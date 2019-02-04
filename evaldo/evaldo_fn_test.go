@@ -1,0 +1,378 @@
+// main_test.go
+package evaldo
+
+import (
+	"Rejy_go_v1/env"
+	"Rejy_go_v1/loader"
+
+	"fmt"
+
+	"testing"
+)
+
+//
+// Function
+//
+
+func TestEvaldo_function1_just_return_integer(t *testing.T) {
+	input := "{ fun1 }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	idx, found := es.Idx.GetIndex("fun1")
+	if found {
+		body := []env.Object{env.Integer{234}}
+		spec := []env.Object{}
+		es.Env.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body))))
+
+		EvalBlock(es)
+
+		fmt.Print(es.Res.Inspect(*es.Idx))
+		if es.Res.Type() != env.IntegerType {
+			t.Error("Expected result type integer")
+		}
+		if es.Res.(env.Integer).Value != 234 {
+			t.Error("Expected result value 1001")
+		}
+	} else {
+		t.Error("Word not found in index")
+	}
+}
+
+func TestEvaldo_function1_just_return_integer_in_loop(t *testing.T) {
+	input := "{ loop 10000 { fun1 } }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	idx, found := es.Idx.GetIndex("fun1")
+	if found {
+		body := []env.Object{env.Integer{2345}}
+		spec := []env.Object{}
+		es.Env.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body))))
+
+		EvalBlock(es)
+
+		fmt.Print(es.Res.Inspect(*es.Idx))
+		if es.Res.Type() != env.IntegerType {
+			t.Error("Expected result type integer")
+		}
+		if es.Res.(env.Integer).Value != 2345 {
+			t.Error("Expected result value 1001")
+		}
+	} else {
+		t.Error("Word not found in index")
+	}
+}
+
+func TestEvaldo_function2_call_builtin_in_func(t *testing.T) {
+	input := "{ fun1 }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	idx, found := es.Idx.GetIndex("fun1")
+
+	if found {
+		incidx, found1 := es.Idx.GetIndex("inc")
+		//printidx, _ := es.Idx.GetIndex("print")
+		if found1 { // env.Word{printidx},
+			body := []env.Object{env.Word{incidx}, env.Word{incidx}, env.Word{incidx}, env.Integer{330}}
+			spec := []env.Object{}
+			es.Env.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body))))
+
+			EvalBlock(es)
+
+			fmt.Print(es.Res.Inspect(*es.Idx))
+			if es.Res.Type() != env.IntegerType {
+				t.Error("Expected result type integer")
+			}
+			if es.Res.(env.Integer).Value != 333 {
+				t.Error("Expected result value 1001")
+			}
+		} else {
+			t.Error("Builting inc Word not found in index")
+		}
+	} else {
+		t.Error("Word not found in index")
+	}
+}
+
+func TestEvaldo_function3_arg_unit_func(t *testing.T) {
+	input := "{ fun1 789 }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	idx, found := es.Idx.GetIndex("fun1")
+
+	if found {
+		aaaidx := es.Idx.IndexWord("aaa")
+		//printidx, _ := es.Idx.GetIndex("print")
+		body := []env.Object{env.Word{aaaidx}}
+		spec := []env.Object{env.Word{aaaidx}}
+		es.Env.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body))))
+
+		EvalBlock(es)
+
+		fmt.Print(es.Res.Inspect(*es.Idx))
+		if es.Res.Type() != env.IntegerType {
+			t.Error("Expected result type integer")
+		}
+		if es.Res.(env.Integer).Value != 789 {
+			t.Error("Expected result value 789")
+		}
+	} else {
+		t.Error("Word not found in index")
+	}
+}
+
+func TestEvaldo_function3_arg_inc_func(t *testing.T) {
+	input := "{ fun1 999 }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	idx, found := es.Idx.GetIndex("fun1")
+
+	if found {
+		incidx, found1 := es.Idx.GetIndex("inc")
+		//printidx, _ := es.Idx.GetIndex("print")
+		if found1 { // env.Word{printidx},
+
+			aaaidx := es.Idx.IndexWord("aaa")
+			//printidx, _ := es.Idx.GetIndex("print")
+			spec := []env.Object{env.Word{aaaidx}}
+			body := []env.Object{env.Word{incidx}, env.Word{aaaidx}}
+			es.Env.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body))))
+
+			EvalBlock(es)
+
+			fmt.Print(es.Res.Inspect(*es.Idx))
+			if es.Res.Type() != env.IntegerType {
+				t.Error("Expected result type integer")
+			}
+			if es.Res.(env.Integer).Value != 1000 {
+				t.Error("Expected result value 1000")
+			}
+		} else {
+			t.Error("Word not found in index")
+		}
+	} else {
+		t.Error("Word not found in index")
+	}
+}
+
+func TestEvaldo_function3_arg_unit_func_loop(t *testing.T) {
+	input := "{ loop 2 { fun1 999 } }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	idx, found := es.Idx.GetIndex("fun1")
+
+	if found {
+		//incidx, found1 := es.Idx.GetIndex("inc")
+		//printidx, _ := es.Idx.GetIndex("print")
+		//if found1 { // env.Word{printidx},
+
+		aaaidx := es.Idx.IndexWord("aaa")
+		//printidx, _ := es.Idx.GetIndex("print")
+		spec := []env.Object{env.Word{aaaidx}}
+		body := []env.Object{env.Word{aaaidx}}
+		es.Env.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body))))
+
+		EvalBlock(es)
+
+		fmt.Print(es.Res.Inspect(*es.Idx))
+		if es.Res.Type() != env.IntegerType {
+			t.Error("Expected result type integer")
+		}
+		if es.Res.(env.Integer).Value != 999 {
+			t.Error("Expected result value 999")
+		}
+		//} else {
+		//	t.Error("Word not found in index")
+		//}
+	} else {
+		t.Error("Word not found in index")
+	}
+}
+
+func TestEvaldo_function3_arg_inc_func_loop(t *testing.T) {
+	//input := "{ fun1 999 }"
+	input := "{ loop 1000 { fun1 999 } }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	idx, found := es.Idx.GetIndex("fun1")
+
+	if found {
+		incidx, found1 := es.Idx.GetIndex("inc")
+		//printidx, _ := es.Idx.GetIndex("print")
+		if found1 { // env.Word{printidx},
+
+			aaaidx := es.Idx.IndexWord("aaa")
+			//printidx, _ := es.Idx.GetIndex("print")
+			spec := []env.Object{env.Word{aaaidx}}
+			body := []env.Object{env.Word{incidx}, env.Word{aaaidx}}
+			es.Env.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body))))
+
+			EvalBlock(es)
+
+			fmt.Print(es.Res.Inspect(*es.Idx))
+			if es.Res.Type() != env.IntegerType {
+				t.Error("Expected result type integer")
+			}
+			if es.Res.(env.Integer).Value != 1000 {
+				t.Error("Expected result value 1000")
+			}
+		} else {
+			t.Error("Word not found in index")
+		}
+	} else {
+		t.Error("Word not found in index")
+	}
+}
+
+func TestEvaldo_function4_simple_recur(t *testing.T) {
+	input := "{ fun1 1 }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	idx, found := es.Idx.GetIndex("fun1")
+
+	if found {
+		incidx, found1 := es.Idx.GetIndex("inc")
+		recuridx, _ := es.Idx.GetIndex("recur1if")
+		printidx, _ := es.Idx.GetIndex("print")
+		greateridx, _ := es.Idx.GetIndex("greater")
+		if found1 { // env.Word{printidx},
+
+			aaaidx := es.Idx.IndexWord("aaa")
+			//printidx, _ := es.Idx.GetIndex("print")
+			spec := []env.Object{env.Word{aaaidx}}
+			body := []env.Object{env.Word{printidx}, env.Word{aaaidx}, env.Word{recuridx}, env.Word{greateridx}, env.Integer{99}, env.Word{aaaidx}, env.Word{incidx}, env.Word{aaaidx}}
+			es.Env.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body))))
+
+			EvalBlock(es)
+
+			fmt.Print(es.Res.Inspect(*es.Idx))
+			if es.Res.Type() != env.IntegerType {
+				t.Error("Expected result type integer")
+			}
+			if es.Res.(env.Integer).Value != 100 {
+				t.Error("Expected result value 100")
+			}
+		} else {
+			t.Error("Word not found in index")
+		}
+	} else {
+		t.Error("Word not found in index")
+	}
+}
+
+func TestEvaldo_function4_simple_fn_in_code(t *testing.T) {
+	input := "{ fun1: fn { aa } { aa } fun1 1234 }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	if es.Res.Type() != env.IntegerType {
+		t.Error("Expected result type integer")
+	}
+	if es.Res.(env.Integer).Value != 1234 {
+		t.Error("Expected result value 1234")
+	}
+}
+
+func TestEvaldo_function4_simple_fn_in_code2(t *testing.T) {
+	input := "{ fun1: fn { aa } { inc aa } fun1 1234 }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	if es.Res.Type() != env.IntegerType {
+		t.Error("Expected result type integer")
+	}
+	if es.Res.(env.Integer).Value != 1235 {
+		t.Error("Expected result value 1235")
+	}
+}
+
+func TestEvaldo_function4_factorial_w_recur2(t *testing.T) {
+	input := "{ factorial: fn { nn aa } { recur2if greater nn 0  subtract nn 1 multiply nn aa aa } loop 100000 { factorial 12 1 } }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	es.Res.Trace("returned")
+	if es.Res.Type() != env.IntegerType {
+		t.Error("Expected result type integer")
+	}
+	if es.Res.(env.Integer).Value != 479001600 {
+		t.Error("Expected result value 479001600")
+	}
+}
+
+func TestEvaldo_function4_factorial_w_recursive(t *testing.T) {
+	input := "{ factorial: fn { nn } { either greater nn 1 { multiply nn factorial subtract nn 1 } { 1 } } loop 100000 { factorial 12 } }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	es.Res.Trace("returned")
+	if es.Res.Type() != env.IntegerType {
+		t.Error("Expected result type integer")
+	}
+	if es.Res.(env.Integer).Value != 479001600 {
+		t.Error("Expected result value 479001600")
+	}
+}
+
+// fibonacci: fn { n } {  either lesser? n 3 { n } {  add fibonacci n - 2 fibonacci n - 1 } } x: miliseconds y: fibonacci 30 print miliseconds-from x y }'), 0, {}, 0)), 479001600)
+
+func TestEvaldo_function4_fibonnaci_recursive(t *testing.T) {
+	input := "{ fibonacci: fn { nn } {  either lesser nn 3 { nn } {  add fibonacci subtract nn 2 fibonacci subtract nn 1 } } fibonacci 30 }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	es.Res.Trace("returned")
+	if es.Res.Type() != env.IntegerType {
+		t.Error("Expected result type integer")
+	}
+	if es.Res.(env.Integer).Value != 479001600 {
+		t.Error("Expected result value 479001600")
+	}
+}
+
+func TestEvaldo_function4_fibonnaci_w_recur3(t *testing.T) {
+	input := "{ fibonacci: fn { nn aa bb } { recur3if greater nn 1 subtract  nn 1  bb  add aa bb  either lesser nn 1 { aa } { bb } } fibonacci 50 0 1 }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	es.Res.Trace("returned")
+	if es.Res.Type() != env.IntegerType {
+		t.Error("Expected result type integer")
+	}
+	if es.Res.(env.Integer).Value != 832040 {
+		t.Error("Expected result value 832040")
+	}
+}
