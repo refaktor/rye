@@ -98,6 +98,23 @@ func TestLoader_load_setword_check_colon(t *testing.T) {
 	}
 }
 
+func TestLoader_load_opword_1(t *testing.T) {
+	input := "{ |wowo }"
+	block, _ := LoadString(input)
+	if block.Series.Len() != 1 {
+		t.Error("Expected 1 item")
+	}
+	if block.Series.Get(0).(env.Object).Type() != env.OpwordType {
+		t.Error("Expected type opword")
+	}
+
+	idx := block.Series.Get(0).(env.Opword).Index
+
+	if genv.GetWord(idx) != "wowo" {
+		t.Error("Word spelling not correct")
+	}
+}
+
 func TestLoader_just_load_various(t *testing.T) {
 	input := "{ 123 word 3 { setword: 23 } end 12 word }"
 	LoadString(input)

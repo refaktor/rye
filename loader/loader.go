@@ -52,6 +52,10 @@ func parseWord(v *Values, d Any) (Any, error) {
 	return env.Word{idx}, nil
 }
 
+func parseComma(v *Values, d Any) (Any, error) {
+	return env.Comma{}, nil
+}
+
 func parseSetword(v *Values, d Any) (Any, error) {
 	//fmt.Println("SETWORD:" + v.Token())
 	word := v.Token()
@@ -59,14 +63,32 @@ func parseSetword(v *Values, d Any) (Any, error) {
 	return env.Setword{idx}, nil
 }
 
+func parseOpword(v *Values, d Any) (Any, error) {
+	//fmt.Println("OPWORD:" + v.Token())
+	word := v.Token()
+	idx := genv.IndexWord(word[1:])
+	return env.Opword{idx}, nil
+}
+
+func parsePipeword(v *Values, d Any) (Any, error) {
+	//fmt.Println("OPWORD:" + v.Token())
+	word := v.Token()
+	idx := genv.IndexWord(word[1:])
+	return env.Pipeword{idx}, nil
+}
+
 func newParser() *Parser {
+	// TODO -- add string eaddress path url time
 	// Create a PEG parser
 	parser, _ := NewParser(`
-    BLOCK       		<-  "{" SPACES SERIES* "}"
-    SERIES           <-  (NUMBER / SETWORD / WORD / BLOCK) SPACES
-    WORD           	<-  LETTER LETTERORNUM+ 
-	SETWORD    		<-  LETTER LETTERORNUM+ ":"
+    BLOCK       	<-  "{" SPACES SERIES* "}"
+    SERIES          <-  (NUMBER / COMMA / SETWORD / OPWORD / PIPEWORD / WORD / BLOCK) SPACES
+    WORD           	<-  LETTER LETTERORNUM* 
+	SETWORD    		<-  LETTER LETTERORNUM* ":"
+	PIPEWORD   		<-  "|" LETTER LETTERORNUM*
+	OPWORD    		<-  "." LETTER LETTERORNUM*
 	SPACES			<-  SPACE+
+	COMMA			<-  ","
 	LETTERORNUM		<-  < [a-zA-Z0-9] >
 	LETTER  			<-  < [a-zA-Z] >
     NUMBER           <-  < [0-9]+ >
@@ -78,7 +100,10 @@ func newParser() *Parser {
 	g := parser.Grammar
 	g["BLOCK"].Action = parseBlock
 	g["WORD"].Action = parseWord
+	g["COMMA"].Action = parseComma
 	g["SETWORD"].Action = parseSetword
+	g["OPWORD"].Action = parseOpword
+	g["PIPEWORD"].Action = parsePipeword
 	g["NUMBER"].Action = parseNumber
 	/* g["SERIES"].Action = func(v *Values, d Any) (Any, error) {
 		return v, nil

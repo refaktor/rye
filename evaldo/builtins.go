@@ -96,14 +96,27 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-	"print": {
+	"inspect": {
 		Argsn: 1,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			fmt.Println(arg0.Inspect(*env1.Idx))
 			return arg0
 		},
 	},
-
+	"print": {
+		Argsn: 1,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			fmt.Print(arg0.Probe(*env1.Idx))
+			return arg0
+		},
+	},
+	"puts": {
+		Argsn: 1,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			fmt.Println(arg0.Probe(*env1.Idx))
+			return arg0
+		},
+	},
 	"if": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

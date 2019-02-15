@@ -1,6 +1,12 @@
 // series.go
 package env
 
+import (
+	"fmt"
+)
+
+//"fmt"
+
 //"fmt"
 
 type TSeries struct {
@@ -36,6 +42,7 @@ func (ser *TSeries) Pop() Object {
 }
 
 func (ser *TSeries) Reset() {
+	fmt.Println("RESET")
 	ser.pos = 0
 }
 
@@ -48,7 +55,12 @@ func (ser *TSeries) GetPos() int {
 }
 
 func (ser TSeries) Peek() Object {
-	return ser.s[ser.pos-1]
+	//fmt.Println(ser.pos)
+	//fmt.Println(ser.s)
+	if len(ser.s) > ser.pos { // maybe we could store len in object .. test later if it's faster
+		return ser.s[ser.pos]
+	}
+	return nil
 }
 
 func (ser TSeries) Get(n int) Object {

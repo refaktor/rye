@@ -13,9 +13,11 @@ const (
 	IntegerType  Type = 2
 	WordType     Type = 3
 	SetwordType  Type = 4
-	BuiltinType  Type = 5
-	FunctionType Type = 6
-	ErrorType    Type = 7
+	OpwordType   Type = 5
+	BuiltinType  Type = 6
+	FunctionType Type = 7
+	ErrorType    Type = 8
+	CommaType    Type = 9
 )
 
 type Object interface {
@@ -150,6 +152,98 @@ func (b Setword) Probe(e Idxs) string {
 func (i Setword) Trace(msg string) {
 	fmt.Print(msg + "(setword): ")
 	fmt.Println(i.Index)
+}
+
+//
+// OPWORD
+//
+
+// Integer represents an integer.
+type Opword struct {
+	Index int
+}
+
+// Type returns the type of the Integer.
+func (i Opword) Type() Type {
+	return OpwordType
+}
+
+// Inspect returns a string
+func (i Opword) Inspect(e Idxs) string {
+	return "<Opword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + ">"
+}
+
+// Inspect returns a string representation of the Integer.
+func (b Opword) Probe(e Idxs) string {
+	return e.GetWord(b.Index)
+}
+
+func (i Opword) Trace(msg string) {
+	fmt.Print(msg + " (opword): ")
+	fmt.Println(i.Index)
+}
+
+func (i Opword) ToWord() Word {
+	return Word{i.Index}
+}
+
+//
+// PIPEWORD
+//
+
+// Integer represents an integer.
+type Pipeword struct {
+	Index int
+}
+
+// Type returns the type of the Integer.
+func (i Pipeword) Type() Type {
+	return OpwordType
+}
+
+// Inspect returns a string
+func (i Pipeword) Inspect(e Idxs) string {
+	return "<Pipeword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + ">"
+}
+
+// Inspect returns a string representation of the Integer.
+func (b Pipeword) Probe(e Idxs) string {
+	return e.GetWord(b.Index)
+}
+
+func (i Pipeword) Trace(msg string) {
+	fmt.Print(msg + " (pipeword): ")
+	fmt.Println(i.Index)
+}
+
+func (i Pipeword) ToWord() Word {
+	return Word{i.Index}
+}
+
+//
+// COMMA
+//
+
+// Integer represents an integer.
+type Comma struct{}
+
+// Type returns the type of the Integer.
+func (i Comma) Type() Type {
+	return CommaType
+}
+
+// Inspect returns a string
+func (i Comma) Inspect(e Idxs) string {
+	return "<Comma>"
+}
+
+// Inspect returns a string representation of the Integer.
+func (b Comma) Probe(e Idxs) string {
+	return ","
+}
+
+func (i Comma) Trace(msg string) {
+	fmt.Print(msg + " (comma)")
 }
 
 //
