@@ -2,7 +2,7 @@ package evaldo
 
 import (
 	"Rejy_go_v1/env"
-	"fmt"
+	//"fmt"
 	//"fmt"
 	//"strconv"
 )
@@ -99,8 +99,8 @@ func EvalExpression2(es *env.ProgramState, limited bool) *env.ProgramState {
 	esleft := EvalExpression_(es)
 	////// OPWORDWWW
 	// IF WE COMMENT IN NEXT LINE IT WORKS WITHOUT OPWORDS PROCESSING
-	fmt.Println("EvalExpression")
-	fmt.Println(es.Ser.GetPos())
+	//fmt.Println("EvalExpression")
+	//fmt.Println(es.Ser.GetPos())
 	return MaybeEvalOpwordOnRight(esleft.Ser.Peek(), esleft, limited)
 	return esleft
 }
@@ -109,8 +109,8 @@ func EvalExpression(es *env.ProgramState) *env.ProgramState {
 	esleft := EvalExpression_(es)
 	////// OPWORDWWW
 	// IF WE COMMENT IN NEXT LINE IT WORKS WITHOUT OPWORDS PROCESSING
-	fmt.Println("EvalExpression")
-	fmt.Println(es.Ser.GetPos())
+	//fmt.Println("EvalExpression")
+	//fmt.Println(es.Ser.GetPos())
 	return MaybeEvalOpwordOnRight(esleft.Ser.Peek(), esleft, false)
 	return esleft
 }
@@ -121,9 +121,9 @@ func MaybeEvalOpwordOnRight(nextObj env.Object, es *env.ProgramState, limited bo
 	case env.Opword:
 		//ProcOpword(nextObj, es)
 		es.Ser.Next()
-		fmt.Println("MaybeEvalOpword..1")
+		//fmt.Println("MaybeEvalOpword..1")
 		es = EvalWord(es, opword.ToWord(), es.Res, false)
-		fmt.Println("MaybeEvalOpword..2")
+		//fmt.Println("MaybeEvalOpword..2")
 		return MaybeEvalOpwordOnRight(es.Ser.Peek(), es, limited)
 	case env.Pipeword:
 		//ProcOpword(nextObj, es)
@@ -131,9 +131,9 @@ func MaybeEvalOpwordOnRight(nextObj env.Object, es *env.ProgramState, limited bo
 			return es
 		}
 		es.Ser.Next()
-		fmt.Println("MaybeEvalPipeword..1")
+		//fmt.Println("MaybeEvalPipeword..1")
 		es = EvalWord(es, opword.ToWord(), es.Res, false)
-		fmt.Println("MaybeEvalPipeword..2")
+		//fmt.Println("MaybeEvalPipeword..2")
 		return MaybeEvalOpwordOnRight(es.Ser.Peek(), es, limited)
 	}
 	return es
@@ -148,14 +148,18 @@ func MaybeEvalOpwordOnRight(nextObj env.Object, es *env.ProgramState, limited bo
 /* */
 
 func EvalExpression_(es *env.ProgramState) *env.ProgramState {
-	fmt.Println("EvalExpression___")
+	//fmt.Println("EvalExpression___")
 	object := es.Ser.Pop()
 	//es.Idx.Probe()
 	//object.Trace("Before entering expression")
 	switch object.Type() {
 	case env.IntegerType:
 		es.Res = object
+	case env.StringType:
+		es.Res = object
 	case env.BlockType:
+		es.Res = object
+	case env.VoidType:
 		es.Res = object
 	case env.WordType:
 		return EvalWord(es, object.(env.Word), nil, false)
@@ -188,7 +192,7 @@ func EvalExpression_(es *env.ProgramState) *env.ProgramState {
 }*/
 
 func EvalWord(es *env.ProgramState, word env.Word, leftVal env.Object, toLeft bool) *env.ProgramState {
-	fmt.Println("*EVAL WORD*")
+	//fmt.Println("*EVAL WORD*")
 	//es.Env.Probe(*es.Idx)
 	object, found := es.Env.Get(word.Index)
 	if found {
@@ -216,17 +220,17 @@ func EvalWord(es *env.ProgramState, word env.Word, leftVal env.Object, toLeft bo
 } */
 
 func EvalObject(es *env.ProgramState, object env.Object, leftVal env.Object, toLeft bool) *env.ProgramState {
-	fmt.Print("EVAL OBJECT")
+	//fmt.Print("EVAL OBJECT")
 	switch object.Type() {
 	case env.FunctionType:
-		fmt.Println(" FUN**")
+		//fmt.Println(" FUN**")
 		fn := object.(env.Function)
 		return CallFunction(fn, es, leftVal, toLeft)
 		//es.Res.Trace("After user function call")
 		//return es
 	case env.BuiltinType:
-		fmt.Println(" BUIL**")
-		fmt.Println(es.Ser.GetPos())
+		//fmt.Println(" BUIL**")
+		//fmt.Println(es.Ser.GetPos())
 		//fmt.Println(" BUILTIN**")
 		bu := object.(env.Builtin)
 		return CallBuiltin(bu, es, leftVal, toLeft)
@@ -248,8 +252,8 @@ func EvalSetword(es *env.ProgramState, word env.Setword) *env.ProgramState {
 }
 
 func CallFunction(fn env.Function, es *env.ProgramState, arg0 env.Object, toLeft bool) *env.ProgramState {
-	fmt.Println("Call Function")
-	fmt.Println(es.Ser.GetPos())
+	//fmt.Println("Call Function")
+	//fmt.Println(es.Ser.GetPos())
 	env0 := es.Env // store reference to current env in local
 	es.Env = env.NewEnv(env0)
 
@@ -283,7 +287,6 @@ func CallFunction(fn env.Function, es *env.ProgramState, arg0 env.Object, toLeft
 	es.Ser = ser0
 	//es.Res.Trace("Before user function returns")
 	return es
-
 	/*         for (var i=0;i<h.length;i+=1) {
 	    var e = this.evalExpr(block,pos,state,depth+1);
 	    pos = e[1];
@@ -295,7 +298,6 @@ func CallFunction(fn env.Function, es *env.ProgramState, arg0 env.Object, toLeft
 	r = this.evalBlock(b,0,lctx,depth+1);
 	return [r.length>4?r:r[0],pos,state,depth];
 	*/
-
 }
 
 func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft bool) *env.ProgramState {
@@ -307,14 +309,15 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 	}
 	ps.Ser.SetPos(pospos)*/
 	// let's try to make it without array allocation and without variadic arguments that also maybe actualizes splice
-	arg0 := env.Object(nil)
-	arg1 := env.Object(nil)
-	arg2 := env.Object(nil)
-	arg3 := env.Object(nil)
-	arg4 := env.Object(nil)
+	arg0 := env.Object(bi.Cur0) //env.Object(bi.Cur0)
+	arg1 := env.Object(bi.Cur1)
+	arg2 := env.Object(bi.Cur2)
+	arg3 := env.Object(bi.Cur3)
+	arg4 := env.Object(bi.Cur4)
 	evalExprFn := EvalExpression2
+	curry := false
 	if arg0_ != nil {
-		fmt.Println("ARG0 = LEFT")
+		//fmt.Println("ARG0 = LEFT")
 		arg0 = arg0_
 		if !toLeft {
 			//fmt.Println("L TO R *** ")
@@ -322,27 +325,47 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 		} else {
 			//fmt.Println("TO THE *** LEFT")
 		}
-	} else if bi.Argsn > 0 {
-		fmt.Println(" ARG 1 ")
-		fmt.Println(ps.Ser.GetPos())
+	} else if bi.Argsn > 0 && bi.Cur0 == nil {
+		//fmt.Println(" ARG 1 ")
+		//fmt.Println(ps.Ser.GetPos())
 		evalExprFn(ps, true)
-		arg0 = ps.Res
+		if ps.Res.Type() == env.VoidType {
+			curry = true
+		} else {
+			arg0 = ps.Res
+		}
 	}
-	if bi.Argsn > 1 {
+	if bi.Argsn > 1 && bi.Cur1 == nil {
 		evalExprFn(ps, true)
-		arg1 = ps.Res
+		if ps.Res.Type() == env.VoidType {
+			curry = true
+		} else {
+			arg1 = ps.Res
+		}
 	}
 	if bi.Argsn > 2 {
 		evalExprFn(ps, true)
-		arg2 = ps.Res
+		if ps.Res.Type() == env.VoidType {
+			curry = true
+		} else {
+			arg2 = ps.Res
+		}
 	}
 	if bi.Argsn > 3 {
 		evalExprFn(ps, true)
-		arg3 = ps.Res
+		if ps.Res.Type() == env.VoidType {
+			curry = true
+		} else {
+			arg3 = ps.Res
+		}
 	}
 	if bi.Argsn > 4 {
 		evalExprFn(ps, true)
-		arg4 = ps.Res
+		if ps.Res.Type() == env.VoidType {
+			curry = true
+		} else {
+			arg4 = ps.Res
+		}
 	}
 	/*
 		variadic version
@@ -352,7 +375,16 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 		}
 		ps.Res = bi.Fn(ps, args...)
 	*/
-	ps.Res = bi.Fn(ps, arg0, arg1, arg2, arg3, arg4)
+	if curry {
+		bi.Cur0 = arg0
+		bi.Cur1 = arg1
+		bi.Cur2 = arg2
+		bi.Cur3 = arg3
+		bi.Cur4 = arg4
+		ps.Res = bi
+	} else {
+		ps.Res = bi.Fn(ps, arg0, arg1, arg2, arg3, arg4)
+	}
 	//ps.Res.Trace("Before builtin returns")
 	return ps
 }

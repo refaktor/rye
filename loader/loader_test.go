@@ -2,6 +2,8 @@ package loader
 
 import (
 	"Rejy_go_v1/env"
+	"fmt"
+
 	//"fmt"
 	"testing"
 )
@@ -99,16 +101,33 @@ func TestLoader_load_setword_check_colon(t *testing.T) {
 }
 
 func TestLoader_load_opword_1(t *testing.T) {
-	input := "{ |wowo }"
+	input := "{ .wowo }"
 	block, _ := LoadString(input)
 	if block.Series.Len() != 1 {
 		t.Error("Expected 1 item")
 	}
 	if block.Series.Get(0).(env.Object).Type() != env.OpwordType {
-		t.Error("Expected type opword")
+		t.Error("Expected type Opword")
 	}
 
 	idx := block.Series.Get(0).(env.Opword).Index
+
+	if genv.GetWord(idx) != "wowo" {
+		t.Error("Word spelling not correct")
+	}
+}
+
+func TestLoader_load_pipeword_1(t *testing.T) {
+	input := "{ |wowo }"
+	block, _ := LoadString(input)
+	if block.Series.Len() != 1 {
+		t.Error("Expected 1 item")
+	}
+	if block.Series.Get(0).(env.Object).Type() != env.PipewordType {
+		t.Error("Expected type Pipeword")
+	}
+
+	idx := block.Series.Get(0).(env.Pipeword).Index
 
 	if genv.GetWord(idx) != "wowo" {
 		t.Error("Word spelling not correct")
@@ -211,6 +230,37 @@ func TestLoader_multiple_blocks(t *testing.T) {
 	}
 	if block.Series.Get(4).(env.Object).Type() != env.IntegerType {
 		t.Error("Expected type integer")
+	}
+}
+
+func TestLoader_load_string_1(t *testing.T) {
+	input := "{ \" wowo 123 !._' \" }"
+	block, _ := LoadString(input)
+	if block.Series.Len() != 1 {
+		t.Error("Expected 1 item")
+	}
+	if block.Series.Get(0).(env.Object).Type() != env.StringType {
+		t.Error("Expected type String")
+	} else {
+		fmt.Println(block.Series.Get(0).(env.String).Value)
+		if block.Series.Get(0).(env.String).Value != " wowo 123 !._' " {
+			t.Error("Not correct string content")
+		}
+
+	}
+}
+
+func TestLoader_load_void_comma(t *testing.T) {
+	input := "{ , _ }"
+	block, _ := LoadString(input)
+	if block.Series.Len() != 2 {
+		t.Error("Expected 2 items")
+	}
+	if block.Series.Get(0).(env.Object).Type() != env.CommaType {
+		t.Error("Expected type Comma")
+	}
+	if block.Series.Get(1).(env.Object).Type() != env.VoidType {
+		t.Error("Expected type Void")
 	}
 }
 

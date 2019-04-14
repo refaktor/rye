@@ -295,3 +295,37 @@ func TestEvaldo_load_builtin_loop(t *testing.T) {
 		t.Error("Expected result value 1001")
 	}
 }
+
+func TestEvaldo_curry_1(t *testing.T) {
+	input := "{ add100: add 100 _ , add100 11 }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	fmt.Print(es.Res.Inspect(*es.Idx))
+	if es.Res.Type() != env.IntegerType {
+		t.Error("Expected result type Integer")
+	}
+	if es.Res.(env.Integer).Value != 111 {
+		t.Error("Expected result value 111")
+	}
+}
+
+func TestEvaldo_curry_2(t *testing.T) {
+	input := "{ second: nth _ 2 , { 11 22 33 } .second }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	fmt.Print(es.Res.Inspect(*es.Idx))
+	if es.Res.Type() != env.IntegerType {
+		t.Error("Expected result type Integer")
+	}
+	if es.Res.(env.Integer).Value != 22 {
+		t.Error("Expected result value 22")
+	}
+}

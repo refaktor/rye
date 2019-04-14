@@ -47,6 +47,10 @@ func parseNumber(v *Values, d Any) (Any, error) {
 	return env.Integer{val}, er
 }
 
+func parseString(v *Values, d Any) (Any, error) {
+	return env.String{v.Token()[1 : len(v.Token())-1]}, nil
+}
+
 func parseWord(v *Values, d Any) (Any, error) {
 	idx := genv.IndexWord(v.Token())
 	return env.Word{idx}, nil
@@ -54,6 +58,10 @@ func parseWord(v *Values, d Any) (Any, error) {
 
 func parseComma(v *Values, d Any) (Any, error) {
 	return env.Comma{}, nil
+}
+
+func parseVoid(v *Values, d Any) (Any, error) {
+	return env.Void{}, nil
 }
 
 func parseSetword(v *Values, d Any) (Any, error) {
@@ -82,17 +90,20 @@ func newParser() *Parser {
 	// Create a PEG parser
 	parser, _ := NewParser(`
     BLOCK       	<-  "{" SPACES SERIES* "}"
-    SERIES          <-  (NUMBER / COMMA / SETWORD / OPWORD / PIPEWORD / WORD / BLOCK) SPACES
+    SERIES          <-  (STRING / NUMBER / COMMA / VOID / SETWORD / OPWORD / PIPEWORD / WORD / BLOCK) SPACES
     WORD           	<-  LETTER LETTERORNUM* 
 	SETWORD    		<-  LETTER LETTERORNUM* ":"
 	PIPEWORD   		<-  "|" LETTER LETTERORNUM*
 	OPWORD    		<-  "." LETTER LETTERORNUM*
+	STRING			<-  '"' STRINGCHAR* '"'
 	SPACES			<-  SPACE+
 	COMMA			<-  ","
+	VOID				<-  "_"
 	LETTERORNUM		<-  < [a-zA-Z0-9] >
 	LETTER  			<-  < [a-zA-Z] >
     NUMBER           <-  < [0-9]+ >
 	SPACE			<-  < [ \t\r\n] >
+	STRINGCHAR		<-  < !'"' . >
 `)
 
 	//%whitespace      <-  [ \t\r\n]*
@@ -101,10 +112,12 @@ func newParser() *Parser {
 	g["BLOCK"].Action = parseBlock
 	g["WORD"].Action = parseWord
 	g["COMMA"].Action = parseComma
+	g["VOID"].Action = parseVoid
 	g["SETWORD"].Action = parseSetword
 	g["OPWORD"].Action = parseOpword
 	g["PIPEWORD"].Action = parsePipeword
 	g["NUMBER"].Action = parseNumber
+	g["STRING"].Action = parseString
 	/* g["SERIES"].Action = func(v *Values, d Any) (Any, error) {
 		return v, nil
 	}*/

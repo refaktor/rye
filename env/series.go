@@ -1,9 +1,7 @@
 // series.go
 package env
 
-import (
-	"fmt"
-)
+//"fmt"
 
 //"fmt"
 
@@ -42,7 +40,7 @@ func (ser *TSeries) Pop() Object {
 }
 
 func (ser *TSeries) Reset() {
-	fmt.Println("RESET")
+	//fmt.Println("RESET")
 	ser.pos = 0
 }
 

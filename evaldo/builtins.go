@@ -28,6 +28,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// BASIC FUNCTIONS WITH NUMBERS
+
 	"add": {
 		Argsn: 2,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -96,6 +98,9 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// BASIC GENERAL FUNCTIONS
+
 	"inspect": {
 		Argsn: 1,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -117,6 +122,9 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
+
+	// CONTROL WORDS
+
 	"if": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -199,6 +207,7 @@ var builtins = map[string]*env.Builtin{
 			return nil
 		},
 	},
+
 	"loop": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -219,6 +228,7 @@ var builtins = map[string]*env.Builtin{
 			return nil
 		},
 	},
+
 	//test if we can do recur similar to clojure one. Since functions in rejy are of fixed arity we would need recur1 recur2 recur3 and recur [ ] which is less optimal
 	//otherwise word recur could somehow be bound to correct version or args depending on number of args of func. Try this at first.
 	"recur1if": { //recur1-if
@@ -240,6 +250,7 @@ var builtins = map[string]*env.Builtin{
 			return nil
 		},
 	},
+
 	"recur2if": { //recur1-if
 		Argsn: 3,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -266,6 +277,7 @@ var builtins = map[string]*env.Builtin{
 			return nil
 		},
 	},
+
 	"recur3if": { //recur1-if
 		Argsn: 4,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -296,6 +308,7 @@ var builtins = map[string]*env.Builtin{
 			return nil
 		},
 	},
+
 	"fn": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -307,6 +320,151 @@ var builtins = map[string]*env.Builtin{
 					//body := []env.Object{env.Word{printidx}, env.Word{aaaidx}, env.Word{recuridx}, env.Word{greateridx}, env.Integer{99}, env.Word{aaaidx}, env.Word{incidx}, env.Word{aaaidx}}
 					return *env.NewFunction(args, body)
 				}
+			}
+			return nil
+		},
+	},
+
+	// BASIC STRING FUNCTIONS
+
+	"left": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				switch s2 := arg1.(type) {
+				case env.Integer:
+					return env.String{s1.Value[0:s2.Value]}
+				}
+			}
+			return nil
+		},
+	},
+
+	"middle": {
+		Argsn: 3,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				switch s2 := arg1.(type) {
+				case env.Integer:
+					switch s3 := arg2.(type) {
+					case env.Integer:
+						return env.String{s1.Value[s2.Value:s3.Value]}
+					}
+				}
+			}
+			return nil
+		},
+	},
+
+	"right": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				switch s2 := arg1.(type) {
+				case env.Integer:
+					return env.String{s1.Value[len(s1.Value)-int(s2.Value):]}
+				}
+			}
+			return nil
+		},
+	},
+
+	"join": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				switch s2 := arg1.(type) {
+				case env.String:
+					return env.String{s1.Value + s2.Value}
+				}
+			}
+			return nil
+		},
+	},
+
+	"join3": {
+		Argsn: 3,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				switch s2 := arg1.(type) {
+				case env.String:
+					switch s3 := arg2.(type) {
+					case env.String:
+						return env.String{s1.Value + s2.Value + s3.Value}
+					}
+				}
+			}
+			return nil
+		},
+	},
+
+	// BASIC SERIES FUNCTIONS
+
+	"nth": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Block:
+				switch s2 := arg1.(type) {
+				case env.Integer:
+					return s1.Series.Get(int(s2.Value - 1))
+				}
+			}
+			return nil
+		},
+	},
+	"length": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Block:
+				return env.Integer{int64(s1.Series.Len())}
+			}
+			return nil
+		},
+	},
+	"peek": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Block:
+				return s1.Series.Peek()
+			}
+			return nil
+		},
+	},
+	"pop": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Block:
+				return s1.Series.Pop()
+			}
+			return nil
+		},
+	},
+	"pos": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Block:
+				return env.Integer{int64(s1.Series.Pos())}
+			}
+			return nil
+		},
+	},
+	"next": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Block:
+				s1.Series.Next()
+				return s1
 			}
 			return nil
 		},

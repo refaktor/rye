@@ -297,3 +297,30 @@ Next thing would be, to add the opwords support and see if it slows the evaluato
 I added it to git today also. A separate branch should be done where we test passing programmstate by value in all cases. Maybe also all values in in 
 it should be values. So we see if Go can make this faster as it did with some other changes to val vs ref.
 
+# 24.2. Implementing simple strings, first peg, then object, then some builtins. Implemented, basic test done.
+
+# 7.4 Implementing builtins for blocks and adding tests. nth, peek, Next
+
+one interesting observation: pop doesn't make sense as a function right now can just return changed object, but can't return something else and 
+change object passed to it (as pass by reference). This is good in view of preventing side effects. We will see if we would need this reversed.
+
+another interesting observation: when testing I saw the practical difference between . and | 
+
+{ a: { 101 102 103 } b: a .nth 1 |add 100 }" // 202 -- returns second value in block and adds 100 to it
+{ a: { 101 102 103 } b: a .nth 1 .add 100 }" // error -- tries to return 101th block value (adds 1 and 100 and returns it as arg to nth))
+
+since the forward direction of code is noticable feature of this lang ... maybe name should be *fwd lang* or something like it. awk would then be fwk
+
+NEXT: things to do would be to implement handling of errors (so that if they are meet at any stage they get handeled specifically, not just returned)
+NEXT: thing to figure out would be to make all words basically first argument type/tag sensitive (the short word goal). We need to dispatch on primitive values
+and custom objects that could be some kind of structs / tuples / object (that will later get validation directives) or various native/binary object like canvas opengl handlers etc.
+
+Basically, we need to figure out what these objects/tuples in rye or fwd will be. They should be as lightweight as possible. Maybe with some copy on write optimisations and able to belong 
+to one or more classes / kinds. Kind is defined by validation rules. We can enforce the tuple to kind and we get kindered-tuple out of it or nil (or validation errors object).
+
+THINK: We want some inline setwords option too that works in combination with op/pipe words. 
+THINK: We also need to figure out what to do with regular operators. Are they just op/pipe word types?? + * ?
+
+
+
+

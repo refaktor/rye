@@ -14,10 +14,13 @@ const (
 	WordType     Type = 3
 	SetwordType  Type = 4
 	OpwordType   Type = 5
-	BuiltinType  Type = 6
-	FunctionType Type = 7
-	ErrorType    Type = 8
-	CommaType    Type = 9
+	PipewordType Type = 6
+	BuiltinType  Type = 7
+	FunctionType Type = 8
+	ErrorType    Type = 9
+	CommaType    Type = 10
+	VoidType     Type = 11
+	StringType   Type = 12
 )
 
 type Object interface {
@@ -53,6 +56,35 @@ func (i Integer) Probe(e Idxs) string {
 
 func (i Integer) Trace(msg string) {
 	fmt.Print(msg + "(integer): ")
+	fmt.Println(i.Value)
+}
+
+//
+// STRING
+//
+
+// String represents an string.
+type String struct {
+	Value string
+}
+
+// Type returns the type of the Integer.
+func (i String) Type() Type {
+	return StringType
+}
+
+// Inspect returns a string representation of the Integer.
+func (i String) Inspect(e Idxs) string {
+	return "<String: " + i.Value + ">"
+}
+
+// Inspect returns a string representation of the Integer.
+func (i String) Probe(e Idxs) string {
+	return i.Value
+}
+
+func (i String) Trace(msg string) {
+	fmt.Print(msg + "(string): ")
 	fmt.Println(i.Value)
 }
 
@@ -198,7 +230,7 @@ type Pipeword struct {
 
 // Type returns the type of the Integer.
 func (i Pipeword) Type() Type {
-	return OpwordType
+	return PipewordType
 }
 
 // Inspect returns a string
@@ -244,6 +276,32 @@ func (b Comma) Probe(e Idxs) string {
 
 func (i Comma) Trace(msg string) {
 	fmt.Print(msg + " (comma)")
+}
+
+//
+// COMMA
+//
+
+// Integer represents an integer.
+type Void struct{}
+
+// Type returns the type of the Integer.
+func (i Void) Type() Type {
+	return VoidType
+}
+
+// Inspect returns a string
+func (i Void) Inspect(e Idxs) string {
+	return "<Void>"
+}
+
+// Inspect returns a string representation of the Integer.
+func (b Void) Probe(e Idxs) string {
+	return "_"
+}
+
+func (i Void) Trace(msg string) {
+	fmt.Print(msg + " (void)")
 }
 
 //
@@ -294,10 +352,15 @@ type BuiltinFunction func(ps *ProgramState, arg0 Object, arg1 Object, arg2 Objec
 type Builtin struct {
 	Fn    BuiltinFunction
 	Argsn int
+	Cur0  Object
+	Cur1  Object
+	Cur2  Object
+	Cur3  Object
+	Cur4  Object
 }
 
 func NewBuiltin(fn BuiltinFunction, argsn int) *Builtin {
-	bl := Builtin{fn, argsn}
+	bl := Builtin{fn, argsn, nil, nil, nil, nil, nil}
 	return &bl
 }
 
