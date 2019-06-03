@@ -2,7 +2,7 @@ package evaldo
 
 import (
 	"Rejy_go_v1/env"
-	//"fmt"
+	"fmt"
 	//"fmt"
 	//"strconv"
 )
@@ -161,16 +161,22 @@ func EvalExpression_(es *env.ProgramState) *env.ProgramState {
 		es.Res = object
 	case env.VoidType:
 		es.Res = object
+	case env.TagwordType:
+		es.Res = object
 	case env.WordType:
 		return EvalWord(es, object.(env.Word), nil, false)
 		//es1.Res.Trace("After eval word")
 		//return es1
+	case env.GenwordType:
+		return EvalGenword(es, object.(env.Genword), nil, false)
 	case env.SetwordType:
 		return EvalSetword(es, object.(env.Setword))
+	case env.GetwordType:
+		return EvalGetword(es, object.(env.Getword), nil, false)
 	case env.CommaType:
 		es.Res = env.NewError("ERROR: expression guard inside expression!")
 	default:
-		es.Res = env.NewError("Not know type")
+		es.Res = env.NewError("Not known type")
 	}
 	return es
 }
@@ -205,6 +211,36 @@ func EvalWord(es *env.ProgramState, word env.Word, leftVal env.Object, toLeft bo
 	}
 }
 
+func EvalGenword(es *env.ProgramState, word env.Genword, leftVal env.Object, toLeft bool) *env.ProgramState {
+	//fmt.Println("*EVAL GENWORD*")
+	//es.Env.Probe(*es.Idx)
+	//es.Ser.Next()
+	EvalExpression_(es)
+	var arg0 = es.Res
+	es.Res.Trace("EvalGenword")
+	object, found := es.Gen.Get(arg0.GetKind(), word.Index)
+	object.Trace("OBJECT RETURNED: ")
+	if found {
+		return EvalObject(es, object, arg0, toLeft) //ww0128a *
+		//es.Res.Trace("After eval Object")
+		//return es
+	} else {
+		es.Res = env.NewError("Generic word not found: " + word.Inspect(*es.Idx))
+		return es
+	}
+}
+
+func EvalGetword(es *env.ProgramState, word env.Getword, leftVal env.Object, toLeft bool) *env.ProgramState {
+	object, found := es.Env.Get(word.Index)
+	if found {
+		es.Res = object
+		return es
+	} else {
+		es.Res = env.NewError("Generic word not found: " + word.Inspect(*es.Idx))
+		return es
+	}
+}
+
 /* func EvalObject2(es *env.ProgramState, object env.Object) *env.ProgramState {
 	switch object.(type) {
 	case env.Function:
@@ -221,12 +257,13 @@ func EvalWord(es *env.ProgramState, word env.Word, leftVal env.Object, toLeft bo
 
 func EvalObject(es *env.ProgramState, object env.Object, leftVal env.Object, toLeft bool) *env.ProgramState {
 	//fmt.Print("EVAL OBJECT")
+	object.Trace("EVAL OBJ**")
 	switch object.Type() {
 	case env.FunctionType:
-		//fmt.Println(" FUN**")
+		fmt.Println(" FUN**")
 		fn := object.(env.Function)
 		return CallFunction(fn, es, leftVal, toLeft)
-		//es.Res.Trace("After user function call")
+		es.Res.Trace("After user function call")
 		//return es
 	case env.BuiltinType:
 		//fmt.Println(" BUIL**")
@@ -237,6 +274,7 @@ func EvalObject(es *env.ProgramState, object env.Object, leftVal env.Object, toL
 		//es.Res.Trace("After builtin call")
 		//return es
 	default:
+		object.Trace("DEFAULT**")
 		es.Res = object
 		//es.Res.Trace("After object returned")
 		return es

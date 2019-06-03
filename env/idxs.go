@@ -50,6 +50,39 @@ func (e Idxs) GetWordCount() int {
 func NewIdxs() *Idxs {
 	var e Idxs
 	e.words2 = make(map[string]int)
-	e.wordsn = 0
+	e.wordsn = 1
+
+	/*
+		BlockType    Type = 1
+		IntegerType  Type = 2
+		WordType     Type = 3
+		SetwordType  Type = 4
+		OpwordType   Type = 5
+		PipewordType Type = 6
+		BuiltinType  Type = 7
+		FunctionType Type = 8
+		ErrorType    Type = 9
+		CommaType    Type = 10
+		VoidType     Type = 11
+		StringType   Type = 12
+		TagwordType  Type = 13
+	*/
+
+	// register words for builtin kids, which the value objects should return on GetKind()
+
+	e.IndexWord("block")
+	e.IndexWord("integer")
+	e.IndexWord("word")
+	e.IndexWord("setword")
+	e.IndexWord("opword")
+	e.IndexWord("pipeword")
+	e.IndexWord("builtin")
+	e.IndexWord("function")
+	e.IndexWord("error")
+	e.IndexWord("comma")
+	e.IndexWord("void")
+	e.IndexWord("string")
+	e.IndexWord("tagword")
+
 	return &e
 }

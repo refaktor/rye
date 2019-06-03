@@ -21,6 +21,9 @@ const (
 	CommaType    Type = 10
 	VoidType     Type = 11
 	StringType   Type = 12
+	TagwordType  Type = 13
+	GenwordType  Type = 14
+	GetwordType  Type = 15
 )
 
 type Object interface {
@@ -28,6 +31,7 @@ type Object interface {
 	Inspect(e Idxs) string
 	Probe(e Idxs) string
 	Trace(msg string)
+	GetKind() int
 }
 
 //
@@ -59,6 +63,10 @@ func (i Integer) Trace(msg string) {
 	fmt.Println(i.Value)
 }
 
+func (i Integer) GetKind() int {
+	return int(IntegerType)
+}
+
 //
 // STRING
 //
@@ -86,6 +94,10 @@ func (i String) Probe(e Idxs) string {
 func (i String) Trace(msg string) {
 	fmt.Print(msg + "(string): ")
 	fmt.Println(i.Value)
+}
+
+func (i String) GetKind() int {
+	return int(StringType)
 }
 
 //
@@ -128,6 +140,10 @@ func (i Block) Trace(msg string) {
 	fmt.Println(i.Series)
 }
 
+func (i Block) GetKind() int {
+	return int(BlockType)
+}
+
 //
 // WORD
 //
@@ -157,6 +173,10 @@ func (i Word) Trace(msg string) {
 	fmt.Println(i.Index)
 }
 
+func (i Word) GetKind() int {
+	return int(WordType)
+}
+
 //
 // SETWORD
 //
@@ -184,6 +204,10 @@ func (b Setword) Probe(e Idxs) string {
 func (i Setword) Trace(msg string) {
 	fmt.Print(msg + "(setword): ")
 	fmt.Println(i.Index)
+}
+
+func (i Setword) GetKind() int {
+	return int(SetwordType)
 }
 
 //
@@ -219,6 +243,10 @@ func (i Opword) ToWord() Word {
 	return Word{i.Index}
 }
 
+func (i Opword) GetKind() int {
+	return int(OpwordType)
+}
+
 //
 // PIPEWORD
 //
@@ -252,6 +280,121 @@ func (i Pipeword) ToWord() Word {
 	return Word{i.Index}
 }
 
+func (i Pipeword) GetKind() int {
+	return int(PipewordType)
+}
+
+//
+// TAGWORD
+//
+
+// Integer represents an integer.
+type Tagword struct {
+	Index int
+}
+
+// Type returns the type of the Integer.
+func (i Tagword) Type() Type {
+	return TagwordType
+}
+
+// Inspect returns a string
+func (i Tagword) Inspect(e Idxs) string {
+	return "<Tagword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + ">"
+}
+
+// Inspect returns a string representation of the Integer.
+func (b Tagword) Probe(e Idxs) string {
+	return e.GetWord(b.Index)
+}
+
+func (i Tagword) Trace(msg string) {
+	fmt.Print(msg + " (tagword): ")
+	fmt.Println(i.Index)
+}
+
+func (i Tagword) ToWord() Word {
+	return Word{i.Index}
+}
+
+func (i Tagword) GetKind() int {
+	return int(TagwordType)
+}
+
+//
+// GETWORD
+//
+
+// Integer represents an integer.
+type Getword struct {
+	Index int
+}
+
+// Type returns the type of the Integer.
+func (i Getword) Type() Type {
+	return GetwordType
+}
+
+// Inspect returns a string
+func (i Getword) Inspect(e Idxs) string {
+	return "<Getword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + ">"
+}
+
+// Inspect returns a string representation of the Integer.
+func (b Getword) Probe(e Idxs) string {
+	return e.GetWord(b.Index)
+}
+
+func (i Getword) Trace(msg string) {
+	fmt.Print(msg + " (getword): ")
+	fmt.Println(i.Index)
+}
+
+func (i Getword) ToWord() Word {
+	return Word{i.Index}
+}
+
+func (i Getword) GetKind() int {
+	return int(GetwordType)
+}
+
+//
+// GENWORD
+//
+
+// Integer represents an integer.
+type Genword struct {
+	Index int
+}
+
+// Type returns the type of the Integer.
+func (i Genword) Type() Type {
+	return GenwordType
+}
+
+// Inspect returns a string
+func (i Genword) Inspect(e Idxs) string {
+	return "<Genword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + ">"
+}
+
+// Inspect returns a string representation of the Integer.
+func (b Genword) Probe(e Idxs) string {
+	return e.GetWord(b.Index)
+}
+
+func (i Genword) Trace(msg string) {
+	fmt.Print(msg + " (genword): ")
+	fmt.Println(i.Index)
+}
+
+func (i Genword) ToWord() Word {
+	return Word{i.Index}
+}
+
+func (i Genword) GetKind() int {
+	return int(GenwordType)
+}
+
 //
 // COMMA
 //
@@ -278,8 +421,12 @@ func (i Comma) Trace(msg string) {
 	fmt.Print(msg + " (comma)")
 }
 
+func (i Comma) GetKind() int {
+	return int(CommaType)
+}
+
 //
-// COMMA
+// VOID
 //
 
 // Integer represents an integer.
@@ -302,6 +449,10 @@ func (b Void) Probe(e Idxs) string {
 
 func (i Void) Trace(msg string) {
 	fmt.Print(msg + " (void)")
+}
+
+func (i Void) GetKind() int {
+	return int(VoidType)
 }
 
 //
@@ -338,6 +489,10 @@ func (b Function) Probe(e Idxs) string {
 func (i Function) Trace(msg string) {
 	fmt.Print(msg + " (function): ")
 	fmt.Println(i.Spec)
+}
+
+func (i Function) GetKind() int {
+	return int(FunctionType)
 }
 
 //
@@ -417,4 +572,8 @@ func NewError(message string) *Error {
 func (i Error) Trace(msg string) {
 	fmt.Print(msg + "(error): ")
 	fmt.Println(i.message)
+}
+
+func (i Error) GetKind() int {
+	return int(IntegerType)
 }

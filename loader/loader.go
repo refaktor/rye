@@ -72,10 +72,17 @@ func parseSetword(v *Values, d Any) (Any, error) {
 }
 
 func parseOpword(v *Values, d Any) (Any, error) {
-	//fmt.Println("OPWORD:" + v.Token())
+	fmt.Println("OPWORD:" + v.Token())
 	word := v.Token()
 	idx := genv.IndexWord(word[1:])
 	return env.Opword{idx}, nil
+}
+
+func parseTagword(v *Values, d Any) (Any, error) {
+	//fmt.Println("TAGWORD:" + v.Token())
+	word := v.Token()
+	idx := genv.IndexWord(word[1:])
+	return env.Tagword{idx}, nil
 }
 
 func parsePipeword(v *Values, d Any) (Any, error) {
@@ -85,22 +92,41 @@ func parsePipeword(v *Values, d Any) (Any, error) {
 	return env.Pipeword{idx}, nil
 }
 
+func parseGenword(v *Values, d Any) (Any, error) {
+	fmt.Println("GENWORD:" + v.Token())
+	word := v.Token()
+	idx := genv.IndexWord(word)
+	return env.Genword{idx}, nil
+}
+
+func parseGetword(v *Values, d Any) (Any, error) {
+	fmt.Println("GETWORD:" + v.Token())
+	word := v.Token()
+	idx := genv.IndexWord(word[1:])
+	return env.Getword{idx}, nil
+}
+
 func newParser() *Parser {
 	// TODO -- add string eaddress path url time
 	// Create a PEG parser
 	parser, _ := NewParser(`
     BLOCK       	<-  "{" SPACES SERIES* "}"
-    SERIES          <-  (STRING / NUMBER / COMMA / VOID / SETWORD / OPWORD / PIPEWORD / WORD / BLOCK) SPACES
+    SERIES          <-  (STRING / NUMBER / COMMA / VOID / SETWORD / OPWORD / PIPEWORD / TAGWORD / GENWORD / GETWORD / WORD / BLOCK) SPACES
     WORD           	<-  LETTER LETTERORNUM* 
+	GENWORD           	<-  UCLETTER LCLETTERORNUM* 
 	SETWORD    		<-  LETTER LETTERORNUM* ":"
+	GETWORD   		<-  "?" LETTER LETTERORNUM*
 	PIPEWORD   		<-  "|" LETTER LETTERORNUM*
 	OPWORD    		<-  "." LETTER LETTERORNUM*
+	TAGWORD    		<-  "'" LETTER LETTERORNUM*
 	STRING			<-  '"' STRINGCHAR* '"'
 	SPACES			<-  SPACE+
 	COMMA			<-  ","
 	VOID				<-  "_"
 	LETTERORNUM		<-  < [a-zA-Z0-9] >
 	LETTER  			<-  < [a-zA-Z] >
+	UCLETTER  			<-  < [A-Z] >
+	LCLETTERORNUM		<-  < [a-z0-9] >
     NUMBER           <-  < [0-9]+ >
 	SPACE			<-  < [ \t\r\n] >
 	STRINGCHAR		<-  < !'"' . >
@@ -116,6 +142,9 @@ func newParser() *Parser {
 	g["SETWORD"].Action = parseSetword
 	g["OPWORD"].Action = parseOpword
 	g["PIPEWORD"].Action = parsePipeword
+	g["TAGWORD"].Action = parseTagword
+	g["GENWORD"].Action = parseGenword
+	g["GETWORD"].Action = parseGetword
 	g["NUMBER"].Action = parseNumber
 	g["STRING"].Action = parseString
 	/* g["SERIES"].Action = func(v *Values, d Any) (Any, error) {

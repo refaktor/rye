@@ -321,6 +321,35 @@ to one or more classes / kinds. Kind is defined by validation rules. We can enfo
 THINK: We want some inline setwords option too that works in combination with op/pipe words. 
 THINK: We also need to figure out what to do with regular operators. Are they just op/pipe word types?? + * ?
 
+# 14.4.2019
+
+made another branch kinds
+
+core kinds have predefined integers as in IntegerType, BlockType, etc
+
+# 02.06.2019
+
+added getKind that returns integer of type for native values. Now we should register kinds so that they have these numbers ...
+can we call it first so it will take those indexes?
+
+We added register function and generic builtin. The map accepts objects now. 
+
+Now we should dispatch on first argument, but if all are just words how would we know to lookup in Gen before ve evaluate first arg
+if it's firs arg at all. So we need to make a distinction Word are local words, word is a generic word (linked to function or builtin)
+
+But for now, so the test will pass whil we implement the change we make it reverse. Word is generic. Since all our builtins etc are now not
+generic yet.
+
+So we make another type of word Genword (that for now starts with a uppercase letter)
+
+Made it work. It was quite simple to do. Just added evalGenword with few different lines.
+
+After that I also made generic 'type 'Add ?add work with builtins. It basically already worked, I just needed a getword type
+whis is so far ?word. because :word will maybe be used for left setword.
+
+It seems we will need to make pipewords and opwords genword variants too ... but it shouldn't be complex and better to separate this 
+at load time, not interpret time.
+
 
 
 

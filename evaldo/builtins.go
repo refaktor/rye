@@ -469,6 +469,28 @@ var builtins = map[string]*env.Builtin{
 			return nil
 		},
 	},
+	// FUNCTIONALITY AROUND GENERIC METHODS
+	// generic <integer> <add> fn [ a b ] [ a + b ] // tagwords are temporary here
+	"generic": {
+		Argsn: 3,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Tagword:
+				switch s2 := arg1.(type) {
+				case env.Tagword:
+					switch s3 := arg2.(type) {
+					case env.Object:
+						fmt.Println(s1.Index)
+						fmt.Println(s2.Index)
+						fmt.Println("Generic")
+
+						registerGeneric(ps, s1.Index, s2.Index, s3)
+					}
+				}
+			}
+			return nil
+		},
+	},
 }
 
 func RegisterBuiltins(ps *env.ProgramState) {

@@ -75,6 +75,7 @@ type ProgramState struct {
 	Env  *Env
 	Idx  *Idxs
 	Args []int
+	Gen  *Gen //map[int]map[int]Object
 }
 
 func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
@@ -84,6 +85,7 @@ func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
 		NewEnv(nil),
 		idx,
 		make([]int, 6),
+		NewGen(), //make(map[int]map[int]Object),
 	}
 	return &ps
 }
