@@ -81,7 +81,7 @@ func TestEvaldo_generic_use_2(t *testing.T) {
 
 	es.Res.Trace("RES")
 
-	if es.Res.Type() != env.IntegerType {
+	if es.Res.Type() != env.StringType {
 		t.Error("Expected result type integer")
 	}
 

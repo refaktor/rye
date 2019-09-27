@@ -350,6 +350,12 @@ whis is so far ?word. because :word will maybe be used for left setword.
 It seems we will need to make pipewords and opwords genword variants too ... but it shouldn't be complex and better to separate this 
 at load time, not interpret time.
 
+WHAT TO THINK ABOUT NEXT: will all builtin functions be generic functions? Probably makes sense, so we can in context reuse 
+the words etc.
+
+make the tuples / objects object. They are word/object dictionaries with validation rules ... each object has a kind determined
+and you can define generic functions on those kinds. Binary objects also have kinds ... like image / connection / ...
+
 
 
 
