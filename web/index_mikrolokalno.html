@@ -1,0 +1,60 @@
+<html>
+    <title>mikroLokalno - lokalni pridelovalci + pametni potrošniki =  &#9829;</title>
+    <style>
+     body { font-family: Helvetica; font-size: 15px; padding: 30px 10%; color: #444; } 
+     pre { font-size: 13px; background-color: #f8fbdb; padding: 10px 20px; width: 400px; color: #222; }
+     p.result span { font-size: 15px; background-color: #eddbfb; padding: 5px 10px; width: 400px; color: #222; }
+     p em { color: #666; font-weight: 500; font-size: 13px; }
+     h1 { padding: 20px 0; }
+     h1 span { background-color: #7DBD65; color: white; font-family: Serif; padding: 3px 6px; font-weight: lighter;}
+     h1 b { color: #444; font-family: Serif; padding: 6px 6px; font-weight: lighter; }
+     h3 { color: #8D8741; font-family: Sans-serif; padding: 12px 0 0 0; font-weight: 400; }
+     div.box { border: 1px solid #eee; padding: 20px; width: 300px; float: left; margin: 5px; }
+     div.footer { padding: 0px 0; }
+    </style>
+        <body>
+            <h1><span>mikro</span><b>Lokalno</b></h1>
+            <% echo get-session session "mytest" %>
+            <% echo get-session session "foo1" %>
+            <% echo "result: " echo 100 .add 10 .add 1 %>
+            <% set-session session "mytest" "YOYOYO4" %>
+            <% 
+            db: sqlite-open "test.db"
+            sqlite-exec db "create table peeps (id int, name varchar)"
+            sqlite-exec db "insert into peeps values (100, 'Jimbo')"
+            sqlite-exec db "insert into peeps values (200, 'Dumbo')"
+            sqlite-query db "select * from peeps" |to-html-table |echo
+            %>
+            <!-- % ctx % -->
+            <br/>
+            <% query? ctx "name" |echo .skip { echo " " } |wrap "b" |echo %>
+            <br/>
+            <% echo join3 query? ctx "name" " "  query? ctx "age" %>
+            <br/>
+            <% echo isweb %>
+            <% 200 .add 20 .add 2 |echo %>
+            <% isweb %>
+            <h3>Kmetije, eko kmetije, mali pridelovalci ...</h3>
+            <p>najdite, vzpostavite zaupanje in vzdržujte odnos s stalnimi odjemalci vaših pridelkov</p>
+            <p><em>"pridelke ali le viške pridelkov prodamo, ko jih poberemo z njive, znebimo se distributerjev in skladiščenja"<span style="color: red;">*</span></em></p>
+            
+            <h3>Pametni potrošniki, butični hoteli ...</h3>
+            <p>vedite od kot vaša hrana prihaja, kako nastaja, zagotovite si kvalitetne, lokalne in sezonske pridelke</p>
+            <p><em>"spremljamo kmetije, vidimo kako delajo, ko je pridelek pobran, gre včasih direktno na našo mizo, svež in res skoraj domač"<span style="color: red;">*</span></em></p>
+            
+            <h3>Stanje programa</h3>
+            <p>program je še <b>v izdelavi</b></p>
+            
+            <h3>Kako začeti</h3>
+            <p>registrirate se na spletu ali pa si namestite mobilni program preko Trgovine Play <span style="color: blue;">**</span></p>
+
+            <br style="clear: both;"/>
+                
+            <div class="footer">
+                <p><small><span style="color: red;">*</span> to so zaenkrat le hipotetične izjave, ki skušajo na strnjen način ponazoriti zaželjene prednosti za uporabnike. Ko pričnemo z delovanjem, <br/>jih bodo upamo nadomestile prave izjave uporabnikov. :)</small></p>
+                <p><small><span style="color: blue;">**</span> ko bo na voljo. Trenutno je vse skupaj še v izdelavi.</small></p>
+                <br/>
+                <p><small>(mikroLokalno sestavljamo pri <a href="http://refaktorlabs.com">Refaktor d.o.o.</a> / <a href="https://www.cebelca.biz">Cebelca BIZ</a>)</small></p>
+            </div>
+        </body>
+</html>

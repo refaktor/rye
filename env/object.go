@@ -24,6 +24,8 @@ const (
 	TagwordType  Type = 13
 	GenwordType  Type = 14
 	GetwordType  Type = 15
+	ArgwordType  Type = 16
+	NativeType   Type = 17
 )
 
 type Object interface {
@@ -576,4 +578,70 @@ func (i Error) Trace(msg string) {
 
 func (i Error) GetKind() int {
 	return int(IntegerType)
+}
+
+//
+// ARGWORD
+//
+
+type Argword struct {
+	Name Word
+	Kind Word
+}
+
+// Type returns the type of the Integer.
+func (i Argword) Type() Type {
+	return ArgwordType
+}
+
+// Inspect returns a string
+func (i Argword) Inspect(e Idxs) string {
+	return "<Argword: " + i.Name.Inspect(e) + ":" + i.Kind.Inspect(e) + ">"
+}
+
+// Inspect returns a string representation of the Integer.
+func (b Argword) Probe(e Idxs) string {
+	return b.Name.Probe(e)
+}
+
+func (i Argword) Trace(msg string) {
+	fmt.Print(msg + " (argword): ")
+	//fmt.Println(i.Name.Probe())
+}
+
+func (i Argword) GetKind() int {
+	return int(WordType)
+}
+
+//
+// NATIVE
+//
+
+// String represents an string.
+type Native struct {
+	Value interface{}
+}
+
+// Type returns the type of the Integer.
+func (i Native) Type() Type {
+	return NativeType
+}
+
+// Inspect returns a string representation of the Integer.
+func (i Native) Inspect(e Idxs) string {
+	return "<Native>"
+}
+
+// Inspect returns a string representation of the Integer.
+func (i Native) Probe(e Idxs) string {
+	return "<Native>"
+}
+
+func (i Native) Trace(msg string) {
+	fmt.Print(msg + "(native): ")
+	//fmt.Println(i.Value)
+}
+
+func (i Native) GetKind() int {
+	return int(NativeType)
 }

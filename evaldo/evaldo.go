@@ -2,7 +2,6 @@ package evaldo
 
 import (
 	"Rejy_go_v1/env"
-	"fmt"
 	//"fmt"
 	//"strconv"
 )
@@ -257,10 +256,10 @@ func EvalGetword(es *env.ProgramState, word env.Getword, leftVal env.Object, toL
 
 func EvalObject(es *env.ProgramState, object env.Object, leftVal env.Object, toLeft bool) *env.ProgramState {
 	//fmt.Print("EVAL OBJECT")
-	object.Trace("EVAL OBJ**")
+	//d object.Trace("EVAL OBJ**")
 	switch object.Type() {
 	case env.FunctionType:
-		fmt.Println(" FUN**")
+		//d fmt.Println(" FUN**")
 		fn := object.(env.Function)
 		return CallFunction(fn, es, leftVal, toLeft)
 		es.Res.Trace("After user function call")
@@ -274,7 +273,7 @@ func EvalObject(es *env.ProgramState, object env.Object, leftVal env.Object, toL
 		//es.Res.Trace("After builtin call")
 		//return es
 	default:
-		object.Trace("DEFAULT**")
+		//d object.Trace("DEFAULT**")
 		es.Res = object
 		//es.Res.Trace("After object returned")
 		return es

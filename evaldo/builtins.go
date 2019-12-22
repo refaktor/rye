@@ -64,6 +64,18 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"equals": {
+		Argsn: 2,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var res int64
+			if arg0.GetKind() == arg1.GetKind() && arg0.Inspect(*env1.Idx) == arg1.Inspect(*env1.Idx) {
+				res = 1
+			} else {
+				res = 0
+			}
+			return env.Integer{res}
+		},
+	},
 	"greater": {
 		Argsn: 2,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -108,14 +120,14 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
-	"print": {
+	"prin": {
 		Argsn: 1,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			fmt.Print(arg0.Probe(*env1.Idx))
 			return arg0
 		},
 	},
-	"puts": {
+	"print": {
 		Argsn: 1,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			fmt.Println(arg0.Probe(*env1.Idx))
@@ -124,6 +136,26 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// CONTROL WORDS
+
+	"unless": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch cond := arg0.(type) {
+			case env.Integer:
+				switch bloc := arg1.(type) {
+				case env.Block:
+					if cond.Value == 0 {
+						ser := ps.Ser
+						ps.Ser = bloc.Series
+						EvalBlock(ps)
+						ps.Ser = ser
+						return ps.Res
+					}
+				}
+			}
+			return nil
+		},
+	},
 
 	"if": {
 		Argsn: 2,
@@ -185,6 +217,22 @@ var builtins = map[string]*env.Builtin{
 				EvalBlock(ps)
 				ps.Ser = ser
 				return ps.Res
+			}
+			return nil
+		},
+	},
+
+	"skip": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg1.(type) {
+			case env.Block:
+				res := arg0
+				ser := ps.Ser
+				ps.Ser = bloc.Series
+				EvalBlock(ps)
+				ps.Ser = ser
+				return res
 			}
 			return nil
 		},
@@ -494,6 +542,12 @@ var builtins = map[string]*env.Builtin{
 }
 
 func RegisterBuiltins(ps *env.ProgramState) {
+	RegisterBuiltins2(builtins, ps)
+	RegisterBuiltins2(Builtins_web, ps)
+	RegisterBuiltins2(Builtins_sqlite, ps)
+}
+
+func RegisterBuiltins2(builtins map[string]*env.Builtin, ps *env.ProgramState) {
 	for k, v := range builtins {
 		bu := env.NewBuiltin(v.Fn, v.Argsn)
 		registerBuiltin(ps, k, *bu)

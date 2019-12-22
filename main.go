@@ -11,21 +11,36 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
+
+	//"regexp"
 	"strconv"
 	"strings"
+
+	"net/http"
+
+	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
 
 	"Rejy_go_v1/env"
 	"Rejy_go_v1/evaldo"
 	"Rejy_go_v1/loader"
+	"Rejy_go_v1/util"
 
 	//"Rejy_go_v1/util"
 	//"fmt"
 	//"strconv"
 	"github.com/pkg/profile"
 	//"github.com/pkg/term"
+)
+
+import (
+	"github.com/gorilla/sessions"
+	"github.com/labstack/echo-contrib/session"
 )
 
 // REJY0 in GoLang
@@ -64,10 +79,12 @@ var CODE []interface{}
 
 func main() {
 	if len(os.Args) == 1 {
-		main_rye_repl()
+		main_rye_repl(os.Stdin, os.Stdout)
 	} else if len(os.Args) == 2 {
 		if os.Args[1] == "shell" {
 			main_rysh()
+		} else if os.Args[1] == "web" {
+			main_httpd()
 		} else {
 			main_rye_file(os.Args[1])
 		}
@@ -129,6 +146,125 @@ func main_ryk(code string) {
 
 }
 
+func main_httpd() {
+
+	//util.PrintHeader()
+	//	defer profile.Start().Stop()
+
+	// Echo instance
+	e := echo.New()
+
+	e.Use(session.Middleware(sessions.NewCookieStore([]byte("secret122849320"))))
+
+	// Middleware
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+
+	// Routes
+	e.GET("/", serve)
+
+	// Start server
+	e.Logger.Fatal(e.Start(":1323"))
+}
+
+// Handler
+func serve(c echo.Context) error {
+
+	sess, _ := session.Get("session", c)
+	/*sess.Options = &sessions.Options{
+		Path:     "/",
+		MaxAge:   86400 * 7,
+		HttpOnly: true,
+	}*/
+	//sess.Values["foo"] = env.String{"barca"}
+
+	input := "{ whoami: \"Rye webserver 0.001 alpha\" ctx: 0 result: \"\" session: 0 }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	evaldo.RegisterBuiltins(es)
+	//evaldo.RegisterBuiltins2(evaldo.Buil, ps *env.ProgramState) {
+	evaldo.EvalBlock(es)
+
+	env.SetValue(es, "ctx", env.Native{c})
+	env.SetValue(es, "session", env.Native{sess})
+	//env.SetValue(es, "ctx", env.String{"YOYOYO"})
+
+	b1, err := ioutil.ReadFile("web/index.html")
+	if err != nil {
+		fmt.Print(err)
+	}
+
+	var bu strings.Builder
+
+	b := string(b1)
+
+	idx1 := 0
+
+	for {
+		ii := util.IndexOfAt(b, "<%", idx1)
+		if ii > -1 {
+			ii2 := util.IndexOfAt(b, "%>", ii)
+			if ii2 > -1 {
+
+				fmt.Println("OUTPUT")
+				fmt.Println(idx1)
+				fmt.Println(ii)
+				fmt.Println(b[idx1:ii])
+				bu.WriteString(b[idx1:ii])
+
+				displayBlock := false
+				if string(b[ii+2]) == "?" {
+					ii++
+					displayBlock = true
+				}
+
+				code := b[ii+2 : ii2]
+
+				if displayBlock {
+					bu.WriteString("<pre class='rye-code'>" + code + "</pre>")
+				}
+				fmt.Print("CODE: ")
+				fmt.Println(code)
+				block, genv := loader.LoadString("{ " + code + " }")
+				es := env.AddToProgramState(es, block.Series, genv)
+				evaldo.EvalBlock(es)
+				if displayBlock {
+					bu.WriteString("<div class='rye-result'>")
+				}
+				bu.WriteString(evaldo.PopOutBuffer())
+				/*
+					ACTIVATE LATER FOR <%= tags %>
+						if es.Res != nil {
+						//fmt.Println("\x1b[6;30;42m" + es.Res.Inspect(*genv) + "\x1b[0m")
+						if es.Res.Type() == env.IntegerType {
+							bu.WriteString(strconv.FormatInt(es.Res.(env.Integer).Value, 10))
+						} else if es.Res.Type() == env.StringType {
+							bu.WriteString(es.Res.(env.String).Value)
+						}
+					} */
+				if displayBlock {
+					bu.WriteString("</div>")
+				}
+				idx1 = ii2 + 2
+			} else {
+				fmt.Println("Err 214")
+				break
+			}
+		} else {
+			bu.WriteString(b[idx1:])
+			break
+		}
+	}
+
+	err = sess.Save(c.Request(), c.Response())
+	if err != nil {
+		return c.HTML(http.StatusOK, err.Error()) // tempsol: make this work better .. RETURN http error
+
+	}
+
+	return c.HTML(http.StatusOK, bu.String())
+}
+
 func main_rye_file(file string) {
 
 	//util.PrintHeader()
@@ -157,16 +293,46 @@ func main_rye_file(file string) {
 
 }
 
-func main_rye_repl() {
+func main_rye_repl(in io.Reader, out io.Writer) {
 
 	//util.PrintHeader()
-	defer profile.Start().Stop()
+	//defer profile.Start().Stop()
 
-	input := "{ loop 10000000 { add 1 2 } }"
+	input := "{ name: \"Rye\" version: \"0.002 alpha\" }"
 	block, genv := loader.LoadString(input)
 	es := env.NewProgramState(block.Series, genv)
 	evaldo.RegisterBuiltins(es)
 	evaldo.EvalBlock(es)
+
+	fmt.Println("")
+	fmt.Println(".:/|\\:. Rye shell v0.006 alpha .:/|\\:.")
+	fmt.Println("")
+
+	const PROMPT = "\n\x1b[6;30;42m Rye \033[m "
+
+	scanner := bufio.NewScanner(in)
+
+	for {
+
+		fmt.Print(PROMPT)
+
+		scanned := scanner.Scan()
+
+		if !scanned {
+			return
+		}
+
+		line := scanner.Text()
+
+		block, genv := loader.LoadString("{ " + line + " }")
+		es := env.AddToProgramState(es, block.Series, genv)
+		evaldo.EvalBlock(es)
+
+		if es.Res != nil {
+			//fmt.Println("\x1b[6;30;42m" + es.Res.Inspect(*genv) + "\x1b[0m")
+			fmt.Println("\x1b[0;49;32m" + es.Res.Inspect(*genv) + "\x1b[0m")
+		}
+	}
 
 	/*genv := loader.GetIdxs()
 		ps := evaldo.ProgramState{}

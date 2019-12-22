@@ -91,11 +91,11 @@ func TestLoader_load_setword_check_colon(t *testing.T) {
 
 	idx := block.Series.Get(0).(env.Setword).Index
 
-	if genv.GetWord(idx) == "wowo:" {
+	if wordIndex.GetWord(idx) == "wowo:" {
 		t.Error("Collon added to word")
 	}
 
-	if genv.GetWord(idx) != "wowo" {
+	if wordIndex.GetWord(idx) != "wowo" {
 		t.Error("Word spelling not correct")
 	}
 }
@@ -112,7 +112,7 @@ func TestLoader_load_opword_1(t *testing.T) {
 
 	idx := block.Series.Get(0).(env.Opword).Index
 
-	if genv.GetWord(idx) != "wowo" {
+	if wordIndex.GetWord(idx) != "wowo" {
 		t.Error("Word spelling not correct")
 	}
 }
@@ -129,7 +129,7 @@ func TestLoader_load_pipeword_1(t *testing.T) {
 
 	idx := block.Series.Get(0).(env.Pipeword).Index
 
-	if genv.GetWord(idx) != "wowo" {
+	if wordIndex.GetWord(idx) != "wowo" {
 		t.Error("Word spelling not correct")
 	}
 }
@@ -282,3 +282,25 @@ func TestLoader_load_setword(t *testing.T) {
 	}
 }
 */
+
+func TestLoader_load_argword(t *testing.T) {
+	input := "{ {somename:somekind} }"
+	block, _ := LoadString(input)
+	if block.Series.Len() != 1 {
+		t.Error("Expected 1 items")
+	}
+
+	fmt.Println(block.Series.Get(0).Inspect(wordIndex))
+
+	if block.Series.Get(0).(env.Object).Type() != env.ArgwordType {
+		t.Error("Expected type Argword")
+	}
+	idx, _ := wordIndex.GetIndex("somename")
+	if block.Series.Get(0).(env.Argword).Name.Index != idx {
+		t.Error("Expected name somename")
+	}
+	idx2, _ := wordIndex.GetIndex("somekind")
+	if block.Series.Get(0).(env.Argword).Kind.Index != idx2 {
+		t.Error("Expected kind somekind")
+	}
+}

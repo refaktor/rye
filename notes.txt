@@ -357,5 +357,470 @@ make the tuples / objects object. They are word/object dictionaries with validat
 and you can define generic functions on those kinds. Binary objects also have kinds ... like image / connection / ...
 
 
+// 27.9.2019 
 
+Started adding SPRUCE LANG SUPPORT.
+
+I started making a spruce/build parser. It's a indentation aware tree representation parser.
+I created a SprNode ... a node in a tree that holds a Rye Object (word, string, block), list of child SprNodes, depth
+and a parent SprNode.
+I added a function to find the right parent to add a node to based on a last parent and depth.
+
+Next. I should add the Rye loader, that turns strings to Rye Objects (word, string, block). And make a unit test that parses
+fist tree.
+
+when
+ email "help string"
+  is 
+   received 
+    do
+     {todo:block}
+     [ on-event 'email-received { 'it 'email } todo ]
+   sent
+    do
+     {todo:block}
+     [ ]
+   blocked
+    do
+     {todo:block}
+     [ ]     
+if
+ {cond:boolean}
+  do
+   {todo:block}
+   [ core/if cond todo ]
+it's
+ {key:string}
+ [ core/at it key ]
+{a:boolean}
+ and
+  {b:boolean}
+  [ core/and a b ]
+{val:string}
+ includes
+  text
+   {text:string}
+ is
+  from
+   domain
+    {domain:string}
+	
+I also added the tests file to loader and it basically works.
+
+NEXT: given that we have a basic parser and with it a basic tree, we can make a simple walker / executor next.
+think about making proposer too and how we could add tree branches to existing tree ... etc
+
+how could we make a simple console based IDE ... or emacs based IDE? How do IDE-s connect to language runtimes at all.
+
+//29.9.2019 #SPRUCE 2 
+
+Ok, so basic expression works. We would next need to add argument definition and pickup, but to do it as example above we
+would need to extend the parser with these forms {name:type}. Are there any other forms that we already parse for?
+
+example option #1:
+
+add:
+ numbers
+  {a:number}
+   and
+    {b:number}
+     { add a b }
+	
+Sum: add numbers 10 and 5 
+. returns 15
+
+could we remove the {}, since they are already used for blocks too?
+
+add
+ nubmers
+  first:number
+   and
+    second:number
+	 { add a b }
+	
+Not enough visual distinction so looks cleaner, but the tree looks more complex, because
+args are not distincted apart imediatelly. We also might need to pack in more logic in this
+pickup words, so just : is not distincion enough. We might pick up multiple types, add transformers, 
+composers etc, so a whole mini language might get in later.
+
+my:
+ number
+  { 041741612 }
+
+in:
+ high
+  alert
+   mode
+    { get-alert-mode .equal? "H" }
+	
+when:
+ pinged
+  if
+   {cond:boolean}
+    do
+	 {code:block}
+	  { if cond { do/spr code }}
+	
+time:
+ is
+  between
+   {t1:time}
+    and
+	 {t2:time}
+	  { get-time .between t1 t2 }
+		
+when pinged if in high alert mode and time is between 20:30 and 06:30 do {
+	sms my number with text "something weird is going on"
+}
+
+alert:
+ numbers 
+  { { 041741612 041741623 } }
+
+for:
+ all
+  {list:block}
+   do
+    {code:block}
+	 { for-all 'it list { do/spr bind [ 'It it ] code } }
+
+when pinged if in high alert mode and time is between 20:30 and 06:30 do {
+	for all alert numbers do { 
+		sms It with text "something weird is going on"
+	}
+}
+
+...
+
+So, first we need to add those argument placeholders {name:type} to Rye parser. 
+Then we can use them inside Spruce builer and user quite easily.
+
+Then we need to decide, where the varables picked up get stored and for how 
+long. It seems obvious that each start of spruce expression should have it's own
+namespace, and namespace is used in code, if there is one. After the end of 
+the branch that namespace is discarded.
+
+There could later show to be some special forms to directly set It, or decompose
+stuff. Or compose to the It object for example.
+
+##composition of object example?
+
+create:
+ person
+  {It:object:create}
+  with *
+   name
+    {name:string->It}
+	 *
+   surname
+    {surname:string->It}
+	 *
+   age
+    {age:number->It}
+	 *
+
+general object could be a Rye tuple instead, that has defined validation rules, and those
+are checked and returned as error if not meet when used
+
+
+
+create person with name "Janko"
+. returns Validation error, tuple Person { surname: required }
+
+## decomposition of tuple example?
+
+get:
+ age
+  of
+   {p:person}
+    { at p 'age }
+	
+or potential automatic decomposition
+
+get
+ age
+  of
+   {p:person:'age->}
+
+// 
+
+Ok so we now have a parser for Argwords. We should make evaluator too now.
+
+First question is where do we store the state. By looking at it I think we should use the ProgramState used in Rye, since we have the same 
+Series of code, Env (state / variables), Idxs ... It's basically all the same at evaluation time. We also pass the state to Rye code, so 
+it will just use the same ProgramState. This means that we at the begining of evaluation create ProgramState, and pass it to evaluator like in Rye code.
+
+We also need to turn EvaluateBlock to EvaluateExpression, so it can evaluate multiple expressions (and later subexpressions)
+
+## IDEA ... BIG AIML LIKE RECURSICE RULES
+
+when thinkgin about natural interface to our project webapp, the whole AIML spiel I got thinking about it's recursive rules. That is big concept .. biggest 
+of aiml and we need to add it too. 
+
+For one, it will make Spruce usable also in processing natural varied user inputs, like aiml but with arguments and more.
+
+To directly make natural text input interfaces similar to workonomic's which needed pyaiml and all sorts of stuff ...
+
+And it might bring interesting, not thought out yet features to "coding Spruce". For one aliases and shorthands, but maybe with some composition etc more?
+
+add..
+ two
+  numbers
+   (* add numbers )
+
+add..
+ { sum: 0 }
+ numbers <loop>
+  {a:number} 
+  { sum: sum + a , recur-to <loop>  } 
+
+... does aimls also recur in the middle of the branch. Do we want / need this too? Think of cases ... for now just keep the general idea.
+
+
+# SPRINT 2019 WINTER (14.11.2019)
+
+Stop adding language features / gadgets (maybe remove some, that aren't 100%). Make existing language work, think about scopes, implement the
+generic words, make them work. Then return and make this basic language work. Add natives, try embedding a simplest form of web-app programming.
+
+First we run all the tests.
+
+When tests pass. We look if we would comments out some more obscure features.
+
+Then we look if the generic words work, or how to make them work. What about the uppercase/lowcase method of distincting generic and local words. 
+I am still not 100% sure of that and it will break the similarity to rebol.
+
+So, main dillema is, if we make the generic words the default, then we at the same time make Rye quite different to rebol. If the goal is to just make
+practical rebol + some other options in Golang, then the generic words aren't default or at least need some other (more noisy than lowercase) 
+notation to recognise. 
+Login-user: fn [ Id Pwd ]
+Sum: read add Name: get-name-from-id Id
+
+The benefit is that local variables which we don't want to have too many sort of popup.
+
+Maybe then it makes sense that GLOBAL variables or (like) constants etc. would need to be all upper case. They could be stored to Global state which is 
+more introspective, or even has state management, like reactive state libraries, ...
+
+But if we have generic (kind sensitive functions), then we need to decide how do we assign kinds to values. Primitive values have automatic kinds, 
+objects, binary blobs, we can assign kinds to them? Does it make sense ... can one value be of multiple kinds or can kinds be like unions etc?
+
+// OFFSHOOT IDEA ... something like refinements ... (ref) .. also for denoting number of args ... continuation type ..
+
+!person is-union-of (3) !female !male !other ... could we dispatch on arrity too?
+
+join (4) (space) "hi" "my" "name" "is"
+
+... is of type continuation 
+
+join: fn [ !string a b ... ] {
+	rejoin join [ a b ] ...
+}
+
+join: fn [ !block a b ... (block) ]
+	
+]
+
+join (block) (map-before) [ "janko" "metelko" "grosuplje" ] [ uppercase ]
+
+// END OFFSHOOT FOR NOW
+
+## HOW DO WE TAG KINDS, TRANSLATE BETWEEN THEN VIA RULES (dialect) OR CODE
+
+If each value could have multiple kinds, then ways to store and lookup them are costly. If there could be type hiearchies, storing is simpler, but traversing
+is costly too probably. Maybe there are just direct type lookups, but you can change kinds based on a hierarchy ... or forget the hierarchy .. we just have 
+the "p2p" rules, that could convert anything if specified. Also similar types like integer to age and person to employee for example.
+
+For starters each value has just one kind and kind is singular ... we do make translators yes. 
+
+Transators should have their own namespace (and possibly dialect later) ... the type is the word ... but it should be of some specific word type.
+
+add 100 integer< Buyer .get 'age
+
+add 100 Buyer .get 'age >integer
+
+Buyer .get 'age >integer .add 100
+
+Buyer: person< { name "Janko" age 40 } ; tags it with !person 
+
+def-translator !person !age { get _1 'age }
+def-translator !person !info { get-all block< _1 [ 'name 'surname 'age ] .join (spaces) }
+
+translator !block !person { } ; just tags the block
+
+print <info Buyer
+Buyer >info .print
+
+#tagging a value or translating 
+
+We need option to distinct when we just want to tag some value or when we expect that a translator with some rules, etc will be called
+Since we are in this space we can use >type and >Type , type< and Type< for this.
+
+## WE FORGOT ABOUT TUPLE RULES (CREATION VALIDATION DIALECT)
+
+Is the validation dialect called automatically on new block? Probably should be. Or we could have a option to validate it just when we need to.
+
+So when we tag block with tag !tag:
+
+Buyer: Person< { name "Janko" age 40 }
+
+code first uses a translator from !block to !person. If there is none, error happens since Person< is uppercase.
+Then on returned data the validator is ran if there is one. Then the block is tagged with "person" tag.
+
+def-validator !person { name: required and string surname: optional and string birth: optional 0 and integer and check ( _1 > 1900 .if { "too old" } ) }
+
+
+Age: integer< Buyer .get 'age
+
+## So concrete .. hopefully we can as I am not totally up to speed of the state of code
+
+* Run tests to see where we are at all
+* Rye objects have a setKind and getKind, kind is is index of a word in indexer, add this
+* Each object has just one kind. Native values have hardcoded kind returns (words get preindexed), add native objects getKind
+* look where we have the generic words ... can we already create and interpret them?
+
+## Around 1.12.2019 
+
+I made a shell, quite nice on first look and also a simple web server based on golang's echo.
+
+## 15.12.2019 Webserver fwd ...
+
+I could try making webserver script accept request parameters for next step. This way we would also see how we could hangle this in best way.
+
+Echo server does this:
+
+func(c echo.Context) error {
+	name := c.FormValue("name")
+	return c.String(http.StatusOK, name)
+}
+
+func(c echo.Context) error {
+	name := c.QueryParam("name")
+	return c.String(http.StatusOK, name)
+})
+
+We could make it work like this:
+
+<% name: form-val? ctx 'name %>
+
+<% city: query-val? ctx 'city %>
+
+## Next time add query-vals and form-vals ... make out function work
+
+<% probe query-vals? ctx %>
+
+<% 
+	data: validate query-vals? ctx { name: required one-word age: optional 0 integer } 
+	out get data 'name
+	
+	out data ? 'name
+	
+	data ? 'name .out .wrap 'b 
+%>
+
+## Next add loader support for ( ) so we can add the Dgraph dialect loading ... something in line of ... (but without the scope/context)
+
+friends: scope {
+	
+ find-friends: webfn "returns true if two persons by ID's are friends"
+ { person1: required integer } 
+ { 
+	totalRoles ( func: uid ( ?person1 ) , orderasc: val ( roles ) ) {
+    		name@en
+    		numRoles : val ( roles )
+    }
+ }
+
+}
+
+OR maybe first should be sqlite ... without parens for now like
+
+bills: scope {
+	
+ get-finalized: webfn/user-sqlite 
+ "returns finalized bills"
+ { 
+ 	finalized: required integer
+	number: optional 50 , integer 
+	from-date: optional nil , iso-date , check ( this .year .greater? 2001 ) "date must be above 2001"
+	to-date: optional nil , iso-date , check ( this .year .lesser? now .year? ) "date can't be in future"
+ } 
+ { 
+	select * 
+		from bill 
+		where 
+			finalized = ?finalized 
+			{ from-date ; and date_created > ?from-date }
+			{ to-date   ; and date_created < ?to-date }
+		limit ?number  
+ }
+
+}
+
+# this above seems to be THE GOAL ... the for now ideal declaration of what should happen on given api call
+
+## Some other ideas I had yeasterday 
+
+# json / block collecting dialect inspired to graphql ...
+
+collect data { 
+	name: convert ( this .to-upper-case )
+	date: convert ( this .to-iso-date )
+	friends { limit 10 name: city: }
+}
+
+# idea about fwd code flow ... get some object, parse it to discrete variables, use those variables
+# like det user object, parse out id, email and username , update event to log using id, email to email with content of username
+
+# get just id, use it
+get-current-user ? 'id |log-user-event "signin" now
+
+# get in and email, use them both in one action ... with isn't like idea for implicit ... it's just that when the block is started the current value is already 
+# set to the first argument of skip-with ... maybe all skips should have this ... there is no downside I think ... (3)
+get-current-user .skip { ? 'email :email } ? 'id |log-user-event "signin" now email
+
+# ? -- means lookup
+
+# get in and email, use them both in separate actions
+get-current-user .skip-two 
+ { ? 'id |log-user-event "singin" now this ? 'email }
+ { ? 'email |notify-user "signin attempt" }
+
+
+# get in and email, use them both in separate actions
+get-current-user .skip-two
+ { ? 'id |log-user-event "singin" now this ? 'email }
+ { :email if failed { notify-user email "signin attempt" } }
+but this could just be one skip ... unless we need that object further, 
+the negative is that we loose the symetry between the first and second action, which are equal otherwise
+
+get-current-user
+ .skip { ? 'id |log-user-event "singin" now this ? 'email }
+ :email if failed { notify-user email "signin attempt" }
+
+
+# would this return the resul of last block, or the incoming object? based od (3) ... skip-with would just be skip. And the word determines what is returned
+after ececution of block ... skip's point is to return the incoming object, but we could have something like cascade, which returns the last object, but this is 
+then just normal concatenation with pipe-words I think :) even better if it is .. explore more
+
+# implicit that set's the first argument for all function calls in block ( ) is escape hatch where implicit doesn't work
+
+with ctx {
+	name: query? 'name
+	num: query? 'num
+	id: sesion? 'id_user
+	set-session 'user ( get-email-of id )
+}
+
+# with is more natural than implicit ...
+
+# Defer - idea from golang 
+
+
+query-user: fn { id } {
+	f: open %file
+	defer { close f }
+	id: with-sqlite %db {
+		select * from user where id = ?id
+	}
+	write f id
+}
 

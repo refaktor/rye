@@ -1,0 +1,135 @@
+package evaldo
+
+import (
+	"Rejy_go_v1/env"
+	//	"Rejy_go_v1/loader"
+	"fmt"
+	//"fmt"
+	//"strconv"
+)
+
+// Eval SPRUCE dialect works like this:
+//  We have a spruce tree (SprNode root)
+//  `give
+//    me
+//     five
+//      { 5 }
+//  `
+//  and Rye block
+//  spruce { give me five }
+//  we iterate over block
+//  first if current item is word we try to find matching level 0 node on spruce tree
+//  if we find it we store it an look into next word
+//  if next word is found as a child of current node we loop one line back
+//       --      isn't found we return an error with child options
+//  on the path we execute any code blocks we find
+//  return value of the last code block is returned an result of expression
+//  when we reach the end of the branch we return this result and with next word start looking at the 0 level nodes
+//
+//  expression inside an expression (if we can't find the next word in our branch, we look at top again and follow that
+//  when we reach the end of that like we return result, try to match it with previous brach node and continue. If it doesn't
+//  match we return error, saying that the scentence "xx yy zz" returned type X while "aa bb _ expected one of options [ tt ff <Type> ]
+
+func EvalSpruceBlock(root *env.SprNode, node *env.SprNode, ps *env.ProgramState) *env.ProgramState {
+	// while not end of spruce user code do
+	for ps.Ser.Pos() < ps.Ser.Len() {
+		//fmt.Println("EVALBLOCK: " + strconv.FormatInt(int64(es.Ser.Pos()), 10))
+		//fmt.Println("EVALBLOCK N: " + strconv.FormatInt(int64(es.Ser.Len()), 10))
+		// TODO --- look at JS code for eval .. what state we carry around
+		// TODO --- probably block, position, env ... pack all this into one struct
+		//		--- that could be passed in and returned from eval functions (I think)
+		ps = EvalSpruceExpression(root, node, ps)
+		//MaybeAcceptComma(es)
+		//es.Res.Trace("After eval expression")
+	}
+	return ps
+}
+
+func EvalSpruceExpression(root *env.SprNode, node *env.SprNode, ps *env.ProgramState) *env.ProgramState {
+	object := ps.Ser.Pop()
+	switch object.Type() {
+	case env.IntegerType:
+		ps.Res = object
+	case env.StringType:
+		ps.Res = object
+	case env.BlockType:
+		ps.Res = object
+	case env.VoidType:
+		ps.Res = object
+	case env.TagwordType:
+		ps.Res = object
+	case env.WordType:
+		return EvalSpruceWord(root, node, ps) //, object.(env.Word), nil, false)
+		//	case env.GenwordType:
+		//		return EvalGenword(es, object.(env.Genword), nil, false)
+		//	case env.SetwordType:
+		//		return EvalSpruceSetword(es, object.(env.Setword))
+		//	case env.GetwordType:
+		//		return EvalGetword(es, object.(env.Getword), nil, false)
+		//	case env.CommaType:
+		//		es.Res = env.NewError("ERROR: expression guard inside expression!")
+		//	default:
+		//		es.Res = env.NewError("Not known type")
+	}
+	return ps
+}
+
+func EvalSpruceWord(root *env.SprNode, node *env.SprNode, ps *env.ProgramState) *env.ProgramState {
+	//fmt.Println("BEFORE BLOCK ***")
+	//var num = 0
+	////block.Series.Reset()
+
+	// if we don't find the current series word in our we try looking for another toplevel
+	// node to match and if it does we try to execute that expression. If not we try further
+	// and if none are left we return an error. But is it error of the first kind or error
+	// in some subexpression that started matching. We return all posibilities ... all branches,
+	// that did march, but stopped to match at some point.
+
+	//var ret = env.Object(nil)
+	//var node = *root
+	//for block.Series.Pos() < block.Series.Len() {
+	//	fmt.Println("EVALING")
+	//	var obj = block.Series.Pop()
+	//	if obj.Type() == env.WordType {
+	// LAST	var child = node.FindChild(obj.(env.Word).Index)
+	// LAST	if child != nil {
+	// LAST		ret = MaybeDoCode(child)
+	// LAST		node = *child
+	// LAST		fmt.Println(node)
+	//		} else {
+	//			return env.NewError("no path")
+	//		}
+	//	} else if obj.Type() == env.BlockType {
+	//		fmt.Println("EvalBlock()")
+	//	} else {
+	//		fmt.Println("Other type:")
+	//		fmt.Println(obj)
+	//	}
+	//num += 1
+	// LAST	}
+	return ps
+}
+
+func MaybeDoCode(n *env.SprNode, ps env.ProgramState) env.ProgramState {
+	var ret = env.Object(nil)
+	for _, child := range n.Children {
+		if child.Value.Type() == env.BlockType {
+			//fmt.Println("Block:")
+			//fmt.Println(child.Value)
+			//es := env.NewProgramState(child.Value.(env.Block).Series, loader.GetIdxs())
+			//RegisterBuiltins(es)
+			ps = EvalBlock(ps)
+			//fmt.Println("After eval:")
+			//fmt.Println(es)
+			//ret = es.Res
+		} else if child.Value.Type() == env.ArgwordType {
+			fmt.Println("Argword:")
+			fmt.Println(child.Value)
+			// MAKE THIS FUNCTION es1 := EvalSpruceExpression(es)
+			idx := word.Index
+			es1.Env.Set(idx, es1.Res)
+			return es1
+		}
+	}
+	return ps
+}

@@ -10,17 +10,24 @@ import (
 	. "github.com/yhirose/go-peg"
 )
 
-var genv = *env.NewIdxs()
+var wordIndex = *env.NewIdxs()
 
 func GetIdxs() *env.Idxs {
-	return &genv
+	return &wordIndex
 }
 
 func LoadString(input string) (env.Block, *env.Idxs) {
+	//fmt.Println(input)
 	parser := newParser()
 	val, _ := parser.ParseAndGetValue(input, nil)
 	//InspectNode(val)
-	return val.(env.Block), &genv
+	if val != nil {
+		return val.(env.Block), &wordIndex
+	} else {
+		empty1 := make([]env.Object, 0)
+		ser := env.NewTSeries(empty1)
+		return *env.NewBlock(*ser), &wordIndex
+	}
 }
 
 func parseBlock(v *Values, d Any) (Any, error) {
@@ -52,8 +59,14 @@ func parseString(v *Values, d Any) (Any, error) {
 }
 
 func parseWord(v *Values, d Any) (Any, error) {
-	idx := genv.IndexWord(v.Token())
+	idx := wordIndex.IndexWord(v.Token())
 	return env.Word{idx}, nil
+}
+
+func parseArgword(v *Values, d Any) (Any, error) {
+	//word := genv.IndexWord(v.Vs[0].(string))
+	//type_ := genv.IndexWord(v.Vs[1].(string))
+	return env.Argword{v.Vs[0].(env.Word), v.Vs[1].(env.Word)}, nil
 }
 
 func parseComma(v *Values, d Any) (Any, error) {
@@ -67,42 +80,42 @@ func parseVoid(v *Values, d Any) (Any, error) {
 func parseSetword(v *Values, d Any) (Any, error) {
 	//fmt.Println("SETWORD:" + v.Token())
 	word := v.Token()
-	idx := genv.IndexWord(word[:len(word)-1])
+	idx := wordIndex.IndexWord(word[:len(word)-1])
 	return env.Setword{idx}, nil
 }
 
 func parseOpword(v *Values, d Any) (Any, error) {
-	fmt.Println("OPWORD:" + v.Token())
+	//d fmt.Println("OPWORD:" + v.Token())
 	word := v.Token()
-	idx := genv.IndexWord(word[1:])
+	idx := wordIndex.IndexWord(word[1:])
 	return env.Opword{idx}, nil
 }
 
 func parseTagword(v *Values, d Any) (Any, error) {
 	//fmt.Println("TAGWORD:" + v.Token())
 	word := v.Token()
-	idx := genv.IndexWord(word[1:])
+	idx := wordIndex.IndexWord(word[1:])
 	return env.Tagword{idx}, nil
 }
 
 func parsePipeword(v *Values, d Any) (Any, error) {
 	//fmt.Println("OPWORD:" + v.Token())
 	word := v.Token()
-	idx := genv.IndexWord(word[1:])
+	idx := wordIndex.IndexWord(word[1:])
 	return env.Pipeword{idx}, nil
 }
 
 func parseGenword(v *Values, d Any) (Any, error) {
 	fmt.Println("GENWORD:" + v.Token())
 	word := v.Token()
-	idx := genv.IndexWord(word)
+	idx := wordIndex.IndexWord(word)
 	return env.Genword{idx}, nil
 }
 
 func parseGetword(v *Values, d Any) (Any, error) {
 	fmt.Println("GETWORD:" + v.Token())
 	word := v.Token()
-	idx := genv.IndexWord(word[1:])
+	idx := wordIndex.IndexWord(word[1:])
 	return env.Getword{idx}, nil
 }
 
@@ -111,7 +124,8 @@ func newParser() *Parser {
 	// Create a PEG parser
 	parser, _ := NewParser(`
     BLOCK       	<-  "{" SPACES SERIES* "}"
-    SERIES          <-  (STRING / NUMBER / COMMA / VOID / SETWORD / OPWORD / PIPEWORD / TAGWORD / GENWORD / GETWORD / WORD / BLOCK) SPACES
+    SERIES          <-  (STRING / NUMBER / COMMA / VOID / SETWORD / OPWORD / PIPEWORD / TAGWORD / GENWORD / GETWORD / WORD / BLOCK / ARGBLOCK ) SPACES
+    ARGBLOCK       	<-  "{" WORD ":" WORD "}"
     WORD           	<-  LETTER LETTERORNUM* 
 	GENWORD           	<-  UCLETTER LCLETTERORNUM* 
 	SETWORD    		<-  LETTER LETTERORNUM* ":"
@@ -123,7 +137,7 @@ func newParser() *Parser {
 	SPACES			<-  SPACE+
 	COMMA			<-  ","
 	VOID				<-  "_"
-	LETTERORNUM		<-  < [a-zA-Z0-9] >
+	LETTERORNUM		<-  < [a-zA-Z0-9-?] >
 	LETTER  			<-  < [a-zA-Z] >
 	UCLETTER  			<-  < [A-Z] >
 	LCLETTERORNUM		<-  < [a-z0-9] >
@@ -137,6 +151,7 @@ func newParser() *Parser {
 	g := parser.Grammar
 	g["BLOCK"].Action = parseBlock
 	g["WORD"].Action = parseWord
+	g["ARGBLOCK"].Action = parseArgword
 	g["COMMA"].Action = parseComma
 	g["VOID"].Action = parseVoid
 	g["SETWORD"].Action = parseSetword
@@ -155,6 +170,6 @@ func newParser() *Parser {
 
 func InspectNode(v Any) {
 	if v != nil {
-		fmt.Println(v.(env.Object).Inspect(genv))
+		fmt.Println(v.(env.Object).Inspect(wordIndex))
 	}
 }

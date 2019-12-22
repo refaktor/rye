@@ -1,0 +1,121 @@
+package evaldo
+
+import (
+	"Rejy_go_v1/env"
+	"Rejy_go_v1/loader"
+	"fmt"
+	"testing"
+)
+
+//
+// Literal values
+//
+
+func __TestEvalSpruce_first_sample(t *testing.T) {
+	builder := `give
+ me
+  five
+   { add 2 3 }
+`
+	// TODO -- genv (Idxs) is now implicitly passed in both Load*String ... that is weird
+	//         make it a normal object we create when we need it and pass around where needed
+
+	builder1, genv := loader.LoadSpruceString(builder)
+
+	user := "{ give me five }"
+
+	user1, genv := loader.LoadString(user)
+
+	ps := env.NewProgramState(user1, genv)
+
+	var result = EvalSpruceBlock(builder1, ps)
+
+	fmt.Println(builder1)
+	fmt.Println(genv)
+	fmt.Println(result)
+
+	if result.Type() != env.IntegerType {
+		t.Error("Expected result type integer")
+	}
+	if result.(env.Integer).Value != 5 {
+		t.Error("Expected result is 5")
+	}
+}
+
+func TestEvalSpruce_second_sample(t *testing.T) {
+	builder := `give
+ me
+  five
+   { add 2 3 }
+  six
+   { 6 }
+  your
+   name
+    { join "Spru" "ce" }
+`
+
+	builder1, genv := loader.LoadSpruceString(builder)
+
+	builder1.Probe(0, *genv)
+
+	user := "{ give me five }"
+
+	user1, genv := loader.LoadString(user)
+
+	var result = EvalSpruceBlock(builder1, &user1)
+
+	fmt.Println("AFTER FIRST RUN:")
+	fmt.Println(builder1)
+	fmt.Println(genv)
+	fmt.Println(result)
+
+	if result.Type() != env.IntegerType {
+		t.Error("Expected result type integer")
+	}
+	if result.(env.Integer).Value != 5 {
+		t.Error("Expected result is 5")
+	}
+
+	user = "{ give me six }"
+
+	user1, genv = loader.LoadString(user)
+
+	fmt.Println("BEFORE SECOND RUN:")
+	fmt.Println(user1)
+	fmt.Println(builder1)
+
+	result = EvalSpruceBlock(builder1, &user1)
+
+	fmt.Println(builder1)
+	fmt.Println(genv)
+	fmt.Println(result)
+
+	if result.Type() != env.IntegerType {
+		t.Error("Expected result type integer")
+	}
+	if result.(env.Integer).Value != 6 {
+		t.Error("Expected result is 6")
+	}
+
+	user = "{ give me your name }"
+
+	user1, genv = loader.LoadString(user)
+
+	fmt.Println("BEFORE THIRD RUN:")
+	fmt.Println(user1)
+	fmt.Println(builder1)
+
+	result = EvalSpruceBlock(builder1, &user1)
+
+	fmt.Println(builder1)
+	fmt.Println(genv)
+	fmt.Println(result)
+
+	if result.Type() != env.StringType {
+		t.Error("Expected result type String")
+	}
+	if result.(env.String).Value != "Spruce" {
+		t.Error("Expected result is Spruce")
+	}
+
+}

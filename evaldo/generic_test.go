@@ -134,5 +134,4 @@ func TestEvaldo_generic_builtin(t *testing.T) {
 	if es.Res.Type() != env.IntegerType {
 		t.Error("Expected result type integer")
 	}
-
 }

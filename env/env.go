@@ -70,12 +70,12 @@ func (e *Env) Set(word int, val Object) Object {
 }
 
 type ProgramState struct {
-	Ser  TSeries
-	Res  Object
-	Env  *Env
-	Idx  *Idxs
-	Args []int
-	Gen  *Gen //map[int]map[int]Object
+	Ser  TSeries // current block of code
+	Res  Object  // result of expression
+	Env  *Env    // Env object ()
+	Idx  *Idxs   // Idx object (index of words)
+	Args []int   // names of current arguments (indexes of names)
+	Gen  *Gen    //map[int]map[int]Object  // list of Generic kinds / code
 }
 
 func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
@@ -88,4 +88,19 @@ func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
 		NewGen(), //make(map[int]map[int]Object),
 	}
 	return &ps
+}
+
+func AddToProgramState(ps *ProgramState, ser TSeries, idx *Idxs) *ProgramState {
+	ps.Ser = ser
+	ps.Res = nil
+	ps.Idx = idx
+	//ps.Env
+	return ps
+}
+
+func SetValue(ps *ProgramState, word string, val Object) {
+	idx, found := ps.Idx.GetIndex(word)
+	if found {
+		ps.Env.Set(idx, val)
+	}
 }
