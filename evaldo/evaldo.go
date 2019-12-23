@@ -101,17 +101,24 @@ func EvalExpression2(es *env.ProgramState, limited bool) *env.ProgramState {
 	//fmt.Println("EvalExpression")
 	//fmt.Println(es.Ser.GetPos())
 	return MaybeEvalOpwordOnRight(esleft.Ser.Peek(), esleft, limited)
-	return esleft
+	//return esleft
 }
 
 func EvalExpression(es *env.ProgramState) *env.ProgramState {
-	esleft := EvalExpression_(es)
+	var esleft *env.ProgramState
+	if es.Inj == nil {
+		esleft = EvalExpression_(es)
+	} else {
+		esleft = es
+		esleft.Res = es.Inj
+		esleft.Inj = nil
+	}
 	////// OPWORDWWW
 	// IF WE COMMENT IN NEXT LINE IT WORKS WITHOUT OPWORDS PROCESSING
 	//fmt.Println("EvalExpression")
 	//fmt.Println(es.Ser.GetPos())
 	return MaybeEvalOpwordOnRight(esleft.Ser.Peek(), esleft, false)
-	return esleft
+	//return esleft
 }
 
 /* OPWORDWWW */
@@ -134,6 +141,16 @@ func MaybeEvalOpwordOnRight(nextObj env.Object, es *env.ProgramState, limited bo
 		es = EvalWord(es, opword.ToWord(), es.Res, false)
 		//fmt.Println("MaybeEvalPipeword..2")
 		return MaybeEvalOpwordOnRight(es.Ser.Peek(), es, limited)
+	case env.LSetword:
+		if limited {
+			return es
+		}
+		//ProcOpword(nextObj, es)
+		idx := opword.Index
+		es.Env.Set(idx, es.Res)
+		es.Ser.Next()
+		return MaybeEvalOpwordOnRight(es.Ser.Peek(), es, limited)
+
 	}
 	return es
 }
@@ -161,6 +178,8 @@ func EvalExpression_(es *env.ProgramState) *env.ProgramState {
 	case env.VoidType:
 		es.Res = object
 	case env.TagwordType:
+		es.Res = object
+	case env.UriType:
 		es.Res = object
 	case env.WordType:
 		return EvalWord(es, object.(env.Word), nil, false)
@@ -200,6 +219,15 @@ func EvalWord(es *env.ProgramState, word env.Word, leftVal env.Object, toLeft bo
 	//fmt.Println("*EVAL WORD*")
 	//es.Env.Probe(*es.Idx)
 	object, found := es.Env.Get(word.Index)
+	if !found {
+		if leftVal == nil {
+			EvalExpression_(es)
+			leftVal = es.Res
+		}
+		es.Res.Trace("EvalGenword")
+		object, found = es.Gen.Get(leftVal.GetKind(), word.Index)
+		object.Trace("OBJECT RETURNED: ")
+	}
 	if found {
 		return EvalObject(es, object, leftVal, toLeft) //ww0128a *
 		//es.Res.Trace("After eval Object")

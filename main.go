@@ -185,8 +185,8 @@ func serve(c echo.Context) error {
 	//evaldo.RegisterBuiltins2(evaldo.Buil, ps *env.ProgramState) {
 	evaldo.EvalBlock(es)
 
-	env.SetValue(es, "ctx", env.Native{c})
-	env.SetValue(es, "session", env.Native{sess})
+	env.SetValue(es, "ctx", *env.NewNative(es.Idx, c, "Rye-echo-context"))
+	env.SetValue(es, "session", *env.NewNative(es.Idx, sess, "Rye-echo-session"))
 	//env.SetValue(es, "ctx", env.String{"YOYOYO"})
 
 	b1, err := ioutil.ReadFile("web/index.html")

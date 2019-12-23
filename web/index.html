@@ -15,48 +15,89 @@
      div.rye-result { font-size: 14px; background-color: #e4acde; padding: 10px 20px; color: #222; }
      div.rye-result table { background-color: #e4acde; padding:0px; margin: 0;  border-collapse: collapse; }
      div.rye-result table td { border: 1px solid gray; margin: 0; padding: 4px 10px; }
-     p span { padding: 0px 3px; background-color: #acd4e4; border-radius: 5px;  }
+     p span { padding: 0px 3px; background-color: #ebf3f6; border-radius: 5px;  }
     </style>
         <body>
-            <h1><span>Rye</span><b>Webserver-ček (check)</b></h1>
+            <h1><span>Rye</span><b>Webserver-ček <small>(22.12.2019)</small></b></h1>
 
-            <h2>Some Rye and Echo</h2>
+            <p>I added <span>infix setwords</span> today. Made at least temproray decision on how scoping aroung <span>generic functions</span> will work, so I made them work. Added <span>Kinds</span> to <span>Native</span> datatype (like sqlitedb, spreadsheet, server context ...) and added another block type <span>( )</span> called a <span>group</span>. I will need it for the GraphQL+- dialect which I plan to make next. this webserver format seems as a great way to test, experiment with code and at the same time document things I make.</p>
 
-            <%?
-name: "James" , surname: "Bond" 
-joins: fn { a b } { join3 a " " b }
-skip: fn { a b } { do b a }
-name .echo .skip { echo ", " } .joins surname |wrap "b" |echo %>
+            <h2>Postfix Set-word</h2>
 
-            <h2>Query and Form params</h2>
+            <p>In Rebol-like languages, inline assignment is nothings special. This is a valid REBOL and Rye code. Note that newlines don't have any meaning in Rebol or Rye. This could all be written in the same line. Rye, has optional <span>expression guards</span>, 
+to make expression boundaries at least at the top level of block more explicit. The interpreter doesn't need them, but it's nicer for human understanding of the code and adds some sanity checking.</p>
 
-            <p><span>query?</span> returns a value from URL query parameter, <span>form?</span> from the same on GET request and application/x-www-form-urlencoded on POST request</p>
+            <%?fullname: join name: "Jim" "Bo"
+echo label: join3 name " " fullname 
+echo wrap wrap label "b" "div" %>
 
-            <%?bold: fn { a } { wrap a "b" }
+            <p>But since Rye has this pipe-forward flow, it makes sense we sometimes want infix/left oriented setwords too.</p>
+
+            <%?"Jim" :name .join "Bo" :fullname
+join3 name " " fullname :label |echo
+wrap label "b" |wrap "div" |echo  %>
+
+            <p>This is just a random convoluted code example, to show some setwords. I don't need the <span>label</span> assignment.</p>
+
+            <%?"Jim" :name .join "Bo" :fullname
+name .join3 " " fullname |echo |wrap "b" |wrap "div" |echo %>
+
+            <h2>Add some Curry</h2>
+            
+            <p>Curry or whatever you want to call this works on any argument of a function. Because Rye has no parenthesis, to define the end of the argument's list <span>void _</span> datatype is used. I wanted an absolutely lightest possible syntax for it. If you need to create additional blocks for example you already lost the benefit. I think it came up nice. Let's see if it still works with all the pipe-words, left setwords, etc ...</p>
+            <%?qm1: join "?" _
+qm2: join _ "?" 
+echo join3 qm1 "What" ", " qm2 "Why"  %>
+
+            <p>So if we really go beserk with currying ...</p>
+
+            <%?"Jim" .skip { .join3 " " _ :js } |join _ :jx , wrap _ "b" :b , wrap _ "div" :div
+js jx "Bo" |echo |b |div |echo  %>
+
+            <h2>Skip with injected value</h2>
+
+            <p>For the previous example to work as intended, I needed to change Skip so it injects it's argument as a preset value when evaluating the block, so first function can be opword and you again don't need to have a named variable.
+It's makes skip like sort of <span>tee</span> command in bash. I had idea for this for a while, and I think it will enable some other interesting codeflows.</p>
+
+            <p>This seems to make the most elegant solution for my weirdish "JimBo" problem.</p>
+
+            <%?"Jim" .skip { .join "Bo" :fullname } |join3 " " fullname |echo |b |div |echo  %>
+
+            <h1>Generic webserver functions</h1>
+
+            <p>I made <a href="http:/refaktorlabs.com/ryelang/notes/index_2019-12-20.html">first simple builting functions</a> related to webapp development few days ago. Reading query and form parameters, sessions, and SQLite database. But since Rye
+            didn't yet have generic functions, the interface at least to SQLite and Sessions was very unelegant. Today I've made generic functions and implemented Kinds with Native values. So the interface became a less verbose.</p>
+
+            <h2>Query and form</h2>
+
+            <%?bold: wrap _ "b"
 query? ctx "name" |echo 
 form? ctx "name" |bold |echo %>
+            <!-- % ctx % -->
 
-            <!--%? form? ctx "name" |echo .skip { echo " " } |wrap "b" |echo %-->
+
             <h2>Sessions</h2>
 
             <p>Session and sqlite functions will look <b>much</b> less verbose once I add generic methods to Rye</p>
 
-            <%?echo get-session session "foo"
-set-session session "foo" "BAR!"
-echo get-session session "foo" %>
-            
-            <h2>Very crude SQLite</h2>
+            <%?echo get session "foo"
+set session "foo" "BAR!"
+echo get session "foo" %>
 
-            <p>SQL will be defined in it's own dialect mimicking the SQL in Rye, not strings, but this is the zero version.</p>
+            <h2>SQLite now with generic words</h2>
 
-            <%?db: sqlite-open "test.db"
-get-session session "foo" |equals "BAR!" |unless {
-  echo "creating"
-  sqlite-exec db "create table peeps (id int, name varchar)"
-  sqlite-exec db "insert into peeps values (100, 'Jimbo')"
-  sqlite-exec db "insert into peeps values (200, 'Dumbo')"
+            <%?db: open sqlite://test
+get session "foo" |equals "BAR!" |unless {
+  exec db "create table peeps (id int, name varchar)"
+  exec db "insert into peeps values (100, 'Jimbo')"
+  exec db "insert into peeps values (200, 'Dumbo')"
 }
-sqlite-query db "select * from peeps" |to-html-table |echo %>
-            <!-- % ctx % -->
+query db "select * from peeps" |htmlize |echo %>
+
+<h2>First version of SQL dialect</h2>
+
+<%? id: 100 , query db { select id , name from peeps where id = ?id } |htmlize |echo %>
+
+            <br/>
         </body>
 </html>

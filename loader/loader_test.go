@@ -304,3 +304,58 @@ func TestLoader_load_argword(t *testing.T) {
 		t.Error("Expected kind somekind")
 	}
 }
+
+func TestLoader_load_group(t *testing.T) {
+	input := "{ ( 1 2 , sada ) }"
+	block, _ := LoadString(input)
+	if block.Series.Len() != 1 {
+		t.Error("Expected 1 items")
+	}
+
+	fmt.Println(block.Series.Get(0).Inspect(wordIndex))
+
+	if block.Series.Get(0).(env.Object).Type() != env.BlockType {
+		t.Error("Expected type Block")
+	}
+}
+
+func TestLoader_load_lsetword(t *testing.T) {
+	input := "{ 123 :lsetword1 }"
+	block, _ := LoadString(input)
+	if block.Series.Len() != 2 {
+		t.Error("Expected 1 items")
+	}
+
+	fmt.Println(block.Series.Get(0).Inspect(wordIndex))
+
+	if block.Series.Get(1).(env.Object).Type() != env.LSetwordType {
+		t.Error("Expected type LSetword")
+	}
+	idx, _ := wordIndex.GetIndex("lsetword1")
+	if block.Series.Get(1).(env.LSetword).Index != idx {
+		t.Error("Expected name lsetword")
+	}
+}
+
+func TestLoader_load_uri_min(t *testing.T) {
+	input := "{ sqlite://db }"
+	block, _ := LoadString(input)
+	block.Trace("BLOCK URI ....")
+	if block.Series.Len() != 1 {
+		t.Error("Expected 1 items")
+	}
+
+	//fmt.Println(block.Series.Get(0).Inspect(wordIndex))
+
+	if block.Series.Get(0).(env.Object).Type() != env.UriType {
+		t.Error("Expected type Uri")
+	}
+	idx, _ := wordIndex.GetIndex("sqlite")
+	if block.Series.Get(0).(env.Uri).Scheme.Index != idx {
+		t.Error("Expected scheme sqlite")
+	}
+
+	if block.Series.Get(0).(env.Uri).Path != "sqlite://db" { // todo later return just the path part ... but there are more components to URI, so we do it later
+		t.Error("Expected path sqlite://db")
+	}
+}

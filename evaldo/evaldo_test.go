@@ -329,3 +329,83 @@ func TestEvaldo_curry_2(t *testing.T) {
 		t.Error("Expected result value 22")
 	}
 }
+
+func TestEvaldo_load_lsetword1(t *testing.T) {
+	input := "{ 30303 :lword 10101 lword }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	idx, found := es.Idx.GetIndex("lword")
+	if found {
+		es.Env.Set(idx, env.Integer{0})
+
+		if block.Series.Len() != 4 {
+			t.Error("Expected 4 items")
+		}
+		if block.Series.Get(1).(env.Object).Type() != env.LSetwordType {
+			t.Error("Expected type setword")
+		}
+
+		EvalBlock(es)
+
+		if es.Res.Type() != env.IntegerType {
+			t.Error("Expected result type integer")
+		}
+
+		if es.Res.(env.Integer).Value != 30303 {
+			t.Error("Expected result value 30303")
+		}
+	} else {
+		t.Error("Word not found in state")
+	}
+}
+
+func TestEvaldo_load_lsetword2(t *testing.T) {
+	input := "{ add 10 20 :lword 123456 lword }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	if es.Res.Type() != env.IntegerType {
+		t.Error("Expected result type integer")
+	}
+
+	if es.Res.(env.Integer).Value != 30 {
+		t.Error("Expected result value 30")
+	}
+}
+
+func TestEvaldo_load_lsetword3(t *testing.T) {
+	input := "{ add 10 20 .add 20 |add 50 :lword 123456 lword }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	if es.Res.Type() != env.IntegerType {
+		t.Error("Expected result type integer")
+	}
+
+	if es.Res.(env.Integer).Value != 100 {
+		t.Error("Expected result value 100")
+	}
+}
+
+func TestEvaldo_load_lsetword4(t *testing.T) {
+	input := "{ add 10 20 :sum1 .add 20 |add sum1 :lword 123456 lword }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	if es.Res.Type() != env.IntegerType {
+		t.Error("Expected result type integer")
+	}
+
+	if es.Res.(env.Integer).Value != 80 {
+		t.Error("Expected result value 80")
+	}
+}

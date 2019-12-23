@@ -24,13 +24,6 @@ func PopOutBuffer() string {
 
 var Builtins_web = map[string]*env.Builtin{
 
-	"isweb": {
-		Argsn: 0,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return env.Integer{1010101}
-		},
-	},
-
 	"out-buffer": {
 		Argsn: 0,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -112,7 +105,7 @@ var Builtins_web = map[string]*env.Builtin{
 		},
 	},
 
-	"set-session": { // after we make kinds ... session native will be tagged with session, and set will be multimetod on session
+	"Rye-echo-session//set": { // after we make kinds ... session native will be tagged with session, and set will be multimetod on session
 		Argsn: 3,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			fmt.Println("YOYOYOYOYOYO ------------- - - -  --")
@@ -140,7 +133,7 @@ var Builtins_web = map[string]*env.Builtin{
 		},
 	},
 
-	"get-session": { // after we make kinds ... session native will be tagged with session, and set will be multimetod on session
+	"Rye-echo-session//get": { // after we make kinds ... session native will be tagged with session, and set will be multimetod on sessio
 		Argsn: 2,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			fmt.Println("YOYOYOYOYOYO ------------- - - -  --")

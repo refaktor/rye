@@ -49,6 +49,25 @@ func parseBlock(v *Values, d Any) (Any, error) {
 	return env.Block{*ser}, nil
 }
 
+func parseGroup(v *Values, d Any) (Any, error) {
+	//fmt.Println("** Parse block **")
+	//fmt.Println(v.Vs)
+	block := make([]env.Object, len(v.Vs)-1)
+	//var r env.Object
+	for i := 1; i < len(v.Vs); i += 1 {
+		obj := v.Vs[i]
+		if true { //obj != nil
+			//fmt.Println(i)
+			//InspectNode(obj)
+			block[i-1] = obj.(env.Object)
+		}
+	}
+	//fmt.Print("BLOCK --> ")
+	//fmt.Println(block)
+	ser := env.NewTSeries(block)
+	return env.Block{*ser}, nil
+}
+
 func parseNumber(v *Values, d Any) (Any, error) {
 	val, er := strconv.ParseInt(v.Token(), 10, 64)
 	return env.Integer{val}, er
@@ -56,6 +75,13 @@ func parseNumber(v *Values, d Any) (Any, error) {
 
 func parseString(v *Values, d Any) (Any, error) {
 	return env.String{v.Token()[1 : len(v.Token())-1]}, nil
+}
+
+func parseUri(v *Values, d Any) (Any, error) {
+	//fmt.Println("INSIDE URI ****************** * * * * * * * * * * * * * * * *  *")
+	//fmt.Println(v.Vs)
+	//fmt.Println(v)
+	return *env.NewUri(&wordIndex, v.Vs[0].(env.Word), v.Token()), nil // ){v.Vs[0].(env.Word), v.Token()}, nil // TODO let the second part be it's own object that parser returns like path
 }
 
 func parseWord(v *Values, d Any) (Any, error) {
@@ -82,6 +108,13 @@ func parseSetword(v *Values, d Any) (Any, error) {
 	word := v.Token()
 	idx := wordIndex.IndexWord(word[:len(word)-1])
 	return env.Setword{idx}, nil
+}
+
+func parseLSetword(v *Values, d Any) (Any, error) {
+	//fmt.Println("SETWORD:" + v.Token())
+	word := v.Token()
+	idx := wordIndex.IndexWord(word[1:])
+	return env.LSetword{idx}, nil
 }
 
 func parseOpword(v *Values, d Any) (Any, error) {
@@ -123,22 +156,25 @@ func newParser() *Parser {
 	// TODO -- add string eaddress path url time
 	// Create a PEG parser
 	parser, _ := NewParser(`
-    BLOCK       	<-  "{" SPACES SERIES* "}"
-    SERIES          <-  (STRING / NUMBER / COMMA / VOID / SETWORD / OPWORD / PIPEWORD / TAGWORD / GENWORD / GETWORD / WORD / BLOCK / ARGBLOCK ) SPACES
+	BLOCK       	<-  "{" SPACES SERIES* "}"
+    GROUP       	<-  "(" SPACES SERIES* ")"
+    SERIES          <-  (URI / STRING / NUMBER / COMMA / VOID / SETWORD / LSETWORD / OPWORD / PIPEWORD / TAGWORD / GENWORD / GETWORD / WORD / BLOCK / GROUP / ARGBLOCK ) SPACES
     ARGBLOCK       	<-  "{" WORD ":" WORD "}"
     WORD           	<-  LETTER LETTERORNUM* 
 	GENWORD           	<-  UCLETTER LCLETTERORNUM* 
 	SETWORD    		<-  LETTER LETTERORNUM* ":"
+	LSETWORD    		<-  ":" LETTER LETTERORNUM*
 	GETWORD   		<-  "?" LETTER LETTERORNUM*
 	PIPEWORD   		<-  "|" LETTER LETTERORNUM*
 	OPWORD    		<-  "." LETTER LETTERORNUM*
 	TAGWORD    		<-  "'" LETTER LETTERORNUM*
 	STRING			<-  '"' STRINGCHAR* '"'
 	SPACES			<-  SPACE+
+	URI    		<-  WORD "://" LETTERORNUM*
 	COMMA			<-  ","
 	VOID				<-  "_"
-	LETTERORNUM		<-  < [a-zA-Z0-9-?] >
-	LETTER  			<-  < [a-zA-Z] >
+	LETTERORNUM		<-  < [a-zA-Z0-9-?=] >
+	LETTER  			<-  < [a-zA-Z?=] >
 	UCLETTER  			<-  < [A-Z] >
 	LCLETTERORNUM		<-  < [a-z0-9] >
     NUMBER           <-  < [0-9]+ >
@@ -146,15 +182,19 @@ func newParser() *Parser {
 	STRINGCHAR		<-  < !'"' . >
 `)
 
+	// TODO -- maybe add path type and make URI more fully featured
+
 	//%whitespace      <-  [ \t\r\n]*
 	//%word			<-  [a-zA-Z]+
 	g := parser.Grammar
 	g["BLOCK"].Action = parseBlock
+	g["GROUP"].Action = parseGroup
 	g["WORD"].Action = parseWord
 	g["ARGBLOCK"].Action = parseArgword
 	g["COMMA"].Action = parseComma
 	g["VOID"].Action = parseVoid
 	g["SETWORD"].Action = parseSetword
+	g["LSETWORD"].Action = parseLSetword
 	g["OPWORD"].Action = parseOpword
 	g["PIPEWORD"].Action = parsePipeword
 	g["TAGWORD"].Action = parseTagword
@@ -162,6 +202,7 @@ func newParser() *Parser {
 	g["GETWORD"].Action = parseGetword
 	g["NUMBER"].Action = parseNumber
 	g["STRING"].Action = parseString
+	g["URI"].Action = parseUri
 	/* g["SERIES"].Action = func(v *Values, d Any) (Any, error) {
 		return v, nil
 	}*/

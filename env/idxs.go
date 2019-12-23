@@ -68,7 +68,7 @@ func NewIdxs() *Idxs {
 		TagwordType  Type = 13
 	*/
 
-	// register words for builtin kids, which the value objects should return on GetKind()
+	// register words for builtin kinds, which the value objects should return on GetKind()
 
 	e.IndexWord("block")
 	e.IndexWord("integer")

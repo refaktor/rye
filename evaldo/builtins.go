@@ -3,8 +3,8 @@ package evaldo
 
 import (
 	"Rejy_go_v1/env"
-	"Rejy_go_v1/loader"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -230,6 +230,7 @@ var builtins = map[string]*env.Builtin{
 				res := arg0
 				ser := ps.Ser
 				ps.Ser = bloc.Series
+				ps.Inj = arg0
 				EvalBlock(ps)
 				ps.Ser = ser
 				return res
@@ -556,8 +557,20 @@ func RegisterBuiltins2(builtins map[string]*env.Builtin, ps *env.ProgramState) {
 
 func registerBuiltin(ps *env.ProgramState, word string, builtin env.Builtin) {
 	// indexWord
-	idxs := loader.GetIdxs()
-	idx := idxs.IndexWord(word)
+	// TODO -- this with string separator is a temporary way of how we define generic builtins
+	// in future a map will probably not be a map but an array and builtin will also support the Kind value
+
+	idxk := 0
+	if strings.Index(word, "//") > 0 {
+		temp := strings.Split(word, "//")
+		word = temp[1]
+		idxk = ps.Idx.IndexWord(temp[0])
+	}
+	idxw := ps.Idx.IndexWord(word)
 	// set global word with builtin
-	ps.Env.Set(idx, builtin)
+	if idxk == 0 {
+		ps.Env.Set(idxw, builtin)
+	} else {
+		ps.Gen.Set(idxk, idxw, builtin)
+	}
 }

@@ -113,7 +113,7 @@ func TestEvaldo_generic_function_2_args(t *testing.T) {
 }
 
 func TestEvaldo_generic_builtin(t *testing.T) {
-	input := "{ generic 'integer 'Add ?add Add 100 10 generic 'string 'Add ?join Add \"Wood\" \"Meow\" Add 100 11 }"
+	input := "{ generic 'integer 'add1 ?add add1 100 10 generic 'string 'add1 ?join add1 \"Wood\" \"Meow\" add1 100 11 }"
 	block, genv := loader.LoadString(input)
 	es := env.NewProgramState(block.Series, genv)
 

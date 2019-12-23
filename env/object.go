@@ -4,6 +4,7 @@ package env
 import (
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 type Type int
@@ -26,6 +27,8 @@ const (
 	GetwordType  Type = 15
 	ArgwordType  Type = 16
 	NativeType   Type = 17
+	UriType      Type = 18
+	LSetwordType Type = 19
 )
 
 type Object interface {
@@ -100,6 +103,51 @@ func (i String) Trace(msg string) {
 
 func (i String) GetKind() int {
 	return int(StringType)
+}
+
+//
+// URI
+//
+
+// String represents an string.
+type Uri struct {
+	Scheme Word
+	Path   string
+	Kind   Word
+}
+
+func NewUri(index *Idxs, scheme Word, path string) *Uri {
+	kindstr := strings.Split(path, "://")[0] + "-schema" // TODO -- this is just temporary .. so we test it further, make propper once at that level
+	idx := index.IndexWord(kindstr)
+	nat := Uri{scheme, path, Word{idx}}
+	return &nat
+}
+
+func (i Uri) GetPath() string {
+	return strings.SplitAfter(i.Path, "://")[1]
+}
+
+func (i Uri) Type() Type {
+	return UriType
+}
+
+// Inspect returns a string representation of the Integer.
+func (i Uri) Inspect(e Idxs) string {
+	return "<Uri: " + i.Scheme.Probe(e) + "://" + i.Path + ">"
+}
+
+// Inspect returns a string representation of the Integer.
+func (i Uri) Probe(e Idxs) string {
+	return i.Path
+}
+
+func (i Uri) Trace(msg string) {
+	fmt.Print(msg + "(uri): ")
+	fmt.Println(i.Path)
+}
+
+func (i Uri) GetKind() int {
+	return i.Kind.Index
 }
 
 //
@@ -210,6 +258,39 @@ func (i Setword) Trace(msg string) {
 
 func (i Setword) GetKind() int {
 	return int(SetwordType)
+}
+
+//
+// LSETWORD
+//
+
+// Integer represents an integer.
+type LSetword struct {
+	Index int
+}
+
+// Type returns the type of the Integer.
+func (i LSetword) Type() Type {
+	return LSetwordType
+}
+
+// Inspect returns a string representation of the Integer.
+func (i LSetword) Inspect(e Idxs) string {
+	return "<LSetword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + ">"
+}
+
+// Inspect returns a string representation of the Integer.
+func (b LSetword) Probe(e Idxs) string {
+	return e.GetWord(b.Index)
+}
+
+func (i LSetword) Trace(msg string) {
+	fmt.Print(msg + "(lsetword): ")
+	fmt.Println(i.Index)
+}
+
+func (i LSetword) GetKind() int {
+	return int(LSetwordType)
 }
 
 //
@@ -620,6 +701,13 @@ func (i Argword) GetKind() int {
 // String represents an string.
 type Native struct {
 	Value interface{}
+	Kind  Word
+}
+
+func NewNative(index *Idxs, val interface{}, kind string) *Native {
+	idx := index.IndexWord(kind)
+	nat := Native{val, Word{idx}}
+	return &nat
 }
 
 // Type returns the type of the Integer.
@@ -629,12 +717,12 @@ func (i Native) Type() Type {
 
 // Inspect returns a string representation of the Integer.
 func (i Native) Inspect(e Idxs) string {
-	return "<Native>"
+	return "<Native OF " + i.Kind.Probe(e) + ">"
 }
 
 // Inspect returns a string representation of the Integer.
 func (i Native) Probe(e Idxs) string {
-	return "<Native>"
+	return "<Native OF " + i.Kind.Probe(e) + ">"
 }
 
 func (i Native) Trace(msg string) {
@@ -643,5 +731,5 @@ func (i Native) Trace(msg string) {
 }
 
 func (i Native) GetKind() int {
-	return int(NativeType)
+	return i.Kind.Index
 }
