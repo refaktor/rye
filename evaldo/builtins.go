@@ -2,7 +2,7 @@
 package evaldo
 
 import (
-	"Rejy_go_v1/env"
+	"Ryelang/env"
 	"fmt"
 	"strings"
 	"time"
@@ -222,7 +222,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"skip": {
+	"with": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg1.(type) {
@@ -230,8 +230,9 @@ var builtins = map[string]*env.Builtin{
 				res := arg0
 				ser := ps.Ser
 				ps.Ser = bloc.Series
-				ps.Inj = arg0
-				EvalBlock(ps)
+				//ps.Inj = arg0
+				//ps.Injnow = true
+				EvalBlockInj(ps, arg0, true)
 				ps.Ser = ser
 				return res
 			}
@@ -546,6 +547,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(builtins, ps)
 	RegisterBuiltins2(Builtins_web, ps)
 	RegisterBuiltins2(Builtins_sqlite, ps)
+	RegisterBuiltins2(Builtins_gtk, ps)
 }
 
 func RegisterBuiltins2(builtins map[string]*env.Builtin, ps *env.ProgramState) {

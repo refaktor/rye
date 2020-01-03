@@ -29,6 +29,7 @@ const (
 	NativeType   Type = 17
 	UriType      Type = 18
 	LSetwordType Type = 19
+	EnvType      Type = 20
 )
 
 type Object interface {

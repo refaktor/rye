@@ -13,6 +13,7 @@ import (
 type Env struct {
 	state  map[int]Object
 	parent *Env
+	kind   Word
 }
 
 func NewEnv(par *Env) *Env {
@@ -28,6 +29,25 @@ func (e *Env) Probe(idxs Idxs) {
 		fmt.Print(strconv.FormatInt(int64(k), 10) + ": " + v.Inspect(idxs) + " ")
 	}
 	fmt.Println(">")
+}
+
+// Type returns the type of the Integer.
+func (i Env) Type() Type {
+	return EnvType
+}
+
+// Inspect returns a string representation of the Integer.
+func (i Env) Inspect(e Idxs) string {
+	return "<Env OF " + i.kind.Probe(e) + ">"
+}
+
+func (i Env) Trace(msg string) {
+	fmt.Print(msg + "(env): ")
+	//fmt.Println(i.Value)
+}
+
+func (i Env) GetKind() int {
+	return i.kind.Index
 }
 
 /*func (e *Env) Get(word int) (*Object, bool) {
@@ -70,13 +90,14 @@ func (e *Env) Set(word int, val Object) Object {
 }
 
 type ProgramState struct {
-	Ser  TSeries // current block of code
-	Res  Object  // result of expression
-	Env  *Env    // Env object ()
-	Idx  *Idxs   // Idx object (index of words)
-	Args []int   // names of current arguments (indexes of names)
-	Gen  *Gen    // map[int]map[int]Object  // list of Generic kinds / code
-	Inj  Object  // Injected first value in a block evaluation
+	Ser    TSeries // current block of code
+	Res    Object  // result of expression
+	Env    *Env    // Env object ()
+	Idx    *Idxs   // Idx object (index of words)
+	Args   []int   // names of current arguments (indexes of names)
+	Gen    *Gen    // map[int]map[int]Object  // list of Generic kinds / code
+	Inj    Object  // Injected first value in a block evaluation
+	Injnow bool
 }
 
 func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
@@ -88,6 +109,7 @@ func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
 		make([]int, 6),
 		NewGen(), //make(map[int]map[int]Object),
 		nil,
+		false,
 	}
 	return &ps
 }

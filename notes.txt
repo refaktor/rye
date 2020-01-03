@@ -824,3 +824,65 @@ query-user: fn { id } {
 	write f id
 }
 
+### Next ... more sqlite funcs, first graphql 
+
+How would dgraph examples look here:
+
+#go 
+
+q := `query all($a: string) {
+    all(func: eq(name, $a)) {
+      name
+    }
+  }`
+
+res, err := txn.QueryWithVars(ctx, q, map[string]string{"$a": "Alice"})
+fmt.Printf("%s\n", res.Json)
+
+#Rye
+--------------------------------------
+api-fn 'users 'find-user ( auth )
+{
+	name: required string few-words
+}
+dg: open dgraph://localhost:9080
+query dg {
+	all ( func: eq ( name , ?name ) ) {
+		name
+		age
+		friends {
+			name
+		}
+	}
+} |to-json |echo
+--------------------------------------
+
+
+# validation has multiple functionalities basically
+
+validation dialect can also construct / deconstruct / reconstruct
+pick from local values to block, block to block, block to local (block is not really a block but a map/object/tuple/context)
+
+collect { name: :firstname age: integer :age }
+set forms? { name: required short-string :pers-name }
+map forms? { ... }
+
+# how would we make a first api function
+# we need something like context
+
+posts: context {
+	paginate: { limit ?page * ?per-page, (?page + 1) * ?per-page }
+	table: 'posts
+	per-page: 30
+	
+	get-all: webfn/sql
+		"gets all posts, paginated"
+		{ page: optional 0 integer }
+		
+		{
+			select * 
+			from <table>
+			<paginate>
+		}
+	}
+}

@@ -1,9 +1,9 @@
 package perf
 
 import (
-	"Rejy_go_v1/env"
-	"Rejy_go_v1/evaldo"
-	"Rejy_go_v1/loader"
+	"Ryelang/env"
+	"Ryelang/evaldo"
+	"Ryelang/loader"
 
 	//	"fmt"
 	"testing"

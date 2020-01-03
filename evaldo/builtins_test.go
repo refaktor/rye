@@ -2,8 +2,8 @@
 package evaldo
 
 import (
-	"Rejy_go_v1/env"
-	"Rejy_go_v1/loader"
+	"Ryelang/env"
+	"Ryelang/loader"
 	"fmt"
 
 	//"fmt"

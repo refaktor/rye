@@ -2,8 +2,8 @@
 package evaldo
 
 import (
-	"Rejy_go_v1/env"
-	"Rejy_go_v1/loader"
+	"Ryelang/env"
+	"Ryelang/loader"
 	"fmt"
 
 	"testing"
@@ -217,7 +217,7 @@ func TestEvaldo_load_builtin_1_arg(t *testing.T) {
 	es := env.NewProgramState(block.Series, genv)
 	RegisterBuiltins(es)
 
-	es = EvalBlock(es)
+	EvalBlock(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {

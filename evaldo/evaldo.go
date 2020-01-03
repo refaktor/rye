@@ -1,7 +1,7 @@
 package evaldo
 
 import (
-	"Rejy_go_v1/env"
+	"Ryelang/env"
 	//"fmt"
 	//"strconv"
 )
@@ -43,6 +43,10 @@ func NewProgramState(ser env.TSeries, idx env.Idxs) *ProgramState {
 //
 
 func EvalBlock(es *env.ProgramState) *env.ProgramState {
+	return EvalBlockInj(es, nil, false)
+}
+
+func EvalBlockInj(es *env.ProgramState, inj env.Object, injnow bool) *env.ProgramState {
 	//fmt.Println("BEFORE BLOCK ***")
 	for es.Ser.Pos() < es.Ser.Len() {
 		//fmt.Println("EVALBLOCK: " + strconv.FormatInt(int64(es.Ser.Pos()), 10))
@@ -50,20 +54,25 @@ func EvalBlock(es *env.ProgramState) *env.ProgramState {
 		// TODO --- look at JS code for eval .. what state we carry around
 		// TODO --- probably block, position, env ... pack all this into one struct
 		//		--- that could be passed in and returned from eval functions (I think)
-		es = EvalExpression(es)
-		MaybeAcceptComma(es)
+		es, injnow = EvalExpressionInj(es, inj, injnow)
+		es, injnow = MaybeAcceptComma(es, inj, injnow)
 		//es.Res.Trace("After eval expression")
 	}
+	//es.Inj = nil
 	return es
 }
 
-func MaybeAcceptComma(es *env.ProgramState) *env.ProgramState {
+func MaybeAcceptComma(es *env.ProgramState, inj env.Object, injnow bool) (*env.ProgramState, bool) {
 	obj := es.Ser.Peek()
 	switch obj.(type) {
 	case env.Comma:
 		es.Ser.Next()
+		if inj != nil {
+			//fmt.Println("INJNOW")
+			injnow = true
+		}
 	}
-	return es
+	return es, injnow
 }
 
 //
@@ -105,19 +114,25 @@ func EvalExpression2(es *env.ProgramState, limited bool) *env.ProgramState {
 }
 
 func EvalExpression(es *env.ProgramState) *env.ProgramState {
+	es1, _ := EvalExpressionInj(es, nil, false)
+	return es1
+}
+
+func EvalExpressionInj(es *env.ProgramState, inj env.Object, injnow bool) (*env.ProgramState, bool) {
 	var esleft *env.ProgramState
-	if es.Inj == nil {
+	if inj == nil || injnow == false {
 		esleft = EvalExpression_(es)
 	} else {
 		esleft = es
-		esleft.Res = es.Inj
-		esleft.Inj = nil
+		esleft.Res = inj
+		injnow = false
+		//esleft.Inj = nil
 	}
 	////// OPWORDWWW
 	// IF WE COMMENT IN NEXT LINE IT WORKS WITHOUT OPWORDS PROCESSING
 	//fmt.Println("EvalExpression")
 	//fmt.Println(es.Ser.GetPos())
-	return MaybeEvalOpwordOnRight(esleft.Ser.Peek(), esleft, false)
+	return MaybeEvalOpwordOnRight(esleft.Ser.Peek(), esleft, false), injnow
 	//return esleft
 }
 
@@ -218,15 +233,27 @@ func EvalExpression_(es *env.ProgramState) *env.ProgramState {
 func EvalWord(es *env.ProgramState, word env.Word, leftVal env.Object, toLeft bool) *env.ProgramState {
 	//fmt.Println("*EVAL WORD*")
 	//es.Env.Probe(*es.Idx)
+	/* WE MUST PROCESS FUNCTIONS THAT DON'T ACCEPT ANY ARGS IN THIS CASE .. TODO SOON
+	if leftVal == nil {
+		EvalExpression_(es)
+		leftVal = es.Res
+	}
+	//es.Res.Trace("EvalGenword")
+	object, found := es.Gen.Get(leftVal.GetKind(), word.Index)
+	if !found {
+		//object.Trace("OBJECT RETURNED: ")
+		object, found = es.Env.Get(word.Index)
+	}*/
+	// LOCAL FIRST
 	object, found := es.Env.Get(word.Index)
 	if !found {
 		if leftVal == nil {
 			EvalExpression_(es)
 			leftVal = es.Res
 		}
-		es.Res.Trace("EvalGenword")
+		//es.Res.Trace("EvalGenword")
 		object, found = es.Gen.Get(leftVal.GetKind(), word.Index)
-		object.Trace("OBJECT RETURNED: ")
+		//object.Trace("OBJECT RETURNED: ")
 	}
 	if found {
 		return EvalObject(es, object, leftVal, toLeft) //ww0128a *
@@ -244,9 +271,9 @@ func EvalGenword(es *env.ProgramState, word env.Genword, leftVal env.Object, toL
 	//es.Ser.Next()
 	EvalExpression_(es)
 	var arg0 = es.Res
-	es.Res.Trace("EvalGenword")
+	//es.Res.Trace("EvalGenword")
 	object, found := es.Gen.Get(arg0.GetKind(), word.Index)
-	object.Trace("OBJECT RETURNED: ")
+	//object.Trace("OBJECT RETURNED: ")
 	if found {
 		return EvalObject(es, object, arg0, toLeft) //ww0128a *
 		//es.Res.Trace("After eval Object")

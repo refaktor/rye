@@ -1,4 +1,4 @@
-// Rejy_go_v1 project main.go
+// Ryelang project main.go
 package main
 
 /*
@@ -26,12 +26,12 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 
-	"Rejy_go_v1/env"
-	"Rejy_go_v1/evaldo"
-	"Rejy_go_v1/loader"
-	"Rejy_go_v1/util"
+	"Ryelang/env"
+	"Ryelang/evaldo"
+	"Ryelang/loader"
+	"Ryelang/util"
 
-	//"Rejy_go_v1/util"
+	//"Ryelang/util"
 	//"fmt"
 	//"strconv"
 	"github.com/pkg/profile"
@@ -305,7 +305,7 @@ func main_rye_repl(in io.Reader, out io.Writer) {
 	evaldo.EvalBlock(es)
 
 	fmt.Println("")
-	fmt.Println(".:/|\\:. Rye shell v0.006 alpha .:/|\\:.")
+	fmt.Println(".:/|\\:. Rye shell v0.011 alpha .:/|\\:.")
 	fmt.Println("")
 
 	const PROMPT = "\n\x1b[6;30;42m Rye \033[m "

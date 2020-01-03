@@ -2,7 +2,7 @@
 package loader
 
 import (
-	"Rejy_go_v1/env"
+	"Ryelang/env"
 	"fmt"
 )
 
