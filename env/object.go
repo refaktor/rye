@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type Type int
@@ -30,6 +31,8 @@ const (
 	UriType      Type = 18
 	LSetwordType Type = 19
 	EnvType      Type = 20
+	RawMapType   Type = 21
+	DateType     Type = 22
 )
 
 type Object interface {
@@ -107,10 +110,38 @@ func (i String) GetKind() int {
 }
 
 //
+// DATE
+//
+
+type Date struct {
+	Value time.Time
+}
+
+func (i Date) Type() Type {
+	return DateType
+}
+
+func (i Date) Inspect(e Idxs) string {
+	return "<Date: " + i.Value.Format(time.RFC822Z) + ">"
+}
+
+func (i Date) Probe(e Idxs) string {
+	return i.Value.Format(time.RFC822Z)
+}
+
+func (i Date) Trace(msg string) {
+	fmt.Print(msg + "(date): ")
+	fmt.Println(i.Value.Format(time.RFC822Z))
+}
+
+func (i Date) GetKind() int {
+	return int(DateType)
+}
+
+//
 // URI
 //
 
-// String represents an string.
 type Uri struct {
 	Scheme Word
 	Path   string
@@ -732,5 +763,57 @@ func (i Native) Trace(msg string) {
 }
 
 func (i Native) GetKind() int {
+	return i.Kind.Index
+}
+
+//
+// RawMap -- nonindexed map ... for example for params from request etc, so we don't neet to idex keys and it doesn't need boxed values
+// I think it should have option of having Kind too ...
+//
+
+// String represents an string.
+type RawMap struct {
+	Data map[string]interface{}
+	Kind Word
+}
+
+func NewRawMap(data map[string]interface{}) *RawMap {
+	return &RawMap{data, Word{0}}
+}
+
+func NewRawMapFromSeries(block TSeries) RawMap {
+	data := make(map[string]interface{})
+	for block.Pos() < block.Len() {
+		key := block.Pop()
+		val := block.Pop()
+		// v001 -- only process the typical case of string val
+		switch k := key.(type) {
+		case String:
+			data[k.Value] = val
+		}
+	}
+	return RawMap{data, Word{0}}
+}
+
+// Type returns the type of the Integer.
+func (i RawMap) Type() Type {
+	return RawMapType
+}
+
+// Inspect returns a string representation of the Integer.
+func (i RawMap) Inspect(e Idxs) string {
+	return "<RawMap OF " + i.Kind.Probe(e) + ">"
+}
+
+// Inspect returns a string representation of the Integer.
+func (i RawMap) Probe(e Idxs) string {
+	return "<RawMap OF " + i.Kind.Probe(e) + ">"
+}
+
+func (i RawMap) Trace(msg string) {
+	fmt.Print(msg + "(rawmap): ")
+}
+
+func (i RawMap) GetKind() int {
 	return i.Kind.Index
 }

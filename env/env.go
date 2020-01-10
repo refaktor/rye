@@ -90,14 +90,15 @@ func (e *Env) Set(word int, val Object) Object {
 }
 
 type ProgramState struct {
-	Ser    TSeries // current block of code
-	Res    Object  // result of expression
-	Env    *Env    // Env object ()
-	Idx    *Idxs   // Idx object (index of words)
-	Args   []int   // names of current arguments (indexes of names)
-	Gen    *Gen    // map[int]map[int]Object  // list of Generic kinds / code
-	Inj    Object  // Injected first value in a block evaluation
-	Injnow bool
+	Ser        TSeries // current block of code
+	Res        Object  // result of expression
+	Env        *Env    // Env object ()
+	Idx        *Idxs   // Idx object (index of words)
+	Args       []int   // names of current arguments (indexes of names)
+	Gen        *Gen    // map[int]map[int]Object  // list of Generic kinds / code
+	Inj        Object  // Injected first value in a block evaluation
+	Injnow     bool
+	ReturnFlag bool
 }
 
 func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
@@ -109,6 +110,7 @@ func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
 		make([]int, 6),
 		NewGen(), //make(map[int]map[int]Object),
 		nil,
+		false,
 		false,
 	}
 	return &ps

@@ -230,8 +230,6 @@ var builtins = map[string]*env.Builtin{
 				res := arg0
 				ser := ps.Ser
 				ps.Ser = bloc.Series
-				//ps.Inj = arg0
-				//ps.Injnow = true
 				EvalBlockInj(ps, arg0, true)
 				ps.Ser = ser
 				return res
@@ -541,13 +539,77 @@ var builtins = map[string]*env.Builtin{
 			return nil
 		},
 	},
+
+	"raw-map": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg0.(type) {
+			case env.Block:
+				return env.NewRawMapFromSeries(bloc.Series)
+			}
+			return nil
+		},
+	},
+
+	// BASIC ENV / RAWMAP FUNCTIONS
+	"get": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.RawMap:
+				switch s2 := arg1.(type) {
+				case env.String:
+					v := s1.Data[s2.Value]
+					switch v1 := v.(type) {
+					case env.Integer:
+						return v1
+					case env.String:
+						return v1
+					case env.Date:
+						return v1
+					}
+				}
+			}
+			return nil
+		},
+	},
+
+	// BASIC ENV / RAWMAP FUNCTIONS
+	"return": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			ps.ReturnFlag = true
+			return arg0
+		},
+	},
+
+	// BASIC ENV / RAWMAP FUNCTIONS
+	"mold": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var r strings.Builder
+			switch s1 := arg0.(type) {
+			case env.RawMap:
+				for k, v := range s1.Data {
+					r.WriteString(k)
+					r.WriteString(":\n\t")
+					r.WriteString(fmt.Sprintln(v))
+				}
+			default:
+				fmt.Println("Error")
+			}
+			return env.String{r.String()}
+		},
+	},
 }
 
 func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(builtins, ps)
-	RegisterBuiltins2(Builtins_web, ps)
-	RegisterBuiltins2(Builtins_sqlite, ps)
-	RegisterBuiltins2(Builtins_gtk, ps)
+	//  RegisterBuiltins2(Builtins_web, ps)
+	//	RegisterBuiltins2(Builtins_sqlite, ps)
+	//	RegisterBuiltins2(Builtins_gtk, ps)
+	RegisterBuiltins2(Builtins_validation, ps)
+	RegisterBuiltins2(Builtins_ps, ps)
 }
 
 func RegisterBuiltins2(builtins map[string]*env.Builtin, ps *env.ProgramState) {

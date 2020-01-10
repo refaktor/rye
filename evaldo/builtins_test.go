@@ -277,4 +277,193 @@ func TestEvaldo_series_next_pop_peek(t *testing.T) {
 	}
 }
 
+func TestRawMap1(t *testing.T) {
+	input := "{ raw-map { \"age\" 123 \"name\" \"Jimbo\" } 123 }" // POP doesn't make sense right now as builtins can't change objects now. If is this good / safety or bad /too restricting
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	fmt.Print(es.Res.Inspect(*es.Idx))
+	if es.Res.Type() != env.IntegerType {
+		t.Error("Expected result type Integer")
+	}
+	if !(es.Res.(env.Integer).Value == 123) {
+		t.Error("Expected result value 123")
+	}
+}
+
+func TestValidateRawMap(t *testing.T) {
+	//input := "{ rm: raw-map { \"age1\" 1234 \"name\" \"Jimbo\" } vm: validate rm { age: optional \"123\" integer } get vm \"age\" }"
+	input := "{ { \"age1\" 1234 \"name\" \"Jimbo\" } |raw-map |validate { age: optional \"123\" integer } |get \"age\" }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	es.Res.Trace("dasasd")
+
+	fmt.Print(es.Res.Inspect(*es.Idx))
+	if es.Res.Type() != env.IntegerType {
+		t.Error("Expected result type Integer")
+	}
+	if !(es.Res.(env.Integer).Value == 123) {
+		t.Error("Expected result value 123")
+	}
+}
+
+func TestValidateRawMap2(t *testing.T) { // passing thru
+	input := "{ { \"age1\" 1234 \"name\" \"Jimbo\" } |raw-map |validate { name: optional \"JoeDoe\" string } |get \"name\" }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	es.Res.Trace("dasasd")
+
+	fmt.Print(es.Res.Inspect(*es.Idx))
+	if es.Res.Type() != env.StringType {
+		t.Error("Expected result type String")
+	}
+	if !(es.Res.(env.String).Value == "Jimbo") {
+		t.Error("Expected result value Jimbo")
+	}
+}
+
+func TestValidateRawMap3(t *testing.T) { // using default
+	input := "{ { \"age1\" 1234 \"name1\" \"Jimbo\" } |raw-map |validate { name: optional \"JoeDoe\" string } |get \"name\" }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	es.Res.Trace("dasasd")
+
+	fmt.Print(es.Res.Inspect(*es.Idx))
+	if es.Res.Type() != env.StringType {
+		t.Error("Expected result type String")
+	}
+	if !(es.Res.(env.String).Value == "JoeDoe") {
+		t.Error("Expected result value JoeDoe")
+	}
+}
+
+func TestValidateRawMap4(t *testing.T) { // two keys, int as string
+	input := "{ { \"age1\" 1234 \"name1\" \"Jimbo\" } |raw-map |validate { age: optional 111 string  name: optional \"JoeDoe\" string } |get \"age\" }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	es.Res.Trace("dasasd")
+
+	fmt.Print(es.Res.Inspect(*es.Idx))
+	if es.Res.Type() != env.StringType {
+		t.Error("Expected result type String")
+	}
+	if !(es.Res.(env.String).Value == "111") {
+		t.Error("Expected result value 111")
+	}
+}
+
+func TestValidateRawMap5(t *testing.T) { // two keys, int as string, pass true
+	input := "{ { \"age\" 1234 \"name1\" \"Jimbo\" } |raw-map |validate { age: required string } |get \"age\" }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	es.Res.Trace("dasasd")
+
+	fmt.Print(es.Res.Inspect(*es.Idx))
+	if es.Res.Type() != env.StringType {
+		t.Error("Expected result type String")
+	}
+	if !(es.Res.(env.String).Value == "1234") {
+		t.Error("Expected result value 1234")
+	}
+}
+
+func TestValidateRawMapEmail1(t *testing.T) { // two keys, int as string, pass true
+	input := "{ { \"em\" \"toto.bam@gmail.com\" } |raw-map |validate { em: required email } |get \"em\" }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	es.Res.Trace("dasasd")
+
+	fmt.Print(es.Res.Inspect(*es.Idx))
+	if es.Res.Type() != env.StringType {
+		t.Error("Expected result type String")
+	}
+	if !(es.Res.(env.String).Value == "toto.bam@gmail.com") {
+		t.Error("Expected result value toto.bam@gmail.com")
+	}
+}
+
+func TestValidateRawMapDate1(t *testing.T) { // two keys, int as string, pass true
+	input := "{ { \"da\" \"02.01.1020\" } |raw-map |validate { da: required date } |get \"da\" |print }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	es.Res.Trace("dasasd")
+
+	fmt.Print(es.Res.Inspect(*es.Idx))
+	if es.Res.Type() != env.DateType {
+		t.Error("Expected result type Date")
+	}
+}
+
+func TestValidateRawMapCheck1(t *testing.T) { // two keys, int as string, pass true
+	input := "{ { \"num\" 100 } |raw-map |validate { num: optional 0 check \"too-low\" { .greater 50 } } |get \"num\" |print }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	es.Res.Trace("dasasd")
+
+	fmt.Print(es.Res.Inspect(*es.Idx))
+	if es.Res.Type() != env.IntegerType {
+		t.Error("Expected result type Date")
+	}
+	if !(es.Res.(env.Integer).Value == 100) {
+		t.Error("Expected result value 100")
+	}
+
+}
+
+func TestValidateRawMapCalc1(t *testing.T) { // two keys, int as string, pass true
+	input := "{ { \"numX\" 100 } |raw-map |validate { num: optional 1 calc { .add 10000 } } |get \"num\" |print }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	es.Res.Trace("dasasd")
+
+	fmt.Print(es.Res.Inspect(*es.Idx))
+	if es.Res.Type() != env.IntegerType {
+		t.Error("Expected result type Date")
+	}
+
+	if !(es.Res.(env.Integer).Value == 10001) {
+		t.Error("Expected result value 123")
+	}
+
+}
+
 // { a: { 101 102 103 } b: a .nth 1 |add 100 }" // POP doesn't make sense right now as builtins can't change objects now. If is this good / safety or bad /too restricting

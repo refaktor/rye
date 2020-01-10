@@ -886,3 +886,79 @@ posts: context {
 		}
 	}
 }
+
+# Env is context is object .... can we lock whole object's contexts? ... if we add a flag to it ... what do we get ... 
+# we would also need a validated flag probably
+
+ok. So context is the same as env and same as object ... basically execution environment is a first class Rye type.
+
+Then we could have function in-context, which places given context as primary and normal context as it's parent?
+
+do with-context 'gtk {
+	init 
+	w: new-window
+	l: new-label
+}
+
+what if we use factor like convention for new ... it clashes a little that words with op as first arg are op-words?
+
+do with-context 'gtk {
+	init 
+	w: <window>
+	l: <label>
+}
+
+#idea ... flag for 
+
+
+# 04.01.2020
+
+Ok so we make the first validation dialect. Validation dialect will not be a pattern / code flow of Rye functions ...
+
+The main reason to not explore this direction is that it's integral part of the language, also used internally, not just to
+validate external input, so it must be as fast and light as possible and we want to avoid any namespace lookups if possible. So at least core
+validation rules should be executed directly in GO, with no steps to rye environments. 
+
+First validation rules are:
+
+required , optional X , string , integer , number , email
+
+Then we add the adhoc rules for: 
+  birth: optional _ opt-iso-date
+  email: required email check 'email-taken { .find-user-by-email .found? }
+  exid: calc { .add 100000 } ; takes current value and calculates new one
+  email-hash: generate { .get 'email |hash }
+
+There will also be a rule for executing and arbitrary Rye function in multiple modalities 
+(accepts validation-state returns validation-state, returns true/false, etc)... later
+
+So, firstly ... we implement the dialect words above. For reasons mentioned this dialect should be compact hardcoded function switching on
+these words
+
+# Error handling ...
+
+1. Errors print out and or log and stop execution
+
+2. Failures can be caught in code, if uncaught they turn to errors
+
+Error is like early return / unwind of our whole evaluation. How do we do it? Let's make a minimal example and think about it:
+
+let's first make a return work ...
+
+{ print1 return 2 print 3 }
+// should print 1 and return 2, but not print 3
+return has to pass over multiple scopes ... nested blocks like if {} do {} foreach ...
+
+this can be done via some special return type, that when meet causes exiting etc ... but where exactly do we detect it? ... and checking constantly is costly ... 
+could there just be a return flag in current Env that is set and then unset on exiting? And return would be a builtin that set's this flag?
+
+
+{ print 1 return err 2 print 3 }
+
+should print 1 and then exit. err is the builtin that returns the error object.
+
+{ print 1 do { print 2 err 3 print 4 } print 5 }
+
+Can our code throw error? if error exits immediatelly? Does it even make sense? When do we detect the error? On return of call? It's related to return ... error is like return error
+
+

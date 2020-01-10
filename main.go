@@ -184,7 +184,6 @@ func serve(c echo.Context) error {
 	evaldo.RegisterBuiltins(es)
 	//evaldo.RegisterBuiltins2(evaldo.Buil, ps *env.ProgramState) {
 	evaldo.EvalBlock(es)
-
 	env.SetValue(es, "ctx", *env.NewNative(es.Idx, c, "Rye-echo-context"))
 	env.SetValue(es, "session", *env.NewNative(es.Idx, sess, "Rye-echo-session"))
 	//env.SetValue(es, "ctx", env.String{"YOYOYO"})
@@ -268,9 +267,9 @@ func serve(c echo.Context) error {
 func main_rye_file(file string) {
 
 	//util.PrintHeader()
-	defer profile.Start().Stop()
+	defer profile.Start(profile.CPUProfile).Stop()
 
-	input := "{ loop 10000000 { add 1 2 } }"
+	input := "{ loop 50000000 { add 1 2 } }"
 	block, genv := loader.LoadString(input)
 	es := env.NewProgramState(block.Series, genv)
 	evaldo.RegisterBuiltins(es)

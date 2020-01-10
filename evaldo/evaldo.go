@@ -55,6 +55,9 @@ func EvalBlockInj(es *env.ProgramState, inj env.Object, injnow bool) *env.Progra
 		// TODO --- probably block, position, env ... pack all this into one struct
 		//		--- that could be passed in and returned from eval functions (I think)
 		es, injnow = EvalExpressionInj(es, inj, injnow)
+		if es.ReturnFlag {
+			return es
+		}
 		es, injnow = MaybeAcceptComma(es, inj, injnow)
 		//es.Res.Trace("After eval expression")
 	}
@@ -165,7 +168,6 @@ func MaybeEvalOpwordOnRight(nextObj env.Object, es *env.ProgramState, limited bo
 		es.Env.Set(idx, es.Res)
 		es.Ser.Next()
 		return MaybeEvalOpwordOnRight(es.Ser.Peek(), es, limited)
-
 	}
 	return es
 }

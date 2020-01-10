@@ -173,7 +173,7 @@ func newParser() *Parser {
 	URI    		<-  WORD "://" LETTERORNUM*
 	COMMA			<-  ","
 	VOID				<-  "_"
-	LETTERORNUM		<-  < [a-zA-Z0-9-?=] >
+	LETTERORNUM		<-  < [a-zA-Z0-9-?=/] >
 	LETTER  			<-  < [a-zA-Z?=] >
 	UCLETTER  			<-  < [A-Z] >
 	LCLETTERORNUM		<-  < [a-z0-9] >
