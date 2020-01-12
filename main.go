@@ -8,6 +8,8 @@ extern void enableRawMode();
 import "C"
 
 import (
+	"path/filepath"
+
 	"bufio"
 	"errors"
 	"fmt"
@@ -30,6 +32,8 @@ import (
 	"Ryelang/evaldo"
 	"Ryelang/loader"
 	"Ryelang/util"
+
+	"github.com/peterh/liner"
 
 	//"Ryelang/util"
 	//"fmt"
@@ -292,7 +296,7 @@ func main_rye_file(file string) {
 
 }
 
-func main_rye_repl(in io.Reader, out io.Writer) {
+func main_rye_repl_OLD(in io.Reader, out io.Writer) {
 
 	//util.PrintHeader()
 	//defer profile.Start().Stop()
@@ -304,7 +308,7 @@ func main_rye_repl(in io.Reader, out io.Writer) {
 	evaldo.EvalBlock(es)
 
 	fmt.Println("")
-	fmt.Println(".:/|\\:. Rye shell v0.011 alpha .:/|\\:.")
+	fmt.Println(".:/|\\:. Rye shell v0.014 alpha .:/|\\:.")
 	fmt.Println("")
 
 	const PROMPT = "\n\x1b[6;30;42m Rye \033[m "
@@ -323,9 +327,20 @@ func main_rye_repl(in io.Reader, out io.Writer) {
 
 		line := scanner.Text()
 
-		block, genv := loader.LoadString("{ " + line + " }")
+		line1 := strings.Split(line, "//") //--- just very temporary solution for some comments in repl. Later should probably be part of loader ... maybe?
+		//fmt.Println(line1[0])
+		block, genv := loader.LoadString("{ " + line1[0] + " }")
 		es := env.AddToProgramState(es, block.Series, genv)
 		evaldo.EvalBlock(es)
+		if es.FailureFlag {
+			fmt.Println("\x1b[33m" + "failure" + "\x1b[0m")
+		}
+		if es.ErrorFlag {
+			fmt.Println("\x1b[31m" + "critical-error" + "\x1b[0m")
+		}
+		es.ReturnFlag = false
+		es.ErrorFlag = false
+		es.FailureFlag = false
 
 		if es.Res != nil {
 			//fmt.Println("\x1b[6;30;42m" + es.Res.Inspect(*genv) + "\x1b[0m")
@@ -348,6 +363,83 @@ func main_rye_repl(in io.Reader, out io.Writer) {
 
 	a	fmt.Println(strconv.FormatInt(int64(genv.GetWordCount()), 10))*/
 
+}
+
+var (
+	history_fn = filepath.Join(os.TempDir(), ".rye_repl_history")
+	names      = []string{"add", "join", "return", "fn", "fail", "if"}
+)
+
+func main_rye_repl(in io.Reader, out io.Writer) {
+
+	input := "{ name: \"Rye\" version: \"0.002 alpha\" }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	evaldo.RegisterBuiltins(es)
+	evaldo.EvalBlock(es)
+
+	line := liner.NewLiner()
+	defer line.Close()
+
+	line.SetCtrlCAborts(true)
+
+	line.SetCompleter(func(line string) (c []string) {
+		for _, n := range names {
+			if strings.HasPrefix(n, strings.ToLower(line)) {
+				c = append(c, n)
+			}
+		}
+		return
+	})
+
+	if f, err := os.Open(history_fn); err == nil {
+		line.ReadHistory(f)
+		f.Close()
+	}
+	//const PROMPT = "\x1b[6;30;42m Rye \033[m "
+	const PROMPT = "{ Rye } "
+
+	for {
+
+		if code, err := line.Prompt(PROMPT); err == nil {
+
+			line1 := strings.Split(code, "//") //--- just very temporary solution for some comments in repl. Later should probably be part of loader ... maybe?
+			//fmt.Println(line1[0])
+			block, genv := loader.LoadString("{ " + line1[0] + " }")
+			es := env.AddToProgramState(es, block.Series, genv)
+			evaldo.EvalBlock(es)
+			if es.FailureFlag {
+				fmt.Println("\x1b[33m" + "failure" + "\x1b[0m")
+			}
+			if es.ErrorFlag {
+				fmt.Println("\x1b[31m" + "critical-error" + "\x1b[0m")
+			}
+			es.ReturnFlag = false
+			es.ErrorFlag = false
+			es.FailureFlag = false
+
+			if es.Res != nil {
+				//fmt.Println("\x1b[6;30;42m" + es.Res.Inspect(*genv) + "\x1b[0m")
+				fmt.Println("\033[38;5;37m" + es.Res.Inspect(*genv) + "\x1b[0m")
+			}
+
+			line.AppendHistory(code)
+		} else if err == liner.ErrPromptAborted {
+			log.Print("Aborted")
+			break
+		} else {
+			log.Print("Error reading line: ", err)
+			break
+		}
+
+	}
+
+	if f, err := os.Create(history_fn); err != nil {
+		log.Print("Error writing history file: ", err)
+	} else {
+		line.WriteHistory(f)
+		f.Close()
+	}
 }
 
 func main_rysh() {

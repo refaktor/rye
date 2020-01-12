@@ -466,4 +466,149 @@ func TestValidateRawMapCalc1(t *testing.T) { // two keys, int as string, pass tr
 
 }
 
+func TestReturn(t *testing.T) { // two keys, int as string, pass true
+	input := "{ print 1 return 2 print 3 }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	fmt.Print(es.Res.Inspect(*es.Idx))
+	if es.Res.Type() != env.IntegerType {
+		t.Error("Expected result type Date")
+	}
+
+	if !(es.Res.(env.Integer).Value == 2) {
+		t.Error("Expected result value 2")
+	}
+
+}
+
+func TestReturnDo(t *testing.T) { // two keys, int as string, pass true
+	input := "{ print 1 do { print 2 return 3 print 4 } print 5 }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	fmt.Print(es.Res.Inspect(*es.Idx))
+	if es.Res.Type() != env.IntegerType {
+		t.Error("Expected result type Date")
+	}
+
+	if !(es.Res.(env.Integer).Value == 3) {
+		t.Error("Expected result value 3")
+	}
+}
+
+func TestReturnDoIf(t *testing.T) { // two keys, int as string, pass true
+	input := "{ print 1 do { print 2 if 1 { print 3 return 4 print 5 } print 6 } print 7 }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	fmt.Print(es.Res.Inspect(*es.Idx))
+	if es.Res.Type() != env.IntegerType {
+		t.Error("Expected result type Date")
+	}
+
+	if !(es.Res.(env.Integer).Value == 4) {
+		t.Error("Expected result value 4")
+	}
+}
+
+func TestReturnInsideFn0(t *testing.T) { // two keys, int as string, pass true
+	input := "{ print 1 a: fn { } { print 11 return 22 print 33 } print 2 }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	fmt.Print(es.Res.Inspect(*es.Idx))
+	if es.Res.Type() != env.IntegerType {
+		t.Error("Expected result type Date")
+	}
+
+	if !(es.Res.(env.Integer).Value == 2) {
+		t.Error("Expected result value 2")
+	}
+}
+
+func TestReturnInsideFn1(t *testing.T) { // two keys, int as string, pass true
+	input := "{ print 1 a: fn { } { print 11 return 22 print 33 } print 2 print a print 3 }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	fmt.Print(es.Res.Inspect(*es.Idx))
+	if es.Res.Type() != env.IntegerType {
+		t.Error("Expected result type Date")
+	}
+
+	if !(es.Res.(env.Integer).Value == 3) {
+		t.Error("Expected result value 3")
+	}
+}
+
+func TestReturnInsideFn2(t *testing.T) { // two keys, int as string, pass true
+	input := "{ print 1 a: fn { } { print 11 return 22 print 33 } b: fn { } { print 111 return a print 333 } print 2 print b print 3 }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	fmt.Print(es.Res.Inspect(*es.Idx))
+	if es.Res.Type() != env.IntegerType {
+		t.Error("Expected result type Date")
+	}
+
+	if !(es.Res.(env.Integer).Value == 3) {
+		t.Error("Expected result value 3")
+	}
+}
+
+func TestCriticalFailureInsideFn2InBuiltinExpr(t *testing.T) { // two keys, int as string, pass true
+	input := "{ print 1 a: fn { } { print 11 critical-failure 22 print 33 } b: fn { } { print 111 return a print 333 } print 2 add b 2 print 3 }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	fmt.Print(es.Res.Inspect(*es.Idx))
+	if es.Res.Type() != env.IntegerType {
+		t.Error("Expected result type Date")
+	}
+
+	if !(es.Res.(env.Integer).Value == 22) {
+		t.Error("Expected result value 22")
+	}
+}
+
+func TestCriticalFailureInsideFn2InFnExpr(t *testing.T) { // two keys, int as string, pass true
+	input := "{ print 1 a: fn { } { print 11 critical-failure 22 print 33 } b: fn { a } { print 111 print a print 333 } print 2 b a print 3 }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	fmt.Print(es.Res.Inspect(*es.Idx))
+	if es.Res.Type() != env.IntegerType {
+		t.Error("Expected result type Date")
+	}
+
+	if !(es.Res.(env.Integer).Value == 22) {
+		t.Error("Expected result value 22")
+	}
+}
+
 // { a: { 101 102 103 } b: a .nth 1 |add 100 }" // POP doesn't make sense right now as builtins can't change objects now. If is this good / safety or bad /too restricting

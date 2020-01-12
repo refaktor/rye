@@ -10,6 +10,12 @@ import (
 	. "github.com/yhirose/go-peg"
 )
 
+func trace(x interface{}) {
+	//fmt.Print("\x1b[56m")
+	//fmt.Print(x)
+	//fmt.Println("\x1b[0m")
+}
+
 var wordIndex = *env.NewIdxs()
 
 func GetIdxs() *env.Idxs {
@@ -139,14 +145,14 @@ func parsePipeword(v *Values, d Any) (Any, error) {
 }
 
 func parseGenword(v *Values, d Any) (Any, error) {
-	fmt.Println("GENWORD:" + v.Token())
+	trace("GENWORD:" + v.Token())
 	word := v.Token()
 	idx := wordIndex.IndexWord(word)
 	return env.Genword{idx}, nil
 }
 
 func parseGetword(v *Values, d Any) (Any, error) {
-	fmt.Println("GETWORD:" + v.Token())
+	trace("GETWORD:" + v.Token())
 	word := v.Token()
 	idx := wordIndex.IndexWord(word[1:])
 	return env.Getword{idx}, nil

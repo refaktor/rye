@@ -2,6 +2,7 @@ package evaldo
 
 import (
 	"Ryelang/env"
+	"fmt"
 	//"fmt"
 	//"strconv"
 )
@@ -55,7 +56,7 @@ func EvalBlockInj(es *env.ProgramState, inj env.Object, injnow bool) *env.Progra
 		// TODO --- probably block, position, env ... pack all this into one struct
 		//		--- that could be passed in and returned from eval functions (I think)
 		es, injnow = EvalExpressionInj(es, inj, injnow)
-		if es.ReturnFlag {
+		if es.ReturnFlag || es.ErrorFlag {
 			return es
 		}
 		es, injnow = MaybeAcceptComma(es, inj, injnow)
@@ -108,6 +109,10 @@ func MaybeAcceptComma(es *env.ProgramState, inj env.Object, injnow bool) (*env.P
 
 func EvalExpression2(es *env.ProgramState, limited bool) *env.ProgramState {
 	esleft := EvalExpression_(es)
+	trace("****1")
+	if es.ReturnFlag {
+		return es
+	}
 	////// OPWORDWWW
 	// IF WE COMMENT IN NEXT LINE IT WORKS WITHOUT OPWORDS PROCESSING
 	//fmt.Println("EvalExpression")
@@ -125,6 +130,11 @@ func EvalExpressionInj(es *env.ProgramState, inj env.Object, injnow bool) (*env.
 	var esleft *env.ProgramState
 	if inj == nil || injnow == false {
 		esleft = EvalExpression_(es)
+		trace("****2")
+		if es.ReturnFlag {
+			return es, injnow
+		}
+
 	} else {
 		esleft = es
 		esleft.Res = inj
@@ -151,13 +161,22 @@ func MaybeEvalOpwordOnRight(nextObj env.Object, es *env.ProgramState, limited bo
 		return MaybeEvalOpwordOnRight(es.Ser.Peek(), es, limited)
 	case env.Pipeword:
 		//ProcOpword(nextObj, es)
+		trace2("LIMITED JUMP")
 		if limited {
+			trace("LIMITED JUMP")
 			return es
 		}
 		es.Ser.Next()
 		//fmt.Println("MaybeEvalPipeword..1")
 		es = EvalWord(es, opword.ToWord(), es.Res, false)
 		//fmt.Println("MaybeEvalPipeword..2")
+		if es.ReturnFlag {
+			return es //... not sure if we need this
+		}
+		/*if es.FailureFlag {
+			es.FailureFlag = false
+			es.ErrorFlag = true
+		}*/
 		return MaybeEvalOpwordOnRight(es.Ser.Peek(), es, limited)
 	case env.LSetword:
 		if limited {
@@ -181,7 +200,8 @@ func MaybeEvalOpwordOnRight(nextObj env.Object, es *env.ProgramState, limited bo
 /* */
 
 func EvalExpression_(es *env.ProgramState) *env.ProgramState {
-	//fmt.Println("EvalExpression___")
+	trace2("<<<EvalExpression_")
+	defer trace2("EvalExpression_>>>")
 	object := es.Ser.Pop()
 	//es.Idx.Probe()
 	//object.Trace("Before entering expression")
@@ -199,7 +219,8 @@ func EvalExpression_(es *env.ProgramState) *env.ProgramState {
 	case env.UriType:
 		es.Res = object
 	case env.WordType:
-		return EvalWord(es, object.(env.Word), nil, false)
+		rr := EvalWord(es, object.(env.Word), nil, false)
+		return rr
 		//es1.Res.Trace("After eval word")
 		//return es1
 	case env.GenwordType:
@@ -251,6 +272,10 @@ func EvalWord(es *env.ProgramState, word env.Word, leftVal env.Object, toLeft bo
 	if !found {
 		if leftVal == nil {
 			EvalExpression_(es)
+			trace("****3")
+			if es.ReturnFlag {
+				return es
+			}
 			leftVal = es.Res
 		}
 		//es.Res.Trace("EvalGenword")
@@ -272,6 +297,8 @@ func EvalGenword(es *env.ProgramState, word env.Genword, leftVal env.Object, toL
 	//es.Env.Probe(*es.Idx)
 	//es.Ser.Next()
 	EvalExpression_(es)
+	trace("****4")
+
 	var arg0 = es.Res
 	//es.Res.Trace("EvalGenword")
 	object, found := es.Gen.Get(arg0.GetKind(), word.Index)
@@ -352,19 +379,24 @@ func CallFunction(fn env.Function, es *env.ProgramState, arg0 env.Object, toLeft
 	es.Env = env.NewEnv(env0)
 
 	ii := 0
-	evalExprFn := EvalExpression
+	// evalExprFn := EvalExpression // 2020-01-12 .. changed to ion2
+	evalExprFn := EvalExpression2
 	if arg0 != nil {
 		index := fn.Spec.Series.Get(ii).(env.Word).Index
 		es.Env.Set(index, arg0)
 		es.Args[ii] = index
 		ii = 1
 		if !toLeft {
-			evalExprFn = EvalExpression_
+			//evalExprFn = EvalExpression_ // 2020-01-12 .. changed to ion2
+			evalExprFn = EvalExpression2
 		}
 	}
 	// collect arguments
 	for i := ii; i < fn.Argsn; i += 1 {
-		es = evalExprFn(es)
+		es = evalExprFn(es, true)
+		if es.ErrorFlag || es.ReturnFlag {
+			return es
+		}
 		index := fn.Spec.Series.Get(i).(env.Word).Index
 		es.Env.Set(index, es.Res)
 		es.Args[i] = index
@@ -379,6 +411,7 @@ func CallFunction(fn env.Function, es *env.ProgramState, arg0 env.Object, toLeft
 	es.Res = result.Res
 	es.Env = env0
 	es.Ser = ser0
+	es.ReturnFlag = false
 	//es.Res.Trace("Before user function returns")
 	return es
 	/*         for (var i=0;i<h.length;i+=1) {
@@ -394,6 +427,38 @@ func CallFunction(fn env.Function, es *env.ProgramState, arg0 env.Object, toLeft
 	*/
 }
 
+func fmt1() { fmt.Print(1) }
+
+func trace(x interface{}) {
+	//fmt.Print("\x1b[36m")
+	//fmt.Print(x)
+	//fmt.Println("\x1b[0m")
+}
+func trace2(x interface{}) {
+	//fmt.Print("\x1b[56m")
+	//fmt.Print(x)
+	//fmt.Println("\x1b[0m")
+}
+
+func checkFlags(bi env.Builtin, ps *env.ProgramState, n int) bool {
+	trace(n)
+	trace(ps.Res)
+	trace(bi)
+	if ps.FailureFlag {
+		trace("FailureFlag")
+		if bi.AcceptFailure {
+			trace("Accept Failure")
+		} else {
+			trace("Fail->Error.")
+			ps.ErrorFlag = true
+			return true
+		}
+	} else {
+		trace("NOT FailuteFlag")
+	}
+	return false
+}
+
 func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft bool) *env.ProgramState {
 	////args := make([]env.Object, bi.Argsn)
 	/*pospos := ps.Ser.GetPos()
@@ -402,6 +467,7 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 		args[i] = ps.Res
 	}
 	ps.Ser.SetPos(pospos)*/
+
 	// let's try to make it without array allocation and without variadic arguments that also maybe actualizes splice
 	arg0 := env.Object(bi.Cur0) //env.Object(bi.Cur0)
 	arg1 := env.Object(bi.Cur1)
@@ -410,6 +476,10 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 	arg4 := env.Object(bi.Cur4)
 	evalExprFn := EvalExpression2
 	curry := false
+
+	trace("*** BUILTIN ***")
+	trace(bi)
+
 	if arg0_ != nil {
 		//fmt.Println("ARG0 = LEFT")
 		arg0 = arg0_
@@ -423,6 +493,13 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 		//fmt.Println(" ARG 1 ")
 		//fmt.Println(ps.Ser.GetPos())
 		evalExprFn(ps, true)
+
+		if checkFlags(bi, ps, 0) {
+			return ps
+		}
+		if ps.ErrorFlag || ps.ReturnFlag {
+			return ps
+		}
 		if ps.Res.Type() == env.VoidType {
 			curry = true
 		} else {
@@ -430,7 +507,13 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 		}
 	}
 	if bi.Argsn > 1 && bi.Cur1 == nil {
-		evalExprFn(ps, true)
+		evalExprFn(ps, true) // <---- THESE DETERMINE IF IT CONSUMES WHOLE EXPRESSION OR NOT IN CASE OF PIPEWORDS .. HM*... MAYBE WOULD COULD HAVE A WORD MODIFIER?? a: 2 |add 5 a:: 2 |add 5 print* --TODO
+		if checkFlags(bi, ps, 1) {
+			return ps
+		}
+		if ps.ErrorFlag || ps.ReturnFlag {
+			return ps
+		}
 		if ps.Res.Type() == env.VoidType {
 			curry = true
 		} else {
@@ -439,6 +522,12 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 	}
 	if bi.Argsn > 2 {
 		evalExprFn(ps, true)
+		if checkFlags(bi, ps, 2) {
+			return ps
+		}
+		if ps.ErrorFlag || ps.ReturnFlag {
+			return ps
+		}
 		if ps.Res.Type() == env.VoidType {
 			curry = true
 		} else {

@@ -620,17 +620,18 @@ type BuiltinFunction func(ps *ProgramState, arg0 Object, arg1 Object, arg2 Objec
 
 // Builtin represents a builtin function.
 type Builtin struct {
-	Fn    BuiltinFunction
-	Argsn int
-	Cur0  Object
-	Cur1  Object
-	Cur2  Object
-	Cur3  Object
-	Cur4  Object
+	Fn            BuiltinFunction
+	Argsn         int
+	Cur0          Object
+	Cur1          Object
+	Cur2          Object
+	Cur3          Object
+	Cur4          Object
+	AcceptFailure bool
 }
 
-func NewBuiltin(fn BuiltinFunction, argsn int) *Builtin {
-	bl := Builtin{fn, argsn, nil, nil, nil, nil, nil}
+func NewBuiltin(fn BuiltinFunction, argsn int, acceptFailure bool) *Builtin {
+	bl := Builtin{fn, argsn, nil, nil, nil, nil, nil, acceptFailure}
 	return &bl
 }
 

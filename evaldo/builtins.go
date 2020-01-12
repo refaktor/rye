@@ -120,6 +120,13 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
+	"prn": {
+		Argsn: 1,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			fmt.Print(arg0.Probe(*env1.Idx) + " ")
+			return arg0
+		},
+	},
 	"prin": {
 		Argsn: 1,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -160,17 +167,24 @@ var builtins = map[string]*env.Builtin{
 	"if": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch cond := arg0.(type) {
-			case env.Integer:
-				switch bloc := arg1.(type) {
-				case env.Block:
-					if cond.Value > 0 {
-						ser := ps.Ser
-						ps.Ser = bloc.Series
-						EvalBlock(ps)
-						ps.Ser = ser
-						return ps.Res
-					}
+			var cond1 bool
+			switch bloc := arg1.(type) {
+			case env.Block:
+				switch cond := arg0.(type) {
+				case env.Integer:
+					cond1 = cond.Value != 0
+				case env.String:
+					cond1 = cond.Value != ""
+				default:
+					return env.NewError("Error if")
+				}
+				if cond1 {
+					ser := ps.Ser
+					ps.Ser = bloc.Series
+					EvalBlockInj(ps, arg0, true)
+					ps.Ser = ser
+					return ps.Res
+
 				}
 			}
 			return nil
@@ -183,25 +197,32 @@ var builtins = map[string]*env.Builtin{
 			//arg0.Trace("")
 			//arg1.Trace("")
 			//arg2.Trace("")
-			switch cond := arg0.(type) {
-			case env.Integer:
-				switch bloc1 := arg1.(type) {
+			var cond1 bool
+			switch bloc1 := arg1.(type) {
+			case env.Block:
+				switch bloc2 := arg2.(type) {
 				case env.Block:
-					switch bloc2 := arg2.(type) {
-					case env.Block:
-						ser := ps.Ser
-						if cond.Value > 0 {
-							ps.Ser = bloc1.Series
-							ps.Ser.Reset()
-						} else {
-							ps.Ser = bloc2.Series
-							ps.Ser.Reset()
-						}
-						EvalBlock(ps)
-						ps.Ser = ser
-						return ps.Res
+					switch cond := arg0.(type) {
+					case env.Integer:
+						cond1 = cond.Value != 0
+					case env.String:
+						cond1 = cond.Value != ""
+					default:
+						return env.NewError("Error either")
 					}
+					ser := ps.Ser
+					if cond1 {
+						ps.Ser = bloc1.Series
+						ps.Ser.Reset()
+					} else {
+						ps.Ser = bloc2.Series
+						ps.Ser.Reset()
+					}
+					EvalBlockInj(ps, arg0, true)
+					ps.Ser = ser
+					return ps.Res
 				}
+
 			}
 			return nil
 		},
@@ -574,12 +595,63 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	// BASIC ENV / RAWMAP FUNCTIONS
+	// return , error , failure functions
 	"return": {
 		Argsn: 1,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			//fmt.Println("RETURN")
 			ps.ReturnFlag = true
 			return arg0
+		},
+	},
+
+	"fail": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			//fmt.Println("FAIL")
+			ps.FailureFlag = true
+			return arg0
+		},
+	},
+
+	"error": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			fmt.Println("ERROR")
+			ps.ErrorFlag = true
+			return arg0
+		},
+	},
+
+	"disarm": {
+		AcceptFailure: true,
+		Argsn:         1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			fmt.Println("DISARM")
+			ps.FailureFlag = false
+			return arg0
+		},
+	},
+
+	"r-check": {
+		AcceptFailure: true,
+		Argsn:         2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			fmt.Println("R-CHECK")
+			ps.FailureFlag = false
+			ps.ReturnFlag = true
+			return arg1
+		},
+	},
+
+	"fix": {
+		AcceptFailure: true,
+		Argsn:         2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			fmt.Println("FIX")
+			ps.FailureFlag = false
+			ps.Res = arg1
+			return arg1
 		},
 	},
 
@@ -614,7 +686,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 
 func RegisterBuiltins2(builtins map[string]*env.Builtin, ps *env.ProgramState) {
 	for k, v := range builtins {
-		bu := env.NewBuiltin(v.Fn, v.Argsn)
+		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure)
 		registerBuiltin(ps, k, *bu)
 	}
 }
