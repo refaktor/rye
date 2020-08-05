@@ -14,7 +14,11 @@ go build -o rye
 
 ## Author
 
-- [Janko Metelko][refaktor] - `<janko.itm@gmail.com>` - [Facebook Group](https://www.facebook.com/groups/866313463771373)
+- [Janko Metelko][refaktor] - `<janko.itm@gmail.com>`
+
+## Resources and contact
+
+- [Rye programming language - work in progress - Facebook Group](https://www.facebook.com/groups/866313463771373)
 
 [refaktor]: https://github.com/refaktor
 [otobrglez]: https://github.com/otobrglez
