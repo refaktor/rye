@@ -1,6 +1,6 @@
-# nekozito 🌾
+# rye 🌾
 
-> ⚠️ This is experimental programming language from [refaktor], looking into new language concepts with interpreter in Go. ⚠️
+> ⚠️ This is experimental programming language from [refaktor], looking into new (and borrowed) language ideas with interpreter in Go. ⚠️
 
 ## Development and experimentation
 
@@ -18,7 +18,7 @@ go get -v github.com/pkg/profile \
   github.com/shirou/gopsutil/mem \
   github.com/tobgu/qframe
 
-go build -x -o rye .
+go build
 
 # Executable
 ./rye 
@@ -42,6 +42,6 @@ More [instructions here](https://www.gtk.org/docs/installations/macos/).
 
 - [Rye programming language - work in progress - Facebook Group](https://www.facebook.com/groups/866313463771373)
 
-[refaktor]: https://github.com/refaktor
-[otobrglez]: https://github.com/otobrglez
+ [refaktor]: https://github.com/refaktor
+ [otobrglez]: https://github.com/otobrglez
 
