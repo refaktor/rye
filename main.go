@@ -8,9 +8,6 @@ extern void enableRawMode();
 import "C"
 
 import (
-	"path/filepath"
-	"regexp"
-
 	"bufio"
 	"errors"
 	"fmt"
@@ -32,10 +29,7 @@ import (
 	"Ryelang/env"
 	"Ryelang/evaldo"
 	"Ryelang/loader"
-	"Ryelang/ryeco"
 	"Ryelang/util"
-
-	"github.com/peterh/liner"
 
 	//"Ryelang/util"
 	//"fmt"
@@ -91,8 +85,6 @@ func main() {
 			main_rysh()
 		} else if os.Args[1] == "web" {
 			main_httpd()
-		} else if os.Args[1] == "ryeco" {
-			main_ryeco()
 		} else {
 			main_rye_file(os.Args[1])
 		}
@@ -120,7 +112,7 @@ func main_ryk(code string) {
 		//printidx, _ := es.Idx.GetIndex("print")
 		val0, er := strconv.ParseInt(scanner.Text(), 10, 64)
 		if er == nil {
-			es.Ctx.Set(curIdx, env.Integer{val0})
+			es.Env.Set(curIdx, env.Integer{val0})
 			evaldo.EvalBlock(es)
 			es.Ser.Reset()
 		} else {
@@ -151,22 +143,6 @@ func main_ryk(code string) {
 		genv.Probe()
 
 	a	fmt.Println(strconv.FormatInt(int64(genv.GetWordCount()), 10))*/
-
-}
-
-func main_ryeco() {
-
-	// this is experiment to create a golang equivalent of rye code
-	// with same datatypes and using the same builtin code
-	// so it gets compiled, so we can see what speeds do we get that way
-	//defer profile.Start().Stop()
-	//input := "{ loop 10000000 { add 1 2 } }"
-
-	// so we need a golang loop and add rye function versions
-
-	//	ryeco_do(func() env.Object { return ryeco_loop(1000, func() env.Object { return ryeco_add(1, 2) }) })
-
-	ryeco.Loop(env.Integer{10000000}, func() env.Object { return ryeco.Add(env.Integer{1}, env.Integer{2}) })
 
 }
 
@@ -208,6 +184,7 @@ func serve(c echo.Context) error {
 	evaldo.RegisterBuiltins(es)
 	//evaldo.RegisterBuiltins2(evaldo.Buil, ps *env.ProgramState) {
 	evaldo.EvalBlock(es)
+
 	env.SetValue(es, "ctx", *env.NewNative(es.Idx, c, "Rye-echo-context"))
 	env.SetValue(es, "session", *env.NewNative(es.Idx, sess, "Rye-echo-session"))
 	//env.SetValue(es, "ctx", env.String{"YOYOYO"})
@@ -291,9 +268,9 @@ func serve(c echo.Context) error {
 func main_rye_file(file string) {
 
 	//util.PrintHeader()
-	defer profile.Start(profile.CPUProfile).Stop()
+	defer profile.Start().Stop()
 
-	input := "{ loop 50000000 { add 1 2 } }"
+	input := "{ loop 10000000 { add 1 2 } }"
 	block, genv := loader.LoadString(input)
 	es := env.NewProgramState(block.Series, genv)
 	evaldo.RegisterBuiltins(es)
@@ -316,7 +293,7 @@ func main_rye_file(file string) {
 
 }
 
-func main_rye_repl_OLD(in io.Reader, out io.Writer) {
+func main_rye_repl(in io.Reader, out io.Writer) {
 
 	//util.PrintHeader()
 	//defer profile.Start().Stop()
@@ -328,7 +305,7 @@ func main_rye_repl_OLD(in io.Reader, out io.Writer) {
 	evaldo.EvalBlock(es)
 
 	fmt.Println("")
-	fmt.Println(".:/|\\:. Rye shell v0.014 alpha .:/|\\:.")
+	fmt.Println(".:/|\\:. Rye shell v0.011 alpha .:/|\\:.")
 	fmt.Println("")
 
 	const PROMPT = "\n\x1b[6;30;42m Rye \033[m "
@@ -347,20 +324,9 @@ func main_rye_repl_OLD(in io.Reader, out io.Writer) {
 
 		line := scanner.Text()
 
-		line1 := strings.Split(line, "//") //--- just very temporary solution for some comments in repl. Later should probably be part of loader ... maybe?
-		//fmt.Println(line1[0])
-		block, genv := loader.LoadString("{ " + line1[0] + " }")
+		block, genv := loader.LoadString("{ " + line + " }")
 		es := env.AddToProgramState(es, block.Series, genv)
 		evaldo.EvalBlock(es)
-		if es.FailureFlag {
-			fmt.Println("\x1b[33m" + "failure" + "\x1b[0m")
-		}
-		if es.ErrorFlag {
-			fmt.Println("\x1b[31m" + "critical-error" + "\x1b[0m")
-		}
-		es.ReturnFlag = false
-		es.ErrorFlag = false
-		es.FailureFlag = false
 
 		if es.Res != nil {
 			//fmt.Println("\x1b[6;30;42m" + es.Res.Inspect(*genv) + "\x1b[0m")
@@ -383,238 +349,6 @@ func main_rye_repl_OLD(in io.Reader, out io.Writer) {
 
 	a	fmt.Println(strconv.FormatInt(int64(genv.GetWordCount()), 10))*/
 
-}
-
-var (
-	history_fn = filepath.Join(os.TempDir(), ".rye_repl_history")
-	names      = []string{"add", "join", "return", "fn", "fail", "if"}
-)
-
-type ShellEd struct {
-	CurrObj env.Function
-	Pause   bool
-	Askfor  []string
-	Mode    string
-	Return  env.Object
-}
-
-func main_rye_repl(in io.Reader, out io.Writer) {
-
-	input := "{ name: \"Rye\" version: \"0.002 alpha\" }"
-	block, genv := loader.LoadString(input)
-	es := env.NewProgramState(block.Series, genv)
-	evaldo.RegisterBuiltins(es)
-	evaldo.EvalBlock(es)
-
-	line := liner.NewLiner()
-	defer line.Close()
-
-	line.SetCtrlCAborts(true)
-
-	line.SetCompleter(func(line string) (c []string) {
-		for i := 0; i < es.Idx.GetWordCount(); i++ {
-			if strings.HasPrefix(es.Idx.GetWord(i), strings.ToLower(line)) {
-				c = append(c, es.Idx.GetWord(i))
-			}
-		}
-		return
-	})
-
-	if f, err := os.Open(history_fn); err == nil {
-		line.ReadHistory(f)
-		f.Close()
-	}
-	//const PROMPT = "\x1b[6;30;42m Rye \033[m "
-
-	shellEd := ShellEd{env.Function{}, false, make([]string, 0), "", nil}
-
-	// nek variable bo z listo wordow bo ki jih želi setirat v tem okolju in dokler ne pride čez bo repl spraševal za njih
-	// name funkcije pa bo prikazal v promptu dokler smo noter , spet en state var
-	// isti potek bi lahko uporabili za kreirat live validation dialekte npr daš primer podatka rawmap npr za input in potem pišeš dialekt
-	// in preverjaš rezultat ... tako z hitrim reset in ponovi workflowon in prikazom rezultata
-	// to s funkcijo se bo dalo čist dobro naredit ... potem pa tudi s kontekstom ne vidim kaj bi bil problem
-
-	line2 := ""
-
-	for {
-
-		prompt, arg := genPrompt(&shellEd, line2)
-
-		if code, err := line.Prompt(prompt); err == nil {
-			// strip comment
-
-			multiline := len(code) > 1 && code[len(code)-1:len(code)] == " "
-
-			comment := regexp.MustCompile(`\s//`)
-			line1 := comment.Split(code, 2) //--- just very temporary solution for some comments in repl. Later should probably be part of loader ... maybe?
-			//fmt.Println(line1)
-			lineReal := strings.Trim(line1[0], "\t")
-
-			// check for #shed commands
-			maybeDoShedCommands(lineReal, es, &shellEd)
-
-			///fmt.Println(lineReal[len(lineReal)-3 : len(lineReal)])
-
-			if multiline {
-
-				line2 += lineReal + "\n"
-
-			} else {
-
-				line2 += lineReal
-
-				//fmt.Println(lineReal)
-				block, genv := loader.LoadString("{ " + line2 + " }")
-				es := env.AddToProgramState(es, block.Series, genv)
-				evaldo.EvalBlock(es)
-
-				if arg != "" {
-					if arg == "<-return->" {
-						shellEd.Return = es.Res
-					} else {
-						es.Ctx.Set(es.Idx.IndexWord(arg), es.Res)
-					}
-				} else {
-					if shellEd.Mode != "" {
-						if !shellEd.Pause {
-							//fmt.Println(shellEd.CurrObj)
-							//fmt.Println("SETIRAM ******* ")
-							shellEd.CurrObj.Body.Series.AppendMul(block.Series.GetAll())
-							//shellEd.CurrObj.(env.Function).Body.Series.AppendMul(block.Series.GetAll())
-							//fmt.Println(shellEd.CurrObj)
-
-						}
-					}
-					if es.FailureFlag {
-						fmt.Println("\x1b[33m" + "failure" + "\x1b[0m")
-					}
-					if es.ErrorFlag {
-						fmt.Println("\x1b[31m" + "critical-error" + "\x1b[0m")
-					}
-					es.ReturnFlag = false
-					es.ErrorFlag = false
-					es.FailureFlag = false
-
-					if es.Res != nil {
-						fmt.Print("\033[38;5;37m" + es.Res.Inspect(*genv) + "\x1b[0m")
-						if es.Res != nil && shellEd.Mode != "" && !shellEd.Pause && es.Res == shellEd.Return {
-							fmt.Println(" <- the correct value was returned")
-						} else {
-							fmt.Println("")
-						}
-					}
-				}
-
-				line2 = ""
-
-			}
-
-			line.AppendHistory(code)
-		} else if err == liner.ErrPromptAborted {
-			log.Print("Aborted")
-			break
-		} else {
-			log.Print("Error reading line: ", err)
-			break
-		}
-
-	}
-
-	if f, err := os.Create(history_fn); err != nil {
-		log.Print("Error writing history file: ", err)
-	} else {
-		line.WriteHistory(f)
-		f.Close()
-	}
-}
-
-func genPrompt(shellEd *ShellEd, line string) (string, string) {
-	if shellEd.Mode != "" {
-		a := shellEd.Askfor
-		if len(a) > 0 {
-			x, a := a[0], a[1:]
-			shellEd.Askfor = a
-			return "{ Rye - value of " + x + " } ", x
-		} else if shellEd.Return == nil {
-			return "{ Rye - expected return value } ", "<-return->"
-		}
-		return "{ Rye " + shellEd.Mode + "} ", ""
-	} else {
-		if len(line) > 0 {
-
-			return "        ", ""
-		} else {
-
-			return "{ Rye } ", ""
-		}
-	}
-}
-
-func maybeDoShedCommands(line string, es *env.ProgramState, shellEd *ShellEd) {
-	//fmt.Println(shellEd)
-	line1 := strings.Split(line, " ")
-	var block env.Block
-	block = shellEd.CurrObj.Body
-	switch line1[0] {
-	case "#ra":
-		//es.Res.Trace("ADD1")
-		block.Series.Append(es.Res)
-		//es.Res.Trace("ADD2")
-	case "#in":
-		//fmt.Println("in")
-		//es.Res.Trace("*es.Idx")
-		//b := es.Res.(env.Block)
-		//fmt.Println(es.Res)
-		shellEd.Mode = "fn"
-		fn := es.Res.(env.Function)
-		words := fn.Spec.Series.GetAll()
-		for _, x := range words {
-			shellEd.Askfor = append(shellEd.Askfor, es.Idx.GetWord(x.(env.Word).Index))
-		}
-		shellEd.CurrObj = es.Res.(env.Function)
-		//fmt.Println(shellEd)
-	case "#ls":
-		fmt.Println(shellEd.CurrObj.Inspect(*es.Idx))
-	case "#s":
-		i := es.Idx.IndexWord(line1[1])
-		es.Ctx.Set(i, shellEd.CurrObj)
-	case "#.":
-		shellEd.Pause = true
-	case "#>":
-		shellEd.Pause = false
-	case "#out":
-		shellEd.Mode = ""
-	}
-}
-
-func maybeDoShedCommandsBlk(line string, es *env.ProgramState, block *env.Block, shed_pause *bool) {
-	if block != nil {
-		//block.Trace("TOP")
-	}
-	line1 := strings.Split(line, " ")
-	switch line1[0] {
-	case "#in":
-		//fmt.Println("in")
-		//es.Res.Trace("*es.Idx")
-		//b := es.Res.(env.Block)
-		*block = es.Res.(env.Block)
-		//block.Trace("*es.Idx")
-	case "#ls":
-		fmt.Println(block.Inspect(*es.Idx))
-	case "#ra":
-		//es.Res.Trace("ADD1")
-		block.Series.Append(es.Res)
-		//es.Res.Trace("ADD2")
-	case "#s":
-		i := es.Idx.IndexWord(line1[1])
-		es.Ctx.Set(i, *block)
-	case "#,":
-		*shed_pause = true
-	case "#>":
-		*shed_pause = false
-	case "#out":
-		block = nil
-	}
 }
 
 func main_rysh() {
@@ -674,7 +408,7 @@ func main_rysh() {
 							fmt.Printf("\033[C")
 							cursorPos++
 						}
-					case 'D':
+					caseasda 'D':
 						if cursorPos > 0 {
 							fmt.Printf("\033[D")
 							cursorPos--

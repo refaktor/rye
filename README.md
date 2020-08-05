@@ -1,9 +1,21 @@
 # nekozito
 
-To je "neuraden" dump privatne kode na vzpodbudo @otobrglez. Ko bom razvijal naprej, bom stvari urejal tudi s tem v mislih, da bo zadeva delno javna, zato jo bom počasi počistil, dodal navodila, kakšne komentarje, angleščino ... 
+> ⚠️ This is experimental project from [refaktor], looking into new language concepts and the depths of Go. ⚠️
 
-./rye ; je executable za linux
+## Development and experimentation
 
-./go build -o rye ; pa zbuilda kodo
+```bash
+# Builds the "rye" interpreter
+go build -o rye
 
-kontakt na janko.itm@gmail.com ali FB skupini https://www.facebook.com/groups/866313463771373
+# Executable
+./rye 
+```
+
+## Author
+
+- [Janko Metelko][refaktor] - `<janko.itm@gmail.com>` - [Facebook Group](https://www.facebook.com/groups/866313463771373)
+
+[refaktor]: https://github.com/refaktor
+[otobrglez]: https://github.com/otobrglez
+
