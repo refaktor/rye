@@ -1,6 +1,6 @@
 # nekozito 🌾
 
-> ⚠️ This is experimental project from [refaktor], looking into new language concepts and the depths of Go. ⚠️
+> ⚠️ This is experimental programming language from [refaktor], looking into new language concepts with interpreter in Go. ⚠️
 
 ## Development and experimentation
 
