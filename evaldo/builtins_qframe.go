@@ -1,7 +1,7 @@
 package evaldo
 
 import (
-	"Ryelang/env"
+	"./../env"
 	"bufio"
 	"fmt"
 	"io"

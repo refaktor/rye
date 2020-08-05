@@ -1,7 +1,7 @@
 package evaldo
 
 import (
-	"Ryelang/env"
+	"./../env"
 	"fmt"
 
 	"github.com/shirou/gopsutil/process"

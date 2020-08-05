@@ -3,8 +3,7 @@ package evaldo
 import "C"
 
 import (
-	"Ryelang/env"
-
+	"../env"
 	"github.com/gotk3/gotk3/gtk"
 )
 

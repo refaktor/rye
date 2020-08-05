@@ -16,3 +16,6 @@
 
 # Docs, dumps etc don't belong to Git
 *~
+
+evaldo/*.debug
+loader/loader.debug

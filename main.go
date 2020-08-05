@@ -26,10 +26,10 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 
-	"Ryelang/env"
-	"Ryelang/evaldo"
-	"Ryelang/loader"
-	"Ryelang/util"
+	"./env"
+	"./evaldo"
+	"./loader"
+	"./util"
 
 	//"Ryelang/util"
 	//"fmt"
@@ -408,7 +408,7 @@ func main_rysh() {
 							fmt.Printf("\033[C")
 							cursorPos++
 						}
-					caseasda 'D':
+					case 'D':
 						if cursorPos > 0 {
 							fmt.Printf("\033[D")
 							cursorPos--

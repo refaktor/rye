@@ -3,7 +3,7 @@ package evaldo
 import "C"
 
 import (
-	"Ryelang/env"
+	"./../env"
 	"fmt"
 
 	nats "github.com/nats-io/nats.go"

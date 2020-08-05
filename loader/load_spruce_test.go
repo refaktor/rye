@@ -1,7 +1,7 @@
 package loader
 
 import (
-	"Ryelang/env"
+	"./env"
 	"fmt"
 
 	//"fmt"

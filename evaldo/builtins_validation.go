@@ -3,8 +3,8 @@ package evaldo
 import "C"
 
 import (
-	"Ryelang/env"
-	"Ryelang/util"
+	"../env"
+	"../util"
 	"fmt"
 	"net/mail"
 	"strconv"

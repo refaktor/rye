@@ -2,7 +2,7 @@
 package util
 
 import (
-	"Ryelang/env"
+	"../env"
 	"fmt"
 	"strings"
 )
