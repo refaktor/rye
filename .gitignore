@@ -1,4 +1,6 @@
 # Binaries for programs and plugins
+rye
+./rye
 *.exe
 *.exe~
 *.dll
@@ -16,6 +18,6 @@
 
 # Docs, dumps etc don't belong to Git
 *~
+*/*.debug
 
-evaldo/*.debug
-loader/loader.debug
+.idea/

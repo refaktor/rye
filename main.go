@@ -16,8 +16,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-
-	//"regexp"
 	"strconv"
 	"strings"
 
@@ -25,17 +23,12 @@ import (
 
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	"github.com/pkg/profile"
 
 	"./env"
 	"./evaldo"
 	"./loader"
 	"./util"
-
-	//"Ryelang/util"
-	//"fmt"
-	//"strconv"
-	"github.com/pkg/profile"
-	//"github.com/pkg/term"
 )
 
 import (
@@ -53,22 +46,6 @@ import (
 // complex values are stored as struct { type, index } (words, setwords)
 // functions are stored similarly. Probably argument count should be in struct too.
 
-type TagType int
-type RjType int
-type Series []interface{}
-
-type anyword struct {
-	kind RjType
-	idx  int
-}
-
-type node struct {
-	kind  RjType
-	value interface{}
-}
-
-var CODE []interface{}
-
 //
 // main function. Dispatches to appropriate mode function
 //
@@ -79,17 +56,17 @@ var CODE []interface{}
 
 func main() {
 	if len(os.Args) == 1 {
-		main_rye_repl(os.Stdin, os.Stdout)
+		mainRyeRepl(os.Stdin, os.Stdout)
 	} else if len(os.Args) == 2 {
 		if os.Args[1] == "shell" {
-			main_rysh()
+			mainRysh()
 		} else if os.Args[1] == "web" {
-			main_httpd()
+			mainHttpd()
 		} else {
-			main_rye_file(os.Args[1])
+			mainRyeFile(os.Args[1])
 		}
 	} else if len(os.Args) == 3 && os.Args[1] == "ryk" {
-		main_ryk(os.Args[2])
+		mainRyk(os.Args[2])
 	}
 }
 
@@ -97,7 +74,7 @@ func main() {
 // main for awk like functionality with rye language
 //
 
-func main_ryk(code string) {
+func mainRyk(code string) {
 
 	block, genv := loader.LoadString(code)
 	// make code composable, updatable ... so you can load by appending to existing program/state or initial block?
@@ -112,7 +89,11 @@ func main_ryk(code string) {
 		//printidx, _ := es.Idx.GetIndex("print")
 		val0, er := strconv.ParseInt(scanner.Text(), 10, 64)
 		if er == nil {
-			es.Env.Set(curIdx, env.Integer{val0})
+			// TODO: This is br0ken as "es" is without "Env".
+			// es.Env.Set(curIdx, env.Integer{Value: val0})
+			es.Ser.SetPos(curIdx)
+			fmt.Println(val0)
+
 			evaldo.EvalBlock(es)
 			es.Ser.Reset()
 		} else {
@@ -146,7 +127,7 @@ func main_ryk(code string) {
 
 }
 
-func main_httpd() {
+func mainHttpd() {
 
 	//util.PrintHeader()
 	//	defer profile.Start().Stop()
@@ -265,7 +246,7 @@ func serve(c echo.Context) error {
 	return c.HTML(http.StatusOK, bu.String())
 }
 
-func main_rye_file(file string) {
+func mainRyeFile(file string) {
 
 	//util.PrintHeader()
 	defer profile.Start().Stop()
@@ -293,7 +274,7 @@ func main_rye_file(file string) {
 
 }
 
-func main_rye_repl(in io.Reader, out io.Writer) {
+func mainRyeRepl(in io.Reader, out io.Writer) {
 
 	//util.PrintHeader()
 	//defer profile.Start().Stop()
@@ -351,7 +332,7 @@ func main_rye_repl(in io.Reader, out io.Writer) {
 
 }
 
-func main_rysh() {
+func mainRysh() {
 	reader := bufio.NewReader(os.Stdin)
 	status := 1
 

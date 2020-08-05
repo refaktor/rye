@@ -2,8 +2,8 @@
 package evaldo
 
 import (
-	"./env"
-	"./loader"
+	"../env"
+	"../loader"
 	"fmt"
 
 	//"fmt"

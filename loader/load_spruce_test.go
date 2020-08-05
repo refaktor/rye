@@ -1,7 +1,7 @@
 package loader
 
 import (
-	"./env"
+	"../env"
 	"fmt"
 
 	//"fmt"

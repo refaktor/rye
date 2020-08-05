@@ -1,7 +1,7 @@
 package evaldo
 
 import (
-	"./../env"
+	"../env"
 	"fmt"
 
 	"github.com/shirou/gopsutil/process"
