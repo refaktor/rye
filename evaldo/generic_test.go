@@ -1,8 +1,8 @@
 package evaldo
 
 import (
-	"Ryelang/env"
-	"Ryelang/loader"
+	"../env"
+	"../loader"
 	"fmt"
 
 	//	"fmt"

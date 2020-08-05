@@ -1,7 +1,7 @@
 package evaldo
 
 import (
-	"./../env"
+	"../env"
 	"bufio"
 	"fmt"
 	"io"

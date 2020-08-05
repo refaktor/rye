@@ -1,11 +1,9 @@
 package failures
 
 import (
-	"Ryelang/env"
-	"Ryelang/evaldo"
-	"Ryelang/loader"
-
-	//	"fmt"
+	"../env"
+	"../evaldo"
+	"../loader"
 	"testing"
 )
 

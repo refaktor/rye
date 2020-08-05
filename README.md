@@ -2,6 +2,8 @@
 
 > ⚠️ This is experimental programming language from [refaktor], looking into new (and borrowed) language ideas with interpreter in Go. ⚠️
 
+Start by reading [NOTES.md](./NOTES.md), where concepts and ideas are born and logged.
+
 ## Development and experimentation
 
 ```bash
@@ -33,6 +35,15 @@ brew install pkg-config gtk+3 adwaita-icon-theme
 ```
 
 More [instructions here](https://www.gtk.org/docs/installations/macos/).
+
+## Building Docker image
+
+```bash
+docker build -t refaktor/rye -f .docker/Dockerfile .
+```
+
+> Currently broken, because rye depends on GTK3 and few 
+> other things that are not part of original golang Docker image.  
 
 ## Author
 
