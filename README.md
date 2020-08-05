@@ -1,4 +1,4 @@
-# nekozito
+# nekozito 🌾
 
 > ⚠️ This is experimental project from [refaktor], looking into new language concepts and the depths of Go. ⚠️
 
