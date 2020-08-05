@@ -1,0 +1,11 @@
+<!-- small sample of the otherwise 96MB XML file we parse wuth Go or Rye-->
+<Prs><Ident stZapisov="256734" tipObdelave="B" obseg="A" datumOd="2008-01-01T00:00:00" datumPriprave="2020-01-01T06:00:04"/>
+<PS ma="5286832000"><PopolnoIme>FORM - KOPITAR &amp; CO. podjetje za grafične storitve, d.n.o.</PopolnoIme>
+<Oblika>Družba z neomejeno odgovornostjo d.n.o.</Oblika><Organ>Okrožno sodišče Ljubljana</Organ>
+<N po="1000" hs="102"><UpravnaEnota>LJUBLJANA, izp. BEŽIGRAD</UpravnaEnota><Regija>OSREDNJESLOVENSKA</Regija>
+<Obcina>Ljubljana</Obcina><Posta>Ljubljana</Posta><Naselje>Ljubljana</Naselje><Ulica>Tesovnikova ulica</Ulica></N></PS>
+<PS ma="5291372000"><PopolnoIme>MREŽA - BLATNIK IN DRUŽBENIK proizvodno - trgovsko podjetje, d.n.o.</PopolnoIme>
+<Oblika>Družba z neomejeno odgovornostjo d.n.o.</Oblika><Organ>Okrožno sodišče Ljubljana</Organ><N po="1312" hs="070" do="B">
+<UpravnaEnota>GROSUPLJE</UpravnaEnota><Regija>OSREDNJESLOVENSKA</Regija><Obcina>Dobrepolje</Obcina>
+<Posta>Videm - Dobrepolje</Posta><Naselje>Ponikve</Naselje><Ulica>Ponikve</Ulica></N></PS>
+</Prs>

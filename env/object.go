@@ -11,28 +11,32 @@ import (
 type Type int
 
 const (
-	BlockType    Type = 1
-	IntegerType  Type = 2
-	WordType     Type = 3
-	SetwordType  Type = 4
-	OpwordType   Type = 5
-	PipewordType Type = 6
-	BuiltinType  Type = 7
-	FunctionType Type = 8
-	ErrorType    Type = 9
-	CommaType    Type = 10
-	VoidType     Type = 11
-	StringType   Type = 12
-	TagwordType  Type = 13
-	GenwordType  Type = 14
-	GetwordType  Type = 15
-	ArgwordType  Type = 16
-	NativeType   Type = 17
-	UriType      Type = 18
-	LSetwordType Type = 19
-	EnvType      Type = 20
-	RawMapType   Type = 21
-	DateType     Type = 22
+	BlockType       Type = 1
+	IntegerType     Type = 2
+	WordType        Type = 3
+	SetwordType     Type = 4
+	OpwordType      Type = 5
+	PipewordType    Type = 6
+	BuiltinType     Type = 7
+	FunctionType    Type = 8
+	ErrorType       Type = 9
+	CommaType       Type = 10
+	VoidType        Type = 11
+	StringType      Type = 12
+	TagwordType     Type = 13
+	GenwordType     Type = 14
+	GetwordType     Type = 15
+	ArgwordType     Type = 16
+	NativeType      Type = 17
+	UriType         Type = 18
+	LSetwordType    Type = 19
+	CtxType         Type = 20
+	RawMapType      Type = 21
+	DateType        Type = 22
+	CPathType       Type = 23
+	XwordType       Type = 24
+	EXwordType      Type = 25
+	SpreadsheetType Type = 26
 )
 
 type Object interface {
@@ -189,10 +193,16 @@ func (i Uri) GetKind() int {
 // Integer represents an integer.
 type Block struct {
 	Series TSeries
+	Mode   int
 }
 
 func NewBlock(series TSeries) *Block {
-	o := Block{series}
+	o := Block{series, 0}
+	return &o
+}
+
+func NewBlock2(series TSeries, m int) *Block {
+	o := Block{series, m}
 	return &o
 }
 
@@ -437,6 +447,80 @@ func (i Tagword) GetKind() int {
 }
 
 //
+// XWORD
+//
+
+// Integer represents an integer.
+type Xword struct {
+	Index int
+}
+
+// Type returns the type of the Integer.
+func (i Xword) Type() Type {
+	return XwordType
+}
+
+// Inspect returns a string
+func (i Xword) Inspect(e Idxs) string {
+	return "<Xword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + ">"
+}
+
+// Inspect returns a string representation of the Integer.
+func (b Xword) Probe(e Idxs) string {
+	return e.GetWord(b.Index)
+}
+
+func (i Xword) Trace(msg string) {
+	fmt.Print(msg + " (Xword): ")
+	fmt.Println(i.Index)
+}
+
+func (i Xword) ToWord() Word {
+	return Word{i.Index}
+}
+
+func (i Xword) GetKind() int {
+	return int(XwordType)
+}
+
+//
+// EXWORD
+//
+
+// Integer represents an integer.
+type EXword struct {
+	Index int
+}
+
+// Type returns the type of the Integer.
+func (i EXword) Type() Type {
+	return EXwordType
+}
+
+// Inspect returns a string
+func (i EXword) Inspect(e Idxs) string {
+	return "<EXword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + ">"
+}
+
+// Inspect returns a string representation of the Integer.
+func (b EXword) Probe(e Idxs) string {
+	return e.GetWord(b.Index)
+}
+
+func (i EXword) Trace(msg string) {
+	fmt.Print(msg + " (EXword): ")
+	fmt.Println(i.Index)
+}
+
+func (i EXword) ToWord() Word {
+	return Word{i.Index}
+}
+
+func (i EXword) GetKind() int {
+	return int(EXwordType)
+}
+
+//
 // GETWORD
 //
 
@@ -579,10 +663,16 @@ type Function struct {
 	Argsn int
 	Spec  Block
 	Body  Block
+	Ctx   *RyeCtx
 }
 
 func NewFunction(spec Block, body Block) *Function {
-	o := Function{spec.Series.Len(), spec, body}
+	o := Function{spec.Series.Len(), spec, body, nil}
+	return &o
+}
+
+func NewFunctionC(spec Block, body Block, ctx *RyeCtx) *Function {
+	o := Function{spec.Series.Len(), spec, body, ctx}
 	return &o
 }
 
@@ -593,7 +683,8 @@ func (i Function) Type() Type {
 
 // Inspect returns a string representation of the Integer.
 func (i Function) Inspect(e Idxs) string {
-	return "<Function: " + i.Spec.Inspect(e) + ", " + i.Body.Inspect(e) + ">"
+	// LONG DISPLAY OF FUNCTION NODES return "<Function: " + i.Spec.Inspect(e) + ", " + i.Body.Inspect(e) + ">"
+	return "<Function: " + strconv.FormatInt(int64(i.Argsn), 10) + ">"
 }
 
 // Inspect returns a string representation of the Integer.
@@ -660,7 +751,10 @@ func (i Builtin) Trace(msg string) {
 
 // Integer represents an integer.
 type Error struct {
-	message string
+	Status  int
+	Message string
+	Parent  *Error
+	Values  map[string]Object
 }
 
 // Type returns the type of the Integer.
@@ -670,24 +764,56 @@ func (i Error) Type() Type {
 
 // Inspect returns a string representation of the Integer.
 func (i Error) Inspect(e Idxs) string {
-	return "<Error: " + i.message + ">"
+	var b strings.Builder
+	b.WriteString("<Error: " + i.Message + " ")
+	if i.Parent != nil {
+		b.WriteString(i.Parent.Probe(e))
+	}
+	b.WriteString(">")
+	return b.String()
 }
 
 // Inspect returns a string representation of the Integer.
-func (b Error) Probe(e Idxs) string {
-	return "<Error: " + b.message + ">"
+func (i Error) Probe(e Idxs) string {
+	var b strings.Builder
+	b.WriteString("<Error: " + i.Message + " ")
+	if i.Parent != nil {
+		b.WriteString(i.Parent.Probe(e))
+	}
+	b.WriteString(">")
+	return b.String()
+}
+
+func NewError1(status int) *Error {
+	var e Error
+	e.Status = status
+	return &e
+}
+
+func NewError2(status int, message string) *Error {
+	var e Error
+	e.Message = message
+	e.Status = status
+	return &e
 }
 
 func NewError(message string) *Error {
 	var e Error
-	fmt.Println("ERROR: " + message)
-	e.message = message
+	e.Message = message
+	return &e
+}
+
+func NewError4(status int, message string, error *Error, values map[string]Object) *Error {
+	var e Error
+	e.Message = message
+	e.Parent = error
+	e.Values = values
 	return &e
 }
 
 func (i Error) Trace(msg string) {
 	fmt.Print(msg + "(error): ")
-	fmt.Println(i.message)
+	fmt.Println(i.Message)
 }
 
 func (i Error) GetKind() int {
@@ -728,6 +854,75 @@ func (i Argword) GetKind() int {
 }
 
 //
+// CPATH
+//
+
+type CPath struct {
+	Cnt   int
+	Word1 Word
+	Word2 Word
+	Word3 Word
+}
+
+// Type returns the type of the Integer.
+func (i CPath) Type() Type {
+	return CPathType
+}
+
+// Inspect returns a string
+func (i CPath) Inspect(e Idxs) string {
+	switch i.Cnt {
+	case 2:
+		return "<CPath: " + i.Word1.Inspect(e) + "/" + i.Word2.Inspect(e) + ">"
+	case 3:
+		return "<CPath: " + i.Word1.Inspect(e) + "/" + i.Word2.Inspect(e) + "/" + i.Word3.Inspect(e) + ">"
+	}
+	return "<CPath: " + i.Word1.Inspect(e) + "/ ... >"
+}
+
+// Inspect returns a string
+func (o CPath) GetWordNumber(i int) Word {
+	switch i {
+	case 1:
+		return o.Word1
+	case 2:
+		return o.Word2
+	default:
+		return o.Word3 // TODO -- just temporary this wasy ... make ultil depth 5 or 6 and return error otherwises
+	}
+}
+
+// Inspect returns a string representation of the Integer.
+func (b CPath) Probe(e Idxs) string {
+	return b.Word1.Probe(e)
+}
+
+func (i CPath) Trace(msg string) {
+	fmt.Print(msg + " (cpath): ")
+}
+
+func (i CPath) GetKind() int {
+	return int(CPathType)
+}
+
+func NewCPath2(w1 Word, w2 Word) *CPath {
+	var cp CPath
+	cp.Cnt = 2
+	cp.Word1 = w1
+	cp.Word2 = w2
+	return &cp
+
+}
+func NewCPath3(w1 Word, w2 Word, w3 Word) *CPath {
+	var cp CPath
+	cp.Cnt = 3
+	cp.Word1 = w1
+	cp.Word2 = w2
+	cp.Word3 = w3
+	return &cp
+}
+
+//
 // NATIVE
 //
 
@@ -750,12 +945,12 @@ func (i Native) Type() Type {
 
 // Inspect returns a string representation of the Integer.
 func (i Native) Inspect(e Idxs) string {
-	return "<Native OF " + i.Kind.Probe(e) + ">"
+	return "<Native of kind " + i.Kind.Probe(e) + ">"
 }
 
 // Inspect returns a string representation of the Integer.
 func (i Native) Probe(e Idxs) string {
-	return "<Native OF " + i.Kind.Probe(e) + ">"
+	return "<Native of kind " + i.Kind.Probe(e) + ">"
 }
 
 func (i Native) Trace(msg string) {

@@ -52,7 +52,19 @@ func parseBlock(v *Values, d Any) (Any, error) {
 	//fmt.Print("BLOCK --> ")
 	//fmt.Println(block)
 	ser := env.NewTSeries(block)
-	return env.Block{*ser}, nil
+	return env.Block{*ser, 0}, nil
+}
+
+func parseBBlock(v *Values, d Any) (Any, error) {
+	block := make([]env.Object, len(v.Vs)-1)
+	for i := 1; i < len(v.Vs); i += 1 {
+		obj := v.Vs[i]
+		if true {
+			block[i-1] = obj.(env.Object)
+		}
+	}
+	ser := env.NewTSeries(block)
+	return env.Block{*ser, 1}, nil
 }
 
 func parseGroup(v *Values, d Any) (Any, error) {
@@ -71,7 +83,7 @@ func parseGroup(v *Values, d Any) (Any, error) {
 	//fmt.Print("BLOCK --> ")
 	//fmt.Println(block)
 	ser := env.NewTSeries(block)
-	return env.Block{*ser}, nil
+	return env.Block{*ser, 2}, nil
 }
 
 func parseNumber(v *Values, d Any) (Any, error) {
@@ -84,10 +96,18 @@ func parseString(v *Values, d Any) (Any, error) {
 }
 
 func parseUri(v *Values, d Any) (Any, error) {
-	//fmt.Println("INSIDE URI ****************** * * * * * * * * * * * * * * * *  *")
-	//fmt.Println(v.Vs)
-	//fmt.Println(v)
 	return *env.NewUri(&wordIndex, v.Vs[0].(env.Word), v.Token()), nil // ){v.Vs[0].(env.Word), v.Token()}, nil // TODO let the second part be it's own object that parser returns like path
+}
+
+func parseCPath(v *Values, d Any) (Any, error) {
+	switch len(v.Vs) {
+	case 2:
+		return *env.NewCPath2(v.Vs[0].(env.Word), v.Vs[1].(env.Word)), nil
+	case 3:
+		return *env.NewCPath3(v.Vs[0].(env.Word), v.Vs[1].(env.Word), v.Vs[2].(env.Word)), nil
+	default:
+		return *env.NewCPath3(v.Vs[0].(env.Word), v.Vs[1].(env.Word), v.Vs[2].(env.Word)), nil
+	}
 }
 
 func parseWord(v *Values, d Any) (Any, error) {
@@ -96,8 +116,6 @@ func parseWord(v *Values, d Any) (Any, error) {
 }
 
 func parseArgword(v *Values, d Any) (Any, error) {
-	//word := genv.IndexWord(v.Vs[0].(string))
-	//type_ := genv.IndexWord(v.Vs[1].(string))
 	return env.Argword{v.Vs[0].(env.Word), v.Vs[1].(env.Word)}, nil
 }
 
@@ -137,6 +155,20 @@ func parseTagword(v *Values, d Any) (Any, error) {
 	return env.Tagword{idx}, nil
 }
 
+func parseXword(v *Values, d Any) (Any, error) {
+	//fmt.Println("TAGWORD:" + v.Token())
+	word := v.Token()
+	idx := wordIndex.IndexWord(word[1 : len(word)-1])
+	return env.Xword{idx}, nil
+}
+
+func parseEXword(v *Values, d Any) (Any, error) {
+	//fmt.Println("TAGWORD:" + v.Token())
+	word := v.Token()
+	idx := wordIndex.IndexWord(word[2 : len(word)-1])
+	return env.EXword{idx}, nil
+}
+
 func parsePipeword(v *Values, d Any) (Any, error) {
 	//fmt.Println("OPWORD:" + v.Token())
 	word := v.Token()
@@ -163,10 +195,11 @@ func newParser() *Parser {
 	// Create a PEG parser
 	parser, _ := NewParser(`
 	BLOCK       	<-  "{" SPACES SERIES* "}"
+	BBLOCK       	<-  "[" SPACES SERIES* "]"
     GROUP       	<-  "(" SPACES SERIES* ")"
-    SERIES          <-  (URI / STRING / NUMBER / COMMA / VOID / SETWORD / LSETWORD / OPWORD / PIPEWORD / TAGWORD / GENWORD / GETWORD / WORD / BLOCK / GROUP / ARGBLOCK ) SPACES
+    SERIES          <-  (URI / STRING / NUMBER / COMMA / VOID / SETWORD / LSETWORD / OPWORD / PIPEWORD / TAGWORD / EXWORD / CPATH / XWORD / GENWORD / GETWORD / WORD / BLOCK / GROUP / BBLOCK / ARGBLOCK ) SPACES
     ARGBLOCK       	<-  "{" WORD ":" WORD "}"
-    WORD           	<-  LETTER LETTERORNUM* 
+    WORD           	<-  LETTER LETTERORNUM* / ONECHARWORDS
 	GENWORD           	<-  UCLETTER LCLETTERORNUM* 
 	SETWORD    		<-  LETTER LETTERORNUM* ":"
 	LSETWORD    		<-  ":" LETTER LETTERORNUM*
@@ -174,13 +207,18 @@ func newParser() *Parser {
 	PIPEWORD   		<-  "|" LETTER LETTERORNUM*
 	OPWORD    		<-  "." LETTER LETTERORNUM*
 	TAGWORD    		<-  "'" LETTER LETTERORNUM*
+	XWORD    		<-  "<" LETTER LETTERORNUM* ">"?
+	EXWORD    		<-  "</" LETTER LETTERORNUM* ">"?
 	STRING			<-  '"' STRINGCHAR* '"'
 	SPACES			<-  SPACE+
-	URI    		<-  WORD "://" LETTERORNUM*
+	URI    		<-  WORD "://" URIPATH*
+	CPATH    		<-  WORD ( "/" WORD )+
 	COMMA			<-  ","
 	VOID				<-  "_"
-	LETTERORNUM		<-  < [a-zA-Z0-9-?=/] >
-	LETTER  			<-  < [a-zA-Z?=] >
+	ONECHARWORDS		<-  < [<>*+] >
+	LETTERORNUM		<-  < [a-zA-Z0-9-?=.\\!_>] >
+	URIPATH		<-  < [a-zA-Z0-9-?=.:@/\\!_>] >
+	LETTER  			<-  < [a-zA-Z?=^_] >
 	UCLETTER  			<-  < [A-Z] >
 	LCLETTERORNUM		<-  < [a-z0-9] >
     NUMBER           <-  < [0-9]+ >
@@ -188,12 +226,14 @@ func newParser() *Parser {
 	STRINGCHAR		<-  < !'"' . >
 `)
 
+	// TODO -- make path path work for deeper paths too
 	// TODO -- maybe add path type and make URI more fully featured
 
 	//%whitespace      <-  [ \t\r\n]*
 	//%word			<-  [a-zA-Z]+
 	g := parser.Grammar
 	g["BLOCK"].Action = parseBlock
+	g["BBLOCK"].Action = parseBBlock
 	g["GROUP"].Action = parseGroup
 	g["WORD"].Action = parseWord
 	g["ARGBLOCK"].Action = parseArgword
@@ -204,11 +244,14 @@ func newParser() *Parser {
 	g["OPWORD"].Action = parseOpword
 	g["PIPEWORD"].Action = parsePipeword
 	g["TAGWORD"].Action = parseTagword
+	g["XWORD"].Action = parseXword
+	g["EXWORD"].Action = parseEXword
 	g["GENWORD"].Action = parseGenword
 	g["GETWORD"].Action = parseGetword
 	g["NUMBER"].Action = parseNumber
 	g["STRING"].Action = parseString
 	g["URI"].Action = parseUri
+	g["CPATH"].Action = parseCPath
 	/* g["SERIES"].Action = func(v *Values, d Any) (Any, error) {
 		return v, nil
 	}*/

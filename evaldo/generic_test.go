@@ -112,6 +112,30 @@ func TestEvaldo_generic_function_2_args(t *testing.T) {
 
 }
 
+func TestEvaldo_generic_builtin_01(t *testing.T) {
+	input := "{ generic 'integer 'add1 ?add add1 100 10 }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+
+	RegisterBuiltins(es)
+
+	fmt.Println("EVALUATING >>")
+
+	EvalBlock(es)
+
+	es.Idx.Probe()
+
+	es.Gen.Probe(*es.Idx)
+
+	fmt.Println("RES >>")
+
+	es.Res.Trace("RES")
+
+	if es.Res.Type() != env.IntegerType {
+		t.Error("Expected result type integer")
+	}
+}
+
 func TestEvaldo_generic_builtin(t *testing.T) {
 	input := "{ generic 'integer 'add1 ?add add1 100 10 generic 'string 'add1 ?join add1 \"Wood\" \"Meow\" add1 100 11 }"
 	block, genv := loader.LoadString(input)

@@ -18,11 +18,11 @@ func NewTSeries(ser []Object) *TSeries {
 }
 
 func (ser TSeries) Ended() bool {
-	return ser.pos < len(ser.s)
+	return ser.pos > len(ser.s)
 }
 
 func (ser TSeries) AtLast() bool {
-	return ser.pos < len(ser.s)-2
+	return ser.pos > len(ser.s)-1
 }
 
 func (ser TSeries) Pos() int {
@@ -34,9 +34,22 @@ func (ser *TSeries) Next() {
 }
 
 func (ser *TSeries) Pop() Object {
-	//fmt.Println(ser.pos)
 	ser.pos++
 	return ser.s[ser.pos-1]
+}
+
+func (ser *TSeries) Put(obj Object) {
+	ser.s[ser.pos-1] = obj // -1 ... because we already poped out the word .. if this works past the experiment improve this
+}
+
+func (ser *TSeries) Append(obj Object) *TSeries {
+	ser.s = append(ser.s, obj) // -1 ... because we already poped out the word .. if this works past the experiment improve this
+	return ser
+}
+
+func (ser *TSeries) AppendMul(objs []Object) *TSeries {
+	ser.s = append(ser.s, objs...) // -1 ... because we already poped out the word .. if this works past the experiment improve this
+	return ser
 }
 
 func (ser *TSeries) Reset() {
@@ -50,6 +63,10 @@ func (ser *TSeries) SetPos(pos int) {
 
 func (ser *TSeries) GetPos() int {
 	return ser.pos
+}
+
+func (ser *TSeries) GetAll() []Object {
+	return ser.s
 }
 
 func (ser TSeries) Peek() Object {

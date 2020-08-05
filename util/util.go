@@ -2,6 +2,7 @@
 package util
 
 import (
+	"Ryelang/env"
 	"fmt"
 	"strings"
 )
@@ -18,4 +19,29 @@ func IndexOfAt(s, sep string, n int) int {
 		idx += n
 	}
 	return idx
+}
+
+func IsTruthy(o env.Object) bool {
+	switch oo := o.(type) {
+	case env.Integer:
+		return oo.Value > 0
+	case env.String:
+		return len(oo.Value) > 0
+	default:
+		return false
+	}
+}
+
+func RawMap2Context(ps *env.ProgramState, s1 env.RawMap) env.RyeCtx {
+	ctx := env.NewEnv(ps.Ctx)
+	for k, v := range s1.Data {
+		word := ps.Idx.IndexWord(k)
+		switch v1 := v.(type) {
+		case env.Integer:
+			ctx.Set(word, v1)
+		case env.String:
+			ctx.Set(word, v1)
+		}
+	}
+	return *ctx
 }

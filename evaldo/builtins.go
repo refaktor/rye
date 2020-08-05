@@ -3,7 +3,9 @@ package evaldo
 
 import (
 	"Ryelang/env"
+	"Ryelang/util"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -127,6 +129,13 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
+	"prn2": {
+		Argsn: 2,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			fmt.Print(arg0.Probe(*env1.Idx) + arg1.Probe(*env1.Idx))
+			return arg0
+		},
+	},
 	"prin": {
 		Argsn: 1,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -142,6 +151,13 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"print2": {
+		Argsn: 2,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			fmt.Println(arg0.Probe(*env1.Idx) + arg1.Probe(*env1.Idx))
+			return arg0
+		},
+	},
 	// CONTROL WORDS
 
 	"unless": {
@@ -243,7 +259,175 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"with": {
+	"do-with": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg1.(type) {
+			case env.Block:
+				ser := ps.Ser
+				ps.Ser = bloc.Series
+				EvalBlockInj(ps, arg0, true)
+				ps.Ser = ser
+				return ps.Res
+			}
+			return nil
+		},
+	},
+
+	"do-in": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch ctx := arg0.(type) {
+			case env.RyeCtx:
+				switch bloc := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = bloc.Series
+					EvalBlockInCtx(ps, &ctx)
+					ps.Ser = ser
+					return ps.Res
+				default:
+					ps.ErrorFlag = true
+					return env.NewError("Secong arg should be block")
+
+				}
+			default:
+				ps.ErrorFlag = true
+				return env.NewError("First arg should be context")
+			}
+
+		},
+	},
+	// CONTEXT FUNCTIONS
+
+	"current-context": {
+		Argsn: 0,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return *ps.Ctx
+		},
+	},
+	"parent-context": {
+		Argsn: 0,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return *ps.Ctx.Parent
+		},
+	},
+
+	"raw-context": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg0.(type) {
+			case env.Block:
+				ser := ps.Ser
+				ctx := ps.Ctx
+				ps.Ser = bloc.Series
+				ps.Ctx = env.NewEnv(nil) // make new context with no parent
+				EvalBlock(ps)
+				rctx := ps.Ctx
+				ps.Ctx = ctx
+				ps.Ser = ser
+				if ps.ErrorFlag {
+					return ps.Res
+				}
+				return *rctx // return the resulting context
+			}
+			return nil
+		},
+	},
+
+	"isolate": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg0.(type) {
+			case env.Block:
+				ser := ps.Ser
+				ctx := ps.Ctx
+				ps.Ser = bloc.Series
+				ps.Ctx = env.NewEnv(ps.Ctx) // make new context with no parent
+				EvalBlock(ps)
+				rctx := ps.Ctx
+				rctx.Parent = nil
+				ps.Ctx = ctx
+				ps.Ser = ser
+				if ps.ErrorFlag {
+					return ps.Res
+				}
+				return *rctx // return the resulting context
+			}
+			return nil
+		},
+	},
+
+	"context": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg0.(type) {
+			case env.Block:
+				ser := ps.Ser
+				ctx := ps.Ctx
+				ps.Ser = bloc.Series
+				ps.Ctx = env.NewEnv(ps.Ctx) // make new context with no parent
+				EvalBlock(ps)
+				rctx := ps.Ctx
+				ps.Ctx = ctx
+				ps.Ser = ser
+				return *rctx // return the resulting context
+			}
+			return nil
+		},
+	},
+
+	"extend!": { // exclamation mark, because it as it is now extends/changes the source context too .. in place
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch ctx0 := arg0.(type) {
+			case env.RyeCtx:
+				switch bloc := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ctx := ps.Ctx
+					ps.Ser = bloc.Series
+					ps.Ctx = &ctx0 // make new context with no parent
+					EvalBlock(ps)
+					rctx := ps.Ctx
+					ps.Ctx = ctx
+					ps.Ser = ser
+					return *rctx // return the resulting context
+				}
+			}
+			ps.ErrorFlag = true
+			return env.NewError("Second argument should be block, builtin (or function).")
+		},
+	},
+
+	"bind": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch swCtx1 := arg0.(type) {
+			case env.RyeCtx:
+				switch swCtx2 := arg1.(type) {
+				case env.RyeCtx:
+					swCtx1.Parent = &swCtx2
+					return swCtx1
+				}
+			}
+			return env.NewError("wrong args")
+		},
+	},
+
+	"unbind": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch swCtx1 := arg0.(type) {
+			case env.RyeCtx:
+				swCtx1.Parent = nil
+				return swCtx1
+			}
+			return env.NewError("wrong args")
+		},
+	},
+
+	"skip": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg1.(type) {
@@ -258,6 +442,8 @@ var builtins = map[string]*env.Builtin{
 			return nil
 		},
 	},
+
+	//
 
 	"dotime": {
 		Argsn: 1,
@@ -298,6 +484,115 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// map should at the end map over block, raw-map, etc ...
+	// it should accept a block of code, a function and a builtin
+	// it should use injected block so it doesn't need a variable defined like map [ 1 2 3 ] x [ add a 100 ]
+	// map [ 1 2 3 ] { .add 3 }
+	"map": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch list := arg0.(type) {
+			case env.Block:
+				switch block := arg1.(type) {
+				case env.Block, env.Builtin:
+					l := list.Series.Len()
+					newl := make([]env.Object, l)
+					switch block := block.(type) {
+					case env.Block:
+						ser := ps.Ser
+						ps.Ser = block.Series
+						for i := 0; i < l; i++ {
+							ps = EvalBlockInj(ps, list.Series.Get(i), true)
+							newl[i] = ps.Res
+							ps.Ser.Reset()
+						}
+						ps.Ser = ser
+					case env.Builtin:
+						for i := 0; i < l; i++ {
+							newl[i] = DirectlyCallBuiltin(ps, block, list.Series.Get(i), nil)
+						}
+					}
+					return *env.NewBlock(*env.NewTSeries(newl))
+				}
+			}
+			return nil
+		},
+	},
+
+	// filter [ 1 2 3 ] { .add 3 }
+	"filter": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch list := arg0.(type) {
+			case env.Block:
+				switch block := arg1.(type) {
+				case env.Block, env.Builtin:
+					l := list.Series.Len()
+					var newl []env.Object
+					switch block := block.(type) {
+					case env.Block:
+						ser := ps.Ser
+						ps.Ser = block.Series
+						for i := 0; i < l; i++ {
+							ps = EvalBlockInj(ps, list.Series.Get(i), true)
+							if util.IsTruthy(ps.Res) { // todo -- move these to util or something
+								newl = append(newl, list.Series.Get(i))
+							}
+							ps.Ser.Reset()
+						}
+						ps.Ser = ser
+					case env.Builtin:
+						for i := 0; i < l; i++ {
+							res := DirectlyCallBuiltin(ps, block, list.Series.Get(i), nil)
+							if util.IsTruthy(res) { // todo -- move these to util or something
+								newl = append(newl, list.Series.Get(i))
+							}
+						}
+					}
+					return *env.NewBlock(*env.NewTSeries(newl))
+				}
+			}
+			return nil
+		},
+	},
+
+	"seek": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch list := arg0.(type) {
+			case env.Block:
+				switch block := arg1.(type) {
+				case env.Block, env.Builtin:
+					l := list.Series.Len()
+					switch block := block.(type) {
+					case env.Block:
+						ser := ps.Ser
+						ps.Ser = block.Series
+						for i := 0; i < l; i++ {
+							ps = EvalBlockInj(ps, list.Series.Get(i), true)
+							if util.IsTruthy(ps.Res) { // todo -- move these to util or something
+								return list.Series.Get(i)
+							}
+							ps.Ser.Reset()
+						}
+						ps.Ser = ser
+					case env.Builtin:
+						for i := 0; i < l; i++ {
+							res := DirectlyCallBuiltin(ps, block, list.Series.Get(i), nil)
+							if util.IsTruthy(res) { // todo -- move these to util or something
+								return list.Series.Get(i)
+							}
+						}
+					default:
+						ps.ErrorFlag = true
+						return env.NewError("Second argument should be block, builtin (or function).")
+					}
+				}
+			}
+			return nil
+		},
+	},
+
 	//test if we can do recur similar to clojure one. Since functions in rejy are of fixed arity we would need recur1 recur2 recur3 and recur [ ] which is less optimal
 	//otherwise word recur could somehow be bound to correct version or args depending on number of args of func. Try this at first.
 	"recur1if": { //recur1-if
@@ -308,7 +603,7 @@ var builtins = map[string]*env.Builtin{
 				if cond.Value > 0 {
 					switch arg := arg1.(type) {
 					case env.Integer:
-						ps.Env.Set(ps.Args[0], arg)
+						ps.Ctx.Set(ps.Args[0], arg)
 						ps.Ser.Reset()
 						return nil
 					}
@@ -333,8 +628,8 @@ var builtins = map[string]*env.Builtin{
 					case env.Integer:
 						switch argi2 := arg2.(type) {
 						case env.Integer:
-							ps.Env.Set(ps.Args[0], argi1)
-							ps.Env.Set(ps.Args[1], argi2)
+							ps.Ctx.Set(ps.Args[0], argi1)
+							ps.Ctx.Set(ps.Args[1], argi2)
 							ps.Ser.Reset()
 							return ps.Res
 						}
@@ -362,9 +657,9 @@ var builtins = map[string]*env.Builtin{
 						case env.Integer:
 							switch argi3 := arg3.(type) {
 							case env.Integer:
-								ps.Env.Set(ps.Args[0], argi1)
-								ps.Env.Set(ps.Args[1], argi2)
-								ps.Env.Set(ps.Args[2], argi3)
+								ps.Ctx.Set(ps.Args[0], argi1)
+								ps.Ctx.Set(ps.Args[1], argi2)
+								ps.Ctx.Set(ps.Args[2], argi3)
 								ps.Ser.Reset()
 								return ps.Res
 							}
@@ -389,6 +684,36 @@ var builtins = map[string]*env.Builtin{
 					//body := []env.Object{env.Word{printidx}, env.Word{aaaidx}, env.Word{recuridx}, env.Word{greateridx}, env.Integer{99}, env.Word{aaaidx}, env.Word{incidx}, env.Word{aaaidx}}
 					return *env.NewFunction(args, body)
 				}
+			}
+			return nil
+		},
+	},
+
+	"fnc": {
+		// a function with context	 bb: 10 add10 [ a ] context [ b: bb ] [ add a b ]
+		// 							add10 [ a ] this [ add a b ]
+		// later maybe			   add10 [ a ] [ b: b ] [ add a b ]
+		//  						   add10 [ a ] [ 'b ] [ add a b ]
+		Argsn: 3,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch args := arg0.(type) {
+			case env.Block:
+				switch ctx := arg1.(type) {
+				case env.RyeCtx:
+					switch body := arg2.(type) {
+					case env.Block:
+						return *env.NewFunctionC(args, body, &ctx)
+					default:
+						ps.ErrorFlag = true
+						return env.NewError("Third arg should be Block")
+					}
+				default:
+					ps.ErrorFlag = true
+					return env.NewError("Second arg should be Context")
+				}
+			default:
+				ps.ErrorFlag = true
+				return env.NewError("First argument should be Block")
 			}
 			return nil
 		},
@@ -449,9 +774,29 @@ var builtins = map[string]*env.Builtin{
 				switch s2 := arg1.(type) {
 				case env.String:
 					return env.String{s1.Value + s2.Value}
+				case env.Integer:
+					return env.String{s1.Value + strconv.Itoa(int(s2.Value))}
+				}
+			case env.Block:
+				switch b2 := arg1.(type) {
+				case env.Block:
+					s := &s1.Series
+					s1.Series = *s.AppendMul(b2.Series.GetAll())
+					return s1
 				}
 			}
 			return nil
+		},
+	},
+	"title": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				return env.String{strings.Title(s1.Value)}
+			default:
+				return env.NewError("first arg must be string")
+			}
 		},
 	},
 
@@ -538,6 +883,18 @@ var builtins = map[string]*env.Builtin{
 			return nil
 		},
 	},
+	"append": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Block:
+				s := &s1.Series
+				s1.Series = *s.Append(arg1)
+				return s1
+			}
+			return nil
+		},
+	},
 	// FUNCTIONALITY AROUND GENERIC METHODS
 	// generic <integer> <add> fn [ a b ] [ a + b ] // tagwords are temporary here
 	"generic": {
@@ -554,10 +911,12 @@ var builtins = map[string]*env.Builtin{
 						fmt.Println("Generic")
 
 						registerGeneric(ps, s1.Index, s2.Index, s3)
+						return s3
 					}
 				}
 			}
-			return nil
+			ps.ErrorFlag = true
+			return env.NewError("Wrong args when creating generic function")
 		},
 	},
 
@@ -590,6 +949,17 @@ var builtins = map[string]*env.Builtin{
 						return v1
 					}
 				}
+			case env.RyeCtx:
+				switch s2 := arg1.(type) {
+				case env.Tagword:
+					v, ok := s1.Get(s2.Index)
+					if ok {
+						return v
+					} else {
+						ps.FailureFlag = true
+						return env.NewError1(5) // NOT_FOUND
+					}
+				}
 			}
 			return nil
 		},
@@ -610,6 +980,28 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			//fmt.Println("FAIL")
 			ps.FailureFlag = true
+			ps.ReturnFlag = true
+			switch val := arg0.(type) {
+			case env.String: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+				return *env.NewError(val.Value)
+			case env.Integer: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+				return *env.NewError1(int(val.Value))
+			}
+			return arg0
+		},
+	},
+
+	"failure": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			//fmt.Println("FAIL")
+			ps.FailureFlag = true
+			switch val := arg0.(type) {
+			case env.String: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+				return *env.NewError(val.Value)
+			case env.Integer: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+				return *env.NewError1(int(val.Value))
+			}
 			return arg0
 		},
 	},
@@ -619,6 +1011,13 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			fmt.Println("ERROR")
 			ps.ErrorFlag = true
+			switch val := arg0.(type) {
+			case env.String: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+				return *env.NewError(val.Value)
+			case env.Integer: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+				return *env.NewError1(int(val.Value))
+			}
+
 			return arg0
 		},
 	},
@@ -627,20 +1026,66 @@ var builtins = map[string]*env.Builtin{
 		AcceptFailure: true,
 		Argsn:         1,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			fmt.Println("DISARM")
 			ps.FailureFlag = false
 			return arg0
 		},
 	},
 
-	"r-check": {
+	"status": {
+		AcceptFailure: true,
+		Argsn:         1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			arg0.Trace("STATUS")
+			switch er := arg0.(type) {
+			case env.Error:
+				return env.Integer{int64(er.Status)}
+			}
+			return env.NewError("wrong arg")
+		},
+	},
+
+	"^check": {
 		AcceptFailure: true,
 		Argsn:         2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			fmt.Println("R-CHECK")
-			ps.FailureFlag = false
-			ps.ReturnFlag = true
-			return arg1
+			if ps.FailureFlag {
+				ps.ReturnFlag = true
+				switch er := arg0.(type) {
+				case env.Error: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+					switch val := arg1.(type) {
+					case env.String: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+						return *env.NewError4(0, val.Value, &er, nil)
+					case env.Integer: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+						return *env.NewError4(int(val.Value), "", &er, nil)
+					}
+				}
+				return env.NewError("error 1")
+			}
+			return arg0
+		},
+	},
+
+	"^assert": {
+		AcceptFailure: true,
+		Argsn:         2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch cond := arg0.(type) {
+			case env.Integer:
+				if cond.Value == 0 {
+					ps.FailureFlag = true
+					ps.ReturnFlag = true
+					switch er := arg1.(type) {
+					case env.String:
+						return *env.NewError(er.Value)
+					case env.Integer:
+						return *env.NewError1(int(er.Value))
+					}
+				} else {
+					return env.Void{}
+				}
+				return env.Void{}
+			}
+			return env.Void{}
 		},
 	},
 
@@ -648,10 +1093,12 @@ var builtins = map[string]*env.Builtin{
 		AcceptFailure: true,
 		Argsn:         2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			fmt.Println("FIX")
-			ps.FailureFlag = false
-			ps.Res = arg1
-			return arg1
+			if ps.FailureFlag {
+				ps.FailureFlag = false
+				return arg1
+			} else {
+				return arg0
+			}
 		},
 	},
 
@@ -673,15 +1120,118 @@ var builtins = map[string]*env.Builtin{
 			return env.String{r.String()}
 		},
 	},
+
+	"to-context": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.RawMap:
+
+				return util.RawMap2Context(ps, s1)
+				// make new context with no parent
+
+			default:
+				fmt.Println("Error")
+			}
+			return nil
+		},
+	},
+
+	"len": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.RawMap:
+				return env.Integer{int64(len(s1.Data))}
+			case env.Block:
+				return env.Integer{int64(s1.Series.Len())}
+			case env.Spreadsheet:
+				return env.Integer{int64(len(s1.Rows))}
+			default:
+				fmt.Println("Error")
+			}
+			return nil
+		},
+	},
+	"ncols": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.RawMap:
+			case env.Block:
+			case env.Spreadsheet:
+				return env.Integer{int64(len(s1.Cols))}
+			default:
+				fmt.Println("Error")
+			}
+			return nil
+		},
+	},
+	"keys": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.RawMap:
+				keys := make([]env.Object, len(s1.Data))
+				i := 0
+				for k, _ := range s1.Data {
+					keys[i] = env.String{k}
+					i++
+				}
+			case env.Spreadsheet:
+				keys := make([]env.Object, len(s1.Cols))
+				for i, k := range s1.Cols {
+					keys[i] = env.String{k}
+				}
+				return *env.NewBlock(*env.NewTSeries(keys))
+			default:
+				fmt.Println("Error")
+			}
+			return nil
+		},
+	},
+
+	"sum": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var name string
+			switch s1 := arg0.(type) {
+			case env.Spreadsheet:
+				switch s2 := arg1.(type) {
+				case env.Tagword:
+					name = ps.Idx.GetWord(s2.Index)
+				case env.String:
+					name = s2.Value
+				default:
+					ps.ErrorFlag = true
+					return env.NewError("second arg not string")
+				}
+				r := s1.Sum(name)
+				if r.Type() == env.ErrorType {
+					ps.ErrorFlag = true
+				}
+				return r
+
+			default:
+				ps.ErrorFlag = true
+				return env.NewError("first arg not spreadsheet")
+			}
+			return nil
+		},
+	},
 }
 
 func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(builtins, ps)
-	//  RegisterBuiltins2(Builtins_web, ps)
-	//	RegisterBuiltins2(Builtins_sqlite, ps)
-	//	RegisterBuiltins2(Builtins_gtk, ps)
+	RegisterBuiltins2(Builtins_web, ps)
+	RegisterBuiltins2(Builtins_sxml, ps)
+	RegisterBuiltins2(Builtins_sqlite, ps)
+	RegisterBuiltins2(Builtins_gtk, ps)
 	RegisterBuiltins2(Builtins_validation, ps)
 	RegisterBuiltins2(Builtins_ps, ps)
+	RegisterBuiltins2(Builtins_nats, ps)
+	RegisterBuiltins2(Builtins_qframe, ps)
+	RegisterBuiltins2(Builtins_psql, ps)
 }
 
 func RegisterBuiltins2(builtins map[string]*env.Builtin, ps *env.ProgramState) {
@@ -705,7 +1255,7 @@ func registerBuiltin(ps *env.ProgramState, word string, builtin env.Builtin) {
 	idxw := ps.Idx.IndexWord(word)
 	// set global word with builtin
 	if idxk == 0 {
-		ps.Env.Set(idxw, builtin)
+		ps.Ctx.Set(idxw, builtin)
 	} else {
 		ps.Gen.Set(idxk, idxw, builtin)
 	}

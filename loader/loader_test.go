@@ -359,3 +359,90 @@ func TestLoader_load_uri_min(t *testing.T) {
 		t.Error("Expected path sqlite://db")
 	}
 }
+
+func TestLoader_cpath(t *testing.T) {
+	input := "{ user/check/user }"
+	block, _ := LoadString(input)
+	block.Trace("CPATH")
+	if block.Series.Len() != 1 {
+		t.Error("Expected 1 items")
+	}
+
+	//fmt.Println(block.Series.Get(0).Inspect(wordIndex))
+
+	if block.Series.Get(0).(env.Object).Type() != env.CPathType {
+		t.Error("Expected type CPath")
+	}
+
+	fmt.Println(block.Series.Get(0))
+
+	block.Series.Get(0).(env.CPath).Word1.Probe(wordIndex)
+
+	idx, _ := wordIndex.GetIndex("user")
+	if block.Series.Get(0).(env.CPath).Word1.Index != idx {
+		t.Error("Expected context user")
+	}
+
+	idx2, _ := wordIndex.GetIndex("check")
+	if block.Series.Get(0).(env.CPath).Word2.Index != idx2 { // todo later return just the path part ... but there are more components to URI, so we do it later
+		t.Error("Expected word1 check")
+	}
+
+	idx3, _ := wordIndex.GetIndex("user")
+	if block.Series.Get(0).(env.CPath).Word3.Index != idx3 { // todo later return just the path part ... but there are more components to URI, so we do it later
+		t.Error("Expected word1 user")
+	}
+}
+
+func TestLoader_load_tagword_1(t *testing.T) {
+	input := "{ 'wowo }"
+	block, _ := LoadString(input)
+	if block.Series.Len() != 1 {
+		t.Error("Expected 1 item")
+	}
+	if block.Series.Get(0).(env.Object).Type() != env.TagwordType {
+		t.Error("Expected type Pipeword")
+	}
+
+	idx := block.Series.Get(0).(env.Tagword).Index
+
+	if wordIndex.GetWord(idx) != "wowo" {
+		t.Error("Word spelling not correct")
+	}
+}
+
+func TestLoader_load_xword_1(t *testing.T) {
+	input := "{ <wowo> }"
+	block, _ := LoadString(input)
+	if block.Series.Len() != 1 {
+		t.Error("Expected 1 item")
+	}
+	if block.Series.Get(0).(env.Object).Type() != env.XwordType {
+		t.Error("Expected type Xword")
+	}
+
+	idx := block.Series.Get(0).(env.Xword).Index
+
+	fmt.Println(wordIndex.GetWord(idx))
+
+	if wordIndex.GetWord(idx) != "wowo" {
+		t.Error("Word spelling not correct")
+	}
+}
+
+func TestLoader_load_exword_1(t *testing.T) {
+	input := "{ </wowo> }"
+	block, _ := LoadString(input)
+	if block.Series.Len() != 1 {
+		t.Error("Expected 1 item")
+	}
+	if block.Series.Get(0).(env.Object).Type() != env.EXwordType {
+		t.Error("Expected type EXword")
+	}
+
+	idx := block.Series.Get(0).(env.EXword).Index
+
+	if wordIndex.GetWord(idx) != "wowo" {
+		t.Error("Word spelling not correct")
+	}
+}

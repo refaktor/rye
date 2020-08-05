@@ -47,6 +47,14 @@ func EvalBlock(es *env.ProgramState) *env.ProgramState {
 	return EvalBlockInj(es, nil, false)
 }
 
+func EvalBlockInCtx(es *env.ProgramState, ctx *env.RyeCtx) *env.ProgramState {
+	ctx2 := es.Ctx
+	es.Ctx = ctx
+	res := EvalBlockInj(es, nil, false)
+	es.Ctx = ctx2
+	return res
+}
+
 func EvalBlockInj(es *env.ProgramState, inj env.Object, injnow bool) *env.ProgramState {
 	//fmt.Println("BEFORE BLOCK ***")
 	for es.Ser.Pos() < es.Ser.Len() {
@@ -56,6 +64,9 @@ func EvalBlockInj(es *env.ProgramState, inj env.Object, injnow bool) *env.Progra
 		// TODO --- probably block, position, env ... pack all this into one struct
 		//		--- that could be passed in and returned from eval functions (I think)
 		es, injnow = EvalExpressionInj(es, inj, injnow)
+		if checkFlags2(es, 101) {
+			return es
+		}
 		if es.ReturnFlag || es.ErrorFlag {
 			return es
 		}
@@ -130,10 +141,14 @@ func EvalExpressionInj(es *env.ProgramState, inj env.Object, injnow bool) (*env.
 	var esleft *env.ProgramState
 	if inj == nil || injnow == false {
 		esleft = EvalExpression_(es)
+		trace2(esleft)
 		trace("****2")
 		if es.ReturnFlag {
 			return es, injnow
 		}
+		/*if checkFlags2(es, 102) {
+			return es, injnow
+		}*/
 
 	} else {
 		esleft = es
@@ -184,7 +199,7 @@ func MaybeEvalOpwordOnRight(nextObj env.Object, es *env.ProgramState, limited bo
 		}
 		//ProcOpword(nextObj, es)
 		idx := opword.Index
-		es.Env.Set(idx, es.Res)
+		es.Ctx.Set(idx, es.Res)
 		es.Ser.Next()
 		return MaybeEvalOpwordOnRight(es.Ser.Peek(), es, limited)
 	}
@@ -204,7 +219,7 @@ func EvalExpression_(es *env.ProgramState) *env.ProgramState {
 	defer trace2("EvalExpression_>>>")
 	object := es.Ser.Pop()
 	//es.Idx.Probe()
-	//object.Trace("Before entering expression")
+	trace2("Before entering expression")
 	switch object.Type() {
 	case env.IntegerType:
 		es.Res = object
@@ -221,8 +236,11 @@ func EvalExpression_(es *env.ProgramState) *env.ProgramState {
 	case env.WordType:
 		rr := EvalWord(es, object.(env.Word), nil, false)
 		return rr
-		//es1.Res.Trace("After eval word")
-		//return es1
+	case env.CPathType:
+		rr := EvalWord(es, object, nil, false)
+		return rr
+	case env.BuiltinType:
+		return CallBuiltin(object.(env.Builtin), es, nil, false)
 	case env.GenwordType:
 		return EvalGenword(es, object.(env.Genword), nil, false)
 	case env.SetwordType:
@@ -230,8 +248,10 @@ func EvalExpression_(es *env.ProgramState) *env.ProgramState {
 	case env.GetwordType:
 		return EvalGetword(es, object.(env.Getword), nil, false)
 	case env.CommaType:
+		es.ErrorFlag = true
 		es.Res = env.NewError("ERROR: expression guard inside expression!")
 	default:
+		es.ErrorFlag = true
 		es.Res = env.NewError("Not known type")
 	}
 	return es
@@ -253,9 +273,49 @@ func EvalExpression_(es *env.ProgramState) *env.ProgramState {
 	return es
 }*/
 
-func EvalWord(es *env.ProgramState, word env.Word, leftVal env.Object, toLeft bool) *env.ProgramState {
+func findWordValue(es *env.ProgramState, word1 env.Object) (bool, env.Object, *env.RyeCtx) {
+	switch word := word1.(type) {
+	case env.Word:
+		object, found := es.Ctx.Get(word.Index)
+		return found, object, nil
+
+	case env.CPath:
+		currCtx := es.Ctx
+		i := 1
+	gogo1:
+		currWord := word.GetWordNumber(i)
+		object, found := currCtx.Get(currWord.Index)
+		if found && word.Cnt > i {
+			switch swObj := object.(type) {
+			case env.RyeCtx:
+				currCtx = &swObj
+				i += 1
+				goto gogo1
+			}
+		}
+		return found, object, currCtx
+		/*
+			if found {
+				//var ctx env.RyeCtx
+				ctx := ctx1.(env.RyeCtx)
+				object, found = ctx.Get()
+				if object.Type() == env.CtxType {
+					ctx3 := object.(env.RyeCtx)
+					currCtx = &ctx3
+					i += 1
+					goto gogo1
+				}
+				return found, object, &ctx
+			}*/
+		return false, object, nil // TODO -- should trigger error
+	default:
+		return false, nil, nil
+	}
+}
+
+func EvalWord(es *env.ProgramState, word env.Object, leftVal env.Object, toLeft bool) *env.ProgramState {
 	//fmt.Println("*EVAL WORD*")
-	//es.Env.Probe(*es.Idx)
+	//es.Ctx.Probe(*es.Idx)
 	/* WE MUST PROCESS FUNCTIONS THAT DON'T ACCEPT ANY ARGS IN THIS CASE .. TODO SOON
 	if leftVal == nil {
 		EvalExpression_(es)
@@ -265,36 +325,50 @@ func EvalWord(es *env.ProgramState, word env.Word, leftVal env.Object, toLeft bo
 	object, found := es.Gen.Get(leftVal.GetKind(), word.Index)
 	if !found {
 		//object.Trace("OBJECT RETURNED: ")
-		object, found = es.Env.Get(word.Index)
+		object, found = es.Ctx.Get(word.Index)
 	}*/
 	// LOCAL FIRST
-	object, found := es.Env.Get(word.Index)
-	if !found {
+	found, object, ctx := findWordValue(es, word)
+	if !found { // look at Generic words, but first check type
 		if leftVal == nil {
-			EvalExpression_(es)
-			trace("****3")
-			if es.ReturnFlag {
-				return es
+			trace("****31")
+			trace(es.Ser.Pos())
+			trace(es.Ser.Len())
+			if !es.Ser.AtLast() {
+				trace("****32")
+				EvalExpression_(es)
+				trace("****32")
+				if es.ReturnFlag {
+					return es
+				}
+				leftVal = es.Res
 			}
-			leftVal = es.Res
 		}
+		trace("****21")
 		//es.Res.Trace("EvalGenword")
-		object, found = es.Gen.Get(leftVal.GetKind(), word.Index)
+		if leftVal != nil {
+			object, found = es.Gen.Get(leftVal.GetKind(), word.(env.Word).Index)
+		}
 		//object.Trace("OBJECT RETURNED: ")
 	}
+	trace("****33")
+	//object, found := es.Ctx.Get(word.Index)
 	if found {
-		return EvalObject(es, object, leftVal, toLeft) //ww0128a *
+		trace("****33")
+		return EvalObject(es, object, leftVal, toLeft, ctx) //ww0128a *
 		//es.Res.Trace("After eval Object")
 		//return es
 	} else {
-		es.Res = env.NewError("Word not found: " + word.Inspect(*es.Idx))
+		trace("****34")
+		es.ErrorFlag = true
+		es.Res = *env.NewError2(5, "Word not found: "+word.Inspect(*es.Idx))
 		return es
 	}
 }
 
 func EvalGenword(es *env.ProgramState, word env.Genword, leftVal env.Object, toLeft bool) *env.ProgramState {
 	//fmt.Println("*EVAL GENWORD*")
-	//es.Env.Probe(*es.Idx)
+	//es.Ctx.Probe(*es.Idx)
 	//es.Ser.Next()
 	EvalExpression_(es)
 	trace("****4")
@@ -304,7 +378,7 @@ func EvalGenword(es *env.ProgramState, word env.Genword, leftVal env.Object, toL
 	object, found := es.Gen.Get(arg0.GetKind(), word.Index)
 	//object.Trace("OBJECT RETURNED: ")
 	if found {
-		return EvalObject(es, object, arg0, toLeft) //ww0128a *
+		return EvalObject(es, object, arg0, toLeft, nil) //ww0128a *
 		//es.Res.Trace("After eval Object")
 		//return es
 	} else {
@@ -314,7 +388,7 @@ func EvalGenword(es *env.ProgramState, word env.Genword, leftVal env.Object, toL
 }
 
 func EvalGetword(es *env.ProgramState, word env.Getword, leftVal env.Object, toLeft bool) *env.ProgramState {
-	object, found := es.Env.Get(word.Index)
+	object, found := es.Ctx.Get(word.Index)
 	if found {
 		es.Res = object
 		return es
@@ -338,21 +412,31 @@ func EvalGetword(es *env.ProgramState, word env.Getword, leftVal env.Object, toL
 	return es
 } */
 
-func EvalObject(es *env.ProgramState, object env.Object, leftVal env.Object, toLeft bool) *env.ProgramState {
+func EvalObject(es *env.ProgramState, object env.Object, leftVal env.Object, toLeft bool, ctx *env.RyeCtx) *env.ProgramState {
 	//fmt.Print("EVAL OBJECT")
-	//d object.Trace("EVAL OBJ**")
 	switch object.Type() {
 	case env.FunctionType:
 		//d fmt.Println(" FUN**")
 		fn := object.(env.Function)
-		return CallFunction(fn, es, leftVal, toLeft)
-		es.Res.Trace("After user function call")
+		return CallFunction(fn, es, leftVal, toLeft, ctx)
+		//return es
+	case env.CPathType: // RMME
+		fmt.Println(" CPATH **************")
+		fn := object.(env.Function)
+		return CallFunction(fn, es, leftVal, toLeft, ctx)
 		//return es
 	case env.BuiltinType:
 		//fmt.Println(" BUIL**")
 		//fmt.Println(es.Ser.GetPos())
 		//fmt.Println(" BUILTIN**")
 		bu := object.(env.Builtin)
+
+		// OBJECT INJECTION EXPERIMENT
+		// es.Ser.Put(bu)
+
+		if checkFlags(bu, es, 333) {
+			return es
+		}
 		return CallBuiltin(bu, es, leftVal, toLeft)
 		//es.Res.Trace("After builtin call")
 		//return es
@@ -368,22 +452,42 @@ func EvalObject(es *env.ProgramState, object env.Object, leftVal env.Object, toL
 func EvalSetword(es *env.ProgramState, word env.Setword) *env.ProgramState {
 	es1 := EvalExpression(es)
 	idx := word.Index
-	es1.Env.Set(idx, es1.Res)
+	es1.Ctx.Set(idx, es1.Res)
 	return es1
 }
 
-func CallFunction(fn env.Function, es *env.ProgramState, arg0 env.Object, toLeft bool) *env.ProgramState {
+/*func CallRFunction2(fn env.Function, es *env.ProgramState, arg0 env.Object, arg1 env.Object) *env.ProgramState {
+
+}*/
+
+func CallFunction(fn env.Function, es *env.ProgramState, arg0 env.Object, toLeft bool, ctx *env.RyeCtx) *env.ProgramState {
 	//fmt.Println("Call Function")
 	//fmt.Println(es.Ser.GetPos())
-	env0 := es.Env // store reference to current env in local
-	es.Env = env.NewEnv(env0)
+	env0 := es.Ctx // store reference to current env in local
+	var fnCtx *env.RyeCtx
+	if ctx != nil { // called via contextpath and this is the context
+		if fn.Ctx != nil { // if context was defined at definition time, pass it as parent.
+			fn.Ctx.Parent = ctx
+			fnCtx = env.NewEnv(fn.Ctx)
+		} else {
+			fnCtx = env.NewEnv(ctx)
+		}
+	} else {
+		if fn.Ctx != nil { // if context was defined at definition time, pass it as parent.
+			// Q: Would we want to pass it directly at any point?
+			//    Maybe to remove need of creating new contexts, for reuse, of to be able to modify it?
+			fnCtx = env.NewEnv(fn.Ctx)
+		} else {
+			fnCtx = env.NewEnv(env0)
+		}
+	}
 
 	ii := 0
 	// evalExprFn := EvalExpression // 2020-01-12 .. changed to ion2
 	evalExprFn := EvalExpression2
 	if arg0 != nil {
 		index := fn.Spec.Series.Get(ii).(env.Word).Index
-		es.Env.Set(index, arg0)
+		fnCtx.Set(index, arg0)
 		es.Args[ii] = index
 		ii = 1
 		if !toLeft {
@@ -398,21 +502,29 @@ func CallFunction(fn env.Function, es *env.ProgramState, arg0 env.Object, toLeft
 			return es
 		}
 		index := fn.Spec.Series.Get(i).(env.Word).Index
-		es.Env.Set(index, es.Res)
+		fnCtx.Set(index, es.Res)
 		es.Args[i] = index
 	}
 	ser0 := es.Ser // only after we process the arguments and get new position
 	es.Ser = fn.Body.Series
 	//es.Idx.Probe()
-	//es.Env.Probe(*es.Idx)
+	//es.Ctx.Probe(*es.Idx)
 
-	result := EvalBlock(es)
+	// *******
+	env0 = es.Ctx // store reference to current env in local
+	es.Ctx = fnCtx
 
+	var result *env.ProgramState
+	//	if ctx != nil {
+	//		result = EvalBlockInCtx(es, ctx)
+	//	} else {
+	result = EvalBlock(es)
+	//	}
 	es.Res = result.Res
-	es.Env = env0
+	es.Ctx = env0
 	es.Ser = ser0
 	es.ReturnFlag = false
-	//es.Res.Trace("Before user function returns")
+	trace2("Before user function returns")
 	return es
 	/*         for (var i=0;i<h.length;i+=1) {
 	    var e = this.evalExpr(block,pos,state,depth+1);
@@ -441,6 +553,7 @@ func trace2(x interface{}) {
 }
 
 func checkFlags(bi env.Builtin, ps *env.ProgramState, n int) bool {
+	trace("CHECK FLAGS")
 	trace(n)
 	trace(ps.Res)
 	trace(bi)
@@ -453,6 +566,20 @@ func checkFlags(bi env.Builtin, ps *env.ProgramState, n int) bool {
 			ps.ErrorFlag = true
 			return true
 		}
+	} else {
+		trace("NOT FailuteFlag")
+	}
+	return false
+}
+func checkFlags2(ps *env.ProgramState, n int) bool {
+	trace("CHECK FLAGS 2")
+	trace(n)
+	trace(ps.Res)
+	if ps.FailureFlag && !ps.ReturnFlag {
+		trace("FailureFlag")
+		trace("Fail->Error.")
+		ps.ErrorFlag = true
+		return true
 	} else {
 		trace("NOT FailuteFlag")
 	}
@@ -474,6 +601,23 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 	arg2 := env.Object(bi.Cur2)
 	arg3 := env.Object(bi.Cur3)
 	arg4 := env.Object(bi.Cur4)
+
+	// This is just experiment if we could at currying provide ?fn or ?builtin and
+	// with arity of 0 and it would get executed at calltime. So closure would become
+	// closure: fnc _ ?current-context _
+	// this is maybe only usefull to provide sort of dynamic constant to a curried
+	// probably not worthe the special case but here for exploration for now just
+	// on arg1 . In case of arg being function this would not bind curry to static
+	// value but to a result of a function, which would let us inject some context
+	// bound dynamic value
+	// ... we will see ...
+	if bi.Cur1 != nil && bi.Cur1.Type() == env.BuiltinType {
+		if bi.Cur1.(env.Builtin).Argsn == 0 {
+			arg1 = DirectlyCallBuiltin(ps, bi.Cur1.(env.Builtin), nil, nil)
+		}
+	}
+	// end of experiment
+
 	evalExprFn := EvalExpression2
 	curry := false
 
@@ -514,6 +658,7 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 		if ps.ErrorFlag || ps.ReturnFlag {
 			return ps
 		}
+		//fmt.Println(ps.Res)
 		if ps.Res.Type() == env.VoidType {
 			curry = true
 		} else {
@@ -570,4 +715,33 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 	}
 	//ps.Res.Trace("Before builtin returns")
 	return ps
+}
+
+func DirectlyCallBuiltin(ps *env.ProgramState, bi env.Builtin, a0 env.Object, a1 env.Object) env.Object {
+	// let's try to make it without array allocation and without variadic arguments that also maybe actualizes splice
+	// up to 2 curried variables and 2 in caller
+	// examples:
+	// 	map { 1 2 3 } add _ 10
+	var arg0 env.Object
+	var arg1 env.Object
+
+	if bi.Cur0 != nil {
+		arg0 = env.Object(bi.Cur0)
+		if bi.Cur1 != nil {
+			arg1 = env.Object(bi.Cur1)
+		} else {
+			arg1 = a0
+		}
+	} else {
+		arg0 = a0
+		if bi.Cur1 != nil {
+			arg1 = env.Object(bi.Cur1)
+		} else {
+			arg1 = a1
+		}
+	}
+	arg2 := env.Object(bi.Cur2)
+	arg3 := env.Object(bi.Cur3)
+	arg4 := env.Object(bi.Cur4)
+	return bi.Fn(ps, arg0, arg1, arg2, arg3, arg4)
 }

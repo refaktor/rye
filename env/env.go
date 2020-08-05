@@ -2,7 +2,8 @@ package env
 
 import (
 	"fmt"
-	"strconv"
+	//	"strconv"
+	"strings"
 )
 
 /* type Envi interface {
@@ -10,43 +11,55 @@ import (
 	Set(word int, val Object) Object
 } */
 
-type Env struct {
-	state  map[int]Object
-	parent *Env
+// This is experimental env without map for Functions with up to two variables
+
+type EnvR2 struct {
+	Var1   Object
+	Var2   Object
+	parent *RyeCtx
 	kind   Word
 }
 
-func NewEnv(par *Env) *Env {
-	var e Env
+type RyeCtx struct {
+	state  map[int]Object
+	Parent *RyeCtx
+	kind   Word
+	locked bool
+}
+
+func NewEnv(par *RyeCtx) *RyeCtx {
+	var e RyeCtx
 	e.state = make(map[int]Object)
-	e.parent = par
+	e.Parent = par
 	return &e
 }
 
-func (e *Env) Probe(idxs Idxs) {
-	fmt.Print("<ENV State: ")
+func (e RyeCtx) Probe(idxs Idxs) string {
+	var bu strings.Builder
+	bu.WriteString("<Context: ")
 	for k, v := range e.state {
-		fmt.Print(strconv.FormatInt(int64(k), 10) + ": " + v.Inspect(idxs) + " ")
+		bu.WriteString(idxs.GetWord(k) + ": " + v.Inspect(idxs) + " ")
 	}
-	fmt.Println(">")
+	bu.WriteString(">")
+	return bu.String()
 }
 
 // Type returns the type of the Integer.
-func (i Env) Type() Type {
-	return EnvType
+func (i RyeCtx) Type() Type {
+	return CtxType
 }
 
 // Inspect returns a string representation of the Integer.
-func (i Env) Inspect(e Idxs) string {
-	return "<Env OF " + i.kind.Probe(e) + ">"
+func (i RyeCtx) Inspect(e Idxs) string {
+	return "<Context of kind " + i.kind.Probe(e) + ">"
 }
 
-func (i Env) Trace(msg string) {
+func (i RyeCtx) Trace(msg string) {
 	fmt.Print(msg + "(env): ")
 	//fmt.Println(i.Value)
 }
 
-func (i Env) GetKind() int {
+func (i RyeCtx) GetKind() int {
 	return i.kind.Index
 }
 
@@ -67,14 +80,14 @@ func (i Env) GetKind() int {
 	return &obj, exists
 }*/
 
-func (e *Env) Get(word int) (Object, bool) {
+func (e *RyeCtx) Get(word int) (Object, bool) {
 	obj, exists := e.state[word]
 	// recursively look at outer Environments ...
 	// only specific functions should do this and ounly for function values ... but there is only global env maybe
 	// this is simple environment setup, but we will for the sake of safety and speed change this probably
 	// maybe some caching here ... or we could inject functions directly into locked series like some idea was to avoid variable lookup
-	if !exists && e.parent != nil {
-		par := *e.parent
+	if !exists && e.Parent != nil {
+		par := *e.Parent
 		obj1, exists1 := par.Get(word)
 		if exists1 {
 			obj = obj1
@@ -84,7 +97,7 @@ func (e *Env) Get(word int) (Object, bool) {
 	return obj, exists
 }
 
-func (e *Env) Set(word int, val Object) Object {
+func (e *RyeCtx) Set(word int, val Object) Object {
 	e.state[word] = val
 	return val
 }
@@ -92,7 +105,7 @@ func (e *Env) Set(word int, val Object) Object {
 type ProgramState struct {
 	Ser         TSeries // current block of code
 	Res         Object  // result of expression
-	Env         *Env    // Env object ()
+	Ctx         *RyeCtx // Env object ()
 	Idx         *Idxs   // Idx object (index of words)
 	Args        []int   // names of current arguments (indexes of names)
 	Gen         *Gen    // map[int]map[int]Object  // list of Generic kinds / code
@@ -131,6 +144,6 @@ func AddToProgramState(ps *ProgramState, ser TSeries, idx *Idxs) *ProgramState {
 func SetValue(ps *ProgramState, word string, val Object) {
 	idx, found := ps.Idx.GetIndex(word)
 	if found {
-		ps.Env.Set(idx, val)
+		ps.Ctx.Set(idx, val)
 	}
 }

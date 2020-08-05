@@ -576,7 +576,7 @@ func TestReturnInsideFn2(t *testing.T) { // two keys, int as string, pass true
 }
 
 func TestCriticalFailureInsideFn2InBuiltinExpr(t *testing.T) { // two keys, int as string, pass true
-	input := "{ print 1 a: fn { } { print 11 critical-failure 22 print 33 } b: fn { } { print 111 return a print 333 } print 2 add b 2 print 3 }"
+	input := "{ print 1 a: fn { } { print 11 error 22 print 33 } b: fn { } { print 111 return a print 333 } print 2 add b 2 print 3 }"
 	block, genv := loader.LoadString(input)
 	es := env.NewProgramState(block.Series, genv)
 	RegisterBuiltins(es)
@@ -584,17 +584,37 @@ func TestCriticalFailureInsideFn2InBuiltinExpr(t *testing.T) { // two keys, int 
 	EvalBlock(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
-	if es.Res.Type() != env.IntegerType {
+	if es.Res.Type() != env.ErrorType {
 		t.Error("Expected result type Date")
 	}
 
-	if !(es.Res.(env.Integer).Value == 22) {
+	if !(es.Res.(env.Error).Status == 22) {
 		t.Error("Expected result value 22")
 	}
 }
 
 func TestCriticalFailureInsideFn2InFnExpr(t *testing.T) { // two keys, int as string, pass true
-	input := "{ print 1 a: fn { } { print 11 critical-failure 22 print 33 } b: fn { a } { print 111 print a print 333 } print 2 b a print 3 }"
+	input := "{ print 1 a: fn { } { print 11 error 22 print 33 } b: fn { a } { print 111 print a print 333 } print 2 b a print 3 }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	fmt.Print(es.Res.Inspect(*es.Idx))
+	if es.Res.Type() != env.ErrorType {
+		t.Error("Expected result type Error")
+	}
+
+	if !(es.Res.(env.Error).Status == 22) {
+		t.Error("Expected result value 22")
+	}
+}
+
+// FNC
+
+func Test_Fnc_make_adder(t *testing.T) { // two keys, int as string, pass true
+	input := "{ make-adder: fn { b } { fnc { a } context { b: b } { add a b } } add2: make-adder 2 add5: make-adder 5 add2 10 }"
 	block, genv := loader.LoadString(input)
 	es := env.NewProgramState(block.Series, genv)
 	RegisterBuiltins(es)
@@ -603,12 +623,176 @@ func TestCriticalFailureInsideFn2InFnExpr(t *testing.T) { // two keys, int as st
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
-		t.Error("Expected result type Date")
+		t.Error("Expected result type Error")
 	}
 
-	if !(es.Res.(env.Integer).Value == 22) {
-		t.Error("Expected result value 22")
+	if !(es.Res.(env.Integer).Value == 12) {
+		t.Error("Expected result value 12")
+	}
+}
+
+func Test_Fnc_make_adder_2(t *testing.T) { // two keys, int as string, pass true
+	input := "{ make-adder: fn { b } { fnc { a } current-context { add a b } } add2: make-adder 2 add5: make-adder 5 add add2 10 add5 10 }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	fmt.Print(es.Res.Inspect(*es.Idx))
+	if es.Res.Type() != env.IntegerType {
+		t.Error("Expected result type Error")
+	}
+
+	if !(es.Res.(env.Integer).Value == 27) {
+		t.Error("Expected result value 27")
+	}
+}
+
+func Test_Fnc_make_adder_3_closure(t *testing.T) { // two keys, int as string, pass true
+	input := "{ closure: fn { a b } { fnc a parent-context b } make-adder: fn { b } { closure { a } { add a b } } add3: make-adder 3 add5: make-adder 5 add add3 10 add5 10 }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	fmt.Print(es.Res.Inspect(*es.Idx))
+	if es.Res.Type() != env.IntegerType {
+		t.Error("Expected result type Error")
+	}
+
+	if !(es.Res.(env.Integer).Value == 28) {
+		t.Error("Expected result value 28")
+	}
+}
+
+func Test_Fnc_make_adder_4_in_context(t *testing.T) { // two keys, int as string, pass true
+	input := "{ closure: fn { a b } { fnc a parent-context b } adder: fn { b } { closure { a } { add a b } } api: context { add9: adder 9 add5: adder 5 } add api/add9 10 api/add5 10 }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	fmt.Print(es.Res.Inspect(*es.Idx))
+	if es.Res.Type() != env.IntegerType {
+		t.Error("Expected result type Error")
+	}
+
+	if !(es.Res.(env.Integer).Value == 34) {
+		t.Error("Expected result value 34")
 	}
 }
 
 // { a: { 101 102 103 } b: a .nth 1 |add 100 }" // POP doesn't make sense right now as builtins can't change objects now. If is this good / safety or bad /too restricting
+
+// MAP FILTER SEEK
+
+func Test_hofs_map_1(t *testing.T) { // two keys, int as string, pass true
+	input := "{ a: { 1 4 8 } map a { .inc } |nth 1 }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	fmt.Print(es.Res.Inspect(*es.Idx))
+	if es.Res.Type() != env.IntegerType {
+		t.Error("Expected result type Error")
+	}
+
+	if !(es.Res.(env.Integer).Value == 2) {
+		t.Error("Expected result value 2")
+	}
+}
+
+func Test_hofs_map_2(t *testing.T) { // two keys, int as string, pass true
+	input := "{ a: { 1 4 8 } map a add 10 _ |nth 1 }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	fmt.Print(es.Res.Inspect(*es.Idx))
+	if es.Res.Type() != env.IntegerType {
+		t.Error("Expected result type Error")
+	}
+
+	if !(es.Res.(env.Integer).Value == 11) {
+		t.Error("Expected result value 11")
+	}
+}
+
+func Test_hofs_filter_1(t *testing.T) { // two keys, int as string, pass true
+	input := "{ a: { 1 4 8 } filter a { .greater 5 } |nth 1 }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	fmt.Print(es.Res.Inspect(*es.Idx))
+	if es.Res.Type() != env.IntegerType {
+		t.Error("Expected result type Error")
+	}
+
+	if !(es.Res.(env.Integer).Value == 8) {
+		t.Error("Expected result value 8")
+	}
+}
+
+func Test_hofs_filter_2(t *testing.T) { // two keys, int as string, pass true
+	input := "{ a: { 1 4 8 } filter a lesser _ 5 |nth 1 }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	fmt.Print(es.Res.Inspect(*es.Idx))
+	if es.Res.Type() != env.IntegerType {
+		t.Error("Expected result type Error")
+	}
+
+	if !(es.Res.(env.Integer).Value == 1) {
+		t.Error("Expected result value 1")
+	}
+}
+
+func Test_hofs_seek_1(t *testing.T) { // two keys, int as string, pass true
+	input := "{ a: { 1 4 8 } seek a { .greater 5 } }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	fmt.Print(es.Res.Inspect(*es.Idx))
+	if es.Res.Type() != env.IntegerType {
+		t.Error("Expected result type Error")
+	}
+
+	if !(es.Res.(env.Integer).Value == 8) {
+		t.Error("Expected result value 8")
+	}
+}
+
+func Test_hofs_seek_2(t *testing.T) { // two keys, int as string, pass true
+	input := "{ a: { 1 4 8 } seek a greater _ 3 }"
+	block, genv := loader.LoadString(input)
+	es := env.NewProgramState(block.Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	fmt.Print(es.Res.Inspect(*es.Idx))
+	if es.Res.Type() != env.IntegerType {
+		t.Error("Expected result type Error")
+	}
+
+	if !(es.Res.(env.Integer).Value == 4) {
+		t.Error("Expected result value 4")
+	}
+}

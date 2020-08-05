@@ -962,3 +962,22 @@ should print 1 and then exit. err is the builtin that returns the error object.
 Can our code throw error? if error exits immediatelly? Does it even make sense? When do we detect the error? On return of call? It's related to return ... error is like return error
 
 
+# 2020-03-22
+
+HOW DO WE MAKE A FIRST WEB API 
+
+Added postgres binding. If we are trying to solidify thing there is tons of things to do. So while developing new, we should also solidify things like Errors for builtins.
+
+- ProgramState should have a error function that returns the error and sets the flag.
+
+Spreadsheet should have some basic functionality:
++ list of columns
++ count of columns
++ count of rows
++ to html
++ to text
+- to json
+. get column out as a block of values
+. get row out as a blok of values
+. get row as raw-map out
+. get sum, max, min, custom reduction of a column

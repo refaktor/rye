@@ -5,6 +5,7 @@ import "C"
 import (
 	"Ryelang/env"
 	"database/sql"
+
 	"fmt"
 	"strconv"
 	"strings"
@@ -12,77 +13,32 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-type SpreadsheetRow struct {
-	values []interface{}
-}
+const MODE_SQLITE = 1
+const MODE_PSQL = 2
 
-type Spreadsheet struct {
-	cols []string
-	rows []SpreadsheetRow
-}
-
-func NewSpreadsheet(cols []string) *Spreadsheet {
-	var ps Spreadsheet
-	ps.cols = cols
-	ps.rows = make([]SpreadsheetRow, 1)
-	/*
-		ps := Spreadsheet{
-			cols,
-			make([]SpreadsheetRow, 1)
-		} */
-	return &ps
-}
-
-// Inspect returns a string representation of the Integer.
-func (s *Spreadsheet) addRow(vals SpreadsheetRow) {
-	s.rows = append(s.rows, vals)
-}
-
-// Inspect returns a string representation of the Integer.
-func (s *Spreadsheet) setCols(vals []string) {
-	s.cols = vals
-}
-
-// Inspect returns a string representation of the Integer.
-func (s Spreadsheet) toHtml() string {
-	fmt.Println("IN TO Html")
-	var bu strings.Builder
-	bu.WriteString("<table>")
-	for _, row := range s.rows {
-		bu.WriteString("<tr>")
-		for _, val := range row.values {
-			bu.WriteString("<td>")
-			bu.WriteString(fmt.Sprint(val))
-			bu.WriteString("</td>")
-		}
-		bu.WriteString("</tr>")
-	}
-	bu.WriteString("</table>")
-	fmt.Println(bu.String())
-	return bu.String()
-}
-
-func SQL_EvalBlock(es *env.ProgramState) (*env.ProgramState, []interface{}) {
+func SQL_EvalBlock(es *env.ProgramState, mode int) (*env.ProgramState, []interface{}) {
 	var bu strings.Builder
 	var str string
 	values := make([]interface{}, 0, 2) // TODO ... what is this 2 here ... just for temp
 	for es.Ser.Pos() < es.Ser.Len() {
-		es, str, values = SQL_EvalExpression(es, values)
+		es, str, values = SQL_EvalExpression(es, values, mode)
 		bu.WriteString(str + " ")
-		fmt.Println(bu.String())
+		//fmt.Println(bu.String())
 	}
 	es.Res = env.String{bu.String()}
 	return es, values
 }
 
-func SQL_EvalExpression(es *env.ProgramState, vals []interface{}) (*env.ProgramState, string, []interface{}) {
+// mode 1 SQLite, 2 postgresql
+
+func SQL_EvalExpression(es *env.ProgramState, vals []interface{}, mode int) (*env.ProgramState, string, []interface{}) {
 	object := es.Ser.Pop()
 
 	switch obj := object.(type) {
 	case env.Integer:
 		return es, strconv.FormatInt(obj.Value, 10), vals
 	case env.String:
-		return es, "\"" + obj.Value + "\"", vals
+		return es, "'" + obj.Value + "'", vals
 	/*case env.VoidType:
 		es.Res = object
 	case env.TagwordType:
@@ -96,9 +52,16 @@ func SQL_EvalExpression(es *env.ProgramState, vals []interface{}) (*env.ProgramS
 	case env.SetwordType:
 		return EvalSetword(es, object.(env.Setword)) */
 	case env.Getword:
-		val, _ := es.Env.Get(obj.Index)
+		val, _ := es.Ctx.Get(obj.Index)
 		vals = append(vals, val.(env.Integer).Value)
-		return es, "?", vals
+		var ph string
+		switch mode {
+		case 1:
+			ph = "?"
+		case 2:
+			ph = "$" + strconv.Itoa(len(vals))
+		}
+		return es, ph, vals
 	case env.Comma:
 		return es, ", ", vals
 	default:
@@ -112,7 +75,7 @@ var Builtins_sqlite = map[string]*env.Builtin{
 	"sqlite-schema//open": {
 		Argsn: 1,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			arg0.Trace("OPEN :::::::::")
+			arg0.Trace("SQLITE OPEN TODO :::::::::")
 			switch str := arg0.(type) {
 			case env.Uri:
 				fmt.Println(str.Path)
@@ -125,12 +88,12 @@ var Builtins_sqlite = map[string]*env.Builtin{
 		},
 	},
 
-	"Rye-spreadsheet//htmlize": {
+	"htmlize": {
 		Argsn: 1,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
-			case env.Native:
-				return env.String{str.Value.(Spreadsheet).toHtml()}
+			case env.Spreadsheet:
+				return env.String{str.ToHtml()}
 			default:
 				return env.NewError("arg 2 should be string %s")
 			}
@@ -167,10 +130,10 @@ var Builtins_sqlite = map[string]*env.Builtin{
 			case env.Native:
 				switch str := arg1.(type) {
 				case env.Block:
-					fmt.Println("BLOCK ****** *****")
+					//fmt.Println("BLOCK ****** *****")
 					ser := env1.Ser
 					env1.Ser = str.Series
-					_, vals = SQL_EvalBlock(env1)
+					_, vals = SQL_EvalBlock(env1, MODE_SQLITE)
 					sqlstr = env1.Res.(env.String).Value
 					env1.Ser = ser
 				case env.String:
@@ -179,7 +142,7 @@ var Builtins_sqlite = map[string]*env.Builtin{
 					return env.NewError("arg 2222 should be string %s")
 				}
 				if sqlstr != "" {
-					spr := NewSpreadsheet([]string{"name", "id"})
+					spr := env.NewSpreadsheet([]string{"name", "id"})
 					rows, err := db1.Value.(*sql.DB).Query(sqlstr, vals...)
 					result := make([]map[string]interface{}, 0)
 					if err != nil {
@@ -188,7 +151,7 @@ var Builtins_sqlite = map[string]*env.Builtin{
 						cols, _ := rows.Columns()
 						for rows.Next() {
 
-							var sr SpreadsheetRow
+							var sr env.SpreadsheetRow
 
 							columns := make([]interface{}, len(cols))
 							columnPointers := make([]interface{}, len(cols))
@@ -207,15 +170,15 @@ var Builtins_sqlite = map[string]*env.Builtin{
 							for i, colName := range cols {
 								val := columnPointers[i].(*interface{})
 								m[colName] = *val
-								sr.values = append(sr.values, *val)
+								sr.Values = append(sr.Values, *val)
 							}
-							spr.addRow(sr)
+							spr.AddRow(sr)
 							result = append(result, m)
 							// Outputs: map[columnName:value columnName2:value2 columnName3:value3 ...]
 						}
 						rows.Close() //good habit to close
-						fmt.Println("+++++")
-						fmt.Print(result)
+						//fmt.Println("+++++")
+						//fmt.Print(result)
 						return *env.NewNative(env1.Idx, *spr, "Rye-spreadsheet")
 					}
 					return env.NewError("Empty SQL")

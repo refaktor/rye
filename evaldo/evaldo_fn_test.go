@@ -24,7 +24,7 @@ func TestEvaldo_function1_just_return_integer(t *testing.T) {
 	if found {
 		body := []env.Object{env.Integer{234}}
 		spec := []env.Object{}
-		es.Env.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body))))
+		es.Ctx.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body))))
 
 		EvalBlock(es)
 
@@ -50,7 +50,7 @@ func TestEvaldo_function1_just_return_integer_in_loop(t *testing.T) {
 	if found {
 		body := []env.Object{env.Integer{2345}}
 		spec := []env.Object{}
-		es.Env.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body))))
+		es.Ctx.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body))))
 
 		EvalBlock(es)
 
@@ -80,7 +80,7 @@ func TestEvaldo_function2_call_builtin_in_func(t *testing.T) {
 		if found1 { // env.Word{printidx},
 			body := []env.Object{env.Word{incidx}, env.Word{incidx}, env.Word{incidx}, env.Integer{330}}
 			spec := []env.Object{}
-			es.Env.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body))))
+			es.Ctx.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body))))
 
 			EvalBlock(es)
 
@@ -112,7 +112,7 @@ func TestEvaldo_function3_arg_unit_func(t *testing.T) {
 		//printidx, _ := es.Idx.GetIndex("print")
 		body := []env.Object{env.Word{aaaidx}}
 		spec := []env.Object{env.Word{aaaidx}}
-		es.Env.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body))))
+		es.Ctx.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body))))
 
 		EvalBlock(es)
 
@@ -145,7 +145,7 @@ func TestEvaldo_function3_arg_inc_func(t *testing.T) {
 			//printidx, _ := es.Idx.GetIndex("print")
 			spec := []env.Object{env.Word{aaaidx}}
 			body := []env.Object{env.Word{incidx}, env.Word{aaaidx}}
-			es.Env.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body))))
+			es.Ctx.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body))))
 
 			EvalBlock(es)
 
@@ -181,7 +181,7 @@ func TestEvaldo_function3_arg_unit_func_loop(t *testing.T) {
 		//printidx, _ := es.Idx.GetIndex("print")
 		spec := []env.Object{env.Word{aaaidx}}
 		body := []env.Object{env.Word{aaaidx}}
-		es.Env.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body))))
+		es.Ctx.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body))))
 
 		EvalBlock(es)
 
@@ -218,7 +218,7 @@ func TestEvaldo_function3_arg_inc_func_loop(t *testing.T) {
 			//printidx, _ := es.Idx.GetIndex("print")
 			spec := []env.Object{env.Word{aaaidx}}
 			body := []env.Object{env.Word{incidx}, env.Word{aaaidx}}
-			es.Env.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body))))
+			es.Ctx.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body))))
 
 			EvalBlock(es)
 
@@ -256,7 +256,7 @@ func _TestEvaldo_function4_simple_recur(t *testing.T) {
 			//printidx, _ := es.Idx.GetIndex("print")
 			spec := []env.Object{env.Word{aaaidx}}
 			body := []env.Object{env.Word{printidx}, env.Word{aaaidx}, env.Word{recuridx}, env.Word{greateridx}, env.Integer{99}, env.Word{aaaidx}, env.Word{incidx}, env.Word{aaaidx}}
-			es.Env.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body))))
+			es.Ctx.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body))))
 
 			EvalBlock(es)
 

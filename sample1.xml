@@ -1,0 +1,33 @@
+<list>
+	<human age='33'>
+		<name>Jim</name>
+		<addr>Pale street 33</addr>
+	</human>
+  <dog>
+		<name>Rex</name>
+	</dog>
+	<human age='44'>
+		<name>Jane</name>
+		<addr>High street 44</addr>
+	</human>
+</list>
+<nonlist>
+	<human age='99'>
+		<name>Albert</name>
+		<addr>Grey street 99</addr>
+	</human>
+</nonlist>
+
+
+do-sxml xml { 
+	<list> { 
+		<human> { 
+			[ .get-attr 0 |prs ] 
+			<name> <addr> { 
+				_ [ .prs ] 
+			} 
+			'end [ print "" ] 
+		}		
+	} 
+}
+
