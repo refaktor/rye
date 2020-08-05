@@ -356,7 +356,7 @@ func main_rysh() {
 	status := 1
 
 	for status != 0 {
-		C.enableRawMode()
+		// temporary, to compile on Mac: C.enableRawMode()
 		wd, _ := os.Getwd()
 		fmt.Print("\033[36m" + wd + " -> " + "\033[m")
 
@@ -484,7 +484,7 @@ func main_rysh() {
 		//	fmt.Fprintln(os.Stderr, err)
 		//}
 		fmt.Println("OUT OUT")
-		C.disableRawMode()
+		// temporary, to compile on Mac: C.disableRawMode()
 		// Handle the execution of the input.
 		if err := execInput(line); err != nil {
 			fmt.Fprintln(os.Stderr, err)
