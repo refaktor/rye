@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"../env"
+	"rye/env"
 
 	. "github.com/yhirose/go-peg"
 )

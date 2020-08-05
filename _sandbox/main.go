@@ -1,4 +1,4 @@
-// Ryelang project main.go
+// rye project main.go
 package main
 
 /*
@@ -29,15 +29,15 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 
-	"Ryelang/env"
-	"Ryelang/evaldo"
-	"Ryelang/loader"
-	"Ryelang/ryeco"
-	"Ryelang/util"
+	"rye/env"
+	"rye/evaldo"
+	"rye/loader"
+	"rye/ryeco"
+	"rye/util"
 
 	"github.com/peterh/liner"
 
-	//"Ryelang/util"
+	//"rye/util"
 	//"fmt"
 	//"strconv"
 	"github.com/pkg/profile"

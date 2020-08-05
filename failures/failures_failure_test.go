@@ -1,9 +1,9 @@
 package failures
 
 import (
-	"../env"
-	"../evaldo"
-	"../loader"
+	"rye/env"
+	"rye/evaldo"
+	"rye/loader"
 
 	//	"fmt"
 	"testing"

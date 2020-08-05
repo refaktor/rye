@@ -3,7 +3,7 @@ package evaldo
 import "C"
 
 import (
-	"../env"
+	"rye/env"
 	"github.com/gotk3/gotk3/gtk"
 )
 

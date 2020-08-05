@@ -2,8 +2,8 @@
 package evaldo
 
 import (
-	"../env"
-	"../loader"
+	"rye/env"
+	"rye/loader"
 	"fmt"
 
 	//"fmt"

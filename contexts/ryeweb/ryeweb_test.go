@@ -1,9 +1,9 @@
 package contexts
 
 import (
-	"Ryelang/env"
-	"Ryelang/evaldo"
-	"Ryelang/loader"
+	"rye/env"
+	"rye/evaldo"
+	"rye/loader"
 	"fmt"
 
 	//	"fmt"

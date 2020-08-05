@@ -1,9 +1,9 @@
 package perf
 
 import (
-	"../env"
-	"../evaldo"
-	"../loader"
+	"rye/env"
+	"rye/evaldo"
+	"rye/loader"
 
 	//	"fmt"
 	"testing"

@@ -1,7 +1,7 @@
 package perf
 
 /* 18.2.2020
-/usr/local/go/bin/go test -v [/home/jimbo/go/src/Ryelang/perf]
+/usr/local/go/bin/go test -v [/home/jimbo/go/src/rye/perf]
 === RUN   TestEvaldo_function4_factorial_w_recur2
 returned(integer): 479001600
 --- PASS: TestEvaldo_function4_factorial_w_recur2 (2.07s)

@@ -2,7 +2,7 @@
 package loader
 
 import (
-	"../env"
+	"rye/env"
 	"fmt"
 )
 

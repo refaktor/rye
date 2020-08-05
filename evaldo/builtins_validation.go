@@ -3,8 +3,8 @@ package evaldo
 import "C"
 
 import (
-	"../env"
-	"../util"
+	"rye/env"
+	"rye/util"
 	"fmt"
 	"net/mail"
 	"strconv"

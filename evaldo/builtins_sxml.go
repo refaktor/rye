@@ -1,7 +1,7 @@
 package evaldo
 
 import (
-	"../env"
+	"rye/env"
 	"encoding/xml"
 
 	//"fmt"

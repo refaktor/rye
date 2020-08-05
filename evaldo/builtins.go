@@ -2,8 +2,8 @@
 package evaldo
 
 import (
-	"../env"
-	"../util"
+	"rye/env"
+	"rye/util"
 	"fmt"
 	"strconv"
 	"strings"

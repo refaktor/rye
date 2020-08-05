@@ -1,8 +1,8 @@
 package evaldo
 
 import (
-	"../env"
-	//"Ryelang/loader"
+	"rye/env"
+	//"rye/loader"
 )
 
 func registerGeneric(ps *env.ProgramState, kind int, word int, object env.Object) {

@@ -1,7 +1,7 @@
 package ryeco
 
 import (
-	"../env"
+	"rye/env"
 )
 
 func Loop(n env.Integer, c func() env.Object) env.Object {

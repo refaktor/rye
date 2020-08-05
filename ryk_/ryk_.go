@@ -1,7 +1,7 @@
 package ryk_
 
 import (
-	"../env"
+	"rye/env"
 	//	"bufio"
 	"encoding/xml"
 	//sb	"flag"

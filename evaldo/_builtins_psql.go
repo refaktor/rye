@@ -3,7 +3,7 @@ package evaldo
 import "C"
 
 import (
-	"./../env"
+	"rye/env"
 	"database/sql"
 
 	//"fmt"
