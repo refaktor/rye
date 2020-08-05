@@ -42,6 +42,6 @@ More [instructions here](https://www.gtk.org/docs/installations/macos/).
 
 - [Rye programming language - work in progress - Facebook Group](https://www.facebook.com/groups/866313463771373)
 
-[refaktor]: https://github.com/refaktor
-[otobrglez]: https://github.com/otobrglez
+[refaktor][refaktor]: https://github.com/refaktor
+[otobrglez][otobrglez]: https://github.com/otobrglez
 
