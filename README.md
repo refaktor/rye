@@ -6,4 +6,4 @@ to je direkten dump privatne kode ... "neuradni" ... a ko bom delal naprej bom s
 
 ./go build -o rye ; pa zbuilda kodo
 
-več informacij na janko.itm@gmail.com ali FB skupina https://www.facebook.com/groups/866313463771373
+več informacij na janko.itm@gmail.com ali FB skupini https://www.facebook.com/groups/866313463771373
