@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"Ryelang/env"
+	"../env"
 
 	. "github.com/yhirose/go-peg"
 )

@@ -3,7 +3,7 @@ package evaldo
 import "C"
 
 import (
-	"Ryelang/env"
+	"./../env"
 	"database/sql"
 
 	//"fmt"
@@ -11,7 +11,7 @@ import (
 	//"strconv"
 	//"strings"
 
-	_ "github.com/lib/pq"
+	"github.com/lib/pq"
 )
 
 var Builtins_psql = map[string]*env.Builtin{

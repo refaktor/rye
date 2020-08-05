@@ -2,8 +2,8 @@
 package evaldo
 
 import (
-	"Ryelang/env"
-	"Ryelang/util"
+	"../env"
+	"../util"
 	"fmt"
 	"strconv"
 	"strings"
@@ -1231,7 +1231,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_ps, ps)
 	RegisterBuiltins2(Builtins_nats, ps)
 	RegisterBuiltins2(Builtins_qframe, ps)
-	RegisterBuiltins2(Builtins_psql, ps)
+	// RegisterBuiltins2(Builtins_psql, ps)
 }
 
 func RegisterBuiltins2(builtins map[string]*env.Builtin, ps *env.ProgramState) {
