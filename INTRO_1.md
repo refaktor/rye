@@ -1,4 +1,4 @@
-# Introducing Rye for Python programmers #1
+# Introducing Rye to Python programmers
 
 Python is a clear, understood language that many people know. So I will try using Python examples to introduce some basic ideas in Rye.
 
@@ -51,6 +51,6 @@ wise
 ```
 Ordinary __words__ like age and description just return the values they are linked to. 
 
-So what is __print__ then?
+So, words are similar to variables in Python. And what is __print__ then?
 
->Next chapter soon 
+_Next chapter soon_ 
