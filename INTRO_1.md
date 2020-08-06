@@ -56,12 +56,12 @@ Ordinary __words__ like _age_ and _description_ just return the values they are 
 
 So, words are similar to variables in Python. And what is __print__ then?
 
-### Builtin functions
+### Native functions
 
 __print__ above looks a lot like __age__ and __description__. It looks like a word and it is a word. But this word is 
-linked to another type of value, a __builtin function__. 
+linked to another type of value, a __native function__. 
 
-Builtin behind _print_ accepts 1 argument, so rye evaluates expression on the right to get that value. Then the builtin 
+Native behind _print_ accepts 1 argument, so rye evaluates expression on the right to get that value. Then the native 
 prints it.
 
 Better late than never, now would be a good time to do:
