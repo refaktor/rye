@@ -2,9 +2,9 @@
 package evaldo
 
 import (
+	"fmt"
 	"rye/env"
 	"rye/util"
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -474,6 +474,27 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = bloc.Series
 					for i := 0; int64(i) < cond.Value; i++ {
 						ps = EvalBlock(ps)
+						ps.Ser.Reset()
+					}
+					ps.Ser = ser
+					return ps.Res
+				}
+			}
+			return nil
+		},
+	},
+
+	"for": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch block := arg0.(type) {
+			case env.Block:
+				switch bloc := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = bloc.Series
+					for i := 0; i < block.Series.Len(); i++ {
+						ps = EvalBlockInj(ps, block.Series.Get(i), true)
 						ps.Ser.Reset()
 					}
 					ps.Ser = ser

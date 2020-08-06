@@ -1,8 +1,10 @@
+// +build b_psutil
+
 package evaldo
 
 import (
-	"rye/env"
 	"fmt"
+	"rye/env"
 
 	"github.com/shirou/gopsutil/process"
 

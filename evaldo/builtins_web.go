@@ -1,10 +1,12 @@
+// +build b_echo
+
 package evaldo
 
 import "C"
 
 import (
-	"rye/env"
 	"fmt"
+	"rye/env"
 	"strconv"
 
 	"github.com/labstack/echo"

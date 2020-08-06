@@ -1,10 +1,12 @@
+// +build b_psql
+
 package evaldo
 
 import "C"
 
 import (
-	"rye/env"
 	"database/sql"
+	"rye/env"
 
 	//"fmt"
 

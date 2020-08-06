@@ -1,10 +1,12 @@
+// +build b_nats
+
 package evaldo
 
 import "C"
 
 import (
-	"rye/env"
 	"fmt"
+	"rye/env"
 
 	nats "github.com/nats-io/nats.go"
 )

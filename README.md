@@ -2,13 +2,30 @@
 
 > ⚠️ This is experimental programming language from [refaktor], looking into new (and borrowed) language ideas with interpreter in Go. ⚠️
 
-Start by reading [NOTES.md](./NOTES.md), where concepts and ideas are born and logged.
+You could peek at [NOTES.md](./NOTES.md), where concepts and ideas are born and logged. The language introduction documents are coming.
 
 ## Development and experimentation
 
-```bash
+Currently tested on Linux and Mac.
 
-# Builds the "rye" interpreter
+### Builds the rye interpreter
+
+```bash
+go get -v github.com/pkg/profile \
+  github.com/yhirose/go-peg \
+  github.com/mattn/go-sqlite3 \
+ 
+go build
+
+# Executable
+./rye 
+```
+
+### Builds the rye interpreter with all current builtins
+
+You can leave just the tags and install just the bindings you want.
+
+```bash
 go get -v github.com/pkg/profile \
   github.com/yhirose/go-peg \
   github.com/labstack/echo/middleware \
@@ -20,15 +37,15 @@ go get -v github.com/pkg/profile \
   github.com/shirou/gopsutil/mem \
   github.com/tobgu/qframe
 
-go build
+go build -tags "b_echo b_gtk b_psql b_nats b_psutil b_qframe" -o ryefull
 
 # Executable
-./rye 
+./ryefull 
 ```
 
-## Installing on OSX
+## OSX tips
 
-This code-base relies on GTK3. So make sure your machine has it.
+Ryefull relies on GTK3. So make sure your machine has it.
 
 ```bash
 brew install pkg-config gtk+3 adwaita-icon-theme

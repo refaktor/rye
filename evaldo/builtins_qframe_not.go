@@ -1,19 +1,18 @@
-// +build b_qframe
+// +build !b_qframe
 
 package evaldo
 
 import (
-	"bufio"
-	"fmt"
-	"io"
-	"os"
+	//	"bufio"
+	//	"fmt"
+	//	"io"
+	//	"os"
 	"rye/env"
-	"strconv"
-	"strings"
-
-	"github.com/tobgu/qframe"
-	"github.com/tobgu/qframe/config/groupby"
+	// "strconv"
+	// "strings"
 )
+
+// There are some IO or maybe spreadsheet builtins below to extract to it's own package
 
 type colInfo struct {
 	Num  int
@@ -21,7 +20,7 @@ type colInfo struct {
 	Name string
 }
 
-func eval_new_frame(es *env.ProgramState, block env.Block) env.Object {
+/* func eval_new_frame(es *env.ProgramState, block env.Block) env.Object {
 	//var colType = 0 // 1 - ints, 2 - strings
 	//var col string
 	//var colNum int
@@ -233,7 +232,7 @@ func _addColumToMap(mmap *map[string]interface{}, icol []int, scol []string, col
 	}
 	col.Type = 0
 	return true
-}
+} */
 
 var Builtins_qframe = map[string]*env.Builtin{
 
@@ -257,124 +256,125 @@ var Builtins_qframe = map[string]*env.Builtin{
 	// new-frame { 'col1 1 2 3 'col3 "a" "b" "b" }  returns kind: rye-frame
 	// new-frame { 1 "jim" 23 , 2 "jane" 33 }
 	// new-frame { 'id 'name 'age , 1 "jim" 23 , 2 "jane" 33 }
-
-	"file-schema//open": {
-		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s := arg0.(type) {
-			case env.Uri:
-				path := strings.Split(s.Path, "://")
-				file, err := os.Open(path[1])
-				//trace3(path)
-				if err != nil {
-					// TODO return failure
+	/*
+		"file-schema//open": {
+			Argsn: 1,
+			Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+				switch s := arg0.(type) {
+				case env.Uri:
+					path := strings.Split(s.Path, "://")
+					file, err := os.Open(path[1])
+					//trace3(path)
+					if err != nil {
+						// TODO return failure
+					}
+					return *env.NewNative(env1.Idx, bufio.NewReader(file), "rye-reader")
 				}
-				return *env.NewNative(env1.Idx, bufio.NewReader(file), "rye-reader")
-			}
-			env1.FailureFlag = true
-			return *env.NewError("just accepting Uri-s")
+				env1.FailureFlag = true
+				return *env.NewError("just accepting Uri-s")
+			},
 		},
-	},
 
-	"rye-reader//read-csv": {
-		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return *env.NewNative(env1.Idx, qframe.ReadCSV(arg0.(env.Native).Value.(io.Reader)), "rye-frame")
+		"rye-reader//read-csv": {
+			Argsn: 1,
+			Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+				return *env.NewNative(env1.Idx, qframe.ReadCSV(arg0.(env.Native).Value.(io.Reader)), "rye-frame")
+			},
 		},
-	},
 
-	"new-frame": {
-		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			// for loop ... if tag-word create slice, if values add to last slice
-			//es.Inj = nil
-			// create frame by constructor
-			return eval_new_frame(env1, arg0.(env.Block))
+		"new-frame": {
+			Argsn: 1,
+			Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+				// for loop ... if tag-word create slice, if values add to last slice
+				//es.Inj = nil
+				// create frame by constructor
+				return eval_new_frame(env1, arg0.(env.Block))
 
+			},
 		},
-	},
 
-	"rye-frame//show": {
-		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			fmt.Println(arg0.(env.Native).Value)
-			return arg0
+		"rye-frame//show": {
+			Argsn: 1,
+			Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+				fmt.Println(arg0.(env.Native).Value)
+				return arg0
+			},
 		},
-	},
-	// group-by fr 'col1
-	"rye-frame//group-by": {
-		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch ft := arg0.(type) {
-			case env.Native:
-				switch cn := arg1.(type) {
-				case env.Tagword:
-					return *env.NewNative(env1.Idx, ft.Value.(qframe.QFrame).GroupBy(groupby.Columns(env1.Idx.GetWord(cn.Index))), "rye-frame-grouper")
+		// group-by fr 'col1
+		"rye-frame//group-by": {
+			Argsn: 2,
+			Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+				switch ft := arg0.(type) {
+				case env.Native:
+					switch cn := arg1.(type) {
+					case env.Tagword:
+						return *env.NewNative(env1.Idx, ft.Value.(qframe.QFrame).GroupBy(groupby.Columns(env1.Idx.GetWord(cn.Index))), "rye-frame-grouper")
+					}
 				}
-			}
-			return env.NewError("something wrong with group-by")
+				return env.NewError("something wrong with group-by")
+			},
 		},
-	},
-	// sort fr 'col1
-	"rye-frame//sort": {
-		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch ft := arg0.(type) {
-			case env.Native:
-				switch cn := arg1.(type) {
-				case env.Tagword:
-					return *env.NewNative(env1.Idx, ft.Value.(qframe.QFrame).Sort(qframe.Order{Column: env1.Idx.GetWord(cn.Index)}), "rye-frame")
+		// sort fr 'col1
+		"rye-frame//sort": {
+			Argsn: 2,
+			Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+				switch ft := arg0.(type) {
+				case env.Native:
+					switch cn := arg1.(type) {
+					case env.Tagword:
+						return *env.NewNative(env1.Idx, ft.Value.(qframe.QFrame).Sort(qframe.Order{Column: env1.Idx.GetWord(cn.Index)}), "rye-frame")
+					}
 				}
-			}
-			return env.NewError("something wrong with group-by")
+				return env.NewError("something wrong with group-by")
+			},
 		},
-	},
-	// filter fr { 'col1 > 2 }
-	// filter fr { or { 'col1 > 2 , col2 = "a" } }
-	"rye-frame//filter": {
-		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch frame := arg0.(type) {
-			case env.Native:
-				switch bl := arg1.(type) {
-				case env.Block:
-					clauses, err := eval_filter(env1, frame.Value.(qframe.QFrame), bl)
-					if err == nil {
-						//fmt.Println(clauses)
-						if len(clauses) == 1 {
-							return *env.NewNative(env1.Idx, frame.Value.(qframe.QFrame).Filter(clauses[0]), "rye-frame")
+		// filter fr { 'col1 > 2 }
+		// filter fr { or { 'col1 > 2 , col2 = "a" } }
+		"rye-frame//filter": {
+			Argsn: 2,
+			Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+				switch frame := arg0.(type) {
+				case env.Native:
+					switch bl := arg1.(type) {
+					case env.Block:
+						clauses, err := eval_filter(env1, frame.Value.(qframe.QFrame), bl)
+						if err == nil {
+							//fmt.Println(clauses)
+							if len(clauses) == 1 {
+								return *env.NewNative(env1.Idx, frame.Value.(qframe.QFrame).Filter(clauses[0]), "rye-frame")
+							} else {
+								return env.NewError("only one top-level clause allowed")
+							}
 						} else {
-							return env.NewError("only one top-level clause allowed")
+							return *err
 						}
-					} else {
-						return *err
+					default:
+						return env.NewError("second argument isn't block")
 					}
 				default:
-					return env.NewError("second argument isn't block")
+					return env.NewError("first argument isn't native")
 				}
-			default:
-				return env.NewError("first argument isn't native")
-			}
-			return env.NewError("something wrong with aggregate")
+				return env.NewError("something wrong with aggregate")
+			},
 		},
-	},
-	// aggregate fr { int-sum 'col2 }
-	"rye-frame-grouper//aggregate": {
-		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch grouper := arg0.(type) {
-			case env.Native:
-				switch bl := arg1.(type) {
-				case env.Block:
-					return eval_aggregate(env1, grouper.Value.(qframe.Grouper), bl)
+		// aggregate fr { int-sum 'col2 }
+		"rye-frame-grouper//aggregate": {
+			Argsn: 2,
+			Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+				switch grouper := arg0.(type) {
+				case env.Native:
+					switch bl := arg1.(type) {
+					case env.Block:
+						return eval_aggregate(env1, grouper.Value.(qframe.Grouper), bl)
+					default:
+						return env.NewError("second argument isn't block")
+					}
 				default:
-					return env.NewError("second argument isn't block")
-				}
-			default:
-				return env.NewError("first argument isn't native")
+					return env.NewError("first argument isn't native")
 
-			}
-			return env.NewError("something wrong with aggregate")
+				}
+				return env.NewError("something wrong with aggregate")
+			},
 		},
-	},
+	*/
 }

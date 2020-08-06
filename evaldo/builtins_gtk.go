@@ -1,9 +1,12 @@
+// +build b_gtk
+
 package evaldo
 
 import "C"
 
 import (
 	"rye/env"
+
 	"github.com/gotk3/gotk3/gtk"
 )
 
