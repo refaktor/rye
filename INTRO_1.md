@@ -68,6 +68,7 @@ Better late than never, now would be a good time to do:
 
 ```factor
 print "Hello world!"
+Hello world
 ```
 
 _Next chapter soon_ 
