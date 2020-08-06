@@ -7,7 +7,10 @@ It also takes some aspirations from Factor (a stack based language) and just fro
 
 ## Theory be damned!
 
->When I say Rye below, I mean the Do dialect of Rye ... more on that later
+>When I say Rye below, I most of the time mean the Do dialect of Rye ... more on that later
+
+Let me tell you a little about the basic principles in Rye, so the code forward will click better. It's quite simple, there are no
+keywords, statements, special forms.
 
 ### Nothin' but values
 
@@ -52,5 +55,17 @@ wise
 Ordinary __words__ like age and description just return the values they are linked to. 
 
 So, words are similar to variables in Python. And what is __print__ then?
+
+### Builtin functions
+
+__print__ above looks a lot like __age__ and __description__. It looks like a word and it is a word. But this word is 
+linked to another type of value, a __builtin function__. 
+
+Builtin behind print accepts 1 argument, so rye evaluates expression on the right to get that value. Then the builtin 
+prints it. It would be the time to do:
+
+```factor
+print "Hello world!"
+```
 
 _Next chapter soon_ 
