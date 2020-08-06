@@ -52,7 +52,7 @@ print age
 print description
 wise
 ```
-Ordinary __words__ like age and description just return the values they are linked to. 
+Ordinary __words__ like _age_ and _description_ just return the values they are linked to. 
 
 So, words are similar to variables in Python. And what is __print__ then?
 
@@ -61,8 +61,10 @@ So, words are similar to variables in Python. And what is __print__ then?
 __print__ above looks a lot like __age__ and __description__. It looks like a word and it is a word. But this word is 
 linked to another type of value, a __builtin function__. 
 
-Builtin behind print accepts 1 argument, so rye evaluates expression on the right to get that value. Then the builtin 
-prints it. It would be the time to do:
+Builtin behind _print_ accepts 1 argument, so rye evaluates expression on the right to get that value. Then the builtin 
+prints it.
+
+Better late than never, now would be a good time to do:
 
 ```factor
 print "Hello world!"
