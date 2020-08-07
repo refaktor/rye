@@ -24,7 +24,7 @@ In rye, notice another lack, the lack of commas.
 
 ```factor
 names: { "Jim" "Jane" }
-print rejoin names ","
+print sjoin names ","
 ```
 You could understand the second line as:
 ```factor
