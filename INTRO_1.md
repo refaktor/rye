@@ -1,28 +1,30 @@
 # Introducing Rye to Python programmers
 
-Python is a clear, understood language that many people know. So I will try using Python examples to introduce some basic ideas in Rye.
+Python is a clear, understood language that many people know. So I will try using Python examples to introduce you to the Rye language.
 
-But Python and Rye are quite different. All Rye's core ideas are taken from Rebol. Words, blocks, code is data, etc.. 
-It also takes some aspirations from Factor (a stack based language) and just from using an ordinary linux shell (pipes). 
+But Python and Rye are quite different. All Rye's core ideas are taken from __Rebol__. Words, blocks, code is data, etc.. 
+It also takes some aspirations from __Factor__ (a stack based language) and some from your ordinary __linux shell__ (pipes). 
 
 ## Theory be damned!
 
 >When I say Rye below, I most of the time mean the Do dialect of Rye ... more on that later
 
-Let me tell you a little about the basic principles in Rye, so the code forward will click better. It's quite simple, there are no
-keywords, statements, special forms.
+Let me tell you a little about the basic principles in Rye, so the code forward will make more sense. 
+
+It's quite simple, there are no keywords, statements or special forms.
 
 ### Nothin' but values
 
 Rye language is currently composed of 29 different types of __values__. Values can be literal values (numbers, strings, dates), words, blocks, etc.
 
-You could say that Rye code is nothing but values and it would be true.
+You could say that Rye code is nothing but values and it would be true. 
 
 ```factor
 1
 2
 "Jim"
 ```
+Python has 13 data types [[py1]](https://www.w3schools.com/python/python_datatypes.asp), but it has a lot of other "things".
 
 ### Block of Values
 
@@ -32,6 +34,7 @@ A more interesting type of value is a __block__. Because block holds other value
 { 1 2 "Jim" }
 { { "Jim" 33 } { "Jane" 35 } }
 ```
+Block is like a list in Python.
 
 ### Words
 
