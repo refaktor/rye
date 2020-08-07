@@ -1,19 +1,22 @@
 # rye 🌾
 
-> ⚠️ This is experimental programming language from [refaktor], looking into new (and borrowed) language ideas with interpreter in Go. ⚠️
+An experimental programming language from [refaktor], looking into new (and borrowed) language 
+ideas with interpreter in Go. ⚠
 
-You could peek at [NOTES.md](./NOTES.md), where concepts and ideas are born and logged. The language introduction documents are coming.
+## Progress
+You could peek at [NOTES.md](./NOTES.md), where concepts and ideas are born and logged. 
+The language [introduction documents](./INTRO_1.md) are coming.
 
 ## Development and experimentation
 
-Currently tested on Linux and Mac.
+Currently, tested on Linux, Mac and Docker.
 
 ### Builds the rye interpreter
 
 ```bash
 go get -v github.com/pkg/profile \
   github.com/yhirose/go-peg \
-  github.com/mattn/go-sqlite3 \
+  github.com/mattn/go-sqlite3
  
 go build
 
@@ -43,6 +46,21 @@ go build -tags "b_echo b_gtk b_psql b_nats b_psutil b_qframe" -o ryefull
 ./ryefull 
 ```
 
+## Docker image
+
+The repository comes with [Docker image](./docker/Dockerfile) that is capable of building rye in its full, 
+the final step however then just wraps executable so that the image remains small and nimble.
+
+```bash
+docker build -t refaktor/rye -f .docker/Dockerfile .
+```
+
+Run 🏃‍♂️ the rye REPL with:
+
+```bash
+docker run -ti refaktor/rye
+```
+
 ## OSX tips
 
 Ryefull relies on GTK3. So make sure your machine has it.
@@ -52,15 +70,6 @@ brew install pkg-config gtk+3 adwaita-icon-theme
 ```
 
 More [instructions here](https://www.gtk.org/docs/installations/macos/).
-
-## Building Docker image
-
-```bash
-docker build -t refaktor/rye -f .docker/Dockerfile .
-```
-
-> Currently broken, because rye depends on GTK3 and few 
-> other things that are not part of original golang Docker image.  
 
 ## Author
 
