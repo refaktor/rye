@@ -20,15 +20,15 @@ Here we make a list, join them with separator and print the result.
 names = [ "Jim", "Jane" ]
 print(", ".join(names))
 ```
-In rye, notice another lack, the lack of commas. Rye has join function but it joins two values, like two strings, together.
+In rye, notice another lack, the lack of commas.
 
 ```factor
 names: { "Jim" "Jane" }
-print concat-with names ","
+print join names ","
 ```
 You could understand the second line as:
 
 ```factor
-(print (concat-with names ","))
+(print (join names ","))
 ```
 In Rye, all functions must accept a fixed number of arguments.
