@@ -1,12 +1,15 @@
 # rye 🌾
 
-> ⚠️ This is experimental programming language from [refaktor], looking into new (and borrowed) language ideas with interpreter in Go. ⚠️
+An experimental programming language from [refaktor], looking into new (and borrowed) language 
+ideas with interpreter in Go. ⚠
 
-You could peek at [NOTES.md](./NOTES.md), where concepts and ideas are born and logged. The language introduction documents are coming.
+## Progress
+You could peek at [NOTES.md](./NOTES.md), where concepts and ideas are born and logged. 
+The language [introduction documents](./INTRO_1.md) are coming.
 
 ## Development and experimentation
 
-Currently, tested on Linux and Mac.
+Currently, tested on Linux, Mac and Docker.
 
 ### Builds the rye interpreter
 
