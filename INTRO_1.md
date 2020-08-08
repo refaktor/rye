@@ -61,11 +61,11 @@ So, words are similar to variables in Python. And what is __print__ then?
 
 ### Native functions
 
-__print__ above looks a lot like __age__ and __description__. It looks like a word and it is a word. But this word is 
+__print__ above looks a lot like the words (_age_ and _description_) and it is a word. But this word is 
 linked to another type of value, a __native function__. 
 
-Native behind _print_ accepts 1 argument, so rye evaluates expression on the right to get that value. Then the native 
-prints it.
+Native function behind _print_ accepts 1 argument, so rye evaluates expression on the right to get that value.
+Then the native prints it.
 
 Better late than never, now would be a good time to do:
 
@@ -73,5 +73,6 @@ Better late than never, now would be a good time to do:
 print "Hello world!"
 Hello world
 ```
+Ok. Enough theory for now. Let's compare some python and rye code next.
 
-_Next chapter soon_ 
+[Second chapter &gt;](./INTRO_2.md) 
