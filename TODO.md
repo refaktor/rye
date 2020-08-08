@@ -1,0 +1,4 @@
+- [x] start writing intro
+- [ ] move intro and notes to folder ./docs
+- [ ] change loader for one character (operator) op-words as in notes (2020-08-08)
+- [ ] implement python like for-each without the injected value, because it would be to early in the intro to talk about that
