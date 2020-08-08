@@ -130,10 +130,10 @@ sometimes we dont use pipe flows, we need a repeated access to value in such tim
  
       map as { .add 100 }
       
-but this is probably less elegant or at least less __usual__ for programmers from other languages so me could have equivalent *-each functions
+but this is probably less elegant or at least less __usual__ for programmers from other languages so we could have equivalent *-each functions
 work 
 
-      for-each a as { print a }
-      map-each a as { add a 100 }
+      for-each 'a as { print a }
+      map-each 'a as { add a 100 }
       
-      
+     
