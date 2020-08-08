@@ -71,7 +71,7 @@ This looks similar to python's or Javascript's __eval__ function. There is a maj
 that looks like javascript. Here we _do_ the already parsed, loaded and "alive" __rye values__.
 
 In fact, there is no difference in evaluation of the code we wrote so far and the code inside _a-block_. And the _do_ we called is no
-differnt that the _do_ that does all our code.
+different from the _do_ that does __all our code__.
 
 ```factor
 do {
@@ -87,6 +87,8 @@ do {
 
 > It's like you would have a python's lists and your code is also just a python's list.
 
-That quote from the first chapter about all Rye here being the _Do dialect_ makes a little more sense now, but more still later.
+That quote from the first chapter, about all Rye here being just the _Do dialect_ makes a little more sense now. In fact, Rye (as __Rebol__ - they 
+invented all this) is a data description language (think JSON). And it has many interpreters of that data, one of them is the __do__ function, 
+the __do dialect__.
 
 [&lt; Previous chapter](./INTRO_1.md) - [Next chapter&gt;](./INTRO_3.md)
