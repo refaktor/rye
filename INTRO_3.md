@@ -28,4 +28,11 @@ if 10 < 100 {
 
 
 
-_more later .. currently we have greater? lesser? instead of < > in rye implementation, so I will first add these before we continue_
+_more later .. currently we have in rebol tradition greater lesser instead of < > in rye implementation, so I will first add these before we continue_
+
+
+```factor
+if lesser 10 100 {
+   print "10 is less than 100"
+}
+```
