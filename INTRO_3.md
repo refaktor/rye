@@ -1,3 +1,5 @@
+[&lt; Previous chapter](./INTRO_2.md)
+
 ## A man can't live of ~~bread~~functions alone
 
 Ok, so we were calling few functions now, but we forgot about all the other basic stuff, like the __if__ statement, the __loops__.
@@ -24,4 +26,6 @@ if 10 < 100 {
 }
 ```
 
-_ .. more later .. currently we have _greater? lesser?_ instead of _< >_ in implementation, but I will add them shortly .. _ 
+
+
+_more later .. currently we have greater? lesser? instead of < > in rye implementation, so I will first add these before we continue_
