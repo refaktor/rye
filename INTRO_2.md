@@ -70,9 +70,8 @@ Jim, Jane
 This looks similar to python's or Javascript's __eval__ function. There is a major difference though, those two evaluate a __string__
 that looks like javascript. Here we _do_ the already parsed, loaded and "alive" __rye values__.
 
-It's like you would have a python's list and your code is also a python's list.
-
-In fact, there is no difference in evaluation of the code we wrote so far and the code inside a-block.
+In fact, there is no difference in evaluation of the code we wrote so far and the code inside _a-block_. And the _do_ we called is no
+differnt that the _do_ that does all our code.
 
 ```factor
 do {
@@ -86,8 +85,8 @@ do {
 } // .....
 ```
 
-That quote from first chapter makes a little more sense now, but more still later ...
+> It's like you would have a python's lists and your code is also just a python's list.
 
-> When I say Rye below, I most of the time mean the Do dialect of Rye ... more on that later
+That quote from the first chapter about all Rye here being the _Do dialect_ makes a little more sense now, but more still later.
 
-[&lt; Previous chapter](./INTRO_1.md) [&lt; Next chapter](./INTRO_3.md)
+[&lt; Previous chapter](./INTRO_1.md) - [Next chapter&gt;](./INTRO_3.md)
