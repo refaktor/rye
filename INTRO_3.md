@@ -8,10 +8,20 @@ First of all, rye doesn't have any statements, everything is an expression, ever
 if 10 < 100:
    print("10 is less than 100")
 ```
-Do you remember the __do__ function?
+_Do_ you remember the __do__ function? I accepts the block of code as a first argument.
 
-```python
+```factor
 do {
    print "10 is less than 100"
 }
 ```
+Could there be a similar function, but it would _do_ the code (now second argument) only if the first argument
+would be true? Yes ... 
+
+```factor
+if 10 < 100 {
+   print "10 is less than 100"
+}
+```
+
+_ .. more later .. currently we have _greater? lesser?_ instead of _< >_ in implementation, but I will add them shortly .. _ 
