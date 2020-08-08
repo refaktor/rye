@@ -46,7 +46,7 @@ to the right as it needs. That's why in Rye all functions must accept a fixed nu
 
 ## _Do_ those blocks again
 
-We used an list above and called it a block. As a python list, rye block can hold different types of values. Any types of values:
+We used an list above and called it a block. As python lists, rye blocks can hold different types of values, any types of values:
 
 ```python
 some_list = [ "Jim", "Jane", 33, 12.5 ]
@@ -56,7 +56,7 @@ some_list = [ "Jim", "Jane", 33, 12.5 ]
 some-block: { "Jim" "Jane" 33 12.5 }
 ```
 
-But remember, rye has 29 types of values, one of them, absolutely equal to the other values are words.
+But remember, rye has 29 types of values. One of them, absolutely equal to the other types are __words__.
 
 ```factor
 a-block: { print join names ", " }
