@@ -46,7 +46,7 @@ to the right as it needs. That's why in Rye all functions must accept a fixed nu
 
 ## _Do_ those blocks again
 
-We used an list above and called it a block. As python lists, rye blocks can hold different types of values, any types of values:
+We used a list above and called it a block. As python lists, rye blocks can hold different types of values, any types of values:
 
 ```python
 some_list = [ "Jim", "Jane", 33, 12.5 ]
@@ -61,7 +61,7 @@ But remember, rye has 29 types of values. One of them, absolutely equal to the o
 ```factor
 a-block: { print join names ", " }
 ```
-So we have a _list_ that looks like code. So what good is this now? Well, we have this __do__ native function that _does_ a block.
+So we have a _list_ that looks like code, but what good is this now? Well, we have this __do__ native function that _does_ a block.
 
 ```factor
 do a-block
