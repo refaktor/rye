@@ -32,6 +32,17 @@ var builtins = map[string]*env.Builtin{
 
 	// BASIC FUNCTIONS WITH NUMBERS
 
+	"not": {
+		Argsn: 1,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			if util.IsTruthy(arg0) {
+				return env.Integer{0}
+			} else {
+				return env.Integer{1}
+			}
+		},
+	},
+
 	"add": {
 		Argsn: 2,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -183,25 +194,43 @@ var builtins = map[string]*env.Builtin{
 	"if": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			var cond1 bool
+			// function accepts 2 args. arg0 is a "boolean" value, arg1 is a block of code
+			// we set bloc to block of code
+			// (we don't have boolean type yet, because it's not cruicial to important part of design, neither is truthiness ... this will be decided later
+			// on more operational level
+
+			// we switch on the type of second argument, so far it should be block (later we could accept native and function)
 			switch bloc := arg1.(type) {
 			case env.Block:
-				switch cond := arg0.(type) {
-				case env.Integer:
-					cond1 = cond.Value != 0
-				case env.String:
-					cond1 = cond.Value != ""
-				default:
-					return env.NewError("Error if")
-				}
-				if cond1 {
-					ser := ps.Ser
-					ps.Ser = bloc.Series
-					EvalBlockInj(ps, arg0, true)
-					ps.Ser = ser
-					return ps.Res
+				// TODO --- istruthy must return error if it's not possible to
+				// calculate truthiness and we must here raise failure
+				// we switch on type of arg0
+				// if it's integer, all except 0 is true
+				// if it's string, all except empty string is true
+				// we don't care for other types at this stage
+				cond1 := util.IsTruthy(arg0)
 
+				// if arg0 is ok and arg1 is block we end up here
+				// if cond1 is true (arg0 was truthy), otherwise we don't do anything
+				// later we should return void or null, or ... we still have to decide
+				if cond1 {
+					// we store current series (block of code with position we are at) to temp 'ser'
+					ser := ps.Ser
+					// we set ProgramStates series to series ob the block
+					ps.Ser = bloc.Series
+					// we eval the block (current context / scope stays the same as it was in parent block)
+					// Inj means we inject the condition value into the block, because it costs us very little. we could do "if name { .print }"
+					EvalBlockInj(ps, arg0, true)
+					// we set temporary series back to current program state
+					ps.Ser = ser
+					// we return the last return value (the return value of executing the block) "a: if 1 { 100 }" a becomes 100,
+					// in future we will also handle the "else" case, but we have to decide
+					return ps.Res
 				}
+			default:
+				// if it's not a block we return error for now
+				ps.FailureFlag = true
+				return env.NewError("Error if")
 			}
 			return nil
 		},
@@ -1241,6 +1270,21 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 }
+
+/*
+func isTruthy(arg env.Object) env.Object {
+	switch cond := arg.(type) {
+	case env.Integer:
+		return cond.Value != 0
+	case env.String:
+		return cond.Value != ""
+	default:
+		// if it's neither we just return error for now
+		ps.FailureFlag = true
+		return env.NewError("Error determining if truty")
+	}
+}
+*/
 
 func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(builtins, ps)
