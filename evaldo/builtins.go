@@ -76,7 +76,6 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-
 	"equals": {
 		Argsn: 2,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -85,6 +84,18 @@ var builtins = map[string]*env.Builtin{
 				res = 1
 			} else {
 				res = 0
+			}
+			return env.Integer{res}
+		},
+	},
+	"not_equals": {
+		Argsn: 2,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var res int64
+			if arg0.GetKind() == arg1.GetKind() && arg0.Inspect(*env1.Idx) == arg1.Inspect(*env1.Idx) {
+				res = 0
+			} else {
+				res = 1
 			}
 			return env.Integer{res}
 		},
