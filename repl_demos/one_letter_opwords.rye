@@ -1,0 +1,32 @@
+// a small demo of of few *details* of Rye (10.08.2020)
+
+// op-words, one letter op-words (operators in other languages),
+// naming and one example why we have get-words 
+
+// we currently have a function greater (similar to rebol's), but since we are more about infix code
+// it will be changed to one letter opword '>' . In current version:
+greater 20 10
+greater 10 20
+// opwords enable us to use that word in infix fashion
+20 .greater 10
+10 .greater 20
+// Rye doesn't need another language construct for operators. Operators are just one letter op-words. They
+// have only two differences at loader level to ordinary op-words.
+//  * They don't need a '.' in front to be recognised as opword. If loader finds < > * + it creates a value of 
+//    type opword
+//  * naming of ordinary op-word is the text after the dot (.greater => greater). Here it's charater prefixed by _
+//    (* =has naming=> _*) , (< =has=naming=> _<)
+// That is all. As i said _> will replace greater. But for now we can use Rye to replace it like this
+_>: ?greater
+// a get-word doesn't evaluate but returns the value it's linked to. In this case a native function.
+// so now we can do
+20 > 10
+10 > 20
+// when language will replace greater with _> , if you would want to use "greater?" as rebol has it you simply
+// could. Even now, you just do:
+greater?: ?_>
+// rebol like code
+greater? 20 10
+greater? 10 20
+// question mark at the end has no specific meaning in rye, so it can be normal parts of words
+// (rye doesn't yet have boolean as it's not important question of it's specific design)

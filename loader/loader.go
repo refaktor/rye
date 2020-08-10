@@ -142,9 +142,15 @@ func parseLSetword(v *Values, d Any) (Any, error) {
 }
 
 func parseOpword(v *Values, d Any) (Any, error) {
-	//d fmt.Println("OPWORD:" + v.Token())
+	//fmt.Println("OPWORD:" + v.Token())
 	word := v.Token()
-	idx := wordIndex.IndexWord(word[1:])
+	var idx int
+	if len(word) == 1 {
+		// onecharopwords < > + * ... their naming is equal to _< _> _* ...
+		idx = wordIndex.IndexWord("_" + word)
+	} else {
+		idx = wordIndex.IndexWord(word[1:])
+	}
 	return env.Opword{idx}, nil
 }
 
@@ -197,33 +203,33 @@ func newParser() *Parser {
 	BLOCK       	<-  "{" SPACES SERIES* "}"
 	BBLOCK       	<-  "[" SPACES SERIES* "]"
     GROUP       	<-  "(" SPACES SERIES* ")"
-    SERIES          <-  (URI / STRING / NUMBER / COMMA / VOID / SETWORD / LSETWORD / OPWORD / PIPEWORD / TAGWORD / EXWORD / CPATH / XWORD / GENWORD / GETWORD / WORD / BLOCK / GROUP / BBLOCK / ARGBLOCK ) SPACES
+    SERIES     		<-  (URI / STRING / NUMBER / COMMA / SETWORD / LSETWORD / OPWORD / PIPEWORD / TAGWORD / EXWORD / CPATH / XWORD / GENWORD / GETWORD / WORD / VOID / BLOCK / GROUP / BBLOCK / ARGBLOCK ) SPACES
     ARGBLOCK       	<-  "{" WORD ":" WORD "}"
-    WORD           	<-  LETTER LETTERORNUM* / ONECHARWORDS
-	GENWORD           	<-  UCLETTER LCLETTERORNUM* 
+    WORD           	<-  LETTER LETTERORNUM*
+	GENWORD 		<-  UCLETTER LCLETTERORNUM* 
 	SETWORD    		<-  LETTER LETTERORNUM* ":"
-	LSETWORD    		<-  ":" LETTER LETTERORNUM*
+	LSETWORD    	<-  ":" LETTER LETTERORNUM*
 	GETWORD   		<-  "?" LETTER LETTERORNUM*
 	PIPEWORD   		<-  "|" LETTER LETTERORNUM*
-	OPWORD    		<-  "." LETTER LETTERORNUM*
+	OPWORD    		<-  "." LETTER LETTERORNUM* / ONECHARWORDS
 	TAGWORD    		<-  "'" LETTER LETTERORNUM*
 	XWORD    		<-  "<" LETTER LETTERORNUM* ">"?
 	EXWORD    		<-  "</" LETTER LETTERORNUM* ">"?
 	STRING			<-  '"' STRINGCHAR* '"'
 	SPACES			<-  SPACE+
-	URI    		<-  WORD "://" URIPATH*
+	URI    			<-  WORD "://" URIPATH*
 	CPATH    		<-  WORD ( "/" WORD )+
-	COMMA			<-  ","
-	VOID				<-  "_"
-	ONECHARWORDS		<-  < [<>*+] >
+	ONECHARWORDS	<-  < [<>*+] >
+	LETTER  		<-  < [a-zA-Z?=^_] >
 	LETTERORNUM		<-  < [a-zA-Z0-9-?=.\\!_>] >
-	URIPATH		<-  < [a-zA-Z0-9-?=.:@/\\!_>] >
-	LETTER  			<-  < [a-zA-Z?=^_] >
-	UCLETTER  			<-  < [A-Z] >
-	LCLETTERORNUM		<-  < [a-z0-9] >
-    NUMBER           <-  < [0-9]+ >
+	URIPATH			<-  < [a-zA-Z0-9-?=.:@/\\!_>] >
+	UCLETTER  		<-  < [A-Z] >
+	LCLETTERORNUM	<-  < [a-z0-9] >
+    NUMBER         	<-  < [0-9]+ >
 	SPACE			<-  < [ \t\r\n] >
 	STRINGCHAR		<-  < !'"' . >
+	COMMA			<-  ","
+	VOID			<-  "_"
 `)
 
 	// TODO -- make path path work for deeper paths too
