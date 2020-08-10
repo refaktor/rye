@@ -1,11 +1,15 @@
 ## Current
 
 - [x] start writing intro
-- [ ] move intro and notes to folder ./docs
 - [x] change loader for one character (operator) op-words as in notes (2020-08-08)
 - [ ] implement python like for-each without the injected value, because it would be to early in the intro to talk about that
 - [ ] continue intro page 3	
 - [ ] add some basic file IO natives
+
+## Code org
+
+- [ ] rename evaldo module/folder to eval, since it includes all dialects not just do
+- [ ] move intro and notes to folder ./docs
 
 ## Long term
 
