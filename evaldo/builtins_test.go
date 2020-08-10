@@ -2,9 +2,9 @@
 package evaldo
 
 import (
+	"fmt"
 	"rye/env"
 	"rye/loader"
-	"fmt"
 
 	//"fmt"
 	"testing"
