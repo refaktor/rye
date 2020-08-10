@@ -43,8 +43,12 @@ if 10 < 100 {
 }
 ```
 
-If __if__ is just a function, it means you can make your own if-like functions inside rye. The small downside of 
-this is that in Rye we can't have special forms like __if ... else ....__, because _we don't have special forms at all_. 
+If __if__ is just a function, it means you can make your own if-like functions inside rye. 
+
+## U either like it or U don't
+
+The downside of this is that in Rye we can't have special forms like __if ... else ....__, because _we don't
+have special forms at all_. 
 
 ```python
 if name == "Jim":
@@ -53,7 +57,7 @@ else:
    print("Door is locked")
 ```
 
-So we have a function called __either__. 
+So we have a function called __either__, that takes additional block as argument. 
 
 ```factor
 either name = "Jim" {
@@ -62,5 +66,22 @@ either name = "Jim" {
    print "Door is locked"
 }
 ```
-See, it's not so bad. But because everything is function calls it makes a language much more uniform, simpler and
-malleable.
+
+See, it's not so bad. But because everything is a function call it makes a language much more uniform,
+simpler and malleable.
+
+And I said, everything in Rye retuns something, so the example above would be better written as:
+
+```factor
+print either name = "Jim" { "hi Jim" } { "Door is locked" }
+```
+
+## About those turtles
+
+Someone once said "Turtled all the way down". We've learned in this page that in Rye (do dialect) there is:
+
+* Rye values all the way down
+* Expressions all the way down
+* Function calls all the way down
+
+_Next page sooner or later_
