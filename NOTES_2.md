@@ -136,4 +136,29 @@ work
       for-each 'a as { print a }
       map-each 'a as { add a 100 }
       
-     
+# 10.08.2020
+
+## Operand op-words
+
+Commit for one-letter opwords.
+
+But they will not be just one letter op-words like "<" ">" "=" "+" "*" ... change parse rules so we also include likes of "!=" "*=" "==>" and other combinations.
+These all are automatically loaded as op-words.
+
+## Collect besides return
+ 
+in general evaluation of blocks returns the result of the last expression in a block. You can change that in special cases with return function.
+I was thinking about something like this for a while ... since block is a very universal collection type in Rye ... what if we have a collect function, that
+can if called create a (code) block level blok to which it appends. And at the end of block if anything was collected then this is returned unless of course explicit return is called.
+
+      probe do { print collect 1 print collect 2 }
+      1
+      2
+      { 1 2 }
+      
+ this could get more usefull in loops and various state machines, parse dialects ?
+ 
+      a: 0 probe loop 5 { a: collect inc a }
+      { 1 2 3 4 5 }
+ 
+ 
