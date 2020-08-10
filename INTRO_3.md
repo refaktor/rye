@@ -15,7 +15,7 @@ print 100 .add do { print 1 print 11 }
 11
 111
 ```
-The last expression in a block is `print 11`, print returns the value it prints, so the block returns 2. You can figure out the rest.
+The last expression in a block is `print 11`, print returns the value it prints, so the do returns 11. You can figure out the rest.
 
 ## Function calls all the way down
 
