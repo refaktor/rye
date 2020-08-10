@@ -84,7 +84,9 @@ Someone once said "Turtles all the way down". We've learned in this page that in
 * Expressions all the way down (all evaluation elements return something, are expressions)
 * Function calls all the way down (... more on this in next pages ...)
 
-And there is another stark difference between Rye (and Rebol) and most other programming languages. Rye code
+## Spaces, separators and newlines: who needs you?
+
+There is another stark difference between Rye (and Rebol) and most other programming languages. Rye code
 doesn't need separators (between elements or end of line), parenthesis and is absolutely space and newline unsensitive.
 You could write entire Rye program in one line (without any separators) or type in each Rye code element it it's own 
 line for example.
@@ -103,13 +105,16 @@ inc
 ```
 
 Now this could be seen as a blessing or a curse, I am just saying how it is. Rye (not Rebol)
-has a concept of expression guards, so you can (for your certanty) in some cases where it's usefull, use commas between
+has aditional concept of expression guards, so you can (for your certanty) in some cases where it's usefull, use commas between
 top level expressions if you want to make certai they are separated.
 
-Here you could use them like this
+Here you could use them like this:
 
 ```factor
 print "jim" , print add 1 inc 2  
 ```
 
-_Next page sooner or later_n
+Rye tries to keep and sometimes increase the flexibility of Rebol, while also improve __certainty__. Expression guards is small
+addition in that manner.
+
+_Next page soon_
