@@ -10,7 +10,7 @@ It also doesn't need explicit __return__ statements, the result of last expressi
 of code:
 
 ```factor
-print 100 .add do { print 1 print 11 }
+print 100 + do { print 1 print 11 }
 1
 11
 111
