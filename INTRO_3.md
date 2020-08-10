@@ -80,8 +80,36 @@ print either name = "Jim" { "hi Jim" } { "Door is locked" }
 
 Someone once said "Turtles all the way down". We've learned in this page that in Rye (do dialect) there is:
 
-* Rye values all the way down
-* Expressions all the way down
-* Function calls all the way down
+* Rye values all the way down (all rye code and data is composed of (nested) rye values)
+* Expressions all the way down (all evaluation elements return something, are expressions)
+* Function calls all the way down (... more on this in next pages ...)
 
-_Next page sooner or later_
+And there is another stark difference between Rye (and Rebol) and most other programming languages. Rye code
+doesn't need separators (between elements or end of line), parenthesis and is absolutely space and newline unsensitive.
+You could write entire Rye program in one line (without any separators) or type in each Rye code element it it's own 
+line for example.
+
+```factor
+print "jim" print add 1 inc 2 // is the same as 
+
+print
+"jim" print
+add 1
+inc
+2
+// both will print:
+// jim
+// 4
+```
+
+Now this could be seen as a blessing or a curse, I am just saying how it is. Rye (not Rebol)
+has a concept of expression guards, so you can (for your certanty) in some cases where it's usefull, use commas between
+top level expressions if you want to make certai they are separated.
+
+Here you could use them like this
+
+```factor
+print "jim" , print add 1 inc 2  
+```
+
+_Next page sooner or later_n
