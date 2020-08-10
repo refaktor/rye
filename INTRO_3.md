@@ -78,7 +78,7 @@ print either name = "Jim" { "hi Jim" } { "Door is locked" }
 
 ## About those turtles
 
-Someone once said "Turtled all the way down". We've learned in this page that in Rye (do dialect) there is:
+Someone once said "Turtles all the way down". We've learned in this page that in Rye (do dialect) there is:
 
 * Rye values all the way down
 * Expressions all the way down
