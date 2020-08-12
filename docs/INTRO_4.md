@@ -1,3 +1,5 @@
+(&lt; Previous page)[./INTRO_3.md]
+
 ## Loop functions
 
 Python has (with combination of iterators and range function) a powerfull and versatile __for loop statement__. 
