@@ -1,5 +1,7 @@
 [&lt; Previous page](./INTRO_2.md)
 
+_This page is work in progress_
+
 ## Expressions all the way down
 
 So we tried calling few functions so far, but we forgot about all the other basic stuff, like the __if__ statement, the __loops__.
@@ -117,6 +119,7 @@ print "jim" , print add 1 inc 2
 Rye tries to keep and sometimes increase the flexibility of Rebol, while also improve __certainty__. Expression guards are a small
 addition in that direction.
 
-> On next page we look at loops, map, filter and user functions ...
-
 [Next page &gt;](./INTRO_4.md)
+
+
+> On next page we look at loops, map, filter and user functions ...
