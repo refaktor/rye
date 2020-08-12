@@ -2,7 +2,7 @@
 
 _This page is work in progress_
 
-## Expressions all the way down
+## Everything is an expression
 
 So we tried calling few functions so far, but we forgot about all the other basic stuff, like the __if__ statement, the __loops__.
 
@@ -19,7 +19,7 @@ print 100 + do { print 1 print 11 }
 ```
 The last expression in a block is `print 11`, print returns the value it prints, so the do returns 11. You can figure out the rest.
 
-## Function calls all the way down
+## Everything is a function call
 
 In most languages __if__ is a statement, or a __special form__, feature of the language. Even in Lisps, if is a macro.
 
@@ -47,7 +47,7 @@ if 10 < 100 {
 
 If __if__ is just a function, it means you can make your own if-like functions inside rye. 
 
-## U either like it or U don't
+## Either like it or don't
 
 The downside of this is that in Rye we can't have special forms like __if ... else ....__, because _we don't
 have special forms at all_. 
@@ -78,15 +78,13 @@ And I said, everything in Rye retuns something, so the example above would be be
 print either name = "Jim" { "hi Jim" } { "Door is locked" }
 ```
 
-## About those turtles
+## What are we learning
 
-Someone once said "Turtles all the way down". We've learned in this page that in Rye (do dialect) there is:
+* All rye code and data is composed of (nested) rye values
+* All evaluation elements return something, are expressions
+* All active words in Rye are functions 
 
-* Rye values all the way down (all rye code and data is composed of (nested) rye values)
-* Expressions all the way down (all evaluation elements return something, are expressions)
-* Function calls all the way down (... more about this on next pages ...)
-
-## Code bureaucracy: spaces, separators and newlines, who needs thou
+## Spaces, separators and newlines - Code bureaucracy or profit?
 
 There is another stark difference between Rye (and Rebol) and most other programming languages. Rye code
 doesn't need separators (between elements or end of line), parenthesis and is absolutely space and newline unsensitive.
@@ -118,6 +116,7 @@ print "jim" , print add 1 inc 2
 
 Rye tries to keep and sometimes increase the flexibility of Rebol, while also improve __certainty__. Expression guards are a small
 addition in that direction.
+
 
 [Next page &gt;](./INTRO_4.md)
 
