@@ -1,4 +1,4 @@
-[&lt; Previous chapter](./INTRO_2.md)
+[&lt; Previous page](./INTRO_2.md)
 
 ## Expressions all the way down
 
@@ -117,4 +117,6 @@ print "jim" , print add 1 inc 2
 Rye tries to keep and sometimes increase the flexibility of Rebol, while also improve __certainty__. Expression guards are a small
 addition in that direction.
 
-_Next page soon_
+> On next page we look at loops, map, filter and user functions ...
+
+[Next page &gt;](./INTRO_4.md)
