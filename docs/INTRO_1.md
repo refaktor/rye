@@ -75,4 +75,4 @@ Hello world
 ```
 Ok. Enough theory for now. Let's compare some python and rye code next.
 
-[Second chapter &gt;](./INTRO_2.md) 
+[Second page &gt;](./INTRO_2.md) 
