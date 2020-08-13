@@ -122,7 +122,7 @@ There are some differences behind the scenes though
 And yet again. __fn__ is just a function, we could and do have many of those. For example _fnc_
 that also accepts a context in which a function runs, a _closure_, and library specific ones.
 
-[&lt; Previous page](./INTRO_3.md) [Next page &gt;](./INTRO_5.md)
+[&lt; Previous page](./INTRO_3.md) - [Next page &gt;](./INTRO_5.md)
 
 
 > In next page we leave the planet of Rebol like Rye, we turn code evaluation from left
