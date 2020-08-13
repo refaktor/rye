@@ -1,15 +1,15 @@
 # Introducing Rye to Python programmers
 
-## Page 1
-### Theory be damned!
-#### Nothin' but values
-All rye atoms are rye values. Rye has 29 types of values.
-#### Block of values
-Block is one of the types. It's a list of rye values.
-#### Words
-Nother type are words. Words are linked to other values. We have different types of words.
-#### Native functions
-Words can link to native functions.
+* Page 1
+ * Theory be damned!
+  * Nothin' but values
+   * All rye atoms are rye values. Rye has 29 types of values.
+  * Block of values
+   * Block is one of the types. It's a list of rye values.
+  * Words
+   * Nother type are words. Words are linked to other values. We have different types of words.
+  * Native functions
+   * Words can link to native functions.
 
 ## Page 2
 #### More about native functions
