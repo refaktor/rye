@@ -47,7 +47,7 @@ if 10 < 100 {
 
 If __if__ is just a function, it means you can make your own if-like functions inside rye. 
 
-## Either like it or don't
+## Either do or don't
 
 The downside of this is that in Rye we can't have special forms like __if ... else ....__, because _we don't
 have special forms at all_. 
@@ -78,7 +78,7 @@ And I said, everything in Rye retuns something, so the example above would be be
 print either name = "Jim" { "hi Jim" } { "Door is locked" }
 ```
 
-## 3 All-isms so far
+## All-isms so far
 
 * All rye code and data is composed of (nested) rye values
 * All evaluation elements return something, are expressions
