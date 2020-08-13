@@ -1,9 +1,9 @@
 # Introducing Rye to Python programmers
 
 * Page 1
- * Theory be damned!
-  * Nothin' but values
-   * All rye atoms are rye values. Rye has 29 types of values.
+** Theory be damned!
+*** Nothin' but values
+**** All rye atoms are rye values. Rye has 29 types of values.
   * Block of values
    * Block is one of the types. It's a list of rye values.
   * Words
