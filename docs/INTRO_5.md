@@ -81,7 +81,7 @@ It executes a block of code and it returns the first argument.
  * |print prints it
 
 
-[&lt; Previous page](./INTRO_4.md) [Next page &gt;](./INTRO_6.md)
+[&lt; Previous page](./INTRO_4.md) - [Next page &gt;](./INTRO_6.md)
 
 > Next we will look at more language utilities, to support this left-to-right style
 > The lset-words and a concepts so far called injected blocks
