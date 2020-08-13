@@ -114,14 +114,16 @@ greet "Jane"
 ```
 
 There are some differences behind the scenes though
-* as always, greet set-word sets word _greet_ to the result of the expression on the right
-* __fn__ is a function, that creates a function, it accepts 2 arguments, two block
+* as always, set-word sets word _greet_ to the result of the expression on the right
+* __fn__ is a function, that returns a __user function value__, it accepts 2 arguments, two blocks
     * first block is a argument list (a spec, it can include more than just arguments)
-    * second block is code
+    * second block is code / function body
     
 And yet again. __fn__ is just a function, we could and do have many of those. For example _fnc_
 that also accepts a context in which a function runs, a _closure_, and library specific ones.
 
-> In next page we leave the planet of Rebol like Rye ...
+[&lt; Previous page](./INTRO_3.md) [Next page &gt;](./INTRO_5.md)
 
-_Next page soon_
+
+> In next page we leave the planet of Rebol like Rye, we turn code evaluation from left
+> to right with the use of op and pipe-words
