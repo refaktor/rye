@@ -118,7 +118,7 @@ Rye tries to keep and sometimes increase the flexibility of Rebol, while also im
 addition in that direction.
 
 
-[Next page &gt;](./INTRO_4.md)
+[&lt; Previous page](./INTRO_2.md) - [Next page &gt;](./INTRO_4.md)
 
 
 > On next page we look at loops, map, filter and user functions ...
