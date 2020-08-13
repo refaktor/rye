@@ -2,7 +2,7 @@
 
 _This page is work in progress_
 
-## Everything is an expression
+## Express yourself
 
 So we tried calling few functions so far, but we forgot about all the other basic stuff, like the __if__ statement, the __loops__.
 
@@ -19,7 +19,7 @@ print 100 + do { print 1 print 11 }
 ```
 The last expression in a block is `print 11`, print returns the value it prints, so the do returns 11. You can figure out the rest.
 
-## Everything is a function call
+## The If function
 
 In most languages __if__ is a statement, or a __special form__, feature of the language. Even in Lisps, if is a macro.
 
@@ -78,13 +78,13 @@ And I said, everything in Rye retuns something, so the example above would be be
 print either name = "Jim" { "hi Jim" } { "Door is locked" }
 ```
 
-## What are we learning
+## 3 All-isms so far
 
 * All rye code and data is composed of (nested) rye values
 * All evaluation elements return something, are expressions
 * All active words in Rye are functions 
 
-## Spaces, separators and newlines - Code bureaucracy or profit?
+## Spaces, separators and newlines
 
 There is another stark difference between Rye (and Rebol) and most other programming languages. Rye code
 doesn't need separators (between elements or end of line), parenthesis and is absolutely space and newline unsensitive.
