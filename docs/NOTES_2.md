@@ -190,7 +190,7 @@ g.salute
 ```
 rye so far
 
-```factor
+```rebol
 def-kind 'Greeter {
    name: required string calc { .capitalize }
 }
@@ -208,7 +208,7 @@ function definitions and set the generic methods (they are still not part of the
 I also think ... what if we just accept the "class" word instead of using some third, "kind". To add to familiarity not take away. I was thinking that "class"
 is too overloaded with meaning and expectations, but rye does a lot of familiar things a little differently. Let's try it for a while 
 
-```factor
+```rebol
 class 'Greeter {
 
   name: required string calc { .capitalize }
@@ -232,7 +232,7 @@ methods Greeter {
 if the kids definition dialect would not include method definition (just validation) then we could do it like this,
 but it's still visually heavier
 
-```factor
+```rebol
 class 'Greeter {
 
   name: required string calc { .capitalize }
