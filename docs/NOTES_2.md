@@ -211,17 +211,17 @@ is too overloaded with meaning and expectations, but rye does a lot of familiar 
 ```factor
 class 'Greeter {
 
-	name: required string calc { .capitalize }
-
+  name: required string calc { .capitalize }
+  
 	salute: does { 
-		>name .printo "Hello {#}!" 
-	}
+    >name .printo "Hello {#}!" 
+  }
 }
 
 methods Greeter {
-	chow: does {
-		print "woof"
-	}	
+  chow: does {
+    print "woof"
+  }
 } 
 
 <Greeter> { name: "Jim" } |do { .salut , .chow }
@@ -235,19 +235,19 @@ but it's still visually heavier
 ```factor
 class 'Greeter {
 
-	name: required string calc { .capitalize }
+  name: required string calc { .capitalize }
 
 } .methods {
 
-	salut: does { 
-		>name .printo "Hello {#}!" 
-	}
+  salut: does { 
+    >name .printo "Hello {#}!" 
+  }
 
 }
 
 methods Greeter {
-	chow: does {
-		print "woof"
-	}	
+  chow: does {
+    print "woof"
+  }	
 }
 ```
