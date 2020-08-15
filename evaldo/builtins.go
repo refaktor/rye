@@ -1299,6 +1299,7 @@ func isTruthy(arg env.Object) env.Object {
 
 func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(builtins, ps)
+	RegisterBuiltins2(Builtins_io, ps)
 	RegisterBuiltins2(Builtins_web, ps)
 	RegisterBuiltins2(Builtins_sxml, ps)
 	RegisterBuiltins2(Builtins_sqlite, ps)

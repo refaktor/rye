@@ -258,24 +258,6 @@ var Builtins_qframe = map[string]*env.Builtin{
 	// new-frame { 1 "jim" 23 , 2 "jane" 33 }
 	// new-frame { 'id 'name 'age , 1 "jim" 23 , 2 "jane" 33 }
 
-	"file-schema//open": {
-		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s := arg0.(type) {
-			case env.Uri:
-				path := strings.Split(s.Path, "://")
-				file, err := os.Open(path[1])
-				//trace3(path)
-				if err != nil {
-					// TODO return failure
-				}
-				return *env.NewNative(env1.Idx, bufio.NewReader(file), "rye-reader")
-			}
-			env1.FailureFlag = true
-			return *env.NewError("just accepting Uri-s")
-		},
-	},
-
 	"rye-reader//read-csv": {
 		Argsn: 1,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
