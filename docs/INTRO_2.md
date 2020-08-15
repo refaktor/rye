@@ -1,4 +1,4 @@
-[&lt; Previous chapter](./INTRO_1.md)
+[&lt; Previous page](./INTRO_1.md)
 
 ## More about native functions
 
@@ -91,4 +91,4 @@ That quote from the first chapter, about all Rye here being just the _Do dialect
 invented all this) is a data description language (think JSON). And it has many interpreters of that data, one of them is the __do__ function, 
 the __do dialect__.
 
-[&lt; Previous chapter](./INTRO_1.md) - [Next chapter&gt;](./INTRO_3.md)
+[&lt; Previous page](./INTRO_1.md) - [Next page &gt;](./INTRO_3.md)

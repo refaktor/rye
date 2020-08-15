@@ -162,3 +162,92 @@ can if called create a (code) block level blok to which it appends. And at the e
       { 1 2 3 4 5 }
  
  
+# 14.08.2020
+
+## Some thoughts on kinds
+
+I was looking at ruby example on front page, trying to translate it to kinds.
+
+Since methods are not part of the kind (just data) and we have generic methods ... first example looked really clumsy compared to Ruby
+
+```ruby
+# The Greeter class
+class Greeter
+  def initialize(name)
+    @name = name.capitalize
+  end
+
+  def salute
+    puts "Hello #{@name}!"
+  end
+end
+
+# Create a new object
+g = Greeter.new("world")
+
+# Output "Hello World!"
+g.salute
+```
+rye so far
+
+```rebol
+def-kind 'Greeter {
+   name: required string calc { .capitalize }
+}
+
+def-method 'Greeter salute {
+   >name .printo "Hello {#}!"
+}
+   
+<Greeter> { name: "world" } |salute
+```
+
+The repetition of Greeter at method is not the best. I am thinking if the kind definition dialect would besides being a validation didalect also accept
+function definitions and set the generic methods (they are still not part of the kind, but can be defined nested in definition and outside)
+
+I also think ... what if we just accept the "class" word instead of using some third, "kind". To add to familiarity not take away. I was thinking that "class"
+is too overloaded with meaning and expectations, but rye does a lot of familiar things a little differently. Let's try it for a while 
+
+```rebol
+class 'Greeter {
+
+  name: required string calc { .capitalize }
+  
+	salute: does { 
+    >name .printo "Hello {#}!" 
+  }
+}
+
+methods Greeter {
+  chow: does {
+    print "woof"
+  }
+} 
+
+<Greeter> { name: "Jim" } |do { .salut , .chow }
+
+{ name: "Jim" } >Greeter> .salut
+```
+
+if the kids definition dialect would not include method definition (just validation) then we could do it like this,
+but it's still visually heavier
+
+```rebol
+class 'Greeter {
+
+  name: required string calc { .capitalize }
+
+} .methods {
+
+  salut: does { 
+    >name .printo "Hello {#}!" 
+  }
+
+}
+
+methods Greeter {
+  chow: does {
+    print "woof"
+  }	
+}
+```
