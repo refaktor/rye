@@ -251,3 +251,134 @@ methods Greeter {
   }	
 }
 ```
+
+# 17.08.2020
+
+## Exception handling in light of file IO
+
+I've added some file IO functions. So I can now try the failure/error ideas in more practical scenarios. I have a feeling
+they will work for some cases, but sometimes, traditional try/catch structure will still be preferable (for many consequent IO operations, 
+you don't want to handle individually)
+
+### scenario 1: reading file and printing it's contents
+
+So we start with reading a file and printing it's contents
+
+```rebol
+open file://test3.txt |read-all |print
+<Error: Word not found: <Word: 92, read-all> >
+```
+
+If the file exists it all works, if not it currently returns <read-all word not found> as read-all is only determined on kind rye-file, and
+we returned an error kind. First, maybe error text should be more explicit. Maybe we should check if word exists at generic functions list and 
+report what kinds could be ok. Maybe 
+	
+Basically this is first of all a bug in raising errors conencted to pipe words. If we do
+	
+```rebol
+open file://test3.txt :a read-all a |print
+failure
+critical-error
+<Error: open test3.txt: no such file or directory >
+```
+Then error makes sense. We should first fix this bug in the interpreter, as we want to mostly design a in-flow (pipewords) exception handling
+with escape words.
+
+Found the bug ... I need to go through all this code again, and make the loops with words opwords / pipewords clearer. Interpreter checked if the
+next word will handle the failure, and this worked ok if it found the next word. Otherwise it overwrote the first failure for failure for not found next word.
+
+Ok so now we have: 
+
+	{ Rye } a: open file://test3.txt |disarm |print
+	<Error: open test3.txt: no such file or directory >
+	{ Rye } a: open file://test1.txt |disarm |print
+	<Native of kind ryepr-file>
+	{ Rye } a: open file://test3.txt |^check "Problem opening the profile file." |print
+	Failure
+	<Error: Problem opening the profile file. <Error: open test3.txt: no such file or directory >>
+	{ Rye } open-profile: fn { } { a: open file://test3.txt |^check "Problem opening the profile file." |read-all }
+	<Function: 0>
+	{ Rye } open-profile 
+	Failure
+	Critical error:
+	<Error: Problem opening the profile file. <Error: open test3.txt: no such file or directory >>
+	{ Rye } open-profile |print
+	Critical error:
+	<Error: Problem opening the profile file. <Error: open test3.txt: no such file or directory >>
+	{ Rye } open-profile |disarm |print
+	<Error: Problem opening the profile file. <Error: open test3.txt: no such file or directory >>
+	{ Rye } open-profile: fn { } { a: open file://test1.txt |^check "Problem opening the profile file." |read-all }
+	{ Rye } open-profile |disarm |print
+	profile-data ...
+
+This make sense, except ... in repl, later figure out what does the returning function do, does it just return the failure or should it 
+raise critical error.
+
+OK, so back to initial scenario ... can we use simple fix ? In this case we can't really ... 
+
+	{ Rye } a: open file://test3.txt |fix "no data yet" |print  }
+	no data yet
+	<String: no data yet>
+	{ Rye } a: open file://test1.txt |fix "no data yet" |print  }
+	<Native of kind rye-file>
+	<Native of kind rye-file>
+	{ Rye } a: open file://test1.txt |fix "no data yet" |read-all |print  }
+	soso
+	<String: soso>
+	{ Rye } a: open file://test3.txt |fix { "no data yet" } |read-all |print
+	<Error: Word not found: <Word: 95, read-all> >
+	Critical error:
+	<Error: Word not found: <Word: 95, read-all> >
+
+Read-all should only be applied if error didn't happen. We need something like
+
+	{ Rye } a: open file://test3.txt |fix { "no data yet" } { |read-all } |print
+	
+Question: should fix accept literal value or a block to execute. A literal value is shorter but has limited use, expressions are problematic, since we are allready  in failed state and interpreter as it is now doesn't want to accept new expressions ... just the first one ... if we accept a block we can change the state, and then evaluate it. What would the name be for either case ... fix { } and correct { } { } doesn't really make real sense. Maybe fix and fix-both, (fix2, either-err, errther...???
+
+	{ Rye } a: open file://test3.txt |fix-both { "no data yet" } { |read-all } |print
+	
+Made the fix native funtion accept block with, and added fix-both so this works now:
+
+	{ Rye } open file://test3.txt |fix-both { join "jo" "jo" } { |read-all } |print
+	jojo
+	{ Rye } open file://test1.txt |fix-both { join "jo" "jo" } { |read-all } |print
+	profile data ...
+
+... how / when do we close the file ... can we use defer as in go ... defer being a injected block function. But we can't put .defer { .close } before
+fix-both ... and we can't put it after. :P 
+
+So one way now seems a try function.
+
+	{ Rye } open file://test1.txt :file |fix-both { join "jo" "jo" } { |read-all } |print try { close file } 
+	profile data ...
+
+If we wanted to do it all in stream we have one problem ... unless we invent some "faliure passing function", skip doesn't yet solve the failure, but it does
+pass it forward without triggering error ... in a way it could work since skip evaluates a subblock and in subblock a first word does dissolve failure
+or we just add disarm for now. we could change fix to work on type of argument not on the flag
+
+	open file://test1.txt |disarm |skip { 
+	  .fix-both { join "jo" "jo" } { .read-all } |print
+	} |try-w/ { .close }
+
+one way withouth this would be
+
+	open file://test1.txt |fix-both { join "jo" "jo" |print } { .read-all |print , .close }
+
+since skip returns an error ... we could use the fix-* also ... this works now. We could add something like fix-else
+
+	{ Rye } open file://test3.txt |disarm |skip { |fix-both { join "jo" "jo" } { |read-all } |print } |fix-both { } { .close }
+	jojo
+	{ Rye } open file://test1.txt |disarm |skip { |fix-both { join "jo" "jo" } { |read-all } |print } |fix-both { } { .close }
+	soso
+
+We could do the same with commas, or with ... depending on what we wanted returned
+
+	open file://test1.txt |disarm |with { 
+		.fix-both { join "jo" "jo" } { .read-all } |print, 
+		.fix-else { .close }
+	}
+
+Seems nicer ... TODO -- add with native func. It's the same as skip, but it returns the result of last expr. not the first arg.
+
+
