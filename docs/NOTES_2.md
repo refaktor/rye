@@ -430,3 +430,73 @@ TODO .. lets add %text1.txt as shorthand for file:// to loader. and .returns fun
 	    { .read-all |returns , .close } 
 	    |print
 
+Maybe keep is not so bad, it's more symetric and with all the injected block behaviour it could be quite poverfull in situations. Fix-both maybe 
+visually belongs closer to open as it's relating to it. So the final version would be. skip could maybe be better named "pass" as it's passes it's value
+over block, or passes over block.
+
+	open %test1.txt |fix-both 
+	  { "jo" + "jo" } 
+	  { keep { .read-all } { .close } }: 
+	  |print
+	  
+### Scenario 2: load multiple file, in their own function, translate error messages
+
+scenario goes like this (I have written scenario before I started writting any code to solve it)
+
+  * load-user-name: load and read file, if error returns "anonymous"
+  * load-user-stream: load concat two files return, returns string or error wrapped into "error loading user stream"
+  * load-all-user-data: combine those two strings to json , if error happens at any of them return the error as json
+
+TODO -- add does function
+
+	load-user-name: does { read %user-name |fix "Anonymous" }
+	
+	load-user-stream: does { 
+		read %user-stream-new 
+		  |^check "Error reading new stream" 
+		  |collect      	  
+		read %user-stream-old 
+		  |^check "Error reading old stream"
+		  |collect
+	}
+	
+     	load-add-user-data: does {
+		load-user-name |collect-key 'username
+		load-user-stream |fix-either 
+			{ .^check "Error reading user data" } 
+			{ .collect-key 'stream }
+		collected |to-json
+	}
+
+TODO -- add read, collect, collected and collect-key
+
+I would try to rewrite this in python like language, but franky it seems it would be quite complex code
+
+	load_user_name: def ():
+		try:
+			return read("user-name")
+		catch:
+			return "Anonymous"
+
+	load-user-stream: does {
+		stream = []
+		try:
+		  append(stream, read("user-stream-new")) 
+		catch fileError:
+		  raise "Error reading new stream" 
+		try:
+		  append(stream, read("user-stream-old")) 
+		catch fileError:
+		  raise "Error reading old stream" 
+	
+     	load-add-user-data does {
+		data = {}
+		data["username"] = load-user-name()
+		try:
+		  data[stream] = load-user-stream() 
+		catch:
+ 		  return to_json({ "Error": "Error loading stream" }) # can we get nested error info?  
+		return to_json(data)
+	
+
+
