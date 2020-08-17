@@ -449,7 +449,7 @@ scenario goes like this (I have written scenario before I started writting any c
 
 TODO -- add does function
 
-```less
+```bash
 load-user-name: does { read %user-name |fix "Anonymous" }
 
 load-user-stream: does { 
