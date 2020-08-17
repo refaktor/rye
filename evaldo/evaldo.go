@@ -1,8 +1,8 @@
 package evaldo
 
 import (
-	"rye/env"
 	"fmt"
+	"rye/env"
 	//"fmt"
 	//"strconv"
 )
@@ -120,7 +120,7 @@ func MaybeAcceptComma(es *env.ProgramState, inj env.Object, injnow bool) (*env.P
 
 func EvalExpression2(es *env.ProgramState, limited bool) *env.ProgramState {
 	esleft := EvalExpression_(es)
-	trace("****1")
+	trace("EvalExpression2 beflre check of return flag")
 	if es.ReturnFlag {
 		return es
 	}
@@ -142,7 +142,7 @@ func EvalExpressionInj(es *env.ProgramState, inj env.Object, injnow bool) (*env.
 	if inj == nil || injnow == false {
 		esleft = EvalExpression_(es)
 		trace2(esleft)
-		trace("****2")
+		trace("EvalExpressionInj in first IF")
 		if es.ReturnFlag {
 			return es, injnow
 		}
@@ -151,21 +151,30 @@ func EvalExpressionInj(es *env.ProgramState, inj env.Object, injnow bool) (*env.
 		}*/
 
 	} else {
+		trace("EvalExpressionInj in ELSE")
 		esleft = es
 		esleft.Res = inj
 		injnow = false
+		if es.ReturnFlag { //20200817
+			return es, injnow
+		}
 		//esleft.Inj = nil
 	}
 	////// OPWORDWWW
 	// IF WE COMMENT IN NEXT LINE IT WORKS WITHOUT OPWORDS PROCESSING
 	//fmt.Println("EvalExpression")
 	//fmt.Println(es.Ser.GetPos())
+	trace2("Calling Maybe from EvalExp Inj")
 	return MaybeEvalOpwordOnRight(esleft.Ser.Peek(), esleft, false), injnow
 	//return esleft
 }
 
 /* OPWORDWWW */
 func MaybeEvalOpwordOnRight(nextObj env.Object, es *env.ProgramState, limited bool) *env.ProgramState {
+	trace2("MaybeEvalWord -----------======--------> 1")
+	if es.ReturnFlag {
+		return es
+	}
 	switch opword := nextObj.(type) {
 	case env.Opword:
 		//ProcOpword(nextObj, es)
@@ -176,22 +185,26 @@ func MaybeEvalOpwordOnRight(nextObj env.Object, es *env.ProgramState, limited bo
 		return MaybeEvalOpwordOnRight(es.Ser.Peek(), es, limited)
 	case env.Pipeword:
 		//ProcOpword(nextObj, es)
-		trace2("LIMITED JUMP")
 		if limited {
 			trace("LIMITED JUMP")
 			return es
 		}
 		es.Ser.Next()
-		//fmt.Println("MaybeEvalPipeword..1")
+		trace2(es.Res)
 		es = EvalWord(es, opword.ToWord(), es.Res, false)
-		//fmt.Println("MaybeEvalPipeword..2")
+		trace2("MaybeEvalPipeword ---------> 2")
 		if es.ReturnFlag {
+			trace2("RETURN ES")
 			return es //... not sure if we need this
 		}
-		/*if es.FailureFlag {
+		if es.FailureFlag { // uncommented 202008017
+			trace2("FAILURE FLAG DETECTED !")
 			es.FailureFlag = false
 			es.ErrorFlag = true
-		}*/
+			es.ReturnFlag = true
+			return es
+		}
+		trace2("MaybeEval --------------------------------------> looping around")
 		return MaybeEvalOpwordOnRight(es.Ser.Peek(), es, limited)
 	case env.LSetword:
 		if limited {
@@ -361,7 +374,9 @@ func EvalWord(es *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 	} else {
 		trace("****34")
 		es.ErrorFlag = true
-		es.Res = *env.NewError2(5, "Word not found: "+word.Inspect(*es.Idx))
+		if es.FailureFlag == false {
+			es.Res = *env.NewError2(5, "Word not found: "+word.Inspect(*es.Idx))
+		}
 		return es
 	}
 }
@@ -438,6 +453,7 @@ func EvalObject(es *env.ProgramState, object env.Object, leftVal env.Object, toL
 			return es
 		}
 		return CallBuiltin(bu, es, leftVal, toLeft)
+
 		//es.Res.Trace("After builtin call")
 		//return es
 	default:
@@ -542,27 +558,27 @@ func CallFunction(fn env.Function, es *env.ProgramState, arg0 env.Object, toLeft
 func fmt1() { fmt.Print(1) }
 
 func trace(x interface{}) {
-	//fmt.Print("\x1b[36m")
-	//fmt.Print(x)
-	//fmt.Println("\x1b[0m")
+	// fmt.Print("\x1b[36m")
+	// fmt.Print(x)
+	// fmt.Println("\x1b[0m")
 }
 func trace2(x interface{}) {
-	//fmt.Print("\x1b[56m")
-	//fmt.Print(x)
-	//fmt.Println("\x1b[0m")
+	// fmt.Print("\x1b[56m")
+	// fmt.Print(x)
+	// fmt.Println("\x1b[0m")
 }
 
 func checkFlags(bi env.Builtin, ps *env.ProgramState, n int) bool {
 	trace("CHECK FLAGS")
 	trace(n)
 	trace(ps.Res)
-	trace(bi)
+	//	trace(bi)
 	if ps.FailureFlag {
-		trace("FailureFlag")
+		trace("------ > FailureFlag")
 		if bi.AcceptFailure {
-			trace("Accept Failure")
+			trace("----- > Accept Failure")
 		} else {
-			trace("Fail->Error.")
+			trace("Fail ------->  Error.")
 			ps.ErrorFlag = true
 			return true
 		}
@@ -651,7 +667,9 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 		}
 	}
 	if bi.Argsn > 1 && bi.Cur1 == nil {
+
 		evalExprFn(ps, true) // <---- THESE DETERMINE IF IT CONSUMES WHOLE EXPRESSION OR NOT IN CASE OF PIPEWORDS .. HM*... MAYBE WOULD COULD HAVE A WORD MODIFIER?? a: 2 |add 5 a:: 2 |add 5 print* --TODO
+
 		if checkFlags(bi, ps, 1) {
 			return ps
 		}
@@ -666,7 +684,9 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 		}
 	}
 	if bi.Argsn > 2 {
+
 		evalExprFn(ps, true)
+
 		if checkFlags(bi, ps, 2) {
 			return ps
 		}
@@ -713,7 +733,7 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 	} else {
 		ps.Res = bi.Fn(ps, arg0, arg1, arg2, arg3, arg4)
 	}
-	//ps.Res.Trace("Before builtin returns")
+	trace2(" ------------- Before builtin returns")
 	return ps
 }
 

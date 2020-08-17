@@ -483,6 +483,21 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"with": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg1.(type) {
+			case env.Block:
+				ser := ps.Ser
+				ps.Ser = bloc.Series
+				EvalBlockInj(ps, arg0, true)
+				ps.Ser = ser
+				return ps.Res
+			}
+			return nil
+		},
+	},
+
 	//
 
 	"dotime": {
@@ -1154,9 +1169,74 @@ var builtins = map[string]*env.Builtin{
 		AcceptFailure: true,
 		Argsn:         2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			if ps.FailureFlag {
+			if ps.FailureFlag || arg0.Type() == env.ErrorType {
 				ps.FailureFlag = false
-				return arg1
+				// TODO -- create function do_block and call in all cases
+				switch bloc := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = bloc.Series
+					EvalBlock(ps)
+					ps.Ser = ser
+					return ps.Res
+				default:
+					return env.NewError("Error ..TODO")
+				}
+			} else {
+				return arg0
+			}
+		},
+	},
+
+	"fix-both": {
+		AcceptFailure: true,
+		Argsn:         3,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			if ps.FailureFlag || arg0.Type() == env.ErrorType {
+				ps.FailureFlag = false
+				// TODO -- create function do_block and call in all cases
+				switch bloc := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = bloc.Series
+					EvalBlockInj(ps, arg0, true)
+					ps.Ser = ser
+					return ps.Res
+				default:
+					return env.NewError("Error ..TODO")
+				}
+			} else {
+				switch bloc := arg2.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = bloc.Series
+					EvalBlockInj(ps, arg0, true)
+					ps.Ser = ser
+					return ps.Res
+				default:
+					return env.NewError("Error ..TODO")
+				}
+			}
+		},
+	},
+
+	"fix-else": {
+		AcceptFailure: true,
+		Argsn:         2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			if !(ps.FailureFlag || arg0.Type() == env.ErrorType) {
+				ps.FailureFlag = false
+				// TODO -- create function do_block and call in all cases
+				switch bloc := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = bloc.Series
+					EvalBlockInj(ps, arg0, true)
+					ps.Ser = ser
+					return ps.Res
+				default:
+					return env.NewError("Error ..TODO")
+				}
 			} else {
 				return arg0
 			}

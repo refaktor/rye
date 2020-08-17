@@ -486,10 +486,10 @@ func main_rye_repl(in io.Reader, out io.Writer) {
 						}
 					}
 					if es.FailureFlag {
-						fmt.Println("\x1b[33m" + "failure" + "\x1b[0m")
+						fmt.Println("\x1b[33m" + "Failure" + "\x1b[0m")
 					}
 					if es.ErrorFlag {
-						fmt.Println("\x1b[31m" + "critical-error" + "\x1b[0m")
+						fmt.Println("\x1b[31m" + "Critical error:\n" + es.Res.Inspect(*genv) + "\x1b[0m")
 					}
 					es.ReturnFlag = false
 					es.ErrorFlag = false
