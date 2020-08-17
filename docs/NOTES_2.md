@@ -500,9 +500,9 @@ def load_add_user_data ():
 	catch:
 	  return to_json({ "Error": "Error loading stream" }) # can we get nested error info?  
 	return to_json(data)
-	
+```
+
 ### TODO -- improve this code, make it realistic also with concrete modules / functions
-```h t
 
 What I like about rye-version of code above
 
@@ -541,7 +541,10 @@ print something to the user, not just silently crash. But it needs to be determi
 
 Solution to both these is that you can on app level determine a global handler.
 
-	set-app 'on-error { e } { probe e } // log e , dialog.alert("Error happened:" +\ e) ....
 	
-	
-	
+```rebol
+	set-app 'on-error { e } { probe "Unexpected e" + e } // log e , dialog.alert("Error happened:" +\ e) ....
+```
+
+
+
