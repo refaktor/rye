@@ -459,8 +459,8 @@ TODO -- add does function
 		  |^check "Error reading old stream"
 		  |collect
 	}
-	
-     	load-add-user-data: does {
+
+	load-add-user-data: does {
 		load-user-name |collect-key 'username
 		load-user-stream |fix-either 
 			{ .^check "Error reading user data" } 
@@ -489,7 +489,7 @@ I would try to rewrite this in python like language, but franky it seems it woul
 		catch fileError:
 		  raise "Error reading old stream" 
 	
-     	load-add-user-data does {
+	def load_add_user-data does {
 		data = {}
 		data["username"] = load-user-name()
 		try:
