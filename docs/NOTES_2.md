@@ -381,4 +381,52 @@ We could do the same with commas, or with ... depending on what we wanted return
 
 Seems nicer ... TODO -- add with native func. It's the same as skip, but it returns the result of last expr. not the first arg.
 
+Ok, native functions have "AcceptsFailures" flag and we added this flag to with (and skip) so this becomes (it makes sense for this flag to be on
+for "combinator" functions), with changes to else block we don't need with basically.
+
+	open file://test1.txt |with { 
+		.fix-both { join "jo" "jo" } { .read-all } |print, 
+		.fix-else { .close }
+	}
+
+	open file://test1.txtt fo
+	  |fix-both 
+	    { "jo" + "jo" } 
+	    { .read-all :text , .close , text } 
+	    |print
+
+Returns function would make it even shorter. Will probably try adding later. 
+
+How would this look in something like python?
+
+	text = ""
+	try:
+	  f = open("test1.txt")
+	catch:
+	  text = "jo" + "jo"
+	else:
+	  text = f.readAll()
+	  f.close()
+	print text
+
+Offshoot: Is there some combinator that would handle this pattern without returns? What would it be like:
+
+	100 { return-first { .add 10 } { .print } } 
+
+	open %test1.txt
+	  |fix-both 
+	    { "jo" + "jo" } 
+	    { keep { .read-all } { .close } } 
+	    |print
+
+Keep would do inject 2 blocks with it's first argument, but keep / return the result of first block. Not very obvious and more
+verbose than returns solution it seems ... we can keep it in mind
+
+TODO .. lets add %text1.txt as shorthand for file:// to loader. and .returns function
+
+	open %test1.txt
+	  |fix-both 
+	    { "jo" + "jo" } 
+	    { .read-all |returns , .close } 
+	    |print
 
