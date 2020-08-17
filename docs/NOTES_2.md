@@ -449,54 +449,99 @@ scenario goes like this (I have written scenario before I started writting any c
 
 TODO -- add does function
 
-	load-user-name: does { read %user-name |fix "Anonymous" }
-	
-	load-user-stream: does { 
-		read %user-stream-new 
-		  |^check "Error reading new stream" 
-		  |collect      	  
-		read %user-stream-old 
-		  |^check "Error reading old stream"
-		  |collect
-	}
+```rebol
+load-user-name: does { read %user-name |fix "Anonymous" }
 
-	load-add-user-data: does {
-		load-user-name |collect-key 'username
-		load-user-stream |fix-either 
-			{ .^check "Error reading user data" } 
-			{ .collect-key 'stream }
-		collected |to-json
-	}
+load-user-stream: does { 
+  read %user-stream-new 
+    |^check "Error reading new stream" 
+    |collect      	  
+  read %user-stream-old 
+    |^check "Error reading old stream"
+    |collect
+}
 
-TODO -- add read, collect, collected and collect-key
+load-add-user-data: does {
+  load-user-name |collect-key 'username
+  load-user-stream |fix-either 
+    { .^check "Error reading user data" } 
+    { .collect-key 'stream }
+  collected |to-json
+}
+```
+
+TODO IMPLEMENT -- add read, collect, collected and collect-key
 
 I would try to rewrite this in python like language, but franky it seems it would be quite complex code
 
-	load_user_name: def ():
-		try:
-			return read("user-name")
-		catch:
-			return "Anonymous"
+```python
+def load_user_name ():
+  try:
+    return read("user-name")
+  catch:
+    return "Anonymous"
 
-	load-user-stream: does {
-		stream = []
-		try:
-		  append(stream, read("user-stream-new")) 
-		catch fileError:
-		  raise "Error reading new stream" 
-		try:
-		  append(stream, read("user-stream-old")) 
-		catch fileError:
-		  raise "Error reading old stream" 
+def load_user_stream ():
+  stream = []
+  try:h
+    append(stream, read("user-stream-new")) 
+  catch fileError:
+    raise "Error reading new stream" 
+  try:
+    append(stream, read("user-stream-old")) 
+  catch fileError:
+    raise "Error reading old stream" 
 	
-	def load_add_user-data does {
-		data = {}
-		data["username"] = load-user-name()
-		try:
-		  data[stream] = load-user-stream() 
-		catch:
- 		  return to_json({ "Error": "Error loading stream" }) # can we get nested error info?  
-		return to_json(data)
+def load_add_user_data ():
+	data = {}
+	data["username"] = load_user_name()
+	try:
+	  data[stream] = load_user_stream() 
+	catch:
+	  return to_json({ "Error": "Error loading stream" }) # can we get nested error info?  
+	return to_json(data)
 	
+### TODO -- improve this code, make it realistic also with concrete modules / functions
+```h t
 
+What I like about rye-version of code above
 
+  * code flow: rye's error handling is in flow and I think doesn't disturb (visually or structurally) it more than it needs to. Try/catch is more like
+    goto statements and labels
+  * __intent__: rye's error handling expresses intent much better than general try/catch, fix/check/disarm/fix-else/fix-either like map/filter/reduce 
+    expresses intent where for-each loop to acomplish the same doesn't.
+  * functions like ^check automatically nest the errors, while I think python's usual error handling overwrites previous ones (you loose information 
+    you already had). Exception handling to me (and to go-s view) is like programming about translating from computer specific to app / user specific
+  * rye-s code is more symetrical, without temperary value sprinkeled all over and shorter
+  * In rye all these error handling functions are library level functions, meaning you can make your own or additional for your cases
+  
+  
+### The fail of: Catch, (reword) and print
+  
+Many languages oftex exhibit error handling in manner catch and print. You catch the error and then you print the error. It creates code and structure and
+acomplishes very little, and it's ununiform. My thought are, that things can be much more thought out. There is a number of common scenarios of what you want to
+do, and they should be thought out in advance and systemized on language and app level.
+
+#### Failure you expect and will handle (continue the program)
+
+Some failures can be expected to happen and you want to handle, continue the application, redirect the logic, provide alternative / default value ...
+
+#### Faliure you can't didn't expect but happened
+
+Everything that happens but wasn't expected, __should stop the execution of program__ as you don't know what can be the consequences. The failure should 
+be printed out / displayed and / or logged. It's a bug that needs to be solved.
+
+#### Failures you expected but can't handle
+
+If you don't intend to continue running the program then there is probably little reason to handle them specifically, maybe only to mark that it's a know
+potential failure that you dont / can't handle. So you don't treat it as a but that must be solved. 
+re is 
+The best solution here seems wrap original failure with this additional info and let it stop the program. These as previous types of program should 
+print something to the user, not just silently crash. But it needs to be determined systematically by whole app the same as previous category.
+
+Solution to both these is that you can on app level determine a global handler.
+
+	set-app 'on-error { e } { probe e } // log e , dialog.alert("Error happened:" +\ e) ....
+	
+	
+	
