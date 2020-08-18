@@ -1,18 +1,18 @@
 html {
-	background-color: #F8F8F8 ;
+	__background-color: #F8F8F8 ;
 }
 
 body {
-	background-color: #FFFFFF ;
-	color: #000000 ;
+	__background-color: #FFFFFF ;
+	__color: #000000 ;
 	font-family: Helvetica, Arial, sans-serif ;
 	text-align: justify ;
 	line-height: 1.25 ;
-	margin: 16px auto ;
+	__margin: 16px auto ;
 	padding: 32px ;
-	border: solid #ccc 1px ;
-	border-radius: 20px ;
-	max-width: 70em ;
+	__border: solid #ccc 1px ;
+	__border-radius: 20px ;
+	max-width: 60em ;
 	width: 90% ;
 }
 
