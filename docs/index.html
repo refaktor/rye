@@ -4,21 +4,74 @@
   <title>Rye programming language</title>
   <meta charset="utf-8" />
   <link rel="stylesheet" type="text/css" href="main.css" />
+  <link rel="stylesheet" type="text/css" href="css/desert.css" />
+  <script type="text/javascript" src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+  <script type="text/javascript" src="./js/lang-rye.js"></script>
 </head>
 <body>
-  <h1>🌾 Rye programming language</h1>
+  <h1>🌾 Rye language</h1>
   
-  <p>Rye is a <b>work in progress</b> language based on ideas from REBOL, with some aspirations from Factor and linux shell</p>
+  <p>Rye is a <b>work in progress</b> programming language based on ideas from Rebol, with some aspirations from Factor and Linux shell.</p>
+
+  <p>Rye is a high level, homoiconic, dynamic language. Currently implemented as an interpreter in Go. It's basic elements are determined, but many are still in test and design stage.</p>  
+
+  <pre class="prettyprint lang-rye"><code language="lang-rye">
+      hello: fn { a } { "Hello" +_ a + "!" }
+      print hello "world"
+      // outputs: Hello world!
+  </code></pre>
+
+  <p>Rye is basically a data description language (think JSON) with over 30 data types and multiple dialects (interpreters) over that data (think executable JSON).</p>
+
+  <pre class="prettyprint lang-rye"><code language="lang-rye">
+      person: { name "Jim" age 33 }
+      code: { hello person/name }
+      if true code
+      // outputs: Hello Jim!
+  </code></pre>
+
+  <p>It has no keywords, no special forms, every active word in it's main dialect (+, *, if, for-each, fn, class, return) is a
+    function and determined on a "library level" (you can load libraries with different ones or write your own). It has many types of words though.</p>
+
+  <pre class="prettyprint lang-rye"><code language="lang-rye">
+      _+\: fn { a b } { a + "\n" + b }
+      hello "pipe-words" +\ "and op-words!" .capitalize |print
+      // outputs: Hello pipe-words!
+      //          And op-words!
+  </code></pre>
+
+  <p>It's native functions aren't only control structures, "special forms", but can also be <b>their own interpreters</b> (dialects). One example is validate
+  function and it's validation-dialect.</p>
+
   
-  <h3>Introduction for Python programmers</h3>
+  <pre class="prettyprint lang-rye"><code language="lang-rye">
+      { num 100 }
+      |validate {
+        name: optional "joedoe" string calc { .capitalize }
+        num: required integer check "too-low" { > 50 }
+      } |probe
+      // outputs: { name "Joedoe" num 100 }
+  </code></pre>
+
+  <h3>Introductions</h3>
   
-  <p>You can see the WIP introduction <a href="https://github.com/refaktor/rye/blob/kinds/docs/INTRO_1.md">here</a>
+  <p><a href="https://github.com/refaktor/rye/blob/kinds/docs/INTRO_1.md">Introducing Rye to Python programmers {WIP}</a>
+
+  <h3>Specific themes</h3>
+  
+  <p><a _href="https://github.com/refaktor/rye/blob/kinds/docs/INTRO_1.md">Failures and errors {NOT WRITTEN YET}</a>
+
+  <h3>Development notes and braindumps</h3>
+
+  <p>Warning: (especially the first one) wasn't written for public consumption!</p> 
+  <p><a href="https://github.com/refaktor/rye/blob/kinds/docs/NOTES_2.md">Second notes</a>, 
+    <a href="https://github.com/refaktor/rye/blob/kinds/docs/NOTES.md">First notes</a>
     
-  <h3>Internal notes and braindumps</h3>
+
+    <h3>Links</h3>
+  <p><a href="https://github.com/refaktor/rye">Rye's github page</a></p>
+  <p><a href="http://www.rebol.com">Rebol</a> - Rebol's author Carl Sassenrath invented or combined together 90% of concepts that Rye builds upon</p>
+  <p><a href="https://factorcode.org/">Factor</a> - Factor taught me new fluidity and that variables are no-good, but stack shuffle words are even worse ;)</p>
   
-  <p><a href="https://github.com/refaktor/rye/blob/kinds/docs/NOTES_2.md">Current version</a> , 
-    <a href="https://github.com/refaktor/rye/blob/kinds/docs/NOTES.md">First version</a> (warning: wasn't written for public consumption)</p> 
-    
-  <p><i>this page will improve</i></p>
-  
+  <p>You can contact me on <a href="https://twitter.com/refaktor">twitter</p>
 </body></hmtl>

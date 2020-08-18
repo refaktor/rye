@@ -7,13 +7,14 @@ body {
 	__color: #000000 ;
 	font-family: Helvetica, Arial, sans-serif ;
 	text-align: justify ;
-	line-height: 1.25 ;
+	line-height: 1.5 ;
 	__margin: 16px auto ;
 	padding: 32px ;
 	__border: solid #ccc 1px ;
 	__border-radius: 20px ;
 	max-width: 60em ;
 	width: 90% ;
+	font-size: 16px;
 }
 
 h1, h2, h3, h4 {
@@ -25,7 +26,8 @@ h1, h2, h3, h4 {
 }
 
 h1 {
-	font-size: 28pt ;
+    font-size: 28pt ;
+    margin-bottom: 32pt;
 }
 
 h1 img {
@@ -105,10 +107,11 @@ input[type=text] {
 	height: 2em ;
 }
 
-pre.session {
+pre {
 	background-color: #F8F8F8 ;
 	padding: 1em ;
 	border-radius: 8px ;
+	font-size: 90%;
 }
 
 table {

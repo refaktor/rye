@@ -1,0 +1,420 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title></title>
+  <meta name="GENERATOR" content="github.com/gomarkdown/markdown markdown processor for Go" />
+  <meta charset="utf-8" />
+  <link rel="stylesheet" type="text/css" href="notes.css" />
+</head>
+<body>
+
+<blockquote>
+<p>Notes since the project went on github</p>
+</blockquote>
+
+<h1>08.08.2020</h1>
+
+<h2>few vocabulary decisions, loader</h2>
+
+<p>While writing intro_2 I decided I need to implement some things that move us more away from rebol (not the core at all, but how it worder the things on top,
+the &ldquo;frontend&rdquo;) to be more concise and in line with rye</p>
+
+<ul>
+<li>For typical dyadic operations, where known operators exist they shoulb be prefered over words (a much used prefix <em>join</em> in rebol becomes +,
+greater? and lesser? become &gt; &lt;). In rebol prefix was preferred, but we use much more infix words anyway</li>
+<li>join becomes like python&rsquo;s and javascripts <em>join</em>,</li>
+<li>joining a block without separator should then be <em>concat</em> intead of rebols <em>rejoin</em> as you don&rsquo;t really <em>REjoin</em> anything when you do that.
+concatenate is a little to long and complex word for this very used function, so concat should be one of limited few words that we adopt as our jargon</li>
+</ul>
+
+<p>the idea is that the opeators are nothing special, they are functions like all others, and are recognised as opwords, and they don&rsquo;t have a regular non-opwordy
+counterpart &hellip; although if a benefit would show they could have it like &gt; is opword (infix)  _&gt; is word (prefix)
+I need to update the loader for this.</p>
+
+<pre><code> if greater 100 10 { print &quot;100 is greater&quot; }
+ // is the same as 
+ if 100 .greater 10 { print &quot;100 is greater&quot; }
+ // will be the same as
+ if 100 &gt; 10 { print &quot;100 is greater&quot; }
+ // could be the same, if any benefit shows up as
+ if _&gt; 100 10 { print &quot;100 is greater&quot; , 
+</code></pre>
+
+<p>Logic should probably be that all one character operators are by sefault recognised as opwords where naming isn&rsquo;t one dot less, but one line more?</p>
+
+<p>opword &gt; ==becomes==&gt; name _&gt; so setword in this example would not be:</p>
+
+<pre><code> &gt;: fn { a b } { greater a b } // but
+ _&gt;: fn { a b } { greater a b }
+</code></pre>
+
+<h2>Rebol and dictionaries</h2>
+
+<p>Rebol was made before we began using dictionaries for all sorts of things in dynamic languages (or objects in JS). I was writing some rebol code this week
+when I needed to use a simple dictinary like structure, to sum by keys, and either I forgot about how to do this in rebol or it&rsquo;s very cumbersome. It&rsquo;s not like
+rebol couldn&rsquo;t do this but because of it&rsquo;s syntax the shorthands we are used to</p>
+
+<pre><code> a[key] = a[key] + v
+ // well I tried now some more and you can do it pretty much the same, but I still don't that much like that double colon ... it's basically an accessor, with a 
+ // get word while all around being like a set-word in one ... :P, but it is comparable to py/js code, which I complained about
+ b: [ &quot;a&quot; 100 ]
+ c: &quot;a&quot;
+ b/(:c): b/:c + 11
+ b/:c: b/:c + 11 
+</code></pre>
+
+<p>I don&rsquo;t know if there is something better and as consise, but we have to explore this.</p>
+
+<p>Another thing I want to change about dictionaries, hasthatables, &hellip; in Rebol and now in rye you can only type-in blocks, which is nice unary thing.
+And they can then be turned to anything by functions. In rebol</p>
+
+<pre><code> block: { &quot;a&quot; 1 &quot;b&quot; 2 } // this is a block, if you want hashtable performance you do
+ block: hash { &quot;a&quot; 1 &quot;b&quot; 2 } // but this loads a block and then a function turns it to hashtable. If we have a big hashtable, we want it to be loaded
+ // directly as hashtable
+</code></pre>
+
+<p>Third. Because block and dictionary are not distinguished, you can use all block/dict functions on both, which is &ldquo;maybe??&rdquo; nice, but dict has a very specific
+simple API (get/set) and it&rsquo;s probably more a source of errors and confusions. And block has a very wide, flexible api .. just few Examples &hellip;</p>
+
+<pre><code> a: [ b 1 c 2 ]
+ select a 'c // returns 2 is like a/c , but select works the same on key and value arguments
+ select a 1 // returns c which is really weird in dictionary
+
+ finda a 'b // vs. 
+ find a 2
+</code></pre>
+
+<p>With dictionary you always know if you are calling something based on key or value &hellip; I think it&rsquo;s never a benefit to have these two undistinguished. What if
+keys and values are for example names of people</p>
+
+<pre><code> married-people: hash [ &quot;jane&quot; &quot;jim&quot; &quot;paul&quot; &quot;natasha&quot; ] // who is married to who if we fo _find_ for jane and for paul
+</code></pre>
+
+<p>I think we need dictionary not be just different rye value internally, but also in code, so it needs it&rsquo;s own syntax which loader can recognise. We have {}
+for blocks of code and blocks (lists/ arrays) in general. Current idea is to have [] as a specific block. It could be just dictionary, but maybe some internal
+load time rules could be used to enable other types too &hellip; like sets .. maybe</p>
+
+<pre><code> some-dict: [ a: 10 b: 20 ]
+ some-set [ a 10 b 20 ] 
+</code></pre>
+
+<p>Questions:
+* But what is fist key now:
+ * a string &ldquo;a&rdquo;
+ * a word <em>a</em>
+ * a set-word <em>a:</em>
+* Are sets really that usefull in practice?
+* Can dictionaries (or sets) be used as specific code elements in which case we want that they can include all rye values
+  * we can and do use dictionary like blocks as code, in specific dialects, but they internally can&rsquo;t be and aren&rsquo;t  woudictionaries
+  * are dictionaries evaluated implicitly or explicitly, just values or keys also? with compose reduce &hellip;
+  * &hellip;</p>
+
+<p>The compose route &hellip;</p>
+
+<pre><code> val: 12 key: &quot;ab&quot;
+ some-dict: compose [ ab: &quot;val&quot; (key): (val) ]    
+</code></pre>
+
+<p>If dict can hold only literal values, they we could eval all values, and only the keys that are explicitly marked like</p>
+
+<pre><code> some-dict: [ ab: &quot;val&quot; ?key: val ]
+</code></pre>
+
+<p>I am begining to understand why rebol would rather have just blocks &hellip; but I still think we need them on a practical side &hellip; need to think about it more.</p>
+
+<p>Overusing dicts for programming &hellip; &ldquo;dict based programming&rdquo; is by default slow and also more error prone. I would much better prefer something like records
+in ocaml or structs, but I am not sure if you can even make (or reap any benefit) from making a &ldquo;static&rdquo; structure in a dynamic (runtime) language?</p>
+
+<p>Whole subject on dicst is something to ponder on and try things &hellip; One goal of rye is to make more dynamic / flexible language, but also more exact when you
+want it to be exact. Exact dicts with exact api, would be one step towards it. On the implementation side &hellip; would dictinaries be just objects (tuples) or
+are there any differences?</p>
+
+<h2>loops with injected values vs ordinary</h2>
+
+<p>in rebol we have for-each</p>
+
+<pre><code>  as: [ 1 2 3 ]
+  for-each a as [ print a ]
+</code></pre>
+
+<p>Rye won&rsquo;t have nonevaluating word exception determined by the caller func so this would be</p>
+
+<pre><code>  for-each 'a as { print a }
+</code></pre>
+
+<p>But rye also has injected blocks, which play well with opwords, but do we want to force everyone to use them, or always use them:</p>
+
+<pre><code>  for as { .print }
+</code></pre>
+
+<p>sometimes we dont use pipe flows, we need a repeated access to value in such time we do</p>
+
+<pre><code>  for as { :a print a }
+</code></pre>
+
+<p>same for map, filter, reduce and other similar</p>
+
+<pre><code>  map as { .add 100 }
+</code></pre>
+
+<p>but this is probably less elegant or at least less <strong>usual</strong> for programmers from other languages so we could have equivalent *-each functions
+work</p>
+
+<pre><code>  for-each 'a as { print a }
+  map-each 'a as { add a 100 }
+</code></pre>
+
+<h1>10.08.2020</h1>
+
+<h2>Operand op-words</h2>
+
+<p>Commit for one-letter opwords.</p>
+
+<p>But they will not be just one letter op-words like &ldquo;&lt;&rdquo; &ldquo;&gt;&rdquo; &ldquo;=&rdquo; &ldquo;+&rdquo; &ldquo;<em>&rdquo; &hellip; change parse rules so we also include likes of &ldquo;!=&rdquo; &ldquo;</em>=&rdquo; &ldquo;==&gt;&rdquo; and other combinations.
+These all are automatically loaded as op-words.</p>
+
+<h2>Collect besides return</h2>
+
+<p>in general evaluation of blocks returns the result of the last expression in a block. You can change that in special cases with return function.
+I was thinking about something like this for a while &hellip; since block is a very universal collection type in Rye &hellip; what if we have a collect function, that
+can if called create a (code) block level blok to which it appends. And at the end of block if anything was collected then this is returned unless of course explicit return is called.</p>
+
+<pre><code>  probe do { print collect 1 print collect 2 }
+  1
+  2
+  { 1 2 }
+</code></pre>
+
+<p>this could get more usefull in loops and various state machines, parse dialects ?</p>
+
+<pre><code>  a: 0 probe loop 5 { a: collect inc a }
+  { 1 2 3 4 5 }
+</code></pre>
+
+<h1>14.08.2020</h1>
+
+<h2>Some thoughts on kinds</h2>
+
+<p>I was looking at ruby example on front page, trying to translate it to kinds.</p>
+
+<p>Since methods are not part of the kind (just data) and we have generic methods &hellip; first example looked really clumsy compared to Ruby</p>
+
+<pre><code class="language-ruby"># The Greeter class
+class Greeter
+  def initialize(name)
+    @name = name.capitalize
+  end
+
+  def salute
+    puts &quot;Hello #{@name}!&quot;
+  end
+end
+
+# Create a new object
+g = Greeter.new(&quot;world&quot;)
+
+# Output &quot;Hello World!&quot;
+g.salute
+</code></pre>
+
+<p>rye so far</p>
+
+<pre><code class="language-rebol">def-kind 'Greeter {
+   name: required string calc { .capitalize }
+}
+
+def-method 'Greeter salute {
+   &gt;name .printo &quot;Hello {#}!&quot;
+}
+   
+&lt;Greeter&gt; { name: &quot;world&quot; } |salute
+</code></pre>
+
+<p>The repetition of Greeter at method is not the best. I am thinking if the kind definition dialect would besides being a validation didalect also accept
+function definitions and set the generic methods (they are still not part of the kind, but can be defined nested in definition and outside)</p>
+
+<p>I also think &hellip; what if we just accept the &ldquo;class&rdquo; word instead of using some third, &ldquo;kind&rdquo;. To add to familiarity not take away. I was thinking that &ldquo;class&rdquo;
+is too overloaded with meaning and expectations, but rye does a lot of familiar things a little differently. Let&rsquo;s try it for a while</p>
+
+<pre><code class="language-rebol">class 'Greeter {
+
+  name: required string calc { .capitalize }
+  
+	salute: does { 
+    &gt;name .printo &quot;Hello {#}!&quot; 
+  }
+}
+
+methods Greeter {
+  chow: does {
+    print &quot;woof&quot;
+  }
+} 
+
+&lt;Greeter&gt; { name: &quot;Jim&quot; } |do { .salut , .chow }
+
+{ name: &quot;Jim&quot; } &gt;Greeter&gt; .salut
+</code></pre>
+
+<p>if the kids definition dialect would not include method definition (just validation) then we could do it like this,
+but it&rsquo;s still visually heavier</p>
+
+<pre><code class="language-rebol">class 'Greeter {
+
+  name: required string calc { .capitalize }
+
+} .methods {
+
+  salut: does { 
+    &gt;name .printo &quot;Hello {#}!&quot; 
+  }
+
+}
+
+methods Greeter {
+  chow: does {
+    print &quot;woof&quot;
+  }	
+}
+</code></pre>
+
+<h1>17.08.2020</h1>
+
+<h2>Exception handling in light of file IO</h2>
+
+<p>I&rsquo;ve added some file IO functions. So I can now try the failure/error ideas in more practical scenarios. I have a feeling
+they will work for some cases, but sometimes, traditional try/catch structure will still be preferable (for many consequent IO operations,
+you don&rsquo;t want to handle individually)</p>
+
+<h3>scenario 1: reading file and printing it&rsquo;s contents</h3>
+
+<p>So we start with reading a file and printing it&rsquo;s contents</p>
+
+<pre><code class="language-rebol">open file://test3.txt |read-all |print
+&lt;Error: Word not found: &lt;Word: 92, read-all&gt; &gt;
+</code></pre>
+
+<p>If the file exists it all works, if not it currently returns <read-all word not found> as read-all is only determined on kind rye-file, and
+we returned an error kind. First, maybe error text should be more explicit. Maybe we should check if word exists at generic functions list and
+report what kinds could be ok. Maybe</p>
+
+<p>Basically this is first of all a bug in raising errors conencted to pipe words. If we do</p>
+
+<pre><code class="language-rebol">open file://test3.txt :a read-all a |print
+failure
+critical-error
+&lt;Error: open test3.txt: no such file or directory &gt;
+</code></pre>
+
+<p>Then error makes sense. We should first fix this bug in the interpreter, as we want to mostly design a in-flow (pipewords) exception handling
+with escape words.</p>
+
+<p>Found the bug &hellip; I need to go through all this code again, and make the loops with words opwords / pipewords clearer. Interpreter checked if the
+next word will handle the failure, and this worked ok if it found the next word. Otherwise it overwrote the first failure for failure for not found next word.</p>
+
+<p>Ok so now we have:</p>
+
+<pre><code>{ Rye } a: open file://test3.txt |disarm |print
+&lt;Error: open test3.txt: no such file or directory &gt;
+{ Rye } a: open file://test1.txt |disarm |print
+&lt;Native of kind ryepr-file&gt;
+{ Rye } a: open file://test3.txt |^check &quot;Problem opening the profile file.&quot; |print
+Failure
+&lt;Error: Problem opening the profile file. &lt;Error: open test3.txt: no such file or directory &gt;&gt;
+{ Rye } open-profile: fn { } { a: open file://test3.txt |^check &quot;Problem opening the profile file.&quot; |read-all }
+&lt;Function: 0&gt;
+{ Rye } open-profile 
+Failure
+Critical error:
+&lt;Error: Problem opening the profile file. &lt;Error: open test3.txt: no such file or directory &gt;&gt;
+{ Rye } open-profile |print
+Critical error:
+&lt;Error: Problem opening the profile file. &lt;Error: open test3.txt: no such file or directory &gt;&gt;
+{ Rye } open-profile |disarm |print
+&lt;Error: Problem opening the profile file. &lt;Error: open test3.txt: no such file or directory &gt;&gt;
+{ Rye } open-profile: fn { } { a: open file://test1.txt |^check &quot;Problem opening the profile file.&quot; |read-all }
+{ Rye } open-profile |disarm |print
+profile-data ...
+</code></pre>
+
+<p>This make sense, except &hellip; in repl, later figure out what does the returning function do, does it just return the failure or should it
+raise critical error.</p>
+
+<p>OK, so back to initial scenario &hellip; can we use simple fix ? In this case we can&rsquo;t really &hellip;</p>
+
+<pre><code>{ Rye } a: open file://test3.txt |fix &quot;no data yet&quot; |print  }
+no data yet
+&lt;String: no data yet&gt;
+{ Rye } a: open file://test1.txt |fix &quot;no data yet&quot; |print  }
+&lt;Native of kind rye-file&gt;
+&lt;Native of kind rye-file&gt;
+{ Rye } a: open file://test1.txt |fix &quot;no data yet&quot; |read-all |print  }
+soso
+&lt;String: soso&gt;
+{ Rye } a: open file://test3.txt |fix { &quot;no data yet&quot; } |read-all |print
+&lt;Error: Word not found: &lt;Word: 95, read-all&gt; &gt;
+Critical error:
+&lt;Error: Word not found: &lt;Word: 95, read-all&gt; &gt;
+</code></pre>
+
+<p>Read-all should only be applied if error didn&rsquo;t happen. We need something like</p>
+
+<pre><code>{ Rye } a: open file://test3.txt |fix { &quot;no data yet&quot; } { |read-all } |print
+</code></pre>
+
+<p>Question: should fix accept literal value or a block to execute. A literal value is shorter but has limited use, expressions are problematic, since we are allready  in failed state and interpreter as it is now doesn&rsquo;t want to accept new expressions &hellip; just the first one &hellip; if we accept a block we can change the state, and then evaluate it. What would the name be for either case &hellip; fix { } and correct { } { } doesn&rsquo;t really make real sense. Maybe fix and fix-both, (fix2, either-err, errther&hellip;???</p>
+
+<pre><code>{ Rye } a: open file://test3.txt |fix-both { &quot;no data yet&quot; } { |read-all } |print
+</code></pre>
+
+<p>Made the fix native funtion accept block with, and added fix-both so this works now:</p>
+
+<pre><code>{ Rye } open file://test3.txt |fix-both { join &quot;jo&quot; &quot;jo&quot; } { |read-all } |print
+jojo
+{ Rye } open file://test1.txt |fix-both { join &quot;jo&quot; &quot;jo&quot; } { |read-all } |print
+profile data ...
+</code></pre>
+
+<p>&hellip; how / when do we close the file &hellip; can we use defer as in go &hellip; defer being a injected block function. But we can&rsquo;t put .defer { .close } before
+fix-both &hellip; and we can&rsquo;t put it after. :P</p>
+
+<p>So one way now seems a try function.</p>
+
+<pre><code>{ Rye } open file://test1.txt :file |fix-both { join &quot;jo&quot; &quot;jo&quot; } { |read-all } |print try { close file } 
+profile data ...
+</code></pre>
+
+<p>If we wanted to do it all in stream we have one problem &hellip; unless we invent some &ldquo;faliure passing function&rdquo;, skip doesn&rsquo;t yet solve the failure, but it does
+pass it forward without triggering error &hellip; in a way it could work since skip evaluates a subblock and in subblock a first word does dissolve failure
+or we just add disarm for now. we could change fix to work on type of argument not on the flag</p>
+
+<pre><code>open file://test1.txt |disarm |skip { 
+  .fix-both { join &quot;jo&quot; &quot;jo&quot; } { .read-all } |print
+} |try-w/ { .close }
+</code></pre>
+
+<p>one way withouth this would be</p>
+
+<pre><code>open file://test1.txt |fix-both { join &quot;jo&quot; &quot;jo&quot; |print } { .read-all |print , .close }
+</code></pre>
+
+<p>since skip returns an error &hellip; we could use the fix-* also &hellip; this works now. We could add something like fix-else</p>
+
+<pre><code>{ Rye } open file://test3.txt |disarm |skip { |fix-both { join &quot;jo&quot; &quot;jo&quot; } { |read-all } |print } |fix-both { } { .close }
+jojo
+{ Rye } open file://test1.txt |disarm |skip { |fix-both { join &quot;jo&quot; &quot;jo&quot; } { |read-all } |print } |fix-both { } { .close }
+soso
+</code></pre>
+
+<p>We could do the same with commas, or with &hellip; depending on what we wanted returned</p>
+
+<pre><code>open file://test1.txt |disarm |with { 
+	.fix-both { join &quot;jo&quot; &quot;jo&quot; } { .read-all } |print, 
+	.fix-else { .close }
+}
+</code></pre>
+
+<p>Seems nicer &hellip; TODO -- add with native func. It&rsquo;s the same as skip, but it returns the result of last expr. not the first arg.</p>
+
+</body>
+</html>
