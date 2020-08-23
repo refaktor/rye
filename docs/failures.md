@@ -50,6 +50,19 @@ Value and IO exceptions start as __failures__. Failure to do the desired operati
   
 ## Some examples from python
 
+simple exception, recover and return a default value
+
+```python
+  try:
+    x = int(input("Please enter a number: "))
+    break
+  except ValueError:
+   print("Oops!  That was no valid number.  Try again...")
+```
+
+
+simple exception in a loop, from python docs
+
 ```python
 while True:
   try:
@@ -67,5 +80,21 @@ while True:
      |fix-either 
        { print "This was not a valid number. Try again" }
        { .print-val "You entered number {#}." false }
- ```
-  
+}
+```
+
+file io error 
+
+```python
+try:
+    f = open('myfile.txt')
+    s = f.readline()
+    i = int(s.strip())
+except OSError as err:
+    print("OS error: {0}".format(err))
+except ValueError:
+    print("Could not convert data to an integer.")
+except:
+    print("Unexpected error:", sys.exc_info()[0])
+    raise
+```
