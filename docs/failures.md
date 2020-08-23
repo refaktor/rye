@@ -1,5 +1,7 @@
 # Failures and Errors
 
+_work in progress_
+
 When I started writing Rye I had no specific ideas about Exception handling. But the classic _try catch_ model looked annoying to me.
 
 I had a problem with it visually, the code without exceptions flowed, but if you added all exception handling that needed to be there (sometimes) the 
@@ -31,6 +33,39 @@ Let's try to start from zero.
 
 ## What should happen
 
-  * When a bug happendsBugs should notify the user, store error to log file, and stop execution in all cases except maybe in server environments, where you
-  want continious 
+  * When a __bug happends__ the program should notify the user, log the error, and stop execution in all cases except maybe in server environments, where you
+  want continious running and only the process or procedure is stopped
+  * When runtime failure happens it shoul be handeled, if not it's a bug so first applies
+  
+## The sto stages of runtime exceptions in rye
+
+Value and IO exceptions start as __failures__. Failure to do the desired operation. If failure is not handeled or returned it becomes an program error and stops the execution.
+
+## In what ways do we handle failures
+
+  * we can return in to caller function
+  * we can wrap it into a higher level description of error and return it
+  * we can provide the alternative / default value instead of computed one
+  * we can do some action (like cleanup, get alternative value ...)
+  
+## Some examples from python
+
+```python
+while True:
+  try:
+    x = int(input("Please enter a number: "))
+    break
+  except ValueError:
+   print("Oops!  That was no valid number.  Try again...")
+```
+
+
+```rye
+ while {
+   input "Please enter a number:" 
+     |to-int
+     |fix-either 
+       { print "This was not a valid number. Try again" }
+       { .print-val "You entered number {#}." false }
+ ```
   
