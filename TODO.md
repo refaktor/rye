@@ -3,8 +3,16 @@
 - [x] start writing intro
 - [x] change loader for one character (operator) op-words as in notes (2020-08-08)
 - [ ] implement python like for-each without the injected value, because it would be to early in the intro to talk about that
-- [x] continue intro page 3	
-- [ ] add some basic file IO natives
+- [x] continue intro page 3
+- [x] implement fix-either, fix-else
+- [x] add some basic file IO natives
+- [x] add returns, collect, collect-keys
+- [x] in loader implement filepath type %file.txt that is the same as file://file.txt
+- [ ] implement multichar operators in loader like +\ , +_ , etc
+- [ ] add additional file IO operations like read write to file-schema
+- [ ] try implementing cases control structure
+- [x] implement keep combinator
+- [ ] implement divides? functions
 
 ## Code org
 

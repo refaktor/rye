@@ -1,11 +1,24 @@
 # rye 🌾
 
-An experimental programming language from [refaktor], looking into new (and borrowed) language 
+An experimental programming language, looking into some new and many borrowed language 
 ideas with interpreter in Go. ⚠
 
+```bash
+hello: fn { a } { "Hello" +_ a + "!" }
+print hello "world"
+// outputs: Hello world!
+
+data: { name "Jim" age 33 }
+code: { hello data/name }
+if true code
+// outputs: Hello Jim!
+```
+
 ## Progress
-You could peek at [NOTES.md](https://refaktor.github.io/rye/NOTES.html), where concepts and ideas are born and logged. 
-The language [introduction documents](https://refaktor.github.io/rye/INTRO_1.html) are coming.
+
+The language [introduction documents](https://refaktor.github.io/rye/INTRO_1.md) are work in progress.
+
+There is also a [simple website](https://refaktor.github.io/rye/) being made. Mostly so that notes and intros have correct syntax highlighted code examples.
 
 ## Development and experimentation
 
