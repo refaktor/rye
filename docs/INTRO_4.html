@@ -1,0 +1,140 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title></title>
+  <meta name="GENERATOR" content="github.com/gomarkdown/markdown markdown processor for Go" />
+  <meta charset="utf-8" />
+  <link rel="stylesheet" type="text/css" href="css/docs-all.css" />
+  <script type="text/javascript" src="js/docs-all.js"></script>
+</head>
+<body>
+
+<p><a href="./INTRO_3.html" class="prev">Previous page</a></p>
+
+<p><em>This page is still work in progress</em></p>
+
+<h2>Loop functions</h2>
+
+<p>Python has (with combination of iterators and range function) a powerfull and versatile <strong>for loop statement</strong>.
+It can iterate over a collection of items, loop over numbers, ranges, etc.</p>
+
+<pre class="prettyprint"><code class="language-python">for x in range(5):
+    print(x)
+
+primes = [2, 3, 5, 7]
+for prime in primes:
+    print(prime)
+</code></pre>
+
+<p>Rye takes a different approach here. Because loop constructs are <strong>again just functions</strong> in Rye, you can have many of them,
+you can make our own, they can be defined in libraries which you can load if you need them.</p>
+
+<p>Rye has less verbose equivavlents of the code above, which we will meet once we know <strong>op-words</strong>.</p>
+
+<pre class="prettyprint"><code class="language-factor">loop 5 { .print }
+
+primes: { 2 3 5 7 }
+for primes { .print }
+</code></pre>
+
+<p>But it also has more python / rebol like equivalents:</p>
+
+<pre class="prettyprint"><code class="language-factor">repeat 'i 5 { print i }
+
+primes: { 2 3 5 7 }
+for-each 'prime primes { print prime }
+</code></pre>
+
+<p>Again, <em>repeat</em> and <em>for-each</em> are functions, both take 3 arguments. A word to set in each iteration, a value to iterate over or to and a block of code.</p>
+
+<blockquote>
+<p>lit-word is another type of word. It means it doesn&rsquo;t evalueate to the value the word is linked to but to literal word itself.
+&lsquo;i and &lsquo;prime are lit-words above.</p>
+</blockquote>
+
+<h2>Map, Reduce, Filter</h2>
+
+<p>You probably heard of these three. They are 3 popular higher order functions in <em>funcional programming</em> languages. Semi functional languages have them also,
+like Javascript and Python. Python is not particularly strong on FP side, Javascript is a little better. Let&rsquo;s look at map &hellip;</p>
+
+<p>These are functions in javascript and python too. That&rsquo;s why they are a little more limited.</p>
+
+<p>Map <em>maps</em> a list of items to new list of items given some (usually anonymous) function.</p>
+
+<p>Map function is passed an anonymous function.</p>
+
+<pre class="prettyprint"><code class="language-javascript">const items = [ 1, 2, 3, 4, 5 ];
+const doubled = items.map(functionx(x) { return x * 2 });
+const lower = items.filter(functionx(x) { return x &lt; 4 });
+</code></pre>
+
+<p>Newer Javascript has a shorthand syntax for anonymous functions, so it can be written like this:</p>
+
+<pre class="prettyprint"><code class="language-javascript">const doubled = items.map(x =&gt; x * 2);
+const lower = items.filter(x =&gt; x &lt; 4);
+</code></pre>
+
+<p>Python also has map <strong>function</strong>, and a concept of lambda function, which is a small anonymous function that can only have one expression.</p>
+
+<pre class="prettyprint"><code class="language-python">items = [1, 2, 3, 4, 5]
+doubled = list(map(lambda x: x * 2, items))
+lower = list(filter(lambda x: x &lt; 4, items))
+</code></pre>
+
+<p>Rye standard library has map-each (and map) too</p>
+
+<pre class="prettyprint"><code class="language-factor">items: { 1 2 3 4 5 }
+doubled: map-each 'x items { x * 2 }  // this is normal block, not limited to 1 expression like in python
+lower: filter-each 'x items { x &gt; 2 }
+</code></pre>
+
+<p>Map each can take an anonymous function as third argument like the javascript or python above, but it can also take a block of code, which is
+less verbose and more lighterweight.</p>
+
+<p>When we get to <strong>op-words</strong> and &ldquo;injected blocks&rdquo;, we will also be able to use map function</p>
+
+<pre class="prettyprint"><code class="language-factor">items: { 1 2 3 4 5 }
+doubled: map items { * 2 }
+lower: filter items { * 2 }
+</code></pre>
+
+<h2>User functions</h2>
+
+<p>This is how you define your (user) functions in Python:</p>
+
+<pre class="prettyprint"><code class="language-python">def greet(name):
+    print(&quot;Hello, &quot; + name + &quot;!&quot;)
+
+# and call it
+greet(&quot;Jane&quot;)
+</code></pre>
+
+<p>And not so differently in Rye:</p>
+
+<pre class="prettyprint"><code class="language-factor">greet: fn { name } {
+    print &quot;Hello, &quot; + name + &quot;!&quot;
+}
+
+# and call it
+greet &quot;Jane&quot;
+</code></pre>
+
+<p>There are some differences behind the scenes though
+* as always, set-word sets word <em>greet</em> to the result of the expression on the right
+* <strong>fn</strong> is a function, that returns a <strong>user function value</strong>, it accepts 2 arguments, two blocks
+    * first block is a argument list (a spec, it can include more than just arguments)
+    * second block is code / function body</p>
+
+<p>And yet again. <strong>fn</strong> is just a function, we could and do have many of those. For example <em>fnc</em>
+that also accepts a context in which a function runs, a <em>closure</em>, and library specific ones.</p>
+
+<p><a href="./INTRO_3.html" class="prev">Previous page</a> -
+<a href="./INTRO_5.html" class="next">Next page</a></p>
+
+<blockquote>
+<p>In next page we leave the planet of Rebol like Rye, we turn code evaluation from left
+to right with the use of op and pipe-words</p>
+</blockquote>
+
+</body>
+</html>

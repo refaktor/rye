@@ -24,14 +24,37 @@
   <p>Rye is basically a data description language (think JSON) with over 30 data types and multiple dialects (interpreters) over that data (think executable JSON).</p>
 
   <pre class="prettyprint lang-rye"><code language="lang-rye">
-      person: { name "Jim" age 33 }
-      code: { hello person/name }
+      data: { name "Jim" age 33 }
+      code: { hello data/name }
       if true code
       // outputs: Hello Jim!
   </code></pre>
 
-  <p>It has no keywords, no special forms, every active word in it's main dialect (+, *, if, for-each, fn, class, return) is a
-    function and determined on a "library level" (you can load libraries with different ones or write your own). It has many types of words though.</p>
+  <p>It has no keywords, no special forms, every active word in it's main dialect (print, +, if, for-each, fn, class, return) is a
+    function and determined on a "library level" (you can load libraries with different ones or write your own).</p>
+
+  <pre class="prettyprint lang-rye"><code language="lang-rye">
+      for range 1 100 { :n
+        cases "" {
+          { n .divides 3 } { "Fizz" }
+          { n .divides 5 } { + "Buzz" }
+          none { n }
+        } |prn
+      }
+      // outputs: 1 2 Fizz 4 Buzz Fizz 7 8 Fizz Buzz 11 Fizz 13 14 FizzBuzz 16 ...
+  </code></pre>
+
+  <p>That's why Rye can have many more interesting language constructs (still just functions), not just typical half dozen hadrcoded into the language. And your code can use all the mechanism the language provides.</p>
+
+  <!--pre class="prettyprint lang-rye"><code language="lang-rye">
+      .range 1 21 |map-where {
+        { .all-with? { .divides? 3 , .divides 5 } } { FizzBuzz }
+        { .divides? 3 } { Fizz }
+        { .divides? 5 } { Buzz }
+      } |print
+  </code></pre>
+
+  <p>Another one is a map with condition <b>map-where</b>.</p-->
 
   <pre class="prettyprint lang-rye"><code language="lang-rye">
       _+\: fn { a b } { a + "\n" + b }
@@ -55,7 +78,7 @@
 
   <h3>Introductions</h3>
   
-  <p><a href="https://github.com/refaktor/rye/blob/kinds/docs/INTRO_1.md">Introducing Rye to Python programmers {WIP}</a>
+  <p><a href="./INTRO_1.html">Introducing Rye to Python programmers {WIP}</a>
 
   <h3>Specific themes</h3>
   
@@ -64,8 +87,8 @@
   <h3>Development notes and braindumps</h3>
 
   <p>Warning: (especially the first one) wasn't written for public consumption!</p> 
-  <p><a href="https://github.com/refaktor/rye/blob/kinds/docs/NOTES_2.md">Second notes</a>, 
-    <a href="https://github.com/refaktor/rye/blob/kinds/docs/NOTES.md">First notes</a>
+  <p><a href="./NOTES_2.html">Second notes</a>, 
+    <a href="./NOTES.html">First notes</a>
     
 
     <h3>Links</h3>

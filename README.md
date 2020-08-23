@@ -4,8 +4,8 @@ An experimental programming language from [refaktor], looking into new (and borr
 ideas with interpreter in Go. ⚠
 
 ## Progress
-You could peek at [NOTES.md](./docs/NOTES.md), where concepts and ideas are born and logged. 
-The language [introduction documents](./docs/INTRO_1.md) are coming.
+You could peek at [NOTES.md](https://refaktor.github.io/rye/NOTES.html), where concepts and ideas are born and logged. 
+The language [introduction documents](https://refaktor.github.io/rye/INTRO_1.html) are coming.
 
 ## Development and experimentation
 

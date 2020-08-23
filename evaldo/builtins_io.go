@@ -126,6 +126,25 @@ func __write(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.
 	return *env.NewError("Failed")
 }
 
+func __fs_read(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+	switch f := arg0.(type) {
+	case env.Uri:
+
+		data, err := ioutil.ReadFile(f.GetPath())
+		if err != nil {
+			env1.FailureFlag = true
+			return *env.NewError(err.Error())
+		}
+
+		// log.Printf("Data read: %s\n", data)
+		return env.String{string(data)}
+	}
+	env1.FailureFlag = true
+	return *env.NewError("Failed")
+
+	// Read file to byte slice
+}
+
 var Builtins_io = map[string]*env.Builtin{
 
 	"input": {
@@ -174,6 +193,13 @@ var Builtins_io = map[string]*env.Builtin{
 		Argsn: 1,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __close(env1, arg0, arg1, arg2, arg3, arg4)
+		},
+	},
+
+	"file-schema//read": {
+		Argsn: 1,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __fs_read(env1, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 }

@@ -96,7 +96,14 @@ func parseString(v *Values, d Any) (Any, error) {
 }
 
 func parseUri(v *Values, d Any) (Any, error) {
+	fmt.Println(v.Vs[0])
 	return *env.NewUri(&wordIndex, v.Vs[0].(env.Word), v.Token()), nil // ){v.Vs[0].(env.Word), v.Token()}, nil // TODO let the second part be it's own object that parser returns like path
+}
+
+func parseFpath(v *Values, d Any) (Any, error) {
+	idx := wordIndex.IndexWord("file")
+	fmt.Println(idx)
+	return *env.NewUri(&wordIndex, env.Word{idx}, "file://"+v.Token()[1:]), nil // ){v.Vs[0].(env.Word), v.Token()}, nil // TODO let the second part be it's own object that parser returns like path
 }
 
 func parseCPath(v *Values, d Any) (Any, error) {
@@ -203,7 +210,7 @@ func newParser() *Parser {
 	BLOCK       	<-  "{" SPACES SERIES* "}"
 	BBLOCK       	<-  "[" SPACES SERIES* "]"
     GROUP       	<-  "(" SPACES SERIES* ")"
-    SERIES     		<-  (URI / STRING / NUMBER / COMMA / SETWORD / LSETWORD / OPWORD / PIPEWORD / TAGWORD / EXWORD / CPATH / XWORD / GENWORD / GETWORD / VOID / WORD / BLOCK / GROUP / BBLOCK / ARGBLOCK ) SPACES
+    SERIES     		<-  (URI / STRING / NUMBER / COMMA / SETWORD / LSETWORD / OPWORD / PIPEWORD / TAGWORD / EXWORD / CPATH / FPATH / XWORD / GENWORD / GETWORD / VOID / WORD / BLOCK / GROUP / BBLOCK / ARGBLOCK ) SPACES
     ARGBLOCK       	<-  "{" WORD ":" WORD "}"
     WORD           	<-  LETTER LETTERORNUM*
 	GENWORD 		<-  UCLETTER LCLETTERORNUM* 
@@ -218,8 +225,9 @@ func newParser() *Parser {
 	STRING			<-  '"' STRINGCHAR* '"'
 	SPACES			<-  SPACE+
 	URI    			<-  WORD "://" URIPATH*
+	FPATH 	   		<-  "%" URIPATH*
 	CPATH    		<-  WORD ( "/" WORD )+
-	ONECHARWORDS	<-  < [<>*+] >
+	ONECHARWORDS	<-  < [<>*+-=/] >
 	LETTER  		<-  < [a-zA-Z?=^_] >
 	LETTERORNUM		<-  < [a-zA-Z0-9-?=.\\!_>] >
 	URIPATH			<-  < [a-zA-Z0-9-?=.:@/\\!_>] >
@@ -257,6 +265,7 @@ func newParser() *Parser {
 	g["NUMBER"].Action = parseNumber
 	g["STRING"].Action = parseString
 	g["URI"].Action = parseUri
+	g["FPATH"].Action = parseFpath
 	g["CPATH"].Action = parseCPath
 	/* g["SERIES"].Action = func(v *Values, d Any) (Any, error) {
 		return v, nil

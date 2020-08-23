@@ -1,4 +1,4 @@
-[&lt; Previous page](./INTRO_2.md)
+<a href="./INTRO_2.html" class="prev">Previous page</a>
 
 _This page is work in progress_
 
@@ -118,7 +118,8 @@ Rye tries to keep and sometimes increase the flexibility of Rebol, while also im
 addition in that direction.
 
 
-[&lt; Previous page](./INTRO_2.md) - [Next page &gt;](./INTRO_4.md)
+<a href="./INTRO_2.html" class="prev">Previous page</a> -
+<a href="./INTRO_4.html" class="next">Next page</a>
 
 
 > On next page we look at loops, map, filter and user functions ...

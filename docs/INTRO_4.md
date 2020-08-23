@@ -1,4 +1,4 @@
-[&lt; Previous page](./INTRO_3.md)
+<a href="./INTRO_3.html" class="prev">Previous page</a>
 
 _This page is still work in progress_
 
@@ -122,8 +122,8 @@ There are some differences behind the scenes though
 And yet again. __fn__ is just a function, we could and do have many of those. For example _fnc_
 that also accepts a context in which a function runs, a _closure_, and library specific ones.
 
-[&lt; Previous page](./INTRO_3.md) - [Next page &gt;](./INTRO_5.md)
-
+<a href="./INTRO_3.html" class="prev">Previous page</a> -
+<a href="./INTRO_5.html" class="next">Next page</a>
 
 > In next page we leave the planet of Rebol like Rye, we turn code evaluation from left
 > to right with the use of op and pipe-words

@@ -4,13 +4,14 @@
   <title>Introducing Rye to Python programmers</title>
   <meta name="GENERATOR" content="github.com/gomarkdown/markdown markdown processor for Go" />
   <meta charset="utf-8" />
-  <link rel="stylesheet" type="text/css" href="notes.css" />
+  <link rel="stylesheet" type="text/css" href="css/docs-all.css" />
+  <script type="text/javascript" src="js/docs-all.js"></script>
 </head>
 <body>
 
 <h1>Introducing Rye to Python programmers</h1>
 
-<p>Python is a clear, understood language that many people know. So I will try using Python examples to introduce you to the Rye language.</p>
+<p>Python is a clear, understood language that many people know. So I will use Python examples to introduce you to the Rye language.</p>
 
 <p>But Python and Rye are quite different. All Rye&rsquo;s core ideas are taken from <strong>Rebol</strong>. Words, blocks, code is data, etc..
 It also takes some aspirations from <strong>Factor</strong> (a stack based language) and some from your ordinary <strong>linux shell</strong> (pipes).</p>
@@ -25,43 +26,43 @@ It also takes some aspirations from <strong>Factor</strong> (a stack based langu
 
 <p>It&rsquo;s quite simple, there are no keywords, statements or special forms.</p>
 
-<h3>Nothin&rsquo; but values</h3>
+<h2>Nothin&rsquo; but values</h2>
 
 <p>Rye language is currently composed of 29 different types of <strong>values</strong>. Values can be literal values (numbers, strings, dates), words, blocks, etc.</p>
 
 <p>You could say that Rye code is nothing but values and it would be true.</p>
 
-<pre><code class="language-factor">1
+<pre class="prettyprint"><code class="language-rye">1
 2
 &quot;Jim&quot;
 </code></pre>
 
 <p>Python has 13 data types <a href="https://www.w3schools.com/python/python_datatypes.asp">[py1]</a>, but it has a lot of other &ldquo;things&rdquo;.</p>
 
-<h3>Block of Values</h3>
+<h2>Block of Values</h2>
 
 <p>A more interesting type of value is a <strong>block</strong>. Because block holds other values inside. Value of values :)</p>
 
-<pre><code class="language-factor">{ 1 2 &quot;Jim&quot; }
+<pre class="prettyprint"><code>{ 1 2 &quot;Jim&quot; }
 { { &quot;Jim&quot; 33 } { &quot;Jane&quot; 35 } }
 </code></pre>
 
 <p>Block is like a list in Python.</p>
 
-<h3>Words</h3>
+<h2>Words</h2>
 
 <p>Probably the most interesting type of value is a <strong>word</strong>. Words can be linked to any other value. Like we saw above,
 to numbers, strings, blocks, other words, etc. There are multiple types of words, actually. First two we will meet
 are <strong>set-words</strong> and just ordinary <strong>words</strong>.</p>
 
-<pre><code class="language-factor">age: 101
+<pre class="prettyprint"><code>age: 101
 description: &quot;wise&quot;
 </code></pre>
 
 <p>The colon on the right identifies a <strong>set-word</strong>. A set word in Rye evaluates expression on the right and
 sets the value of it to that word.</p>
 
-<pre><code class="language-factor">print age
+<pre class="prettyprint"><code>print age
 101
 print description
 wise
@@ -71,7 +72,7 @@ wise
 
 <p>So, words are similar to variables in Python. And what is <strong>print</strong> then?</p>
 
-<h3>Native functions</h3>
+<h2>Native functions</h2>
 
 <p><strong>print</strong> above looks a lot like the words (<em>age</em> and <em>description</em>) and it is a word. But this word is
 linked to another type of value, a <strong>native function</strong>.</p>
@@ -81,13 +82,13 @@ Then the native prints it.</p>
 
 <p>Better late than never, now would be a good time to do:</p>
 
-<pre><code class="language-factor">print &quot;Hello world!&quot;
+<pre class="prettyprint"><code>print &quot;Hello world!&quot;
 Hello world
 </code></pre>
 
 <p>Ok. Enough theory for now. Let&rsquo;s compare some python and rye code next.</p>
 
-<p><a href="./INTRO_2.md">Second page &amp;gt;</a></p>
+<p><a href="./INTRO_2.html" class="next">Second page</a></p>
 
 </body>
 </html>

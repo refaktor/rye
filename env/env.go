@@ -102,17 +102,18 @@ func (e *RyeCtx) Set(word int, val Object) Object {
 }
 
 type ProgramState struct {
-	Ser         TSeries // current block of code
-	Res         Object  // result of expression
-	Ctx         *RyeCtx // Env object ()
-	Idx         *Idxs   // Idx object (index of words)
-	Args        []int   // names of current arguments (indexes of names)
-	Gen         *Gen    // map[int]map[int]Object  // list of Generic kinds / code
-	Inj         Object  // Injected first value in a block evaluation
-	Injnow      bool
-	ReturnFlag  bool
-	ErrorFlag   bool
-	FailureFlag bool
+	Ser          TSeries // current block of code
+	Res          Object  // result of expression
+	Ctx          *RyeCtx // Env object ()
+	Idx          *Idxs   // Idx object (index of words)
+	Args         []int   // names of current arguments (indexes of names)
+	Gen          *Gen    // map[int]map[int]Object  // list of Generic kinds / code
+	Inj          Object  // Injected first value in a block evaluation
+	Injnow       bool
+	ReturnFlag   bool
+	ErrorFlag    bool
+	FailureFlag  bool
+	ForcedResult Object
 }
 
 func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
@@ -128,6 +129,7 @@ func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
 		false,
 		false,
 		false,
+		nil,
 	}
 	return &ps
 }

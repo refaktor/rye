@@ -35,7 +35,11 @@ func (ser *TSeries) Next() {
 
 func (ser *TSeries) Pop() Object {
 	ser.pos++
-	return ser.s[ser.pos-1]
+	if len(ser.s) >= ser.pos {
+		return ser.s[ser.pos-1]
+	} else {
+		return nil
+	}
 }
 
 func (ser *TSeries) Put(obj Object) {

@@ -1,4 +1,4 @@
-[&lt; Previous page](./INTRO_4.md)
+<a href="./INTRO_3.html" class="prev">Previous page</a>
 
 ## Rye and Rebol
 
@@ -81,7 +81,8 @@ It executes a block of code and it returns the first argument.
  * |print prints it
 
 
-[&lt; Previous page](./INTRO_4.md) - [Next page &gt;](./INTRO_6.md)
+<a href="./INTRO_4.html" class="prev">Previous page</a> -
+<a href="./INTRO_6.html" class="next">Next page</a>
 
 > Next we will look at more language utilities, to support this left-to-right style
 > The lset-words and a concepts so far called injected blocks

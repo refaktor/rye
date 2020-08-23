@@ -233,40 +233,46 @@ func EvalExpression_(es *env.ProgramState) *env.ProgramState {
 	object := es.Ser.Pop()
 	//es.Idx.Probe()
 	trace2("Before entering expression")
-	switch object.Type() {
-	case env.IntegerType:
-		es.Res = object
-	case env.StringType:
-		es.Res = object
-	case env.BlockType:
-		es.Res = object
-	case env.VoidType:
-		es.Res = object
-	case env.TagwordType:
-		es.Res = object
-	case env.UriType:
-		es.Res = object
-	case env.WordType:
-		rr := EvalWord(es, object.(env.Word), nil, false)
-		return rr
-	case env.CPathType:
-		rr := EvalWord(es, object, nil, false)
-		return rr
-	case env.BuiltinType:
-		return CallBuiltin(object.(env.Builtin), es, nil, false)
-	case env.GenwordType:
-		return EvalGenword(es, object.(env.Genword), nil, false)
-	case env.SetwordType:
-		return EvalSetword(es, object.(env.Setword))
-	case env.GetwordType:
-		return EvalGetword(es, object.(env.Getword), nil, false)
-	case env.CommaType:
-		es.ErrorFlag = true
-		es.Res = env.NewError("ERROR: expression guard inside expression!")
-	default:
+	if object != nil {
+		switch object.Type() {
+		case env.IntegerType:
+			es.Res = object
+		case env.StringType:
+			es.Res = object
+		case env.BlockType:
+			es.Res = object
+		case env.VoidType:
+			es.Res = object
+		case env.TagwordType:
+			es.Res = object
+		case env.UriType:
+			es.Res = object
+		case env.WordType:
+			rr := EvalWord(es, object.(env.Word), nil, false)
+			return rr
+		case env.CPathType:
+			rr := EvalWord(es, object, nil, false)
+			return rr
+		case env.BuiltinType:
+			return CallBuiltin(object.(env.Builtin), es, nil, false)
+		case env.GenwordType:
+			return EvalGenword(es, object.(env.Genword), nil, false)
+		case env.SetwordType:
+			return EvalSetword(es, object.(env.Setword))
+		case env.GetwordType:
+			return EvalGetword(es, object.(env.Getword), nil, false)
+		case env.CommaType:
+			es.ErrorFlag = true
+			es.Res = env.NewError("ERROR: expression guard inside expression!")
+		default:
+			es.ErrorFlag = true
+			es.Res = env.NewError("Not known type")
+		}
+	} else {
 		es.ErrorFlag = true
 		es.Res = env.NewError("Not known type")
 	}
+
 	return es
 }
 
@@ -536,7 +542,12 @@ func CallFunction(fn env.Function, es *env.ProgramState, arg0 env.Object, toLeft
 	//	} else {
 	result = EvalBlock(es)
 	//	}
-	es.Res = result.Res
+	if result.ForcedResult != nil {
+		es.Res = result.ForcedResult
+		result.ForcedResult = nil
+	} else {
+		es.Res = result.Res
+	}
 	es.Ctx = env0
 	es.Ser = ser0
 	es.ReturnFlag = false

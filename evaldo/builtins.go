@@ -32,6 +32,20 @@ var builtins = map[string]*env.Builtin{
 
 	// BASIC FUNCTIONS WITH NUMBERS
 
+	"true": {
+		Argsn: 0,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return env.Integer{1}
+		},
+	},
+
+	"false": {
+		Argsn: 0,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return env.Integer{0}
+		},
+	},
+
 	"not": {
 		Argsn: 1,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -43,18 +57,51 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"add": {
+	"divides": {
 		Argsn: 2,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Integer:
-				return env.Integer{arg.Value + arg1.(env.Integer).Value}
+				if arg.Value%arg1.(env.Integer).Value == 0 {
+					return env.Integer{1}
+				} else {
+					return env.Integer{0}
+				}
 			default:
 				return env.NewError("argument to `len` not supported, got %s")
 			}
 		},
 	},
-	"subtract": {
+
+	"_+": {
+		Argsn: 2,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Integer:
+				return env.Integer{s1.Value + arg1.(env.Integer).Value}
+			case env.String:
+				switch s2 := arg1.(type) {
+				case env.String:
+					return env.String{s1.Value + s2.Value}
+				case env.Integer:
+					return env.String{s1.Value + strconv.Itoa(int(s2.Value))}
+				}
+			case env.Block:
+				switch b2 := arg1.(type) {
+				case env.Block:
+					s := &s1.Series
+					s1.Series = *s.AppendMul(b2.Series.GetAll())
+					return s1
+				}
+			default:
+				env1.FailureFlag = true
+				return env.NewError("Wrong arguments for + function")
+			}
+			env1.FailureFlag = true
+			return env.NewError("Wrong arguments for + function")
+		},
+	},
+	"_-": {
 		Argsn: 2,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
@@ -65,7 +112,7 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-	"multiply": {
+	"_*": {
 		Argsn: 2,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
@@ -76,7 +123,7 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-	"equals": {
+	"_=": {
 		Argsn: 2,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var res int64
@@ -88,7 +135,7 @@ var builtins = map[string]*env.Builtin{
 			return env.Integer{res}
 		},
 	},
-	"not_equals": {
+	"_!": {
 		Argsn: 2,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var res int64
@@ -100,7 +147,7 @@ var builtins = map[string]*env.Builtin{
 			return env.Integer{res}
 		},
 	},
-	"greater": {
+	"_>": {
 		Argsn: 2,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
@@ -117,7 +164,7 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-	"lesser": {
+	"_<": {
 		Argsn: 2,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
@@ -284,6 +331,75 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"cases": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			// function accepts 2 args. arg0 is a "boolean" value, arg1 is a block of code
+			// we set bloc to block of code
+			// (we don't have boolean type yet, because it's not cruicial to important part of design, neither is truthiness ... this will be decided later
+			// on more operational level
+
+			// we switch on the type of second argument, so far it should be block (later we could accept native and function)
+			switch bloc := arg1.(type) {
+			case env.Block:
+				// TODO --- istruthy must return error if it's not possible to
+				// calculate truthiness and we must here raise failure
+				// we switch on type of arg0
+				// if it's integer, all except 0 is true
+				// if it's string, all except empty string is true
+				// we don't care for other types at this stage
+				ser := ps.Ser
+
+				cumul := arg0
+
+				foundany := false
+				for {
+
+					doblk := false
+					cond_ := bloc.Series.Pop()
+					blk := bloc.Series.Pop().(env.Block)
+
+					switch cond := cond_.(type) {
+					case env.Block:
+						ps.Ser = cond.Series
+						// we eval the block (current context / scope stays the same as it was in parent block)
+						// Inj means we inject the condition value into the block, because it costs us very little. we could do "if name { .print }"
+						EvalBlock(ps)
+						// we set temporary series back to current program state
+						if util.IsTruthy(ps.Res) {
+							doblk = true
+							foundany = true
+						}
+					case env.Void:
+						if foundany == false {
+							doblk = true
+						}
+					}
+					// we set ProgramStates series to series ob the block
+					if doblk {
+						ps.Ser = blk.Series
+						// we eval the block (current context / scope stays the same as it was in parent block)
+						// Inj means we inject the condition value into the block, because it costs us very little. we could do "if name { .print }"
+						EvalBlockInj(ps, cumul, true)
+						cumul = ps.Res
+					}
+					if bloc.Series.AtLast() {
+						break
+					}
+				}
+				ps.Ser = ser
+				// we return the last return value (the return value of executing the block) "a: if 1 { 100 }" a becomes 100,
+				// in future we will also handle the "else" case, but we have to decide
+				return cumul
+			default:
+				// if it's not a block we return error for now
+				ps.FailureFlag = true
+				return env.NewError("Error if")
+			}
+			return nil
+		},
+	},
+
 	"do": {
 		Argsn: 1,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -338,7 +454,74 @@ var builtins = map[string]*env.Builtin{
 
 		},
 	},
+
+	"range": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch i1 := arg0.(type) {
+			case env.Integer:
+				switch i2 := arg1.(type) {
+				case env.Integer:
+					objs := make([]env.Object, i2.Value-i1.Value+1)
+					idx := 0
+					for i := i1.Value; i <= i2.Value; i++ {
+						objs[idx] = env.Integer{i}
+						idx += 1
+					}
+					return *env.NewBlock(*env.NewTSeries(objs))
+				}
+
+			}
+			ps.ErrorFlag = true
+			return env.NewError("First arg should be context")
+		},
+	},
+
+	// SPECIAL FUNCTION FUNCTIONS
+
 	// CONTEXT FUNCTIONS
+
+	"returns": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			ps.ForcedResult = arg0
+			return arg0
+		},
+	},
+
+	"collect": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			if ps.ForcedResult == nil || ps.ForcedResult.Type() != env.BlockType {
+				ps.ForcedResult = *env.NewBlock(*env.NewTSeries(make([]env.Object, 0)))
+			}
+			block := ps.ForcedResult.(env.Block)
+			block.Series.Append(arg0)
+			ps.ForcedResult = block
+			return arg0
+		},
+	},
+
+	"collect-key": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			if ps.ForcedResult == nil || ps.ForcedResult.Type() != env.BlockType {
+				ps.ForcedResult = *env.NewBlock(*env.NewTSeries(make([]env.Object, 0)))
+			}
+			block := ps.ForcedResult.(env.Block)
+			block.Series.Append(arg1)
+			block.Series.Append(arg0)
+			ps.ForcedResult = block
+			return arg0
+		},
+	},
+
+	"collected": {
+		Argsn: 0,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return ps.ForcedResult
+		},
+	},
 
 	"current-context": {
 		Argsn: 0,
@@ -467,7 +650,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"skip": {
+	// COMBINATORS
+
+	"pass": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg1.(type) {
@@ -478,6 +663,27 @@ var builtins = map[string]*env.Builtin{
 				EvalBlockInj(ps, arg0, true)
 				ps.Ser = ser
 				return res
+			}
+			return nil
+		},
+	},
+
+	"keep": {
+		Argsn: 3,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch b1 := arg1.(type) {
+			case env.Block:
+				switch b2 := arg2.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = b1.Series
+					EvalBlockInj(ps, arg0, true)
+					res := ps.Res
+					ps.Ser = b2.Series
+					EvalBlockInj(ps, arg0, true)
+					ps.Ser = ser
+					return res
+				}
 			}
 			return nil
 		},
@@ -501,7 +707,7 @@ var builtins = map[string]*env.Builtin{
 
 	//
 
-	"dotime": {
+	"do-time": {
 		Argsn: 1,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
@@ -745,6 +951,19 @@ var builtins = map[string]*env.Builtin{
 				} else {
 					return ps.Res
 				}
+			}
+			return nil
+		},
+	},
+
+	"does": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch body := arg0.(type) {
+			case env.Block:
+				//spec := []env.Object{env.Word{aaaidx}}
+				//body := []env.Object{env.Word{printidx}, env.Word{aaaidx}, env.Word{recuridx}, env.Word{greateridx}, env.Integer{99}, env.Word{aaaidx}, env.Word{incidx}, env.Word{aaaidx}}
+				return *env.NewFunction(*env.NewBlock(*env.NewTSeries(make([]env.Object, 0))), body)
 			}
 			return nil
 		},
@@ -1189,7 +1408,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"fix-both": {
+	"fix-either": {
 		AcceptFailure: true,
 		Argsn:         3,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

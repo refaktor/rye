@@ -1,0 +1,134 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title></title>
+  <meta name="GENERATOR" content="github.com/gomarkdown/markdown markdown processor for Go" />
+  <meta charset="utf-8" />
+  <link rel="stylesheet" type="text/css" href="css/docs-all.css" />
+  <script type="text/javascript" src="js/docs-all.js"></script>
+</head>
+<body>
+
+<p><a href="./INTRO_2.html" class="prev">Previous page</a></p>
+
+<p><em>This page is work in progress</em></p>
+
+<h2>Express yourself</h2>
+
+<p>So we tried calling few functions so far, but we forgot about all the other basic stuff, like the <strong>if</strong> statement, the <strong>loops</strong>.</p>
+
+<p>First of all, rye doesn&rsquo;t have any statements, everything is an expression, <strong>everything returns something</strong>.</p>
+
+<p>It also doesn&rsquo;t need explicit <strong>return</strong> statements, the result of last expression in the block is returned. A little weird piece
+of code:</p>
+
+<pre class="prettyprint"><code class="language-factor">print 100 + do { print 1 print 11 }
+1
+11
+111
+</code></pre>
+
+<p>The last expression in a block is <code>print 11</code>, print returns the value it prints, so the do returns 11. You can figure out the rest.</p>
+
+<h2>The If function</h2>
+
+<p>In most languages <strong>if</strong> is a statement, or a <strong>special form</strong>, feature of the language. Even in Lisps, if is a macro.</p>
+
+<pre class="prettyprint"><code class="language-python">if 10 &lt; 100:
+   print(&quot;10 is less than 100&quot;)
+</code></pre>
+
+<p>Rye doesn&rsquo;t evaluate blocks by default, so they can be ordinary arguments. <em>Do</em> you remember the <strong>do</strong> function? I accepts the
+block of code as a first argument.</p>
+
+<pre class="prettyprint"><code class="language-factor">do {
+   print &quot;10 is less than 100&quot;
+}
+</code></pre>
+
+<p>Could there be a similar function, but it would <em>do</em> the code (now second argument) only if the first argument
+would be true? Of course &hellip;</p>
+
+<pre class="prettyprint"><code class="language-factor">if 10 &lt; 100 {
+   print &quot;10 is less than 100&quot;
+}
+</code></pre>
+
+<p>If <strong>if</strong> is just a function, it means you can make your own if-like functions inside rye.</p>
+
+<h2>Either do or don&rsquo;t</h2>
+
+<p>The downside of this is that in Rye we can&rsquo;t have special forms like <strong>if &hellip; else &hellip;.</strong>, because <em>we don&rsquo;t
+have special forms at all</em>.</p>
+
+<pre class="prettyprint"><code class="language-python">if name == &quot;Jim&quot;:
+   print(&quot;Hi Jim&quot;)
+else:
+   print(&quot;Door is locked&quot;)
+</code></pre>
+
+<p>So we have a function called <strong>either</strong>, that takes additional block as argument.</p>
+
+<pre class="prettyprint"><code class="language-factor">either name = &quot;Jim&quot; {
+   print &quot;hi Jim&quot;
+} {
+   print &quot;Door is locked&quot;
+}
+</code></pre>
+
+<p>See, it&rsquo;s not so bad. But because everything is a function call it makes a language much more uniform,
+simpler and malleable.</p>
+
+<p>And I said, everything in Rye retuns something, so the example above would be better written as:</p>
+
+<pre class="prettyprint"><code class="language-factor">print either name = &quot;Jim&quot; { &quot;hi Jim&quot; } { &quot;Door is locked&quot; }
+</code></pre>
+
+<h2>All-isms so far</h2>
+
+<ul>
+<li>All rye code and data is composed of (nested) rye values</li>
+<li>All evaluation elements return something, are expressions</li>
+<li>All active words in Rye are functions</li>
+</ul>
+
+<h2>Spaces, separators and newlines</h2>
+
+<p>There is another stark difference between Rye (and Rebol) and most other programming languages. Rye code
+doesn&rsquo;t need separators (between elements or end of line), parenthesis and is absolutely space and newline unsensitive.
+You could write entire Rye program in one line (without any separators) or type in each Rye code element it it&rsquo;s own
+line for example.</p>
+
+<pre class="prettyprint"><code class="language-factor">print &quot;jim&quot; print add 1 inc 2 // is the same as 
+
+print
+&quot;jim&quot; print
+add 1
+inc
+2
+// both will print:
+// jim
+// 4
+</code></pre>
+
+<p>This can be seen as a blessing or a curse, I am just saying how it is. Rye (not Rebol)
+has aditional concept of expression guards, so you can (for your certanty) in some cases where it&rsquo;s usefull, use commas between
+top level expressions if you want to make certain they are separated.</p>
+
+<p>Here you could use them like this:</p>
+
+<pre class="prettyprint"><code class="language-factor">print &quot;jim&quot; , print add 1 inc 2  
+</code></pre>
+
+<p>Rye tries to keep and sometimes increase the flexibility of Rebol, while also improve <strong>certainty</strong>. Expression guards are a small
+addition in that direction.</p>
+
+<p><a href="./INTRO_2.html" class="prev">Previous page</a> -
+<a href="./INTRO_4.html" class="next">Next page</a></p>
+
+<blockquote>
+<p>On next page we look at loops, map, filter and user functions &hellip;</p>
+</blockquote>
+
+</body>
+</html>
