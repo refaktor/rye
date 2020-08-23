@@ -1,4 +1,4 @@
-#Failures and Errors
+# Failures and Errors
 
 When I started writing Rye I had no specific ideas about Exception handling. But the classic _try catch_ model looked annoying to me.
 
