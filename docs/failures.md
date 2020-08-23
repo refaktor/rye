@@ -11,7 +11,7 @@ see if it really works any better than the classic approach.
 
 Everything below this point is just a current hypothesis, it may be wrong in parts or alltogether, but let's play with it and see.
 
-## A fresh look
+## Types of exceptions
 
 Let's try to start from zero. 
 
@@ -22,3 +22,15 @@ Let's try to start from zero.
       * naming errors - words that aren't defined or are misnamed
       * structure errors - the code isn't structured as used words would need it to be: "loop 2 3" ... 3 should be a block of code
     * runtime bugs
+      * __unhandeled__ value errors - the value or type of value is such that evaluation can't proceed: division w/ zero, wrong type
+      * __unhandeled__ io errors
+  * Runtime exceptions, that you predicted can happen, and you check for them or handle them after they happen, sometimes they can be used
+    to controll logic (example 1.)
+      * value failures (wrong type, division by zero, conversion failures, parsing failures, ...)
+      * io failures (filesystem related like: disk out of space, insufficient priviliges, nonexistent path ; network errors ; ssl errors ...
+
+## What should happen
+
+  * When a bug happendsBugs should notify the user, store error to log file, and stop execution in all cases except maybe in server environments, where you
+  want continious 
+  
