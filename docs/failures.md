@@ -2,23 +2,57 @@
 
 _work in progress_
 
+_This document is a thought experiment in progress. I am trying to test the current idea I had about exceptions. I am fully aware, that it might 
+be insufficient, not solution at all or worse than status quo that I am criticising (to see what really is the problem, or I think it is). I am testing it out by writing this doc_
+
+## Exceptions are where beautifull code goes to die
+
 When I started writing Rye I had no specific ideas about Exception handling. But the classic _try catch_ model looked annoying to me.
 
-I had a problem with it visually, the code without exceptions flowed, but if you added all exception handling that needed to be there (sometimes) the 
-code became a mess. Try catch added code structure, where there logic wise wasn't one. And many times (or in many languages) exception handling looks to me
-like a goto statement.
+I had a problem with it visually, the code without exceptions flowed, but if you added all exception handling that _needed to be there_ (many times) the 
+code became a mess. Try catch added code structure, where there logic wise wasn't one. And it's sort of GOTO-ish structure at that.
 
-I wanted to make something that is visually and structurally not so obtrusive. I wanted something in-flow. I composed something based on that, we have yet to
-see if it really works any better than the classic approach.
+Try catch statements are often times not specific enough, and at the same time much too verbose. 
 
-Everything below this point is just a current hypothesis, it may be wrong in parts or alltogether, but let's play with it and see.
+This is an example from python docs:
+
+```python
+try:
+    f = open('myfile.txt')
+    s = f.readline()
+    i = int(s.strip())
+except OSError as err:
+    print("OS error: {0}".format(err))
+except ValueError:
+    print("Could not convert data to an integer.")
+except:
+    print("Unexpected error:", sys.exc_info()[0])
+    raise
+```
+
+The problems I have with this:
+
+  * visual: quite sequetial logic is now split in 3 code blocks with unclear flow
+  * unprecise: try block holds 4 expressions. It's not clearly from code alone (we just infer from our (miss)understanding of context) where the exceptions we are trying to catch (should) happen at all
+  * unprecise #2: the try block in catching the expected exceptions and also our coding bugs. There is no distinction, but it should be, coding bugs should be solved not handeled at runtime
+  * no intent: intent is not clear from code, it has to be infered by the viewer (similar to #2)
+  * the last except has no point in being there: What did we gain if we write code to "Expect and Unexpected error". This basicall mean we expect the block of 
+  code can have bugs and we catch them print the error and raise error again? Wouldn't the interpreter print the error anyway and in consistent way? If this is 
+  valid, then we should surround every few lines of our code with "try: except:"
+  
+## One can wish
+
+I wished to make something that is visually and structurally not so obtrusive, it shouldn't require / create it's own code structure. I wished for something in-flow.
+
+To have these two, the "try" shouldn't accept block of code (structure). To be in flow, an exception should a value like others, that we can handle ...
+
+Everything below this point is just a current hypothesis, it may be wrong in parts or all-together, but let's play with it and see.
 
 ## Types of exceptions
 
-Let's try to start from zero. 
+Let's try to start from scratch ...
 
-  * Some exceptions are a result of __programming bug__. It means the program should stop (as we don't know what will happen next and what should). Exception should
-  becommunicated to the user and logged for programmer, to fix the bug. We don't catch and handle these exceptions, we fix them if we know for them.
+  * Some exceptions are a result of __programming bug__. It means the program should stop (as we don't know what will happen next and what should). Exception should be communicated to the user and logged for programmer, to fix the bug. We don't catch and handle these exceptions, we fix them if we know for them.
     * static bugs
       * syntax errors  - the code is not loadable rye, example: "err: {123 asda }"
       * naming errors - words that aren't defined or are misnamed
@@ -37,9 +71,9 @@ Let's try to start from zero.
   want continious running and only the process or procedure is stopped
   * When runtime failure happens it shoul be handeled, if not it's a bug so first applies
   
-## The sto stages of runtime exceptions in rye
+## The two stages of runtime exceptions in rye
 
-Value and IO exceptions start as __failures__. Failure to do the desired operation. If failure is not handeled or returned it becomes an program error and stops the execution.
+Value and IO exceptions start as __failures__. Failure to do the desired operation. If failure is not handeled or returned it becomes an program error and stops the execution. So failures can happen and we can handle them, unhandled failure is an error, a programming bug.
 
 ## In what ways do we handle failures
 
@@ -48,20 +82,34 @@ Value and IO exceptions start as __failures__. Failure to do the desired operati
   * we can provide the alternative / default value instead of computed one
   * we can do some action (like cleanup, get alternative value ...)
   
-## Some examples from python
+## Handling exceptions is a translation from computer to user / domain language
 
-simple exception, recover and return a default value
+All programming is or should be is a translation from computer to user / domain language, from machine code to UI basically, programming is somewhere in between.
+
+Handling exceptions is the same. A machine failure happens and we translate it to user / domain and then display it to user. Example:
+  
+## Let's look at few examples from python
+
+very simple exception, we just print to user directly:
 
 ```python
-  try:
-    x = int(input("Please enter a number: "))
-    break
-  except ValueError:
-   print("Oops!  That was no valid number.  Try again...")
+try:
+    x = int(raw_input("Please enter a number: "))
+except ValueError:
+   print("You didn't enter a number")
+else:
+   print("I raise by 100 to %d" % (x + 100) )
 ```
 
+```rye
+   input "Please enter a number:" |to-int
+     |fix-either 
+       { "You didn't enter a number" }
+       { + 100 |str-val "I raise by 100 to {#}." }
+     |print
+```
 
-simple exception in a loop, from python docs
+simple exception in a loop, from python docs (https://docs.python.org/3/tutorial/errors.html)
 
 ```python
 while True:
@@ -75,15 +123,17 @@ while True:
 
 ```rye
  while {
-   input "Please enter a number:" 
-     |to-int
+   input "Please enter a number:" |to-int
      |fix-either 
        { print "This was not a valid number. Try again" }
        { .print-val "You entered number {#}." false }
 }
 ```
 
-file io error 
+While in rye repeats until while return of a block is truthy.
+
+
+File IO and conversion to Int ...
 
 ```python
 try:
@@ -98,3 +148,62 @@ except:
     print("Unexpected error:", sys.exc_info()[0])
     raise
 ```
+
+^check is a "returning function" that can also return to caller. It works like this. It accepts 2 arguments, if first is a failure
+it wraps it into an error created from second argument and returns to caller (exits current evaluation unit). If first argument is not
+failure it returns it. 
+
+```rye
+open %myfile.txt
+  |^check "Failed to open profile file"
+  |readline
+  |^check "Failed to read profile file"
+  |strip
+  |to-int
+  |^check "Failed to convert age to integer"
+```
+
+Why I feel rye version is better:
+
+  * the flow of code strictly follows the logic and error handling flow
+  * the handling of errors is locationally precise and explicit
+  * check is a returning function. if it accepts the error it wraps it into a higher level error and returns that thus 
+    we are translating from machine to user errors in the process, and there is no loss of information, you get the whole tree.
+  * printing error seems almost always stupid. If you move this code to a function and you call the function, what does it help
+    you if the function you called printed something, you mush get a return information, so you can handle it on your level (even closer to user).
+    And environment determines how it will message the error to user, let's say it's a server, a phone app. In first case it would log it, in second
+    it will use UI dialog for example.
+
+## Failures across function calls 
+
+If we put our code in function the benefit becomes evan more visible:
+
+```rye
+get-age: does {
+  open %myfile.txt
+    |^check "Failed to open profile file"
+    |readline
+    |^check "Failed to read profile file"
+    |strip
+    |to-int
+    |^check "Failed to convert age to integer"
+}
+```
+
+There are multiple scenarios you would want to do if you counln't do age. If you want to provide an alternative / default value:
+
+```rye
+get-age |fix 0 :age
+
+get-age |fix { ask-for-age } :age
+```
+
+If you can't provide alternative, you usually want to reraise still
+```rye
+get-age |^check "Problem getting user's age"
+```
+
+You can then handle this up-further (closer to user), or the system displays it to the user, with nice nested info:
+
+( Problem getting user's age ( Failed to open profile file ( myfile.txt doesn't exist ) ) ) 
+
