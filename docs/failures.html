@@ -1,0 +1,324 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Failures and Errors</title>
+  <meta name="GENERATOR" content="github.com/gomarkdown/markdown markdown processor for Go" />
+  <meta charset="utf-8" />
+  <link rel="stylesheet" type="text/css" href="css/docs-all.css" />
+  <script type="text/javascript" src="js/docs-all.js"></script>
+</head>
+<body>
+
+<h1>Failures and Errors</h1>
+
+<p><em>work in progress</em></p>
+
+<p><em>This document is a thought experiment in progress. I am trying to test the current idea I had about exceptions. I am fully aware, that it might
+be insufficient, not solution at all or worse than status quo that I am criticising (to see what really is the problem, or I think it is). I am testing it out by writing this doc</em></p>
+
+<h2>Exceptions are where beautifull code goes to die</h2>
+
+<p>When I started writing Rye I had no specific ideas about Exception handling. But the classic <em>try catch</em> model looked annoying to me.</p>
+
+<p>I had a problem with it visually, the code without exceptions flowed, but if you added all exception handling that <em>needed to be there</em> (many times) the
+code became a mess. Try catch added code structure, where there logic wise wasn&rsquo;t one. And it&rsquo;s sort of GOTO-ish structure at that.</p>
+
+<p>Try catch statements are often times not specific enough, and at the same time much too verbose.</p>
+
+<p>This is an example from python docs:</p>
+
+<pre class="prettyprint"><code class="language-python">try:
+    f = open('myfile.txt')
+    s = f.readline()
+    i = int(s.strip())
+except OSError as err:
+    print(&quot;OS error: {0}&quot;.format(err))
+except ValueError:
+    print(&quot;Could not convert data to an integer.&quot;)
+except:
+    print(&quot;Unexpected error:&quot;, sys.exc_info()[0])
+    raise
+</code></pre>
+
+<p>The problems I have with this:</p>
+
+<ul>
+<li>visual: quite sequetial logic is now split in 3 code blocks with unclear flow</li>
+<li>unprecise: try block holds 4 expressions. It&rsquo;s not clearly from code alone (we just infer from our (miss)understanding of context) where the exceptions we are trying to catch (should) happen at all</li>
+<li>unprecise #2: the try block in catching the expected exceptions and also our coding bugs. There is no distinction, but it should be, coding bugs should be solved not handeled at runtime</li>
+<li>no intent: intent is not clear from code, it has to be infered by the viewer (similar to #2)</li>
+<li>the last except has no point in being there: What did we gain if we write code to &ldquo;Expect and Unexpected error&rdquo;. This basicall mean we expect the block of
+code can have bugs and we catch them print the error and raise error again? Wouldn&rsquo;t the interpreter print the error anyway and in consistent way? If this is
+valid, then we should surround every few lines of our code with &ldquo;try: except:&rdquo;</li>
+</ul>
+
+<h2>One can wish</h2>
+
+<p>I wished to make something that is visually and structurally not so obtrusive, it shouldn&rsquo;t require / create it&rsquo;s own code structure. I wished for something in-flow.</p>
+
+<p>To have these two, the &ldquo;try&rdquo; shouldn&rsquo;t accept block of code (structure). To be in flow, an exception should a value like others, that we can handle &hellip;</p>
+
+<p>Everything below this point is just a current hypothesis, it may be wrong in parts or all-together, but let&rsquo;s play with it and see.</p>
+
+<h2>Types of exceptions</h2>
+
+<p>Let&rsquo;s try to start from scratch &hellip;</p>
+
+<ul>
+<li>Some exceptions are a result of <strong>programming bug</strong>. It means the program should stop (as we don&rsquo;t know what will happen next and what should). Exception should be communicated to the user and logged for programmer, to fix the bug. We don&rsquo;t catch and handle these exceptions, we fix them if we know for them.
+
+<ul>
+<li>static bugs
+
+<ul>
+<li>syntax errors  - the code is not loadable rye, example: &ldquo;err: {123 asda }&rdquo;</li>
+<li>naming errors - words that aren&rsquo;t defined or are misnamed</li>
+<li>structure errors - the code isn&rsquo;t structured as used words would need it to be: &ldquo;loop 2 3&rdquo; &hellip; 3 should be a block of code</li>
+</ul></li>
+<li>runtime bugs
+
+<ul>
+<li><strong>unhandeled</strong> value errors - the value or type of value is such that evaluation can&rsquo;t proceed: division w/ zero, wrong type</li>
+<li><strong>unhandeled</strong> io errors</li>
+</ul></li>
+</ul></li>
+<li>Runtime exceptions, that you predicted can happen, and you check for them or handle them after they happen, sometimes they can be used
+to controll logic (example 1.)
+
+<ul>
+<li>value failures (wrong type, division by zero, conversion failures, parsing failures, &hellip;)</li>
+<li>io failures (filesystem related like: disk out of space, insufficient priviliges, nonexistent path ; network errors ; ssl errors &hellip;</li>
+</ul></li>
+</ul>
+
+<h2>What should happen</h2>
+
+<ul>
+<li>When a <strong>bug happends</strong> the program should notify the user, log the error, and stop execution in all cases except maybe in server environments, where you
+want continious running and only the process or procedure is stopped</li>
+<li>When runtime failure happens it shoul be handeled, if not it&rsquo;s a bug so first applies</li>
+</ul>
+
+<h2>The two stages of runtime exceptions in rye</h2>
+
+<p>Value and IO exceptions start as <strong>failures</strong>. Failure to do the desired operation. If failure is not handeled or returned it becomes an program error and stops the execution. So failures can happen and we can handle them, unhandled failure is an error, a programming bug.</p>
+
+<h2>In what ways do we handle failures</h2>
+
+<ul>
+<li>we can return in to caller function</li>
+<li>we can wrap it into a higher level description of error and return it</li>
+<li>we can provide the alternative / default value instead of computed one</li>
+<li>we can do some action (like cleanup, get alternative value &hellip;)</li>
+</ul>
+
+<h2>Handling exceptions is a translation from computer to user / domain language</h2>
+
+<p>All programming is or should be is a translation from computer to user / domain language, from machine code to UI basically, programming is somewhere in between.</p>
+
+<p>Handling exceptions is the same. A machine failure happens and we translate it to user / domain and then display it to user. Example:</p>
+
+<h2>Let&rsquo;s look at few examples from python</h2>
+
+<p>very simple exception, we just print to user directly:</p>
+
+<pre class="prettyprint"><code class="language-python">try:
+    x = int(raw_input(&quot;Please enter a number: &quot;))
+except ValueError:
+   print(&quot;You didn't enter a number&quot;)
+else:
+   print(&quot;I raise by 100 to %d&quot; % (x + 100) )
+</code></pre>
+
+<pre class="prettyprint"><code class="language-rye">   input &quot;Please enter a number:&quot; |to-int
+     |fix-either 
+       { &quot;You didn't enter a number&quot; }
+       { + 100 |str-val &quot;I raise by 100 to {#}.&quot; }
+     |print
+</code></pre>
+
+<p>simple exception in a loop, from python docs (<a href="https://docs.python.org/3/tutorial/errors.html">https://docs.python.org/3/tutorial/errors.html</a>)</p>
+
+<pre class="prettyprint"><code class="language-python">while True:
+  try:
+    x = int(input(&quot;Please enter a number: &quot;))
+    break
+  except ValueError:
+   print(&quot;Oops!  That was no valid number.  Try again...&quot;)
+</code></pre>
+
+<pre class="prettyprint"><code class="language-rye"> while {
+   input &quot;Please enter a number:&quot; |to-int
+     |fix-either 
+       { print &quot;This was not a valid number. Try again&quot; }
+       { .print-val &quot;You entered number {#}.&quot; false }
+}
+</code></pre>
+
+<p>While in rye repeats until while return of a block is truthy.</p>
+
+<p>File IO and conversion to Int &hellip;</p>
+
+<pre class="prettyprint"><code class="language-python">try:
+    f = open('myfile.txt')
+    s = f.readline()
+    i = int(s.strip())
+except OSError as err:
+    print(&quot;OS error: {0}&quot;.format(err))
+except ValueError:
+    print(&quot;Could not convert data to an integer.&quot;)
+except:
+    print(&quot;Unexpected error:&quot;, sys.exc_info()[0])
+    raise
+</code></pre>
+
+<p>^check is a &ldquo;returning function&rdquo; that can also return to caller. It works like this. It accepts 2 arguments, if first is a failure
+it wraps it into an error created from second argument and returns to caller (exits current evaluation unit). If first argument is not
+failure it returns it.</p>
+
+<pre class="prettyprint"><code class="language-rye">open %myfile.txt
+  |^check &quot;Failed to open profile file&quot;
+  |readline
+  |^check &quot;Failed to read profile file&quot;
+  |strip
+  |to-int
+  |^check &quot;Failed to convert age to integer&quot;
+</code></pre>
+
+<p>Why I feel rye version is better:</p>
+
+<ul>
+<li>the flow of code strictly follows the logic and error handling flow</li>
+<li>the handling of errors is locationally precise and explicit</li>
+<li>check is a returning function. if it accepts the error it wraps it into a higher level error and returns that thus
+we are translating from machine to user errors in the process, and there is no loss of information, you get the whole tree.</li>
+<li>printing error seems almost always stupid. If you move this code to a function and you call the function, what does it help
+you if the function you called printed something, you mush get a return information, so you can handle it on your level (even closer to user).
+And environment determines how it will message the error to user, let&rsquo;s say it&rsquo;s a server, a phone app. In first case it would log it, in second
+it will use UI dialog for example.</li>
+</ul>
+
+<h2>Failures across function calls</h2>
+
+<p>If we put our code in function the benefit becomes evan more visible:</p>
+
+<pre class="prettyprint"><code class="language-rye">get-age: does {
+  open %myfile.txt
+    |^check &quot;Failed to open profile file&quot;
+    |readline
+    |^check &quot;Failed to read profile file&quot;
+    |strip
+    |to-int
+    |^check &quot;Failed to convert age to integer&quot;
+}
+</code></pre>
+
+<p>There are multiple scenarios you would want to do if you counln&rsquo;t do age. If you want to provide an alternative / default value:</p>
+
+<pre class="prettyprint"><code class="language-rye">get-age |fix 0 :age
+
+get-age |fix { ask-for-age } :age
+</code></pre>
+
+<p>If you can&rsquo;t provide alternative, you usually want to reraise still</p>
+
+<pre class="prettyprint"><code class="language-rye">get-age |^check &quot;Problem getting user's age&quot;
+</code></pre>
+
+<p>You can then handle this up-further (closer to user), or the system displays it to the user, with nice nested info:</p>
+
+<p>( Problem getting user&rsquo;s age ( Failed to open profile file ( myfile.txt doesn&rsquo;t exist ) ) )</p>
+
+<h2>Failures aren&rsquo;t just strings</h2>
+
+<p>In the examples above I used strings to quickly create failures. But this isn&rsquo;t ideal, for example what if you want to use code in
+an application in another language. There are standard &ldquo;error codes&rdquo;, I are still determining which standard to use, and there is a short-name
+option that makes them translatable then.</p>
+
+<h2>The pointlessness of catch and print</h2>
+
+<p>As I look at the examples for exceptions in languages most of them catch and print the error. These are just examples, but I am not sure if such behaviour doesn&rsquo;t
+then extend into real code. All in all I think it&rsquo;s cumbersome model. If you don&rsquo;t handle (provide alternative or translate the exception) - what are you then even doing writing code?</p>
+
+<p>It uses a lot of code to create user level inconsistent presenting errors. Each &ldquo;app&rdquo; should have one way of presenting errors determined on app level and if
+you just catch / print and fail there is no point in catching except signaling to your future self that you are aware failure can happen somewhere (you don&rsquo;t handle it, but you still want to distinguish it from failure you didn&rsquo;t expect at all (which means you must look at and figure out what to do)).</p>
+
+<h2>A little bigger scenario</h2>
+
+<p><strong>Scenario: load multiple files, in their own function, translate error messages</strong></p>
+
+<p>scenario goes like this (I have written scenario before I started writting any code to solve it)</p>
+
+<ul>
+<li>load-user-name: load and read file, if error returns &ldquo;anonymous&rdquo;</li>
+<li>load-user-stream: load concat two files return, returns string or error wrapped into &ldquo;error loading user stream&rdquo;</li>
+<li>load-all-user-data: combine those two strings to json , if error happens at any of them return the error as json</li>
+<li>result, if all works is JSON <code>{ &quot;username&quot;: &quot;Jim&quot;, &quot;stream&quot;: [ &quot;update1&quot;, &quot;update2&quot; ] }</code></li>
+</ul>
+
+<p>TODO -- add does function</p>
+
+<pre class="prettyprint"><code class="language-rye">load-user-name: does { read %user-name |fix &quot;Anonymous&quot; }
+
+load-user-stream: does { 
+  read %user-stream-new
+    |^check &quot;Error reading new stream&quot; 
+    |collect      	  
+  read %user-stream-old 
+    |^check &quot;Error reading old stream&quot;
+    |collect
+}
+
+load-add-user-data: does {
+  load-user-name |collect-key 'username
+  load-user-stream |fix-either 
+    { .re-fail &quot;Error reading user data&quot; } 
+    { .collect-key 'stream , collected }
+  |to-json
+}
+</code></pre>
+
+<p>The aproximate python-like code.</p>
+
+<pre class="prettyprint"><code class="language-python">def load_user_name ():
+  try:
+    return Path(&quot;user-name&quot;).read_text()
+  except:
+    return &quot;Anonymous&quot;
+
+def load_user_stream ():
+  stream = []
+  try:
+    stream.append(Path(&quot;user-stream-new&quot;).read_text()) 
+  except:
+    raise &quot;Error reading new stream&quot; 
+  try:
+    stream.append(Path(&quot;user-stream-old&quot;).read_text()) 
+  catch fileError:
+    raise &quot;Error reading old stream&quot;
+	
+def load_add_user_data ():
+  data = {}
+  data[&quot;username&quot;] = load_user_name()
+  try:
+    data[stream] = load_user_stream() 
+  except:
+    return json.dumps({ &quot;Error&quot;: &quot;Error loading stream&quot; }) # can we get nested error info or just latest?  
+  return json.dumps(data)
+</code></pre>
+
+<p>What I like about rye-version of code above</p>
+
+<ul>
+<li>code flow: rye&rsquo;s error handling is in flow and I think doesn&rsquo;t disturb (visually or structurally) it more than it needs to. Try/catch is more like
+goto statements and labels</li>
+<li><strong>intent</strong>: rye&rsquo;s error handling expresses intent much better than general try/catch, fix/check/disarm/fix-else/fix-either like map/filter/reduce
+expresses intent where for-each loop to acomplish the same doesn&rsquo;t.</li>
+<li>functions like ^check automatically nest the errors, while I think python&rsquo;s usual error handling overwrites previous ones (you loose information
+you already had). Exception handling to me (and to go-s view) is like programming about translating from computer specific to app / user specific</li>
+<li>rye-s code is more symetrical, without temperary value sprinkeled all over and shorter</li>
+<li>In rye all these error handling functions are library level functions, meaning you can make your own or additional for your cases</li>
+</ul>
+
+</body>
+</html>

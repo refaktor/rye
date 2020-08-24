@@ -174,5 +174,5 @@
              // Punctuation (from lisp)
              [PR['PR_PUNCTUATION'], /^[^\w\t\n\r \xA0()\"\\\';]+/]
             ]),
-        ['rebol', 'red']);
+        ['rye']);
 })();

@@ -6,3 +6,5 @@ mdtohtml -page -css "css/docs-all.css" -js "js/docs-all.js" INTRO_5.md > INTRO_5
 
 mdtohtml -page -css "css/docs-all.css" -js "js/docs-all.js" NOTES.md > NOTES.html
 mdtohtml -page -css "css/docs-all.css" -js "js/docs-all.js" NOTES_2.md > NOTES_2.html
+
+mdtohtml -page -css "css/docs-all.css" -js "js/docs-all.js" failures.md > failures.html

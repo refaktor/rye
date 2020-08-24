@@ -238,5 +238,5 @@ l:l,a:null,i:null,c:null,g:null})}}}t<r.length?Q.setTimeout(f,250):"function"===
              // Punctuation (from lisp)
              [PR['PR_PUNCTUATION'], /^[^\w\t\n\r \xA0()\"\\\';]+/]
             ]),
-        ['rebol', 'red']);
+        ['rye']);
 })();
