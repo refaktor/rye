@@ -230,6 +230,7 @@ scenario goes like this (I have written scenario before I started writting any c
   * load-user-name: load and read file, if error returns "anonymous"
   * load-user-stream: load concat two files return, returns string or error wrapped into "error loading user stream"
   * load-all-user-data: combine those two strings to json , if error happens at any of them return the error as json
+  * result, if all works is JSON ```{ "username": "Jim", "stream": [ "update1", "update2" ] }```
 
 TODO -- add does function
 
@@ -237,7 +238,7 @@ TODO -- add does function
 load-user-name: does { read %user-name |fix "Anonymous" }
 
 load-user-stream: does { 
-  read %user-stream-new 
+  read %user-stream-new
     |^check "Error reading new stream" 
     |collect      	  
   read %user-stream-old 
@@ -254,39 +255,35 @@ load-add-user-data: does {
 }
 ```
 
-TODO IMPLEMENT -- add read, collect, collected and collect-key
-
-I would try to rewrite this in python like language, but franky it seems it would be quite complex code
+The aproximate python-like code. 
 
 ```python
 def load_user_name ():
   try:
-    return read("user-name")
-  catch:
+    return Path("user-name").read_text()
+  except:
     return "Anonymous"
 
 def load_user_stream ():
   stream = []
-  try:h
-    append(stream, read("user-stream-new")) 
-  catch fileError:
+  try:
+    stream.append(Path("user-stream-new").read_text()) 
+  except:
     raise "Error reading new stream" 
   try:
-    append(stream, read("user-stream-old")) 
+    stream.append(Path("user-stream-old").read_text()) 
   catch fileError:
-    raise "Error reading old stream" 
+    raise "Error reading old stream"
 	
 def load_add_user_data ():
-	data = {}
-	data["username"] = load_user_name()
-	try:
-	  data[stream] = load_user_stream() 
-	catch:
-	  return to_json({ "Error": "Error loading stream" }) # can we get nested error info?  
-	return to_json(data)
+  data = {}
+  data["username"] = load_user_name()
+  try:
+    data[stream] = load_user_stream() 
+  except:
+    return json.dumps({ "Error": "Error loading stream" }) # can we get nested error info or just latest?  
+  return json.dumps(data)
 ```
-
-### TODO -- improve this code, make it realistic also with concrete modules / functions
 
 What I like about rye-version of code above
 
