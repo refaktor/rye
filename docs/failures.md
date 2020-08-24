@@ -207,3 +207,95 @@ You can then handle this up-further (closer to user), or the system displays it 
 
 ( Problem getting user's age ( Failed to open profile file ( myfile.txt doesn't exist ) ) ) 
 
+## Failures aren't just strings
+
+In the examples above I used strings to quickly create failures. But this isn't ideal, for example what if you want to use code in 
+an application in another language. There are standard "error codes", I are still determining which standard to use, and there is a short-name
+option that makes them translatable then.
+
+## The pointlessness of catch and print 
+
+As I look at the examples for exceptions in languages most of them catch and print the error. These are just examples, but I am not sure if such behaviour doesn't 
+then extend into real code. All in all I think it's cumbersome model. If you don't handle (provide alternative or translate the exception) - what are you then even doing writing code?
+
+It uses a lot of code to create user level inconsistent presenting errors. Each "app" should have one way of presenting errors determined on app level and if 
+you just catch / print and fail there is no point in catching except signaling to your future self that you are aware failure can happen somewhere (you don't handle it, but you still want to distinguish it from failure you didn't expect at all (which means you must look at and figure out what to do)).
+
+## A little bigger scenario
+
+__Scenario: load multiple files, in their own function, translate error messages__
+
+scenario goes like this (I have written scenario before I started writting any code to solve it)
+
+  * load-user-name: load and read file, if error returns "anonymous"
+  * load-user-stream: load concat two files return, returns string or error wrapped into "error loading user stream"
+  * load-all-user-data: combine those two strings to json , if error happens at any of them return the error as json
+
+TODO -- add does function
+
+```ocaml
+load-user-name: does { read %user-name |fix "Anonymous" }
+
+load-user-stream: does { 
+  read %user-stream-new 
+    |^check "Error reading new stream" 
+    |collect      	  
+  read %user-stream-old 
+    |^check "Error reading old stream"
+    |collect
+}
+
+load-add-user-data: does {
+  load-user-name |collect-key 'username
+  load-user-stream |fix-either 
+    { .^check "Error reading user data" } 
+    { .collect-key 'stream }
+  collected |to-json
+}
+```
+
+TODO IMPLEMENT -- add read, collect, collected and collect-key
+
+I would try to rewrite this in python like language, but franky it seems it would be quite complex code
+
+```python
+def load_user_name ():
+  try:
+    return read("user-name")
+  catch:
+    return "Anonymous"
+
+def load_user_stream ():
+  stream = []
+  try:h
+    append(stream, read("user-stream-new")) 
+  catch fileError:
+    raise "Error reading new stream" 
+  try:
+    append(stream, read("user-stream-old")) 
+  catch fileError:
+    raise "Error reading old stream" 
+	
+def load_add_user_data ():
+	data = {}
+	data["username"] = load_user_name()
+	try:
+	  data[stream] = load_user_stream() 
+	catch:
+	  return to_json({ "Error": "Error loading stream" }) # can we get nested error info?  
+	return to_json(data)
+```
+
+### TODO -- improve this code, make it realistic also with concrete modules / functions
+
+What I like about rye-version of code above
+
+  * code flow: rye's error handling is in flow and I think doesn't disturb (visually or structurally) it more than it needs to. Try/catch is more like
+    goto statements and labels
+  * __intent__: rye's error handling expresses intent much better than general try/catch, fix/check/disarm/fix-else/fix-either like map/filter/reduce 
+    expresses intent where for-each loop to acomplish the same doesn't.
+  * functions like ^check automatically nest the errors, while I think python's usual error handling overwrites previous ones (you loose information 
+    you already had). Exception handling to me (and to go-s view) is like programming about translating from computer specific to app / user specific
+  * rye-s code is more symetrical, without temperary value sprinkeled all over and shorter
+  * In rye all these error handling functions are library level functions, meaning you can make your own or additional for your cases
+  
