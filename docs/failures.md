@@ -249,9 +249,9 @@ load-user-stream: does {
 load-add-user-data: does {
   load-user-name |collect-key 'username
   load-user-stream |fix-either 
-    { .re-fail "Error reading user data" |collect } 
-    { .collect-key 'stream }
-  collected |to-json
+    { .re-fail "Error reading user data" } 
+    { .collect-key 'stream , collected }
+  |to-json
 }
 ```
 
