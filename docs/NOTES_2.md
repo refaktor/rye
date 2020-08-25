@@ -563,10 +563,10 @@ load a page and print it's content or print the custom error description
 
 ```rye
 get https://www.google.com 
-	|fix-switch {
-		404 { "stran ne obstaja" }
-		403 { "nimaš dostopa do strani" }
-	} |print
+  |fix-switch {
+    404 { "stran ne obstaja" }
+    403 { "nimaš dostopa do strani" }
+  } |print
 ```
 
 ok, now we want to do something with the OK result, and still print the error messages
@@ -577,30 +577,29 @@ let's say we want to print the length
 ```rye
 get https://www.google.com 
   |fix-either { 
-		  .fix-switch {
-			  404 { "stran ne obstaja" }
-			  403 { "nimaš dostopa do strani" }
-	    }
-	  } { 
-			.length? 
-		}
-	|print 
+    .fix-switch {
+      404 { "stran ne obstaja" }
+      403 { "nimaš dostopa do strani" }
+    }
+  } { 
+  .length? 
+  } |print 
 ```
 we want to get the length and check if it's above 1000 and return bool, in case of error we still want to print the custom message and return the error
 
 ```rye
 get https://www.google.com 
   |fix-either {
-			.pass {
-				.fix-switch {
-					404 { "stran ne obstaja" }
-					403 { "nimaš dostopa do strani" }
-			  } |print 
-			}
-	  } {
-			.length? > 1000
-		}
-	}
+    .pass {
+      .fix-switch {
+        404 { "stran ne obstaja" }
+        403 { "nimaš dostopa do strani" }
+      } |print 
+      }
+    } {
+    .length? > 1000
+    }
+  }
 ```
 
 ok that printing makes no sense ... let's return 200 if all is ok and the status code if it's not
@@ -608,11 +607,10 @@ ok that printing makes no sense ... let's return 200 if all is ok and the status
 ```rye
 get https://www.google.com 
   |fix-either {
-			>>code
-	  } {
-			200
-		}
-	}
+    >>code
+  } {
+    200
+  }
 ```
 
 // note: >>accessors are not yet made
@@ -624,21 +622,22 @@ notify: jim@example.com
 
 get https://www.example.com 
   |fix-either { 
-		  .fix-switch {
-			  404 { .re-fail "Can't access webpage" }
-			  402 { .to-text >> 'body <Email> { to: notify subject: "Pay for page please" } |send }
-			  403 { .to-text >> 'body <Email> { to: notify subject: "Access was forbidden" } |send }
-	    }
-	  } { 
-			.write %the_page.html
-		}
-	}
+    .fix-switch {
+      404 { .re-fail "Can't access webpage" }
+      402 { .to-text >> 'body <Email> { to: notify subject: "Pay for page please" } |send }
+      403 { .to-text >> 'body <Email> { to: notify subject: "Access was forbidden" } |send }
+      }
+     } { 
+      .write %the_page.html
+    }
+  }
 ```
 
-// TODO to make these examples work we need a
+// TODO to make these examples work we need a, but accessors and constructors are in plans after we finalize kinds ... I will see
+// Maybe I will try to make something before.
 
-* get generic function that works on http-schema
-* fix-switch that can switch on status codes (later words too)
-* tuples , constructor and set operator >> 
-* write function for files
-* send function that sends email based on <Email> tuple
+  * get generic function that works on http-schema
+  * fix-switch that can switch on status codes (later words too)
+  * tuples , constructor and set operator >> 
+  * write function for files
+  * send function that sends email based on <Email> tuple
