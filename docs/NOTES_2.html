@@ -583,8 +583,98 @@ print something to the user, not just silently crash. But it needs to be determi
 
 <p>Solution to both these is that you can on app level determine a global handler.</p>
 
-<pre class="prettyprint"><code class="language-rebol">	set-app 'on-error { e } { probe &quot;Unexpected e&quot; + e } // log e , dialog.alert(&quot;Error happened:&quot; +\ e) ....
+<pre class="prettyprint"><code class="language-rye">	set-app 'on-error { e } { probe &quot;Unexpected e&quot; + e } // log e , dialog.alert(&quot;Error happened:&quot; +\ e) ....
 </code></pre>
+
+<h1>25.08.2020</h1>
+
+<p>I posted the scenario 2 from last notes on fb and we @sbelak was interested to see how we dispatch on types of errors if we can. I see it as a good next scenario
+to think about.</p>
+
+<h2>Exceptions (evolving) scenario 3</h2>
+
+<p>Let&rsquo;s try few scenarios, from simpler and complicating / more or less randomly changing them and see if they are solvable in a nice way. The focus is still
+on flow of code using the current idea about failure management. The exact strucutre of error object is not an issue yet.</p>
+
+<p>load a page and print it&rsquo;s content or print the custom error description</p>
+
+<pre class="prettyprint"><code class="language-rye">get https://www.google.com 
+  |fix-switch {
+    404 { &quot;stran ne obstaja&quot; }
+    403 { &quot;nimaš dostopa do strani&quot; }
+  } |print
+</code></pre>
+
+<p>ok, now we want to do something with the OK result, and still print the error messages</p>
+
+<p>let&rsquo;s say we want to print the length</p>
+
+<pre class="prettyprint"><code class="language-rye">get https://www.google.com 
+  |fix-either { 
+    .fix-switch {
+      404 { &quot;stran ne obstaja&quot; }
+      403 { &quot;nimaš dostopa do strani&quot; }
+    }
+  } { 
+  .length? 
+  } |print 
+</code></pre>
+
+<p>we want to get the length and check if it&rsquo;s above 1000 and return bool, in case of error we still want to print the custom message and return the error</p>
+
+<pre class="prettyprint"><code class="language-rye">get https://www.google.com 
+  |fix-either {
+    .pass {
+      .fix-switch {
+        404 { &quot;stran ne obstaja&quot; }
+        403 { &quot;nimaš dostopa do strani&quot; }
+      } |print 
+      }
+    } {
+    .length? &gt; 1000
+    }
+  }
+</code></pre>
+
+<p>ok that printing makes no sense &hellip; let&rsquo;s return 200 if all is ok and the status code if it&rsquo;s not</p>
+
+<pre class="prettyprint"><code class="language-rye">get https://www.google.com 
+  |fix-either {
+    &gt;&gt;code
+  } {
+    200
+  }
+</code></pre>
+
+<p>// note: &gt;&gt;accessors are not yet made</p>
+
+<p>ok &hellip; let&rsquo;s try to do some actions based on error types and if all ok save page to local file</p>
+
+<pre class="prettyprint"><code class="language-rye">notify: jim@example.com
+
+get https://www.example.com 
+  |fix-either { 
+    .fix-switch {
+      404 { .re-fail &quot;Can't access webpage&quot; }
+      402 { .to-text &gt;&gt; 'body &lt;Email&gt; { to: notify subject: &quot;Pay for page please&quot; } |send }
+      403 { .to-text &gt;&gt; 'body &lt;Email&gt; { to: notify subject: &quot;Access was forbidden&quot; } |send }
+      }
+     } { 
+      .write %the_page.html
+    }
+  }
+</code></pre>
+
+<p>// TODO to make these examples work we need a, but accessors and constructors are in plans after we finalize kinds &hellip; I will see
+// Maybe I will try to make something before.</p>
+
+<ul>
+<li>get generic function that works on http-schema</li>
+<li>fix-switch that can switch on status codes (later words too)</li>
+<li>tuples , constructor and set operator &gt;&gt;</li>
+<li>write function for files</li>
+<li>send function that sends email based on <Email> tuple</li>
+</ul>
 
 </body>
 </html>
