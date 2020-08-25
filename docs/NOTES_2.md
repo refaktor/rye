@@ -542,9 +542,103 @@ print something to the user, not just silently crash. But it needs to be determi
 Solution to both these is that you can on app level determine a global handler.
 
 	
-```rebol
+```rye
 	set-app 'on-error { e } { probe "Unexpected e" + e } // log e , dialog.alert("Error happened:" +\ e) ....
 ```
 
+# 25.08.2020
+
+I posted the scenario 2 from last notes on fb and we @sbelak was interested to see how we dispatch on types of errors if we can. I see it as a good next scenario
+to think about.
+
+## Exceptions (evolving) scenario 3
+
+Let's try few scenarios, from simpler and complicating / more or less randomly changing them and see if they are solvable in a nice way. The focus is still
+on flow of code using the current idea about failure management. The exact strucutre of error object is not an issue yet.
 
 
+
+load a page and print it's content or print the custom error description
+
+
+```rye
+get https://www.google.com 
+	|fix-switch {
+		404 { "stran ne obstaja" }
+		403 { "nimaš dostopa do strani" }
+	} |print
+```
+
+ok, now we want to do something with the OK result, and still print the error messages
+
+
+let's say we want to print the length
+
+```rye
+get https://www.google.com 
+  |fix-either { 
+		  .fix-switch {
+			  404 { "stran ne obstaja" }
+			  403 { "nimaš dostopa do strani" }
+	    }
+	  } { 
+			.length? 
+		}
+	|print 
+```
+we want to get the length and check if it's above 1000 and return bool, in case of error we still want to print the custom message and return the error
+
+```rye
+get https://www.google.com 
+  |fix-either {
+			.pass {
+				.fix-switch {
+					404 { "stran ne obstaja" }
+					403 { "nimaš dostopa do strani" }
+			  } |print 
+			}
+	  } {
+			.length? > 1000
+		}
+	}
+```
+
+ok that printing makes no sense ... let's return 200 if all is ok and the status code if it's not
+
+```rye
+get https://www.google.com 
+  |fix-either {
+			>>code
+	  } {
+			200
+		}
+	}
+```
+
+// note: >>accessors are not yet made
+
+ok ... let's try to do some actions based on error types and if all ok save page to local file
+
+```rye
+notify: jim@example.com
+
+get https://www.example.com 
+  |fix-either { 
+		  .fix-switch {
+			  404 { .re-fail "Can't access webpage" }
+			  402 { .to-text >> 'body <Email> { to: notify subject: "Pay for page please" } |send }
+			  403 { .to-text >> 'body <Email> { to: notify subject: "Access was forbidden" } |send }
+	    }
+	  } { 
+			.write %the_page.html
+		}
+	}
+```
+
+// TODO to make these examples work we need a
+
+* get generic function that works on http-schema
+* fix-switch that can switch on status codes (later words too)
+* tuples , constructor and set operator >> 
+* write function for files
+* send function that sends email based on <Email> tuple
