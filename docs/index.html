@@ -81,8 +81,8 @@
     quite short. It also has syntax types for Uri-s and emails so they don't have to be strings and can give generic words context.</p>
   
   <pre class="prettyprint lang-rye"><code language="lang-rye">
-    get https://examples.com/data.json 
-      |^cleanup { send-to jim@example.com "site is not working" }
+    get https://example.com/data.json 
+      |^cleanup { send jim@example.com "site is not working" }
       :data
     post https://httpbin.org/post data 'json
   </code></pre>
