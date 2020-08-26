@@ -442,7 +442,7 @@ func EvalObject(es *env.ProgramState, object env.Object, leftVal env.Object, toL
 		return CallFunction(fn, es, leftVal, toLeft, ctx)
 		//return es
 	case env.CPathType: // RMME
-		fmt.Println(" CPATH **************")
+		//fmt.Println(" CPATH **************")
 		fn := object.(env.Function)
 		return CallFunction(fn, es, leftVal, toLeft, ctx)
 		//return es

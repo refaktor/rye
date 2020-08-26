@@ -2,12 +2,16 @@ package evaldo
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"rye/env"
 	"strings"
+
+	"net/http"
+	// "net/url"
 	//"strconv"
 )
 
@@ -145,6 +149,83 @@ func __fs_read(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 en
 	// Read file to byte slice
 }
 
+func __https_s_get(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+	switch f := arg0.(type) {
+	case env.Uri:
+
+		resp, err := http.Get("https://" + f.GetPath())
+		if err != nil {
+			env1.FailureFlag = true
+			return *env.NewError(err.Error())
+		}
+
+		// Print the HTTP Status Code and Status Name
+		//mt.Println("HTTP Response Status:", resp.StatusCode, http.StatusText(resp.StatusCode))
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+
+		if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
+			return env.String{string(body)}
+		} else {
+			env1.FailureFlag = true
+			return env.NewError2(resp.StatusCode, string(body))
+		}
+
+		// log.Printf("Data read: %s\n", data)
+
+	}
+	env1.FailureFlag = true
+	return *env.NewError("Failed")
+
+	// Read file to byte slice
+}
+
+func __http_s_post(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+	switch f := arg0.(type) {
+	case env.Uri:
+
+		switch t := arg1.(type) {
+		case env.Tagword:
+			switch d := arg2.(type) {
+			case env.String:
+
+				var tt string
+				tidx, terr := env1.Idx.GetIndex("json")
+				if terr && t.Index == tidx {
+					//if t.Value == "json" {
+					tt = "application/json"
+				} else {
+					env1.FailureFlag = true
+					return *env.NewError("wrong content type")
+				}
+				// TODO -- add other cases
+
+				resp, err := http.Post("https://"+f.GetPath(), tt, bytes.NewBufferString(d.Value))
+				if err != nil {
+					env1.FailureFlag = true
+					return *env.NewError(err.Error())
+				}
+
+				// Print the HTTP Status Code and Status Name
+				// fmt.Println("HTTP Response Status:", resp.StatusCode, http.StatusText(resp.StatusCode))
+				defer resp.Body.Close()
+				body, err := ioutil.ReadAll(resp.Body)
+
+				if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
+					return env.String{string(body)}
+				} else {
+					env1.FailureFlag = true
+					return env.NewError2(resp.StatusCode, string(body))
+				}
+			}
+		}
+	}
+	env1.FailureFlag = true
+	return *env.NewError("Failed")
+
+	// Read file to byte slice
+}
+
 var Builtins_io = map[string]*env.Builtin{
 
 	"input": {
@@ -200,6 +281,20 @@ var Builtins_io = map[string]*env.Builtin{
 		Argsn: 1,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __fs_read(env1, arg0, arg1, arg2, arg3, arg4)
+		},
+	},
+
+	"https-schema//get": {
+		Argsn: 1,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __https_s_get(env1, arg0, arg1, arg2, arg3, arg4)
+		},
+	},
+
+	"https-schema//post": {
+		Argsn: 3,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __http_s_post(env1, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 }

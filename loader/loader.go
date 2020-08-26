@@ -96,7 +96,7 @@ func parseString(v *Values, d Any) (Any, error) {
 }
 
 func parseUri(v *Values, d Any) (Any, error) {
-	fmt.Println(v.Vs[0])
+	// fmt.Println(v.Vs[0])
 	return *env.NewUri(&wordIndex, v.Vs[0].(env.Word), v.Token()), nil // ){v.Vs[0].(env.Word), v.Token()}, nil // TODO let the second part be it's own object that parser returns like path
 }
 
