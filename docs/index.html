@@ -77,6 +77,16 @@
       // outputs: { name "Joedoe" num 100 }
   </code></pre>
 
+  <p>Rye also features a version of generic functions (functions that dispatch on kind of the first argument), so words in your vocabulary can many times be
+    quite short. It also has syntax types for Uri-s and emails so they don't have to be strings and can give generic words context.</p>
+  
+  <pre class="prettyprint lang-rye"><code language="lang-rye">
+    get https://examples.com/data.json 
+      |^cleanup { send-to jim@example.com "site is not working" }
+      :data
+    post https://httpbin.org/post data 'json
+  </code></pre>
+  
   <h3>Introductions</h3>
   
   <p><a href="./INTRO_1.html">Introducing Rye to Python programmers {WIP}</a>
