@@ -734,3 +734,29 @@ closer .. but what about combined cases, etc ... think more .. should be somethi
     try-make 'Email { .. will keep retrying with result of this block .. }
     
 Think of more realistic interaction scenarios ...
+
+## Let's look at it from different view
+
+Look at cases when we would like to validate and how to handle.
+
+### we load data from some server
+
+if we load data, we can't reply, we can log / store the error (by evolving it and letting it fail). The error will log, we will see the hiher description
+and the basic error, which describes the exact reason validation failed.
+
+    laod-data-from-server >Email> |check "data didn't validate" |do-with-data
+
+### we are the server, we get data via request
+
+we respond to the client with the validation error as JSON. Our server function works on business logic and it's reply
+
+    get-post-data >Email> |^check none |do-with-data |get-response  
+
+    get-post-data >Email> |^fix { .to-json } |do-with-data |get-response |to-json  
+
+### the direct user or GUI app 
+
+we show the user problem directly in gui
+
+    get-post-data >Email> |^fix { .display-validation-errors } |save-file  
+
