@@ -641,3 +641,19 @@ get https://www.example.com
   * tuples , constructor and set operator >> 
   * write function for files
   * send function that sends email based on <Email> tuple
+
+
+# 29.08.2020
+
+## Exceptions - first shape
+
+We have 3 handling phrases, all 3 return it's first arg if it's not an error: 
+* check - checks if first arg is error, if it is it rewraps it in (new error) second arg and returns that
+* fix - checks if fist arg is error, if it is it executes code (second arg) and returns the result of code
+* tidy - check if first arg is error, if it is it executers code (second arg) and still returns the error
+
+all these phrases have multiple modes besides the basic one
+
+* -switch switches on type or code or error 
+* -either accepts is-error and isn't-error block of code
+
