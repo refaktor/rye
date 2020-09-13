@@ -247,6 +247,8 @@ func EvalExpression_(es *env.ProgramState) *env.ProgramState {
 			es.Res = object
 		case env.UriType:
 			es.Res = object
+		case env.EmailType:
+			es.Res = object
 		case env.WordType:
 			rr := EvalWord(es, object.(env.Word), nil, false)
 			return rr

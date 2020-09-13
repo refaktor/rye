@@ -8,6 +8,7 @@ extern void enableRawMode();
 import "C"
 
 import (
+	"os/user"
 	"path/filepath"
 	"regexp"
 
@@ -401,6 +402,21 @@ type ShellEd struct {
 func main_rye_repl(in io.Reader, out io.Writer) {
 
 	input := "{ name: \"Rye\" version: \"0.002 alpha\" }"
+	user, _ := user.Current()
+	profile_path := filepath.Join(user.HomeDir, ".rye-profile")
+
+	if _, err := os.Stat(profile_path); err == nil {
+		fmt.Print("loading your profile")
+		content, err := ioutil.ReadFile(profile_path)
+		if err != nil {
+			log.Fatal(err)
+		}
+		input = "{ " + string(content) + " }"
+	} else {
+		fmt.Print("no profile")
+
+	}
+
 	block, genv := loader.LoadString(input)
 	es := env.NewProgramState(block.Series, genv)
 	evaldo.RegisterBuiltins(es)
@@ -491,11 +507,7 @@ func main_rye_repl(in io.Reader, out io.Writer) {
 					if es.ErrorFlag {
 						fmt.Println("\x1b[31m" + "Critical error:\n" + es.Res.Inspect(*genv) + "\x1b[0m")
 					}
-					es.ReturnFlag = false
-					es.ErrorFlag = false
-					es.FailureFlag = false
-
-					if es.Res != nil {
+					if !es.ErrorFlag && es.Res != nil {
 						fmt.Print("\033[38;5;37m" + es.Res.Inspect(*genv) + "\x1b[0m")
 						if es.Res != nil && shellEd.Mode != "" && !shellEd.Pause && es.Res == shellEd.Return {
 							fmt.Println(" <- the correct value was returned")
@@ -503,6 +515,10 @@ func main_rye_repl(in io.Reader, out io.Writer) {
 							fmt.Println("")
 						}
 					}
+					es.ReturnFlag = false
+					es.ErrorFlag = false
+					es.FailureFlag = false
+
 				}
 
 				line2 = ""

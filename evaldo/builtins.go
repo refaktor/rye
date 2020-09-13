@@ -331,6 +331,83 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"^tidy-switch": {
+		Argsn:         2,
+		AcceptFailure: true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			fmt.Println("FLAGS")
+
+			ps.FailureFlag = false
+			//fmt.Println(arg0.Probe(*ps.Idx))
+
+			switch er := arg0.(type) {
+			case env.Error:
+				fmt.Println("ERR")
+
+				switch bloc := arg1.(type) {
+				case env.Block:
+
+					var code env.Object
+
+					any_found := false
+					fmt.Println("BLOCK")
+
+					for i := 0; i < bloc.Series.Len(); i += 2 {
+						fmt.Println("LOOP")
+
+						if i > bloc.Series.Len()-2 {
+							return env.NewError("switch block malformed")
+						}
+
+						switch ev := bloc.Series.Get(i).(type) {
+						case env.Integer:
+							if er.Status == int(ev.Value) {
+								any_found = true
+								code = bloc.Series.Get(i + 1)
+							}
+						case env.Void:
+							fmt.Println("VOID")
+							if !any_found {
+								code = bloc.Series.Get(i + 1)
+								any_found = false
+							}
+						}
+					}
+					switch cc := code.(type) {
+					case env.Block:
+						fmt.Println(code.Probe(*ps.Idx))
+						// we store current series (block of code with position we are at) to temp 'ser'
+						ser := ps.Ser
+						// we set ProgramStates series to series ob the block
+						ps.Ser = cc.Series
+						// we eval the block (current context / scope stays the same as it was in parent block)
+						// Inj means we inject the condition value into the block, because it costs us very little. we could do "if name { .print }"
+						EvalBlockInj(ps, arg0, true)
+						// we set temporary series back to current program state
+						ps.Ser = ser
+						// we return the last return value (the return value of executing the block) "a: if 1 { 100 }" a becomes 100,
+						// in future we will also handle the "else" case, but we have to decide
+						//						ps.ReturnFlag = true
+
+						ps.ReturnFlag = true
+						ps.FailureFlag = true
+						return arg0
+					default:
+						// if it's not a block we return error for now
+						ps.FailureFlag = true
+						return env.NewError("Malformed switch block")
+					}
+				default:
+					// if it's not a block we return error for now
+					ps.FailureFlag = true
+					return env.NewError("Second arg not block")
+				}
+			default:
+				return arg0
+			}
+		},
+	},
+
 	"cases": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -623,7 +700,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"bind": {
+	"Ctx//bind": { // TODO -- check if this works
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch swCtx1 := arg0.(type) {
@@ -1608,6 +1685,8 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_ps, ps)
 	RegisterBuiltins2(Builtins_nats, ps)
 	RegisterBuiltins2(Builtins_qframe, ps)
+	RegisterBuiltins2(Builtins_webview, ps)
+	RegisterBuiltins2(Builtins_json, ps)
 	// RegisterBuiltins2(Builtins_psql, ps)
 }
 

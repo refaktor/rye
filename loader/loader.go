@@ -100,6 +100,10 @@ func parseUri(v *Values, d Any) (Any, error) {
 	return *env.NewUri(&wordIndex, v.Vs[0].(env.Word), v.Token()), nil // ){v.Vs[0].(env.Word), v.Token()}, nil // TODO let the second part be it's own object that parser returns like path
 }
 
+func parseEmail(v *Values, d Any) (Any, error) {
+	return env.Email{v.Token()}, nil
+}
+
 func parseFpath(v *Values, d Any) (Any, error) {
 	idx := wordIndex.IndexWord("file")
 	fmt.Println(idx)
@@ -210,7 +214,7 @@ func newParser() *Parser {
 	BLOCK       	<-  "{" SPACES SERIES* "}"
 	BBLOCK       	<-  "[" SPACES SERIES* "]"
     GROUP       	<-  "(" SPACES SERIES* ")"
-    SERIES     		<-  (URI / STRING / NUMBER / COMMA / SETWORD / LSETWORD / OPWORD / PIPEWORD / TAGWORD / EXWORD / CPATH / FPATH / XWORD / GENWORD / GETWORD / VOID / WORD / BLOCK / GROUP / BBLOCK / ARGBLOCK ) SPACES
+    SERIES     		<-  (URI / EMAIL / STRING / NUMBER / COMMA / SETWORD / LSETWORD / OPWORD / PIPEWORD / TAGWORD / EXWORD / CPATH / FPATH / XWORD / GENWORD / GETWORD / VOID / WORD / BLOCK / GROUP / BBLOCK / ARGBLOCK ) SPACES
     ARGBLOCK       	<-  "{" WORD ":" WORD "}"
     WORD           	<-  LETTER LETTERORNUM*
 	GENWORD 		<-  UCLETTER LCLETTERORNUM* 
@@ -225,6 +229,8 @@ func newParser() *Parser {
 	STRING			<-  '"' STRINGCHAR* '"'
 	SPACES			<-  SPACE+
 	URI    			<-  WORD "://" URIPATH*
+	EMAIL			<-  EMAILPART "@" EMAILPART 
+	EMAILPART		<-  < ([a-zA-Z0-9._]+) >
 	FPATH 	   		<-  "%" URIPATH*
 	CPATH    		<-  WORD ( "/" WORD )+
 	ONECHARWORDS	<-  < [<>*+-=/] >
@@ -239,7 +245,7 @@ func newParser() *Parser {
 	COMMA			<-  ","
 	VOID			<-  "_"
 `)
-
+	// < ^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})$ >
 	// TODO -- make path path work for deeper paths too
 	// TODO -- maybe add path type and make URI more fully featured
 
@@ -264,6 +270,7 @@ func newParser() *Parser {
 	g["GETWORD"].Action = parseGetword
 	g["NUMBER"].Action = parseNumber
 	g["STRING"].Action = parseString
+	g["EMAIL"].Action = parseEmail
 	g["URI"].Action = parseUri
 	g["FPATH"].Action = parseFpath
 	g["CPATH"].Action = parseCPath

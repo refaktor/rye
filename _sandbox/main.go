@@ -358,14 +358,16 @@ func main_rye_repl_OLD(in io.Reader, out io.Writer) {
 		if es.ErrorFlag {
 			fmt.Println("\x1b[31m" + "Critical error:\n" + es.Res + "\x1b[0m")
 		}
+
+		if es.ErrorFlag && es.Res != nil {
+			//fmt.Println("\x1b[6;30;42m" + es.Res.Inspect(*genv) + "\x1b[0m")
+			fmt.Println("\x1b[0;49;32m" + es.Res.Inspect(*genv) + "\x1b[0m")
+		}
+
 		es.ReturnFlag = false
 		es.ErrorFlag = false
 		es.FailureFlag = false
 
-		if es.Res != nil {
-			//fmt.Println("\x1b[6;30;42m" + es.Res.Inspect(*genv) + "\x1b[0m")
-			fmt.Println("\x1b[0;49;32m" + es.Res.Inspect(*genv) + "\x1b[0m")
-		}
 	}
 
 	/*genv := loader.GetIdxs()

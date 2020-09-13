@@ -3,10 +3,10 @@ package evaldo
 import "C"
 
 import (
-	"rye/env"
-	"rye/util"
 	"fmt"
 	"net/mail"
+	"rye/env"
+	"rye/util"
 	"strconv"
 	"strings"
 	"time"
@@ -216,10 +216,10 @@ func BuiValidate(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object) env.O
 			env1.Ser = ser1
 			return val
 		default:
-			return env.NewError("arg 2 should be Uri")
+			return env.NewError("arg 2 should be block")
 		}
 	default:
-		return env.NewError("arg 2 should be Uri")
+		return env.NewError("arg 1 should be RawMap")
 	}
 
 }

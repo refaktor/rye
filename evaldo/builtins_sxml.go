@@ -1,8 +1,8 @@
 package evaldo
 
 import (
-	"rye/env"
 	"encoding/xml"
+	"rye/env"
 
 	//"fmt"
 	"io"
@@ -13,10 +13,6 @@ import (
 	//	"strconv"
 	//	"strings"
 )
-
-func _emptyRM() env.RawMap {
-	return env.RawMap{}
-}
 
 // { <person> [ .print ] }
 // { <person> { _ [ .print ] <name> <surname> <age> { _ [ .print2 ";" ] } }

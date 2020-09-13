@@ -3,6 +3,7 @@ package env
 import (
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 type Idxs struct {
@@ -70,19 +71,38 @@ func NewIdxs() *Idxs {
 
 	// register words for builtin kinds, which the value objects should return on GetKind()
 
-	e.IndexWord("block")
-	e.IndexWord("integer")
-	e.IndexWord("word")
-	e.IndexWord("setword")
-	e.IndexWord("opword")
-	e.IndexWord("pipeword")
-	e.IndexWord("builtin")
-	e.IndexWord("function")
-	e.IndexWord("error")
-	e.IndexWord("comma")
-	e.IndexWord("void")
-	e.IndexWord("string")
-	e.IndexWord("tagword")
+	NativeTypes := []string{
+		"Block",
+		"Integer",
+		"Word",
+		"Setword",
+		"Opword",
+		"Pipeword",
+		"Builtin",
+		"Function",
+		"Error",
+		"Comma",
+		"Void",
+		"String",
+		"Tagword",
+		"Genword",
+		"Getword",
+		"Argword",
+		"Native",
+		"Uri",
+		"LSetword",
+		"Ctx",
+		"RawMap",
+		"Date",
+		"CPath",
+		"Xword",
+		"EXword",
+		"Spreadsheet",
+		"Email",
+	}
 
+	for _, value := range NativeTypes {
+		e.IndexWord(strings.ToLower(value))
+	}
 	return &e
 }

@@ -37,6 +37,7 @@ const (
 	XwordType       Type = 24
 	EXwordType      Type = 25
 	SpreadsheetType Type = 26
+	EmailType       Type = 27
 )
 
 type Object interface {
@@ -184,6 +185,37 @@ func (i Uri) Trace(msg string) {
 
 func (i Uri) GetKind() int {
 	return i.Kind.Index
+}
+
+//
+// Email
+//
+
+type Email struct {
+	Address string
+}
+
+func (i Email) Type() Type {
+	return EmailType
+}
+
+// Inspect returns a string representation of the Integer.
+func (i Email) Inspect(e Idxs) string {
+	return "<Email: " + i.Probe(e) + ">"
+}
+
+// Inspect returns a string representation of the Integer.
+func (i Email) Probe(e Idxs) string {
+	return i.Address
+}
+
+func (i Email) Trace(msg string) {
+	fmt.Print(msg + "(email): ")
+	fmt.Println(i.Address)
+}
+
+func (i Email) GetKind() int {
+	return int(EmailType)
 }
 
 //

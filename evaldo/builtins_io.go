@@ -10,7 +10,11 @@ import (
 	"rye/env"
 	"strings"
 
+	//	"crypto/tls"
+
 	"net/http"
+	//"net/smtp"
+	//	gomail "gopkg.in/mail.v2"
 	// "net/url"
 	//"strconv"
 )
@@ -168,7 +172,7 @@ func __https_s_get(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg
 			return env.String{string(body)}
 		} else {
 			env1.FailureFlag = true
-			return env.NewError2(resp.StatusCode, string(body))
+			return *env.NewError2(resp.StatusCode, string(body))
 		}
 
 		// log.Printf("Data read: %s\n", data)
@@ -218,6 +222,67 @@ func __http_s_post(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg
 					return env.NewError2(resp.StatusCode, string(body))
 				}
 			}
+		}
+	}
+	env1.FailureFlag = true
+	return *env.NewError("Failed")
+
+	// Read file to byte slice
+}
+
+func __email_send(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+	switch to_ := arg0.(type) {
+	case env.Email:
+
+		switch msg := arg1.(type) {
+		case env.String:
+
+			idx, _ := env1.Idx.GetIndex("user-profile")
+			uctx_, _ := env1.Ctx.Get(idx)
+			uctx := uctx_.(env.RyeCtx)
+			fmt.Println(to_)
+			fmt.Println(msg)
+			fmt.Println(uctx)
+			// TODO continue: uncomment and make it work
+			/*
+				from, _ := uctx.Get(env1.Idx.GetIndex("smtp-from"))
+				password, _ := uctx.Get(env1.Idx.GetIndex("smtp-password"))
+				server, _ := uctx.Get(env1.Idx.GetIndex("smtp-server"))
+				port, _ := uctx.Get(env1.Idx.GetIndex("smtp-port"))
+				// Receiver email address.
+				// to := []string{
+				//	to_.Value,
+				//}
+				// Message.
+				// message := []byte(msg.Value)
+				m := gomail.NewMessage()
+
+				// Set E-Mail sender
+				m.SetHeader("From", from)
+
+				// Set E-Mail receivers
+				m.SetHeader("To", to_.Address)
+
+				// Set E-Mail subject
+				m.SetHeader("Subject", msg.Value)
+
+				// Set E-Mail body. You can set plain text or html with text/html
+				m.SetBody("text/plain", msg.Value)
+
+				// Settings for SMTP server
+				d := gomail.NewDialer(server, port, from, password)
+
+				// This is only needed when SSL/TLS certificate is not valid on server.
+				// In production this should be set to false.
+				//			d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+
+				// Now send E-Mail
+				if err := d.DialAndSend(m); err != nil {
+					env1.FailureFlag = true
+					return env.NewError(err.Error())
+				}
+			*/
+			return env.Integer{1}
 		}
 	}
 	env1.FailureFlag = true
@@ -295,6 +360,13 @@ var Builtins_io = map[string]*env.Builtin{
 		Argsn: 3,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __http_s_post(env1, arg0, arg1, arg2, arg3, arg4)
+		},
+	},
+
+	"email//send": {
+		Argsn: 2,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __email_send(env1, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 }
