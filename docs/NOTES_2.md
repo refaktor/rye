@@ -641,3 +641,122 @@ get https://www.example.com
   * tuples , constructor and set operator >> 
   * write function for files
   * send function that sends email based on <Email> tuple
+
+
+# 29.08.2020
+
+## Exceptions - first shape
+
+We have 3 handling phrases, all 3 return it's first arg if it's not an error: 
+
+  * check - checks if first arg is error, if it is it rewraps it in (new error) second arg and returns that
+  * fix - checks if fist arg is error, if it is it executes code (second arg) and returns the result of code
+  * tidy - check if first arg is error, if it is it executers code (second arg) and still returns the error
+
+all these phrases have multiple modes besides the basic one
+
+  * -switch switches on type or code or error 
+  * -either accepts is-error and isn't-error block of code
+
+## Emails and ~/.rye-profile and interesting options
+
+Added support for send function. It's meant to very quickly send a email notification to someone. I added rye-profile file.
+
+If it's there in the user's home directory rye does it. In this case it sets a context user-defaults where also smtp info is set. This will get tuned, named better. We would need to have an option to ignore per "project" (directory) the use of this file and at the same time enable per-project defaults.
+
+This could be achieved if rye looked at current directory for a file .rye-project and load it and that one would also be able to disable the loading of user-profile. Would there also be a web-scope possible, would it make sense?
+
+This would also make a directory some sort of app if it loaded all the code in the rye-project file. From web or from local files. You could just create a folder and add a rye-project file directing to online file and all would be loaded (with caching) and started.
+
+Especially in combination with Spruce based console UI. ;)
+
+## Some ideas
+
+### Weird idea of "drop-in - drop-out"
+
+I got an idea last time. If I could call a word drop-in that would instead of moving to next blocks call a console and let you do repl inside any point of code.
+good idea would be if you could then also drop-out and continue the evaluation normally. Even better if you could change the current block and replay it multiple times and then drop out. I am not 100% sure this is doable (I have a feeling there must be some catch 22 otherwise others would have done it), but from very cursory look I don't see why not.
+
+### The try { retry } failed idea
+
+I had some idea that try woul record it's state, then enter code and if retry was called inside it would reset the state to saved and rerun the code in try. It failed soon after (idea) because, this would be a very good producer of infinite loops. Maybe if there was retry-once ... or try 3 { .... }. But there are also other issues like the timing of retry ... etc ...
+
+## Example works
+
+So I added email value type, send generic function, get, post generic and tidy-switch on statuses
+
+    email: refaktorlabs@gmail.com
+
+    get https://example.com/data.json 
+      |^tidy-switch { 
+          404 { send email "data is missing from site" } 
+          _   { send email "site is not working" } 
+        } 
+      :data 
+    post https://httpbin.org/post data 'json
+
+## Next!!! Failure management + Validation + Kinds !
+
+This is where it potentially all comes together, or falls appart at least somewhat. The combination of kinds (generic words on them), the validation dialect, failure handling from that validation. If I can make this all 3 work in sensible it would be very good, otherwise I will need to rethink some parts. oon
+
+These will also be a lot of deciding to do. When are blocks of kind validated, allways? is there a flag. Can it be lazy ... when the reciever requires it? Is there special syntax for creating a validated object
+
+What would be the inital example we start working with. While we are at send ... send will also accept Email kind object. This would be a start ...
+
+If we want to send a simple email with the object:
+
+    <Email> { to: refaktorlabs@gmail.com
+              subject: "Hello from Rye"
+              body: "yup ..."
+    } |send
+    
+Let's say we get the json data from some service, let's say the constructor validates always:
+
+### Scenario #1: fail on validation
+
+    get-data >Email> |check "email data didn't validate"
+    
+### Scenario #2: do something on validation
+
+    get-data >Email> |tidy { alert "email data didn't validate" }
+
+### Scenario #3: if email wasn't correct ask user for new email
+
+    get-data >Email> |fix-switch { 'to { .prnf "Entered email was {#}, enter correct one: " d << 'to input >Email>  }
+    
+There is some unelegant repetiton there and it only works once, then if email is still not ok it fails with error. Maybe that try-retry wasn't so bad idea ..
+or we need another construct that can modify values and redo the operation implicitly? ... 
+
+    try { >Email> } { fix-switch { 'to { .prnf "Entered email was {#}, enter correct one: " d << 'to input } } }
+
+closer .. but what about combined cases, etc ... think more .. should be something implicit in constructor maybe?
+
+    try-make 'Email { .. will keep retrying with result of this block .. }
+    
+Think of more realistic interaction scenarios ...
+
+## Let's look at it from different view
+
+Look at cases when we would like to validate and how to handle.
+
+### we load data from some server
+
+if we load data, we can't reply, we can log / store the error (by evolving it and letting it fail). The error will log, we will see the hiher description
+and the basic error, which describes the exact reason validation failed.
+
+    laod-data-from-server >Email> |check "data didn't validate" |do-with-data
+
+### we are the server, we get data via request
+
+we respond to the client with the validation error as JSON. Our server function works on business logic and it's reply
+
+    get-post-data >Email> |^check none |do-with-data |get-response  
+
+    get-post-data >Email> |^fix { .to-json } |do-with-data |get-response |to-json  
+
+### the direct user or GUI app 
+
+we show the user problem directly in gui
+
+    get-post-data >Email> |^fix { .display-validation-errors } |save-file  
+
