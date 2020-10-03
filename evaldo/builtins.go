@@ -2,8 +2,12 @@
 package evaldo
 
 import (
+	//	"bufio"
 	"fmt"
+	//	"os"
 	"rye/env"
+
+	//	"rye/loader"
 	"rye/util"
 	"strconv"
 	"strings"
@@ -74,6 +78,35 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	"_+": {
+		Argsn: 2,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Integer:
+				return env.Integer{s1.Value + arg1.(env.Integer).Value}
+			case env.String:
+				switch s2 := arg1.(type) {
+				case env.String:
+					return env.String{s1.Value + s2.Value}
+				case env.Integer:
+					return env.String{s1.Value + strconv.Itoa(int(s2.Value))}
+				}
+			case env.Block:
+				switch b2 := arg1.(type) {
+				case env.Block:
+					s := &s1.Series
+					s1.Series = *s.AppendMul(b2.Series.GetAll())
+					return s1
+				}
+			default:
+				env1.FailureFlag = true
+				return env.NewError("Wrong arguments for + function")
+			}
+			env1.FailureFlag = true
+			return env.NewError("Wrong arguments for + function")
+		},
+	},
+
+	"add": {
 		Argsn: 2,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
@@ -477,6 +510,52 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"drop-in": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg1.(type) {
+			case env.Block:
+				ser := ps.Ser
+				ps.Ser = bloc.Series
+				EvalBlock(ps)
+				ps.Ser = ser
+				//reader := bufio.NewReader(os.Stdin)
+
+				fmt.Println("You are inside a drop-in: " + arg0.(env.String).Value)
+				fmt.Println(" * user (h) for help, (lc) to list context , (r) to return")
+				fmt.Println("----------------------------------------------------------")
+				/*
+					for {
+						fmt.Print("{ rye dropin }")
+						text, _ := reader.ReadString('\n')
+						//fmt.Println(1111)
+						// convert CRLF to LF
+						text = strings.Replace(text, "\n", "", -1)
+						//fmt.Println(1111)
+						if strings.Compare("(lc)", text) == 0 {
+							fmt.Println(ps.Ctx.Probe(*ps.Idx))
+						} else if strings.Compare("(r)", text) == 0 {
+							ps.Ser = ser
+							return ps.Res
+						} else {
+							// fmt.Println(1111)
+							block, genv := loader.LoadString("{ " + text + " }")
+							ps := env.AddToProgramState(ps, block.Series, genv)
+							EvalBlock(ps)
+							fmt.Println(ps.Res.Inspect(*ps.Idx))
+						}
+					}*/
+
+				DoRyeRepl(ps)
+				fmt.Println("----------------------------------------------------------")
+				ps.Ser = ser
+
+				return ps.Res
+			}
+			return nil
+		},
+	},
+
 	"do": {
 		Argsn: 1,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -784,7 +863,7 @@ var builtins = map[string]*env.Builtin{
 
 	//
 
-	"do-time": {
+	"time-it": {
 		Argsn: 1,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
@@ -1687,6 +1766,8 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_qframe, ps)
 	RegisterBuiltins2(Builtins_webview, ps)
 	RegisterBuiltins2(Builtins_json, ps)
+	RegisterBuiltins2(Builtins_stackless, ps)
+	RegisterBuiltins2(Builtins_eyr, ps)
 	// RegisterBuiltins2(Builtins_psql, ps)
 }
 
