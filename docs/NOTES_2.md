@@ -854,3 +854,8 @@ So what would we need if we this would be the way ...
 In practice, in real apps we usually don't fix most of the validation errors but return them to the UI / frontend layer as it is and it displays them 
 to the user. This above is all more to test if this is flexible. In practive there is a separate function that displays the error, we don't adhoc display them
 inside fix code.
+
+**So what are our conclusions for now**
+
+Handling validation errors is no different in general than any other erros. Basically we use the check, fix and tidy, and we could have more special functions
+for specific cases, but we would need to find those cases in the wild. There doesn't seem to be any that typical use to make them beforehand. Maybe fix-children, but even there I am not sure if I will really need it exactly as that.
