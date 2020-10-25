@@ -760,3 +760,40 @@ we show the user problem directly in gui
 
     get-post-data >Email> |^fix { .display-validation-errors } |save-file  
 
+# 25.10.2020
+
+## What I want to think about
+
+* **Exceptions as result of validation dialect**. In case of validation exception has child nodes that can be key or index related, or nested deeper . Are those nodes also exceptions or something else?
+
+* **The billion dollar mistake**, runtime null/exceptions code errors. Option and Either types make more sense in compiled languages, where you can statically, at compile time prevent null-exceptions. Dynamic and non-compiled languages don't have this benefit, but they could still improve *certainty*  from these constructs.
+A interpreter should issue (log) warnings or fail because of type error when it mees a code where null-exception is possible. The difference is that it fails/warns every time it sees this could be possible with given code, so you fix these cases. Not that it fails in specific case when null really happens. If we
+could make handling of option types elegant this would be a good feature to have. Same thing for error values.
+
+## Exceptions and validation
+
+Some terminology (current proposal). Exception is an object / rye value. Failure and Errors are a state of interpreter. If failure is not handeled it becomes and error. It would terminologically speaking make sense for functions to return exceptions withot failure too?
+ 
+### Exception structure
+
+Exceptions have: "custom message" (string), code (int), type (word), parent(parent exception), parents (List of exceptions).
+
+(we have a separate parent / parents) because most times there will be single parent and we don't want to create lists with one parent for no reason)
+
+Exception construction dialect accepts those 3 types or block of those 3 types automatically to construct exceptions. 
+
+fail 404  ; fail "user wasn't logined" ; fail { 404 missing }
+
+In case of validation exceptions the children also need "key" and/or "index" { validation-fail { { name: required } }
+
+Key could be a setword in constructor, for index integer clashes with code ...
+
+(idea) codes except few typical ones like 404, 503, 200 are a queswork anyway ... if we have types, they should map to codes, but we should use words anyway,
+not numbers, even in case of 404 "not found" is better and more descriptive.
+
+Ok so we ditch code and integer in constructor is index. So far the exception doesn't hold any information regarding file/line of code where it happened.
+
+Revised structure: 
+
+{ type "custom message" <Integer(index): 0> <Exception(parent)> <list: ().... parents ....> }
+
