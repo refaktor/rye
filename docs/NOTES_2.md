@@ -795,5 +795,62 @@ Ok so we ditch code and integer in constructor is index. So far the exception do
 
 Revised structure: 
 
-{ type "custom message" <Integer(index): 0> <Exception(parent)> <list: ().... parents ....> }
+	{ type "custom message" <Integer(index): 0> <Exception(parent)> <list: ().... parents ....> }
 
+### So how do we handle validation exceptions again?
+
+** case 1: on exception return genaral wrapped exception **
+
+	person: { name: required age: required integer }
+	dict { "age" 33 } |validate person => "name"  // code error: validate didn't return a dict but an failure
+	
+	// if failure just wrap and return, otherwise return name
+	dict { "age" 33 } |validate person |^check "person data is invalid" => "name" // code ok
+
+	// if failure print something, otherwise print name
+	dict { "age" 33 } |validate person |fix-either { print "person data is invalid" } { => "name" |print } // code ok
+
+	// if failure print the keys and messages, otherwise print name
+	dict { "age" 33 } |validate person |fix-either { -> parents |for { -> 'key |prn , -> 'msg |print } } { => "name" |print } // code ok
+
+	// since it's general pattern to do something for parents in validation scenario we could have the specific function for it
+	dict { "age" 33 } |validate person |fix-parents { -> 'key |prn , -> 'msg |print } { => "name" |print } // code ok
+	
+	// we would need eihter there !? this becomes combinatorial explosion ... so what if instead of -either we by default use ^
+	dict { "age" 33 } |validate person |^fix { -> parents |for { -> 'key |prn , -> 'msg |print } } => "name" |print // code ok
+	dict { "age" 33 } |validate person |^fix-children { -> 'key |prn , -> 'msg |print } => "name" |print // code ok
+	
+	// but what if we can't return. if there is other code to execute after failure anyway, maybe we split the problem in block
+	dict { "age" 33 } |validate person |fix-either { .for-children { -> 'key |prn , -> 'msg |print } } { => "name" |print } print "bye" // code ok
+
+	// a more functional approach
+	dict { "age" 33 } |validate person |fix-either { -> 'children |map { .embed "{{key}}: {{msg}}" } |print-lines } { => "name" |print } print "bye"
+
+** what if we want to do something in case of specific field **
+
+	// some of these maybe don't make sense as it would be solved on other level, but let's say we need to somehow
+	// if failure is with name we show a poput to user to enter his name, syncroniusly
+	dict { "age" 33 } :p0 |validate person |fix-either { .match-children { name: 'missing { prompt-user "What is your name again?" .update p0 "name" } } } { => "name" |print } print "bye" // .... let's retry that
+	
+	
+	dict { "age" 33 } :p0 |validate person |fix-children { name: 'missing { prompt-user "What is your name again?" |update p0 "name" } } => "name" |print
+
+	// this is fail, we didn't validate the second name the user entered the correct code would be (where we ask and if it fails again we fail
+	dict { "age" 33 } :p0 |validate person |fix-children { name: 'missing { prompt-user "What is your name again?" |update p0 "name" } } 
+	  |validate person |^check "We give up!" => "name" |print
+
+	// if we are here ... can we make this circular? so if it doesn't validate it keeps asking ...
+	dict { "age" 33 } |assure-valid person 'p0 { fix-children { name: 'missing { prompt-user "What is your name again?" |combine p0 "name" } } } 
+	   => "name" |print
+
+
+So what would we need if we this would be the way ...
+  * fix-children with special match dialect, that uses the return of block to feed to next match
+  * assure-valid which is sort of loop until validation doesn't return error
+  * update / combine ... takes dict, overwrites the value and returns (new) dict, since it's single key maybe we should just call it "set"
+  
+**The UI code**
+
+In practice, in real apps we usually don't fix most of the validation errors but return them to the UI / frontend layer as it is and it displays them 
+to the user. This above is all more to test if this is flexible. In practive there is a separate function that displays the error, we don't adhoc display them
+inside fix code.
