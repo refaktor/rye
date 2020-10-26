@@ -876,4 +876,29 @@ https://ryelang.blogspot.com/2020/10/blog-about-rye-language-development.html
  * on-error callback
  * validation dialect should return validation failure when validation fails, with children detailing the reason
  
- 
+## Other paths forward
+
+To further explore the validation / failure mechanics it would be good to make something like a web-server. I already have golang's Echo builtins made, but
+I was thingking standard library webserver is quite powerfull in go anyway, so that should be the defatul basis for providin a webserver functionality in 
+rye. Echo is an optional addon.
+
+Another interesting path towards Rye-s toolset for distributed computing options would be nng which is nanomsg which "was" zeromq. nng supports tls protocols
+for example so it's meant to be for external / exposed comm also, not just internal. Making direct actors/mailboxes for distributed computing seems simple at 
+first sight, but you have to build all the specific plumbing on top of it. nng also provides the typical distributed patters, the actors and messages can probably 
+still be there, but messages delivery has more options by default than just a2a. So it would be interesting to start playing with nng. Also test the ideas
+of "mobile code" I was thinking about. For mobile code one thing we would need would be distinction of pure and unpure functions. ..>
+
+## Pure functions
+
+The idea is that we would specify pure builtins and user can create pure function by just using pure builtins or functions. These functions can then be more mobile (in relation to previous topic), since they are safer to use as a filter / seek / map operation on some distant node. Pure functions of course have other
+guaranties that improve reliability of local use.
+
+### Implementation
+
+"Pure function" would need to be a flag in a builtin and function. But we want to avoid need for checking this flag at evaluation all the time. One solution
+would be that we create a context of pure functions (they could be available in both ordinary and pure context) and all pure user functions are bound to that
+context, not the ordinary one. So unpure function/builtin would be undefined in a pure function code. I need to try this solution, we already have very flexible
+context manipulation (look at isolates), so this could already be possible inside a language almost.
+
+
+
