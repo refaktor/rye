@@ -859,3 +859,21 @@ inside fix code.
 
 Handling validation errors is no different in general than any other erros. Basically we use the check, fix and tidy, and we could have more special functions
 for specific cases, but we would need to find those cases in the wild. There doesn't seem to be any that typical use to make them beforehand. Maybe fix-children, but even there I am not sure if I will really need it exactly as that.
+
+# 26.10.2020
+
+## Next per example
+
+So if I want to follow the example from the first blogpost, next thing to do is:
+
+https://ryelang.blogspot.com/2020/10/blog-about-rye-language-development.html
+
+ * make load generic function for kind scheme: it should look in local cache and if not there save from url to cache and load
+ * url should accept the {{variables}} embeddings and embed them, probably at the same time add it to strings. Didn't yet decide if it should work by default
+   or if there is a function required. On first sight it seems that function is better, if so then loader should also accept such string/uri and
+   only the embed function should find and replace those. Otherwise probably the loader should recognise them and parse them out. This would make all string 
+   or urls more expensive to create and heavier / more complex?
+ * on-error callback
+ * validation dialect should return validation failure when validation fails, with children detailing the reason
+ 
+ 
