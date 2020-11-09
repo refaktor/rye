@@ -760,3 +760,145 @@ we show the user problem directly in gui
 
     get-post-data >Email> |^fix { .display-validation-errors } |save-file  
 
+# 25.10.2020
+
+## What I want to think about
+
+* **Exceptions as result of validation dialect**. In case of validation exception has child nodes that can be key or index related, or nested deeper . Are those nodes also exceptions or something else?
+
+* **The billion dollar mistake**, runtime null/exceptions code errors. Option and Either types make more sense in compiled languages, where you can statically, at compile time prevent null-exceptions. Dynamic and non-compiled languages don't have this benefit, but they could still improve *certainty*  from these constructs.
+A interpreter should issue (log) warnings or fail because of type error when it mees a code where null-exception is possible. The difference is that it fails/warns every time it sees this could be possible with given code, so you fix these cases. Not that it fails in specific case when null really happens. If we
+could make handling of option types elegant this would be a good feature to have. Same thing for error values.
+
+## Exceptions and validation
+
+Some terminology (current proposal). Exception is an object / rye value. Failure and Errors are a state of interpreter. If failure is not handeled it becomes and error. It would terminologically speaking make sense for functions to return exceptions withot failure too?
+ 
+### Exception structure
+
+Exceptions have: "custom message" (string), code (int), type (word), parent(parent exception), parents (List of exceptions).
+
+(we have a separate parent / parents) because most times there will be single parent and we don't want to create lists with one parent for no reason)
+
+Exception construction dialect accepts those 3 types or block of those 3 types automatically to construct exceptions. 
+
+fail 404  ; fail "user wasn't logined" ; fail { 404 missing }
+
+In case of validation exceptions the children also need "key" and/or "index" { validation-fail { { name: required } }
+
+Key could be a setword in constructor, for index integer clashes with code ...
+
+(idea) codes except few typical ones like 404, 503, 200 are a queswork anyway ... if we have types, they should map to codes, but we should use words anyway,
+not numbers, even in case of 404 "not found" is better and more descriptive.
+
+Ok so we ditch code and integer in constructor is index. So far the exception doesn't hold any information regarding file/line of code where it happened.
+
+Revised structure: 
+
+	{ type "custom message" <Integer(index): 0> <Exception(parent)> <list: ().... parents ....> }
+
+### So how do we handle validation exceptions again?
+
+** case 1: on exception return genaral wrapped exception **
+
+	person: { name: required age: required integer }
+	dict { "age" 33 } |validate person => "name"  // code error: validate didn't return a dict but an failure
+	
+	// if failure just wrap and return, otherwise return name
+	dict { "age" 33 } |validate person |^check "person data is invalid" => "name" // code ok
+
+	// if failure print something, otherwise print name
+	dict { "age" 33 } |validate person |fix-either { print "person data is invalid" } { => "name" |print } // code ok
+
+	// if failure print the keys and messages, otherwise print name
+	dict { "age" 33 } |validate person |fix-either { -> parents |for { -> 'key |prn , -> 'msg |print } } { => "name" |print } // code ok
+
+	// since it's general pattern to do something for parents in validation scenario we could have the specific function for it
+	dict { "age" 33 } |validate person |fix-parents { -> 'key |prn , -> 'msg |print } { => "name" |print } // code ok
+	
+	// we would need eihter there !? this becomes combinatorial explosion ... so what if instead of -either we by default use ^
+	dict { "age" 33 } |validate person |^fix { -> parents |for { -> 'key |prn , -> 'msg |print } } => "name" |print // code ok
+	dict { "age" 33 } |validate person |^fix-children { -> 'key |prn , -> 'msg |print } => "name" |print // code ok
+	
+	// but what if we can't return. if there is other code to execute after failure anyway, maybe we split the problem in block
+	dict { "age" 33 } |validate person |fix-either { .for-children { -> 'key |prn , -> 'msg |print } } { => "name" |print } print "bye" // code ok
+
+	// a more functional approach
+	dict { "age" 33 } |validate person |fix-either { -> 'children |map { .embed "{{key}}: {{msg}}" } |print-lines } { => "name" |print } print "bye"
+
+** what if we want to do something in case of specific field **
+
+	// some of these maybe don't make sense as it would be solved on other level, but let's say we need to somehow
+	// if failure is with name we show a poput to user to enter his name, syncroniusly
+	dict { "age" 33 } :p0 |validate person |fix-either { .match-children { name: 'missing { prompt-user "What is your name again?" .update p0 "name" } } } { => "name" |print } print "bye" // .... let's retry that
+	
+	
+	dict { "age" 33 } :p0 |validate person |fix-children { name: 'missing { prompt-user "What is your name again?" |update p0 "name" } } => "name" |print
+
+	// this is fail, we didn't validate the second name the user entered the correct code would be (where we ask and if it fails again we fail
+	dict { "age" 33 } :p0 |validate person |fix-children { name: 'missing { prompt-user "What is your name again?" |update p0 "name" } } 
+	  |validate person |^check "We give up!" => "name" |print
+
+	// if we are here ... can we make this circular? so if it doesn't validate it keeps asking ...
+	dict { "age" 33 } |assure-valid person 'p0 { fix-children { name: 'missing { prompt-user "What is your name again?" |combine p0 "name" } } } 
+	   => "name" |print
+
+
+So what would we need if we this would be the way ...
+  * fix-children with special match dialect, that uses the return of block to feed to next match
+  * assure-valid which is sort of loop until validation doesn't return error
+  * update / combine ... takes dict, overwrites the value and returns (new) dict, since it's single key maybe we should just call it "set"
+  
+**The UI code**
+
+In practice, in real apps we usually don't fix most of the validation errors but return them to the UI / frontend layer as it is and it displays them 
+to the user. This above is all more to test if this is flexible. In practive there is a separate function that displays the error, we don't adhoc display them
+inside fix code.
+
+**So what are our conclusions for now**
+
+Handling validation errors is no different in general than any other erros. Basically we use the check, fix and tidy, and we could have more special functions
+for specific cases, but we would need to find those cases in the wild. There doesn't seem to be any that typical use to make them beforehand. Maybe fix-children, but even there I am not sure if I will really need it exactly as that.
+
+# 26.10.2020
+
+## Next per example
+
+So if I want to follow the example from the first blogpost, next thing to do is:
+
+https://ryelang.blogspot.com/2020/10/blog-about-rye-language-development.html
+
+ * make load generic function for kind scheme: it should look in local cache and if not there save from url to cache and load
+ * url should accept the {{variables}} embeddings and embed them, probably at the same time add it to strings. Didn't yet decide if it should work by default
+   or if there is a function required. On first sight it seems that function is better, if so then loader should also accept such string/uri and
+   only the embed function should find and replace those. Otherwise probably the loader should recognise them and parse them out. This would make all string 
+   or urls more expensive to create and heavier / more complex?
+ * on-error callback
+ * validation dialect should return validation failure when validation fails, with children detailing the reason
+ 
+## Other paths forward
+
+To further explore the validation / failure mechanics it would be good to make something like a web-server. I already have golang's Echo builtins made, but
+I was thingking standard library webserver is quite powerfull in go anyway, so that should be the defatul basis for providin a webserver functionality in 
+rye. Echo is an optional addon.
+
+Another interesting path towards Rye-s toolset for distributed computing options would be nng which is nanomsg which "was" zeromq. nng supports tls protocols
+for example so it's meant to be for external / exposed comm also, not just internal. Making direct actors/mailboxes for distributed computing seems simple at 
+first sight, but you have to build all the specific plumbing on top of it. nng also provides the typical distributed patters, the actors and messages can probably 
+still be there, but messages delivery has more options by default than just a2a. So it would be interesting to start playing with nng. Also test the ideas
+of "mobile code" I was thinking about. For mobile code one thing we would need would be distinction of pure and unpure functions. ..>
+
+## Pure functions
+
+The idea is that we would specify pure builtins and user can create pure function by just using pure builtins or functions. These functions can then be more mobile (in relation to previous topic), since they are safer to use as a filter / seek / map operation on some distant node. Pure functions of course have other
+guaranties that improve reliability of local use.
+
+### Implementation
+
+"Pure function" would need to be a flag in a builtin and function. But we want to avoid need for checking this flag at evaluation all the time. One solution
+would be that we create a context of pure functions (they could be available in both ordinary and pure context) and all pure user functions are bound to that
+context, not the ordinary one. So unpure function/builtin would be undefined in a pure function code. I need to try this solution, we already have very flexible
+context manipulation (look at isolates), so this could already be possible inside a language almost.
+
+
+
