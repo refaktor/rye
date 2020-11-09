@@ -115,7 +115,45 @@ func maybeDoShedCommandsBlk(line string, es *env.ProgramState, block *env.Block,
 	}
 }
 
+// terminal commands from buger/goterm
+
+// Clear screen
+func Clear() {
+	fmt.Print("\033[2J")
+}
+
+// Move cursor to given position
+func MoveCursor(x int, y int) {
+	fmt.Printf("\033[%d;%dH", y, x)
+}
+
+// Move cursor up relative the current position
+func MoveCursorUp(bias int) {
+	fmt.Printf("\033[%dA", bias)
+}
+
+// Move cursor down relative the current position
+func MoveCursorDown(bias int) {
+	fmt.Printf("\033[%dB", bias)
+}
+
+// Move cursor forward relative the current position
+func MoveCursorForward(bias int) {
+	fmt.Printf("\033[%dC", bias)
+}
+
+// Move cursor backward relative the current position
+func MoveCursorBackward(bias int) {
+	fmt.Printf("\033[%dD", bias)
+}
+
+//
+
 func DoRyeRepl(es *env.ProgramState) {
+
+	codestr := "a: 100\nb: \"jim\"\nprint 10 + 20 + b"
+	codelines := strings.Split(codestr, ",\n")
+
 	line := liner.NewLiner()
 	defer line.Close()
 
@@ -140,11 +178,13 @@ func DoRyeRepl(es *env.ProgramState) {
 
 	// nek variable bo z listo wordow bo ki jih želi setirat v tem okolju in dokler ne pride čez bo repl spraševal za njih
 	// name funkcije pa bo prikazal v promptu dokler smo noter , spet en state var
-	// isti potek bi lahko uporabili za kreirat live validation dialekte npr daš primer podatka rawmap npr za input in potem pišeš dialekt
+	// isti potek bi lahko uporabili za kreirat live validation dialekte npr daš primer podatka Dict npr za input in potem pišeš dialekt
 	// in preverjaš rezultat ... tako z hitrim reset in ponovi workflowon in prikazom rezultata
 	// to s funkcijo se bo dalo čist dobro naredit ... potem pa tudi s kontekstom ne vidim kaj bi bil problem
 
 	line2 := ""
+
+	var prevResult env.Object
 
 	for {
 
@@ -159,6 +199,13 @@ func DoRyeRepl(es *env.ProgramState) {
 			line1 := comment.Split(code, 2) //--- just very temporary solution for some comments in repl. Later should probably be part of loader ... maybe?
 			//fmt.Println(line1)
 			lineReal := strings.Trim(line1[0], "\t")
+
+			// JM20201008
+			if lineReal == "111" {
+				for _, c := range codelines {
+					fmt.Println(c)
+				}
+			}
 
 			// check for #shed commands
 			maybeDoShedCommands(lineReal, es, &shellEd)
@@ -184,7 +231,7 @@ func DoRyeRepl(es *env.ProgramState) {
 					//fmt.Println(lineReal)
 					block, genv := loader.LoadString("{ " + line2 + " }")
 					es := env.AddToProgramState(es, block.Series, genv)
-					EvalBlock(es)
+					EvalBlockInj(es, prevResult, true)
 
 					if arg != "" {
 						if arg == "<-return->" {
@@ -210,6 +257,7 @@ func DoRyeRepl(es *env.ProgramState) {
 							fmt.Println("\x1b[31m" + "Critical error:\n" + es.Res.Inspect(*genv) + "\x1b[0m")
 						}
 						if !es.ErrorFlag && es.Res != nil {
+							prevResult = es.Res
 							fmt.Print("\033[38;5;37m" + es.Res.Inspect(*genv) + "\x1b[0m")
 							if es.Res != nil && shellEd.Mode != "" && !shellEd.Pause && es.Res == shellEd.Return {
 								fmt.Println(" <- the correct value was returned")
@@ -220,7 +268,6 @@ func DoRyeRepl(es *env.ProgramState) {
 						es.ReturnFlag = false
 						es.ErrorFlag = false
 						es.FailureFlag = false
-
 					}
 				}
 
@@ -232,6 +279,12 @@ func DoRyeRepl(es *env.ProgramState) {
 		} else if err == liner.ErrPromptAborted {
 			log.Print("Aborted")
 			break
+		} else if err == liner.ErrJMCodeUp {
+			fmt.Println("")
+			for _, c := range codelines {
+				fmt.Println(c)
+			}
+			MoveCursorUp(len(codelines))
 		} else {
 			log.Print("Error reading line: ", err)
 			break

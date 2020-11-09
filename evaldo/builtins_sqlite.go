@@ -1,3 +1,5 @@
+// +build b_sqlite
+
 package evaldo
 
 import "C"

@@ -21,18 +21,44 @@
 
 ## Long term
 
-- [ ] add to repl the "loader mode" where it doesn't Do the input but just loads it and shows loaded values
+- [x] add to repl the "loader mode" where it doesn't Do the input but just loads it and shows loaded values
 	  this will be helpfull in debugging the more exotic loader tasks. Right now (10.08.2020) Void priority
-	  clashes with the word beginning with underscore (which it shouldn't)
+	  clashes with the word beginning with underscore (which it shouldn't). => Don't need this just enter a block of code
 - [ ] fix the underscore word - void clash in loader
 
 ## Main open design questions
 
 - [ ] exceptions, failures, errors
-	[ ] test the idea we had and implemented in various scenarios (faliure if not handeled or returned becomes error, return words)
+	[x] test the idea we had and implemented in various scenarios (faliure if not handeled or returned becomes error, return words)
 	[ ] if it makes sense, make it work 100%, I suspect it doesn't work in some pipe-word cases
 	[ ] will we need to add try/catch for specific cases
 	
 - [ ] kinds (generic words? namespaces? validation dialect? validated status? ...)
 
 - [ ] contexts (scoping, extending, isolates ...	)
+
+## Kinds (04.10.2020)
+
+- [x] make the Kind object in env
+- [x] make the kind builtin that creates the kind object (sets the block as spec)
+- [x] make a simple kind constructor, that accepts RawMap, validates it and returns a RawMap with specific kind
+
+## Shopify example (11.10.2020)
+
+### dict, list, json
+- [x] rename rawmap to dict in code
+- [x] add another object list which is like rawlist (non indexed and non-boxed values. dict and list are what you get from go-s json parse!
+- [x] make string loader work with " " and ' '
+- [x] try how it looks if dict is direct map without boxing
+- [x] make json load to these objects ... how do we do with one in another exactly ... try
+  - [x] let json-parse load array to list
+  - [x] let json-parse load object to dict
+  - [x] let json-parse load array of objects ... figure out if we convert to dicts at accessor or after parse? .. accessor
+  - [x] make inspect work better for dict and list and list of dicts
+- [x] make map work for lists too, not just blocks
+- [ ] make -> work on blocks too
+### repl
+- [x] try making last value ob line in console be injected block to next line
+- [x] improve the distinction between probe and inspect (probe ob object is what you want to print, inspect is more inspective)
+- [x] if error happens leave the last result alone
+ 	

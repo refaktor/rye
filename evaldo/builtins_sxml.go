@@ -1,3 +1,5 @@
+// +build b_sxml
+
 package evaldo
 
 import (
@@ -17,12 +19,12 @@ import (
 // { <person> [ .print ] }
 // { <person> { _ [ .print ] <name> <surname> <age> { _ [ .print2 ";" ] } }
 
-func load_saxml_rawmap(es *env.ProgramState, block env.Block) (env.RawMap, *env.Error) {
+func load_saxml_Dict(es *env.ProgramState, block env.Block) (env.Dict, *env.Error) {
 
 	var keys []string
 
 	data := make(map[string]interface{})
-	rmap := *env.NewRawMap(data)
+	rmap := *env.NewDict(data)
 
 	for block.Series.Pos() < block.Series.Len() {
 		obj := block.Series.Peek()
@@ -44,7 +46,7 @@ func load_saxml_rawmap(es *env.ProgramState, block env.Block) (env.RawMap, *env.
 			trace4("BLO")
 			block.Series.Next()
 			if obj1.Mode == 1 {
-				// if code assign in to keys in rawmap
+				// if code assign in to keys in Dict
 				if len(keys) > 0 {
 					for _, k := range keys {
 						rmap.Data[k] = obj1
@@ -54,7 +56,7 @@ func load_saxml_rawmap(es *env.ProgramState, block env.Block) (env.RawMap, *env.
 					rmap.Data["-start-"] = obj1
 				}
 			} else if obj1.Mode == 0 {
-				rm, err := load_saxml_rawmap(es, obj1)
+				rm, err := load_saxml_Dict(es, obj1)
 				if err != nil {
 					return _emptyRM(), err
 				}
@@ -68,16 +70,16 @@ func load_saxml_rawmap(es *env.ProgramState, block env.Block) (env.RawMap, *env.
 				}
 			}
 		default:
-			// ni rawmap ampak blok kode, vrni blok
+			// ni Dict ampak blok kode, vrni blok
 			return _emptyRM(), env.NewError("unknow type in block parsing TODO")
 		}
 	}
 	return rmap, nil
 }
 
-func do_sxml(es *env.ProgramState, reader io.Reader, rmap env.RawMap) env.Object {
+func do_sxml(es *env.ProgramState, reader io.Reader, rmap env.Dict) env.Object {
 
-	var stack []env.RawMap
+	var stack []env.Dict
 	var tags []string
 	var curtag string
 	decoder := xml.NewDecoder(reader)
@@ -98,7 +100,7 @@ func do_sxml(es *env.ProgramState, reader io.Reader, rmap env.RawMap) env.Object
 				trace4("START2")
 				tags = append(tags, curtag)
 				switch obj := ob.(type) {
-				case env.RawMap:
+				case env.Dict:
 					trace4("START3")
 					stack = append(stack, rmap)
 					//fmt.Println(stack)
@@ -190,7 +192,7 @@ var Builtins_sxml = map[string]*env.Builtin{
 	"rye-reader//do-sxml": {
 		Argsn: 2,
 		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			rm, err := load_saxml_rawmap(es, arg1.(env.Block))
+			rm, err := load_saxml_Dict(es, arg1.(env.Block))
 			//fmt.Println(rm)
 			if err != nil {
 				es.FailureFlag = true

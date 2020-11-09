@@ -1,0 +1,19 @@
+Print {
+	name: "Rye editor"
+	}
+
+url: start-server |print
+[ 
+	[
+		{
+			print 1123
+			}
+	]
+]
+with new-webview {
+	.set-title "Rye editor" ,
+	.set-size 600 500 ,
+	.bind 'lolo fn { } { print "LOLOLO" } ,
+	.navigate url ,
+	.run
+	}

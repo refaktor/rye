@@ -1,3 +1,5 @@
+// +build !b_tiny
+
 package evaldo
 
 import (

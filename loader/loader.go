@@ -156,7 +156,7 @@ func parseOpword(v *Values, d Any) (Any, error) {
 	//fmt.Println("OPWORD:" + v.Token())
 	word := v.Token()
 	var idx int
-	if len(word) == 1 {
+	if len(word) == 1 || word == "<<" || word == "<-" {
 		// onecharopwords < > + * ... their naming is equal to _< _> _* ...
 		idx = wordIndex.IndexWord("_" + word)
 	} else {
@@ -179,6 +179,12 @@ func parseXword(v *Values, d Any) (Any, error) {
 	return env.Xword{idx}, nil
 }
 
+func parseKindword(v *Values, d Any) (Any, error) {
+	word := v.Token()
+	idx := wordIndex.IndexWord(word[1 : len(word)-1])
+	return env.Kindword{idx}, nil
+}
+
 func parseEXword(v *Values, d Any) (Any, error) {
 	//fmt.Println("TAGWORD:" + v.Token())
 	word := v.Token()
@@ -189,7 +195,12 @@ func parseEXword(v *Values, d Any) (Any, error) {
 func parsePipeword(v *Values, d Any) (Any, error) {
 	//fmt.Println("OPWORD:" + v.Token())
 	word := v.Token()
-	idx := wordIndex.IndexWord(word[1:])
+	var idx int
+	if word == ">>" || word == "->" {
+		idx = wordIndex.IndexWord("_" + word)
+	} else {
+		idx = wordIndex.IndexWord(word[1:])
+	}
 	return env.Pipeword{idx}, nil
 }
 
@@ -214,34 +225,38 @@ func newParser() *Parser {
 	BLOCK       	<-  "{" SPACES SERIES* "}"
 	BBLOCK       	<-  "[" SPACES SERIES* "]"
     GROUP       	<-  "(" SPACES SERIES* ")"
-    SERIES     		<-  (URI / EMAIL / STRING / NUMBER / COMMA / SETWORD / LSETWORD / OPWORD / PIPEWORD / TAGWORD / EXWORD / CPATH / FPATH / XWORD / GENWORD / GETWORD / VOID / WORD / BLOCK / GROUP / BBLOCK / ARGBLOCK ) SPACES
+    SERIES     		<-  (URI / EMAIL / STRING / NUMBER / COMMA / SETWORD / LSETWORD / PIPEWORD / OPWORD / TAGWORD / EXWORD / CPATH / FPATH / KINDWORD / XWORD / GENWORD / GETWORD / VOID / WORD / BLOCK / GROUP / BBLOCK / ARGBLOCK ) SPACES
     ARGBLOCK       	<-  "{" WORD ":" WORD "}"
     WORD           	<-  LETTER LETTERORNUM*
 	GENWORD 		<-  UCLETTER LCLETTERORNUM* 
 	SETWORD    		<-  LETTER LETTERORNUM* ":"
 	LSETWORD    	<-  ":" LETTER LETTERORNUM*
 	GETWORD   		<-  "?" LETTER LETTERORNUM*
-	PIPEWORD   		<-  "|" LETTER LETTERORNUM*
-	OPWORD    		<-  "." LETTER LETTERORNUM* / ONECHARWORDS
+	PIPEWORD   		<-  "|" LETTER LETTERORNUM* / PIPEARROWS
+	OPWORD    		<-  "." LETTER LETTERORNUM* / OPARROWS / ONECHARWORDS 
 	TAGWORD    		<-  "'" LETTER LETTERORNUM*
+	KINDWORD    		<-  "(" LETTER LETTERORNUM* ")"?
 	XWORD    		<-  "<" LETTER LETTERORNUM* ">"?
 	EXWORD    		<-  "</" LETTER LETTERORNUM* ">"?
-	STRING			<-  '"' STRINGCHAR* '"'
+	STRING			<-  ('"' STRINGCHAR* '"') / ("'" STRINGCHAR1* "'")
 	SPACES			<-  SPACE+
 	URI    			<-  WORD "://" URIPATH*
 	EMAIL			<-  EMAILPART "@" EMAILPART 
 	EMAILPART		<-  < ([a-zA-Z0-9._]+) >
 	FPATH 	   		<-  "%" URIPATH*
 	CPATH    		<-  WORD ( "/" WORD )+
-	ONECHARWORDS	<-  < [<>*+-=/] >
-	LETTER  		<-  < [a-zA-Z?=^_] >
-	LETTERORNUM		<-  < [a-zA-Z0-9-?=.\\!_>] >
+	ONECHARWORDS	    <-  < [<>*+-=/] >
+	PIPEARROWS      <-  ">>" / "->"
+	OPARROWS        <-  "<<" / "<-"
+	LETTER  	       	<-  < [a-zA-Z?=^_] >
+	LETTERORNUM		<-  < [a-zA-Z0-9-?=.\\!_+<>] >
 	URIPATH			<-  < [a-zA-Z0-9-?=.:@/\\!_>] >
 	UCLETTER  		<-  < [A-Z] >
 	LCLETTERORNUM	<-  < [a-z0-9] >
     NUMBER         	<-  < [0-9]+ >
 	SPACE			<-  < [ \t\r\n] >
 	STRINGCHAR		<-  < !'"' . >
+	STRINGCHAR1		<-  < !"'" . >
 	COMMA			<-  ","
 	VOID			<-  "_"
 `)
@@ -264,6 +279,7 @@ func newParser() *Parser {
 	g["OPWORD"].Action = parseOpword
 	g["PIPEWORD"].Action = parsePipeword
 	g["TAGWORD"].Action = parseTagword
+	g["KINDWORD"].Action = parseKindword
 	g["XWORD"].Action = parseXword
 	g["EXWORD"].Action = parseEXword
 	g["GENWORD"].Action = parseGenword

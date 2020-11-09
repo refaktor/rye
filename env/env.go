@@ -22,7 +22,7 @@ type EnvR2 struct {
 type RyeCtx struct {
 	state  map[int]Object
 	Parent *RyeCtx
-	kind   Word
+	Kind   Word
 	locked bool
 }
 
@@ -35,7 +35,7 @@ func NewEnv(par *RyeCtx) *RyeCtx {
 
 func (e RyeCtx) Probe(idxs Idxs) string {
 	var bu strings.Builder
-	bu.WriteString("<Context: ")
+	bu.WriteString("<Context (" + e.Kind.Probe(idxs) + "): ")
 	for k, v := range e.state {
 		bu.WriteString(idxs.GetWord(k) + ": " + v.Inspect(idxs) + " ")
 	}
@@ -50,7 +50,7 @@ func (i RyeCtx) Type() Type {
 
 // Inspect returns a string representation of the Integer.
 func (i RyeCtx) Inspect(e Idxs) string {
-	return "<Context of kind " + i.kind.Probe(e) + ">"
+	return i.Probe(e)
 }
 
 func (i RyeCtx) Trace(msg string) {
@@ -59,7 +59,7 @@ func (i RyeCtx) Trace(msg string) {
 }
 
 func (i RyeCtx) GetKind() int {
-	return i.kind.Index
+	return i.Kind.Index
 }
 
 /*func (e *Env) Get(word int) (*Object, bool) {
@@ -105,6 +105,7 @@ type ProgramState struct {
 	Ser          TSeries // current block of code
 	Res          Object  // result of expression
 	Ctx          *RyeCtx // Env object ()
+	PCtx         *RyeCtx // Env object () -- pure countext
 	Idx          *Idxs   // Idx object (index of words)
 	Args         []int   // names of current arguments (indexes of names)
 	Gen          *Gen    // map[int]map[int]Object  // list of Generic kinds / code
@@ -120,6 +121,7 @@ func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
 	ps := ProgramState{
 		ser,
 		nil,
+		NewEnv(nil),
 		NewEnv(nil),
 		idx,
 		make([]int, 6),
@@ -146,5 +148,11 @@ func SetValue(ps *ProgramState, word string, val Object) {
 	idx, found := ps.Idx.GetIndex(word)
 	if found {
 		ps.Ctx.Set(idx, val)
+		switch valf := val.(type) {
+		case Function:
+			if valf.Pure {
+				ps.PCtx.Set(idx, val)
+			}
+		}
 	}
 }

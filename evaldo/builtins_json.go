@@ -1,13 +1,15 @@
+// +build !b_tiny
+
 package evaldo
 
 import (
 	"encoding/json"
-	"fmt"
+	"math"
 	"rye/env"
 )
 
-func _emptyRM() env.RawMap {
-	return env.RawMap{}
+func _emptyRM() env.Dict {
+	return env.Dict{}
 }
 
 func resultToJS(res env.Object) interface{} {
@@ -22,14 +24,24 @@ func resultToJS(res env.Object) interface{} {
 	return nil
 }
 
-func JSToRye(res interface{}) env.Object {
+func JsonToRye(res interface{}) env.Object {
 	switch v := res.(type) {
+	case float64:
+		return env.Integer{int64(math.Round(v))}
+	case int:
+		return env.Integer{int64(v)}
 	case int64:
 		return env.Integer{v}
 	case string:
 		return env.String{v}
 	case map[string]interface{}:
-		return *env.NewRawMap(v)
+		return *env.NewDict(v)
+	case []interface{}:
+		return *env.NewList(v)
+	case env.Object:
+		return v
+	case nil:
+		return nil
 	}
 	return env.Void{}
 }
@@ -45,8 +57,7 @@ func _parse_json(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 en
 		if err != nil {
 			panic(err)
 		}
-		fmt.Println(m)
-		return JSToRye(m)
+		return JsonToRye(m)
 	}
 	return env.Void{}
 }

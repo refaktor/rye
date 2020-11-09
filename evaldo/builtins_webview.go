@@ -1,11 +1,19 @@
-// +build b_webview
+// +build !b_tiny
 
 package evaldo
 
 import "C"
 
 import (
+	"rye/util"
 	//	"fmt"
+	"bytes"
+	"io"
+	"log"
+	"mime"
+	"net"
+	"net/http"
+	"path/filepath"
 	"rye/env"
 
 	"github.com/webview/webview"
@@ -123,7 +131,7 @@ var Builtins_webview = map[string]*env.Builtin{
 						}
 						if fn.Argsn == 1 {
 							win.Value.(webview.WebView).Bind(env1.Idx.GetWord(word.Index), func(a0 interface{}) interface{} {
-								a0_ := JSToRye(a0)
+								a0_ := JsonToRye(a0)
 								CallFunction(fn, env1, a0_, false, env1.Ctx)
 								return resultToJS(env1.Res)
 							})
@@ -138,6 +146,53 @@ var Builtins_webview = map[string]*env.Builtin{
 			default:
 				return env.NewError("arg 1 should be Native")
 			}
+		},
+	},
+
+	"start-server": {
+		Argsn: 0,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			go func() {
+				fs := http.FileServer(http.Dir("./assets"))
+				http.Handle("/", fs)
+
+				log.Println("Listening on :3301...")
+				err := http.ListenAndServe(":3301", nil)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}()
+			return env.String{"http://localhost:3301"}
+		},
+	},
+	"start-serverX": {
+		Argsn: 0,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+
+			ln, err := net.Listen("tcp", "127.0.0.1:0")
+			if err != nil {
+				log.Fatal(err)
+			}
+			go func() {
+				defer ln.Close()
+				http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+					path := r.URL.Path
+					if len(path) > 0 && path[0] == '/' {
+						path = path[1:]
+					}
+					if path == "" {
+						path = "index.html"
+					}
+					if bs, err := util.Asset(path); err != nil {
+						w.WriteHeader(http.StatusNotFound)
+					} else {
+						w.Header().Add("Content-Type", mime.TypeByExtension(filepath.Ext(path)))
+						io.Copy(w, bytes.NewBuffer(bs))
+					}
+				})
+				log.Fatal(http.Serve(ln, nil))
+			}()
+			return env.String{"http://" + ln.Addr().String()}
 		},
 	},
 }

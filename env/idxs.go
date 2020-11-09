@@ -92,13 +92,18 @@ func NewIdxs() *Idxs {
 		"Uri",
 		"LSetword",
 		"Ctx",
-		"RawMap",
+		"Dict",
+		"List",
 		"Date",
 		"CPath",
 		"Xword",
 		"EXword",
 		"Spreadsheet",
 		"Email",
+		"Kind",
+		"Kindword",
+		"Converter",
+		"Time",
 	}
 
 	for _, value := range NativeTypes {

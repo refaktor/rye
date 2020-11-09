@@ -2,8 +2,8 @@
 package util
 
 import (
-	"rye/env"
 	"fmt"
+	"rye/env"
 	"strings"
 )
 
@@ -32,7 +32,7 @@ func IsTruthy(o env.Object) bool {
 	}
 }
 
-func RawMap2Context(ps *env.ProgramState, s1 env.RawMap) env.RyeCtx {
+func Dict2Context(ps *env.ProgramState, s1 env.Dict) env.RyeCtx {
 	ctx := env.NewEnv(ps.Ctx)
 	for k, v := range s1.Data {
 		word := ps.Idx.IndexWord(k)

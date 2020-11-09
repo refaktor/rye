@@ -277,7 +277,7 @@ func TestEvaldo_series_next_pop_peek(t *testing.T) {
 	}
 }
 
-func TestRawMap1(t *testing.T) {
+func TestDict1(t *testing.T) {
 	input := "{ raw-map { \"age\" 123 \"name\" \"Jimbo\" } 123 }" // POP doesn't make sense right now as builtins can't change objects now. If is this good / safety or bad /too restricting
 	block, genv := loader.LoadString(input)
 	es := env.NewProgramState(block.Series, genv)
@@ -294,7 +294,7 @@ func TestRawMap1(t *testing.T) {
 	}
 }
 
-func TestValidateRawMap(t *testing.T) {
+func TestValidateDict(t *testing.T) {
 	//input := "{ rm: raw-map { \"age1\" 1234 \"name\" \"Jimbo\" } vm: validate rm { age: optional \"123\" integer } get vm \"age\" }"
 	input := "{ { \"age1\" 1234 \"name\" \"Jimbo\" } |raw-map |validate { age: optional \"123\" integer } |get \"age\" }"
 	block, genv := loader.LoadString(input)
@@ -314,7 +314,7 @@ func TestValidateRawMap(t *testing.T) {
 	}
 }
 
-func TestValidateRawMap2(t *testing.T) { // passing thru
+func TestValidateDict2(t *testing.T) { // passing thru
 	input := "{ { \"age1\" 1234 \"name\" \"Jimbo\" } |raw-map |validate { name: optional \"JoeDoe\" string } |get \"name\" }"
 	block, genv := loader.LoadString(input)
 	es := env.NewProgramState(block.Series, genv)
@@ -333,7 +333,7 @@ func TestValidateRawMap2(t *testing.T) { // passing thru
 	}
 }
 
-func TestValidateRawMap3(t *testing.T) { // using default
+func TestValidateDict3(t *testing.T) { // using default
 	input := "{ { \"age1\" 1234 \"name1\" \"Jimbo\" } |raw-map |validate { name: optional \"JoeDoe\" string } |get \"name\" }"
 	block, genv := loader.LoadString(input)
 	es := env.NewProgramState(block.Series, genv)
@@ -352,7 +352,7 @@ func TestValidateRawMap3(t *testing.T) { // using default
 	}
 }
 
-func TestValidateRawMap4(t *testing.T) { // two keys, int as string
+func TestValidateDict4(t *testing.T) { // two keys, int as string
 	input := "{ { \"age1\" 1234 \"name1\" \"Jimbo\" } |raw-map |validate { age: optional 111 string  name: optional \"JoeDoe\" string } |get \"age\" }"
 	block, genv := loader.LoadString(input)
 	es := env.NewProgramState(block.Series, genv)
@@ -371,7 +371,7 @@ func TestValidateRawMap4(t *testing.T) { // two keys, int as string
 	}
 }
 
-func TestValidateRawMap5(t *testing.T) { // two keys, int as string, pass true
+func TestValidateDict5(t *testing.T) { // two keys, int as string, pass true
 	input := "{ { \"age\" 1234 \"name1\" \"Jimbo\" } |raw-map |validate { age: required string } |get \"age\" }"
 	block, genv := loader.LoadString(input)
 	es := env.NewProgramState(block.Series, genv)
@@ -390,7 +390,7 @@ func TestValidateRawMap5(t *testing.T) { // two keys, int as string, pass true
 	}
 }
 
-func TestValidateRawMapEmail1(t *testing.T) { // two keys, int as string, pass true
+func TestValidateDictEmail1(t *testing.T) { // two keys, int as string, pass true
 	input := "{ { \"em\" \"toto.bam@gmail.com\" } |raw-map |validate { em: required email } |get \"em\" }"
 	block, genv := loader.LoadString(input)
 	es := env.NewProgramState(block.Series, genv)
@@ -409,7 +409,7 @@ func TestValidateRawMapEmail1(t *testing.T) { // two keys, int as string, pass t
 	}
 }
 
-func TestValidateRawMapDate1(t *testing.T) { // two keys, int as string, pass true
+func TestValidateDictDate1(t *testing.T) { // two keys, int as string, pass true
 	input := "{ { \"da\" \"02.01.1020\" } |raw-map |validate { da: required date } |get \"da\" |print }"
 	block, genv := loader.LoadString(input)
 	es := env.NewProgramState(block.Series, genv)
@@ -425,7 +425,7 @@ func TestValidateRawMapDate1(t *testing.T) { // two keys, int as string, pass tr
 	}
 }
 
-func TestValidateRawMapCheck1(t *testing.T) { // two keys, int as string, pass true
+func TestValidateDictCheck1(t *testing.T) { // two keys, int as string, pass true
 	input := "{ { \"num\" 100 } |raw-map |validate { num: optional 0 check \"too-low\" { .greater 50 } } |get \"num\" |print }"
 	block, genv := loader.LoadString(input)
 	es := env.NewProgramState(block.Series, genv)
@@ -445,7 +445,7 @@ func TestValidateRawMapCheck1(t *testing.T) { // two keys, int as string, pass t
 
 }
 
-func TestValidateRawMapCalc1(t *testing.T) { // two keys, int as string, pass true
+func TestValidateDictCalc1(t *testing.T) { // two keys, int as string, pass true
 	input := "{ { \"numX\" 100 } |raw-map |validate { num: optional 1 calc { .add 10000 } } |get \"num\" |print }"
 	block, genv := loader.LoadString(input)
 	es := env.NewProgramState(block.Series, genv)

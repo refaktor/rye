@@ -8,7 +8,7 @@ package env
 //"fmt"
 
 type TSeries struct {
-	s   []Object
+	S   []Object
 	pos int
 }
 
@@ -18,11 +18,11 @@ func NewTSeries(ser []Object) *TSeries {
 }
 
 func (ser TSeries) Ended() bool {
-	return ser.pos > len(ser.s)
+	return ser.pos > len(ser.S)
 }
 
 func (ser TSeries) AtLast() bool {
-	return ser.pos > len(ser.s)-1
+	return ser.pos > len(ser.S)-1
 }
 
 func (ser TSeries) Pos() int {
@@ -35,24 +35,24 @@ func (ser *TSeries) Next() {
 
 func (ser *TSeries) Pop() Object {
 	ser.pos++
-	if len(ser.s) >= ser.pos {
-		return ser.s[ser.pos-1]
+	if len(ser.S) >= ser.pos {
+		return ser.S[ser.pos-1]
 	} else {
 		return nil
 	}
 }
 
 func (ser *TSeries) Put(obj Object) {
-	ser.s[ser.pos-1] = obj // -1 ... because we already poped out the word .. if this works past the experiment improve this
+	ser.S[ser.pos-1] = obj // -1 ... because we already poped out the word .. if this works past the experiment improve this
 }
 
 func (ser *TSeries) Append(obj Object) *TSeries {
-	ser.s = append(ser.s, obj) // -1 ... because we already poped out the word .. if this works past the experiment improve this
+	ser.S = append(ser.S, obj) // -1 ... because we already poped out the word .. if this works past the experiment improve this
 	return ser
 }
 
 func (ser *TSeries) AppendMul(objs []Object) *TSeries {
-	ser.s = append(ser.s, objs...) // -1 ... because we already poped out the word .. if this works past the experiment improve this
+	ser.S = append(ser.S, objs...) // -1 ... because we already poped out the word .. if this works past the experiment improve this
 	return ser
 }
 
@@ -70,23 +70,23 @@ func (ser *TSeries) GetPos() int {
 }
 
 func (ser *TSeries) GetAll() []Object {
-	return ser.s
+	return ser.S
 }
 
 func (ser TSeries) Peek() Object {
 	//fmt.Println(ser.pos)
 	//fmt.Println(ser.s)
-	if len(ser.s) > ser.pos { // maybe we could store len in object .. test later if it's faster
-		return ser.s[ser.pos]
+	if len(ser.S) > ser.pos { // maybe we could store len in object .. test later if it's faster
+		return ser.S[ser.pos]
 	}
 	return nil
 }
 
 func (ser TSeries) Get(n int) Object {
 	//ser.pos += n + 1
-	return ser.s[n]
+	return ser.S[n]
 }
 
 func (ser TSeries) Len() int {
-	return len(ser.s)
+	return len(ser.S)
 }

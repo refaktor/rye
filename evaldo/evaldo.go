@@ -490,19 +490,33 @@ func CallFunction(fn env.Function, es *env.ProgramState, arg0 env.Object, toLeft
 	env0 := es.Ctx // store reference to current env in local
 	var fnCtx *env.RyeCtx
 	if ctx != nil { // called via contextpath and this is the context
-		if fn.Ctx != nil { // if context was defined at definition time, pass it as parent.
-			fn.Ctx.Parent = ctx
-			fnCtx = env.NewEnv(fn.Ctx)
+		//		fmt.Println("if 111")
+		if fn.Pure {
+			//			fmt.Println("calling pure function")
+			//		fmt.Println(es.PCtx)
+			fnCtx = env.NewEnv(es.PCtx)
 		} else {
-			fnCtx = env.NewEnv(ctx)
+			if fn.Ctx != nil { // if context was defined at definition time, pass it as parent.
+				fn.Ctx.Parent = ctx
+				fnCtx = env.NewEnv(fn.Ctx)
+			} else {
+				fnCtx = env.NewEnv(ctx)
+			}
 		}
 	} else {
-		if fn.Ctx != nil { // if context was defined at definition time, pass it as parent.
-			// Q: Would we want to pass it directly at any point?
-			//    Maybe to remove need of creating new contexts, for reuse, of to be able to modify it?
-			fnCtx = env.NewEnv(fn.Ctx)
+		//fmt.Println("else1")
+		if fn.Pure {
+			//		fmt.Println("calling pure function")
+			//	fmt.Println(es.PCtx)
+			fnCtx = env.NewEnv(es.PCtx)
 		} else {
-			fnCtx = env.NewEnv(env0)
+			if fn.Ctx != nil { // if context was defined at definition time, pass it as parent.
+				// Q: Would we want to pass it directly at any point?
+				//    Maybe to remove need of creating new contexts, for reuse, of to be able to modify it?
+				fnCtx = env.NewEnv(fn.Ctx)
+			} else {
+				fnCtx = env.NewEnv(env0)
+			}
 		}
 	}
 
@@ -527,6 +541,9 @@ func CallFunction(fn env.Function, es *env.ProgramState, arg0 env.Object, toLeft
 		}
 		index := fn.Spec.Series.Get(i).(env.Word).Index
 		fnCtx.Set(index, es.Res)
+		if i == 0 {
+			arg0 = es.Res
+		}
 		es.Args[i] = index
 	}
 	ser0 := es.Ser // only after we process the arguments and get new position
@@ -542,7 +559,11 @@ func CallFunction(fn env.Function, es *env.ProgramState, arg0 env.Object, toLeft
 	//	if ctx != nil {
 	//		result = EvalBlockInCtx(es, ctx)
 	//	} else {
-	result = EvalBlock(es)
+	if arg0 != nil {
+		result = EvalBlockInj(es, arg0, true)
+	} else {
+		result = EvalBlock(es)
+	}
 	//	}
 	if result.ForcedResult != nil {
 		es.Res = result.ForcedResult
@@ -566,6 +587,66 @@ func CallFunction(fn env.Function, es *env.ProgramState, arg0 env.Object, toLeft
 	r = this.evalBlock(b,0,lctx,depth+1);
 	return [r.length>4?r:r[0],pos,state,depth];
 	*/
+}
+
+func CallFunctionArgs2(fn env.Function, es *env.ProgramState, arg0 env.Object, arg1 env.Object, ctx *env.RyeCtx) *env.ProgramState {
+	var fnCtx *env.RyeCtx
+	env0 := es.Ctx  // store reference to current env in local
+	if ctx != nil { // called via contextpath and this is the context
+		//		fmt.Println("if 111")
+		if fn.Pure {
+			//			fmt.Println("calling pure function")
+			//		fmt.Println(es.PCtx)
+			fnCtx = env.NewEnv(es.PCtx)
+		} else {
+			if fn.Ctx != nil { // if context was defined at definition time, pass it as parent.
+				fn.Ctx.Parent = ctx
+				fnCtx = env.NewEnv(fn.Ctx)
+			} else {
+				fnCtx = env.NewEnv(ctx)
+			}
+		}
+	} else {
+		//fmt.Println("else1")
+		if fn.Pure {
+			//		fmt.Println("calling pure function")
+			//	fmt.Println(es.PCtx)
+			fnCtx = env.NewEnv(es.PCtx)
+		} else {
+			if fn.Ctx != nil { // if context was defined at definition time, pass it as parent.
+				// Q: Would we want to pass it directly at any point?
+				//    Maybe to remove need of creating new contexts, for reuse, of to be able to modify it?
+				fnCtx = env.NewEnv(fn.Ctx)
+			} else {
+				fnCtx = env.NewEnv(env0)
+			}
+		}
+	}
+	if es.ErrorFlag || es.ReturnFlag {
+		return es
+	}
+	i := 0
+	index := fn.Spec.Series.Get(i).(env.Word).Index
+	fnCtx.Set(index, arg0)
+	i = 1
+	index = fn.Spec.Series.Get(i).(env.Word).Index
+	fnCtx.Set(index, arg1)
+	ser0 := es.Ser
+	es.Ser = fn.Body.Series
+	env0 = es.Ctx
+	es.Ctx = fnCtx
+	var result *env.ProgramState
+	result = EvalBlockInj(es, arg0, true)
+	if result.ForcedResult != nil {
+		es.Res = result.ForcedResult
+		result.ForcedResult = nil
+	} else {
+		es.Res = result.Res
+	}
+	es.Ctx = env0
+	es.Ser = ser0
+	es.ReturnFlag = false
+	return es
 }
 
 func fmt1() { fmt.Print(1) }

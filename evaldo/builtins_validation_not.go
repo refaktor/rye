@@ -1,14 +1,12 @@
-// +build !b_tiny
+// +build b_tiny
 
 package evaldo
 
-import "C"
-
 import (
 	"fmt"
-	"net/mail"
+	//	"net/mail"
 	"rye/env"
-	"rye/util"
+	// "rye/util"
 	"strconv"
 	"strings"
 	"time"
@@ -25,7 +23,6 @@ func Validation_EvalBlock(es *env.ProgramState, vals env.Dict) (env.Dict, map[st
 
 	var name string
 	var val interface{}
-	res := make(map[string]interface{})
 
 	for es.Ser.Pos() < es.Ser.Len() {
 		object := es.Ser.Pop()
@@ -34,46 +31,23 @@ func Validation_EvalBlock(es *env.ProgramState, vals env.Dict) (env.Dict, map[st
 		case env.Setword:
 			if name != "" {
 				// sets the previous value
-				res[name] = JsonToRye(val)
+				vals.Data[name] = val
 			}
 			name = es.Idx.GetWord(obj.Index)
-			res[name] = JsonToRye(vals.Data[name])
 		case env.Word:
 			if name != "" {
-				val, verr = evalWord(obj, es, res[name])
+				val, verr = evalWord(obj, es, vals.Data[name])
 				if verr != nil {
 					notes[name] = *verr
 				} else {
-					res[name] = val
+					vals.Data[name] = val
 				}
 			}
 		}
 	}
 	//set the last value too
-	res[name] = JsonToRye(val)
-	return *env.NewDict(res), notes
-}
-
-func Validation_EvalBlock_List(es *env.ProgramState, vals env.List) (env.Object, []ValidationError) {
-
-	notes := make([]ValidationError, 0) // TODO ... what is this 2 here ... just for temp
-
-	var res env.Object
-
-	for es.Ser.Pos() < es.Ser.Len() {
-		object := es.Ser.Pop()
-		var verr *ValidationError
-		switch obj := object.(type) {
-		case env.Word:
-			res, verr = evalWord_List(obj, es, vals)
-			if verr != nil {
-				notes = append(notes, *verr)
-			}
-		}
-	}
-
-	//set the last value too
-	return res, notes
+	vals.Data[name] = val
+	return vals, notes
 }
 
 func newVE(n string) *ValidationError {
@@ -138,29 +112,6 @@ func evalWord(word env.Word, es *env.ProgramState, val interface{}) (interface{}
 	}
 }
 
-func evalWord_List(word env.Word, es *env.ProgramState, vals env.List) (env.List, *ValidationError) {
-	// later get all word indexes in adwance and store them only once... then use integer comparisson in switch below
-	// this is two times BAD ... first it needs to retrieve a string of index (BIG BAD) and then it compares string to string
-	// instead of just comparing two integers
-
-	res := make([]interface{}, 0)
-	switch es.Idx.GetWord(word.Index) {
-	case "some":
-		switch blk := es.Ser.Pop().(type) {
-		case env.Block:
-			for _, v := range vals.Data {
-				rit := BuiValidate(es, JsonToRye(v), blk)
-				res = append(res, rit)
-			}
-			return *env.NewList(res), nil
-		default:
-			return *env.NewList(res), nil // TODO ... make error
-		}
-	default:
-		return vals, newVE("unknown word in list validation") // TODO --- this is not a validation error exactly, but more like error in validation code .. think about
-	}
-}
-
 func evalInteger(val interface{}) (interface{}, *ValidationError) {
 	switch val1 := val.(type) {
 	case int64:
@@ -202,11 +153,11 @@ func evalString(val interface{}) (interface{}, *ValidationError) {
 }
 
 func parseEmail(v string) (interface{}, *ValidationError) {
-	e, err := mail.ParseAddress(v)
+	/* e, err := mail.ParseAddress(v)
 	if err != nil {
 		return v, newVE("not email")
-	}
-	return env.String{e.Address}, nil
+	} */
+	return env.String{v}, nil
 }
 
 func evalEmail(val interface{}) (interface{}, *ValidationError) {
@@ -249,83 +200,27 @@ func evalDate(val interface{}) (interface{}, *ValidationError) {
 	}
 }
 
+func something() {
+
+	fmt.Print("1")
+}
+
 func BuiValidate(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object) env.Object {
-	switch blk := arg1.(type) {
-	case env.Block:
-		switch rmap := arg0.(type) {
-		case env.Dict:
+	switch rmap := arg0.(type) {
+	case env.Dict:
+		switch blk := arg1.(type) {
+		case env.Block:
 			ser1 := env1.Ser
 			env1.Ser = blk.Series
 			val, _ := Validation_EvalBlock(env1, rmap)
-			env1.Ser = ser1
-			return val
-		case env.List:
-			ser1 := env1.Ser
-			env1.Ser = blk.Series
-			val, _ := Validation_EvalBlock_List(env1, rmap)
 			env1.Ser = ser1
 			return val
 		default:
 			return env.NewError("arg 2 should be block")
 		}
 	default:
-		return env.NewError("arg 1 should be Dict or List")
+		return env.NewError("arg 1 should be Dict")
 	}
 }
 
-func something() {
-
-	fmt.Print("1")
-}
-
-var Builtins_validation = map[string]*env.Builtin{
-
-	"validate": {
-		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return BuiValidate(env1, arg0, arg1)
-		},
-	},
-
-	"validate>ctx": {
-		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			obj := BuiValidate(env1, arg0, arg1)
-			switch obj1 := obj.(type) {
-			case env.Dict:
-				return util.Dict2Context(env1, obj1)
-			default:
-				return obj1
-			}
-		},
-	},
-
-	/*	"collect": {
-			Argsn: 1,
-			Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-				arg0.Trace("OPEN :::::::::")
-				switch str := arg0.(type) {
-				case env.Uri:
-					fmt.Println(str.Path)
-					db, _ := sql.Open("sqlite3", "temp-database") // TODO -- we need to make path parser in URI then this will be path
-					return *env.NewNative(env1.Idx, db, "Rye-sqlite")
-				default:
-					return env.NewError("arg 2 should be Uri")
-				}
-			},
-		},
-		"pulldown": {
-			Argsn: 2,
-			Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-				arg0.Trace("OPEN :::::::::")
-				switch str := arg0.(type) {
-				case env.Uri:
-					fmt.Println(str.Path)
-					db, _ := sql.Open("sqlite3", "temp-database") // TODO -- we need to make path parser in URI then this will be path
-					return *env.NewNative(env1.Idx, db, "Rye-sqlite")
-				default:
-					return env.NewError("arg 2 should be Uri")
-				}
-			},
-		},*/
-}
+var Builtins_validation = map[string]*env.Builtin{}

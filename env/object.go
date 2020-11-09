@@ -31,14 +31,21 @@ const (
 	UriType         Type = 18
 	LSetwordType    Type = 19
 	CtxType         Type = 20
-	RawMapType      Type = 21
-	DateType        Type = 22
-	CPathType       Type = 23
-	XwordType       Type = 24
-	EXwordType      Type = 25
-	SpreadsheetType Type = 26
-	EmailType       Type = 27
+	DictType        Type = 21
+	ListType        Type = 22
+	DateType        Type = 23
+	CPathType       Type = 24
+	XwordType       Type = 25
+	EXwordType      Type = 26
+	SpreadsheetType Type = 27
+	EmailType       Type = 28
+	KindType        Type = 29
+	KindwordType    Type = 30
+	ConverterType   Type = 31
+	TimeType        Type = 32
 )
+
+// after adding new type here, also add string to idxs.go
 
 type Object interface {
 	Type() Type
@@ -102,7 +109,7 @@ func (i String) Inspect(e Idxs) string {
 
 // Inspect returns a string representation of the Integer.
 func (i String) Probe(e Idxs) string {
-	return i.Value
+	return "\"" + i.Value + "\""
 }
 
 func (i String) Trace(msg string) {
@@ -162,6 +169,10 @@ func NewUri(index *Idxs, scheme Word, path string) *Uri {
 
 func (i Uri) GetPath() string {
 	return strings.SplitAfter(i.Path, "://")[1]
+}
+
+func (i Uri) GetProtocol() string {
+	return strings.Split(i.Path, "://")[0]
 }
 
 func (i Uri) Type() Type {
@@ -244,19 +255,31 @@ func (i Block) Type() Type {
 }
 
 // Inspect returns a string representation of the Integer.
-func (i Block) Inspect(e Idxs) string {
-	return "<Block: " + i.Probe(e) + ">"
+func (b Block) Inspect(e Idxs) string {
+	var r strings.Builder
+	r.WriteString("<Block: ")
+	for i := 0; i < b.Series.Len(); i += 1 {
+		if b.Series.Get(i) != nil {
+			r.WriteString(b.Series.Get(i).Inspect(e))
+			r.WriteString(" ")
+		}
+	}
+	r.WriteString(">")
+	return r.String()
 }
 
 // Inspect returns a string representation of the Integer.
 func (b Block) Probe(e Idxs) string {
-	res := ""
+	var r strings.Builder
+	r.WriteString("{ ")
 	for i := 0; i < b.Series.Len(); i += 1 {
 		if b.Series.Get(i) != nil {
-			res += b.Series.Get(i).Inspect(e)
+			r.WriteString(b.Series.Get(i).Probe(e))
+			r.WriteString(" ")
 		}
 	}
-	return res
+	r.WriteString(" }")
+	return r.String()
 }
 
 func (i Block) Trace(msg string) {
@@ -322,7 +345,7 @@ func (i Setword) Inspect(e Idxs) string {
 
 // Inspect returns a string representation of the Integer.
 func (b Setword) Probe(e Idxs) string {
-	return e.GetWord(b.Index)
+	return e.GetWord(b.Index) + ":"
 }
 
 func (i Setword) Trace(msg string) {
@@ -355,7 +378,7 @@ func (i LSetword) Inspect(e Idxs) string {
 
 // Inspect returns a string representation of the Integer.
 func (b LSetword) Probe(e Idxs) string {
-	return e.GetWord(b.Index)
+	return ":" + e.GetWord(b.Index)
 }
 
 func (i LSetword) Trace(msg string) {
@@ -388,7 +411,7 @@ func (i Opword) Inspect(e Idxs) string {
 
 // Inspect returns a string representation of the Integer.
 func (b Opword) Probe(e Idxs) string {
-	return e.GetWord(b.Index)
+	return "." + e.GetWord(b.Index)
 }
 
 func (i Opword) Trace(msg string) {
@@ -425,7 +448,7 @@ func (i Pipeword) Inspect(e Idxs) string {
 
 // Inspect returns a string representation of the Integer.
 func (b Pipeword) Probe(e Idxs) string {
-	return e.GetWord(b.Index)
+	return "|" + e.GetWord(b.Index)
 }
 
 func (i Pipeword) Trace(msg string) {
@@ -550,6 +573,43 @@ func (i EXword) ToWord() Word {
 
 func (i EXword) GetKind() int {
 	return int(EXwordType)
+}
+
+//
+// KINDWORD
+//
+
+// Integer represents an integer.
+type Kindword struct {
+	Index int
+}
+
+// Type returns the type of the Integer.
+func (i Kindword) Type() Type {
+	return KindwordType
+}
+
+// Inspect returns a string
+func (i Kindword) Inspect(e Idxs) string {
+	return "<Kindword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + ">"
+}
+
+// Inspect returns a string representation of the Integer.
+func (b Kindword) Probe(e Idxs) string {
+	return e.GetWord(b.Index)
+}
+
+func (i Kindword) Trace(msg string) {
+	fmt.Print(msg + " (Kidnword): ")
+	fmt.Println(i.Index)
+}
+
+func (i Kindword) ToWord() Word {
+	return Word{i.Index}
+}
+
+func (i Kindword) GetKind() int {
+	return int(KindwordType)
 }
 
 //
@@ -696,15 +756,16 @@ type Function struct {
 	Spec  Block
 	Body  Block
 	Ctx   *RyeCtx
+	Pure  bool
 }
 
-func NewFunction(spec Block, body Block) *Function {
-	o := Function{spec.Series.Len(), spec, body, nil}
+func NewFunction(spec Block, body Block, pure bool) *Function {
+	o := Function{spec.Series.Len(), spec, body, nil, pure}
 	return &o
 }
 
-func NewFunctionC(spec Block, body Block, ctx *RyeCtx) *Function {
-	o := Function{spec.Series.Len(), spec, body, ctx}
+func NewFunctionC(spec Block, body Block, ctx *RyeCtx, pure bool) *Function {
+	o := Function{spec.Series.Len(), spec, body, ctx, pure}
 	return &o
 }
 
@@ -716,7 +777,11 @@ func (i Function) Type() Type {
 // Inspect returns a string representation of the Integer.
 func (i Function) Inspect(e Idxs) string {
 	// LONG DISPLAY OF FUNCTION NODES return "<Function: " + i.Spec.Inspect(e) + ", " + i.Body.Inspect(e) + ">"
-	return "<Function: " + strconv.FormatInt(int64(i.Argsn), 10) + ">"
+	var pure_s string
+	if i.Pure {
+		pure_s = "Pure "
+	}
+	return "<" + pure_s + "Function: " + strconv.FormatInt(int64(i.Argsn), 10) + ">"
 }
 
 // Inspect returns a string representation of the Integer.
@@ -751,10 +816,11 @@ type Builtin struct {
 	Cur3          Object
 	Cur4          Object
 	AcceptFailure bool
+	Pure          bool
 }
 
-func NewBuiltin(fn BuiltinFunction, argsn int, acceptFailure bool) *Builtin {
-	bl := Builtin{fn, argsn, nil, nil, nil, nil, nil, acceptFailure}
+func NewBuiltin(fn BuiltinFunction, argsn int, acceptFailure bool, pure bool) *Builtin {
+	bl := Builtin{fn, argsn, nil, nil, nil, nil, nil, acceptFailure, pure}
 	return &bl
 }
 
@@ -765,7 +831,12 @@ func (b Builtin) Type() Type {
 
 // Inspect returns a string representation of the Builtin.
 func (b Builtin) Inspect(e Idxs) string {
-	return "<Builtin>"
+	var pure_s string
+	if b.Pure {
+		pure_s = "Pure "
+	}
+
+	return "<" + pure_s + "Builtin>"
 }
 
 func (b Builtin) Probe(e Idxs) string {
@@ -995,21 +1066,21 @@ func (i Native) GetKind() int {
 }
 
 //
-// RawMap -- nonindexed map ... for example for params from request etc, so we don't neet to idex keys and it doesn't need boxed values
+// Dict -- nonindexed and unboxed map ... for example for params from request etc, so we don't neet to idex keys and it doesn't need boxed values
 // I think it should have option of having Kind too ...
 //
 
 // String represents an string.
-type RawMap struct {
+type Dict struct {
 	Data map[string]interface{}
 	Kind Word
 }
 
-func NewRawMap(data map[string]interface{}) *RawMap {
-	return &RawMap{data, Word{0}}
+func NewDict(data map[string]interface{}) *Dict {
+	return &Dict{data, Word{0}}
 }
 
-func NewRawMapFromSeries(block TSeries) RawMap {
+func NewDictFromSeries(block TSeries) Dict {
 	data := make(map[string]interface{})
 	for block.Pos() < block.Len() {
 		key := block.Pop()
@@ -1020,28 +1091,231 @@ func NewRawMapFromSeries(block TSeries) RawMap {
 			data[k.Value] = val
 		}
 	}
-	return RawMap{data, Word{0}}
+	return Dict{data, Word{0}}
 }
 
 // Type returns the type of the Integer.
-func (i RawMap) Type() Type {
-	return RawMapType
+func (i Dict) Type() Type {
+	return DictType
 }
 
 // Inspect returns a string representation of the Integer.
-func (i RawMap) Inspect(e Idxs) string {
-	return "<RawMap OF " + i.Kind.Probe(e) + ">"
+func (i Dict) Inspect(idxs Idxs) string {
+	var bu strings.Builder
+	bu.WriteString("<Dict (" + i.Kind.Probe(idxs) + "): ")
+	for k, v := range i.Data {
+		switch ob := v.(type) {
+		case Object:
+			bu.WriteString(k + ": " + ob.Inspect(idxs) + " ")
+		default:
+			bu.WriteString(k + ": " + fmt.Sprint(ob) + " ")
+		}
+	}
+	bu.WriteString(">")
+	return bu.String()
 }
 
 // Inspect returns a string representation of the Integer.
-func (i RawMap) Probe(e Idxs) string {
-	return "<RawMap OF " + i.Kind.Probe(e) + ">"
+func (i Dict) Probe(e Idxs) string {
+	return i.Inspect(e)
 }
 
-func (i RawMap) Trace(msg string) {
-	fmt.Print(msg + "(rawmap): ")
+func (i Dict) Trace(msg string) {
+	fmt.Print(msg + "(Dict): ")
 }
 
-func (i RawMap) GetKind() int {
+func (i Dict) GetKind() int {
 	return i.Kind.Index
+}
+
+//
+// List -- nonindexed and unboxed list (block)
+//
+
+type List struct {
+	Data []interface{}
+	Kind Word
+}
+
+func NewList(data []interface{}) *List {
+	return &List{data, Word{0}}
+}
+
+func NewListFromSeries(block TSeries) List {
+	data := make([]interface{}, block.Len())
+	for block.Pos() < block.Len() {
+		k1 := block.Pop()
+		i := block.Pos()
+		switch k := k1.(type) {
+		case String:
+			data[i] = k.Value
+		case Integer:
+			data[i] = k.Value
+		}
+	}
+	return List{data, Word{0}}
+}
+
+// Type returns the type of the Integer.
+func (i List) Type() Type {
+	return ListType
+}
+
+// Inspect returns a string representation of the Integer.
+func (i List) Inspect(idxs Idxs) string {
+	var bu strings.Builder
+	bu.WriteString("<List (" + i.Kind.Probe(idxs) + "): ")
+	for _, v := range i.Data {
+		switch ob := v.(type) {
+		case map[string]interface{}:
+			vv := NewDict(ob)
+			bu.WriteString(" " + vv.Inspect(idxs) + " ")
+		case Object:
+			bu.WriteString(" " + ob.Inspect(idxs) + " ")
+		default:
+			bu.WriteString(" " + fmt.Sprint(ob) + " ")
+		}
+	}
+	bu.WriteString(">")
+	return bu.String()
+}
+
+// Inspect returns a string representation of the Integer.
+func (i List) Probe(e Idxs) string {
+	return i.Inspect(e)
+}
+
+func (i List) Trace(msg string) {
+	fmt.Print(msg + "(List): ")
+}
+
+func (i List) GetKind() int {
+	return i.Kind.Index
+}
+
+// KIND Type
+
+//
+// Kind
+//
+
+type Kind struct {
+	Kind       Word
+	Spec       Block
+	Converters map[int]Block
+}
+
+func NewKind(kind Word, spec Block) *Kind {
+	var o Kind // o := Kind{kind, spec}
+	o.Kind = kind
+	o.Spec = spec
+	o.Converters = make(map[int]Block)
+	return &o
+}
+
+func (i Kind) Type() Type {
+	return KindType
+}
+
+// Inspect returns a string representation of the Integer.
+func (i Kind) Inspect(e Idxs) string {
+	// LONG DISPLAY OF FUNCTION NODES return "<Function: " + i.Spec.Inspect(e) + ", " + i.Body.Inspect(e) + ">"
+	return "<Kind(" + i.Kind.Probe(e) + "): " + i.Spec.Inspect(e) + ">"
+}
+
+// Inspect returns a string representation of the Integer.
+func (i Kind) Probe(e Idxs) string {
+	return "<Kind: " + i.Spec.Inspect(e) + ">"
+}
+
+func (i Kind) Trace(msg string) {
+	fmt.Print(msg + " (Kind): ")
+	fmt.Println(i.Spec)
+}
+
+func (i Kind) GetKind() int {
+	return int(KindType)
+}
+
+func (i Kind) SetConverter(from int, spec Block) {
+	i.Converters[from] = spec
+}
+
+func (i Kind) HasConverter(from int) bool {
+	if _, ok := i.Converters[from]; ok {
+		return true
+	} else {
+		return false
+	}
+}
+
+//
+// Converter
+//
+
+type Converter struct {
+	From Word
+	To   Word
+	Spec Block
+}
+
+func NewConverter(from Word, to Word, spec Block) *Converter {
+	o := Converter{from, to, spec}
+	return &o
+}
+
+func (i Converter) Type() Type {
+	return ConverterType
+}
+
+// Inspect returns a string representation of the Integer.
+func (i Converter) Inspect(e Idxs) string {
+	// LONG DISPLAY OF FUNCTION NODES return "<Function: " + i.Spec.Inspect(e) + ", " + i.Body.Inspect(e) + ">"
+	return "<Converter(" + i.From.Probe(e) + "->" + i.To.Probe(e) + "): " + i.Spec.Inspect(e) + ">"
+}
+
+// Inspect returns a string representation of the Integer.
+func (i Converter) Probe(e Idxs) string {
+	return i.Spec.Inspect(e)
+}
+
+func (i Converter) Trace(msg string) {
+	fmt.Print(msg + " (Converter): ")
+	fmt.Println(i.Spec)
+}
+
+func (i Converter) GetKind() int {
+	return int(ConverterType)
+}
+
+//
+// TIME
+//
+
+type Time struct {
+	Value time.Time
+}
+
+// Type returns the type of the Integer.
+func (i Time) Type() Type {
+	return TimeType
+}
+
+// Inspect returns a string representation of the Integer.
+func (i Time) Inspect(e Idxs) string {
+	return "<Time: " + i.Probe(e) + ">"
+}
+
+// Inspect returns a string representation of the Integer.
+func (i Time) Probe(e Idxs) string {
+	return i.Value.Format("2006-01-02 15:04:05")
+}
+
+func (i Time) Trace(msg string) {
+	fmt.Print(msg + "(time): ")
+	fmt.Println(i.Value)
+}
+
+func (i Time) GetKind() int {
+	return int(TimeType)
 }

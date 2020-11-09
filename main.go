@@ -400,7 +400,6 @@ func main_rye_repl(in io.Reader, out io.Writer) {
 	profile_path := filepath.Join(user.HomeDir, ".rye-profile")
 
 	if _, err := os.Stat(profile_path); err == nil {
-		fmt.Print("loading your profile")
 		content, err := ioutil.ReadFile(profile_path)
 		if err != nil {
 			log.Fatal(err)
