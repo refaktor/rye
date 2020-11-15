@@ -64,8 +64,7 @@ func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toL
 		//fmt.Println(" ARG 1 ")
 		//fmt.Println(ps.Ser.GetPos())
 		// evalExprFn(ps, true)
-
-		if checkFlags(bi, ps, 0) {
+		if checkFlagsBi(bi, ps, 0) {
 			return ps
 		}
 		if ps.ErrorFlag || ps.ReturnFlag {
@@ -74,10 +73,8 @@ func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toL
 		arg0 = stack.Pop()
 	}
 	if bi.Argsn > 1 && bi.Cur1 == nil {
-
 		//evalExprFn(ps, true) // <---- THESE DETERMINE IF IT CONSUMES WHOLE EXPRESSION OR NOT IN CASE OF PIPEWORDS .. HM*... MAYBE WOULD COULD HAVE A WORD MODIFIER?? a: 2 |add 5 a:: 2 |add 5 print* --TODO
-
-		if checkFlags(bi, ps, 1) {
+		if checkFlagsBi(bi, ps, 1) {
 			return ps
 		}
 		if ps.ErrorFlag || ps.ReturnFlag {
@@ -109,7 +106,7 @@ func Eyr_EvalObject(es *env.ProgramState, object env.Object, leftVal env.Object,
 		// OBJECT INJECTION EXPERIMENT
 		// es.Ser.Put(bu)
 
-		if checkFlags(bu, es, 333) {
+		if checkFlagsBi(bu, es, 333) {
 			return es
 		}
 		return Eyr_CallBuiltin(bu, es, leftVal, toLeft, stack)
@@ -178,7 +175,7 @@ func Eyr_EvalExpression(es *env.ProgramState, stack *EyrStack) *env.ProgramState
 func Eyr_EvalBlock(es *env.ProgramState, stack *EyrStack) *env.ProgramState {
 	for es.Ser.Pos() < es.Ser.Len() {
 		es = Eyr_EvalExpression(es, stack)
-		if checkFlags2(es, 101) {
+		if checkFlagsAfterBlock(es, 101) {
 			return es
 		}
 		if es.ReturnFlag || es.ErrorFlag {

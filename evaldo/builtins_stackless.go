@@ -22,7 +22,7 @@ func Stck_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, to
 		//fmt.Println(ps.Ser.GetPos())
 		evalExprFn(ps, true)
 
-		if checkFlags(bi, ps, 0) {
+		if checkFlagsBi(bi, ps, 0) {
 			return ps
 		}
 		if ps.ErrorFlag || ps.ReturnFlag {
@@ -34,7 +34,7 @@ func Stck_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, to
 
 		evalExprFn(ps, true) // <---- THESE DETERMINE IF IT CONSUMES WHOLE EXPRESSION OR NOT IN CASE OF PIPEWORDS .. HM*... MAYBE WOULD COULD HAVE A WORD MODIFIER?? a: 2 |add 5 a:: 2 |add 5 print* --TODO
 
-		if checkFlags(bi, ps, 1) {
+		if checkFlagsBi(bi, ps, 1) {
 			return ps
 		}
 		if ps.ErrorFlag || ps.ReturnFlag {
@@ -61,7 +61,7 @@ func Stck_EvalObject(es *env.ProgramState, object env.Object, leftVal env.Object
 		// OBJECT INJECTION EXPERIMENT
 		// es.Ser.Put(bu)
 
-		if checkFlags(bu, es, 333) {
+		if checkFlagsBi(bu, es, 333) {
 			return es
 		}
 		return Stck_CallBuiltin(bu, es, leftVal, toLeft)
@@ -125,7 +125,7 @@ func Stck_EvalExpression(es *env.ProgramState) *env.ProgramState {
 func Stck_EvalBlock(es *env.ProgramState) *env.ProgramState {
 	for es.Ser.Pos() < es.Ser.Len() {
 		es = Stck_EvalExpression(es)
-		if checkFlags2(es, 101) {
+		if checkFlagsAfterBlock(es, 101) {
 			return es
 		}
 		if es.ReturnFlag || es.ErrorFlag {
