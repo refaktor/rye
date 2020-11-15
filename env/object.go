@@ -854,10 +854,12 @@ func (i Builtin) Trace(msg string) {
 
 // Integer represents an integer.
 type Error struct {
-	Status  int
-	Message string
-	Parent  *Error
-	Values  map[string]Object
+	Status      int
+	Message     string
+	Parent      *Error
+	Values      map[string]Object
+	CodeContext *RyeCtx
+	CodeBlock   TSeries
 }
 
 // Type returns the type of the Integer.
@@ -879,11 +881,11 @@ func (i Error) Inspect(e Idxs) string {
 // Inspect returns a string representation of the Integer.
 func (i Error) Probe(e Idxs) string {
 	var b strings.Builder
-	b.WriteString("<Error: " + i.Message + " ")
+	b.WriteString("Error: " + i.Message + " ")
 	if i.Parent != nil {
-		b.WriteString(i.Parent.Probe(e))
+		b.WriteString("\n\t" + i.Parent.Probe(e))
 	}
-	b.WriteString(">")
+	b.WriteString("")
 	return b.String()
 }
 

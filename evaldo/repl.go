@@ -253,8 +253,19 @@ func DoRyeRepl(es *env.ProgramState) {
 						if es.FailureFlag {
 							fmt.Println("\x1b[33m" + "Failure" + "\x1b[0m")
 						}
+
 						if es.ErrorFlag {
-							fmt.Println("\x1b[31m" + "Critical error:\n" + es.Res.Inspect(*genv) + "\x1b[0m")
+							fmt.Println("\x1b[35;3m" + es.Res.Probe(*genv))
+							switch err := es.Res.(type) {
+							case env.Error:
+
+								fmt.Println(err.CodeBlock.Probe(*genv))
+								fmt.Println("Error not pointer so bug. #temp")
+							case *env.Error:
+								fmt.Println("At location:")
+								fmt.Println(err.CodeBlock.Probe(*genv))
+							}
+							fmt.Println("\x1b[0m")
 						}
 						if !es.ErrorFlag && es.Res != nil {
 							prevResult = es.Res

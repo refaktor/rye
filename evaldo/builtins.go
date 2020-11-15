@@ -171,6 +171,29 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+	"_/": {
+		Argsn: 2,
+		Pure:  true,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch a := arg0.(type) {
+			case env.Integer:
+				switch b := arg1.(type) {
+				case env.Integer:
+					if b.Value == 0 {
+						env1.FailureFlag = true
+						return env.NewError("cannot divide by zero")
+					}
+					return env.Integer{a.Value / b.Value}
+				default:
+					env1.ErrorFlag = true
+					return env.NewError("first arg not integer")
+				}
+			default:
+				env1.ErrorFlag = true
+				return env.NewError("second arg not integer")
+			}
+		},
+	},
 	"_=": {
 		Argsn: 2,
 		Pure:  true,
@@ -1776,7 +1799,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"fail": {
+	"^fail": {
 		Argsn: 1,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			//fmt.Println("FAIL")
@@ -1784,24 +1807,24 @@ var builtins = map[string]*env.Builtin{
 			ps.ReturnFlag = true
 			switch val := arg0.(type) {
 			case env.String: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
-				return *env.NewError(val.Value)
+				return env.NewError(val.Value)
 			case env.Integer: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
-				return *env.NewError1(int(val.Value))
+				return env.NewError1(int(val.Value))
 			}
 			return arg0
 		},
 	},
 
-	"failure": {
+	"fail": {
 		Argsn: 1,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			//fmt.Println("FAIL")
 			ps.FailureFlag = true
 			switch val := arg0.(type) {
 			case env.String: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
-				return *env.NewError(val.Value)
+				return env.NewError(val.Value)
 			case env.Integer: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
-				return *env.NewError1(int(val.Value))
+				return env.NewError1(int(val.Value))
 			}
 			return arg0
 		},
@@ -1851,12 +1874,12 @@ var builtins = map[string]*env.Builtin{
 			if ps.FailureFlag {
 				ps.ReturnFlag = true
 				switch er := arg0.(type) {
-				case env.Error: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+				case *env.Error: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
 					switch val := arg1.(type) {
 					case env.String: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
-						return *env.NewError4(0, val.Value, &er, nil)
+						return env.NewError4(0, val.Value, er, nil)
 					case env.Integer: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
-						return *env.NewError4(int(val.Value), "", &er, nil)
+						return env.NewError4(int(val.Value), "", er, nil)
 					}
 				}
 				return env.NewError("error 1")
@@ -1900,8 +1923,32 @@ var builtins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
+					EvalBlockInj(ps, arg0, true)
+					ps.Ser = ser
+					return ps.Res
+				default:
+					return env.NewError("Error ..TODO")
+				}
+			} else {
+				return arg0
+			}
+		},
+	},
+
+	"^fix": {
+		AcceptFailure: true,
+		Argsn:         2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			if ps.FailureFlag || arg0.Type() == env.ErrorType {
+				ps.FailureFlag = false
+				// TODO -- create function do_block and call in all cases
+				switch bloc := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = bloc.Series
 					EvalBlock(ps)
 					ps.Ser = ser
+					ps.ReturnFlag = true
 					return ps.Res
 				default:
 					return env.NewError("Error ..TODO")

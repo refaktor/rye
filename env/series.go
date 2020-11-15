@@ -1,11 +1,9 @@
 // series.go
 package env
 
-//"fmt"
-
-//"fmt"
-
-//"fmt"
+import (
+	"strings"
+)
 
 type TSeries struct {
 	S   []Object
@@ -89,4 +87,21 @@ func (ser TSeries) Get(n int) Object {
 
 func (ser TSeries) Len() int {
 	return len(ser.S)
+}
+
+// Inspect returns a string representation of the Integer.
+func (ser TSeries) Probe(idxs Idxs) string {
+	var bu strings.Builder
+	bu.WriteString("{ ")
+	for i, v := range ser.S {
+		if i == ser.Pos()-1 {
+			bu.WriteString("<-here-> ")
+		}
+		bu.WriteString(v.Probe(idxs) + " ")
+	}
+	if ser.Len() == ser.Pos()-1 {
+		bu.WriteString("<-here-> ")
+	}
+	bu.WriteString("}")
+	return bu.String()
 }
