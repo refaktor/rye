@@ -900,5 +900,45 @@ would be that we create a context of pure functions (they could be available in 
 context, not the ordinary one. So unpure function/builtin would be undefined in a pure function code. I need to try this solution, we already have very flexible
 context manipulation (look at isolates), so this could already be possible inside a language almost.
 
+# 15.11.2020
 
+## Http server + websockets
 
+In the meantime I made a stdlib-s golang's http server in rye. I also added a websocket handling. Since the stdlib is said to not be that good I used 3-rd party. There are at least 3 
+contenders here. Maybe I will switch to another one as I dive deeper into this. Currently the stupid problem is that the error in the handler isn't reported. Even worse, the websocket handler
+stops reponding. And even worse still, after we close the websocket client connection handlers stop responding also (I think they didn't initially, so I maybe introduced some error on stop). 
+It's hard to tell since we don't get any error reporting or printout from the handler.
+
+	new-server ":8080"
+	 |handle "/" "Hello from Rye!"  
+	 |handle "/fn" fn { w r } { write w "Hello from Rye function!" }  
+	 |handle-ws "/echo" fn { s ctx } { forever { read s ctx :m , write s ctx m } }  
+	 |handle-ws "/ping" fn { s ctx } { forever { read s ctx :m = "Ping" |if { write s ctx "Pong" } } }   
+	 |serve
+
+## on-error-do
+
+So this should be the next thing to tackle. After a little thought I saw why the error isn't printed out. As it is now the repl prints out the error. And in case of a hadler there is 
+no repl interaction involved. The interpreter itself doesn't do this, because I was thinking that "printing" an error is just one case what you want to happen on error. The "what should happen"
+is app or environment specific. Maybe you want to log it, maybe display it in UI, send it to client, etc ... 
+
+The idea was always that there should be an option of defining an sort of "od-error" function in your or projects profile, or code itself and it would determine this. Thinking now about it, 
+it should be context specific, so you can redefine it in specific contexts. If you don't and are in a normal rooted context then the parent or root context definition is used. So defining
+a normal word inside context gives us this desired behaviour it seems, So we don't need a special pointer inside context or some other environment related object.
+
+## the interpreter should then
+
+so on error interpreter should use current context to search for the on-error-do word. If it's not there then for now it does nothing, just dies, if it is there it disarms the error and 
+calls it with error as a first argument. Keep in mind that the contexts can be nested and also errors can be nested. **Let's do this.**
+
+[ ] on error in interpreter call a on-error-do function
+[ ] some code met at runtime is a coding error ( like "do [ print ]" with no additionl arg). Is this the same type of runtime "error", or something else, a "code mistake" that needs to be fixed either way? Handle this at least temporarily.
+ 
+## Handler function + program state
+
+So far the handler just called a regular function, but I am not sure this is ok really. The ordinary function holds a reference to a programstate that changes. This is then shared between
+the handler functions, but at least some data, like current block and the position of ealuation inside it shouldn't be. Also these functions should not have a write access to words in parent
+contexts (maybe no functions should anyway ... I haven't fully determined if this is really needed :/ ... you need read access to have access to functions and "constants" that you defined in parent contexts)
+
+In any case ... we should dissect program state and think what parts are shared in concurrent use, what are ok to be shared and what do we need to create new version of program state 
+that can run in it's own "thread". Could we serialize this progrm state or swith between them freely?

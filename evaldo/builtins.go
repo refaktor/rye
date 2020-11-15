@@ -1818,7 +1818,6 @@ var builtins = map[string]*env.Builtin{
 			case env.Integer: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
 				return *env.NewError1(int(val.Value))
 			}
-
 			return arg0
 		},
 	},
