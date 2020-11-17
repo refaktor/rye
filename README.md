@@ -22,6 +22,8 @@ The language [introduction](https://refaktor.github.io/rye/INTRO_1.md) are work 
 
 There is also a [simple website](https://refaktor.github.io/rye/) being made.
 
+There is also a very small [FB group](https://www.facebook.com/groups/866313463771373).
+
 ## Platforms
 
 Currently, tested on Linux, Mac and Docker.
