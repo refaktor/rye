@@ -2191,6 +2191,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_conversion, ps)
 	RegisterBuiltins2(Builtins_nng, ps)
 	RegisterBuiltins2(Builtins_http, ps)
+	RegisterBuiltins2(Builtins_crypto, ps)
 	// RegisterBuiltins2(Builtins_psql, ps)
 }
 
