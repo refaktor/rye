@@ -14,13 +14,17 @@ if true code
 // outputs: Hello Jim!
 ```
 
-## Progress
+## Examples and more info
 
-The language [introduction documents](https://refaktor.github.io/rye/INTRO_1.md) are work in progress.
+A [blog](https://ryelang.blogspot.com/) following development.
 
-There is also a [simple website](https://refaktor.github.io/rye/) being made. Mostly so that notes and intros have correct syntax highlighted code examples.
+The language [introduction](https://refaktor.github.io/rye/INTRO_1.html) are work in progress.
 
-## Development and experimentation
+There is also a [simple website](https://refaktor.github.io/rye/) being made.
+
+There is also a very small [FB group](https://www.facebook.com/groups/866313463771373) you can join.
+
+## Platforms
 
 Currently, tested on Linux, Mac and Docker.
 
