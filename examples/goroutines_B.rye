@@ -1,0 +1,18 @@
+
+downloader: pipe {
+	|pass { .get .length .prn , prn "is length of" }
+	|print
+}
+
+sites: {
+	https://www.google.com
+	https://www.yahoo.com
+	https://www.duckduckgo.com
+	https://www.najdi.si
+}
+
+for sites { .go-with ?downloader }
+
+print "waiting..."
+sleep 4000
+print "stopped waiting"

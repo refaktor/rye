@@ -494,6 +494,63 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"switch": {
+		Argsn:         2,
+		AcceptFailure: true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg1.(type) {
+			case env.Block:
+
+				var code env.Object
+
+				any_found := false
+				//fmt.Println("BLOCK")
+
+				for i := 0; i < bloc.Series.Len(); i += 2 {
+					//fmt.Println("LOOP")
+
+					if i > bloc.Series.Len()-2 {
+						return env.NewError("switch block malformed")
+					}
+
+					ev := bloc.Series.Get(i)
+					if arg0.GetKind() == ev.GetKind() && arg0.Inspect(*ps.Idx) == ev.Inspect(*ps.Idx) {
+						any_found = true
+						code = bloc.Series.Get(i + 1)
+					}
+				}
+				if any_found {
+					switch cc := code.(type) {
+					case env.Block:
+						// fmt.Println(code.Probe(*ps.Idx))
+						// we store current series (block of code with position we are at) to temp 'ser'
+						ser := ps.Ser
+						// we set ProgramStates series to series ob the block
+						ps.Ser = cc.Series
+						// we eval the block (current context / scope stays the same as it was in parent block)
+						// Inj means we inject the condition value into the block, because it costs us very little. we could do "if name { .print }"
+						EvalBlockInj(ps, arg0, true)
+						// we set temporary series back to current program state
+						ps.Ser = ser
+						// we return the last return value (the return value of executing the block) "a: if 1 { 100 }" a becomes 100,
+						// in future we will also handle the "else" case, but we have to decide
+						//						ps.ReturnFlag = true
+						return ps.Res
+					default:
+						// if it's not a block we return error for now
+						ps.FailureFlag = true
+						return env.NewError("Malformed switch block")
+					}
+				}
+				return arg0
+			default:
+				// if it's not a block we return error for now
+				ps.FailureFlag = true
+				return env.NewError("Second arg not block")
+			}
+		},
+	},
+
 	"cases": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -661,6 +718,35 @@ var builtins = map[string]*env.Builtin{
 				return env.NewError("First arg should be context")
 			}
 
+		},
+	},
+
+	"eval": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg0.(type) {
+			case env.Block:
+				ser := ps.Ser
+				ps.Ser = bloc.Series
+				res := make([]env.Object, 0)
+				for ps.Ser.Pos() < ps.Ser.Len() {
+					// ps, injnow = EvalExpressionInj(ps, inj, injnow)
+					EvalExpression2(ps, false)
+					res = append(res, ps.Res)
+					// check and raise the flags if needed if true (error) return
+					//if checkFlagsAfterBlock(ps, 101) {
+					//	return ps
+					//}
+					// if return flag was raised return ( errorflag I think would return in previous if anyway)
+					//if checkErrorReturnFlag(ps) {
+					//	return ps
+					//}
+					// ps, injnow = MaybeAcceptComma(ps, inj, injnow)
+				}
+				ps.Ser = ser
+				return *env.NewBlock(*env.NewTSeries(res))
+			}
+			return nil
 		},
 	},
 
@@ -1002,6 +1088,47 @@ var builtins = map[string]*env.Builtin{
 					}
 					ps.Ser = ser
 					return ps.Res
+				}
+			}
+			return nil
+		},
+	},
+
+	"purge": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch block := arg0.(type) {
+			case env.Block:
+				switch code := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = code.Series
+					for i := 0; i < block.Series.Len(); i++ {
+						ps = EvalBlockInj(ps, block.Series.Get(i), true)
+						if util.IsTruthy(ps.Res) {
+							block.Series.S = append(block.Series.S[:i], block.Series.S[i+1:]...)
+							i--
+						}
+						ps.Ser.Reset()
+					}
+					ps.Ser = ser
+					return block
+				}
+			case env.List:
+				switch code := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = code.Series
+					for i := 0; i < len(block.Data); i++ {
+						ps = EvalBlockInj(ps, JsonToRye(block.Data[i]), true)
+						if util.IsTruthy(ps.Res) {
+							block.Data = append(block.Data[:i], block.Data[i+1:]...)
+							i--
+						}
+						ps.Ser.Reset()
+					}
+					ps.Ser = ser
+					return block
 				}
 			}
 			return nil
@@ -1632,8 +1759,13 @@ var builtins = map[string]*env.Builtin{
 		Argsn: 1,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
+			case env.String:
+				return env.Integer{int64(len(s1.Value))}
 			case env.Block:
 				return env.Integer{int64(s1.Series.Len())}
+			default:
+				ps.FailureFlag = true
+				return env.NewError("first arg not string or block")
 			}
 			return nil
 		},
@@ -1851,6 +1983,21 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			ps.FailureFlag = false
 			return arg0
+		},
+	},
+
+	"failed?": {
+		AcceptFailure: true,
+		Argsn:         1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			ps.FailureFlag = false
+			switch arg0.(type) {
+			case env.Error:
+				return env.Integer{int64(1)}
+			case *env.Error:
+				return env.Integer{int64(1)}
+			}
+			return env.Integer{int64(0)}
 		},
 	},
 
@@ -2192,6 +2339,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_nng, ps)
 	RegisterBuiltins2(Builtins_http, ps)
 	RegisterBuiltins2(Builtins_crypto, ps)
+	RegisterBuiltins2(Builtins_goroutines, ps)
 	// RegisterBuiltins2(Builtins_psql, ps)
 }
 

@@ -557,7 +557,9 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 	env0 = ps.Ctx
 	ps.Ctx = fnCtx
 	var result *env.ProgramState
+	ps.Ser.SetPos(0)
 	result = EvalBlockInj(ps, arg0, true)
+	MaybeDisplayFailureOrError(ps, ps.Idx)
 	if result.ForcedResult != nil {
 		ps.Res = result.ForcedResult
 		result.ForcedResult = nil

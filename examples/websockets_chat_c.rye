@@ -1,0 +1,24 @@
+
+events: new-channel 10
+
+handle-chat: fn { sock c } {
+	send events eval { 'new sock } 
+	forever { 
+		read sock :msg
+		send events print eval { 'msg msg }
+	} }
+
+hub: fn { ch } {
+	sockets: { }
+	forever {
+		read ch :msg
+		switch msg .first {
+			'new  {	sockets: append sockets second msg }
+			'msg  { sockets: purge sockets { .write second msg |failed? } }
+		} } }
+
+go-with events ?hub
+
+new-server ":8080"
+|handle-ws "/chat" ?handle-chat  
+|serve

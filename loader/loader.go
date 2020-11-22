@@ -238,7 +238,7 @@ func newParser() *Parser {
 	KINDWORD    		<-  "(" LETTER LETTERORNUM* ")"?
 	XWORD    		<-  "<" LETTER LETTERORNUM* ">"?
 	EXWORD    		<-  "</" LETTER LETTERORNUM* ">"?
-	STRING			<-  ('"' STRINGCHAR* '"') / ("'" STRINGCHAR1* "'")
+	STRING			<-  ('"' STRINGCHAR* '"') / ("%" STRINGCHAR1* "%")
 	SPACES			<-  SPACE+
 	URI    			<-  WORD "://" URIPATH*
 	EMAIL			<-  EMAILPART "@" EMAILPART 

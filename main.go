@@ -307,6 +307,8 @@ func main_rye_file(file string) {
 	evaldo.RegisterBuiltins(es)
 	evaldo.EvalBlock(es)
 
+	evaldo.MaybeDisplayFailureOrError(es, genv)
+
 	/*genv := loader.GetIdxs()
 		ps := evaldo.ProgramState{}
 
