@@ -68,7 +68,7 @@ var Builtins_http = map[string]*env.Builtin{
 
 	"Go-server//handle": {
 		Argsn: 3,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg1.(type) {
 			case env.String:
 				switch handler := arg2.(type) {
@@ -79,15 +79,20 @@ var Builtins_http = map[string]*env.Builtin{
 					return arg0
 				case env.Function:
 					http.HandleFunc(path.Value, func(w http.ResponseWriter, r *http.Request) {
-						CallFunctionArgs2(handler, env1, *env.NewNative(env1.Idx, w, "Go-server-response-writer"), *env.NewNative(env1.Idx, r, "Go-server-request"), nil)
+						ps.FailureFlag = false
+						ps.ErrorFlag = false
+						ps.ReturnFlag = false
+						psTemp := env.ProgramState{}
+						copier.Copy(&psTemp, &ps)
+						CallFunctionArgs2(handler, ps, *env.NewNative(ps.Idx, w, "Go-server-response-writer"), *env.NewNative(ps.Idx, r, "Go-server-request"), nil)
 					})
 					return arg0
 				default:
-					env1.FailureFlag = true
+					ps.FailureFlag = true
 					return env.NewError("arg1 should be string or function")
 				}
 			default:
-				env1.FailureFlag = true
+				ps.FailureFlag = true
 				return env.NewError("arg0 should be string")
 			}
 		},
@@ -101,6 +106,46 @@ var Builtins_http = map[string]*env.Builtin{
 				switch handler := arg1.(type) {
 				case env.String:
 					fmt.Fprintf(path.Value.(http.ResponseWriter), handler.Value)
+					return arg0
+				default:
+					env1.FailureFlag = true
+					return env.NewError("arg1 should be string")
+				}
+			default:
+				env1.FailureFlag = true
+				return env.NewError("arg0 should be native")
+			}
+		},
+	},
+
+	"Go-server-response-writer//set-content-type": {
+		Argsn: 2,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch path := arg0.(type) {
+			case env.Native:
+				switch handler := arg1.(type) {
+				case env.String:
+					path.Value.(http.ResponseWriter).Header().Set("Content-Type", handler.Value)
+					return arg0
+				default:
+					env1.FailureFlag = true
+					return env.NewError("arg1 should be string")
+				}
+			default:
+				env1.FailureFlag = true
+				return env.NewError("arg0 should be native")
+			}
+		},
+	},
+
+	"Go-server-response-writer//write-header": {
+		Argsn: 2,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch w := arg0.(type) {
+			case env.Native:
+				switch code := arg1.(type) {
+				case env.Integer:
+					w.Value.(http.ResponseWriter).WriteHeader(int(code.Value))
 					return arg0
 				default:
 					env1.FailureFlag = true
@@ -189,7 +234,7 @@ var Builtins_http = map[string]*env.Builtin{
 
 	"Go-server-websocket//write": {
 		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch sock := arg0.(type) {
 			case env.Native:
 				switch message := arg1.(type) {
@@ -200,21 +245,178 @@ var Builtins_http = map[string]*env.Builtin{
 					//err := sock_.Write(ctx_, websocket.MessageText, []byte(message.Value))
 					if err != nil {
 						fmt.Println("YYOOYOYOYOYOYOYYOYOYOOY")
-						env1.FailureFlag = true
+						ps.FailureFlag = true
 						return env.NewError(err.Error())
 					}
 					return arg1
 				default:
-					env1.FailureFlag = true
+					ps.FailureFlag = true
 					return env.NewError("arg1 should be string")
 				}
 			default:
-				env1.FailureFlag = true
+				ps.FailureFlag = true
 				return env.NewError("arg0 should be native")
 			}
 		},
 	},
 
+	/*	"Go-server-request//form?": {
+		Argsn: 2,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch ctx := arg0.(type) {
+			case env.Native:
+				switch key := arg1.(type) {
+				case env.String:
+					return env.String{ctx.Value.(echo.Context).FormValue(key.Value)}
+				default:
+					return env.NewError("second arg should be string, got %s")
+				}
+			default:
+				return env.NewError("first arg should be echo.Context, got %s")
+			}
+		},
+	},*/
+
+	"Go-server-request//query?": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			fmt.Println("YOYOYOYOYOYO ------------- - - -  --")
+			//return env.String{"QUERY - VAL"}
+			switch req := arg0.(type) {
+			case env.Native:
+				switch key := arg1.(type) {
+				case env.String:
+
+					vals, ok := req.Value.(*http.Request).URL.Query()[key.Value]
+
+					if !ok || len(vals[0]) < 1 {
+						ps.FailureFlag = true
+						return env.NewError("key is missing")
+					}
+					//return env.NewError("XOSADOSADOA SDAS DO" + key.Value)
+					return env.String{vals[0]}
+				default:
+					ps.FailureFlag = true
+					return env.NewError("second arg should be String")
+				}
+			default:
+				ps.FailureFlag = true
+				return env.NewError("first arg should be Native")
+			}
+		},
+	},
+
+	"Go-server-request//form?": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch req := arg0.(type) {
+			case env.Native:
+				switch key := arg1.(type) {
+				case env.String:
+					r := req.Value.(*http.Request)
+					r.ParseForm()
+
+					val := r.FormValue(key.Value)
+
+					if len(val) < 1 {
+						ps.FailureFlag = true
+						return env.NewError("value is missing")
+					}
+					return env.String{val}
+				default:
+					ps.FailureFlag = true
+					return env.NewError("second arg should be String")
+				}
+			default:
+				ps.FailureFlag = true
+				return env.NewError("first arg should be Native")
+			}
+		},
+	},
+
+	"Go-server-request//full-form?": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch req := arg0.(type) {
+			case env.Native:
+				r := req.Value.(*http.Request)
+				r.ParseForm()
+
+				dict := make(map[string]interface{})
+
+				for key, val := range r.Form {
+					dict[key] = val[0]
+				}
+
+				return *env.NewDict(dict)
+			default:
+				ps.FailureFlag = true
+				return env.NewError("first arg should be Native")
+			}
+		},
+	},
+	/*
+		"Rye-echo-session//set": { // after we make kinds ... session native will be tagged with session, and set will be multimetod on session
+			Argsn: 3,
+			Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+				fmt.Println("YOYOYOYOYOYO ------------- - - -  --")
+				//return env.String{"QUERY - VAL"}
+				switch ctx := arg0.(type) {
+				case env.Native:
+					switch key := arg1.(type) {
+					case env.String:
+						switch val := arg2.(type) {
+						case env.String:
+							//return env.NewError("XOSADOSADOA SDAS DO" + key.Value)
+							ctx.Value.(*sessions.Session).Values[key.Value] = val.Value
+							return val
+						default:
+							return env.NewError("second arg should be string, got %s")
+						}
+						//return env.NewError("XOSADOSADOA SDAS DO" + key.Value)
+						return env.String{ctx.Value.(echo.Context).QueryParam(key.Value)}
+					default:
+						return env.NewError("second arg should be string, got %s")
+					}
+				default:
+					return env.NewError("first arg should be echo.Context, got %s")
+				}
+			},
+		},
+
+		"Rye-echo-session//get": { // after we make kinds ... session native will be tagged with session, and set will be multimetod on sessio
+			Argsn: 2,
+			Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+				fmt.Println("YOYOYOYOYOYO ------------- - - -  --")
+				//return env.String{"QUERY - VAL"}
+				switch ctx := arg0.(type) {
+				case env.Native:
+					switch key := arg1.(type) {
+					case env.String:
+						val := ctx.Value.(*sessions.Session).Values[key.Value]
+						if val != nil {
+							fmt.Println("***************************************************************")
+							fmt.Println(val)
+							switch val2 := val.(type) {
+							case string:
+								return env.String{val2}
+							case env.Object:
+								return val2
+							}
+							return env.NewError("bla 123141")
+							//return env.NewError("XOSADOSADOA SDAS DO" + key.Value)
+						} else {
+							return env.String{"NO VALUE"}
+						}
+					default:
+						return env.NewError("second arg should be string, got %s")
+					}
+				default:
+					return env.NewError("first arg should be echo.Context, got %s")
+				}
+			},
+		},
+	*/
 	/*	"Go-server//handle-ws--old": {
 			Argsn: 3,
 			Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

@@ -41,12 +41,15 @@ func parseBlock(v *Values, d Any) (Any, error) {
 	//fmt.Println(v.Vs)
 	block := make([]env.Object, len(v.Vs)-1)
 	//var r env.Object
+	ofs := 0
 	for i := 1; i < len(v.Vs); i += 1 {
 		obj := v.Vs[i]
-		if true { //obj != nil
-			//fmt.Println(i)
-			//InspectNode(obj)
-			block[i-1] = obj.(env.Object)
+		if obj != nil { //obj != nil
+			//			fmt.Println(i)
+			//			InspectNode(obj)
+			block[i-1+ofs] = obj.(env.Object)
+		} else {
+			ofs -= 1
 		}
 	}
 	//fmt.Print("BLOCK --> ")
@@ -57,10 +60,13 @@ func parseBlock(v *Values, d Any) (Any, error) {
 
 func parseBBlock(v *Values, d Any) (Any, error) {
 	block := make([]env.Object, len(v.Vs)-1)
+	ofs := 0
 	for i := 1; i < len(v.Vs); i += 1 {
 		obj := v.Vs[i]
-		if true {
-			block[i-1] = obj.(env.Object)
+		if obj != nil {
+			block[i-1+ofs] = obj.(env.Object)
+		} else {
+			ofs -= 1
 		}
 	}
 	ser := env.NewTSeries(block)
@@ -72,12 +78,15 @@ func parseGroup(v *Values, d Any) (Any, error) {
 	//fmt.Println(v.Vs)
 	block := make([]env.Object, len(v.Vs)-1)
 	//var r env.Object
+	ofs := 0
 	for i := 1; i < len(v.Vs); i += 1 {
 		obj := v.Vs[i]
-		if true { //obj != nil
+		if obj != nil { //obj != nil
 			//fmt.Println(i)
 			//InspectNode(obj)
-			block[i-1] = obj.(env.Object)
+			block[i-1+ofs] = obj.(env.Object)
+		} else {
+			ofs -= 1
 		}
 	}
 	//fmt.Print("BLOCK --> ")
@@ -218,6 +227,11 @@ func parseGetword(v *Values, d Any) (Any, error) {
 	return env.Getword{idx}, nil
 }
 
+func parseComment(v *Values, d Any) (Any, error) {
+	trace("GETWORD:" + v.Token())
+	return nil, nil
+}
+
 func newParser() *Parser {
 	// TODO -- add string eaddress path url time
 	// Create a PEG parser
@@ -225,7 +239,7 @@ func newParser() *Parser {
 	BLOCK       	<-  "{" SPACES SERIES* "}"
 	BBLOCK       	<-  "[" SPACES SERIES* "]"
     GROUP       	<-  "(" SPACES SERIES* ")"
-    SERIES     		<-  (URI / EMAIL / STRING / NUMBER / COMMA / SETWORD / LSETWORD / PIPEWORD / OPWORD / TAGWORD / EXWORD / CPATH / FPATH / KINDWORD / XWORD / GENWORD / GETWORD / VOID / WORD / BLOCK / GROUP / BBLOCK / ARGBLOCK ) SPACES
+    SERIES     		<-  (COMMENT / URI / EMAIL / STRING / NUMBER / COMMA / SETWORD / LSETWORD / PIPEWORD / OPWORD / TAGWORD / EXWORD / CPATH / FPATH / KINDWORD / XWORD / GENWORD / GETWORD / VOID / WORD / BLOCK / GROUP / BBLOCK / ARGBLOCK ) SPACES
     ARGBLOCK       	<-  "{" WORD ":" WORD "}"
     WORD           	<-  LETTER LETTERORNUM*
 	GENWORD 		<-  UCLETTER LCLETTERORNUM* 
@@ -258,7 +272,9 @@ func newParser() *Parser {
 	STRINGCHAR		<-  < !'"' . >
 	STRINGCHAR1		<-  < !"'" . >
 	COMMA			<-  ","
-	VOID			<-  "_"
+	VOID				<-  "_"
+	COMMENT			<-  (";" NOTENDLINE* )
+	NOTENDLINE		<-  < !"\n" . >
 `)
 	// < ^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})$ >
 	// TODO -- make path path work for deeper paths too
@@ -290,6 +306,7 @@ func newParser() *Parser {
 	g["URI"].Action = parseUri
 	g["FPATH"].Action = parseFpath
 	g["CPATH"].Action = parseCPath
+	g["COMMENT"].Action = parseComment
 	/* g["SERIES"].Action = func(v *Values, d Any) (Any, error) {
 		return v, nil
 	}*/

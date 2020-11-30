@@ -1,0 +1,23 @@
+webfn: fn { spec args body } {
+	fnc args current-context {
+		validate-out form? r spec |^check "validation error"
+		do body
+	}
+}
+
+say-hello: webfn { name: optional "Jim" string } { w r } {
+	print "YELLO"
+}
+
+webfn-fake: fn { spec args body } {
+	fnc args current-context {
+		validate dict { "name1" "Jane" } spec |^check "validation error" |to-context :data
+		do-in data body
+	}
+}
+
+say-hello: webfn-fake { name: optional "Jim" string } { w r } {
+	print r
+}
+
+say-hello 1 2 

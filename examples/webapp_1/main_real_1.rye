@@ -1,0 +1,83 @@
+// TODO:
+// * connect to psql, psql-do
+// * embed cookie-store
+// * web-resource context
+// * webfn that takes r and w and spec
+// * handle-files-from
+
+sql-do: ?psql-do
+
+cookie-name: "my-session-cookie"
+store: new-cookie-store "super-secret-key"
+
+account-resource: context {
+
+	spec: {
+		email: required email check { .is-email-free? } 'email-taken
+		password: required longer-than 5 bcrypt
+	}
+ 
+	sign-up: webfn spec {
+		sql-do { insert into users ( email , password ) values ( ?email , ?password ) }
+	}
+
+	sign-in: webfn spec {
+		sql-do { select count ( id ) from users where email = ?email and password = ?password }
+		|if {
+			session? store r cookie-name
+			|set 'authenticated 1
+			|save r w
+		}
+	}
+
+	is-email-free?: fn { e } {
+		is-zero? sql-do { select count() from user where email = ?e }
+	}
+}
+
+page-resource: web-resource {
+
+	table: "page"
+	spec: {
+		author: required integer
+		title: required string
+		mode: optional 'normal lit-word any-of { 'normal 'hidden }
+		content: required string
+	}
+}
+
+collection-resource: web-resource {
+	
+	table: "collection"
+	spec: {
+		title: required string
+		mode: optional 'normal lit-word any-of { 'public 'private }
+		content: required array-of-integers
+	}
+
+	get-children: webfn id-spec {
+		select * from (select unnest(content) from collection where id = ?) page_id left join page p on p.id = page_id;
+	}	
+}
+
+handle-public-api: fn { s c } {
+	handle-web-resources {
+		"account" account-resource
+	}
+}
+
+handle-private-api: fn { s c } {
+	either is-signed-in c {
+		handle-web-resources {
+			"page"       page-resource
+			"collection" collection-resource } }
+	{
+		web-response 403 "not signed in"
+	}
+}
+
+new-server ":8080"
+|handle "/pub-api" ?handle-public-api  
+|handle "/priv-api" ?handle-private-api  
+|handle-files-from "/" %static/
+|serve

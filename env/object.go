@@ -910,6 +910,7 @@ func NewError(message string) *Error {
 
 func NewError4(status int, message string, error *Error, values map[string]Object) *Error {
 	var e Error
+	e.Status = status
 	e.Message = message
 	e.Parent = error
 	e.Values = values

@@ -28,6 +28,19 @@ var builtins = map[string]*env.Builtin{
 			return env.Integer{11}
 		},
 	},
+	"to-word": {
+		Argsn: 1,
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch str := arg0.(type) {
+			case env.String:
+				idx := ps.Idx.IndexWord(str.Value)
+				return env.Word{idx}
+			default:
+				return env.NewError("first arg is not string")
+			}
+		},
+	},
 	"inc": {
 		Argsn: 1,
 		Pure:  true,
@@ -36,7 +49,7 @@ var builtins = map[string]*env.Builtin{
 			case env.Integer:
 				return env.Integer{1 + arg.Value}
 			default:
-				return env.NewError("argument to `len` not supported, got %s")
+				return env.NewError("first arg is not integer")
 			}
 		},
 	},
@@ -67,6 +80,19 @@ var builtins = map[string]*env.Builtin{
 				return env.Integer{0}
 			} else {
 				return env.Integer{1}
+			}
+		},
+	},
+
+	"require": {
+		Argsn: 1,
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			if util.IsTruthy(arg0) {
+				return env.Integer{1}
+			} else {
+				ps.FailureFlag = true
+				return env.NewError("requirement failed")
 			}
 		},
 	},
@@ -259,20 +285,6 @@ var builtins = map[string]*env.Builtin{
 
 	// BASIC GENERAL FUNCTIONS
 
-	"inspect": {
-		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			fmt.Println(arg0.Inspect(*env1.Idx))
-			return arg0
-		},
-	},
-	"probe": {
-		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			fmt.Println(arg0.Probe(*env1.Idx))
-			return arg0
-		},
-	},
 	"prn": {
 		Argsn: 1,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -307,6 +319,20 @@ var builtins = map[string]*env.Builtin{
 				fmt.Println(arg0.Probe(*env1.Idx))
 			}
 			return arg0
+		},
+	},
+	"probe": {
+		Argsn: 1,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			fmt.Println(arg0.Inspect(*env1.Idx))
+			return arg0
+		},
+	},
+	"mold": {
+		Argsn: 1,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			// fmt.Println()
+			return env.String{arg0.Inspect(*env1.Idx)}
 		},
 	},
 
@@ -747,6 +773,49 @@ var builtins = map[string]*env.Builtin{
 				return *env.NewBlock(*env.NewTSeries(res))
 			}
 			return nil
+		},
+	},
+
+	"all": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg0.(type) {
+			case env.Block:
+				ser := ps.Ser
+				ps.Ser = bloc.Series
+				for ps.Ser.Pos() < ps.Ser.Len() {
+					EvalExpression2(ps, false)
+					fmt.Println(ps.Res.Probe(*ps.Idx))
+					if !util.IsTruthy(ps.Res) {
+						break
+					}
+				}
+				ps.Ser = ser
+				return ps.Res
+			}
+			ps.FailureFlag = true
+			return env.NewError("expecting block")
+		},
+	},
+
+	"any": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg0.(type) {
+			case env.Block:
+				ser := ps.Ser
+				ps.Ser = bloc.Series
+				for ps.Ser.Pos() < ps.Ser.Len() {
+					EvalExpression2(ps, false)
+					if util.IsTruthy(ps.Res) {
+						break
+					}
+				}
+				ps.Ser = ser
+				return ps.Res
+			}
+			ps.FailureFlag = true
+			return env.NewError("expecting block")
 		},
 	},
 
@@ -1877,13 +1946,16 @@ var builtins = map[string]*env.Builtin{
 						return v1
 					case env.Date:
 						return v1
+					case env.Block:
+						return v1
 					default:
+						ps.FailureFlag = true
 						return env.NewError("Value of type: " + reflect.TypeOf(v1).String())
 					}
 				}
 			case env.RyeCtx:
 				switch s2 := arg1.(type) {
-				case env.Tagword:
+				case env.Word:
 					v, ok := s1.Get(s2.Index)
 					if ok {
 						return v
@@ -1977,6 +2049,22 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"code?": {
+		AcceptFailure: true,
+		Argsn:         1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch er := arg0.(type) {
+			case env.Error:
+				return env.Integer{int64(er.Status)}
+			case *env.Error:
+				return env.Integer{int64(er.Status)}
+			default:
+				ps.FailureFlag = true
+				return env.NewError("arg 0 not error")
+			}
+		},
+	},
+
 	"disarm": {
 		AcceptFailure: true,
 		Argsn:         1,
@@ -2014,6 +2102,35 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"check": {
+		AcceptFailure: true,
+		Argsn:         2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			if ps.FailureFlag || arg0.Type() == env.ErrorType {
+				ps.FailureFlag = false
+				switch er := arg0.(type) {
+				case *env.Error: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+					switch val := arg1.(type) {
+					case env.String: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+						return env.NewError4(0, val.Value, er, nil)
+					case env.Integer: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+						return env.NewError4(int(val.Value), "", er, nil)
+					case env.Block: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+						// TODO -- this is only temporary it takes numeric value as first and string as second arg
+						code := val.Series.Get(0)
+						message := val.Series.Get(1)
+						if code.Type() == env.IntegerType && message.Type() == env.StringType {
+							return env.NewError4(int(code.(env.Integer).Value), message.(env.String).Value, er, nil)
+						}
+						return env.NewError("wrong error constructor")
+					}
+				}
+				return env.NewError("unknown type in error constructor")
+			}
+			return arg0
+		},
+	},
+
 	"^check": {
 		AcceptFailure: true,
 		Argsn:         2,
@@ -2027,6 +2144,14 @@ var builtins = map[string]*env.Builtin{
 						return env.NewError4(0, val.Value, er, nil)
 					case env.Integer: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
 						return env.NewError4(int(val.Value), "", er, nil)
+					case env.Block: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+						// TODO -- this is only temporary it takes numeric value as first and string as second arg
+						code := val.Series.Get(0)
+						message := val.Series.Get(1)
+						if code.Type() == env.IntegerType && message.Type() == env.StringType {
+							return env.NewError4(int(code.(env.Integer).Value), message.(env.String).Value, er, nil)
+						}
+						return env.NewError("wrong error constructor")
 					}
 				}
 				return env.NewError("error 1")
@@ -2093,7 +2218,7 @@ var builtins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlock(ps)
+					EvalBlockInj(ps, arg0, true)
 					ps.Ser = ser
 					ps.ReturnFlag = true
 					return ps.Res

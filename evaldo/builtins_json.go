@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"math"
 	"rye/env"
+	"strconv"
 )
 
 func _emptyRM() env.Dict {
@@ -22,6 +23,32 @@ func resultToJS(res env.Object) interface{} {
 		return "{ 'state': 'todo' }"
 	}
 	return nil
+}
+
+func ryeToJSON(res interface{}) string {
+	switch v := res.(type) {
+	case nil:
+		return "null"
+	case int:
+		return strconv.Itoa(v)
+	case int64:
+		return strconv.Itoa(int(v))
+	case string:
+		return "\"" + v + "\""
+	case env.String:
+		return "\"" + v.Value + "\""
+	case env.Integer:
+		return strconv.Itoa(int(v.Value))
+	case *env.Error:
+		if v != nil {
+			return "{ \"code\": " + ryeToJSON(v.Status) + ", \"message\": " + ryeToJSON(v.Message) + ", \"parent\": " + ryeToJSON(v.Parent) + " }"
+		} else {
+			return "null"
+		}
+	case env.RyeCtx:
+		return "{ 'state': 'todo' }"
+	}
+	return "not handeled"
 }
 
 func JsonToRye(res interface{}) env.Object {
@@ -68,6 +95,12 @@ var Builtins_json = map[string]*env.Builtin{
 		Argsn: 1,
 		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return _parse_json(es, arg0, arg1, arg2, arg3, arg4)
+		},
+	},
+	"to-json": {
+		Argsn: 1,
+		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return env.String{ryeToJSON(arg0)}
 		},
 	},
 }

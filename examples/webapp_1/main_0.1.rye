@@ -1,0 +1,19 @@
+"// TODO HERE"
+"// * make function handle-web-resources"
+"// * make it work with webserver in happy path"
+
+demo-resource: context {
+ 
+	say-hello: fn { r w } {
+		write w "Hello From Resource" 
+	}
+
+}
+
+handle-api: fn { w r } {
+	write w "Hiiii!"
+}
+
+new-server ":8080"
+|handle "/api" ?handle-api  
+|serve
