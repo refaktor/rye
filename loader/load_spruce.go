@@ -114,7 +114,7 @@ func LoadSpruceString(input string) (*env.SprNode, *env.Idxs) {
 			}
 		}
 	}
-	return root, &wordIndex
+	return root, wordIndex
 }
 
 func findParentNode(parent *env.SprNode, depth int) *env.SprNode {

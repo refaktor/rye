@@ -2,8 +2,6 @@
 
 package evaldo
 
-import "C"
-
 import (
 	"rye/env"
 )

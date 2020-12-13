@@ -70,17 +70,22 @@ func EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) *env.Progra
 		// evaluate expression
 		ps, injnow = EvalExpressionInj(ps, inj, injnow)
 		// check and raise the flags if needed if true (error) return
-		if checkFlagsAfterBlock(ps, 101) {
-			// we could add current error, block and position to the trace
-			return ps
-		}
+		// --- 20201213: removed because require didn't really work :	if checkFlagsAfterBlock(ps, 101) {
+		// we could add current error, block and position to the trace
+		//		return ps
+		//	}
 		// if return flag was raised return ( errorflag I think would return in previous if anyway)
+		// --- 20201213 --
 		if checkErrorReturnFlag(ps) {
 			return ps
 		}
 		ps, injnow = MaybeAcceptComma(ps, inj, injnow)
 		//es.Res.Trace("After eval expression")
 	}
+	// added here from above 20201213
+	//if checkErrorReturnFlag(ps) {
+	//	return ps
+	//}
 	//es.Inj = nil
 	return ps
 }
@@ -743,12 +748,12 @@ func DirectlyCallBuiltin(ps *env.ProgramState, bi env.Builtin, a0 env.Object, a1
 // TODO -- once we know it works in all situations remove all debug lines
 // 		and rewrite
 func checkFlagsBi(bi env.Builtin, ps *env.ProgramState, n int) bool {
-	//trace("CHECK FLAGS")
+	trace("CHECK FLAGS BI")
 	//trace(n)
 	//trace(ps.Res)
 	//	trace(bi)
 	if ps.FailureFlag {
-		//trace("------ > FailureFlag")
+		trace("------ > FailureFlag")
 		if bi.AcceptFailure {
 			//trace("----- > Accept Failure")
 		} else {
@@ -778,7 +783,7 @@ func checkFlagsBi(bi env.Builtin, ps *env.ProgramState, n int) bool {
 // then raise the error flag and return true
 // USED -- on returns from block
 func checkFlagsAfterBlock(ps *env.ProgramState, n int) bool {
-	//trace("CHECK FLAGS 2")
+	trace("CHECK FLAGS 2")
 	//trace(n)
 	//trace(ps.Res)
 	if ps.FailureFlag && !ps.ReturnFlag {
@@ -805,6 +810,7 @@ func checkFlagsAfterBlock(ps *env.ProgramState, n int) bool {
 }
 
 func checkErrorReturnFlag(ps *env.ProgramState) bool {
+	trace("---- > return flags")
 	if ps.ErrorFlag {
 		switch err := ps.Res.(type) {
 		case env.Error:
@@ -826,9 +832,9 @@ func checkErrorReturnFlag(ps *env.ProgramState) bool {
 func fmt1() { fmt.Print(1) }
 
 func trace(x interface{}) {
-	// fmt.Print("\x1b[36m")
-	// fmt.Print(x)
-	// fmt.Println("\x1b[0m")
+	fmt.Print("\x1b[36m")
+	fmt.Print(x)
+	fmt.Println("\x1b[0m")
 }
 func trace2(x interface{}) {
 	// fmt.Print("\x1b[56m")

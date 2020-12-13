@@ -97,7 +97,11 @@ func (ser TSeries) Probe(idxs Idxs) string {
 		if i == ser.Pos()-1 {
 			bu.WriteString("<-here-> ")
 		}
-		bu.WriteString(v.Probe(idxs) + " ")
+		if v != nil {
+			bu.WriteString(v.Probe(idxs) + " ")
+		} else {
+			bu.WriteString("<<< NIL >>>" + " ")
+		}
 	}
 	if ser.Len() == ser.Pos()-1 {
 		bu.WriteString("<-here-> ")

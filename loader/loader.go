@@ -16,23 +16,33 @@ func trace(x interface{}) {
 	//fmt.Println("\x1b[0m")
 }
 
-var wordIndex = *env.NewIdxs()
+var wordIndex *env.Idxs
+
+func InitIndex() {
+	if wordIndex == nil {
+		wordIndex = env.NewIdxs()
+	}
+}
 
 func GetIdxs() *env.Idxs {
-	return &wordIndex
+	if wordIndex == nil {
+		wordIndex = env.NewIdxs()
+	}
+	return wordIndex
 }
 
 func LoadString(input string) (env.Block, *env.Idxs) {
 	//fmt.Println(input)
+	InitIndex()
 	parser := newParser()
 	val, _ := parser.ParseAndGetValue(input, nil)
 	//InspectNode(val)
 	if val != nil {
-		return val.(env.Block), &wordIndex
+		return val.(env.Block), wordIndex
 	} else {
 		empty1 := make([]env.Object, 0)
 		ser := env.NewTSeries(empty1)
-		return *env.NewBlock(*ser), &wordIndex
+		return *env.NewBlock(*ser), wordIndex
 	}
 }
 
@@ -106,7 +116,7 @@ func parseString(v *Values, d Any) (Any, error) {
 
 func parseUri(v *Values, d Any) (Any, error) {
 	// fmt.Println(v.Vs[0])
-	return *env.NewUri(&wordIndex, v.Vs[0].(env.Word), v.Token()), nil // ){v.Vs[0].(env.Word), v.Token()}, nil // TODO let the second part be it's own object that parser returns like path
+	return *env.NewUri(wordIndex, v.Vs[0].(env.Word), v.Token()), nil // ){v.Vs[0].(env.Word), v.Token()}, nil // TODO let the second part be it's own object that parser returns like path
 }
 
 func parseEmail(v *Values, d Any) (Any, error) {
@@ -116,7 +126,7 @@ func parseEmail(v *Values, d Any) (Any, error) {
 func parseFpath(v *Values, d Any) (Any, error) {
 	idx := wordIndex.IndexWord("file")
 	fmt.Println(idx)
-	return *env.NewUri(&wordIndex, env.Word{idx}, "file://"+v.Token()[1:]), nil // ){v.Vs[0].(env.Word), v.Token()}, nil // TODO let the second part be it's own object that parser returns like path
+	return *env.NewUri(wordIndex, env.Word{idx}, "file://"+v.Token()[1:]), nil // ){v.Vs[0].(env.Word), v.Token()}, nil // TODO let the second part be it's own object that parser returns like path
 }
 
 func parseCPath(v *Values, d Any) (Any, error) {
@@ -315,6 +325,6 @@ func newParser() *Parser {
 
 func InspectNode(v Any) {
 	if v != nil {
-		fmt.Println(v.(env.Object).Inspect(wordIndex))
+		fmt.Println(v.(env.Object).Inspect(*wordIndex))
 	}
 }

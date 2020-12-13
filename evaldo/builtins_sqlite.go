@@ -5,8 +5,8 @@ package evaldo
 import "C"
 
 import (
-	"rye/env"
 	"database/sql"
+	"rye/env"
 
 	"fmt"
 	"strconv"
@@ -18,15 +18,15 @@ import (
 const MODE_SQLITE = 1
 const MODE_PSQL = 2
 
-func SQL_EvalBlock(es *env.ProgramState, mode int) (*env.ProgramState, []interface{}) {
+func SQL_EvalBlock(es *env.ProgramState, mode int, values []interface{}) (*env.ProgramState, []interface{}) {
 	var bu strings.Builder
 	var str string
-	values := make([]interface{}, 0, 2) // TODO ... what is this 2 here ... just for temp
 	for es.Ser.Pos() < es.Ser.Len() {
 		es, str, values = SQL_EvalExpression(es, values, mode)
 		bu.WriteString(str + " ")
 		//fmt.Println(bu.String())
 	}
+	fmt.Println(bu.String())
 	es.Res = env.String{bu.String()}
 	return es, values
 }
@@ -49,13 +49,26 @@ func SQL_EvalExpression(es *env.ProgramState, vals []interface{}, mode int) (*en
 		es.Res = object */
 	case env.Word:
 		return es, es.Idx.GetWord(obj.Index), vals
+	case env.Opword:
+		return es, es.Idx.GetWord(obj.Index)[1:], vals
+	case env.Pipeword:
+		return es, es.Idx.GetWord(obj.Index)[1:], vals
+	case env.Block:
+		ser := es.Ser
+		es.Ser = obj.Series
+		es1, vals1 := SQL_EvalBlock(es, mode, vals)
+		trace("VALS")
+		trace(vals1)
+		es.Ser = ser
+		//vals2 := append(vals, vals1)
+		return es1, "( " + es.Res.(env.String).Value + " )", vals1
 	/*case env.GenwordType:
 		return EvalGenword(es, object.(env.Genword), nil, false)
 	case env.SetwordType:
 		return EvalSetword(es, object.(env.Setword)) */
 	case env.Getword:
 		val, _ := es.Ctx.Get(obj.Index)
-		vals = append(vals, val.(env.Integer).Value)
+		vals = append(vals, resultToJS(val))
 		var ph string
 		switch mode {
 		case 1:
@@ -67,6 +80,7 @@ func SQL_EvalExpression(es *env.ProgramState, vals []interface{}, mode int) (*en
 	case env.Comma:
 		return es, ", ", vals
 	default:
+		fmt.Println("OTHER SQL NODE")
 		return es, "Error 123112431", vals
 	}
 	return es, "ERROR", vals
@@ -135,7 +149,8 @@ var Builtins_sqlite = map[string]*env.Builtin{
 					//fmt.Println("BLOCK ****** *****")
 					ser := env1.Ser
 					env1.Ser = str.Series
-					_, vals = SQL_EvalBlock(env1, MODE_SQLITE)
+					values := make([]interface{}, 0, 0)
+					_, vals = SQL_EvalBlock(env1, MODE_SQLITE, values)
 					sqlstr = env1.Res.(env.String).Value
 					env1.Ser = ser
 				case env.String:

@@ -5,7 +5,7 @@ package evaldo
 // import "C"
 
 import (
-	"database/sql"
+	//"database/sql"
 	"rye/env"
 	//"fmt"
 	//"strconv"

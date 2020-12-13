@@ -20,7 +20,7 @@ type Spreadsheet struct {
 func NewSpreadsheet(cols []string) *Spreadsheet {
 	var ps Spreadsheet
 	ps.Cols = cols
-	ps.Rows = make([]SpreadsheetRow, 1)
+	ps.Rows = make([]SpreadsheetRow, 0)
 	/*
 		ps := Spreadsheet{
 			cols,

@@ -4,9 +4,11 @@ package evaldo
 
 import (
 	"encoding/json"
+	"fmt"
 	"math"
 	"rye/env"
 	"strconv"
+	"strings"
 )
 
 func _emptyRM() env.Dict {
@@ -25,7 +27,7 @@ func resultToJS(res env.Object) interface{} {
 	return nil
 }
 
-func ryeToJSON(res interface{}) string {
+func RyeToJSON(res interface{}) string {
 	switch v := res.(type) {
 	case nil:
 		return "null"
@@ -39,16 +41,18 @@ func ryeToJSON(res interface{}) string {
 		return "\"" + v.Value + "\""
 	case env.Integer:
 		return strconv.Itoa(int(v.Value))
+	case env.Spreadsheet:
+		return SpreadsheetToJSON(v)
 	case *env.Error:
 		if v != nil {
-			return "{ \"code\": " + ryeToJSON(v.Status) + ", \"message\": " + ryeToJSON(v.Message) + ", \"parent\": " + ryeToJSON(v.Parent) + " }"
+			return "{ \"code\": " + RyeToJSON(v.Status) + ", \"message\": " + RyeToJSON(v.Message) + ", \"parent\": " + RyeToJSON(v.Parent) + " }"
 		} else {
 			return "null"
 		}
 	case env.RyeCtx:
 		return "{ 'state': 'todo' }"
 	}
-	return "not handeled"
+	return "\"not handeled\""
 }
 
 func JsonToRye(res interface{}) env.Object {
@@ -71,6 +75,30 @@ func JsonToRye(res interface{}) env.Object {
 		return nil
 	}
 	return env.Void{}
+}
+
+// Inspect returns a string representation of the Integer.
+func SpreadsheetToJSON(s env.Spreadsheet) string {
+	//fmt.Println("IN TO Html")
+	var bu strings.Builder
+	bu.WriteString("[")
+	fmt.Println(len(s.Rows))
+	for _, row := range s.Rows {
+		bu.WriteString("{")
+		for i, val := range row.Values {
+			if i > 0 {
+				bu.WriteString(", ")
+			}
+			bu.WriteString("\"")
+			bu.WriteString(s.Cols[i])
+			bu.WriteString("\": ")
+			bu.WriteString(RyeToJSON(val))
+		}
+		bu.WriteString("}")
+	}
+	bu.WriteString("]")
+	//fmt.Println(bu.String())
+	return bu.String()
 }
 
 // { <person> [ .print ] }
@@ -100,7 +128,7 @@ var Builtins_json = map[string]*env.Builtin{
 	"to-json": {
 		Argsn: 1,
 		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return env.String{ryeToJSON(arg0)}
+			return env.String{RyeToJSON(arg0)}
 		},
 	},
 }

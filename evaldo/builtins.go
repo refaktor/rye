@@ -647,17 +647,17 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	"drop-in": {
-		Argsn: 2,
+		Argsn: 1,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch bloc := arg1.(type) {
-			case env.Block:
-				ser := ps.Ser
+			switch name := arg0.(type) {
+			case env.String:
+				/* ser := ps.Ser
 				ps.Ser = bloc.Series
 				EvalBlock(ps)
-				ps.Ser = ser
+				ps.Ser = ser */
 				//reader := bufio.NewReader(os.Stdin)
 
-				fmt.Println("You are inside a drop-in: " + arg0.(env.String).Value)
+				fmt.Println("You are inside a drop-in: " + name.Value)
 				fmt.Println(" * user (h) for help, (lc) to list context , (r) to return")
 				fmt.Println("----------------------------------------------------------")
 				/*
@@ -684,7 +684,7 @@ var builtins = map[string]*env.Builtin{
 
 				DoRyeRepl(ps)
 				fmt.Println("----------------------------------------------------------")
-				ps.Ser = ser
+				// ps.Ser = ser
 
 				return ps.Res
 			}
@@ -1026,9 +1026,15 @@ var builtins = map[string]*env.Builtin{
 				ps.Ser = bloc.Series
 				EvalBlockInj(ps, arg0, true)
 				ps.Ser = ser
+				if ps.ReturnFlag {
+
+					return ps.Res
+				}
 				return res
+			default:
+				ps.FailureFlag = true
+				return env.NewError("second argument should be block")
 			}
-			return nil
 		},
 	},
 
@@ -2110,6 +2116,9 @@ var builtins = map[string]*env.Builtin{
 				ps.FailureFlag = false
 				switch er := arg0.(type) {
 				case *env.Error: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+					if er.Status == 0 && er.Message == "" {
+						er = nil
+					}
 					switch val := arg1.(type) {
 					case env.String: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
 						return env.NewError4(0, val.Value, er, nil)
@@ -2139,6 +2148,9 @@ var builtins = map[string]*env.Builtin{
 				ps.ReturnFlag = true
 				switch er := arg0.(type) {
 				case *env.Error: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+					if er.Status == 0 && er.Message == "" {
+						er = nil
+					}
 					switch val := arg1.(type) {
 					case env.String: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
 						return env.NewError4(0, val.Value, er, nil)
@@ -2171,16 +2183,56 @@ var builtins = map[string]*env.Builtin{
 					ps.ReturnFlag = true
 					switch er := arg1.(type) {
 					case env.String:
-						return *env.NewError(er.Value)
+						return env.NewError(er.Value)
 					case env.Integer:
-						return *env.NewError1(int(er.Value))
+						return env.NewError1(int(er.Value))
+					case env.Block: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+						// TODO -- this is only temporary it takes numeric value as first and string as second arg
+						code := er.Series.Get(0)
+						message := er.Series.Get(1)
+						if code.Type() == env.IntegerType && message.Type() == env.StringType {
+							return env.NewError4(int(code.(env.Integer).Value), message.(env.String).Value, nil, nil)
+						}
+						return env.NewError("wrong error constructor")
 					}
 				} else {
-					return env.Void{}
+					return arg0
 				}
-				return env.Void{}
+				return arg0
 			}
-			return env.Void{}
+			return arg0
+		},
+	},
+
+	"assert": {
+		AcceptFailure: true,
+		Argsn:         2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch cond := arg0.(type) {
+			case env.Integer:
+				if cond.Value == 0 {
+					ps.FailureFlag = true
+					// ps.ReturnFlag = true
+					switch er := arg1.(type) {
+					case env.String:
+						return env.NewError(er.Value)
+					case env.Integer:
+						return env.NewError1(int(er.Value))
+					case env.Block: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+						// TODO -- this is only temporary it takes numeric value as first and string as second arg
+						code := er.Series.Get(0)
+						message := er.Series.Get(1)
+						if code.Type() == env.IntegerType && message.Type() == env.StringType {
+							return env.NewError4(int(code.(env.Integer).Value), message.(env.String).Value, nil, nil)
+						}
+						return env.NewError("wrong error constructor")
+					}
+				} else {
+					return arg0
+				}
+				return arg0
+			}
+			return arg0
 		},
 	},
 
@@ -2428,6 +2480,36 @@ var builtins = map[string]*env.Builtin{
 			return nil
 		},
 	},
+	"A1": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s0 := arg0.(type) {
+			case env.Spreadsheet:
+				r := s0.Rows[0].Values[0]
+				return JsonToRye(r)
+
+			default:
+				ps.ErrorFlag = true
+				return env.NewError("first arg not spreadsheet")
+			}
+			return nil
+		},
+	},
+	"B1": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s0 := arg0.(type) {
+			case env.Spreadsheet:
+				r := s0.Rows[0].Values[1]
+				return JsonToRye(r)
+
+			default:
+				ps.ErrorFlag = true
+				return env.NewError("first arg not spreadsheet")
+			}
+			return nil
+		},
+	},
 }
 
 /*
@@ -2465,7 +2547,8 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_http, ps)
 	RegisterBuiltins2(Builtins_crypto, ps)
 	RegisterBuiltins2(Builtins_goroutines, ps)
-	// RegisterBuiltins2(Builtins_psql, ps)
+	RegisterBuiltins2(Builtins_psql, ps)
+	RegisterBuiltins2(Builtins_bcrypt, ps)
 }
 
 func RegisterBuiltins2(builtins map[string]*env.Builtin, ps *env.ProgramState) {

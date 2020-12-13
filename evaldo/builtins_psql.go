@@ -8,12 +8,7 @@ import (
 	"database/sql"
 	"rye/env"
 
-	//"fmt"
-
-	//"strconv"
-	//"strings"
-
-	"github.com/lib/pq"
+	_ "github.com/lib/pq"
 )
 
 var Builtins_psql = map[string]*env.Builtin{
@@ -23,19 +18,18 @@ var Builtins_psql = map[string]*env.Builtin{
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.Uri:
-				//fmt.Println(str.Path)
-				//connStr := "user=grouch dbname=grouch password='b12312b' sslmode=disable host=localhost"
-				//connStr := "postgres://grouch:b12312b@localhost/grouch?sslmode=disable"
 				db, err := sql.Open("postgres", str.Path) // TODO -- we need to make path parser in URI then this will be path
 				if err != nil {
-					//fmt.Println(err)
-					env1.ErrorFlag = true
+					// TODO --
+					//fmt.Println("Error1")
+					env1.FailureFlag = true
 					return env.NewError("Error opening SQL: " + err.Error())
 				} else {
+					//fmt.Println("Error2")
 					return *env.NewNative(env1.Idx, db, "Rye-psql")
 				}
-				return *env.NewNative(env1.Idx, db, "Rye-psql")
 			default:
+				env1.FailureFlag = true
 				return env.NewError("arg 1 should be Uri")
 			}
 
@@ -53,7 +47,8 @@ var Builtins_psql = map[string]*env.Builtin{
 				case env.Block:
 					ser := env1.Ser
 					env1.Ser = str.Series
-					_, vals = SQL_EvalBlock(env1, MODE_PSQL)
+					values := make([]interface{}, 0, 2)
+					_, vals = SQL_EvalBlock(env1, MODE_PSQL, values)
 					sqlstr = env1.Res.(env.String).Value
 					env1.Ser = ser
 				case env.String:
@@ -68,6 +63,7 @@ var Builtins_psql = map[string]*env.Builtin{
 					db2 := db1.Value.(*sql.DB)
 					_, err := db2.Exec(sqlstr, vals...)
 					if err != nil {
+						env1.FailureFlag = true
 						return env.NewError("Error" + err.Error())
 					} else {
 						return env.Void{}
@@ -92,7 +88,8 @@ var Builtins_psql = map[string]*env.Builtin{
 					//fmt.Println("BLOCK ****** *****")
 					ser := env1.Ser
 					env1.Ser = str.Series
-					_, vals = SQL_EvalBlock(env1, MODE_PSQL)
+					values := make([]interface{}, 0, 2)
+					_, vals = SQL_EvalBlock(env1, MODE_PSQL, values)
 					sqlstr = env1.Res.(env.String).Value
 					env1.Ser = ser
 				case env.String:
@@ -107,10 +104,12 @@ var Builtins_psql = map[string]*env.Builtin{
 					rows, err := db1.Value.(*sql.DB).Query(sqlstr, vals...)
 					result := make([]map[string]interface{}, 0)
 					if err != nil {
+						env1.FailureFlag = true
 						return env.NewError("Error" + err.Error())
 					} else {
 						cols, _ := rows.Columns()
 						spr := env.NewSpreadsheet(cols)
+						i := 0
 						for rows.Next() {
 
 							var sr env.SpreadsheetRow
@@ -137,10 +136,15 @@ var Builtins_psql = map[string]*env.Builtin{
 							spr.AddRow(sr)
 							result = append(result, m)
 							// Outputs: map[columnName:value columnName2:value2 columnName3:value3 ...]
+							i++
 						}
 						rows.Close() //good habit to close
 						//fmt.Println("+++++")
 						//	fmt.Print(result)
+						if i == 0 {
+							env1.FailureFlag = true
+							return env.NewError("no data")
+						}
 						return *spr
 						//return *env.NewNative(env1.Idx, *spr, "Rye-spreadsheet")
 					}
