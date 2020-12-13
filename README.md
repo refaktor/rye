@@ -18,7 +18,7 @@ if true code
 
 A [blog](https://ryelang.blogspot.com/) following development.
 
-The language [introduction](https://refaktor.github.io/rye/INTRO_1.html) are work in progress.
+The language [introduction documents](https://refaktor.github.io/rye/INTRO_1.html) are work in progress.
 
 There is also a [simple website](https://refaktor.github.io/rye/) being made.
 
