@@ -1556,7 +1556,7 @@ var builtins = map[string]*env.Builtin{
 	"_>>": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch spec := arg1.(type) {
+			switch spec := "arg1.(type) {
 			case env.Kind:
 				switch dict := arg0.(type) {
 				case env.Dict:
@@ -1729,6 +1729,28 @@ var builtins = map[string]*env.Builtin{
 			switch s1 := arg0.(type) {
 			case env.String:
 				return env.String{strings.Title(s1.Value)}
+			default:
+				return env.NewError("first arg must be string")
+			}
+		},
+	},
+	"to-lower": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				return env.String{strings.ToLower(s1.Value)}
+			default:
+				return env.NewError("first arg must be string")
+			}
+		},
+	},
+	"to-upper": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				return env.String{strings.ToUpper(s1.Value)}
 			default:
 				return env.NewError("first arg must be string")
 			}
@@ -1954,6 +1976,13 @@ var builtins = map[string]*env.Builtin{
 						return v1
 					case env.Block:
 						return v1
+					case env.Dict:
+						return v1
+					case env.List:
+						return v1
+					case nil:
+						ps.FailureFlag = true
+						return env.NewError("missing key")
 					default:
 						ps.FailureFlag = true
 						return env.NewError("Value of type: " + reflect.TypeOf(v1).String())
@@ -2273,6 +2302,30 @@ var builtins = map[string]*env.Builtin{
 					EvalBlockInj(ps, arg0, true)
 					ps.Ser = ser
 					ps.ReturnFlag = true
+					return ps.Res
+				default:
+					return env.NewError("Error ..TODO")
+				}
+			} else {
+				return arg0
+			}
+		},
+	},
+
+	"`fix": {
+		AcceptFailure: true,
+		Argsn:         2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			if ps.FailureFlag || arg0.Type() == env.ErrorType {
+				ps.FailureFlag = false
+				// TODO -- create function do_block and call in all cases
+				switch bloc := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = bloc.Series
+					EvalBlockInj(ps, arg0, true)
+					ps.Ser = ser
+					ps.SkipFlag = true
 					return ps.Res
 				default:
 					return env.NewError("Error ..TODO")

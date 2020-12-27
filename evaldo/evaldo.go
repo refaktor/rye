@@ -74,6 +74,9 @@ func EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) *env.Progra
 		// we could add current error, block and position to the trace
 		//		return ps
 		//	}
+		if checkFlagsAfterBlock(ps, 101) {
+			return ps
+		}
 		// if return flag was raised return ( errorflag I think would return in previous if anyway)
 		// --- 20201213 --
 		if checkErrorReturnFlag(ps) {
@@ -214,12 +217,13 @@ func MaybeEvalOpwordOnRight(nextObj env.Object, ps *env.ProgramState, limited bo
 		if ps.ReturnFlag {
 			return ps //... not sure if we need this
 		}
-		if ps.FailureFlag { // uncommented 202008017
+		// checkFlagsBi()
+		/*if ps.FailureFlag { // uncommented 202008017
 			ps.FailureFlag = false
 			ps.ErrorFlag = true
 			ps.ReturnFlag = true
 			return ps
-		}
+		}*/
 		return MaybeEvalOpwordOnRight(ps.Ser.Peek(), ps, limited)
 	case env.LSetword:
 		if limited {
@@ -229,7 +233,10 @@ func MaybeEvalOpwordOnRight(nextObj env.Object, ps *env.ProgramState, limited bo
 		idx := opword.Index
 		ps.Ctx.Set(idx, ps.Res)
 		ps.Ser.Next()
+		ps.SkipFlag = false
 		return MaybeEvalOpwordOnRight(ps.Ser.Peek(), ps, limited)
+	default:
+		ps.SkipFlag = false
 	}
 	return ps
 }
@@ -242,20 +249,10 @@ func EvalExpressionConcrete(ps *env.ProgramState) *env.ProgramState {
 	//trace2("Before entering expression")
 	if object != nil {
 		switch object.Type() {
-		case env.IntegerType:
-			ps.Res = object
-		case env.StringType:
-			ps.Res = object
-		case env.BlockType:
-			ps.Res = object
-		case env.VoidType:
-			ps.Res = object
-		case env.TagwordType:
-			ps.Res = object
-		case env.UriType:
-			ps.Res = object
-		case env.EmailType:
-			ps.Res = object
+		case env.IntegerType, env.StringType, env.BlockType, env.VoidType, env.TagwordType, env.UriType, env.EmailType:
+			if !ps.SkipFlag {
+				ps.Res = object
+			}
 		case env.WordType:
 			rr := EvalWord(ps, object.(env.Word), nil, false)
 			return rr
@@ -397,7 +394,9 @@ func EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toL
 		}
 		return CallBuiltin(bu, ps, leftVal, toLeft)
 	default:
-		ps.Res = object
+		if !ps.SkipFlag {
+			ps.Res = object
+		}
 		return ps
 	}
 	return ps
@@ -698,6 +697,7 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 		}
 		ps.Res = bi.Fn(ps, args...)
 	*/
+	trace("YOYOYOYOYOYOYOYOYOYO ---")
 	if curry {
 		bi.Cur0 = arg0
 		bi.Cur1 = arg1
@@ -706,6 +706,16 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 		bi.Cur4 = arg4
 		ps.Res = bi
 	} else {
+		if ps.SkipFlag {
+			trace2("SKIPPING ....")
+			//if arg0_ != nil {
+			trace2("PIPE ....")
+			return ps
+			//} else {
+			//	trace2("RESETING ....")
+			//ps.SkipFlag = false
+			//}
+		}
 		ps.Res = bi.Fn(ps, arg0, arg1, arg2, arg3, arg4)
 	}
 	trace2(" ------------- Before builtin returns")
@@ -755,9 +765,9 @@ func checkFlagsBi(bi env.Builtin, ps *env.ProgramState, n int) bool {
 	if ps.FailureFlag {
 		trace("------ > FailureFlag")
 		if bi.AcceptFailure {
-			//trace("----- > Accept Failure")
+			trace2("----- > Accept Failure")
 		} else {
-			//trace("Fail ------->  Error.")
+			trace2("Fail ------->  Error.")
 			switch err := ps.Res.(type) {
 			case env.Error:
 				if err.CodeBlock.Len() == 0 {
@@ -774,7 +784,7 @@ func checkFlagsBi(bi env.Builtin, ps *env.ProgramState, n int) bool {
 			return true
 		}
 	} else {
-		//trace("NOT FailuteFlag")
+		trace2("NOT FailuteFlag")
 	}
 	return false
 }
@@ -783,12 +793,12 @@ func checkFlagsBi(bi env.Builtin, ps *env.ProgramState, n int) bool {
 // then raise the error flag and return true
 // USED -- on returns from block
 func checkFlagsAfterBlock(ps *env.ProgramState, n int) bool {
-	trace("CHECK FLAGS 2")
-	//trace(n)
+	trace2("CHECK FLAGS AFTER BLOCKS")
+	trace2(n)
 	//trace(ps.Res)
 	if ps.FailureFlag && !ps.ReturnFlag {
-		//trace("FailureFlag")
-		//trace("Fail->Error.")
+		trace2("FailureFlag")
+		trace2("Fail->Error.")
 		switch err := ps.Res.(type) {
 		case env.Error:
 			if err.CodeBlock.Len() == 0 {
@@ -801,10 +811,11 @@ func checkFlagsAfterBlock(ps *env.ProgramState, n int) bool {
 				err.CodeContext = ps.Ctx
 			}
 		}
+		trace2("FAIL -> ERROR blk")
 		ps.ErrorFlag = true
 		return true
 	} else {
-		//trace("NOT FailureFlag")
+		trace2("NOT FailureFlag")
 	}
 	return false
 }
@@ -832,18 +843,18 @@ func checkErrorReturnFlag(ps *env.ProgramState) bool {
 func fmt1() { fmt.Print(1) }
 
 func trace(x interface{}) {
-	fmt.Print("\x1b[36m")
-	fmt.Print(x)
-	fmt.Println("\x1b[0m")
+	//fmt.Print("\x1b[36m")
+	//fmt.Print(x)
+	//fmt.Println("\x1b[0m")
 }
 func trace2(x interface{}) {
-	// fmt.Print("\x1b[56m")
-	// fmt.Print(x)
-	// fmt.Println("\x1b[0m")
+	//fmt.Print("\x1b[56m")
+	//fmt.Print(x)
+	//fmt.Println("\x1b[0m")
 }
 
 func trace3(x interface{}) {
-	fmt.Print("\x1b[56m")
-	fmt.Print(x)
-	fmt.Println("\x1b[0m")
+	//fmt.Print("\x1b[56m")
+	//fmt.Print(x)
+	//fmt.Println("\x1b[0m")
 }

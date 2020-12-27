@@ -223,6 +223,14 @@ func parsePipeword(v *Values, d Any) (Any, error) {
 	return env.Pipeword{idx}, nil
 }
 
+func parseOnecharpipe(v *Values, d Any) (Any, error) {
+	//fmt.Println("OPWORD:" + v.Token())
+	word := v.Token()
+	var idx int
+	idx = wordIndex.IndexWord("_" + word[1:])
+	return env.Pipeword{idx}, nil
+}
+
 func parseGenword(v *Values, d Any) (Any, error) {
 	trace("GENWORD:" + v.Token())
 	word := v.Token()
@@ -249,7 +257,7 @@ func newParser() *Parser {
 	BLOCK       	<-  "{" SPACES SERIES* "}"
 	BBLOCK       	<-  "[" SPACES SERIES* "]"
     GROUP       	<-  "(" SPACES SERIES* ")"
-    SERIES     		<-  (COMMENT / URI / EMAIL / STRING / NUMBER / COMMA / SETWORD / LSETWORD / PIPEWORD / OPWORD / TAGWORD / EXWORD / CPATH / FPATH / KINDWORD / XWORD / GENWORD / GETWORD / VOID / WORD / BLOCK / GROUP / BBLOCK / ARGBLOCK ) SPACES
+    SERIES     		<-  (COMMENT / URI / EMAIL / STRING / NUMBER / COMMA / SETWORD / LSETWORD / ONECHARPIPE / PIPEWORD / OPWORD / TAGWORD / EXWORD / CPATH / FPATH / KINDWORD / XWORD / GENWORD / GETWORD / VOID / WORD / BLOCK / GROUP / BBLOCK / ARGBLOCK ) SPACES
     ARGBLOCK       	<-  "{" WORD ":" WORD "}"
     WORD           	<-  LETTER LETTERORNUM*
 	GENWORD 		<-  UCLETTER LCLETTERORNUM* 
@@ -257,6 +265,7 @@ func newParser() *Parser {
 	LSETWORD    	<-  ":" LETTER LETTERORNUM*
 	GETWORD   		<-  "?" LETTER LETTERORNUM*
 	PIPEWORD   		<-  "|" LETTER LETTERORNUM* / PIPEARROWS
+	ONECHARPIPE    <-  "|" ONECHARWORDS
 	OPWORD    		<-  "." LETTER LETTERORNUM* / OPARROWS / ONECHARWORDS 
 	TAGWORD    		<-  "'" LETTER LETTERORNUM*
 	KINDWORD    		<-  "(" LETTER LETTERORNUM* ")"?
@@ -272,7 +281,7 @@ func newParser() *Parser {
 	ONECHARWORDS	    <-  < [<>*+-=/] >
 	PIPEARROWS      <-  ">>" / "->"
 	OPARROWS        <-  "<<" / "<-"
-	LETTER  	       	<-  < [a-zA-Z?=^_] >
+	LETTER  	       	<-  < [a-zA-Z?=^` + "`" + `_] >
 	LETTERORNUM		<-  < [a-zA-Z0-9-?=.\\!_+<>] >
 	URIPATH			<-  < [a-zA-Z0-9-?=.:@/\\!_>] >
 	UCLETTER  		<-  < [A-Z] >
@@ -304,6 +313,7 @@ func newParser() *Parser {
 	g["LSETWORD"].Action = parseLSetword
 	g["OPWORD"].Action = parseOpword
 	g["PIPEWORD"].Action = parsePipeword
+	g["ONECHARPIPE"].Action = parseOnecharpipe
 	g["TAGWORD"].Action = parseTagword
 	g["KINDWORD"].Action = parseKindword
 	g["XWORD"].Action = parseXword
