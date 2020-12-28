@@ -91,7 +91,7 @@ func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toL
 	return ps
 }
 
-func Eyr_EvalObject(es *env.ProgramState, object env.Object, leftVal env.Object, toLeft bool, ctx *env.RyeCtx, stack *EyrStack, bakein bool) *env.ProgramState {
+func Eyr_EvalObject(es *env.ProgramState, object env.Object, leftVal env.Object, toLeft bool, session *env.RyeCtx, stack *EyrStack, bakein bool) *env.ProgramState {
 	//fmt.Print("EVAL OBJECT")
 	switch object.Type() {
 	case env.BuiltinType:

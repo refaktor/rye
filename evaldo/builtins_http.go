@@ -17,6 +17,7 @@ import (
 	//"github.com/gorilla/websocket"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
+	"github.com/gorilla/sessions"
 	"github.com/jinzhu/copier"
 )
 
@@ -357,68 +358,148 @@ var Builtins_http = map[string]*env.Builtin{
 			}
 		},
 	},
-	/*
-		"Rye-echo-session//set": { // after we make kinds ... session native will be tagged with session, and set will be multimetod on session
-			Argsn: 3,
-			Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-				fmt.Println("YOYOYOYOYOYO ------------- - - -  --")
-				//return env.String{"QUERY - VAL"}
-				switch ctx := arg0.(type) {
-				case env.Native:
-					switch key := arg1.(type) {
-					case env.String:
-						switch val := arg2.(type) {
-						case env.String:
-							//return env.NewError("XOSADOSADOA SDAS DO" + key.Value)
-							ctx.Value.(*sessions.Session).Values[key.Value] = val.Value
-							return val
-						default:
-							return env.NewError("second arg should be string, got %s")
-						}
-						//return env.NewError("XOSADOSADOA SDAS DO" + key.Value)
-						return env.String{ctx.Value.(echo.Context).QueryParam(key.Value)}
-					default:
-						return env.NewError("second arg should be string, got %s")
-					}
-				default:
-					return env.NewError("first arg should be echo.Context, got %s")
-				}
-			},
-		},
 
-		"Rye-echo-session//get": { // after we make kinds ... session native will be tagged with session, and set will be multimetod on sessio
-			Argsn: 2,
-			Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-				fmt.Println("YOYOYOYOYOYO ------------- - - -  --")
-				//return env.String{"QUERY - VAL"}
-				switch ctx := arg0.(type) {
+	"new-cookie-store": {
+		Argsn: 1,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch addr := arg0.(type) {
+			case env.String:
+				return *env.NewNative(env1.Idx, sessions.NewCookieStore([]byte(addr.Value)), "Http-cookie-store")
+			default:
+				env1.FailureFlag = true
+				return *env.NewError("arg 0 should be String")
+			}
+		},
+	},
+
+	"Http-cookie-store//get": {
+		Argsn: 3,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			fmt.Println("asdsad")
+			switch store := arg0.(type) {
+			case env.Native:
+				switch r := arg1.(type) {
 				case env.Native:
-					switch key := arg1.(type) {
+					switch name := arg2.(type) {
 					case env.String:
-						val := ctx.Value.(*sessions.Session).Values[key.Value]
-						if val != nil {
-							fmt.Println("***************************************************************")
-							fmt.Println(val)
-							switch val2 := val.(type) {
-							case string:
-								return env.String{val2}
-							case env.Object:
-								return val2
-							}
-							return env.NewError("bla 123141")
-							//return env.NewError("XOSADOSADOA SDAS DO" + key.Value)
-						} else {
-							return env.String{"NO VALUE"}
+						fmt.Println("asdsad")
+						session, err := store.Value.(*sessions.CookieStore).Get(r.Value.(*http.Request), name.Value)
+						if err != nil {
+							env1.FailureFlag = true
+							return env.NewError("can't get session: " + err.Error())
 						}
+						fmt.Println("asdsad 1")
+						return *env.NewNative(env1.Idx, session, "Http-session")
+					default:
+						fmt.Println("asdsad 2")
+						env1.FailureFlag = true
+						return *env.NewError("arg 0 should be String")
+					}
+				default:
+					fmt.Println("asdsad 3")
+					env1.FailureFlag = true
+					return *env.NewError("arg 0 should be String")
+				}
+			default:
+				fmt.Println("asdsad 4")
+				env1.FailureFlag = true
+				return *env.NewError("arg 0 should be String")
+			}
+		},
+	},
+
+	"Http-session//set": {
+		Argsn: 3,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			fmt.Println("YOYOYOYOYOYO ------------- - - -  --")
+			//return env.String{"QUERY - VAL"}
+			switch session := arg0.(type) {
+			case env.Native:
+				switch key := arg1.(type) {
+				case env.String:
+					switch val := arg2.(type) {
+					case env.String:
+						//return env.NewError("XOSADOSADOA SDAS DO" + key.Value)
+						session.Value.(*sessions.Session).Values[key.Value] = val.Value
+						return arg0
+					case env.Integer:
+						session.Value.(*sessions.Session).Values[key.Value] = int(val.Value)
+						return arg0
+					default:
+						return env.NewError("second arg should be string, got %s")
+					}
+					//return env.NewError("XOSADOSADOA SDAS DO" + key.Value)
+					return arg2 // env.String{ctx.Value.(echo.Context).QueryParam(key.Value)}
+				default:
+					return env.NewError("second arg should be string, got %s")
+				}
+			default:
+				return env.NewError("first arg should be echo.Context, got %s")
+			}
+		},
+	},
+
+	"Http-session//get": {
+		Argsn: 2,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			//return env.String{"QUERY - VAL"}
+			switch session := arg0.(type) {
+			case env.Native:
+				switch key := arg1.(type) {
+				case env.String:
+					val := session.Value.(*sessions.Session).Values[key.Value]
+					if val != nil {
+						switch val2 := val.(type) {
+						case int:
+							return env.Integer{int64(val2)}
+						case string:
+							return env.String{val2}
+						case env.Object:
+							return val2
+						default:
+							env1.FailureFlag = true
+							return env.NewError("unknown type")
+						}
+					} else {
+						env1.FailureFlag = true
+						return env.NewError("value is empty")
+					}
+				default:
+					return env.NewError("second arg should be string, got %s")
+				}
+			default:
+				return env.NewError("first arg should be echo.Context, got %s")
+			}
+		},
+	},
+
+	"Http-session//save": {
+		Argsn: 3,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch session := arg0.(type) {
+			case env.Native:
+				switch r := arg1.(type) {
+				case env.Native:
+					switch w := arg2.(type) {
+					case env.Native:
+						err := session.Value.(*sessions.Session).Save(r.Value.(*http.Request), w.Value.(http.ResponseWriter))
+						if err != nil {
+							env1.FailureFlag = true
+							return env.NewError("can't save: " + err.Error())
+						}
+						return env.Integer{1}
 					default:
 						return env.NewError("second arg should be string, got %s")
 					}
 				default:
-					return env.NewError("first arg should be echo.Context, got %s")
+					return env.NewError("second arg should be string, got %s")
 				}
-			},
+			default:
+				return env.NewError("first arg should be echo.Context, got %s")
+			}
 		},
-	*/
+	},
+
 	/*	"Go-server//handle-ws--old": {
 			Argsn: 3,
 			Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

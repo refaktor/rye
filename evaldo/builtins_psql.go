@@ -61,12 +61,19 @@ var Builtins_psql = map[string]*env.Builtin{
 					//fmt.Println(sqlstr)
 					//fmt.Println(vals)
 					db2 := db1.Value.(*sql.DB)
-					_, err := db2.Exec(sqlstr, vals...)
+					res, err := db2.Exec(sqlstr, vals...)
 					if err != nil {
 						env1.FailureFlag = true
 						return env.NewError("Error" + err.Error())
 					} else {
-						return env.Void{}
+						num, _ := res.RowsAffected()
+						if num > 0 {
+							return env.Integer{1}
+						} else {
+							env1.FailureFlag = true
+							return env.NewError("no rows affected")
+						}
+
 					}
 				}
 			default:

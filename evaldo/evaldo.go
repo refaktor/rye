@@ -200,7 +200,7 @@ func EvalExpressionInj(ps *env.ProgramState, inj env.Object, injnow bool) (*env.
 // 		set the value to word and recurse
 func MaybeEvalOpwordOnRight(nextObj env.Object, ps *env.ProgramState, limited bool) *env.ProgramState {
 	//trace2("MaybeEvalWord -----------======--------> 1")
-	if ps.ReturnFlag {
+	if ps.ReturnFlag || ps.ErrorFlag {
 		return ps
 	}
 	switch opword := nextObj.(type) {
@@ -320,7 +320,7 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 // on that, it here is leftval already present it can dispatc on it otherwise
 func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft bool) *env.ProgramState {
 	// LOCAL FIRST
-	found, object, ctx := findWordValue(ps, word)
+	found, object, session := findWordValue(ps, word)
 	pos := ps.Ser.GetPos()
 	if !found { // look at Generic words, but first check type
 		if leftVal == nil {
@@ -337,7 +337,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 		}
 	}
 	if found {
-		return EvalObject(ps, object, leftVal, toLeft, ctx) //ww0128a *
+		return EvalObject(ps, object, leftVal, toLeft, session) //ww0128a *
 	} else {
 		ps.ErrorFlag = true
 		if ps.FailureFlag == false {
@@ -563,7 +563,9 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 	var result *env.ProgramState
 	ps.Ser.SetPos(0)
 	result = EvalBlockInj(ps, arg0, true)
-	MaybeDisplayFailureOrError(ps, ps.Idx)
+	fmt.Println(result)
+	fmt.Println(result.Res)
+	MaybeDisplayFailureOrError(result, result.Idx)
 	if result.ForcedResult != nil {
 		ps.Res = result.ForcedResult
 		result.ForcedResult = nil
@@ -821,7 +823,7 @@ func checkFlagsAfterBlock(ps *env.ProgramState, n int) bool {
 }
 
 func checkErrorReturnFlag(ps *env.ProgramState) bool {
-	trace("---- > return flags")
+	trace3("---- > return flags")
 	if ps.ErrorFlag {
 		switch err := ps.Res.(type) {
 		case env.Error:
@@ -854,7 +856,7 @@ func trace2(x interface{}) {
 }
 
 func trace3(x interface{}) {
-	//fmt.Print("\x1b[56m")
-	//fmt.Print(x)
-	//fmt.Println("\x1b[0m")
+	fmt.Print("\x1b[56m")
+	fmt.Print(x)
+	fmt.Println("\x1b[0m")
 }

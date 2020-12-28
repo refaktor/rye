@@ -84,7 +84,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"require": {
+	"require_": {
 		Argsn: 1,
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1556,7 +1556,7 @@ var builtins = map[string]*env.Builtin{
 	"_>>": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch spec := "arg1.(type) {
+			switch spec := arg1.(type) {
 			case env.Kind:
 				switch dict := arg0.(type) {
 				case env.Dict:
@@ -2201,13 +2201,13 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"^assert": {
+	"^require": {
 		AcceptFailure: true,
 		Argsn:         2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cond := arg0.(type) {
-			case env.Integer:
-				if cond.Value == 0 {
+			case env.Object:
+				if !util.IsTruthy(cond) {
 					ps.FailureFlag = true
 					ps.ReturnFlag = true
 					switch er := arg1.(type) {
@@ -2233,13 +2233,13 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"assert": {
+	"require": {
 		AcceptFailure: true,
 		Argsn:         2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cond := arg0.(type) {
-			case env.Integer:
-				if cond.Value == 0 {
+			case env.Object:
+				if !util.IsTruthy(cond) {
 					ps.FailureFlag = true
 					// ps.ReturnFlag = true
 					switch er := arg1.(type) {
@@ -2280,7 +2280,8 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = ser
 					return ps.Res
 				default:
-					return env.NewError("Error ..TODO")
+					ps.FailureFlag = true
+					return env.NewError("expecting block")
 				}
 			} else {
 				return arg0
@@ -2304,7 +2305,8 @@ var builtins = map[string]*env.Builtin{
 					ps.ReturnFlag = true
 					return ps.Res
 				default:
-					return env.NewError("Error ..TODO")
+					ps.FailureFlag = true
+					return env.NewError("expecting block")
 				}
 			} else {
 				return arg0
@@ -2328,7 +2330,8 @@ var builtins = map[string]*env.Builtin{
 					ps.SkipFlag = true
 					return ps.Res
 				default:
-					return env.NewError("Error ..TODO")
+					ps.FailureFlag = true
+					return env.NewError("expecting block")
 				}
 			} else {
 				return arg0
@@ -2351,7 +2354,8 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = ser
 					return ps.Res
 				default:
-					return env.NewError("Error ..TODO")
+					ps.FailureFlag = true
+					return env.NewError("expecting block")
 				}
 			} else {
 				switch bloc := arg2.(type) {
@@ -2362,7 +2366,8 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = ser
 					return ps.Res
 				default:
-					return env.NewError("Error ..TODO")
+					ps.FailureFlag = true
+					return env.NewError("expecting block")
 				}
 			}
 		},
@@ -2383,7 +2388,8 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = ser
 					return ps.Res
 				default:
-					return env.NewError("Error ..TODO")
+					ps.FailureFlag = true
+					return env.NewError("expecting block")
 				}
 			} else {
 				return arg0
