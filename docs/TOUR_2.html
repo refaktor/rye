@@ -9,7 +9,7 @@
 </head>
 <body>
 
-<p><b><a href="./TOUR_0.html">A fantastic cereal</a> &gt; Do, If and Switch</b></p>
+<p><b><a href="./TOUR_0.html">A fantastic cereal</a> &gt; Do, if and switch</b></p>
 
 <h1>Do, If and Switch</h1>
 
@@ -32,13 +32,13 @@ do block
 
 <h2>If, either</h2>
 
-<p>If is a function with two arguments. A conditinal and a block of code.</p>
+<p>If is a function with two arguments. A conditional and a block of code.</p>
 
 <pre class="prettyprint"><code class="language-rye">if 10 &lt; 20 { print &quot;hello&quot; }
 // prints: hello
 </code></pre>
 
-<p>To achieve id-else behaviour we have function either, that accepts two blocks.</p>
+<p>To achieve if-else behaviour we have function either, that accepts two blocks.</p>
 
 <pre class="prettyprint"><code class="language-rye">either 10 &gt; 20 { print &quot;hello&quot; } { print &quot;yello&quot; }
 // prints: yello
@@ -75,7 +75,7 @@ print switch 2 { 1 { &quot;one&quot; } 2 { &quot;two&quot; } }
 
 <h3>BONUS: All these are just functions</h3>
 
-<p>If, either, switch aren&rsquo;t special forms but just library level functions, so we can have many of those &hellip;</p>
+<p>If, either, switch are just library level functions, so we can have many of them and add our own &hellip;</p>
 
 <pre class="prettyprint"><code class="language-rye">// this would be a simpler way to achieve the specific switch solution
 print select 2 { 1 &quot;one&quot; 2 &quot;two&quot; }
@@ -83,12 +83,12 @@ print select 2 { 1 &quot;one&quot; 2 &quot;two&quot; }
 
 // from Rebol legacy we also have the case function
 x: 2 y: 1
-case { { x = 1 } { &quot;boo&quot; } all { x = 2 x = 1 } { &quot;hoo&quot; } } |print
+case { x = 1 { &quot;boo&quot; } all { x = 2 x = 1 } { &quot;hoo&quot; } } |print
 // prints: hoo
 
 // more as an experiment I also created cases function
 for range 1 100 { :n
-  cases &quot;&quot; {
+  cases &quot;&quot;
     { n .divides 3 } { &quot;Fizz&quot; }
     { n .divides 5 } { + &quot;Buzz&quot; }
     _ { n }

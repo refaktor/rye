@@ -3,7 +3,7 @@
 Programming languages are user interfaces, more powerfull, composable, modular, scriptable,
 potentially more complex and users might be specific, but still user interfaces.
 
-Programming is translation from computational substrate language to user / domain language or reverse.
+Programming is translation from computational substrate language to user/domain language or reverse.
 
 Rye language lives very much on a user / domain end of the spectrum.
 
@@ -21,7 +21,7 @@ Rye language lives very much on a user / domain end of the spectrum.
 * <a href="./TOUR_11.html">Pipe-words, op-words</a>*
 * <a href="./TOUR_12.html">Injected block</a>*
 * <a href="./TOUR_15.html">Validation dialect</a>*
-* <a href="./TOUR_15.html">Kinds and converters </a>*
+* <a href="./TOUR_15.html">Kinds and converters</a>*
 
 ## Failure handling
 
@@ -42,12 +42,13 @@ Rye language lives very much on a user / domain end of the spectrum.
 
 * <a href="./TOUR_11.html">Working with files</a>*
 * <a href="./TOUR_11.html">SQLite and Postgres</a>*
-* <a href="./TOUR_FDW_3.html">Simple webserver</a>**
-* <a href="./TOUR_11.html">HTTP API server</a>*
+* <a href="./TOUR_FDW_3.html">Serving HTTP and websockets</a>**
+* <a href="./TOUR_11.html">Simple App/API server</a>*
 
 
 ## More dialects
 
+* <a href="./TOUR_11.html">SAX (XML) like dialect</a>*
 * <a href="./TOUR_11.html">QFrame dialect</a>*
 
 
