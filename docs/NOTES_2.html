@@ -676,5 +676,326 @@ get https://www.example.com
 <li>send function that sends email based on <Email> tuple</li>
 </ul>
 
+<h1>29.08.2020</h1>
+
+<h2>Exceptions - first shape</h2>
+
+<p>We have 3 handling phrases, all 3 return it&rsquo;s first arg if it&rsquo;s not an error:</p>
+
+<ul>
+<li>check - checks if first arg is error, if it is it rewraps it in (new error) second arg and returns that</li>
+<li>fix - checks if fist arg is error, if it is it executes code (second arg) and returns the result of code</li>
+<li>tidy - check if first arg is error, if it is it executers code (second arg) and still returns the error</li>
+</ul>
+
+<p>all these phrases have multiple modes besides the basic one</p>
+
+<ul>
+<li>-switch switches on type or code or error</li>
+<li>-either accepts is-error and isn&rsquo;t-error block of code</li>
+</ul>
+
+<h2>Emails and ~/.rye-profile and interesting options</h2>
+
+<p>Added support for send function. It&rsquo;s meant to very quickly send a email notification to someone. I added rye-profile file.</p>
+
+<p>If it&rsquo;s there in the user&rsquo;s home directory rye does it. In this case it sets a context user-defaults where also smtp info is set. This will get tuned, named better. We would need to have an option to ignore per &ldquo;project&rdquo; (directory) the use of this file and at the same time enable per-project defaults.</p>
+
+<p>This could be achieved if rye looked at current directory for a file .rye-project and load it and that one would also be able to disable the loading of user-profile. Would there also be a web-scope possible, would it make sense?</p>
+
+<p>This would also make a directory some sort of app if it loaded all the code in the rye-project file. From web or from local files. You could just create a folder and add a rye-project file directing to online file and all would be loaded (with caching) and started.</p>
+
+<p>Especially in combination with Spruce based console UI. ;)</p>
+
+<h2>Some ideas</h2>
+
+<h3>Weird idea of &ldquo;drop-in - drop-out&rdquo;</h3>
+
+<p>I got an idea last time. If I could call a word drop-in that would instead of moving to next blocks call a console and let you do repl inside any point of code.
+good idea would be if you could then also drop-out and continue the evaluation normally. Even better if you could change the current block and replay it multiple times and then drop out. I am not 100% sure this is doable (I have a feeling there must be some catch 22 otherwise others would have done it), but from very cursory look I don&rsquo;t see why not.</p>
+
+<h3>The try { retry } failed idea</h3>
+
+<p>I had some idea that try woul record it&rsquo;s state, then enter code and if retry was called inside it would reset the state to saved and rerun the code in try. It failed soon after (idea) because, this would be a very good producer of infinite loops. Maybe if there was retry-once &hellip; or try 3 { &hellip;. }. But there are also other issues like the timing of retry &hellip; etc &hellip;</p>
+
+<h2>Example works</h2>
+
+<p>So I added email value type, send generic function, get, post generic and tidy-switch on statuses</p>
+
+<pre class="prettyprint"><code>email: refaktorlabs@gmail.com
+
+get https://example.com/data.json 
+  |^tidy-switch { 
+      404 { send email &quot;data is missing from site&quot; } 
+      _   { send email &quot;site is not working&quot; } 
+    } 
+  :data 
+post https://httpbin.org/post data 'json
+</code></pre>
+
+<h2>Next!!! Failure management + Validation + Kinds !</h2>
+
+<p>This is where it potentially all comes together, or falls appart at least somewhat. The combination of kinds (generic words on them), the validation dialect, failure handling from that validation. If I can make this all 3 work in sensible it would be very good, otherwise I will need to rethink some parts. oon</p>
+
+<p>These will also be a lot of deciding to do. When are blocks of kind validated, allways? is there a flag. Can it be lazy &hellip; when the reciever requires it? Is there special syntax for creating a validated object</p>
+
+<p>What would be the inital example we start working with. While we are at send &hellip; send will also accept Email kind object. This would be a start &hellip;</p>
+
+<p>If we want to send a simple email with the object:</p>
+
+<pre class="prettyprint"><code>&lt;Email&gt; { to: refaktorlabs@gmail.com
+          subject: &quot;Hello from Rye&quot;
+          body: &quot;yup ...&quot;
+} |send
+</code></pre>
+
+<p>Let&rsquo;s say we get the json data from some service, let&rsquo;s say the constructor validates always:</p>
+
+<h3>Scenario #1: fail on validation</h3>
+
+<pre class="prettyprint"><code>get-data &gt;Email&gt; |check &quot;email data didn't validate&quot;
+</code></pre>
+
+<h3>Scenario #2: do something on validation</h3>
+
+<pre class="prettyprint"><code>get-data &gt;Email&gt; |tidy { alert &quot;email data didn't validate&quot; }
+</code></pre>
+
+<h3>Scenario #3: if email wasn&rsquo;t correct ask user for new email</h3>
+
+<pre class="prettyprint"><code>get-data &gt;Email&gt; |fix-switch { 'to { .prnf &quot;Entered email was {#}, enter correct one: &quot; d &lt;&lt; 'to input &gt;Email&gt;  }
+</code></pre>
+
+<p>There is some unelegant repetiton there and it only works once, then if email is still not ok it fails with error. Maybe that try-retry wasn&rsquo;t so bad idea ..
+or we need another construct that can modify values and redo the operation implicitly? &hellip;</p>
+
+<pre class="prettyprint"><code>try { &gt;Email&gt; } { fix-switch { 'to { .prnf &quot;Entered email was {#}, enter correct one: &quot; d &lt;&lt; 'to input } } }
+</code></pre>
+
+<p>closer .. but what about combined cases, etc &hellip; think more .. should be something implicit in constructor maybe?</p>
+
+<pre class="prettyprint"><code>try-make 'Email { .. will keep retrying with result of this block .. }
+</code></pre>
+
+<p>Think of more realistic interaction scenarios &hellip;</p>
+
+<h2>Let&rsquo;s look at it from different view</h2>
+
+<p>Look at cases when we would like to validate and how to handle.</p>
+
+<h3>we load data from some server</h3>
+
+<p>if we load data, we can&rsquo;t reply, we can log / store the error (by evolving it and letting it fail). The error will log, we will see the hiher description
+and the basic error, which describes the exact reason validation failed.</p>
+
+<pre class="prettyprint"><code>laod-data-from-server &gt;Email&gt; |check &quot;data didn't validate&quot; |do-with-data
+</code></pre>
+
+<h3>we are the server, we get data via request</h3>
+
+<p>we respond to the client with the validation error as JSON. Our server function works on business logic and it&rsquo;s reply</p>
+
+<pre class="prettyprint"><code>get-post-data &gt;Email&gt; |^check none |do-with-data |get-response  
+
+get-post-data &gt;Email&gt; |^fix { .to-json } |do-with-data |get-response |to-json  
+</code></pre>
+
+<h3>the direct user or GUI app</h3>
+
+<p>we show the user problem directly in gui</p>
+
+<pre class="prettyprint"><code>get-post-data &gt;Email&gt; |^fix { .display-validation-errors } |save-file  
+</code></pre>
+
+<h1>25.10.2020</h1>
+
+<h2>What I want to think about</h2>
+
+<ul>
+<li><p><strong>Exceptions as result of validation dialect</strong>. In case of validation exception has child nodes that can be key or index related, or nested deeper . Are those nodes also exceptions or something else?</p></li>
+
+<li><p><strong>The billion dollar mistake</strong>, runtime null/exceptions code errors. Option and Either types make more sense in compiled languages, where you can statically, at compile time prevent null-exceptions. Dynamic and non-compiled languages don&rsquo;t have this benefit, but they could still improve <em>certainty</em>  from these constructs.
+A interpreter should issue (log) warnings or fail because of type error when it mees a code where null-exception is possible. The difference is that it fails/warns every time it sees this could be possible with given code, so you fix these cases. Not that it fails in specific case when null really happens. If we
+could make handling of option types elegant this would be a good feature to have. Same thing for error values.</p></li>
+</ul>
+
+<h2>Exceptions and validation</h2>
+
+<p>Some terminology (current proposal). Exception is an object / rye value. Failure and Errors are a state of interpreter. If failure is not handeled it becomes and error. It would terminologically speaking make sense for functions to return exceptions withot failure too?</p>
+
+<h3>Exception structure</h3>
+
+<p>Exceptions have: &ldquo;custom message&rdquo; (string), code (int), type (word), parent(parent exception), parents (List of exceptions).</p>
+
+<p>(we have a separate parent / parents) because most times there will be single parent and we don&rsquo;t want to create lists with one parent for no reason)</p>
+
+<p>Exception construction dialect accepts those 3 types or block of those 3 types automatically to construct exceptions.</p>
+
+<p>fail 404  ; fail &ldquo;user wasn&rsquo;t logined&rdquo; ; fail { 404 missing }</p>
+
+<p>In case of validation exceptions the children also need &ldquo;key&rdquo; and/or &ldquo;index&rdquo; { validation-fail { { name: required } }</p>
+
+<p>Key could be a setword in constructor, for index integer clashes with code &hellip;</p>
+
+<p>(idea) codes except few typical ones like 404, 503, 200 are a queswork anyway &hellip; if we have types, they should map to codes, but we should use words anyway,
+not numbers, even in case of 404 &ldquo;not found&rdquo; is better and more descriptive.</p>
+
+<p>Ok so we ditch code and integer in constructor is index. So far the exception doesn&rsquo;t hold any information regarding file/line of code where it happened.</p>
+
+<p>Revised structure:</p>
+
+<pre class="prettyprint"><code>{ type &quot;custom message&quot; &lt;Integer(index): 0&gt; &lt;Exception(parent)&gt; &lt;list: ().... parents ....&gt; }
+</code></pre>
+
+<h3>So how do we handle validation exceptions again?</h3>
+
+<p>** case 1: on exception return genaral wrapped exception **</p>
+
+<pre class="prettyprint"><code>person: { name: required age: required integer }
+dict { &quot;age&quot; 33 } |validate person =&gt; &quot;name&quot;  // code error: validate didn't return a dict but an failure
+
+// if failure just wrap and return, otherwise return name
+dict { &quot;age&quot; 33 } |validate person |^check &quot;person data is invalid&quot; =&gt; &quot;name&quot; // code ok
+
+// if failure print something, otherwise print name
+dict { &quot;age&quot; 33 } |validate person |fix-either { print &quot;person data is invalid&quot; } { =&gt; &quot;name&quot; |print } // code ok
+
+// if failure print the keys and messages, otherwise print name
+dict { &quot;age&quot; 33 } |validate person |fix-either { -&gt; parents |for { -&gt; 'key |prn , -&gt; 'msg |print } } { =&gt; &quot;name&quot; |print } // code ok
+
+// since it's general pattern to do something for parents in validation scenario we could have the specific function for it
+dict { &quot;age&quot; 33 } |validate person |fix-parents { -&gt; 'key |prn , -&gt; 'msg |print } { =&gt; &quot;name&quot; |print } // code ok
+
+// we would need eihter there !? this becomes combinatorial explosion ... so what if instead of -either we by default use ^
+dict { &quot;age&quot; 33 } |validate person |^fix { -&gt; parents |for { -&gt; 'key |prn , -&gt; 'msg |print } } =&gt; &quot;name&quot; |print // code ok
+dict { &quot;age&quot; 33 } |validate person |^fix-children { -&gt; 'key |prn , -&gt; 'msg |print } =&gt; &quot;name&quot; |print // code ok
+
+// but what if we can't return. if there is other code to execute after failure anyway, maybe we split the problem in block
+dict { &quot;age&quot; 33 } |validate person |fix-either { .for-children { -&gt; 'key |prn , -&gt; 'msg |print } } { =&gt; &quot;name&quot; |print } print &quot;bye&quot; // code ok
+
+// a more functional approach
+dict { &quot;age&quot; 33 } |validate person |fix-either { -&gt; 'children |map { .embed &quot;{{key}}: {{msg}}&quot; } |print-lines } { =&gt; &quot;name&quot; |print } print &quot;bye&quot;
+</code></pre>
+
+<p>** what if we want to do something in case of specific field **</p>
+
+<pre class="prettyprint"><code>// some of these maybe don't make sense as it would be solved on other level, but let's say we need to somehow
+// if failure is with name we show a poput to user to enter his name, syncroniusly
+dict { &quot;age&quot; 33 } :p0 |validate person |fix-either { .match-children { name: 'missing { prompt-user &quot;What is your name again?&quot; .update p0 &quot;name&quot; } } } { =&gt; &quot;name&quot; |print } print &quot;bye&quot; // .... let's retry that
+
+
+dict { &quot;age&quot; 33 } :p0 |validate person |fix-children { name: 'missing { prompt-user &quot;What is your name again?&quot; |update p0 &quot;name&quot; } } =&gt; &quot;name&quot; |print
+
+// this is fail, we didn't validate the second name the user entered the correct code would be (where we ask and if it fails again we fail
+dict { &quot;age&quot; 33 } :p0 |validate person |fix-children { name: 'missing { prompt-user &quot;What is your name again?&quot; |update p0 &quot;name&quot; } } 
+  |validate person |^check &quot;We give up!&quot; =&gt; &quot;name&quot; |print
+
+// if we are here ... can we make this circular? so if it doesn't validate it keeps asking ...
+dict { &quot;age&quot; 33 } |assure-valid person 'p0 { fix-children { name: 'missing { prompt-user &quot;What is your name again?&quot; |combine p0 &quot;name&quot; } } } 
+   =&gt; &quot;name&quot; |print
+</code></pre>
+
+<p>So what would we need if we this would be the way &hellip;
+  * fix-children with special match dialect, that uses the return of block to feed to next match
+  * assure-valid which is sort of loop until validation doesn&rsquo;t return error
+  * update / combine &hellip; takes dict, overwrites the value and returns (new) dict, since it&rsquo;s single key maybe we should just call it &ldquo;set&rdquo;</p>
+
+<p><strong>The UI code</strong></p>
+
+<p>In practice, in real apps we usually don&rsquo;t fix most of the validation errors but return them to the UI / frontend layer as it is and it displays them
+to the user. This above is all more to test if this is flexible. In practive there is a separate function that displays the error, we don&rsquo;t adhoc display them
+inside fix code.</p>
+
+<p><strong>So what are our conclusions for now</strong></p>
+
+<p>Handling validation errors is no different in general than any other erros. Basically we use the check, fix and tidy, and we could have more special functions
+for specific cases, but we would need to find those cases in the wild. There doesn&rsquo;t seem to be any that typical use to make them beforehand. Maybe fix-children, but even there I am not sure if I will really need it exactly as that.</p>
+
+<h1>26.10.2020</h1>
+
+<h2>Next per example</h2>
+
+<p>So if I want to follow the example from the first blogpost, next thing to do is:</p>
+
+<p><a href="https://ryelang.blogspot.com/2020/10/blog-about-rye-language-development.html">https://ryelang.blogspot.com/2020/10/blog-about-rye-language-development.html</a></p>
+
+<ul>
+<li>make load generic function for kind scheme: it should look in local cache and if not there save from url to cache and load</li>
+<li>url should accept the {{variables}} embeddings and embed them, probably at the same time add it to strings. Didn&rsquo;t yet decide if it should work by default
+or if there is a function required. On first sight it seems that function is better, if so then loader should also accept such string/uri and
+only the embed function should find and replace those. Otherwise probably the loader should recognise them and parse them out. This would make all string
+or urls more expensive to create and heavier / more complex?</li>
+<li>on-error callback</li>
+<li>validation dialect should return validation failure when validation fails, with children detailing the reason</li>
+</ul>
+
+<h2>Other paths forward</h2>
+
+<p>To further explore the validation / failure mechanics it would be good to make something like a web-server. I already have golang&rsquo;s Echo builtins made, but
+I was thingking standard library webserver is quite powerfull in go anyway, so that should be the defatul basis for providin a webserver functionality in
+rye. Echo is an optional addon.</p>
+
+<p>Another interesting path towards Rye-s toolset for distributed computing options would be nng which is nanomsg which &ldquo;was&rdquo; zeromq. nng supports tls protocols
+for example so it&rsquo;s meant to be for external / exposed comm also, not just internal. Making direct actors/mailboxes for distributed computing seems simple at
+first sight, but you have to build all the specific plumbing on top of it. nng also provides the typical distributed patters, the actors and messages can probably
+still be there, but messages delivery has more options by default than just a2a. So it would be interesting to start playing with nng. Also test the ideas
+of &ldquo;mobile code&rdquo; I was thinking about. For mobile code one thing we would need would be distinction of pure and unpure functions. ..&gt;</p>
+
+<h2>Pure functions</h2>
+
+<p>The idea is that we would specify pure builtins and user can create pure function by just using pure builtins or functions. These functions can then be more mobile (in relation to previous topic), since they are safer to use as a filter / seek / map operation on some distant node. Pure functions of course have other
+guaranties that improve reliability of local use.</p>
+
+<h3>Implementation</h3>
+
+<p>&ldquo;Pure function&rdquo; would need to be a flag in a builtin and function. But we want to avoid need for checking this flag at evaluation all the time. One solution
+would be that we create a context of pure functions (they could be available in both ordinary and pure context) and all pure user functions are bound to that
+context, not the ordinary one. So unpure function/builtin would be undefined in a pure function code. I need to try this solution, we already have very flexible
+context manipulation (look at isolates), so this could already be possible inside a language almost.</p>
+
+<h1>15.11.2020</h1>
+
+<h2>Http server + websockets</h2>
+
+<p>In the meantime I made a stdlib-s golang&rsquo;s http server in rye. I also added a websocket handling. Since the stdlib is said to not be that good I used 3-rd party. There are at least 3
+contenders here. Maybe I will switch to another one as I dive deeper into this. Currently the stupid problem is that the error in the handler isn&rsquo;t reported. Even worse, the websocket handler
+stops reponding. And even worse still, after we close the websocket client connection handlers stop responding also (I think they didn&rsquo;t initially, so I maybe introduced some error on stop).
+It&rsquo;s hard to tell since we don&rsquo;t get any error reporting or printout from the handler.</p>
+
+<pre class="prettyprint"><code>new-server &quot;:8080&quot;
+ |handle &quot;/&quot; &quot;Hello from Rye!&quot;  
+ |handle &quot;/fn&quot; fn { w r } { write w &quot;Hello from Rye function!&quot; }  
+ |handle-ws &quot;/echo&quot; fn { s ctx } { forever { read s ctx :m , write s ctx m } }  
+ |handle-ws &quot;/ping&quot; fn { s ctx } { forever { read s ctx :m = &quot;Ping&quot; |if { write s ctx &quot;Pong&quot; } } }   
+ |serve
+</code></pre>
+
+<h2>on-error-do</h2>
+
+<p>So this should be the next thing to tackle. After a little thought I saw why the error isn&rsquo;t printed out. As it is now the repl prints out the error. And in case of a hadler there is
+no repl interaction involved. The interpreter itself doesn&rsquo;t do this, because I was thinking that &ldquo;printing&rdquo; an error is just one case what you want to happen on error. The &ldquo;what should happen&rdquo;
+is app or environment specific. Maybe you want to log it, maybe display it in UI, send it to client, etc &hellip;</p>
+
+<p>The idea was always that there should be an option of defining an sort of &ldquo;od-error&rdquo; function in your or projects profile, or code itself and it would determine this. Thinking now about it,
+it should be context specific, so you can redefine it in specific contexts. If you don&rsquo;t and are in a normal rooted context then the parent or root context definition is used. So defining
+a normal word inside context gives us this desired behaviour it seems, So we don&rsquo;t need a special pointer inside context or some other environment related object.</p>
+
+<h2>the interpreter should then</h2>
+
+<p>so on error interpreter should use current context to search for the on-error-do word. If it&rsquo;s not there then for now it does nothing, just dies, if it is there it disarms the error and
+calls it with error as a first argument. Keep in mind that the contexts can be nested and also errors can be nested. <strong>Let&rsquo;s do this.</strong></p>
+
+<p>[ ] on error in interpreter call a on-error-do function
+[ ] some code met at runtime is a coding error ( like &ldquo;do [ print ]&rdquo; with no additionl arg). Is this the same type of runtime &ldquo;error&rdquo;, or something else, a &ldquo;code mistake&rdquo; that needs to be fixed either way? Handle this at least temporarily.</p>
+
+<h2>Handler function + program state</h2>
+
+<p>So far the handler just called a regular function, but I am not sure this is ok really. The ordinary function holds a reference to a programstate that changes. This is then shared between
+the handler functions, but at least some data, like current block and the position of ealuation inside it shouldn&rsquo;t be. Also these functions should not have a write access to words in parent
+contexts (maybe no functions should anyway &hellip; I haven&rsquo;t fully determined if this is really needed :/ &hellip; you need read access to have access to functions and &ldquo;constants&rdquo; that you defined in parent contexts)</p>
+
+<p>In any case &hellip; we should dissect program state and think what parts are shared in concurrent use, what are ok to be shared and what do we need to create new version of program state
+that can run in it&rsquo;s own &ldquo;thread&rdquo;. Could we serialize this progrm state or swith between them freely?</p>
+
 </body>
 </html>

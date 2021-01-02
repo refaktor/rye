@@ -117,7 +117,7 @@ l:l,a:null,i:null,c:null,g:null})}}}t<r.length?Q.setTimeout(f,250):"function"===
 (function(){
     var REB = {
         'word!': "lit dt-word",
-        'get-word!': "lit dt-get-word",
+        'get-word!': "dec dt-get-word",
         'function!': "kwd dt-function",
         'native!': "kwd dt-native",
         'op!': "kwd dt-native",

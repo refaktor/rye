@@ -8,3 +8,7 @@ mdtohtml -page -css "css/docs-all.css" -js "js/docs-all.js" NOTES.md > NOTES.htm
 mdtohtml -page -css "css/docs-all.css" -js "js/docs-all.js" NOTES_2.md > NOTES_2.html
 
 mdtohtml -page -css "css/docs-all.css" -js "js/docs-all.js" failures.md > failures.html
+mdtohtml -page -css "css/docs-all.css" -js "js/docs-all.js" TOUR_0.md > TOUR_0.html
+mdtohtml -page -css "css/docs-all.css" -js "js/docs-all.js" TOUR_1.md > TOUR_1.html
+mdtohtml -page -css "css/docs-all.css" -js "js/docs-all.js" TOUR_2.md > TOUR_2.html
+mdtohtml -page -css "css/docs-all.css" -js "js/docs-all.js" TOUR_FDW_3.md > TOUR_FDW_3.html

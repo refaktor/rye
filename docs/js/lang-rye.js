@@ -53,7 +53,7 @@
 (function(){
     var REB = {
         'word!': "lit dt-word",
-        'get-word!': "lit dt-get-word",
+        'get-word!': "dec dt-get-word",
         'function!': "kwd dt-function",
         'native!': "kwd dt-native",
         'op!': "kwd dt-native",
@@ -81,6 +81,7 @@
         'url!': "str dt-url",
         'refinement!': "lit dt-refinement",
         'set-word!': "dec dt-set-word",
+        'lset-word!': "dec dt-lset-word",
         'set-path!': "fun dt-set-path",
         'rebol!': "kwd dt-rebol",
         'comment!': "com dt-cmt",
@@ -151,6 +152,7 @@
          [REB['datatype!'], /^(?:[A-Za-z\-]+)\!(?![A-Za-z0-9\-])/],
          // -- set-word!
          [REB['set-word!'], /^[A-Za-z=\-?!_*+.`~&][A-Za-z0-9=\-!?_*+.`~&]*(?:\/[A-Za-z=\-?!_*+.`~&][A-Za-z0-9=\-!?_*+.`~&]*|\/\d+)*:/],
+         [REB['lset-word!'], /^:[A-Za-z=\-?!_*+.`~&][A-Za-z0-9=\-!?_*+.`~&]*(?:\/[A-Za-z=\-?!_*+.`~&][A-Za-z0-9=\-!?_*+.`~&]*|\/\d+)*/],
          // -- get-word!
          [REB['get-word!'], /^:[A-Za-z=\-?!_*+.`~&][A-Za-z0-9=\-!?_*+.`~&]*/],
          // -- lit-word!

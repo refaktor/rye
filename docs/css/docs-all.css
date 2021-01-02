@@ -44,6 +44,12 @@ a.next:after {
 	content: "\1F872" ;
 	padding-left: 0.5em ;
 }
+a.foot {
+	display: block;
+	border-bottom: 5px solid #d5d4ce;
+	padding-top: 10px;
+	padding-bottom: 20px;
+}
 a.prev:before {
 	content: "\1F870" ;
 	padding-right: 0.5em ;
@@ -168,125 +174,43 @@ blockquote p {
 
 
 
-
-/*! Color themes for Google Code Prettify | MIT License | github.com/jmblog/color-themes-for-google-code-prettify */
+/* desert scheme ported from vim to google prettify */
 body pre.prettyprint {
-    padding: 1.5em 2.5em;
-  background: #f4f3ec;
-  font-family: Menlo, "Bitstream Vera Sans Mono", "DejaVu Sans Mono", Monaco, Consolas, monospace;
-  border: 0 !important;
+	padding: 1.5em 2.5em;
+	display: block; background-color: #464848;
+	font-family: Menlo, "Bitstream Vera Sans Mono", "DejaVu Sans Mono", Monaco, Consolas, monospace;
+	border: 0 !important;
 }
-
-.pln {
-  color: #22221b;
-}
+pre .nocode { background-color: none; color: #000 }
+pre .str { color: #ffa0a0 } /* string  - pink */
+pre .kwd { color: #f0e68c; font-weight: bold }
+pre .com { color: #87ceeb } /* comment - skyblue */
+pre .typ { color: #98fb98 } /* type    - lightgreen */
+pre .lit { color: #cd5c5c } /* literal - darkred */
+pre .pun { color: #fff }    /* punctuation */
+pre .pln { color: #fff }    /* plaintext */
+pre .tag { color: #f0e68c; font-weight: bold } /* html/xml tag    - lightyellow */
+pre .atn { color: #bdb76b; font-weight: bold } /* attribute name  - khaki */
+pre .atv { color: #ffa0a0 } /* attribute value - pink */
+pre .dec { color: #98fb98 } /* decimal         - lightgreen */
 
 /* Specify class=linenums on a pre to get line numbering */
-ol.linenums {
-  margin-top: 0;
-  margin-bottom: 0;
-  color: #878573;
-}
+ol.linenums { margin-top: 0; margin-bottom: 0; color: #AEAEAE } /* IE indents via margin-left */
+li.L0,li.L1,li.L2,li.L3,li.L5,li.L6,li.L7,li.L8 { list-style-type: none }
+/* Alternate shading for lines */
+li.L1,li.L3,li.L5,li.L7,li.L9 { }
 
-li.L0,
-li.L1,
-li.L2,
-li.L3,
-li.L4,
-li.L5,
-li.L6,
-li.L7,
-li.L8,
-li.L9 {
-  padding-left: 1em;
-  background-color: #f4f3ec;
-  list-style-type: decimal;
-}
-
-@media screen {
-
-  /* string content */
-
-  .str {
-    color: #7d9726;
-  }
-
-  /* keyword */
-
-  .kwd {
-    color: #5f9182;
-  }
-
-  /* comment */
-
-  .com {
-    color: #878573;
-  }
-
-  /* type name */
-
-  .typ {
-    color: #36a166;
-  }
-
-  /* literal value */
-
-  .lit {
-    color: #ae7313;
-  }
-
-  /* punctuation */
-
-  .pun {
-    color: #22221b;
-  }
-
-  /* lisp open bracket */
-
-  .opn {
-    color: #22221b;
-  }
-
-  /* lisp close bracket */
-
-  .clo {
-    color: #22221b;
-  }
-
-  /* markup tag name */
-
-  .tag {
-    color: #ba6236;
-  }
-
-  /* markup attribute name */
-
-  .atn {
-    color: #ae7313;
-  }
-
-  /* markup attribute value */
-
-  .atv {
-    color: #5b9d48;
-  }
-
-  /* declaration */
-
-  .dec {
-    color: #ae7313;
-  }
-
-  /* variable name */
-
-  .var {
-    color: #ba6236;
-  }
-
-  /* function name */
-
-  .fun {
-    color: #36a166;
-  }
+@media print {
+  pre.prettyprint { background-color: none }
+  pre .str, code .str { color: #060 }
+  pre .kwd, code .kwd { color: #006; font-weight: bold }
+  pre .com, code .com { color: #600; font-style: italic }
+  pre .typ, code .typ { color: #404; font-weight: bold }
+  pre .lit, code .lit { color: #044 }
+  pre .pun, code .pun { color: #440 }
+  pre .pln, code .pln { color: #000 }
+  pre .tag, code .tag { color: #006; font-weight: bold }
+  pre .atn, code .atn { color: #404 }
+  pre .atv, code .atv { color: #060 }
 }
 
