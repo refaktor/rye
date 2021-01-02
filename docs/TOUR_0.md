@@ -3,7 +3,7 @@
 Programming languages are user interfaces, more powerfull, composable, modular, scriptable,
 potentially more complex and users might be specific, but still user interfaces.
 
-Programming is translation from computational substrate language to user/domain language or reverse.
+Programming is translation from computational substrate language to user / domain language or reverse.
 
 Rye language lives very much on a user / domain end of the spectrum.
 
