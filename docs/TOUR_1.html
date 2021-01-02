@@ -1,0 +1,90 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title></title>
+  <meta name="GENERATOR" content="github.com/gomarkdown/markdown markdown processor for Go" />
+  <meta charset="utf-8" />
+  <link rel="stylesheet" type="text/css" href="css/docs-all.css" />
+  <script type="text/javascript" src="js/docs-all.js"></script>
+</head>
+<body>
+
+<p><b><a href="./TOUR_0.html">A fantastic cereal</a> &gt; Rye values and assignment</b></p>
+
+<h1>Rye values and assignment</h1>
+
+<h2>Rye value types</h2>
+
+<p>Rye knows many types of values. From numbers, strings, emails, URI-s, words, special words types, blocks of values &hellip;</p>
+
+<pre class="prettyprint"><code class="language-rye">33
+&quot;Hello word&quot;
+jim@example.com
+https://example.com
+some-word
+'print
+data:
+{ &quot;Jane&quot; &quot;Jim&quot; }
+</code></pre>
+
+<h2>Rye code = Rye values</h2>
+
+<p>Rye code is a block of Rye values. A block is also a Rye value.</p>
+
+<pre class="prettyprint"><code class="language-rye">print 11 + 22
+print &quot;Hello world&quot;
+data: { &quot;Jane&quot; &quot;Jim&quot; }
+print first data
+// prints:
+// 33
+// Hello world
+// Jane
+</code></pre>
+
+<pre class="prettyprint"><code class="language-rye">do {
+  print 11 + 22
+  print &quot;Hello world&quot;
+  data: { &quot;Jane&quot; &quot;Jim&quot; }
+  print first data
+}
+// prints the same as above
+</code></pre>
+
+<h2>Assignment</h2>
+
+<p>Words can be linked to Rye values. Set-words are used to create the assignment.</p>
+
+<pre class="prettyprint"><code class="language-rye">a-set-word: &quot;takes value from the expression on the right&quot;
+name: &quot;Jane&quot;
+age: 33
+print name
+new-age: print age + 1
+// prints:
+// Jane
+// 34
+</code></pre>
+
+<p><a href="./TOUR_2.html" class="foot next">Next</a></p>
+
+<h3>BONUS: Inline set-words</h3>
+
+<p>Everything in Rye is also an expression, returns a value. Setwords also return the assigned value, so they can be used inline.</p>
+
+<pre class="prettyprint"><code class="language-rye">prn &quot;All:&quot;
+print all-fruits: 100 + apples: 12 + 21
+prn { &quot;Apples:&quot; apples }
+// prints:
+// All: 133
+// Apples: 33
+</code></pre>
+
+<h3>BONUS: Left and right set-words</h3>
+
+<p>They will make more sense later, but Rye also has left leaning set-words.</p>
+
+<pre class="prettyprint"><code class="language-rye">&quot;Jim&quot; :name
+12 + 21 :apples + 100 :all-fruits
+</code></pre>
+
+</body>
+</html>
