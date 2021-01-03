@@ -57,7 +57,7 @@ loop 3 { + 1 |prn }
 
 for names { .embed "Hi {{}}!" |print }
 // prints:
-// Hi Jim
-// Hi Jane
-// Hi Anne
+// Hi Jim!
+// Hi Jane!
+// Hi Anne!
 ```
