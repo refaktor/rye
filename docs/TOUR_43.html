@@ -1,0 +1,31 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title></title>
+  <meta name="GENERATOR" content="github.com/gomarkdown/markdown markdown processor for Go" />
+  <meta charset="utf-8" />
+  <link rel="stylesheet" type="text/css" href="css/docs-all.css" />
+  <script type="text/javascript" src="js/docs-all.js"></script>
+</head>
+<body>
+
+<p><b><a href="./TOUR_0.html">Some Practical Rye</a> &gt; Simple webserver</b></p>
+
+<h1>Simple webserver</h1>
+
+<h2>Http server</h2>
+
+<pre class="prettyprint"><code class="language-rye">new-server &quot;:8080&quot;
+|handle &quot;/&quot; &quot;Hello from Rye!&quot;
+|handle &quot;/fn&quot; fn { r w } { write w &quot;Hello from Rye function!&quot; }
+</code></pre>
+
+<h2>Websockets</h2>
+
+<pre class="prettyprint"><code class="language-rye">new-server &quot;:8080&quot;
+|handle-ws &quot;/echo&quot; fn { s ctx } { forever { read s ctx :m , write s ctx m } } 
+|handle-ws &quot;/ping&quot; fn { s ctx } { forever { reas s ctx :m = &quot;Ping&quot; |if { write s ctx &quot;Pong&quot; } } }
+</code></pre>
+
+</body>
+</html>
