@@ -62,7 +62,7 @@ for range 1 5 { :i print l-pad i i &quot;0&quot; }
 <pre class="prettyprint"><code class="language-rye">loop 3 { + 1 |prn }
 // prints: 1 2 3
 
-for names { embed &quot;Hi {{}}!&quot; |print }
+for names { .embed &quot;Hi {{}}!&quot; |print }
 // prints:
 // Hi Jim
 // Hi Jane
