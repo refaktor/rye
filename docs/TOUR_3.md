@@ -59,5 +59,5 @@ for names { .embed "Hi {{}}!" |print }
 // prints:
 // Hi Jim
 // Hi Jane
-// Ji Anne
+// Hi Anne
 ```
