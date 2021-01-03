@@ -55,7 +55,7 @@ We will come to them later, but we would write the examples above like this:
 loop 3 { + 1 |prn }
 // prints: 1 2 3
 
-for names { embed "Hi {{}}!" |print }
+for names { .embed "Hi {{}}!" |print }
 // prints:
 // Hi Jim
 // Hi Jane
