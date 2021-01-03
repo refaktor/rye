@@ -50,6 +50,12 @@ a.foot {
 	padding-top: 10px;
 	padding-bottom: 20px;
 }
+a.wip {
+	color: #60a6d0;
+}
+a.notyet {
+	color: silver;
+}
 a.prev:before {
 	content: "\1F870" ;
 	padding-right: 0.5em ;
@@ -212,5 +218,7 @@ li.L1,li.L3,li.L5,li.L7,li.L9 { }
   pre .tag, code .tag { color: #006; font-weight: bold }
   pre .atn, code .atn { color: #404 }
   pre .atv, code .atv { color: #060 }
+  pre .opn, code .opn { color: #440 }
+  pre .clo, code .clo { color: #440 }
 }
 

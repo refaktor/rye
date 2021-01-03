@@ -11,4 +11,9 @@ mdtohtml -page -css "css/docs-all.css" -js "js/docs-all.js" failures.md > failur
 mdtohtml -page -css "css/docs-all.css" -js "js/docs-all.js" TOUR_0.md > TOUR_0.html
 mdtohtml -page -css "css/docs-all.css" -js "js/docs-all.js" TOUR_1.md > TOUR_1.html
 mdtohtml -page -css "css/docs-all.css" -js "js/docs-all.js" TOUR_2.md > TOUR_2.html
+mdtohtml -page -css "css/docs-all.css" -js "js/docs-all.js" TOUR_3.md > TOUR_3.html
+mdtohtml -page -css "css/docs-all.css" -js "js/docs-all.js" TOUR_4.md > TOUR_4.html
+mdtohtml -page -css "css/docs-all.css" -js "js/docs-all.js" TOUR_11.md > TOUR_11.html
+mdtohtml -page -css "css/docs-all.css" -js "js/docs-all.js" TOUR_42.md > TOUR_42.html
+mdtohtml -page -css "css/docs-all.css" -js "js/docs-all.js" TOUR_43.md > TOUR_43.html
 mdtohtml -page -css "css/docs-all.css" -js "js/docs-all.js" TOUR_FDW_3.md > TOUR_FDW_3.html
