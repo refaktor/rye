@@ -1,0 +1,110 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title></title>
+  <meta name="GENERATOR" content="github.com/gomarkdown/markdown markdown processor for Go" />
+  <meta charset="utf-8" />
+  <link rel="stylesheet" type="text/css" href="css/docs-all.css" />
+  <script type="text/javascript" src="js/docs-all.js"></script>
+</head>
+<body>
+
+<p><b><a href="./TOUR_0.html">Some Practical Rye</a> &gt; Injected blocks</b></p>
+
+<h1>Injected blocks</h1>
+
+<p><em>WORK IN PROGRESS</em></p>
+
+<p>Op-words, pipe-words and left-set-words accept first argument from the left. In this pattern we preinject a block of code with a left value.</p>
+
+<h2>Injected left value</h2>
+
+<p>Multiple functions that accept an argument and a block of code use the mechanism of (so far called) injected blocks.</p>
+
+<pre class="prettyprint"><code class="language-rye">1 + 1 |with { .print }
+// prints: 2
+
+1 + 2 |pass { + 10 |prn } |prn
+// prints: 13 3
+
+loop 3 { +10 |prn }
+// prints: 10 11 12
+
+names: { &quot;Jim&quot; &quot;Jane&quot; &quot;Anne&quot; }
+for names { .prn }
+// prints: Jim Jane Anne
+
+db: open sqlite://main.db
+names: { &quot;Jim&quot; &quot;Jane&quot; &quot;Anne&quot; }
+for names { :name
+  exec db { insert into pals ( name ) values ( ?name ) }
+  print name +_ &quot;added&quot;
+} 
+// prints:
+// Jim added
+// Jane added
+// Anne added
+</code></pre>
+
+<h2>Reinjections with expression guards</h2>
+
+<p>A comma is a so called expression guard in Rye. It can be inserted between expressions to assure you about expression borders. Inside an injected block it has another behaviour: It reinjects the argument.</p>
+
+<pre class="prettyprint"><code class="language-rye">1 |with {  + 100 |prn , + 10 |prn } |prn
+// prints 101 11 11
+
+1 |pass {  + 100 |prn , + 10 |prn } |prn
+// prints 101 11 1
+
+{ &quot;Jane&quot; &quot;Jim&quot; }
+|with { .embed &quot;Hi {{}}!&quot; |prn , prn &quot;Huh?&quot; , .embed &quot;Bye {{}}!&quot; |prn } 
+// prints:
+// Hi Jane! Huh? Bye Jane!
+// Hi Jim! Huh? Bye Jim!
+</code></pre>
+
+<h2>Practical example</h2>
+
+<p>Here we look at simple GTK example and how it looks if we use the injected block mechanics.</p>
+
+<pre class="prettyprint"><code>
+// example without the injected block mechanics
+
+gtk-init
+
+win: gtk-new-window
+win .set-title &quot;Hello GTK&quot;
+
+lab: gtk-new-label
+lab .set-text &quot;from Rye language&quot;
+lab .set-tooltip &quot;yeah really&quot;
+win .add-to lab
+
+win .set-size 200 200
+win .show
+
+gtk-main
+
+
+// example using injected blocks
+
+gtk-init
+gtk-new-window .with {
+  .set-title &quot;Hello GTK&quot;
+  .add-to new-gtk-label .with {
+    .set-text &quot;from Rye language&quot; ,
+    .set-tooltip &quot;yeah really!&quot;
+  } ,
+  .set-size 200 200 ,
+  .show
+}
+gtk-main
+
+</code></pre>
+
+<p>This is taken from my code experiments below:</p>
+
+<p><img src="./tour_imgs/gtk_minimal_example.jpeg" /></p>
+
+</body>
+</html>

@@ -17,7 +17,7 @@ Rye language lives close to the user / domain end of the spectrum.
 ## Language specialities
 
 * <a class="wip" href="./TOUR_11.html">Pipe-words, op-words</a>
-* <a class="notyet" href="./TOUR_12.html">Injected block</a>
+* <a class="wip" href="./TOUR_12.html">Injected block</a>
 * <a class="notyet" href="./TOUR_13.html">Validation dialect</a>
 * <a class="notyet" href="./TOUR_14.html">Kinds and converters</a>
 * <a class="notyet" href="./TOUR_15.html">Generic methods</a>
