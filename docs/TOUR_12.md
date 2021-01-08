@@ -48,7 +48,7 @@ A comma is a so called expression guard in Rye. It can be inserted between expre
 // prints 101 11 1
 
 { "Jane" "Jim" }
-|with { .embed "Hi {{}}!" |prn , prn "Huh?" , .embed "Bye {{}}!" |prn } 
+|for { .embed "Hi {{}}!" |prn , prn "Huh?" , .embed "Bye {{}}!" |prn } 
 // prints:
 // Hi Jane! Huh? Bye Jane!
 // Hi Jim! Huh? Bye Jim!
