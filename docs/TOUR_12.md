@@ -38,7 +38,7 @@ for names { :name
 
 ## Reinjections with expression guards
 
-A comma is a so called expression guard in Rye. It can be inserted between expressions to assure you about expression borders. Inside an injected block it has another behaviour: It reinjects the argument.
+A comma is a so called expression guard in Rye. It can be inserted between expressions to assure you about expression borders. Inside an injected block it has additional behaviour: It reinjects the argument.
 
 ```rye
 1 |with {  + 100 |prn , + 10 |prn } |prn
