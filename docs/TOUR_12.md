@@ -82,7 +82,7 @@ gtk-main
 
 gtk-init
 gtk-new-window .with {
-  .set-title "Hello GTK"
+  .set-title "Hello GTK" ,
   .add-to new-gtk-label .with {
     .set-text "from Rye language" ,
     .set-tooltip "yeah really!"
