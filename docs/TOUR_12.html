@@ -48,7 +48,7 @@ for names { :name
 
 <h2>Reinjections with expression guards</h2>
 
-<p>A comma is a so called expression guard in Rye. It can be inserted between expressions to assure you about expression borders. Inside an injected block it has another behaviour: It reinjects the argument.</p>
+<p>A comma is a so called expression guard in Rye. It can be inserted between expressions to assure you about expression borders. Inside an injected block it has additional behaviour: It reinjects the argument.</p>
 
 <pre class="prettyprint"><code class="language-rye">1 |with {  + 100 |prn , + 10 |prn } |prn
 // prints 101 11 11
@@ -57,7 +57,7 @@ for names { :name
 // prints 101 11 1
 
 { &quot;Jane&quot; &quot;Jim&quot; }
-|with { .embed &quot;Hi {{}}!&quot; |prn , prn &quot;Huh?&quot; , .embed &quot;Bye {{}}!&quot; |prn } 
+|for { .embed &quot;Hi {{}}!&quot; |prn , prn &quot;Huh?&quot; , .embed &quot;Bye {{}}!&quot; |prn } 
 // prints:
 // Hi Jane! Huh? Bye Jane!
 // Hi Jim! Huh? Bye Jim!
