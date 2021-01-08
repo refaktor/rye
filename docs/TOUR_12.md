@@ -11,11 +11,11 @@ Op-words, pipe-words and left-set-words accept first argument from the left. In 
 Multiple functions that accept an argument and a block of code use the mechanism of (so far called) injected blocks.
 
 ```rye
-1 + 1 |with { .print }
-// prints: 2
+1 + 2 |with { + 30 |prn } |prn
+// prints: 33 33
 
-1 + 2 |pass { + 10 |prn } |prn
-// prints: 13 3
+1 + 2 |pass { + 30 |prn } |prn
+// prints: 33 3
 
 loop 3 { +10 |prn }
 // prints: 10 11 12
