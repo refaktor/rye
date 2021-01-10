@@ -196,7 +196,8 @@ var Builtins_sqlite = map[string]*env.Builtin{
 						rows.Close() //good habit to close
 						//fmt.Println("+++++")
 						//fmt.Print(result)
-						return *env.NewNative(env1.Idx, *spr, "Rye-spreadsheet")
+						// return *env.NewNative(env1.Idx, *spr, "Rye-spreadsheet")
+						return *spr
 					}
 					return env.NewError("Empty SQL")
 				}

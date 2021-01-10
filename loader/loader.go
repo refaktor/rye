@@ -172,10 +172,10 @@ func parseLSetword(v *Values, d Any) (Any, error) {
 }
 
 func parseOpword(v *Values, d Any) (Any, error) {
-	//fmt.Println("OPWORD:" + v.Token())
+	fmt.Println("OPWORD:" + v.Token())
 	word := v.Token()
 	var idx int
-	if len(word) == 1 || word == "<<" || word == "<-" {
+	if len(word) == 1 || word == "<<" || word == "<-" || word == "<--" {
 		// onecharopwords < > + * ... their naming is equal to _< _> _* ...
 		idx = wordIndex.IndexWord("_" + word)
 	} else {
@@ -215,7 +215,7 @@ func parsePipeword(v *Values, d Any) (Any, error) {
 	//fmt.Println("OPWORD:" + v.Token())
 	word := v.Token()
 	var idx int
-	if word == ">>" || word == "->" {
+	if word == ">>" || word == "->" || word == "-->" {
 		idx = wordIndex.IndexWord("_" + word)
 	} else {
 		idx = wordIndex.IndexWord(word[1:])
@@ -279,8 +279,8 @@ func newParser() *Parser {
 	FPATH 	   		<-  "%" URIPATH*
 	CPATH    		<-  WORD ( "/" WORD )+
 	ONECHARWORDS	    <-  < [<>*+-=/] >
-	PIPEARROWS      <-  ">>" / "->"
-	OPARROWS        <-  "<<" / "<-"
+	PIPEARROWS      <-  ">>" / "-->" / "->"
+	OPARROWS        <-  "<<" / "<--" / "<-"
 	LETTER  	       	<-  < [a-zA-Z?=^` + "`" + `_] >
 	LETTERORNUM		<-  < [a-zA-Z0-9-?=.\\!_+<>] >
 	URIPATH			<-  < [a-zA-Z0-9-?=.:@/\\!_>] >

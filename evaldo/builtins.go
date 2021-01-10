@@ -19,6 +19,82 @@ func ss() {
 	fmt.Print(1)
 }
 
+func getFrom(ps *env.ProgramState, data interface{}, key interface{}, posMode bool) env.Object {
+	switch s1 := data.(type) {
+	case env.Dict:
+		switch s2 := key.(type) {
+		case env.String:
+			v := s1.Data[s2.Value]
+			switch v1 := v.(type) {
+			case int, int64, float64, string, []interface{}, map[string]interface{}:
+				return JsonToRye(v1)
+			case env.Integer:
+				return v1
+			case env.String:
+				return v1
+			case env.Date:
+				return v1
+			case env.Block:
+				return v1
+			case env.Dict:
+				return v1
+			case env.List:
+				return v1
+			case nil:
+				ps.FailureFlag = true
+				return env.NewError("missing key")
+			default:
+				ps.FailureFlag = true
+				return env.NewError("Value of type: " + reflect.TypeOf(v1).String())
+			}
+		}
+	case env.RyeCtx:
+		switch s2 := key.(type) {
+		case env.Word:
+			v, ok := s1.Get(s2.Index)
+			if ok {
+				return v
+			} else {
+				ps.FailureFlag = true
+				return env.NewError1(5) // NOT_FOUND
+			}
+		}
+	case env.List:
+		switch s2 := key.(type) {
+		case env.Integer:
+			idx := s2.Value
+			if posMode {
+				idx--
+			}
+			v := s1.Data[idx]
+			ok := true
+			if ok {
+				return JsonToRye(v)
+			} else {
+				ps.FailureFlag = true
+				return env.NewError1(5) // NOT_FOUND
+			}
+		}
+	case env.Block:
+		switch s2 := key.(type) {
+		case env.Integer:
+			idx := s2.Value
+			if posMode {
+				idx--
+			}
+			v := s1.Series.Get(int(idx))
+			ok := true
+			if ok {
+				return v
+			} else {
+				ps.FailureFlag = true
+				return env.NewError1(5) // NOT_FOUND
+			}
+		}
+	}
+	return env.NewError("wrong types TODO")
+}
+
 var builtins = map[string]*env.Builtin{
 
 	"oneone": {
@@ -1960,71 +2036,25 @@ var builtins = map[string]*env.Builtin{
 	"_->": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s1 := arg0.(type) {
-			case env.Dict:
-				switch s2 := arg1.(type) {
-				case env.String:
-					v := s1.Data[s2.Value]
-					switch v1 := v.(type) {
-					case int, int64, float64, string, []interface{}, map[string]interface{}:
-						return JsonToRye(v1)
-					case env.Integer:
-						return v1
-					case env.String:
-						return v1
-					case env.Date:
-						return v1
-					case env.Block:
-						return v1
-					case env.Dict:
-						return v1
-					case env.List:
-						return v1
-					case nil:
-						ps.FailureFlag = true
-						return env.NewError("missing key")
-					default:
-						ps.FailureFlag = true
-						return env.NewError("Value of type: " + reflect.TypeOf(v1).String())
-					}
-				}
-			case env.RyeCtx:
-				switch s2 := arg1.(type) {
-				case env.Word:
-					v, ok := s1.Get(s2.Index)
-					if ok {
-						return v
-					} else {
-						ps.FailureFlag = true
-						return env.NewError1(5) // NOT_FOUND
-					}
-				}
-			case env.List:
-				switch s2 := arg1.(type) {
-				case env.Integer:
-					v := s1.Data[s2.Value]
-					ok := true
-					if ok {
-						return JsonToRye(v)
-					} else {
-						ps.FailureFlag = true
-						return env.NewError1(5) // NOT_FOUND
-					}
-				}
-			case env.Block:
-				switch s2 := arg1.(type) {
-				case env.Integer:
-					v := s1.Series.Get(int(s2.Value))
-					ok := true
-					if ok {
-						return v
-					} else {
-						ps.FailureFlag = true
-						return env.NewError1(5) // NOT_FOUND
-					}
-				}
-			}
-			return nil
+			return getFrom(ps, arg0, arg1, false)
+		},
+	},
+	"_<-": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return getFrom(ps, arg1, arg0, false)
+		},
+	},
+	"_<--": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return getFrom(ps, arg1, arg0, true)
+		},
+	},
+	"_-->": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return getFrom(ps, arg0, arg1, true)
 		},
 	},
 

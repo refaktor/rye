@@ -7,14 +7,15 @@ Programming is translation from computational substrate language to user / domai
 
 Rye language lives close to the user / domain end of the spectrum.
 
-## Language Basics
+## Some basic elements
 
 * <a href="./TOUR_1.html">Rye values and assignment</a>
 * <a href="./TOUR_2.html">If, either, switch and more</a>
 * <a href="./TOUR_3.html">Loop and for</a>
-* <a href="./TOUR_4.html">Functions</a>
+* <a href="./TOUR_5.html">Map, filter and HOF-s</a>
+* <a href="./TOUR_4.html">Functions, pure functions and curry</a>
 
-## Language specialities
+## More specific elements
 
 * <a class="wip" href="./TOUR_11.html">Pipe-words, op-words</a>
 * <a class="wip" href="./TOUR_12.html">Injected block</a>
@@ -24,8 +25,8 @@ Rye language lives close to the user / domain end of the spectrum.
 
 ## Failure handling
 
-* <a class="notyet" href="./TOUR_14.html">Failures and Errors</a>
-* <a class="notyet" href="./TOUR_14.html">Check, Fix and Tidy</a>
+* <a class="notyet" href="./TOUR_14.html">Failures and errors</a>
+* <a class="notyet" href="./TOUR_14.html">Check, fix and tidy</a>
 * <a class="notyet" href="./TOUR_14.html">Returning words</a>
 * <a class="notyet" href="./TOUR_14.html">Skipping words</a>
 
@@ -42,7 +43,7 @@ Rye language lives close to the user / domain end of the spectrum.
 * <a class="notyet" href="./TOUR_41.html">Working with files</a>
 * <a class="wip" href="./TOUR_42.html">SQLite and Postgres</a>
 * <a class="wip" href="./TOUR_43.html">Serving HTTP and websockets</a>
-* <a class="notyet" href="./TOUR_44.html">Simple App/API server</a>
+* <a class="notyet" href="./TOUR_44.html">Simple app/API server</a>
 
 
 ## More dialects

@@ -57,10 +57,30 @@ apply-1 10 ?increment |print
 
 ```
 
+## Pure functions
+
+Pure functions are functions that have no side effects and referentially transparent. You can define your own pure functions and they must
+call just other pure functions or natives.
+
+Pure functions only have access to pure context, so for them any unpure words are simply undefined.
+
+```rye
+add3: pfn { a b c } { a + b + c }
+
+add3 1 2 3 |print
+// prints: 6
+
+non-pure: pfn { a b c } { print a + b + c }
+non-pure 1 2 3
+Error: Error: word not found: print 
+At location:
+{ <-here-> print a ._+ b }
+```
+
 
 ## Currying
 
-This is experimental, but Rye has a form of partial application.
+This is somewhat experimental, but Rye has a form of partial application. It can partially evaluate on any argument.
 
 ```rye
 add5: add _ 5
@@ -71,6 +91,23 @@ print add5 10
 
 print subtract-from-10 3
 // prints: 7
+
+add10: 10 + _
+print add10 5
+// prints 15
+
+{ 10 100 1000 } |map 1 + _ |for { .print }
+// prints:
+// 11
+// 101
+// 1001
+
+db: open sqlite://test.db
+myquery: query db _
+myquery { select * from pals } |print
+// prints:
+// | id | name |
+// | 1  | Jane |
 
 ```
 
