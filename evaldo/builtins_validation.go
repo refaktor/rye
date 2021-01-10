@@ -19,9 +19,9 @@ type ValidationError struct {
 	message string
 }
 
-func Validation_EvalBlock(es *env.ProgramState, vals env.Dict) (env.Dict, map[string]ValidationError) {
+func Validation_EvalBlock(es *env.ProgramState, vals env.Dict) (env.Dict, map[string]env.Object) {
 
-	notes := make(map[string]ValidationError, 0) // TODO ... what is this 2 here ... just for temp
+	notes := make(map[string]env.Object, 0) // TODO ... what is this 2 here ... just for temp
 
 	var name string
 	var val interface{}
@@ -29,7 +29,7 @@ func Validation_EvalBlock(es *env.ProgramState, vals env.Dict) (env.Dict, map[st
 
 	for es.Ser.Pos() < es.Ser.Len() {
 		object := es.Ser.Pop()
-		var verr *ValidationError
+		var verr env.Object
 		switch obj := object.(type) {
 		case env.Setword:
 			if name != "" {
@@ -42,7 +42,7 @@ func Validation_EvalBlock(es *env.ProgramState, vals env.Dict) (env.Dict, map[st
 			if name != "" {
 				val, verr = evalWord(obj, es, res[name])
 				if verr != nil {
-					notes[name] = *verr
+					notes[name] = verr
 				} else {
 					res[name] = val
 				}
@@ -54,20 +54,20 @@ func Validation_EvalBlock(es *env.ProgramState, vals env.Dict) (env.Dict, map[st
 	return *env.NewDict(res), notes
 }
 
-func Validation_EvalBlock_List(es *env.ProgramState, vals env.List) (env.Object, []ValidationError) {
+func Validation_EvalBlock_List(es *env.ProgramState, vals env.List) (env.Object, []env.Object) {
 
-	notes := make([]ValidationError, 0) // TODO ... what is this 2 here ... just for temp
+	notes := make([]env.Object, 0) // TODO ... what is this 2 here ... just for temp
 
 	var res env.Object
 
 	for es.Ser.Pos() < es.Ser.Len() {
 		object := es.Ser.Pop()
-		var verr *ValidationError
+		var verr env.Object
 		switch obj := object.(type) {
 		case env.Word:
 			res, verr = evalWord_List(obj, es, vals)
 			if verr != nil {
-				notes = append(notes, *verr)
+				notes = append(notes, verr)
 			}
 		}
 	}
@@ -80,7 +80,7 @@ func newVE(n string) *ValidationError {
 	return &ValidationError{n}
 }
 
-func evalWord(word env.Word, es *env.ProgramState, val interface{}) (interface{}, *ValidationError) {
+func evalWord(word env.Word, es *env.ProgramState, val interface{}) (interface{}, env.Object) {
 	// later get all word indexes in adwance and store them only once... then use integer comparisson in switch below
 	// this is two times BAD ... first it needs to retrieve a string of index (BIG BAD) and then it compares string to string
 	// instead of just comparing two integers
@@ -103,7 +103,7 @@ func evalWord(word env.Word, es *env.ProgramState, val interface{}) (interface{}
 			if es.Res.(env.Integer).Value > 0 {
 				return val, nil
 			} else {
-				return val, newVE(serr.(env.String).Value)
+				return val, serr
 			}
 		default:
 			return val, nil // TODO ... make error
@@ -121,7 +121,7 @@ func evalWord(word env.Word, es *env.ProgramState, val interface{}) (interface{}
 		}
 	case "required":
 		if val == nil {
-			return val, newVE("required")
+			return val, env.String{"required"}
 		} else {
 			return val, nil
 		}
@@ -138,7 +138,7 @@ func evalWord(word env.Word, es *env.ProgramState, val interface{}) (interface{}
 	}
 }
 
-func evalWord_List(word env.Word, es *env.ProgramState, vals env.List) (env.List, *ValidationError) {
+func evalWord_List(word env.Word, es *env.ProgramState, vals env.List) (env.List, env.Object) {
 	// later get all word indexes in adwance and store them only once... then use integer comparisson in switch below
 	// this is two times BAD ... first it needs to retrieve a string of index (BIG BAD) and then it compares string to string
 	// instead of just comparing two integers
@@ -157,11 +157,11 @@ func evalWord_List(word env.Word, es *env.ProgramState, vals env.List) (env.List
 			return *env.NewList(res), nil // TODO ... make error
 		}
 	default:
-		return vals, newVE("unknown word in list validation") // TODO --- this is not a validation error exactly, but more like error in validation code .. think about
+		return vals, env.String{"unknown word in list validation"} // TODO --- this is not a validation error exactly, but more like error in validation code .. think about
 	}
 }
 
-func evalInteger(val interface{}) (interface{}, *ValidationError) {
+func evalInteger(val interface{}) (interface{}, env.Object) {
 	switch val1 := val.(type) {
 	case int64:
 		return env.Integer{val1}, nil
@@ -170,23 +170,23 @@ func evalInteger(val interface{}) (interface{}, *ValidationError) {
 	case string:
 		v, e := strconv.Atoi(val1)
 		if e != nil {
-			return val, newVE("not integer")
+			return val, env.String{"not integer"}
 		} else {
 			return env.Integer{int64(v)}, nil
 		}
 	case env.String:
 		v, e := strconv.Atoi(val1.Value)
 		if e != nil {
-			return val, newVE("not integer")
+			return val, env.String{"not integer"}
 		} else {
 			return env.Integer{int64(v)}, nil
 		}
 	default:
-		return val, newVE("not integer")
+		return val, env.String{"not integer"}
 	}
 }
 
-func evalString(val interface{}) (interface{}, *ValidationError) {
+func evalString(val interface{}) (interface{}, env.Object) {
 	switch val1 := val.(type) {
 	case int64:
 		return env.String{strconv.FormatInt(val1, 10)}, nil
@@ -197,55 +197,55 @@ func evalString(val interface{}) (interface{}, *ValidationError) {
 	case env.String:
 		return val1, nil
 	default:
-		return val1, newVE("not integer")
+		return val1, env.String{"not string"}
 	}
 }
 
-func parseEmail(v string) (interface{}, *ValidationError) {
+func parseEmail(v string) (interface{}, env.Object) {
 	e, err := mail.ParseAddress(v)
 	if err != nil {
-		return v, newVE("not email")
+		return v, env.String{"not email"}
 	}
 	return env.String{e.Address}, nil
 }
 
-func evalEmail(val interface{}) (interface{}, *ValidationError) {
+func evalEmail(val interface{}) (interface{}, env.Object) {
 	switch val1 := val.(type) {
 	case env.String:
 		return parseEmail(val1.Value)
 	case string:
 		return parseEmail(val1)
 	default:
-		return val, newVE("not email")
+		return val, env.String{"not email"}
 	}
 }
 
-func parseDate(v string) (interface{}, *ValidationError) {
+func parseDate(v string) (interface{}, env.Object) {
 	if strings.Index(v[0:3], ".") > 0 {
 		d, e := time.Parse("02.01.2006", v)
 		if e != nil {
-			return v, newVE("not date")
+			return v, env.String{"not date"}
 		}
 		fmt.Println(d)
 		return env.Date{d}, nil
 	} else if strings.Index(v[3:5], ":") > 0 {
 		d, e := time.Parse("2006-01-02", v)
 		if e != nil {
-			return v, newVE("not date")
+			return v, env.String{"not date"}
 		}
 		return env.Date{d}, nil
 	}
-	return v, newVE("not date")
+	return v, env.String{"not date"}
 }
 
-func evalDate(val interface{}) (interface{}, *ValidationError) {
+func evalDate(val interface{}) (interface{}, env.Object) {
 	switch val1 := val.(type) {
 	case env.String:
 		return parseDate(val1.Value)
 	case string:
 		return parseDate(val1)
 	default:
-		return val, newVE("not date")
+		return val, env.String{"not date"}
 	}
 }
 
@@ -256,8 +256,12 @@ func BuiValidate(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object) env.O
 		case env.Dict:
 			ser1 := env1.Ser
 			env1.Ser = blk.Series
-			val, _ := Validation_EvalBlock(env1, rmap)
+			val, verrs := Validation_EvalBlock(env1, rmap)
 			env1.Ser = ser1
+			if len(verrs) > 0 {
+				env1.FailureFlag = true
+				return env.NewError4(403, "validation error", nil, verrs)
+			}
 			return val
 		case env.List:
 			ser1 := env1.Ser

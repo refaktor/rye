@@ -1,0 +1,68 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title></title>
+  <meta name="GENERATOR" content="github.com/gomarkdown/markdown markdown processor for Go" />
+  <meta charset="utf-8" />
+  <link rel="stylesheet" type="text/css" href="css/docs-all.css" />
+  <script type="text/javascript" src="js/docs-all.js"></script>
+</head>
+<body>
+
+<p><b><a href="./TOUR_0.html">Some Practical Rye</a> &gt; Validation dialect</b></p>
+
+<h1>Validation dialect</h1>
+
+<h2>Required, optional</h2>
+
+<p>Validation rules begin with <strong>required</strong> and <strong>optional</strong>.</p>
+
+<pre class="prettyprint"><code class="language-rye">dict { &quot;name&quot; &quot;jim&quot; &quot;score&quot; &quot;100&quot; }
+|validate { name: required score: optional 0 integer } |probe
+// prints: #[ name: &quot;jim&quot; score: 100 ] 
+
+dict { &quot;name&quot; &quot;jane&quot; }
+|validate { name: required score: optional 0 integer } |probe
+// prints: #[ name: &quot;jim&quot; score: 0 ] 
+
+dict { }
+|validate { name: required }
+// returns: &lt;Error(422): &lt;name: required&gt;&gt;
+</code></pre>
+
+<h2>Types</h2>
+
+<p>Rye has some predefined formats / types. Like <strong>integer</strong>, <strong>decimal</strong>, <strong>email</strong>, <strong>iso-date</strong> &hellip;</p>
+
+<pre class="prettyprint"><code class="language-rye">dict { &quot;email&quot; &quot;abcd&quot; &quot;active-since&quot; &quot;2020&quot; }
+|validate { email: required email active-since: required iso-date }
+// returns: &lt;Error(422): &lt;name: not email&gt; &lt;active-since: not iso-date&gt;&gt;
+</code></pre>
+
+<h2>Calc and check</h2>
+
+<p>To call custom code in validation dialect.</p>
+
+<pre class="prettyprint"><code class="language-rye">dict { &quot;name&quot; &quot;jim&quot; }
+|validate { name: required calc { .capitalize } } |probe
+// prints: #[ name: &quot;Jim&quot; ]
+
+rules: { password: required 
+	   	 check { .len &gt;= 6 |require &quot;shorter than 6 letters&quot; }
+		 calc { .bcrypt-hash } }
+		  
+parse-json '{ &quot;password&quot;: &quot;1234&quot; }' |validate rules
+// returns: &lt;Error(422): &lt;password: shorter than 6 letters&gt;&gt;
+</code></pre>
+
+<h2>Validating lists</h2>
+
+<p>Still work-in-progress but there are <strong>some</strong> and <strong>any</strong> rule words for validating lists of dicts.</p>
+
+<pre class="prettyprint"><code class="language-rye">parse-json '[{ &quot;user&quot;: &quot;jane&quot; }, { }]'
+|validate { some { user: optional &quot;joedoe&quot; } }
+// returns: &lt;List &lt;Dict user: jane&gt; &lt;Dict user: joedoe&gt;&gt; 
+</code></pre>
+
+</body>
+</html>

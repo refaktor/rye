@@ -1,6 +1,6 @@
-<b><a href="./TOUR_0.html">A fantastic cereal</a> > Map, filter and more</b>
+<b><a href="./TOUR_0.html">A fantastic cereal</a> > Map, filter and HOF-s</b>
 
-# HOF-s
+# Map, filter and HOF-s
 
 In functional programming languages, functions are first class values. Functions that accept them as arguments are called higher-order-functions (HOF-s).
 

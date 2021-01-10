@@ -289,7 +289,7 @@ func newParser() *Parser {
     NUMBER         	<-  < [0-9]+ >
 	SPACE			<-  < [ \t\r\n] >
 	STRINGCHAR		<-  < !'"' . >
-	STRINGCHAR1		<-  < !"'" . >
+	STRINGCHAR1		<-  < !"%" . >
 	COMMA			<-  ","
 	VOID				<-  "_"
 	COMMENT			<-  (";" NOTENDLINE* )

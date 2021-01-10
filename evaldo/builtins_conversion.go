@@ -10,9 +10,9 @@ type ConversionError struct {
 	message string
 }
 
-func Conversion_EvalBlock(es *env.ProgramState, vals env.RyeCtx) (env.RyeCtx, map[string]ValidationError) {
+func Conversion_EvalBlock(es *env.ProgramState, vals env.RyeCtx) (env.RyeCtx, map[string]env.Object) {
 
-	notes := make(map[string]ValidationError, 0) // TODO ... what is this 2 here ... just for temp
+	notes := make(map[string]env.Object, 0) // TODO ... what is this 2 here ... just for temp
 
 	var key int
 
@@ -38,7 +38,7 @@ func newCE(n string) *ConversionError {
 	return &ConversionError{n}
 }
 
-func conversion_evalWord(word env.Word, es *env.ProgramState, val interface{}) (interface{}, *ValidationError) {
+func conversion_evalWord(word env.Word, es *env.ProgramState, val interface{}) (interface{}, env.Object) {
 	// later get all word indexes in adwance and store them only once... then use integer comparisson in switch below
 	// this is two times BAD ... first it needs to retrieve a string of index (BIG BAD) and then it compares string to string
 	// instead of just comparing two integers
@@ -61,7 +61,7 @@ func conversion_evalWord(word env.Word, es *env.ProgramState, val interface{}) (
 			if es.Res.(env.Integer).Value > 0 {
 				return val, nil
 			} else {
-				return val, newVE(serr.(env.String).Value)
+				return val, serr
 			}
 		default:
 			return val, nil // TODO ... make error
@@ -79,7 +79,7 @@ func conversion_evalWord(word env.Word, es *env.ProgramState, val interface{}) (
 		}
 	case "required":
 		if val == nil {
-			return val, newVE("required")
+			return val, env.String{"required"}
 		} else {
 			return val, nil
 		}

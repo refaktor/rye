@@ -1,4 +1,4 @@
-# A fantastic cereal
+# Meet Rye
 
 Programming languages are user interfaces, more powerfull, composable, modular, scriptable,
 potentially more complex and users might be specific, but still user interfaces.
@@ -12,14 +12,14 @@ Rye language lives close to the user / domain end of the spectrum.
 * <a href="./TOUR_1.html">Rye values and assignment</a>
 * <a href="./TOUR_2.html">If, either, switch and more</a>
 * <a href="./TOUR_3.html">Loop and for</a>
-* <a href="./TOUR_5.html">Map, filter and HOF-s</a>
 * <a href="./TOUR_4.html">Functions, pure functions and curry</a>
 
 ## More specific elements
 
 * <a class="wip" href="./TOUR_11.html">Pipe-words, op-words</a>
-* <a class="wip" href="./TOUR_12.html">Injected block</a>
-* <a class="notyet" href="./TOUR_13.html">Validation dialect</a>
+* <a class="" href="./TOUR_12.html">Injected block</a>
+* <a class="" href="./TOUR_16.html">Map, filter and HOF-s</a>
+* <a class="wip" href="./TOUR_13.html">Validation dialect</a>
 * <a class="notyet" href="./TOUR_14.html">Kinds and converters</a>
 * <a class="notyet" href="./TOUR_15.html">Generic methods</a>
 
