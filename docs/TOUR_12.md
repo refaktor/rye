@@ -1,4 +1,4 @@
-<b><a href="./TOUR_0.html">Some Practical Rye</a> > Injected blocks</b>
+<b><a href="./TOUR_0.html">Meet Rye</a> > Injected blocks</b>
 
 # Injected blocks
 

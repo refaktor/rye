@@ -1,4 +1,4 @@
-<b><a href="./TOUR_0.html">A fantastic cereal</a> > Rye values and assignment</b>
+<b><a href="./TOUR_0.html">Meet Rye</a> > Rye values and assignment</b>
 
 # Rye values and assignment
 

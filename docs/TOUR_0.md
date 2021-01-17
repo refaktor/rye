@@ -25,10 +25,10 @@ Rye language lives close to the user / domain end of the spectrum.
 
 ## Failure handling
 
-* <a class="notyet" href="./TOUR_14.html">Failures and errors</a>
-* <a class="notyet" href="./TOUR_14.html">Check, fix and tidy</a>
-* <a class="notyet" href="./TOUR_14.html">Returning words</a>
-* <a class="notyet" href="./TOUR_14.html">Skipping words</a>
+* <a class="wip" href="./TOUR_21.html">Failures and errors</a>
+* <a class="wip" href="./TOUR_22.html">Check, fix and tidy</a>
+* <a class="notyet" href="./TOUR_23.html">Returning words</a>
+* <a class="notyet" href="./TOUR_24.html">Skipping words</a>
 
 ## Language structures
 

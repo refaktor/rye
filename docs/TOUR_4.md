@@ -1,4 +1,4 @@
-<b><a href="./TOUR_0.html">A fantastic cereal</a> > User functions</b>
+<b><a href="./TOUR_0.html">Meet Rye</a> > User functions</b>
 
 # User functions
 

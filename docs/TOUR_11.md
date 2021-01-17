@@ -1,4 +1,4 @@
-<b><a href="./TOUR_0.html">Some Practical Rye</a> > Pipe-words, op-words</b>
+<b><a href="./TOUR_0.html">Meet Rye</a> > Pipe-words, op-words</b>
 
 # Pipe-words, op-words
 

@@ -1,0 +1,78 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title></title>
+  <meta name="GENERATOR" content="github.com/gomarkdown/markdown markdown processor for Go" />
+  <meta charset="utf-8" />
+  <link rel="stylesheet" type="text/css" href="css/docs-all.css" />
+  <script type="text/javascript" src="js/docs-all.js"></script>
+</head>
+<body>
+
+<p><b><a href="./TOUR_0.html">Meet Rye</a> &gt; Failures and errors</b></p>
+
+<h1>Failures and exceptions</h1>
+
+<p><em>this concept is at a stage of a working thought experiment</em></p>
+
+<h2>Exceptions are where beautifull code goes to die</h2>
+
+<p>You can find many beautifull code snippets in various programming languages. But then it hits you. What if that file wasn&rsquo;t there, what if that
+http call failed, etc. Most of the times, when you add exception handling the beauty is gone. But without them, the program is not really complete.
+Certain failures are a part of reality.</p>
+
+<p>So the idea is to try something <em>completely different</em>.</p>
+
+<h2>Failures vs. code errors</h2>
+
+<p>Most languages combine all runtime mishaps into one group, exceptions. I think we have a two distinct event groups, that also require two distinct groups of reactions.</p>
+
+<h3>Failures</h3>
+
+<p>Unpure functions have an effect / task to perform. It can be expected that sometimes some tasks can&rsquo;t be performed. Like I said: a file is not there, http request fails,
+input data validation fails, etc &hellip;</p>
+
+<p>Failures are Rye values. We can work with them, handle them programatically and continue the execution of program.</p>
+
+<h3>Code errors</h3>
+
+<p>Our program can arrive on a coding error at runtime. We never plan to make an error in our code and handle it. We remove the error.</p>
+
+<p>Program is in an unpredictable state after an error, so it should &ldquo;log&rdquo; the error and stop. The way of logging the error is application specific and should be determined on application level.</p>
+
+<h3>Unhandeled Failures</h3>
+
+<p>If the failure isn&rsquo;t handeled it becomes an Code error.</p>
+
+<h2>Translation of failures</h2>
+
+<p>As code is a translation from a computer jargon, to problem, niche, and at the end user&rsquo;s jargon so should be the failures.</p>
+
+<p>Lower level code shouldn&rsquo;t
+define how failure is communicated to the user, but should return a failure or translate from a lower level failure to it&rsquo;s level of failure and return that to
+it&rsquo;s callers.</p>
+
+<h2>Catch and print</h2>
+
+<p>One of the most common antipattern for all this is so called &ldquo;catch and print&rdquo; on an individual exception level. It breaks all concepts above and is pointless.</p>
+
+<h2>Example of concepts</h2>
+
+<p>Most examples I could find of error handling in various languages, to compare my ideas on them, were sady very basic and uninteresting. This <a href="https://www.learn-clojurescript.com/section-4/lesson-24-handling-exceptions-and-errors/">clojurescript example</a>
+was a little more invovled:</p>
+
+<p><img src="./tour_imgs/clojure_failure_sample.png" /></p>
+
+<p>This was the aproximate translation to Rye:</p>
+
+<p><img src="./tour_imgs/rye_failure_sample.png" /></p>
+
+<p>This is a more idiomatic Rye, also using kinds:</p>
+
+<p><img src="./tour_imgs/rye2_failure_sample.png" /></p>
+
+<p></body>
+</html></p>
+
+</body>
+</html>
