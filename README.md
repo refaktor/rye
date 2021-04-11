@@ -63,7 +63,7 @@ jim@example.com .send "title" content
 ; outputs: Jane Jim
 get http://www.example.com/users.json
 |parse-json |for { -> "name" |capitalize |print }
-; ouptuts capitalized names of users
+; outputs capitalized names of users
 ```
 
 Rye has **higher order like functions**, but they come in what
@@ -96,7 +96,7 @@ Rye has **multiple dialects**, specific interpreters of Rye values.
 Two examples of this are the validation and SQL dialects.
 
 ```bash
-dict { "name" "jane" }
+dict { "name" "jane" surname: "boo" }
 |validate { name: required score: optional 0 integer } |probe
 // prints: #[ name: "jane" score: 0 ]
 
@@ -114,6 +114,17 @@ converter person user { user-name: :name }
 dict { "name" "jameson" } >> person >> user |print
 ; prints: <Context (user): user-name: <String: Jameson>>
 ```
+
+Rye's **scope/context** is a first class Rye value and by this very malleable.
+One of the results of this are isolated contexts.
+
+```bash
+iso: isolate { print: ?print plus: ?add }
+do-in iso { 100 .plus 11 |print }
+; prints 111
+do-in iso { 2 .add 3 |print }
+; Error: Word add not found
+ ```
 
 ## More info
 
