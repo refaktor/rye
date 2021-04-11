@@ -71,19 +71,12 @@ would usually be special forms (here these are just functions).
 nums: { 1 2 3 }
 map nums { + 30 }
 ; returns { 31 32 33 }
-filter nums { < 3 }
-; returns { 1 2 }
 filter nums { :x all { x > 1  x < 3 } }
 ; returns: { 2 }
 strs: { "one" "two" "three" }
-{ 3 1 2 3 } |filter { > 1 } |map { <-- strs } |for { .print }
-; prints: 
-;  three
-;  two
-;  three
+{ 3 1 2 3 } |filter { > 1 } |map { <-- strs } |for { .prn }
+; prints: three two three
 ```
-
-
 
 Rye has some different ideas about **failure handling**. This
 is a complex subject, so look at other docs about it. Remember it's
@@ -97,12 +90,30 @@ read-all %mydata.json |check { 404 "couldn't read the file" }
 ; if file is there and json is OK, but score field is missing
 ```
 
+Rye has **multiple dialects**, specific interpreters of Rye values. 
+Two examples of this are the validation and SQL dialects.
 
-## Examples and more info
+```bash
+dict { "name" "jane" }
+|validate { name: required score: optional 0 integer } |probe
+// prints: #[ name: "jim" score: 0 ]
 
-A [blog](https://ryelang.blogspot.com/) following development.
+name: "James"
+db: open sqlite://main.db
+exec db { insert into pals ( name ) values ( ?name ) }
+```
 
-The language [introduction documents](https://refaktor.github.io/rye/INTRO_1.html) are work in progress.
+Rye has a concept of **kinds with validators and converters**.
+
+```bash
+person: kind 'person { name: required string calc { .capitalize } }
+user: kind user { user-name: required }
+converter person user { user-name: :name }
+dict { "name" "jameson" } >> person >> user |print
+; prints: <Context (user): user-name: <String: Jameson>>
+```
+
+## More info
 
 There is also a [simple website](https://refaktor.github.io/rye/) being made.
 
