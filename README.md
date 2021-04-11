@@ -1,16 +1,19 @@
 # Rye at a glance 🌾
 
-Rye is homoiconic, code is just data.
+Rye is **homoiconic**, code is data, etc.
 
 ```bash
 data: { name "Jim" score 33 }
 code: { print "Hello" +_ data/name }
 if data/score > 25 code
 ; outputs: Hello Jim
+print second data + ", " + second code
+; outputs: Jim, Hello
 ```
 
-Rye has no keywords or special forms. Ifs, Loops, even Function
-definiton words are just functions (and you can define your own).
+Rye has **no keywords or special forms**. Ifs, Loops, even Function
+definiton words are just functions. This means you can load them on 
+library level and create your own.
 
 ```bash
 if-jim: fn { name code } { if name = "jim" code }
@@ -20,7 +23,18 @@ if-jim visitor { print "Welcome in!" }
 ; prints: Welcome in!
 ```
 
-Rye has more syntax types than your average language 
+Rye has no statements. Everything is an **expression**, returns 
+something. Even asignment returns a value, so you can assign
+inline. Either is an if/else like function.
+
+```bash
+sex: 'f 
+full-name: join3 name: "Jane" " " surname: "Doe"  
+print "Hello" +_ either gender = 'm { "Mr." } { "Ms." } +_ name
+; outputs: Hello Ms. Jane Doe
+```
+
+Rye has more **syntax types** than your average language 
 and it has generic methods for short function names, get and send
 dispatch on the kind of first argument (http uri and an email address).
 
@@ -31,11 +45,12 @@ send email "title" content
 ; sends email with contents of the webpage
 ```
 
-Rye has a concept of op (operator) and pipe words. Every function can
-be called as ordinary function or as op/pipe word 
+Rye has an option of forward code flow. It has a concept of 
+**op (operator) and pipe words**. Every function can
+be called as ordinary function or as op/pipe word. 
 
 ```bash
-http://www.example.com |get |html->text :content
+http://www.example.com .get .html->text :content
 jim@example.com .send "title" content
 ; sends email with contents of the webpage
 ```
