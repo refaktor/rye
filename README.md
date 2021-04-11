@@ -30,7 +30,8 @@ if-jim visitor { print "Welcome in!" }
 
 Rye has no statements. Everything is an **expression**, returns 
 something. Even asignment returns a value, so you can assign
-inline. (Either is an if/else like function).
+inline. Either (an if/else like function) returns the result of the evaluated
+block and can be used like an ternary operator.
 
 ```bash
 direction: 'in
