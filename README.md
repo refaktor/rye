@@ -1,11 +1,11 @@
 # Rye 🌾
 
-Rye is work/design in progress programming language based on ideas from Rebol merged with some ideas
-from factor, bash shell and golang. It currently features a WIP golang based interpreter.
+Rye is **work/design in progress** programming language based on ideas from Rebol inspired by some specifics from
+Factor, Bash shell and Golang. It currently features a WIP golang based interpreter and REPL.
 
 # Rye at a glance 🌾
 
-Rye is **homoiconic**, code is also Rye's data.
+Rye is **homoiconic**, Rye's code is also Rye's data.
 
 ```bash
 data: { name "Jim" score 33 }
@@ -17,8 +17,8 @@ print second data + ", " + second code
 ```
 
 Rye has **no keywords or special forms**. Ifs, Loops, even Function
-definiton words are just functions. This means you can load them at 
-library level and create your own.
+definiton words are just functions. This means you can have more of them,
+load them at library level and create your own.
 
 ```bash
 if-jim: fn { name code } { if name = "jim" code }
@@ -35,13 +35,13 @@ inline. (Either is an if/else like function).
 ```bash
 direction: 'in
 full-name: join3 name: "Jane" " " surname: "Doe"  
-print either direction = 'in { "Hi" +_ full-name } { "Bye bye" }
-; outputs: Hi Jane Doe
+print either direction = 'in { "Hi" +_ full-name } { "Bye bye" +_ name }
+; outputs: Hi Jane Doell
 ```
 
-Rye has more **syntax types** than your average language.
+Rye has **more syntax types** than your average language.
 And it has generic methods for short function names. *Get* and *send*
-below dispatch on the kind of first argument (http uri and an email address).
+below dispatch on the *kind* of first argument (http uri and an email address).
 
 ```bash
 email: jim@example.com
@@ -52,20 +52,22 @@ send email "title" content
 
 Rye has an option of forward code flow. It has a concept of 
 **op and pipe words**. Every function can
-be called as ordinary function or as op/pipe word.
+be called as ordinary function or as op/pipe word. It also 
+has a concept of **injected blocks** like *for* below.
 
 ```bash
 http://www.example.com/ .get .html->text :content
 jim@example.com .send "title" content
 ; sends email with contents of the webpage
-
+{ "Jane" "Jim" } |for { .prn }
+; outputs: Jane Jim
 get http://www.example.com/users.json
 |parse-json |for { -> "name" |capitalize |print }
 ; ouptuts capitalized names of users
 ```
 
 Rye has **higher order like functions**, but they come in what
-would usually be special forms (here these are just functions).
+would usually be special forms (here these are still just functions).
 
 ```bash
 nums: { 1 2 3 }
@@ -96,7 +98,7 @@ Two examples of this are the validation and SQL dialects.
 ```bash
 dict { "name" "jane" }
 |validate { name: required score: optional 0 integer } |probe
-// prints: #[ name: "jim" score: 0 ]
+// prints: #[ name: "jane" score: 0 ]
 
 name: "James"
 db: open sqlite://main.db
