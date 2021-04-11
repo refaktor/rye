@@ -1,17 +1,43 @@
-# rye 🌾
+# Rye at a glance 🌾
 
-An experimental programming language, looking into some new and many borrowed language 
-ideas with interpreter in Go. ⚠
+Rye is homoiconic, code is just data.
 
 ```bash
-hello: fn { a } { "Hello" +_ a + "!" }
-print hello "world"
-// outputs: Hello world!
+data: { name "Jim" score 33 }
+code: { print "Hello" +_ data/name }
+if data/score > 25 code
+; outputs: Hello Jim
+```
 
-data: { name "Jim" age 33 }
-code: { hello data/name }
-if true code
-// outputs: Hello Jim!
+Rye has no keywords or special forms. Ifs, Loops, even Function
+definiton words are just functions (and you can define your own).
+
+```bash
+if-jim: fn { name code } { if name = "jim" code }
+
+visitor: "jim"
+if-jim visitor { print "Welcome in!" }
+; prints: Welcome in!
+```
+
+Rye has more syntax types than your average language 
+and it has generic methods for short function names, get and send
+dispatch on the kind of first argument (http uri and an email address).
+
+```bash
+email: jim@example.com
+content: html->text get http://www.example.com
+send email "title" content
+; sends email with contents of the webpage
+```
+
+Rye has a concept of op (operator) and pipe words. Every function can
+be called as ordinary function or as op/pipe word 
+
+```bash
+http://www.example.com |get |html->text :content
+jim@example.com .send "title" content
+; sends email with contents of the webpage
 ```
 
 ## Examples and more info
