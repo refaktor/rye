@@ -1,13 +1,13 @@
 # Rye 🌾
 
-Rye is **work/design in progress** programming language based on ideas from Rebol inspired by some specifics from
+Rye is **design/work in progress** programming language based on ideas from Rebol and flawored by
 Factor, Bash shell and Golang. It currently features a WIP golang based interpreter and REPL.
 
 # Rye at a glance 🌾
 
 Rye is **homoiconic**, Rye's code is also Rye's data.
 
-```bash
+```clojure
 data: { name "Jim" score 33 }
 code: { print "Hello" +_ data/name }
 if data/score > 25 code
@@ -20,7 +20,7 @@ Rye has **no keywords or special forms**. Ifs, Loops, even Function
 definiton words are just functions. This means you can have more of them,
 load them at library level and create your own.
 
-```bash
+```clojure
 if-jim: fn { name code } { if name = "jim" code }
 
 visitor: "jim"
@@ -33,18 +33,18 @@ something. Even asignment returns a value, so you can assign
 inline. Either (an if/else like function) returns the result of the evaluated
 block and can be used like an ternary operator.
 
-```bash
+```clojure
 direction: 'in
 full-name: join3 name: "Jane" " " surname: "Doe"  
 print either direction = 'in { "Hi" +_ full-name } { "Bye bye" +_ name }
-; outputs: Hi Jane Doell
+; outputs: Hi Jane Doe
 ```
 
 Rye has **more syntax types** than your average language.
 And it has generic methods for short function names. *Get* and *send*
 below dispatch on the *kind* of first argument (http uri and an email address).
 
-```bash
+```clojure
 email: jim@example.com
 content: html->text get http://www.example.com
 send email "title" content
@@ -56,7 +56,7 @@ Rye has an option of forward code flow. It has a concept of
 be called as ordinary function or as op/pipe word. It also 
 has a concept of **injected blocks** like *for* below.
 
-```bash
+```clojure
 http://www.example.com/ .get .html->text :content
 jim@example.com .send "title" content
 ; sends email with contents of the webpage
@@ -70,7 +70,7 @@ get http://www.example.com/users.json
 Rye has **higher order like functions**, but they come in what
 would usually be special forms (here these are still just functions).
 
-```bash
+```clojure
 nums: { 1 2 3 }
 map nums { + 30 }
 ; returns { 31 32 33 }
@@ -85,7 +85,7 @@ Rye has some different ideas about **failure handling**. This
 is a complex subject, so look at other docs about it. Remember it's
 all still experimental.
 
-```bash
+```clojure
 read-all %mydata.json |check { 404 "couldn't read the file" }
 |parse-json |check { 500 "couldn't parse JSON" }
 -> "score" |fix { 50 } |print1 "Your score: {}"
@@ -96,7 +96,7 @@ read-all %mydata.json |check { 404 "couldn't read the file" }
 Rye has **multiple dialects**, specific interpreters of Rye values. 
 Two examples of this are the validation and SQL dialects.
 
-```bash
+```clojure
 dict { "name" "jane" surname: "boo" }
 |validate { name: required score: optional 0 integer } |probe
 // prints: #[ name: "jane" score: 0 ]
@@ -108,7 +108,7 @@ exec db { insert into pals ( name ) values ( ?name ) }
 
 Rye has a concept of **kinds with validators and converters**.
 
-```bash
+```clojure
 person: kind 'person { name: required string calc { .capitalize } }
 user: kind user { user-name: required }
 converter person user { user-name: :name }
@@ -119,7 +119,7 @@ dict { "name" "jameson" } >> person >> user |print
 Rye's **scope/context** is a first class Rye value and by this very malleable.
 One of the results of this are isolated contexts.
 
-```bash
+```clojure
 iso: isolate { print: ?print plus: ?add }
 do-in iso { 100 .plus 11 |print }
 ; prints 111
@@ -129,9 +129,9 @@ do-in iso { 2 .add 3 |print }
 
 ## More info
 
-There is also a [simple website](https://refaktor.github.io/rye/) being made.
+There is a [simple website](https://refaktor.github.io/rye/) being made.
 
-There is also a very small [FB group](https://www.facebook.com/groups/866313463771373) you can join.
+More iThere is also a very small [FB group](https://www.facebook.com/groups/866313463771373) you can join.
 
 ## Platforms
 
