@@ -129,9 +129,9 @@ do-in iso { 2 .add 3 |print }
 
 ## More info
 
-There is a [simple website](https://refaktor.github.io/rye/) being made.
+There is a [simple website](https://refaktor.github.io/rye/) being made, and a [blog](http://ryelang.blogspot.com/).
 
-More iThere is also a very small [FB group](https://www.facebook.com/groups/866313463771373) you can join.
+There is also a very small [FB group](https://www.facebook.com/groups/866313463771373) you can join.
 
 ## Platforms
 
@@ -199,11 +199,9 @@ More [instructions here](https://www.gtk.org/docs/installations/macos/).
 
 ## Author
 
-- [Janko Metelko][refaktor] - `<janko.itm@gmail.com>`
+- [Janko][refaktor] - `<janko.itm@gmail.com>`
 
-## Resources and contact
-
-- [Rye programming language - work in progress - Facebook Group](https://www.facebook.com/groups/866313463771373)
+## Contact
 
  [refaktor]: https://github.com/refaktor
  [otobrglez]: https://github.com/otobrglez
