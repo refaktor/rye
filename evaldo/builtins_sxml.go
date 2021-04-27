@@ -30,7 +30,7 @@ func load_saxml_Dict(es *env.ProgramState, block env.Block) (env.Dict, *env.Erro
 		obj := block.Series.Peek()
 		switch obj1 := obj.(type) {
 		case env.Xword:
-			trace4("TAG")
+			trace5("TAG")
 			keys = append(keys, es.Idx.GetWord(obj1.Index))
 			block.Series.Next()
 			continue
@@ -43,7 +43,7 @@ func load_saxml_Dict(es *env.ProgramState, block env.Block) (env.Dict, *env.Erro
 			block.Series.Next()
 			continue
 		case env.Block:
-			trace4("BLO")
+			trace5("BLO")
 			block.Series.Next()
 			if obj1.Mode == 1 {
 				// if code assign in to keys in Dict
@@ -93,15 +93,15 @@ func do_sxml(es *env.ProgramState, reader io.Reader, rmap env.Dict) env.Object {
 		// Inspect the type of the token just read.
 		switch se := t.(type) {
 		case xml.StartElement:
-			trace4("START")
+			trace5("START")
 			tag := se.Name.Local
 			ob, ok := rmap.Data[tag]
 			if ok {
-				trace4("START2")
+				trace5("START2")
 				tags = append(tags, curtag)
 				switch obj := ob.(type) {
 				case env.Dict:
-					trace4("START3")
+					trace5("START3")
 					stack = append(stack, rmap)
 					//fmt.Println(stack)
 					rmap = obj
@@ -141,10 +141,10 @@ func do_sxml(es *env.ProgramState, reader io.Reader, rmap env.Dict) env.Object {
 			}
 		case xml.EndElement:
 			inElement := se.Name.Local
-			trace4("END")
+			trace5("END")
 			//fmt.Println(curtag)
 			if inElement == curtag { // TODO -- solve the case of same named elements inside <person><person></person></person>
-				trace4("END2")
+				trace5("END2")
 				//fmt.Println(rmap)
 				b, ok := rmap.Data["-end-"]
 				if ok {
@@ -176,7 +176,7 @@ func do_sxml(es *env.ProgramState, reader io.Reader, rmap env.Dict) env.Object {
 	return nil
 }
 
-func trace4(s string) {
+func trace5(s string) {
 	//	fmt.Println(s)
 }
 

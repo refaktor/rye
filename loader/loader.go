@@ -64,6 +64,9 @@ func parseBlock(v *Values, d Any) (Any, error) {
 	}
 	//fmt.Print("BLOCK --> ")
 	//fmt.Println(block)
+	if ofs != 0 {
+		block = block[0 : len(v.Vs)-1+ofs]
+	}
 	ser := env.NewTSeries(block)
 	return env.Block{*ser, 0}, nil
 }
@@ -78,6 +81,9 @@ func parseBBlock(v *Values, d Any) (Any, error) {
 		} else {
 			ofs -= 1
 		}
+	}
+	if ofs != 0 {
+		block = block[0 : len(v.Vs)-1+ofs]
 	}
 	ser := env.NewTSeries(block)
 	return env.Block{*ser, 1}, nil
@@ -101,6 +107,9 @@ func parseGroup(v *Values, d Any) (Any, error) {
 	}
 	//fmt.Print("BLOCK --> ")
 	//fmt.Println(block)
+	if ofs != 0 {
+		block = block[0 : len(v.Vs)-1+ofs]
+	}
 	ser := env.NewTSeries(block)
 	return env.Block{*ser, 2}, nil
 }
@@ -172,7 +181,7 @@ func parseLSetword(v *Values, d Any) (Any, error) {
 }
 
 func parseOpword(v *Values, d Any) (Any, error) {
-	fmt.Println("OPWORD:" + v.Token())
+	//fmt.Println("OPWORD:" + v.Token())
 	word := v.Token()
 	var idx int
 	if len(word) == 1 || word == "<<" || word == "<-" || word == "<--" {
@@ -257,7 +266,7 @@ func newParser() *Parser {
 	BLOCK       	<-  "{" SPACES SERIES* "}"
 	BBLOCK       	<-  "[" SPACES SERIES* "]"
     GROUP       	<-  "(" SPACES SERIES* ")"
-    SERIES     		<-  (COMMENT / URI / EMAIL / STRING / NUMBER / COMMA / SETWORD / LSETWORD / ONECHARPIPE / PIPEWORD / OPWORD / TAGWORD / EXWORD / CPATH / FPATH / KINDWORD / XWORD / GENWORD / GETWORD / VOID / WORD / BLOCK / GROUP / BBLOCK / ARGBLOCK ) SPACES
+    SERIES     		<-  (COMMENT / URI / EMAIL / STRING / NUMBER / COMMA / SETWORD / LSETWORD / ONECHARPIPE / PIPEWORD / XWORD / OPWORD / TAGWORD / EXWORD / CPATH / FPATH / KINDWORD / GENWORD / GETWORD / VOID / WORD / BLOCK / GROUP / BBLOCK / ARGBLOCK ) SPACES
     ARGBLOCK       	<-  "{" WORD ":" WORD "}"
     WORD           	<-  LETTER LETTERORNUM*
 	GENWORD 		<-  UCLETTER LCLETTERORNUM* 

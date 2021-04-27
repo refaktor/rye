@@ -361,6 +361,14 @@ var builtins = map[string]*env.Builtin{
 
 	// BASIC GENERAL FUNCTIONS
 
+	"prnl": {
+		Argsn: 0,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			fmt.Print("\n")
+			return nil
+		},
+	},
+
 	"prn": {
 		Argsn: 1,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -798,7 +806,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"do-in": {
+	"with-context": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch ctx := arg0.(type) {
@@ -1201,6 +1209,25 @@ var builtins = map[string]*env.Builtin{
 				ps.Ser = bloc.Series
 				for {
 					ps = EvalBlock(ps)
+					ps.Ser.Reset()
+				}
+				ps.Ser = ser
+				return ps.Res
+			default:
+				ps.FailureFlag = true
+				return env.NewError("arg0 should be block	")
+			}
+		},
+	},
+	"forever-with": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg1.(type) {
+			case env.Block:
+				ser := ps.Ser
+				ps.Ser = bloc.Series
+				for {
+					EvalBlockInj(ps, arg0, true)
 					ps.Ser.Reset()
 				}
 				ps.Ser = ser
@@ -2621,6 +2648,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_io, ps)
 	RegisterBuiltins2(Builtins_web, ps)
 	RegisterBuiltins2(Builtins_sxml, ps)
+	RegisterBuiltins2(Builtins_html, ps)
 	RegisterBuiltins2(Builtins_sqlite, ps)
 	RegisterBuiltins2(Builtins_gtk, ps)
 	RegisterBuiltins2(Builtins_validation, ps)
@@ -2638,6 +2666,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_goroutines, ps)
 	RegisterBuiltins2(Builtins_psql, ps)
 	RegisterBuiltins2(Builtins_bcrypt, ps)
+	RegisterBuiltins2(Builtins_raylib, ps)
 }
 
 func RegisterBuiltins2(builtins map[string]*env.Builtin, ps *env.ProgramState) {

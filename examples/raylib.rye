@@ -1,0 +1,10 @@
+
+rl: raylib-init 300 260 "Rye raylib demo"
+set-target-fps rl 60
+forever {
+	begin-drawing rl
+	clear-background rl rl-black
+	draw-circle rl 150 130 60 rl-gold
+	end-drawing rl
+}
+

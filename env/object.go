@@ -276,6 +276,8 @@ func (b Block) Probe(e Idxs) string {
 		if b.Series.Get(i) != nil {
 			r.WriteString(b.Series.Get(i).Probe(e))
 			r.WriteString(" ")
+		} else {
+			r.WriteString("<NIL>")
 		}
 	}
 	r.WriteString(" }")
