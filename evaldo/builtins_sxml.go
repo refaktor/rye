@@ -1,4 +1,4 @@
-// +build b_sxml
+//_ +build b_sxml
 
 package evaldo
 
@@ -8,12 +8,6 @@ import (
 
 	//"fmt"
 	"io"
-	"strings"
-	//	"bufio"
-	//	"io"
-	//	"os"
-	//	"strconv"
-	//	"strings"
 )
 
 // { <person> [ .print ] }
@@ -181,13 +175,6 @@ func trace5(s string) {
 }
 
 var Builtins_sxml = map[string]*env.Builtin{
-
-	"string-reader": {
-		Argsn: 1,
-		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return *env.NewNative(es.Idx, strings.NewReader(arg0.(env.String).Value), "rye-reader")
-		},
-	},
 
 	"rye-reader//do-sxml": {
 		Argsn: 2,

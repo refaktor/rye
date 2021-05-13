@@ -275,7 +275,7 @@ func newParser() *Parser {
 	GETWORD   		<-  "?" LETTER LETTERORNUM*
 	PIPEWORD   		<-  "|" LETTER LETTERORNUM* / PIPEARROWS
 	ONECHARPIPE    <-  "|" ONECHARWORDS
-	OPWORD    		<-  "." LETTER LETTERORNUM* / OPARROWS / ONECHARWORDS 
+	OPWORD    		<-  "." LETTER LETTERORNUM* / OPARROWS / ONECHARWORDS / "[" LETTERORNUM* 
 	TAGWORD    		<-  "'" LETTER LETTERORNUM*
 	KINDWORD    		<-  "(" LETTER LETTERORNUM* ")"?
 	XWORD    		<-  "<" LETTER LETTERORNUM* ">"?
@@ -291,7 +291,7 @@ func newParser() *Parser {
 	PIPEARROWS      <-  ">>" / "-->" / "->"
 	OPARROWS        <-  "<<" / "<--" / "<-"
 	LETTER  	       	<-  < [a-zA-Z?=^` + "`" + `_] >
-	LETTERORNUM		<-  < [a-zA-Z0-9-?=.\\!_+<>] >
+	LETTERORNUM		<-  < [a-zA-Z0-9-?=.\\!_+<>\]] >
 	URIPATH			<-  < [a-zA-Z0-9-?=.:@/\\!_>] >
 	UCLETTER  		<-  < [A-Z] >
 	LCLETTERORNUM	<-  < [a-z0-9] >

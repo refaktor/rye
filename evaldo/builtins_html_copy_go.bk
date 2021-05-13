@@ -27,9 +27,6 @@ import (
 // when we have accessor words
 // { <div> .menu <a> when [ [href] .includes "www.google.com" ] { <b> [ [content] .collect ] } }
 
-const TYPE_SUBNODE int = 1
-const TYPE_CODE int = 2
-
 type HtmlNavigCondition struct {
 	Class string
 	Id    string
@@ -37,12 +34,8 @@ type HtmlNavigCondition struct {
 
 type HtmlDialectNode struct {
 	Condition *HtmlNavigCondition
-	Code      *env.Block
-	SubNode   *env.Dict
-	Type      int // 1 - node , 2 - code , 3 - direct_descendant (later)
+	Value     interface{}
 }
-
-// dmap is a dict of nodes
 
 // tagname is stored in dict that we lookup. On match we look at condition if there.
 
@@ -57,44 +50,51 @@ func load_html_Dict(es *env.ProgramState, block env.Block) (env.Dict, *env.Error
 	var keys []string                    // keys
 	var conditions []*HtmlNavigCondition // conditions
 
-	data := make(map[string]interface{})
-	dmap := *env.NewDict(data)
+	data := make(map[string]interface{}) //
+	rmap := *env.NewDict(data)           //
 
 	for block.Series.Pos() < block.Series.Len() {
-		object := block.Series.Peek()
-		switch obj := object.(type) {
+		obj := block.Series.Peek()
+		switch obj1 := obj.(type) {
 		case env.Void:
+			trace4("VOID")
 			keys = append(keys, "")              // if void append empty string to keys
 			conditions = append(conditions, nil) // if void append empty string to keys
 			block.Series.Next()
 			continue
 		case env.Xword:
-			key = es.Idx.GetWord(obj.Index)
+			trace4("XWORD")
+			key = es.Idx.GetWord(obj1.Index)
+			// keys = append(keys, ) // if xword append to keys
 			block.Series.Next()
 			continue
 		case env.Tagword: // if tagword append -word- to keys
-			key = "-" + es.Idx.GetWord(obj.Index) + "-"
+			trace4("TAGWORD")
+			key = "-" + es.Idx.GetWord(obj1.Index) + "-"
+			//keys = append(keys, "-"+es.Idx.GetWord(obj1.Index)+"-")
 			block.Series.Next()
 			continue
 		case env.LSetword: // if tagword append -word- to keys
 			if condition == nil {
 				condition = &HtmlNavigCondition{"", ""}
 			}
-			condition.Id = es.Idx.GetWord(obj.Index)
+			condition.Id = es.Idx.GetWord(obj1.Index)
+			//keys = append(keys, "-"+es.Idx.GetWord(obj1.Index)+"-")
 			block.Series.Next()
 			continue
 		case env.Opword: // if tagword append -word- to keys
 			if condition == nil {
 				condition = &HtmlNavigCondition{"", ""}
 			}
-			condition.Class = es.Idx.GetWord(obj.Index)
+			condition.Class = es.Idx.GetWord(obj1.Index)
+			//keys = append(keys, "-"+es.Idx.GetWord(obj1.Index)+"-")
 			block.Series.Next()
 			continue
 		case env.Comma:
 			trace4("COMMA")
 			// push key and condition
 			keys = append(keys, key)
-			conditions = append(conditions, condition)
+			conditions = append(conditions, condition) // if void append empty string to keys
 			key = ""
 			condition = nil
 			block.Series.Next()
@@ -106,35 +106,35 @@ func load_html_Dict(es *env.ProgramState, block env.Block) (env.Dict, *env.Error
 				key = ""
 				condition = nil
 			}
-			trace8("KEYS, CONDITIONS")
-			// fmt.Println(keys)
-			// fmt.Println(conditions)
+			trace4("BLOCK")
 			block.Series.Next()
-			if obj.Mode == 1 { // if block is [ ]
+			if obj1.Mode == 1 {
 				// if code assign in to keys in Dict
 				if len(keys) > 0 {
 					for idx, k := range keys {
-						dmap.Data[k] = HtmlDialectNode{conditions[idx], &obj, nil, TYPE_CODE}
+						if conditions[idx] != nil {
+							rmap.Data[k] = HtmlDialectNode{conditions[idx], obj1}
+						} else {
+							rmap.Data[k] = obj1
+						}
+						keys = []string{}
 					}
-					keys = make([]string, 0)
-					conditions = make([]*HtmlNavigCondition, 0)
 				} else {
-					dmap.Data["-start-"] = obj
+					rmap.Data["-start-"] = obj1
 				}
-			} else if obj.Mode == 0 { // if block is { }
-				subdmap, err := load_html_Dict(es, obj)
+			} else if obj1.Mode == 0 {
+				rm, err := load_html_Dict(es, obj1)
 				if err != nil {
 					return _emptyRM(), err
 				}
 				trace8(" **** FOR KEYS")
 				if len(keys) > 0 {
-					// fmt.Println(keys)
-					// fmt.Println(subdmap)
-					for idx, k := range keys {
-						dmap.Data[k] = HtmlDialectNode{conditions[idx], nil, &subdmap, TYPE_SUBNODE}
+					fmt.Println(keys)
+					fmt.Println(rm)
+					for _, k := range keys {
+						rmap.Data[k] = rm
 					}
-					keys = make([]string, 0)
-					conditions = make([]*HtmlNavigCondition, 0)
+					keys = []string{}
 				} else {
 					return _emptyRM(), env.NewError("no selectors before tag map")
 				}
@@ -145,23 +145,19 @@ func load_html_Dict(es *env.ProgramState, block env.Block) (env.Dict, *env.Error
 		}
 	}
 	trace8("**** RETURNING **** ")
-	// fmt.Println(dmap)
+	fmt.Println(rmap)
 
-	return dmap, nil
+	return rmap, nil
 }
 
-func do_html(es *env.ProgramState, reader io.Reader, dmap env.Dict) env.Object {
-
-	trace8("**** DO HTML **** ")
-	// fmt.Println(dmap)
+func do_html(es *env.ProgramState, reader io.Reader, rmap env.Dict) env.Object {
 
 	var stack []env.Dict // ??_?
 	var tags []string    // list of tags ??_?
 	var curtag string    // current tag ??_?
 	decoder := html.NewTokenizer(reader)
 
-	// check of root node has start (code node)
-	b, ok := dmap.Data["-start-"]
+	b, ok := rmap.Data["-start-"]
 	if ok {
 		switch obj := b.(type) {
 		case env.Block: // if values of start key is of type block, evaluate it
@@ -174,136 +170,105 @@ func do_html(es *env.ProgramState, reader io.Reader, dmap env.Dict) env.Object {
 		}
 	}
 
-myloop:
+	//total := 0
 	for {
-
-		//fmt.Println(dmap)
-
 		// Read tokens from the XML document in a stream.
-		rawtoken := decoder.Next()
+		t := decoder.Next()
 		// Inspect the type of the token just read.
-		switch rawtoken {
+		switch t {
 		case html.StartTagToken:
 			trace8("START TOKEN (tag)")
-			token := decoder.Token()
-			tag := token.Data
+			tok := decoder.Token()
+			tag := tok.Data
 			trace8(tag)
-			// check if token exists in current dmap
-			rawNode, ok := dmap.Data[tag]
+			// check if token exists in current rmap
+			ob, ok := rmap.Data[tag]
 			if ok {
 				// if it is then
 				trace8(" --- is in RMAP")
-				switch node := rawNode.(type) { // swith on the type of object from rmap
+				switch obj := ob.(type) { // swith on the type of object from rmap
+				case env.Dict: // if it is Dict
+					trace8(" --- THIS IS DICT OBJ")
+					tags = append(tags, curtag) // append current tag to tags
+					stack = append(stack, rmap) // append whole rmap to the stack
+					//fmt.Println(stack)
+					rmap = obj   // set the received object as rmap
+					curtag = tag // set tag as curtag
+					// if new rmap has -start- run it
+					b, ok := rmap.Data["-start-"]
+					if ok {
+						switch obj := b.(type) {
+						case env.Block: // if values of start key is of type block, evaluate it
+							ser := es.Ser // TODO -- make helper function that "does" a block
+							es.Ser = obj.Series
+							EvalBlockInj(es, *env.NewNative(es.Idx, tok, "rye-html-start"), true)
+							es.Ser = ser
+						default:
+							// TODO Err
+						}
+					}
 				case HtmlDialectNode: // if it is Dict
+					trace4("  THIS IS DIALECT NODE")
+					blk := obj.Value // set the received object as rmap
 
 					id := ""
 					class := ""
 					// get the class and id attributes
-					for _, a := range token.Attr {
+					for _, a := range tok.Attr {
 						if a.Key == "id" {
 							id = a.Val
 						} else if a.Key == "class" {
 							class = a.Val
 						}
 					}
-					trace8("NODE, CONDITION")
-					// fmt.Println(node)
-					// fmt.Println(node.Condition)
-					if (node.Condition == nil) || ((node.Condition.Class == "" || node.Condition.Class == class) &&
-						(node.Condition.Id == "" || node.Condition.Id == id)) {
-						switch node.Type {
-						case TYPE_CODE: // if it is block
-							trace4("  THIS IS BLOCK OBJ")
-							// stack = append(stack, rmap) // append rmap to stack and evaluate block
-							ser := es.Ser // TODO -- make helper function that "does" a block
-							es.Ser = node.Code.Series
-							EvalBlockInj(es, *env.NewNative(es.Idx, token, "rye-html-start"), true)
-							es.Ser = ser
-
-						case TYPE_SUBNODE:
+					if (obj.Condition.Class == "" || obj.Condition.Class == class) &&
+						(obj.Condition.Id == "" || obj.Condition.Id == id) {
+						switch blk2 := blk.(type) { // swith on the type of object from rmap
+						case env.Dict: // if it is Dict
 							trace8(" --- THIS IS DICT OBJ")
 							tags = append(tags, curtag) // append current tag to tags
-							stack = append(stack, dmap) // append whole rmap to the stack
+							stack = append(stack, rmap) // append whole rmap to the stack
 							//fmt.Println(stack)
-							dmap = *node.SubNode // set the received object as rmap
-							curtag = tag         // set tag as curtag
+							rmap = blk2  // set the received object as rmap
+							curtag = tag // set tag as curtag
 							// if new rmap has -start- run it
-							rawCode, ok := node.SubNode.Data["-start-"]
+							b, ok := rmap.Data["-start-"]
 							if ok {
-								switch code := rawCode.(type) {
+								switch obj := b.(type) {
 								case env.Block: // if values of start key is of type block, evaluate it
 									ser := es.Ser // TODO -- make helper function that "does" a block
-									es.Ser = code.Series
-									EvalBlockInj(es, *env.NewNative(es.Idx, token, "rye-html-start"), true)
+									es.Ser = obj.Series
+									EvalBlockInj(es, *env.NewNative(es.Idx, tok, "rye-html-start"), true)
 									es.Ser = ser
 								default:
 									// TODO Err
 								}
 							}
+						case env.Block:
+							ser := es.Ser // TODO -- make helper function that "does" a block
+							es.Ser = blk2.Series
+							EvalBlockInj(es, *env.NewNative(es.Idx, tok, "rye-html-start"), true)
+							es.Ser = ser
 						}
-						/*
-							case HtmlDialectNode: // if it is Dict
-								trace4("  THIS IS DIALECT NODE")
-								blk := obj.Value // set the received object as rmap
-
-								id := ""
-								class := ""
-								// get the class and id attributes
-								for _, a := range token.Attr {
-									if a.Key == "id" {
-										id = a.Val
-									} else if a.Key == "class" {
-										class = a.Val
-									}
-								}
-								if (obj.Condition.Class == "" || obj.Condition.Class == class) &&
-									(obj.Condition.Id == "" || obj.Condition.Id == id) {
-									switch blk2 := blk.(type) { // swith on the type of object from rmap
-									case env.Dict: // if it is Dict
-										trace8(" --- THIS IS DICT OBJ")
-										tags = append(tags, curtag) // append current tag to tags
-										stack = append(stack, rmap) // append whole rmap to the stack
-										//fmt.Println(stack)
-										rmap = blk2  // set the received object as rmap
-										curtag = tag // set tag as curtag
-										// if new rmap has -start- run it
-										b, ok := rmap.Data["-start-"]
-										if ok {
-											switch obj := b.(type) {
-											case env.Block: // if values of start key is of type block, evaluate it
-												ser := es.Ser // TODO -- make helper function that "does" a block
-												es.Ser = obj.Series
-												EvalBlockInj(es, *env.NewNative(es.Idx, tok, "rye-html-start"), true)
-												es.Ser = ser
-											default:
-												// TODO Err
-											}
-										}
-									case env.Block:
-										ser := es.Ser // TODO -- make helper function that "does" a block
-										es.Ser = blk2.Series
-										EvalBlockInj(es, *env.NewNative(es.Idx, tok, "rye-html-start"), true)
-										es.Ser = ser
-									}
-								} */
 					}
-				default:
-					// TODO err not HtmlNode
+
+				case env.Block: // if it is block
+					trace4("  THIS IS BLOCK OBJ")
+					// stack = append(stack, rmap) // append rmap to stack and evaluate block
+					ser := es.Ser // TODO -- make helper function that "does" a block
+					es.Ser = obj.Series
+					EvalBlockInj(es, *env.NewNative(es.Idx, tok, "rye-html-start"), true)
+					es.Ser = ser
 				}
 			}
 		case html.TextToken:
-			trace8("TEXT TOKEN")
-			// fmt.Println(dmap)
 			tok := decoder.Token()
-			rawnode, ok := dmap.Data[""]
+			ob, ok := rmap.Data[""]
 			if ok {
-				// fmt.Println("IN IF")
-				// fmt.Println(rawnode)
-				switch node := rawnode.(type) {
-				case HtmlDialectNode:
-					// fmt.Println("IN BLOCK")
+				switch obj := ob.(type) {
+				case env.Block:
 					ser := es.Ser // TODO -- make helper function that "does" a block
-					es.Ser = node.Code.Series
+					es.Ser = obj.Series
 					EvalBlockInj(es, env.String{string(tok.Data)}, true)
 					es.Ser = ser
 				}
@@ -318,7 +283,7 @@ myloop:
 			if inElement == curtag { // TODO -- solve the case of same named elements inside <person><person></person></person>
 				trace4("END2")
 				//fmt.Println(rmap)
-				b, ok := dmap.Data["-end-"]
+				b, ok := rmap.Data["-end-"]
 				if ok {
 					switch obj := b.(type) {
 					case env.Block:
@@ -332,38 +297,24 @@ myloop:
 				}
 
 				trace8("*** RETURNING ***")
-				// fmt.Println(stack)
-				// fmt.Println(tags)
+				fmt.Println(stack)
+				fmt.Println(tags)
 				n := len(stack) - 1 // Top element
-				// fmt.Println(n)
-				dmap = stack[n]
+				fmt.Println(n)
+				rmap = stack[n]
 				stack = stack[:n] // Pop
 
 				m := len(tags) - 1 // Top element
 				curtag = tags[m]
 				tags = tags[:m] // Pop
 
-				// fmt.Println(stack)
-				// fmt.Println(tags)
+				fmt.Println(stack)
+				fmt.Println(tags)
 
 			}
 		case html.ErrorToken:
-			break myloop
+			return nil
 		default:
-		}
-	}
-	// fmt.Println(dmap)
-	b1, ok1 := dmap.Data["-return-"]
-	if ok1 {
-		switch obj := b1.(type) {
-		case HtmlDialectNode: // if values of start key is of type block, evaluate it
-			ser := es.Ser // TODO -- make helper function that "does" a block
-			es.Ser = obj.Code.Series
-			EvalBlockInj(es, *env.NewNative(es.Idx, "", "rye-html-start"), true)
-			es.Ser = ser
-			return es.Res
-		default:
-			// TODO Err
 		}
 	}
 	return nil
@@ -373,19 +324,19 @@ func trace4(s string) {
 	// fmt.Println(s)
 }
 func trace8(s string) {
-	if false {
+	if true {
 		fmt.Println(s)
 	}
 }
 
 var Builtins_html = map[string]*env.Builtin{
 
-	"rye-reader//parse-html": {
+	"rye-reader//do-html": {
 		Argsn: 2,
 		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			rm, err := load_html_Dict(es, arg1.(env.Block))
 			trace8("*** _--- GOT RM ++**")
-			// fmt.Println(rm)
+			fmt.Println(rm)
 			if err != nil {
 				es.FailureFlag = true
 				return err
@@ -426,38 +377,21 @@ var Builtins_html = map[string]*env.Builtin{
 			}
 		},
 	},
-
-	"rye-html-start//name?": {
-		Argsn: 1,
-		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch tok1 := arg0.(type) {
-			case env.Native:
-				switch tok := tok1.Value.(type) {
-				case html.Token:
-					return env.String{tok.Data}
+	/*
+		"rye-html-start//name?": {
+			Argsn: 1,
+			Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+				switch obj := arg0.(type) {
+				case env.Native:
+					switch obj1 := obj.Value.(type) {
+					case xml.StartElement:
+						return env.String{obj1.Name.Local}
+					default:
+						return env.NewError("Not xml-strat element")
+					}
 				default:
-					return env.NewError("Not xml-strat element")
+					return env.NewError("first argument should be native")
 				}
-			default:
-				return env.NewError("first argument should be native")
-			}
-		},
-	},
-
-	/*	"rye-html-start//name?": {
-		Argsn: 1,
-		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch obj := arg0.(type) {
-			case env.Native:
-				switch obj1 := obj.Value.(type) {
-				case xml.StartElement:
-					return env.String{obj1.Name.Local}
-				default:
-					return env.NewError("Not xml-strat element")
-				}
-			default:
-				return env.NewError("first argument should be native")
-			}
-		},
-	},*/
+			},
+		}, */
 }

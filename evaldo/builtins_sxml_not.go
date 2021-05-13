@@ -2,8 +2,6 @@
 
 package evaldo
 
-import (
-	"rye/env"
-)
+//	"rye/env"
 
-var Builtins_sxml = map[string]*env.Builtin{}
+//var Builtins_sxml = map[string]*env.Builtin{}

@@ -83,6 +83,8 @@ func __open_reader(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg
 			return *env.NewError("Error opening file")
 		}
 		return *env.NewNative(env1.Idx, bufio.NewReader(file), "rye-reader")
+	case env.String:
+		return *env.NewNative(env1.Idx, strings.NewReader(s.Value), "rye-reader")
 	default:
 		env1.FailureFlag = true
 		return *env.NewError("just accepting Uri-s")
@@ -316,7 +318,8 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
-	"file-schema//open-reader": {
+	// should this be generic method or not?
+	"reader": {
 		Argsn: 1,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __open_reader(env1, arg0, arg1, arg2, arg3, arg4)

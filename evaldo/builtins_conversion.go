@@ -84,16 +84,17 @@ func conversion_evalWord(word env.Word, es *env.ProgramState, val interface{}) (
 			return val, nil
 		}
 	case "integer":
-		return evalInteger(val)
+		//		return evalInteger(val)
 	case "string":
-		return evalString(val)
+		//		return evalString(val)
 	case "email":
-		return evalEmail(val)
+		//		return evalEmail(val)
 	case "date":
-		return evalDate(val)
+		//		return evalDate(val)
 	default:
 		return val, nil
 	}
+	return val, nil
 }
 
 func BuiConvert(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object) env.Object {
