@@ -96,10 +96,14 @@ func main() {
 		} else if os.Args[1] == "ryeco" {
 			main_ryeco()
 		} else {
-			main_rye_file(os.Args[1])
+			main_rye_file(os.Args[1], false)
 		}
-	} else if len(os.Args) == 3 && os.Args[1] == "ryk" {
-		main_ryk(os.Args[2])
+	} else if len(os.Args) == 3 {
+		if os.Args[1] == "ryk" {
+			main_ryk(os.Args[2])
+		} else if os.Args[1] == "sig" {
+			main_rye_file(os.Args[2], true)
+		}
 	}
 }
 
@@ -109,10 +113,10 @@ func main() {
 
 func main_ryk(code string) {
 
-	block, genv := loader.LoadString(code)
+	block, genv := loader.LoadString(code, false)
 	// make code composable, updatable ... so you can load by appending to existing program/state or initial block?
 	// basically we need to have multiple toplevel blocks that can be evaluated by the same state
-	es := env.NewProgramState(block.Series, genv)
+	es := env.NewProgramState(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
 
 	scanner := bufio.NewScanner(os.Stdin)
@@ -205,8 +209,8 @@ func serve(c echo.Context) error {
 	//sess.Values["foo"] = env.String{"barca"}
 
 	input := "{ whoami: \"Rye webserver 0.001 alpha\" ctx: 0 result: \"\" session: 0 }"
-	block, genv := loader.LoadString(input)
-	es := env.NewProgramState(block.Series, genv)
+	block, genv := loader.LoadString(input, false)
+	es := env.NewProgramState(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
 	//evaldo.RegisterBuiltins2(evaldo.Buil, ps *env.ProgramState) {
 	evaldo.EvalBlock(es)
@@ -250,8 +254,8 @@ func serve(c echo.Context) error {
 				}
 				fmt.Print("CODE: ")
 				fmt.Println(code)
-				block, genv := loader.LoadString("{ " + code + " }")
-				es := env.AddToProgramState(es, block.Series, genv)
+				block, genv := loader.LoadString(code, false)
+				es := env.AddToProgramState(es, block.(env.Block).Series, genv)
 				evaldo.EvalBlock(es)
 				if displayBlock {
 					bu.WriteString("<div class='rye-result'>")
@@ -290,39 +294,29 @@ func serve(c echo.Context) error {
 	return c.HTML(http.StatusOK, bu.String())
 }
 
-func main_rye_file(file string) {
+func main_rye_file(file string, sig bool) {
 
 	//util.PrintHeader()
 	//defer profile.Start(profile.CPUProfile).Stop()
 
-	content, err := ioutil.ReadFile(file)
+	bcontent, err := ioutil.ReadFile(file)
 	if err != nil {
 		log.Fatal(err)
 	}
-	input := "{ " + string(content) + " }"
+
+	content := string(bcontent)
 
 	//	input := "{ loop 50000000 { add 1 2 } }"
-	block, genv := loader.LoadString(input)
-	es := env.NewProgramState(block.Series, genv)
-	evaldo.RegisterBuiltins(es)
-	evaldo.EvalBlock(es)
-
-	evaldo.MaybeDisplayFailureOrError(es, genv)
-
-	/*genv := loader.GetIdxs()
-		ps := evaldo.ProgramState{}
-
-		// Parse
-		loader1 := loader.NewLoader()
-		input := "{ 123 word 3 { setword: 23 } end 12 word }"
-		val, _ := loader1.ParseAndGetValue(input, nil)
-		loader.InspectNode(val)
-		evaldo.EvalBlock(ps, val.(env.Object))
-		fmt.Println(val)
-
-		genv.Probe()
-
-	a	fmt.Println(strconv.FormatInt(int64(genv.GetWordCount()), 10))*/
+	block, genv := loader.LoadString(content, sig)
+	switch val := block.(type) {
+	case env.Block:
+		es := env.NewProgramState(block.(env.Block).Series, genv)
+		evaldo.RegisterBuiltins(es)
+		evaldo.EvalBlock(es)
+		evaldo.MaybeDisplayFailureOrError(es, genv)
+	case env.Error:
+		fmt.Println(val.Message)
+	}
 
 }
 
@@ -332,8 +326,8 @@ func main_rye_repl_OLD(in io.Reader, out io.Writer) {
 	defer profile.Start().Stop()
 
 	input := "{ name: \"Rye\" version: \"0.002 alpha\" }"
-	block, genv := loader.LoadString(input)
-	es := env.NewProgramState(block.Series, genv)
+	block, genv := loader.LoadString(input, false)
+	es := env.NewProgramState(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
 	evaldo.EvalBlock(es)
 
@@ -359,8 +353,8 @@ func main_rye_repl_OLD(in io.Reader, out io.Writer) {
 
 		line1 := strings.Split(line, "//") //--- just very temporary solution for some comments in repl. Later should probably be part of loader ... maybe?
 		//fmt.Println(line1[0])
-		block, genv := loader.LoadString("{ " + line1[0] + " }")
-		es := env.AddToProgramState(es, block.Series, genv)
+		block, genv := loader.LoadString(line1[0], false)
+		es := env.AddToProgramState(es, block.(env.Block).Series, genv)
 		evaldo.EvalBlock(es)
 		if es.FailureFlag {
 			fmt.Println("\x1b[33m" + "failure" + "\x1b[0m")
@@ -406,14 +400,14 @@ func main_rye_repl(in io.Reader, out io.Writer) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		input = "{ " + string(content) + " }"
+		input = string(content)
 	} else {
 		fmt.Print("no profile")
 
 	}
 
-	block, genv := loader.LoadString(input)
-	es := env.NewProgramState(block.Series, genv)
+	block, genv := loader.LoadString(input, false)
+	es := env.NewProgramState(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
 	evaldo.EvalBlock(es)
 

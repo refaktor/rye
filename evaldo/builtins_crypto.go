@@ -8,6 +8,16 @@ import (
 	"rye/env"
 )
 
+/* Our strategy to only support signed files
+
+A) .codepks file holds public keys of developers we can trust, owner must be root and write access for all except root must be forbidden
+
+B) .pubkeys are compiled into the rye binary. Only root can change it since it's in the /usr/bin, monitoring programs can check that no other rye runs
+
+We make list of public keys and a flag "careful" as a global variable.
+
+if a "careful" flag is set when a file is "done" the last five lines are checked for comment ;#codesig 123131321231 The fike up to this line is checked for signature
+
 /*
 
     	priv := "e06d3183d14159228433ed599221b80bd0a5ce8352e4bdf0262f76786ef1c74db7e7a9fea2c0eb269d61e3b38e450a22e754941ac78479d6c54e1faf6037881d"
@@ -60,6 +70,32 @@ var Builtins_crypto = map[string]*env.Builtin{
 			switch addr := arg0.(type) {
 			case env.Native:
 				return env.String{hex.EncodeToString(addr.Value.([]byte))}
+			default:
+				env1.FailureFlag = true
+				return env.NewError("arg 0 should be Native")
+			}
+		},
+	},
+
+	"Ed25519-pub-key//to-string": {
+		Argsn: 1,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch addr := arg0.(type) {
+			case env.Native:
+				return env.String{hex.EncodeToString(addr.Value.(ed25519.PublicKey))}
+			default:
+				env1.FailureFlag = true
+				return env.NewError("arg 0 should be Native")
+			}
+		},
+	},
+
+	"Ed25519-priv-key//to-string": {
+		Argsn: 1,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch addr := arg0.(type) {
+			case env.Native:
+				return env.String{hex.EncodeToString(addr.Value.(ed25519.PrivateKey))}
 			default:
 				env1.FailureFlag = true
 				return env.NewError("arg 0 should be Native")

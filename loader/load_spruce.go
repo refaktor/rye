@@ -2,8 +2,8 @@
 package loader
 
 import (
-	"rye/env"
 	"fmt"
+	"rye/env"
 )
 
 /*
@@ -64,9 +64,9 @@ func LoadSpruceString(input string) (*env.SprNode, *env.Idxs) {
 				depth = space_cnt
 			} else if c == '\n' {
 				if state == INWORD {
-					block, _ := LoadString("{ " + curr_str + " }")
+					block, _ := LoadString(curr_str, false)
 					curr_str = ""
-					var obj = block.Series.Get(0)
+					var obj = block.(env.Block).Series.Get(0)
 					fmt.Println("ADDING")
 					fmt.Println(lastParent)
 					fmt.Println(depth)
@@ -98,7 +98,7 @@ func LoadSpruceString(input string) (*env.SprNode, *env.Idxs) {
 		} else {
 			if c == '}' {
 				state = NOTHING
-				block, _ := LoadString("{ " + curr_str + " }")
+				block, _ := LoadString(curr_str, false)
 				fmt.Println("PARSED BLOCK:")
 				fmt.Println(curr_str)
 				var parent = findParentNode(lastParent, depth)

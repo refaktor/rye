@@ -11,38 +11,39 @@ import (
 type Type int
 
 const (
-	BlockType       Type = 1
-	IntegerType     Type = 2
-	WordType        Type = 3
-	SetwordType     Type = 4
-	OpwordType      Type = 5
-	PipewordType    Type = 6
-	BuiltinType     Type = 7
-	FunctionType    Type = 8
-	ErrorType       Type = 9
-	CommaType       Type = 10
-	VoidType        Type = 11
-	StringType      Type = 12
-	TagwordType     Type = 13
-	GenwordType     Type = 14
-	GetwordType     Type = 15
-	ArgwordType     Type = 16
-	NativeType      Type = 17
-	UriType         Type = 18
-	LSetwordType    Type = 19
-	CtxType         Type = 20
-	DictType        Type = 21
-	ListType        Type = 22
-	DateType        Type = 23
-	CPathType       Type = 24
-	XwordType       Type = 25
-	EXwordType      Type = 26
-	SpreadsheetType Type = 27
-	EmailType       Type = 28
-	KindType        Type = 29
-	KindwordType    Type = 30
-	ConverterType   Type = 31
-	TimeType        Type = 32
+	BlockType          Type = 1
+	IntegerType        Type = 2
+	WordType           Type = 3
+	SetwordType        Type = 4
+	OpwordType         Type = 5
+	PipewordType       Type = 6
+	BuiltinType        Type = 7
+	FunctionType       Type = 8
+	ErrorType          Type = 9
+	CommaType          Type = 10
+	VoidType           Type = 11
+	StringType         Type = 12
+	TagwordType        Type = 13
+	GenwordType        Type = 14
+	GetwordType        Type = 15
+	ArgwordType        Type = 16
+	NativeType         Type = 17
+	UriType            Type = 18
+	LSetwordType       Type = 19
+	CtxType            Type = 20
+	DictType           Type = 21
+	ListType           Type = 22
+	DateType           Type = 23
+	CPathType          Type = 24
+	XwordType          Type = 25
+	EXwordType         Type = 26
+	SpreadsheetType    Type = 27
+	EmailType          Type = 28
+	KindType           Type = 29
+	KindwordType       Type = 30
+	ConverterType      Type = 31
+	TimeType           Type = 32
+	SpreadsheetRowType Type = 33
 )
 
 // after adding new type here, also add string to idxs.go

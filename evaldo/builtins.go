@@ -91,6 +91,37 @@ func getFrom(ps *env.ProgramState, data interface{}, key interface{}, posMode bo
 				return env.NewError1(5) // NOT_FOUND
 			}
 		}
+	case env.SpreadsheetRow:
+		switch s2 := key.(type) {
+		case env.String:
+			index := 0
+			// find the column index
+			for i := 0; i < len(s1.Uplink.Cols); i++ {
+				if s1.Uplink.Cols[i] == s2.Value {
+					index = i
+				}
+			}
+			v := s1.Values[index]
+			if true {
+				return JsonToRye(v)
+			} else {
+				ps.FailureFlag = true
+				return env.NewError1(5) // NOT_FOUND
+			}
+		case env.Integer:
+			idx := s2.Value
+			if posMode {
+				idx--
+			}
+			v := s1.Values[idx]
+			ok := true
+			if ok {
+				return JsonToRye(v)
+			} else {
+				ps.FailureFlag = true
+				return env.NewError1(5) // NOT_FOUND
+			}
+		}
 	}
 	return env.NewError("wrong types TODO")
 }
@@ -1267,6 +1298,20 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = ser
 					return ps.Res
 				}
+			case env.Spreadsheet:
+				switch code := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = code.Series
+					for i := 0; i < len(block.Rows); i++ {
+						row := block.Rows[i]
+						row.Uplink = &block
+						ps = EvalBlockInj(ps, row, true)
+						ps.Ser.Reset()
+					}
+					ps.Ser = ser
+					return ps.Res
+				}
 			}
 			return nil
 		},
@@ -1301,6 +1346,22 @@ var builtins = map[string]*env.Builtin{
 						ps = EvalBlockInj(ps, JsonToRye(block.Data[i]), true)
 						if util.IsTruthy(ps.Res) {
 							block.Data = append(block.Data[:i], block.Data[i+1:]...)
+							i--
+						}
+						ps.Ser.Reset()
+					}
+					ps.Ser = ser
+					return block
+				}
+			case env.Spreadsheet:
+				switch code := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = code.Series
+					for i := 0; i < len(block.Rows); i++ {
+						ps = EvalBlockInj(ps, block.Rows[i], true)
+						if util.IsTruthy(ps.Res) {
+							block.Rows = append(block.Rows[:i], block.Rows[i+1:]...)
 							i--
 						}
 						ps.Ser.Reset()
@@ -1767,6 +1828,41 @@ var builtins = map[string]*env.Builtin{
 				switch s2 := arg1.(type) {
 				case env.Integer:
 					return env.String{s1.Value[0:s2.Value]}
+				}
+			}
+			return nil
+		},
+	},
+
+	"newline": {
+		Argsn: 0,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return env.String{"\n"}
+		},
+	},
+
+	"trim": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				return env.String{strings.TrimSpace(s1.Value)}
+			}
+			return nil
+		},
+	},
+
+	"replace": {
+		Argsn: 3,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				switch s2 := arg1.(type) {
+				case env.String:
+					switch s3 := arg2.(type) {
+					case env.String:
+						return env.String{strings.ReplaceAll(s1.Value, s2.Value, s3.Value)}
+					}
 				}
 			}
 			return nil
@@ -2459,7 +2555,22 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
-				block, _ := loader.LoadString(s1.Value)
+				block, _ := loader.LoadString(s1.Value, false)
+				//ps = env.AddToProgramState(ps, block.Series, genv)
+				return block
+			default:
+				ps.FailureFlag = true
+				return env.NewError("Must be string or file TODO")
+			}
+		},
+	},
+
+	"load-sig": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				block, _ := loader.LoadString(s1.Value, true)
 				//ps = env.AddToProgramState(ps, block.Series, genv)
 				return block
 			default:
@@ -2665,6 +2776,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_crypto, ps)
 	RegisterBuiltins2(Builtins_goroutines, ps)
 	RegisterBuiltins2(Builtins_psql, ps)
+	RegisterBuiltins2(Builtins_mysql, ps)
 	RegisterBuiltins2(Builtins_bcrypt, ps)
 	RegisterBuiltins2(Builtins_raylib, ps)
 	RegisterBuiltins2(Builtins_email, ps)

@@ -2,8 +2,11 @@
 package loader
 
 import (
+	"crypto/ed25519"
+	"encoding/hex"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"rye/env"
 
@@ -31,9 +34,49 @@ func GetIdxs() *env.Idxs {
 	return wordIndex
 }
 
-func LoadString(input string) (env.Block, *env.Idxs) {
+func checkCodeSignature(content string) int {
+
+	parts := strings.SplitN(content, ";ryesig ", 2)
+	content = strings.TrimSpace(parts[0])
+	if len(parts) != 2 {
+		fmt.Println("\x1b[33m" + "No rye signature found. Exiting." + "\x1b[0m")
+		return -1
+	}
+
+	signature := parts[1]
+	// fmt.Println(content)
+	// fmt.Println(signature)
+	// fmt.Println(strings.Index(signature, ";#codesig "))
+	sig := strings.TrimSpace(signature)
+	bsig, _ := hex.DecodeString(sig)
+	// ba8eaa125ee3c8abfc98d8b2b7e5d900bfec0073b701e5c3ca9187a39508b2f1827ba5f0904227678bf33446abbca8bf6a3a5333815920741eb475582a4c31dd privk
+	puk, _ := hex.DecodeString("827ba5f0904227678bf33446abbca8bf6a3a5333815920741eb475582a4c31dd") // pubk
+	bbpuk := ed25519.PublicKey(puk)
+	if !ed25519.Verify(bbpuk, []byte(content), bsig) {
+		fmt.Println("\x1b[33m" + "Rye signature is not valid! Exiting." + "\x1b[0m")
+		return -2
+	}
+	return 1
+}
+
+func LoadString(input string, sig bool) (env.Object, *env.Idxs) {
 	//fmt.Println(input)
+
 	InitIndex()
+	if sig {
+		signed := checkCodeSignature(input)
+		if signed == -1 {
+			return *env.NewError(""), wordIndex
+		} else if signed == -2 {
+			return *env.NewError(""), wordIndex
+		}
+	}
+
+	inp1 := strings.TrimSpace(input)
+	if strings.Index("{", inp1) != 0 {
+		input = "{ " + input + " }"
+	}
+
 	parser := newParser()
 	val, _ := parser.ParseAndGetValue(input, nil)
 	//InspectNode(val)
@@ -134,7 +177,6 @@ func parseEmail(v *Values, d Any) (Any, error) {
 
 func parseFpath(v *Values, d Any) (Any, error) {
 	idx := wordIndex.IndexWord("file")
-	fmt.Println(idx)
 	return *env.NewUri(wordIndex, env.Word{idx}, "file://"+v.Token()[1:]), nil // ){v.Vs[0].(env.Word), v.Token()}, nil // TODO let the second part be it's own object that parser returns like path
 }
 
@@ -280,7 +322,7 @@ func newParser() *Parser {
 	KINDWORD    		<-  "(" LETTER LETTERORNUM* ")"?
 	XWORD    		<-  "<" LETTER LETTERORNUM* ">"?
 	EXWORD    		<-  "</" LETTER LETTERORNUM* ">"?
-	STRING			<-  ('"' STRINGCHAR* '"') / ("%" STRINGCHAR1* "%")
+	STRING			<-  ('"' STRINGCHAR* '"') / ("$" STRINGCHAR1* "$")
 	SPACES			<-  SPACE+
 	URI    			<-  WORD "://" URIPATH*
 	EMAIL			<-  EMAILPART "@" EMAILPART 
@@ -292,13 +334,13 @@ func newParser() *Parser {
 	OPARROWS        <-  "<<" / "<--" / "<-"
 	LETTER  	       	<-  < [a-zA-Z?=^` + "`" + `_] >
 	LETTERORNUM		<-  < [a-zA-Z0-9-?=.\\!_+<>\]] >
-	URIPATH			<-  < [a-zA-Z0-9-?=.:@/\\!_>] >
+	URIPATH			<-  < [a-zA-Z0-9-?=.:@/\\!_>	()] >
 	UCLETTER  		<-  < [A-Z] >
 	LCLETTERORNUM	<-  < [a-z0-9] >
     NUMBER         	<-  < [0-9]+ >
 	SPACE			<-  < [ \t\r\n] >
 	STRINGCHAR		<-  < !'"' . >
-	STRINGCHAR1		<-  < !"%" . >
+	STRINGCHAR1		<-  < !"$" . >
 	COMMA			<-  ","
 	VOID				<-  "_"
 	COMMENT			<-  (";" NOTENDLINE* )

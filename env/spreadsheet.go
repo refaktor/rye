@@ -9,6 +9,7 @@ import (
 
 type SpreadsheetRow struct {
 	Values []interface{}
+	Uplink *Spreadsheet
 }
 
 type Spreadsheet struct {
@@ -141,4 +142,27 @@ func (s Spreadsheet) Trace(msg string) {
 
 func (s Spreadsheet) GetKind() int {
 	return int(SpreadsheetType)
+}
+
+func (s SpreadsheetRow) GetKind() int {
+	return int(0)
+}
+
+// Inspect returns a string
+func (s SpreadsheetRow) Inspect(e Idxs) string {
+	return "<SpreadsheetRow [" + strconv.Itoa(len(s.Values)) + " ] of kind " + ">"
+}
+
+// Inspect returns a string representation of the Integer.
+func (s SpreadsheetRow) Probe(e Idxs) string {
+	return "TODO"
+}
+
+func (s SpreadsheetRow) Trace(msg string) {
+	fmt.Print(msg + " (spreadsheet): ")
+}
+
+// Type returns the type of the Integer.
+func (s SpreadsheetRow) Type() Type {
+	return SpreadsheetRowType
 }

@@ -231,8 +231,9 @@ func DoRyeRepl(es *env.ProgramState) {
 				} else {
 
 					//fmt.Println(lineReal)
-					block, genv := loader.LoadString("{ " + line2 + " }")
-					es := env.AddToProgramState(es, block.Series, genv)
+					block, genv := loader.LoadString(line2, false)
+					block1 := block.(env.Block)
+					es := env.AddToProgramState(es, block1.Series, genv)
 					EvalBlockInj(es, prevResult, true)
 
 					if arg != "" {
@@ -246,7 +247,7 @@ func DoRyeRepl(es *env.ProgramState) {
 							if !shellEd.Pause {
 								//fmt.Println(shellEd.CurrObj)
 								//fmt.Println("SETIRAM ******* ")
-								shellEd.CurrObj.Body.Series.AppendMul(block.Series.GetAll())
+								shellEd.CurrObj.Body.Series.AppendMul(block1.Series.GetAll())
 								//shellEd.CurrObj.(env.Function).Body.Series.AppendMul(block.Series.GetAll())
 								//fmt.Println(shellEd.CurrObj)
 
@@ -277,7 +278,7 @@ func DoRyeRepl(es *env.ProgramState) {
 
 			line.AppendHistory(code)
 		} else if err == liner.ErrPromptAborted {
-			log.Print("Aborted")
+			// log.Print("Aborted")
 			break
 		} else if err == liner.ErrJMCodeUp {
 			fmt.Println("")

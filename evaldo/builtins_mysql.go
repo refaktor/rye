@@ -8,17 +8,17 @@ import (
 	"database/sql"
 	"rye/env"
 
-	_ "github.com/lib/pq"
+	_ "github.com/go-sql-driver/mysql"
 )
 
-var Builtins_psql = map[string]*env.Builtin{
+var Builtins_mysql = map[string]*env.Builtin{
 
-	"postgres-schema//open": {
+	"mysql-schema//open": {
 		Argsn: 1,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.Uri:
-				db, err := sql.Open("postgres", str.Path) // TODO -- we need to make path parser in URI then this will be path
+				db, err := sql.Open("mysql", str.Path) // TODO -- we need to make path parser in URI then this will be path
 				if err != nil {
 					// TODO --
 					//fmt.Println("Error1")
@@ -26,7 +26,7 @@ var Builtins_psql = map[string]*env.Builtin{
 					return env.NewError("Error opening SQL: " + err.Error())
 				} else {
 					//fmt.Println("Error2")
-					return *env.NewNative(env1.Idx, db, "Rye-psql")
+					return *env.NewNative(env1.Idx, db, "Rye-mysql")
 				}
 			default:
 				env1.FailureFlag = true
@@ -36,7 +36,7 @@ var Builtins_psql = map[string]*env.Builtin{
 		},
 	},
 
-	"Rye-psql//exec": {
+	"Rye-mysql//exec": {
 		Argsn: 2,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var sqlstr string
@@ -83,7 +83,7 @@ var Builtins_psql = map[string]*env.Builtin{
 		},
 	},
 
-	"Rye-psql//query": {
+	"Rye-mysql//query": {
 		Argsn: 2,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var sqlstr string
