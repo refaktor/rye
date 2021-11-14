@@ -1,4 +1,4 @@
-// +build b_tiny
+// +build b_no_json
 
 package evaldo
 

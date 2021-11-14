@@ -1,18 +1,18 @@
-// +build b_tiny
+// +build b_norepl
 
 package evaldo
 
 import (
 	"fmt"
-//	"log"
+	//	"log"
 	"os"
 	"path/filepath"
-//	"regexp"
-	"rye/env"
-//	"rye/loader"
-//	"strings"
 
-//	"github.com/peterh/liner"
+	//	"regexp"
+	"rye/env"
+	//	"rye/loader"
+	//	"strings"
+	//	"github.com/peterh/liner"
 )
 
 var (
@@ -29,7 +29,7 @@ type ShellEd struct {
 }
 
 func genPrompt(shellEd *ShellEd, line string) (string, string) {
-	 			return "{ Rye } ", ""
+	return "{ Rye } ", ""
 }
 
 func maybeDoShedCommands(line string, es *env.ProgramState, shellEd *ShellEd) {
@@ -73,7 +73,6 @@ func MoveCursorBackward(bias int) {
 //
 
 func DoRyeRepl(es *env.ProgramState) {
-
 
 }
 

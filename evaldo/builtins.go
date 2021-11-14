@@ -234,6 +234,36 @@ var builtins = map[string]*env.Builtin{
 					return env.String{s1.Value + s2.Value}
 				case env.Integer:
 					return env.String{s1.Value + strconv.Itoa(int(s2.Value))}
+				default:
+					env1.FailureFlag = true
+					return env.NewError("Wrong second arg for string +")
+				}
+			case env.Uri:
+				switch s2 := arg1.(type) {
+				case env.String:
+					return *env.NewUri(env1.Idx, s1.Scheme, s1.Path+s2.Value)
+				case env.Integer:
+					return *env.NewUri(env1.Idx, s1.Scheme, s1.Path+strconv.Itoa(int(s2.Value)))
+				case env.Block: // -- TODO turn tagwords and valvar sb strings.Builderues to uri encoded values , turn files into paths ... think more about it
+					var str strings.Builder
+					sepa := ""
+					for i := 0; i < s2.Series.Len(); i++ {
+						switch node := s2.Series.Get(i).(type) {
+						case env.Tagword:
+							str.WriteString(sepa + env1.Idx.GetWord(node.Index) + "=")
+							sepa = "&"
+						case env.String:
+							str.WriteString(node.Value)
+						case env.Integer:
+							str.WriteString(strconv.Itoa(int(node.Value)))
+						case env.Uri:
+							str.WriteString(node.GetPath())
+						}
+					}
+					return *env.NewUri(env1.Idx, s1.Scheme, s1.Path+str.String())
+				default:
+					env1.FailureFlag = true
+					return env.NewError("Wrong second arg for Uri +")
 				}
 			case env.Block:
 				switch b2 := arg1.(type) {
@@ -241,13 +271,14 @@ var builtins = map[string]*env.Builtin{
 					s := &s1.Series
 					s1.Series = *s.AppendMul(b2.Series.GetAll())
 					return s1
+				default:
+					env1.FailureFlag = true
+					return env.NewError("Wrong second arg for Block + ")
 				}
 			default:
 				env1.FailureFlag = true
-				return env.NewError("Wrong arguments for + function")
+				return env.NewError("Wrong first arg for +")
 			}
-			env1.FailureFlag = true
-			return env.NewError("Wrong arguments for + function")
 		},
 	},
 

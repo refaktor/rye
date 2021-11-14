@@ -1,4 +1,4 @@
-// +build !b_tiny
+// +build !b_no_http
 
 package evaldo
 
@@ -298,6 +298,32 @@ var Builtins_http = map[string]*env.Builtin{
 					}
 					//return env.NewError("XOSADOSADOA SDAS DO" + key.Value)
 					return env.String{vals[0]}
+				default:
+					ps.FailureFlag = true
+					return env.NewError("second arg should be String")
+				}
+			default:
+				ps.FailureFlag = true
+				return env.NewError("first arg should be Native")
+			}
+		},
+	},
+
+	"Go-server-request//cookie-val?": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch req := arg0.(type) {
+			case env.Native:
+				switch key := arg1.(type) {
+				case env.String:
+
+					cookie, err := req.Value.(*http.Request).Cookie(key.Value)
+
+					if err != nil {
+						ps.FailureFlag = true
+						return env.NewError("cookie key is missing")
+					}
+					return env.String{cookie.Value}
 				default:
 					ps.FailureFlag = true
 					return env.NewError("second arg should be String")

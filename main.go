@@ -44,6 +44,7 @@ import (
 	//"strconv"
 	"github.com/pkg/profile"
 	//"github.com/pkg/term"
+	"net/http/cgi"
 )
 
 import (
@@ -101,6 +102,8 @@ func main() {
 	} else if len(os.Args) == 3 {
 		if os.Args[1] == "ryk" {
 			main_ryk(os.Args[2])
+		} else if os.Args[1] == "cgi" {
+			main_cgi_file(os.Args[2], false)
 		} else if os.Args[1] == "sig" {
 			main_rye_file(os.Args[2], true)
 		}
@@ -320,6 +323,45 @@ func main_rye_file(file string, sig bool) {
 
 }
 
+func main_cgi_file(file string, sig bool) {
+
+	if err := cgi.Serve(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		//util.PrintHeader()
+		//defer profile.Start(profile.CPUProfile).Stop()
+
+		input := " whoami: \"Rye cgi 0.001 alpha\" ctx: 0 result: \"\" session: 0 w: 0 r: 0"
+		block, genv := loader.LoadString(input, false)
+		es := env.NewProgramState(block.(env.Block).Series, genv)
+		evaldo.RegisterBuiltins(es)
+		evaldo.EvalBlock(es)
+		env.SetValue(es, "w", *env.NewNative(es.Idx, w, "Go-server-response-writer"))
+		env.SetValue(es, "r", *env.NewNative(es.Idx, r, "Go-server-request"))
+
+		bcontent, err := ioutil.ReadFile(file)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		content := string(bcontent)
+
+		block, genv = loader.LoadString(content, sig)
+		switch val := block.(type) {
+		case env.Block:
+			es := env.AddToProgramState(es, block.(env.Block).Series, genv)
+			evaldo.RegisterBuiltins(es)
+			evaldo.EvalBlock(es)
+			evaldo.MaybeDisplayFailureOrError(es, genv)
+		case env.Error:
+			fmt.Println(val.Message)
+		}
+
+	})); err != nil {
+		fmt.Println(err)
+	}
+
+}
+
 func main_rye_repl_OLD(in io.Reader, out io.Writer) {
 
 	//util.PrintHeader()
@@ -391,7 +433,7 @@ func main_rye_repl_OLD(in io.Reader, out io.Writer) {
 
 func main_rye_repl(in io.Reader, out io.Writer) {
 
-	input := "{ name: \"Rye\" version: \"0.002 alpha\" }"
+	input := "name: \"Rye\" version: \"0.002 alpha\""
 	user, _ := user.Current()
 	profile_path := filepath.Join(user.HomeDir, ".rye-profile")
 

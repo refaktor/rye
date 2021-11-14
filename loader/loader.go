@@ -34,6 +34,13 @@ func GetIdxs() *env.Idxs {
 	return wordIndex
 }
 
+func removeBangLine(content string) string {
+	if strings.Index(content, "#!") == 0 {
+		content = content[strings.Index(content, "\n")+1:]
+	}
+	return content
+}
+
 func checkCodeSignature(content string) int {
 
 	parts := strings.SplitN(content, ";ryesig ", 2)
@@ -71,6 +78,8 @@ func LoadString(input string, sig bool) (env.Object, *env.Idxs) {
 			return *env.NewError(""), wordIndex
 		}
 	}
+
+	input = removeBangLine(input)
 
 	inp1 := strings.TrimSpace(input)
 	if strings.Index("{", inp1) != 0 {
@@ -265,13 +274,19 @@ func parseEXword(v *Values, d Any) (Any, error) {
 func parsePipeword(v *Values, d Any) (Any, error) {
 	//fmt.Println("OPWORD:" + v.Token())
 	word := v.Token()
+	force := 0
 	var idx int
 	if word == ">>" || word == "->" || word == "-->" {
 		idx = wordIndex.IndexWord("_" + word)
 	} else {
+		fmt.Println(word[len(word)-1:])
+		if word[len(word)-1:] == "." {
+			force = 1
+			word = word[:len(word)-1]
+		}
 		idx = wordIndex.IndexWord(word[1:])
 	}
-	return env.Pipeword{idx}, nil
+	return env.Pipeword{idx, force}, nil
 }
 
 func parseOnecharpipe(v *Values, d Any) (Any, error) {
@@ -279,7 +294,7 @@ func parseOnecharpipe(v *Values, d Any) (Any, error) {
 	word := v.Token()
 	var idx int
 	idx = wordIndex.IndexWord("_" + word[1:])
-	return env.Pipeword{idx}, nil
+	return env.Pipeword{idx, 0}, nil
 }
 
 func parseGenword(v *Values, d Any) (Any, error) {
@@ -333,7 +348,7 @@ func newParser() *Parser {
 	PIPEARROWS      <-  ">>" / "-->" / "->"
 	OPARROWS        <-  "<<" / "<--" / "<-"
 	LETTER  	       	<-  < [a-zA-Z?=^` + "`" + `_] >
-	LETTERORNUM		<-  < [a-zA-Z0-9-?=.\\!_+<>\]] >
+	LETTERORNUM		<-  < [a-zA-Z0-9-?=.\\!_+<>\]←] >
 	URIPATH			<-  < [a-zA-Z0-9-?=.:@/\\!_>	()] >
 	UCLETTER  		<-  < [A-Z] >
 	LCLETTERORNUM	<-  < [a-z0-9] >

@@ -1,4 +1,4 @@
-// +build !b_tiny
+// +build !b_no_io
 
 package evaldo
 
@@ -19,6 +19,7 @@ import (
 	//	gomail "gopkg.in/mail.v2"
 	// "net/url"
 	//"strconv"
+	"net/http/cgi"
 )
 
 func __input(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -239,7 +240,7 @@ func __http_s_post(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg
 					return env.String{string(body)}
 				} else {
 					env1.FailureFlag = true
-					return env.NewError2(resp.StatusCode, string(body))
+					return *env.NewError2(resp.StatusCode, string(body))
 				}
 			}
 		}
@@ -309,6 +310,97 @@ func __email_send(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2
 	return *env.NewError("Failed")
 
 	// Read file to byte slice
+}
+
+func __https_s__new_request(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+	switch uri := arg0.(type) {
+	case env.Uri:
+		switch method := arg1.(type) {
+		case env.Tagword:
+			method1 := env1.Idx.GetWord(method.Index)
+			if !(method1 == "GET" || method1 == "POST") {
+				env1.FailureFlag = true
+				return *env.NewError("Wrong method")
+			}
+			switch data := arg2.(type) {
+			case env.String:
+				data1 := strings.NewReader(data.Value)
+				req, err := http.NewRequest(method1, uri.GetProtocol()+"://"+uri.GetPath(), data1)
+				if err != nil {
+					env1.FailureFlag = true
+					return *env.NewError("Error: " + err.Error())
+				}
+				return *env.NewNative(env1.Idx, req, "https-request")
+			default:
+				env1.FailureFlag = true
+				return *env.NewError("Arg 3 not String")
+			}
+		default:
+			env1.FailureFlag = true
+			return *env.NewError("Arg 2 not Word")
+		}
+	default:
+		env1.FailureFlag = true
+		return *env.NewError("Arg 1 not Uri")
+	}
+}
+
+func __https_request__set_header(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+	switch req := arg0.(type) {
+	case env.Native:
+		switch method := arg1.(type) {
+		case env.Tagword:
+			name := env1.Idx.GetWord(method.Index)
+			switch data := arg2.(type) {
+			case env.String:
+				req.Value.(*http.Request).Header.Set(name, data.Value)
+				return arg0
+			default:
+				return makeError(env1, "Arg 3 not String")
+			}
+		default:
+			return makeError(env1, "Arg 2 not Word")
+		}
+	default:
+		return makeError(env1, "Arg 1 not Native")
+	}
+	return makeError(env1, "Failed")
+}
+
+func makeError(env1 *env.ProgramState, msg string) *env.Error {
+	env1.FailureFlag = true
+	return env.NewError(msg)
+}
+
+func __https_request__do(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+	switch req := arg0.(type) {
+	case env.Native:
+		client := &http.Client{}
+		resp, err := client.Do(req.Value.(*http.Request))
+		if err != nil {
+			return makeError(env1, "Error: "+err.Error())
+		}
+		return *env.NewNative(env1.Idx, resp, "https-response")
+	default:
+		return makeError(env1, "Arg 1 not Native")
+	}
+	return makeError(env1, "Failed")
+}
+
+func __https_response__read_body(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+	switch resp := arg0.(type) {
+	case env.Native:
+		data, err := ioutil.ReadAll(resp.Value.(*http.Response).Body)
+		if err != nil {
+			makeError(env1, "Error: "+err.Error())
+		}
+		return env.String{string(data)}
+	default:
+		env1.FailureFlag = true
+		return *env.NewError("Arg 1 not Native")
+	}
+	env1.FailureFlag = true
+	return *env.NewError("Failed")
 }
 
 var Builtins_io = map[string]*env.Builtin{
@@ -391,10 +483,75 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
+	"https-schema//new-request": {
+		Argsn: 3,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __https_s__new_request(env1, arg0, arg1, arg2, arg3, arg4)
+		},
+	},
+
+	"https-request//set-header": {
+		Argsn: 3,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __https_request__set_header(env1, arg0, arg1, arg2, arg3, arg4)
+		},
+	},
+
+	"https-request//call": {
+		Argsn: 1,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __https_request__do(env1, arg0, arg1, arg2, arg3, arg4)
+		},
+	},
+
+	"https-response//read-body": {
+		Argsn: 1,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __https_response__read_body(env1, arg0, arg1, arg2, arg3, arg4)
+		},
+	},
+
 	"email//send": {
 		Argsn: 2,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __email_send(env1, arg0, arg1, arg2, arg3, arg4)
+		},
+	},
+
+	"serve-cgi": {
+		Argsn: 3,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch rword := arg0.(type) {
+			case env.Tagword:
+				switch wword := arg1.(type) {
+				case env.Tagword:
+					switch bloc := arg2.(type) {
+					case env.Block:
+						var rctx *env.RyeCtx
+						if err := cgi.Serve(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+							ser := ps.Ser
+							ctx := ps.Ctx
+							ps.Ser = bloc.Series
+							ps.Ctx = env.NewEnv(ps.Ctx) // make new context with no parent
+							ps.Ctx.Set(rword.Index, *env.NewNative(ps.Idx, w, "Go-server-response-writer"))
+							ps.Ctx.Set(wword.Index, *env.NewNative(ps.Idx, r, "Go-server-request"))
+							EvalBlock(ps)
+							rctx = ps.Ctx
+							ps.Ctx = ctx
+							ps.Ser = ser
+						})); err != nil {
+							return makeError(ps, "Error: "+err.Error())
+						}
+						return *rctx
+					default:
+						return makeError(ps, "Arg 3 not Block")
+					}
+				default:
+					return makeError(ps, "Arg 2 not Tagword")
+				}
+			default:
+				return makeError(ps, "Arg 1 not Tagword")
+			}
 		},
 	},
 }

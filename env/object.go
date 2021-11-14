@@ -182,7 +182,7 @@ func (i Uri) Type() Type {
 
 // Inspect returns a string representation of the Integer.
 func (i Uri) Inspect(e Idxs) string {
-	return "<Uri: " + i.Scheme.Probe(e) + "://" + i.Path + ">"
+	return "<Uri: " + i.Scheme.Probe(e) + "://" + i.GetPath() + ">"
 }
 
 // Inspect returns a string representation of the Integer.
@@ -437,6 +437,7 @@ func (i Opword) GetKind() int {
 // Integer represents an integer.
 type Pipeword struct {
 	Index int
+	Force int
 }
 
 // Type returns the type of the Integer.
