@@ -400,6 +400,7 @@ func (i LSetword) GetKind() int {
 // Integer represents an integer.
 type Opword struct {
 	Index int
+	Force int
 }
 
 // Type returns the type of the Integer.
@@ -885,10 +886,19 @@ func (i Error) Inspect(e Idxs) string {
 // Inspect returns a string representation of the Integer.
 func (i Error) Probe(e Idxs) string {
 	var b strings.Builder
-	b.WriteString("Error: " + i.Message + " ")
+	b.WriteString("Error (" + strconv.Itoa(i.Status) + "): " + i.Message + " ")
 	if i.Parent != nil {
 		b.WriteString("\n\t" + i.Parent.Probe(e))
 	}
+	for k, v := range i.Values {
+		switch ob := v.(type) {
+		case Object:
+			b.WriteString("\n\t" + k + ": " + ob.Inspect(e) + " ")
+		default:
+			b.WriteString("\n\t" + k + ": " + fmt.Sprint(ob) + " ")
+		}
+	}
+
 	b.WriteString("")
 	return b.String()
 }

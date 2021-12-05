@@ -206,14 +206,14 @@ func MaybeEvalOpwordOnRight(nextObj env.Object, ps *env.ProgramState, limited bo
 	switch opword := nextObj.(type) {
 	case env.Opword:
 		ps.Ser.Next()
-		ps = EvalWord(ps, opword.ToWord(), ps.Res, false)
+		ps = EvalWord(ps, opword.ToWord(), ps.Res, false, opword.Force > 0)
 		return MaybeEvalOpwordOnRight(ps.Ser.Peek(), ps, limited)
 	case env.Pipeword:
 		if limited {
 			return ps
 		}
 		ps.Ser.Next()
-		ps = EvalWord(ps, opword.ToWord(), ps.Res, false)
+		ps = EvalWord(ps, opword.ToWord(), ps.Res, false, opword.Force > 0)
 		if ps.ReturnFlag {
 			return ps //... not sure if we need this
 		}
@@ -254,13 +254,13 @@ func EvalExpressionConcrete(ps *env.ProgramState) *env.ProgramState {
 				ps.Res = object
 			}
 		case env.WordType:
-			rr := EvalWord(ps, object.(env.Word), nil, false)
+			rr := EvalWord(ps, object.(env.Word), nil, false, false)
 			return rr
 		case env.CPathType:
-			rr := EvalWord(ps, object, nil, false)
+			rr := EvalWord(ps, object, nil, false, false)
 			return rr
 		case env.BuiltinType:
-			return CallBuiltin(object.(env.Builtin), ps, nil, false)
+			return CallBuiltin(object.(env.Builtin), ps, nil, false, false, nil)
 		case env.GenwordType:
 			return EvalGenword(ps, object.(env.Genword), nil, false)
 		case env.SetwordType:
@@ -318,26 +318,45 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 // first tries to find a value in normal context. If there were no generic words this would be mostly it
 // if word is not found then it tries to get the value of next expression and find a generic word based
 // on that, it here is leftval already present it can dispatc on it otherwise
-func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft bool) *env.ProgramState {
+func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft bool, pipeSecond bool) *env.ProgramState {
 	// LOCAL FIRST
+	var firstVal env.Object
 	found, object, session := findWordValue(ps, word)
 	pos := ps.Ser.GetPos()
 	if !found { // look at Generic words, but first check type
-		if leftVal == nil {
+		// fmt.Println(pipeSecond)
+		kind := 0
+		if leftVal != nil {
+			kind = leftVal.GetKind()
+		}
+		if leftVal == nil && !pipeSecond {
 			if !ps.Ser.AtLast() {
 				EvalExpressionConcrete(ps)
 				if ps.ReturnFlag {
 					return ps
 				}
 				leftVal = ps.Res
+				kind = leftVal.GetKind()
 			}
 		}
+		if pipeSecond {
+			if !ps.Ser.AtLast() {
+				EvalExpressionConcrete(ps)
+				if ps.ReturnFlag {
+					return ps
+				}
+				firstVal = ps.Res
+				kind = firstVal.GetKind()
+				// fmt.Println("pipeSecond kind")
+			}
+		}
+		// fmt.Println(kind)
 		if leftVal != nil {
-			object, found = ps.Gen.Get(leftVal.GetKind(), word.(env.Word).Index)
+			object, found = ps.Gen.Get(kind, word.(env.Word).Index)
 		}
 	}
 	if found {
-		return EvalObject(ps, object, leftVal, toLeft, session) //ww0128a *
+		return EvalObject(ps, object, leftVal, toLeft, session, pipeSecond, firstVal) //ww0128a *
 	} else {
 		ps.ErrorFlag = true
 		if ps.FailureFlag == false {
@@ -356,7 +375,7 @@ func EvalGenword(ps *env.ProgramState, word env.Genword, leftVal env.Object, toL
 	var arg0 = ps.Res
 	object, found := ps.Gen.Get(arg0.GetKind(), word.Index)
 	if found {
-		return EvalObject(ps, object, arg0, toLeft, nil) //ww0128a *
+		return EvalObject(ps, object, arg0, toLeft, nil, false, nil) //ww0128a *
 	} else {
 		ps.ErrorFlag = true
 		ps.Res = env.NewError("generic word not found: " + word.Probe(*ps.Idx))
@@ -378,7 +397,7 @@ func EvalGetword(ps *env.ProgramState, word env.Getword, leftVal env.Object, toL
 }
 
 // evaluates a rye value, most of them just get returned, except builtins, functions and context paths
-func EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toLeft bool, ctx *env.RyeCtx) *env.ProgramState {
+func EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toLeft bool, ctx *env.RyeCtx, pipeSecond bool, firstVal env.Object) *env.ProgramState {
 	switch object.Type() {
 	case env.FunctionType:
 		fn := object.(env.Function)
@@ -392,7 +411,7 @@ func EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toL
 		if checkFlagsBi(bu, ps, 333) {
 			return ps
 		}
-		return CallBuiltin(bu, ps, leftVal, toLeft)
+		return CallBuiltin(bu, ps, leftVal, toLeft, pipeSecond, firstVal)
 	default:
 		if !ps.SkipFlag {
 			ps.Res = object
@@ -578,7 +597,7 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 	return ps
 }
 
-func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft bool) *env.ProgramState {
+func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft bool, pipeSecond bool, firstVal env.Object) *env.ProgramState {
 	////args := make([]env.Object, bi.Argsn)
 	/*pospos := ps.Ser.GetPos()
 	for i := 0; i < bi.Argsn; i += 1 {
@@ -616,7 +635,7 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 	trace("*** BUILTIN ***")
 	trace(bi)
 
-	if arg0_ != nil {
+	if arg0_ != nil && !pipeSecond {
 		//fmt.Println("ARG0 = LEFT")
 		arg0 = arg0_
 		if !toLeft {
@@ -625,6 +644,8 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 		} else {
 			//fmt.Println("TO THE *** LEFT")
 		}
+	} else if firstVal != nil && pipeSecond {
+		arg0 = firstVal
 	} else if bi.Argsn > 0 && bi.Cur0 == nil {
 		//fmt.Println(" ARG 1 ")
 		//fmt.Println(ps.Ser.GetPos())
@@ -642,7 +663,10 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 			arg0 = ps.Res
 		}
 	}
-	if bi.Argsn > 1 && bi.Cur1 == nil {
+
+	if arg0_ != nil && pipeSecond {
+		arg1 = arg0_
+	} else if bi.Argsn > 1 && bi.Cur1 == nil {
 
 		evalExprFn(ps, true) // <---- THESE DETERMINE IF IT CONSUMES WHOLE EXPRESSION OR NOT IN CASE OF PIPEWORDS .. HM*... MAYBE WOULD COULD HAVE A WORD MODIFIER?? a: 2 |add 5 a:: 2 |add 5 print* --TODO
 

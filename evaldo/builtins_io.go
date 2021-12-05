@@ -178,7 +178,7 @@ func __https_s_get(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg
 	switch f := arg0.(type) {
 	case env.Uri:
 
-		resp, err := http.Get("https://" + f.GetPath())
+		resp, err := http.Get(f.GetProtocol() + "://" + f.GetPath())
 		if err != nil {
 			env1.FailureFlag = true
 			return *env.NewError(err.Error())
@@ -209,24 +209,29 @@ func __http_s_post(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg
 	switch f := arg0.(type) {
 	case env.Uri:
 
-		switch t := arg1.(type) {
+		switch t := arg2.(type) {
 		case env.Tagword:
-			switch d := arg2.(type) {
+			switch d := arg1.(type) {
 			case env.String:
 
 				var tt string
 				tidx, terr := env1.Idx.GetIndex("json")
+				tidx2, terr2 := env1.Idx.GetIndex("text")
 				if terr && t.Index == tidx {
 					//if t.Value == "json" {
 					tt = "application/json"
+				} else if terr2 && t.Index == tidx2 {
+					tt = "text/plain"
 				} else {
 					env1.FailureFlag = true
 					return *env.NewError("wrong content type")
 				}
 				// TODO -- add other cases
+				// fmt.Println("BEFORE")
 
-				resp, err := http.Post("https://"+f.GetPath(), tt, bytes.NewBufferString(d.Value))
+				resp, err := http.Post(f.GetProtocol()+"://"+f.GetPath(), tt, bytes.NewBufferString(d.Value))
 				if err != nil {
+					// fmt.Println("ERR")
 					env1.FailureFlag = true
 					return *env.NewError(err.Error())
 				}
@@ -235,18 +240,26 @@ func __http_s_post(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg
 				// fmt.Println("HTTP Response Status:", resp.StatusCode, http.StatusText(resp.StatusCode))
 				defer resp.Body.Close()
 				body, err := ioutil.ReadAll(resp.Body)
+				if err != nil {
+					// fmt.Println("ERR")
+					env1.FailureFlag = true
+					return *env.NewError(err.Error())
+				}
 
 				if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
 					return env.String{string(body)}
 				} else {
+					// fmt.Println("ERR33")
 					env1.FailureFlag = true
-					return *env.NewError2(resp.StatusCode, string(body))
+					return env.NewError2(resp.StatusCode, string(body))
 				}
 			}
 		}
 	}
+	// fmt.Println("ERR44")
+
 	env1.FailureFlag = true
-	return *env.NewError("Failed")
+	return *env.NewError("Failed 123")
 
 	// Read file to byte slice
 }
@@ -477,6 +490,20 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 
 	"https-schema//post": {
+		Argsn: 3,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __http_s_post(env1, arg0, arg1, arg2, arg3, arg4)
+		},
+	},
+
+	"http-schema//get": {
+		Argsn: 1,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __https_s_get(env1, arg0, arg1, arg2, arg3, arg4)
+		},
+	},
+
+	"http-schema//post": {
 		Argsn: 3,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __http_s_post(env1, arg0, arg1, arg2, arg3, arg4)

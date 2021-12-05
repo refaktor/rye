@@ -50,7 +50,7 @@ func getFrom(ps *env.ProgramState, data interface{}, key interface{}, posMode bo
 		}
 	case env.RyeCtx:
 		switch s2 := key.(type) {
-		case env.Word:
+		case env.Tagword:
 			v, ok := s1.Get(s2.Index)
 			if ok {
 				return v
@@ -1033,6 +1033,15 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"pop-collected": {
+		Argsn: 0,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			result := ps.ForcedResult
+			ps.ForcedResult = nil
+			return result
+		},
+	},
+
 	"current-context": {
 		Argsn: 0,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1762,7 +1771,7 @@ var builtins = map[string]*env.Builtin{
 						ctx.Kind = spec.Kind
 						return ctx
 					default:
-						return env.NewError("2nd A isn't ")
+						return obj
 					}
 				case env.RyeCtx:
 					if spec.HasConverter(dict.Kind.Index) {
@@ -1772,17 +1781,17 @@ var builtins = map[string]*env.Builtin{
 							ctx.Kind = spec.Kind
 							return ctx
 						default:
-							return env.NewError("2344nd xxxx   xxx sn't Dict")
+							return *env.NewError("2344nd xxxx   xxx sn't Dict")
 						}
 					}
-					return env.NewError("2nd xxxx   xxx sn't Dict")
+					return *env.NewError("2nd xxxx   xxx sn't Dict")
 				default:
-					return env.NewError("2nd isn't Dict")
+					return *env.NewError("2nd isn't Dict")
 				}
 			default:
-				return env.NewError("1st isn't kind")
+				return *env.NewError("1st isn't kind")
 			}
-			return env.NewError("1st isn't kind xxxx")
+			return *env.NewError("1st isn't kind xxxx")
 		},
 	},
 
@@ -2697,6 +2706,7 @@ var builtins = map[string]*env.Builtin{
 					keys[i] = env.String{k}
 					i++
 				}
+				return *env.NewBlock(*env.NewTSeries(keys))
 			case env.Spreadsheet:
 				keys := make([]env.Object, len(s1.Cols))
 				for i, k := range s1.Cols {
@@ -2811,6 +2821,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_bcrypt, ps)
 	RegisterBuiltins2(Builtins_raylib, ps)
 	RegisterBuiltins2(Builtins_email, ps)
+	RegisterBuiltins2(Builtins_cayley, ps)
 }
 
 func RegisterBuiltins2(builtins map[string]*env.Builtin, ps *env.ProgramState) {

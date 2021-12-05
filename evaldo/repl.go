@@ -309,7 +309,6 @@ func MaybeDisplayFailureOrError(es *env.ProgramState, genv *env.Idxs) {
 		fmt.Println("\x1b[35;3m" + "Error: " + es.Res.Probe(*genv))
 		switch err := es.Res.(type) {
 		case env.Error:
-
 			fmt.Println(err.CodeBlock.Probe(*genv))
 			fmt.Println("Error not pointer so bug. #temp")
 		case *env.Error:

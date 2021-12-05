@@ -234,14 +234,19 @@ func parseLSetword(v *Values, d Any) (Any, error) {
 func parseOpword(v *Values, d Any) (Any, error) {
 	//fmt.Println("OPWORD:" + v.Token())
 	word := v.Token()
+	force := 0
 	var idx int
 	if len(word) == 1 || word == "<<" || word == "<-" || word == "<--" {
 		// onecharopwords < > + * ... their naming is equal to _< _> _* ...
 		idx = wordIndex.IndexWord("_" + word)
 	} else {
+		if word[len(word)-1:] == "*" {
+			force = 1
+			word = word[:len(word)-1]
+		}
 		idx = wordIndex.IndexWord(word[1:])
 	}
-	return env.Opword{idx}, nil
+	return env.Opword{idx, force}, nil
 }
 
 func parseTagword(v *Values, d Any) (Any, error) {
@@ -279,8 +284,7 @@ func parsePipeword(v *Values, d Any) (Any, error) {
 	if word == ">>" || word == "->" || word == "-->" {
 		idx = wordIndex.IndexWord("_" + word)
 	} else {
-		fmt.Println(word[len(word)-1:])
-		if word[len(word)-1:] == "." {
+		if word[len(word)-1:] == "*" {
 			force = 1
 			word = word[:len(word)-1]
 		}
@@ -316,8 +320,7 @@ func parseComment(v *Values, d Any) (Any, error) {
 	return nil, nil
 }
 
-func newParser() *Parser {
-	// TODO -- add string eaddress path url time
+func newParser() *Parser { // TODO -- add string eaddress path url time
 	// Create a PEG parser
 	parser, _ := NewParser(`
 	BLOCK       	<-  "{" SPACES SERIES* "}"
@@ -334,7 +337,7 @@ func newParser() *Parser {
 	ONECHARPIPE    <-  "|" ONECHARWORDS
 	OPWORD    		<-  "." LETTER LETTERORNUM* / OPARROWS / ONECHARWORDS / "[" LETTERORNUM* 
 	TAGWORD    		<-  "'" LETTER LETTERORNUM*
-	KINDWORD    		<-  "(" LETTER LETTERORNUM* ")"?
+	KINDWORD    		<-  "_(" LETTER LETTERORNUM* ")_"?
 	XWORD    		<-  "<" LETTER LETTERORNUM* ">"?
 	EXWORD    		<-  "</" LETTER LETTERORNUM* ">"?
 	STRING			<-  ('"' STRINGCHAR* '"') / ("$" STRINGCHAR1* "$")
@@ -344,11 +347,11 @@ func newParser() *Parser {
 	EMAILPART		<-  < ([a-zA-Z0-9._]+) >
 	FPATH 	   		<-  "%" URIPATH*
 	CPATH    		<-  WORD ( "/" WORD )+
-	ONECHARWORDS	    <-  < [<>*+-=/] >
+	ONECHARWORDS	    <-  < [<>*+-=/?] >
 	PIPEARROWS      <-  ">>" / "-->" / "->"
 	OPARROWS        <-  "<<" / "<--" / "<-"
-	LETTER  	       	<-  < [a-zA-Z?=^` + "`" + `_] >
-	LETTERORNUM		<-  < [a-zA-Z0-9-?=.\\!_+<>\]←] >
+	LETTER  	       	<-  < [a-zA-Z?=^(` + "`" + `_] >
+	LETTERORNUM		<-  < [a-zA-Z0-9-?=.\\!_+<>\]*()] >
 	URIPATH			<-  < [a-zA-Z0-9-?=.:@/\\!_>	()] >
 	UCLETTER  		<-  < [A-Z] >
 	LCLETTERORNUM	<-  < [a-z0-9] >

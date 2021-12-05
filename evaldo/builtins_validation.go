@@ -270,10 +270,10 @@ func BuiValidate(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object) env.O
 			env1.Ser = ser1
 			return val
 		default:
-			return env.NewError("arg 1 should be Dict or List")
+			return *env.NewError("arg 1 should be Dict or List")
 		}
 	default:
-		return env.NewError("arg 2 should be block")
+		return *env.NewError("arg 2 should be block")
 	}
 }
 
