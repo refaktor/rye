@@ -1,0 +1,28 @@
+
+; parse JSON from STDIN, get client data via API call, process and insert data into SQLite db
+
+token: trim read %.api-token
+
+call-api: fn { path } { get\bearer https://refaktorlabs.com/API/ + path token }
+
+(client): kind 'client { name: required address: required city: required }
+(item): kind 'item { title: required qty: optional 1 decimal price: required decimal }
+
+client-conv: { name: :full_name  address: calc { -> "street" :s , -> "house_num" :hn , s +_ hn } }
+item-conv: { exclusive title: 'item_name  qty: 'quantity  price: calc { -> "price" -> "base" } }
+
+; main code
+
+items: copy { }
+
+read-stdin .parse-json .process { ; TODO process function
+	'shipping_address_id [ :id , call-api "shipping/" + id |convert client-conv >> (client) :client ]
+	'items { _ [ .convert item-conv >> (item) |append items ] }
+}
+
+with open sqlite://main.db {  ; TODO crud functions
+	.assure client 'client :client-id ,
+	.insert eval { 'date_sent now\date 'id_client client-id } 'invoice :invoice-id ,
+	:db for items { + eval { 'id_invoice invoice-id } .insert* db 'invoice_b }
+}
+

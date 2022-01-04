@@ -1,0 +1,30 @@
+; this is the original code we need to process concrete JSON , we could minimalize it as an Rye example
+
+on-error { .log-error %error.log , .fatal }
+
+token: trim read %.api-token
+
+call-api: fn { path } { get\bearer https://example.com/API/ + path token }
+
+(client): kind { name: required address: required postal: required city: required }
+(item): kind { title: required qty: required decimal price: required decimal unit: optional "pc" vat: required decimal }
+(shipping): kind { name: required price: required decimal vat: required decimal }
+
+set-converter * 'client { name: :name  address: calc { with-join { -> "street" , " " , -> "house_num" } } }
+set-converter * 'item { title: :item_name  qty: :quantity  price:  calc { -> "price_single" -> "base" } vat: calc { -> "price_single" -> "taxes_applied" } }
+set-converter * 'shipping { title: calc { -> "name" -> "__"  } price: calc { -> "cost" -> "base" }  vat: calc { [cost] [taxes_applied] [rate] * 100 } }
+
+items: empty-block
+
+read-stdin .load-json .process {
+	shipping_address_id [ :id , call-api "shipping/" + id >> (client) :client ]
+	items { _ [ >> (item) |append items ] }
+	shipping { >> (shipping) :shipping }
+}
+
+open sqlite://mydb.db |new-crud :crud
+crud/assure 'client client :client-id
+crud/insert 'invoice_sent eval { 'dates_sent now 'date_to_pay now 'date_server now 'id_client client-id } :invoice-id
+for items { + eval { 'id_invoice_sent invoice-id } |crud/insert* 'invoice_sent_b }
+shipping + eval { 'qty 1 } |crud/insert* 'invoice_sent_b
+
