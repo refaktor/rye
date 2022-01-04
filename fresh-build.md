@@ -14,7 +14,7 @@ Check Go version.
 
 Create the ~/go/src directory
 
-    mkdir -f ~/go/src && cd ~/go/src
+    mkdir -p ~/go/src && cd ~/go/src
 
 Clone the main branch from the Rye repository
 
