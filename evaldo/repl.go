@@ -280,12 +280,13 @@ func DoRyeRepl(es *env.ProgramState) {
 		} else if err == liner.ErrPromptAborted {
 			// log.Print("Aborted")
 			break
-		} else if err == liner.ErrJMCodeUp {
+			//		} else if err == liner.ErrJMCodeUp {
+			/* } else if err == liner.ErrCodeUp { ... REMOVED 04.01.2022 for cleaning , figure out why I added it and if it still makes sense
 			fmt.Println("")
 			for _, c := range codelines {
 				fmt.Println(c)
 			}
-			MoveCursorUp(len(codelines))
+			MoveCursorUp(len(codelines))*/
 		} else {
 			log.Print("Error reading line: ", err)
 			break

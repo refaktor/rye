@@ -27,15 +27,11 @@ import (
 	"strings"
 
 	"net/http"
-
-	"github.com/labstack/echo"
-	"github.com/labstack/echo/middleware"
-
 	"rye/env"
 	"rye/evaldo"
 	"rye/loader"
 	"rye/ryeco"
-	"rye/util"
+	//	"rye/util"
 
 	//	"github.com/peterh/liner"
 
@@ -48,8 +44,11 @@ import (
 )
 
 import (
-	"github.com/gorilla/sessions"
-	"github.com/labstack/echo-contrib/session"
+	//		"github.com/labstack/echo"
+	//"github.com/labstack/echo/middleware"
+
+	//"github.com/gorilla/sessions"
+	//"github.com/labstack/echo-contrib/session"
 )
 
 // REJY0 in GoLang
@@ -93,7 +92,7 @@ func main() {
 		if os.Args[1] == "shell" {
 			main_rysh()
 		} else if os.Args[1] == "web" {
-			main_httpd()
+			// main_httpd()
 		} else if os.Args[1] == "ryeco" {
 			main_ryeco()
 		} else {
@@ -179,6 +178,7 @@ func main_ryeco() {
 
 }
 
+/* USES Echo server --- disabled for now to reduce dependences .. also we used maing http go package now
 func main_httpd() {
 
 	//util.PrintHeader()
@@ -204,11 +204,11 @@ func main_httpd() {
 func serve(c echo.Context) error {
 
 	sess, _ := session.Get("session", c)
-	/*sess.Options = &sessions.Options{
+	/ *sess.Options = &sessions.Options{
 		Path:     "/",
 		MaxAge:   86400 * 7,
 		HttpOnly: true,
-	}*/
+	}* /
 	//sess.Values["foo"] = env.String{"barca"}
 
 	input := "{ whoami: \"Rye webserver 0.001 alpha\" ctx: 0 result: \"\" session: 0 }"
@@ -264,7 +264,7 @@ func serve(c echo.Context) error {
 					bu.WriteString("<div class='rye-result'>")
 				}
 				bu.WriteString(evaldo.PopOutBuffer())
-				/*
+				/ *
 					ACTIVATE LATER FOR <%= tags %>
 						if es.Res != nil {
 						//fmt.Println("\x1b[6;30;42m" + es.Res.Inspect(*genv) + "\x1b[0m")
@@ -273,7 +273,7 @@ func serve(c echo.Context) error {
 						} else if es.Res.Type() == env.StringType {
 							bu.WriteString(es.Res.(env.String).Value)
 						}
-					} */
+					} * /
 				if displayBlock {
 					bu.WriteString("</div>")
 				}
@@ -295,7 +295,7 @@ func serve(c echo.Context) error {
 	}
 
 	return c.HTML(http.StatusOK, bu.String())
-}
+} */
 
 func main_rye_file(file string, sig bool) {
 
