@@ -2822,6 +2822,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_raylib, ps)
 	RegisterBuiltins2(Builtins_email, ps)
 	RegisterBuiltins2(Builtins_cayley, ps)
+	RegisterBuiltins2(Builtins_structures, ps)
 }
 
 func RegisterBuiltins2(builtins map[string]*env.Builtin, ps *env.ProgramState) {

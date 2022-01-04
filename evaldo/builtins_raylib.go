@@ -1,3 +1,5 @@
+// +build b_raylib
+
 package evaldo
 
 import (

@@ -6,7 +6,7 @@ import (
 	"encoding/xml"
 	"rye/env"
 
-	//"fmt"
+	"fmt"
 	"io"
 )
 
@@ -171,7 +171,7 @@ func do_sxml(es *env.ProgramState, reader io.Reader, rmap env.Dict) env.Object {
 }
 
 func trace5(s string) {
-	//	fmt.Println(s)
+	fmt.Println(s)
 }
 
 var Builtins_sxml = map[string]*env.Builtin{
