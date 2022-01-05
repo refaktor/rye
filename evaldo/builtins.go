@@ -19,6 +19,11 @@ func ss() {
 	fmt.Print(1)
 }
 
+func makeError(env1 *env.ProgramState, msg string) *env.Error {
+	env1.FailureFlag = true
+	return env.NewError(msg)
+}
+
 func getFrom(ps *env.ProgramState, data interface{}, key interface{}, posMode bool) env.Object {
 	switch s1 := data.(type) {
 	case env.Dict:
@@ -204,19 +209,42 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"divides": {
+	"factor-of": {
 		Argsn: 2,
 		Pure:  true,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch arg := arg0.(type) {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch a := arg0.(type) {
 			case env.Integer:
-				if arg.Value%arg1.(env.Integer).Value == 0 {
-					return env.Integer{1}
-				} else {
-					return env.Integer{0}
+				switch b := arg1.(type) {
+				case env.Integer:
+					if a.Value%b.Value == 0 {
+						return env.Integer{1}
+					} else {
+						return env.Integer{0}
+					}
+				default:
+					return makeError(ps, "Arg 1 not Int")
 				}
 			default:
-				return env.NewError("argument to `len` not supported, got %s")
+				return makeError(ps, "Arg 2 not Int")
+			}
+		},
+	},
+
+	"mod": {
+		Argsn: 2,
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch a := arg0.(type) {
+			case env.Integer:
+				switch b := arg1.(type) {
+				case env.Integer:
+					return env.Integer{a.Value % b.Value}
+				default:
+					return makeError(ps, "Arg 1 not Int")
+				}
+			default:
+				return makeError(ps, "Arg 2 not Int")
 			}
 		},
 	},
@@ -931,7 +959,6 @@ var builtins = map[string]*env.Builtin{
 				ps.Ser = bloc.Series
 				for ps.Ser.Pos() < ps.Ser.Len() {
 					EvalExpression2(ps, false)
-					fmt.Println(ps.Res.Probe(*ps.Idx))
 					if !util.IsTruthy(ps.Res) {
 						break
 					}
@@ -939,8 +966,7 @@ var builtins = map[string]*env.Builtin{
 				ps.Ser = ser
 				return ps.Res
 			}
-			ps.FailureFlag = true
-			return env.NewError("expecting block")
+			return makeError(ps, "Arg 1 not Block")
 		},
 	},
 
@@ -960,8 +986,7 @@ var builtins = map[string]*env.Builtin{
 				ps.Ser = ser
 				return ps.Res
 			}
-			ps.FailureFlag = true
-			return env.NewError("expecting block")
+			return makeError(ps, "Arg 1 not Block")
 		},
 	},
 
@@ -980,10 +1005,10 @@ var builtins = map[string]*env.Builtin{
 					}
 					return *env.NewBlock(*env.NewTSeries(objs))
 				}
+				return makeError(ps, "Arg 1 not Int")
 
 			}
-			ps.ErrorFlag = true
-			return env.NewError("First arg should be context")
+			return makeError(ps, "Arg 1 not Int")
 		},
 	},
 
@@ -1260,7 +1285,7 @@ var builtins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = bloc.Series
 					for i := 0; int64(i) < cond.Value; i++ {
-						ps = EvalBlock(ps)
+						ps = EvalBlockInj(ps, env.Integer{int64(i + 1)}, true)
 						ps.Ser.Reset()
 					}
 					ps.Ser = ser

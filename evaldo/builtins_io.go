@@ -380,11 +380,6 @@ func __https_request__set_header(env1 *env.ProgramState, arg0 env.Object, arg1 e
 	return makeError(env1, "Failed")
 }
 
-func makeError(env1 *env.ProgramState, msg string) *env.Error {
-	env1.FailureFlag = true
-	return env.NewError(msg)
-}
-
 func __https_request__do(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch req := arg0.(type) {
 	case env.Native:
