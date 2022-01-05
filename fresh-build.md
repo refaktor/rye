@@ -14,7 +14,7 @@ Check Go version.
 
 Create the ~/go/src directory
 
-    mkdir -f ~/go/src && cd ~/go/src
+    mkdir -p ~/go/src && cd ~/go/src
 
 Clone the main branch from the Rye repository
 
@@ -43,8 +43,9 @@ Run the REPL
 
     ./rye
 
-The language towards the end of design stage. Current implementation is mostly a vehicle to
-test and explore the language design ideas. It will get unified and solidified in 2022.
+The language is moving towards the end of design stage. Current implementation was mostly a vehicle to
+test and explore various language design ideas. It will get more unified, solidified and maybe even useful 
+in 2022! :)
 
 
 

@@ -161,40 +161,22 @@ There is also a very small [FB group](https://www.facebook.com/groups/8663134637
 
 Currently, tested on Linux, Mac and Docker.
 
-### Builds the rye interpreter
+### Building a minimal Rye
 
 ```bash
-go get -v github.com/pkg/profile \
-  github.com/yhirose/go-peg \
-  github.com/mattn/go-sqlite3
- 
-go build
+export GO111MODULE=auto
+
+go get github.com/yhirose/go-peg # PEG parser (rye loader)
+go get github.com/peterh/liner   # library for REPL
+go get golang.org/x/net/html     # for html parsin - will probably remove for b_tiny
+go get github.com/pkg/profile    # for runtime profiling - will probably remove for b_tiny
+
+go build -tags "b_tiny"
 
 # Executable
 ./rye 
 ```
-
-### Builds the rye interpreter with all current builtins
-
-You can leave just the tags and install just the bindings you want.
-
-```bash
-go get -v github.com/pkg/profile \
-  github.com/yhirose/go-peg \
-  github.com/labstack/echo/middleware \
-  github.com/labstack/echo-contrib/session \
-  github.com/gotk3/gotk3/gtk \
-  github.com/lib/pq \
-  github.com/mattn/go-sqlite3 \
-  github.com/nats-io/nats.go \
-  github.com/shirou/gopsutil/mem \
-  github.com/tobgu/qframe
-
-go build -tags "b_echo b_gtk b_psql b_nats b_psutil b_qframe" -o ryefull
-
-# Executable
-./ryefull 
-```
+More information on https://github.com/refaktor/rye/blob/main/fresh-build.md
 
 ## Docker image
 
