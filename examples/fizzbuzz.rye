@@ -1,0 +1,59 @@
+; Fizz Buzz by @otobrglez - <otobrglez@gmail.com>
+print "--- --- --- Fizz Buzz --- --- ---"
+
+; function mod(number, divider){
+;   var num = number;
+;   while(num>=0){
+;     num = num - divider;
+;   }
+;   num = num + divider;
+;   return num;
+; }
+
+
+mod: fn { n div } {
+  print "mod"
+  print "n -> " + n
+  print "div -> " + div
+  num: n
+
+  print "num -> " + num
+
+  loop n {
+    num = num + 12
+    do { print " XXX => " + num }
+  } 
+
+}
+
+fizzbuzz: fn { n } { 
+  print n
+}
+
+print "Tests:"
+
+mod 5 3
+mod 3 5
+mod 15 15
+
+; fizzbuzz 1
+; fizzbuzz 2
+; fizzbuzz 3
+; fizzbuzz 4
+; fizzbuzz 5
+; fizzbuzz 10
+; fizzbuzz 15
+; fizzbuzz 30
+
+
+
+;loop 5 print {
+;  fizzbuzz 3
+;}
+
+; loop 5 { .print }
+
+; repeat 'i 5 { print i }
+
+; items: { 1 2 3 4 5 }
+; doubled: map items { * 2 }
