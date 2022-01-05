@@ -347,10 +347,10 @@ func newParser() *Parser { // TODO -- add string eaddress path url time
 	EMAILPART		<-  < ([a-zA-Z0-9._]+) >
 	FPATH 	   		<-  "%" URIPATH*
 	CPATH    		<-  WORD ( "/" WORD )+
-	ONECHARWORDS	    <-  < [<>*+-=/?] >
+	ONECHARWORDS	    <-  < [<>*+-=/] >
 	PIPEARROWS      <-  ">>" / "-->" / "->"
 	OPARROWS        <-  "<<" / "<--" / "<-"
-	LETTER  	       	<-  < [a-zA-Z?=^(` + "`" + `_] >
+	LETTER  	       	<-  < [a-zA-Z=^(` + "`" + `_] >
 	LETTERORNUM		<-  < [a-zA-Z0-9-?=.\\!_+<>\]*()] >
 	URIPATH			<-  < [a-zA-Z0-9-?=.:@/\\!_>	()] >
 	UCLETTER  		<-  < [A-Z] >

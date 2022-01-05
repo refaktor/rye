@@ -822,10 +822,11 @@ type Builtin struct {
 	Cur4          Object
 	AcceptFailure bool
 	Pure          bool
+	Doc           string
 }
 
-func NewBuiltin(fn BuiltinFunction, argsn int, acceptFailure bool, pure bool) *Builtin {
-	bl := Builtin{fn, argsn, nil, nil, nil, nil, nil, acceptFailure, pure}
+func NewBuiltin(fn BuiltinFunction, argsn int, acceptFailure bool, pure bool, doc string) *Builtin {
+	bl := Builtin{fn, argsn, nil, nil, nil, nil, nil, acceptFailure, pure, doc}
 	return &bl
 }
 
@@ -841,11 +842,16 @@ func (b Builtin) Inspect(e Idxs) string {
 		pure_s = "Pure "
 	}
 
-	return "<" + pure_s + "Builtin>"
+	return "<" + pure_s + "Builtin(" + strconv.Itoa(b.Argsn) + ") ~ " + b.Doc + ">"
 }
 
 func (b Builtin) Probe(e Idxs) string {
-	return "<Builtin>"
+	var pure_s string
+	if b.Pure {
+		pure_s = "Pure "
+	}
+
+	return "<" + pure_s + "Builtin>"
 }
 
 func (i Builtin) Trace(msg string) {

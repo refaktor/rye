@@ -135,13 +135,14 @@ var builtins = map[string]*env.Builtin{
 
 	"oneone": {
 		Argsn: 0,
-
+		Doc:   "Test builtin with no args.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return env.Integer{11}
 		},
 	},
 	"to-word": {
 		Argsn: 1,
+		Doc:   "Takes a string and returns a Word",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
@@ -155,6 +156,7 @@ var builtins = map[string]*env.Builtin{
 	},
 	"inc": {
 		Argsn: 1,
+		Doc:   "Increments integer value by 1.",
 		Pure:  true,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
@@ -186,6 +188,7 @@ var builtins = map[string]*env.Builtin{
 
 	"not": {
 		Argsn: 1,
+		Doc:   "Turns a truthy value to non-truthy and reverse.",
 		Pure:  true,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if util.IsTruthy(arg0) {
@@ -211,6 +214,7 @@ var builtins = map[string]*env.Builtin{
 
 	"factor-of": {
 		Argsn: 2,
+		Doc:   "Checks if a 1 arg. is factor of 2. argument.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch a := arg0.(type) {
@@ -233,6 +237,7 @@ var builtins = map[string]*env.Builtin{
 
 	"mod": {
 		Argsn: 2,
+		Doc:   "Calculates module of two integers.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch a := arg0.(type) {
@@ -832,7 +837,7 @@ var builtins = map[string]*env.Builtin{
 				//reader := bufio.NewReader(os.Stdin)
 
 				fmt.Println("You are inside a drop-in: " + name.Value)
-				fmt.Println(" * user (h) for help, (lc) to list context , (r) to return")
+				fmt.Println(" * use (h) for help, (lc) to list context , (r) to return")
 				fmt.Println("----------------------------------------------------------")
 				/*
 					for {
@@ -1073,6 +1078,16 @@ var builtins = map[string]*env.Builtin{
 			return *ps.Ctx
 		},
 	},
+
+	"ls": {
+		Argsn: 0,
+		Doc:   "Lists words in current context",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			fmt.Println(ps.Ctx.Preview(*ps.Idx))
+			return env.Integer{1}
+		},
+	},
+
 	"parent-context": {
 		Argsn: 0,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1241,6 +1256,7 @@ var builtins = map[string]*env.Builtin{
 
 	"with": {
 		AcceptFailure: true,
+		Doc:           "Do a block with Arg 1 injected. 1 .with { + 1 , + 2 }",
 		Argsn:         2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg1.(type) {
@@ -2852,7 +2868,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 
 func RegisterBuiltins2(builtins map[string]*env.Builtin, ps *env.ProgramState) {
 	for k, v := range builtins {
-		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure)
+		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc)
 		registerBuiltin(ps, k, *bu)
 	}
 }

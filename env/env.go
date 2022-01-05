@@ -2,6 +2,7 @@ package env
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -43,6 +44,24 @@ func (e RyeCtx) Probe(idxs Idxs) string {
 	return bu.String()
 }
 
+func (e RyeCtx) Preview(idxs Idxs) string {
+	var bu strings.Builder
+	bu.WriteString("Context (" + e.Kind.Probe(idxs) + "):\n")
+	arr := make([]string, len(e.state))
+	i := 0
+	for k, v := range e.state {
+		arr[i] = idxs.GetWord(k) + ": " + v.Inspect(idxs)
+		// bu.WriteString(" " + idxs.GetWord(k) + ": " + v.Inspect(idxs) + "\n")
+		i += 1
+	}
+	sort.Strings(arr)
+	for aa := range arr {
+		bu.WriteString(" " + arr[aa] + "\n")
+	}
+	bu.WriteString(">")
+	return bu.String()
+}
+
 // Type returns the type of the Integer.
 func (i RyeCtx) Type() Type {
 	return CtxType
@@ -60,6 +79,16 @@ func (i RyeCtx) Trace(msg string) {
 
 func (i RyeCtx) GetKind() int {
 	return i.Kind.Index
+}
+
+func (e RyeCtx) GetWords(idxs Idxs) Block {
+	objs := make([]Object, len(e.state))
+	idx := 0
+	for k, _ := range e.state {
+		objs[idx] = String{idxs.GetWord(k)}
+		idx += 1
+	}
+	return *NewBlock(*NewTSeries(objs))
 }
 
 /*func (e *Env) Get(word int) (*Object, bool) {
