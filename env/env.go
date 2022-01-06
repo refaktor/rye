@@ -44,21 +44,23 @@ func (e RyeCtx) Probe(idxs Idxs) string {
 	return bu.String()
 }
 
-func (e RyeCtx) Preview(idxs Idxs) string {
+func (e RyeCtx) Preview(idxs Idxs, filter string) string {
 	var bu strings.Builder
 	bu.WriteString("Context (" + e.Kind.Probe(idxs) + "):\n")
-	arr := make([]string, len(e.state))
+	arr := make([]string, 0)
 	i := 0
 	for k, v := range e.state {
-		arr[i] = idxs.GetWord(k) + ": " + v.Inspect(idxs)
-		// bu.WriteString(" " + idxs.GetWord(k) + ": " + v.Inspect(idxs) + "\n")
-		i += 1
+		str1 := idxs.GetWord(k)
+		if strings.Contains(str1, filter) {
+			arr = append(arr, str1+": "+v.Inspect(idxs))
+			// bu.WriteString(" " + idxs.GetWord(k) + ": " + v.Inspect(idxs) + "\n")
+			i += 1
+		}
 	}
 	sort.Strings(arr)
 	for aa := range arr {
 		bu.WriteString(" " + arr[aa] + "\n")
 	}
-	bu.WriteString(">")
 	return bu.String()
 }
 

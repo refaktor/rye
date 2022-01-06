@@ -133,16 +133,9 @@ func getFrom(ps *env.ProgramState, data interface{}, key interface{}, posMode bo
 
 var builtins = map[string]*env.Builtin{
 
-	"oneone": {
-		Argsn: 0,
-		Doc:   "Test builtin with no args.",
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return env.Integer{11}
-		},
-	},
 	"to-word": {
 		Argsn: 1,
-		Doc:   "Takes a string and returns a Word",
+		Doc:   "Takes a string and returns a Word with that name.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
@@ -150,7 +143,7 @@ var builtins = map[string]*env.Builtin{
 				idx := ps.Idx.IndexWord(str.Value)
 				return env.Word{idx}
 			default:
-				return env.NewError("first arg is not string")
+				return makeError(ps, "Arg 1 not String.")
 			}
 		},
 	},
@@ -158,12 +151,12 @@ var builtins = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "Increments integer value by 1.",
 		Pure:  true,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Integer:
 				return env.Integer{1 + arg.Value}
 			default:
-				return env.NewError("first arg is not integer")
+				return makeError(ps, "Arg 1 not Integer.")
 			}
 		},
 	},
@@ -172,6 +165,7 @@ var builtins = map[string]*env.Builtin{
 
 	"true": {
 		Argsn: 0,
+		Doc:   "Retutns a truthy value.",
 		Pure:  true,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return env.Integer{1}
@@ -180,6 +174,7 @@ var builtins = map[string]*env.Builtin{
 
 	"false": {
 		Argsn: 0,
+		Doc:   "Retutns a falsy value.",
 		Pure:  true,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return env.Integer{0}
@@ -206,15 +201,14 @@ var builtins = map[string]*env.Builtin{
 			if util.IsTruthy(arg0) {
 				return env.Integer{1}
 			} else {
-				ps.FailureFlag = true
-				return env.NewError("requirement failed")
+				return makeError(ps, "Requirement failed.")
 			}
 		},
 	},
 
 	"factor-of": {
 		Argsn: 2,
-		Doc:   "Checks if a 1 arg. is factor of 2. argument.",
+		Doc:   "Checks if a Arg 1 is factor of Arg 2.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch a := arg0.(type) {
@@ -256,8 +250,9 @@ var builtins = map[string]*env.Builtin{
 
 	"_+": {
 		Argsn: 2,
+		Doc:   "Adds or joins two values together (Integers, Strings, Uri-s and Blocks)",
 		Pure:  true,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Integer:
 				return env.Integer{s1.Value + arg1.(env.Integer).Value}
@@ -268,22 +263,21 @@ var builtins = map[string]*env.Builtin{
 				case env.Integer:
 					return env.String{s1.Value + strconv.Itoa(int(s2.Value))}
 				default:
-					env1.FailureFlag = true
-					return env.NewError("Wrong second arg for string +")
+					return makeError(ps, "If Arg 1 is String, Arg 2 should also be String or Integer")
 				}
 			case env.Uri:
 				switch s2 := arg1.(type) {
 				case env.String:
-					return *env.NewUri(env1.Idx, s1.Scheme, s1.Path+s2.Value)
+					return *env.NewUri(ps.Idx, s1.Scheme, s1.Path+s2.Value)
 				case env.Integer:
-					return *env.NewUri(env1.Idx, s1.Scheme, s1.Path+strconv.Itoa(int(s2.Value)))
+					return *env.NewUri(ps.Idx, s1.Scheme, s1.Path+strconv.Itoa(int(s2.Value)))
 				case env.Block: // -- TODO turn tagwords and valvar sb strings.Builderues to uri encoded values , turn files into paths ... think more about it
 					var str strings.Builder
 					sepa := ""
 					for i := 0; i < s2.Series.Len(); i++ {
 						switch node := s2.Series.Get(i).(type) {
 						case env.Tagword:
-							str.WriteString(sepa + env1.Idx.GetWord(node.Index) + "=")
+							str.WriteString(sepa + ps.Idx.GetWord(node.Index) + "=")
 							sepa = "&"
 						case env.String:
 							str.WriteString(node.Value)
@@ -293,10 +287,9 @@ var builtins = map[string]*env.Builtin{
 							str.WriteString(node.GetPath())
 						}
 					}
-					return *env.NewUri(env1.Idx, s1.Scheme, s1.Path+str.String())
+					return *env.NewUri(ps.Idx, s1.Scheme, s1.Path+str.String())
 				default:
-					env1.FailureFlag = true
-					return env.NewError("Wrong second arg for Uri +")
+					return makeError(ps, "If Arg 1 is Uri, Arg 2 should be Integer, String or Block.")
 				}
 			case env.Block:
 				switch b2 := arg1.(type) {
@@ -305,98 +298,79 @@ var builtins = map[string]*env.Builtin{
 					s1.Series = *s.AppendMul(b2.Series.GetAll())
 					return s1
 				default:
-					env1.FailureFlag = true
-					return env.NewError("Wrong second arg for Block + ")
+					return makeError(ps, "If Arg 1 is Block, Arg 2 should also be Block.")
 				}
 			default:
-				env1.FailureFlag = true
-				return env.NewError("Wrong first arg for +")
+				return makeError(ps, "If Arg 1 is Uri, Arg 2 should be Integer, String or Block")
 			}
 		},
 	},
 
-	"add": {
-		Argsn: 2,
-		Pure:  true,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s1 := arg0.(type) {
-			case env.Integer:
-				return env.Integer{s1.Value + arg1.(env.Integer).Value}
-			case env.String:
-				switch s2 := arg1.(type) {
-				case env.String:
-					return env.String{s1.Value + s2.Value}
-				case env.Integer:
-					return env.String{s1.Value + strconv.Itoa(int(s2.Value))}
-				}
-			case env.Block:
-				switch b2 := arg1.(type) {
-				case env.Block:
-					s := &s1.Series
-					s1.Series = *s.AppendMul(b2.Series.GetAll())
-					return s1
-				}
-			default:
-				env1.FailureFlag = true
-				return env.NewError("Wrong arguments for + function")
-			}
-			env1.FailureFlag = true
-			return env.NewError("Wrong arguments for + function")
-		},
-	},
 	"_-": {
 		Argsn: 2,
+		Doc:   "Substract two integers.",
 		Pure:  true,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch arg := arg0.(type) {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch a := arg0.(type) {
 			case env.Integer:
-				return env.Integer{arg.Value - arg1.(env.Integer).Value}
+				switch b := arg1.(type) {
+				case env.Integer:
+					return env.Integer{a.Value - b.Value}
+				default:
+					return makeError(ps, "Arg 1 is not Integer.")
+				}
 			default:
-				return env.NewError("argument to `len` not supported, got %s")
+				return makeError(ps, "Arg 2 is not Integer.")
 			}
 		},
 	},
 	"_*": {
 		Argsn: 2,
+		Doc:   "Multiply two integers.",
 		Pure:  true,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch arg := arg0.(type) {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch a := arg0.(type) {
 			case env.Integer:
-				return env.Integer{arg.Value * arg1.(env.Integer).Value}
+				switch b := arg1.(type) {
+				case env.Integer:
+					return env.Integer{a.Value * b.Value}
+				default:
+					return makeError(ps, "Arg 1 is not Integer.")
+				}
 			default:
-				return env.NewError("argument to `len` not supported, got %s")
+				return makeError(ps, "Arg 2 is not Integer.")
 			}
 		},
 	},
 	"_/": {
 		Argsn: 2,
+		Doc:   "Divide two integers.",
 		Pure:  true,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch a := arg0.(type) {
 			case env.Integer:
 				switch b := arg1.(type) {
 				case env.Integer:
 					if b.Value == 0 {
-						env1.FailureFlag = true
-						return env.NewError("cannot divide by zero")
+						ps.FailureFlag = true
+						return makeError(ps, "Can't divide by Zero.")
 					}
 					return env.Integer{a.Value / b.Value}
 				default:
-					env1.ErrorFlag = true
-					return env.NewError("first arg not integer")
+					return makeError(ps, "Arg 1 is not Integer.")
 				}
 			default:
-				env1.ErrorFlag = true
-				return env.NewError("second arg not integer")
+				return makeError(ps, "Arg 1 is not Integer.")
 			}
 		},
 	},
 	"_=": {
 		Argsn: 2,
+		Doc:   "Test if two values are equal.",
 		Pure:  true,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var res int64
-			if arg0.GetKind() == arg1.GetKind() && arg0.Inspect(*env1.Idx) == arg1.Inspect(*env1.Idx) {
+			if arg0.GetKind() == arg1.GetKind() && arg0.Inspect(*ps.Idx) == arg1.Inspect(*ps.Idx) {
 				res = 1
 			} else {
 				res = 0
@@ -406,10 +380,11 @@ var builtins = map[string]*env.Builtin{
 	},
 	"_!": {
 		Argsn: 2,
+		Doc:   "Reverses the truthines.",
 		Pure:  true,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var res int64
-			if arg0.GetKind() == arg1.GetKind() && arg0.Inspect(*env1.Idx) == arg1.Inspect(*env1.Idx) {
+			if arg0.GetKind() == arg1.GetKind() && arg0.Inspect(*ps.Idx) == arg1.Inspect(*ps.Idx) {
 				res = 0
 			} else {
 				res = 1
@@ -419,8 +394,9 @@ var builtins = map[string]*env.Builtin{
 	},
 	"_>": {
 		Argsn: 2,
+		Doc:   "Tests if Arg1 is greater than Arg 2.",
 		Pure:  true,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Integer:
 				var res int64
@@ -431,14 +407,15 @@ var builtins = map[string]*env.Builtin{
 				}
 				return env.Integer{res}
 			default:
-				return env.NewError("argument to `len` not supported, got %s")
+				return makeError(ps, "Arg 1 is not Integer.")
 			}
 		},
 	},
 	"_<": {
 		Argsn: 2,
+		Doc:   "Tests if Arg1 is lesser than Arg 2.",
 		Pure:  true,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Integer:
 				var res int64
@@ -449,7 +426,7 @@ var builtins = map[string]*env.Builtin{
 				}
 				return env.Integer{res}
 			default:
-				return env.NewError("argument to `len` not supported, got %s")
+				return makeError(ps, "Arg 1 is not Integer.")
 			}
 		},
 	},
@@ -466,6 +443,7 @@ var builtins = map[string]*env.Builtin{
 
 	"prn": {
 		Argsn: 1,
+		Doc:   "Prints a value and adds a space.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.String:
@@ -478,6 +456,7 @@ var builtins = map[string]*env.Builtin{
 	},
 	"prin": {
 		Argsn: 1,
+		Doc:   "Prints a value without newline.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.String:
@@ -490,6 +469,7 @@ var builtins = map[string]*env.Builtin{
 	},
 	"print": {
 		Argsn: 1,
+		Doc:   "Prints a value and adds a newline.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.String:
@@ -502,6 +482,7 @@ var builtins = map[string]*env.Builtin{
 	},
 	"probe": {
 		Argsn: 1,
+		Doc:   "Prints a probe of a value.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			fmt.Println(arg0.Inspect(*env1.Idx))
 			return arg0
@@ -509,6 +490,7 @@ var builtins = map[string]*env.Builtin{
 	},
 	"mold": {
 		Argsn: 1,
+		Doc:   "Turn value to it's string representation.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// fmt.Println()
 			return env.String{arg0.Inspect(*env1.Idx)}
@@ -519,6 +501,7 @@ var builtins = map[string]*env.Builtin{
 
 	"unless": {
 		Argsn: 2,
+		Doc:   "Conditional if not. Takes condition and a block of code.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cond := arg0.(type) {
@@ -540,6 +523,7 @@ var builtins = map[string]*env.Builtin{
 
 	"if": {
 		Argsn: 2,
+		Doc:   "Basic conditional. Takes a condition and a block of code.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// function accepts 2 args. arg0 is a "boolean" value, arg1 is a block of code
@@ -586,6 +570,7 @@ var builtins = map[string]*env.Builtin{
 
 	"either": {
 		Argsn: 3,
+		Doc:   "The if/else conditional. Takes a value and true and false block of code.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			//arg0.Trace("")
@@ -701,6 +686,7 @@ var builtins = map[string]*env.Builtin{
 
 	"switch": {
 		Argsn:         2,
+		Doc:           "Classic switch function. Takes a word and multiple possible values and block of code to do.",
 		AcceptFailure: true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg1.(type) {
@@ -873,6 +859,7 @@ var builtins = map[string]*env.Builtin{
 
 	"do": {
 		Argsn: 1,
+		Doc:   "Takes a block of code and does (runs) it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -888,6 +875,7 @@ var builtins = map[string]*env.Builtin{
 
 	"do-with": {
 		Argsn: 2,
+		Doc:   "Takes a value and a block of code. It does the code with the value injected.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg1.(type) {
 			case env.Block:
@@ -928,6 +916,7 @@ var builtins = map[string]*env.Builtin{
 
 	"eval": {
 		Argsn: 1,
+		Doc:   "Takes a block of Rye values and evaluates each value or expression.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -957,6 +946,7 @@ var builtins = map[string]*env.Builtin{
 
 	"all": {
 		Argsn: 1,
+		Doc:   "Takes a block, if all values or expressions are truthy it returns the last one, otherwise false.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -977,6 +967,7 @@ var builtins = map[string]*env.Builtin{
 
 	"any": {
 		Argsn: 1,
+		Doc:   "Takes a block, if any of the values or expressions are truthy, the it returns that one, in none false.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -997,6 +988,7 @@ var builtins = map[string]*env.Builtin{
 
 	"range": {
 		Argsn: 2,
+		Doc:   "Takes two integers and returns a block of integers between them. (Will change to lazy list/generator later)",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch i1 := arg0.(type) {
 			case env.Integer:
@@ -1074,6 +1066,7 @@ var builtins = map[string]*env.Builtin{
 
 	"current-context": {
 		Argsn: 0,
+		Doc:   "Returns current context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *ps.Ctx
 		},
@@ -1083,13 +1076,28 @@ var builtins = map[string]*env.Builtin{
 		Argsn: 0,
 		Doc:   "Lists words in current context",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			fmt.Println(ps.Ctx.Preview(*ps.Idx))
+			fmt.Println(ps.Ctx.Preview(*ps.Idx, ""))
 			return env.Integer{1}
+		},
+	},
+
+	"ls\\": {
+		Argsn: 1,
+		Doc:   "Lists words in current context with string filter",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				fmt.Println(ps.Ctx.Preview(*ps.Idx, s1.Value))
+				return env.Integer{1}
+			}
+			return nil
+
 		},
 	},
 
 	"parent-context": {
 		Argsn: 0,
+		Doc:   "Returns parent context of the current context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *ps.Ctx.Parent
 		},
@@ -1142,6 +1150,7 @@ var builtins = map[string]*env.Builtin{
 
 	"context": {
 		Argsn: 1,
+		Doc:   "Creates a new context with no parent",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -1213,6 +1222,7 @@ var builtins = map[string]*env.Builtin{
 
 	"pass": {
 		Argsn: 2,
+		Doc:   "Accepts a value and a block. It does the block, with value injected, and returns (passes on) the initial value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg1.(type) {
 			case env.Block:
@@ -1227,8 +1237,7 @@ var builtins = map[string]*env.Builtin{
 				}
 				return res
 			default:
-				ps.FailureFlag = true
-				return env.NewError("second argument should be block")
+				return makeError(ps, "Arg 2 should be Block.")
 			}
 		},
 	},
@@ -1256,7 +1265,7 @@ var builtins = map[string]*env.Builtin{
 
 	"with": {
 		AcceptFailure: true,
-		Doc:           "Do a block with Arg 1 injected. 1 .with { + 1 , + 2 }",
+		Doc:           "Do a block with Arg 1 injected. Example: 1 .with { .prn , + 10 |prn }",
 		Argsn:         2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg1.(type) {
@@ -1275,6 +1284,7 @@ var builtins = map[string]*env.Builtin{
 
 	"time-it": {
 		Argsn: 1,
+		Doc:   "Accepts a block, does it and times it's execution time.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -1293,6 +1303,7 @@ var builtins = map[string]*env.Builtin{
 
 	"loop": {
 		Argsn: 2,
+		Doc:   "Accepts a number and a block of code. Does the block of code number times, injecting the number.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cond := arg0.(type) {
 			case env.Integer:
@@ -1314,6 +1325,7 @@ var builtins = map[string]*env.Builtin{
 
 	"forever": {
 		Argsn: 1,
+		Doc:   "Accepts a block and does it forever.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -1353,6 +1365,7 @@ var builtins = map[string]*env.Builtin{
 
 	"for": {
 		Argsn: 2,
+		Doc:   "Accepts a block of values and a block of code, does the code for each of the values, injecting them.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch block := arg0.(type) {
 			case env.Block:
@@ -2016,6 +2029,8 @@ var builtins = map[string]*env.Builtin{
 	},
 	"to-lower": {
 		Argsn: 1,
+		Pure:  true,
+		Doc:   "Turns all characters to lower case.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -2027,6 +2042,8 @@ var builtins = map[string]*env.Builtin{
 	},
 	"to-upper": {
 		Argsn: 1,
+		Pure:  true,
+		Doc:   "Turns all characters to upper case. Also see capitalize.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -2692,6 +2709,7 @@ var builtins = map[string]*env.Builtin{
 
 	"to-context": {
 		Argsn: 1,
+		Doc:   "Turns a dict to a context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Dict:
