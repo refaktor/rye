@@ -53,6 +53,7 @@ factorial: pipe { :n > 0 |^if { n * factorial n - 1 } 1 }
 ; injected blocks are usefull again
 ; op-words are similar to pipe-words, but a little different
 loop { .factorial .print }
+; 1
 ; 2
 ; 6
 ; 24
