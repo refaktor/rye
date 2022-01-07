@@ -30,7 +30,7 @@ import (
 	"rye/env"
 	"rye/evaldo"
 	"rye/loader"
-	"rye/ryeco"
+	//"rye/ryeco"
 	//	"rye/util"
 
 	//	"github.com/peterh/liner"
@@ -94,7 +94,7 @@ func main() {
 		} else if os.Args[1] == "web" {
 			// main_httpd()
 		} else if os.Args[1] == "ryeco" {
-			main_ryeco()
+			// main_ryeco()
 		} else {
 			main_rye_file(os.Args[1], false)
 		}
@@ -174,7 +174,7 @@ func main_ryeco() {
 
 	//	ryeco_do(func() env.Object { return ryeco_loop(1000, func() env.Object { return ryeco_add(1, 2) }) })
 
-	ryeco.Loop(env.Integer{10000000}, func() env.Object { return ryeco.Add(env.Integer{1}, env.Integer{2}) })
+	// ryeco.Loop(env.Integer{10000000}, func() env.Object { return ryeco.Add(env.Integer{1}, env.Integer{2}) })
 
 }
 
