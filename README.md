@@ -6,7 +6,6 @@
    * [Find out more](#find-out-more)
    * [How to install / Build](#how-to-install--build)
    * [Docker image](#docker-image)
-   * [Contact](#contact)
 
 ## What is Rye
 
@@ -297,10 +296,6 @@ Run 🏃‍♂️ the rye REPL with:
 docker run -ti refaktor/rye
 ```
 
-## Contact
 
- [Author][refaktor] - `<janko.itm@gmail.com>`
 
- [refaktor]: https://github.com/refaktor
- [otobrglez]: https://github.com/otobrglez
 
