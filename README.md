@@ -10,7 +10,7 @@
 
 ## What is Rye
 
-Rye is a **design in progress**, human centric, high level programming language based on ideas from **Rebol** flawored by
+Rye is a **design in progress**, human centric, high level programming language based on ideas from **Rebol** flavored by
 Factor, Bash shell and Golang. It features a golang based interpreter and REPL.
 
 ## Show, don't tell
