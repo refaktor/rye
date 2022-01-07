@@ -48,7 +48,7 @@ For better of just for show, let's enhance on the Rye-isms ..
 factorial: pipe { :n > 0 |either { n * factorial n - 1 } { 1 } }
 
 ; rye has some weird idea of *returning functions*, they start with ^
-factorial: pipe { :n > 0 ^if { n * factorial n - 1 } 1 }
+factorial: pipe { :n > 0 |^if { n * factorial n - 1 } 1 }
 
 ; injected blocks are usefull again
 ; op-words are similar to pipe-words, but a little different
