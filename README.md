@@ -126,40 +126,20 @@ do-in iso { 100 .plus 11 |print }
 do-in iso { 2 .add 3 |print }
 ; Error: Word add not found
  ```
-## Doing Y with Rye
+ 
+## Find out more
 
-Rye-s first focus is data (pre)processing, so some examples of that.
-
-### read a webpage, save it to a file
-
-```clojure
-get https://www.google.com/search?q=ryelang
- |write-all %ryelang-results.html
-```
-
-### read and XML file and parse out specific information
-
-rye has a SAX-based dialect
-
-```clojure
-"<people><person age='33'>Jim</person><person age='30'>Jane</person></people>" 
-|string-reader |do-sxml { <person> [ .get-attr 0 |prn  ] _ [ .print ] }
-; prints:
-; 33 jim
-; 30 jane
-```
-
-## More info
-
-For most up-to date information on the language and it's development visit out [blog](http://ryelang.blogspot.com/)
+For most up-to date information on the language and it's development visit out **[blog](http://ryelang.blogspot.com/)**
 
 There is a work in progress [website](https://refaktor.github.io/rye/).
 
-## Platforms
+## Instalation
 
-Currently, tested on Linux, Mac and Docker.
+Rye is primarly developed on Linux, but has also been compiled on Mac and Docker.
 
 ### Building a minimal Rye
+
+You need to install Golang and then run.
 
 ```bash
 export GO111MODULE=auto
@@ -174,7 +154,8 @@ go build -tags "b_tiny"
 # Executable
 ./rye 
 ```
-Full process, even if you don't have Golang installed, here: https://github.com/refaktor/rye/blob/main/fresh-build.md
+
+For full process, also with Golang installation, see [fresh-build](https://github.com/refaktor/rye/blob/main/fresh-build.md)
 
 ## Docker image
 
