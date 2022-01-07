@@ -149,13 +149,11 @@ rye has a SAX-based dialect
 ; 30 jane
 ```
 
-
-
 ## More info
 
-There is a [simple website](https://refaktor.github.io/rye/) being made, and a [blog](http://ryelang.blogspot.com/).
+For most up-to date information on the language and it's development visit out [blog](http://ryelang.blogspot.com/)
 
-There is also a very small [FB group](https://www.facebook.com/groups/866313463771373) you can join.
+There is a work in progress [website](https://refaktor.github.io/rye/).
 
 ## Platforms
 
@@ -176,7 +174,7 @@ go build -tags "b_tiny"
 # Executable
 ./rye 
 ```
-More information on https://github.com/refaktor/rye/blob/main/fresh-build.md
+Full process, even if you don't have Golang installed, here: https://github.com/refaktor/rye/blob/main/fresh-build.md
 
 ## Docker image
 
@@ -192,16 +190,6 @@ Run 🏃‍♂️ the rye REPL with:
 ```bash
 docker run -ti refaktor/rye
 ```
-
-## OSX tips
-
-Ryefull relies on GTK3. So make sure your machine has it.
-
-```bash
-brew install pkg-config gtk+3 adwaita-icon-theme
-```
-
-More [instructions here](https://www.gtk.org/docs/installations/macos/).
 
 ## Author
 
