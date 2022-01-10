@@ -240,10 +240,10 @@ var builtins = map[string]*env.Builtin{
 				case env.Integer:
 					return env.Integer{a.Value % b.Value}
 				default:
-					return makeError(ps, "Arg 1 not Int")
+					return makeError(ps, "Arg 2 not Int")
 				}
 			default:
-				return makeError(ps, "Arg 2 not Int")
+				return makeError(ps, "Arg 1 not Int")
 			}
 		},
 	},
@@ -563,6 +563,29 @@ var builtins = map[string]*env.Builtin{
 				// if it's not a block we return error for now
 				ps.FailureFlag = true
 				return env.NewError("Error if")
+			}
+			return nil
+		},
+	},
+
+	"^if": {
+		Argsn: 2,
+		Doc:   "Basic conditional with a Returning mechanism when true. Takes a condition and a block of code.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg1.(type) {
+			case env.Block:
+				cond1 := util.IsTruthy(arg0)
+				if cond1 {
+					ser := ps.Ser
+					ps.Ser = bloc.Series
+					EvalBlockInj(ps, arg0, true)
+					ps.Ser = ser
+					ps.ReturnFlag = true
+					return ps.Res
+				}
+			default:
+				return makeError(ps, "Arg 2 not Block.")
 			}
 			return nil
 		},
@@ -1629,7 +1652,7 @@ var builtins = map[string]*env.Builtin{
 
 	//test if we can do recur similar to clojure one. Since functions in rejy are of fixed arity we would need recur1 recur2 recur3 and recur [ ] which is less optimal
 	//otherwise word recur could somehow be bound to correct version or args depending on number of args of func. Try this at first.
-	"recur1if": { //recur1-if
+	"recur-if\\1": { //recur1-if
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cond := arg0.(type) {
@@ -1649,7 +1672,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"recur2if": { //recur1-if
+	"recur-if\\2": { //recur1-if
 		Argsn: 3,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			//arg0.Trace("a0")
@@ -1676,7 +1699,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"recur3if": { //recur1-if
+	"recur-if\\3": { //recur1-if
 		Argsn: 4,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			//arg0.Trace("a0")

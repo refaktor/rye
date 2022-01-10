@@ -87,7 +87,18 @@ func LoadString(input string, sig bool) (env.Object, *env.Idxs) {
 	}
 
 	parser := newParser()
-	val, _ := parser.ParseAndGetValue(input, nil)
+	val, err := parser.ParseAndGetValue(input, nil)
+
+	if err != nil {
+		fmt.Print("\x1b[35;3m")
+		fmt.Print(err.Error())
+		fmt.Println("\x1b[0m")
+
+		empty1 := make([]env.Object, 0)
+		ser := env.NewTSeries(empty1)
+		return *env.NewBlock(*ser), wordIndex
+	}
+
 	//InspectNode(val)
 	if val != nil {
 		return val.(env.Block), wordIndex
