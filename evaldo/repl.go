@@ -222,7 +222,9 @@ func DoRyeRepl(es *env.ProgramState) {
 
 				line2 += lineReal
 
-				if strings.Compare("(lc)", line2) == 0 {
+				if strings.Trim(line2, " \t\n\r") == "" {
+					// ignore
+				} else if strings.Compare("(lc)", line2) == 0 {
 					fmt.Println(es.Ctx.Probe(*es.Idx))
 				} else if strings.Compare("(r)", line2) == 0 {
 					// es.Ser = ser
@@ -307,14 +309,14 @@ func MaybeDisplayFailureOrError(es *env.ProgramState, genv *env.Idxs) {
 		fmt.Println("\x1b[33m" + "Failure" + "\x1b[0m")
 	}
 	if es.ErrorFlag {
-		fmt.Println("\x1b[35;3m" + "Error: " + es.Res.Probe(*genv))
+		fmt.Println("\x1b[35;3m" + es.Res.Probe(*genv))
 		switch err := es.Res.(type) {
 		case env.Error:
 			fmt.Println(err.CodeBlock.Probe(*genv))
 			fmt.Println("Error not pointer so bug. #temp")
 		case *env.Error:
 			fmt.Println("At location:")
-			fmt.Println(err.CodeBlock.Probe(*genv))
+			fmt.Print(err.CodeBlock.Probe(*genv))
 		}
 		fmt.Println("\x1b[0m")
 	}
