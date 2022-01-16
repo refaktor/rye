@@ -12,7 +12,7 @@ import (
 	"rye/loader"
 	"strings"
 
-	"github.com/peterh/liner"
+	"github.com/refaktor/liner"
 )
 
 var (
@@ -197,10 +197,12 @@ func DoRyeRepl(es *env.ProgramState) {
 
 			multiline := len(code) > 1 && code[len(code)-1:len(code)] == " "
 
-			comment := regexp.MustCompile(`\s//`)
+			comment := regexp.MustCompile(`\s*;`)
 			line1 := comment.Split(code, 2) //--- just very temporary solution for some comments in repl. Later should probably be part of loader ... maybe?
 			//fmt.Println(line1)
 			lineReal := strings.Trim(line1[0], "\t")
+
+			// fmt.Println("*" + lineReal + "*")
 
 			// JM20201008
 			if lineReal == "111" {

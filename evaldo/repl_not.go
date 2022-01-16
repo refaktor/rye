@@ -12,7 +12,7 @@ import (
 	"rye/env"
 	//	"rye/loader"
 	//	"strings"
-	//	"github.com/peterh/liner"
+	//	"github.com/refaktor/liner"
 )
 
 var (
