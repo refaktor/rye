@@ -1,0 +1,28 @@
+{
+	'switch {
+		tags { core conditional }
+		docs {
+			p "switch is a conditional statement, that let's you swich over multiple potentially true values"
+		}
+		examples {
+			{
+				height: 0
+				command: "up"
+				switch command {
+					"up" { height: height + 10 }
+					"down" { height: height - 10 }
+				}
+			} {
+				height: 0
+				command: "up"
+				height: switch command {
+					"up" { height + 10 }
+					"down" { height - 10 }
+				}
+			}
+		}
+		related {
+			case if either cases 
+		}
+	}
+}

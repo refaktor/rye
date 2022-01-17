@@ -36,13 +36,22 @@ func NewEnv(par *RyeCtx) *RyeCtx {
 
 func (e RyeCtx) Probe(idxs Idxs) string {
 	var bu strings.Builder
-	bu.WriteString("<Context (" + e.Kind.Probe(idxs) + "): ")
+	bu.WriteString("[Context (" + e.Kind.Probe(idxs) + "): ")
 	for k, v := range e.state {
 		bu.WriteString(idxs.GetWord(k) + ": " + v.Inspect(idxs) + " ")
 	}
-	bu.WriteString(">")
+	bu.WriteString("]")
 	return bu.String()
 }
+
+const reset = "\x1b[0m"
+const reset2 = "\033[39;49m"
+
+const color_word = "\x1b[38;5;45m"
+const color_word2 = "\033[38;5;214m"
+const color_num2 = "\033[38;5;202m"
+const color_string2 = "\033[38;5;148m"
+const color_comment = "\033[38;5;247m"
 
 func (e RyeCtx) Preview(idxs Idxs, filter string) string {
 	var bu strings.Builder
@@ -52,14 +61,27 @@ func (e RyeCtx) Preview(idxs Idxs, filter string) string {
 	for k, v := range e.state {
 		str1 := idxs.GetWord(k)
 		if strings.Contains(str1, filter) {
-			arr = append(arr, str1+": "+v.Inspect(idxs))
+			var color string
+			switch idxs.GetWord(v.GetKind()) {
+			case "builtin":
+				color = color_word2
+			case "context":
+				color = color_num2
+			case "function":
+				color = color_word
+			default:
+				color = color_string2
+			}
+			arr = append(arr, str1+": "+reset+color_comment+v.Inspect(idxs)+reset+"|||"+color) // idxs.GetWord(v.GetKind()
 			// bu.WriteString(" " + idxs.GetWord(k) + ": " + v.Inspect(idxs) + "\n")
 			i += 1
 		}
 	}
 	sort.Strings(arr)
 	for aa := range arr {
-		bu.WriteString(" " + arr[aa] + "\n")
+		line := arr[aa]
+		pars := strings.Split(line, "|||")
+		bu.WriteString(" " + pars[1] + pars[0] + "\n")
 	}
 	return bu.String()
 }

@@ -135,7 +135,7 @@ var builtins = map[string]*env.Builtin{
 
 	"to-word": {
 		Argsn: 1,
-		Doc:   "Takes a string and returns a Word with that name.",
+		Doc:   "Takes a String and returns a Word with that name.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
@@ -1288,7 +1288,7 @@ var builtins = map[string]*env.Builtin{
 
 	"with": {
 		AcceptFailure: true,
-		Doc:           "Do a block with Arg 1 injected. Example: 1 .with { .prn , + 10 |prn }",
+		Doc:           "Do a block with Arg 1 injected.",
 		Argsn:         2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg1.(type) {
@@ -1436,6 +1436,8 @@ var builtins = map[string]*env.Builtin{
 
 	"purge": {
 		Argsn: 2,
+		Doc:   "Purges values from a seris based on return of a injected code block.",
+		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch block := arg0.(type) {
 			case env.Block:
@@ -1497,6 +1499,8 @@ var builtins = map[string]*env.Builtin{
 	// map [ 1 2 3 ] { .add 3 }
 	"map": {
 		Argsn: 2,
+		Doc:   "Maps values of a block to a new block by evaluating a block of code.",
+		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch list := arg0.(type) {
 			case env.Block:
@@ -1551,6 +1555,8 @@ var builtins = map[string]*env.Builtin{
 	// filter [ 1 2 3 ] { .add 3 }
 	"filter": {
 		Argsn: 2,
+		Doc:   "Filters values from a seris based on return of a injected code block.",
+		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var ll []interface{}
 			var lo []env.Object
@@ -1615,6 +1621,8 @@ var builtins = map[string]*env.Builtin{
 
 	"seek": {
 		Argsn: 2,
+		Doc:   "Seek over a series until a Block of code returns True.",
+		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch list := arg0.(type) {
 			case env.Block:
@@ -1732,6 +1740,8 @@ var builtins = map[string]*env.Builtin{
 
 	"does": {
 		Argsn: 1,
+		Doc:   "Creates a function without arguments.",
+		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch body := arg0.(type) {
 			case env.Block:
@@ -1745,6 +1755,8 @@ var builtins = map[string]*env.Builtin{
 
 	"pipe": {
 		Argsn: 1,
+		Doc:   "Creates a function that accepts one anonymouse argument.",
+		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch body := arg0.(type) {
 			case env.Block:
@@ -1758,6 +1770,8 @@ var builtins = map[string]*env.Builtin{
 
 	"fn": {
 		Argsn: 2,
+		Doc:   "Creates a function.",
+		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch args := arg0.(type) {
 			case env.Block:
@@ -1774,6 +1788,8 @@ var builtins = map[string]*env.Builtin{
 
 	"pfn": {
 		Argsn: 2,
+		Doc:   "Creates a pure function.",
+		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch args := arg0.(type) {
 			case env.Block:
@@ -1792,6 +1808,8 @@ var builtins = map[string]*env.Builtin{
 		// later maybe			   add10 [ a ] [ b: b ] [ add a b ]
 		//  						   add10 [ a ] [ 'b ] [ add a b ]
 		Argsn: 3,
+		Doc:   "Creates a function with specific context.",
+		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch args := arg0.(type) {
 			case env.Block:
@@ -1939,6 +1957,8 @@ var builtins = map[string]*env.Builtin{
 
 	"left": {
 		Argsn: 2,
+		Doc:   "Returns the left N characters of the String.",
+		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -1953,6 +1973,8 @@ var builtins = map[string]*env.Builtin{
 
 	"newline": {
 		Argsn: 0,
+		Doc:   "Returns the Newline.",
+		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return env.String{"\n"}
 		},
@@ -1960,6 +1982,8 @@ var builtins = map[string]*env.Builtin{
 
 	"trim": {
 		Argsn: 1,
+		Doc:   "Trims the String of spacing characters.",
+		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -1971,6 +1995,8 @@ var builtins = map[string]*env.Builtin{
 
 	"replace": {
 		Argsn: 3,
+		Doc:   "Returns the string with all parts of the strings replaced.",
+		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -1986,8 +2012,10 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"middle": {
+	"substring": {
 		Argsn: 3,
+		Doc:   "Returns part of the String between two positions.",
+		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -2005,6 +2033,8 @@ var builtins = map[string]*env.Builtin{
 
 	"right": {
 		Argsn: 2,
+		Doc:   "Returns the N characters from the right of the String.",
+		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -2019,6 +2049,8 @@ var builtins = map[string]*env.Builtin{
 
 	"join": {
 		Argsn: 2,
+		Doc:   "Joins two strings together.",
+		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -2041,6 +2073,8 @@ var builtins = map[string]*env.Builtin{
 	},
 	"capitalize": {
 		Argsn: 1,
+		Pure:  true,
+		Doc:   "Takes a String and returns the same String, but  with first character turned to upper case.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -2053,7 +2087,7 @@ var builtins = map[string]*env.Builtin{
 	"to-lower": {
 		Argsn: 1,
 		Pure:  true,
-		Doc:   "Turns all characters to lower case.",
+		Doc:   "Takes a String and returns the same String, but  with all characters turned to lower case.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -2066,7 +2100,7 @@ var builtins = map[string]*env.Builtin{
 	"to-upper": {
 		Argsn: 1,
 		Pure:  true,
-		Doc:   "Turns all characters to upper case. Also see capitalize.",
+		Doc:   "Takes a String and returns the same String, but with all characters turned to upper case.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -2079,6 +2113,8 @@ var builtins = map[string]*env.Builtin{
 
 	"join3": {
 		Argsn: 3,
+		Pure:  true,
+		Doc:   "Joins 3 Rye values together.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -2098,6 +2134,7 @@ var builtins = map[string]*env.Builtin{
 
 	"first": {
 		Argsn: 1,
+		Doc:   "Accepts Block and returns the first value in it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -2111,6 +2148,7 @@ var builtins = map[string]*env.Builtin{
 	},
 	"second": {
 		Argsn: 1,
+		Doc:   "Accepts Block and returns the second value in it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -2121,6 +2159,7 @@ var builtins = map[string]*env.Builtin{
 	},
 	"third": {
 		Argsn: 1,
+		Doc:   "Accepts Block and returns the third value in it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -2131,6 +2170,7 @@ var builtins = map[string]*env.Builtin{
 	},
 	"last": {
 		Argsn: 1,
+		Doc:   "Accepts Block and returns the last value in it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -2142,6 +2182,7 @@ var builtins = map[string]*env.Builtin{
 
 	"head": {
 		Argsn: 2,
+		Doc:   "Accepts a Block or a List and an Integer N. Returns first N values of the Block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s2 := arg1.(type) {
 			case env.Integer:
@@ -2161,6 +2202,7 @@ var builtins = map[string]*env.Builtin{
 
 	"nth": {
 		Argsn: 2,
+		Doc:   "Accepts Block and Integer N, returns the N-th value of the block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -2172,23 +2214,9 @@ var builtins = map[string]*env.Builtin{
 			return nil
 		},
 	},
-	"length": {
-		Argsn: 1,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s1 := arg0.(type) {
-			case env.String:
-				return env.Integer{int64(len(s1.Value))}
-			case env.Block:
-				return env.Integer{int64(s1.Series.Len())}
-			default:
-				ps.FailureFlag = true
-				return env.NewError("first arg not string or block")
-			}
-			return nil
-		},
-	},
 	"peek": {
 		Argsn: 1,
+		Doc:   "Accepts Block and returns the current value, without removing it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -2199,6 +2227,7 @@ var builtins = map[string]*env.Builtin{
 	},
 	"pop": {
 		Argsn: 1,
+		Doc:   "Accepts Block and returns the next value and removes it from the Block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -2209,6 +2238,7 @@ var builtins = map[string]*env.Builtin{
 	},
 	"pos": {
 		Argsn: 1,
+		Doc:   "Accepts Block and returns the position of it's carret.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -2219,6 +2249,7 @@ var builtins = map[string]*env.Builtin{
 	},
 	"next": {
 		Argsn: 1,
+		Doc:   "Accepts Block and returns the next value from it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -2230,6 +2261,7 @@ var builtins = map[string]*env.Builtin{
 	},
 	"append": {
 		Argsn: 2,
+		Doc:   "Accepts Block and Rye value. Appends Rye value to block ant returns it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -2244,6 +2276,7 @@ var builtins = map[string]*env.Builtin{
 	// generic <integer> <add> fn [ a b ] [ a + b ] // tagwords are temporary here
 	"generic": {
 		Argsn: 3,
+		Doc:   "Registers a generic function.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Tagword:
@@ -2267,6 +2300,7 @@ var builtins = map[string]*env.Builtin{
 
 	"dict": {
 		Argsn: 1,
+		Doc:   "Constructs a Dict from the Block of key and value pairs.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -2305,6 +2339,7 @@ var builtins = map[string]*env.Builtin{
 	// return , error , failure functions
 	"return": {
 		Argsn: 1,
+		Doc:   "Accepts one value and returns it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			//fmt.Println("RETURN")
 			ps.ReturnFlag = true
@@ -2314,6 +2349,7 @@ var builtins = map[string]*env.Builtin{
 
 	"^fail": {
 		Argsn: 1,
+		Doc:   "Returning Fail.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			//fmt.Println("FAIL")
 			ps.FailureFlag = true
@@ -2330,6 +2366,7 @@ var builtins = map[string]*env.Builtin{
 
 	"fail": {
 		Argsn: 1,
+		Doc:   "Constructs and Fails with an Error object. Accepts String as message, Integer as code, or block for multiple parameters.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			//fmt.Println("FAIL")
 			ps.FailureFlag = true
@@ -2343,11 +2380,11 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"error": {
+	"new-error": {
 		Argsn: 1,
+		Doc:   "Constructs and Error object. Accepts String as message, Integer as code, or block for multiple parameters.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			fmt.Println("ERROR")
-			ps.ErrorFlag = true
+			//ps.ErrorFlag = true
 			switch val := arg0.(type) {
 			case env.String: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
 				return *env.NewError(val.Value)
@@ -2361,6 +2398,7 @@ var builtins = map[string]*env.Builtin{
 	"code?": {
 		AcceptFailure: true,
 		Argsn:         1,
+		Doc:           "Returns the status code of the Error.", // TODO -- seems duplicate of status
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch er := arg0.(type) {
 			case env.Error:
@@ -2377,6 +2415,7 @@ var builtins = map[string]*env.Builtin{
 	"disarm": {
 		AcceptFailure: true,
 		Argsn:         1,
+		Doc:           "Disarms the Error.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			ps.FailureFlag = false
 			return arg0
@@ -2386,6 +2425,7 @@ var builtins = map[string]*env.Builtin{
 	"failed?": {
 		AcceptFailure: true,
 		Argsn:         1,
+		Doc:           "Checks if first argument is an Error. Returns a boolean.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			ps.FailureFlag = false
 			switch arg0.(type) {
@@ -2398,22 +2438,10 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"status": {
-		AcceptFailure: true,
-		Argsn:         1,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			arg0.Trace("STATUS")
-			switch er := arg0.(type) {
-			case env.Error:
-				return env.Integer{int64(er.Status)}
-			}
-			return env.NewError("wrong arg")
-		},
-	},
-
 	"check": {
 		AcceptFailure: true,
 		Argsn:         2,
+		Doc:           "Check if Arg 1 is not failure, if it wraps it into another Failure (Arg 2), otherwise returns Arg 1.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if ps.FailureFlag || arg0.Type() == env.ErrorType {
 				ps.FailureFlag = false
@@ -2446,6 +2474,7 @@ var builtins = map[string]*env.Builtin{
 	"^check": {
 		AcceptFailure: true,
 		Argsn:         2,
+		Doc:           "Returning Check.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if ps.FailureFlag {
 				ps.ReturnFlag = true
@@ -2478,6 +2507,7 @@ var builtins = map[string]*env.Builtin{
 	"^require": {
 		AcceptFailure: true,
 		Argsn:         2,
+		Doc:           "Returning Require.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cond := arg0.(type) {
 			case env.Object:
@@ -2510,6 +2540,7 @@ var builtins = map[string]*env.Builtin{
 	"require": {
 		AcceptFailure: true,
 		Argsn:         2,
+		Doc:           "",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cond := arg0.(type) {
 			case env.Object:
@@ -2542,6 +2573,7 @@ var builtins = map[string]*env.Builtin{
 	"fix": {
 		AcceptFailure: true,
 		Argsn:         2,
+		Doc:           "If Arg 1 is a failure, do a block and return the result of it, otherwise return Arg 1.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if ps.FailureFlag || arg0.Type() == env.ErrorType {
 				ps.FailureFlag = false
@@ -2566,6 +2598,7 @@ var builtins = map[string]*env.Builtin{
 	"^fix": {
 		AcceptFailure: true,
 		Argsn:         2,
+		Doc:           "Fix as a returning function. If Arg 1 is failure, do the block and return to caller.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if ps.FailureFlag || arg0.Type() == env.ErrorType {
 				ps.FailureFlag = false
@@ -2591,6 +2624,7 @@ var builtins = map[string]*env.Builtin{
 	"`fix": {
 		AcceptFailure: true,
 		Argsn:         2,
+		Doc:           "Fix as a skipping function.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if ps.FailureFlag || arg0.Type() == env.ErrorType {
 				ps.FailureFlag = false
@@ -2616,6 +2650,7 @@ var builtins = map[string]*env.Builtin{
 	"fix-either": {
 		AcceptFailure: true,
 		Argsn:         3,
+		Doc:           "Fix also with else block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if ps.FailureFlag || arg0.Type() == env.ErrorType {
 				ps.FailureFlag = false
@@ -2650,6 +2685,7 @@ var builtins = map[string]*env.Builtin{
 	"fix-else": {
 		AcceptFailure: true,
 		Argsn:         2,
+		Doc:           "Do a block of code if Arg 1 is not a failure.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if !(ps.FailureFlag || arg0.Type() == env.ErrorType) {
 				ps.FailureFlag = false
@@ -2673,6 +2709,7 @@ var builtins = map[string]*env.Builtin{
 
 	"load": {
 		Argsn: 1,
+		Doc:   "Loads a string into Rye values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -2688,6 +2725,7 @@ var builtins = map[string]*env.Builtin{
 
 	"load-sig": {
 		Argsn: 1,
+		Doc:   "Checks the signature, if OK then loads a string into Rye values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -2704,6 +2742,7 @@ var builtins = map[string]*env.Builtin{
 	// BASIC ENV / Dict FUNCTIONS
 	"format": {
 		Argsn: 1,
+		Doc:   "Accepts a Dict and returns formatted presentation of it as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var r strings.Builder
 			switch s1 := arg0.(type) {
@@ -2723,6 +2762,7 @@ var builtins = map[string]*env.Builtin{
 	// date time functions
 	"now": {
 		Argsn: 0,
+		Doc:   "Returns current Time.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return env.Time{time.Now()}
 		},
@@ -2732,7 +2772,7 @@ var builtins = map[string]*env.Builtin{
 
 	"to-context": {
 		Argsn: 1,
-		Doc:   "Turns a dict to a context.",
+		Doc:   "Takes a Dict and returns a Context with same names and values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Dict:
@@ -2747,10 +2787,13 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"len": {
+	"length": {
 		Argsn: 1,
+		Doc:   "Accepts a collection (String, Block, Dict, Spreadsheet) and returns it's length.", // TODO -- accept list, context also
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
+			case env.String:
+				return env.Integer{int64(len(s1.Value))}
 			case env.Dict:
 				return env.Integer{int64(len(s1.Data))}
 			case env.Block:
@@ -2764,6 +2807,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 	"ncols": {
+		Doc:   "Accepts a Spreadsheet and returns number of columns.",
 		Argsn: 1,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
@@ -2779,6 +2823,7 @@ var builtins = map[string]*env.Builtin{
 	},
 	"keys": {
 		Argsn: 1,
+		Doc:   "Accepts Dict or Spreadsheet and returns a Block of keys or column names.", // TODO -- accept context also
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Dict:
@@ -2804,6 +2849,7 @@ var builtins = map[string]*env.Builtin{
 
 	"sum": {
 		Argsn: 2,
+		Doc:   "Accepts a spreadsheet and a column name and returns a sum of a column.", // TODO -- let it accept a block and list also
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var name string
 			switch s1 := arg0.(type) {
@@ -2832,6 +2878,7 @@ var builtins = map[string]*env.Builtin{
 	},
 	"A1": {
 		Argsn: 1,
+		Doc:   "Accepts a Spreadsheet and returns the first row first column cell.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s0 := arg0.(type) {
 			case env.Spreadsheet:
@@ -2847,6 +2894,7 @@ var builtins = map[string]*env.Builtin{
 	},
 	"B1": {
 		Argsn: 1,
+		Doc:   "Accepts a Spreadsheet and returns the first row second column cell.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s0 := arg0.(type) {
 			case env.Spreadsheet:

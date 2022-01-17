@@ -127,6 +127,7 @@ var Builtins_json = map[string]*env.Builtin{
 	},
 	"to-json": {
 		Argsn: 1,
+		Doc:   "Takes a Rye value and returns it encoded into JSON.",
 		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return env.String{RyeToJSON(arg0)}
 		},
