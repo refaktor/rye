@@ -1973,7 +1973,7 @@ var builtins = map[string]*env.Builtin{
 
 	"newline": {
 		Argsn: 0,
-		Doc:   "Returns the Newline.",
+		Doc:   "Returns the newline character.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return env.String{"\n"}
