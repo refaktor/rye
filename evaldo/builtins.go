@@ -9,6 +9,7 @@ import (
 	"rye/env"
 
 	"rye/loader"
+	"rye/term"
 	"rye/util"
 	"strconv"
 	"strings"
@@ -486,6 +487,23 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			fmt.Println(arg0.Inspect(*env1.Idx))
 			return arg0
+		},
+	},
+	"display": {
+		Argsn: 1,
+		Doc:   "Work in progress Interactively displays a value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			// This is temporary implementation for experimenting what it would work like at all
+			// later it should belong to the object (and the medium of display, terminal, html ..., it's part of the frontend)
+			term.SaveCurPos()
+			switch bloc := arg0.(type) {
+			case env.Block:
+				obj, esc := term.DisplayBlock(bloc, ps.Idx)
+				if !esc {
+					return obj
+				}
+			}
+			return nil
 		},
 	},
 	"mold": {
