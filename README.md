@@ -1,15 +1,23 @@
 # Rye language 🌾
 
-   * [What is Rye](#what-is-rye)
+   * [What is it](#what-is-it)
    * [Some Rye specifics](#some-rye-specifics)
    * [Find out more](#find-out-more)
    * [How to install / build](#how-to-install--build)
    * [Docker image](#docker-image)
 
-## What is Rye
+## What is it
 
-Rye is a **design in progress**, human centric, high level **programming language** based on ideas from **Rebol**, flavored by
-Factor, Bash shell and Golang. It features a golang based interpreter and REPL.
+Rye is a human and information centric, high level, dynamic **programming language** based on ideas from **Rebol**, flavored by
+Factor, Linux shells and Golang. It features a Golang based interpreter and REPL.
+
+## Status
+
+**Alpha**
+
+Core ideas of the language are formed. Most experimenting, at least until version 1 is done.
+Right now, my focus is on making the core and runtime more ready and friendly for a potential brave soul that wants to install it and 
+dabble around a little. 
 
 ## Some Rye specifics
 
