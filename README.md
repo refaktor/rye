@@ -3,7 +3,7 @@
    * [What is it](#what-is-it)
    * [Alpha status](#alpha-status)
    * [Some Rye specifics](#some-rye-specifics)
-   * [Find out more](#find-out-more)
+   * [Follow the blog](#find-the-blog)
    * [How to install / build](#how-to-install--build)
    * [Docker image](#docker-image)
 
@@ -144,11 +144,11 @@ do-in iso { 2 .add 3 |print }
 ; Error: Word add not found
  ```
  
-## Find out more
+## Follow the blog
 
 For most up-to date information on the language and it's development visit out **[blog](http://ryelang.blogspot.com/)**
 
-There is a work in progress [website](https://refaktor.github.io/rye/).
+*There is a work in progress [website](https://refaktor.github.io/rye/).*
 
 ## How to install / build 
 
