@@ -1784,7 +1784,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"pipe": {
+	"fn1": {
 		Argsn: 1,
 		Doc:   "Creates a function that accepts one anonymouse argument.",
 		Pure:  true,
@@ -2084,6 +2084,13 @@ var builtins = map[string]*env.Builtin{
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
+			case env.Integer:
+				switch s2 := arg1.(type) {
+				case env.String:
+					return env.String{strconv.Itoa(int(s1.Value)) + s2.Value}
+				case env.Integer:
+					return env.String{strconv.Itoa(int(s1.Value)) + strconv.Itoa(int(s2.Value))}
+				}
 			case env.String:
 				switch s2 := arg1.(type) {
 				case env.String:
@@ -2098,6 +2105,18 @@ var builtins = map[string]*env.Builtin{
 					s1.Series = *s.AppendMul(b2.Series.GetAll())
 					return s1
 				}
+			}
+			return nil
+		},
+	},
+	"str": {
+		Argsn: 1,
+		Doc:   "Turn Rye value to String.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Integer:
+				return env.String{strconv.Itoa(int(s1.Value))}
 			}
 			return nil
 		},
@@ -2165,15 +2184,54 @@ var builtins = map[string]*env.Builtin{
 
 	"first": {
 		Argsn: 1,
-		Doc:   "Accepts Block and returns the first value in it.",
+		Doc:   "Accepts Block, List or String and returns the first item.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
+				if len(s1.Series.S) == 0 {
+					return makeError(ps, "Block is empty.")
+				}
 				return s1.Series.Get(int(0))
 			case env.List:
+				if len(s1.Data) == 0 {
+					return makeError(ps, "List is empty.")
+				}
 				return JsonToRye(s1.Data[int(0)])
+			case env.String:
+				str := []rune(s1.Value)
+				if len(str) == 0 {
+					return makeError(ps, "String is empty.")
+				}
+				return env.String{string(str[0])}
 			default:
-				return env.NewError("not block or list")
+				return env.NewError("Arg 1 not a Series.")
+			}
+		},
+	},
+
+	"tail": {
+		Argsn: 1,
+		Doc:   "Accepts Block, List or String and returns all but first items.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Block:
+				if len(s1.Series.S) == 0 {
+					return makeError(ps, "Block is empty.")
+				}
+				return *env.NewBlock(*env.NewTSeries(s1.Series.S[1:]))
+			case env.List:
+				if len(s1.Data) == 0 {
+					return makeError(ps, "List is empty.")
+				}
+				return env.NewList(s1.Data[int(1):])
+			case env.String:
+				str := []rune(s1.Value)
+				if len(str) < 1 {
+					return makeError(ps, "String has only one element.")
+				}
+				return env.String{string(str[1:])}
+			default:
+				return env.NewError("Arg 1 not a Series.")
 			}
 		},
 	},
@@ -2183,9 +2241,24 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
-				return s1.Series.Get(int(1))
+				if len(s1.Series.S) < 2 {
+					return makeError(ps, "Block has no second element.")
+				}
+				return s1.Series.Get(1)
+			case env.List:
+				if len(s1.Data) < 2 {
+					return makeError(ps, "List has no second element.")
+				}
+				return JsonToRye(s1.Data[1])
+			case env.String:
+				str := []rune(s1.Value)
+				if len(str) < 2 {
+					return makeError(ps, "String has no second element.")
+				}
+				return env.String{string(str[1])}
+			default:
+				return env.NewError("Arg 1 not a Series.")
 			}
-			return nil
 		},
 	},
 	"third": {
@@ -2290,7 +2363,7 @@ var builtins = map[string]*env.Builtin{
 			return nil
 		},
 	},
-	"append": {
+	"append!": {
 		Argsn: 2,
 		Doc:   "Accepts Block and Rye value. Appends Rye value to block ant returns it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2643,6 +2716,19 @@ var builtins = map[string]*env.Builtin{
 				return arg0
 			}
 			return arg0
+		},
+	},
+
+	"assert-equal": {
+		Argsn: 2,
+		Doc:   "Test if two values are equal. Fail if not.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			if arg0.GetKind() == arg1.GetKind() && arg0.Inspect(*ps.Idx) == arg1.Inspect(*ps.Idx) {
+				return env.Integer{1}
+			} else {
+				return makeError(ps, "Values are not equal: "+arg0.Inspect(*ps.Idx)+" "+arg1.Inspect(*ps.Idx))
+			}
 		},
 	},
 
