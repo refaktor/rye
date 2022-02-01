@@ -1,109 +1,26 @@
 # Rye language 🌾
 
-   * [What is Rye](#what-is-rye)
-   * [Show, don't tell](#show-dont-tell)
-   * [Now for some tell](#now-for-some-tell)
-   * [Find out more](#find-out-more)
-   * [How to install / Build](#how-to-install--build)
+   * [What is it](#what-is-it)
+   * [Alpha status](#alpha-status)
+   * [Some Rye specifics](#some-rye-specifics)
+   * [Follow the blog](#find-the-blog)
+   * [How to install / build](#how-to-install--build)
    * [Docker image](#docker-image)
 
-## What is Rye
+## What is it
 
-Rye is a **design in progress**, human centric, high level programming language based on ideas from **Rebol** flavored by
-Factor, Bash shell and Golang. It features a golang based interpreter and REPL.
+Rye is a human and information centric, high level, dynamic **programming language** based on ideas from **Rebol**, flavored by
+Factor, Linux shells and Golang. It features a Golang based interpreter and REPL.
 
-## Show, don't tell
+## Alpha status
 
-Challenge: *Print first 10 factorial numbers*
+Core ideas of the language are formed. Most experimenting, at least until version 1 is done.
+Right now, my focus is on making the core and runtime more ready and friendly for a potential brave soul that wants to install it and 
+dabble around a little.
 
-First we make a more "classic" looking implementation:
+That means I am improving the REPL, live documentation and stabilising core functions.
 
-```red
-factorial: fn { n } { 
-  either n > 0               ;either is like if/else
-    { n * factorial n - 1 } 
-    { 1 } 
-}
-
-for range 1 10 { :n          ; :n will make more sense later
-  print factorial n
-}
-;1
-;2
-;6
-;24
-;120
-;720
-;5040
-;40320
-;362880
-;3628800
-```
-For better of just for show, let's enhance on the Rye-isms ..
-
-```red
-; rye doesn't care about newlines
-; function accepting one arg can be defined by a pipe function
-; either function can be called as a pipe-word
-factorial: pipe { :n > 0 |either { n * factorial n - 1 } { 1 } }
-
-; rye has some weird idea of *returning functions*, they start with ^
-factorial: pipe { :n > 0 |^if { n * factorial n - 1 } 1 }
-
-; injected blocks are usefull again
-; op-words are similar to pipe-words, but a little different
-loop { .factorial .print }
-; 1
-; 2
-; 6
-; 24
-; 120
-; 720
-; 5040
-; 40320
-; 362880
-; 3628800
-```
-
-I found this nice iterative example of Factorial in Python:
-
-```python
-def factorial(n):
-    fact = 1
-    for i in range(1, n + 1):
-        fact *= i
-    return fact
-    
-print(factorial(12))
-# 479001600
-```
-We can mimmic it with Rye ...
-
-```red
-factorial: fn { n } { 
-  fact: 1 
-  for range 1 n { :i 
-    fact: fact * i 
-  } 
-}
-print factorial 12
-; 479001600
-```
-If I again try to use more of Rye-s features ...
-
-```red
-; btw, the comma is an optional expression guard 
-factorial: fn { n } { fact: 1 , loop n { * fact :fact } fact }
-
-; we can do with less
-factorial: pipe { fact: 1 , .loop { * fact :fact } }
-
-factorial 12 |print
-; 479001600
-```
-*I am sure Pythonistas can use list comprehensions and come up with some shorter version too.*
-
-## Now for some tell
+## Some Rye specifics
 
 Rye is **homoiconic**, Rye's code is also Rye's data.
 
@@ -227,11 +144,11 @@ do-in iso { 2 .add 3 |print }
 ; Error: Word add not found
  ```
  
-## Find out more
+## Follow the blog
 
 For most up-to date information on the language and it's development visit out **[blog](http://ryelang.blogspot.com/)**
 
-There is a work in progress [website](https://refaktor.github.io/rye/).
+*There is a work in progress [website](https://refaktor.github.io/rye/).*
 
 ## How to install / build 
 
