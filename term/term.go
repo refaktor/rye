@@ -81,6 +81,164 @@ DODO:
 	}
 }
 
+func DisplayDict(bloc env.Dict, idx *env.Idxs) (env.Object, bool) {
+	HideCur()
+	curr := 0
+	moveUp := 0
+	mode := 0 // 0 - human, 1 - dev
+DODO:
+	if moveUp > 0 {
+		CurUp(moveUp)
+	}
+	SaveCurPos()
+	for k, v := range bloc.Data {
+		ClearLine()
+		if 0 == curr {
+			ColorOrange()
+			fmt.Print("*")
+		} else {
+			fmt.Print(" ")
+		}
+		fmt.Print(k + ": ")
+		switch ob := v.(type) {
+		case env.Object:
+			if mode == 0 {
+				fmt.Println(" " + ob.Probe(*idx) + " ")
+			} else {
+				fmt.Println(" " + ob.Inspect(*idx) + " ")
+			}
+		default:
+			fmt.Println(" " + fmt.Sprint(ob) + " ")
+		}
+		CloseProps()
+		// term.CurUp(1)
+	}
+
+	moveUp = len(bloc.Data)
+
+	defer func() {
+		// Show cursor.
+		fmt.Printf("\033[?25h")
+	}()
+
+	// RestoreCurPos()
+
+	for {
+		ascii, keyCode, err := GetChar()
+
+		if (ascii == 3 || ascii == 27) || err != nil {
+			fmt.Println()
+			ShowCur()
+			return nil, true
+		}
+
+		if ascii == 13 {
+			fmt.Println()
+			return nil, false // bloc.Series.Get(curr), false
+		}
+
+		if ascii == 77 || ascii == 109 {
+			if mode == 0 {
+				mode = 1
+			} else {
+				mode = 0
+			}
+			goto DODO
+		}
+
+		if keyCode == 40 {
+			curr++
+			goto DODO
+		} else if keyCode == 38 {
+			curr--
+			goto DODO
+		}
+	}
+}
+
+func DisplayTable(bloc env.Spreadsheet, idx *env.Idxs) (env.Object, bool) {
+	HideCur()
+	curr := 0
+	moveUp := 0
+	mode := 0 // 0 - human, 1 - dev
+DODO:
+	if moveUp > 0 {
+		CurUp(moveUp)
+	}
+	SaveCurPos()
+	for _, cc := range bloc.Cols {
+		fmt.Print("| " + cc + "\t")
+	}
+	fmt.Println()
+	fmt.Println("---------------------------------")
+
+	for _, r := range bloc.Rows {
+		for i, v := range r.Values {
+			ClearLine()
+			if i == curr {
+				ColorOrange()
+				fmt.Print("*")
+			} else {
+				fmt.Print(" ")
+			}
+			switch ob := v.(type) {
+			case env.Object:
+				if mode == 0 {
+					fmt.Print("| " + ob.Probe(*idx) + "\t")
+				} else {
+					fmt.Print("| " + ob.Inspect(*idx) + "\t")
+				}
+			default:
+				fmt.Print("| " + fmt.Sprint(ob) + "\t")
+			}
+			CloseProps()
+			// term.CurUp(1)
+		}
+		fmt.Println()
+	}
+
+	moveUp = len(bloc.Rows)
+
+	defer func() {
+		// Show cursor.
+		fmt.Printf("\033[?25h")
+	}()
+
+	// RestoreCurPos()
+
+	for {
+		ascii, keyCode, err := GetChar()
+
+		if (ascii == 3 || ascii == 27) || err != nil {
+			fmt.Println()
+			ShowCur()
+			return nil, true
+		}
+
+		if ascii == 13 {
+			fmt.Println()
+			return nil, false // bloc.Series.Get(curr), false
+		}
+
+		if ascii == 77 || ascii == 109 {
+			if mode == 0 {
+				mode = 1
+			} else {
+				mode = 0
+			}
+			goto DODO
+		}
+
+		if keyCode == 40 {
+			curr++
+			goto DODO
+		} else if keyCode == 38 {
+			curr--
+			goto DODO
+		}
+	}
+}
+
 func ShowCur() {
 	fmt.Print("\x1b[?25h")
 }

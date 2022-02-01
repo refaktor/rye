@@ -286,6 +286,7 @@ var Builtins_validation = map[string]*env.Builtin{
 
 	"validate": {
 		Argsn: 2,
+		Doc:   "Validates Dictionary using the Validation dialect and returns result or a Failure.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return BuiValidate(env1, arg0, arg1)
 		},
@@ -293,6 +294,7 @@ var Builtins_validation = map[string]*env.Builtin{
 
 	"validate>ctx": {
 		Argsn: 2,
+		Doc:   "Validates Dictionary using the Validation dialect and returns result as a Context or a Failure.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			obj := BuiValidate(env1, arg0, arg1)
 			switch obj1 := obj.(type) {

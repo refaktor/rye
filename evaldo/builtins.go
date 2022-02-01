@@ -502,7 +502,18 @@ var builtins = map[string]*env.Builtin{
 				if !esc {
 					return obj
 				}
+			case env.Dict:
+				obj, esc := term.DisplayDict(bloc, ps.Idx)
+				if !esc {
+					return obj
+				}
+			case env.Spreadsheet:
+				obj, esc := term.DisplayTable(bloc, ps.Idx)
+				if !esc {
+					return obj
+				}
 			}
+
 			return nil
 		},
 	},
@@ -932,6 +943,7 @@ var builtins = map[string]*env.Builtin{
 
 	"with-context": {
 		Argsn: 2,
+		Doc:   "Takes a Context and a Block. It Does a block inside a given Context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch ctx := arg0.(type) {
 			case env.RyeCtx:
@@ -1249,6 +1261,7 @@ var builtins = map[string]*env.Builtin{
 
 	"unbind": {
 		Argsn: 1,
+		Doc:   "Accepts a Context and unbinds it from it's parent Context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch swCtx1 := arg0.(type) {
 			case env.RyeCtx:
@@ -2313,6 +2326,51 @@ var builtins = map[string]*env.Builtin{
 			}
 			ps.ErrorFlag = true
 			return env.NewError("Wrong args when creating generic function")
+		},
+	},
+
+	"table": {
+		Argsn: 1,
+		Doc:   "Constructs an empty table, accepts a block of column names",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg0.(type) {
+			case env.Block:
+				vv := bloc.Series.Peek()
+				switch vv.(type) {
+				case env.String:
+					cols := make([]string, bloc.Series.Len())
+					for i := 0; i < bloc.Series.Len(); i++ {
+						cols[i] = bloc.Series.Get(i).(env.String).Value
+					}
+					return *env.NewSpreadsheet(cols)
+
+				case env.Tagword:
+					// TODO
+				}
+				return nil
+			}
+			return nil
+		},
+	},
+
+	"add-row": {
+		Argsn: 2,
+		Doc:   "Constructs an empty table, accepts a block of column names",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch table := arg0.(type) {
+			case env.Spreadsheet:
+				switch bloc := arg1.(type) {
+				case env.Block:
+					vals := make([]interface{}, bloc.Series.Len())
+					for i := 0; i < bloc.Series.Len(); i++ {
+						vals[i] = bloc.Series.Get(i)
+					}
+					table.AddRow(env.SpreadsheetRow{vals, &table})
+					return table
+				}
+				return nil
+			}
+			return nil
 		},
 	},
 
