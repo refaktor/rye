@@ -1,4 +1,4 @@
-FROM golang:1.14-alpine AS builder
+FROM golang:1.16-alpine AS builder
 
 RUN apk add --no-cache git sqlite-dev bash gcc libc-dev
 
@@ -6,14 +6,16 @@ WORKDIR /go/src/rye
 
 COPY . .
 
-RUN go get -d -v -insecure \
+RUN export GO111MODULE=auto && \
+	go get -d -v -insecure \
 	github.com/refaktor/go-peg \
 	github.com/refaktor/liner \
 	golang.org/x/net/html \
 	github.com/pkg/profile \
 	github.com/pkg/term
 
-RUN mkdir -p /out && \
+RUN export GO111MODULE=auto && \
+	mkdir -p /out && \
     go build -x -tags "b_tiny" -o /out/rye .
 
 FROM alpine AS bin
