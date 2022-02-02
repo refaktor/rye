@@ -201,7 +201,7 @@ Run the REPL
 
 ## Docker image
 
-The repository comes with [Docker image](./docker/Dockerfile) that is capable of building rye in its full, 
+The repository comes with [Docker image](./.docker/Dockerfile) that is capable of building rye in its full, 
 the final step however then just wraps executable so that the image remains small and nimble.
 
 ```bash
