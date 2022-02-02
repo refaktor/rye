@@ -182,10 +182,11 @@ Rye doesn't use go modules yet, but "go get"
 
 Go get the dependencies for tiny build
 
-    go get github.com/refaktor/go-peg # PEG parser (rye loader)
+    go get github.com/refaktor/go-peg  # PEG parser (rye loader)
     go get github.com/refaktor/liner   # library for REPL
-    go get golang.org/x/net/html     # for html parsin - will probably remove for b_tiny
-    go get github.com/pkg/profile    # for runtime profiling - will probably remove for b_tiny
+    go get golang.org/x/net/html       # for html parsin - will probably remove for b_tiny
+    go get github.com/pkg/profile      # for runtime profiling - will probably remove for b_tiny
+    go get github.com/pkg/term         # 
 
 Build the tiny version of Rye:
 
@@ -201,7 +202,7 @@ Run the REPL
 
 ## Docker image
 
-The repository comes with [Docker image](./docker/Dockerfile) that is capable of building rye in its full, 
+The repository comes with [Docker image](./.docker/Dockerfile) that is capable of building rye in its full, 
 the final step however then just wraps executable so that the image remains small and nimble.
 
 ```bash
