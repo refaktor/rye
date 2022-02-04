@@ -148,6 +148,7 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+
 	"inc": {
 		Argsn: 1,
 		Doc:   "Increments integer value by 1.",
@@ -156,6 +157,54 @@ var builtins = map[string]*env.Builtin{
 			switch arg := arg0.(type) {
 			case env.Integer:
 				return env.Integer{1 + arg.Value}
+			default:
+				return makeError(ps, "Arg 1 not Integer.")
+			}
+		},
+	},
+
+	"inc!": {
+		Argsn: 1,
+		Doc:   "Increments integer value by 1 in-plaede.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg := arg0.(type) {
+			case env.Tagword:
+				intval, found := ps.Ctx.Get(arg.Index)
+				if found {
+					switch iintval := intval.(type) {
+					case env.Integer:
+						ps.Ctx.Set(arg.Index, env.Integer{1 + iintval.Value})
+						return env.Integer{1 + iintval.Value}
+					}
+				}
+				return makeError(ps, "Arg 1 not Integer.")
+
+			default:
+				return makeError(ps, "Arg 1 not Integer.")
+			}
+		},
+	},
+
+	"change!": {
+		Argsn: 2,
+		Doc:   "Changes value in a word, if value changes returns true otherwise false",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg := arg1.(type) {
+			case env.Tagword:
+				val, found := ps.Ctx.Get(arg.Index)
+				if found {
+					ps.Ctx.Set(arg.Index, arg0)
+					var res int64
+					if arg0.GetKind() == val.GetKind() && arg0.Inspect(*ps.Idx) == val.Inspect(*ps.Idx) {
+						res = 0
+					} else {
+						res = 1
+					}
+					return env.Integer{res}
+				}
+				return makeError(ps, "Arg 1 not Integer.")
 			default:
 				return makeError(ps, "Arg 1 not Integer.")
 			}
@@ -1422,13 +1471,13 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Accepts a block of values and a block of code, does the code for each of the values, injecting them.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch block := arg0.(type) {
-			case env.Block:
+			case env.String:
 				switch code := arg1.(type) {
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = code.Series
-					for i := 0; i < block.Series.Len(); i++ {
-						ps = EvalBlockInj(ps, block.Series.Get(i), true)
+					for i := 0; i < len(block.Value); i++ {
+						ps = EvalBlockInj(ps, env.String{string(block.Value[i])}, true)
 						ps.Ser.Reset()
 					}
 					ps.Ser = ser
@@ -2367,13 +2416,32 @@ var builtins = map[string]*env.Builtin{
 		Argsn: 2,
 		Doc:   "Accepts Block and Rye value. Appends Rye value to block ant returns it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s1 := arg0.(type) {
-			case env.Block:
-				s := &s1.Series
-				s1.Series = *s.Append(arg1)
-				return s1
+			switch wrd := arg1.(type) {
+			case env.Tagword:
+				switch s1 := arg0.(type) {
+				case env.Block: // TODO
+					s := &s1.Series
+					s1.Series = *s.Append(arg1)
+					return s1
+				case env.String:
+					val, found := ps.Ctx.Get(wrd.Index)
+					if found {
+						switch oldval := val.(type) {
+						case env.String:
+							newval := env.String{oldval.Value + s1.Value}
+							ps.Ctx.Set(wrd.Index, newval)
+							return newval
+						default:
+							return makeError(ps, "Type of tagword is not String.")
+						}
+					}
+					return makeError(ps, "Tagword not found.")
+				default:
+					return makeError(ps, "Value not String or Block")
+				}
+			default:
+				return makeError(ps, "Value not tagword")
 			}
-			return nil
 		},
 	},
 	// FUNCTIONALITY AROUND GENERIC METHODS
