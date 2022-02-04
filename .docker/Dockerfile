@@ -6,15 +6,14 @@ WORKDIR /go/src/rye
 
 COPY . .
 
-RUN export GO111MODULE=auto && \
-	go get -d -v -insecure \
+ENV GO111MODULE=auto
+
+RUN go get -d -v -insecure \
 	github.com/refaktor/go-peg \
 	github.com/refaktor/liner \
 	golang.org/x/net/html \
 	github.com/pkg/profile \
-	github.com/pkg/term
-
-RUN export GO111MODULE=auto && \
+	github.com/pkg/term && \
 	mkdir -p /out && \
     go build -x -tags "b_tiny" -o /out/rye .
 
