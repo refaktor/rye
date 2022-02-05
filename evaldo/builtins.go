@@ -845,6 +845,7 @@ var builtins = map[string]*env.Builtin{
 
 	"cases": {
 		Argsn: 2,
+		Doc:   "Similar to Case function, but checks all the cases, even after a match. It combines the outputs.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// function accepts 2 args. arg0 is a "boolean" value, arg1 is a block of code
 			// we set bloc to block of code
@@ -912,8 +913,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"drop-in": {
+	"enter-console": {
 		Argsn: 1,
+		Doc:   "Stops execution and gives you a Rye console, to test the code inside environment.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch name := arg0.(type) {
 			case env.String:
@@ -1117,6 +1119,7 @@ var builtins = map[string]*env.Builtin{
 
 	"returns": {
 		Argsn: 1,
+		Doc:   "Sets up a value to return at the end of function.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			ps.ForcedResult = arg0
 			return arg0
@@ -1125,6 +1128,7 @@ var builtins = map[string]*env.Builtin{
 
 	"collect": {
 		Argsn: 1,
+		Doc:   "Collects values into an implicit block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if ps.ForcedResult == nil || ps.ForcedResult.Type() != env.BlockType {
 				ps.ForcedResult = *env.NewBlock(*env.NewTSeries(make([]env.Object, 0)))
@@ -1138,6 +1142,7 @@ var builtins = map[string]*env.Builtin{
 
 	"collect-key": {
 		Argsn: 2,
+		Doc:   "Collecs key value pars to implicit block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if ps.ForcedResult == nil || ps.ForcedResult.Type() != env.BlockType {
 				ps.ForcedResult = *env.NewBlock(*env.NewTSeries(make([]env.Object, 0)))
@@ -1152,6 +1157,7 @@ var builtins = map[string]*env.Builtin{
 
 	"collected": {
 		Argsn: 0,
+		Doc:   "Returns the implicit data structure that we collected t",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return ps.ForcedResult
 		},
@@ -1159,6 +1165,7 @@ var builtins = map[string]*env.Builtin{
 
 	"pop-collected": {
 		Argsn: 0,
+		Doc:   "Retursn the implicit collected data structure and resets it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			result := ps.ForcedResult
 			ps.ForcedResult = nil
@@ -2757,7 +2764,7 @@ var builtins = map[string]*env.Builtin{
 	"require": {
 		AcceptFailure: true,
 		Argsn:         2,
-		Doc:           "",
+		Doc:           "Require that first argument is Truthy value, if not produce a failure based on second argument",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cond := arg0.(type) {
 			case env.Object:
