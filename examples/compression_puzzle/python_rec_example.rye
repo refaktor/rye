@@ -1,0 +1,61 @@
+; Translation of simple Compression puzzle to Ryelang
+
+; Brodul's recursive Python solution
+; https://github.com/otobrglez/compression-puzzle/blob/master/src/python/compress_brodul.py
+;
+; def rec_group(input_, c, result):
+;    if len(input_) == 1:
+;        c += 1
+;        result.append(str(c) + input_)
+;        return result
+;    char, rest = input_[0], input_[1:]
+;    c += 1
+;    if char != rest[0]:
+;        result.append(str(c) + char)
+;        return rec_group(rest, 0, result)
+;    return rec_group(rest, c, result)
+
+; Direct translation to Rye
+
+rec-group1: fn { inp cnt res } {
+	if inp .length = 1 {
+		cnt: inc cnt
+		res: res + c .str + inp
+		return res
+	}
+	chr: first inp , rest: tail inp 
+	cnt: inc cnt
+	either not chr = first rest {
+		result: result + c .str + char
+		rec-group rest 0 result
+	} {	rec-group rest c result }
+}
+
+; Some optimisations
+
+compress-rec-1: fn { inp cnt res } {
+	cnt: inc cnt                 ; cnt is incremeneted in all branches so we move it up here
+	^if inp .length = 1 {        ; ^if is returning function, so on true it automatically returns to caller
+		res + c .str + inp       ; result of the last expression is automatically returned 
+	}
+	chr: first inp , rest: tail inp 
+	either not chr = first rest {
+		compress-rec-1 rest 0 res + c .str + char ; we remove the temp variable and leave just expression
+	} {	compress-rec-1 rest c res }
+}
+
+; Final version
+
+compress-rec: fn { inp cnt res } { c: inc cnt 
+  ^if inp .length = 1 { res + c .str + inp } 
+  ^if inp .first = second inp { compress-rec tail inp c res } 
+  compress-rec  tail inp  0  res + c .str + first inp 
+}
+
+compress: fn1 { .compress-rec 0 "" }
+
+
+; And a test 
+
+compress "AAABBAAC" |assert-equal "3A2B2A1C"
+
