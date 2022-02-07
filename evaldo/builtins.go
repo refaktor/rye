@@ -25,6 +25,10 @@ func makeError(env1 *env.ProgramState, msg string) *env.Error {
 	return env.NewError(msg)
 }
 
+func equalValues(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) bool {
+	return arg0.GetKind() == arg1.GetKind() && arg0.Inspect(*ps.Idx) == arg1.Inspect(*ps.Idx)
+}
+
 func getFrom(ps *env.ProgramState, data interface{}, key interface{}, posMode bool) env.Object {
 	switch s1 := data.(type) {
 	case env.Dict:
@@ -420,7 +424,7 @@ var builtins = map[string]*env.Builtin{
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var res int64
-			if arg0.GetKind() == arg1.GetKind() && arg0.Inspect(*ps.Idx) == arg1.Inspect(*ps.Idx) {
+			if equalValues(ps, arg0, arg1) {
 				res = 1
 			} else {
 				res = 0
@@ -1639,6 +1643,134 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// map should at the end map over block, raw-map, etc ...
+	// it should accept a block of code, a function and a builtin
+	// it should use injected block so it doesn't need a variable defined like map [ 1 2 3 ] x [ add a 100 ]
+	// reduce [ 1 2 3 ] 'acc { + acc }
+	"reduce": {
+		Argsn: 3,
+		Doc:   "Reduces values of a block to a new block by evaluating a block of code ...",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch list := arg0.(type) {
+			case env.Block:
+				switch accu := arg1.(type) {
+				case env.Tagword:
+					// ps.Ctx.Set(accu.Index)
+					switch block := arg2.(type) {
+					case env.Block, env.Builtin:
+						l := len(list.Series.S)
+						acc := list.Series.Get(0)
+						switch block := block.(type) {
+						case env.Block:
+							ser := ps.Ser
+							ps.Ser = block.Series
+							for i := 1; i < l; i++ {
+								ps.Ctx.Set(accu.Index, acc)
+								ps = EvalBlockInj(ps, list.Series.Get(i), true)
+								if ps.ErrorFlag {
+									return ps.Res
+								}
+								acc = ps.Res
+								ps.Ser.Reset()
+							}
+							ps.Ser = ser
+						case env.Builtin:
+							// TODO
+							for i := 1; i < l; i++ {
+								acc = DirectlyCallBuiltin(ps, block, acc, list.Series.Get(i))
+							}
+						}
+						return acc
+					}
+				}
+			}
+			return nil
+		},
+	},
+
+	// map should at the end map over block, raw-map, etc ...
+	// it should accept a block of code, a function and a builtin
+	// it should use injected block so it doesn't need a variable defined like map [ 1 2 3 ] x [ add a 100 ]
+	// map [ 1 2 3 ] { .add 3 }
+	"partition": {
+		Argsn: 2,
+		Doc:   "Maps values of a block to a new block by evaluating a block of code.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch list := arg0.(type) {
+			case env.Block:
+				switch block := arg1.(type) {
+				case env.Block, env.Builtin:
+					l := list.Series.Len()
+					newl := make([]env.Object, 0)
+					subl := make([]env.Object, 0)
+					var prevres env.Object
+					switch block := block.(type) {
+					case env.Block:
+						ser := ps.Ser
+						ps.Ser = block.Series
+						for i := 0; i < l; i++ {
+							curval := list.Series.Get(i)
+							ps = EvalBlockInj(ps, curval, true)
+							if ps.ErrorFlag {
+								return ps.Res
+							}
+							if prevres == nil || equalValues(ps, ps.Res, prevres) {
+								subl = append(subl, curval)
+							} else {
+								newl = append(newl, env.NewBlock(*env.NewTSeries(subl)))
+								subl = make([]env.Object, 1)
+								subl[0] = curval
+							}
+							prevres = ps.Res
+							ps.Ser.Reset()
+						}
+						newl = append(newl, env.NewBlock(*env.NewTSeries(subl)))
+						ps.Ser = ser
+					case env.Builtin:
+						for i := 0; i < l; i++ {
+							newl[i] = DirectlyCallBuiltin(ps, block, list.Series.Get(i), nil)
+						}
+					}
+					return *env.NewBlock(*env.NewTSeries(newl))
+				}
+			case env.String:
+				switch block := arg1.(type) {
+				case env.Block, env.Builtin:
+					newl := make([]interface{}, 0)
+					var subl strings.Builder
+					var prevres env.Object
+					switch block := block.(type) {
+					case env.Block:
+						ser := ps.Ser
+						ps.Ser = block.Series
+						for _, curval := range list.Value {
+							ps = EvalBlockInj(ps, env.String{string(curval)}, true)
+							if ps.ErrorFlag {
+								return ps.Res
+							}
+							if prevres == nil || equalValues(ps, ps.Res, prevres) {
+								subl.WriteRune(curval)
+							} else {
+								newl = append(newl, subl.String())
+								subl.Reset()
+								subl.WriteRune(curval)
+							}
+							prevres = ps.Res
+							ps.Ser.Reset()
+						}
+						newl = append(newl, subl.String())
+						ps.Ser = ser
+					case env.Builtin:
+					}
+					return *env.NewList(newl)
+				}
+			}
+			return nil
+		},
+	},
+
 	// filter [ 1 2 3 ] { .add 3 }
 	"filter": {
 		Argsn: 2,
@@ -2118,6 +2250,26 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"contains": {
+		Argsn: 2,
+		Doc:   "Returns part of the String between two positions.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				switch s2 := arg1.(type) {
+				case env.String:
+					if strings.Contains(s1.Value, s2.Value) {
+						return env.Integer{1}
+					} else {
+						return env.Integer{0}
+					}
+				}
+			}
+			return nil
+		},
+	},
+
 	"right": {
 		Argsn: 2,
 		Doc:   "Returns the N characters from the right of the String.",
@@ -2134,7 +2286,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"join": {
+	"concat": {
 		Argsn: 2,
 		Doc:   "Joins two strings together.",
 		Pure:  true,
@@ -2159,6 +2311,10 @@ var builtins = map[string]*env.Builtin{
 				case env.Block:
 					s := &s1.Series
 					s1.Series = *s.AppendMul(b2.Series.GetAll())
+					return s1
+				case env.Object:
+					s := &s1.Series
+					s1.Series = *s.Append(b2)
 					return s1
 				}
 			}
@@ -2217,7 +2373,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"join3": {
+	"concat3": {
 		Argsn: 3,
 		Pure:  true,
 		Doc:   "Joins 3 Rye values together.",
@@ -2231,6 +2387,32 @@ var builtins = map[string]*env.Builtin{
 						return env.String{s1.Value + s2.Value + s3.Value}
 					}
 				}
+			}
+			return nil
+		},
+	},
+
+	"join": { // todo -- join\w data ","
+		Argsn: 1,
+		Pure:  true,
+		Doc:   "Joins Block or list of values together.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.List:
+				var str strings.Builder
+				for _, c := range s1.Data {
+					switch it := c.(type) {
+					case string:
+						str.WriteString(it)
+					case env.String:
+						str.WriteString(it.Value)
+					case int:
+						str.WriteString(strconv.Itoa(it))
+					case env.Integer:
+						str.WriteString(strconv.Itoa(int(it.Value)))
+					}
+				}
+				return env.String{str.String()}
 			}
 			return nil
 		},
@@ -2335,6 +2517,8 @@ var builtins = map[string]*env.Builtin{
 			switch s1 := arg0.(type) {
 			case env.Block:
 				return s1.Series.Get(s1.Series.Len() - 1)
+			case env.String:
+				return env.String{s1.Value[len(s1.Value)-1:]}
 			}
 			return nil
 		},
@@ -2419,33 +2603,55 @@ var builtins = map[string]*env.Builtin{
 			return nil
 		},
 	},
+	"remove-last!": {
+		Argsn: 1,
+		Doc:   "Accepts Block and returns the next value and removes it from the Block.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch wrd := arg0.(type) {
+			case env.Tagword:
+				val, found := ps.Ctx.Get(wrd.Index)
+				if found {
+					switch oldval := val.(type) {
+					case env.Block:
+						s := &oldval.Series
+						oldval.Series = *s.RmLast()
+						ps.Ctx.Set(wrd.Index, oldval)
+						return oldval
+					}
+				}
+			}
+			return nil
+		},
+	},
 	"append!": {
 		Argsn: 2,
-		Doc:   "Accepts Block and Rye value. Appends Rye value to block ant returns it.",
+		Doc: "Accepts Rye value and Tagword with a Block or String. Appends Rye value to Block/String in place, also returns it	.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch wrd := arg1.(type) {
 			case env.Tagword:
-				switch s1 := arg0.(type) {
-				case env.Block: // TODO
-					s := &s1.Series
-					s1.Series = *s.Append(arg1)
-					return s1
-				case env.String:
-					val, found := ps.Ctx.Get(wrd.Index)
-					if found {
-						switch oldval := val.(type) {
+				val, found := ps.Ctx.Get(wrd.Index)
+				if found {
+					switch oldval := val.(type) {
+					case env.String:
+						var newval env.String
+						switch s3 := arg0.(type) {
 						case env.String:
-							newval := env.String{oldval.Value + s1.Value}
-							ps.Ctx.Set(wrd.Index, newval)
-							return newval
-						default:
-							return makeError(ps, "Type of tagword is not String.")
+							newval = env.String{oldval.Value + s3.Value}
+						case env.Integer:
+							newval = env.String{oldval.Value + strconv.Itoa(int(s3.Value))}
 						}
+						ps.Ctx.Set(wrd.Index, newval)
+						return newval
+					case env.Block: // TODO
+						s := &oldval.Series
+						oldval.Series = *s.Append(arg0)
+						ps.Ctx.Set(wrd.Index, oldval)
+						return oldval
+					default:
+						return makeError(ps, "Type of tagword is not String.")
 					}
-					return makeError(ps, "Tagword not found.")
-				default:
-					return makeError(ps, "Value not String or Block")
 				}
+				return makeError(ps, "Tagword not found.")
 			default:
 				return makeError(ps, "Value not tagword")
 			}
