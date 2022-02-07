@@ -1052,6 +1052,36 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"_eval-with_": {
+		Argsn: 2,
+		Doc:   "",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg1.(type) {
+			case env.Block:
+				ser := ps.Ser
+				ps.Ser = bloc.Series
+				res := make([]env.Object, 0)
+				for ps.Ser.Pos() < ps.Ser.Len() {
+					// ps, injnow = EvalExpressionInj(ps, inj, injnow)
+					EvalExpressionInjLimited(ps, arg0, true)
+					res = append(res, ps.Res)
+					// check and raise the flags if needed if true (error) return
+					//if checkFlagsAfterBlock(ps, 101) {
+					//	return ps
+					//}
+					// if return flag was raised return ( errorflag I think would return in previous if anyway)
+					//if checkErrorReturnFlag(ps) {
+					//	return ps
+					//}
+					// ps, injnow = MaybeAcceptComma(ps, inj, injnow)
+				}
+				ps.Ser = ser
+				return *env.NewBlock(*env.NewTSeries(res))
+			}
+			return nil
+		},
+	},
+
 	"all": {
 		Argsn: 1,
 		Doc:   "Takes a block, if all values or expressions are truthy it returns the last one, otherwise false.",
@@ -1346,7 +1376,6 @@ var builtins = map[string]*env.Builtin{
 				EvalBlockInj(ps, arg0, true)
 				ps.Ser = ser
 				if ps.ReturnFlag {
-
 					return ps.Res
 				}
 				return res
@@ -1680,6 +1709,168 @@ var builtins = map[string]*env.Builtin{
 							for i := 1; i < l; i++ {
 								acc = DirectlyCallBuiltin(ps, block, acc, list.Series.Get(i))
 							}
+						}
+						return acc
+					}
+				}
+			case env.List:
+				switch accu := arg1.(type) {
+				case env.Tagword:
+					// ps.Ctx.Set(accu.Index)
+					switch block := arg2.(type) {
+					case env.Block, env.Builtin:
+						l := len(list.Data)
+						acc := JsonToRye(list.Data[0])
+						switch block := block.(type) {
+						case env.Block:
+							ser := ps.Ser
+							ps.Ser = block.Series
+							for i := 1; i < l; i++ {
+								ps.Ctx.Set(accu.Index, acc)
+								ps = EvalBlockInj(ps, JsonToRye(list.Data[i]), true)
+								if ps.ErrorFlag {
+									return ps.Res
+								}
+								acc = ps.Res
+								ps.Ser.Reset()
+							}
+							ps.Ser = ser
+						case env.Builtin:
+							// TODO
+							for i := 1; i < l; i++ {
+								acc = DirectlyCallBuiltin(ps, block, acc, JsonToRye(list.Data[i]))
+							}
+						}
+						return acc
+					}
+				}
+			case env.String:
+				switch accu := arg1.(type) {
+				case env.Tagword:
+					switch block := arg2.(type) {
+					case env.Block, env.Builtin:
+						input := []rune(list.Value)
+						var acc env.Object
+						acc = env.String{string(input[0])}
+						switch block := block.(type) {
+						case env.Block:
+							ser := ps.Ser
+							ps.Ser = block.Series
+							for i := 1; i < len(input); i++ {
+								ps.Ctx.Set(accu.Index, acc)
+								ps = EvalBlockInj(ps, env.String{string(input[i])}, true)
+								if ps.ErrorFlag {
+									return ps.Res
+								}
+								acc = ps.Res
+								ps.Ser.Reset()
+							}
+							ps.Ser = ser
+						case env.Builtin:
+						}
+						return acc
+					}
+				}
+			}
+			return nil
+		},
+	},
+
+	// map should at the end map over block, raw-map, etc ...
+	// it should accept a block of code, a function and a builtin
+	// it should use injected block so it doesn't need a variable defined like map [ 1 2 3 ] x [ add a 100 ]
+	// reduce [ 1 2 3 ] 'acc { + acc }
+	"fold": {
+		Argsn: 4,
+		Doc:   "Reduces values of a block to a new block by evaluating a block of code ...",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch list := arg0.(type) {
+			case env.Block:
+				switch accu := arg1.(type) {
+				case env.Tagword:
+					// ps.Ctx.Set(accu.Index)
+					switch block := arg3.(type) {
+					case env.Block, env.Builtin:
+						l := len(list.Series.S)
+						acc := arg2
+						switch block := block.(type) {
+						case env.Block:
+							ser := ps.Ser
+							ps.Ser = block.Series
+							for i := 0; i < l; i++ {
+								ps.Ctx.Set(accu.Index, acc)
+								ps = EvalBlockInj(ps, list.Series.Get(i), true)
+								if ps.ErrorFlag {
+									return ps.Res
+								}
+								acc = ps.Res
+								ps.Ser.Reset()
+							}
+							ps.Ser = ser
+						case env.Builtin:
+							// TODO
+							for i := 1; i < l; i++ {
+								acc = DirectlyCallBuiltin(ps, block, acc, list.Series.Get(i))
+							}
+						}
+						return acc
+					}
+				}
+			case env.List:
+				switch accu := arg1.(type) {
+				case env.Tagword:
+					// ps.Ctx.Set(accu.Index)
+					switch block := arg3.(type) {
+					case env.Block, env.Builtin:
+						l := len(list.Data)
+						acc := arg2
+						switch block := block.(type) {
+						case env.Block:
+							ser := ps.Ser
+							ps.Ser = block.Series
+							for i := 0; i < l; i++ {
+								ps.Ctx.Set(accu.Index, acc)
+								ps = EvalBlockInj(ps, JsonToRye(list.Data[i]), true)
+								if ps.ErrorFlag {
+									return ps.Res
+								}
+								acc = ps.Res
+								ps.Ser.Reset()
+							}
+							ps.Ser = ser
+						case env.Builtin:
+							// TODO
+							for i := 1; i < l; i++ {
+								acc = DirectlyCallBuiltin(ps, block, acc, JsonToRye(list.Data[i]))
+							}
+						}
+						return acc
+					}
+				}
+			case env.String:
+				switch accu := arg1.(type) {
+				case env.Tagword:
+					switch block := arg3.(type) {
+					case env.Block, env.Builtin:
+						input := []rune(list.Value)
+						var acc env.Object
+						acc = arg2
+						switch block := block.(type) {
+						case env.Block:
+							ser := ps.Ser
+							ps.Ser = block.Series
+							for i := 0; i < len(input); i++ {
+								ps.Ctx.Set(accu.Index, acc)
+								ps = EvalBlockInj(ps, env.String{string(input[i])}, true)
+								if ps.ErrorFlag {
+									return ps.Res
+								}
+								acc = ps.Res
+								ps.Ser.Reset()
+							}
+							ps.Ser = ser
+						case env.Builtin:
 						}
 						return acc
 					}
@@ -2408,6 +2599,17 @@ var builtins = map[string]*env.Builtin{
 						str.WriteString(it.Value)
 					case int:
 						str.WriteString(strconv.Itoa(it))
+					case env.Integer:
+						str.WriteString(strconv.Itoa(int(it.Value)))
+					}
+				}
+				return env.String{str.String()}
+			case env.Block:
+				var str strings.Builder
+				for _, c := range s1.Series.S {
+					switch it := c.(type) {
+					case env.String:
+						str.WriteString(it.Value)
 					case env.Integer:
 						str.WriteString(strconv.Itoa(int(it.Value)))
 					}

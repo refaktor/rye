@@ -187,6 +187,36 @@ func EvalExpressionInj(ps *env.ProgramState, inj env.Object, injnow bool) (*env.
 	//return esleft
 }
 
+// REFATOR THIS WITH CODE ABOVE
+// when seeing bigger picture, just adding fow eval-with
+func EvalExpressionInjLimited(ps *env.ProgramState, inj env.Object, injnow bool) (*env.ProgramState, bool) { // TODO -- doesn't work .. would be nice - eval-with
+	var esleft *env.ProgramState
+	if inj == nil || injnow == false {
+		// if there is no injected value just eval the concrete expression
+		esleft = EvalExpressionConcrete(ps)
+		if ps.ReturnFlag {
+			return ps, injnow
+		}
+	} else {
+		// otherwise set program state to specific one and injected value to result
+		// set injnow to false and if return flag return
+		esleft = ps
+		esleft.Res = inj
+		injnow = false
+		if ps.ReturnFlag { //20200817
+			return ps, injnow
+		}
+		//esleft.Inj = nil
+	}
+	////// OPWORDWWW
+	// IF WE COMMENT IN NEXT LINE IT WORKS WITHOUT OPWORDS PROCESSING
+	//fmt.Println("EvalExpression")
+	//fmt.Println(es.Ser.GetPos())
+	// trace2("Calling Maybe from EvalExp Inj")
+	return MaybeEvalOpwordOnRight(esleft.Ser.Peek(), esleft, true), injnow
+	//return esleft
+}
+
 // this function get's the next object (unevaluated), progra state, limited bool (op or pipe)
 // first if there is return flag it returns (not sure if this is necesarry here) TODO -- figure out
 // if next object is opword it steps to next and evaluates the word then recurse  to maybe again
