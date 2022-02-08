@@ -181,7 +181,7 @@ For most up-to date information on the language and it's development visit our *
 
 ### Github
 
-If code speaks to you, our Github page is the central location for all things Rye. You are wellcome to collaborate, post Issues or PR-s, there is tons of things to do and improve :)
+If code speaks to you, our Github page is the central location for all things Rye. You are welcome to collaborate, post Issues or PR-s, there is tons of things to do and improve :)
 
 ## Getting Rye
 
@@ -264,7 +264,7 @@ Run the REPL
   
   [Factor](https://factorcode.org/) - Factor from Slava Pestov taught me new fluidity and that variables are *no-good*, but stack shuffle words are even worse ;)
   
-  [Red](https://github.com/red/red) - Another language inspired by Rebol from well known Rebol developer DocKimbel and his colleagues. A concrete endaviour, with it's low level language, compiler, GUI, ...
+  [Red](https://github.com/red/red) - Another language inspired by Rebol from well known Rebol developer  DocKimbel and his colleagues. A concrete endaviour, with it's low level language, compiler, GUI, ...
   
   [Oldes' Rebol 3](https://oldes.github.io/Rebol3/) - Rebol3 fork maintained by Oldes (from Amanita Design), tries to resolve issues without unnecessarily changing the language itself.
   
