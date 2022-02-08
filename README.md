@@ -126,6 +126,22 @@ read-all %mydata.json |check { 404 "couldn't read the file" }
 ; if file is there and json is OK, but score field is missing
 ```
 
+Most languages return with an explicit keyword *return*. Rye, like lisps 
+always returns the result of the **last expression**. But Rye also has
+so called **returning words** which start with ^ and
+most of the times conditionally return to caller.
+
+```red
+add-nums: fn { a b } { a + b }
+digits: fn1 { = 0 |either { "zero" } { "one" } }
+percentage: fn { a b } { 100 * a |/ b |^fix { "ERR" } |concat "%" }
+percentage 33 77  ; returns: 42%
+percentage 42 0   ; returns: ERR
+unlock-jim: fn1 { = "Jim" |^if { print "Hi Jim" } print "Locked" }
+unlock-jim "Jim"  ; prints: Hi Jim
+unlock-jim "Jane" ; prints: Locked
+```
+
 Rye has **multiple dialects**, specific interpreters of Rye values. 
 Two examples of this are the validation and SQL dialects.
 
