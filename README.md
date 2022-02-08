@@ -6,6 +6,7 @@
      * [Some specifics](#some-specifics)
      * [Introductions](#introductions)
      * [Examples](#examples)
+     * [Rye vs. Python](#rye-compare-python)
    * [Follow development](#follow-development)
      * [Rye blog](#rye-blog)
      * [Github](#github)
@@ -173,6 +174,14 @@ These pages are littered with examples. You can find them on this **README** pag
   * [Examples folder](./examples/) - unorganized so far, will change
   * [Solutions to simple compression puzzle](https://github.com/otobrglez/compression-puzzle/tree/master/src/rye)
 
+### Rye vs. Python
+
+Python is the *lingua franca* and the *measuring stone* amongst dynamic programming languages, where Rye is also searching it's place. 
+When learning about something new it makes sense to approach it from a familiar place.
+
+  * [Less variables, more flows example vs Python](https://ryelang.blogspot.com/2021/11/less-variables-more-flows-example-vs.html)
+  * [Simple compression puzzle - from Python to Rye solution](https://github.com/otobrglez/compression-puzzle/blob/master/src/rye/compress_jm_rec_steps.rye)
+  
 ## Follow development
 
 ### Rye blog
