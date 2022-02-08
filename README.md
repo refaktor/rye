@@ -128,8 +128,8 @@ read-all %mydata.json |check { 404 "couldn't read the file" }
 
 Most languages return with an explicit keyword *return*. Rye, like lisps 
 always returns the result of the **last expression**. But Rye also has
-so called **returning words** which start with ^ and
-most of the times conditionally return to caller.
+so called **returning words** which for visual clarity start with **^** 
+and always or conditionally return to caller.
 
 ```red
 add-nums: fn { a b } { a + b }
