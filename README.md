@@ -5,6 +5,7 @@
    * [Overview](#overview)
      * [Some specifics](#some-specifics)
      * [Introductions](#introductions)
+     * [Examples](#examples)
    * [Follow development](#follow-development)
      * [Rye blog](#rye-blog)
      * [Github](#github)
@@ -165,6 +166,12 @@ These are all work in progress, but can maybe offer some insight:
   * [Meet Rye](https://refaktor.github.io/rye/TOUR_0.html)
   * [Introduction for Python programmers](https://refaktor.github.io/rye/INTRO_1.html)
  
+### Examples
+
+These pages are littered with examples. You can find them on this **README** page, on our **blog**, on **Introductions**, but also:
+
+  * [Examples folder](./examples/) - unorganized so far, will change
+  * [Solutions to simple compression puzzle](https://github.com/otobrglez/compression-puzzle/tree/master/src/rye)
 
 ## Follow development
 
