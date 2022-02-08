@@ -6,7 +6,7 @@
      * [Some specifics](#some-specifics)
      * [Introductions](#introductions)
      * [Examples](#examples)
-     * [Rye vs. Python](#rye-compare-python)
+     * [Rye vs. Python](#rye-vs-python)
    * [Follow development](#follow-development)
      * [Rye blog](#rye-blog)
      * [Github](#github)
@@ -162,7 +162,7 @@ do-in iso { 2 .add 3 |print }
 
 ### Introductions
 
-These are all work in progress, but can maybe offer some insight:
+These are all work in progress, also need a refresher, but can maybe offer some insight:
 
   * [Meet Rye](https://refaktor.github.io/rye/TOUR_0.html)
   * [Introduction for Python programmers](https://refaktor.github.io/rye/INTRO_1.html)
