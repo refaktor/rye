@@ -2,7 +2,10 @@
 package evaldo
 
 import (
+	"io/ioutil"
+	"os/exec"
 	"reflect"
+
 	//	"bufio"
 	"fmt"
 	//	"os"
@@ -1554,7 +1557,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"purge": {
+	"purge!": { // TODO ... doesn't fully work
 		Argsn: 2,
 		Doc:   "Purges values from a seris based on return of a injected code block.",
 		Pure:  true,
@@ -1956,6 +1959,51 @@ var builtins = map[string]*env.Builtin{
 					case env.Builtin:
 					}
 					return *env.NewList(newl)
+				}
+			}
+			return nil
+		},
+	},
+
+	"group": {
+		Argsn: 2,
+		Doc:   "",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch list := arg0.(type) {
+			case env.Block:
+				switch block := arg1.(type) {
+				case env.Block, env.Builtin:
+					l := list.Series.Len()
+					newd := make(map[string]interface{})
+					switch block := block.(type) {
+					case env.Block:
+						ser := ps.Ser
+						ps.Ser = block.Series
+						for i := 0; i < l; i++ {
+							curval := list.Series.Get(i)
+							ps = EvalBlockInj(ps, curval, true)
+							if ps.ErrorFlag {
+								return ps.Res
+							}
+							// TODO !!! -- currently only works if results are keys
+							newkey := ps.Res.(env.String).Value
+							entry, ok := newd[newkey]
+							if !ok {
+								newd[newkey] = env.NewList(make([]interface{}, 0))
+								entry, ok = newd[newkey]
+							}
+							switch ee := entry.(type) {
+							case *env.List:
+								ee.Data = append(ee.Data, curval)
+							default:
+								return makeError(ps, "FAILURE TODO")
+							}
+							ps.Ser.Reset()
+						}
+						ps.Ser = ser
+						return *env.NewDict(newd)
+					}
 				}
 			}
 			return nil
@@ -3361,6 +3409,19 @@ var builtins = map[string]*env.Builtin{
 				block, _ := loader.LoadString(s1.Value, false)
 				//ps = env.AddToProgramState(ps, block.Series, genv)
 				return block
+			case env.Uri:
+				var str string
+				fileIdx, _ := ps.Idx.GetIndex("file")
+				if s1.Scheme.Index == fileIdx {
+					b, err := ioutil.ReadFile(s1.GetPath())
+					if err != nil {
+						return makeError(ps, err.Error())
+					}
+					str = string(b) // convert content to a 'string'
+				}
+				block, _ := loader.LoadString(str, false)
+				//ps = env.AddToProgramState(ps, block.Series, genv)
+				return block
 			default:
 				ps.FailureFlag = true
 				return env.NewError("Must be string or file TODO")
@@ -3553,7 +3614,27 @@ var builtins = map[string]*env.Builtin{
 			return nil
 		},
 	},
+
+	/* Terminal functions .. move to it's own later */
+
+	"cmd": {
+		Argsn: 1,
+		Doc:   "",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s0 := arg0.(type) {
+			case env.String:
+				r := exec.Command("/bin/bash", "-c", s0.Value)
+				stdout, _ := r.Output()
+				return JsonToRye(string(stdout))
+			default:
+				return makeError(ps, "Arg 1 should be String")
+			}
+			return nil
+		},
+	},
 }
+
+/* Terminal functions .. move to it's own later */
 
 /*
 func isTruthy(arg env.Object) env.Object {

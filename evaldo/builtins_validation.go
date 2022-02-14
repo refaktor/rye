@@ -2,8 +2,6 @@
 
 package evaldo
 
-import "C"
-
 import (
 	"fmt"
 	"net/mail"

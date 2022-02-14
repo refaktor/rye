@@ -145,14 +145,11 @@ func __fs_read(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 en
 
 		data, err := ioutil.ReadFile(f.GetPath())
 		if err != nil {
-			env1.FailureFlag = true
-			return *env.NewError(err.Error())
+			return makeError(env1, err.Error())
 		}
 		return env.String{string(data)}
 	}
-	env1.FailureFlag = true
-	return *env.NewError("Failed")
-
+	return makeError(env1, "Failed to read file")
 	// Read file to byte slice
 }
 

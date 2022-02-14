@@ -1,3 +1,5 @@
+//+build linux darwin windows
+
 // rye project main.go
 package main
 
@@ -5,7 +7,7 @@ package main
 extern void disableRawMode();
 extern void enableRawMode();
 */
-import "C"
+// import "C"
 
 import (
 	"os/user"

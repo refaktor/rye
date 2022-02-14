@@ -45,7 +45,7 @@ func genPrompt(shellEd *ShellEd, line string) (string, string) {
 			return "        ", ""
 		} else {
 
-			return "{ Rye } ", ""
+			return "×> ", ""
 		}
 	}
 }

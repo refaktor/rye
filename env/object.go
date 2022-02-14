@@ -281,7 +281,7 @@ func (b Block) Probe(e Idxs) string {
 			r.WriteString("[NIL]")
 		}
 	}
-	r.WriteString(" }")
+	r.WriteString("}")
 	return r.String()
 }
 
@@ -1139,8 +1139,19 @@ func (i Dict) Inspect(idxs Idxs) string {
 }
 
 // Inspect returns a string representation of the Integer.
-func (i Dict) Probe(e Idxs) string {
-	return i.Inspect(e)
+func (i Dict) Probe(idxs Idxs) string {
+	var bu strings.Builder
+	bu.WriteString("[\n")
+	for k, v := range i.Data {
+		switch ob := v.(type) {
+		case Object:
+			bu.WriteString(" " + k + ": " + ob.Probe(idxs) + "\n")
+		default:
+			bu.WriteString(" " + k + ": " + fmt.Sprint(ob) + "\n")
+		}
+	}
+	bu.WriteString("]")
+	return bu.String()
 }
 
 func (i Dict) Trace(msg string) {
@@ -1204,8 +1215,22 @@ func (i List) Inspect(idxs Idxs) string {
 }
 
 // Inspect returns a string representation of the Integer.
-func (i List) Probe(e Idxs) string {
-	return i.Inspect(e)
+func (i List) Probe(idxs Idxs) string {
+	var bu strings.Builder
+	bu.WriteString("[ ")
+	for _, v := range i.Data {
+		switch ob := v.(type) {
+		case map[string]interface{}:
+			vv := NewDict(ob)
+			bu.WriteString(" " + vv.Probe(idxs) + " ")
+		case Object:
+			bu.WriteString(" " + ob.Probe(idxs) + " ")
+		default:
+			bu.WriteString(" " + fmt.Sprint(ob) + " ")
+		}
+	}
+	bu.WriteString("]")
+	return bu.String()
 }
 
 func (i List) Trace(msg string) {
