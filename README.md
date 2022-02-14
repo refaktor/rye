@@ -21,7 +21,7 @@
 
 Rye is a human centric, high level, dynamic **programming language** based on ideas from **Rebol**, flavored by
 Factor, Linux shells and Golang. It's still an experiment in language design, but it should slowly become more and
-more usefull in real world.
+more useful in real world.
 
 It features a Golang based interpreter and console and could also be seen as (modest) Golang's scripting companion as
 Go-s libraries are quite easy to integrate.
