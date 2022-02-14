@@ -1,26 +1,42 @@
 # Rye language 🌾
 
-   * [What is it](#what-is-it)
-   * [Alpha status](#alpha-status)
-   * [Some Rye specifics](#some-rye-specifics)
-   * [Follow the blog](#find-the-blog)
-   * [How to install / build](#how-to-install--build)
-   * [Docker image](#docker-image)
+   * [What is Rye](#what-is-rye)
+   * [Status: Alpha](#status-alpha)
+   * [Overview](#overview)
+     * [Some specifics](#some-specifics)
+     * [Introductions](#introductions)
+     * [Examples](#examples)
+     * [Rye vs. Python](#rye-vs-python)
+   * [Follow development](#follow-development)
+     * [Rye blog](#rye-blog)
+     * [Github](#github)
+   * [Getting Rye](#getting-rye)
+     * [Binaries](#binaries)
+     * [Docker images](#docker-images)
+     * [Building Rye](#building-rye)
+   * [Related links](#related-links)
+   * [Questions, contact](#related-links)
 
-## What is it
+## What is Rye
 
-Rye is a human and information centric, high level, dynamic **programming language** based on ideas from **Rebol**, flavored by
-Factor, Linux shells and Golang. It features a Golang based interpreter and REPL.
+Rye is a human centric, high level, dynamic **programming language** based on ideas from **Rebol**, flavored by
+Factor, Linux shells and Golang. It's still an experiment in language design, but it should slowly become more and
+more usefull in real world.
 
-## Alpha status
+It features a Golang based interpreter and console and could also be seen as (modest) Golang's scripting companion as
+Go-s libraries are quite easy to integrate.
+
+## Status: Alpha
 
 Core ideas of the language are formed. Most experimenting, at least until version 1 is done.
-Right now, my focus is on making the core and runtime more ready and friendly for a potential brave soul that wants to install it and 
+Right now, my focus is on making the core and runtime more ready and friendly for a potential brave souls that want to install it and 
 dabble around a little.
 
-That means I am improving the REPL, live documentation and stabilising core functions.
+That means I am improving the Rye console, live documentation and stabilising core functions.
 
-## Some Rye specifics
+## Overview
+
+### Some specifics
 
 Rye is **homoiconic**, Rye's code is also Rye's data.
 
@@ -110,6 +126,22 @@ read-all %mydata.json |check { 404 "couldn't read the file" }
 ; if file is there and json is OK, but score field is missing
 ```
 
+Most languages return with an explicit keyword *return*. Rye, like lisps 
+always returns the result of the **last expression**. But Rye also has
+so called **returning words** which for visual clarity start with **^** 
+and always or conditionally return to caller.
+
+```red
+add-nums: fn { a b } { a + b }
+digits: fn1 { = 0 |either { "zero" } { "one" } }
+percentage: fn { a b } { 100 * a |/ b |^fix { "ERR" } |concat "%" }
+percentage 33 77  ; returns: 42%
+percentage 42 0   ; returns: ERR
+unlock-jim: fn1 { = "Jim" |^if { print "Hi Jim" } print "Locked" }
+unlock-jim "Jim"  ; prints: Hi Jim
+unlock-jim "Jane" ; prints: Locked
+```
+
 Rye has **multiple dialects**, specific interpreters of Rye values. 
 Two examples of this are the validation and SQL dialects.
 
@@ -143,18 +175,70 @@ do-in iso { 100 .plus 11 |print }
 do-in iso { 2 .add 3 |print }
 ; Error: Word add not found
  ```
+
+### Introductions
+
+These are all work in progress, also need a refresher, but can maybe offer some insight:
+
+  * [Meet Rye](https://refaktor.github.io/rye/TOUR_0.html)
+  * [Introduction for Python programmers](https://refaktor.github.io/rye/INTRO_1.html)
  
-## Follow the blog
+### Examples
 
-For most up-to date information on the language and it's development visit out **[blog](http://ryelang.blogspot.com/)**
+These pages are littered with examples. You can find them on this **README** page, on our **blog**, on **Introductions**, but also:
 
-*There is a work in progress [website](https://refaktor.github.io/rye/).*
+  * [Examples folder](./examples/) - unorganized so far, will change
+  * [Solutions to simple compression puzzle](https://github.com/otobrglez/compression-puzzle/tree/master/src/rye)
 
-## How to install / build 
+### Rye vs. Python
 
-Rye is developed on Linux, but has also been compiled on Mac and Docker.
+Python is the *lingua franca* and the *measuring stone* amongst dynamic programming languages, where Rye is also searching it's place. 
+When learning about something new it makes sense to approach it from a familiar place.
 
-### How to build Rye on a fresh Ubuntu
+  * [Less variables, more flows example vs Python](https://ryelang.blogspot.com/2021/11/less-variables-more-flows-example-vs.html)
+  * [Simple compression puzzle - from Python to Rye solution](https://github.com/otobrglez/compression-puzzle/blob/master/src/rye/compress_jm_rec_steps.rye)
+  
+## Follow development
+
+### Rye blog
+
+For most up-to date information on the language and it's development visit our **[blog](http://ryelang.blogspot.com/)**.
+
+### Github
+
+If code speaks to you, our Github page is the central location for all things Rye. You are welcome to collaborate, post Issues or PR-s, there is tons of things to do and improve :)
+
+## Getting Rye
+
+Rye is developed on Linux, but has also been compiled on macOS and Docker. If you need aditional architecture or OS, post an Issue.
+
+### Binaries
+
+You can find precompiled Binaries for **Linux** and **macOS** under [Releases](https://github.com/refaktor/rye/releases). 
+
+### Docker images
+
+#### Binary Docker image
+
+This image includes Linux, Rye binary ready for use and Emacs-nox editor.
+
+Docker image: **[refaktorlabs/ryelang](https://hub.docker.com/repository/docker/refaktorlabs/ryelang)**
+
+#### Dev Docker image
+
+The repository comes with a local [Docker image](./.docker/Dockerfile) that builds rye and allows you to do so.
+
+```bash
+docker build -t refaktor/rye -f .docker/Dockerfile .
+```
+
+Run 🏃‍♂️ the rye REPL with:
+
+```bash
+docker run -ti refaktor/rye
+```
+
+### Building Rye
 
 Use official documentation to install latest Golang https://go.dev/doc/install
 
@@ -188,9 +272,8 @@ Go get the dependencies for tiny build
     go get github.com/pkg/profile      # for runtime profiling - will probably remove for b_tiny
     go get github.com/pkg/term         # 
 
-Build the tiny version of Rye:
+Build the tiny version of RFactorye-t)ny"
 
-    go build -tags "b_tiny"
 
 Run the rye file:
 
@@ -200,21 +283,19 @@ Run the REPL
 
     ./rye
 
-## Docker image
+# Related links
 
-The repository comes with [Docker image](./.docker/Dockerfile) that is capable of building rye in its full, 
-the final step however then just wraps executable so that the image remains small and nimble.
-
-```bash
-docker build -t refaktor/rye -f .docker/Dockerfile .
-```
-
-Run 🏃‍♂️ the rye REPL with:
-
-```bash
-docker run -ti refaktor/rye
-```
-
-
-
+  [**Rebol**](http://www.rebol.com) - Rebol's author Carl Sassenrath invented or combined together 90% of concepts that Rye builds upon.
+  
+  [Factor](https://factorcode.org/) - Factor from Slava Pestov taught me new fluidity and that variables are *no-good*, but stack shuffle words are even worse ;)
+  
+  [Red](https://red-lang.org) - Another language inspired by Rebol from well known Rebol developer  DocKimbel and his colleagues. A concrete endaviour, with it's low level language, compiler, GUI, ...
+  
+  [Oldes' Rebol 3](https://oldes.github.io/Rebol3/) - Rebol3 fork maintained by Oldes (from Amanita Design), tries to resolve issues without unnecessarily changing the language itself.
+  
+  [Ren-c](https://github.com/metaeducation/ren-c) - Rebol 3 fork maintained by HostileFork, more liberal with changes to the language. 
+  
+ # Questions, contact
+  
+You can post an **[Issue](https://github.com/refaktor/rye/issues)** visit github **[Discussions](https://github.com/refaktor/rye/discussions)** or contact me through <a href="mailto:janko .itm+rye[ ]gmail .com">gmail</a> or <a href="https://twitter.com/refaktor">twitter</a>.</p>
 
