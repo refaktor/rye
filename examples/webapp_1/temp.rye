@@ -1,7 +1,0 @@
-handle-web-resources: fn { w r ress } {
-	query? "_r" |to-word :name
-	handle-web-resource w r select ress name 
-}
-
-|to-word :m-name
-	call res m-name { w r }

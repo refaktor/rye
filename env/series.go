@@ -40,6 +40,15 @@ func (ser *TSeries) Pop() Object {
 	}
 }
 
+func (ser *TSeries) RmLast() *TSeries {
+	if len(ser.S) > 0 {
+		ser.S = ser.S[:len(ser.S)-1]
+		return ser
+	} else {
+		return ser
+	}
+}
+
 func (ser *TSeries) Put(obj Object) {
 	ser.S[ser.pos-1] = obj // -1 ... because we already poped out the word .. if this works past the experiment improve this
 }
@@ -97,7 +106,11 @@ func (ser TSeries) Probe(idxs Idxs) string {
 		if i == ser.Pos()-1 {
 			bu.WriteString("<-here-> ")
 		}
-		bu.WriteString(v.Probe(idxs) + " ")
+		if v != nil {
+			bu.WriteString(v.Probe(idxs) + " ")
+		} else {
+			bu.WriteString("<<< NIL >>>" + " ")
+		}
 	}
 	if ser.Len() == ser.Pos()-1 {
 		bu.WriteString("<-here-> ")

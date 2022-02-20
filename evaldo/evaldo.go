@@ -70,17 +70,25 @@ func EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) *env.Progra
 		// evaluate expression
 		ps, injnow = EvalExpressionInj(ps, inj, injnow)
 		// check and raise the flags if needed if true (error) return
+		// --- 20201213: removed because require didn't really work :	if checkFlagsAfterBlock(ps, 101) {
+		// we could add current error, block and position to the trace
+		//		return ps
+		//	}
 		if checkFlagsAfterBlock(ps, 101) {
-			// we could add current error, block and position to the trace
 			return ps
 		}
 		// if return flag was raised return ( errorflag I think would return in previous if anyway)
+		// --- 20201213 --
 		if checkErrorReturnFlag(ps) {
 			return ps
 		}
 		ps, injnow = MaybeAcceptComma(ps, inj, injnow)
 		//es.Res.Trace("After eval expression")
 	}
+	// added here from above 20201213
+	//if checkErrorReturnFlag(ps) {
+	//	return ps
+	//}
 	//es.Inj = nil
 	return ps
 }
@@ -179,6 +187,36 @@ func EvalExpressionInj(ps *env.ProgramState, inj env.Object, injnow bool) (*env.
 	//return esleft
 }
 
+// REFATOR THIS WITH CODE ABOVE
+// when seeing bigger picture, just adding fow eval-with
+func EvalExpressionInjLimited(ps *env.ProgramState, inj env.Object, injnow bool) (*env.ProgramState, bool) { // TODO -- doesn't work .. would be nice - eval-with
+	var esleft *env.ProgramState
+	if inj == nil || injnow == false {
+		// if there is no injected value just eval the concrete expression
+		esleft = EvalExpressionConcrete(ps)
+		if ps.ReturnFlag {
+			return ps, injnow
+		}
+	} else {
+		// otherwise set program state to specific one and injected value to result
+		// set injnow to false and if return flag return
+		esleft = ps
+		esleft.Res = inj
+		injnow = false
+		if ps.ReturnFlag { //20200817
+			return ps, injnow
+		}
+		//esleft.Inj = nil
+	}
+	////// OPWORDWWW
+	// IF WE COMMENT IN NEXT LINE IT WORKS WITHOUT OPWORDS PROCESSING
+	//fmt.Println("EvalExpression")
+	//fmt.Println(es.Ser.GetPos())
+	// trace2("Calling Maybe from EvalExp Inj")
+	return MaybeEvalOpwordOnRight(esleft.Ser.Peek(), esleft, true), injnow
+	//return esleft
+}
+
 // this function get's the next object (unevaluated), progra state, limited bool (op or pipe)
 // first if there is return flag it returns (not sure if this is necesarry here) TODO -- figure out
 // if next object is opword it steps to next and evaluates the word then recurse  to maybe again
@@ -192,29 +230,30 @@ func EvalExpressionInj(ps *env.ProgramState, inj env.Object, injnow bool) (*env.
 // 		set the value to word and recurse
 func MaybeEvalOpwordOnRight(nextObj env.Object, ps *env.ProgramState, limited bool) *env.ProgramState {
 	//trace2("MaybeEvalWord -----------======--------> 1")
-	if ps.ReturnFlag {
+	if ps.ReturnFlag || ps.ErrorFlag {
 		return ps
 	}
 	switch opword := nextObj.(type) {
 	case env.Opword:
 		ps.Ser.Next()
-		ps = EvalWord(ps, opword.ToWord(), ps.Res, false)
+		ps = EvalWord(ps, opword.ToWord(), ps.Res, false, opword.Force > 0)
 		return MaybeEvalOpwordOnRight(ps.Ser.Peek(), ps, limited)
 	case env.Pipeword:
 		if limited {
 			return ps
 		}
 		ps.Ser.Next()
-		ps = EvalWord(ps, opword.ToWord(), ps.Res, false)
+		ps = EvalWord(ps, opword.ToWord(), ps.Res, false, opword.Force > 0)
 		if ps.ReturnFlag {
 			return ps //... not sure if we need this
 		}
-		if ps.FailureFlag { // uncommented 202008017
+		// checkFlagsBi()
+		/*if ps.FailureFlag { // uncommented 202008017
 			ps.FailureFlag = false
 			ps.ErrorFlag = true
 			ps.ReturnFlag = true
 			return ps
-		}
+		}*/
 		return MaybeEvalOpwordOnRight(ps.Ser.Peek(), ps, limited)
 	case env.LSetword:
 		if limited {
@@ -224,7 +263,10 @@ func MaybeEvalOpwordOnRight(nextObj env.Object, ps *env.ProgramState, limited bo
 		idx := opword.Index
 		ps.Ctx.Set(idx, ps.Res)
 		ps.Ser.Next()
+		ps.SkipFlag = false
 		return MaybeEvalOpwordOnRight(ps.Ser.Peek(), ps, limited)
+	default:
+		ps.SkipFlag = false
 	}
 	return ps
 }
@@ -237,28 +279,18 @@ func EvalExpressionConcrete(ps *env.ProgramState) *env.ProgramState {
 	//trace2("Before entering expression")
 	if object != nil {
 		switch object.Type() {
-		case env.IntegerType:
-			ps.Res = object
-		case env.StringType:
-			ps.Res = object
-		case env.BlockType:
-			ps.Res = object
-		case env.VoidType:
-			ps.Res = object
-		case env.TagwordType:
-			ps.Res = object
-		case env.UriType:
-			ps.Res = object
-		case env.EmailType:
-			ps.Res = object
+		case env.IntegerType, env.StringType, env.BlockType, env.VoidType, env.TagwordType, env.UriType, env.EmailType:
+			if !ps.SkipFlag {
+				ps.Res = object
+			}
 		case env.WordType:
-			rr := EvalWord(ps, object.(env.Word), nil, false)
+			rr := EvalWord(ps, object.(env.Word), nil, false, false)
 			return rr
 		case env.CPathType:
-			rr := EvalWord(ps, object, nil, false)
+			rr := EvalWord(ps, object, nil, false, false)
 			return rr
 		case env.BuiltinType:
-			return CallBuiltin(object.(env.Builtin), ps, nil, false)
+			return CallBuiltin(object.(env.Builtin), ps, nil, false, false, nil)
 		case env.GenwordType:
 			return EvalGenword(ps, object.(env.Genword), nil, false)
 		case env.SetwordType:
@@ -316,26 +348,45 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 // first tries to find a value in normal context. If there were no generic words this would be mostly it
 // if word is not found then it tries to get the value of next expression and find a generic word based
 // on that, it here is leftval already present it can dispatc on it otherwise
-func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft bool) *env.ProgramState {
+func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft bool, pipeSecond bool) *env.ProgramState {
 	// LOCAL FIRST
-	found, object, ctx := findWordValue(ps, word)
+	var firstVal env.Object
+	found, object, session := findWordValue(ps, word)
 	pos := ps.Ser.GetPos()
 	if !found { // look at Generic words, but first check type
-		if leftVal == nil {
+		// fmt.Println(pipeSecond)
+		kind := 0
+		if leftVal != nil {
+			kind = leftVal.GetKind()
+		}
+		if leftVal == nil && !pipeSecond {
 			if !ps.Ser.AtLast() {
 				EvalExpressionConcrete(ps)
 				if ps.ReturnFlag {
 					return ps
 				}
 				leftVal = ps.Res
+				kind = leftVal.GetKind()
 			}
 		}
+		if pipeSecond {
+			if !ps.Ser.AtLast() {
+				EvalExpressionConcrete(ps)
+				if ps.ReturnFlag {
+					return ps
+				}
+				firstVal = ps.Res
+				kind = firstVal.GetKind()
+				// fmt.Println("pipeSecond kind")
+			}
+		}
+		// fmt.Println(kind)
 		if leftVal != nil {
-			object, found = ps.Gen.Get(leftVal.GetKind(), word.(env.Word).Index)
+			object, found = ps.Gen.Get(kind, word.(env.Word).Index)
 		}
 	}
 	if found {
-		return EvalObject(ps, object, leftVal, toLeft, ctx) //ww0128a *
+		return EvalObject(ps, object, leftVal, toLeft, session, pipeSecond, firstVal) //ww0128a *
 	} else {
 		ps.ErrorFlag = true
 		if ps.FailureFlag == false {
@@ -354,7 +405,7 @@ func EvalGenword(ps *env.ProgramState, word env.Genword, leftVal env.Object, toL
 	var arg0 = ps.Res
 	object, found := ps.Gen.Get(arg0.GetKind(), word.Index)
 	if found {
-		return EvalObject(ps, object, arg0, toLeft, nil) //ww0128a *
+		return EvalObject(ps, object, arg0, toLeft, nil, false, nil) //ww0128a *
 	} else {
 		ps.ErrorFlag = true
 		ps.Res = env.NewError("generic word not found: " + word.Probe(*ps.Idx))
@@ -376,7 +427,7 @@ func EvalGetword(ps *env.ProgramState, word env.Getword, leftVal env.Object, toL
 }
 
 // evaluates a rye value, most of them just get returned, except builtins, functions and context paths
-func EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toLeft bool, ctx *env.RyeCtx) *env.ProgramState {
+func EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toLeft bool, ctx *env.RyeCtx, pipeSecond bool, firstVal env.Object) *env.ProgramState {
 	switch object.Type() {
 	case env.FunctionType:
 		fn := object.(env.Function)
@@ -390,9 +441,11 @@ func EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toL
 		if checkFlagsBi(bu, ps, 333) {
 			return ps
 		}
-		return CallBuiltin(bu, ps, leftVal, toLeft)
+		return CallBuiltin(bu, ps, leftVal, toLeft, pipeSecond, firstVal)
 	default:
-		ps.Res = object
+		if !ps.SkipFlag {
+			ps.Res = object
+		}
 		return ps
 	}
 	return ps
@@ -559,7 +612,9 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 	var result *env.ProgramState
 	ps.Ser.SetPos(0)
 	result = EvalBlockInj(ps, arg0, true)
-	MaybeDisplayFailureOrError(ps, ps.Idx)
+	fmt.Println(result)
+	fmt.Println(result.Res)
+	MaybeDisplayFailureOrError(result, result.Idx)
 	if result.ForcedResult != nil {
 		ps.Res = result.ForcedResult
 		result.ForcedResult = nil
@@ -572,7 +627,25 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 	return ps
 }
 
-func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft bool) *env.ProgramState {
+func MaybeDisplayFailureOrError(es *env.ProgramState, genv *env.Idxs) {
+	if es.FailureFlag {
+		fmt.Println("\x1b[33m" + "Failure" + "\x1b[0m")
+	}
+	if es.ErrorFlag {
+		fmt.Println("\x1b[35;3m" + es.Res.Probe(*genv))
+		switch err := es.Res.(type) {
+		case env.Error:
+			fmt.Println(err.CodeBlock.Probe(*genv))
+			fmt.Println("Error not pointer so bug. #temp")
+		case *env.Error:
+			fmt.Println("At location:")
+			fmt.Print(err.CodeBlock.Probe(*genv))
+		}
+		fmt.Println("\x1b[0m")
+	}
+}
+
+func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft bool, pipeSecond bool, firstVal env.Object) *env.ProgramState {
 	////args := make([]env.Object, bi.Argsn)
 	/*pospos := ps.Ser.GetPos()
 	for i := 0; i < bi.Argsn; i += 1 {
@@ -610,7 +683,7 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 	trace("*** BUILTIN ***")
 	trace(bi)
 
-	if arg0_ != nil {
+	if arg0_ != nil && !pipeSecond {
 		//fmt.Println("ARG0 = LEFT")
 		arg0 = arg0_
 		if !toLeft {
@@ -619,6 +692,8 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 		} else {
 			//fmt.Println("TO THE *** LEFT")
 		}
+	} else if firstVal != nil && pipeSecond {
+		arg0 = firstVal
 	} else if bi.Argsn > 0 && bi.Cur0 == nil {
 		//fmt.Println(" ARG 1 ")
 		//fmt.Println(ps.Ser.GetPos())
@@ -636,7 +711,10 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 			arg0 = ps.Res
 		}
 	}
-	if bi.Argsn > 1 && bi.Cur1 == nil {
+
+	if arg0_ != nil && pipeSecond {
+		arg1 = arg0_
+	} else if bi.Argsn > 1 && bi.Cur1 == nil {
 
 		evalExprFn(ps, true) // <---- THESE DETERMINE IF IT CONSUMES WHOLE EXPRESSION OR NOT IN CASE OF PIPEWORDS .. HM*... MAYBE WOULD COULD HAVE A WORD MODIFIER?? a: 2 |add 5 a:: 2 |add 5 print* --TODO
 
@@ -693,6 +771,7 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 		}
 		ps.Res = bi.Fn(ps, args...)
 	*/
+	trace("YOYOYOYOYOYOYOYOYOYO ---")
 	if curry {
 		bi.Cur0 = arg0
 		bi.Cur1 = arg1
@@ -701,6 +780,16 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 		bi.Cur4 = arg4
 		ps.Res = bi
 	} else {
+		if ps.SkipFlag {
+			trace2("SKIPPING ....")
+			//if arg0_ != nil {
+			trace2("PIPE ....")
+			return ps
+			//} else {
+			//	trace2("RESETING ....")
+			//ps.SkipFlag = false
+			//}
+		}
 		ps.Res = bi.Fn(ps, arg0, arg1, arg2, arg3, arg4)
 	}
 	trace2(" ------------- Before builtin returns")
@@ -743,16 +832,16 @@ func DirectlyCallBuiltin(ps *env.ProgramState, bi env.Builtin, a0 env.Object, a1
 // TODO -- once we know it works in all situations remove all debug lines
 // 		and rewrite
 func checkFlagsBi(bi env.Builtin, ps *env.ProgramState, n int) bool {
-	//trace("CHECK FLAGS")
+	trace("CHECK FLAGS BI")
 	//trace(n)
 	//trace(ps.Res)
 	//	trace(bi)
 	if ps.FailureFlag {
-		//trace("------ > FailureFlag")
+		trace("------ > FailureFlag")
 		if bi.AcceptFailure {
-			//trace("----- > Accept Failure")
+			trace2("----- > Accept Failure")
 		} else {
-			//trace("Fail ------->  Error.")
+			trace2("Fail ------->  Error.")
 			switch err := ps.Res.(type) {
 			case env.Error:
 				if err.CodeBlock.Len() == 0 {
@@ -769,7 +858,7 @@ func checkFlagsBi(bi env.Builtin, ps *env.ProgramState, n int) bool {
 			return true
 		}
 	} else {
-		//trace("NOT FailuteFlag")
+		trace2("NOT FailuteFlag")
 	}
 	return false
 }
@@ -778,12 +867,12 @@ func checkFlagsBi(bi env.Builtin, ps *env.ProgramState, n int) bool {
 // then raise the error flag and return true
 // USED -- on returns from block
 func checkFlagsAfterBlock(ps *env.ProgramState, n int) bool {
-	//trace("CHECK FLAGS 2")
-	//trace(n)
+	trace2("CHECK FLAGS AFTER BLOCKS")
+	trace2(n)
 	//trace(ps.Res)
 	if ps.FailureFlag && !ps.ReturnFlag {
-		//trace("FailureFlag")
-		//trace("Fail->Error.")
+		trace2("FailureFlag")
+		trace2("Fail->Error.")
 		switch err := ps.Res.(type) {
 		case env.Error:
 			if err.CodeBlock.Len() == 0 {
@@ -796,15 +885,17 @@ func checkFlagsAfterBlock(ps *env.ProgramState, n int) bool {
 				err.CodeContext = ps.Ctx
 			}
 		}
+		trace2("FAIL -> ERROR blk")
 		ps.ErrorFlag = true
 		return true
 	} else {
-		//trace("NOT FailureFlag")
+		trace2("NOT FailureFlag")
 	}
 	return false
 }
 
 func checkErrorReturnFlag(ps *env.ProgramState) bool {
+	// trace3("---- > return flags")
 	if ps.ErrorFlag {
 		switch err := ps.Res.(type) {
 		case env.Error:
@@ -826,14 +917,14 @@ func checkErrorReturnFlag(ps *env.ProgramState) bool {
 func fmt1() { fmt.Print(1) }
 
 func trace(x interface{}) {
-	// fmt.Print("\x1b[36m")
-	// fmt.Print(x)
-	// fmt.Println("\x1b[0m")
+	//fmt.Print("\x1b[36m")
+	//fmt.Print(x)
+	//fmt.Println("\x1b[0m")
 }
 func trace2(x interface{}) {
-	// fmt.Print("\x1b[56m")
-	// fmt.Print(x)
-	// fmt.Println("\x1b[0m")
+	//fmt.Print("\x1b[56m")
+	//fmt.Print(x)
+	//fmt.Println("\x1b[0m")
 }
 
 func trace3(x interface{}) {

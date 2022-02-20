@@ -2,6 +2,7 @@ package env
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -35,11 +36,53 @@ func NewEnv(par *RyeCtx) *RyeCtx {
 
 func (e RyeCtx) Probe(idxs Idxs) string {
 	var bu strings.Builder
-	bu.WriteString("<Context (" + e.Kind.Probe(idxs) + "): ")
+	bu.WriteString("[Context (" + e.Kind.Probe(idxs) + "): ")
 	for k, v := range e.state {
 		bu.WriteString(idxs.GetWord(k) + ": " + v.Inspect(idxs) + " ")
 	}
-	bu.WriteString(">")
+	bu.WriteString("]")
+	return bu.String()
+}
+
+const reset = "\x1b[0m"
+const reset2 = "\033[39;49m"
+
+const color_word = "\x1b[38;5;45m"
+const color_word2 = "\033[38;5;214m"
+const color_num2 = "\033[38;5;202m"
+const color_string2 = "\033[38;5;148m"
+const color_comment = "\033[38;5;247m"
+
+func (e RyeCtx) Preview(idxs Idxs, filter string) string {
+	var bu strings.Builder
+	bu.WriteString("Context (" + e.Kind.Probe(idxs) + "):\n")
+	arr := make([]string, 0)
+	i := 0
+	for k, v := range e.state {
+		str1 := idxs.GetWord(k)
+		if strings.Contains(str1, filter) {
+			var color string
+			switch idxs.GetWord(v.GetKind()) {
+			case "builtin":
+				color = color_word2
+			case "context":
+				color = color_num2
+			case "function":
+				color = color_word
+			default:
+				color = color_string2
+			}
+			arr = append(arr, str1+": "+reset+color_comment+v.Inspect(idxs)+reset+"|||"+color) // idxs.GetWord(v.GetKind()
+			// bu.WriteString(" " + idxs.GetWord(k) + ": " + v.Inspect(idxs) + "\n")
+			i += 1
+		}
+	}
+	sort.Strings(arr)
+	for aa := range arr {
+		line := arr[aa]
+		pars := strings.Split(line, "|||")
+		bu.WriteString(" " + pars[1] + pars[0] + "\n")
+	}
 	return bu.String()
 }
 
@@ -60,6 +103,16 @@ func (i RyeCtx) Trace(msg string) {
 
 func (i RyeCtx) GetKind() int {
 	return i.Kind.Index
+}
+
+func (e RyeCtx) GetWords(idxs Idxs) Block {
+	objs := make([]Object, len(e.state))
+	idx := 0
+	for k, _ := range e.state {
+		objs[idx] = String{idxs.GetWord(k)}
+		idx += 1
+	}
+	return *NewBlock(*NewTSeries(objs))
 }
 
 /*func (e *Env) Get(word int) (*Object, bool) {
@@ -115,6 +168,7 @@ type ProgramState struct {
 	ErrorFlag    bool
 	FailureFlag  bool
 	ForcedResult Object
+	SkipFlag     bool
 }
 
 func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
@@ -132,6 +186,7 @@ func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
 		false,
 		false,
 		nil,
+		false,
 	}
 	return &ps
 }

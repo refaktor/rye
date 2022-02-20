@@ -2,34 +2,149 @@
 package evaldo
 
 import (
-	"reflect"
+	// "io/ioutil"
+	//	"os/exec"
+	// "reflect"
+
 	//	"bufio"
 	"fmt"
 	//	"os"
 	"rye/env"
 
-	"rye/loader"
+	// "rye/loader"
+	//	"rye/term"
 	"rye/util"
 	"strconv"
 	"strings"
 	"time"
 )
 
+
 func ss() {
 	fmt.Print(1)
 }
 
+func makeError(env1 *env.ProgramState, msg string) *env.Error {
+	env1.FailureFlag = true
+	return env.NewError(msg)
+}
+
+func equalValues(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) bool {
+	return arg0.GetKind() == arg1.GetKind() && arg0.Inspect(*ps.Idx) == arg1.Inspect(*ps.Idx)
+}
+
+func getFrom(ps *env.ProgramState, data interface{}, key interface{}, posMode bool) env.Object {
+	switch s1 := data.(type) {
+	case env.Dict:
+		switch s2 := key.(type) {
+		case env.String:
+			v := s1.Data[s2.Value]
+			switch v1 := v.(type) {
+			case int, int64, float64, string, []interface{}, map[string]interface{}:
+				return JsonToRye(v1)
+			case env.Integer:
+				return v1
+			case env.String:
+				return v1
+			case env.Date:
+				return v1
+			case env.Block:
+				return v1
+			case env.Dict:
+				return v1
+			case env.List:
+				return v1
+			case nil:
+				ps.FailureFlag = true
+				return env.NewError("missing key")
+			default:
+				ps.FailureFlag = true
+				return env.NewError("Value of type: x") // JM 202202 + reflect.TypeOf(v1).String())
+			}
+		}
+	case env.RyeCtx:
+		switch s2 := key.(type) {
+		case env.Tagword:
+			v, ok := s1.Get(s2.Index)
+			if ok {
+				return v
+			} else {
+				ps.FailureFlag = true
+				return env.NewError1(5) // NOT_FOUND
+			}
+		}
+	case env.List:
+		switch s2 := key.(type) {
+		case env.Integer:
+			idx := s2.Value
+			if posMode {
+				idx--
+			}
+			v := s1.Data[idx]
+			ok := true
+			if ok {
+				return JsonToRye(v)
+			} else {
+				ps.FailureFlag = true
+				return env.NewError1(5) // NOT_FOUND
+			}
+		}
+	case env.Block:
+		switch s2 := key.(type) {
+		case env.Integer:
+			idx := s2.Value
+			if posMode {
+				idx--
+			}
+			v := s1.Series.Get(int(idx))
+			ok := true
+			if ok {
+				return v
+			} else {
+				ps.FailureFlag = true
+				return env.NewError1(5) // NOT_FOUND
+			}
+		}
+	case env.SpreadsheetRow:
+		switch s2 := key.(type) {
+		case env.String:
+			index := 0
+			// find the column index
+			for i := 0; i < len(s1.Uplink.Cols); i++ {
+				if s1.Uplink.Cols[i] == s2.Value {
+					index = i
+				}
+			}
+			v := s1.Values[index]
+			if true {
+				return JsonToRye(v)
+			} else {
+				ps.FailureFlag = true
+				return env.NewError1(5) // NOT_FOUND
+			}
+		case env.Integer:
+			idx := s2.Value
+			if posMode {
+				idx--
+			}
+			v := s1.Values[idx]
+			ok := true
+			if ok {
+				return JsonToRye(v)
+			} else {
+				ps.FailureFlag = true
+				return env.NewError1(5) // NOT_FOUND
+			}
+		}
+	}
+	return env.NewError("wrong types TODO")
+}
+
 var builtins = map[string]*env.Builtin{
 
-	"oneone": {
-		Argsn: 0,
-
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return env.Integer{11}
-		},
-	},
 	"to-word": {
 		Argsn: 1,
+		Doc:   "Takes a String and returns a Word with that name.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
@@ -37,19 +152,69 @@ var builtins = map[string]*env.Builtin{
 				idx := ps.Idx.IndexWord(str.Value)
 				return env.Word{idx}
 			default:
-				return env.NewError("first arg is not string")
+				return makeError(ps, "Arg 1 not String.")
 			}
 		},
 	},
+
 	"inc": {
 		Argsn: 1,
+		Doc:   "Increments integer value by 1.",
 		Pure:  true,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Integer:
 				return env.Integer{1 + arg.Value}
 			default:
-				return env.NewError("first arg is not integer")
+				return makeError(ps, "Arg 1 not Integer.")
+			}
+		},
+	},
+
+	"inc!": {
+		Argsn: 1,
+		Doc:   "Increments integer value by 1 in-plaede.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg := arg0.(type) {
+			case env.Tagword:
+				intval, found := ps.Ctx.Get(arg.Index)
+				if found {
+					switch iintval := intval.(type) {
+					case env.Integer:
+						ps.Ctx.Set(arg.Index, env.Integer{1 + iintval.Value})
+						return env.Integer{1 + iintval.Value}
+					}
+				}
+				return makeError(ps, "Arg 1 not Integer.")
+
+			default:
+				return makeError(ps, "Arg 1 not Integer.")
+			}
+		},
+	},
+
+	"change!": {
+		Argsn: 2,
+		Doc:   "Changes value in a word, if value changes returns true otherwise false",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg := arg1.(type) {
+			case env.Tagword:
+				val, found := ps.Ctx.Get(arg.Index)
+				if found {
+					ps.Ctx.Set(arg.Index, arg0)
+					var res int64
+					if arg0.GetKind() == val.GetKind() && arg0.Inspect(*ps.Idx) == val.Inspect(*ps.Idx) {
+						res = 0
+					} else {
+						res = 1
+					}
+					return env.Integer{res}
+				}
+				return makeError(ps, "Arg 1 not Integer.")
+			default:
+				return makeError(ps, "Arg 1 not Integer.")
 			}
 		},
 	},
@@ -58,6 +223,7 @@ var builtins = map[string]*env.Builtin{
 
 	"true": {
 		Argsn: 0,
+		Doc:   "Retutns a truthy value.",
 		Pure:  true,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return env.Integer{1}
@@ -66,6 +232,7 @@ var builtins = map[string]*env.Builtin{
 
 	"false": {
 		Argsn: 0,
+		Doc:   "Retutns a falsy value.",
 		Pure:  true,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return env.Integer{0}
@@ -74,6 +241,7 @@ var builtins = map[string]*env.Builtin{
 
 	"not": {
 		Argsn: 1,
+		Doc:   "Turns a truthy value to non-truthy and reverse.",
 		Pure:  true,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if util.IsTruthy(arg0) {
@@ -84,40 +252,65 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"require": {
+	"require_": {
 		Argsn: 1,
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if util.IsTruthy(arg0) {
 				return env.Integer{1}
 			} else {
-				ps.FailureFlag = true
-				return env.NewError("requirement failed")
+				return makeError(ps, "Requirement failed.")
 			}
 		},
 	},
 
-	"divides": {
+	"factor-of": {
 		Argsn: 2,
+		Doc:   "Checks if a Arg 1 is factor of Arg 2.",
 		Pure:  true,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch arg := arg0.(type) {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch a := arg0.(type) {
 			case env.Integer:
-				if arg.Value%arg1.(env.Integer).Value == 0 {
-					return env.Integer{1}
-				} else {
-					return env.Integer{0}
+				switch b := arg1.(type) {
+				case env.Integer:
+					if a.Value%b.Value == 0 {
+						return env.Integer{1}
+					} else {
+						return env.Integer{0}
+					}
+				default:
+					return makeError(ps, "Arg 1 not Int")
 				}
 			default:
-				return env.NewError("argument to `len` not supported, got %s")
+				return makeError(ps, "Arg 2 not Int")
+			}
+		},
+	},
+
+	"mod": {
+		Argsn: 2,
+		Doc:   "Calculates module of two integers.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch a := arg0.(type) {
+			case env.Integer:
+				switch b := arg1.(type) {
+				case env.Integer:
+					return env.Integer{a.Value % b.Value}
+				default:
+					return makeError(ps, "Arg 2 not Int")
+				}
+			default:
+				return makeError(ps, "Arg 1 not Int")
 			}
 		},
 	},
 
 	"_+": {
 		Argsn: 2,
+		Doc:   "Adds or joins two values together (Integers, Strings, Uri-s and Blocks)",
 		Pure:  true,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Integer:
 				return env.Integer{s1.Value + arg1.(env.Integer).Value}
@@ -127,6 +320,34 @@ var builtins = map[string]*env.Builtin{
 					return env.String{s1.Value + s2.Value}
 				case env.Integer:
 					return env.String{s1.Value + strconv.Itoa(int(s2.Value))}
+				default:
+					return makeError(ps, "If Arg 1 is String, Arg 2 should also be String or Integer")
+				}
+			case env.Uri:
+				switch s2 := arg1.(type) {
+				case env.String:
+					return *env.NewUri(ps.Idx, s1.Scheme, s1.Path+s2.Value)
+				case env.Integer:
+					return *env.NewUri(ps.Idx, s1.Scheme, s1.Path+strconv.Itoa(int(s2.Value)))
+				case env.Block: // -- TODO turn tagwords and valvar sb strings.Builderues to uri encoded values , turn files into paths ... think more about it
+					var str strings.Builder
+					sepa := ""
+					for i := 0; i < s2.Series.Len(); i++ {
+						switch node := s2.Series.Get(i).(type) {
+						case env.Tagword:
+							str.WriteString(sepa + ps.Idx.GetWord(node.Index) + "=")
+							sepa = "&"
+						case env.String:
+							str.WriteString(node.Value)
+						case env.Integer:
+							str.WriteString(strconv.Itoa(int(node.Value)))
+						case env.Uri:
+							str.WriteString(node.GetPath())
+						}
+					}
+					return *env.NewUri(ps.Idx, s1.Scheme, s1.Path+str.String())
+				default:
+					return makeError(ps, "If Arg 1 is Uri, Arg 2 should be Integer, String or Block.")
 				}
 			case env.Block:
 				switch b2 := arg1.(type) {
@@ -134,98 +355,80 @@ var builtins = map[string]*env.Builtin{
 					s := &s1.Series
 					s1.Series = *s.AppendMul(b2.Series.GetAll())
 					return s1
+				default:
+					return makeError(ps, "If Arg 1 is Block, Arg 2 should also be Block.")
 				}
 			default:
-				env1.FailureFlag = true
-				return env.NewError("Wrong arguments for + function")
+				return makeError(ps, "If Arg 1 is Uri, Arg 2 should be Integer, String or Block")
 			}
-			env1.FailureFlag = true
-			return env.NewError("Wrong arguments for + function")
 		},
 	},
 
-	"add": {
-		Argsn: 2,
-		Pure:  true,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s1 := arg0.(type) {
-			case env.Integer:
-				return env.Integer{s1.Value + arg1.(env.Integer).Value}
-			case env.String:
-				switch s2 := arg1.(type) {
-				case env.String:
-					return env.String{s1.Value + s2.Value}
-				case env.Integer:
-					return env.String{s1.Value + strconv.Itoa(int(s2.Value))}
-				}
-			case env.Block:
-				switch b2 := arg1.(type) {
-				case env.Block:
-					s := &s1.Series
-					s1.Series = *s.AppendMul(b2.Series.GetAll())
-					return s1
-				}
-			default:
-				env1.FailureFlag = true
-				return env.NewError("Wrong arguments for + function")
-			}
-			env1.FailureFlag = true
-			return env.NewError("Wrong arguments for + function")
-		},
-	},
 	"_-": {
 		Argsn: 2,
+		Doc:   "Substract two integers.",
 		Pure:  true,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch arg := arg0.(type) {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch a := arg0.(type) {
 			case env.Integer:
-				return env.Integer{arg.Value - arg1.(env.Integer).Value}
+				switch b := arg1.(type) {
+				case env.Integer:
+					return env.Integer{a.Value - b.Value}
+				default:
+					return makeError(ps, "Arg 1 is not Integer.")
+				}
 			default:
-				return env.NewError("argument to `len` not supported, got %s")
+				return makeError(ps, "Arg 2 is not Integer.")
 			}
 		},
 	},
 	"_*": {
 		Argsn: 2,
+		Doc:   "Multiply two integers.",
 		Pure:  true,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch arg := arg0.(type) {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch a := arg0.(type) {
 			case env.Integer:
-				return env.Integer{arg.Value * arg1.(env.Integer).Value}
+				switch b := arg1.(type) {
+				case env.Integer:
+					return env.Integer{a.Value * b.Value}
+				default:
+					return makeError(ps, "Arg 1 is not Integer.")
+				}
 			default:
-				return env.NewError("argument to `len` not supported, got %s")
+				return makeError(ps, "Arg 2 is not Integer.")
 			}
 		},
 	},
 	"_/": {
 		Argsn: 2,
+		Doc:   "Divide two integers.",
 		Pure:  true,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch a := arg0.(type) {
 			case env.Integer:
 				switch b := arg1.(type) {
 				case env.Integer:
 					if b.Value == 0 {
-						env1.FailureFlag = true
-						return env.NewError("cannot divide by zero")
+						ps.FailureFlag = true
+						return makeError(ps, "Can't divide by Zero.")
 					}
 					return env.Integer{a.Value / b.Value}
 				default:
-					env1.ErrorFlag = true
-					return env.NewError("first arg not integer")
+					return makeError(ps, "Arg 1 is not Integer.")
 				}
 			default:
-				env1.ErrorFlag = true
-				return env.NewError("second arg not integer")
+				return makeError(ps, "Arg 1 is not Integer.")
 			}
 		},
 	},
 	"_=": {
 		Argsn: 2,
+		Doc:   "Test if two values are equal.",
 		Pure:  true,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var res int64
-			if arg0.GetKind() == arg1.GetKind() && arg0.Inspect(*env1.Idx) == arg1.Inspect(*env1.Idx) {
+			if equalValues(ps, arg0, arg1) {
 				res = 1
 			} else {
 				res = 0
@@ -235,10 +438,11 @@ var builtins = map[string]*env.Builtin{
 	},
 	"_!": {
 		Argsn: 2,
+		Doc:   "Reverses the truthines.",
 		Pure:  true,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var res int64
-			if arg0.GetKind() == arg1.GetKind() && arg0.Inspect(*env1.Idx) == arg1.Inspect(*env1.Idx) {
+			if arg0.GetKind() == arg1.GetKind() && arg0.Inspect(*ps.Idx) == arg1.Inspect(*ps.Idx) {
 				res = 0
 			} else {
 				res = 1
@@ -248,8 +452,9 @@ var builtins = map[string]*env.Builtin{
 	},
 	"_>": {
 		Argsn: 2,
+		Doc:   "Tests if Arg1 is greater than Arg 2.",
 		Pure:  true,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Integer:
 				var res int64
@@ -260,14 +465,15 @@ var builtins = map[string]*env.Builtin{
 				}
 				return env.Integer{res}
 			default:
-				return env.NewError("argument to `len` not supported, got %s")
+				return makeError(ps, "Arg 1 is not Integer.")
 			}
 		},
 	},
 	"_<": {
 		Argsn: 2,
+		Doc:   "Tests if Arg1 is lesser than Arg 2.",
 		Pure:  true,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Integer:
 				var res int64
@@ -278,15 +484,24 @@ var builtins = map[string]*env.Builtin{
 				}
 				return env.Integer{res}
 			default:
-				return env.NewError("argument to `len` not supported, got %s")
+				return makeError(ps, "Arg 1 is not Integer.")
 			}
 		},
 	},
 
 	// BASIC GENERAL FUNCTIONS
 
+	"prnl": {
+		Argsn: 0,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			fmt.Print("\n")
+			return nil
+		},
+	},
+
 	"prn": {
 		Argsn: 1,
+		Doc:   "Prints a value and adds a space.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.String:
@@ -299,6 +514,7 @@ var builtins = map[string]*env.Builtin{
 	},
 	"prin": {
 		Argsn: 1,
+		Doc:   "Prints a value without newline.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.String:
@@ -311,6 +527,7 @@ var builtins = map[string]*env.Builtin{
 	},
 	"print": {
 		Argsn: 1,
+		Doc:   "Prints a value and adds a newline.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.String:
@@ -323,13 +540,43 @@ var builtins = map[string]*env.Builtin{
 	},
 	"probe": {
 		Argsn: 1,
+		Doc:   "Prints a probe of a value.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			fmt.Println(arg0.Inspect(*env1.Idx))
 			return arg0
 		},
 	},
+	/*	"display": {
+		Argsn: 1,
+		Doc:   "Work in progress Interactively displays a value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			// This is temporary implementation for experimenting what it would work like at all
+			// later it should belong to the object (and the medium of display, terminal, html ..., it's part of the frontend)
+			term.SaveCurPos()
+			switch bloc := arg0.(type) {
+			case env.Block:
+				obj, esc := term.DisplayBlock(bloc, ps.Idx)
+				if !esc {
+					return obj
+				}
+			case env.Dict:
+				obj, esc := term.DisplayDict(bloc, ps.Idx)
+				if !esc {
+					return obj
+				}
+			case env.Spreadsheet:
+				obj, esc := term.DisplayTable(bloc, ps.Idx)
+				if !esc {
+					return obj
+				}
+			}
+
+			return nil
+		},
+	}, */
 	"mold": {
 		Argsn: 1,
+		Doc:   "Turn value to it's string representation.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// fmt.Println()
 			return env.String{arg0.Inspect(*env1.Idx)}
@@ -340,6 +587,7 @@ var builtins = map[string]*env.Builtin{
 
 	"unless": {
 		Argsn: 2,
+		Doc:   "Conditional if not. Takes condition and a block of code.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cond := arg0.(type) {
@@ -361,6 +609,7 @@ var builtins = map[string]*env.Builtin{
 
 	"if": {
 		Argsn: 2,
+		Doc:   "Basic conditional. Takes a condition and a block of code.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// function accepts 2 args. arg0 is a "boolean" value, arg1 is a block of code
@@ -405,8 +654,32 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"^if": {
+		Argsn: 2,
+		Doc:   "Basic conditional with a Returning mechanism when true. Takes a condition and a block of code.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg1.(type) {
+			case env.Block:
+				cond1 := util.IsTruthy(arg0)
+				if cond1 {
+					ser := ps.Ser
+					ps.Ser = bloc.Series
+					EvalBlockInj(ps, arg0, true)
+					ps.Ser = ser
+					ps.ReturnFlag = true
+					return ps.Res
+				}
+			default:
+				return makeError(ps, "Arg 2 not Block.")
+			}
+			return nil
+		},
+	},
+
 	"either": {
 		Argsn: 3,
+		Doc:   "The if/else conditional. Takes a value and true and false block of code.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			//arg0.Trace("")
@@ -522,6 +795,7 @@ var builtins = map[string]*env.Builtin{
 
 	"switch": {
 		Argsn:         2,
+		Doc:           "Classic switch function. Takes a word and multiple possible values and block of code to do.",
 		AcceptFailure: true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg1.(type) {
@@ -579,6 +853,7 @@ var builtins = map[string]*env.Builtin{
 
 	"cases": {
 		Argsn: 2,
+		Doc:   "Similar to Case function, but checks all the cases, even after a match. It combines the outputs.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// function accepts 2 args. arg0 is a "boolean" value, arg1 is a block of code
 			// we set bloc to block of code
@@ -646,54 +921,31 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"drop-in": {
-		Argsn: 2,
+	/*	"enter-console": {
+		Argsn: 1,
+		Doc:   "Stops execution and gives you a Rye console, to test the code inside environment.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch bloc := arg1.(type) {
-			case env.Block:
-				ser := ps.Ser
-				ps.Ser = bloc.Series
-				EvalBlock(ps)
-				ps.Ser = ser
+			switch name := arg0.(type) {
+			case env.String:
 				//reader := bufio.NewReader(os.Stdin)
 
-				fmt.Println("You are inside a drop-in: " + arg0.(env.String).Value)
-				fmt.Println(" * user (h) for help, (lc) to list context , (r) to return")
+				fmt.Println("You are inside a drop-in: " + name.Value)
+				fmt.Println(" * use (h) for help, (lc) to list context , (r) to return")
 				fmt.Println("----------------------------------------------------------")
-				/*
-					for {
-						fmt.Print("{ rye dropin }")
-						text, _ := reader.ReadString('\n')
-						//fmt.Println(1111)
-						// convert CRLF to LF
-						text = strings.Replace(text, "\n", "", -1)
-						//fmt.Println(1111)
-						if strings.Compare("(lc)", text) == 0 {
-							fmt.Println(ps.Ctx.Probe(*ps.Idx))
-						} else if strings.Compare("(r)", text) == 0 {
-							ps.Ser = ser
-							return ps.Res
-						} else {
-							// fmt.Println(1111)
-							block, genv := loader.LoadString("{ " + text + " }")
-							ps := env.AddToProgramState(ps, block.Series, genv)
-							EvalBlock(ps)
-							fmt.Println(ps.Res.Inspect(*ps.Idx))
-						}
-					}*/
 
 				DoRyeRepl(ps)
 				fmt.Println("----------------------------------------------------------")
-				ps.Ser = ser
+				// ps.Ser = ser
 
 				return ps.Res
 			}
 			return nil
 		},
-	},
+},*/
 
 	"do": {
 		Argsn: 1,
+		Doc:   "Takes a block of code and does (runs) it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -709,6 +961,7 @@ var builtins = map[string]*env.Builtin{
 
 	"do-with": {
 		Argsn: 2,
+		Doc:   "Takes a value and a block of code. It does the code with the value injected.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg1.(type) {
 			case env.Block:
@@ -722,8 +975,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"do-in": {
+	"with-context": {
 		Argsn: 2,
+		Doc:   "Takes a Context and a Block. It Does a block inside a given Context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch ctx := arg0.(type) {
 			case env.RyeCtx:
@@ -749,6 +1003,7 @@ var builtins = map[string]*env.Builtin{
 
 	"eval": {
 		Argsn: 1,
+		Doc:   "Takes a block of Rye values and evaluates each value or expression.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -776,8 +1031,39 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"_eval-with_": {
+		Argsn: 2,
+		Doc:   "",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg1.(type) {
+			case env.Block:
+				ser := ps.Ser
+				ps.Ser = bloc.Series
+				res := make([]env.Object, 0)
+				for ps.Ser.Pos() < ps.Ser.Len() {
+					// ps, injnow = EvalExpressionInj(ps, inj, injnow)
+					EvalExpressionInjLimited(ps, arg0, true)
+					res = append(res, ps.Res)
+					// check and raise the flags if needed if true (error) return
+					//if checkFlagsAfterBlock(ps, 101) {
+					//	return ps
+					//}
+					// if return flag was raised return ( errorflag I think would return in previous if anyway)
+					//if checkErrorReturnFlag(ps) {
+					//	return ps
+					//}
+					// ps, injnow = MaybeAcceptComma(ps, inj, injnow)
+				}
+				ps.Ser = ser
+				return *env.NewBlock(*env.NewTSeries(res))
+			}
+			return nil
+		},
+	},
+
 	"all": {
 		Argsn: 1,
+		Doc:   "Takes a block, if all values or expressions are truthy it returns the last one, otherwise false.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -785,7 +1071,6 @@ var builtins = map[string]*env.Builtin{
 				ps.Ser = bloc.Series
 				for ps.Ser.Pos() < ps.Ser.Len() {
 					EvalExpression2(ps, false)
-					fmt.Println(ps.Res.Probe(*ps.Idx))
 					if !util.IsTruthy(ps.Res) {
 						break
 					}
@@ -793,13 +1078,13 @@ var builtins = map[string]*env.Builtin{
 				ps.Ser = ser
 				return ps.Res
 			}
-			ps.FailureFlag = true
-			return env.NewError("expecting block")
+			return makeError(ps, "Arg 1 not Block")
 		},
 	},
 
 	"any": {
 		Argsn: 1,
+		Doc:   "Takes a block, if any of the values or expressions are truthy, the it returns that one, in none false.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -814,13 +1099,13 @@ var builtins = map[string]*env.Builtin{
 				ps.Ser = ser
 				return ps.Res
 			}
-			ps.FailureFlag = true
-			return env.NewError("expecting block")
+			return makeError(ps, "Arg 1 not Block")
 		},
 	},
 
 	"range": {
 		Argsn: 2,
+		Doc:   "Takes two integers and returns a block of integers between them. (Will change to lazy list/generator later)",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch i1 := arg0.(type) {
 			case env.Integer:
@@ -834,10 +1119,10 @@ var builtins = map[string]*env.Builtin{
 					}
 					return *env.NewBlock(*env.NewTSeries(objs))
 				}
+				return makeError(ps, "Arg 1 not Int")
 
 			}
-			ps.ErrorFlag = true
-			return env.NewError("First arg should be context")
+			return makeError(ps, "Arg 1 not Int")
 		},
 	},
 
@@ -847,6 +1132,7 @@ var builtins = map[string]*env.Builtin{
 
 	"returns": {
 		Argsn: 1,
+		Doc:   "Sets up a value to return at the end of function.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			ps.ForcedResult = arg0
 			return arg0
@@ -855,6 +1141,7 @@ var builtins = map[string]*env.Builtin{
 
 	"collect": {
 		Argsn: 1,
+		Doc:   "Collects values into an implicit block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if ps.ForcedResult == nil || ps.ForcedResult.Type() != env.BlockType {
 				ps.ForcedResult = *env.NewBlock(*env.NewTSeries(make([]env.Object, 0)))
@@ -868,6 +1155,7 @@ var builtins = map[string]*env.Builtin{
 
 	"collect-key": {
 		Argsn: 2,
+		Doc:   "Collecs key value pars to implicit block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if ps.ForcedResult == nil || ps.ForcedResult.Type() != env.BlockType {
 				ps.ForcedResult = *env.NewBlock(*env.NewTSeries(make([]env.Object, 0)))
@@ -882,19 +1170,56 @@ var builtins = map[string]*env.Builtin{
 
 	"collected": {
 		Argsn: 0,
+		Doc:   "Returns the implicit data structure that we collected t",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return ps.ForcedResult
 		},
 	},
 
+	"pop-collected": {
+		Argsn: 0,
+		Doc:   "Retursn the implicit collected data structure and resets it.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			result := ps.ForcedResult
+			ps.ForcedResult = nil
+			return result
+		},
+	},
+
 	"current-context": {
 		Argsn: 0,
+		Doc:   "Returns current context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *ps.Ctx
 		},
 	},
+
+	"ls": {
+		Argsn: 0,
+		Doc:   "Lists words in current context",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			fmt.Println(ps.Ctx.Preview(*ps.Idx, ""))
+			return env.Integer{1}
+		},
+	},
+
+	"ls\\": {
+		Argsn: 1,
+		Doc:   "Lists words in current context with string filter",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				fmt.Println(ps.Ctx.Preview(*ps.Idx, s1.Value))
+				return env.Integer{1}
+			}
+			return nil
+
+		},
+	},
+
 	"parent-context": {
 		Argsn: 0,
+		Doc:   "Returns parent context of the current context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *ps.Ctx.Parent
 		},
@@ -947,6 +1272,7 @@ var builtins = map[string]*env.Builtin{
 
 	"context": {
 		Argsn: 1,
+		Doc:   "Creates a new context with no parent",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -1004,6 +1330,7 @@ var builtins = map[string]*env.Builtin{
 
 	"unbind": {
 		Argsn: 1,
+		Doc:   "Accepts a Context and unbinds it from it's parent Context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch swCtx1 := arg0.(type) {
 			case env.RyeCtx:
@@ -1018,6 +1345,7 @@ var builtins = map[string]*env.Builtin{
 
 	"pass": {
 		Argsn: 2,
+		Doc:   "Accepts a value and a block. It does the block, with value injected, and returns (passes on) the initial value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg1.(type) {
 			case env.Block:
@@ -1026,9 +1354,13 @@ var builtins = map[string]*env.Builtin{
 				ps.Ser = bloc.Series
 				EvalBlockInj(ps, arg0, true)
 				ps.Ser = ser
+				if ps.ReturnFlag {
+					return ps.Res
+				}
 				return res
+			default:
+				return makeError(ps, "Arg 2 should be Block.")
 			}
-			return nil
 		},
 	},
 
@@ -1055,6 +1387,7 @@ var builtins = map[string]*env.Builtin{
 
 	"with": {
 		AcceptFailure: true,
+		Doc:           "Do a block with Arg 1 injected.",
 		Argsn:         2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg1.(type) {
@@ -1073,6 +1406,7 @@ var builtins = map[string]*env.Builtin{
 
 	"time-it": {
 		Argsn: 1,
+		Doc:   "Accepts a block, does it and times it's execution time.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -1091,6 +1425,7 @@ var builtins = map[string]*env.Builtin{
 
 	"loop": {
 		Argsn: 2,
+		Doc:   "Accepts a number and a block of code. Does the block of code number times, injecting the number.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cond := arg0.(type) {
 			case env.Integer:
@@ -1099,7 +1434,7 @@ var builtins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = bloc.Series
 					for i := 0; int64(i) < cond.Value; i++ {
-						ps = EvalBlock(ps)
+						ps = EvalBlockInj(ps, env.Integer{int64(i + 1)}, true)
 						ps.Ser.Reset()
 					}
 					ps.Ser = ser
@@ -1112,6 +1447,7 @@ var builtins = map[string]*env.Builtin{
 
 	"forever": {
 		Argsn: 1,
+		Doc:   "Accepts a block and does it forever.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -1129,18 +1465,38 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+	"forever-with": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg1.(type) {
+			case env.Block:
+				ser := ps.Ser
+				ps.Ser = bloc.Series
+				for {
+					EvalBlockInj(ps, arg0, true)
+					ps.Ser.Reset()
+				}
+				ps.Ser = ser
+				return ps.Res
+			default:
+				ps.FailureFlag = true
+				return env.NewError("arg0 should be block	")
+			}
+		},
+	},
 
 	"for": {
 		Argsn: 2,
+		Doc:   "Accepts a block of values and a block of code, does the code for each of the values, injecting them.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch block := arg0.(type) {
-			case env.Block:
+			case env.String:
 				switch code := arg1.(type) {
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = code.Series
-					for i := 0; i < block.Series.Len(); i++ {
-						ps = EvalBlockInj(ps, block.Series.Get(i), true)
+					for i := 0; i < len(block.Value); i++ {
+						ps = EvalBlockInj(ps, env.String{string(block.Value[i])}, true)
 						ps.Ser.Reset()
 					}
 					ps.Ser = ser
@@ -1158,13 +1514,29 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = ser
 					return ps.Res
 				}
+			case env.Spreadsheet:
+				switch code := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = code.Series
+					for i := 0; i < len(block.Rows); i++ {
+						row := block.Rows[i]
+						row.Uplink = &block
+						ps = EvalBlockInj(ps, row, true)
+						ps.Ser.Reset()
+					}
+					ps.Ser = ser
+					return ps.Res
+				}
 			}
 			return nil
 		},
 	},
 
-	"purge": {
+	"purge!": { // TODO ... doesn't fully work
 		Argsn: 2,
+		Doc:   "Purges values from a seris based on return of a injected code block.",
+		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch block := arg0.(type) {
 			case env.Block:
@@ -1199,6 +1571,22 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = ser
 					return block
 				}
+			case env.Spreadsheet:
+				switch code := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = code.Series
+					for i := 0; i < len(block.Rows); i++ {
+						ps = EvalBlockInj(ps, block.Rows[i], true)
+						if util.IsTruthy(ps.Res) {
+							block.Rows = append(block.Rows[:i], block.Rows[i+1:]...)
+							i--
+						}
+						ps.Ser.Reset()
+					}
+					ps.Ser = ser
+					return block
+				}
 			}
 			return nil
 		},
@@ -1210,6 +1598,8 @@ var builtins = map[string]*env.Builtin{
 	// map [ 1 2 3 ] { .add 3 }
 	"map": {
 		Argsn: 2,
+		Doc:   "Maps values of a block to a new block by evaluating a block of code.",
+		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch list := arg0.(type) {
 			case env.Block:
@@ -1261,9 +1651,346 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// map should at the end map over block, raw-map, etc ...
+	// it should accept a block of code, a function and a builtin
+	// it should use injected block so it doesn't need a variable defined like map [ 1 2 3 ] x [ add a 100 ]
+	// reduce [ 1 2 3 ] 'acc { + acc }
+	"reduce": {
+		Argsn: 3,
+		Doc:   "Reduces values of a block to a new block by evaluating a block of code ...",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch list := arg0.(type) {
+			case env.Block:
+				switch accu := arg1.(type) {
+				case env.Tagword:
+					// ps.Ctx.Set(accu.Index)
+					switch block := arg2.(type) {
+					case env.Block, env.Builtin:
+						l := len(list.Series.S)
+						acc := list.Series.Get(0)
+						switch block := block.(type) {
+						case env.Block:
+							ser := ps.Ser
+							ps.Ser = block.Series
+							for i := 1; i < l; i++ {
+								ps.Ctx.Set(accu.Index, acc)
+								ps = EvalBlockInj(ps, list.Series.Get(i), true)
+								if ps.ErrorFlag {
+									return ps.Res
+								}
+								acc = ps.Res
+								ps.Ser.Reset()
+							}
+							ps.Ser = ser
+						case env.Builtin:
+							// TODO
+							for i := 1; i < l; i++ {
+								acc = DirectlyCallBuiltin(ps, block, acc, list.Series.Get(i))
+							}
+						}
+						return acc
+					}
+				}
+			case env.List:
+				switch accu := arg1.(type) {
+				case env.Tagword:
+					// ps.Ctx.Set(accu.Index)
+					switch block := arg2.(type) {
+					case env.Block, env.Builtin:
+						l := len(list.Data)
+						acc := JsonToRye(list.Data[0])
+						switch block := block.(type) {
+						case env.Block:
+							ser := ps.Ser
+							ps.Ser = block.Series
+							for i := 1; i < l; i++ {
+								ps.Ctx.Set(accu.Index, acc)
+								ps = EvalBlockInj(ps, JsonToRye(list.Data[i]), true)
+								if ps.ErrorFlag {
+									return ps.Res
+								}
+								acc = ps.Res
+								ps.Ser.Reset()
+							}
+							ps.Ser = ser
+						case env.Builtin:
+							// TODO
+							for i := 1; i < l; i++ {
+								acc = DirectlyCallBuiltin(ps, block, acc, JsonToRye(list.Data[i]))
+							}
+						}
+						return acc
+					}
+				}
+			case env.String:
+				switch accu := arg1.(type) {
+				case env.Tagword:
+					switch block := arg2.(type) {
+					case env.Block, env.Builtin:
+						input := []rune(list.Value)
+						var acc env.Object
+						acc = env.String{string(input[0])}
+						switch block := block.(type) {
+						case env.Block:
+							ser := ps.Ser
+							ps.Ser = block.Series
+							for i := 1; i < len(input); i++ {
+								ps.Ctx.Set(accu.Index, acc)
+								ps = EvalBlockInj(ps, env.String{string(input[i])}, true)
+								if ps.ErrorFlag {
+									return ps.Res
+								}
+								acc = ps.Res
+								ps.Ser.Reset()
+							}
+							ps.Ser = ser
+						case env.Builtin:
+						}
+						return acc
+					}
+				}
+			}
+			return nil
+		},
+	},
+
+	// map should at the end map over block, raw-map, etc ...
+	// it should accept a block of code, a function and a builtin
+	// it should use injected block so it doesn't need a variable defined like map [ 1 2 3 ] x [ add a 100 ]
+	// reduce [ 1 2 3 ] 'acc { + acc }
+	"fold": {
+		Argsn: 4,
+		Doc:   "Reduces values of a block to a new block by evaluating a block of code ...",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch list := arg0.(type) {
+			case env.Block:
+				switch accu := arg1.(type) {
+				case env.Tagword:
+					// ps.Ctx.Set(accu.Index)
+					switch block := arg3.(type) {
+					case env.Block, env.Builtin:
+						l := len(list.Series.S)
+						acc := arg2
+						switch block := block.(type) {
+						case env.Block:
+							ser := ps.Ser
+							ps.Ser = block.Series
+							for i := 0; i < l; i++ {
+								ps.Ctx.Set(accu.Index, acc)
+								ps = EvalBlockInj(ps, list.Series.Get(i), true)
+								if ps.ErrorFlag {
+									return ps.Res
+								}
+								acc = ps.Res
+								ps.Ser.Reset()
+							}
+							ps.Ser = ser
+						case env.Builtin:
+							// TODO
+							for i := 1; i < l; i++ {
+								acc = DirectlyCallBuiltin(ps, block, acc, list.Series.Get(i))
+							}
+						}
+						return acc
+					}
+				}
+			case env.List:
+				switch accu := arg1.(type) {
+				case env.Tagword:
+					// ps.Ctx.Set(accu.Index)
+					switch block := arg3.(type) {
+					case env.Block, env.Builtin:
+						l := len(list.Data)
+						acc := arg2
+						switch block := block.(type) {
+						case env.Block:
+							ser := ps.Ser
+							ps.Ser = block.Series
+							for i := 0; i < l; i++ {
+								ps.Ctx.Set(accu.Index, acc)
+								ps = EvalBlockInj(ps, JsonToRye(list.Data[i]), true)
+								if ps.ErrorFlag {
+									return ps.Res
+								}
+								acc = ps.Res
+								ps.Ser.Reset()
+							}
+							ps.Ser = ser
+						case env.Builtin:
+							// TODO
+							for i := 1; i < l; i++ {
+								acc = DirectlyCallBuiltin(ps, block, acc, JsonToRye(list.Data[i]))
+							}
+						}
+						return acc
+					}
+				}
+			case env.String:
+				switch accu := arg1.(type) {
+				case env.Tagword:
+					switch block := arg3.(type) {
+					case env.Block, env.Builtin:
+						input := []rune(list.Value)
+						var acc env.Object
+						acc = arg2
+						switch block := block.(type) {
+						case env.Block:
+							ser := ps.Ser
+							ps.Ser = block.Series
+							for i := 0; i < len(input); i++ {
+								ps.Ctx.Set(accu.Index, acc)
+								ps = EvalBlockInj(ps, env.String{string(input[i])}, true)
+								if ps.ErrorFlag {
+									return ps.Res
+								}
+								acc = ps.Res
+								ps.Ser.Reset()
+							}
+							ps.Ser = ser
+						case env.Builtin:
+						}
+						return acc
+					}
+				}
+			}
+			return nil
+		},
+	},
+
+	// map should at the end map over block, raw-map, etc ...
+	// it should accept a block of code, a function and a builtin
+	// it should use injected block so it doesn't need a variable defined like map [ 1 2 3 ] x [ add a 100 ]
+	// map [ 1 2 3 ] { .add 3 }
+	"partition": {
+		Argsn: 2,
+		Doc:   "Maps values of a block to a new block by evaluating a block of code.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch list := arg0.(type) {
+			case env.Block:
+				switch block := arg1.(type) {
+				case env.Block, env.Builtin:
+					l := list.Series.Len()
+					newl := make([]env.Object, 0)
+					subl := make([]env.Object, 0)
+					var prevres env.Object
+					switch block := block.(type) {
+					case env.Block:
+						ser := ps.Ser
+						ps.Ser = block.Series
+						for i := 0; i < l; i++ {
+							curval := list.Series.Get(i)
+							ps = EvalBlockInj(ps, curval, true)
+							if ps.ErrorFlag {
+								return ps.Res
+							}
+							if prevres == nil || equalValues(ps, ps.Res, prevres) {
+								subl = append(subl, curval)
+							} else {
+								newl = append(newl, env.NewBlock(*env.NewTSeries(subl)))
+								subl = make([]env.Object, 1)
+								subl[0] = curval
+							}
+							prevres = ps.Res
+							ps.Ser.Reset()
+						}
+						newl = append(newl, env.NewBlock(*env.NewTSeries(subl)))
+						ps.Ser = ser
+					case env.Builtin:
+						for i := 0; i < l; i++ {
+							newl[i] = DirectlyCallBuiltin(ps, block, list.Series.Get(i), nil)
+						}
+					}
+					return *env.NewBlock(*env.NewTSeries(newl))
+				}
+			case env.String:
+				switch block := arg1.(type) {
+				case env.Block, env.Builtin:
+					newl := make([]interface{}, 0)
+					var subl strings.Builder
+					var prevres env.Object
+					switch block := block.(type) {
+					case env.Block:
+						ser := ps.Ser
+						ps.Ser = block.Series
+						for _, curval := range list.Value {
+							ps = EvalBlockInj(ps, env.String{string(curval)}, true)
+							if ps.ErrorFlag {
+								return ps.Res
+							}
+							if prevres == nil || equalValues(ps, ps.Res, prevres) {
+								subl.WriteRune(curval)
+							} else {
+								newl = append(newl, subl.String())
+								subl.Reset()
+								subl.WriteRune(curval)
+							}
+							prevres = ps.Res
+							ps.Ser.Reset()
+						}
+						newl = append(newl, subl.String())
+						ps.Ser = ser
+					case env.Builtin:
+					}
+					return *env.NewList(newl)
+				}
+			}
+			return nil
+		},
+	},
+
+	"group": {
+		Argsn: 2,
+		Doc:   "",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch list := arg0.(type) {
+			case env.Block:
+				switch block := arg1.(type) {
+				case env.Block, env.Builtin:
+					l := list.Series.Len()
+					newd := make(map[string]interface{})
+					switch block := block.(type) {
+					case env.Block:
+						ser := ps.Ser
+						ps.Ser = block.Series
+						for i := 0; i < l; i++ {
+							curval := list.Series.Get(i)
+							ps = EvalBlockInj(ps, curval, true)
+							if ps.ErrorFlag {
+								return ps.Res
+							}
+							// TODO !!! -- currently only works if results are keys
+							newkey := ps.Res.(env.String).Value
+							entry, ok := newd[newkey]
+							if !ok {
+								newd[newkey] = env.NewList(make([]interface{}, 0))
+								entry, ok = newd[newkey]
+							}
+							switch ee := entry.(type) {
+							case *env.List:
+								ee.Data = append(ee.Data, curval)
+							default:
+								return makeError(ps, "FAILURE TODO")
+							}
+							ps.Ser.Reset()
+						}
+						ps.Ser = ser
+						return *env.NewDict(newd)
+					}
+				}
+			}
+			return nil
+		},
+	},
+
 	// filter [ 1 2 3 ] { .add 3 }
 	"filter": {
 		Argsn: 2,
+		Doc:   "Filters values from a seris based on return of a injected code block.",
+		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var ll []interface{}
 			var lo []env.Object
@@ -1328,6 +2055,8 @@ var builtins = map[string]*env.Builtin{
 
 	"seek": {
 		Argsn: 2,
+		Doc:   "Seek over a series until a Block of code returns True.",
+		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch list := arg0.(type) {
 			case env.Block:
@@ -1365,7 +2094,7 @@ var builtins = map[string]*env.Builtin{
 
 	//test if we can do recur similar to clojure one. Since functions in rejy are of fixed arity we would need recur1 recur2 recur3 and recur [ ] which is less optimal
 	//otherwise word recur could somehow be bound to correct version or args depending on number of args of func. Try this at first.
-	"recur1if": { //recur1-if
+	"recur-if\\1": { //recur1-if
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cond := arg0.(type) {
@@ -1385,7 +2114,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"recur2if": { //recur1-if
+	"recur-if\\2": { //recur1-if
 		Argsn: 3,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			//arg0.Trace("a0")
@@ -1412,7 +2141,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"recur3if": { //recur1-if
+	"recur-if\\3": { //recur1-if
 		Argsn: 4,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			//arg0.Trace("a0")
@@ -1445,6 +2174,8 @@ var builtins = map[string]*env.Builtin{
 
 	"does": {
 		Argsn: 1,
+		Doc:   "Creates a function without arguments.",
+		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch body := arg0.(type) {
 			case env.Block:
@@ -1456,8 +2187,10 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"pipe": {
+	"fn1": {
 		Argsn: 1,
+		Doc:   "Creates a function that accepts one anonymouse argument.",
+		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch body := arg0.(type) {
 			case env.Block:
@@ -1471,6 +2204,8 @@ var builtins = map[string]*env.Builtin{
 
 	"fn": {
 		Argsn: 2,
+		Doc:   "Creates a function.",
+		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch args := arg0.(type) {
 			case env.Block:
@@ -1487,6 +2222,8 @@ var builtins = map[string]*env.Builtin{
 
 	"pfn": {
 		Argsn: 2,
+		Doc:   "Creates a pure function.",
+		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch args := arg0.(type) {
 			case env.Block:
@@ -1505,6 +2242,8 @@ var builtins = map[string]*env.Builtin{
 		// later maybe			   add10 [ a ] [ b: b ] [ add a b ]
 		//  						   add10 [ a ] [ 'b ] [ add a b ]
 		Argsn: 3,
+		Doc:   "Creates a function with specific context.",
+		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch args := arg0.(type) {
 			case env.Block:
@@ -1561,7 +2300,7 @@ var builtins = map[string]*env.Builtin{
 						ctx.Kind = spec.Kind
 						return ctx
 					default:
-						return env.NewError("2nd A isn't ")
+						return obj
 					}
 				case env.RyeCtx:
 					if spec.HasConverter(dict.Kind.Index) {
@@ -1571,17 +2310,17 @@ var builtins = map[string]*env.Builtin{
 							ctx.Kind = spec.Kind
 							return ctx
 						default:
-							return env.NewError("2344nd xxxx   xxx sn't Dict")
+							return *env.NewError("2344nd xxxx   xxx sn't Dict")
 						}
 					}
-					return env.NewError("2nd xxxx   xxx sn't Dict")
+					return *env.NewError("2nd xxxx   xxx sn't Dict")
 				default:
-					return env.NewError("2nd isn't Dict")
+					return *env.NewError("2nd isn't Dict")
 				}
 			default:
-				return env.NewError("1st isn't kind")
+				return *env.NewError("1st isn't kind")
 			}
-			return env.NewError("1st isn't kind xxxx")
+			return *env.NewError("1st isn't kind xxxx")
 		},
 	},
 
@@ -1652,6 +2391,8 @@ var builtins = map[string]*env.Builtin{
 
 	"left": {
 		Argsn: 2,
+		Doc:   "Returns the left N characters of the String.",
+		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -1664,8 +2405,51 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"middle": {
+	"newline": {
+		Argsn: 0,
+		Doc:   "Returns the newline character.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return env.String{"\n"}
+		},
+	},
+
+	"trim": {
+		Argsn: 1,
+		Doc:   "Trims the String of spacing characters.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				return env.String{strings.TrimSpace(s1.Value)}
+			}
+			return nil
+		},
+	},
+
+	"replace": {
 		Argsn: 3,
+		Doc:   "Returns the string with all parts of the strings replaced.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				switch s2 := arg1.(type) {
+				case env.String:
+					switch s3 := arg2.(type) {
+					case env.String:
+						return env.String{strings.ReplaceAll(s1.Value, s2.Value, s3.Value)}
+					}
+				}
+			}
+			return nil
+		},
+	},
+
+	"substring": {
+		Argsn: 3,
+		Doc:   "Returns part of the String between two positions.",
+		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -1681,8 +2465,30 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"contains": {
+		Argsn: 2,
+		Doc:   "Returns part of the String between two positions.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				switch s2 := arg1.(type) {
+				case env.String:
+					if strings.Contains(s1.Value, s2.Value) {
+						return env.Integer{1}
+					} else {
+						return env.Integer{0}
+					}
+				}
+			}
+			return nil
+		},
+	},
+
 	"right": {
 		Argsn: 2,
+		Doc:   "Returns the N characters from the right of the String.",
+		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -1695,10 +2501,19 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"join": {
+	"concat": {
 		Argsn: 2,
+		Doc:   "Joins two strings together.",
+		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
+			case env.Integer:
+				switch s2 := arg1.(type) {
+				case env.String:
+					return env.String{strconv.Itoa(int(s1.Value)) + s2.Value}
+				case env.Integer:
+					return env.String{strconv.Itoa(int(s1.Value)) + strconv.Itoa(int(s2.Value))}
+				}
 			case env.String:
 				switch s2 := arg1.(type) {
 				case env.String:
@@ -1712,13 +2527,31 @@ var builtins = map[string]*env.Builtin{
 					s := &s1.Series
 					s1.Series = *s.AppendMul(b2.Series.GetAll())
 					return s1
+				case env.Object:
+					s := &s1.Series
+					s1.Series = *s.Append(b2)
+					return s1
 				}
+			}
+			return nil
+		},
+	},
+	"str": {
+		Argsn: 1,
+		Doc:   "Turn Rye value to String.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Integer:
+				return env.String{strconv.Itoa(int(s1.Value))}
 			}
 			return nil
 		},
 	},
 	"capitalize": {
 		Argsn: 1,
+		Pure:  true,
+		Doc:   "Takes a String and returns the same String, but  with first character turned to upper case.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -1728,9 +2561,37 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+	"to-lower": {
+		Argsn: 1,
+		Pure:  true,
+		Doc:   "Takes a String and returns the same String, but  with all characters turned to lower case.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				return env.String{strings.ToLower(s1.Value)}
+			default:
+				return env.NewError("first arg must be string")
+			}
+		},
+	},
+	"to-upper": {
+		Argsn: 1,
+		Pure:  true,
+		Doc:   "Takes a String and returns the same String, but with all characters turned to upper case.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				return env.String{strings.ToUpper(s1.Value)}
+			default:
+				return env.NewError("first arg must be string")
+			}
+		},
+	},
 
-	"join3": {
+	"concat3": {
 		Argsn: 3,
+		Pure:  true,
+		Doc:   "Joins 3 Rye values together.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -1746,33 +2607,127 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"join": { // todo -- join\w data ","
+		Argsn: 1,
+		Pure:  true,
+		Doc:   "Joins Block or list of values together.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.List:
+				var str strings.Builder
+				for _, c := range s1.Data {
+					switch it := c.(type) {
+					case string:
+						str.WriteString(it)
+					case env.String:
+						str.WriteString(it.Value)
+					case int:
+						str.WriteString(strconv.Itoa(it))
+					case env.Integer:
+						str.WriteString(strconv.Itoa(int(it.Value)))
+					}
+				}
+				return env.String{str.String()}
+			case env.Block:
+				var str strings.Builder
+				for _, c := range s1.Series.S {
+					switch it := c.(type) {
+					case env.String:
+						str.WriteString(it.Value)
+					case env.Integer:
+						str.WriteString(strconv.Itoa(int(it.Value)))
+					}
+				}
+				return env.String{str.String()}
+			}
+			return nil
+		},
+	},
+
 	// BASIC SERIES FUNCTIONS
 
 	"first": {
 		Argsn: 1,
+		Doc:   "Accepts Block, List or String and returns the first item.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
+				if len(s1.Series.S) == 0 {
+					return makeError(ps, "Block is empty.")
+				}
 				return s1.Series.Get(int(0))
 			case env.List:
+				if len(s1.Data) == 0 {
+					return makeError(ps, "List is empty.")
+				}
 				return JsonToRye(s1.Data[int(0)])
+			case env.String:
+				str := []rune(s1.Value)
+				if len(str) == 0 {
+					return makeError(ps, "String is empty.")
+				}
+				return env.String{string(str[0])}
 			default:
-				return env.NewError("not block or list")
+				return env.NewError("Arg 1 not a Series.")
+			}
+		},
+	},
+
+	"tail": {
+		Argsn: 1,
+		Doc:   "Accepts Block, List or String and returns all but first items.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Block:
+				if len(s1.Series.S) == 0 {
+					return makeError(ps, "Block is empty.")
+				}
+				return *env.NewBlock(*env.NewTSeries(s1.Series.S[1:]))
+			case env.List:
+				if len(s1.Data) == 0 {
+					return makeError(ps, "List is empty.")
+				}
+				return env.NewList(s1.Data[int(1):])
+			case env.String:
+				str := []rune(s1.Value)
+				if len(str) < 1 {
+					return makeError(ps, "String has only one element.")
+				}
+				return env.String{string(str[1:])}
+			default:
+				return env.NewError("Arg 1 not a Series.")
 			}
 		},
 	},
 	"second": {
 		Argsn: 1,
+		Doc:   "Accepts Block and returns the second value in it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
-				return s1.Series.Get(int(1))
+				if len(s1.Series.S) < 2 {
+					return makeError(ps, "Block has no second element.")
+				}
+				return s1.Series.Get(1)
+			case env.List:
+				if len(s1.Data) < 2 {
+					return makeError(ps, "List has no second element.")
+				}
+				return JsonToRye(s1.Data[1])
+			case env.String:
+				str := []rune(s1.Value)
+				if len(str) < 2 {
+					return makeError(ps, "String has no second element.")
+				}
+				return env.String{string(str[1])}
+			default:
+				return env.NewError("Arg 1 not a Series.")
 			}
-			return nil
 		},
 	},
 	"third": {
 		Argsn: 1,
+		Doc:   "Accepts Block and returns the third value in it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -1783,10 +2738,13 @@ var builtins = map[string]*env.Builtin{
 	},
 	"last": {
 		Argsn: 1,
+		Doc:   "Accepts Block and returns the last value in it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
 				return s1.Series.Get(s1.Series.Len() - 1)
+			case env.String:
+				return env.String{s1.Value[len(s1.Value)-1:]}
 			}
 			return nil
 		},
@@ -1794,6 +2752,7 @@ var builtins = map[string]*env.Builtin{
 
 	"head": {
 		Argsn: 2,
+		Doc:   "Accepts a Block or a List and an Integer N. Returns first N values of the Block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s2 := arg1.(type) {
 			case env.Integer:
@@ -1813,6 +2772,7 @@ var builtins = map[string]*env.Builtin{
 
 	"nth": {
 		Argsn: 2,
+		Doc:   "Accepts Block and Integer N, returns the N-th value of the block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -1824,23 +2784,9 @@ var builtins = map[string]*env.Builtin{
 			return nil
 		},
 	},
-	"length": {
-		Argsn: 1,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s1 := arg0.(type) {
-			case env.String:
-				return env.Integer{int64(len(s1.Value))}
-			case env.Block:
-				return env.Integer{int64(s1.Series.Len())}
-			default:
-				ps.FailureFlag = true
-				return env.NewError("first arg not string or block")
-			}
-			return nil
-		},
-	},
 	"peek": {
 		Argsn: 1,
+		Doc:   "Accepts Block and returns the current value, without removing it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -1851,6 +2797,7 @@ var builtins = map[string]*env.Builtin{
 	},
 	"pop": {
 		Argsn: 1,
+		Doc:   "Accepts Block and returns the next value and removes it from the Block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -1861,6 +2808,7 @@ var builtins = map[string]*env.Builtin{
 	},
 	"pos": {
 		Argsn: 1,
+		Doc:   "Accepts Block and returns the position of it's carret.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -1871,6 +2819,7 @@ var builtins = map[string]*env.Builtin{
 	},
 	"next": {
 		Argsn: 1,
+		Doc:   "Accepts Block and returns the next value from it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -1880,22 +2829,65 @@ var builtins = map[string]*env.Builtin{
 			return nil
 		},
 	},
-	"append": {
-		Argsn: 2,
+	"remove-last!": {
+		Argsn: 1,
+		Doc:   "Accepts Block and returns the next value and removes it from the Block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s1 := arg0.(type) {
-			case env.Block:
-				s := &s1.Series
-				s1.Series = *s.Append(arg1)
-				return s1
+			switch wrd := arg0.(type) {
+			case env.Tagword:
+				val, found := ps.Ctx.Get(wrd.Index)
+				if found {
+					switch oldval := val.(type) {
+					case env.Block:
+						s := &oldval.Series
+						oldval.Series = *s.RmLast()
+						ps.Ctx.Set(wrd.Index, oldval)
+						return oldval
+					}
+				}
 			}
 			return nil
+		},
+	},
+	"append!": {
+		Argsn: 2,
+		Doc: "Accepts Rye value and Tagword with a Block or String. Appends Rye value to Block/String in place, also returns it	.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch wrd := arg1.(type) {
+			case env.Tagword:
+				val, found := ps.Ctx.Get(wrd.Index)
+				if found {
+					switch oldval := val.(type) {
+					case env.String:
+						var newval env.String
+						switch s3 := arg0.(type) {
+						case env.String:
+							newval = env.String{oldval.Value + s3.Value}
+						case env.Integer:
+							newval = env.String{oldval.Value + strconv.Itoa(int(s3.Value))}
+						}
+						ps.Ctx.Set(wrd.Index, newval)
+						return newval
+					case env.Block: // TODO
+						s := &oldval.Series
+						oldval.Series = *s.Append(arg0)
+						ps.Ctx.Set(wrd.Index, oldval)
+						return oldval
+					default:
+						return makeError(ps, "Type of tagword is not String.")
+					}
+				}
+				return makeError(ps, "Tagword not found.")
+			default:
+				return makeError(ps, "Value not tagword")
+			}
 		},
 	},
 	// FUNCTIONALITY AROUND GENERIC METHODS
 	// generic <integer> <add> fn [ a b ] [ a + b ] // tagwords are temporary here
 	"generic": {
 		Argsn: 3,
+		Doc:   "Registers a generic function.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Tagword:
@@ -1917,8 +2909,54 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"table": {
+		Argsn: 1,
+		Doc:   "Constructs an empty table, accepts a block of column names",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg0.(type) {
+			case env.Block:
+				vv := bloc.Series.Peek()
+				switch vv.(type) {
+				case env.String:
+					cols := make([]string, bloc.Series.Len())
+					for i := 0; i < bloc.Series.Len(); i++ {
+						cols[i] = bloc.Series.Get(i).(env.String).Value
+					}
+					return *env.NewSpreadsheet(cols)
+
+				case env.Tagword:
+					// TODO
+				}
+				return nil
+			}
+			return nil
+		},
+	},
+
+	"add-row": {
+		Argsn: 2,
+		Doc:   "Constructs an empty table, accepts a block of column names",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch table := arg0.(type) {
+			case env.Spreadsheet:
+				switch bloc := arg1.(type) {
+				case env.Block:
+					vals := make([]interface{}, bloc.Series.Len())
+					for i := 0; i < bloc.Series.Len(); i++ {
+						vals[i] = bloc.Series.Get(i)
+					}
+					table.AddRow(env.SpreadsheetRow{vals, &table})
+					return table
+				}
+				return nil
+			}
+			return nil
+		},
+	},
+
 	"dict": {
 		Argsn: 1,
+		Doc:   "Constructs a Dict from the Block of key and value pairs.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -1932,70 +2970,32 @@ var builtins = map[string]*env.Builtin{
 	"_->": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s1 := arg0.(type) {
-			case env.Dict:
-				switch s2 := arg1.(type) {
-				case env.String:
-					v := s1.Data[s2.Value]
-					switch v1 := v.(type) {
-					case int, int64, float64, string, []interface{}, map[string]interface{}:
-						return JsonToRye(v1)
-					case env.Integer:
-						return v1
-					case env.String:
-						return v1
-					case env.Date:
-						return v1
-					case env.Block:
-						return v1
-					default:
-						ps.FailureFlag = true
-						return env.NewError("Value of type: " + reflect.TypeOf(v1).String())
-					}
-				}
-			case env.RyeCtx:
-				switch s2 := arg1.(type) {
-				case env.Word:
-					v, ok := s1.Get(s2.Index)
-					if ok {
-						return v
-					} else {
-						ps.FailureFlag = true
-						return env.NewError1(5) // NOT_FOUND
-					}
-				}
-			case env.List:
-				switch s2 := arg1.(type) {
-				case env.Integer:
-					v := s1.Data[s2.Value]
-					ok := true
-					if ok {
-						return JsonToRye(v)
-					} else {
-						ps.FailureFlag = true
-						return env.NewError1(5) // NOT_FOUND
-					}
-				}
-			case env.Block:
-				switch s2 := arg1.(type) {
-				case env.Integer:
-					v := s1.Series.Get(int(s2.Value))
-					ok := true
-					if ok {
-						return v
-					} else {
-						ps.FailureFlag = true
-						return env.NewError1(5) // NOT_FOUND
-					}
-				}
-			}
-			return nil
+			return getFrom(ps, arg0, arg1, false)
+		},
+	},
+	"_<-": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return getFrom(ps, arg1, arg0, false)
+		},
+	},
+	"_<--": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return getFrom(ps, arg1, arg0, true)
+		},
+	},
+	"_-->": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return getFrom(ps, arg0, arg1, true)
 		},
 	},
 
 	// return , error , failure functions
 	"return": {
 		Argsn: 1,
+		Doc:   "Accepts one value and returns it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			//fmt.Println("RETURN")
 			ps.ReturnFlag = true
@@ -2005,6 +3005,7 @@ var builtins = map[string]*env.Builtin{
 
 	"^fail": {
 		Argsn: 1,
+		Doc:   "Returning Fail.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			//fmt.Println("FAIL")
 			ps.FailureFlag = true
@@ -2021,6 +3022,7 @@ var builtins = map[string]*env.Builtin{
 
 	"fail": {
 		Argsn: 1,
+		Doc:   "Constructs and Fails with an Error object. Accepts String as message, Integer as code, or block for multiple parameters.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			//fmt.Println("FAIL")
 			ps.FailureFlag = true
@@ -2034,11 +3036,11 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"error": {
+	"new-error": {
 		Argsn: 1,
+		Doc:   "Constructs and Error object. Accepts String as message, Integer as code, or block for multiple parameters.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			fmt.Println("ERROR")
-			ps.ErrorFlag = true
+			//ps.ErrorFlag = true
 			switch val := arg0.(type) {
 			case env.String: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
 				return *env.NewError(val.Value)
@@ -2052,6 +3054,7 @@ var builtins = map[string]*env.Builtin{
 	"code?": {
 		AcceptFailure: true,
 		Argsn:         1,
+		Doc:           "Returns the status code of the Error.", // TODO -- seems duplicate of status
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch er := arg0.(type) {
 			case env.Error:
@@ -2068,6 +3071,7 @@ var builtins = map[string]*env.Builtin{
 	"disarm": {
 		AcceptFailure: true,
 		Argsn:         1,
+		Doc:           "Disarms the Error.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			ps.FailureFlag = false
 			return arg0
@@ -2077,6 +3081,7 @@ var builtins = map[string]*env.Builtin{
 	"failed?": {
 		AcceptFailure: true,
 		Argsn:         1,
+		Doc:           "Checks if first argument is an Error. Returns a boolean.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			ps.FailureFlag = false
 			switch arg0.(type) {
@@ -2089,27 +3094,18 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"status": {
-		AcceptFailure: true,
-		Argsn:         1,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			arg0.Trace("STATUS")
-			switch er := arg0.(type) {
-			case env.Error:
-				return env.Integer{int64(er.Status)}
-			}
-			return env.NewError("wrong arg")
-		},
-	},
-
 	"check": {
 		AcceptFailure: true,
 		Argsn:         2,
+		Doc:           "Check if Arg 1 is not failure, if it wraps it into another Failure (Arg 2), otherwise returns Arg 1.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if ps.FailureFlag || arg0.Type() == env.ErrorType {
 				ps.FailureFlag = false
 				switch er := arg0.(type) {
 				case *env.Error: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+					if er.Status == 0 && er.Message == "" {
+						er = nil
+					}
 					switch val := arg1.(type) {
 					case env.String: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
 						return env.NewError4(0, val.Value, er, nil)
@@ -2134,11 +3130,15 @@ var builtins = map[string]*env.Builtin{
 	"^check": {
 		AcceptFailure: true,
 		Argsn:         2,
+		Doc:           "Returning Check.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if ps.FailureFlag {
 				ps.ReturnFlag = true
 				switch er := arg0.(type) {
 				case *env.Error: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+					if er.Status == 0 && er.Message == "" {
+						er = nil
+					}
 					switch val := arg1.(type) {
 					case env.String: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
 						return env.NewError4(0, val.Value, er, nil)
@@ -2160,33 +3160,89 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"^assert": {
+	"^require": {
 		AcceptFailure: true,
 		Argsn:         2,
+		Doc:           "Returning Require.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cond := arg0.(type) {
-			case env.Integer:
-				if cond.Value == 0 {
+			case env.Object:
+				if !util.IsTruthy(cond) {
 					ps.FailureFlag = true
 					ps.ReturnFlag = true
 					switch er := arg1.(type) {
 					case env.String:
-						return *env.NewError(er.Value)
+						return env.NewError(er.Value)
 					case env.Integer:
-						return *env.NewError1(int(er.Value))
+						return env.NewError1(int(er.Value))
+					case env.Block: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+						// TODO -- this is only temporary it takes numeric value as first and string as second arg
+						code := er.Series.Get(0)
+						message := er.Series.Get(1)
+						if code.Type() == env.IntegerType && message.Type() == env.StringType {
+							return env.NewError4(int(code.(env.Integer).Value), message.(env.String).Value, nil, nil)
+						}
+						return env.NewError("wrong error constructor")
 					}
 				} else {
-					return env.Void{}
+					return arg0
 				}
-				return env.Void{}
+				return arg0
 			}
-			return env.Void{}
+			return arg0
+		},
+	},
+
+	"require": {
+		AcceptFailure: true,
+		Argsn:         2,
+		Doc:           "Require that first argument is Truthy value, if not produce a failure based on second argument",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch cond := arg0.(type) {
+			case env.Object:
+				if !util.IsTruthy(cond) {
+					ps.FailureFlag = true
+					// ps.ReturnFlag = true
+					switch er := arg1.(type) {
+					case env.String:
+						return env.NewError(er.Value)
+					case env.Integer:
+						return env.NewError1(int(er.Value))
+					case env.Block: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+						// TODO -- this is only temporary it takes numeric value as first and string as second arg
+						code := er.Series.Get(0)
+						message := er.Series.Get(1)
+						if code.Type() == env.IntegerType && message.Type() == env.StringType {
+							return env.NewError4(int(code.(env.Integer).Value), message.(env.String).Value, nil, nil)
+						}
+						return env.NewError("wrong error constructor")
+					}
+				} else {
+					return arg0
+				}
+				return arg0
+			}
+			return arg0
+		},
+	},
+
+	"assert-equal": {
+		Argsn: 2,
+		Doc:   "Test if two values are equal. Fail if not.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			if arg0.GetKind() == arg1.GetKind() && arg0.Inspect(*ps.Idx) == arg1.Inspect(*ps.Idx) {
+				return env.Integer{1}
+			} else {
+				return makeError(ps, "Values are not equal: "+arg0.Inspect(*ps.Idx)+" "+arg1.Inspect(*ps.Idx))
+			}
 		},
 	},
 
 	"fix": {
 		AcceptFailure: true,
 		Argsn:         2,
+		Doc:           "If Arg 1 is a failure, do a block and return the result of it, otherwise return Arg 1.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if ps.FailureFlag || arg0.Type() == env.ErrorType {
 				ps.FailureFlag = false
@@ -2199,7 +3255,8 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = ser
 					return ps.Res
 				default:
-					return env.NewError("Error ..TODO")
+					ps.FailureFlag = true
+					return env.NewError("expecting block")
 				}
 			} else {
 				return arg0
@@ -2210,6 +3267,7 @@ var builtins = map[string]*env.Builtin{
 	"^fix": {
 		AcceptFailure: true,
 		Argsn:         2,
+		Doc:           "Fix as a returning function. If Arg 1 is failure, do the block and return to caller.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if ps.FailureFlag || arg0.Type() == env.ErrorType {
 				ps.FailureFlag = false
@@ -2223,7 +3281,34 @@ var builtins = map[string]*env.Builtin{
 					ps.ReturnFlag = true
 					return ps.Res
 				default:
-					return env.NewError("Error ..TODO")
+					ps.FailureFlag = true
+					return env.NewError("expecting block")
+				}
+			} else {
+				return arg0
+			}
+		},
+	},
+
+	"`fix": {
+		AcceptFailure: true,
+		Argsn:         2,
+		Doc:           "Fix as a skipping function.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			if ps.FailureFlag || arg0.Type() == env.ErrorType {
+				ps.FailureFlag = false
+				// TODO -- create function do_block and call in all cases
+				switch bloc := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = bloc.Series
+					EvalBlockInj(ps, arg0, true)
+					ps.Ser = ser
+					ps.SkipFlag = true
+					return ps.Res
+				default:
+					ps.FailureFlag = true
+					return env.NewError("expecting block")
 				}
 			} else {
 				return arg0
@@ -2234,6 +3319,7 @@ var builtins = map[string]*env.Builtin{
 	"fix-either": {
 		AcceptFailure: true,
 		Argsn:         3,
+		Doc:           "Fix also with else block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if ps.FailureFlag || arg0.Type() == env.ErrorType {
 				ps.FailureFlag = false
@@ -2246,7 +3332,8 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = ser
 					return ps.Res
 				default:
-					return env.NewError("Error ..TODO")
+					ps.FailureFlag = true
+					return env.NewError("expecting block")
 				}
 			} else {
 				switch bloc := arg2.(type) {
@@ -2257,7 +3344,8 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = ser
 					return ps.Res
 				default:
-					return env.NewError("Error ..TODO")
+					ps.FailureFlag = true
+					return env.NewError("expecting block")
 				}
 			}
 		},
@@ -2266,6 +3354,7 @@ var builtins = map[string]*env.Builtin{
 	"fix-else": {
 		AcceptFailure: true,
 		Argsn:         2,
+		Doc:           "Do a block of code if Arg 1 is not a failure.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if !(ps.FailureFlag || arg0.Type() == env.ErrorType) {
 				ps.FailureFlag = false
@@ -2278,7 +3367,8 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = ser
 					return ps.Res
 				default:
-					return env.NewError("Error ..TODO")
+					ps.FailureFlag = true
+					return env.NewError("expecting block")
 				}
 			} else {
 				return arg0
@@ -2286,12 +3376,26 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"load": {
+	/*	"load": {
 		Argsn: 1,
+		Doc:   "Loads a string into Rye values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
-				block, _ := loader.LoadString(s1.Value)
+				block, _ := loader.LoadString(s1.Value, false)
+				//ps = env.AddToProgramState(ps, block.Series, genv)
+				return block
+			case env.Uri:
+				var str string
+				fileIdx, _ := ps.Idx.GetIndex("file")
+				if s1.Scheme.Index == fileIdx {
+					b, err := ioutil.ReadFile(s1.GetPath())
+					if err != nil {
+						return makeError(ps, err.Error())
+					}
+					str = string(b) // convert content to a 'string'
+				}
+				block, _ := loader.LoadString(str, false)
 				//ps = env.AddToProgramState(ps, block.Series, genv)
 				return block
 			default:
@@ -2299,11 +3403,28 @@ var builtins = map[string]*env.Builtin{
 				return env.NewError("Must be string or file TODO")
 			}
 		},
-	},
+	}, */
+
+	/* "load-sig": {
+		Argsn: 1,
+		Doc:   "Checks the signature, if OK then loads a string into Rye values.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				block, _ := loader.LoadString(s1.Value, true)
+				//ps = env.AddToProgramState(ps, block.Series, genv)
+				return block
+			default:
+				ps.FailureFlag = true
+				return env.NewError("Must be string or file TODO")
+			}
+		},
+	}, */
 
 	// BASIC ENV / Dict FUNCTIONS
 	"format": {
 		Argsn: 1,
+		Doc:   "Accepts a Dict and returns formatted presentation of it as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var r strings.Builder
 			switch s1 := arg0.(type) {
@@ -2323,6 +3444,7 @@ var builtins = map[string]*env.Builtin{
 	// date time functions
 	"now": {
 		Argsn: 0,
+		Doc:   "Returns current Time.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return env.Time{time.Now()}
 		},
@@ -2332,6 +3454,7 @@ var builtins = map[string]*env.Builtin{
 
 	"to-context": {
 		Argsn: 1,
+		Doc:   "Takes a Dict and returns a Context with same names and values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Dict:
@@ -2346,10 +3469,13 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"len": {
+	"length": {
 		Argsn: 1,
+		Doc:   "Accepts a collection (String, Block, Dict, Spreadsheet) and returns it's length.", // TODO -- accept list, context also
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
+			case env.String:
+				return env.Integer{int64(len(s1.Value))}
 			case env.Dict:
 				return env.Integer{int64(len(s1.Data))}
 			case env.Block:
@@ -2363,6 +3489,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 	"ncols": {
+		Doc:   "Accepts a Spreadsheet and returns number of columns.",
 		Argsn: 1,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
@@ -2378,6 +3505,7 @@ var builtins = map[string]*env.Builtin{
 	},
 	"keys": {
 		Argsn: 1,
+		Doc:   "Accepts Dict or Spreadsheet and returns a Block of keys or column names.", // TODO -- accept context also
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Dict:
@@ -2387,6 +3515,7 @@ var builtins = map[string]*env.Builtin{
 					keys[i] = env.String{k}
 					i++
 				}
+				return *env.NewBlock(*env.NewTSeries(keys))
 			case env.Spreadsheet:
 				keys := make([]env.Object, len(s1.Cols))
 				for i, k := range s1.Cols {
@@ -2402,6 +3531,7 @@ var builtins = map[string]*env.Builtin{
 
 	"sum": {
 		Argsn: 2,
+		Doc:   "Accepts a spreadsheet and a column name and returns a sum of a column.", // TODO -- let it accept a block and list also
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var name string
 			switch s1 := arg0.(type) {
@@ -2428,7 +3558,59 @@ var builtins = map[string]*env.Builtin{
 			return nil
 		},
 	},
+	"A1": {
+		Argsn: 1,
+		Doc:   "Accepts a Spreadsheet and returns the first row first column cell.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s0 := arg0.(type) {
+			case env.Spreadsheet:
+				r := s0.Rows[0].Values[0]
+				return JsonToRye(r)
+
+			default:
+				ps.ErrorFlag = true
+				return env.NewError("first arg not spreadsheet")
+			}
+			return nil
+		},
+	},
+	"B1": {
+		Argsn: 1,
+		Doc:   "Accepts a Spreadsheet and returns the first row second column cell.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s0 := arg0.(type) {
+			case env.Spreadsheet:
+				r := s0.Rows[0].Values[1]
+				return JsonToRye(r)
+
+			default:
+				ps.ErrorFlag = true
+				return env.NewError("first arg not spreadsheet")
+			}
+			return nil
+		},
+	},
+
+	/* Terminal functions .. move to it's own later */
+
+	/* "cmd": {
+		Argsn: 1,
+		Doc:   "",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s0 := arg0.(type) {
+			case env.String:
+				r := exec.Command("/bin/bash", "-c", s0.Value)
+				stdout, _ := r.Output()
+				return JsonToRye(string(stdout))
+			default:
+				return makeError(ps, "Arg 1 should be String")
+			}
+			return nil
+		},
+	}, */
 }
+
+/* Terminal functions .. move to it's own later */
 
 /*
 func isTruthy(arg env.Object) env.Object {
@@ -2447,30 +3629,11 @@ func isTruthy(arg env.Object) env.Object {
 
 func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(builtins, ps)
-	RegisterBuiltins2(Builtins_io, ps)
-	RegisterBuiltins2(Builtins_web, ps)
-	RegisterBuiltins2(Builtins_sxml, ps)
-	RegisterBuiltins2(Builtins_sqlite, ps)
-	RegisterBuiltins2(Builtins_gtk, ps)
-	RegisterBuiltins2(Builtins_validation, ps)
-	RegisterBuiltins2(Builtins_ps, ps)
-	RegisterBuiltins2(Builtins_nats, ps)
-	RegisterBuiltins2(Builtins_qframe, ps)
-	RegisterBuiltins2(Builtins_webview, ps)
-	RegisterBuiltins2(Builtins_json, ps)
-	RegisterBuiltins2(Builtins_stackless, ps)
-	RegisterBuiltins2(Builtins_eyr, ps)
-	RegisterBuiltins2(Builtins_conversion, ps)
-	RegisterBuiltins2(Builtins_nng, ps)
-	RegisterBuiltins2(Builtins_http, ps)
-	RegisterBuiltins2(Builtins_crypto, ps)
-	RegisterBuiltins2(Builtins_goroutines, ps)
-	// RegisterBuiltins2(Builtins_psql, ps)
 }
 
 func RegisterBuiltins2(builtins map[string]*env.Builtin, ps *env.ProgramState) {
 	for k, v := range builtins {
-		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure)
+		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc)
 		registerBuiltin(ps, k, *bu)
 	}
 }

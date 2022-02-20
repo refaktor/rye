@@ -11,38 +11,39 @@ import (
 type Type int
 
 const (
-	BlockType       Type = 1
-	IntegerType     Type = 2
-	WordType        Type = 3
-	SetwordType     Type = 4
-	OpwordType      Type = 5
-	PipewordType    Type = 6
-	BuiltinType     Type = 7
-	FunctionType    Type = 8
-	ErrorType       Type = 9
-	CommaType       Type = 10
-	VoidType        Type = 11
-	StringType      Type = 12
-	TagwordType     Type = 13
-	GenwordType     Type = 14
-	GetwordType     Type = 15
-	ArgwordType     Type = 16
-	NativeType      Type = 17
-	UriType         Type = 18
-	LSetwordType    Type = 19
-	CtxType         Type = 20
-	DictType        Type = 21
-	ListType        Type = 22
-	DateType        Type = 23
-	CPathType       Type = 24
-	XwordType       Type = 25
-	EXwordType      Type = 26
-	SpreadsheetType Type = 27
-	EmailType       Type = 28
-	KindType        Type = 29
-	KindwordType    Type = 30
-	ConverterType   Type = 31
-	TimeType        Type = 32
+	BlockType          Type = 1
+	IntegerType        Type = 2
+	WordType           Type = 3
+	SetwordType        Type = 4
+	OpwordType         Type = 5
+	PipewordType       Type = 6
+	BuiltinType        Type = 7
+	FunctionType       Type = 8
+	ErrorType          Type = 9
+	CommaType          Type = 10
+	VoidType           Type = 11
+	StringType         Type = 12
+	TagwordType        Type = 13
+	GenwordType        Type = 14
+	GetwordType        Type = 15
+	ArgwordType        Type = 16
+	NativeType         Type = 17
+	UriType            Type = 18
+	LSetwordType       Type = 19
+	CtxType            Type = 20
+	DictType           Type = 21
+	ListType           Type = 22
+	DateType           Type = 23
+	CPathType          Type = 24
+	XwordType          Type = 25
+	EXwordType         Type = 26
+	SpreadsheetType    Type = 27
+	EmailType          Type = 28
+	KindType           Type = 29
+	KindwordType       Type = 30
+	ConverterType      Type = 31
+	TimeType           Type = 32
+	SpreadsheetRowType Type = 33
 )
 
 // after adding new type here, also add string to idxs.go
@@ -71,7 +72,7 @@ func (i Integer) Type() Type {
 
 // Inspect returns a string representation of the Integer.
 func (i Integer) Inspect(e Idxs) string {
-	return "<Integer: " + strconv.FormatInt(i.Value, 10) + ">"
+	return "[Integer: " + strconv.FormatInt(i.Value, 10) + "]"
 }
 
 // Inspect returns a string representation of the Integer.
@@ -104,7 +105,7 @@ func (i String) Type() Type {
 
 // Inspect returns a string representation of the Integer.
 func (i String) Inspect(e Idxs) string {
-	return "<String: " + i.Value + ">"
+	return "[String: " + i.Value + "]"
 }
 
 // Inspect returns a string representation of the Integer.
@@ -134,7 +135,7 @@ func (i Date) Type() Type {
 }
 
 func (i Date) Inspect(e Idxs) string {
-	return "<Date: " + i.Value.Format(time.RFC822Z) + ">"
+	return "[Date: " + i.Value.Format(time.RFC822Z) + "]"
 }
 
 func (i Date) Probe(e Idxs) string {
@@ -181,7 +182,7 @@ func (i Uri) Type() Type {
 
 // Inspect returns a string representation of the Integer.
 func (i Uri) Inspect(e Idxs) string {
-	return "<Uri: " + i.Scheme.Probe(e) + "://" + i.Path + ">"
+	return "[Uri: " + i.Scheme.Probe(e) + "://" + i.GetPath() + "]"
 }
 
 // Inspect returns a string representation of the Integer.
@@ -212,7 +213,7 @@ func (i Email) Type() Type {
 
 // Inspect returns a string representation of the Integer.
 func (i Email) Inspect(e Idxs) string {
-	return "<Email: " + i.Probe(e) + ">"
+	return "[Email: " + i.Probe(e) + "]"
 }
 
 // Inspect returns a string representation of the Integer.
@@ -257,14 +258,14 @@ func (i Block) Type() Type {
 // Inspect returns a string representation of the Integer.
 func (b Block) Inspect(e Idxs) string {
 	var r strings.Builder
-	r.WriteString("<Block: ")
+	r.WriteString("[Block: ")
 	for i := 0; i < b.Series.Len(); i += 1 {
 		if b.Series.Get(i) != nil {
 			r.WriteString(b.Series.Get(i).Inspect(e))
 			r.WriteString(" ")
 		}
 	}
-	r.WriteString(">")
+	r.WriteString("]")
 	return r.String()
 }
 
@@ -276,9 +277,11 @@ func (b Block) Probe(e Idxs) string {
 		if b.Series.Get(i) != nil {
 			r.WriteString(b.Series.Get(i).Probe(e))
 			r.WriteString(" ")
+		} else {
+			r.WriteString("[NIL]")
 		}
 	}
-	r.WriteString(" }")
+	r.WriteString("}")
 	return r.String()
 }
 
@@ -307,7 +310,7 @@ func (i Word) Type() Type {
 
 // Inspect returns a string
 func (i Word) Inspect(e Idxs) string {
-	return "<Word: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + ">"
+	return "[Word: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + "]"
 }
 
 // Inspect returns a string representation of the Integer.
@@ -340,7 +343,7 @@ func (i Setword) Type() Type {
 
 // Inspect returns a string representation of the Integer.
 func (i Setword) Inspect(e Idxs) string {
-	return "<Setword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + ">"
+	return "[Setword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + "]"
 }
 
 // Inspect returns a string representation of the Integer.
@@ -373,7 +376,7 @@ func (i LSetword) Type() Type {
 
 // Inspect returns a string representation of the Integer.
 func (i LSetword) Inspect(e Idxs) string {
-	return "<LSetword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + ">"
+	return "[LSetword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + "]"
 }
 
 // Inspect returns a string representation of the Integer.
@@ -397,6 +400,7 @@ func (i LSetword) GetKind() int {
 // Integer represents an integer.
 type Opword struct {
 	Index int
+	Force int
 }
 
 // Type returns the type of the Integer.
@@ -406,7 +410,7 @@ func (i Opword) Type() Type {
 
 // Inspect returns a string
 func (i Opword) Inspect(e Idxs) string {
-	return "<Opword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + ">"
+	return "[Opword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + "]"
 }
 
 // Inspect returns a string representation of the Integer.
@@ -434,6 +438,7 @@ func (i Opword) GetKind() int {
 // Integer represents an integer.
 type Pipeword struct {
 	Index int
+	Force int
 }
 
 // Type returns the type of the Integer.
@@ -443,7 +448,7 @@ func (i Pipeword) Type() Type {
 
 // Inspect returns a string
 func (i Pipeword) Inspect(e Idxs) string {
-	return "<Pipeword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + ">"
+	return "[Pipeword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + "]"
 }
 
 // Inspect returns a string representation of the Integer.
@@ -480,7 +485,7 @@ func (i Tagword) Type() Type {
 
 // Inspect returns a string
 func (i Tagword) Inspect(e Idxs) string {
-	return "<Tagword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + ">"
+	return "[Tagword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + "]"
 }
 
 // Inspect returns a string representation of the Integer.
@@ -517,7 +522,7 @@ func (i Xword) Type() Type {
 
 // Inspect returns a string
 func (i Xword) Inspect(e Idxs) string {
-	return "<Xword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + ">"
+	return "[Xword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + "]"
 }
 
 // Inspect returns a string representation of the Integer.
@@ -554,7 +559,7 @@ func (i EXword) Type() Type {
 
 // Inspect returns a string
 func (i EXword) Inspect(e Idxs) string {
-	return "<EXword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + ">"
+	return "[EXword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + "]"
 }
 
 // Inspect returns a string representation of the Integer.
@@ -591,7 +596,7 @@ func (i Kindword) Type() Type {
 
 // Inspect returns a string
 func (i Kindword) Inspect(e Idxs) string {
-	return "<Kindword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + ">"
+	return "[Kindword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + "]"
 }
 
 // Inspect returns a string representation of the Integer.
@@ -628,7 +633,7 @@ func (i Getword) Type() Type {
 
 // Inspect returns a string
 func (i Getword) Inspect(e Idxs) string {
-	return "<Getword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + ">"
+	return "[Getword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + "]"
 }
 
 // Inspect returns a string representation of the Integer.
@@ -665,7 +670,7 @@ func (i Genword) Type() Type {
 
 // Inspect returns a string
 func (i Genword) Inspect(e Idxs) string {
-	return "<Genword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + ">"
+	return "[Genword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + "]"
 }
 
 // Inspect returns a string representation of the Integer.
@@ -700,7 +705,7 @@ func (i Comma) Type() Type {
 
 // Inspect returns a string
 func (i Comma) Inspect(e Idxs) string {
-	return "<Comma>"
+	return "[Comma]"
 }
 
 // Inspect returns a string representation of the Integer.
@@ -730,7 +735,7 @@ func (i Void) Type() Type {
 
 // Inspect returns a string
 func (i Void) Inspect(e Idxs) string {
-	return "<Void>"
+	return "[Void]"
 }
 
 // Inspect returns a string representation of the Integer.
@@ -776,17 +781,17 @@ func (i Function) Type() Type {
 
 // Inspect returns a string representation of the Integer.
 func (i Function) Inspect(e Idxs) string {
-	// LONG DISPLAY OF FUNCTION NODES return "<Function: " + i.Spec.Inspect(e) + ", " + i.Body.Inspect(e) + ">"
+	// LONG DISPLAY OF FUNCTION NODES return "[Function: " + i.Spec.Inspect(e) + ", " + i.Body.Inspect(e) + "]"
 	var pure_s string
 	if i.Pure {
 		pure_s = "Pure "
 	}
-	return "<" + pure_s + "Function: " + strconv.FormatInt(int64(i.Argsn), 10) + ">"
+	return "[" + pure_s + "Function: " + strconv.FormatInt(int64(i.Argsn), 10) + "]"
 }
 
 // Inspect returns a string representation of the Integer.
 func (b Function) Probe(e Idxs) string {
-	return "<Function: " + strconv.FormatInt(int64(b.Argsn), 10) + ">"
+	return "[Function: " + strconv.FormatInt(int64(b.Argsn), 10) + "]"
 }
 
 func (i Function) Trace(msg string) {
@@ -817,10 +822,11 @@ type Builtin struct {
 	Cur4          Object
 	AcceptFailure bool
 	Pure          bool
+	Doc           string
 }
 
-func NewBuiltin(fn BuiltinFunction, argsn int, acceptFailure bool, pure bool) *Builtin {
-	bl := Builtin{fn, argsn, nil, nil, nil, nil, nil, acceptFailure, pure}
+func NewBuiltin(fn BuiltinFunction, argsn int, acceptFailure bool, pure bool, doc string) *Builtin {
+	bl := Builtin{fn, argsn, nil, nil, nil, nil, nil, acceptFailure, pure, doc}
 	return &bl
 }
 
@@ -836,11 +842,16 @@ func (b Builtin) Inspect(e Idxs) string {
 		pure_s = "Pure "
 	}
 
-	return "<" + pure_s + "Builtin>"
+	return "[" + pure_s + "Builtin(" + strconv.Itoa(b.Argsn) + "): " + b.Doc + "]"
 }
 
 func (b Builtin) Probe(e Idxs) string {
-	return "<Builtin>"
+	var pure_s string
+	if b.Pure {
+		pure_s = "Pure "
+	}
+
+	return "[" + pure_s + "Builtin]"
 }
 
 func (i Builtin) Trace(msg string) {
@@ -870,21 +881,30 @@ func (i Error) Type() Type {
 // Inspect returns a string representation of the Integer.
 func (i Error) Inspect(e Idxs) string {
 	var b strings.Builder
-	b.WriteString("<Error " + strconv.Itoa(i.Status) + ": " + i.Message + " ")
+	b.WriteString("[Error " + strconv.Itoa(i.Status) + ": " + i.Message + " ")
 	if i.Parent != nil {
 		b.WriteString(i.Parent.Probe(e))
 	}
-	b.WriteString(">")
+	b.WriteString("]")
 	return b.String()
 }
 
 // Inspect returns a string representation of the Integer.
 func (i Error) Probe(e Idxs) string {
 	var b strings.Builder
-	b.WriteString("Error: " + i.Message + " ")
+	b.WriteString("Error (" + strconv.Itoa(i.Status) + "): " + i.Message + " ")
 	if i.Parent != nil {
 		b.WriteString("\n\t" + i.Parent.Probe(e))
 	}
+	for k, v := range i.Values {
+		switch ob := v.(type) {
+		case Object:
+			b.WriteString("\n\t" + k + ": " + ob.Inspect(e) + " ")
+		default:
+			b.WriteString("\n\t" + k + ": " + fmt.Sprint(ob) + " ")
+		}
+	}
+
 	b.WriteString("")
 	return b.String()
 }
@@ -942,7 +962,7 @@ func (i Argword) Type() Type {
 
 // Inspect returns a string
 func (i Argword) Inspect(e Idxs) string {
-	return "<Argword: " + i.Name.Inspect(e) + ":" + i.Kind.Inspect(e) + ">"
+	return "[Argword: " + i.Name.Inspect(e) + ":" + i.Kind.Inspect(e) + "]"
 }
 
 // Inspect returns a string representation of the Integer.
@@ -979,11 +999,11 @@ func (i CPath) Type() Type {
 func (i CPath) Inspect(e Idxs) string {
 	switch i.Cnt {
 	case 2:
-		return "<CPath: " + i.Word1.Inspect(e) + "/" + i.Word2.Inspect(e) + ">"
+		return "[CPath: " + i.Word1.Inspect(e) + "/" + i.Word2.Inspect(e) + "]"
 	case 3:
-		return "<CPath: " + i.Word1.Inspect(e) + "/" + i.Word2.Inspect(e) + "/" + i.Word3.Inspect(e) + ">"
+		return "[CPath: " + i.Word1.Inspect(e) + "/" + i.Word2.Inspect(e) + "/" + i.Word3.Inspect(e) + "]"
 	}
-	return "<CPath: " + i.Word1.Inspect(e) + "/ ... >"
+	return "[CPath: " + i.Word1.Inspect(e) + "/ ... ]"
 }
 
 // Inspect returns a string
@@ -1051,12 +1071,12 @@ func (i Native) Type() Type {
 
 // Inspect returns a string representation of the Integer.
 func (i Native) Inspect(e Idxs) string {
-	return "<Native of kind " + i.Kind.Probe(e) + ">"
+	return "[Native of kind " + i.Kind.Probe(e) + "]"
 }
 
 // Inspect returns a string representation of the Integer.
 func (i Native) Probe(e Idxs) string {
-	return "<Native of kind " + i.Kind.Probe(e) + ">"
+	return "[Native of kind " + i.Kind.Probe(e) + "]"
 }
 
 func (i Native) Trace(msg string) {
@@ -1105,7 +1125,7 @@ func (i Dict) Type() Type {
 // Inspect returns a string representation of the Integer.
 func (i Dict) Inspect(idxs Idxs) string {
 	var bu strings.Builder
-	bu.WriteString("<Dict (" + i.Kind.Probe(idxs) + "): ")
+	bu.WriteString("[Dict (" + i.Kind.Probe(idxs) + "): ")
 	for k, v := range i.Data {
 		switch ob := v.(type) {
 		case Object:
@@ -1114,13 +1134,24 @@ func (i Dict) Inspect(idxs Idxs) string {
 			bu.WriteString(k + ": " + fmt.Sprint(ob) + " ")
 		}
 	}
-	bu.WriteString(">")
+	bu.WriteString("]")
 	return bu.String()
 }
 
 // Inspect returns a string representation of the Integer.
-func (i Dict) Probe(e Idxs) string {
-	return i.Inspect(e)
+func (i Dict) Probe(idxs Idxs) string {
+	var bu strings.Builder
+	bu.WriteString("[\n")
+	for k, v := range i.Data {
+		switch ob := v.(type) {
+		case Object:
+			bu.WriteString(" " + k + ": " + ob.Probe(idxs) + "\n")
+		default:
+			bu.WriteString(" " + k + ": " + fmt.Sprint(ob) + "\n")
+		}
+	}
+	bu.WriteString("]")
+	return bu.String()
 }
 
 func (i Dict) Trace(msg string) {
@@ -1167,7 +1198,7 @@ func (i List) Type() Type {
 // Inspect returns a string representation of the Integer.
 func (i List) Inspect(idxs Idxs) string {
 	var bu strings.Builder
-	bu.WriteString("<List (" + i.Kind.Probe(idxs) + "): ")
+	bu.WriteString("[List (" + i.Kind.Probe(idxs) + "): ")
 	for _, v := range i.Data {
 		switch ob := v.(type) {
 		case map[string]interface{}:
@@ -1179,13 +1210,27 @@ func (i List) Inspect(idxs Idxs) string {
 			bu.WriteString(" " + fmt.Sprint(ob) + " ")
 		}
 	}
-	bu.WriteString(">")
+	bu.WriteString("]")
 	return bu.String()
 }
 
 // Inspect returns a string representation of the Integer.
-func (i List) Probe(e Idxs) string {
-	return i.Inspect(e)
+func (i List) Probe(idxs Idxs) string {
+	var bu strings.Builder
+	bu.WriteString("[ ")
+	for _, v := range i.Data {
+		switch ob := v.(type) {
+		case map[string]interface{}:
+			vv := NewDict(ob)
+			bu.WriteString(" " + vv.Probe(idxs) + " ")
+		case Object:
+			bu.WriteString(" " + ob.Probe(idxs) + " ")
+		default:
+			bu.WriteString(" " + fmt.Sprint(ob) + " ")
+		}
+	}
+	bu.WriteString("]")
+	return bu.String()
 }
 
 func (i List) Trace(msg string) {
@@ -1222,13 +1267,13 @@ func (i Kind) Type() Type {
 
 // Inspect returns a string representation of the Integer.
 func (i Kind) Inspect(e Idxs) string {
-	// LONG DISPLAY OF FUNCTION NODES return "<Function: " + i.Spec.Inspect(e) + ", " + i.Body.Inspect(e) + ">"
-	return "<Kind(" + i.Kind.Probe(e) + "): " + i.Spec.Inspect(e) + ">"
+	// LONG DISPLAY OF FUNCTION NODES return "[Function: " + i.Spec.Inspect(e) + ", " + i.Body.Inspect(e) + "]"
+	return "[Kind(" + i.Kind.Probe(e) + "): " + i.Spec.Inspect(e) + "]"
 }
 
 // Inspect returns a string representation of the Integer.
 func (i Kind) Probe(e Idxs) string {
-	return "<Kind: " + i.Spec.Inspect(e) + ">"
+	return "[Kind: " + i.Spec.Inspect(e) + "]"
 }
 
 func (i Kind) Trace(msg string) {
@@ -1273,8 +1318,8 @@ func (i Converter) Type() Type {
 
 // Inspect returns a string representation of the Integer.
 func (i Converter) Inspect(e Idxs) string {
-	// LONG DISPLAY OF FUNCTION NODES return "<Function: " + i.Spec.Inspect(e) + ", " + i.Body.Inspect(e) + ">"
-	return "<Converter(" + i.From.Probe(e) + "->" + i.To.Probe(e) + "): " + i.Spec.Inspect(e) + ">"
+	// LONG DISPLAY OF FUNCTION NODES return "[Function: " + i.Spec.Inspect(e) + ", " + i.Body.Inspect(e) + "]"
+	return "[Converter(" + i.From.Probe(e) + "->" + i.To.Probe(e) + "): " + i.Spec.Inspect(e) + "]"
 }
 
 // Inspect returns a string representation of the Integer.
@@ -1306,7 +1351,7 @@ func (i Time) Type() Type {
 
 // Inspect returns a string representation of the Integer.
 func (i Time) Inspect(e Idxs) string {
-	return "<Time: " + i.Probe(e) + ">"
+	return "[Time: " + i.Probe(e) + "]"
 }
 
 // Inspect returns a string representation of the Integer.
