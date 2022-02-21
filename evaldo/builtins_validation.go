@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/mail"
 	"rye/env"
-	"rye/util"
 	"strconv"
 	"strings"
 	"time"
@@ -278,58 +277,4 @@ func BuiValidate(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object) env.O
 func something() {
 
 	fmt.Print("1")
-}
-
-var Builtins_validation = map[string]*env.Builtin{
-
-	"validate": {
-		Argsn: 2,
-		Doc:   "Validates Dictionary using the Validation dialect and returns result or a Failure.",
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return BuiValidate(env1, arg0, arg1)
-		},
-	},
-
-	"validate>ctx": {
-		Argsn: 2,
-		Doc:   "Validates Dictionary using the Validation dialect and returns result as a Context or a Failure.",
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			obj := BuiValidate(env1, arg0, arg1)
-			switch obj1 := obj.(type) {
-			case env.Dict:
-				return util.Dict2Context(env1, obj1)
-			default:
-				return obj1
-			}
-		},
-	},
-
-	/*	"collect": {
-			Argsn: 1,
-			Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-				arg0.Trace("OPEN :::::::::")
-				switch str := arg0.(type) {
-				case env.Uri:
-					fmt.Println(str.Path)
-					db, _ := sql.Open("sqlite3", "temp-database") // TODO -- we need to make path parser in URI then this will be path
-					return *env.NewNative(env1.Idx, db, "Rye-sqlite")
-				default:
-					return env.NewError("arg 2 should be Uri")
-				}
-			},
-		},
-		"pulldown": {
-			Argsn: 2,
-			Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-				arg0.Trace("OPEN :::::::::")
-				switch str := arg0.(type) {
-				case env.Uri:
-					fmt.Println(str.Path)
-					db, _ := sql.Open("sqlite3", "temp-database") // TODO -- we need to make path parser in URI then this will be path
-					return *env.NewNative(env1.Idx, db, "Rye-sqlite")
-				default:
-					return env.NewError("arg 2 should be Uri")
-				}
-			},
-		},*/
 }

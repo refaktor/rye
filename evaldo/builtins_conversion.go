@@ -159,38 +159,3 @@ func BuiConvert(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object) env.Ob
 		return env.NewError("arg 2 should be block")
 	}
 }
-
-var Builtins_conversion = map[string]*env.Builtin{
-
-	"convert": {
-		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return BuiConvert(env1, arg0, arg1)
-		},
-	},
-
-	"converter": {
-		Argsn: 3,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			// obj := BuiValidate(env1, arg0, arg1)
-			switch obj1 := arg0.(type) {
-			case env.Kind:
-				switch obj2 := arg1.(type) {
-				case env.Kind:
-					switch spec := arg2.(type) {
-					case env.Block:
-						obj2.SetConverter(obj1.Kind.Index, spec)
-						return obj2
-					default:
-						return env.NewError("3rd should be block")
-					}
-				default:
-					return env.NewError("2nd should be block")
-				}
-			default:
-				return env.NewError("1st should be block")
-			}
-			return env.NewError("error at the end")
-		},
-	},
-}
