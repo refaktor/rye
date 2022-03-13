@@ -272,8 +272,9 @@ Go get the dependencies for tiny build
     go get github.com/pkg/profile      # for runtime profiling - will probably remove for b_tiny
     go get github.com/pkg/term         # 
 
-Build the tiny version of RFactorye-t)ny"
+Build the tiny version of Rye
 
+    go build -tags "b_tiny"
 
 Run the rye file:
 
