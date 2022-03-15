@@ -24,7 +24,7 @@ Factor, Linux shells and Golang. It's still an experiment in language design, bu
 more useful in real world.
 
 It features a Golang based interpreter and console and could also be seen as (modest) Golang's scripting companion as
-Go-s libraries are quite easy to integrate.
+Go's libraries are quite easy to integrate.
 
 ## Status: Alpha
 
@@ -32,7 +32,7 @@ Core ideas of the language are formed. Most experimenting, at least until versio
 Right now, my focus is on making the core and runtime more ready and friendly for a potential brave souls that want to install it and 
 dabble around a little.
 
-That means I am improving the Rye console, live documentation and stabilising core functions.
+That means I am improving the Rye console, live documentation and stabilizing core functions.
 
 ## Overview
 
@@ -113,6 +113,7 @@ strs: { "one" "two" "three" }
 { 3 1 2 3 } |filter { > 1 } |map { <-- strs } |for { .prn }
 ; prints: three two three
 ```
+*[more about HOF-s](https://ryelang.blogspot.com/2022/02/higher-order-functions-test.html)*
 
 Rye has some different ideas about **failure handling**. This
 is a complex subject, so look at other docs about it. Remember it's
@@ -146,7 +147,7 @@ Rye has **multiple dialects**, specific interpreters of Rye values.
 Two examples of this are the validation and SQL dialects.
 
 ```red
-dict { "name" "jane" surname: "boo" }
+dict { "name" "jane" "surname" "boo" }
 |validate { name: required score: optional 0 integer } |probe
 // prints: #[ name: "jane" score: 0 ]
 
@@ -154,6 +155,7 @@ name: "James"
 db: open sqlite://main.db
 exec db { insert into pals ( name ) values ( ?name ) }
 ```
+*more dialects: [html parsing](https://ryelang.blogspot.com/2021/04/html-parsing-dialect-demo.html), [conversion](https://ryelang.blogspot.com/2021/12/convert-function-and-conversion-dialect.html)*
 
 Rye has a concept of **kinds with validators and converters**.
 
