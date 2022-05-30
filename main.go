@@ -1,19 +1,10 @@
 //+build linux darwin windows
 
-// rye project main.go
 package main
-
-/*
-extern void disableRawMode();
-extern void enableRawMode();
-*/
-// import "C"
 
 import (
 	"os/user"
 	"path/filepath"
-
-	//	"regexp"
 
 	"bufio"
 	"errors"
@@ -24,7 +15,6 @@ import (
 	"os"
 	"os/exec"
 
-	//"regexp"
 	"strconv"
 	"strings"
 
@@ -32,36 +22,12 @@ import (
 	"rye/env"
 	"rye/evaldo"
 	"rye/loader"
-	//"rye/ryeco"
-	//	"rye/util"
 
-	//	"github.com/peterh/liner"
-
-	//"rye/util"
-	//"fmt"
-	//"strconv"
-	"github.com/pkg/profile"
-	//"github.com/pkg/term"
 	"net/http/cgi"
+	"rye/ryeco"
+	// enable when using profiler
+	// "github.com/pkg/profile"
 )
-
-import (
-	//		"github.com/labstack/echo"
-	//"github.com/labstack/echo/middleware"
-
-	//"github.com/gorilla/sessions"
-	//"github.com/labstack/echo-contrib/session"
-)
-
-// REJY0 in GoLang
-
-// contrary to JS rejy version, parser here already indexes word names into global word index, not evaluator.
-// This means one intermediate step less (one data format less, and one conversion less)
-
-// parser produces a tree of values words and blocks in an array.
-// primitive values are stored unboxed, we can do this with series   []interface{}
-// complex values are stored as struct { type, index } (words, setwords)
-// functions are stored similarly. Probably argument count should be in struct too.
 
 type TagType int
 type RjType int
@@ -82,10 +48,6 @@ var CODE []interface{}
 //
 // main function. Dispatches to appropriate mode function
 //
-// rye_repl - repl of rye language (like rebol repl)
-// rye_file - loads a script file and runs it
-// rysh - starts a rysh experimental shell
-// ryk  - starts as an awk like tool with rye programming language
 
 func main() {
 	if len(os.Args) == 1 {
@@ -96,7 +58,7 @@ func main() {
 		} else if os.Args[1] == "web" {
 			// main_httpd()
 		} else if os.Args[1] == "ryeco" {
-			// main_ryeco()
+			main_ryeco()
 		} else {
 			main_rye_file(os.Args[1], false)
 		}
@@ -141,27 +103,6 @@ func main_ryk(code string) {
 	if err := scanner.Err(); err != nil {
 		log.Println(err)
 	}
-
-	//util.PrintHeader()
-	///// defer profile.Start().Stop()
-
-	//input := "{ loop 10000000 { add 1 2 } }"
-
-	/*genv := loader.GetIdxs()
-		ps := evaldo.ProgramState{}
-
-		// Parse
-		loader1 := loader.NewLoader()
-		input := "{ 123 word 3 { setword: 23 } end 12 word }"
-		val, _ := loader1.ParseAndGetValue(input, nil)
-		loader.InspectNode(val)
-		evaldo.EvalBlock(ps, val.(env.Object))
-		fmt.Println(val)
-
-		genv.Probe()
-
-	a	fmt.Println(strconv.FormatInt(int64(genv.GetWordCount()), 10))*/
-
 }
 
 func main_ryeco() {
@@ -169,135 +110,16 @@ func main_ryeco() {
 	// this is experiment to create a golang equivalent of rye code
 	// with same datatypes and using the same builtin code
 	// so it gets compiled, so we can see what speeds do we get that way
-	//defer profile.Start().Stop()
+	// defer profile.Start().Stop()
 	//input := "{ loop 10000000 { add 1 2 } }"
 
 	// so we need a golang loop and add rye function versions
 
-	//	ryeco_do(func() env.Object { return ryeco_loop(1000, func() env.Object { return ryeco_add(1, 2) }) })
+	// ryeco_do(func() env.Object { return ryeco_loop(1000, func() env.Object { return ryeco_add(1, 2) }) })
 
-	// ryeco.Loop(env.Integer{10000000}, func() env.Object { return ryeco.Add(env.Integer{1}, env.Integer{2}) })
+	ryeco.Loop(env.Integer{10000000}, func() env.Object { return ryeco.Inc(env.Integer{1}) })
 
 }
-
-/* USES Echo server --- disabled for now to reduce dependences .. also we used maing http go package now
-func main_httpd() {
-
-	//util.PrintHeader()
-	//	defer profile.Start().Stop()
-
-	// Echo instance
-	e := echo.New()
-
-	e.Use(session.Middleware(sessions.NewCookieStore([]byte("secret122849320"))))
-
-	// Middleware
-	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
-
-	// Routes
-	e.GET("/", serve)
-
-	// Start server
-	e.Logger.Fatal(e.Start(":1323"))
-}
-
-// Handler
-func serve(c echo.Context) error {
-
-	sess, _ := session.Get("session", c)
-	/ *sess.Options = &sessions.Options{
-		Path:     "/",
-		MaxAge:   86400 * 7,
-		HttpOnly: true,
-	}* /
-	//sess.Values["foo"] = env.String{"barca"}
-
-	input := "{ whoami: \"Rye webserver 0.001 alpha\" ctx: 0 result: \"\" session: 0 }"
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
-	evaldo.RegisterBuiltins(es)
-	//evaldo.RegisterBuiltins2(evaldo.Buil, ps *env.ProgramState) {
-	evaldo.EvalBlock(es)
-	env.SetValue(es, "ctx", *env.NewNative(es.Idx, c, "Rye-echo-context"))
-	env.SetValue(es, "session", *env.NewNative(es.Idx, sess, "Rye-echo-session"))
-	//env.SetValue(es, "ctx", env.String{"YOYOYO"})
-
-	b1, err := ioutil.ReadFile("web/index.html")
-	if err != nil {
-		fmt.Print(err)
-	}
-
-	var bu strings.Builder
-
-	b := string(b1)
-
-	idx1 := 0
-
-	for {
-		ii := util.IndexOfAt(b, "<%", idx1)
-		if ii > -1 {
-			ii2 := util.IndexOfAt(b, "%>", ii)
-			if ii2 > -1 {
-
-				fmt.Println("OUTPUT")
-				fmt.Println(idx1)
-				fmt.Println(ii)
-				fmt.Println(b[idx1:ii])
-				bu.WriteString(b[idx1:ii])
-
-				displayBlock := false
-				if string(b[ii+2]) == "?" {
-					ii++
-					displayBlock = true
-				}
-
-				code := b[ii+2 : ii2]
-
-				if displayBlock {
-					bu.WriteString("<pre class='rye-code'>" + code + "</pre>")
-				}
-				fmt.Print("CODE: ")
-				fmt.Println(code)
-				block, genv := loader.LoadString(code, false)
-				es := env.AddToProgramState(es, block.(env.Block).Series, genv)
-				evaldo.EvalBlock(es)
-				if displayBlock {
-					bu.WriteString("<div class='rye-result'>")
-				}
-				bu.WriteString(evaldo.PopOutBuffer())
-				/ *
-					ACTIVATE LATER FOR <%= tags %>
-						if es.Res != nil {
-						//fmt.Println("\x1b[6;30;42m" + es.Res.Inspect(*genv) + "\x1b[0m")
-						if es.Res.Type() == env.IntegerType {
-							bu.WriteString(strconv.FormatInt(es.Res.(env.Integer).Value, 10))
-						} else if es.Res.Type() == env.StringType {
-							bu.WriteString(es.Res.(env.String).Value)
-						}
-					} * /
-				if displayBlock {
-					bu.WriteString("</div>")
-				}
-				idx1 = ii2 + 2
-			} else {
-				fmt.Println("Err 214")
-				break
-			}
-		} else {
-			bu.WriteString(b[idx1:])
-			break
-		}
-	}
-
-	err = sess.Save(c.Request(), c.Response())
-	if err != nil {
-		return c.HTML(http.StatusOK, err.Error()) // tempsol: make this work better .. RETURN http error
-
-	}
-
-	return c.HTML(http.StatusOK, bu.String())
-} */
 
 func main_rye_file(file string, sig bool) {
 
@@ -311,7 +133,6 @@ func main_rye_file(file string, sig bool) {
 
 	content := string(bcontent)
 
-	//	input := "{ loop 50000000 { add 1 2 } }"
 	block, genv := loader.LoadString(content, sig)
 	switch val := block.(type) {
 	case env.Block:
@@ -361,75 +182,6 @@ func main_cgi_file(file string, sig bool) {
 	})); err != nil {
 		fmt.Println(err)
 	}
-
-}
-
-func main_rye_repl_OLD(in io.Reader, out io.Writer) {
-
-	//util.PrintHeader()
-	defer profile.Start().Stop()
-
-	input := "{ name: \"Rye\" version: \"0.002 alpha\" }"
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
-	evaldo.RegisterBuiltins(es)
-	evaldo.EvalBlock(es)
-
-	fmt.Println("")
-	fmt.Println(".:/|\\:. Rye shell v0.014 alpha .:/|\\:.")
-	fmt.Println("")
-
-	const PROMPT = "\n\x1b[6;30;42m Rye \033[m "
-
-	scanner := bufio.NewScanner(in)
-
-	for {
-
-		fmt.Print(PROMPT)
-
-		scanned := scanner.Scan()
-
-		if !scanned {
-			return
-		}
-
-		line := scanner.Text()
-
-		line1 := strings.Split(line, "//") //--- just very temporary solution for some comments in repl. Later should probably be part of loader ... maybe?
-		//fmt.Println(line1[0])
-		block, genv := loader.LoadString(line1[0], false)
-		es := env.AddToProgramState(es, block.(env.Block).Series, genv)
-		evaldo.EvalBlock(es)
-		if es.FailureFlag {
-			fmt.Println("\x1b[33m" + "failure" + "\x1b[0m")
-		}
-		if es.ErrorFlag {
-			fmt.Println("\x1b[31m" + "critical-error" + "\x1b[0m")
-		}
-		es.ReturnFlag = false
-		es.ErrorFlag = false
-		es.FailureFlag = false
-
-		if es.Res != nil {
-			//fmt.Println("\x1b[6;30;42m" + es.Res.Inspect(*genv) + "\x1b[0m")
-			fmt.Println("\x1b[0;49;32m" + es.Res.Inspect(*genv) + "\x1b[0m")
-		}
-	}
-
-	/*genv := loader.GetIdxs()
-		ps := evaldo.ProgramState{}
-
-		// Parse
-		loader1 := loader.NewLoader()
-		input := "{ 123 word 3 { setword: 23 } end 12 word }"
-		val, _ := loader1.ParseAndGetValue(input, nil)
-		loader.InspectNode(val)
-		evaldo.EvalBlock(ps, val.(env.Object))
-		fmt.Println(val)
-
-		genv.Probe()
-
-	a	fmt.Println(strconv.FormatInt(int64(genv.GetWordCount()), 10))*/
 
 }
 

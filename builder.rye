@@ -1,0 +1,55 @@
+
+with Rye {
+	.info { Descr: "A script for building Rye instances in declarative way" Author: "JM" } ,
+	.needs { os } ,
+	.args { "build" { block! } "ls" opt { string! } "help" } ,
+	.usage {
+		"rye build { sqlite telegram }"
+		"rye build help"
+		"rye build ls"
+		"rye build ls sql"
+	}	
+}
+
+CORE-MODULES: { "..." }
+
+MODULES: {
+	sqlite { "github.com/mattn/go-sqlite3" }
+	telegram { "github.com/go-telegram-bot-api/telegram-bot-api" }
+}
+
+Rye .get-args-rye :args -> 1 |switch {
+	build { build-rye 2 <- args }
+	help { show-help 2 <- args  }
+	ls { list-modules 2 <- args }
+}
+
+build-rye: fn1 {
+	.vars { cant-build: false }
+	.add* CORE-MODULES
+	|for {
+		.either-with { .find MODULES } {
+			.add* "go get " .pass { print "getting module:" } .print .cmd .print 		
+		} {
+			.add* "can't find module: " |print , cant-build: true
+		}
+	}
+	^if cant-build { print "Can't build" }
+	cmd "rye build"
+}
+
+show-help: does {
+	print "This is a simple utility to build Rye binaries"
+	print "Use > ryeb build { list of modules } to build a binary you need."
+}
+
+list-modules: fn { str } {
+	MODULES .for { .to-string |when { .contains str } { .print } }
+}
+
+
+; missing
+; * Rye header functions ... add at least dummy ones
+; * get-args-rye
+; * function add that is equivalent of +
+; * either-with , if-with (or when)

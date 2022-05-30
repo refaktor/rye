@@ -1521,6 +1521,9 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = code.Series
 					for i := 0; i < len(block.Value); i++ {
 						ps = EvalBlockInj(ps, env.String{string(block.Value[i])}, true)
+						if ps.ErrorFlag {
+							return ps.Res
+						}
 						ps.Ser.Reset()
 					}
 					ps.Ser = ser
@@ -1533,6 +1536,9 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = code.Series
 					for i := 0; i < len(block.Data); i++ {
 						ps = EvalBlockInj(ps, JsonToRye(block.Data[i]), true)
+						if ps.ErrorFlag {
+							return ps.Res
+						}
 						ps.Ser.Reset()
 					}
 					ps.Ser = ser
@@ -1547,6 +1553,9 @@ var builtins = map[string]*env.Builtin{
 						row := block.Rows[i]
 						row.Uplink = &block
 						ps = EvalBlockInj(ps, row, true)
+						if ps.ErrorFlag {
+							return ps.Res
+						}
 						ps.Ser.Reset()
 					}
 					ps.Ser = ser
@@ -3632,6 +3641,38 @@ var builtins = map[string]*env.Builtin{
 			return nil
 		},
 	},
+
+	"Rye": {
+		Argsn: 0,
+		Doc:   "",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return *env.NewNative(ps.Idx, modules, "Rye-itself")
+		},
+	},
+
+	"Rye-itself//needs": {
+		Argsn: 2,
+		Doc:   "",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			/* switch ry := arg0.(type) {
+			case env.Native:
+				switch blk := arg1.(type) {
+				case env.Block:
+					// TODO:
+					// for each value in a block
+					// check if it's in the modules and true
+					// if yes then ok
+					// if not true report "Module exists but not built in"
+					// if not exists report "Module doesn't exist"
+				default:
+					return makeError(ps, "Arg 1 should be String")
+				}
+			default:
+				return makeError(ps, "Arg 1 should be String")
+			}*/
+			return nil
+		},
+	},
 }
 
 /* Terminal functions .. move to it's own later */
@@ -3652,36 +3693,40 @@ func isTruthy(arg env.Object) env.Object {
 */
 
 func RegisterBuiltins(ps *env.ProgramState) {
-	RegisterBuiltins2(builtins, ps)
-	RegisterBuiltins2(Builtins_io, ps)
-	RegisterBuiltins2(Builtins_web, ps)
-	RegisterBuiltins2(Builtins_sxml, ps)
-	RegisterBuiltins2(Builtins_html, ps)
-	RegisterBuiltins2(Builtins_sqlite, ps)
-	RegisterBuiltins2(Builtins_gtk, ps)
-	RegisterBuiltins2(Builtins_validation, ps)
-	RegisterBuiltins2(Builtins_ps, ps)
-	RegisterBuiltins2(Builtins_nats, ps)
-	RegisterBuiltins2(Builtins_qframe, ps)
-	RegisterBuiltins2(Builtins_webview, ps)
-	RegisterBuiltins2(Builtins_json, ps)
-	RegisterBuiltins2(Builtins_stackless, ps)
-	RegisterBuiltins2(Builtins_eyr, ps)
-	RegisterBuiltins2(Builtins_conversion, ps)
-	RegisterBuiltins2(Builtins_nng, ps)
-	RegisterBuiltins2(Builtins_http, ps)
-	RegisterBuiltins2(Builtins_crypto, ps)
-	RegisterBuiltins2(Builtins_goroutines, ps)
-	RegisterBuiltins2(Builtins_psql, ps)
-	RegisterBuiltins2(Builtins_mysql, ps)
-	RegisterBuiltins2(Builtins_bcrypt, ps)
-	RegisterBuiltins2(Builtins_raylib, ps)
-	RegisterBuiltins2(Builtins_email, ps)
-	RegisterBuiltins2(Builtins_cayley, ps)
-	RegisterBuiltins2(Builtins_structures, ps)
+	RegisterBuiltins2(builtins, ps, "core")
+	RegisterBuiltins2(Builtins_io, ps, "io")
+	RegisterBuiltins2(Builtins_web, ps, "web")
+	RegisterBuiltins2(Builtins_sxml, ps, "sxml")
+	RegisterBuiltins2(Builtins_html, ps, "html")
+	RegisterBuiltins2(Builtins_sqlite, ps, "sqlite")
+	RegisterBuiltins2(Builtins_gtk, ps, "gtk")
+	RegisterBuiltins2(Builtins_validation, ps, "validation")
+	RegisterBuiltins2(Builtins_ps, ps, "ps")
+	RegisterBuiltins2(Builtins_nats, ps, "nats")
+	RegisterBuiltins2(Builtins_qframe, ps, "qframe")
+	RegisterBuiltins2(Builtins_webview, ps, "webview")
+	RegisterBuiltins2(Builtins_json, ps, "json")
+	RegisterBuiltins2(Builtins_stackless, ps, "stackless")
+	RegisterBuiltins2(Builtins_eyr, ps, "eyr")
+	RegisterBuiltins2(Builtins_conversion, ps, "conversion")
+	RegisterBuiltins2(Builtins_nng, ps, "nng")
+	RegisterBuiltins2(Builtins_http, ps, "http")
+	RegisterBuiltins2(Builtins_crypto, ps, "crypto")
+	RegisterBuiltins2(Builtins_goroutines, ps, "gorourines")
+	RegisterBuiltins2(Builtins_psql, ps, "psql")
+	RegisterBuiltins2(Builtins_mysql, ps, "mysql")
+	RegisterBuiltins2(Builtins_bcrypt, ps, "bcrypt")
+	RegisterBuiltins2(Builtins_raylib, ps, "raylib")
+	RegisterBuiltins2(Builtins_email, ps, "email")
+	RegisterBuiltins2(Builtins_cayley, ps, "cayley")
+	RegisterBuiltins2(Builtins_structures, ps, "structs")
+	RegisterBuiltins2(Builtins_telegrambot, ps, "telegram")
 }
 
-func RegisterBuiltins2(builtins map[string]*env.Builtin, ps *env.ProgramState) {
+var modules map[string]int
+
+func RegisterBuiltins2(builtins map[string]*env.Builtin, ps *env.ProgramState, name string) {
+	// modules[name] = len(builtins)
 	for k, v := range builtins {
 		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc)
 		registerBuiltin(ps, k, *bu)

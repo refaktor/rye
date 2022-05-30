@@ -262,11 +262,11 @@ func DoRyeRepl(es *env.ProgramState) {
 
 						if !es.ErrorFlag && es.Res != nil {
 							prevResult = es.Res
-							fmt.Print("\033[38;5;37m" + es.Res.Inspect(*genv) + "\x1b[0m")
+							// TEMP - make conditional fmt.Print("\033[38;5;37m" + es.Res.Inspect(*genv) + "\x1b[0m")
 							if es.Res != nil && shellEd.Mode != "" && !shellEd.Pause && es.Res == shellEd.Return {
 								fmt.Println(" <- the correct value was returned")
 							} else {
-								fmt.Println("")
+								// fmt.Println("")
 							}
 						}
 
