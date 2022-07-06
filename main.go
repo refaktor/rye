@@ -15,13 +15,14 @@ import (
 	"os"
 	"os/exec"
 
-	"strconv"
+	// "strconv"
 	"strings"
 
 	"net/http"
 	"rye/env"
 	"rye/evaldo"
 	"rye/loader"
+	"rye/util"
 
 	"net/http/cgi"
 	"rye/ryeco"
@@ -88,16 +89,21 @@ func main_ryk(code string) {
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		//fmt.Println(scanner.Text())
-		curIdx := es.Idx.IndexWord("line") // turn to _0, _1 or something like it via separator later ..
+		idx0 := es.Idx.IndexWord("_0") // turn to _0, _1 or something like it via separator later ..
+		idx1 := es.Idx.IndexWord("_1") // turn to _0, _1 or something like it via separator later ..
+		idx2 := es.Idx.IndexWord("_2") // turn to _0, _1 or something like it via separator later ..
 		//printidx, _ := es.Idx.GetIndex("print")
-		val0, er := strconv.ParseInt(scanner.Text(), 10, 64)
-		if er == nil {
-			es.Ctx.Set(curIdx, env.Integer{val0})
-			evaldo.EvalBlock(es)
-			es.Ser.Reset()
-		} else {
-			fmt.Println("error processing line: " + scanner.Text())
-		}
+		// val0, er := strconv.ParseInt(scanner.Text(), 10, 64)
+		val0 := util.StringToFieldsWithQuoted(scanner.Text(), " ", "\"")
+		// if er == nil {
+		es.Ctx.Set(idx0, val0.Series.Get(0))
+		es.Ctx.Set(idx1, val0.Series.Get(1))
+		es.Ctx.Set(idx2, val0.Series.Get(2))
+		evaldo.EvalBlockInj(es, val0, true)
+		es.Ser.Reset()
+		//} else {
+		//	fmt.Println("error processing line: " + scanner.Text())
+		// }
 	}
 
 	if err := scanner.Err(); err != nil {

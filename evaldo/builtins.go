@@ -2677,6 +2677,30 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"split-quoted": {
+		Argsn: 3,
+		Pure:  true,
+		Doc:   "Splits a line of string into values by separator by respecting quotes",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch str := arg0.(type) {
+			case env.String:
+				switch sepa := arg1.(type) {
+				case env.String:
+					switch quote := arg2.(type) {
+					case env.String:
+						return util.StringToFieldsWithQuoted(str.Value, sepa.Value, quote.Value)
+					default:
+						return makeError(ps, "Quote character not a string.")
+					}
+				default:
+					return makeError(ps, "Separator character not a string.")
+				}
+			default:
+				return makeError(ps, "Input text not a string.")
+			}
+		},
+	},
+
 	// BASIC SERIES FUNCTIONS
 
 	"first": {

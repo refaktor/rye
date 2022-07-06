@@ -45,3 +45,22 @@ func Dict2Context(ps *env.ProgramState, s1 env.Dict) env.RyeCtx {
 	}
 	return *ctx
 }
+
+func StringToFieldsWithQuoted(str string, sepa string, quote string) env.Block {
+	quoted := false
+	spl := strings.FieldsFunc(str, func(r rune) bool {
+		if string(r) == quote {
+			quoted = !quoted
+		}
+		return !quoted && string(r) == sepa
+	})
+	lst := make([]env.Object, len(spl))
+	for i := 0; i < len(spl); i++ {
+		//fmt.Println(spl[i])
+		// TODO -- detect numbers and turn them to integers or floats, later we can also detect other types of values
+		// val, _ := loader.LoadString(spl[i], false)
+		val := env.String{spl[i]}
+		lst[i] = val
+	}
+	return *env.NewBlock(*env.NewTSeries(lst))
+}

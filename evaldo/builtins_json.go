@@ -73,8 +73,10 @@ func JsonToRye(res interface{}) env.Object {
 		return v
 	case nil:
 		return nil
+	default:
+		fmt.Println(res)
+		return env.Void{}
 	}
-	return env.Void{}
 }
 
 // Inspect returns a string representation of the Integer.
