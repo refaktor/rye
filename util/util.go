@@ -3,7 +3,9 @@ package util
 
 import (
 	"fmt"
+	"regexp"
 	"rye/env"
+	"strconv"
 	"strings"
 )
 
@@ -59,8 +61,23 @@ func StringToFieldsWithQuoted(str string, sepa string, quote string) env.Block {
 		//fmt.Println(spl[i])
 		// TODO -- detect numbers and turn them to integers or floats, later we can also detect other types of values
 		// val, _ := loader.LoadString(spl[i], false)
-		val := env.String{spl[i]}
-		lst[i] = val
+		numeric, _ := regexp.MatchString("[0-9]+", spl[i])
+		// fmt.Println(numeric)
+		pass := false
+		if numeric {
+			num, err := strconv.Atoi(spl[i])
+			if err == nil {
+				lst[i] = env.Integer{int64(num)}
+				pass = true
+			} else {
+				// fmt.Println(err.Error())
+			}
+		}
+		if !pass {
+			clean := regexp.MustCompile(`^"(.*)"$`).ReplaceAllString(spl[i], `$1`)
+			val := env.String{clean}
+			lst[i] = val
+		}
 	}
 	return *env.NewBlock(*env.NewTSeries(lst))
 }

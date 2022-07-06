@@ -2677,6 +2677,51 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"join-with": { // todo -- join\w data ","
+		Argsn: 2,
+		Pure:  true,
+		Doc:   "Joins Block or list of values together.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.List:
+				switch s2 := arg1.(type) {
+				case env.String:
+					var str strings.Builder
+					for _, c := range s1.Data {
+						switch it := c.(type) {
+						case string:
+							str.WriteString(it)
+						case env.String:
+							str.WriteString(it.Value)
+						case int:
+							str.WriteString(strconv.Itoa(it))
+						case env.Integer:
+							str.WriteString(strconv.Itoa(int(it.Value)))
+						}
+						str.WriteString(s2.Value)
+					}
+					return env.String{str.String()}
+				}
+			case env.Block:
+				switch s2 := arg1.(type) {
+				case env.String:
+					var str strings.Builder
+					for _, c := range s1.Series.S {
+						switch it := c.(type) {
+						case env.String:
+							str.WriteString(it.Value)
+						case env.Integer:
+							str.WriteString(strconv.Itoa(int(it.Value)))
+						}
+						str.WriteString(s2.Value)
+					}
+					return env.String{str.String()}
+				}
+			}
+			return nil
+		},
+	},
+
 	"split-quoted": {
 		Argsn: 3,
 		Pure:  true,
@@ -2697,6 +2742,22 @@ var builtins = map[string]*env.Builtin{
 				}
 			default:
 				return makeError(ps, "Input text not a string.")
+			}
+		},
+	},
+
+	"to-integer": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch addr := arg0.(type) {
+			case env.String:
+				int, err := strconv.Atoi(addr.Value)
+				if err != nil {
+					return makeError(ps, err.Error())
+				}
+				return env.Integer{int64(int)}
+			default:
+				return makeError(ps, "Arg 1 should be String.")
 			}
 		},
 	},
