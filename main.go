@@ -63,9 +63,9 @@ func main() {
 		} else {
 			main_rye_file(os.Args[1], false)
 		}
-	} else if len(os.Args) == 3 {
+	} else if len(os.Args) >= 3 {
 		if os.Args[1] == "ryk" {
-			main_ryk(os.Args[2])
+			main_ryk()
 		} else if os.Args[1] == "cgi" {
 			main_cgi_file(os.Args[2], false)
 		} else if os.Args[1] == "sig" {
@@ -78,20 +78,37 @@ func main() {
 // main for awk like functionality with rye language
 //
 
-func main_ryk(code string) {
+func main_ryk() {
 
-	block, genv := loader.LoadString(code, false)
-	// make code composable, updatable ... so you can load by appending to existing program/state or initial block?
-	// basically we need to have multiple toplevel blocks that can be evaluated by the same state
+	argIdx := 2
+
+	block, genv := loader.LoadString("{ }", false)
 	es := env.NewProgramState(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
+
+	if len(os.Args) >= 5 {
+		if os.Args[argIdx] == "--begin" {
+			block, genv := loader.LoadString(os.Args[argIdx+1], false)
+			es := env.AddToProgramState(es, block.(env.Block).Series, genv)
+			evaldo.EvalBlockInj(es, es.ForcedResult, true)
+			es.Ser.Reset()
+			argIdx += 2
+		}
+	}
+
+	code := os.Args[argIdx]
+
+	block1, genv1 := loader.LoadString(code, false)
+	es = env.AddToProgramState(es, block1.(env.Block).Series, genv1)
+	// make code composable, updatable ... so you can load by appending to existing program/state or initial block?
+	// basically we need to have multiple toplevel blocks that can be evaluated by the same state
 
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		//fmt.Println(scanner.Text())
-		idx0 := es.Idx.IndexWord("_0") // turn to _0, _1 or something like it via separator later ..
-		idx1 := es.Idx.IndexWord("_1") // turn to _0, _1 or something like it via separator later ..
-		idx2 := es.Idx.IndexWord("_2") // turn to _0, _1 or something like it via separator later ..
+		idx0 := es.Idx.IndexWord("f0") // turn to _0, _1 or something like it via separator later ..
+		idx1 := es.Idx.IndexWord("f1") // turn to _0, _1 or something like it via separator later ..
+		idx2 := es.Idx.IndexWord("f2") // turn to _0, _1 or something like it via separator later ..
 		//printidx, _ := es.Idx.GetIndex("print")
 		// val0, er := strconv.ParseInt(scanner.Text(), 10, 64)
 		val0 := util.StringToFieldsWithQuoted(scanner.Text(), " ", "\"")
@@ -108,6 +125,17 @@ func main_ryk(code string) {
 
 	if err := scanner.Err(); err != nil {
 		log.Println(err)
+	}
+
+	argIdx += 1
+
+	if len(os.Args) >= argIdx+2 {
+		if os.Args[argIdx] == "--end" {
+			block, genv := loader.LoadString(os.Args[argIdx+1], false)
+			es := env.AddToProgramState(es, block.(env.Block).Series, genv)
+			evaldo.EvalBlockInj(es, es.ForcedResult, true)
+			es.Ser.Reset()
+		}
 	}
 }
 

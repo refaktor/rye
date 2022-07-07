@@ -3,6 +3,7 @@ package evaldo
 
 import (
 	"io/ioutil"
+	// "math"
 	"os/exec"
 	"reflect"
 
@@ -30,6 +31,17 @@ func makeError(env1 *env.ProgramState, msg string) *env.Error {
 
 func equalValues(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) bool {
 	return arg0.GetKind() == arg1.GetKind() && arg0.Inspect(*ps.Idx) == arg1.Inspect(*ps.Idx)
+}
+
+func greaterThan(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) bool {
+	switch v1 := arg0.(type) {
+	case env.Integer:
+		switch v2 := arg1.(type) {
+		case env.Integer:
+			return v1.Value > v2.Value
+		}
+	}
+	return false
 }
 
 func getFrom(ps *env.ProgramState, data interface{}, key interface{}, posMode bool) env.Object {
@@ -2125,6 +2137,88 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"max": {
+		Argsn: 1,
+		Doc:   "Accepts a block of values and returns maximal value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var max env.Object
+			switch block := arg0.(type) {
+			case env.Block:
+				l := block.Series.Len()
+				for i := 0; i < l; i++ {
+					if max == nil || greaterThan(ps, block.Series.Get(i), max) {
+						max = block.Series.Get(i)
+					}
+				}
+			}
+			return max
+		},
+	},
+
+	"min": {
+		Argsn: 1,
+		Doc:   "Accepts a block of values and returns maximal value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var max env.Object
+			switch block := arg0.(type) {
+			case env.Block:
+				l := block.Series.Len()
+				for i := 0; i < l; i++ {
+					if max == nil || greaterThan(ps, max, block.Series.Get(i)) {
+						max = block.Series.Get(i)
+					}
+				}
+			}
+			return max
+		},
+	},
+
+	"avg": {
+		Argsn: 1,
+		Doc:   "Accepts a block of values and returns maximal value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var sum int64
+			switch block := arg0.(type) {
+			case env.Block:
+				l := block.Series.Len()
+				for i := 0; i < l; i++ {
+					obj := block.Series.Get(i)
+					switch val1 := obj.(type) {
+					case env.Integer:
+						{
+							sum += val1.Value
+						}
+					}
+				}
+				return env.Integer{int64(sum) / int64(l)}
+			}
+			return nil
+		},
+	},
+
+	"sum": {
+		Argsn: 1,
+		Doc:   "Accepts a block of values and returns maximal value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var sum int64
+			switch block := arg0.(type) {
+			case env.Block:
+				l := block.Series.Len()
+				for i := 0; i < l; i++ {
+					obj := block.Series.Get(i)
+					switch val1 := obj.(type) {
+					case env.Integer:
+						{
+							sum += val1.Value
+						}
+					}
+				}
+				return env.Integer{int64(sum)}
+			}
+			return nil
+		},
+	},
+
 	//test if we can do recur similar to clojure one. Since functions in rejy are of fixed arity we would need recur1 recur2 recur3 and recur [ ] which is less optimal
 	//otherwise word recur could somehow be bound to correct version or args depending on number of args of func. Try this at first.
 	"recur-if\\1": { //recur1-if
@@ -3647,7 +3741,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"sum": {
+	"colsum": {
 		Argsn: 2,
 		Doc:   "Accepts a spreadsheet and a column name and returns a sum of a column.", // TODO -- let it accept a block and list also
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
