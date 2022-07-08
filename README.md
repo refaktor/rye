@@ -17,6 +17,9 @@
    * [Related links](#related-links)
    * [Questions, contact](#related-links)
 
+
+*visit **[our blog](https://ryelang.blogspot.com/)** for latest examples and development updates*
+
 ## What is Rye
 
 Rye is a human centric, high level, dynamic **programming language** based on ideas from **Rebol**, flavored by
@@ -295,6 +298,8 @@ Run the REPL
   [Red](https://red-lang.org) - Another language inspired by Rebol from well known Rebol developer  DocKimbel and his colleagues. A concrete endaviour, with it's low level language, compiler, GUI, ...
   
   [Oldes' Rebol 3](https://oldes.github.io/Rebol3/) - Rebol3 fork maintained by Oldes (from Amanita Design), tries to resolve issues without unnecessarily changing the language itself.
+  
+  [Arturo](https://arturo-lang.io/) - Another unique language that builds on Rebol's core ideas.
   
   [Ren-c](https://github.com/metaeducation/ren-c) - Rebol 3 fork maintained by HostileFork, more liberal with changes to the language. 
   
