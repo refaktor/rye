@@ -1204,6 +1204,21 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"collect-update-key": {
+		Argsn: 2,
+		Doc:   "Collecs key value pars to implicit block.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			if ps.ForcedResult == nil || ps.ForcedResult.Type() != env.BlockType {
+				ps.ForcedResult = *env.NewBlock(*env.NewTSeries(make([]env.Object, 0)))
+			}
+			block := ps.ForcedResult.(env.Block)
+			block.Series.Append(arg1)
+			block.Series.Append(arg0)
+			ps.ForcedResult = block
+			return arg0
+		},
+	},
+
 	"collected": {
 		Argsn: 0,
 		Doc:   "Returns the implicit data structure that we collected t",
@@ -2842,6 +2857,7 @@ var builtins = map[string]*env.Builtin{
 
 	"to-integer": {
 		Argsn: 1,
+		Doc:   "Splits a line of string into values by separator by respecting quotes",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch addr := arg0.(type) {
 			case env.String:

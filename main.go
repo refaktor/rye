@@ -81,10 +81,44 @@ func main() {
 func main_ryk() {
 
 	argIdx := 2
+	ignore := 0
+	separator := " "
+	input := ""
 
-	block, genv := loader.LoadString("{ }", false)
+	// 	fmt.Print("preload")
+
+	profile_path := ".ryk-preload"
+
+	if _, err := os.Stat(profile_path); err == nil {
+		content, err := ioutil.ReadFile(profile_path)
+		if err != nil {
+			log.Fatal(err)
+		}
+		input = string(content)
+	} else {
+		// fmt.Print("no preload")
+	}
+
+	block, genv := loader.LoadString(input, false)
+	//block, genv := loader.LoadString("{ }", false)
 	es := env.NewProgramState(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
+	evaldo.EvalBlock(es)
+
+	if len(os.Args) >= 4 {
+		if os.Args[argIdx] == "--skip" {
+			ignore = 1
+			argIdx++
+		}
+		if os.Args[argIdx] == "--csv" {
+			separator = ","
+			argIdx++
+		}
+		if os.Args[argIdx] == "--tsv" {
+			separator = "\t"
+			argIdx++
+		}
+	}
 
 	if len(os.Args) >= 5 {
 		if os.Args[argIdx] == "--begin" {
@@ -105,22 +139,25 @@ func main_ryk() {
 
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
-		//fmt.Println(scanner.Text())
-		idx0 := es.Idx.IndexWord("f0") // turn to _0, _1 or something like it via separator later ..
-		idx1 := es.Idx.IndexWord("f1") // turn to _0, _1 or something like it via separator later ..
-		idx2 := es.Idx.IndexWord("f2") // turn to _0, _1 or something like it via separator later ..
-		//printidx, _ := es.Idx.GetIndex("print")
-		// val0, er := strconv.ParseInt(scanner.Text(), 10, 64)
-		val0 := util.StringToFieldsWithQuoted(scanner.Text(), " ", "\"")
-		// if er == nil {
-		es.Ctx.Set(idx0, val0.Series.Get(0))
-		es.Ctx.Set(idx1, val0.Series.Get(1))
-		es.Ctx.Set(idx2, val0.Series.Get(2))
-		evaldo.EvalBlockInj(es, val0, true)
-		es.Ser.Reset()
-		//} else {
-		//	fmt.Println("error processing line: " + scanner.Text())
-		// }
+		if ignore > 0 {
+			ignore--
+		} else {
+			//fmt.Println(scanner.Text())
+			//idx0 := es.Idx.IndexWord("f0") // turn to _0, _1 or something like it via separator later ..
+			//idx1 := es.Idx.IndexWord("f1") // turn to _0, _1 or something like it via separator later ..
+			//idx2 := es.Idx.IndexWord("f2") // turn to _0, _1 or something like it via separator later ..
+			//printidx, _ := es.Idx.GetIndex("print")
+			// val0, er := strconv.ParseInt(scanner.Text(), 10, 64)
+			val0 := util.StringToFieldsWithQuoted(scanner.Text(), separator, "\"")
+			// if er == nil {
+			// es.Ctx.Set(idx0, val0.Series.Get(0))
+			evaldo.EvalBlockInj(es, val0, true)
+			es.Ser.Reset()
+			//} else {
+			//	fmt.Println("error processing line: " + scanner.Text())
+			// }
+		}
+
 	}
 
 	if err := scanner.Err(); err != nil {
