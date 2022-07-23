@@ -184,6 +184,11 @@ func parseNumber(v *Values, d Any) (Any, error) {
 	return env.Integer{val}, er
 }
 
+func parseDecimal(v *Values, d Any) (Any, error) {
+	val, er := strconv.ParseFloat(v.Token(), 64)
+	return env.Decimal{val}, er
+}
+
 func parseString(v *Values, d Any) (Any, error) {
 	return env.String{v.Token()[1 : len(v.Token())-1]}, nil
 }
@@ -339,7 +344,7 @@ func newParser() *Parser { // TODO -- add string eaddress path url time
 	BLOCK       	<-  "{" SPACES SERIES* "}"
 	BBLOCK       	<-  "[" SPACES SERIES* "]"
     GROUP       	<-  "(" SPACES SERIES* ")"
-    SERIES     		<-  (COMMENT / URI / EMAIL / STRING / NUMBER / COMMA / SETWORD / LSETWORD / ONECHARPIPE / PIPEWORD / XWORD / OPWORD / TAGWORD / EXWORD / CPATH / FPATH / KINDWORD / GENWORD / GETWORD / VOID / WORD / BLOCK / GROUP / BBLOCK / ARGBLOCK ) SPACES
+    SERIES     		<-  (COMMENT / URI / EMAIL / STRING / DECIMAL / NUMBER / COMMA / SETWORD / LSETWORD / ONECHARPIPE / PIPEWORD / XWORD / OPWORD / TAGWORD / EXWORD / CPATH / FPATH / KINDWORD / GENWORD / GETWORD / VOID / WORD / BLOCK / GROUP / BBLOCK / ARGBLOCK ) SPACES
     ARGBLOCK       	<-  "{" WORD ":" WORD "}"
     WORD           	<-  LETTER LETTERORNUM*
 	GENWORD 		<-  UCLETTER LCLETTERORNUM* 
@@ -367,8 +372,9 @@ func newParser() *Parser { // TODO -- add string eaddress path url time
 	LETTERORNUM		<-  < [a-zA-Z0-9-?=.\\!_+<>\]*()] >
 	URIPATH			<-  < [a-zA-Z0-9-?=.:@/\\!_>	()] >
 	UCLETTER  		<-  < [A-Z] >
-	LCLETTERORNUM	<-  < [a-z0-9] >
-    NUMBER         	<-  < [0-9]+ >
+	LCLETTERORNUM  	        <-  < [a-z0-9] >
+        NUMBER          	<-  < [0-9]+ >
+        DECIMAL         	<-  < [0-9]+.[0-9]+ >
 	SPACE			<-  < [ \t\r\n] >
 	STRINGCHAR		<-  < !'"' . >
 	STRINGCHAR1		<-  < !"$" . >
@@ -403,6 +409,7 @@ func newParser() *Parser { // TODO -- add string eaddress path url time
 	g["GENWORD"].Action = parseGenword
 	g["GETWORD"].Action = parseGetword
 	g["NUMBER"].Action = parseNumber
+	g["DECIMAL"].Action = parseDecimal
 	g["STRING"].Action = parseString
 	g["EMAIL"].Action = parseEmail
 	g["URI"].Action = parseUri

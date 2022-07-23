@@ -279,7 +279,7 @@ func EvalExpressionConcrete(ps *env.ProgramState) *env.ProgramState {
 	//trace2("Before entering expression")
 	if object != nil {
 		switch object.Type() {
-		case env.IntegerType, env.StringType, env.BlockType, env.VoidType, env.TagwordType, env.UriType, env.EmailType:
+		case env.IntegerType, env.DecimalType, env.StringType, env.BlockType, env.VoidType, env.TagwordType, env.UriType, env.EmailType:
 			if !ps.SkipFlag {
 				ps.Res = object
 			}

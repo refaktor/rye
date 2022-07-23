@@ -44,6 +44,7 @@ const (
 	ConverterType      Type = 31
 	TimeType           Type = 32
 	SpreadsheetRowType Type = 33
+	DecimalType          Type = 34
 )
 
 // after adding new type here, also add string to idxs.go
@@ -87,6 +88,39 @@ func (i Integer) Trace(msg string) {
 
 func (i Integer) GetKind() int {
 	return int(IntegerType)
+}
+
+//
+// DECIMAL
+//
+
+// Decimal 
+type Decimal struct {
+	Value float64
+}
+
+// Type returns the type of the Decimal.
+func (i Decimal) Type() Type {
+	return DecimalType
+}
+
+// Inspect returns a string representation of the Decimal.
+func (i Decimal) Inspect(e Idxs) string {
+	return "[Decimal: " + strconv.FormatFloat(i.Value, 'f', 6, 64) + "]"
+}
+
+// Inspect returns a string representation of the Decimal.
+func (i Decimal) Probe(e Idxs) string {
+	return strconv.FormatFloat(i.Value, 'f', 6, 64)
+}
+
+func (i Decimal) Trace(msg string) {
+	fmt.Print(msg + "(Decimal): ")
+	fmt.Println(i.Value)
+}
+
+func (i Decimal) GetKind() int {
+	return int(DecimalType)
 }
 
 //

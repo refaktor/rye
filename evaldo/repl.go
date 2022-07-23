@@ -186,6 +186,8 @@ func DoRyeRepl(es *env.ProgramState) {
 
 	line2 := ""
 
+	showResults := false
+
 	var prevResult env.Object
 
 	for {
@@ -228,6 +230,10 @@ func DoRyeRepl(es *env.ProgramState) {
 					// ignore
 				} else if strings.Compare("(lc)", line2) == 0 {
 					fmt.Println(es.Ctx.Probe(*es.Idx))
+				} else if strings.Compare("(show-results)", line2) == 0 {
+					showResults = true
+				} else if strings.Compare("(hide-results)", line2) == 0 {
+					showResults = false
 				} else if strings.Compare("(r)", line2) == 0 {
 					// es.Ser = ser
 					// fmt.Println("")
@@ -262,7 +268,11 @@ func DoRyeRepl(es *env.ProgramState) {
 
 						if !es.ErrorFlag && es.Res != nil {
 							prevResult = es.Res
-							// TEMP - make conditional fmt.Print("\033[38;5;37m" + es.Res.Inspect(*genv) + "\x1b[0m")
+							// TEMP - make conditional
+							// print the result
+							if showResults {
+								fmt.Println("\033[38;5;37m" + es.Res.Inspect(*genv) + "\x1b[0m")
+							}
 							if es.Res != nil && shellEd.Mode != "" && !shellEd.Pause && es.Res == shellEd.Return {
 								fmt.Println(" <- the correct value was returned")
 							} else {
