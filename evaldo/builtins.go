@@ -3,13 +3,9 @@ package evaldo
 
 import (
 	"io/ioutil"
-	// "math"
 	"os/exec"
 	"reflect"
-
-	//	"bufio"
 	"fmt"
-	//	"os"
 	"rye/env"
 
 	"rye/loader"
@@ -34,14 +30,39 @@ func equalValues(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) bool {
 }
 
 func greaterThan(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) bool {
-	switch v1 := arg0.(type) {
+	var valA float64
+	var valB float64
+	switch vA := arg0.(type) {
 	case env.Integer:
-		switch v2 := arg1.(type) {
-		case env.Integer:
-			return v1.Value > v2.Value
-		}
+		valA = float64(vA.Value)
+	case env.Decimal:
+		valA = vA.Value
 	}
-	return false
+	switch vB := arg1.(type) {
+	case env.Integer:
+		valB = float64(vB.Value)
+	case env.Decimal:
+		valB = vB.Value
+	}
+	return valA > valB
+}
+
+func lesserThan(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) bool {
+	var valA float64
+	var valB float64
+	switch vA := arg0.(type) {
+	case env.Integer:
+		valA = float64(vA.Value)
+	case env.Decimal:
+		valA = vA.Value
+	}
+	switch vB := arg1.(type) {
+	case env.Integer:
+		valB = float64(vB.Value)
+	case env.Decimal:
+		valB = vB.Value
+	}
+	return valA < valB
 }
 
 func getFrom(ps *env.ProgramState, data interface{}, key interface{}, posMode bool) env.Object {
@@ -324,13 +345,31 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Integer:
-				return env.Integer{s1.Value + arg1.(env.Integer).Value}
+				switch s2 := arg1.(type) {
+				case env.Integer:
+					return env.Integer{s1.Value + s2.Value}
+				case env.Decimal:
+					return env.Decimal{float64(s1.Value) + s2.Value}
+				default:
+					return makeError(ps, "Integer and a wrong type")
+				}
+			case env.Decimal:
+				switch s2 := arg1.(type) {
+				case env.Integer:
+					return env.Decimal{s1.Value + float64(s2.Value)}
+				case env.Decimal:
+					return env.Decimal{s1.Value + s2.Value}
+				default:
+					return makeError(ps, "Decimal and a wrong type")
+				}
 			case env.String:
 				switch s2 := arg1.(type) {
 				case env.String:
 					return env.String{s1.Value + s2.Value}
 				case env.Integer:
 					return env.String{s1.Value + strconv.Itoa(int(s2.Value))}
+				case env.Decimal:
+					return env.String{s1.Value + strconv.FormatFloat(s2.Value, 'f', -1, 64)}
 				default:
 					return makeError(ps, "If Arg 1 is String, Arg 2 should also be String or Integer")
 				}
@@ -385,6 +424,17 @@ var builtins = map[string]*env.Builtin{
 				switch b := arg1.(type) {
 				case env.Integer:
 					return env.Integer{a.Value - b.Value}
+				case env.Decimal:
+					return env.Decimal{float64(a.Value) - b.Value}
+				default:
+					return makeError(ps, "Arg 1 is not Integer.")
+				}
+			case env.Decimal:
+				switch b := arg1.(type) {
+				case env.Integer:
+					return env.Decimal{a.Value - float64(b.Value)}
+				case env.Decimal:
+					return env.Decimal{a.Value - b.Value}
 				default:
 					return makeError(ps, "Arg 1 is not Integer.")
 				}
@@ -403,6 +453,17 @@ var builtins = map[string]*env.Builtin{
 				switch b := arg1.(type) {
 				case env.Integer:
 					return env.Integer{a.Value * b.Value}
+				case env.Decimal:
+					return env.Decimal{float64(a.Value) * b.Value}
+				default:
+					return makeError(ps, "Arg 1 is not Integer.")
+				}
+			case env.Decimal:
+				switch b := arg1.(type) {
+				case env.Integer:
+					return env.Decimal{a.Value * float64(b.Value)}
+				case env.Decimal:
+					return env.Decimal{a.Value * b.Value}
 				default:
 					return makeError(ps, "Arg 1 is not Integer.")
 				}
@@ -425,6 +486,29 @@ var builtins = map[string]*env.Builtin{
 						return makeError(ps, "Can't divide by Zero.")
 					}
 					return env.Integer{a.Value / b.Value}
+				case env.Decimal:
+					if b.Value == 0.0 {
+						ps.FailureFlag = true
+						return makeError(ps, "Can't divide by Zero.")
+					}
+					return env.Decimal{float64(a.Value) / b.Value}
+				default:
+					return makeError(ps, "Arg 1 is not Integer.")
+				}
+			case env.Decimal:
+				switch b := arg1.(type) {
+				case env.Integer:
+					if b.Value == 0 {
+						ps.FailureFlag = true
+						return makeError(ps, "Can't divide by Zero.")
+					}
+					return env.Decimal{a.Value / float64(b.Value)}
+				case env.Decimal:
+					if b.Value == 0.0 {
+						ps.FailureFlag = true
+						return makeError(ps, "Can't divide by Zero.")
+					}
+					return env.Decimal{a.Value / b.Value}
 				default:
 					return makeError(ps, "Arg 1 is not Integer.")
 				}
@@ -466,17 +550,10 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Tests if Arg1 is greater than Arg 2.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch arg := arg0.(type) {
-			case env.Integer:
-				var res int64
-				if arg.Value > arg1.(env.Integer).Value {
-					res = 1
-				} else {
-					res = 0
-				}
-				return env.Integer{res}
-			default:
-				return makeError(ps, "Arg 1 is not Integer.")
+			if greaterThan(ps, arg0, arg1) {
+				return env.Integer{1}
+			} else {
+				return env.Integer{0}
 			}
 		},
 	},
@@ -485,17 +562,10 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Tests if Arg1 is lesser than Arg 2.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch arg := arg0.(type) {
-			case env.Integer:
-				var res int64
-				if arg.Value < arg1.(env.Integer).Value {
-					res = 1
-				} else {
-					res = 0
-				}
-				return env.Integer{res}
-			default:
-				return makeError(ps, "Arg 1 is not Integer.")
+			if lesserThan(ps, arg0, arg1) {
+				return env.Integer{1}
+			} else {
+				return env.Integer{0}
 			}
 		},
 	},
