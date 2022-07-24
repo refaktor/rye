@@ -2262,7 +2262,7 @@ var builtins = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "Accepts a block of values and returns maximal value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			var sum int64
+			var sum float64
 			switch block := arg0.(type) {
 			case env.Block:
 				l := block.Series.Len()
@@ -2270,12 +2270,12 @@ var builtins = map[string]*env.Builtin{
 					obj := block.Series.Get(i)
 					switch val1 := obj.(type) {
 					case env.Integer:
-						{
-							sum += val1.Value
-						}
+						sum += float64(val1.Value)
+					case env.Decimal:
+						sum += val1.Value
 					}
 				}
-				return env.Integer{int64(sum) / int64(l)}
+				return env.Decimal{sum / float64(l)}
 			}
 			return nil
 		},
@@ -2285,7 +2285,7 @@ var builtins = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "Accepts a block of values and returns maximal value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			var sum int64
+			var sum float64
 			switch block := arg0.(type) {
 			case env.Block:
 				l := block.Series.Len()
@@ -2293,12 +2293,12 @@ var builtins = map[string]*env.Builtin{
 					obj := block.Series.Get(i)
 					switch val1 := obj.(type) {
 					case env.Integer:
-						{
-							sum += val1.Value
-						}
+						sum += float64(val1.Value)
+					case env.Decimal:
+						sum += val1.Value
 					}
 				}
-				return env.Integer{int64(sum)}
+				return env.Decimal{sum}
 			}
 			return nil
 		},

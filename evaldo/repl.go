@@ -186,7 +186,7 @@ func DoRyeRepl(es *env.ProgramState) {
 
 	line2 := ""
 
-	showResults := false
+	showResults := true
 
 	var prevResult env.Object
 
