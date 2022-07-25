@@ -3,6 +3,8 @@ package evaldo
 
 import (
 	"io/ioutil"
+	"os"
+	"bytes"
 	"os/exec"
 	"reflect"
 	"fmt"
@@ -186,6 +188,15 @@ var builtins = map[string]*env.Builtin{
 			default:
 				return makeError(ps, "Arg 1 not String.")
 			}
+		},
+	},
+
+	"to-string": {
+		Argsn: 1,
+		Doc:   "Takes a Rye value and returns a string representation.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return env.String{arg0.Probe(*ps.Idx)}
 		},
 	},
 
@@ -1621,6 +1632,18 @@ var builtins = map[string]*env.Builtin{
 						if ps.ErrorFlag {
 							return ps.Res
 						}
+						ps.Ser.Reset()
+					}
+					ps.Ser = ser
+					return ps.Res
+				}
+			case env.Block:
+				switch code := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = code.Series
+					for i := 0; i < block.Series.Len(); i++ {
+						ps = EvalBlockInj(ps, block.Series.Get(i), true)
 						ps.Ser.Reset()
 					}
 					ps.Ser = ser
@@ -3897,9 +3920,33 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s0 := arg0.(type) {
 			case env.String:
+				/*				cmd := exec.Command("date")
+				err := cmd.Run()
+				if err != nil {
+					log.Fatal(err)
+				}
+				fmt.Println("out:", outb.String(), "err:", errb.String()) */
+				
+				
 				r := exec.Command("/bin/bash", "-c", s0.Value)
-				stdout, _ := r.Output()
-				return JsonToRye(string(stdout))
+				// stdout, stderr := r.Output()
+				var outb, errb bytes.Buffer
+				r.Stdout = &outb
+				r.Stderr = &errb
+
+				err := r.Run()
+				if err != nil {
+					fmt.Println("ERROR")
+					fmt.Println(err)
+				}
+				fmt.Println("out:", outb.String(), "err:", errb.String())
+
+				
+					/*				if stderr != nil {
+					fmt.Println(stderr.Error())
+				}
+				return JsonToRye(" "-----------" + string(stdout)) */
+				//				return JsonToRye(string(stdout))
 			default:
 				return makeError(ps, "Arg 1 should be String")
 			}
@@ -3907,11 +3954,11 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"Rye": {
+	"rye": {
 		Argsn: 0,
 		Doc:   "",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return *env.NewNative(ps.Idx, modules, "Rye-itself")
+			return *env.NewNative(ps.Idx, builtinNames, "Rye-itself")
 		},
 	},
 
@@ -3919,25 +3966,72 @@ var builtins = map[string]*env.Builtin{
 		Argsn: 2,
 		Doc:   "",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			/* switch ry := arg0.(type) {
-			case env.Native:
-				switch blk := arg1.(type) {
-				case env.Block:
-					// TODO:
-					// for each value in a block
-					// check if it's in the modules and true
-					// if yes then ok
-					// if not true report "Module exists but not built in"
-					// if not exists report "Module doesn't exist"
-				default:
-					return makeError(ps, "Arg 1 should be String")
+			switch mod := arg1.(type) {
+			case env.Block:
+				missing := make([]env.Object, 0)
+				for i := 0; i < mod.Series.Len(); i++ {
+					switch node := mod.Series.Get(i).(type) {
+					case env.Tagword:
+						name := ps.Idx.GetWord(node.Index)
+						cnt, ok := builtinNames[name]
+						// TODO -- distinguish between modules that aren't loaded or don't exists
+						if ok && cnt > 0 {
+							//							return env.Integer{1}
+						} else {
+							fmt.Println("Module: " + name + " is missing.")
+							missing = append(missing, node)
+							// v0 todo: Print mis
+							// v1 todo: Print the instructions of what modules to go get in the project folder and reinstall
+							// v2 todo: ge get modules and then recompile rye with these flags into current folder
+							//							return env.Integer{0}
+						}
+					}
 				}
+				return *env.NewBlock(*env.NewTSeries(missing))
 			default:
-				return makeError(ps, "Arg 1 should be String")
-			}*/
-			return nil
+				return makeError(ps, "Arg 1 should be Block of Tagwords.")
+			}			
 		},
 	},
+	
+	"Rye-itself//includes?": {
+		Argsn: 1,
+		Doc:   "",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			blts := make([]env.Object, 0)
+			for i, v := range builtinNames {
+				if v > 0 {
+					idx := ps.Idx.IndexWord(i)
+					blts = append(blts, env.Word{idx})
+				}
+			}
+			return *env.NewBlock(*env.NewTSeries(blts))
+		},
+	},
+	"Rye-itself//could-include?": {
+		Argsn: 1,
+		Doc:   "",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			blts := make([]env.Object, 0)
+			for i, v := range builtinNames {
+				if v == 0 {
+					idx := ps.Idx.IndexWord(i)
+					blts = append(blts, env.Word{idx})
+				}
+			}
+			return *env.NewBlock(*env.NewTSeries(blts))
+		},
+	},
+	"Rye-itself//args": {
+		Argsn: 1,
+		Doc:   "",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return util.StringToFieldsWithQuoted(strings.Join(os.Args, " "), " ", "\"")
+			// block, _ := loader.LoadString(os.Args[0], false)
+			// return block
+		},
+	},
+
 }
 
 /* Terminal functions .. move to it's own later */
@@ -3958,6 +4052,7 @@ func isTruthy(arg env.Object) env.Object {
 */
 
 func RegisterBuiltins(ps *env.ProgramState) {
+	builtinNames = make(map[string]int)
 	RegisterBuiltins2(builtins, ps, "core")
 	RegisterBuiltins2(Builtins_io, ps, "io")
 	RegisterBuiltins2(Builtins_web, ps, "web")
@@ -3988,10 +4083,10 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_telegrambot, ps, "telegram")
 }
 
-var modules map[string]int
+var builtinNames map[string]int
 
 func RegisterBuiltins2(builtins map[string]*env.Builtin, ps *env.ProgramState, name string) {
-	// modules[name] = len(builtins)
+	builtinNames[name] = len(builtins)
 	for k, v := range builtins {
 		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc)
 		registerBuiltin(ps, k, *bu)

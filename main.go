@@ -14,8 +14,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-
-	// "strconv"
 	"strings"
 
 	"net/http"
@@ -25,9 +23,6 @@ import (
 	"rye/util"
 
 	"net/http/cgi"
-	//"rye/ryeco"
-	// enable when using profiler
-	// "github.com/pkg/profile"
 )
 
 type TagType int
@@ -70,7 +65,10 @@ func main() {
 			main_cgi_file(os.Args[2], false)
 		} else if os.Args[1] == "sig" {
 			main_rye_file(os.Args[2], true)
+		} else {
+			main_rye_file(os.Args[1], false)
 		}
+
 	}
 }
 

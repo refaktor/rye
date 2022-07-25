@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/mattn/go-runewidth v0.0.3 // indirect
+	github.com/mattn/go-sqlite3 v1.14.14 // indirect
 	github.com/pkg/profile v1.6.0 // indirect
 	github.com/pkg/term v1.1.0 // indirect
 	github.com/refaktor/go-peg v0.0.0-20220116201714-31e3dfa8dc7d // indirect

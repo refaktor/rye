@@ -12,13 +12,7 @@ import (
 	"rye/env"
 	"strings"
 
-	//	"crypto/tls"
-
 	"net/http"
-	//"net/smtp"
-	//	gomail "gopkg.in/mail.v2"
-	// "net/url"
-	//"strconv"
 	"net/http/cgi"
 )
 
@@ -43,15 +37,11 @@ func __open(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.O
 		path := strings.Split(s.Path, "://")
 		file, err := os.Open(path[1])
 		if err != nil {
-			//env1.ReturnFlag = true
-			env1.FailureFlag = true
-			return *env.NewError(err.Error())
+			return makeError(env1, err.Error())
 		}
 		return *env.NewNative(env1.Idx, file, "rye-file")
 	default:
-		//env1.ReturnFlag = true
-		env1.FailureFlag = true
-		return *env.NewError("just accepting Uri-s")
+		return makeError(env1, "Arg 1 isn't Uri")
 	}
 }
 
