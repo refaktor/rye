@@ -297,6 +297,40 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+	"odd": {
+		Argsn: 1,
+		Doc:   "Checks if a Arg 1 is even.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch a := arg0.(type) {
+			case env.Integer:
+				if a.Value%2 != 0 {
+					return env.Integer{1}
+				} else {
+					return env.Integer{0}
+				}
+			default:
+				return makeError(ps, "Arg 2 not Int")
+			}
+		},
+	},
+	"even": {
+		Argsn: 1,
+		Doc:   "Checks if a Arg 1 is even.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch a := arg0.(type) {
+			case env.Integer:
+				if a.Value%2 == 0 {
+					return env.Integer{1}
+				} else {
+					return env.Integer{0}
+				}
+			default:
+				return makeError(ps, "Arg 2 not Int")
+			}
+		},
+	},
 
 	"mod": {
 		Argsn: 2,
@@ -545,6 +579,45 @@ var builtins = map[string]*env.Builtin{
 				fmt.Println(arg.Value)
 			default:
 				fmt.Println(arg0.Probe(*env1.Idx))
+			}
+			return arg0
+		},
+	},
+	"print-ssv": {
+		Argsn: 1,
+		Doc:   "Prints a value and adds a newline.",
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg := arg0.(type) {
+			case env.Object:
+				fmt.Println(util.FormatSsv(arg, *env1.Idx))
+			default:
+				return makeError(env1, "Not Rye object")
+			}
+			return arg0
+		},
+	},
+	"print-csv": {
+		Argsn: 1,
+		Doc:   "Prints a value and adds a newline.",
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg := arg0.(type) {
+			case env.Object:
+				fmt.Println(util.FormatCsv(arg, *env1.Idx))
+			default:
+				return makeError(env1, "Not Rye object")
+			}
+			return arg0
+		},
+	},
+	"print-json": {
+		Argsn: 1,
+		Doc:   "Prints a value and adds a newline.",
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg := arg0.(type) {
+			case env.Object:
+				fmt.Println(util.FormatJson(arg, *env1.Idx))
+			default:
+				return makeError(env1, "Not Rye object")
 			}
 			return arg0
 		},
@@ -1067,7 +1140,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"_eval-with_": {
+	"eval-with": {
 		Argsn: 2,
 		Doc:   "",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
