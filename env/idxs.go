@@ -104,6 +104,7 @@ func NewIdxs() *Idxs {
 		"Kindword",
 		"Converter",
 		"Time",
+		"Decimal",
 	}
 
 	for _, value := range NativeTypes {

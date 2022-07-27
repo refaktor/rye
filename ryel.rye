@@ -1,0 +1,26 @@
+; # Rye local binary*
+;
+; *This is experimental way to work with rye interpreter*
+;
+; This Rye script looks at local rye.mod and tries to build Rye binary with listed bindings
+
+build-ryel: fn { } {
+  print "Building ryel ..."
+  %ryel.mod .open .read-all .load
+   .map { .to-string .concat* "b_" }
+   |join-with " " :modules |print
+
+  cmd print $go build -tags "b_tiny $ + modules + $" -o ryel /home/nano/go/src/rye$
+}
+
+install-ryel: fn { } {
+  print "Installing Ryel ..."
+  print "TODO"
+}
+
+print 123
+
+rye .args -> 2 |print :mode = "build" |if { build-ryel }
+if mode = "install" { install-ryel }
+
+; Later when script is executed and it returns a failure of missing known binding it adds it to the list

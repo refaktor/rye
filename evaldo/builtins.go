@@ -3,13 +3,11 @@ package evaldo
 
 import (
 	"io/ioutil"
-	// "math"
+	"os"
+	"bytes"
 	"os/exec"
 	"reflect"
-
-	//	"bufio"
 	"fmt"
-	//	"os"
 	"rye/env"
 
 	"rye/loader"
@@ -34,14 +32,39 @@ func equalValues(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) bool {
 }
 
 func greaterThan(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) bool {
-	switch v1 := arg0.(type) {
+	var valA float64
+	var valB float64
+	switch vA := arg0.(type) {
 	case env.Integer:
-		switch v2 := arg1.(type) {
-		case env.Integer:
-			return v1.Value > v2.Value
-		}
+		valA = float64(vA.Value)
+	case env.Decimal:
+		valA = vA.Value
 	}
-	return false
+	switch vB := arg1.(type) {
+	case env.Integer:
+		valB = float64(vB.Value)
+	case env.Decimal:
+		valB = vB.Value
+	}
+	return valA > valB
+}
+
+func lesserThan(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) bool {
+	var valA float64
+	var valB float64
+	switch vA := arg0.(type) {
+	case env.Integer:
+		valA = float64(vA.Value)
+	case env.Decimal:
+		valA = vA.Value
+	}
+	switch vB := arg1.(type) {
+	case env.Integer:
+		valB = float64(vB.Value)
+	case env.Decimal:
+		valB = vB.Value
+	}
+	return valA < valB
 }
 
 func getFrom(ps *env.ProgramState, data interface{}, key interface{}, posMode bool) env.Object {
@@ -165,6 +188,15 @@ var builtins = map[string]*env.Builtin{
 			default:
 				return makeError(ps, "Arg 1 not String.")
 			}
+		},
+	},
+
+	"to-string": {
+		Argsn: 1,
+		Doc:   "Takes a Rye value and returns a string representation.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return env.String{arg0.Probe(*ps.Idx)}
 		},
 	},
 
@@ -358,13 +390,31 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Integer:
-				return env.Integer{s1.Value + arg1.(env.Integer).Value}
+				switch s2 := arg1.(type) {
+				case env.Integer:
+					return env.Integer{s1.Value + s2.Value}
+				case env.Decimal:
+					return env.Decimal{float64(s1.Value) + s2.Value}
+				default:
+					return makeError(ps, "Integer and a wrong type")
+				}
+			case env.Decimal:
+				switch s2 := arg1.(type) {
+				case env.Integer:
+					return env.Decimal{s1.Value + float64(s2.Value)}
+				case env.Decimal:
+					return env.Decimal{s1.Value + s2.Value}
+				default:
+					return makeError(ps, "Decimal and a wrong type")
+				}
 			case env.String:
 				switch s2 := arg1.(type) {
 				case env.String:
 					return env.String{s1.Value + s2.Value}
 				case env.Integer:
 					return env.String{s1.Value + strconv.Itoa(int(s2.Value))}
+				case env.Decimal:
+					return env.String{s1.Value + strconv.FormatFloat(s2.Value, 'f', -1, 64)}
 				default:
 					return makeError(ps, "If Arg 1 is String, Arg 2 should also be String or Integer")
 				}
@@ -419,6 +469,17 @@ var builtins = map[string]*env.Builtin{
 				switch b := arg1.(type) {
 				case env.Integer:
 					return env.Integer{a.Value - b.Value}
+				case env.Decimal:
+					return env.Decimal{float64(a.Value) - b.Value}
+				default:
+					return makeError(ps, "Arg 1 is not Integer.")
+				}
+			case env.Decimal:
+				switch b := arg1.(type) {
+				case env.Integer:
+					return env.Decimal{a.Value - float64(b.Value)}
+				case env.Decimal:
+					return env.Decimal{a.Value - b.Value}
 				default:
 					return makeError(ps, "Arg 1 is not Integer.")
 				}
@@ -437,6 +498,17 @@ var builtins = map[string]*env.Builtin{
 				switch b := arg1.(type) {
 				case env.Integer:
 					return env.Integer{a.Value * b.Value}
+				case env.Decimal:
+					return env.Decimal{float64(a.Value) * b.Value}
+				default:
+					return makeError(ps, "Arg 1 is not Integer.")
+				}
+			case env.Decimal:
+				switch b := arg1.(type) {
+				case env.Integer:
+					return env.Decimal{a.Value * float64(b.Value)}
+				case env.Decimal:
+					return env.Decimal{a.Value * b.Value}
 				default:
 					return makeError(ps, "Arg 1 is not Integer.")
 				}
@@ -459,6 +531,29 @@ var builtins = map[string]*env.Builtin{
 						return makeError(ps, "Can't divide by Zero.")
 					}
 					return env.Integer{a.Value / b.Value}
+				case env.Decimal:
+					if b.Value == 0.0 {
+						ps.FailureFlag = true
+						return makeError(ps, "Can't divide by Zero.")
+					}
+					return env.Decimal{float64(a.Value) / b.Value}
+				default:
+					return makeError(ps, "Arg 1 is not Integer.")
+				}
+			case env.Decimal:
+				switch b := arg1.(type) {
+				case env.Integer:
+					if b.Value == 0 {
+						ps.FailureFlag = true
+						return makeError(ps, "Can't divide by Zero.")
+					}
+					return env.Decimal{a.Value / float64(b.Value)}
+				case env.Decimal:
+					if b.Value == 0.0 {
+						ps.FailureFlag = true
+						return makeError(ps, "Can't divide by Zero.")
+					}
+					return env.Decimal{a.Value / b.Value}
 				default:
 					return makeError(ps, "Arg 1 is not Integer.")
 				}
@@ -500,17 +595,10 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Tests if Arg1 is greater than Arg 2.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch arg := arg0.(type) {
-			case env.Integer:
-				var res int64
-				if arg.Value > arg1.(env.Integer).Value {
-					res = 1
-				} else {
-					res = 0
-				}
-				return env.Integer{res}
-			default:
-				return makeError(ps, "Arg 1 is not Integer.")
+			if greaterThan(ps, arg0, arg1) {
+				return env.Integer{1}
+			} else {
+				return env.Integer{0}
 			}
 		},
 	},
@@ -519,17 +607,10 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Tests if Arg1 is lesser than Arg 2.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch arg := arg0.(type) {
-			case env.Integer:
-				var res int64
-				if arg.Value < arg1.(env.Integer).Value {
-					res = 1
-				} else {
-					res = 0
-				}
-				return env.Integer{res}
-			default:
-				return makeError(ps, "Arg 1 is not Integer.")
+			if lesserThan(ps, arg0, arg1) {
+				return env.Integer{1}
+			} else {
+				return env.Integer{0}
 			}
 		},
 	},
@@ -1629,6 +1710,18 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = ser
 					return ps.Res
 				}
+			case env.Block:
+				switch code := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = code.Series
+					for i := 0; i < block.Series.Len(); i++ {
+						ps = EvalBlockInj(ps, block.Series.Get(i), true)
+						ps.Ser.Reset()
+					}
+					ps.Ser = ser
+					return ps.Res
+				}
 			case env.List:
 				switch code := arg1.(type) {
 				case env.Block:
@@ -2265,7 +2358,7 @@ var builtins = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "Accepts a block of values and returns maximal value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			var sum int64
+			var sum float64
 			switch block := arg0.(type) {
 			case env.Block:
 				l := block.Series.Len()
@@ -2273,12 +2366,12 @@ var builtins = map[string]*env.Builtin{
 					obj := block.Series.Get(i)
 					switch val1 := obj.(type) {
 					case env.Integer:
-						{
-							sum += val1.Value
-						}
+						sum += float64(val1.Value)
+					case env.Decimal:
+						sum += val1.Value
 					}
 				}
-				return env.Integer{int64(sum) / int64(l)}
+				return env.Decimal{sum / float64(l)}
 			}
 			return nil
 		},
@@ -2288,7 +2381,7 @@ var builtins = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "Accepts a block of values and returns maximal value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			var sum int64
+			var sum float64
 			switch block := arg0.(type) {
 			case env.Block:
 				l := block.Series.Len()
@@ -2296,12 +2389,12 @@ var builtins = map[string]*env.Builtin{
 					obj := block.Series.Get(i)
 					switch val1 := obj.(type) {
 					case env.Integer:
-						{
-							sum += val1.Value
-						}
+						sum += float64(val1.Value)
+					case env.Decimal:
+						sum += val1.Value
 					}
 				}
-				return env.Integer{int64(sum)}
+				return env.Decimal{sum}
 			}
 			return nil
 		},
@@ -3900,9 +3993,33 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s0 := arg0.(type) {
 			case env.String:
+				/*				cmd := exec.Command("date")
+				err := cmd.Run()
+				if err != nil {
+					log.Fatal(err)
+				}
+				fmt.Println("out:", outb.String(), "err:", errb.String()) */
+				
+				
 				r := exec.Command("/bin/bash", "-c", s0.Value)
-				stdout, _ := r.Output()
-				return JsonToRye(string(stdout))
+				// stdout, stderr := r.Output()
+				var outb, errb bytes.Buffer
+				r.Stdout = &outb
+				r.Stderr = &errb
+
+				err := r.Run()
+				if err != nil {
+					fmt.Println("ERROR")
+					fmt.Println(err)
+				}
+				fmt.Println("out:", outb.String(), "err:", errb.String())
+
+				
+					/*				if stderr != nil {
+					fmt.Println(stderr.Error())
+				}
+				return JsonToRye(" "-----------" + string(stdout)) */
+				//				return JsonToRye(string(stdout))
 			default:
 				return makeError(ps, "Arg 1 should be String")
 			}
@@ -3910,11 +4027,11 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"Rye": {
+	"rye": {
 		Argsn: 0,
 		Doc:   "",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return *env.NewNative(ps.Idx, modules, "Rye-itself")
+			return *env.NewNative(ps.Idx, builtinNames, "Rye-itself")
 		},
 	},
 
@@ -3922,25 +4039,72 @@ var builtins = map[string]*env.Builtin{
 		Argsn: 2,
 		Doc:   "",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			/* switch ry := arg0.(type) {
-			case env.Native:
-				switch blk := arg1.(type) {
-				case env.Block:
-					// TODO:
-					// for each value in a block
-					// check if it's in the modules and true
-					// if yes then ok
-					// if not true report "Module exists but not built in"
-					// if not exists report "Module doesn't exist"
-				default:
-					return makeError(ps, "Arg 1 should be String")
+			switch mod := arg1.(type) {
+			case env.Block:
+				missing := make([]env.Object, 0)
+				for i := 0; i < mod.Series.Len(); i++ {
+					switch node := mod.Series.Get(i).(type) {
+					case env.Tagword:
+						name := ps.Idx.GetWord(node.Index)
+						cnt, ok := builtinNames[name]
+						// TODO -- distinguish between modules that aren't loaded or don't exists
+						if ok && cnt > 0 {
+							//							return env.Integer{1}
+						} else {
+							fmt.Println("Module: " + name + " is missing.")
+							missing = append(missing, node)
+							// v0 todo: Print mis
+							// v1 todo: Print the instructions of what modules to go get in the project folder and reinstall
+							// v2 todo: ge get modules and then recompile rye with these flags into current folder
+							//							return env.Integer{0}
+						}
+					}
 				}
+				return *env.NewBlock(*env.NewTSeries(missing))
 			default:
-				return makeError(ps, "Arg 1 should be String")
-			}*/
-			return nil
+				return makeError(ps, "Arg 1 should be Block of Tagwords.")
+			}			
 		},
 	},
+	
+	"Rye-itself//includes?": {
+		Argsn: 1,
+		Doc:   "",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			blts := make([]env.Object, 0)
+			for i, v := range builtinNames {
+				if v > 0 {
+					idx := ps.Idx.IndexWord(i)
+					blts = append(blts, env.Word{idx})
+				}
+			}
+			return *env.NewBlock(*env.NewTSeries(blts))
+		},
+	},
+	"Rye-itself//could-include?": {
+		Argsn: 1,
+		Doc:   "",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			blts := make([]env.Object, 0)
+			for i, v := range builtinNames {
+				if v == 0 {
+					idx := ps.Idx.IndexWord(i)
+					blts = append(blts, env.Word{idx})
+				}
+			}
+			return *env.NewBlock(*env.NewTSeries(blts))
+		},
+	},
+	"Rye-itself//args": {
+		Argsn: 1,
+		Doc:   "",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return util.StringToFieldsWithQuoted(strings.Join(os.Args, " "), " ", "\"")
+			// block, _ := loader.LoadString(os.Args[0], false)
+			// return block
+		},
+	},
+
 }
 
 /* Terminal functions .. move to it's own later */
@@ -3961,6 +4125,7 @@ func isTruthy(arg env.Object) env.Object {
 */
 
 func RegisterBuiltins(ps *env.ProgramState) {
+	builtinNames = make(map[string]int)
 	RegisterBuiltins2(builtins, ps, "core")
 	RegisterBuiltins2(Builtins_io, ps, "io")
 	RegisterBuiltins2(Builtins_web, ps, "web")
@@ -3991,10 +4156,10 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_telegrambot, ps, "telegram")
 }
 
-var modules map[string]int
+var builtinNames map[string]int
 
 func RegisterBuiltins2(builtins map[string]*env.Builtin, ps *env.ProgramState, name string) {
-	// modules[name] = len(builtins)
+	builtinNames[name] = len(builtins)
 	for k, v := range builtins {
 		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc)
 		registerBuiltin(ps, k, *bu)

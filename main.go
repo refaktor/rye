@@ -15,8 +15,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-
-	// "strconv"
 	"strings"
 
 	"net/http"
@@ -26,9 +24,6 @@ import (
 	"rye/util"
 
 	"net/http/cgi"
-	"rye/ryeco"
-	// enable when using profiler
-	// "github.com/pkg/profile"
 )
 
 type TagType int
@@ -71,7 +66,10 @@ func main() {
 			main_cgi_file(os.Args[2], false)
 		} else if os.Args[1] == "sig" {
 			main_rye_file(os.Args[2], true)
+		} else {
+			main_rye_file(os.Args[1], false)
 		}
+
 	}
 }
 
@@ -222,7 +220,7 @@ func main_ryeco() {
 
 	// ryeco_do(func() env.Object { return ryeco_loop(1000, func() env.Object { return ryeco_add(1, 2) }) })
 
-	ryeco.Loop(env.Integer{10000000}, func() env.Object { return ryeco.Inc(env.Integer{1}) })
+	// ryeco.Loop(env.Integer{10000000}, func() env.Object { return ryeco.Inc(env.Integer{1}) })
 
 }
 
@@ -258,7 +256,7 @@ func main_cgi_file(file string, sig bool) {
 		//util.PrintHeader()
 		//defer profile.Start(profile.CPUProfile).Stop()
 
-		input := " whoami: \"Rye cgi 0.001 alpha\" ctx: 0 result: \"\" session: 0 w: 0 r: 0"
+		input := " 123 " //" whoami: \"Rye cgi 0.001 alpha\" ctx: 0 result: \"\" session: 0 w: 0 r: 0"
 		block, genv := loader.LoadString(input, false)
 		es := env.NewProgramState(block.(env.Block).Series, genv)
 		evaldo.RegisterBuiltins(es)
@@ -292,18 +290,20 @@ func main_cgi_file(file string, sig bool) {
 
 func main_rye_repl(in io.Reader, out io.Writer) {
 
-	input := "name: \"Rye\" version: \"0.002 alpha\""
+	input := " 123 " // "name: \"Rye\" version: \"0.011 alpha\""
 	user, _ := user.Current()
 	profile_path := filepath.Join(user.HomeDir, ".rye-profile")
 
+	fmt.Println("Welcome to Rye shell. Use ls and ls\\ \"pr\" to list the current context.")
+	
 	if _, err := os.Stat(profile_path); err == nil {
-		content, err := ioutil.ReadFile(profile_path)
-		if err != nil {
-			log.Fatal(err)
-		}
-		input = string(content)
+		//content, err := ioutil.ReadFile(profile_path)
+		//if err != nil {
+		//	log.Fatal(err)
+		//}
+		// input = string(content)
 	} else {
-		fmt.Print("no profile")
+		fmt.Println("There was no profile.")
 
 	}
 
