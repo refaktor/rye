@@ -10,7 +10,7 @@ build-ryel: fn { } {
    .map { .to-string .concat* "b_" }
    |join-with " " :modules |print
 
-  cmd print $go build -tags "b_tiny $ + modules + $" -o ryel /home/nano/go/src/rye$
+  cmd print $go build -tags "b_tiny $ + modules + $" -o ryel ~/go/src/rye$
 }
 
 install-ryel: fn { } {

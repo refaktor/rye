@@ -6,6 +6,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"regexp"
+	"rye/contrib"
 
 	"bufio"
 	"errors"
@@ -102,6 +103,7 @@ func main_ryk() {
 	//block, genv := loader.LoadString("{ }", false)
 	es := env.NewProgramState(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
+	contrib.RegisterBuiltins(es)
 	evaldo.EvalBlock(es)
 
 	if len(os.Args) >= 4 {
@@ -241,6 +243,8 @@ func main_rye_file(file string, sig bool) {
 	case env.Block:
 		es := env.NewProgramState(block.(env.Block).Series, genv)
 		evaldo.RegisterBuiltins(es)
+		contrib.RegisterBuiltins(es)
+
 		evaldo.EvalBlock(es)
 		evaldo.MaybeDisplayFailureOrError(es, genv)
 	case env.Error:
@@ -260,6 +264,8 @@ func main_cgi_file(file string, sig bool) {
 		block, genv := loader.LoadString(input, false)
 		es := env.NewProgramState(block.(env.Block).Series, genv)
 		evaldo.RegisterBuiltins(es)
+		contrib.RegisterBuiltins(es)
+
 		evaldo.EvalBlock(es)
 		env.SetValue(es, "w", *env.NewNative(es.Idx, w, "Go-server-response-writer"))
 		env.SetValue(es, "r", *env.NewNative(es.Idx, r, "Go-server-request"))
@@ -276,6 +282,8 @@ func main_cgi_file(file string, sig bool) {
 		case env.Block:
 			es := env.AddToProgramState(es, block.(env.Block).Series, genv)
 			evaldo.RegisterBuiltins(es)
+			contrib.RegisterBuiltins(es)
+
 			evaldo.EvalBlock(es)
 			evaldo.MaybeDisplayFailureOrError(es, genv)
 		case env.Error:
@@ -295,7 +303,7 @@ func main_rye_repl(in io.Reader, out io.Writer) {
 	profile_path := filepath.Join(user.HomeDir, ".rye-profile")
 
 	fmt.Println("Welcome to Rye shell. Use ls and ls\\ \"pr\" to list the current context.")
-	
+
 	if _, err := os.Stat(profile_path); err == nil {
 		//content, err := ioutil.ReadFile(profile_path)
 		//if err != nil {
@@ -310,6 +318,8 @@ func main_rye_repl(in io.Reader, out io.Writer) {
 	block, genv := loader.LoadString(input, false)
 	es := env.NewProgramState(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
+	contrib.RegisterBuiltins(es)
+
 	evaldo.EvalBlock(es)
 
 	evaldo.DoRyeRepl(es)

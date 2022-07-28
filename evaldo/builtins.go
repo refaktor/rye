@@ -2,12 +2,12 @@
 package evaldo
 
 import (
+	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
-	"bytes"
 	"os/exec"
 	"reflect"
-	"fmt"
 	"rye/env"
 
 	"rye/loader"
@@ -3994,13 +3994,12 @@ var builtins = map[string]*env.Builtin{
 			switch s0 := arg0.(type) {
 			case env.String:
 				/*				cmd := exec.Command("date")
-				err := cmd.Run()
-				if err != nil {
-					log.Fatal(err)
-				}
-				fmt.Println("out:", outb.String(), "err:", errb.String()) */
-				
-				
+								err := cmd.Run()
+								if err != nil {
+									log.Fatal(err)
+								}
+								fmt.Println("out:", outb.String(), "err:", errb.String()) */
+
 				r := exec.Command("/bin/bash", "-c", s0.Value)
 				// stdout, stderr := r.Output()
 				var outb, errb bytes.Buffer
@@ -4014,11 +4013,10 @@ var builtins = map[string]*env.Builtin{
 				}
 				fmt.Println("out:", outb.String(), "err:", errb.String())
 
-				
-					/*				if stderr != nil {
-					fmt.Println(stderr.Error())
-				}
-				return JsonToRye(" "-----------" + string(stdout)) */
+				/*				if stderr != nil {
+									fmt.Println(stderr.Error())
+								}
+								return JsonToRye(" "-----------" + string(stdout)) */
 				//				return JsonToRye(string(stdout))
 			default:
 				return makeError(ps, "Arg 1 should be String")
@@ -4063,10 +4061,10 @@ var builtins = map[string]*env.Builtin{
 				return *env.NewBlock(*env.NewTSeries(missing))
 			default:
 				return makeError(ps, "Arg 1 should be Block of Tagwords.")
-			}			
+			}
 		},
 	},
-	
+
 	"Rye-itself//includes?": {
 		Argsn: 1,
 		Doc:   "",
@@ -4104,7 +4102,6 @@ var builtins = map[string]*env.Builtin{
 			// return block
 		},
 	},
-
 }
 
 /* Terminal functions .. move to it's own later */

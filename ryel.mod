@@ -1,2 +1,1 @@
-core
-sqlite
+tiny
