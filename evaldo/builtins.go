@@ -22,6 +22,11 @@ func ss() {
 	fmt.Print(1)
 }
 
+func MakeError(env1 *env.ProgramState, msg string) *env.Error {
+	env1.FailureFlag = true
+	return env.NewError(msg)
+}
+
 func makeError(env1 *env.ProgramState, msg string) *env.Error {
 	env1.FailureFlag = true
 	return env.NewError(msg)

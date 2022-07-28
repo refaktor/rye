@@ -44,7 +44,7 @@ const (
 	ConverterType      Type = 31
 	TimeType           Type = 32
 	SpreadsheetRowType Type = 33
-	DecimalType          Type = 34
+	DecimalType        Type = 34
 )
 
 // after adding new type here, also add string to idxs.go
@@ -94,7 +94,7 @@ func (i Integer) GetKind() int {
 // DECIMAL
 //
 
-// Decimal 
+// Decimal
 type Decimal struct {
 	Value float64
 }
@@ -925,8 +925,12 @@ func (i Error) Inspect(e Idxs) string {
 
 // Inspect returns a string representation of the Integer.
 func (i Error) Probe(e Idxs) string {
+	status := ""
+	if i.Status != 0 {
+		status = "(" + strconv.Itoa(i.Status) + ")"
+	}
 	var b strings.Builder
-	b.WriteString("Error (" + strconv.Itoa(i.Status) + "): " + i.Message + " ")
+	b.WriteString("Error" + status + ": " + i.Message + " ")
 	if i.Parent != nil {
 		b.WriteString("\n\t" + i.Parent.Probe(e))
 	}
