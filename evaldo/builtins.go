@@ -3968,17 +3968,18 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch mod := arg1.(type) {
 			case env.Block:
+				var str strings.Builder
 				missing := make([]env.Object, 0)
 				for i := 0; i < mod.Series.Len(); i++ {
 					switch node := mod.Series.Get(i).(type) {
-					case env.Tagword:
+					case env.Word:
 						name := ps.Idx.GetWord(node.Index)
 						cnt, ok := builtinNames[name]
 						// TODO -- distinguish between modules that aren't loaded or don't exists
 						if ok && cnt > 0 {
 							//							return env.Integer{1}
 						} else {
-							fmt.Println("Module: " + name + " is missing.")
+							str.WriteString("\nBinding *" + name + "* is missing.")
 							missing = append(missing, node)
 							// v0 todo: Print mis
 							// v1 todo: Print the instructions of what modules to go get in the project folder and reinstall
@@ -3987,7 +3988,12 @@ var builtins = map[string]*env.Builtin{
 						}
 					}
 				}
-				return *env.NewBlock(*env.NewTSeries(missing))
+				if len(missing) > 0 {
+					return makeError(ps, str.String())
+				} else {
+					return env.Integer{1}
+				}
+				// return *env.NewBlock(*env.NewTSeries(missing))
 			default:
 				return makeError(ps, "Arg 1 should be Block of Tagwords.")
 			}			
@@ -4008,7 +4014,7 @@ var builtins = map[string]*env.Builtin{
 			return *env.NewBlock(*env.NewTSeries(blts))
 		},
 	},
-	"Rye-itself//could-include?": {
+	"Rye-itself//can-include?": {
 		Argsn: 1,
 		Doc:   "",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
