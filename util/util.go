@@ -81,3 +81,57 @@ func StringToFieldsWithQuoted(str string, sepa string, quote string) env.Block {
 	}
 	return *env.NewBlock(*env.NewTSeries(lst))
 }
+
+func FormatJson(val env.Object, e env.Idxs) string {
+	// TODO -- this is currently made just for block of strings and integers
+	var r strings.Builder
+	switch b := val.(type) {
+	case env.Block:
+		r.WriteString("[ ")
+		for i := 0; i < b.Series.Len(); i += 1 {
+			if b.Series.Get(i) != nil {
+				if i > 0 {
+					r.WriteString(", ")
+				}
+				r.WriteString(b.Series.Get(i).Probe(e))
+			}
+		}
+		r.WriteString(" ]")
+
+	}
+	return r.String()
+}
+
+func FormatCsv(val env.Object, e env.Idxs) string {
+	// TODO -- this is currently made just for block of strings and integers
+	var r strings.Builder
+	switch b := val.(type) {
+	case env.Block:
+		for i := 0; i < b.Series.Len(); i += 1 {
+			if b.Series.Get(i) != nil {
+				if i > 0 {
+					r.WriteString(",")
+				}
+				r.WriteString(b.Series.Get(i).Probe(e))
+			}
+		}
+	}
+	return r.String()
+}
+
+func FormatSsv(val env.Object, e env.Idxs) string {
+	// TODO -- this is currently made just for block of strings and integers
+	var r strings.Builder
+	switch b := val.(type) {
+	case env.Block:
+		for i := 0; i < b.Series.Len(); i += 1 {
+			if b.Series.Get(i) != nil {
+				if i > 0 {
+					r.WriteString(" ")
+				}
+				r.WriteString(b.Series.Get(i).Probe(e))
+			}
+		}
+	}
+	return r.String()
+}

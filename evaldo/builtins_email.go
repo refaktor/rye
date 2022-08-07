@@ -1,9 +1,10 @@
-// +build !b_tiny
+// +build b_email
 
 package evaldo
 
 import (
 	"rye/env"
+	"strings"
 
 	"github.com/go-gomail/gomail"
 )
@@ -15,23 +16,32 @@ func __newMessage(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2
 func __setHeader(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch mailobj := arg0.(type) {
 	case env.Native:
+		var fld string
+		var val string
+		switch value := arg2.(type) {
+		case env.String:
+			val = value.Value
+		case env.Email:
+			val = value.Address
+		default:
+			return MakeError(env1, "A3 should be string or email")
+		}
 		switch field := arg1.(type) {
 		case env.String:
-			switch value := arg2.(type) {
-			case env.String:
-				mailobj.Value.(*gomail.Message).SetHeader(field.Value, value.Value)
-				return arg0
-			default:
-				env1.FailureFlag = true
-				return env.NewError("arg 3 should be string")
-			}
+			fld = field.Value
+		case env.Tagword:
+			fld = env1.Idx.GetWord(field.Index)
 		default:
-			env1.FailureFlag = true
-			return env.NewError("arg 2 should be string")
+			return MakeError(env1, "A2 should be string or tagword")
+		}
+		if fld != "" && val != "" {
+			mailobj.Value.(*gomail.Message).SetHeader(fld, val)
+			return arg0
+		} else {
+			return MakeError(env1, "Not both values were defined")
 		}
 	default:
-		env1.FailureFlag = true
-		return env.NewError("arg 1 should be native")
+		return MakeError(env1, "A1 should be native")
 	}
 }
 
@@ -90,17 +100,18 @@ func __setBody(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 en
 func __attach(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch mailobj := arg0.(type) {
 	case env.Native:
-		switch filepath := arg1.(type) {
-		case env.String:
-			mailobj.Value.(*gomail.Message).Attach(filepath.Value)
+		switch file := arg1.(type) {
+		case env.Uri:
+			ath := strings.Split(file.Path, "://")
+			mailobj.Value.(*gomail.Message).Attach(ath[1])
 			return arg0
 		default:
 			env1.FailureFlag = true
-			return env.NewError("arg 2 should be string")
+			return env.NewError("arg 2 should be Uri")
 		}
 	default:
 		env1.FailureFlag = true
-		return env.NewError("arg 2 should be string")
+		return env.NewError("arg 1 should be native")
 	}
 
 }
@@ -178,7 +189,7 @@ func __dialAndSend(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg
 
 var Builtins_email = map[string]*env.Builtin{
 
-	"new-gomail-message": {
+	"new-email-message": {
 		Argsn: 0,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __newMessage(env1, arg0, arg1, arg2, arg3, arg4)
@@ -219,7 +230,7 @@ var Builtins_email = map[string]*env.Builtin{
 			return __addAlternative(env1, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
-	"new-gomail-dialer": {
+	"new-email-dialer": {
 		Argsn: 4,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __newDialer(env1, arg0, arg1, arg2, arg3, arg4)

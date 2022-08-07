@@ -5,6 +5,8 @@ package main
 import (
 	"os/user"
 	"path/filepath"
+	"regexp"
+	"rye/contrib"
 
 	"bufio"
 	"errors"
@@ -81,7 +83,7 @@ func main_ryk() {
 	argIdx := 2
 	ignore := 0
 	separator := " "
-	input := ""
+	input := " 1 "
 
 	// 	fmt.Print("preload")
 
@@ -101,6 +103,7 @@ func main_ryk() {
 	//block, genv := loader.LoadString("{ }", false)
 	es := env.NewProgramState(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
+	contrib.RegisterBuiltins(es)
 	evaldo.EvalBlock(es)
 
 	if len(os.Args) >= 4 {
@@ -118,12 +121,26 @@ func main_ryk() {
 		}
 	}
 
+	var filter *regexp.Regexp
+	var filterBlock *env.Object
+
 	if len(os.Args) >= 5 {
 		if os.Args[argIdx] == "--begin" {
 			block, genv := loader.LoadString(os.Args[argIdx+1], false)
 			es := env.AddToProgramState(es, block.(env.Block).Series, genv)
 			evaldo.EvalBlockInj(es, es.ForcedResult, true)
 			es.Ser.Reset()
+			argIdx += 2
+		}
+		if os.Args[argIdx] == "--filter" {
+			code := os.Args[argIdx+1]
+			if code[0] == '/' {
+				filter = regexp.MustCompilePOSIX(code[1 : len(code)-1])
+			} else {
+				filterBlock1, genv1 := loader.LoadString(code, false)
+				es = env.AddToProgramState(es, filterBlock1.(env.Block).Series, genv1)
+				filterBlock = &filterBlock1
+			}
 			argIdx += 2
 		}
 	}
@@ -136,26 +153,45 @@ func main_ryk() {
 	// basically we need to have multiple toplevel blocks that can be evaluated by the same state
 
 	scanner := bufio.NewScanner(os.Stdin)
+	nn := 1
 	for scanner.Scan() {
+		doLine := true
+		if filter != nil {
+			doLine = filter.MatchString(scanner.Text())
+		}
 		if ignore > 0 {
 			ignore--
 		} else {
-			//fmt.Println(scanner.Text())
-			//idx0 := es.Idx.IndexWord("f0") // turn to _0, _1 or something like it via separator later ..
-			//idx1 := es.Idx.IndexWord("f1") // turn to _0, _1 or something like it via separator later ..
-			//idx2 := es.Idx.IndexWord("f2") // turn to _0, _1 or something like it via separator later ..
-			//printidx, _ := es.Idx.GetIndex("print")
-			// val0, er := strconv.ParseInt(scanner.Text(), 10, 64)
-			val0 := util.StringToFieldsWithQuoted(scanner.Text(), separator, "\"")
-			// if er == nil {
-			// es.Ctx.Set(idx0, val0.Series.Get(0))
-			evaldo.EvalBlockInj(es, val0, true)
-			es.Ser.Reset()
-			//} else {
-			//	fmt.Println("error processing line: " + scanner.Text())
-			// }
+			if doLine {
+				//fmt.Println(scanner.Text())
+				N := es.Idx.IndexWord("n") // turn to _0, _1 or something like it via separator later ..
+				L := es.Idx.IndexWord("l") // turn to _0, _1 or something like it via separator later ..
+				//idx1 := es.Idx.IndexWord("f1") // turn to _0, _1 or something like it via separator later ..
+				//idx2 := es.Idx.IndexWord("f2") // turn to _0, _1 or something like it via separator later ..
+				//printidx, _ := es.Idx.GetIndex("print")
+				// val0, er := strconv.ParseInt(scanner.Text(), 10, 64)
+				val0 := util.StringToFieldsWithQuoted(scanner.Text(), separator, "\"")
+				// if er == nil {
+				es.Ctx.Set(N, env.Integer{int64(nn)})
+				es.Ctx.Set(L, env.Integer{int64(val0.Series.Len())})
+				if filterBlock != nil {
+					blk := *filterBlock
+					es.Ser = blk.(env.Block).Series
+					evaldo.EvalBlockInj(es, val0, true)
+					es.Ser.Reset()
+					doLine = util.IsTruthy(es.Res)
+				}
+				if doLine {
+					es.Ser = block1.(env.Block).Series
+					evaldo.EvalBlockInj(es, val0, true)
+					es.Ser.Reset()
+				}
+				//} else {
+				//	fmt.Println("error processing line: " + scanner.Text())
+				// }
+			}
+			nn++
 		}
-
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -207,6 +243,8 @@ func main_rye_file(file string, sig bool) {
 	case env.Block:
 		es := env.NewProgramState(block.(env.Block).Series, genv)
 		evaldo.RegisterBuiltins(es)
+		contrib.RegisterBuiltins(es)
+
 		evaldo.EvalBlock(es)
 		evaldo.MaybeDisplayFailureOrError(es, genv)
 	case env.Error:
@@ -226,6 +264,8 @@ func main_cgi_file(file string, sig bool) {
 		block, genv := loader.LoadString(input, false)
 		es := env.NewProgramState(block.(env.Block).Series, genv)
 		evaldo.RegisterBuiltins(es)
+		contrib.RegisterBuiltins(es)
+
 		evaldo.EvalBlock(es)
 		env.SetValue(es, "w", *env.NewNative(es.Idx, w, "Go-server-response-writer"))
 		env.SetValue(es, "r", *env.NewNative(es.Idx, r, "Go-server-request"))
@@ -242,6 +282,8 @@ func main_cgi_file(file string, sig bool) {
 		case env.Block:
 			es := env.AddToProgramState(es, block.(env.Block).Series, genv)
 			evaldo.RegisterBuiltins(es)
+			contrib.RegisterBuiltins(es)
+
 			evaldo.EvalBlock(es)
 			evaldo.MaybeDisplayFailureOrError(es, genv)
 		case env.Error:
@@ -261,7 +303,7 @@ func main_rye_repl(in io.Reader, out io.Writer) {
 	profile_path := filepath.Join(user.HomeDir, ".rye-profile")
 
 	fmt.Println("Welcome to Rye shell. Use ls and ls\\ \"pr\" to list the current context.")
-	
+
 	if _, err := os.Stat(profile_path); err == nil {
 		//content, err := ioutil.ReadFile(profile_path)
 		//if err != nil {
@@ -276,6 +318,8 @@ func main_rye_repl(in io.Reader, out io.Writer) {
 	block, genv := loader.LoadString(input, false)
 	es := env.NewProgramState(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
+	contrib.RegisterBuiltins(es)
+
 	evaldo.EvalBlock(es)
 
 	evaldo.DoRyeRepl(es)

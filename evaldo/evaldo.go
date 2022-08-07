@@ -213,8 +213,9 @@ func EvalExpressionInjLimited(ps *env.ProgramState, inj env.Object, injnow bool)
 	//fmt.Println("EvalExpression")
 	//fmt.Println(es.Ser.GetPos())
 	// trace2("Calling Maybe from EvalExp Inj")
-	return MaybeEvalOpwordOnRight(esleft.Ser.Peek(), esleft, true), injnow
+	return MaybeEvalOpwordOnRight(esleft.Ser.Peek(), esleft, false), injnow
 	//return esleft
+
 }
 
 // this function get's the next object (unevaluated), progra state, limited bool (op or pipe)

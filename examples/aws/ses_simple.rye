@@ -1,0 +1,23 @@
+
+; Example constructs a raw message with attachment and sends it through AWS SES
+; AWS credentials are defined in ~/.aws/credentials
+
+rye .needs { aws email }
+
+new-email-message
+|set-header 'From postar@example.com
+|set-header 'To janko.itm@gmail.com
+|set-header 'Subject "Raw AWS SES email from Ryelang"
+|set-body "text/html" "When you get this email some dopamine will be released."
+|attach %invoice.pdf :msg
+
+new-aws-session "us-east-1"
+|open-ses
+|send-raw msg { janko.itm@gmail.com } postar@example.com
+
+
+
+
+
+
+; python example for screenshot was from https://www.learnaws.org/2020/12/18/aws-ses-boto3-guide/
