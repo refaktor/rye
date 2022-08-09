@@ -207,7 +207,7 @@ var builtins = map[string]*env.Builtin{
 
 	"inc": {
 		Argsn: 1,
-		Doc:   "Increments integer value by 1.",
+		Doc:   "Returns integer value incremented by 1.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
@@ -221,16 +221,16 @@ var builtins = map[string]*env.Builtin{
 
 	"inc!": {
 		Argsn: 1,
-		Doc:   "Increments integer value by 1 in-plaede.",
-		Pure:  true,
+		Doc:   "Increments integer value by 1 in place.",
+		Pure:  false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Tagword:
-				intval, found := ps.Ctx.Get(arg.Index)
+				intval, found, ctx := ps.Ctx.Get2(arg.Index)
 				if found {
 					switch iintval := intval.(type) {
 					case env.Integer:
-						ps.Ctx.Set(arg.Index, env.Integer{1 + iintval.Value})
+						ctx.Set(arg.Index, env.Integer{1 + iintval.Value})
 						return env.Integer{1 + iintval.Value}
 					}
 				}
@@ -245,13 +245,13 @@ var builtins = map[string]*env.Builtin{
 	"change!": {
 		Argsn: 2,
 		Doc:   "Changes value in a word, if value changes returns true otherwise false",
-		Pure:  true,
+		Pure:  false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg1.(type) {
 			case env.Tagword:
-				val, found := ps.Ctx.Get(arg.Index)
+				val, found, ctx := ps.Ctx.Get2(arg.Index)
 				if found {
-					ps.Ctx.Set(arg.Index, arg0)
+					ctx.Set(arg.Index, arg0)
 					var res int64
 					if arg0.GetKind() == val.GetKind() && arg0.Inspect(*ps.Idx) == val.Inspect(*ps.Idx) {
 						res = 0
@@ -1103,9 +1103,9 @@ var builtins = map[string]*env.Builtin{
 				ps.Ser = ser */
 				//reader := bufio.NewReader(os.Stdin)
 
-				fmt.Println("You are inside a drop-in: " + name.Value)
-				fmt.Println(" * use (h) for help, (lc) to list context , (r) to return")
-				fmt.Println("----------------------------------------------------------")
+				fmt.Println("Welcome to console: " + name.Value)
+				fmt.Println(" Use ls to list current context")
+				fmt.Println("-------------------------------------------------------------")
 				/*
 					for {
 						fmt.Print("{ rye dropin }")
@@ -1129,7 +1129,7 @@ var builtins = map[string]*env.Builtin{
 					}*/
 
 				DoRyeRepl(ps)
-				fmt.Println("----------------------------------------------------------")
+				fmt.Println("-------------------------------------------------------------")
 				// ps.Ser = ser
 
 				return ps.Res
@@ -1170,7 +1170,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"with-context": {
+	"do-in": {
 		Argsn: 2,
 		Doc:   "Takes a Context and a Block. It Does a block inside a given Context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1185,12 +1185,12 @@ var builtins = map[string]*env.Builtin{
 					return ps.Res
 				default:
 					ps.ErrorFlag = true
-					return env.NewError("Secong arg should be block")
+					return env.NewError("Arg 2 should be block")
 
 				}
 			default:
 				ps.ErrorFlag = true
-				return env.NewError("First arg should be context")
+				return env.NewError("Arg 1 should be context")
 			}
 
 		},
@@ -1500,8 +1500,10 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"extend!": { // exclamation mark, because it as it is now extends/changes the source context too .. in place
+	"extend": { // exclamation mark, because it as it is now extends/changes the source context too .. in place
 		Argsn: 2,
+		Doc:   "Extends a context with a new context in place and returns it.",
+		Pure:  false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch ctx0 := arg0.(type) {
 			case env.RyeCtx:
@@ -1510,7 +1512,7 @@ var builtins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ctx := ps.Ctx
 					ps.Ser = bloc.Series
-					ps.Ctx = &ctx0 // make new context with no parent
+					ps.Ctx = ctx0.Copy() // make new context with no parent
 					EvalBlock(ps)
 					rctx := ps.Ctx
 					ps.Ctx = ctx
@@ -1523,7 +1525,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"Ctx//bind": { // TODO -- check if this works
+	"bind": { // TODO -- check if this works
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch swCtx1 := arg0.(type) {
@@ -1764,10 +1766,10 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"purge!": { // TODO ... doesn't fully work
+	"purge": { // TODO ... doesn't fully work
 		Argsn: 2,
 		Doc:   "Purges values from a seris based on return of a injected code block.",
-		Pure:  true,
+		Pure:  false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch block := arg0.(type) {
 			case env.Block:
@@ -1817,6 +1819,40 @@ var builtins = map[string]*env.Builtin{
 					}
 					ps.Ser = ser
 					return block
+				}
+			}
+			return nil
+		},
+	},
+
+	"purge!": { // TODO ... doesn't fully work
+		Argsn: 2,
+		Doc:   "Purges values from a seris based on return of a injected code block.",
+		Pure:  false,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch wrd := arg1.(type) {
+			case env.Tagword:
+				val, found, ctx := ps.Ctx.Get2(wrd.Index)
+				if found {
+					switch block := val.(type) {
+					case env.Block:
+						switch code := arg0.(type) {
+						case env.Block:
+							ser := ps.Ser
+							ps.Ser = code.Series
+							for i := 0; i < block.Series.Len(); i++ {
+								ps = EvalBlockInj(ps, block.Series.Get(i), true)
+								if util.IsTruthy(ps.Res) {
+									block.Series.S = append(block.Series.S[:i], block.Series.S[i+1:]...)
+									i--
+								}
+								ps.Ser.Reset()
+							}
+							ps.Ser = ser
+							ctx.Set(wrd.Index, block)
+							return block
+						}
+					}
 				}
 			}
 			return nil
@@ -3230,17 +3266,18 @@ var builtins = map[string]*env.Builtin{
 	},
 	"remove-last!": {
 		Argsn: 1,
+		Pure:  false,
 		Doc:   "Accepts Block and returns the next value and removes it from the Block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch wrd := arg0.(type) {
 			case env.Tagword:
-				val, found := ps.Ctx.Get(wrd.Index)
+				val, found, ctx := ps.Ctx.Get2(wrd.Index)
 				if found {
 					switch oldval := val.(type) {
 					case env.Block:
 						s := &oldval.Series
 						oldval.Series = *s.RmLast()
-						ps.Ctx.Set(wrd.Index, oldval)
+						ctx.Set(wrd.Index, oldval)
 						return oldval
 					}
 				}
@@ -3251,10 +3288,11 @@ var builtins = map[string]*env.Builtin{
 	"append!": {
 		Argsn: 2,
 		Doc: "Accepts Rye value and Tagword with a Block or String. Appends Rye value to Block/String in place, also returns it	.",
+		Pure: false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch wrd := arg1.(type) {
 			case env.Tagword:
-				val, found := ps.Ctx.Get(wrd.Index)
+				val, found, ctx := ps.Ctx.Get2(wrd.Index)
 				if found {
 					switch oldval := val.(type) {
 					case env.String:
@@ -3265,12 +3303,12 @@ var builtins = map[string]*env.Builtin{
 						case env.Integer:
 							newval = env.String{oldval.Value + strconv.Itoa(int(s3.Value))}
 						}
-						ps.Ctx.Set(wrd.Index, newval)
+						ctx.Set(wrd.Index, newval)
 						return newval
 					case env.Block: // TODO
 						s := &oldval.Series
 						oldval.Series = *s.Append(arg0)
-						ps.Ctx.Set(wrd.Index, oldval)
+						ctx.Set(wrd.Index, oldval)
 						return oldval
 					default:
 						return makeError(ps, "Type of tagword is not String.")

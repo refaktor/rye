@@ -1,0 +1,80 @@
+Rye                                                 ; TODO -- make injected value of type "Script startup" so Rye generic method can be called
+|name   "Telegram command bot example"
+|info { "Telegram bot that uses OTP (Google authetnicator codes) to autheticate chatters."
+   	    "Once authenticated it let's them issue a set of commands. Authenticated status times out"
+	    "after 5 minutes of inactivity." }
+|author janko@ryelang.org
+|needs { 'telegram 'otp 'flat-spruce }              ; TODO -- add these functions name info author
+
+
+otpd: load %.otp-data
+
+curr-user: 0
+greeting: { "Nice to see you" "Welcome in" "Hello!" }
+
+bot: new-telegram-bot trim read %.token
+|on-update { -> "Message" :msg -> "Text" |respond-to-user msg } ; TODO -- figure out where in message unique identifier for telegram user is, is it device specific / session specific?
+
+reply: say bot _
+
+respond-to-user: fn { text msg } {
+	either auth/is-authenticated? msg {
+		respond-validated text
+	} {
+		respond-anonymous text "tid" <- msg
+	}
+}
+
+respond-validated: fn { text } {
+	.load .follow-tree {
+		find {
+			user :partial [ .find-user .pass { .format-user .reply } -> "id" |set-par 'curr-user ] ,
+			project :partial [ .find-project .format-project .reply ]
+		}
+		disable user [ curr-user |^when { .positive? } { .disable-user , "disabled" .reply } ] ,
+		show user [ curr-user |^when { .positive? } { .get-user .format-user .reply } ]
+	}
+}
+
+respond-anonymous: fn { text tid } {
+	|^when { .starts-with "auth " } {
+		
+		.split " " -> 2 :code
+		
+		new-otp otpd/secret otpd/cnt                   ; TODO -- integrate OTP library
+		 |verify-resync code :result -> 1
+		 |^if {
+			auth/add-valid tid now
+			save-otp-data result otpd
+			reply random greeting
+		}
+		reply "Wrong code!"
+	}	
+	reply "Please authenticate first."
+}
+	
+save-otp-data: fn { res } {
+	res -> 2 |set otpd 'cnt |save %.otp-data
+}
+
+auth: context {
+
+	authenticated: { } 
+
+	(operator): kind { tid: required string , last-t: required integer } 
+
+	is-authenticated: fn { tid } {
+		seek authenticated {
+			all {
+				-> 'tid = tid ,
+				.when { -> 'last-t |since? |> 5 .minutes } { .remove-from authenticated false } ,
+				true
+			} 
+		} 
+	}
+	
+	add-valid: fn { tid time } {
+		eval { tid time } >> (operator) .append authenticated
+	}
+	
+}

@@ -34,6 +34,18 @@ func NewEnv(par *RyeCtx) *RyeCtx {
 	return &e
 }
 
+func (e RyeCtx) Copy() *RyeCtx {
+	nc := NewEnv(e.Parent)
+	cp := make(map[int]Object)
+	for k, v := range e.state {
+		cp[k] = v
+	}
+	nc.state = cp
+	nc.Kind = e.Kind
+	nc.locked = e.locked
+	return nc
+}
+
 func (e RyeCtx) Probe(idxs Idxs) string {
 	var bu strings.Builder
 	bu.WriteString("[Context (" + e.Kind.Probe(idxs) + "): ")
@@ -147,6 +159,24 @@ func (e *RyeCtx) Get(word int) (Object, bool) {
 		}
 	}
 	return obj, exists
+}
+
+func (e *RyeCtx) Get2(word int) (Object, bool, *RyeCtx) {
+	obj, exists := e.state[word]
+	// recursively look at outer Environments ...
+	// only specific functions should do this and ounly for function values ... but there is only global env maybe
+	// this is simple environment setup, but we will for the sake of safety and speed change this probably
+	// maybe some caching here ... or we could inject functions directly into locked series like some idea was to avoid variable lookup
+	if !exists && e.Parent != nil {
+		par := *e.Parent
+		obj1, exists1, ctx := par.Get2(word)
+		if exists1 {
+			obj = obj1
+			exists = exists1
+			e = ctx
+		}
+	}
+	return obj, exists, e
 }
 
 func (e *RyeCtx) Set(word int, val Object) Object {
