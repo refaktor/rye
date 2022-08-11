@@ -1,4 +1,4 @@
-// +build b_http_server
+// +build b_http
 
 package evaldo
 

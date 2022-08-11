@@ -1,0 +1,15 @@
+
+// Rye example
+
+rye .needs { bleve }
+
+new-bleve-mapping .open %minimal.bleve :idx
+|index "elephant and a cat" "A mouse scared an elephant. A cat caught an mouse."
+|index "mouse and dog" "Cat was hunting for a mouse. A dog chased it away."
+|index "elephant and a dog" "Elephant looked at the dog. The dog looked at the cat."
+
+new-match-query "dog"
+|new-search-request
+|search idx
+|print
+
