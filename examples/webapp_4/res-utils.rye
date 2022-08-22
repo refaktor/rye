@@ -1,0 +1,16 @@
+
+; Api/resouce definition
+
+utils-resource: context {
+ 
+	add: webfn { a: required integer  b: required integer } { w r } {
+		a + b
+	}
+
+	duplicate: webfn { str: required } { w r } {
+		str .concat str
+	}
+	
+}
+
+

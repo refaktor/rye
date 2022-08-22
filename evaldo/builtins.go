@@ -73,6 +73,7 @@ func lesserThan(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) bool {
 }
 
 func getFrom(ps *env.ProgramState, data interface{}, key interface{}, posMode bool) env.Object {
+	fmt.Println(data)
 	switch s1 := data.(type) {
 	case env.Dict:
 		switch s2 := key.(type) {
@@ -108,9 +109,17 @@ func getFrom(ps *env.ProgramState, data interface{}, key interface{}, posMode bo
 			if ok {
 				return v
 			} else {
-				ps.FailureFlag = true
-				return env.NewError1(5) // NOT_FOUND
+				return makeError(ps, "Not found in context")
 			}
+		case env.Word:
+			v, ok := s1.Get(s2.Index)
+			if ok {
+				return v
+			} else {
+				return makeError(ps, "Not found in context")
+			}
+		default:
+			return makeError(ps, "Wrong type or missing key for get-arrow")
 		}
 	case env.List:
 		switch s2 := key.(type) {
@@ -176,7 +185,7 @@ func getFrom(ps *env.ProgramState, data interface{}, key interface{}, posMode bo
 			}
 		}
 	}
-	return env.NewError("wrong types TODO")
+	return makeError(ps, "Wrong type or missing key for get-arrow")
 }
 
 var builtins = map[string]*env.Builtin{
@@ -3468,6 +3477,13 @@ var builtins = map[string]*env.Builtin{
 				return env.NewError(val.Value)
 			case env.Integer: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
 				return env.NewError1(int(val.Value))
+			case env.Block: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+				// TODO -- this is only temporary it takes numeric value as first and string as second arg
+				code := val.Series.Get(0)
+				message := val.Series.Get(1)
+				if code.Type() == env.IntegerType && message.Type() == env.StringType {
+					return env.NewError4(int(code.(env.Integer).Value), message.(env.String).Value, nil, nil)
+				}
 			}
 			return arg0
 		},
@@ -3483,6 +3499,13 @@ var builtins = map[string]*env.Builtin{
 				return *env.NewError(val.Value)
 			case env.Integer: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
 				return *env.NewError1(int(val.Value))
+			case env.Block: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+				// TODO -- this is only temporary it takes numeric value as first and string as second arg
+				code := val.Series.Get(0)
+				message := val.Series.Get(1)
+				if code.Type() == env.IntegerType && message.Type() == env.StringType {
+					return env.NewError4(int(code.(env.Integer).Value), message.(env.String).Value, nil, nil)
+				}
 			}
 			return arg0
 		},
@@ -3547,6 +3570,9 @@ var builtins = map[string]*env.Builtin{
 					case env.String: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
 						return env.NewError4(0, val.Value, er, nil)
 					case env.Integer: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+						if val.Value == 0 {
+							return er
+						}
 						return env.NewError4(int(val.Value), "", er, nil)
 					case env.Block: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
 						// TODO -- this is only temporary it takes numeric value as first and string as second arg
@@ -3580,6 +3606,9 @@ var builtins = map[string]*env.Builtin{
 					case env.String: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
 						return env.NewError4(0, val.Value, er, nil)
 					case env.Integer: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+						if val.Value == 0 {
+							return er
+						}
 						return env.NewError4(int(val.Value), "", er, nil)
 					case env.Block: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
 						// TODO -- this is only temporary it takes numeric value as first and string as second arg
