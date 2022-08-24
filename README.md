@@ -31,6 +31,8 @@ Go's libraries are quite easy to integrate.
 
 ## Status: Alpha
 
+Heads up!: Just now, Aug/Sep 2022 I am reorganizing how and where all the integrations are defined, so repository is a little in a mess. Things will get better once I am done with this process.
+
 Core ideas of the language are formed. Most experimenting, at least until version 1 is done.
 Right now, my focus is on making the core and runtime more ready and friendly for a potential brave souls that want to install it and 
 dabble around a little.
