@@ -211,26 +211,26 @@ The author of Factor once said that at the end *it's not about the language, but
 
 Most of them are more proof of concepts than full implementations. But it's not hard to extend them, to cover more ground if needed. 
 
-*I am just in the process into reorganising libraries*
+*I am just in the process into reorganising libraries. I will add info about the level of integration*
 
-### Base (for now)
+### Base - will be official integrations
   * Bcrypt - password hashing
   * Http - http servers and clients
   * Json - json handling
   * Mysql - database
   * Postgresql - database
   * Psutil - Linux process management
-  * QFrame - a fast dataframe implementation
   * Sqlite - database
   * Sxml - sax xml like interface
   
-### Contrib
+### Contrib - will be community / third party integrations
   * Amazon AWS
   * Bleve full text search
   * Cayley - graph database
   * GTK - GUI framework
   * Nats - connective technologies
   * NNG - nanomsg scalability protocols
+  * QFrame - a fast dataframe implementation
   * Raylib - 2D graphich library / game engine
   * Telegram bot - telegram bots
   * Webview - golang's webview implementation
