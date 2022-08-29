@@ -205,6 +205,36 @@ When learning about something new it makes sense to approach it from a familiar 
   * [Less variables, more flows example vs Python](https://ryelang.blogspot.com/2021/11/less-variables-more-flows-example-vs.html)
   * [Simple compression puzzle - from Python to Rye solution](https://github.com/otobrglez/compression-puzzle/blob/master/src/rye/compress_jm_rec_steps.rye)
   
+## Libraries
+
+The author of Factor once said that at the end *it's not about the language, but the libraries*. I can only agree, adding *libraries, and distribution*. Rye is still an experiment in language design, so it doesn't have anything like production level libraries. But to test the language with practical problems in mind, or because I needed something for my use of Rye, there are quite many integrations already made. 
+
+Most of them are more proof of concepts than full implementations. But it's not hard to extend them, to cover more ground if needed. 
+
+*I am just in the process into reorganising libraries*
+
+### Base (for now)
+  * Bcrypt - password hashing
+  * Http - http servers and clients
+  * Json - json handling
+  * Mysql - database
+  * Postgresql - database
+  * Psutil - Linux process management
+  * QFrame - a fast dataframe implementation
+  * Sqlite - database
+  * Sxml - sax xml like interface
+  
+### Contrib
+  * Amazon AWS
+  * Bleve full text search
+  * Cayley - graph database
+  * GTK - GUI framework
+  * Nats - connective technologies
+  * NNG - nanomsg scalability protocols
+  * Raylib - 2D graphich library / game engine
+  * Telegram bot - telegram bots
+  * Webview - golang's webview implementation
+    
 ## Follow development
 
 ### Rye blog
