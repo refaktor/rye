@@ -73,7 +73,6 @@ func lesserThan(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) bool {
 }
 
 func getFrom(ps *env.ProgramState, data interface{}, key interface{}, posMode bool) env.Object {
-	fmt.Println(data)
 	switch s1 := data.(type) {
 	case env.Dict:
 		switch s2 := key.(type) {
@@ -187,6 +186,8 @@ func getFrom(ps *env.ProgramState, data interface{}, key interface{}, posMode bo
 	}
 	return makeError(ps, "Wrong type or missing key for get-arrow")
 }
+
+var ShowResults bool
 
 var builtins = map[string]*env.Builtin{
 
@@ -1112,8 +1113,8 @@ var builtins = map[string]*env.Builtin{
 				ps.Ser = ser */
 				//reader := bufio.NewReader(os.Stdin)
 
-				fmt.Println("Welcome to console: " + name.Value)
-				fmt.Println(" Use ls to list current context")
+				fmt.Println("Welcome to console: \033[1m" + name.Value + "\033[0m")
+				fmt.Println("* use \033[1mls\033[0m to list current context")
 				fmt.Println("-------------------------------------------------------------")
 				/*
 					for {
@@ -1137,7 +1138,7 @@ var builtins = map[string]*env.Builtin{
 						}
 					}*/
 
-				DoRyeRepl(ps)
+				DoRyeRepl(ps, ShowResults)
 				fmt.Println("-------------------------------------------------------------")
 				// ps.Ser = ser
 
@@ -1506,6 +1507,53 @@ var builtins = map[string]*env.Builtin{
 				return *rctx // return the resulting context
 			}
 			return nil
+		},
+	},
+
+	"private": {
+		Argsn: 1,
+		Doc:   "Creates a new context with current parent, returns last value",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg0.(type) {
+			case env.Block:
+				ser := ps.Ser
+				ctx := ps.Ctx
+				ps.Ser = bloc.Series
+				ps.Ctx = env.NewEnv(ps.Ctx) // make new context with no parent
+				EvalBlock(ps)
+				// rctx := ps.Ctx
+				ps.Ctx = ctx
+				ps.Ser = ser
+				return ps.Res // return the resulting context
+			}
+			return nil
+		},
+	},
+
+	"private\\": {
+		Argsn: 2,
+		Doc:   "Creates a new context with current parent, returns last value",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch doc := arg0.(type) {
+			case env.String:
+				switch bloc := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ctx := ps.Ctx
+					ps.Ser = bloc.Series
+					ps.Ctx = env.NewEnv2(ps.Ctx, doc.Value) // make new context with no parent
+					EvalBlock(ps)
+					// rctx := ps.Ctx
+					ps.Ctx = ctx
+					ps.Ser = ser
+					return ps.Res // return the resulting context
+
+				default:
+					return makeError(ps, "Arg 2 not Block")
+				}
+			default:
+				return makeError(ps, "Arg 1 not String")
+			}
 		},
 	},
 
@@ -3406,7 +3454,7 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
-				return env.NewDictFromSeries(bloc.Series)
+				return env.NewDictFromSeries(bloc.Series, ps.Idx)
 			}
 			return nil
 		},
@@ -3935,7 +3983,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"length": {
+	"length?": {
 		Argsn: 1,
 		Doc:   "Accepts a collection (String, Block, Dict, Spreadsheet) and returns it's length.", // TODO -- accept list, context also
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -3948,6 +3996,8 @@ var builtins = map[string]*env.Builtin{
 				return env.Integer{int64(s1.Series.Len())}
 			case env.Spreadsheet:
 				return env.Integer{int64(len(s1.Rows))}
+			case env.RyeCtx:
+				return env.Integer{int64(s1.GetWords(*ps.Idx).Series.Len())}
 			default:
 				fmt.Println("Error")
 			}
@@ -4101,7 +4151,7 @@ var builtins = map[string]*env.Builtin{
 		Argsn: 0,
 		Doc:   "",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return *env.NewNative(ps.Idx, builtinNames, "Rye-itself")
+			return *env.NewNative(ps.Idx, BuiltinNames, "Rye-itself")
 		},
 	},
 
@@ -4117,7 +4167,7 @@ var builtins = map[string]*env.Builtin{
 					switch node := mod.Series.Get(i).(type) {
 					case env.Word:
 						name := ps.Idx.GetWord(node.Index)
-						cnt, ok := builtinNames[name]
+						cnt, ok := BuiltinNames[name]
 						// TODO -- distinguish between modules that aren't loaded or don't exists
 						if ok && cnt > 0 {
 							//							return env.Integer{1}
@@ -4148,7 +4198,7 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			blts := make([]env.Object, 0)
-			for i, v := range builtinNames {
+			for i, v := range BuiltinNames {
 				if v > 0 {
 					idx := ps.Idx.IndexWord(i)
 					blts = append(blts, env.Word{idx})
@@ -4162,7 +4212,7 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			blts := make([]env.Object, 0)
-			for i, v := range builtinNames {
+			for i, v := range BuiltinNames {
 				if v == 0 {
 					idx := ps.Idx.IndexWord(i)
 					blts = append(blts, env.Word{idx})
@@ -4200,7 +4250,7 @@ func isTruthy(arg env.Object) env.Object {
 */
 
 func RegisterBuiltins(ps *env.ProgramState) {
-	builtinNames = make(map[string]int)
+	BuiltinNames = make(map[string]int)
 	RegisterBuiltins2(builtins, ps, "core")
 	RegisterBuiltins2(Builtins_io, ps, "io")
 	RegisterBuiltins2(Builtins_web, ps, "web")
@@ -4231,10 +4281,10 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_telegrambot, ps, "telegram")
 }
 
-var builtinNames map[string]int
+var BuiltinNames map[string]int
 
 func RegisterBuiltins2(builtins map[string]*env.Builtin, ps *env.ProgramState, name string) {
-	builtinNames[name] = len(builtins)
+	BuiltinNames[name] = len(builtins)
 	for k, v := range builtins {
 		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc)
 		registerBuiltin(ps, k, *bu)

@@ -24,6 +24,7 @@ type RyeCtx struct {
 	state  map[int]Object
 	Parent *RyeCtx
 	Kind   Word
+	Doc    string
 	locked bool
 }
 
@@ -31,6 +32,14 @@ func NewEnv(par *RyeCtx) *RyeCtx {
 	var e RyeCtx
 	e.state = make(map[int]Object)
 	e.Parent = par
+	return &e
+}
+
+func NewEnv2(par *RyeCtx, doc string) *RyeCtx {
+	var e RyeCtx
+	e.state = make(map[int]Object)
+	e.Parent = par
+	e.Doc = doc
 	return &e
 }
 
@@ -67,7 +76,14 @@ const color_comment = "\033[38;5;247m"
 
 func (e RyeCtx) Preview(idxs Idxs, filter string) string {
 	var bu strings.Builder
-	bu.WriteString("Context (" + e.Kind.Probe(idxs) + "):\n")
+	var ks string
+	if e.GetKind() > 0 {
+		ks = " (" + e.Kind.Probe(idxs) + ") "
+	}
+	bu.WriteString("Context" + ks + ":")
+	if e.Doc > "" {
+		bu.WriteString("\n\"" + e.Doc + "\"")
+	}
 	arr := make([]string, 0)
 	i := 0
 	for k, v := range e.state {
@@ -93,7 +109,7 @@ func (e RyeCtx) Preview(idxs Idxs, filter string) string {
 	for aa := range arr {
 		line := arr[aa]
 		pars := strings.Split(line, "|||")
-		bu.WriteString(" " + pars[1] + pars[0] + "\n")
+		bu.WriteString("\n " + pars[1] + pars[0])
 	}
 	return bu.String()
 }

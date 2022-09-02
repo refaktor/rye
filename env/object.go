@@ -1141,7 +1141,7 @@ func NewDict(data map[string]interface{}) *Dict {
 	return &Dict{data, Word{0}}
 }
 
-func NewDictFromSeries(block TSeries) Dict {
+func NewDictFromSeries(block TSeries, idx *Idxs) Dict {
 	data := make(map[string]interface{})
 	for block.Pos() < block.Len() {
 		key := block.Pop()
@@ -1150,6 +1150,12 @@ func NewDictFromSeries(block TSeries) Dict {
 		switch k := key.(type) {
 		case String:
 			data[k.Value] = val
+		case Tagword:
+			data[idx.GetWord(k.Index)] = val
+		case Word:
+			data[idx.GetWord(k.Index)] = val
+		case Setword:
+			data[idx.GetWord(k.Index)] = val
 		}
 	}
 	return Dict{data, Word{0}}

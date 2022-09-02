@@ -322,7 +322,7 @@ func parseOnecharpipe(v *Values, d Any) (Any, error) {
 func parseGenword(v *Values, d Any) (Any, error) {
 	trace("GENWORD:" + v.Token())
 	word := v.Token()
-	idx := wordIndex.IndexWord(word)
+	idx := wordIndex.IndexWord(strings.ToLower(word))
 	return env.Genword{idx}, nil
 }
 

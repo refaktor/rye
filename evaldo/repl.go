@@ -151,7 +151,7 @@ func MoveCursorBackward(bias int) {
 
 //
 
-func DoRyeRepl(es *env.ProgramState) {
+func DoRyeRepl(es *env.ProgramState, showResults bool) {
 
 	codestr := "a: 100\nb: \"jim\"\nprint 10 + 20 + b"
 	codelines := strings.Split(codestr, ",\n")
@@ -185,8 +185,6 @@ func DoRyeRepl(es *env.ProgramState) {
 	// to s funkcijo se bo dalo čist dobro naredit ... potem pa tudi s kontekstom ne vidim kaj bi bil problem
 
 	line2 := ""
-
-	showResults := true
 
 	var prevResult env.Object
 
@@ -230,11 +228,11 @@ func DoRyeRepl(es *env.ProgramState) {
 					// ignore
 				} else if strings.Compare("(lc)", line2) == 0 {
 					fmt.Println(es.Ctx.Probe(*es.Idx))
-				} else if strings.Compare("(show-results)", line2) == 0 {
+				} else if strings.Compare("((show-results))", line2) == 0 {
 					showResults = true
-				} else if strings.Compare("(hide-results)", line2) == 0 {
+				} else if strings.Compare("((hide-results))", line2) == 0 {
 					showResults = false
-				} else if strings.Compare("(r)", line2) == 0 {
+				} else if strings.Compare("((return))", line2) == 0 {
 					// es.Ser = ser
 					// fmt.Println("")
 					return

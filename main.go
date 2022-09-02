@@ -48,11 +48,16 @@ var CODE []interface{}
 //
 
 func main() {
+	evaldo.ShowResults = true
+
 	if len(os.Args) == 1 {
 		main_rye_repl(os.Stdin, os.Stdout)
 	} else if len(os.Args) == 2 {
 		if os.Args[1] == "shell" {
 			main_rysh()
+		} else if os.Args[1] == "--hr" {
+			evaldo.ShowResults = false
+			main_rye_repl(os.Stdin, os.Stdout)
 		} else if os.Args[1] == "web" {
 			// main_httpd()
 		} else if os.Args[1] == "ryeco" {
@@ -63,6 +68,9 @@ func main() {
 	} else if len(os.Args) >= 3 {
 		if os.Args[1] == "ryk" {
 			main_ryk()
+		} else if os.Args[1] == "--hr" {
+			evaldo.ShowResults = false
+			main_rye_file(os.Args[2], false)
 		} else if os.Args[1] == "cgi" {
 			main_cgi_file(os.Args[2], false)
 		} else if os.Args[1] == "sig" {
@@ -103,7 +111,7 @@ func main_ryk() {
 	//block, genv := loader.LoadString("{ }", false)
 	es := env.NewProgramState(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
-	contrib.RegisterBuiltins(es)
+	contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
 	evaldo.EvalBlock(es)
 
 	if len(os.Args) >= 4 {
@@ -243,7 +251,7 @@ func main_rye_file(file string, sig bool) {
 	case env.Block:
 		es := env.NewProgramState(block.(env.Block).Series, genv)
 		evaldo.RegisterBuiltins(es)
-		contrib.RegisterBuiltins(es)
+		contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
 
 		evaldo.EvalBlock(es)
 		evaldo.MaybeDisplayFailureOrError(es, genv)
@@ -264,7 +272,7 @@ func main_cgi_file(file string, sig bool) {
 		block, genv := loader.LoadString(input, false)
 		es := env.NewProgramState(block.(env.Block).Series, genv)
 		evaldo.RegisterBuiltins(es)
-		contrib.RegisterBuiltins(es)
+		contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
 
 		evaldo.EvalBlock(es)
 		env.SetValue(es, "w", *env.NewNative(es.Idx, w, "Go-server-response-writer"))
@@ -282,7 +290,7 @@ func main_cgi_file(file string, sig bool) {
 		case env.Block:
 			es := env.AddToProgramState(es, block.(env.Block).Series, genv)
 			evaldo.RegisterBuiltins(es)
-			contrib.RegisterBuiltins(es)
+			contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
 
 			evaldo.EvalBlock(es)
 			evaldo.MaybeDisplayFailureOrError(es, genv)
@@ -318,11 +326,11 @@ func main_rye_repl(in io.Reader, out io.Writer) {
 	block, genv := loader.LoadString(input, false)
 	es := env.NewProgramState(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
-	contrib.RegisterBuiltins(es)
+	contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
 
 	evaldo.EvalBlock(es)
 
-	evaldo.DoRyeRepl(es)
+	evaldo.DoRyeRepl(es, evaldo.ShowResults)
 
 }
 

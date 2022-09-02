@@ -347,7 +347,8 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 
 // Evaluates a word
 // first tries to find a value in normal context. If there were no generic words this would be mostly it
-// if word is not found then it tries to get the value of next expression and find a generic word based
+// if word is not found then it tries to get the value of next expression
+// and find a generic word based
 // on that, it here is leftval already present it can dispatc on it otherwise
 func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft bool, pipeSecond bool) *env.ProgramState {
 	// LOCAL FIRST
