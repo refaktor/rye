@@ -3,8 +3,8 @@
 
 rye .needs { http }
 
-do load %src/fryework.rye
-do load %src/res-utils.rye
+do load %fryework.rye
+do load %res-utils.rye
 
 handle-api: fn { w r } {
 	handle-web-resources w r context {

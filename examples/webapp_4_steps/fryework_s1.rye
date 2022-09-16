@@ -1,0 +1,20 @@
+
+; Fryework step 1
+
+write-ok: fn { d w } { write w to-json d }
+
+webfn: fn { args body } {
+	fnc args current-context {
+		full-form? r |probe |to-context |do-in body
+	}
+}
+
+handle-web-resource: fn { w r res } {
+	query? r "_m" |to-word <- res :func
+	func w r |write-ok w
+}
+
+handle-web-resources: fn { w r resmap } {
+	query? r "_r" |to-word <- resmap |first :res
+	handle-web-resource w r res
+}

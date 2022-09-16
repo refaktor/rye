@@ -43,6 +43,8 @@ func Dict2Context(ps *env.ProgramState, s1 env.Dict) env.RyeCtx {
 			ctx.Set(word, v1)
 		case env.String:
 			ctx.Set(word, v1)
+		case string:
+			ctx.Set(word, env.String{v1})
 		}
 	}
 	return *ctx

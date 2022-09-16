@@ -1714,6 +1714,30 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"produce": {
+		Argsn: 3,
+		Doc:   "Accepts a number and a block of code. Does the block of code number times, injecting the number.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch cond := arg0.(type) {
+			case env.Integer:
+				switch bloc := arg2.(type) {
+				case env.Block:
+					acc := arg1
+					ser := ps.Ser
+					ps.Ser = bloc.Series
+					for i := 0; int64(i) < cond.Value; i++ {
+						ps = EvalBlockInj(ps, acc, true)
+						ps.Ser.Reset()
+						acc = ps.Res
+					}
+					ps.Ser = ser
+					return ps.Res
+				}
+			}
+			return nil
+		},
+	},
+
 	"forever": {
 		Argsn: 1,
 		Doc:   "Accepts a block and does it forever.",

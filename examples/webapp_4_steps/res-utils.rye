@@ -1,0 +1,10 @@
+
+; Api resource definition
+
+utils-resource: context {
+ 
+	repeat: webfn { w r } {
+		produce to-integer n "" { .concat str }
+	}
+	
+}
