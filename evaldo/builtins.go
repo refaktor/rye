@@ -27,6 +27,29 @@ func MakeError(env1 *env.ProgramState, msg string) *env.Error {
 	return env.NewError(msg)
 }
 
+func MakeRyeError(env1 *env.ProgramState, val env.Object, er *env.Error) *env.Error {
+	switch val := val.(type) {
+	case env.String: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+		return env.NewError4(0, val.Value, er, nil)
+	case env.Integer: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+		if val.Value == 0 {
+			return er
+		}
+		return env.NewError4(int(val.Value), "", er, nil)
+	case env.Block: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+		// TODO -- this is only temporary it takes numeric value as first and string as second arg
+		code := val.Series.Get(0)
+		message := val.Series.Get(1)
+		if code.Type() == env.IntegerType && message.Type() == env.StringType {
+			return env.NewError4(int(code.(env.Integer).Value), message.(env.String).Value, er, nil)
+		}
+		
+		return makeError(env1, "Wrong error constructor")
+	default:
+		return makeError(env1, "Wrong error constructor")
+	}
+}
+
 func makeError(env1 *env.ProgramState, msg string) *env.Error {
 	env1.FailureFlag = true
 	return env.NewError(msg)
@@ -3544,20 +3567,7 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			//fmt.Println("FAIL")
 			ps.FailureFlag = true
-			switch val := arg0.(type) {
-			case env.String: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
-				return env.NewError(val.Value)
-			case env.Integer: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
-				return env.NewError1(int(val.Value))
-			case env.Block: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
-				// TODO -- this is only temporary it takes numeric value as first and string as second arg
-				code := val.Series.Get(0)
-				message := val.Series.Get(1)
-				if code.Type() == env.IntegerType && message.Type() == env.StringType {
-					return env.NewError4(int(code.(env.Integer).Value), message.(env.String).Value, nil, nil)
-				}
-			}
-			return arg0
+			return MakeRyeError(ps, arg0, nil)
 		},
 	},
 
@@ -3566,20 +3576,7 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Constructs and Error object. Accepts String as message, Integer as code, or block for multiple parameters.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			//ps.ErrorFlag = true
-			switch val := arg0.(type) {
-			case env.String: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
-				return *env.NewError(val.Value)
-			case env.Integer: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
-				return *env.NewError1(int(val.Value))
-			case env.Block: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
-				// TODO -- this is only temporary it takes numeric value as first and string as second arg
-				code := val.Series.Get(0)
-				message := val.Series.Get(1)
-				if code.Type() == env.IntegerType && message.Type() == env.StringType {
-					return env.NewError4(int(code.(env.Integer).Value), message.(env.String).Value, nil, nil)
-				}
-			}
-			return arg0
+			return MakeRyeError(ps, arg0, nil)
 		},
 	},
 
@@ -3638,25 +3635,8 @@ var builtins = map[string]*env.Builtin{
 					if er.Status == 0 && er.Message == "" {
 						er = nil
 					}
-					switch val := arg1.(type) {
-					case env.String: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
-						return env.NewError4(0, val.Value, er, nil)
-					case env.Integer: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
-						if val.Value == 0 {
-							return er
-						}
-						return env.NewError4(int(val.Value), "", er, nil)
-					case env.Block: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
-						// TODO -- this is only temporary it takes numeric value as first and string as second arg
-						code := val.Series.Get(0)
-						message := val.Series.Get(1)
-						if code.Type() == env.IntegerType && message.Type() == env.StringType {
-							return env.NewError4(int(code.(env.Integer).Value), message.(env.String).Value, er, nil)
-						}
-						return env.NewError("wrong error constructor")
-					}
+					return MakeRyeError(ps, arg1, er)
 				}
-				return env.NewError("unknown type in error constructor")
 			}
 			return arg0
 		},
@@ -3674,23 +3654,7 @@ var builtins = map[string]*env.Builtin{
 					if er.Status == 0 && er.Message == "" {
 						er = nil
 					}
-					switch val := arg1.(type) {
-					case env.String: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
-						return env.NewError4(0, val.Value, er, nil)
-					case env.Integer: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
-						if val.Value == 0 {
-							return er
-						}
-						return env.NewError4(int(val.Value), "", er, nil)
-					case env.Block: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
-						// TODO -- this is only temporary it takes numeric value as first and string as second arg
-						code := val.Series.Get(0)
-						message := val.Series.Get(1)
-						if code.Type() == env.IntegerType && message.Type() == env.StringType {
-							return env.NewError4(int(code.(env.Integer).Value), message.(env.String).Value, er, nil)
-						}
-						return env.NewError("wrong error constructor")
-					}
+					return MakeRyeError(ps, arg1, er)
 				}
 				return env.NewError("error 1")
 			}
@@ -3708,20 +3672,7 @@ var builtins = map[string]*env.Builtin{
 				if !util.IsTruthy(cond) {
 					ps.FailureFlag = true
 					ps.ReturnFlag = true
-					switch er := arg1.(type) {
-					case env.String:
-						return env.NewError(er.Value)
-					case env.Integer:
-						return env.NewError1(int(er.Value))
-					case env.Block: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
-						// TODO -- this is only temporary it takes numeric value as first and string as second arg
-						code := er.Series.Get(0)
-						message := er.Series.Get(1)
-						if code.Type() == env.IntegerType && message.Type() == env.StringType {
-							return env.NewError4(int(code.(env.Integer).Value), message.(env.String).Value, nil, nil)
-						}
-						return env.NewError("wrong error constructor")
-					}
+					return MakeRyeError(ps, arg1, nil)
 				} else {
 					return arg0
 				}
@@ -3741,20 +3692,7 @@ var builtins = map[string]*env.Builtin{
 				if !util.IsTruthy(cond) {
 					ps.FailureFlag = true
 					// ps.ReturnFlag = true
-					switch er := arg1.(type) {
-					case env.String:
-						return env.NewError(er.Value)
-					case env.Integer:
-						return env.NewError1(int(er.Value))
-					case env.Block: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
-						// TODO -- this is only temporary it takes numeric value as first and string as second arg
-						code := er.Series.Get(0)
-						message := er.Series.Get(1)
-						if code.Type() == env.IntegerType && message.Type() == env.StringType {
-							return env.NewError4(int(code.(env.Integer).Value), message.(env.String).Value, nil, nil)
-						}
-						return env.NewError("wrong error constructor")
-					}
+					return MakeRyeError(ps, arg1, nil)
 				} else {
 					return arg0
 				}
