@@ -1,8 +1,8 @@
-// +build !b_tiny
+// ### +build !b_tiny
 
 package evaldo
 
-import "C"
+// import "C"
 
 import (
 	"fmt"

@@ -7,5 +7,5 @@ import (
 
 )
 
-var Builtins_goroutines = map[string]*env.Builtin{
+var Builtins_goroutines2 = map[string]*env.Builtin{
 }
