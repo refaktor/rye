@@ -53,6 +53,7 @@ require (
 	github.com/pkg/term v1.1.0 // indirect
 	github.com/refaktor/go-peg v0.0.0-20220116201714-31e3dfa8dc7d // indirect
 	github.com/refaktor/liner v1.2.3 // indirect
+	github.com/webview/webview v0.0.0-20220816141928-2ee04ccd0530 // indirect
 	go.etcd.io/bbolt v1.3.5 // indirect
 	golang.org/x/net v0.0.0-20220708220712-1185a9018129 // indirect
 	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect

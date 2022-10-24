@@ -1,5 +1,5 @@
 
-; Fryework step 1
+; Framework step 1 - stripped of any validation or error handl.
 
 write-ok: fn { d w } { write w to-json d }
 

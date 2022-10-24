@@ -7,6 +7,7 @@ ryel
 *.dll
 *.so
 *.dylib
+data.txt
 
 # Test binary, built with `go test -c`
 *.test

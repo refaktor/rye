@@ -7,21 +7,29 @@ import (
 	"strings"
 )
 
+func makeError(env1 *ProgramState, msg string) *Error {
+	env1.FailureFlag = true
+	return NewError(msg)
+}
+
 type SpreadsheetRow struct {
 	Values []interface{}
 	Uplink *Spreadsheet
 }
 
 type Spreadsheet struct {
-	Cols []string
-	Rows []SpreadsheetRow
-	Kind Word
+	Cols    []string
+	Rows    []SpreadsheetRow
+	RawRows [][]string
+	Kind    Word
+	RawMode bool
 }
 
 func NewSpreadsheet(cols []string) *Spreadsheet {
 	var ps Spreadsheet
 	ps.Cols = cols
 	ps.Rows = make([]SpreadsheetRow, 0)
+	ps.RawMode = false
 	/*
 		ps := Spreadsheet{
 			cols,
@@ -33,6 +41,11 @@ func NewSpreadsheet(cols []string) *Spreadsheet {
 // Inspect returns a string representation of the Integer.
 func (s *Spreadsheet) AddRow(vals SpreadsheetRow) {
 	s.Rows = append(s.Rows, vals)
+}
+
+func (s *Spreadsheet) SetRaw(vals [][]string) {
+	s.RawRows = vals
+	s.RawMode = true
 }
 
 // Inspect returns a string representation of the Integer.
@@ -77,7 +90,6 @@ func (s Spreadsheet) ToTxt() string {
 	return bu.String()
 }
 
-// Inspect returns a string representation of the Integer.
 func (s Spreadsheet) Column(name string) Object {
 	col1 := make([]Object, len(s.Cols))
 	idx := IndexOfString(name, s.Cols)
@@ -121,6 +133,62 @@ func (s Spreadsheet) Sum(name string) Object {
 	}
 }
 
+func (s Spreadsheet) WhereEquals(ps *ProgramState, name string, val interface{}) Object {
+	idx := IndexOfString(name, s.Cols)
+	nspr := NewSpreadsheet(s.Cols)
+	if idx > -1 {
+		if s.RawMode {
+			res := make([][]string, 0)
+			for _, row := range s.RawRows {
+				if len(row) > idx {
+					switch ov := val.(type) {
+					case String:
+						if ov.Value == row[idx] {
+							res = append(res, row)
+						}
+					}
+				}
+			}
+			nspr.SetRaw(res)
+			return *nspr
+		}
+		return makeError(ps, "Only raw spreadsheet for now TODO")
+
+	} else {
+		return makeError(ps, "Column not found")
+	}
+}
+
+func (s Spreadsheet) Columns(ps *ProgramState, names []string) Object {
+
+	idxs := make([]int, len(names))
+	for name := range names {
+		idx := IndexOfString(names[name], s.Cols)
+		if idx == -1 {
+			return makeError(ps, "Col not found")
+		}
+		idxs[name] = idx
+
+	}
+	nspr := NewSpreadsheet(names)
+	if s.RawMode {
+		res := make([][]string, 0)
+		for _, row := range s.RawRows {
+			row2 := make([]string, len(names))
+			for col := range idxs {
+				if len(row) > col {
+					row2[col] = row[idxs[col]]
+				}
+			}
+			res = append(res, row2)
+		}
+		nspr.SetRaw(res)
+		return *nspr
+	}
+	return makeError(ps, "Only raw spreadsheet for now TODO")
+
+}
+
 // Type returns the type of the Integer.
 func (s Spreadsheet) Type() Type {
 	return SpreadsheetType
@@ -128,7 +196,13 @@ func (s Spreadsheet) Type() Type {
 
 // Inspect returns a string
 func (s Spreadsheet) Inspect(e Idxs) string {
-	return "<Spreadsheet [" + strconv.Itoa(len(s.Cols)) + " " + strconv.Itoa(len(s.Rows)) + "] of kind " + s.Kind.Probe(e) + ">"
+	rows := ""
+	if s.RawMode {
+		rows = strconv.Itoa(len(s.RawRows))
+	} else {
+		rows = strconv.Itoa(len(s.Rows))
+	}
+	return "<Spreadsheet [" + strconv.Itoa(len(s.Cols)) + " " + rows + "] of kind " + s.Kind.Probe(e) + ">"
 }
 
 // Inspect returns a string representation of the Integer.

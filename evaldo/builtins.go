@@ -215,6 +215,28 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"is-string": {
+		Argsn: 1,
+		Doc:   "Returns true if value is string.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			if arg0.Type() == env.StringType {
+				return env.Integer{1}
+			} else {
+				return env.Integer{0}
+			}
+		},
+	},
+
+	"to-uri": {
+		Argsn: 1,
+		Doc:   "Takes a Rye value and returns a string representation.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return *env.NewUri1(ps.Idx, arg0.(env.String).Value) // TODO turn to switch
+		},
+	},
+
 	"inc": {
 		Argsn: 1,
 		Doc:   "Returns integer value incremented by 1.",
@@ -1738,6 +1760,35 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"produce\\": {
+		Argsn: 4,
+		Doc:   "produce\\ 5 1 'acc { * acc , + 1 }",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch cond := arg0.(type) {
+			case env.Integer:
+				switch bloc := arg3.(type) {
+				case env.Block:
+					switch accu := arg2.(type) {
+					case env.Tagword:
+						acc := arg1
+						ps.Ctx.Set(accu.Index, acc)
+						ser := ps.Ser
+						ps.Ser = bloc.Series
+						for i := 0; int64(i) < cond.Value; i++ {
+							ps = EvalBlockInj(ps, acc, true)
+							ps.Ser.Reset()
+							acc = ps.Res
+						}
+						ps.Ser = ser
+						val, _ := ps.Ctx.Get(accu.Index)
+						return val
+					}
+				}
+			}
+			return nil
+		},
+	},
+
 	"forever": {
 		Argsn: 1,
 		Doc:   "Accepts a block and does it forever.",
@@ -1830,14 +1881,31 @@ var builtins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = code.Series
-					for i := 0; i < len(block.Rows); i++ {
-						row := block.Rows[i]
-						row.Uplink = &block
-						ps = EvalBlockInj(ps, row, true)
-						if ps.ErrorFlag {
-							return ps.Res
+					if block.RawMode {
+						for i := 0; i < len(block.RawRows); i++ {
+							row := block.RawRows[i]
+							row2 := make([]interface{}, len(row))
+							for i := range row {
+								row2[i] = row[i]
+							}
+
+							row3 := env.NewList(row2)
+							ps = EvalBlockInj(ps, row3, true)
+							if ps.ErrorFlag {
+								return ps.Res
+							}
+							ps.Ser.Reset()
 						}
-						ps.Ser.Reset()
+					} else {
+						for i := 0; i < len(block.Rows); i++ {
+							row := block.Rows[i]
+							row.Uplink = &block
+							ps = EvalBlockInj(ps, row, true)
+							if ps.ErrorFlag {
+								return ps.Res
+							}
+							ps.Ser.Reset()
+						}
 					}
 					ps.Ser = ser
 					return ps.Res
@@ -4277,6 +4345,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	BuiltinNames = make(map[string]int)
 	RegisterBuiltins2(builtins, ps, "core")
 	RegisterBuiltins2(Builtins_io, ps, "io")
+	RegisterBuiltins2(Builtins_regexp, ps, "regexp")
 	RegisterBuiltins2(Builtins_web, ps, "web")
 	RegisterBuiltins2(Builtins_sxml, ps, "sxml")
 	RegisterBuiltins2(Builtins_html, ps, "html")
@@ -4303,6 +4372,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_cayley, ps, "cayley")
 	RegisterBuiltins2(Builtins_structures, ps, "structs")
 	RegisterBuiltins2(Builtins_telegrambot, ps, "telegram")
+	RegisterBuiltins2(Builtins_spreadsheet, ps, "spreadsheet")
 }
 
 var BuiltinNames map[string]int

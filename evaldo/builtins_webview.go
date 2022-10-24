@@ -1,13 +1,12 @@
-// +build !b_tiny
+// +build b_webview
 
 package evaldo
 
 import "C"
 
 import (
-	"rye/util"
-	//	"fmt"
 	"bytes"
+	"fmt"
 	"io"
 	"log"
 	"mime"
@@ -15,6 +14,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"rye/env"
+	"rye/util"
 
 	"github.com/webview/webview"
 )
@@ -31,6 +31,7 @@ var Builtins_webview = map[string]*env.Builtin{
 	"webview//set-title": {
 		Argsn: 2,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			fmt.Println("TITLE ---")
 			switch obj := arg0.(type) {
 			case env.Native:
 				switch val := arg1.(type) {
@@ -114,17 +115,23 @@ var Builtins_webview = map[string]*env.Builtin{
 		},
 	},
 
-	"webview//bind": {
+	"webview//fn-bind": {
 		Argsn: 3,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			fmt.Println("YOYO1")
 			switch win := arg0.(type) {
 			case env.Native:
+				win.Value.(webview.WebView).Bind("hellorye", func() interface{} {
+					fmt.Println("YOYO2")
+					return "RETURNED"
+				})
 				switch word := arg1.(type) {
 				case env.Tagword:
 					switch fn := arg2.(type) {
 					case env.Function:
 						if fn.Argsn == 0 {
 							win.Value.(webview.WebView).Bind(env1.Idx.GetWord(word.Index), func() interface{} {
+								fmt.Println("YOYO3")
 								CallFunction(fn, env1, nil, false, env1.Ctx)
 								return resultToJS(env1.Res)
 							})

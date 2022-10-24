@@ -1,4 +1,4 @@
-// +build b_tiny
+// +build !b_webview
 
 package evaldo
 

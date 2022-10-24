@@ -1,0 +1,40 @@
+
+sites: {
+	"https://yahoo.com/"
+}
+
+; This is a convention I am testing:
+; ? at the end of the word would mean "get-" , so instead of get-name
+; you use name? and instead of get-submatch you use submatch? etc.
+
+root?: fn1 { .submatch?* regexp "^((https?:\/\/)([^\/]+))" }
+full-path?: fn1 { .submatch?* regexp "(.*\/).*" }
+is-absolute: fn1 { .matches* regexp "https?" }
+
+normalize-url: fn { link page } {
+	^if not link .is-string { "" }    ; ^if is a returning function, if
+	^if link .is-absolute { link }    ; condition is true it also returns
+	either link .matches* regexp "^/"
+	{ root? page } { full-path? page } |+ link
+}
+
+crawl-page: fn { page } {
+	.pass { prn "LOADING:" , .prn }
+	|get |^fix { print "[Failed]" } |reader
+	|parse-html { <a> [ .attr? 'href |normalize-url page |append! 'sites ] }
+	print length? sites
+}
+
+loop 10 { crawl-page to-uri last sites remove-last! 'sites }
+
+
+
+
+
+; crawl-page first sites
+
+; print urls/normalize "" to-string http://usrjoy.com/ 
+
+; using goroutines when we implement concurrent block and waitgroups
+; for sites { .go-with ?process-page }
+
