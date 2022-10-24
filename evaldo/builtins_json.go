@@ -44,6 +44,25 @@ func RyeToJSON(res interface{}) string {
 	case env.Spreadsheet:
 		return SpreadsheetToJSON(v)
 	case *env.Error:
+		status := ""
+		if v.Status != 0 {
+			status = "\"status\": " + RyeToJSON(v.Status)
+		}
+		var b strings.Builder
+		b.WriteString("{ " + status + ", \"message\": " + RyeToJSON(v.Message))
+		if v.Parent != nil {
+			b.WriteString(", \"parent\": " + RyeToJSON(v.Parent))
+		}
+		b.WriteString(", \"data\": { ")
+		for k, v := range v.Values {
+			switch ob := v.(type) {
+			case env.Object:
+				b.WriteString(" " + RyeToJSON(k) + ": " + RyeToJSON(ob) + ", ")
+			}
+		}
+		b.WriteString("} }")
+		return b.String()
+
 		if v != nil {
 			return "{ \"code\": " + RyeToJSON(v.Status) + ", \"message\": " + RyeToJSON(v.Message) + ", \"parent\": " + RyeToJSON(v.Parent) + " }"
 		} else {

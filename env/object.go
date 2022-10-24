@@ -923,13 +923,7 @@ func (i Error) Type() Type {
 
 // Inspect returns a string representation of the Integer.
 func (i Error) Inspect(e Idxs) string {
-	var b strings.Builder
-	b.WriteString("[Error " + strconv.Itoa(i.Status) + ": " + i.Message + " ")
-	if i.Parent != nil {
-		b.WriteString(i.Parent.Probe(e))
-	}
-	b.WriteString("]")
-	return b.String()
+	return i.Probe(e)
 }
 
 // Inspect returns a string representation of the Integer.
