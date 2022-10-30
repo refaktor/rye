@@ -36,6 +36,9 @@ func RyeToJSON(res interface{}) string {
 	case int64:
 		return strconv.Itoa(int(v))
 	case string:
+		if v[0] == '[' && v[len(v)-1:] == "]" {
+			return v
+		}
 		return "\"" + v + "\""
 	case env.String:
 		return "\"" + v.Value + "\""
@@ -103,19 +106,41 @@ func SpreadsheetToJSON(s env.Spreadsheet) string {
 	//fmt.Println("IN TO Html")
 	var bu strings.Builder
 	bu.WriteString("[")
-	fmt.Println(len(s.Rows))
-	for _, row := range s.Rows {
-		bu.WriteString("{")
-		for i, val := range row.Values {
+	//fmt.Println(len(s.Rows))
+	if s.RawMode {
+		for i, row := range s.RawRows {
 			if i > 0 {
 				bu.WriteString(", ")
 			}
-			bu.WriteString("\"")
-			bu.WriteString(s.Cols[i])
-			bu.WriteString("\": ")
-			bu.WriteString(RyeToJSON(val))
+			bu.WriteString("{")
+			for i, val := range row {
+				if i > 0 {
+					bu.WriteString(", ")
+				}
+				bu.WriteString("\"")
+				bu.WriteString(s.Cols[i])
+				bu.WriteString("\": ")
+				bu.WriteString(RyeToJSON(val))
+			}
+			bu.WriteString("} ")
 		}
-		bu.WriteString("}")
+	} else {
+		for i, row := range s.Rows {
+			if i > 0 {
+				bu.WriteString(", ")
+			}
+			bu.WriteString("{")
+			for i, val := range row.Values {
+				if i > 0 {
+					bu.WriteString(", ")
+				}
+				bu.WriteString("\"")
+				bu.WriteString(s.Cols[i])
+				bu.WriteString("\": ")
+				bu.WriteString(RyeToJSON(val))
+			}
+			bu.WriteString("} ")
+		}
 	}
 	bu.WriteString("]")
 	//fmt.Println(bu.String())

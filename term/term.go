@@ -172,29 +172,54 @@ DODO:
 	fmt.Println()
 	fmt.Println("---------------------------------")
 
-	for _, r := range bloc.Rows {
-		for i, v := range r.Values {
+	if bloc.RawMode {
+		for range bloc.Rows {
 			ClearLine()
-			if i == curr {
-				ColorOrange()
-				fmt.Print("*")
-			} else {
-				fmt.Print(" ")
-			}
-			switch ob := v.(type) {
-			case env.Object:
-				if mode == 0 {
-					fmt.Print("| " + ob.Probe(*idx) + "\t")
-				} else {
-					fmt.Print("| " + ob.Inspect(*idx) + "\t")
-				}
-			default:
-				fmt.Print("| " + fmt.Sprint(ob) + "\t")
-			}
-			CloseProps()
-			// term.CurUp(1)
 		}
-		fmt.Println()
+		for i, r := range bloc.RawRows {
+			ClearLine()
+			for _, v := range r {
+				if i == curr {
+					ColorOrange()
+					// fmt.Print("*")
+				} else {
+					// fmt.Print(" ")
+				}
+				fmt.Print("| " + fmt.Sprint(v) + "\t")
+				CloseProps()
+				// term.CurUp(1)
+			}
+			fmt.Println()
+		}
+
+	} else {
+		for range bloc.Rows {
+			ClearLine()
+		}
+		for _, r := range bloc.Rows {
+			for i, v := range r.Values {
+				if i == curr {
+					ColorOrange()
+					fmt.Print("*")
+				} else {
+					fmt.Print(" ")
+				}
+				switch ob := v.(type) {
+				case env.Object:
+					if mode == 0 {
+						fmt.Print("| " + ob.Probe(*idx) + "\t")
+					} else {
+						fmt.Print("| " + ob.Inspect(*idx) + "\t")
+					}
+				default:
+					fmt.Print("| " + fmt.Sprint(ob) + "\t")
+				}
+				CloseProps()
+				// term.CurUp(1)
+			}
+			fmt.Println()
+		}
+
 	}
 
 	moveUp = len(bloc.Rows)

@@ -1,0 +1,41 @@
+
+rye .needs { csv http }
+
+data: context {
+	time-it {
+		load\csv %trips.big.csv :trips
+	} |print-val "Parsed trips in {{}} ms"
+	time-it {
+		load\csv %stop_times.big.csv :st
+	} |print-val "Parsed stop-times in {{}} ms"
+	time-it {
+		st .add-index { 'trip_id } :stop-times
+	} |print-val "Indexed stop-times in {{}} ms"
+} 
+
+build-response: fn { route } {
+	data/trips
+	|where-equal 'route_id route
+	|columns { 'trip_id 'service_id 'route_id }
+	|gen-col 'schedules { trip_id } {
+		data/stop-times
+		|where-equal 'trip_id trip_id
+		|columns { 'stop_id 'arrival_time 'departure_time }
+		|to-json
+	}
+}
+
+write-ok: fn { d w } { set-content-type w "application/json" , write w to-json d }
+get-route: fn1 { .url? .path? .submatch?* regexp "/.*/(.*)" }
+
+handle-schedules: fn { w r } {
+	r .get-route |build-response |write-ok w
+}
+
+; start server
+new-server ":8080"
+|handle "/schedules/" ?handle-schedules
+|serve
+
+
+

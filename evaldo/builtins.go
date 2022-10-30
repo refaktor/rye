@@ -43,7 +43,7 @@ func MakeRyeError(env1 *env.ProgramState, val env.Object, er *env.Error) *env.Er
 		if code.Type() == env.IntegerType && message.Type() == env.StringType {
 			return env.NewError4(int(code.(env.Integer).Value), message.(env.String).Value, er, nil)
 		}
-		
+
 		return makeError(env1, "Wrong error constructor")
 	default:
 		return makeError(env1, "Wrong error constructor")
@@ -323,6 +323,15 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// BASIC FUNCTIONS WITH NUMBERS
+
+	"type?": {
+		Argsn: 1,
+		Doc:   "Return type of a value as a word.",
+		Pure:  true,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return env.Word{arg0.GetKind()}
+		},
+	},
 
 	"true": {
 		Argsn: 0,
@@ -718,6 +727,21 @@ var builtins = map[string]*env.Builtin{
 			switch arg := arg0.(type) {
 			case env.String:
 				fmt.Println(arg.Value)
+			default:
+				fmt.Println(arg0.Probe(*env1.Idx))
+			}
+			return arg0
+		},
+	},
+	"print-val": {
+		Argsn: 2,
+		Doc:   "Prints a value and adds a newline.",
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg := arg1.(type) {
+			case env.String:
+				vals := arg0.Probe(*env1.Idx)
+				news := strings.ReplaceAll(arg.Value, "{{}}", vals)
+				fmt.Println(news)
 			default:
 				fmt.Println(arg0.Probe(*env1.Idx))
 			}
@@ -2531,6 +2555,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// collections exploration functions
+
 	"max": {
 		Argsn: 1,
 		Doc:   "Accepts a block of values and returns maximal value.",
@@ -2612,6 +2638,11 @@ var builtins = map[string]*env.Builtin{
 			return nil
 		},
 	},
+
+	// add distinct? and count? functions
+	// make functions work with list, which column and row can return
+
+	// end of collections exploration
 
 	//test if we can do recur similar to clojure one. Since functions in rejy are of fixed arity we would need recur1 recur2 recur3 and recur [ ] which is less optimal
 	//otherwise word recur could somehow be bound to correct version or args depending on number of args of func. Try this at first.

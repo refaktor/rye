@@ -9,6 +9,8 @@ import (
 	//"context"
 	"fmt"
 	"net/http"
+	"net/url"
+
 	"rye/env"
 
 	//"time"
@@ -302,6 +304,34 @@ var Builtins_http = map[string]*env.Builtin{
 					ps.FailureFlag = true
 					return env.NewError("second arg should be String")
 				}
+			default:
+				ps.FailureFlag = true
+				return env.NewError("first arg should be Native")
+			}
+		},
+	},
+
+	"Go-server-request//url?": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch req := arg0.(type) {
+			case env.Native:
+				vals := req.Value.(*http.Request).URL
+				return *env.NewNative(ps.Idx, vals, "Go-server-url")
+			default:
+				ps.FailureFlag = true
+				return env.NewError("first arg should be Native")
+			}
+		},
+	},
+
+	"Go-server-url//path?": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch req := arg0.(type) {
+			case env.Native:
+				val := req.Value.(*url.URL).Path
+				return env.String{val}
 			default:
 				ps.FailureFlag = true
 				return env.NewError("first arg should be Native")

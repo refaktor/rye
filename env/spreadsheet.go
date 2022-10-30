@@ -18,11 +18,13 @@ type SpreadsheetRow struct {
 }
 
 type Spreadsheet struct {
-	Cols    []string
-	Rows    []SpreadsheetRow
-	RawRows [][]string
-	Kind    Word
-	RawMode bool
+	Cols      []string
+	Rows      []SpreadsheetRow
+	RawRows   [][]string
+	Kind      Word
+	RawMode   bool
+	Index     map[string][]int
+	IndexName string
 }
 
 func NewSpreadsheet(cols []string) *Spreadsheet {
@@ -138,17 +140,37 @@ func (s Spreadsheet) WhereEquals(ps *ProgramState, name string, val interface{})
 	nspr := NewSpreadsheet(s.Cols)
 	if idx > -1 {
 		if s.RawMode {
-			res := make([][]string, 0)
-			for _, row := range s.RawRows {
-				if len(row) > idx {
-					switch ov := val.(type) {
-					case String:
-						if ov.Value == row[idx] {
-							res = append(res, row)
+			var res [][]string
+			if name == s.IndexName {
+				//				fmt.Println("Using index")
+				switch ov := val.(type) {
+				case String:
+					idxs := s.Index[ov.Value]
+					res = make([][]string, len(idxs))
+					for i, idx := range idxs {
+						res[i] = s.RawRows[idx]
+					}
+				}
+			} else {
+				//			fmt.Println("Not using index")
+				res = make([][]string, 0)
+				for _, row := range s.RawRows {
+					if len(row) > idx {
+						switch ov := val.(type) {
+						case String:
+							// fmt.Println(ov.Value)
+							// fmt.Println(row[idx])
+							// fmt.Println(idx)
+							if ov.Value == row[idx] {
+								// fmt.Println("appending")
+								res = append(res, row)
+								// fmt.Println(res)
+							}
 						}
 					}
 				}
 			}
+			// fmt.Println(res)
 			nspr.SetRaw(res)
 			return *nspr
 		}
@@ -189,6 +211,20 @@ func (s Spreadsheet) Columns(ps *ProgramState, names []string) Object {
 
 }
 
+func (s Spreadsheet) GetRawRowValue(column string, rrow []string) (string, error) {
+	index := -1
+	for i, v := range s.Cols {
+		if v == column {
+			index = i
+			break
+		}
+	}
+	if index < 0 {
+		return "", nil
+	}
+	return rrow[index], nil
+}
+
 // Type returns the type of the Integer.
 func (s Spreadsheet) Type() Type {
 	return SpreadsheetType
@@ -202,7 +238,12 @@ func (s Spreadsheet) Inspect(e Idxs) string {
 	} else {
 		rows = strconv.Itoa(len(s.Rows))
 	}
-	return "<Spreadsheet [" + strconv.Itoa(len(s.Cols)) + " " + rows + "] of kind " + s.Kind.Probe(e) + ">"
+	var kindStr string
+	//fmt.Println(s.GetKind())
+	if s.GetKind() != int(SpreadsheetType) {
+		kindStr = " of kind " + s.Kind.Probe(e)
+	}
+	return "<Spreadsheet [" + strconv.Itoa(len(s.Cols)) + " " + rows + "]" + kindStr + ">"
 }
 
 // Inspect returns a string representation of the Integer.
@@ -239,4 +280,12 @@ func (s SpreadsheetRow) Trace(msg string) {
 // Type returns the type of the Integer.
 func (s SpreadsheetRow) Type() Type {
 	return SpreadsheetRowType
+}
+
+func (s Spreadsheet) GetColumns() List {
+	lst := make([]interface{}, len(s.Cols))
+	for i, v := range s.Cols {
+		lst[i] = v
+	}
+	return *NewList(lst)
 }
