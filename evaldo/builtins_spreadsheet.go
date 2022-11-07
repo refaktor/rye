@@ -4,7 +4,6 @@ package evaldo
 
 import (
 	"encoding/csv"
-	"fmt"
 	"os"
 	"rye/env"
 	"strconv"
@@ -169,7 +168,6 @@ func AddIndex(ps *env.ProgramState, s env.Spreadsheet, column env.Tagword) env.O
 	s.Index = make(map[string][]int, 0)
 	// for each row in spreadsheet
 	colstr := ps.Idx.GetWord(column.Index)
-	fmt.Println(colstr)
 	s.IndexName = colstr
 	for ir, row := range s.RawRows {
 		val, er := s.GetRawRowValue(colstr, row)
@@ -185,7 +183,7 @@ func AddIndex(ps *env.ProgramState, s env.Spreadsheet, column env.Tagword) env.O
 			s.Index[val] = subidx
 		}
 	}
-	fmt.Println(s.IndexName)
-	fmt.Println(len(s.Index))
+	//fmt.Println(s.IndexName)
+	//fmt.Println(len(s.Index))
 	return s
 }

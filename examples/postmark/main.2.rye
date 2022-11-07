@@ -1,0 +1,13 @@
+
+ rye .needs { postmark }
+
+ token: first load %.token
+
+ new-postmark-email
+ |from<- podpora@example.biz
+ |to<- podpora@example.biz
+ |subject<- "Postmark email w/ attachment from Ryelang"
+ |text-body<- "When you get this email some dopamine will be released."
+ |attach! %invoice.pdf
+ |send open-postmark token
+

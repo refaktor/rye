@@ -1,9 +1,9 @@
 
-rye .needs { csv http }
+rye .needs { http }
 
 data: context {
 	time-it {
-		load\csv %trips.big.csv :trips
+		load\csv %trips.big.csv |add-index { 'route_id } :trips
 	} |print-val "Parsed trips in {{}} ms"
 	time-it {
 		load\csv %stop_times.big.csv :st
@@ -33,7 +33,7 @@ handle-schedules: fn { w r } {
 }
 
 ; start server
-new-server ":8080"
+new-server ":4000"
 |handle "/schedules/" ?handle-schedules
 |serve
 

@@ -5,7 +5,7 @@
 rye .needs { aws email }
 
 new-email-message
-|set-header 'From postar@example.com
+|set-header 'From postar@cebelca.biz
 |set-header 'To janko.itm@gmail.com
 |set-header 'Subject "Raw AWS SES email from Ryelang"
 |set-body "text/html" "When you get this email some dopamine will be released."
@@ -13,7 +13,7 @@ new-email-message
 
 new-aws-session "us-east-1"
 |open-ses
-|send-raw msg { janko.itm@gmail.com } postar@example.com
+|send-raw msg { janko.itm@gmail.com } postar@cebelca.biz
 
 
 

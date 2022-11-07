@@ -285,7 +285,7 @@ var Builtins_http = map[string]*env.Builtin{
 	"Go-server-request//query?": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			fmt.Println("YOYOYOYOYOYO ------------- - - -  --")
+			//fmt.Println("YOYOYOYOYOYO ------------- - - -  --")
 			//return env.String{"QUERY - VAL"}
 			switch req := arg0.(type) {
 			case env.Native:
@@ -431,33 +431,33 @@ var Builtins_http = map[string]*env.Builtin{
 	"Http-cookie-store//get": {
 		Argsn: 3,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			fmt.Println("asdsad")
+			//fmt.Println("asdsad")
 			switch store := arg0.(type) {
 			case env.Native:
 				switch r := arg1.(type) {
 				case env.Native:
 					switch name := arg2.(type) {
 					case env.String:
-						fmt.Println("asdsad")
+						//fmt.Println("asdsad")
 						session, err := store.Value.(*sessions.CookieStore).Get(r.Value.(*http.Request), name.Value)
 						if err != nil {
 							env1.FailureFlag = true
 							return env.NewError("can't get session: " + err.Error())
 						}
-						fmt.Println("asdsad 1")
+						//fmt.Println("asdsad 1")
 						return *env.NewNative(env1.Idx, session, "Http-session")
 					default:
-						fmt.Println("asdsad 2")
+						//fmt.Println("asdsad 2")
 						env1.FailureFlag = true
 						return *env.NewError("arg 0 should be String")
 					}
 				default:
-					fmt.Println("asdsad 3")
+					//fmt.Println("asdsad 3")
 					env1.FailureFlag = true
 					return *env.NewError("arg 0 should be String")
 				}
 			default:
-				fmt.Println("asdsad 4")
+				//fmt.Println("asdsad 4")
 				env1.FailureFlag = true
 				return *env.NewError("arg 0 should be String")
 			}
@@ -467,7 +467,7 @@ var Builtins_http = map[string]*env.Builtin{
 	"Http-session//set": {
 		Argsn: 3,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			fmt.Println("YOYOYOYOYOYO ------------- - - -  --")
+			//fmt.Println("YOYOYOYOYOYO ------------- - - -  --")
 			//return env.String{"QUERY - VAL"}
 			switch session := arg0.(type) {
 			case env.Native:

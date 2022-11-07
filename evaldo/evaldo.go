@@ -607,15 +607,24 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 	i = 1
 	index = fn.Spec.Series.Get(i).(env.Word).Index
 	fnCtx.Set(index, arg1)
-	ser0 := ps.Ser
-	ps.Ser = fn.Body.Series
-	env0 = ps.Ctx
-	ps.Ctx = fnCtx
+	// TRY
+	psX := env.NewProgramState(fn.Body.Series, ps.Idx)
+	psX.Ctx = fnCtx
+	psX.PCtx = ps.PCtx
+	psX.Gen = ps.Gen
+
+	// END TRY
+
+	/// ser0 := ps.Ser
+	/// ps.Ser = fn.Body.Series
+	/// env0 = ps.Ctx
+	/// ps.Ctx = fnCtx
+
 	var result *env.ProgramState
 	ps.Ser.SetPos(0)
-	result = EvalBlockInj(ps, arg0, true)
-	fmt.Println(result)
-	fmt.Println(result.Res)
+	result = EvalBlockInj(psX, arg0, true)
+	// fmt.Println(result)
+	// fmt.Println(result.Res)
 	MaybeDisplayFailureOrError(result, result.Idx)
 	if result.ForcedResult != nil {
 		ps.Res = result.ForcedResult
@@ -623,8 +632,8 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 	} else {
 		ps.Res = result.Res
 	}
-	ps.Ctx = env0
-	ps.Ser = ser0
+	/// ps.Ctx = env0
+	/// ps.Ser = ser0
 	ps.ReturnFlag = false
 	return ps
 }

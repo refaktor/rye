@@ -48,6 +48,7 @@ require (
 	github.com/json-iterator/go v0.0.0-20171115153421-f7279a603ede // indirect
 	github.com/mattn/go-runewidth v0.0.3 // indirect
 	github.com/mattn/go-sqlite3 v1.14.14 // indirect
+	github.com/mrz1836/postmark v1.3.0 // indirect
 	github.com/mschoch/smat v0.2.0 // indirect
 	github.com/pkg/profile v1.6.0 // indirect
 	github.com/pkg/term v1.1.0 // indirect
