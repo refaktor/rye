@@ -1,0 +1,49 @@
+
+rye .needs { postmark mysql }
+
+db: open mysql://user@mailer load\first %.mysqlpwd
+
+rule: { _from: required email _to: required email subject: required } 
+
+do-mailer: does {
+
+	query db {
+		select * from mailer where status < 3 order by id asc limit 1
+	}
+	|first .^check { "no messages" }
+	|pass { -> 'id :id , -> 'status :status }
+	|send-message
+	|fix\else { inc! 'status } { status: 100 }
+
+	exec db { update mailer set status = ?status where id = ?id }
+}
+
+send-message: fn1 {
+
+	.validate rule |^check. :row
+	
+	new-postmark-email
+	|from<- '_from <- row
+	|to<- '_to <- row
+	|subject<- 'subject <- row
+	|text-body<- 'content <- row
+	:msg
+
+	if not empty file: 'file <- row {
+		msg .attach! to-file file |^check.
+	}
+
+	tok: load\first %.token
+	
+	msg .send open-postmark tok |^check.
+}
+
+loop 5 { do-mailer , sleep 500 }
+
+
+
+
+
+
+
+
