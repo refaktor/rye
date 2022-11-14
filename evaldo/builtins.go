@@ -3891,7 +3891,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"fix-either": {
+	"fix\\either": {
 		AcceptFailure: true,
 		Argsn:         3,
 		Doc:           "Fix also with else block.",

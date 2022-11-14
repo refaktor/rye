@@ -215,6 +215,7 @@ type ProgramState struct {
 	FailureFlag  bool
 	ForcedResult Object
 	SkipFlag     bool
+	InErrHandler bool
 }
 
 func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
@@ -232,6 +233,7 @@ func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
 		false,
 		false,
 		nil,
+		false,
 		false,
 	}
 	return &ps

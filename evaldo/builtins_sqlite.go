@@ -26,7 +26,7 @@ func SQL_EvalBlock(es *env.ProgramState, mode int, values []interface{}) (*env.P
 		bu.WriteString(str + " ")
 		//fmt.Println(bu.String())
 	}
-	fmt.Println(bu.String())
+	//fmt.Println(bu.String())
 	es.Res = env.String{bu.String()}
 	return es, values
 }
@@ -57,8 +57,8 @@ func SQL_EvalExpression(es *env.ProgramState, vals []interface{}, mode int) (*en
 		ser := es.Ser
 		es.Ser = obj.Series
 		es1, vals1 := SQL_EvalBlock(es, mode, vals)
-		trace("VALS")
-		trace(vals1)
+		//trace("VALS")
+		// trace(vals1)
 		es.Ser = ser
 		//vals2 := append(vals, vals1)
 		return es1, "( " + es.Res.(env.String).Value + " )", vals1
@@ -91,11 +91,11 @@ var Builtins_sqlite = map[string]*env.Builtin{
 	"sqlite-schema//open": {
 		Argsn: 1,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			arg0.Trace("SQLITE OPEN TODO :::::::::")
+			// arg0.Trace("SQLITE OPEN TODO :::::::::")
 			switch str := arg0.(type) {
 			case env.Uri:
-				fmt.Println(str.Path)
-				db, _ := sql.Open("sqlite3", "temp-database") // TODO -- we need to make path parser in URI then this will be path
+				// fmt.Println(str.Path)
+				db, _ := sql.Open("sqlite3", str.GetPath()) // TODO -- we need to make path parser in URI then this will be path
 				return *env.NewNative(env1.Idx, db, "Rye-sqlite")
 			default:
 				return env.NewError("arg 2 should be Uri")

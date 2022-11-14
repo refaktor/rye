@@ -1,2 +1,3 @@
 tiny
 http
+sqlite

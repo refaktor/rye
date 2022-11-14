@@ -337,6 +337,8 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 				currCtx = &swObj
 				i += 1
 				goto gogo1
+			case env.Dict:
+				return found, env.String{"asdsad"}, currCtx
 			}
 		}
 		return found, object, currCtx
@@ -834,6 +836,7 @@ func checkFlagsBi(bi env.Builtin, ps *env.ProgramState, n int) bool {
 		if bi.AcceptFailure {
 			trace2("----- > Accept Failure")
 		} else {
+			fmt.Println("checkFlagsBi***")
 			trace2("Fail ------->  Error.")
 			switch err := ps.Res.(type) {
 			case env.Error:
@@ -856,16 +859,54 @@ func checkFlagsBi(bi env.Builtin, ps *env.ProgramState, n int) bool {
 	return false
 }
 
+func checkContextErrorHandler(ps *env.ProgramState) bool {
+	// check if there is error-handler word defined in context (or parent).
+	erh, w_exists := ps.Idx.GetIndex("error-handler")
+	if !w_exists {
+		return false
+	}
+	handler, exists := ps.Ctx.Get(erh)
+	// if it is get the block
+	if !exists {
+		return false
+	}
+	// ps.FailureFlag = false
+	ps.InErrHandler = true
+	switch bloc := handler.(type) {
+	case env.Block:
+		ser := ps.Ser
+		ps.Ser = bloc.Series
+		EvalBlockInj(ps, ps.Res, true)
+		ps.Ser = ser
+	}
+	ps.InErrHandler = false
+	return true
+	// evaluate the block, where injected value is error
+
+	// NOT SURE YET, if we proceed with failure based on return, always or what
+	// need more practical-situations to figure this out
+
+}
+
 // if failure flag is raised and return flag is not up
 // then raise the error flag and return true
 // USED -- on returns from block
 func checkFlagsAfterBlock(ps *env.ProgramState, n int) bool {
 	trace2("CHECK FLAGS AFTER BLOCKS")
 	trace2(n)
+	/// fmt.Println("checkFlagsAfterBlock***")
+
 	//trace(ps.Res)
 	if ps.FailureFlag && !ps.ReturnFlag {
 		trace2("FailureFlag")
 		trace2("Fail->Error.")
+
+		if !ps.InErrHandler {
+			if checkContextErrorHandler(ps) {
+				return false // error should be picked up in the handler block if not handeled -- TODO -- hopefully
+			}
+		}
+
 		switch err := ps.Res.(type) {
 		case env.Error:
 			if err.CodeBlock.Len() == 0 {
@@ -890,6 +931,8 @@ func checkFlagsAfterBlock(ps *env.ProgramState, n int) bool {
 func checkErrorReturnFlag(ps *env.ProgramState) bool {
 	// trace3("---- > return flags")
 	if ps.ErrorFlag {
+		fmt.Println("***checkErrorReturnFlags***")
+
 		switch err := ps.Res.(type) {
 		case env.Error:
 			if err.CodeBlock.Len() == 0 {
