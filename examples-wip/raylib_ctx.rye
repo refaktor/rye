@@ -1,0 +1,25 @@
+
+raylib: context {
+	init: ?raylib-init
+	set-target-fps: ?raylib-set-target-fps
+	begin-drawing: ?raylib-begin-drawing
+	clear-background: ?raylib-clear-background
+	draw-circle: ?raylib-draw-circle
+	end-drawing: ?raylib-end-drawing
+	main-loop: ?raylib-main-loop
+	black: ?raylib-black
+	gold: ?raylib-gold
+}
+
+with-context raylib {
+
+	init 300 260 "Rye raylib demo"
+	set-target-fps 60
+	main-loop {
+		begin-drawing
+		clear-background black
+		draw-circle 150 130 60 gold
+		end-drawing 
+	}
+	
+}

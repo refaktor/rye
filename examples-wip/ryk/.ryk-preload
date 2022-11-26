@@ -1,0 +1,1 @@
+quote: fn1 { .concat* $"$ |concat $"$ }

@@ -1,0 +1,40 @@
+
+event: new-channel 10
+
+handle-chat: fn { s c } {
+	print "starting a websocket handle"
+	send event eval { "new" s } 
+	forever { 
+		read s :m
+		print "read a message"
+		print m
+		send event print eval { "msg" m }
+		print "after sending"
+	} 
+}
+
+hub: fn { e } {
+	sockets: { }
+	forever {
+		print "waiting for cmessage"
+		read e :msg
+		prn "got a cmessage"
+		print msg
+		if msg .first = "new" {
+			print sockets
+			print sockets: append sockets second msg
+		}
+		if msg .first = "msg" {
+			print "message is here"
+			print sockets
+			for sockets { .print .write print second msg } 
+		}
+		print "HUB HANDELED: " + first msg
+	} 
+}
+
+go-with event ?hub
+
+new-server ":8080"
+|handle-ws "/chat" ?handle-chat  
+ |serve

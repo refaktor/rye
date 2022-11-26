@@ -1,0 +1,20 @@
+; Javascript regex example
+
+const sequence = (string) => 
+  string.split(/(?<=(.))(?!\1|$)/g)
+    .filter((_, i) => !(i % 2))
+    .map((c) => [c.length, c[0]])
+    .flatMap((c) => c)
+.join('')
+
+
+compress: fn1 {
+	.split-between { :c .first = second c |not }
+	|map { :c .length .join first c }
+	|concat "" }
+
+compress: fn1 { .first :ch
+	.reduce 'acc eval { ch 0 "" }
+	{ :ch = first acc |^if { acc .mask { _ { .inc } _ } } ,
+		acc .mask { ch 1 { acc .third + second acc + ch } } } 
+}

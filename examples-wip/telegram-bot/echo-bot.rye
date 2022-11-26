@@ -1,0 +1,10 @@
+
+token: read\all %.token
+
+new-telegram-bot token :bot
+.for-update {
+	-> "Message" :msg -> "Chat" -> "ID"
+	|new-telegram-message "Text" <- msg
+	|send bot
+}
+

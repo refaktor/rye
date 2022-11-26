@@ -1,0 +1,28 @@
+Rye .needs { 'telegram 'otp }
+
+otpd: load %.otp-data
+
+authenticated: 0
+
+bot: new-telegram-bot trim read %.token
+reply: say bot _
+bot .on-update { -> "Message" -> "Text" |respond-to-user otpd }
+
+respond-to-user: fn { text otpd } {
+	^if text .starts-with "auth " {
+		text .split " " -> 2 :code
+		new-hotp otpd/secret otpd/cnt
+		|verify-resync code :result -> 1 |set-par 'authenticated
+		|^if {
+			save-otp-data result otpd
+			reply "Welcome!"
+		}
+		reply either authenticated { "Bye bye" } { "Wrong code!" }
+	}
+	reply either authenticated { "Very funny :)" } { "Go away" }
+}
+	
+save-otp-data: fn { res otpd } {
+	res -> 2 |set otpd 'cnt |save %.otp-data
+}
+

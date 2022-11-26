@@ -1,0 +1,13 @@
+; Rye cayley example
+
+dir: temp-dir %example |^check { .fatal }
+
+init-quad-store 'bolt dir |^check { .fatal }
+
+store: new-cayley-graph 'bolt dir |^check { .fatal }
+ |add new-quad "phrase of the day" "is of course" "Hello bolt" "demo graph"
+
+store .start-path { "phrase of the day" out "is of course" }
+ |iterate { .name-of |print }
+
+

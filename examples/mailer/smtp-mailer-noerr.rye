@@ -1,0 +1,40 @@
+
+rye .needs { postmark mysql }
+
+db: open mysql://user@mailer load\first %.mysqlpwd
+
+run-mailer: does {
+
+	query db {
+		select * from mailer where status < 3
+		order by id limit 1 }
+	|first |^fix { "no messages" }
+	|pass { -> 'id :id , -> 'status :status }
+	|send-message
+	|fix\else { inc! 'status } { status: 100 }
+
+	exec db { update mailer set status = ?status where id = ?id }
+}
+
+construct-message: fn { row } {
+
+	new-postmark-email
+	|from<- '_from <- row
+	|to<- '_to <- row
+	|subject<- 'subject <- row
+	|text-body<- 'content <- row :msg
+
+	if f: 'file <- row {
+		msg .attach! to-file f
+	}
+	msg
+}
+
+send-message: fn { row } {
+	
+	.construct-message
+	|send open-postmark load\first %.token
+}
+
+loop 5 { run-mailer , sleep 500 }
+

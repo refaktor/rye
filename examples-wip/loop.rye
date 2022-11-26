@@ -1,0 +1,13 @@
+
+print "hello from rye"
+
+loop 3 print {
+
+	print "IN LOOP"
+	; print "yoyo"
+	print "END LOOP"
+	
+}
+
+print "ENDING"
+
