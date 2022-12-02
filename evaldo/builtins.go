@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"reflect"
 	"rye/env"
+	"sort"
 
 	"rye/loader"
 	"rye/term"
@@ -60,6 +61,24 @@ func equalValues(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) bool {
 }
 
 func greaterThan(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) bool {
+	var valA float64
+	var valB float64
+	switch vA := arg0.(type) {
+	case env.Integer:
+		valA = float64(vA.Value)
+	case env.Decimal:
+		valA = vA.Value
+	}
+	switch vB := arg1.(type) {
+	case env.Integer:
+		valB = float64(vB.Value)
+	case env.Decimal:
+		valB = vB.Value
+	}
+	return valA > valB
+}
+
+func greaterThanNew(arg0 env.Object, arg1 env.Object) bool {
 	var valA float64
 	var valB float64
 	switch vA := arg0.(type) {
@@ -208,6 +227,19 @@ func getFrom(ps *env.ProgramState, data interface{}, key interface{}, posMode bo
 		}
 	}
 	return makeError(ps, "Wrong type or missing key for get-arrow")
+}
+
+// Sort interface
+type RyeBlockSort []env.Object
+
+func (s RyeBlockSort) Len() int {
+	return len(s)
+}
+func (s RyeBlockSort) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+func (s RyeBlockSort) Less(i, j int) bool {
+	return greaterThanNew(s[j], s[i])
 }
 
 var ShowResults bool
@@ -2639,6 +2671,20 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"sort!": {
+		Argsn: 1,
+		Doc:   "Accepts a block of values and returns maximal value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch block := arg0.(type) {
+			case env.Block:
+				ss := block.Series.S
+				sort.Sort(RyeBlockSort(ss))
+				return *env.NewBlock(*env.NewTSeries(ss))
+			}
+			return nil
+		},
+	},
+
 	// add distinct? and count? functions
 	// make functions work with list, which column and row can return
 
@@ -3265,6 +3311,30 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"split": {
+		Argsn: 2,
+		Pure:  true,
+		Doc:   "Splits a string into a block of values using a separator",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch str := arg0.(type) {
+			case env.String:
+				switch sepa := arg1.(type) {
+				case env.String:
+					spl := strings.Split(str.Value, sepa.Value) // util.StringToFieldsWithQuoted(str.Value, sepa.Value, quote.Value)
+					spl2 := make([]env.Object, len(spl))
+					for i, val := range spl {
+						spl2[i] = env.String{val}
+					}
+					return *env.NewBlock(*env.NewTSeries(spl2))
+				default:
+					return makeError(ps, "Separator character not a string.")
+				}
+			default:
+				return makeError(ps, "Input text not a string.")
+			}
+		},
+	},
+
 	"to-integer": {
 		Argsn: 1,
 		Doc:   "Splits a line of string into values by separator by respecting quotes",
@@ -3311,7 +3381,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"tail": {
+	"rest": {
 		Argsn: 1,
 		Doc:   "Accepts Block, List or String and returns all but first items.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -3334,6 +3404,37 @@ var builtins = map[string]*env.Builtin{
 				return env.String{string(str[1:])}
 			default:
 				return env.NewError("Arg 1 not a Series.")
+			}
+		},
+	},
+	"tail": {
+		Argsn: 2,
+		Doc:   "Accepts Block, List or String and returns all but first items.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch num := arg1.(type) {
+			case env.Integer:
+				switch s1 := arg0.(type) {
+				case env.Block:
+					if len(s1.Series.S) == 0 {
+						return makeError(ps, "Block is empty.")
+					}
+					return *env.NewBlock(*env.NewTSeries(s1.Series.S[len(s1.Series.S)-int(num.Value):]))
+				case env.List:
+					if len(s1.Data) == 0 {
+						return makeError(ps, "List is empty.")
+					}
+					return env.NewList(s1.Data[len(s1.Data)-int(num.Value):])
+				case env.String:
+					str := []rune(s1.Value)
+					if len(str) < 1 {
+						return makeError(ps, "String has only one element.")
+					}
+					return env.String{string(str[len(str)-int(num.Value):])}
+				default:
+					return env.NewError("Arg 1 not a Series.")
+				}
+			default:
+				return env.NewError("Arg 2 not a Integer.")
 			}
 		},
 	},
@@ -3490,8 +3591,8 @@ var builtins = map[string]*env.Builtin{
 	},
 	"append!": {
 		Argsn: 2,
-		Doc: "Accepts Rye value and Tagword with a Block or String. Appends Rye value to Block/String in place, also returns it	.",
-		Pure: false,
+		Doc:   "Accepts Rye value and Tagword with a Block or String. Appends Rye value to Block/String in place, also returns it	.",
+		Pure:  false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch wrd := arg1.(type) {
 			case env.Tagword:

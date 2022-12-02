@@ -190,7 +190,10 @@ func parseDecimal(v *Values, d Any) (Any, error) {
 }
 
 func parseString(v *Values, d Any) (Any, error) {
-	return env.String{v.Token()[1 : len(v.Token())-1]}, nil
+	str := v.Token()[1 : len(v.Token())-1]
+	// turn \n to newlines
+	str = strings.Replace(str, "\\n", "\n", -1)
+	return env.String{str}, nil
 }
 
 func parseUri(v *Values, d Any) (Any, error) {
