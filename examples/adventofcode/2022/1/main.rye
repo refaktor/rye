@@ -1,0 +1,13 @@
+
+; AoC2022 / Day 1 in Ryelang
+
+read %calories.txt 
+|split "\n\n" 
+|map { .load .sum } :sums
+|max
+; part 1 result
+
+sums .sort! .tail 3 |sum
+; part 2 result
+
+; ryelang.blogspot.com
