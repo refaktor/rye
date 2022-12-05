@@ -257,7 +257,7 @@ func parseOpword(v *Values, d Any) (Any, error) {
 	word := v.Token()
 	force := 0
 	var idx int
-	if len(word) == 1 || word == "<<" || word == "<-" || word == "<--" {
+	if len(word) == 1 || word == "<<" || word == "<-" || word == "<~" {
 		// onecharopwords < > + * ... their naming is equal to _< _> _* ...
 		idx = wordIndex.IndexWord("_" + word)
 	} else {
@@ -346,11 +346,11 @@ func newParser() *Parser { // TODO -- add string eaddress path url time
 	parser, _ := NewParser(`
 	BLOCK       	<-  "{" SPACES SERIES* "}"
 	BBLOCK       	<-  "[" SPACES SERIES* "]"
-    GROUP       	<-  "(" SPACES SERIES* ")"
-    SERIES     		<-  (COMMENT / URI / EMAIL / STRING / DECIMAL / NUMBER / COMMA / SETWORD / LSETWORD / ONECHARPIPE / PIPEWORD / XWORD / OPWORD / TAGWORD / EXWORD / CPATH / FPATH / KINDWORD / GENWORD / GETWORD / VOID / WORD / BLOCK / GROUP / BBLOCK / ARGBLOCK ) SPACES
-    ARGBLOCK       	<-  "{" WORD ":" WORD "}"
-    WORD           	<-  LETTER LETTERORNUM*
-	GENWORD 		<-  UCLETTER LCLETTERORNUM* 
+        GROUP       	<-  "(" SPACES SERIES* ")"
+        SERIES     	<-  (COMMENT / URI / EMAIL / STRING / DECIMAL / NUMBER / COMMA / SETWORD / LSETWORD / ONECHARPIPE / PIPEWORD / XWORD / OPWORD / TAGWORD / EXWORD / CPATH / FPATH / KINDWORD / GENWORD / GETWORD / VOID / WORD / BLOCK / GROUP / BBLOCK / ARGBLOCK ) SPACES
+        ARGBLOCK       	<-  "{" WORD ":" WORD "}"
+        WORD           	<-  LETTER LETTERORNUM*
+	GENWORD 		<-  "~" UCLETTER LCLETTERORNUM* 
 	SETWORD    		<-  LETTER LETTERORNUM* ":"
 	LSETWORD    	<-  ":" LETTER LETTERORNUM*
 	GETWORD   		<-  "?" LETTER LETTERORNUM*
@@ -369,8 +369,8 @@ func newParser() *Parser { // TODO -- add string eaddress path url time
 	FPATH 	   		<-  "%" URIPATH*
 	CPATH    		<-  WORD ( "/" WORD )+
 	ONECHARWORDS	    <-  < [<>*+-=/] >
-	PIPEARROWS      <-  ">>" / "-->" / "->"
-	OPARROWS        <-  "<<" / "<--" / "<-"
+	PIPEARROWS      <-  ">>" / "~>" / "->"
+	OPARROWS        <-  "<<" / "<~" / "<-"
 	LETTER  	       	<-  < [a-zA-Z=^(` + "`" + `_] >
 	LETTERORNUM		<-  < [a-zA-Z0-9-?=.\\!_+<>\]*()] >
 	URIPATH			<-  < [a-zA-Z0-9-?=.:@/\\!_>	()] >

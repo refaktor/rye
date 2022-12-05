@@ -1307,7 +1307,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"eval": {
+	"valuate": {
 		Argsn: 1,
 		Doc:   "Takes a block of Rye values and evaluates each value or expression.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1332,6 +1332,12 @@ var builtins = map[string]*env.Builtin{
 				}
 				ps.Ser = ser
 				return *env.NewBlock(*env.NewTSeries(res))
+			case env.Word:
+				val, found := ps.Ctx.Get(bloc.Index)
+				if found {
+					return val
+				}
+				return makeError(ps, "Value not bound")
 			}
 			return nil
 		},
@@ -2685,6 +2691,23 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"reverse!": {
+		Argsn: 1,
+		Doc:   "Accepts a block of values and returns maximal value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch block := arg0.(type) {
+			case env.Block:
+				a := block.Series.S
+				for left, right := 0, len(a)-1; left < right; left, right = left+1, right-1 {
+					a[left], a[right] = a[right], a[left]
+				}
+				// sort.Sort(RyeBlockSort(ss))
+				return *env.NewBlock(*env.NewTSeries(a))
+			}
+			return nil
+		},
+	},
+
 	// add distinct? and count? functions
 	// make functions work with list, which column and row can return
 
@@ -3083,6 +3106,40 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"index?": {
+		Argsn: 2,
+		Doc:   "Returns part of the String between two positions.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				switch s2 := arg1.(type) {
+				case env.String:
+					res := strings.Index(s2.Value, s1.Value)
+					return env.Integer{int64(res)}
+				}
+			}
+			return nil
+		},
+	},
+
+	"position?": {
+		Argsn: 2,
+		Doc:   "Returns part of the String between two positions.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				switch s2 := arg1.(type) {
+				case env.String:
+					res := strings.Index(s2.Value, s1.Value)
+					return env.Integer{int64(res + 1)}
+				}
+			}
+			return nil
+		},
+	},
+
 	"right": {
 		Argsn: 2,
 		Doc:   "Returns the N characters from the right of the String.",
@@ -3134,6 +3191,34 @@ var builtins = map[string]*env.Builtin{
 			return nil
 		},
 	},
+
+	"intersect": {
+		Argsn: 2,
+		Doc:   "Finds the intersection of two values.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				switch s2 := arg1.(type) {
+				case env.String:
+					inter := util.IntersectStrings(s1.Value, s2.Value)
+					return env.String{inter}
+				case env.Integer:
+					return makeError(ps, "Arg 2 not String")
+				}
+			case env.Block:
+				/* switch _ := arg1.(type) {
+				case env.Block:
+					//					return util.IntersectBlock{s1.Value, b2.Value}
+					return s1
+				case env.Object:
+					return makeError(ps, "Arg 2 not Block")
+				}*/
+			}
+			return makeError(ps, "Arg 1 not Block or String")
+		},
+	},
+
 	"str": {
 		Argsn: 1,
 		Doc:   "Turn Rye value to String.",
@@ -3324,6 +3409,42 @@ var builtins = map[string]*env.Builtin{
 					spl2 := make([]env.Object, len(spl))
 					for i, val := range spl {
 						spl2[i] = env.String{val}
+					}
+					return *env.NewBlock(*env.NewTSeries(spl2))
+				default:
+					return makeError(ps, "Separator character not a string.")
+				}
+			default:
+				return makeError(ps, "Input text not a string.")
+			}
+		},
+	},
+
+	"split-every": {
+		Argsn: 2,
+		Pure:  true,
+		Doc:   "Splits a string into a block of values using a separator",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch str := arg0.(type) {
+			case env.String:
+				switch sepa := arg1.(type) {
+				case env.Integer:
+					spl := util.SplitEveryString(str.Value, int(sepa.Value))
+					spl2 := make([]env.Object, len(spl))
+					for i, val := range spl {
+						spl2[i] = env.String{val}
+					}
+					return *env.NewBlock(*env.NewTSeries(spl2))
+				default:
+					return makeError(ps, "Separator character not a string.")
+				}
+			case env.Block:
+				switch sepa := arg1.(type) {
+				case env.Integer:
+					spl := util.SplitEveryList(str.Series.S, int(sepa.Value))
+					spl2 := make([]env.Object, len(spl))
+					for i, val := range spl {
+						spl2[i] = *env.NewBlock(*env.NewTSeries(val))
 					}
 					return *env.NewBlock(*env.NewTSeries(spl2))
 				default:
@@ -3720,13 +3841,13 @@ var builtins = map[string]*env.Builtin{
 			return getFrom(ps, arg1, arg0, false)
 		},
 	},
-	"_<--": {
+	"_<~": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return getFrom(ps, arg1, arg0, true)
 		},
 	},
-	"_-->": {
+	"_~>": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return getFrom(ps, arg0, arg1, true)

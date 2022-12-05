@@ -1,0 +1,35 @@
+
+
+
+    
+    ; AoC2022 - Day 3 with Rye (ryelang.blogspot.com)
+    
+    a-Z: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    get-priority: fn1 { .position? a-Z }
+    
+    ; part 1
+    
+    read\lines %rucksacks.txt :lines
+    |fold 'priority 0 {
+    	.length? |/ 2 :mid ,
+    	.split-every mid |pass { .first :left } |second
+    	|intersect left |fold 'priority1 0 {
+            .get-priority + priority1
+    	} |+ priority
+    } |print
+    
+    ; part 2
+
+    lines .split-every 3 |fold 'priority 0 {
+    	-> 0 :line0 ,
+    	-> 1 :line1 ,
+    	-> 2 |intersect line1 |intersect line0
+    	|get-priority + priority
+    } |print
+
+
+
+
+
+
+

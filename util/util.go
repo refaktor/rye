@@ -137,3 +137,75 @@ func FormatSsv(val env.Object, e env.Idxs) string {
 	}
 	return r.String()
 }
+
+func SplitEveryString(s string, chunkSize int) []string {
+	if len(s) == 0 {
+		return nil
+	}
+	if chunkSize >= len(s) {
+		return []string{s}
+	}
+	var chunks []string = make([]string, 0, (len(s)-1)/chunkSize+1)
+	currentLen := 0
+	currentStart := 0
+	for i := range s {
+		if currentLen == chunkSize {
+			chunks = append(chunks, s[currentStart:i])
+			currentLen = 0
+			currentStart = i
+		}
+		currentLen++
+	}
+	chunks = append(chunks, s[currentStart:])
+	return chunks
+}
+
+func SplitEveryList(s []env.Object, chunkSize int) [][]env.Object {
+	if len(s) == 0 {
+		return nil
+	}
+	if chunkSize >= len(s) {
+		return append(make([][]env.Object, 0), s)
+	}
+	var chunks [][]env.Object = make([][]env.Object, 0, (len(s)-1)/chunkSize+1)
+	var chunk []env.Object = make([]env.Object, 0, chunkSize)
+	currentLen := 0
+	// currentStart := 0
+	for i := range s {
+		chunk = append(chunk, s[i])
+		currentLen++
+		if currentLen == chunkSize {
+			chunks = append(chunks, chunk)
+			currentLen = 0
+			//		currentStart = i + 1
+			chunk = make([]env.Object, 0, chunkSize)
+		}
+	}
+	if len(chunk) > 0 {
+		chunks = append(chunks, chunk)
+	}
+	return chunks
+}
+
+func IntersectStrings(a string, b string) string {
+	res := ""
+	for _, ch := range a {
+		if strings.Index(b, string(ch)) > -1 && strings.Index(res, string(ch)) == -1 {
+			res = res + string(ch)
+		}
+	}
+
+	return res
+}
+
+func IntersectLists(a []env.Object, b []env.Object) []env.Object {
+	set := make([]env.Object, 0)
+
+	for _, v := range a {
+		//		if ContainsGen(b, v) {
+		set = append(set, v)
+		//}
+	}
+
+	return set
+}

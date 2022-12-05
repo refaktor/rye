@@ -1,3 +1,4 @@
+//go:build !b_no_io
 // +build !b_no_io
 
 package evaldo
@@ -8,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"rye/env"
 	"strings"
@@ -140,6 +142,33 @@ func __fs_read(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 en
 		return env.String{string(data)}
 	}
 	return makeError(env1, "Failed to read file")
+	// Read file to byte slice
+}
+
+func __fs_read_lines(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+	switch f := arg0.(type) {
+	case env.Uri:
+		file, err := os.OpenFile(f.GetPath(), os.O_RDONLY, os.ModePerm)
+		if err != nil {
+			// log.Fatalf("open file error: %v", err)
+			return makeError(env1, err.Error())
+		}
+		defer file.Close()
+
+		// var lines []env.Object
+		lines := make([]env.Object, 0)
+		sc := bufio.NewScanner(file)
+		for sc.Scan() {
+			lines = append(lines, env.String{sc.Text()}) // GET the line string
+		}
+		if err := sc.Err(); err != nil {
+			log.Fatalf("scan file error: %v", err)
+			return makeError(env1, err.Error())
+		}
+
+		return *env.NewBlock(*env.NewTSeries(lines))
+	}
+	return makeError(env1, "Arg 1 not Uri")
 	// Read file to byte slice
 }
 
@@ -454,6 +483,13 @@ var Builtins_io = map[string]*env.Builtin{
 		Argsn: 1,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __fs_read(env1, arg0, arg1, arg2, arg3, arg4)
+		},
+	},
+
+	"file-schema//read\\lines": {
+		Argsn: 1,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __fs_read_lines(env1, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
