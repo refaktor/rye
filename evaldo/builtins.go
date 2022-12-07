@@ -56,6 +56,7 @@ func makeError(env1 *env.ProgramState, msg string) *env.Error {
 	return env.NewError(msg)
 }
 
+// todo -- move to util
 func equalValues(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) bool {
 	return arg0.GetKind() == arg1.GetKind() && arg0.Inspect(*ps.Idx) == arg1.Inspect(*ps.Idx)
 }
@@ -306,6 +307,24 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"positive?": {
+		Argsn: 1,
+		Doc:   "Returns true if integer is positive.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg := arg0.(type) {
+			case env.Integer:
+				if arg.Value > 0 {
+					return env.Integer{1}
+				} else {
+					return env.Integer{0}
+				}
+			default:
+				return makeError(ps, "Arg 1 not Integer.")
+			}
+		},
+	},
+
 	"inc!": {
 		Argsn: 1,
 		Doc:   "Increments integer value by 1 in place.",
@@ -354,6 +373,40 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"set": {
+		Argsn: 2,
+		Doc:   "Set words by deconstructing block",
+		Pure:  false,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch vals := arg0.(type) {
+			case env.Block:
+				switch words := arg1.(type) { 
+				case env.Block:
+					for i, word_ := range words.Series.S {
+						switch word := word_.(type) {
+						case env.Word:
+							// get nth value from values
+							if len(vals.Series.S) < i {
+								return makeError(ps, "More words than values.")
+							}
+							val := vals.Series.S[i]
+							// if it exists then we set it to word from words
+							ps.Ctx.Set(word.Index, val)
+						default:
+							fmt.Println(word)
+							return makeError(ps, "Only words in words block")
+						}
+					}
+					return arg0
+				default:
+					return makeError(ps, "Arg 1 not Integer.")
+				}
+			default:
+				return makeError(ps, "Arg 1 not Integer.")
+			}
+		},
+	},
+	
 	// BASIC FUNCTIONS WITH NUMBERS
 
 	"type?": {
@@ -703,12 +756,36 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+	"_>=": {
+		Argsn: 2,
+		Doc:   "Tests if Arg1 is greater than Arg 2.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			if equalValues(ps, arg0, arg1) || greaterThan(ps, arg0, arg1) {
+				return env.Integer{1}
+			} else {
+				return env.Integer{0}
+			}
+		},
+	},
 	"_<": {
 		Argsn: 2,
 		Doc:   "Tests if Arg1 is lesser than Arg 2.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			if lesserThan(ps, arg0, arg1) {
+			if lesserThan(ps, arg0, arg1)  {
+				return env.Integer{1}
+			} else {
+				return env.Integer{0}
+			}
+		},
+	},
+	"_<=": {
+		Argsn: 2,
+		Doc:   "Tests if Arg1 is lesser than Arg 2.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			if equalValues(ps, arg0, arg1) || lesserThan(ps, arg0, arg1) {
 				return env.Integer{1}
 			} else {
 				return env.Integer{0}
@@ -2363,6 +2440,59 @@ var builtins = map[string]*env.Builtin{
 	// map should at the end map over block, raw-map, etc ...
 	// it should accept a block of code, a function and a builtin
 	// it should use injected block so it doesn't need a variable defined like map [ 1 2 3 ] x [ add a 100 ]
+	// reduce [ 1 2 3 ] 'acc { + acc }
+	"sum-up": {
+		Argsn: 2,
+		Doc:   "Reduces values of a block to a new block by evaluating a block of code ...",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch list := arg0.(type) {
+			case env.Block:
+				switch block := arg1.(type) {
+				case env.Block, env.Builtin:
+					l := len(list.Series.S)
+					var acc env.Object
+					switch block := block.(type) {
+					case env.Block:
+						ser := ps.Ser
+						ps.Ser = block.Series
+						for i := 0; i < l; i++ {
+							// ps.Ctx.Set(accu.Index, acc)
+							ps = EvalBlockInj(ps, list.Series.Get(i), true)
+							if ps.ErrorFlag {
+								return ps.Res
+							}
+							switch res := ps.Res.(type) {
+							case env.Integer:
+								if acc == nil {
+									acc = env.Integer{0}
+								}
+								switch acc_ := acc.(type) {
+								case env.Integer:
+									acc_.Value = acc_.Value + res.Value
+									acc = acc_
+								}
+							}
+							ps.Ser.Reset()
+						}
+						ps.Ser = ser
+					case env.Builtin:
+						// TODO
+						for i := 1; i < l; i++ {
+							acc = DirectlyCallBuiltin(ps, block, acc, list.Series.Get(i))
+						}
+					}
+					return acc
+				}
+				return makeError(ps, "A2 not block")
+			}
+			return makeError(ps, "A1 not block")
+		},
+	},
+
+	// map should at the end map over block, raw-map, etc ...
+	// it should accept a block of code, a function and a builtin
+	// it should use injected block so it doesn't need a variable defined like map [ 1 2 3 ] x [ add a 100 ]
 	// map [ 1 2 3 ] { .add 3 }
 	"partition": {
 		Argsn: 2,
@@ -3203,17 +3333,17 @@ var builtins = map[string]*env.Builtin{
 				case env.String:
 					inter := util.IntersectStrings(s1.Value, s2.Value)
 					return env.String{inter}
-				case env.Integer:
+				default:
 					return makeError(ps, "Arg 2 not String")
 				}
 			case env.Block:
-				/* switch _ := arg1.(type) {
+				switch b2 := arg1.(type) {
 				case env.Block:
-					//					return util.IntersectBlock{s1.Value, b2.Value}
-					return s1
-				case env.Object:
+					inter := util.IntersectLists(ps, s1.Series.S, b2.Series.S)
+					return *env.NewBlock(*env.NewTSeries(inter))
+				default:
 					return makeError(ps, "Arg 2 not Block")
-				}*/
+				}
 			}
 			return makeError(ps, "Arg 1 not Block or String")
 		},
@@ -3406,6 +3536,30 @@ var builtins = map[string]*env.Builtin{
 				switch sepa := arg1.(type) {
 				case env.String:
 					spl := strings.Split(str.Value, sepa.Value) // util.StringToFieldsWithQuoted(str.Value, sepa.Value, quote.Value)
+					spl2 := make([]env.Object, len(spl))
+					for i, val := range spl {
+						spl2[i] = env.String{val}
+					}
+					return *env.NewBlock(*env.NewTSeries(spl2))
+				default:
+					return makeError(ps, "Separator character not a string.")
+				}
+			default:
+				return makeError(ps, "Input text not a string.")
+			}
+		},
+	},
+
+	"split\\many": {
+		Argsn: 2,
+		Pure:  true,
+		Doc:   "Splits a string into a block of values using a separator",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch str := arg0.(type) {
+			case env.String:
+				switch sepa := arg1.(type) {
+				case env.String:
+					spl := util.SplitMulti(str.Value, sepa.Value) // util.StringToFieldsWithQuoted(str.Value, sepa.Value, quote.Value)
 					spl2 := make([]env.Object, len(spl))
 					for i, val := range spl {
 						spl2[i] = env.String{val}

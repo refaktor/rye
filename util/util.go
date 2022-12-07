@@ -198,14 +198,34 @@ func IntersectStrings(a string, b string) string {
 	return res
 }
 
-func IntersectLists(a []env.Object, b []env.Object) []env.Object {
+func IntersectLists(ps *env.ProgramState, a []env.Object, b []env.Object) []env.Object {
 	set := make([]env.Object, 0)
-
 	for _, v := range a {
-		//		if ContainsGen(b, v) {
-		set = append(set, v)
-		//}
+		if ContainsVal(ps, b, v) && !ContainsVal(ps, set, v) {
+			set = append(set, v)
+		}
 	}
-
 	return set
 }
+
+func SplitMulti(s string, seps string) []string {
+	splitter := func(r rune) bool {
+		return strings.ContainsRune(seps, r)
+	}
+	return strings.FieldsFunc(s, splitter)
+}
+
+func ContainsVal(ps *env.ProgramState, b []env.Object, val env.Object) bool {
+	for _, a := range b {
+		if EqualValues(ps, a, val) {
+			return true
+		}
+	}
+	return false
+}
+
+// TODO move to this from various
+func EqualValues(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) bool {
+	return arg0.GetKind() == arg1.GetKind() && arg0.Inspect(*ps.Idx) == arg1.Inspect(*ps.Idx)
+}
+

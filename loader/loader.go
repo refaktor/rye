@@ -257,7 +257,7 @@ func parseOpword(v *Values, d Any) (Any, error) {
 	word := v.Token()
 	force := 0
 	var idx int
-	if len(word) == 1 || word == "<<" || word == "<-" || word == "<~" {
+	if len(word) == 1 || word == "<<" || word == "<-" || word == "<~" || word == ">=" || word == "<=" {
 		// onecharopwords < > + * ... their naming is equal to _< _> _* ...
 		idx = wordIndex.IndexWord("_" + word)
 	} else {
@@ -370,8 +370,8 @@ func newParser() *Parser { // TODO -- add string eaddress path url time
 	CPATH    		<-  WORD ( "/" WORD )+
 	ONECHARWORDS	    <-  < [<>*+-=/] >
 	PIPEARROWS      <-  ">>" / "~>" / "->"
-	OPARROWS        <-  "<<" / "<~" / "<-"
-	LETTER  	       	<-  < [a-zA-Z=^(` + "`" + `_] >
+	OPARROWS        <-  "<<" / "<~" / "<-" / ">=" / "<="
+	LETTER  	       	<-  < [a-zA-Z^(` + "`" + `_] >
 	LETTERORNUM		<-  < [a-zA-Z0-9-?=.\\!_+<>\]*()] >
 	URIPATH			<-  < [a-zA-Z0-9-?=.:@/\\!_>	()] >
 	UCLETTER  		<-  < [A-Z] >

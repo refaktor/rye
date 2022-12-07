@@ -9,22 +9,20 @@
     
     ; part 1
     
-    read\lines %rucksacks.txt :lines
-    |fold 'priority 0 {
+    read\lines %rucksacks.txt :lines |add-up {
     	.length? / 2 :mid ,
-    	.split-every mid |pass { .first :left } |second
-    	|intersect left |fold 'priority1 0 {
-            .get-priority + priority1
-    	} |+ priority
+	    .split-every mid
+	    |with { .first :left , .second }
+    	|intersect left |add-up { .get-priority }
     } |print
     
     ; part 2
 
-    lines .split-every 3 |fold 'priority 0 {
+    lines .split-every 3 |add-up {
     	-> 0 :line0 ,
     	-> 1 :line1 ,
     	-> 2 |intersect line1 |intersect line0
-    	|get-priority + priority
+    	|get-priority
     } |print
 
 

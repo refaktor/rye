@@ -1,0 +1,28 @@
+
+
+   ; AoC2022 - Day 4 - with Rye (ryelang.blogspot.com)
+
+    part1: {
+	    any { all { a >= x b <= z } all { x >= a z <= b } }
+    }
+
+    part2: {
+	    range a b |intersect range x z |length? > 0
+    }
+
+    solve: fn { part } {
+	    read\lines %pairs.txt |sum-up {
+		    |split\many ",-" |map { .to-integer }
+		    |set { a b x z }
+		    do part
+	    }
+    }
+
+    solve part1 |print
+    solve part2 |print
+
+
+
+
+
+
