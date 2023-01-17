@@ -94,6 +94,11 @@ func (ser TSeries) Get(n int) Object {
 	return ser.S[n]
 }
 
+func (ser TSeries) PGet(n int) *Object {
+	//ser.pos += n + 1
+	return &ser.S[n]
+}
+
 func (ser TSeries) Len() int {
 	return len(ser.S)
 }

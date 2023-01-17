@@ -1,0 +1,4 @@
+read\lines %sample-boxes.txt :bb
+b1: 0 <- bb
+read-cell: fn { i l } { pos: 1 + i * 4 , l .substring pos pos + 1 }
+enter-console "asd"

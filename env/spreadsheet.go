@@ -81,6 +81,7 @@ func (s Spreadsheet) ToTxt() string {
 		bu.WriteString(fmt.Sprint(name))
 		bu.WriteString("\t|")
 	}
+	bu.WriteString("\n")
 	for _, row := range s.Rows {
 		for _, val := range row.Values {
 			bu.WriteString(fmt.Sprint(val))
@@ -211,6 +212,21 @@ func (s Spreadsheet) Columns(ps *ProgramState, names []string) Object {
 
 }
 
+func (s Spreadsheet) GetRow(ps *ProgramState, index int) Object {
+	if s.RawMode {
+		row := s.RawRows[index]
+		row2 := make([]interface{}, len(row))
+		for i := range row {
+			row2[i] = row[i]
+		}
+		return SpreadsheetRow{row2, &s}
+	} else {
+		row := s.Rows[index]
+		row.Uplink = &s
+		return row
+	}
+}
+
 func (s Spreadsheet) GetRawRowValue(column string, rrow []string) (string, error) {
 	index := -1
 	for i, v := range s.Cols {
@@ -270,7 +286,20 @@ func (s SpreadsheetRow) Inspect(e Idxs) string {
 
 // Inspect returns a string representation of the Integer.
 func (s SpreadsheetRow) Probe(e Idxs) string {
-	return "TODO"
+	return s.ToTxt()
+}
+
+func (s SpreadsheetRow) ToTxt() string {
+	var bu strings.Builder
+	bu.WriteString("[ ")
+	for i, val := range s.Values {
+		bu.WriteString(s.Uplink.Cols[i])
+		bu.WriteString(": ")
+		bu.WriteString(fmt.Sprint(val))
+		bu.WriteString("\t")
+	}
+	bu.WriteString(" ]")
+	return bu.String()
 }
 
 func (s SpreadsheetRow) Trace(msg string) {

@@ -1,3 +1,4 @@
+//go:build b_sqlite
 // +build b_sqlite
 
 package evaldo
@@ -120,15 +121,29 @@ var Builtins_sqlite = map[string]*env.Builtin{
 	"Rye-sqlite//exec": {
 		Argsn: 2,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var sqlstr string
+			var vals []interface{}
 			switch db1 := arg0.(type) {
 			case env.Native:
 				switch str := arg1.(type) {
+				case env.Block:
+					//fmt.Println("BLOCK ****** *****")
+					ser := env1.Ser
+					env1.Ser = str.Series
+					values := make([]interface{}, 0, 0)
+					_, vals = SQL_EvalBlock(env1, MODE_SQLITE, values)
+					sqlstr = env1.Res.(env.String).Value
+					env1.Ser = ser
 				case env.String:
-					db2 := db1.Value.(*sql.DB)
-					db2.Exec(str.Value)
-					return env.Void{}
+					sqlstr = str.Value
 				default:
 					return env.NewError("arg 2222 should be string %s")
+				}
+				if sqlstr != "" {
+					db2 := db1.Value.(*sql.DB)
+					db2.Exec(sqlstr, vals...)
+					//					rows, err := db1.Value.(*sql.DB).Query(sqlstr, vals...)
+					return env.Void{}
 				}
 			default:
 				return env.NewError("arg 1111 should be string %s")
@@ -159,8 +174,9 @@ var Builtins_sqlite = map[string]*env.Builtin{
 					return env.NewError("arg 2222 should be string %s")
 				}
 				if sqlstr != "" {
-					spr := env.NewSpreadsheet([]string{"name", "id"})
 					rows, err := db1.Value.(*sql.DB).Query(sqlstr, vals...)
+					columns, _ := rows.Columns()
+					spr := env.NewSpreadsheet(columns)
 					result := make([]map[string]interface{}, 0)
 					if err != nil {
 						fmt.Println(err.Error())

@@ -1,0 +1,35 @@
+
+rye .needs { sqlite }
+
+db: open sqlite://tasker.db
+	
+merge: fn { old new } {
+	exec db { update invoice_sent set id_partner = ?new where id_partner = ?old }
+	exec db { delete from partner where id = ?old }
+}
+
+stats: fn { old new } {
+	query db {
+		select * from 
+		( select count() old from invoice_sent where id_partner = ?old ) ,
+		( select count() new from invoice_sent where id_partner = ?new )
+	} |first
+}
+
+fix-doubles: does {
+
+	db .query {
+		select min(id) old , max(id) new , vatid  ident , count() cnt
+		from partner where vatid > "" group by vatid , name
+		having cnt > 1
+	}
+	|print
+	|for {
+		-> 0 :old , -> 1 :new
+		stats old new |prn , prn "=>"
+		merge old new
+		stats old new |print
+	}	
+}
+
+enter-console "run: fix-doubles"

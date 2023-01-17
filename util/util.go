@@ -229,3 +229,24 @@ func EqualValues(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) bool {
 	return arg0.GetKind() == arg1.GetKind() && arg0.Inspect(*ps.Idx) == arg1.Inspect(*ps.Idx)
 }
 
+/* func Transpose(slice []env.Object) []env.Object {
+	yl := len(slice)
+	var xl int
+	switch blk := slice[0].(type) {
+	case env.Block:
+		xl = len(blk.Series.S)
+	}
+	if xl == 0 {
+		return nil
+	}
+	result := make([]env.Object, xl)
+	//for i := range result { // TODOD .... finish this or comment it out next time ... left as it is
+	// result[i] = env.NewBlock(env.NewTSeries()) // make([]env.Object, yl)
+	//}
+	for i := 0; i < xl; i++ {
+		for j := 0; j < yl; j++ {
+			result[i][j] = slice[j][i]
+		}
+	}
+	return result
+        }*/

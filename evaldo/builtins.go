@@ -380,7 +380,7 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch vals := arg0.(type) {
 			case env.Block:
-				switch words := arg1.(type) { 
+				switch words := arg1.(type) {
 				case env.Block:
 					for i, word_ := range words.Series.S {
 						switch word := word_.(type) {
@@ -406,7 +406,7 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-	
+
 	// BASIC FUNCTIONS WITH NUMBERS
 
 	"type?": {
@@ -773,7 +773,7 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Tests if Arg1 is lesser than Arg 2.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			if lesserThan(ps, arg0, arg1)  {
+			if lesserThan(ps, arg0, arg1) {
 				return env.Integer{1}
 			} else {
 				return env.Integer{0}
@@ -943,22 +943,20 @@ var builtins = map[string]*env.Builtin{
 
 	// CONTROL WORDS
 
-	"unless": {
+	"otherwise": {
 		Argsn: 2,
 		Doc:   "Conditional if not. Takes condition and a block of code.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch cond := arg0.(type) {
-			case env.Integer:
-				switch bloc := arg1.(type) {
-				case env.Block:
-					if cond.Value == 0 {
-						ser := ps.Ser
-						ps.Ser = bloc.Series
-						EvalBlock(ps)
-						ps.Ser = ser
-						return ps.Res
-					}
+			switch bloc := arg1.(type) {
+			case env.Block:
+				cond1 := util.IsTruthy(arg0)
+				if !cond1 {
+					ser := ps.Ser
+					ps.Ser = bloc.Series
+					EvalBlock(ps)
+					ps.Ser = ser
+					return ps.Res
 				}
 			}
 			return nil
@@ -1021,6 +1019,29 @@ var builtins = map[string]*env.Builtin{
 			case env.Block:
 				cond1 := util.IsTruthy(arg0)
 				if cond1 {
+					ser := ps.Ser
+					ps.Ser = bloc.Series
+					EvalBlockInj(ps, arg0, true)
+					ps.Ser = ser
+					ps.ReturnFlag = true
+					return ps.Res
+				}
+			default:
+				return makeError(ps, "Arg 2 not Block.")
+			}
+			return nil
+		},
+	},
+
+	"^otherwise": {
+		Argsn: 2,
+		Doc:   "Basic conditional with a Returning mechanism when true. Takes a condition and a block of code.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg1.(type) {
+			case env.Block:
+				cond1 := util.IsTruthy(arg0)
+				if !cond1 {
 					ser := ps.Ser
 					ps.Ser = bloc.Series
 					EvalBlockInj(ps, arg0, true)
@@ -1384,7 +1405,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"valuate": {
+	"eval": {
 		Argsn: 1,
 		Doc:   "Takes a block of Rye values and evaluates each value or expression.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1420,7 +1441,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"eval-with": {
+	"eval\\with": {
 		Argsn: 2,
 		Doc:   "",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1481,6 +1502,28 @@ var builtins = map[string]*env.Builtin{
 				ps.Ser = bloc.Series
 				for ps.Ser.Pos() < ps.Ser.Len() {
 					EvalExpression2(ps, false)
+					if util.IsTruthy(ps.Res) {
+						break
+					}
+				}
+				ps.Ser = ser
+				return ps.Res
+			}
+			return makeError(ps, "Arg 1 not Block")
+		},
+	},
+
+	"any\\with": {
+		Argsn: 2,
+		Doc:   "Takes a block, if any of the values or expressions are truthy, the it returns that one, in none false.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg1.(type) {
+			case env.Block:
+				ser := ps.Ser
+				ps.Ser = bloc.Series
+				for ps.Ser.Pos() < ps.Ser.Len() {
+					EvalExpressionInjLimited(ps, arg0, true)
+					//					EvalExpression2(ps, false)
 					if util.IsTruthy(ps.Res) {
 						break
 					}
@@ -3650,6 +3693,8 @@ var builtins = map[string]*env.Builtin{
 					return makeError(ps, "String is empty.")
 				}
 				return env.String{string(str[0])}
+			case env.Spreadsheet:
+				return s1.GetRow(ps, int(0))
 			default:
 				return env.NewError("Arg 1 not a Series.")
 			}
@@ -3884,7 +3929,8 @@ var builtins = map[string]*env.Builtin{
 						}
 						ctx.Set(wrd.Index, newval)
 						return newval
-					case env.Block: // TODO
+					case *env.Block: // TODO
+						fmt.Println(123)
 						s := &oldval.Series
 						oldval.Series = *s.Append(arg0)
 						ctx.Set(wrd.Index, oldval)
@@ -3894,6 +3940,11 @@ var builtins = map[string]*env.Builtin{
 					}
 				}
 				return makeError(ps, "Tagword not found.")
+			case env.Block:
+				s := &wrd.Series
+				wrd.Series = *s.Append(arg0)
+				//ctx.Set(wrd.Index, oldval)
+				return nil
 			default:
 				return makeError(ps, "Value not tagword")
 			}
@@ -3995,6 +4046,32 @@ var builtins = map[string]*env.Builtin{
 			return getFrom(ps, arg1, arg0, false)
 		},
 	},
+	/* "_<-": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Block:
+				switch s2 := arg1.(type) {
+				case env.Integer:
+					idx := s2.Value
+					//					if posMode {
+					// 	idx--
+					//}
+					v := s1.Series.PGet(int(idx))
+					ok := true
+					if ok {
+						return v
+					} else {
+						ps.FailureFlag = true
+						return env.NewError1(5) // NOT_FOUND
+					}
+				}
+				//return getFrom(ps, arg1, arg0, false)
+				return nil
+			}
+			return nil
+		},
+	},*/
 	"_<~": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
