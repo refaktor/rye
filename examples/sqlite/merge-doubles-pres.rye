@@ -1,14 +1,23 @@
+; TODO:
+; * add doc function that documents the current context / function 
+; * let ls function display that documentation
+; * add as-subcontext method that creates a subcontext and runs the file inside of that
 
-rye .needs { sqlite }
+rye |needs { sqlite }
+    |as-subcontext
 
 db: open sqlite://tasker.db
 	
-merge: fn { old new } {
+merge: fnd { old new "moves tasks to new contact and removes the old one" }
+{
 	exec db { update invoice_sent set id_partner = ?new where id_partner = ?old }
 	exec db { delete from partner where id = ?old }
 }
 
-stats: fn { old new } {
+stats: fn { old new "gets the number of tasks for old and new contact"
+}
+{
+	
 	query db {
 		select * from 
 		( select count() old from invoice_sent where id_partner = ?old ) ,
@@ -17,6 +26,8 @@ stats: fn { old new } {
 }
 
 fix-doubles: does {
+
+	doc "fixes double entries of contacts, moves tasks to new ones, deletes old"
 
 	db .query {
 		select min(id) old , max(id) new , vatid  ident , count() cnt

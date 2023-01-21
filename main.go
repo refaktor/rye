@@ -1,4 +1,5 @@
-//+build linux darwin windows
+//go:build linux || darwin || windows
+// +build linux darwin windows
 
 package main
 
@@ -51,32 +52,37 @@ func main() {
 	evaldo.ShowResults = true
 
 	if len(os.Args) == 1 {
-		main_rye_repl(os.Stdin, os.Stdout)
+		main_rye_repl(os.Stdin, os.Stdout, false)
 	} else if len(os.Args) == 2 {
 		if os.Args[1] == "shell" {
 			main_rysh()
 		} else if os.Args[1] == "--hr" {
 			evaldo.ShowResults = false
-			main_rye_repl(os.Stdin, os.Stdout)
+			main_rye_repl(os.Stdin, os.Stdout, false)
+
+		} else if os.Args[1] == "--subc" {
+			main_rye_repl(os.Stdin, os.Stdout, true)
 		} else if os.Args[1] == "web" {
 			// main_httpd()
 		} else if os.Args[1] == "ryeco" {
 			main_ryeco()
 		} else {
-			main_rye_file(os.Args[1], false)
+			main_rye_file(os.Args[1], false, false)
 		}
 	} else if len(os.Args) >= 3 {
 		if os.Args[1] == "ryk" {
 			main_ryk()
 		} else if os.Args[1] == "--hr" {
 			evaldo.ShowResults = false
-			main_rye_file(os.Args[2], false)
+			main_rye_file(os.Args[2], false, false)
+		} else if os.Args[1] == "--subc" {
+			main_rye_file(os.Args[2], false, true)
 		} else if os.Args[1] == "cgi" {
 			main_cgi_file(os.Args[2], false)
 		} else if os.Args[1] == "sig" {
-			main_rye_file(os.Args[2], true)
+			main_rye_file(os.Args[2], true, false)
 		} else {
-			main_rye_file(os.Args[1], false)
+			main_rye_file(os.Args[1], false, false)
 		}
 
 	}
@@ -234,7 +240,7 @@ func main_ryeco() {
 
 }
 
-func main_rye_file(file string, sig bool) {
+func main_rye_file(file string, sig bool, subc bool) {
 
 	//util.PrintHeader()
 	//defer profile.Start(profile.CPUProfile).Stop()
@@ -252,6 +258,11 @@ func main_rye_file(file string, sig bool) {
 		es := env.NewProgramState(block.(env.Block).Series, genv)
 		evaldo.RegisterBuiltins(es)
 		contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
+
+		if subc {
+			ctx := es.Ctx
+			es.Ctx = env.NewEnv(ctx)
+		}
 
 		evaldo.EvalBlock(es)
 		evaldo.MaybeDisplayFailureOrError(es, genv)
@@ -304,7 +315,7 @@ func main_cgi_file(file string, sig bool) {
 
 }
 
-func main_rye_repl(in io.Reader, out io.Writer) {
+func main_rye_repl(in io.Reader, out io.Writer, subc bool) {
 
 	input := " 123 " // "name: \"Rye\" version: \"0.011 alpha\""
 	user, _ := user.Current()
@@ -329,6 +340,11 @@ func main_rye_repl(in io.Reader, out io.Writer) {
 	contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
 
 	evaldo.EvalBlock(es)
+
+	if subc {
+		ctx := es.Ctx
+		es.Ctx = env.NewEnv(ctx) // make new context with no parent
+	}
 
 	evaldo.DoRyeRepl(es, evaldo.ShowResults)
 

@@ -1,4 +1,3 @@
-// builtins.go
 package evaldo
 
 import (
@@ -409,12 +408,27 @@ var builtins = map[string]*env.Builtin{
 
 	// BASIC FUNCTIONS WITH NUMBERS
 
-	"type?": {
+	"doc": {
 		Argsn: 1,
-		Doc:   "Return type of a value as a word.",
+		Doc:   "Set documentation of the current context.",
 		Pure:  true,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return env.Word{arg0.GetKind()}
+			switch d := arg0.(type) {
+			case env.String:
+				env1.Ctx.Doc = d.Value
+				return env.Integer{1}
+			default:
+				return makeError(env1, "Arg 1 not String.")
+			}
+		},
+	},
+
+	"doc?": {
+		Argsn: 0,
+		Doc:   "Get documentation of the current context.",
+		Pure:  true,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return env.String{env1.Ctx.Doc}
 		},
 	},
 
@@ -1646,7 +1660,7 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Lists words in current context",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			fmt.Println(ps.Ctx.Preview(*ps.Idx, ""))
-			return env.Integer{1}
+			return env.Void{}
 		},
 	},
 
@@ -1657,7 +1671,7 @@ var builtins = map[string]*env.Builtin{
 			switch s1 := arg0.(type) {
 			case env.String:
 				fmt.Println(ps.Ctx.Preview(*ps.Idx, s1.Value))
-				return env.Integer{1}
+				return env.Void{}
 			}
 			return nil
 
@@ -3003,11 +3017,18 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch args := arg0.(type) {
 			case env.Block:
+				var doc string
+				switch a := args.Series.S[len(args.Series.S)-1].(type) {
+				case env.String:
+					doc = a.Value
+					//fmt.Println("DOC DOC")
+				}
 				switch body := arg1.(type) {
 				case env.Block:
 					//spec := []env.Object{env.Word{aaaidx}}
 					//body := []env.Object{env.Word{printidx}, env.Word{aaaidx}, env.Word{recuridx}, env.Word{greateridx}, env.Integer{99}, env.Word{aaaidx}, env.Word{incidx}, env.Word{aaaidx}}
-					return *env.NewFunction(args, body, false)
+					// fmt.Println(doc)
+					return *env.NewFunctionDoc(args, body, false, doc)
 				}
 			}
 			return nil

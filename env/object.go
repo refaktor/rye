@@ -805,15 +805,27 @@ type Function struct {
 	Body  Block
 	Ctx   *RyeCtx
 	Pure  bool
+	Doc   string
 }
 
 func NewFunction(spec Block, body Block, pure bool) *Function {
-	o := Function{spec.Series.Len(), spec, body, nil, pure}
+	o := Function{spec.Series.Len(), spec, body, nil, pure, ""}
 	return &o
 }
 
 func NewFunctionC(spec Block, body Block, ctx *RyeCtx, pure bool) *Function {
-	o := Function{spec.Series.Len(), spec, body, ctx, pure}
+	o := Function{spec.Series.Len(), spec, body, ctx, pure, ""}
+	return &o
+}
+
+func NewFunctionDoc(spec Block, body Block, pure bool, doc string) *Function {
+	var argn int
+	if doc > "" {
+		argn = spec.Series.Len() - 1
+	} else {
+		argn = spec.Series.Len()
+	}
+	o := Function{argn, spec, body, nil, pure, doc}
 	return &o
 }
 
@@ -829,12 +841,12 @@ func (i Function) Inspect(e Idxs) string {
 	if i.Pure {
 		pure_s = "Pure "
 	}
-	return "[" + pure_s + "Function: " + strconv.FormatInt(int64(i.Argsn), 10) + "]"
+	return "[" + pure_s + "Function(" + strconv.FormatInt(int64(i.Argsn), 10) + "): " + i.Doc + "]"
 }
 
 // Inspect returns a string representation of the Integer.
 func (b Function) Probe(e Idxs) string {
-	return "[Function: " + strconv.FormatInt(int64(b.Argsn), 10) + "]"
+	return "[Function(" + strconv.FormatInt(int64(b.Argsn), 10) + "): " + b.Doc + "]"
 }
 
 func (i Function) Trace(msg string) {
@@ -851,7 +863,7 @@ func (i Function) GetKind() int {
 //
 
 // BuiltinFunction represents a function signature of builtin functions.
-/////type BuiltinFunction func(ps *ProgramState, args ...Object) Object
+// ///type BuiltinFunction func(ps *ProgramState, args ...Object) Object
 type BuiltinFunction func(ps *ProgramState, arg0 Object, arg1 Object, arg2 Object, arg3 Object, arg4 Object) Object
 
 // Builtin represents a builtin function.

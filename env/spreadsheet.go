@@ -259,7 +259,7 @@ func (s Spreadsheet) Inspect(e Idxs) string {
 	if s.GetKind() != int(SpreadsheetType) {
 		kindStr = " of kind " + s.Kind.Probe(e)
 	}
-	return "<Spreadsheet [" + strconv.Itoa(len(s.Cols)) + " " + rows + "]" + kindStr + ">"
+	return "[Spreadsheet(" + strconv.Itoa(len(s.Cols)) + " " + rows + ")" + kindStr + "]"
 }
 
 // Inspect returns a string representation of the Integer.
@@ -281,7 +281,7 @@ func (s SpreadsheetRow) GetKind() int {
 
 // Inspect returns a string
 func (s SpreadsheetRow) Inspect(e Idxs) string {
-	return "<SpreadsheetRow [" + strconv.Itoa(len(s.Values)) + " ] of kind " + ">"
+	return "[SpreadsheetRow(" + strconv.Itoa(len(s.Values)) + ")" + "]"
 }
 
 // Inspect returns a string representation of the Integer.
