@@ -5,7 +5,7 @@ write-err: fn { err w } { write-header w 403 , write w to-json err }
 write-ok: fn { d w } { write w to-json d }
 
 webfn: fn { spec args body } {
-	fnc args current-context {
+	fnc args current-ctx {
 		set-content-type w "application/json"
 		full-form? r |validate spec |^check 0
 		|to-context |do-in body
@@ -24,4 +24,6 @@ handle-web-resources: fn { w r resmap } {
 	handle-web-resource w r res |^fix { .write-err w }
 }
 
-page: fn { title body } { join eval { "<html><title>" title "</title><body>" body "</body></html>" } }
+page: fn { title body } { join evalu { "<html><title>" title "</title><body>" body "</body></html>" } }
+
+print "WHYY"

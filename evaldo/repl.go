@@ -1,3 +1,4 @@
+//go:build !b_norepl
 // +build !b_norepl
 
 package evaldo
@@ -41,10 +42,8 @@ func genPrompt(shellEd *ShellEd, line string) (string, string) {
 		return "{ Rye " + shellEd.Mode + "} ", ""
 	} else {
 		if len(line) > 0 {
-
 			return "        ", ""
 		} else {
-
 			return "×> ", ""
 		}
 	}
@@ -226,8 +225,6 @@ func DoRyeRepl(es *env.ProgramState, showResults bool) {
 
 				if strings.Trim(line2, " \t\n\r") == "" {
 					// ignore
-				} else if strings.Compare("(lc)", line2) == 0 {
-					fmt.Println(es.Ctx.Probe(*es.Idx))
 				} else if strings.Compare("((show-results))", line2) == 0 {
 					showResults = true
 				} else if strings.Compare("((hide-results))", line2) == 0 {
@@ -253,12 +250,7 @@ func DoRyeRepl(es *env.ProgramState, showResults bool) {
 					} else {
 						if shellEd.Mode != "" {
 							if !shellEd.Pause {
-								//fmt.Println(shellEd.CurrObj)
-								//fmt.Println("SETIRAM ******* ")
 								shellEd.CurrObj.Body.Series.AppendMul(block1.Series.GetAll())
-								//shellEd.CurrObj.(env.Function).Body.Series.AppendMul(block.Series.GetAll())
-								//fmt.Println(shellEd.CurrObj)
-
 							}
 						}
 
@@ -329,5 +321,15 @@ func MaybeDisplayFailureOrError(es *env.ProgramState, genv *env.Idxs) {
 			fmt.Print(err.CodeBlock.Probe(*genv))
 		}
 		fmt.Println("\x1b[0m")
+	}
+}
+
+func DoGeneralInput(es *env.ProgramState, prompt string) {
+	line := liner.NewLiner()
+	defer line.Close()
+	if code, err := line.SimplePrompt(prompt); err == nil {
+		es.Res = env.String{code}
+	} else {
+		log.Print("Error reading line: ", err)
 	}
 }

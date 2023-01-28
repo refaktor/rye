@@ -8,7 +8,7 @@ do load %res-demo.rye
 
 handle-api: fn { w r } {
 	handle-web-resources w r context {
-		demo: eval { demo-resource "Demo resource" }
+		demo: evalu { demo-resource "Demo resource" }
 	}
 }
 

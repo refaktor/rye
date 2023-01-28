@@ -222,13 +222,16 @@ func EvalExpressionInjLimited(ps *env.ProgramState, inj env.Object, injnow bool)
 // first if there is return flag it returns (not sure if this is necesarry here) TODO -- figure out
 // if next object is opword it steps to next and evaluates the word then recurse  to maybe again
 // if next object is pipeword
-// 		on limited return (what is limited exactly ? TODO)
-// 		step to next word and evaluate it
-// 		again check for return flag
-// 		check for failure flag and cwitch to error ... doesn't one of checkFlags do this or similar? .TODO
-// 		recurse again
+//
+//	on limited return (what is limited exactly ? TODO)
+//	step to next word and evaluate it
+//	again check for return flag
+//	check for failure flag and cwitch to error ... doesn't one of checkFlags do this or similar? .TODO
+//	recurse again
+//
 // if next is lsetword
-// 		set the value to word and recurse
+//
+//	set the value to word and recurse
 func MaybeEvalOpwordOnRight(nextObj env.Object, ps *env.ProgramState, limited bool) *env.ProgramState {
 	//trace2("MaybeEvalWord -----------======--------> 1")
 	if ps.ReturnFlag || ps.ErrorFlag {
@@ -280,10 +283,13 @@ func EvalExpressionConcrete(ps *env.ProgramState) *env.ProgramState {
 	//trace2("Before entering expression")
 	if object != nil {
 		switch object.Type() {
-		case env.IntegerType, env.DecimalType, env.StringType, env.BlockType, env.VoidType, env.TagwordType, env.UriType, env.EmailType:
+		case env.IntegerType, env.DecimalType, env.StringType, env.BlockType, env.VoidType, env.UriType, env.EmailType: // env.TagwordType, JM 20230126
 			if !ps.SkipFlag {
 				ps.Res = object
 			}
+		case env.TagwordType:
+			ps.Res = env.Word{object.(env.Tagword).Index}
+			return ps
 		case env.WordType:
 			rr := EvalWord(ps, object.(env.Word), nil, false, false)
 			return rr
@@ -825,7 +831,8 @@ func DirectlyCallBuiltin(ps *env.ProgramState, bi env.Builtin, a0 env.Object, a1
 // otherwise false
 // USED -- before evaluationg a builtin
 // TODO -- once we know it works in all situations remove all debug lines
-// 		and rewrite
+//
+//	and rewrite
 func checkFlagsBi(bi env.Builtin, ps *env.ProgramState, n int) bool {
 	trace("CHECK FLAGS BI")
 	//trace(n)

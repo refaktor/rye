@@ -72,7 +72,7 @@ func load_html_Dict(es *env.ProgramState, block env.Block) (env.Dict, *env.Error
 			key = es.Idx.GetWord(obj.Index)
 			block.Series.Next()
 			continue
-		case env.Tagword: // if tagword append -word- to keys
+		case env.Word: // if tagword append -word- to keys
 			key = "-" + es.Idx.GetWord(obj.Index) + "-"
 			block.Series.Next()
 			continue
@@ -426,7 +426,7 @@ var Builtins_html = map[string]*env.Builtin{
 						} else {
 							return env.Void{}
 						}
-					case env.Tagword:
+					case env.Word:
 						for _, a := range tok.Attr {
 							if a.Key == es.Idx.GetWord(n.Index) {
 								return env.String{a.Val}

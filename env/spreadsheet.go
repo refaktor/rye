@@ -227,6 +227,21 @@ func (s Spreadsheet) GetRow(ps *ProgramState, index int) Object {
 	}
 }
 
+func (s Spreadsheet) GetRowNew(index int) Object {
+	if s.RawMode {
+		row := s.RawRows[index]
+		row2 := make([]interface{}, len(row))
+		for i := range row {
+			row2[i] = row[i]
+		}
+		return SpreadsheetRow{row2, &s}
+	} else {
+		row := s.Rows[index]
+		row.Uplink = &s
+		return row
+	}
+}
+
 func (s Spreadsheet) GetRawRowValue(column string, rrow []string) (string, error) {
 	index := -1
 	for i, v := range s.Cols {

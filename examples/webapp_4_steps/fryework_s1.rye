@@ -4,7 +4,7 @@
 write-ok: fn { d w } { write w to-json d }
 
 webfn: fn { args body } {
-	fnc args current-context {
+	fnc args current-ctx {
 		full-form? r |probe |to-context |do-in body
 	}
 }

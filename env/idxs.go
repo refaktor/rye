@@ -12,6 +12,42 @@ type Idxs struct {
 	wordsn int
 }
 
+var NativeTypes = [...]string{
+	"Block",
+	"Integer",
+	"Word",
+	"Setword",
+	"Opword",
+	"Pipeword",
+	"Builtin",
+	"Function",
+	"Error",
+	"Comma",
+	"Void",
+	"String",
+	"Tagword",
+	"Genword",
+	"Getword",
+	"Argword",
+	"Native",
+	"Uri",
+	"LSetword",
+	"Ctx",
+	"Dict",
+	"List",
+	"Date",
+	"CPath",
+	"Xword",
+	"EXword",
+	"Spreadsheet",
+	"Email",
+	"Kind",
+	"Kindword",
+	"Converter",
+	"Time",
+	"Decimal",
+}
+
 func (e *Idxs) IndexWord(w string) int {
 	idx, ok := e.words2[w]
 	if ok {
@@ -70,42 +106,6 @@ func NewIdxs() *Idxs {
 	*/
 
 	// register words for builtin kinds, which the value objects should return on GetKind()
-
-	NativeTypes := []string{
-		"Block",
-		"Integer",
-		"Word",
-		"Setword",
-		"Opword",
-		"Pipeword",
-		"Builtin",
-		"Function",
-		"Error",
-		"Comma",
-		"Void",
-		"String",
-		"Tagword",
-		"Genword",
-		"Getword",
-		"Argword",
-		"Native",
-		"Uri",
-		"LSetword",
-		"Ctx",
-		"Dict",
-		"List",
-		"Date",
-		"CPath",
-		"Xword",
-		"EXword",
-		"Spreadsheet",
-		"Email",
-		"Kind",
-		"Kindword",
-		"Converter",
-		"Time",
-		"Decimal",
-	}
 
 	for _, value := range NativeTypes {
 		e.IndexWord(strings.ToLower(value))

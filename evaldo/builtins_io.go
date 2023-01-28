@@ -21,11 +21,15 @@ import (
 func __input(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch str := arg0.(type) {
 	case env.String:
-		reader := bufio.NewReader(os.Stdin)
+		fmt.Print("Enter text: " + str.Value)
+		var input string
+		fmt.Scanln(&input)
+		fmt.Print(input)
+		/* reader := bufio.NewReader(os.Stdin)
 		fmt.Print(str)
 		inp, _ := reader.ReadString('\n')
-		fmt.Println(inp)
-		return env.String{inp}
+		fmt.Println(inp) */
+		return env.String{input}
 	default:
 		//env1.ReturnFlag = true
 		env1.FailureFlag = true
@@ -226,7 +230,7 @@ func __http_s_post(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg
 	case env.Uri:
 
 		switch t := arg2.(type) {
-		case env.Tagword:
+		case env.Word:
 			switch d := arg1.(type) {
 			case env.String:
 
@@ -345,7 +349,7 @@ func __https_s__new_request(env1 *env.ProgramState, arg0 env.Object, arg1 env.Ob
 	switch uri := arg0.(type) {
 	case env.Uri:
 		switch method := arg1.(type) {
-		case env.Tagword:
+		case env.Word:
 			method1 := env1.Idx.GetWord(method.Index)
 			if !(method1 == "GET" || method1 == "POST") {
 				env1.FailureFlag = true
@@ -378,7 +382,7 @@ func __https_request__set_header(env1 *env.ProgramState, arg0 env.Object, arg1 e
 	switch req := arg0.(type) {
 	case env.Native:
 		switch method := arg1.(type) {
-		case env.Tagword:
+		case env.Word:
 			name := env1.Idx.GetWord(method.Index)
 			switch data := arg2.(type) {
 			case env.String:
@@ -567,9 +571,9 @@ var Builtins_io = map[string]*env.Builtin{
 		Argsn: 3,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch rword := arg0.(type) {
-			case env.Tagword:
+			case env.Word:
 				switch wword := arg1.(type) {
-				case env.Tagword:
+				case env.Word:
 					switch bloc := arg2.(type) {
 					case env.Block:
 						var rctx *env.RyeCtx

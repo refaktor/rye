@@ -3,6 +3,7 @@ package util
 
 import (
 	"fmt"
+	"math"
 	"regexp"
 	"rye/env"
 	"strconv"
@@ -250,3 +251,27 @@ func EqualValues(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) bool {
 	}
 	return result
         }*/
+
+func ToRyeValue(res interface{}) env.Object {
+	switch v := res.(type) {
+	case float64:
+		return env.Integer{Value: int64(math.Round(v))}
+	case int:
+		return env.Integer{int64(v)}
+	case int64:
+		return env.Integer{v}
+	case string:
+		return env.String{v}
+	case map[string]interface{}:
+		return *env.NewDict(v)
+	case []interface{}:
+		return *env.NewList(v)
+	case env.Object:
+		return v
+	case nil:
+		return nil
+	default:
+		fmt.Println(res)
+		return env.Void{}
+	}
+}

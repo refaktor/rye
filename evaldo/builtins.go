@@ -145,14 +145,14 @@ func getFrom(ps *env.ProgramState, data interface{}, key interface{}, posMode bo
 		}
 	case env.RyeCtx:
 		switch s2 := key.(type) {
-		case env.Tagword:
+		case env.Word:
 			v, ok := s1.Get(s2.Index)
 			if ok {
 				return v
 			} else {
 				return makeError(ps, "Not found in context")
 			}
-		case env.Word:
+		case env.Tagword:
 			v, ok := s1.Get(s2.Index)
 			if ok {
 				return v
@@ -255,6 +255,8 @@ var builtins = map[string]*env.Builtin{
 			case env.String:
 				idx := ps.Idx.IndexWord(str.Value)
 				return env.Word{idx}
+			case env.Word:
+				return env.Word{str.Index}
 			default:
 				return makeError(ps, "Arg 1 not String.")
 			}
@@ -289,6 +291,15 @@ var builtins = map[string]*env.Builtin{
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewUri1(ps.Idx, arg0.(env.String).Value) // TODO turn to switch
+		},
+	},
+
+	"type?": {
+		Argsn: 1,
+		Doc:   "Returns true if value is string.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return env.Word{int(arg0.Type())}
 		},
 	},
 
@@ -330,7 +341,7 @@ var builtins = map[string]*env.Builtin{
 		Pure:  false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
-			case env.Tagword:
+			case env.Word:
 				intval, found, ctx := ps.Ctx.Get2(arg.Index)
 				if found {
 					switch iintval := intval.(type) {
@@ -353,7 +364,7 @@ var builtins = map[string]*env.Builtin{
 		Pure:  false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg1.(type) {
-			case env.Tagword:
+			case env.Word:
 				val, found, ctx := ps.Ctx.Get2(arg.Index)
 				if found {
 					ctx.Set(arg.Index, arg0)
@@ -597,7 +608,7 @@ var builtins = map[string]*env.Builtin{
 					sepa := ""
 					for i := 0; i < s2.Series.Len(); i++ {
 						switch node := s2.Series.Get(i).(type) {
-						case env.Tagword:
+						case env.Word:
 							str.WriteString(sepa + ps.Idx.GetWord(node.Index) + "=")
 							sepa = "&"
 						case env.String:
@@ -938,6 +949,11 @@ var builtins = map[string]*env.Builtin{
 				}
 			case env.Spreadsheet:
 				obj, esc := term.DisplayTable(bloc, ps.Idx)
+				if !esc {
+					return obj
+				}
+			case env.SpreadsheetRow:
+				obj, esc := term.DisplaySpreadsheetRow(bloc, ps.Idx)
 				if !esc {
 					return obj
 				}
@@ -1361,6 +1377,20 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"get-input": {
+		Argsn: 1,
+		Doc:   "Stops execution and gives you a Rye console, to test the code inside environment.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch name := arg0.(type) {
+			case env.String:
+				// fmt.Print("Get Input: \033[1m" + name.Value + "\033[0m")
+				DoGeneralInput(ps, name.Value)
+				return ps.Res
+			}
+			return nil
+		},
+	},
+
 	"do": {
 		Argsn: 1,
 		Doc:   "Takes a block of code and does (runs) it.",
@@ -1419,7 +1449,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"eval": {
+	"evalu": {
 		Argsn: 1,
 		Doc:   "Takes a block of Rye values and evaluates each value or expression.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1647,7 +1677,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"current-context": {
+	"current-ctx": {
 		Argsn: 0,
 		Doc:   "Returns current context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1678,7 +1708,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"parent-context": {
+	"parent-ctx": {
 		Argsn: 0,
 		Doc:   "Returns parent context of the current context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1884,6 +1914,9 @@ var builtins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = b1.Series
 					EvalBlockInj(ps, arg0, true)
+					if ps.ErrorFlag {
+						return ps.Res
+					}
 					res := ps.Res
 					ps.Ser = b2.Series
 					EvalBlockInj(ps, arg0, true)
@@ -1945,6 +1978,9 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = bloc.Series
 					for i := 0; int64(i) < cond.Value; i++ {
 						ps = EvalBlockInj(ps, env.Integer{int64(i + 1)}, true)
+						if ps.ErrorFlag {
+							return ps.Res
+						}
 						ps.Ser.Reset()
 					}
 					ps.Ser = ser
@@ -1968,6 +2004,9 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = bloc.Series
 					for i := 0; int64(i) < cond.Value; i++ {
 						ps = EvalBlockInj(ps, acc, true)
+						if ps.ErrorFlag {
+							return ps.Res
+						}
 						ps.Ser.Reset()
 						acc = ps.Res
 					}
@@ -1988,13 +2027,16 @@ var builtins = map[string]*env.Builtin{
 				switch bloc := arg3.(type) {
 				case env.Block:
 					switch accu := arg2.(type) {
-					case env.Tagword:
+					case env.Word:
 						acc := arg1
 						ps.Ctx.Set(accu.Index, acc)
 						ser := ps.Ser
 						ps.Ser = bloc.Series
 						for i := 0; int64(i) < cond.Value; i++ {
 							ps = EvalBlockInj(ps, acc, true)
+							if ps.ErrorFlag {
+								return ps.Res
+							}
 							ps.Ser.Reset()
 							acc = ps.Res
 						}
@@ -2018,6 +2060,9 @@ var builtins = map[string]*env.Builtin{
 				ps.Ser = bloc.Series
 				for {
 					ps = EvalBlock(ps)
+					if ps.ErrorFlag {
+						return ps.Res
+					}
 					ps.Ser.Reset()
 				}
 				ps.Ser = ser
@@ -2037,6 +2082,9 @@ var builtins = map[string]*env.Builtin{
 				ps.Ser = bloc.Series
 				for {
 					EvalBlockInj(ps, arg0, true)
+					if ps.ErrorFlag {
+						return ps.Res
+					}
 					ps.Ser.Reset()
 				}
 				ps.Ser = ser
@@ -2075,6 +2123,9 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = code.Series
 					for i := 0; i < block.Series.Len(); i++ {
 						ps = EvalBlockInj(ps, block.Series.Get(i), true)
+						if ps.ErrorFlag {
+							return ps.Res
+						}
 						ps.Ser.Reset()
 					}
 					ps.Ser = ser
@@ -2147,6 +2198,9 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = code.Series
 					for i := 0; i < block.Series.Len(); i++ {
 						ps = EvalBlockInj(ps, block.Series.Get(i), true)
+						if ps.ErrorFlag {
+							return ps.Res
+						}
 						if util.IsTruthy(ps.Res) {
 							block.Series.S = append(block.Series.S[:i], block.Series.S[i+1:]...)
 							i--
@@ -2163,6 +2217,9 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = code.Series
 					for i := 0; i < len(block.Data); i++ {
 						ps = EvalBlockInj(ps, JsonToRye(block.Data[i]), true)
+						if ps.ErrorFlag {
+							return ps.Res
+						}
 						if util.IsTruthy(ps.Res) {
 							block.Data = append(block.Data[:i], block.Data[i+1:]...)
 							i--
@@ -2179,6 +2236,9 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = code.Series
 					for i := 0; i < len(block.Rows); i++ {
 						ps = EvalBlockInj(ps, block.Rows[i], true)
+						if ps.ErrorFlag {
+							return ps.Res
+						}
 						if util.IsTruthy(ps.Res) {
 							block.Rows = append(block.Rows[:i], block.Rows[i+1:]...)
 							i--
@@ -2199,7 +2259,7 @@ var builtins = map[string]*env.Builtin{
 		Pure:  false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch wrd := arg1.(type) {
-			case env.Tagword:
+			case env.Word:
 				val, found, ctx := ps.Ctx.Get2(wrd.Index)
 				if found {
 					switch block := val.(type) {
@@ -2210,6 +2270,9 @@ var builtins = map[string]*env.Builtin{
 							ps.Ser = code.Series
 							for i := 0; i < block.Series.Len(); i++ {
 								ps = EvalBlockInj(ps, block.Series.Get(i), true)
+								if ps.ErrorFlag {
+									return ps.Res
+								}
 								if util.IsTruthy(ps.Res) {
 									block.Series.S = append(block.Series.S[:i], block.Series.S[i+1:]...)
 									i--
@@ -2248,6 +2311,9 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
 							ps = EvalBlockInj(ps, list.Series.Get(i), true)
+							if ps.ErrorFlag {
+								return ps.Res
+							}
 							newl[i] = ps.Res
 							ps.Ser.Reset()
 						}
@@ -2270,6 +2336,9 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
 							ps = EvalBlockInj(ps, JsonToRye(list.Data[i]), true)
+							if ps.ErrorFlag {
+								return ps.Res
+							}
 							newl[i] = ps.Res
 							ps.Ser.Reset()
 						}
@@ -2298,7 +2367,7 @@ var builtins = map[string]*env.Builtin{
 			switch list := arg0.(type) {
 			case env.Block:
 				switch accu := arg1.(type) {
-				case env.Tagword:
+				case env.Word:
 					// ps.Ctx.Set(accu.Index)
 					switch block := arg2.(type) {
 					case env.Block, env.Builtin:
@@ -2311,6 +2380,9 @@ var builtins = map[string]*env.Builtin{
 							for i := 1; i < l; i++ {
 								ps.Ctx.Set(accu.Index, acc)
 								ps = EvalBlockInj(ps, list.Series.Get(i), true)
+								if ps.ErrorFlag {
+									return ps.Res
+								}
 								if ps.ErrorFlag {
 									return ps.Res
 								}
@@ -2329,7 +2401,7 @@ var builtins = map[string]*env.Builtin{
 				}
 			case env.List:
 				switch accu := arg1.(type) {
-				case env.Tagword:
+				case env.Word:
 					// ps.Ctx.Set(accu.Index)
 					switch block := arg2.(type) {
 					case env.Block, env.Builtin:
@@ -2360,7 +2432,7 @@ var builtins = map[string]*env.Builtin{
 				}
 			case env.String:
 				switch accu := arg1.(type) {
-				case env.Tagword:
+				case env.Word:
 					switch block := arg2.(type) {
 					case env.Block, env.Builtin:
 						input := []rune(list.Value)
@@ -2402,7 +2474,7 @@ var builtins = map[string]*env.Builtin{
 			switch list := arg0.(type) {
 			case env.Block:
 				switch accu := arg1.(type) {
-				case env.Tagword:
+				case env.Word:
 					// ps.Ctx.Set(accu.Index)
 					switch block := arg3.(type) {
 					case env.Block, env.Builtin:
@@ -2433,7 +2505,7 @@ var builtins = map[string]*env.Builtin{
 				}
 			case env.List:
 				switch accu := arg1.(type) {
-				case env.Tagword:
+				case env.Word:
 					// ps.Ctx.Set(accu.Index)
 					switch block := arg3.(type) {
 					case env.Block, env.Builtin:
@@ -2464,7 +2536,7 @@ var builtins = map[string]*env.Builtin{
 				}
 			case env.String:
 				switch accu := arg1.(type) {
-				case env.Tagword:
+				case env.Word:
 					switch block := arg3.(type) {
 					case env.Block, env.Builtin:
 						input := []rune(list.Value)
@@ -2715,6 +2787,9 @@ var builtins = map[string]*env.Builtin{
 							item = lo[i]
 						}
 						ps = EvalBlockInj(ps, JsonToRye(item), true)
+						if ps.ErrorFlag {
+							return ps.Res
+						}
 						if util.IsTruthy(ps.Res) { // todo -- move these to util or something
 							newl = append(newl, JsonToRye(item))
 						}
@@ -2757,6 +2832,9 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
 							ps = EvalBlockInj(ps, list.Series.Get(i), true)
+							if ps.ErrorFlag {
+								return ps.Res
+							}
 							if util.IsTruthy(ps.Res) { // todo -- move these to util or something
 								return list.Series.Get(i)
 							}
@@ -3018,10 +3096,12 @@ var builtins = map[string]*env.Builtin{
 			switch args := arg0.(type) {
 			case env.Block:
 				var doc string
-				switch a := args.Series.S[len(args.Series.S)-1].(type) {
-				case env.String:
-					doc = a.Value
-					//fmt.Println("DOC DOC")
+				if args.Series.Len() > 0 {
+					switch a := args.Series.S[len(args.Series.S)-1].(type) {
+					case env.String:
+						doc = a.Value
+						//fmt.Println("DOC DOC")
+					}
 				}
 				switch body := arg1.(type) {
 				case env.Block:
@@ -3087,10 +3167,10 @@ var builtins = map[string]*env.Builtin{
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
-			case env.Tagword:
+			case env.Word:
 				switch spec := arg1.(type) {
 				case env.Block:
-					return *env.NewKind(s1.ToWord(), spec)
+					return *env.NewKind(s1, spec)
 				default:
 					return env.NewError("2nd not block")
 				}
@@ -3915,7 +3995,7 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Accepts Block and returns the next value and removes it from the Block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch wrd := arg0.(type) {
-			case env.Tagword:
+			case env.Word:
 				val, found, ctx := ps.Ctx.Get2(wrd.Index)
 				if found {
 					switch oldval := val.(type) {
@@ -3936,7 +4016,7 @@ var builtins = map[string]*env.Builtin{
 		Pure:  false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch wrd := arg1.(type) {
-			case env.Tagword:
+			case env.Word:
 				val, found, ctx := ps.Ctx.Get2(wrd.Index)
 				if found {
 					switch oldval := val.(type) {
@@ -3978,9 +4058,9 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Registers a generic function.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
-			case env.Tagword:
+			case env.Word:
 				switch s2 := arg1.(type) {
-				case env.Tagword:
+				case env.Word:
 					switch s3 := arg2.(type) {
 					case env.Object:
 						fmt.Println(s1.Index)
@@ -4012,7 +4092,7 @@ var builtins = map[string]*env.Builtin{
 					}
 					return *env.NewSpreadsheet(cols)
 
-				case env.Tagword:
+				case env.Word:
 					// TODO
 				}
 				return nil
@@ -4588,7 +4668,7 @@ var builtins = map[string]*env.Builtin{
 			switch s1 := arg0.(type) {
 			case env.Spreadsheet:
 				switch s2 := arg1.(type) {
-				case env.Tagword:
+				case env.Word:
 					name = ps.Idx.GetWord(s2.Index)
 				case env.String:
 					name = s2.Value

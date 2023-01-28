@@ -8,7 +8,7 @@ do load %res-utils.rye
 
 handle-api: fn { w r } {
 	handle-web-resources w r context {
-		util: eval { utils-resource "Few utilities" }
+		util: evalu { utils-resource "Few utilities" }
 	}
 }
 
@@ -19,7 +19,7 @@ new-server ":8080"
 |handle "/api" ?handle-api
 |serve
 
-
+print "WHAA"
 
 
 

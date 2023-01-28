@@ -3,6 +3,10 @@ package term
 import (
 	"fmt"
 	"rye/env"
+	"rye/util"
+	"sort"
+	"strconv"
+	"strings"
 
 	"github.com/pkg/term"
 )
@@ -12,6 +16,7 @@ func DisplayBlock(bloc env.Block, idx *env.Idxs) (env.Object, bool) {
 	curr := 0
 	moveUp := 0
 	mode := 0 // 0 - human, 1 - dev
+	len := bloc.Series.Len()
 DODO:
 	if moveUp > 0 {
 		CurUp(moveUp)
@@ -20,20 +25,21 @@ DODO:
 	for i, v := range bloc.Series.S {
 		ClearLine()
 		if i == curr {
-			ColorOrange()
-			fmt.Print("*")
+			ColorBrGreen()
+			ColorBold()
+			fmt.Print("\u00bb ")
 		} else {
 			fmt.Print(" ")
 		}
 		switch ob := v.(type) {
 		case env.Object:
 			if mode == 0 {
-				fmt.Println(" " + ob.Probe(*idx) + " ")
+				fmt.Println("" + ob.Probe(*idx) + "")
 			} else {
-				fmt.Println(" " + ob.Inspect(*idx) + " ")
+				fmt.Println("" + ob.Inspect(*idx) + "")
 			}
 		default:
-			fmt.Println(" " + fmt.Sprint(ob) + " ")
+			fmt.Println("" + fmt.Sprint(ob) + "")
 		}
 		CloseProps()
 		// term.CurUp(1)
@@ -52,13 +58,13 @@ DODO:
 		ascii, keyCode, err := GetChar()
 
 		if (ascii == 3 || ascii == 27) || err != nil {
-			fmt.Println()
+			//fmt.Println()
 			ShowCur()
 			return nil, true
 		}
 
 		if ascii == 13 {
-			fmt.Println()
+			//fmt.Println()
 			return bloc.Series.Get(curr), false
 		}
 
@@ -73,9 +79,15 @@ DODO:
 
 		if keyCode == 40 {
 			curr++
+			if curr > len-1 {
+				curr = 0
+			}
 			goto DODO
 		} else if keyCode == 38 {
 			curr--
+			if curr < 0 {
+				curr = len - 1
+			}
 			goto DODO
 		}
 	}
@@ -86,26 +98,40 @@ func DisplayDict(bloc env.Dict, idx *env.Idxs) (env.Object, bool) {
 	curr := 0
 	moveUp := 0
 	mode := 0 // 0 - human, 1 - dev
+	len1 := len(bloc.Data)
+	// make a slice for keys
+	keys := make([]string, len(bloc.Data))
+	i := 0
+	for k, _ := range bloc.Data {
+		keys[i] = k
+		i++
+	}
+	sort.Strings(keys)
 DODO:
 	if moveUp > 0 {
 		CurUp(moveUp)
 	}
 	SaveCurPos()
-	for k, v := range bloc.Data {
+	for ii, k := range keys {
+		// for k, v := range bloc.Data {
+		v := bloc.Data[k]
 		ClearLine()
-		if 0 == curr {
-			ColorOrange()
-			fmt.Print("*")
+		if ii == curr {
+			ColorBrGreen()
+			ColorBold()
+			fmt.Print("\u00bb ")
 		} else {
 			fmt.Print(" ")
 		}
+		ColorBold()
 		fmt.Print(k + ": ")
+		ResetBold()
 		switch ob := v.(type) {
 		case env.Object:
 			if mode == 0 {
-				fmt.Println(" " + ob.Probe(*idx) + " ")
+				fmt.Println("" + ob.Probe(*idx) + "")
 			} else {
-				fmt.Println(" " + ob.Inspect(*idx) + " ")
+				fmt.Println("" + ob.Inspect(*idx) + "")
 			}
 		default:
 			fmt.Println(" " + fmt.Sprint(ob) + " ")
@@ -127,6 +153,282 @@ DODO:
 		ascii, keyCode, err := GetChar()
 
 		if (ascii == 3 || ascii == 27) || err != nil {
+			//fmt.Println()
+			ShowCur()
+			return nil, true
+		}
+
+		if ascii == 13 {
+			//fmt.Println()
+			ret := ""
+			for ii, k := range keys {
+				if ii == curr {
+					ret = k
+				}
+				ii++
+			}
+			return env.String{ret}, false // bloc.Series.Get(curr), false
+		}
+
+		if ascii == 120 {
+			//fmt.Println()
+			var ret env.Object
+			for ii, k := range keys {
+				if ii == curr {
+					ret = bloc.Data[k].(env.Object)
+				}
+			}
+			return ret, false // bloc.Series.Get(curr), false
+		}
+
+		if ascii == 77 || ascii == 109 {
+			if mode == 0 {
+				mode = 1
+			} else {
+				mode = 0
+			}
+			goto DODO
+		}
+
+		if keyCode == 40 {
+			curr++
+			if curr > len1-1 {
+				curr = 0
+			}
+			goto DODO
+		} else if keyCode == 38 {
+			curr--
+			if curr < 0 {
+				curr = len1 - 1
+			}
+			goto DODO
+		}
+	}
+}
+
+func DisplaySpreadsheetRow(bloc env.SpreadsheetRow, idx *env.Idxs) (env.Object, bool) {
+	HideCur()
+	curr := 0
+	moveUp := 0
+	mode := 0 // 0 - human, 1 - dev
+	len1 := len(bloc.Values)
+	// make a slice for keys
+	/* keys := make([]string, len(bloc.Data))
+	i := 0
+	for k, _ := range bloc.Data {
+		keys[i] = k
+		i++
+	}
+	sort.Strings(keys)*/
+DODO:
+	if moveUp > 0 {
+		CurUp(moveUp)
+	}
+	SaveCurPos()
+	for ii, k := range bloc.Uplink.Cols {
+		// for k, v := range bloc.Data {
+		v := bloc.Values[ii]
+		ClearLine()
+		if ii == curr {
+			ColorBrGreen()
+			ColorBold()
+			fmt.Print("\u00bb ")
+		} else {
+			fmt.Print(" ")
+		}
+		ColorBold()
+		fmt.Print(k + ": ")
+		ResetBold()
+		switch ob := v.(type) {
+		case env.Object:
+			if mode == 0 {
+				fmt.Println("" + ob.Probe(*idx) + "")
+			} else {
+				fmt.Println("" + ob.Inspect(*idx) + "")
+			}
+		default:
+			fmt.Println(" " + fmt.Sprint(ob) + " ")
+		}
+		CloseProps()
+		// term.CurUp(1)
+	}
+
+	moveUp = len(bloc.Values)
+
+	defer func() {
+		// Show cursor.
+		fmt.Printf("\033[?25h")
+	}()
+
+	// RestoreCurPos()
+
+	for {
+		ascii, keyCode, err := GetChar()
+
+		if (ascii == 3 || ascii == 27) || err != nil {
+			//fmt.Println()
+			ShowCur()
+			return nil, true
+		}
+
+		if ascii == 13 {
+			return util.ToRyeValue(bloc.Values[curr]), false
+		}
+
+		if ascii == 120 {
+			//fmt.Println()
+			return env.String{Value: bloc.Uplink.Cols[curr]}, false
+		}
+
+		if ascii == 77 || ascii == 109 {
+			if mode == 0 {
+				mode = 1
+			} else {
+				mode = 0
+			}
+			goto DODO
+		}
+
+		if keyCode == 40 {
+			curr++
+			if curr > len1-1 {
+				curr = 0
+			}
+			goto DODO
+		} else if keyCode == 38 {
+			curr--
+			if curr < 0 {
+				curr = len1 - 1
+			}
+			goto DODO
+		}
+	}
+}
+
+func DisplayTable(bloc env.Spreadsheet, idx *env.Idxs) (env.Object, bool) {
+	HideCur()
+	curr := 0
+	moveUp := 0
+	mode := 0 // 0 - human, 1 - dev
+	// get the ideal widths of columns
+	widths := make([]int, len(bloc.Cols))
+	// check all col names
+	for ic, col := range bloc.Cols {
+		widths[ic] = len(col)
+	}
+	// check all data
+	if bloc.RawMode {
+		for _, row := range bloc.RawRows {
+			for ic, v := range row {
+				ll := len(v)
+				if widths[ic] < ll {
+					widths[ic] = ll + 1
+				}
+			}
+		}
+	} else {
+		for _, r := range bloc.Rows {
+			for ic, v := range r.Values {
+				ww := 5
+				switch val := v.(type) {
+				case string:
+					ww = len(val)
+				case int64:
+					ww = len(strconv.Itoa(int(val))) + 1
+				case float64:
+					ww = len(strconv.FormatFloat(val, 'f', 2, 64)) + 1
+				}
+				if widths[ic] < ww {
+					widths[ic] = ww + 1
+				}
+			}
+		}
+	}
+	fulwidth := 0
+	for _, w := range widths {
+		fulwidth += w + 2
+	}
+
+DODO:
+	if moveUp > 0 {
+		CurUp(moveUp)
+	}
+	SaveCurPos()
+	for ic, cn := range bloc.Cols {
+		ColorBold()
+		fmt.Printf("| %-"+strconv.Itoa(widths[ic])+"s", cn)
+		CloseProps()
+	}
+	fmt.Println("|")
+	fmt.Println("+" + strings.Repeat("-", fulwidth-1) + "+")
+
+	if bloc.RawMode {
+		for range bloc.Rows {
+			ClearLine()
+		}
+		for i, r := range bloc.RawRows {
+			ClearLine()
+			if i == curr {
+				ColorBrGreen()
+				// fmt.Print("*")
+			} else {
+				// fmt.Print(" ")
+			}
+			for ic, v := range r {
+				fmt.Printf("| %-"+strconv.Itoa(widths[ic])+"s", fmt.Sprint(v))
+				//fmt.Print("| " + fmt.Sprint(v) + "\t")
+				// term.CurUp(1)
+			}
+			CloseProps()
+			fmt.Println("|")
+		}
+
+	} else {
+		for range bloc.Rows {
+			ClearLine()
+		}
+		for i, r := range bloc.Rows {
+			if i == curr {
+				ColorBrGreen()
+				fmt.Print("")
+			} else {
+				fmt.Print("")
+			}
+			for ic, v := range r.Values {
+				switch ob := v.(type) {
+				case env.Object:
+					if mode == 0 {
+						fmt.Printf("| %-"+strconv.Itoa(widths[ic])+"s", ob.Probe(*idx))
+						//fmt.Print("| " +  + "\t")
+					} else {
+						fmt.Printf("| %-"+strconv.Itoa(widths[ic])+"s", ob.Inspect(*idx))
+						//fmt.Print("| " +  + "\t")
+					}
+				default:
+					fmt.Printf("| %-"+strconv.Itoa(widths[ic])+"s", fmt.Sprint(ob))
+					///fmt.Print("| " + +"\t")
+				}
+				// term.CurUp(1)
+			}
+			CloseProps()
+			fmt.Println("|")
+		}
+
+	}
+
+	moveUp = len(bloc.Rows) + 2
+
+	defer func() {
+		// Show cursor.
+		fmt.Printf("\033[?25h")
+	}()
+
+	// RestoreCurPos()
+
+	for {
+		ascii, keyCode, err := GetChar()
+
+		if (ascii == 3 || ascii == 27) || err != nil {
 			fmt.Println()
 			ShowCur()
 			return nil, true
@@ -134,7 +436,7 @@ DODO:
 
 		if ascii == 13 {
 			fmt.Println()
-			return nil, false // bloc.Series.Get(curr), false
+			return bloc.GetRowNew(curr), false // bloc.Series.Get(curr), false
 		}
 
 		if ascii == 77 || ascii == 109 {
@@ -156,112 +458,8 @@ DODO:
 	}
 }
 
-func DisplayTable(bloc env.Spreadsheet, idx *env.Idxs) (env.Object, bool) {
-	HideCur()
-	curr := 0
-	moveUp := 0
-	mode := 0 // 0 - human, 1 - dev
-DODO:
-	if moveUp > 0 {
-		CurUp(moveUp)
-	}
-	SaveCurPos()
-	for _, cc := range bloc.Cols {
-		fmt.Print("| " + cc + "\t")
-	}
-	fmt.Println()
-	fmt.Println("---------------------------------")
-
-	if bloc.RawMode {
-		for range bloc.Rows {
-			ClearLine()
-		}
-		for i, r := range bloc.RawRows {
-			ClearLine()
-			for _, v := range r {
-				if i == curr {
-					ColorOrange()
-					// fmt.Print("*")
-				} else {
-					// fmt.Print(" ")
-				}
-				fmt.Print("| " + fmt.Sprint(v) + "\t")
-				CloseProps()
-				// term.CurUp(1)
-			}
-			fmt.Println()
-		}
-
-	} else {
-		for range bloc.Rows {
-			ClearLine()
-		}
-		for _, r := range bloc.Rows {
-			for i, v := range r.Values {
-				if i == curr {
-					ColorOrange()
-					fmt.Print("*")
-				} else {
-					fmt.Print(" ")
-				}
-				switch ob := v.(type) {
-				case env.Object:
-					if mode == 0 {
-						fmt.Print("| " + ob.Probe(*idx) + "\t")
-					} else {
-						fmt.Print("| " + ob.Inspect(*idx) + "\t")
-					}
-				default:
-					fmt.Print("| " + fmt.Sprint(ob) + "\t")
-				}
-				CloseProps()
-				// term.CurUp(1)
-			}
-			fmt.Println()
-		}
-
-	}
-
-	moveUp = len(bloc.Rows)
-
-	defer func() {
-		// Show cursor.
-		fmt.Printf("\033[?25h")
-	}()
-
-	// RestoreCurPos()
-
-	for {
-		ascii, keyCode, err := GetChar()
-
-		if (ascii == 3 || ascii == 27) || err != nil {
-			fmt.Println()
-			ShowCur()
-			return nil, true
-		}
-
-		if ascii == 13 {
-			fmt.Println()
-			return nil, false // bloc.Series.Get(curr), false
-		}
-
-		if ascii == 77 || ascii == 109 {
-			if mode == 0 {
-				mode = 1
-			} else {
-				mode = 0
-			}
-			goto DODO
-		}
-
-		if keyCode == 40 {
-			curr++
-			goto DODO
-		} else if keyCode == 38 {
-			curr--
-			goto DODO
-		}
-	}
+func itoa(i int) {
+	panic("unimplemented")
 }
 
 func ShowCur() {
@@ -283,14 +481,39 @@ func RestoreCurPos() {
 	fmt.Print("\x1b8")
 }
 
+func ColorRed() {
+	fmt.Printf("\x1b[31m")
+}
+func ColorGreen() {
+	fmt.Printf("\x1b[32m")
+}
 func ColorOrange() {
 	fmt.Printf("\x1b[33m")
 }
-
+func ColorBlue() {
+	fmt.Printf("\x1b[34m")
+}
+func ColorMagenta() {
+	fmt.Printf("\x1b[35m")
+}
+func ColorCyan() {
+	fmt.Printf("\x1b[36m")
+}
+func ColorWhite() {
+	fmt.Printf("\x1b[37m")
+}
+func ColorBrGreen() {
+	fmt.Printf("\x1b[32;1m")
+}
+func ColorBold() {
+	fmt.Printf("\x1b[1m")
+}
+func ResetBold() {
+	fmt.Printf("\x1b[22m")
+}
 func CloseProps() {
 	fmt.Printf("\x1b[0m")
 }
-
 func CurUp(n int) {
 	fmt.Printf("\x1b[%dA", n)
 }
