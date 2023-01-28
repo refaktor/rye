@@ -1,0 +1,47 @@
+
+
+
+; this is a comment
+
+; variable definition
+age: 56 
+name: "nora" 
+grades: [67 100 87 56] 
+
+; hello world
+print "Hello world"
+
+; datatypes
+×> type? 11
+[word: integer]  
+
+×> type? "a string"
+[word: string] 
+
+×> type? jim@python.org
+[word: email] 
+
+; working with strings
+capitalize name                   ; or
+name .capitalize
+
+surname: "sur" + "name" 
+
+ship: "Appollo" + to-string 11   ; or
+ship: "Appollo" + 11 .to-string  ; or 
+ship: "Appollo" .concat 11 
+
+; working with logic
+
+A: true , B: false      ; or
+ 
+and A B                          ; or
+A .and B                         ; or
+all { A B }
+
+A .or B .and age > 50              ; or
+all { any { A B } age > 50 }
+
+
+
+

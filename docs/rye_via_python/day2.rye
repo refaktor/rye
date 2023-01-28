@@ -1,0 +1,53 @@
+
+
+
+; If and when functions
+
+x: 5
+if x > 9 { print "is lesser" }
+
+
+12 .when { .factor-of 2 } { .concat " is even" }
+
+
+
+; Either function
+
+either x > 9 { print "more" } { print "less" }  ; or
+print either x > 9 { "more" } { "less" }
+
+
+
+; More than two branches
+
+print switch lang {
+	"Javascript" { "webdev" }
+	"Python"     { "bigdata" }
+	"Java"       { "mobile" }
+}
+
+
+age: 42
+case {
+	age > 60 { "senior" }
+	age > 36 { "midlife crysis" }
+	_        { "greenhorn" }
+} |print
+
+
+; Loops
+
+for range 5 { .print }  ; or
+loop 5 { .print }
+
+for range 10 { .print-val "loop {{}}" }
+
+
+
+; --> and Rye focuses more on functional approach with
+; providing standard and it's own HOF-s like map, filter,
+; reduce, fold, seek, partition, group, produce ...
+
+
+
+
