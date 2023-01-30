@@ -18,7 +18,9 @@
    * [Questions, contact](#related-links)
 
 
-*visit **[our blog](https://ryelang.blogspot.com/)** for latest examples and development updates*
+*visit **[our blog](https://ryelang.blogspot.com/)** and join our **[reddit group](https://reddit.com/r/ryelang/)** for latest examples and development updates*
+
+
 
 ## What is Rye
 
