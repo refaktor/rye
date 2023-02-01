@@ -283,14 +283,14 @@ docker run -ti refaktor/rye
 
 ### Building Rye
 
-1) Use official documentation to install latest Golang https://go.dev/doc/install
+Use official documentation to install latest Golang https://go.dev/doc/install
 
 
-2) Clone the main branch from the Rye repository
+Clone the main branch from the Rye repository
 
     git clone https://github.com/refaktor/rye.git && cd rye
 
-3) Go get the dependencies for tiny build
+Go get the dependencies for tiny build
 
     go get github.com/refaktor/go-peg  # PEG parser (rye loader)
     go get github.com/refaktor/liner   # library for REPL
@@ -298,15 +298,15 @@ docker run -ti refaktor/rye
     go get github.com/pkg/profile      # for runtime profiling - will probably remove for b_tiny
     go get github.com/pkg/term         # 
 
-4) Build the tiny version of Rye
+Build the tiny version of Rye
 
     go build -tags "b_tiny"
 
-5) Run the rye file:
+Run the rye file:
 
     ./rye hello.rye
 
-6) Run the REPL
+Run the REPL
 
     ./rye
 
