@@ -283,7 +283,7 @@ docker run -ti refaktor/rye
 
 ### Building Rye
 
-Use official documentation to install latest Golang https://go.dev/doc/install
+Use official documentation or lines below to install Golang 1.19.3 https://go.dev/doc/install
 
     wget https://go.dev/dl/go1.19.3.linux-amd64.tar.gz
     rm -rf /usr/local/go && tar -C /usr/local -xzf go1.19.3.linux-amd64.tar.gz
