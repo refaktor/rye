@@ -1,3 +1,4 @@
+//go:build b_http
 // +build b_http
 
 package evaldo
@@ -408,6 +409,54 @@ var Builtins_http = map[string]*env.Builtin{
 				}
 
 				return *env.NewDict(dict)
+			default:
+				ps.FailureFlag = true
+				return env.NewError("first arg should be Native")
+			}
+		},
+	},
+
+	"Go-server-request//parse-multipart-form!": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch req := arg0.(type) {
+			case env.Native:
+				r := req.Value.(*http.Request)
+				// 10 MB files max
+				r.ParseMultipartForm(10 << 20)
+				return arg0
+			default:
+				ps.FailureFlag = true
+				return env.NewError("first arg should be Native")
+			}
+		},
+	},
+
+	// file-handler: r.form-file "image"
+	// dst: create file-handler
+
+	"Go-server-request//form-file?": {
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch req := arg0.(type) {
+			case env.Native:
+				switch key := arg1.(type) {
+				case env.String:
+					r := req.Value.(*http.Request)
+
+					file, handler, err := r.FormFile(key.Value)
+					if err != nil {
+						ps.FailureFlag = true
+						return env.NewError("couldn't read form file")
+					}
+					pair := make([]env.Object, 2)
+					pair[0] = env.NewNative(ps.Idx, file, "rye-multipart-file")
+					pair[1] = env.NewNative(ps.Idx, handler, "rye-multipart-handler")
+					return *env.NewBlock(*env.NewTSeries(pair))
+				default:
+					ps.FailureFlag = true
+					return env.NewError("second arg should be String")
+				}
 			default:
 				ps.FailureFlag = true
 				return env.NewError("first arg should be Native")

@@ -93,6 +93,92 @@ DODO:
 	}
 }
 
+func DisplaySelection(bloc env.Block, idx *env.Idxs, right int) (env.Object, bool) {
+	HideCur()
+	curr := 0
+	moveUp := 0
+	mode := 0 // 0 - human, 1 - dev
+	len := bloc.Series.Len() / 2
+DODO1:
+	if moveUp > 0 {
+		CurUp(moveUp)
+	}
+	SaveCurPos()
+	idents := make([]int, (bloc.Series.Len()/2)+3)
+	//fmt.Println("---")
+	//fmt.Println(bloc.Series.Len())
+	for i := 0; i < bloc.Series.Len(); i += 2 {
+		//fmt.Println(i)
+		// todo check if it's word
+		idents[i/2] = bloc.Series.Get(i).(env.Word).Index
+		label := bloc.Series.Get(i + 1)
+		// ClearLine()
+		CurRight(right)
+		if i/2 == curr {
+			ColorMagenta()
+			ColorBold()
+			fmt.Print("\u00bb ")
+		} else {
+			fmt.Print(" ")
+		}
+		switch ob := label.(type) {
+		case env.String:
+			fmt.Println(ob.Value + " ")
+		default:
+			fmt.Println("" + fmt.Sprint(ob) + "***")
+		}
+		CloseProps()
+		// term.CurUp(1)
+	}
+
+	moveUp = bloc.Series.Len() / 2
+
+	defer func() {
+		// Show cursor.
+		fmt.Printf("\033[?25h")
+	}()
+
+	// RestoreCurPos()
+
+	for {
+		ascii, keyCode, err := GetChar()
+
+		if (ascii == 3 || ascii == 27) || err != nil {
+			//fmt.Println()
+			ShowCur()
+			return nil, true
+		}
+
+		if ascii == 13 {
+			//fmt.Println()
+			return env.Word{idents[curr]}, false
+		}
+
+		if ascii == 77 || ascii == 109 {
+			if mode == 0 {
+				mode = 1
+			} else {
+				mode = 0
+			}
+			goto DODO1
+		}
+
+		if keyCode == 40 {
+			curr++
+			if curr > len-1 {
+				curr = 0
+			}
+			goto DODO1
+		} else if keyCode == 38 {
+			curr--
+			if curr < 0 {
+				curr = len - 1
+			}
+			goto DODO1
+		}
+	}
+}
+
 func DisplayDict(bloc env.Dict, idx *env.Idxs) (env.Object, bool) {
 	HideCur()
 	curr := 0
@@ -516,6 +602,15 @@ func CloseProps() {
 }
 func CurUp(n int) {
 	fmt.Printf("\x1b[%dA", n)
+}
+func CurDown(n int) {
+	fmt.Printf("\x1b[%dB", n)
+}
+func CurRight(n int) {
+	fmt.Printf("\x1b[%dC", n)
+}
+func CurLeft(n int) {
+	fmt.Printf("\x1b[%dD", n)
 }
 
 // From https://github.com/paulrademacher/climenu/blob/master/getchar.go

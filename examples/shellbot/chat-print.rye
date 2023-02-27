@@ -1,0 +1,48 @@
+
+term: context {
+
+	extend: fn { n c } { produce n "" { .concat c } }
+	line: fn1 { .extend "─" }
+		
+	timely-print: fn1 { .for { .prin , sleep 50 } }
+
+	draw-box: fn { cols rows offset } {
+		right offset , "╭" |+ line cols + 3 |+ "╮" |print
+		for range 1 rows {
+			right offset , "│" |+ extend cols + 3 " " |+ "│" |print
+		}
+		right offset , either offset > 0 {
+			"╰" |+ line cols + 3 |+ "┴" |print
+		} {
+			"┴" |+ line cols + 3 |+ "╯" |print
+		}
+	}
+	
+	chat: fn { t } {
+		.length? |draw-box 1 0
+		up 2 , right 2 , timely-print t , down 1 , print ""
+	}
+
+	chat-lines: fn { ts } {
+		.map { .length? } |max |draw-box rows: length? ts 0
+		up rows + 1
+		for ts { .pass { right 2 } |timely-print print "" }
+		print ""
+	}
+
+	choice: fn { ch } {
+		draw-box 50 2 60 , up 3
+		tui\selection ch 62
+	}
+	
+	up:    fn1 { .esc-val "[(*)A" |prin }
+	down:  fn1 { .esc-val "[(*)B" |prin }
+	right: fn1 { .esc-val "[(*)C" |prin }
+	left:  fn1 { .esc-val "[(*)D" |prin }
+	bold:  does { esc "[1m" |prin }
+	reset:  does { esc "[22m" |prin }
+
+	color\red: does { esc "[31m" |prin }
+	color\default:  does { esc "[39m" |prin }
+	color\reset:  does { esc "[0m" |prin }
+}

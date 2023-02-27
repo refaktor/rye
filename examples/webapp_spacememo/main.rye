@@ -6,6 +6,8 @@
 ;  * word with id, id_collection, key, word
 ;  * sample with id, text, full text index
 
+do load %framework.rye
+
 words-resource: context {
  
 	no-auth: { 401 "Unauthenticated" }
@@ -21,9 +23,9 @@ words-resource: context {
 
 handle-api: fn { w r } {
 	handle-web-resources w r context {
-		words: eval { words-resource "Handles words database" }
-;		collection: eval { collection-resource "Collections of words" }
-		account: eval { account-resource "Handles user accounts" }
+		words: evalu { words-resource "Handles words database" }
+;		collection: evalu { collection-resource "Collections of words" }
+		account: evalu { account-resource "Handles user accounts" }
 	}
 }
 

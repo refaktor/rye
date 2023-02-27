@@ -1,0 +1,32 @@
+
+do load %chat-tui.rye
+
+do-in chat-tui {
+
+	wrap { print "" sleep 1000 } {
+		color\red prn " Game:" bold  print "Run Run!!" reset color\default
+	}
+	
+	loop 2  {
+		
+		chat "You are in a black cave, you hear a screeching sound. What do you do?"
+
+		choice { fight "You pull out the sword" run "Run as fast as you can" }
+
+		|= 'fight
+		|either {
+
+			chat-lines {
+				"The beast is much too strong"
+				"You sadly die!"
+			}
+
+			return ""
+
+		} {
+			chat "You stop running and look around ..."
+		}
+	}
+
+	chat-lines { "You see the sunlight." "You will live to fight another day!" }
+}

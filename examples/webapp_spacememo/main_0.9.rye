@@ -15,7 +15,7 @@ write-err: fn { err w } { write-header w code? err , write w to-json err }
 write-ok: fn { d w } { write w to-json d }
 
 webfn: fn { spec args body } {
-	fnc args current-context {
+	fnc args current-ctx {
 		set-content-type w "application/json"
 		full-form? r |validate spec
 		|to-context |do-in body
@@ -115,8 +115,8 @@ page-resource: context {
 
 handle-api: fn { w r } {
 	handle-web-resources w r context {
-		page: eval { page-resource "Hanldes pages" }
-		account: eval { account-resource "Handles user accounts" }
+		page: evalu { page-resource "Hanldes pages" }
+		account: evalu { account-resource "Handles user accounts" }
 	}
 }
 

@@ -929,7 +929,35 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
-	"display": {
+	"esc": {
+		Argsn: 1,
+		Doc:   "Creates an escape sequence \033{}",
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg := arg0.(type) {
+			case env.String:
+				return env.String{"\033" + arg.Value}
+			default:
+				return makeError(env1, "Arg 0 not String")
+			}
+			return arg0
+		},
+	},
+	"esc-val": {
+		Argsn: 2,
+		Doc:   "Escapes a value and adds a newline.",
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch base := arg1.(type) {
+			case env.String:
+				vals := arg0.Probe(*env1.Idx)
+				news := strings.ReplaceAll(base.Value, "(*)", vals)
+				return env.String{"\033" + news}
+			default:
+				return makeError(env1, "Arg 0 not String")
+			}
+			return arg0
+		},
+	},
+	"interact": {
 		Argsn: 1,
 		Doc:   "Work in progress Interactively displays a value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -959,6 +987,23 @@ var builtins = map[string]*env.Builtin{
 				}
 			}
 
+			return nil
+		},
+	},
+	"tui\\selection": {
+		Argsn: 2,
+		Doc:   "Work in progress Interactively displays a value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			// This is temporary implementation for experimenting what it would work like at all
+			// later it should belong to the object (and the medium of display, terminal, html ..., it's part of the frontend)
+			term.SaveCurPos()
+			switch bloc := arg0.(type) {
+			case env.Block:
+				obj, esc := term.DisplaySelection(bloc, ps.Idx, int(arg1.(env.Integer).Value))
+				if !esc {
+					return obj
+				}
+			}
 			return nil
 		},
 	},
@@ -1904,6 +1949,44 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"wrap": {
+		Argsn: 2,
+		Doc:   "Accepts a value and a block. It does the block, with value injected, and returns (passes on) the initial value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch wrap := arg0.(type) {
+			case env.Block:
+				switch bloc := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = wrap.Series
+					EvalBlockInj(ps, arg0, true)
+					if ps.ReturnFlag {
+						return ps.Res
+					}
+
+					ps.Ser = bloc.Series
+					EvalBlockInj(ps, arg0, true)
+					if ps.ReturnFlag {
+						return ps.Res
+					}
+					res := ps.Res
+
+					ps.Ser = wrap.Series
+					EvalBlockInj(ps, arg0, true)
+					ps.Ser = ser
+					if ps.ReturnFlag {
+						return ps.Res
+					}
+					return res
+				default:
+					return makeError(ps, "Arg 2 should be Block.")
+				}
+			default:
+				return makeError(ps, "Arg 2 should be Block.")
+			}
+		},
+	},
+
 	"keep": {
 		Argsn: 3,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2106,8 +2189,8 @@ var builtins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = code.Series
-					for i := 0; i < len(block.Value); i++ {
-						ps = EvalBlockInj(ps, env.String{string(block.Value[i])}, true)
+					for _, ch := range block.Value {
+						ps = EvalBlockInj(ps, env.String{string(ch)}, true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -2349,6 +2432,75 @@ var builtins = map[string]*env.Builtin{
 						}
 					}
 					return *env.NewList(newl)
+				}
+			}
+			return nil
+		},
+	},
+
+	"map\\pos": {
+		Argsn: 3,
+		Doc:   "Maps values of a block to a new block by evaluating a block of code.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch list := arg0.(type) {
+			case env.Block:
+				switch accu := arg1.(type) {
+				case env.Word:
+					switch block := arg2.(type) {
+					case env.Block, env.Builtin:
+						l := list.Series.Len()
+						newl := make([]env.Object, l)
+						switch block := block.(type) {
+						case env.Block:
+							ser := ps.Ser
+							ps.Ser = block.Series
+							for i := 0; i < l; i++ {
+								ps.Ctx.Set(accu.Index, env.Integer{int64(i + 1)})
+								ps = EvalBlockInj(ps, list.Series.Get(i), true)
+								if ps.ErrorFlag {
+									return ps.Res
+								}
+								newl[i] = ps.Res
+								ps.Ser.Reset()
+							}
+							ps.Ser = ser
+						case env.Builtin:
+							for i := 0; i < l; i++ {
+								newl[i] = DirectlyCallBuiltin(ps, block, list.Series.Get(i), nil)
+							}
+						}
+						return *env.NewBlock(*env.NewTSeries(newl))
+					}
+				}
+			case env.List:
+				switch block := arg1.(type) {
+				case env.Block, env.Builtin:
+					l := len(list.Data)
+					newl := make([]interface{}, l)
+					switch accu := arg1.(type) {
+					case env.Word:
+						switch block := block.(type) {
+						case env.Block:
+							ser := ps.Ser
+							ps.Ser = block.Series
+							for i := 0; i < l; i++ {
+								ps.Ctx.Set(accu.Index, env.Integer{int64(i + 1)})
+								ps = EvalBlockInj(ps, JsonToRye(list.Data[i]), true)
+								if ps.ErrorFlag {
+									return ps.Res
+								}
+								newl[i] = ps.Res
+								ps.Ser.Reset()
+							}
+							ps.Ser = ser
+						case env.Builtin:
+							for i := 0; i < l; i++ {
+								newl[i] = DirectlyCallBuiltin(ps, block, JsonToRye(list.Data[i]), nil)
+							}
+						}
+						return *env.NewList(newl)
+					}
 				}
 			}
 			return nil

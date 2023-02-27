@@ -1,4 +1,5 @@
-// +build b_mysql
+//go:build b_psql
+// +build b_psql
 
 package evaldo
 

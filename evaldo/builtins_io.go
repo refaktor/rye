@@ -194,6 +194,31 @@ func __fs_write(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 e
 	return *env.NewError("Failed")
 }
 
+func __copy(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+	switch r := arg0.(type) {
+	case env.Native:
+		switch w := arg1.(type) {
+		case env.Native:
+			// Writer , Reader
+			_, err := io.Copy(w.Value.(io.Writer), r.Value.(io.Reader))
+			if err != nil {
+				env1.FailureFlag = true
+				return *env.NewError(err.Error())
+			}
+			return arg0
+		default:
+			env1.FailureFlag = true
+			return *env.NewError("Failed 2")
+		}
+	default:
+		env1.FailureFlag = true
+		return *env.NewError("Failed 3")
+
+	}
+	env1.FailureFlag = true
+	return *env.NewError("Failed 4	")
+}
+
 func __https_s_get(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch f := arg0.(type) {
 	case env.Uri:
@@ -459,6 +484,27 @@ var Builtins_io = map[string]*env.Builtin{
 		Argsn: 1,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __open_reader(env1, arg0, arg1, arg2, arg3, arg4)
+		},
+	},
+
+	"stdin": {
+		Argsn: 0,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return *env.NewNative(env1.Idx, os.Stdin, "rye-reader")
+		},
+	},
+
+	"stdout": {
+		Argsn: 0,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return *env.NewNative(env1.Idx, os.Stdout, "rye-writer")
+		},
+	},
+
+	"rye-reader//copy": {
+		Argsn: 2,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __copy(env1, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
