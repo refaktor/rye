@@ -18,7 +18,9 @@
    * [Questions, contact](#related-links)
 
 
-*visit **[our blog](https://ryelang.blogspot.com/)** for latest examples and development updates*
+*visit **[our blog](https://ryelang.blogspot.com/)** and join our **[reddit group](https://reddit.com/r/ryelang/)** for latest examples and development updates*
+
+
 
 ## What is Rye
 
@@ -241,6 +243,10 @@ Most of them are more proof of concepts than full implementations. But it's not 
 
 For most up-to date information on the language and it's development visit our **[blog](http://ryelang.blogspot.com/)**.
 
+### Ryelang reddit
+
+This is another place for updates and also potental discussions. You are welcome to join **[our reddit group](https://reddit.com/r/ryelang/)**. 
+
 ### Github
 
 If code speaks to you, our Github page is the central location for all things Rye. You are welcome to collaborate, post Issues or PR-s, there is tons of things to do and improve :)
@@ -277,38 +283,21 @@ docker run -ti refaktor/rye
 
 ### Building Rye
 
-Use official documentation to install latest Golang https://go.dev/doc/install
+Use official documentation or lines below to install Golang 1.19.3 https://go.dev/doc/install
 
-    cd /tmp
-    wget https://go.dev/dl/go1.17.5.linux-amd64.tar.gz
-    tar -C /usr/local -xzf go1.17.5.linux-amd64.tar.gz
+    wget https://go.dev/dl/go1.19.3.linux-amd64.tar.gz
+    rm -rf /usr/local/go && tar -C /usr/local -xzf go1.19.3.linux-amd64.tar.gz
     export PATH=$PATH:/usr/local/go/bin
-
-Check Go version.
-
     go version
-    go version go1.17.5 linux/amd64
+    
+Clone the main branch from the Rye repository. There is a submodule (a different repo) for contributed packages, hence the additional flag:
 
-Create the ~/go/src directory
-
-    mkdir -p ~/go/src && cd ~/go/src
-
-Clone the main branch from the Rye repository
-
-    git clone https://github.com/refaktor/rye.git && cd rye
-
-Rye doesn't use go modules yet, but "go get"
-
-    export GO111MODULE=auto
+    git clone --recurse-submodules https://github.com/refaktor/rye.git && cd rye
 
 Go get the dependencies for tiny build
 
-    go get github.com/refaktor/go-peg  # PEG parser (rye loader)
-    go get github.com/refaktor/liner   # library for REPL
-    go get golang.org/x/net/html       # for html parsin - will probably remove for b_tiny
-    go get github.com/pkg/profile      # for runtime profiling - will probably remove for b_tiny
-    go get github.com/pkg/term         # 
-
+    bash go-get-tiny.bash
+    
 Build the tiny version of Rye
 
     go build -tags "b_tiny"
@@ -317,9 +306,13 @@ Run the rye file:
 
     ./rye hello.rye
 
-Run the REPL
+Run the Rye Console
 
     ./rye
+
+Install build-esential if you don't already have it, for packages that require cgo (like sqlite):
+
+    sudo apt install build-essential
 
 # Related links
 
