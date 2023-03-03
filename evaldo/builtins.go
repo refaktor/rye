@@ -1007,6 +1007,23 @@ var builtins = map[string]*env.Builtin{
 			return nil
 		},
 	},
+	"tui\\input": {
+		Argsn: 2,
+		Doc:   "Work in progress Interactively displays a value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			// This is temporary implementation for experimenting what it would work like at all
+			// later it should belong to the object (and the medium of display, terminal, html ..., it's part of the frontend)
+			term.SaveCurPos()
+			switch bloc := arg0.(type) {
+			case env.Integer:
+				obj, esc := term.DisplayInputField(int(bloc.Value), int(arg1.(env.Integer).Value))
+				if !esc {
+					return obj
+				}
+			}
+			return nil
+		},
+	},
 	"mold": {
 		Argsn: 1,
 		Doc:   "Turn value to it's string representation.",
@@ -1430,6 +1447,20 @@ var builtins = map[string]*env.Builtin{
 			case env.String:
 				// fmt.Print("Get Input: \033[1m" + name.Value + "\033[0m")
 				DoGeneralInput(ps, name.Value)
+				return ps.Res
+			}
+			return nil
+		},
+	},
+
+	"input-field": {
+		Argsn: 1,
+		Doc:   "Stops execution and gives you a Rye console, to test the code inside environment.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch name := arg0.(type) {
+			case env.String:
+				// fmt.Print("Get Input: \033[1m" + name.Value + "\033[0m")
+				DoGeneralInputField(ps, name.Value)
 				return ps.Res
 			}
 			return nil

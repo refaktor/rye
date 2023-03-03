@@ -6,10 +6,14 @@ do-in chat-tui {
 	wrap { print "" sleep 1000 } {
 		color\red prn " Game:" bold  print "Run Run!!" reset color\default
 	}
+
+	chat "What is thy name, brave explorer?"
+
+	name: input 25
 	
 	loop 2  {
 		
-		chat "You are in a black cave, you hear a screeching sound. What do you do?"
+		chat "You are in a black cave " + name + ", you hear a screeching sound. What do you do?"
 
 		choice { fight "You pull out the sword" run "Run as fast as you can" }
 

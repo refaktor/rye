@@ -20,19 +20,33 @@ chat-tui: context {
 	
 	chat: fn { t } {
 		.length? |draw-box 1 0
-		up 2 , right 2 , gradual-print t , down 1 , print ""
+		up 2 , right 3 , gradual-print t , down 1 , print ""
+	}
+
+	chat-of: fn { t name } {
+		.pass { color\yellow }
+		|length? |draw-box 1 0
+		, print name
+		up 3 , right 3 , gradual-print t , down 1 , print "" , print ""
+		color\reset
 	}
 
 	chat-lines: fn { ts } {
 		.map { .length? } |max |draw-box rows: length? ts 0
 		up rows + 1
-		for ts { .pass { right 2 } |gradual-print print "" }
+		for ts { .pass { right 3 } |gradual-print sleep 400 print "" }
 		print ""
 	}
 
 	choice: fn { ch } {
-		draw-box 30 2 60 , up 3
-		tui\selection ch 62
+		draw-box 60 2 40 , up 3
+		tui\selection ch 42
+	}
+
+	input: fn { len } {
+		draw-box len + 3 1 60 , up 2
+		tui\input 62 len
+		|pass { down 1 }
 	}
 	
 	up:    fn1 { .esc-val "[(*)A" |prin }
@@ -42,7 +56,14 @@ chat-tui: context {
 	bold:  does { esc "[1m"  |prin }
 	reset: does { esc "[22m" |prin }
 
+	color\black:     does { esc "[30m" |prin }
 	color\red:     does { esc "[31m" |prin }
+	color\green:     does { esc "[32m" |prin }
+	color\yellow:     does { esc "[33m" |prin }
+	color\blue:     does { esc "[34m" |prin }
+	color\magenta:     does { esc "[35m" |prin }
+	color\cyan:     does { esc "[36m" |prin }
+	color\white:     does { esc "[37m" |prin }
 	color\default: does { esc "[39m" |prin }
 	color\reset:   does { esc "[0m"  |prin }
 }

@@ -150,7 +150,7 @@ DODO1:
 		}
 
 		if ascii == 13 {
-			//fmt.Println()
+			fmt.Println()
 			return env.Word{idents[curr]}, false
 		}
 
@@ -175,6 +175,65 @@ DODO1:
 				curr = len - 1
 			}
 			goto DODO1
+		}
+	}
+}
+
+func DisplayInputField(right int, mlen int) (env.Object, bool) {
+	// HideCur()
+	//curr := 0
+	moveUp := 0
+	text := ""
+	//DODO1:
+	if moveUp > 0 {
+		CurUp(moveUp)
+	}
+
+	defer func() {
+		// Show cursor.
+		// fmt.Printf("\033[?25h")
+	}()
+
+	// RestoreCurPos()
+	//fmt.Println(".")
+	//fmt.Println(".")
+	//CurUp(2)
+
+	CurRight(right)
+
+	SaveCurPos()
+
+	for {
+		letter, ascii, keyCode, err := GetChar2()
+		//		letter := fmt.Scan()
+		// RestoreCurPos()
+		//CurDown(1)
+		//fmt.Print("-----------")
+		//fmt.Print(ascii)
+		//CurUp(1)
+		if (ascii == 3 || ascii == 27) || err != nil {
+			// ShowCur()
+			return nil, true
+		} else if (ascii == 127) || err != nil {
+			text = text[0 : len(text)-1]
+			RestoreCurPos()
+			fmt.Print("                  ")
+			RestoreCurPos()
+			fmt.Print(text)
+		} else if ascii == 13 {
+			fmt.Println("")
+			fmt.Println("")
+			return env.String{text}, false
+		} else {
+			if len(text) < mlen {
+				text += letter
+				RestoreCurPos()
+				fmt.Print(text)
+			}
+		}
+
+		if keyCode == 40 {
+		} else if keyCode == 38 {
 		}
 	}
 }
@@ -647,6 +706,47 @@ func GetChar() (ascii int, keyCode int, err error) {
 		ascii = int(bytes[0])
 	} else {
 		// Two characters read??
+	}
+	t.Restore()
+	t.Close()
+	return
+}
+
+func GetChar2() (letter string, ascii int, keyCode int, err error) {
+	t, _ := term.Open("/dev/tty")
+	term.RawMode(t)
+	bytes := make([]byte, 3)
+
+	var numRead int
+	numRead, err = t.Read(bytes)
+	if err != nil {
+		return
+	}
+	if numRead == 3 && bytes[0] == 27 && bytes[1] == 91 {
+		// Three-character control sequence, beginning with "ESC-[".
+
+		// Since there are no ASCII codes for arrow keys, we use
+		// Javascript key codes.
+		if bytes[2] == 65 {
+			// Up
+			keyCode = 38
+		} else if bytes[2] == 66 {
+			// Down
+			keyCode = 40
+		} else if bytes[2] == 67 {
+			// Right
+			keyCode = 39
+		} else if bytes[2] == 68 {
+			// Left
+			keyCode = 37
+		}
+	} else if numRead == 1 {
+		ascii = int(bytes[0])
+		letter = string(bytes[0])
+	} else if numRead == 2 {
+		letter = string(bytes[0:2])
+	} else if numRead == 3 {
+		letter = string(bytes)
 	}
 	t.Restore()
 	t.Close()

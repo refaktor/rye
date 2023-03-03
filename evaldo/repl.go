@@ -333,3 +333,13 @@ func DoGeneralInput(es *env.ProgramState, prompt string) {
 		log.Print("Error reading line: ", err)
 	}
 }
+
+func DoGeneralInputField(es *env.ProgramState, prompt string) {
+	line := liner.NewLiner()
+	defer line.Close()
+	if code, err := line.SimpleTextField(prompt, 5); err == nil {
+		es.Res = env.String{code}
+	} else {
+		log.Print("Error reading line: ", err)
+	}
+}
