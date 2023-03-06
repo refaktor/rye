@@ -1,0 +1,19 @@
+
+; Serve hello world
+
+rye .needs { http }
+
+new-server ":8081"
+|handle "/hello" fn { w r } { .write "Hello world" }
+|serve
+
+
+
+
+
+
+; or 
+; |handle "/hello" "Hello world?"
+
+; or
+; handle "/hello" read %hello.txt

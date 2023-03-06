@@ -1,0 +1,29 @@
+
+; Serve static files on /static/ route
+; and offer file upload on /upload
+
+rye .needs { http }
+
+; generate path in uploads dir using curr. time,
+; file extension. example: uploads/2023-03-06013601.png
+
+gen-path: fn1 {
+	.filename? .file-ext? :ext
+	now .to-string .replace-all* regexp "[ :]" ""
+	|concat* "uploads/" |+ ext |to-file 
+}
+
+; handle upload
+
+upload: fn { w r } {
+	parse-multipart-form! r
+	form-file? r "img" |set [ file headers ]
+	new-file: create gen-path headers 
+	copy file new-file |^check { write w "Error" }
+	write w "OK"
+}
+
+new-server ":8080"
+|handle "/" new-static-handler %www
+|handle "/upload" ?upload
+|serve

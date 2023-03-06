@@ -9,10 +9,11 @@ import (
 	"io"
 	//"context"
 	"fmt"
+	"mime/multipart"
 	"net/http"
 	"net/url"
-
 	"rye/env"
+	"strings"
 
 	//"time"
 	//"golang.org/x/time/rate"
@@ -72,6 +73,21 @@ var Builtins_http = map[string]*env.Builtin{
 		},
 	},
 
+	"Go-server//serve\\port": {
+		Argsn: 1,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch host := arg0.(type) {
+			case env.String:
+				http.ListenAndServe(host.Value, nil)
+				return arg0
+			default:
+				env1.FailureFlag = true
+				return env.NewError("A0 should be string")
+			}
+
+		},
+	},
+
 	"Go-server//handle": {
 		Argsn: 3,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -93,13 +109,16 @@ var Builtins_http = map[string]*env.Builtin{
 						CallFunctionArgs2(handler, ps, *env.NewNative(ps.Idx, w, "Go-server-response-writer"), *env.NewNative(ps.Idx, r, "Go-server-request"), nil)
 					})
 					return arg0
+				case env.Native:
+					http.Handle(path.Value, handler.Value.(http.Handler))
+					return arg0
 				default:
 					ps.FailureFlag = true
-					return env.NewError("arg1 should be string or function")
+					return env.NewError("A1 should be string or function")
 				}
 			default:
 				ps.FailureFlag = true
-				return env.NewError("arg0 should be string")
+				return env.NewError("A0 should be Native")
 			}
 		},
 	},
@@ -450,13 +469,28 @@ var Builtins_http = map[string]*env.Builtin{
 						return env.NewError("couldn't read form file")
 					}
 					pair := make([]env.Object, 2)
-					pair[0] = env.NewNative(ps.Idx, file, "rye-multipart-file")
-					pair[1] = env.NewNative(ps.Idx, handler, "rye-multipart-handler")
+					pair[0] = *env.NewNative(ps.Idx, file, "rye-reader")
+					pair[1] = *env.NewNative(ps.Idx, handler, "rye-multipart-header")
 					return *env.NewBlock(*env.NewTSeries(pair))
 				default:
 					ps.FailureFlag = true
 					return env.NewError("second arg should be String")
 				}
+			default:
+				ps.FailureFlag = true
+				return env.NewError("first arg should be Native")
+			}
+		},
+	},
+
+	"rye-multipart-header//filename?": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch req := arg0.(type) {
+			case env.Native:
+				r := req.Value.(*multipart.FileHeader)
+				return env.String{r.Filename}
+
 			default:
 				ps.FailureFlag = true
 				return env.NewError("first arg should be Native")
@@ -711,4 +745,49 @@ var Builtins_http = map[string]*env.Builtin{
 			},
 		},
 	*/
+
+	// Serving static files
+
+	"new-http-dir": {
+		Argsn: 1,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch addr := arg0.(type) {
+			case env.Uri:
+				path := strings.Split(addr.Path, "://")
+				return *env.NewNative(env1.Idx, http.Dir(path[1]), "Go-http-dir")
+			default:
+				return makeError(env1, "Arg 1 isn't Uri")
+			}
+		},
+	},
+	"new-static-handler": {
+		Argsn: 1,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch addr := arg0.(type) {
+			case env.Uri:
+				path := strings.Split(addr.Path, "://")
+				return *env.NewNative(env1.Idx, http.FileServer(http.Dir(path[1])), "Http-handler")
+			default:
+				return makeError(env1, "Arg 1 isn't Native")
+			}
+
+		},
+	},
+	"Http-handler//strip-prefix": {
+		Argsn: 2,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch prefix := arg1.(type) {
+			case env.String:
+				switch servr := arg0.(type) {
+				case env.Native:
+					return *env.NewNative(env1.Idx, http.StripPrefix(prefix.Value, servr.Value.(http.Handler)), "Http-handler")
+				default:
+					return makeError(env1, "Arg 1 isn't Native")
+				}
+			default:
+				return makeError(env1, "Arg 1 isn't Native")
+			}
+
+		},
+	},
 }

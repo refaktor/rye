@@ -294,6 +294,15 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"to-file": {
+		Argsn: 1,
+		Doc:   "Takes a Rye value and returns a string representation.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return *env.NewUri1(ps.Idx, "file://"+arg0.(env.String).Value) // TODO turn to switch
+		},
+	},
+
 	"type?": {
 		Argsn: 1,
 		Doc:   "Returns true if value is string.",

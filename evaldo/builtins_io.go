@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"rye/env"
 	"strings"
 
@@ -46,6 +47,20 @@ func __open(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.O
 			return makeError(env1, err.Error())
 		}
 		return *env.NewNative(env1.Idx, file, "rye-file")
+	default:
+		return makeError(env1, "Arg 1 isn't Uri")
+	}
+}
+
+func __openFile(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+	switch s := arg0.(type) {
+	case env.Uri:
+		path := strings.Split(s.Path, "://")
+		file, err := os.OpenFile(path[1], os.O_CREATE, 0666)
+		if err != nil {
+			return makeError(env1, err.Error())
+		}
+		return *env.NewNative(env1.Idx, file, "rye-writer")
 	default:
 		return makeError(env1, "Arg 1 isn't Uri")
 	}
@@ -195,10 +210,13 @@ func __fs_write(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 e
 }
 
 func __copy(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+	fmt.Println(arg0)
 	switch r := arg0.(type) {
 	case env.Native:
+		fmt.Println("***A")
 		switch w := arg1.(type) {
 		case env.Native:
+			fmt.Println("***B")
 			// Writer , Reader
 			_, err := io.Copy(w.Value.(io.Writer), r.Value.(io.Reader))
 			if err != nil {
@@ -476,6 +494,23 @@ var Builtins_io = map[string]*env.Builtin{
 		Argsn: 1,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __create(env1, arg0, arg1, arg2, arg3, arg4)
+		},
+	},
+
+	"file-ext?": {
+		Argsn: 1,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s := arg0.(type) {
+			case env.Uri:
+				path := strings.Split(s.Path, "://")
+				ext := filepath.Ext(path[1])
+				return env.String{ext}
+			case env.String:
+				ext := filepath.Ext(s.Value)
+				return env.String{ext}
+			default:
+				return makeError(env1, "Arg 1 isn't Uri")
+			}
 		},
 	},
 

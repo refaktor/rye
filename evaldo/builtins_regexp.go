@@ -84,4 +84,27 @@ var Builtins_regexp = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	"regexp//replace-all": {
+		Argsn: 3,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch re := arg0.(type) {
+			case env.Native:
+				switch val := arg1.(type) {
+				case env.String:
+					switch replac := arg2.(type) {
+					case env.String:
+						res := re.Value.(*regexp.Regexp).ReplaceAllString(val.Value, replac.Value)
+						return env.String{res}
+					default:
+						return MakeError(env1, "Arg2 not Native")
+					}
+				default:
+					return MakeError(env1, "Arg2 not Native")
+				}
+			default:
+				return MakeError(env1, "Arg1 not String")
+			}
+		},
+	},
 }

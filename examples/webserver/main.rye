@@ -1,0 +1,59 @@
+
+; RYE HTTP SERVER COOKBOOK 
+
+; declare that your code needs http module
+
+rye .needs { http }
+
+; serve hello world
+
+new-server ":8081"
+|handle "/hello" fn { w r } { .write "Hello world" }
+|serve
+
+; serve all static files from www folder
+
+new-server ":8080"
+|handle "/" new-static-handler %www ; TODO rename, integrate http-dir
+|serve
+
+; serve static files on /static/ route
+; and dynamic content on   
+
+sh: new-static-handler %static
+
+new-server ":8082"
+|handle "/static/" sh
+|handle "/" fn { w r } { .write now }
+|serve
+
+; serve information from sqlite database
+
+db: open sqlite://main.db
+
+get-user: fn { w r } {
+	query? r 'uid :id
+	sql db { select * from users where id = ?id }
+	|to-json |write* w
+}
+
+new-server ":8080"
+|handle "/user/" get-user
+|serve
+
+; serve static files on /static/ route
+; and offer file upload on /upload
+
+upload: fn { w r } {
+	parse-multipart-form r
+	set* [ file handler ] form-file? "img"
+	holder: create %image.png
+	copy holder file
+}
+
+new-server ":8080"
+|handle "/" new-static-handler %www
+|handle "/upload" ?upload
+|serve
+
+
