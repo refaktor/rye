@@ -1,0 +1,52 @@
+
+; Websocket server demo
+
+rye .needs { http }
+
+new-server ":9090"
+|handle-ws "/echo" fn { s ctx } { forever { read s |write* s } }
+|handle-ws "/captcha" fn { s ctx } { 
+	write s "Hasta la vista," 
+	forever {
+		read s |switch {
+			"baby" { "*Welcome back, John Connor*" }
+			_      { "Beep Boop" }
+		} |write* s } }
+|serve
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

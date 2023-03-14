@@ -27,3 +27,8 @@ new-server ":8080"
 |handle "/" new-static-handler %www
 |handle "/upload" ?upload
 |serve
+
+
+
+
+

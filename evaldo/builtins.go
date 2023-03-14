@@ -1298,6 +1298,13 @@ var builtins = map[string]*env.Builtin{
 						any_found = true
 						code = bloc.Series.Get(i + 1)
 					}
+					if ev.Type() == env.VoidType {
+						fmt.Println("VOID")
+						if !any_found {
+							code = bloc.Series.Get(i + 1)
+							any_found = true
+						}
+					}
 				}
 				if any_found {
 					switch cc := code.(type) {
@@ -1322,6 +1329,7 @@ var builtins = map[string]*env.Builtin{
 						return env.NewError("Malformed switch block")
 					}
 				}
+
 				return arg0
 			default:
 				// if it's not a block we return error for now
