@@ -1,0 +1,57 @@
+
+
+
+; Lists are called Blocks (they are the same we use for code)
+
+list-of-ints: { 1 2 3 4 5 }
+
+mixed: { 1 "Emily" emily@example.com }
+
+; Length
+
+length? mixed             ; any function can be called in classic way
+mixed .length?            ; or as an ".op-word"
+                          
+sum list-of-ints
+max list-of-ints
+
+; Retrieving elements or slices
+
+first mixed
+rest mixed
+mixed .head 5
+mixed .tail 3
+
+; Rye generally uses functional operations that create new lists
+
+; Adding to list - create a new list with added value
+
+new-list: list-of-ints + { 6 }
+new-list: { 99 } + list-of-ints
+
+; Rye currently doesn't have a way to modify elements of a list
+
+
+; Doubling all values
+
+list-of-ints .map { * 2 }
+
+
+
+
+
+; removing all odd values
+
+list-of-ints .purge { .factor-of 2 |not }   ; or
+
+list-of-ints .filter { .factor-of 2 }       ; or
+
+fold list-of-ints 'ac { } { ^when { .factor-of 2 } { .attach ac } ac }
+
+; or if you really need in-place op. because of optimisation
+
+purge! list-of-ints { .factor-of 2 |not }
+
+; functions that/ change values in-place have "!" at the end
+
+

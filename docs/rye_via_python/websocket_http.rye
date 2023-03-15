@@ -1,0 +1,15 @@
+
+rye .needs { http }
+
+new-server ":9090"
+|handle "/" read %websocket_http.html
+|handle-ws "/echo" fn { s ctx } {
+	forever { read s |write* s }
+}
+|serve
+
+
+
+
+
+
