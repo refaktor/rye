@@ -62,6 +62,7 @@ require (
 	github.com/pkg/term v1.1.0 // indirect
 	github.com/refaktor/go-peg v0.0.0-20220116201714-31e3dfa8dc7d // indirect
 	github.com/refaktor/liner v1.2.3 // indirect
+	github.com/sashabaranov/go-openai v1.5.8 // indirect
 	github.com/spf13/cobra v1.6.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/webview/webview v0.0.0-20220816141928-2ee04ccd0530 // indirect
