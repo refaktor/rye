@@ -1237,12 +1237,14 @@ func NewList(data []interface{}) *List {
 func NewListFromSeries(block TSeries) List {
 	data := make([]interface{}, block.Len())
 	for block.Pos() < block.Len() {
-		k1 := block.Pop()
 		i := block.Pos()
+		k1 := block.Pop()
 		switch k := k1.(type) {
 		case String:
 			data[i] = k.Value
 		case Integer:
+			data[i] = k.Value
+		case Decimal:
 			data[i] = k.Value
 		}
 	}

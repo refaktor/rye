@@ -1,0 +1,23 @@
+
+read %smallvecs.txt
+|split newline
+; remove the header
+|rest
+; remove the empty line
+|purge { .length? = 0 }
+; map to vectors 
+|map { .load .vector } :vecs
+
+; calculate euclidean norms, lengths
+.for { .norm .print }
+map vecs { .norm } |vector :norms
+
+; get mean and std deviation
+.with { .mean .prn , .std-deviation .print }
+
+; calculate the cosine similarity
+for vecs { .cosine vector { 0 1 1 } |print }
+
+
+
+

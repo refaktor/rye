@@ -35,6 +35,7 @@ require (
 	github.com/blevesearch/zapx/v14 v14.3.4 // indirect
 	github.com/blevesearch/zapx/v15 v15.3.4 // indirect
 	github.com/chzyer/readline v1.5.1 // indirect
+	github.com/drewlanenga/govector v0.0.0-20220726163947-b958ac08bc93 // indirect
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/go-gomail/gomail v0.0.0-20160411212932-81ebce5c23df // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect

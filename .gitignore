@@ -8,6 +8,9 @@ ryel
 *.so
 *.dylib
 data.txt
+.apitoken
+._*
+.token
 
 # Test binary, built with `go test -c`
 *.test

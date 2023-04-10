@@ -4334,6 +4334,18 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"list": {
+		Argsn: 1,
+		Doc:   "Constructs a List from the Block of values.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg0.(type) {
+			case env.Block:
+				return env.NewListFromSeries(bloc.Series)
+			}
+			return nil
+		},
+	},
+
 	// BASIC ENV / Dict FUNCTIONS
 	"_->": {
 		Argsn: 2,
@@ -5096,6 +5108,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_structures, ps, "structs")
 	RegisterBuiltins2(Builtins_telegrambot, ps, "telegram")
 	RegisterBuiltins2(Builtins_spreadsheet, ps, "spreadsheet")
+	RegisterBuiltins2(Builtins_vector, ps, "vector")
 }
 
 var BuiltinNames map[string]int
