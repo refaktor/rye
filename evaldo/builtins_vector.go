@@ -34,132 +34,96 @@ var Builtins_vector = map[string]*env.Builtin{
 				if err != nil {
 					return MakeError(env1, err.Error())
 				}
-				return *env.NewNative(env1.Idx, val, "vector")
+				return *env.NewVector(val)
 			default:
 				return MakeError(env1, "Arg1 not String")
 			}
 		},
 	},
 
-	"vector//len": {
+	"norm": {
 		Argsn: 1,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
-			case env.Native:
-				return env.Integer{int64(val.Value.(govector.Vector).Len())}
+			case env.Vector:
+				return env.Decimal{govector.Norm(val.Value, 2.0)}
 			default:
-				return MakeError(env1, "Arg1 not String")
+				return MakeError(env1, "Arg1 not Vector")
 			}
 		},
 	},
 
-	"vector//norm": {
+	"std-deviation": {
 		Argsn: 1,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
-			case env.Native:
-				return env.Decimal{govector.Norm(val.Value.(govector.Vector), 2.0)}
+			case env.Vector:
+				return env.Decimal{val.Value.Sd()}
 			default:
 				return MakeError(env1, "Arg1 not String")
 			}
 		},
 	},
 
-	"vector//std-deviation": {
-		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch val := arg0.(type) {
-			case env.Native:
-				return env.Decimal{val.Value.(govector.Vector).Sd()}
-			default:
-				return MakeError(env1, "Arg1 not String")
-			}
-		},
-	},
-
-	"vector//mean": {
-		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch val := arg0.(type) {
-			case env.Native:
-				return env.Decimal{val.Value.(govector.Vector).Mean()}
-			default:
-				return MakeError(env1, "Arg1 not String")
-			}
-		},
-	},
-
-	"vector//sum": {
-		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch val := arg0.(type) {
-			case env.Native:
-				return env.Decimal{val.Value.(govector.Vector).Sum()}
-			default:
-				return MakeError(env1, "Arg1 not String")
-			}
-		},
-	},
-
-	"vector//cosine": {
+	"cosine-similarity": {
 		Argsn: 2,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch v1 := arg0.(type) {
-			case env.Native:
+			case env.Vector:
 				switch v2 := arg1.(type) {
-				case env.Native:
-					res, err := govector.Cosine(v1.Value.(govector.Vector), v2.Value.(govector.Vector))
+				case env.Vector:
+					res, err := govector.Cosine(v1.Value, v2.Value)
 					if err != nil {
 						return MakeError(env1, err.Error())
 					}
 					return env.Decimal{res}
 				default:
-					return MakeError(env1, "Arg2 not Native")
+					return MakeError(env1, "Arg2 not Vector")
 				}
 			default:
-				return MakeError(env1, "Arg1 not Native")
+				return MakeError(env1, "Arg1 not Vector")
 			}
 		},
 	},
 
-	"vector//correlation": {
+	"correlation": {
 		Argsn: 2,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch v1 := arg0.(type) {
-			case env.Native:
+			case env.Vector:
 				switch v2 := arg1.(type) {
-				case env.Native:
-					res, err := govector.Cor(v1.Value.(govector.Vector), v2.Value.(govector.Vector))
+				case env.Vector:
+					res, err := govector.Cor(v1.Value, v2.Value)
 					if err != nil {
 						return MakeError(env1, err.Error())
 					}
 					return env.Decimal{res}
 				default:
-					return MakeError(env1, "Arg2 not Native")
+					return MakeError(env1, "Arg2 not Vector")
 				}
 			default:
-				return MakeError(env1, "Arg1 not Native")
+				return MakeError(env1, "Arg1 not Vector")
 			}
 		},
 	},
 
-	"vector//dot-product": {
+	"dot-product": {
 		Argsn: 2,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch v1 := arg0.(type) {
-			case env.Native:
+			case env.Vector:
 				switch v2 := arg1.(type) {
-				case env.Native:
-					res, err := govector.DotProduct(v1.Value.(govector.Vector), v2.Value.(govector.Vector))
+				case env.Vector:
+					res, err := govector.DotProduct(v1.Value, v2.Value)
 					if err != nil {
 						return MakeError(env1, err.Error())
 					}
 					return env.Decimal{res}
 				default:
-					return MakeError(env1, "Arg2 not Native")
+					return MakeError(env1, "Arg2 not Vector")
 				}
 			default:
-				return MakeError(env1, "Arg1 not Native")
+				return MakeError(env1, "Arg1 not Vector")
 			}
 		},
 	},

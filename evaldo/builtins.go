@@ -966,7 +966,7 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
-	"interact": {
+	"display": {
 		Argsn: 1,
 		Doc:   "Work in progress Interactively displays a value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1190,7 +1190,23 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = ser
 					return ps.Res
 				}
-
+			case env.Object:
+				switch bloc2 := arg2.(type) {
+				case env.Object: // TODO , if true value is not block then also false value will be treated as literal for now
+					switch cond := arg0.(type) {
+					case env.Integer:
+						cond1 = cond.Value != 0
+					case env.String:
+						cond1 = cond.Value != ""
+					default:
+						return env.NewError("Error either")
+					}
+					if cond1 {
+						return bloc1
+					} else {
+						return bloc2
+					}
+				}
 			}
 			return nil
 		},
@@ -3114,6 +3130,8 @@ var builtins = map[string]*env.Builtin{
 					}
 				}
 				return env.Decimal{sum / float64(l)}
+			case env.Vector:
+				return env.Decimal{block.Value.Mean()}
 			}
 			return nil
 		},
@@ -3137,6 +3155,8 @@ var builtins = map[string]*env.Builtin{
 					}
 				}
 				return env.Decimal{sum}
+			case env.Vector:
+				return env.Decimal{block.Value.Sum()}
 			}
 			return nil
 		},
@@ -4825,6 +4845,8 @@ var builtins = map[string]*env.Builtin{
 				return env.Integer{int64(len(s1.Rows))}
 			case env.RyeCtx:
 				return env.Integer{int64(s1.GetWords(*ps.Idx).Series.Len())}
+			case env.Vector:
+				return env.Integer{int64(s1.Value.Len())}
 			default:
 				fmt.Println("Error")
 			}
@@ -4872,7 +4894,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"colsum": {
+	"col-sum": {
 		Argsn: 2,
 		Doc:   "Accepts a spreadsheet and a column name and returns a sum of a column.", // TODO -- let it accept a block and list also
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -4901,6 +4923,39 @@ var builtins = map[string]*env.Builtin{
 			return nil
 		},
 	},
+
+	"col-avg": {
+		Argsn: 2,
+		Doc:   "Accepts a spreadsheet and a column name and returns a sum of a column.", // TODO -- let it accept a block and list also
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var name string
+			switch s1 := arg0.(type) {
+			case env.Spreadsheet:
+				switch s2 := arg1.(type) {
+				case env.Word:
+					name = ps.Idx.GetWord(s2.Index)
+				case env.String:
+					name = s2.Value
+				default:
+					ps.ErrorFlag = true
+					return env.NewError("second arg not string")
+				}
+				r, err := s1.Sum_Just(name)
+				if err != nil {
+					ps.ErrorFlag = true
+					return env.NewError(err.Error())
+				}
+				n := s1.NRows()
+				return env.Decimal{r / float64(n)}
+
+			default:
+				ps.ErrorFlag = true
+				return env.NewError("first arg not spreadsheet")
+			}
+			return nil
+		},
+	},
+
 	"A1": {
 		Argsn: 1,
 		Doc:   "Accepts a Spreadsheet and returns the first row first column cell.",

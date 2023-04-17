@@ -1,6 +1,7 @@
 package env
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -136,49 +137,49 @@ func (s Spreadsheet) Sum(name string) Object {
 	}
 }
 
-func (s Spreadsheet) WhereEquals(ps *ProgramState, name string, val interface{}) Object {
+func (s Spreadsheet) Sum_Just(name string) (float64, error) {
+	var sum int64
+	var sumf float64
 	idx := IndexOfString(name, s.Cols)
-	nspr := NewSpreadsheet(s.Cols)
 	if idx > -1 {
-		if s.RawMode {
-			var res [][]string
-			if name == s.IndexName {
-				//				fmt.Println("Using index")
-				switch ov := val.(type) {
-				case String:
-					idxs := s.Index[ov.Value]
-					res = make([][]string, len(idxs))
-					for i, idx := range idxs {
-						res[i] = s.RawRows[idx]
-					}
+		for _, row := range s.Rows {
+			if len(row.Values) > idx {
+				switch v := row.Values[idx].(type) {
+				case float64:
+					sumf += v
+				case int64:
+					sum += v
+					break
+				case Integer:
+					sum += v.Value
+					break
+				case Decimal:
+					sumf += v.Value
+					break
+				default:
+					fmt.Println("row--->")
+					fmt.Println(reflect.TypeOf(v))
 				}
 			} else {
-				//			fmt.Println("Not using index")
-				res = make([][]string, 0)
-				for _, row := range s.RawRows {
-					if len(row) > idx {
-						switch ov := val.(type) {
-						case String:
-							// fmt.Println(ov.Value)
-							// fmt.Println(row[idx])
-							// fmt.Println(idx)
-							if ov.Value == row[idx] {
-								// fmt.Println("appending")
-								res = append(res, row)
-								// fmt.Println(res)
-							}
-						}
-					}
-				}
+				// TODO fmt.Println("no VAL")
 			}
-			// fmt.Println(res)
-			nspr.SetRaw(res)
-			return *nspr
 		}
-		return makeError(ps, "Only raw spreadsheet for now TODO")
-
+		// if sumf == 0 {
+		//	return Integer{int64(sum)}
+		//} else {
+		//	return Decimal{sumf + float64(sum)}
+		//}
+		return sumf + float64(sum), nil
 	} else {
-		return makeError(ps, "Column not found")
+		return 0.0, errors.New("Column not found")
+	}
+}
+
+func (s Spreadsheet) NRows() int {
+	if s.RawMode {
+		return len(s.RawRows)
+	} else {
+		return len(s.Rows)
 	}
 }
 
@@ -254,6 +255,20 @@ func (s Spreadsheet) GetRawRowValue(column string, rrow []string) (string, error
 		return "", nil
 	}
 	return rrow[index], nil
+}
+
+func (s Spreadsheet) GetRowValue(column string, rrow SpreadsheetRow) (interface{}, error) {
+	index := -1
+	for i, v := range s.Cols {
+		if v == column {
+			index = i
+			break
+		}
+	}
+	if index < 0 {
+		return "", nil
+	}
+	return rrow.Values[index], nil
 }
 
 // Type returns the type of the Integer.

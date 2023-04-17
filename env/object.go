@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/drewlanenga/govector"
 )
 
 type Type int
@@ -45,6 +47,7 @@ const (
 	TimeType           Type = 32
 	SpreadsheetRowType Type = 33
 	DecimalType        Type = 34
+	VectorType         Type = 35
 )
 
 // after adding new type here, also add string to idxs.go
@@ -144,7 +147,11 @@ func (i String) Inspect(e Idxs) string {
 
 // Inspect returns a string representation of the Integer.
 func (i String) Probe(e Idxs) string {
-	return "\"" + i.Value + "\""
+	s := i.Value
+	if len(s) > 100 {
+		return s[:100] + "..."
+	}
+	return "\"" + s + "\""
 }
 
 func (i String) Trace(msg string) {
@@ -1427,4 +1434,82 @@ func (i Time) Trace(msg string) {
 
 func (i Time) GetKind() int {
 	return int(TimeType)
+}
+
+//
+// VECTOR TYPE -- feture vector (uses govector)
+//
+
+type Vector struct {
+	Value govector.Vector
+	Kind  Word
+}
+
+func NewVector(vec govector.Vector) *Vector {
+	//vec, err := govector.AsVector(data)
+	//if err != nil {
+	//	return MakeError(env1, err.Error())
+	//}
+	return &Vector{vec, Word{0}}
+}
+
+func ArrayFloat32FromSeries(block TSeries) []float32 {
+	data := make([]float32, block.Len())
+	for block.Pos() < block.Len() {
+		i := block.Pos()
+		k1 := block.Pop()
+		switch k := k1.(type) {
+		case Integer:
+			data[i] = float32(k.Value)
+		case Decimal:
+			data[i] = float32(k.Value)
+		}
+	}
+	return data
+}
+
+// data []float32
+
+func NewVectorFromSeries(block TSeries) *Vector {
+	data := ArrayFloat32FromSeries(block)
+	vec, err := govector.AsVector(data)
+	if err != nil {
+		return nil
+	}
+	return &Vector{vec, Word{0}}
+}
+
+// Type returns the type of the Integer.
+func (i Vector) Type() Type {
+	return VectorType
+}
+
+// Inspect returns a string representation of the Integer.
+func (i Vector) Inspect(idxs Idxs) string {
+	var bu strings.Builder
+	bu.WriteString("[Vector:") //(" + i.Kind.Probe(idxs) + "):")
+	bu.WriteString(" Len " + strconv.Itoa(i.Value.Len()))
+	bu.WriteString(" Norm " + fmt.Sprintf("%.2f", govector.Norm(i.Value, 2.0)))
+	bu.WriteString(" Mean " + fmt.Sprintf("%.2f", i.Value.Mean()))
+	bu.WriteString("]")
+	return bu.String()
+}
+
+// Inspect returns a string representation of the Integer.
+func (i Vector) Probe(idxs Idxs) string {
+	var bu strings.Builder
+	bu.WriteString("[")
+	bu.WriteString("Len " + strconv.Itoa(i.Value.Len()))
+	bu.WriteString(" Norm " + fmt.Sprintf("%.2f", govector.Norm(i.Value, 2.0)))
+	bu.WriteString(" Mean " + fmt.Sprintf("%.2f", i.Value.Mean()))
+	bu.WriteString("]")
+	return bu.String()
+}
+
+func (i Vector) Trace(msg string) {
+	fmt.Print(msg + "(Vector): ")
+}
+
+func (i Vector) GetKind() int {
+	return int(VectorType)
 }

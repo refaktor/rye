@@ -459,15 +459,15 @@ func DisplayTable(bloc env.Spreadsheet, idx *env.Idxs) (env.Object, bool) {
 	widths := make([]int, len(bloc.Cols))
 	// check all col names
 	for ic, col := range bloc.Cols {
-		widths[ic] = len(col)
+		widths[ic] = len(col) + 1
 	}
 	// check all data
 	if bloc.RawMode {
 		for _, row := range bloc.RawRows {
 			for ic, v := range row {
-				ll := len(v)
+				ll := len(v) + 2
 				if widths[ic] < ll {
-					widths[ic] = ll + 1
+					widths[ic] = ll
 				}
 			}
 		}
@@ -477,13 +477,24 @@ func DisplayTable(bloc env.Spreadsheet, idx *env.Idxs) (env.Object, bool) {
 				ww := 5
 				switch val := v.(type) {
 				case string:
-					ww = len(val)
+					ww = len(val) + 2
 				case int64:
 					ww = len(strconv.Itoa(int(val))) + 1
+				case env.Integer:
+					ww = len(strconv.Itoa(int(val.Value))) + 1
 				case float64:
 					ww = len(strconv.FormatFloat(val, 'f', 2, 64)) + 1
+				case env.Decimal:
+					ww = len(strconv.FormatFloat(val.Value, 'f', 2, 64)) + 1
+				case env.String:
+					ww = len(val.Probe(*idx))
+					if ww > 60 {
+						// ww = 60
+					}
+				case env.Vector:
+					ww = len(val.Probe(*idx))
 				}
-				if widths[ic] < ww {
+				if len(widths) > ic && widths[ic] < ww {
 					widths[ic] = ww + 1
 				}
 			}
@@ -540,18 +551,20 @@ DODO:
 				fmt.Print("")
 			}
 			for ic, v := range r.Values {
-				switch ob := v.(type) {
-				case env.Object:
-					if mode == 0 {
-						fmt.Printf("| %-"+strconv.Itoa(widths[ic])+"s", ob.Probe(*idx))
-						//fmt.Print("| " +  + "\t")
-					} else {
-						fmt.Printf("| %-"+strconv.Itoa(widths[ic])+"s", ob.Inspect(*idx))
-						//fmt.Print("| " +  + "\t")
+				if ic < len(widths) {
+					switch ob := v.(type) {
+					case env.Object:
+						if mode == 0 {
+							fmt.Printf("| %-"+strconv.Itoa(widths[ic])+"s", ob.Probe(*idx))
+							//fmt.Print("| " +  + "\t")
+						} else {
+							fmt.Printf("| %-"+strconv.Itoa(widths[ic])+"s", ob.Inspect(*idx))
+							//fmt.Print("| " +  + "\t")
+						}
+					default:
+						fmt.Printf("| %-"+strconv.Itoa(widths[ic])+"s", fmt.Sprint(ob))
+						///fmt.Print("| " + +"\t")
 					}
-				default:
-					fmt.Printf("| %-"+strconv.Itoa(widths[ic])+"s", fmt.Sprint(ob))
-					///fmt.Print("| " + +"\t")
 				}
 				// term.CurUp(1)
 			}

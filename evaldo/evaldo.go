@@ -57,6 +57,15 @@ func EvalBlockInCtx(ps *env.ProgramState, ctx *env.RyeCtx) *env.ProgramState {
 	return res
 }
 
+// DESCR: eval a block in specific context
+func EvalBlockInCtxInj(ps *env.ProgramState, ctx *env.RyeCtx, inj env.Object, injnow bool) *env.ProgramState {
+	ctx2 := ps.Ctx
+	ps.Ctx = ctx
+	res := EvalBlockInj(ps, inj, injnow)
+	ps.Ctx = ctx2
+	return res
+}
+
 // DESCR: the main evaluator of block
 func EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) *env.ProgramState {
 	//fmt.Println("BEFORE BLOCK ***")

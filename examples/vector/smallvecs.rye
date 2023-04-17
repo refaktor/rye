@@ -13,10 +13,10 @@ read %smallvecs.txt
 map vecs { .norm } |vector :norms
 
 ; get mean and std deviation
-.with { .mean .prn , .std-deviation .print }
+.with { .avg .prn , .std-deviation .print }
 
 ; calculate the cosine similarity
-for vecs { .cosine vector { 0 1 1 } |print }
+for vecs { .cosine-similarity vector { 0 1 1 } |print }
 
 
 
