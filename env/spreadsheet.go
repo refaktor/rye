@@ -46,6 +46,10 @@ func (s *Spreadsheet) AddRow(vals SpreadsheetRow) {
 	s.Rows = append(s.Rows, vals)
 }
 
+func (s *Spreadsheet) GetRows() []SpreadsheetRow {
+	return s.Rows
+}
+
 func (s *Spreadsheet) SetRaw(vals [][]string) {
 	s.RawRows = vals
 	s.RawMode = true

@@ -164,6 +164,20 @@ func __fs_read(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 en
 	// Read file to byte slice
 }
 
+func __fs_read_bytes(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+	switch f := arg0.(type) {
+	case env.Uri:
+
+		data, err := ioutil.ReadFile(f.GetPath())
+		if err != nil {
+			return makeError(env1, err.Error())
+		}
+		return *env.NewNative(env1.Idx, data, "bytes")
+	}
+	return makeError(env1, "Failed to read file")
+	// Read file to byte slice
+}
+
 func __fs_read_lines(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch f := arg0.(type) {
 	case env.Uri:
@@ -198,6 +212,13 @@ func __fs_write(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 e
 		case env.String:
 
 			err := ioutil.WriteFile(f.GetPath(), []byte(s.Value), 0644)
+			if err != nil {
+				env1.FailureFlag = true
+				return *env.NewError(err.Error())
+			}
+			return arg1
+		case env.Native:
+			err := ioutil.WriteFile(f.GetPath(), []byte(s.Value.([]byte)), 0644)
 			if err != nil {
 				env1.FailureFlag = true
 				return *env.NewError(err.Error())
@@ -568,6 +589,13 @@ var Builtins_io = map[string]*env.Builtin{
 		Argsn: 1,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __fs_read(env1, arg0, arg1, arg2, arg3, arg4)
+		},
+	},
+
+	"file-schema//read\\bytes": {
+		Argsn: 1,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __fs_read_bytes(env1, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 

@@ -5164,6 +5164,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_telegrambot, ps, "telegram")
 	RegisterBuiltins2(Builtins_spreadsheet, ps, "spreadsheet")
 	RegisterBuiltins2(Builtins_vector, ps, "vector")
+	RegisterBuiltins2(Builtins_bson, ps, "bson")
 }
 
 var BuiltinNames map[string]int

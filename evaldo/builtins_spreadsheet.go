@@ -48,7 +48,20 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		},
 	},
 
-	"add-row": {
+	"get-rows": {
+		Argsn: 1,
+		Doc:   "Create a spreadsheet by accepting block of column names and flat block of values",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch spr := arg0.(type) {
+			case env.Spreadsheet:
+				rows := spr.GetRows()
+				return *env.NewNative(ps.Idx, rows, "spreadsheet-rows")
+			}
+			return MakeError(ps, "Some error")
+		},
+	},
+	
+	"add-rows": {
 		Argsn: 2,
 		Doc:   "Create a spreadsheet by accepting block of column names and flat block of values",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -66,9 +79,12 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 						spr.AddRow(env.SpreadsheetRow{rowd, &spr})
 					}
 					return spr
+				case env.Native:
+					spr.Rows = append(spr.Rows, data1.Value.([]env.SpreadsheetRow)...)
+					return spr
 				}
 			}
-			return MakeError(ps, "Some error")
+			return MakeError(ps, "Some errora")
 		},
 	},
 

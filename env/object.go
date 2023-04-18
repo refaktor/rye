@@ -99,7 +99,7 @@ func (i Integer) GetKind() int {
 
 // Decimal
 type Decimal struct {
-	Value float64
+	Value float64 `bson: "value"`
 }
 
 // Type returns the type of the Decimal.
@@ -132,7 +132,7 @@ func (i Decimal) GetKind() int {
 
 // String represents an string.
 type String struct {
-	Value string
+	Value string `bson: "value"`
 }
 
 // Type returns the type of the Integer.
@@ -286,8 +286,8 @@ func (i Email) GetKind() int {
 
 // Integer represents an integer.
 type Block struct {
-	Series TSeries
-	Mode   int
+	Series TSeries `bson: "series"`
+	Mode   int     `bson: "mode"`
 }
 
 func NewBlock(series TSeries) *Block {
