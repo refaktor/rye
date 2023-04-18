@@ -4,6 +4,7 @@
 package evaldo
 
 import (
+	"fmt"
 	"rye/env"
 
 	"github.com/drewlanenga/govector"
@@ -20,8 +21,8 @@ var Builtins_bson = map[string]*env.Builtin{
 			if err != nil {
 				return makeError(es, err.Error())
 			}
-			// fmt.Println(val["val"])
-			// fmt.Printf("Type: %T", val["val"])
+			fmt.Println(val["val"])
+			fmt.Printf("Type: %T", val["val"])
 			switch rval := val["val"].(type) {
 			case int64:
 				return env.Integer{int64(rval)}
@@ -67,6 +68,10 @@ var Builtins_bson = map[string]*env.Builtin{
 			case env.Vector:
 				val = obj.Value
 				typ = "vec"
+			case env.Block:
+				val = obj.Series.S
+				// for val := range obj.Series.S
+				typ = "ser"
 			}
 			encoded, err := bson.Marshal(bson.M{"val": val, "typ": typ})
 			if err != nil {
