@@ -11,6 +11,7 @@ read %petcare.txt
 |new-spreadsheet* { "text" }
 |pass { .display , print "Creating embeddings ..." }
 |gen-col 'embedding { text } { .create-embeddings* ai } :spr
+
 print "multiplying ..."
 
 spr2: spr

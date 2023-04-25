@@ -13,7 +13,7 @@ import (
 
 var Builtins_spreadsheet = map[string]*env.Builtin{
 
-	"new-spreadsheet": {
+	"spreadsheet": {
 		Argsn: 2,
 		Doc:   "Create a spreadsheet by accepting block of column names and flat block of values",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -60,7 +60,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			return MakeError(ps, "Some error")
 		},
 	},
-	
+
 	"add-rows": {
 		Argsn: 2,
 		Doc:   "Create a spreadsheet by accepting block of column names and flat block of values",
@@ -474,7 +474,7 @@ func WhereGreater(ps *env.ProgramState, s env.Spreadsheet, name string, val inte
 				if len(s.Cols) > idx {
 					switch val2 := val.(type) {
 					case env.Object:
-						if greaterThanNew(val2, row.Values[idx].(env.Object)) {
+						if greaterThanNew(row.Values[idx].(env.Object), val2) {
 							nspr.AddRow(row)
 						}
 					}

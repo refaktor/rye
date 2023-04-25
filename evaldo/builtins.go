@@ -996,7 +996,7 @@ var builtins = map[string]*env.Builtin{
 				}
 			}
 
-			return nil
+			return arg0
 		},
 	},
 	"tui\\selection": {

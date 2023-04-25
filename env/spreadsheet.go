@@ -118,6 +118,7 @@ func (s Spreadsheet) Column(name string) Object {
 
 func (s Spreadsheet) Sum(name string) Object {
 	var sum int64
+	var sumf float64
 	idx := IndexOfString(name, s.Cols)
 	if idx > -1 {
 		for _, row := range s.Rows {
@@ -127,6 +128,8 @@ func (s Spreadsheet) Sum(name string) Object {
 					sum += v
 				case Integer:
 					sum += v.Value
+				case Decimal:
+					sumf += v.Value
 				default:
 					fmt.Println("row--->")
 					fmt.Println(reflect.TypeOf(v))
@@ -135,7 +138,13 @@ func (s Spreadsheet) Sum(name string) Object {
 				// TODO fmt.Println("no VAL")
 			}
 		}
-		return Integer{int64(sum)}
+		if sumf == 0 {
+			return Integer{sum}
+		} else {
+			return Decimal{sumf + float64(sum)}
+		}
+		//return sumf + float64(sum), nil
+		//return Integer{int64(sum)}
 	} else {
 		return *NewError("Column not found")
 	}
@@ -212,9 +221,19 @@ func (s Spreadsheet) Columns(ps *ProgramState, names []string) Object {
 		}
 		nspr.SetRaw(res)
 		return *nspr
+	} else {
+		for _, row := range s.Rows {
+			row2 := make([]interface{}, len(names))
+			for col := range idxs {
+				if len(row.Values) > col {
+					row2[col] = row.Values[idxs[col]].(Object)
+				}
+			}
+			nspr.AddRow(SpreadsheetRow{row2, nspr})
+		}
+		//nspr.(res)
+		return *nspr
 	}
-	return makeError(ps, "Only raw spreadsheet for now TODO")
-
 }
 
 func (s Spreadsheet) GetRow(ps *ProgramState, index int) Object {
