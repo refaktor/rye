@@ -163,6 +163,33 @@ var Builtins_http = map[string]*env.Builtin{
 		},
 	},
 
+	"Go-server-response-writer//set-header": {
+		Argsn: 3,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch writer := arg0.(type) {
+			case env.Native:
+				switch name := arg1.(type) {
+				case env.Word:
+					name_ := env1.Idx.GetWord(name.Index)
+					switch value := arg2.(type) {
+					case env.String:
+						writer.Value.(http.ResponseWriter).Header().Set(name_, value.Value)
+						return arg0
+					default:
+						env1.FailureFlag = true
+						return env.NewError("arg3 should be string")
+					}
+				default:
+					env1.FailureFlag = true
+					return env.NewError("arg2 should be a word")
+				}
+			default:
+				env1.FailureFlag = true
+				return env.NewError("arg1 should be native")
+			}
+		},
+	},
+
 	"Go-server-response-writer//write-header": {
 		Argsn: 2,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

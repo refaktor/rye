@@ -1,4 +1,5 @@
-// +build b_tiny
+//go:build !b_bcrypt
+// +build !b_bcrypt
 
 package evaldo
 

@@ -1,3 +1,4 @@
+//go:build b_no_json
 // +build b_no_json
 
 package evaldo
@@ -30,6 +31,8 @@ func RyeToJSON(res interface{}) string {
 		return "null"
 	case int:
 		return strconv.Itoa(v)
+	case int32:
+		return strconv.Itoa(int(v))
 	case int64:
 		return strconv.Itoa(int(v))
 	case string:
@@ -47,7 +50,8 @@ func RyeToJSON(res interface{}) string {
 	case env.RyeCtx:
 		return "{ 'state': 'todo' }"
 	}
-	return "not handeled"
+	fmt.Println(res)
+	return "not handeled1"
 }
 
 func JsonToRye(res interface{}) env.Object {

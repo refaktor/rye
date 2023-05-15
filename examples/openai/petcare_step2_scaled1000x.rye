@@ -19,8 +19,10 @@ read\bytes %petcare_1000x.bson |fix\either {
 	|pass-print "Creating embeddings ..."
 	|gen-col 'embedding { text } { .create-embeddings* ai }
 	:spr1 :spr
-
+	
+	; For testing purposes we multiply table rows 1000 times
 	loop 1000 { spr: spr .add-rows get-rows spr1 }	
+	
 	spr .to-bson .write* %petcare_1000x.bson
 } {
 	.from-bson :spr

@@ -1,0 +1,47 @@
+
+; # Controlled download
+;
+; Accept a key, hash it, if the file with that name exists return it
+
+rye |needs { http bcrypt }
+
+handle-file-get: fn { w r } {
+
+	; retrieve GET arg. "key",
+	; if missing return err, hash it 
+	query? r "key"
+	|^fix {
+		write-header w 402
+		write w "Err: Missing Key"
+	}
+	|bcrypt-hash :name
+
+	; open a file with calculated name
+	; if can't return err, get stat-info of a file
+	open %storage/ + name
+	|^fix {
+		write-header w 403
+		write w "Err: Wrong code"
+	}
+	:file .stat :info
+
+	; set the response headers
+	with w {
+		.write-header 200 ,
+		.set-header 'Content-Type "application/octet-stream" ,
+		.set-header 'Content-Length probe to-string info .size? ,
+		.set-header 'Content-Disposition "attachment; filename=mycert.p12"
+	}
+
+	; stream file to response writer without loading it all into memory
+	file .copy w	
+}
+
+; setup the server
+new-server ":8080"
+|handle "/get" ?handle-file-get
+|handle "/" new-static-handler %www
+|serve
+
+
+

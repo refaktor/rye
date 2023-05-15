@@ -171,10 +171,13 @@ var Builtins_sqlite = map[string]*env.Builtin{
 				case env.String:
 					sqlstr = str.Value
 				default:
-					return env.NewError("arg 2222 should be string %s")
+					return makeError(env1, "Arg 2 should be a string or a block")
 				}
 				if sqlstr != "" {
 					rows, err := db1.Value.(*sql.DB).Query(sqlstr, vals...)
+					if err != nil {
+						return makeError(env1, err.Error())
+					}
 					columns, _ := rows.Columns()
 					spr := env.NewSpreadsheet(columns)
 					result := make([]map[string]interface{}, 0)

@@ -231,13 +231,10 @@ func __fs_write(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 e
 }
 
 func __copy(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-	fmt.Println(arg0)
 	switch r := arg0.(type) {
 	case env.Native:
-		fmt.Println("***A")
 		switch w := arg1.(type) {
 		case env.Native:
-			fmt.Println("***B")
 			// Writer , Reader
 			_, err := io.Copy(w.Value.(io.Writer), r.Value.(io.Reader))
 			if err != nil {
@@ -249,6 +246,24 @@ func __copy(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.O
 			env1.FailureFlag = true
 			return *env.NewError("Failed 2")
 		}
+	default:
+		env1.FailureFlag = true
+		return *env.NewError("Failed 3")
+
+	}
+	env1.FailureFlag = true
+	return *env.NewError("Failed 4	")
+}
+
+func __stat(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+	switch r := arg0.(type) {
+	case env.Native:
+		info, err := r.Value.(*os.File).Stat()
+		if err != nil {
+			env1.FailureFlag = true
+			return *env.NewError(err.Error())
+		}
+		return *env.NewNative(env1.Idx, info, "file-info")
 	default:
 		env1.FailureFlag = true
 		return *env.NewError("Failed 3")
@@ -464,6 +479,27 @@ func __https_request__set_header(env1 *env.ProgramState, arg0 env.Object, arg1 e
 	return makeError(env1, "Failed")
 }
 
+func __https_request__set_basic_auth(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+	switch req := arg0.(type) {
+	case env.Native:
+		switch username := arg1.(type) {
+		case env.String:
+			switch password := arg2.(type) {
+			case env.String:
+				req.Value.(*http.Request).SetBasicAuth(username.Value, password.Value)
+				return arg0
+			default:
+				return makeError(env1, "Arg 3 not String")
+			}
+		default:
+			return makeError(env1, "Arg 2 not Word")
+		}
+	default:
+		return makeError(env1, "Arg 1 not Native")
+	}
+	return makeError(env1, "Failed")
+}
+
 func __https_request__do(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch req := arg0.(type) {
 	case env.Native:
@@ -564,6 +600,33 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
+	"rye-file//copy": {
+		Argsn: 2,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __copy(env1, arg0, arg1, arg2, arg3, arg4)
+		},
+	},
+
+	"rye-file//stat": {
+		Argsn: 1,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __stat(env1, arg0, arg1, arg2, arg3, arg4)
+		},
+	},
+
+	"file-info//size?": {
+		Argsn: 1,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s := arg0.(type) {
+			case env.Native:
+				size := s.Value.(os.FileInfo).Size()
+				return env.Integer{size}
+			default:
+				return makeError(env1, "Arg 1 isn't Uri")
+			}
+		},
+	},
+
 	"rye-file//read-all": {
 		Argsn: 1,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -652,6 +715,13 @@ var Builtins_io = map[string]*env.Builtin{
 		Argsn: 3,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __https_request__set_header(env1, arg0, arg1, arg2, arg3, arg4)
+		},
+	},
+
+	"https-request//set-basic-auth": {
+		Argsn: 3,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __https_request__set_basic_auth(env1, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 

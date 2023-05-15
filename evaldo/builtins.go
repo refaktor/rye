@@ -2002,6 +2002,9 @@ var builtins = map[string]*env.Builtin{
 				ser := ps.Ser
 				ps.Ser = bloc.Series
 				EvalBlockInj(ps, arg0, true)
+				if ps.ErrorFlag {
+					return ps.Res
+				}
 				ps.Ser = ser
 				if ps.ReturnFlag {
 					return ps.Res

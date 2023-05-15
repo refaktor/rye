@@ -1,3 +1,4 @@
+//go:build !b_no_json
 // +build !b_no_json
 
 package evaldo
@@ -28,12 +29,17 @@ func resultToJS(res env.Object) interface{} {
 }
 
 func RyeToJSON(res interface{}) string {
+	fmt.Printf("Type: %T", res)
 	switch v := res.(type) {
 	case nil:
 		return "null"
 	case int:
 		return strconv.Itoa(v)
+	case int32:
+		return strconv.Itoa(int(v))
 	case int64:
+		return strconv.Itoa(int(v))
+	case float64:
 		return strconv.Itoa(int(v))
 	case string:
 		if v[0] == '[' && v[len(v)-1:] == "]" {
@@ -43,6 +49,8 @@ func RyeToJSON(res interface{}) string {
 	case env.String:
 		return "\"" + v.Value + "\""
 	case env.Integer:
+		return strconv.Itoa(int(v.Value))
+	case env.Decimal:
 		return strconv.Itoa(int(v.Value))
 	case env.Spreadsheet:
 		return SpreadsheetToJSON(v)
@@ -74,6 +82,7 @@ func RyeToJSON(res interface{}) string {
 	case env.RyeCtx:
 		return "{ 'state': 'todo' }"
 	}
+	fmt.Println(res)
 	return "\"not handeled\""
 }
 

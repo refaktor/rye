@@ -1,0 +1,46 @@
+
+rye |needs { http bcrypt }
+
+handle-file-get: fn { w r } {
+
+	query? r "key" |^fix {
+		write-header w 402
+		write w "Err: Missing Key"
+	}
+	|bcrypt-hash :name
+
+	open %storage/ + name
+	|^fix {
+		write-header w 403
+		write w "Err: Wrong code"
+	}
+	:file .stat :info
+
+	with w {
+		.write-header 200 ,
+		.set-header 'Content-Type "application/octet-stream" ,
+		.set-header 'Content-Length probe to-string info .size? ,
+		.set-header 'Content-Disposition "attachment; filename=mycert.p12"
+	}
+
+	file .copy w	
+}
+
+new-server ":8080"
+|handle "/get" ?handle-file-get
+|serve
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
