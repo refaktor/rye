@@ -7,4 +7,4 @@ import (
 	"rye/env"
 )
 
-var Builtins_bsona = map[string]*env.Builtin{}
+var Builtins_bson = map[string]*env.Builtin{}
