@@ -33,6 +33,39 @@ new-server ":8080"
 
 
 
+; rye |needs { http bcrypt }
+
+; do load %rye-flaskish.rye
+
+; get-file: fn { w r } {
+
+;	query? r "key"
+;   |^fix { reply w "missing key" 400 }
+;	|bcrypt-hash :name
+
+;	open %storage/ + name
+;	|^fix { reply w "wrong key" 403 }
+;	|send-file\attachment w "application/x-pkcs12" "mycert.p12"
+; }
+
+; get-file: fn { w r } {
+
+;	query? r "key"
+;   |^fix { reply w "missing key" 400 }
+;	|bcrypt-hash 
+;	|concat* %storage/
+;   |open
+;	|^fix { reply w "wrong key" 403 }
+;	|send-file\attachment w "application/x-pkcs12" "mycert.p12"
+; }
+
+; new-server ":8080"
+; |flaskish-handle "/get" ?get-file
+; |serve
+
+
+
+
 
 
 

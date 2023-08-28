@@ -4,8 +4,8 @@
  token: first load %.token
 
  new-postmark-email
- |from<- podpora@example.biz
- |to<- podpora@example.biz
+ |from<- podpora@cebelca.biz
+ |to<- podpora@cebelca.biz
  |subject<- "Postmark email w/ attachment from Ryelang"
  |text-body<- "When you get this email some dopamine will be released."
  |attach! %invoice.pdf

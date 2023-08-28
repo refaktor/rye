@@ -655,6 +655,69 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 	return ps
 }
 
+func CallFunctionArgs4(fn env.Function, ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, ctx *env.RyeCtx) *env.ProgramState {
+	var fnCtx *env.RyeCtx
+	env0 := ps.Ctx  // store reference to current env in local
+	if ctx != nil { // called via contextpath and this is the context
+		if fn.Pure {
+			fnCtx = env.NewEnv(ps.PCtx)
+		} else {
+			if fn.Ctx != nil { // if context was defined at definition time, pass it as parent.
+				fn.Ctx.Parent = ctx
+				fnCtx = env.NewEnv(fn.Ctx)
+			} else {
+				fnCtx = env.NewEnv(ctx)
+			}
+		}
+	} else {
+		if fn.Pure {
+			fnCtx = env.NewEnv(ps.PCtx)
+		} else {
+			if fn.Ctx != nil { // if context was defined at definition time, pass it as parent.
+				// Q: Would we want to pass it directly at any point?
+				//    Maybe to remove need of creating new contexts, for reuse, of to be able to modify it?
+				fnCtx = env.NewEnv(fn.Ctx)
+			} else {
+				fnCtx = env.NewEnv(env0)
+			}
+		}
+	}
+	if checkErrorReturnFlag(ps) {
+		return ps
+	}
+	i := 0
+	index := fn.Spec.Series.Get(i).(env.Word).Index
+	fnCtx.Set(index, arg0)
+	i = 1
+	index = fn.Spec.Series.Get(i).(env.Word).Index
+	fnCtx.Set(index, arg1)
+	i = 2
+	index = fn.Spec.Series.Get(i).(env.Word).Index
+	fnCtx.Set(index, arg2)
+	i = 3
+	index = fn.Spec.Series.Get(i).(env.Word).Index
+	fnCtx.Set(index, arg3)
+	// TRY
+	psX := env.NewProgramState(fn.Body.Series, ps.Idx)
+	psX.Ctx = fnCtx
+	psX.PCtx = ps.PCtx
+	psX.Gen = ps.Gen
+
+	// END TRY
+	var result *env.ProgramState
+	ps.Ser.SetPos(0)
+	result = EvalBlockInj(psX, arg0, true)
+	MaybeDisplayFailureOrError(result, result.Idx)
+	if result.ForcedResult != nil {
+		ps.Res = result.ForcedResult
+		result.ForcedResult = nil
+	} else {
+		ps.Res = result.Res
+	}
+	ps.ReturnFlag = false
+	return ps
+}
+
 func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft bool, pipeSecond bool, firstVal env.Object) *env.ProgramState {
 	////args := make([]env.Object, bi.Argsn)
 	/*pospos := ps.Ser.GetPos()

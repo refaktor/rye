@@ -1,0 +1,11 @@
+
+; Serve all static files from wasm folder
+; This is meant to test the wasm Rye version that works in a browser and needs http server
+; to load properly
+
+rye .needs { http }
+
+new-server ":8085"
+|handle "/" new-static-handler %wasm
+|serve
+

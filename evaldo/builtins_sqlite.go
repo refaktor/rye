@@ -141,9 +141,12 @@ var Builtins_sqlite = map[string]*env.Builtin{
 				}
 				if sqlstr != "" {
 					db2 := db1.Value.(*sql.DB)
-					db2.Exec(sqlstr, vals...)
+					_, err := db2.Exec(sqlstr, vals...)
+					if err != nil {
+						return makeError(env1, err.Error())
+					}
 					//					rows, err := db1.Value.(*sql.DB).Query(sqlstr, vals...)
-					return env.Void{}
+					return arg0
 				}
 			default:
 				return env.NewError("arg 1111 should be string %s")

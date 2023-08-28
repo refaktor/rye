@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="wasm_exec.js"></script>
+	<style>
+	  body {
+	      font-family: mono;
+	      background-color: #f1f1f1;
+	      padding: 20px;
+	  }
+	  h1 {
+	      font-size: 110%;
+	  }
+	  textarea {
+	      width: 300px;
+	      box-model: content;
+	      padding: 10px;
+	  }
+	  pre {
+	      border: 1px solid green;
+	      width: 300px;
+	      background-color: #e0ffe0;
+	      padding: 10px;
+	      box-model: content;
+	  }
+	  </style>
+        <script>
+             
+            if (WebAssembly) {
+                 // WebAssembly.instantiateStreaming is not currently available in Safari
+                 if (WebAssembly && !WebAssembly.instantiateStreaming) { // polyfill
+                     WebAssembly.instantiateStreaming = async (resp, importObject) => {
+                        const source = await (await resp).arrayBuffer();
+                         return await WebAssembly.instantiate(source, importObject);
+                     };
+                 }  
+
+		const go = new Go();
+		WebAssembly.instantiateStreaming(fetch('rye.wasm'), go.importObject).then(function(dat) {
+		    go.run(dat.instance);
+		});
+		
+                 /*const go = new Go();
+                 WebAssembly.instantiateStreaming(fetch("rye.wasm"), go.importObject).then((result) => {
+                    go.run(result.instance);
+                 });*/
+            } else {
+               console.log("WebAssembly is not supported in your browser")
+            }
+
+	  function evalArea() {
+	      var ret = document.getElementById('returned');
+	      var inp = document.getElementById('code');
+	      ret.innerText = RyeEvalString(inp.value);
+	  }
+	  
+        </script>
+        <script src="exercises_basic_rye.js"></script>
+    </head>
+    <body>
+      <main id="wasm">
+	<h1>Rye WASM demo</h1>
+	<div>
+	  <textarea id="code" cols="40" rows="6">map { 1 2 3 4 5 } { :i * i }</textarea>
+	</div>
+	<div>
+	  <button onclick="evalArea()">Run</button>
+	</div>
+	<pre id="returned"></pre>
+      </main>
+    </body>
+</html>

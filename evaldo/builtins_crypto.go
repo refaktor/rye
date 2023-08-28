@@ -1,9 +1,11 @@
-// +build !b_tiny
+//go:build b_crypto
+// +build b_crypto
 
 package evaldo
 
 import (
 	"crypto/ed25519"
+	"crypto/sha512"
 	"encoding/hex"
 	"rye/env"
 )
@@ -188,32 +190,18 @@ var Builtins_crypto = map[string]*env.Builtin{
 		},
 	},
 
-	"Ed25519-pub-key//verify": {
-		Argsn: 3,
+	"sha512": {
+		Argsn: 1,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch puk := arg0.(type) {
-			case env.Native:
-				switch buff := arg1.(type) {
-				case env.String:
-					switch sig := arg2.(type) {
-					case env.Native:
-						sigb := ed25519.Verify(puk.Value.(ed25519.PublicKey), []byte(buff.Value), sig.Value.([]byte))
-						if sigb {
-							return env.Integer{1}
-						} else {
-							return env.Integer{0}
-						}
-					default:
-						ps.FailureFlag = true
-						return env.NewError("arg 2 should be native")
-					}
-				default:
-					ps.FailureFlag = true
-					return env.NewError("arg 1 should be string")
-				}
+			switch s := arg0.(type) {
+			case env.String:
+				h := sha512.New()
+				h.Write([]byte(s.Value))
+				bs := h.Sum(nil)
+				return env.String{hex.EncodeToString(bs[:])}
 			default:
 				ps.FailureFlag = true
-				return env.NewError("arg 0 should be native")
+				return env.NewError("arg 1 should be String")
 			}
 		},
 	},

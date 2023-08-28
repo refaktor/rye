@@ -11,7 +11,7 @@ import (
 	"sort"
 
 	"rye/loader"
-	"rye/term"
+	// JM 20230825	"rye/term"
 	"rye/util"
 	"strconv"
 	"strings"
@@ -966,6 +966,7 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
+	/* JM 20230825
 	"display": {
 		Argsn: 1,
 		Doc:   "Work in progress Interactively displays a value.",
@@ -1032,7 +1033,7 @@ var builtins = map[string]*env.Builtin{
 			}
 			return nil
 		},
-	},
+	}, */
 	"mold": {
 		Argsn: 1,
 		Doc:   "Turn value to it's string representation.",
@@ -5156,7 +5157,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_nng, ps, "nng")
 	RegisterBuiltins2(Builtins_http, ps, "http")
 	RegisterBuiltins2(Builtins_crypto, ps, "crypto")
-	RegisterBuiltins2(Builtins_goroutines, ps, "gorourines")
+	RegisterBuiltins2(Builtins_goroutines, ps, "goroutines")
 	RegisterBuiltins2(Builtins_psql, ps, "psql")
 	RegisterBuiltins2(Builtins_mysql, ps, "mysql")
 	RegisterBuiltins2(Builtins_bcrypt, ps, "bcrypt")
@@ -5168,6 +5169,8 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_spreadsheet, ps, "spreadsheet")
 	RegisterBuiltins2(Builtins_vector, ps, "vector")
 	RegisterBuiltins2(Builtins_bson, ps, "bson")
+	RegisterBuiltins2(Builtins_smtpd, ps, "smtpd")
+	RegisterBuiltins2(Builtins_mail, ps, "mail")
 }
 
 var BuiltinNames map[string]int

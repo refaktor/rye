@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="wasm_exec.js"></script>
+	<link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,700|Roboto:300,400,700&subset=latin-ext' rel='stylesheet' type='text/css'>
+	<style>
+	  body {
+	      font-family: Sans serif;
+	      __background-color: #f1f1f1;
+	      padding: 20px;
+	      font-size: 13px;
+	  }
+	  main {
+	      __border: 1px solid #f1f1f1;
+	      width: 740px;
+	      margin: auto;
+	  }
+	  h1 {
+	      font-size: 110%;
+	  }
+	  textarea {
+	      width: 320px;
+	      box-model: content;
+	      padding: 10px;
+	      border: 0px solid red;
+	  }
+	  pre {
+	      __border: 1px solid green;
+	      width: 320px;
+	      background-color: #9ef2d3;
+	      padding: 10px;
+	      box-model: content;
+	  }
+	  #header {
+	      padding: 10px 20px;
+	      background-color: #a9f9f9;
+	      margin-bottom: 10px;
+	      __box-shadow: 2px 2px 4px 0px #cacaca;
+	      color: #595856;
+	      border-radius: 5px;
+	  }
+	  #info {
+	      float: left;
+	      width: 350px;
+	      padding: 10px;
+	  }
+	  #solution {
+	      float: left;
+	      width: 350px;
+	      padding: 10px;
+	      color: #556a62;
+	  }
+	  #code {
+	      font-family: mono;
+	      font-size: 13px;
+	      border: 1px solid gray;
+	      width: 340px;
+	      background-color: #f1f1f1;
+	  }
+	  .code_static {
+	      padding: 10px;
+	  }
+	  .cloud {
+	      margin: 0 0 10px 0;
+	      border-radius: 24px;
+	      padding: 15px;
+	      min-height: 45px;
+	      position: relative;
+	      color: #333;
+	  }
+	  .cloud > div {
+	      float: right;
+	      position: absolute;
+	      right: 15px;
+	      bottom: 12px;
+	  }
+	  .sample {
+	      background-color: #f1f1f1;
+	  }
+	  .task {
+	      background-color: #f1f1f1;
+	  }
+	  button {
+	      padding: 0px 2px;
+	      font-size: 13px;
+	  }
+	  </style>
+        <script>
+             
+            if (WebAssembly) {
+                 // WebAssembly.instantiateStreaming is not currently available in Safari
+                 if (WebAssembly && !WebAssembly.instantiateStreaming) { // polyfill
+                     WebAssembly.instantiateStreaming = async (resp, importObject) => {
+                        const source = await (await resp).arrayBuffer();
+                         return await WebAssembly.instantiate(source, importObject);
+                     };
+                 }  
+
+		const go = new Go();
+		WebAssembly.instantiateStreaming(fetch('rye.wasm'), go.importObject).then(function(dat) {
+		    go.run(dat.instance);
+		});
+		
+                 /*const go = new Go();
+                 WebAssembly.instantiateStreaming(fetch("rye.wasm"), go.importObject).then((result) => {
+                    go.run(result.instance);
+                 });*/
+            } else {
+               console.log("WebAssembly is not supported in your browser")
+            }
+
+	  function evalArea() {
+	      var ret = document.getElementById('returned');
+	      var inp = document.getElementById('code');
+	      ret.innerText = RyeEvalString(inp.value);
+	  }
+
+
+	  var CURRENT_EXER = 0;
+
+	  function displayExercise() {
+
+	  }
+	  
+        </script>
+        <script src="exercises_learn_programming.js"></script>
+    </head>
+    <body>
+      <main id="wasm">
+	<div id="header">
+	  <div style="float: right;">
+	    <img src="arrow-left.svg" style="width: 30px;"></img>
+	    <img src="arrow-right.svg" style="width: 30px;"></img>
+	  </div>
+	  <h1>Naloga #2</h1>
+	  <p><em>Spremeni kodo primera tako, da izpolniš nalogo.</em></p>
+	</div>
+	<div id="info">
+	  <div class="cloud sample">Primer: izpiši število 33
+	    <div><button><img src="reload.svg" style="width: 12px;"></button> <button><img src="play.svg" style="width: 12px;"></button></div></div>
+	  <div class="cloud task">Naloga: izpiši število 42
+	    <div><button><img src="play.svg" style="width: 12px;"></img></button></div></div>
+	</div>
+	<div id="solution">
+	  <div id="code">
+	    <div></div>
+	    <textarea id="code_entry" cols="40" rows="1">a: 33</textarea>
+	    <div class="code_static">print a</div>
+	  </div>
+	  <div>
+	    <!--button onclick="evalArea()">Zaženi</button-->
+	  </div>
+	  <pre id="returned"><em>Rezultat</em></pre>
+	</div>
+      </main>
+    </body>
+</html>

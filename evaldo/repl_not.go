@@ -1,3 +1,4 @@
+//go:build b_norepl
 // +build b_norepl
 
 package evaldo
@@ -72,7 +73,7 @@ func MoveCursorBackward(bias int) {
 
 //
 
-func DoRyeRepl(es *env.ProgramState) {
+func DoRyeRepl(es *env.ProgramState, showResults bool) {
 
 }
 
@@ -94,4 +95,12 @@ func MaybeDisplayFailureOrError(es *env.ProgramState, genv *env.Idxs) {
 		}
 		fmt.Println("\x1b[0m")
 	}
+}
+
+func DoGeneralInput(es *env.ProgramState, prompt string) {
+
+}
+
+func DoGeneralInputField(es *env.ProgramState, prompt string) {
+
 }

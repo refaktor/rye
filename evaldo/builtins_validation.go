@@ -1,3 +1,4 @@
+//go:build !b_no_validate
 // +build !b_no_validate
 
 package evaldo
@@ -125,6 +126,8 @@ func evalWord(word env.Word, es *env.ProgramState, val interface{}) (interface{}
 		}
 	case "integer":
 		return evalInteger(val)
+	case "decimal":
+		return evalDecimal(val)
 	case "string":
 		return evalString(val)
 	case "email":
@@ -181,6 +184,31 @@ func evalInteger(val interface{}) (interface{}, env.Object) {
 		}
 	default:
 		return val, env.String{"not integer"}
+	}
+}
+
+func evalDecimal(val interface{}) (interface{}, env.Object) {
+	switch val1 := val.(type) {
+	case float64:
+		return env.Decimal{val1}, nil
+	case env.Decimal:
+		return val1, nil
+	case string:
+		v, e := strconv.ParseFloat(val1, 64)
+		if e != nil {
+			return val, env.String{"not decimal"}
+		} else {
+			return env.Decimal{float64(v)}, nil
+		}
+	case env.String:
+		v, e := strconv.ParseFloat(val1.Value, 64)
+		if e != nil {
+			return val, env.String{"not decimal"}
+		} else {
+			return env.Decimal{float64(v)}, nil
+		}
+	default:
+		return val, env.String{"not decimal"}
 	}
 }
 
