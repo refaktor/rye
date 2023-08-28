@@ -2,8 +2,6 @@ module rye
 
 go 1.18
 
-require go.mongodb.org/mongo-driver v1.11.4
-
 require (
 	github.com/RoaringBitmap/roaring v0.9.4 // indirect
 	github.com/aws/aws-sdk-go v1.44.64 // indirect
