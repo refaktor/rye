@@ -314,6 +314,19 @@ Install build-esential if you don't already have it, for packages that require c
 
     sudo apt install build-essential
 
+# Build Rye with specific modules
+
+Rye has many bindings, that you can determine at build time, so (currently) you get a specific Rye binary for your specific project. This is an example of a build with many bindings. 
+I've been working on a way to make this more elegant and systematic, but the manual version is:
+
+    go build -tags "b_tiny,b_sqlite,b_http,b_sql,b_postgres,b_openai,b_bson,b_crypto,b_smtpd,b_mail,b_postmark,b_bctypt,b_telegram"
+	
+# Build WASM version of Rye
+
+Rye can also work inside your browser or any other WASM container. I will add examples, html pages and info about it, but to build it:
+
+    GOOS=js GOARCH=wasm go build -tags "b_tiny,b_norepl" -o wasm/rye.wasm main_wasm.go
+
 # Related links
 
   [**Rebol**](http://www.rebol.com) - Rebol's author Carl Sassenrath invented or combined together 90% of concepts that Rye builds upon.

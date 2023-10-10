@@ -1,3 +1,4 @@
+//go:build b_telegram
 // +build b_telegram
 
 package evaldo
@@ -73,7 +74,7 @@ var Builtins_telegrambot = map[string]*env.Builtin{
 		},
 	},
 
-	"telegram-bot//for-update": {
+	"telegram-bot//on-update": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bot := arg0.(type) {
@@ -83,7 +84,7 @@ var Builtins_telegrambot = map[string]*env.Builtin{
 					u := tgm.NewUpdate(0)
 					u.Timeout = 60
 
-					updates := bot.Value.(*tgm.BotAPI).GetUpdatesChan(u)
+					updates, _ := bot.Value.(*tgm.BotAPI).GetUpdatesChan(u)
 					ser := ps.Ser
 					ps.Ser = code.Series
 

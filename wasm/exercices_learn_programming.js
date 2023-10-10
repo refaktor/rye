@@ -11,9 +11,12 @@ exercises = [
     {
 	"title": "Spremenljivka",
 	"example": "Izpiši številko 33",
-	"goal": "Izpiši števili 42",
+	"tasks": [
+	    { i: "Izpiši števili 42", r: "42" }
+	],
 	"code": [
-	    "_ a: 33",
+	    ""
+	    "a: 33",
 	    "print a"
 	]	
     }

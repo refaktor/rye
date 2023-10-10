@@ -38,6 +38,7 @@ require (
 	github.com/drewlanenga/govector v0.0.0-20220726163947-b958ac08bc93 // indirect
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/go-gomail/gomail v0.0.0-20160411212932-81ebce5c23df // indirect
+	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/gobwas/ws v1.1.0 // indirect
@@ -67,9 +68,11 @@ require (
 	github.com/sashabaranov/go-openai v1.5.8 // indirect
 	github.com/spf13/cobra v1.6.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
 	github.com/thomasberger/parsemail v1.2.6 // indirect
 	github.com/webview/webview v0.0.0-20220816141928-2ee04ccd0530 // indirect
 	go.etcd.io/bbolt v1.3.5 // indirect
+	go.mongodb.org/mongo-driver v1.12.1 // indirect
 	golang.org/x/crypto v0.9.0 // indirect
 	golang.org/x/net v0.10.0 // indirect
 	golang.org/x/sys v0.8.0 // indirect

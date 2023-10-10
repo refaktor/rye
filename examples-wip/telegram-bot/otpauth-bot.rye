@@ -1,28 +1,39 @@
-Rye .needs { 'telegram 'otp }
+rye .needs { 'telegram 'otp }
 
-otpd: load %.otp-data
+otpd: context load %.otp-data
+token: trim read %.token
 
 authenticated: 0
 
-bot: new-telegram-bot trim read %.token
-reply: say bot _
-bot .on-update { -> "Message" -> "Text" |respond-to-user otpd }
+new-telegram-bot token :bot
 
-respond-to-user: fn { text otpd } {
-	^if text .starts-with "auth " {
-		text .split " " -> 2 :code
+shell: isolate {
+	auth: fnc { c1 c2 } parent-ctx {
 		new-hotp otpd/secret otpd/cnt
 		|verify-resync code :result -> 1 |set-par 'authenticated
 		|^if {
 			save-otp-data result otpd
-			reply "Welcome!"
+			print "Welcome!"
 		}
-		reply either authenticated { "Bye bye" } { "Wrong code!" }
+		print "Problem"
 	}
-	reply either authenticated { "Very funny :)" } { "Go away" }
+
+	echo: fnc { x } parent-ctx { print x }
+	
+	;   print either authenticated { "Bye bye" } { "Wrong code!" }
+	;	}
+	;	print either authenticated { "Very funny :)" } { "Go away" }
+	
+}
+
+respond-to-user: fn { text } {
+	load text |do-in* shell
 }
 	
 save-otp-data: fn { res otpd } {
 	res -> 2 |set otpd 'cnt |save %.otp-data
 }
+
+bot .for-update { |probe -> "Message" |probe -> "Text" |respond-to-user }
+
 

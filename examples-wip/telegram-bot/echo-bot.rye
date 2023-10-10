@@ -1,10 +1,13 @@
 
-token: read\all %.token
+  ; Telegram Echo bot
+  ; ~ echoes back the message you send it
 
-new-telegram-bot token :bot
-.for-update {
-	-> "Message" :msg -> "Chat" -> "ID"
-	|new-telegram-message "Text" <- msg
-	|send bot
-}
+  token: trim read %.token
+
+  new-telegram-bot token :bot
+  |on-update {
+  	  -> "Message" :msg -> "Chat" -> "ID"
+	  |new-telegram-message "Text" <- msg
+	  |send bot
+  }
 

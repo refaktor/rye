@@ -3,6 +3,7 @@
     <head>
         <meta charset="utf-8">
         <script src="wasm_exec.js"></script>
+        <script src="jsGoo.js"></script>
 	<link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,700|Roboto:300,400,700&subset=latin-ext' rel='stylesheet' type='text/css'>
 	<style>
 	  body {
@@ -58,8 +59,12 @@
 	      width: 340px;
 	      background-color: #f1f1f1;
 	  }
-	  .code_static {
+	  #code_static1, #code_static2 {
 	      padding: 10px;
+	  }
+	  .cloud > div > img {
+	      width: 22px;
+	      vertical-align: bottom;
 	  }
 	  .cloud {
 	      margin: 0 0 10px 0;
@@ -85,9 +90,16 @@
 	      padding: 0px 2px;
 	      font-size: 13px;
 	  }
-	  </style>
+	  button.nav {
+	      border: none;
+	      background-color: transparent;
+	  }
+	  button.nav:disabled {
+	      opacity: 0.3;
+	  }
+	</style>
         <script>
-             
+          
             if (WebAssembly) {
                  // WebAssembly.instantiateStreaming is not currently available in Safari
                  if (WebAssembly && !WebAssembly.instantiateStreaming) { // polyfill
@@ -111,47 +123,160 @@
             }
 
 	  function evalArea() {
+	      fullOutput = "";
 	      var ret = document.getElementById('returned');
 	      var inp = document.getElementById('code');
-	      ret.innerText = RyeEvalString(inp.value);
+	      var code1 = document.getElementById('code_static1');
+	      var code2 = document.getElementById('code_entry');
+	      var code3 = document.getElementById('code_static2');
+	      var code = code1.innerHTML + "\n" + code2.value + "\n" + code3.innerHTML;
+	      RyeEvalString(code);
+	      ret.innerText = fullOutput;
+	      return fullOutput;
 	  }
 
 
 	  var CURRENT_EXER = 0;
+	  var EXERCISE = null;
 
-	  function displayExercise() {
+	  function displayExercise(ex) {
+	      var samp_ok = document.getElementById('sample_ok');
+	      var samp_fail = document.getElementById('sample_fail');
+	      var task_ok = document.getElementById('task_ok');
+	      var task_fail = document.getElementById('task_fail');
+	      samp_ok.style.display = "none"
+	      samp_fail.style.display = "none"
+	      task_ok.style.display = "none"
+	      task_fail.style.display = "none"
 
+	      var nav_bck = document.getElementById('nav_bck');
+	      var nav_fwd = document.getElementById('nav_fwd');
+	      if (CURRENT_EXER > 0) {
+		  nav_bck.disabled = false;
+	      } else {
+		  nav_bck.disabled = "disabled";
+	      }
+	      nav_fwd.disabled = "disabled";
+
+	      var bot = document.getElementById('bot');
+	      var botcl = document.getElementById('botcloud');
+	      bot.style.display = "none";
+	      botcl.innerHTML = "";
+	      
+	      var title = document.getElementById('ex_title');
+	      var ret = document.getElementById('returned');
+	      var code1 = document.getElementById('code_static1');
+	      var code2 = document.getElementById('code_entry');
+	      var code3 = document.getElementById('code_static2');
+	      var info1 = _dom.seekIn(document.getElementById('info_sample'), 'span');
+	      var info2 = _dom.seekIn(document.getElementById('info_task'), 'span');
+	      title.innerHTML = "Naloga #" + (CURRENT_EXER + 1)
+	      code1.innerHTML = ex.code[0]
+	      code2.value = ex.code[1]
+	      code3.innerHTML = ex.code[2]
+	      info1.innerHTML = "Primer: " + ex.example.i
+	      info2.innerHTML = "Naloga: " + ex.tasks[0].i
+	      ret.innerHTML = "<span>[Izpis]</span>"
+	  }
+
+	  function checkSample() {
+	      evalArea()
+	      var samp_ok = document.getElementById('sample_ok');
+	      var samp_fail = document.getElementById('sample_fail');
+	      if (fullOutput.trim() == EXERCISE.example.r) {
+		  samp_ok.style.display = "inline"
+		  samp_fail.style.display = "none"
+	      } else {
+		  samp_ok.style.display = "none"
+		  samp_fail.style.display = "inline"
+	      }
+	  }
+
+	  function checkTask() {
+	      evalArea()
+	      var task_ok = document.getElementById('task_ok');
+	      var task_fail = document.getElementById('task_fail');
+	      var nav_fwd = document.getElementById('nav_fwd');
+	      var bot = document.getElementById('bot');
+	      var botcl = document.getElementById('botcloud');
+	      if (fullOutput.trim() == EXERCISE.tasks[0].r.trim()) {
+		  task_ok.style.display = "inline"
+		  task_fail.style.display = "none"
+		  nav_fwd.disabled = false;
+		  bot.style.display = "block";
+		  botcloud.innerHTML = EXERCISE.lesson;
+	      } else {
+		  task_ok.style.display = "none"
+		  task_fail.style.display = "inline"
+		  nav_fwd.disabled = "disabled";
+	      }
+	  }
+
+	  function loadPage() {
+	      EXERCISE = exercises[CURRENT_EXER]
+	      displayExercise(EXERCISE)
+	  }
+
+	  function exerciseDown() {
+	      if (CURRENT_EXER > 0) {
+		  CURRENT_EXER --;
+		  loadPage()
+	      }
+	  }
+
+	  function exerciseUp() {
+	      if (CURRENT_EXER < exercises.length - 1) {
+		  CURRENT_EXER ++;
+		  loadPage()
+	      } else {
+		  alert("To je to, za sedaj. Hvala!")
+	      }
 	  }
 	  
-        </script>
+          </script>
         <script src="exercises_learn_programming.js"></script>
     </head>
-    <body>
+    <body onload="loadPage()">
       <main id="wasm">
 	<div id="header">
 	  <div style="float: right;">
-	    <img src="arrow-left.svg" style="width: 30px;"></img>
-	    <img src="arrow-right.svg" style="width: 30px;"></img>
+	    <button id="nav_bck" onclick="exerciseDown()" title="nazaj" class="nav" disabled="disabled"><img src="arrow-left.svg" style="width: 30px;"></img></button>
+	    <button id="nav_fwd" onclick="exerciseUp()" title="naprej" class="nav" disabled="disabled"><img src="arrow-right.svg" style="width: 30px;"></img></button>
 	  </div>
-	  <h1>Naloga #2</h1>
+	  <h1 id="ex_title">-</h1>
 	  <p><em>Spremeni kodo primera tako, da izpolniš nalogo.</em></p>
 	</div>
 	<div id="info">
-	  <div class="cloud sample">Primer: izpiši število 33
-	    <div><button><img src="reload.svg" style="width: 12px;"></button> <button><img src="play.svg" style="width: 12px;"></button></div></div>
-	  <div class="cloud task">Naloga: izpiši število 42
-	    <div><button><img src="play.svg" style="width: 12px;"></img></button></div></div>
+	  <div id="info_sample" class="cloud sample"><span>-</span>
+	    <div>
+	      <img id="sample_ok" src="check.svg" style="display: none;">
+	      <img id="sample_fail" src="cross.svg" style="display: none;">
+	      <button onclick="loadPage()" title="povrni primer"><img src="reload.svg" style="width: 12px;"></button>
+	      <button onclick="checkSample()" title="preizkusi primer"><img src="play.svg" style="width: 12px;"></button>
+	    </div>
+	  </div>
+	  <div id="info_task" class="cloud task"><span>-</span>
+	    <div>
+	      <img id="task_ok" src="check.svg" style="display: none;">
+	      <img id="task_fail" src="cross.svg" style="display: none;">
+	      <button onclick="checkTask()" title="preizkusi nalogo"><img src="play.svg" style="width: 12px;"></img></button>
+	    </div>
+	  </div>
 	</div>
 	<div id="solution">
 	  <div id="code">
-	    <div></div>
-	    <textarea id="code_entry" cols="40" rows="1">a: 33</textarea>
-	    <div class="code_static">print a</div>
+	    <div id="code_static1"></div>
+	    <textarea id="code_entry" cols="40" rows="1" spellcheck="false"></textarea>
+	    <div id="code_static2"></div>
 	  </div>
 	  <div>
 	    <!--button onclick="evalArea()">Zaženi</button-->
 	  </div>
 	  <pre id="returned"><em>Rezultat</em></pre>
+	</div>
+	<div style="clear: both; display: none;" id="bot">
+	  <img src="bot1.png" style="float: left" />
+	  <div style="float: left; width: 400px; border-radius: 20px; background-color: #f9f79c; padding: 20px;" id="botcloud">Kaj si se naučil: bla bla bla</div>
 	</div>
       </main>
     </body>

@@ -3604,6 +3604,46 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"has-suffix": {
+		Argsn: 2,
+		Doc:   "Returns part of the String between two positions.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				switch s2 := arg1.(type) {
+				case env.String:
+					if strings.HasSuffix(s1.Value, s2.Value) {
+						return env.Integer{1}
+					} else {
+						return env.Integer{0}
+					}
+				}
+			}
+			return nil
+		},
+	},
+
+	"has-prefix": {
+		Argsn: 2,
+		Doc:   "Returns part of the String between two positions.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				switch s2 := arg1.(type) {
+				case env.String:
+					if strings.HasPrefix(s1.Value, s2.Value) {
+						return env.Integer{1}
+					} else {
+						return env.Integer{0}
+					}
+				}
+			}
+			return nil
+		},
+	},
+
 	"index?": {
 		Argsn: 2,
 		Doc:   "Returns part of the String between two positions.",

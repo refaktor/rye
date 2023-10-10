@@ -1,9 +1,9 @@
-Rye                                                 ; TODO -- make injected value of type "Script startup" so Rye generic method can be called
-|name   "Telegram command bot example"
-|info { "Telegram bot that uses OTP (Google authetnicator codes) to autheticate chatters."
-   	    "Once authenticated it let's them issue a set of commands. Authenticated status times out"
-	    "after 5 minutes of inactivity." }
-|author janko@ryelang.org
+rye                                                 ; TODO -- make injected value of type "Script startup" so Rye generic method can be called
+;|name   "Telegram command bot example"
+;|info { "Telegram bot that uses OTP (Google authetnicator codes) to autheticate chatters."
+;   	    "Once authenticated it let's them issue a set of commands. Authenticated status times out"
+;	    "after 5 minutes of inactivity." }
+;|author janko@ryelang.org
 |needs { 'telegram 'otp 'flat-spruce }              ; TODO -- add these functions name info author
 
 
