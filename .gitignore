@@ -11,6 +11,8 @@ data.txt
 .apitoken
 ._*
 .token
+.otp-data
+*.data
 *.wasm
 
 # Test binary, built with `go test -c`
