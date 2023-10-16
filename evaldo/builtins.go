@@ -27,6 +27,18 @@ func MakeError(env1 *env.ProgramState, msg string) *env.Error {
 	return env.NewError(msg)
 }
 
+func MakeArgError(env1 *env.ProgramState, N int, typ []env.Type, fn string) *env.Error {
+	env1.FailureFlag = true
+	types := ""
+	for i, tt := range typ {
+		if i > 0 {
+			types += ", "
+		}
+		types += env.NativeTypes[tt-1]
+	}
+	return env.NewError("Function " + fn + " requires argument " + strconv.Itoa(N) + " to be any of: " + types + ".")
+}
+
 func MakeRyeError(env1 *env.ProgramState, val env.Object, er *env.Error) *env.Error {
 	switch val := val.(type) {
 	case env.String: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
@@ -246,9 +258,9 @@ var ShowResults bool
 
 var builtins = map[string]*env.Builtin{
 
-	"to-word": {
+	"to-word": { // ALLOK
 		Argsn: 1,
-		Doc:   "Takes a String and returns a Word with that name.",
+		Doc:   "Takes a Rye value (like string) and returns a Word with that name.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
@@ -258,12 +270,12 @@ var builtins = map[string]*env.Builtin{
 			case env.Word:
 				return env.Word{str.Index}
 			default:
-				return makeError(ps, "Arg 1 not String.")
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.WordType}, "to-word")
 			}
 		},
 	},
 
-	"to-string": {
+	"to-string": { // ALLOK
 		Argsn: 1,
 		Doc:   "Takes a Rye value and returns a string representation.",
 		Pure:  true,
@@ -272,7 +284,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"is-string": {
+	"is-string": { // ALLOK
 		Argsn: 1,
 		Doc:   "Returns true if value is string.",
 		Pure:  true,
@@ -285,34 +297,34 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"to-uri": {
+	"to-uri": { // T: return possible failures
 		Argsn: 1,
-		Doc:   "Takes a Rye value and returns a string representation.",
+		Doc:   "Takes a Rye value and return a URI if possible.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewUri1(ps.Idx, arg0.(env.String).Value) // TODO turn to switch
 		},
 	},
 
-	"to-file": {
+	"to-file": { // T: return possible failures
 		Argsn: 1,
-		Doc:   "Takes a Rye value and returns a string representation.",
+		Doc:   "Takes a Rye value and returns file if possible.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewUri1(ps.Idx, "file://"+arg0.(env.String).Value) // TODO turn to switch
 		},
 	},
 
-	"type?": {
+	"type?": { // ALLOK
 		Argsn: 1,
-		Doc:   "Returns true if value is string.",
+		Doc:   "Returns the type of Rye value (as word).",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return env.Word{int(arg0.Type())}
 		},
 	},
 
-	"inc": {
+	"inc": { // ALLOK
 		Argsn: 1,
 		Doc:   "Returns integer value incremented by 1.",
 		Pure:  true,
@@ -321,12 +333,12 @@ var builtins = map[string]*env.Builtin{
 			case env.Integer:
 				return env.Integer{1 + arg.Value}
 			default:
-				return makeError(ps, "Arg 1 not Integer.")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "inc")
 			}
 		},
 	},
 
-	"positive?": {
+	"positive?": { // ALLOK
 		Argsn: 1,
 		Doc:   "Returns true if integer is positive.",
 		Pure:  true,
@@ -339,12 +351,12 @@ var builtins = map[string]*env.Builtin{
 					return env.Integer{0}
 				}
 			default:
-				return makeError(ps, "Arg 1 not Integer.")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "inc")
 			}
 		},
 	},
 
-	"inc!": {
+	"inc!": { // ALLOK
 		Argsn: 1,
 		Doc:   "Increments integer value by 1 in place.",
 		Pure:  false,
@@ -357,17 +369,19 @@ var builtins = map[string]*env.Builtin{
 					case env.Integer:
 						ctx.Set(arg.Index, env.Integer{1 + iintval.Value})
 						return env.Integer{1 + iintval.Value}
+					default:
+						return MakeError(ps, "Value in word is not integer.")
 					}
 				}
-				return makeError(ps, "Arg 1 not Integer.")
+				return MakeError(ps, "Word not found in context.")
 
 			default:
-				return makeError(ps, "Arg 1 not Integer.")
+				return MakeArgError(ps, 1, []env.Type{env.WordType}, "inc!")
 			}
 		},
 	},
 
-	"change!": {
+	"change!": { // ALLOK
 		Argsn: 2,
 		Doc:   "Changes value in a word, if value changes returns true otherwise false",
 		Pure:  false,
@@ -385,14 +399,14 @@ var builtins = map[string]*env.Builtin{
 					}
 					return env.Integer{res}
 				}
-				return makeError(ps, "Arg 1 not Integer.")
+				return makeError(ps, "Word not found in context.")
 			default:
-				return makeError(ps, "Arg 1 not Integer.")
+				return MakeArgError(ps, 1, []env.Type{env.WordType}, "change!")
 			}
 		},
 	},
 
-	"set": {
+	"set": { // ALLOK
 		Argsn: 2,
 		Doc:   "Set words by deconstructing block",
 		Pure:  false,
@@ -418,13 +432,15 @@ var builtins = map[string]*env.Builtin{
 					}
 					return arg0
 				default:
-					return makeError(ps, "Arg 1 not Integer.")
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "set")
 				}
 			default:
-				return makeError(ps, "Arg 1 not Integer.")
+				return MakeArgError(ps, 1, []env.Type{env.WordType}, "set")
 			}
 		},
 	},
+
+	// CONTINUE WORK HERE - SYSTEMATISATION
 
 	// BASIC FUNCTIONS WITH NUMBERS
 

@@ -1010,7 +1010,7 @@ func checkFlagsAfterBlock(ps *env.ProgramState, n int) bool {
 func checkErrorReturnFlag(ps *env.ProgramState) bool {
 	// trace3("---- > return flags")
 	if ps.ErrorFlag {
-		fmt.Println("***checkErrorReturnFlags***")
+		/// fmt.Println("***checkErrorReturnFlags***")
 
 		switch err := ps.Res.(type) {
 		case env.Error:

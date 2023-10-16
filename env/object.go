@@ -848,12 +848,16 @@ func (i Function) Inspect(e Idxs) string {
 	if i.Pure {
 		pure_s = "Pure "
 	}
-	return "[" + pure_s + "Function(" + strconv.FormatInt(int64(i.Argsn), 10) + "): " + i.Doc + "]"
+	docs := ""
+	if len(i.Doc) > 0 {
+		docs = ": " + i.Doc
+	}
+	return "[" + pure_s + "Function(" + strconv.FormatInt(int64(i.Argsn), 10) + ")" + docs + "]"
 }
 
 // Inspect returns a string representation of the Integer.
 func (b Function) Probe(e Idxs) string {
-	return "[Function(" + strconv.FormatInt(int64(b.Argsn), 10) + "): " + b.Doc + "]"
+	return "[Function(" + strconv.FormatInt(int64(b.Argsn), 10) + ")]"
 }
 
 func (i Function) Trace(msg string) {
