@@ -36,7 +36,7 @@ func MakeArgError(env1 *env.ProgramState, N int, typ []env.Type, fn string) *env
 		}
 		types += env.NativeTypes[tt-1]
 	}
-	return env.NewError("Function " + fn + " requires argument " + strconv.Itoa(N) + " to be any of: " + types + ".")
+	return env.NewError("Function " + fn + " requires argument " + strconv.Itoa(N) + " to be any of	: " + types + ".")
 }
 
 func MakeRyeError(env1 *env.ProgramState, val env.Object, er *env.Error) *env.Error {
@@ -98,6 +98,13 @@ func greaterThanNew(arg0 env.Object, arg1 env.Object) bool {
 		valA = float64(vA.Value)
 	case env.Decimal:
 		valA = vA.Value
+	case env.String:
+		switch vB := arg1.(type) {
+		case env.String:
+			return vA.Value > vB.Value
+		default:
+			return false
+		}
 	}
 	switch vB := arg1.(type) {
 	case env.Integer:
@@ -241,7 +248,7 @@ func getFrom(ps *env.ProgramState, data interface{}, key interface{}, posMode bo
 	return makeError(ps, "Wrong type or missing key for get-arrow")
 }
 
-// Sort interface
+// Sort object interface
 type RyeBlockSort []env.Object
 
 func (s RyeBlockSort) Len() int {
@@ -252,6 +259,19 @@ func (s RyeBlockSort) Swap(i, j int) {
 }
 func (s RyeBlockSort) Less(i, j int) bool {
 	return greaterThanNew(s[j], s[i])
+}
+
+// Sort list interface
+type RyeListSort []interface{}
+
+func (s RyeListSort) Len() int {
+	return len(s)
+}
+func (s RyeListSort) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+func (s RyeListSort) Less(i, j int) bool {
+	return greaterThanNew(JsonToRye(s[j]), JsonToRye(s[i]))
 }
 
 var ShowResults bool
@@ -2939,7 +2959,7 @@ var builtins = map[string]*env.Builtin{
 
 	"group": {
 		Argsn: 2,
-		Doc:   "",
+		Doc:   "Groups a block or list of values given condition.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch list := arg0.(type) {
@@ -2955,6 +2975,41 @@ var builtins = map[string]*env.Builtin{
 						for i := 0; i < l; i++ {
 							curval := list.Series.Get(i)
 							ps = EvalBlockInj(ps, curval, true)
+							if ps.ErrorFlag {
+								return ps.Res
+							}
+							// TODO !!! -- currently only works if results are keys
+							newkey := ps.Res.(env.String).Value
+							entry, ok := newd[newkey]
+							if !ok {
+								newd[newkey] = env.NewList(make([]interface{}, 0))
+								entry, ok = newd[newkey]
+							}
+							switch ee := entry.(type) {
+							case *env.List:
+								ee.Data = append(ee.Data, curval)
+							default:
+								return makeError(ps, "FAILURE TODO")
+							}
+							ps.Ser.Reset()
+						}
+						ps.Ser = ser
+						return *env.NewDict(newd)
+					}
+				}
+			case env.List:
+				switch block := arg1.(type) {
+				case env.Block, env.Builtin:
+					l := len(list.Data)
+					newd := make(map[string]interface{})
+					switch block := block.(type) {
+					case env.Block:
+						ser := ps.Ser
+						ps.Ser = block.Series
+						for i := 0; i < l; i++ {
+							curval := list.Data[i]
+							ryeval := JsonToRye(curval)
+							ps = EvalBlockInj(ps, ryeval, true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -3191,6 +3246,42 @@ var builtins = map[string]*env.Builtin{
 				ss := block.Series.S
 				sort.Sort(RyeBlockSort(ss))
 				return *env.NewBlock(*env.NewTSeries(ss))
+			case env.List:
+				ss := block.Data
+				sort.Sort(RyeListSort(ss))
+				return *env.NewList(ss)
+			}
+			return nil
+		},
+	},
+
+	"unique": {
+		Argsn: 1,
+		Doc:   "Accepts a block or list of values and returns only unique values.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch block := arg0.(type) {
+			case env.List:
+				ss := block.Data
+
+				// Create a map to store the unique values.
+				// uniqueValues := make(map[string]bool)
+				uniqueValues := make(map[interface{}]bool)
+
+				// Iterate over the slice and add the elements to the map.
+				for _, element := range ss {
+					// uniqueValues[JsonToRye(element).Probe(*ps.Idx)] = true
+					uniqueValues[element] = true
+				}
+
+				// Create a new slice to store the unique values.
+				uniqueSlice := make([]interface{}, 0, len(uniqueValues))
+
+				// Iterate over the map and add the keys to the new slice.
+				for key := range uniqueValues {
+					uniqueSlice = append(uniqueSlice, key)
+				}
+
+				return *env.NewList(uniqueSlice)
 			}
 			return nil
 		},
@@ -4898,6 +4989,8 @@ var builtins = map[string]*env.Builtin{
 			case env.String:
 				return env.Integer{int64(len(s1.Value))}
 			case env.Dict:
+				return env.Integer{int64(len(s1.Data))}
+			case env.List:
 				return env.Integer{int64(len(s1.Data))}
 			case env.Block:
 				return env.Integer{int64(s1.Series.Len())}
