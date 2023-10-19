@@ -49,7 +49,7 @@ Rye is **homoiconic**, Rye's code is also Rye's data.
 
 ```red
 data: { name "Jim" score 33 }
-code: { print "Hello" +_ data/name }
+code: { print "Hello " + data/name }
 if data/score > 25 code
 ; outputs: Hello Jim
 print second data + ", " + second code
