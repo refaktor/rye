@@ -27,6 +27,11 @@ func MakeError(env1 *env.ProgramState, msg string) *env.Error {
 	return env.NewError(msg)
 }
 
+func MakeBuiltinError(env1 *env.ProgramState, msg string, fn string) *env.Error {
+	env1.FailureFlag = true
+	return env.NewError(msg + " in builtin " + fn + ".")
+}
+
 func MakeArgError(env1 *env.ProgramState, N int, typ []env.Type, fn string) *env.Error {
 	env1.FailureFlag = true
 	types := ""
@@ -337,7 +342,7 @@ var builtins = map[string]*env.Builtin{
 
 	"type?": { // ALLOK
 		Argsn: 1,
-		Doc:   "Returns the type of Rye value (as word).",
+		Doc:   "Returns the type of Rye value (as a word).",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return env.Word{int(arg0.Type())}
@@ -390,10 +395,10 @@ var builtins = map[string]*env.Builtin{
 						ctx.Set(arg.Index, env.Integer{1 + iintval.Value})
 						return env.Integer{1 + iintval.Value}
 					default:
-						return MakeError(ps, "Value in word is not integer.")
+						return MakeBuiltinError(ps, "Value in word is not integer.", "inc!")
 					}
 				}
-				return MakeError(ps, "Word not found in context.")
+				return MakeBuiltinError(ps, "Word not found in context.", "inc!")
 
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.WordType}, "inc!")
@@ -440,14 +445,14 @@ var builtins = map[string]*env.Builtin{
 						case env.Word:
 							// get nth value from values
 							if len(vals.Series.S) < i {
-								return makeError(ps, "More words than values.")
+								return MakeBuiltinError(ps, "More words than values.", "set")
 							}
 							val := vals.Series.S[i]
 							// if it exists then we set it to word from words
 							ps.Ctx.Set(word.Index, val)
 						default:
 							fmt.Println(word)
-							return makeError(ps, "Only words in words block")
+							return MakeBuiltinError(ps, "Only words in words block", "set")
 						}
 					}
 					return arg0
@@ -464,9 +469,9 @@ var builtins = map[string]*env.Builtin{
 
 	// BASIC FUNCTIONS WITH NUMBERS
 
-	"doc": {
+	"doc": { // ALLOK
 		Argsn: 1,
-		Doc:   "Set documentation of the current context.",
+		Doc:   "Set docstring of the current context.",
 		Pure:  true,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch d := arg0.(type) {
@@ -474,21 +479,21 @@ var builtins = map[string]*env.Builtin{
 				env1.Ctx.Doc = d.Value
 				return env.Integer{1}
 			default:
-				return makeError(env1, "Arg 1 not String.")
+				return MakeArgError(env1, 1, []env.Type{env.StringType}, "doc")
 			}
 		},
 	},
 
-	"doc?": {
+	"doc?": { // ALLOK
 		Argsn: 0,
-		Doc:   "Get documentation of the current context.",
+		Doc:   "Get docstring of the current context.",
 		Pure:  true,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return env.String{env1.Ctx.Doc}
 		},
 	},
 
-	"true": {
+	"true": { // ALLOK
 		Argsn: 0,
 		Doc:   "Retutns a truthy value.",
 		Pure:  true,
@@ -497,7 +502,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"false": {
+	"false": { // ALLOK
 		Argsn: 0,
 		Doc:   "Retutns a falsy value.",
 		Pure:  true,
@@ -506,7 +511,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"not": {
+	"not": { // ALLOK
 		Argsn: 1,
 		Doc:   "Turns a truthy value to non-truthy and reverse.",
 		Pure:  true,
@@ -519,21 +524,22 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"require_": {
+	"require_": { //
 		Argsn: 1,
+		Doc:   "TODODOC",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if util.IsTruthy(arg0) {
 				return env.Integer{1}
 			} else {
-				return makeError(ps, "Requirement failed.")
+				return MakeBuiltinError(ps, "Requirement failed.", "require_")
 			}
 		},
 	},
 
-	"factor-of": {
+	"factor-of": { // ALLOK
 		Argsn: 2,
-		Doc:   "Checks if a Arg 1 is factor of Arg 2.",
+		Doc:   "Checks if a first argument is a factor of second.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch a := arg0.(type) {
@@ -546,16 +552,16 @@ var builtins = map[string]*env.Builtin{
 						return env.Integer{0}
 					}
 				default:
-					return makeError(ps, "Arg 1 not Int")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "factor-of")
 				}
 			default:
-				return makeError(ps, "Arg 2 not Int")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "factor-of")
 			}
 		},
 	},
-	"odd": {
+	"odd": { // ALLOK
 		Argsn: 1,
-		Doc:   "Checks if a Arg 1 is even.",
+		Doc:   "Checks if a number is odd.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch a := arg0.(type) {
@@ -566,13 +572,13 @@ var builtins = map[string]*env.Builtin{
 					return env.Integer{0}
 				}
 			default:
-				return makeError(ps, "Arg 2 not Int")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "odd")
 			}
 		},
 	},
-	"even": {
+	"even": { // ALLOK
 		Argsn: 1,
-		Doc:   "Checks if a Arg 1 is even.",
+		Doc:   "Checks if a number is even.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch a := arg0.(type) {
@@ -583,7 +589,7 @@ var builtins = map[string]*env.Builtin{
 					return env.Integer{0}
 				}
 			default:
-				return makeError(ps, "Arg 2 not Int")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "odd")
 			}
 		},
 	},
