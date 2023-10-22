@@ -1,10 +1,10 @@
-// +build b_tiny
+//go:build !b_nng
+// +build !b_nng
 
 package evaldo
 
 import (
-	   "rye/env"
+	"rye/env"
 )
 
-var Builtins_nng = map[string]*env.Builtin{
-}
+var Builtins_nng = map[string]*env.Builtin{}
