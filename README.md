@@ -281,6 +281,18 @@ Run 🏃‍♂️ the rye REPL with:
 docker run -ti refaktor/rye
 ```
 
+### Forking Rye on Github
+
+Rye's directory **contrib** is used for contributed, 3-rd party modules. The directory is a submodul and is a separate repository **github.com/refaktor/rye-contrib**. This complicates
+fork and clone a little. It might change in the future.
+
+To fork Rye repository on Github you must also fork rye-contrib repo. And then inside a main repository run:
+
+```bash
+git submodule init
+git submodule update
+```
+
 ### Building Rye
 
 Use official documentation or lines below to install Golang 1.19.3 https://go.dev/doc/install
@@ -290,7 +302,7 @@ Use official documentation or lines below to install Golang 1.19.3 https://go.de
     export PATH=$PATH:/usr/local/go/bin
     go version
     
-Clone the main branch from the Rye repository. There is a submodule (a different repo) for contributed packages, hence the additional flag:
+Clone the main branch from the Rye repository. There is a submodule (a different repo) for contributed packages, hence the additional flag is needed:
 
     git clone --recurse-submodules https://github.com/refaktor/rye.git && cd rye
 
