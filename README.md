@@ -13,6 +13,7 @@
    * [Getting Rye](#getting-rye)
      * [Binaries](#binaries)
      * [Docker images](#docker-images)
+     * [Forking Rye on Github](#forking-rye-on-github)
      * [Building Rye](#building-rye)
    * [Related links](#related-links)
    * [Questions, contact](#related-links)
