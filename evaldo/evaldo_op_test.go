@@ -11,9 +11,9 @@ import (
 )
 
 func TestEvaldo_expression_maybeproctest_comma(t *testing.T) {
-	input := "{ add add 1 2 3 , add 2 3 , add 2 4 }"
-	block, genv := loader.LoadString(input)
-	es := env.NewProgramState(block.Series, genv)
+	input := " 1 + 2 + 3 , 2 + 3 , 2 + 4  "
+	block, genv := loader.LoadString(input, false)
+	es := env.NewProgramState(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
 	EvalBlock(es)
@@ -28,9 +28,9 @@ func TestEvaldo_expression_maybeproctest_comma(t *testing.T) {
 }
 
 func TestEvaldo_OPWORD_1(t *testing.T) {
-	input := "{ 2 .add 3 }"
-	block, genv := loader.LoadString(input)
-	es := env.NewProgramState(block.Series, genv)
+	input := "  2 + 3  "
+	block, genv := loader.LoadString(input, false)
+	es := env.NewProgramState(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
 	EvalBlock(es)
@@ -45,9 +45,9 @@ func TestEvaldo_OPWORD_1(t *testing.T) {
 }
 
 func TestEvaldo_PIPEWORD_1(t *testing.T) {
-	input := "{ 2 |add 3 }"
-	block, genv := loader.LoadString(input)
-	es := env.NewProgramState(block.Series, genv)
+	input := "  2 + 3  "
+	block, genv := loader.LoadString(input, false)
+	es := env.NewProgramState(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
 	EvalBlock(es)
@@ -62,9 +62,9 @@ func TestEvaldo_PIPEWORD_1(t *testing.T) {
 }
 
 func TestEvaldo_OPWORD_2(t *testing.T) {
-	input := "{ 10 |subtract 3 .add 6 }"
-	block, genv := loader.LoadString(input)
-	es := env.NewProgramState(block.Series, genv)
+	input := "  10 |- 3 |- 6  "
+	block, genv := loader.LoadString(input, false)
+	es := env.NewProgramState(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
 	EvalBlock(es)
@@ -73,15 +73,20 @@ func TestEvaldo_OPWORD_2(t *testing.T) {
 	if es.Res.Type() != env.IntegerType {
 		t.Error("Expected result type integer")
 	}
+
+	fmt.Println("********************+")
+	fmt.Println(es.Res)
+	fmt.Println("********************+")
+
 	if es.Res.(env.Integer).Value != 1 {
 		t.Error("Expected result value 1")
 	}
 }
 
 func TestEvaldo_PIPEWORD_2(t *testing.T) {
-	input := "{ 10 |subtract 3 |add 5 }"
-	block, genv := loader.LoadString(input)
-	es := env.NewProgramState(block.Series, genv)
+	input := "  10 |- 3 |+ 5  "
+	block, genv := loader.LoadString(input, false)
+	es := env.NewProgramState(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
 	EvalBlock(es)
@@ -96,10 +101,10 @@ func TestEvaldo_PIPEWORD_2(t *testing.T) {
 }
 
 func TestEvaldo_OPWORD_3(t *testing.T) {
-	//input := "{ r: 10 |subtract 3 .add 6 |add 10 .subtract 2 |subtract 3 , 2 .add 2 .add rr }"
-	input := "{ inspect r: 10 |subtract 3 .add 6 |add 10 , 2 .add r }"
-	block, genv := loader.LoadString(input)
-	es := env.NewProgramState(block.Series, genv)
+	//input := "  r: 10 |subtract 3 .add 6 |add 10 .subtract 2 |subtract 3 , 2 .add 2 .add rr  "
+	input := "  r: 10 |- 3 + 6 |+ 10 , 2 + r  "
+	block, genv := loader.LoadString(input, false)
+	es := env.NewProgramState(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
 	EvalBlock(es)
@@ -114,9 +119,9 @@ func TestEvaldo_OPWORD_3(t *testing.T) {
 }
 
 func _TestEvaldo_PIPEWORD_3(t *testing.T) {
-	input := "{ 10 |subtract 3 |add 5 |subtract 10 |add 8 }"
-	block, genv := loader.LoadString(input)
-	es := env.NewProgramState(block.Series, genv)
+	input := "  10 |- 3 |+ 5 |- 10 |+ 8  "
+	block, genv := loader.LoadString(input, false)
+	es := env.NewProgramState(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
 	EvalBlock(es)
@@ -133,9 +138,9 @@ func _TestEvaldo_PIPEWORD_3(t *testing.T) {
 /*
 
 func TestEvaldo_expression_first_opword_2(t *testing.T) {
-	input := "{ 2 |add 3 |add 5 }"
-	block, genv := loader.LoadString(input)
-	es := env.NewProgramState(block.Series, genv)
+	input := "  2 |add 3 |add 5  "
+	block, genv := loader.LoadString(input, false)
+	es := env.NewProgramState(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
 	EvalBlock(es)
@@ -150,9 +155,9 @@ func TestEvaldo_expression_first_opword_2(t *testing.T) {
 }
 
 func TestEvaldo_expression_first_opword_mix(t *testing.T) {
-	input := "{ add add 2 |add 3 |add 5 10 1 }"
-	block, genv := loader.LoadString(input)
-	es := env.NewProgramState(block.Series, genv)
+	input := "  add add 2 |add 3 |add 5 10 1  "
+	block, genv := loader.LoadString(input, false)
+	es := env.NewProgramState(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
 	EvalBlock(es)
@@ -167,9 +172,9 @@ func TestEvaldo_expression_first_opword_mix(t *testing.T) {
 }
 
 func TestEvaldo_expression_first_opword_4(t *testing.T) {
-	input := "{ 100 |add 50 |subtract 33 }"
-	block, genv := loader.LoadString(input)
-	es := env.NewProgramState(block.Series, genv)
+	input := "  100 |add 50 |subtract 33  "
+	block, genv := loader.LoadString(input, false)
+	es := env.NewProgramState(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
 	EvalBlock(es)
@@ -184,9 +189,9 @@ func TestEvaldo_expression_first_opword_4(t *testing.T) {
 }
 
 func TestEvaldo_expression_first_opword_5(t *testing.T) {
-	input := "{ 100 |add 50 |subtract 33 add 2 5 |subtract 3 }"
-	block, genv := loader.LoadString(input)
-	es := env.NewProgramState(block.Series, genv)
+	input := "  100 |add 50 |subtract 33 add 2 5 |subtract 3  "
+	block, genv := loader.LoadString(input, false)
+	es := env.NewProgramState(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
 	EvalBlock(es)
@@ -201,9 +206,9 @@ func TestEvaldo_expression_first_opword_5(t *testing.T) {
 }
 
 func TestEvaldo_OPWORDS_USER_FUNC_1(t *testing.T) {
-	input := "{ myadd: fn { a b } { add a b } 100 |myadd 50 }"
-	block, genv := loader.LoadString(input)
-	es := env.NewProgramState(block.Series, genv)
+	input := "  myadd: fn { a b } { add a b } 100 |myadd 50  "
+	block, genv := loader.LoadString(input, false)
+	es := env.NewProgramState(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
 	EvalBlock(es)
@@ -218,9 +223,9 @@ func TestEvaldo_OPWORDS_USER_FUNC_1(t *testing.T) {
 }
 
 func TestEvaldo_OPWORDS_USER_FUNC_2(t *testing.T) {
-	input := "{ myadd: fn { a b } { add a b } 100 |myadd 50 |subtract 66 }"
-	block, genv := loader.LoadString(input)
-	es := env.NewProgramState(block.Series, genv)
+	input := "  myadd: fn { a b } { add a b } 100 |myadd 50 |subtract 66  "
+	block, genv := loader.LoadString(input, false)
+	es := env.NewProgramState(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
 	EvalBlock(es)
@@ -235,9 +240,9 @@ func TestEvaldo_OPWORDS_USER_FUNC_2(t *testing.T) {
 }
 
 func TestEvaldo_OPWORDS_USER_FUNC_3(t *testing.T) {
-	input := "{ myadd: fn { a b } { add a b } 100 |add 50 |subtract 20 |add 10 }"
-	block, genv := loader.LoadString(input)
-	es := env.NewProgramState(block.Series, genv)
+	input := "  myadd: fn { a b } { add a b } 100 |add 50 |subtract 20 |add 10  "
+	block, genv := loader.LoadString(input, false)
+	es := env.NewProgramState(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
 	EvalBlock(es)
@@ -273,9 +278,9 @@ func TestEvaldo_OPWORDS_USER_FUNC_3(t *testing.T) {
 // test show us that .subtract then consumes all opwords and pipewords on right. Which doesn't behave as I expected and can't be desirable.
 
 func TestEvaldo_OPWORDS_USER_FUNC_toleft_1(t *testing.T) {
-	input := "{ 150 |subtract 20 |add 20 |add 10 |add 10 |add 20 }"
-	block, genv := loader.LoadString(input)
-	es := env.NewProgramState(block.Series, genv)
+	input := "  150 |subtract 20 |add 20 |add 10 |add 10 |add 20  "
+	block, genv := loader.LoadString(input, false)
+	es := env.NewProgramState(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
 	EvalBlock(es)
@@ -290,9 +295,9 @@ func TestEvaldo_OPWORDS_USER_FUNC_toleft_1(t *testing.T) {
 }
 
 func __TestEvaldo_OPWORDS_USER_FUNC_toleft_2(t *testing.T) {
-	input := "{ 150 |subtract 20 |add 10 }"
-	block, genv := loader.LoadString(input)
-	es := env.NewProgramState(block.Series, genv)
+	input := "  150 |subtract 20 |add 10  "
+	block, genv := loader.LoadString(input, false)
+	es := env.NewProgramState(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
 	EvalBlock(es)

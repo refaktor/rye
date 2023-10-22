@@ -1,11 +1,10 @@
+//go:build b_tiny
 // +build b_tiny
 
 package evaldo
 
 import (
-"rye/env"
-
+	"rye/env"
 )
 
-var Builtins_goroutines2 = map[string]*env.Builtin{
-}
+var Builtins_goroutines2 = map[string]*env.Builtin{}

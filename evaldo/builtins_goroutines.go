@@ -1,4 +1,5 @@
-// ### +build !b_tiny
+//go:build !b_tiny
+// +build !b_tiny
 
 package evaldo
 

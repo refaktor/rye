@@ -1,4 +1,5 @@
-//_ +build b_sxml
+//go:build b_sxml
+// +build b_sxml
 
 package evaldo
 
