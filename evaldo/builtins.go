@@ -422,9 +422,9 @@ var builtins = map[string]*env.Builtin{
 					} else {
 						res = 1
 					}
-					return env.Integer{res}
+					return env.Integer{Value: res}
 				}
-				return makeError(ps, "Word not found in context.")
+				return MakeBuiltinError(ps, "Word not found in context.", "change!")
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.WordType}, "change!")
 			}
@@ -605,10 +605,10 @@ var builtins = map[string]*env.Builtin{
 				case env.Integer:
 					return env.Integer{a.Value % b.Value}
 				default:
-					return makeError(ps, "Arg 2 not Int")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "mod")
 				}
 			default:
-				return makeError(ps, "Arg 1 not Int")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "mod")
 			}
 		},
 	},
@@ -626,7 +626,7 @@ var builtins = map[string]*env.Builtin{
 				case env.Decimal:
 					return env.Decimal{float64(s1.Value) + s2.Value}
 				default:
-					return makeError(ps, "Integer and a wrong type")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "_+")
 				}
 			case env.Decimal:
 				switch s2 := arg1.(type) {
@@ -635,7 +635,7 @@ var builtins = map[string]*env.Builtin{
 				case env.Decimal:
 					return env.Decimal{s1.Value + s2.Value}
 				default:
-					return makeError(ps, "Decimal and a wrong type")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "_+")
 				}
 			case env.String:
 				switch s2 := arg1.(type) {
@@ -646,7 +646,7 @@ var builtins = map[string]*env.Builtin{
 				case env.Decimal:
 					return env.String{s1.Value + strconv.FormatFloat(s2.Value, 'f', -1, 64)}
 				default:
-					return makeError(ps, "If Arg 1 is String, Arg 2 should also be String or Integer")
+					return MakeArgError(ps, 2, []env.Type{env.StringType, env.IntegerType, env.DecimalType}, "_+")
 				}
 			case env.Uri:
 				switch s2 := arg1.(type) {
@@ -660,19 +660,33 @@ var builtins = map[string]*env.Builtin{
 					for i := 0; i < s2.Series.Len(); i++ {
 						switch node := s2.Series.Get(i).(type) {
 						case env.Word:
-							str.WriteString(sepa + ps.Idx.GetWord(node.Index) + "=")
+							_, err := str.WriteString(sepa + ps.Idx.GetWord(node.Index) + "=")
+							if err != nil {
+								return MakeBuiltinError(ps, "WriteString failed for Word type.", "_+")
+							}
 							sepa = "&"
 						case env.String:
-							str.WriteString(node.Value)
+							_, err := str.WriteString(node.Value)
+							if err != nil {
+								return MakeBuiltinError(ps, "WriteString failed for String type.", "_+")
+							}
 						case env.Integer:
-							str.WriteString(strconv.Itoa(int(node.Value)))
+							_, err := str.WriteString(strconv.Itoa(int(node.Value)))
+							if err != nil {
+								return MakeBuiltinError(ps, "WriteString failed for Integer type.", "_+")
+							}
 						case env.Uri:
-							str.WriteString(node.GetPath())
+							_, err := str.WriteString(node.GetPath())
+							if err != nil {
+								return MakeBuiltinError(ps, "WriteString failed for Uri type.", "_+")
+							}
+						default:
+							return MakeBuiltinError(ps, "Value in node is not word, string, int or uri type.", "_+")
 						}
 					}
 					return *env.NewUri(ps.Idx, s1.Scheme, s1.Path+str.String())
 				default:
-					return makeError(ps, "If Arg 1 is Uri, Arg 2 should be Integer, String or Block.")
+					return MakeArgError(ps, 2, []env.Type{env.StringType, env.IntegerType, env.BlockType}, "_+")
 				}
 			case env.Block:
 				switch b2 := arg1.(type) {
@@ -681,17 +695,17 @@ var builtins = map[string]*env.Builtin{
 					s1.Series = *s.AppendMul(b2.Series.GetAll())
 					return s1
 				default:
-					return makeError(ps, "If Arg 1 is Block, Arg 2 should also be Block.")
+					return MakeBuiltinError(ps, "Value in Block is not block type.", "_+")
 				}
 			default:
-				return makeError(ps, "If Arg 1 is Uri, Arg 2 should be Integer, String or Block")
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.IntegerType, env.BlockType, env.DecimalType, env.UriType}, "_+")
 			}
 		},
 	},
 
 	"_-": {
 		Argsn: 2,
-		Doc:   "Substract two integers.",
+		Doc:   "Subtract two integers.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch a := arg0.(type) {
@@ -702,7 +716,7 @@ var builtins = map[string]*env.Builtin{
 				case env.Decimal:
 					return env.Decimal{float64(a.Value) - b.Value}
 				default:
-					return makeError(ps, "Arg 1 is not Integer.")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "_-")
 				}
 			case env.Decimal:
 				switch b := arg1.(type) {
@@ -711,10 +725,10 @@ var builtins = map[string]*env.Builtin{
 				case env.Decimal:
 					return env.Decimal{a.Value - b.Value}
 				default:
-					return makeError(ps, "Arg 1 is not Integer.")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "_-")
 				}
 			default:
-				return makeError(ps, "Arg 2 is not Integer.")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "_-")
 			}
 		},
 	},
@@ -731,7 +745,7 @@ var builtins = map[string]*env.Builtin{
 				case env.Decimal:
 					return env.Decimal{float64(a.Value) * b.Value}
 				default:
-					return makeError(ps, "Arg 1 is not Integer.")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "_*")
 				}
 			case env.Decimal:
 				switch b := arg1.(type) {
@@ -740,10 +754,10 @@ var builtins = map[string]*env.Builtin{
 				case env.Decimal:
 					return env.Decimal{a.Value * b.Value}
 				default:
-					return makeError(ps, "Arg 1 is not Integer.")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "_*")
 				}
 			default:
-				return makeError(ps, "Arg 2 is not Integer.")
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "_*")
 			}
 		},
 	},
@@ -758,37 +772,37 @@ var builtins = map[string]*env.Builtin{
 				case env.Integer:
 					if b.Value == 0 {
 						ps.FailureFlag = true
-						return makeError(ps, "Can't divide by Zero.")
+						return MakeBuiltinError(ps, "Can't divide by Zero.", "_/")
 					}
 					return env.Integer{a.Value / b.Value}
 				case env.Decimal:
 					if b.Value == 0.0 {
 						ps.FailureFlag = true
-						return makeError(ps, "Can't divide by Zero.")
+						return MakeBuiltinError(ps, "Can't divide by Zero.", "_/")
 					}
 					return env.Decimal{float64(a.Value) / b.Value}
 				default:
-					return makeError(ps, "Arg 1 is not Integer.")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "_/")
 				}
 			case env.Decimal:
 				switch b := arg1.(type) {
 				case env.Integer:
 					if b.Value == 0 {
 						ps.FailureFlag = true
-						return makeError(ps, "Can't divide by Zero.")
+						return MakeBuiltinError(ps, "Can't divide by Zero.", "_/")
 					}
 					return env.Decimal{a.Value / float64(b.Value)}
 				case env.Decimal:
 					if b.Value == 0.0 {
 						ps.FailureFlag = true
-						return makeError(ps, "Can't divide by Zero.")
+						return MakeBuiltinError(ps, "Can't divide by Zero.", "_/")
 					}
 					return env.Decimal{a.Value / b.Value}
 				default:
-					return makeError(ps, "Arg 1 is not Integer.")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "_/")
 				}
 			default:
-				return makeError(ps, "Arg 1 is not Integer.")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "_/")
 			}
 		},
 	},
@@ -873,7 +887,7 @@ var builtins = map[string]*env.Builtin{
 
 	"prnl": {
 		Argsn: 0,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			fmt.Print("\n")
 			return nil
 		},
@@ -882,12 +896,12 @@ var builtins = map[string]*env.Builtin{
 	"prn": {
 		Argsn: 1,
 		Doc:   "Prints a value and adds a space.",
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.String:
 				fmt.Print(arg.Value + " ")
 			default:
-				fmt.Print(arg0.Probe(*env1.Idx) + " ")
+				fmt.Print(arg0.Probe(*ps.Idx) + " ")
 			}
 			return arg0
 		},
@@ -895,12 +909,12 @@ var builtins = map[string]*env.Builtin{
 	"prin": {
 		Argsn: 1,
 		Doc:   "Prints a value without newline.",
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.String:
 				fmt.Print(arg.Value)
 			default:
-				fmt.Print(arg0.Probe(*env1.Idx))
+				fmt.Print(arg0.Probe(*ps.Idx))
 			}
 			return arg0
 		},
@@ -908,12 +922,12 @@ var builtins = map[string]*env.Builtin{
 	"print": {
 		Argsn: 1,
 		Doc:   "Prints a value and adds a newline.",
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.String:
 				fmt.Println(arg.Value)
 			default:
-				fmt.Println(arg0.Probe(*env1.Idx))
+				fmt.Println(arg0.Probe(*ps.Idx))
 			}
 			return arg0
 		},
@@ -921,14 +935,14 @@ var builtins = map[string]*env.Builtin{
 	"print-val": {
 		Argsn: 2,
 		Doc:   "Prints a value and adds a newline.",
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg1.(type) {
 			case env.String:
-				vals := arg0.Probe(*env1.Idx)
+				vals := arg0.Probe(*ps.Idx)
 				news := strings.ReplaceAll(arg.Value, "{{}}", vals)
 				fmt.Println(news)
 			default:
-				fmt.Println(arg0.Probe(*env1.Idx))
+				fmt.Println(arg0.Probe(*ps.Idx))
 			}
 			return arg0
 		},
@@ -936,12 +950,12 @@ var builtins = map[string]*env.Builtin{
 	"print-ssv": {
 		Argsn: 1,
 		Doc:   "Prints a value and adds a newline.",
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Object:
-				fmt.Println(util.FormatSsv(arg, *env1.Idx))
+				fmt.Println(util.FormatSsv(arg, *ps.Idx))
 			default:
-				return makeError(env1, "Not Rye object")
+				return MakeBuiltinError(ps, "Not Rye object.", "print-ssv")
 			}
 			return arg0
 		},
@@ -949,12 +963,12 @@ var builtins = map[string]*env.Builtin{
 	"print-csv": {
 		Argsn: 1,
 		Doc:   "Prints a value and adds a newline.",
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Object:
-				fmt.Println(util.FormatCsv(arg, *env1.Idx))
+				fmt.Println(util.FormatCsv(arg, *ps.Idx))
 			default:
-				return makeError(env1, "Not Rye object")
+				return MakeBuiltinError(ps, "Not Rye object.", "print-csv")
 			}
 			return arg0
 		},
@@ -962,12 +976,12 @@ var builtins = map[string]*env.Builtin{
 	"print-json": {
 		Argsn: 1,
 		Doc:   "Prints a value and adds a newline.",
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Object:
-				fmt.Println(util.FormatJson(arg, *env1.Idx))
+				fmt.Println(util.FormatJson(arg, *ps.Idx))
 			default:
-				return makeError(env1, "Not Rye object")
+				return MakeBuiltinError(ps, "Not Rye object.", "print-json")
 			}
 			return arg0
 		},
@@ -975,37 +989,35 @@ var builtins = map[string]*env.Builtin{
 	"probe": {
 		Argsn: 1,
 		Doc:   "Prints a probe of a value.",
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			fmt.Println(arg0.Inspect(*env1.Idx))
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			fmt.Println(arg0.Inspect(*ps.Idx))
 			return arg0
 		},
 	},
 	"esc": {
 		Argsn: 1,
 		Doc:   "Creates an escape sequence \033{}",
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.String:
 				return env.String{"\033" + arg.Value}
 			default:
-				return makeError(env1, "Arg 0 not String")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "esc")
 			}
-			return arg0
 		},
 	},
 	"esc-val": {
 		Argsn: 2,
 		Doc:   "Escapes a value and adds a newline.",
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch base := arg1.(type) {
 			case env.String:
-				vals := arg0.Probe(*env1.Idx)
+				vals := arg0.Probe(*ps.Idx)
 				news := strings.ReplaceAll(base.Value, "(*)", vals)
 				return env.String{"\033" + news}
 			default:
-				return makeError(env1, "Arg 0 not String")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "esc-val")
 			}
-			return arg0
 		},
 	},
 	/* JM 20230825
