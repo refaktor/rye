@@ -1016,7 +1016,7 @@ var builtins = map[string]*env.Builtin{
 				news := strings.ReplaceAll(base.Value, "(*)", vals)
 				return env.String{"\033" + news}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "esc-val")
+				return MakeArgError(ps, 2, []env.Type{env.StringType}, "esc-val")
 			}
 		},
 	},
