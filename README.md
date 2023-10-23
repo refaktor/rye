@@ -15,11 +15,13 @@
      * [Docker images](#docker-images)
      * [Forking Rye on Github](#forking-rye-on-github)
      * [Building Rye](#building-rye)
+	 * [Build Rye with specific modules](#build-rye-with-specific-modules)
+	 * [Build WASM version of Rye](#build-wasm-version-of-rye)
    * [Related links](#related-links)
    * [Questions, contact](#related-links)
 
 
-*visit **[our blog](https://ryelang.blogspot.com/)** and join our **[reddit group](https://reddit.com/r/ryelang/)** for latest examples and development updates*
+*visit **[ryelang.org](https://ryelang.org/)**, **[our blog](https://ryelang.blogspot.com/)** or join our **[reddit group](https://reddit.com/r/ryelang/)** for latest examples and development updates*
 
 
 
