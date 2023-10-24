@@ -219,26 +219,35 @@ Most of them are more proof of concepts than full implementations. But it's not 
 *I am just in the process into reorganising libraries. I will add info about the level of integration*
 
 ### Base - will be official integrations
+  * Core builtin functions
   * Bcrypt - password hashing
+  * Bson - binary (j)son
+  * Crypto - cryptographic functions
+  * Email - email generation and parsing
+  * Html - html parsing
   * Http - http servers and clients
-  * Json - json handling
+  * IO (!) - can be excluded at build time
+  * Json - json parsing
   * Mysql - database
+  * NATS - messaging
+  * nng - nanomsg scalability protocols
   * Postgresql - database
-  * Psutil - Linux process management
+  * Psutil - linux process management
+  * Regexp - regular expressions
+  * Smtpd - smtp server (receiver)
   * Sqlite - database
-  * Sxml - sax xml like interface
-  
+  * Sxml - sax XML like streaming dialect
+  * Validation (!) - can be excluded
+  * Webview - Webview GUI
+   
 ### Contrib - will be community / third party integrations
   * Amazon AWS
   * Bleve full text search
   * Cayley - graph database
   * GTK - GUI framework
-  * Nats - connective technologies
-  * NNG - nanomsg scalability protocols
   * QFrame - a fast dataframe implementation
   * Raylib - 2D graphich library / game engine
   * Telegram bot - telegram bots
-  * Webview - golang's webview implementation
     
 ## Follow development
 
