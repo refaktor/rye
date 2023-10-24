@@ -8,9 +8,9 @@ import (
 )
 
 func TestFailures_no_error1(t *testing.T) {
-	input := "{ 1 return 2 3 }"
-	block, genv := loader.LoadString(input)
-	es := env.NewProgramState(block.Series, genv)
+	input := "1 return 2 3 "
+	block, genv := loader.LoadString(input, false)
+	es := env.NewProgramState(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
 	evaldo.EvalBlock(es)
 
