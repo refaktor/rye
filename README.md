@@ -245,7 +245,9 @@ Most of them are more proof of concepts than full implementations. But it's not 
   * Bleve full text search
   * Cayley - graph database
   * GTK - GUI framework
+  * OpenAI - OpenAI API
   * QFrame - a fast dataframe implementation
+  * Postmark - email sending service
   * Raylib - 2D graphich library / game engine
   * Telegram bot - telegram bots
     
