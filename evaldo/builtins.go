@@ -1113,9 +1113,12 @@ var builtins = map[string]*env.Builtin{
 					EvalBlock(ps)
 					ps.Ser = ser
 					return ps.Res
+				} else {
+					return MakeBuiltinError(ps, "Truthiness condition is not correct.", "otherwise")
 				}
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "otherwise")
 			}
-			return nil
 		},
 	},
 
@@ -1126,7 +1129,7 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// function accepts 2 args. arg0 is a "boolean" value, arg1 is a block of code
 			// we set bloc to block of code
-			// (we don't have boolean type yet, because it's not cruicial to important part of design, neither is truthiness ... this will be decided later
+			// (we don't have boolean type yet, because it's not crucial to important part of design, neither is truthiness ... this will be decided later
 			// on more operational level
 
 			// we switch on the type of second argument, so far it should be block (later we could accept native and function)
@@ -1156,13 +1159,14 @@ var builtins = map[string]*env.Builtin{
 					// we return the last return value (the return value of executing the block) "a: if 1 { 100 }" a becomes 100,
 					// in future we will also handle the "else" case, but we have to decide
 					return ps.Res
+				} else {
+					return MakeBuiltinError(ps, "Truthiness condition is not correct.", "if")
 				}
 			default:
 				// if it's not a block we return error for now
 				ps.FailureFlag = true
-				return env.NewError("Error if")
+				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "if")
 			}
-			return nil
 		},
 	},
 
@@ -1181,11 +1185,12 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = ser
 					ps.ReturnFlag = true
 					return ps.Res
+				} else {
+					return MakeBuiltinError(ps, "Truthiness condition is not correct.", "^if")
 				}
 			default:
-				return makeError(ps, "Arg 2 not Block.")
+				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "^if")
 			}
-			return nil
 		},
 	},
 
@@ -1204,11 +1209,12 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = ser
 					ps.ReturnFlag = true
 					return ps.Res
+				} else {
+					return MakeBuiltinError(ps, "Truthiness condition is not correct.", "^otherwise")
 				}
 			default:
-				return makeError(ps, "Arg 2 not Block.")
+				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "^otherwise")
 			}
-			return nil
 		},
 	},
 
@@ -1231,7 +1237,7 @@ var builtins = map[string]*env.Builtin{
 					case env.String:
 						cond1 = cond.Value != ""
 					default:
-						return env.NewError("Error either")
+						return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.StringType}, "either")
 					}
 					ser := ps.Ser
 					if cond1 {
@@ -1244,6 +1250,8 @@ var builtins = map[string]*env.Builtin{
 					EvalBlockInj(ps, arg0, true)
 					ps.Ser = ser
 					return ps.Res
+				default:
+					return MakeArgError(ps, 3, []env.Type{env.BlockType}, "either")
 				}
 			case env.Object:
 				switch bloc2 := arg2.(type) {
@@ -1254,16 +1262,20 @@ var builtins = map[string]*env.Builtin{
 					case env.String:
 						cond1 = cond.Value != ""
 					default:
-						return env.NewError("Error either")
+						return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.StringType}, "either")
 					}
 					if cond1 {
 						return bloc1
 					} else {
 						return bloc2
 					}
+				default:
+					return MakeBuiltinError(ps, "Third argument must be Object Type.", "either")
 				}
+			default:
+				//Note - ObjectType is not available so using MakeBuiltinError instead of MakeArgError
+				return MakeBuiltinError(ps, "Second argument must be Block or Object Type.", "either")
 			}
-			return nil
 		},
 	},
 
@@ -1292,7 +1304,7 @@ var builtins = map[string]*env.Builtin{
 						fmt.Println("LOOP")
 
 						if i > bloc.Series.Len()-2 {
-							return env.NewError("switch block malformed")
+							return MakeBuiltinError(ps, "Switch block malformed.", "^tidy-switch")
 						}
 
 						switch ev := bloc.Series.Get(i).(type) {
@@ -1307,6 +1319,8 @@ var builtins = map[string]*env.Builtin{
 								code = bloc.Series.Get(i + 1)
 								any_found = false
 							}
+						default:
+							return MakeBuiltinError(ps, "Invalid type in block series.", "^tidy-switch")
 						}
 					}
 					switch cc := code.(type) {
@@ -1331,12 +1345,12 @@ var builtins = map[string]*env.Builtin{
 					default:
 						// if it's not a block we return error for now
 						ps.FailureFlag = true
-						return env.NewError("Malformed switch block")
+						return MakeBuiltinError(ps, "Malformed switch block.", "^tidy-switch")
 					}
 				default:
 					// if it's not a block we return error for now
 					ps.FailureFlag = true
-					return env.NewError("Second arg not block")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "^tidy-switch")
 				}
 			default:
 				return arg0
@@ -1361,7 +1375,7 @@ var builtins = map[string]*env.Builtin{
 					//fmt.Println("LOOP")
 
 					if i > bloc.Series.Len()-2 {
-						return env.NewError("switch block malformed")
+						return MakeBuiltinError(ps, "Switch block malformed.", "switch")
 					}
 
 					ev := bloc.Series.Get(i)
@@ -1397,15 +1411,14 @@ var builtins = map[string]*env.Builtin{
 					default:
 						// if it's not a block we return error for now
 						ps.FailureFlag = true
-						return env.NewError("Malformed switch block")
+						return MakeBuiltinError(ps, "Malformed switch block.", "switch")
 					}
 				}
-
 				return arg0
 			default:
 				// if it's not a block we return error for now
 				ps.FailureFlag = true
-				return env.NewError("Second arg not block")
+				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "switch")
 			}
 		},
 	},
@@ -1454,6 +1467,8 @@ var builtins = map[string]*env.Builtin{
 						if foundany == false {
 							doblk = true
 						}
+					default:
+						return MakeBuiltinError(ps, "Invalid block series type.", "cases")
 					}
 					// we set ProgramStates series to series ob the block
 					if doblk {
@@ -1474,9 +1489,8 @@ var builtins = map[string]*env.Builtin{
 			default:
 				// if it's not a block we return error for now
 				ps.FailureFlag = true
-				return env.NewError("Error if")
+				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "cases")
 			}
-			return nil
 		},
 	},
 
@@ -1520,10 +1534,10 @@ var builtins = map[string]*env.Builtin{
 				DoRyeRepl(ps, ShowResults)
 				fmt.Println("-------------------------------------------------------------")
 				// ps.Ser = ser
-
 				return ps.Res
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "enter-console")
 			}
-			return nil
 		},
 	},
 
@@ -1536,8 +1550,9 @@ var builtins = map[string]*env.Builtin{
 				// fmt.Print("Get Input: \033[1m" + name.Value + "\033[0m")
 				DoGeneralInput(ps, name.Value)
 				return ps.Res
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "get-input")
 			}
-			return nil
 		},
 	},
 
@@ -1550,8 +1565,9 @@ var builtins = map[string]*env.Builtin{
 				// fmt.Print("Get Input: \033[1m" + name.Value + "\033[0m")
 				DoGeneralInputField(ps, name.Value)
 				return ps.Res
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "input-field")
 			}
-			return nil
 		},
 	},
 
@@ -1566,8 +1582,9 @@ var builtins = map[string]*env.Builtin{
 				EvalBlock(ps)
 				ps.Ser = ser
 				return ps.Res
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "do")
 			}
-			return nil
 		},
 	},
 
@@ -1582,8 +1599,9 @@ var builtins = map[string]*env.Builtin{
 				EvalBlockInj(ps, arg0, true)
 				ps.Ser = ser
 				return ps.Res
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "do-with")
 			}
-			return nil
 		},
 	},
 
@@ -1602,12 +1620,11 @@ var builtins = map[string]*env.Builtin{
 					return ps.Res
 				default:
 					ps.ErrorFlag = true
-					return env.NewError("Arg 2 should be block")
-
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "do-in")
 				}
 			default:
 				ps.ErrorFlag = true
-				return env.NewError("Arg 1 should be context")
+				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "do-in")
 			}
 
 		},
