@@ -2318,6 +2318,9 @@ var builtins = map[string]*env.Builtin{
 					if ps.ErrorFlag {
 						return ps.Res
 					}
+					if ps.ReturnFlag {
+						break
+					}
 					ps.Ser.Reset()
 				}
 				ps.Ser = ser
