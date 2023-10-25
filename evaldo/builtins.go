@@ -1660,15 +1660,16 @@ var builtins = map[string]*env.Builtin{
 				if found {
 					return val
 				}
-				return makeError(ps, "Value not bound")
+				return MakeBuiltinError(ps, "Value not found.", "evalu")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.WordType}, "evalu")
 			}
-			return nil
 		},
 	},
 
 	"eval\\with": {
 		Argsn: 2,
-		Doc:   "",
+		Doc:   "TODODOC",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg1.(type) {
 			case env.Block:
@@ -1691,8 +1692,9 @@ var builtins = map[string]*env.Builtin{
 				}
 				ps.Ser = ser
 				return *env.NewBlock(*env.NewTSeries(res))
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "eval\\with")
 			}
-			return nil
 		},
 	},
 
@@ -1712,8 +1714,9 @@ var builtins = map[string]*env.Builtin{
 				}
 				ps.Ser = ser
 				return ps.Res
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "all")
 			}
-			return makeError(ps, "Arg 1 not Block")
 		},
 	},
 
@@ -1733,14 +1736,15 @@ var builtins = map[string]*env.Builtin{
 				}
 				ps.Ser = ser
 				return ps.Res
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "any")
 			}
-			return makeError(ps, "Arg 1 not Block")
 		},
 	},
 
 	"any\\with": {
 		Argsn: 2,
-		Doc:   "Takes a block, if any of the values or expressions are truthy, the it returns that one, in none false.",
+		Doc:   "Takes a block, if any of the values or expressions are truthy, then it returns that one, in none false.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg1.(type) {
 			case env.Block:
@@ -1755,8 +1759,9 @@ var builtins = map[string]*env.Builtin{
 				}
 				ps.Ser = ser
 				return ps.Res
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "any\\with")
 			}
-			return makeError(ps, "Arg 1 not Block")
 		},
 	},
 
@@ -1775,11 +1780,12 @@ var builtins = map[string]*env.Builtin{
 						idx += 1
 					}
 					return *env.NewBlock(*env.NewTSeries(objs))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "range")
 				}
-				return makeError(ps, "Arg 1 not Int")
-
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "range")
 			}
-			return makeError(ps, "Arg 1 not Int")
 		},
 	},
 
@@ -1812,7 +1818,7 @@ var builtins = map[string]*env.Builtin{
 
 	"collect-key": {
 		Argsn: 2,
-		Doc:   "Collecs key value pars to implicit block.",
+		Doc:   "Collects key value pars to implicit block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if ps.ForcedResult == nil || ps.ForcedResult.Type() != env.BlockType {
 				ps.ForcedResult = *env.NewBlock(*env.NewTSeries(make([]env.Object, 0)))
@@ -1827,7 +1833,7 @@ var builtins = map[string]*env.Builtin{
 
 	"collect-update-key": {
 		Argsn: 2,
-		Doc:   "Collecs key value pars to implicit block.",
+		Doc:   "Collects key value pars to implicit block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if ps.ForcedResult == nil || ps.ForcedResult.Type() != env.BlockType {
 				ps.ForcedResult = *env.NewBlock(*env.NewTSeries(make([]env.Object, 0)))
@@ -1842,7 +1848,7 @@ var builtins = map[string]*env.Builtin{
 
 	"collected": {
 		Argsn: 0,
-		Doc:   "Returns the implicit data structure that we collected t",
+		Doc:   "Returns the implicit data structure that we collected.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return ps.ForcedResult
 		},
@@ -1850,7 +1856,7 @@ var builtins = map[string]*env.Builtin{
 
 	"pop-collected": {
 		Argsn: 0,
-		Doc:   "Retursn the implicit collected data structure and resets it.",
+		Doc:   "Returns the implicit collected data structure and resets it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			result := ps.ForcedResult
 			ps.ForcedResult = nil
@@ -1883,9 +1889,9 @@ var builtins = map[string]*env.Builtin{
 			case env.String:
 				fmt.Println(ps.Ctx.Preview(*ps.Idx, s1.Value))
 				return env.Void{}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "ls\\")
 			}
-			return nil
-
 		},
 	},
 
@@ -1914,8 +1920,9 @@ var builtins = map[string]*env.Builtin{
 					return ps.Res
 				}
 				return *rctx // return the resulting context
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "raw-context")
 			}
-			return nil
 		},
 	},
 
@@ -1937,8 +1944,9 @@ var builtins = map[string]*env.Builtin{
 					return ps.Res
 				}
 				return *rctx // return the resulting context
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "isolate")
 			}
-			return nil
 		},
 	},
 
@@ -1957,8 +1965,9 @@ var builtins = map[string]*env.Builtin{
 				ps.Ctx = ctx
 				ps.Ser = ser
 				return *rctx // return the resulting context
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "context")
 			}
-			return nil
 		},
 	},
 
@@ -1977,8 +1986,9 @@ var builtins = map[string]*env.Builtin{
 				ps.Ctx = ctx
 				ps.Ser = ser
 				return ps.Res // return the resulting context
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "private")
 			}
-			return nil
 		},
 	},
 
@@ -1999,12 +2009,11 @@ var builtins = map[string]*env.Builtin{
 					ps.Ctx = ctx
 					ps.Ser = ser
 					return ps.Res // return the resulting context
-
 				default:
-					return makeError(ps, "Arg 2 not Block")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "private\\")
 				}
 			default:
-				return makeError(ps, "Arg 1 not String")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "private\\")
 			}
 		},
 	},
@@ -2027,10 +2036,13 @@ var builtins = map[string]*env.Builtin{
 					ps.Ctx = ctx
 					ps.Ser = ser
 					return *rctx // return the resulting context
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "extend")
 				}
+			default:
+				ps.ErrorFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "extend")
 			}
-			ps.ErrorFlag = true
-			return env.NewError("Second argument should be block, builtin (or function).")
 		},
 	},
 
@@ -2043,9 +2055,12 @@ var builtins = map[string]*env.Builtin{
 				case env.RyeCtx:
 					swCtx1.Parent = &swCtx2
 					return swCtx1
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.CtxType}, "bind")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "bind")
 			}
-			return env.NewError("wrong args")
 		},
 	},
 
@@ -2057,8 +2072,9 @@ var builtins = map[string]*env.Builtin{
 			case env.RyeCtx:
 				swCtx1.Parent = nil
 				return swCtx1
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "unbind")
 			}
-			return env.NewError("wrong args")
 		},
 	},
 
@@ -2083,7 +2099,7 @@ var builtins = map[string]*env.Builtin{
 				}
 				return res
 			default:
-				return makeError(ps, "Arg 2 should be Block.")
+				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "pass")
 			}
 		},
 	},
@@ -2118,16 +2134,17 @@ var builtins = map[string]*env.Builtin{
 					}
 					return res
 				default:
-					return makeError(ps, "Arg 2 should be Block.")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "wrap")
 				}
 			default:
-				return makeError(ps, "Arg 2 should be Block.")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "wrap")
 			}
 		},
 	},
 
 	"keep": {
 		Argsn: 3,
+		Doc:   "TODODOC",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch b1 := arg1.(type) {
 			case env.Block:
@@ -2144,9 +2161,12 @@ var builtins = map[string]*env.Builtin{
 					EvalBlockInj(ps, arg0, true)
 					ps.Ser = ser
 					return res
+				default:
+					return MakeArgError(ps, 3, []env.Type{env.BlockType}, "keep")
 				}
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "keep")
 			}
-			return nil
 		},
 	},
 
@@ -2162,8 +2182,9 @@ var builtins = map[string]*env.Builtin{
 				EvalBlockInj(ps, arg0, true)
 				ps.Ser = ser
 				return ps.Res
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "with")
 			}
-			return nil
 		},
 	},
 
@@ -2183,8 +2204,9 @@ var builtins = map[string]*env.Builtin{
 				elapsed := t.Sub(start)
 				ps.Ser = ser
 				return env.Integer{elapsed.Nanoseconds() / 1000000}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "time-it")
 			}
-			return nil
 		},
 	},
 
@@ -2207,9 +2229,12 @@ var builtins = map[string]*env.Builtin{
 					}
 					ps.Ser = ser
 					return ps.Res
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "loop")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "loop")
 			}
-			return nil
 		},
 	},
 
@@ -2234,9 +2259,12 @@ var builtins = map[string]*env.Builtin{
 					}
 					ps.Ser = ser
 					return ps.Res
+				default:
+					return MakeArgError(ps, 3, []env.Type{env.BlockType}, "produce")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "produce")
 			}
-			return nil
 		},
 	},
 
@@ -2265,10 +2293,15 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = ser
 						val, _ := ps.Ctx.Get(accu.Index)
 						return val
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.WordType}, "produce\\")
 					}
+				default:
+					return MakeArgError(ps, 4, []env.Type{env.BlockType}, "produce\\")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "produce\\")
 			}
-			return nil
 		},
 	},
 
@@ -2291,7 +2324,7 @@ var builtins = map[string]*env.Builtin{
 				return ps.Res
 			default:
 				ps.FailureFlag = true
-				return env.NewError("arg0 should be block	")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "forever")
 			}
 		},
 	},
