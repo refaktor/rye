@@ -2402,13 +2402,16 @@ var builtins = map[string]*env.Builtin{
 					if ps.ErrorFlag {
 						return ps.Res
 					}
+					if ps.ReturnFlag {
+						break
+					}
 					ps.Ser.Reset()
 				}
 				ps.Ser = ser
 				return ps.Res
 			default:
 				ps.FailureFlag = true
-				return env.NewError("arg0 should be block	")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "forever-with")
 			}
 		},
 	},
@@ -2432,6 +2435,8 @@ var builtins = map[string]*env.Builtin{
 					}
 					ps.Ser = ser
 					return ps.Res
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "for")
 				}
 			case env.Block:
 				switch code := arg1.(type) {
@@ -2447,6 +2452,8 @@ var builtins = map[string]*env.Builtin{
 					}
 					ps.Ser = ser
 					return ps.Res
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "for")
 				}
 			case env.List:
 				switch code := arg1.(type) {
@@ -2462,6 +2469,8 @@ var builtins = map[string]*env.Builtin{
 					}
 					ps.Ser = ser
 					return ps.Res
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "for")
 				}
 			case env.Spreadsheet:
 				switch code := arg1.(type) {
@@ -2496,15 +2505,18 @@ var builtins = map[string]*env.Builtin{
 					}
 					ps.Ser = ser
 					return ps.Res
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "for")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType, env.SpreadsheetType}, "for")
 			}
-			return nil
 		},
 	},
 
 	"purge": { // TODO ... doesn't fully work
 		Argsn: 2,
-		Doc:   "Purges values from a seris based on return of a injected code block.",
+		Doc:   "Purges values from a series based on return of a injected code block.",
 		Pure:  false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch block := arg0.(type) {
@@ -2526,6 +2538,8 @@ var builtins = map[string]*env.Builtin{
 					}
 					ps.Ser = ser
 					return block
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "purge")
 				}
 			case env.List:
 				switch code := arg1.(type) {
@@ -2545,6 +2559,8 @@ var builtins = map[string]*env.Builtin{
 					}
 					ps.Ser = ser
 					return block
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "purge")
 				}
 			case env.Spreadsheet:
 				switch code := arg1.(type) {
@@ -2564,15 +2580,18 @@ var builtins = map[string]*env.Builtin{
 					}
 					ps.Ser = ser
 					return block
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "purge")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType, env.SpreadsheetType}, "purge")
 			}
-			return nil
 		},
 	},
 
 	"purge!": { // TODO ... doesn't fully work
 		Argsn: 2,
-		Doc:   "Purges values from a seris based on return of a injected code block.",
+		Doc:   "Purges values from a series based on return of a injected code block.",
 		Pure:  false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch wrd := arg1.(type) {
@@ -2599,11 +2618,18 @@ var builtins = map[string]*env.Builtin{
 							ps.Ser = ser
 							ctx.Set(wrd.Index, block)
 							return block
+						default:
+							return MakeArgError(ps, 1, []env.Type{env.BlockType}, "purge!")
 						}
+					default:
+						return MakeBuiltinError(ps, "Context value should be block type.", "purge!")
 					}
+				} else {
+					return MakeBuiltinError(ps, "Word not found in context.", "purge!")
 				}
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.WordType}, "purge!")
 			}
-			return nil
 		},
 	},
 
@@ -2639,8 +2665,12 @@ var builtins = map[string]*env.Builtin{
 						for i := 0; i < l; i++ {
 							newl[i] = DirectlyCallBuiltin(ps, block, list.Series.Get(i), nil)
 						}
+					default:
+						return MakeBuiltinError(ps, "Block value should be builtin or block type.", "map")
 					}
 					return *env.NewBlock(*env.NewTSeries(newl))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.BuiltinType}, "map")
 				}
 			case env.List:
 				switch block := arg1.(type) {
@@ -2664,11 +2694,16 @@ var builtins = map[string]*env.Builtin{
 						for i := 0; i < l; i++ {
 							newl[i] = DirectlyCallBuiltin(ps, block, JsonToRye(list.Data[i]), nil)
 						}
+					default:
+						return MakeBuiltinError(ps, "Block value should be builtin or block type.", "map")
 					}
 					return *env.NewList(newl)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.BuiltinType}, "map")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "map")
 			}
-			return nil
 		},
 	},
 
@@ -2703,9 +2738,15 @@ var builtins = map[string]*env.Builtin{
 							for i := 0; i < l; i++ {
 								newl[i] = DirectlyCallBuiltin(ps, block, list.Series.Get(i), nil)
 							}
+						default:
+							return MakeBuiltinError(ps, "Block value should be builtin or block type.", "map\\pos")
 						}
 						return *env.NewBlock(*env.NewTSeries(newl))
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.BlockType, env.BuiltinType}, "map\\pos")
 					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "map\\pos")
 				}
 			case env.List:
 				switch block := arg1.(type) {
@@ -2732,12 +2773,19 @@ var builtins = map[string]*env.Builtin{
 							for i := 0; i < l; i++ {
 								newl[i] = DirectlyCallBuiltin(ps, block, JsonToRye(list.Data[i]), nil)
 							}
+						default:
+							return MakeBuiltinError(ps, "Block value should be builtin or block type.", "map\\pos")
 						}
 						return *env.NewList(newl)
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.WordType}, "map\\pos")
 					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.BuiltinType}, "map\\pos")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "map\\pos")
 			}
-			return nil
 		},
 	},
 
