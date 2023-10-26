@@ -2749,7 +2749,7 @@ var builtins = map[string]*env.Builtin{
 					return MakeArgError(ps, 2, []env.Type{env.WordType}, "map\\pos")
 				}
 			case env.List:
-				switch block := arg1.(type) {
+				switch block := arg2.(type) {
 				case env.Block, env.Builtin:
 					l := len(list.Data)
 					newl := make([]interface{}, l)
@@ -2781,7 +2781,7 @@ var builtins = map[string]*env.Builtin{
 						return MakeArgError(ps, 2, []env.Type{env.WordType}, "map\\pos")
 					}
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.BuiltinType}, "map\\pos")
+					return MakeArgError(ps, 3, []env.Type{env.BlockType, env.BuiltinType}, "map\\pos")
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "map\\pos")
