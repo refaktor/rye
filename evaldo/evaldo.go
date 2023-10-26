@@ -400,7 +400,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 			}
 		}
 		// fmt.Println(kind)
-		if leftVal != nil {
+		if leftVal != nil && ps.Ctx.Kind.Index != -1 { // don't use generic words if context kind is -1 --- TODO temporary solution to isolates, think about it more
 			object, found = ps.Gen.Get(kind, word.(env.Word).Index)
 		}
 	}

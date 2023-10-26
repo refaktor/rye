@@ -1588,6 +1588,31 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"try": {
+		Argsn: 1,
+		Doc:   "Takes a block of code and does (runs) it.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg0.(type) {
+			case env.Block:
+				ser := ps.Ser
+				ps.Ser = bloc.Series
+				EvalBlock(ps)
+
+				// TODO -- probably shouldn't just display error ... but we return it and then handle it / display it
+				MaybeDisplayFailureOrError(ps, ps.Idx)
+
+				ps.ReturnFlag = false
+				ps.ErrorFlag = false
+				ps.FailureFlag = false
+
+				ps.Ser = ser
+				return ps.Res
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "do")
+			}
+		},
+	},
+
 	"do-with": {
 		Argsn: 2,
 		Doc:   "Takes a value and a block of code. It does the code with the value injected.",
@@ -1616,6 +1641,39 @@ var builtins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = bloc.Series
 					EvalBlockInCtx(ps, &ctx)
+					ps.Ser = ser
+					return ps.Res
+				default:
+					ps.ErrorFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "do-in")
+				}
+			default:
+				ps.ErrorFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "do-in")
+			}
+
+		},
+	},
+
+	"do-in\\try": {
+		Argsn: 2,
+		Doc:   "Takes a Context and a Block. It Does a block inside a given Context.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch ctx := arg0.(type) {
+			case env.RyeCtx:
+				switch bloc := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = bloc.Series
+					EvalBlockInCtx(ps, &ctx)
+
+					// TODO -- probably shouldn't just display error ... but we return it and then handle it / display it
+					MaybeDisplayFailureOrError(ps, ps.Idx)
+
+					ps.ReturnFlag = false
+					ps.ErrorFlag = false
+					ps.FailureFlag = false
+
 					ps.Ser = ser
 					return ps.Res
 				default:
@@ -1938,6 +1996,7 @@ var builtins = map[string]*env.Builtin{
 				EvalBlock(ps)
 				rctx := ps.Ctx
 				rctx.Parent = nil
+				rctx.Kind = env.Word{-1}
 				ps.Ctx = ctx
 				ps.Ser = ser
 				if ps.ErrorFlag {
