@@ -574,7 +574,11 @@ DODO:
 
 	}
 
-	moveUp = len(bloc.Rows) + 2
+	if bloc.RawMode {
+		moveUp = len(bloc.RawRows) + 2
+	} else {
+		moveUp = len(bloc.Rows) + 2
+	}
 
 	defer func() {
 		// Show cursor.

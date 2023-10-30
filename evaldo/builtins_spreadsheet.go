@@ -213,7 +213,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			return MakeError(ps, "Some error")
 		},
 	},
-	"gen-col": {
+	"add-col!": {
 		Argsn: 4,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
@@ -232,7 +232,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			return MakeError(ps, "Some error")
 		},
 	},
-	"add-index": {
+	"add-index!": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {

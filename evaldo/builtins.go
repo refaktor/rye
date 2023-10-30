@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"reflect"
 	"rye/env"
+	"rye/term"
 	"sort"
 
 	"rye/loader"
@@ -1020,7 +1021,6 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-	/* JM 20230825
 	"display": {
 		Argsn: 1,
 		Doc:   "Work in progress Interactively displays a value.",
@@ -1054,6 +1054,7 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
+	/* JM 20230825
 	"tui\\selection": {
 		Argsn: 2,
 		Doc:   "Work in progress Interactively displays a value.",
