@@ -237,7 +237,7 @@ Most of them are more proof of concepts than full implementations. But it's not 
   * Smtpd - smtp server (receiver)
   * Sqlite - database ⭐
   * Sxml - sax XML like streaming dialect
-  * Validation ⭐ (!) can be excluded
+  * Validation - validation dialect ⭐ 
   * Webview - Webview GUI
    
 ### Contrib - will be community / third party integrations
