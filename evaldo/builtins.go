@@ -2829,9 +2829,15 @@ var builtins = map[string]*env.Builtin{
 							for i := 1; i < l; i++ {
 								acc = DirectlyCallBuiltin(ps, block, acc, list.Series.Get(i))
 							}
+						default:
+							return MakeBuiltinError(ps, "Block type should be Builtin or Block.", "reduce")
 						}
 						return acc
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.BlockType, env.BuiltinType}, "reduce")
 					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "reduce")
 				}
 			case env.List:
 				switch accu := arg1.(type) {
@@ -2860,9 +2866,15 @@ var builtins = map[string]*env.Builtin{
 							for i := 1; i < l; i++ {
 								acc = DirectlyCallBuiltin(ps, block, acc, JsonToRye(list.Data[i]))
 							}
+						default:
+							return MakeBuiltinError(ps, "Block type should be Builtin or Block.", "reduce")
 						}
 						return acc
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.BlockType, env.BuiltinType}, "reduce")
 					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "reduce")
 				}
 			case env.String:
 				switch accu := arg1.(type) {
@@ -2887,12 +2899,20 @@ var builtins = map[string]*env.Builtin{
 							}
 							ps.Ser = ser
 						case env.Builtin:
+							// TODO-FIXME
+						default:
+							return MakeBuiltinError(ps, "Block type should be Builtin or Block.", "reduce")
 						}
 						return acc
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.BlockType, env.BuiltinType}, "reduce")
 					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "reduce")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "reduce")
 			}
-			return nil
 		},
 	},
 
@@ -2933,9 +2953,15 @@ var builtins = map[string]*env.Builtin{
 							for i := 1; i < l; i++ {
 								acc = DirectlyCallBuiltin(ps, block, acc, list.Series.Get(i))
 							}
+						default:
+							return MakeBuiltinError(ps, "Block type should be Builtin or Block.", "fold")
 						}
 						return acc
+					default:
+						return MakeArgError(ps, 4, []env.Type{env.BlockType, env.BuiltinType}, "fold")
 					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "fold")
 				}
 			case env.List:
 				switch accu := arg1.(type) {
@@ -2964,9 +2990,15 @@ var builtins = map[string]*env.Builtin{
 							for i := 1; i < l; i++ {
 								acc = DirectlyCallBuiltin(ps, block, acc, JsonToRye(list.Data[i]))
 							}
+						default:
+							return MakeBuiltinError(ps, "Block type should be Builtin or Block.", "fold")
 						}
 						return acc
+					default:
+						return MakeArgError(ps, 4, []env.Type{env.BlockType, env.BuiltinType}, "fold")
 					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "fold")
 				}
 			case env.String:
 				switch accu := arg1.(type) {
@@ -2991,12 +3023,20 @@ var builtins = map[string]*env.Builtin{
 							}
 							ps.Ser = ser
 						case env.Builtin:
+							//TODO-FIXME
+						default:
+							return MakeBuiltinError(ps, "Block type should be Builtin or Block.", "fold")
 						}
 						return acc
+					default:
+						return MakeArgError(ps, 4, []env.Type{env.BlockType, env.BuiltinType}, "fold")
 					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "fold")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "fold")
 			}
-			return nil
 		},
 	},
 
@@ -3044,12 +3084,16 @@ var builtins = map[string]*env.Builtin{
 						for i := 1; i < l; i++ {
 							acc = DirectlyCallBuiltin(ps, block, acc, list.Series.Get(i))
 						}
+					default:
+						return MakeBuiltinError(ps, "Block type should be Builtin or Block.", "sum-up")
 					}
 					return acc
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.BuiltinType}, "sum-up")
 				}
-				return makeError(ps, "A2 not block")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "sum-up")
 			}
-			return makeError(ps, "A1 not block")
 		},
 	},
 
@@ -3096,8 +3140,12 @@ var builtins = map[string]*env.Builtin{
 						for i := 0; i < l; i++ {
 							newl[i] = DirectlyCallBuiltin(ps, block, list.Series.Get(i), nil)
 						}
+					default:
+						return MakeBuiltinError(ps, "Block type should be Builtin or Block.", "partition")
 					}
 					return *env.NewBlock(*env.NewTSeries(newl))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.BuiltinType}, "partition")
 				}
 			case env.String:
 				switch block := arg1.(type) {
@@ -3127,11 +3175,17 @@ var builtins = map[string]*env.Builtin{
 						newl = append(newl, subl.String())
 						ps.Ser = ser
 					case env.Builtin:
+						//TODO-FIXME
+					default:
+						return MakeBuiltinError(ps, "Block type should be Builtin or Block.", "partition")
 					}
 					return *env.NewList(newl)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.BuiltinType}, "partition")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.StringType}, "partition")
 			}
-			return nil
 		},
 	},
 
@@ -3162,18 +3216,25 @@ var builtins = map[string]*env.Builtin{
 							if !ok {
 								newd[newkey] = env.NewList(make([]interface{}, 0))
 								entry, ok = newd[newkey]
+								if !ok {
+									return MakeBuiltinError(ps, "Key not found in List.", "group")
+								}
 							}
 							switch ee := entry.(type) {
 							case *env.List:
 								ee.Data = append(ee.Data, curval)
 							default:
-								return makeError(ps, "FAILURE TODO")
+								return MakeBuiltinError(ps, "Entry type should be List.", "group")
 							}
 							ps.Ser.Reset()
 						}
 						ps.Ser = ser
 						return *env.NewDict(newd)
+					default:
+						return MakeBuiltinError(ps, "Block must be type of Block.", "group")
 					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "group")
 				}
 			case env.List:
 				switch block := arg1.(type) {
@@ -3197,21 +3258,29 @@ var builtins = map[string]*env.Builtin{
 							if !ok {
 								newd[newkey] = env.NewList(make([]interface{}, 0))
 								entry, ok = newd[newkey]
+								if !ok {
+									return MakeBuiltinError(ps, "Key not found in List.", "group")
+								}
 							}
 							switch ee := entry.(type) {
 							case *env.List:
 								ee.Data = append(ee.Data, curval)
 							default:
-								return makeError(ps, "FAILURE TODO")
+								return MakeBuiltinError(ps, "Entry type should be List.", "group")
 							}
 							ps.Ser.Reset()
 						}
 						ps.Ser = ser
 						return *env.NewDict(newd)
+					default:
+						return MakeBuiltinError(ps, "Block must be type of Block.", "group")
 					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.BuiltinType}, "group")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "group")
 			}
-			return nil
 		},
 	},
 
