@@ -29,7 +29,7 @@ func resultToJS(res env.Object) interface{} {
 }
 
 func RyeToJSON(res interface{}) string {
-	fmt.Printf("Type: %T", res)
+	// fmt.Printf("Type: %T", res)
 	switch v := res.(type) {
 	case nil:
 		return "null"

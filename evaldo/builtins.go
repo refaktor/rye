@@ -3673,6 +3673,33 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"closure": {
+		// a function with context	 bb: 10 add10 [ a ] context [ b: bb ] [ add a b ]
+		// 							add10 [ a ] this [ add a b ]
+		// later maybe			   add10 [ a ] [ b: b ] [ add a b ]
+		//  						   add10 [ a ] [ 'b ] [ add a b ]
+		Argsn: 2,
+		Doc:   "Creates a function with specific context.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			ctx := ps.Ctx
+			switch args := arg0.(type) {
+			case env.Block:
+				switch body := arg1.(type) {
+				case env.Block:
+					return *env.NewFunctionC(args, body, ctx, false)
+				default:
+					ps.ErrorFlag = true
+					return env.NewError("Third arg should be Block")
+				}
+			default:
+				ps.ErrorFlag = true
+				return env.NewError("First argument should be Block")
+			}
+			return nil
+		},
+	},
+
 	"kind": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

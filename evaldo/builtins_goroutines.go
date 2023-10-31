@@ -59,6 +59,28 @@ var Builtins_goroutines = map[string]*env.Builtin{
 		},
 	},
 
+	"go": {
+		Argsn: 1,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch handler := arg0.(type) {
+			case env.Function:
+				go func() {
+					env1.FailureFlag = false
+					env1.ErrorFlag = false
+					env1.ReturnFlag = false
+					psTemp := env.ProgramState{}
+					copier.Copy(&psTemp, &env1)
+					CallFunction(handler, &psTemp, nil, false, nil)
+					// CallFunctionArgs2(handler, &psTemp, arg, *env.NewNative(psTemp.Idx, "asd", "Go-server-context"), nil)
+				}()
+				return arg0
+			default:
+				env1.FailureFlag = true
+				return env.NewError("arg0 should be string")
+			}
+		},
+	},
+
 	"new-channel": {
 		Argsn: 1,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
