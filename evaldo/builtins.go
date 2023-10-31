@@ -3303,11 +3303,13 @@ var builtins = map[string]*env.Builtin{
 				ll = data.Data
 				llen = len(ll)
 				modeObj = 1
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "filter")
 			}
 
 			if modeObj == 0 {
 				ps.FailureFlag = true
-				return env.NewError("expects list or block")
+				return MakeBuiltinError(ps, "Expects list of block.", "filter")
 			}
 
 			switch block := arg1.(type) {
@@ -3347,10 +3349,13 @@ var builtins = map[string]*env.Builtin{
 							newl = append(newl, JsonToRye(item))
 						}
 					}
+				default:
+					return MakeBuiltinError(ps, "Block type should be Builtin or Block.", "filter")
 				}
 				return *env.NewBlock(*env.NewTSeries(newl))
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.BlockType, env.BuiltinType}, "filter")
 			}
-			return nil
 		},
 	},
 
@@ -3388,9 +3393,13 @@ var builtins = map[string]*env.Builtin{
 						}
 					default:
 						ps.ErrorFlag = true
-						return env.NewError("Second argument should be block, builtin (or function).")
+						return MakeBuiltinError(ps, "Second argument should be block, builtin (or function).", "seek")
 					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.BuiltinType}, "seek")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "seek")
 			}
 			return nil
 		},
@@ -3411,6 +3420,8 @@ var builtins = map[string]*env.Builtin{
 						max = block.Series.Get(i)
 					}
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "max")
 			}
 			return max
 		},
@@ -3429,6 +3440,8 @@ var builtins = map[string]*env.Builtin{
 						max = block.Series.Get(i)
 					}
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "min")
 			}
 			return max
 		},
@@ -3449,13 +3462,16 @@ var builtins = map[string]*env.Builtin{
 						sum += float64(val1.Value)
 					case env.Decimal:
 						sum += val1.Value
+					default:
+						return MakeBuiltinError(ps, "Block type should be Integer or Decimal.", "avg")
 					}
 				}
 				return env.Decimal{sum / float64(l)}
 			case env.Vector:
 				return env.Decimal{block.Value.Mean()}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.VectorType}, "avg")
 			}
-			return nil
 		},
 	},
 
@@ -3474,13 +3490,16 @@ var builtins = map[string]*env.Builtin{
 						sum += float64(val1.Value)
 					case env.Decimal:
 						sum += val1.Value
+					default:
+						return MakeBuiltinError(ps, "Block type should be Integer or Decimal.", "sum")
 					}
 				}
 				return env.Decimal{sum}
 			case env.Vector:
 				return env.Decimal{block.Value.Sum()}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.VectorType}, "sum")
 			}
-			return nil
 		},
 	},
 
@@ -3497,8 +3516,9 @@ var builtins = map[string]*env.Builtin{
 				ss := block.Data
 				sort.Sort(RyeListSort(ss))
 				return *env.NewList(ss)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "sort!")
 			}
-			return nil
 		},
 	},
 
@@ -3527,10 +3547,10 @@ var builtins = map[string]*env.Builtin{
 				for key := range uniqueValues {
 					uniqueSlice = append(uniqueSlice, key)
 				}
-
 				return *env.NewList(uniqueSlice)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.ListType}, "unique")
 			}
-			return nil
 		},
 	},
 
@@ -3546,8 +3566,9 @@ var builtins = map[string]*env.Builtin{
 				}
 				// sort.Sort(RyeBlockSort(ss))
 				return *env.NewBlock(*env.NewTSeries(a))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "reverse!")
 			}
-			return nil
 		},
 	},
 
@@ -3569,12 +3590,15 @@ var builtins = map[string]*env.Builtin{
 						ps.Ctx.Set(ps.Args[0], arg)
 						ps.Ser.Reset()
 						return nil
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "recur-if\\1")
 					}
 				} else {
 					return ps.Res
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "recur-if\\1")
 			}
-			return nil
 		},
 	},
 
@@ -3595,13 +3619,18 @@ var builtins = map[string]*env.Builtin{
 							ps.Ctx.Set(ps.Args[1], argi2)
 							ps.Ser.Reset()
 							return ps.Res
+						default:
+							return MakeArgError(ps, 3, []env.Type{env.IntegerType}, "recur-if\\2")
 						}
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "recur-if\\2")
 					}
 				} else {
 					return ps.Res
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "recur-if\\2")
 			}
-			return nil
 		},
 	},
 
@@ -3626,11 +3655,17 @@ var builtins = map[string]*env.Builtin{
 								ps.Ser.Reset()
 								return ps.Res
 							}
+						default:
+							return MakeArgError(ps, 3, []env.Type{env.IntegerType}, "recur-if\\3")
 						}
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "recur-if\\3")
 					}
 				} else {
 					return ps.Res
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "recur-if\\3")
 			}
 			return nil
 		},
@@ -3646,8 +3681,9 @@ var builtins = map[string]*env.Builtin{
 				//spec := []env.Object{env.Word{aaaidx}}
 				//body := []env.Object{env.Word{printidx}, env.Word{aaaidx}, env.Word{recuridx}, env.Word{greateridx}, env.Integer{99}, env.Word{aaaidx}, env.Word{incidx}, env.Word{aaaidx}}
 				return *env.NewFunction(*env.NewBlock(*env.NewTSeries(make([]env.Object, 0))), body, false)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "does")
 			}
-			return nil
 		},
 	},
 
