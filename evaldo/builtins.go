@@ -527,7 +527,7 @@ var builtins = map[string]*env.Builtin{
 
 	"require_": { //
 		Argsn: 1,
-		Doc:   "TODODOC",
+		Doc:   "Requite a truthy value or produce a failure.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if util.IsTruthy(arg0) {
@@ -1689,7 +1689,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"evalu": {
+	"evaluate": {
 		Argsn: 1,
 		Doc:   "Takes a block of Rye values and evaluates each value or expression.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1726,9 +1726,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"eval\\with": {
+	"evaluate\\with": {
 		Argsn: 2,
-		Doc:   "TODODOC",
+		Doc:   "Evaluate a block with injecting the first argument.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg1.(type) {
 			case env.Block:
@@ -2204,7 +2204,7 @@ var builtins = map[string]*env.Builtin{
 
 	"keep": {
 		Argsn: 3,
-		Doc:   "TODODOC",
+		Doc:   "Do the first block, then the second one but return the result of the first one.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch b1 := arg1.(type) {
 			case env.Block:
@@ -4283,7 +4283,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"join-with": { // todo -- join\w data ","
+	"join\\with": { // todo -- join\w data ","
 		Argsn: 2,
 		Pure:  true,
 		Doc:   "Joins Block or list of values together.",
@@ -4293,7 +4293,10 @@ var builtins = map[string]*env.Builtin{
 				switch s2 := arg1.(type) {
 				case env.String:
 					var str strings.Builder
-					for _, c := range s1.Data {
+					for i, c := range s1.Data {
+						if i > 0 {
+							str.WriteString(s2.Value)
+						}
 						switch it := c.(type) {
 						case string:
 							str.WriteString(it)
@@ -4304,7 +4307,6 @@ var builtins = map[string]*env.Builtin{
 						case env.Integer:
 							str.WriteString(strconv.Itoa(int(it.Value)))
 						}
-						str.WriteString(s2.Value)
 					}
 					return env.String{str.String()}
 				}
