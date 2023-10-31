@@ -218,16 +218,16 @@ Most of them are more proof of concepts than full implementations. But it's not 
 
 *I am just in the process into reorganising libraries. I will add info about the level of integration*
 
-### Base - will be official integrations
-  * Core builtin functions
+### Base - official integrations
+  * Core builtin functions ⭐ ~ 🛠️ currently working on, 👍 unified api: ~50%, 🧪 tests: ~5%
   * Bcrypt - password hashing
   * Bson - binary (j)son
   * Crypto - cryptographic functions
   * Email - email generation and parsing
   * Html - html parsing
-  * Http - http servers and clients
+  * Http - http servers and clients ⭐
   * IO (!) - can be excluded at build time
-  * Json - json parsing
+  * Json - json parsing ⭐ 
   * Mysql - database
   * NATS - messaging
   * nng - nanomsg scalability protocols
@@ -235,9 +235,9 @@ Most of them are more proof of concepts than full implementations. But it's not 
   * Psutil - linux process management
   * Regexp - regular expressions
   * Smtpd - smtp server (receiver)
-  * Sqlite - database
+  * Sqlite - database ⭐
   * Sxml - sax XML like streaming dialect
-  * Validation (!) - can be excluded
+  * Validation ⭐ (!) can be excluded
   * Webview - Webview GUI
    
 ### Contrib - will be community / third party integrations
@@ -250,6 +250,8 @@ Most of them are more proof of concepts than full implementations. But it's not 
   * Postmark - email sending service
   * Raylib - 2D graphich library / game engine
   * Telegram bot - telegram bots
+
+legend: ⭐ priority
     
 ## Follow development
 
