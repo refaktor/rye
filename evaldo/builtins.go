@@ -3698,8 +3698,9 @@ var builtins = map[string]*env.Builtin{
 				spec := []env.Object{env.Word{1}}
 				//body := []env.Object{env.Word{printidx}, env.Word{aaaidx}, env.Word{recuridx}, env.Word{greateridx}, env.Integer{99}, env.Word{aaaidx}, env.Word{incidx}, env.Word{aaaidx}}
 				return *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), body, false)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "fn1")
 			}
-			return nil
 		},
 	},
 
@@ -3716,6 +3717,8 @@ var builtins = map[string]*env.Builtin{
 					case env.String:
 						doc = a.Value
 						//fmt.Println("DOC DOC")
+					default:
+						return MakeBuiltinError(ps, "Series type should be string.", "fn")
 					}
 				}
 				switch body := arg1.(type) {
@@ -3724,9 +3727,12 @@ var builtins = map[string]*env.Builtin{
 					//body := []env.Object{env.Word{printidx}, env.Word{aaaidx}, env.Word{recuridx}, env.Word{greateridx}, env.Integer{99}, env.Word{aaaidx}, env.Word{incidx}, env.Word{aaaidx}}
 					// fmt.Println(doc)
 					return *env.NewFunctionDoc(args, body, false, doc)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "fn")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "fn")
 			}
-			return nil
 		},
 	},
 
@@ -3740,9 +3746,12 @@ var builtins = map[string]*env.Builtin{
 				switch body := arg1.(type) {
 				case env.Block:
 					return *env.NewFunction(args, body, true)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "pfn")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "pfn")
 			}
-			return nil
 		},
 	},
 
@@ -3764,17 +3773,16 @@ var builtins = map[string]*env.Builtin{
 						return *env.NewFunctionC(args, body, &ctx, false)
 					default:
 						ps.ErrorFlag = true
-						return env.NewError("Third arg should be Block")
+						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "fnc")
 					}
 				default:
 					ps.ErrorFlag = true
-					return env.NewError("Second arg should be Context")
+					return MakeArgError(ps, 2, []env.Type{env.CtxType}, "fnc")
 				}
 			default:
 				ps.ErrorFlag = true
-				return env.NewError("First argument should be Block")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "fnc")
 			}
-			return nil
 		},
 	},
 
@@ -3795,13 +3803,12 @@ var builtins = map[string]*env.Builtin{
 					return *env.NewFunctionC(args, body, ctx, false)
 				default:
 					ps.ErrorFlag = true
-					return env.NewError("Third arg should be Block")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "fnc")
 				}
 			default:
 				ps.ErrorFlag = true
-				return env.NewError("First argument should be Block")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "closure")
 			}
-			return nil
 		},
 	},
 
@@ -3814,12 +3821,11 @@ var builtins = map[string]*env.Builtin{
 				case env.Block:
 					return *env.NewKind(s1, spec)
 				default:
-					return env.NewError("2nd not block")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "kind")
 				}
 			default:
-				return env.NewError("first not lit-word")
+				return MakeArgError(ps, 1, []env.Type{env.WordType}, "kind")
 			}
-			return nil
 		},
 	},
 
