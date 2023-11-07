@@ -3814,6 +3814,7 @@ var builtins = map[string]*env.Builtin{
 
 	"kind": {
 		Argsn: 2,
+		Doc:   "Creates new kind.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Word:
@@ -3831,6 +3832,7 @@ var builtins = map[string]*env.Builtin{
 
 	"_>>": {
 		Argsn: 2,
+		Doc:   "TODODOC",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spec := arg1.(type) {
 			case env.Kind:
@@ -3853,22 +3855,22 @@ var builtins = map[string]*env.Builtin{
 							ctx.Kind = spec.Kind
 							return ctx
 						default:
-							return *env.NewError("2344nd xxxx   xxx sn't Dict")
+							return MakeBuiltinError(ps, "Conversion value isn't Dict.", "_>>")
 						}
 					}
-					return *env.NewError("2nd xxxx   xxx sn't Dict")
+					return MakeBuiltinError(ps, "Conversion value isn't Dict.", "_>>")
 				default:
-					return *env.NewError("2nd isn't Dict")
+					return MakeArgError(ps, 1, []env.Type{env.DictType, env.KindType}, "_>>")
 				}
 			default:
-				return *env.NewError("1st isn't kind")
+				return MakeArgError(ps, 2, []env.Type{env.KindType}, "_>>")
 			}
-			return *env.NewError("1st isn't kind xxxx")
 		},
 	},
 
 	"_<<": {
 		Argsn: 2,
+		Doc:   "TODODOC",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spec := arg0.(type) {
 			case env.Kind:
@@ -3881,7 +3883,7 @@ var builtins = map[string]*env.Builtin{
 						ctx.Kind = spec.Kind
 						return ctx
 					default:
-						return env.NewError("2nd A isn't ")
+						return MakeBuiltinError(ps, "Conversion value isn't Dict.", "_<<")
 					}
 				case env.RyeCtx:
 					if spec.HasConverter(dict.Kind.Index) {
@@ -3891,21 +3893,22 @@ var builtins = map[string]*env.Builtin{
 							ctx.Kind = spec.Kind
 							return ctx
 						default:
-							return env.NewError("2344nd xxxx   xxx sn't Dict")
+							return MakeBuiltinError(ps, "Conversion value isn't Dict.", "_<<")
 						}
 					}
+					return MakeBuiltinError(ps, "Conversion value isn't Dict.", "_<<")
 				default:
-					return env.NewError("2nd isn't Dict")
+					return MakeArgError(ps, 2, []env.Type{env.DictType, env.CtxType}, "_<<")
 				}
 			default:
-				return env.NewError("1st isn't kind")
+				return MakeArgError(ps, 1, []env.Type{env.KindType}, "_<<")
 			}
-			return nil
 		},
 	},
 
 	"assure-kind": {
 		Argsn: 2,
+		Doc:   "Assuring kind.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spec := arg1.(type) {
 			case env.Kind:
@@ -3918,15 +3921,14 @@ var builtins = map[string]*env.Builtin{
 						ctx.Kind = spec.Kind
 						return ctx
 					default:
-						return env.NewError("2nd A isn't ")
+						return MakeBuiltinError(ps, "Object type is not Dict.", "assure-kind")
 					}
 				default:
-					return env.NewError("2nd isn't Dict")
+					return MakeArgError(ps, 1, []env.Type{env.DictType}, "assure-kind")
 				}
 			default:
-				return env.NewError("1st isn't kind")
+				return MakeArgError(ps, 2, []env.Type{env.KindType}, "assure-kind")
 			}
-			return nil
 		},
 	},
 
@@ -3942,9 +3944,12 @@ var builtins = map[string]*env.Builtin{
 				switch s2 := arg1.(type) {
 				case env.Integer:
 					return env.String{s1.Value[0:s2.Value]}
+				default:
+					return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "left")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "left")
 			}
-			return nil
 		},
 	},
 
@@ -3965,8 +3970,9 @@ var builtins = map[string]*env.Builtin{
 			switch s1 := arg0.(type) {
 			case env.String:
 				return env.String{strings.TrimSpace(s1.Value)}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "trim")
 			}
-			return nil
 		},
 	},
 
@@ -3982,10 +3988,15 @@ var builtins = map[string]*env.Builtin{
 					switch s3 := arg2.(type) {
 					case env.String:
 						return env.String{strings.ReplaceAll(s1.Value, s2.Value, s3.Value)}
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.StringType}, "replace")
 					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "replace")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "replace")
 			}
-			return nil
 		},
 	},
 
@@ -4001,10 +4012,15 @@ var builtins = map[string]*env.Builtin{
 					switch s3 := arg2.(type) {
 					case env.Integer:
 						return env.String{s1.Value[s2.Value:s3.Value]}
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.IntegerType}, "substring")
 					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "substring")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "substring")
 			}
-			return nil
 		},
 	},
 
@@ -4018,13 +4034,16 @@ var builtins = map[string]*env.Builtin{
 				switch s2 := arg1.(type) {
 				case env.String:
 					if strings.Contains(s1.Value, s2.Value) {
-						return env.Integer{1}
+						return env.Integer{Value: 1}
 					} else {
-						return env.Integer{0}
+						return env.Integer{Value: 0}
 					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "contains")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "contains")
 			}
-			return nil
 		},
 	},
 
@@ -4038,13 +4057,16 @@ var builtins = map[string]*env.Builtin{
 				switch s2 := arg1.(type) {
 				case env.String:
 					if strings.HasSuffix(s1.Value, s2.Value) {
-						return env.Integer{1}
+						return env.Integer{Value: 1}
 					} else {
-						return env.Integer{0}
+						return env.Integer{Value: 0}
 					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "has-suffix")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "has-suffix")
 			}
-			return nil
 		},
 	},
 
@@ -4058,13 +4080,16 @@ var builtins = map[string]*env.Builtin{
 				switch s2 := arg1.(type) {
 				case env.String:
 					if strings.HasPrefix(s1.Value, s2.Value) {
-						return env.Integer{1}
+						return env.Integer{Value: 1}
 					} else {
-						return env.Integer{0}
+						return env.Integer{Value: 0}
 					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "has-prefix")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "has-prefix")
 			}
-			return nil
 		},
 	},
 
@@ -4079,9 +4104,12 @@ var builtins = map[string]*env.Builtin{
 				case env.String:
 					res := strings.Index(s2.Value, s1.Value)
 					return env.Integer{int64(res)}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "index?")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "index?")
 			}
-			return nil
 		},
 	},
 
@@ -4096,9 +4124,12 @@ var builtins = map[string]*env.Builtin{
 				case env.String:
 					res := strings.Index(s2.Value, s1.Value)
 					return env.Integer{int64(res + 1)}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "position?")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "position?")
 			}
-			return nil
 		},
 	},
 
@@ -4112,9 +4143,12 @@ var builtins = map[string]*env.Builtin{
 				switch s2 := arg1.(type) {
 				case env.Integer:
 					return env.String{s1.Value[len(s1.Value)-int(s2.Value):]}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "right")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "right")
 			}
-			return nil
 		},
 	},
 
@@ -4130,6 +4164,8 @@ var builtins = map[string]*env.Builtin{
 					return env.String{strconv.Itoa(int(s1.Value)) + s2.Value}
 				case env.Integer:
 					return env.String{strconv.Itoa(int(s1.Value)) + strconv.Itoa(int(s2.Value))}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType, env.IntegerType}, "concat")
 				}
 			case env.String:
 				switch s2 := arg1.(type) {
@@ -4137,6 +4173,8 @@ var builtins = map[string]*env.Builtin{
 					return env.String{s1.Value + s2.Value}
 				case env.Integer:
 					return env.String{s1.Value + strconv.Itoa(int(s2.Value))}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType, env.IntegerType}, "concat")
 				}
 			case env.Block:
 				switch b2 := arg1.(type) {
@@ -4148,9 +4186,12 @@ var builtins = map[string]*env.Builtin{
 					s := &s1.Series
 					s1.Series = *s.Append(b2)
 					return s1
+				default:
+					return MakeBuiltinError(ps, "If Arg 1 is Block then Arg 2 should be Block or Object type.", "concat")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.StringType, env.BlockType}, "concat")
 			}
-			return nil
 		},
 	},
 
@@ -4166,7 +4207,7 @@ var builtins = map[string]*env.Builtin{
 					inter := util.IntersectStrings(s1.Value, s2.Value)
 					return env.String{inter}
 				default:
-					return makeError(ps, "Arg 2 not String")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "intersect")
 				}
 			case env.Block:
 				switch b2 := arg1.(type) {
@@ -4174,10 +4215,11 @@ var builtins = map[string]*env.Builtin{
 					inter := util.IntersectLists(ps, s1.Series.S, b2.Series.S)
 					return *env.NewBlock(*env.NewTSeries(inter))
 				default:
-					return makeError(ps, "Arg 2 not Block")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "intersect")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType}, "intersect")
 			}
-			return makeError(ps, "Arg 1 not Block or String")
 		},
 	},
 
@@ -4189,8 +4231,9 @@ var builtins = map[string]*env.Builtin{
 			switch s1 := arg0.(type) {
 			case env.Integer:
 				return env.String{strconv.Itoa(int(s1.Value))}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "str")
 			}
-			return nil
 		},
 	},
 	"capitalize": {
@@ -4202,7 +4245,7 @@ var builtins = map[string]*env.Builtin{
 			case env.String:
 				return env.String{strings.Title(s1.Value)}
 			default:
-				return env.NewError("first arg must be string")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "capitalize")
 			}
 		},
 	},
@@ -4215,7 +4258,7 @@ var builtins = map[string]*env.Builtin{
 			case env.String:
 				return env.String{strings.ToLower(s1.Value)}
 			default:
-				return env.NewError("first arg must be string")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "to-lower")
 			}
 		},
 	},
@@ -4228,7 +4271,7 @@ var builtins = map[string]*env.Builtin{
 			case env.String:
 				return env.String{strings.ToUpper(s1.Value)}
 			default:
-				return env.NewError("first arg must be string")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "to-upper")
 			}
 		},
 	},
@@ -4245,10 +4288,15 @@ var builtins = map[string]*env.Builtin{
 					switch s3 := arg2.(type) {
 					case env.String:
 						return env.String{s1.Value + s2.Value + s3.Value}
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.StringType}, "concat3")
 					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "concat3")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "concat3")
 			}
-			return nil
 		},
 	},
 
@@ -4270,6 +4318,8 @@ var builtins = map[string]*env.Builtin{
 						str.WriteString(strconv.Itoa(it))
 					case env.Integer:
 						str.WriteString(strconv.Itoa(int(it.Value)))
+					default:
+						return MakeBuiltinError(ps, "List data should me integer or string.", "join")
 					}
 				}
 				return env.String{str.String()}
@@ -4281,11 +4331,14 @@ var builtins = map[string]*env.Builtin{
 						str.WriteString(it.Value)
 					case env.Integer:
 						str.WriteString(strconv.Itoa(int(it.Value)))
+					default:
+						return MakeBuiltinError(ps, "Block series data should be string or integer.", "join")
 					}
 				}
 				return env.String{str.String()}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.ListType, env.BlockType}, "join")
 			}
-			return nil
 		},
 	},
 
@@ -4312,9 +4365,13 @@ var builtins = map[string]*env.Builtin{
 							str.WriteString(strconv.Itoa(it))
 						case env.Integer:
 							str.WriteString(strconv.Itoa(int(it.Value)))
+						default:
+							return MakeBuiltinError(ps, "Data should be string or integer.", "join\\with")
 						}
 					}
 					return env.String{str.String()}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "join\\with")
 				}
 			case env.Block:
 				switch s2 := arg1.(type) {
@@ -4326,13 +4383,18 @@ var builtins = map[string]*env.Builtin{
 							str.WriteString(it.Value)
 						case env.Integer:
 							str.WriteString(strconv.Itoa(int(it.Value)))
+						default:
+							return MakeBuiltinError(ps, "Block series data should be string or integer.", "join\\with")
 						}
 						str.WriteString(s2.Value)
 					}
 					return env.String{str.String()}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "join\\with")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.ListType, env.BlockType}, "join\\with")
 			}
-			return nil
 		},
 	},
 
@@ -4349,13 +4411,13 @@ var builtins = map[string]*env.Builtin{
 					case env.String:
 						return util.StringToFieldsWithQuoted(str.Value, sepa.Value, quote.Value)
 					default:
-						return makeError(ps, "Quote character not a string.")
+						return MakeArgError(ps, 3, []env.Type{env.StringType}, "split-quoted")
 					}
 				default:
-					return makeError(ps, "Separator character not a string.")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "split-quoted")
 				}
 			default:
-				return makeError(ps, "Input text not a string.")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "split-quoted")
 			}
 		},
 	},
@@ -4372,14 +4434,14 @@ var builtins = map[string]*env.Builtin{
 					spl := strings.Split(str.Value, sepa.Value) // util.StringToFieldsWithQuoted(str.Value, sepa.Value, quote.Value)
 					spl2 := make([]env.Object, len(spl))
 					for i, val := range spl {
-						spl2[i] = env.String{val}
+						spl2[i] = env.String{Value: val}
 					}
 					return *env.NewBlock(*env.NewTSeries(spl2))
 				default:
-					return makeError(ps, "Separator character not a string.")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "split")
 				}
 			default:
-				return makeError(ps, "Input text not a string.")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "split")
 			}
 		},
 	},
@@ -4396,14 +4458,14 @@ var builtins = map[string]*env.Builtin{
 					spl := util.SplitMulti(str.Value, sepa.Value) // util.StringToFieldsWithQuoted(str.Value, sepa.Value, quote.Value)
 					spl2 := make([]env.Object, len(spl))
 					for i, val := range spl {
-						spl2[i] = env.String{val}
+						spl2[i] = env.String{Value: val}
 					}
 					return *env.NewBlock(*env.NewTSeries(spl2))
 				default:
-					return makeError(ps, "Separator character not a string.")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "split\\many")
 				}
 			default:
-				return makeError(ps, "Input text not a string.")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "split\\many")
 			}
 		},
 	},
@@ -4420,11 +4482,11 @@ var builtins = map[string]*env.Builtin{
 					spl := util.SplitEveryString(str.Value, int(sepa.Value))
 					spl2 := make([]env.Object, len(spl))
 					for i, val := range spl {
-						spl2[i] = env.String{val}
+						spl2[i] = env.String{Value: val}
 					}
 					return *env.NewBlock(*env.NewTSeries(spl2))
 				default:
-					return makeError(ps, "Separator character not a string.")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "split-every")
 				}
 			case env.Block:
 				switch sepa := arg1.(type) {
@@ -4436,10 +4498,10 @@ var builtins = map[string]*env.Builtin{
 					}
 					return *env.NewBlock(*env.NewTSeries(spl2))
 				default:
-					return makeError(ps, "Separator character not a string.")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "split-every")
 				}
 			default:
-				return makeError(ps, "Input text not a string.")
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType}, "split-every")
 			}
 		},
 	},
@@ -4450,13 +4512,13 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch addr := arg0.(type) {
 			case env.String:
-				int, err := strconv.Atoi(addr.Value)
+				iValue, err := strconv.Atoi(addr.Value)
 				if err != nil {
-					return makeError(ps, err.Error())
+					return MakeBuiltinError(ps, err.Error(), "to-integer")
 				}
-				return env.Integer{int64(int)}
+				return env.Integer{int64(iValue)}
 			default:
-				return makeError(ps, "Arg 1 should be String.")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "to-integer")
 			}
 		},
 	},
@@ -4470,24 +4532,24 @@ var builtins = map[string]*env.Builtin{
 			switch s1 := arg0.(type) {
 			case env.Block:
 				if len(s1.Series.S) == 0 {
-					return makeError(ps, "Block is empty.")
+					return MakeBuiltinError(ps, "Block is empty.", "first")
 				}
 				return s1.Series.Get(int(0))
 			case env.List:
 				if len(s1.Data) == 0 {
-					return makeError(ps, "List is empty.")
+					return MakeBuiltinError(ps, "List is empty.", "first")
 				}
 				return JsonToRye(s1.Data[int(0)])
 			case env.String:
 				str := []rune(s1.Value)
 				if len(str) == 0 {
-					return makeError(ps, "String is empty.")
+					return MakeBuiltinError(ps, "String is empty.", "first")
 				}
 				return env.String{string(str[0])}
 			case env.Spreadsheet:
 				return s1.GetRow(ps, int(0))
 			default:
-				return env.NewError("Arg 1 not a Series.")
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType, env.BlockType, env.StringType, env.ListType}, "first")
 			}
 		},
 	},
@@ -4499,22 +4561,22 @@ var builtins = map[string]*env.Builtin{
 			switch s1 := arg0.(type) {
 			case env.Block:
 				if len(s1.Series.S) == 0 {
-					return makeError(ps, "Block is empty.")
+					return MakeBuiltinError(ps, "Block is empty.", "rest")
 				}
 				return *env.NewBlock(*env.NewTSeries(s1.Series.S[1:]))
 			case env.List:
 				if len(s1.Data) == 0 {
-					return makeError(ps, "List is empty.")
+					return MakeBuiltinError(ps, "Block is empty.", "rest")
 				}
 				return env.NewList(s1.Data[int(1):])
 			case env.String:
 				str := []rune(s1.Value)
 				if len(str) < 1 {
-					return makeError(ps, "String has only one element.")
+					return MakeBuiltinError(ps, "String has only one element.", "rest")
 				}
 				return env.String{string(str[1:])}
 			default:
-				return env.NewError("Arg 1 not a Series.")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.StringType, env.ListType}, "rest")
 			}
 		},
 	},
@@ -4527,25 +4589,25 @@ var builtins = map[string]*env.Builtin{
 				switch s1 := arg0.(type) {
 				case env.Block:
 					if len(s1.Series.S) == 0 {
-						return makeError(ps, "Block is empty.")
+						return MakeBuiltinError(ps, "Block is empty.", "tail")
 					}
 					return *env.NewBlock(*env.NewTSeries(s1.Series.S[len(s1.Series.S)-int(num.Value):]))
 				case env.List:
 					if len(s1.Data) == 0 {
-						return makeError(ps, "List is empty.")
+						return MakeBuiltinError(ps, "List is empty.", "tail")
 					}
 					return env.NewList(s1.Data[len(s1.Data)-int(num.Value):])
 				case env.String:
 					str := []rune(s1.Value)
 					if len(str) < 1 {
-						return makeError(ps, "String has only one element.")
+						return MakeBuiltinError(ps, "String has only one element.", "tail")
 					}
 					return env.String{string(str[len(str)-int(num.Value):])}
 				default:
-					return env.NewError("Arg 1 not a Series.")
+					return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "tail")
 				}
 			default:
-				return env.NewError("Arg 2 not a Integer.")
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "tail")
 			}
 		},
 	},
@@ -4556,22 +4618,22 @@ var builtins = map[string]*env.Builtin{
 			switch s1 := arg0.(type) {
 			case env.Block:
 				if len(s1.Series.S) < 2 {
-					return makeError(ps, "Block has no second element.")
+					return MakeBuiltinError(ps, "Block has no second element.", "second")
 				}
 				return s1.Series.Get(1)
 			case env.List:
 				if len(s1.Data) < 2 {
-					return makeError(ps, "List has no second element.")
+					return MakeBuiltinError(ps, "List has no second element.", "second")
 				}
 				return JsonToRye(s1.Data[1])
 			case env.String:
 				str := []rune(s1.Value)
 				if len(str) < 2 {
-					return makeError(ps, "String has no second element.")
+					return MakeBuiltinError(ps, "String has no second element.", "second")
 				}
 				return env.String{string(str[1])}
 			default:
-				return env.NewError("Arg 1 not a Series.")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "second")
 			}
 		},
 	},
@@ -4582,8 +4644,9 @@ var builtins = map[string]*env.Builtin{
 			switch s1 := arg0.(type) {
 			case env.Block:
 				return s1.Series.Get(int(2))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "third")
 			}
-			return nil
 		},
 	},
 	"last": {
@@ -4595,8 +4658,9 @@ var builtins = map[string]*env.Builtin{
 				return s1.Series.Get(s1.Series.Len() - 1)
 			case env.String:
 				return env.String{s1.Value[len(s1.Value)-1:]}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.StringType}, "last")
 			}
-			return nil
 		},
 	},
 
@@ -4612,10 +4676,10 @@ var builtins = map[string]*env.Builtin{
 				case env.List:
 					return *env.NewList(s1.Data[0:s2.Value])
 				default:
-					return *env.NewError("not block or list")
+					return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "head")
 				}
 			default:
-				return *env.NewError("not integer")
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "head")
 			}
 		},
 	},
@@ -4629,9 +4693,12 @@ var builtins = map[string]*env.Builtin{
 				switch s2 := arg1.(type) {
 				case env.Integer:
 					return s1.Series.Get(int(s2.Value - 1))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "nth")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "nth")
 			}
-			return nil
 		},
 	},
 	"peek": {
@@ -4641,8 +4708,9 @@ var builtins = map[string]*env.Builtin{
 			switch s1 := arg0.(type) {
 			case env.Block:
 				return s1.Series.Peek()
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "peek")
 			}
-			return nil
 		},
 	},
 	"pop": {
@@ -4652,8 +4720,9 @@ var builtins = map[string]*env.Builtin{
 			switch s1 := arg0.(type) {
 			case env.Block:
 				return s1.Series.Pop()
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "pop")
 			}
-			return nil
 		},
 	},
 	"pos": {
@@ -4663,8 +4732,9 @@ var builtins = map[string]*env.Builtin{
 			switch s1 := arg0.(type) {
 			case env.Block:
 				return env.Integer{int64(s1.Series.Pos())}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "pos")
 			}
-			return nil
 		},
 	},
 	"next": {
@@ -4675,8 +4745,9 @@ var builtins = map[string]*env.Builtin{
 			case env.Block:
 				s1.Series.Next()
 				return s1
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "next")
 			}
-			return nil
 		},
 	},
 	"remove-last!": {
@@ -4694,10 +4765,15 @@ var builtins = map[string]*env.Builtin{
 						oldval.Series = *s.RmLast()
 						ctx.Set(wrd.Index, oldval)
 						return oldval
+					default:
+						return MakeBuiltinError(ps, "Old value should be Block type.", "remove-last!")
 					}
+				} else {
+					return MakeBuiltinError(ps, "Word not found in context.", "remove-last!")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.WordType}, "remove-last!")
 			}
-			return nil
 		},
 	},
 	"append!": {
