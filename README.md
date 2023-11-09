@@ -221,22 +221,22 @@ Most of them are more proof of concepts than full implementations. But it's not 
   * Core builtin functions ⭐ ~ 🛠️ currently working on, 👍 unified api: ~50%, 🧪 tests: ~5%
   * Bcrypt - password hashing
   * Bson - binary (j)son
-  * Crypto - cryptographic functions
+  * Crypto - cryptographic functions ⭐
   * Email - email generation and parsing
   * Html - html parsing
-  * Http - http servers and clients ⭐
+  * Http - http servers and clients ⭐⭐
   * IO (!) - can be excluded at build time
-  * Json - json parsing ⭐ 
-  * Mysql - database
+  * Json - json parsing ⭐⭐ 
+  * Mysql - database ⭐
   * NATS - messaging
   * nng - nanomsg scalability protocols
-  * Postgresql - database
+  * Postgresql - database ⭐
   * Psutil - linux process management
-  * Regexp - regular expressions
+  * Regexp - regular expressions ⭐
   * Smtpd - smtp server (receiver)
-  * Sqlite - database ⭐
+  * Sqlite - database ⭐⭐
   * Sxml - sax XML like streaming dialect
-  * Validation - validation dialect ⭐ 
+  * Validation - validation dialect ⭐⭐ 
   * Webview - Webview GUI
    
 ### Contrib - will be community / third party integrations
