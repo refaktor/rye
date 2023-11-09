@@ -24,7 +24,6 @@
 *visit **[ryelang.org](https://ryelang.org/)**, **[our blog](https://ryelang.blogspot.com/)** or join our **[reddit group](https://reddit.com/r/ryelang/)** for latest examples and development updates*
 
 
-
 ## What is Rye
 
 Rye is a human centric, high level, dynamic **programming language** based on ideas from **Rebol**, flavored by
