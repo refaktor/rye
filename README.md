@@ -225,7 +225,7 @@ Most of them are more proof of concepts than full implementations. But it's not 
   * Email - email generation and parsing
   * Html - html parsing
   * Http - http servers and clients ⭐⭐
-  * IO (!) - can be excluded at build time
+  * IO (!) - can be excluded at build time ⭐⭐ 
   * Json - json parsing ⭐⭐ 
   * Mysql - database ⭐
   * NATS - messaging
