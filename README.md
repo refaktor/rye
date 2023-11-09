@@ -21,7 +21,7 @@
    * [Questions, contact](#related-links)
 
 
-*visit **[ryelang.org](https://ryelang.org/)**, **[our blog](https://ryelang.blogspot.com/)** or join our **[reddit group](https://reddit.com/r/ryelang/)** for latest examples and development updates*
+*visit **[ryelang.org](https://ryelang.org/)**, **[our blog](https://ryelang.org/blog/)** or join our **[reddit group](https://reddit.com/r/ryelang/)** for latest examples and development updates*
 
 
 
