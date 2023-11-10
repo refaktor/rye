@@ -1,0 +1,17 @@
+
+group 'join {
+	equal { join { "abc" "dfe" } } "abcdfe"
+	equal { join { "abc" 123 } } "abc123"
+}
+
+group 'join\with {
+	equal { join\with { "abc" "dfe" } "," } "abc,dfe," ; TODO -- should not have comma at the end
+	equal { join\with { "abc" 123 } "," } "abc,123,"
+}
+
+group 'length? {
+	equal { "12345" .length? } 5
+	equal { { 1 2 3 4 5 } .length? } 5
+	equal { list { 1 2 3 } |length? } 3
+}
+

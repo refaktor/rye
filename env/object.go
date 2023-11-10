@@ -860,6 +860,21 @@ func (b Function) Probe(e Idxs) string {
 	return "[Function(" + strconv.FormatInt(int64(b.Argsn), 10) + ")]"
 }
 
+// Inspect returns a string representation of the Integer.
+func (i Function) Dump(e Idxs) Block {
+	// LONG DISPLAY OF FUNCTION NODES return "[Function: " + i.Spec.Inspect(e) + ", " + i.Body.Inspect(e) + "]"
+	ser := make([]Object, 0)
+	idx, found := e.GetIndex("fn")
+	if !found {
+		goto ENE // TODO
+	}
+	ser = append(ser, Word{idx})
+	ser = append(ser, i.Spec)
+	ser = append(ser, i.Body)
+ENE:
+	return *NewBlock(*NewTSeries(ser))
+}
+
 func (i Function) Trace(msg string) {
 	fmt.Print(msg + " (function): ")
 	fmt.Println(i.Spec)

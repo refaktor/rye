@@ -46,6 +46,7 @@ var NativeTypes = [...]string{
 	"Converter",
 	"Time",
 	"Decimal",
+	"Vector",
 }
 
 func (e *Idxs) IndexWord(w string) int {
