@@ -4793,6 +4793,8 @@ var builtins = map[string]*env.Builtin{
 							newval = env.String{oldval.Value + s3.Value}
 						case env.Integer:
 							newval = env.String{oldval.Value + strconv.Itoa(int(s3.Value))}
+						default:
+							return MakeArgError(ps, 1, []env.Type{env.StringType, env.IntegerType}, "append!")
 						}
 						ctx.Set(wrd.Index, newval)
 						return newval
@@ -4803,17 +4805,18 @@ var builtins = map[string]*env.Builtin{
 						ctx.Set(wrd.Index, oldval)
 						return oldval
 					default:
-						return makeError(ps, "Type of tagword is not String.")
+						return MakeBuiltinError(ps, "Type of tagword is not String.", "append!")
 					}
+				} else {
+					return MakeBuiltinError(ps, "Word not found in context.", "append!")
 				}
-				return makeError(ps, "Tagword not found.")
 			case env.Block:
 				s := &wrd.Series
 				wrd.Series = *s.Append(arg0)
 				//ctx.Set(wrd.Index, oldval)
 				return nil
 			default:
-				return makeError(ps, "Value not tagword")
+				return MakeArgError(ps, 2, []env.Type{env.WordType, env.BlockType}, "append!")
 			}
 		},
 	},
@@ -4835,11 +4838,18 @@ var builtins = map[string]*env.Builtin{
 
 						registerGeneric(ps, s1.Index, s2.Index, s3)
 						return s3
+					default:
+						ps.ErrorFlag = true
+						return MakeBuiltinError(ps, "Argument 3 should be Object type.", "generic")
 					}
+				default:
+					ps.ErrorFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "generic")
 				}
+			default:
+				ps.ErrorFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.WordType}, "generic")
 			}
-			ps.ErrorFlag = true
-			return env.NewError("Wrong args when creating generic function")
 		},
 	},
 
@@ -4859,11 +4869,14 @@ var builtins = map[string]*env.Builtin{
 					return *env.NewSpreadsheet(cols)
 
 				case env.Word:
-					// TODO
+					// TODO-FIXME
+					return MakeBuiltinError(ps, "TODO - Not yet implemented.", "table")
+				default:
+					return MakeBuiltinError(ps, "Block series type should be String or Word.", "table")
 				}
-				return nil
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.WordType}, "table")
 			}
-			return nil
 		},
 	},
 
@@ -4881,10 +4894,12 @@ var builtins = map[string]*env.Builtin{
 					}
 					table.AddRow(env.SpreadsheetRow{vals, &table})
 					return table
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "add-row")
 				}
-				return nil
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "add-row")
 			}
-			return nil
 		},
 	},
 
@@ -4895,8 +4910,9 @@ var builtins = map[string]*env.Builtin{
 			switch bloc := arg0.(type) {
 			case env.Block:
 				return env.NewDictFromSeries(bloc.Series, ps.Idx)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "dict")
 			}
-			return nil
 		},
 	},
 
@@ -4907,8 +4923,9 @@ var builtins = map[string]*env.Builtin{
 			switch bloc := arg0.(type) {
 			case env.Block:
 				return env.NewListFromSeries(bloc.Series)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "list")
 			}
-			return nil
 		},
 	},
 
@@ -4987,8 +5004,9 @@ var builtins = map[string]*env.Builtin{
 				return env.NewError(val.Value)
 			case env.Integer: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
 				return env.NewError1(int(val.Value))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.IntegerType}, "^fail")
 			}
-			return arg0
 		},
 	},
 
@@ -5023,7 +5041,7 @@ var builtins = map[string]*env.Builtin{
 				return env.Integer{int64(er.Status)}
 			default:
 				ps.FailureFlag = true
-				return env.NewError("arg 0 not error")
+				return MakeArgError(ps, 1, []env.Type{env.ErrorType}, "code?")
 			}
 		},
 	},
@@ -5049,8 +5067,9 @@ var builtins = map[string]*env.Builtin{
 				return env.Integer{int64(1)}
 			case *env.Error:
 				return env.Integer{int64(1)}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.ErrorType}, "failed?")
 			}
-			return env.Integer{int64(0)}
 		},
 	},
 
@@ -5067,6 +5086,8 @@ var builtins = map[string]*env.Builtin{
 						er = nil
 					}
 					return MakeRyeError(ps, arg1, er)
+				default:
+					return MakeArgError(ps, 1, []env.Type{env.ErrorType}, "check")
 				}
 			}
 			return arg0
@@ -5086,8 +5107,9 @@ var builtins = map[string]*env.Builtin{
 						er = nil
 					}
 					return MakeRyeError(ps, arg1, er)
+				default:
+					return MakeArgError(ps, 1, []env.Type{env.ErrorType}, "^check")
 				}
-				return env.NewError("error 1")
 			}
 			return arg0
 		},
@@ -5107,9 +5129,9 @@ var builtins = map[string]*env.Builtin{
 				} else {
 					return arg0
 				}
-				return arg0
+			default:
+				return MakeBuiltinError(ps, "Object type is not found for argument 1.", "^require")
 			}
-			return arg0
 		},
 	},
 
@@ -5127,9 +5149,9 @@ var builtins = map[string]*env.Builtin{
 				} else {
 					return arg0
 				}
-				return arg0
+			default:
+				return MakeBuiltinError(ps, "Object type is not found for argument 1.", "require")
 			}
-			return arg0
 		},
 	},
 
@@ -5141,7 +5163,8 @@ var builtins = map[string]*env.Builtin{
 			if arg0.GetKind() == arg1.GetKind() && arg0.Inspect(*ps.Idx) == arg1.Inspect(*ps.Idx) {
 				return env.Integer{1}
 			} else {
-				return makeError(ps, "Values are not equal: "+arg0.Inspect(*ps.Idx)+" "+arg1.Inspect(*ps.Idx))
+				errorMsg := fmt.Sprintf("Values are not equal: %v %v", arg0.Inspect(*ps.Idx), arg1.Inspect(*ps.Idx))
+				return MakeBuiltinError(ps, errorMsg, "assert-equal")
 			}
 		},
 	},
@@ -5163,7 +5186,7 @@ var builtins = map[string]*env.Builtin{
 					return ps.Res
 				default:
 					ps.FailureFlag = true
-					return env.NewError("expecting block")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "fix")
 				}
 			} else {
 				return arg0
@@ -5189,7 +5212,7 @@ var builtins = map[string]*env.Builtin{
 					return ps.Res
 				default:
 					ps.FailureFlag = true
-					return env.NewError("expecting block")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "^fix")
 				}
 			} else {
 				return arg0
@@ -5215,7 +5238,7 @@ var builtins = map[string]*env.Builtin{
 					return ps.Res
 				default:
 					ps.FailureFlag = true
-					return env.NewError("expecting block")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "`fix")
 				}
 			} else {
 				return arg0
@@ -5240,7 +5263,7 @@ var builtins = map[string]*env.Builtin{
 					return ps.Res
 				default:
 					ps.FailureFlag = true
-					return env.NewError("expecting block")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "fix\\either")
 				}
 			} else {
 				switch bloc := arg2.(type) {
@@ -5252,7 +5275,7 @@ var builtins = map[string]*env.Builtin{
 					return ps.Res
 				default:
 					ps.FailureFlag = true
-					return env.NewError("expecting block")
+					return MakeArgError(ps, 3, []env.Type{env.BlockType}, "fix\\either")
 				}
 			}
 		},
@@ -5275,7 +5298,7 @@ var builtins = map[string]*env.Builtin{
 					return ps.Res
 				default:
 					ps.FailureFlag = true
-					return env.NewError("expecting block")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "fix-else")
 				}
 			} else {
 				return arg0
@@ -5307,7 +5330,7 @@ var builtins = map[string]*env.Builtin{
 				return block
 			default:
 				ps.FailureFlag = true
-				return env.NewError("Must be string or file TODO")
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.UriType}, "load")
 			}
 		},
 	},
@@ -5323,7 +5346,7 @@ var builtins = map[string]*env.Builtin{
 				return block
 			default:
 				ps.FailureFlag = true
-				return env.NewError("Must be string or file TODO")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "load-sig")
 			}
 		},
 	},
@@ -5365,14 +5388,12 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Dict:
-
 				return util.Dict2Context(ps, s1)
 				// make new context with no parent
-
 			default:
 				fmt.Println("Error")
+				return MakeArgError(ps, 1, []env.Type{env.DictType}, "to-context")
 			}
-			return nil
 		},
 	},
 
@@ -5397,8 +5418,8 @@ var builtins = map[string]*env.Builtin{
 				return env.Integer{int64(s1.Value.Len())}
 			default:
 				fmt.Println("Error")
+				return MakeArgError(ps, 1, []env.Type{env.DictType, env.StringType, env.ListType, env.BlockType, env.SpreadsheetType, env.CtxType, env.VectorType}, "length?")
 			}
-			return nil
 		},
 	},
 	"ncols": {
@@ -5407,13 +5428,16 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Dict:
+				//TODO-FIXME
+				return MakeBuiltinError(ps, "Not implemented.", "ncols")
 			case env.Block:
+				//TODO-FIXME
+				return MakeBuiltinError(ps, "Not implemented.", "ncols")
 			case env.Spreadsheet:
 				return env.Integer{int64(len(s1.Cols))}
 			default:
-				fmt.Println("Error")
+				return MakeArgError(ps, 1, []env.Type{env.DictType, env.BlockType, env.SpreadsheetType}, "ncols")
 			}
-			return nil
 		},
 	},
 	"keys": {
@@ -5425,20 +5449,19 @@ var builtins = map[string]*env.Builtin{
 				keys := make([]env.Object, len(s1.Data))
 				i := 0
 				for k, _ := range s1.Data {
-					keys[i] = env.String{k}
+					keys[i] = env.String{Value: k}
 					i++
 				}
 				return *env.NewBlock(*env.NewTSeries(keys))
 			case env.Spreadsheet:
 				keys := make([]env.Object, len(s1.Cols))
 				for i, k := range s1.Cols {
-					keys[i] = env.String{k}
+					keys[i] = env.String{Value: k}
 				}
 				return *env.NewBlock(*env.NewTSeries(keys))
 			default:
-				fmt.Println("Error")
+				return MakeArgError(ps, 1, []env.Type{env.DictType, env.SpreadsheetType}, "keys")
 			}
-			return nil
 		},
 	},
 
@@ -5456,7 +5479,7 @@ var builtins = map[string]*env.Builtin{
 					name = s2.Value
 				default:
 					ps.ErrorFlag = true
-					return env.NewError("second arg not string")
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "col-sum")
 				}
 				r := s1.Sum(name)
 				if r.Type() == env.ErrorType {
@@ -5466,9 +5489,8 @@ var builtins = map[string]*env.Builtin{
 
 			default:
 				ps.ErrorFlag = true
-				return env.NewError("first arg not spreadsheet")
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "col-sum")
 			}
-			return nil
 		},
 	},
 
@@ -5486,7 +5508,7 @@ var builtins = map[string]*env.Builtin{
 					name = s2.Value
 				default:
 					ps.ErrorFlag = true
-					return env.NewError("second arg not string")
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "col-avg")
 				}
 				r, err := s1.Sum_Just(name)
 				if err != nil {
@@ -5498,9 +5520,8 @@ var builtins = map[string]*env.Builtin{
 
 			default:
 				ps.ErrorFlag = true
-				return env.NewError("first arg not spreadsheet")
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "col-avg")
 			}
-			return nil
 		},
 	},
 
@@ -5515,9 +5536,8 @@ var builtins = map[string]*env.Builtin{
 
 			default:
 				ps.ErrorFlag = true
-				return env.NewError("first arg not spreadsheet")
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "A1")
 			}
-			return nil
 		},
 	},
 	"B1": {
@@ -5531,9 +5551,8 @@ var builtins = map[string]*env.Builtin{
 
 			default:
 				ps.ErrorFlag = true
-				return env.NewError("first arg not spreadsheet")
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "B1")
 			}
-			return nil
 		},
 	},
 
@@ -5541,7 +5560,7 @@ var builtins = map[string]*env.Builtin{
 
 	"cmd": {
 		Argsn: 1,
-		Doc:   "",
+		Doc:   "TODODOC",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s0 := arg0.(type) {
 			case env.String:
@@ -5571,7 +5590,7 @@ var builtins = map[string]*env.Builtin{
 								return JsonToRye(" "-----------" + string(stdout)) */
 				//				return JsonToRye(string(stdout))
 			default:
-				return makeError(ps, "Arg 1 should be String")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "cmd")
 			}
 			return nil
 		},
@@ -5600,7 +5619,8 @@ var builtins = map[string]*env.Builtin{
 						cnt, ok := BuiltinNames[name]
 						// TODO -- distinguish between modules that aren't loaded or don't exists
 						if ok && cnt > 0 {
-							//							return env.Integer{1}
+							//return env.Integer{1}
+							//TODO-FIXME
 						} else {
 							str.WriteString("\nBinding *" + name + "* is missing.")
 							missing = append(missing, node)
@@ -5612,13 +5632,13 @@ var builtins = map[string]*env.Builtin{
 					}
 				}
 				if len(missing) > 0 {
-					return makeError(ps, str.String())
+					return MakeBuiltinError(ps, str.String(), "Rye-itself//needs")
 				} else {
 					return env.Integer{1}
 				}
 				// return *env.NewBlock(*env.NewTSeries(missing))
 			default:
-				return makeError(ps, "Arg 1 should be Block of Tagwords.")
+				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "Rye-itself//needs")
 			}
 		},
 	},
