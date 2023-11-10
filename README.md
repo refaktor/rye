@@ -20,7 +20,6 @@
    * [Related links](#related-links)
    * [Questions, contact](#related-links)
 
-
 *visit **[ryelang.org](https://ryelang.org/)**, **[our blog](https://ryelang.org/blog/)** or join our **[reddit group](https://reddit.com/r/ryelang/)** for latest examples and development updates*
 
 ## What is Rye
