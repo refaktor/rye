@@ -69,6 +69,9 @@ func (e *Idxs) GetIndex(w string) (int, bool) {
 }
 
 func (e Idxs) GetWord(i int) string {
+	if i < 0 {
+		return "isolate!" // TODO -- behaviour aroung isolates ... so that it prevents generic function lookup
+	}
 	return e.words1[i]
 }
 

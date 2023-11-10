@@ -3717,8 +3717,8 @@ var builtins = map[string]*env.Builtin{
 					case env.String:
 						doc = a.Value
 						//fmt.Println("DOC DOC")
-					default:
-						return MakeBuiltinError(ps, "Series type should be string.", "fn")
+						// default:
+						// return MakeBuiltinError(ps, "Series type should be string.", "fn")
 					}
 				}
 				switch body := arg1.(type) {
