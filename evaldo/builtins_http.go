@@ -67,7 +67,7 @@ var Builtins_http = map[string]*env.Builtin{
 				return arg0
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Go-server//serve")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server//serve")
 			}
 
 		},
@@ -114,7 +114,7 @@ var Builtins_http = map[string]*env.Builtin{
 					return arg0
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 3, []env.Type{env.StringType, env.FunctionType, env.NativeTypes}, "Go-server//handle")
+					return MakeArgError(ps, 3, []env.Type{env.StringType, env.FunctionType, env.NativeType}, "Go-server//handle")
 				}
 			default:
 				ps.FailureFlag = true
@@ -138,7 +138,7 @@ var Builtins_http = map[string]*env.Builtin{
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Go-server-response-writer//write")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-response-writer//write")
 			}
 		},
 	},
@@ -158,7 +158,7 @@ var Builtins_http = map[string]*env.Builtin{
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Go-server-response-writer//set-content-type")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-response-writer//set-content-type")
 			}
 		},
 	},
@@ -185,7 +185,7 @@ var Builtins_http = map[string]*env.Builtin{
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Go-server-response-writer//set-header")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-response-writer//set-header")
 			}
 		},
 	},
@@ -205,7 +205,7 @@ var Builtins_http = map[string]*env.Builtin{
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Go-server-response-writer//write-header")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-response-writer//write-header")
 			}
 		},
 	},
@@ -222,7 +222,8 @@ var Builtins_http = map[string]*env.Builtin{
 						if err != nil {
 							fmt.Println("< upgrade http error >")
 							// handle error
-							return MakeBuiltinError(ps, "Unable to upgrade HTTP.", "Go-server//handle-ws")
+							//TODO-FIXME
+							//return MakeBuiltinError(ps, "Unable to upgrade HTTP.", "Go-server//handle-ws"), nil
 						}
 						go func() {
 							defer conn.Close()
@@ -280,7 +281,7 @@ var Builtins_http = map[string]*env.Builtin{
 				return env.String{string(msg)}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Go-server-websocket//read")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-websocket//read")
 			}
 		},
 	},
@@ -304,11 +305,11 @@ var Builtins_http = map[string]*env.Builtin{
 					return arg1
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.NativeTypes}, "Go-server-websocket//write")
+					return MakeArgError(ps, 2, []env.Type{env.NativeType}, "Go-server-websocket//write")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Go-server-websocket//write")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-websocket//write")
 			}
 		},
 	},
@@ -354,7 +355,7 @@ var Builtins_http = map[string]*env.Builtin{
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Go-server-request//query?")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-request//query?")
 			}
 		},
 	},
@@ -368,7 +369,7 @@ var Builtins_http = map[string]*env.Builtin{
 				return *env.NewNative(ps.Idx, vals, "Go-server-url")
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Go-server-request//url?")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-request//url?")
 			}
 		},
 	},
@@ -382,7 +383,7 @@ var Builtins_http = map[string]*env.Builtin{
 				return env.String{val}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Go-server-url//path?")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-url//path?")
 			}
 		},
 	},
@@ -406,7 +407,7 @@ var Builtins_http = map[string]*env.Builtin{
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Go-server-request//cookie-val?")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-request//cookie-val?")
 			}
 		},
 	},
@@ -432,7 +433,7 @@ var Builtins_http = map[string]*env.Builtin{
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Go-server-request//form?")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-request//form?")
 			}
 		},
 	},
@@ -451,7 +452,7 @@ var Builtins_http = map[string]*env.Builtin{
 				return *env.NewDict(dict)
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Go-server-request//full-form?")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-request//full-form?")
 			}
 		},
 	},
@@ -467,7 +468,7 @@ var Builtins_http = map[string]*env.Builtin{
 				return arg0
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Go-server-request//parse-multipart-form!")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-request//parse-multipart-form!")
 			}
 		},
 	},
@@ -498,7 +499,7 @@ var Builtins_http = map[string]*env.Builtin{
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Go-server-request//form-file?")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-request//form-file?")
 			}
 		},
 	},
@@ -512,7 +513,7 @@ var Builtins_http = map[string]*env.Builtin{
 				return env.String{r.Filename}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "rye-multipart-header//filename?")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "rye-multipart-header//filename?")
 			}
 		},
 	},
@@ -559,12 +560,12 @@ var Builtins_http = map[string]*env.Builtin{
 					//fmt.Println("asdsad 3")
 					ps.FailureFlag = true
 					return *env.NewError("arg 0 should be String")
-					return MakeArgError(ps, 2, []env.Type{env.NativeTypes}, "Http-cookie-store//get")
+					return MakeArgError(ps, 2, []env.Type{env.NativeType}, "Http-cookie-store//get")
 				}
 			default:
 				//fmt.Println("asdsad 4")
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Http-cookie-store//get")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Http-cookie-store//get")
 			}
 		},
 	},
@@ -595,7 +596,7 @@ var Builtins_http = map[string]*env.Builtin{
 					return MakeArgError(ps, 2, []env.Type{env.StringType}, "Http-session//set")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Http-session//set")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Http-session//set")
 			}
 		},
 	},
@@ -629,7 +630,7 @@ var Builtins_http = map[string]*env.Builtin{
 					return MakeArgError(ps, 2, []env.Type{env.StringType}, "Http-session//get")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Http-session//get")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Http-session//get")
 			}
 		},
 	},
@@ -651,13 +652,13 @@ var Builtins_http = map[string]*env.Builtin{
 						}
 						return env.Integer{1}
 					default:
-						return MakeArgError(ps, 3, []env.Type{env.NativeTypes}, "Http-session//save")
+						return MakeArgError(ps, 3, []env.Type{env.NativeType}, "Http-session//save")
 					}
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.NativeTypes}, "Http-session//save")
+					return MakeArgError(ps, 2, []env.Type{env.NativeType}, "Http-session//save")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Http-session//save")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Http-session//save")
 			}
 		},
 	},
@@ -805,7 +806,7 @@ var Builtins_http = map[string]*env.Builtin{
 				case env.Native:
 					return *env.NewNative(ps.Idx, http.StripPrefix(prefix.Value, servr.Value.(http.Handler)), "Http-handler")
 				default:
-					return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Http-handler//strip-prefix")
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Http-handler//strip-prefix")
 				}
 			default:
 				return MakeArgError(ps, 2, []env.Type{env.StringType}, "Http-handler//strip-prefix")
