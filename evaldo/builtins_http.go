@@ -52,7 +52,7 @@ var Builtins_http = map[string]*env.Builtin{
 				return *env.NewNative(env1.Idx, &http.Server{Addr: addr.Value}, "Go-server")
 			default:
 				env1.FailureFlag = true
-				return *env.NewError("arg 0 should be String")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "new-server")
 			}
 
 		},
@@ -67,7 +67,7 @@ var Builtins_http = map[string]*env.Builtin{
 				return arg0
 			default:
 				env1.FailureFlag = true
-				return env.NewError("arg 2 should be string %s")
+				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Go-server//serve")
 			}
 
 		},
@@ -82,7 +82,7 @@ var Builtins_http = map[string]*env.Builtin{
 				return arg0
 			default:
 				env1.FailureFlag = true
-				return env.NewError("A0 should be string")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "Go-server//serve\\port")
 			}
 
 		},
@@ -114,11 +114,11 @@ var Builtins_http = map[string]*env.Builtin{
 					return arg0
 				default:
 					ps.FailureFlag = true
-					return env.NewError("A1 should be string or function")
+					return MakeArgError(ps, 3, []env.Type{env.StringType, env.FunctionType, env.NativeTypes}, "Go-server//handle")
 				}
 			default:
 				ps.FailureFlag = true
-				return env.NewError("A0 should be Native")
+				return MakeArgError(ps, 2, []env.Type{env.StringType}, "Go-server//handle")
 			}
 		},
 	},
@@ -134,11 +134,11 @@ var Builtins_http = map[string]*env.Builtin{
 					return arg0
 				default:
 					env1.FailureFlag = true
-					return env.NewError("arg1 should be string")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "Go-server-response-writer//write")
 				}
 			default:
 				env1.FailureFlag = true
-				return env.NewError("arg0 should be native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Go-server-response-writer//write")
 			}
 		},
 	},
@@ -154,11 +154,11 @@ var Builtins_http = map[string]*env.Builtin{
 					return arg0
 				default:
 					env1.FailureFlag = true
-					return env.NewError("arg1 should be string")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "Go-server-response-writer//set-content-type")
 				}
 			default:
 				env1.FailureFlag = true
-				return env.NewError("arg0 should be native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Go-server-response-writer//set-content-type")
 			}
 		},
 	},
@@ -177,15 +177,15 @@ var Builtins_http = map[string]*env.Builtin{
 						return arg0
 					default:
 						env1.FailureFlag = true
-						return env.NewError("arg3 should be string")
+						return MakeArgError(ps, 3, []env.Type{env.StringType}, "Go-server-response-writer//set-header")
 					}
 				default:
 					env1.FailureFlag = true
-					return env.NewError("arg2 should be a word")
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "Go-server-response-writer//set-header")
 				}
 			default:
 				env1.FailureFlag = true
-				return env.NewError("arg1 should be native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Go-server-response-writer//set-header")
 			}
 		},
 	},
@@ -201,11 +201,11 @@ var Builtins_http = map[string]*env.Builtin{
 					return arg0
 				default:
 					env1.FailureFlag = true
-					return env.NewError("arg1 should be string")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "Go-server-response-writer//write-header")
 				}
 			default:
 				env1.FailureFlag = true
-				return env.NewError("arg0 should be native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Go-server-response-writer//write-header")
 			}
 		},
 	},
@@ -222,6 +222,7 @@ var Builtins_http = map[string]*env.Builtin{
 						if err != nil {
 							fmt.Println("< upgrade http error >")
 							// handle error
+							return MakeBuiltinError(ps, "Unable to upgrade HTTP.", "Go-server//handle-ws")
 						}
 						go func() {
 							defer conn.Close()
@@ -248,11 +249,11 @@ var Builtins_http = map[string]*env.Builtin{
 					return arg0
 				default:
 					env1.FailureFlag = true
-					return env.NewError("arg1 should be string or function")
+					return MakeArgError(ps, 1, []env.Type{env.FunctionType}, "Go-server//handle-ws")
 				}
 			default:
 				env1.FailureFlag = true
-				return env.NewError("arg0 should be string")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "Go-server//handle-ws")
 			}
 		},
 	},
@@ -273,13 +274,13 @@ var Builtins_http = map[string]*env.Builtin{
 					env1.ReturnFlag = true
 					env1.FailureFlag = true
 					env1.ErrorFlag = true
-					return env.NewError("arg1 should be string 211s")
+					return MakeBuiltinError(ps, "Error in reading client data.", "Go-server-websocket//read")
 				}
 				// fmt.Fprintf(path.Value.(http.ResponseWriter), handler.Value)
 				return env.String{string(msg)}
 			default:
 				env1.FailureFlag = true
-				return env.NewError("arg0 should be native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Go-server-websocket//read")
 			}
 		},
 	},
@@ -298,16 +299,16 @@ var Builtins_http = map[string]*env.Builtin{
 					if err != nil {
 						fmt.Println("YYOOYOYOYOYOYOYYOYOYOOY")
 						ps.FailureFlag = true
-						return env.NewError(err.Error())
+						return MakeBuiltinError(ps, "Failed to write server message.", "Go-server-websocket//write")
 					}
 					return arg1
 				default:
 					ps.FailureFlag = true
-					return env.NewError("arg1 should be string")
+					return MakeArgError(ps, 2, []env.Type{env.NativeTypes}, "Go-server-websocket//write")
 				}
 			default:
 				ps.FailureFlag = true
-				return env.NewError("arg0 should be native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Go-server-websocket//write")
 			}
 		},
 	},
@@ -343,17 +344,17 @@ var Builtins_http = map[string]*env.Builtin{
 
 					if !ok || len(vals[0]) < 1 {
 						ps.FailureFlag = true
-						return env.NewError("key is missing")
+						return MakeBuiltinError(ps, "Key is missing.", "Go-server-request//query?")
 					}
 					//return env.NewError("XOSADOSADOA SDAS DO" + key.Value)
 					return env.String{vals[0]}
 				default:
 					ps.FailureFlag = true
-					return env.NewError("second arg should be String")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "Go-server-request//query?")
 				}
 			default:
 				ps.FailureFlag = true
-				return env.NewError("first arg should be Native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Go-server-request//query?")
 			}
 		},
 	},
@@ -367,7 +368,7 @@ var Builtins_http = map[string]*env.Builtin{
 				return *env.NewNative(ps.Idx, vals, "Go-server-url")
 			default:
 				ps.FailureFlag = true
-				return env.NewError("first arg should be Native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Go-server-request//url?")
 			}
 		},
 	},
@@ -381,7 +382,7 @@ var Builtins_http = map[string]*env.Builtin{
 				return env.String{val}
 			default:
 				ps.FailureFlag = true
-				return env.NewError("first arg should be Native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Go-server-url//path?")
 			}
 		},
 	},
@@ -393,21 +394,19 @@ var Builtins_http = map[string]*env.Builtin{
 			case env.Native:
 				switch key := arg1.(type) {
 				case env.String:
-
 					cookie, err := req.Value.(*http.Request).Cookie(key.Value)
-
 					if err != nil {
 						ps.FailureFlag = true
-						return env.NewError("cookie key is missing")
+						return MakeBuiltinError(ps, "Cookie key is missing.", "Go-server-request//cookie-val?")
 					}
 					return env.String{cookie.Value}
 				default:
 					ps.FailureFlag = true
-					return env.NewError("second arg should be String")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "Go-server-request//cookie-val?")
 				}
 			default:
 				ps.FailureFlag = true
-				return env.NewError("first arg should be Native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Go-server-request//cookie-val?")
 			}
 		},
 	},
@@ -421,21 +420,19 @@ var Builtins_http = map[string]*env.Builtin{
 				case env.String:
 					r := req.Value.(*http.Request)
 					r.ParseForm()
-
 					val := r.FormValue(key.Value)
-
 					if len(val) < 1 {
 						ps.FailureFlag = true
-						return env.NewError("value is missing")
+						return MakeBuiltinError(ps, "Value is missing.", "Go-server-request//form?")
 					}
 					return env.String{val}
 				default:
 					ps.FailureFlag = true
-					return env.NewError("second arg should be String")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "Go-server-request//form?")
 				}
 			default:
 				ps.FailureFlag = true
-				return env.NewError("first arg should be Native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Go-server-request//form?")
 			}
 		},
 	},
@@ -447,17 +444,14 @@ var Builtins_http = map[string]*env.Builtin{
 			case env.Native:
 				r := req.Value.(*http.Request)
 				r.ParseForm()
-
 				dict := make(map[string]interface{})
-
 				for key, val := range r.Form {
 					dict[key] = val[0]
 				}
-
 				return *env.NewDict(dict)
 			default:
 				ps.FailureFlag = true
-				return env.NewError("first arg should be Native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Go-server-request//full-form?")
 			}
 		},
 	},
@@ -473,7 +467,7 @@ var Builtins_http = map[string]*env.Builtin{
 				return arg0
 			default:
 				ps.FailureFlag = true
-				return env.NewError("first arg should be Native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Go-server-request//parse-multipart-form!")
 			}
 		},
 	},
@@ -489,11 +483,10 @@ var Builtins_http = map[string]*env.Builtin{
 				switch key := arg1.(type) {
 				case env.String:
 					r := req.Value.(*http.Request)
-
 					file, handler, err := r.FormFile(key.Value)
 					if err != nil {
 						ps.FailureFlag = true
-						return env.NewError("couldn't read form file")
+						return MakeBuiltinError(ps, "Failed to read from file.", "Go-server-request//form-file?")
 					}
 					pair := make([]env.Object, 2)
 					pair[0] = *env.NewNative(ps.Idx, file, "rye-reader")
@@ -501,11 +494,11 @@ var Builtins_http = map[string]*env.Builtin{
 					return *env.NewBlock(*env.NewTSeries(pair))
 				default:
 					ps.FailureFlag = true
-					return env.NewError("second arg should be String")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "Go-server-request//form-file?")
 				}
 			default:
 				ps.FailureFlag = true
-				return env.NewError("first arg should be Native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Go-server-request//form-file?")
 			}
 		},
 	},
@@ -517,10 +510,9 @@ var Builtins_http = map[string]*env.Builtin{
 			case env.Native:
 				r := req.Value.(*multipart.FileHeader)
 				return env.String{r.Filename}
-
 			default:
 				ps.FailureFlag = true
-				return env.NewError("first arg should be Native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "rye-multipart-header//filename?")
 			}
 		},
 	},
@@ -533,7 +525,7 @@ var Builtins_http = map[string]*env.Builtin{
 				return *env.NewNative(env1.Idx, sessions.NewCookieStore([]byte(addr.Value)), "Http-cookie-store")
 			default:
 				env1.FailureFlag = true
-				return *env.NewError("arg 0 should be String")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "new-cookie-store")
 			}
 		},
 	},
@@ -552,24 +544,27 @@ var Builtins_http = map[string]*env.Builtin{
 						session, err := store.Value.(*sessions.CookieStore).Get(r.Value.(*http.Request), name.Value)
 						if err != nil {
 							env1.FailureFlag = true
-							return env.NewError("can't get session: " + err.Error())
+							errMsg := fmt.Sprintf("Can't get session: %v", err.Error())
+							return MakeBuiltinError(ps, errMsg, "Http-cookie-store//get")
 						}
-						//fmt.Println("asdsad 1")
+						//fmt.Println("asdsad 1")s
 						return *env.NewNative(env1.Idx, session, "Http-session")
 					default:
 						//fmt.Println("asdsad 2")
 						env1.FailureFlag = true
 						return *env.NewError("arg 0 should be String")
+						return MakeArgError(ps, 3, []env.Type{env.StringType}, "Http-cookie-store//get")
 					}
 				default:
 					//fmt.Println("asdsad 3")
 					env1.FailureFlag = true
 					return *env.NewError("arg 0 should be String")
+					return MakeArgError(ps, 2, []env.Type{env.NativeTypes}, "Http-cookie-store//get")
 				}
 			default:
 				//fmt.Println("asdsad 4")
 				env1.FailureFlag = true
-				return *env.NewError("arg 0 should be String")
+				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Http-cookie-store//get")
 			}
 		},
 	},
@@ -592,15 +587,15 @@ var Builtins_http = map[string]*env.Builtin{
 						session.Value.(*sessions.Session).Values[key.Value] = int(val.Value)
 						return arg0
 					default:
-						return env.NewError("second arg should be string, got %s")
+						return MakeArgError(ps, 3, []env.Type{env.StringType, env.IntegerType}, "Http-session//set")
 					}
 					//return env.NewError("XOSADOSADOA SDAS DO" + key.Value)
 					return arg2 // env.String{ctx.Value.(echo.Context).QueryParam(key.Value)}
 				default:
-					return env.NewError("second arg should be string, got %s")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "Http-session//set")
 				}
 			default:
-				return env.NewError("first arg should be echo.Context, got %s")
+				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Http-session//set")
 			}
 		},
 	},
@@ -624,17 +619,17 @@ var Builtins_http = map[string]*env.Builtin{
 							return val2
 						default:
 							env1.FailureFlag = true
-							return env.NewError("unknown type")
+							return MakeBuiltinError(ps, "Unknown type.", "Http-session//get")
 						}
 					} else {
 						env1.FailureFlag = true
-						return env.NewError("value is empty")
+						return MakeBuiltinError(ps, "Value is empty.", "Http-session//get")
 					}
 				default:
-					return env.NewError("second arg should be string, got %s")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "Http-session//get")
 				}
 			default:
-				return env.NewError("first arg should be echo.Context, got %s")
+				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Http-session//get")
 			}
 		},
 	},
@@ -651,17 +646,18 @@ var Builtins_http = map[string]*env.Builtin{
 						err := session.Value.(*sessions.Session).Save(r.Value.(*http.Request), w.Value.(http.ResponseWriter))
 						if err != nil {
 							env1.FailureFlag = true
-							return env.NewError("can't save: " + err.Error())
+							errMsg := fmt.Sprintf("Can't save: %v", err.Error())
+							return MakeBuiltinError(ps, errMsg, "Http-session//save")
 						}
 						return env.Integer{1}
 					default:
-						return env.NewError("second arg should be string, got %s")
+						return MakeArgError(ps, 3, []env.Type{env.NativeTypes}, "Http-session//save")
 					}
 				default:
-					return env.NewError("second arg should be string, got %s")
+					return MakeArgError(ps, 2, []env.Type{env.NativeTypes}, "Http-session//save")
 				}
 			default:
-				return env.NewError("first arg should be echo.Context, got %s")
+				return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Http-session//save")
 			}
 		},
 	},
@@ -783,7 +779,7 @@ var Builtins_http = map[string]*env.Builtin{
 				path := strings.Split(addr.Path, "://")
 				return *env.NewNative(env1.Idx, http.Dir(path[1]), "Go-http-dir")
 			default:
-				return makeError(env1, "Arg 1 isn't Uri")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "new-http-dir")
 			}
 		},
 	},
@@ -795,7 +791,7 @@ var Builtins_http = map[string]*env.Builtin{
 				path := strings.Split(addr.Path, "://")
 				return *env.NewNative(env1.Idx, http.FileServer(http.Dir(path[1])), "Http-handler")
 			default:
-				return makeError(env1, "Arg 1 isn't Native")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "new-static-handler")
 			}
 
 		},
@@ -809,10 +805,10 @@ var Builtins_http = map[string]*env.Builtin{
 				case env.Native:
 					return *env.NewNative(env1.Idx, http.StripPrefix(prefix.Value, servr.Value.(http.Handler)), "Http-handler")
 				default:
-					return makeError(env1, "Arg 1 isn't Native")
+					return MakeArgError(ps, 1, []env.Type{env.NativeTypes}, "Http-handler//strip-prefix")
 				}
 			default:
-				return makeError(env1, "Arg 1 isn't Native")
+				return MakeArgError(ps, 2, []env.Type{env.StringType}, "Http-handler//strip-prefix")
 			}
 
 		},
