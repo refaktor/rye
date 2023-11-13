@@ -932,7 +932,8 @@ func (b Builtin) Probe(e Idxs) string {
 		pure_s = "Pure "
 	}
 
-	return "[" + pure_s + "Builtin]"
+	// return "[" + pure_s + "Builtin]"
+	return "[" + pure_s + "Builtin(" + strconv.Itoa(b.Argsn) + "): " + b.Doc + "]"
 }
 
 func (i Builtin) Trace(msg string) {

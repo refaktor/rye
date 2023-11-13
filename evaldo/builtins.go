@@ -524,6 +524,25 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"doc\\of?": { // ALLOK
+		Argsn: 1,
+		Doc:   "Get docstring of the first argument.",
+		Pure:  true,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch d := arg0.(type) {
+			case env.Function:
+				return env.String{d.Doc}
+			case env.Builtin:
+				return env.String{d.Doc}
+			case env.RyeCtx:
+				return env.String{d.Doc}
+			default:
+				return MakeArgError(env1, 1, []env.Type{env.FunctionType, env.CtxType}, "doc\\of?")
+			}
+
+		},
+	},
+
 	// BASIC FUNCTIONS WITH NUMBERS
 
 	"true": { // ALLOK
@@ -1027,6 +1046,13 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
+	"inspect": {
+		Argsn: 1,
+		Doc:   "Returs information about a value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return env.String{arg0.Inspect(*ps.Idx)}
+		},
+	},
 	"esc": {
 		Argsn: 1,
 		Doc:   "Creates an escape sequence \033{}",
@@ -1126,7 +1152,21 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Turn value to it's string representation.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// fmt.Println()
-			return env.String{arg0.Inspect(*env1.Idx)}
+			return env.String{arg0.Probe(*env1.Idx)}
+		},
+	},
+
+	"mold\\nowrap": {
+		Argsn: 1,
+		Doc:   "Turn value to it's string representation.",
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			// fmt.Println()
+			str := arg0.Probe(*env1.Idx)
+			if str[0] == '{' || str[0] == '[' {
+				str = str[1 : len(str)-1]
+			}
+			str = strings.ReplaceAll(str, "._", "") // temporary solution for special op-words
+			return env.String{strings.Trim(str, " ")}
 		},
 	},
 
@@ -1402,10 +1442,8 @@ var builtins = map[string]*env.Builtin{
 				var code env.Object
 
 				any_found := false
-				//fmt.Println("BLOCK")
 
 				for i := 0; i < bloc.Series.Len(); i += 2 {
-					//fmt.Println("LOOP")
 
 					if i > bloc.Series.Len()-2 {
 						return MakeBuiltinError(ps, "Switch block malformed.", "switch")
@@ -1417,7 +1455,6 @@ var builtins = map[string]*env.Builtin{
 						code = bloc.Series.Get(i + 1)
 					}
 					if ev.Type() == env.VoidType {
-						fmt.Println("VOID")
 						if !any_found {
 							code = bloc.Series.Get(i + 1)
 							any_found = true
@@ -1721,7 +1758,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"evaluate": {
+	"vals": {
 		Argsn: 1,
 		Doc:   "Takes a block of Rye values and evaluates each value or expression.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1758,7 +1795,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"evaluate\\with": {
+	"vals\\with": {
 		Argsn: 2,
 		Doc:   "Evaluate a block with injecting the first argument.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -4356,8 +4393,29 @@ var builtins = map[string]*env.Builtin{
 				}
 				return env.String{str.String()}
 			case env.Block:
+
+				ser := ps.Ser
+				ps.Ser = s1.Series
+				res := make([]env.Object, 0)
+				for ps.Ser.Pos() < ps.Ser.Len() {
+					// ps, injnow = EvalExpressionInj(ps, inj, injnow)
+					EvalExpression2(ps, false)
+					res = append(res, ps.Res)
+					// check and raise the flags if needed if true (error) return
+					//if checkFlagsAfterBlock(ps, 101) {
+					//	return ps
+					//}
+					// if return flag was raised return ( errorflag I think would return in previous if anyway)
+					//if checkErrorReturnFlag(ps) {
+					//	return ps
+					//}
+					// ps, injnow = MaybeAcceptComma(ps, inj, injnow)
+				}
+				ps.Ser = ser
+				bloc := *env.NewBlock(*env.NewTSeries(res))
+
 				var str strings.Builder
-				for _, c := range s1.Series.S {
+				for _, c := range bloc.Series.S {
 					switch it := c.(type) {
 					case env.String:
 						str.WriteString(it.Value)
@@ -4609,6 +4667,37 @@ var builtins = map[string]*env.Builtin{
 				return env.String{string(str[1:])}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.StringType, env.ListType}, "rest")
+			}
+		},
+	},
+	"rest\\from": {
+		Argsn: 2,
+		Doc:   "Accepts Block, List or String and returns all but first items.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch num := arg1.(type) {
+			case env.Integer:
+				switch s1 := arg0.(type) {
+				case env.Block:
+					if len(s1.Series.S) == 0 {
+						return MakeBuiltinError(ps, "Block is empty.", "tail")
+					}
+					return *env.NewBlock(*env.NewTSeries(s1.Series.S[int(num.Value):]))
+				case env.List:
+					if len(s1.Data) == 0 {
+						return MakeBuiltinError(ps, "List is empty.", "tail")
+					}
+					return env.NewList(s1.Data[int(num.Value):])
+				case env.String:
+					str := []rune(s1.Value)
+					if len(str) < 1 {
+						return MakeBuiltinError(ps, "String has only one element.", "tail")
+					}
+					return env.String{string(str[int(num.Value):])}
+				default:
+					return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "tail")
+				}
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "tail")
 			}
 		},
 	},
@@ -5687,7 +5776,16 @@ var builtins = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return util.StringToFieldsWithQuoted(strings.Join(os.Args, " "), " ", "\"")
+			return util.StringToFieldsWithQuoted(strings.Join(os.Args[2:], " "), " ", "\"")
+			// block, _ := loader.LoadString(os.Args[0], false)
+			// return block
+		},
+	},
+	"Rye-itself//args\\raw": {
+		Argsn: 1,
+		Doc:   "",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return env.String{strings.Join(os.Args[2:], " ")}
 			// block, _ := loader.LoadString(os.Args[0], false)
 			// return block
 		},
