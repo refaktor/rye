@@ -24,6 +24,9 @@ func resultToJS(res env.Object) interface{} {
 		return v.Value
 	case env.RyeCtx:
 		return "{ 'state': 'todo' }"
+	default:
+		fmt.Println("No matching type available.")
+		// TODO-FIXME - ps - ProgramState is not available, can not add error handling.
 	}
 	return nil
 }
