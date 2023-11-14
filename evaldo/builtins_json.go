@@ -84,6 +84,9 @@ func RyeToJSON(res interface{}) string {
 		}
 	case env.RyeCtx:
 		return "{ 'state': 'todo' }"
+	default:
+		return "\"not handeled\""
+		// TODO-FIXME
 	}
 	fmt.Println(res)
 	return "\"not handeled\""
@@ -109,6 +112,7 @@ func JsonToRye(res interface{}) env.Object {
 		return nil
 	default:
 		fmt.Println(res)
+		// TODO-FIXME
 		return env.Void{}
 	}
 }
@@ -172,8 +176,9 @@ func _parse_json(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 en
 			//panic(err)
 		}
 		return JsonToRye(m)
+	default:
+		return MakeArgError(ps, 1, []env.Type{env.StringType}, "_parse_json")
 	}
-	return env.Void{}
 }
 
 var Builtins_json = map[string]*env.Builtin{
