@@ -84,6 +84,9 @@ func RyeToJSON(res interface{}) string {
 		}
 	case env.RyeCtx:
 		return "{ 'state': 'todo' }"
+	default:
+		return "\"not handeled\""
+		// TODO-FIXME
 	}
 	fmt.Println(res)
 	return "\"not handeled\""
@@ -109,6 +112,7 @@ func JsonToRye(res interface{}) env.Object {
 		return nil
 	default:
 		fmt.Println(res)
+		// TODO-FIXME
 		return env.Void{}
 	}
 }
@@ -162,23 +166,26 @@ func SpreadsheetToJSON(s env.Spreadsheet) string {
 // { <person> [ .print ] }
 // { <person> { _ [ .print ] <name> <surname> <age> { _ [ .print2 ";" ] } }
 
-func _parse_json(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+func _parse_json(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch input := arg0.(type) {
 	case env.String:
 		var m interface{}
 		err := json.Unmarshal([]byte(input.Value), &m)
 		if err != nil {
-			panic(err)
+			return MakeBuiltinError(ps, "Failed to Unmarshal.", "_parse_json")
+			//panic(err)
 		}
 		return JsonToRye(m)
+	default:
+		return MakeArgError(ps, 1, []env.Type{env.StringType}, "_parse_json")
 	}
-	return env.Void{}
 }
 
 var Builtins_json = map[string]*env.Builtin{
 
 	"parse-json": {
 		Argsn: 1,
+		Doc:   "Parsing JSON values.",
 		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return _parse_json(es, arg0, arg1, arg2, arg3, arg4)
 		},

@@ -91,15 +91,16 @@ var Builtins_sqlite = map[string]*env.Builtin{
 
 	"sqlite-schema//open": {
 		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "Opening sqlite schema.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// arg0.Trace("SQLITE OPEN TODO :::::::::")
 			switch str := arg0.(type) {
 			case env.Uri:
 				// fmt.Println(str.Path)
 				db, _ := sql.Open("sqlite3", str.GetPath()) // TODO -- we need to make path parser in URI then this will be path
-				return *env.NewNative(env1.Idx, db, "Rye-sqlite")
+				return *env.NewNative(ps.Idx, db, "Rye-sqlite")
 			default:
-				return env.NewError("arg 2 should be Uri")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "sqlite-schema//open")
 			}
 
 		},
@@ -107,12 +108,13 @@ var Builtins_sqlite = map[string]*env.Builtin{
 
 	"htmlize": {
 		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "Converting to html.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.Spreadsheet:
 				return env.String{str.ToHtml()}
 			default:
-				return env.NewError("arg 2 should be string %s")
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "htmlize")
 			}
 
 		},
@@ -120,7 +122,8 @@ var Builtins_sqlite = map[string]*env.Builtin{
 
 	"Rye-sqlite//exec": {
 		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var sqlstr string
 			var vals []interface{}
 			switch db1 := arg0.(type) {
@@ -128,36 +131,38 @@ var Builtins_sqlite = map[string]*env.Builtin{
 				switch str := arg1.(type) {
 				case env.Block:
 					//fmt.Println("BLOCK ****** *****")
-					ser := env1.Ser
-					env1.Ser = str.Series
+					ser := ps.Ser
+					ps.Ser = str.Series
 					values := make([]interface{}, 0, 0)
-					_, vals = SQL_EvalBlock(env1, MODE_SQLITE, values)
-					sqlstr = env1.Res.(env.String).Value
-					env1.Ser = ser
+					_, vals = SQL_EvalBlock(ps, MODE_SQLITE, values)
+					sqlstr = ps.Res.(env.String).Value
+					ps.Ser = ser
 				case env.String:
 					sqlstr = str.Value
 				default:
-					return env.NewError("arg 2222 should be string %s")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.StringType}, "Rye-sqlite//exec")
 				}
 				if sqlstr != "" {
 					db2 := db1.Value.(*sql.DB)
 					_, err := db2.Exec(sqlstr, vals...)
 					if err != nil {
-						return makeError(env1, err.Error())
+						return MakeBuiltinError(ps, err.Error(), "Rye-sqlite//exec")
 					}
-					//					rows, err := db1.Value.(*sql.DB).Query(sqlstr, vals...)
+					// rows, err := db1.Value.(*sql.DB).Query(sqlstr, vals...)
 					return arg0
+				} else {
+					return MakeBuiltinError(ps, "sql string not found.", "Rye-sqlite//exec")
 				}
 			default:
-				return env.NewError("arg 1111 should be string %s")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-sqlite//exec")
 			}
-			return env.NewError("arg 0000 should be string %s")
 		},
 	},
 
 	"Rye-sqlite//query": {
 		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var sqlstr string
 			var vals []interface{}
 			switch db1 := arg0.(type) {
@@ -165,21 +170,21 @@ var Builtins_sqlite = map[string]*env.Builtin{
 				switch str := arg1.(type) {
 				case env.Block:
 					//fmt.Println("BLOCK ****** *****")
-					ser := env1.Ser
-					env1.Ser = str.Series
+					ser := ps.Ser
+					ps.Ser = str.Series
 					values := make([]interface{}, 0, 0)
-					_, vals = SQL_EvalBlock(env1, MODE_SQLITE, values)
-					sqlstr = env1.Res.(env.String).Value
-					env1.Ser = ser
+					_, vals = SQL_EvalBlock(ps, MODE_SQLITE, values)
+					sqlstr = ps.Res.(env.String).Value
+					ps.Ser = ser
 				case env.String:
 					sqlstr = str.Value
 				default:
-					return makeError(env1, "Arg 2 should be a string or a block")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.StringType}, "Rye-sqlite//query")
 				}
 				if sqlstr != "" {
 					rows, err := db1.Value.(*sql.DB).Query(sqlstr, vals...)
 					if err != nil {
-						return makeError(env1, err.Error())
+						return MakeBuiltinError(ps, err.Error(), "Rye-sqlite//query")
 					}
 					columns, _ := rows.Columns()
 					spr := env.NewSpreadsheet(columns)
@@ -189,9 +194,7 @@ var Builtins_sqlite = map[string]*env.Builtin{
 					} else {
 						cols, _ := rows.Columns()
 						for rows.Next() {
-
 							var sr env.SpreadsheetRow
-
 							columns := make([]interface{}, len(cols))
 							columnPointers := make([]interface{}, len(cols))
 							for i, _ := range columns {
@@ -218,16 +221,16 @@ var Builtins_sqlite = map[string]*env.Builtin{
 						rows.Close() //good habit to close
 						//fmt.Println("+++++")
 						//fmt.Print(result)
-						// return *env.NewNative(env1.Idx, *spr, "Rye-spreadsheet")
+						// return *env.NewNative(ps.Idx, *spr, "Rye-spreadsheet")
 						return *spr
 					}
-					return env.NewError("Empty SQL")
+					return MakeBuiltinError(ps, "Empty SQL.", "Rye-sqlite//query")
+				} else {
+					return MakeBuiltinError(ps, "Sql string not found.", "Rye-sqlite//query")
 				}
 			default:
-				return env.NewError("arg 1111 should be string %s")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-sqlite//query")
 			}
-			return env.NewError("arg 1111 should be string %s")
-
 		},
 	},
 }
