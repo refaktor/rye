@@ -14,12 +14,24 @@ all in all there is a lot of builtin functions.
 To have some overview over the stage the builtins are in we will define 5 levels. Main builtins are defined in builtins.go all other are is specific files, for example builtins_http.go, builtins_sqlite.go. For each file/integration the level 
 can be defined. If the level is not written it's considered lvl0.
 
-  lvl0: builtin is made, works in some example cases
-  lvl1: + all docstrings are written, all argument errors are handeled consistently
-  lvl2: + argument types are displayed, tests and reference docs are written
-  lvl3: + builtins handle all the argument types it would make sense they should handle
+  * **lvl0**: builtin is made, works in some example cases
+  * **lvl1**: + all docstrings are written, all argument errors are handeled consistently
+  * **lvl2**: + argument types are displayed, tests and reference docs are written
+  * **lvl3**: + builtins handle all the argument types it would make sense they should handle (this is a judgement call and can change in future versions)
 
-## Interpreter
+### Progress
 
-Interpreter hasn't been majorly changed in a while. In general it seems to handle all we've trown at it, but there are some edge cases probably, especially around more obscure ideas in Rye which are not 100% sure to be included. Also more
+Progress here is defined by how many modules will have higher levels. For next stage we need to move all integrations with higher priority (stars) at least to lvl2.
+
+## Interpreter and runtime
+
+Interpreter and runtime hasn't been majorly changed in a while. In general it seems to handle all we've trown at it, but there are some edge cases probably, especially around more obscure ideas in Rye which are not 100% sure to be included. Also more
 tests should be made how various features interact with failure handling. This means that we should start writing a set of test that test various facets of the interpreter.
+
+Progress is defined by the coverage of test that test the behaviour of the interpreter and runtime.
+
+## Loader
+
+Loader is even more static, but there are some inconsistencies and some things we need to clear up. For example escape sequences in strings.
+
+Progress is defined by the coverage of loader tests. We should test it load every syntax type and combinations of them. We might also need to add aditional syntax types, like /refinements.
