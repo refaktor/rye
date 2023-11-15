@@ -46,6 +46,9 @@ func Validation_EvalBlock(es *env.ProgramState, vals env.Dict) (env.Dict, map[st
 					res[name] = val
 				}
 			}
+		default:
+			fmt.Println("Type is not matching - Validation_EvalBlock.")
+			//TODO-FIXME
 		}
 	}
 	//set the last value too
@@ -68,6 +71,9 @@ func Validation_EvalBlock_List(es *env.ProgramState, vals env.List) (env.Object,
 			if verr != nil {
 				notes = append(notes, verr)
 			}
+		default:
+			fmt.Println("Type is not matching - Validation_EvalBlock_List.")
+			//TODO-FIXME
 		}
 	}
 

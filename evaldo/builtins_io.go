@@ -19,7 +19,7 @@ import (
 	"net/http/cgi"
 )
 
-func __input(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+func __input(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch str := arg0.(type) {
 	case env.String:
 		fmt.Print("Enter text: " + str.Value)
@@ -32,159 +32,163 @@ func __input(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.
 		fmt.Println(inp) */
 		return env.String{input}
 	default:
-		//env1.ReturnFlag = true
-		env1.FailureFlag = true
-		return env.NewError("arg 1 should be string")
+		ps.FailureFlag = true
+		return MakeArgError(ps, 1, []env.Type{env.StringType}, "__input")
 	}
 }
 
-func __open(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+func __open(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch s := arg0.(type) {
 	case env.Uri:
 		path := strings.Split(s.Path, "://")
 		file, err := os.Open(path[1])
 		if err != nil {
-			return makeError(env1, err.Error())
+			return makeError(ps, err.Error())
 		}
-		return *env.NewNative(env1.Idx, file, "rye-file")
+		return *env.NewNative(ps.Idx, file, "rye-file")
 	default:
-		return makeError(env1, "Arg 1 isn't Uri")
+		return MakeArgError(ps, 1, []env.Type{env.UriType}, "__open")
 	}
 }
 
-func __openFile(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+func __openFile(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch s := arg0.(type) {
 	case env.Uri:
 		path := strings.Split(s.Path, "://")
 		file, err := os.OpenFile(path[1], os.O_CREATE, 0666)
 		if err != nil {
-			return makeError(env1, err.Error())
+			return MakeBuiltinError(ps, err.Error(), "__openFile")
 		}
-		return *env.NewNative(env1.Idx, file, "rye-writer")
+		return *env.NewNative(ps.Idx, file, "rye-writer")
 	default:
-		return makeError(env1, "Arg 1 isn't Uri")
+		return MakeArgError(ps, 1, []env.Type{env.UriType}, "__openFile")
 	}
 }
 
-func __create(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+func __create(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch s := arg0.(type) {
 	case env.Uri:
 		path := strings.Split(s.Path, "://")
 		file, err := os.Create(path[1])
 		if err != nil {
-			env1.ReturnFlag = true
-			env1.FailureFlag = true
-			return *env.NewError(err.Error())
+			ps.ReturnFlag = true
+			ps.FailureFlag = true
+			return MakeBuiltinError(ps, err.Error(), "__create")
 		}
-		return *env.NewNative(env1.Idx, file, "rye-file")
+		return *env.NewNative(ps.Idx, file, "rye-file")
 	default:
-		env1.ReturnFlag = true
-		env1.FailureFlag = true
-		return *env.NewError("just accepting Uri-s")
+		ps.ReturnFlag = true
+		ps.FailureFlag = true
+		return MakeArgError(ps, 1, []env.Type{env.UriType}, "__create")
 	}
 }
 
-func __open_reader(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+func __open_reader(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch s := arg0.(type) {
 	case env.Uri:
 		path := strings.Split(s.Path, "://")
 		file, err := os.Open(path[1])
 		//trace3(path)
 		if err != nil {
-			env1.FailureFlag = true
-			return *env.NewError("Error opening file")
+			ps.FailureFlag = true
+			return MakeBuiltinError(ps, "Error opening file.", "__open_reader")
 		}
-		return *env.NewNative(env1.Idx, bufio.NewReader(file), "rye-reader")
+		return *env.NewNative(ps.Idx, bufio.NewReader(file), "rye-reader")
 	case env.String:
-		return *env.NewNative(env1.Idx, strings.NewReader(s.Value), "rye-reader")
+		return *env.NewNative(ps.Idx, strings.NewReader(s.Value), "rye-reader")
 	default:
-		env1.FailureFlag = true
-		return *env.NewError("just accepting Uri-s")
+		ps.FailureFlag = true
+		return MakeArgError(ps, 1, []env.Type{env.UriType, env.StringType}, "__open_reader")
 	}
 }
 
-func __read_all(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+func __read_all(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch s := arg0.(type) {
 	case env.Native:
 		data, err := ioutil.ReadAll(s.Value.(io.Reader))
 		if err != nil {
-			env1.FailureFlag = true
-			return *env.NewError("Error reading file")
+			ps.FailureFlag = true
+			return MakeBuiltinError(ps, "Error reading file.", "__read_all")
 		}
 		return env.String{string(data)}
+	default:
+		ps.FailureFlag = true
+		return MakeArgError(ps, 1, []env.Type{env.NativeType}, "__read_all")
 	}
-	env1.FailureFlag = true
-	return *env.NewError("Failed")
 }
 
-func __close(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+func __close(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch s := arg0.(type) {
 	case env.Native:
 		err := s.Value.(*os.File).Close()
 		if err != nil {
-			env1.FailureFlag = true
-			return *env.NewError(err.Error())
+			ps.FailureFlag = true
+			return MakeBuiltinError(ps, err.Error(), "__close")
 		}
 		return env.String{""}
+	default:
+		ps.FailureFlag = true
+		return MakeArgError(ps, 1, []env.Type{env.NativeType}, "__close")
 	}
-	env1.FailureFlag = true
-	return *env.NewError("Failed")
 }
 
-func __write(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+func __write(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch f := arg0.(type) {
 	case env.Native:
 		switch s := arg1.(type) {
 		case env.String:
-
 			bytesWritten, err := f.Value.(io.Writer).Write([]byte(s.Value))
 			if err != nil {
-				env1.FailureFlag = true
-				return *env.NewError(err.Error())
+				ps.FailureFlag = true
+				return MakeBuiltinError(ps, err.Error(), "__write")
 			}
 			return env.Integer{int64(bytesWritten)}
 			//log.Printf("Wrote %d bytes.\n", bytesWritten)
+		default:
+			ps.FailureFlag = true
+			return MakeArgError(ps, 2, []env.Type{env.StringType}, "__write")
 		}
+	default:
+		ps.FailureFlag = true
+		return MakeArgError(ps, 1, []env.Type{env.NativeType}, "__write")
 	}
-	env1.FailureFlag = true
-	return *env.NewError("Failed")
 }
 
-func __fs_read(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+func __fs_read(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch f := arg0.(type) {
 	case env.Uri:
-
 		data, err := ioutil.ReadFile(f.GetPath())
 		if err != nil {
-			return makeError(env1, err.Error())
+			return MakeBuiltinError(ps, err.Error(), "__fs_read")
 		}
 		return env.String{string(data)}
+	default:
+		return MakeArgError(ps, 1, []env.Type{env.UriType}, "__fs_read")
 	}
-	return makeError(env1, "Failed to read file")
 	// Read file to byte slice
 }
 
-func __fs_read_bytes(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+func __fs_read_bytes(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch f := arg0.(type) {
 	case env.Uri:
-
 		data, err := ioutil.ReadFile(f.GetPath())
 		if err != nil {
-			return makeError(env1, err.Error())
+			return MakeBuiltinError(ps, err.Error(), "__fs_read_bytes")
 		}
-		return *env.NewNative(env1.Idx, data, "bytes")
+		return *env.NewNative(ps.Idx, data, "bytes")
+	default:
+		return MakeArgError(ps, 1, []env.Type{env.UriType}, "__fs_read_bytes")
 	}
-	return makeError(env1, "Failed to read file")
 	// Read file to byte slice
 }
 
-func __fs_read_lines(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+func __fs_read_lines(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch f := arg0.(type) {
 	case env.Uri:
 		file, err := os.OpenFile(f.GetPath(), os.O_RDONLY, os.ModePerm)
 		if err != nil {
 			// log.Fatalf("open file error: %v", err)
-			return makeError(env1, err.Error())
+			return MakeBuiltinError(ps, err.Error(), "__fs_read_lines")
 		}
 		defer file.Close()
 
@@ -196,41 +200,43 @@ func __fs_read_lines(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, a
 		}
 		if err := sc.Err(); err != nil {
 			log.Fatalf("scan file error: %v", err)
-			return makeError(env1, err.Error())
+			return MakeBuiltinError(ps, err.Error(), "__fs_read_lines")
 		}
-
 		return *env.NewBlock(*env.NewTSeries(lines))
+	default:
+		return MakeArgError(ps, 1, []env.Type{env.UriType}, "__fs_read_lines")
 	}
-	return makeError(env1, "Arg 1 not Uri")
 	// Read file to byte slice
 }
 
-func __fs_write(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+func __fs_write(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch f := arg0.(type) {
 	case env.Uri:
 		switch s := arg1.(type) {
 		case env.String:
-
 			err := ioutil.WriteFile(f.GetPath(), []byte(s.Value), 0644)
 			if err != nil {
-				env1.FailureFlag = true
-				return *env.NewError(err.Error())
+				ps.FailureFlag = true
+				return MakeBuiltinError(ps, err.Error(), "__fs_write")
 			}
 			return arg1
 		case env.Native:
 			err := ioutil.WriteFile(f.GetPath(), []byte(s.Value.([]byte)), 0644)
 			if err != nil {
-				env1.FailureFlag = true
-				return *env.NewError(err.Error())
+				ps.FailureFlag = true
+				return MakeBuiltinError(ps, err.Error(), "__fs_write")
 			}
 			return arg1
+		default:
+			return MakeArgError(ps, 2, []env.Type{env.StringType, env.NativeType}, "__fs_write")
 		}
+	default:
+		ps.FailureFlag = true
+		return MakeArgError(ps, 1, []env.Type{env.UriType}, "__fs_write")
 	}
-	env1.FailureFlag = true
-	return *env.NewError("Failed")
 }
 
-func __copy(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+func __copy(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch r := arg0.(type) {
 	case env.Native:
 		switch w := arg1.(type) {
@@ -238,51 +244,44 @@ func __copy(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.O
 			// Writer , Reader
 			_, err := io.Copy(w.Value.(io.Writer), r.Value.(io.Reader))
 			if err != nil {
-				env1.FailureFlag = true
-				return *env.NewError(err.Error())
+				ps.FailureFlag = true
+				return MakeBuiltinError(ps, err.Error(), "__copy")
 			}
 			return arg0
 		default:
-			env1.FailureFlag = true
-			return *env.NewError("Failed 2")
+			ps.FailureFlag = true
+			return MakeArgError(ps, 2, []env.Type{env.NativeType}, "__copy")
 		}
 	default:
-		env1.FailureFlag = true
-		return *env.NewError("Failed 3")
-
+		ps.FailureFlag = true
+		return MakeArgError(ps, 1, []env.Type{env.NativeType}, "__copy")
 	}
-	env1.FailureFlag = true
-	return *env.NewError("Failed 4	")
 }
 
-func __stat(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+func __stat(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch r := arg0.(type) {
 	case env.Native:
 		info, err := r.Value.(*os.File).Stat()
 		if err != nil {
-			env1.FailureFlag = true
-			return *env.NewError(err.Error())
+			ps.FailureFlag = true
+			return MakeBuiltinError(ps, err.Error(), "__stat")
 		}
-		return *env.NewNative(env1.Idx, info, "file-info")
+		return *env.NewNative(ps.Idx, info, "file-info")
 	default:
-		env1.FailureFlag = true
-		return *env.NewError("Failed 3")
+		ps.FailureFlag = true
+		return MakeArgError(ps, 1, []env.Type{env.NativeType}, "__stat")
 
 	}
-	env1.FailureFlag = true
-	return *env.NewError("Failed 4	")
 }
 
-func __https_s_get(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+func __https_s_get(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch f := arg0.(type) {
 	case env.Uri:
-
 		resp, err := http.Get(f.GetProtocol() + "://" + f.GetPath())
 		if err != nil {
-			env1.FailureFlag = true
+			ps.FailureFlag = true
 			return *env.NewError(err.Error())
 		}
-
 		// Print the HTTP Status Code and Status Name
 		//mt.Println("HTTP Response Status:", resp.StatusCode, http.StatusText(resp.StatusCode))
 		defer resp.Body.Close()
@@ -291,39 +290,36 @@ func __https_s_get(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg
 		if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
 			return env.String{string(body)}
 		} else {
-			env1.FailureFlag = true
-			return *env.NewError2(resp.StatusCode, string(body))
+			ps.FailureFlag = true
+			errMsg := fmt.Sprintf("Status Code: %v, Body: %v", resp.StatusCode, string(body))
+			return MakeBuiltinError(ps, errMsg, "__https_s_get")
 		}
-
 		// log.Printf("Data read: %s\n", data)
-
+	default:
+		ps.FailureFlag = true
+		return MakeArgError(ps, 1, []env.Type{env.NativeType}, "__https_s_get")
 	}
-	env1.FailureFlag = true
-	return *env.NewError("Failed")
-
 	// Read file to byte slice
 }
 
-func __http_s_post(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+func __http_s_post(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch f := arg0.(type) {
 	case env.Uri:
-
 		switch t := arg2.(type) {
 		case env.Word:
 			switch d := arg1.(type) {
 			case env.String:
-
 				var tt string
-				tidx, terr := env1.Idx.GetIndex("json")
-				tidx2, terr2 := env1.Idx.GetIndex("text")
+				tidx, terr := ps.Idx.GetIndex("json")
+				tidx2, terr2 := ps.Idx.GetIndex("text")
 				if terr && t.Index == tidx {
 					//if t.Value == "json" {
 					tt = "application/json"
 				} else if terr2 && t.Index == tidx2 {
 					tt = "text/plain"
 				} else {
-					env1.FailureFlag = true
-					return *env.NewError("wrong content type")
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Wrong content type.", "__http_s_post")
 				}
 				// TODO -- add other cases
 				// fmt.Println("BEFORE")
@@ -331,8 +327,8 @@ func __http_s_post(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg
 				resp, err := http.Post(f.GetProtocol()+"://"+f.GetPath(), tt, bytes.NewBufferString(d.Value))
 				if err != nil {
 					// fmt.Println("ERR")
-					env1.FailureFlag = true
-					return *env.NewError(err.Error())
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, err.Error(), "__http_s_post")
 				}
 
 				// Print the HTTP Status Code and Status Name
@@ -341,47 +337,49 @@ func __http_s_post(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg
 				body, err := ioutil.ReadAll(resp.Body)
 				if err != nil {
 					// fmt.Println("ERR")
-					env1.FailureFlag = true
-					return *env.NewError(err.Error())
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, err.Error(), "__http_s_post")
 				}
 
 				if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
 					return env.String{string(body)}
 				} else {
 					// fmt.Println("ERR33")
-					env1.FailureFlag = true
+					ps.FailureFlag = true
 					return env.NewError2(resp.StatusCode, string(body))
 				}
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 2, []env.Type{env.StringType}, "__http_s_post")
 			}
+		default:
+			ps.FailureFlag = true
+			return MakeArgError(ps, 3, []env.Type{env.WordType}, "__http_s_post")
 		}
+	default:
+		ps.FailureFlag = true
+		return MakeArgError(ps, 1, []env.Type{env.UriType}, "__http_s_post")
 	}
-	// fmt.Println("ERR44")
-
-	env1.FailureFlag = true
-	return *env.NewError("Failed 123")
-
 	// Read file to byte slice
 }
 
-func __email_send(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+func __email_send(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch to_ := arg0.(type) {
 	case env.Email:
-
 		switch msg := arg1.(type) {
 		case env.String:
-
-			idx, _ := env1.Idx.GetIndex("user-profile")
-			uctx_, _ := env1.Ctx.Get(idx)
+			idx, _ := ps.Idx.GetIndex("user-profile")
+			uctx_, _ := ps.Ctx.Get(idx)
 			uctx := uctx_.(env.RyeCtx)
 			fmt.Println(to_)
 			fmt.Println(msg)
 			fmt.Println(uctx)
 			// TODO continue: uncomment and make it work
 			/*
-				from, _ := uctx.Get(env1.Idx.GetIndex("smtp-from"))
-				password, _ := uctx.Get(env1.Idx.GetIndex("smtp-password"))
-				server, _ := uctx.Get(env1.Idx.GetIndex("smtp-server"))
-				port, _ := uctx.Get(env1.Idx.GetIndex("smtp-port"))
+				from, _ := uctx.Get(ps.Idx.GetIndex("smtp-from"))
+				password, _ := uctx.Get(ps.Idx.GetIndex("smtp-password"))
+				server, _ := uctx.Get(ps.Idx.GetIndex("smtp-server"))
+				port, _ := uctx.Get(ps.Idx.GetIndex("smtp-port"))
 				// Receiver email address.
 				// to := []string{
 				//	to_.Value,
@@ -411,75 +409,77 @@ func __email_send(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2
 
 				// Now send E-Mail
 				if err := d.DialAndSend(m); err != nil {
-					env1.FailureFlag = true
+					ps.FailureFlag = true
 					return env.NewError(err.Error())
 				}
 			*/
 			return env.Integer{1}
+		default:
+			ps.FailureFlag = true
+			return MakeArgError(ps, 2, []env.Type{env.StringType}, "__email_send")
 		}
+	default:
+		ps.FailureFlag = true
+		return MakeArgError(ps, 1, []env.Type{env.EmailType}, "__email_send")
 	}
-	env1.FailureFlag = true
-	return *env.NewError("Failed")
-
 	// Read file to byte slice
 }
 
-func __https_s__new_request(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+func __https_s__new_request(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch uri := arg0.(type) {
 	case env.Uri:
 		switch method := arg1.(type) {
 		case env.Word:
-			method1 := env1.Idx.GetWord(method.Index)
+			method1 := ps.Idx.GetWord(method.Index)
 			if !(method1 == "GET" || method1 == "POST") {
-				env1.FailureFlag = true
-				return *env.NewError("Wrong method")
+				ps.FailureFlag = true
+				return MakeBuiltinError(ps, "Wrong method.", "__https_s__new_request")
 			}
 			switch data := arg2.(type) {
 			case env.String:
 				data1 := strings.NewReader(data.Value)
 				req, err := http.NewRequest(method1, uri.GetProtocol()+"://"+uri.GetPath(), data1)
 				if err != nil {
-					env1.FailureFlag = true
-					return *env.NewError("Error: " + err.Error())
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, err.Error(), "__https_s__new_request")
 				}
-				return *env.NewNative(env1.Idx, req, "https-request")
+				return *env.NewNative(ps.Idx, req, "https-request")
 			default:
-				env1.FailureFlag = true
-				return *env.NewError("Arg 3 not String")
+				ps.FailureFlag = true
+				return MakeArgError(ps, 3, []env.Type{env.StringType}, "__https_s__new_request")
 			}
 		default:
-			env1.FailureFlag = true
-			return *env.NewError("Arg 2 not Word")
+			ps.FailureFlag = true
+			return MakeArgError(ps, 2, []env.Type{env.WordType}, "__https_s__new_request")
 		}
 	default:
-		env1.FailureFlag = true
-		return *env.NewError("Arg 1 not Uri")
+		ps.FailureFlag = true
+		return MakeArgError(ps, 1, []env.Type{env.UriType}, "__https_s__new_request")
 	}
 }
 
-func __https_request__set_header(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+func __https_request__set_header(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch req := arg0.(type) {
 	case env.Native:
 		switch method := arg1.(type) {
 		case env.Word:
-			name := env1.Idx.GetWord(method.Index)
+			name := ps.Idx.GetWord(method.Index)
 			switch data := arg2.(type) {
 			case env.String:
 				req.Value.(*http.Request).Header.Set(name, data.Value)
 				return arg0
 			default:
-				return makeError(env1, "Arg 3 not String")
+				return MakeArgError(ps, 3, []env.Type{env.StringType}, "__https_request__set_header")
 			}
 		default:
-			return makeError(env1, "Arg 2 not Word")
+			return MakeArgError(ps, 2, []env.Type{env.WordType}, "__https_request__set_header")
 		}
 	default:
-		return makeError(env1, "Arg 1 not Native")
+		return MakeArgError(ps, 1, []env.Type{env.NativeType}, "__https_request__set_header")
 	}
-	return makeError(env1, "Failed")
 }
 
-func __https_request__set_basic_auth(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+func __https_request__set_basic_auth(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch req := arg0.(type) {
 	case env.Native:
 		switch username := arg1.(type) {
@@ -489,74 +489,74 @@ func __https_request__set_basic_auth(env1 *env.ProgramState, arg0 env.Object, ar
 				req.Value.(*http.Request).SetBasicAuth(username.Value, password.Value)
 				return arg0
 			default:
-				return makeError(env1, "Arg 3 not String")
+				return MakeArgError(ps, 3, []env.Type{env.StringType}, "__https_request__set_basic_auth")
 			}
 		default:
-			return makeError(env1, "Arg 2 not Word")
+			return MakeArgError(ps, 2, []env.Type{env.StringType}, "__https_request__set_basic_auth")
 		}
 	default:
-		return makeError(env1, "Arg 1 not Native")
+		return MakeArgError(ps, 1, []env.Type{env.NativeType}, "__https_request__set_basic_auth")
 	}
-	return makeError(env1, "Failed")
 }
 
-func __https_request__do(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+func __https_request__do(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch req := arg0.(type) {
 	case env.Native:
 		client := &http.Client{}
 		resp, err := client.Do(req.Value.(*http.Request))
 		if err != nil {
-			return makeError(env1, "Error: "+err.Error())
+			return MakeBuiltinError(ps, err.Error(), "__https_request__do")
 		}
-		return *env.NewNative(env1.Idx, resp, "https-response")
+		return *env.NewNative(ps.Idx, resp, "https-response")
 	default:
-		return makeError(env1, "Arg 1 not Native")
+		return MakeArgError(ps, 1, []env.Type{env.NativeType}, "__https_request__do")
 	}
-	return makeError(env1, "Failed")
 }
 
-func __https_response__read_body(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+func __https_response__read_body(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch resp := arg0.(type) {
 	case env.Native:
 		data, err := ioutil.ReadAll(resp.Value.(*http.Response).Body)
 		if err != nil {
-			makeError(env1, "Error: "+err.Error())
+			return MakeBuiltinError(ps, err.Error(), "__https_response__read_body")
 		}
 		return env.String{string(data)}
 	default:
-		env1.FailureFlag = true
-		return *env.NewError("Arg 1 not Native")
+		ps.FailureFlag = true
+		return MakeArgError(ps, 1, []env.Type{env.NativeType}, "__https_response__read_body")
 	}
-	env1.FailureFlag = true
-	return *env.NewError("Failed")
 }
 
 var Builtins_io = map[string]*env.Builtin{
 
 	"input": {
 		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __input(env1, arg0, arg1, arg2, arg3, arg4)
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __input(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
 	"file-schema//open": {
 		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __open(env1, arg0, arg1, arg2, arg3, arg4)
+		Doc:   "Open file.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __open(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
 	"file-schema//create": {
 		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __create(env1, arg0, arg1, arg2, arg3, arg4)
+		Doc:   "Create file.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __create(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
 	"file-ext?": {
 		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Uri:
 				path := strings.Split(s.Path, "://")
@@ -566,7 +566,7 @@ var Builtins_io = map[string]*env.Builtin{
 				ext := filepath.Ext(s.Value)
 				return env.String{ext}
 			default:
-				return makeError(env1, "Arg 1 isn't Uri")
+				return MakeArgError(ps, 1, []env.Type{env.UriType, env.StringType}, "file-ext?")
 			}
 		},
 	},
@@ -574,20 +574,23 @@ var Builtins_io = map[string]*env.Builtin{
 	// should this be generic method or not?
 	"reader": {
 		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __open_reader(env1, arg0, arg1, arg2, arg3, arg4)
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __open_reader(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
 	"stdin": {
 		Argsn: 0,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return *env.NewNative(env1.Idx, os.Stdin, "rye-reader")
+		Doc:   "Standard input.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return *env.NewNative(ps.Idx, os.Stdin, "rye-reader")
 		},
 	},
 
 	"stdout": {
 		Argsn: 0,
+		Doc:   "Standard output.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewNative(env1.Idx, os.Stdout, "rye-writer")
 		},
@@ -595,159 +598,179 @@ var Builtins_io = map[string]*env.Builtin{
 
 	"rye-reader//copy": {
 		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __copy(env1, arg0, arg1, arg2, arg3, arg4)
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __copy(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
 	"rye-file//copy": {
 		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __copy(env1, arg0, arg1, arg2, arg3, arg4)
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __copy(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
 	"rye-file//stat": {
 		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __stat(env1, arg0, arg1, arg2, arg3, arg4)
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __stat(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
 	"file-info//size?": {
 		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Native:
 				size := s.Value.(os.FileInfo).Size()
 				return env.Integer{size}
 			default:
-				return makeError(env1, "Arg 1 isn't Uri")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "file-info//size?")
 			}
 		},
 	},
 
 	"rye-file//read-all": {
 		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __read_all(env1, arg0, arg1, arg2, arg3, arg4)
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __read_all(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
 	"rye-file//write": {
 		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __write(env1, arg0, arg1, arg2, arg3, arg4)
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __write(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
 	"rye-file//close": {
 		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __close(env1, arg0, arg1, arg2, arg3, arg4)
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __close(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
 	"file-schema//read": {
 		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __fs_read(env1, arg0, arg1, arg2, arg3, arg4)
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __fs_read(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
 	"file-schema//read\\bytes": {
 		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __fs_read_bytes(env1, arg0, arg1, arg2, arg3, arg4)
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __fs_read_bytes(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
 	"file-schema//read\\lines": {
 		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __fs_read_lines(env1, arg0, arg1, arg2, arg3, arg4)
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __fs_read_lines(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
 	"file-schema//write": {
 		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __fs_write(env1, arg0, arg1, arg2, arg3, arg4)
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __fs_write(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
 	"https-schema//get": {
 		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __https_s_get(env1, arg0, arg1, arg2, arg3, arg4)
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __https_s_get(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
 	"https-schema//post": {
 		Argsn: 3,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __http_s_post(env1, arg0, arg1, arg2, arg3, arg4)
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __http_s_post(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
 	"http-schema//get": {
 		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __https_s_get(env1, arg0, arg1, arg2, arg3, arg4)
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __https_s_get(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
 	"http-schema//post": {
 		Argsn: 3,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __http_s_post(env1, arg0, arg1, arg2, arg3, arg4)
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __http_s_post(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
 	"https-schema//new-request": {
 		Argsn: 3,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __https_s__new_request(env1, arg0, arg1, arg2, arg3, arg4)
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __https_s__new_request(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
 	"https-request//set-header": {
 		Argsn: 3,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __https_request__set_header(env1, arg0, arg1, arg2, arg3, arg4)
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __https_request__set_header(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
 	"https-request//set-basic-auth": {
 		Argsn: 3,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __https_request__set_basic_auth(env1, arg0, arg1, arg2, arg3, arg4)
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __https_request__set_basic_auth(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
 	"https-request//call": {
 		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __https_request__do(env1, arg0, arg1, arg2, arg3, arg4)
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __https_request__do(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
 	"https-response//read-body": {
 		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __https_response__read_body(env1, arg0, arg1, arg2, arg3, arg4)
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __https_response__read_body(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
 	"email//send": {
 		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __email_send(env1, arg0, arg1, arg2, arg3, arg4)
+		Doc:   "Send email.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return __email_send(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
 	"serve-cgi": {
 		Argsn: 3,
+		Doc:   "TODODOC",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch rword := arg0.(type) {
 			case env.Word:
@@ -768,17 +791,17 @@ var Builtins_io = map[string]*env.Builtin{
 							ps.Ctx = ctx
 							ps.Ser = ser
 						})); err != nil {
-							return makeError(ps, "Error: "+err.Error())
+							return MakeBuiltinError(ps, err.Error(), "serve-cgi")
 						}
 						return *rctx
 					default:
-						return makeError(ps, "Arg 3 not Block")
+						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "serve-cgi")
 					}
 				default:
-					return makeError(ps, "Arg 2 not Tagword")
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "serve-cgi")
 				}
 			default:
-				return makeError(ps, "Arg 1 not Tagword")
+				return MakeArgError(ps, 1, []env.Type{env.WordType}, "serve-cgi")
 			}
 		},
 	},
