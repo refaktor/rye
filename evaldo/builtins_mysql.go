@@ -1,3 +1,4 @@
+//go:build b_mysql
 // +build b_mysql
 
 package evaldo
@@ -6,6 +7,7 @@ package evaldo
 
 import (
 	"database/sql"
+	"fmt"
 	"rye/env"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -15,22 +17,24 @@ var Builtins_mysql = map[string]*env.Builtin{
 
 	"mysql-schema//open": {
 		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "Open Mysql connection.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.Uri:
 				db, err := sql.Open("mysql", str.Path) // TODO -- we need to make path parser in URI then this will be path
 				if err != nil {
 					// TODO --
 					//fmt.Println("Error1")
-					env1.FailureFlag = true
-					return env.NewError("Error opening SQL: " + err.Error())
+					ps.FailureFlag = true
+					errMsg := fmt.Sprintf("Error opening SQL: %v", err.Error())
+					return MakeBuiltinError(ps, errMsg, "mysql-schema//open")
 				} else {
 					//fmt.Println("Error2")
-					return *env.NewNative(env1.Idx, db, "Rye-mysql")
+					return *env.NewNative(ps.Idx, db, "Rye-mysql")
 				}
 			default:
-				env1.FailureFlag = true
-				return env.NewError("arg 1 should be Uri")
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "mysql-schema//open")
 			}
 
 		},
@@ -38,24 +42,25 @@ var Builtins_mysql = map[string]*env.Builtin{
 
 	"Rye-mysql//exec": {
 		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "Execute sql query in for mysql.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var sqlstr string
 			var vals []interface{}
 			switch db1 := arg0.(type) {
 			case env.Native:
 				switch str := arg1.(type) {
 				case env.Block:
-					ser := env1.Ser
-					env1.Ser = str.Series
+					ser := ps.Ser
+					ps.Ser = str.Series
 					values := make([]interface{}, 0, 2)
-					_, vals = SQL_EvalBlock(env1, MODE_PSQL, values)
-					sqlstr = env1.Res.(env.String).Value
-					env1.Ser = ser
+					_, vals = SQL_EvalBlock(ps, MODE_PSQL, values)
+					sqlstr = ps.Res.(env.String).Value
+					ps.Ser = ser
 				case env.String:
 					sqlstr = str.Value
 				default:
-					env1.ErrorFlag = true
-					return env.NewError("First argument should be block or string.")
+					ps.ErrorFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.StringType}, "Rye-mysql//exec")
 				}
 				if sqlstr != "" {
 					//fmt.Println(sqlstr)
@@ -63,29 +68,30 @@ var Builtins_mysql = map[string]*env.Builtin{
 					db2 := db1.Value.(*sql.DB)
 					res, err := db2.Exec(sqlstr, vals...)
 					if err != nil {
-						env1.FailureFlag = true
-						return env.NewError("Error" + err.Error())
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, err.Error(), "Rye-mysql//exec")
 					} else {
 						num, _ := res.RowsAffected()
 						if num > 0 {
 							return env.Integer{1}
 						} else {
-							env1.FailureFlag = true
-							return env.NewError("no rows affected")
+							ps.FailureFlag = true
+							return MakeBuiltinError(ps, "No rows affected.", "Rye-mysql//exec")
 						}
-
 					}
+				} else {
+					return MakeBuiltinError(ps, "SQL string is blank.", "Rye-mysql//exec")
 				}
 			default:
-				return env.NewError("arg 1111 should be string %s")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-mysql//exec")
 			}
-			return env.NewError("arg 0000 should be string %s")
 		},
 	},
 
 	"Rye-mysql//query": {
 		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "Sql query to get rows data",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var sqlstr string
 			var vals []interface{}
 			switch db1 := arg0.(type) {
@@ -93,17 +99,17 @@ var Builtins_mysql = map[string]*env.Builtin{
 				switch str := arg1.(type) {
 				case env.Block:
 					//fmt.Println("BLOCK ****** *****")
-					ser := env1.Ser
-					env1.Ser = str.Series
+					ser := ps.Ser
+					ps.Ser = str.Series
 					values := make([]interface{}, 0, 2)
-					_, vals = SQL_EvalBlock(env1, MODE_PSQL, values)
-					sqlstr = env1.Res.(env.String).Value
-					env1.Ser = ser
+					_, vals = SQL_EvalBlock(ps, MODE_PSQL, values)
+					sqlstr = ps.Res.(env.String).Value
+					ps.Ser = ser
 				case env.String:
 					sqlstr = str.Value
 				default:
-					env1.ErrorFlag = true
-					return env.NewError("First argument should be block or string.")
+					ps.ErrorFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.StringType}, "Rye-mysql//query")
 				}
 				if sqlstr != "" {
 					//					fmt.Println(sqlstr)
@@ -111,8 +117,8 @@ var Builtins_mysql = map[string]*env.Builtin{
 					rows, err := db1.Value.(*sql.DB).Query(sqlstr, vals...)
 					result := make([]map[string]interface{}, 0)
 					if err != nil {
-						env1.FailureFlag = true
-						return env.NewError("Error" + err.Error())
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, err.Error(), "Rye-mysql//exec")
 					} else {
 						cols, _ := rows.Columns()
 						spr := env.NewSpreadsheet(cols)
@@ -149,18 +155,18 @@ var Builtins_mysql = map[string]*env.Builtin{
 						//fmt.Println("+++++")
 						//	fmt.Print(result)
 						if i == 0 {
-							env1.FailureFlag = true
-							return env.NewError("no data")
+							ps.FailureFlag = true
+							return MakeBuiltinError(ps, "No data.", "Rye-mysql//exec")
 						}
 						return *spr
-						//return *env.NewNative(env1.Idx, *spr, "Rye-spreadsheet")
+						//return *env.NewNative(ps.Idx, *spr, "Rye-spreadsheet")
 					}
 				} else {
-					return env.NewError("Empty SQL")
+					return MakeBuiltinError(ps, "Empty SQL.", "Rye-mysql//exec")
 				}
 
 			default:
-				return env.NewError("First argument should be native.")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-mysql//query")
 			}
 		},
 	},
