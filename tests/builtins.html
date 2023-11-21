@@ -1,23 +1,22 @@
 <html>
-<head>
-</head>
-<link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,700|Roboto:300,400,700&subset=latin-ext' rel='stylesheet' type='text/css'>
-	<link rel="preconnect" href="https://fonts.googleapis.com">
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Londrina+Solid:wght@300&display=swap" rel="stylesheet">
-	<style>
-	  body {
-	      font-family: Roboto;
-	      __background-color: #f1f1f1;
-	      padding: 20px;
-	      font-size: 15px;
-	  }
-	  main {
-	      __border: 1px solid #f1f1f1;
-	      width: 740px;
-	      margin: auto;
-	  }
-	  textarea {
+  <head>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,700|Roboto:300,400,700&subset=latin-ext' rel='stylesheet' type='text/css'>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Londrina+Solid:wght@300&display=swap" rel="stylesheet">
+    <style>
+      body {
+	  font-family: Roboto;
+	  __background-color: #f1f1f1;
+	  padding: 20px;
+	  font-size: 15px;
+      }
+      main {
+	  __border: 1px solid #f1f1f1;
+	  width: 740px;
+	  margin: auto;
+      }
+      textarea {
 	      width: 320px;
 	      box-model: content;
 	      padding: 10px;
@@ -127,19 +126,128 @@
 	  button.nav:disabled {
 	      opacity: 0.3;
 	  }
-	</style>
-
-
-  
-</style>
+    </style>
+  </head>
 <body>
 
-<h1>Builtins</h1><p>Builtins are core builtin functions of Rye language</p>
-<h2>join</h2><p>Pure Builtin(1): Joins Block or list of values together.</p>
-<pre>join { "abc" "dfe" "ghi" }
-; returns "abcdfeghi"</pre>
-<pre>{ "abc" 123 } .join
-; returns "abc123"</pre>
+<h1>Type conversion and checking</h1><p>Functions that convert between Rye value types.</p>
+<h2>to-word</h2><p>Pure Builtin(1): Takes a Rye value (like string) and returns a Word with that name.</p>
+<pre>to-word "test"
+; returns test</pre>
+<pre>to-word test
+; returns test</pre>
+<h2>to-string</h2><p>Pure Builtin(1): Takes a Rye value and returns a string representation.</p>
+<pre>to-string 123
+; returns "123"</pre>
+<h2>to-uri</h2><p>Pure Builtin(1): Takes a Rye value and return a URI if possible.</p>
+<h2>to-file</h2><p>Pure Builtin(1): Takes a Rye value and returns file if possible.</p>
+<pre>to-file "file.txt"
+; returns file://file.txt</pre>
+<h2>is-string</h2><p>Pure Builtin(1): Returns true if value is string.</p>
+<pre>is-string "ABC"
+; returns 1</pre>
+<pre>is-string 123
+; returns 0</pre>
+<pre>is-string file://file.txt
+; returns 0</pre>
+<pre>is-string test@gmail.com
+; returns 0</pre>
+<h2>type?</h2><p>Pure Builtin(1): Returns the type of Rye value (as a word).</p>
+<pre>type? "ABC"
+; returns string</pre>
+<pre>type? 123
+; returns integer</pre>
+<h1>Numeric functions</h1><p>Functions that mostly work with numbers.</p>
+<h2>inc</h2><p>Pure Builtin(1): Returns integer value incremented by 1.</p>
+<pre>inc 100
+; returns 101</pre>
+<h2>inc!</h2><p>Builtin(1): Increments integer value by 1 in place.</p>
+<pre>a: 100 , inc! a
+; returns 101</pre>
+<pre>a: 100 , inc! a , a
+; returns 101</pre>
+<h2>is-positive</h2><p>Pure Builtin(1): Returns true if integer is positive.</p>
+<pre>is-positive 1
+; returns 1</pre>
+<pre>0 .is-positive
+; returns 0</pre>
+<h2>factor-of</h2><p>Pure Builtin(2): Checks if a first argument is a factor of second.</p>
+<pre>factor-of 10 2
+; returns 1</pre>
+<pre>10 .factor-of 3
+; returns 0</pre>
+<h2>odd</h2><p>Pure Builtin(1): Checks if a number is odd.</p>
+<pre>odd 3
+; returns 1</pre>
+<h2>even</h2><p>Pure Builtin(1): Checks if a number is even.</p>
+<pre>even 2
+; returns 1</pre>
+<h2>mod</h2><p>Pure Builtin(2): Calculates module of two integers.</p>
+<h1>Values functions</h1><p>Functions that mostly work with blocks.</p>
+<h2>change!</h2><p>Builtin(2): Changes value in a word, if value changes returns true otherwise false</p>
+<pre>a: 1 change! 2 a
+; returns 1</pre>
+<pre>a: 2 change! 2 a
+; returns 0</pre>
+<h2>dump</h2><p>Pure Builtin(1): Set docstring of the current context.</p>
+<h2>doc\\of?</h2><p>Pure Builtin(1): Get docstring of the first argument.</p>
+<h2>true</h2><p>Pure Builtin(0): Retutns a truthy value.</p>
+<pre>true
+; returns 1</pre>
+<h2>false</h2><p>Pure Builtin(0): Retutns a falsy value.</p>
+<pre>false
+; returns 0</pre>
+<h2>not</h2><p>Pure Builtin(1): Turns a truthy value to non-truthy and reverse.</p>
+<pre>not 0
+; returns 1</pre>
+<pre>not 1
+; returns 0</pre>
+<h1>Context functions</h1><p>Functions that mostly work with blocks.</p>
+<h2>doc</h2><p>Pure Builtin(1): Set docstring of the current context.</p>
+<h2>doc?</h2><p>Pure Builtin(0): Get docstring of the current context.</p>
+<h1>Printing functions</h1><p>Functions that print values to stdio</p>
+<h2>prn</h2><p>Builtin(1): Prints a value and adds a space.</p>
+<pre>prn 123
+; prints "123 "</pre>
+<h2>prin</h2><p>Builtin(1): Prints a value without newline.</p>
+<pre>prin 123
+; prints "123"</pre>
+<h2>print</h2><p>Builtin(1): Prints a value and adds a newline.</p>
+<pre>print 123
+; prints "123
+"</pre>
+<h2>print-val</h2><p>Builtin(2): Prints a value and adds a newline.</p>
+<pre>print-val 33 "value is: {{}}"
+; prints "value is: 33
+"</pre>
+<h2>probe</h2><p>Builtin(1): Prints a probe of a value.</p>
+<pre>probe 33
+; prints "[Integer: 33]
+"</pre>
+<h2>mold</h2><p>Builtin(1): Turn value to it's string representation.</p>
+<pre>mold 33
+; returns "33"</pre>
+<h2>mold\
+owrap</h2><p>Builtin(1): Turn value to it's string representation.</p>
+<pre>mold\nowrap "33"
+; returns ""33""</pre>
+<h1>Control functions</h1><p>Program flow control functions</p>
+<h2>if</h2><p>Pure Builtin(2): Basic conditional. Takes a condition and a block of code.</p>
+<h2>otherwise</h2><p>Pure Builtin(2): Conditional if not. Takes condition and a block of code.</p>
+<h2>^if</h2><p>Pure Builtin(2): Basic conditional with a Returning mechanism when true. Takes a condition and a block of code.</p>
+<h2>^otherwise</h2><p>Pure Builtin(2): Basic conditional with a Returning mechanism when true. Takes a condition and a block of code.</p>
+<h2>either</h2><p>Pure Builtin(3): The if/else conditional. Takes a value and true and false block of code.</p>
+<h2>switch</h2><p>Builtin(2): Classic switch function. Takes a word and multiple possible values and block of code to do.</p>
+<h2>cases</h2><p>Builtin(2): Similar to Case function, but checks all the cases, even after a match. It combines the outputs.</p>
+<h1>Doers and evaluators</h1><p>...</p>
+<h2>do</h2><p>Builtin(1): Takes a block of code and does (runs) it.</p>
+<h2>do-in</h2><p>Builtin(2): Takes a Context and a Block. It Does a block inside a given Context.</p>
+<h2>do-with</h2><p>Builtin(2): Takes a value and a block of code. It does the code with the value injected.</p>
+<h2>try</h2><p>Builtin(1): Takes a block of code and does (runs) it.</p>
+<h2>do-in\\try</h2><p>Builtin(2): Takes a Context and a Block. It Does a block inside a given Context.</p>
+<h2>vals</h2><p>Builtin(1): Takes a block of Rye values and evaluates each value or expression.</p>
+<h2>vals\\with</h2><p>Builtin(2): Evaluate a block with injecting the first argument.</p>
+<h1>Collections related functions</h1><p>Functions that mostly work with collections (blocks / lists).</p>
 <h2>length?</h2><p>Builtin(1): Accepts a collection (String, Block, Dict, Spreadsheet) and returns it's length.</p>
 <pre>length? "1234567"
 ; returns 7</pre>
@@ -152,5 +260,6 @@
 ; returns 2 3 4</pre>
 <pre>map { "a" "bb" "ccc" } { .length? }
 ; returns 1 2 3</pre>
+</body>
 </html>
 

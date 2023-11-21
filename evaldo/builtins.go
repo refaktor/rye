@@ -3,6 +3,7 @@ package evaldo
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -302,7 +303,7 @@ var ShowResults bool
 
 var builtins = map[string]*env.Builtin{
 
-	"to-word": { // ALLOK
+	"to-word": { // **
 		Argsn: 1,
 		Doc:   "Takes a Rye value (like string) and returns a Word with that name.",
 		Pure:  true,
@@ -319,7 +320,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"to-string": { // ALLOK
+	"to-string": { // **
 		Argsn: 1,
 		Doc:   "Takes a Rye value and returns a string representation.",
 		Pure:  true,
@@ -328,7 +329,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"is-string": { // ALLOK
+	"is-string": { // **
 		Argsn: 1,
 		Doc:   "Returns true if value is string.",
 		Pure:  true,
@@ -341,7 +342,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"to-uri": { // T: return possible failures
+	"to-uri": { // * TODO-FIXME: return possible failures
 		Argsn: 1,
 		Doc:   "Takes a Rye value and return a URI if possible.",
 		Pure:  true,
@@ -350,7 +351,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"to-file": { // T: return possible failures
+	"to-file": { // *  TODO-FIXME: return possible failures
 		Argsn: 1,
 		Doc:   "Takes a Rye value and returns file if possible.",
 		Pure:  true,
@@ -359,7 +360,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"type?": { // ALLOK
+	"type?": { // **
 		Argsn: 1,
 		Doc:   "Returns the type of Rye value (as a word).",
 		Pure:  true,
@@ -368,7 +369,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"inc": { // ALLOK
+	"inc": { // **
 		Argsn: 1,
 		Doc:   "Returns integer value incremented by 1.",
 		Pure:  true,
@@ -382,7 +383,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"positive?": { // ALLOK
+	"is-positive": { // **
 		Argsn: 1,
 		Doc:   "Returns true if integer is positive.",
 		Pure:  true,
@@ -400,7 +401,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"inc!": { // ALLOK
+	"inc!": { // **
 		Argsn: 1,
 		Doc:   "Increments integer value by 1 in place.",
 		Pure:  false,
@@ -425,7 +426,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"change!": { // ALLOK
+	"change!": { // *
 		Argsn: 2,
 		Doc:   "Changes value in a word, if value changes returns true otherwise false",
 		Pure:  false,
@@ -450,7 +451,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"set": { // ALLOK
+	"set": { // **
 		Argsn: 2,
 		Doc:   "Set words by deconstructing block",
 		Pure:  false,
@@ -486,7 +487,7 @@ var builtins = map[string]*env.Builtin{
 
 	// CONTINUE WORK HERE - SYSTEMATISATION
 
-	"dump": { // currently a concept in testing ... for getting a code of a function, maybe same would be needed for context?
+	"dump": { // ** currently a concept in testing ... for getting a code of a function, maybe same would be needed for context?
 		Argsn: 1,
 		Doc:   "Set docstring of the current context.",
 		Pure:  true,
@@ -500,7 +501,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"doc": { // ALLOK
+	"doc": { // **
 		Argsn: 1,
 		Doc:   "Set docstring of the current context.",
 		Pure:  true,
@@ -515,7 +516,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"doc?": { // ALLOK
+	"doc?": { // **
 		Argsn: 0,
 		Doc:   "Get docstring of the current context.",
 		Pure:  true,
@@ -524,7 +525,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"doc\\of?": { // ALLOK
+	"doc\\of?": { // *
 		Argsn: 1,
 		Doc:   "Get docstring of the first argument.",
 		Pure:  true,
@@ -545,7 +546,7 @@ var builtins = map[string]*env.Builtin{
 
 	// BASIC FUNCTIONS WITH NUMBERS
 
-	"true": { // ALLOK
+	"true": { // **
 		Argsn: 0,
 		Doc:   "Retutns a truthy value.",
 		Pure:  true,
@@ -554,7 +555,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"false": { // ALLOK
+	"false": { // **
 		Argsn: 0,
 		Doc:   "Retutns a falsy value.",
 		Pure:  true,
@@ -589,7 +590,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"factor-of": { // ALLOK
+	"factor-of": { // **
 		Argsn: 2,
 		Doc:   "Checks if a first argument is a factor of second.",
 		Pure:  true,
@@ -611,7 +612,7 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-	"odd": { // ALLOK
+	"odd": { // **
 		Argsn: 1,
 		Doc:   "Checks if a number is odd.",
 		Pure:  true,
@@ -628,7 +629,7 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-	"even": { // ALLOK
+	"even": { // **
 		Argsn: 1,
 		Doc:   "Checks if a number is even.",
 		Pure:  true,
@@ -646,7 +647,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"mod": {
+	"mod": { // **
 		Argsn: 2,
 		Doc:   "Calculates module of two integers.",
 		Pure:  true,
@@ -665,7 +666,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"_+": {
+	"_+": { // **
 		Argsn: 2,
 		Doc:   "Adds or joins two values together (Integers, Strings, Uri-s and Blocks)",
 		Pure:  true,
@@ -755,7 +756,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"_-": {
+	"_-": { // **
 		Argsn: 2,
 		Doc:   "Subtract two integers.",
 		Pure:  true,
@@ -784,7 +785,8 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-	"_*": {
+
+	"_*": { // **
 		Argsn: 2,
 		Doc:   "Multiply two integers.",
 		Pure:  true,
@@ -813,7 +815,7 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-	"_/": {
+	"_/": { // **
 		Argsn: 2,
 		Doc:   "Divide two integers.",
 		Pure:  true,
@@ -858,7 +860,7 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-	"_=": {
+	"_=": { // **
 		Argsn: 2,
 		Doc:   "Test if two values are equal.",
 		Pure:  true,
@@ -872,7 +874,7 @@ var builtins = map[string]*env.Builtin{
 			return env.Integer{res}
 		},
 	},
-	"_!": {
+	"_!": { // **
 		Argsn: 2,
 		Doc:   "Reverses the truthines.",
 		Pure:  true,
@@ -886,7 +888,7 @@ var builtins = map[string]*env.Builtin{
 			return env.Integer{res}
 		},
 	},
-	"_>": {
+	"_>": { // **
 		Argsn: 2,
 		Doc:   "Tests if Arg1 is greater than Arg 2.",
 		Pure:  true,
@@ -898,7 +900,7 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-	"_>=": {
+	"_>=": { //
 		Argsn: 2,
 		Doc:   "Tests if Arg1 is greater than Arg 2.",
 		Pure:  true,
@@ -910,7 +912,7 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-	"_<": {
+	"_<": { // **
 		Argsn: 2,
 		Doc:   "Tests if Arg1 is lesser than Arg 2.",
 		Pure:  true,
@@ -937,15 +939,7 @@ var builtins = map[string]*env.Builtin{
 
 	// BASIC GENERAL FUNCTIONS
 
-	"prnl": {
-		Argsn: 0,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			fmt.Print("\n")
-			return nil
-		},
-	},
-
-	"prn": {
+	"prn": { // **
 		Argsn: 1,
 		Doc:   "Prints a value and adds a space.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -958,7 +952,7 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
-	"prin": {
+	"prin": { // **
 		Argsn: 1,
 		Doc:   "Prints a value without newline.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -971,7 +965,7 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
-	"print": {
+	"print": { // **
 		Argsn: 1,
 		Doc:   "Prints a value and adds a newline.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -984,7 +978,7 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
-	"print-val": {
+	"print-val": { // **
 		Argsn: 2,
 		Doc:   "Prints a value and adds a newline.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -999,7 +993,7 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
-	"print-ssv": {
+	"print-ssv": { // **
 		Argsn: 1,
 		Doc:   "Prints a value and adds a newline.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1012,7 +1006,7 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
-	"print-csv": {
+	"print-csv": { // **
 		Argsn: 1,
 		Doc:   "Prints a value and adds a newline.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1025,7 +1019,7 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
-	"print-json": {
+	"print-json": { // **
 		Argsn: 1,
 		Doc:   "Prints a value and adds a newline.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1038,7 +1032,7 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
-	"probe": {
+	"probe": { // **
 		Argsn: 1,
 		Doc:   "Prints a probe of a value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1046,7 +1040,7 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
-	"inspect": {
+	"inspect": { // **
 		Argsn: 1,
 		Doc:   "Returs information about a value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1147,7 +1141,7 @@ var builtins = map[string]*env.Builtin{
 			return nil
 		},
 	}, */
-	"mold": {
+	"mold": { // **
 		Argsn: 1,
 		Doc:   "Turn value to it's string representation.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1156,7 +1150,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"mold\\nowrap": {
+	"mold\\nowrap": { // **
 		Argsn: 1,
 		Doc:   "Turn value to it's string representation.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1172,7 +1166,7 @@ var builtins = map[string]*env.Builtin{
 
 	// CONTROL WORDS
 
-	"otherwise": {
+	"otherwise": { // **
 		Argsn: 2,
 		Doc:   "Conditional if not. Takes condition and a block of code.",
 		Pure:  true,
@@ -1186,16 +1180,18 @@ var builtins = map[string]*env.Builtin{
 					EvalBlock(ps)
 					ps.Ser = ser
 					return ps.Res
-				} else {
-					return MakeBuiltinError(ps, "Truthiness condition is not correct.", "otherwise")
 				}
+				return env.Integer{0}
+				// else {
+				//	return MakeBuiltinError(ps, "Truthiness condition is not correct.", "otherwise")
+				// }
 			default:
 				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "otherwise")
 			}
 		},
 	},
 
-	"if": {
+	"if": { // **
 		Argsn: 2,
 		Doc:   "Basic conditional. Takes a condition and a block of code.",
 		Pure:  true,
@@ -1232,9 +1228,11 @@ var builtins = map[string]*env.Builtin{
 					// we return the last return value (the return value of executing the block) "a: if 1 { 100 }" a becomes 100,
 					// in future we will also handle the "else" case, but we have to decide
 					return ps.Res
-				} else {
-					return MakeBuiltinError(ps, "Truthiness condition is not correct.", "if")
 				}
+				return env.Integer{0}
+				// else {
+				//	return MakeBuiltinError(ps, "Truthiness condition is not correct.", "if")
+				// }
 			default:
 				// if it's not a block we return error for now
 				ps.FailureFlag = true
@@ -1243,7 +1241,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"^if": {
+	"^if": { // **
 		Argsn: 2,
 		Doc:   "Basic conditional with a Returning mechanism when true. Takes a condition and a block of code.",
 		Pure:  true,
@@ -1258,16 +1256,18 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = ser
 					ps.ReturnFlag = true
 					return ps.Res
-				} else {
-					return MakeBuiltinError(ps, "Truthiness condition is not correct.", "^if")
 				}
+				return env.Integer{0}
+				// else {
+				//	return MakeBuiltinError(ps, "Truthiness condition is not correct.", "^if")
+				// }
 			default:
 				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "^if")
 			}
 		},
 	},
 
-	"^otherwise": {
+	"^otherwise": { // **
 		Argsn: 2,
 		Doc:   "Basic conditional with a Returning mechanism when true. Takes a condition and a block of code.",
 		Pure:  true,
@@ -1282,16 +1282,18 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = ser
 					ps.ReturnFlag = true
 					return ps.Res
-				} else {
-					return MakeBuiltinError(ps, "Truthiness condition is not correct.", "^otherwise")
 				}
+				return env.Integer{0}
+				// else {
+				// 	return MakeBuiltinError(ps, "Truthiness condition is not correct.", "^otherwise")
+				// }
 			default:
 				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "^otherwise")
 			}
 		},
 	},
 
-	"either": {
+	"either": { // **
 		Argsn: 3,
 		Doc:   "The if/else conditional. Takes a value and true and false block of code.",
 		Pure:  true,
@@ -1431,7 +1433,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"switch": {
+	"switch": { // **
 		Argsn:         2,
 		Doc:           "Classic switch function. Takes a word and multiple possible values and block of code to do.",
 		AcceptFailure: true,
@@ -1493,7 +1495,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"cases": {
+	"cases": { // **
 		Argsn: 2,
 		Doc:   "Similar to Case function, but checks all the cases, even after a match. It combines the outputs.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1641,7 +1643,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"do": {
+	"do": { // **
 		Argsn: 1,
 		Doc:   "Takes a block of code and does (runs) it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1658,7 +1660,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"try": {
+	"try": { // **
 		Argsn: 1,
 		Doc:   "Takes a block of code and does (runs) it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1683,7 +1685,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"do-with": {
+	"do-with": { // **
 		Argsn: 2,
 		Doc:   "Takes a value and a block of code. It does the code with the value injected.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1700,7 +1702,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"do-in": {
+	"do-in": { // **
 		Argsn: 2,
 		Doc:   "Takes a Context and a Block. It Does a block inside a given Context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1725,7 +1727,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"do-in\\try": {
+	"do-in\\try": { // **
 		Argsn: 2,
 		Doc:   "Takes a Context and a Block. It Does a block inside a given Context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1758,7 +1760,49 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"vals": {
+	"capture-stdout": { // **
+		Argsn: 1,
+		Doc:   "Takes a block of code and does (runs) it.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg0.(type) {
+			case env.Block:
+
+				old := os.Stdout // keep backup of the real stdout
+				r, w, _ := os.Pipe()
+				os.Stdout = w
+
+				// print()
+
+				ser := ps.Ser
+				ps.Ser = bloc.Series
+				EvalBlock(ps)
+				ps.Ser = ser
+
+				outC := make(chan string)
+				// copy the output in a separate goroutine so printing can't block indefinitely
+				go func() {
+					var buf bytes.Buffer
+					io.Copy(&buf, r)
+					outC <- buf.String()
+				}()
+
+				// back to normal state
+				w.Close()
+				os.Stdout = old // restoring the real stdout
+				out := <-outC
+
+				// reading our temp stdout
+				// fmt.Println("previous output:")
+				// fmt.Print(out)
+
+				return env.String{out}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "capture-stdout")
+			}
+		},
+	},
+
+	"vals": { // **
 		Argsn: 1,
 		Doc:   "Takes a block of Rye values and evaluates each value or expression.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1795,7 +1839,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"vals\\with": {
+	"vals\\with": { // **
 		Argsn: 2,
 		Doc:   "Evaluate a block with injecting the first argument.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

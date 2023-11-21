@@ -12,7 +12,7 @@ type Idxs struct {
 	wordsn int
 }
 
-var NativeTypes = [...]string{
+var NativeTypes = [...]string{ // Todo change to BuiltinTypes
 	"Block",
 	"Integer",
 	"Word",

@@ -7,25 +7,36 @@ test-framework: context {
 	
 	section: fn { name descr code } { print join { "SECTION: " name newline " * " descr } , do code }
 	
-	group: fn { name descr code } { print " GROUP: " + name , do code }
+	group: fn { name descr args code } { print " GROUP: " + name , do code }
 	
 	equal: fn { test res } {
 		do-in root-ctx test :got = res
-		|either { print "  - OK" } { print join { "  - Error: expected " mold res ", got " mold got }
-		}
+		|either { print "  - OK" } { print join { "  - Error: expected " mold res ", got " mold got } }
 	}
+	
+	stdout: fn { test res } {
+		capture-stdout { do-in root-ctx test } :got = res
+		|either { print "  - OK" } { print join { "  - Error: expected " mold res ", got " mold got } }
+	}
+
 }
 
 docs-framework: context {
 	
 	section: fn { name descr code } { print join { "<h1>" name "</h1><p>" descr "</p>" } , do code }
 	
-	group: fn { name descr code }   { print join { "<h2>" name "</h2><p>" descr "</p>" } , do code }
+	group: fn { name descr args code }   { print join { "<h2>" name "</h2><p>" descr "</p>" } , do code }
 
 	equal: fn { test res } {
 		do-in root-ctx test :got = res
 		|if { print join [ "<pre>" mold\nowrap test newline "; returns "  mold\nowrap got "</pre>" ] }
 	}
+
+	stdout: fn { test res } {
+		capture-stdout { do-in root-ctx test } :got = res
+		|if { print join [ "<pre>" mold\nowrap test newline "; prints "  mold\nowrap got "</pre>" ] }
+	}
+
 	
 }
 

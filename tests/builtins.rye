@@ -1,17 +1,372 @@
 ; Test / docs definition ... mold/nowrap ?function get's docstrings from live functions
 
-section "Builtins"
-"Builtins are core builtin functions of Rye language"
-{	
-	group "join"
-	mold\nowrap ?join
+section "Type conversion and checking"
+"Functions that convert between Rye value types."
+{
+	group "to-word"
+	mold\nowrap ?to-word
+	{ { string word } }
 	{
-		equal { join { "abc" "dfe" "ghi" } } "abcdfeghi"
-		equal { { "abc" 123 } .join } "abc123"
+		equal { to-word "test" } 'test
+		equal { to-word 'test } 'test
 	}
+
+	group "to-string"
+	mold\nowrap ?to-string
+	{ { string word number } }
+	{
+		equal { to-string 123 } "123"
+	}
+
+	group "to-uri"
+	mold\nowrap ?to-uri
+	{ { string } }
+	{
+		equal { to-uri "https://example.com" } http://example.com
+		; TODO -- add https
+	}
+
+	group "to-file"
+	mold\nowrap ?to-file
+	{ { string } }
+	{
+		equal { to-file "file.txt" } %file.txt
+	}
+
+	group "is-string"
+	mold\nowrap ?is-string
+	{ { object } }
+	{
+		equal { is-string "ABC" } 1
+		equal { is-string 123 } 0
+		equal { is-string %file.txt } 0
+		equal { is-string test@gmail.com } 0
+	}
+
+	group "type?"
+	mold\nowrap ?type?
+	{ { object } }
+	{
+		equal { type? "ABC" } 'string
+		equal { type? 123 } 'integer
+		; TODO -- add for other types
+	}
+
+	
+}
+
+section "Numeric functions"
+"Functions that mostly work with numbers."
+{
+	group "inc"
+	mold\nowrap ?inc
+	{ { integer } }
+	{
+		equal { inc 100 } 101
+	}
+
+	group "inc!"
+	mold\nowrap ?inc!
+	{ { word } }
+	{
+		equal { a: 100 , inc! 'a } 101 
+		equal { a: 100 , inc! 'a , a } 101 
+	}
+
+	group "is-positive"
+	mold\nowrap ?is-positive
+	{ { integer decimal } }
+	{
+		equal { is-positive 1 } 1 
+		equal { 0 .is-positive } 0 
+		; TODO equal { -1 .is-positive } 0
+		; TODO -- same for decimal
+	}
+
+	group "factor-of"
+	mold\nowrap ?factor-of
+	{ { integer } { integer } }
+	{
+		equal { factor-of 10 2 } 1
+		equal { 10 .factor-of 3 } 0		
+	}
+
+	group "odd"
+	mold\nowrap ?odd
+	{ { integer } }
+	{
+		equal { odd 3 } 1
+		; TODO 
+	}
+
+	group "even"
+	mold\nowrap ?even
+	{ { integer } }
+	{
+		equal { even 2 } 1
+		; TODO
+	}
+
+	group "mod"
+	mold\nowrap ?mod
+	{ { integer } { integer } }
+	{
+		equal { 2 .mod 3 } 1
+		; TODO
+	}
+
+	$ 
+	group "+-*/"
+	""
+	{ { integer decimal } { integer decimal } }
+	{
+	}
+
+
+	group "!=><+"
+	""
+	{ { integer decimal } { integer decimal } }
+	{
+	} $
+
+}
+
+section "Values functions"
+"Functions that mostly work with blocks."
+{
+	group "change!"
+	mold\nowrap ?change!
+	{ { any } { word } }
+	{
+		equal { a: 1 change! 2 'a } 1
+		equal { a: 2 change! 2 'a } 0
+	}
+
+	group "dump"
+	mold\nowrap ?dump
+	{ { any } { word } }
+	{
+		; TODO
+	}
+
+	group "doc\\of?"
+	mold\nowrap ?doc\of?
+	{ { function } }
+	{
+		; TODO 
+	}
+
+	group "true"
+	mold\nowrap ?true
+	{ { } }
+	{
+		equal { true } 1
+	}
+
+	group "false"
+	mold\nowrap ?false
+	{ { function } }
+	{
+		equal { false } 0
+	}
+
+	group "not"
+	mold\nowrap ?not
+	{ { function } }
+	{
+		equal { not 0 } 1
+		equal { not 1 } 0
+	}
+
+
+}
+
+section "Context functions"
+"Functions that mostly work with blocks."
+{
+	group "doc"
+	mold\nowrap ?doc
+	{ { string  } }
+	{
+		; TODO
+	}
+
+	group "doc?"
+	mold\nowrap ?doc?
+	{ { } }
+	{
+		; TODO
+	}
+
+}
+
+section "Printing functions"
+"Functions that print values to stdio"
+{
+	group "prn"
+	mold\nowrap ?prn
+	{ { object } }
+	{
+		stdout { prn 123 } "123 "
+	}
+	group "prin"
+	mold\nowrap ?prin
+	{ { object } }
+	{
+		stdout { prin 123 } "123"
+	}
+	group "print"
+	mold\nowrap ?print
+	{ { object } }
+	{
+		stdout { print 123 } "123" + newline
+	}
+	group "print-val"
+	mold\nowrap ?print-val
+	{ { object } }
+	{
+		stdout { print-val 33 "value is: {{}}" } "value is: 33" + newline
+	}
+	; group "print-ssv"
+	; mold\nowrap ?print-ssv
+	; { { function } }
+	; {
+	; }
+	$ group "print-csv"
+	mold\nowrap ?print-csv
+	{ { function } }
+	{
+	}
+	group "print-json"
+	mold\nowrap ?print-json
+	{ { function } }
+	{
+	} $
+	group "probe"
+	mold\nowrap ?probe
+	{ { function } }
+	{
+		stdout { probe 33 } "[Integer: 33]" + newline
+	}
+	; group "inspect"
+	; mold\nowrap ?inspect
+	; { { function } }
+	; {
+	;	stdout { inspect 33 } "33"
+	; }
+	group "mold"
+	mold\nowrap ?mold
+	{ { function } }
+	{
+		equal { mold 33 } "33"
+	}
+	group "mold\\nowrap"
+	mold\nowrap ?mold\nowrap
+	{ { function } }
+	{
+		equal { mold\nowrap "33" } $"33"$
+	}
+
+}
+
+
+section "Control functions"
+"Program flow control functions"
+{	
+	
+	group "if"
+	mold\nowrap ?if
+	{ { block string list } }
+	{
+	}
+	group "otherwise"
+	mold\nowrap ?otherwise
+	{ { block string list } }
+	{
+	}
+	group "^if"
+	mold\nowrap ?^if
+	{ { block string list } }
+	{
+	}
+	group "^otherwise"
+	mold\nowrap ?^otherwise
+	{ { block string list } }
+	{
+	}
+	group "either"
+	mold\nowrap ?either
+	{ { block string list } }
+	{
+	}
+	group "switch"
+	mold\nowrap ?switch
+	{ { block string list } }
+	{
+	}
+	group "cases"
+	mold\nowrap ?cases
+	{ { block string list } }
+	{
+	}
+}
+
+section "Doers and evaluators"
+"..."
+{	
+	
+	group "do"
+	mold\nowrap ?do
+	{ { block } }
+	{
+	}
+
+	group "do-in"
+	mold\nowrap ?do-in
+	{ { block } }
+	{
+	}
+
+	group "do-with"
+	mold\nowrap ?do-with
+	{ { block } }
+	{
+	}
+
+	group "try"
+	mold\nowrap ?try
+	{ { block } }
+	{
+	}
+	
+	group "do-in\\try"
+	mold\nowrap ?do-in\try
+	{ { block } }
+	{
+	}
+
+	group "vals"
+	mold\nowrap ?vals
+	{ { block } }
+	{
+	}
+
+	group "vals\\with"
+	mold\nowrap ?vals\with
+	{ { block } }
+	{
+	}
+
+}
+
+
+section "Collections related functions"
+"Functions that mostly work with collections (blocks / lists)."
+{	
 	
 	group "length?"
 	mold\nowrap ?length?
+	{ { block string list } }
 	{
 		equal { length? "1234567" } 7
 		equal { { 1 2 3 4 5 } .length? } 5
@@ -20,15 +375,12 @@ section "Builtins"
 
 	group "map"
 	mold\nowrap ?map
+	{ { block } { block } }
 	{
 		equal { map { 1 2 3 } { + 1 } } { 2 3 4 }
 		equal { map { "a" "bb" "ccc" } { .length? } } { 1 2 3 }
 	}	
 }
-
-
-
-
 
 
 ;	TODO	equal { list { 3 4 5 6 } |map { .factor-of 3 } } list { 1 0 0 1 } 
