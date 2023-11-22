@@ -136,27 +136,26 @@ func conversion_evalWord(word env.Word, ps *env.ProgramState, vals env.Object) (
 	default:
 		return nil, nil
 	}
-	return nil, nil
 }
 
-func BuiConvert(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object) env.Object {
+func BuiConvert(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) env.Object {
 	switch blk := arg1.(type) {
 	case env.Block:
-		ser1 := env1.Ser
-		env1.Ser = blk.Series
+		ser1 := ps.Ser
+		ps.Ser = blk.Series
 		var vals env.Object
 		switch rmap := arg0.(type) {
 		case env.RyeCtx:
-			vals = Conversion_EvalBlockCtx(env1, rmap)
+			vals = Conversion_EvalBlockCtx(ps, rmap)
 		case env.Dict:
-			vals = Conversion_EvalBlockDict(env1, rmap)
+			vals = Conversion_EvalBlockDict(ps, rmap)
 		default:
-			return env.NewError("arg 1 should be Dict")
+			return MakeArgError(ps, 1, []env.Type{env.DictType, env.CtxType}, "BuiConvert")
 		}
-		env1.Ser = ser1
+		ps.Ser = ser1
 		return vals
 	default:
-		return env.NewError("arg 2 should be block")
+		return MakeArgError(ps, 2, []env.Type{env.BlockType}, "BuiConvert")
 	}
 }
 
@@ -164,15 +163,17 @@ var Builtins_conversion = map[string]*env.Builtin{
 
 	"convert": {
 		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return BuiConvert(env1, arg0, arg1)
+		Doc:   "TODODOC.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return BuiConvert(ps, arg0, arg1)
 		},
 	},
 
 	"converter": {
 		Argsn: 3,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			// obj := BuiValidate(env1, arg0, arg1)
+		Doc:   "TODODOC.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			// obj := BuiValidate(ps, arg0, arg1)
 			switch obj1 := arg0.(type) {
 			case env.Kind:
 				switch obj2 := arg1.(type) {
@@ -182,15 +183,14 @@ var Builtins_conversion = map[string]*env.Builtin{
 						obj2.SetConverter(obj1.Kind.Index, spec)
 						return obj2
 					default:
-						return env.NewError("3rd should be block")
+						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "converter")
 					}
 				default:
-					return env.NewError("2nd should be block")
+					return MakeArgError(ps, 2, []env.Type{env.KindType, env.BlockType}, "converter")
 				}
 			default:
-				return env.NewError("1st should be block")
+				return MakeArgError(ps, 1, []env.Type{env.KindType}, "converter")
 			}
-			return env.NewError("error at the end")
 		},
 	},
 }
