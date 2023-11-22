@@ -59,23 +59,24 @@ var Builtins_telegrambot = map[string]*env.Builtin{
 
 	"new-telegram-bot": {
 		Argsn: 1,
-		Doc:   "",
+		Doc:   "Create new telegram bot using API value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.String:
 				bot, err := tgm.NewBotAPI(arg.Value)
 				if err != nil {
-					return makeError(ps, "Arg 1 should be Integer.")
+					return MakeBuiltinError(ps, "Error in NewBotAPI function.", "new-telegram-bot")
 				}
 				return *env.NewNative(ps.Idx, bot, "telegram-bot")
 			default:
-				return makeError(ps, "Arg 1 should be Integer.")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "new-telegram-bot")
 			}
 		},
 	},
 
 	"telegram-bot//on-update": {
 		Argsn: 2,
+		Doc:   "Get telegram update and add to Rye dictionary",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bot := arg0.(type) {
 			case env.Native:
@@ -100,16 +101,17 @@ var Builtins_telegrambot = map[string]*env.Builtin{
 					ps.Ser = ser
 					return env.Integer{1}
 				default:
-					return makeError(ps, "Arg 1 should be Native.")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "telegram-bot//on-update")
 				}
 			default:
-				return makeError(ps, "Arg 2 should be Block.")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "telegram-bot//on-update")
 			}
 		},
 	},
 
 	"telegram-message//send": {
 		Argsn: 2,
+		Doc:   "Send message in telegram bot.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch msg := arg0.(type) {
 			case env.Native:
@@ -118,16 +120,17 @@ var Builtins_telegrambot = map[string]*env.Builtin{
 					bot.Value.(*tgm.BotAPI).Send(msg.Value.(tgm.MessageConfig))
 					return arg0
 				default:
-					return makeError(ps, "Arg 1 should be Native.")
+					return MakeArgError(ps, 2, []env.Type{env.NativeType}, "telegram-message//send")
 				}
 			default:
-				return makeError(ps, "Arg 1 should be Native.")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "telegram-message//send")
 			}
 
 		},
 	},
 	"new-telegram-message": {
 		Argsn: 2,
+		Doc:   "Create new telegram bot message.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cid := arg0.(type) {
 			case env.Integer:
@@ -136,10 +139,10 @@ var Builtins_telegrambot = map[string]*env.Builtin{
 					msg := tgm.NewMessage(cid.Value, txt.Value)
 					return *env.NewNative(ps.Idx, msg, "telegram-message")
 				default:
-					return makeError(ps, "Arg 2 should String.")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "new-telegram-message")
 				}
 			default:
-				return makeError(ps, "Arg 1 should be Integer.")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "new-telegram-message")
 			}
 		},
 	},

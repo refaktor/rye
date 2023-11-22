@@ -4,6 +4,7 @@
 package evaldo
 
 import (
+	"fmt"
 	"rye/env"
 
 	"github.com/drewlanenga/govector"
@@ -67,6 +68,9 @@ func ValueToBSON(arg0 env.Object, topLevel bool) interface{} {
 		val = rows
 		typ = "spr"
 		met = obj.Cols
+	default:
+		fmt.Println("No matching arguments found.")
+		// TODO-FIXME
 	}
 	if topLevel || typ != "" {
 		//fmt.Println(bson.M{"val": val, "typ": typ, "met": met})
@@ -76,7 +80,7 @@ func ValueToBSON(arg0 env.Object, topLevel bool) interface{} {
 	}
 }
 
-func BsonToValue_Map(es *env.ProgramState, val interface{}, typ string, meta interface{}, topLevel bool) env.Object {
+func BsonToValue_Map(ps *env.ProgramState, val interface{}, typ string, meta interface{}, topLevel bool) env.Object {
 
 	/*fmt.Println("BSONToVALUE_MAP")
 	fmt.Println(val)
@@ -94,9 +98,9 @@ func BsonToValue_Map(es *env.ProgramState, val interface{}, typ string, meta int
 	case string:
 		return env.String{rval}
 	case bson.M:
-		return BsonToValue_Map(es, rval["val"], rval["typ"].(string), rval["met"], false)
+		return BsonToValue_Map(ps, rval["val"], rval["typ"].(string), rval["met"], false)
 	case map[string]interface{}:
-		return BsonToValue_Map(es, rval["val"], rval["typ"].(string), rval["met"], false)
+		return BsonToValue_Map(ps, rval["val"], rval["typ"].(string), rval["met"], false)
 	case bson.A:
 		switch typ {
 		case "spr":
@@ -119,7 +123,7 @@ func BsonToValue_Map(es *env.ProgramState, val interface{}, typ string, meta int
 					case bson.A:
 						cells := make([]interface{}, len(rrval))
 						for iii, rrrval := range rrval {
-							cells[iii] = BsonToValue_Map(es, rrrval, "", nil, false)
+							cells[iii] = BsonToValue_Map(ps, rrrval, "", nil, false)
 						}
 						spr.AddRow(env.SpreadsheetRow{cells, spr})
 					case []interface{}:
@@ -139,22 +143,24 @@ func BsonToValue_Map(es *env.ProgramState, val interface{}, typ string, meta int
 			}
 			ret, err := govector.AsVector(rrval)
 			if err != nil {
-				return makeError(es, err.Error())
+				return makeError(ps, err.Error())
 			}
 			return *env.NewVector(ret)
 		case "block":
 			rrval := make([]env.Object, len(rval))
 			for i, element := range rval {
-				value := BsonToValue_Map(es, element, "", nil, false)
+				value := BsonToValue_Map(ps, element, "", nil, false)
 				rrval[i] = value
 			}
 			return *env.NewBlock(*env.NewTSeries(rrval))
+		default:
+			return MakeBuiltinError(ps, "No matching arguments found.", "BsonToValue_Map")
 		}
 	}
-	return makeError(es, "bson type not found 2")
+	return MakeBuiltinError(ps, "bson type not found.", "BsonToValue_Map")
 }
 
-func BsonToValue_Val(es *env.ProgramState, val interface{}, topLevel bool) env.Object {
+func BsonToValue_Val(ps *env.ProgramState, val interface{}, topLevel bool) env.Object {
 
 	//fmt.Printf("Type: %T\n", val)
 	//fmt.Println(val)
@@ -167,40 +173,42 @@ func BsonToValue_Val(es *env.ProgramState, val interface{}, topLevel bool) env.O
 		fmt.Printf("Meta: %T\n", rval["met"])
 		fmt.Println("~~")*/
 
-		val := BsonToValue_Map(es, rval["col"], rval["typ"].(string), rval["met"], false)
+		val := BsonToValue_Map(ps, rval["col"], rval["typ"].(string), rval["met"], false)
 		return val
+	default:
+		return MakeBuiltinError(ps, "bson type not found.", "BsonToValue_Val")
 	}
-	return makeError(es, "bson type not found")
 }
 
 var Builtins_bson = map[string]*env.Builtin{
 
 	"from-bson": {
 		Argsn: 1,
-		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "Takes a BSON value and returns it encoded into Rye values.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var val map[string]interface{}
 			// var val interface{}
 			// err := bson.Unmarshal(arg0.(env.Native).Value.([]byte), &val)
 			err := bson.Unmarshal(arg0.(env.Native).Value.([]byte), &val)
 			if err != nil {
-				return makeError(es, err.Error())
+				return MakeBuiltinError(ps, err.Error(), "from-bson")
 			}
 
-			return BsonToValue_Map(es, val["val"], val["typ"].(string), val["met"], true)
-			//return BsonToValue_Val(es, val, true)
-			// return makeError(es, "bson type not found")
+			return BsonToValue_Map(ps, val["val"], val["typ"].(string), val["met"], true)
+			//return BsonToValue_Val(ps, val, true)
+			// return makeError(ps, "bson type not found")
 		},
 	},
 	"to-bson": {
 		Argsn: 1,
 		Doc:   "Takes a Rye value and returns it encoded into BSON.",
-		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			value := ValueToBSON(arg0, true)
 			encoded, err := bson.Marshal(value)
 			if err != nil {
-				return makeError(es, err.Error())
+				return MakeBuiltinError(ps, err.Error(), "to-bson")
 			}
-			return *env.NewNative(es.Idx, encoded, "bytes")
+			return *env.NewNative(ps.Idx, encoded, "bytes")
 		},
 	},
 }
