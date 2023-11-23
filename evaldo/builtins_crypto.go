@@ -50,69 +50,74 @@ var Builtins_crypto = map[string]*env.Builtin{
 
 	"string//to-bytes": {
 		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "Decode string to bytes.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch addr := arg0.(type) {
 			case env.String:
 				r, err := hex.DecodeString(addr.Value)
 				if err != nil {
-					env1.FailureFlag = true
-					return env.NewError("failure to decode string")
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Failure to decode string.", "string//to-bytes")
 				}
-				return *env.NewNative(env1.Idx, r, "Go-bytes")
+				return *env.NewNative(ps.Idx, r, "Go-bytes")
 			default:
-				env1.FailureFlag = true
-				return env.NewError("arg 0 should be String")
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "string//to-bytes")
 			}
 		},
 	},
 
 	"Go-bytes//to-string": {
 		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "Encoding value to string.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch addr := arg0.(type) {
 			case env.Native:
 				return env.String{hex.EncodeToString(addr.Value.([]byte))}
 			default:
-				env1.FailureFlag = true
-				return env.NewError("arg 0 should be Native")
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-bytes//to-string")
 			}
 		},
 	},
 
 	"Ed25519-pub-key//to-string": {
 		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch addr := arg0.(type) {
 			case env.Native:
 				return env.String{hex.EncodeToString(addr.Value.(ed25519.PublicKey))}
 			default:
-				env1.FailureFlag = true
-				return env.NewError("arg 0 should be Native")
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Ed25519-pub-key//to-string")
 			}
 		},
 	},
 
 	"Ed25519-priv-key//to-string": {
 		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch addr := arg0.(type) {
 			case env.Native:
 				return env.String{hex.EncodeToString(addr.Value.(ed25519.PrivateKey))}
 			default:
-				env1.FailureFlag = true
-				return env.NewError("arg 0 should be Native")
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Ed25519-priv-key//to-string")
 			}
 		},
 	},
 
 	"ed25519-generate-keys": {
 		Argsn: 0,
+		Doc:   "TODODOC.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			keys := make([]env.Object, 2)
 			puk, pvk, err := ed25519.GenerateKey(nil)
 			if err != nil {
 				ps.FailureFlag = true
-				return env.NewError("failed to generate keys")
+				return MakeBuiltinError(ps, "Failed to generate keys.", "ed25519-generate-keys")
 			}
 			keys[0] = *env.NewNative(ps.Idx, ed25519.PublicKey(puk), "Ed25519-pub-key")
 			keys[1] = *env.NewNative(ps.Idx, ed25519.PrivateKey(pvk), "Ed25519-priv-key")
@@ -123,6 +128,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 
 	"ed25519-private-key": {
 		Argsn: 1,
+		Doc:   "TODODOC.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var pkey []byte
 			var err error
@@ -133,11 +139,11 @@ var Builtins_crypto = map[string]*env.Builtin{
 				pkey, err = hex.DecodeString(server.Value)
 				if err != nil {
 					ps.FailureFlag = true
-					return env.NewError("decode err")
+					return MakeBuiltinError(ps, "Error in decoding string.", "ed25519-private-key")
 				}
 			default:
 				ps.FailureFlag = true
-				return env.NewError("arg 0 should be string or native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType, env.StringType}, "ed25519-private-key")
 			}
 			return *env.NewNative(ps.Idx, ed25519.PrivateKey(pkey), "Ed25519-priv-key")
 
@@ -146,6 +152,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 
 	"ed25519-public-key": {
 		Argsn: 1,
+		Doc:   "TODODOC.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var pkey []byte
 			var err error
@@ -156,11 +163,11 @@ var Builtins_crypto = map[string]*env.Builtin{
 				pkey, err = hex.DecodeString(server.Value)
 				if err != nil {
 					ps.FailureFlag = true
-					return env.NewError("decode err")
+					return MakeBuiltinError(ps, "Error in decoding string.", "ed25519-public-key")
 				}
 			default:
 				ps.FailureFlag = true
-				return env.NewError("arg 0 should be string or native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType, env.StringType}, "ed25519-public-key")
 			}
 			return *env.NewNative(ps.Idx, ed25519.PublicKey(pkey), "Ed25519-pub-key")
 
@@ -172,6 +179,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 
 	"Ed25519-priv-key//sign": {
 		Argsn: 2,
+		Doc:   "TODODOC.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch pvk := arg0.(type) {
 			case env.Native:
@@ -181,17 +189,18 @@ var Builtins_crypto = map[string]*env.Builtin{
 					return *env.NewNative(ps.Idx, sigb, "Go-bytes")
 				default:
 					ps.FailureFlag = true
-					return env.NewError("arg 1 should be string")
+					return MakeArgError(ps, 1, []env.Type{env.StringType}, "Ed25519-priv-key//sign")
 				}
 			default:
 				ps.FailureFlag = true
-				return env.NewError("arg 0 should be native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Ed25519-priv-key//sign")
 			}
 		},
 	},
 
 	"sha512": {
 		Argsn: 1,
+		Doc:   "TODODOC.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.String:
@@ -201,7 +210,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 				return env.String{hex.EncodeToString(bs[:])}
 			default:
 				ps.FailureFlag = true
-				return env.NewError("arg 1 should be String")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "sha512")
 			}
 		},
 	},
