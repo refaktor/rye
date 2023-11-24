@@ -540,7 +540,7 @@ func (i Tagword) Inspect(e Idxs) string {
 
 // Inspect returns a string representation of the Integer.
 func (b Tagword) Probe(e Idxs) string {
-	return e.GetWord(b.Index)
+	return "'" + e.GetWord(b.Index)
 }
 
 func (i Tagword) Trace(msg string) {

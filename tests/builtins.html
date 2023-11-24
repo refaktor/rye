@@ -4,262 +4,242 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Londrina+Solid:wght@300&display=swap" rel="stylesheet">
-    <style>
-      body {
-	  font-family: Roboto;
-	  __background-color: #f1f1f1;
-	  padding: 20px;
-	  font-size: 15px;
-      }
-      main {
-	  __border: 1px solid #f1f1f1;
-	  width: 740px;
-	  margin: auto;
-      }
-      textarea {
-	      width: 320px;
-	      box-model: content;
-	      padding: 10px;
-	      border: 0px solid red;
-	  }
-	  div#info pre {
-	      width: 80%;
-	      padding: 5px;
-	  }
-	  div#info pre.inl {
-	      display: inline;
-	  }
-	  pre {
-	      __border: 1px solid green;
-	      width: 320px;
-	      background-color: #c7fbf4;
-	      padding: 10px;
-	      box-model: content;
-	      font-size: 13px;
-	  }
-	  #header {
-	      padding: 10px 20px;
-	      background-color: #aeffff;
-	      margin-bottom: 10px;
-	      __box-shadow: 2px 2px 4px 0px #cacaca;
-	      color: #595856;
-	      border-radius: 5px;
-	  }
-	  #info {
-	      float: left;
-	      width: 350px;
-	      padding: 10px;
-	  }
-	  #solution {
-	      float: left;
-	      width: 350px;
-	      padding: 10px;
-	      color: #556a62;
-	  }
-	  #code, .code_s {
-	      font-family: mono;
-	      font-size: 13px;
-	      border: 1px solid #c6c6c6;
-	      width: 340px;
-	      background-color: #f1f1f1;
-	  }
-	  #code_static1, #code_static2, .code_s {
-	      padding: 10px;
-	  }
-	  .cloud > div > img {
-	      width: 22px;
-	      vertical-align: bottom;
-	  }
-	  .cloud {
-	      margin: 0 0 10px 0;
-	      border-radius: 24px;
-	      padding: 15px;
-	      min-height: 45px;
-	      position: relative;
-	      color: #333;
-	  }
-	  .cloud > div {
-	      float: right;
-	      position: absolute;
-	      right: 15px;
-	      bottom: 12px;
-	  }
-	  .sample {
-	      background-color: #f1f1f1;
-	  }
-	  .task {
-	      background-color: #f1f1f1;
-	  }
-	  #intro {
-	      display: block;
-	      border: 1px solid #c1d5db;
-	      padding: 10px 20px 60px 20px;
-	      box-shadow: turquoise 1px 1px 10px;
-	  }
-	  #intro h3 {
-	      font-family: 'Londrina Solid', sans-serif;
-	      font-size: 22px;
-	      color: #3e1764;
-	      margin-bottom: 40px;
-	  }
-	  #intro p {
-	      margin-bottom: 25px;
-	  }
-	  #intro p.note {
-	      background-color: #dfffce;
-	      padding: 10px;
-	      color: #4f8c12;
-	      border-radius: 7px;
-	  }
-	  button {
-	      padding: 3px 6px 2px 6px;
-	      font-size: 13px;
-	      cursor: pointer;
-	      border: none;
-	      border-radius: 15px;
-	      __background-color: yellowgreen;
-	  }
-	  button.nav {
-	      border: none;
-	      background-color: transparent;
-	  }
-	  button.nav:disabled {
-	      opacity: 0.3;
-	  }
-    </style>
+    <link rel="stylesheet" href="tpl/main.css" />
+    <script src="tpl/menu.js"></script>
+    <script src="tpl/jsGoo.js"></script>
+    <!-- syntax highlighting -->
+    <link rel="stylesheet" type="text/css" href="tpl/desert.css" />
+    <script type="text/javascript" src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+    <script type="text/javascript" src="./tpl/lang-rye.js"></script>
+    <!-- syntax highlightinh end -->
   </head>
-<body>
+<body onload="generateMenu()">
+<div id="menu-holder">
+</div>
+<h1>Function reference: core builtins</h1>
 
-<h1>Type conversion and checking</h1><p>Functions that convert between Rye value types.</p>
-<h2>to-word</h2><p>Pure Builtin(1): Takes a Rye value (like string) and returns a Word with that name.</p>
-<pre>to-word "test"
-; returns test</pre>
-<pre>to-word test
-; returns test</pre>
-<h2>to-string</h2><p>Pure Builtin(1): Takes a Rye value and returns a string representation.</p>
-<pre>to-string 123
-; returns "123"</pre>
-<h2>to-uri</h2><p>Pure Builtin(1): Takes a Rye value and return a URI if possible.</p>
-<h2>to-file</h2><p>Pure Builtin(1): Takes a Rye value and returns file if possible.</p>
-<pre>to-file "file.txt"
-; returns file://file.txt</pre>
-<h2>is-string</h2><p>Pure Builtin(1): Returns true if value is string.</p>
-<pre>is-string "ABC"
-; returns 1</pre>
-<pre>is-string 123
-; returns 0</pre>
-<pre>is-string file://file.txt
-; returns 0</pre>
-<pre>is-string test@gmail.com
-; returns 0</pre>
-<h2>type?</h2><p>Pure Builtin(1): Returns the type of Rye value (as a word).</p>
-<pre>type? "ABC"
-; returns string</pre>
-<pre>type? 123
-; returns integer</pre>
-<h1>Numeric functions</h1><p>Functions that mostly work with numbers.</p>
-<h2>inc</h2><p>Pure Builtin(1): Returns integer value incremented by 1.</p>
-<pre>inc 100
-; returns 101</pre>
-<h2>inc!</h2><p>Builtin(1): Increments integer value by 1 in place.</p>
-<pre>a: 100 , inc! a
-; returns 101</pre>
-<pre>a: 100 , inc! a , a
-; returns 101</pre>
-<h2>is-positive</h2><p>Pure Builtin(1): Returns true if integer is positive.</p>
-<pre>is-positive 1
-; returns 1</pre>
-<pre>0 .is-positive
-; returns 0</pre>
-<h2>factor-of</h2><p>Pure Builtin(2): Checks if a first argument is a factor of second.</p>
-<pre>factor-of 10 2
-; returns 1</pre>
-<pre>10 .factor-of 3
-; returns 0</pre>
-<h2>odd</h2><p>Pure Builtin(1): Checks if a number is odd.</p>
-<pre>odd 3
-; returns 1</pre>
-<h2>even</h2><p>Pure Builtin(1): Checks if a number is even.</p>
-<pre>even 2
-; returns 1</pre>
-<h2>mod</h2><p>Pure Builtin(2): Calculates module of two integers.</p>
-<h1>Values functions</h1><p>Functions that mostly work with blocks.</p>
-<h2>change!</h2><p>Builtin(2): Changes value in a word, if value changes returns true otherwise false</p>
-<pre>a: 1 change! 2 a
-; returns 1</pre>
-<pre>a: 2 change! 2 a
-; returns 0</pre>
-<h2>dump</h2><p>Pure Builtin(1): Set docstring of the current context.</p>
-<h2>doc\\of?</h2><p>Pure Builtin(1): Get docstring of the first argument.</p>
-<h2>true</h2><p>Pure Builtin(0): Retutns a truthy value.</p>
-<pre>true
-; returns 1</pre>
-<h2>false</h2><p>Pure Builtin(0): Retutns a falsy value.</p>
-<pre>false
-; returns 0</pre>
-<h2>not</h2><p>Pure Builtin(1): Turns a truthy value to non-truthy and reverse.</p>
-<pre>not 0
-; returns 1</pre>
-<pre>not 1
-; returns 0</pre>
-<h1>Context functions</h1><p>Functions that mostly work with blocks.</p>
-<h2>doc</h2><p>Pure Builtin(1): Set docstring of the current context.</p>
-<h2>doc?</h2><p>Pure Builtin(0): Get docstring of the current context.</p>
-<h1>Printing functions</h1><p>Functions that print values to stdio</p>
-<h2>prn</h2><p>Builtin(1): Prints a value and adds a space.</p>
-<pre>prn 123
-; prints "123 "</pre>
-<h2>prin</h2><p>Builtin(1): Prints a value without newline.</p>
-<pre>prin 123
-; prints "123"</pre>
-<h2>print</h2><p>Builtin(1): Prints a value and adds a newline.</p>
-<pre>print 123
+<h2>Type conversion and checking</h2><p>Functions that convert between Rye value types.</p><div class='section'>
+<h3>to-word</h3><p>Pure Builtin(1): Takes a Rye value (like string) and returns a Word with that name.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-word "test"
+; returns test</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-word 'test
+; returns test</code></pre>
+</div>
+<h3>to-string</h3><p>Pure Builtin(1): Takes a Rye value and returns a string representation.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-string 123
+; returns "123"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-string 'word
+; returns "word"</code></pre>
+</div>
+<h3>to-uri</h3><p>Pure Builtin(1): Takes a Rye value and return a URI if possible.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-uri "https://example.com"
+; returns https://example.com</code></pre>
+</div>
+<h3>to-file</h3><p>Pure Builtin(1): Takes a Rye value and returns file if possible.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-file "file.txt"
+; returns file://file.txt</code></pre>
+</div>
+<h3>is-string</h3><p>Pure Builtin(1): Returns true if value is string.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-string "ABC"
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-string 123
+; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-string file://file.txt
+; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-string test@gmail.com
+; returns 0</code></pre>
+</div>
+<h3>type?</h3><p>Pure Builtin(1): Returns the type of Rye value (as a word).</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>type? "ABC"
+; returns string</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>type? 123
+; returns integer</code></pre>
+</div>
+</div>
+<h2>Numeric functions</h2><p>Functions that mostly work with numbers.</p><div class='section'>
+<h3>inc</h3><p>Pure Builtin(1): Returns integer value incremented by 1.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>inc 100
+; returns 101</code></pre>
+</div>
+<h3>inc!</h3><p>Builtin(1): Increments integer value by 1 in place.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>a: 100 , inc! 'a
+; returns 101</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>a: 100 , inc! 'a , a
+; returns 101</code></pre>
+</div>
+<h3>is-positive</h3><p>Pure Builtin(1): Returns true if integer is positive.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-positive 1
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>0 .is-positive
+; returns 0</code></pre>
+</div>
+<h3>factor-of</h3><p>Pure Builtin(2): Checks if a first argument is a factor of second.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>factor-of 10 2
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>10 .factor-of 3
+; returns 0</code></pre>
+</div>
+<h3>odd</h3><p>Pure Builtin(1): Checks if a number is odd.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>odd 3
+; returns 1</code></pre>
+</div>
+<h3>even</h3><p>Pure Builtin(1): Checks if a number is even.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>even 2
+; returns 1</code></pre>
+</div>
+<h3>mod</h3><p>Pure Builtin(2): Calculates module of two integers.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>3 .mod 2
+; returns 1</code></pre>
+</div>
+</div>
+<h2>Values functions</h2><p>Functions that mostly work with blocks.</p><div class='section'>
+<h3>change!</h3><p>Builtin(2): Changes value in a word, if value changes returns true otherwise false</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>a: 1 change! 2 'a
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>a: 2 change! 2 'a
+; returns 0</code></pre>
+</div>
+<h3>dump</h3><p>Pure Builtin(1): Set docstring of the current context.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>fn { x } { x + 1 } |dump
+; returns fn { x } { x + 1 }</code></pre>
+</div>
+<h3>doc\of?</h3><p>Pure Builtin(1): Get docstring of the first argument.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>fn { x "docstring" } { x + 1 } |doc\of?
+; returns "docstring"</code></pre>
+</div>
+<h3>true</h3><p>Pure Builtin(0): Retutns a truthy value.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>true
+; returns 1</code></pre>
+</div>
+<h3>false</h3><p>Pure Builtin(0): Retutns a falsy value.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>false
+; returns 0</code></pre>
+</div>
+<h3>not</h3><p>Pure Builtin(1): Turns a truthy value to non-truthy and reverse.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>not 0
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>not 1
+; returns 0</code></pre>
+</div>
+</div>
+<h2>Printing functions</h2><p>Functions that print values to stdio</p><div class='section'>
+<h3>prn</h3><p>Builtin(1): Prints a value and adds a space.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>prn 123
+; prints "123 "</code></pre>
+</div>
+<h3>prin</h3><p>Builtin(1): Prints a value without newline.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>prin 123
+; prints "123"</code></pre>
+</div>
+<h3>print</h3><p>Builtin(1): Prints a value and adds a newline.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>print 123
 ; prints "123
-"</pre>
-<h2>print-val</h2><p>Builtin(2): Prints a value and adds a newline.</p>
-<pre>print-val 33 "value is: {{}}"
+"</code></pre>
+</div>
+<h3>print-val</h3><p>Builtin(2): Prints a value and adds a newline.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>print-val 33 "value is: {{}}"
 ; prints "value is: 33
-"</pre>
-<h2>probe</h2><p>Builtin(1): Prints a probe of a value.</p>
-<pre>probe 33
+"</code></pre>
+</div>
+<h3>probe</h3><p>Builtin(1): Prints a probe of a value.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>probe 33
 ; prints "[Integer: 33]
-"</pre>
-<h2>mold</h2><p>Builtin(1): Turn value to it's string representation.</p>
-<pre>mold 33
-; returns "33"</pre>
-<h2>mold\
-owrap</h2><p>Builtin(1): Turn value to it's string representation.</p>
-<pre>mold\nowrap "33"
-; returns ""33""</pre>
-<h1>Control functions</h1><p>Program flow control functions</p>
-<h2>if</h2><p>Pure Builtin(2): Basic conditional. Takes a condition and a block of code.</p>
-<h2>otherwise</h2><p>Pure Builtin(2): Conditional if not. Takes condition and a block of code.</p>
-<h2>^if</h2><p>Pure Builtin(2): Basic conditional with a Returning mechanism when true. Takes a condition and a block of code.</p>
-<h2>^otherwise</h2><p>Pure Builtin(2): Basic conditional with a Returning mechanism when true. Takes a condition and a block of code.</p>
-<h2>either</h2><p>Pure Builtin(3): The if/else conditional. Takes a value and true and false block of code.</p>
-<h2>switch</h2><p>Builtin(2): Classic switch function. Takes a word and multiple possible values and block of code to do.</p>
-<h2>cases</h2><p>Builtin(2): Similar to Case function, but checks all the cases, even after a match. It combines the outputs.</p>
-<h1>Doers and evaluators</h1><p>...</p>
-<h2>do</h2><p>Builtin(1): Takes a block of code and does (runs) it.</p>
-<h2>do-in</h2><p>Builtin(2): Takes a Context and a Block. It Does a block inside a given Context.</p>
-<h2>do-with</h2><p>Builtin(2): Takes a value and a block of code. It does the code with the value injected.</p>
-<h2>try</h2><p>Builtin(1): Takes a block of code and does (runs) it.</p>
-<h2>do-in\\try</h2><p>Builtin(2): Takes a Context and a Block. It Does a block inside a given Context.</p>
-<h2>vals</h2><p>Builtin(1): Takes a block of Rye values and evaluates each value or expression.</p>
-<h2>vals\\with</h2><p>Builtin(2): Evaluate a block with injecting the first argument.</p>
-<h1>Collections related functions</h1><p>Functions that mostly work with collections (blocks / lists).</p>
-<h2>length?</h2><p>Builtin(1): Accepts a collection (String, Block, Dict, Spreadsheet) and returns it's length.</p>
-<pre>length? "1234567"
-; returns 7</pre>
-<pre>{ 1 2 3 4 5 } .length?
-; returns 5</pre>
-<pre>list { 1 2 3 } |length?
-; returns 3</pre>
-<h2>map</h2><p>Pure Builtin(2): Maps values of a block to a new block by evaluating a block of code.</p>
-<pre>map { 1 2 3 } { + 1 }
-; returns 2 3 4</pre>
-<pre>map { "a" "bb" "ccc" } { .length? }
-; returns 1 2 3</pre>
+"</code></pre>
+</div>
+<h3>mold</h3><p>Builtin(1): Turn value to it's string representation.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>mold 33
+; returns "33"</code></pre>
+</div>
+<h3>mold
+owrap</h3><p>Builtin(1): Turn value to it's string representation.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>mold\nowrap "33"
+; returns ""33""</code></pre>
+</div>
+</div>
+<h2>Control functions</h2><p>Program flow control functions</p><div class='section'>
+<h3>if</h3><p>Pure Builtin(2): Basic conditional. Takes a condition and a block of code.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>if 1 { 101 }
+; returns 101</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>if 0 { 101 }
+; returns 0</code></pre>
+</div>
+<h3>otherwise</h3><p>Pure Builtin(2): Conditional if not. Takes condition and a block of code.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>otherwise 1 { 101 }
+; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>otherwise 0 { 101 }
+; returns 101</code></pre>
+</div>
+<h3>^if</h3><p>Pure Builtin(2): Basic conditional with a Returning mechanism when true. Takes a condition and a block of code.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>^if 0 { 101 }
+; returns 0</code></pre>
+</div>
+<h3>^otherwise</h3><p>Pure Builtin(2): Basic conditional with a Returning mechanism when true. Takes a condition and a block of code.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>^otherwise 1 { 101 }
+; returns 0</code></pre>
+</div>
+<h3>either</h3><p>Pure Builtin(3): The if/else conditional. Takes a value and true and false block of code.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>either 1 { 101 } { 202 }
+; returns 101</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>either 0 { 101 } { 202 }
+; returns 202</code></pre>
+</div>
+<h3>switch</h3><p>Builtin(2): Classic switch function. Takes a word and multiple possible values and block of code to do.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>switch 1 { 1 { 101 } 2 { 202 } }
+; returns 101</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>switch 2 { 1 { 101 } 2 { 202 } }
+; returns 202</code></pre>
+</div>
+</div>
+<h2>Doers and evaluators</h2><p>Functions that do code and evaluate blocks.</p><div class='section'>
+<h3>do</h3><p>Builtin(1): Takes a block of code and does (runs) it.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do { 101 + 101 }
+; returns 202</code></pre>
+</div>
+<h3>do-in</h3><p>Builtin(2): Takes a Context and a Block. It Does a block inside a given Context.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc: context { x: 101 } do-in cc { x + 101 }
+; returns 202</code></pre>
+</div>
+<h3>do-with</h3><p>Builtin(2): Takes a value and a block of code. It does the code with the value injected.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do-with 101 { + 101 }
+; returns 202</code></pre>
+</div>
+<h3>try</h3><p>Builtin(1): Takes a block of code and does (runs) it.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { 10 + unknown } |type?
+; returns error</code></pre>
+</div>
+<h3>do-in\try</h3><p>Builtin(2): Takes a Context and a Block. It Does a block inside a given Context.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>ctx: context { x: 101 } do-in\try ctx { x / 0 } |type?
+; returns error</code></pre>
+</div>
+<h3>vals</h3><p>Builtin(1): Takes a block of Rye values and evaluates each value or expression.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: 101 vals { x }
+; returns 101</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>name: "Anne" vals { name "Goodall" }
+; returns "Anne" "Goodall"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>y: 202 vals { 101 y y + 101 }
+; returns 101 202 303</code></pre>
+</div>
+<h3>vals\with</h3><p>Builtin(2): Evaluate a block with injecting the first argument.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>vals\with 100 { + 1 }
+; returns 101</code></pre>
+</div>
+</div>
+<h2>Collections related functions</h2><p>Functions that mostly work with collections (blocks / lists).</p><div class='section'>
+<h3>length?</h3><p>Builtin(1): Accepts a collection (String, Block, Dict, Spreadsheet) and returns it's length.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>length? "1234567"
+; returns 7</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>{ 1 2 3 4 5 } .length?
+; returns 5</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>list { 1 2 3 } |length?
+; returns 3</code></pre>
+</div>
+<h3>map</h3><p>Pure Builtin(2): Maps values of a block to a new block by evaluating a block of code.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map { 1 2 3 } { + 1 }
+; returns 2 3 4</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map { "a" "bb" "ccc" } { .length? }
+; returns 1 2 3</code></pre>
+</div>
+</div>
 </body>
 </html>
 

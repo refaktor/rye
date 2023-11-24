@@ -16,14 +16,14 @@ section "Type conversion and checking"
 	{ { string word number } }
 	{
 		equal { to-string 123 } "123"
+		equal { to-string 'word } "word"
 	}
 
 	group "to-uri"
 	mold\nowrap ?to-uri
 	{ { string } }
 	{
-		equal { to-uri "https://example.com" } http://example.com
-		; TODO -- add https
+		equal { to-uri "https://example.com" } https://example.com
 	}
 
 	group "to-file"
@@ -111,7 +111,7 @@ section "Numeric functions"
 	mold\nowrap ?mod
 	{ { integer } { integer } }
 	{
-		equal { 2 .mod 3 } 1
+		equal { 3 .mod 2 } 1
 		; TODO
 	}
 
@@ -146,14 +146,14 @@ section "Values functions"
 	mold\nowrap ?dump
 	{ { any } { word } }
 	{
-		; TODO
+		equal { fn { x } { x + 1 } |dump } { fn { x } { x ._+ 1 } } 
 	}
 
-	group "doc\\of?"
+	group "doc\of?"
 	mold\nowrap ?doc\of?
 	{ { function } }
 	{
-		; TODO 
+		equal { fn { x "docstring" } { x + 1 } |doc\of? } "docstring"
 	}
 
 	group "true"
@@ -181,7 +181,7 @@ section "Values functions"
 
 }
 
-section "Context functions"
+$ section "Context functions"
 "Functions that mostly work with blocks."
 {
 	group "doc"
@@ -198,7 +198,7 @@ section "Context functions"
 		; TODO
 	}
 
-}
+} $
 
 section "Printing functions"
 "Functions that print values to stdio"
@@ -260,7 +260,7 @@ section "Printing functions"
 	{
 		equal { mold 33 } "33"
 	}
-	group "mold\\nowrap"
+	group "mold\nowrap"
 	mold\nowrap ?mold\nowrap
 	{ { function } }
 	{
@@ -276,85 +276,110 @@ section "Control functions"
 	
 	group "if"
 	mold\nowrap ?if
-	{ { block string list } }
+	{ { object } { block } }
 	{
+		equal { if 1 { 101 } } 101
+		equal { if 0 { 101 } } 0
 	}
 	group "otherwise"
 	mold\nowrap ?otherwise
-	{ { block string list } }
+	{ { object } { block } }
 	{
+		equal { otherwise 1 { 101 } } 0
+		equal { otherwise 0 { 101 } } 101
 	}
 	group "^if"
 	mold\nowrap ?^if
-	{ { block string list } }
+	{ { object } { block } }
 	{
+		equal { ^if 1 { 101 } } 101
+		equal { ^if 0 { 101 } } 0
 	}
 	group "^otherwise"
 	mold\nowrap ?^otherwise
-	{ { block string list } }
+	{ { object } { block } }
 	{
+		equal { ^otherwise 1 { 101 } } 0
+		equal { ^otherwise 0 { 101 } } 101
 	}
 	group "either"
 	mold\nowrap ?either
-	{ { block string list } }
+	{ { object } { block } { block } }
 	{
+		equal { either 1 { 101 } { 202 } } 101
+		equal { either 0 { 101 } { 202 } } 202
 	}
 	group "switch"
 	mold\nowrap ?switch
-	{ { block string list } }
+	{ { object } { block } }
 	{
+		equal { switch 1 { 1 { 101 } 2 { 202 } } } 101
+		equal { switch 2 { 1 { 101 } 2 { 202 } } } 202
 	}
-	group "cases"
-	mold\nowrap ?cases
-	{ { block string list } }
-	{
-	}
+	; group "cases"
+	; mold\nowrap ?cases
+	; { { object } { block } { block } }
+	; {
+	;	equal { either 1 { 101 } { 202 } } 101
+	;	equal { either 0 { 101 } { 202 } } 202
+	; }
 }
 
 section "Doers and evaluators"
-"..."
+"Functions that do code and evaluate blocks."
 {	
 	
 	group "do"
 	mold\nowrap ?do
 	{ { block } }
 	{
+		equal { do { 101 + 101 } } 202
 	}
 
 	group "do-in"
 	mold\nowrap ?do-in
-	{ { block } }
+	{ { context } { block } }
 	{
+		equal { cc: context { x: 101 } do-in cc { x + 101 } } 202
 	}
 
 	group "do-with"
 	mold\nowrap ?do-with
-	{ { block } }
+	{ { object } { block } }
 	{
+		equal { do-with 101 { + 101 } } 202
 	}
 
 	group "try"
 	mold\nowrap ?try
 	{ { block } }
 	{
+		equal { try { 10 + unknown } |type? } 'error 
 	}
 	
-	group "do-in\\try"
+	group "do-in\try"
 	mold\nowrap ?do-in\try
-	{ { block } }
+	{ { context } { block } }
 	{
+		equal { ctx: context { x: 101 } do-in\try ctx { x / 0 } |type? } 'error
 	}
 
 	group "vals"
 	mold\nowrap ?vals
 	{ { block } }
 	{
+		equal { x: 101 vals { x } } { 101 }
+		equal { name: "Anne" vals { name "Goodall" } } { "Anne" "Goodall" }
+		equal { y: 202 vals { 101  y  y + 101 } } { 101 202 303 }
+		; TODO expression guards don't work
 	}
 
-	group "vals\\with"
+	group "vals\with"
 	mold\nowrap ?vals\with
-	{ { block } }
+	{ { object } { block } }
 	{
+		equal { vals\with 100 { + 1 } } { 101 }
+		; TODO equal { x: 303 vals\with 100 { + 1 } } { 101 } ; loops forever
 	}
 
 }

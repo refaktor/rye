@@ -1671,7 +1671,7 @@ var builtins = map[string]*env.Builtin{
 				EvalBlock(ps)
 
 				// TODO -- probably shouldn't just display error ... but we return it and then handle it / display it
-				MaybeDisplayFailureOrError(ps, ps.Idx)
+				// MaybeDisplayFailureOrError(ps, ps.Idx)
 
 				ps.ReturnFlag = false
 				ps.ErrorFlag = false
@@ -1740,7 +1740,7 @@ var builtins = map[string]*env.Builtin{
 					EvalBlockInCtx(ps, &ctx)
 
 					// TODO -- probably shouldn't just display error ... but we return it and then handle it / display it
-					MaybeDisplayFailureOrError(ps, ps.Idx)
+					// MaybeDisplayFailureOrError(ps, ps.Idx)
 
 					ps.ReturnFlag = false
 					ps.ErrorFlag = false
