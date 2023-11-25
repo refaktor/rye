@@ -19,6 +19,10 @@ test-framework: context {
 		|either { print "  - OK" } { print join { "  - Error: expected " mold res ", got " mold got } }
 	}
 
+	comment: fn { str } {
+		
+	}
+
 }
 
 docs-framework: context {
@@ -35,6 +39,10 @@ docs-framework: context {
 	stdout: fn { test res } {
 		capture-stdout { do-in root-ctx test } :got = res
 		|if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" mold\nowrap test newline "; prints "  mold\nowrap got "</code></pre>" ] }
+	}
+
+	comment: fn { str } {
+		print join [ "<p class='comment'>" str "</p>" ]
 	}
 
 	

@@ -1,4 +1,5 @@
 ; Test / docs definition ... mold/nowrap ?function get's docstrings from live functions
+; title "Function reference: core builtins"
 
 section "Type conversion and checking"
 "Functions that convert between Rye value types."
@@ -9,6 +10,12 @@ section "Type conversion and checking"
 	{
 		equal { to-word "test" } 'test
 		equal { to-word 'test } 'test
+	}
+	group "to-integer"
+	mold\nowrap ?to-integer
+	{ { string number } }
+	{
+		equal { to-integer "123" } 123
 	}
 
 	group "to-string"
@@ -254,6 +261,11 @@ section "Printing functions"
 	; {
 	;	stdout { inspect 33 } "33"
 	; }
+}
+
+section "Serializing functions"
+"Functions that print values to stdio"
+{
 	group "mold"
 	mold\nowrap ?mold
 	{ { function } }
@@ -265,6 +277,12 @@ section "Printing functions"
 	{ { function } }
 	{
 		equal { mold\nowrap "33" } $"33"$
+	}
+	group "capture-stdout"
+	mold\nowrap ?capture-stdout
+	{ { block } }
+	{
+		equal { capture-stdout { "out" .print , "not this" } } "out" + newline
 	}
 
 }
@@ -381,14 +399,176 @@ section "Doers and evaluators"
 		equal { vals\with 100 { + 1 } } { 101 }
 		; TODO equal { x: 303 vals\with 100 { + 1 } } { 101 } ; loops forever
 	}
-
 }
 
 
-section "Collections related functions"
+
+section "Logic functions"
+"Function that help with logical operations."
+{	
+	
+	group "all"
+	mold\nowrap ?all
+	{ { block } }
+	{
+		equal { all { 1 1 1 } } 1
+		equal { { 0 0 1 } .all } 0
+	}
+
+	group "any"
+	mold\nowrap ?any
+	{ { block } }
+	{
+		equal { any { 0 0 1 } } 1
+		equal { { 0 0 0 } .any } 0
+	}
+
+	group "any\with"
+	mold\nowrap ?any\with
+	{ { object } { block } }
+	{
+		equal { any\with 1 {  + 0 , + 0  } } 1
+	}
+}
+
+section "Strings related functions"
+"Functions that mostly work with strings."
+{	
+
+	group "capitalize"
+	mold\nowrap ?capitalize
+	{ { string } }
+	{
+		equal { capitalize "anne" } "Anne"
+	}
+
+	group "to-lower"
+	mold\nowrap ?to-lower
+	{ { string } }
+	{
+		equal { to-lower "ANNE" } "anne"
+	}
+
+	group "to-upper"
+	mold\nowrap ?to-upper
+	{ { string } }
+	{
+		equal { to-upper "anne" } "ANNE"
+	}
+
+	group "join"
+	mold\nowrap ?join
+	{ { block list } }
+	{
+		equal { join [ "Marry" "Anne" ] } "MarryAnne"
+	}
+	
+	group "join\with"
+	mold\nowrap ?join\with
+	{ { block list } { string } }
+	{
+		equal { join\with [ "Marry" "Anne" ] "," } "Marry,Anne"
+	}
+
+	group "split"
+	mold\nowrap ?split
+	{ { string } { string } }
+	{
+		equal { split "Marry,Anne" "," } { "Marry" "Anne" }
+	}
+
+	group "split\quoted"
+	mold\nowrap ?split\quoted
+	{ { string } { string } }
+	{
+		equal { split\quoted $"Marry,Anne",Joe$ "," $"$ } { "Marry,Anne" "Joe" } ;" }
+	}
+	
+	group "split\every"
+	mold\nowrap ?split\every
+	{ { string } { integer } }
+	{
+		equal { split\every "abcbce" 3 } { "abc" "bce" }
+	}
+	
+	comment "Many of functions that work with other collections also work with strings."
+}
+
+section "Block and list related functions"
 "Functions that mostly work with collections (blocks / lists)."
 {	
 	
+	group "range"
+	mold\nowrap ?range
+	{ { integer } { integer } }
+	{
+		equal { range 1 5 } { 1 2 3 4 5 }
+	}
+	
+	group "first"
+	mold\nowrap ?first
+	{ { block } }
+	{
+		equal { first { 1 2 3 4 5 } } 1
+	}
+
+	group "rest"
+	mold\nowrap ?rest
+	{ { block } }
+	{
+		equal { rest { 1 2 3 4 5 } } { 2 3 4 5 }
+	}
+
+	group "rest\from"
+	mold\nowrap ?rest\from
+	{ { block } { integer } }
+	{
+		equal { rest\from { 1 2 3 4 5 } 2 } { 3 4 5 }
+	}
+
+	group "second"
+	mold\nowrap ?second
+	{ { block } }
+	{
+		equal { second { 1 2 3 4 5 } } 2
+	}
+
+	group "third"
+	mold\nowrap ?third
+	{ { block } }
+	{
+		equal { third { 1 2 3 4 5 } } 3
+	}
+
+	group "nth"
+	mold\nowrap ?nth
+	{ { block } }
+	{
+		equal { nth { 1 2 3 4 5 } 4 } 4
+	}
+	
+	group "last"
+	mold\nowrap ?last
+	{ { block } }
+	{
+		equal { last { 1 2 3 4 5 } } 5
+	}
+	
+	group "head"
+	mold\nowrap ?head
+	{ { block } { integer } }
+	{
+		equal { head { 1 2 3 4 5 } 2 } { 1 2 }
+	}
+
+		
+	group "tail"
+	mold\nowrap ?tail
+	{ { block } { integer } }
+	{
+		equal { tail { 1 2 3 4 5 } 2 } { 4 5 }
+	}
+
 	group "length?"
 	mold\nowrap ?length?
 	{ { block string list } }
@@ -398,6 +578,13 @@ section "Collections related functions"
 		equal { list { 1 2 3 } |length? } 3
 	}
 
+}
+
+section "Higher order like functions"
+"Functions for usual HOF patterns, map, reduce, filter."
+{	
+
+	
 	group "map"
 	mold\nowrap ?map
 	{ { block } { block } }
@@ -406,6 +593,7 @@ section "Collections related functions"
 		equal { map { "a" "bb" "ccc" } { .length? } } { 1 2 3 }
 	}	
 }
+
 
 
 ;	TODO	equal { list { 3 4 5 6 } |map { .factor-of 3 } } list { 1 0 0 1 } 

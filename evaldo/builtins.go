@@ -320,6 +320,23 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"to-integer": { // **
+		Argsn: 1,
+		Doc:   "Splits a line of string into values by separator by respecting quotes",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch addr := arg0.(type) {
+			case env.String:
+				iValue, err := strconv.Atoi(addr.Value)
+				if err != nil {
+					return MakeBuiltinError(ps, err.Error(), "to-integer")
+				}
+				return env.Integer{int64(iValue)}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "to-integer")
+			}
+		},
+	},
+
 	"to-string": { // **
 		Argsn: 1,
 		Doc:   "Takes a Rye value and returns a string representation.",
@@ -1870,7 +1887,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"all": {
+	"all": { // **
 		Argsn: 1,
 		Doc:   "Takes a block, if all values or expressions are truthy it returns the last one, otherwise false.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1892,7 +1909,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"any": {
+	"any": { // **
 		Argsn: 1,
 		Doc:   "Takes a block, if any of the values or expressions are truthy, the it returns that one, in none false.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1933,30 +1950,6 @@ var builtins = map[string]*env.Builtin{
 				return ps.Res
 			default:
 				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "any\\with")
-			}
-		},
-	},
-
-	"range": {
-		Argsn: 2,
-		Doc:   "Takes two integers and returns a block of integers between them. (Will change to lazy list/generator later)",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch i1 := arg0.(type) {
-			case env.Integer:
-				switch i2 := arg1.(type) {
-				case env.Integer:
-					objs := make([]env.Object, i2.Value-i1.Value+1)
-					idx := 0
-					for i := i1.Value; i <= i2.Value; i++ {
-						objs[idx] = env.Integer{i}
-						idx += 1
-					}
-					return *env.NewBlock(*env.NewTSeries(objs))
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "range")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "range")
 			}
 		},
 	},
@@ -4349,7 +4342,8 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-	"capitalize": {
+
+	"capitalize": { // **
 		Argsn: 1,
 		Pure:  true,
 		Doc:   "Takes a String and returns the same String, but  with first character turned to upper case.",
@@ -4362,7 +4356,8 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-	"to-lower": {
+
+	"to-lower": { // **
 		Argsn: 1,
 		Pure:  true,
 		Doc:   "Takes a String and returns the same String, but  with all characters turned to lower case.",
@@ -4375,7 +4370,8 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-	"to-upper": {
+
+	"to-upper": { // **
 		Argsn: 1,
 		Pure:  true,
 		Doc:   "Takes a String and returns the same String, but with all characters turned to upper case.",
@@ -4413,7 +4409,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"join": { // todo -- join\w data ","
+	"join": { // **
 		Argsn: 1,
 		Pure:  true,
 		Doc:   "Joins Block or list of values together.",
@@ -4476,7 +4472,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"join\\with": { // todo -- join\w data ","
+	"join\\with": { // **
 		Argsn: 2,
 		Pure:  true,
 		Doc:   "Joins Block or list of values together.",
@@ -4511,7 +4507,10 @@ var builtins = map[string]*env.Builtin{
 				switch s2 := arg1.(type) {
 				case env.String:
 					var str strings.Builder
-					for _, c := range s1.Series.S {
+					for i, c := range s1.Series.S {
+						if i > 0 {
+							str.WriteString(s2.Value)
+						}
 						switch it := c.(type) {
 						case env.String:
 							str.WriteString(it.Value)
@@ -4520,7 +4519,6 @@ var builtins = map[string]*env.Builtin{
 						default:
 							return MakeBuiltinError(ps, "Block series data should be string or integer.", "join\\with")
 						}
-						str.WriteString(s2.Value)
 					}
 					return env.String{str.String()}
 				default:
@@ -4532,31 +4530,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"split-quoted": {
-		Argsn: 3,
-		Pure:  true,
-		Doc:   "Splits a line of string into values by separator by respecting quotes",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch str := arg0.(type) {
-			case env.String:
-				switch sepa := arg1.(type) {
-				case env.String:
-					switch quote := arg2.(type) {
-					case env.String:
-						return util.StringToFieldsWithQuoted(str.Value, sepa.Value, quote.Value)
-					default:
-						return MakeArgError(ps, 3, []env.Type{env.StringType}, "split-quoted")
-					}
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.StringType}, "split-quoted")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "split-quoted")
-			}
-		},
-	},
-
-	"split": {
+	"split": { // **
 		Argsn: 2,
 		Pure:  true,
 		Doc:   "Splits a string into a block of values using a separator",
@@ -4576,6 +4550,30 @@ var builtins = map[string]*env.Builtin{
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "split")
+			}
+		},
+	},
+
+	"split\\quoted": { // **
+		Argsn: 3,
+		Pure:  true,
+		Doc:   "Splits a line of string into values by separator by respecting quotes",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch str := arg0.(type) {
+			case env.String:
+				switch sepa := arg1.(type) {
+				case env.String:
+					switch quote := arg2.(type) {
+					case env.String:
+						return util.StringToFieldsWithQuoted(str.Value, sepa.Value, quote.Value)
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.StringType}, "split-quoted")
+					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "split-quoted")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "split-quoted")
 			}
 		},
 	},
@@ -4604,7 +4602,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"split-every": {
+	"split\\every": { // **
 		Argsn: 2,
 		Pure:  true,
 		Doc:   "Splits a string into a block of values using a separator",
@@ -4640,26 +4638,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"to-integer": {
-		Argsn: 1,
-		Doc:   "Splits a line of string into values by separator by respecting quotes",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch addr := arg0.(type) {
-			case env.String:
-				iValue, err := strconv.Atoi(addr.Value)
-				if err != nil {
-					return MakeBuiltinError(ps, err.Error(), "to-integer")
-				}
-				return env.Integer{int64(iValue)}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "to-integer")
-			}
-		},
-	},
-
 	// BASIC SERIES FUNCTIONS
 
-	"first": {
+	"first": { // **
 		Argsn: 1,
 		Doc:   "Accepts Block, List or String and returns the first item.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -4688,7 +4669,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"rest": {
+	"rest": { // **
 		Argsn: 1,
 		Doc:   "Accepts Block, List or String and returns all but first items.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -4714,7 +4695,7 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-	"rest\\from": {
+	"rest\\from": { // **
 		Argsn: 2,
 		Doc:   "Accepts Block, List or String and returns all but first items.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -4745,7 +4726,7 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-	"tail": {
+	"tail": { // **
 		Argsn: 2,
 		Doc:   "Accepts Block, List or String and returns all but first items.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -4776,7 +4757,7 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-	"second": {
+	"second": { // **
 		Argsn: 1,
 		Doc:   "Accepts Block and returns the second value in it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -4802,7 +4783,7 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-	"third": {
+	"third": { // **
 		Argsn: 1,
 		Doc:   "Accepts Block and returns the third value in it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -4814,7 +4795,7 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-	"last": {
+	"last": { // **
 		Argsn: 1,
 		Doc:   "Accepts Block and returns the last value in it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -4829,7 +4810,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"head": {
+	"head": { // **
 		Argsn: 2,
 		Doc:   "Accepts a Block or a List and an Integer N. Returns first N values of the Block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -4849,7 +4830,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"nth": {
+	"nth": { // **
 		Argsn: 2,
 		Doc:   "Accepts Block and Integer N, returns the N-th value of the block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -5541,7 +5522,31 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"length?": {
+	"range": { // **
+		Argsn: 2,
+		Doc:   "Takes two integers and returns a block of integers between them. (Will change to lazy list/generator later)",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch i1 := arg0.(type) {
+			case env.Integer:
+				switch i2 := arg1.(type) {
+				case env.Integer:
+					objs := make([]env.Object, i2.Value-i1.Value+1)
+					idx := 0
+					for i := i1.Value; i <= i2.Value; i++ {
+						objs[idx] = env.Integer{i}
+						idx += 1
+					}
+					return *env.NewBlock(*env.NewTSeries(objs))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "range")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "range")
+			}
+		},
+	},
+
+	"length?": { // **
 		Argsn: 1,
 		Doc:   "Accepts a collection (String, Block, Dict, Spreadsheet) and returns it's length.", // TODO -- accept list, context also
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

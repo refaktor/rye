@@ -25,6 +25,10 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>to-word 'test
 ; returns test</code></pre>
 </div>
+<h3>to-integer</h3><p>Builtin(1): Splits a line of string into values by separator by respecting quotes</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-integer "123"
+; returns 123</code></pre>
+</div>
 <h3>to-string</h3><p>Pure Builtin(1): Takes a Rye value and returns a string representation.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>to-string 123
 ; returns "123"</code></pre>
@@ -146,6 +150,8 @@
 ; prints "[Integer: 33]
 "</code></pre>
 </div>
+</div>
+<h2>Serializing functions</h2><p>Functions that print values to stdio</p><div class='section'>
 <h3>mold</h3><p>Builtin(1): Turn value to it's string representation.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>mold 33
 ; returns "33"</code></pre>
@@ -154,6 +160,11 @@
 owrap</h3><p>Builtin(1): Turn value to it's string representation.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>mold\nowrap "33"
 ; returns ""33""</code></pre>
+</div>
+<h3>capture-stdout</h3><p>Builtin(1): Takes a block of code and does (runs) it.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>capture-stdout { "out" .print , "not this" }
+; returns "out
+"</code></pre>
 </div>
 </div>
 <h2>Control functions</h2><p>Program flow control functions</p><div class='section'>
@@ -224,7 +235,100 @@ owrap</h3><p>Builtin(1): Turn value to it's string representation.</p><div class
 ; returns 101</code></pre>
 </div>
 </div>
-<h2>Collections related functions</h2><p>Functions that mostly work with collections (blocks / lists).</p><div class='section'>
+<h2>Logic functions</h2><p>Function that help with logical operations.</p><div class='section'>
+<h3>all</h3><p>Builtin(1): Takes a block, if all values or expressions are truthy it returns the last one, otherwise false.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>all { 1 1 1 }
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>{ 0 0 1 } .all
+; returns 0</code></pre>
+</div>
+<h3>any</h3><p>Builtin(1): Takes a block, if any of the values or expressions are truthy, the it returns that one, in none false.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>any { 0 0 1 }
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>{ 0 0 0 } .any
+; returns 0</code></pre>
+</div>
+<h3>any\with</h3><p>Builtin(2): Takes a block, if any of the values or expressions are truthy, then it returns that one, in none false.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>any\with 1 { + 0 , + 0 }
+; returns 1</code></pre>
+</div>
+</div>
+<h2>Strings related functions</h2><p>Functions that mostly work with strings.</p><div class='section'>
+<h3>capitalize</h3><p>Pure Builtin(1): Takes a String and returns the same String, but  with first character turned to upper case.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>capitalize "anne"
+; returns "Anne"</code></pre>
+</div>
+<h3>to-lower</h3><p>Pure Builtin(1): Takes a String and returns the same String, but  with all characters turned to lower case.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-lower "ANNE"
+; returns "anne"</code></pre>
+</div>
+<h3>to-upper</h3><p>Pure Builtin(1): Takes a String and returns the same String, but with all characters turned to upper case.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-upper "anne"
+; returns "ANNE"</code></pre>
+</div>
+<h3>join</h3><p>Pure Builtin(1): Joins Block or list of values together.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>join { "Marry" "Anne" }
+; returns "MarryAnne"</code></pre>
+</div>
+<h3>join\with</h3><p>Pure Builtin(2): Joins Block or list of values together.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>join\with { "Marry" "Anne" } ","
+; returns "Marry,Anne"</code></pre>
+</div>
+<h3>split</h3><p>Pure Builtin(2): Splits a string into a block of values using a separator</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>split "Marry,Anne" ","
+; returns "Marry" "Anne"</code></pre>
+</div>
+<h3>split\quoted</h3><p>Pure Builtin(3): Splits a line of string into values by separator by respecting quotes</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>split\quoted ""Marry,Anne",Joe" "," """
+; returns "Marry,Anne" "Joe"</code></pre>
+</div>
+<h3>split\every</h3><p>Pure Builtin(2): Splits a string into a block of values using a separator</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>split\every "abcbce" 3
+; returns "abc" "bce"</code></pre>
+</div>
+<p class='comment'>Many of functions that work with other collections also work with strings.</p>
+</div>
+<h2>Block and list related functions</h2><p>Functions that mostly work with collections (blocks / lists).</p><div class='section'>
+<h3>range</h3><p>Builtin(2): Takes two integers and returns a block of integers between them. (Will change to lazy list/generator later)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>range 1 5
+; returns 1 2 3 4 5</code></pre>
+</div>
+<h3>first</h3><p>Builtin(1): Accepts Block, List or String and returns the first item.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>first { 1 2 3 4 5 }
+; returns 1</code></pre>
+</div>
+<h3>rest</h3><p>Builtin(1): Accepts Block, List or String and returns all but first items.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>rest { 1 2 3 4 5 }
+; returns 2 3 4 5</code></pre>
+</div>
+<h3>rest\from</h3><p>Builtin(2): Accepts Block, List or String and returns all but first items.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>rest\from { 1 2 3 4 5 } 2
+; returns 3 4 5</code></pre>
+</div>
+<h3>second</h3><p>Builtin(1): Accepts Block and returns the second value in it.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>second { 1 2 3 4 5 }
+; returns 2</code></pre>
+</div>
+<h3>third</h3><p>Builtin(1): Accepts Block and returns the third value in it.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>third { 1 2 3 4 5 }
+; returns 3</code></pre>
+</div>
+<h3>nth</h3><p>Builtin(2): Accepts Block and Integer N, returns the N-th value of the block.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>nth { 1 2 3 4 5 } 4
+; returns 4</code></pre>
+</div>
+<h3>last</h3><p>Builtin(1): Accepts Block and returns the last value in it.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>last { 1 2 3 4 5 }
+; returns 5</code></pre>
+</div>
+<h3>head</h3><p>Builtin(2): Accepts a Block or a List and an Integer N. Returns first N values of the Block.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>head { 1 2 3 4 5 } 2
+; returns 1 2</code></pre>
+</div>
+<h3>tail</h3><p>Builtin(2): Accepts Block, List or String and returns all but first items.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>tail { 1 2 3 4 5 } 2
+; returns 4 5</code></pre>
+</div>
 <h3>length?</h3><p>Builtin(1): Accepts a collection (String, Block, Dict, Spreadsheet) and returns it's length.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>length? "1234567"
 ; returns 7</code></pre>
@@ -233,6 +337,8 @@ owrap</h3><p>Builtin(1): Turn value to it's string representation.</p><div class
 <pre class='prettyprint lang-rye'><code language='lang-rye'>list { 1 2 3 } |length?
 ; returns 3</code></pre>
 </div>
+</div>
+<h2>Higher order like functions</h2><p>Functions for usual HOF patterns, map, reduce, filter.</p><div class='section'>
 <h3>map</h3><p>Pure Builtin(2): Maps values of a block to a new block by evaluating a block of code.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>map { 1 2 3 } { + 1 }
 ; returns 2 3 4</code></pre>
