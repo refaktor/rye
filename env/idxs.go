@@ -45,6 +45,7 @@ var NativeTypes = [...]string{ // Todo change to BuiltinTypes
 	"Kindword",
 	"Converter",
 	"Time",
+	"SpreadsheetRowType",
 	"Decimal",
 	"Vector",
 }

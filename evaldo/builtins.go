@@ -348,7 +348,7 @@ var builtins = map[string]*env.Builtin{
 
 	"is-string": { // **
 		Argsn: 1,
-		Doc:   "Returns true if value is string.",
+		Doc:   "Returns true if value is a string.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if arg0.Type() == env.StringType {
@@ -361,7 +361,7 @@ var builtins = map[string]*env.Builtin{
 
 	"is-integer": { // **
 		Argsn: 1,
-		Doc:   "Returns true if value is string.",
+		Doc:   "Returns true if value is an integer.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if arg0.Type() == env.IntegerType {
@@ -372,7 +372,31 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	// TODO-ADD: is-decimal , is-number (integer or decimal)
+	"is-decimal": { // **
+		Argsn: 1,
+		Doc:   "Returns true if value is a decimal.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			if arg0.Type() == env.DecimalType {
+				return env.Integer{1}
+			} else {
+				return env.Integer{0}
+			}
+		},
+	},
+
+	"is-number": { // **
+		Argsn: 1,
+		Doc:   "Returns true if value is a number (integer or decimal).",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			if arg0.Type() == env.IntegerType || arg0.Type() == env.DecimalType {
+				return env.Integer{1}
+			} else {
+				return env.Integer{0}
+			}
+		},
+	},
 
 	"to-uri": { // * TODO-FIXME: return possible failures
 		Argsn: 1,
@@ -417,7 +441,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"is-positive": { // ** , TODO-FIX: handle Decimal
+	"is-positive": { // **
 		Argsn: 1,
 		Doc:   "Returns true if integer is positive.",
 		Pure:  true,
@@ -429,13 +453,41 @@ var builtins = map[string]*env.Builtin{
 				} else {
 					return env.Integer{0}
 				}
+			case env.Decimal:
+				if arg.Value > 0 {
+					return env.Integer{1}
+				} else {
+					return env.Integer{0}
+				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "inc")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "is-positive")
 			}
 		},
 	},
 
-	// TODO-ADD: is-zero
+	"is-zero": { // **
+		Argsn: 1,
+		Doc:   "Returns true if integer is zero.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
+			switch arg := arg0.(type) {
+			case env.Integer:
+				if arg.Value == 0 {
+					return env.Integer{1}
+				} else {
+					return env.Integer{0}
+				}
+			case env.Decimal:
+				if arg.Value == 0 {
+					return env.Integer{1}
+				} else {
+					return env.Integer{0}
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "is-zero")
+			}
+		},
+	},
 
 	"inc!": { // **
 		Argsn: 1,

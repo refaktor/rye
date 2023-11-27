@@ -55,6 +55,16 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>0 .is-positive
 ; returns 0</code></pre>
 </div>
+<h3>is-zero</h3><p>Pure Builtin(1): Returns true if integer is zero.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-zero 0
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>0 .is-zero
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-zero 0.000000
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-zero 0.100000
+; returns 0</code></pre>
+</div>
 <h3>factor-of</h3><p>Pure Builtin(2): Checks if a first argument is a factor of second.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>factor-of 10 2
 ; returns 1</code></pre>
@@ -220,13 +230,29 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>to-file "file.txt"
 ; returns file://file.txt</code></pre>
 </div>
-<h3>is-integer</h3><p>Pure Builtin(1): Returns true if value is string.</p><div class='group'>
+<h3>is-integer</h3><p>Pure Builtin(1): Returns true if value is an integer.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>is-integer 123
 ; returns 1</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>is-integer "ABC"
 ; returns 0</code></pre>
 </div>
-<h3>is-string</h3><p>Pure Builtin(1): Returns true if value is string.</p><div class='group'>
+<h3>is-decimal</h3><p>Pure Builtin(1): Returns true if value is a decimal.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-decimal 123.456000
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-decimal 123
+; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-decimal "ABC"
+; returns 0</code></pre>
+</div>
+<h3>is-number</h3><p>Pure Builtin(1): Returns true if value is a number (integer or decimal).</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-number 123
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-number 123.456000
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-number "ABC"
+; returns 0</code></pre>
+</div>
+<h3>is-string</h3><p>Pure Builtin(1): Returns true if value is a string.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>is-string "ABC"
 ; returns 1</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>is-string 123
