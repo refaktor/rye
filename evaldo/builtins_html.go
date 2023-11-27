@@ -401,21 +401,23 @@ var Builtins_html = map[string]*env.Builtin{
 
 	"rye-reader//parse-html": {
 		Argsn: 2,
-		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			rm, err := load_html_Dict(es, arg1.(env.Block))
+		Doc:   "TODODOC.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			rm, err := load_html_Dict(ps, arg1.(env.Block))
 			trace8("*** _--- GOT RM ++**")
 			// fmt.Println(rm)
 			if err != nil {
-				es.FailureFlag = true
-				return err
+				ps.FailureFlag = true
+				return MakeBuiltinError(ps, "Error to load html dict.", "rye-reader//parse-html")
 			}
-			return do_html(es, arg0.(env.Native).Value.(io.Reader), rm)
+			return do_html(ps, arg0.(env.Native).Value.(io.Reader), rm)
 		},
 	},
 
 	"rye-html-start//attr?": {
 		Argsn: 2,
-		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch tok1 := arg0.(type) {
 			case env.Native:
 				switch tok := tok1.Value.(type) {
@@ -429,43 +431,44 @@ var Builtins_html = map[string]*env.Builtin{
 						}
 					case env.Word:
 						for _, a := range tok.Attr {
-							if a.Key == es.Idx.GetWord(n.Index) {
+							if a.Key == ps.Idx.GetWord(n.Index) {
 								return env.String{a.Val}
 							}
 						}
 						return env.Void{}
 					default:
-						return env.NewError("second arg not integer")
+						return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "rye-html-start//attr?")
 					}
 				default:
-					return env.NewError("Not xml-strat element")
+					return MakeBuiltinError(ps, "Token value is not matching.", "rye-html-start//attr?")
 				}
 			default:
-				return env.NewError("first argument should be native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "rye-html-start//attr?")
 			}
 		},
 	},
 
 	"rye-html-start//name?": {
 		Argsn: 1,
-		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch tok1 := arg0.(type) {
 			case env.Native:
 				switch tok := tok1.Value.(type) {
 				case html.Token:
 					return env.String{tok.Data}
 				default:
-					return env.NewError("Not xml-strat element")
+					return MakeBuiltinError(ps, "Not xml-strat element.", "rye-html-start//name?")
 				}
 			default:
-				return env.NewError("first argument should be native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "rye-html-start//name?")
 			}
 		},
 	},
 
 	/*	"rye-html-start//name?": {
 		Argsn: 1,
-		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch obj := arg0.(type) {
 			case env.Native:
 				switch obj1 := obj.Value.(type) {
