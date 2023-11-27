@@ -77,6 +77,16 @@ section "Working with numbers"
 		; TODO -- same for decimal
 	}
 
+	group "is-zero"
+	mold\nowrap ?is-zero
+	{ { integer decimal } }
+	{
+		equal { is-zero 0 } 1
+		equal { 0 .is-zero } 1
+		equal { is-zero 0.0 } 1
+		equal { is-zero 0.1 } 0
+	}
+
 	group "factor-of"
 	mold\nowrap ?factor-of
 	{ { integer } { integer } }
@@ -381,11 +391,29 @@ section "Type conversion and checking"
 	}
 
 	group "is-integer"
-	mold\nowrap ?is-string
+	mold\nowrap ?is-integer
 	{ { object } }
 	{
 		equal { is-integer 123 } 1
 		equal { is-integer "ABC" } 0
+	}
+
+	group "is-decimal"
+	mold\nowrap ?is-decimal
+	{ { object } }
+	{
+		equal { is-decimal 123.456 } 1
+		equal { is-decimal 123 } 0
+		equal { is-decimal "ABC" } 0
+	}
+
+	group "is-number"
+	mold\nowrap ?is-number
+	{ { object } }
+	{
+		equal { is-number 123 } 1
+		equal { is-number 123.456 } 1
+		equal { is-number "ABC" } 0
 	}
 
 	group "is-string"
