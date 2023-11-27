@@ -49,6 +49,8 @@ docs-framework: context {
 		print join [ "<p class='comment'>" str "</p>" ]
 	}
 
+	stats: fn { } { }
+
 	
 }
 

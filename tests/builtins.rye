@@ -2,31 +2,31 @@
 ; title "Function reference: core builtins"
 
 section "Printing functions"
-"Functions that print values to stdio"
+"Functions that print values to stdout."
 {
-	group "prn"
-	mold\nowrap ?prn
-	{ { object } }
-	{
-		stdout { prn 123 } "123 "
-	}
-	group "prin"
-	mold\nowrap ?prin
-	{ { object } }
-	{
-		stdout { prin 123 } "123"
-	}
 	group "print"
 	mold\nowrap ?print
 	{ { object } }
 	{
 		stdout { print 123 } "123" + newline
 	}
-	group "print-val"
-	mold\nowrap ?print-val
+	group "prn"
+	mold\nowrap ?prn
 	{ { object } }
 	{
-		stdout { print-val 33 "value is: {{}}" } "value is: 33" + newline
+		stdout { prn 123 } "123"
+	}
+	group "prns"
+	mold\nowrap ?prns
+	{ { object } }
+	{
+		stdout { prns 123 } "123 "
+	}
+	group "print\val"
+	mold\nowrap ?print\val
+	{ { object } }
+	{
+		stdout { print\val 33 "value is: {{}}" } "value is: 33" + newline
 	}
 	; group "print-ssv"
 	; mold\nowrap ?print-ssv
@@ -55,6 +55,289 @@ section "Printing functions"
 	; {
 	;	stdout { inspect 33 } "33"
 	; }
+}
+
+section "Working with numbers"
+"Functions that mostly work with numbers."
+{
+	group "inc"
+	mold\nowrap ?inc
+	{ { integer } }
+	{
+		equal { inc 100 } 101
+	}
+
+	group "is-positive"
+	mold\nowrap ?is-positive
+	{ { integer decimal } }
+	{
+		equal { is-positive 1 } 1 
+		equal { 0 .is-positive } 0 
+		; TODO equal { -1 .is-positive } 0
+		; TODO -- same for decimal
+	}
+
+	group "factor-of"
+	mold\nowrap ?factor-of
+	{ { integer } { integer } }
+	{
+		equal { factor-of 10 2 } 1
+		equal { 10 .factor-of 3 } 0		
+	}
+
+	group "odd"
+	mold\nowrap ?odd
+	{ { integer } }
+	{
+		equal { odd 3 } 1
+		; TODO 
+	}
+
+	group "even"
+	mold\nowrap ?even
+	{ { integer } }
+	{
+		equal { even 2 } 1
+		; TODO
+	}
+
+	group "mod"
+	mold\nowrap ?mod
+	{ { integer } { integer } }
+	{
+		equal { 3 .mod 2 } 1
+		; TODO
+	}
+
+	$ 
+	group "+-*/"
+	""
+	{ { integer decimal } { integer decimal } }
+	{
+	}
+
+
+	group "!=><+"
+	""
+	{ { integer decimal } { integer decimal } }
+	{
+	} $
+
+}
+
+
+section "Logic functions"
+"Function that help with logical operations."
+{	
+
+	group "true"
+	mold\nowrap ?true
+	{ { } }
+	{
+		equal { true } 1
+	}
+
+	group "false"
+	mold\nowrap ?false
+	{ { function } }
+	{
+		equal { false } 0
+	}
+	
+	group "not"
+	mold\nowrap ?not
+	{ { function } }
+	{
+		equal { not 0 } 1
+		equal { not 1 } 0
+	}
+	
+	group "all"
+	mold\nowrap ?all
+	{ { block } }
+	{
+		equal { all { 1 1 1 } } 1
+		equal { { 0 0 1 } .all } 0
+	}
+
+	group "any"
+	mold\nowrap ?any
+	{ { block } }
+	{
+		equal { any { 0 0 1 } } 1
+		equal { { 0 0 0 } .any } 0
+	}
+
+	;group "any\with"
+	;mold\nowrap ?any\with
+	;{ { object } { block } }
+	;{
+	;	equal { any\with 1 {  + 0 , + 0  } } 1
+	;}
+}
+
+section "Working with strings"
+"Functions that mostly work with strings."
+{	
+
+	group "capitalize"
+	mold\nowrap ?capitalize
+	{ { string } }
+	{
+		equal { capitalize "anne" } "Anne"
+	}
+
+	group "to-lower"
+	mold\nowrap ?to-lower
+	{ { string } }
+	{
+		equal { to-lower "ANNE" } "anne"
+	}
+
+	group "to-upper"
+	mold\nowrap ?to-upper
+	{ { string } }
+	{
+		equal { to-upper "anne" } "ANNE"
+	}
+
+	group "join"
+	mold\nowrap ?join
+	{ { block list } }
+	{
+		equal { join [ "Marry" "Anne" ] } "MarryAnne"
+	}
+	
+	group "join\with"
+	mold\nowrap ?join\with
+	{ { block list } { string } }
+	{
+		equal { join\with [ "Marry" "Anne" ] "," } "Marry,Anne"
+	}
+
+	group "split"
+	mold\nowrap ?split
+	{ { string } { string } }
+	{
+		equal { split "Marry,Anne" "," } { "Marry" "Anne" }
+	}
+
+	group "split\quoted"
+	mold\nowrap ?split\quoted
+	{ { string } { string } }
+	{
+		equal { split\quoted $"Marry,Anne",Joe$ "," $"$ } { "Marry,Anne" "Joe" } ;" }
+	}
+	
+	group "split\every"
+	mold\nowrap ?split\every
+	{ { string } { integer } }
+	{
+		equal { split\every "abcbce" 3 } { "abc" "bce" }
+	}
+	
+	comment "Many of functions that work with other collections also work with strings."
+}
+
+section "Working with blocks and lists"
+"Functions that mostly work with collections (blocks / lists)."
+{	
+	
+	group "range"
+	mold\nowrap ?range
+	{ { integer } { integer } }
+	{
+		equal { range 1 5 } { 1 2 3 4 5 }
+	}
+	
+	group "first"
+	mold\nowrap ?first
+	{ { block } }
+	{
+		equal { first { 1 2 3 4 5 } } 1
+	}
+
+	group "rest"
+	mold\nowrap ?rest
+	{ { block } }
+	{
+		equal { rest { 1 2 3 4 5 } } { 2 3 4 5 }
+	}
+
+	group "rest\from"
+	mold\nowrap ?rest\from
+	{ { block } { integer } }
+	{
+		equal { rest\from { 1 2 3 4 5 } 2 } { 3 4 5 }
+	}
+
+	group "second"
+	mold\nowrap ?second
+	{ { block } }
+	{
+		equal { second { 1 2 3 4 5 } } 2
+	}
+
+	group "third"
+	mold\nowrap ?third
+	{ { block } }
+	{
+		equal { third { 1 2 3 4 5 } } 3
+	}
+
+	group "nth"
+	mold\nowrap ?nth
+	{ { block } }
+	{
+		equal { nth { 1 2 3 4 5 } 4 } 4
+	}
+	
+	group "last"
+	mold\nowrap ?last
+	{ { block } }
+	{
+		equal { last { 1 2 3 4 5 } } 5
+	}
+	
+	group "head"
+	mold\nowrap ?head
+	{ { block } { integer } }
+	{
+		equal { head { 1 2 3 4 5 } 2 } { 1 2 }
+	}
+
+		
+	group "tail"
+	mold\nowrap ?tail
+	{ { block } { integer } }
+	{
+		equal { tail { 1 2 3 4 5 } 2 } { 4 5 }
+	}
+
+	group "length?"
+	mold\nowrap ?length?
+	{ { block string list } }
+	{
+		equal { length? "1234567" } 7
+		equal { { 1 2 3 4 5 } .length? } 5
+		equal { list { 1 2 3 } |length? } 3
+	}
+	
+	group "list"
+	mold\nowrap ?list
+	{ { block } }
+	{
+		equal { list { "a" 1 "b" 2 } |type? } 'list
+	}
+
+	group "dict"
+	mold\nowrap ?dict
+	{ { block } }
+	{
+		equal { dict { "a" 1 "b" 2 } |type? } 'dict
+	}
+
+
 }
 
 
@@ -123,95 +406,28 @@ section "Type conversion and checking"
 		equal { type? 123 } 'integer
 		; TODO -- add for other types
 	}
-
-	
 }
 
-section "Numeric functions"
-"Functions that mostly work with numbers."
+section "Serializing values"
+"Functions that print values to stdio"
 {
-	group "inc"
-	mold\nowrap ?inc
-	{ { integer } }
+	group "mold"
+	mold\nowrap ?mold
+	{ { function } }
 	{
-		equal { inc 100 } 101
+		equal { mold 33 } "33"
 	}
-
-	group "inc!"
-	mold\nowrap ?inc!
-	{ { word } }
+	group "mold\unwrap"
+	mold\nowrap ?mold\nowrap
+	{ { function } }
 	{
-		equal { a: 100 , inc! 'a } 101 
-		equal { a: 100 , inc! 'a , a } 101 
+		equal { mold\nowrap "33" } $"33"$
 	}
-
-	group "is-positive"
-	mold\nowrap ?is-positive
-	{ { integer decimal } }
+	group "capture-stdout"
+	mold\nowrap ?capture-stdout
+	{ { block } }
 	{
-		equal { is-positive 1 } 1 
-		equal { 0 .is-positive } 0 
-		; TODO equal { -1 .is-positive } 0
-		; TODO -- same for decimal
-	}
-
-	group "factor-of"
-	mold\nowrap ?factor-of
-	{ { integer } { integer } }
-	{
-		equal { factor-of 10 2 } 1
-		equal { 10 .factor-of 3 } 0		
-	}
-
-	group "odd"
-	mold\nowrap ?odd
-	{ { integer } }
-	{
-		equal { odd 3 } 1
-		; TODO 
-	}
-
-	group "even"
-	mold\nowrap ?even
-	{ { integer } }
-	{
-		equal { even 2 } 1
-		; TODO
-	}
-
-	group "mod"
-	mold\nowrap ?mod
-	{ { integer } { integer } }
-	{
-		equal { 3 .mod 2 } 1
-		; TODO
-	}
-
-	$ 
-	group "+-*/"
-	""
-	{ { integer decimal } { integer decimal } }
-	{
-	}
-
-
-	group "!=><+"
-	""
-	{ { integer decimal } { integer decimal } }
-	{
-	} $
-
-}
-
-section "Values functions"
-"Functions that mostly work with blocks."
-{
-	group "change!"
-	mold\nowrap ?change!
-	{ { any } { word } }
-	{
-		equal { a: 1 change! 2 'a } 1
-		equal { a: 2 change! 2 'a } 0
+		equal { capture-stdout { "out" .print , "not this" } } "out" + newline
 	}
 
 	group "dump"
@@ -228,33 +444,7 @@ section "Values functions"
 		equal { fn { x "docstring" } { x + 1 } |doc\of? } "docstring"
 	}
 
-	group "true"
-	mold\nowrap ?true
-	{ { } }
-	{
-		equal { true } 1
-	}
 
-	group "false"
-	mold\nowrap ?false
-	{ { function } }
-	{
-		equal { false } 0
-	}
-
-	group "list"
-	mold\nowrap ?list
-	{ { block } }
-	{
-		equal { list { "a" 1 "b" 2 } |type? } 'list
-	}
-
-	group "dict"
-	mold\nowrap ?dict
-	{ { block } }
-	{
-		equal { dict { "a" 1 "b" 2 } |type? } 'dict
-	}
 
 }
 
@@ -276,30 +466,6 @@ $ section "Context functions"
 	}
 
 } $
-
-section "Serializing functions"
-"Functions that print values to stdio"
-{
-	group "mold"
-	mold\nowrap ?mold
-	{ { function } }
-	{
-		equal { mold 33 } "33"
-	}
-	group "mold\nowrap"
-	mold\nowrap ?mold\nowrap
-	{ { function } }
-	{
-		equal { mold\nowrap "33" } $"33"$
-	}
-	group "capture-stdout"
-	mold\nowrap ?capture-stdout
-	{ { block } }
-	{
-		equal { capture-stdout { "out" .print , "not this" } } "out" + newline
-	}
-
-}
 
 
 section "Control functions"
@@ -418,207 +584,7 @@ section "Doers and evaluators"
 
 
 
-section "Logic functions"
-"Function that help with logical operations."
-{	
 
-	group "not"
-	mold\nowrap ?not
-	{ { function } }
-	{
-		equal { not 0 } 1
-		equal { not 1 } 0
-	}
-	
-	group "all"
-	mold\nowrap ?all
-	{ { block } }
-	{
-		equal { all { 1 1 1 } } 1
-		equal { { 0 0 1 } .all } 0
-	}
-
-	group "any"
-	mold\nowrap ?any
-	{ { block } }
-	{
-		equal { any { 0 0 1 } } 1
-		equal { { 0 0 0 } .any } 0
-	}
-
-	;group "any\with"
-	;mold\nowrap ?any\with
-	;{ { object } { block } }
-	;{
-	;	equal { any\with 1 {  + 0 , + 0  } } 1
-	;}
-}
-
-section "Strings related functions"
-"Functions that mostly work with strings."
-{	
-
-	group "capitalize"
-	mold\nowrap ?capitalize
-	{ { string } }
-	{
-		equal { capitalize "anne" } "Anne"
-	}
-
-	group "to-lower"
-	mold\nowrap ?to-lower
-	{ { string } }
-	{
-		equal { to-lower "ANNE" } "anne"
-	}
-
-	group "to-upper"
-	mold\nowrap ?to-upper
-	{ { string } }
-	{
-		equal { to-upper "anne" } "ANNE"
-	}
-
-	group "join"
-	mold\nowrap ?join
-	{ { block list } }
-	{
-		equal { join [ "Marry" "Anne" ] } "MarryAnne"
-	}
-	
-	group "join\with"
-	mold\nowrap ?join\with
-	{ { block list } { string } }
-	{
-		equal { join\with [ "Marry" "Anne" ] "," } "Marry,Anne"
-	}
-
-	group "split"
-	mold\nowrap ?split
-	{ { string } { string } }
-	{
-		equal { split "Marry,Anne" "," } { "Marry" "Anne" }
-	}
-
-	group "split\quoted"
-	mold\nowrap ?split\quoted
-	{ { string } { string } }
-	{
-		equal { split\quoted $"Marry,Anne",Joe$ "," $"$ } { "Marry,Anne" "Joe" } ;" }
-	}
-	
-	group "split\every"
-	mold\nowrap ?split\every
-	{ { string } { integer } }
-	{
-		equal { split\every "abcbce" 3 } { "abc" "bce" }
-	}
-	
-	comment "Many of functions that work with other collections also work with strings."
-}
-
-section "Block and list related functions"
-"Functions that mostly work with collections (blocks / lists)."
-{	
-	
-	group "range"
-	mold\nowrap ?range
-	{ { integer } { integer } }
-	{
-		equal { range 1 5 } { 1 2 3 4 5 }
-	}
-	
-	group "first"
-	mold\nowrap ?first
-	{ { block } }
-	{
-		equal { first { 1 2 3 4 5 } } 1
-	}
-
-	group "rest"
-	mold\nowrap ?rest
-	{ { block } }
-	{
-		equal { rest { 1 2 3 4 5 } } { 2 3 4 5 }
-	}
-
-	group "rest\from"
-	mold\nowrap ?rest\from
-	{ { block } { integer } }
-	{
-		equal { rest\from { 1 2 3 4 5 } 2 } { 3 4 5 }
-	}
-
-	group "second"
-	mold\nowrap ?second
-	{ { block } }
-	{
-		equal { second { 1 2 3 4 5 } } 2
-	}
-
-	group "third"
-	mold\nowrap ?third
-	{ { block } }
-	{
-		equal { third { 1 2 3 4 5 } } 3
-	}
-
-	group "nth"
-	mold\nowrap ?nth
-	{ { block } }
-	{
-		equal { nth { 1 2 3 4 5 } 4 } 4
-	}
-	
-	group "last"
-	mold\nowrap ?last
-	{ { block } }
-	{
-		equal { last { 1 2 3 4 5 } } 5
-	}
-	
-	group "head"
-	mold\nowrap ?head
-	{ { block } { integer } }
-	{
-		equal { head { 1 2 3 4 5 } 2 } { 1 2 }
-	}
-
-		
-	group "tail"
-	mold\nowrap ?tail
-	{ { block } { integer } }
-	{
-		equal { tail { 1 2 3 4 5 } 2 } { 4 5 }
-	}
-
-	group "length?"
-	mold\nowrap ?length?
-	{ { block string list } }
-	{
-		equal { length? "1234567" } 7
-		equal { { 1 2 3 4 5 } .length? } 5
-		equal { list { 1 2 3 } |length? } 3
-	}
-
-	comment "Functions that change values in-place are used more rarely in Rye and have ! at the end."
-	
-	group "remove-last!"
-	mold\nowrap ?remove-last!
-	{ { word } }
-	{
-		equal { b: { 1 2 3 } , remove-last! 'b , b } { 1 2 }
-	}
-
-	group "append!"
-	mold\nowrap ?append!
-	{ { word } { object } }
-	{
-		equal { b: { 1 2 3 } , append! 4 'b , b } { 1 2 3 4 }
-		equal { b: { 1 2 3 } , append! { 4 5 } 'b , b } { 1 2 3 { 4 5 } }
-	}
-
-}
 
 section "Higher order like functions"
 "Functions for usual HOF patterns, map, reduce, filter."
@@ -766,6 +732,44 @@ section "Context related functions"
 
 }
 
+section "Functions that change values in-place"
+"Functions that mostly work with blocks."
+{
+
+	group "inc!"
+	mold\nowrap ?inc!
+	{ { word } }
+	{
+		equal { a: 100 , inc! 'a } 101 
+		equal { a: 100 , inc! 'a , a } 101 
+	}
+
+	group "change!"
+	mold\nowrap ?change!
+	{ { any } { word } }
+	{
+		equal { a: 1 change! 2 'a } 1
+		equal { a: 2 change! 2 'a } 0
+	}
+
+	comment "Functions that change values in-place are used more rarely in Rye and have ! at the end."
+	
+	group "remove-last!"
+	mold\nowrap ?remove-last!
+	{ { word } }
+	{
+		equal { b: { 1 2 3 } , remove-last! 'b , b } { 1 2 }
+	}
+	
+	group "append!"
+	mold\nowrap ?append!
+	{ { word } { object } }
+	{
+		equal { b: { 1 2 3 } , append! 4 'b , b } { 1 2 3 4 }
+		equal { b: { 1 2 3 } , append! { 4 5 } 'b , b } { 1 2 3 { 4 5 } }
+	}
+	
+}
 
 
 ;	TODO	equal { list { 3 4 5 6 } |map { .factor-of 3 } } list { 1 0 0 1 } 

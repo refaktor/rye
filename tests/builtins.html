@@ -16,25 +16,25 @@
 <body onload="generateMenu()">
 <div id="menu-holder">
 </div>
-<h1>Function reference: core builtins</h1>
+<h1>Function reference: Rye core</h1>
 <p><em>work in progress</em></p>
 
-<h2>Printing functions</h2><p>Functions that print values to stdio</p><div class='section'>
-<h3>prn</h3><p>Builtin(1): Prints a value and adds a space.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>prn 123
-; prints "123 "</code></pre>
-</div>
-<h3>prin</h3><p>Builtin(1): Prints a value without newline.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>prin 123
-; prints "123"</code></pre>
-</div>
+<h2>Printing functions</h2><p>Functions that print values to stdout.</p><div class='section'>
 <h3>print</h3><p>Builtin(1): Prints a value and adds a newline.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>print 123
 ; prints "123
 "</code></pre>
 </div>
-<h3>print-val</h3><p>Builtin(2): Prints a value and adds a newline.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>print-val 33 "value is: {{}}"
+<h3>prn</h3><p>Builtin(1): Prints a value without newline.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>prn 123
+; prints "123"</code></pre>
+</div>
+<h3>prns</h3><p>Builtin(1): Prints a value and adds a space.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>prns 123
+; prints "123 "</code></pre>
+</div>
+<h3>print\val</h3><p>Builtin(2): Prints a value and adds a newline.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>print\val 33 "value is: {{}}"
 ; prints "value is: 33
 "</code></pre>
 </div>
@@ -42,6 +42,157 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>probe 33
 ; prints "[Integer: 33]
 "</code></pre>
+</div>
+</div>
+<h2>Working with numbers</h2><p>Functions that mostly work with numbers.</p><div class='section'>
+<h3>inc</h3><p>Pure Builtin(1): Returns integer value incremented by 1.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>inc 100
+; returns 101</code></pre>
+</div>
+<h3>is-positive</h3><p>Pure Builtin(1): Returns true if integer is positive.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-positive 1
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>0 .is-positive
+; returns 0</code></pre>
+</div>
+<h3>factor-of</h3><p>Pure Builtin(2): Checks if a first argument is a factor of second.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>factor-of 10 2
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>10 .factor-of 3
+; returns 0</code></pre>
+</div>
+<h3>odd</h3><p>Pure Builtin(1): Checks if a number is odd.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>odd 3
+; returns 1</code></pre>
+</div>
+<h3>even</h3><p>Pure Builtin(1): Checks if a number is even.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>even 2
+; returns 1</code></pre>
+</div>
+<h3>mod</h3><p>Pure Builtin(2): Calculates module of two integers.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>3 .mod 2
+; returns 1</code></pre>
+</div>
+</div>
+<h2>Logic functions</h2><p>Function that help with logical operations.</p><div class='section'>
+<h3>true</h3><p>Pure Builtin(0): Retutns a truthy value.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>true
+; returns 1</code></pre>
+</div>
+<h3>false</h3><p>Pure Builtin(0): Retutns a falsy value.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>false
+; returns 0</code></pre>
+</div>
+<h3>not</h3><p>Pure Builtin(1): Turns a truthy value to non-truthy and reverse.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>not 0
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>not 1
+; returns 0</code></pre>
+</div>
+<h3>all</h3><p>Builtin(1): Takes a block, if all values or expressions are truthy it returns the last one, otherwise false.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>all { 1 1 1 }
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>{ 0 0 1 } .all
+; returns 0</code></pre>
+</div>
+<h3>any</h3><p>Builtin(1): Takes a block, if any of the values or expressions are truthy, the it returns that one, in none false.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>any { 0 0 1 }
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>{ 0 0 0 } .any
+; returns 0</code></pre>
+</div>
+</div>
+<h2>Working with strings</h2><p>Functions that mostly work with strings.</p><div class='section'>
+<h3>capitalize</h3><p>Pure Builtin(1): Takes a String and returns the same String, but  with first character turned to upper case.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>capitalize "anne"
+; returns "Anne"</code></pre>
+</div>
+<h3>to-lower</h3><p>Pure Builtin(1): Takes a String and returns the same String, but  with all characters turned to lower case.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-lower "ANNE"
+; returns "anne"</code></pre>
+</div>
+<h3>to-upper</h3><p>Pure Builtin(1): Takes a String and returns the same String, but with all characters turned to upper case.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-upper "anne"
+; returns "ANNE"</code></pre>
+</div>
+<h3>join</h3><p>Pure Builtin(1): Joins Block or list of values together.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>join { "Marry" "Anne" }
+; returns "MarryAnne"</code></pre>
+</div>
+<h3>join\with</h3><p>Pure Builtin(2): Joins Block or list of values together.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>join\with { "Marry" "Anne" } ","
+; returns "Marry,Anne"</code></pre>
+</div>
+<h3>split</h3><p>Pure Builtin(2): Splits a string into a block of values using a separator</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>split "Marry,Anne" ","
+; returns "Marry" "Anne"</code></pre>
+</div>
+<h3>split\quoted</h3><p>Pure Builtin(3): Splits a line of string into values by separator by respecting quotes</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>split\quoted ""Marry,Anne",Joe" "," """
+; returns "Marry,Anne" "Joe"</code></pre>
+</div>
+<h3>split\every</h3><p>Pure Builtin(2): Splits a string into a block of values using a separator</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>split\every "abcbce" 3
+; returns "abc" "bce"</code></pre>
+</div>
+<p class='comment'>Many of functions that work with other collections also work with strings.</p>
+</div>
+<h2>Working with blocks and lists</h2><p>Functions that mostly work with collections (blocks / lists).</p><div class='section'>
+<h3>range</h3><p>Builtin(2): Takes two integers and returns a block of integers between them. (Will change to lazy list/generator later)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>range 1 5
+; returns 1 2 3 4 5</code></pre>
+</div>
+<h3>first</h3><p>Builtin(1): Accepts Block, List or String and returns the first item.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>first { 1 2 3 4 5 }
+; returns 1</code></pre>
+</div>
+<h3>rest</h3><p>Builtin(1): Accepts Block, List or String and returns all but first items.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>rest { 1 2 3 4 5 }
+; returns 2 3 4 5</code></pre>
+</div>
+<h3>rest\from</h3><p>Builtin(2): Accepts Block, List or String and returns all but first items.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>rest\from { 1 2 3 4 5 } 2
+; returns 3 4 5</code></pre>
+</div>
+<h3>second</h3><p>Builtin(1): Accepts Block and returns the second value in it.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>second { 1 2 3 4 5 }
+; returns 2</code></pre>
+</div>
+<h3>third</h3><p>Builtin(1): Accepts Block and returns the third value in it.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>third { 1 2 3 4 5 }
+; returns 3</code></pre>
+</div>
+<h3>nth</h3><p>Builtin(2): Accepts Block and Integer N, returns the N-th value of the block.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>nth { 1 2 3 4 5 } 4
+; returns 4</code></pre>
+</div>
+<h3>last</h3><p>Builtin(1): Accepts Block and returns the last value in it.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>last { 1 2 3 4 5 }
+; returns 5</code></pre>
+</div>
+<h3>head</h3><p>Builtin(2): Accepts a Block or a List and an Integer N. Returns first N values of the Block.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>head { 1 2 3 4 5 } 2
+; returns 1 2</code></pre>
+</div>
+<h3>tail</h3><p>Builtin(2): Accepts Block, List or String and returns all but first items.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>tail { 1 2 3 4 5 } 2
+; returns 4 5</code></pre>
+</div>
+<h3>length?</h3><p>Builtin(1): Accepts a collection (String, Block, Dict, Spreadsheet) and returns it's length.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>length? "1234567"
+; returns 7</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>{ 1 2 3 4 5 } .length?
+; returns 5</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>list { 1 2 3 } |length?
+; returns 3</code></pre>
+</div>
+<h3>list</h3><p>Builtin(1): Constructs a List from the Block of values.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>list { "a" 1 "b" 2 } |type?
+; returns list</code></pre>
+</div>
+<h3>dict</h3><p>Builtin(1): Constructs a Dict from the Block of key and value pairs.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 "b" 2 } |type?
+; returns dict</code></pre>
 </div>
 </div>
 <h2>Type conversion and checking</h2><p>Functions that convert between Rye value types.</p><div class='section'>
@@ -92,48 +243,19 @@
 ; returns integer</code></pre>
 </div>
 </div>
-<h2>Numeric functions</h2><p>Functions that mostly work with numbers.</p><div class='section'>
-<h3>inc</h3><p>Pure Builtin(1): Returns integer value incremented by 1.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>inc 100
-; returns 101</code></pre>
+<h2>Serializing values</h2><p>Functions that print values to stdio</p><div class='section'>
+<h3>mold</h3><p>Builtin(1): Turn value to it's string representation.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>mold 33
+; returns "33"</code></pre>
 </div>
-<h3>inc!</h3><p>Builtin(1): Increments integer value by 1 in place.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>a: 100 , inc! 'a
-; returns 101</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>a: 100 , inc! 'a , a
-; returns 101</code></pre>
+<h3>mold\unwrap</h3><p>Builtin(1): Turn value to it's string representation.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>mold\nowrap "33"
+; returns ""33""</code></pre>
 </div>
-<h3>is-positive</h3><p>Pure Builtin(1): Returns true if integer is positive.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>is-positive 1
-; returns 1</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>0 .is-positive
-; returns 0</code></pre>
-</div>
-<h3>factor-of</h3><p>Pure Builtin(2): Checks if a first argument is a factor of second.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>factor-of 10 2
-; returns 1</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>10 .factor-of 3
-; returns 0</code></pre>
-</div>
-<h3>odd</h3><p>Pure Builtin(1): Checks if a number is odd.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>odd 3
-; returns 1</code></pre>
-</div>
-<h3>even</h3><p>Pure Builtin(1): Checks if a number is even.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>even 2
-; returns 1</code></pre>
-</div>
-<h3>mod</h3><p>Pure Builtin(2): Calculates module of two integers.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>3 .mod 2
-; returns 1</code></pre>
-</div>
-</div>
-<h2>Values functions</h2><p>Functions that mostly work with blocks.</p><div class='section'>
-<h3>change!</h3><p>Builtin(2): Changes value in a word, if value changes returns true otherwise false</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>a: 1 change! 2 'a
-; returns 1</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>a: 2 change! 2 'a
-; returns 0</code></pre>
+<h3>capture-stdout</h3><p>Builtin(1): Takes a block of code and does (runs) it.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>capture-stdout { "out" .print , "not this" }
+; returns "out
+"</code></pre>
 </div>
 <h3>dump</h3><p>Pure Builtin(1): Set docstring of the current context.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>fn { x } { x + 1 } |dump
@@ -142,38 +264,6 @@
 <h3>doc\of?</h3><p>Pure Builtin(1): Get docstring of the first argument.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>fn { x "docstring" } { x + 1 } |doc\of?
 ; returns "docstring"</code></pre>
-</div>
-<h3>true</h3><p>Pure Builtin(0): Retutns a truthy value.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>true
-; returns 1</code></pre>
-</div>
-<h3>false</h3><p>Pure Builtin(0): Retutns a falsy value.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>false
-; returns 0</code></pre>
-</div>
-<h3>list</h3><p>Builtin(1): Constructs a List from the Block of values.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>list { "a" 1 "b" 2 } |type?
-; returns list</code></pre>
-</div>
-<h3>dict</h3><p>Builtin(1): Constructs a Dict from the Block of key and value pairs.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 "b" 2 } |type?
-; returns dict</code></pre>
-</div>
-</div>
-<h2>Serializing functions</h2><p>Functions that print values to stdio</p><div class='section'>
-<h3>mold</h3><p>Builtin(1): Turn value to it's string representation.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>mold 33
-; returns "33"</code></pre>
-</div>
-<h3>mold
-owrap</h3><p>Builtin(1): Turn value to it's string representation.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>mold\nowrap "33"
-; returns ""33""</code></pre>
-</div>
-<h3>capture-stdout</h3><p>Builtin(1): Takes a block of code and does (runs) it.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>capture-stdout { "out" .print , "not this" }
-; returns "out
-"</code></pre>
 </div>
 </div>
 <h2>Control functions</h2><p>Program flow control functions</p><div class='section'>
@@ -248,122 +338,6 @@ owrap</h3><p>Builtin(1): Turn value to it's string representation.</p><div class
 <h3>vals\with</h3><p>Builtin(2): Evaluate a block with injecting the first argument.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>vals\with 100 { + 1 }
 ; returns 101</code></pre>
-</div>
-</div>
-<h2>Logic functions</h2><p>Function that help with logical operations.</p><div class='section'>
-<h3>not</h3><p>Pure Builtin(1): Turns a truthy value to non-truthy and reverse.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>not 0
-; returns 1</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>not 1
-; returns 0</code></pre>
-</div>
-<h3>all</h3><p>Builtin(1): Takes a block, if all values or expressions are truthy it returns the last one, otherwise false.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>all { 1 1 1 }
-; returns 1</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>{ 0 0 1 } .all
-; returns 0</code></pre>
-</div>
-<h3>any</h3><p>Builtin(1): Takes a block, if any of the values or expressions are truthy, the it returns that one, in none false.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>any { 0 0 1 }
-; returns 1</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>{ 0 0 0 } .any
-; returns 0</code></pre>
-</div>
-</div>
-<h2>Strings related functions</h2><p>Functions that mostly work with strings.</p><div class='section'>
-<h3>capitalize</h3><p>Pure Builtin(1): Takes a String and returns the same String, but  with first character turned to upper case.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>capitalize "anne"
-; returns "Anne"</code></pre>
-</div>
-<h3>to-lower</h3><p>Pure Builtin(1): Takes a String and returns the same String, but  with all characters turned to lower case.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>to-lower "ANNE"
-; returns "anne"</code></pre>
-</div>
-<h3>to-upper</h3><p>Pure Builtin(1): Takes a String and returns the same String, but with all characters turned to upper case.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>to-upper "anne"
-; returns "ANNE"</code></pre>
-</div>
-<h3>join</h3><p>Pure Builtin(1): Joins Block or list of values together.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>join { "Marry" "Anne" }
-; returns "MarryAnne"</code></pre>
-</div>
-<h3>join\with</h3><p>Pure Builtin(2): Joins Block or list of values together.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>join\with { "Marry" "Anne" } ","
-; returns "Marry,Anne"</code></pre>
-</div>
-<h3>split</h3><p>Pure Builtin(2): Splits a string into a block of values using a separator</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>split "Marry,Anne" ","
-; returns "Marry" "Anne"</code></pre>
-</div>
-<h3>split\quoted</h3><p>Pure Builtin(3): Splits a line of string into values by separator by respecting quotes</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>split\quoted ""Marry,Anne",Joe" "," """
-; returns "Marry,Anne" "Joe"</code></pre>
-</div>
-<h3>split\every</h3><p>Pure Builtin(2): Splits a string into a block of values using a separator</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>split\every "abcbce" 3
-; returns "abc" "bce"</code></pre>
-</div>
-<p class='comment'>Many of functions that work with other collections also work with strings.</p>
-</div>
-<h2>Block and list related functions</h2><p>Functions that mostly work with collections (blocks / lists).</p><div class='section'>
-<h3>range</h3><p>Builtin(2): Takes two integers and returns a block of integers between them. (Will change to lazy list/generator later)</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>range 1 5
-; returns 1 2 3 4 5</code></pre>
-</div>
-<h3>first</h3><p>Builtin(1): Accepts Block, List or String and returns the first item.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>first { 1 2 3 4 5 }
-; returns 1</code></pre>
-</div>
-<h3>rest</h3><p>Builtin(1): Accepts Block, List or String and returns all but first items.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>rest { 1 2 3 4 5 }
-; returns 2 3 4 5</code></pre>
-</div>
-<h3>rest\from</h3><p>Builtin(2): Accepts Block, List or String and returns all but first items.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>rest\from { 1 2 3 4 5 } 2
-; returns 3 4 5</code></pre>
-</div>
-<h3>second</h3><p>Builtin(1): Accepts Block and returns the second value in it.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>second { 1 2 3 4 5 }
-; returns 2</code></pre>
-</div>
-<h3>third</h3><p>Builtin(1): Accepts Block and returns the third value in it.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>third { 1 2 3 4 5 }
-; returns 3</code></pre>
-</div>
-<h3>nth</h3><p>Builtin(2): Accepts Block and Integer N, returns the N-th value of the block.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>nth { 1 2 3 4 5 } 4
-; returns 4</code></pre>
-</div>
-<h3>last</h3><p>Builtin(1): Accepts Block and returns the last value in it.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>last { 1 2 3 4 5 }
-; returns 5</code></pre>
-</div>
-<h3>head</h3><p>Builtin(2): Accepts a Block or a List and an Integer N. Returns first N values of the Block.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>head { 1 2 3 4 5 } 2
-; returns 1 2</code></pre>
-</div>
-<h3>tail</h3><p>Builtin(2): Accepts Block, List or String and returns all but first items.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>tail { 1 2 3 4 5 } 2
-; returns 4 5</code></pre>
-</div>
-<h3>length?</h3><p>Builtin(1): Accepts a collection (String, Block, Dict, Spreadsheet) and returns it's length.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>length? "1234567"
-; returns 7</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>{ 1 2 3 4 5 } .length?
-; returns 5</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>list { 1 2 3 } |length?
-; returns 3</code></pre>
-</div>
-<p class='comment'>Functions that change values in-place are used more rarely in Rye and have ! at the end.</p>
-<h3>remove-last!</h3><p>Builtin(1): Accepts Block and returns the next value and removes it from the Block.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>b: { 1 2 3 } , remove-last! 'b , b
-; returns 1 2</code></pre>
-</div>
-<h3>append!</h3><p>Builtin(2): Accepts Rye value and Tagword with a Block or String. Appends Rye value to Block/String in place, also returns it	.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>b: { 1 2 3 } , append! 4 'b , b
-; returns 1 2 3 4</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>b: { 1 2 3 } , append! { 4 5 } 'b , b
-; returns 1 2 3 { 4 5 }</code></pre>
 </div>
 </div>
 <h2>Higher order like functions</h2><p>Functions for usual HOF patterns, map, reduce, filter.</p><div class='section'>
@@ -460,30 +434,31 @@ owrap</h3><p>Builtin(1): Turn value to it's string representation.</p><div class
 ; returns ctx</code></pre>
 </div>
 </div>
-[31;3mError(5): word not found: stats 
-At location:
-{ section "Printing functions" "Functions that print values to stdio" { group "prn" mold\nowrap prn { { object } } { stdout { prn 123 } "123 " } group "prin" mold\nowrap prin { { object } } { stdout { prin 123 } "123" } group "print" mold\nowrap print { { object } } { stdout { print 123 } "123" ._+ newline } group "print-val" mold\nowrap print-val { { object } } { stdout { print-val 33 "value is: {{}}" } "value is: 33" ._+ newline }  group "print-csv"
-	mold
-owrap ?print-csv
-	{ { function } }
-	{
-	}
-	group "print-json"
-	mold
-owrap ?p... group "probe" mold\nowrap probe { { function } } { stdout { probe 33 } "[Integer: 33]" ._+ newline } } section "Type conversion and checking" "Functions that convert between Rye value types." { group "to-word" mold\nowrap to-word { { string word } } { equal { to-word "test" } 'test equal { to-word 'test } 'test } group "to-integer" mold\nowrap to-integer { { string number } } { equal { to-integer "123" } 123 } group "to-string" mold\nowrap to-string { { string word number } } { equal { to-string 123 } "123" equal { to-string 'word } "word" } group "to-uri" mold\nowrap to-uri { { string } } { equal { to-uri "https://example.com" } https://example.com } group "to-file" mold\nowrap to-file { { string } } { equal { to-file "file.txt" } file://file.txt } group "is-integer" mold\nowrap is-string { { object } } { equal { is-integer 123 } 1 equal { is-integer "ABC" } 0 } group "is-string" mold\nowrap is-string { { object } } { equal { is-string "ABC" } 1 equal { is-string 123 } 0 equal { is-string file://file.txt } 0 equal { is-string test@gmail.com } 0 } group "type?" mold\nowrap type? { { object } } { equal { type? "ABC" } 'string equal { type? 123 } 'integer } } section "Numeric functions" "Functions that mostly work with numbers." { group "inc" mold\nowrap inc { { integer } } { equal { inc 100 } 101 } group "inc!" mold\nowrap inc! { { word } } { equal { a: 100 , inc! 'a } 101 equal { a: 100 , inc! 'a , a } 101 } group "is-positive" mold\nowrap is-positive { { integer decimal } } { equal { is-positive 1 } 1 equal { 0 .is-positive } 0 } group "factor-of" mold\nowrap factor-of { { integer } { integer } } { equal { factor-of 10 2 } 1 equal { 10 .factor-of 3 } 0 } group "odd" mold\nowrap odd { { integer } } { equal { odd 3 } 1 } group "even" mold\nowrap even { { integer } } { equal { even 2 } 1 } group "mod" mold\nowrap mod { { integer } { integer } } { equal { 3 .mod 2 } 1 }  
-	group "+-*/"
-	""
-	{ { integer decimal } { integer decimal } }
-	{
-	}
+<h2>Functions that change values in-place</h2><p>Functions that mostly work with blocks.</p><div class='section'>
+<h3>inc!</h3><p>Builtin(1): Increments integer value by 1 in place.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>a: 100 , inc! 'a
+; returns 101</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>a: 100 , inc! 'a , a
+; returns 101</code></pre>
+</div>
+<h3>change!</h3><p>Builtin(2): Changes value in a word, if value changes returns true otherwise false</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>a: 1 change! 2 'a
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>a: 2 change! 2 'a
+; returns 0</code></pre>
+</div>
+<p class='comment'>Functions that change values in-place are used more rarely in Rye and have ! at the end.</p>
+<h3>remove-last!</h3><p>Builtin(1): Accepts Block and returns the next value and removes it from the Block.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>b: { 1 2 3 } , remove-last! 'b , b
+; returns 1 2</code></pre>
+</div>
+<h3>append!</h3><p>Builtin(2): Accepts Rye value and Tagword with a Block or String. Appends Rye value to Block/String in place, also returns it	.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>b: { 1 2 3 } , append! 4 'b , b
+; returns 1 2 3 4</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>b: { 1 2 3 } , append! { 4 5 } 'b , b
+; returns 1 2 3 { 4 5 }</code></pre>
+</div>
+</div>
+</body>
+</html>
 
-
-	group "!=><+"
-	""
-	{ { int... } section "Values functions" "Functions that mostly work with blocks." { group "change!" mold\nowrap change! { { any } { word } } { equal { a: 1 change! 2 'a } 1 equal { a: 2 change! 2 'a } 0 } group "dump" mold\nowrap dump { { any } { word } } { equal { fn { x } { x ._+ 1 } |dump } { fn { x } { x ._+ 1 } } } group "doc\of?" mold\nowrap doc\of? { { function } } { equal { fn { x "docstring" } { x ._+ 1 } |doc\of? } "docstring" } group "true" mold\nowrap true { { } } { equal { true } 1 } group "false" mold\nowrap false { { function } } { equal { false } 0 } group "list" mold\nowrap list { { block } } { equal { list { "a" 1 "b" 2 } |type? } 'list } group "dict" mold\nowrap dict { { block } } { equal { dict { "a" 1 "b" 2 } |type? } 'dict } }  section "Context functions"
-"Functions that mostly work with blocks."
-{
-	group "doc"
-	mold
-owrap ?d... section "Serializing functions" "Functions that print values to stdio" { group "mold" mold\nowrap mold { { function } } { equal { mold 33 } "33" } group "mold
-owrap" mold\nowrap mold\nowrap { { function } } { equal { mold\nowrap "33" } ""33"" } group "capture-stdout" mold\nowrap capture-stdout { { block } } { equal { capture-stdout { "out" .print , "not this" } } "out" ._+ newline } } section "Control functions" "Program flow control functions" { group "if" mold\nowrap if { { object } { block } } { equal { if 1 { 101 } } 101 equal { if 0 { 101 } } 0 } group "otherwise" mold\nowrap otherwise { { object } { block } } { equal { otherwise 1 { 101 } } 0 equal { otherwise 0 { 101 } } 101 } group "^if" mold\nowrap ^if { { object } { block } } { equal { ^if 1 { 101 } } 101 equal { ^if 0 { 101 } } 0 } group "^otherwise" mold\nowrap ^otherwise { { object } { block } } { equal { ^otherwise 1 { 101 } } 0 equal { ^otherwise 0 { 101 } } 101 } group "either" mold\nowrap either { { object } { block } { block } } { equal { either 1 { 101 } { 202 } } 101 equal { either 0 { 101 } { 202 } } 202 } group "switch" mold\nowrap switch { { object } { block } } { equal { switch 1 { 1 { 101 } 2 { 202 } } } 101 equal { switch 2 { 1 { 101 } 2 { 202 } } } 202 } group "cases" mold\nowrap cases { { object } { block } { block } } { equal { cases 1 { { 1 } { ._+ 10 } { 1 } { ._+ 100 } } } 111 equal { cases 1 { { 0 } { ._+ 10 } { 1 } { ._+ 100 } } } 101 } } section "Doers and evaluators" "Functions that do code and evaluate blocks." { group "do" mold\nowrap do { { block } } { equal { do { 101 ._+ 101 } } 202 } group "do-in" mold\nowrap do-in { { context } { block } } { equal { cc: context { x: 101 } do-in cc { x ._+ 101 } } 202 } group "do-with" mold\nowrap do-with { { object } { block } } { equal { do-with 101 { ._+ 101 } } 202 } group "try" mold\nowrap try { { block } } { equal { try { 10 ._+ unknown } |type? } 'error } group "do-in\try" mold\nowrap do-in\try { { context } { block } } { equal { ctx: context { x: 101 } do-in\try ctx { x ._/ 0 } |type? } 'error } group "vals" mold\nowrap vals { { block } } { equal { x: 101 vals { x } } { 101 } equal { name: "Anne" vals { name "Goodall" } } { "Anne" "Goodall" } equal { y: 202 vals { 101 y y ._+ 101 } } { 101 202 303 } } group "vals\with" mold\nowrap vals\with { { object } { block } } { equal { vals\with 100 { ._+ 1 } } { 101 } } } section "Logic functions" "Function that help with logical operations." { group "not" mold\nowrap not { { function } } { equal { not 0 } 1 equal { not 1 } 0 } group "all" mold\nowrap all { { block } } { equal { all { 1 1 1 } } 1 equal { { 0 0 1 } .all } 0 } group "any" mold\nowrap any { { block } } { equal { any { 0 0 1 } } 1 equal { { 0 0 0 } .any } 0 } } section "Strings related functions" "Functions that mostly work with strings." { group "capitalize" mold\nowrap capitalize { { string } } { equal { capitalize "anne" } "Anne" } group "to-lower" mold\nowrap to-lower { { string } } { equal { to-lower "ANNE" } "anne" } group "to-upper" mold\nowrap to-upper { { string } } { equal { to-upper "anne" } "ANNE" } group "join" mold\nowrap join { { block list } } { equal { join { "Marry" "Anne" } } "MarryAnne" } group "join\with" mold\nowrap join\with { { block list } { string } } { equal { join\with { "Marry" "Anne" } "," } "Marry,Anne" } group "split" mold\nowrap split { { string } { string } } { equal { split "Marry,Anne" "," } { "Marry" "Anne" } } group "split\quoted" mold\nowrap split\quoted { { string } { string } } { equal { split\quoted ""Marry,Anne",Joe" "," """ } { "Marry,Anne" "Joe" } } group "split\every" mold\nowrap split\every { { string } { integer } } { equal { split\every "abcbce" 3 } { "abc" "bce" } } comment "Many of functions that work with other collections also work with strings." } section "Block and list related functions" "Functions that mostly work with collections (blocks / lists)." { group "range" mold\nowrap range { { integer } { integer } } { equal { range 1 5 } { 1 2 3 4 5 } } group "first" mold\nowrap first { { block } } { equal { first { 1 2 3 4 5 } } 1 } group "rest" mold\nowrap rest { { block } } { equal { rest { 1 2 3 4 5 } } { 2 3 4 5 } } group "rest\from" mold\nowrap rest\from { { block } { integer } } { equal { rest\from { 1 2 3 4 5 } 2 } { 3 4 5 } } group "second" mold\nowrap second { { block } } { equal { second { 1 2 3 4 5 } } 2 } group "third" mold\nowrap third { { block } } { equal { third { 1 2 3 4 5 } } 3 } group "nth" mold\nowrap nth { { block } } { equal { nth { 1 2 3 4 5 } 4 } 4 } group "last" mold\nowrap last { { block } } { equal { last { 1 2 3 4 5 } } 5 } group "head" mold\nowrap head { { block } { integer } } { equal { head { 1 2 3 4 5 } 2 } { 1 2 } } group "tail" mold\nowrap tail { { block } { integer } } { equal { tail { 1 2 3 4 5 } 2 } { 4 5 } } group "length?" mold\nowrap length? { { block string list } } { equal { length? "1234567" } 7 equal { { 1 2 3 4 5 } .length? } 5 equal { list { 1 2 3 } |length? } 3 } comment "Functions that change values in-place are used more rarely in Rye and have ! at the end." group "remove-last!" mold\nowrap remove-last! { { word } } { equal { b: { 1 2 3 } , remove-last! 'b , b } { 1 2 } } group "append!" mold\nowrap append! { { word } { object } } { equal { b: { 1 2 3 } , append! 4 'b , b } { 1 2 3 4 } equal { b: { 1 2 3 } , append! { 4 5 } 'b , b } { 1 2 3 { 4 5 } } } } section "Higher order like functions" "Functions for usual HOF patterns, map, reduce, filter." { group "map" mold\nowrap map { { block } { block } } { equal { map { 1 2 3 } { ._+ 1 } } { 2 3 4 } equal { map { "a" "bb" "ccc" } { .length? } } { 1 2 3 } } group "map\pos" mold\nowrap map { { block } { block } } { equal { map { 1 2 3 } { ._+ 1 } } { 2 3 4 } equal { map { "a" "bb" "ccc" } { .length? } } { 1 2 3 } } group "filter" mold\nowrap map { { block } { block } } { equal { map { 1 2 3 } { ._+ 1 } } { 2 3 4 } equal { map { "a" "bb" "ccc" } { .length? } } { 1 2 3 } } group "reduce" mold\nowrap map { { block } { block } } { equal { map { 1 2 3 } { ._+ 1 } } { 2 3 4 } equal { map { "a" "bb" "ccc" } { .length? } } { 1 2 3 } } group "fold" mold\nowrap map { { block } { block } } { equal { map { 1 2 3 } { ._+ 1 } } { 2 3 4 } equal { map { "a" "bb" "ccc" } { .length? } } { 1 2 3 } } group "produce" mold\nowrap map { { block } { block } } { equal { map { 1 2 3 } { ._+ 1 } } { 2 3 4 } equal { map { "a" "bb" "ccc" } { .length? } } { 1 2 3 } } group "sum-up" mold\nowrap map { { block } { block } } { equal { map { 1 2 3 } { ._+ 1 } } { 2 3 4 } equal { map { "a" "bb" "ccc" } { .length? } } { 1 2 3 } } group "seek" mold\nowrap map { { block } { block } } { equal { map { 1 2 3 } { ._+ 1 } } { 2 3 4 } equal { map { "a" "bb" "ccc" } { .length? } } { 1 2 3 } } group "purge" mold\nowrap map { { block } { block } } { equal { map { 1 2 3 } { ._+ 1 } } { 2 3 4 } equal { map { "a" "bb" "ccc" } { .length? } } { 1 2 3 } } } section "Context related functions" "Functions for handling and working with Context." { group "current-ctx" mold\nowrap current-ctx { } { equal { current-ctx |type? } 'ctx } group "parent-ctx" mold\nowrap parent-ctx { } { equal { cc: context { f: does { parent-ctx |type? } } , cc } 'ctx } group "context" mold\nowrap context { { block } } { equal { cc: context { } |type? } 'ctx } group "isolate" mold\nowrap isolate { { block } } { equal { cc: isolate { } |type? } 'ctx } group "raw-context" mold\nowrap raw-context { { block } } { equal { cc: raw-context { } |type? } 'ctx } group "private" mold\nowrap raw-context { { block } } { equal { cc: raw-context { } |type? } 'ctx } group "extend" mold\nowrap raw-context { { block } } { equal { cc: raw-context { } |type? } 'ctx } group "bind" mold\nowrap raw-context { { block } } { equal { cc: raw-context { } |type? } 'ctx } group "unbind" mold\nowrap raw-context { { block } } { equal { cc: raw-context { } |type? } 'ctx } } <-here-> stats }[0m

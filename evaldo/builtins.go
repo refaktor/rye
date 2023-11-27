@@ -1001,7 +1001,7 @@ var builtins = map[string]*env.Builtin{
 
 	// BASIC GENERAL FUNCTIONS
 
-	"prn": { // **
+	"prns": { // **
 		Argsn: 1,
 		Doc:   "Prints a value and adds a space.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1014,7 +1014,7 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
-	"prin": { // **
+	"prn": { // **
 		Argsn: 1,
 		Doc:   "Prints a value without newline.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1040,7 +1040,7 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
-	"print-val": { // **
+	"print\\val": { // **
 		Argsn: 2,
 		Doc:   "Prints a value and adds a newline.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1055,7 +1055,7 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
-	"print-ssv": { // **
+	"print\\ssv": { // **
 		Argsn: 1,
 		Doc:   "Prints a value and adds a newline.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1068,7 +1068,7 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
-	"print-csv": { // **
+	"print\\csv": { // **
 		Argsn: 1,
 		Doc:   "Prints a value and adds a newline.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1081,7 +1081,7 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
-	"print-json": { // **
+	"print\\json": { // **
 		Argsn: 1,
 		Doc:   "Prints a value and adds a newline.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
