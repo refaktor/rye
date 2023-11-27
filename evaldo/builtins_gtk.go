@@ -1,3 +1,4 @@
+//go:build b_gtk
 // +build b_gtk
 
 package evaldo
@@ -14,28 +15,32 @@ var Builtins_gtk = map[string]*env.Builtin{
 
 	"gtk-init": {
 		Argsn: 0,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			gtk.Init(nil)
 			return env.Integer{1}
 		},
 	},
 	"gtk-main": {
 		Argsn: 0,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			gtk.Main()
 			return env.Integer{1}
 		},
 	},
 	"gtk-new-window": {
 		Argsn: 0,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "Create new gtk window.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			win, _ := gtk.WindowNew(gtk.WINDOW_TOPLEVEL)
-			return *env.NewNative(env1.Idx, win, "gtk-window")
+			return *env.NewNative(ps.Idx, win, "gtk-window")
 		},
 	},
 	"gtk-window//set-title": {
 		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "Set title of gtk window.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch obj := arg0.(type) {
 			case env.Native:
 				switch val := arg1.(type) {
@@ -43,36 +48,35 @@ var Builtins_gtk = map[string]*env.Builtin{
 					obj.Value.(*gtk.Window).SetTitle(val.Value)
 					return obj
 				default:
-					return env.NewError("arg 2 should be String")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "gtk-window//set-title")
 				}
 			default:
-				return env.NewError("arg 2 should be Native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "gtk-window//set-title")
 			}
-			return env.NewError("arg 2 should be Native")
-
 		},
 	},
 	"gtk-window//show": {
 		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "Show gtk window.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch obj := arg0.(type) {
 			case env.Native:
 				obj.Value.(*gtk.Window).ShowAll()
 				return obj
 			default:
-				return env.NewError("arg 2 should be Native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "gtk-window//show")
 			}
-			return env.NewError("arg 2 should be Native")
 		},
 	},
 
 	"gtk-new-label": {
 		Argsn: 0,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			//switch str := arg0.(type) {
 			//case env.String:
 			l, _ := gtk.LabelNew("...")
-			return *env.NewNative(env1.Idx, l, "gtk-label")
+			return *env.NewNative(ps.Idx, l, "gtk-label")
 			//default:
 			//	return env.NewError("arg 1 should be String")
 			//}
@@ -80,7 +84,8 @@ var Builtins_gtk = map[string]*env.Builtin{
 	},
 	"gtk-label//set-text": {
 		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "Set text on gtk label.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch win := arg0.(type) {
 			case env.Native:
 				switch str := arg1.(type) {
@@ -88,17 +93,18 @@ var Builtins_gtk = map[string]*env.Builtin{
 					win.Value.(*gtk.Label).SetText(str.Value)
 					return win
 				default:
-					return env.NewError("arg 2 should be String")
+					return MakeArgError(ps, 1, []env.Type{env.StringType}, "gtk-label//set-text")
 				}
 
 			default:
-				return env.NewError("arg 1 should be Native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "gtk-label//set-text")
 			}
 		},
 	},
 	"gtk-label//set-tooltip": {
 		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "Set tool tip on gtk label.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch win := arg0.(type) {
 			case env.Native:
 				switch str := arg1.(type) {
@@ -106,17 +112,17 @@ var Builtins_gtk = map[string]*env.Builtin{
 					win.Value.(*gtk.Label).SetTooltipText(str.Value)
 					return win
 				default:
-					return env.NewError("arg 2 should be String")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "gtk-label//set-tooltip")
 				}
-
 			default:
-				return env.NewError("arg 1 should be Native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "gtk-label//set-tooltip")
 			}
 		},
 	},
 	"gtk-window//add-to": {
 		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch win := arg0.(type) {
 			case env.Native:
 				switch wig := arg1.(type) {
@@ -124,17 +130,18 @@ var Builtins_gtk = map[string]*env.Builtin{
 					win.Value.(*gtk.Window).Add(wig.Value.(gtk.IWidget))
 					return wig
 				default:
-					return env.NewError("arg 2 should be Native")
+					return MakeArgError(ps, 2, []env.Type{env.NativeType}, "gtk-window//add-to")
 				}
 
 			default:
-				return env.NewError("arg 1 should be Native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "gtk-window//add-to")
 			}
 		},
 	},
 	"gtk-window//set-size": {
 		Argsn: 3,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "Set window size in gtk gui.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch win := arg0.(type) {
 			case env.Native:
 				switch x := arg1.(type) {
@@ -144,13 +151,13 @@ var Builtins_gtk = map[string]*env.Builtin{
 						win.Value.(*gtk.Window).SetDefaultSize(int(x.Value), int(y.Value))
 						return win
 					default:
-						return env.NewError("arg 3 should be Int")
+						return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "gtk-window//set-size")
 					}
 				default:
-					return env.NewError("arg 2 should be Int")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "gtk-window//set-size")
 				}
 			default:
-				return env.NewError("arg 1 should be Native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "gtk-window//set-size")
 			}
 		},
 	},

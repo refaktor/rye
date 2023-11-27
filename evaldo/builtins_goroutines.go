@@ -20,69 +20,72 @@ var Builtins_goroutines = map[string]*env.Builtin{
 	"sleep": {
 		Argsn: 1,
 		Doc:   "Accepts an integer and Sleeps for given number of miliseconds.",
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Integer:
 				time.Sleep(time.Duration(int(arg.Value)) * time.Millisecond)
 				return arg
 			default:
-				return makeError(env1, "Arg 1 should be Integer.")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "sleep")
 			}
 		},
 	},
 
 	"go-with": {
 		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Object:
 				switch handler := arg1.(type) {
 				case env.Function:
 					go func() {
-						env1.FailureFlag = false
-						env1.ErrorFlag = false
-						env1.ReturnFlag = false
+						ps.FailureFlag = false
+						ps.ErrorFlag = false
+						ps.ReturnFlag = false
 						psTemp := env.ProgramState{}
-						copier.Copy(&psTemp, &env1)
+						copier.Copy(&psTemp, &ps)
 						CallFunction(handler, &psTemp, arg, false, nil)
 						// CallFunctionArgs2(handler, &psTemp, arg, *env.NewNative(psTemp.Idx, "asd", "Go-server-context"), nil)
 					}()
 					return arg0
 				default:
-					env1.FailureFlag = true
-					return env.NewError("arg0 should be string")
+					ps.FailureFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.FunctionType}, "go-with")
 				}
 			default:
-				env1.FailureFlag = true
-				return env.NewError("arg0 should be string")
+				ps.FailureFlag = true
+				return MakeBuiltinError(ps, "First argument should be object type.", "go-with")
 			}
 		},
 	},
 
 	"go": {
 		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch handler := arg0.(type) {
 			case env.Function:
 				go func() {
-					env1.FailureFlag = false
-					env1.ErrorFlag = false
-					env1.ReturnFlag = false
+					ps.FailureFlag = false
+					ps.ErrorFlag = false
+					ps.ReturnFlag = false
 					psTemp := env.ProgramState{}
-					copier.Copy(&psTemp, &env1)
+					copier.Copy(&psTemp, &ps)
 					CallFunction(handler, &psTemp, nil, false, nil)
 					// CallFunctionArgs2(handler, &psTemp, arg, *env.NewNative(psTemp.Idx, "asd", "Go-server-context"), nil)
 				}()
 				return arg0
 			default:
-				env1.FailureFlag = true
-				return env.NewError("arg0 should be string")
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.FunctionType}, "go")
 			}
 		},
 	},
 
 	"new-channel": {
 		Argsn: 1,
+		Doc:   "TODODOC.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch buflen := arg0.(type) {
 			case env.Integer:
@@ -91,13 +94,13 @@ var Builtins_goroutines = map[string]*env.Builtin{
 				return *env.NewNative(ps.Idx, ch, "Rye-channel")
 			default:
 				ps.FailureFlag = true
-				return env.NewError("first arg should be integer")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "new-channel")
 			}
-
 		},
 	},
 	"Rye-channel//read": {
 		Argsn: 1,
+		Doc:   "TODODOC.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch chn := arg0.(type) {
 			case env.Native:
@@ -105,12 +108,13 @@ var Builtins_goroutines = map[string]*env.Builtin{
 				return *msg
 			default:
 				ps.FailureFlag = true
-				return env.NewError("arg 1 should be Uri")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-channel//read")
 			}
 		},
 	},
 	"Rye-channel//send": {
 		Argsn: 2,
+		Doc:   "TODODOC.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch chn := arg0.(type) {
 			case env.Native:
@@ -118,7 +122,7 @@ var Builtins_goroutines = map[string]*env.Builtin{
 				return arg0
 			default:
 				ps.FailureFlag = true
-				return env.NewError("first ar0 should be native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-channel//send")
 			}
 		},
 	},

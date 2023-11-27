@@ -189,6 +189,7 @@ var Builtins_eyr = map[string]*env.Builtin{
 
 	"eyr": {
 		Argsn: 1,
+		Doc:   "TODODOC.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -198,13 +199,15 @@ var Builtins_eyr = map[string]*env.Builtin{
 				Eyr_EvalBlock(ps, stack)
 				ps.Ser = ser
 				return ps.Res
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "eyr")
 			}
-			return nil
 		},
 	},
 
 	"eyr-loop": {
 		Argsn: 2,
+		Doc:   "TODODOC.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cond := arg0.(type) {
 			case env.Integer:
@@ -219,9 +222,12 @@ var Builtins_eyr = map[string]*env.Builtin{
 					}
 					ps.Ser = ser
 					return ps.Res
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "eyr-loop")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "eyr-loop")
 			}
-			return nil
 		},
 	},
 }
