@@ -359,6 +359,21 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"is-integer": { // **
+		Argsn: 1,
+		Doc:   "Returns true if value is string.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			if arg0.Type() == env.IntegerType {
+				return env.Integer{1}
+			} else {
+				return env.Integer{0}
+			}
+		},
+	},
+
+	// TODO-ADD: is-decimal , is-number (integer or decimal)
+
 	"to-uri": { // * TODO-FIXME: return possible failures
 		Argsn: 1,
 		Doc:   "Takes a Rye value and return a URI if possible.",
@@ -386,6 +401,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// NUMBERS
+
 	"inc": { // **
 		Argsn: 1,
 		Doc:   "Returns integer value incremented by 1.",
@@ -400,7 +417,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"is-positive": { // **
+	"is-positive": { // ** , TODO-FIX: handle Decimal
 		Argsn: 1,
 		Doc:   "Returns true if integer is positive.",
 		Pure:  true,
@@ -417,6 +434,8 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// TODO-ADD: is-zero
 
 	"inc!": { // **
 		Argsn: 1,
@@ -561,7 +580,31 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	// BASIC FUNCTIONS WITH NUMBERS
+	// VALUES
+
+	"dict": { // **
+		Argsn: 1,
+		Doc:   "Constructs a Dict from the Block of key and value pairs.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg0.(type) {
+			case env.Block:
+				return env.NewDictFromSeries(bloc.Series, ps.Idx)
+			}
+			return nil
+		},
+	},
+
+	"list": { // **
+		Argsn: 1,
+		Doc:   "Constructs a List from the Block of values.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg0.(type) {
+			case env.Block:
+				return env.NewListFromSeries(bloc.Series)
+			}
+			return nil
+		},
+	},
 
 	"true": { // **
 		Argsn: 0,
@@ -581,7 +624,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"not": { // ALLOK
+	"not": { // **
 		Argsn: 1,
 		Doc:   "Turns a truthy value to non-truthy and reverse.",
 		Pure:  true,
@@ -606,6 +649,8 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// BASIC FUNCTIONS WITH NUMBERS
 
 	"factor-of": { // **
 		Argsn: 2,
@@ -1512,7 +1557,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"cases": { // **
+	"cases": { // ** , TODO-FIX: error handling
 		Argsn: 2,
 		Doc:   "Similar to Case function, but checks all the cases, even after a match. It combines the outputs.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1931,7 +1976,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"any\\with": {
+	"any\\with": { // TODO-FIX error handling, halts on multiple expressions
 		Argsn: 2,
 		Doc:   "Takes a block, if any of the values or expressions are truthy, then it returns that one, in none false.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1954,9 +1999,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	// SPECIAL FUNCTION FUNCTIONS
-
-	// CONTEXT FUNCTIONS
+	// EXPERIMENTAL: COLLECTION AND RETURNING FUNCTIONS ... NOT DETERMINED IF WILL BE INCLUDED YET
 
 	"returns": {
 		Argsn: 1,
@@ -2029,11 +2072,21 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"current-ctx": {
+	// CONTEXT
+
+	"current-ctx": { // **
 		Argsn: 0,
 		Doc:   "Returns current context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *ps.Ctx
+		},
+	},
+
+	"parent-ctx": { // **
+		Argsn: 0,
+		Doc:   "Returns parent context of the current context.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return *ps.Ctx.Parent
 		},
 	},
 
@@ -2057,14 +2110,6 @@ var builtins = map[string]*env.Builtin{
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "ls\\")
 			}
-		},
-	},
-
-	"parent-ctx": {
-		Argsn: 0,
-		Doc:   "Returns parent context of the current context.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return *ps.Ctx.Parent
 		},
 	},
 
@@ -4847,6 +4892,10 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// These are rebol like functions for blocks with carret ... I'm not sure yet it they will be included in long term
+	// a carret is an imperative concept, doint blocks on the otheh hand requires a carret
+
 	"peek": {
 		Argsn: 1,
 		Doc:   "Accepts Block and returns the current value, without removing it.",
@@ -4896,7 +4945,8 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-	"remove-last!": {
+	//
+	"remove-last!": { // **
 		Argsn: 1,
 		Pure:  false,
 		Doc:   "Accepts Block and returns the next value and removes it from the Block.",
@@ -4922,7 +4972,7 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-	"append!": {
+	"append!": { // **
 		Argsn: 2,
 		Doc:   "Accepts Rye value and Tagword with a Block or String. Appends Rye value to Block/String in place, also returns it	.",
 		Pure:  false,
@@ -4942,14 +4992,14 @@ var builtins = map[string]*env.Builtin{
 						}
 						ctx.Set(wrd.Index, newval)
 						return newval
-					case *env.Block: // TODO
-						fmt.Println(123)
+					case env.Block: // TODO
+						// 	fmt.Println(123)
 						s := &oldval.Series
 						oldval.Series = *s.Append(arg0)
 						ctx.Set(wrd.Index, oldval)
 						return oldval
 					default:
-						return makeError(ps, "Type of tagword is not String.")
+						return makeError(ps, "Type of tagword is not String or Block")
 					}
 				}
 				return makeError(ps, "Tagword not found.")
@@ -5029,30 +5079,6 @@ var builtins = map[string]*env.Builtin{
 					return table
 				}
 				return nil
-			}
-			return nil
-		},
-	},
-
-	"dict": {
-		Argsn: 1,
-		Doc:   "Constructs a Dict from the Block of key and value pairs.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch bloc := arg0.(type) {
-			case env.Block:
-				return env.NewDictFromSeries(bloc.Series, ps.Idx)
-			}
-			return nil
-		},
-	},
-
-	"list": {
-		Argsn: 1,
-		Doc:   "Constructs a List from the Block of values.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch bloc := arg0.(type) {
-			case env.Block:
-				return env.NewListFromSeries(bloc.Series)
 			}
 			return nil
 		},

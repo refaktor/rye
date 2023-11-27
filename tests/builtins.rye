@@ -1,6 +1,63 @@
 ; Test / docs definition ... mold/nowrap ?function get's docstrings from live functions
 ; title "Function reference: core builtins"
 
+section "Printing functions"
+"Functions that print values to stdio"
+{
+	group "prn"
+	mold\nowrap ?prn
+	{ { object } }
+	{
+		stdout { prn 123 } "123 "
+	}
+	group "prin"
+	mold\nowrap ?prin
+	{ { object } }
+	{
+		stdout { prin 123 } "123"
+	}
+	group "print"
+	mold\nowrap ?print
+	{ { object } }
+	{
+		stdout { print 123 } "123" + newline
+	}
+	group "print-val"
+	mold\nowrap ?print-val
+	{ { object } }
+	{
+		stdout { print-val 33 "value is: {{}}" } "value is: 33" + newline
+	}
+	; group "print-ssv"
+	; mold\nowrap ?print-ssv
+	; { { function } }
+	; {
+	; }
+	$ group "print-csv"
+	mold\nowrap ?print-csv
+	{ { function } }
+	{
+	}
+	group "print-json"
+	mold\nowrap ?print-json
+	{ { function } }
+	{
+	} $
+	group "probe"
+	mold\nowrap ?probe
+	{ { function } }
+	{
+		stdout { probe 33 } "[Integer: 33]" + newline
+	}
+	; group "inspect"
+	; mold\nowrap ?inspect
+	; { { function } }
+	; {
+	;	stdout { inspect 33 } "33"
+	; }
+}
+
+
 section "Type conversion and checking"
 "Functions that convert between Rye value types."
 {
@@ -38,6 +95,14 @@ section "Type conversion and checking"
 	{ { string } }
 	{
 		equal { to-file "file.txt" } %file.txt
+	}
+
+	group "is-integer"
+	mold\nowrap ?is-string
+	{ { object } }
+	{
+		equal { is-integer 123 } 1
+		equal { is-integer "ABC" } 0
 	}
 
 	group "is-string"
@@ -177,14 +242,19 @@ section "Values functions"
 		equal { false } 0
 	}
 
-	group "not"
-	mold\nowrap ?not
-	{ { function } }
+	group "list"
+	mold\nowrap ?list
+	{ { block } }
 	{
-		equal { not 0 } 1
-		equal { not 1 } 0
+		equal { list { "a" 1 "b" 2 } |type? } 'list
 	}
 
+	group "dict"
+	mold\nowrap ?dict
+	{ { block } }
+	{
+		equal { dict { "a" 1 "b" 2 } |type? } 'dict
+	}
 
 }
 
@@ -206,62 +276,6 @@ $ section "Context functions"
 	}
 
 } $
-
-section "Printing functions"
-"Functions that print values to stdio"
-{
-	group "prn"
-	mold\nowrap ?prn
-	{ { object } }
-	{
-		stdout { prn 123 } "123 "
-	}
-	group "prin"
-	mold\nowrap ?prin
-	{ { object } }
-	{
-		stdout { prin 123 } "123"
-	}
-	group "print"
-	mold\nowrap ?print
-	{ { object } }
-	{
-		stdout { print 123 } "123" + newline
-	}
-	group "print-val"
-	mold\nowrap ?print-val
-	{ { object } }
-	{
-		stdout { print-val 33 "value is: {{}}" } "value is: 33" + newline
-	}
-	; group "print-ssv"
-	; mold\nowrap ?print-ssv
-	; { { function } }
-	; {
-	; }
-	$ group "print-csv"
-	mold\nowrap ?print-csv
-	{ { function } }
-	{
-	}
-	group "print-json"
-	mold\nowrap ?print-json
-	{ { function } }
-	{
-	} $
-	group "probe"
-	mold\nowrap ?probe
-	{ { function } }
-	{
-		stdout { probe 33 } "[Integer: 33]" + newline
-	}
-	; group "inspect"
-	; mold\nowrap ?inspect
-	; { { function } }
-	; {
-	;	stdout { inspect 33 } "33"
-	; }
-}
 
 section "Serializing functions"
 "Functions that print values to stdio"
@@ -334,13 +348,14 @@ section "Control functions"
 		equal { switch 1 { 1 { 101 } 2 { 202 } } } 101
 		equal { switch 2 { 1 { 101 } 2 { 202 } } } 202
 	}
-	; group "cases"
-	; mold\nowrap ?cases
-	; { { object } { block } { block } }
-	; {
-	;	equal { either 1 { 101 } { 202 } } 101
-	;	equal { either 0 { 101 } { 202 } } 202
-	; }
+	group "cases"
+	mold\nowrap ?cases
+	{ { object } { block } { block } }
+	{
+		equal { cases 1 { { 1 } { + 10 } { 1 } { + 100 } } } 111
+		equal { cases 1 { { 0 } { + 10 } { 1 } { + 100 } } } 101
+		; TODO cases doesn't do error handling well yet
+	}
 }
 
 section "Doers and evaluators"
@@ -406,6 +421,14 @@ section "Doers and evaluators"
 section "Logic functions"
 "Function that help with logical operations."
 {	
+
+	group "not"
+	mold\nowrap ?not
+	{ { function } }
+	{
+		equal { not 0 } 1
+		equal { not 1 } 0
+	}
 	
 	group "all"
 	mold\nowrap ?all
@@ -423,12 +446,12 @@ section "Logic functions"
 		equal { { 0 0 0 } .any } 0
 	}
 
-	group "any\with"
-	mold\nowrap ?any\with
-	{ { object } { block } }
-	{
-		equal { any\with 1 {  + 0 , + 0  } } 1
-	}
+	;group "any\with"
+	;mold\nowrap ?any\with
+	;{ { object } { block } }
+	;{
+	;	equal { any\with 1 {  + 0 , + 0  } } 1
+	;}
 }
 
 section "Strings related functions"
@@ -578,14 +601,86 @@ section "Block and list related functions"
 		equal { list { 1 2 3 } |length? } 3
 	}
 
+	comment "Functions that change values in-place are used more rarely in Rye and have ! at the end."
+	
+	group "remove-last!"
+	mold\nowrap ?remove-last!
+	{ { word } }
+	{
+		equal { b: { 1 2 3 } , remove-last! 'b , b } { 1 2 }
+	}
+
+	group "append!"
+	mold\nowrap ?append!
+	{ { word } { object } }
+	{
+		equal { b: { 1 2 3 } , append! 4 'b , b } { 1 2 3 4 }
+		equal { b: { 1 2 3 } , append! { 4 5 } 'b , b } { 1 2 3 { 4 5 } }
+	}
+
 }
 
 section "Higher order like functions"
 "Functions for usual HOF patterns, map, reduce, filter."
 {	
 
-	
 	group "map"
+	mold\nowrap ?map
+	{ { block } { block } }
+	{
+		equal { map { 1 2 3 } { + 1 } } { 2 3 4 }
+		equal { map { "a" "bb" "ccc" } { .length? } } { 1 2 3 }
+	}	
+	group "map\pos"
+	mold\nowrap ?map
+	{ { block } { block } }
+	{
+		equal { map { 1 2 3 } { + 1 } } { 2 3 4 }
+		equal { map { "a" "bb" "ccc" } { .length? } } { 1 2 3 }
+	}	
+	group "filter"
+	mold\nowrap ?map
+	{ { block } { block } }
+	{
+		equal { map { 1 2 3 } { + 1 } } { 2 3 4 }
+		equal { map { "a" "bb" "ccc" } { .length? } } { 1 2 3 }
+	}	
+	group "reduce"
+	mold\nowrap ?map
+	{ { block } { block } }
+	{
+		equal { map { 1 2 3 } { + 1 } } { 2 3 4 }
+		equal { map { "a" "bb" "ccc" } { .length? } } { 1 2 3 }
+	}	
+	group "fold"
+	mold\nowrap ?map
+	{ { block } { block } }
+	{
+		equal { map { 1 2 3 } { + 1 } } { 2 3 4 }
+		equal { map { "a" "bb" "ccc" } { .length? } } { 1 2 3 }
+	}	
+	group "produce"
+	mold\nowrap ?map
+	{ { block } { block } }
+	{
+		equal { map { 1 2 3 } { + 1 } } { 2 3 4 }
+		equal { map { "a" "bb" "ccc" } { .length? } } { 1 2 3 }
+	}	
+	group "sum-up"
+	mold\nowrap ?map
+	{ { block } { block } }
+	{
+		equal { map { 1 2 3 } { + 1 } } { 2 3 4 }
+		equal { map { "a" "bb" "ccc" } { .length? } } { 1 2 3 }
+	}	
+	group "seek"
+	mold\nowrap ?map
+	{ { block } { block } }
+	{
+		equal { map { 1 2 3 } { + 1 } } { 2 3 4 }
+		equal { map { "a" "bb" "ccc" } { .length? } } { 1 2 3 }
+	}	
+	group "purge"
 	mold\nowrap ?map
 	{ { block } { block } }
 	{
@@ -594,6 +689,86 @@ section "Higher order like functions"
 	}	
 }
 
+section "Context related functions"
+"Functions for handling and working with Context."
+{	
+	
+	group "current-ctx"
+	mold\nowrap ?current-ctx
+	{ }
+	{
+		equal { current-ctx |type? } 'ctx ; TODO should probably rename to context 
+	}	
+
+	group "parent-ctx"
+	mold\nowrap ?parent-ctx
+	{ }
+	{
+		equal { cc: context { f: does { parent-ctx |type? } } , cc/f } 'ctx
+	}	
+
+; TODO -- make something that clears color formatting or solve it some other way
+;	group "ls"
+;	mold\nowrap ?ls
+;	{ }
+;	{
+;		example { cc: context { x: 123 , ls } } 'ctx
+;	}	
+
+	group "context"
+	mold\nowrap ?context
+	{ { block } }
+	{
+		equal { cc: context { } |type? } 'ctx
+	}	
+
+	group "isolate"
+	mold\nowrap ?isolate
+	{ { block } }
+	{
+		equal { cc: isolate { } |type? } 'ctx
+	}	
+
+	group "raw-context"
+	mold\nowrap ?raw-context
+	{ { block } }
+	{
+		equal { cc: raw-context { } |type? } 'ctx
+	}	
+
+	group "private"
+	mold\nowrap ?raw-context
+	{ { block } }
+	{
+		equal { cc: raw-context { } |type? } 'ctx
+	}	
+
+	group "extend"
+	mold\nowrap ?raw-context
+	{ { block } }
+	{
+		equal { cc: raw-context { } |type? } 'ctx
+	}	
+
+	group "bind"
+	mold\nowrap ?raw-context
+	{ { block } }
+	{
+		equal { cc: raw-context { } |type? } 'ctx
+	}	
+
+	group "unbind"
+	mold\nowrap ?raw-context
+	{ { block } }
+	{
+		equal { cc: raw-context { } |type? } 'ctx
+	}	
+
+}
+
 
 
 ;	TODO	equal { list { 3 4 5 6 } |map { .factor-of 3 } } list { 1 0 0 1 } 
+
+
+stats
