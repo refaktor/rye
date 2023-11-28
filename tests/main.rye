@@ -37,12 +37,12 @@ docs-framework: context {
 
 	equal: fn { test res } {
 		do-in root-ctx test :got = res
-		|if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" mold\nowrap test newline "; returns "  mold\nowrap got "</code></pre>" ] }
+		|if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" mold\nowrap test newline "; returns "  replace mold got newline newline + "; "  "</code></pre>" ] }
 	}
 
 	stdout: fn { test res } {
 		capture-stdout { do-in root-ctx test } :got = res
-		1 |if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" mold\nowrap test newline "; prints "  mold\nowrap got "</code></pre>" ] }
+		1 |if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" mold\nowrap test newline "; prints " replace mold\nowrap got newline newline + "; " "</code></pre>" ] }
 	}
 
 	comment: fn { str } {

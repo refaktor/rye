@@ -69,6 +69,11 @@ type Integer struct {
 	Value int64
 }
 
+func NewInteger(val int64) *Integer {
+	nat := Integer{val}
+	return &nat
+}
+
 // Type returns the type of the Integer.
 func (i Integer) Type() Type {
 	return IntegerType

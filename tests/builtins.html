@@ -4,8 +4,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Londrina+Solid:wght@300&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="tpl/main.css" />
-    <script src="tpl/menu.js"></script>
+    <link rel="stylesheet" href="tpl/main.css?a001" />
+    <script src="tpl/menu.js?a001"></script>
     <script src="tpl/jsGoo.js"></script>
     <!-- syntax highlighting -->
     <link rel="stylesheet" type="text/css" href="tpl/desert.css" />
@@ -16,6 +16,7 @@
 <body onload="generateMenu()">
 <div id="menu-holder">
 </div>
+<p><a href="/">← main page</a></p>
 <h1>Function reference: Rye core</h1>
 <p><em>work in progress</em></p>
 
@@ -23,7 +24,7 @@
 <h3>print</h3><p>Builtin(1): Prints a value and adds a newline.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>print 123
 ; prints "123
-"</code></pre>
+; "</code></pre>
 </div>
 <h3>prn</h3><p>Builtin(1): Prints a value without newline.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>prn 123
@@ -36,12 +37,12 @@
 <h3>print\val</h3><p>Builtin(2): Prints a value and adds a newline.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>print\val 33 "value is: {{}}"
 ; prints "value is: 33
-"</code></pre>
+; "</code></pre>
 </div>
 <h3>probe</h3><p>Builtin(1): Prints a probe of a value.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>probe 33
 ; prints "[Integer: 33]
-"</code></pre>
+; "</code></pre>
 </div>
 </div>
 <h2>Working with numbers</h2><p>Functions that mostly work with numbers.</p><div class='section'>
@@ -135,22 +136,22 @@
 </div>
 <h3>split</h3><p>Pure Builtin(2): Splits a string into a block of values using a separator</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>split "Marry,Anne" ","
-; returns "Marry" "Anne"</code></pre>
+; returns { "Marry" "Anne" }</code></pre>
 </div>
 <h3>split\quoted</h3><p>Pure Builtin(3): Splits a line of string into values by separator by respecting quotes</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>split\quoted ""Marry,Anne",Joe" "," """
-; returns "Marry,Anne" "Joe"</code></pre>
+; returns { "Marry,Anne" "Joe" }</code></pre>
 </div>
 <h3>split\every</h3><p>Pure Builtin(2): Splits a string into a block of values using a separator</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>split\every "abcbce" 3
-; returns "abc" "bce"</code></pre>
+; returns { "abc" "bce" }</code></pre>
 </div>
 <p class='comment'>Many of functions that work with other collections also work with strings.</p>
 </div>
 <h2>Working with blocks and lists</h2><p>Functions that mostly work with collections (blocks / lists).</p><div class='section'>
 <h3>range</h3><p>Builtin(2): Takes two integers and returns a block of integers between them. (Will change to lazy list/generator later)</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>range 1 5
-; returns 1 2 3 4 5</code></pre>
+; returns { 1 2 3 4 5 }</code></pre>
 </div>
 <h3>first</h3><p>Builtin(1): Accepts Block, List or String and returns the first item.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>first { 1 2 3 4 5 }
@@ -158,11 +159,11 @@
 </div>
 <h3>rest</h3><p>Builtin(1): Accepts Block, List or String and returns all but first items.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>rest { 1 2 3 4 5 }
-; returns 2 3 4 5</code></pre>
+; returns { 2 3 4 5 }</code></pre>
 </div>
 <h3>rest\from</h3><p>Builtin(2): Accepts Block, List or String and returns all but first items.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>rest\from { 1 2 3 4 5 } 2
-; returns 3 4 5</code></pre>
+; returns { 3 4 5 }</code></pre>
 </div>
 <h3>second</h3><p>Builtin(1): Accepts Block and returns the second value in it.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>second { 1 2 3 4 5 }
@@ -182,11 +183,11 @@
 </div>
 <h3>head</h3><p>Builtin(2): Accepts a Block or a List and an Integer N. Returns first N values of the Block.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>head { 1 2 3 4 5 } 2
-; returns 1 2</code></pre>
+; returns { 1 2 }</code></pre>
 </div>
 <h3>tail</h3><p>Builtin(2): Accepts Block, List or String and returns all but first items.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>tail { 1 2 3 4 5 } 2
-; returns 4 5</code></pre>
+; returns { 4 5 }</code></pre>
 </div>
 <h3>length?</h3><p>Builtin(1): Accepts a collection (String, Block, Dict, Spreadsheet) and returns it's length.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>length? "1234567"
@@ -203,6 +204,26 @@
 <h3>dict</h3><p>Builtin(1): Constructs a Dict from the Block of key and value pairs.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 "b" 2 } |type?
 ; returns dict</code></pre>
+</div>
+<h3>min</h3><p>Builtin(1): Constructs a Dict from the Block of key and value pairs.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>min { 8 2 10 6 }
+; returns 2</code></pre>
+</div>
+<h3>max</h3><p>Builtin(1): Constructs a Dict from the Block of key and value pairs.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>max { 8 2 10 6 }
+; returns 10</code></pre>
+</div>
+<h3>avg</h3><p>Builtin(1): Constructs a Dict from the Block of key and value pairs.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>avg { 8 2 10 6 }
+; returns 6.500000</code></pre>
+</div>
+<h3>sum</h3><p>Builtin(1): Constructs a Dict from the Block of key and value pairs.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>sum { 8 2 10 6 }
+; returns 26.000000</code></pre>
+</div>
+<h3>unique</h3><p>Builtin(2): Accepts Rye value and Tagword with a Block or String. Appends Rye value to Block/String in place, also returns it	.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>{ 3 2 3 5 3 2 } .list .unique .length?
+; returns 3</code></pre>
 </div>
 </div>
 <h2>Type conversion and checking</h2><p>Functions that convert between Rye value types.</p><div class='section'>
@@ -281,18 +302,18 @@
 <h3>capture-stdout</h3><p>Builtin(1): Takes a block of code and does (runs) it.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>capture-stdout { "out" .print , "not this" }
 ; returns "out
-"</code></pre>
+; "</code></pre>
 </div>
 <h3>dump</h3><p>Pure Builtin(1): Set docstring of the current context.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>fn { x } { x + 1 } |dump
-; returns fn { x } { x + 1 }</code></pre>
+; returns { fn { x } { x ._+ 1 } }</code></pre>
 </div>
 <h3>doc\of?</h3><p>Pure Builtin(1): Get docstring of the first argument.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>fn { x "docstring" } { x + 1 } |doc\of?
 ; returns "docstring"</code></pre>
 </div>
 </div>
-<h2>Control functions</h2><p>Program flow control functions</p><div class='section'>
+<h2>Conditional functions</h2><p>Program flow control functions</p><div class='section'>
 <h3>if</h3><p>Pure Builtin(2): Basic conditional. Takes a condition and a block of code.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>if 1 { 101 }
 ; returns 101</code></pre>
@@ -332,6 +353,26 @@
 ; returns 101</code></pre>
 </div>
 </div>
+<h2>Looping functions</h2><p>Program flow control functions</p><div class='section'>
+<h3>loop</h3><p>Pure Builtin(2): Basic conditional. Takes a condition and a block of code.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>loop 3 { prns "x" }
+; prints "x x x "</code></pre>
+</div>
+<h3>for</h3><p>Pure Builtin(2): Conditional if not. Takes condition and a block of code.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>for { 1 2 3 } { prns "x" }
+; prints "x x x "</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>{ "a" "b" "c" } .for { .prns }
+; prints "a b c "</code></pre>
+</div>
+<h3>forever</h3><p>Builtin(1): Accepts a block and does it forever.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>forever { "once" .prn .return }
+; prints "once"</code></pre>
+</div>
+<h3>forever\with</h3><p>Builtin(2):</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>forever\with 1 { .prn .return }
+; prints "1"</code></pre>
+</div>
+</div>
 <h2>Doers and evaluators</h2><p>Functions that do code and evaluate blocks.</p><div class='section'>
 <h3>do</h3><p>Builtin(1): Takes a block of code and does (runs) it.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>do { 101 + 101 }
@@ -341,9 +382,9 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>cc: context { x: 101 } do-in cc { x + 101 }
 ; returns 202</code></pre>
 </div>
-<h3>do-with</h3><p>Builtin(2): Takes a value and a block of code. It does the code with the value injected.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>do-with 101 { + 101 }
-; returns 202</code></pre>
+<h3>with</h3><p>Builtin(2): Takes a value and a block of code. It does the code with the value injected.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>1 .with { + 100 }
+; returns 101</code></pre>
 </div>
 <h3>try</h3><p>Builtin(1): Takes a block of code and does (runs) it.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>try { 10 + unknown } |type?
@@ -355,71 +396,73 @@
 </div>
 <h3>vals</h3><p>Builtin(1): Takes a block of Rye values and evaluates each value or expression.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>x: 101 vals { x }
-; returns 101</code></pre>
+; returns { 101 }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>name: "Anne" vals { name "Goodall" }
-; returns "Anne" "Goodall"</code></pre>
+; returns { "Anne" "Goodall" }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>y: 202 vals { 101 y y + 101 }
-; returns 101 202 303</code></pre>
+; returns { 101 202 303 }</code></pre>
 </div>
 <h3>vals\with</h3><p>Builtin(2): Evaluate a block with injecting the first argument.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>vals\with 100 { + 1 }
-; returns 101</code></pre>
+; returns { 101 }</code></pre>
+</div>
+<h3>time-it</h3><p>Builtin(1): Accepts a block, does it and times it's execution time.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>time-it { 1 + 1 }
+; returns 0</code></pre>
+</div>
+</div>
+<h2>Code flow combinators</h2><p>Program flow control functions</p><div class='section'>
+<h3>pass</h3><p>Builtin(2): Accepts a value and a block. It does the block, with value injected, and returns (passes on) the initial value.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>"xxx" .pass { + "yyy" :xy }
+; returns "xxx"</code></pre>
+</div>
+<h3>keep</h3><p>Builtin(3): Do the first block, then the second one but return the result of the first one.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>10 .keep { + 1 } { * 10 }
+; returns 11</code></pre>
+</div>
+<h3>wrap</h3><p>Builtin(2): Accepts a value and a block. It does the block, with value injected, and returns (passes on) the initial value.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>wrap { 1 + 1 } { 10 + 20 }
+; returns 30</code></pre>
 </div>
 </div>
 <h2>Higher order like functions</h2><p>Functions for usual HOF patterns, map, reduce, filter.</p><div class='section'>
 <h3>map</h3><p>Pure Builtin(2): Maps values of a block to a new block by evaluating a block of code.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>map { 1 2 3 } { + 1 }
-; returns 2 3 4</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map { "a" "bb" "ccc" } { .length? }
-; returns 1 2 3</code></pre>
+; returns { 2 3 4 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map { "aaa" "bb" "c" } { .length? }
+; returns { 3 2 1 }</code></pre>
 </div>
-<h3>map\pos</h3><p>Pure Builtin(2): Maps values of a block to a new block by evaluating a block of code.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map { 1 2 3 } { + 1 }
-; returns 2 3 4</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map { "a" "bb" "ccc" } { .length? }
-; returns 1 2 3</code></pre>
+<h3>map\pos</h3><p>Pure Builtin(3): Maps values of a block to a new block by evaluating a block of code.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map\pos { 1 2 3 } 'i { + i }
+; returns { 2 4 6 }</code></pre>
 </div>
-<h3>filter</h3><p>Pure Builtin(2): Maps values of a block to a new block by evaluating a block of code.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map { 1 2 3 } { + 1 }
-; returns 2 3 4</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map { "a" "bb" "ccc" } { .length? }
-; returns 1 2 3</code></pre>
+<h3>filter</h3><p>Pure Builtin(2): Filters values from a seris based on return of a injected code block.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>filter { 1 2 3 } { .even }
+; returns { 2 }</code></pre>
 </div>
-<h3>reduce</h3><p>Pure Builtin(2): Maps values of a block to a new block by evaluating a block of code.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map { 1 2 3 } { + 1 }
-; returns 2 3 4</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map { "a" "bb" "ccc" } { .length? }
-; returns 1 2 3</code></pre>
+<h3>seek</h3><p>Pure Builtin(2): Seek over a series until a Block of code returns True.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>seek { 1 2 3 } { .even }
+; returns 2</code></pre>
+</div>
+<h3>purge</h3><p>Builtin(2): Purges values from a series based on return of a injected code block.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>purge { 1 3 3 } { .even }
+; returns { 1 3 }</code></pre>
+</div>
+<h3>reduce</h3><p>Pure Builtin(3): Reduces values of a block to a new block by evaluating a block of code ...</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>reduce { 1 2 3 } 'acc { + acc }
+; returns 6</code></pre>
 </div>
 <h3>fold</h3><p>Pure Builtin(2): Maps values of a block to a new block by evaluating a block of code.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map { 1 2 3 } { + 1 }
-; returns 2 3 4</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map { "a" "bb" "ccc" } { .length? }
-; returns 1 2 3</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>fold { 1 2 3 } 'acc 1 { + acc }
+; returns 7</code></pre>
 </div>
 <h3>produce</h3><p>Pure Builtin(2): Maps values of a block to a new block by evaluating a block of code.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map { 1 2 3 } { + 1 }
-; returns 2 3 4</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map { "a" "bb" "ccc" } { .length? }
-; returns 1 2 3</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>produce 5 0 { + 3 }
+; returns 15</code></pre>
 </div>
 <h3>sum-up</h3><p>Pure Builtin(2): Maps values of a block to a new block by evaluating a block of code.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map { 1 2 3 } { + 1 }
-; returns 2 3 4</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map { "a" "bb" "ccc" } { .length? }
-; returns 1 2 3</code></pre>
-</div>
-<h3>seek</h3><p>Pure Builtin(2): Maps values of a block to a new block by evaluating a block of code.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map { 1 2 3 } { + 1 }
-; returns 2 3 4</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map { "a" "bb" "ccc" } { .length? }
-; returns 1 2 3</code></pre>
-</div>
-<h3>purge</h3><p>Pure Builtin(2): Maps values of a block to a new block by evaluating a block of code.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map { 1 2 3 } { + 1 }
-; returns 2 3 4</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map { "a" "bb" "ccc" } { .length? }
-; returns 1 2 3</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>sum-up { 1 2 3 } { * 10 }
+; returns 60</code></pre>
 </div>
 </div>
 <h2>Context related functions</h2><p>Functions for handling and working with Context.</p><div class='section'>
@@ -432,32 +475,32 @@
 ; returns ctx</code></pre>
 </div>
 <h3>context</h3><p>Builtin(1): Creates a new context with no parent</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>cc: context { } |type?
-; returns ctx</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>context { x: does { 1 + 1 } } :cc , cc
+; returns 2</code></pre>
 </div>
 <h3>isolate</h3><p>Builtin(1):</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>cc: isolate { } |type?
-; returns ctx</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>isolate { x: does { 1 + 1 } } :cc , try { cc } |type?
+; returns error</code></pre>
 </div>
 <h3>raw-context</h3><p>Builtin(1):</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>cc: raw-context { } |type?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc: raw-context { name: "Jim" } |type?
 ; returns ctx</code></pre>
 </div>
-<h3>private</h3><p>Builtin(1):</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>cc: raw-context { } |type?
-; returns ctx</code></pre>
+<h3>private</h3><p>Builtin(1): Creates a new context with current parent, returns last value</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>private { x: 3 , x + 30 } :x
+; returns 33</code></pre>
 </div>
-<h3>extend</h3><p>Builtin(1):</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>cc: raw-context { } |type?
-; returns ctx</code></pre>
+<h3>extend</h3><p>Builtin(2): Extends a context with a new context in place and returns it.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c1: context { x: 1 } , c2: extend c1 { y: 2 } , c2
+; returns 1</code></pre>
 </div>
-<h3>bind</h3><p>Builtin(1):</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>cc: raw-context { } |type?
-; returns ctx</code></pre>
+<h3>bind</h3><p>Builtin(2):</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>isolate { x: does { 1 + 1 } } |bind current-ctx :cc , cc
+; returns 2</code></pre>
 </div>
-<h3>unbind</h3><p>Builtin(1):</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>cc: raw-context { } |type?
-; returns ctx</code></pre>
+<h3>unbind</h3><p>Builtin(1): Accepts a Context and unbinds it from it's parent Context.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>context { x: does { 1 + 1 } } |unbind :cc , try { cc } |type?
+; returns error</code></pre>
 </div>
 </div>
 <h2>Functions that change values in-place</h2><p>Functions that mostly work with blocks.</p><div class='section'>
@@ -476,13 +519,21 @@
 <p class='comment'>Functions that change values in-place are used more rarely in Rye and have ! at the end.</p>
 <h3>remove-last!</h3><p>Builtin(1): Accepts Block and returns the next value and removes it from the Block.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>b: { 1 2 3 } , remove-last! 'b , b
-; returns 1 2</code></pre>
+; returns { 1 2 }</code></pre>
 </div>
 <h3>append!</h3><p>Builtin(2): Accepts Rye value and Tagword with a Block or String. Appends Rye value to Block/String in place, also returns it	.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>b: { 1 2 3 } , append! 4 'b , b
-; returns 1 2 3 4</code></pre>
+; returns { 1 2 3 4 }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>b: { 1 2 3 } , append! { 4 5 } 'b , b
-; returns 1 2 3 { 4 5 }</code></pre>
+; returns { 1 2 3 { 4 5 } }</code></pre>
+</div>
+<h3>sort!</h3><p>Builtin(2): Accepts Rye value and Tagword with a Block or String. Appends Rye value to Block/String in place, also returns it	.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>b: { 1 2 4 7 } , sort! b , b
+; returns { 1 2 4 7 }</code></pre>
+</div>
+<h3>reverse!</h3><p>Builtin(2): Accepts Rye value and Tagword with a Block or String. Appends Rye value to Block/String in place, also returns it	.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>b: { 2 7 1 4 } , reverse! b , b
+; returns { 2 7 1 4 }</code></pre>
 </div>
 </div>
 </body>
