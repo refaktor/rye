@@ -1,9 +1,0 @@
-
-rye .needs { 'telegram }
-
-new-telegram-bot trim read %.token
-|on-update { .probe } 
-
-
-
-
