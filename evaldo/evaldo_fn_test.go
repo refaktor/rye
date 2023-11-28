@@ -22,7 +22,7 @@ func TestEvaldo_function1_just_return_integer(t *testing.T) {
 
 	idx, found := es.Idx.GetIndex("fun1")
 	if found {
-		body := []env.Object{env.Integer{234}}
+		body := []env.Object{*env.NewInteger(234)}
 		spec := []env.Object{}
 		es.Ctx.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body)), false))
 
@@ -48,7 +48,7 @@ func TestEvaldo_function1_just_return_integer_in_loop(t *testing.T) {
 
 	idx, found := es.Idx.GetIndex("fun1")
 	if found {
-		body := []env.Object{env.Integer{2345}}
+		body := []env.Object{*env.NewInteger(2345)}
 		spec := []env.Object{}
 		es.Ctx.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body)), false))
 
@@ -77,8 +77,8 @@ func TestEvaldo_function2_call_builtin_in_func(t *testing.T) {
 	if found {
 		incidx, found1 := es.Idx.GetIndex("inc")
 		//printidx, _ := es.Idx.GetIndex("print")
-		if found1 { // env.Word{printidx},
-			body := []env.Object{env.Word{incidx}, env.Word{incidx}, env.Word{incidx}, env.Integer{330}}
+		if found1 { // *env.NewWord(printidx),
+			body := []env.Object{*env.NewWord(incidx), *env.NewWord(incidx), *env.NewWord(incidx), *env.NewInteger(330)}
 			spec := []env.Object{}
 			es.Ctx.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body)), false))
 
@@ -110,8 +110,8 @@ func TestEvaldo_function3_arg_unit_func(t *testing.T) {
 	if found {
 		aaaidx := es.Idx.IndexWord("aaa")
 		//printidx, _ := es.Idx.GetIndex("print")
-		body := []env.Object{env.Word{aaaidx}}
-		spec := []env.Object{env.Word{aaaidx}}
+		body := []env.Object{*env.NewWord(aaaidx)}
+		spec := []env.Object{*env.NewWord(aaaidx)}
 		es.Ctx.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body)), false))
 
 		EvalBlock(es)
@@ -139,12 +139,12 @@ func TestEvaldo_function3_arg_inc_func(t *testing.T) {
 	if found {
 		incidx, found1 := es.Idx.GetIndex("inc")
 		//printidx, _ := es.Idx.GetIndex("print")
-		if found1 { // env.Word{printidx},
+		if found1 { // *env.NewWord(printidx),
 
 			aaaidx := es.Idx.IndexWord("aaa")
 			//printidx, _ := es.Idx.GetIndex("print")
-			spec := []env.Object{env.Word{aaaidx}}
-			body := []env.Object{env.Word{incidx}, env.Word{aaaidx}}
+			spec := []env.Object{*env.NewWord(aaaidx)}
+			body := []env.Object{*env.NewWord(incidx), *env.NewWord(aaaidx)}
 			es.Ctx.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body)), false))
 
 			EvalBlock(es)
@@ -175,12 +175,12 @@ func TestEvaldo_function3_arg_unit_func_loop(t *testing.T) {
 	if found {
 		//incidx, found1 := es.Idx.GetIndex("inc")
 		//printidx, _ := es.Idx.GetIndex("print")
-		//if found1 { // env.Word{printidx},
+		//if found1 { // *env.NewWord(printidx),
 
 		aaaidx := es.Idx.IndexWord("aaa")
 		//printidx, _ := es.Idx.GetIndex("print")
-		spec := []env.Object{env.Word{aaaidx}}
-		body := []env.Object{env.Word{aaaidx}}
+		spec := []env.Object{*env.NewWord(aaaidx)}
+		body := []env.Object{*env.NewWord(aaaidx)}
 		es.Ctx.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body)), false))
 
 		EvalBlock(es)
@@ -212,12 +212,12 @@ func TestEvaldo_function3_arg_inc_func_loop(t *testing.T) {
 	if found {
 		incidx, found1 := es.Idx.GetIndex("inc")
 		//printidx, _ := es.Idx.GetIndex("print")
-		if found1 { // env.Word{printidx},
+		if found1 { // *env.NewWord(printidx),
 
 			aaaidx := es.Idx.IndexWord("aaa")
 			//printidx, _ := es.Idx.GetIndex("print")
-			spec := []env.Object{env.Word{aaaidx}}
-			body := []env.Object{env.Word{incidx}, env.Word{aaaidx}}
+			spec := []env.Object{*env.NewWord(aaaidx)}
+			body := []env.Object{*env.NewWord(incidx), *env.NewWord(aaaidx)}
 			es.Ctx.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body)), false))
 
 			EvalBlock(es)
@@ -250,12 +250,12 @@ func _TestEvaldo_function4_simple_recur(t *testing.T) {
 		recuridx, _ := es.Idx.GetIndex("recur1if")
 		printidx, _ := es.Idx.GetIndex("print")
 		greateridx, _ := es.Idx.GetIndex("greater")
-		if found1 { // env.Word{printidx},
+		if found1 { // *env.NewWord(printidx),
 
 			aaaidx := es.Idx.IndexWord("aaa")
 			//printidx, _ := es.Idx.GetIndex("print")
-			spec := []env.Object{env.Word{aaaidx}}
-			body := []env.Object{env.Word{printidx}, env.Word{aaaidx}, env.Word{recuridx}, env.Word{greateridx}, env.Integer{99}, env.Word{aaaidx}, env.Word{incidx}, env.Word{aaaidx}}
+			spec := []env.Object{*env.NewWord(aaaidx)}
+			body := []env.Object{*env.NewWord(printidx), *env.NewWord(aaaidx), *env.NewWord(recuridx), *env.NewWord(greateridx), *env.NewInteger(99), *env.NewWord(aaaidx), *env.NewWord(incidx), *env.NewWord(aaaidx)}
 			es.Ctx.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body)), false))
 
 			EvalBlock(es)

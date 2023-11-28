@@ -107,6 +107,11 @@ type Decimal struct {
 	Value float64 `bson: "value"`
 }
 
+func NewDecimal(val float64) *Decimal {
+	nat := Decimal{val}
+	return &nat
+}
+
 // Type returns the type of the Decimal.
 func (i Decimal) Type() Type {
 	return DecimalType
@@ -138,6 +143,11 @@ func (i Decimal) GetKind() int {
 // String represents an string.
 type String struct {
 	Value string `bson: "value"`
+}
+
+func NewString(val string) *String {
+	nat := String{val}
+	return &nat
 }
 
 // Type returns the type of the Integer.
@@ -178,6 +188,11 @@ type Date struct {
 
 func (i Date) Type() Type {
 	return DateType
+}
+
+func NewDate(val time.Time) *Date {
+	nat := Date{val}
+	return &nat
 }
 
 func (i Date) Inspect(e Idxs) string {
@@ -356,6 +371,11 @@ func (i Block) GetKind() int {
 // Integer represents an integer.
 type Word struct {
 	Index int
+}
+
+func NewWord(val int) *Word {
+	nat := Word{val}
+	return &nat
 }
 
 // Type returns the type of the Integer.
@@ -1435,6 +1455,11 @@ func (i Converter) GetKind() int {
 
 type Time struct {
 	Value time.Time
+}
+
+func NewTime(val time.Time) *Time {
+	nat := Time{val}
+	return &nat
 }
 
 // Type returns the type of the Integer.

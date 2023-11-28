@@ -18,6 +18,11 @@ type SpreadsheetRow struct {
 	Uplink *Spreadsheet
 }
 
+func NewSpreadsheetRow(values []interface{}, uplink *Spreadsheet) *SpreadsheetRow {
+	nat := SpreadsheetRow{values, uplink}
+	return &nat
+}
+
 type Spreadsheet struct {
 	Cols      []string
 	Rows      []SpreadsheetRow

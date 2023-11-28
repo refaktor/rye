@@ -31,7 +31,7 @@ func TestBuiltin_inc(t *testing.T) {
 	genv := loader.GetIdxs()
 	builtin := builtins["inc"]
 	es := env.NewProgramState(env.TSeries{}, genv)
-	obj := builtin.Fn(es, env.Integer{100}, nil, nil, nil, nil)
+	obj := builtin.Fn(es, *env.NewInteger(100), nil, nil, nil, nil)
 	fmt.Println(obj.(env.Object).Inspect(*genv))
 	if obj.(env.Integer).Value != 101 {
 		t.Error("Not 101 returned")
@@ -42,7 +42,7 @@ func TestBuiltin_print(t *testing.T) {
 	genv := loader.GetIdxs()
 	builtin := builtins["print"]
 	es := env.NewProgramState(env.TSeries{}, genv)
-	obj := builtin.Fn(es, env.Integer{1010101010101}, nil, nil, nil, nil)
+	obj := builtin.Fn(es, *env.NewInteger(1010101010101), nil, nil, nil, nil)
 	fmt.Println(obj.(env.Object).Inspect(*genv))
 	if obj.(env.Integer).Value != 1010101010101 {
 		t.Error("Not 1010101010101 returned")

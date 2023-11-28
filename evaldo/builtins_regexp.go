@@ -32,9 +32,9 @@ var Builtins_regexp = map[string]*env.Builtin{
 				case env.Native:
 					res := s.Value.(*regexp.Regexp).MatchString(val.Value)
 					if res {
-						return env.Integer{1}
+						return *env.NewInteger(1)
 					} else {
-						return env.Integer{0}
+						return *env.NewInteger(0)
 					}
 				default:
 					return MakeError(env1, "Arg2 not Native")
@@ -54,7 +54,7 @@ var Builtins_regexp = map[string]*env.Builtin{
 				case env.Native:
 					res := s.Value.(*regexp.Regexp).FindStringSubmatch(val.Value)
 					if len(res) > 1 {
-						return env.String{res[1]}
+						return *env.NewString(res[1])
 					} else {
 						return MakeError(env1, "No submatch")
 					}
@@ -75,7 +75,7 @@ var Builtins_regexp = map[string]*env.Builtin{
 				switch s := arg0.(type) {
 				case env.Native:
 					res := s.Value.(*regexp.Regexp).FindString(val.Value)
-					return env.String{res}
+					return *env.NewString(res)
 				default:
 					return MakeError(env1, "Arg2 not Native")
 				}
@@ -95,7 +95,7 @@ var Builtins_regexp = map[string]*env.Builtin{
 					switch replac := arg2.(type) {
 					case env.String:
 						res := re.Value.(*regexp.Regexp).ReplaceAllString(val.Value, replac.Value)
-						return env.String{res}
+						return *env.NewString(res)
 					default:
 						return MakeError(env1, "Arg2 not Native")
 					}

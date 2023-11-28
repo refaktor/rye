@@ -126,7 +126,7 @@ func evalWord(word env.Word, es *env.ProgramState, val interface{}) (interface{}
 		}
 	case "required":
 		if val == nil {
-			return val, env.String{"required"}
+			return val, *env.NewString("required")
 		} else {
 			return val, nil
 		}
@@ -164,81 +164,81 @@ func evalWord_List(word env.Word, es *env.ProgramState, vals env.List) (env.List
 			return *env.NewList(res), nil // TODO ... make error
 		}
 	default:
-		return vals, env.String{"unknown word in list validation"} // TODO --- this is not a validation error exactly, but more like error in validation code .. think about
+		return vals, *env.NewString("unknown word in list validation") // TODO --- this is not a validation error exactly, but more like error in validation code .. think about
 	}
 }
 
 func evalInteger(val interface{}) (interface{}, env.Object) {
 	switch val1 := val.(type) {
 	case int64:
-		return env.Integer{val1}, nil
+		return *env.NewInteger(val1), nil
 	case env.Integer:
 		return val1, nil
 	case string:
 		v, e := strconv.Atoi(val1)
 		if e != nil {
-			return val, env.String{"not integer"}
+			return val, *env.NewString("not integer")
 		} else {
-			return env.Integer{int64(v)}, nil
+			return *env.NewInteger(int64(v)), nil
 		}
 	case env.String:
 		v, e := strconv.Atoi(val1.Value)
 		if e != nil {
-			return val, env.String{"not integer"}
+			return val, *env.NewString("not integer")
 		} else {
-			return env.Integer{int64(v)}, nil
+			return *env.NewInteger(int64(v)), nil
 		}
 	default:
-		return val, env.String{"not integer"}
+		return val, *env.NewString("not integer")
 	}
 }
 
 func evalDecimal(val interface{}) (interface{}, env.Object) {
 	switch val1 := val.(type) {
 	case float64:
-		return env.Decimal{val1}, nil
+		return *env.NewDecimal(val1), nil
 	case env.Decimal:
 		return val1, nil
 	case string:
 		v, e := strconv.ParseFloat(val1, 64)
 		if e != nil {
-			return val, env.String{"not decimal"}
+			return val, *env.NewString("not decimal")
 		} else {
-			return env.Decimal{float64(v)}, nil
+			return *env.NewDecimal(float64(v)), nil
 		}
 	case env.String:
 		v, e := strconv.ParseFloat(val1.Value, 64)
 		if e != nil {
-			return val, env.String{"not decimal"}
+			return val, *env.NewString("not decimal")
 		} else {
-			return env.Decimal{float64(v)}, nil
+			return *env.NewDecimal(float64(v)), nil
 		}
 	default:
-		return val, env.String{"not decimal"}
+		return val, *env.NewString("not decimal")
 	}
 }
 
 func evalString(val interface{}) (interface{}, env.Object) {
 	switch val1 := val.(type) {
 	case int64:
-		return env.String{strconv.FormatInt(val1, 10)}, nil
+		return *env.NewString(strconv.FormatInt(val1, 10)), nil
 	case env.Integer:
-		return env.String{strconv.FormatInt(val1.Value, 10)}, nil
+		return *env.NewString(strconv.FormatInt(val1.Value, 10)), nil
 	case string:
-		return env.String{val1}, nil
+		return *env.NewString(val1), nil
 	case env.String:
 		return val1, nil
 	default:
-		return val1, env.String{"not string"}
+		return val1, *env.NewString("not string")
 	}
 }
 
 func parseEmail(v string) (interface{}, env.Object) {
 	e, err := mail.ParseAddress(v)
 	if err != nil {
-		return v, env.String{"not email"}
+		return v, *env.NewString("not email")
 	}
-	return env.String{e.Address}, nil
+	return *env.NewString(e.Address), nil
 }
 
 func evalEmail(val interface{}) (interface{}, env.Object) {
@@ -248,7 +248,7 @@ func evalEmail(val interface{}) (interface{}, env.Object) {
 	case string:
 		return parseEmail(val1)
 	default:
-		return val, env.String{"not email"}
+		return val, *env.NewString("not email")
 	}
 }
 
@@ -256,18 +256,18 @@ func parseDate(v string) (interface{}, env.Object) {
 	if strings.Index(v[0:3], ".") > 0 {
 		d, e := time.Parse("02.01.2006", v)
 		if e != nil {
-			return v, env.String{"not date"}
+			return v, *env.NewString("not date")
 		}
 		fmt.Println(d)
-		return env.Date{d}, nil
+		return *env.NewDate(d), nil
 	} else if strings.Index(v[3:5], ":") > 0 {
 		d, e := time.Parse("2006-01-02", v)
 		if e != nil {
-			return v, env.String{"not date"}
+			return v, *env.NewString("not date")
 		}
-		return env.Date{d}, nil
+		return *env.NewDate(d), nil
 	}
-	return v, env.String{"not date"}
+	return v, *env.NewString("not date")
 }
 
 func evalDate(val interface{}) (interface{}, env.Object) {
@@ -277,7 +277,7 @@ func evalDate(val interface{}) (interface{}, env.Object) {
 	case string:
 		return parseDate(val1)
 	default:
-		return val, env.String{"not date"}
+		return val, *env.NewString("not date")
 	}
 }
 

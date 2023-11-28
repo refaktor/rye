@@ -46,7 +46,7 @@ var Builtins_vector = map[string]*env.Builtin{
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Vector:
-				return env.Decimal{govector.Norm(val.Value, 2.0)}
+				return *env.NewDecimal(govector.Norm(val.Value, 2.0))
 			default:
 				return MakeError(env1, "Arg1 not Vector")
 			}
@@ -58,7 +58,7 @@ var Builtins_vector = map[string]*env.Builtin{
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Vector:
-				return env.Decimal{val.Value.Sd()}
+				return *env.NewDecimal(val.Value.Sd())
 			default:
 				return MakeError(env1, "Arg1 not String")
 			}
@@ -76,7 +76,7 @@ var Builtins_vector = map[string]*env.Builtin{
 					if err != nil {
 						return MakeError(env1, err.Error())
 					}
-					return env.Decimal{res}
+					return *env.NewDecimal(res)
 				default:
 					return MakeError(env1, "Arg2 not Vector")
 				}
@@ -97,7 +97,7 @@ var Builtins_vector = map[string]*env.Builtin{
 					if err != nil {
 						return MakeError(env1, err.Error())
 					}
-					return env.Decimal{res}
+					return *env.NewDecimal(res)
 				default:
 					return MakeError(env1, "Arg2 not Vector")
 				}
@@ -118,7 +118,7 @@ var Builtins_vector = map[string]*env.Builtin{
 					if err != nil {
 						return MakeError(env1, err.Error())
 					}
-					return env.Decimal{res}
+					return *env.NewDecimal(res)
 				default:
 					return MakeError(env1, "Arg2 not Vector")
 				}

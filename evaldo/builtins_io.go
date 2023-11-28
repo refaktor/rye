@@ -30,7 +30,7 @@ func __input(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Ob
 		fmt.Print(str)
 		inp, _ := reader.ReadString('\n')
 		fmt.Println(inp) */
-		return env.String{input}
+		return *env.NewString(input)
 	default:
 		ps.FailureFlag = true
 		return MakeArgError(ps, 1, []env.Type{env.StringType}, "__input")
@@ -110,7 +110,7 @@ func __read_all(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env
 			ps.FailureFlag = true
 			return MakeBuiltinError(ps, "Error reading file.", "__read_all")
 		}
-		return env.String{string(data)}
+		return *env.NewString(string(data))
 	default:
 		ps.FailureFlag = true
 		return MakeArgError(ps, 1, []env.Type{env.NativeType}, "__read_all")
@@ -125,7 +125,7 @@ func __close(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Ob
 			ps.FailureFlag = true
 			return MakeBuiltinError(ps, err.Error(), "__close")
 		}
-		return env.String{""}
+		return *env.NewString("")
 	default:
 		ps.FailureFlag = true
 		return MakeArgError(ps, 1, []env.Type{env.NativeType}, "__close")
@@ -142,7 +142,7 @@ func __write(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Ob
 				ps.FailureFlag = true
 				return MakeBuiltinError(ps, err.Error(), "__write")
 			}
-			return env.Integer{int64(bytesWritten)}
+			return *env.NewInteger(int64(bytesWritten))
 			//log.Printf("Wrote %d bytes.\n", bytesWritten)
 		default:
 			ps.FailureFlag = true
@@ -161,7 +161,7 @@ func __fs_read(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.
 		if err != nil {
 			return MakeBuiltinError(ps, err.Error(), "__fs_read")
 		}
-		return env.String{string(data)}
+		return *env.NewString(string(data))
 	default:
 		return MakeArgError(ps, 1, []env.Type{env.UriType}, "__fs_read")
 	}
@@ -196,7 +196,7 @@ func __fs_read_lines(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg
 		lines := make([]env.Object, 0)
 		sc := bufio.NewScanner(file)
 		for sc.Scan() {
-			lines = append(lines, env.String{sc.Text()}) // GET the line string
+			lines = append(lines, *env.NewString(sc.Text())) // GET the line string
 		}
 		if err := sc.Err(); err != nil {
 			log.Fatalf("scan file error: %v", err)
@@ -288,7 +288,7 @@ func __https_s_get(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 
 		body, err := ioutil.ReadAll(resp.Body)
 
 		if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
-			return env.String{string(body)}
+			return *env.NewString(string(body))
 		} else {
 			ps.FailureFlag = true
 			errMsg := fmt.Sprintf("Status Code: %v, Body: %v", resp.StatusCode, string(body))
@@ -342,7 +342,7 @@ func __http_s_post(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 
 				}
 
 				if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
-					return env.String{string(body)}
+					return *env.NewString(string(body))
 				} else {
 					// fmt.Println("ERR33")
 					ps.FailureFlag = true
@@ -413,7 +413,7 @@ func __email_send(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 e
 					return env.NewError(err.Error())
 				}
 			*/
-			return env.Integer{1}
+			return *env.NewInteger(1)
 		default:
 			ps.FailureFlag = true
 			return MakeArgError(ps, 2, []env.Type{env.StringType}, "__email_send")
@@ -520,7 +520,7 @@ func __https_response__read_body(ps *env.ProgramState, arg0 env.Object, arg1 env
 		if err != nil {
 			return MakeBuiltinError(ps, err.Error(), "__https_response__read_body")
 		}
-		return env.String{string(data)}
+		return *env.NewString(string(data))
 	default:
 		ps.FailureFlag = true
 		return MakeArgError(ps, 1, []env.Type{env.NativeType}, "__https_response__read_body")
@@ -561,10 +561,10 @@ var Builtins_io = map[string]*env.Builtin{
 			case env.Uri:
 				path := strings.Split(s.Path, "://")
 				ext := filepath.Ext(path[1])
-				return env.String{ext}
+				return *env.NewString(ext)
 			case env.String:
 				ext := filepath.Ext(s.Value)
-				return env.String{ext}
+				return *env.NewString(ext)
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.UriType, env.StringType}, "file-ext?")
 			}
@@ -627,7 +627,7 @@ var Builtins_io = map[string]*env.Builtin{
 			switch s := arg0.(type) {
 			case env.Native:
 				size := s.Value.(os.FileInfo).Size()
-				return env.Integer{size}
+				return *env.NewInteger(size)
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "file-info//size?")
 			}

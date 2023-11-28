@@ -95,13 +95,13 @@ func RyeToJSON(res interface{}) string {
 func JsonToRye(res interface{}) env.Object {
 	switch v := res.(type) {
 	case float64:
-		return env.Integer{int64(math.Round(v))}
+		return *env.NewInteger(int64(math.Round(v)))
 	case int:
-		return env.Integer{int64(v)}
+		return *env.NewInteger(int64(v))
 	case int64:
-		return env.Integer{v}
+		return *env.NewInteger(v)
 	case string:
-		return env.String{v}
+		return *env.NewString(v)
 	case map[string]interface{}:
 		return *env.NewDict(v)
 	case []interface{}:
@@ -194,7 +194,7 @@ var Builtins_json = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "Takes a Rye value and returns it encoded into JSON.",
 		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return env.String{RyeToJSON(arg0)}
+			return *env.NewString(RyeToJSON(arg0))
 		},
 	},
 }

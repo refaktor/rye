@@ -328,7 +328,7 @@ func DoGeneralInput(es *env.ProgramState, prompt string) {
 	line := liner.NewLiner()
 	defer line.Close()
 	if code, err := line.SimplePrompt(prompt); err == nil {
-		es.Res = env.String{code}
+		es.Res = *env.NewString(code)
 	} else {
 		log.Print("Error reading line: ", err)
 	}
@@ -338,7 +338,7 @@ func DoGeneralInputField(es *env.ProgramState, prompt string) {
 	line := liner.NewLiner()
 	defer line.Close()
 	if code, err := line.SimpleTextField(prompt, 5); err == nil {
-		es.Res = env.String{code}
+		es.Res = *env.NewString(code)
 	} else {
 		log.Print("Error reading line: ", err)
 	}

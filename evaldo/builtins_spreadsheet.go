@@ -279,9 +279,9 @@ func GenerateColumn(ps *env.ProgramState, s env.Spreadsheet, name env.Word, extr
 						return nil
 					}
 					if firstVal == nil {
-						firstVal = env.String{val}
+						firstVal = *env.NewString(val)
 					}
-					ctx.Set(w.Index, env.String{val})
+					ctx.Set(w.Index, *env.NewString(val))
 				}
 			}
 			// execute the block of code injected with first value

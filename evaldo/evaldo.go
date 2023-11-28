@@ -297,7 +297,7 @@ func EvalExpressionConcrete(ps *env.ProgramState) *env.ProgramState {
 				ps.Res = object
 			}
 		case env.TagwordType:
-			ps.Res = env.Word{object.(env.Tagword).Index}
+			ps.Res = *env.NewWord(object.(env.Tagword).Index)
 			return ps
 		case env.WordType:
 			rr := EvalWord(ps, object.(env.Word), nil, false, false)
@@ -353,7 +353,7 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 				i += 1
 				goto gogo1
 			case env.Dict:
-				return found, env.String{"asdsad"}, currCtx
+				return found, *env.NewString("asdsad"), currCtx
 			}
 		}
 		return found, object, currCtx

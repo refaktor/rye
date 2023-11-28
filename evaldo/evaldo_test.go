@@ -71,7 +71,7 @@ func TestEvaldo_load_word1(t *testing.T) {
 	es := env.NewProgramState(block.(env.Block).Series, genv)
 	idx, found := es.Idx.GetIndex("someval")
 	if found {
-		es.Ctx.Set(idx, env.Integer{10101})
+		es.Ctx.Set(idx, *env.NewInteger(10101))
 
 		if block.(env.Block).Series.Len() != 1 {
 			t.Error("Expected 1 items")
@@ -104,7 +104,7 @@ func TestEvaldo_load_setword1_pass_val(t *testing.T) {
 	es := env.NewProgramState(block.(env.Block).Series, genv)
 	idx, found := es.Idx.GetIndex("someval")
 	if found {
-		es.Ctx.Set(idx, env.Integer{10101})
+		es.Ctx.Set(idx, *env.NewInteger(10101))
 
 		if block.(env.Block).Series.Len() != 2 {
 			t.Error("Expected 2 items")
@@ -133,7 +133,7 @@ func TestEvaldo_load_setword1_stores_val(t *testing.T) {
 	es := env.NewProgramState(block.(env.Block).Series, genv)
 	idx, found := es.Idx.GetIndex("someval")
 	if found {
-		es.Ctx.Set(idx, env.Integer{10101})
+		es.Ctx.Set(idx, *env.NewInteger(10101))
 
 		EvalBlock(es)
 
@@ -336,7 +336,7 @@ func TestEvaldo_load_lsetword1(t *testing.T) {
 	es := env.NewProgramState(block.(env.Block).Series, genv)
 	idx, found := es.Idx.GetIndex("lword")
 	if found {
-		es.Ctx.Set(idx, env.Integer{0})
+		es.Ctx.Set(idx, *env.NewInteger(0))
 
 		if block.(env.Block).Series.Len() != 4 {
 			t.Error("Expected 4 items")
