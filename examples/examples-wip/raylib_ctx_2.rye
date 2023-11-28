@@ -1,0 +1,29 @@
+
+raylib: context {
+	init: ?raylib-init
+	set-target-fps: ?raylib-set-target-fps
+	begin-drawing: ?raylib-begin-drawing
+	clear-background: ?raylib-clear-background
+	draw-circle: ?raylib-draw-circle
+	end-drawing: ?raylib-end-drawing
+	main-loop: ?raylib-main-loop
+	black: ?raylib-black
+	gold: ?raylib-gold
+}
+
+with-context raylib {
+
+	cx: 0 - r: 60
+	width: 300 height: 260
+
+	init width 260 "Rye raylib demo"
+	set-target-fps 60
+	main-loop {
+		begin-drawing
+		clear-background black
+		draw-circle cx height / 2 r gold
+		end-drawing
+		cx: either width < cx - r { print "wrap around" , 0 - r } { cx + 5 }
+	}
+	
+}

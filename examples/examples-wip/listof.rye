@@ -1,0 +1,7 @@
+
+print "json listof"
+
+data: '[ { "name": "jim" , "score": 1000 }, { "name": "anne", "score": 2200 } ]'
+
+// drop-in "xx" {}
+

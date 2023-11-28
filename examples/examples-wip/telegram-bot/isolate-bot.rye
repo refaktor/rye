@@ -1,0 +1,50 @@
+
+rye .needs { 'telegram }
+
+bot: new-telegram-bot trim read %.token
+
+botctx: isolate {
+
+	i-am: fnc { name } parent-ctx { "Hi " + name }
+	
+	add: fnc { a b } parent-ctx { a + b }
+
+	chuck?: fnc { } parent-ctx {
+		get https://api.chucknorris.io/jokes/random |parse-json -> "value"
+	}
+	
+}
+
+produce-reply: fn { msg } {
+	load msg/text
+	|print
+	|do-in\try* botctx
+}
+
+; helper functions
+
+extract-message: fn { telegram-update-obj } {
+	-> "Message" :msg
+	context { msg -> "Chat" -> "ID" :id , msg -> "Text" :text }
+}
+
+reply: fn { text msg bot } {
+	new-telegram-message msg/id to-string text
+	|send bot
+}
+
+; msg update loop
+
+bot .on-update { .extract-message :msg |produce-reply |reply msg bot }
+
+
+
+
+
+
+
+; bot .on-update { .probe } 
+
+
+
+

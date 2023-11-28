@@ -1,0 +1,16 @@
+ 
+  ; Telegram Echo bot
+  ; ~ echoes back the message you send it
+
+  token: trim read %.token
+
+  new-telegram-bot token :bot
+  |on-update {
+  	  -> "Message" :msg -> "Chat" -> "ID"
+	  |new-telegram-message "Text" <- msg
+	  |send bot
+  }
+
+
+
+

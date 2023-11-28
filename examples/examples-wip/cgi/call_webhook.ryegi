@@ -1,0 +1,24 @@
+#!/home/chey/ryetiny cgi
+
+serve-cgi 'r 'w {
+	
+	id: query? r "id"
+	cookie: cookie-val? r "RSPSID"
+	
+	base-url: https://www.cebelca.biz/manage/DR-srv.html
+	
+	my-call: pipe { |new-request 'POST "" |set-header 'Cookie "RSPSID=" + cookie |call |read-body }
+	
+	; call cebeleca to get webhook settings
+	base-url + { '_r "account" '_m "get-webhook-settings" }
+	|my-call |load-val :uri
+	
+	; call cebelca to get the inventory quantities
+	base-url + { '_r "item" '_m "select-inventory" 'page "0" 'limit-to-transfer id "700" 'date "01.01.2030" }
+	|my-call :data
+	
+	; post this to given url to perform a webhook
+	post uri data :resp
+	write w resp
+	
+}
