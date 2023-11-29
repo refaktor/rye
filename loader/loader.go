@@ -133,7 +133,7 @@ func parseBlock(v *Values, d Any) (Any, error) {
 		block = block[0 : len(v.Vs)-1+ofs]
 	}
 	ser := env.NewTSeries(block)
-	return env.Block{*ser, 0}, nil
+	return *env.NewBlock2(*ser, 0), nil
 }
 
 func parseBBlock(v *Values, d Any) (Any, error) {
@@ -151,7 +151,7 @@ func parseBBlock(v *Values, d Any) (Any, error) {
 		block = block[0 : len(v.Vs)-1+ofs]
 	}
 	ser := env.NewTSeries(block)
-	return env.Block{*ser, 1}, nil
+	return *env.NewBlock2(*ser, 1), nil
 }
 
 func parseGroup(v *Values, d Any) (Any, error) {
@@ -176,24 +176,24 @@ func parseGroup(v *Values, d Any) (Any, error) {
 		block = block[0 : len(v.Vs)-1+ofs]
 	}
 	ser := env.NewTSeries(block)
-	return env.Block{*ser, 2}, nil
+	return *env.NewBlock2(*ser, 2), nil
 }
 
 func parseNumber(v *Values, d Any) (Any, error) {
 	val, er := strconv.ParseInt(v.Token(), 10, 64)
-	return env.Integer{val}, er
+	return *env.NewInteger(val), er
 }
 
 func parseDecimal(v *Values, d Any) (Any, error) {
 	val, er := strconv.ParseFloat(v.Token(), 64)
-	return env.Decimal{val}, er
+	return *env.NewDecimal(val), er
 }
 
 func parseString(v *Values, d Any) (Any, error) {
 	str := v.Token()[1 : len(v.Token())-1]
 	// turn \n to newlines
 	str = strings.Replace(str, "\\n", "\n", -1)
-	return env.String{str}, nil
+	return *env.NewString(str), nil
 }
 
 func parseUri(v *Values, d Any) (Any, error) {
@@ -202,12 +202,12 @@ func parseUri(v *Values, d Any) (Any, error) {
 }
 
 func parseEmail(v *Values, d Any) (Any, error) {
-	return env.Email{v.Token()}, nil
+	return *env.NewEmail(v.Token()), nil
 }
 
 func parseFpath(v *Values, d Any) (Any, error) {
 	idx := wordIndex.IndexWord("file")
-	return *env.NewUri(wordIndex, env.Word{idx}, "file://"+v.Token()[1:]), nil // ){v.Vs[0].(env.Word), v.Token()}, nil // TODO let the second part be it's own object that parser returns like path
+	return *env.NewUri(wordIndex, *env.NewWord(idx), "file://"+v.Token()[1:]), nil // ){v.Vs[0].(env.Word), v.Token()}, nil // TODO let the second part be it's own object that parser returns like path
 }
 
 func parseCPath(v *Values, d Any) (Any, error) {
@@ -223,11 +223,11 @@ func parseCPath(v *Values, d Any) (Any, error) {
 
 func parseWord(v *Values, d Any) (Any, error) {
 	idx := wordIndex.IndexWord(v.Token())
-	return env.Word{idx}, nil
+	return *env.NewWord(idx), nil
 }
 
 func parseArgword(v *Values, d Any) (Any, error) {
-	return env.Argword{v.Vs[0].(env.Word), v.Vs[1].(env.Word)}, nil
+	return *env.NewArgword(v.Vs[0].(env.Word), v.Vs[1].(env.Word)), nil
 }
 
 func parseComma(v *Values, d Any) (Any, error) {
@@ -242,14 +242,14 @@ func parseSetword(v *Values, d Any) (Any, error) {
 	//fmt.Println("SETWORD:" + v.Token())
 	word := v.Token()
 	idx := wordIndex.IndexWord(word[:len(word)-1])
-	return env.Setword{idx}, nil
+	return *env.NewSetword(idx), nil
 }
 
 func parseLSetword(v *Values, d Any) (Any, error) {
 	//fmt.Println("SETWORD:" + v.Token())
 	word := v.Token()
 	idx := wordIndex.IndexWord(word[1:])
-	return env.LSetword{idx}, nil
+	return *env.NewLSetword(idx), nil
 }
 
 func parseOpword(v *Values, d Any) (Any, error) {
@@ -267,34 +267,34 @@ func parseOpword(v *Values, d Any) (Any, error) {
 		}
 		idx = wordIndex.IndexWord(word[1:])
 	}
-	return env.Opword{idx, force}, nil
+	return *env.NewOpword(idx, force), nil
 }
 
 func parseTagword(v *Values, d Any) (Any, error) {
 	//fmt.Println("TAGWORD:" + v.Token())
 	word := v.Token()
 	idx := wordIndex.IndexWord(word[1:])
-	return env.Tagword{idx}, nil
+	return *env.NewTagword(idx), nil
 }
 
 func parseXword(v *Values, d Any) (Any, error) {
 	//fmt.Println("TAGWORD:" + v.Token())
 	word := v.Token()
 	idx := wordIndex.IndexWord(word[1 : len(word)-1])
-	return env.Xword{idx}, nil
+	return *env.NewXword(idx), nil
 }
 
 func parseKindword(v *Values, d Any) (Any, error) {
 	word := v.Token()
 	idx := wordIndex.IndexWord(word[1 : len(word)-1])
-	return env.Kindword{idx}, nil
+	return *env.NewKindword(idx), nil
 }
 
 func parseEXword(v *Values, d Any) (Any, error) {
 	//fmt.Println("TAGWORD:" + v.Token())
 	word := v.Token()
 	idx := wordIndex.IndexWord(word[2 : len(word)-1])
-	return env.EXword{idx}, nil
+	return *env.NewEXword(idx), nil
 }
 
 func parsePipeword(v *Values, d Any) (Any, error) {
@@ -311,29 +311,28 @@ func parsePipeword(v *Values, d Any) (Any, error) {
 		}
 		idx = wordIndex.IndexWord(word[1:])
 	}
-	return env.Pipeword{idx, force}, nil
+	return *env.NewPipeword(idx, force), nil
 }
 
 func parseOnecharpipe(v *Values, d Any) (Any, error) {
 	//fmt.Println("OPWORD:" + v.Token())
 	word := v.Token()
-	var idx int
-	idx = wordIndex.IndexWord("_" + word[1:])
-	return env.Pipeword{idx, 0}, nil
+	idx := wordIndex.IndexWord("_" + word[1:])
+	return *env.NewPipeword(idx, 0), nil
 }
 
 func parseGenword(v *Values, d Any) (Any, error) {
 	trace("GENWORD:" + v.Token())
 	word := v.Token()
 	idx := wordIndex.IndexWord(strings.ToLower(word))
-	return env.Genword{idx}, nil
+	return *env.NewGenword(idx), nil
 }
 
 func parseGetword(v *Values, d Any) (Any, error) {
 	trace("GETWORD:" + v.Token())
 	word := v.Token()
 	idx := wordIndex.IndexWord(word[1:])
-	return env.Getword{idx}, nil
+	return *env.NewGetword(idx), nil
 }
 
 func parseComment(v *Values, d Any) (Any, error) {

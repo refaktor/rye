@@ -75,20 +75,12 @@ func RyeToJSON(res interface{}) string {
 		}
 		b.WriteString("} }")
 		return b.String()
-
-		if v != nil {
-			return "{ \"code\": " + RyeToJSON(v.Status) + ", \"message\": " + RyeToJSON(v.Message) + ", \"parent\": " + RyeToJSON(v.Parent) + " }"
-		} else {
-			return "null"
-		}
 	case env.RyeCtx:
 		return "{ 'state': 'todo' }"
 	default:
 		return "\"not handeled\""
 		// TODO-FIXME
 	}
-	fmt.Println(res)
-	return "\"not handeled\""
 }
 
 func JsonToRye(res interface{}) env.Object {

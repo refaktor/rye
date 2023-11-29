@@ -39,7 +39,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 							k1 := data.Pop()
 							rowd[ii] = k1
 						}
-						spr.AddRow(env.SpreadsheetRow{rowd, spr})
+						spr.AddRow(*env.NewSpreadsheetRow(rowd, spr))
 					}
 					return *spr
 				}
@@ -76,7 +76,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 							k1 := data.Pop()
 							rowd[ii] = k1
 						}
-						spr.AddRow(env.SpreadsheetRow{rowd, &spr})
+						spr.AddRow(*env.NewSpreadsheetRow(rowd, &spr))
 					}
 					return spr
 				case env.Native:

@@ -119,7 +119,6 @@ func Eyr_EvalObject(es *env.ProgramState, object env.Object, leftVal env.Object,
 		//es.Res.Trace("After object returned")
 		return es
 	}
-	return es
 }
 
 func Eyr_EvalWord(es *env.ProgramState, word env.Object, leftVal env.Object, toLeft bool, stack *EyrStack) *env.ProgramState {
