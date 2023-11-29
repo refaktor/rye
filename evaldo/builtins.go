@@ -346,6 +346,22 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"to-context": { // **
+		Argsn: 1,
+		Doc:   "Takes a Dict and returns a Context with same names and values.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Dict:
+
+				return util.Dict2Context(ps, s1)
+				// make new context with no parent
+
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.DictType}, "to-context")
+			}
+		},
+	},
+
 	"is-string": { // **
 		Argsn: 1,
 		Doc:   "Returns true if value is a string.",
@@ -5080,7 +5096,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"table": {
+	/* "table": {
 		Argsn: 1,
 		Doc:   "Constructs an empty table, accepts a block of column names",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -5102,7 +5118,7 @@ var builtins = map[string]*env.Builtin{
 			}
 			return nil
 		},
-	},
+	}, */
 
 	"add-row": {
 		Argsn: 2,
@@ -5215,7 +5231,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"new-error": {
+	"failure": {
 		Argsn: 1,
 		Doc:   "Constructs and Error object. Accepts String as message, Integer as code, or block for multiple parameters.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -5469,7 +5485,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"fix-else": {
+	"fix\\else": {
 		AcceptFailure: true,
 		Argsn:         2,
 		Doc:           "Do a block of code if Arg 1 is not a failure.",
@@ -5569,23 +5585,6 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// end of date time functions
-
-	"to-context": {
-		Argsn: 1,
-		Doc:   "Takes a Dict and returns a Context with same names and values.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s1 := arg0.(type) {
-			case env.Dict:
-
-				return util.Dict2Context(ps, s1)
-				// make new context with no parent
-
-			default:
-				fmt.Println("Error")
-			}
-			return nil
-		},
-	},
 
 	"range": { // **
 		Argsn: 2,

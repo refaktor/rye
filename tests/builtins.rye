@@ -420,6 +420,13 @@ section "Type conversion and checking"
 		equal { to-file "file.txt" } %file.txt
 	}
 
+	group "to-context"
+	mold\nowrap ?to-context
+	{ { string } }
+	{
+		equal { cc: to-context dict { "name" "Jim" } , cc/name } "Jim"
+	}
+
 	group "is-integer"
 	mold\nowrap ?is-integer
 	{ { object } }
@@ -846,8 +853,80 @@ section "Context related functions"
 
 }
 
+$ section "Spreadsheet related functions"
+"Functions for handling and working with Context."
+{	
+	
+	group "spreadsheet"
+	mold\nowrap ?spreadsheet
+	{ }
+	{
+		equal { spreadsheet { 'id 'name 'score } } 'ctx ; TODO should probably rename to context 
+	}
+
+} $
+
+section "Failure handling functions"
+"Functions for handling and working with Context."
+{	
+	
+	group "fail"
+	mold\nowrap ?fail
+	{ }
+	{
+		equal { fail 404 |disarm |code? } 404
+		equal { fail "message" |disarm |mold } "Error: message "
+		equal { fail { 501 "auth error" } |disarm |mold } "Error(501): auth error "
+	}
+
+	group "failure"
+	mold\nowrap ?failure
+	{ }
+	{
+		equal { failure 403 |type? } 'error ; todo --- should be failure?
+	}
+	group "code?"
+	mold\nowrap ?fail
+	{ }
+	{
+		equal { failure 403 |code? } 403
+	}
+
+	group "disarm"
+	mold\nowrap ?fail
+	{ }
+	{
+		equal { failure 403 |disarm  } failure 403
+	}
+
+	group "failed?"
+	mold\nowrap ?fail
+	{ }
+	{
+		equal { fail 403 |failed? } 1
+	}
+
+	group "check"
+	mold\nowrap ?fail
+	{ }
+	{
+		equal { 1 / 0 |check 501 |code? } 501
+	}
+
+	group "fix"
+	mold\nowrap ?fail
+	{ }
+	{
+		equal { 100 / 0 |fix { 99 } |+ 1 } 100
+		equal { 100 / 1 |fix { 99 } |+ 1 } 101
+	}
+
+}
+
+
+
 section "Functions that change values in-place"
-"Functions that mostly work with blocks."
+""
 {
 
 	group "inc!"

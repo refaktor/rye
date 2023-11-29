@@ -251,6 +251,10 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>to-file "file.txt"
 ; returns file://file.txt</code></pre>
 </div>
+<h3>to-context</h3><p>Builtin(1): Takes a Dict and returns a Context with same names and values.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc: to-context dict { "name" "Jim" } , cc
+; returns "Jim"</code></pre>
+</div>
 <h3>is-integer</h3><p>Pure Builtin(1): Returns true if value is an integer.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>is-integer 123
 ; returns 1</code></pre>
@@ -503,7 +507,43 @@
 ; returns error</code></pre>
 </div>
 </div>
-<h2>Functions that change values in-place</h2><p>Functions that mostly work with blocks.</p><div class='section'>
+<h2>Failure handling functions</h2><p>Functions for handling and working with Context.</p><div class='section'>
+<h3>fail</h3><p>Builtin(1): Constructs and Fails with an Error object. Accepts String as message, Integer as code, or block for multiple parameters.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>fail 404 |disarm |code?
+; returns 404</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>fail "message" |disarm |mold
+; returns "Error: message "</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>fail { 501 "auth error" } |disarm |mold
+; returns "Error(501): auth error "</code></pre>
+</div>
+<h3>failure</h3><p>Builtin(1): Constructs and Error object. Accepts String as message, Integer as code, or block for multiple parameters.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>failure 403 |type?
+; returns error</code></pre>
+</div>
+<h3>code?</h3><p>Builtin(1): Constructs and Fails with an Error object. Accepts String as message, Integer as code, or block for multiple parameters.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>failure 403 |code?
+; returns 403</code></pre>
+</div>
+<h3>disarm</h3><p>Builtin(1): Constructs and Fails with an Error object. Accepts String as message, Integer as code, or block for multiple parameters.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>failure 403 |disarm
+; returns Error(403):  </code></pre>
+</div>
+<h3>failed?</h3><p>Builtin(1): Constructs and Fails with an Error object. Accepts String as message, Integer as code, or block for multiple parameters.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>fail 403 |failed?
+; returns 1</code></pre>
+</div>
+<h3>check</h3><p>Builtin(1): Constructs and Fails with an Error object. Accepts String as message, Integer as code, or block for multiple parameters.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>1 / 0 |check 501 |code?
+; returns 501</code></pre>
+</div>
+<h3>fix</h3><p>Builtin(1): Constructs and Fails with an Error object. Accepts String as message, Integer as code, or block for multiple parameters.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>100 / 0 |fix { 99 } |_+ 1
+; returns 100</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>100 / 1 |fix { 99 } |_+ 1
+; returns 101</code></pre>
+</div>
+</div>
+<h2>Functions that change values in-place</h2><p></p><div class='section'>
 <h3>inc!</h3><p>Builtin(1): Increments integer value by 1 in place.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>a: 100 , inc! 'a
 ; returns 101</code></pre>
@@ -536,6 +576,21 @@
 ; returns { 2 7 1 4 }</code></pre>
 </div>
 </div>
+  
+<script type="text/javascript">
+var sc_project=12932344; 
+var sc_invisible=1; 
+var sc_security="6e399927"; 
+</script>
+<script type="text/javascript"
+src="https://www.statcounter.com/counter/counter.js"
+async></script>
+<noscript><div class="statcounter"><a title="Web Analytics"
+href="https://statcounter.com/" target="_blank"><img
+class="statcounter"
+src="https://c.statcounter.com/12932344/0/6e399927/1/"
+alt="Web Analytics"
+referrerPolicy="no-referrer-when-downgrade"></a></div></noscript>
 </body>
 </html>
 
