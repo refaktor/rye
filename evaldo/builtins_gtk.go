@@ -146,7 +146,7 @@ var Builtins_gtk = map[string]*env.Builtin{
 			case env.Native:
 				switch x := arg1.(type) {
 				case env.Integer:
-					switch y := arg1.(type) {
+					switch y := arg2.(type) {
 					case env.Integer:
 						win.Value.(*gtk.Window).SetDefaultSize(int(x.Value), int(y.Value))
 						return win
