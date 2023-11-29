@@ -6,7 +6,6 @@ package evaldo
 import (
 	"encoding/json"
 	"fmt"
-	"math"
 	"rye/env"
 	"strconv"
 	"strings"
@@ -95,7 +94,7 @@ func RyeToJSON(res interface{}) string {
 func JsonToRye(res interface{}) env.Object {
 	switch v := res.(type) {
 	case float64:
-		return *env.NewInteger(int64(math.Round(v)))
+		return *env.NewDecimal(v)
 	case int:
 		return *env.NewInteger(int64(v))
 	case int64:
