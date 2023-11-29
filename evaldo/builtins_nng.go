@@ -10,11 +10,10 @@ import (
 	"rye/env"
 
 	"go.nanomsg.org/mangos"
-	"go.nanomsg.org/mangos/protocol/rep"
-
-	"go.nanomsg.org/mangos/protocol/req"
 
 	// register transports
+	"go.nanomsg.org/mangos/protocol/rep"
+	"go.nanomsg.org/mangos/protocol/req"
 	_ "go.nanomsg.org/mangos/transport/all"
 )
 
@@ -80,7 +79,8 @@ var Builtins_nng = map[string]*env.Builtin{
 
 	"nng-schema//open": {
 		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch uri := arg0.(type) {
 			case env.Uri:
 				// TODO -- switch over socket type nng://rep req ...
@@ -89,105 +89,112 @@ var Builtins_nng = map[string]*env.Builtin{
 				switch uri.GetPath() {
 				case "rep":
 					if sock, err = rep.NewSocket(); err != nil {
-						env1.FailureFlag = true
-						return *env.NewError(err.Error())
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, err.Error(), "nng-schema//open")
 					}
 				case "req":
 					if sock, err = req.NewSocket(); err != nil {
-						env1.FailureFlag = true
-						return *env.NewError(err.Error())
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, err.Error(), "nng-schema//open")
 					}
+				default:
+					return MakeBuiltinError(ps, "No matching path found.", "nng-schema//open")
 				}
-				return *env.NewNative(env1.Idx, sock, "Nng-socket")
+				return *env.NewNative(ps.Idx, sock, "Nng-socket")
 			default:
-				env1.FailureFlag = true
-				return *env.NewError("arg 1 should be Uri")
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "nng-schema//open")
 			}
 		},
 	},
+
 	"Nng-socket//listen": {
 		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch sock := arg0.(type) {
 			case env.Native:
 				switch url := arg1.(type) {
 				case env.Uri:
 					var err error
 					if err = sock.Value.(mangos.Socket).Listen(url.Path); err != nil {
-						env1.FailureFlag = true
+						ps.FailureFlag = true
 						return *env.NewError(err.Error())
 					}
 					return arg0
 				default:
-					env1.FailureFlag = true
-					return *env.NewError("Arg 2 should be Url")
+					ps.FailureFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.UriType}, "Nng-socket//listen")
 				}
 			default:
-				env1.FailureFlag = true
-				return *env.NewError("Arg 1 should be Native")
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Nng-socket//listen")
 			}
 		},
 	},
 	"Nng-socket//dial": {
 		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch sock := arg0.(type) {
 			case env.Native:
 				switch url := arg1.(type) {
 				case env.Uri:
 					var err error
 					if err = sock.Value.(mangos.Socket).Dial(url.Path); err != nil {
-						env1.FailureFlag = true
-						return *env.NewError(err.Error())
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, err.Error(), "Nng-socket//dial")
 					}
 					return arg0
 				default:
-					env1.FailureFlag = true
-					return *env.NewError("Arg 2 should be Url")
+					ps.FailureFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.UriType}, "Nng-socket//dial")
 				}
 			default:
-				env1.FailureFlag = true
-				return *env.NewError("Arg 1 should be Native")
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Nng-socket//dial")
 			}
 		},
 	},
 	"Nng-socket//receive": {
 		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch sock := arg0.(type) {
 			case env.Native:
 				msg, err := sock.Value.(mangos.Socket).Recv()
 				if err != nil {
-					env1.FailureFlag = true
-					return *env.NewError(err.Error())
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, err.Error(), "Nng-socket//receive")
 				}
 				return env.String{string(msg)}
 			default:
-				env1.FailureFlag = true
-				return *env.NewError("Arg 1 should be Native")
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Nng-socket//receive")
 			}
 		},
 	},
 	"Nng-socket//send": {
 		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch sock := arg0.(type) {
 			case env.Native:
 				switch d := arg1.(type) {
 				case env.String:
 					err := sock.Value.(mangos.Socket).Send([]byte(d.Value))
 					if err != nil {
-						env1.FailureFlag = true
-						return *env.NewError(err.Error())
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, err.Error(), "Nng-socket//send")
 					}
 					return env.String{string(d.Value)}
 				default:
-					env1.FailureFlag = true
-					return *env.NewError("Arg 2 should be String..")
+					ps.FailureFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "Nng-socket//send")
 				}
 			default:
-				env1.FailureFlag = true
-				return *env.NewError("Arg 1 should be Native")
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Nng-socket//send")
 			}
 		},
 	},

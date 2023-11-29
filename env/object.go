@@ -104,7 +104,7 @@ func (i Integer) GetKind() int {
 
 // Decimal
 type Decimal struct {
-	Value float64 `bson: "value"`
+	Value float64 `bson:"value"`
 }
 
 func NewDecimal(val float64) *Decimal {
@@ -142,7 +142,7 @@ func (i Decimal) GetKind() int {
 
 // String represents an string.
 type String struct {
-	Value string `bson: "value"`
+	Value string `bson:"value"`
 }
 
 func NewString(val string) *String {
@@ -277,6 +277,11 @@ type Email struct {
 	Address string
 }
 
+func NewEmail(address string) *Email {
+	nat := Email{address}
+	return &nat
+}
+
 func (i Email) Type() Type {
 	return EmailType
 }
@@ -306,8 +311,8 @@ func (i Email) GetKind() int {
 
 // Integer represents an integer.
 type Block struct {
-	Series TSeries `bson: "series"`
-	Mode   int     `bson: "mode"`
+	Series TSeries `bson:"series"`
+	Mode   int     `bson:"mode"`
 }
 
 func NewBlock(series TSeries) *Block {
@@ -411,6 +416,11 @@ type Setword struct {
 	Index int
 }
 
+func NewSetword(index int) *Setword {
+	nat := Setword{index}
+	return &nat
+}
+
 // Type returns the type of the Integer.
 func (i Setword) Type() Type {
 	return SetwordType
@@ -442,6 +452,11 @@ func (i Setword) GetKind() int {
 // Integer represents an integer.
 type LSetword struct {
 	Index int
+}
+
+func NewLSetword(index int) *LSetword {
+	nat := LSetword{index}
+	return &nat
 }
 
 // Type returns the type of the Integer.
@@ -476,6 +491,11 @@ func (i LSetword) GetKind() int {
 type Opword struct {
 	Index int
 	Force int
+}
+
+func NewOpword(index, force int) *Opword {
+	nat := Opword{index, force}
+	return &nat
 }
 
 // Type returns the type of the Integer.
@@ -516,6 +536,11 @@ type Pipeword struct {
 	Force int
 }
 
+func NewPipeword(index, force int) *Pipeword {
+	nat := Pipeword{index, force}
+	return &nat
+}
+
 // Type returns the type of the Integer.
 func (i Pipeword) Type() Type {
 	return PipewordType
@@ -551,6 +576,11 @@ func (i Pipeword) GetKind() int {
 // Integer represents an integer.
 type Tagword struct {
 	Index int
+}
+
+func NewTagword(index int) *Tagword {
+	nat := Tagword{index}
+	return &nat
 }
 
 // Type returns the type of the Integer.
@@ -590,6 +620,11 @@ type Xword struct {
 	Index int
 }
 
+func NewXword(index int) *Xword {
+	nat := Xword{index}
+	return &nat
+}
+
 // Type returns the type of the Integer.
 func (i Xword) Type() Type {
 	return XwordType
@@ -625,6 +660,11 @@ func (i Xword) GetKind() int {
 // Integer represents an integer.
 type EXword struct {
 	Index int
+}
+
+func NewEXword(index int) *EXword {
+	nat := EXword{index}
+	return &nat
 }
 
 // Type returns the type of the Integer.
@@ -664,6 +704,11 @@ type Kindword struct {
 	Index int
 }
 
+func NewKindword(index int) *Kindword {
+	nat := Kindword{index}
+	return &nat
+}
+
 // Type returns the type of the Integer.
 func (i Kindword) Type() Type {
 	return KindwordType
@@ -701,6 +746,11 @@ type Getword struct {
 	Index int
 }
 
+func NewGetword(index int) *Getword {
+	nat := Getword{index}
+	return &nat
+}
+
 // Type returns the type of the Integer.
 func (i Getword) Type() Type {
 	return GetwordType
@@ -736,6 +786,11 @@ func (i Getword) GetKind() int {
 // Integer represents an integer.
 type Genword struct {
 	Index int
+}
+
+func NewGenword(index int) *Genword {
+	nat := Genword{index}
+	return &nat
 }
 
 // Type returns the type of the Integer.
@@ -1058,6 +1113,11 @@ func (i Error) GetKind() int {
 type Argword struct {
 	Name Word
 	Kind Word
+}
+
+func NewArgword(name Word, kind Word) *Argword {
+	nat := Argword{name, kind}
+	return &nat
 }
 
 // Type returns the type of the Integer.

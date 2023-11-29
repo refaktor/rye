@@ -1,3 +1,4 @@
+//go:build b_psutil
 // +build b_psutil
 
 package evaldo
@@ -23,6 +24,7 @@ var Builtins_ps = map[string]*env.Builtin{
 
 	"ps/virtual-memory": {
 		Argsn: 0,
+		Doc:   "TODODOC",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			v, _ := mem.VirtualMemory()
 			r := env.NewDict(make(map[string]interface{}, 3))
@@ -34,6 +36,7 @@ var Builtins_ps = map[string]*env.Builtin{
 	},
 	"ps/pids": {
 		Argsn: 0,
+		Doc:   "TODODOC",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			pids, _ := process.Pids()
 			pids2 := make([]env.Object, len(pids))
@@ -45,6 +48,7 @@ var Builtins_ps = map[string]*env.Builtin{
 	},
 	"ps/process": {
 		Argsn: 1,
+		Doc:   "TODODOC",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			pids, _ := process.Pids()
 			pids2 := make([]env.Object, len(pids))

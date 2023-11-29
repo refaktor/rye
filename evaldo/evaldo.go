@@ -467,7 +467,6 @@ func EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toL
 		}
 		return ps
 	}
-	return ps
 }
 
 // evaluates expression to the right and sets the result of it to a word in current context

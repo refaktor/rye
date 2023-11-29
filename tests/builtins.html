@@ -153,41 +153,127 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>range 1 5
 ; returns { 1 2 3 4 5 }</code></pre>
 </div>
-<h3>first</h3><p>Builtin(1): Accepts Block, List or String and returns the first item.</p><div class='group'>
+<h3>first</h3><p>Builtin(1): Accepts a Block, List or String and returns the first item.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>first { 1 2 3 4 5 }
 ; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>first list { 1 2 3 4 5 }
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>first "12345"
+; returns "1"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { first { } } |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { first list { } } |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { first "" } |type?
+; returns error</code></pre>
 </div>
-<h3>rest</h3><p>Builtin(1): Accepts Block, List or String and returns all but first items.</p><div class='group'>
+<h3>rest</h3><p>Builtin(1): Accepts a Block, List or String and returns all but first item.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>rest { 1 2 3 4 5 }
 ; returns { 2 3 4 5 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>rest "12345"
+; returns "2345"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { rest { } } |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { rest list { } } |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { rest "" } |type?
+; returns error</code></pre>
 </div>
-<h3>rest\from</h3><p>Builtin(2): Accepts Block, List or String and returns all but first items.</p><div class='group'>
+<h3>rest\from</h3><p>Builtin(2): Accepts a Block, List or String and an Integer N, returns all but first N items.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>rest\from { 1 2 3 4 5 } 2
 ; returns { 3 4 5 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>rest\from "12345" 2
+; returns "345"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { rest\from { } } |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { rest\from list { } } |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { rest\from "" } |type?
+; returns error</code></pre>
 </div>
-<h3>second</h3><p>Builtin(1): Accepts Block and returns the second value in it.</p><div class='group'>
+<h3>second</h3><p>Builtin(1): Accepts a Block, List or String and returns the second value in it.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>second { 1 2 3 4 5 }
 ; returns 2</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>second list { 1 2 3 4 5 }
+; returns 2</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>second "12345"
+; returns "2"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { second { } } |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { second list { } } |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { second "" } |type?
+; returns error</code></pre>
 </div>
-<h3>third</h3><p>Builtin(1): Accepts Block and returns the third value in it.</p><div class='group'>
+<h3>third</h3><p>Builtin(1): Accepts a Block, List or String and returns the third value in it.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>third { 1 2 3 4 5 }
 ; returns 3</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>third list { 1 2 3 4 5 }
+; returns 3</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>third "12345"
+; returns "3"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { third { } } |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { third list { } } |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { third "" } |type?
+; returns error</code></pre>
 </div>
-<h3>nth</h3><p>Builtin(2): Accepts Block and Integer N, returns the N-th value of the block.</p><div class='group'>
+<h3>nth</h3><p>Builtin(2): Accepts a Block, List or String and Integer N, returns the N-th value.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>nth { 1 2 3 4 5 } 4
 ; returns 4</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>nth list { 1 2 3 4 5 } 4
+; returns 4</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>nth "12345" 4
+; returns "4"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { nth { } } |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { nth list { } } |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { nth "" } |type?
+; returns error</code></pre>
 </div>
-<h3>last</h3><p>Builtin(1): Accepts Block and returns the last value in it.</p><div class='group'>
+<h3>last</h3><p>Builtin(1): Accepts a Block, List or String and returns the last value in it.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>last { 1 2 3 4 5 }
 ; returns 5</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>last list { 1 2 3 4 5 }
+; returns 5</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>last "12345"
+; returns "5"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { last { } } |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { last list { } } |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { last "" } |type?
+; returns error</code></pre>
 </div>
-<h3>head</h3><p>Builtin(2): Accepts a Block or a List and an Integer N. Returns first N values of the Block.</p><div class='group'>
+<h3>head</h3><p>Builtin(2): Accepts a Block, List or String and an Integer N, returns the first N values.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>head { 1 2 3 4 5 } 2
 ; returns { 1 2 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>head { 1 2 3 4 5 } 10
+; returns { 1 2 3 4 5 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>head { } 2
+; returns { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>head "12345" 2
+; returns "12"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>head "12345" 10
+; returns "12345"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>head "" 2
+; returns ""</code></pre>
 </div>
-<h3>tail</h3><p>Builtin(2): Accepts Block, List or String and returns all but first items.</p><div class='group'>
+<h3>tail</h3><p>Builtin(2): Accepts a Block, List or String and Integer N, returns the last N items.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>tail { 1 2 3 4 5 } 2
 ; returns { 4 5 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>tail { 1 2 3 4 5 } 10
+; returns { 1 2 3 4 5 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>tail { } 2
+; returns { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>tail "12345" 2
+; returns "45"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>tail "12345" 10
+; returns "12345"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>tail "" 2
+; returns ""</code></pre>
 </div>
 <h3>length?</h3><p>Builtin(1): Accepts a collection (String, Block, Dict, Spreadsheet) and returns it's length.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>length? "1234567"
@@ -208,18 +294,46 @@
 <h3>min</h3><p>Builtin(1): Constructs a Dict from the Block of key and value pairs.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>min { 8 2 10 6 }
 ; returns 2</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>min list { 8 2 10 6 }
+; returns 2</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { min { } } |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { min list { } } |type?
+; returns error</code></pre>
 </div>
 <h3>max</h3><p>Builtin(1): Constructs a Dict from the Block of key and value pairs.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>max { 8 2 10 6 }
 ; returns 10</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>max list { 8 2 10 6 }
+; returns 10</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { max { } } |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { max list { } } |type?
+; returns error</code></pre>
 </div>
 <h3>avg</h3><p>Builtin(1): Constructs a Dict from the Block of key and value pairs.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>avg { 8 2 10 6 }
 ; returns 6.500000</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>avg list { 8 2 10 6 }
+; returns 6.500000</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { avg { } } |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { avg list { } } |type?
+; returns error</code></pre>
 </div>
 <h3>sum</h3><p>Builtin(1): Constructs a Dict from the Block of key and value pairs.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>sum { 8 2 10 6 }
-; returns 26.000000</code></pre>
+; returns 26</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>sum { 8 2 10 6.500000 }
+; returns 26.500000</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>sum { }
+; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>sum list { 8 2 10 6 }
+; returns 26</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>sum list { 8 2 10 6.500000 }
+; returns 26.500000</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>sum list { }
+; returns 0</code></pre>
 </div>
 <h3>unique</h3><p>Builtin(2): Accepts Rye value and Tagword with a Block or String. Appends Rye value to Block/String in place, also returns it	.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>{ 3 2 3 5 3 2 } .list .unique .length?

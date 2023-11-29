@@ -151,7 +151,7 @@ DODO1:
 
 		if ascii == 13 {
 			fmt.Println()
-			return env.Word{idents[curr]}, false
+			return *env.NewWord(idents[curr]), false
 		}
 
 		if ascii == 77 || ascii == 109 {
@@ -223,7 +223,7 @@ func DisplayInputField(right int, mlen int) (env.Object, bool) {
 		} else if ascii == 13 {
 			fmt.Println("")
 			fmt.Println("")
-			return env.String{text}, false
+			return *env.NewString(text), false
 		} else {
 			if len(text) < mlen {
 				text += letter
@@ -312,7 +312,7 @@ DODO:
 				}
 				ii++
 			}
-			return env.String{ret}, false // bloc.Series.Get(curr), false
+			return *env.NewString(ret), false // bloc.Series.Get(curr), false
 		}
 
 		if ascii == 120 {

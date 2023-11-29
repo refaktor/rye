@@ -6,7 +6,6 @@ package evaldo
 import (
 	"encoding/json"
 	"fmt"
-	"math"
 	"rye/env"
 	"strconv"
 	"strings"
@@ -76,26 +75,18 @@ func RyeToJSON(res interface{}) string {
 		}
 		b.WriteString("} }")
 		return b.String()
-
-		if v != nil {
-			return "{ \"code\": " + RyeToJSON(v.Status) + ", \"message\": " + RyeToJSON(v.Message) + ", \"parent\": " + RyeToJSON(v.Parent) + " }"
-		} else {
-			return "null"
-		}
 	case env.RyeCtx:
 		return "{ 'state': 'todo' }"
 	default:
 		return "\"not handeled\""
 		// TODO-FIXME
 	}
-	fmt.Println(res)
-	return "\"not handeled\""
 }
 
 func JsonToRye(res interface{}) env.Object {
 	switch v := res.(type) {
 	case float64:
-		return *env.NewInteger(int64(math.Round(v)))
+		return *env.NewDecimal(v)
 	case int:
 		return *env.NewInteger(int64(v))
 	case int64:

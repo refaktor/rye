@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math"
 	"os"
 	"os/exec"
 	"reflect"
@@ -3616,54 +3617,119 @@ var builtins = map[string]*env.Builtin{
 
 	// collections exploration functions
 
-	"max": { // ** , TODO-FIX add support for list
+	"max": { // **
 		Argsn: 1,
-		Doc:   "Accepts a block of values and returns maximal value.",
+		Doc:   "Accepts a Block or List of values and returns the maximal value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			var max env.Object
-			switch block := arg0.(type) {
+			switch data := arg0.(type) {
 			case env.Block:
-				l := block.Series.Len()
+				var max env.Object
+				l := data.Series.Len()
+				if l == 0 {
+					return MakeBuiltinError(ps, "Block is empty.", "max")
+				}
 				for i := 0; i < l; i++ {
-					if max == nil || greaterThan(ps, block.Series.Get(i), max) {
-						max = block.Series.Get(i)
+					if max == nil || greaterThan(ps, data.Series.Get(i), max) {
+						max = data.Series.Get(i)
 					}
 				}
+				return max
+			case env.List:
+				max := math.SmallestNonzeroFloat64
+				l := len(data.Data)
+				if l == 0 {
+					return MakeBuiltinError(ps, "List is empty.", "max")
+				}
+				var isMaxInt bool
+				for i := 0; i < l; i++ {
+					switch val1 := data.Data[i].(type) {
+					case int64:
+						if float64(val1) > max {
+							max = float64(val1)
+							isMaxInt = true
+						}
+					case float64:
+						if val1 > max {
+							max = val1
+							isMaxInt = false
+						}
+					default:
+						return MakeBuiltinError(ps, "List type should be Integer or Decimal.", "max")
+					}
+				}
+				if isMaxInt {
+					return *env.NewInteger(int64(max))
+				} else {
+					return *env.NewDecimal(max)
+				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "max")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "max")
 			}
-			return max
 		},
 	},
 
-	"min": { // ** , TODO-FIX add support for list
+	"min": { // **
 		Argsn: 1,
-		Doc:   "Accepts a block of values and returns maximal value.",
+		Doc:   "Accepts a Block or List of values and returns the minimal value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			var max env.Object
-			switch block := arg0.(type) {
+			switch data := arg0.(type) {
 			case env.Block:
-				l := block.Series.Len()
+				var min env.Object
+				l := data.Series.Len()
+				if l == 0 {
+					return MakeBuiltinError(ps, "Block is empty.", "min")
+				}
 				for i := 0; i < l; i++ {
-					if max == nil || greaterThan(ps, max, block.Series.Get(i)) {
-						max = block.Series.Get(i)
+					if min == nil || greaterThan(ps, min, data.Series.Get(i)) {
+						min = data.Series.Get(i)
 					}
+				}
+				return min
+			case env.List:
+				l := len(data.Data)
+				if l == 0 {
+					return MakeBuiltinError(ps, "List is empty.", "min")
+				}
+				var isMinInt bool
+				min := math.MaxFloat64
+				for i := 0; i < l; i++ {
+					switch val1 := data.Data[i].(type) {
+					case int64:
+						if float64(val1) < min {
+							min = float64(val1)
+							isMinInt = true
+						}
+					case float64:
+						if val1 < min {
+							min = val1
+							isMinInt = false
+						}
+					default:
+						return MakeBuiltinError(ps, "List type should be Integer or Decimal.", "min")
+					}
+				}
+				if isMinInt {
+					return *env.NewInteger(int64(min))
+				} else {
+					return *env.NewDecimal(min)
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "min")
 			}
-			return max
 		},
 	},
 
-	"avg": { // ** , TODO-FIX add support for list
+	"avg": { // **
 		Argsn: 1,
-		Doc:   "Accepts a block of values and returns maximal value.",
+		Doc:   "Accepts a Block or List of values and returns the average value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var sum float64
 			switch block := arg0.(type) {
 			case env.Block:
 				l := block.Series.Len()
+				if l == 0 {
+					return MakeBuiltinError(ps, "Block is empty.", "avg")
+				}
 				for i := 0; i < l; i++ {
 					obj := block.Series.Get(i)
 					switch val1 := obj.(type) {
@@ -3676,6 +3742,23 @@ var builtins = map[string]*env.Builtin{
 					}
 				}
 				return *env.NewDecimal(sum / float64(l))
+			case env.List:
+				l := len(block.Data)
+				if l == 0 {
+					return MakeBuiltinError(ps, "List is empty.", "avg")
+				}
+				for i := 0; i < l; i++ {
+					obj := block.Data[i]
+					switch val1 := obj.(type) {
+					case int64:
+						sum += float64(val1)
+					case float64:
+						sum += val1
+					default:
+						return MakeBuiltinError(ps, "List type should be Integer or Decimal.", "avg")
+					}
+				}
+				return *env.NewDecimal(sum / float64(l))
 			case env.Vector:
 				return *env.NewDecimal(block.Value.Mean())
 			default:
@@ -3684,14 +3767,15 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"sum": { // ** , TODO-FIX add support for list
+	"sum": { // **
 		Argsn: 1,
-		Doc:   "Accepts a block of values and returns maximal value.",
+		Doc:   "Accepts a Block or List of values and returns the sum.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var sum float64
 			switch block := arg0.(type) {
 			case env.Block:
 				l := block.Series.Len()
+				onlyInts := true
 				for i := 0; i < l; i++ {
 					obj := block.Series.Get(i)
 					switch val1 := obj.(type) {
@@ -3699,11 +3783,37 @@ var builtins = map[string]*env.Builtin{
 						sum += float64(val1.Value)
 					case env.Decimal:
 						sum += val1.Value
+						onlyInts = false
 					default:
 						return MakeBuiltinError(ps, "Block type should be Integer or Decimal.", "sum")
 					}
 				}
-				return *env.NewDecimal(sum)
+				if onlyInts {
+					return *env.NewInteger(int64(sum))
+				} else {
+					return *env.NewDecimal(sum)
+				}
+			case env.List:
+				l := len(block.Data)
+				onlyInts := true
+				for i := 0; i < l; i++ {
+					obj := block.Data[i]
+					switch val1 := obj.(type) {
+					case int64:
+						sum += float64(val1)
+					case float64:
+						sum += val1
+						onlyInts = false
+					default:
+						return MakeBuiltinError(ps, "List type should be Integer or Decimal.", "sum")
+					}
+				}
+				if onlyInts {
+					return *env.NewInteger(int64(sum))
+				} else {
+					return *env.NewDecimal(sum)
+				}
+
 			case env.Vector:
 				return *env.NewDecimal(block.Value.Sum())
 			default:
@@ -4744,7 +4854,7 @@ var builtins = map[string]*env.Builtin{
 
 	"first": { // **
 		Argsn: 1,
-		Doc:   "Accepts Block, List or String and returns the first item.",
+		Doc:   "Accepts a Block, List or String and returns the first item.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -4773,7 +4883,7 @@ var builtins = map[string]*env.Builtin{
 
 	"rest": { // **
 		Argsn: 1,
-		Doc:   "Accepts Block, List or String and returns all but first items.",
+		Doc:   "Accepts a Block, List or String and returns all but first item.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -4797,60 +4907,81 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+
 	"rest\\from": { // **
 		Argsn: 2,
-		Doc:   "Accepts Block, List or String and returns all but first items.",
+		Doc:   "Accepts a Block, List or String and an Integer N, returns all but first N items.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch num := arg1.(type) {
 			case env.Integer:
 				switch s1 := arg0.(type) {
 				case env.Block:
 					if len(s1.Series.S) == 0 {
-						return MakeBuiltinError(ps, "Block is empty.", "tail")
+						return MakeBuiltinError(ps, "Block is empty.", "rest\\from")
+					}
+					if len(s1.Series.S) <= int(num.Value) {
+						return MakeBuiltinError(ps, fmt.Sprintf("Block has less than %d elements.", num.Value+1), "rest\\from")
 					}
 					return *env.NewBlock(*env.NewTSeries(s1.Series.S[int(num.Value):]))
 				case env.List:
 					if len(s1.Data) == 0 {
-						return MakeBuiltinError(ps, "List is empty.", "tail")
+						return MakeBuiltinError(ps, "List is empty.", "rest\\from")
+					}
+					if len(s1.Data) <= int(num.Value) {
+						return MakeBuiltinError(ps, fmt.Sprintf("List has less than %d elements.", num.Value+1), "rest\\from")
 					}
 					return env.NewList(s1.Data[int(num.Value):])
 				case env.String:
 					str := []rune(s1.Value)
-					if len(str) < 1 {
-						return MakeBuiltinError(ps, "String has only one element.", "tail")
+					if len(str) == 0 {
+						return MakeBuiltinError(ps, "String is empty.", "rest\\from")
+					}
+					if len(str) <= int(num.Value) {
+						return MakeBuiltinError(ps, fmt.Sprintf("String has less than %d elements.", num.Value+1), "rest\\from")
 					}
 					return *env.NewString(string(str[int(num.Value):]))
 				default:
-					return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "tail")
+					return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "rest\\from")
 				}
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "tail")
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "rest\\from")
 			}
 		},
 	},
+
 	"tail": { // **
 		Argsn: 2,
-		Doc:   "Accepts Block, List or String and returns all but first items.",
+		Doc:   "Accepts a Block, List or String and Integer N, returns the last N items.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch num := arg1.(type) {
 			case env.Integer:
+				numVal := int(num.Value)
 				switch s1 := arg0.(type) {
 				case env.Block:
 					if len(s1.Series.S) == 0 {
-						return MakeBuiltinError(ps, "Block is empty.", "tail")
+						return *env.NewBlock(*env.NewTSeries([]env.Object{}))
 					}
-					return *env.NewBlock(*env.NewTSeries(s1.Series.S[len(s1.Series.S)-int(num.Value):]))
+					if len(s1.Series.S) < numVal {
+						numVal = len(s1.Series.S)
+					}
+					return *env.NewBlock(*env.NewTSeries(s1.Series.S[len(s1.Series.S)-int(numVal):]))
 				case env.List:
 					if len(s1.Data) == 0 {
-						return MakeBuiltinError(ps, "List is empty.", "tail")
+						return *env.NewList([]interface{}{})
 					}
-					return env.NewList(s1.Data[len(s1.Data)-int(num.Value):])
+					if len(s1.Data) < int(numVal) {
+						numVal = len(s1.Data)
+					}
+					return *env.NewList(s1.Data[len(s1.Data)-int(numVal):])
 				case env.String:
 					str := []rune(s1.Value)
-					if len(str) < 1 {
-						return MakeBuiltinError(ps, "String has only one element.", "tail")
+					if len(str) == 0 {
+						return *env.NewString("")
 					}
-					return *env.NewString(string(str[len(str)-int(num.Value):]))
+					if len(str) < int(numVal) {
+						numVal = len(str)
+					}
+					return *env.NewString(string(str[len(str)-int(numVal):]))
 				default:
 					return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "tail")
 				}
@@ -4859,9 +4990,10 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+
 	"second": { // **
 		Argsn: 1,
-		Doc:   "Accepts Block and returns the second value in it.",
+		Doc:   "Accepts a Block, List or String and returns the second value in it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -4885,46 +5017,95 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-	"third": { // ** , TODO-FIX add support for list and string
+
+	"third": { // **
 		Argsn: 1,
-		Doc:   "Accepts Block and returns the third value in it.",
+		Doc:   "Accepts a Block, List or String and returns the third value in it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
+				if len(s1.Series.S) < 3 {
+					return MakeBuiltinError(ps, "Block has no third element.", "third")
+				}
 				return s1.Series.Get(int(2))
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "third")
-			}
-		},
-	},
-	"last": { // ** , TODO-FIX add support for list
-		Argsn: 1,
-		Doc:   "Accepts Block and returns the last value in it.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s1 := arg0.(type) {
-			case env.Block:
-				return s1.Series.Get(s1.Series.Len() - 1)
+			case env.List:
+				if len(s1.Data) < 3 {
+					return MakeBuiltinError(ps, "List has no third element.", "third")
+				}
+				return JsonToRye(s1.Data[2])
 			case env.String:
-				return *env.NewString(s1.Value[len(s1.Value)-1:])
+				str := []rune(s1.Value)
+				if len(str) < 3 {
+					return MakeBuiltinError(ps, "String has no third element.", "third")
+				}
+				return *env.NewString(string(str[2]))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.StringType}, "last")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "third")
 			}
 		},
 	},
 
-	"head": { // ** , TODO-FIX add support for string
-		Argsn: 2,
-		Doc:   "Accepts a Block or a List and an Integer N. Returns first N values of the Block.",
+	"last": { // **
+		Argsn: 1,
+		Doc:   "Accepts a Block, List or String and returns the last value in it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s2 := arg1.(type) {
+			switch s1 := arg0.(type) {
+			case env.Block:
+				if len(s1.Series.S) == 0 {
+					return MakeBuiltinError(ps, "Block is empty.", "last")
+				}
+				return s1.Series.Get(s1.Series.Len() - 1)
+			case env.List:
+				if len(s1.Data) == 0 {
+					return MakeBuiltinError(ps, "List is empty.", "last")
+				}
+				return JsonToRye(s1.Data[len(s1.Data)-1])
+			case env.String:
+				if len(s1.Value) == 0 {
+					return MakeBuiltinError(ps, "String is empty.", "last")
+				}
+				return *env.NewString(s1.Value[len(s1.Value)-1:])
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "last")
+			}
+		},
+	},
+
+	"head": { // **
+		Argsn: 2,
+		Doc:   "Accepts a Block, List or String and an Integer N, returns the first N values.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch num := arg1.(type) {
 			case env.Integer:
+				numVal := int(num.Value)
 				switch s1 := arg0.(type) {
 				case env.Block:
-					return *env.NewBlock(*env.NewTSeries(s1.Series.S[0:s2.Value]))
+					if len(s1.Series.S) == 0 {
+						return *env.NewBlock(*env.NewTSeries([]env.Object{}))
+					}
+					if len(s1.Series.S) < numVal {
+						numVal = len(s1.Series.S)
+					}
+					return *env.NewBlock(*env.NewTSeries(s1.Series.S[0:numVal]))
 				case env.List:
-					return *env.NewList(s1.Data[0:s2.Value])
+					if len(s1.Data) == 0 {
+						return *env.NewList([]interface{}{})
+					}
+					if len(s1.Data) < int(numVal) {
+						numVal = len(s1.Data)
+					}
+					return *env.NewList(s1.Data[0:numVal])
+				case env.String:
+					str := []rune(s1.Value)
+					if len(str) == 0 {
+						return *env.NewString("")
+					}
+					if len(str) < int(numVal) {
+						numVal = len(str)
+					}
+					return *env.NewString(string(str[0:numVal]))
 				default:
-					return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "head")
+					return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "head")
 				}
 			default:
 				return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "head")
@@ -4932,20 +5113,34 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"nth": { // ** , TODO-FIX add support for list and string
+	"nth": { // **
 		Argsn: 2,
-		Doc:   "Accepts Block and Integer N, returns the N-th value of the block.",
+		Doc:   "Accepts a Block, List or String and Integer N, returns the N-th value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s1 := arg0.(type) {
-			case env.Block:
-				switch s2 := arg1.(type) {
-				case env.Integer:
-					return s1.Series.Get(int(s2.Value - 1))
+			switch num := arg1.(type) {
+			case env.Integer:
+				switch s1 := arg0.(type) {
+				case env.Block:
+					if num.Value > int64(s1.Series.Len()) {
+						return MakeBuiltinError(ps, fmt.Sprintf("Block has less than %d elements.", num.Value), "nth")
+					}
+					return s1.Series.Get(int(num.Value - 1))
+				case env.List:
+					if num.Value > int64(len(s1.Data)) {
+						return MakeBuiltinError(ps, fmt.Sprintf("List has less than %d elements.", num.Value), "nth")
+					}
+					return JsonToRye(s1.Data[int(num.Value-1)])
+				case env.String:
+					str := []rune(s1.Value)
+					if num.Value > int64(len(str)) {
+						return MakeBuiltinError(ps, fmt.Sprintf("String has less than %d elements.", num.Value), "nth")
+					}
+					return *env.NewString(string(str[num.Value-1 : num.Value]))
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "nth")
+					return MakeArgError(ps, 1, []env.Type{env.BlockType}, "nth")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "nth")
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "nth")
 			}
 		},
 	},
