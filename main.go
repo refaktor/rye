@@ -186,8 +186,8 @@ func main_ryk() {
 				// val0, er := strconv.ParseInt(scanner.Text(), 10, 64)
 				val0 := util.StringToFieldsWithQuoted(scanner.Text(), separator, "\"")
 				// if er == nil {
-				es.Ctx.Set(N, env.Integer{int64(nn)})
-				es.Ctx.Set(L, env.Integer{int64(val0.Series.Len())})
+				es.Ctx.Set(N, *env.NewInteger(int64(nn)))
+				es.Ctx.Set(L, *env.NewInteger(int64(val0.Series.Len())))
 				if filterBlock != nil {
 					blk := *filterBlock
 					es.Ser = blk.(env.Block).Series

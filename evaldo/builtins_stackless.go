@@ -74,7 +74,6 @@ func Stck_EvalObject(es *env.ProgramState, object env.Object, leftVal env.Object
 		//es.Res.Trace("After object returned")
 		return es
 	}
-	return es
 }
 
 func Stck_EvalWord(es *env.ProgramState, word env.Object, leftVal env.Object, toLeft bool) *env.ProgramState {

@@ -45,7 +45,7 @@ func Dict2Context(ps *env.ProgramState, s1 env.Dict) env.RyeCtx {
 		case env.String:
 			ctx.Set(word, v1)
 		case string:
-			ctx.Set(word, env.String{v1})
+			ctx.Set(word, *env.NewString(v1))
 		}
 	}
 	return *ctx
@@ -70,7 +70,7 @@ func StringToFieldsWithQuoted(str string, sepa string, quote string) env.Block {
 		if numeric {
 			num, err := strconv.Atoi(spl[i])
 			if err == nil {
-				lst[i] = env.Integer{int64(num)}
+				lst[i] = *env.NewInteger(int64(num))
 				pass = true
 			} else {
 				// fmt.Println(err.Error())
@@ -78,7 +78,7 @@ func StringToFieldsWithQuoted(str string, sepa string, quote string) env.Block {
 		}
 		if !pass {
 			clean := regexp.MustCompile(`^"(.*)"$`).ReplaceAllString(spl[i], `$1`)
-			val := env.String{clean}
+			val := *env.NewString(clean)
 			lst[i] = val
 		}
 	}
@@ -257,11 +257,11 @@ func ToRyeValue(res interface{}) env.Object {
 	case float64:
 		return env.Integer{Value: int64(math.Round(v))}
 	case int:
-		return env.Integer{int64(v)}
+		return *env.NewInteger(int64(v))
 	case int64:
-		return env.Integer{v}
+		return *env.NewInteger(v)
 	case string:
-		return env.String{v}
+		return *env.NewString(v)
 	case map[string]interface{}:
 		return *env.NewDict(v)
 	case []interface{}:

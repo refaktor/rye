@@ -6,7 +6,7 @@ import (
 )
 
 type TSeries struct {
-	S   []Object `bson: "series"`
+	S   []Object `bson:"series"`
 	pos int
 }
 
