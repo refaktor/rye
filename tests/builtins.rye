@@ -27,22 +27,24 @@ section "Printing functions"
 	{ { object } }
 	{
 		stdout { print\val 33 "value is: {{}}" } "value is: 33" + newline
+		stdout { print\val "OK" "value is: {{}}" } "value is: 33" + newline ; TODO-BUG quotes the string
+		; stdout { { "Jane Austen" } print\val "Hello {{}}!" } "value is: 33" + newline
 	}
 	; group "print-ssv"
 	; mold\nowrap ?print-ssv
 	; { { function } }
 	; {
 	; }
-	$ group "print-csv"
-	mold\nowrap ?print-csv
-	{ { function } }
-	{
-	}
-	group "print-json"
-	mold\nowrap ?print-json
-	{ { function } }
-	{
-	} $
+	;group "print-csv"
+	;mold\nowrap ?print-csv
+	;{ { function } }
+	;{
+	;}
+	;group "print-json"
+	;mold\nowrap ?print-json
+	;{ { function } }
+	;{
+	;}
 	group "probe"
 	mold\nowrap ?probe
 	{ { function } }
@@ -277,7 +279,7 @@ section "Working with blocks and lists"
 	{ { block } }
 	{
 		equal { rest { 1 2 3 4 5 } } { 2 3 4 5 }
-		equal { rest list { 1 2 3 4 5 } } [ 2 3 4 5 ]
+		equal { rest list { 1 2 3 4 5 } } list { 2 3 4 5 }
 		equal { rest "12345" } "2345"
 		equal { try { rest { } } |type? } 'error
 		equal { try { rest list { } } |type? } 'error
@@ -289,7 +291,7 @@ section "Working with blocks and lists"
 	{ { block } { integer } }
 	{
 		equal { rest\from { 1 2 3 4 5 } 2 } { 3 4 5 }
-		equal { rest\from list { 1 2 3 4 5 } 2 } [ 3 4 5 ]
+		equal { rest\from list { 1 2 3 4 5 } 2 } list { 3 4 5 }
 		equal { rest\from "12345" 2 } "345"
 		equal { try { rest\from { } } |type? } 'error
 		equal { try { rest\from list { } } |type? } 'error
@@ -331,6 +333,25 @@ section "Working with blocks and lists"
 		equal { try { nth list { } } |type? } 'error
 		equal { try { nth "" } |type? } 'error
 	}
+
+	group "->"
+	mold\nowrap ?_->
+	{ { string  } }
+	{
+		equal { { 11 22 33 } -> 1 } 22
+		equal { list { 11 22 33 } -> 1 } 22
+		equal { dict { "a" 11 "b" 22 "c" 33 } -> "b" } 22
+	}
+
+	group "<-"
+	mold\nowrap ?_<-
+	{ { string  } }
+	{
+		equal { 2 <- { 11 22 33 } } 33
+		equal { 2 <- list { 11 22 33 } } 33
+		equal { "c" <- dict { "a" 11 "b" 22 "c" 33 } } 33
+	}
+
 	
 	group "last"
 	mold\nowrap ?last
@@ -351,9 +372,9 @@ section "Working with blocks and lists"
 		equal { head { 1 2 3 4 5 } 2 } { 1 2 }
 		equal { head { 1 2 3 4 5 } 10 } { 1 2 3 4 5 }
 		equal { head { } 2 } { }
-		equal { head list { 1 2 3 4 5 } 2 } [ 1 2 ]
-		equal { head list { 1 2 3 4 5 } 10 } [ 1 2 3 4 5 ]
-		equal { head list { } 2 } [ ]
+		equal { head list { 1 2 3 4 5 } 2 } list { 1 2 }
+		equal { head list { 1 2 3 4 5 } 10 } list { 1 2 3 4 5 }
+		equal { head list { } 2 } list { }
 		equal { head "12345" 2 } "12"
 		equal { head "12345" 10 } "12345"
 		equal { head "" 2 } ""
@@ -367,9 +388,9 @@ section "Working with blocks and lists"
 		equal { tail { 1 2 3 4 5 } 2 } { 4 5 }
 		equal { tail { 1 2 3 4 5 } 10 } { 1 2 3 4 5 }
 		equal { tail {  } 2 } { }
-		equal { tail list { 1 2 3 4 5 } 2 } [ 4 5 ]
-		equal { tail list { 1 2 3 4 5 } 10 } [ 1 2 3 4 5 ]
-		equal { tail list {  } 2 } [ ]
+		equal { tail list { 1 2 3 4 5 } 2 } list { 4 5 }
+		equal { tail list { 1 2 3 4 5 } 10 } list { 1 2 3 4 5 }
+		equal { tail list {  } 2 } list { }
 		equal { tail "12345" 2 } "45"
 		equal { tail "12345" 10 } "12345"
 		equal { tail "" 2 } ""
@@ -538,7 +559,7 @@ section "Type conversion and checking"
 	}
 }
 
-section "Serializing values"
+section "Serializers and loaders"
 "Functions that print values to stdio"
 {
 	group "mold"
@@ -574,6 +595,15 @@ section "Serializing values"
 		equal { fn { x "docstring" } { x + 1 } |doc\of? } "docstring"
 	}
 
+	group "load"
+	mold\nowrap ?load
+	{ { block } }
+	{
+		equal { load "1 2 3" |type? } 'block
+		equal { load "1 2 3" |length? } 3
+		equal { load "1 2 { print 4 }" |third |length? } 2
+		equal { load "1 2 { print 4 }" |third |first |type? } 'word
+	}
 
 
 }
@@ -790,12 +820,15 @@ section "Higher order like functions"
 	{
 		equal { map { 1 2 3 } { + 1 } } { 2 3 4 }
 		equal { map { "aaa" "bb" "c" } { .length? } } { 3 2 1 }
+		equal { map list { "aaa" "bb" "c" } { .length? } } list { 3 2 1 }
+		; equal { map "abc" { + "-" } } "a-b-c-"
 	}	
 	group "map\pos"
 	mold\nowrap ?map\pos
 	{ { block } { block } }
 	{
 		equal { map\pos { 1 2 3 } 'i { + i } } { 2 4 6 }
+		equal { map\pos list { 1 2 3 } 'i { + i } } list { 2 4 6 }
 	}	
 	group "filter"
 	mold\nowrap ?filter
@@ -826,6 +859,20 @@ section "Higher order like functions"
 	{ { block } { block } }
 	{
 		equal { fold { 1 2 3 } 'acc 1 { + acc } } 7
+	}	
+	group "partition"
+	mold\nowrap ?partition
+	{ { block } { block } }
+	{
+		equal { { 1 2 3 4 } .partition { > 2 } } { { 1 2 } { 3 4 } }
+		equal { { "a" "b" 1 "c" "d" } .partition { .is-integer } } { { "a" "b" } { 1 } { "c" "d" } }
+		equal { "aaabbccc" .partition { , } } list { "aaa" "bb" "ccc" }
+	}	
+	group "group"
+	mold\nowrap ?group
+	{ { block } { block } }
+	{
+		equal { { "Anne" "Mitch" "Anya" } .group { .first } } dict vals { "A" list { "Anne" "Anya" } "M" list { "Mitch" } }
 	}	
 	group "produce"
 	mold\nowrap ?map
@@ -984,6 +1031,14 @@ section "Failure handling functions"
 	{
 		equal { 100 / 0 |fix { 99 } |+ 1 } 100
 		equal { 100 / 1 |fix { 99 } |+ 1 } 101
+	}
+
+	group "assert-equal"
+	mold\nowrap ?assert-equal
+	{ }
+	{
+		equal { assert-equal 10 10 } 1
+		equal { assert-equal 10 20 |disarm |type? } 'error 
 	}
 
 }

@@ -38,6 +38,9 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>print\val 33 "value is: {{}}"
 ; prints "value is: 33
 ; "</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>print\val "OK" "value is: {{}}"
+; prints "value is: "OK"
+; "</code></pre>
 </div>
 <h3>probe</h3><p>Builtin(1): Prints a probe of a value.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>probe 33
@@ -170,6 +173,8 @@
 <h3>rest</h3><p>Builtin(1): Accepts a Block, List or String and returns all but first item.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>rest { 1 2 3 4 5 }
 ; returns { 2 3 4 5 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>rest list { 1 2 3 4 5 }
+; returns [  2  3  4  5 ]</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>rest "12345"
 ; returns "2345"</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>try { rest { } } |type?
@@ -182,6 +187,8 @@
 <h3>rest\from</h3><p>Builtin(2): Accepts a Block, List or String and an Integer N, returns all but first N items.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>rest\from { 1 2 3 4 5 } 2
 ; returns { 3 4 5 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>rest\from list { 1 2 3 4 5 } 2
+; returns [  3  4  5 ]</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>rest\from "12345" 2
 ; returns "345"</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>try { rest\from { } } |type?
@@ -233,6 +240,22 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>try { nth "" } |type?
 ; returns error</code></pre>
 </div>
+<h3>-></h3><p>Builtin(2):</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>{ 11 22 33 } |_-> 1
+; returns 22</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>list { 11 22 33 } |_-> 1
+; returns 22</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 11 "b" 22 "c" 33 } |_-> "b"
+; returns 22</code></pre>
+</div>
+<h3><-</h3><p>Builtin(2):</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>2 <- { 11 22 33 }
+; returns 33</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>2 <- list { 11 22 33 }
+; returns 33</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>"c" <- dict { "a" 11 "b" 22 "c" 33 }
+; returns 33</code></pre>
+</div>
 <h3>last</h3><p>Builtin(1): Accepts a Block, List or String and returns the last value in it.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>last { 1 2 3 4 5 }
 ; returns 5</code></pre>
@@ -254,6 +277,12 @@
 ; returns { 1 2 3 4 5 }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>head { } 2
 ; returns { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>head list { 1 2 3 4 5 } 2
+; returns [  1  2 ]</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>head list { 1 2 3 4 5 } 10
+; returns [  1  2  3  4  5 ]</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>head list { } 2
+; returns [ ]</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>head "12345" 2
 ; returns "12"</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>head "12345" 10
@@ -268,6 +297,12 @@
 ; returns { 1 2 3 4 5 }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>tail { } 2
 ; returns { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>tail list { 1 2 3 4 5 } 2
+; returns [  4  5 ]</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>tail list { 1 2 3 4 5 } 10
+; returns [  1  2  3  4  5 ]</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>tail list { } 2
+; returns [ ]</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>tail "12345" 2
 ; returns "45"</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>tail "12345" 10
@@ -408,7 +443,7 @@
 ; returns integer</code></pre>
 </div>
 </div>
-<h2>Serializing values</h2><p>Functions that print values to stdio</p><div class='section'>
+<h2>Serializers and loaders</h2><p>Functions that print values to stdio</p><div class='section'>
 <h3>mold</h3><p>Builtin(1): Turn value to it's string representation.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>mold 33
 ; returns "33"</code></pre>
@@ -429,6 +464,16 @@
 <h3>doc\of?</h3><p>Pure Builtin(1): Get docstring of the first argument.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>fn { x "docstring" } { x + 1 } |doc\of?
 ; returns "docstring"</code></pre>
+</div>
+<h3>load</h3><p>Builtin(1): Loads a string into Rye values.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>load "1 2 3" |type?
+; returns block</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>load "1 2 3" |length?
+; returns 3</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>load "1 2 { print 4 }" |third |length?
+; returns 2</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>load "1 2 { print 4 }" |third |first |type?
+; returns word</code></pre>
 </div>
 </div>
 <h2>Conditional functions</h2><p>Program flow control functions</p><div class='section'>
@@ -574,6 +619,21 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>fold { 1 2 3 } 'acc 1 { + acc }
 ; returns 7</code></pre>
 </div>
+<h3>partition</h3><p>Pure Builtin(2): Maps values of a block to a new block by evaluating a block of code.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>{ 1 2 3 4 } .partition { > 2 }
+; returns { { 1 2 } { 3 4 } }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>{ "a" "b" 1 "c" "d" } .partition { .is-integer }
+; returns { { "a" "b" } { 1 } { "c" "d" } }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>"aaabbccc" .partition { , }
+; returns [  aaa  bb  ccc ]</code></pre>
+</div>
+<h3>group</h3><p>Function(4)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>{ "Anne" "Mitch" "Anya" } .group { .first }
+; returns [
+;  A: [  Anne  Anya ]
+;  M: [  Mitch ]
+; ]</code></pre>
+</div>
 <h3>produce</h3><p>Pure Builtin(2): Maps values of a block to a new block by evaluating a block of code.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>produce 5 0 { + 3 }
 ; returns 15</code></pre>
@@ -655,6 +715,12 @@
 ; returns 100</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>100 / 1 |fix { 99 } |_+ 1
 ; returns 101</code></pre>
+</div>
+<h3>assert-equal</h3><p>Pure Builtin(2): Test if two values are equal. Fail if not.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>assert-equal 10 10
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>assert-equal 10 20 |disarm |type?
+; returns error</code></pre>
 </div>
 </div>
 <h2>Functions that change values in-place</h2><p></p><div class='section'>

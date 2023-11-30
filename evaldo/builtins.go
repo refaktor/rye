@@ -1124,7 +1124,7 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
-	"print\\ssv": { // **
+	"print\\ssv": { //
 		Argsn: 1,
 		Doc:   "Prints a value and adds a newline.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1137,7 +1137,7 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
-	"print\\csv": { // **
+	"print\\csv": { //
 		Argsn: 1,
 		Doc:   "Prints a value and adds a newline.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1150,7 +1150,7 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
-	"print\\json": { // **
+	"print\\json": { //
 		Argsn: 1,
 		Doc:   "Prints a value and adds a newline.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1272,6 +1272,52 @@ var builtins = map[string]*env.Builtin{
 			return nil
 		},
 	}, */
+
+	"load": { // **
+		Argsn: 1,
+		Doc:   "Loads a string into Rye values.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				block, _ := loader.LoadString(s1.Value, false)
+				//ps = env.AddToProgramState(ps, block.Series, genv)
+				return block
+			case env.Uri:
+				var str string
+				fileIdx, _ := ps.Idx.GetIndex("file")
+				if s1.Scheme.Index == fileIdx {
+					b, err := ioutil.ReadFile(s1.GetPath())
+					if err != nil {
+						return makeError(ps, err.Error())
+					}
+					str = string(b) // convert content to a 'string'
+				}
+				block, _ := loader.LoadString(str, false)
+				//ps = env.AddToProgramState(ps, block.Series, genv)
+				return block
+			default:
+				ps.FailureFlag = true
+				return env.NewError("Must be string or file TODO")
+			}
+		},
+	},
+
+	"load-sig": {
+		Argsn: 1,
+		Doc:   "Checks the signature, if OK then loads a string into Rye values.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				block, _ := loader.LoadString(s1.Value, true)
+				//ps = env.AddToProgramState(ps, block.Series, genv)
+				return block
+			default:
+				ps.FailureFlag = true
+				return env.NewError("Must be string or file TODO")
+			}
+		},
+	},
+
 	"mold": { // **
 		Argsn: 1,
 		Doc:   "Turn value to it's string representation.",
@@ -2896,7 +2942,7 @@ var builtins = map[string]*env.Builtin{
 							if ps.ErrorFlag {
 								return ps.Res
 							}
-							newl[i] = ps.Res
+							newl[i] = env.RyeToRaw(ps.Res)
 							ps.Ser.Reset()
 						}
 						ps.Ser = ser
@@ -2975,7 +3021,7 @@ var builtins = map[string]*env.Builtin{
 								if ps.ErrorFlag {
 									return ps.Res
 								}
-								newl[i] = ps.Res
+								newl[i] = env.RyeToRaw(ps.Res)
 								ps.Ser.Reset()
 							}
 							ps.Ser = ser
@@ -2999,10 +3045,6 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	// map should at the end map over block, raw-map, etc ...
-	// it should accept a block of code, a function and a builtin
-	// it should use injected block so it doesn't need a variable defined like map [ 1 2 3 ] x [ add a 100 ]
-	// reduce [ 1 2 3 ] 'acc { + acc }
 	"reduce": { // **
 		Argsn: 3,
 		Doc:   "Reduces values of a block to a new block by evaluating a block of code ...",
@@ -3250,10 +3292,6 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	// map should at the end map over block, raw-map, etc ...
-	// it should accept a block of code, a function and a builtin
-	// it should use injected block so it doesn't need a variable defined like map [ 1 2 3 ] x [ add a 100 ]
-	// reduce [ 1 2 3 ] 'acc { + acc }
 	"sum-up": { // **
 		Argsn: 2,
 		Doc:   "Reduces values of a block to a new block by evaluating a block of code ...",
@@ -3307,11 +3345,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	// map should at the end map over block, raw-map, etc ...
-	// it should accept a block of code, a function and a builtin
-	// it should use injected block so it doesn't need a variable defined like map [ 1 2 3 ] x [ add a 100 ]
-	// map [ 1 2 3 ] { .add 3 }
-	"partition": {
+	"partition": { // **
 		Argsn: 2,
 		Doc:   "Maps values of a block to a new block by evaluating a block of code.",
 		Pure:  true,
@@ -3399,7 +3433,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"group": {
+	"group": { // **
 		Argsn: 2,
 		Doc:   "Groups a block or list of values given condition.",
 		Pure:  true,
@@ -3432,7 +3466,7 @@ var builtins = map[string]*env.Builtin{
 							}
 							switch ee := entry.(type) { // list in dict is a pointer
 							case *env.List:
-								ee.Data = append(ee.Data, curval)
+								ee.Data = append(ee.Data, env.RyeToRaw(curval))
 							default:
 								return MakeBuiltinError(ps, "Entry type should be List.", "group")
 							}
@@ -3495,7 +3529,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// filter [ 1 2 3 ] { .add 3 }
-	"filter": {
+	"filter": { // ** TODO-FIX add support for list , convert to Rye value JsonToRye before injecting to code block
 		Argsn: 2,
 		Doc:   "Filters values from a seris based on return of a injected code block.",
 		Pure:  true,
@@ -3569,7 +3603,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"seek": {
+	"seek": { // **  TODO-FIX add support for list
 		Argsn: 2,
 		Doc:   "Seek over a series until a Block of code returns True.",
 		Pure:  true,
@@ -5389,7 +5423,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// return , error , failure functions
-	"return": {
+	"return": { // **
 		Argsn: 1,
 		Doc:   "Accepts one value and returns it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -5416,7 +5450,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"fail": {
+	"fail": { // **
 		Argsn: 1,
 		Doc:   "Constructs and Fails with an Error object. Accepts String as message, Integer as code, or block for multiple parameters.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -5426,7 +5460,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"failure": {
+	"failure": { // **
 		Argsn: 1,
 		Doc:   "Constructs and Error object. Accepts String as message, Integer as code, or block for multiple parameters.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -5435,7 +5469,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"code?": {
+	"code?": { // **
 		AcceptFailure: true,
 		Argsn:         1,
 		Doc:           "Returns the status code of the Error.", // TODO -- seems duplicate of status
@@ -5452,7 +5486,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"disarm": {
+	"disarm": { // **
 		AcceptFailure: true,
 		Argsn:         1,
 		Doc:           "Disarms the Error.",
@@ -5462,7 +5496,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"failed?": {
+	"failed?": { // **
 		AcceptFailure: true,
 		Argsn:         1,
 		Doc:           "Checks if first argument is an Error. Returns a boolean.",
@@ -5478,7 +5512,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"check": {
+	"check": { // **
 		AcceptFailure: true,
 		Argsn:         2,
 		Doc:           "Check if Arg 1 is not failure, if it wraps it into another Failure (Arg 2), otherwise returns Arg 1.",
@@ -5536,7 +5570,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"require": {
+	"require": { // **
 		AcceptFailure: true,
 		Argsn:         2,
 		Doc:           "Require that first argument is Truthy value, if not produce a failure based on second argument",
@@ -5555,7 +5589,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"assert-equal": {
+	"assert-equal": { // **
 		Argsn: 2,
 		Doc:   "Test if two values are equal. Fail if not.",
 		Pure:  true,
@@ -5568,7 +5602,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"fix": {
+	"fix": { // **
 		AcceptFailure: true,
 		Argsn:         2,
 		Doc:           "If Arg 1 is a failure, do a block and return the result of it, otherwise return Arg 1.",
@@ -5701,51 +5735,6 @@ var builtins = map[string]*env.Builtin{
 				}
 			} else {
 				return arg0
-			}
-		},
-	},
-
-	"load": {
-		Argsn: 1,
-		Doc:   "Loads a string into Rye values.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s1 := arg0.(type) {
-			case env.String:
-				block, _ := loader.LoadString(s1.Value, false)
-				//ps = env.AddToProgramState(ps, block.Series, genv)
-				return block
-			case env.Uri:
-				var str string
-				fileIdx, _ := ps.Idx.GetIndex("file")
-				if s1.Scheme.Index == fileIdx {
-					b, err := ioutil.ReadFile(s1.GetPath())
-					if err != nil {
-						return makeError(ps, err.Error())
-					}
-					str = string(b) // convert content to a 'string'
-				}
-				block, _ := loader.LoadString(str, false)
-				//ps = env.AddToProgramState(ps, block.Series, genv)
-				return block
-			default:
-				ps.FailureFlag = true
-				return env.NewError("Must be string or file TODO")
-			}
-		},
-	},
-
-	"load-sig": {
-		Argsn: 1,
-		Doc:   "Checks the signature, if OK then loads a string into Rye values.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s1 := arg0.(type) {
-			case env.String:
-				block, _ := loader.LoadString(s1.Value, true)
-				//ps = env.AddToProgramState(ps, block.Series, genv)
-				return block
-			default:
-				ps.FailureFlag = true
-				return env.NewError("Must be string or file TODO")
 			}
 		},
 	},

@@ -1346,6 +1346,23 @@ func NewList(data []interface{}) *List {
 	return &List{data, Word{0}}
 }
 
+func RyeToRaw(res Object) interface{} {
+	// fmt.Printf("Type: %T", res)
+	switch v := res.(type) {
+	case nil:
+		return "null"
+	case String:
+		return v.Value
+	case Integer:
+		return strconv.Itoa(int(v.Value))
+	case Decimal:
+		return strconv.Itoa(int(v.Value))
+	default:
+		return "not handeled"
+		// TODO-FIXME
+	}
+}
+
 func NewListFromSeries(block TSeries) List {
 	data := make([]interface{}, block.Len())
 	for block.Pos() < block.Len() {
@@ -1390,7 +1407,7 @@ func (i List) Inspect(idxs Idxs) string {
 // Inspect returns a string representation of the Integer.
 func (i List) Probe(idxs Idxs) string {
 	var bu strings.Builder
-	bu.WriteString("[ ")
+	bu.WriteString("L[")
 	for _, v := range i.Data {
 		switch ob := v.(type) {
 		case map[string]interface{}:
