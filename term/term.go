@@ -204,7 +204,7 @@ func DisplayInputField(right int, mlen int) (env.Object, bool) {
 	SaveCurPos()
 
 	for {
-		letter, ascii, keyCode, err := GetChar2()
+		letter, ascii, _, err := GetChar2()
 		//		letter := fmt.Scan()
 		// RestoreCurPos()
 		//CurDown(1)
@@ -232,8 +232,8 @@ func DisplayInputField(right int, mlen int) (env.Object, bool) {
 			}
 		}
 
-		if keyCode == 40 {
-		}
+		// if keyCode == 40 {
+		// }
 		// else if keyCode == 38 {
 		// }
 	}
@@ -489,9 +489,9 @@ func DisplayTable(bloc env.Spreadsheet, idx *env.Idxs) (env.Object, bool) {
 					ww = len(strconv.FormatFloat(val.Value, 'f', 2, 64)) + 1
 				case env.String:
 					ww = len(val.Probe(*idx))
-					if ww > 60 {
-						// ww = 60
-					}
+					//if ww > 60 {
+					// ww = 60
+					//}
 				case env.Vector:
 					ww = len(val.Probe(*idx))
 				}
@@ -723,9 +723,10 @@ func GetChar() (ascii int, keyCode int, err error) {
 		}
 	} else if numRead == 1 {
 		ascii = int(bytes[0])
-	} else {
-		// Two characters read??
 	}
+	// else {
+	// Two characters read??
+	// }
 	t.Restore()
 	t.Close()
 	return
