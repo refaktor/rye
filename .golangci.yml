@@ -103,7 +103,7 @@ linters:
     - noctx
     - nolintlint
     # - revive
-    # - staticcheck
+    - staticcheck
     # - stylecheck
     - typecheck
     - unconvert
