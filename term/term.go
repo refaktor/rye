@@ -233,8 +233,9 @@ func DisplayInputField(right int, mlen int) (env.Object, bool) {
 		}
 
 		if keyCode == 40 {
-		} else if keyCode == 38 {
 		}
+		// else if keyCode == 38 {
+		// }
 	}
 }
 
@@ -527,9 +528,10 @@ DODO:
 			if i == curr {
 				ColorBrGreen()
 				// fmt.Print("*")
-			} else {
-				// fmt.Print(" ")
 			}
+			// else {
+			// fmt.Print(" ")
+			// }
 			for ic, v := range r {
 				fmt.Printf("| %-"+strconv.Itoa(widths[ic])+"s", fmt.Sprint(v))
 				//fmt.Print("| " + fmt.Sprint(v) + "\t")
