@@ -139,8 +139,6 @@ func (s Spreadsheet) Sum(name string) Object {
 					fmt.Println("row--->")
 					fmt.Println(reflect.TypeOf(v))
 				}
-			} else {
-				// TODO fmt.Println("no VAL")
 			}
 		}
 		if sumf == 0 {
@@ -178,8 +176,6 @@ func (s Spreadsheet) Sum_Just(name string) (float64, error) {
 					fmt.Println("row--->")
 					fmt.Println(reflect.TypeOf(v))
 				}
-			} else {
-				// TODO fmt.Println("no VAL")
 			}
 		}
 		// if sumf == 0 {

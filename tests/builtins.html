@@ -174,7 +174,7 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>rest { 1 2 3 4 5 }
 ; returns { 2 3 4 5 }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>rest list { 1 2 3 4 5 }
-; returns [  2  3  4  5 ]</code></pre>
+; returns L[ 2  3  4  5 ]</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>rest "12345"
 ; returns "2345"</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>try { rest { } } |type?
@@ -188,7 +188,7 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>rest\from { 1 2 3 4 5 } 2
 ; returns { 3 4 5 }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>rest\from list { 1 2 3 4 5 } 2
-; returns [  3  4  5 ]</code></pre>
+; returns L[ 3  4  5 ]</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>rest\from "12345" 2
 ; returns "345"</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>try { rest\from { } } |type?
@@ -278,11 +278,11 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>head { } 2
 ; returns { }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>head list { 1 2 3 4 5 } 2
-; returns [  1  2 ]</code></pre>
+; returns L[ 1  2 ]</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>head list { 1 2 3 4 5 } 10
-; returns [  1  2  3  4  5 ]</code></pre>
+; returns L[ 1  2  3  4  5 ]</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>head list { } 2
-; returns [ ]</code></pre>
+; returns L[]</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>head "12345" 2
 ; returns "12"</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>head "12345" 10
@@ -298,11 +298,11 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>tail { } 2
 ; returns { }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>tail list { 1 2 3 4 5 } 2
-; returns [  4  5 ]</code></pre>
+; returns L[ 4  5 ]</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>tail list { 1 2 3 4 5 } 10
-; returns [  1  2  3  4  5 ]</code></pre>
+; returns L[ 1  2  3  4  5 ]</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>tail list { } 2
-; returns [ ]</code></pre>
+; returns L[]</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>tail "12345" 2
 ; returns "45"</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>tail "12345" 10
@@ -574,6 +574,35 @@
 ; returns 0</code></pre>
 </div>
 </div>
+<h2>Function creating functions!?</h2><p>Functions that create functions.</p><div class='section'>
+<h3>does</h3><p>Pure Builtin(1): Creates a function without arguments.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>f: does { prns "Hey" } f f
+; prints "Hey Hey "</code></pre>
+</div>
+<h3>fn</h3><p>Pure Builtin(2): Creates a function.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>f: fn { x } { prns x } f "A" f "B"
+; prints "A B "</code></pre>
+</div>
+<h3>fn1</h3><p>Pure Builtin(1): Creates a function that accepts one anonymouse argument.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>f: fn1 { .prns } f "A" f "B"
+; prints "A B "</code></pre>
+</div>
+<h3>pfn</h3><p>Pure Builtin(2): Creates a pure function.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>add10: pfn { x } { x + 10 } add10 9
+; returns 19</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: 10 f: pfn { } { prns 1 } try { f } |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: 10 f: pfn { } { x } try { f } |type?
+; returns error</code></pre>
+</div>
+<p class='comment'>Pure functions only have access to other pure functions.</p>
+<h3>closure</h3><p>Pure Builtin(2): Creates a function with specific context.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: 10 cl: fn { } { prns x } , context { x: 99 cl }
+; prints "99 "</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: 10 cl: closure { } { prns x } , context { x: 99 cl }
+; prints "10 "</code></pre>
+</div>
+</div>
 <h2>Code flow combinators</h2><p>Program flow control functions</p><div class='section'>
 <h3>pass</h3><p>Builtin(2): Accepts a value and a block. It does the block, with value injected, and returns (passes on) the initial value.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>"xxx" .pass { + "yyy" :xy }
@@ -594,10 +623,14 @@
 ; returns { 2 3 4 }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>map { "aaa" "bb" "c" } { .length? }
 ; returns { 3 2 1 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map list { "aaa" "bb" "c" } { .length? }
+; returns L[ 3  2  1 ]</code></pre>
 </div>
 <h3>map\pos</h3><p>Pure Builtin(3): Maps values of a block to a new block by evaluating a block of code.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>map\pos { 1 2 3 } 'i { + i }
 ; returns { 2 4 6 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map\pos list { 1 2 3 } 'i { + i }
+; returns L[ 2  4  6 ]</code></pre>
 </div>
 <h3>filter</h3><p>Pure Builtin(2): Filters values from a seris based on return of a injected code block.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>filter { 1 2 3 } { .even }
@@ -625,13 +658,13 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>{ "a" "b" 1 "c" "d" } .partition { .is-integer }
 ; returns { { "a" "b" } { 1 } { "c" "d" } }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>"aaabbccc" .partition { , }
-; returns [  aaa  bb  ccc ]</code></pre>
+; returns L[ aaa  bb  ccc ]</code></pre>
 </div>
 <h3>group</h3><p>Function(4)</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>{ "Anne" "Mitch" "Anya" } .group { .first }
 ; returns [
-;  A: [  Anne  Anya ]
-;  M: [  Mitch ]
+;  A: L[ Anne  Anya ]
+;  M: L[ Mitch ]
 ; ]</code></pre>
 </div>
 <h3>produce</h3><p>Pure Builtin(2): Maps values of a block to a new block by evaluating a block of code.</p><div class='group'>

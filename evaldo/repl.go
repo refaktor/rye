@@ -194,7 +194,7 @@ func DoRyeRepl(es *env.ProgramState, showResults bool) {
 		if code, err := line.Prompt(prompt); err == nil {
 			// strip comment
 
-			multiline := len(code) > 1 && code[len(code)-1:len(code)] == " "
+			multiline := len(code) > 1 && code[len(code)-1:] == " "
 
 			comment := regexp.MustCompile(`\s*;`)
 			line1 := comment.Split(code, 2) //--- just very temporary solution for some comments in repl. Later should probably be part of loader ... maybe?

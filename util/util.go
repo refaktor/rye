@@ -59,11 +59,13 @@ func StringToFieldsWithQuoted(str string, sepa string, quote string) env.Block {
 		return !quoted && string(r) == sepa
 	})
 	lst := make([]env.Object, len(spl))
+	re := regexp.MustCompile("[0-9]+")
 	for i := 0; i < len(spl); i++ {
 		//fmt.Println(spl[i])
 		// TODO -- detect numbers and turn them to integers or floats, later we can also detect other types of values
 		// val, _ := loader.LoadString(spl[i], false)
-		numeric, _ := regexp.MatchString("[0-9]+", spl[i])
+		// numeric, _ := regexp.MatchString("[0-9]+", spl[i])
+		numeric := re.MatchString(spl[i])
 		// fmt.Println(numeric)
 		pass := false
 		if numeric {
@@ -71,8 +73,6 @@ func StringToFieldsWithQuoted(str string, sepa string, quote string) env.Block {
 			if err == nil {
 				lst[i] = *env.NewInteger(int64(num))
 				pass = true
-			} else {
-				// fmt.Println(err.Error())
 			}
 		}
 		if !pass {

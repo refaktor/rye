@@ -782,6 +782,54 @@ section "Doers and evaluators"
 	}
 }
 
+section "Function creating functions!?"
+"Functions that create functions."
+{	
+	
+	group "does"
+	mold\nowrap ?does
+	{ { block } }
+	{
+		stdout { f: does { prns "Hey" } f f } "Hey Hey "
+	}
+
+	group "fn"
+	mold\nowrap ?fn
+	{ { block } }
+	{
+		stdout { f: fn { x } { prns x } f "A" f "B" } "A B "
+	}
+
+	group "fn1"
+	mold\nowrap ?fn1
+	{ { block } }
+	{
+		stdout { f: fn1 { .prns } f "A" f "B" } "A B "
+	}
+
+	group "pfn"
+	mold\nowrap ?pfn
+	{ { block } }
+	{
+		equal { add10: pfn { x } { x + 10 } add10 9 } 19
+		equal { x: 10 f: pfn { } { prns 1 } try { f } |type? } 'error  ; prns is not a pure function so isn't avail.
+		equal { x: 10 f: pfn { } { x } try { f } |type? } 'error  ; x from parent context is also not avail, even read 
+	}
+	comment "Pure functions only have access to other pure functions."
+
+
+	group "closure"
+	mold\nowrap ?closure
+	{ { block } }
+	{
+		stdout { x: 10 cl: fn { } { prns x } , context { x: 99 cl } } "99 "
+		stdout { x: 10 cl: closure { } { prns x } , context { x: 99 cl } } "10 "
+	}
+
+	
+}
+
+
 section "Code flow combinators"
 "Program flow control functions"
 {	

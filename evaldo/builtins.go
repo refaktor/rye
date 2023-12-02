@@ -4024,7 +4024,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"does": {
+	"does": { // **
 		Argsn: 1,
 		Doc:   "Creates a function without arguments.",
 		Pure:  true,
@@ -4040,7 +4040,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"fn1": {
+	"fn1": { // **
 		Argsn: 1,
 		Doc:   "Creates a function that accepts one anonymouse argument.",
 		Pure:  true,
