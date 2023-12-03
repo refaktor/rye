@@ -1,3 +1,4 @@
+//go:build b_echo
 // +build b_echo
 
 package evaldo
@@ -9,12 +10,11 @@ import (
 	"rye/env"
 	"strconv"
 
+	"github.com/gorilla/sessions"
 	"github.com/labstack/echo"
 )
-import (
-	"github.com/gorilla/sessions"
-	//	"github.com/labstack/echo-contrib/session"
-)
+
+//	"github.com/labstack/echo-contrib/session"
 
 var OutBuffer = "" // how does this work with multiple threads / ... in server use ... probably we would need some per environment variable, not global / global?
 
@@ -28,23 +28,25 @@ var Builtins_web = map[string]*env.Builtin{
 
 	"out-buffer": {
 		Argsn: 0,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return env.String{OutBuffer}
 		},
 	},
 
 	"echo": {
 		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.String:
 				OutBuffer += str.Value
 				return str
 			case env.Integer:
-				OutBuffer += strconv.FormatInt(env1.Res.(env.Integer).Value, 10)
+				OutBuffer += strconv.FormatInt(ps.Res.(env.Integer).Value, 10)
 				return str
 			default:
-				return env.NewError("arg 2 should be string %s")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.StringType}, "echo")
 			}
 
 		},
@@ -52,17 +54,18 @@ var Builtins_web = map[string]*env.Builtin{
 
 	"wrap": {
 		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch wrp := arg1.(type) {
 			case env.String:
 				switch str := arg0.(type) {
 				case env.String:
 					return env.String{"<" + wrp.Value + ">" + str.Value + "</" + wrp.Value + ">"}
 				default:
-					return env.NewError("arg should be string %s")
+					return MakeArgError(ps, 1, []env.Type{env.StringType}, "wrap")
 				}
 			default:
-				return env.NewError("arg should be string %s")
+				return MakeArgError(ps, 2, []env.Type{env.StringType}, "wrap")
 			}
 
 		},
@@ -72,24 +75,26 @@ var Builtins_web = map[string]*env.Builtin{
 
 	"form?": {
 		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch ctx := arg0.(type) {
 			case env.Native:
 				switch key := arg1.(type) {
 				case env.String:
 					return env.String{ctx.Value.(echo.Context).FormValue(key.Value)}
 				default:
-					return env.NewError("second arg should be string, got %s")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "form?")
 				}
 			default:
-				return env.NewError("first arg should be echo.Context, got %s")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "form?")
 			}
 		},
 	},
 
 	"query?": {
 		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			fmt.Println("YOYOYOYOYOYO ------------- - - -  --")
 			//return env.String{"QUERY - VAL"}
 			switch ctx := arg0.(type) {
@@ -99,17 +104,18 @@ var Builtins_web = map[string]*env.Builtin{
 					//return env.NewError("XOSADOSADOA SDAS DO" + key.Value)
 					return env.String{ctx.Value.(echo.Context).QueryParam(key.Value)}
 				default:
-					return env.NewError("second arg should be string, got %s")
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "query?")
 				}
 			default:
-				return env.NewError("first arg should be echo.Context, got %s")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "query?")
 			}
 		},
 	},
 
 	"Rye-echo-session//set": { // after we make kinds ... session native will be tagged with session, and set will be multimetod on session
 		Argsn: 3,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			fmt.Println("YOYOYOYOYOYO ------------- - - -  --")
 			//return env.String{"QUERY - VAL"}
 			switch ctx := arg0.(type) {
@@ -122,22 +128,23 @@ var Builtins_web = map[string]*env.Builtin{
 						ctx.Value.(*sessions.Session).Values[key.Value] = val.Value
 						return val
 					default:
-						return env.NewError("second arg should be string, got %s")
+						return MakeArgError(ps, 3, []env.Type{env.StringType}, "Rye-echo-session//set")
 					}
 					//return env.NewError("XOSADOSADOA SDAS DO" + key.Value)
 					return env.String{ctx.Value.(echo.Context).QueryParam(key.Value)}
 				default:
-					return env.NewError("second arg should be string, got %s")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "Rye-echo-session//set")
 				}
 			default:
-				return env.NewError("first arg should be echo.Context, got %s")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-echo-session//set")
 			}
 		},
 	},
 
 	"Rye-echo-session//get": { // after we make kinds ... session native will be tagged with session, and set will be multimetod on sessio
 		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			fmt.Println("YOYOYOYOYOYO ------------- - - -  --")
 			//return env.String{"QUERY - VAL"}
 			switch ctx := arg0.(type) {
@@ -153,17 +160,18 @@ var Builtins_web = map[string]*env.Builtin{
 							return env.String{val2}
 						case env.Object:
 							return val2
+						default:
+							return MakeBuiltinError(ps, "No matching type found.", "Rye-echo-session//get")
 						}
-						return env.NewError("bla 123141")
 						//return env.NewError("XOSADOSADOA SDAS DO" + key.Value)
 					} else {
 						return env.String{"NO VALUE"}
 					}
 				default:
-					return env.NewError("second arg should be string, got %s")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "Rye-echo-session//get")
 				}
 			default:
-				return env.NewError("first arg should be echo.Context, got %s")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-echo-session//get")
 			}
 		},
 	},
@@ -171,7 +179,7 @@ var Builtins_web = map[string]*env.Builtin{
 	/*
 		"queryvals": { // returns the block with query vals
 			Argsn: 1,
-			Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 				fmt.Println("YOYOYOYOYOYO ------------- - - -  --")
 				//return env.String{"QUERY - VAL"}
 				switch ctx := arg0.(type) {
