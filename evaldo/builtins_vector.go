@@ -25,105 +25,110 @@ var Builtins_vector = map[string]*env.Builtin{
 
 	"vector": {
 		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Block:
-
 				data := ArrayFloat32FromSeries(s.Series)
 				val, err := govector.AsVector(data)
 				if err != nil {
-					return MakeError(env1, err.Error())
+					return MakeError(ps, err.Error())
 				}
 				return *env.NewVector(val)
 			default:
-				return MakeError(env1, "Arg1 not String")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "vector")
 			}
 		},
 	},
 
 	"norm": {
 		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Vector:
 				return *env.NewDecimal(govector.Norm(val.Value, 2.0))
 			default:
-				return MakeError(env1, "Arg1 not Vector")
+				return MakeArgError(ps, 1, []env.Type{env.VectorType}, "norm")
 			}
 		},
 	},
 
 	"std-deviation": {
 		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Vector:
 				return *env.NewDecimal(val.Value.Sd())
 			default:
-				return MakeError(env1, "Arg1 not String")
+				return MakeArgError(ps, 1, []env.Type{env.VectorType}, "std-deviation")
 			}
 		},
 	},
 
 	"cosine-similarity": {
 		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch v1 := arg0.(type) {
 			case env.Vector:
 				switch v2 := arg1.(type) {
 				case env.Vector:
 					res, err := govector.Cosine(v1.Value, v2.Value)
 					if err != nil {
-						return MakeError(env1, err.Error())
+						return MakeBuiltinError(ps, err.Error(), "cosine-similarity")
 					}
 					return *env.NewDecimal(res)
 				default:
-					return MakeError(env1, "Arg2 not Vector")
+					return MakeArgError(ps, 2, []env.Type{env.VectorType}, "cosine-similarity")
 				}
 			default:
-				return MakeError(env1, "Arg1 not Vector")
+				return MakeArgError(ps, 1, []env.Type{env.VectorType}, "cosine-similarity")
 			}
 		},
 	},
 
 	"correlation": {
 		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch v1 := arg0.(type) {
 			case env.Vector:
 				switch v2 := arg1.(type) {
 				case env.Vector:
 					res, err := govector.Cor(v1.Value, v2.Value)
 					if err != nil {
-						return MakeError(env1, err.Error())
+						return MakeError(ps, err.Error())
 					}
 					return *env.NewDecimal(res)
 				default:
-					return MakeError(env1, "Arg2 not Vector")
+					return MakeArgError(ps, 2, []env.Type{env.VectorType}, "correlation")
 				}
 			default:
-				return MakeError(env1, "Arg1 not Vector")
+				return MakeArgError(ps, 1, []env.Type{env.VectorType}, "correlation")
 			}
 		},
 	},
 
 	"dot-product": {
 		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch v1 := arg0.(type) {
 			case env.Vector:
 				switch v2 := arg1.(type) {
 				case env.Vector:
 					res, err := govector.DotProduct(v1.Value, v2.Value)
 					if err != nil {
-						return MakeError(env1, err.Error())
+						return MakeError(ps, err.Error())
 					}
 					return *env.NewDecimal(res)
 				default:
-					return MakeError(env1, "Arg2 not Vector")
+					return MakeArgError(ps, 2, []env.Type{env.VectorType}, "dot-product")
 				}
 			default:
-				return MakeError(env1, "Arg1 not Vector")
+				return MakeArgError(ps, 1, []env.Type{env.VectorType}, "dot-product")
 			}
 		},
 	},
