@@ -9,23 +9,25 @@ var Builtins_regexp = map[string]*env.Builtin{
 
 	"regexp": {
 		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.String:
 				val, err := regexp.Compile(s.Value)
 				if err != nil {
-					return MakeError(env1, err.Error())
+					return MakeError(ps, err.Error())
 				}
-				return *env.NewNative(env1.Idx, val, "regexp")
+				return *env.NewNative(ps.Idx, val, "regexp")
 			default:
-				return MakeError(env1, "Arg1 not String")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "regexp")
 			}
 		},
 	},
 
 	"regexp//matches": {
 		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg1.(type) {
 			case env.String:
 				switch s := arg0.(type) {
@@ -37,17 +39,18 @@ var Builtins_regexp = map[string]*env.Builtin{
 						return *env.NewInteger(0)
 					}
 				default:
-					return MakeError(env1, "Arg2 not Native")
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "regexp//matches")
 				}
 			default:
-				return MakeError(env1, "Arg1 not String")
+				return MakeArgError(ps, 2, []env.Type{env.StringType}, "regexp//matches")
 			}
 		},
 	},
 
 	"regexp//submatch?": {
 		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg1.(type) {
 			case env.String:
 				switch s := arg0.(type) {
@@ -56,20 +59,21 @@ var Builtins_regexp = map[string]*env.Builtin{
 					if len(res) > 1 {
 						return *env.NewString(res[1])
 					} else {
-						return MakeError(env1, "No submatch")
+						return MakeBuiltinError(ps, "No submatch.", "regexp//submatch?")
 					}
 				default:
-					return MakeError(env1, "Arg2 not Native")
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "regexp//submatch?")
 				}
 			default:
-				return MakeError(env1, "Arg1 not String")
+				return MakeArgError(ps, 2, []env.Type{env.StringType}, "regexp//submatch?")
 			}
 		},
 	},
 
 	"regexp//match?": {
 		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg1.(type) {
 			case env.String:
 				switch s := arg0.(type) {
@@ -77,17 +81,18 @@ var Builtins_regexp = map[string]*env.Builtin{
 					res := s.Value.(*regexp.Regexp).FindString(val.Value)
 					return *env.NewString(res)
 				default:
-					return MakeError(env1, "Arg2 not Native")
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "regexp//match?")
 				}
 			default:
-				return MakeError(env1, "Arg1 not String")
+				return MakeArgError(ps, 2, []env.Type{env.StringType}, "regexp//match?")
 			}
 		},
 	},
 
 	"regexp//replace-all": {
 		Argsn: 3,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch re := arg0.(type) {
 			case env.Native:
 				switch val := arg1.(type) {
@@ -97,13 +102,13 @@ var Builtins_regexp = map[string]*env.Builtin{
 						res := re.Value.(*regexp.Regexp).ReplaceAllString(val.Value, replac.Value)
 						return *env.NewString(res)
 					default:
-						return MakeError(env1, "Arg2 not Native")
+						return MakeArgError(ps, 3, []env.Type{env.StringType}, "regexp//replace-all")
 					}
 				default:
-					return MakeError(env1, "Arg2 not Native")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "regexp//replace-all")
 				}
 			default:
-				return MakeError(env1, "Arg1 not String")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "regexp//replace-all")
 			}
 		},
 	},
