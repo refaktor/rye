@@ -2,6 +2,7 @@
 package evaldo
 
 import (
+	"fmt"
 	"rye/env"
 )
 
@@ -49,95 +50,99 @@ func Stck_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, to
 	return ps
 }
 
-func Stck_EvalObject(es *env.ProgramState, object env.Object, leftVal env.Object, toLeft bool, ctx *env.RyeCtx) *env.ProgramState {
+func Stck_EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toLeft bool, ctx *env.RyeCtx) *env.ProgramState {
 	//fmt.Print("EVAL OBJECT")
 	switch object.Type() {
 	case env.BuiltinType:
 		//fmt.Println(" BUIL**")
-		//fmt.Println(es.Ser.GetPos())
+		//fmt.Println(ps.Ser.GetPos())
 		//fmt.Println(" BUILTIN**")
 		bu := object.(env.Builtin)
 
 		// OBJECT INJECTION EXPERIMENT
-		// es.Ser.Put(bu)
+		// ps.Ser.Put(bu)
 
-		if checkFlagsBi(bu, es, 333) {
-			return es
+		if checkFlagsBi(bu, ps, 333) {
+			return ps
 		}
-		return Stck_CallBuiltin(bu, es, leftVal, toLeft)
+		return Stck_CallBuiltin(bu, ps, leftVal, toLeft)
 
-		//es.Res.Trace("After builtin call")
-		//return es
+		//ps.Res.Trace("After builtin call")
+		//return ps
 	default:
 		//d object.Trace("DEFAULT**")
-		es.Res = object
-		//es.Res.Trace("After object returned")
-		return es
+		ps.Res = object
+		//ps.Res.Trace("After object returned")
+		return ps
 	}
 }
 
-func Stck_EvalWord(es *env.ProgramState, word env.Object, leftVal env.Object, toLeft bool) *env.ProgramState {
+func Stck_EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft bool) *env.ProgramState {
 	// LOCAL FIRST
-	found, object, ctx := findWordValue(es, word)
+	found, object, ctx := findWordValue(ps, word)
 	if found {
 		trace("****33")
-		return Stck_EvalObject(es, object, leftVal, toLeft, ctx) //ww0128a *
-		//es.Res.Trace("After eval Object")
-		//return es
+		return Stck_EvalObject(ps, object, leftVal, toLeft, ctx) //ww0128a *
+		//ps.Res.Trace("After eval Object")
+		//return ps
 	} else {
 		trace("****34")
-		es.ErrorFlag = true
-		if es.FailureFlag == false {
-			es.Res = *env.NewError2(5, "Word not found: "+word.Inspect(*es.Idx))
+		ps.ErrorFlag = true
+		if ps.FailureFlag == false {
+			ps.Res = *env.NewError2(5, "Word not found: "+word.Inspect(*ps.Idx))
+			fmt.Println("Error: Not known type")
 		}
-		return es
+		return ps
 	}
 }
 
-func Stck_EvalExpression(es *env.ProgramState) *env.ProgramState {
-	object := es.Ser.Pop()
-	//es.Idx.Probe()
+func Stck_EvalExpression(ps *env.ProgramState) *env.ProgramState {
+	object := ps.Ser.Pop()
+	//ps.Idx.Probe()
 	trace2("Before entering expression")
 	if object != nil {
 		switch object.Type() {
 		case env.IntegerType:
-			es.Res = object
+			ps.Res = object
 		case env.StringType:
-			es.Res = object
+			ps.Res = object
 		case env.BlockType:
-			es.Res = object
+			ps.Res = object
 		case env.WordType:
-			rr := Stck_EvalWord(es, object.(env.Word), nil, false)
+			rr := Stck_EvalWord(ps, object.(env.Word), nil, false)
 			return rr
 		default:
-			es.ErrorFlag = true
-			es.Res = env.NewError("Not known type")
+			ps.ErrorFlag = true
+			ps.Res = env.NewError("Not known type")
+			fmt.Println("Error: Not known type")
 		}
 	} else {
-		es.ErrorFlag = true
-		es.Res = env.NewError("Not known type")
+		ps.ErrorFlag = true
+		ps.Res = env.NewError("Not known type")
+		fmt.Println("Error: Not known type")
 	}
 
-	return es
+	return ps
 }
 
-func Stck_EvalBlock(es *env.ProgramState) *env.ProgramState {
-	for es.Ser.Pos() < es.Ser.Len() {
-		es = Stck_EvalExpression(es)
-		if checkFlagsAfterBlock(es, 101) {
-			return es
+func Stck_EvalBlock(ps *env.ProgramState) *env.ProgramState {
+	for ps.Ser.Pos() < ps.Ser.Len() {
+		ps = Stck_EvalExpression(ps)
+		if checkFlagsAfterBlock(ps, 101) {
+			return ps
 		}
-		if es.ReturnFlag || es.ErrorFlag {
-			return es
+		if ps.ReturnFlag || ps.ErrorFlag {
+			return ps
 		}
 	}
-	return es
+	return ps
 }
 
 var Builtins_stackless = map[string]*env.Builtin{
 
 	"ry0": {
 		Argsn: 1,
+		Doc:   "TODODOC",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -146,13 +151,15 @@ var Builtins_stackless = map[string]*env.Builtin{
 				Stck_EvalBlock(ps)
 				ps.Ser = ser
 				return ps.Res
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "ry0")
 			}
-			return nil
 		},
 	},
 
 	"ry0-loop": {
 		Argsn: 2,
+		Doc:   "TODODOC",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cond := arg0.(type) {
 			case env.Integer:
@@ -166,9 +173,12 @@ var Builtins_stackless = map[string]*env.Builtin{
 					}
 					ps.Ser = ser
 					return ps.Res
+				default:
+					return MakeArgError(ps, 1, []env.Type{env.BlockType}, "ry0-loop")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "ry0-loop")
 			}
-			return nil
 		},
 	},
 }
