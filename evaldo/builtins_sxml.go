@@ -14,7 +14,7 @@ import (
 // { <person> [ .print ] }
 // { <person> { _ [ .print ] <name> <surname> <age> { _ [ .print2 ";" ] } }
 
-func load_saxml_Dict(es *env.ProgramState, block env.Block) (env.Dict, *env.Error) {
+func load_saxml_Dict(ps *env.ProgramState, block env.Block) (env.Dict, *env.Error) {
 
 	var keys []string
 
@@ -26,11 +26,11 @@ func load_saxml_Dict(es *env.ProgramState, block env.Block) (env.Dict, *env.Erro
 		switch obj1 := obj.(type) {
 		case env.Xword:
 			trace5("TAG")
-			keys = append(keys, es.Idx.GetWord(obj1.Index))
+			keys = append(keys, ps.Idx.GetWord(obj1.Index))
 			block.Series.Next()
 			continue
 		case env.Tagword:
-			keys = append(keys, "-"+es.Idx.GetWord(obj1.Index)+"-")
+			keys = append(keys, "-"+ps.Idx.GetWord(obj1.Index)+"-")
 			block.Series.Next()
 			continue
 		case env.Void:
@@ -51,7 +51,7 @@ func load_saxml_Dict(es *env.ProgramState, block env.Block) (env.Dict, *env.Erro
 					rmap.Data["-start-"] = obj1
 				}
 			} else if obj1.Mode == 0 {
-				rm, err := load_saxml_Dict(es, obj1)
+				rm, err := load_saxml_Dict(ps, obj1)
 				if err != nil {
 					return _emptyRM(), err
 				}
@@ -61,18 +61,18 @@ func load_saxml_Dict(es *env.ProgramState, block env.Block) (env.Dict, *env.Erro
 						keys = []string{}
 					}
 				} else {
-					return _emptyRM(), env.NewError("no selectors before tag map")
+					return _emptyRM(), MakeBuiltinError(ps, "No selectors before tag map.", "rye-reader//do-sxml")
 				}
 			}
 		default:
 			// ni Dict ampak blok kode, vrni blok
-			return _emptyRM(), env.NewError("unknow type in block parsing TODO")
+			return _emptyRM(), MakeBuiltinError(ps, "Unknown type in block parsing TODO.", "rye-reader//do-sxml")
 		}
 	}
 	return rmap, nil
 }
 
-func do_sxml(es *env.ProgramState, reader io.Reader, rmap env.Dict) env.Object {
+func do_sxml(ps *env.ProgramState, reader io.Reader, rmap env.Dict) env.Object {
 
 	var stack []env.Dict
 	var tags []string
@@ -107,20 +107,20 @@ func do_sxml(es *env.ProgramState, reader io.Reader, rmap env.Dict) env.Object {
 					if ok {
 						switch obj := b.(type) {
 						case env.Block:
-							ser := es.Ser // TODO -- make helper function that "does" a block
-							es.Ser = obj.Series
-							EvalBlockInj(es, *env.NewNative(es.Idx, se, "rye-sxml-start"), true)
-							es.Ser = ser
+							ser := ps.Ser // TODO -- make helper function that "does" a block
+							ps.Ser = obj.Series
+							EvalBlockInj(ps, *env.NewNative(ps.Idx, se, "rye-sxml-start"), true)
+							ps.Ser = ser
 						default:
 							// TODO Err
 						}
 					}
 				case env.Block:
 					stack = append(stack, rmap)
-					ser := es.Ser // TODO -- make helper function that "does" a block
-					es.Ser = obj.Series
-					EvalBlockInj(es, *env.NewNative(es.Idx, se, "rye-sxml-start"), true)
-					es.Ser = ser
+					ser := ps.Ser // TODO -- make helper function that "does" a block
+					ps.Ser = obj.Series
+					EvalBlockInj(ps, *env.NewNative(ps.Idx, se, "rye-sxml-start"), true)
+					ps.Ser = ser
 				}
 			}
 		case xml.CharData:
@@ -128,10 +128,10 @@ func do_sxml(es *env.ProgramState, reader io.Reader, rmap env.Dict) env.Object {
 			if ok {
 				switch obj := ob.(type) {
 				case env.Block:
-					ser := es.Ser // TODO -- make helper function that "does" a block
-					es.Ser = obj.Series
-					EvalBlockInj(es, env.String{string(se.Copy())}, true)
-					es.Ser = ser
+					ser := ps.Ser // TODO -- make helper function that "does" a block
+					ps.Ser = obj.Series
+					EvalBlockInj(ps, env.String{string(se.Copy())}, true)
+					ps.Ser = ser
 				}
 			}
 		case xml.EndElement:
@@ -145,10 +145,10 @@ func do_sxml(es *env.ProgramState, reader io.Reader, rmap env.Dict) env.Object {
 				if ok {
 					switch obj := b.(type) {
 					case env.Block:
-						ser := es.Ser // TODO -- make helper function that "does" a block
-						es.Ser = obj.Series
-						EvalBlockInj(es, *env.NewNative(es.Idx, se, "rye-sxml-start"), true)
-						es.Ser = ser
+						ser := ps.Ser // TODO -- make helper function that "does" a block
+						ps.Ser = obj.Series
+						EvalBlockInj(ps, *env.NewNative(ps.Idx, se, "rye-sxml-start"), true)
+						ps.Ser = ser
 					default:
 						// TODO Err
 					}
@@ -179,21 +179,23 @@ var Builtins_sxml = map[string]*env.Builtin{
 
 	"rye-reader//do-sxml": {
 		Argsn: 2,
-		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			rm, err := load_saxml_Dict(es, arg1.(env.Block))
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			rm, err := load_saxml_Dict(ps, arg1.(env.Block))
 			//fmt.Println(rm)
 			if err != nil {
-				es.FailureFlag = true
+				ps.FailureFlag = true
 				return err
 			}
-			return do_sxml(es, arg0.(env.Native).Value.(io.Reader), rm)
+			return do_sxml(ps, arg0.(env.Native).Value.(io.Reader), rm)
 		},
 	},
 
 	//se.Attr[1].Value
 	"rye-sxml-start//get-attr": {
 		Argsn: 2,
-		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch obj := arg0.(type) {
 			case env.Native:
 				switch obj1 := obj.Value.(type) {
@@ -206,29 +208,30 @@ var Builtins_sxml = map[string]*env.Builtin{
 							return env.Void{}
 						}
 					default:
-						return env.NewError("second arg not integer")
+						return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "rye-sxml-start//get-attr")
 					}
 				default:
-					return env.NewError("Not xml-strat element")
+					return MakeBuiltinError(ps, "Not xml-strat element.", "rye-sxml-start//get-attr")
 				}
 			default:
-				return env.NewError("first argument should be native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "rye-sxml-start//get-attr")
 			}
 		},
 	},
 	"rye-sxml-start//name?": {
 		Argsn: 1,
-		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch obj := arg0.(type) {
 			case env.Native:
 				switch obj1 := obj.Value.(type) {
 				case xml.StartElement:
 					return env.String{obj1.Name.Local}
 				default:
-					return env.NewError("Not xml-strat element")
+					return MakeBuiltinError(ps, "Not xml-strat element.", "rye-sxml-start//name?")
 				}
 			default:
-				return env.NewError("first argument should be native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "rye-sxml-start//name?")
 			}
 		},
 	},
