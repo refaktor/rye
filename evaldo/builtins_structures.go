@@ -23,7 +23,7 @@ import (
 
 // { _ { <person> { * [ -> 1 |print , -> 2 |print ] } } }
 
-func load_structures_Dict(es *env.ProgramState, block env.Block) (env.Dict, *env.Error) {
+func load_structures_Dict(ps *env.ProgramState, block env.Block) (env.Dict, *env.Error) {
 
 	var keys []string
 
@@ -35,11 +35,11 @@ func load_structures_Dict(es *env.ProgramState, block env.Block) (env.Dict, *env
 		switch obj1 := obj.(type) {
 		case env.Xword:
 			// trace5("TAG")
-			keys = append(keys, es.Idx.GetWord(obj1.Index))
+			keys = append(keys, ps.Idx.GetWord(obj1.Index))
 			block.Series.Next()
 			continue
 		case env.Tagword:
-			keys = append(keys, "-"+es.Idx.GetWord(obj1.Index)+"-")
+			keys = append(keys, "-"+ps.Idx.GetWord(obj1.Index)+"-")
 			block.Series.Next()
 			continue
 		case env.Void:
@@ -60,7 +60,7 @@ func load_structures_Dict(es *env.ProgramState, block env.Block) (env.Dict, *env
 					rmap.Data["-start-"] = obj1
 				}
 			} else if obj1.Mode == 0 {
-				rm, err := load_saxml_Dict(es, obj1)
+				rm, err := load_saxml_Dict(ps, obj1)
 				if err != nil {
 					return _emptyRM(), err
 				}
@@ -70,18 +70,18 @@ func load_structures_Dict(es *env.ProgramState, block env.Block) (env.Dict, *env
 						keys = []string{}
 					}
 				} else {
-					return _emptyRM(), env.NewError("no selectors before tag map")
+					return _emptyRM(), MakeBuiltinError(ps, "No selectors before tag map.", "process")
 				}
 			}
 		default:
 			// ni Dict ampak blok kode, vrni blok
-			return _emptyRM(), env.NewError("unknow type in block parsing TODO")
+			return _emptyRM(), MakeBuiltinError(ps, "Unknow type in block parsing TODO.", "process")
 		}
 	}
 	return rmap, nil
 }
 
-func do_structures(es *env.ProgramState, data env.Dict, rmap env.Dict) env.Object { // TODO -- make it work for List too later
+func do_structures(ps *env.ProgramState, data env.Dict, rmap env.Dict) env.Object { // TODO -- make it work for List too later
 	fmt.Println(rmap)
 	// fmt.Println("IN DO")
 	//	var stack []env.Dict
@@ -95,15 +95,15 @@ func do_structures(es *env.ProgramState, data env.Dict, rmap env.Dict) env.Objec
 				switch val1 := val.(type) {
 				case map[string]interface{}:
 					// trace5("RECURSING")
-					do_structures(es, *env.NewDict(val1), obj)
+					do_structures(ps, *env.NewDict(val1), obj)
 					// trace5("OUTCURSING")
 				}
 			case env.Block:
 				//				stack = append(stack, rmap)
-				ser := es.Ser // TODO -- make helper function that "does" a block
-				es.Ser = obj.Series
-				EvalBlockInj(es, JsonToRye(val), true)
-				es.Ser = ser
+				ser := ps.Ser // TODO -- make helper function that "does" a block
+				ps.Ser = obj.Series
+				EvalBlockInj(ps, JsonToRye(val), true)
+				ps.Ser = ser
 			}
 		}
 		rval, ok := rmap.Data[key]
@@ -113,14 +113,14 @@ func do_structures(es *env.ProgramState, data env.Dict, rmap env.Dict) env.Objec
 			case env.Dict:
 				switch val1 := val.(type) {
 				case map[string]interface{}:
-					do_structures(es, *env.NewDict(val1), obj)
+					do_structures(ps, *env.NewDict(val1), obj)
 				}
 			case env.Block:
 				//				stack = append(stack, rmap)
-				ser := es.Ser // TODO -- make helper function that "does" a block
-				es.Ser = obj.Series
-				EvalBlockInj(es, JsonToRye(val), true)
-				es.Ser = ser
+				ser := ps.Ser // TODO -- make helper function that "does" a block
+				ps.Ser = obj.Series
+				EvalBlockInj(ps, JsonToRye(val), true)
+				ps.Ser = ser
 			}
 
 		} else {
@@ -134,16 +134,17 @@ var Builtins_structures = map[string]*env.Builtin{
 
 	"process": {
 		Argsn: 2,
-		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			rm, err := load_structures_Dict(es, arg1.(env.Block))
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			rm, err := load_structures_Dict(ps, arg1.(env.Block))
 			//fmt.Println(rm)
 			if err != nil {
-				es.FailureFlag = true
+				ps.FailureFlag = true
 				return err
 			}
 			switch data := arg0.(type) {
 			case env.Dict:
-				return do_structures(es, data, rm)
+				return do_structures(ps, data, rm)
 			}
 			return nil
 		},

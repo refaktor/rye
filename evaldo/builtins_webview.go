@@ -1,3 +1,4 @@
+//go:build b_webview
 // +build b_webview
 
 package evaldo
@@ -23,14 +24,16 @@ var Builtins_webview = map[string]*env.Builtin{
 
 	"new-webview": {
 		Argsn: 0,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "Create new webview.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			wv := webview.New(true)
-			return *env.NewNative(env1.Idx, wv, "webview")
+			return *env.NewNative(ps.Idx, wv, "webview")
 		},
 	},
 	"webview//set-title": {
 		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "Set title for webview.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			fmt.Println("TITLE ---")
 			switch obj := arg0.(type) {
 			case env.Native:
@@ -39,44 +42,43 @@ var Builtins_webview = map[string]*env.Builtin{
 					obj.Value.(webview.WebView).SetTitle(val.Value)
 					return obj
 				default:
-					return env.NewError("arg 2 should be String")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "webview//set-title")
 				}
 			default:
-				return env.NewError("arg 2 should be Native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "webview//set-title")
 			}
-			return env.NewError("arg 2 should be Native")
-
 		},
 	},
 	"webview//run": {
 		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch obj := arg0.(type) {
 			case env.Native:
 				obj.Value.(webview.WebView).Run()
 				return obj
 			default:
-				return env.NewError("arg 2 should be Native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "webview//run")
 			}
-			return env.NewError("arg 2 should be Native")
 		},
 	},
 	"webview//destroy": {
 		Argsn: 1,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch obj := arg0.(type) {
 			case env.Native:
 				obj.Value.(webview.WebView).Destroy()
 				return obj
 			default:
-				return env.NewError("arg 2 should be Native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "webview//destroy")
 			}
-			return env.NewError("arg 2 should be Native")
 		},
 	},
 	"webview//navigate": {
 		Argsn: 2,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch win := arg0.(type) {
 			case env.Native:
 				switch str := arg1.(type) {
@@ -84,17 +86,17 @@ var Builtins_webview = map[string]*env.Builtin{
 					win.Value.(webview.WebView).Navigate(str.Value)
 					return win
 				default:
-					return env.NewError("arg 2 should be String")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "webview//navigate")
 				}
-
 			default:
-				return env.NewError("arg 1 should be Native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "webview//navigate")
 			}
 		},
 	},
 	"webview//set-size": {
 		Argsn: 3,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch win := arg0.(type) {
 			case env.Native:
 				switch x := arg1.(type) {
@@ -104,20 +106,21 @@ var Builtins_webview = map[string]*env.Builtin{
 						win.Value.(webview.WebView).SetSize(int(x.Value), int(y.Value), webview.HintNone)
 						return win
 					default:
-						return env.NewError("arg 3 should be Int")
+						return MakeArgError(ps, 3, []env.Type{env.IntegerType}, "webview//set-size")
 					}
 				default:
-					return env.NewError("arg 2 should be Int")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "webview//set-size")
 				}
 			default:
-				return env.NewError("arg 1 should be Native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "webview//set-size")
 			}
 		},
 	},
 
 	"webview//fn-bind": {
 		Argsn: 3,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			fmt.Println("YOYO1")
 			switch win := arg0.(type) {
 			case env.Native:
@@ -130,35 +133,36 @@ var Builtins_webview = map[string]*env.Builtin{
 					switch fn := arg2.(type) {
 					case env.Function:
 						if fn.Argsn == 0 {
-							win.Value.(webview.WebView).Bind(env1.Idx.GetWord(word.Index), func() interface{} {
+							win.Value.(webview.WebView).Bind(ps.Idx.GetWord(word.Index), func() interface{} {
 								fmt.Println("YOYO3")
-								CallFunction(fn, env1, nil, false, env1.Ctx)
-								return resultToJS(env1.Res)
+								CallFunction(fn, ps, nil, false, ps.Ctx)
+								return resultToJS(ps.Res)
 							})
 						}
 						if fn.Argsn == 1 {
-							win.Value.(webview.WebView).Bind(env1.Idx.GetWord(word.Index), func(a0 interface{}) interface{} {
+							win.Value.(webview.WebView).Bind(ps.Idx.GetWord(word.Index), func(a0 interface{}) interface{} {
 								a0_ := JsonToRye(a0)
-								CallFunction(fn, env1, a0_, false, env1.Ctx)
-								return resultToJS(env1.Res)
+								CallFunction(fn, ps, a0_, false, ps.Ctx)
+								return resultToJS(ps.Res)
 							})
 						}
 						return win
 					default:
-						return env.NewError("arg 3 should be Int")
+						return MakeArgError(ps, 3, []env.Type{env.FunctionType}, "webview//fn-bind")
 					}
 				default:
-					return env.NewError("arg 2 should be Int")
+					return MakeArgError(ps, 2, []env.Type{env.TagwordType}, "webview//fn-bind")
 				}
 			default:
-				return env.NewError("arg 1 should be Native")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "webview//fn-bind")
 			}
 		},
 	},
 
 	"start-server": {
 		Argsn: 0,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			go func() {
 				fs := http.FileServer(http.Dir("./assets"))
 				http.Handle("/", fs)
@@ -174,7 +178,8 @@ var Builtins_webview = map[string]*env.Builtin{
 	},
 	"start-serverX": {
 		Argsn: 0,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 
 			ln, err := net.Listen("tcp", "127.0.0.1:0")
 			if err != nil {

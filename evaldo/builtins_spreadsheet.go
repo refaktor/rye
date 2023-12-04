@@ -42,9 +42,12 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 						spr.AddRow(*env.NewSpreadsheetRow(rowd, spr))
 					}
 					return *spr
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "spreadsheet")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "spreadsheet")
 			}
-			return MakeError(ps, "Some error")
 		},
 	},
 
@@ -56,8 +59,9 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			case env.Spreadsheet:
 				rows := spr.GetRows()
 				return *env.NewNative(ps.Idx, rows, "spreadsheet-rows")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "get-rows")
 			}
-			return MakeError(ps, "Some error")
 		},
 	},
 
@@ -82,15 +86,19 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 				case env.Native:
 					spr.Rows = append(spr.Rows, data1.Value.([]env.SpreadsheetRow)...)
 					return spr
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.NativeType}, "add-rows")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "add-rows")
 			}
-			return MakeError(ps, "Some errora")
 		},
 	},
 
 	// TODO 2 -- this could move to a go functio so it could be called by general load that uses extension to define the loader
 	"load\\csv": {
 		Argsn: 1,
+		Doc:   "TODODOC",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch file := arg0.(type) {
 			case env.Uri:
@@ -98,6 +106,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 				f, err := os.Open(file.GetPath())
 				if err != nil {
 					// log.Fatal("Unable to read input file "+filePath, err)
+					return MakeBuiltinError(ps, "Unable to read input file.", "load\\csv")
 				}
 				defer f.Close()
 
@@ -105,56 +114,71 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 				rows, err := csvReader.ReadAll()
 				if err != nil {
 					// log.Fatal("Unable to parse file as CSV for "+filePath, err)
+					return MakeBuiltinError(ps, "Unable to parse file as CSV.", "load\\csv")
 				}
 				spr := env.NewSpreadsheet(rows[0])
 				spr.SetRaw(rows[1:])
 				return *spr
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "load\\csv")
 			}
-			return MakeError(ps, "Some error")
 		},
 	},
 	"where-equal": {
 		Argsn: 3,
+		Doc:   "TODODOC",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Spreadsheet:
 				switch col := arg1.(type) {
 				case env.Word:
 					return WhereEquals(ps, spr, ps.Idx.GetWord(col.Index), arg2)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "where-equal")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "where-equal")
 			}
-			return MakeError(ps, "Some error")
 		},
 	},
 	"where-greater": {
 		Argsn: 3,
+		Doc:   "TODODOC",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Spreadsheet:
 				switch col := arg1.(type) {
 				case env.Word:
 					return WhereGreater(ps, spr, ps.Idx.GetWord(col.Index), arg2)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "where-greater")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "where-greater")
 			}
-			return MakeError(ps, "Some error")
 		},
 	},
 	"limit": {
 		Argsn: 2,
+		Doc:   "TODODOC",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Spreadsheet:
 				switch n := arg1.(type) {
 				case env.Integer:
 					return Limit(ps, spr, int(n.Value))
+				default:
+					return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "limit")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "limit")
 			}
-			return MakeError(ps, "Some error")
 		},
 	},
 
 	"sort-col!": {
 		Argsn: 2,
+		Doc:   "TODODOC",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Spreadsheet:
@@ -162,13 +186,17 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 				case env.Word:
 					SortByColumn(ps, &spr, ps.Idx.GetWord(col.Index))
 					return spr
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "sort-col!")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "sort-col!")
 			}
-			return MakeError(ps, "Some error")
 		},
 	},
 	"sort-col\\desc!": {
 		Argsn: 2,
+		Doc:   "TODODOC",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Spreadsheet:
@@ -176,13 +204,17 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 				case env.Word:
 					SortByColumnDesc(ps, &spr, ps.Idx.GetWord(col.Index))
 					return spr
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "sort-col\\desc!")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "sort-col\\desc!")
 			}
-			return MakeError(ps, "Some error")
 		},
 	},
 	"columns": {
 		Argsn: 2,
+		Doc:   "TODODOC",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Spreadsheet:
@@ -198,23 +230,29 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 						}
 					}
 					return spr.Columns(ps, cols)
+				default:
+					return MakeArgError(ps, 1, []env.Type{env.BlockType}, "columns")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "columns")
 			}
-			return MakeError(ps, "Some error")
 		},
 	},
 	"columns?": {
 		Argsn: 1,
+		Doc:   "TODODOC",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Spreadsheet:
 				return spr.GetColumns()
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "columns?")
 			}
-			return MakeError(ps, "Some error")
 		},
 	},
 	"add-col!": {
 		Argsn: 4,
+		Doc:   "TODODOC",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Spreadsheet:
@@ -225,15 +263,23 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 						switch code := arg3.(type) {
 						case env.Block:
 							return GenerateColumn(ps, spr, name, extract, code)
+						default:
+							return MakeArgError(ps, 4, []env.Type{env.BlockType}, "add-col!")
 						}
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "add-col!")
 					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "add-col!")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "add-col!")
 			}
-			return MakeError(ps, "Some error")
 		},
 	},
 	"add-index!": {
 		Argsn: 2,
+		Doc:   "TODODOC",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Spreadsheet:
@@ -254,9 +300,12 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 						}
 					}
 					return spr
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "add-index!")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "add-index!")
 			}
-			return MakeError(ps, "Some error TODO")
 		},
 	},
 }
@@ -435,7 +484,7 @@ func WhereEquals(ps *env.ProgramState, s env.Spreadsheet, name string, val inter
 			return *nspr
 		}
 	} else {
-		return makeError(ps, "Column not found")
+		return MakeBuiltinError(ps, "Column not found.", "WhereEquals")
 	}
 }
 
@@ -483,7 +532,7 @@ func WhereGreater(ps *env.ProgramState, s env.Spreadsheet, name string, val inte
 			return *nspr
 		}
 	} else {
-		return makeError(ps, "Column not found")
+		return MakeBuiltinError(ps, "Column not found.", "WhereGreater")
 	}
 }
 

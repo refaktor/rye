@@ -16,6 +16,7 @@ var Builtins_smtpd = map[string]*env.Builtin{
 
 	"new-smtpd": {
 		Argsn: 1,
+		Doc:   "TODODOC",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewNative(ps.Idx, arg0, "smtpd")
 		},
@@ -23,6 +24,7 @@ var Builtins_smtpd = map[string]*env.Builtin{
 
 	"smtpd//serve": {
 		Argsn: 4,
+		Doc:   "TODODOC",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch server := arg0.(type) {
 			case env.Native:
@@ -50,13 +52,13 @@ var Builtins_smtpd = map[string]*env.Builtin{
 							}, name.Value, "")
 						return arg0
 					default:
-						return makeError(ps, "arg 3 should be string")
+						return MakeArgError(ps, 3, []env.Type{env.StringType}, "smtpd//serve")
 					}
 				default:
-					return makeError(ps, "arg 2 should be string")
+					return MakeArgError(ps, 2, []env.Type{env.FunctionType}, "smtpd//serve")
 				}
 			default:
-				return makeError(ps, "arg 1 should be native")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "smtpd//serve")
 			}
 
 		},
