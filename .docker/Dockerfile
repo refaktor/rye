@@ -6,15 +6,8 @@ WORKDIR /go/src/rye
 
 COPY . .
 
-ENV GO111MODULE=auto
-
-RUN go get -d -v -insecure \
-	github.com/refaktor/go-peg \
-	github.com/refaktor/liner \
-	golang.org/x/net/html \
-	github.com/pkg/profile \
-	github.com/pkg/term && \
-	mkdir -p /out && \
+RUN bash go-get-tiny.bash \
+    mkdir -p /out && \
     go build -x -tags "b_tiny" -o /out/rye .
 
 FROM alpine AS bin
