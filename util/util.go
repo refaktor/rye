@@ -15,12 +15,26 @@ func PrintHeader() {
 	fmt.Println("=-===============-===-===-=============-=")   // Output: -3
 }
 
+// todo -- move to util
+func equalValues(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) bool {
+	return arg0.GetKind() == arg1.GetKind() && arg0.Inspect(*ps.Idx) == arg1.Inspect(*ps.Idx)
+}
+
 func IndexOfAt(s, sep string, n int) int {
 	idx := strings.Index(s[n:], sep)
 	if idx > -1 {
 		idx += n
 	}
 	return idx
+}
+
+func IndexOfSlice(ps *env.ProgramState, slice []env.Object, value env.Object) int {
+	for i, v := range slice {
+		if equalValues(ps, v, value) {
+			return i
+		}
+	}
+	return -1 // not found
 }
 
 func IsTruthy(o env.Object) bool {

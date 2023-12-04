@@ -75,11 +75,6 @@ func makeError(env1 *env.ProgramState, msg string) *env.Error {
 	return env.NewError(msg)
 }
 
-// todo -- move to util
-func equalValues(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) bool {
-	return arg0.GetKind() == arg1.GetKind() && arg0.Inspect(*ps.Idx) == arg1.Inspect(*ps.Idx)
-}
-
 func greaterThan(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) bool {
 	var valA float64
 	var valB float64
@@ -997,7 +992,7 @@ var builtins = map[string]*env.Builtin{
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var res int64
-			if equalValues(ps, arg0, arg1) {
+			if util.EqualValues(ps, arg0, arg1) {
 				res = 1
 			} else {
 				res = 0
@@ -1036,7 +1031,7 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Tests if Arg1 is greater than Arg 2.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			if equalValues(ps, arg0, arg1) || greaterThan(ps, arg0, arg1) {
+			if util.EqualValues(ps, arg0, arg1) || greaterThan(ps, arg0, arg1) {
 				return *env.NewInteger(1)
 			} else {
 				return *env.NewInteger(0)
@@ -1060,7 +1055,7 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Tests if Arg1 is lesser than Arg 2.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			if equalValues(ps, arg0, arg1) || lesserThan(ps, arg0, arg1) {
+			if util.EqualValues(ps, arg0, arg1) || lesserThan(ps, arg0, arg1) {
 				return *env.NewInteger(1)
 			} else {
 				return *env.NewInteger(0)
@@ -2050,9 +2045,11 @@ var builtins = map[string]*env.Builtin{
 				ser := ps.Ser
 				ps.Ser = bloc.Series
 				res := make([]env.Object, 0)
+				injnow := true
 				for ps.Ser.Pos() < ps.Ser.Len() {
 					// ps, injnow = EvalExpressionInj(ps, inj, injnow)
-					EvalExpressionInjLimited(ps, arg0, true)
+					//20231203 EvalExpressionInjectedVALS(ps, arg0, true)
+					ps, injnow = EvalExpressionInj(ps, arg0, injnow)
 					res = append(res, ps.Res)
 					// check and raise the flags if needed if true (error) return
 					//if checkFlagsAfterBlock(ps, 101) {
@@ -2062,7 +2059,7 @@ var builtins = map[string]*env.Builtin{
 					//if checkErrorReturnFlag(ps) {
 					//	return ps
 					//}
-					// ps, injnow = MaybeAcceptComma(ps, inj, injnow)
+					ps, injnow = MaybeAcceptComma(ps, arg0, injnow)
 				}
 				ps.Ser = ser
 				return *env.NewBlock(*env.NewTSeries(res))
@@ -3368,7 +3365,7 @@ var builtins = map[string]*env.Builtin{
 							if ps.ErrorFlag {
 								return ps.Res
 							}
-							if prevres == nil || equalValues(ps, ps.Res, prevres) {
+							if prevres == nil || util.EqualValues(ps, ps.Res, prevres) {
 								subl = append(subl, curval)
 							} else {
 								newl = append(newl, env.NewBlock(*env.NewTSeries(subl)))
@@ -3406,7 +3403,7 @@ var builtins = map[string]*env.Builtin{
 							if ps.ErrorFlag {
 								return ps.Res
 							}
-							if prevres == nil || equalValues(ps, ps.Res, prevres) {
+							if prevres == nil || util.EqualValues(ps, ps.Res, prevres) {
 								subl.WriteRune(curval)
 							} else {
 								newl = append(newl, subl.String())
@@ -3907,7 +3904,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"reverse!": { // **
+	"reverse": { // **
 		Argsn: 1,
 		Doc:   "Accepts a block of values and returns maximal value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -3919,8 +3916,15 @@ var builtins = map[string]*env.Builtin{
 				}
 				// sort.Sort(RyeBlockSort(ss))
 				return *env.NewBlock(*env.NewTSeries(a))
+			case env.String:
+				s := block.Value
+				reversed := ""
+				for i := len(s) - 1; i >= 0; i-- {
+					reversed += string(s[i])
+				}
+				return *env.NewString(reversed)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "reverse!")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.StringType}, "reverse")
 			}
 		},
 	},
@@ -4471,10 +4475,16 @@ var builtins = map[string]*env.Builtin{
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
-			case env.String:
+			case env.String: // TODO-FIX ... let s1 be any type if s2 is block, and string only if s2 is string .. reverse nesting in switches
 				switch s2 := arg1.(type) {
 				case env.String:
 					res := strings.Index(s2.Value, s1.Value)
+					return *env.NewInteger(int64(res + 1))
+				case env.Block:
+					res := util.IndexOfSlice(ps, s2.Series.S, s1)
+					if res == -1 {
+						return MakeBuiltinError(ps, "not found", "position?")
+					}
 					return *env.NewInteger(int64(res + 1))
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.StringType}, "position?")

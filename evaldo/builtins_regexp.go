@@ -67,6 +67,58 @@ var Builtins_regexp = map[string]*env.Builtin{
 		},
 	},
 
+	"regexp//submatches?": {
+		Argsn: 2,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg1.(type) {
+			case env.String:
+				switch s := arg0.(type) {
+				case env.Native:
+					res := s.Value.(*regexp.Regexp).FindStringSubmatch(val.Value)
+					if len(res) > 0 {
+						col1 := make([]env.Object, len(res)-1)
+						for i, row := range res {
+							if i > 0 {
+								col1[i-1] = *env.NewString(row)
+							}
+						}
+						return *env.NewBlock(*env.NewTSeries(col1))
+					}
+					return MakeBuiltinError(env1, "No results", "submatches?")
+				default:
+					return MakeError(env1, "Arg2 not Native")
+				}
+			default:
+				return MakeError(env1, "Arg1 not String")
+			}
+		},
+	},
+
+	"regexp//find-all": {
+		Argsn: 2,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg1.(type) {
+			case env.String:
+				switch s := arg0.(type) {
+				case env.Native:
+					res := s.Value.(*regexp.Regexp).FindAllString(val.Value, -1)
+					if len(res) > 0 {
+						col1 := make([]env.Object, len(res))
+						for i, row := range res {
+							col1[i] = *env.NewString(row)
+						}
+						return *env.NewBlock(*env.NewTSeries(col1))
+					}
+					return MakeBuiltinError(env1, "No results", "submatches?")
+				default:
+					return MakeError(env1, "Arg2 not Native")
+				}
+			default:
+				return MakeError(env1, "Arg1 not String")
+			}
+		},
+	},
+
 	"regexp//match?": {
 		Argsn: 2,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
