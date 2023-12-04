@@ -63,7 +63,7 @@ linters-settings:
   lll:
     line-length: 140
   misspell:
-    locale: US
+    # locale: US # or UK, uncomment if want to be picky about colour/color behaviour/behavior
   nolintlint:
     allow-unused: false # report any unused nolint directives
     require-explanation: false # don't require an explanation for nolint directives
@@ -98,7 +98,7 @@ linters:
     - govet
     # - ineffassign
     # - lll
-    # - misspell
+    - misspell
     # - nakedret
     - noctx
     - nolintlint
