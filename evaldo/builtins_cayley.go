@@ -1,3 +1,4 @@
+//go:build b_cayley
 // +build b_cayley
 
 package evaldo
@@ -9,7 +10,7 @@ import (
 	"github.com/cayleygraph/cayley"
 	"github.com/cayleygraph/cayley/graph"
 	_ "github.com/cayleygraph/cayley/graph/kv/bolt"
-	"github.com/cayleygraph/cayley/query/path"
+	"github.com/cayleygraph/cayley/graph/path"
 	"github.com/cayleygraph/quad"
 )
 

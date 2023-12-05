@@ -16,10 +16,12 @@ require (
 	github.com/mattn/go-runewidth v0.0.3 // indirect
 	github.com/mattn/go-sqlite3 v1.14.18 // indirect
 	github.com/mhale/smtpd v0.8.0 // indirect
+	github.com/mrz1836/postmark v1.6.1 // indirect
 	github.com/pkg/profile v1.7.0 // indirect
 	github.com/pkg/term v1.1.0 // indirect
 	github.com/refaktor/go-peg v0.0.0-20220116201714-31e3dfa8dc7d // indirect
 	github.com/refaktor/liner v1.2.6 // indirect
+	github.com/sashabaranov/go-openai v1.17.9 // indirect
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
 	github.com/thomasberger/parsemail v1.2.6 // indirect
 	go.mongodb.org/mongo-driver v1.13.0 // indirect

@@ -476,7 +476,7 @@ func main_rysh() {
 				fmt.Print(shellEditor)
 			}
 		}
-		// Read the keyboad input.
+		// Read the keyboard input.
 		//input, err := reader.ReadString('\n')
 		//if err != nil {
 		//	fmt.Fprintln(os.Stderr, err)
@@ -521,7 +521,7 @@ func execInput(input string) error {
 	//
 	// look at this page on how to capture the output and pass it through:
 	// https://blog.kowalczyk.info/article/wOYk/advanced-command-execution-in-go-with-osexec.html
-	// we tested it and it worked, but changed ls to multileine outpu. This could be also used to do some ouput formatting like
+	// we tested it and it worked, but changed ls to multiline output. This could be also used to do some output formatting like
 	// adding colors. Maybe other shells use similar approaches and so this should work
 	// With this, we could "move cursor in the background string and get the word under the string like we wanted to
 	// but maybe we would screw up some commands ... test it like ls | wc -l could function a little differently.
@@ -529,7 +529,7 @@ func execInput(input string) error {
 	// maybe we could detect these special commands and let them through as they are and maybe when we are piping
 	// we wouldn't buffer output since it won't be displayed anyway
 	//
-	// OK. so we solved the ls mistery. It displays / outputs uniformly. So this could be done it seems.
+	// OK. so we solved the ls mystery. It displays / outputs uniformly. So this could be done it seems.
 	// https://unix.stackexchange.com/questions/10421/output-from-ls-has-newlines-but-displays-on-a-single-line-why
 	//
 	// looked at the --color option and saw:

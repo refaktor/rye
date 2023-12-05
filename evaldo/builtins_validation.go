@@ -146,7 +146,7 @@ func evalWord(word env.Word, es *env.ProgramState, val interface{}) (interface{}
 }
 
 func evalWord_List(word env.Word, es *env.ProgramState, vals env.List) (env.List, env.Object) {
-	// later get all word indexes in adwance and store them only once... then use integer comparison in switch below
+	// later get all word indexes in advance and store them only once... then use integer comparison in switch below
 	// this is two times BAD ... first it needs to retrieve a string of index (BIG BAD) and then it compares string to string
 	// instead of just comparing two integers
 
