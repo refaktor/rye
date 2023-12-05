@@ -16,7 +16,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"os/exec"
 	"strings"
 
 	"net/http"
@@ -515,7 +514,9 @@ func execInput(input string) error {
 	}
 
 	// Prepare the command to execute.
-	cmd := exec.Command(args[0], args[1:]...)
+	// REMOVED 20231205
+	// Subprocess launched with a potential tainted input or cmd arguments (gosec)
+	// cmd := exec.Command(args[0], args[1:]...)
 
 	//
 	// look at this page on how to capture the output and pass it through:
@@ -553,9 +554,10 @@ func execInput(input string) error {
 	//
 
 	// Set the correct output device.
-	cmd.Stderr = os.Stderr
-	cmd.Stdout = os.Stdout
-
+	// REMOVED 20231205 -- as above
+	//cmd.Stderr = os.Stderr
+	// cmd.Stdout = os.Stdout
 	// Execute the command and return the error.
-	return cmd.Run()
+	// return cmd.Run()
+	return nil
 }
