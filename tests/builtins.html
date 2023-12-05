@@ -747,6 +747,11 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>{ } .group { .first }
 ; returns [
 ; ]</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>{ "Anne" "Mitch" "Anya" } .list .group first
+; returns [
+;  A: L[ Anne  Anya ]
+;  M: L[ Mitch ]
+; ]</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>{ } .list .group { .first }
 ; returns [
 ; ]</code></pre>

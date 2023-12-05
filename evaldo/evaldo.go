@@ -736,7 +736,7 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 	// This is just experiment if we could at currying provide ?fn or ?builtin and
 	// with arity of 0 and it would get executed at calltime. So closure would become
 	// closure: fnc _ ?current-context _
-	// this is maybe only usefull to provide sort of dynamic constant to a curried
+	// this is maybe only useful to provide sort of dynamic constant to a curried
 	// probably not worthe the special case but here for exploration for now just
 	// on arg1 . In case of arg being function this would not bind curry to static
 	// value but to a result of a function, which would let us inject some context

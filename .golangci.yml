@@ -73,6 +73,10 @@ linters-settings:
       - name: unexported-return
         disabled: true
       - name: unused-parameter
+  gosec:
+    exclude-rules:
+      - id: G504
+
 
 linters:
   disable-all: true
@@ -94,6 +98,7 @@ linters:
     # - gomnd
     - goprintffuncname
     - gosec
+    # - gosec -exclude=G504
     # - gosimple
     - govet
     # - ineffassign

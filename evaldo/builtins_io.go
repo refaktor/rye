@@ -214,14 +214,14 @@ func __fs_write(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env
 	case env.Uri:
 		switch s := arg1.(type) {
 		case env.String:
-			err := ioutil.WriteFile(f.GetPath(), []byte(s.Value), 0644)
+			err := ioutil.WriteFile(f.GetPath(), []byte(s.Value), 0600)
 			if err != nil {
 				ps.FailureFlag = true
 				return MakeBuiltinError(ps, err.Error(), "__fs_write")
 			}
 			return arg1
 		case env.Native:
-			err := ioutil.WriteFile(f.GetPath(), []byte(s.Value.([]byte)), 0644)
+			err := ioutil.WriteFile(f.GetPath(), []byte(s.Value.([]byte)), 0600)
 			if err != nil {
 				ps.FailureFlag = true
 				return MakeBuiltinError(ps, err.Error(), "__fs_write")
