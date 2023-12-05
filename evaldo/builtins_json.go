@@ -93,6 +93,8 @@ func JsonToRye(res interface{}) env.Object {
 		return *env.NewInteger(v)
 	case string:
 		return *env.NewString(v)
+	case rune:
+		return *env.NewString(string(v))
 	case map[string]interface{}:
 		return *env.NewDict(v)
 	case []interface{}:
