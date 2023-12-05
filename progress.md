@@ -1,7 +1,7 @@
 # Progress fall 2023 and on
 
 There are still many open details, even some inconsistencies between various ideas, but in the rought the main design of Rye is made and somewhat tested in the wild. Next step is to stabilise the language to make
-it potentially usefull. I think that only with concrete use in the real life will the open detailed questions show it's asnwers.  
+it potentially useful. I think that only with concrete use in the real life will the open detailed questions show it's asnwers.  
 
 ## Builtin functions
 

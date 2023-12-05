@@ -1,3 +1,4 @@
+//go:build b_no_validate
 // +build b_no_validate
 
 package evaldo
@@ -55,7 +56,7 @@ func newVE(n string) *ValidationError {
 }
 
 func evalWord(word env.Word, es *env.ProgramState, val interface{}) (interface{}, *ValidationError) {
-	// later get all word indexes in adwance and store them only once... then use integer comparisson in switch below
+	// later get all word indexes in adwance and store them only once... then use integer comparison in switch below
 	// this is two times BAD ... first it needs to retrieve a string of index (BIG BAD) and then it compares string to string
 	// instead of just comparing two integers
 	switch es.Idx.GetWord(word.Index) {
