@@ -108,8 +108,6 @@ func main_ryk() {
 			log.Fatal(err)
 		}
 		input = string(content)
-	} else {
-		// fmt.Print("no preload")
 	}
 
 	block, genv := loader.LoadString(input, false)
@@ -140,7 +138,7 @@ func main_ryk() {
 	if len(os.Args) >= 5 {
 		if os.Args[argIdx] == "--begin" {
 			block, genv := loader.LoadString(os.Args[argIdx+1], false)
-			es := env.AddToProgramState(es, block.(env.Block).Series, genv)
+			es = env.AddToProgramState(es, block.(env.Block).Series, genv)
 			evaldo.EvalBlockInj(es, es.ForcedResult, true)
 			es.Ser.Reset()
 			argIdx += 2
@@ -216,7 +214,7 @@ func main_ryk() {
 	if len(os.Args) >= argIdx+2 {
 		if os.Args[argIdx] == "--end" {
 			block, genv := loader.LoadString(os.Args[argIdx+1], false)
-			es := env.AddToProgramState(es, block.(env.Block).Series, genv)
+			es = env.AddToProgramState(es, block.(env.Block).Series, genv)
 			evaldo.EvalBlockInj(es, es.ForcedResult, true)
 			es.Ser.Reset()
 		}
@@ -298,7 +296,7 @@ func main_cgi_file(file string, sig bool) {
 		block, genv = loader.LoadString(content, sig)
 		switch val := block.(type) {
 		case env.Block:
-			es := env.AddToProgramState(es, block.(env.Block).Series, genv)
+			es = env.AddToProgramState(es, block.(env.Block).Series, genv)
 			evaldo.RegisterBuiltins(es)
 			contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
 
@@ -314,7 +312,7 @@ func main_cgi_file(file string, sig bool) {
 
 }
 
-func main_rye_repl(in io.Reader, out io.Writer, subc bool) {
+func main_rye_repl(_ io.Reader, _ io.Writer, subc bool) {
 
 	input := " 123 " // "name: \"Rye\" version: \"0.011 alpha\""
 	user, _ := user.Current()
@@ -368,7 +366,7 @@ func main_rysh() {
 				//line = line[:len(line)-1]
 				fmt.Println()
 				shellEditor = false
-				cursorPos = len(line)
+				// cursorPos = len(line)
 				fmt.Print("YOLO")
 				break
 			}

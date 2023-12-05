@@ -75,7 +75,7 @@ linters-settings:
       - name: unused-parameter
   gosec:
     exclude-rules:
-      - id: G504
+      - G504
 
 
 linters:

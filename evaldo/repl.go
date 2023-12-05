@@ -33,7 +33,8 @@ func genPrompt(shellEd *ShellEd, line string) (string, string) {
 	if shellEd.Mode != "" {
 		a := shellEd.Askfor
 		if len(a) > 0 {
-			x, a := a[0], a[1:]
+			x := a[0]
+			a = a[1:]
 			shellEd.Askfor = a
 			return "{ Rye - value of " + x + " } ", x
 		} else if shellEd.Return == nil {
@@ -87,9 +88,9 @@ func maybeDoShedCommands(line string, es *env.ProgramState, shellEd *ShellEd) {
 }
 
 func maybeDoShedCommandsBlk(line string, es *env.ProgramState, block *env.Block, shed_pause *bool) {
-	if block != nil {
-		//block.Trace("TOP")
-	}
+	//if block != nil {
+	//block.Trace("TOP")
+	//}
 	line1 := strings.Split(line, " ")
 	switch line1[0] {
 	case "#in":
@@ -265,8 +266,6 @@ func DoRyeRepl(es *env.ProgramState, showResults bool) {
 							}
 							if es.Res != nil && shellEd.Mode != "" && !shellEd.Pause && es.Res == shellEd.Return {
 								fmt.Println(" <- the correct value was returned")
-							} else {
-								// fmt.Println("")
 							}
 						}
 

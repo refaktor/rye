@@ -285,7 +285,7 @@ func __https_s_get(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 
 		// Print the HTTP Status Code and Status Name
 		//mt.Println("HTTP Response Status:", resp.StatusCode, http.StatusText(resp.StatusCode))
 		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
+		body, _ := ioutil.ReadAll(resp.Body)
 
 		if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
 			return *env.NewString(string(body))

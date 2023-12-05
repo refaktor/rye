@@ -758,12 +758,10 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 	if arg0_ != nil && !pipeSecond {
 		//fmt.Println("ARG0 = LEFT")
 		arg0 = arg0_
-		if !toLeft {
-			//fmt.Println("L TO R *** ")
-			//evalExprFn = EvalExpression_
-		} else {
-			//fmt.Println("TO THE *** LEFT")
-		}
+		//if !toLeft {
+		//fmt.Println("L TO R *** ")
+		//evalExprFn = EvalExpression_
+		// }
 	} else if firstVal != nil && pipeSecond {
 		arg0 = firstVal
 	} else if bi.Argsn > 0 && bi.Cur0 == nil {

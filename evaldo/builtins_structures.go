@@ -122,9 +122,6 @@ func do_structures(ps *env.ProgramState, data env.Dict, rmap env.Dict) env.Objec
 				EvalBlockInj(ps, JsonToRye(val), true)
 				ps.Ser = ser
 			}
-
-		} else {
-			// 	fmt.Println("not found")
 		}
 	}
 	return nil
