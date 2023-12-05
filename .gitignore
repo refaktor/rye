@@ -30,6 +30,8 @@ data.txt
 
 .idea/
 
+.vscode/
+
 \#*\#
 .\#*
 *.bleve
