@@ -951,12 +951,16 @@ section "Higher order like functions"
 	mold\nowrap ?partition
 	{ { block } { block } }
 	{
-		equal { { 1 2 3 4 } .partition { > 2 } } { { 1 2 } { 3 4 } }
-		; equal { list { 1 2 3 4 } .partition { > 2 } } list { list { 1 2 } list { 3 4 } }
-		equal { { "a" "b" 1 "c" "d" } .partition { .is-integer } } { { "a" "b" } { 1 } { "c" "d" } }
-		equal { "aaabbccc" .partition { , } } list { "aaa" "bb" "ccc" }
-		; equal { { } .partition { > 2 } } { }
-		; equal { list { } .partition { > 2 } } list { }
+		equal { partition { 1 2 3 4 } { > 2 } } { { 1 2 } { 3 4 } }
+		equal { partition { "a" "b" 1 "c" "d" } { .is-integer } } { { "a" "b" } { 1 } { "c" "d" } }
+		equal { partition { "a" "b" 1 "c" "d" } ?is-integer } { { "a" "b" } { 1 } { "c" "d" } }
+		equal { partition { } { > 2 } } { { } }
+		equal { partition list { 1 2 3 4 } { > 2 } } list vals { list { 1 2 } list { 3 4 } }
+		equal { partition list { "a" "b" 1 "c" "d" } ?is-integer } list vals { list { "a" "b" } list { 1 } list { "c" "d" } }
+		equal { partition list { } { > 2 } } list vals { list { } }
+		equal { partition "aaabbccc" { , } } list { "aaa" "bb" "ccc" }
+		equal { partition "" { , } } list { "" }
+		equal { partition "aaabbccc" ?is-string } list { "aaabbccc" }
 	}	
 	group "group"
 	mold\nowrap ?group
@@ -970,7 +974,6 @@ section "Higher order like functions"
 		equal { { "Anne" "Mitch" "Anya" } .list .group ?first } dict vals { "A" list { "Anne" "Anya" } "M" list { "Mitch" } }
 		equal { { } .list .group { .first } } dict vals { }
 		equal { try { { 1 2 3 4 } .group { .even } } |type? } 'error ; TODO keys can only be string currently
-		
 	}	
 	group "produce"
 	mold\nowrap ?produce
