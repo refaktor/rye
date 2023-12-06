@@ -3424,8 +3424,7 @@ var builtins = map[string]*env.Builtin{
 								subl = append(subl, curval)
 							} else {
 								newl = append(newl, env.NewBlock(*env.NewTSeries(subl)))
-								subl = make([]env.Object, 1)
-								subl[0] = curval
+								subl = []env.Object{curval}
 							}
 							prevres = ps.Res
 							ps.Ser.Reset()
@@ -3434,12 +3433,71 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = ser
 					case env.Builtin:
 						for i := 0; i < l; i++ {
-							newl[i] = DirectlyCallBuiltin(ps, block, list.Series.Get(i), nil)
+							curval := list.Series.Get(i)
+							res := DirectlyCallBuiltin(ps, block, curval, nil)
+							if prevres == nil || util.EqualValues(ps, res, prevres) {
+								subl = append(subl, curval)
+							} else {
+								newl = append(newl, env.NewBlock(*env.NewTSeries(subl)))
+								subl = []env.Object{curval}
+							}
+							prevres = res
 						}
+						newl = append(newl, env.NewBlock(*env.NewTSeries(subl)))
 					default:
 						return MakeBuiltinError(ps, "Block type should be Builtin or Block.", "partition")
 					}
 					return *env.NewBlock(*env.NewTSeries(newl))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.BuiltinType}, "partition")
+				}
+			case env.List:
+				switch block := arg1.(type) {
+				case env.Block, env.Builtin:
+					l := len(list.Data)
+					newl := make([]interface{}, 0)
+					subl := make([]interface{}, 0)
+					var prevres env.Object
+					switch block := block.(type) {
+					case env.Block:
+						ser := ps.Ser
+						ps.Ser = block.Series
+						for i := 0; i < l; i++ {
+							curval := list.Data[i]
+							curvalRye := JsonToRye(list.Data[i])
+							ps = EvalBlockInj(ps, curvalRye, true)
+							if ps.ErrorFlag {
+								return ps.Res
+							}
+							if prevres == nil || util.EqualValues(ps, ps.Res, prevres) {
+								subl = append(subl, curval)
+							} else {
+								newl = append(newl, env.NewList(subl))
+								subl = []interface{}{curval}
+							}
+							prevres = ps.Res
+							ps.Ser.Reset()
+						}
+						newl = append(newl, env.NewList(subl))
+						ps.Ser = ser
+					case env.Builtin:
+						for i := 0; i < l; i++ {
+							curval := list.Data[i]
+							curvalRye := JsonToRye(list.Data[i])
+							res := DirectlyCallBuiltin(ps, block, curvalRye, nil)
+							if prevres == nil || util.EqualValues(ps, res, prevres) {
+								subl = append(subl, curval)
+							} else {
+								newl = append(newl, env.NewList(subl))
+								subl = []interface{}{curval}
+							}
+							prevres = res
+						}
+						newl = append(newl, env.NewList(subl))
+					default:
+						return MakeBuiltinError(ps, "Block type should be Builtin or Block.", "partition")
+					}
+					return *env.NewList(newl)
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.BuiltinType}, "partition")
 				}
@@ -3471,7 +3529,15 @@ var builtins = map[string]*env.Builtin{
 						newl = append(newl, subl.String())
 						ps.Ser = ser
 					case env.Builtin:
-						//TODO-FIXME
+						for _, curval := range list.Value {
+							res := DirectlyCallBuiltin(ps, block, JsonToRye(curval), nil)
+							if prevres == nil || util.EqualValues(ps, res, prevres) {
+								subl.WriteRune(curval)
+							} else {
+								newl = append(newl, subl.String())
+							}
+						}
+						newl = append(newl, subl.String())
 					default:
 						return MakeBuiltinError(ps, "Block type should be Builtin or Block.", "partition")
 					}
@@ -3480,7 +3546,7 @@ var builtins = map[string]*env.Builtin{
 					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.BuiltinType}, "partition")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.StringType}, "partition")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "partition")
 			}
 		},
 	},

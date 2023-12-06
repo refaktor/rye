@@ -726,12 +726,26 @@
 ; returns "123"</code></pre>
 </div>
 <h3>partition</h3><p>Pure Builtin(2): Partitions a series by evaluating a block of code.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>{ 1 2 3 4 } .partition { > 2 }
+<pre class='prettyprint lang-rye'><code language='lang-rye'>partition { 1 2 3 4 } { > 2 }
 ; returns { { 1 2 } { 3 4 } }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>{ "a" "b" 1 "c" "d" } .partition { .is-integer }
+<pre class='prettyprint lang-rye'><code language='lang-rye'>partition { "a" "b" 1 "c" "d" } { .is-integer }
 ; returns { { "a" "b" } { 1 } { "c" "d" } }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>"aaabbccc" .partition { , }
+<pre class='prettyprint lang-rye'><code language='lang-rye'>partition { "a" "b" 1 "c" "d" } is-integer
+; returns { { "a" "b" } { 1 } { "c" "d" } }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>partition { } { > 2 }
+; returns { { } }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>partition list { 1 2 3 4 } { > 2 }
+; returns L[ L[ 1  2 ]  L[ 3  4 ] ]</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>partition list { "a" "b" 1 "c" "d" } is-integer
+; returns L[ L[ a  b ]  L[ 1 ]  L[ c  d ] ]</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>partition list { } { > 2 }
+; returns L[ L[] ]</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>partition "aaabbccc" { , }
 ; returns L[ aaa  bb  ccc ]</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>partition "" { , }
+; returns L[  ]</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>partition "aaabbccc" is-string
+; returns L[ aaabbccc ]</code></pre>
 </div>
 <h3>group</h3><p>Function(4)</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>{ "Anne" "Mitch" "Anya" } .group { .first }
@@ -746,6 +760,11 @@
 ; ]</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>{ } .group { .first }
 ; returns [
+; ]</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>{ "Anne" "Mitch" "Anya" } .list .group { .first }
+; returns [
+;  A: L[ Anne  Anya ]
+;  M: L[ Mitch ]
 ; ]</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>{ "Anne" "Mitch" "Anya" } .list .group first
 ; returns [
