@@ -1357,8 +1357,16 @@ func RyeToRaw(res Object) interface{} {
 		return strconv.Itoa(int(v.Value))
 	case Decimal:
 		return strconv.Itoa(int(v.Value))
+	case Word:
+		return "word"
+	case Block:
+		return v
+	case List:
+		return v
+	case *List:
+		return *v
 	default:
-		return "not handeled"
+		return "not handeled 2"
 		// TODO-FIXME
 	}
 }

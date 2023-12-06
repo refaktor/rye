@@ -3853,7 +3853,19 @@ var builtins = map[string]*env.Builtin{
 							min = val1
 							isMinInt = false
 						}
+					case env.Integer: // TODO -- think about what values really List should hold and when / how it should be used
+						if float64(val1.Value) < min {
+							min = float64(val1.Value)
+							isMinInt = true
+						}
+					case *env.Integer: // TODO -- think about what values really List should hold and when / how it should be used
+						if float64(val1.Value) < min {
+							min = float64(val1.Value)
+							isMinInt = true
+						}
 					default:
+						fmt.Println(data.Data[i])
+						fmt.Printf("t1: %T\n", data.Data[i])
 						return MakeBuiltinError(ps, "List type should be Integer or Decimal.", "min")
 					}
 				}
@@ -5303,6 +5315,23 @@ var builtins = map[string]*env.Builtin{
 				}
 			default:
 				return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "nth")
+			}
+		},
+	},
+
+	"values": { // **
+		Argsn: 1,
+		Doc:   "Accepts a Dict and returns a List of just values.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch dict := arg0.(type) {
+			case env.Dict:
+				newl := make([]any, 0)
+				for _, v := range dict.Data {
+					newl = append(newl, v)
+				}
+				return *env.NewList(newl)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.DictType}, "values")
 			}
 		},
 	},

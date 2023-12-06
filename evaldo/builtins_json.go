@@ -99,6 +99,12 @@ func JsonToRye(res interface{}) env.Object {
 		return *env.NewDict(v)
 	case []interface{}:
 		return *env.NewList(v)
+	case *env.List:
+		return *v
+	case *env.Block:
+		return *v
+	case *env.Object:
+		return *v
 	case env.Object:
 		return v
 	case nil:
