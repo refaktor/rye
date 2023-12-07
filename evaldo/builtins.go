@@ -5661,6 +5661,23 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// return , error , failure functions
+	"exit": { // **
+		Argsn: 1,
+		Doc:   "Accepts one value and returns it.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch code := arg0.(type) {
+			case env.Integer:
+				os.Exit(int(code.Value))
+				return nil
+			default:
+				fmt.Println(code.Inspect(*ps.Idx))
+				os.Exit(0)
+				return nil
+			}
+		},
+	},
+
 	"^fail": {
 		Argsn: 1,
 		Doc:   "Returning Fail.",

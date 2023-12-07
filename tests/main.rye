@@ -6,6 +6,7 @@ root-ctx: current-ctx
 test-framework: context {
 
 	cnt: 0
+	failed: 0
 	
 	section: fn { name descr code } { print join { "SECTION: " name newline " * " descr } , do code }
 	
@@ -13,19 +14,19 @@ test-framework: context {
 	
 	equal: fn { test res } {
 		do-in root-ctx test :got = res
-		|either { print "  - OK" } { print join { "  - Error: expected " mold res ", got " mold got } }
+		|either { print "  - OK" } { inc! 'failed , print join { "  - Error: expected " mold res ", got " mold got } }
 	}
 	
 	stdout: fn { test res } {
 		capture-stdout { do-in root-ctx test } :got = res
-		|either { print "  - OK" } { print join { "  - Error: expected " mold res ", got " mold got } }
+		|either { print "  - OK" } { inc! 'failed , print join { "  - Error: expected " mold res ", got " mold got } }
 	}
 
 	comment: fn { str } {
 		
 	}
 
-	stats: fn { } { print "CNT: " + cnt }
+	end: fn { } { print "CNT: " + cnt , print "FAILED: " + failed , if failed > 0 { exit 1 } }
 
 }
 
@@ -49,7 +50,7 @@ docs-framework: context {
 		print join [ "<p class='comment'>" str "</p>" ]
 	}
 
-	stats: fn { } { }
+	end: fn { } { }
 
 	
 }
