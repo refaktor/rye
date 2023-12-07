@@ -1354,9 +1354,11 @@ func RyeToRaw(res Object) interface{} {
 	case String:
 		return v.Value
 	case Integer:
-		return strconv.Itoa(int(v.Value))
+		return v.Value
+		// return strconv.Itoa(int(v.Value))
 	case Decimal:
-		return strconv.Itoa(int(v.Value))
+		return v.Value
+		// return strconv.Itoa(int(v.Value))
 	case Word:
 		return "word"
 	case Block:
