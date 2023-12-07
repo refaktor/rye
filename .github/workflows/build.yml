@@ -27,7 +27,7 @@ jobs:
       run: go build -tags "b_tiny,b_sqlite,b_http,b_sql,b_postgres,b_bson,b_crypto,b_smtpd,b_mail,b_bctypt,b_telegram,b_norepl" -o bin/rye
 
     - name: Run Rye Tests
-      run: bin/rye tests/main.rye test
+      run: cd tests ; ../bin/rye tests/main.rye test
 
 #    - name: Test
 #      run: go test -v -tags "b_tiny,b_sqlite,b_http,b_sql,b_postgres,b_openai,b_bson,b_crypto,b_smtpd,b_mail,b_postmark,b_bctypt,b_telegram" ./...
