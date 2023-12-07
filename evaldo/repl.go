@@ -239,7 +239,7 @@ func DoRyeRepl(es *env.ProgramState, showResults bool) {
 					//fmt.Println(lineReal)
 					block, genv := loader.LoadString(line2, false)
 					block1 := block.(env.Block)
-					es := env.AddToProgramState(es, block1.Series, genv)
+					es = env.AddToProgramState(es, block1.Series, genv)
 					EvalBlockInj(es, prevResult, true)
 
 					if arg != "" {

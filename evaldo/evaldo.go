@@ -727,11 +727,11 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 	ps.Ser.SetPos(pospos)*/
 
 	// let's try to make it without array allocation and without variadic arguments that also maybe actualizes splice
-	arg0 := env.Object(bi.Cur0) //env.Object(bi.Cur0)
-	arg1 := env.Object(bi.Cur1)
-	arg2 := env.Object(bi.Cur2)
-	arg3 := env.Object(bi.Cur3)
-	arg4 := env.Object(bi.Cur4)
+	arg0 := bi.Cur0 //env.Object(bi.Cur0)
+	arg1 := bi.Cur1
+	arg2 := bi.Cur2
+	arg3 := bi.Cur3
+	arg4 := bi.Cur4
 
 	// This is just experiment if we could at currying provide ?fn or ?builtin and
 	// with arity of 0 and it would get executed at call time. So closure would become
@@ -875,23 +875,23 @@ func DirectlyCallBuiltin(ps *env.ProgramState, bi env.Builtin, a0 env.Object, a1
 	var arg1 env.Object
 
 	if bi.Cur0 != nil {
-		arg0 = env.Object(bi.Cur0)
+		arg0 = bi.Cur0
 		if bi.Cur1 != nil {
-			arg1 = env.Object(bi.Cur1)
+			arg1 = bi.Cur1
 		} else {
 			arg1 = a0
 		}
 	} else {
 		arg0 = a0
 		if bi.Cur1 != nil {
-			arg1 = env.Object(bi.Cur1)
+			arg1 = bi.Cur1
 		} else {
 			arg1 = a1
 		}
 	}
-	arg2 := env.Object(bi.Cur2)
-	arg3 := env.Object(bi.Cur3)
-	arg4 := env.Object(bi.Cur4)
+	arg2 := bi.Cur2
+	arg3 := bi.Cur3
+	arg4 := bi.Cur4
 	return bi.Fn(ps, arg0, arg1, arg2, arg3, arg4)
 }
 

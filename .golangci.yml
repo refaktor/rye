@@ -112,7 +112,7 @@ linters:
     # - stylecheck
     - typecheck
     - unconvert
-    - unparam
+    # l1 - unparam
     # - unused
     # - whitespace
 
@@ -136,6 +136,8 @@ issues:
   exclude-rules:
     - text: "evaldo"
       linters: typecheck
+    - text: "net/http/cgi" # REASON: only important for Go 1.6 and lower, Rye requires go1.8 or higher as defined in go.mod
+      linters: gosec 
 
     # - path: _test\.go
     #   linters:

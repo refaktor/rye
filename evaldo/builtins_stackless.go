@@ -15,8 +15,8 @@ import (
 func Stck_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft bool) *env.ProgramState {
 
 	evalExprFn := EvalExpression2
-	arg0 := env.Object(bi.Cur0) //env.Object(bi.Cur0)
-	arg1 := env.Object(bi.Cur1)
+	arg0 := bi.Cur0 //env.Object(bi.Cur0)
+	arg1 := bi.Cur1
 
 	if bi.Argsn > 0 && bi.Cur0 == nil {
 		//fmt.Println(" ARG 1 ")

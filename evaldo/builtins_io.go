@@ -6,6 +6,7 @@ package evaldo
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -14,6 +15,7 @@ import (
 	"path/filepath"
 	"rye/env"
 	"strings"
+	"time"
 
 	"net/http"
 	"net/http/cgi"
@@ -221,7 +223,7 @@ func __fs_write(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env
 			}
 			return arg1
 		case env.Native:
-			err := ioutil.WriteFile(f.GetPath(), []byte(s.Value.([]byte)), 0600)
+			err := ioutil.WriteFile(f.GetPath(), s.Value.([]byte), 0600)
 			if err != nil {
 				ps.FailureFlag = true
 				return MakeBuiltinError(ps, err.Error(), "__fs_write")
@@ -277,7 +279,14 @@ func __stat(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Obj
 func __https_s_get(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch f := arg0.(type) {
 	case env.Uri:
-		resp, err := http.Get(f.GetProtocol() + "://" + f.GetPath())
+		ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Second*10))
+		defer cancel()
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, f.GetProtocol()+"://"+f.GetPath(), nil)
+		if err != nil {
+			ps.FailureFlag = true
+			return *env.NewError(err.Error())
+		}
+		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
 			ps.FailureFlag = true
 			return *env.NewError(err.Error())
@@ -324,12 +333,23 @@ func __http_s_post(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 
 				// TODO -- add other cases
 				// fmt.Println("BEFORE")
 
-				resp, err := http.Post(f.GetProtocol()+"://"+f.GetPath(), tt, bytes.NewBufferString(d.Value))
+				ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Second*10))
+				defer cancel()
+				req, err := http.NewRequestWithContext(ctx, http.MethodPost, f.GetProtocol()+"://"+f.GetPath(), bytes.NewBufferString(d.Value))
 				if err != nil {
-					// fmt.Println("ERR")
 					ps.FailureFlag = true
-					return MakeBuiltinError(ps, err.Error(), "__http_s_post")
+					return *env.NewError(err.Error())
 				}
+				req.Header.Set("Content-Type", tt)
+				resp, err := http.DefaultClient.Do(req)
+				if err != nil {
+					ps.FailureFlag = true
+					return *env.NewError(err.Error())
+				}
+				// Print the HTTP Status Code and Status Name
+				//mt.Println("HTTP Response Status:", resp.StatusCode, http.StatusText(resp.StatusCode))
+
+				// resp, err := http.Post(f.GetProtocol()+"://"+f.GetPath(), tt, bytes.NewBufferString(d.Value))
 
 				// Print the HTTP Status Code and Status Name
 				// fmt.Println("HTTP Response Status:", resp.StatusCode, http.StatusText(resp.StatusCode))
@@ -504,6 +524,7 @@ func __https_request__do(ps *env.ProgramState, arg0 env.Object, arg1 env.Object,
 	case env.Native:
 		client := &http.Client{}
 		resp, err := client.Do(req.Value.(*http.Request))
+		defer resp.Body.Close()
 		if err != nil {
 			return MakeBuiltinError(ps, err.Error(), "__https_request__do")
 		}

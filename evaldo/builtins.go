@@ -19,6 +19,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 func ss() {
@@ -4802,7 +4805,9 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
-				return *env.NewString(strings.Title(s1.Value))
+
+				english := cases.Title(language.English)
+				return *env.NewString(english.String(s1.Value))
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "capitalize")
 			}
@@ -5204,24 +5209,24 @@ var builtins = map[string]*env.Builtin{
 					if len(s1.Series.S) < numVal {
 						numVal = len(s1.Series.S)
 					}
-					return *env.NewBlock(*env.NewTSeries(s1.Series.S[len(s1.Series.S)-int(numVal):]))
+					return *env.NewBlock(*env.NewTSeries(s1.Series.S[len(s1.Series.S)-numVal:]))
 				case env.List:
 					if len(s1.Data) == 0 {
 						return *env.NewList([]interface{}{})
 					}
-					if len(s1.Data) < int(numVal) {
+					if len(s1.Data) < numVal {
 						numVal = len(s1.Data)
 					}
-					return *env.NewList(s1.Data[len(s1.Data)-int(numVal):])
+					return *env.NewList(s1.Data[len(s1.Data)-numVal:])
 				case env.String:
 					str := []rune(s1.Value)
 					if len(str) == 0 {
 						return *env.NewString("")
 					}
-					if len(str) < int(numVal) {
+					if len(str) < numVal {
 						numVal = len(str)
 					}
-					return *env.NewString(string(str[len(str)-int(numVal):]))
+					return *env.NewString(string(str[len(str)-numVal:]))
 				default:
 					return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "tail")
 				}
@@ -5331,7 +5336,7 @@ var builtins = map[string]*env.Builtin{
 					if len(s1.Data) == 0 {
 						return *env.NewList([]interface{}{})
 					}
-					if len(s1.Data) < int(numVal) {
+					if len(s1.Data) < numVal {
 						numVal = len(s1.Data)
 					}
 					return *env.NewList(s1.Data[0:numVal])
@@ -5340,7 +5345,7 @@ var builtins = map[string]*env.Builtin{
 					if len(str) == 0 {
 						return *env.NewString("")
 					}
-					if len(str) < int(numVal) {
+					if len(str) < numVal {
 						numVal = len(str)
 					}
 					return *env.NewString(string(str[0:numVal]))
@@ -6189,7 +6194,7 @@ var builtins = map[string]*env.Builtin{
 								}
 								fmt.Println("out:", outb.String(), "err:", errb.String()) */
 
-				r := exec.Command("/bin/bash", "-c", s0.Value)
+				r := exec.Command("/bin/bash", "-c", s0.Value) //nolint: gosec
 				// stdout, stderr := r.Output()
 				var outb, errb bytes.Buffer
 				r.Stdout = &outb

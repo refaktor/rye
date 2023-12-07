@@ -204,14 +204,14 @@ func evalDecimal(val interface{}) (interface{}, env.Object) {
 		if e != nil {
 			return val, *env.NewString("not decimal")
 		} else {
-			return *env.NewDecimal(float64(v)), nil
+			return *env.NewDecimal(v), nil
 		}
 	case env.String:
 		v, e := strconv.ParseFloat(val1.Value, 64)
 		if e != nil {
 			return val, *env.NewString("not decimal")
 		} else {
-			return *env.NewDecimal(float64(v)), nil
+			return *env.NewDecimal(v), nil
 		}
 	default:
 		return val, *env.NewString("not decimal")
