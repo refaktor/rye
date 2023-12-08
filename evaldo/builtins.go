@@ -705,6 +705,43 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"and": {
+		Argsn: 2,
+		Doc:   "Bitwise AND operation between two values.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Integer:
+				switch s2 := arg1.(type) {
+				case env.Integer:
+					return *env.NewInteger(s1.Value & s2.Value)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "and")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "and")
+			}
+		},
+	},
+	"or": {
+		Argsn: 2,
+		Doc:   "Bitwise OR operation between two values.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Integer:
+				switch s2 := arg1.(type) {
+				case env.Integer:
+					return *env.NewInteger(s1.Value | s2.Value)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "or")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "or")
+			}
+		},
+	},
+
 	"require_": { //
 		Argsn: 1,
 		Doc:   "Requite a truthy value or produce a failure.",
