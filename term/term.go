@@ -540,7 +540,6 @@ DODO:
 			CloseProps()
 			fmt.Println("|")
 		}
-
 	} else {
 		for range bloc.Rows {
 			ClearLine()
@@ -573,7 +572,6 @@ DODO:
 			CloseProps()
 			fmt.Println("|")
 		}
-
 	}
 
 	if bloc.RawMode {

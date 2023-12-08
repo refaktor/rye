@@ -24,7 +24,6 @@ func CopyMap(m map[string]interface{}) map[string]interface{} {
 }
 
 func Conversion_EvalBlockCtx(ps *env.ProgramState, vals env.RyeCtx) env.Object {
-
 	var key int
 
 	out := env.NewEnv(nil)
@@ -46,7 +45,6 @@ func Conversion_EvalBlockCtx(ps *env.ProgramState, vals env.RyeCtx) env.Object {
 }
 
 func Conversion_EvalBlockDict(ps *env.ProgramState, vals env.Dict) env.Object {
-
 	//var outD map[string]interface{}
 	outD := make(map[string]interface{})
 	object := ps.Ser.Peek()

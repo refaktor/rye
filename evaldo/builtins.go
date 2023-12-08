@@ -6413,7 +6413,6 @@ func registerBuiltin(ps *env.ProgramState, word string, builtin env.Builtin) {
 		if builtin.Pure {
 			ps.PCtx.Set(idxw, builtin)
 		}
-
 	} else {
 		ps.Gen.Set(idxk, idxw, builtin)
 	}

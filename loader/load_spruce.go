@@ -45,11 +45,9 @@ func LoadSpruceString(input string) (*env.SprNode, *env.Idxs) {
 
 	// for each character
 	for i, c := range input {
-
 		fmt.Println(i, " => ", string(c))
 
 		if state != INBLOCK {
-
 			if c == ' ' {
 				if state == STARTL {
 					space_cnt += 1
@@ -133,7 +131,6 @@ func findParentNode(parent *env.SprNode, depth int) *env.SprNode {
 		if cnt > 30 {
 			return nil
 		}
-
 	}
 	return nil
 }

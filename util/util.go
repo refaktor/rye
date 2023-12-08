@@ -113,7 +113,6 @@ func FormatJson(val env.Object, e env.Idxs) string {
 			}
 		}
 		r.WriteString(" ]")
-
 	}
 	return r.String()
 }

@@ -244,7 +244,6 @@ func TestLoader_load_string_1(t *testing.T) {
 		if block.(env.Block).Series.Get(0).(env.String).Value != " wowo 123 !._' " {
 			t.Error("Not correct string content")
 		}
-
 	}
 }
 

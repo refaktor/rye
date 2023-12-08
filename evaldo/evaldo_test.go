@@ -34,7 +34,6 @@ func TestEvaldo_load_integer2(t *testing.T) {
 	if es.Res.Type() != env.IntegerType {
 		t.Error("Expected result type integer")
 	}
-
 }
 
 func TestEvaldo_load_integer3(t *testing.T) {
@@ -58,7 +57,6 @@ func TestEvaldo_load_integer3(t *testing.T) {
 	if es.Res.(env.Integer).Value != 435 {
 		t.Error("Expected result value 435")
 	}
-
 }
 
 //

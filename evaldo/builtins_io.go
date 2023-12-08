@@ -272,7 +272,6 @@ func __stat(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Obj
 	default:
 		ps.FailureFlag = true
 		return MakeArgError(ps, 1, []env.Type{env.NativeType}, "__stat")
-
 	}
 }
 

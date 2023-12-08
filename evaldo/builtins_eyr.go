@@ -56,7 +56,6 @@ func (s *EyrStack) Pop() env.Object {
 }
 
 func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft bool, stack *EyrStack) *env.ProgramState {
-
 	arg0 := bi.Cur0 //env.Object(bi.Cur0)
 	arg1 := bi.Cur1
 
@@ -83,7 +82,6 @@ func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toL
 		//fmt.Println(ps.Res)
 
 		arg1 = stack.Pop()
-
 	}
 	ps.Res = bi.Fn(ps, arg0, arg1, nil, nil, nil)
 

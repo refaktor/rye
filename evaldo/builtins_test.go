@@ -16,7 +16,6 @@ import (
 //
 
 func DISABLED_TestBuiltin_oneone(t *testing.T) {
-
 	genv := loader.GetIdxs()
 	builtin := builtins["oneone"]
 	es := env.NewProgramState(env.TSeries{}, genv)
@@ -444,7 +443,6 @@ func TestValidateDictCheck1(t *testing.T) { // two keys, int as string, pass tru
 	if !(es.Res.(env.Integer).Value == 100) {
 		t.Error("Expected result value 100")
 	}
-
 }
 
 func TestValidateDictCalc1(t *testing.T) { // two keys, int as string, pass true
@@ -465,7 +463,6 @@ func TestValidateDictCalc1(t *testing.T) { // two keys, int as string, pass true
 	if !(es.Res.(env.Integer).Value == 10001) {
 		t.Error("Expected result value 123")
 	}
-
 }
 
 func TestReturn(t *testing.T) { // two keys, int as string, pass true
@@ -484,7 +481,6 @@ func TestReturn(t *testing.T) { // two keys, int as string, pass true
 	if !(es.Res.(env.Integer).Value == 2) {
 		t.Error("Expected result value 2")
 	}
-
 }
 
 func TestReturnDo(t *testing.T) { // two keys, int as string, pass true

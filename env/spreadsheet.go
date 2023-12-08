@@ -198,7 +198,6 @@ func (s Spreadsheet) NRows() int {
 }
 
 func (s Spreadsheet) Columns(ps *ProgramState, names []string) Object {
-
 	idxs := make([]int, len(names))
 	for name := range names {
 		idx := IndexOfString(names[name], s.Cols)
@@ -206,7 +205,6 @@ func (s Spreadsheet) Columns(ps *ProgramState, names []string) Object {
 			return makeError(ps, "Col not found")
 		}
 		idxs[name] = idx
-
 	}
 	nspr := NewSpreadsheet(names)
 	if s.RawMode {

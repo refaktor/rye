@@ -1202,7 +1202,6 @@ func NewCPath2(w1 Word, w2 Word) *CPath {
 	cp.Word1 = w1
 	cp.Word2 = w2
 	return &cp
-
 }
 func NewCPath3(w1 Word, w2 Word, w3 Word) *CPath {
 	var cp CPath

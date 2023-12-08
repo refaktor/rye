@@ -152,7 +152,6 @@ func MoveCursorBackward(bias int) {
 //
 
 func DoRyeRepl(es *env.ProgramState, showResults bool) {
-
 	codestr := "a: 100\nb: \"jim\"\nprint 10 + 20 + b"
 	codelines := strings.Split(codestr, ",\n")
 
@@ -189,7 +188,6 @@ func DoRyeRepl(es *env.ProgramState, showResults bool) {
 	var prevResult env.Object
 
 	for {
-
 		prompt, arg := genPrompt(&shellEd, line2)
 
 		if code, err := line.Prompt(prompt); err == nil {
@@ -217,11 +215,8 @@ func DoRyeRepl(es *env.ProgramState, showResults bool) {
 			///fmt.Println(lineReal[len(lineReal)-3 : len(lineReal)])
 
 			if multiline {
-
 				line2 += lineReal + "\n"
-
 			} else {
-
 				line2 += lineReal
 
 				if strings.Trim(line2, " \t\n\r") == "" {
@@ -235,7 +230,6 @@ func DoRyeRepl(es *env.ProgramState, showResults bool) {
 					// fmt.Println("")
 					return
 				} else {
-
 					//fmt.Println(lineReal)
 					block, genv := loader.LoadString(line2, false)
 					block1 := block.(env.Block)
@@ -276,7 +270,6 @@ func DoRyeRepl(es *env.ProgramState, showResults bool) {
 				}
 
 				line2 = ""
-
 			}
 
 			line.AppendHistory(code)
@@ -294,7 +287,6 @@ func DoRyeRepl(es *env.ProgramState, showResults bool) {
 			log.Print("Error reading line: ", err)
 			break
 		}
-
 	}
 
 	if f, err := os.Create(history_fn); err != nil {
