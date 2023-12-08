@@ -100,7 +100,7 @@ linters:
     # - gosec -exclude=G504
     - gosimple
     - govet
-    # - ineffassign
+    - ineffassign
     # - lll
     - misspell
     # - nakedret

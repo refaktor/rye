@@ -311,7 +311,6 @@ DODO:
 				if ii == curr {
 					ret = k
 				}
-				ii++
 			}
 			return *env.NewString(ret), false // bloc.Series.Get(curr), false
 		}
