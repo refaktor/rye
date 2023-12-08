@@ -32,8 +32,8 @@ linters-settings:
     min-complexity: 15
   gofmt:
     rewrite-rules:
-      - pattern: "interface{}"
-        replacement: "any"
+      - pattern: 'interface{}'
+        replacement: 'any'
   goimports:
     local-prefixes: github.com/golangci/golangci-lint
   gomnd:
@@ -44,10 +44,10 @@ linters-settings:
       - condition
       - return
     ignored-numbers:
-      - "0"
-      - "1"
-      - "2"
-      - "3"
+      - '0'
+      - '1'
+      - '2'
+      - '3'
     ignored-functions:
       - strings.SplitN
 
@@ -76,6 +76,7 @@ linters-settings:
   gosec:
     exclude-rules:
       - G504
+
 
 linters:
   disable-all: true
@@ -136,7 +137,7 @@ issues:
     - text: "evaldo"
       linters: typecheck
     - text: "net/http/cgi" # REASON: only important for Go 1.6 and lower, Rye requires go1.8 or higher as defined in go.mod
-      linters: gosec
+      linters: gosec 
 
     # - path: _test\.go
     #   linters:
@@ -167,3 +168,4 @@ run:
   #   - internal/cache # extracted from Go code
   #   - internal/renameio # extracted from Go code
   #   - internal/robustio # extracted from Go code
+  
