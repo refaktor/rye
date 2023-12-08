@@ -170,7 +170,9 @@ func DoRyeRepl(es *env.ProgramState, showResults bool) {
 	})
 
 	if f, err := os.Open(history_fn); err == nil {
-		line.ReadHistory(f)
+		if _, err := line.ReadHistory(f); err != nil {
+			log.Print("Error reading history file: ", err)
+		}
 		f.Close()
 	}
 	//const PROMPT = "\x1b[6;30;42m Rye \033[m "
@@ -292,7 +294,9 @@ func DoRyeRepl(es *env.ProgramState, showResults bool) {
 	if f, err := os.Create(history_fn); err != nil {
 		log.Print("Error writing history file: ", err)
 	} else {
-		line.WriteHistory(f)
+		if _, err := line.WriteHistory(f); err != nil {
+			log.Print("Error writing history file: ", err)
+		}
 		f.Close()
 	}
 }
