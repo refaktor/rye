@@ -53,8 +53,7 @@ func genPrompt(shellEd *ShellEd, line string) (string, string) {
 func maybeDoShedCommands(line string, es *env.ProgramState, shellEd *ShellEd) {
 	//fmt.Println(shellEd)
 	line1 := strings.Split(line, " ")
-	var block env.Block
-	block = shellEd.CurrObj.Body
+	block := shellEd.CurrObj.Body
 	switch line1[0] {
 	case "#ra":
 		//es.Res.Trace("ADD1")

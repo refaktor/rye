@@ -248,7 +248,7 @@ func DisplayDict(bloc env.Dict, idx *env.Idxs) (env.Object, bool) {
 	// make a slice for keys
 	keys := make([]string, len(bloc.Data))
 	i := 0
-	for k, _ := range bloc.Data {
+	for k := range bloc.Data {
 		keys[i] = k
 		i++
 	}

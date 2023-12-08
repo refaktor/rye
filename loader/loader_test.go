@@ -17,7 +17,7 @@ func TestLoader_load_integer(t *testing.T) {
 
 	// fmt.Println(block.(env.Block).Series.Get(0).Type())
 
-	if block.(env.Block).Series.Get(0).(env.Object).Type() != env.IntegerType {
+	if block.(env.Block).Series.Get(0).Type() != env.IntegerType {
 		t.Error("Expected type integer")
 	}
 }
@@ -28,7 +28,7 @@ func TestLoader_load_integers(t *testing.T) {
 	if block.(env.Block).Series.Len() != 3 {
 		t.Error("Expected 3 items")
 	}
-	if block.(env.Block).Series.Get(0).(env.Object).Type() != env.IntegerType {
+	if block.(env.Block).Series.Get(0).Type() != env.IntegerType {
 		t.Error("Expected type integer")
 	}
 }
@@ -39,7 +39,7 @@ func TestLoader_load_word(t *testing.T) {
 	if block.(env.Block).Series.Len() != 1 {
 		t.Error("Expected 1 item")
 	}
-	if block.(env.Block).Series.Get(0).(env.Object).Type() != env.WordType {
+	if block.(env.Block).Series.Get(0).Type() != env.WordType {
 		t.Error("Expected type word")
 	}
 }
@@ -50,7 +50,7 @@ func TestLoader_load_words(t *testing.T) {
 	if block.(env.Block).Series.Len() != 3 {
 		t.Error("Expected 3 items")
 	}
-	if block.(env.Block).Series.Get(0).(env.Object).Type() != env.WordType {
+	if block.(env.Block).Series.Get(0).Type() != env.WordType {
 		t.Error("Expected type word")
 	}
 }
@@ -61,7 +61,7 @@ func TestLoader_load_setword(t *testing.T) {
 	if block.(env.Block).Series.Len() != 1 {
 		t.Error("Expected 1 item")
 	}
-	if block.(env.Block).Series.Get(0).(env.Object).Type() != env.SetwordType {
+	if block.(env.Block).Series.Get(0).Type() != env.SetwordType {
 		t.Error("Expected type word")
 	}
 }
@@ -72,7 +72,7 @@ func TestLoader_load_setwords(t *testing.T) {
 	if block.(env.Block).Series.Len() != 3 {
 		t.Error("Expected 1 item")
 	}
-	if block.(env.Block).Series.Get(0).(env.Object).Type() != env.SetwordType {
+	if block.(env.Block).Series.Get(0).Type() != env.SetwordType {
 		t.Error("Expected type word")
 	}
 }
@@ -83,7 +83,7 @@ func TestLoader_load_setword_check_colon(t *testing.T) {
 	if block.(env.Block).Series.Len() != 1 {
 		t.Error("Expected 1 item")
 	}
-	if block.(env.Block).Series.Get(0).(env.Object).Type() != env.SetwordType {
+	if block.(env.Block).Series.Get(0).Type() != env.SetwordType {
 		t.Error("Expected type word")
 	}
 
@@ -104,7 +104,7 @@ func TestLoader_load_opword_1(t *testing.T) {
 	if block.(env.Block).Series.Len() != 1 {
 		t.Error("Expected 1 item")
 	}
-	if block.(env.Block).Series.Get(0).(env.Object).Type() != env.OpwordType {
+	if block.(env.Block).Series.Get(0).Type() != env.OpwordType {
 		t.Error("Expected type Opword")
 	}
 
@@ -121,7 +121,7 @@ func TestLoader_load_pipeword_1(t *testing.T) {
 	if block.(env.Block).Series.Len() != 1 {
 		t.Error("Expected 1 item")
 	}
-	if block.(env.Block).Series.Get(0).(env.Object).Type() != env.PipewordType {
+	if block.(env.Block).Series.Get(0).Type() != env.PipewordType {
 		t.Error("Expected type Pipeword")
 	}
 
@@ -143,13 +143,13 @@ func TestLoader_load_mixed(t *testing.T) {
 	if block.(env.Block).Series.Len() != 3 {
 		t.Error("Expected 3 items")
 	}
-	if block.(env.Block).Series.Get(0).(env.Object).Type() != env.SetwordType {
+	if block.(env.Block).Series.Get(0).Type() != env.SetwordType {
 		t.Error("Expected type setword")
 	}
-	if block.(env.Block).Series.Get(1).(env.Object).Type() != env.WordType {
+	if block.(env.Block).Series.Get(1).Type() != env.WordType {
 		t.Error("Expected type word")
 	}
-	if block.(env.Block).Series.Get(2).(env.Object).Type() != env.IntegerType {
+	if block.(env.Block).Series.Get(2).Type() != env.IntegerType {
 		t.Error("Expected type integer")
 	}
 }
@@ -160,7 +160,7 @@ func TestLoader_multiple_spaces(t *testing.T) {
 	if block.(env.Block).Series.Len() != 1 {
 		t.Error("Expected 1 items")
 	}
-	if block.(env.Block).Series.Get(0).(env.Object).Type() != env.IntegerType {
+	if block.(env.Block).Series.Get(0).Type() != env.IntegerType {
 		t.Error("Expected type integer")
 	}
 }
@@ -171,7 +171,7 @@ func TestLoader_multiple_newlines(t *testing.T) {
 	if block.(env.Block).Series.Len() != 1 {
 		t.Error("Expected 1 items")
 	}
-	if block.(env.Block).Series.Get(0).(env.Object).Type() != env.IntegerType {
+	if block.(env.Block).Series.Get(0).Type() != env.IntegerType {
 		t.Error("Expected type integer")
 	}
 }
@@ -182,19 +182,19 @@ func TestLoader_multiple_newlines2(t *testing.T) {
 	if block.(env.Block).Series.Len() != 5 {
 		t.Error("Expected 5 items")
 	}
-	if block.(env.Block).Series.Get(0).(env.Object).Type() != env.IntegerType {
+	if block.(env.Block).Series.Get(0).Type() != env.IntegerType {
 		t.Error("Expected type integer")
 	}
-	if block.(env.Block).Series.Get(1).(env.Object).Type() != env.WordType {
+	if block.(env.Block).Series.Get(1).Type() != env.WordType {
 		t.Error("Expected type word")
 	}
-	if block.(env.Block).Series.Get(2).(env.Object).Type() != env.WordType {
+	if block.(env.Block).Series.Get(2).Type() != env.WordType {
 		t.Error("Expected type word")
 	}
-	if block.(env.Block).Series.Get(3).(env.Object).Type() != env.SetwordType {
+	if block.(env.Block).Series.Get(3).Type() != env.SetwordType {
 		t.Error("Expected type set-word")
 	}
-	if block.(env.Block).Series.Get(4).(env.Object).Type() != env.IntegerType {
+	if block.(env.Block).Series.Get(4).Type() != env.IntegerType {
 		t.Error("Expected type integer")
 	}
 }
@@ -205,28 +205,28 @@ func TestLoader_multiple_blocks(t *testing.T) {
 	if block.(env.Block).Series.Len() != 5 {
 		t.Error("Expected 5 items")
 	}
-	if block.(env.Block).Series.Get(0).(env.Object).Type() != env.IntegerType {
+	if block.(env.Block).Series.Get(0).Type() != env.IntegerType {
 		t.Error("Expected type integer")
 	}
-	if block.(env.Block).Series.Get(1).(env.Object).Type() != env.BlockType {
+	if block.(env.Block).Series.Get(1).Type() != env.BlockType {
 		t.Error("Expected type block")
 	}
-	if block.(env.Block).Series.Get(1).(env.Block).Series.Get(0).(env.Object).Type() != env.BlockType {
+	if block.(env.Block).Series.Get(1).(env.Block).Series.Get(0).Type() != env.BlockType {
 		t.Error("Expected type block")
 	}
-	if block.(env.Block).Series.Get(1).(env.Block).Series.Get(1).(env.Object).Type() != env.WordType {
+	if block.(env.Block).Series.Get(1).(env.Block).Series.Get(1).Type() != env.WordType {
 		t.Error("Expected type word")
 	}
-	if block.(env.Block).Series.Get(1).(env.Block).Series.Get(0).(env.Block).Series.Get(0).(env.Object).Type() != env.IntegerType {
+	if block.(env.Block).Series.Get(1).(env.Block).Series.Get(0).(env.Block).Series.Get(0).Type() != env.IntegerType {
 		t.Error("Expected type integer")
 	}
-	if block.(env.Block).Series.Get(2).(env.Object).Type() != env.WordType {
+	if block.(env.Block).Series.Get(2).Type() != env.WordType {
 		t.Error("Expected type word")
 	}
-	if block.(env.Block).Series.Get(3).(env.Object).Type() != env.SetwordType {
+	if block.(env.Block).Series.Get(3).Type() != env.SetwordType {
 		t.Error("Expected type set-word")
 	}
-	if block.(env.Block).Series.Get(4).(env.Object).Type() != env.IntegerType {
+	if block.(env.Block).Series.Get(4).Type() != env.IntegerType {
 		t.Error("Expected type integer")
 	}
 }
@@ -237,7 +237,7 @@ func TestLoader_load_string_1(t *testing.T) {
 	if block.(env.Block).Series.Len() != 1 {
 		t.Error("Expected 1 item")
 	}
-	if block.(env.Block).Series.Get(0).(env.Object).Type() != env.StringType {
+	if block.(env.Block).Series.Get(0).Type() != env.StringType {
 		t.Error("Expected type String")
 	} else {
 		fmt.Println(block.(env.Block).Series.Get(0).(env.String).Value)
@@ -253,10 +253,10 @@ func TestLoader_load_void_comma(t *testing.T) {
 	if block.(env.Block).Series.Len() != 2 {
 		t.Error("Expected 2 items")
 	}
-	if block.(env.Block).Series.Get(0).(env.Object).Type() != env.CommaType {
+	if block.(env.Block).Series.Get(0).Type() != env.CommaType {
 		t.Error("Expected type Comma")
 	}
-	if block.(env.Block).Series.Get(1).(env.Object).Type() != env.VoidType {
+	if block.(env.Block).Series.Get(1).Type() != env.VoidType {
 		t.Error("Expected type Void")
 	}
 }
@@ -289,7 +289,7 @@ func TestLoader_load_argword(t *testing.T) {
 
 	fmt.Println(block.(env.Block).Series.Get(0).Inspect(*wordIndex))
 
-	if block.(env.Block).Series.Get(0).(env.Object).Type() != env.ArgwordType {
+	if block.(env.Block).Series.Get(0).Type() != env.ArgwordType {
 		t.Error("Expected type Argword")
 	}
 	idx, _ := wordIndex.GetIndex("somename")
@@ -311,7 +311,7 @@ func TestLoader_load_group(t *testing.T) {
 
 	fmt.Println(block.(env.Block).Series.Get(0).Inspect(*wordIndex))
 
-	if block.(env.Block).Series.Get(0).(env.Object).Type() != env.BlockType {
+	if block.(env.Block).Series.Get(0).Type() != env.BlockType {
 		t.Error("Expected type Block")
 	}
 }
@@ -325,7 +325,7 @@ func TestLoader_load_lsetword(t *testing.T) {
 
 	fmt.Println(block.(env.Block).Series.Get(0).Inspect(*wordIndex))
 
-	if block.(env.Block).Series.Get(1).(env.Object).Type() != env.LSetwordType {
+	if block.(env.Block).Series.Get(1).Type() != env.LSetwordType {
 		t.Error("Expected type LSetword")
 	}
 	idx, _ := wordIndex.GetIndex("lsetword1")
@@ -344,7 +344,7 @@ func TestLoader_load_uri_min(t *testing.T) {
 
 	//fmt.Println(block.(env.Block).Series.Get(0).Inspect(wordIndex))
 
-	if block.(env.Block).Series.Get(0).(env.Object).Type() != env.UriType {
+	if block.(env.Block).Series.Get(0).Type() != env.UriType {
 		t.Error("Expected type Uri")
 	}
 	idx, _ := wordIndex.GetIndex("sqlite")
@@ -367,7 +367,7 @@ func TestLoader_cpath(t *testing.T) {
 
 	//fmt.Println(block.(env.Block).Series.Get(0).Inspect(wordIndex))
 
-	if block.(env.Block).Series.Get(0).(env.Object).Type() != env.CPathType {
+	if block.(env.Block).Series.Get(0).Type() != env.CPathType {
 		t.Error("Expected type CPath")
 	}
 
@@ -397,7 +397,7 @@ func TestLoader_load_tagword_1(t *testing.T) {
 	if block.(env.Block).Series.Len() != 1 {
 		t.Error("Expected 1 item")
 	}
-	if block.(env.Block).Series.Get(0).(env.Object).Type() != env.TagwordType {
+	if block.(env.Block).Series.Get(0).Type() != env.TagwordType {
 		t.Error("Expected type Pipeword")
 	}
 
@@ -414,7 +414,7 @@ func TestLoader_load_xword_1(t *testing.T) {
 	if block.(env.Block).Series.Len() != 1 {
 		t.Error("Expected 1 item")
 	}
-	if block.(env.Block).Series.Get(0).(env.Object).Type() != env.XwordType {
+	if block.(env.Block).Series.Get(0).Type() != env.XwordType {
 		t.Error("Expected type Xword")
 	}
 
@@ -433,7 +433,7 @@ func DISABLED__TestLoader_load_exword_1(t *testing.T) {
 	if block.(env.Block).Series.Len() != 1 {
 		t.Error("Expected 1 item")
 	}
-	if block.(env.Block).Series.Get(0).(env.Object).Type() != env.EXwordType {
+	if block.(env.Block).Series.Get(0).Type() != env.EXwordType {
 		t.Error("Expected type EXword")
 	}
 

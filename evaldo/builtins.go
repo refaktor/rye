@@ -1712,7 +1712,7 @@ var builtins = map[string]*env.Builtin{
 							foundany = true
 						}
 					case env.Void:
-						if foundany == false {
+						if !foundany {
 							doblk = true
 						}
 					default:

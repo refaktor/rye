@@ -165,13 +165,10 @@ func (s Spreadsheet) Sum_Just(name string) (float64, error) {
 					sumf += v
 				case int64:
 					sum += v
-					break
 				case Integer:
 					sum += v.Value
-					break
 				case Decimal:
 					sumf += v.Value
-					break
 				default:
 					fmt.Println("row--->")
 					fmt.Println(reflect.TypeOf(v))

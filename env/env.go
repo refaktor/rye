@@ -136,7 +136,7 @@ func (i RyeCtx) GetKind() int {
 func (e RyeCtx) GetWords(idxs Idxs) Block {
 	objs := make([]Object, len(e.state))
 	idx := 0
-	for k, _ := range e.state {
+	for k := range e.state {
 		objs[idx] = String{idxs.GetWord(k)}
 		idx += 1
 	}

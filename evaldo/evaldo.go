@@ -170,7 +170,7 @@ func EvalExpression2(ps *env.ProgramState, limited bool) *env.ProgramState {
 // TODO -- return to this and explain
 func EvalExpressionInj(ps *env.ProgramState, inj env.Object, injnow bool) (*env.ProgramState, bool) {
 	var esleft *env.ProgramState
-	if inj == nil || injnow == false {
+	if inj == nil || !injnow {
 		// if there is no injected value just eval the concrete expression
 		esleft = EvalExpressionConcrete(ps)
 		if ps.ReturnFlag {
@@ -200,7 +200,7 @@ func EvalExpressionInj(ps *env.ProgramState, inj env.Object, injnow bool) (*env.
 // when seeing bigger picture, just adding fow eval-with
 func EvalExpressionInjLimited(ps *env.ProgramState, inj env.Object, injnow bool) (*env.ProgramState, bool) { // TODO -- doesn't work .. would be nice - eval-with
 	var esleft *env.ProgramState
-	if inj == nil || injnow == false {
+	if inj == nil || !injnow {
 		// if there is no injected value just eval the concrete expression
 		esleft = EvalExpressionConcrete(ps)
 		if ps.ReturnFlag {
@@ -407,7 +407,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 		return EvalObject(ps, object, leftVal, toLeft, session, pipeSecond, firstVal) //ww0128a *
 	} else {
 		ps.ErrorFlag = true
-		if ps.FailureFlag == false {
+		if !ps.FailureFlag {
 			ps.Ser.SetPos(pos)
 			ps.Res = env.NewError2(5, "word not found: "+word.Probe(*ps.Idx))
 		}

@@ -85,7 +85,7 @@ func Stck_EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, to
 	} else {
 		trace("****34")
 		ps.ErrorFlag = true
-		if ps.FailureFlag == false {
+		if !ps.FailureFlag {
 			ps.Res = *env.NewError2(5, "Word not found: "+word.Inspect(*ps.Idx))
 			fmt.Println("Error: Not known type")
 		}

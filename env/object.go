@@ -604,7 +604,7 @@ func (i Tagword) Trace(msg string) {
 }
 
 func (i Tagword) ToWord() Word {
-	return Word{i.Index}
+	return Word(i)
 }
 
 func (i Tagword) GetKind() int {
@@ -646,7 +646,7 @@ func (i Xword) Trace(msg string) {
 }
 
 func (i Xword) ToWord() Word {
-	return Word{i.Index}
+	return Word(i)
 }
 
 func (i Xword) GetKind() int {
@@ -688,7 +688,7 @@ func (i EXword) Trace(msg string) {
 }
 
 func (i EXword) ToWord() Word {
-	return Word{i.Index}
+	return Word(i)
 }
 
 func (i EXword) GetKind() int {
@@ -730,7 +730,7 @@ func (i Kindword) Trace(msg string) {
 }
 
 func (i Kindword) ToWord() Word {
-	return Word{i.Index}
+	return Word(i)
 }
 
 func (i Kindword) GetKind() int {
@@ -772,7 +772,7 @@ func (i Getword) Trace(msg string) {
 }
 
 func (i Getword) ToWord() Word {
-	return Word{i.Index}
+	return Word(i)
 }
 
 func (i Getword) GetKind() int {
@@ -814,7 +814,7 @@ func (i Genword) Trace(msg string) {
 }
 
 func (i Genword) ToWord() Word {
-	return Word{i.Index}
+	return Word(i)
 }
 
 func (i Genword) GetKind() int {

@@ -130,7 +130,7 @@ func Eyr_EvalWord(es *env.ProgramState, word env.Object, leftVal env.Object, toL
 	} else {
 		trace("****34")
 		es.ErrorFlag = true
-		if es.FailureFlag == false {
+		if !es.FailureFlag {
 			es.Res = *env.NewError2(5, "Word not found: "+word.Inspect(*es.Idx))
 		}
 		return es

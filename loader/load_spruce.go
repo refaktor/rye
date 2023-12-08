@@ -117,7 +117,7 @@ func LoadSpruceString(input string) (*env.SprNode, *env.Idxs) {
 
 func findParentNode(parent *env.SprNode, depth int) *env.SprNode {
 	var cnt = 0
-	for true {
+	for {
 		fmt.Println("LOOP")
 		fmt.Println(parent)
 		fmt.Println(depth)
@@ -132,5 +132,4 @@ func findParentNode(parent *env.SprNode, depth int) *env.SprNode {
 			return nil
 		}
 	}
-	return nil
 }

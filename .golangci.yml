@@ -98,7 +98,7 @@ linters:
     - goprintffuncname
     - gosec
     # - gosec -exclude=G504
-    # - gosimple
+    - gosimple
     - govet
     # - ineffassign
     # - lll
