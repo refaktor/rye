@@ -1,3 +1,4 @@
+//go:build !b_nats
 // +build !b_nats
 
 package evaldo

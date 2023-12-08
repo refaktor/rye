@@ -249,10 +249,10 @@ type bintree struct {
 	Children map[string]*bintree
 }
 var _bintree = &bintree{nil, map[string]*bintree{
-	"app.js": &bintree{appJs, map[string]*bintree{}},
-	"index.html": &bintree{indexHtml, map[string]*bintree{}},
-	"picodom.js": &bintree{picodomJs, map[string]*bintree{}},
-	"styles.css": &bintree{stylesCss, map[string]*bintree{}},
+	"app.js": {appJs, map[string]*bintree{}},
+	"index.html":{indexHtml, map[string]*bintree{}},
+	"picodom.js": {picodomJs, map[string]*bintree{}},
+	"styles.css": {stylesCss, map[string]*bintree{}},
 }}
 
 // RestoreAsset restores an asset under the given directory

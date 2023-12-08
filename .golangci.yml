@@ -85,7 +85,7 @@ linters:
     - depguard
     - dogsled
     # - dupl
-    # - errcheck
+    - errcheck
     - exportloopref
     # - funlen
     - gocheckcompilerdirectives
@@ -99,9 +99,9 @@ linters:
     - goprintffuncname
     - gosec
     # - gosec -exclude=G504
-    # - gosimple
+    - gosimple
     - govet
-    # - ineffassign
+    - ineffassign
     # - lll
     - misspell
     # - nakedret
@@ -114,7 +114,7 @@ linters:
     - unconvert
     # l1 - unparam
     # - unused
-    # - whitespace
+    - whitespace
 
   # don't enable:
   # - asciicheck

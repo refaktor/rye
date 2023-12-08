@@ -19,7 +19,6 @@ type ValidationError struct {
 }
 
 func Validation_EvalBlock(es *env.ProgramState, vals env.Dict) (env.Dict, map[string]env.Object) {
-
 	notes := make(map[string]env.Object, 0) // TODO ... what is this 2 here ... just for temp
 
 	var name string
@@ -57,7 +56,6 @@ func Validation_EvalBlock(es *env.ProgramState, vals env.Dict) (env.Dict, map[st
 }
 
 func Validation_EvalBlock_List(es *env.ProgramState, vals env.List) (env.Object, []env.Object) {
-
 	notes := make([]env.Object, 0) // TODO ... what is this 2 here ... just for temp
 
 	var res env.Object
@@ -310,7 +308,6 @@ func BuiValidate(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object) env.O
 }
 
 func something() {
-
 	fmt.Print("1")
 }
 

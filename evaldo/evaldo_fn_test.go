@@ -140,7 +140,6 @@ func TestEvaldo_function3_arg_inc_func(t *testing.T) {
 		incidx, found1 := es.Idx.GetIndex("inc")
 		//printidx, _ := es.Idx.GetIndex("print")
 		if found1 { // *env.NewWord(printidx),
-
 			aaaidx := es.Idx.IndexWord("aaa")
 			//printidx, _ := es.Idx.GetIndex("print")
 			spec := []env.Object{*env.NewWord(aaaidx)}
@@ -213,7 +212,6 @@ func TestEvaldo_function3_arg_inc_func_loop(t *testing.T) {
 		incidx, found1 := es.Idx.GetIndex("inc")
 		//printidx, _ := es.Idx.GetIndex("print")
 		if found1 { // *env.NewWord(printidx),
-
 			aaaidx := es.Idx.IndexWord("aaa")
 			//printidx, _ := es.Idx.GetIndex("print")
 			spec := []env.Object{*env.NewWord(aaaidx)}
@@ -251,7 +249,6 @@ func _TestEvaldo_function4_simple_recur(t *testing.T) {
 		printidx, _ := es.Idx.GetIndex("print")
 		greateridx, _ := es.Idx.GetIndex("greater")
 		if found1 { // *env.NewWord(printidx),
-
 			aaaidx := es.Idx.IndexWord("aaa")
 			//printidx, _ := es.Idx.GetIndex("print")
 			spec := []env.Object{*env.NewWord(aaaidx)}

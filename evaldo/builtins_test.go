@@ -16,12 +16,11 @@ import (
 //
 
 func DISABLED_TestBuiltin_oneone(t *testing.T) {
-
 	genv := loader.GetIdxs()
 	builtin := builtins["oneone"]
 	es := env.NewProgramState(env.TSeries{}, genv)
 	obj := builtin.Fn(es, nil, nil, nil, nil, nil)
-	fmt.Println(obj.(env.Object).Inspect(*genv))
+	fmt.Println(obj.Inspect(*genv))
 	if obj.(env.Integer).Value != 11 {
 		t.Error("Not 11 returned")
 	}
@@ -32,7 +31,7 @@ func TestBuiltin_inc(t *testing.T) {
 	builtin := builtins["inc"]
 	es := env.NewProgramState(env.TSeries{}, genv)
 	obj := builtin.Fn(es, *env.NewInteger(100), nil, nil, nil, nil)
-	fmt.Println(obj.(env.Object).Inspect(*genv))
+	fmt.Println(obj.Inspect(*genv))
 	if obj.(env.Integer).Value != 101 {
 		t.Error("Not 101 returned")
 	}
@@ -43,7 +42,7 @@ func TestBuiltin_print(t *testing.T) {
 	builtin := builtins["print"]
 	es := env.NewProgramState(env.TSeries{}, genv)
 	obj := builtin.Fn(es, *env.NewInteger(1010101010101), nil, nil, nil, nil)
-	fmt.Println(obj.(env.Object).Inspect(*genv))
+	fmt.Println(obj.Inspect(*genv))
 	if obj.(env.Integer).Value != 1010101010101 {
 		t.Error("Not 1010101010101 returned")
 	}
@@ -444,7 +443,6 @@ func TestValidateDictCheck1(t *testing.T) { // two keys, int as string, pass tru
 	if !(es.Res.(env.Integer).Value == 100) {
 		t.Error("Expected result value 100")
 	}
-
 }
 
 func TestValidateDictCalc1(t *testing.T) { // two keys, int as string, pass true
@@ -465,7 +463,6 @@ func TestValidateDictCalc1(t *testing.T) { // two keys, int as string, pass true
 	if !(es.Res.(env.Integer).Value == 10001) {
 		t.Error("Expected result value 123")
 	}
-
 }
 
 func TestReturn(t *testing.T) { // two keys, int as string, pass true
@@ -484,7 +481,6 @@ func TestReturn(t *testing.T) { // two keys, int as string, pass true
 	if !(es.Res.(env.Integer).Value == 2) {
 		t.Error("Expected result value 2")
 	}
-
 }
 
 func TestReturnDo(t *testing.T) { // two keys, int as string, pass true

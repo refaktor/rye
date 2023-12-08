@@ -3,6 +3,11 @@ module rye
 go 1.18
 
 require (
+	golang.org/x/sync v0.5.0
+	golang.org/x/text v0.14.0
+)
+
+require (
 	github.com/drewlanenga/govector v0.0.0-20220726163947-b958ac08bc93 // indirect
 	github.com/felixge/fgprof v0.9.3 // indirect
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible // indirect
@@ -27,5 +32,4 @@ require (
 	go.mongodb.org/mongo-driver v1.13.0 // indirect
 	golang.org/x/net v0.19.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect
-	golang.org/x/text v0.14.0
 )

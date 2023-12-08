@@ -113,7 +113,6 @@ func FormatJson(val env.Object, e env.Idxs) string {
 			}
 		}
 		r.WriteString(" ]")
-
 	}
 	return r.String()
 }
@@ -204,7 +203,7 @@ func SplitEveryList(s []env.Object, chunkSize int) [][]env.Object {
 func IntersectStrings(a string, b string) string {
 	res := ""
 	for _, ch := range a {
-		if strings.Index(b, string(ch)) > -1 && strings.Index(res, string(ch)) == -1 {
+		if strings.Contains(b, string(ch)) && !strings.Contains(res, string(ch)) {
 			res = res + string(ch)
 		}
 	}

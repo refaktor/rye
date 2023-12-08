@@ -44,7 +44,6 @@ func removeBangLine(content string) string {
 }
 
 func checkCodeSignature(content string) int {
-
 	parts := strings.SplitN(content, ";ryesig ", 2)
 	content = strings.TrimSpace(parts[0])
 	if len(parts) != 2 {

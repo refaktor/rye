@@ -53,8 +53,7 @@ func genPrompt(shellEd *ShellEd, line string) (string, string) {
 func maybeDoShedCommands(line string, es *env.ProgramState, shellEd *ShellEd) {
 	//fmt.Println(shellEd)
 	line1 := strings.Split(line, " ")
-	var block env.Block
-	block = shellEd.CurrObj.Body
+	block := shellEd.CurrObj.Body
 	switch line1[0] {
 	case "#ra":
 		//es.Res.Trace("ADD1")
@@ -152,7 +151,6 @@ func MoveCursorBackward(bias int) {
 //
 
 func DoRyeRepl(es *env.ProgramState, showResults bool) {
-
 	codestr := "a: 100\nb: \"jim\"\nprint 10 + 20 + b"
 	codelines := strings.Split(codestr, ",\n")
 
@@ -171,7 +169,9 @@ func DoRyeRepl(es *env.ProgramState, showResults bool) {
 	})
 
 	if f, err := os.Open(history_fn); err == nil {
-		line.ReadHistory(f)
+		if _, err := line.ReadHistory(f); err != nil {
+			log.Print("Error reading history file: ", err)
+		}
 		f.Close()
 	}
 	//const PROMPT = "\x1b[6;30;42m Rye \033[m "
@@ -189,7 +189,6 @@ func DoRyeRepl(es *env.ProgramState, showResults bool) {
 	var prevResult env.Object
 
 	for {
-
 		prompt, arg := genPrompt(&shellEd, line2)
 
 		if code, err := line.Prompt(prompt); err == nil {
@@ -217,11 +216,8 @@ func DoRyeRepl(es *env.ProgramState, showResults bool) {
 			///fmt.Println(lineReal[len(lineReal)-3 : len(lineReal)])
 
 			if multiline {
-
 				line2 += lineReal + "\n"
-
 			} else {
-
 				line2 += lineReal
 
 				if strings.Trim(line2, " \t\n\r") == "" {
@@ -235,7 +231,6 @@ func DoRyeRepl(es *env.ProgramState, showResults bool) {
 					// fmt.Println("")
 					return
 				} else {
-
 					//fmt.Println(lineReal)
 					block, genv := loader.LoadString(line2, false)
 					block1 := block.(env.Block)
@@ -276,7 +271,6 @@ func DoRyeRepl(es *env.ProgramState, showResults bool) {
 				}
 
 				line2 = ""
-
 			}
 
 			line.AppendHistory(code)
@@ -294,13 +288,14 @@ func DoRyeRepl(es *env.ProgramState, showResults bool) {
 			log.Print("Error reading line: ", err)
 			break
 		}
-
 	}
 
 	if f, err := os.Create(history_fn); err != nil {
 		log.Print("Error writing history file: ", err)
 	} else {
-		line.WriteHistory(f)
+		if _, err := line.WriteHistory(f); err != nil {
+			log.Print("Error writing history file: ", err)
+		}
 		f.Close()
 	}
 }
