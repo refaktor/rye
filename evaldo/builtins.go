@@ -1955,7 +1955,7 @@ var builtins = map[string]*env.Builtin{
 				EvalBlock(ps)
 				ps.Ser = ser
 
-				outC := make(chan string)
+				outC := make(chan string, 1)
 				g := errgroup.Group{}
 				// copy the output in a separate goroutine so printing can't block indefinitely
 				g.Go(func() error {
