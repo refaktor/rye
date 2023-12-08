@@ -28,6 +28,7 @@ jobs:
 
     - name: Run Rye Tests
       run: cd tests ; ../bin/rye main.rye test
+      timeout-minutes: 1
 
 #    - name: Test
 #      run: go test -v -tags "b_tiny,b_sqlite,b_http,b_sql,b_postgres,b_openai,b_bson,b_crypto,b_smtpd,b_mail,b_postmark,b_bctypt,b_telegram" ./...
