@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math"
 	"os"
 	"os/exec"
@@ -1285,7 +1284,7 @@ var builtins = map[string]*env.Builtin{
 				var str string
 				fileIdx, _ := ps.Idx.GetIndex("file")
 				if s1.Scheme.Index == fileIdx {
-					b, err := ioutil.ReadFile(s1.GetPath())
+					b, err := os.ReadFile(s1.GetPath())
 					if err != nil {
 						return makeError(ps, err.Error())
 					}
