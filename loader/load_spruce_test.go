@@ -21,7 +21,6 @@ func _TestLoaderSpruce_empty(t *testing.T) {
 		if block.Series.Get(0).(env.Object).Type() != env.IntegerType {
 			t.Error("Expected type integer")
 		}*/
-
 }
 
 func _TestLoaderSpruce_one_level(t *testing.T) {
@@ -38,7 +37,6 @@ they
 		if block.Series.Get(0).(env.Object).Type() != env.IntegerType {
 			t.Error("Expected type integer")
 		}*/
-
 }
 
 func TestLoaderSpruce_two_levels(t *testing.T) {

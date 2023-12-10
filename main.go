@@ -13,7 +13,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -58,7 +57,6 @@ func main() {
 		} else if os.Args[1] == "--hr" {
 			evaldo.ShowResults = false
 			main_rye_repl(os.Stdin, os.Stdout, false)
-
 		} else if os.Args[1] == "--subc" {
 			main_rye_repl(os.Stdin, os.Stdout, true)
 		} else if os.Args[1] == "web" {
@@ -83,7 +81,6 @@ func main() {
 		} else {
 			main_rye_file(os.Args[1], false, false)
 		}
-
 	}
 }
 
@@ -92,7 +89,6 @@ func main() {
 //
 
 func main_ryk() {
-
 	argIdx := 2
 	ignore := 0
 	separator := " "
@@ -103,7 +99,7 @@ func main_ryk() {
 	profile_path := ".ryk-preload"
 
 	if _, err := os.Stat(profile_path); err == nil {
-		content, err := ioutil.ReadFile(profile_path)
+		content, err := os.ReadFile(profile_path)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -238,11 +234,10 @@ func main_ryeco() {
 }
 
 func main_rye_file(file string, sig bool, subc bool) {
-
 	//util.PrintHeader()
 	//defer profile.Start(profile.CPUProfile).Stop()
 
-	bcontent, err := ioutil.ReadFile(file)
+	bcontent, err := os.ReadFile(file)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -266,13 +261,10 @@ func main_rye_file(file string, sig bool, subc bool) {
 	case env.Error:
 		fmt.Println(val.Message)
 	}
-
 }
 
 func main_cgi_file(file string, sig bool) {
-
 	if err := cgi.Serve(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 		//util.PrintHeader()
 		//defer profile.Start(profile.CPUProfile).Stop()
 
@@ -286,7 +278,7 @@ func main_cgi_file(file string, sig bool) {
 		env.SetValue(es, "w", *env.NewNative(es.Idx, w, "Go-server-response-writer"))
 		env.SetValue(es, "r", *env.NewNative(es.Idx, r, "Go-server-request"))
 
-		bcontent, err := ioutil.ReadFile(file)
+		bcontent, err := os.ReadFile(file)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -305,15 +297,12 @@ func main_cgi_file(file string, sig bool) {
 		case env.Error:
 			fmt.Println(val.Message)
 		}
-
 	})); err != nil {
 		fmt.Println(err)
 	}
-
 }
 
 func main_rye_repl(_ io.Reader, _ io.Writer, subc bool) {
-
 	input := " 123 " // "name: \"Rye\" version: \"0.011 alpha\""
 	user, _ := user.Current()
 	profile_path := filepath.Join(user.HomeDir, ".rye-profile")
@@ -321,14 +310,13 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool) {
 	fmt.Println("Welcome to Rye shell. Use ls and ls\\ \"pr\" to list the current context.")
 
 	if _, err := os.Stat(profile_path); err == nil {
-		//content, err := ioutil.ReadFile(profile_path)
+		//content, err := os.ReadFile(profile_path)
 		//if err != nil {
 		//	log.Fatal(err)
 		//}
 		// input = string(content)
 	} else {
 		fmt.Println("There was no profile.")
-
 	}
 
 	block, genv := loader.LoadString(input, false)
@@ -344,7 +332,6 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool) {
 	}
 
 	evaldo.DoRyeRepl(es, evaldo.ShowResults)
-
 }
 
 func main_rysh() {
@@ -359,7 +346,6 @@ func main_rysh() {
 		line, cursorPos, shellEditor := "", 0, false
 
 		for {
-
 			c, _ := reader.ReadByte()
 			//fmt.Print(c)
 			if c == 13 {

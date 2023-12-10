@@ -248,7 +248,7 @@ func DisplayDict(bloc env.Dict, idx *env.Idxs) (env.Object, bool) {
 	// make a slice for keys
 	keys := make([]string, len(bloc.Data))
 	i := 0
-	for k, _ := range bloc.Data {
+	for k := range bloc.Data {
 		keys[i] = k
 		i++
 	}
@@ -311,7 +311,6 @@ DODO:
 				if ii == curr {
 					ret = k
 				}
-				ii++
 			}
 			return *env.NewString(ret), false // bloc.Series.Get(curr), false
 		}
@@ -540,7 +539,6 @@ DODO:
 			CloseProps()
 			fmt.Println("|")
 		}
-
 	} else {
 		for range bloc.Rows {
 			ClearLine()
@@ -573,7 +571,6 @@ DODO:
 			CloseProps()
 			fmt.Println("|")
 		}
-
 	}
 
 	if bloc.RawMode {
@@ -695,7 +692,9 @@ func CurLeft(n int) {
 
 func GetChar() (ascii int, keyCode int, err error) {
 	t, _ := term.Open("/dev/tty")
-	term.RawMode(t)
+	if err = term.RawMode(t); err != nil {
+		return
+	}
 	bytes := make([]byte, 3)
 
 	var numRead int
@@ -727,14 +726,18 @@ func GetChar() (ascii int, keyCode int, err error) {
 	// else {
 	// Two characters read??
 	// }
-	t.Restore()
+	if err = t.Restore(); err != nil {
+		return
+	}
 	t.Close()
 	return
 }
 
 func GetChar2() (letter string, ascii int, keyCode int, err error) {
 	t, _ := term.Open("/dev/tty")
-	term.RawMode(t)
+	if err = term.RawMode(t); err != nil {
+		return
+	}
 	bytes := make([]byte, 3)
 
 	var numRead int
@@ -768,7 +771,9 @@ func GetChar2() (letter string, ascii int, keyCode int, err error) {
 	} else if numRead == 3 {
 		letter = string(bytes)
 	}
-	t.Restore()
+	if err = t.Restore(); err != nil {
+		return
+	}
 	t.Close()
 	return
 }

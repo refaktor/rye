@@ -39,15 +39,25 @@ var Builtins_goroutines = map[string]*env.Builtin{
 			case env.Object:
 				switch handler := arg1.(type) {
 				case env.Function:
+					errC := make(chan error)
 					go func() {
 						ps.FailureFlag = false
 						ps.ErrorFlag = false
 						ps.ReturnFlag = false
 						psTemp := env.ProgramState{}
-						copier.Copy(&psTemp, &ps)
+						err := copier.Copy(&psTemp, &ps)
+						if err != nil {
+							ps.FailureFlag = true
+							ps.ErrorFlag = true
+							ps.ReturnFlag = true
+							errC <- fmt.Errorf("failed to copy ps: %w", err)
+						}
+						close(errC)
 						CallFunction(handler, &psTemp, arg, false, nil)
-						// CallFunctionArgs2(handler, &psTemp, arg, *env.NewNative(psTemp.Idx, "asd", "Go-server-context"), nil)
 					}()
+					if err := <-errC; err != nil {
+						return MakeBuiltinError(ps, err.Error(), "go-with")
+					}
 					return arg0
 				default:
 					ps.FailureFlag = true
@@ -66,15 +76,26 @@ var Builtins_goroutines = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch handler := arg0.(type) {
 			case env.Function:
+				errC := make(chan error)
 				go func() {
 					ps.FailureFlag = false
 					ps.ErrorFlag = false
 					ps.ReturnFlag = false
 					psTemp := env.ProgramState{}
-					copier.Copy(&psTemp, &ps)
+					err := copier.Copy(&psTemp, &ps)
+					if err != nil {
+						ps.FailureFlag = true
+						ps.ErrorFlag = true
+						ps.ReturnFlag = true
+						errC <- fmt.Errorf("failed to copy ps: %w", err)
+					}
+					close(errC)
 					CallFunction(handler, &psTemp, nil, false, nil)
 					// CallFunctionArgs2(handler, &psTemp, arg, *env.NewNative(psTemp.Idx, "asd", "Go-server-context"), nil)
 				}()
+				if err := <-errC; err != nil {
+					return MakeBuiltinError(ps, err.Error(), "go")
+				}
 				return arg0
 			default:
 				ps.FailureFlag = true

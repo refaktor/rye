@@ -170,7 +170,7 @@ func EvalExpression2(ps *env.ProgramState, limited bool) *env.ProgramState {
 // TODO -- return to this and explain
 func EvalExpressionInj(ps *env.ProgramState, inj env.Object, injnow bool) (*env.ProgramState, bool) {
 	var esleft *env.ProgramState
-	if inj == nil || injnow == false {
+	if inj == nil || !injnow {
 		// if there is no injected value just eval the concrete expression
 		esleft = EvalExpressionConcrete(ps)
 		if ps.ReturnFlag {
@@ -200,7 +200,7 @@ func EvalExpressionInj(ps *env.ProgramState, inj env.Object, injnow bool) (*env.
 // when seeing bigger picture, just adding fow eval-with
 func EvalExpressionInjLimited(ps *env.ProgramState, inj env.Object, injnow bool) (*env.ProgramState, bool) { // TODO -- doesn't work .. would be nice - eval-with
 	var esleft *env.ProgramState
-	if inj == nil || injnow == false {
+	if inj == nil || !injnow {
 		// if there is no injected value just eval the concrete expression
 		esleft = EvalExpressionConcrete(ps)
 		if ps.ReturnFlag {
@@ -224,7 +224,6 @@ func EvalExpressionInjLimited(ps *env.ProgramState, inj env.Object, injnow bool)
 	// trace2("Calling Maybe from EvalExp Inj")
 	return MaybeEvalOpwordOnRight(esleft.Ser.Peek(), esleft, false), injnow
 	//return esleft
-
 }
 
 // this function get's the next object (unevaluated), progra state, limited bool (op or pipe)
@@ -408,7 +407,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 		return EvalObject(ps, object, leftVal, toLeft, session, pipeSecond, firstVal) //ww0128a *
 	} else {
 		ps.ErrorFlag = true
-		if ps.FailureFlag == false {
+		if !ps.FailureFlag {
 			ps.Ser.SetPos(pos)
 			ps.Res = env.NewError2(5, "word not found: "+word.Probe(*ps.Idx))
 		}
@@ -785,7 +784,6 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 	if arg0_ != nil && pipeSecond {
 		arg1 = arg0_
 	} else if bi.Argsn > 1 && bi.Cur1 == nil {
-
 		evalExprFn(ps, true) // <---- THESE DETERMINE IF IT CONSUMES WHOLE EXPRESSION OR NOT IN CASE OF PIPEWORDS .. HM*... MAYBE WOULD COULD HAVE A WORD MODIFIER?? a: 2 |add 5 a:: 2 |add 5 print* --TODO
 
 		if checkFlagsBi(bi, ps, 1) {
@@ -802,7 +800,6 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 		}
 	}
 	if bi.Argsn > 2 {
-
 		evalExprFn(ps, true)
 
 		if checkFlagsBi(bi, ps, 2) {
@@ -961,7 +958,6 @@ func checkContextErrorHandler(ps *env.ProgramState) bool {
 
 	// NOT SURE YET, if we proceed with failure based on return, always or what
 	// need more practical-situations to figure this out
-
 }
 
 // if failure flag is raised and return flag is not up

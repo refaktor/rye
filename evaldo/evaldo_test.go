@@ -21,7 +21,7 @@ func TestEvaldo_load_integer2(t *testing.T) {
 	if block.(env.Block).Series.Len() != 1 {
 		t.Error("Expected 1 items")
 	}
-	if block.(env.Block).Series.Get(0).(env.Object).Type() != env.IntegerType {
+	if block.(env.Block).Series.Get(0).Type() != env.IntegerType {
 		t.Error("Expected type integer")
 	}
 
@@ -34,7 +34,6 @@ func TestEvaldo_load_integer2(t *testing.T) {
 	if es.Res.Type() != env.IntegerType {
 		t.Error("Expected result type integer")
 	}
-
 }
 
 func TestEvaldo_load_integer3(t *testing.T) {
@@ -45,7 +44,7 @@ func TestEvaldo_load_integer3(t *testing.T) {
 	if block.(env.Block).Series.Len() != 3 {
 		t.Error("Expected 1 items")
 	}
-	if block.(env.Block).Series.Get(0).(env.Object).Type() != env.IntegerType {
+	if block.(env.Block).Series.Get(0).Type() != env.IntegerType {
 		t.Error("Expected type integer")
 	}
 
@@ -58,7 +57,6 @@ func TestEvaldo_load_integer3(t *testing.T) {
 	if es.Res.(env.Integer).Value != 435 {
 		t.Error("Expected result value 435")
 	}
-
 }
 
 //
@@ -76,7 +74,7 @@ func TestEvaldo_load_word1(t *testing.T) {
 		if block.(env.Block).Series.Len() != 1 {
 			t.Error("Expected 1 items")
 		}
-		if block.(env.Block).Series.Get(0).(env.Object).Type() != env.WordType {
+		if block.(env.Block).Series.Get(0).Type() != env.WordType {
 			t.Error("Expected type word")
 		}
 
@@ -109,7 +107,7 @@ func TestEvaldo_load_setword1_pass_val(t *testing.T) {
 		if block.(env.Block).Series.Len() != 2 {
 			t.Error("Expected 2 items")
 		}
-		if block.(env.Block).Series.Get(0).(env.Object).Type() != env.SetwordType {
+		if block.(env.Block).Series.Get(0).Type() != env.SetwordType {
 			t.Error("Expected type setword")
 		}
 
@@ -341,7 +339,7 @@ func TestEvaldo_load_lsetword1(t *testing.T) {
 		if block.(env.Block).Series.Len() != 4 {
 			t.Error("Expected 4 items")
 		}
-		if block.(env.Block).Series.Get(1).(env.Object).Type() != env.LSetwordType {
+		if block.(env.Block).Series.Get(1).Type() != env.LSetwordType {
 			t.Error("Expected type setword")
 		}
 

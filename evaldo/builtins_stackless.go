@@ -13,7 +13,6 @@ import (
 // 									če je builtin potem pusha trenuten frame na stack in kreira novega
 
 func Stck_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft bool) *env.ProgramState {
-
 	evalExprFn := EvalExpression2
 	arg0 := bi.Cur0 //env.Object(bi.Cur0)
 	arg1 := bi.Cur1
@@ -32,7 +31,6 @@ func Stck_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, to
 		arg0 = ps.Res
 	}
 	if bi.Argsn > 1 && bi.Cur1 == nil {
-
 		evalExprFn(ps, true) // <---- THESE DETERMINE IF IT CONSUMES WHOLE EXPRESSION OR NOT IN CASE OF PIPEWORDS .. HM*... MAYBE WOULD COULD HAVE A WORD MODIFIER?? a: 2 |add 5 a:: 2 |add 5 print* --TODO
 
 		if checkFlagsBi(bi, ps, 1) {
@@ -44,7 +42,6 @@ func Stck_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, to
 		//fmt.Println(ps.Res)
 
 		arg1 = ps.Res
-
 	}
 	ps.Res = bi.Fn(ps, arg0, arg1, nil, nil, nil)
 	return ps
@@ -88,7 +85,7 @@ func Stck_EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, to
 	} else {
 		trace("****34")
 		ps.ErrorFlag = true
-		if ps.FailureFlag == false {
+		if !ps.FailureFlag {
 			ps.Res = *env.NewError2(5, "Word not found: "+word.Inspect(*ps.Idx))
 			fmt.Println("Error: Not known type")
 		}

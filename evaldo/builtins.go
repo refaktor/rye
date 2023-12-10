@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math"
 	"os"
 	"os/exec"
@@ -20,6 +19,7 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/sync/errgroup"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -1284,7 +1284,7 @@ var builtins = map[string]*env.Builtin{
 				var str string
 				fileIdx, _ := ps.Idx.GetIndex("file")
 				if s1.Scheme.Index == fileIdx {
-					b, err := ioutil.ReadFile(s1.GetPath())
+					b, err := os.ReadFile(s1.GetPath())
 					if err != nil {
 						return makeError(ps, err.Error())
 					}
@@ -1711,7 +1711,7 @@ var builtins = map[string]*env.Builtin{
 							foundany = true
 						}
 					case env.Void:
-						if foundany == false {
+						if !foundany {
 							doblk = true
 						}
 					default:
@@ -1949,24 +1949,31 @@ var builtins = map[string]*env.Builtin{
 				r, w, _ := os.Pipe()
 				os.Stdout = w
 
-				// print()
-
 				ser := ps.Ser
 				ps.Ser = bloc.Series
 				EvalBlock(ps)
 				ps.Ser = ser
 
-				outC := make(chan string)
+				outC := make(chan string, 1)
+				g := errgroup.Group{}
 				// copy the output in a separate goroutine so printing can't block indefinitely
-				go func() {
+				g.Go(func() error {
 					var buf bytes.Buffer
-					io.Copy(&buf, r)
+					_, err := io.Copy(&buf, r)
+					if err != nil {
+						return err
+					}
 					outC <- buf.String()
-				}()
+					return nil
+				})
 
 				// back to normal state
 				w.Close()
 				os.Stdout = old // restoring the real stdout
+
+				if err := g.Wait(); err != nil {
+					return MakeBuiltinError(ps, fmt.Sprintf("Error reading stdout: %v", err), "capture-stdout")
+				}
 				out := <-outC
 
 				// reading our temp stdout
@@ -6435,7 +6442,6 @@ func registerBuiltin(ps *env.ProgramState, word string, builtin env.Builtin) {
 		if builtin.Pure {
 			ps.PCtx.Set(idxw, builtin)
 		}
-
 	} else {
 		ps.Gen.Set(idxk, idxw, builtin)
 	}

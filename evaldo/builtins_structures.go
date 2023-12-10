@@ -24,7 +24,6 @@ import (
 // { _ { <person> { * [ -> 1 |print , -> 2 |print ] } } }
 
 func load_structures_Dict(ps *env.ProgramState, block env.Block) (env.Dict, *env.Error) {
-
 	var keys []string
 
 	data := make(map[string]interface{})

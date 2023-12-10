@@ -409,7 +409,6 @@ func AddIndex(ps *env.ProgramState, s env.Spreadsheet, column env.Word) env.Obje
 }
 
 func SortByColumn(ps *env.ProgramState, s *env.Spreadsheet, name string) {
-
 	idx := env.IndexOfString(name, s.Cols)
 
 	compareCol := func(i, j int) bool {
@@ -417,11 +416,9 @@ func SortByColumn(ps *env.ProgramState, s *env.Spreadsheet, name string) {
 	}
 
 	sort.Slice(s.Rows, compareCol)
-
 }
 
 func SortByColumnDesc(ps *env.ProgramState, s *env.Spreadsheet, name string) {
-
 	idx := env.IndexOfString(name, s.Cols)
 
 	compareCol := func(i, j int) bool {
@@ -429,7 +426,6 @@ func SortByColumnDesc(ps *env.ProgramState, s *env.Spreadsheet, name string) {
 	}
 
 	sort.Slice(s.Rows, compareCol)
-
 }
 
 func WhereEquals(ps *env.ProgramState, s env.Spreadsheet, name string, val interface{}) env.Object {
