@@ -9,7 +9,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -107,7 +106,7 @@ func __open_reader(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 
 func __read_all(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch s := arg0.(type) {
 	case env.Native:
-		data, err := ioutil.ReadAll(s.Value.(io.Reader))
+		data, err := io.ReadAll(s.Value.(io.Reader))
 		if err != nil {
 			ps.FailureFlag = true
 			return MakeBuiltinError(ps, "Error reading file.", "__read_all")
@@ -159,7 +158,7 @@ func __write(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Ob
 func __fs_read(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch f := arg0.(type) {
 	case env.Uri:
-		data, err := ioutil.ReadFile(f.GetPath())
+		data, err := os.ReadFile(f.GetPath())
 		if err != nil {
 			return MakeBuiltinError(ps, err.Error(), "__fs_read")
 		}
@@ -173,7 +172,7 @@ func __fs_read(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.
 func __fs_read_bytes(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch f := arg0.(type) {
 	case env.Uri:
-		data, err := ioutil.ReadFile(f.GetPath())
+		data, err := os.ReadFile(f.GetPath())
 		if err != nil {
 			return MakeBuiltinError(ps, err.Error(), "__fs_read_bytes")
 		}
@@ -216,14 +215,14 @@ func __fs_write(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env
 	case env.Uri:
 		switch s := arg1.(type) {
 		case env.String:
-			err := ioutil.WriteFile(f.GetPath(), []byte(s.Value), 0600)
+			err := os.WriteFile(f.GetPath(), []byte(s.Value), 0600)
 			if err != nil {
 				ps.FailureFlag = true
 				return MakeBuiltinError(ps, err.Error(), "__fs_write")
 			}
 			return arg1
 		case env.Native:
-			err := ioutil.WriteFile(f.GetPath(), s.Value.([]byte), 0600)
+			err := os.WriteFile(f.GetPath(), s.Value.([]byte), 0600)
 			if err != nil {
 				ps.FailureFlag = true
 				return MakeBuiltinError(ps, err.Error(), "__fs_write")
@@ -293,7 +292,7 @@ func __https_s_get(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 
 		// Print the HTTP Status Code and Status Name
 		//mt.Println("HTTP Response Status:", resp.StatusCode, http.StatusText(resp.StatusCode))
 		defer resp.Body.Close()
-		body, _ := ioutil.ReadAll(resp.Body)
+		body, _ := io.ReadAll(resp.Body)
 
 		if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
 			return *env.NewString(string(body))
@@ -353,7 +352,7 @@ func __http_s_post(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 
 				// Print the HTTP Status Code and Status Name
 				// fmt.Println("HTTP Response Status:", resp.StatusCode, http.StatusText(resp.StatusCode))
 				defer resp.Body.Close()
-				body, err := ioutil.ReadAll(resp.Body)
+				body, err := io.ReadAll(resp.Body)
 				if err != nil {
 					// fmt.Println("ERR")
 					ps.FailureFlag = true
@@ -536,7 +535,7 @@ func __https_request__do(ps *env.ProgramState, arg0 env.Object, arg1 env.Object,
 func __https_response__read_body(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch resp := arg0.(type) {
 	case env.Native:
-		data, err := ioutil.ReadAll(resp.Value.(*http.Response).Body)
+		data, err := io.ReadAll(resp.Value.(*http.Response).Body)
 		if err != nil {
 			return MakeBuiltinError(ps, err.Error(), "__https_response__read_body")
 		}

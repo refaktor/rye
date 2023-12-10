@@ -13,7 +13,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -100,7 +99,7 @@ func main_ryk() {
 	profile_path := ".ryk-preload"
 
 	if _, err := os.Stat(profile_path); err == nil {
-		content, err := ioutil.ReadFile(profile_path)
+		content, err := os.ReadFile(profile_path)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -238,7 +237,7 @@ func main_rye_file(file string, sig bool, subc bool) {
 	//util.PrintHeader()
 	//defer profile.Start(profile.CPUProfile).Stop()
 
-	bcontent, err := ioutil.ReadFile(file)
+	bcontent, err := os.ReadFile(file)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -279,7 +278,7 @@ func main_cgi_file(file string, sig bool) {
 		env.SetValue(es, "w", *env.NewNative(es.Idx, w, "Go-server-response-writer"))
 		env.SetValue(es, "r", *env.NewNative(es.Idx, r, "Go-server-request"))
 
-		bcontent, err := ioutil.ReadFile(file)
+		bcontent, err := os.ReadFile(file)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -311,7 +310,7 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool) {
 	fmt.Println("Welcome to Rye shell. Use ls and ls\\ \"pr\" to list the current context.")
 
 	if _, err := os.Stat(profile_path); err == nil {
-		//content, err := ioutil.ReadFile(profile_path)
+		//content, err := os.ReadFile(profile_path)
 		//if err != nil {
 		//	log.Fatal(err)
 		//}
