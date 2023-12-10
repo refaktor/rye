@@ -1,5 +1,8 @@
 # Rye language 🌾
 
+[![Build and Test](https://github.com/refaktor/rye/actions/workflows/build.yml/badge.svg)](https://github.com/refaktor/rye/actions/workflows/build.yml)
+[![golangci-lint](https://github.com/refaktor/rye/actions/workflows/golangci-lint.yml/badge.svg)](https://github.com/refaktor/rye/actions/workflows/golangci-lint.yml)
+
    * [What is Rye](#what-is-rye)
    * [Status: Alpha](#status-alpha)
    * [Overview](#overview)
