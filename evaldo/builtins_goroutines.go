@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/jinzhu/copier"
-	"golang.org/x/sync/errgroup"
 )
 
 func strimpg() { fmt.Println("") }
@@ -40,8 +39,8 @@ var Builtins_goroutines = map[string]*env.Builtin{
 			case env.Object:
 				switch handler := arg1.(type) {
 				case env.Function:
-					g := errgroup.Group{}
-					g.Go(func() error {
+					errC := make(chan error)
+					go func() {
 						ps.FailureFlag = false
 						ps.ErrorFlag = false
 						ps.ReturnFlag = false
@@ -51,13 +50,12 @@ var Builtins_goroutines = map[string]*env.Builtin{
 							ps.FailureFlag = true
 							ps.ErrorFlag = true
 							ps.ReturnFlag = true
-							return fmt.Errorf("failed to copy ps: %w", err)
+							errC <- fmt.Errorf("failed to copy ps: %w", err)
 						}
+						close(errC)
 						CallFunction(handler, &psTemp, arg, false, nil)
-						// CallFunctionArgs2(handler, &psTemp, arg, *env.NewNative(psTemp.Idx, "asd", "Go-server-context"), nil)
-						return nil
-					})
-					if err := g.Wait(); err != nil {
+					}()
+					if err := <-errC; err != nil {
 						return MakeBuiltinError(ps, err.Error(), "go-with")
 					}
 					return arg0
@@ -78,8 +76,8 @@ var Builtins_goroutines = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch handler := arg0.(type) {
 			case env.Function:
-				g := errgroup.Group{}
-				g.Go(func() error {
+				errC := make(chan error)
+				go func() {
 					ps.FailureFlag = false
 					ps.ErrorFlag = false
 					ps.ReturnFlag = false
@@ -89,13 +87,13 @@ var Builtins_goroutines = map[string]*env.Builtin{
 						ps.FailureFlag = true
 						ps.ErrorFlag = true
 						ps.ReturnFlag = true
-						return fmt.Errorf("failed to copy ps: %w", err)
+						errC <- fmt.Errorf("failed to copy ps: %w", err)
 					}
+					close(errC)
 					CallFunction(handler, &psTemp, nil, false, nil)
 					// CallFunctionArgs2(handler, &psTemp, arg, *env.NewNative(psTemp.Idx, "asd", "Go-server-context"), nil)
-					return nil
-				})
-				if err := g.Wait(); err != nil {
+				}()
+				if err := <-errC; err != nil {
 					return MakeBuiltinError(ps, err.Error(), "go")
 				}
 				return arg0
