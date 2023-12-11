@@ -26,7 +26,7 @@ You can then use tinyrye for general use around the shell. Tinyrye should have s
 
 When inside a project folder, you create rye.mod file where you list modules you want local rye to have.
 
-Then you use `rye-assist build` to build a local rye with those modules. It should also do go-get commands later, in first version you need to make them.
+Then you use `rye-assist build` to build a local rye with those modules.
 
 When adding modules you add them to rye.mod and rebuild.
 

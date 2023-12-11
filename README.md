@@ -320,10 +320,6 @@ Clone the main branch from the Rye repository. There is a submodule (a different
 
     git clone --recurse-submodules https://github.com/refaktor/rye.git && cd rye
 
-Go get the dependencies for tiny build
-
-    bash go-get-tiny.bash
-    
 Build the tiny version of Rye
 
     go build -tags "b_tiny"
@@ -345,7 +341,7 @@ Install build-esential if you don't already have it, for packages that require c
 Rye has many bindings, that you can determine at build time, so (currently) you get a specific Rye binary for your specific project. This is an example of a build with many bindings. 
 I've been working on a way to make this more elegant and systematic, but the manual version is:
 
-    go build -tags "b_tiny,b_sqlite,b_http,b_sql,b_postgres,b_openai,b_bson,b_crypto,b_smtpd,b_mail,b_postmark,b_bctypt,b_telegram"
+    go build -tags "b_tiny,b_sqlite,b_http,b_sql,b_postgres,b_openai,b_bson,b_crypto,b_smtpd,b_mail,b_postmark,b_bcrypt,b_telegram"
 	
 # Build WASM version of Rye
 
