@@ -302,9 +302,9 @@ var ShowResults bool
 
 var builtins = map[string]*env.Builtin{
 
-	"to-word": { // **
+	"to-word": { // ***
 		Argsn: 1,
-		Doc:   "Takes a Rye value (like string) and returns a Word with that name.",
+		Doc:   "Tries to change a Rye value to a word with same name.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
@@ -319,9 +319,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"to-integer": { // **
+	"to-integer": { // ***
 		Argsn: 1,
-		Doc:   "Splits a line of string into values by separator by respecting quotes",
+		Doc:   "Tries to change a Rye value (like string) to integer.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch addr := arg0.(type) {
 			case env.String:
@@ -336,16 +336,16 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"to-string": { // **
+	"to-string": { // ***
 		Argsn: 1,
-		Doc:   "Takes a Rye value and returns a string representation.",
+		Doc:   "Tries to turn a Rye value to string.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(arg0.Probe(*ps.Idx))
 		},
 	},
 
-	"to-context": { // **
+	"to-context": { // ***
 		Argsn: 1,
 		Doc:   "Takes a Dict and returns a Context with same names and values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -361,7 +361,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"is-string": { // **
+	"is-string": { // ***
 		Argsn: 1,
 		Doc:   "Returns true if value is a string.",
 		Pure:  true,
@@ -374,7 +374,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"is-integer": { // **
+	"is-integer": { // ***
 		Argsn: 1,
 		Doc:   "Returns true if value is an integer.",
 		Pure:  true,
@@ -387,7 +387,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"is-decimal": { // **
+	"is-decimal": { // ***
 		Argsn: 1,
 		Doc:   "Returns true if value is a decimal.",
 		Pure:  true,
@@ -400,7 +400,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"is-number": { // **
+	"is-number": { // ***
 		Argsn: 1,
 		Doc:   "Returns true if value is a number (integer or decimal).",
 		Pure:  true,
@@ -413,27 +413,27 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"to-uri": { // * TODO-FIXME: return possible failures
+	"to-uri": { // ** TODO-FIXME: return possible failures
 		Argsn: 1,
-		Doc:   "Takes a Rye value and return a URI if possible.",
+		Doc:   "Tries to change Rye value to an URI.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewUri1(ps.Idx, arg0.(env.String).Value) // TODO turn to switch
 		},
 	},
 
-	"to-file": { // *  TODO-FIXME: return possible failures
+	"to-file": { // **  TODO-FIXME: return possible failures
 		Argsn: 1,
-		Doc:   "Takes a Rye value and returns file if possible.",
+		Doc:   "Tries to change Rye value to a file.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewUri1(ps.Idx, "file://"+arg0.(env.String).Value) // TODO turn to switch
 		},
 	},
 
-	"type?": { // **
+	"type?": { // ***
 		Argsn: 1,
-		Doc:   "Returns the type of Rye value (as a word).",
+		Doc:   "Returns the type of Rye value as a word.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewWord(int(arg0.Type()))
@@ -442,7 +442,7 @@ var builtins = map[string]*env.Builtin{
 
 	// NUMBERS
 
-	"inc": { // **
+	"inc": { // ***
 		Argsn: 1,
 		Doc:   "Returns integer value incremented by 1.",
 		Pure:  true,
@@ -456,7 +456,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"is-positive": { // **
+	"is-positive": { // ***
 		Argsn: 1,
 		Doc:   "Returns true if integer is positive.",
 		Pure:  true,
@@ -480,7 +480,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"is-zero": { // **
+	"is-zero": { // ***
 		Argsn: 1,
 		Doc:   "Returns true if integer is zero.",
 		Pure:  true,
@@ -504,9 +504,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"inc!": { // **
+	"inc!": { // ***
 		Argsn: 1,
-		Doc:   "Increments integer value by 1 in place.",
+		Doc:   "Searches for a word and increments it's integer value in-place.",
 		Pure:  false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
@@ -529,9 +529,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"change!": { // *
+	"change!": { // ***
 		Argsn: 2,
-		Doc:   "Changes value in a word, if value changes returns true otherwise false",
+		Doc:   "Searches for a word and changes it's value in-place. If value changes returns true otherwise false",
 		Pure:  false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg1.(type) {
@@ -554,7 +554,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"set": { // **
+	"set": { // ***
 		Argsn: 2,
 		Doc:   "Set words by deconstructing block",
 		Pure:  false,
@@ -590,9 +590,9 @@ var builtins = map[string]*env.Builtin{
 
 	// CONTINUE WORK HERE - SYSTEMATISATION
 
-	"dump": { // ** currently a concept in testing ... for getting a code of a function, maybe same would be needed for context?
+	"dump": { // *** currently a concept in testing ... for getting a code of a function, maybe same would be needed for context?
 		Argsn: 1,
-		Doc:   "Set docstring of the current context.",
+		Doc:   "Retunrs (dumps) content of a function.",
 		Pure:  true,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch d := arg0.(type) {
@@ -604,9 +604,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"doc": { // **
+	"doc": { // ***
 		Argsn: 1,
-		Doc:   "Set docstring of the current context.",
+		Doc:   "Sets docstring of the current context.",
 		Pure:  true,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch d := arg0.(type) {
@@ -619,18 +619,18 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"doc?": { // **
+	"doc?": { // ***
 		Argsn: 0,
-		Doc:   "Get docstring of the current context.",
+		Doc:   "Gets docstring of the current context.",
 		Pure:  true,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(env1.Ctx.Doc)
 		},
 	},
 
-	"doc\\of?": { // *
+	"doc\\of?": { // **
 		Argsn: 1,
-		Doc:   "Get docstring of the first argument.",
+		Doc:   "Get docstring of the passed context.",
 		Pure:  true,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch d := arg0.(type) {
@@ -649,7 +649,7 @@ var builtins = map[string]*env.Builtin{
 
 	// VALUES
 
-	"dict": { // **
+	"dict": { // ***
 		Argsn: 1,
 		Doc:   "Constructs a Dict from the Block of key and value pairs.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -661,7 +661,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"list": { // **
+	"list": { // ***
 		Argsn: 1,
 		Doc:   "Constructs a List from the Block of values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -673,7 +673,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"true": { // **
+	"true": { // ***
 		Argsn: 0,
 		Doc:   "Returns a truthy value.",
 		Pure:  true,
@@ -682,7 +682,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"false": { // **
+	"false": { // ***
 		Argsn: 0,
 		Doc:   "Returns a falsy value.",
 		Pure:  true,
@@ -691,9 +691,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"not": { // **
+	"not": { // ***
 		Argsn: 1,
-		Doc:   "Turns a truthy value to non-truthy and reverse.",
+		Doc:   "Turns a truthy value to a non-truthy and reverse.",
 		Pure:  true,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if util.IsTruthy(arg0) {
@@ -719,7 +719,7 @@ var builtins = map[string]*env.Builtin{
 
 	// BASIC FUNCTIONS WITH NUMBERS
 
-	"factor-of": { // **
+	"factor-of": { // ***
 		Argsn: 2,
 		Doc:   "Checks if a first argument is a factor of second.",
 		Pure:  true,
@@ -741,7 +741,7 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-	"odd": { // **
+	"odd": { // ***
 		Argsn: 1,
 		Doc:   "Checks if a number is odd.",
 		Pure:  true,
@@ -758,7 +758,7 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-	"even": { // **
+	"even": { // ***
 		Argsn: 1,
 		Doc:   "Checks if a number is even.",
 		Pure:  true,
@@ -776,9 +776,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"mod": { // **
+	"mod": { // ***
 		Argsn: 2,
-		Doc:   "Calculates module of two integers.",
+		Doc:   "Calculates module (remainder) of two integers.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch a := arg0.(type) {
@@ -887,7 +887,7 @@ var builtins = map[string]*env.Builtin{
 
 	"_-": { // **
 		Argsn: 2,
-		Doc:   "Subtract two integers.",
+		Doc:   "Subtracts two numbers.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch a := arg0.(type) {
@@ -917,7 +917,7 @@ var builtins = map[string]*env.Builtin{
 
 	"_*": { // **
 		Argsn: 2,
-		Doc:   "Multiply two integers.",
+		Doc:   "Multiplies two numbers.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch a := arg0.(type) {
@@ -946,7 +946,7 @@ var builtins = map[string]*env.Builtin{
 	},
 	"_/": { // **
 		Argsn: 2,
-		Doc:   "Divide two integers.",
+		Doc:   "Divided two numbers.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch a := arg0.(type) {
@@ -989,9 +989,9 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-	"_=": { // **
+	"_=": { // ***
 		Argsn: 2,
-		Doc:   "Test if two values are equal.",
+		Doc:   "Checks if two Rye values are equal.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var res int64
@@ -1003,23 +1003,10 @@ var builtins = map[string]*env.Builtin{
 			return *env.NewInteger(res)
 		},
 	},
-	"_!": { // **
+
+	"_>": { // *** // ENDED FIXING DOCSTRINGS HERE
 		Argsn: 2,
-		Doc:   "Reverses the truthines.",
-		Pure:  true,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			var res int64
-			if arg0.GetKind() == arg1.GetKind() && arg0.Inspect(*ps.Idx) == arg1.Inspect(*ps.Idx) {
-				res = 0
-			} else {
-				res = 1
-			}
-			return *env.NewInteger(res)
-		},
-	},
-	"_>": { // **
-		Argsn: 2,
-		Doc:   "Tests if Arg1 is greater than Arg 2.",
+		Doc:   "Checks if first argument is greater than the second.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if greaterThan(ps, arg0, arg1) {
@@ -1029,9 +1016,9 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-	"_>=": { //
+	"_>=": { // * *
 		Argsn: 2,
-		Doc:   "Tests if Arg1 is greater than Arg 2.",
+		Doc:   "Checks if first argument is greater or equal than the second.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if util.EqualValues(ps, arg0, arg1) || greaterThan(ps, arg0, arg1) {

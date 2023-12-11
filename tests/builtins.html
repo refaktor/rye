@@ -9,7 +9,7 @@
     <script src="tpl/jsGoo.js"></script>
     <!-- syntax highlighting -->
     <link rel="stylesheet" type="text/css" href="tpl/desert.css" />
-    <script type="text/javascript" src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/prettify/r298/run_prettify.js"></script>
     <script type="text/javascript" src="./tpl/lang-rye.js"></script>
     <!-- syntax highlightinh end -->
   </head>
@@ -368,8 +368,10 @@
 ; returns 0</code></pre>
 </div>
 <h3>union</h3><p>Builtin(2): Accepts a block or list of values and returns only unique values.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>union { } { 1 9 }
-; returns { 1 9 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>union { 8 2 } { 1 9 } |length?
+; returns 4</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>union { } { 1 9 } |length?
+; returns 2</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>union { } { }
 ; returns { }</code></pre>
 </div>
