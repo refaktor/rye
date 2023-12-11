@@ -47,7 +47,7 @@ func MakeArgError(env1 *env.ProgramState, N int, typ []env.Type, fn string) *env
 		}
 		types += env.NativeTypes[tt-1]
 	}
-	return env.NewError("Function " + fn + " requires argument " + strconv.Itoa(N) + " to be any of	: " + types + ".")
+	return env.NewError("Function " + fn + " requires argument " + strconv.Itoa(N) + " to be of	: " + types + ".")
 }
 
 func MakeRyeError(env1 *env.ProgramState, val env.Object, er *env.Error) *env.Error {
@@ -4603,6 +4603,7 @@ var builtins = map[string]*env.Builtin{
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.StringType}, "contains")
 				}
+			// TODO-FIX1 .. add for block and list (use util.containsVal for block)
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "contains")
 			}
@@ -4763,7 +4764,28 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"intersect": {
+	"union": { // **
+		Argsn: 2,
+		Doc:   "Accepts a block or list of values and returns only unique values.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Block:
+				switch b2 := arg1.(type) {
+				case env.Block:
+					inter := util.UnionOfLists(ps, s1.Series.S, b2.Series.S)
+					return *env.NewBlock(*env.NewTSeries(inter))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "union")
+				}
+				// TODO-FIX1 add for list
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "union")
+			}
+
+		},
+	},
+
+	"common": {
 		Argsn: 2,
 		Doc:   "Finds the intersection of two values.",
 		Pure:  true,

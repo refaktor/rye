@@ -353,7 +353,7 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>try { avg list { } } |type?
 ; returns error</code></pre>
 </div>
-<h3>sum</h3><p>Builtin(1): Constructs a Dict from the Block of key and value pairs.</p><div class='group'>
+<h3>sum</h3><p>Builtin(1): Accepts a Block or List of values and returns the sum.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>sum { 8 2 10 6 }
 ; returns 26</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>sum { 8 2 10 6.500000 }
@@ -366,6 +366,20 @@
 ; returns 26.500000</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>sum list { }
 ; returns 0</code></pre>
+</div>
+<h3>union</h3><p>Builtin(2): Accepts a block or list of values and returns only unique values.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>union { } { 1 9 }
+; returns { 1 9 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>union { } { }
+; returns { }</code></pre>
+</div>
+<h3>common</h3><p>Pure Builtin(2): Finds the intersection of two values.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>common { 1 3 5 6 } { 2 3 4 5 }
+; returns { 3 5 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>common { } { 2 3 4 }
+; returns { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>common { } { }
+; returns { }</code></pre>
 </div>
 <h3>unique</h3><p>Builtin(2): Accepts Rye value and Tagword with a Block or String. Appends Rye value to Block/String in place, also returns it	.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>{ 3 2 3 5 3 2 } .list .unique .length?
@@ -748,29 +762,6 @@
 ; returns L[ aaabbccc ]</code></pre>
 </div>
 <h3>group</h3><p>Function(4)</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>{ "Anne" "Mitch" "Anya" } .group { .first }
-; returns [
-;  A: L[ Anne  Anya ]
-;  M: L[ Mitch ]
-; ]</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>{ "Anne" "Mitch" "Anya" } .group first
-; returns [
-;  M: L[ Mitch ]
-;  A: L[ Anne  Anya ]
-; ]</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>{ } .group { .first }
-; returns [
-; ]</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>{ "Anne" "Mitch" "Anya" } .list .group { .first }
-; returns [
-;  A: L[ Anne  Anya ]
-;  M: L[ Mitch ]
-; ]</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>{ "Anne" "Mitch" "Anya" } .list .group first
-; returns [
-;  A: L[ Anne  Anya ]
-;  M: L[ Mitch ]
-; ]</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>{ } .list .group { .first }
 ; returns [
 ; ]</code></pre>

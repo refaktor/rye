@@ -221,6 +221,21 @@ func IntersectLists(ps *env.ProgramState, a []env.Object, b []env.Object) []env.
 	return set
 }
 
+func UnionOfLists(ps *env.ProgramState, a []env.Object, b []env.Object) []env.Object {
+	elementMap := make(map[env.Object]bool)
+	for _, element := range a {
+		elementMap[element] = true
+	}
+	for _, element := range b {
+		elementMap[element] = true
+	}
+	mergedSlice := make([]env.Object, 0)
+	for element := range elementMap {
+		mergedSlice = append(mergedSlice, element)
+	}
+	return mergedSlice
+}
+
 func SplitMulti(s string, seps string) []string {
 	splitter := func(r rune) bool {
 		return strings.ContainsRune(seps, r)
