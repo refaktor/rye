@@ -1,3 +1,4 @@
+//go:build !b_mysql
 // +build !b_mysql
 
 package evaldo

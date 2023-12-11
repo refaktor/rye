@@ -1,3 +1,4 @@
+//go:build !b_webview
 // +build !b_webview
 
 package evaldo

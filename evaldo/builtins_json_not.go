@@ -13,7 +13,7 @@ func _emptyRM() env.Dict {
 	return env.Dict{}
 }
 
-func resultToJS(res env.Object) interface{} {
+func resultToJS(res env.Object) any {
 	switch v := res.(type) {
 	case env.String:
 		return v.Value
@@ -25,7 +25,7 @@ func resultToJS(res env.Object) interface{} {
 	return nil
 }
 
-func RyeToJSON(res interface{}) string {
+func RyeToJSON(res any) string {
 	switch v := res.(type) {
 	case nil:
 		return "null"
@@ -54,7 +54,7 @@ func RyeToJSON(res interface{}) string {
 	return "not handeled1"
 }
 
-func JsonToRye(res interface{}) env.Object {
+func JsonToRye(res any) env.Object {
 	switch v := res.(type) {
 	case float64:
 		return env.Integer{int64(math.Round(v))}
@@ -64,9 +64,9 @@ func JsonToRye(res interface{}) env.Object {
 		return env.Integer{v}
 	case string:
 		return env.String{v}
-	case map[string]interface{}:
+	case map[string]any:
 		return *env.NewDict(v)
-	case []interface{}:
+	case []any:
 		return *env.NewList(v)
 	case env.Object:
 		return v

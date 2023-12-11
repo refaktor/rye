@@ -68,7 +68,7 @@ func buildTripResponse(
 					})
 				}
 			} else { */
-				tripResponse.Schedules = []ScheduleResponse{}
+			tripResponse.Schedules = []ScheduleResponse{}
 			// }
 			resp = append(resp, tripResponse)
 		}

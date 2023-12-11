@@ -45,14 +45,14 @@ var Builtins_psql = map[string]*env.Builtin{
 		Doc:   "Execute sql query in for postgresql.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var sqlstr string
-			var vals []interface{}
+			var vals []any
 			switch db1 := arg0.(type) {
 			case env.Native:
 				switch str := arg1.(type) {
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = str.Series
-					values := make([]interface{}, 0, 2)
+					values := make([]any, 0, 2)
 					_, vals = SQL_EvalBlock(ps, MODE_PSQL, values)
 					sqlstr = ps.Res.(env.String).Value
 					ps.Ser = ser
@@ -94,7 +94,7 @@ var Builtins_psql = map[string]*env.Builtin{
 		Doc:   "Sql query to get rows data.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var sqlstr string
-			var vals []interface{}
+			var vals []any
 			switch db1 := arg0.(type) {
 			case env.Native:
 				switch str := arg1.(type) {
@@ -102,7 +102,7 @@ var Builtins_psql = map[string]*env.Builtin{
 					//fmt.Println("BLOCK ****** *****")
 					ser := ps.Ser
 					ps.Ser = str.Series
-					values := make([]interface{}, 0, 2)
+					values := make([]any, 0, 2)
 					_, vals = SQL_EvalBlock(ps, MODE_PSQL, values)
 					sqlstr = ps.Res.(env.String).Value
 					ps.Ser = ser
@@ -116,7 +116,7 @@ var Builtins_psql = map[string]*env.Builtin{
 					//					fmt.Println(sqlstr)
 					//					fmt.Println(vals)
 					rows, err := db1.Value.(*sql.DB).Query(sqlstr, vals...)
-					result := make([]map[string]interface{}, 0)
+					result := make([]map[string]any, 0)
 					if err != nil {
 						ps.FailureFlag = true
 						return MakeBuiltinError(ps, err.Error(), "Rye-psql//query")
@@ -128,9 +128,9 @@ var Builtins_psql = map[string]*env.Builtin{
 
 							var sr env.SpreadsheetRow
 
-							columns := make([]interface{}, len(cols))
-							columnPointers := make([]interface{}, len(cols))
-							for i, _ := range columns {
+							columns := make([]any, len(cols))
+							columnPointers := make([]any, len(cols))
+							for i := range columns {
 								columnPointers[i] = &columns[i]
 							}
 
@@ -141,9 +141,9 @@ var Builtins_psql = map[string]*env.Builtin{
 
 							// Create our map, and retrieve the value for each column from the pointers slice,
 							// storing it in the map with the name of the column as the key.
-							m := make(map[string]interface{})
+							m := make(map[string]any)
 							for i, colName := range cols {
-								val := columnPointers[i].(*interface{})
+								val := columnPointers[i].(*any)
 								m[colName] = *val
 								sr.Values = append(sr.Values, *val)
 							}

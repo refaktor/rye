@@ -27,7 +27,7 @@ var Builtins_ps = map[string]*env.Builtin{
 		Doc:   "TODODOC",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			v, _ := mem.VirtualMemory()
-			r := env.NewDict(make(map[string]interface{}, 3))
+			r := env.NewDict(make(map[string]any, 3))
 			r.Data["total"] = v.Total
 			r.Data["free"] = v.Free
 			r.Data["used-percent"] = v.UsedPercent

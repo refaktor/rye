@@ -30,13 +30,13 @@ import (
 */
 
 func TelegramUpdateToRyeDict(update_ tgm.Update) env.Dict {
-	update := make(map[string]interface{})
+	update := make(map[string]any)
 	if update_.Message != nil {
-		msg := make(map[string]interface{})
+		msg := make(map[string]any)
 		msg["Text"] = update_.Message.Text
 		msg["MessageID"] = update_.Message.MessageID
 		if update_.Message.From != nil {
-			from := make(map[string]interface{})
+			from := make(map[string]any)
 			from["UserName"] = update_.Message.From.UserName
 			from["FirstName"] = update_.Message.From.FirstName
 			from["ID"] = update_.Message.From.ID
@@ -46,7 +46,7 @@ func TelegramUpdateToRyeDict(update_ tgm.Update) env.Dict {
 			msg["From"] = *env.NewDict(from)
 		}
 		if update_.Message.Chat != nil {
-			chat := make(map[string]interface{})
+			chat := make(map[string]any)
 			chat["ID"] = update_.Message.Chat.ID
 			msg["Chat"] = *env.NewDict(chat)
 		}

@@ -1,3 +1,4 @@
+//go:build !b_http
 // +build !b_http
 
 package evaldo

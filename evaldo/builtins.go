@@ -139,14 +139,14 @@ func lesserThan(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) bool {
 	return valA < valB
 }
 
-func getFrom(ps *env.ProgramState, data interface{}, key interface{}, posMode bool) env.Object {
+func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 	switch s1 := data.(type) {
 	case env.Dict:
 		switch s2 := key.(type) {
 		case env.String:
 			v := s1.Data[s2.Value]
 			switch v1 := v.(type) {
-			case int, int64, float64, string, []interface{}, map[string]interface{}:
+			case int, int64, float64, string, []any, map[string]any:
 				return JsonToRye(v1)
 			case env.Integer:
 				return v1
@@ -286,7 +286,7 @@ func (s RyeBlockSort) Less(i, j int) bool {
 }
 
 // Sort list interface
-type RyeListSort []interface{}
+type RyeListSort []any
 
 func (s RyeListSort) Len() int {
 	return len(s)
@@ -2767,7 +2767,7 @@ var builtins = map[string]*env.Builtin{
 					if block.RawMode {
 						for i := 0; i < len(block.RawRows); i++ {
 							row := block.RawRows[i]
-							row2 := make([]interface{}, len(row))
+							row2 := make([]any, len(row))
 							for i := range row {
 								row2[i] = row[i]
 							}
@@ -2987,7 +2987,7 @@ var builtins = map[string]*env.Builtin{
 				switch block := arg1.(type) {
 				case env.Block, env.Builtin:
 					l := len(list.Data)
-					newl := make([]interface{}, l)
+					newl := make([]any, l)
 					switch block := block.(type) {
 					case env.Block:
 						ser := ps.Ser
@@ -3085,7 +3085,7 @@ var builtins = map[string]*env.Builtin{
 				switch block := arg2.(type) {
 				case env.Block:
 					l := len(list.Data)
-					newl := make([]interface{}, l)
+					newl := make([]any, l)
 					switch accu := arg1.(type) {
 					case env.Word:
 						ser := ps.Ser
@@ -3349,7 +3349,7 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Reduces values of a block or list by evaluating a block of code and summing the values.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			var ll []interface{}
+			var ll []any
 			var lo []env.Object
 			var llen int
 			modeObj := 0
@@ -3375,7 +3375,7 @@ var builtins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = block.Series
 					for i := 0; i < llen; i++ {
-						var item interface{}
+						var item any
 						if modeObj == 1 {
 							item = ll[i]
 						} else {
@@ -3400,7 +3400,7 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = ser
 				case env.Builtin:
 					for i := 0; i < llen; i++ {
-						var item interface{}
+						var item any
 						if modeObj == 1 {
 							item = ll[i]
 						} else {
@@ -3489,8 +3489,8 @@ var builtins = map[string]*env.Builtin{
 				switch block := arg1.(type) {
 				case env.Block, env.Builtin:
 					l := len(list.Data)
-					newl := make([]interface{}, 0)
-					subl := make([]interface{}, 0)
+					newl := make([]any, 0)
+					subl := make([]any, 0)
 					var prevres env.Object
 					switch block := block.(type) {
 					case env.Block:
@@ -3507,7 +3507,7 @@ var builtins = map[string]*env.Builtin{
 								subl = append(subl, curval)
 							} else {
 								newl = append(newl, env.NewList(subl))
-								subl = []interface{}{curval}
+								subl = []any{curval}
 							}
 							prevres = ps.Res
 							ps.Ser.Reset()
@@ -3523,7 +3523,7 @@ var builtins = map[string]*env.Builtin{
 								subl = append(subl, curval)
 							} else {
 								newl = append(newl, env.NewList(subl))
-								subl = []interface{}{curval}
+								subl = []any{curval}
 							}
 							prevres = res
 						}
@@ -3538,7 +3538,7 @@ var builtins = map[string]*env.Builtin{
 			case env.String:
 				switch block := arg1.(type) {
 				case env.Block, env.Builtin:
-					newl := make([]interface{}, 0)
+					newl := make([]any, 0)
 					var subl strings.Builder
 					var prevres env.Object
 					switch block := block.(type) {
@@ -3590,7 +3590,7 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Groups a block or list of values given condition.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			var ll []interface{}
+			var ll []any
 			var lo []env.Object
 			var llen int
 			modeObj := 0
@@ -3609,7 +3609,7 @@ var builtins = map[string]*env.Builtin{
 
 			switch block := arg1.(type) {
 			case env.Block, env.Builtin:
-				newd := make(map[string]interface{})
+				newd := make(map[string]any)
 				switch block := block.(type) {
 				case env.Block:
 					ser := ps.Ser
@@ -3633,7 +3633,7 @@ var builtins = map[string]*env.Builtin{
 						newkey := newkeyStr.Value
 						entry, ok := newd[newkey]
 						if !ok {
-							newd[newkey] = env.NewList(make([]interface{}, 0))
+							newd[newkey] = env.NewList(make([]any, 0))
 							entry, ok = newd[newkey]
 							if !ok {
 								return MakeBuiltinError(ps, "Key not found in List.", "group")
@@ -3665,7 +3665,7 @@ var builtins = map[string]*env.Builtin{
 						newkey := newkeyStr.Value
 						entry, ok := newd[newkey]
 						if !ok {
-							newd[newkey] = env.NewList(make([]interface{}, 0))
+							newd[newkey] = env.NewList(make([]any, 0))
 							entry, ok = newd[newkey]
 							if !ok {
 								return MakeBuiltinError(ps, "Key not found in List.", "group")
@@ -3694,7 +3694,7 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Filters values from a seris based on return of a injected code block.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			var ll []interface{}
+			var ll []any
 			var lo []env.Object
 			var ls []rune
 			var llen int
@@ -3719,13 +3719,13 @@ var builtins = map[string]*env.Builtin{
 			switch block := arg1.(type) {
 			case env.Block, env.Builtin:
 				var newlo []env.Object
-				var newll []interface{}
+				var newll []any
 				switch block := block.(type) {
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = block.Series
 					for i := 0; i < llen; i++ {
-						var item interface{}
+						var item any
 						if modeObj == 1 {
 							item = ll[i]
 						} else if modeObj == 2 {
@@ -3751,7 +3751,7 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = ser
 				case env.Builtin:
 					for i := 0; i < llen; i++ {
-						var item interface{}
+						var item any
 						if modeObj == 1 {
 							item = ll[i]
 						} else if modeObj == 2 {
@@ -3792,7 +3792,7 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Seek over a series until a Block of code returns True and return the value.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			var ll []interface{}
+			var ll []any
 			var lo []env.Object
 			var ls []rune
 			var llen int
@@ -3820,7 +3820,7 @@ var builtins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = block.Series
 					for i := 0; i < llen; i++ {
-						var item interface{}
+						var item any
 						if modeObj == 1 {
 							item = ll[i]
 						} else if modeObj == 2 {
@@ -3840,7 +3840,7 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = ser
 				case env.Builtin:
 					for i := 0; i < llen; i++ {
-						var item interface{}
+						var item any
 						if modeObj == 1 {
 							item = ll[i]
 						} else if modeObj == 2 {
@@ -4112,7 +4112,7 @@ var builtins = map[string]*env.Builtin{
 
 				// Create a map to store the unique values.
 				// uniqueValues := make(map[string]bool)
-				uniqueValues := make(map[interface{}]bool)
+				uniqueValues := make(map[any]bool)
 
 				// Iterate over the slice and add the elements to the map.
 				for _, element := range ss {
@@ -4121,7 +4121,7 @@ var builtins = map[string]*env.Builtin{
 				}
 
 				// Create a new slice to store the unique values.
-				uniqueSlice := make([]interface{}, 0, len(uniqueValues))
+				uniqueSlice := make([]any, 0, len(uniqueValues))
 
 				// Iterate over the map and add the keys to the new slice.
 				for key := range uniqueValues {
@@ -5265,7 +5265,7 @@ var builtins = map[string]*env.Builtin{
 					return *env.NewBlock(*env.NewTSeries(s1.Series.S[len(s1.Series.S)-numVal:]))
 				case env.List:
 					if len(s1.Data) == 0 {
-						return *env.NewList([]interface{}{})
+						return *env.NewList([]any{})
 					}
 					if len(s1.Data) < numVal {
 						numVal = len(s1.Data)
@@ -5387,7 +5387,7 @@ var builtins = map[string]*env.Builtin{
 					return *env.NewBlock(*env.NewTSeries(s1.Series.S[0:numVal]))
 				case env.List:
 					if len(s1.Data) == 0 {
-						return *env.NewList([]interface{}{})
+						return *env.NewList([]any{})
 					}
 					if len(s1.Data) < numVal {
 						numVal = len(s1.Data)
@@ -5638,7 +5638,7 @@ var builtins = map[string]*env.Builtin{
 			case env.Spreadsheet:
 				switch bloc := arg1.(type) {
 				case env.Block:
-					vals := make([]interface{}, bloc.Series.Len())
+					vals := make([]any, bloc.Series.Len())
 					for i := 0; i < bloc.Series.Len(); i++ {
 						vals[i] = bloc.Series.Get(i)
 					}

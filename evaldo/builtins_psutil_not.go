@@ -1,3 +1,4 @@
+//go:build !b_psutil
 // +build !b_psutil
 
 package evaldo

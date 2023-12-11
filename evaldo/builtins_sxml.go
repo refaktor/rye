@@ -18,7 +18,7 @@ func load_saxml_Dict(ps *env.ProgramState, block env.Block) (env.Dict, *env.Erro
 
 	var keys []string
 
-	data := make(map[string]interface{})
+	data := make(map[string]any)
 	rmap := *env.NewDict(data)
 
 	for block.Series.Pos() < block.Series.Len() {

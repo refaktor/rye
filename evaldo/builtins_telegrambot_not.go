@@ -1,3 +1,4 @@
+//go:build !b_telegram
 // +build !b_telegram
 
 package evaldo

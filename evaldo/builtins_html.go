@@ -58,7 +58,7 @@ func load_html_Dict(es *env.ProgramState, block env.Block) (env.Dict, *env.Error
 	var keys []string                    // keys
 	var conditions []*HtmlNavigCondition // conditions
 
-	data := make(map[string]interface{})
+	data := make(map[string]any)
 	dmap := *env.NewDict(data)
 
 	for block.Series.Pos() < block.Series.Len() {

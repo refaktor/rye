@@ -23,7 +23,7 @@ func Validation_EvalBlock(es *env.ProgramState, vals env.Dict) (env.Dict, map[st
 	notes := make(map[string]ValidationError, 0) // TODO ... what is this 2 here ... just for temp
 
 	var name string
-	var val interface{}
+	var val any
 
 	for es.Ser.Pos() < es.Ser.Len() {
 		object := es.Ser.Pop()
@@ -55,7 +55,7 @@ func newVE(n string) *ValidationError {
 	return &ValidationError{n}
 }
 
-func evalWord(word env.Word, es *env.ProgramState, val interface{}) (interface{}, *ValidationError) {
+func evalWord(word env.Word, es *env.ProgramState, val any) (any, *ValidationError) {
 	// later get all word indexes in adwance and store them only once... then use integer comparison in switch below
 	// this is two times BAD ... first it needs to retrieve a string of index (BIG BAD) and then it compares string to string
 	// instead of just comparing two integers
@@ -113,7 +113,7 @@ func evalWord(word env.Word, es *env.ProgramState, val interface{}) (interface{}
 	}
 }
 
-func evalInteger(val interface{}) (interface{}, *ValidationError) {
+func evalInteger(val any) (any, *ValidationError) {
 	switch val1 := val.(type) {
 	case int64:
 		return env.Integer{val1}, nil
@@ -138,7 +138,7 @@ func evalInteger(val interface{}) (interface{}, *ValidationError) {
 	}
 }
 
-func evalString(val interface{}) (interface{}, *ValidationError) {
+func evalString(val any) (any, *ValidationError) {
 	switch val1 := val.(type) {
 	case int64:
 		return env.String{strconv.FormatInt(val1, 10)}, nil
@@ -153,7 +153,7 @@ func evalString(val interface{}) (interface{}, *ValidationError) {
 	}
 }
 
-func parseEmail(v string) (interface{}, *ValidationError) {
+func parseEmail(v string) (any, *ValidationError) {
 	/* e, err := mail.ParseAddress(v)
 	if err != nil {
 		return v, newVE("not email")
@@ -161,7 +161,7 @@ func parseEmail(v string) (interface{}, *ValidationError) {
 	return env.String{v}, nil
 }
 
-func evalEmail(val interface{}) (interface{}, *ValidationError) {
+func evalEmail(val any) (any, *ValidationError) {
 	switch val1 := val.(type) {
 	case env.String:
 		return parseEmail(val1.Value)
@@ -172,7 +172,7 @@ func evalEmail(val interface{}) (interface{}, *ValidationError) {
 	}
 }
 
-func parseDate(v string) (interface{}, *ValidationError) {
+func parseDate(v string) (any, *ValidationError) {
 	if strings.Index(v[0:3], ".") > 0 {
 		d, e := time.Parse("02.01.2006", v)
 		if e != nil {
@@ -190,7 +190,7 @@ func parseDate(v string) (interface{}, *ValidationError) {
 	return v, newVE("not date")
 }
 
-func evalDate(val interface{}) (interface{}, *ValidationError) {
+func evalDate(val any) (any, *ValidationError) {
 	switch val1 := val.(type) {
 	case env.String:
 		return parseDate(val1.Value)

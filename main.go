@@ -28,7 +28,7 @@ import (
 
 type TagType int
 type RjType int
-type Series []interface{}
+type Series []any
 
 type anyword struct {
 	kind RjType
@@ -37,10 +37,10 @@ type anyword struct {
 
 type node struct {
 	kind  RjType
-	value interface{}
+	value any
 }
 
-var CODE []interface{}
+var CODE []any
 
 //
 // main function. Dispatches to appropriate mode function
