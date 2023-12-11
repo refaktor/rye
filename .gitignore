@@ -37,3 +37,5 @@ data.txt
 *.bleve
 *.big.csv
 *.tar.gz
+
+dist/
