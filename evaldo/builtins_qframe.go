@@ -24,7 +24,7 @@ func eval_new_frame(ps *env.ProgramState, block env.Block) env.Object {
 	//var col string
 	//var colNum int
 	var col colInfo
-	mmap := make(map[string]interface{})
+	mmap := make(map[string]any)
 	var scol []string
 	var icol []int
 	for block.Series.Pos() < block.Series.Len() {
@@ -110,7 +110,7 @@ type filter_state struct {
 	step int
 	fn   *env.Word
 	col  *env.Tagword
-	val  interface{}
+	val  any
 }
 
 func _emptyFC() []qframe.FilterClause {
@@ -213,7 +213,7 @@ func eval_filter_clauses(ps *env.ProgramState, frame qframe.QFrame, block env.Bl
 	return clauses, nil
 }
 
-func _addColumToMap(mmap *map[string]interface{}, icol []int, scol []string, col *colInfo) bool {
+func _addColumToMap(mmap *map[string]any, icol []int, scol []string, col *colInfo) bool {
 	var col1 string
 	if col.Name == "" {
 		col1 = "col" + strconv.Itoa(col.Num)

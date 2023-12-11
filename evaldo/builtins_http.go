@@ -462,7 +462,7 @@ var Builtins_http = map[string]*env.Builtin{
 			case env.Native:
 				r := req.Value.(*http.Request)
 				r.ParseForm()
-				dict := make(map[string]interface{})
+				dict := make(map[string]any)
 				for key, val := range r.Form {
 					dict[key] = val[0]
 				}

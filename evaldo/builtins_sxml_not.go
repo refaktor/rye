@@ -14,7 +14,7 @@ var Builtins_sxml = map[string]*env.Builtin{}
 func load_saxml_Dict(es *env.ProgramState, block env.Block) (env.Dict, *env.Error) {
 	var keys []string
 
-	data := make(map[string]interface{})
+	data := make(map[string]any)
 	rmap := *env.NewDict(data)
 
 	for block.Series.Pos() < block.Series.Len() {

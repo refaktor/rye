@@ -1024,18 +1024,18 @@ func checkErrorReturnFlag(ps *env.ProgramState) bool {
 
 func fmt1() { fmt.Print(1) }
 
-func trace(x interface{}) {
+func trace(x any) {
 	//fmt.Print("\x1b[36m")
 	//fmt.Print(x)
 	//fmt.Println("\x1b[0m")
 }
-func trace2(x interface{}) {
+func trace2(x any) {
 	//fmt.Print("\x1b[56m")
 	//fmt.Print(x)
 	//fmt.Println("\x1b[0m")
 }
 
-func trace3(x interface{}) {
+func trace3(x any) {
 	fmt.Print("\x1b[56m")
 	fmt.Print(x)
 	fmt.Println("\x1b[0m")

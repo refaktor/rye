@@ -1218,11 +1218,11 @@ func NewCPath3(w1 Word, w2 Word, w3 Word) *CPath {
 
 // String represents an string.
 type Native struct {
-	Value interface{}
+	Value any
 	Kind  Word
 }
 
-func NewNative(index *Idxs, val interface{}, kind string) *Native {
+func NewNative(index *Idxs, val any, kind string) *Native {
 	idx := index.IndexWord(kind)
 	nat := Native{val, Word{idx}}
 	return &nat
@@ -1259,16 +1259,16 @@ func (i Native) GetKind() int {
 
 // String represents an string.
 type Dict struct {
-	Data map[string]interface{}
+	Data map[string]any
 	Kind Word
 }
 
-func NewDict(data map[string]interface{}) *Dict {
+func NewDict(data map[string]any) *Dict {
 	return &Dict{data, Word{0}}
 }
 
 func NewDictFromSeries(block TSeries, idx *Idxs) Dict {
-	data := make(map[string]interface{})
+	data := make(map[string]any)
 	for block.Pos() < block.Len() {
 		key := block.Pop()
 		val := block.Pop()
@@ -1337,15 +1337,15 @@ func (i Dict) GetKind() int {
 //
 
 type List struct {
-	Data []interface{}
+	Data []any
 	Kind Word
 }
 
-func NewList(data []interface{}) *List {
+func NewList(data []any) *List {
 	return &List{data, Word{0}}
 }
 
-func RyeToRaw(res Object) interface{} {
+func RyeToRaw(res Object) any {
 	// fmt.Printf("Type: %T", res)
 	switch v := res.(type) {
 	case nil:
@@ -1373,7 +1373,7 @@ func RyeToRaw(res Object) interface{} {
 }
 
 func NewListFromSeries(block TSeries) List {
-	data := make([]interface{}, block.Len())
+	data := make([]any, block.Len())
 	for block.Pos() < block.Len() {
 		i := block.Pos()
 		k1 := block.Pop()
@@ -1402,7 +1402,7 @@ func (i List) Inspect(idxs Idxs) string {
 	bu.WriteString("[List (" + i.Kind.Probe(idxs) + "): ")
 	for _, v := range i.Data {
 		switch ob := v.(type) {
-		case map[string]interface{}:
+		case map[string]any:
 			vv := NewDict(ob)
 			bu.WriteString(" " + vv.Inspect(idxs) + " ")
 		case Object:
@@ -1421,7 +1421,7 @@ func (i List) Probe(idxs Idxs) string {
 	bu.WriteString("L[")
 	for _, v := range i.Data {
 		switch ob := v.(type) {
-		case map[string]interface{}:
+		case map[string]any:
 			vv := NewDict(ob)
 			bu.WriteString(" " + vv.Probe(idxs) + " ")
 		case Object:

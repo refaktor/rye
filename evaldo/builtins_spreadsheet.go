@@ -34,7 +34,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 					spr := env.NewSpreadsheet(cols)
 					data := data1.Series
 					for data.Pos() < data.Len() {
-						rowd := make([]interface{}, header.Len())
+						rowd := make([]any, header.Len())
 						for ii := 0; ii < header.Len(); ii++ {
 							k1 := data.Pop()
 							rowd[ii] = k1
@@ -75,7 +75,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 				case env.Block:
 					data := data1.Series
 					for data.Pos() < data.Len() {
-						rowd := make([]interface{}, len(spr.Cols))
+						rowd := make([]any, len(spr.Cols))
 						for ii := 0; ii < len(spr.Cols); ii++ {
 							k1 := data.Pop()
 							rowd[ii] = k1
@@ -428,7 +428,7 @@ func SortByColumnDesc(ps *env.ProgramState, s *env.Spreadsheet, name string) {
 	sort.Slice(s.Rows, compareCol)
 }
 
-func WhereEquals(ps *env.ProgramState, s env.Spreadsheet, name string, val interface{}) env.Object {
+func WhereEquals(ps *env.ProgramState, s env.Spreadsheet, name string, val any) env.Object {
 	idx := env.IndexOfString(name, s.Cols)
 	nspr := env.NewSpreadsheet(s.Cols)
 	if idx > -1 {
@@ -484,7 +484,7 @@ func WhereEquals(ps *env.ProgramState, s env.Spreadsheet, name string, val inter
 	}
 }
 
-func WhereGreater(ps *env.ProgramState, s env.Spreadsheet, name string, val interface{}) env.Object {
+func WhereGreater(ps *env.ProgramState, s env.Spreadsheet, name string, val any) env.Object {
 	idx := env.IndexOfString(name, s.Cols)
 	nspr := env.NewSpreadsheet(s.Cols)
 	if idx > -1 {

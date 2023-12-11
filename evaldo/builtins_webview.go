@@ -124,7 +124,7 @@ var Builtins_webview = map[string]*env.Builtin{
 			fmt.Println("YOYO1")
 			switch win := arg0.(type) {
 			case env.Native:
-				win.Value.(webview.WebView).Bind("hellorye", func() interface{} {
+				win.Value.(webview.WebView).Bind("hellorye", func() any {
 					fmt.Println("YOYO2")
 					return "RETURNED"
 				})
@@ -133,14 +133,14 @@ var Builtins_webview = map[string]*env.Builtin{
 					switch fn := arg2.(type) {
 					case env.Function:
 						if fn.Argsn == 0 {
-							win.Value.(webview.WebView).Bind(ps.Idx.GetWord(word.Index), func() interface{} {
+							win.Value.(webview.WebView).Bind(ps.Idx.GetWord(word.Index), func() any {
 								fmt.Println("YOYO3")
 								CallFunction(fn, ps, nil, false, ps.Ctx)
 								return resultToJS(ps.Res)
 							})
 						}
 						if fn.Argsn == 1 {
-							win.Value.(webview.WebView).Bind(ps.Idx.GetWord(word.Index), func(a0 interface{}) interface{} {
+							win.Value.(webview.WebView).Bind(ps.Idx.GetWord(word.Index), func(a0 any) any {
 								a0_ := JsonToRye(a0)
 								CallFunction(fn, ps, a0_, false, ps.Ctx)
 								return resultToJS(ps.Res)

@@ -67,7 +67,7 @@ func (fi bindataFileInfo) ModTime() time.Time {
 func (fi bindataFileInfo) IsDir() bool {
 	return false
 }
-func (fi bindataFileInfo) Sys() interface{} {
+func (fi bindataFileInfo) Sys() any {
 	return nil
 }
 
@@ -203,7 +203,7 @@ func AssetNames() []string {
 
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() (*asset, error){
-	"app.js": appJs,
+	"app.js":     appJs,
 	"index.html": indexHtml,
 	"picodom.js": picodomJs,
 	"styles.css": stylesCss,
@@ -213,11 +213,13 @@ var _bindata = map[string]func() (*asset, error){
 // directory embedded in the file by go-bindata.
 // For example if you run go-bindata on data/... and data contains the
 // following hierarchy:
-//     data/
-//       foo.txt
-//       img/
-//         a.png
-//         b.png
+//
+//	data/
+//	  foo.txt
+//	  img/
+//	    a.png
+//	    b.png
+//
 // then AssetDir("data") would return []string{"foo.txt", "img"}
 // AssetDir("data/img") would return []string{"a.png", "b.png"}
 // AssetDir("foo.txt") and AssetDir("notexist") would return an error
@@ -248,9 +250,10 @@ type bintree struct {
 	Func     func() (*asset, error)
 	Children map[string]*bintree
 }
+
 var _bintree = &bintree{nil, map[string]*bintree{
-	"app.js": {appJs, map[string]*bintree{}},
-	"index.html":{indexHtml, map[string]*bintree{}},
+	"app.js":     {appJs, map[string]*bintree{}},
+	"index.html": {indexHtml, map[string]*bintree{}},
 	"picodom.js": {picodomJs, map[string]*bintree{}},
 	"styles.css": {stylesCss, map[string]*bintree{}},
 }}
@@ -301,4 +304,3 @@ func _filePath(dir, name string) string {
 	cannonicalName := strings.Replace(name, "\\", "/", -1)
 	return filepath.Join(append([]string{dir}, strings.Split(cannonicalName, "/")...)...)
 }
-

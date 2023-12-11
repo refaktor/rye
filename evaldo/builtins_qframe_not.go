@@ -1,3 +1,4 @@
+//go:build !b_qframe
 // +build !b_qframe
 
 package evaldo

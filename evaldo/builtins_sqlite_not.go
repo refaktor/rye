@@ -1,3 +1,4 @@
+//go:build !b_sqlite
 // +build !b_sqlite
 
 package evaldo

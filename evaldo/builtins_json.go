@@ -15,7 +15,7 @@ func _emptyRM() env.Dict {
 	return env.Dict{}
 }
 
-func resultToJS(res env.Object) interface{} {
+func resultToJS(res env.Object) any {
 	switch v := res.(type) {
 	case env.String:
 		return v.Value
@@ -30,7 +30,7 @@ func resultToJS(res env.Object) interface{} {
 	return nil
 }
 
-func RyeToJSON(res interface{}) string {
+func RyeToJSON(res any) string {
 	// fmt.Printf("Type: %T", res)
 	switch v := res.(type) {
 	case nil:
@@ -83,7 +83,7 @@ func RyeToJSON(res interface{}) string {
 	}
 }
 
-func JsonToRye(res interface{}) env.Object {
+func JsonToRye(res any) env.Object {
 	switch v := res.(type) {
 	case float64:
 		return *env.NewDecimal(v)
@@ -95,9 +95,9 @@ func JsonToRye(res interface{}) env.Object {
 		return *env.NewString(v)
 	case rune:
 		return *env.NewString(string(v))
-	case map[string]interface{}:
+	case map[string]any:
 		return *env.NewDict(v)
-	case []interface{}:
+	case []any:
 		return *env.NewList(v)
 	case *env.List:
 		return *v
@@ -168,7 +168,7 @@ func SpreadsheetToJSON(s env.Spreadsheet) string {
 func _parse_json(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch input := arg0.(type) {
 	case env.String:
-		var m interface{}
+		var m any
 		err := json.Unmarshal([]byte(input.Value), &m)
 		if err != nil {
 			return MakeBuiltinError(ps, "Failed to Unmarshal.", "_parse_json")

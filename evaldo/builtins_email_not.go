@@ -1,3 +1,4 @@
+//go:build !b_email
 // +build !b_email
 
 package evaldo

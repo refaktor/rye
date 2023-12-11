@@ -279,7 +279,7 @@ func EqualValues(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) bool {
 	return result
         }*/
 
-func ToRyeValue(res interface{}) env.Object {
+func ToRyeValue(res any) env.Object {
 	switch v := res.(type) {
 	case float64:
 		return *env.NewDecimal(v)
@@ -289,9 +289,9 @@ func ToRyeValue(res interface{}) env.Object {
 		return *env.NewInteger(v)
 	case string:
 		return *env.NewString(v)
-	case map[string]interface{}:
+	case map[string]any:
 		return *env.NewDict(v)
-	case []interface{}:
+	case []any:
 		return *env.NewList(v)
 	case env.Object:
 		return v

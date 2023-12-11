@@ -9,10 +9,10 @@ type ConversionError struct {
 	message string
 }
 
-func CopyMap(m map[string]interface{}) map[string]interface{} {
-	cp := make(map[string]interface{})
+func CopyMap(m map[string]any) map[string]any {
+	cp := make(map[string]any)
 	for k, v := range m {
-		vm, ok := v.(map[string]interface{})
+		vm, ok := v.(map[string]any)
 		if ok {
 			cp[k] = CopyMap(vm)
 		} else {
@@ -46,7 +46,7 @@ func Conversion_EvalBlockCtx(ps *env.ProgramState, vals env.RyeCtx) env.Object {
 
 func Conversion_EvalBlockDict(ps *env.ProgramState, vals env.Dict) env.Object {
 	//var outD map[string]interface{}
-	outD := make(map[string]interface{})
+	outD := make(map[string]any)
 	object := ps.Ser.Peek()
 	switch obj := object.(type) {
 	case env.Word:
@@ -64,7 +64,7 @@ func Conversion_EvalBlockDict(ps *env.ProgramState, vals env.Dict) env.Object {
 
 	var key string
 	var val env.Object
-	var toDel interface{}
+	var toDel any
 
 	for ps.Ser.Pos() < ps.Ser.Len() {
 		object := ps.Ser.Pop()
@@ -108,7 +108,7 @@ func newCE(n string) *ConversionError {
 	return &ConversionError{n}
 }
 
-func conversion_evalWord(word env.Word, ps *env.ProgramState, vals env.Object) (env.Object, interface{}) {
+func conversion_evalWord(word env.Word, ps *env.ProgramState, vals env.Object) (env.Object, any) {
 	// later get all word indexes in adwance and store them only once... then use integer comparison in switch below
 	// this is two times BAD ... first it needs to retrieve a string of index (BIG BAD) and then it compares string to string
 	// instead of just comparing two integers

@@ -1,3 +1,4 @@
+//go:build !b_echo
 // +build !b_echo
 
 package evaldo
@@ -16,5 +17,4 @@ func PopOutBuffer() string {
 	return r
 }
 
-var Builtins_web = map[string]*env.Builtin{
-}
+var Builtins_web = map[string]*env.Builtin{}

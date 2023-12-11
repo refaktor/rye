@@ -93,7 +93,7 @@ linters:
     # - goconst
     # - gocritic
     # - gocyclo
-    # - gofmt
+    - gofmt
     # - goimports
     # - gomnd
     - goprintffuncname

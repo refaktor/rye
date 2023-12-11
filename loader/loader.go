@@ -15,7 +15,7 @@ import (
 	. "github.com/refaktor/go-peg"
 )
 
-func trace(x interface{}) {
+func trace(x any) {
 	//fmt.Print("\x1b[56m")
 	//fmt.Print(x)
 	//fmt.Println("\x1b[0m")

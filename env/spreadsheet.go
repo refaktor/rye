@@ -14,11 +14,11 @@ func makeError(env1 *ProgramState, msg string) *Error {
 }
 
 type SpreadsheetRow struct {
-	Values []interface{}
+	Values []any
 	Uplink *Spreadsheet
 }
 
-func NewSpreadsheetRow(values []interface{}, uplink *Spreadsheet) *SpreadsheetRow {
+func NewSpreadsheetRow(values []any, uplink *Spreadsheet) *SpreadsheetRow {
 	nat := SpreadsheetRow{values, uplink}
 	return &nat
 }
@@ -219,7 +219,7 @@ func (s Spreadsheet) Columns(ps *ProgramState, names []string) Object {
 		return *nspr
 	} else {
 		for _, row := range s.Rows {
-			row2 := make([]interface{}, len(names))
+			row2 := make([]any, len(names))
 			for col := range idxs {
 				if len(row.Values) > col {
 					row2[col] = row.Values[idxs[col]].(Object)
@@ -235,7 +235,7 @@ func (s Spreadsheet) Columns(ps *ProgramState, names []string) Object {
 func (s Spreadsheet) GetRow(ps *ProgramState, index int) Object {
 	if s.RawMode {
 		row := s.RawRows[index]
-		row2 := make([]interface{}, len(row))
+		row2 := make([]any, len(row))
 		for i := range row {
 			row2[i] = row[i]
 		}
@@ -250,7 +250,7 @@ func (s Spreadsheet) GetRow(ps *ProgramState, index int) Object {
 func (s Spreadsheet) GetRowNew(index int) Object {
 	if s.RawMode {
 		row := s.RawRows[index]
-		row2 := make([]interface{}, len(row))
+		row2 := make([]any, len(row))
 		for i := range row {
 			row2[i] = row[i]
 		}
@@ -276,7 +276,7 @@ func (s Spreadsheet) GetRawRowValue(column string, rrow []string) (string, error
 	return rrow[index], nil
 }
 
-func (s Spreadsheet) GetRowValue(column string, rrow SpreadsheetRow) (interface{}, error) {
+func (s Spreadsheet) GetRowValue(column string, rrow SpreadsheetRow) (any, error) {
 	index := -1
 	for i, v := range s.Cols {
 		if v == column {
@@ -361,7 +361,7 @@ func (s SpreadsheetRow) Type() Type {
 }
 
 func (s Spreadsheet) GetColumns() List {
-	lst := make([]interface{}, len(s.Cols))
+	lst := make([]any, len(s.Cols))
 	for i, v := range s.Cols {
 		lst[i] = v
 	}

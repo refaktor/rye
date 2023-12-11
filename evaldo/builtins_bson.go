@@ -11,12 +11,12 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-func ValueToBSON(arg0 env.Object, topLevel bool) interface{} {
+func ValueToBSON(arg0 env.Object, topLevel bool) any {
 	//fmt.Println("val->bson")
 	//fmt.Println(topLevel)
-	var val interface{}
+	var val any
 	var typ string
-	var met interface{}
+	var met any
 	switch obj := arg0.(type) {
 	case env.Integer:
 		val = obj.Value
@@ -28,7 +28,7 @@ func ValueToBSON(arg0 env.Object, topLevel bool) interface{} {
 		val = obj.Value
 		typ = "vec"
 	case env.Block:
-		vals := make([]interface{}, obj.Series.Len())
+		vals := make([]any, obj.Series.Len())
 		for i, valu := range obj.Series.S {
 			vals[i] = ValueToBSON(valu, false)
 		}
@@ -45,7 +45,7 @@ func ValueToBSON(arg0 env.Object, topLevel bool) interface{} {
 	val = vals
 	typ = "sprr"*/
 	case env.SpreadsheetRow:
-		vals := make([]interface{}, len(obj.Values))
+		vals := make([]any, len(obj.Values))
 		for i, valu := range obj.Values {
 			switch val := valu.(type) {
 			case env.Object:
@@ -61,7 +61,7 @@ func ValueToBSON(arg0 env.Object, topLevel bool) interface{} {
 		//	vals[i] = ValueToBSON(valu, false)
 		//}
 		// fmt.Println(spr)
-		rows := make([]interface{}, len(obj.Rows))
+		rows := make([]any, len(obj.Rows))
 		for i, valu := range obj.Rows {
 			rows[i] = ValueToBSON(valu, false)
 		}
@@ -80,7 +80,7 @@ func ValueToBSON(arg0 env.Object, topLevel bool) interface{} {
 	}
 }
 
-func BsonToValue_Map(ps *env.ProgramState, val interface{}, typ string, meta interface{}, topLevel bool) env.Object {
+func BsonToValue_Map(ps *env.ProgramState, val any, typ string, meta any, topLevel bool) env.Object {
 
 	/*fmt.Println("BSONToVALUE_MAP")
 	fmt.Println(val)
@@ -99,7 +99,7 @@ func BsonToValue_Map(ps *env.ProgramState, val interface{}, typ string, meta int
 		return env.String{rval}
 	case bson.M:
 		return BsonToValue_Map(ps, rval["val"], rval["typ"].(string), rval["met"], false)
-	case map[string]interface{}:
+	case map[string]any:
 		return BsonToValue_Map(ps, rval["val"], rval["typ"].(string), rval["met"], false)
 	case bson.A:
 		switch typ {
@@ -121,12 +121,12 @@ func BsonToValue_Map(ps *env.ProgramState, val interface{}, typ string, meta int
 
 					switch rrval := rval[ii].(type) {
 					case bson.A:
-						cells := make([]interface{}, len(rrval))
+						cells := make([]any, len(rrval))
 						for iii, rrrval := range rrval {
 							cells[iii] = BsonToValue_Map(ps, rrrval, "", nil, false)
 						}
 						spr.AddRow(env.SpreadsheetRow{cells, spr})
-					case []interface{}:
+					case []any:
 						spr.AddRow(env.SpreadsheetRow{rrval, spr})
 					}
 				}
@@ -160,7 +160,7 @@ func BsonToValue_Map(ps *env.ProgramState, val interface{}, typ string, meta int
 	return MakeBuiltinError(ps, "bson type not found.", "BsonToValue_Map")
 }
 
-func BsonToValue_Val(ps *env.ProgramState, val interface{}, topLevel bool) env.Object {
+func BsonToValue_Val(ps *env.ProgramState, val any, topLevel bool) env.Object {
 
 	//fmt.Printf("Type: %T\n", val)
 	//fmt.Println(val)
@@ -186,7 +186,7 @@ var Builtins_bson = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "Takes a BSON value and returns it encoded into Rye values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			var val map[string]interface{}
+			var val map[string]any
 			// var val interface{}
 			// err := bson.Unmarshal(arg0.(env.Native).Value.([]byte), &val)
 			err := bson.Unmarshal(arg0.(env.Native).Value.([]byte), &val)

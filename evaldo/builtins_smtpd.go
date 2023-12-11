@@ -40,7 +40,7 @@ var Builtins_smtpd = map[string]*env.Builtin{
 								psTemp := env.ProgramState{}
 								copier.Copy(&psTemp, &ps)
 								// msg, _ := mail.ReadMessage(bytes.NewReader(data))
-								lstTo := make([]interface{}, len(to))
+								lstTo := make([]any, len(to))
 								for i, v := range to {
 									lstTo[i] = v
 								}

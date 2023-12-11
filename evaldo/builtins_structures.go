@@ -26,7 +26,7 @@ import (
 func load_structures_Dict(ps *env.ProgramState, block env.Block) (env.Dict, *env.Error) {
 	var keys []string
 
-	data := make(map[string]interface{})
+	data := make(map[string]any)
 	rmap := *env.NewDict(data)
 
 	for block.Series.Pos() < block.Series.Len() {
@@ -92,7 +92,7 @@ func do_structures(ps *env.ProgramState, data env.Dict, rmap env.Dict) env.Objec
 			switch obj := rval0.(type) {
 			case env.Dict:
 				switch val1 := val.(type) {
-				case map[string]interface{}:
+				case map[string]any:
 					// trace5("RECURSING")
 					do_structures(ps, *env.NewDict(val1), obj)
 					// trace5("OUTCURSING")
@@ -111,7 +111,7 @@ func do_structures(ps *env.ProgramState, data env.Dict, rmap env.Dict) env.Objec
 			switch obj := rval.(type) {
 			case env.Dict:
 				switch val1 := val.(type) {
-				case map[string]interface{}:
+				case map[string]any:
 					do_structures(ps, *env.NewDict(val1), obj)
 				}
 			case env.Block:

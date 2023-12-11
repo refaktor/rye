@@ -1,3 +1,4 @@
+//go:build !b_gtk
 // +build !b_gtk
 
 package evaldo

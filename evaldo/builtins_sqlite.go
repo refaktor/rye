@@ -19,7 +19,7 @@ import (
 const MODE_SQLITE = 1
 const MODE_PSQL = 2
 
-func SQL_EvalBlock(es *env.ProgramState, mode int, values []interface{}) (*env.ProgramState, []interface{}) {
+func SQL_EvalBlock(es *env.ProgramState, mode int, values []any) (*env.ProgramState, []any) {
 	var bu strings.Builder
 	var str string
 	for es.Ser.Pos() < es.Ser.Len() {
@@ -34,7 +34,7 @@ func SQL_EvalBlock(es *env.ProgramState, mode int, values []interface{}) (*env.P
 
 // mode 1 SQLite, 2 postgresql
 
-func SQL_EvalExpression(es *env.ProgramState, vals []interface{}, mode int) (*env.ProgramState, string, []interface{}) {
+func SQL_EvalExpression(es *env.ProgramState, vals []any, mode int) (*env.ProgramState, string, []any) {
 	object := es.Ser.Pop()
 
 	switch obj := object.(type) {
@@ -125,7 +125,7 @@ var Builtins_sqlite = map[string]*env.Builtin{
 		Doc:   "TODODOC.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var sqlstr string
-			var vals []interface{}
+			var vals []any
 			switch db1 := arg0.(type) {
 			case env.Native:
 				switch str := arg1.(type) {
@@ -133,7 +133,7 @@ var Builtins_sqlite = map[string]*env.Builtin{
 					//fmt.Println("BLOCK ****** *****")
 					ser := ps.Ser
 					ps.Ser = str.Series
-					values := make([]interface{}, 0, 0)
+					values := make([]any, 0, 0)
 					_, vals = SQL_EvalBlock(ps, MODE_SQLITE, values)
 					sqlstr = ps.Res.(env.String).Value
 					ps.Ser = ser
@@ -164,7 +164,7 @@ var Builtins_sqlite = map[string]*env.Builtin{
 		Doc:   "TODODOC.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var sqlstr string
-			var vals []interface{}
+			var vals []any
 			switch db1 := arg0.(type) {
 			case env.Native:
 				switch str := arg1.(type) {
@@ -172,7 +172,7 @@ var Builtins_sqlite = map[string]*env.Builtin{
 					//fmt.Println("BLOCK ****** *****")
 					ser := ps.Ser
 					ps.Ser = str.Series
-					values := make([]interface{}, 0, 0)
+					values := make([]any, 0, 0)
 					_, vals = SQL_EvalBlock(ps, MODE_SQLITE, values)
 					sqlstr = ps.Res.(env.String).Value
 					ps.Ser = ser
@@ -188,16 +188,16 @@ var Builtins_sqlite = map[string]*env.Builtin{
 					}
 					columns, _ := rows.Columns()
 					spr := env.NewSpreadsheet(columns)
-					result := make([]map[string]interface{}, 0)
+					result := make([]map[string]any, 0)
 					if err != nil {
 						fmt.Println(err.Error())
 					} else {
 						cols, _ := rows.Columns()
 						for rows.Next() {
 							var sr env.SpreadsheetRow
-							columns := make([]interface{}, len(cols))
-							columnPointers := make([]interface{}, len(cols))
-							for i, _ := range columns {
+							columns := make([]any, len(cols))
+							columnPointers := make([]any, len(cols))
+							for i := range columns {
 								columnPointers[i] = &columns[i]
 							}
 
@@ -208,9 +208,9 @@ var Builtins_sqlite = map[string]*env.Builtin{
 
 							// Create our map, and retrieve the value for each column from the pointers slice,
 							// storing it in the map with the name of the column as the key.
-							m := make(map[string]interface{})
+							m := make(map[string]any)
 							for i, colName := range cols {
-								val := columnPointers[i].(*interface{})
+								val := columnPointers[i].(*any)
 								m[colName] = *val
 								sr.Values = append(sr.Values, *val)
 							}
