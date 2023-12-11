@@ -100,6 +100,22 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>not 1
 ; returns 0</code></pre>
 </div>
+<h3>and</h3><p>Pure Builtin(2): Bitwise AND operation between two values.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>1 .and 0
+; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>1 .and 1
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>0 .and 0
+; returns 0</code></pre>
+</div>
+<h3>or</h3><p>Pure Builtin(2): Bitwise OR operation between two values.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>1 .or 0
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>1 .or 1
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>0 .or 0
+; returns 0</code></pre>
+</div>
 <h3>all</h3><p>Builtin(1): Takes a block, if all values or expressions are truthy it returns the last one, otherwise false.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>all { 1 1 1 }
 ; returns 1</code></pre>
