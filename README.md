@@ -320,10 +320,6 @@ Clone the main branch from the Rye repository. There is a submodule (a different
 
     git clone --recurse-submodules https://github.com/refaktor/rye.git && cd rye
 
-Go get the dependencies for tiny build
-
-    bash go-get-tiny.bash
-    
 Build the tiny version of Rye
 
     go build -tags "b_tiny"

@@ -6,8 +6,7 @@ WORKDIR /go/src/rye
 
 COPY . .
 
-RUN bash go-get-tiny.bash \
-    mkdir -p /out && \
+RUN mkdir -p /out && \
     go build -x -tags "b_tiny" -o /out/rye .
 
 FROM alpine AS bin
