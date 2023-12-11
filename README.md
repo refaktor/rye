@@ -217,7 +217,7 @@ Most of them are more proof of concepts than full implementations. But it's not 
 *I am just in the process into reorganising libraries. I will add info about the level of integration*
 
 ### Base - official integrations
-  * Core builtin functions ⭐ ~ 🛠️ currently working on, 👍 unified api: ~50%, 🧪 tests: ~5%
+  * Core builtin functions ⭐ ~ 🛠️ currently working on, 👍 unified api: ~70%, 🧪 tests: ~80%
   * Bcrypt - password hashing
   * Bson - binary (j)son
   * Crypto - cryptographic functions ⭐
@@ -275,12 +275,6 @@ You can find precompiled Binaries for **Linux** and **macOS** under [Releases](h
 
 ### Docker images
 
-#### Binary Docker image
-
-This image includes Linux, Rye binary ready for use and Emacs-nox editor.
-
-Docker image: **[refaktorlabs/ryelang](https://hub.docker.com/repository/docker/refaktorlabs/ryelang)**
-
 #### Dev Docker image
 
 The repository comes with a local [Docker image](./.docker/Dockerfile) that builds rye and allows you to do so.
@@ -311,8 +305,8 @@ git submodule update
 
 Use official documentation or lines below to install Golang 1.19.3 https://go.dev/doc/install
 
-    wget https://go.dev/dl/go1.19.3.linux-amd64.tar.gz
-    rm -rf /usr/local/go && tar -C /usr/local -xzf go1.19.3.linux-amd64.tar.gz
+    wget https://go.dev/dl/go1.21.5.linux-amd64.tar.gz
+    rm -rf /usr/local/go && tar -C /usr/local -xzf go1.21.5.linux-amd64.tar.gz
     export PATH=$PATH:/usr/local/go/bin
     go version
     
