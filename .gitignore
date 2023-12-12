@@ -38,4 +38,5 @@ data.txt
 *.big.csv
 *.tar.gz
 
+bin/
 dist/
