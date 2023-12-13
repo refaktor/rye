@@ -740,6 +740,24 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+	"xor": {
+		Argsn: 2,
+		Doc:   "Bitwise XOR operation between two values.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Integer:
+				switch s2 := arg1.(type) {
+				case env.Integer:
+					return *env.NewInteger(s1.Value ^ s2.Value)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "xor")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "xor")
+			}
+		},
+	},
 
 	"require_": { //
 		Argsn: 1,
