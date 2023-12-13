@@ -1,4 +1,6 @@
 ; Testing and Documenting frameworks that do test and generate html reference docs
+; Run test cases: ../rye main.rye test
+; Generate documentation: ../rye main.rye doc > builtins.html
 
 rye .args\raw :arg
 root-ctx: current-ctx

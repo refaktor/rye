@@ -80,7 +80,7 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>even 2
 ; returns 1</code></pre>
 </div>
-<h3>mod</h3><p>Pure Builtin(2): Calculates module of two integers.</p><div class='group'>
+<h3>mod</h3><p>Pure Builtin(2): Calculates module (remainder) of two integers.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>3 .mod 2
 ; returns 1</code></pre>
 </div>
@@ -94,7 +94,7 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>false
 ; returns 0</code></pre>
 </div>
-<h3>not</h3><p>Pure Builtin(1): Turns a truthy value to non-truthy and reverse.</p><div class='group'>
+<h3>not</h3><p>Pure Builtin(1): Turns a truthy value to a non-truthy and reverse.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>not 0
 ; returns 1</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>not 1
@@ -115,6 +115,16 @@
 ; returns 1</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>0 .or 0
 ; returns 0</code></pre>
+</div>
+<h3>xor</h3><p>Pure Builtin(2): Bitwise XOR operation between two values.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>0 .xor 0
+; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>1 .xor 1
+; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>0 .xor 1
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>1 .xor 0
+; returns 1</code></pre>
 </div>
 <h3>all</h3><p>Builtin(1): Takes a block, if all values or expressions are truthy it returns the last one, otherwise false.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>all { 1 1 1 }
@@ -405,27 +415,27 @@
 </div>
 </div>
 <h2>Type conversion and checking</h2><p>Functions that convert between Rye value types.</p><div class='section'>
-<h3>to-word</h3><p>Pure Builtin(1): Takes a Rye value (like string) and returns a Word with that name.</p><div class='group'>
+<h3>to-word</h3><p>Pure Builtin(1): Tries to change a Rye value to a word with same name.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>to-word "test"
 ; returns test</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>to-word 'test
 ; returns test</code></pre>
 </div>
-<h3>to-integer</h3><p>Builtin(1): Splits a line of string into values by separator by respecting quotes</p><div class='group'>
+<h3>to-integer</h3><p>Builtin(1): Tries to change a Rye value (like string) to integer.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>to-integer "123"
 ; returns 123</code></pre>
 </div>
-<h3>to-string</h3><p>Pure Builtin(1): Takes a Rye value and returns a string representation.</p><div class='group'>
+<h3>to-string</h3><p>Pure Builtin(1): Tries to turn a Rye value to string.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>to-string 123
 ; returns "123"</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>to-string 'word
 ; returns "word"</code></pre>
 </div>
-<h3>to-uri</h3><p>Pure Builtin(1): Takes a Rye value and return a URI if possible.</p><div class='group'>
+<h3>to-uri</h3><p>Pure Builtin(1): Tries to change Rye value to an URI.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>to-uri "https://example.com"
 ; returns https://example.com</code></pre>
 </div>
-<h3>to-file</h3><p>Pure Builtin(1): Takes a Rye value and returns file if possible.</p><div class='group'>
+<h3>to-file</h3><p>Pure Builtin(1): Tries to change Rye value to a file.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>to-file "file.txt"
 ; returns file://file.txt</code></pre>
 </div>
@@ -465,7 +475,7 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>is-string test@gmail.com
 ; returns 0</code></pre>
 </div>
-<h3>type?</h3><p>Pure Builtin(1): Returns the type of Rye value (as a word).</p><div class='group'>
+<h3>type?</h3><p>Pure Builtin(1): Returns the type of Rye value as a word.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>type? "ABC"
 ; returns string</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>type? 123
@@ -486,11 +496,11 @@
 ; returns "out
 ; "</code></pre>
 </div>
-<h3>dump</h3><p>Pure Builtin(1): Set docstring of the current context.</p><div class='group'>
+<h3>dump</h3><p>Pure Builtin(1): Retunrs (dumps) content of a function.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>fn { x } { x + 1 } |dump
 ; returns { fn { x } { x ._+ 1 } }</code></pre>
 </div>
-<h3>doc\of?</h3><p>Pure Builtin(1): Get docstring of the first argument.</p><div class='group'>
+<h3>doc\of?</h3><p>Pure Builtin(1): Get docstring of the passed context.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>fn { x "docstring" } { x + 1 } |doc\of?
 ; returns "docstring"</code></pre>
 </div>
@@ -892,13 +902,13 @@
 </div>
 </div>
 <h2>Functions that change values in-place</h2><p></p><div class='section'>
-<h3>inc!</h3><p>Builtin(1): Increments integer value by 1 in place.</p><div class='group'>
+<h3>inc!</h3><p>Builtin(1): Searches for a word and increments it's integer value in-place.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>a: 100 , inc! 'a
 ; returns 101</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>a: 100 , inc! 'a , a
 ; returns 101</code></pre>
 </div>
-<h3>change!</h3><p>Builtin(2): Changes value in a word, if value changes returns true otherwise false</p><div class='group'>
+<h3>change!</h3><p>Builtin(2): Searches for a word and changes it's value in-place. If value changes returns true otherwise false</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>a: 1 change! 2 'a
 ; returns 1</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>a: 2 change! 2 'a
