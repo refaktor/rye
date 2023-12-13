@@ -1,7 +1,8 @@
-w: 100
-h: 100
+w: 80
+h: 64
+scale: 5
 
-maxInitAliveCells: w * h / 10
+maxInitAliveCells: w * h / 7
 
 world: list produce w * h { } { .concat false }
 
@@ -83,4 +84,8 @@ on-draw { :screen
     screen .write-pixels pixels
 }
 
-ebitengine-run w h
+set-layout-scale scale
+
+ebitengine-run w * scale  h * scale
+
+
