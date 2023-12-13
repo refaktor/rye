@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"math/rand"
 	"os"
 	"os/exec"
 	"reflect"
@@ -1294,6 +1295,20 @@ var builtins = map[string]*env.Builtin{
 			return nil
 		},
 	}, */
+
+	"random-integer": {
+		Argsn: 1,
+		Doc:   "Accepts an integer n and eturns a random integer between 0 and n in the half-open interval [0,n).",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg := arg0.(type) {
+			case env.Integer:
+				return *env.NewInteger(rand.Int63n(arg.Value))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "random")
+			}
+		},
+	},
 
 	"load": { // **
 		Argsn: 1,
@@ -5580,6 +5595,36 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	"change\\nth!": { // **
+		Argsn: 3,
+		Doc:   "Accepts a Block or List, Integer n and a value. Changes the n-th value in the Block in place. Also returns the new series.",
+		Pure:  false,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch num := arg1.(type) {
+			case env.Integer:
+				switch s1 := arg0.(type) {
+				case env.Block:
+					if num.Value > int64(s1.Series.Len()) {
+						return MakeBuiltinError(ps, fmt.Sprintf("Block has less than %d elements.", num.Value), "change\\nth!")
+					}
+					s1.Series.S[num.Value-1] = arg2
+					return s1
+				case env.List:
+					if num.Value > int64(len(s1.Data)) {
+						return MakeBuiltinError(ps, fmt.Sprintf("List has less than %d elements.", num.Value), "change\\nth!")
+					}
+					s1.Data[num.Value-1] = env.RyeToRaw(arg2)
+					return s1
+				default:
+					return MakeArgError(ps, 1, []env.Type{env.BlockType}, "change\\nth!")
+				}
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "change\\nth!")
+			}
+		},
+	},
+
 	// FUNCTIONALITY AROUND GENERIC METHODS
 	// generic <integer> <add> fn [ a b ] [ a + b ] // tagwords are temporary here
 	"generic": {

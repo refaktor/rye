@@ -1226,6 +1226,19 @@ section "Functions that change values in-place"
 		equal { b: { 1 2 3 } , append! { 4 5 } 'b , b } { 1 2 3 { 4 5 } }
 	}
 
+	group "change\ nth!"
+	mold\nowrap ?change\nth!
+	{ { word } { object } }
+	{
+		equal { b: { 1 2 3 } , change\nth! b 2 4 } { 1 4 3 }
+		equal { b: { 1 2 3 } , change\nth! b 2 { 4 5 } } { 1 { 4 5 } 3 }
+		equal { b: list { 1 2 3 } , change\nth! b 2 4 } list { 1 4 3 }
+		equal { b: list { 1 2 3 } , change\nth! b 2 list { 4 5 } } list vals { 1 list { 4 5 } 3 }
+		equal { try { b: { 1 2 3 } , change\nth! b 4 0 } |type? } 'error
+		equal { try { b: list { 1 2 3 } , change\nth! b 4 0 } |type? } 'error
+	}
+	
+
 	group "sort!"
 	mold\nowrap ?append!
 	{ { word } { object } }
