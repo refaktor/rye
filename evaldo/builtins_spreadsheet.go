@@ -133,6 +133,8 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 				switch col := arg1.(type) {
 				case env.Word:
 					return WhereEquals(ps, spr, ps.Idx.GetWord(col.Index), arg2)
+				case env.String:
+					return WhereEquals(ps, spr, col.Value, arg2)
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.WordType}, "where-equal")
 				}
@@ -150,6 +152,8 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 				switch col := arg1.(type) {
 				case env.Word:
 					return WhereGreater(ps, spr, ps.Idx.GetWord(col.Index), arg2)
+				case env.String:
+					return WhereGreater(ps, spr, col.Value, arg2)
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.WordType}, "where-greater")
 				}
