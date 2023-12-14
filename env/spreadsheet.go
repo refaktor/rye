@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -24,20 +25,16 @@ func NewSpreadsheetRow(values []any, uplink *Spreadsheet) *SpreadsheetRow {
 }
 
 type Spreadsheet struct {
-	Cols      []string
-	Rows      []SpreadsheetRow
-	RawRows   [][]string
-	Kind      Word
-	RawMode   bool
-	Index     map[string][]int
-	IndexName string
+	Cols    []string
+	Rows    []SpreadsheetRow
+	Kind    Word
+	Indexes map[string]map[any][]int
 }
 
 func NewSpreadsheet(cols []string) *Spreadsheet {
 	var ps Spreadsheet
 	ps.Cols = cols
 	ps.Rows = make([]SpreadsheetRow, 0)
-	ps.RawMode = false
 	/*
 		ps := Spreadsheet{
 			cols,
@@ -53,11 +50,6 @@ func (s *Spreadsheet) AddRow(vals SpreadsheetRow) {
 
 func (s *Spreadsheet) GetRows() []SpreadsheetRow {
 	return s.Rows
-}
-
-func (s *Spreadsheet) SetRaw(vals [][]string) {
-	s.RawRows = vals
-	s.RawMode = true
 }
 
 // Inspect returns a string representation of the Integer.
@@ -104,16 +96,11 @@ func (s Spreadsheet) ToTxt() string {
 }
 
 func (s Spreadsheet) Column(name string) Object {
-	col1 := make([]Object, len(s.Cols))
-	idx := IndexOfString(name, s.Cols)
+	col1 := make([]Object, len(s.Rows))
+	idx := slices.Index[[]string](s.Cols, name)
 	if idx > -1 {
 		for i, row := range s.Rows {
-			switch v := row.Values[idx].(type) {
-			case int:
-				col1[i] = Integer{int64(v)}
-			case Integer:
-				col1[i] = v
-			}
+			col1[i] = ToRyeValue(row.Values[idx])
 		}
 		return *NewBlock(*NewTSeries(col1))
 	} else {
@@ -124,7 +111,7 @@ func (s Spreadsheet) Column(name string) Object {
 func (s Spreadsheet) Sum(name string) Object {
 	var sum int64
 	var sumf float64
-	idx := IndexOfString(name, s.Cols)
+	idx := slices.Index[[]string](s.Cols, name)
 	if idx > -1 {
 		for _, row := range s.Rows {
 			if len(row.Values) > idx {
@@ -156,7 +143,7 @@ func (s Spreadsheet) Sum(name string) Object {
 func (s Spreadsheet) Sum_Just(name string) (float64, error) {
 	var sum int64
 	var sumf float64
-	idx := IndexOfString(name, s.Cols)
+	idx := slices.Index[[]string](s.Cols, name)
 	if idx > -1 {
 		for _, row := range s.Rows {
 			if len(row.Values) > idx {
@@ -187,93 +174,43 @@ func (s Spreadsheet) Sum_Just(name string) (float64, error) {
 }
 
 func (s Spreadsheet) NRows() int {
-	if s.RawMode {
-		return len(s.RawRows)
-	} else {
-		return len(s.Rows)
-	}
+	return len(s.Rows)
 }
 
 func (s Spreadsheet) Columns(ps *ProgramState, names []string) Object {
 	idxs := make([]int, len(names))
 	for name := range names {
-		idx := IndexOfString(names[name], s.Cols)
+		idx := slices.Index[[]string](s.Cols, names[name])
 		if idx == -1 {
 			return makeError(ps, "Col not found")
 		}
 		idxs[name] = idx
 	}
 	nspr := NewSpreadsheet(names)
-	if s.RawMode {
-		res := make([][]string, 0)
-		for _, row := range s.RawRows {
-			row2 := make([]string, len(names))
-			for col := range idxs {
-				if len(row) > col {
-					row2[col] = row[idxs[col]]
-				}
+
+	for _, row := range s.Rows {
+		row2 := make([]any, len(names))
+		for col := range idxs {
+			if len(row.Values) > col {
+				row2[col] = row.Values[idxs[col]].(Object)
 			}
-			res = append(res, row2)
 		}
-		nspr.SetRaw(res)
-		return *nspr
-	} else {
-		for _, row := range s.Rows {
-			row2 := make([]any, len(names))
-			for col := range idxs {
-				if len(row.Values) > col {
-					row2[col] = row.Values[idxs[col]].(Object)
-				}
-			}
-			nspr.AddRow(SpreadsheetRow{row2, nspr})
-		}
-		//nspr.(res)
-		return *nspr
+		nspr.AddRow(SpreadsheetRow{row2, nspr})
 	}
+	//nspr.(res)
+	return *nspr
 }
 
 func (s Spreadsheet) GetRow(ps *ProgramState, index int) Object {
-	if s.RawMode {
-		row := s.RawRows[index]
-		row2 := make([]any, len(row))
-		for i := range row {
-			row2[i] = row[i]
-		}
-		return SpreadsheetRow{row2, &s}
-	} else {
-		row := s.Rows[index]
-		row.Uplink = &s
-		return row
-	}
+	row := s.Rows[index]
+	row.Uplink = &s
+	return row
 }
 
 func (s Spreadsheet) GetRowNew(index int) Object {
-	if s.RawMode {
-		row := s.RawRows[index]
-		row2 := make([]any, len(row))
-		for i := range row {
-			row2[i] = row[i]
-		}
-		return SpreadsheetRow{row2, &s}
-	} else {
-		row := s.Rows[index]
-		row.Uplink = &s
-		return row
-	}
-}
-
-func (s Spreadsheet) GetRawRowValue(column string, rrow []string) (string, error) {
-	index := -1
-	for i, v := range s.Cols {
-		if v == column {
-			index = i
-			break
-		}
-	}
-	if index < 0 {
-		return "", nil
-	}
-	return rrow[index], nil
+	row := s.Rows[index]
+	row.Uplink = &s
+	return row
 }
 
 func (s Spreadsheet) GetRowValue(column string, rrow SpreadsheetRow) (any, error) {
@@ -297,12 +234,7 @@ func (s Spreadsheet) Type() Type {
 
 // Inspect returns a string
 func (s Spreadsheet) Inspect(e Idxs) string {
-	rows := ""
-	if s.RawMode {
-		rows = strconv.Itoa(len(s.RawRows))
-	} else {
-		rows = strconv.Itoa(len(s.Rows))
-	}
+	rows := strconv.Itoa(len(s.Rows))
 	var kindStr string
 	//fmt.Println(s.GetKind())
 	if s.GetKind() != int(SpreadsheetType) {

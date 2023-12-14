@@ -7,6 +7,7 @@ import (
 	"os"
 	"rye/env"
 	"rye/util"
+	"slices"
 	"sort"
 	"strconv"
 )
@@ -117,7 +118,13 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 					return MakeBuiltinError(ps, "Unable to parse file as CSV.", "load\\csv")
 				}
 				spr := env.NewSpreadsheet(rows[0])
-				spr.SetRaw(rows[1:])
+				for _, row := range rows {
+					anyRow := make([]any, len(row))
+					for i, v := range row {
+						anyRow[i] = v
+					}
+					spr.AddRow(*env.NewSpreadsheetRow(anyRow, spr))
+				}
 				return *spr
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.UriType}, "load\\csv")
@@ -254,6 +261,25 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+	"column?": {
+		Argsn: 2,
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
+			switch spr := arg0.(type) {
+			case env.Spreadsheet:
+				switch col := arg1.(type) {
+				case env.Word:
+					return spr.Column(ps.Idx.GetWord(col.Index))
+				case env.String:
+					return spr.Column(col.Value)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "column?")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "column?")
+			}
+		},
+	},
 	"add-col!": {
 		Argsn: 4,
 		Doc:   "TODODOC",
@@ -289,19 +315,18 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			case env.Spreadsheet:
 				switch col := arg1.(type) {
 				case env.Block:
+					colWords := make([]env.Word, col.Series.Len())
 					for c := range col.Series.S {
 						switch ww := col.Series.S[c].(type) {
 						case env.Word:
-							res := AddIndex(ps, spr, ww)
-							switch res2 := res.(type) {
-							case env.Spreadsheet:
-								spr = res2
-							default:
-								return res
-							}
+							colWords[c] = ww
 						default:
 							return MakeError(ps, "Block of tagwords needed")
 						}
+					}
+					res := AddIndexes(ps, &spr, colWords)
+					if res != nil {
+						return res
 					}
 					return spr
 				default:
@@ -317,103 +342,63 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 func GenerateColumn(ps *env.ProgramState, s env.Spreadsheet, name env.Word, extractCols env.Block, code env.Block) env.Object {
 	// add name to columns
 	s.Cols = append(s.Cols, ps.Idx.GetWord(name.Index))
-	if s.RawMode {
-		// for each row in spreadsheet
-		for ir, row := range s.RawRows {
-			// create a empty context connected to current context
-			ctx := env.NewEnv(ps.Ctx)
-			// for each word in extractCols get a value from current row and set word in context to it
-			var firstVal env.Object
-			for _, word := range extractCols.Series.S {
-				switch w := word.(type) {
-				case env.Word:
-					val, er := s.GetRawRowValue(ps.Idx.GetWord(w.Index), row)
-					if er != nil {
-						return nil
-					}
-					if firstVal == nil {
-						firstVal = *env.NewString(val)
-					}
-					ctx.Set(w.Index, *env.NewString(val))
+	for ix, row := range s.Rows {
+		// create a empty context connected to current context
+		ctx := env.NewEnv(ps.Ctx)
+		// for each word in extractCols get a value from current row and set word in context to it
+		var firstVal env.Object
+		for _, word := range extractCols.Series.S {
+			switch w := word.(type) {
+			case env.Word:
+				val, er := s.GetRowValue(ps.Idx.GetWord(w.Index), row)
+				if er != nil {
+					return nil
 				}
-			}
-			// execute the block of code injected with first value
-			ser := ps.Ser
-			ps.Ser = code.Series
-			EvalBlockInCtxInj(ps, ctx, firstVal, firstVal != nil)
-			if ps.ErrorFlag {
-				return ps.Res
-			}
-			ps.Ser = ser
-			// set the result of code block as the new column value in this row
-			// TODO -- make
-			row = append(row, ps.Res.(env.String).Value)
-			s.RawRows[ir] = row
-		}
-		return s
-	} else {
-		for ix, row := range s.Rows {
-			// create a empty context connected to current context
-			ctx := env.NewEnv(ps.Ctx)
-			// for each word in extractCols get a value from current row and set word in context to it
-			var firstVal env.Object
-			for _, word := range extractCols.Series.S {
-				switch w := word.(type) {
-				case env.Word:
-					val, er := s.GetRowValue(ps.Idx.GetWord(w.Index), row)
-					if er != nil {
-						return nil
-					}
-					if firstVal == nil {
-						firstVal = val.(env.Object)
-					}
-					ctx.Set(w.Index, val.(env.Object))
+				if firstVal == nil {
+					firstVal = val.(env.Object)
 				}
+				ctx.Set(w.Index, val.(env.Object))
 			}
-			// execute the block of code injected with first value
-			ser := ps.Ser
-			ps.Ser = code.Series
-			EvalBlockInCtxInj(ps, ctx, firstVal, firstVal != nil)
-			if ps.ErrorFlag {
-				return ps.Res
-			}
-			ps.Ser = ser
-			// set the result of code block as the new column value in this row
-			// TODO -- make
-			row.Values = append(row.Values, ps.Res)
-			s.Rows[ix] = row
 		}
-		return s
+		// execute the block of code injected with first value
+		ser := ps.Ser
+		ps.Ser = code.Series
+		EvalBlockInCtxInj(ps, ctx, firstVal, firstVal != nil)
+		if ps.ErrorFlag {
+			return ps.Res
+		}
+		ps.Ser = ser
+		// set the result of code block as the new column value in this row
+		// TODO -- make
+		row.Values = append(row.Values, ps.Res)
+		s.Rows[ix] = row
 	}
-}
-
-func AddIndex(ps *env.ProgramState, s env.Spreadsheet, column env.Word) env.Object {
-	// make a new index map
-	s.Index = make(map[string][]int, 0)
-	// for each row in spreadsheet
-	colstr := ps.Idx.GetWord(column.Index)
-	s.IndexName = colstr
-	for ir, row := range s.RawRows {
-		val, er := s.GetRawRowValue(colstr, row)
-		// fmt.Println(val)
-		if er != nil {
-			return MakeError(ps, "Couldn't retrieve index at row "+strconv.Itoa(ir))
-		}
-		if subidx, ok := s.Index[val]; ok {
-			s.Index[val] = append(subidx, ir)
-		} else {
-			subidx := make([]int, 1)
-			subidx[0] = ir
-			s.Index[val] = subidx
-		}
-	}
-	//fmt.Println(s.IndexName)
-	//fmt.Println(len(s.Index))
 	return s
 }
 
+func AddIndexes(ps *env.ProgramState, s *env.Spreadsheet, columns []env.Word) env.Object {
+	s.Indexes = make(map[string]map[any][]int, 0)
+	for _, column := range columns {
+		colstr := ps.Idx.GetWord(column.Index)
+		s.Indexes[colstr] = make(map[any][]int, 0)
+		for ir, row := range s.Rows {
+			val, err := s.GetRowValue(colstr, row)
+			if err != nil {
+				return MakeError(ps, "Couldn't retrieve index at row "+strconv.Itoa(ir))
+			}
+			if subidx, ok := s.Indexes[colstr][val]; ok {
+				s.Indexes[colstr][val] = append(subidx, ir)
+			} else {
+				subidx := []int{ir}
+				s.Indexes[colstr][val] = subidx
+			}
+		}
+	}
+	return nil
+}
+
 func SortByColumn(ps *env.ProgramState, s *env.Spreadsheet, name string) {
-	idx := env.IndexOfString(name, s.Cols)
+	idx := slices.Index[[]string](s.Cols, name)
 
 	compareCol := func(i, j int) bool {
 		return greaterThanNew(s.Rows[j].Values[idx].(env.Object), s.Rows[i].Values[idx].(env.Object))
@@ -423,7 +408,7 @@ func SortByColumn(ps *env.ProgramState, s *env.Spreadsheet, name string) {
 }
 
 func SortByColumnDesc(ps *env.ProgramState, s *env.Spreadsheet, name string) {
-	idx := env.IndexOfString(name, s.Cols)
+	idx := slices.Index[[]string](s.Cols, name)
 
 	compareCol := func(i, j int) bool {
 		return greaterThanNew(s.Rows[i].Values[idx].(env.Object), s.Rows[j].Values[idx].(env.Object))
@@ -433,46 +418,17 @@ func SortByColumnDesc(ps *env.ProgramState, s *env.Spreadsheet, name string) {
 }
 
 func WhereEquals(ps *env.ProgramState, s env.Spreadsheet, name string, val any) env.Object {
-	idx := env.IndexOfString(name, s.Cols)
+	idx := slices.Index[[]string](s.Cols, name)
 	nspr := env.NewSpreadsheet(s.Cols)
 	if idx > -1 {
-		if s.RawMode {
-			var res [][]string
-			if name == s.IndexName {
-				//				fmt.Println("Using index")
-				switch ov := val.(type) {
-				case env.String:
-					idxs := s.Index[ov.Value]
-					res = make([][]string, len(idxs))
-					for i, idx := range idxs {
-						res[i] = s.RawRows[idx]
-					}
-				}
-			} else {
-				//			fmt.Println("Not using index")
-				res = make([][]string, 0)
-				for _, row := range s.RawRows {
-					if len(row) > idx {
-						switch ov := val.(type) {
-						case env.String:
-							// fmt.Println(ov.Value)
-							// fmt.Println(row[idx])
-							// fmt.Println(idx)
-							if ov.Value == row[idx] {
-								// fmt.Println("appending")
-								res = append(res, row)
-								// fmt.Println(res)
-							}
-						}
-					}
-				}
+		if index, ok := s.Indexes[name]; ok {
+			idxs := index[val]
+			for _, idx := range idxs {
+				nspr.AddRow(s.Rows[idx])
 			}
-			// fmt.Println(res)
-			nspr.SetRaw(res)
-			return *nspr
 		} else {
 			for _, row := range s.Rows {
-				if len(s.Cols) > idx {
+				if len(row.Values) > idx {
 					switch val2 := val.(type) {
 					case env.Object:
 						if util.EqualValues(ps, val2, row.Values[idx].(env.Object)) {
@@ -481,56 +437,28 @@ func WhereEquals(ps *env.ProgramState, s env.Spreadsheet, name string, val any) 
 					}
 				}
 			}
-			return *nspr
 		}
+		return *nspr
 	} else {
 		return MakeBuiltinError(ps, "Column not found.", "WhereEquals")
 	}
 }
 
 func WhereGreater(ps *env.ProgramState, s env.Spreadsheet, name string, val any) env.Object {
-	idx := env.IndexOfString(name, s.Cols)
+	idx := slices.Index[[]string](s.Cols, name)
 	nspr := env.NewSpreadsheet(s.Cols)
 	if idx > -1 {
-		if s.RawMode {
-			var res [][]string
-			if name == s.IndexName {
-				switch ov := val.(type) {
-				case env.String:
-					idxs := s.Index[ov.Value]
-					res = make([][]string, len(idxs))
-					for i, idx := range idxs {
-						res[i] = s.RawRows[idx]
-					}
-				}
-			} else {
-				res = make([][]string, 0)
-				for _, row := range s.RawRows {
-					if len(row) > idx {
-						switch ov := val.(type) {
-						case env.String:
-							if ov.Value == row[idx] {
-								res = append(res, row)
-							}
-						}
+		for _, row := range s.Rows {
+			if len(row.Values) > idx {
+				switch val2 := val.(type) {
+				case env.Object:
+					if greaterThanNew(row.Values[idx].(env.Object), val2) {
+						nspr.AddRow(row)
 					}
 				}
 			}
-			nspr.SetRaw(res)
-			return *nspr
-		} else {
-			for _, row := range s.Rows {
-				if len(s.Cols) > idx {
-					switch val2 := val.(type) {
-					case env.Object:
-						if greaterThanNew(row.Values[idx].(env.Object), val2) {
-							nspr.AddRow(row)
-						}
-					}
-				}
-			}
-			return *nspr
 		}
+		return *nspr
 	} else {
 		return MakeBuiltinError(ps, "Column not found.", "WhereGreater")
 	}
@@ -538,11 +466,6 @@ func WhereGreater(ps *env.ProgramState, s env.Spreadsheet, name string, val any)
 
 func Limit(ps *env.ProgramState, s env.Spreadsheet, n int) env.Object {
 	nspr := env.NewSpreadsheet(s.Cols)
-	if s.RawMode {
-		nspr.SetRaw(s.RawRows[0:n])
-		return *nspr
-	} else {
-		nspr.Rows = s.Rows[0:n]
-		return *nspr
-	}
+	nspr.Rows = s.Rows[0:n]
+	return *nspr
 }

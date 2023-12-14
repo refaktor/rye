@@ -32,10 +32,10 @@ func Validation_EvalBlock(es *env.ProgramState, vals env.Dict) (env.Dict, map[st
 		case env.Setword:
 			if name != "" {
 				// sets the previous value
-				res[name] = JsonToRye(val)
+				res[name] = env.ToRyeValue(val)
 			}
 			name = es.Idx.GetWord(obj.Index)
-			res[name] = JsonToRye(vals.Data[name])
+			res[name] = env.ToRyeValue(vals.Data[name])
 		case env.Word:
 			if name != "" {
 				val, verr = evalWord(obj, es, res[name])
@@ -51,7 +51,7 @@ func Validation_EvalBlock(es *env.ProgramState, vals env.Dict) (env.Dict, map[st
 		}
 	}
 	//set the last value too
-	res[name] = JsonToRye(val)
+	res[name] = env.ToRyeValue(val)
 	return *env.NewDict(res), notes
 }
 
@@ -154,7 +154,7 @@ func evalWord_List(word env.Word, es *env.ProgramState, vals env.List) (env.List
 		switch blk := es.Ser.Pop().(type) {
 		case env.Block:
 			for _, v := range vals.Data {
-				rit := BuiValidate(es, JsonToRye(v), blk)
+				rit := BuiValidate(es, env.ToRyeValue(v), blk)
 				res = append(res, rit)
 			}
 			return *env.NewList(res), nil

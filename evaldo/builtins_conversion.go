@@ -82,7 +82,7 @@ func Conversion_EvalBlockDict(ps *env.ProgramState, vals env.Dict) env.Object {
 		case env.Tagword:
 			srcKey := ps.Idx.GetWord(obj.Index)
 			valY := vals.Data[ps.Idx.GetWord(obj.Index)]
-			val = JsonToRye(valY)
+			val = env.ToRyeValue(valY)
 			if srcKey != key {
 				delete(outD, srcKey)
 			}

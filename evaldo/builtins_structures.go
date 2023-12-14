@@ -101,7 +101,7 @@ func do_structures(ps *env.ProgramState, data env.Dict, rmap env.Dict) env.Objec
 				//				stack = append(stack, rmap)
 				ser := ps.Ser // TODO -- make helper function that "does" a block
 				ps.Ser = obj.Series
-				EvalBlockInj(ps, JsonToRye(val), true)
+				EvalBlockInj(ps, env.ToRyeValue(val), true)
 				ps.Ser = ser
 			}
 		}
@@ -118,7 +118,7 @@ func do_structures(ps *env.ProgramState, data env.Dict, rmap env.Dict) env.Objec
 				//				stack = append(stack, rmap)
 				ser := ps.Ser // TODO -- make helper function that "does" a block
 				ps.Ser = obj.Series
-				EvalBlockInj(ps, JsonToRye(val), true)
+				EvalBlockInj(ps, env.ToRyeValue(val), true)
 				ps.Ser = ser
 			}
 		}

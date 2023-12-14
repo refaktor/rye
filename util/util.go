@@ -278,27 +278,3 @@ func EqualValues(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) bool {
 	}
 	return result
         }*/
-
-func ToRyeValue(res any) env.Object {
-	switch v := res.(type) {
-	case float64:
-		return *env.NewDecimal(v)
-	case int:
-		return *env.NewInteger(int64(v))
-	case int64:
-		return *env.NewInteger(v)
-	case string:
-		return *env.NewString(v)
-	case map[string]any:
-		return *env.NewDict(v)
-	case []any:
-		return *env.NewList(v)
-	case env.Object:
-		return v
-	case nil:
-		return nil
-	default:
-		fmt.Println(res)
-		return env.Void{}
-	}
-}
