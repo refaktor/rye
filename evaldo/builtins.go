@@ -2,10 +2,11 @@ package evaldo
 
 import (
 	"bytes"
+	"crypto/rand"
 	"fmt"
 	"io"
 	"math"
-	"math/rand"
+	"math/big"
 	"os"
 	"os/exec"
 	"reflect"
@@ -1321,9 +1322,13 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Integer:
-				return *env.NewInteger(rand.Int63n(arg.Value))
+				val, err := rand.Int(rand.Reader, big.NewInt(arg.Value))
+				if err != nil {
+					return MakeBuiltinError(ps, err.Error(), "random-integer")
+				}
+				return *env.NewInteger(val.Int64())
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "random")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "random-integer")
 			}
 		},
 	},
@@ -4645,7 +4650,7 @@ var builtins = map[string]*env.Builtin{
 
 	"contains": {
 		Argsn: 2,
-		Doc:   "Returns part of the String between two positions.",
+		Doc:   "Returns true if argument 2 contains argument 1",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
@@ -4842,7 +4847,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"common": {
+	"intersection": {
 		Argsn: 2,
 		Doc:   "Finds the intersection of two values.",
 		Pure:  true,
@@ -4864,6 +4869,7 @@ var builtins = map[string]*env.Builtin{
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "intersect")
 				}
+				// TODO-FIX1 add for list
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType}, "intersect")
 			}
