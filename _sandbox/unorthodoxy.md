@@ -33,3 +33,13 @@ _Unordered_
 ## Hierarcies of Contexts
 
 ## Scopes (Searching for context)
+
+## Multimethods
+
+## N datatypes, M syntax types
+
+## Spreadsheet datatype
+
+## Validation dialect
+
+## Conversion dialect
