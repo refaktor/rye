@@ -96,16 +96,11 @@ func (s Spreadsheet) ToTxt() string {
 }
 
 func (s Spreadsheet) Column(name string) Object {
-	col1 := make([]Object, len(s.Cols))
+	col1 := make([]Object, len(s.Rows))
 	idx := slices.Index[[]string](s.Cols, name)
 	if idx > -1 {
 		for i, row := range s.Rows {
-			switch v := row.Values[idx].(type) {
-			case int:
-				col1[i] = Integer{int64(v)}
-			case Integer:
-				col1[i] = v
-			}
+			col1[i] = ToRyeValue(row.Values[idx])
 		}
 		return *NewBlock(*NewTSeries(col1))
 	} else {

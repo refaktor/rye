@@ -257,6 +257,25 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+	"column?": {
+		Argsn: 2,
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
+			switch spr := arg0.(type) {
+			case env.Spreadsheet:
+				switch col := arg1.(type) {
+				case env.Word:
+					return spr.Column(ps.Idx.GetWord(col.Index))
+				case env.String:
+					return spr.Column(col.Value)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "column?")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "column?")
+			}
+		},
+	},
 	"add-col!": {
 		Argsn: 4,
 		Doc:   "TODODOC",
