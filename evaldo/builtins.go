@@ -2797,31 +2797,14 @@ var builtins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = code.Series
-					if block.RawMode {
-						for i := 0; i < len(block.RawRows); i++ {
-							row := block.RawRows[i]
-							row2 := make([]any, len(row))
-							for i := range row {
-								row2[i] = row[i]
-							}
-
-							row3 := env.NewList(row2)
-							ps = EvalBlockInj(ps, row3, true)
-							if ps.ErrorFlag {
-								return ps.Res
-							}
-							ps.Ser.Reset()
+					for i := 0; i < len(block.Rows); i++ {
+						row := block.Rows[i]
+						row.Uplink = &block
+						ps = EvalBlockInj(ps, row, true)
+						if ps.ErrorFlag {
+							return ps.Res
 						}
-					} else {
-						for i := 0; i < len(block.Rows); i++ {
-							row := block.Rows[i]
-							row.Uplink = &block
-							ps = EvalBlockInj(ps, row, true)
-							if ps.ErrorFlag {
-								return ps.Res
-							}
-							ps.Ser.Reset()
-						}
+						ps.Ser.Reset()
 					}
 					ps.Ser = ser
 					return ps.Res

@@ -122,40 +122,21 @@ func SpreadsheetToJSON(s env.Spreadsheet) string {
 	var bu strings.Builder
 	bu.WriteString("[")
 	//fmt.Println(len(s.Rows))
-	if s.RawMode {
-		for i, row := range s.RawRows {
+	for i, row := range s.Rows {
+		if i > 0 {
+			bu.WriteString(", ")
+		}
+		bu.WriteString("{")
+		for i, val := range row.Values {
 			if i > 0 {
 				bu.WriteString(", ")
 			}
-			bu.WriteString("{")
-			for i, val := range row {
-				if i > 0 {
-					bu.WriteString(", ")
-				}
-				bu.WriteString("\"")
-				bu.WriteString(s.Cols[i])
-				bu.WriteString("\": ")
-				bu.WriteString(RyeToJSON(val))
-			}
-			bu.WriteString("} ")
+			bu.WriteString("\"")
+			bu.WriteString(s.Cols[i])
+			bu.WriteString("\": ")
+			bu.WriteString(RyeToJSON(val))
 		}
-	} else {
-		for i, row := range s.Rows {
-			if i > 0 {
-				bu.WriteString(", ")
-			}
-			bu.WriteString("{")
-			for i, val := range row.Values {
-				if i > 0 {
-					bu.WriteString(", ")
-				}
-				bu.WriteString("\"")
-				bu.WriteString(s.Cols[i])
-				bu.WriteString("\": ")
-				bu.WriteString(RyeToJSON(val))
-			}
-			bu.WriteString("} ")
-		}
+		bu.WriteString("} ")
 	}
 	bu.WriteString("]")
 	//fmt.Println(bu.String())

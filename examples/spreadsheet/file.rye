@@ -1,0 +1,5 @@
+spr: load\csv file://data.csv
+
+spr .add-index! { Name } :spr
+
+spr .where-equal 'Name "John Doe"
