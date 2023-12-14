@@ -83,39 +83,6 @@ func RyeToJSON(res any) string {
 	}
 }
 
-func JsonToRye(res any) env.Object {
-	switch v := res.(type) {
-	case float64:
-		return *env.NewDecimal(v)
-	case int:
-		return *env.NewInteger(int64(v))
-	case int64:
-		return *env.NewInteger(v)
-	case string:
-		return *env.NewString(v)
-	case rune:
-		return *env.NewString(string(v))
-	case map[string]any:
-		return *env.NewDict(v)
-	case []any:
-		return *env.NewList(v)
-	case *env.List:
-		return *v
-	case *env.Block:
-		return *v
-	case *env.Object:
-		return *v
-	case env.Object:
-		return v
-	case nil:
-		return nil
-	default:
-		fmt.Println(res)
-		// TODO-FIXME
-		return env.Void{}
-	}
-}
-
 // Inspect returns a string representation of the Integer.
 func SpreadsheetToJSON(s env.Spreadsheet) string {
 	//fmt.Println("IN TO Html")
@@ -155,7 +122,7 @@ func _parse_json(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 en
 			return MakeBuiltinError(ps, "Failed to Unmarshal.", "_parse_json")
 			//panic(err)
 		}
-		return JsonToRye(m)
+		return env.ToRyeValue(m)
 	default:
 		return MakeArgError(ps, 1, []env.Type{env.StringType}, "_parse_json")
 	}

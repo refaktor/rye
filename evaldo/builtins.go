@@ -148,7 +148,7 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 			v := s1.Data[s2.Value]
 			switch v1 := v.(type) {
 			case int, int64, float64, string, []any, map[string]any:
-				return JsonToRye(v1)
+				return env.ToRyeValue(v1)
 			case env.Integer:
 				return v1
 			case env.String:
@@ -200,7 +200,7 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 			v := s1.Data[idx]
 			ok := true
 			if ok {
-				return JsonToRye(v)
+				return env.ToRyeValue(v)
 			} else {
 				ps.FailureFlag = true
 				return env.NewError1(5) // NOT_FOUND
@@ -216,7 +216,7 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 			v := s1.Data[idx]
 			ok := true
 			if ok {
-				return JsonToRye(v)
+				return env.ToRyeValue(v)
 			} else {
 				ps.FailureFlag = true
 				return env.NewError1(5) // NOT_FOUND
@@ -250,7 +250,7 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 			}
 			v := s1.Values[index]
 			if true {
-				return JsonToRye(v)
+				return env.ToRyeValue(v)
 			} else {
 				ps.FailureFlag = true
 				return env.NewError1(5) // NOT_FOUND
@@ -263,7 +263,7 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 			v := s1.Values[idx]
 			ok := true
 			if ok {
-				return JsonToRye(v)
+				return env.ToRyeValue(v)
 			} else {
 				ps.FailureFlag = true
 				return env.NewError1(5) // NOT_FOUND
@@ -296,7 +296,7 @@ func (s RyeListSort) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
 func (s RyeListSort) Less(i, j int) bool {
-	return greaterThanNew(JsonToRye(s[j]), JsonToRye(s[i]))
+	return greaterThanNew(env.ToRyeValue(s[j]), env.ToRyeValue(s[i]))
 }
 
 var ShowResults bool
@@ -2781,7 +2781,7 @@ var builtins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = code.Series
 					for i := 0; i < len(block.Data); i++ {
-						ps = EvalBlockInj(ps, JsonToRye(block.Data[i]), true)
+						ps = EvalBlockInj(ps, env.ToRyeValue(block.Data[i]), true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -2852,7 +2852,7 @@ var builtins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = code.Series
 					for i := 0; i < len(block.Data); i++ {
-						ps = EvalBlockInj(ps, JsonToRye(block.Data[i]), true)
+						ps = EvalBlockInj(ps, env.ToRyeValue(block.Data[i]), true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -2875,7 +2875,7 @@ var builtins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = code.Series
 					for i := 0; i < len(input); i++ {
-						ps = EvalBlockInj(ps, JsonToRye(input[i]), true)
+						ps = EvalBlockInj(ps, env.ToRyeValue(input[i]), true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -3009,7 +3009,7 @@ var builtins = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
-							ps = EvalBlockInj(ps, JsonToRye(list.Data[i]), true)
+							ps = EvalBlockInj(ps, env.ToRyeValue(list.Data[i]), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -3019,7 +3019,7 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = ser
 					case env.Builtin:
 						for i := 0; i < l; i++ {
-							newl[i] = DirectlyCallBuiltin(ps, block, JsonToRye(list.Data[i]), nil)
+							newl[i] = DirectlyCallBuiltin(ps, block, env.ToRyeValue(list.Data[i]), nil)
 						}
 					default:
 						return MakeBuiltinError(ps, "Block value should be builtin or block type.", "map")
@@ -3108,7 +3108,7 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
 							ps.Ctx.Set(accu.Index, *env.NewInteger(int64(i + 1)))
-							ps = EvalBlockInj(ps, JsonToRye(list.Data[i]), true)
+							ps = EvalBlockInj(ps, env.ToRyeValue(list.Data[i]), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -3207,12 +3207,12 @@ var builtins = map[string]*env.Builtin{
 					// ps.Ctx.Set(accu.Index)
 					switch block := arg2.(type) {
 					case env.Block:
-						acc := JsonToRye(list.Data[0])
+						acc := env.ToRyeValue(list.Data[0])
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 1; i < l; i++ {
 							ps.Ctx.Set(accu.Index, acc)
-							ps = EvalBlockInj(ps, JsonToRye(list.Data[i]), true)
+							ps = EvalBlockInj(ps, env.ToRyeValue(list.Data[i]), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -3312,7 +3312,7 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
 							ps.Ctx.Set(accu.Index, acc)
-							ps = EvalBlockInj(ps, JsonToRye(list.Data[i]), true)
+							ps = EvalBlockInj(ps, env.ToRyeValue(list.Data[i]), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -3398,7 +3398,7 @@ var builtins = map[string]*env.Builtin{
 							item = lo[i]
 						}
 						// ps.Ctx.Set(accu.Index, acc)
-						ps = EvalBlockInj(ps, JsonToRye(item), true)
+						ps = EvalBlockInj(ps, env.ToRyeValue(item), true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -3422,7 +3422,7 @@ var builtins = map[string]*env.Builtin{
 						} else {
 							item = lo[i]
 						}
-						res := DirectlyCallBuiltin(ps, block, JsonToRye(item), nil)
+						res := DirectlyCallBuiltin(ps, block, env.ToRyeValue(item), nil)
 						switch res := res.(type) {
 						case env.Integer:
 							acc.Value += float64(res.Value)
@@ -3514,7 +3514,7 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
 							curval := list.Data[i]
-							curvalRye := JsonToRye(list.Data[i])
+							curvalRye := env.ToRyeValue(list.Data[i])
 							ps = EvalBlockInj(ps, curvalRye, true)
 							if ps.ErrorFlag {
 								return ps.Res
@@ -3533,7 +3533,7 @@ var builtins = map[string]*env.Builtin{
 					case env.Builtin:
 						for i := 0; i < l; i++ {
 							curval := list.Data[i]
-							curvalRye := JsonToRye(list.Data[i])
+							curvalRye := env.ToRyeValue(list.Data[i])
 							res := DirectlyCallBuiltin(ps, block, curvalRye, nil)
 							if prevres == nil || util.EqualValues(ps, res, prevres) {
 								subl = append(subl, curval)
@@ -3580,7 +3580,7 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = ser
 					case env.Builtin:
 						for _, curval := range list.Value {
-							res := DirectlyCallBuiltin(ps, block, JsonToRye(curval), nil)
+							res := DirectlyCallBuiltin(ps, block, env.ToRyeValue(curval), nil)
 							if prevres == nil || util.EqualValues(ps, res, prevres) {
 								subl.WriteRune(curval)
 							} else {
@@ -3633,7 +3633,7 @@ var builtins = map[string]*env.Builtin{
 					for i := 0; i < llen; i++ {
 						var curval env.Object
 						if modeObj == 1 {
-							curval = JsonToRye(ll[i])
+							curval = env.ToRyeValue(ll[i])
 						} else {
 							curval = lo[i]
 						}
@@ -3668,7 +3668,7 @@ var builtins = map[string]*env.Builtin{
 					for i := 0; i < llen; i++ {
 						var curval env.Object
 						if modeObj == 1 {
-							curval = JsonToRye(ll[i])
+							curval = env.ToRyeValue(ll[i])
 						} else {
 							curval = lo[i]
 						}
@@ -3747,9 +3747,9 @@ var builtins = map[string]*env.Builtin{
 						} else if modeObj == 2 {
 							item = lo[i]
 						} else {
-							item = JsonToRye(ls[i])
+							item = env.ToRyeValue(ls[i])
 						}
-						ps = EvalBlockInj(ps, JsonToRye(item), true)
+						ps = EvalBlockInj(ps, env.ToRyeValue(item), true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -3773,9 +3773,9 @@ var builtins = map[string]*env.Builtin{
 						} else if modeObj == 2 {
 							item = lo[i]
 						} else {
-							item = JsonToRye(ls[i])
+							item = env.ToRyeValue(ls[i])
 						}
-						res := DirectlyCallBuiltin(ps, block, JsonToRye(item), nil)
+						res := DirectlyCallBuiltin(ps, block, env.ToRyeValue(item), nil)
 						if util.IsTruthy(res) { // todo -- move these to util or something
 							if modeObj == 1 {
 								newll = append(newll, ll[i])
@@ -3844,12 +3844,12 @@ var builtins = map[string]*env.Builtin{
 						} else {
 							item = *env.NewString(string(ls[i]))
 						}
-						ps = EvalBlockInj(ps, JsonToRye(item), true)
+						ps = EvalBlockInj(ps, env.ToRyeValue(item), true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
 						if util.IsTruthy(ps.Res) { // todo -- move these to util or something
-							return JsonToRye(item)
+							return env.ToRyeValue(item)
 						}
 						ps.Ser.Reset()
 					}
@@ -3864,9 +3864,9 @@ var builtins = map[string]*env.Builtin{
 						} else {
 							item = *env.NewString(string(ls[i]))
 						}
-						res := DirectlyCallBuiltin(ps, block, JsonToRye(item), nil)
+						res := DirectlyCallBuiltin(ps, block, env.ToRyeValue(item), nil)
 						if util.IsTruthy(res) { // todo -- move these to util or something
-							return JsonToRye(item)
+							return env.ToRyeValue(item)
 						}
 					}
 				default:
@@ -4132,7 +4132,7 @@ var builtins = map[string]*env.Builtin{
 
 				// Iterate over the slice and add the elements to the map.
 				for _, element := range ss {
-					// uniqueValues[JsonToRye(element).Probe(*ps.Idx)] = true
+					// uniqueValues[env.ToRyeValue(element).Probe(*ps.Idx)] = true
 					uniqueValues[element] = true
 				}
 
@@ -5180,7 +5180,7 @@ var builtins = map[string]*env.Builtin{
 				if len(s1.Data) == 0 {
 					return MakeBuiltinError(ps, "List is empty.", "first")
 				}
-				return JsonToRye(s1.Data[int(0)])
+				return env.ToRyeValue(s1.Data[int(0)])
 			case env.String:
 				str := []rune(s1.Value)
 				if len(str) == 0 {
@@ -5319,7 +5319,7 @@ var builtins = map[string]*env.Builtin{
 				if len(s1.Data) < 2 {
 					return MakeBuiltinError(ps, "List has no second element.", "second")
 				}
-				return JsonToRye(s1.Data[1])
+				return env.ToRyeValue(s1.Data[1])
 			case env.String:
 				str := []rune(s1.Value)
 				if len(str) < 2 {
@@ -5346,7 +5346,7 @@ var builtins = map[string]*env.Builtin{
 				if len(s1.Data) < 3 {
 					return MakeBuiltinError(ps, "List has no third element.", "third")
 				}
-				return JsonToRye(s1.Data[2])
+				return env.ToRyeValue(s1.Data[2])
 			case env.String:
 				str := []rune(s1.Value)
 				if len(str) < 3 {
@@ -5373,7 +5373,7 @@ var builtins = map[string]*env.Builtin{
 				if len(s1.Data) == 0 {
 					return MakeBuiltinError(ps, "List is empty.", "last")
 				}
-				return JsonToRye(s1.Data[len(s1.Data)-1])
+				return env.ToRyeValue(s1.Data[len(s1.Data)-1])
 			case env.String:
 				if len(s1.Value) == 0 {
 					return MakeBuiltinError(ps, "String is empty.", "last")
@@ -5443,7 +5443,7 @@ var builtins = map[string]*env.Builtin{
 					if num.Value > int64(len(s1.Data)) {
 						return MakeBuiltinError(ps, fmt.Sprintf("List has less than %d elements.", num.Value), "nth")
 					}
-					return JsonToRye(s1.Data[int(num.Value-1)])
+					return env.ToRyeValue(s1.Data[int(num.Value-1)])
 				case env.String:
 					str := []rune(s1.Value)
 					if num.Value > int64(len(str)) {
@@ -6271,7 +6271,7 @@ var builtins = map[string]*env.Builtin{
 			switch s0 := arg0.(type) {
 			case env.Spreadsheet:
 				r := s0.Rows[0].Values[0]
-				return JsonToRye(r)
+				return env.ToRyeValue(r)
 
 			default:
 				ps.ErrorFlag = true
@@ -6286,7 +6286,7 @@ var builtins = map[string]*env.Builtin{
 			switch s0 := arg0.(type) {
 			case env.Spreadsheet:
 				r := s0.Rows[0].Values[1]
-				return JsonToRye(r)
+				return env.ToRyeValue(r)
 
 			default:
 				ps.ErrorFlag = true
@@ -6326,8 +6326,8 @@ var builtins = map[string]*env.Builtin{
 				/*				if stderr != nil {
 									fmt.Println(stderr.Error())
 								}
-								return JsonToRye(" "-----------" + string(stdout)) */
-				//				return JsonToRye(string(stdout))
+								return env.ToRyeValue(" "-----------" + string(stdout)) */
+				//				return env.ToRyeValue(string(stdout))
 			default:
 				return makeError(ps, "Arg 1 should be String")
 			}

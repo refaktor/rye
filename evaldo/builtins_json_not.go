@@ -4,7 +4,7 @@
 package evaldo
 
 import (
-	"math"
+	"fmt"
 	"rye/env"
 	"strconv"
 )
@@ -52,28 +52,6 @@ func RyeToJSON(res any) string {
 	}
 	fmt.Println(res)
 	return "not handeled1"
-}
-
-func JsonToRye(res any) env.Object {
-	switch v := res.(type) {
-	case float64:
-		return env.Integer{int64(math.Round(v))}
-	case int:
-		return env.Integer{int64(v)}
-	case int64:
-		return env.Integer{v}
-	case string:
-		return env.String{v}
-	case map[string]any:
-		return *env.NewDict(v)
-	case []any:
-		return *env.NewList(v)
-	case env.Object:
-		return v
-	case nil:
-		return nil
-	}
-	return env.Void{}
 }
 
 var Builtins_json = map[string]*env.Builtin{}

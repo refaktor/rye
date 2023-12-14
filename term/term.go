@@ -6,7 +6,6 @@ package term
 import (
 	"fmt"
 	"rye/env"
-	"rye/util"
 	"sort"
 	"strconv"
 	"strings"
@@ -420,7 +419,7 @@ DODO:
 		}
 
 		if ascii == 13 {
-			return util.ToRyeValue(bloc.Values[curr]), false
+			return env.ToRyeValue(bloc.Values[curr]), false
 		}
 
 		if ascii == 120 {

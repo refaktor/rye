@@ -141,7 +141,7 @@ var Builtins_webview = map[string]*env.Builtin{
 						}
 						if fn.Argsn == 1 {
 							win.Value.(webview.WebView).Bind(ps.Idx.GetWord(word.Index), func(a0 any) any {
-								a0_ := JsonToRye(a0)
+								a0_ := env.ToRyeValue(a0)
 								CallFunction(fn, ps, a0_, false, ps.Ctx)
 								return resultToJS(ps.Res)
 							})

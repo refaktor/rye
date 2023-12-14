@@ -179,7 +179,7 @@ var Builtins_cayley = map[string]*env.Builtin{
 						nativeValue := quad.NativeOf(value) // this converts RDF values to normal Go types
 						ser := ps.Ser
 						ps.Ser = code.Series
-						EvalBlockInj(ps, JsonToRye(nativeValue), true)
+						EvalBlockInj(ps, env.ToRyeValue(nativeValue), true)
 						ps.Ser = ser
 						//						fmt.Println(nativeValue)
 						return nil
