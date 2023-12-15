@@ -4,7 +4,7 @@
 package evaldo
 
 import (
-	"rye/env"
+	"github.com/refaktor/rye/env"
 )
 
 var Builtins_gtk = map[string]*env.Builtin{}

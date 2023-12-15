@@ -8,7 +8,7 @@ import (
 	//	"fmt"
 	//	"io"
 	//	"os"
-	"rye/env"
+	"github.com/refaktor/rye/env"
 	// "strconv"
 	// "strings"
 )

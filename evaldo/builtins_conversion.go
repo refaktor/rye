@@ -1,7 +1,7 @@
 package evaldo
 
 import (
-	"rye/env"
+	"github.com/refaktor/rye/env"
 )
 
 // Integer represents an integer.

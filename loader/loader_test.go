@@ -2,7 +2,8 @@ package loader
 
 import (
 	"fmt"
-	"rye/env"
+
+	"github.com/refaktor/rye/env"
 
 	//"fmt"
 	"testing"

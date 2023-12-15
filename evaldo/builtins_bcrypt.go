@@ -6,7 +6,8 @@ package evaldo
 import (
 	"crypto/rand"
 	"encoding/hex"
-	"rye/env"
+
+	"github.com/refaktor/rye/env"
 
 	"golang.org/x/crypto/bcrypt"
 )

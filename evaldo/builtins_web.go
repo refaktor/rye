@@ -7,8 +7,9 @@ import "C"
 
 import (
 	"fmt"
-	"rye/env"
 	"strconv"
+
+	"github.com/refaktor/rye/env"
 
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo"

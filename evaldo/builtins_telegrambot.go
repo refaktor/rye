@@ -4,7 +4,7 @@
 package evaldo
 
 import (
-	"rye/env"
+	"github.com/refaktor/rye/env"
 
 	tgm "github.com/go-telegram-bot-api/telegram-bot-api"
 )

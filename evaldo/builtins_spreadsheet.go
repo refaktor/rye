@@ -5,11 +5,12 @@ package evaldo
 import (
 	"encoding/csv"
 	"os"
-	"rye/env"
-	"rye/util"
 	"slices"
 	"sort"
 	"strconv"
+
+	"github.com/refaktor/rye/env"
+	"github.com/refaktor/rye/util"
 )
 
 var Builtins_spreadsheet = map[string]*env.Builtin{

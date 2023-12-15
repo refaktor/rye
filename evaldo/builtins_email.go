@@ -4,8 +4,9 @@
 package evaldo
 
 import (
-	"rye/env"
 	"strings"
+
+	"github.com/refaktor/rye/env"
 
 	"github.com/go-gomail/gomail"
 )

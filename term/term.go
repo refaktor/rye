@@ -5,10 +5,11 @@ package term
 
 import (
 	"fmt"
-	"rye/env"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/refaktor/rye/env"
 
 	"github.com/pkg/term"
 )

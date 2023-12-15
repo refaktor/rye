@@ -14,8 +14,9 @@ import (
 	"mime/multipart"
 	"mime/quotedprintable"
 	"net/mail"
-	"rye/env"
 	"strings"
+
+	"github.com/refaktor/rye/env"
 	// "github.com/jinzhu/copier"
 )
 

@@ -5,11 +5,12 @@ package main
 
 import (
 	"fmt"
-	"rye/contrib"
-	"rye/env"
-	"rye/evaldo"
-	"rye/loader"
 	"syscall/js"
+
+	"github.com/refaktor/rye/contrib"
+	"github.com/refaktor/rye/env"
+	"github.com/refaktor/rye/evaldo"
+	"github.com/refaktor/rye/loader"
 )
 
 type TagType int

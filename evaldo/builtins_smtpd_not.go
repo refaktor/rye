@@ -4,7 +4,7 @@
 package evaldo
 
 import (
-	"rye/env"
+	"github.com/refaktor/rye/env"
 )
 
 var Builtins_smtpd = map[string]*env.Builtin{}

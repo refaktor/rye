@@ -3,7 +3,8 @@ package evaldo
 
 import (
 	"fmt"
-	"rye/env"
+
+	"github.com/refaktor/rye/env"
 )
 
 // definiraj frame <builtin nargs arg0 arg1>

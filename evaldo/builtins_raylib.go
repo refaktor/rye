@@ -4,7 +4,7 @@
 package evaldo
 
 import (
-	"rye/env"
+	"github.com/refaktor/rye/env"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
 )

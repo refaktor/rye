@@ -5,7 +5,8 @@ package evaldo
 
 import (
 	"encoding/xml"
-	"rye/env"
+
+	"github.com/refaktor/rye/env"
 
 	"fmt"
 	"io"

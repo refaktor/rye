@@ -2,7 +2,8 @@ package evaldo
 
 import (
 	"regexp"
-	"rye/env"
+
+	"github.com/refaktor/rye/env"
 )
 
 var Builtins_regexp = map[string]*env.Builtin{
