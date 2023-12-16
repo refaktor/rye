@@ -3,25 +3,32 @@
 [![Build and Test](https://github.com/refaktor/rye/actions/workflows/build.yml/badge.svg)](https://github.com/refaktor/rye/actions/workflows/build.yml)
 [![golangci-lint](https://github.com/refaktor/rye/actions/workflows/golangci-lint.yml/badge.svg)](https://github.com/refaktor/rye/actions/workflows/golangci-lint.yml)
 
-   * [What is Rye](#what-is-rye)
-   * [Status: Alpha](#status-alpha)
-   * [Overview](#overview)
-     * [Some specifics](#some-specifics)
-     * [Introductions](#introductions)
-     * [Examples](#examples)
-     * [Rye vs. Python](#rye-vs-python)
-   * [Follow development](#follow-development)
-     * [Rye blog](#rye-blog)
-     * [Github](#github)
-   * [Getting Rye](#getting-rye)
-     * [Binaries](#binaries)
-     * [Docker images](#docker-images)
-     * [Forking Rye on Github](#forking-rye-on-github)
-     * [Building Rye](#building-rye)
-	 * [Build Rye with specific modules](#build-rye-with-specific-modules)
-	 * [Build WASM version of Rye](#build-wasm-version-of-rye)
-   * [Related links](#related-links)
-   * [Questions, contact](#related-links)
+- [Rye language 🌾](#rye-language-)
+  - [What is Rye](#what-is-rye)
+  - [Status: Alpha](#status-alpha)
+  - [Overview](#overview)
+    - [Some specifics](#some-specifics)
+    - [Introductions](#introductions)
+    - [Examples](#examples)
+    - [Rye vs. Python](#rye-vs-python)
+  - [Libraries](#libraries)
+    - [Base - official integrations](#base---official-integrations)
+    - [Contrib - will be community / third party integrations](#contrib---will-be-community--third-party-integrations)
+  - [Follow development](#follow-development)
+    - [Rye blog](#rye-blog)
+    - [Ryelang reddit](#ryelang-reddit)
+    - [Github](#github)
+  - [Getting Rye](#getting-rye)
+    - [Binaries](#binaries)
+    - [Docker images](#docker-images)
+      - [Binary Docker image](#binary-docker-image)
+      - [Dev Docker image](#dev-docker-image)
+    - [Forking Rye on Github](#forking-rye-on-github)
+    - [Building Rye](#building-rye)
+      - [Build Rye with specific modules](#build-rye-with-specific-modules)
+      - [Build WASM version of Rye](#build-wasm-version-of-rye)
+  - [Related links](#related-links)
+  - [Questions, contact](#questions-contact)
 
 *visit **[ryelang.org](https://ryelang.org/)**, **[our blog](https://ryelang.org/blog/)** or join our **[reddit group](https://reddit.com/r/ryelang/)** for latest examples and development updates*
 
@@ -267,13 +274,27 @@ If code speaks to you, our Github page is the central location for all things Ry
 
 ## Getting Rye
 
-Rye is developed on Linux, but has also been compiled on macOS and Docker. If you need aditional architecture or OS, post an Issue.
+Rye is developed on Linux, but has also been compiled on macOS and Docker. If you need additional architecture or OS, post an Issue.
 
 ### Binaries
 
-You can find precompiled Binaries for **Linux** and **macOS** under [Releases](https://github.com/refaktor/rye/releases). 
+You can find precompiled Binaries for **Linux** and **macOS** under [Releases](https://github.com/refaktor/rye/releases).
+
+Docker images are published under [Packages](https://github.com/refaktor/rye/pkgs/container/rye).
 
 ### Docker images
+
+#### Binary Docker image
+
+This image includes Linux, Rye binary ready for use and Emacs-nox editor.
+
+Docker image: **[ghcr.io/refaktor/rye](https://github.com/refaktor/rye/pkgs/container/rye)**
+
+Run it via:
+
+```bash
+docker run -ti ghcr.io/refaktor/rye
+```
 
 #### Dev Docker image
 
@@ -330,20 +351,20 @@ Install build-esential if you don't already have it, for packages that require c
 
     sudo apt install build-essential
 
-# Build Rye with specific modules
+#### Build Rye with specific modules
 
 Rye has many bindings, that you can determine at build time, so (currently) you get a specific Rye binary for your specific project. This is an example of a build with many bindings. 
 I've been working on a way to make this more elegant and systematic, but the manual version is:
 
     go build -tags "b_tiny,b_sqlite,b_http,b_sql,b_postgres,b_openai,b_bson,b_crypto,b_smtpd,b_mail,b_postmark,b_bcrypt,b_telegram"
 	
-# Build WASM version of Rye
+#### Build WASM version of Rye
 
 Rye can also work inside your browser or any other WASM container. I will add examples, html pages and info about it, but to build it:
 
     GOOS=js GOARCH=wasm go build -tags "b_tiny,b_norepl" -o wasm/rye.wasm main_wasm.go
 
-# Related links
+## Related links
 
   [**Rebol**](http://www.rebol.com) - Rebol's author Carl Sassenrath invented or combined together 90% of concepts that Rye builds upon.
   
@@ -357,7 +378,7 @@ Rye can also work inside your browser or any other WASM container. I will add ex
   
   [Ren-c](https://github.com/metaeducation/ren-c) - Rebol 3 fork maintained by HostileFork, more liberal with changes to the language. 
   
- # Questions, contact
+ ## Questions, contact
   
 You can post an **[Issue](https://github.com/refaktor/rye/issues)** visit github **[Discussions](https://github.com/refaktor/rye/discussions)** or contact me through <a href="mailto:janko .itm+rye[ ]gmail .com">gmail</a> or <a href="https://twitter.com/refaktor">twitter</a>.</p>
 
