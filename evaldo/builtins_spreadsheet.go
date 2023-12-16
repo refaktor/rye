@@ -5,11 +5,12 @@ package evaldo
 import (
 	"encoding/csv"
 	"os"
-	"rye/env"
-	"rye/util"
 	"slices"
 	"sort"
 	"strconv"
+
+	"github.com/refaktor/rye/env"
+	"github.com/refaktor/rye/util"
 )
 
 var Builtins_spreadsheet = map[string]*env.Builtin{
@@ -118,11 +119,16 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 					return MakeBuiltinError(ps, "Unable to parse file as CSV.", "load\\csv")
 				}
 				spr := env.NewSpreadsheet(rows[0])
-				for i, row := range rows {
-					if i > 0 {
+				//				for i, row := range rows {
+				//	if i > 0 {
+				//		anyRow := make([]any, len(row))
+				//		for i, v := range row {
+				//			anyRow[i] = v
+				if len(rows) > 1 {
+					for _, row := range rows[1:] {
 						anyRow := make([]any, len(row))
 						for i, v := range row {
-							anyRow[i] = v
+							anyRow[i] = *env.NewString(v)
 						}
 						spr.AddRow(*env.NewSpreadsheetRow(anyRow, spr))
 					}
@@ -339,6 +345,23 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+	"autotype": {
+		Argsn: 2,
+		Doc:   "",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
+			switch spr := arg0.(type) {
+			case env.Spreadsheet:
+				switch percent := arg1.(type) {
+				case env.Decimal:
+					return AutoType(ps, &spr, percent.Value)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.DecimalType}, "autotype")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "autotype")
+			}
+		},
+	},
 }
 
 func GenerateColumn(ps *env.ProgramState, s env.Spreadsheet, name env.Word, extractCols env.Block, code env.Block) env.Object {
@@ -470,4 +493,61 @@ func Limit(ps *env.ProgramState, s env.Spreadsheet, n int) env.Object {
 	nspr := env.NewSpreadsheet(s.Cols)
 	nspr.Rows = s.Rows[0:n]
 	return *nspr
+}
+
+func AutoType(ps *env.ProgramState, s *env.Spreadsheet, percent float64) env.Object {
+	colTypeCount := make(map[int]map[string]int)
+	for i := range s.Cols {
+		colTypeCount[i] = make(map[string]int)
+	}
+	for _, row := range s.Rows {
+		for i, val := range row.Values {
+			switch stringVal := val.(type) {
+			case env.String:
+				if _, err := strconv.Atoi(stringVal.Value); err == nil {
+					colTypeCount[i]["int"]++
+				} else if _, err = strconv.ParseFloat(stringVal.Value, 64); err == nil {
+					colTypeCount[i]["dec"]++
+				} else {
+					colTypeCount[i]["str"]++
+				}
+			default:
+				continue
+			}
+		}
+	}
+
+	lenRows := len(s.Rows)
+	newS := env.NewSpreadsheet(s.Cols)
+	for range s.Rows {
+		newRow := make([]any, len(s.Cols))
+		newS.AddRow(*env.NewSpreadsheetRow(newRow, newS))
+	}
+
+	for colNum, typeCount := range colTypeCount {
+		minRows := int(float64(lenRows) * percent)
+		var newType string
+		// if there's a mix of floats and ints, make it a float
+		if typeCount["dec"] > 0 && typeCount["dec"]+typeCount["int"] >= minRows {
+			newType = "dec"
+		} else if typeCount["int"] >= minRows {
+			newType = "int"
+		} else {
+			newType = "str"
+		}
+		for i, row := range s.Rows {
+			switch newType {
+			case "int":
+				intVal, _ := strconv.Atoi(row.Values[colNum].(env.String).Value)
+				newS.Rows[i].Values[colNum] = *env.NewInteger(int64(intVal))
+			case "dec":
+				floatVal, _ := strconv.ParseFloat(row.Values[colNum].(env.String).Value, 64)
+				newS.Rows[i].Values[colNum] = *env.NewDecimal(floatVal)
+			case "str":
+				newS.Rows[i].Values[colNum] = row.Values[colNum]
+			}
+		}
+	}
+
+	return *newS
 }

@@ -7,7 +7,8 @@ import (
 	"crypto/ed25519"
 	"crypto/sha512"
 	"encoding/hex"
-	"rye/env"
+
+	"github.com/refaktor/rye/env"
 )
 
 /* Our strategy to only support signed files

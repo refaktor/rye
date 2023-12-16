@@ -6,8 +6,8 @@ package evaldo
 import (
 	"fmt"
 	//	"net/mail"
-	"rye/env"
-	// "rye/util"
+	"github.com/refaktor/rye/env"
+	// "github.com/refaktor/rye/util"
 	"strconv"
 	"strings"
 	"time"

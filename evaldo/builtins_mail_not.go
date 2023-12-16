@@ -3,6 +3,6 @@
 
 package evaldo
 
-import "rye/env"
+import "github.com/refaktor/rye/env"
 
 var Builtins_mail = map[string]*env.Builtin{}

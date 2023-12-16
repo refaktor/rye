@@ -6,11 +6,12 @@ package evaldo
 import (
 	"fmt"
 	"net/mail"
-	"rye/env"
-	"rye/util"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/refaktor/rye/env"
+	"github.com/refaktor/rye/util"
 )
 
 // Integer represents an integer.

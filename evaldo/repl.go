@@ -9,9 +9,10 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"rye/env"
-	"rye/loader"
 	"strings"
+
+	"github.com/refaktor/rye/env"
+	"github.com/refaktor/rye/loader"
 
 	"github.com/refaktor/liner"
 )

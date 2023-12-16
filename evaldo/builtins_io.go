@@ -12,9 +12,10 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"rye/env"
 	"strings"
 	"time"
+
+	"github.com/refaktor/rye/env"
 
 	"net/http"
 	"net/http/cgi"

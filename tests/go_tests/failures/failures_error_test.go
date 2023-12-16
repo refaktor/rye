@@ -1,10 +1,11 @@
 package failures
 
 import (
-	"rye/env"
-	"rye/evaldo"
-	"rye/loader"
 	"testing"
+
+	"github.com/refaktor/rye/env"
+	"github.com/refaktor/rye/evaldo"
+	"github.com/refaktor/rye/loader"
 )
 
 func TestFailures_no_error1(t *testing.T) {

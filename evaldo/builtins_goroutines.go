@@ -7,8 +7,9 @@ package evaldo
 
 import (
 	"fmt"
-	"rye/env"
 	"time"
+
+	"github.com/refaktor/rye/env"
 
 	"github.com/jinzhu/copier"
 )

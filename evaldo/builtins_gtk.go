@@ -6,7 +6,7 @@ package evaldo
 import "C"
 
 import (
-	"rye/env"
+	"github.com/refaktor/rye/env"
 
 	"github.com/gotk3/gotk3/gtk"
 )

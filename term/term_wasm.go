@@ -4,7 +4,7 @@
 package term
 
 import (
-	"rye/env"
+	"github.com/refaktor/rye/env"
 )
 
 // DisplayBlock is dummy non-implementation for wasm for display builtin

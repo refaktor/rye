@@ -4,8 +4,9 @@ package evaldo
 
 import (
 	"fmt"
-	"rye/env"
-	"rye/loader"
+
+	"github.com/refaktor/rye/env"
+	"github.com/refaktor/rye/loader"
 
 	//"fmt"
 	"testing"

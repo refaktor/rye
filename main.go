@@ -7,7 +7,8 @@ import (
 	"os/user"
 	"path/filepath"
 	"regexp"
-	"rye/contrib"
+
+	"github.com/refaktor/rye/contrib"
 
 	"bufio"
 	"errors"
@@ -18,10 +19,11 @@ import (
 	"strings"
 
 	"net/http"
-	"rye/env"
-	"rye/evaldo"
-	"rye/loader"
-	"rye/util"
+
+	"github.com/refaktor/rye/env"
+	"github.com/refaktor/rye/evaldo"
+	"github.com/refaktor/rye/loader"
+	"github.com/refaktor/rye/util"
 
 	"net/http/cgi"
 )

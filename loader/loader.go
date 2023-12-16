@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"rye/env"
+	"github.com/refaktor/rye/env"
 
 	//. "github.com/yhirose/go-peg"
 	//. "github.com/CWood1/go-peg"

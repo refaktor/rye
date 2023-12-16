@@ -6,7 +6,7 @@ package evaldo
 // import "C"
 
 import (
-	"rye/env"
+	"github.com/refaktor/rye/env"
 )
 
 var OutBuffer = "" // how does this work with multiple threads / ... in server use ... probably we would need some per environment variable, not global / global?

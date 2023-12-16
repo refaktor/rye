@@ -35,7 +35,7 @@ linters-settings:
       - pattern: 'interface{}'
         replacement: 'any'
   goimports:
-    local-prefixes: github.com/golangci/golangci-lint
+    local-prefixes: github.com/refaktor/rye
   gomnd:
     # don't include the "operation" and "assign"
     checks:
@@ -94,7 +94,7 @@ linters:
     # - gocritic
     # - gocyclo
     - gofmt
-    # - goimports
+    - goimports
     # - gomnd
     - goprintffuncname
     - gosec

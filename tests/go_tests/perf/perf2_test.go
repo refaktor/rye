@@ -1,9 +1,9 @@
 package perf
 
 import (
-	"rye/env"
-	"rye/evaldo"
-	"rye/loader"
+	"github.com/refaktor/rye/env"
+	"github.com/refaktor/rye/evaldo"
+	"github.com/refaktor/rye/loader"
 
 	//	"fmt"
 	"testing"
