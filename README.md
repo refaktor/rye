@@ -2,6 +2,8 @@
 
 [![Build and Test](https://github.com/refaktor/rye/actions/workflows/build.yml/badge.svg)](https://github.com/refaktor/rye/actions/workflows/build.yml)
 [![golangci-lint](https://github.com/refaktor/rye/actions/workflows/golangci-lint.yml/badge.svg)](https://github.com/refaktor/rye/actions/workflows/golangci-lint.yml)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/refaktor/rye/badge)](https://securityscorecards.dev/viewer/?uri=github.com/refaktor/rye)
+[![Go Reference](https://pkg.go.dev/badge/github.com/refaktor/rye.svg)](https://pkg.go.dev/github.com/refaktor/rye)
 
    * [What is Rye](#what-is-rye)
    * [Status: Alpha](#status-alpha)
