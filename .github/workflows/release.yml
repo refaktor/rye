@@ -8,7 +8,7 @@ on:
 
 permissions:
   contents: write
-  # packages: write
+  packages: write
   # issues: write
 
 jobs:
