@@ -10,8 +10,8 @@ import (
 	"path/filepath"
 
 	//	"regexp"
-	"rye/env"
-	//	"rye/loader"
+	"github.com/refaktor/rye/env"
+	//	"github.com/refaktor/rye/loader"
 	//	"strings"
 	//	"github.com/refaktor/liner"
 )

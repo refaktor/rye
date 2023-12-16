@@ -6,7 +6,8 @@ package evaldo
 import (
 	"bytes"
 	"net"
-	"rye/env"
+
+	"github.com/refaktor/rye/env"
 
 	"github.com/jinzhu/copier"
 	"github.com/mhale/smtpd"

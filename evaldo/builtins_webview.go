@@ -14,8 +14,9 @@ import (
 	"net"
 	"net/http"
 	"path/filepath"
-	"rye/env"
-	"rye/util"
+
+	"github.com/refaktor/rye/env"
+	"github.com/refaktor/rye/util"
 
 	"github.com/webview/webview"
 )

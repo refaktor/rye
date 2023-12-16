@@ -5,7 +5,8 @@ package evaldo
 
 import (
 	"fmt"
-	"rye/env"
+
+	"github.com/refaktor/rye/env"
 
 	"github.com/cayleygraph/cayley"
 	"github.com/cayleygraph/cayley/graph"

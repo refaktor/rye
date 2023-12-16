@@ -12,8 +12,9 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
-	"rye/env"
 	"strings"
+
+	"github.com/refaktor/rye/env"
 
 	//"time"
 	//"golang.org/x/time/rate"

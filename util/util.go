@@ -4,9 +4,10 @@ package util
 import (
 	"fmt"
 	"regexp"
-	"rye/env"
 	"strconv"
 	"strings"
+
+	"github.com/refaktor/rye/env"
 )
 
 func PrintHeader() {

@@ -8,7 +8,8 @@ package evaldo
 import (
 	"database/sql"
 	"fmt"
-	"rye/env"
+
+	"github.com/refaktor/rye/env"
 
 	_ "github.com/lib/pq"
 )

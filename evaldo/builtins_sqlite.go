@@ -7,7 +7,8 @@ import "C"
 
 import (
 	"database/sql"
-	"rye/env"
+
+	"github.com/refaktor/rye/env"
 
 	"fmt"
 	"strconv"

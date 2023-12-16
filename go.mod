@@ -1,4 +1,4 @@
-module rye
+module github.com/refaktor/rye
 
 go 1.21
 

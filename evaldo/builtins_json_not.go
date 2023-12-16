@@ -5,8 +5,9 @@ package evaldo
 
 import (
 	"fmt"
-	"rye/env"
 	"strconv"
+
+	"github.com/refaktor/rye/env"
 )
 
 func _emptyRM() env.Dict {

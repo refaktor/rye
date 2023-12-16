@@ -10,16 +10,18 @@ import (
 	"os"
 	"os/exec"
 	"reflect"
-	"rye/env"
-	"rye/term"
 	"sort"
 
-	"rye/loader"
-	// JM 20230825	"rye/term"
-	"rye/util"
+	"github.com/refaktor/rye/env"
+	"github.com/refaktor/rye/term"
+
+	"github.com/refaktor/rye/loader"
+	// JM 20230825	"github.com/refaktor/rye/term"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/refaktor/rye/util"
 
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/text/cases"

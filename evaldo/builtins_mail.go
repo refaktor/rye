@@ -5,7 +5,8 @@ package evaldo
 
 import (
 	"io"
-	"rye/env"
+
+	"github.com/refaktor/rye/env"
 
 	"github.com/thomasberger/parsemail"
 )

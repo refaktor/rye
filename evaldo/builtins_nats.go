@@ -7,7 +7,8 @@ import "C"
 
 import (
 	"fmt"
-	"rye/env"
+
+	"github.com/refaktor/rye/env"
 
 	nats "github.com/nats-io/nats.go"
 )
