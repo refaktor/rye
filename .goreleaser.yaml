@@ -58,6 +58,17 @@ archives:
       - goos: windows
         format: zip
 
+kos:  # See https://goreleaser.com/customization/ko/
+  - repository: ghcr.io/refaktor/rye
+    tags:
+    - '{{.Version}}'
+    - latest
+    bare: true
+    preserve_import_paths: false
+    platforms:
+    - linux/amd64
+    - linux/arm64
+
 changelog:
   sort: asc
   filters:
