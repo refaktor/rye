@@ -16,10 +16,9 @@
 <body onload="generateMenu()">
 <div id="menu-holder">
 </div>
-<p><a href="/">← main page</a></p>
-<h1>Function reference: Rye core</h1>
+<p><a href="/">← main page</a> <a href='basics'>basics</a> &middot; <a href='series'>series</a> &middot; <a href='spreadsheets'>spreadsheets</a> &middot; </p>
+<h1>Function reference: builtins</h1>
 <p><em>work in progress</em></p>
-
 <h2>Printing functions</h2><p>Functions that print values to stdout.</p><div class='section'>
 <h3>print</h3><p>Builtin(1): Prints a value and adds a newline.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>print 123
@@ -401,12 +400,12 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>union { } { }
 ; returns { }</code></pre>
 </div>
-<h3>common</h3><p>Pure Builtin(2): Finds the intersection of two values.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>common { 1 3 5 6 } { 2 3 4 5 }
+<h3>intersection</h3><p>Pure Builtin(2): Finds the intersection of two values.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>intersection { 1 3 5 6 } { 2 3 4 5 }
 ; returns { 3 5 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>common { } { 2 3 4 }
+<pre class='prettyprint lang-rye'><code language='lang-rye'>intersection { } { 2 3 4 }
 ; returns { }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>common { } { }
+<pre class='prettyprint lang-rye'><code language='lang-rye'>intersection { } { }
 ; returns { }</code></pre>
 </div>
 <h3>unique</h3><p>Builtin(2): Accepts Rye value and Tagword with a Block or String. Appends Rye value to Block/String in place, also returns it	.</p><div class='group'>
@@ -651,9 +650,7 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>10 .keep { + 1 } { * 10 }
 ; returns 11</code></pre>
 </div>
-<h3>wrap</h3><p>Builtin(2): Accepts a value and a block. It does the block, with value injected, and returns (passes on) the initial value.</p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>wrap { 1 + 1 } { 10 + 20 }
-; returns 30</code></pre>
+<h3>wrap</h3><p>Builtin(2): TODODOC</p><div class='group'>
 </div>
 </div>
 <h2>Higher order like functions</h2><p>Functions for usual HOF patterns, map, reduce, filter.</p><div class='section'>
@@ -925,6 +922,20 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>b: { 1 2 3 } , append! { 4 5 } 'b , b
 ; returns { 1 2 3 { 4 5 } }</code></pre>
 </div>
+<h3>change\ nth!</h3><p>Builtin(3): Accepts a Block or List, Integer n and a value. Changes the n-th value in the Block in place. Also returns the new series.</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>b: { 1 4 3 } , change\nth! b 2 4
+; returns { 1 4 3 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>b: { 1 { 4 5 } 3 } , change\nth! b 2 { 4 5 }
+; returns { 1 { 4 5 } 3 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>b: list { 1 2 3 } , change\nth! b 2 4
+; returns L[ 1  4  3 ]</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>b: list { 1 2 3 } , change\nth! b 2 list { 4 5 }
+; returns L[ 1  L[ 4  5 ]  3 ]</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { b: { 1 2 3 } , change\nth! b 4 0 } |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { b: list { 1 2 3 } , change\nth! b 4 0 } |type?
+; returns error</code></pre>
+</div>
 <h3>sort!</h3><p>Builtin(2): Accepts Rye value and Tagword with a Block or String. Appends Rye value to Block/String in place, also returns it	.</p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>b: { 1 2 4 7 } , sort! b , b
 ; returns { 1 2 4 7 }</code></pre>
@@ -949,4 +960,3 @@ alt="Web Analytics"
 referrerPolicy="no-referrer-when-downgrade"></a></div></noscript>
 </body>
 </html>
-

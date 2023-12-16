@@ -118,12 +118,14 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 					return MakeBuiltinError(ps, "Unable to parse file as CSV.", "load\\csv")
 				}
 				spr := env.NewSpreadsheet(rows[0])
-				for _, row := range rows {
-					anyRow := make([]any, len(row))
-					for i, v := range row {
-						anyRow[i] = v
+				for i, row := range rows {
+					if i > 0 {
+						anyRow := make([]any, len(row))
+						for i, v := range row {
+							anyRow[i] = v
+						}
+						spr.AddRow(*env.NewSpreadsheetRow(anyRow, spr))
 					}
-					spr.AddRow(*env.NewSpreadsheetRow(anyRow, spr))
 				}
 				return *spr
 			default:
@@ -431,7 +433,7 @@ func WhereEquals(ps *env.ProgramState, s env.Spreadsheet, name string, val any) 
 				if len(row.Values) > idx {
 					switch val2 := val.(type) {
 					case env.Object:
-						if util.EqualValues(ps, val2, row.Values[idx].(env.Object)) {
+						if util.EqualValues(ps, val2, env.ToRyeValue(row.Values[idx])) {
 							nspr.AddRow(row)
 						}
 					}

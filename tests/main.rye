@@ -57,12 +57,25 @@ docs-framework: context {
 	
 }
 
+generate-menu: fn { menu } {
+	.fold 'acc "" { :x acc .concat " &middot; <a href='{{}}.html'>{{}}</a>" .replace "{{}}" x }
+}
+
+generate-doc-file: fn { filename menu } {
+	join {
+		%tpl/header.html .read .replace "{{title}}" filename |replace "{{menu}}" generate-menu menu
+		capture-stdout { do-in docs-framework load to-file filename + ".rye" }
+		read %tpl/footer.html
+	} |write* to-file filename + ".html"
+}
+
+menu: { "basics" "structures" "spreadsheets" }
+
 switch arg {
 	"test" { do-in test-framework load %builtins.rye }
 	"doc"  {
-		print read %tpl/header.html
-		do-in docs-framework load %builtins.rye
-		print read %tpl/footer.html
+		generate-doc-file "basics" menu
+		generate-doc-file "structures" menu
 	}
 	_ { print "use test or doc command" }
 } 
