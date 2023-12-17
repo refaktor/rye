@@ -35,7 +35,7 @@ require (
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/thomasberger/parsemail v1.2.6
 	github.com/tobgu/qframe v0.4.0
-	github.com/webview/webview v0.0.0-20230830165049-e0ca3ed53345
+	github.com/webview/webview_go v0.0.0-20230901181450-5a14030a9070
 	go.mongodb.org/mongo-driver v1.13.0
 	go.nanomsg.org/mangos v2.0.0+incompatible
 	golang.org/x/crypto v0.16.0
