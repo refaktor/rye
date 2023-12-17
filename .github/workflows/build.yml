@@ -12,7 +12,14 @@ on:
 jobs:
 
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+    runs-on: ${{ matrix.image }}
+
     steps:
     - uses: actions/checkout@v4
       with:
@@ -23,7 +30,8 @@ jobs:
       with:
         go-version: '1.21'
 
-    - name: Install cgo dependancies
+    - name: Install Linux cgo dependancies
+      if: runner.os == 'Linux'
       run: |
         sudo apt-get update
         sudo apt-get install -y libwebkit2gtk-4.0-dev # for webview
