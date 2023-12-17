@@ -15,10 +15,10 @@ import (
 	"net/http"
 	"path/filepath"
 
+	webview "github.com/webview/webview_go"
+
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/util"
-
-	"github.com/webview/webview"
 )
 
 var Builtins_webview = map[string]*env.Builtin{
