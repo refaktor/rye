@@ -1,0 +1,252 @@
+
+section "Type conversion and checking"
+"Functions that convert between Rye value types."
+{
+	group "to-word"
+	mold\nowrap ?to-word
+	{ { string word } }
+	{
+		equal { to-word "test" } 'test
+		equal { to-word 'test } 'test
+	}
+	group "to-integer"
+	mold\nowrap ?to-integer
+	{ { string number } }
+	{
+		equal { to-integer "123" } 123
+	}
+
+	group "to-string"
+	mold\nowrap ?to-string
+	{ { string word number } }
+	{
+		equal { to-string 123 } "123"
+		equal { to-string 'word } "word"
+	}
+
+	group "to-uri"
+	mold\nowrap ?to-uri
+	{ { string } }
+	{
+		equal { to-uri "https://example.com" } https://example.com
+	}
+
+	group "to-file"
+	mold\nowrap ?to-file
+	{ { string } }
+	{
+		equal { to-file "file.txt" } %file.txt
+	}
+
+	group "to-context"
+	mold\nowrap ?to-context
+	{ { string } }
+	{
+		equal { cc: to-context dict { "name" "Jim" } , cc/name } "Jim"
+	}
+
+	group "is-integer"
+	mold\nowrap ?is-integer
+	{ { object } }
+	{
+		equal { is-integer 123 } 1
+		equal { is-integer "ABC" } 0
+	}
+
+	group "is-decimal"
+	mold\nowrap ?is-decimal
+	{ { object } }
+	{
+		equal { is-decimal 123.456 } 1
+		equal { is-decimal 123 } 0
+		equal { is-decimal "ABC" } 0
+	}
+
+	group "is-number"
+	mold\nowrap ?is-number
+	{ { object } }
+	{
+		equal { is-number 123 } 1
+		equal { is-number 123.456 } 1
+		equal { is-number "ABC" } 0
+	}
+
+	group "is-string"
+	mold\nowrap ?is-string
+	{ { object } }
+	{
+		equal { is-string "ABC" } 1
+		equal { is-string 123 } 0
+		equal { is-string %file.txt } 0
+		equal { is-string test@gmail.com } 0
+	}
+
+	group "type?"
+	mold\nowrap ?type?
+	{ { object } }
+	{
+		equal { type? "ABC" } 'string
+		equal { type? 123 } 'integer
+		; TODO -- add for other types
+	}
+}
+
+
+section "Failure handling functions"
+"Functions for handling and working with Context."
+{	
+	
+	group "fail"
+	mold\nowrap ?fail
+	{ }
+	{
+		equal { fail 404 |disarm |code? } 404
+		equal { fail "message" |disarm |mold } "Error: message "
+		equal { fail { 501 "auth error" } |disarm |mold } "Error(501): auth error "
+	}
+
+	group "failure"
+	mold\nowrap ?failure
+	{ }
+	{
+		equal { failure 403 |type? } 'error ; todo --- should be failure?
+	}
+	group "code?"
+	mold\nowrap ?fail
+	{ }
+	{
+		equal { failure 403 |code? } 403
+	}
+
+	group "disarm"
+	mold\nowrap ?fail
+	{ }
+	{
+		equal { failure 403 |disarm  } failure 403
+	}
+
+	group "failed?"
+	mold\nowrap ?fail
+	{ }
+	{
+		equal { fail 403 |failed? } 1
+	}
+
+	group "check"
+	mold\nowrap ?fail
+	{ }
+	{
+		equal { 1 / 0 |check 501 |code? } 501
+	}
+
+	group "fix"
+	mold\nowrap ?fail
+	{ }
+	{
+		equal { 100 / 0 |fix { 99 } |+ 1 } 100
+		equal { 100 / 1 |fix { 99 } |+ 1 } 101
+	}
+
+	group "assert-equal"
+	mold\nowrap ?assert-equal
+	{ }
+	{
+		equal { assert-equal 10 10 } 1
+		equal { assert-equal 10 20 |disarm |type? } 'error 
+	}
+
+}
+
+section "Code flow combinators"
+"Program flow control functions"
+{	
+	
+	group "pass"
+	mold\nowrap ?pass
+	{ { object } { block } }
+	{
+		equal { "xxx" .pass { + "yyy" :xy } } "xxx"
+	}
+	group "keep"
+	mold\nowrap ?keep
+	{ { object } { block } }
+	{
+		equal { 10 .keep { + 1 } { * 10 } } 11
+	}
+	group "wrap"
+	mold\nowrap ?wrap
+	{ { object } { block } }
+	{
+		; equal { wrap { 1 + 1 } { 10 + 20 } } 30
+	}
+}
+
+
+
+
+section "Functions that change values in-place"
+""
+{
+
+	group "inc!"
+	mold\nowrap ?inc!
+	{ { word } }
+	{
+		equal { a: 100 , inc! 'a } 101 
+		equal { a: 100 , inc! 'a , a } 101 
+	}
+
+	group "change!"
+	mold\nowrap ?change!
+	{ { any } { word } }
+	{
+		equal { a: 1 change! 2 'a } 1
+		equal { a: 2 change! 2 'a } 0
+	}
+
+	comment "Functions that change values in-place are used more rarely in Rye and have ! at the end."
+	
+	group "remove-last!"
+	mold\nowrap ?remove-last!
+	{ { word } }
+	{
+		equal { b: { 1 2 3 } , remove-last! 'b , b } { 1 2 }
+	}
+	
+	group "append!"
+	mold\nowrap ?append!
+	{ { word } { object } }
+	{
+		equal { b: { 1 2 3 } , append! 4 'b , b } { 1 2 3 4 }
+		equal { b: { 1 2 3 } , append! { 4 5 } 'b , b } { 1 2 3 { 4 5 } }
+	}
+
+	group "change\ nth!"
+	mold\nowrap ?change\nth!
+	{ { word } { object } }
+	{
+		equal { b: { 1 2 3 } , change\nth! b 2 4 } { 1 4 3 }
+		equal { b: { 1 2 3 } , change\nth! b 2 { 4 5 } } { 1 { 4 5 } 3 }
+		equal { b: list { 1 2 3 } , change\nth! b 2 4 } list { 1 4 3 }
+		equal { b: list { 1 2 3 } , change\nth! b 2 list { 4 5 } } list vals { 1 list { 4 5 } 3 }
+		equal { try { b: { 1 2 3 } , change\nth! b 4 0 } |type? } 'error
+		equal { try { b: list { 1 2 3 } , change\nth! b 4 0 } |type? } 'error
+	}
+	
+
+	group "sort!"
+	mold\nowrap ?append!
+	{ { word } { object } }
+	{
+		equal { b: { 4 1 7 2 } , sort! b , b } { 1 2 4 7 } ; TOTHINK -- should it accept tagword or block directly?
+	}
+	group "reverse!"
+	mold\nowrap ?append!
+	{ { word } { object } }
+	{
+		; equal { b: { 4 1 7 2 } , reverse! b , b } { 2 7 1 4 } ; TOTHINK -- should it accept tagword or block directly?
+	}
+
+}
+
+;	TODO	equal { list { 3 4 5 6 } |map { .factor-of 3 } } list { 1 0 0 1 } 

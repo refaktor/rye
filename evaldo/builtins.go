@@ -444,6 +444,39 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"types?": { // TODO
+		Argsn: 1,
+		Doc:   "Returns the types of Rye values in a block or spreadsheet row as a block of words.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch list := arg0.(type) {
+			case env.Block:
+				l := list.Series.Len()
+				newl := make([]env.Object, l)
+				for i := 0; i < l; i++ {
+					newl[i] = *env.NewWord(int(list.Series.S[i].Type()))
+				}
+				return *env.NewBlock(*env.NewTSeries(newl))
+			case env.Spreadsheet:
+				l := len(list.Rows[0].Values)
+				newl := make([]env.Object, l)
+				for i := 0; i < l; i++ {
+					newl[i] = *env.NewWord(int(env.ToRyeValue(list.Rows[0].Values[i]).Type()))
+				}
+				return *env.NewBlock(*env.NewTSeries(newl))
+			case env.SpreadsheetRow:
+				l := len(list.Values)
+				newl := make([]env.Object, l)
+				for i := 0; i < l; i++ {
+					newl[i] = *env.NewWord(int(env.ToRyeValue(list.Values[i]).Type()))
+				}
+				return *env.NewBlock(*env.NewTSeries(newl))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.SpreadsheetType, env.SpreadsheetRowType}, "types?")
+			}
+		},
+	},
+
 	// NUMBERS
 
 	"inc": { // ***

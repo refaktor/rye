@@ -63,7 +63,7 @@ generate-menu: fn { menu } {
 
 generate-doc-file: fn { filename menu } {
 	join {
-		%tpl/header.html .read .replace "{{title}}" filename |replace "{{menu}}" generate-menu menu
+		%tpl/header.html .read .replace "{{title}}" capitalize filename |replace "{{menu}}" generate-menu menu
 		capture-stdout { do-in docs-framework load to-file filename + ".rye" }
 		read %tpl/footer.html
 	} |write* to-file filename + ".html"
@@ -76,6 +76,8 @@ switch arg {
 	"doc"  {
 		generate-doc-file "basics" menu
 		generate-doc-file "structures" menu
+ 		generate-doc-file "validation" menu
+		generate-doc-file "misc" menu
 	}
 	_ { print "use test or doc command" }
 } 

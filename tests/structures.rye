@@ -1,0 +1,539 @@
+
+
+section "Working with blocks and lists"
+"Functions that mostly work with collections (blocks / lists)."
+{	
+	
+	group "range"
+	mold\nowrap ?range
+	{ { integer } { integer } }
+	{
+		equal { range 1 5 } { 1 2 3 4 5 }
+	}
+	
+	group "first"
+	mold\nowrap ?first
+	{ { block } }
+	{
+		equal { first { 1 2 3 4 5 } } 1
+		equal { first list { 1 2 3 4 5 } } 1
+		equal { first "12345" } "1"
+		equal { try { first { } } |type? } 'error
+		equal { try { first list { } } |type? } 'error
+		equal { try { first "" } |type? } 'error
+	}
+
+	group "rest"
+	mold\nowrap ?rest
+	{ { block } }
+	{
+		equal { rest { 1 2 3 4 5 } } { 2 3 4 5 }
+		equal { rest list { 1 2 3 4 5 } } list { 2 3 4 5 }
+		equal { rest "12345" } "2345"
+		equal { try { rest { } } |type? } 'error
+		equal { try { rest list { } } |type? } 'error
+		equal { try { rest "" } |type? } 'error
+	}
+
+	group "rest\from"
+	mold\nowrap ?rest\from
+	{ { block } { integer } }
+	{
+		equal { rest\from { 1 2 3 4 5 } 2 } { 3 4 5 }
+		equal { rest\from list { 1 2 3 4 5 } 2 } list { 3 4 5 }
+		equal { rest\from "12345" 2 } "345"
+		equal { try { rest\from { } } |type? } 'error
+		equal { try { rest\from list { } } |type? } 'error
+		equal { try { rest\from "" } |type? } 'error
+	}
+
+	group "second"
+	mold\nowrap ?second
+	{ { block } }
+	{
+		equal { second { 1 2 3 4 5 } } 2
+		equal { second list { 1 2 3 4 5 } } 2
+		equal { second "12345" } "2"
+		equal { try { second { } } |type? } 'error
+		equal { try { second list { } } |type? } 'error
+		equal { try { second "" } |type? } 'error
+	}
+
+	group "third"
+	mold\nowrap ?third
+	{ { block } }
+	{
+		equal { third { 1 2 3 4 5 } } 3
+		equal { third list { 1 2 3 4 5 } } 3
+		equal { third "12345" } "3"
+		equal { try { third { } } |type? } 'error
+		equal { try { third list { } } |type? } 'error
+		equal { try { third "" } |type? } 'error
+	}
+
+	group "nth"
+	mold\nowrap ?nth
+	{ { block } }
+	{
+		equal { nth { 1 2 3 4 5 } 4 } 4
+		equal { nth list { 1 2 3 4 5 } 4 } 4
+		equal { nth "12345" 4 } "4"
+		equal { try { nth { } } |type? } 'error
+		equal { try { nth list { } } |type? } 'error
+		equal { try { nth "" } |type? } 'error
+	}
+
+	group "->"
+	mold\nowrap ?_->
+	{ { string  } }
+	{
+		equal { { 11 22 33 } -> 1 } 22
+		equal { list { 11 22 33 } -> 1 } 22
+		equal { dict { "a" 11 "b" 22 "c" 33 } -> "b" } 22
+	}
+
+	group "<-"
+	mold\nowrap ?_<-
+	{ { string  } }
+	{
+		equal { 2 <- { 11 22 33 } } 33
+		equal { 2 <- list { 11 22 33 } } 33
+		equal { "c" <- dict { "a" 11 "b" 22 "c" 33 } } 33
+	}
+
+	
+	group "last"
+	mold\nowrap ?last
+	{ { block } }
+	{
+		equal { last { 1 2 3 4 5 } } 5
+		equal { last list { 1 2 3 4 5 } } 5
+		equal { last "12345" } "5"
+		equal { try { last { } } |type? } 'error
+		equal { try { last list { } } |type? } 'error
+		equal { try { last "" } |type? } 'error
+	}
+	
+	group "head"
+	mold\nowrap ?head
+	{ { block } { integer } }
+	{
+		equal { head { 1 2 3 4 5 } 2 } { 1 2 }
+		equal { head { 1 2 3 4 5 } 10 } { 1 2 3 4 5 }
+		equal { head { } 2 } { }
+		equal { head list { 1 2 3 4 5 } 2 } list { 1 2 }
+		equal { head list { 1 2 3 4 5 } 10 } list { 1 2 3 4 5 }
+		equal { head list { } 2 } list { }
+		equal { head "12345" 2 } "12"
+		equal { head "12345" 10 } "12345"
+		equal { head "" 2 } ""
+	}
+
+	
+	group "tail"
+	mold\nowrap ?tail
+	{ { block } { integer } }
+	{
+		equal { tail { 1 2 3 4 5 } 2 } { 4 5 }
+		equal { tail { 1 2 3 4 5 } 10 } { 1 2 3 4 5 }
+		equal { tail {  } 2 } { }
+		equal { tail list { 1 2 3 4 5 } 2 } list { 4 5 }
+		equal { tail list { 1 2 3 4 5 } 10 } list { 1 2 3 4 5 }
+		equal { tail list {  } 2 } list { }
+		equal { tail "12345" 2 } "45"
+		equal { tail "12345" 10 } "12345"
+		equal { tail "" 2 } ""
+	}
+
+	group "length?"
+	mold\nowrap ?length?
+	{ { block string list } }
+	{
+		equal { length? "1234567" } 7
+		equal { { 1 2 3 4 5 } .length? } 5
+		equal { list { 1 2 3 } |length? } 3
+	}
+	
+	group "list"
+	mold\nowrap ?list
+	{ { block } }
+	{
+		equal { list { "a" 1 "b" 2 } |type? } 'list
+	}
+
+  	group "dict"
+	mold\nowrap ?dict
+	{ { block } }
+	{
+		equal { dict { "a" 1 "b" 2 } |type? } 'dict
+	}
+
+  	group "min"
+	mold\nowrap ?dict
+	{ { block } }
+	{
+		equal { min { 8 2 10 6 } } 2
+		equal { min list { 8 2 10 6 } } 2
+		equal { try { min { } } |type? } 'error
+		equal { try { min list { } } |type? } 'error
+	}
+  	group "max"
+	mold\nowrap ?dict
+	{ { block } }
+	{
+		equal { max { 8 2 10 6 } } 10
+		equal { max list { 8 2 10 6 } } 10
+		equal { try { max { } } |type? } 'error
+		equal { try { max list { } } |type? } 'error
+	}
+  	group "avg"
+	mold\nowrap ?dict
+	{ { block } }
+	{
+		equal { avg { 8 2 10 6 } } 6.5
+		equal { avg list { 8 2 10 6 } } 6.5
+		equal { try { avg { } } |type? } 'error
+		equal { try { avg list { } } |type? } 'error
+	}
+  	group "sum"
+	mold\nowrap ?sum
+	{ { block } }
+	{
+		equal { sum { 8 2 10 6 } } 26
+		equal { sum { 8 2 10 6.5 } } 26.5
+		equal { sum { } } 0
+		equal { sum list { 8 2 10 6 } } 26
+		equal { sum list { 8 2 10 6.5 } } 26.5
+		equal { sum list { } } 0
+	}
+  	group "union"
+	mold\nowrap ?union
+	{ { block } }
+	{
+		equal { union { 8 2 } { 1 9 } |length? } 4 ; sortorder isn't deterministic so far ... think if it should be
+		equal { union { } { 1 9 } |length? }  2
+		equal { union { } { } } { }
+	}
+  	group "intersection"
+	mold\nowrap ?intersection
+	{ { block } }
+	{
+		equal { intersection { 1 3 5 6 } { 2 3 4 5 } } { 3 5 }
+		equal { intersection { } { 2 3 4  } } { }
+		equal { intersection { } { } } { }
+	}
+	group "unique"
+	mold\nowrap ?append!
+	{ { word } { object } }
+	{
+		equal { { 3 2 3 5 3 2 } .list .unique .length? } 3  ; result order is not deterministic list { 3 2 5 }
+	}
+
+}
+
+
+$ section "Context functions"
+"Functions that mostly work with blocks."
+{
+	group "doc"
+	mold\nowrap ?doc
+	{ { string  } }
+	{
+		; TODO
+	}
+
+	group "doc?"
+	mold\nowrap ?doc?
+	{ { } }
+	{
+		; TODO
+	}
+
+} $
+
+
+
+
+
+section "Higher order like functions"
+"Functions for usual HOF patterns, map, reduce, filter."
+{	
+
+	group "map"
+	mold\nowrap ?map
+	{ { block } { block } }
+	{
+		equal { map { 1 2 3 } { + 1 } } { 2 3 4 }
+		equal { map { } { + 1 } } { }
+		equal { map { "aaa" "bb" "c" } { .length? } } { 3 2 1 }
+		equal { map list { "aaa" "bb" "c" } { .length? } } list { 3 2 1 }
+		equal { map list { 3 4 5 6 } { .factor-of 3 } } list { 1 0 0 1 }
+		equal { map list { } { + 1 } } list { }
+		; equal { map "abc" { + "-" } .join } "a-b-c-" ; TODO doesn't work, fix join
+		equal { map "123" { .to-integer } } { 1 2 3 }
+		equal { map "123" ?to-integer } { 1 2 3 }
+		equal { map "" { + "-" } } { }
+	}	
+	group "map\pos"
+	mold\nowrap ?map\pos
+	{ { block } { block } }
+	{
+		equal { map\pos { 1 2 3 } 'i { + i } } { 2 4 6 }
+		equal { map\pos { } 'i { + i } } { }
+		equal { map\pos list { 1 2 3 } 'i { + i } } list { 2 4 6 }
+		equal { map\pos list { } 'i { + i } } list { }
+		equal { map\pos "abc" 'i { + i } } { "a1" "b2" "c3" }
+		equal { map\pos "" 'i { + i } } { }
+	}	
+	group "filter"
+	mold\nowrap ?filter
+	{ { block } { block } }
+	{
+		equal { filter { 1 2 3 4 } { .even } } { 2 4 }
+		equal { filter { 1 2 3 4 } ?even } { 2 4 }
+		equal { filter { } { .even } } { }
+		equal { filter list { 1 2 3 4 } { .even } } list { 2 4 }
+		equal { filter list { 1 2 3 4 } ?even } list { 2 4 }
+		equal { filter list { } { .even } } list { }
+		equal { filter "1234" { .to-integer .even } } { "2" "4" }
+		equal { filter "01234" ?to-integer } { "1" "2" "3" "4" }
+		equal { filter "" { .to-integer .even } } { }
+
+	}	
+	group "seek"
+	mold\nowrap ?seek
+	{ { block } { block } }
+	{
+		equal { seek { 1 2 3 4 } { .even } } 2	
+		equal { seek list { 1 2 3 4 } { .even } } 2
+		equal { seek "1234" { .to-integer .even } } "2"
+		equal { try { seek { 1 2 3 4 } { > 5 } } |type? } 'error
+		equal { try { seek list { 1 2 3 4 } { > 5 } } |type? } 'error
+		equal { try { seek "1234" { .to-integer > 5 } } |type? } 'error
+	}	
+	group "purge"
+	mold\nowrap ?purge
+	{ { block } { block } }
+	{
+		equal { purge { 1 2 3 } { .even } } { 1 3 }
+		equal { purge { } { .even } } { }
+		equal { purge list { 1 2 3 } { .even } } list { 1 3 }
+		equal { purge list { } { .even } } list { }
+		equal { purge "1234" { .to-integer .even } } { "1" "3" }
+		equal { purge "" { .to-integer .even } } { }
+	}	
+	group "reduce"
+	mold\nowrap ?reduce
+	{ { block } { block } }
+	{
+		equal { reduce { 1 2 3 } 'acc { + acc } } 6
+		equal { reduce list { 1 2 3 } 'acc { + acc } } 6
+		equal { reduce "abc" 'acc { + acc } } "cba"
+		equal { try { reduce { } 'acc { + acc } } |type? } 'error
+		equal { try { reduce list { } 'acc { + acc } } |type? } 'error
+		equal { try { reduce "" 'acc { + acc } } |type? } 'error
+	}	
+	group "fold"
+	mold\nowrap ?fold
+	{ { block } { block } }
+	{
+		equal { fold { 1 2 3 } 'acc 1 { + acc } } 7
+		equal { fold { } 'acc 1 { + acc } } 1
+		equal { fold list { 1 2 3 } 'acc 1 { + acc } } 7
+		equal { fold list { } 'acc 1 { + acc } } 1
+		equal { fold "abc" 'acc "123" { + acc } } "cba123"
+		equal { fold "" 'acc "123" { + acc } } "123"
+	}	
+	group "partition"
+	mold\nowrap ?partition
+	{ { block } { block } }
+	{
+		equal { partition { 1 2 3 4 } { > 2 } } { { 1 2 } { 3 4 } }
+		equal { partition { "a" "b" 1 "c" "d" } { .is-integer } } { { "a" "b" } { 1 } { "c" "d" } }
+		equal { partition { "a" "b" 1 "c" "d" } ?is-integer } { { "a" "b" } { 1 } { "c" "d" } }
+		equal { partition { } { > 2 } } { { } }
+		equal { partition list { 1 2 3 4 } { > 2 } } list vals { list { 1 2 } list { 3 4 } }
+		equal { partition list { "a" "b" 1 "c" "d" } ?is-integer } list vals { list { "a" "b" } list { 1 } list { "c" "d" } }
+		equal { partition list { } { > 2 } } list vals { list { } }
+		equal { partition "aaabbccc" { , } } list { "aaa" "bb" "ccc" }
+		equal { partition "" { , } } list { "" }
+		equal { partition "aaabbccc" ?is-string } list { "aaabbccc" }
+	}	
+	group "group"
+	mold\nowrap ?group
+	{ { block } { block } }
+	; TODO-FIX these tests sometimes fail although the printed results look identical, could be something in the comparison function (dict key ordering maybe?)
+	{
+		; Equality for dicts doesn't yet work consistently
+		;equal { { "Anne" "Mitch" "Anya" } .group { .first } } dict vals { "A" list { "Anne" "Anya" } "M" list { "Mitch" } }
+		;equal { { "Anne" "Mitch" "Anya" } .group ?first } dict vals { "A" list { "Anne" "Anya" } "M" list { "Mitch" } }
+		;equal { { } .group { .first } } dict vals { }
+		;equal { { "Anne" "Mitch" "Anya" } .list .group { .first } } dict vals { "A" list { "Anne" "Anya" } "M" list { "Mitch" } }
+		;equal { { "Anne" "Mitch" "Anya" } .list .group ?first } dict vals { "A" list { "Anne" "Anya" } "M" list { "Mitch" } }
+		equal { { } .list .group { .first } } dict vals { }
+		equal { try { { 1 2 3 4 } .group { .even } } |type? } 'error ; TODO keys can only be string currently
+	}	
+	group "produce"
+	mold\nowrap ?produce
+	{ { block } { block } }
+	{
+		equal { produce 5 0 { + 3 } } 15
+	}	
+	group "sum-up"
+	mold\nowrap ?sum-up
+	{ { block } { block } }
+	{
+		equal { sum-up { 1 2 3 } { * 10 } } 60
+		equal { sum-up { 1 2 3 } { * 2.5 } } 15.0
+		equal { sum-up { 1 2.5 3.5 } { * 10 } } 70.0
+		equal { sum-up { "1" "2" "3" } ?to-integer } 6
+		equal { sum-up { } { * 10 } } 0
+		equal { sum-up list { 1 2 3 } { * 10 } } 60
+		equal { sum-up list { 1 2.5 3.5 } { * 10 } } 70.0
+		equal { sum-up list { "1" "2" "3" } ?to-integer } 6
+		equal { sum-up list { } { * 10 } } 0
+	}	
+}
+
+section "Context related functions"
+"Functions for handling and working with Context."
+{	
+	
+	group "current-ctx"
+	mold\nowrap ?current-ctx
+	{ }
+	{
+		equal { current-ctx |type? } 'ctx ; TODO should probably rename to context 
+	}	
+
+	group "parent-ctx"
+	mold\nowrap ?parent-ctx
+	{ }
+	{
+		equal { cc: context { f: does { parent-ctx |type? } } , cc/f } 'ctx
+	}	
+
+	; TODO -- make something that clears color formatting or solve it some other way
+	;	group "ls"
+	;	mold\nowrap ?ls
+	;	{ }
+	;	{
+	;		example { cc: context { x: 123 , ls } } 'ctx
+	;	}	
+
+	group "context"
+	mold\nowrap ?context
+	{ { block } }
+	{
+		equal { context { x: does { 1 + 1 } } :cc , cc/x } 2
+	}	
+
+	group "isolate"
+	mold\nowrap ?isolate
+	{ { block } }
+	{
+		equal { isolate { x: does { 1 + 1 } } :cc , try { cc/x } |type? } 'error
+	}	
+
+	group "raw-context"
+	mold\nowrap ?raw-context
+	{ { block } }
+	{
+		equal { cc: raw-context { name: "Jim" } |type? } 'ctx
+	}	
+
+	group "private"
+	mold\nowrap ?private
+	{ { block } }
+	{
+		equal { private { x: 3 , x + 30 } :x } 33 
+	}	
+
+	group "extend"
+	mold\nowrap ?extend
+	{ { block } }
+	{
+		equal { c1: context { x: 1 } , c2: extend c1 { y: 2 } , c2/x } 1
+	}	
+
+	group "bind"
+	mold\nowrap ?bind
+	{ { block } }
+	{
+		equal { isolate { x: does { 1 + 1 } } |bind current-ctx :cc , cc/x } 2
+	}	
+
+	group "unbind"
+	mold\nowrap ?unbind
+	{ { block } }
+	{
+		equal { context { x: does { 1 + 1 } } |unbind :cc , try { cc/x } |type? } 'error
+	}	
+
+}
+
+
+section "Serializers and loaders"
+"Functions that print values to stdio"
+{
+	group "mold"
+	mold\nowrap ?mold
+	{ { function } }
+	{
+		equal { mold 33 } "33"
+	}
+	group "mold\unwrap"
+	mold\nowrap ?mold\nowrap
+	{ { function } }
+	{
+		equal { mold\nowrap "33" } $"33"$
+	}
+	group "capture-stdout"
+	mold\nowrap ?capture-stdout
+	{ { block } }
+	{
+		equal { capture-stdout { "out" .print , "not this" } } "out" + newline
+	}
+
+	group "dump"
+	mold\nowrap ?dump
+	{ { any } { word } }
+	{
+		equal { fn { x } { x + 1 } |dump } { fn { x } { x ._+ 1 } } 
+	}
+
+	group "doc\of?"
+	mold\nowrap ?doc\of?
+	{ { function } }
+	{
+		equal { fn { x "docstring" } { x + 1 } |doc\of? } "docstring"
+	}
+
+	group "load"
+	mold\nowrap ?load
+	{ { block } }
+	{
+		equal { load "1 2 3" |type? } 'block
+		equal { load "1 2 3" |length? } 3
+		equal { load "1 2 { print 4 }" |third |length? } 2
+		equal { load "1 2 { print 4 }" |third |first |type? } 'word
+	}
+
+
+}
+
+
+
+section "Spreadsheet related functions"
+"Functions for handling and working with Context."
+{	
+	
+	group "spreadsheet"
+	mold\nowrap ?spreadsheet
+	{ }
+	{
+;		equal { spreadsheet { 'id 'name 'score } } 'ctx ; TODO should probably rename to context 
+	}
+	
+}
+

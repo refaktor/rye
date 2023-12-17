@@ -1,177 +1,183 @@
-      body {
-	  font-family: Roboto;
-	  background-color: whitesmoke;
-	  padding: 20px;
-	  font-size: 15px;
-      }
-      main {
-	  __border: 1px solid #f1f1f1;
-	  width: 740px;
-	  margin: auto;
-      }
-      a {
-	  color: #1e7fa6;
-	  text-decoration: none;
-	      font-weight: normal;
-      }
+body {
+    font-family: Roboto;
+    background-color: whitesmoke;
+    padding: 20px;
+    font-size: 15px;
+}
+main {
+    __border: 1px solid #f1f1f1;
+    width: 740px;
+    margin: auto;
+}
+a {
+    color: #1e7fa6;
+    text-decoration: none;
+    font-weight: normal;
+}
 
-      h1, h2, h3 {
-	  color: #353535;
-      }
-      h2 {
-	  padding-top: 30px;
-      }
-      h3 {
-	  padding-top: 20px;
-      }
-      textarea {
-	      width: 320px;
-	      box-model: content;
-	      padding: 10px;
-	      border: 0px solid red;
-	  }
-	  div#info pre {
-	      width: 80%;
-	      padding: 5px;
-	  }
-	  div#info pre.inl {
-	      display: inline;
-	  }
-	  pre {
-	      __border: 1px solid green;
-	      width: 420px;
-	      background-color: #c7fbf4;
-	      padding: 10px;
-	      box-model: content;
-	      font-size: 13px;
-	  }
-	  #header {
-	      padding: 10px 20px;
-	      background-color: #aeffff;
-	      margin-bottom: 10px;
-	      __box-shadow: 2px 2px 4px 0px #cacaca;
-	      color: #595856;
-	      border-radius: 5px;
-	  }
-	  #info {
-	      float: left;
-	      width: 350px;
-	      padding: 10px;
-	  }
-	  #solution {
-	      float: left;
-	      width: 350px;
-	      padding: 10px;
-	      color: #556a62;
-	  }
-	  #code, .code_s {
-	      font-family: mono;
-	      font-size: 13px;
-	      border: 1px solid #c6c6c6;
-	      width: 340px;
-	      background-color: #f1f1f1;
-	  }
-	  #code_static1, #code_static2, .code_s {
-	      padding: 10px;
-	  }
-	  .cloud > div > img {
-	      width: 22px;
-	      vertical-align: bottom;
-	  }
-	  .cloud {
-	      margin: 0 0 10px 0;
-	      border-radius: 24px;
-	      padding: 15px;
-	      min-height: 45px;
-	      position: relative;
-	      color: #333;
-	  }
-	  .cloud > div {
-	      float: right;
-	      position: absolute;
-	      right: 15px;
-	      bottom: 12px;
-	  }
-	  .sample {
-	      background-color: #f1f1f1;
-	  }
-	  .task {
-	      background-color: #f1f1f1;
-	  }
-	  #intro {
-	      display: block;
-	      border: 1px solid #c1d5db;
-	      padding: 10px 20px 60px 20px;
-	      box-shadow: turquoise 1px 1px 10px;
-	  }
-	  #intro h3 {
-	      font-family: 'Londrina Solid', sans-serif;
-	      font-size: 22px;
-	      color: #3e1764;
-	      margin-bottom: 40px;
-	  }
-	  #intro p {
-	      margin-bottom: 25px;
-	  }
-	  #intro p.note {
-	      background-color: #dfffce;
-	      padding: 10px;
-	      color: #4f8c12;
-	      border-radius: 7px;
-	  }
-	  button {
-	      padding: 3px 6px 2px 6px;
-	      font-size: 13px;
-	      cursor: pointer;
-	      border: none;
-	      border-radius: 15px;
-	      __background-color: yellowgreen;
-	  }
-	  button.nav {
-	      border: none;
-	      background-color: transparent;
-	  }
-	  button.nav:disabled {
-	      opacity: 0.3;
-	  }
-	  #menu-holder {
-	      width: 340px;
-	      background-color: #eee;
-	      top: 60px;
-	      left: 850px;
-	      position: absolute;
-	      padding: 20px;
-	  }
-	  #menu-holder a {
-	      color: #353535;
-	      text-decoration: none;
-	      font-weight: bold;
-	  }
-	  #menu-holder ul {
-	      list-style: none;
-	      padding-left: 20px;
-	  }
-	  #menu-holder li {
-	      __margin-left: 20px;
-	  }
-	  #menu-holder li ul {
-	      padding-left: 10px;
-	  }
-	  #menu-holder li li {
-	      display: inline-block;
-	      padding: 5px 7px;
-	  }
-	  #menu-holder li li a {
-	      color: #1e7fa6;
-	      text-decoration: none;
-	      font-weight: normal;
-	  }
-	  div.group {
-	      width: 435px;
-	      background-color: #312f2f;
-	      padding: 2px;
-	  }
-	  div.group pre.prettyprint {
-	      border: none;
-	      padding: 6px;
-	  }
+h1, h2, h3 {
+    color: #353535;
+}
+h2 {
+    padding-top: 30px;
+}
+h3 {
+    padding-top: 20px;
+}
+textarea {
+    width: 320px;
+    box-model: content;
+    padding: 10px;
+    border: 0px solid red;
+}
+div#info pre {
+    width: 80%;
+    padding: 5px;
+}
+div#info pre.inl {
+    display: inline;
+}
+pre {
+    __border: 1px solid green;
+    width: 420px;
+    background-color: #c7fbf4;
+    padding: 10px;
+    box-model: content;
+    font-size: 13px;
+}
+#header {
+    padding: 10px 20px;
+    background-color: #aeffff;
+    margin-bottom: 10px;
+    __box-shadow: 2px 2px 4px 0px #cacaca;
+    color: #595856;
+    border-radius: 5px;
+}
+#info {
+    float: left;
+    width: 350px;
+    padding: 10px;
+}
+#solution {
+    float: left;
+    width: 350px;
+    padding: 10px;
+    color: #556a62;
+}
+#code, .code_s {
+    font-family: mono;
+    font-size: 13px;
+    border: 1px solid #c6c6c6;
+    width: 340px;
+    background-color: #f1f1f1;
+}
+#code_static1, #code_static2, .code_s {
+    padding: 10px;
+}
+.cloud > div > img {
+    width: 22px;
+    vertical-align: bottom;
+}
+.cloud {
+    margin: 0 0 10px 0;
+    border-radius: 24px;
+    padding: 15px;
+    min-height: 45px;
+    position: relative;
+    color: #333;
+}
+.cloud > div {
+    float: right;
+    position: absolute;
+    right: 15px;
+    bottom: 12px;
+}
+.sample {
+    background-color: #f1f1f1;
+}
+.task {
+    background-color: #f1f1f1;
+}
+#intro {
+    display: block;
+    border: 1px solid #c1d5db;
+    padding: 10px 20px 60px 20px;
+    box-shadow: turquoise 1px 1px 10px;
+}
+#intro h3 {
+    font-family: 'Londrina Solid', sans-serif;
+    font-size: 22px;
+    color: #3e1764;
+    margin-bottom: 40px;
+}
+#intro p {
+    margin-bottom: 25px;
+}
+#intro p.note {
+    background-color: #dfffce;
+    padding: 10px;
+    color: #4f8c12;
+    border-radius: 7px;
+}
+button {
+    padding: 3px 6px 2px 6px;
+    font-size: 13px;
+    cursor: pointer;
+    border: none;
+    border-radius: 15px;
+    __background-color: yellowgreen;
+}
+button.nav {
+    border: none;
+    background-color: transparent;
+}
+button.nav:disabled {
+    opacity: 0.3;
+}
+#menu-holder {
+    width: 340px;
+    background-color: #eee;
+    top: 142px;
+    left: 850px;
+    position: absolute;
+    padding: 20px;
+}
+#menu-holder a {
+    color: #353535;
+    text-decoration: none;
+    font-weight: bold;
+}
+#menu-holder ul {
+    list-style: none;
+    padding-left: 20px;
+}
+#menu-holder li {
+    __margin-left: 20px;
+}
+#menu-holder li ul {
+    padding-left: 10px;
+}
+#menu-holder li li {
+    display: inline-block;
+    padding: 5px 7px;
+}
+#menu-holder li li a {
+    color: #1e7fa6;
+    text-decoration: none;
+    font-weight: normal;
+}
+div.group {
+    width: 435px;
+    background-color: #312f2f;
+    padding: 2px;
+}
+div.group pre.prettyprint {
+    border: none;
+    padding: 6px;
+}
+.menumenu {
+    border: 1px #accbe8 solid;
+    width: 1176px;
+    padding: 14px;
+    background-color: aliceblue;
+}

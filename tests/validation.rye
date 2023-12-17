@@ -1,0 +1,40 @@
+
+section "Validation dialect"
+"Functions that convert between Rye value types."
+{
+	group "validate"
+	mold\nowrap ?to-word
+	{ { string word } }
+	{
+		equal { { "a" "1" } .dict .validate { a: required } } dict { "a" "1" }
+		equal { { "a" "1" } .dict .validate { a: required integer } } dict { "a" 1 }
+		equal { { "a" "1" } .dict .validate { b: required } |disarm |type? } 'error
+		equal { { "a" "1" } .dict .validate { b: optional "B" } } dict { "b" "B" }
+	}
+}
+
+
+section "Regular expressions"
+"Functions for handling and working with Context."
+{	
+	
+	group "regexp"
+	mold\nowrap ?fail
+	{ }
+	{
+		equal { regexp "[0-9]" |type? } 'native
+	}
+
+	group "match"
+	mold\nowrap ?failure
+	{ }
+	{
+		equal { regexp "[0-9]" |matches "5" } 1
+		equal { regexp "[0-9]" |matches "a" } 0
+	}
+
+}
+
+
+end
+	
