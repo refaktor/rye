@@ -1,6 +1,6 @@
 body {
     font-family: Roboto;
-    background-color: whitesmoke;
+    background-color: white;
     padding: 20px;
     font-size: 15px;
 }
@@ -17,6 +17,7 @@ a {
 
 h1, h2, h3 {
     color: #353535;
+    padding-top: 29px;
 }
 h2 {
     padding-top: 30px;
@@ -128,11 +129,12 @@ button.nav:disabled {
 }
 #menu-holder {
     width: 340px;
-    background-color: #eee;
-    top: 142px;
+    /*! background-color: #fdfdfd; */
+    top: 160px;
     left: 850px;
     position: absolute;
     padding: 20px;
+    border-left: 4px solid #e1e1e1;
 }
 #menu-holder a {
     color: #353535;
@@ -143,15 +145,15 @@ button.nav:disabled {
     list-style: none;
     padding-left: 20px;
 }
-#menu-holder li {
-    __margin-left: 20px;
+#menu-holder > ul > li {
+    margin-top: 4px;
 }
 #menu-holder li ul {
-    padding-left: 10px;
+    padding-left: 0px;
 }
 #menu-holder li li {
     display: inline-block;
-    padding: 5px 7px;
+    padding: 5px 13px 5px 2px;
 }
 #menu-holder li li a {
     color: #1e7fa6;
@@ -159,26 +161,30 @@ button.nav:disabled {
     font-weight: normal;
 }
 div.group {
-    width: 535px;
-    background-color: #312f2f;
-    padding: 2px;
+    width: 465px;
+    background-color: #3e3e3e;
+    padding: 2px 15px;
+    border-radius: 10px;
 }
 pre.prettyprint {
     __border: 1px solid green;
     width: 520px;
-    background-color: #c7fbf4;
+    background-color: transparent;
     padding: 10px;
     box-model: content;
     font-size: 13px;
+    border-radius: 4px;
 }
 div.group pre.prettyprint {
     border: none;
     padding: 6px;
     white-space: pre-wrap;
+    border-radius: 10px;
 }
 .menumenu {
-    border: 1px #accbe8 solid;
+    border: 1px #cee4e8 solid;
     width: 1176px;
-    padding: 14px;
-    background-color: aliceblue;
+    padding: 22px;
+    background-color: #e7f8f9;
+    border-radius: 10px;
 }

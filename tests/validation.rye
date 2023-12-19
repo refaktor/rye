@@ -2,7 +2,7 @@
 section "Validation dialect"
 "Functions that convert between Rye value types."
 {
-	group "validate"
+	group "validate (required/optional)"
 	mold\nowrap ?to-word
 	{ { string word } }
 	{
@@ -10,6 +10,28 @@ section "Validation dialect"
 		equal { { "a" "1" } .dict .validate { a: required integer } } dict { "a" 1 }
 		equal { { "a" "1" } .dict .validate { b: required } |disarm |type? } 'error
 		equal { { "a" "1" } .dict .validate { b: optional "B" } } dict { "b" "B" }
+	}
+	group "validate (types)"
+	mold\nowrap ?to-word
+	{ { string word } }
+	{
+		equal { { "a" "1" } .dict .validate { a: required } } dict { "a" "1" }
+		equal { { "a" "1" } .dict .validate { a: required string } } dict { "a" "1" }
+		equal { { "a" "1" } .dict .validate { a: required integer } } dict { "a" 1 }
+		equal { { "a" "1.0" } .dict .validate { a: required decimal } } dict { "a" 1.0 }
+		equal { { "e" "rye@ryelang.org" } .dict .validate { e: required email } } dict { "e" "rye@ryelang.org" }
+;		equal { { "d" "01.12.2023" } .dict .validate { d: required date } } dict { "a" date "2023-12-01" }
+		equal { { } .dict .validate { b: optional "1" integer } } dict { "b" 1 }
+		equal { { } .dict .validate { b: optional "2" decimal } } dict { "b" 2.0 }
+	}
+	group "validate (calc/check)"
+	mold\nowrap ?to-word
+	{ { string word } }
+	{
+;		equal { { "a" "1" } .dict .validate { a: required integer check { = 2 } "not two" } } dict { "a" 1 }
+;		equal { { "a" "1" } .dict .validate { a: required integer check { = 2 } "not two" } } dict { "a" 1 }
+		equal { { "a" "AAA" } .dict .validate { a: required integer calc { + 1 } } |disarm |type? } 'error 
+		equal { { "a" "100" } .dict .validate { a: required integer calc { + 1 } } } dict { "a" 101 }
 	}
 }
 
@@ -19,18 +41,53 @@ section "Regular expressions"
 {	
 	
 	group "regexp"
-	mold\nowrap ?fail
+	mold\nowrap ?regexp
 	{ }
 	{
 		equal { regexp "[0-9]" |type? } 'native
 	}
 
-	group "match"
-	mold\nowrap ?failure
+	group "is-match"
+	"" ; mold\nowrap ?is-match
 	{ }
 	{
-		equal { regexp "[0-9]" |matches "5" } 1
-		equal { regexp "[0-9]" |matches "a" } 0
+		equal { regexp "[0-9]" |is-match "5" } 1
+		equal { regexp "[0-9]" |is-match "a" } 0
+	}
+
+	group "match?"
+	"" ;	mold\nowrap ?match?
+	{ }
+	{
+		equal { regexp "[0-9]+c+" |match? "aa33bb55cc" } "55cc"
+	}
+	
+	group "submatch?"
+	"" ; mold\nowrap ?submatch?
+	{ }
+	{
+		equal { regexp "([0-9]+)" |submatch? "aa33bb44cc" } "33"
+	}
+
+	group "submatches?"
+	"" ; mold\nowrap ?submatches?
+	{ }
+	{
+		equal { regexp "([0-9]+).*?(c+)" |submatches? "aa33bb55cc" } { "33" "cc" }
+	}
+
+	group "find-all"
+	"" ; "mold\nowrap ?find-all
+	{ }
+	{
+		equal { regexp "([0-9]+)" |find-all "aa33bb55cc" } { "33" "55" }
+	}
+
+	group "replace-all"
+	"" ; mold\nowrap ?replace-all
+	{ }
+	{
+		equal { regexp "([0-9]+)" |replace-all "aa33bb55cc" "XX" } "aaXXbbXXcc"
 	}
 
 }

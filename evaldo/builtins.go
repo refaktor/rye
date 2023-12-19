@@ -143,6 +143,31 @@ func lesserThan(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) bool {
 	return valA < valB
 }
 
+func lesserThanNew(arg0 env.Object, arg1 env.Object) bool {
+	var valA float64
+	var valB float64
+	switch vA := arg0.(type) {
+	case env.Integer:
+		valA = float64(vA.Value)
+	case env.Decimal:
+		valA = vA.Value
+	case env.String:
+		switch vB := arg1.(type) {
+		case env.String:
+			return vA.Value < vB.Value
+		default:
+			return false
+		}
+	}
+	switch vB := arg1.(type) {
+	case env.Integer:
+		valB = float64(vB.Value)
+	case env.Decimal:
+		valB = vB.Value
+	}
+	return valA < valB
+}
+
 func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 	switch s1 := data.(type) {
 	case env.Dict:
@@ -422,7 +447,13 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Tries to change Rye value to an URI.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return *env.NewUri1(ps.Idx, arg0.(env.String).Value) // TODO turn to switch
+			switch val := arg0.(type) {
+			case env.String:
+				return *env.NewUri1(ps.Idx, val.Value) // TODO turn to switch
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "to-file")
+			}
+
 		},
 	},
 
@@ -431,7 +462,12 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Tries to change Rye value to a file.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return *env.NewUri1(ps.Idx, "file://"+arg0.(env.String).Value) // TODO turn to switch
+			switch val := arg0.(type) {
+			case env.String:
+				return *env.NewUri1(ps.Idx, "file://"+val.Value) // TODO turn to switch
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "to-file")
+			}
 		},
 	},
 
@@ -4190,7 +4226,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"reverse": { // **
+	"reverse!": { // **
 		Argsn: 1,
 		Doc:   "Accepts a block of values and returns maximal value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -5008,6 +5044,13 @@ var builtins = map[string]*env.Builtin{
 					// ps, injnow = EvalExpressionInj(ps, inj, injnow)
 					EvalExpression2(ps, false)
 					res = append(res, ps.Res)
+					if ps.ErrorFlag {
+						return ps.Res
+					}
+					//ps.Ser = ser
+					if ps.ReturnFlag {
+						return ps.Res
+					}
 					// check and raise the flags if needed if true (error) return
 					//if checkFlagsAfterBlock(ps, 101) {
 					//	return ps

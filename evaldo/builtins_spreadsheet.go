@@ -4,6 +4,7 @@ package evaldo
 
 import (
 	"encoding/csv"
+	"fmt"
 	"os"
 	"slices"
 	"sort"
@@ -174,6 +175,25 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "where-greater")
+			}
+		},
+	},
+	"where-lesser": {
+		Argsn: 3,
+		Doc:   "TODODOC",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch spr := arg0.(type) {
+			case env.Spreadsheet:
+				switch col := arg1.(type) {
+				case env.Word:
+					return WhereLesser(ps, spr, ps.Idx.GetWord(col.Index), arg2)
+				case env.String:
+					return WhereLesser(ps, spr, col.Value, arg2)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "where-lesser")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "where-lesser")
 			}
 		},
 	},
@@ -443,7 +463,9 @@ func SortByColumnDesc(ps *env.ProgramState, s *env.Spreadsheet, name string) {
 }
 
 func WhereEquals(ps *env.ProgramState, s env.Spreadsheet, name string, val any) env.Object {
-	idx := slices.Index[[]string](s.Cols, name)
+	fmt.Println(s.Cols)
+	fmt.Println(name)
+	idx := slices.Index(s.Cols, name)
 	nspr := env.NewSpreadsheet(s.Cols)
 	if idx > -1 {
 		if index, ok := s.Indexes[name]; ok {
@@ -470,7 +492,7 @@ func WhereEquals(ps *env.ProgramState, s env.Spreadsheet, name string, val any) 
 }
 
 func WhereGreater(ps *env.ProgramState, s env.Spreadsheet, name string, val any) env.Object {
-	idx := slices.Index[[]string](s.Cols, name)
+	idx := slices.Index(s.Cols, name)
 	nspr := env.NewSpreadsheet(s.Cols)
 	if idx > -1 {
 		for _, row := range s.Rows {
@@ -478,6 +500,26 @@ func WhereGreater(ps *env.ProgramState, s env.Spreadsheet, name string, val any)
 				switch val2 := val.(type) {
 				case env.Object:
 					if greaterThanNew(row.Values[idx].(env.Object), val2) {
+						nspr.AddRow(row)
+					}
+				}
+			}
+		}
+		return *nspr
+	} else {
+		return MakeBuiltinError(ps, "Column not found.", "WhereGreater")
+	}
+}
+
+func WhereLesser(ps *env.ProgramState, s env.Spreadsheet, name string, val any) env.Object {
+	idx := slices.Index(s.Cols, name)
+	nspr := env.NewSpreadsheet(s.Cols)
+	if idx > -1 {
+		for _, row := range s.Rows {
+			if len(row.Values) > idx {
+				switch val2 := val.(type) {
+				case env.Object:
+					if lesserThanNew(row.Values[idx].(env.Object), val2) {
 						nspr.AddRow(row)
 					}
 				}

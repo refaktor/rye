@@ -53,7 +53,7 @@ var Builtins_web = map[string]*env.Builtin{
 		},
 	},
 
-	"wrap": {
+	"tag": {
 		Argsn: 2,
 		Doc:   "TODODOC",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

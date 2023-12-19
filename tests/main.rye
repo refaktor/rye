@@ -18,7 +18,10 @@ test-framework: context {
 		do-in root-ctx test :got = res
 		|either { print "  - OK" } { inc! 'failed , print join { "  - Error: expected " mold res ", got " mold got } }
 	}
-	
+
+	equal\todo: fn { test res } {
+	}
+
 	stdout: fn { test res } {
 		capture-stdout { do-in root-ctx test } :got = res
 		|either { print "  - OK" } { inc! 'failed , print join { "  - Error: expected " mold res ", got " mold got } }
@@ -28,7 +31,7 @@ test-framework: context {
 		
 	}
 
-	end: fn { } { print "CNT: " + cnt , print "FAILED: " + failed , if failed > 0 { exit 1 } }
+	end: fn { } { wrap { print "---------------" } { print "CNT: " + cnt , print "FAILED: " + failed , if failed > 0 { exit 1 } } }
 
 }
 
@@ -43,6 +46,9 @@ docs-framework: context {
 		|if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" mold\nowrap test newline "; returns "  replace mold got newline newline + "; "  "</code></pre>" ] }
 	}
 
+	equal\todo: fn { test res } {
+	}
+
 	stdout: fn { test res } {
 		capture-stdout { do-in root-ctx test } :got = res
 		1 |if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" mold\nowrap test newline "; prints " replace mold\nowrap got newline newline + "; " "</code></pre>" ] }
@@ -54,7 +60,6 @@ docs-framework: context {
 
 	end: fn { } { }
 
-	
 }
 
 generate-menu: fn { menu } {
@@ -63,21 +68,23 @@ generate-menu: fn { menu } {
 
 generate-doc-file: fn { filename menu } {
 	join {
-		%tpl/header.html .read .replace "{{title}}" capitalize filename |replace "{{menu}}" generate-menu menu
+		%tpl/header.html .read .replace "{{title}}" capitalize filename ; |replace "{{menu}}" generate-menu menu
 		capture-stdout { do-in docs-framework load to-file filename + ".rye" }
 		read %tpl/footer.html
 	} |write* to-file filename + ".html"
 }
 
-menu: { "basics" "structures" "spreadsheets" }
+menu: { "basics" "structures" "validation" "misc" }
 
 switch arg {
-	"test" { do-in test-framework load %builtins.rye }
+	"test" {
+		errors: 0
+		for menu { + ".rye" |to-file |load |do-in* test-framework |+ errors :errors }
+		print "==============="
+		print "FAILED TESTS: " + errors
+	}
 	"doc"  {
-		generate-doc-file "basics" menu
-		generate-doc-file "structures" menu
- 		generate-doc-file "validation" menu
-		generate-doc-file "misc" menu
+		for menu { .generate-doc-file menu }
 	}
 	_ { print "use test or doc command" }
 } 

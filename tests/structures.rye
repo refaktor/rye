@@ -532,8 +532,18 @@ section "Spreadsheet related functions"
 	mold\nowrap ?spreadsheet
 	{ }
 	{
-;		equal { spreadsheet { 'id 'name 'score } } 'ctx ; TODO should probably rename to context 
+		equal { spreadsheet { "name" "rating" "weight" }
+			{ "Enno" 4.3 120 "Enya" 6 132 "Shizuuchi" 7.2 168 "Kunishima" 2 68 } :spr |type? } 'spreadsheet
+		equal { spr |length? } 4
+		equal { spr |columns? .probe |length? } 3
+		equal\todo { spr -> 2 -> 'name } "Enya"
+		equal { spr .first -> "name" } "Enno"
+		equal { spr .where-equal 'name "Enya" |length? } 1
+		equal { spr .where-lesser 'weight 130 |length? } 2
+
 	}
 	
 }
 
+
+end
