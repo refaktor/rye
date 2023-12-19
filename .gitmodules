@@ -1,3 +1,0 @@
-[submodule "contrib"]
-	path = contrib
-	url = ../rye-contrib.git
