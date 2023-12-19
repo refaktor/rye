@@ -56,7 +56,7 @@ jobs:
       # Enable all features for CI builds. 
       # TODO: add currently problematic tags: b_cayley,b_nng,b_qframe,b_ebitengine
       run: |
-        go build -v -tags "b_sqlite,b_http,b_sql,b_postgres,b_bson,b_crypto,b_smtpd,b_mail,b_bcrypt,b_telegram,b_html,b_contrib,b_openai,b_email,b_mail,b_mysql,b_nats,b_psql,b_psutil,b_sxml,b_echo,b_webview,b_raylib,b_gtk" -o bin/rye
+        go build -v -tags "b_sqlite,b_http,b_sql,b_postgres,b_bson,b_crypto,b_smtpd,b_mail,b_bcrypt,b_telegram,b_html,b_contrib,b_openai,b_email,b_mail,b_mysql,b_psql,b_psutil,b_sxml,b_echo,b_webview" -o bin/rye
         ls -l bin/rye
         file bin/rye
         go version -m bin/rye
