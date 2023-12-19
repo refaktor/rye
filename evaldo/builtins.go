@@ -6567,7 +6567,6 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	// RegisterBuiltins2(Builtins_nng, ps, "nng")
 	// RegisterBuiltins2(Builtins_raylib, ps, "raylib")
 	// RegisterBuiltins2(Builtins_cayley, ps, "cayley")
-
 }
 
 var BuiltinNames map[string]int
