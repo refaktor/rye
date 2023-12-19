@@ -236,8 +236,8 @@ Most of them are more proof of concepts than full implementations. But it's not 
   * IO (!) - can be excluded at build time ⭐⭐ 
   * Json - json parsing ⭐⭐ 
   * Mysql - database ⭐
-  * NATS - messaging
-  * nng - nanomsg scalability protocols
+  * NATS - messaging 🧱
+  * nng - nanomsg scalability protocols 🧱
   * Postgresql - database ⭐
   * Psutil - linux process management
   * Regexp - regular expressions ⭐
@@ -245,20 +245,21 @@ Most of them are more proof of concepts than full implementations. But it's not 
   * Sqlite - database ⭐⭐
   * Sxml - sax XML like streaming dialect
   * Validation - validation dialect ⭐⭐ 
-  * Webview - Webview GUI
+  * Webview - Webview GUI (🧱) if problematic to build 
    
 ### Contrib - will be community / third party integrations
   * Amazon AWS
-  * Bleve full text search
-  * Cayley - graph database
-  * GTK - GUI framework
+  * Bleve full text search 
+  * Cayley - graph database 🧱
+  * GTK - GUI framework 🧱
   * OpenAI - OpenAI API
-  * QFrame - a fast dataframe implementation
+  * QFrame - a fast dataframe implementation 🧱
   * Postmark - email sending service
-  * Raylib - 2D graphich library / game engine
+  * Raylib - 2D graphich library / game engine 🧱
   * Telegram bot - telegram bots
+  * Ebitengine - 2d game engine
 
-legend: ⭐ priority
+legend: ⭐ priority , 🧱 archived for now 
     
 ## Follow development
 
