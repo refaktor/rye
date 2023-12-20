@@ -6188,6 +6188,41 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// date time functions
+
+	"date": {
+		Argsn: 1,
+		Doc:   "Accepts a String and returns a Date object.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
+			switch s1 := arg0.(type) {
+			case env.String:
+				t, err := time.Parse("2006-01-02", s1.Value)
+				if err != nil {
+					return MakeBuiltinError(ps, err.Error(), "date")
+				}
+				return *env.NewDate(t)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "date")
+			}
+		},
+	},
+
+	"datetime": {
+		Argsn: 1,
+		Doc:   "Accepts a String and returns a Date object.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
+			switch s1 := arg0.(type) {
+			case env.String:
+				t, err := time.Parse("2006-01-02T15:04:05", s1.Value)
+				if err != nil {
+					return MakeBuiltinError(ps, err.Error(), "datetime")
+				}
+				return *env.NewTime(t)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "datetime")
+			}
+		},
+	},
+
 	"now": {
 		Argsn: 0,
 		Doc:   "Returns current Time.",

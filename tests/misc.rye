@@ -249,6 +249,35 @@ section "Functions that change values in-place"
 
 }
 
+section "Date and time functions"
+""
+{
+
+	group "date"
+	mold\nowrap ?date
+	{ { string } }
+	{
+		equal { date "2023-01-01" |type? } 'date
+		equal { try { date "not-date" } |type? } 'error	
+	}
+
+	group "datetime"
+	mold\nowrap ?datetime
+	{ { string } }
+	{
+		equal { datetime "2023-01-01T12:00:00" |type? } 'time
+		equal { try { datetime "not-time" } |type? } 'error
+	}
+
+	group "now"
+	mold\nowrap ?now
+	{ { string } }
+	{
+		equal { now |type? } 'time
+	}
+	
+}
+
 ;	TODO	equal { list { 3 4 5 6 } |map { .factor-of 3 } } list { 1 0 0 1 } 
 
 end
