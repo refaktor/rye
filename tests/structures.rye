@@ -542,6 +542,14 @@ section "Spreadsheet related functions"
 		equal { spr .where-lesser 'weight 130 |length? } 2
 
 	}
+
+	group "to-spreadsheet"
+	mold\nowrap ?to-spreadsheet
+	{ { block } }
+	{
+		equal { to-spreadsheet vals { dict { "a" 1 b 2 } dict { "a" 4 "b" 5 } } } spreadsheet { "a" "b" } { 1 2 3 4 }
+		equal { to-spreadsheet vals { dict { "a" 1 b 2 "c" 3 } dict { "a" 4 "b" 5 } } } spreadsheet { "a" "b" "c" } { 1 2 3 4 5 _ }
+	}
 	
 }
 

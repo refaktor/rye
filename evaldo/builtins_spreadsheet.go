@@ -54,6 +54,54 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		},
 	},
 
+	"to-spreadsheet": {
+		Argsn: 1,
+		Doc:   "Create a spreadsheet by accepting block of dicts",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
+			switch block := arg0.(type) {
+			case env.Block:
+				data := block.Series
+				if data.Len() == 0 {
+					return MakeBuiltinError(ps, "Block is empty", "to-spreadsheet")
+				}
+				k := make(map[string]struct{})
+				for _, obj := range data.S {
+					switch dict := obj.(type) {
+					case env.Dict:
+						for key := range dict.Data {
+							k[key] = struct{}{}
+						}
+					default:
+						return MakeBuiltinError(ps, "Block must contain only dicts", "to-spreadsheet")
+					}
+				}
+				var keys []string
+				for key := range k {
+					keys = append(keys, key)
+				}
+				spr := env.NewSpreadsheet(keys)
+				for _, obj := range data.S {
+					switch dict := obj.(type) {
+					case env.Dict:
+						row := make([]any, len(keys))
+						for i, key := range keys {
+							data, ok := dict.Data[key]
+							if !ok {
+								data = env.Void{}
+							}
+							row[i] = data
+						}
+						spr.AddRow(*env.NewSpreadsheetRow(row, spr))
+					}
+				}
+				return *spr
+
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "to-spreadsheet")
+			}
+		},
+	},
+
 	"get-rows": {
 		Argsn: 1,
 		Doc:   "Create a spreadsheet by accepting block of column names and flat block of values",
