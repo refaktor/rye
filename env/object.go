@@ -763,7 +763,7 @@ func (i Getword) Inspect(e Idxs) string {
 
 // Inspect returns a string representation of the Integer.
 func (b Getword) Probe(e Idxs) string {
-	return e.GetWord(b.Index)
+	return "?" + e.GetWord(b.Index)
 }
 
 func (i Getword) Trace(msg string) {

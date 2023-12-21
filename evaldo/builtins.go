@@ -1467,7 +1467,8 @@ var builtins = map[string]*env.Builtin{
 			if str[0] == '{' || str[0] == '[' {
 				str = str[1 : len(str)-1]
 			}
-			str = strings.ReplaceAll(str, "._", "") // temporary solution for special op-words
+			str = strings.ReplaceAll(str, "._", "")  // temporary solution for special op-words
+			str = strings.ReplaceAll(str, "|_", "|") // temporary solution for special op-words
 			return *env.NewString(strings.Trim(str, " "))
 		},
 	},

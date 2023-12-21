@@ -374,8 +374,8 @@ func newParser() *Parser { // TODO -- add string eaddress path url time
 	URIPATH			<-  < [a-zA-Z0-9-?=.:@/\\!_>	()] >
 	UCLETTER  		<-  < [A-Z] >
 	LCLETTERORNUM  	        <-  < [a-z0-9] >
-        NUMBER          	<-  < [0-9]+ >
-        DECIMAL         	<-  < [0-9]+.[0-9]+ >
+        NUMBER          	<-  < ("-"?[0-9]+) >
+        DECIMAL         	<-  < ("-"?[0-9]+.[0-9]+) >
 	SPACE			<-  < [ \t\r\n] >
 	STRINGCHAR		<-  < !'"' . >
 	STRINGCHAR1		<-  < !"$" . >

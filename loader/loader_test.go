@@ -23,6 +23,20 @@ func TestLoader_load_integer(t *testing.T) {
 	}
 }
 
+func TestLoader_load_negative_integer(t *testing.T) {
+	input := "-123"
+	block, _ := LoadString(input, false)
+	if block.(env.Block).Series.Len() != 1 {
+		t.Error("Expected 1 items")
+	}
+
+	// fmt.Println(block.(env.Block).Series.Get(0).Type())
+
+	if block.(env.Block).Series.Get(0).Type() != env.IntegerType {
+		t.Error("Expected type integer")
+	}
+}
+
 func TestLoader_load_integers(t *testing.T) {
 	input := "123 342 453"
 	block, _ := LoadString(input, false)
@@ -31,6 +45,45 @@ func TestLoader_load_integers(t *testing.T) {
 	}
 	if block.(env.Block).Series.Get(0).Type() != env.IntegerType {
 		t.Error("Expected type integer")
+	}
+}
+
+func TestLoader_load_decimal(t *testing.T) {
+	input := "123.231"
+	block, _ := LoadString(input, false)
+	if block.(env.Block).Series.Len() != 1 {
+		t.Error("Expected 1 items")
+	}
+
+	// fmt.Println(block.(env.Block).Series.Get(0).Type())
+
+	if block.(env.Block).Series.Get(0).Type() != env.DecimalType {
+		t.Error("Expected type decimal")
+	}
+}
+
+func TestLoader_load_negative_decimal(t *testing.T) {
+	input := "-123.324"
+	block, _ := LoadString(input, false)
+	if block.(env.Block).Series.Len() != 1 {
+		t.Error("Expected 1 items")
+	}
+
+	// fmt.Println(block.(env.Block).Series.Get(0).Type())
+
+	if block.(env.Block).Series.Get(0).Type() != env.DecimalType {
+		t.Error("Expected type decimal")
+	}
+}
+
+func TestLoader_load_decimals(t *testing.T) {
+	input := "-123.1 -342.2 -453.3"
+	block, _ := LoadString(input, false)
+	if block.(env.Block).Series.Len() != 3 {
+		t.Error("Expected 3 items")
+	}
+	if block.(env.Block).Series.Get(0).Type() != env.DecimalType {
+		t.Error("Expected type decimal")
 	}
 }
 
