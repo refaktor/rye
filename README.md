@@ -165,7 +165,7 @@ Two examples of this are the validation and SQL dialects.
 ```red
 dict { "name" "jane" "surname" "boo" }
 |validate { name: required score: optional 0 integer } |probe
-// prints: #[ name: "jane" score: 0 ]
+; prints: #[ name: "jane" score: 0 ]
 
 name: "James"
 db: open sqlite://main.db
