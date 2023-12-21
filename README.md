@@ -221,7 +221,7 @@ When learning about something new it makes sense to approach it from a familiar 
 The author of Factor once said that at the end *it's not about the language, but the libraries*. I can only agree, adding *libraries, and distribution*. Rye is still an experiment in language design, so it doesn't have anything like production level libraries. But to test the language with practical problems in mind, or because I needed something for my use of Rye, there are quite many modules already made. 
 
 ### Base - official integrations
-  * Core builtin functions ⭐⭐⭐  🧪tests: ~90%
+  * Core builtin functions ⭐⭐⭐  🧪~80%
   * Bcrypt - password hashing
   * Bson - binary (j)son
   * Crypto - cryptographic functions ⭐
@@ -233,11 +233,11 @@ The author of Factor once said that at the end *it's not about the language, but
   * Mysql - database ⭐
   * Postgresql - database ⭐
   * Psutil - linux process management
-  * Regexp - regular expressions ⭐
+  * Regexp - regular expressions ⭐ 🧪~50%
   * Smtpd - smtp server (receiver)
   * Sqlite - database ⭐⭐
   * Sxml - sax XML like streaming dialect
-  * Validation - validation dialect ⭐⭐ 
+  * Validation - validation dialect ⭐⭐ 🧪~50% 
   * Webview - Webview GUI
    
 ### Contrib - will be community / third party integrations
@@ -248,7 +248,7 @@ The author of Factor once said that at the end *it's not about the language, but
   * Telegram bot - telegram bots
   * Ebitengine - 2d game engine
 
-legend: ⭐ priority 
+legend: ⭐ priority , 🧪 tests
     
 ## Follow development
 
