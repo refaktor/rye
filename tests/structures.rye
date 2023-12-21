@@ -528,14 +528,14 @@ section "Spreadsheet related functions"
 "Functions for handling and working with Context."
 {	
 	
-	group "spreadsheet"
+	group "spreadsheet & related"
 	mold\nowrap ?spreadsheet
 	{ }
 	{
 		equal { spreadsheet { "name" "rating" "weight" }
 			{ "Enno" 4.3 120 "Enya" 6 132 "Shizuuchi" 7.2 168 "Kunishima" 2 68 } :spr |type? } 'spreadsheet
 		equal { spr |length? } 4
-		equal { spr |columns? .probe |length? } 3
+		equal { spr |columns? |length? } 3
 		equal\todo { spr -> 2 -> 'name } "Enya"
 		equal { spr .first -> "name" } "Enno"
 		equal { spr .where-equal 'name "Enya" |length? } 1
@@ -543,6 +543,14 @@ section "Spreadsheet related functions"
 
 	}
 
+	group "autotype"
+	mold\nowrap ?to-spreadsheet
+	{ { block } }
+	{
+		equal { spreadsheet { "a" "b" } { "aa" "2" "bb" "4" } |autotype 1.0     }  spreadsheet { "a" "b" } { "aa" 2   "bb" 4 }
+		equal { spreadsheet { "a" "b" } { "aa" "2.1" "bb" "4.3" } |autotype 1.0 }  spreadsheet { "a" "b" } { "aa" 2.1 "bb" 4.3 }
+	}
+	
 	group "to-spreadsheet"
 	mold\nowrap ?to-spreadsheet
 	{ { block } }
