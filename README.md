@@ -45,11 +45,10 @@ Go's libraries are quite easy to integrate.
 
 ## Status: Alpha
 
-Core ideas of the language are formed. Most experimenting, at least until version 1 is done.
-Right now, my focus is on making the core and runtime more ready and friendly for a potential brave souls that want to install it and 
-dabble around a little.
+Core ideas of the language are formed. Most experimenting, at least for this stage is done.
+Right now, focus is on making the core and runtime useful for anyone who might decide to try it.
 
-That means I am improving the Rye console, live documentation and stabilizing core functions.
+That means I am improving the Rye console, documentation and stabilizing core functions.
 
 ## Overview
 
@@ -217,16 +216,12 @@ When learning about something new it makes sense to approach it from a familiar 
   * [Less variables, more flows example vs Python](https://ryelang.blogspot.com/2021/11/less-variables-more-flows-example-vs.html)
   * [Simple compression puzzle - from Python to Rye solution](https://github.com/otobrglez/compression-puzzle/blob/master/src/rye/compress_jm_rec_steps.rye)
   
-## Libraries
+## Modules
 
-The author of Factor once said that at the end *it's not about the language, but the libraries*. I can only agree, adding *libraries, and distribution*. Rye is still an experiment in language design, so it doesn't have anything like production level libraries. But to test the language with practical problems in mind, or because I needed something for my use of Rye, there are quite many integrations already made. 
-
-Most of them are more proof of concepts than full implementations. But it's not hard to extend them, to cover more ground if needed. 
-
-*I am just in the process into reorganising libraries. I will add info about the level of integration*
+The author of Factor once said that at the end *it's not about the language, but the libraries*. I can only agree, adding *libraries, and distribution*. Rye is still an experiment in language design, so it doesn't have anything like production level libraries. But to test the language with practical problems in mind, or because I needed something for my use of Rye, there are quite many modules already made. 
 
 ### Base - official integrations
-  * Core builtin functions ⭐ ~ 🛠️ currently working on, 👍 unified api: ~70%, 🧪 tests: ~80%
+  * Core builtin functions ⭐⭐⭐  🧪tests: ~90%
   * Bcrypt - password hashing
   * Bson - binary (j)son
   * Crypto - cryptographic functions ⭐
@@ -253,13 +248,13 @@ Most of them are more proof of concepts than full implementations. But it's not 
   * Telegram bot - telegram bots
   * Ebitengine - 2d game engine
 
-legend: ⭐ priority , 🧱 archived for now 
+legend: ⭐ priority 
     
 ## Follow development
 
 ### Rye blog
 
-For most up-to date information on the language and it's development visit our **[blog](http://ryelang.blogspot.com/)**.
+For most up-to date information on the language and it's development visit our **[old](http://ryelang.blogspot.com/)** and **[new blog](http://ryelang.org/blog)**.
 
 ### Ryelang reddit
 
@@ -307,18 +302,6 @@ Run 🏃‍♂️ the rye REPL with:
 docker run -ti refaktor/rye
 ```
 
-### Forking Rye on Github
-
-Rye's directory **contrib** is used for contributed, 3-rd party modules. The directory is a submodul and is a separate repository **github.com/refaktor/rye-contrib**. This complicates
-fork and clone a little. It might change in the future.
-
-To fork Rye repository on Github you must also fork rye-contrib repo. And then inside a main repository run:
-
-```bash
-git submodule init
-git submodule update
-```
-
 ### Building Rye
 
 Use official documentation or lines below to install Golang 1.19.3 https://go.dev/doc/install
@@ -330,7 +313,7 @@ Use official documentation or lines below to install Golang 1.19.3 https://go.de
     
 Clone the main branch from the Rye repository. There is a submodule (a different repo) for contributed packages, hence the additional flag is needed:
 
-    git clone --recurse-submodules https://github.com/refaktor/rye.git && cd rye
+    git clone https://github.com/refaktor/rye.git && cd rye
 
 Build the tiny version of Rye
 
