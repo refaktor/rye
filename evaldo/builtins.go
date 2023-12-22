@@ -1123,7 +1123,7 @@ var builtins = map[string]*env.Builtin{
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var res int64
-			if util.EqualValues(ps, arg0, arg1) {
+			if arg0.Equal(arg1) {
 				res = 1
 			} else {
 				res = 0
@@ -1149,7 +1149,7 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Checks if first argument is greater or equal than the second.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			if util.EqualValues(ps, arg0, arg1) || greaterThan(ps, arg0, arg1) {
+			if arg0.Equal(arg1) || greaterThan(ps, arg0, arg1) {
 				return *env.NewInteger(1)
 			} else {
 				return *env.NewInteger(0)
@@ -1173,7 +1173,7 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Tests if Arg1 is lesser than Arg 2.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			if util.EqualValues(ps, arg0, arg1) || lesserThan(ps, arg0, arg1) {
+			if arg0.Equal(arg1) || lesserThan(ps, arg0, arg1) {
 				return *env.NewInteger(1)
 			} else {
 				return *env.NewInteger(0)
@@ -3120,7 +3120,7 @@ var builtins = map[string]*env.Builtin{
 							if ps.ErrorFlag {
 								return ps.Res
 							}
-							newl = append(newl, ps.Res)
+							newl[i] = ps.Res
 
 							ps.Ser.Reset()
 						}
@@ -3216,7 +3216,7 @@ var builtins = map[string]*env.Builtin{
 							if ps.ErrorFlag {
 								return ps.Res
 							}
-							newl = append(newl, ps.Res)
+							newl[i] = ps.Res
 
 							ps.Ser.Reset()
 						}
@@ -3547,7 +3547,7 @@ var builtins = map[string]*env.Builtin{
 							if ps.ErrorFlag {
 								return ps.Res
 							}
-							if prevres == nil || util.EqualValues(ps, ps.Res, prevres) {
+							if prevres == nil || ps.Res.Equal(prevres) {
 								subl = append(subl, curval)
 							} else {
 								newl = append(newl, env.NewBlock(*env.NewTSeries(subl)))
@@ -3562,7 +3562,7 @@ var builtins = map[string]*env.Builtin{
 						for i := 0; i < l; i++ {
 							curval := list.Series.Get(i)
 							res := DirectlyCallBuiltin(ps, block, curval, nil)
-							if prevres == nil || util.EqualValues(ps, res, prevres) {
+							if prevres == nil || res.Equal(prevres) {
 								subl = append(subl, curval)
 							} else {
 								newl = append(newl, env.NewBlock(*env.NewTSeries(subl)))
@@ -3596,7 +3596,7 @@ var builtins = map[string]*env.Builtin{
 							if ps.ErrorFlag {
 								return ps.Res
 							}
-							if prevres == nil || util.EqualValues(ps, ps.Res, prevres) {
+							if prevres == nil || ps.Res.Equal(prevres) {
 								subl = append(subl, curval)
 							} else {
 								newl = append(newl, env.NewList(subl))
@@ -3612,7 +3612,7 @@ var builtins = map[string]*env.Builtin{
 							curval := list.Data[i]
 							curvalRye := env.ToRyeValue(list.Data[i])
 							res := DirectlyCallBuiltin(ps, block, curvalRye, nil)
-							if prevres == nil || util.EqualValues(ps, res, prevres) {
+							if prevres == nil || res.Equal(prevres) {
 								subl = append(subl, curval)
 							} else {
 								newl = append(newl, env.NewList(subl))
@@ -3643,7 +3643,7 @@ var builtins = map[string]*env.Builtin{
 							if ps.ErrorFlag {
 								return ps.Res
 							}
-							if prevres == nil || util.EqualValues(ps, ps.Res, prevres) {
+							if prevres == nil || ps.Res.Equal(prevres) {
 								subl.WriteRune(curval)
 							} else {
 								newl = append(newl, subl.String())
@@ -3658,7 +3658,7 @@ var builtins = map[string]*env.Builtin{
 					case env.Builtin:
 						for _, curval := range list.Value {
 							res := DirectlyCallBuiltin(ps, block, env.ToRyeValue(curval), nil)
-							if prevres == nil || util.EqualValues(ps, res, prevres) {
+							if prevres == nil || res.Equal(prevres) {
 								subl.WriteRune(curval)
 							} else {
 								newl = append(newl, subl.String())

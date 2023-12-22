@@ -143,6 +143,31 @@ func (e RyeCtx) GetWords(idxs Idxs) Block {
 	return *NewBlock(*NewTSeries(objs))
 }
 
+func (i RyeCtx) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	oCtx := o.(RyeCtx)
+	if len(i.state) != len(oCtx.state) {
+		return false
+	}
+	for k, v := range i.state {
+		if !v.Equal(oCtx.state[k]) {
+			return false
+		}
+	}
+	if i.Parent != oCtx.Parent {
+		return false
+	}
+	if i.Kind != oCtx.Kind {
+		return false
+	}
+	if i.locked != oCtx.locked {
+		return false
+	}
+	return false
+}
+
 /*func (e *Env) Get(word int) (*Object, bool) {
 	obj, exists := e.state[word]
 	// recursively look at outer Environments ...
