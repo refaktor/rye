@@ -19,7 +19,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0 # needs full git history for changelog generation
-          submodules: true
 
       - run: git fetch --force --tags
 

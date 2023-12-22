@@ -82,8 +82,7 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 // ## IDEA
 // Should move to external repo rye-alterego, which contrary to main Rye, would focus on desktop / UI / game / windows?
 // This would make main Rye and Contrib cleaner and focused on the linux backend tasks, information (pre)processing, ...
-// It would also serve as a test if we can move contrib to external module instead of it being a git submodule which
-// complicates many things.
+// It would also serve as a test if we can move contrib to external module instead of it being a simple sub package
 
 var Builtins_ebitengine = map[string]*env.Builtin{
 
