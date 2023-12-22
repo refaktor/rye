@@ -11,7 +11,6 @@ import (
 	"strconv"
 
 	"github.com/refaktor/rye/env"
-	"github.com/refaktor/rye/util"
 )
 
 var Builtins_spreadsheet = map[string]*env.Builtin{
@@ -526,7 +525,7 @@ func WhereEquals(ps *env.ProgramState, s env.Spreadsheet, name string, val any) 
 				if len(row.Values) > idx {
 					switch val2 := val.(type) {
 					case env.Object:
-						if util.EqualValues(ps, val2, env.ToRyeValue(row.Values[idx])) {
+						if val2.Equal(env.ToRyeValue(row.Values[idx])) {
 							nspr.AddRow(row)
 						}
 					}

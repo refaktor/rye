@@ -43,10 +43,3 @@ func (e *Gen) Set(kind int, word int, val Object) Object {
 	e.dict[kind][word] = val
 	return val
 }
-
-func (i Builtin) GetKind() int {
-	return int(BuiltinType)
-}
-
-// TODO: Builtin is just temporary ... we need to make something else, that holds natives and user functions. Interface should be the same ...
-// would it be better (faster) to have concrete type probably.

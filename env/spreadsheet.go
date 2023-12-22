@@ -256,6 +256,44 @@ func (s Spreadsheet) GetKind() int {
 	return int(SpreadsheetType)
 }
 
+func (s Spreadsheet) Equal(o Object) bool {
+	if s.Type() != o.Type() {
+		return false
+	}
+	oSpr := o.(Spreadsheet)
+	if len(s.Cols) != len(oSpr.Cols) {
+		return false
+	}
+	columnMapping := make(map[int]int, len(s.Cols))
+	for i, v := range s.Cols {
+		idx := slices.Index[[]string](oSpr.Cols, v)
+		if idx == -1 {
+			return false
+		}
+		columnMapping[i] = idx
+	}
+	if len(s.Rows) != len(oSpr.Rows) {
+		return false
+	}
+	for i, row := range s.Rows {
+		for j, v := range row.Values {
+			o := oSpr.Rows[i].Values[columnMapping[j]]
+			if vObj, ok := v.(Object); ok {
+				if oObj, ok := o.(Object); ok {
+					if !vObj.Equal(oObj) {
+						return false
+					}
+				}
+			} else {
+				if v != o {
+					return false
+				}
+			}
+		}
+	}
+	return true
+}
+
 func (s SpreadsheetRow) GetKind() int {
 	return int(0)
 }
@@ -268,6 +306,33 @@ func (s SpreadsheetRow) Inspect(e Idxs) string {
 // Inspect returns a string representation of the Integer.
 func (s SpreadsheetRow) Probe(e Idxs) string {
 	return s.ToTxt()
+}
+
+// Do not use when comparing a spreadsheet as a whole
+// because column ordering is not guaranteed
+func (s SpreadsheetRow) Equal(o Object) bool {
+	if s.Type() != o.Type() {
+		return false
+	}
+	oSprRow := o.(SpreadsheetRow)
+	if len(s.Values) != len(oSprRow.Values) {
+		return false
+	}
+	for i, v := range s.Values {
+		if vObj, ok := v.(Object); ok {
+			if oObj, ok := oSprRow.Values[i].(Object); ok {
+				if !vObj.Equal(oObj) {
+					return false
+				}
+			}
+		} else {
+			if v != oSprRow.Values[i] {
+				return false
+			}
+		}
+	}
+
+	return true
 }
 
 func (s SpreadsheetRow) ToTxt() string {
