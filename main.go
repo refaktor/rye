@@ -4,7 +4,6 @@
 package main
 
 import (
-	"os/user"
 	"path/filepath"
 	"regexp"
 
@@ -306,8 +305,8 @@ func main_cgi_file(file string, sig bool) {
 
 func main_rye_repl(_ io.Reader, _ io.Writer, subc bool) {
 	input := " 123 " // "name: \"Rye\" version: \"0.011 alpha\""
-	user, _ := user.Current()
-	profile_path := filepath.Join(user.HomeDir, ".rye-profile")
+	userHomeDir, _ := os.UserHomeDir()
+	profile_path := filepath.Join(userHomeDir, ".rye-profile")
 
 	fmt.Println("Welcome to Rye shell. Use ls and ls\\ \"pr\" to list the current context.")
 
@@ -491,7 +490,11 @@ func execInput(input string) error {
 	case "cd":
 		// 'cd' to home with empty path not yet supported.
 		if len(args) < 2 {
-			return os.Chdir(os.Getenv("HOME"))
+			userHomeDir, err := os.UserHomeDir()
+			if err != nil {
+				return err
+			}
+			return os.Chdir(userHomeDir)
 		}
 		// Change the directory and return the error.
 		return os.Chdir(args[1])
