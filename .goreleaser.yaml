@@ -69,9 +69,24 @@ kos:  # See https://goreleaser.com/customization/ko/
     - linux/amd64
     - linux/arm64
 
-changelog:
+changelog: # See https://goreleaser.com/customization/changelog/
+  use: github
   sort: asc
-  filters:
-    exclude:
-      - "^docs:"
-      - "^test:"
+
+  groups:
+  - title: Features
+    regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
+    order: 0
+  - title: "Bug fixes"
+    regexp: '^.*?bug(\([[:word:]]+\))??!?:.+$'
+    order: 1
+  - title: "Documentation"
+    regexp: '^.*?docs(\([[:word:]]+\))??!?:.+$'
+    order: 2
+  - title: Others
+    order: 999
+
+  # filters:
+  #   exclude:
+  #     - "^docs:"
+  #     - "^test:"
