@@ -29,31 +29,65 @@ some general conventions everyone is already used to.
 * **Nouns** ending with **?** stand for **get-**. Usually it's used when a **noun** is a property (length?, color?, age?)
 * **Nouns** that are types or kinds in the language are constructors (fn, context, dict, list, spreadsheet)
 
-----
+More conventions
+  
+* If a function performs a same task as another, but in a different way or with a different (number of) arguments it can be defined with **\variation** at the end (print\val, load\csv, map\pos)
+* If a function ends with **\\**, this means **"more"**, usually means a this variation accepts additonal argument compared to base function (ls\, produce\)
+* If a functions changes values **in-place** it has ! at the end (inc! , append! , unique!)
+  
 
-## Op-words and Pipe-words
+## Functions as Words, Op-words and Pipe-words
+
+Rye words that are bound to functions (user or builtin) can be called as words in normal reverse polish notation.
+
+The same function can be called as an op-word (with a . infront), in this case it takes it's first argument from the left. Pipe word does the same.
+
+Difference is in priority. Opwords take the first argument on the left they can find, pipewords evaluate all expressions on the left and take the result as argument.
+
+Operators are implicitly op-words, without the need to add them .. Their spelling is _+ _*. They can be called as pipe words too.
 
 ## Returning words
 
+Rye doesn't use return statement. It always returns the last value (akin to rebol, lisp, ...). You can use return function to return before that. But also other functions can return or conditionaly return. Because we want them
+to be obviously visible, convention is that they should have ^ at the begining. Such words are ^if, and some of the failure handling functions ^fix ^check 
+
 ## Failures and Errors
 
-## Hierarcies of Contexts
-
-## Scopes (Searching for context)
+Programmer's errors (bugs) and failures are not the same. Failure is a (not unexpected) result of a function that couldn't do (return) what it is expected to do. 
+Failure at this point is information and can be handeled with Rye functions. If it's not handeled it becomes  a programmers error (a bug). Failures can be handeled, bugs gave to be corrected in code.
 
 ## Multimethods
 
+Generic methods that dispatch on the kind of first argument.
+
 ## N datatypes, M syntax types
+
+Rye like Rebol has many datatypes and many of those are syntax types, meaning you can enter them directly through code with no conversion. This helps at declarative code because more specific types let you create richer more information rich structures.
+
+## Blocks are your bread and butter
+
+Blocks are like lists or arrays, but also all Rye code lives in blocks and you structure your code in blocks.
+
+## Context is everything
+
+Context is another datatypes of Rye that is heavily used by the language itself. All code is executed in a context. 
 
 ## Spreadsheet datatype
 
+Some languages claim that they are high level languages. I claim for Rye, that it's even higher (than usual) level language. For one, if language want's to be higher level it should also have higher level structures. Higher 
+usually means more towards the human. So I believe structures should also be speaking more about human's view on information, than some computer science concept ...
+
 ## Validation dialect
+
+A big part of (safe) code goes into validating values. I believe this part doesn't need to be intermingled with so called "business logic", but can be a separate, better visible, declaratively defined part. So a core Rye includes validation dialect.
 
 ## Conversion dialect
 
+A big part of code is just converting A's in B's and A1's into A2's. Since A, B, A1 and A2 are constants the conversion between them could be constant and could always be reused and cleaned from the regular code.
+
 ## Stance on dialects and macros
 
-_~work-in-progress-text~_
+_work-in-progress-text_
 
 I am not expert on Lisps, not even Rebol, I am just speaking my mind. You are welcome to tell me I am wrong (janko.itm at gmail).
 
@@ -83,5 +117,11 @@ think that the core language could be flexible enough for specific usages like G
 (1) not exception as an error, but exception to the normal operation, evaluation
 (2) well *if* or eq. is not just a macro but a _special form_ because it requires special evaluation rules that aren't compatible with lisps evaluation. Lisp by default immediately evaluates lists. 
 (3) initial tests with regular Rye code using GTK gave nice results
+
+## Is Rye Object Oriented
+
+No. I believe that separation between functionality and state is usualy a better approach. You can use contexts as objects, you could also extend them, put them in hierarchies and in general do anything you would 
+when using a prototype-based object oriented programming language like Lua, Self or Javascript.
+
 
 
