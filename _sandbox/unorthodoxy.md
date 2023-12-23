@@ -178,5 +178,15 @@ think that the core language could be flexible enough for specific usages like G
 No. I believe that separation between functionality and state is usualy a better approach. You can use contexts as objects, you could also extend them, put them in hierarchies and in general do anything you would 
 when using a prototype-based object oriented programming language like Lua, Self or Javascript.
 
+## Focus, orientation, vocabulary
+
+Most of the early computer programming languages were written with focus tt the computer. If you look at it's words and structure they are computer related words, data structures, functions.
+
+Another group of languges seems aimed and focused on the model of computation at their grand idea. The naming, structures, functions are those which elevate the model. Lisp is all about lists and functions, many functional languages stem from mathematics.
+
+I am not saying that is bad and we are better. No. Just that Rye is consciously focused on user (the human) and on problem description.
+
+
+
 
 
