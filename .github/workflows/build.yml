@@ -22,8 +22,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-      with:
-        submodules: true
 
     - name: Set up Go
       uses: actions/setup-go@v4
@@ -41,16 +39,16 @@ jobs:
         # sudo apt-get install -y libc6-dev libgl1-mesa-dev libxcursor-dev libxi-dev libxinerama-dev libxrandr-dev libxxf86vm-dev libasound2-dev pkg-config
 
         # raylib: https://github.com/gen2brain/raylib-go/blob/master/.github/workflows/build.yml
-        sudo apt-get install -y libxi-dev libxinerama-dev libxcursor-dev libxrandr-dev libgl1-mesa-dev
+        # sudo apt-get install -y libxi-dev libxinerama-dev libxcursor-dev libxrandr-dev libgl1-mesa-dev
 
         # gtk: https://github.com/gotk3/gotk3/blob/master/.github/workflows/linux.yml
-        sudo apt-get install -y libgtk-3-dev libcairo2-dev libglib2.0-dev
+        # sudo apt-get install -y libgtk-3-dev libcairo2-dev libglib2.0-dev
 
     - name: Install MacOS cgo dependancies
       if: runner.os == 'macOS'
       run: |
         # b_gtk: https://github.com/gotk3/gotk3/blob/master/.github/workflows/macos.yml
-        brew install gobject-introspection gtk+3  
+        # brew install gobject-introspection gtk+3  
 
     - name: Build
       # Enable all features for CI builds. 

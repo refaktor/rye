@@ -16,11 +16,6 @@ func PrintHeader() {
 	fmt.Println("=-===============-===-===-=============-=")   // Output: -3
 }
 
-// todo -- move to util
-func equalValues(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) bool {
-	return arg0.GetKind() == arg1.GetKind() && arg0.Inspect(*ps.Idx) == arg1.Inspect(*ps.Idx)
-}
-
 func IndexOfAt(s, sep string, n int) int {
 	idx := strings.Index(s[n:], sep)
 	if idx > -1 {
@@ -31,7 +26,7 @@ func IndexOfAt(s, sep string, n int) int {
 
 func IndexOfSlice(ps *env.ProgramState, slice []env.Object, value env.Object) int {
 	for i, v := range slice {
-		if equalValues(ps, v, value) {
+		if v.Equal(value) {
 			return i
 		}
 	}
@@ -246,16 +241,11 @@ func SplitMulti(s string, seps string) []string {
 
 func ContainsVal(ps *env.ProgramState, b []env.Object, val env.Object) bool {
 	for _, a := range b {
-		if EqualValues(ps, a, val) {
+		if a.Equal(val) {
 			return true
 		}
 	}
 	return false
-}
-
-// TODO move to this from various
-func EqualValues(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) bool {
-	return arg0.GetKind() == arg1.GetKind() && arg0.Inspect(*ps.Idx) == arg1.Inspect(*ps.Idx)
 }
 
 /* func Transpose(slice []env.Object) []env.Object {

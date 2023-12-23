@@ -31,7 +31,7 @@ require (
 	github.com/thomasberger/parsemail v1.2.6
 	github.com/webview/webview_go v0.0.0-20230901181450-5a14030a9070
 	go.mongodb.org/mongo-driver v1.13.0
-	golang.org/x/crypto v0.16.0
+	golang.org/x/crypto v0.17.0
 	golang.org/x/net v0.19.0
 	golang.org/x/sync v0.5.0
 	golang.org/x/text v0.14.0

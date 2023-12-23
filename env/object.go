@@ -58,6 +58,7 @@ type Object interface {
 	Probe(e Idxs) string
 	Trace(msg string)
 	GetKind() int
+	Equal(p Object) bool
 }
 
 //
@@ -98,6 +99,13 @@ func (i Integer) GetKind() int {
 	return int(IntegerType)
 }
 
+func (i Integer) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	return i.Value == o.(Integer).Value
+}
+
 //
 // DECIMAL
 //
@@ -134,6 +142,13 @@ func (i Decimal) Trace(msg string) {
 
 func (i Decimal) GetKind() int {
 	return int(DecimalType)
+}
+
+func (i Decimal) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	return i.Value == o.(Decimal).Value
 }
 
 //
@@ -178,6 +193,13 @@ func (i String) GetKind() int {
 	return int(StringType)
 }
 
+func (i String) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	return i.Value == o.(String).Value
+}
+
 //
 // DATE
 //
@@ -210,6 +232,13 @@ func (i Date) Trace(msg string) {
 
 func (i Date) GetKind() int {
 	return int(DateType)
+}
+
+func (i Date) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	return i.Value == o.(Date).Value
 }
 
 //
@@ -269,6 +298,14 @@ func (i Uri) GetKind() int {
 	return i.Kind.Index
 }
 
+func (i Uri) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	oUri := o.(Uri)
+	return i.Path == oUri.Path && i.Scheme.Equal(oUri.Scheme) && i.Kind.Equal(oUri.Kind)
+}
+
 //
 // Email
 //
@@ -303,6 +340,13 @@ func (i Email) Trace(msg string) {
 
 func (i Email) GetKind() int {
 	return int(EmailType)
+}
+
+func (i Email) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	return i.Address == o.(Email).Address
 }
 
 //
@@ -369,6 +413,25 @@ func (i Block) GetKind() int {
 	return int(BlockType)
 }
 
+func (i Block) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	oBlock := o.(Block)
+	if i.Series.Len() != oBlock.Series.Len() {
+		return false
+	}
+	if i.Mode != oBlock.Mode {
+		return false
+	}
+	for j := 0; j < i.Series.Len(); j += 1 {
+		if !i.Series.Get(j).Equal(oBlock.Series.Get(j)) {
+			return false
+		}
+	}
+	return true
+}
+
 //
 // WORD
 //
@@ -405,6 +468,13 @@ func (i Word) Trace(msg string) {
 
 func (i Word) GetKind() int {
 	return int(WordType)
+}
+
+func (i Word) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	return i.Index == o.(Word).Index
 }
 
 //
@@ -445,6 +515,13 @@ func (i Setword) GetKind() int {
 	return int(SetwordType)
 }
 
+func (i Setword) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	return i.Index == o.(Setword).Index
+}
+
 //
 // LSETWORD
 //
@@ -481,6 +558,13 @@ func (i LSetword) Trace(msg string) {
 
 func (i LSetword) GetKind() int {
 	return int(LSetwordType)
+}
+
+func (i LSetword) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	return i.Index == o.(LSetword).Index
 }
 
 //
@@ -526,6 +610,14 @@ func (i Opword) GetKind() int {
 	return int(OpwordType)
 }
 
+func (i Opword) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	oOpword := o.(Opword)
+	return i.Index == oOpword.Index && i.Force == oOpword.Force
+}
+
 //
 // PIPEWORD
 //
@@ -567,6 +659,14 @@ func (i Pipeword) ToWord() Word {
 
 func (i Pipeword) GetKind() int {
 	return int(PipewordType)
+}
+
+func (i Pipeword) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	oPipeword := o.(Pipeword)
+	return i.Index == oPipeword.Index && i.Force == oPipeword.Force
 }
 
 //
@@ -611,6 +711,13 @@ func (i Tagword) GetKind() int {
 	return int(TagwordType)
 }
 
+func (i Tagword) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	return i.Index == o.(Tagword).Index
+}
+
 //
 // XWORD
 //
@@ -651,6 +758,13 @@ func (i Xword) ToWord() Word {
 
 func (i Xword) GetKind() int {
 	return int(XwordType)
+}
+
+func (i Xword) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	return i.Index == o.(Xword).Index
 }
 
 //
@@ -695,6 +809,13 @@ func (i EXword) GetKind() int {
 	return int(EXwordType)
 }
 
+func (i EXword) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	return i.Index == o.(EXword).Index
+}
+
 //
 // KINDWORD
 //
@@ -735,6 +856,13 @@ func (i Kindword) ToWord() Word {
 
 func (i Kindword) GetKind() int {
 	return int(KindwordType)
+}
+
+func (i Kindword) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	return i.Index == o.(Kindword).Index
 }
 
 //
@@ -779,6 +907,13 @@ func (i Getword) GetKind() int {
 	return int(GetwordType)
 }
 
+func (i Getword) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	return i.Index == o.(Getword).Index
+}
+
 //
 // GENWORD
 //
@@ -821,6 +956,13 @@ func (i Genword) GetKind() int {
 	return int(GenwordType)
 }
 
+func (i Genword) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	return i.Index == o.(Genword).Index
+}
+
 //
 // COMMA
 //
@@ -851,6 +993,10 @@ func (i Comma) GetKind() int {
 	return int(CommaType)
 }
 
+func (i Comma) Equal(o Object) bool {
+	return i.Type() == o.Type()
+}
+
 //
 // VOID
 //
@@ -879,6 +1025,10 @@ func (i Void) Trace(msg string) {
 
 func (i Void) GetKind() int {
 	return int(VoidType)
+}
+
+func (i Void) Equal(o Object) bool {
+	return i.Type() == o.Type()
 }
 
 //
@@ -964,6 +1114,26 @@ func (i Function) GetKind() int {
 	return int(FunctionType)
 }
 
+func (i Function) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	oFunction := o.(Function)
+	if i.Argsn != oFunction.Argsn {
+		return false
+	}
+	if !i.Spec.Equal(oFunction.Spec) {
+		return false
+	}
+	if !i.Body.Equal(oFunction.Body) {
+		return false
+	}
+	if i.Pure != oFunction.Pure {
+		return false
+	}
+	return true
+}
+
 //
 // BuiltinFunction
 //
@@ -973,6 +1143,8 @@ func (i Function) GetKind() int {
 type BuiltinFunction func(ps *ProgramState, arg0 Object, arg1 Object, arg2 Object, arg3 Object, arg4 Object) Object
 
 // Builtin represents a builtin function.
+// TODO: Builtin is just temporary ... we need to make something else, that holds natives and user functions. Interface should be the same ...
+// would it be better (faster) to have concrete type probably.
 type Builtin struct {
 	Fn            BuiltinFunction
 	Argsn         int
@@ -1019,6 +1191,42 @@ func (b Builtin) Probe(e Idxs) string {
 func (i Builtin) Trace(msg string) {
 	fmt.Print(msg + " (builtin): ")
 	fmt.Println(i.Argsn)
+}
+
+func (i Builtin) GetKind() int {
+	return int(BuiltinType)
+}
+
+func (i Builtin) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	oBuiltin := o.(Builtin)
+	if i.Argsn != oBuiltin.Argsn {
+		return false
+	}
+	if i.Cur0 != oBuiltin.Cur0 {
+		return false
+	}
+	if i.Cur1 != oBuiltin.Cur1 {
+		return false
+	}
+	if i.Cur2 != oBuiltin.Cur2 {
+		return false
+	}
+	if i.Cur3 != oBuiltin.Cur3 {
+		return false
+	}
+	if i.Cur4 != oBuiltin.Cur4 {
+		return false
+	}
+	if i.AcceptFailure != oBuiltin.AcceptFailure {
+		return false
+	}
+	if i.Pure != oBuiltin.Pure {
+		return false
+	}
+	return true
 }
 
 //
@@ -1106,6 +1314,31 @@ func (i Error) GetKind() int {
 	return int(IntegerType)
 }
 
+func (i Error) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	oError := o.(*Error)
+	if i.Status != oError.Status {
+		return false
+	}
+	if i.Message != oError.Message {
+		return false
+	}
+	if i.Parent != oError.Parent {
+		return false
+	}
+	if len(i.Values) != len(oError.Values) {
+		return false
+	}
+	for k, v := range i.Values {
+		if !v.Equal(oError.Values[k]) {
+			return false
+		}
+	}
+	return true
+}
+
 //
 // ARGWORD
 //
@@ -1142,6 +1375,14 @@ func (i Argword) Trace(msg string) {
 
 func (i Argword) GetKind() int {
 	return int(WordType)
+}
+
+func (i Argword) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	oArgword := o.(Argword)
+	return i.Name.Equal(oArgword.Name) && i.Kind.Equal(oArgword.Kind)
 }
 
 //
@@ -1212,6 +1453,26 @@ func NewCPath3(w1 Word, w2 Word, w3 Word) *CPath {
 	return &cp
 }
 
+func (i CPath) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	oCPath := o.(CPath)
+	if i.Cnt != oCPath.Cnt {
+		return false
+	}
+	if !i.Word1.Equal(oCPath.Word1) {
+		return false
+	}
+	if !i.Word2.Equal(oCPath.Word2) {
+		return false
+	}
+	if !i.Word3.Equal(oCPath.Word3) {
+		return false
+	}
+	return true
+}
+
 //
 // NATIVE
 //
@@ -1250,6 +1511,22 @@ func (i Native) Trace(msg string) {
 
 func (i Native) GetKind() int {
 	return i.Kind.Index
+}
+
+func (i Native) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	oNative := o.(Native)
+	if !i.Kind.Equal(oNative.Kind) {
+		return false
+	}
+	if iValObj, ok := i.Value.(Object); ok {
+		if oValObj, ok := oNative.Value.(Object); ok {
+			return iValObj.Equal(oValObj)
+		}
+	}
+	return i.Value == oNative.Value
 }
 
 //
@@ -1330,6 +1607,33 @@ func (i Dict) Trace(msg string) {
 
 func (i Dict) GetKind() int {
 	return i.Kind.Index
+}
+
+func (i Dict) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	oDict := o.(Dict)
+	if !i.Kind.Equal(oDict.Kind) {
+		return false
+	}
+	if len(i.Data) != len(oDict.Data) {
+		return false
+	}
+	for k, v := range i.Data {
+		if vObj, ok := v.(Object); ok {
+			if oObj, ok := oDict.Data[k].(Object); ok {
+				if !vObj.Equal(oObj) {
+					return false
+				}
+			}
+		} else {
+			if v != oDict.Data[k] {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 //
@@ -1442,6 +1746,33 @@ func (i List) GetKind() int {
 	return i.Kind.Index
 }
 
+func (i List) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	oList := o.(List)
+	if !i.Kind.Equal(oList.Kind) {
+		return false
+	}
+	if len(i.Data) != len(oList.Data) {
+		return false
+	}
+	for i, v := range i.Data {
+		if vObj, ok := v.(Object); ok {
+			if oObj, ok := oList.Data[i].(Object); ok {
+				if !vObj.Equal(oObj) {
+					return false
+				}
+			}
+		} else {
+			if v != oList.Data[i] {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 // KIND Type
 
 //
@@ -1498,6 +1829,28 @@ func (i Kind) HasConverter(from int) bool {
 	}
 }
 
+func (i Kind) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	oKind := o.(Kind)
+	if !i.Kind.Equal(oKind.Kind) {
+		return false
+	}
+	if !i.Spec.Equal(oKind.Spec) {
+		return false
+	}
+	if len(i.Converters) != len(oKind.Converters) {
+		return false
+	}
+	for k, v := range i.Converters {
+		if !v.Equal(oKind.Converters[k]) {
+			return false
+		}
+	}
+	return true
+}
+
 //
 // Converter
 //
@@ -1537,6 +1890,23 @@ func (i Converter) GetKind() int {
 	return int(ConverterType)
 }
 
+func (i Converter) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	oConverter := o.(Converter)
+	if !i.From.Equal(oConverter.From) {
+		return false
+	}
+	if !i.To.Equal(oConverter.To) {
+		return false
+	}
+	if !i.Spec.Equal(oConverter.Spec) {
+		return false
+	}
+	return true
+}
+
 //
 // TIME
 //
@@ -1572,6 +1942,13 @@ func (i Time) Trace(msg string) {
 
 func (i Time) GetKind() int {
 	return int(TimeType)
+}
+
+func (i Time) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	return i.Value.Equal(o.(Time).Value)
 }
 
 //
@@ -1650,4 +2027,23 @@ func (i Vector) Trace(msg string) {
 
 func (i Vector) GetKind() int {
 	return int(VectorType)
+}
+
+func (i Vector) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	oVector := o.(Vector)
+	if !i.Kind.Equal(oVector.Kind) {
+		return false
+	}
+	if i.Value.Len() != oVector.Value.Len() {
+		return false
+	}
+	for j := 0; j < i.Value.Len(); j++ {
+		if i.Value[j] != oVector.Value[j] {
+			return false
+		}
+	}
+	return true
 }
