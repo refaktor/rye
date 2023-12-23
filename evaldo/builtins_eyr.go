@@ -21,7 +21,7 @@ type EyrStack struct {
 
 func NewEyrStack() *EyrStack {
 	st := EyrStack{}
-	st.D = make([]env.Object, 100000000)
+	st.D = make([]env.Object, 100)
 	st.I = 0
 	return &st
 }
@@ -84,7 +84,7 @@ func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toL
 
 		arg1 = stack.Pop()
 	}
-	ps.Res = bi.Fn(ps, arg0, arg1, nil, nil, nil)
+	ps.Res = bi.Fn(ps, arg1, arg0, nil, nil, nil)
 
 	stack.Push(ps.Res)
 	return ps
@@ -152,6 +152,9 @@ func Eyr_EvalExpression(es *env.ProgramState, stack *EyrStack) *env.ProgramState
 			stack.Push(object)
 		case env.WordType:
 			rr := Eyr_EvalWord(es, object.(env.Word), nil, false, stack)
+			return rr
+		case env.OpwordType:
+			rr := Eyr_EvalWord(es, object.(env.Opword), nil, false, stack)
 			return rr
 		case env.BuiltinType:
 			//fmt.Println("yoyo")
