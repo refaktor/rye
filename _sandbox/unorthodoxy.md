@@ -45,6 +45,8 @@ More conventions
 * If a function ends with **\\**, this means **"more"**, usually means a this variation accepts additonal argument compared to base function (ls\, produce\)
 * If a functions changes values **in-place** it has ! at the end (inc! , append! , unique!)
 
+Two types of Rye functions exist. General functions and generic functions. 
+
 ## All the word types!?
 
 Words, set-words, lset-words, get-words, tag-words, ... why ...
