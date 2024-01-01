@@ -21,7 +21,7 @@ require (
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/lib/pq v1.10.9
 	github.com/mattn/go-sqlite3 v1.14.18
-	github.com/mhale/smtpd v0.8.0
+	github.com/mhale/smtpd v0.8.1
 	github.com/mrz1836/postmark v1.6.1
 	github.com/pkg/term v1.1.0
 	github.com/refaktor/go-peg v0.0.0-20220116201714-31e3dfa8dc7d
