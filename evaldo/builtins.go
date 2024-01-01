@@ -4709,6 +4709,7 @@ var builtins = map[string]*env.Builtin{
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
+			//contains with string
 			case env.String:
 				switch s2 := arg1.(type) {
 				case env.String:
@@ -4720,11 +4721,30 @@ var builtins = map[string]*env.Builtin{
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.StringType}, "contains")
 				}
-			// TODO-FIX1 .. add for block and list (use util.containsVal for block)
+			//contains block
 			case env.Block:
-				switch code := arg1.(type) {
+				switch value := arg1.(type) {
 				case env.Integer:
-					if util.ContainsVal(ps, s1.Series.S, code) {
+					if util.ContainsVal(ps, s1.Series.S, value) {
+						return *env.NewInteger(1)
+					} else {
+						return *env.NewInteger(0)
+					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "contains")
+				}
+			// contains list
+			case env.List:
+				switch value := arg1.(type) {
+				case env.Integer:
+					isListContains := false
+					for i := 0; i < len(s1.Data); i++ {
+						if s1.Data[i] == value.Value {
+							isListContains = true
+							break
+						}
+					}
+					if isListContains {
 						return *env.NewInteger(1)
 					} else {
 						return *env.NewInteger(0)
@@ -4733,7 +4753,7 @@ var builtins = map[string]*env.Builtin{
 					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "contains")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType}, "contains")
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType, env.ListType}, "contains")
 			}
 		},
 	},
