@@ -4721,8 +4721,19 @@ var builtins = map[string]*env.Builtin{
 					return MakeArgError(ps, 2, []env.Type{env.StringType}, "contains")
 				}
 			// TODO-FIX1 .. add for block and list (use util.containsVal for block)
+			case env.Block:
+				switch code := arg1.(type) {
+				case env.Integer:
+					if util.ContainsVal(ps, s1.Series.S, code) {
+						return *env.NewInteger(1)
+					} else {
+						return *env.NewInteger(0)
+					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "contains")
+				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "contains")
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType}, "contains")
 			}
 		},
 	},
