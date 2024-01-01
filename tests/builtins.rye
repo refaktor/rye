@@ -507,6 +507,14 @@ section "Working with blocks and lists"
 		equal { { 3 2 3 5 3 2 } .list .unique .length? } 3  ; result order is not deterministic list { 3 2 5 }
 	}
 
+	group "contains"
+	mold\nowrap ?contains
+	{ { block string list } }
+	{
+		equal { contains "abbaca" "b" } 1
+		equal { contains { 1 2 3 } 2  } 1
+		equal { contains list { 1 2 3 } 2 } 1
+	}
 }
 
 
