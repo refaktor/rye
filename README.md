@@ -356,6 +356,8 @@ Rye can also work inside your browser or any other WASM container. I will add ex
   [Oldes' Rebol 3](https://oldes.github.io/Rebol3/) - Rebol3 fork maintained by Oldes (from Amanita Design), tries to resolve issues without unnecessarily changing the language itself.
   
   [Arturo](https://arturo-lang.io/) - Another unique language that builds on Rebol's core ideas.
+
+  [Charm](https://github.com/tim-hardcastle/Charm) - Not related to Rebol, but an interesting Go based language with some similar runtime ideas and challenges.
   
   [Ren-c](https://github.com/metaeducation/ren-c) - Rebol 3 fork maintained by HostileFork, more liberal with changes to the language. 
   
