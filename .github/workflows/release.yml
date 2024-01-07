@@ -7,13 +7,16 @@ on:
           - 'v*.*.*'
 
 permissions:
-  contents: write
-  packages: write
-  # issues: write
+  contents: read
 
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      packages: write
+      # issues: write
 
     steps:
       - uses: actions/checkout@v4
