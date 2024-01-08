@@ -83,8 +83,10 @@ func LoadString(input string, sig bool) (env.Object, *env.Idxs) {
 	input = removeBangLine(input)
 
 	inp1 := strings.TrimSpace(input)
+	var noBraces bool
 	if strings.Index("{", inp1) != 0 {
 		input = "{ " + input + " }"
+		noBraces = true
 	}
 
 	parser := newParser()
@@ -92,7 +94,19 @@ func LoadString(input string, sig bool) (env.Object, *env.Idxs) {
 
 	if err != nil {
 		fmt.Print("\x1b[35;3m")
-		fmt.Print(err.Error())
+		errStr := err.Error()
+		if noBraces {
+			// hacky way to remove the first and last curly braces and
+			// fix the error position without changing the parser library
+			errStr = strings.Replace(errStr, "{", "", 1)
+			if i := strings.LastIndex(errStr, "}"); i >= 0 {
+				errStr = errStr[:i] + errStr[i+1:]
+			}
+			if i := strings.LastIndex(errStr, "-"); i >= 0 {
+				errStr = errStr[:i] + errStr[i+1:]
+			}
+		}
+		fmt.Print(errStr)
 		fmt.Println("\x1b[0m")
 
 		empty1 := make([]env.Object, 0)
