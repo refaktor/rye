@@ -7,20 +7,23 @@ on:
           - 'v*.*.*'
 
 permissions:
-  contents: write
-  packages: write
-  # issues: write
+  contents: read
 
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+      packages: write
+      # issues: write
+
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0 # needs full git history for changelog generation
-
-      - run: git fetch --force --tags
+          fetch-tags: true
+          persist-credentials: false
 
       - uses: actions/setup-go@v5
         with:
