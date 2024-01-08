@@ -107,10 +107,17 @@ func (ser TSeries) Len() int {
 func (ser TSeries) Probe(idxs Idxs) string {
 	var bu strings.Builder
 	bu.WriteString("{ ")
-	for i, v := range ser.S {
+	st := 0
+	if ser.Pos() > 10 {
+		bu.WriteString("... ")
+		st = ser.Pos() - 11
+	}
+	for i := st; i < ser.Pos()+9 && i < ser.Len(); i++ {
 		if i == ser.Pos()-1 {
-			bu.WriteString("<-here-> ")
+			bu.WriteString("\x1b[1m(here) \x1b[22m")
 		}
+
+		v := ser.S[i]
 		if v != nil {
 			bu.WriteString(v.Probe(idxs) + " ")
 		} else {
@@ -118,7 +125,10 @@ func (ser TSeries) Probe(idxs Idxs) string {
 		}
 	}
 	if ser.Len() == ser.Pos()-1 {
-		bu.WriteString("<-here-> ")
+		bu.WriteString("\x1b[1m(here)\x1b[22m")
+	}
+	if ser.Len() > ser.Pos()+9 {
+		bu.WriteString("... ")
 	}
 	bu.WriteString("}")
 	return bu.String()
