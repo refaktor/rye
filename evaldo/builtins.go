@@ -4925,9 +4925,33 @@ var builtins = map[string]*env.Builtin{
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "union")
 				}
-				// TODO-FIX1 add for list
+			case env.List:
+				switch secondBlock := arg1.(type) {
+				case env.Block:
+					mergedSlice := make([]env.Object, 0)
+					firtArgumentValue := s1
+					// If isAvailable is false then it is new value
+					isAvailable := false
+					for _, v1 := range secondBlock.Series.S {
+						isAvailable = false
+						for _, v2 := range firtArgumentValue.Data {
+							if env.RyeToRaw(v1) == v2 {
+								isAvailable = true
+								break
+							}
+						}
+						// If new value then add in List
+						if !isAvailable {
+							s1.Data = append(s1.Data, env.RyeToRaw(v1))
+						}
+					}
+					mergedSlice = append(mergedSlice, s1)
+					return *env.NewBlock(*env.NewTSeries(mergedSlice))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "union")
+				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "union")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "union")
 			}
 
 		},
