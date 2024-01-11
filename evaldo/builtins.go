@@ -4979,9 +4979,29 @@ var builtins = map[string]*env.Builtin{
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "intersect")
 				}
-				// TODO-FIX1 add for list
+			case env.List:
+				switch secondBlock := arg1.(type) {
+				case env.Block:
+					commonSlice := make([]env.Object, 0)
+					for _, v1 := range s1.Data {
+						for _, v2 := range secondBlock.Series.S {
+							// get matching value in both blocks
+							if env.RyeToRaw(v2) == v1 {
+								commonSlice = append(commonSlice, v2)
+							}
+						}
+					}
+					intersectSlice := make([]any, 0, len(commonSlice))
+					for _, value := range commonSlice {
+						intersectSlice = append(intersectSlice, value)
+					}
+					// return List
+					return *env.NewList(intersectSlice)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "intersect")
+				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType}, "intersect")
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType, env.ListType}, "intersect")
 			}
 		},
 	},
