@@ -199,8 +199,7 @@ do-in iso { 2 .add 3 |print }
 
 These are all work in progress, also need a refresher, but can maybe offer some insight:
 
-  * [Meet Rye](https://refaktor.github.io/rye/TOUR_0.html)
-  * [Introduction for Python programmers](https://refaktor.github.io/rye/INTRO_1.html)
+  * [Meet Rye](https://ryelang.org/meet_rye/)
  
 ### Examples
 
@@ -344,6 +343,10 @@ I've been working on a way to make this more elegant and systematic, but the man
 Rye can also work inside your browser or any other WASM container. I will add examples, html pages and info about it, but to build it:
 
     GOOS=js GOARCH=wasm go build -tags "b_tiny,b_norepl" -o wasm/rye.wasm main_wasm.go
+
+## Editor support
+
+Rye has Syntax highlighting for Emacs and VS Code. For VS Code just search for **ryelang** in the Extension marketplace. For Emacs it will be published soon on github. 
 
 ## Related links
 
