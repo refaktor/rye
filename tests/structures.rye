@@ -213,6 +213,11 @@ section "Working with blocks and lists"
 		equal { union { 8 2 } { 1 9 } |length? } 4 ; sortorder isn't deterministic so far ... think if it should be
 		equal { union { } { 1 9 } |length? }  2
 		equal { union { } { } } { }
+
+		equal { union list { 1 2 } { 1 2 3 4 } } list { 1 2 3 4 }
+		equal { union list { 1 2 } { 1 } } list { 1 2 }
+		equal { union list { 1 2 } { } } list { 1 2 }
+		equal { union list { } { } } list { }
 	}
   	group "intersection"
 	mold\nowrap ?intersection
@@ -221,6 +226,10 @@ section "Working with blocks and lists"
 		equal { intersection { 1 3 5 6 } { 2 3 4 5 } } { 3 5 }
 		equal { intersection { } { 2 3 4  } } { }
 		equal { intersection { } { } } { }
+
+		equal { intersection list { 1 3 5 6 } { 2 3 4 5 } } list { 3 5 }
+		equal { intersection list { } { 2 3 4 } } list { }
+		equal { intersection list { } { } } list { }
 	}
 	group "unique"
 	mold\nowrap ?append!

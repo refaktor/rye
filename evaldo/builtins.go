@@ -4929,12 +4929,15 @@ var builtins = map[string]*env.Builtin{
 				switch secondBlock := arg1.(type) {
 				case env.Block:
 					mergedSlice := make([]env.Object, 0)
-					firtArgumentValue := s1
+					// Initially fill first block data
+					for _, v := range s1.Data {
+						mergedSlice = append(mergedSlice, env.ToRyeValue(v))
+					}
 					// If isAvailable is false then it is new value
 					isAvailable := false
 					for _, v1 := range secondBlock.Series.S {
 						isAvailable = false
-						for _, v2 := range firtArgumentValue.Data {
+						for _, v2 := range s1.Data {
 							if env.RyeToRaw(v1) == v2 {
 								isAvailable = true
 								break
@@ -4942,11 +4945,17 @@ var builtins = map[string]*env.Builtin{
 						}
 						// If new value then add in List
 						if !isAvailable {
-							s1.Data = append(s1.Data, env.RyeToRaw(v1))
+							mergedSlice = append(mergedSlice, v1)
 						}
 					}
-					mergedSlice = append(mergedSlice, s1)
-					return *env.NewBlock(*env.NewTSeries(mergedSlice))
+					// Create list of array
+					unionSlice := make([]any, 0, len(mergedSlice))
+					for _, value := range mergedSlice {
+						unionSlice = append(unionSlice, value)
+					}
+					// return List
+					return *env.NewList(unionSlice)
+
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "union")
 				}
@@ -4979,9 +4988,29 @@ var builtins = map[string]*env.Builtin{
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "intersect")
 				}
-				// TODO-FIX1 add for list
+			case env.List:
+				switch secondBlock := arg1.(type) {
+				case env.Block:
+					commonSlice := make([]env.Object, 0)
+					for _, v1 := range s1.Data {
+						for _, v2 := range secondBlock.Series.S {
+							// get matching value in both blocks
+							if env.RyeToRaw(v2) == v1 {
+								commonSlice = append(commonSlice, v2)
+							}
+						}
+					}
+					intersectSlice := make([]any, 0, len(commonSlice))
+					for _, value := range commonSlice {
+						intersectSlice = append(intersectSlice, value)
+					}
+					// return List
+					return *env.NewList(intersectSlice)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "intersect")
+				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType}, "intersect")
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType, env.ListType}, "intersect")
 			}
 		},
 	},
