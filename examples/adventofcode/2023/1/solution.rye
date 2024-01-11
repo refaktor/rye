@@ -9,7 +9,6 @@ read\lines %puzzle.txt
 |map { .find-all* re |vals\with { .first , .last } |join .to-integer }
 |sum |print
 
-
 ; ## Part 2
 ;
 ; I had a nice solution for the sample, but in main puzzle the overlaping number names

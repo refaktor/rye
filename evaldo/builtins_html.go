@@ -409,7 +409,7 @@ var Builtins_html = map[string]*env.Builtin{
 			// fmt.Println(rm)
 			if err != nil {
 				ps.FailureFlag = true
-				return MakeBuiltinError(ps, "Error to load html dict.", "rye-reader//parse-html")
+				return MakeBuiltinError(ps, "Error to load html dict: "+err.Val, "rye-reader//parse-html")
 			}
 			return do_html(ps, arg0.(env.Native).Value.(io.Reader), rm)
 		},
