@@ -190,7 +190,7 @@ var Builtins_eyr = map[string]*env.Builtin{
 
 	"eyr": {
 		Argsn: 1,
-		Doc:   "TODODOC.",
+		Doc:   "Evaluates Rye block as Eyr (postfix) stack based code.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -208,7 +208,7 @@ var Builtins_eyr = map[string]*env.Builtin{
 
 	"eyr-loop": {
 		Argsn: 2,
-		Doc:   "TODODOC.",
+		Doc:   "Evaluates Rye block in loop as Eyr code (postfix stack based) N times.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cond := arg0.(type) {
 			case env.Integer:

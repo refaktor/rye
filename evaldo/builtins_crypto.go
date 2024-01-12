@@ -84,7 +84,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 
 	"Ed25519-pub-key//to-string": {
 		Argsn: 1,
-		Doc:   "TODODOC.",
+		Doc:   "Turns public key to string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch addr := arg0.(type) {
 			case env.Native:
@@ -98,7 +98,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 
 	"Ed25519-priv-key//to-string": {
 		Argsn: 1,
-		Doc:   "TODODOC.",
+		Doc:   "Turns private key to string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch addr := arg0.(type) {
 			case env.Native:
@@ -112,7 +112,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 
 	"ed25519-generate-keys": {
 		Argsn: 0,
-		Doc:   "TODODOC.",
+		Doc:   "Generates private and public key, returns them in a block. Public first.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			keys := make([]env.Object, 2)
 			puk, pvk, err := ed25519.GenerateKey(nil)
@@ -129,7 +129,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 
 	"ed25519-private-key": {
 		Argsn: 1,
-		Doc:   "TODODOC.",
+		Doc:   "Creates private key from string or bytes.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var pkey []byte
 			var err error
@@ -153,7 +153,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 
 	"ed25519-public-key": {
 		Argsn: 1,
-		Doc:   "TODODOC.",
+		Doc:   "Creates public key from string or bytes.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var pkey []byte
 			var err error
@@ -180,7 +180,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 
 	"Ed25519-priv-key//sign": {
 		Argsn: 2,
-		Doc:   "TODODOC.",
+		Doc:   "Signs string with private key. Returns signature in bytes.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch pvk := arg0.(type) {
 			case env.Native:
@@ -201,7 +201,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 
 	"sha512": {
 		Argsn: 1,
-		Doc:   "TODODOC.",
+		Doc:   "Calculates SHA512 on string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.String:

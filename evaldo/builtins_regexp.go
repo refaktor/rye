@@ -10,7 +10,7 @@ var Builtins_regexp = map[string]*env.Builtin{
 
 	"regexp": {
 		Argsn: 1,
-		Doc:   "TODODOC",
+		Doc:   "Creates a Regular expression object.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.String:
@@ -27,7 +27,7 @@ var Builtins_regexp = map[string]*env.Builtin{
 
 	"regexp//is-match": {
 		Argsn: 2,
-		Doc:   "TODODOC",
+		Doc:   "Check if string matches the given regular epression.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg1.(type) {
 			case env.String:
@@ -50,7 +50,7 @@ var Builtins_regexp = map[string]*env.Builtin{
 
 	"regexp//submatch?": {
 		Argsn: 2,
-		Doc:   "TODODOC",
+		Doc:   "Get the first submatch from string given the regular exprepesion.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg1.(type) {
 			case env.String:
@@ -73,6 +73,7 @@ var Builtins_regexp = map[string]*env.Builtin{
 
 	"regexp//submatches?": {
 		Argsn: 2,
+		Doc:   "Get all regexp submatches in a Block.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg1.(type) {
 			case env.String:
@@ -100,6 +101,7 @@ var Builtins_regexp = map[string]*env.Builtin{
 
 	"regexp//find-all": {
 		Argsn: 2,
+		Doc:   "Find all matches and return them in a Block",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg1.(type) {
 			case env.String:
@@ -125,7 +127,7 @@ var Builtins_regexp = map[string]*env.Builtin{
 
 	"regexp//match?": {
 		Argsn: 2,
-		Doc:   "TODODOC",
+		Doc:   "Get the regexp match.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg1.(type) {
 			case env.String:
@@ -144,7 +146,7 @@ var Builtins_regexp = map[string]*env.Builtin{
 
 	"regexp//replace-all": {
 		Argsn: 3,
-		Doc:   "TODODOC",
+		Doc:   "Replace all mathes in a string given the regexp with another string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch re := arg0.(type) {
 			case env.Native:

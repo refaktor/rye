@@ -402,7 +402,7 @@ var Builtins_html = map[string]*env.Builtin{
 
 	"rye-reader//parse-html": {
 		Argsn: 2,
-		Doc:   "TODODOC.",
+		Doc:   "Parses HTML string with a HTML dialect.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			rm, err := load_html_Dict(ps, arg1.(env.Block))
 			trace8("*** _--- GOT RM ++**")
@@ -417,7 +417,7 @@ var Builtins_html = map[string]*env.Builtin{
 
 	"rye-html-start//attr?": {
 		Argsn: 2,
-		Doc:   "TODODOC.",
+		Doc:   "Gets an attribute on node start.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch tok1 := arg0.(type) {
 			case env.Native:
@@ -451,7 +451,7 @@ var Builtins_html = map[string]*env.Builtin{
 
 	"rye-html-start//name?": {
 		Argsn: 1,
-		Doc:   "TODODOC.",
+		Doc:   "Gets the name of the node.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch tok1 := arg0.(type) {
 			case env.Native:
