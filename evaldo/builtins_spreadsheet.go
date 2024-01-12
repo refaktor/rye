@@ -357,7 +357,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	},
 	"add-col!": {
 		Argsn: 4,
-		Doc:   "Adds a new column to spreadsheet. Changes in-place and retuns the new spreadsheet.",
+		Doc:   "Adds a new column to spreadsheet. Changes in-place and returns the new spreadsheet.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Spreadsheet:
