@@ -123,7 +123,7 @@ var Builtins_sqlite = map[string]*env.Builtin{
 
 	"Rye-sqlite//exec": {
 		Argsn: 2,
-		Doc:   "TODODOC.",
+		Doc:   "Executes SQL over a database.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var sqlstr string
 			var vals []any
@@ -162,7 +162,7 @@ var Builtins_sqlite = map[string]*env.Builtin{
 
 	"Rye-sqlite//query": {
 		Argsn: 2,
-		Doc:   "TODODOC.",
+		Doc:   "Query a SQLite database with SQL.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var sqlstr string
 			var vals []any

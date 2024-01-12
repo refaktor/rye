@@ -148,7 +148,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	// TODO 2 -- this could move to a go functio so it could be called by general load that uses extension to define the loader
 	"load\\csv": {
 		Argsn: 1,
-		Doc:   "TODODOC",
+		Doc:   "Loads a .csv file to a spreadsheet datatype.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch file := arg0.(type) {
 			case env.Uri:
@@ -189,7 +189,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	},
 	"where-equal": {
 		Argsn: 3,
-		Doc:   "TODODOC",
+		Doc:   "Returns spreadsheet of rows where specific colum is equal to given value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Spreadsheet:
@@ -208,7 +208,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	},
 	"where-greater": {
 		Argsn: 3,
-		Doc:   "TODODOC",
+		Doc:   "Returns spreadsheet of rows where specific colum is greater than given value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Spreadsheet:
@@ -227,7 +227,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	},
 	"where-lesser": {
 		Argsn: 3,
-		Doc:   "TODODOC",
+		Doc:   "Returns spreadsheet of rows where specific colum is lesser than given value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Spreadsheet:
@@ -246,7 +246,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	},
 	"limit": {
 		Argsn: 2,
-		Doc:   "TODODOC",
+		Doc:   "Returns spreadsheet with number of rows limited to second argument.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Spreadsheet:
@@ -264,7 +264,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 
 	"sort-col!": {
 		Argsn: 2,
-		Doc:   "TODODOC",
+		Doc:   "Sorts row by given column.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Spreadsheet:
@@ -282,7 +282,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	},
 	"sort-col\\desc!": {
 		Argsn: 2,
-		Doc:   "TODODOC",
+		Doc:   "Sorts rows by given column, descending.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Spreadsheet:
@@ -300,7 +300,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	},
 	"columns": {
 		Argsn: 2,
-		Doc:   "TODODOC",
+		Doc:   "Returs spreasheet with just given columns.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Spreadsheet:
@@ -326,7 +326,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	},
 	"columns?": {
 		Argsn: 1,
-		Doc:   "TODODOC",
+		Doc:   "Gets the column names as block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Spreadsheet:
@@ -338,7 +338,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	},
 	"column?": {
 		Argsn: 2,
-		Doc:   "TODODOC",
+		Doc:   "Gets all values of a column as a block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			switch spr := arg0.(type) {
 			case env.Spreadsheet:
@@ -357,7 +357,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	},
 	"add-col!": {
 		Argsn: 4,
-		Doc:   "TODODOC",
+		Doc:   "Adds a new column to spreadsheet. Changes in-place and retuns the new spreadsheet.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Spreadsheet:
@@ -384,7 +384,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	},
 	"add-index!": {
 		Argsn: 2,
-		Doc:   "TODODOC",
+		Doc:   "Indexes all values in a colun and istre it,",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Spreadsheet:
@@ -414,7 +414,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	},
 	"autotype": {
 		Argsn: 2,
-		Doc:   "",
+		Doc:   "Takes a spreadsheet and tries to determine and change the types of columns.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			switch spr := arg0.(type) {
 			case env.Spreadsheet:

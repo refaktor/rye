@@ -161,7 +161,7 @@ var Builtins_conversion = map[string]*env.Builtin{
 
 	"convert": {
 		Argsn: 2,
-		Doc:   "TODODOC.",
+		Doc:   "Converts value from one kind to another.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return BuiConvert(ps, arg0, arg1)
 		},
@@ -169,7 +169,7 @@ var Builtins_conversion = map[string]*env.Builtin{
 
 	"converter": {
 		Argsn: 3,
-		Doc:   "TODODOC.",
+		Doc:   "Sets a converter between two kinds of objects.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// obj := BuiValidate(ps, arg0, arg1)
 			switch obj1 := arg0.(type) {

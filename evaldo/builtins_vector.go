@@ -25,7 +25,7 @@ var Builtins_vector = map[string]*env.Builtin{
 
 	"vector": {
 		Argsn: 1,
-		Doc:   "TODODOC",
+		Doc:   "Creates vector object.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Block:
@@ -41,9 +41,9 @@ var Builtins_vector = map[string]*env.Builtin{
 		},
 	},
 
-	"norm": {
+	"normalize": {
 		Argsn: 1,
-		Doc:   "TODODOC",
+		Doc:   "Normalize vector.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Vector:
@@ -54,9 +54,9 @@ var Builtins_vector = map[string]*env.Builtin{
 		},
 	},
 
-	"std-deviation": {
+	"std-deviation?": {
 		Argsn: 1,
-		Doc:   "TODODOC",
+		Doc:   "Calculate standard deviation of a vector",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Vector:
@@ -67,9 +67,9 @@ var Builtins_vector = map[string]*env.Builtin{
 		},
 	},
 
-	"cosine-similarity": {
+	"cosine-similarity?": {
 		Argsn: 2,
-		Doc:   "TODODOC",
+		Doc:   "Calculate cosine similarity.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch v1 := arg0.(type) {
 			case env.Vector:
@@ -91,7 +91,7 @@ var Builtins_vector = map[string]*env.Builtin{
 
 	"correlation": {
 		Argsn: 2,
-		Doc:   "TODODOC",
+		Doc:   "Get correlation between two vectors",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch v1 := arg0.(type) {
 			case env.Vector:
@@ -113,7 +113,7 @@ var Builtins_vector = map[string]*env.Builtin{
 
 	"dot-product": {
 		Argsn: 2,
-		Doc:   "TODODOC",
+		Doc:   "Calculate dot product between two vectors.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch v1 := arg0.(type) {
 			case env.Vector:

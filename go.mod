@@ -4,9 +4,7 @@ go 1.21
 
 // toolchain go1.21.5
 
-retract (
-    v0.0.11 // Published accidentally with a bug
-)
+retract v0.0.11 // Published accidentally with a bug
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.24.0

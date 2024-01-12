@@ -23,9 +23,9 @@ func something1() {
 
 var Builtins_ps = map[string]*env.Builtin{
 
-	"ps/virtual-memory": {
+	"ps\\virtual-memory?": {
 		Argsn: 0,
-		Doc:   "TODODOC",
+		Doc:   "Get information about virtual memory usage.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			v, _ := mem.VirtualMemory()
 			r := env.NewDict(make(map[string]any, 3))
@@ -35,9 +35,9 @@ var Builtins_ps = map[string]*env.Builtin{
 			return *r
 		},
 	},
-	"ps/pids": {
+	"ps\\pids?": {
 		Argsn: 0,
-		Doc:   "TODODOC",
+		Doc:   "Get process pids as a block.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			pids, _ := process.Pids()
 			pids2 := make([]env.Object, len(pids))
@@ -47,7 +47,7 @@ var Builtins_ps = map[string]*env.Builtin{
 			return env.NewBlock(*env.NewTSeries(pids2))
 		},
 	},
-	"ps/process": {
+	"ps\\process": {
 		Argsn: 1,
 		Doc:   "TODODOC",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

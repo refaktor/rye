@@ -551,7 +551,7 @@ var Builtins_io = map[string]*env.Builtin{
 
 	"input": {
 		Argsn: 1,
-		Doc:   "TODODOC",
+		Doc:   "Take input from a user.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __input(ps, arg0, arg1, arg2, arg3, arg4)
 		},
@@ -575,7 +575,7 @@ var Builtins_io = map[string]*env.Builtin{
 
 	"file-ext?": {
 		Argsn: 1,
-		Doc:   "TODODOC",
+		Doc:   "Get file extension.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Uri:
@@ -594,7 +594,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// should this be generic method or not?
 	"reader": {
 		Argsn: 1,
-		Doc:   "TODODOC",
+		Doc:   "Open new reader.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __open_reader(ps, arg0, arg1, arg2, arg3, arg4)
 		},
@@ -618,7 +618,7 @@ var Builtins_io = map[string]*env.Builtin{
 
 	"rye-reader//copy": {
 		Argsn: 2,
-		Doc:   "TODODOC",
+		Doc:   "Copy from a reader to a writer.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __copy(ps, arg0, arg1, arg2, arg3, arg4)
 		},
@@ -626,7 +626,7 @@ var Builtins_io = map[string]*env.Builtin{
 
 	"rye-file//copy": {
 		Argsn: 2,
-		Doc:   "TODODOC",
+		Doc:   "Copy Rye file to ouptut.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __copy(ps, arg0, arg1, arg2, arg3, arg4)
 		},
@@ -634,7 +634,7 @@ var Builtins_io = map[string]*env.Builtin{
 
 	"rye-file//stat": {
 		Argsn: 1,
-		Doc:   "TODODOC",
+		Doc:   "Get stat of a file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __stat(ps, arg0, arg1, arg2, arg3, arg4)
 		},
@@ -642,7 +642,7 @@ var Builtins_io = map[string]*env.Builtin{
 
 	"file-info//size?": {
 		Argsn: 1,
-		Doc:   "TODODOC",
+		Doc:   "Get size of a file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Native:
@@ -656,7 +656,7 @@ var Builtins_io = map[string]*env.Builtin{
 
 	"rye-file//read-all": {
 		Argsn: 1,
-		Doc:   "TODODOC",
+		Doc:   "Read all file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __read_all(ps, arg0, arg1, arg2, arg3, arg4)
 		},
@@ -664,6 +664,7 @@ var Builtins_io = map[string]*env.Builtin{
 
 	"rye-file//write": {
 		Argsn: 2,
+		Doc:   "Write to a file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __write(ps, arg0, arg1, arg2, arg3, arg4)
 		},
@@ -671,7 +672,7 @@ var Builtins_io = map[string]*env.Builtin{
 
 	"rye-file//close": {
 		Argsn: 1,
-		Doc:   "TODODOC",
+		Doc:   "Closes an open file or reader or writer.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __close(ps, arg0, arg1, arg2, arg3, arg4)
 		},
@@ -679,7 +680,7 @@ var Builtins_io = map[string]*env.Builtin{
 
 	"file-schema//read": {
 		Argsn: 1,
-		Doc:   "TODODOC",
+		Doc:   "Read a file given the path.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __fs_read(ps, arg0, arg1, arg2, arg3, arg4)
 		},
@@ -687,7 +688,7 @@ var Builtins_io = map[string]*env.Builtin{
 
 	"file-schema//read\\bytes": {
 		Argsn: 1,
-		Doc:   "TODODOC",
+		Doc:   "Read a specific number of bytes from a file path.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __fs_read_bytes(ps, arg0, arg1, arg2, arg3, arg4)
 		},
@@ -695,7 +696,7 @@ var Builtins_io = map[string]*env.Builtin{
 
 	"file-schema//read\\lines": {
 		Argsn: 1,
-		Doc:   "TODODOC",
+		Doc:   "Read files into the block of lines.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __fs_read_lines(ps, arg0, arg1, arg2, arg3, arg4)
 		},
@@ -703,6 +704,7 @@ var Builtins_io = map[string]*env.Builtin{
 
 	"file-schema//write": {
 		Argsn: 2,
+		Doc:   "Write to a file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __fs_write(ps, arg0, arg1, arg2, arg3, arg4)
 		},
@@ -710,7 +712,7 @@ var Builtins_io = map[string]*env.Builtin{
 
 	"https-schema//get": {
 		Argsn: 1,
-		Doc:   "TODODOC",
+		Doc:   "Make a HTTPS GET request.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __https_s_get(ps, arg0, arg1, arg2, arg3, arg4)
 		},
@@ -718,7 +720,7 @@ var Builtins_io = map[string]*env.Builtin{
 
 	"https-schema//post": {
 		Argsn: 3,
-		Doc:   "TODODOC",
+		Doc:   "Make a HTTPS POST request.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __http_s_post(ps, arg0, arg1, arg2, arg3, arg4)
 		},
@@ -726,7 +728,7 @@ var Builtins_io = map[string]*env.Builtin{
 
 	"http-schema//get": {
 		Argsn: 1,
-		Doc:   "TODODOC",
+		Doc:   "Make a HTTP GET request.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __https_s_get(ps, arg0, arg1, arg2, arg3, arg4)
 		},
@@ -734,7 +736,7 @@ var Builtins_io = map[string]*env.Builtin{
 
 	"http-schema//post": {
 		Argsn: 3,
-		Doc:   "TODODOC",
+		Doc:   "Make a HTTP POST request.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __http_s_post(ps, arg0, arg1, arg2, arg3, arg4)
 		},
@@ -742,7 +744,7 @@ var Builtins_io = map[string]*env.Builtin{
 
 	"https-schema//new-request": {
 		Argsn: 3,
-		Doc:   "TODODOC",
+		Doc:   "Create a new HTTPS Request object.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __https_s__new_request(ps, arg0, arg1, arg2, arg3, arg4)
 		},
@@ -750,7 +752,7 @@ var Builtins_io = map[string]*env.Builtin{
 
 	"https-request//set-header": {
 		Argsn: 3,
-		Doc:   "TODODOC",
+		Doc:   "Set header to the HTTPS Request.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __https_request__set_header(ps, arg0, arg1, arg2, arg3, arg4)
 		},
@@ -758,7 +760,7 @@ var Builtins_io = map[string]*env.Builtin{
 
 	"https-request//set-basic-auth": {
 		Argsn: 3,
-		Doc:   "TODODOC",
+		Doc:   "Set Basic Auth to the HTTPS Request.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __https_request__set_basic_auth(ps, arg0, arg1, arg2, arg3, arg4)
 		},
@@ -766,7 +768,7 @@ var Builtins_io = map[string]*env.Builtin{
 
 	"https-request//call": {
 		Argsn: 1,
-		Doc:   "TODODOC",
+		Doc:   "Call a HTTPS Request.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __https_request__do(ps, arg0, arg1, arg2, arg3, arg4)
 		},
@@ -774,7 +776,7 @@ var Builtins_io = map[string]*env.Builtin{
 
 	"https-response//read-body": {
 		Argsn: 1,
-		Doc:   "TODODOC",
+		Doc:   "Read body of HTTPS response.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __https_response__read_body(ps, arg0, arg1, arg2, arg3, arg4)
 		},
@@ -790,7 +792,7 @@ var Builtins_io = map[string]*env.Builtin{
 
 	"serve-cgi": {
 		Argsn: 3,
-		Doc:   "TODODOC",
+		Doc:   "Serve CGI.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch rword := arg0.(type) {
 			case env.Word:

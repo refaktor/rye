@@ -15,7 +15,7 @@ var Builtins_mail = map[string]*env.Builtin{
 
 	"rye-reader//parse-email": {
 		Argsn: 1,
-		Doc:   "Parsing email.",
+		Doc:   "Parse email.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch reader := arg0.(type) {
 			case env.Native:
@@ -32,7 +32,7 @@ var Builtins_mail = map[string]*env.Builtin{
 
 	"parsed-email//subject?": {
 		Argsn: 1,
-		Doc:   "TODODOC",
+		Doc:   "Get subject value from parsed email.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch email := arg0.(type) {
 			case env.Native:
@@ -82,7 +82,7 @@ var Builtins_mail = map[string]*env.Builtin{
 
 	"parsed-email//message-id?": {
 		Argsn: 1,
-		Doc:   "TODODOC",
+		Doc:   "Get message-id from parsed email.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch email := arg0.(type) {
 			case env.Native:
@@ -95,7 +95,7 @@ var Builtins_mail = map[string]*env.Builtin{
 
 	"parsed-email//html-body?": {
 		Argsn: 1,
-		Doc:   "TODODOC",
+		Doc:   "Get HTML body from parsed email",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch email := arg0.(type) {
 			case env.Native:
@@ -108,7 +108,7 @@ var Builtins_mail = map[string]*env.Builtin{
 
 	"parsed-email//text-body?": {
 		Argsn: 1,
-		Doc:   "TODODOC",
+		Doc:   "Get text body from parsed email.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch email := arg0.(type) {
 			case env.Native:
