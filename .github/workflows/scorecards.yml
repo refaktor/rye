@@ -13,6 +13,7 @@ on:
     - cron: '20 5 * * 2'
   push:
     branches: ["main"]
+  workflow_dispatch:
 
 # Declare default permissions as read only.
 permissions: read-all
