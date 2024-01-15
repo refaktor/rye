@@ -1,6 +1,6 @@
 
 downloader: fn1 {
-	|pass { .get .length? .prn , prn "is length of" }
+	|pass { .get .length? .prn , prn " is length of " }
 	|print
 }
 

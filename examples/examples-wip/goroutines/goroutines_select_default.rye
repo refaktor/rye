@@ -1,0 +1,18 @@
+c: new-channel 0
+
+go fn { } {
+    sleep 1000
+    send c "hello"
+}
+
+loop 5 {
+    select {
+        c fn { msg } {
+            print msg
+        }
+        fn { } {
+            print "default"
+            sleep 500
+        }
+    }
+}
