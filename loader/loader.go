@@ -345,19 +345,19 @@ func newParser() *Parser { // TODO -- add string eaddress path url time
 	parser, _ := NewParser(`
 	BLOCK       	<-  "{" SPACES SERIES* "}"
 	BBLOCK       	<-  "[" SPACES SERIES* "]"
-        GROUP       	<-  "(" SPACES SERIES* ")"
-        SERIES     	<-  (GROUP / COMMENT / URI / EMAIL / STRING / DECIMAL / NUMBER / COMMA / SETWORD / LSETWORD / ONECHARPIPE / PIPEWORD / XWORD / OPWORD / TAGWORD / EXWORD / CPATH / FPATH / KINDWORD / GENWORD / GETWORD / WORD / VOID / BLOCK / GROUP / BBLOCK / ARGBLOCK ) SPACES
-        ARGBLOCK       	<-  "{" WORD ":" WORD "}"
-        WORD           	<-  LETTER LETTERORNUM* / NORMOPWORDS
+    GROUP       	<-  "(" SPACES SERIES* ")"
+    SERIES     	<-  (GROUP / COMMENT / URI / EMAIL / STRING / DECIMAL / NUMBER / COMMA / SETWORD / LSETWORD / ONECHARPIPE / PIPEWORD / XWORD / OPWORD / TAGWORD / EXWORD / CPATH / FPATH / KINDWORD / GENWORD / GETWORD / WORD / VOID / BLOCK / GROUP / BBLOCK / ARGBLOCK ) SPACES
+    ARGBLOCK       	<-  "{" WORD ":" WORD "}"
+    WORD           	<-  LETTER LETTERORNUM* / NORMOPWORDS
 	GENWORD 		<-  "~" UCLETTER LCLETTERORNUM* 
 	SETWORD    		<-  LETTER LETTERORNUM* ":"
 	LSETWORD    	<-  ":" LETTER LETTERORNUM*
 	GETWORD   		<-  "?" LETTER LETTERORNUM*
 	PIPEWORD   		<-  "|" LETTER LETTERORNUM* / PIPEARROWS / "|" NORMOPWORDS  
-	ONECHARPIPE    <-  "|" ONECHARWORDS
+	ONECHARPIPE    	<-  "|" ONECHARWORDS
 	OPWORD    		<-  "." LETTER LETTERORNUM* / "." NORMOPWORDS / OPARROWS / ONECHARWORDS / "[*" LETTERORNUM*
 	TAGWORD    		<-  "'" LETTER LETTERORNUM*
-	KINDWORD    		<-  "~(" LETTER LETTERORNUM* ")~"?
+	KINDWORD    	<-  "~(" LETTER LETTERORNUM* ")~"?
 	XWORD    		<-  "<" LETTER LETTERORNUM* ">"?
 	EXWORD    		<-  "</" LETTER LETTERORNUM* ">"?
 	STRING			<-  ('"' STRINGCHAR* '"') / ("$" STRINGCHAR1* "$")
@@ -367,22 +367,22 @@ func newParser() *Parser { // TODO -- add string eaddress path url time
 	EMAILPART		<-  < ([a-zA-Z0-9._]+) >
 	FPATH 	   		<-  "%" URIPATH*
 	CPATH    		<-  WORD ( "/" WORD )+
-	ONECHARWORDS	    <-  < [<>*+-=/] >
+	ONECHARWORDS	<-  < [<>*+-=/] >
 	NORMOPWORDS	    <-  < ("_"[<>*+-=/]) >
 	PIPEARROWS      <-  ">>" / "~>" / "->"
 	OPARROWS        <-  "<<" / "<~" / "<-" / ">=" / "<="
-	LETTER  	       	<-  < [a-zA-Z^(` + "`" + `] >
+	LETTER  	    <-  < [a-zA-Z^(` + "`" + `] >
 	LETTERORNUM		<-  < [a-zA-Z0-9-?=.\\!_+<>\]*()] >
 	URIPATH			<-  < [a-zA-Z0-9-?=.:@/\\!_>	()] >
 	UCLETTER  		<-  < [A-Z] >
-	LCLETTERORNUM  	        <-  < [a-z0-9] >
-        NUMBER          	<-  < ("-"?[0-9]+) >
-        DECIMAL         	<-  < ("-"?[0-9]+.[0-9]+) >
+	LCLETTERORNUM  	<-  < [a-z0-9] >
+    NUMBER          <-  < ("-"?[0-9]+) >
+    DECIMAL         <-  < ("-"?[0-9]+.[0-9]+) >
 	SPACE			<-  < [ \t\r\n] >
 	STRINGCHAR		<-  < !'"' . >
 	STRINGCHAR1		<-  < !"$" . >
 	COMMA			<-  ","
-	VOID				<-  "_"
+	VOID			<-  "_"
 	COMMENT			<-  (";" NOTENDLINE* )
 	NOTENDLINE		<-  < !"\n" . >
 `)
