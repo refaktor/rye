@@ -92,7 +92,7 @@ func TestEvaldo_function2_call_builtin_in_func(t *testing.T) {
 				t.Error("Expected result value 1001")
 			}
 		} else {
-			t.Error("Builting inc Word not found in index")
+			t.Error("Builtin inc Word not found in index")
 		}
 	} else {
 		t.Error("Word not found in index")

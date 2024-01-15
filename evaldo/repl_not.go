@@ -1,5 +1,4 @@
 //go:build b_norepl
-// +build b_norepl
 
 package evaldo
 

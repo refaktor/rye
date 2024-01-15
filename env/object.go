@@ -1175,7 +1175,7 @@ func (b Builtin) Inspect(e Idxs) string {
 		pure_s = "Pure "
 	}
 
-	return "[" + pure_s + "Builtin(" + strconv.Itoa(b.Argsn) + "): " + b.Doc + "]"
+	return "[" + pure_s + "BFunction(" + strconv.Itoa(b.Argsn) + "): " + b.Doc + "]"
 }
 
 func (b Builtin) Probe(e Idxs) string {
@@ -1185,11 +1185,11 @@ func (b Builtin) Probe(e Idxs) string {
 	}
 
 	// return "[" + pure_s + "Builtin]"
-	return "[" + pure_s + "Builtin(" + strconv.Itoa(b.Argsn) + "): " + b.Doc + "]"
+	return "[" + pure_s + "BFunction(" + strconv.Itoa(b.Argsn) + "): " + b.Doc + "]"
 }
 
 func (i Builtin) Trace(msg string) {
-	fmt.Print(msg + " (builtin): ")
+	fmt.Print(msg + " (bfunction): ")
 	fmt.Println(i.Argsn)
 }
 
