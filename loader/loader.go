@@ -359,9 +359,9 @@ func newParser() *Parser { // TODO -- add string eaddress path url time
 	BLOCK       	<-  "{" SPACES SERIES* "}"
 	BBLOCK       	<-  "[" SPACES SERIES* "]"
         GROUP       	<-  "(" SPACES SERIES* ")"
-        SERIES     	<-  (GROUP / COMMENT / URI / EMAIL / STRING / DECIMAL / NUMBER / COMMA / SETWORD / LSETWORD / ONECHARPIPE / PIPEWORD / XWORD / OPWORD / TAGWORD / EXWORD / CPATH / FPATH / KINDWORD / GENWORD / GETWORD / VOID / WORD / BLOCK / GROUP / BBLOCK / ARGBLOCK ) SPACES
+        SERIES     	<-  (GROUP / COMMENT / URI / EMAIL / STRING / DECIMAL / NUMBER / COMMA / SETWORD / LSETWORD / ONECHARPIPE / PIPEWORD / XWORD / OPWORD / TAGWORD / EXWORD / CPATH / FPATH / KINDWORD / GENWORD / GETWORD / WORD / VOID / BLOCK / GROUP / BBLOCK / ARGBLOCK ) SPACES
         ARGBLOCK       	<-  "{" WORD ":" WORD "}"
-        WORD           	<-  LETTER LETTERORNUM*
+        WORD           	<-  LETTER LETTERORNUM* / NORMOPWORDS
 	GENWORD 		<-  "~" UCLETTER LCLETTERORNUM* 
 	SETWORD    		<-  LETTER LETTERORNUM* ":"
 	LSETWORD    	<-  ":" LETTER LETTERORNUM*
@@ -370,7 +370,7 @@ func newParser() *Parser { // TODO -- add string eaddress path url time
 	ONECHARPIPE    <-  "|" ONECHARWORDS
 	OPWORD    		<-  "." LETTER LETTERORNUM* / OPARROWS / ONECHARWORDS / "[*" LETTERORNUM* 
 	TAGWORD    		<-  "'" LETTER LETTERORNUM*
-	KINDWORD    		<-  "_(" LETTER LETTERORNUM* ")_"?
+	KINDWORD    		<-  "~(" LETTER LETTERORNUM* ")~"?
 	XWORD    		<-  "<" LETTER LETTERORNUM* ">"?
 	EXWORD    		<-  "</" LETTER LETTERORNUM* ">"?
 	STRING			<-  ('"' STRINGCHAR* '"') / ("$" STRINGCHAR1* "$")
@@ -381,9 +381,10 @@ func newParser() *Parser { // TODO -- add string eaddress path url time
 	FPATH 	   		<-  "%" URIPATH*
 	CPATH    		<-  WORD ( "/" WORD )+
 	ONECHARWORDS	    <-  < [<>*+-=/] >
+	NORMOPWORDS	    <-  < ("_"[<>*+-=/]) >
 	PIPEARROWS      <-  ">>" / "~>" / "->"
 	OPARROWS        <-  "<<" / "<~" / "<-" / ">=" / "<="
-	LETTER  	       	<-  < [a-zA-Z^(` + "`" + `_] >
+	LETTER  	       	<-  < [a-zA-Z^(` + "`" + `] >
 	LETTERORNUM		<-  < [a-zA-Z0-9-?=.\\!_+<>\]*()] >
 	URIPATH			<-  < [a-zA-Z0-9-?=.:@/\\!_>	()] >
 	UCLETTER  		<-  < [A-Z] >

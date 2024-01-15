@@ -1,4 +1,3 @@
-// ----- go:build go1.18
 //go:build !b_norepl
 
 package evaldo
