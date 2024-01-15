@@ -140,7 +140,13 @@ func FormatSsv(val env.Object, e env.Idxs) string {
 				if i > 0 {
 					r.WriteString(" ")
 				}
-				r.WriteString(b.Series.Get(i).Probe(e))
+				o := b.Series.Get(i)
+				switch ob := o.(type) {
+				case env.String:
+					r.WriteString(ob.Value)
+				default:
+					r.WriteString(ob.Probe(e))
+				}
 			}
 		}
 	}

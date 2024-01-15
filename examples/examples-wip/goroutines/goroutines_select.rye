@@ -1,0 +1,22 @@
+c1: new-channel 0
+c2: new-channel 0
+
+go fn { } {
+    sleep 1000
+    send c1 "one"
+}
+go fn { } {
+    sleep 2000
+    send c2 "two"
+}
+
+loop 2 {
+    select {
+        c1 fn { msg } {
+            print\ssv vals { "received from c1:" msg }
+        }
+        c2 fn { msg } {
+            print\ssv vals { "received from c2:" msg }
+        }
+    }
+}

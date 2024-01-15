@@ -1,0 +1,26 @@
+jobs: new-channel 5
+done: new-channel 0
+
+go fn { } {
+    print "waiting to process jobs"
+    forever {
+        j: read jobs |fix {
+            print "recieved all jobs"
+            send done 1
+            return
+        }
+
+        print\ssv vals { "received job" j }
+        sleep 1000
+    }
+}
+
+loop 3 { :i
+    send jobs i
+    print\ssv vals { "sent job" i }
+}
+close jobs
+
+print "waiting for jobs to finish"
+read done
+print "finished"
