@@ -252,11 +252,12 @@ type Uri struct {
 }
 
 func NewUri1(index *Idxs, path string) *Uri {
-	scheme := strings.Split(path, "://")[0] // + "-schema" // TODO -- this is just temporary .. so we test it further, make proper once at that level
+	scheme2 := strings.Split(path, "://")
+	scheme := scheme2[0] // + "-schema" // TODO -- this is just temporary .. so we test it further, make proper once at that level
 	idxSch := index.IndexWord(scheme)
 	kind := scheme + "-schema"
 	idxKind := index.IndexWord(kind)
-	nat := Uri{Word{idxSch}, path, Word{idxKind}}
+	nat := Uri{Word{idxSch}, scheme2[1], Word{idxKind}}
 	return &nat
 }
 

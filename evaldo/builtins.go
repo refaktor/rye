@@ -1922,6 +1922,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	/* TEMP FOR WASM 20250116
 	"get-input": {
 		Argsn: 1,
 		Doc:   "Stops execution and gives you a Rye console, to test the code inside environment.",
@@ -1950,7 +1951,7 @@ var builtins = map[string]*env.Builtin{
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "input-field")
 			}
 		},
-	},
+	}, */
 
 	// DOERS
 

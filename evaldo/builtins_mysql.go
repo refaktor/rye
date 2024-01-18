@@ -8,6 +8,7 @@ package evaldo
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/refaktor/rye/env"
 
@@ -38,6 +39,37 @@ var Builtins_mysql = map[string]*env.Builtin{
 				return MakeArgError(ps, 1, []env.Type{env.UriType}, "mysql-schema//open")
 			}
 
+		},
+	},
+
+	"mysql-schema//open\\pwd": {
+		Argsn: 2,
+		Doc:   "Open Mysql connection.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch str := arg0.(type) {
+			case env.Uri:
+				switch pwd := arg1.(type) {
+				case env.String:
+					path := strings.Replace(str.Path, "@", pwd.Value+"@")
+					db, err := sql.Open("mysql", path)
+					if err != nil {
+						// TODO --
+						//fmt.Println("Error1")
+						ps.FailureFlag = true
+						errMsg := fmt.Sprintf("Error opening SQL: %v", err.Error())
+						return MakeBuiltinError(ps, errMsg, "mysql-schema//open")
+					} else {
+						//fmt.Println("Error2")
+						return *env.NewNative(ps.Idx, db, "Rye-mysql")
+					}
+				default:
+					ps.FailureFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "mysql-schema//open")
+				}
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "mysql-schema//open")
+			}
 		},
 	},
 
@@ -145,7 +177,7 @@ var Builtins_mysql = map[string]*env.Builtin{
 							for i, colName := range cols {
 								val := columnPointers[i].(*any)
 								m[colName] = *val
-								sr.Values = append(sr.Values, *val)
+								sr.Values = append(sr.Values, envutil.ToRyeValue(string(*val)))
 							}
 							spr.AddRow(sr)
 							result = append(result, m)
@@ -157,13 +189,13 @@ var Builtins_mysql = map[string]*env.Builtin{
 						//	fmt.Print(result)
 						if i == 0 {
 							ps.FailureFlag = true
-							return MakeBuiltinError(ps, "No data.", "Rye-mysql//exec")
+							return MakeBuiltinError(ps, "No data.", "Rye-mysql//query")
 						}
 						return *spr
 						//return *env.NewNative(ps.Idx, *spr, "Rye-spreadsheet")
 					}
 				} else {
-					return MakeBuiltinError(ps, "Empty SQL.", "Rye-mysql//exec")
+					return MakeBuiltinError(ps, "Empty SQL.", "Rye-mysql//query")
 				}
 
 			default:

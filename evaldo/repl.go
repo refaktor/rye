@@ -318,7 +318,7 @@ func MaybeDisplayFailureOrError(es *env.ProgramState, genv *env.Idxs) {
 	}
 }
 
-func DoGeneralInput(es *env.ProgramState, prompt string) {
+/*  THIS WAS DISABLED TEMP FOR WASM MODE .. 20250116 func DoGeneralInput(es *env.ProgramState, prompt string) {
 	line := liner.NewLiner()
 	defer line.Close()
 	if code, err := line.SimplePrompt(prompt); err == nil {
@@ -337,3 +337,4 @@ func DoGeneralInputField(es *env.ProgramState, prompt string) {
 		log.Print("Error reading line: ", err)
 	}
 }
+*/
