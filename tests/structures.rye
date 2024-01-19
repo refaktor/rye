@@ -84,7 +84,7 @@ section "Working with blocks and lists"
 	}
 
 	group "->"
-	mold\nowrap ?_->
+	mold\nowrap "?_->"
 	{ { string  } }
 	{
 		equal { { 11 22 33 } -> 1 } 22
@@ -93,7 +93,7 @@ section "Working with blocks and lists"
 	}
 
 	group "<-"
-	mold\nowrap ?_<-
+	mold\nowrap "?_<-"
 	{ { string  } }
 	{
 		equal { 2 <- { 11 22 33 } } 33
@@ -237,6 +237,7 @@ section "Working with blocks and lists"
 	{
 		equal { { 3 2 3 5 3 2 } .list .unique .length? } 3  ; result order is not deterministic list { 3 2 5 }
 	}
+
 	group "unique"
 	mold\nowrap ?unique
 	{ { block string list } }
@@ -510,7 +511,7 @@ section "Serializers and loaders"
 	mold\nowrap ?mold\nowrap
 	{ { function } }
 	{
-		equal { mold\nowrap "33" } $"33"$
+		equal { mold\nowrap "33" } $33$ ; TODO --- unify this ... just changed probe to not have quotes
 	}
 	group "capture-stdout"
 	mold\nowrap ?capture-stdout

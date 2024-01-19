@@ -11,6 +11,7 @@ import (
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/evaldo"
 	"github.com/refaktor/rye/loader"
+	"github.com/refaktor/rye/util"
 )
 
 type TagType int
@@ -42,10 +43,54 @@ func main1() {
 // main for awk like functionality with rye language
 //
 
-func main() {
+func main_OLD() {
 	c := make(chan struct{}, 0)
 	js.Global().Set("RyeEvalString", js.FuncOf(RyeEvalString))
 	<-c
+}
+
+var (
+	jsCallback js.Value
+)
+
+func sendMessageToJS(message string) {
+	jsCallback.Invoke(message)
+}
+
+func main() {
+
+	fmt.Println("MAIN OO")
+
+	c := make(chan string)
+
+	ml := util.NewMicroLiner(c, sendMessageToJS)
+
+	js.Global().Set("RyeEvalString", js.FuncOf(RyeEvalString))
+
+	js.Global().Set("RyeEvalString2", js.FuncOf(RyeEvalString))
+
+	js.Global().Set("SendKeypress", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		if len(args) > 0 {
+			c <- args[0].String()
+		}
+		return nil
+	}))
+
+	// Get the JavaScript function to call back
+	jsCallback = js.Global().Get("receiveMessageFromGo")
+
+	ml.MicroPrompt("x> ", "", 0)
+
+	/* for {
+		key := <-c
+		// Process the keypress and then send a message back to JavaScript
+		response := key
+		if key == "A" {
+			response = "\x1B[1;3;31mA\x1B[0m"
+		}
+		sendMessageToJS(response)
+	} */
+
 }
 
 func RyeEvalString(this js.Value, args []js.Value) any {

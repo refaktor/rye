@@ -37,7 +37,7 @@
                  }  
 
 		const go = new Go();
-		WebAssembly.instantiateStreaming(fetch('rye.wasm'), go.importObject).then(function(dat) {
+		WebAssembly.instantiateStreaming(fetch('main.wasm'), go.importObject).then(function(dat) {
 		    go.run(dat.instance);
 		});
 		

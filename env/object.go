@@ -178,10 +178,11 @@ func (i String) Inspect(e Idxs) string {
 // Inspect returns a string representation of the Integer.
 func (i String) Probe(e Idxs) string {
 	s := i.Value
-	if len(s) > 100 {
-		return s[:100] + "..."
+	if len(s) > 80 {
+		return s[:80] + "..."
 	}
-	return "\"" + s + "\""
+	return s
+	// return "\"" + s + "\""
 }
 
 func (i String) Trace(msg string) {
@@ -252,27 +253,32 @@ type Uri struct {
 }
 
 func NewUri1(index *Idxs, path string) *Uri {
-	scheme := strings.Split(path, "://")[0] // + "-schema" // TODO -- this is just temporary .. so we test it further, make proper once at that level
+	scheme2 := strings.Split(path, "://")
+	scheme := scheme2[0] // + "-schema" // TODO -- this is just temporary .. so we test it further, make proper once at that level
 	idxSch := index.IndexWord(scheme)
 	kind := scheme + "-schema"
 	idxKind := index.IndexWord(kind)
-	nat := Uri{Word{idxSch}, path, Word{idxKind}}
+	nat := Uri{Word{idxSch}, scheme2[1], Word{idxKind}}
+	fmt.Println(nat)
 	return &nat
 }
 
 func NewUri(index *Idxs, scheme Word, path string) *Uri {
+	scheme2 := strings.Split(path, "://")
 	kindstr := strings.Split(path, "://")[0] + "-schema" // TODO -- this is just temporary .. so we test it further, make proper once at that level
 	idx := index.IndexWord(kindstr)
-	nat := Uri{scheme, path, Word{idx}}
+	nat := Uri{scheme, scheme2[1], Word{idx}}
+	//	nat := Uri{Word{idxSch}, scheme2[1], Word{idxKind}}
+	fmt.Println(nat)
 	return &nat
 }
 
 func (i Uri) GetPath() string {
-	return strings.SplitAfter(i.Path, "://")[1]
+	return i.Path
 }
 
 func (i Uri) GetProtocol() string {
-	return strings.Split(i.Path, "://")[0]
+	return "TODO"
 }
 
 func (i Uri) Type() Type {
