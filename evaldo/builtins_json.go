@@ -22,6 +22,10 @@ func resultToJS(res env.Object) any {
 		return v.Value
 	case env.Integer:
 		return v.Value
+	case *env.Integer:
+		return v.Value
+	case env.Decimal:
+		return v.Value
 	case env.RyeCtx:
 		return "{ 'state': 'todo' }"
 	default:
