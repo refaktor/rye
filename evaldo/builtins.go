@@ -2395,6 +2395,30 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"cc": {
+		Argsn: 1,
+		Doc:   "Change to context",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.RyeCtx:
+				ps.Ctx = &s1
+				return s1
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "cc")
+			}
+		},
+	},
+
+	"mkcc": {
+		Argsn: 0,
+		Doc:   "Make context with current as parent and change to it.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		    ctx := ps.Ctx
+		    ps.Ctx = env.NewEnv(ctx) // make new context with current par
+		    return ctx
+		},
+	},
+
 	"raw-context": { // **
 		Argsn: 1,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
