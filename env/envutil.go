@@ -1,7 +1,9 @@
 package env
 
-import "fmt"
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 func ToRyeValue(val any) Object {
 	switch v := val.(type) {

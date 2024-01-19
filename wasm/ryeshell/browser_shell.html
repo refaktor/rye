@@ -1,0 +1,48 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script src="wasm_exec.js"></script>
+    <script>
+      
+      if (WebAssembly) {
+          // WebAssembly.instantiateStreaming is not currently available in Safari
+          if (WebAssembly && !WebAssembly.instantiateStreaming) { // polyfill
+              WebAssembly.instantiateStreaming = async (resp, importObject) => {
+                  const source = await (await resp).arrayBuffer();
+                  return await WebAssembly.instantiate(source, importObject);
+              };
+          }  
+	  
+	  const go = new Go();
+	  WebAssembly.instantiateStreaming(fetch('bliner.wasm'), go.importObject).then(function(dat) {
+	      go.run(dat.instance);
+	  });
+	  
+          /*const go = new Go();
+            WebAssembly.instantiateStreaming(fetch("rye.wasm"), go.importObject).then((result) => {
+            go.run(result.instance);
+            });*/
+      } else {
+          console.log("WebAssembly is not supported in your browser")
+      }
+      
+      function onLoad() {
+	  var input = document.getElementById("inputX");
+	  console.log(input)
+	  input.addEventListener('keypress', (event) => {
+	      const key = event.key;
+	      window.sendKeypress(key);
+	      console.log(key);
+	  });
+      
+      }
+      function receiveMessageFromGo(message) {
+	  console.log("Message received from Go:", message);
+      }
+      
+    </script>
+  </head>
+  <body onload="onLoad()">
+    <textarea id="inputX">XX</textarea>
+  </body>
+</html>
