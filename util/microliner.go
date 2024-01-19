@@ -90,11 +90,10 @@ func (s *MLState) eraseLine() {
 	//str := fmt.Sprintf("\x1b[0K")
 	// s.sendBack("\x1b[0K")
 	s.sendBack("\x1b[2Kr")
-
 }
 
 func (s *MLState) eraseScreen() {
-	str := fmt.Sprintf("\x1b[H\x1b[2J")
+	str := "\x1b[H\x1b[2J"
 	s.sendBack(str)
 }
 
@@ -105,7 +104,6 @@ func (s *MLState) moveUp(lines int) {
 
 func (s *MLState) moveDown(lines int) {
 	s.sendBack(fmt.Sprintf("\x1b[%dB", lines))
-
 }
 
 func (s *MLState) emitNewLine() {
@@ -134,7 +132,6 @@ func NewMicroLiner(ch chan string, sb func(msg string)) *MLState {
 // Called when it needs to redraw / refresh the current input, dispatches to single line and multiline
 
 func (s *MLState) refresh(prompt []rune, buf []rune, pos int) error {
-
 	s.needRefresh = false
 	return s.refreshSingleLine(prompt, buf, pos)
 }
@@ -145,12 +142,9 @@ func (s *MLState) refreshSingleLine(prompt []rune, buf []rune, pos int) error {
 	s.sendBack(string(prompt))
 
 	// pLen := countGlyphs(prompt)
-	bLen := countGlyphs(buf)
+	// bLen := countGlyphs(buf)
 	// on some OS / terminals extra column is needed to place the cursor char
-	if false {
-		bLen++
-	}
-	pos = countGlyphs(buf[:pos])
+	///// pos = countGlyphs(buf[:pos])
 
 	// bLen := countGlyphs(buf)
 	// on some OS / terminals extra column is needed to place the cursor char
@@ -207,7 +201,6 @@ func (s *MLState) refreshSingleLine(prompt []rune, buf []rune, pos int) error {
 
 // signals end-of-file by pressing Ctrl-D.
 func (s *MLState) MicroPrompt(prompt string, text string, pos int) (string, error) {
-
 	s.sendBack(prompt)
 	var line = []rune(text)
 	p := []rune(prompt)
@@ -660,7 +653,6 @@ func VerySimpleRyeHighlight(c string) string {
 	s_num := 0
 	s_comment := 0
 	for _, char := range c {
-
 		if s_comment == 2 {
 			r.WriteRune(char)
 		} else if s_in == 0 && char == ';' {

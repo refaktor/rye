@@ -2413,9 +2413,9 @@ var builtins = map[string]*env.Builtin{
 		Argsn: 0,
 		Doc:   "Make context with current as parent and change to it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-		    ctx := ps.Ctx
-		    ps.Ctx = env.NewEnv(ctx) // make new context with current par
-		    return ctx
+			ctx := ps.Ctx
+			ps.Ctx = env.NewEnv(ctx) // make new context with current par
+			return ctx
 		},
 	},
 
