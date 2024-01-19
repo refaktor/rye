@@ -4246,8 +4246,25 @@ var builtins = map[string]*env.Builtin{
 					uniqueSlice = append(uniqueSlice, key)
 				}
 				return *env.NewList(uniqueSlice)
+			case env.Block:
+				uniqueList := util.RemoveDuplicate(ps, block.Series.S)
+				return *env.NewBlock(*env.NewTSeries(uniqueList))
+			case env.String:
+				strSlice := make([]env.Object, 0)
+				// create string to object slice
+				for _, value := range block.Value {
+					// if want to block  space then we can add here condition
+					strSlice = append(strSlice, env.ToRyeValue(value))
+				}
+				uniqueStringSlice := util.RemoveDuplicate(ps, strSlice)
+				uniqueStr := ""
+				// converting object to string and append final
+				for _, value := range uniqueStringSlice {
+					uniqueStr = uniqueStr + env.RyeToRaw(value).(string)
+				}
+				return *env.NewString(uniqueStr)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.ListType}, "unique")
+				return MakeArgError(ps, 1, []env.Type{env.ListType, env.BlockType, env.StringType}, "unique")
 			}
 		},
 	},

@@ -254,6 +254,32 @@ func ContainsVal(ps *env.ProgramState, b []env.Object, val env.Object) bool {
 	return false
 }
 
+func RemoveDuplicate(ps *env.ProgramState, slice []env.Object) []env.Object {
+	allKeys := make(map[env.Object]bool)
+	list := []env.Object{}
+	for _, item := range slice {
+		if _, value := allKeys[item]; !value {
+			allKeys[item] = true
+			list = append(list, item)
+		}
+	}
+	return list
+}
+
+/*
+func RemoveDuplicate[T comparable](sliceList []T) []T {
+	allKeys := make(map[T]bool)
+	list := []T{}
+	for _, item := range sliceList {
+		if _, value := allKeys[item]; !value {
+			allKeys[item] = true
+			list = append(list, item)
+		}
+	}
+	return list
+}
+*/
+
 /* func Transpose(slice []env.Object) []env.Object {
 	yl := len(slice)
 	var xl int
