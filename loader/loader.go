@@ -95,6 +95,7 @@ func LoadString(input string, sig bool) (env.Object, *env.Idxs) {
 		errStr := err.Error()
 		fmt.Print(errStr)
 		fmt.Println("\x1b[0m")
+		fmt.Print("\r")
 
 		empty1 := make([]env.Object, 0)
 		ser := env.NewTSeries(empty1)

@@ -28,6 +28,8 @@ type node struct {
 	value any
 }
 
+var ES *env.ProgramState
+
 var CODE []any
 
 //
@@ -43,41 +45,44 @@ func main1() {
 // main for awk like functionality with rye language
 //
 
-func main_OLD() {
-	c := make(chan struct{}, 0)
-	js.Global().Set("RyeEvalString", js.FuncOf(RyeEvalString))
-	<-c
-}
-
 var (
-	jsCallback js.Value
+	jsCallback  js.Value
+	jsCallback2 js.Value
 )
 
 func sendMessageToJS(message string) {
 	jsCallback.Invoke(message)
 }
 
+func sendLineToJS(line string) {
+	jsCallback2.Invoke(line)
+}
+
 func main() {
 
-	fmt.Println("MAIN OO")
+	c := make(chan util.KeyEvent)
 
-	c := make(chan string)
-
-	ml := util.NewMicroLiner(c, sendMessageToJS)
+	ml := util.NewMicroLiner(c, sendMessageToJS, sendLineToJS)
 
 	js.Global().Set("RyeEvalString", js.FuncOf(RyeEvalString))
 
 	js.Global().Set("RyeEvalString2", js.FuncOf(RyeEvalString))
 
+	js.Global().Set("RyeEvalShellLine", js.FuncOf(RyeEvalShellLine))
+
+	js.Global().Set("InitRyeShell", js.FuncOf(InitRyeShell))
+
 	js.Global().Set("SendKeypress", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		if len(args) > 0 {
-			c <- args[0].String()
+			cc := util.KeyEvent{args[0].String(), args[1].Int(), args[2].Bool(), args[3].Bool(), args[4].Bool()}
+			c <- cc
 		}
 		return nil
 	}))
 
 	// Get the JavaScript function to call back
 	jsCallback = js.Global().Get("receiveMessageFromGo")
+	jsCallback2 = js.Global().Get("receiveLineFromGo")
 
 	ml.MicroPrompt("x> ", "", 0)
 
@@ -93,11 +98,88 @@ func main() {
 
 }
 
-func RyeEvalString(this js.Value, args []js.Value) any {
+func InitRyeShell(this js.Value, args []js.Value) any {
+	subc := false
+	block, genv := loader.LoadString(" 123 ", false)
+	switch val := block.(type) {
+	case env.Block:
+		es := env.NewProgramState(block.(env.Block).Series, genv)
+		evaldo.RegisterBuiltins(es)
+		contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
+
+		if subc {
+			ctx := es.Ctx
+			es.Ctx = env.NewEnv(ctx)
+		}
+
+		evaldo.EvalBlock(es)
+		evaldo.MaybeDisplayFailureOrErrorWASM(es, genv, sendMessageToJS)
+
+		ES = es
+
+	case env.Error:
+		fmt.Println(val.Message)
+		return "Error"
+	}
+	return "Other"
+}
+
+func RyeEvalShellLine(this js.Value, args []js.Value) any {
 	sig := false
-	subc := true
+	subc := false
 
 	code := args[0].String()
+	//fmt.Println("RYE EVAL STRING")
+	//fmt.Println(code)
+
+	//util.PrintHeader()
+	//defer profile.Start(profile.CPUProfile).Stop()
+	if ES == nil {
+		return "Not initialized"
+	}
+
+	es := ES
+
+	block, genv := loader.LoadString(code, sig)
+	switch val := block.(type) {
+	case env.Block:
+		es = env.AddToProgramState(es, val.Series, genv)
+		evaldo.RegisterBuiltins(es)
+		contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
+
+		if subc {
+			ctx := es.Ctx
+			es.Ctx = env.NewEnv(ctx)
+		}
+
+		evaldo.EvalBlock(es)
+		evaldo.MaybeDisplayFailureOrErrorWASM(es, genv, sendMessageToJS)
+
+		if !es.ErrorFlag && es.Res != nil {
+			// prevResult = es.Res
+			// TEMP - make conditional
+			// print the result
+			sendMessageToJS("\033[38;5;37m" + es.Res.Inspect(*genv) + "\x1b[0m")
+		}
+
+		es.ReturnFlag = false
+		es.ErrorFlag = false
+		es.FailureFlag = false
+		return ""
+	case env.Error:
+		fmt.Println(val.Message)
+		return "Error"
+	}
+	return "Other"
+}
+
+func RyeEvalString(this js.Value, args []js.Value) any {
+	sig := false
+	subc := false
+
+	code := args[0].String()
+	//fmt.Println("RYE EVAL STRING")
+	// fmt.Println(code)
 
 	//util.PrintHeader()
 	//defer profile.Start(profile.CPUProfile).Stop()

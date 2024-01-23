@@ -68,21 +68,21 @@ func getSuffixGlyphs(s []rune, num int) []rune {
 	return s[p:]
 }
 
-type nexter struct {
-	r   rune
-	err error
+type KeyEvent struct {
+	Key   string
+	Code  int
+	Ctrl  bool
+	Alt   bool
+	Shift bool
 }
 
 func (s *MLState) cursorPos(x int) {
-	if false { // useCHA
-		// 'G' is "Cursor Character Absolute (CHA)"
-		fmt.Printf("\x1b[%dG", x)
-	} else {
-		// 'C' is "Cursor Forward (CUF)"
-		s.sendBack("\r")
-		if x > 0 {
-			fmt.Printf("\x1b[%dC", x)
-		}
+	// 'C' is "Cursor Forward (CUF)"
+	s.sendBack("\r")
+	if x > 0 {
+		trace("CURSOR POS:")
+		trace(x)
+		s.sendBack(fmt.Sprintf("\x1b[%dC", x))
 	}
 }
 
@@ -113,17 +113,19 @@ func (s *MLState) emitNewLine() {
 // State represents an open terminal
 type MLState struct {
 	needRefresh bool
-	next        <-chan string
+	next        <-chan KeyEvent
 	sendBack    func(msg string)
+	enterLine   func(line string)
 	// pending     []rune
 }
 
 // NewLiner initializes a new *State, and sets the terminal into raw mode. To
 // restore the terminal to its previous state, call State.Close().
-func NewMicroLiner(ch chan string, sb func(msg string)) *MLState {
+func NewMicroLiner(ch chan KeyEvent, sb func(msg string), el func(line string)) *MLState {
 	var s MLState
 	s.next = ch
 	s.sendBack = sb
+	s.enterLine = el
 	//	s.r = bufio.NewReader(os.Stdin)
 	return &s
 }
@@ -136,12 +138,24 @@ func (s *MLState) refresh(prompt []rune, buf []rune, pos int) error {
 	return s.refreshSingleLine(prompt, buf, pos)
 }
 
+func trace(t any) {
+	if false {
+		trace(t)
+	}
+}
+
 func (s *MLState) refreshSingleLine(prompt []rune, buf []rune, pos int) error {
-	fmt.Println("refreshing line")
+
+	trace("---refreshing line---")
+	trace(prompt)
+	trace(buf)
+	trace(pos)
+	s.cursorPos(0)
+	s.sendBack("\033[K")
 	s.cursorPos(0)
 	s.sendBack(string(prompt))
 
-	// pLen := countGlyphs(prompt)
+	pLen := countGlyphs(prompt)
 	// bLen := countGlyphs(buf)
 	// on some OS / terminals extra column is needed to place the cursor char
 	///// pos = countGlyphs(buf[:pos])
@@ -153,10 +167,11 @@ func (s *MLState) refreshSingleLine(prompt []rune, buf []rune, pos int) error {
 	}*/
 	if true { // pLen+bLen < s.columns {
 		// _, err = fmt.Print(VerySimpleRyeHighlight(string(buf)))
-		//s.cursorPos(0)
+		// s.cursorPos(0)
 		s.sendBack(VerySimpleRyeHighlight(string(buf)))
-		//fmt.Println(pLen + pos)
-		// s.cursorPos(pLen + pos)
+		trace(pLen + pos)
+		s.cursorPos(pLen + pos)
+		trace("SETTING CURSOR POS AFER HIGHLIGHT")
 	} /* else {
 		// Find space available
 		space := s.columns - pLen
@@ -201,6 +216,7 @@ func (s *MLState) refreshSingleLine(prompt []rune, buf []rune, pos int) error {
 
 // signals end-of-file by pressing Ctrl-D.
 func (s *MLState) MicroPrompt(prompt string, text string, pos int) (string, error) {
+startOfHere:
 	s.sendBack(prompt)
 	var line = []rune(text)
 	p := []rune(prompt)
@@ -227,10 +243,10 @@ func (s *MLState) MicroPrompt(prompt string, text string, pos int) (string, erro
 
 	// mainLoop:
 	for {
+		trace("POS: ")
+		trace(pos)
 		next := <-s.next
-		s.sendBack(next)
-		vs := []rune(next)
-		v := vs[0]
+		// s.sendBack(next)
 		// err := nil
 		// LBL haveNext:
 		/* if err != nil {
@@ -247,10 +263,103 @@ func (s *MLState) MicroPrompt(prompt string, text string, pos int) (string, erro
 		/* if pos == len(line) && !s.multiLineMode &&
 		len(p)+len(line) < s.columns*4 && // Avoid countGlyphs on large lines
 		countGlyphs(p)+countGlyphs(line) < s.columns-1 {*/
-		line = append(line, v)
-		s.sendBack(fmt.Sprintf("%c", v))
-		s.needRefresh = true // JM ---
-		pos++
+		if next.Ctrl {
+			switch next.Key {
+			case "a":
+				pos = 0
+				// s.needRefresh = true
+			case "e":
+				pos = len(line)
+				// s.needRefresh = true
+			case "b":
+				if pos > 0 {
+					pos -= len(getSuffixGlyphs(line[:pos], 1))
+					//s.needRefresh = true
+				} else {
+					// s.doBeep()
+				}
+			case "f": // right
+				if pos < len(line) {
+					pos += len(getPrefixGlyphs(line[pos:], 1))
+					// s.needRefresh = true
+				} else {
+					// s.doBeep()
+				}
+			case "k": // delete remainder of line
+				if pos >= len(line) {
+					// s.doBeep()
+				} else {
+					// if killAction > 0 {
+					//	s.addToKillRing(line[pos:], 1) // Add in apend mode
+					// } else {
+					//	s.addToKillRing(line[pos:], 0) // Add in normal mode
+					// }
+					// killAction = 2 // Mark that there was a kill action
+					line = line[:pos]
+					s.needRefresh = true
+				}
+
+			}
+		} else {
+			switch next.Code {
+			case 13: // Enter
+				s.sendBack("\n\r")
+				s.enterLine(string(line))
+				pos = 0
+				s.sendBack("\n\r")
+				line = make([]rune, 0)
+
+				goto startOfHere
+			case 8: // Backspace
+				if pos <= 0 {
+					// s.doBeep()
+				} else {
+					// pos += 1
+					n := len(getSuffixGlyphs(line[:pos], 1))
+					trace("<---line--->")
+					trace(line[:pos-n])
+					trace(line[pos:])
+					trace(n)
+					trace(pos)
+					trace(line)
+					// line = append(line[:pos-n], ' ')
+					line = append(line[:pos-n], line[pos:]...)
+					//						line = line[:pos-1]
+					trace(line)
+					// line = append(line[:pos-n], line[pos:]...)
+					pos -= n
+					s.needRefresh = true
+				}
+			case 39:
+				if pos < len(line) {
+					pos += len(getPrefixGlyphs(line[pos:], 1))
+				} else {
+					// s.doBeep()
+				}
+			case 37:
+				if pos > 0 {
+					pos -= len(getSuffixGlyphs(line[:pos], 1))
+				} else {
+					// s.doBeep()
+				}
+
+			default:
+				trace("***************************** ALARM *******************")
+				vs := []rune(next.Key)
+				v := vs[0]
+
+				if pos >= countGlyphs(p)+countGlyphs(line) {
+					line = append(line, v)
+					//s.sendBack(fmt.Sprintf("%c", v))
+					s.needRefresh = true // JM ---
+					pos++
+				} else {
+					line = append(line[:pos], append([]rune{v}, line[pos:]...)...)
+					pos++
+					s.needRefresh = true
+				}
+			}
+		}
 
 		/* } else {
 			line = append(line[:pos], append([]rune{v}, line[pos:]...)...)
@@ -270,7 +379,7 @@ func (s *MLState) MicroPrompt(prompt string, text string, pos int) (string, erro
 				if s.multiLineMode {
 					s.resetMultiLine(p, line, pos)
 				}
-				fmt.Println()
+				trace()
 				break mainLoop
 			case ctrlA: // Start of line
 				pos = 0
@@ -380,7 +489,7 @@ func (s *MLState) MicroPrompt(prompt string, text string, pos int) (string, erro
 				s.eraseScreen()
 				s.needRefresh = true
 			case ctrlC: // reset
-				fmt.Println("^C")
+				trace("^C")
 				if s.multiLineMode {
 					s.resetMultiLine(p, line, pos)
 				}
@@ -615,6 +724,8 @@ func (s *MLState) MicroPrompt(prompt string, text string, pos int) (string, erro
 			if err != nil {
 				return "", err
 			}
+		} else {
+			s.cursorPos(pos)
 		}
 		/*if !historyAction {
 			historyStale = true

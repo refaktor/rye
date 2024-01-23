@@ -20,6 +20,9 @@
 				const nl = outputBuf.lastIndexOf("\n");
 				if (nl != -1) {
 					console.log(outputBuf.substring(0, nl));
+					if (window.onWasmStdout) {
+						window.onWasmStdout(outputBuf.substring(0, nl)); // JM
+					}
 					outputBuf = outputBuf.substring(nl + 1);
 				}
 				return buf.length;

@@ -4894,6 +4894,20 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"space": {
+		Argsn: 1,
+		Doc:   "Adds space to the end of argument",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				return *env.NewString(s1.Value + " ")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "concat")
+			}
+		},
+	},
+
 	"concat": {
 		Argsn: 2,
 		Doc:   "Joins two strings together.",
