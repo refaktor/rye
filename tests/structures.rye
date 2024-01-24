@@ -237,7 +237,23 @@ section "Working with blocks and lists"
 	{
 		equal { { 3 2 3 5 3 2 } .list .unique .length? } 3  ; result order is not deterministic list { 3 2 5 }
 	}
-	
+
+	group "unique"
+	mold\nowrap ?unique
+	{ { block string list } }
+	{
+		; List
+		equal { unique list { 1 1 2 2 3 } } list { 1 2 3 }
+		equal { unique list { 1 1 2 2 } } list { 1 2 }
+
+		; Block
+		equal { unique { 1 1 2 2 3 } } { 1 2 3 }
+		equal { unique { 1 1 2 2 } } { 1 2 }
+
+		; String
+		equal { unique "aabbc" } "abc"
+		equal { unique "ab" } "ab"
+	}
 }
 
 
