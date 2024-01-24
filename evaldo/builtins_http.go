@@ -12,7 +12,6 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"github.com/refaktor/rye/env"
 
@@ -804,8 +803,7 @@ var Builtins_http = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch addr := arg0.(type) {
 			case env.Uri:
-				path := strings.Split(addr.Path, "://")
-				return *env.NewNative(ps.Idx, http.Dir(path[1]), "Go-http-dir")
+				return *env.NewNative(ps.Idx, http.Dir(addr.Path), "Go-http-dir")
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.UriType}, "new-http-dir")
 			}
@@ -817,8 +815,7 @@ var Builtins_http = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch addr := arg0.(type) {
 			case env.Uri:
-				path := strings.Split(addr.Path, "://")
-				return *env.NewNative(ps.Idx, http.FileServer(http.Dir(path[1])), "Http-handler")
+				return *env.NewNative(ps.Idx, http.FileServer(http.Dir(addr.Path)), "Http-handler")
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.UriType}, "new-static-handler")
 			}
