@@ -143,9 +143,6 @@ func RyeEvalShellLine(this js.Value, args []js.Value) any {
 	}
 
 	es := ES
-	fmt.Print("code")
-	fmt.Print(code)
-	fmt.Print("code")
 	block, genv := loader.LoadString(" "+code+" ", sig)
 	switch val := block.(type) {
 	case env.Block:

@@ -144,6 +144,85 @@ func (s *MLState) refresh(prompt []rune, buf []rune, pos int) error {
 	return s.refreshSingleLine(prompt, buf, pos)
 }
 
+/*
+// addToKillRing adds some text to the kill ring. If mode is 0 it adds it to a
+// new node in the end of the kill ring, and move the current pointer to the new
+// node. If mode is 1 or 2 it appends or prepends the text to the current entry
+// of the killRing.
+func (s *MLState) addToKillRing(text []rune, mode int) {
+	// Don't use the same underlying array as text
+	killLine := make([]rune, len(text))
+	copy(killLine, text)
+
+	// Point killRing to a newNode, procedure depends on the killring state and
+	// append mode.
+	if mode == 0 { // Add new node to killRing
+		if s.killRing == nil { // if killring is empty, create a new one
+			s.killRing = ring.New(1)
+		} else if s.killRing.Len() >= KillRingMax { // if killring is "full"
+			s.killRing = s.killRing.Next()
+		} else { // Normal case
+			s.killRing.Link(ring.New(1))
+			s.killRing = s.killRing.Next()
+		}
+	} else {
+		if s.killRing == nil { // if killring is empty, create a new one
+			s.killRing = ring.New(1)
+			s.killRing.Value = []rune{}
+		}
+		if mode == 1 { // Append to last entry
+			killLine = append(s.killRing.Value.([]rune), killLine...)
+		} else if mode == 2 { // Prepend to last entry
+			killLine = append(killLine, s.killRing.Value.([]rune)...)
+		}
+	}
+
+	// Save text in the current killring node
+	s.killRing.Value = killLine
+}
+
+func (s *MLState) yank(p []rune, text []rune, pos int) ([]rune, int, interface{}, error) {
+	if s.killRing == nil {
+		return text, pos, rune(esc), nil
+	}
+
+	lineStart := text[:pos]
+	lineEnd := text[pos:]
+	var line []rune
+
+	for {
+		value := s.killRing.Value.([]rune)
+		line = make([]rune, 0)
+		line = append(line, lineStart...)
+		line = append(line, value...)
+		line = append(line, lineEnd...)
+
+		pos = len(lineStart) + len(value)
+		err := s.refresh(p, line, pos)
+		if err != nil {
+			return line, pos, 0, err
+		}
+
+		next, err := s.readNext()
+		if err != nil {
+			return line, pos, next, err
+		}
+
+		switch v := next.(type) {
+		case rune:
+			return line, pos, next, nil
+		case action:
+			switch v {
+			case altY:
+				s.killRing = s.killRing.Prev()
+			default:
+				return line, pos, next, nil
+			}
+		}
+	}
+}
+*/
+
 func trace(t any) {
 	if false {
 		trace(t)
@@ -228,9 +307,11 @@ startOfHere:
 
 	// defer s.stopPrompt()
 
+	// if negative or past end put to the end
 	if pos < 0 || len(line) < pos {
 		pos = len(line)
 	}
+	// if len of line is > 0 then refresh
 	if len(line) > 0 {
 		err := s.refresh(p, line, pos)
 		if err != nil {
@@ -250,6 +331,7 @@ startOfHere:
 	for {
 		trace("POS: ")
 		trace(pos)
+		// receive next character from channel
 		next := <-s.next
 		// s.sendBack(next)
 		// err := nil
@@ -268,13 +350,14 @@ startOfHere:
 		/* if pos == len(line) && !s.multiLineMode &&
 		len(p)+len(line) < s.columns*4 && // Avoid countGlyphs on large lines
 		countGlyphs(p)+countGlyphs(line) < s.columns-1 {*/
+		pLen := countGlyphs(p)
 		if next.Ctrl {
-			switch next.Key {
+			switch strings.ToLower(next.Key) {
 			case "a":
-				pos = len(prompt)
+				pos = 0
 				// s.needRefresh = true
 			case "e":
-				pos = len(line) + len(prompt)
+				pos = len(line)
 				// s.needRefresh = true
 			case "b":
 				if pos > 0 {
@@ -303,6 +386,83 @@ startOfHere:
 					line = line[:pos]
 					s.needRefresh = true
 				}
+			}
+		} else if next.Alt {
+			switch strings.ToLower(next.Key) {
+			case "b":
+				if pos > 0 {
+					var spaceHere, spaceLeft, leftKnown bool
+					for {
+						pos--
+						if pos == 0 {
+							break
+						}
+						if leftKnown {
+							spaceHere = spaceLeft
+						} else {
+							spaceHere = unicode.IsSpace(line[pos])
+						}
+						spaceLeft, leftKnown = unicode.IsSpace(line[pos-1]), true
+						if !spaceHere && spaceLeft {
+							break
+						}
+					}
+				} else {
+					s.doBeep()
+				}
+			case "f":
+				if pos < len(line) {
+					var spaceHere, spaceLeft, hereKnown bool
+					for {
+						pos++
+						if pos == len(line) {
+							break
+						}
+						if hereKnown {
+							spaceLeft = spaceHere
+						} else {
+							spaceLeft = unicode.IsSpace(line[pos-1])
+						}
+						spaceHere, hereKnown = unicode.IsSpace(line[pos]), true
+						if spaceHere && !spaceLeft {
+							break
+						}
+					}
+				} else {
+					s.doBeep()
+				}
+			case "d": // Delete next word
+				if pos == len(line) {
+					s.doBeep()
+					break
+				}
+				// Remove whitespace to the right
+				var buf []rune // Store the deleted chars in a buffer
+				for {
+					if pos == len(line) || !unicode.IsSpace(line[pos]) {
+						break
+					}
+					buf = append(buf, line[pos])
+					line = append(line[:pos], line[pos+1:]...)
+				}
+				// Remove non-whitespace to the right
+				for {
+					if pos == len(line) || unicode.IsSpace(line[pos]) {
+						break
+					}
+					buf = append(buf, line[pos])
+					line = append(line[:pos], line[pos+1:]...)
+				}
+				// Save the result on the killRing
+				/*if killAction > 0 {
+					s.addToKillRing(buf, 2) // Add in prepend mode
+				} else {
+					s.addToKillRing(buf, 0) // Add in normal mode
+				} */
+				// killAction = 2 // Mark that there was some killing
+				//			case "bs": // Erase word
+				//				pos, line, killAction = s.eraseWord(pos, line, killAction)
+
 			}
 		} else {
 			switch next.Code {
@@ -334,6 +494,14 @@ startOfHere:
 					pos -= n
 					s.needRefresh = true
 				}
+			case 46: // Del
+				if pos >= len(line) {
+					s.doBeep()
+				} else {
+					n := len(getPrefixGlyphs(line[pos:], 1))
+					line = append(line[:pos], line[pos+n:]...)
+					s.needRefresh = true
+				}
 			case 39: // Right
 				if pos < len(line) {
 					pos += len(getPrefixGlyphs(line[pos:], 1))
@@ -341,12 +509,15 @@ startOfHere:
 					s.doBeep()
 				}
 			case 37: // Left
-				if pos > len(prompt) {
+				if pos > 0 {
 					pos -= len(getSuffixGlyphs(line[:pos], 1))
 				} else {
 					s.doBeep()
 				}
-
+			case 36: // Home
+				pos = 0
+			case 35: // End
+				pos = len(line)
 			default:
 				trace("***************************** ALARM *******************")
 				vs := []rune(next.Key)
@@ -729,7 +900,7 @@ startOfHere:
 				return "", err
 			}
 		} else {
-			s.cursorPos(pos)
+			s.cursorPos(pLen + pos)
 		}
 		/*if !historyAction {
 			historyStale = true
