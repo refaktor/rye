@@ -83,10 +83,12 @@ func LoadString(input string, sig bool) (env.Object, *env.Idxs) {
 	input = removeBangLine(input)
 
 	inp1 := strings.TrimSpace(input)
-	if strings.Index("{", inp1) != 0 {
+	if len(inp1) == 0 || strings.Index("{", inp1) != 0 {
 		input = "{ " + input + " }"
 	}
-
+	// fmt.Println("input")
+	// fmt.Print(input)
+	// fmt.Println("input")
 	parser := newParser()
 	val, err := parser.ParseAndGetValue(input, nil)
 

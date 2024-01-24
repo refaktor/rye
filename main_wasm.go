@@ -32,6 +32,8 @@ var ES *env.ProgramState
 
 var CODE []any
 
+var prevResult env.Object
+
 //
 // main function. Dispatches to appropriate mode function
 //
@@ -100,7 +102,7 @@ func main() {
 
 func InitRyeShell(this js.Value, args []js.Value) any {
 	subc := false
-	block, genv := loader.LoadString(" 123 ", false)
+	block, genv := loader.LoadString(" ", false)
 	switch val := block.(type) {
 	case env.Block:
 		es := env.NewProgramState(block.(env.Block).Series, genv)
@@ -116,6 +118,8 @@ func InitRyeShell(this js.Value, args []js.Value) any {
 		evaldo.MaybeDisplayFailureOrErrorWASM(es, genv, sendMessageToJS)
 
 		ES = es
+
+		prevResult = env.Void{}
 
 	case env.Error:
 		fmt.Println(val.Message)
@@ -139,8 +143,10 @@ func RyeEvalShellLine(this js.Value, args []js.Value) any {
 	}
 
 	es := ES
-
-	block, genv := loader.LoadString(code, sig)
+	fmt.Print("code")
+	fmt.Print(code)
+	fmt.Print("code")
+	block, genv := loader.LoadString(" "+code+" ", sig)
 	switch val := block.(type) {
 	case env.Block:
 		es = env.AddToProgramState(es, val.Series, genv)
@@ -152,8 +158,10 @@ func RyeEvalShellLine(this js.Value, args []js.Value) any {
 			es.Ctx = env.NewEnv(ctx)
 		}
 
-		evaldo.EvalBlock(es)
+		evaldo.EvalBlockInj(es, prevResult, true)
 		evaldo.MaybeDisplayFailureOrErrorWASM(es, genv, sendMessageToJS)
+
+		prevResult = es.Res
 
 		if !es.ErrorFlag && es.Res != nil {
 			// prevResult = es.Res

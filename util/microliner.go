@@ -92,6 +92,12 @@ func (s *MLState) eraseLine() {
 	s.sendBack("\x1b[2Kr")
 }
 
+func (s *MLState) doBeep() {
+	//str := fmt.Sprintf("\x1b[0K")
+	// s.sendBack("\x1b[0K")
+	s.sendBack("\a")
+}
+
 func (s *MLState) eraseScreen() {
 	str := "\x1b[H\x1b[2J"
 	s.sendBack(str)
@@ -145,7 +151,6 @@ func trace(t any) {
 }
 
 func (s *MLState) refreshSingleLine(prompt []rune, buf []rune, pos int) error {
-
 	trace("---refreshing line---")
 	trace(prompt)
 	trace(buf)
@@ -266,24 +271,24 @@ startOfHere:
 		if next.Ctrl {
 			switch next.Key {
 			case "a":
-				pos = 0
+				pos = len(prompt)
 				// s.needRefresh = true
 			case "e":
-				pos = len(line)
+				pos = len(line) + len(prompt)
 				// s.needRefresh = true
 			case "b":
 				if pos > 0 {
 					pos -= len(getSuffixGlyphs(line[:pos], 1))
 					//s.needRefresh = true
 				} else {
-					// s.doBeep()
+					s.doBeep()
 				}
 			case "f": // right
 				if pos < len(line) {
 					pos += len(getPrefixGlyphs(line[pos:], 1))
 					// s.needRefresh = true
 				} else {
-					// s.doBeep()
+					s.doBeep()
 				}
 			case "k": // delete remainder of line
 				if pos >= len(line) {
@@ -298,7 +303,6 @@ startOfHere:
 					line = line[:pos]
 					s.needRefresh = true
 				}
-
 			}
 		} else {
 			switch next.Code {
@@ -308,11 +312,11 @@ startOfHere:
 				pos = 0
 				s.sendBack("\n\r")
 				line = make([]rune, 0)
-
+				trace(line)
 				goto startOfHere
 			case 8: // Backspace
 				if pos <= 0 {
-					// s.doBeep()
+					s.doBeep()
 				} else {
 					// pos += 1
 					n := len(getSuffixGlyphs(line[:pos], 1))
@@ -330,17 +334,17 @@ startOfHere:
 					pos -= n
 					s.needRefresh = true
 				}
-			case 39:
+			case 39: // Right
 				if pos < len(line) {
 					pos += len(getPrefixGlyphs(line[pos:], 1))
 				} else {
-					// s.doBeep()
+					s.doBeep()
 				}
-			case 37:
-				if pos > 0 {
+			case 37: // Left
+				if pos > len(prompt) {
 					pos -= len(getSuffixGlyphs(line[:pos], 1))
 				} else {
-					// s.doBeep()
+					s.doBeep()
 				}
 
 			default:
