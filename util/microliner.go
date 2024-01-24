@@ -452,6 +452,7 @@ startOfHere:
 					}
 					buf = append(buf, line[pos])
 					line = append(line[:pos], line[pos+1:]...)
+					trace(buf)
 				}
 				// Save the result on the killRing
 				/*if killAction > 0 {
@@ -462,7 +463,6 @@ startOfHere:
 				// killAction = 2 // Mark that there was some killing
 				//			case "bs": // Erase word
 				//				pos, line, killAction = s.eraseWord(pos, line, killAction)
-
 			}
 		} else {
 			switch next.Code {
