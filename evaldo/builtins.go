@@ -2774,11 +2774,10 @@ var builtins = map[string]*env.Builtin{
 						if ps.ErrorFlag {
 							return ps.Res
 						}
+						ps.Ser = ser
 						ps.Ser.Reset()
 						acc = ps.Res
 					}
-					ps.Ser = ser
-					return ps.Res
 				default:
 					return MakeArgError(ps, 3, []env.Type{env.BlockType}, "produce")
 				}
