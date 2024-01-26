@@ -406,7 +406,7 @@ func TestLoader_load_uri_min(t *testing.T) {
 		t.Error("Expected scheme sqlite")
 	}
 
-	if block.(env.Block).Series.Get(0).(env.Uri).Path != "sqlite://db" { // todo later return just the path part ... but there are more components to URI, so we do it later
+	if block.(env.Block).Series.Get(0).(env.Uri).Path != "db" { // todo later return just the path part ... but there are more components to URI, so we do it later
 		t.Error("Expected path sqlite://db")
 	}
 }

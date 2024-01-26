@@ -50,7 +50,8 @@ var Builtins_mysql = map[string]*env.Builtin{
 			case env.Uri:
 				switch pwd := arg1.(type) {
 				case env.String:
-					path := strings.Replace(str.Path, "@", pwd.Value+"@")
+					path := strings.Replace(str.Path, "@", ":"+pwd.Value+"@", 1)
+					fmt.Println(path)
 					db, err := sql.Open("mysql", path)
 					if err != nil {
 						// TODO --
@@ -86,7 +87,7 @@ var Builtins_mysql = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = str.Series
 					values := make([]any, 0, 2)
-					_, vals = SQL_EvalBlock(ps, MODE_PSQL, values)
+					_, vals = SQL_EvalBlock(ps, MODE_SQLITE, values)
 					sqlstr = ps.Res.(env.String).Value
 					ps.Ser = ser
 				case env.String:
@@ -135,7 +136,7 @@ var Builtins_mysql = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = str.Series
 					values := make([]any, 0, 2)
-					_, vals = SQL_EvalBlock(ps, MODE_PSQL, values)
+					_, vals = SQL_EvalBlock(ps, MODE_SQLITE, values)
 					sqlstr = ps.Res.(env.String).Value
 					ps.Ser = ser
 				case env.String:
@@ -175,9 +176,17 @@ var Builtins_mysql = map[string]*env.Builtin{
 							// storing it in the map with the name of the column as the key.
 							m := make(map[string]any)
 							for i, colName := range cols {
-								val := columnPointers[i].(*any)
-								m[colName] = *val
-								sr.Values = append(sr.Values, envutil.ToRyeValue(string(*val)))
+								val := *columnPointers[i].(*any)
+								switch vval := val.(type) {
+								case []uint8:
+									//								fmt.Println(val)
+									//								fmt.Printf("%T", vval)
+									m[colName] = env.ToRyeValue(string(vval))
+									sr.Values = append(sr.Values, env.ToRyeValue(string(vval)))
+								default:
+									m[colName] = env.ToRyeValue(vval)
+									sr.Values = append(sr.Values, env.ToRyeValue(vval))
+								}
 							}
 							spr.AddRow(sr)
 							result = append(result, m)

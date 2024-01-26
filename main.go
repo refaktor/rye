@@ -4,7 +4,6 @@
 package main
 
 import (
-	"path/filepath"
 	"regexp"
 
 	"github.com/refaktor/rye/contrib"
@@ -51,15 +50,17 @@ func main() {
 	evaldo.ShowResults = true
 
 	if len(os.Args) == 1 {
-		main_rye_repl(os.Stdin, os.Stdout, false)
+		main_rye_repl(os.Stdin, os.Stdout, false, false)
 	} else if len(os.Args) == 2 {
 		if os.Args[1] == "shell" {
 			main_rysh()
+		} else if os.Args[1] == "here" {
+			main_rye_repl(os.Stdin, os.Stdout, true, true)
 		} else if os.Args[1] == "--hr" {
 			evaldo.ShowResults = false
-			main_rye_repl(os.Stdin, os.Stdout, false)
+			main_rye_repl(os.Stdin, os.Stdout, false, false)
 		} else if os.Args[1] == "--subc" {
-			main_rye_repl(os.Stdin, os.Stdout, true)
+			main_rye_repl(os.Stdin, os.Stdout, true, false)
 		} else if os.Args[1] == "web" {
 			// main_httpd()
 		} else if os.Args[1] == "ryeco" {
@@ -316,33 +317,48 @@ func main_cgi_file(file string, sig bool) {
 	}
 }
 
-func main_rye_repl(_ io.Reader, _ io.Writer, subc bool) {
+func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool) {
 	input := " 123 " // "name: \"Rye\" version: \"0.011 alpha\""
-	userHomeDir, _ := os.UserHomeDir()
-	profile_path := filepath.Join(userHomeDir, ".rye-profile")
+	// userHomeDir, _ := os.UserHomeDir()
+	// profile_path := filepath.Join(userHomeDir, ".rye-profile")
 
 	fmt.Println("Welcome to Rye shell. Use ls and ls\\ \"pr\" to list the current context.")
 
-	if _, err := os.Stat(profile_path); err == nil {
-		//content, err := os.ReadFile(profile_path)
-		//if err != nil {
-		//	log.Fatal(err)
-		//}
-		// input = string(content)
-	} else {
-		fmt.Println("There was no profile.")
-	}
+	//if _, err := os.Stat(profile_path); err == nil {
+	//content, err := os.ReadFile(profile_path)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	// input = string(content)
+	//} else {
+	//		fmt.Println("There was no profile.")
+	//}
 
 	block, genv := loader.LoadString(input, false)
 	es := env.NewProgramState(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
 	contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
-
 	evaldo.EvalBlock(es)
 
 	if subc {
 		ctx := es.Ctx
 		es.Ctx = env.NewEnv(ctx) // make new context with no parent
+	}
+
+	if here {
+		if _, err := os.Stat(".rye-here"); err == nil {
+			content, err := os.ReadFile(".rye-here")
+			if err != nil {
+				log.Fatal(err)
+			}
+			inputH := string(content)
+			block, genv := loader.LoadString(inputH, false)
+			block1 := block.(env.Block)
+			es = env.AddToProgramState(es, block1.Series, genv)
+			evaldo.EvalBlock(es)
+		} else {
+			fmt.Println("There was no `here` file.")
+		}
 	}
 
 	evaldo.DoRyeRepl(es, evaldo.ShowResults)

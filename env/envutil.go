@@ -1,6 +1,9 @@
 package env
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 func ToRyeValue(val any) Object {
 	switch v := val.(type) {
@@ -28,6 +31,8 @@ func ToRyeValue(val any) Object {
 		return v
 	case nil:
 		return nil
+	case time.Time:
+		return *NewString(v.Format(time.RFC3339))
 	default:
 		fmt.Println(val)
 		// TODO-FIXME

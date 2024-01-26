@@ -2395,6 +2395,30 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"cc": {
+		Argsn: 1,
+		Doc:   "Change to context",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.RyeCtx:
+				ps.Ctx = &s1
+				return s1
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "cc")
+			}
+		},
+	},
+
+	"mkcc": {
+		Argsn: 0,
+		Doc:   "Make context with current as parent and change to it.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			ctx := ps.Ctx
+			ps.Ctx = env.NewEnv(ctx) // make new context with current par
+			return ctx
+		},
+	},
+
 	"raw-context": { // **
 		Argsn: 1,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -4263,8 +4287,25 @@ var builtins = map[string]*env.Builtin{
 					uniqueSlice = append(uniqueSlice, key)
 				}
 				return *env.NewList(uniqueSlice)
+			case env.Block:
+				uniqueList := util.RemoveDuplicate(ps, block.Series.S)
+				return *env.NewBlock(*env.NewTSeries(uniqueList))
+			case env.String:
+				strSlice := make([]env.Object, 0)
+				// create string to object slice
+				for _, value := range block.Value {
+					// if want to block  space then we can add here condition
+					strSlice = append(strSlice, env.ToRyeValue(value))
+				}
+				uniqueStringSlice := util.RemoveDuplicate(ps, strSlice)
+				uniqueStr := ""
+				// converting object to string and append final
+				for _, value := range uniqueStringSlice {
+					uniqueStr = uniqueStr + env.RyeToRaw(value).(string)
+				}
+				return *env.NewString(uniqueStr)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.ListType}, "unique")
+				return MakeArgError(ps, 1, []env.Type{env.ListType, env.BlockType, env.StringType}, "unique")
 			}
 		},
 	},
@@ -4907,6 +4948,20 @@ var builtins = map[string]*env.Builtin{
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "right")
+			}
+		},
+	},
+
+	"space": {
+		Argsn: 1,
+		Doc:   "Adds space to the end of argument",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				return *env.NewString(s1.Value + " ")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "concat")
 			}
 		},
 	},

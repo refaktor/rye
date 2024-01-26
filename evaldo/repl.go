@@ -318,6 +318,24 @@ func MaybeDisplayFailureOrError(es *env.ProgramState, genv *env.Idxs) {
 	}
 }
 
+func MaybeDisplayFailureOrErrorWASM(es *env.ProgramState, genv *env.Idxs, printfn func(string)) {
+	if es.FailureFlag {
+		printfn("\x1b[33m" + "Failure" + "\x1b[0m")
+	}
+	if es.ErrorFlag {
+		printfn("\x1b[31;3m" + es.Res.Probe(*genv))
+		switch err := es.Res.(type) {
+		case env.Error:
+			printfn(err.CodeBlock.Probe(*genv))
+			printfn("Error not pointer so bug. #temp")
+		case *env.Error:
+			printfn("At location:")
+			printfn(err.CodeBlock.Probe(*genv))
+		}
+		printfn("\x1b[0m")
+	}
+}
+
 /*  THIS WAS DISABLED TEMP FOR WASM MODE .. 20250116 func DoGeneralInput(es *env.ProgramState, prompt string) {
 	line := liner.NewLiner()
 	defer line.Close()
