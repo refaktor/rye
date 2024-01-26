@@ -1,4 +1,4 @@
-
+; # Simple HTTP server for wasm build
 ; Serve all static files from wasm folder
 ; This is meant to test the wasm Rye version that works in a browser and needs http server
 ; to load properly

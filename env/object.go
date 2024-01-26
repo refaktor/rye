@@ -259,7 +259,6 @@ func NewUri1(index *Idxs, path string) *Uri {
 	kind := scheme + "-schema"
 	idxKind := index.IndexWord(kind)
 	nat := Uri{Word{idxSch}, scheme2[1], Word{idxKind}}
-	fmt.Println(nat)
 	return &nat
 }
 
@@ -269,7 +268,6 @@ func NewUri(index *Idxs, scheme Word, path string) *Uri {
 	idx := index.IndexWord(kindstr)
 	nat := Uri{scheme, scheme2[1], Word{idx}}
 	//	nat := Uri{Word{idxSch}, scheme2[1], Word{idxKind}}
-	fmt.Println(nat)
 	return &nat
 }
 
