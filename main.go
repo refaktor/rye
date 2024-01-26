@@ -235,6 +235,7 @@ func main_ryeco() {
 }
 
 func main_rye_file(file string, sig bool, subc bool) {
+	info := true
 	//util.PrintHeader()
 	//defer profile.Start(profile.CPUProfile).Stop()
 
@@ -244,6 +245,18 @@ func main_rye_file(file string, sig bool, subc bool) {
 	}
 
 	content := string(bcontent)
+
+	if info {
+		pattern := regexp.MustCompile(`^; (#[^\n]*)`)
+
+		lines := pattern.FindAllStringSubmatch(content, -1)
+
+		for _, line := range lines {
+			if line[1] != "" {
+				fmt.Println(line[1])
+			}
+		}
+	}
 
 	block, genv := loader.LoadString(content, sig)
 	switch val := block.(type) {

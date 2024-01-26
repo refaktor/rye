@@ -1,0 +1,9 @@
+; # Project Euler: problem 1
+; sum all factors of 3 and 5 smaller than 1000
+
+range 0 1000
+|filter { :x all { x .factor-of 3  x .factor-of 5 } }
+|sum .print
+
+; result 33165
+

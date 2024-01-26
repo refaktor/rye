@@ -2723,6 +2723,47 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"produce\\while": { // **
+		Argsn: 3,
+		Doc:   "Accepts a while condition, initial value and a block of code. Does the block of code number times, injecting the number first and then result of block.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch cond := arg0.(type) {
+			case env.Block:
+				switch bloc := arg2.(type) {
+				case env.Block:
+					acc := arg1
+					ser := ps.Ser
+					for true {
+						ps.Ser = cond.Series
+						ps = EvalBlockInj(ps, acc, true)
+						if ps.ErrorFlag {
+							return ps.Res
+						}
+						if !util.IsTruthy(ps.Res) {
+							ps.Ser.Reset()
+							ps.Ser = ser
+							return acc
+						}
+						ps.Ser.Reset()
+						ps.Ser = bloc.Series
+						ps = EvalBlockInj(ps, acc, true)
+						if ps.ErrorFlag {
+							return ps.Res
+						}
+						ps.Ser.Reset()
+						acc = ps.Res
+					}
+					ps.Ser = ser
+					return ps.Res
+				default:
+					return MakeArgError(ps, 3, []env.Type{env.BlockType}, "produce")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "produce")
+			}
+		},
+	},
+
 	"produce\\": {
 		Argsn: 4,
 		Doc:   "produce\\ 5 1 'acc { * acc , + 1 }",
@@ -5570,6 +5611,9 @@ var builtins = map[string]*env.Builtin{
 					if len(s1.Series.S) < numVal {
 						numVal = len(s1.Series.S)
 					}
+					if numVal < 0 {
+						numVal = len(s1.Series.S) + numVal // warn: numVal is negative so we must add
+					}
 					return *env.NewBlock(*env.NewTSeries(s1.Series.S[0:numVal]))
 				case env.List:
 					if len(s1.Data) == 0 {
@@ -5924,8 +5968,24 @@ var builtins = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "Accepts one value and returns it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			//fmt.Println("RETURN")
+			fmt.Println("RETURN")
+			fmt.Println(arg0)
 			ps.ReturnFlag = true
+			ps.Res = arg0
+			return arg0
+		},
+	},
+
+	"or-return": { // **
+		Argsn: 1,
+		Doc:   "Accepts one value and returns from evaluation if true.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			//fmt.Println("RETURN")
+			if util.IsTruthy(arg0) {
+				// ps.ReturnFlag = true
+				ps.SkipFlag = true
+			}
+			ps.Res = arg0
 			return arg0
 		},
 	},

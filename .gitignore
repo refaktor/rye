@@ -40,3 +40,4 @@ data.txt
 
 bin/
 dist/
+tests/*.html
