@@ -2757,7 +2757,7 @@ var builtins = map[string]*env.Builtin{
 				case env.Block:
 					acc := arg1
 					ser := ps.Ser
-					for true {
+					for {
 						ps.Ser = cond.Series
 						ps = EvalBlockInj(ps, acc, true)
 						if ps.ErrorFlag {
