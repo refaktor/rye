@@ -1,0 +1,26 @@
+; # Goroutines example
+
+jobs: channel 5
+done: channel 0
+
+go does {
+    print "Waiting to process jobs"
+    forever {
+        read jobs |^fix {
+            print "Recieved all jobs"
+            send done 1
+        }
+		|printv "Received job {}"
+        sleep 1000
+    }
+}
+
+loop 3 {
+    .send* jobs ,
+    .printv "Sent job {}"
+}
+close jobs
+
+print "Waiting for jobs to finish"
+read done
+print "Finished!"

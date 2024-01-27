@@ -1,0 +1,19 @@
+c1: channel 0
+c2: channel 0
+
+go fn { } {
+    sleep 1000
+    send c1 "One"
+}
+
+go fn { } {
+    sleep 2000
+    send c2 "Two"
+}
+
+loop 2 {
+    select {
+        c1 { .printv "Received from c1: {}" }
+        c2 { .printv "Received from c2: {}" }
+    }
+}
