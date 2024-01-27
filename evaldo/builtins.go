@@ -1222,7 +1222,37 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
-	"print\\val": { // **
+	"prnv": { // **
+		Argsn: 2,
+		Doc:   "Prints a value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg := arg1.(type) {
+			case env.String:
+				vals := arg0.Probe(*ps.Idx)
+				news := strings.ReplaceAll(arg.Value, "{}", vals)
+				fmt.Print(news)
+			default:
+				fmt.Print(arg0.Probe(*ps.Idx))
+			}
+			return arg0
+		},
+	},
+	"printv": { // **
+		Argsn: 2,
+		Doc:   "Prints a value and adds a newline.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg := arg1.(type) {
+			case env.String:
+				vals := arg0.Probe(*ps.Idx)
+				news := strings.ReplaceAll(arg.Value, "{}", vals)
+				fmt.Println(news)
+			default:
+				fmt.Println(arg0.Probe(*ps.Idx))
+			}
+			return arg0
+		},
+	},
+	"print\\val": { // DEPRECATED ... too visually noisy ... new is printv and accepts just {}
 		Argsn: 2,
 		Doc:   "Prints a value and adds a newline.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

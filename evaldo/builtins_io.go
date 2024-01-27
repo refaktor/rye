@@ -280,7 +280,8 @@ func __https_s_get(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 
 	case env.Uri:
 		ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Second*10))
 		defer cancel()
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, f.GetProtocol()+"://"+f.GetPath(), nil)
+		proto := ps.Idx.GetWord(f.GetProtocol().Index)
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, proto+"://"+f.GetPath(), nil)
 		if err != nil {
 			ps.FailureFlag = true
 			return *env.NewError(err.Error())
@@ -334,7 +335,8 @@ func __http_s_post(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 
 
 				ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Second*10))
 				defer cancel()
-				req, err := http.NewRequestWithContext(ctx, http.MethodPost, f.GetProtocol()+"://"+f.GetPath(), bytes.NewBufferString(d.Value))
+				proto := ps.Idx.GetWord(f.GetProtocol().Index)
+				req, err := http.NewRequestWithContext(ctx, http.MethodPost, proto+"://"+f.GetPath(), bytes.NewBufferString(d.Value))
 				if err != nil {
 					ps.FailureFlag = true
 					return *env.NewError(err.Error())
@@ -457,7 +459,8 @@ func __https_s__new_request(ps *env.ProgramState, arg0 env.Object, arg1 env.Obje
 			switch data := arg2.(type) {
 			case env.String:
 				data1 := strings.NewReader(data.Value)
-				req, err := http.NewRequest(method1, uri.GetProtocol()+"://"+uri.GetPath(), data1)
+				proto := ps.Idx.GetWord(uri.GetProtocol().Index)
+				req, err := http.NewRequest(method1, proto+"://"+uri.GetPath(), data1)
 				if err != nil {
 					ps.FailureFlag = true
 					return MakeBuiltinError(ps, err.Error(), "__https_s__new_request")

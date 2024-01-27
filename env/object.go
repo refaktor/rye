@@ -275,8 +275,8 @@ func (i Uri) GetPath() string {
 	return i.Path
 }
 
-func (i Uri) GetProtocol() string {
-	return "TODO"
+func (i Uri) GetProtocol() Word {
+	return i.Scheme
 }
 
 func (i Uri) Type() Type {

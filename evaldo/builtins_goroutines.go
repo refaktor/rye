@@ -107,7 +107,7 @@ var Builtins_goroutines = map[string]*env.Builtin{
 		},
 	},
 
-	"new-channel": {
+	"channel": {
 		Argsn: 1,
 		Doc:   "TODODOC.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -170,9 +170,9 @@ var Builtins_goroutines = map[string]*env.Builtin{
 		},
 	},
 
-	"new-waitgroup": {
+	"waitgroup": {
 		Argsn: 0,
-		Doc:   "TODODOC.",
+		Doc:   "Create a waitgroup.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var wg sync.WaitGroup
 			return *env.NewNative(ps.Idx, &wg, "Rye-waitgroup")
@@ -217,7 +217,7 @@ var Builtins_goroutines = map[string]*env.Builtin{
 
 	"Rye-waitgroup//wait": {
 		Argsn: 1,
-		Doc:   "TODODOC.",
+		Doc:   "Wait on a waitgroup.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch wg := arg0.(type) {
 			case env.Native:
@@ -230,9 +230,9 @@ var Builtins_goroutines = map[string]*env.Builtin{
 		},
 	},
 
-	"select": {
+	"select\\fn": {
 		Argsn: 1,
-		Doc:   "TODODOC.",
+		Doc:   "Select on a message on multiple channels or default.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch block := arg0.(type) {
 			case env.Block:
@@ -314,6 +314,109 @@ var Builtins_goroutines = map[string]*env.Builtin{
 					arg = nil
 				}
 				CallFunction(fn, &psTemp, arg, false, nil)
+
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "select")
+			}
+			return arg0
+		},
+	},
+
+	// Modified select\fn code to accept blocks, at the end there will only be one select probably, accepting blocks, functions and get-words
+	// Further modified so that default case is prepedned by void _ , like we do in switch function for example
+	// Rok did one thing differently than we did so faw. He evaluated the second value in pair, block or fn ...
+	// So faw we haven't done this. We didn't evaluate/retrieve except a value was a get-word ... I have to think what is
+	// better in the long run. In normal use you don't see the difference, but in more edge cases the difference is big and it
+	// must be done consistent across similar functions
+
+	"select": {
+		Argsn: 1,
+		Doc:   "Select on a message on multiple channels or default.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch block := arg0.(type) {
+			case env.Block:
+				ser := ps.Ser
+				ps.Ser = block.Series
+
+				var hasDeafult bool
+				var cases []reflect.SelectCase
+				var funcs []env.Block
+				for ps.Ser.Pos() < ps.Ser.Len() {
+					EvalExpression2(ps, false)
+					// handle default case
+					switch maybeChan := ps.Res.(type) {
+					case env.Native:
+						ch, ok := maybeChan.Value.(chan *env.Object)
+						if !ok {
+							ps.FailureFlag = true
+							return MakeBuiltinError(ps, "first argument of a case must be a channel", "select")
+						}
+						cases = append(cases, reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(ch)})
+
+						EvalExpression2(ps, false)
+						fn, ok := ps.Res.(env.Block)
+						if !ok {
+							ps.FailureFlag = true
+							return MakeBuiltinError(ps, "second argument of a case must be a block", "select")
+						}
+						/* if fn.Argsn > 1 {
+							ps.FailureFlag = true
+							return MakeBuiltinError(ps, "function with 0 or 1 arg required", "select")
+						}*/
+						funcs = append(funcs, fn)
+
+					case env.Void:
+						if hasDeafult {
+							ps.FailureFlag = true
+							return MakeBuiltinError(ps, "select can only have one default case", "select")
+						}
+						/* if defaultFn.Argsn != 0 {
+							ps.FailureFlag = true
+							return MakeBuiltinError(ps, "function with 0 args required", "select")
+						} */
+						defaultCase := make(chan struct{})
+						close(defaultCase) // close it immediately so it's always ready to receive
+						cases = append(cases, reflect.SelectCase{
+							Dir:  reflect.SelectRecv,
+							Chan: reflect.ValueOf(defaultCase),
+						})
+						EvalExpression2(ps, false)
+						fn, ok := ps.Res.(env.Block)
+						if !ok {
+							ps.FailureFlag = true
+							return MakeBuiltinError(ps, "second argument of a case must be a block", "select")
+						}
+						funcs = append(funcs, fn)
+						hasDeafult = true
+					}
+				}
+				ps.Ser = ser
+
+				chosen, value, recvOK := reflect.Select(cases)
+				fn := funcs[chosen]
+
+				psTemp := env.ProgramState{}
+				err := copier.Copy(&psTemp, &ps)
+				if err != nil {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, fmt.Sprintf("failed to copy ps: %s", err), "select")
+				}
+				var arg env.Object = nil
+				if recvOK {
+					val, ok := value.Interface().(*env.Object)
+					if !ok {
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, "value from channel is not an object", "select")
+					}
+					arg = *val
+				}
+				/* if fn.Argsn == 0 {
+					arg = nil
+				}*/
+				psTemp.Ser = fn.Series
+				EvalBlockInj(&psTemp, arg, true)
+				// CallFunction(fn, &psTemp, arg, false, nil)
 
 			default:
 				ps.FailureFlag = true

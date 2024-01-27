@@ -8,14 +8,14 @@ hub: fn { e } {
 	}
 }
 
-new-channel 24 :event
+channel 24 :event
  |go-with ?hub
 
 sleep 2000
-send event "does this work?"
+send event "Does this work?"
 
 sleep 2000
-send event "again?"
+send event "Again?"
 
 sleep 2000
 print "Bye bye!"

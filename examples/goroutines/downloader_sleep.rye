@@ -1,0 +1,20 @@
+
+downloader: fn1 {
+	.printv "Started loading {}." ,
+	.get .length? :len ,
+	.printv "Loaded {}, Num of characters: " + len
+}
+
+sites: {
+	https://www.google.com
+	https://www.yahoo.com
+	https://www.duckduckgo.com
+}
+
+for sites { .go-with ?downloader }
+
+print "Waiting..."
+
+sleep 10000
+
+print "Stopped waiting!"
