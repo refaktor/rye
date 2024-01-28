@@ -677,6 +677,24 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"save\\state": {
+		Argsn: 0,
+		Doc:   "Saves current state of the program to a file.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
+			s := ps.Serialize()
+			fileName := fmt.Sprintf("shell_%s.rye", time.Now().Format("060102_150405"))
+
+			err := os.WriteFile(fileName, []byte(s), 0600)
+			if err != nil {
+				ps.FailureFlag = true
+				return MakeBuiltinError(ps, fmt.Sprintf("error writing state: %s", err.Error()), "save\\state")
+			}
+			fmt.Println("State saved to \033[1m" + fileName + "\033[0m.")
+			return *env.NewInteger(1)
+		},
+	},
+
 	"doc": { // ***
 		Argsn: 1,
 		Doc:   "Sets docstring of the current context.",

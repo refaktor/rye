@@ -59,6 +59,7 @@ type Object interface {
 	Trace(msg string)
 	GetKind() int
 	Equal(p Object) bool
+	Serialize(e Idxs) string
 }
 
 //
@@ -106,6 +107,10 @@ func (i Integer) Equal(o Object) bool {
 	return i.Value == o.(Integer).Value
 }
 
+func (i Integer) Serialize(e Idxs) string {
+	return strconv.FormatInt(i.Value, 10)
+}
+
 //
 // DECIMAL
 //
@@ -149,6 +154,10 @@ func (i Decimal) Equal(o Object) bool {
 		return false
 	}
 	return i.Value == o.(Decimal).Value
+}
+
+func (i Decimal) Serialize(e Idxs) string {
+	return strconv.FormatFloat(i.Value, 'f', -1, 64)
 }
 
 //
@@ -201,6 +210,10 @@ func (i String) Equal(o Object) bool {
 	return i.Value == o.(String).Value
 }
 
+func (i String) Serialize(e Idxs) string {
+	return i.Value
+}
+
 //
 // DATE
 //
@@ -240,6 +253,10 @@ func (i Date) Equal(o Object) bool {
 		return false
 	}
 	return i.Value == o.(Date).Value
+}
+
+func (i Date) Serialize(e Idxs) string {
+	return i.Value.Format(time.DateOnly)
 }
 
 //
@@ -310,6 +327,10 @@ func (i Uri) Equal(o Object) bool {
 	return i.Path == oUri.Path && i.Scheme.Equal(oUri.Scheme) && i.Kind.Equal(oUri.Kind)
 }
 
+func (i Uri) Serialize(e Idxs) string {
+	return e.GetWord(i.Scheme.Index) + "://" + i.Path
+}
+
 //
 // Email
 //
@@ -351,6 +372,10 @@ func (i Email) Equal(o Object) bool {
 		return false
 	}
 	return i.Address == o.(Email).Address
+}
+
+func (i Email) Serialize(e Idxs) string {
+	return i.Address
 }
 
 //
@@ -436,6 +461,20 @@ func (i Block) Equal(o Object) bool {
 	return true
 }
 
+func (i Block) Serialize(e Idxs) string {
+	var bu strings.Builder
+	bu.WriteString("{ ")
+	for _, obj := range i.Series.GetAll() {
+		if obj != nil {
+			bu.WriteString(fmt.Sprintf("%s ", obj.Serialize(e)))
+		} else {
+			bu.WriteString("'nil ")
+		}
+	}
+	bu.WriteString("}")
+	return bu.String()
+}
+
 //
 // WORD
 //
@@ -479,6 +518,10 @@ func (i Word) Equal(o Object) bool {
 		return false
 	}
 	return i.Index == o.(Word).Index
+}
+
+func (i Word) Serialize(e Idxs) string {
+	return e.GetWord(i.Index)
 }
 
 //
@@ -526,6 +569,10 @@ func (i Setword) Equal(o Object) bool {
 	return i.Index == o.(Setword).Index
 }
 
+func (i Setword) Serialize(e Idxs) string {
+	return fmt.Sprintf("%s:", e.GetWord(i.Index))
+}
+
 //
 // LSETWORD
 //
@@ -569,6 +616,10 @@ func (i LSetword) Equal(o Object) bool {
 		return false
 	}
 	return i.Index == o.(LSetword).Index
+}
+
+func (i LSetword) Serialize(e Idxs) string {
+	return fmt.Sprintf(":%s", e.GetWord(i.Index))
 }
 
 //
@@ -622,6 +673,10 @@ func (i Opword) Equal(o Object) bool {
 	return i.Index == oOpword.Index && i.Force == oOpword.Force
 }
 
+func (i Opword) Serialize(e Idxs) string {
+	return fmt.Sprintf(".%s", e.GetWord(i.Index))
+}
+
 //
 // PIPEWORD
 //
@@ -673,6 +728,10 @@ func (i Pipeword) Equal(o Object) bool {
 	return i.Index == oPipeword.Index && i.Force == oPipeword.Force
 }
 
+func (i Pipeword) Serialize(e Idxs) string {
+	return fmt.Sprintf("|%s", e.GetWord(i.Index))
+}
+
 //
 // TAGWORD
 //
@@ -720,6 +779,10 @@ func (i Tagword) Equal(o Object) bool {
 		return false
 	}
 	return i.Index == o.(Tagword).Index
+}
+
+func (i Tagword) Serialize(e Idxs) string {
+	return fmt.Sprintf("'%s", e.GetWord(i.Index))
 }
 
 //
@@ -771,6 +834,10 @@ func (i Xword) Equal(o Object) bool {
 	return i.Index == o.(Xword).Index
 }
 
+func (i Xword) Serialize(e Idxs) string {
+	return fmt.Sprintf("<%s>", e.GetWord(i.Index))
+}
+
 //
 // EXWORD
 //
@@ -818,6 +885,10 @@ func (i EXword) Equal(o Object) bool {
 		return false
 	}
 	return i.Index == o.(EXword).Index
+}
+
+func (i EXword) Serialize(e Idxs) string {
+	return fmt.Sprintf("</%s>", e.GetWord(i.Index))
 }
 
 //
@@ -869,6 +940,10 @@ func (i Kindword) Equal(o Object) bool {
 	return i.Index == o.(Kindword).Index
 }
 
+func (i Kindword) Serialize(e Idxs) string {
+	return fmt.Sprintf("~(%s)", e.GetWord(i.Index))
+}
+
 //
 // GETWORD
 //
@@ -916,6 +991,10 @@ func (i Getword) Equal(o Object) bool {
 		return false
 	}
 	return i.Index == o.(Getword).Index
+}
+
+func (i Getword) Serialize(e Idxs) string {
+	return fmt.Sprintf("?%s", e.GetWord(i.Index))
 }
 
 //
@@ -967,6 +1046,11 @@ func (i Genword) Equal(o Object) bool {
 	return i.Index == o.(Genword).Index
 }
 
+func (i Genword) Serialize(e Idxs) string {
+	// TODO not sure if this is correct
+	return fmt.Sprintf("~%s", e.GetWord(i.Index))
+}
+
 //
 // COMMA
 //
@@ -1001,6 +1085,10 @@ func (i Comma) Equal(o Object) bool {
 	return i.Type() == o.Type()
 }
 
+func (i Comma) Serialize(e Idxs) string {
+	return ","
+}
+
 //
 // VOID
 //
@@ -1033,6 +1121,10 @@ func (i Void) GetKind() int {
 
 func (i Void) Equal(o Object) bool {
 	return i.Type() == o.Type()
+}
+
+func (i Void) Serialize(e Idxs) string {
+	return "_"
 }
 
 //
@@ -1138,6 +1230,10 @@ func (i Function) Equal(o Object) bool {
 	return true
 }
 
+func (i Function) Serialize(e Idxs) string {
+	return fmt.Sprintf("\"serlization of %s is not yet supported\" ", i.Inspect(e))
+}
+
 //
 // BuiltinFunction
 //
@@ -1231,6 +1327,11 @@ func (i Builtin) Equal(o Object) bool {
 		return false
 	}
 	return true
+}
+
+func (i Builtin) Serialize(e Idxs) string {
+	// TODO
+	return fmt.Sprintf("\"serlization of %s is not yet supported\" ", i.Inspect(e))
 }
 
 //
@@ -1343,6 +1444,11 @@ func (i Error) Equal(o Object) bool {
 	return true
 }
 
+func (i Error) Serialize(e Idxs) string {
+	// TODO
+	return fmt.Sprintf("\"serlization of %s is not yet supported\" ", i.Inspect(e))
+}
+
 //
 // ARGWORD
 //
@@ -1387,6 +1493,11 @@ func (i Argword) Equal(o Object) bool {
 	}
 	oArgword := o.(Argword)
 	return i.Name.Equal(oArgword.Name) && i.Kind.Equal(oArgword.Kind)
+}
+
+func (i Argword) Serialize(e Idxs) string {
+	// TODO not sure if this is correct
+	return fmt.Sprintf("{ %s : %s }", i.Name.Serialize(e), i.Kind.Serialize(e))
 }
 
 //
@@ -1477,6 +1588,11 @@ func (i CPath) Equal(o Object) bool {
 	return true
 }
 
+func (i CPath) Serialize(e Idxs) string {
+	// TODO
+	return fmt.Sprintf("\"serlization of %s is not yet supported\" ", i.Inspect(e))
+}
+
 //
 // NATIVE
 //
@@ -1531,6 +1647,11 @@ func (i Native) Equal(o Object) bool {
 		}
 	}
 	return i.Value == oNative.Value
+}
+
+func (i Native) Serialize(e Idxs) string {
+	// TODO
+	return fmt.Sprintf("\"serlization of %s is not yet supported\" ", i.Inspect(e))
 }
 
 //
@@ -1638,6 +1759,21 @@ func (i Dict) Equal(o Object) bool {
 		}
 	}
 	return true
+}
+
+func (i Dict) Serialize(e Idxs) string {
+	var bu strings.Builder
+	bu.WriteString("dict { ")
+	for k, v := range i.Data {
+		switch obj := v.(type) {
+		case Object:
+			bu.WriteString(fmt.Sprintf("%s %s ", k, obj.Serialize(e)))
+		default:
+			bu.WriteString(fmt.Sprintf("%s \"WARN: serlization of %s is not yet supported\"", k, obj))
+		}
+	}
+	bu.WriteString("}")
+	return bu.String()
 }
 
 //
@@ -1777,6 +1913,11 @@ func (i List) Equal(o Object) bool {
 	return true
 }
 
+func (i List) Serialize(e Idxs) string {
+	// TODO
+	return fmt.Sprintf("\"serlization of %s is not yet supported\" ", i.Inspect(e))
+}
+
 // KIND Type
 
 //
@@ -1855,6 +1996,10 @@ func (i Kind) Equal(o Object) bool {
 	return true
 }
 
+func (i Kind) Serialize(e Idxs) string {
+	return fmt.Sprintf("kind %s %s", i.Kind.Serialize(e), i.Spec.Serialize(e))
+}
+
 //
 // Converter
 //
@@ -1911,6 +2056,11 @@ func (i Converter) Equal(o Object) bool {
 	return true
 }
 
+func (i Converter) Serialize(e Idxs) string {
+	// TODO
+	return fmt.Sprintf("\"serlization of %s is not yet supported\" ", i.Inspect(e))
+}
+
 //
 // TIME
 //
@@ -1953,6 +2103,10 @@ func (i Time) Equal(o Object) bool {
 		return false
 	}
 	return i.Value.Equal(o.(Time).Value)
+}
+
+func (i Time) Serialize(e Idxs) string {
+	return fmt.Sprintf("datetime \"%s\"", i.Value.Format("2006-01-02T15:04:05"))
 }
 
 //
@@ -2050,4 +2204,9 @@ func (i Vector) Equal(o Object) bool {
 		}
 	}
 	return true
+}
+
+func (i Vector) Serialize(e Idxs) string {
+	// TODO
+	return fmt.Sprintf("\"serlization of %s is not yet supported\" ", i.Inspect(e))
 }
