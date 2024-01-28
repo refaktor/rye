@@ -294,6 +294,11 @@ func (s Spreadsheet) Equal(o Object) bool {
 	return true
 }
 
+func (s Spreadsheet) Serialize(e Idxs) string {
+	// TODO
+	return fmt.Sprintf("\"serlization of %s is not yet supported\" ", s.Inspect(e))
+}
+
 func (s SpreadsheetRow) GetKind() int {
 	return int(0)
 }
@@ -333,6 +338,11 @@ func (s SpreadsheetRow) Equal(o Object) bool {
 	}
 
 	return true
+}
+
+func (s SpreadsheetRow) Serialize(e Idxs) string {
+	// TODO
+	return fmt.Sprintf("\"serlization of %s is not yet supported\" ", s.Inspect(e))
 }
 
 func (s SpreadsheetRow) ToTxt() string {

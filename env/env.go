@@ -168,6 +168,17 @@ func (i RyeCtx) Equal(o Object) bool {
 	return false
 }
 
+func (i RyeCtx) Serialize(e Idxs) string {
+	var bu strings.Builder
+	bu.WriteString(fmt.Sprintf("doc \"%s\"\n", i.Doc))
+	for j := 0; j < e.GetWordCount(); j++ {
+		if val, ok := i.state[j]; ok {
+			bu.WriteString(fmt.Sprintf("%s: %s\n", e.GetWord(j), val.Serialize(e)))
+		}
+	}
+	return bu.String()
+}
+
 /*func (e *Env) Get(word int) (*Object, bool) {
 	obj, exists := e.state[word]
 	// recursively look at outer Environments ...
@@ -262,6 +273,10 @@ func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
 		false,
 	}
 	return &ps
+}
+
+func (ps *ProgramState) Serialize() string {
+	return ps.Ctx.Serialize(*ps.Idx)
 }
 
 func AddToProgramState(ps *ProgramState, ser TSeries, idx *Idxs) *ProgramState {
