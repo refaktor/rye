@@ -11,7 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.26.2
 	github.com/aws/aws-sdk-go-v2/service/ses v1.19.5
 	github.com/blevesearch/bleve/v2 v2.3.10
-	github.com/blevesearch/bleve_index_api v1.1.4
+	github.com/blevesearch/bleve_index_api v1.1.5
 	github.com/drewlanenga/govector v0.0.0-20220726163947-b958ac08bc93
 	github.com/go-gomail/gomail v0.0.0-20160411212932-81ebce5c23df
 	github.com/go-sql-driver/mysql v1.7.1
@@ -22,6 +22,7 @@ require (
 	github.com/jinzhu/copier v0.4.0
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/lib/pq v1.10.9
+	github.com/mattn/go-runewidth v0.0.3
 	github.com/mattn/go-sqlite3 v1.14.19
 	github.com/mhale/smtpd v0.8.1
 	github.com/mrz1836/postmark v1.6.1
@@ -83,7 +84,6 @@ require (
 	github.com/labstack/gommon v0.4.1 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/mattn/go-runewidth v0.0.3 // indirect
 	github.com/mschoch/smat v0.2.0 // indirect
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
 	github.com/tklauser/go-sysconf v0.3.13 // indirect
