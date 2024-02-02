@@ -119,7 +119,7 @@ func (ser TSeries) Probe(idxs Idxs) string {
 
 		v := ser.S[i]
 		if v != nil {
-			bu.WriteString(v.Probe(idxs) + " ")
+			bu.WriteString(v.Print(idxs) + " ")
 		} else {
 			bu.WriteString("<<< NIL >>>" + " ")
 		}
