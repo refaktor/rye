@@ -670,7 +670,7 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch d := arg0.(type) {
 			case env.Function:
-				return d.Dump(*env1.Idx)
+				return env.NewString(d.Dump(*env1.Idx))
 			default:
 				return MakeArgError(env1, 1, []env.Type{env.FunctionType}, "dump")
 			}
@@ -682,7 +682,7 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Saves current state of the program to a file.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
-			s := ps.Serialize()
+			s := ps.Dump()
 			fileName := fmt.Sprintf("shell_%s.rye", time.Now().Format("060102_150405"))
 
 			err := os.WriteFile(fileName, []byte(s), 0600)

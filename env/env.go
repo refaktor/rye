@@ -168,12 +168,12 @@ func (i RyeCtx) Equal(o Object) bool {
 	return false
 }
 
-func (i RyeCtx) Serialize(e Idxs) string {
+func (i RyeCtx) Dump(e Idxs) string {
 	var bu strings.Builder
 	bu.WriteString(fmt.Sprintf("doc \"%s\"\n", i.Doc))
 	for j := 0; j < e.GetWordCount(); j++ {
 		if val, ok := i.state[j]; ok {
-			bu.WriteString(fmt.Sprintf("%s: %s\n", e.GetWord(j), val.Serialize(e)))
+			bu.WriteString(fmt.Sprintf("%s: %s\n", e.GetWord(j), val.Dump(e)))
 		}
 	}
 	return bu.String()
@@ -275,8 +275,8 @@ func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
 	return &ps
 }
 
-func (ps *ProgramState) Serialize() string {
-	return ps.Ctx.Serialize(*ps.Idx)
+func (ps *ProgramState) Dump() string {
+	return ps.Ctx.Dump(*ps.Idx)
 }
 
 func AddToProgramState(ps *ProgramState, ser TSeries, idx *Idxs) *ProgramState {
