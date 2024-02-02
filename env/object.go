@@ -211,7 +211,7 @@ func (i String) Equal(o Object) bool {
 }
 
 func (i String) Serialize(e Idxs) string {
-	return i.Value
+	return fmt.Sprintf("\"%s\"", i.Value)
 }
 
 //

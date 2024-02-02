@@ -1,0 +1,11 @@
+; # Hello Goroutine
+
+print "Starting Goroutine"
+
+go does {    ; does creates a function without arguments
+	sleep 1000
+	print "Hello from Goroutine!"
+}
+
+print "Sleeping for 2 seconds"
+sleep 2000
