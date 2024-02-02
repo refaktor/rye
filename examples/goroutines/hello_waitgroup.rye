@@ -1,3 +1,5 @@
+; # Hello Waitgroup
+
 wg: waitgroup
 
 work: fn { id } {
@@ -15,5 +17,3 @@ loop 5 { :i
 print "Waiting for workers to finish"
 wg .wait
 print "Finished!"
-
-
