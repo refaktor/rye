@@ -57,8 +57,11 @@ type Object interface {
 	Trace(msg string)
 	GetKind() int
 	Equal(p Object) bool
-	Inspect(e Idxs) string
+	// Print returns a string representation of the Object.
 	Print(e Idxs) string
+	// Inspect returns a diagnostic string representation of the Object.
+	Inspect(e Idxs) string
+	// Dump returns a string representation of the Object, intended for serialization.
 	Dump(e Idxs) string
 }
 
@@ -1480,7 +1483,6 @@ func (b Argword) Print(e Idxs) string {
 
 func (i Argword) Trace(msg string) {
 	fmt.Print(msg + " (argword): ")
-	//fmt.Println(i.Name.Probe())
 }
 
 func (i Argword) GetKind() int {
@@ -2160,7 +2162,7 @@ func (i Vector) Type() Type {
 // Inspect returns a string representation of the Integer.
 func (i Vector) Inspect(idxs Idxs) string {
 	var bu strings.Builder
-	bu.WriteString("[Vector:") //(" + i.Kind.Probe(idxs) + "):")
+	bu.WriteString("[Vector:") //(" + i.Kind.Print(idxs) + "):")
 	bu.WriteString(" Len " + strconv.Itoa(i.Value.Len()))
 	bu.WriteString(" Norm " + fmt.Sprintf("%.2f", govector.Norm(i.Value, 2.0)))
 	bu.WriteString(" Mean " + fmt.Sprintf("%.2f", i.Value.Mean()))

@@ -103,8 +103,8 @@ func (ser TSeries) Len() int {
 	return len(ser.S)
 }
 
-// Inspect returns a string representation of the Integer.
-func (ser TSeries) Probe(idxs Idxs) string {
+// PositionAndsurroundingElements returns a string of the position of the series, marked with (here) and 10 surrounding elements.
+func (ser TSeries) PositionAndsurroundingElements(idxs Idxs) string {
 	var bu strings.Builder
 	bu.WriteString("{ ")
 	st := 0

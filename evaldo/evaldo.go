@@ -543,8 +543,6 @@ func CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, toLeft
 	}
 	ser0 := ps.Ser // only after we process the arguments and get new position
 	ps.Ser = fn.Body.Series
-	//es.Idx.Probe()
-	//es.Ctx.Probe(*es.Idx)
 
 	// *******
 	env0 = ps.Ctx // store reference to current env in local

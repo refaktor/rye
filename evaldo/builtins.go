@@ -1324,14 +1324,6 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
-	"probe": { // **
-		Argsn: 1,
-		Doc:   "Prints a probe of a value.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			fmt.Println(arg0.Inspect(*ps.Idx))
-			return arg0
-		},
-	},
 	"inspect": { // **
 		Argsn: 1,
 		Doc:   "Returs information about a value.",
@@ -1718,7 +1710,6 @@ var builtins = map[string]*env.Builtin{
 			fmt.Println("FLAGS")
 
 			ps.FailureFlag = false
-			//fmt.Println(arg0.Probe(*ps.Idx))
 
 			switch er := arg0.(type) {
 			case env.Error:
@@ -1823,7 +1814,6 @@ var builtins = map[string]*env.Builtin{
 				if any_found {
 					switch cc := code.(type) {
 					case env.Block:
-						// fmt.Println(code.Probe(*ps.Idx))
 						// we store current series (block of code with position we are at) to temp 'ser'
 						ser := ps.Ser
 						// we set ProgramStates series to series ob the block
@@ -1947,7 +1937,7 @@ var builtins = map[string]*env.Builtin{
 						text = strings.Replace(text, "\n", "", -1)
 						//fmt.Println(1111)
 						if strings.Compare("(lc)", text) == 0 {
-							fmt.Println(ps.Ctx.Probe(*ps.Idx))
+							fmt.Println(ps.Ctx.Print(*ps.Idx))
 						} else if strings.Compare("(r)", text) == 0 {
 							ps.Ser = ser
 							return ps.Res
@@ -4322,7 +4312,7 @@ var builtins = map[string]*env.Builtin{
 
 				// Iterate over the slice and add the elements to the map.
 				for _, element := range ss {
-					// uniqueValues[env.ToRyeValue(element).Probe(*ps.Idx)] = true
+					// uniqueValues[env.ToRyeValue(element).Print(*ps.Idx)] = true
 					uniqueValues[element] = true
 				}
 

@@ -140,7 +140,6 @@ func Eyr_EvalWord(es *env.ProgramState, word env.Object, leftVal env.Object, toL
 
 func Eyr_EvalExpression(es *env.ProgramState, stack *EyrStack) *env.ProgramState {
 	object := es.Ser.Pop()
-	//es.Idx.Probe()
 	trace2("Before entering expression")
 	if object != nil {
 		switch object.Type() {
