@@ -11,7 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.26.6
 	github.com/aws/aws-sdk-go-v2/service/ses v1.19.5
 	github.com/blevesearch/bleve/v2 v2.3.10
-	github.com/blevesearch/bleve_index_api v1.1.4
+	github.com/blevesearch/bleve_index_api v1.1.6
 	github.com/drewlanenga/govector v0.0.0-20220726163947-b958ac08bc93
 	github.com/go-gomail/gomail v0.0.0-20160411212932-81ebce5c23df
 	github.com/go-sql-driver/mysql v1.7.1
