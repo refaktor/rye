@@ -173,7 +173,9 @@ func (i RyeCtx) Dump(e Idxs) string {
 	bu.WriteString(fmt.Sprintf("doc \"%s\"\n", i.Doc))
 	for j := 0; j < e.GetWordCount(); j++ {
 		if val, ok := i.state[j]; ok {
-			bu.WriteString(fmt.Sprintf("%s: %s\n", e.GetWord(j), val.Dump(e)))
+			if val.Type() != BuiltinType {
+				bu.WriteString(fmt.Sprintf("%s: %s\n", e.GetWord(j), val.Dump(e)))
+			}
 		}
 	}
 	return bu.String()

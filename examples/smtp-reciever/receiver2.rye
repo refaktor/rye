@@ -1,0 +1,45 @@
+
+; Acts as an SMTP server listening for incoming email.
+;
+; On new email it finds the project id from mysql database, based on email "to" address.
+; Then it opens the sqlite in the correct project folder and inserts the email
+; information.
+
+rye .needs { smtpd mail sqlite mysql html2text }
+
+project-path: %/home/userapp/data/projects/
+
+handler: fn { mail from to origin } {
+
+ 	.parse-email .with { .subject? :subject , .find-message-body :body }
+	
+	open mysql://user@localhost/userapp read %.mysqlpwd
+	|query { select id from project where email = ?to }
+	|when { .has-rows } {
+		.first-val? :id
+		open sqlite:// + project-path + id + %/main.db
+		|exec { insert into message ( mtype , direction , subject , body , addr_from , addr_to , date_time )
+			                 values ( 2 , 1 , ?subject , ?body , ?from , ?to , datetime('now') ) }
+	}
+}
+
+; find-message-body isn't shorter than it's Python counterpart just because of
+; language differences, but because our email parsing library is much more high level
+; which can be a good or a bad thing
+
+find-message-body: fn { email } {
+	.text-body? :text ,
+	.html-body? .html->text :text2
+	either all {
+		length? text > 0
+		length? text * 1.1 |> length? text2
+	} { text } { text2 }
+}
+
+
+new-smtpd ":25" |serve ?handler "Mail2Sqlite"
+
+
+
+
+

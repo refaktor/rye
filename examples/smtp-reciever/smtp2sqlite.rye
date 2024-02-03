@@ -1,0 +1,31 @@
+
+ ; Acts as an SMTP server listening for incoming email.
+ ; On new email it stores basic email parameters to
+ ; to sqlite database 
+
+ rye .needs { smtpd mail sqlite }
+
+ handler: fn { mail from to origin } {
+
+ 	.parse-email	.with {
+		.subject? :subject ,
+		.text-body?	:content
+	}
+	
+	open sqlite://incoming.db
+	|exec {
+		insert into inbox values (
+			date() ,
+			?from ,
+			?subject ,
+			?content
+	    )
+	}
+ }
+
+ new-smtpd ":25" |serve ?handler "Mail2Sqlite"
+
+
+
+
+
