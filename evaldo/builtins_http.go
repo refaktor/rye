@@ -240,7 +240,7 @@ var Builtins_http = map[string]*env.Builtin{
 							ps.ErrorFlag = false
 							ps.ReturnFlag = false
 							fmt.Println("<< Call Function Args 2 >>")
-							fmt.Println(ps.Ser.Probe(*ps.Idx))
+							fmt.Println(ps.Ser.PositionAndSurroundingElements(*ps.Idx))
 							psTemp := env.ProgramState{}
 							copier.Copy(&psTemp, &ps)
 							CallFunctionArgs2(handler, &psTemp, *env.NewNative(psTemp.Idx, conn, "Go-server-websocket"), *env.NewNative(psTemp.Idx, "asd", "Go-server-context"), nil)

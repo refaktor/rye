@@ -203,7 +203,7 @@ func RyeEvalString(this js.Value, args []js.Value) any {
 
 		evaldo.EvalBlock(es)
 		evaldo.MaybeDisplayFailureOrError(es, genv)
-		return es.Res.Probe(*es.Idx)
+		return es.Res.Print(*es.Idx)
 	case env.Error:
 		fmt.Println(val.Message)
 		return "Error"

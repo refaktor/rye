@@ -96,7 +96,6 @@ func Stck_EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, to
 
 func Stck_EvalExpression(ps *env.ProgramState) *env.ProgramState {
 	object := ps.Ser.Pop()
-	//ps.Idx.Probe()
 	trace2("Before entering expression")
 	if object != nil {
 		switch object.Type() {

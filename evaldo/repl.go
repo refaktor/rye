@@ -305,14 +305,14 @@ func MaybeDisplayFailureOrError(es *env.ProgramState, genv *env.Idxs) {
 		fmt.Println("\x1b[33m" + "Failure" + "\x1b[0m")
 	}
 	if es.ErrorFlag {
-		fmt.Println("\x1b[31;3m" + es.Res.Probe(*genv))
+		fmt.Println("\x1b[31;3m" + es.Res.Print(*genv))
 		switch err := es.Res.(type) {
 		case env.Error:
-			fmt.Println(err.CodeBlock.Probe(*genv))
+			fmt.Println(err.CodeBlock.PositionAndSurroundingElements(*genv))
 			fmt.Println("Error not pointer so bug. #temp")
 		case *env.Error:
 			fmt.Println("At location:")
-			fmt.Print(err.CodeBlock.Probe(*genv))
+			fmt.Print(err.CodeBlock.PositionAndSurroundingElements(*genv))
 		}
 		fmt.Println("\x1b[0m")
 	}
@@ -323,14 +323,14 @@ func MaybeDisplayFailureOrErrorWASM(es *env.ProgramState, genv *env.Idxs, printf
 		printfn("\x1b[33m" + "Failure" + "\x1b[0m")
 	}
 	if es.ErrorFlag {
-		printfn("\x1b[31;3m" + es.Res.Probe(*genv))
+		printfn("\x1b[31;3m" + es.Res.Print(*genv))
 		switch err := es.Res.(type) {
 		case env.Error:
-			printfn(err.CodeBlock.Probe(*genv))
+			printfn(err.CodeBlock.PositionAndSurroundingElements(*genv))
 			printfn("Error not pointer so bug. #temp")
 		case *env.Error:
 			printfn("At location:")
-			printfn(err.CodeBlock.Probe(*genv))
+			printfn(err.CodeBlock.PositionAndSurroundingElements(*genv))
 		}
 		printfn("\x1b[0m")
 	}

@@ -105,7 +105,7 @@ func FormatJson(val env.Object, e env.Idxs) string {
 				if i > 0 {
 					r.WriteString(", ")
 				}
-				r.WriteString(b.Series.Get(i).Probe(e))
+				r.WriteString(b.Series.Get(i).Print(e))
 			}
 		}
 		r.WriteString(" ]")
@@ -123,7 +123,7 @@ func FormatCsv(val env.Object, e env.Idxs) string {
 				if i > 0 {
 					r.WriteString(",")
 				}
-				r.WriteString(b.Series.Get(i).Probe(e))
+				r.WriteString(b.Series.Get(i).Print(e))
 			}
 		}
 	}
@@ -145,7 +145,7 @@ func FormatSsv(val env.Object, e env.Idxs) string {
 				case env.String:
 					r.WriteString(ob.Value)
 				default:
-					r.WriteString(ob.Probe(e))
+					r.WriteString(ob.Print(e))
 				}
 			}
 		}

@@ -54,12 +54,15 @@ const (
 
 type Object interface {
 	Type() Type
-	Inspect(e Idxs) string
-	Probe(e Idxs) string
 	Trace(msg string)
 	GetKind() int
 	Equal(p Object) bool
-	Serialize(e Idxs) string
+	// Print returns a string representation of the Object.
+	Print(e Idxs) string
+	// Inspect returns a diagnostic string representation of the Object.
+	Inspect(e Idxs) string
+	// Dump returns a string representation of the Object, intended for serialization.
+	Dump(e Idxs) string
 }
 
 //
@@ -87,7 +90,7 @@ func (i Integer) Inspect(e Idxs) string {
 }
 
 // Inspect returns a string representation of the Integer.
-func (i Integer) Probe(e Idxs) string {
+func (i Integer) Print(e Idxs) string {
 	return strconv.FormatInt(i.Value, 10)
 }
 
@@ -107,7 +110,7 @@ func (i Integer) Equal(o Object) bool {
 	return i.Value == o.(Integer).Value
 }
 
-func (i Integer) Serialize(e Idxs) string {
+func (i Integer) Dump(e Idxs) string {
 	return strconv.FormatInt(i.Value, 10)
 }
 
@@ -136,7 +139,7 @@ func (i Decimal) Inspect(e Idxs) string {
 }
 
 // Inspect returns a string representation of the Decimal.
-func (i Decimal) Probe(e Idxs) string {
+func (i Decimal) Print(e Idxs) string {
 	return strconv.FormatFloat(i.Value, 'f', 6, 64)
 }
 
@@ -156,7 +159,7 @@ func (i Decimal) Equal(o Object) bool {
 	return i.Value == o.(Decimal).Value
 }
 
-func (i Decimal) Serialize(e Idxs) string {
+func (i Decimal) Dump(e Idxs) string {
 	return strconv.FormatFloat(i.Value, 'f', -1, 64)
 }
 
@@ -185,7 +188,7 @@ func (i String) Inspect(e Idxs) string {
 }
 
 // Inspect returns a string representation of the Integer.
-func (i String) Probe(e Idxs) string {
+func (i String) Print(e Idxs) string {
 	s := i.Value
 	if len(s) > 80 {
 		return s[:80] + "..."
@@ -210,7 +213,7 @@ func (i String) Equal(o Object) bool {
 	return i.Value == o.(String).Value
 }
 
-func (i String) Serialize(e Idxs) string {
+func (i String) Dump(e Idxs) string {
 	return fmt.Sprintf("\"%s\"", i.Value)
 }
 
@@ -235,7 +238,7 @@ func (i Date) Inspect(e Idxs) string {
 	return "[Date: " + i.Value.Format(time.RFC822Z) + "]"
 }
 
-func (i Date) Probe(e Idxs) string {
+func (i Date) Print(e Idxs) string {
 	return i.Value.Format(time.RFC822Z)
 }
 
@@ -255,7 +258,7 @@ func (i Date) Equal(o Object) bool {
 	return i.Value == o.(Date).Value
 }
 
-func (i Date) Serialize(e Idxs) string {
+func (i Date) Dump(e Idxs) string {
 	return i.Value.Format(time.DateOnly)
 }
 
@@ -302,11 +305,11 @@ func (i Uri) Type() Type {
 
 // Inspect returns a string representation of the Integer.
 func (i Uri) Inspect(e Idxs) string {
-	return "[Uri: " + i.Scheme.Probe(e) + "://" + i.GetPath() + "]"
+	return "[Uri: " + i.Scheme.Print(e) + "://" + i.GetPath() + "]"
 }
 
 // Inspect returns a string representation of the Integer.
-func (i Uri) Probe(e Idxs) string {
+func (i Uri) Print(e Idxs) string {
 	return i.Path
 }
 
@@ -327,7 +330,7 @@ func (i Uri) Equal(o Object) bool {
 	return i.Path == oUri.Path && i.Scheme.Equal(oUri.Scheme) && i.Kind.Equal(oUri.Kind)
 }
 
-func (i Uri) Serialize(e Idxs) string {
+func (i Uri) Dump(e Idxs) string {
 	return e.GetWord(i.Scheme.Index) + "://" + i.Path
 }
 
@@ -350,11 +353,11 @@ func (i Email) Type() Type {
 
 // Inspect returns a string representation of the Integer.
 func (i Email) Inspect(e Idxs) string {
-	return "[Email: " + i.Probe(e) + "]"
+	return "[Email: " + i.Print(e) + "]"
 }
 
 // Inspect returns a string representation of the Integer.
-func (i Email) Probe(e Idxs) string {
+func (i Email) Print(e Idxs) string {
 	return i.Address
 }
 
@@ -374,7 +377,7 @@ func (i Email) Equal(o Object) bool {
 	return i.Address == o.(Email).Address
 }
 
-func (i Email) Serialize(e Idxs) string {
+func (i Email) Dump(e Idxs) string {
 	return i.Address
 }
 
@@ -418,12 +421,12 @@ func (b Block) Inspect(e Idxs) string {
 }
 
 // Inspect returns a string representation of the Integer.
-func (b Block) Probe(e Idxs) string {
+func (b Block) Print(e Idxs) string {
 	var r strings.Builder
 	r.WriteString("{ ")
 	for i := 0; i < b.Series.Len(); i += 1 {
 		if b.Series.Get(i) != nil {
-			r.WriteString(b.Series.Get(i).Probe(e))
+			r.WriteString(b.Series.Get(i).Print(e))
 			r.WriteString(" ")
 		} else {
 			r.WriteString("[NIL]")
@@ -461,12 +464,12 @@ func (i Block) Equal(o Object) bool {
 	return true
 }
 
-func (i Block) Serialize(e Idxs) string {
+func (i Block) Dump(e Idxs) string {
 	var bu strings.Builder
 	bu.WriteString("{ ")
 	for _, obj := range i.Series.GetAll() {
 		if obj != nil {
-			bu.WriteString(fmt.Sprintf("%s ", obj.Serialize(e)))
+			bu.WriteString(fmt.Sprintf("%s ", obj.Dump(e)))
 		} else {
 			bu.WriteString("'nil ")
 		}
@@ -500,7 +503,7 @@ func (i Word) Inspect(e Idxs) string {
 }
 
 // Inspect returns a string representation of the Integer.
-func (b Word) Probe(e Idxs) string {
+func (b Word) Print(e Idxs) string {
 	return e.GetWord(b.Index)
 }
 
@@ -520,7 +523,7 @@ func (i Word) Equal(o Object) bool {
 	return i.Index == o.(Word).Index
 }
 
-func (i Word) Serialize(e Idxs) string {
+func (i Word) Dump(e Idxs) string {
 	return e.GetWord(i.Index)
 }
 
@@ -549,7 +552,7 @@ func (i Setword) Inspect(e Idxs) string {
 }
 
 // Inspect returns a string representation of the Integer.
-func (b Setword) Probe(e Idxs) string {
+func (b Setword) Print(e Idxs) string {
 	return e.GetWord(b.Index) + ":"
 }
 
@@ -569,7 +572,7 @@ func (i Setword) Equal(o Object) bool {
 	return i.Index == o.(Setword).Index
 }
 
-func (i Setword) Serialize(e Idxs) string {
+func (i Setword) Dump(e Idxs) string {
 	return fmt.Sprintf("%s:", e.GetWord(i.Index))
 }
 
@@ -598,7 +601,7 @@ func (i LSetword) Inspect(e Idxs) string {
 }
 
 // Inspect returns a string representation of the Integer.
-func (b LSetword) Probe(e Idxs) string {
+func (b LSetword) Print(e Idxs) string {
 	return ":" + e.GetWord(b.Index)
 }
 
@@ -618,7 +621,7 @@ func (i LSetword) Equal(o Object) bool {
 	return i.Index == o.(LSetword).Index
 }
 
-func (i LSetword) Serialize(e Idxs) string {
+func (i LSetword) Dump(e Idxs) string {
 	return fmt.Sprintf(":%s", e.GetWord(i.Index))
 }
 
@@ -648,7 +651,7 @@ func (i Opword) Inspect(e Idxs) string {
 }
 
 // Inspect returns a string representation of the Integer.
-func (b Opword) Probe(e Idxs) string {
+func (b Opword) Print(e Idxs) string {
 	return "." + e.GetWord(b.Index)
 }
 
@@ -673,7 +676,7 @@ func (i Opword) Equal(o Object) bool {
 	return i.Index == oOpword.Index && i.Force == oOpword.Force
 }
 
-func (i Opword) Serialize(e Idxs) string {
+func (i Opword) Dump(e Idxs) string {
 	return fmt.Sprintf(".%s", e.GetWord(i.Index))
 }
 
@@ -703,7 +706,7 @@ func (i Pipeword) Inspect(e Idxs) string {
 }
 
 // Inspect returns a string representation of the Integer.
-func (b Pipeword) Probe(e Idxs) string {
+func (b Pipeword) Print(e Idxs) string {
 	return "|" + e.GetWord(b.Index)
 }
 
@@ -728,7 +731,7 @@ func (i Pipeword) Equal(o Object) bool {
 	return i.Index == oPipeword.Index && i.Force == oPipeword.Force
 }
 
-func (i Pipeword) Serialize(e Idxs) string {
+func (i Pipeword) Dump(e Idxs) string {
 	return fmt.Sprintf("|%s", e.GetWord(i.Index))
 }
 
@@ -757,7 +760,7 @@ func (i Tagword) Inspect(e Idxs) string {
 }
 
 // Inspect returns a string representation of the Integer.
-func (b Tagword) Probe(e Idxs) string {
+func (b Tagword) Print(e Idxs) string {
 	return "'" + e.GetWord(b.Index)
 }
 
@@ -781,7 +784,7 @@ func (i Tagword) Equal(o Object) bool {
 	return i.Index == o.(Tagword).Index
 }
 
-func (i Tagword) Serialize(e Idxs) string {
+func (i Tagword) Dump(e Idxs) string {
 	return fmt.Sprintf("'%s", e.GetWord(i.Index))
 }
 
@@ -810,7 +813,7 @@ func (i Xword) Inspect(e Idxs) string {
 }
 
 // Inspect returns a string representation of the Integer.
-func (b Xword) Probe(e Idxs) string {
+func (b Xword) Print(e Idxs) string {
 	return e.GetWord(b.Index)
 }
 
@@ -834,7 +837,7 @@ func (i Xword) Equal(o Object) bool {
 	return i.Index == o.(Xword).Index
 }
 
-func (i Xword) Serialize(e Idxs) string {
+func (i Xword) Dump(e Idxs) string {
 	return fmt.Sprintf("<%s>", e.GetWord(i.Index))
 }
 
@@ -863,7 +866,7 @@ func (i EXword) Inspect(e Idxs) string {
 }
 
 // Inspect returns a string representation of the Integer.
-func (b EXword) Probe(e Idxs) string {
+func (b EXword) Print(e Idxs) string {
 	return e.GetWord(b.Index)
 }
 
@@ -887,7 +890,7 @@ func (i EXword) Equal(o Object) bool {
 	return i.Index == o.(EXword).Index
 }
 
-func (i EXword) Serialize(e Idxs) string {
+func (i EXword) Dump(e Idxs) string {
 	return fmt.Sprintf("</%s>", e.GetWord(i.Index))
 }
 
@@ -916,7 +919,7 @@ func (i Kindword) Inspect(e Idxs) string {
 }
 
 // Inspect returns a string representation of the Integer.
-func (b Kindword) Probe(e Idxs) string {
+func (b Kindword) Print(e Idxs) string {
 	return e.GetWord(b.Index)
 }
 
@@ -940,7 +943,7 @@ func (i Kindword) Equal(o Object) bool {
 	return i.Index == o.(Kindword).Index
 }
 
-func (i Kindword) Serialize(e Idxs) string {
+func (i Kindword) Dump(e Idxs) string {
 	return fmt.Sprintf("~(%s)", e.GetWord(i.Index))
 }
 
@@ -969,7 +972,7 @@ func (i Getword) Inspect(e Idxs) string {
 }
 
 // Inspect returns a string representation of the Integer.
-func (b Getword) Probe(e Idxs) string {
+func (b Getword) Print(e Idxs) string {
 	return "?" + e.GetWord(b.Index)
 }
 
@@ -993,7 +996,7 @@ func (i Getword) Equal(o Object) bool {
 	return i.Index == o.(Getword).Index
 }
 
-func (i Getword) Serialize(e Idxs) string {
+func (i Getword) Dump(e Idxs) string {
 	return fmt.Sprintf("?%s", e.GetWord(i.Index))
 }
 
@@ -1022,7 +1025,7 @@ func (i Genword) Inspect(e Idxs) string {
 }
 
 // Inspect returns a string representation of the Integer.
-func (b Genword) Probe(e Idxs) string {
+func (b Genword) Print(e Idxs) string {
 	return e.GetWord(b.Index)
 }
 
@@ -1046,7 +1049,7 @@ func (i Genword) Equal(o Object) bool {
 	return i.Index == o.(Genword).Index
 }
 
-func (i Genword) Serialize(e Idxs) string {
+func (i Genword) Dump(e Idxs) string {
 	// TODO not sure if this is correct
 	return fmt.Sprintf("~%s", e.GetWord(i.Index))
 }
@@ -1069,7 +1072,7 @@ func (i Comma) Inspect(e Idxs) string {
 }
 
 // Inspect returns a string representation of the Integer.
-func (b Comma) Probe(e Idxs) string {
+func (b Comma) Print(e Idxs) string {
 	return ","
 }
 
@@ -1085,7 +1088,7 @@ func (i Comma) Equal(o Object) bool {
 	return i.Type() == o.Type()
 }
 
-func (i Comma) Serialize(e Idxs) string {
+func (i Comma) Dump(e Idxs) string {
 	return ","
 }
 
@@ -1107,7 +1110,7 @@ func (i Void) Inspect(e Idxs) string {
 }
 
 // Inspect returns a string representation of the Integer.
-func (b Void) Probe(e Idxs) string {
+func (b Void) Print(e Idxs) string {
 	return "_"
 }
 
@@ -1123,7 +1126,7 @@ func (i Void) Equal(o Object) bool {
 	return i.Type() == o.Type()
 }
 
-func (i Void) Serialize(e Idxs) string {
+func (i Void) Dump(e Idxs) string {
 	return "_"
 }
 
@@ -1182,24 +1185,24 @@ func (i Function) Inspect(e Idxs) string {
 }
 
 // Inspect returns a string representation of the Integer.
-func (b Function) Probe(e Idxs) string {
+func (b Function) Print(e Idxs) string {
 	return "[Function(" + strconv.FormatInt(int64(b.Argsn), 10) + ")]"
 }
 
 // Inspect returns a string representation of the Integer.
-func (i Function) Dump(e Idxs) Block {
-	// LONG DISPLAY OF FUNCTION NODES return "[Function: " + i.Spec.Inspect(e) + ", " + i.Body.Inspect(e) + "]"
-	ser := make([]Object, 0)
-	idx, found := e.GetIndex("fn")
-	if !found {
-		goto ENE // TODO
-	}
-	ser = append(ser, Word{idx})
-	ser = append(ser, i.Spec)
-	ser = append(ser, i.Body)
-ENE:
-	return *NewBlock(*NewTSeries(ser))
-}
+// func (i Function) Dump(e Idxs) Block {
+// 	// LONG DISPLAY OF FUNCTION NODES return "[Function: " + i.Spec.Inspect(e) + ", " + i.Body.Inspect(e) + "]"
+// 	ser := make([]Object, 0)
+// 	idx, found := e.GetIndex("fn")
+// 	if !found {
+// 		goto ENE // TODO
+// 	}
+// 	ser = append(ser, Word{idx})
+// 	ser = append(ser, i.Spec)
+// 	ser = append(ser, i.Body)
+// ENE:
+// 	return *NewBlock(*NewTSeries(ser))
+// }
 
 func (i Function) Trace(msg string) {
 	fmt.Print(msg + " (function): ")
@@ -1230,7 +1233,7 @@ func (i Function) Equal(o Object) bool {
 	return true
 }
 
-func (i Function) Serialize(e Idxs) string {
+func (i Function) Dump(e Idxs) string {
 	return fmt.Sprintf("\"serlization of %s is not yet supported\" ", i.Inspect(e))
 }
 
@@ -1278,7 +1281,7 @@ func (b Builtin) Inspect(e Idxs) string {
 	return "[" + pure_s + "BFunction(" + strconv.Itoa(b.Argsn) + "): " + b.Doc + "]"
 }
 
-func (b Builtin) Probe(e Idxs) string {
+func (b Builtin) Print(e Idxs) string {
 	var pure_s string
 	if b.Pure {
 		pure_s = "Pure "
@@ -1329,7 +1332,7 @@ func (i Builtin) Equal(o Object) bool {
 	return true
 }
 
-func (i Builtin) Serialize(e Idxs) string {
+func (i Builtin) Dump(e Idxs) string {
 	// TODO
 	return fmt.Sprintf("\"serlization of %s is not yet supported\" ", i.Inspect(e))
 }
@@ -1355,11 +1358,11 @@ func (i Error) Type() Type {
 
 // Inspect returns a string representation of the Integer.
 func (i Error) Inspect(e Idxs) string {
-	return i.Probe(e)
+	return i.Print(e)
 }
 
 // Inspect returns a string representation of the Integer.
-func (i Error) Probe(e Idxs) string {
+func (i Error) Print(e Idxs) string {
 	status := ""
 	if i.Status != 0 {
 		status = "(" + strconv.Itoa(i.Status) + ")"
@@ -1367,7 +1370,7 @@ func (i Error) Probe(e Idxs) string {
 	var b strings.Builder
 	b.WriteString("Error" + status + ": " + i.Message + " ")
 	if i.Parent != nil {
-		b.WriteString("\n\t" + i.Parent.Probe(e))
+		b.WriteString("\n\t" + i.Parent.Print(e))
 	}
 	for k, v := range i.Values {
 		switch ob := v.(type) {
@@ -1444,7 +1447,7 @@ func (i Error) Equal(o Object) bool {
 	return true
 }
 
-func (i Error) Serialize(e Idxs) string {
+func (i Error) Dump(e Idxs) string {
 	// TODO
 	return fmt.Sprintf("\"serlization of %s is not yet supported\" ", i.Inspect(e))
 }
@@ -1474,13 +1477,12 @@ func (i Argword) Inspect(e Idxs) string {
 }
 
 // Inspect returns a string representation of the Integer.
-func (b Argword) Probe(e Idxs) string {
-	return b.Name.Probe(e)
+func (b Argword) Print(e Idxs) string {
+	return b.Name.Print(e)
 }
 
 func (i Argword) Trace(msg string) {
 	fmt.Print(msg + " (argword): ")
-	//fmt.Println(i.Name.Probe())
 }
 
 func (i Argword) GetKind() int {
@@ -1495,9 +1497,9 @@ func (i Argword) Equal(o Object) bool {
 	return i.Name.Equal(oArgword.Name) && i.Kind.Equal(oArgword.Kind)
 }
 
-func (i Argword) Serialize(e Idxs) string {
+func (i Argword) Dump(e Idxs) string {
 	// TODO not sure if this is correct
-	return fmt.Sprintf("{ %s : %s }", i.Name.Serialize(e), i.Kind.Serialize(e))
+	return fmt.Sprintf("{ %s : %s }", i.Name.Dump(e), i.Kind.Dump(e))
 }
 
 //
@@ -1540,8 +1542,8 @@ func (o CPath) GetWordNumber(i int) Word {
 }
 
 // Inspect returns a string representation of the Integer.
-func (b CPath) Probe(e Idxs) string {
-	return b.Word1.Probe(e)
+func (b CPath) Print(e Idxs) string {
+	return b.Word1.Print(e)
 }
 
 func (i CPath) Trace(msg string) {
@@ -1588,7 +1590,7 @@ func (i CPath) Equal(o Object) bool {
 	return true
 }
 
-func (i CPath) Serialize(e Idxs) string {
+func (i CPath) Dump(e Idxs) string {
 	// TODO
 	return fmt.Sprintf("\"serlization of %s is not yet supported\" ", i.Inspect(e))
 }
@@ -1616,12 +1618,12 @@ func (i Native) Type() Type {
 
 // Inspect returns a string representation of the Integer.
 func (i Native) Inspect(e Idxs) string {
-	return "[Native of kind " + i.Kind.Probe(e) + "]"
+	return "[Native of kind " + i.Kind.Print(e) + "]"
 }
 
 // Inspect returns a string representation of the Integer.
-func (i Native) Probe(e Idxs) string {
-	return "[Native of kind " + i.Kind.Probe(e) + "]"
+func (i Native) Print(e Idxs) string {
+	return "[Native of kind " + i.Kind.Print(e) + "]"
 }
 
 func (i Native) Trace(msg string) {
@@ -1649,7 +1651,7 @@ func (i Native) Equal(o Object) bool {
 	return i.Value == oNative.Value
 }
 
-func (i Native) Serialize(e Idxs) string {
+func (i Native) Dump(e Idxs) string {
 	// TODO
 	return fmt.Sprintf("\"serlization of %s is not yet supported\" ", i.Inspect(e))
 }
@@ -1697,7 +1699,7 @@ func (i Dict) Type() Type {
 // Inspect returns a string representation of the Integer.
 func (i Dict) Inspect(idxs Idxs) string {
 	var bu strings.Builder
-	bu.WriteString("[Dict (" + i.Kind.Probe(idxs) + "): ")
+	bu.WriteString("[Dict (" + i.Kind.Print(idxs) + "): ")
 	for k, v := range i.Data {
 		switch ob := v.(type) {
 		case Object:
@@ -1711,13 +1713,13 @@ func (i Dict) Inspect(idxs Idxs) string {
 }
 
 // Inspect returns a string representation of the Integer.
-func (i Dict) Probe(idxs Idxs) string {
+func (i Dict) Print(idxs Idxs) string {
 	var bu strings.Builder
 	bu.WriteString("[\n")
 	for k, v := range i.Data {
 		switch ob := v.(type) {
 		case Object:
-			bu.WriteString(" " + k + ": " + ob.Probe(idxs) + "\n")
+			bu.WriteString(" " + k + ": " + ob.Print(idxs) + "\n")
 		default:
 			bu.WriteString(" " + k + ": " + fmt.Sprint(ob) + "\n")
 		}
@@ -1761,13 +1763,13 @@ func (i Dict) Equal(o Object) bool {
 	return true
 }
 
-func (i Dict) Serialize(e Idxs) string {
+func (i Dict) Dump(e Idxs) string {
 	var bu strings.Builder
 	bu.WriteString("dict { ")
 	for k, v := range i.Data {
 		switch obj := v.(type) {
 		case Object:
-			bu.WriteString(fmt.Sprintf("%s %s ", k, obj.Serialize(e)))
+			bu.WriteString(fmt.Sprintf("%s %s ", k, obj.Dump(e)))
 		default:
 			bu.WriteString(fmt.Sprintf("%s \"WARN: serlization of %s is not yet supported\"", k, obj))
 		}
@@ -1843,7 +1845,7 @@ func (i List) Type() Type {
 // Inspect returns a string representation of the Integer.
 func (i List) Inspect(idxs Idxs) string {
 	var bu strings.Builder
-	bu.WriteString("[List (" + i.Kind.Probe(idxs) + "): ")
+	bu.WriteString("[List (" + i.Kind.Print(idxs) + "): ")
 	for _, v := range i.Data {
 		switch ob := v.(type) {
 		case map[string]any:
@@ -1860,16 +1862,16 @@ func (i List) Inspect(idxs Idxs) string {
 }
 
 // Inspect returns a string representation of the Integer.
-func (i List) Probe(idxs Idxs) string {
+func (i List) Print(idxs Idxs) string {
 	var bu strings.Builder
 	bu.WriteString("L[")
 	for _, v := range i.Data {
 		switch ob := v.(type) {
 		case map[string]any:
 			vv := NewDict(ob)
-			bu.WriteString(" " + vv.Probe(idxs) + " ")
+			bu.WriteString(" " + vv.Print(idxs) + " ")
 		case Object:
-			bu.WriteString(" " + ob.Probe(idxs) + " ")
+			bu.WriteString(" " + ob.Print(idxs) + " ")
 		default:
 			bu.WriteString(" " + fmt.Sprint(ob) + " ")
 		}
@@ -1913,7 +1915,7 @@ func (i List) Equal(o Object) bool {
 	return true
 }
 
-func (i List) Serialize(e Idxs) string {
+func (i List) Dump(e Idxs) string {
 	// TODO
 	return fmt.Sprintf("\"serlization of %s is not yet supported\" ", i.Inspect(e))
 }
@@ -1945,11 +1947,11 @@ func (i Kind) Type() Type {
 // Inspect returns a string representation of the Integer.
 func (i Kind) Inspect(e Idxs) string {
 	// LONG DISPLAY OF FUNCTION NODES return "[Function: " + i.Spec.Inspect(e) + ", " + i.Body.Inspect(e) + "]"
-	return "[Kind(" + i.Kind.Probe(e) + "): " + i.Spec.Inspect(e) + "]"
+	return "[Kind(" + i.Kind.Print(e) + "): " + i.Spec.Inspect(e) + "]"
 }
 
 // Inspect returns a string representation of the Integer.
-func (i Kind) Probe(e Idxs) string {
+func (i Kind) Print(e Idxs) string {
 	return "[Kind: " + i.Spec.Inspect(e) + "]"
 }
 
@@ -1996,8 +1998,8 @@ func (i Kind) Equal(o Object) bool {
 	return true
 }
 
-func (i Kind) Serialize(e Idxs) string {
-	return fmt.Sprintf("kind %s %s", i.Kind.Serialize(e), i.Spec.Serialize(e))
+func (i Kind) Dump(e Idxs) string {
+	return fmt.Sprintf("kind %s %s", i.Kind.Dump(e), i.Spec.Dump(e))
 }
 
 //
@@ -2022,11 +2024,11 @@ func (i Converter) Type() Type {
 // Inspect returns a string representation of the Integer.
 func (i Converter) Inspect(e Idxs) string {
 	// LONG DISPLAY OF FUNCTION NODES return "[Function: " + i.Spec.Inspect(e) + ", " + i.Body.Inspect(e) + "]"
-	return "[Converter(" + i.From.Probe(e) + "->" + i.To.Probe(e) + "): " + i.Spec.Inspect(e) + "]"
+	return "[Converter(" + i.From.Print(e) + "->" + i.To.Print(e) + "): " + i.Spec.Inspect(e) + "]"
 }
 
 // Inspect returns a string representation of the Integer.
-func (i Converter) Probe(e Idxs) string {
+func (i Converter) Print(e Idxs) string {
 	return i.Spec.Inspect(e)
 }
 
@@ -2056,7 +2058,7 @@ func (i Converter) Equal(o Object) bool {
 	return true
 }
 
-func (i Converter) Serialize(e Idxs) string {
+func (i Converter) Dump(e Idxs) string {
 	// TODO
 	return fmt.Sprintf("\"serlization of %s is not yet supported\" ", i.Inspect(e))
 }
@@ -2081,11 +2083,11 @@ func (i Time) Type() Type {
 
 // Inspect returns a string representation of the Integer.
 func (i Time) Inspect(e Idxs) string {
-	return "[Time: " + i.Probe(e) + "]"
+	return "[Time: " + i.Print(e) + "]"
 }
 
 // Inspect returns a string representation of the Integer.
-func (i Time) Probe(e Idxs) string {
+func (i Time) Print(e Idxs) string {
 	return i.Value.Format("2006-01-02 15:04:05")
 }
 
@@ -2105,7 +2107,7 @@ func (i Time) Equal(o Object) bool {
 	return i.Value.Equal(o.(Time).Value)
 }
 
-func (i Time) Serialize(e Idxs) string {
+func (i Time) Dump(e Idxs) string {
 	return fmt.Sprintf("datetime \"%s\"", i.Value.Format("2006-01-02T15:04:05"))
 }
 
@@ -2160,7 +2162,7 @@ func (i Vector) Type() Type {
 // Inspect returns a string representation of the Integer.
 func (i Vector) Inspect(idxs Idxs) string {
 	var bu strings.Builder
-	bu.WriteString("[Vector:") //(" + i.Kind.Probe(idxs) + "):")
+	bu.WriteString("[Vector:") //(" + i.Kind.Print(idxs) + "):")
 	bu.WriteString(" Len " + strconv.Itoa(i.Value.Len()))
 	bu.WriteString(" Norm " + fmt.Sprintf("%.2f", govector.Norm(i.Value, 2.0)))
 	bu.WriteString(" Mean " + fmt.Sprintf("%.2f", i.Value.Mean()))
@@ -2169,7 +2171,7 @@ func (i Vector) Inspect(idxs Idxs) string {
 }
 
 // Inspect returns a string representation of the Integer.
-func (i Vector) Probe(idxs Idxs) string {
+func (i Vector) Print(idxs Idxs) string {
 	var bu strings.Builder
 	bu.WriteString("[")
 	bu.WriteString("Len " + strconv.Itoa(i.Value.Len()))
@@ -2206,7 +2208,7 @@ func (i Vector) Equal(o Object) bool {
 	return true
 }
 
-func (i Vector) Serialize(e Idxs) string {
+func (i Vector) Dump(e Idxs) string {
 	// TODO
 	return fmt.Sprintf("\"serlization of %s is not yet supported\" ", i.Inspect(e))
 }

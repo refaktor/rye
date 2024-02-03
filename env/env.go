@@ -55,9 +55,9 @@ func (e RyeCtx) Copy() *RyeCtx {
 	return nc
 }
 
-func (e RyeCtx) Probe(idxs Idxs) string {
+func (e RyeCtx) Print(idxs Idxs) string {
 	var bu strings.Builder
-	bu.WriteString("[Context (" + e.Kind.Probe(idxs) + "): ")
+	bu.WriteString("[Context (" + e.Kind.Print(idxs) + "): ")
 	for k, v := range e.state {
 		bu.WriteString(idxs.GetWord(k) + ": " + v.Inspect(idxs) + " ")
 	}
@@ -78,7 +78,7 @@ func (e RyeCtx) Preview(idxs Idxs, filter string) string {
 	var bu strings.Builder
 	var ks string
 	if e.GetKind() > 0 {
-		ks = " (" + e.Kind.Probe(idxs) + ") "
+		ks = " (" + e.Kind.Print(idxs) + ") "
 	}
 	bu.WriteString("Context" + ks + ":")
 	if e.Doc > "" {
@@ -121,7 +121,7 @@ func (i RyeCtx) Type() Type {
 
 // Inspect returns a string representation of the Integer.
 func (i RyeCtx) Inspect(e Idxs) string {
-	return i.Probe(e)
+	return i.Print(e)
 }
 
 func (i RyeCtx) Trace(msg string) {
@@ -168,13 +168,13 @@ func (i RyeCtx) Equal(o Object) bool {
 	return false
 }
 
-func (i RyeCtx) Serialize(e Idxs) string {
+func (i RyeCtx) Dump(e Idxs) string {
 	var bu strings.Builder
 	bu.WriteString(fmt.Sprintf("doc \"%s\"\n", i.Doc))
 	for j := 0; j < e.GetWordCount(); j++ {
 		if val, ok := i.state[j]; ok {
 			if val.Type() != BuiltinType {
-				bu.WriteString(fmt.Sprintf("%s: %s\n", e.GetWord(j), val.Serialize(e)))
+				bu.WriteString(fmt.Sprintf("%s: %s\n", e.GetWord(j), val.Dump(e)))
 			}
 		}
 	}
@@ -277,8 +277,8 @@ func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
 	return &ps
 }
 
-func (ps *ProgramState) Serialize() string {
-	return ps.Ctx.Serialize(*ps.Idx)
+func (ps *ProgramState) Dump() string {
+	return ps.Ctx.Dump(*ps.Idx)
 }
 
 func AddToProgramState(ps *ProgramState, ser TSeries, idx *Idxs) *ProgramState {

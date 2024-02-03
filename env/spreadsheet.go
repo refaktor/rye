@@ -238,13 +238,13 @@ func (s Spreadsheet) Inspect(e Idxs) string {
 	var kindStr string
 	//fmt.Println(s.GetKind())
 	if s.GetKind() != int(SpreadsheetType) {
-		kindStr = " of kind " + s.Kind.Probe(e)
+		kindStr = " of kind " + s.Kind.Print(e)
 	}
 	return "[Spreadsheet(" + strconv.Itoa(len(s.Cols)) + " " + rows + ")" + kindStr + "]"
 }
 
 // Inspect returns a string representation of the Integer.
-func (s Spreadsheet) Probe(e Idxs) string {
+func (s Spreadsheet) Print(e Idxs) string {
 	return s.ToTxt()
 }
 
@@ -294,7 +294,7 @@ func (s Spreadsheet) Equal(o Object) bool {
 	return true
 }
 
-func (s Spreadsheet) Serialize(e Idxs) string {
+func (s Spreadsheet) Dump(e Idxs) string {
 	// TODO
 	return fmt.Sprintf("\"serlization of %s is not yet supported\" ", s.Inspect(e))
 }
@@ -309,7 +309,7 @@ func (s SpreadsheetRow) Inspect(e Idxs) string {
 }
 
 // Inspect returns a string representation of the Integer.
-func (s SpreadsheetRow) Probe(e Idxs) string {
+func (s SpreadsheetRow) Print(e Idxs) string {
 	return s.ToTxt()
 }
 
@@ -340,7 +340,7 @@ func (s SpreadsheetRow) Equal(o Object) bool {
 	return true
 }
 
-func (s SpreadsheetRow) Serialize(e Idxs) string {
+func (s SpreadsheetRow) Dump(e Idxs) string {
 	// TODO
 	return fmt.Sprintf("\"serlization of %s is not yet supported\" ", s.Inspect(e))
 }

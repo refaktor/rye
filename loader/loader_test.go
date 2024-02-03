@@ -427,7 +427,7 @@ func TestLoader_cpath(t *testing.T) {
 
 	fmt.Println(block.(env.Block).Series.Get(0))
 
-	block.(env.Block).Series.Get(0).(env.CPath).Word1.Probe(*wordIndex)
+	block.(env.Block).Series.Get(0).(env.CPath).Word1.Print(*wordIndex)
 
 	idx, _ := wordIndex.GetIndex("user")
 	if block.(env.Block).Series.Get(0).(env.CPath).Word1.Index != idx {

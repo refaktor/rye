@@ -413,7 +413,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 		ps.ErrorFlag = true
 		if !ps.FailureFlag {
 			ps.Ser.SetPos(pos)
-			ps.Res = env.NewError2(5, "word not found: "+word.Probe(*ps.Idx))
+			ps.Res = env.NewError2(5, "word not found: "+word.Print(*ps.Idx))
 		}
 		return ps
 	}
@@ -430,7 +430,7 @@ func EvalGenword(ps *env.ProgramState, word env.Genword, leftVal env.Object, toL
 		return EvalObject(ps, object, arg0, toLeft, nil, false, nil) //ww0128a *
 	} else {
 		ps.ErrorFlag = true
-		ps.Res = env.NewError("generic word not found: " + word.Probe(*ps.Idx))
+		ps.Res = env.NewError("generic word not found: " + word.Print(*ps.Idx))
 		return ps
 	}
 }
@@ -443,7 +443,7 @@ func EvalGetword(ps *env.ProgramState, word env.Getword, leftVal env.Object, toL
 		return ps
 	} else {
 		ps.ErrorFlag = true
-		ps.Res = env.NewError("word not found: " + word.Probe(*ps.Idx))
+		ps.Res = env.NewError("word not found: " + word.Print(*ps.Idx))
 		return ps
 	}
 }
@@ -543,8 +543,6 @@ func CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, toLeft
 	}
 	ser0 := ps.Ser // only after we process the arguments and get new position
 	ps.Ser = fn.Body.Series
-	//es.Idx.Probe()
-	//es.Ctx.Probe(*es.Idx)
 
 	// *******
 	env0 = ps.Ctx // store reference to current env in local

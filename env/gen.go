@@ -17,7 +17,7 @@ func NewGen() *Gen {
 	return &e
 }
 
-func (e *Gen) Probe(idxs Idxs) {
+func (e *Gen) Print(idxs Idxs) {
 	fmt.Print("<Gen Dict: ")
 	for k, v := range e.dict {
 		fmt.Print(" <Kind: " + strconv.FormatInt(int64(k), 10))

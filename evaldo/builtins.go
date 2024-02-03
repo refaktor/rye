@@ -370,7 +370,7 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Tries to turn a Rye value to string.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return *env.NewString(arg0.Probe(*ps.Idx))
+			return *env.NewString(arg0.Print(*ps.Idx))
 		},
 	},
 
@@ -670,7 +670,7 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch d := arg0.(type) {
 			case env.Function:
-				return d.Dump(*env1.Idx)
+				return env.NewString(d.Dump(*env1.Idx))
 			default:
 				return MakeArgError(env1, 1, []env.Type{env.FunctionType}, "dump")
 			}
@@ -682,7 +682,7 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Saves current state of the program to a file.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
-			s := ps.Serialize()
+			s := ps.Dump()
 			fileName := fmt.Sprintf("shell_%s.rye", time.Now().Format("060102_150405"))
 
 			err := os.WriteFile(fileName, []byte(s), 0600)
@@ -1209,7 +1209,7 @@ var builtins = map[string]*env.Builtin{
 			case env.String:
 				fmt.Print(arg.Value + " ")
 			default:
-				fmt.Print(arg0.Probe(*ps.Idx) + " ")
+				fmt.Print(arg0.Print(*ps.Idx) + " ")
 			}
 			return arg0
 		},
@@ -1222,7 +1222,7 @@ var builtins = map[string]*env.Builtin{
 			case env.String:
 				fmt.Print(arg.Value)
 			default:
-				fmt.Print(arg0.Probe(*ps.Idx))
+				fmt.Print(arg0.Print(*ps.Idx))
 			}
 			return arg0
 		},
@@ -1235,7 +1235,7 @@ var builtins = map[string]*env.Builtin{
 			case env.String:
 				fmt.Println(arg.Value)
 			default:
-				fmt.Println(arg0.Probe(*ps.Idx))
+				fmt.Println(arg0.Print(*ps.Idx))
 			}
 			return arg0
 		},
@@ -1246,11 +1246,11 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg1.(type) {
 			case env.String:
-				vals := arg0.Probe(*ps.Idx)
+				vals := arg0.Print(*ps.Idx)
 				news := strings.ReplaceAll(arg.Value, "{}", vals)
 				fmt.Print(news)
 			default:
-				fmt.Print(arg0.Probe(*ps.Idx))
+				fmt.Print(arg0.Print(*ps.Idx))
 			}
 			return arg0
 		},
@@ -1261,11 +1261,11 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg1.(type) {
 			case env.String:
-				vals := arg0.Probe(*ps.Idx)
+				vals := arg0.Print(*ps.Idx)
 				news := strings.ReplaceAll(arg.Value, "{}", vals)
 				fmt.Println(news)
 			default:
-				fmt.Println(arg0.Probe(*ps.Idx))
+				fmt.Println(arg0.Print(*ps.Idx))
 			}
 			return arg0
 		},
@@ -1276,11 +1276,11 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg1.(type) {
 			case env.String:
-				vals := arg0.Probe(*ps.Idx)
+				vals := arg0.Print(*ps.Idx)
 				news := strings.ReplaceAll(arg.Value, "{{}}", vals)
 				fmt.Println(news)
 			default:
-				fmt.Println(arg0.Probe(*ps.Idx))
+				fmt.Println(arg0.Print(*ps.Idx))
 			}
 			return arg0
 		},
@@ -1324,14 +1324,6 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
-	"probe": { // **
-		Argsn: 1,
-		Doc:   "Prints a probe of a value.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			fmt.Println(arg0.Inspect(*ps.Idx))
-			return arg0
-		},
-	},
 	"inspect": { // **
 		Argsn: 1,
 		Doc:   "Returs information about a value.",
@@ -1357,7 +1349,7 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch base := arg1.(type) {
 			case env.String:
-				vals := arg0.Probe(*ps.Idx)
+				vals := arg0.Print(*ps.Idx)
 				news := strings.ReplaceAll(base.Value, "(*)", vals)
 				return *env.NewString("\033" + news)
 			default:
@@ -1502,7 +1494,7 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Turn value to it's string representation.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// fmt.Println()
-			return *env.NewString(arg0.Probe(*env1.Idx))
+			return *env.NewString(arg0.Print(*env1.Idx))
 		},
 	},
 
@@ -1511,7 +1503,7 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Turn value to it's string representation.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// fmt.Println()
-			str := arg0.Probe(*env1.Idx)
+			str := arg0.Print(*env1.Idx)
 			if str[0] == '{' || str[0] == '[' {
 				str = str[1 : len(str)-1]
 			}
@@ -1718,7 +1710,6 @@ var builtins = map[string]*env.Builtin{
 			fmt.Println("FLAGS")
 
 			ps.FailureFlag = false
-			//fmt.Println(arg0.Probe(*ps.Idx))
 
 			switch er := arg0.(type) {
 			case env.Error:
@@ -1757,7 +1748,7 @@ var builtins = map[string]*env.Builtin{
 					}
 					switch cc := code.(type) {
 					case env.Block:
-						fmt.Println(code.Probe(*ps.Idx))
+						fmt.Println(code.Print(*ps.Idx))
 						// we store current series (block of code with position we are at) to temp 'ser'
 						ser := ps.Ser
 						// we set ProgramStates series to series ob the block
@@ -1823,7 +1814,6 @@ var builtins = map[string]*env.Builtin{
 				if any_found {
 					switch cc := code.(type) {
 					case env.Block:
-						// fmt.Println(code.Probe(*ps.Idx))
 						// we store current series (block of code with position we are at) to temp 'ser'
 						ser := ps.Ser
 						// we set ProgramStates series to series ob the block
@@ -1947,7 +1937,7 @@ var builtins = map[string]*env.Builtin{
 						text = strings.Replace(text, "\n", "", -1)
 						//fmt.Println(1111)
 						if strings.Compare("(lc)", text) == 0 {
-							fmt.Println(ps.Ctx.Probe(*ps.Idx))
+							fmt.Println(ps.Ctx.Print(*ps.Idx))
 						} else if strings.Compare("(r)", text) == 0 {
 							ps.Ser = ser
 							return ps.Res
@@ -4322,7 +4312,7 @@ var builtins = map[string]*env.Builtin{
 
 				// Iterate over the slice and add the elements to the map.
 				for _, element := range ss {
-					// uniqueValues[env.ToRyeValue(element).Probe(*ps.Idx)] = true
+					// uniqueValues[env.ToRyeValue(element).Print(*ps.Idx)] = true
 					uniqueValues[element] = true
 				}
 
@@ -6427,7 +6417,7 @@ var builtins = map[string]*env.Builtin{
 					r.WriteString(fmt.Sprintln(v))
 				}
 			default:
-				return *env.NewString(arg0.Probe(*ps.Idx))
+				return *env.NewString(arg0.Print(*ps.Idx))
 			}
 			return *env.NewString(r.String())
 		},

@@ -77,7 +77,7 @@ func (e Idxs) GetWord(i int) string {
 	return e.words1[i]
 }
 
-func (e Idxs) Probe() {
+func (e Idxs) Print() {
 	fmt.Print("<IDXS: ")
 	for i := 0; i < e.wordsn; i++ {
 		fmt.Print(strconv.FormatInt(int64(i), 10) + ": " + e.words1[i] + " ")

@@ -35,10 +35,10 @@ func (n SprNode) FindChild(idx int) *SprNode {
 	return nil
 }
 
-func (n SprNode) Probe(depth int, idxs Idxs) {
+func (n SprNode) Print(depth int, idxs Idxs) {
 	for _, child := range n.Children {
 		fmt.Println(LeftPad(child.Value.Inspect(idxs), " ", depth))
-		child.Probe(depth+1, idxs)
+		child.Print(depth+1, idxs)
 	}
 }
 

@@ -37,7 +37,7 @@ DODO:
 		switch ob := v.(type) {
 		case env.Object:
 			if mode == 0 {
-				fmt.Println("" + ob.Probe(*idx) + "")
+				fmt.Println("" + ob.Print(*idx) + "")
 			} else {
 				fmt.Println("" + ob.Inspect(*idx) + "")
 			}
@@ -278,7 +278,7 @@ DODO:
 		switch ob := v.(type) {
 		case env.Object:
 			if mode == 0 {
-				fmt.Println("" + ob.Probe(*idx) + "")
+				fmt.Println("" + ob.Print(*idx) + "")
 			} else {
 				fmt.Println("" + ob.Inspect(*idx) + "")
 			}
@@ -390,7 +390,7 @@ DODO:
 		switch ob := v.(type) {
 		case env.Object:
 			if mode == 0 {
-				fmt.Println("" + ob.Probe(*idx) + "")
+				fmt.Println("" + ob.Print(*idx) + "")
 			} else {
 				fmt.Println("" + ob.Inspect(*idx) + "")
 			}
@@ -480,12 +480,12 @@ func DisplayTable(bloc env.Spreadsheet, idx *env.Idxs) (env.Object, bool) {
 			case env.Decimal:
 				ww = len(strconv.FormatFloat(val.Value, 'f', 2, 64)) + 1
 			case env.String:
-				ww = len(val.Probe(*idx))
+				ww = len(val.Print(*idx))
 				//if ww > 60 {
 				// ww = 60
 				//}
 			case env.Vector:
-				ww = len(val.Probe(*idx))
+				ww = len(val.Print(*idx))
 			}
 			if len(widths) > ic && widths[ic] < ww {
 				widths[ic] = ww + 1
@@ -525,7 +525,7 @@ DODO:
 				switch ob := v.(type) {
 				case env.Object:
 					if mode == 0 {
-						fmt.Printf("| %-"+strconv.Itoa(widths[ic])+"s", ob.Probe(*idx))
+						fmt.Printf("| %-"+strconv.Itoa(widths[ic])+"s", ob.Print(*idx))
 						//fmt.Print("| " +  + "\t")
 					} else {
 						fmt.Printf("| %-"+strconv.Itoa(widths[ic])+"s", ob.Inspect(*idx))
