@@ -29,7 +29,7 @@ require (
 	github.com/pkg/term v1.1.0
 	github.com/refaktor/go-peg v0.0.0-20220116201714-31e3dfa8dc7d
 	github.com/refaktor/liner v1.2.6
-	github.com/sashabaranov/go-openai v1.17.9
+	github.com/sashabaranov/go-openai v1.19.2
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/thomasberger/parsemail v1.2.6
 	github.com/webview/webview_go v0.0.0-20230901181450-5a14030a9070
