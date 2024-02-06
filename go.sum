@@ -100,8 +100,8 @@ github.com/gorilla/securecookie v1.1.2 h1:YCIWL56dvtr73r6715mJs5ZvhtnY73hBvEF8kX
 github.com/gorilla/securecookie v1.1.2/go.mod h1:NfCASbcHqRSY+3a8tlWJwsQap2VX5pwzwo4h3eOamfo=
 github.com/gorilla/sessions v1.2.2 h1:lqzMYz6bOfvn2WriPUjNByzeXIlVzURcPmgMczkmTjY=
 github.com/gorilla/sessions v1.2.2/go.mod h1:ePLdVu+jbEgHH+KWw8I1z2wqd0BAdAQh/8LRvBeoNcQ=
-github.com/hajimehoshi/ebiten/v2 v2.6.3 h1:xJ5klESxhflZbPUx3GdIPoITzgPgamsyv8aZCVguXGI=
-github.com/hajimehoshi/ebiten/v2 v2.6.3/go.mod h1:TZtorL713an00UW4LyvMeKD8uXWnuIuCPtlH11b0pgI=
+github.com/hajimehoshi/ebiten/v2 v2.6.5 h1:lALv+qhEK3CBWViyiGpz4YcR6slVJEjCiS7sExKZ9OE=
+github.com/hajimehoshi/ebiten/v2 v2.6.5/go.mod h1:TZtorL713an00UW4LyvMeKD8uXWnuIuCPtlH11b0pgI=
 github.com/jezek/xgb v1.1.0 h1:wnpxJzP1+rkbGclEkmwpVFQWpuE2PUGNUzP8SbfFobk=
 github.com/jezek/xgb v1.1.0/go.mod h1:nrhwO0FX/enq75I7Y7G8iN1ubpSGZEiA3v9e9GyRFlk=
 github.com/jinzhu/copier v0.4.0 h1:w3ciUoD19shMCRargcpm0cm91ytaBhDvuRpz1ODO/U8=
