@@ -42,21 +42,28 @@ Rye is a high level, dynamic **programming language** based on ideas from **Rebo
 Factor, Linux shells and Golang. It's still an experiment in language design, but it should slowly become more and
 more useful in real world.
 
-It features a Golang based interpreter and console and could also be seen as (modest) Golang's scripting companion as
-Go's libraries are quite easy to integrate.
+It features a Golang based interpreter and console and could also be seen as (modest) **Go's scripting companion** as
+Go's libraries are quite easy to integrate, and Rye can be embedded into Go programs as a scripting or config language.
+
+I believe that as language becomes higher level it starts touching the user interface boundary, besides being a language
+we have great emphasis on interactive use (Rye shell) where we will explore that.
 
 ## Status: Alpha
 
-Core ideas of the language are formed. Most experimenting, at least for this stage is done.
+Core ideas of the language are formed. Most experimenting, at least at this stage, is done.
 Right now, focus is on making the core and runtime useful for anyone who might decide to try it.
 
 This means we are improving the Rye console, documentation and improving the runtime and core functions.
 
 ## Language overview
 
-Rye is **homoiconic**, it has no keywords or special forms (everything is a function call), everything is an expression - returns something,
-has more datatypes and more syntaxt types than your usual language, functions are "first class citisens", bo so is everything else, even 
-blocks of code and scopes (contexts). It has multiple dialects (specific interpreters).
+Rye is **homoiconic**, it has **no keywords** or special forms (everything is a function call, everything is a value), everything returns something (is an expression),
+has more **syntax types** than your usual language, functions are **first class** citizens, so are blocks of code and scopes (contexts). It has multiple **dialects** (specific interpreters).
+
+Although it seems contrary to each other Rye tries to be very **flexible** but also **safer** where possible. For example, it doesn't even have a syntax for changing state directly 
+outside current context (parent or sub). It separates between pure and impure functions, while most of builtins are pure. Validation dialect is part of its core, so input validation is easy and 
+distinguishable/explicit, not sprinkled around other code. Few functions that change state in place end with "!" (and usually don't need to be used). Functions never return null, they return result
+or a specific failure (which is a Rye value too, and you can handle on-specific-spot). 
 
 ### Few one-liners
 
@@ -95,7 +102,7 @@ These pages are littered with examples. You can find them on this **README** pag
 
 ### Rye vs. Python
 
-Python is the *lingua franca* of dynamic programming languages so comparing examples in Python and Rye can be helpfull to some:
+Python is the *lingua franca* of dynamic programming languages, so comparing examples in Python and Rye can be helpful to some:
 
   * [Less variables, more flows example vs Python](https://ryelang.blogspot.com/2021/11/less-variables-more-flows-example-vs.html)
   * [Simple compression puzzle - from Python to Rye solution](https://github.com/otobrglez/compression-puzzle/blob/master/src/rye/compress_jm_rec_steps.rye)
@@ -139,15 +146,15 @@ legend: ⭐ priority , 🧪 tests
 
 ### Rye blog
 
-For most up-to date information on the language and it's development visit our **[old](http://ryelang.blogspot.com/)** and **[new blog](http://ryelang.org/blog)**.
+For most up-to date information on the language, and its development, visit our **[old](http://ryelang.blogspot.com/)** and **[new blog](http://ryelang.org/blog)**.
 
 ### Ryelang reddit
 
-This is another place for updates and also potental discussions. You are welcome to join **[our reddit group](https://reddit.com/r/ryelang/)**. 
+This is another place for updates and also potential discussions. You are welcome to join **[our reddit group](https://reddit.com/r/ryelang/)**. 
 
 ### Github
 
-If code speaks to you, our Github page is the central location for all things Rye. You are welcome to collaborate, post Issues or PR-s, there is tons of things to do and improve :)
+If code speaks to you, our Github page is the central location for all things Rye. You are welcome to collaborate, post Issues or PR-s, there are tons of things to do and improve :)
 
 ## Getting Rye
 
@@ -212,7 +219,7 @@ Run the Rye Console
 
     ./rye
 
-Install build-esential if you don't already have it, for packages that require cgo (like sqlite):
+Install build-essential if you don't already have it, for packages that require cgo (like sqlite):
 
     sudo apt install build-essential
 
@@ -257,7 +264,7 @@ Rye has Syntax highlighting for Emacs and VS Code. For VS Code just search for *
   
   [Factor](https://factorcode.org/) - Factor from Slava Pestov taught me new fluidity and that variables are *no-good*, but stack shuffle words are even worse ;)
   
-  [Red](https://red-lang.org) - Another language inspired by Rebol from well known Rebol developer  DocKimbel and his colleagues. A concrete endaviour, with it's low level language, compiler, GUI, ...
+  [Red](https://red-lang.org) - Another language inspired by Rebol from well known Rebol developer  DocKimbel and his colleagues. A concrete endeavor, with its low level language, compiler, GUI, ...
   
   [Oldes' Rebol 3](https://oldes.github.io/Rebol3/) - Rebol3 fork maintained by Oldes (from Amanita Design), tries to resolve issues without unnecessarily changing the language itself.
   
