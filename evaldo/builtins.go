@@ -3245,7 +3245,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"map\\pos": { // **
+	"map\\pos": { // TODO -- deduplicate map\pos and map\idx
 		Argsn: 3,
 		Doc:   "Maps values of a block to a new block by evaluating a block of code.",
 		Pure:  true,
@@ -3315,6 +3315,99 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
 							ps.Ctx.Set(accu.Index, *env.NewInteger(int64(i + 1)))
+							ps = EvalBlockInj(ps, *env.NewString(string(input[i])), true)
+							if ps.ErrorFlag {
+								return ps.Res
+							}
+							newl[i] = ps.Res
+
+							ps.Ser.Reset()
+						}
+						ps.Ser = ser
+
+						return *env.NewBlock(*env.NewTSeries(newl))
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "map\\pos")
+					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "map\\pos")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "map\\pos")
+			}
+		},
+	},
+
+	"map\\idx": { // TODO -- deduplicate map\pos and map\idx
+		Argsn: 3,
+		Doc:   "Maps values of a block to a new block by evaluating a block of code.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch list := arg0.(type) {
+			case env.Block:
+				switch accu := arg1.(type) {
+				case env.Word:
+					switch block := arg2.(type) {
+					case env.Block:
+						l := list.Series.Len()
+						newl := make([]env.Object, l)
+						ser := ps.Ser
+						ps.Ser = block.Series
+						for i := 0; i < l; i++ {
+							ps.Ctx.Set(accu.Index, *env.NewInteger(int64(i)))
+							ps = EvalBlockInj(ps, list.Series.Get(i), true)
+							if ps.ErrorFlag {
+								return ps.Res
+							}
+							newl[i] = ps.Res
+							ps.Ser.Reset()
+						}
+						ps.Ser = ser
+						return *env.NewBlock(*env.NewTSeries(newl))
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "map\\pos")
+					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "map\\pos")
+				}
+			case env.List:
+				switch block := arg2.(type) {
+				case env.Block:
+					l := len(list.Data)
+					newl := make([]any, l)
+					switch accu := arg1.(type) {
+					case env.Word:
+						ser := ps.Ser
+						ps.Ser = block.Series
+						for i := 0; i < l; i++ {
+							ps.Ctx.Set(accu.Index, *env.NewInteger(int64(i)))
+							ps = EvalBlockInj(ps, env.ToRyeValue(list.Data[i]), true)
+							if ps.ErrorFlag {
+								return ps.Res
+							}
+							newl[i] = env.RyeToRaw(ps.Res)
+							ps.Ser.Reset()
+						}
+						ps.Ser = ser
+						return *env.NewList(newl)
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.WordType}, "map\\pos")
+					}
+				default:
+					return MakeArgError(ps, 3, []env.Type{env.BlockType}, "map\\pos")
+				}
+			case env.String:
+				input := []rune(list.Value)
+				l := len(input)
+				switch accu := arg1.(type) {
+				case env.Word:
+					switch block := arg2.(type) {
+					case env.Block:
+						newl := make([]env.Object, l)
+						ser := ps.Ser
+						ps.Ser = block.Series
+						for i := 0; i < l; i++ {
+							ps.Ctx.Set(accu.Index, *env.NewInteger(int64(i)))
 							ps = EvalBlockInj(ps, *env.NewString(string(input[i])), true)
 							if ps.ErrorFlag {
 								return ps.Res

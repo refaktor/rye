@@ -276,7 +276,7 @@
 		var entries = [];
 		term.onKey((ev) => {
 			window.SendKeypress(ev.domEvent.key, ev.domEvent.keyCode, ev.domEvent.ctrlKey, ev.domEvent.altKey, ev.domEvent.shiftKey);
-			console.log(ev.domEvent)
+			// console.log(ev.domEvent)
 			/* if (ev.domEvent.key == "Enter") {
 				if (currLine) {
 					entries.push(currLine);
@@ -294,12 +294,16 @@
 				//	      term.write(ev.key);
 			} */
 		}); 
-		
-		function evaluate2(str, term) {
-			alert(str);
-		}
-		
+	  
+	  function sendToTerminal(str, term) {
+	      for (var i=0; i<str.length; i++) {
+		  window.SendKeypress(str[i], 0, false, false, false);
+		  term.focus();
+	      }
+	  }	
 	</script>
+
+	<button onclick="sendToTerminal('print 123', term)">hello world</button>
 </body>
 </html>
 

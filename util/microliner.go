@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"strings"
+	"sync"
 	"unicode"
 
 	"github.com/mattn/go-runewidth"
@@ -118,10 +119,15 @@ func (s *MLState) emitNewLine() {
 
 // State represents an open terminal
 type MLState struct {
-	needRefresh bool
-	next        <-chan KeyEvent
-	sendBack    func(msg string)
-	enterLine   func(line string)
+	needRefresh  bool
+	next         <-chan KeyEvent
+	sendBack     func(msg string)
+	enterLine    func(line string)
+	history      []string
+	historyMutex sync.RWMutex
+	columns      int
+	// killRing *ring.Ring
+	//	completer         WordCompleter
 	// pending     []rune
 }
 
@@ -143,6 +149,60 @@ func (s *MLState) refresh(prompt []rune, buf []rune, pos int) error {
 	s.needRefresh = false
 	return s.refreshSingleLine(prompt, buf, pos)
 }
+
+// HISTORY
+
+// HistoryLimit is the maximum number of entries saved in the scrollback history.
+const HistoryLimit = 1000
+
+// AppendHistory appends an entry to the scrollback history. AppendHistory
+// should be called iff Prompt returns a valid command.
+func (s *MLState) AppendHistory(item string) {
+	s.historyMutex.Lock()
+	defer s.historyMutex.Unlock()
+	if len(s.history) > 0 {
+		if item == s.history[len(s.history)-1] {
+			return
+		}
+	}
+	s.history = append(s.history, item)
+	if len(s.history) > HistoryLimit {
+		s.history = s.history[1:]
+	}
+}
+
+// ClearHistory clears the scrollback history.
+func (s *MLState) ClearHistory() {
+	s.historyMutex.Lock()
+	defer s.historyMutex.Unlock()
+	s.history = nil
+}
+
+// Returns the history lines starting with prefix
+func (s *MLState) getHistoryByPrefix(prefix string) (ph []string) {
+	for _, h := range s.history {
+		if strings.HasPrefix(h, prefix) {
+			ph = append(ph, h)
+		}
+	}
+	return
+}
+
+// Returns the history lines matching the intelligent search
+func (s *MLState) getHistoryByPattern(pattern string) (ph []string, pos []int) {
+	if pattern == "" {
+		return
+	}
+	for _, h := range s.history {
+		if i := strings.Index(h, pattern); i >= 0 {
+			ph = append(ph, h)
+			pos = append(pos, i)
+		}
+	}
+	return
+}
+
+// END HISTORY
 
 /*
 // addToKillRing adds some text to the kill ring. If mode is 0 it adds it to a
@@ -234,6 +294,7 @@ func (s *MLState) refreshSingleLine(prompt []rune, buf []rune, pos int) error {
 	trace(prompt)
 	trace(buf)
 	trace(pos)
+	s.sendBack("\033[?25l")
 	s.cursorPos(0)
 	s.sendBack("\033[K")
 	s.cursorPos(0)
@@ -256,6 +317,7 @@ func (s *MLState) refreshSingleLine(prompt []rune, buf []rune, pos int) error {
 		trace(pLen + pos)
 		s.cursorPos(pLen + pos)
 		trace("SETTING CURSOR POS AFER HIGHLIGHT")
+		s.sendBack("\033[?25h")
 	} /* else {
 		// Find space available
 		space := s.columns - pLen
@@ -300,7 +362,16 @@ func (s *MLState) refreshSingleLine(prompt []rune, buf []rune, pos int) error {
 
 // signals end-of-file by pressing Ctrl-D.
 func (s *MLState) MicroPrompt(prompt string, text string, pos int) (string, error) {
+	// history related
+	historyEnd := ""
+	var historyPrefix []string
+	historyPos := 0
+	historyStale := true
+	// historyAction := false // used to mark history related actions
+	// killAction := 0        // used to mark kill related actions
+
 startOfHere:
+
 	s.sendBack(prompt)
 	var line = []rune(text)
 	p := []rune(prompt)
@@ -467,6 +538,7 @@ startOfHere:
 		} else {
 			switch next.Code {
 			case 13: // Enter
+				historyStale = true
 				s.sendBack("\n\r")
 				s.enterLine(string(line))
 				pos = 0
@@ -511,6 +583,43 @@ startOfHere:
 			case 37: // Left
 				if pos > 0 {
 					pos -= len(getSuffixGlyphs(line[:pos], 1))
+				} else {
+					s.doBeep()
+				}
+			case 38: // Up
+				// historyAction = true
+				if historyStale {
+					historyPrefix = s.getHistoryByPrefix(string(line))
+					historyPos = len(historyPrefix)
+					historyStale = false
+				}
+				if historyPos > 0 {
+					if historyPos == len(historyPrefix) {
+						historyEnd = string(line)
+					}
+					historyPos--
+					line = []rune(historyPrefix[historyPos])
+					pos = len(line)
+					s.needRefresh = true
+				} else {
+					s.doBeep()
+				}
+			case 40: // Down
+				// historyAction = true
+				if historyStale {
+					historyPrefix = s.getHistoryByPrefix(string(line))
+					historyPos = len(historyPrefix)
+					historyStale = false
+				}
+				if historyPos < len(historyPrefix) {
+					historyPos++
+					if historyPos == len(historyPrefix) {
+						line = []rune(historyEnd)
+					} else {
+						line = []rune(historyPrefix[historyPos])
+					}
+					pos = len(line)
+					s.needRefresh = true
 				} else {
 					s.doBeep()
 				}
