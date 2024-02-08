@@ -362,9 +362,7 @@ func (s *MLState) refreshSingleLine(prompt []rune, buf []rune, pos int) error {
 
 // signals end-of-file by pressing Ctrl-D.
 func (s *MLState) MicroPrompt(prompt string, text string, pos int) (string, error) {
-
 	// history related
-
 	historyEnd := ""
 	var historyPrefix []string
 	historyPos := 0

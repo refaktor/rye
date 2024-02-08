@@ -10,14 +10,14 @@
 - [Rye language 🌾](#rye-language-)
   - [What is Rye](#what-is-rye)
   - [Status: Alpha](#status-alpha)
-  - [Overview](#overview)
-    - [Some specifics](#some-specifics)
-    - [Introductions](#introductions)
+  - [Language overview](#overview)
+    - [Few oneliners](#few-oneliners)
+    - [Meet Rye](#meet-rye)
     - [Examples](#examples)
     - [Rye vs. Python](#rye-vs-python)
   - [Modules](#modules)
-    - [Base - official integrations](#base---official-integrations)
-    - [Contrib - will be community / third party integrations](#contrib---will-be-community--third-party-integrations)
+    - [Base](#base)
+    - [Contrib](#contrib)
   - [Follow development](#follow-development)
     - [Rye blog](#rye-blog)
     - [Ryelang reddit](#ryelang-reddit)
@@ -29,7 +29,8 @@
       - [Dev Docker image](#dev-docker-image)
     - [Building Rye](#building-rye)
       - [Build Rye with specific modules](#build-rye-with-specific-modules)
-      - [Build WASM version of Rye](#build-wasm-version-of-rye)
+      - [Build WASM version](#build-wasm-version-of-rye)
+	  - [Tests and function reference](#tests-and-function-reference)
   - [Related links](#related-links)
   - [Questions, contact](#questions-contact)
 
@@ -49,155 +50,39 @@ Go's libraries are quite easy to integrate.
 Core ideas of the language are formed. Most experimenting, at least for this stage is done.
 Right now, focus is on making the core and runtime useful for anyone who might decide to try it.
 
-That means I am improving the Rye console, documentation and stabilizing core functions.
+This means we are improving the Rye console, documentation and improving the runtime and core functions.
 
-## Overview
+## Language overview
 
-### Some specifics
+Rye is **homoiconic**, it has no keywords or special forms (everything is a function call), everything is an expression - returns something,
+has more datatypes and more syntaxt types than your usual language, functions are "first class citisens", bo so is everything else, even 
+blocks of code and scopes (contexts). It has multiple dialects (specific interpreters).
 
-Rye is **homoiconic**, Rye's code is also Rye's data.
+### Few one-liners
 
 ```red
-data: { name "Jim" score 33 }
-code: { print "Hello " + data/name }
-if data/score > 25 code
-; outputs: Hello Jim
-print second data + ", " + second code
-; outputs: Jim, Hello
+print "Hello World"
+
+"Hello World" .replace "World" "Mars" |print
+; prints Hello Mars
+
+"12 8 12 16 8 6" .load .unique .sum
+; returns 42
+
+{ "Anne" "Joan" "Adam" } |filter { .first = "A" }
+|for { .print } 
+; prints:
+; Anne
+; Adam
+
+kind: "admin"
+open sqlite://data.db |query { select * from user where kind = ?kind }
+; returns a spreadsheet of admins
 ```
 
-Rye has **no keywords or special forms**. Ifs, Loops, even Function
-definiton words are just functions. This means you can have more of them,
-load them at library level and create your own.
+### Meet Rye
 
-```red
-if-jim: fn { name code } { if name = "jim" code }
-
-visitor: "jim"
-if-jim visitor { print "Welcome in!" }
-; prints: Welcome in!
-```
-
-Rye has no statements. Everything is an **expression**, returns 
-something. Even asignment returns a value, so you can assign
-inline. Either (an if/else like function) returns the result of the evaluated
-block and can be used like an ternary operator.
-
-```red
-direction: 'in
-full-name: join3 name: "Jane" " " surname: "Doe"  
-print either direction = 'in { "Hi" +_ full-name } { "Bye bye" +_ name }
-; outputs: Hi Jane Doe
-```
-
-Rye has **more syntax types** than your average language.
-And it has generic methods for short function names. *Get* and *send*
-below dispatch on the *kind* of first argument (http uri and an email address).
-
-```red
-email: jim@example.com
-content: html->text get http://www.example.com
-send email "title" content
-; sends email with contents of the webpage
-```
-
-Rye has an option of forward code flow. It has a concept of 
-**op and pipe words**. Every function can
-be called as ordinary function or as op/pipe word. It also 
-has a concept of **injected blocks** like *for* below.
-
-```red
-http://www.example.com/ .get .html->text :content
-jim@example.com .send "title" content
-; sends email with contents of the webpage
-{ "Jane" "Jim" } |for { .prn }
-; outputs: Jane Jim
-get http://www.example.com/users.json
-|parse-json |for { -> "name" |capitalize |print }
-; outputs capitalized names of users
-```
-
-Rye has **higher order like functions**, but they come in what
-would usually be special forms (here these are still just functions).
-
-```red
-nums: { 1 2 3 }
-map nums { + 30 }
-; returns { 31 32 33 }
-filter nums { :x all { x > 1  x < 3 } }
-; returns: { 2 }
-strs: { "one" "two" "three" }
-{ 3 1 2 3 } |filter { > 1 } |map { <-- strs } |for { .prn }
-; prints: three two three
-```
-*[more about HOF-s](https://ryelang.blogspot.com/2022/02/higher-order-functions-test.html)*
-
-Rye has some different ideas about **failure handling**. This
-is a complex subject, so look at other docs about it. Remember it's
-all still experimental.
-
-```red
-read-all %mydata.json |check { 404 "couldn't read the file" }
-|parse-json |check { 500 "couldn't parse JSON" }
--> "score" |fix { 50 } |print1 "Your score: {}"
-; outputs: Your score: 50
-; if file is there and json is OK, but score field is missing
-```
-
-Most languages return with an explicit keyword *return*. Rye, like lisps 
-always returns the result of the **last expression**. But Rye also has
-so called **returning words** which for visual clarity start with **^** 
-and always or conditionally return to caller.
-
-```red
-add-nums: fn { a b } { a + b }
-digits: fn1 { = 0 |either { "zero" } { "one" } }
-percentage: fn { a b } { 100 * a |/ b |^fix { "ERR" } |concat "%" }
-percentage 33 77  ; returns: 42%
-percentage 42 0   ; returns: ERR
-unlock-jim: fn1 { = "Jim" |^if { print "Hi Jim" } print "Locked" }
-unlock-jim "Jim"  ; prints: Hi Jim
-unlock-jim "Jane" ; prints: Locked
-```
-
-Rye has **multiple dialects**, specific interpreters of Rye values. 
-Two examples of this are the validation and SQL dialects.
-
-```red
-dict { "name" "jane" "surname" "boo" }
-|validate { name: required score: optional 0 integer } |probe
-; prints: #[ name: "jane" score: 0 ]
-
-name: "James"
-db: open sqlite://main.db
-exec db { insert into pals ( name ) values ( ?name ) }
-```
-*more dialects: [html parsing](https://ryelang.blogspot.com/2021/04/html-parsing-dialect-demo.html), [conversion](https://ryelang.blogspot.com/2021/12/convert-function-and-conversion-dialect.html)*
-
-Rye has a concept of **kinds with validators and converters**.
-
-```red
-person: kind 'person { name: required string calc { .capitalize } }
-user: kind user { user-name: required }
-converter person user { user-name: :name }
-dict { "name" "jameson" } >> person >> user |print
-; prints: <Context (user): user-name: <String: Jameson>>
-```
-
-Rye's **scope/context** is a first class Rye value and by this very malleable.
-One of the results of this are isolated contexts.
-
-```red
-iso: isolate { print: ?print plus: ?add }
-do-in iso { 100 .plus 11 |print }
-; prints 111
-do-in iso { 2 .add 3 |print }
-; Error: Word add not found
- ```
-
-### Introductions
-
-These are all work in progress, also need a refresher, but can maybe offer some insight:
+Visit this set of pages to find out more (work in progress):
 
   * [Meet Rye](https://ryelang.org/meet_rye/)
  
@@ -210,17 +95,16 @@ These pages are littered with examples. You can find them on this **README** pag
 
 ### Rye vs. Python
 
-Python is the *lingua franca* and the *measuring stone* amongst dynamic programming languages, where Rye is also searching it's place. 
-When learning about something new it makes sense to approach it from a familiar place.
+Python is the *lingua franca* of dynamic programming languages so comparing examples in Python and Rye can be helpfull to some:
 
   * [Less variables, more flows example vs Python](https://ryelang.blogspot.com/2021/11/less-variables-more-flows-example-vs.html)
   * [Simple compression puzzle - from Python to Rye solution](https://github.com/otobrglez/compression-puzzle/blob/master/src/rye/compress_jm_rec_steps.rye)
   
 ## Modules
 
-The author of Factor once said that at the end *it's not about the language, but the libraries*. I can only agree, adding *libraries, and distribution*. Rye is still an experiment in language design, so it doesn't have anything like production level libraries. But to test the language with practical problems in mind, or because I needed something for my use of Rye, there are quite many modules already made. 
+The author of Factor once said that at the end *it's not about the language, but the libraries*. I can only agree, adding *libraries, and distribution*. 
 
-### Base - official integrations
+### Base
   * Core builtin functions ⭐⭐⭐  🧪~80%
   * Bcrypt - password hashing
   * Bson - binary (j)son
@@ -240,9 +124,10 @@ The author of Factor once said that at the end *it's not about the language, but
   * Validation - validation dialect ⭐⭐ 🧪~50% 
   * Webview - Webview GUI
    
-### Contrib - will be community / third party integrations
+### Contrib modules
   * Amazon AWS
   * Bleve full text search 
+  * Cayley graph database
   * OpenAI - OpenAI API
   * Postmark - email sending service
   * Telegram bot - telegram bots
@@ -266,7 +151,7 @@ If code speaks to you, our Github page is the central location for all things Ry
 
 ## Getting Rye
 
-Rye is developed on Linux, but has also been compiled on macOS and Docker. If you need additional architecture or OS, post an Issue.
+Rye is developed on Linux, but has also been compiled on macOS, Docker and as WASM module. If you need additional architecture or OS, post an Issue.
 
 ### Binaries
 
@@ -302,20 +187,20 @@ Run 🏃‍♂️ the rye REPL with:
 docker run -ti refaktor/rye
 ```
 
-### Building Rye
+### Building Rye from source
 
-Use official documentation or lines below to install Golang 1.19.3 https://go.dev/doc/install
+Use official documentation or lines below to install Golang 1.19.3 https://go.dev/doc/install (at the time of writing):
 
     wget https://go.dev/dl/go1.21.5.linux-amd64.tar.gz
     rm -rf /usr/local/go && tar -C /usr/local -xzf go1.21.5.linux-amd64.tar.gz
     export PATH=$PATH:/usr/local/go/bin
     go version
     
-Clone the main branch from the Rye repository. There is a submodule (a different repo) for contributed packages, hence the additional flag is needed:
+Clone the main branch from the Rye repository:
 
     git clone https://github.com/refaktor/rye.git && cd rye
 
-Build the tiny version of Rye
+Build the tiny version of Rye:
 
     go build -tags "b_tiny"
 
@@ -338,11 +223,29 @@ I've been working on a way to make this more elegant and systematic, but the man
 
     go build -tags "b_tiny,b_sqlite,b_http,b_sql,b_postgres,b_openai,b_bson,b_crypto,b_smtpd,b_mail,b_postmark,b_bcrypt,b_telegram"
 	
-#### Build WASM version of Rye
+#### Build WASM version
 
 Rye can also work inside your browser or any other WASM container. I will add examples, html pages and info about it, but to build it:
 
-    GOOS=js GOARCH=wasm go build -tags "b_tiny,b_norepl" -o wasm/rye.wasm main_wasm.go
+    GOOS=js GOARCH=wasm go build -tags "b_tiny" -o wasm/rye.wasm main_wasm.go
+	
+Run the demo server for testing WASM version
+
+    bin/rye server_wasm.rye
+	
+Then visit http://localhost:8085 or http://localhost:8085/ryeshell/
+
+#### Tests and function reference
+
+Run the Rye code tests.
+
+    cd tests
+	../bin/rye main.rye test
+	
+Build the function reference out of tests:
+
+    cd tests
+	../bin/rye main.rye doc
 
 ## Editor support
 
