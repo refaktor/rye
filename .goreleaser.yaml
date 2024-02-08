@@ -41,7 +41,7 @@ builds:
     - goarch: wasm
       goos: js
       flags:
-      - -tags=b_tiny,b_norepl
+      - -tags=b_tiny
       - -trimpath
 
 
