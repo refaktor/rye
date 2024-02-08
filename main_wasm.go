@@ -34,6 +34,8 @@ var CODE []any
 
 var prevResult env.Object
 
+var ml *util.MLState
+
 //
 // main function. Dispatches to appropriate mode function
 //
@@ -64,7 +66,7 @@ func main() {
 
 	c := make(chan util.KeyEvent)
 
-	ml := util.NewMicroLiner(c, sendMessageToJS, sendLineToJS)
+	ml = util.NewMicroLiner(c, sendMessageToJS, sendLineToJS)
 
 	js.Global().Set("RyeEvalString", js.FuncOf(RyeEvalString))
 
@@ -170,7 +172,11 @@ func RyeEvalShellLine(this js.Value, args []js.Value) any {
 		es.ReturnFlag = false
 		es.ErrorFlag = false
 		es.FailureFlag = false
+
+		ml.AppendHistory(code)
+
 		return ""
+
 	case env.Error:
 		fmt.Println(val.Message)
 		return "Error"
