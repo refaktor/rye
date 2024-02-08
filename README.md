@@ -76,15 +76,17 @@ print "Hello World"
 "12 8 12 16 8 6" .load .unique .sum
 ; returns 42
 
-{ "Anne" "Joan" "Adam" } |filter { .first = "A" }
-|for { .print } 
+{ "Anne" "Joan" "Adam" } |filter { .first = "A" } |for { .print } 
 ; prints:
 ; Anne
 ; Adam
 
 kind: "admin"
 open sqlite://data.db |query { select * from user where kind = ?kind }
-; returns a spreadsheet of admins
+; returns a Spreadsheet of admins
+
+read %name.txt |fix { "John Doe" } |post* https://example.com/postname 'text
+; makes HTTP post of name read from a file or "John Doe" if missing
 ```
 
 ### Meet Rye
@@ -238,7 +240,7 @@ Rye can also work inside your browser or any other WASM container. I will add ex
 	
 Run the demo server for testing WASM version
 
-    bin/rye server_wasm.rye
+    bin/rye serve_wasm.rye
 	
 Then visit http://localhost:8085 or http://localhost:8085/ryeshell/
 
