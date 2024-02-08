@@ -46,7 +46,7 @@ It features a Golang based interpreter and console and could also be seen as (mo
 Go's libraries are quite easy to integrate, and Rye can be embedded into Go programs as a scripting or config language.
 
 I believe that as language becomes higher level it starts touching the user interface boundary, besides being a language
-we have great emphasis on interactive use (Rye shell) where we will explore that.
+we have great emphasis on **interactive use** (Rye shell) where we will explore that.
 
 ## Status: Alpha
 
