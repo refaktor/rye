@@ -69,7 +69,6 @@ type Object interface {
 // INTEGER
 //
 
-// Integer represents an integer.
 type Integer struct {
 	Value int64
 }
@@ -79,17 +78,14 @@ func NewInteger(val int64) *Integer {
 	return &nat
 }
 
-// Type returns the type of the Integer.
 func (i Integer) Type() Type {
 	return IntegerType
 }
 
-// Inspect returns a string representation of the Integer.
 func (i Integer) Inspect(e Idxs) string {
-	return "[Integer: " + strconv.FormatInt(i.Value, 10) + "]"
+	return "[Integer: " + i.Print(e) + "]"
 }
 
-// Inspect returns a string representation of the Integer.
 func (i Integer) Print(e Idxs) string {
 	return strconv.FormatInt(i.Value, 10)
 }
@@ -118,7 +114,6 @@ func (i Integer) Dump(e Idxs) string {
 // DECIMAL
 //
 
-// Decimal
 type Decimal struct {
 	Value float64 `bson:"value"`
 }
@@ -128,17 +123,14 @@ func NewDecimal(val float64) *Decimal {
 	return &nat
 }
 
-// Type returns the type of the Decimal.
 func (i Decimal) Type() Type {
 	return DecimalType
 }
 
-// Inspect returns a string representation of the Decimal.
 func (i Decimal) Inspect(e Idxs) string {
-	return "[Decimal: " + strconv.FormatFloat(i.Value, 'f', 6, 64) + "]"
+	return "[Decimal: " + i.Print(e) + "]"
 }
 
-// Inspect returns a string representation of the Decimal.
 func (i Decimal) Print(e Idxs) string {
 	return strconv.FormatFloat(i.Value, 'f', 6, 64)
 }
@@ -167,7 +159,6 @@ func (i Decimal) Dump(e Idxs) string {
 // STRING
 //
 
-// String represents an string.
 type String struct {
 	Value string `bson:"value"`
 }
@@ -177,24 +168,16 @@ func NewString(val string) *String {
 	return &nat
 }
 
-// Type returns the type of the Integer.
 func (i String) Type() Type {
 	return StringType
 }
 
-// Inspect returns a string representation of the Integer.
 func (i String) Inspect(e Idxs) string {
-	return "[String: " + i.Value + "]"
+	return "[String: " + i.Print(e) + "]"
 }
 
-// Inspect returns a string representation of the Integer.
 func (i String) Print(e Idxs) string {
-	s := i.Value
-	if len(s) > 80 {
-		return s[:80] + "..."
-	}
-	return s
-	// return "\"" + s + "\""
+	return i.Value
 }
 
 func (i String) Trace(msg string) {
@@ -235,7 +218,7 @@ func NewDate(val time.Time) *Date {
 }
 
 func (i Date) Inspect(e Idxs) string {
-	return "[Date: " + i.Value.Format(time.RFC822Z) + "]"
+	return "[Date: " + i.Print(e) + "]"
 }
 
 func (i Date) Print(e Idxs) string {
@@ -303,14 +286,12 @@ func (i Uri) Type() Type {
 	return UriType
 }
 
-// Inspect returns a string representation of the Integer.
 func (i Uri) Inspect(e Idxs) string {
-	return "[Uri: " + i.Scheme.Print(e) + "://" + i.GetPath() + "]"
+	return "[Uri: " + i.Print(e) + "]"
 }
 
-// Inspect returns a string representation of the Integer.
 func (i Uri) Print(e Idxs) string {
-	return i.Path
+	return i.Scheme.Print(e) + "://" + i.GetPath()
 }
 
 func (i Uri) Trace(msg string) {
@@ -335,7 +316,7 @@ func (i Uri) Dump(e Idxs) string {
 }
 
 //
-// Email
+// EMAIL
 //
 
 type Email struct {
@@ -351,12 +332,10 @@ func (i Email) Type() Type {
 	return EmailType
 }
 
-// Inspect returns a string representation of the Integer.
 func (i Email) Inspect(e Idxs) string {
 	return "[Email: " + i.Print(e) + "]"
 }
 
-// Inspect returns a string representation of the Integer.
 func (i Email) Print(e Idxs) string {
 	return i.Address
 }
@@ -385,7 +364,6 @@ func (i Email) Dump(e Idxs) string {
 // BLOCK
 //
 
-// Integer represents an integer.
 type Block struct {
 	Series TSeries `bson:"series"`
 	Mode   int     `bson:"mode"`
@@ -401,12 +379,10 @@ func NewBlock2(series TSeries, m int) *Block {
 	return &o
 }
 
-// Type returns the type of the Integer.
 func (i Block) Type() Type {
 	return BlockType
 }
 
-// Inspect returns a string representation of the Integer.
 func (b Block) Inspect(e Idxs) string {
 	var r strings.Builder
 	r.WriteString("[Block: ")
@@ -420,7 +396,6 @@ func (b Block) Inspect(e Idxs) string {
 	return r.String()
 }
 
-// Inspect returns a string representation of the Integer.
 func (b Block) Print(e Idxs) string {
 	var r strings.Builder
 	r.WriteString("{ ")
@@ -469,7 +444,8 @@ func (i Block) Dump(e Idxs) string {
 	bu.WriteString("{ ")
 	for _, obj := range i.Series.GetAll() {
 		if obj != nil {
-			bu.WriteString(fmt.Sprintf("%s ", obj.Dump(e)))
+			bu.WriteString(obj.Dump(e))
+			bu.WriteString(" ")
 		} else {
 			bu.WriteString("'nil ")
 		}
@@ -482,7 +458,6 @@ func (i Block) Dump(e Idxs) string {
 // WORD
 //
 
-// Integer represents an integer.
 type Word struct {
 	Index int
 }
@@ -492,19 +467,16 @@ func NewWord(val int) *Word {
 	return &nat
 }
 
-// Type returns the type of the Integer.
 func (i Word) Type() Type {
 	return WordType
 }
 
-// Inspect returns a string
 func (i Word) Inspect(e Idxs) string {
-	return "[Word: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + "]"
+	return "[Word: " + strconv.FormatInt(int64(i.Index), 10) + ", " + i.Print(e) + "]"
 }
 
-// Inspect returns a string representation of the Integer.
-func (b Word) Print(e Idxs) string {
-	return e.GetWord(b.Index)
+func (i Word) Print(e Idxs) string {
+	return e.GetWord(i.Index)
 }
 
 func (i Word) Trace(msg string) {
@@ -531,7 +503,6 @@ func (i Word) Dump(e Idxs) string {
 // SETWORD
 //
 
-// Integer represents an integer.
 type Setword struct {
 	Index int
 }
@@ -541,17 +512,14 @@ func NewSetword(index int) *Setword {
 	return &nat
 }
 
-// Type returns the type of the Integer.
 func (i Setword) Type() Type {
 	return SetwordType
 }
 
-// Inspect returns a string representation of the Integer.
 func (i Setword) Inspect(e Idxs) string {
 	return "[Setword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + "]"
 }
 
-// Inspect returns a string representation of the Integer.
 func (b Setword) Print(e Idxs) string {
 	return e.GetWord(b.Index) + ":"
 }
@@ -573,14 +541,13 @@ func (i Setword) Equal(o Object) bool {
 }
 
 func (i Setword) Dump(e Idxs) string {
-	return fmt.Sprintf("%s:", e.GetWord(i.Index))
+	return e.GetWord(i.Index) + ":"
 }
 
 //
 // LSETWORD
 //
 
-// Integer represents an integer.
 type LSetword struct {
 	Index int
 }
@@ -590,17 +557,14 @@ func NewLSetword(index int) *LSetword {
 	return &nat
 }
 
-// Type returns the type of the Integer.
 func (i LSetword) Type() Type {
 	return LSetwordType
 }
 
-// Inspect returns a string representation of the Integer.
 func (i LSetword) Inspect(e Idxs) string {
 	return "[LSetword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + "]"
 }
 
-// Inspect returns a string representation of the Integer.
 func (b LSetword) Print(e Idxs) string {
 	return ":" + e.GetWord(b.Index)
 }
@@ -622,14 +586,13 @@ func (i LSetword) Equal(o Object) bool {
 }
 
 func (i LSetword) Dump(e Idxs) string {
-	return fmt.Sprintf(":%s", e.GetWord(i.Index))
+	return ":" + e.GetWord(i.Index)
 }
 
 //
 // OPWORD
 //
 
-// Integer represents an integer.
 type Opword struct {
 	Index int
 	Force int
@@ -640,17 +603,14 @@ func NewOpword(index, force int) *Opword {
 	return &nat
 }
 
-// Type returns the type of the Integer.
 func (i Opword) Type() Type {
 	return OpwordType
 }
 
-// Inspect returns a string
 func (i Opword) Inspect(e Idxs) string {
 	return "[Opword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + "]"
 }
 
-// Inspect returns a string representation of the Integer.
 func (b Opword) Print(e Idxs) string {
 	return "." + e.GetWord(b.Index)
 }
@@ -677,14 +637,13 @@ func (i Opword) Equal(o Object) bool {
 }
 
 func (i Opword) Dump(e Idxs) string {
-	return fmt.Sprintf(".%s", e.GetWord(i.Index))
+	return "." + e.GetWord(i.Index)
 }
 
 //
 // PIPEWORD
 //
 
-// Integer represents an integer.
 type Pipeword struct {
 	Index int
 	Force int
@@ -695,17 +654,14 @@ func NewPipeword(index, force int) *Pipeword {
 	return &nat
 }
 
-// Type returns the type of the Integer.
 func (i Pipeword) Type() Type {
 	return PipewordType
 }
 
-// Inspect returns a string
 func (i Pipeword) Inspect(e Idxs) string {
 	return "[Pipeword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + "]"
 }
 
-// Inspect returns a string representation of the Integer.
 func (b Pipeword) Print(e Idxs) string {
 	return "|" + e.GetWord(b.Index)
 }
@@ -732,14 +688,13 @@ func (i Pipeword) Equal(o Object) bool {
 }
 
 func (i Pipeword) Dump(e Idxs) string {
-	return fmt.Sprintf("|%s", e.GetWord(i.Index))
+	return "|" + e.GetWord(i.Index)
 }
 
 //
 // TAGWORD
 //
 
-// Integer represents an integer.
 type Tagword struct {
 	Index int
 }
@@ -749,17 +704,14 @@ func NewTagword(index int) *Tagword {
 	return &nat
 }
 
-// Type returns the type of the Integer.
 func (i Tagword) Type() Type {
 	return TagwordType
 }
 
-// Inspect returns a string
 func (i Tagword) Inspect(e Idxs) string {
 	return "[Tagword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + "]"
 }
 
-// Inspect returns a string representation of the Integer.
 func (b Tagword) Print(e Idxs) string {
 	return "'" + e.GetWord(b.Index)
 }
@@ -785,14 +737,13 @@ func (i Tagword) Equal(o Object) bool {
 }
 
 func (i Tagword) Dump(e Idxs) string {
-	return fmt.Sprintf("'%s", e.GetWord(i.Index))
+	return "'" + e.GetWord(i.Index)
 }
 
 //
 // XWORD
 //
 
-// Integer represents an integer.
 type Xword struct {
 	Index int
 }
@@ -802,17 +753,14 @@ func NewXword(index int) *Xword {
 	return &nat
 }
 
-// Type returns the type of the Integer.
 func (i Xword) Type() Type {
 	return XwordType
 }
 
-// Inspect returns a string
 func (i Xword) Inspect(e Idxs) string {
 	return "[Xword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + "]"
 }
 
-// Inspect returns a string representation of the Integer.
 func (b Xword) Print(e Idxs) string {
 	return e.GetWord(b.Index)
 }
@@ -838,14 +786,13 @@ func (i Xword) Equal(o Object) bool {
 }
 
 func (i Xword) Dump(e Idxs) string {
-	return fmt.Sprintf("<%s>", e.GetWord(i.Index))
+	return "<" + e.GetWord(i.Index) + ">"
 }
 
 //
 // EXWORD
 //
 
-// Integer represents an integer.
 type EXword struct {
 	Index int
 }
@@ -855,17 +802,14 @@ func NewEXword(index int) *EXword {
 	return &nat
 }
 
-// Type returns the type of the Integer.
 func (i EXword) Type() Type {
 	return EXwordType
 }
 
-// Inspect returns a string
 func (i EXword) Inspect(e Idxs) string {
 	return "[EXword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + "]"
 }
 
-// Inspect returns a string representation of the Integer.
 func (b EXword) Print(e Idxs) string {
 	return e.GetWord(b.Index)
 }
@@ -891,14 +835,13 @@ func (i EXword) Equal(o Object) bool {
 }
 
 func (i EXword) Dump(e Idxs) string {
-	return fmt.Sprintf("</%s>", e.GetWord(i.Index))
+	return "</" + e.GetWord(i.Index) + ">"
 }
 
 //
 // KINDWORD
 //
 
-// Integer represents an integer.
 type Kindword struct {
 	Index int
 }
@@ -908,17 +851,14 @@ func NewKindword(index int) *Kindword {
 	return &nat
 }
 
-// Type returns the type of the Integer.
 func (i Kindword) Type() Type {
 	return KindwordType
 }
 
-// Inspect returns a string
 func (i Kindword) Inspect(e Idxs) string {
 	return "[Kindword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + "]"
 }
 
-// Inspect returns a string representation of the Integer.
 func (b Kindword) Print(e Idxs) string {
 	return e.GetWord(b.Index)
 }
@@ -944,14 +884,13 @@ func (i Kindword) Equal(o Object) bool {
 }
 
 func (i Kindword) Dump(e Idxs) string {
-	return fmt.Sprintf("~(%s)", e.GetWord(i.Index))
+	return "~(" + e.GetWord(i.Index) + ")"
 }
 
 //
 // GETWORD
 //
 
-// Integer represents an integer.
 type Getword struct {
 	Index int
 }
@@ -961,17 +900,14 @@ func NewGetword(index int) *Getword {
 	return &nat
 }
 
-// Type returns the type of the Integer.
 func (i Getword) Type() Type {
 	return GetwordType
 }
 
-// Inspect returns a string
 func (i Getword) Inspect(e Idxs) string {
 	return "[Getword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + "]"
 }
 
-// Inspect returns a string representation of the Integer.
 func (b Getword) Print(e Idxs) string {
 	return "?" + e.GetWord(b.Index)
 }
@@ -997,14 +933,13 @@ func (i Getword) Equal(o Object) bool {
 }
 
 func (i Getword) Dump(e Idxs) string {
-	return fmt.Sprintf("?%s", e.GetWord(i.Index))
+	return "?" + e.GetWord(i.Index)
 }
 
 //
 // GENWORD
 //
 
-// Integer represents an integer.
 type Genword struct {
 	Index int
 }
@@ -1014,17 +949,14 @@ func NewGenword(index int) *Genword {
 	return &nat
 }
 
-// Type returns the type of the Integer.
 func (i Genword) Type() Type {
 	return GenwordType
 }
 
-// Inspect returns a string
 func (i Genword) Inspect(e Idxs) string {
 	return "[Genword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + "]"
 }
 
-// Inspect returns a string representation of the Integer.
 func (b Genword) Print(e Idxs) string {
 	return e.GetWord(b.Index)
 }
@@ -1051,27 +983,23 @@ func (i Genword) Equal(o Object) bool {
 
 func (i Genword) Dump(e Idxs) string {
 	// TODO not sure if this is correct
-	return fmt.Sprintf("~%s", e.GetWord(i.Index))
+	return "~" + e.GetWord(i.Index)
 }
 
 //
 // COMMA
 //
 
-// Integer represents an integer.
 type Comma struct{}
 
-// Type returns the type of the Integer.
 func (i Comma) Type() Type {
 	return CommaType
 }
 
-// Inspect returns a string
 func (i Comma) Inspect(e Idxs) string {
 	return "[Comma]"
 }
 
-// Inspect returns a string representation of the Integer.
 func (b Comma) Print(e Idxs) string {
 	return ","
 }
@@ -1096,20 +1024,16 @@ func (i Comma) Dump(e Idxs) string {
 // VOID
 //
 
-// Integer represents an integer.
 type Void struct{}
 
-// Type returns the type of the Integer.
 func (i Void) Type() Type {
 	return VoidType
 }
 
-// Inspect returns a string
 func (i Void) Inspect(e Idxs) string {
 	return "[Void]"
 }
 
-// Inspect returns a string representation of the Integer.
 func (b Void) Print(e Idxs) string {
 	return "_"
 }
@@ -1131,10 +1055,9 @@ func (i Void) Dump(e Idxs) string {
 }
 
 //
-// Function
+// FUNCTION
 //
 
-// Integer represents an integer.
 type Function struct {
 	Argsn int
 	Spec  Block
@@ -1165,31 +1088,31 @@ func NewFunctionDoc(spec Block, body Block, pure bool, doc string) *Function {
 	return &o
 }
 
-// Type returns the type of the Integer.
 func (i Function) Type() Type {
 	return FunctionType
 }
 
-// Inspect returns a string representation of the Integer.
 func (i Function) Inspect(e Idxs) string {
 	// LONG DISPLAY OF FUNCTION NODES return "[Function: " + i.Spec.Inspect(e) + ", " + i.Body.Inspect(e) + "]"
-	var pure_s string
+	var pure string
 	if i.Pure {
-		pure_s = "Pure "
+		pure = "Pure "
 	}
 	docs := ""
 	if len(i.Doc) > 0 {
 		docs = ": " + i.Doc
 	}
-	return "[" + pure_s + "Function(" + strconv.FormatInt(int64(i.Argsn), 10) + ")" + docs + "]"
+	return "[" + pure + "Function(" + strconv.FormatInt(int64(i.Argsn), 10) + ")" + docs + "]"
 }
 
-// Inspect returns a string representation of the Integer.
-func (b Function) Print(e Idxs) string {
-	return "[Function(" + strconv.FormatInt(int64(b.Argsn), 10) + ")]"
+func (i Function) Print(e Idxs) string {
+	var pure string
+	if i.Pure {
+		pure = "Pure "
+	}
+	return "[" + pure + "Function(" + strconv.FormatInt(int64(i.Argsn), 10) + ")]"
 }
 
-// Inspect returns a string representation of the Integer.
 // func (i Function) Dump(e Idxs) Block {
 // 	// LONG DISPLAY OF FUNCTION NODES return "[Function: " + i.Spec.Inspect(e) + ", " + i.Body.Inspect(e) + "]"
 // 	ser := make([]Object, 0)
@@ -1238,7 +1161,7 @@ func (i Function) Dump(e Idxs) string {
 }
 
 //
-// BuiltinFunction
+// BUILTIN FUNCTION
 //
 
 // BuiltinFunction represents a function signature of builtin functions.
@@ -1266,29 +1189,20 @@ func NewBuiltin(fn BuiltinFunction, argsn int, acceptFailure bool, pure bool, do
 	return &bl
 }
 
-// Type returns the type of the Builtin.
 func (b Builtin) Type() Type {
 	return BuiltinType
 }
 
-// Inspect returns a string representation of the Builtin.
 func (b Builtin) Inspect(e Idxs) string {
-	var pure_s string
-	if b.Pure {
-		pure_s = "Pure "
-	}
-
-	return "[" + pure_s + "BFunction(" + strconv.Itoa(b.Argsn) + "): " + b.Doc + "]"
+	return "[" + b.Print(e) + "]"
 }
 
 func (b Builtin) Print(e Idxs) string {
-	var pure_s string
+	var pure string
 	if b.Pure {
-		pure_s = "Pure "
+		pure = "Pure "
 	}
-
-	// return "[" + pure_s + "Builtin]"
-	return "[" + pure_s + "BFunction(" + strconv.Itoa(b.Argsn) + "): " + b.Doc + "]"
+	return pure + "BFunction(" + strconv.Itoa(b.Argsn) + "): " + b.Doc
 }
 
 func (i Builtin) Trace(msg string) {
@@ -1338,10 +1252,9 @@ func (i Builtin) Dump(e Idxs) string {
 }
 
 //
-// Error
+// ERROR
 //
 
-// Integer represents an integer.
 type Error struct {
 	Status      int
 	Message     string
@@ -1351,17 +1264,14 @@ type Error struct {
 	CodeBlock   TSeries
 }
 
-// Type returns the type of the Integer.
 func (i Error) Type() Type {
 	return ErrorType
 }
 
-// Inspect returns a string representation of the Integer.
 func (i Error) Inspect(e Idxs) string {
-	return i.Print(e)
+	return "[" + i.Print(e) + "]"
 }
 
-// Inspect returns a string representation of the Integer.
 func (i Error) Print(e Idxs) string {
 	status := ""
 	if i.Status != 0 {
@@ -1466,17 +1376,14 @@ func NewArgword(name Word, kind Word) *Argword {
 	return &nat
 }
 
-// Type returns the type of the Integer.
 func (i Argword) Type() Type {
 	return ArgwordType
 }
 
-// Inspect returns a string
 func (i Argword) Inspect(e Idxs) string {
 	return "[Argword: " + i.Name.Inspect(e) + ":" + i.Kind.Inspect(e) + "]"
 }
 
-// Inspect returns a string representation of the Integer.
 func (b Argword) Print(e Idxs) string {
 	return b.Name.Print(e)
 }
@@ -1513,12 +1420,10 @@ type CPath struct {
 	Word3 Word
 }
 
-// Type returns the type of the Integer.
 func (i CPath) Type() Type {
 	return CPathType
 }
 
-// Inspect returns a string
 func (i CPath) Inspect(e Idxs) string {
 	switch i.Cnt {
 	case 2:
@@ -1529,7 +1434,6 @@ func (i CPath) Inspect(e Idxs) string {
 	return "[CPath: " + i.Word1.Inspect(e) + "/ ... ]"
 }
 
-// Inspect returns a string
 func (o CPath) GetWordNumber(i int) Word {
 	switch i {
 	case 1:
@@ -1541,7 +1445,6 @@ func (o CPath) GetWordNumber(i int) Word {
 	}
 }
 
-// Inspect returns a string representation of the Integer.
 func (b CPath) Print(e Idxs) string {
 	return b.Word1.Print(e)
 }
@@ -1599,7 +1502,6 @@ func (i CPath) Dump(e Idxs) string {
 // NATIVE
 //
 
-// String represents an string.
 type Native struct {
 	Value any
 	Kind  Word
@@ -1611,19 +1513,16 @@ func NewNative(index *Idxs, val any, kind string) *Native {
 	return &nat
 }
 
-// Type returns the type of the Integer.
 func (i Native) Type() Type {
 	return NativeType
 }
 
-// Inspect returns a string representation of the Integer.
 func (i Native) Inspect(e Idxs) string {
-	return "[Native of kind " + i.Kind.Print(e) + "]"
+	return "[" + i.Print(e) + "]"
 }
 
-// Inspect returns a string representation of the Integer.
 func (i Native) Print(e Idxs) string {
-	return "[Native of kind " + i.Kind.Print(e) + "]"
+	return "Native of kind " + i.Kind.Print(e) + ""
 }
 
 func (i Native) Trace(msg string) {
@@ -1657,11 +1556,11 @@ func (i Native) Dump(e Idxs) string {
 }
 
 //
-// Dict -- nonindexed and unboxed map ... for example for params from request etc, so we don't neet to idex keys and it doesn't need boxed values
-// I think it should have option of having Kind too ...
+// DICT
 //
 
-// String represents an string.
+// Dict -- nonindexed and unboxed map ... for example for params from request etc, so we don't neet to idex keys and it doesn't need boxed values
+// I think it should have option of having Kind too ...
 type Dict struct {
 	Data map[string]any
 	Kind Word
@@ -1691,12 +1590,10 @@ func NewDictFromSeries(block TSeries, idx *Idxs) Dict {
 	return Dict{data, Word{0}}
 }
 
-// Type returns the type of the Integer.
 func (i Dict) Type() Type {
 	return DictType
 }
 
-// Inspect returns a string representation of the Integer.
 func (i Dict) Inspect(idxs Idxs) string {
 	var bu strings.Builder
 	bu.WriteString("[Dict (" + i.Kind.Print(idxs) + "): ")
@@ -1712,7 +1609,6 @@ func (i Dict) Inspect(idxs Idxs) string {
 	return bu.String()
 }
 
-// Inspect returns a string representation of the Integer.
 func (i Dict) Print(idxs Idxs) string {
 	var bu strings.Builder
 	bu.WriteString("[\n")
@@ -1779,9 +1675,10 @@ func (i Dict) Dump(e Idxs) string {
 }
 
 //
-// List -- nonindexed and unboxed list (block)
+// LIST
 //
 
+// List -- nonindexed and unboxed list (block)
 type List struct {
 	Data []any
 	Kind Word
@@ -1837,12 +1734,10 @@ func NewListFromSeries(block TSeries) List {
 	return List{data, Word{0}}
 }
 
-// Type returns the type of the Integer.
 func (i List) Type() Type {
 	return ListType
 }
 
-// Inspect returns a string representation of the Integer.
 func (i List) Inspect(idxs Idxs) string {
 	var bu strings.Builder
 	bu.WriteString("[List (" + i.Kind.Print(idxs) + "): ")
@@ -1861,7 +1756,6 @@ func (i List) Inspect(idxs Idxs) string {
 	return bu.String()
 }
 
-// Inspect returns a string representation of the Integer.
 func (i List) Print(idxs Idxs) string {
 	var bu strings.Builder
 	bu.WriteString("L[")
@@ -1920,10 +1814,8 @@ func (i List) Dump(e Idxs) string {
 	return fmt.Sprintf("\"serlization of %s is not yet supported\" ", i.Inspect(e))
 }
 
-// KIND Type
-
 //
-// Kind
+// KIND
 //
 
 type Kind struct {
@@ -1944,15 +1836,13 @@ func (i Kind) Type() Type {
 	return KindType
 }
 
-// Inspect returns a string representation of the Integer.
 func (i Kind) Inspect(e Idxs) string {
 	// LONG DISPLAY OF FUNCTION NODES return "[Function: " + i.Spec.Inspect(e) + ", " + i.Body.Inspect(e) + "]"
 	return "[Kind(" + i.Kind.Print(e) + "): " + i.Spec.Inspect(e) + "]"
 }
 
-// Inspect returns a string representation of the Integer.
 func (i Kind) Print(e Idxs) string {
-	return "[Kind: " + i.Spec.Inspect(e) + "]"
+	return "Kind: " + i.Spec.Inspect(e)
 }
 
 func (i Kind) Trace(msg string) {
@@ -2003,7 +1893,7 @@ func (i Kind) Dump(e Idxs) string {
 }
 
 //
-// Converter
+// CONVERTER
 //
 
 type Converter struct {
@@ -2021,15 +1911,13 @@ func (i Converter) Type() Type {
 	return ConverterType
 }
 
-// Inspect returns a string representation of the Integer.
 func (i Converter) Inspect(e Idxs) string {
 	// LONG DISPLAY OF FUNCTION NODES return "[Function: " + i.Spec.Inspect(e) + ", " + i.Body.Inspect(e) + "]"
-	return "[Converter(" + i.From.Print(e) + "->" + i.To.Print(e) + "): " + i.Spec.Inspect(e) + "]"
+	return "[" + i.Print(e) + "]"
 }
 
-// Inspect returns a string representation of the Integer.
 func (i Converter) Print(e Idxs) string {
-	return i.Spec.Inspect(e)
+	return "Converter(" + i.From.Print(e) + "->" + i.To.Print(e) + "): " + i.Spec.Inspect(e)
 }
 
 func (i Converter) Trace(msg string) {
@@ -2076,17 +1964,14 @@ func NewTime(val time.Time) *Time {
 	return &nat
 }
 
-// Type returns the type of the Integer.
 func (i Time) Type() Type {
 	return TimeType
 }
 
-// Inspect returns a string representation of the Integer.
 func (i Time) Inspect(e Idxs) string {
 	return "[Time: " + i.Print(e) + "]"
 }
 
-// Inspect returns a string representation of the Integer.
 func (i Time) Print(e Idxs) string {
 	return i.Value.Format("2006-01-02 15:04:05")
 }
@@ -2112,9 +1997,10 @@ func (i Time) Dump(e Idxs) string {
 }
 
 //
-// VECTOR TYPE -- feture vector (uses govector)
+// VECTOR
 //
 
+// Vector -- feture vector (uses govector)
 type Vector struct {
 	Value govector.Vector
 	Kind  Word
@@ -2143,8 +2029,6 @@ func ArrayFloat32FromSeries(block TSeries) []float32 {
 	return data
 }
 
-// data []float32
-
 func NewVectorFromSeries(block TSeries) *Vector {
 	data := ArrayFloat32FromSeries(block)
 	vec, err := govector.AsVector(data)
@@ -2154,12 +2038,10 @@ func NewVectorFromSeries(block TSeries) *Vector {
 	return &Vector{vec, Word{0}}
 }
 
-// Type returns the type of the Integer.
 func (i Vector) Type() Type {
 	return VectorType
 }
 
-// Inspect returns a string representation of the Integer.
 func (i Vector) Inspect(idxs Idxs) string {
 	var bu strings.Builder
 	bu.WriteString("[Vector:") //(" + i.Kind.Print(idxs) + "):")
@@ -2170,10 +2052,9 @@ func (i Vector) Inspect(idxs Idxs) string {
 	return bu.String()
 }
 
-// Inspect returns a string representation of the Integer.
 func (i Vector) Print(idxs Idxs) string {
 	var bu strings.Builder
-	bu.WriteString("[")
+	bu.WriteString("V[")
 	bu.WriteString("Len " + strconv.Itoa(i.Value.Len()))
 	bu.WriteString(" Norm " + fmt.Sprintf("%.2f", govector.Norm(i.Value, 2.0)))
 	bu.WriteString(" Mean " + fmt.Sprintf("%.2f", i.Value.Mean()))
