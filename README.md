@@ -10,8 +10,8 @@
 - [Rye language 🌾](#rye-language-)
   - [What is Rye](#what-is-rye)
   - [Status: Alpha](#status-alpha)
-  - [Language overview](#overview)
-    - [Few oneliners](#few-oneliners)
+  - [Language overview](#language-overview)
+    - [Few oneliners](#few-one-liners)
     - [Meet Rye](#meet-rye)
     - [Examples](#examples)
     - [Rye vs. Python](#rye-vs-python)
@@ -27,10 +27,11 @@
     - [Docker images](#docker-images)
       - [Binary Docker image](#binary-docker-image)
       - [Dev Docker image](#dev-docker-image)
-    - [Building Rye](#building-rye)
+    - [Building Rye from source](#building-rye-from-source)
       - [Build Rye with specific modules](#build-rye-with-specific-modules)
-      - [Build WASM version](#build-wasm-version-of-rye)
-	  - [Tests and function reference](#tests-and-function-reference)
+      - [Build WASM version](#build-wasm-version)
+      - [Tests and function reference](#tests-and-function-reference)
+  - [Editor support](#editor-support)
   - [Related links](#related-links)
   - [Questions, contact](#questions-contact)
 
@@ -133,7 +134,7 @@ The author of Factor once said that at the end *it's not about the language, but
   * Validation - validation dialect ⭐⭐ 🧪~50% 
   * Webview - Webview GUI
    
-### Contrib modules
+### Contrib
   * Amazon AWS
   * Bleve full text search 
   * Cayley graph database
