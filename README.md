@@ -72,10 +72,10 @@ or a specific failure (which is a Rye value too, and you can handle on-specific-
 print "Hello World"
 
 "Hello World" .replace "World" "Mars" |print
-; prints Hello Mars
+; prints: Hello Mars
 
 "12 8 12 16 8 6" .load .unique .sum
-; returns 42
+; returns: 42
 
 { "Anne" "Joan" "Adam" } |filter { .first = "A" } |for { .print } 
 ; prints:
@@ -90,10 +90,10 @@ range 1 10 |map { .fac } |print\csv
 
 kind: "admin"
 open sqlite://data.db |query { select * from user where kind = ?kind }
-; returns a Spreadsheet of admins
+; returns: Spreadsheet of admins
 
-read %name.txt |fix { "John Doe" } |post* https://example.com/postname 'text
-; makes HTTP post of name read from a file or "John Doe" if missing
+read %name.txt |fix { "Anonymous" } |post* https://example.com/postname 'text
+; makes HTTP post of the name read from a file, or "Anonymous" if file failed to be read
 ```
 
 ### Meet Rye
