@@ -4,13 +4,104 @@
 package term
 
 import (
+	"fmt"
+
 	"github.com/refaktor/rye/env"
 )
 
-// DisplayBlock is dummy non-implementation for wasm for display builtin
-func DisplayBlock(bloc env.Block, idx *env.Idxs) (env.Object, bool) {
-	panic("unimplemented")
+var sendBack func(string)
+
+func SetSB(fn func(string)) {
+	sendBack = fn
 }
+
+func DisplayBlock(bloc env.Block, idx *env.Idxs) (env.Object, bool) {
+	HideCur()
+	curr := 0
+	moveUp := 0
+	mode := 0 // 0 - human, 1 - dev
+	//	len := bloc.Series.Len()
+	// DODO:
+	if moveUp > 0 {
+		CurUp(moveUp)
+	}
+	SaveCurPos()
+	for i, v := range bloc.Series.S {
+		ClearLine()
+		if i == curr {
+			ColorBrGreen()
+			ColorBold()
+			fmt.Print("\u00bb ")
+		} else {
+			fmt.Print(" ")
+		}
+		switch ob := v.(type) {
+		case env.Object:
+			if mode == 0 {
+				fmt.Println("" + ob.Print(*idx) + "")
+			} else {
+				fmt.Println("" + ob.Inspect(*idx) + "")
+			}
+		default:
+			fmt.Println("" + fmt.Sprint(ob) + "")
+		}
+		CloseProps()
+		// term.CurUp(1)
+	}
+
+	moveUp = bloc.Series.Len()
+
+	defer func() {
+		// Show cursor.
+		sendBack("\033[?25h")
+	}()
+
+	// RestoreCurPos()
+
+	/* for {
+		ascii, keyCode, err := GetChar()
+
+		if (ascii == 3 || ascii == 27) || err != nil {
+			//fmt.Println()
+			ShowCur()
+			return nil, true
+		}
+
+		if ascii == 13 {
+			//fmt.Println()
+			return bloc.Series.Get(curr), false
+		}
+
+		if ascii == 77 || ascii == 109 {
+			if mode == 0 {
+				mode = 1
+			} else {
+				mode = 0
+			}
+			goto DODO
+		}
+
+		if keyCode == 40 {
+			curr++
+			if curr > len-1 {
+				curr = 0
+			}
+			goto DODO
+		} else if keyCode == 38 {
+			curr--
+			if curr < 0 {
+				curr = len - 1
+			}
+			goto DODO
+		}
+	} */
+	return bloc.Series.Get(curr), false
+}
+
+// DisplayBlock is dummy non-implementation for wasm for display builtin
+// func DisplayBlock(bloc env.Block, idx *env.Idxs) (env.Object, bool) {
+// 	panic("unimplemented")
+// }
 
 // DisplayDict is dummy non-implementation for wasm for display builtin
 func DisplayDict(bloc env.Dict, idx *env.Idxs) (env.Object, bool) {
@@ -27,7 +118,67 @@ func DisplayTable(bloc env.Spreadsheet, idx *env.Idxs) (env.Object, bool) {
 	panic("unimplemented")
 }
 
-// SaveCurPos is dummy non-implementation for wasm for display builtin
+func ShowCur() {
+	sendBack("\x1b[?25h")
+}
+
+func HideCur() {
+	sendBack("\x1b[?25l")
+}
 func SaveCurPos() {
-	panic("unimplemented")
+	sendBack("\x1b7")
+}
+
+func ClearLine() {
+	sendBack("\x1b[0K")
+}
+
+func RestoreCurPos() {
+	sendBack("\x1b8")
+}
+
+func ColorRed() {
+	sendBack("\x1b[31m")
+}
+func ColorGreen() {
+	sendBack("\x1b[32m")
+}
+func ColorOrange() {
+	sendBack("\x1b[33m")
+}
+func ColorBlue() {
+	sendBack("\x1b[34m")
+}
+func ColorMagenta() {
+	sendBack("\x1b[35m")
+}
+func ColorCyan() {
+	sendBack("\x1b[36m")
+}
+func ColorWhite() {
+	sendBack("\x1b[37m")
+}
+func ColorBrGreen() {
+	sendBack("\x1b[32;1m")
+}
+func ColorBold() {
+	sendBack("\x1b[1m")
+}
+func ResetBold() {
+	sendBack("\x1b[22m")
+}
+func CloseProps() {
+	sendBack("\x1b[0m")
+}
+func CurUp(n int) {
+	sendBack(fmt.Sprintf("\x1b[%dA", n))
+}
+func CurDown(n int) {
+	sendBack(fmt.Sprintf("\x1b[%dB", n))
+}
+func CurRight(n int) {
+	sendBack(fmt.Sprintf("\x1b[%dC", n))
+}
+func CurLeft(n int) {
+	sendBack(fmt.Sprintf("\x1b[%dD", n))
 }

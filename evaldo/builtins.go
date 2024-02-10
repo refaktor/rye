@@ -2442,7 +2442,7 @@ var builtins = map[string]*env.Builtin{
 				ps.Ctx = &s1
 				return s1
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "cc")
+				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "cc")
 			}
 		},
 	},
@@ -3746,13 +3746,13 @@ var builtins = map[string]*env.Builtin{
 							if prevres == nil || ps.Res.Equal(prevres) {
 								subl = append(subl, curval)
 							} else {
-								newl = append(newl, env.NewBlock(*env.NewTSeries(subl)))
+								newl = append(newl, *env.NewBlock(*env.NewTSeries(subl)))
 								subl = []env.Object{curval}
 							}
 							prevres = ps.Res
 							ps.Ser.Reset()
 						}
-						newl = append(newl, env.NewBlock(*env.NewTSeries(subl)))
+						newl = append(newl, *env.NewBlock(*env.NewTSeries(subl)))
 						ps.Ser = ser
 					case env.Builtin:
 						for i := 0; i < l; i++ {
@@ -3761,12 +3761,12 @@ var builtins = map[string]*env.Builtin{
 							if prevres == nil || res.Equal(prevres) {
 								subl = append(subl, curval)
 							} else {
-								newl = append(newl, env.NewBlock(*env.NewTSeries(subl)))
+								newl = append(newl, *env.NewBlock(*env.NewTSeries(subl)))
 								subl = []env.Object{curval}
 							}
 							prevres = res
 						}
-						newl = append(newl, env.NewBlock(*env.NewTSeries(subl)))
+						newl = append(newl, *env.NewBlock(*env.NewTSeries(subl)))
 					default:
 						return MakeBuiltinError(ps, "Block type should be Builtin or Block.", "partition")
 					}

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/refaktor/rye/env"
 
@@ -22,6 +23,7 @@ func trace(x any) {
 }
 
 var wordIndex *env.Idxs
+var wordIndexMutex sync.Mutex
 
 func InitIndex() {
 	if wordIndex == nil {
@@ -111,6 +113,53 @@ func LoadString(input string, sig bool) (env.Object, *env.Idxs) {
 		empty1 := make([]env.Object, 0)
 		ser := env.NewTSeries(empty1)
 		return *env.NewBlock(*ser), wordIndex
+	}
+}
+
+func LoadStringNEW(input string, sig bool, ps *env.ProgramState) env.Object {
+
+	if sig {
+		signed := checkCodeSignature(input)
+		if signed == -1 {
+			return *env.NewError("")
+		} else if signed == -2 {
+			return *env.NewError("")
+		}
+	}
+
+	input = removeBangLine(input)
+
+	inp1 := strings.TrimSpace(input)
+	if len(inp1) == 0 || strings.Index("{", inp1) != 0 {
+		input = "{ " + input + " }"
+	}
+
+	parser := newParser()
+
+	wordIndexMutex.Lock()
+	wordIndex = ps.Idx
+	val, err := parser.ParseAndGetValue(input, nil)
+	ps.Idx = wordIndex
+	wordIndexMutex.Unlock()
+
+	if err != nil {
+		fmt.Print("\x1b[35;3m")
+		errStr := err.Error()
+		fmt.Print(errStr)
+		fmt.Println("\x1b[0m")
+		fmt.Print("\r")
+
+		empty1 := make([]env.Object, 0)
+		ser := env.NewTSeries(empty1)
+		return *env.NewBlock(*ser)
+	}
+
+	if val != nil {
+		return val.(env.Block)
+	} else {
+		empty1 := make([]env.Object, 0)
+		ser := env.NewTSeries(empty1)
+		return *env.NewBlock(*ser)
 	}
 }
 
