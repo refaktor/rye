@@ -82,6 +82,12 @@ print "Hello World"
 ; Anne
 ; Adam
 
+fac: fn { x } { either x = 1 { 1 } { x * fac x - 1 } }
+; function that calculates factorial
+
+range 1 10 |map { .fac } |print\csv
+; prints: 1,2,6,24,120,720,5040,40320,362880,3628800
+
 kind: "admin"
 open sqlite://data.db |query { select * from user where kind = ?kind }
 ; returns a Spreadsheet of admins
