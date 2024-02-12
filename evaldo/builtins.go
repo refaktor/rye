@@ -4372,6 +4372,61 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"mul": { // **
+		Argsn: 1,
+		Doc:   "Accepts a Block or List of values and returns the sum.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var sum float64 = 1
+			switch block := arg0.(type) {
+			case env.Block:
+				l := block.Series.Len()
+				onlyInts := true
+				for i := 0; i < l; i++ {
+					obj := block.Series.Get(i)
+					switch val1 := obj.(type) {
+					case env.Integer:
+						sum *= float64(val1.Value)
+					case env.Decimal:
+						sum *= val1.Value
+						onlyInts = false
+					default:
+						return MakeBuiltinError(ps, "Block type should be Integer or Decimal.", "sum")
+					}
+				}
+				if onlyInts {
+					return *env.NewInteger(int64(sum))
+				} else {
+					return *env.NewDecimal(sum)
+				}
+			case env.List:
+				l := len(block.Data)
+				onlyInts := true
+				for i := 0; i < l; i++ {
+					obj := block.Data[i]
+					switch val1 := obj.(type) {
+					case int64:
+						sum *= float64(val1)
+					case float64:
+						sum *= val1
+						onlyInts = false
+					default:
+						return MakeBuiltinError(ps, "List type should be Integer or Decimal.", "sum")
+					}
+				}
+				if onlyInts {
+					return *env.NewInteger(int64(sum))
+				} else {
+					return *env.NewDecimal(sum)
+				}
+
+			case env.Vector:
+				return *env.NewDecimal(block.Value.Sum())
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.VectorType}, "sum")
+			}
+		},
+	},
+
 	"sort!": { // **
 		Argsn: 1,
 		Doc:   "Accepts a block of values and returns maximal value.",
@@ -4470,6 +4525,22 @@ var builtins = map[string]*env.Builtin{
 
 	// end of collections exploration
 
+	"recur-if": { //recur1-if
+		Argsn: 2,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch cond := arg0.(type) {
+			case env.Integer:
+				if cond.Value > 0 {
+					ps.Ser.Reset()
+					return nil
+				} else {
+					return ps.Res
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "recur-if\\1")
+			}
+		},
+	},
 	//test if we can do recur similar to clojure one. Since functions in rejy are of fixed arity we would need recur1 recur2 recur3 and recur [ ] which is less optimal
 	//otherwise word recur could somehow be bound to correct version or args depending on number of args of func. Try this at first.
 	"recur-if\\1": { //recur1-if

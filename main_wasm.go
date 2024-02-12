@@ -5,6 +5,8 @@ package main
 
 import (
 	"fmt"
+	"regexp"
+	"strings"
 	"syscall/js"
 
 	"github.com/refaktor/rye/contrib"
@@ -141,13 +143,16 @@ func RyeEvalShellLine(this js.Value, args []js.Value) any {
 	subc := false
 
 	code := args[0].String()
+	comment := regexp.MustCompile(`\s*;`)
+	codes := comment.Split(code, 2) //--- just very temporary solution for some comments in repl. Later should probably be part of loader ... maybe?
+	code1 := strings.Trim(codes[0], "\t")
 
 	if ES == nil {
 		return "Error: Rye is not initialized"
 	}
 
 	ps := ES
-	block := loader.LoadStringNEW(" "+code+" ", sig, ps)
+	block := loader.LoadStringNEW(" "+code1+" ", sig, ps)
 	switch val := block.(type) {
 	case env.Block:
 
