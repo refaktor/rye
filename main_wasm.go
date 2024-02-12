@@ -5,12 +5,15 @@ package main
 
 import (
 	"fmt"
+	"regexp"
+	"strings"
 	"syscall/js"
 
 	"github.com/refaktor/rye/contrib"
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/evaldo"
 	"github.com/refaktor/rye/loader"
+	"github.com/refaktor/rye/term"
 	"github.com/refaktor/rye/util"
 )
 
@@ -64,6 +67,8 @@ func sendLineToJS(line string) {
 
 func main() {
 
+	term.SetSB(sendMessageToJS)
+
 	c := make(chan util.KeyEvent)
 
 	ml = util.NewMicroLiner(c, sendMessageToJS, sendLineToJS)
@@ -103,13 +108,15 @@ func main() {
 }
 
 func InitRyeShell(this js.Value, args []js.Value) any {
-	subc := false
-	block, genv := loader.LoadString(" ", false)
+	// subc := false
+	// fmt.Println("INITIALISATION")
+	ps := env.NewProgramStateNEW()
+	evaldo.RegisterBuiltins(ps)
+	contrib.RegisterBuiltins(ps, &evaldo.BuiltinNames)
+	ES = ps
+	/* bloc	k := loader.LoadString(" ", false)
 	switch val := block.(type) {
 	case env.Block:
-		es := env.NewProgramState(block.(env.Block).Series, genv)
-		evaldo.RegisterBuiltins(es)
-		contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
 
 		if subc {
 			ctx := es.Ctx
@@ -127,7 +134,8 @@ func InitRyeShell(this js.Value, args []js.Value) any {
 		fmt.Println(val.Message)
 		return "Error"
 	}
-	return "Other"
+	return "Other"*/
+	return "Initalized"
 }
 
 func RyeEvalShellLine(this js.Value, args []js.Value) any {
@@ -135,43 +143,38 @@ func RyeEvalShellLine(this js.Value, args []js.Value) any {
 	subc := false
 
 	code := args[0].String()
-	//fmt.Println("RYE EVAL STRING")
-	//fmt.Println(code)
+	comment := regexp.MustCompile(`\s*;`)
+	codes := comment.Split(code, 2) //--- just very temporary solution for some comments in repl. Later should probably be part of loader ... maybe?
+	code1 := strings.Trim(codes[0], "\t")
 
-	//util.PrintHeader()
-	//defer profile.Start(profile.CPUProfile).Stop()
 	if ES == nil {
-		return "Not initialized"
+		return "Error: Rye is not initialized"
 	}
 
-	es := ES
-	block, genv := loader.LoadString(" "+code+" ", sig)
+	ps := ES
+	block := loader.LoadStringNEW(" "+code1+" ", sig, ps)
 	switch val := block.(type) {
 	case env.Block:
-		es = env.AddToProgramState(es, val.Series, genv)
-		evaldo.RegisterBuiltins(es)
-		contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
+
+		ps = env.AddToProgramState(ps, val.Series, ps.Idx)
 
 		if subc {
-			ctx := es.Ctx
-			es.Ctx = env.NewEnv(ctx)
+			ctx := ps.Ctx
+			ps.Ctx = env.NewEnv(ctx)
 		}
 
-		evaldo.EvalBlockInj(es, prevResult, true)
-		evaldo.MaybeDisplayFailureOrErrorWASM(es, genv, sendMessageToJS)
+		evaldo.EvalBlockInj(ps, prevResult, true)
+		evaldo.MaybeDisplayFailureOrErrorWASM(ps, ps.Idx, sendMessageToJS)
 
-		prevResult = es.Res
+		prevResult = ps.Res
 
-		if !es.ErrorFlag && es.Res != nil {
-			// prevResult = es.Res
-			// TEMP - make conditional
-			// print the result
-			sendMessageToJS("\033[38;5;37m" + es.Res.Inspect(*genv) + "\x1b[0m")
+		if !ps.ErrorFlag && ps.Res != nil {
+			sendMessageToJS("\033[38;5;37m" + ps.Res.Inspect(*ps.Idx) + "\x1b[0m")
 		}
 
-		es.ReturnFlag = false
-		es.ErrorFlag = false
-		es.FailureFlag = false
+		ps.ReturnFlag = false
+		ps.ErrorFlag = false
+		ps.FailureFlag = false
 
 		ml.AppendHistory(code)
 

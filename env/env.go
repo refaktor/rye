@@ -277,6 +277,27 @@ func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
 	return &ps
 }
 
+func NewProgramStateNEW() *ProgramState {
+	ps := ProgramState{
+		*NewTSeries(make([]Object, 0)),
+		nil,
+		NewEnv(nil),
+		NewEnv(nil),
+		NewIdxs(),
+		make([]int, 6),
+		NewGen(), //make(map[int]map[int]Object),
+		nil,
+		false,
+		false,
+		false,
+		false,
+		nil,
+		false,
+		false,
+	}
+	return &ps
+}
+
 func (ps *ProgramState) Dump() string {
 	return ps.Ctx.Dump(*ps.Idx)
 }
