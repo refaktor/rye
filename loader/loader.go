@@ -117,7 +117,6 @@ func LoadString(input string, sig bool) (env.Object, *env.Idxs) {
 }
 
 func LoadStringNEW(input string, sig bool, ps *env.ProgramState) env.Object {
-
 	if sig {
 		signed := checkCodeSignature(input)
 		if signed == -1 {
