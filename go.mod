@@ -23,7 +23,7 @@ require (
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/lib/pq v1.10.9
 	github.com/mattn/go-runewidth v0.0.15
-	github.com/mattn/go-sqlite3 v1.14.19
+	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/mhale/smtpd v0.8.2
 	github.com/mrz1836/postmark v1.6.3
 	github.com/pkg/term v1.1.0
