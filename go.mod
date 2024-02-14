@@ -22,7 +22,7 @@ require (
 	github.com/jinzhu/copier v0.4.0
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/lib/pq v1.10.9
-	github.com/mattn/go-runewidth v0.0.3
+	github.com/mattn/go-runewidth v0.0.15
 	github.com/mattn/go-sqlite3 v1.14.19
 	github.com/mhale/smtpd v0.8.2
 	github.com/mrz1836/postmark v1.6.1
@@ -85,6 +85,7 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mschoch/smat v0.2.0 // indirect
+	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
 	github.com/tklauser/go-sysconf v0.3.13 // indirect
 	github.com/tklauser/numcpus v0.7.0 // indirect
