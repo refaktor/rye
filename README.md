@@ -148,6 +148,7 @@ The author of Factor once said that at the end *it's not about the language, but
   * Postmark - email sending service
   * Telegram bot - telegram bots
   * Ebitengine - 2d game engine
+  * Fyne - desktop and mobile GUI
 
 legend: ⭐ priority , 🧪 tests
     
