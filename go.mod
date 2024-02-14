@@ -25,7 +25,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.15
 	github.com/mattn/go-sqlite3 v1.14.19
 	github.com/mhale/smtpd v0.8.2
-	github.com/mrz1836/postmark v1.6.1
+	github.com/mrz1836/postmark v1.6.3
 	github.com/pkg/term v1.1.0
 	github.com/refaktor/go-peg v0.0.0-20220116201714-31e3dfa8dc7d
 	github.com/refaktor/liner v1.2.6
