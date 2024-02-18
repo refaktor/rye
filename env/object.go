@@ -1113,20 +1113,6 @@ func (i Function) Print(e Idxs) string {
 	return "[" + pure + "Function(" + strconv.FormatInt(int64(i.Argsn), 10) + ")]"
 }
 
-// func (i Function) Dump(e Idxs) Block {
-// 	// LONG DISPLAY OF FUNCTION NODES return "[Function: " + i.Spec.Inspect(e) + ", " + i.Body.Inspect(e) + "]"
-// 	ser := make([]Object, 0)
-// 	idx, found := e.GetIndex("fn")
-// 	if !found {
-// 		goto ENE // TODO
-// 	}
-// 	ser = append(ser, Word{idx})
-// 	ser = append(ser, i.Spec)
-// 	ser = append(ser, i.Body)
-// ENE:
-// 	return *NewBlock(*NewTSeries(ser))
-// }
-
 func (i Function) Trace(msg string) {
 	fmt.Print(msg + " (function): ")
 	fmt.Println(i.Spec)
@@ -1157,7 +1143,28 @@ func (i Function) Equal(o Object) bool {
 }
 
 func (i Function) Dump(e Idxs) string {
-	return fmt.Sprintf("\"serlization of %s is not yet supported\" ", i.Inspect(e))
+	var b strings.Builder
+	b.WriteString("fn { ")
+	for _, obj := range i.Spec.Series.GetAll() {
+		if obj != nil {
+			b.WriteString(obj.Dump(e))
+			b.WriteString(" ")
+		} else {
+			b.WriteString("'nil ")
+		}
+	}
+	b.WriteString("} { ")
+	for _, obj := range i.Body.Series.GetAll() {
+		if obj != nil {
+			b.WriteString(obj.Dump(e))
+			b.WriteString(" ")
+		} else {
+			b.WriteString("'nil ")
+		}
+	}
+	b.WriteString("}")
+
+	return b.String()
 }
 
 //
@@ -1247,8 +1254,8 @@ func (i Builtin) Equal(o Object) bool {
 }
 
 func (i Builtin) Dump(e Idxs) string {
-	// TODO
-	return fmt.Sprintf("\"serlization of %s is not yet supported\" ", i.Inspect(e))
+	// Serializing builtins is not supported
+	return ""
 }
 
 //
@@ -1343,8 +1350,13 @@ func (i Error) Equal(o Object) bool {
 	if i.Message != oError.Message {
 		return false
 	}
-	if i.Parent != oError.Parent {
+	if (i.Parent == nil) != (oError.Parent == nil) {
 		return false
+	}
+	if i.Parent != nil && oError.Parent != nil {
+		if !i.Parent.Equal(oError.Parent) {
+			return false
+		}
 	}
 	if len(i.Values) != len(oError.Values) {
 		return false
@@ -1358,8 +1370,11 @@ func (i Error) Equal(o Object) bool {
 }
 
 func (i Error) Dump(e Idxs) string {
-	// TODO
-	return fmt.Sprintf("\"serlization of %s is not yet supported\" ", i.Inspect(e))
+	if i.Parent == nil {
+		return fmt.Sprintf("failure { %d \"%s\" }", i.Status, i.Message)
+	} else {
+		return fmt.Sprintf("wrap\\failure { %d \"%s\" } %s", i.Status, i.Message, i.Parent.Dump(e))
+	}
 }
 
 //
@@ -1494,8 +1509,15 @@ func (i CPath) Equal(o Object) bool {
 }
 
 func (i CPath) Dump(e Idxs) string {
-	// TODO
-	return fmt.Sprintf("\"serlization of %s is not yet supported\" ", i.Inspect(e))
+	var b strings.Builder
+	b.WriteString(i.Word1.Dump(e))
+	if i.Cnt > 1 {
+		b.WriteString("/" + i.Word2.Dump(e))
+	}
+	if i.Cnt > 2 {
+		b.WriteString("/" + i.Word3.Dump(e))
+	}
+	return b.String()
 }
 
 //
@@ -1551,8 +1573,8 @@ func (i Native) Equal(o Object) bool {
 }
 
 func (i Native) Dump(e Idxs) string {
-	// TODO
-	return fmt.Sprintf("\"serlization of %s is not yet supported\" ", i.Inspect(e))
+	// Serializing natives is not supported
+	return ""
 }
 
 //
@@ -1810,8 +1832,13 @@ func (i List) Equal(o Object) bool {
 }
 
 func (i List) Dump(e Idxs) string {
-	// TODO
-	return fmt.Sprintf("\"serlization of %s is not yet supported\" ", i.Inspect(e))
+	var b strings.Builder
+	b.WriteString("list { ")
+	for _, v := range i.Data {
+		b.WriteString(ToRyeValue(v).Dump(e) + " ")
+	}
+	b.WriteString("}")
+	return b.String()
 }
 
 //
@@ -1947,8 +1974,8 @@ func (i Converter) Equal(o Object) bool {
 }
 
 func (i Converter) Dump(e Idxs) string {
-	// TODO
-	return fmt.Sprintf("\"serlization of %s is not yet supported\" ", i.Inspect(e))
+	// Serializing converters is not supported
+	return ""
 }
 
 //
@@ -2090,6 +2117,11 @@ func (i Vector) Equal(o Object) bool {
 }
 
 func (i Vector) Dump(e Idxs) string {
-	// TODO
-	return fmt.Sprintf("\"serlization of %s is not yet supported\" ", i.Inspect(e))
+	var b strings.Builder
+	b.WriteString("vector { ")
+	for _, v := range i.Value {
+		b.WriteString(fmt.Sprintf("%f ", v))
+	}
+	b.WriteString("}")
+	return b.String()
 }
