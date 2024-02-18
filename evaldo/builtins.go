@@ -665,15 +665,10 @@ var builtins = map[string]*env.Builtin{
 
 	"dump": { // *** currently a concept in testing ... for getting a code of a function, maybe same would be needed for context?
 		Argsn: 1,
-		Doc:   "Retunrs (dumps) content of a function.",
+		Doc:   "Returns (dumps) Rye code representing the object.",
 		Pure:  true,
-		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch d := arg0.(type) {
-			case env.Function:
-				return env.NewString(d.Dump(*env1.Idx))
-			default:
-				return MakeArgError(env1, 1, []env.Type{env.FunctionType}, "dump")
-			}
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return env.NewString(arg0.Dump(*ps.Idx))
 		},
 	},
 
@@ -2212,9 +2207,9 @@ var builtins = map[string]*env.Builtin{
 				if found {
 					return val
 				}
-				return MakeBuiltinError(ps, "Value not found.", "evalu")
+				return MakeBuiltinError(ps, "Value not found.", "vals")
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.WordType}, "evalu")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.WordType}, "vals")
 			}
 		},
 	},
@@ -2247,7 +2242,7 @@ var builtins = map[string]*env.Builtin{
 				ps.Ser = ser
 				return *env.NewBlock(*env.NewTSeries(res))
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "eval\\with")
+				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "vals\\with")
 			}
 		},
 	},
@@ -4605,12 +4600,22 @@ var builtins = map[string]*env.Builtin{
 			case env.Block:
 				var doc string
 				if args.Series.Len() > 0 {
+					var hasDoc bool
 					switch a := args.Series.S[len(args.Series.S)-1].(type) {
 					case env.String:
 						doc = a.Value
+						hasDoc = true
 						//fmt.Println("DOC DOC")
 						// default:
 						//return MakeBuiltinError(ps, "Series type should be string.", "fn")
+					}
+					for i, o := range args.Series.GetAll() {
+						if i == len(args.Series.S)-1 && hasDoc {
+							break
+						}
+						if o.Type() != env.WordType {
+							return MakeBuiltinError(ps, "Function arguments should be words", "fn")
+						}
 					}
 				}
 				switch body := arg1.(type) {
@@ -6197,13 +6202,7 @@ var builtins = map[string]*env.Builtin{
 			//fmt.Println("FAIL")
 			ps.FailureFlag = true
 			ps.ReturnFlag = true
-			switch val := arg0.(type) {
-			case env.String: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
-				return env.NewError(val.Value)
-			case env.Integer: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
-				return env.NewError1(int(val.Value))
-			}
-			return arg0
+			return MakeRyeError(ps, arg0, nil)
 		},
 	},
 
@@ -6223,6 +6222,19 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			//ps.ErrorFlag = true
 			return MakeRyeError(ps, arg0, nil)
+		},
+	},
+
+	"wrap\\failure": {
+		Argsn: 2,
+		Doc:   "Wraps an Error with another Error. Accepts String as message, Integer as code, or block for multiple parameters and Error as arguments.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch er := arg1.(type) {
+			case *env.Error:
+				return MakeRyeError(ps, arg0, er)
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.ErrorType}, "wrap\\error")
+			}
 		},
 	},
 
