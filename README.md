@@ -155,8 +155,8 @@ legend: ⭐ priority , 🧪 tests
 If you are interested in "fontend" / desktop technologies check out separate project that works on extending Rye lanuage with GUI, Game engine and a Webview. It 
 integrates these cool Go libraries:
 
-  * Fyne - Cross platform Material design inspired GUI framework (desktop and mobile) 
-  * Ebitengine - 2d game engine (desktop, mobile and web)
+  * Fyne - Cross platform Material design inspired GUI framework ⭐ 
+  * Ebitengine - 2d game engine
   * Webview - Webview GUI
 
 **[Visit Rye-front repo](https://github.com/refaktor/rye-front)**
