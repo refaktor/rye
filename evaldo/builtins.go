@@ -6988,7 +6988,6 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_sqlite, ps, "sqlite")
 	RegisterBuiltins2(Builtins_validation, ps, "validation")
 	RegisterBuiltins2(Builtins_ps, ps, "ps")
-	RegisterBuiltins2(Builtins_webview, ps, "webview")
 	RegisterBuiltins2(Builtins_json, ps, "json")
 	RegisterBuiltins2(Builtins_stackless, ps, "stackless")
 	RegisterBuiltins2(Builtins_eyr, ps, "eyr")
