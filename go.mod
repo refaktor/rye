@@ -9,7 +9,7 @@ retract v0.0.11 // Published accidentally with a bug
 require (
 	github.com/aws/aws-sdk-go-v2 v1.24.1
 	github.com/aws/aws-sdk-go-v2/config v1.26.6
-	github.com/aws/aws-sdk-go-v2/service/ses v1.19.5
+	github.com/aws/aws-sdk-go-v2/service/ses v1.19.6
 	github.com/blevesearch/bleve/v2 v2.3.10
 	github.com/blevesearch/bleve_index_api v1.1.6
 	github.com/drewlanenga/govector v0.0.0-20220726163947-b958ac08bc93
@@ -18,25 +18,25 @@ require (
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/gobwas/ws v1.3.2
 	github.com/gorilla/sessions v1.2.2
-	github.com/hajimehoshi/ebiten/v2 v2.6.3
+	github.com/hajimehoshi/ebiten/v2 v2.6.5
 	github.com/jinzhu/copier v0.4.0
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/lib/pq v1.10.9
-	github.com/mattn/go-runewidth v0.0.3
-	github.com/mattn/go-sqlite3 v1.14.19
-	github.com/mhale/smtpd v0.8.1
-	github.com/mrz1836/postmark v1.6.1
+	github.com/mattn/go-runewidth v0.0.15
+	github.com/mattn/go-sqlite3 v1.14.22
+	github.com/mhale/smtpd v0.8.2
+	github.com/mrz1836/postmark v1.6.3
 	github.com/pkg/term v1.1.0
 	github.com/refaktor/go-peg v0.0.0-20220116201714-31e3dfa8dc7d
 	github.com/refaktor/liner v1.2.6
-	github.com/sashabaranov/go-openai v1.17.9
+	github.com/sashabaranov/go-openai v1.19.2
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/thomasberger/parsemail v1.2.6
 	github.com/webview/webview_go v0.0.0-20230901181450-5a14030a9070
 	go.mongodb.org/mongo-driver v1.13.1
 	golang.org/x/crypto v0.18.0
 	golang.org/x/net v0.20.0
-	golang.org/x/sync v0.5.0
+	golang.org/x/sync v0.6.0
 	golang.org/x/text v0.14.0
 )
 
@@ -105,6 +105,7 @@ require (
 	github.com/srwiley/oksvg v0.0.0-20221011165216-be6e8873101c // indirect
 	github.com/srwiley/rasterx v0.0.0-20220730225603-2ab79fcdd4ef // indirect
 	github.com/stretchr/testify v1.8.4 // indirect
+	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
 	github.com/tevino/abool v1.2.0 // indirect
 	github.com/tklauser/go-sysconf v0.3.13 // indirect
