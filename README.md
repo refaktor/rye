@@ -18,6 +18,7 @@
   - [Modules](#modules)
     - [Base](#base)
     - [Contrib](#contrib)
+  -  [Rye-front project](rye-front-project)
   - [Follow development](#follow-development)
     - [Rye blog](#rye-blog)
     - [Ryelang reddit](#ryelang-reddit)
@@ -138,7 +139,6 @@ The author of Factor once said that at the end *it's not about the language, but
   * Sqlite - database ⭐⭐
   * Sxml - sax XML like streaming dialect
   * Validation - validation dialect ⭐⭐ 🧪~50% 
-  * Webview - Webview GUI
    
 ### Contrib
   * Amazon AWS
@@ -147,10 +147,19 @@ The author of Factor once said that at the end *it's not about the language, but
   * OpenAI - OpenAI API
   * Postmark - email sending service
   * Telegram bot - telegram bots
-  * Ebitengine - 2d game engine
-  * Fyne - desktop and mobile GUI
 
 legend: ⭐ priority , 🧪 tests
+
+## Rye-front project
+
+If you are interested in "fontend" / desktop technologies check out separate project that works on extending Rye lanuage with GUI, Game engine and a Webview. It 
+integrates these cool Go libraries:
+
+  * Fyne - Cross platform Material design inspired GUI framework (desktop and mobile) 
+  * Ebitengine - 2d game engine (desktop, mobile and web)
+  * Webview - Webview GUI
+
+**[Visit Rye-front repo](https://github.com/refaktor/rye-front)**
     
 ## Follow development
 
