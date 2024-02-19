@@ -2048,7 +2048,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"do-in": { // **
+	"do\\in": { // **
 		Argsn: 2,
 		Doc:   "Takes a Context and a Block. It Does a block inside a given Context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2073,7 +2073,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"do-in\\try": { // **
+	"do\\in\\try": { // **
 		Argsn: 2,
 		Doc:   "Takes a Context and a Block. It Does a block inside a given Context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -6988,7 +6988,6 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_sqlite, ps, "sqlite")
 	RegisterBuiltins2(Builtins_validation, ps, "validation")
 	RegisterBuiltins2(Builtins_ps, ps, "ps")
-	RegisterBuiltins2(Builtins_webview, ps, "webview")
 	RegisterBuiltins2(Builtins_json, ps, "json")
 	RegisterBuiltins2(Builtins_stackless, ps, "stackless")
 	RegisterBuiltins2(Builtins_eyr, ps, "eyr")

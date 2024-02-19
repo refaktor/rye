@@ -18,7 +18,6 @@ require (
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/gobwas/ws v1.3.2
 	github.com/gorilla/sessions v1.2.2
-	github.com/hajimehoshi/ebiten/v2 v2.6.5
 	github.com/jinzhu/copier v0.4.0
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/lib/pq v1.10.9
@@ -32,7 +31,6 @@ require (
 	github.com/sashabaranov/go-openai v1.19.2
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/thomasberger/parsemail v1.2.6
-	github.com/webview/webview_go v0.0.0-20230901181450-5a14030a9070
 	go.mongodb.org/mongo-driver v1.13.1
 	golang.org/x/crypto v0.18.0
 	golang.org/x/net v0.20.0
@@ -69,21 +67,21 @@ require (
 	github.com/blevesearch/zapx/v14 v14.3.10 // indirect
 	github.com/blevesearch/zapx/v15 v15.3.13 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
-	github.com/ebitengine/purego v0.6.0-alpha.1.0.20231122024802-192c5e846faa // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/golang/geo v0.0.0-20210211234256-740aa86cb551 // indirect
-	github.com/golang/protobuf v1.3.2 // indirect
+	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/gorilla/securecookie v1.1.2 // indirect
-	github.com/jezek/xgb v1.1.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	github.com/json-iterator/go v0.0.0-20171115153421-f7279a603ede // indirect
+	github.com/json-iterator/go v1.1.11 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/labstack/gommon v0.4.1 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect
+	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/mschoch/smat v0.2.0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
@@ -94,10 +92,9 @@ require (
 	github.com/yhirose/go-peg v0.0.0-20210804202551-de25d6753cf1 // indirect
 	github.com/yusufpapurcu/wmi v1.2.3 // indirect
 	go.etcd.io/bbolt v1.3.7 // indirect
-	golang.org/x/exp/shiny v0.0.0-20230817173708-d852ddb80c63 // indirect
-	golang.org/x/image v0.12.0 // indirect
-	golang.org/x/mobile v0.0.0-20230922142353-e2f452493d57 // indirect
 	golang.org/x/sys v0.16.0 // indirect
+	google.golang.org/protobuf v1.26.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
