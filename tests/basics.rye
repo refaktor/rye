@@ -379,11 +379,11 @@ section "Doers and evaluators"
 		equal { do { 101 + 101 } } 202
 	}
 
-	group "do-in"
-	mold\nowrap ?do-in
+	group "do\in"
+	mold\nowrap ?do\in
 	{ { context } { block } }
 	{
-		equal { cc: context { x: 101 } do-in cc { x + 101 } } 202
+		equal { cc: context { x: 101 } do\in cc { x + 101 } } 202
 	}
 
 	group "with"
@@ -401,11 +401,11 @@ section "Doers and evaluators"
 		equal { try { 10 + unknown } |type? } 'error 
 	}
 	
-	group "do-in\try"
-	mold\nowrap ?do-in\try
+	group "do\in\try"
+	mold\nowrap ?do\in\try
 	{ { context } { block } }
 	{
-		equal { ctx: context { x: 101 } do-in\try ctx { x / 0 } |type? } 'error
+		equal { ctx: context { x: 101 } do\in\try ctx { x / 0 } |type? } 'error
 	}
 
 	group "vals"

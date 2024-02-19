@@ -519,7 +519,7 @@ section "Serializers and loaders"
 	mold\nowrap ?dump
 	{ { any } { word } }
 	{
-		equal { fn { x } { x + 1 } |dump } { fn { x } { x ._+ 1 } } 
+		equal { fn { x } { x + 1 } |dump } "fn { x } { x ._+ 1 }"
 	}
 
 	group "doc\of?"

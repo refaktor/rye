@@ -1319,6 +1319,14 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
+	"probe": { // **
+		Argsn: 1,
+		Doc:   "Prints information about a value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			fmt.Println(arg0.Inspect(*ps.Idx))
+			return arg0
+		},
+	},
 	"inspect": { // **
 		Argsn: 1,
 		Doc:   "Returs information about a value.",

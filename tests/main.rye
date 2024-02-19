@@ -15,7 +15,7 @@ test-framework: context {
 	group: fn { name descr args code } { inc! 'cnt print " GROUP: " + name , do code }
 	
 	equal: fn { test res } {
-		do-in root-ctx test :got = res
+		do\in root-ctx test :got = res
 		|either { print "  - OK" } { inc! 'failed , print join { "  - Error: expected " mold res ", got " mold got } }
 	}
 
@@ -23,7 +23,7 @@ test-framework: context {
 	}
 
 	stdout: fn { test res } {
-		capture-stdout { do-in root-ctx test } :got = res
+		capture-stdout { do\in root-ctx test } :got = res
 		|either { print "  - OK" } { inc! 'failed , print join { "  - Error: expected " mold res ", got " mold got } }
 	}
 
@@ -42,7 +42,7 @@ docs-framework: context {
 	group: fn { name descr args code }   { print join { "<h3>" name "</h3><p>" descr "</p><div class='group'>" } , do code , print "</div>" }
 
 	equal: fn { test res } {
-		do-in root-ctx test :got = res
+		do\in root-ctx test :got = res
 		|if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" mold\nowrap test newline "; returns "  replace mold got newline newline + "; "  "</code></pre>" ] }
 	}
 
@@ -50,7 +50,7 @@ docs-framework: context {
 	}
 
 	stdout: fn { test res } {
-		capture-stdout { do-in root-ctx test } :got = res
+		capture-stdout { do\in root-ctx test } :got = res
 		1 |if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" mold\nowrap test newline "; prints " replace mold\nowrap got newline newline + "; " "</code></pre>" ] }
 	}
 
@@ -69,7 +69,7 @@ generate-menu: fn { menu } {
 generate-doc-file: fn { filename menu } {
 	join {
 		%tpl/header.html .read .replace "{{title}}" capitalize filename ; |replace "{{menu}}" generate-menu menu
-		capture-stdout { do-in docs-framework load to-file filename + ".rye" }
+		capture-stdout { do\in docs-framework load to-file filename + ".rye" }
 		read %tpl/footer.html
 	} |write* to-file filename + ".html"
 }
@@ -79,7 +79,7 @@ menu: { "basics" "structures" "validation" "misc" }
 switch arg {
 	"test" {
 		errors: 0
-		for menu { + ".rye" |to-file |load |do-in* test-framework |+ errors :errors }
+		for menu { + ".rye" |to-file |load |do\in* test-framework |+ errors :errors }
 		print "==============="
 		print "FAILED TESTS: " + errors
 	}
