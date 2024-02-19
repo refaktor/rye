@@ -12,6 +12,7 @@ import (
 	"github.com/refaktor/rye/contrib/aws"
 	"github.com/refaktor/rye/contrib/bleve"
 	"github.com/refaktor/rye/contrib/ebitengine"
+	"github.com/refaktor/rye/contrib/fyne"
 	"github.com/refaktor/rye/contrib/postmark"
 	"github.com/refaktor/rye/contrib/ryeopenai"
 	"github.com/refaktor/rye/env"
@@ -51,6 +52,7 @@ func RegisterBuiltins(ps *env.ProgramState, builtinNames *map[string]int) {
 	RegisterBuiltins2(postmark.Builtins_postmark, ps, "postmark", builtinNames)
 	RegisterBuiltins2(ryeopenai.Builtins_openai, ps, "openai", builtinNames)
 	RegisterBuiltins2(ebitengine.Builtins_ebitengine, ps, "ebitengine", builtinNames)
+	RegisterBuiltins2(fyne.Builtins_fyne, ps, "fyne", builtinNames)
 }
 
 // var builtinNames map[string]int
