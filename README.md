@@ -18,7 +18,7 @@
   - [Modules](#modules)
     - [Base](#base)
     - [Contrib](#contrib)
-  -  [Rye-front project](rye-front-project)
+  -  [Rye-front project](#rye-front-project)
   - [Follow development](#follow-development)
     - [Rye blog](#rye-blog)
     - [Ryelang reddit](#ryelang-reddit)
