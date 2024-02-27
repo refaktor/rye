@@ -47,4 +47,10 @@ Just very rough idea
 
 * the console keeps history
 * there could be console command that removes last line from history, and maybe undoes the state if possible (shows history)
-* after line is commited, it could be determined if any new values were created and stored which
+* after line is commited, it could be determined if any new values were created and stored which are then used, lines cerating unused values could be purged (it's not always certain if something was used, a gui widget just by existence can be usefull)
+* you edit this in context/mode ... like a function mode, context, block, you can define enty parameters arguments for function, and outputs, which can generate tests
+* if you are in a function, or any other limited context you can view already added lines and restrt to certain point, edit the lines ... whole interaction / UI for this is still unclear
+* How you enter function mode ... just by writing a start of a function or somehow else, how do you set the test arguments? ... does it ask you, do you just use set-words ... do you define them at call time?
+* Focus just on functions first and try to make the most natural workflow with as little "breaks" and new behaviours as possible, maybe just mimic coding or using shell as much as possible
+  
+
