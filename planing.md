@@ -1,10 +1,8 @@
 # Planning
 
-_Planning in the open. You are welcome to comment or implement the plans :)_
-
 ## For 0.0.16
 
-### Subc flag default [+-]
+### Subc flag default [++]
 
 Current default is that builtin words load into current context when Rye starts. `--subc` flag starts Rye shell or file in a subcontext, meaning that all builtins are loaded in the parent context.
 Positive now is that with `ls` you can quickly see all builtins you have, negative that your words are lost between those.
@@ -34,7 +32,7 @@ Too much variability can then complicate reuse ... this would need to be determi
 I need to decide what Rye REPL will be called. REPL is not user friendly word. I used shell, but it can get confusing with Bash, Zsh, maybe one time Ryesh :P. I use console here and there so it's not unified. Google gemini suggests Rye console 
 is approachable than shell, which is contrary to what I thought.
 
-### Web shell - multiline
+### Web shell - multiline [+-]
 
 We shell needs to support multiline, for some examples in docs to work. It can work the same as Regular shell, where if the last character is space it goes into multiline mode. In this case the space character should be made visible, via 
 something like middot or a newline like character. Or / and it could look for open parenthesis and go into multiple lines until it's closed.
