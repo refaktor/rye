@@ -96,7 +96,6 @@ func dotsToMainRye(ryeFile string) string {
 		}
 	}
 	return ryeFile
-
 }
 
 //
