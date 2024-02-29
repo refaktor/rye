@@ -79,7 +79,7 @@
 			font-family: mono;
 			font-size: 13px;
 			border: 1px solid #c6c6c6;
-			width: 340px;
+			width: 360px;
 			background-color: #f1f1f1;
 		}
 		#code_static1, #code_static2, .code_s {
@@ -228,8 +228,8 @@
 
 <body onload="onLoadX()" class='page page-default-single'><!doctype html>
 	
-	<h3 style="font-family: mono; font-weight: normal; font-size: 14px; color: #999; padding: 0px 10px;">Rye shell</h3>
-	<div id="terminal" style="width: 600px; padding: 10px; borde: 1px solid gray; background-color: #111; " ></div>
+	<h3 style="font-family: mono; font-weight: normal; font-size: 14px; color: #999; padding: 0px 10px;">Rye console (web)</h3>
+	<div id="terminal" style="width: 620px; padding: 10px; borde: 1px solid gray; background-color: #111; " ></div>
 	<script>
 		
 		let theme = {
@@ -255,10 +255,11 @@
 		}
 		
 		term = new Terminal({
-			windowsMode: ['Windows', 'Win16', 'Win32', 'WinCE'].indexOf(navigator.platform) >= 0,
-			fontFamily: '"Cascadia Code", Menlo, monospace',
-			fontSize: 13,
-			convertEol: true,
+		    windowsMode: ['Windows', 'Win16', 'Win32', 'WinCE'].indexOf(navigator.platform) >= 0,
+		    fontFamily: '"Cascadia Code", Menlo, monospace',
+		    fontSize: 13,
+		    convertEol: true,
+		    rows: 30,
 		})
 		
 		//      term.setOption('theme', theme)
@@ -274,7 +275,10 @@
 		//     var term = new Terminal();
 		term.open(document.getElementById('terminal'));
 		term.focus()
-		term.writeln("Welcome to Rye console in the browser. It's still work in progress. Have fun.")
+	  term.writeln("Welcome to Rye web console. It's a work in progress. Visit \033[38;5;14mryelang.org\33[0m for more.")
+	  term.writeln("- \033[38;5;246mtype in lsp (list parent context) too see some functions, or ls to see yours \033[0m-")
+	  term.writeln("--------------------------------------------------------------------------------")
+	  
 		var currLine = "";
 		var entries = [];
 		term.onKey((ev) => {
@@ -304,11 +308,8 @@
 		  term.focus();
 	      }
 	  }	
-	  setTimeout(2000, function () {
-	  	sendToTerminal("Welcome to Rye web console", term);
-	  });
 	</script>
-
+	<br/>
 	<button onclick="sendToTerminal('print 123', term)">hello world</button>
 </body>
 </html>
