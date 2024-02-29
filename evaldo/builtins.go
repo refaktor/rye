@@ -2422,6 +2422,15 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"lsp": {
+		Argsn: 0,
+		Doc:   "Lists words in current context",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			fmt.Println(ps.Ctx.Parent.Preview(*ps.Idx, ""))
+			return env.Void{}
+		},
+	},
+
 	"ls\\": {
 		Argsn: 1,
 		Doc:   "Lists words in current context with string filter",
@@ -2429,6 +2438,22 @@ var builtins = map[string]*env.Builtin{
 			switch s1 := arg0.(type) {
 			case env.String:
 				fmt.Println(ps.Ctx.Preview(*ps.Idx, s1.Value))
+				return env.Void{}
+			case env.RyeCtx:
+				fmt.Println(s1.Preview(*ps.Idx, ""))
+				return env.Void{}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "ls\\")
+			}
+		},
+	},
+	"lsp\\": {
+		Argsn: 1,
+		Doc:   "Lists words in current context with string filter",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				fmt.Println(ps.Ctx.Parent.Preview(*ps.Idx, s1.Value))
 				return env.Void{}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "ls\\")
@@ -2450,13 +2475,30 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"mkcc": {
+	"ccp": {
 		Argsn: 0,
+		Doc:   "Change to context",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			cc := ps.Ctx
+			ps.Ctx = ps.Ctx.Parent
+			return *cc
+		},
+	},
+
+	"mkcc": {
+		Argsn: 1,
 		Doc:   "Make context with current as parent and change to it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			ctx := ps.Ctx
-			ps.Ctx = env.NewEnv(ctx) // make new context with current par
-			return ctx
+			switch word := arg0.(type) {
+			case env.Word:
+				newctx := env.NewEnv(ps.Ctx)
+				ps.Ctx.Set(word.Index, *newctx)
+				ctx := ps.Ctx
+				ps.Ctx = newctx // make new context with current par
+				return *ctx
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.WordType}, "mkcc")
+			}
 		},
 	},
 
@@ -3114,12 +3156,14 @@ var builtins = map[string]*env.Builtin{
 						case env.Block:
 							ser := ps.Ser
 							ps.Ser = code.Series
+							purged := make([]env.Object, 0)
 							for i := 0; i < block.Series.Len(); i++ {
 								ps = EvalBlockInj(ps, block.Series.Get(i), true)
 								if ps.ErrorFlag {
 									return ps.Res
 								}
 								if util.IsTruthy(ps.Res) {
+									purged = append(purged, block.Series.S[i])
 									block.Series.S = append(block.Series.S[:i], block.Series.S[i+1:]...)
 									i--
 								}
@@ -3127,7 +3171,7 @@ var builtins = map[string]*env.Builtin{
 							}
 							ps.Ser = ser
 							ctx.Set(wrd.Index, block)
-							return block
+							return env.NewBlock(*env.NewTSeries(purged))
 						default:
 							return MakeArgError(ps, 1, []env.Type{env.BlockType}, "purge!")
 						}

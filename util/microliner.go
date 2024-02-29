@@ -122,7 +122,7 @@ type MLState struct {
 	needRefresh  bool
 	next         <-chan KeyEvent
 	sendBack     func(msg string)
-	enterLine    func(line string)
+	enterLine    func(line string) string
 	history      []string
 	historyMutex sync.RWMutex
 	columns      int
@@ -133,7 +133,7 @@ type MLState struct {
 
 // NewLiner initializes a new *State, and sets the terminal into raw mode. To
 // restore the terminal to its previous state, call State.Close().
-func NewMicroLiner(ch chan KeyEvent, sb func(msg string), el func(line string)) *MLState {
+func NewMicroLiner(ch chan KeyEvent, sb func(msg string), el func(line string) string) *MLState {
 	var s MLState
 	s.next = ch
 	s.sendBack = sb
@@ -369,12 +369,19 @@ func (s *MLState) MicroPrompt(prompt string, text string, pos int) (string, erro
 	historyStale := true
 	// historyAction := false // used to mark history related actions
 	// killAction := 0        // used to mark kill related actions
-
+	multiline := false
 startOfHere:
 
-	s.sendBack(prompt)
+	var p []rune
 	var line = []rune(text)
-	p := []rune(prompt)
+	if !multiline {
+		s.sendBack(prompt)
+		p = []rune(prompt)
+	} else {
+		s.sendBack("   ")
+		p = []rune("   ")
+		multiline = false
+	}
 
 	// defer s.stopPrompt()
 
@@ -540,9 +547,13 @@ startOfHere:
 			case 13: // Enter
 				historyStale = true
 				s.sendBack("\n\r")
-				s.enterLine(string(line))
+				xx := s.enterLine(string(line))
 				pos = 0
-				s.sendBack("\n\r")
+				if xx == "next line" {
+					multiline = true
+				} else {
+					s.sendBack("\n\r")
+				}
 				line = make([]rune, 0)
 				trace(line)
 				goto startOfHere

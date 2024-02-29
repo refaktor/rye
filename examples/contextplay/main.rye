@@ -1,0 +1,32 @@
+
+mkcc 'todos
+items: { }
+trash: { }
+add: fn1 { .append! 'items }
+archive: fn1 { :x purge! { = x } 'items |append! 'trash }
+
+add "work on A"
+; display items
+add "call CEO of B"
+ccp 
+
+mkcc 'bookmarks
+items: { }
+add: fn1 { .append! 'items }
+ccp
+
+stats?: does { 
+    bookmarks/items .length? |printv "Bookmarks: {}"  
+    todos/items .length? |printv "ToDos: {}" 
+}
+
+todo: fn1 { :x todos/add x }
+done: fn1 { :x todos/archive x }
+
+bookmark: fn1 { :x bookmarks/add x }
+bookmark?: fn1 { :x filter bookmarks/items { .contains x } |display }
+todos/add "call Jana"
+
+todo?: does { display todos/items }
+
+enter-console "Do your thing ..."

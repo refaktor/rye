@@ -82,7 +82,7 @@ func (e RyeCtx) Preview(idxs Idxs, filter string) string {
 	}
 	bu.WriteString("Context" + ks + ":")
 	if e.Doc > "" {
-		bu.WriteString("\n\"" + e.Doc + "\"")
+		bu.WriteString("\n\r\"" + e.Doc + "\"")
 	}
 	arr := make([]string, 0)
 	i := 0
@@ -109,7 +109,7 @@ func (e RyeCtx) Preview(idxs Idxs, filter string) string {
 	for aa := range arr {
 		line := arr[aa]
 		pars := strings.Split(line, "|||")
-		bu.WriteString("\n " + pars[1] + pars[0])
+		bu.WriteString("\n\r " + pars[1] + pars[0])
 	}
 	return bu.String()
 }
