@@ -50,7 +50,7 @@ func main() {
 	evaldo.ShowResults = true
 
 	if len(os.Args) == 1 {
-		main_rye_repl(os.Stdin, os.Stdout, false, false)
+		main_rye_repl(os.Stdin, os.Stdout, true, false)
 	} else if len(os.Args) == 2 {
 		if os.Args[1] == "shell" {
 			main_rysh()
@@ -58,32 +58,45 @@ func main() {
 			main_rye_repl(os.Stdin, os.Stdout, true, true)
 		} else if os.Args[1] == "--hr" {
 			evaldo.ShowResults = false
-			main_rye_repl(os.Stdin, os.Stdout, false, false)
-		} else if os.Args[1] == "--subc" {
 			main_rye_repl(os.Stdin, os.Stdout, true, false)
-		} else if os.Args[1] == "web" {
-			// main_httpd()
-		} else if os.Args[1] == "ryeco" {
-			main_ryeco()
 		} else {
-			main_rye_file(os.Args[1], false, false)
+			ryeFile := dotsToMainRye(os.Args[1])
+			main_rye_file(ryeFile, false, true)
 		}
 	} else if len(os.Args) >= 3 {
 		if os.Args[1] == "ryk" {
 			main_ryk()
 		} else if os.Args[1] == "--hr" {
+			ryeFile := dotsToMainRye(os.Args[2])
 			evaldo.ShowResults = false
-			main_rye_file(os.Args[2], false, false)
-		} else if os.Args[1] == "--subc" {
-			main_rye_file(os.Args[2], false, true)
+			main_rye_file(ryeFile, false, true)
 		} else if os.Args[1] == "cgi" {
 			main_cgi_file(os.Args[2], false)
 		} else if os.Args[1] == "sig" {
-			main_rye_file(os.Args[2], true, false)
+			main_rye_file(os.Args[2], true, true)
 		} else {
-			main_rye_file(os.Args[1], false, false)
+			ryeFile := dotsToMainRye(os.Args[1])
+			main_rye_file(ryeFile, false, true)
 		}
 	}
+}
+
+func dotsToMainRye(ryeFile string) string {
+	re := regexp.MustCompile(`^\.$|/\.$`)
+	if re.MatchString(ryeFile) {
+		main_path := ryeFile[:len(ryeFile)-1] + "main.rye"
+		if _, err := os.Stat(main_path); err == nil {
+			_, err := os.ReadFile(main_path)
+			if err != nil {
+				log.Fatal(err)
+			}
+			return main_path
+		} else {
+			fmt.Println("There was no main.rye")
+		}
+	}
+	return ryeFile
+
 }
 
 //
@@ -322,7 +335,7 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool) {
 	// userHomeDir, _ := os.UserHomeDir()
 	// profile_path := filepath.Join(userHomeDir, ".rye-profile")
 
-	fmt.Println("Welcome to Rye shell. Use ls and ls\\ \"pr\" to list the current context.")
+	fmt.Println("Welcome to Rye shell. ls to list current or lsp or lsp\\ \"prin\" to list parent context.")
 
 	//if _, err := os.Stat(profile_path); err == nil {
 	//content, err := os.ReadFile(profile_path)

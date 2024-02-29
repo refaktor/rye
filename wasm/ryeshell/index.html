@@ -196,7 +196,9 @@
 		function evaluateShellLine(code, term) {
 			
 			var ret = RyeEvalShellLine(code);
-			
+			console.log("EVAL SHELL LINE:");
+			console.log(ret);
+			return ret;
 			// term.write(ret);
 		}
 		
@@ -215,7 +217,7 @@
 		}
 		
 		function receiveLineFromGo(line) {
-			evaluateShellLine(line, term);
+			return evaluateShellLine(line, term);
 		}
 
 		function onWasmStdout(out) {
@@ -256,6 +258,7 @@
 			windowsMode: ['Windows', 'Win16', 'Win32', 'WinCE'].indexOf(navigator.platform) >= 0,
 			fontFamily: '"Cascadia Code", Menlo, monospace',
 			fontSize: 13,
+			convertEol: true,
 		})
 		
 		//      term.setOption('theme', theme)
@@ -271,7 +274,7 @@
 		//     var term = new Terminal();
 		term.open(document.getElementById('terminal'));
 		term.focus()
-		
+		term.writeln("Welcome to Rye console in the browser. It's still work in progress. Have fun.")
 		var currLine = "";
 		var entries = [];
 		term.onKey((ev) => {
@@ -301,6 +304,9 @@
 		  term.focus();
 	      }
 	  }	
+	  setTimeout(2000, function () {
+	  	sendToTerminal("Welcome to Rye web console", term);
+	  });
 	</script>
 
 	<button onclick="sendToTerminal('print 123', term)">hello world</button>

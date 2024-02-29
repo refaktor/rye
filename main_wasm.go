@@ -35,6 +35,8 @@ var ES *env.ProgramState
 
 var CODE []any
 
+var PREV_LINES string
+
 var prevResult env.Object
 
 var ml *util.MLState
@@ -61,8 +63,9 @@ func sendMessageToJS(message string) {
 	jsCallback.Invoke(message)
 }
 
-func sendLineToJS(line string) {
-	jsCallback2.Invoke(line)
+func sendLineToJS(line string) string {
+	ret := jsCallback2.Invoke(line)
+	return ret.String()
 }
 
 func main() {
@@ -109,18 +112,18 @@ func main() {
 
 func InitRyeShell(this js.Value, args []js.Value) any {
 	// subc := false
-	// fmt.Println("INITIALISATION")
+	// fmt.Println("INITIALIZATION")
 	ps := env.NewProgramStateNEW()
 	evaldo.RegisterBuiltins(ps)
 	contrib.RegisterBuiltins(ps, &evaldo.BuiltinNames)
+	ctx := ps.Ctx
+	ps.Ctx = env.NewEnv(ctx)
 	ES = ps
 	/* bloc	k := loader.LoadString(" ", false)
 	switch val := block.(type) {
 	case env.Block:
 
 		if subc {
-			ctx := es.Ctx
-			es.Ctx = env.NewEnv(ctx)
 		}
 
 		evaldo.EvalBlock(es)
@@ -143,9 +146,19 @@ func RyeEvalShellLine(this js.Value, args []js.Value) any {
 	subc := false
 
 	code := args[0].String()
+	multiline := len(code) > 1 && code[len(code)-1:] == " "
+
 	comment := regexp.MustCompile(`\s*;`)
 	codes := comment.Split(code, 2) //--- just very temporary solution for some comments in repl. Later should probably be part of loader ... maybe?
 	code1 := strings.Trim(codes[0], "\t")
+	if multiline {
+		PREV_LINES += code1
+		return "next line"
+	}
+
+	code1 = PREV_LINES + "\n" + code1
+
+	PREV_LINES = ""
 
 	if ES == nil {
 		return "Error: Rye is not initialized"
