@@ -4561,8 +4561,24 @@ var builtins = map[string]*env.Builtin{
 					reversed += string(s[i])
 				}
 				return *env.NewString(reversed)
+			case env.List:
+				// Create slice of env.Object
+				dataSlice := make([]env.Object, 0)
+				for _, v := range block.Data {
+					dataSlice = append(dataSlice, env.ToRyeValue(v))
+				}
+				// Reverse slice data
+				for left, right := 0, len(dataSlice)-1; left < right; left, right = left+1, right-1 {
+					dataSlice[left], dataSlice[right] = dataSlice[right], dataSlice[left]
+				}
+				// Create list frol slice data
+				reverseList := make([]any, 0, len(dataSlice))
+				for _, value := range dataSlice {
+					reverseList = append(reverseList, value)
+				}
+				return *env.NewList(reverseList)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.StringType}, "reverse")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.StringType, env.ListType}, "reverse!")
 			}
 		},
 	},
