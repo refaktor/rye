@@ -31,7 +31,7 @@ require (
 	github.com/sashabaranov/go-openai v1.19.2
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/thomasberger/parsemail v1.2.6
-	go.mongodb.org/mongo-driver v1.13.1
+	go.mongodb.org/mongo-driver v1.14.0
 	golang.org/x/crypto v0.20.0
 	golang.org/x/net v0.21.0
 	golang.org/x/sync v0.6.0
