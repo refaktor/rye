@@ -7109,7 +7109,6 @@ func RegisterBuiltinsInContext(builtins map[string]*env.Builtin, ps *env.Program
 
 	wordIdx := ps.Idx.IndexWord(name)
 	ps.Ctx.Set(wordIdx, *newctx)
-
 }
 
 func registerBuiltin(ps *env.ProgramState, word string, builtin env.Builtin) {
