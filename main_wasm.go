@@ -119,6 +119,7 @@ func InitRyeShell(this js.Value, args []js.Value) any {
 	ctx := ps.Ctx
 	ps.Ctx = env.NewEnv(ctx)
 	ES = ps
+	evaldo.ShowResults = false
 	/* bloc	k := loader.LoadString(" ", false)
 	switch val := block.(type) {
 	case env.Block:
@@ -145,6 +146,7 @@ func RyeEvalShellLine(this js.Value, args []js.Value) any {
 	sig := false
 	subc := false
 
+	evaldo.ShowResults = false
 	code := args[0].String()
 	multiline := len(code) > 1 && code[len(code)-1:] == " "
 

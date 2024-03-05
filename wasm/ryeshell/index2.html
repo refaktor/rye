@@ -76,7 +76,7 @@
 	  font-family: mono;
 	  font-size: 13px;
 	  border: 1px solid #c6c6c6;
-	  width: 340px;
+	  width: 360px;
 	  background-color: #f1f1f1;
       }
       #code_static1, #code_static2, .code_s {
@@ -193,7 +193,9 @@
       function evaluateShellLine(code, term) {
 	  
 	  var ret = RyeEvalShellLine(code);
-	  
+	  console.log("EVAL SHELL LINE:");
+	  console.log(ret);
+	  return ret;
 	  // term.write(ret);
       }
       
@@ -212,7 +214,7 @@
       }
       
       function receiveLineFromGo(line) {
-	  evaluateShellLine(line, term);
+	  return evaluateShellLine(line, term);
       }
 
       function onWasmStdout(out) {
@@ -223,7 +225,7 @@
 
   <body onload="onLoadX()" class='page page-default-single'><!doctype html>
     
-    <div id="terminal" style="width: 630px; padding: 10px; background-color: #111;"></div>
+    <div id="terminal" style="width: 650px; padding: 10px; background-color: #111;"></div>
     <script>
       
       let theme = {
@@ -252,6 +254,8 @@
 	  windowsMode: ['Windows', 'Win16', 'Win32', 'WinCE'].indexOf(navigator.platform) >= 0,
 	  fontFamily: '"Cascadia Code", Menlo, monospace',
 	  fontSize: 13,
+	  convertEol: true,
+	  rows: 22,
       })
       
       //      term.setOption('theme', theme)
@@ -267,6 +271,9 @@
       //     var term = new Terminal();
       term.open(document.getElementById('terminal'));
       term.focus()
+      term.writeln("Welcome to Rye web console. It's a work in progress. Visit \033[38;5;14mryelang.org\33[0m for more.")
+      term.writeln("- \033[38;5;246mtype in lsp (list parent context) too see some functions, or ls to see yours \033[0m-")
+      term.writeln("--------------------------------------------------------------------------------")
       
       var currLine = "";
       var entries = [];
@@ -334,8 +341,6 @@
       }
 
     </script>
-
-    <!--button onclick="sendToTerminal('print 123', term)">hello world</button-->
   </body>
 </html>
 
