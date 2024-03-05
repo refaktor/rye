@@ -170,7 +170,16 @@ func (i RyeCtx) Equal(o Object) bool {
 
 func (i RyeCtx) Dump(e Idxs) string {
 	var bu strings.Builder
+	bu.WriteString("context {\n")
 	bu.WriteString(fmt.Sprintf("doc \"%s\"\n", i.Doc))
+	bu.WriteString(i.DumpBare(e))
+	bu.WriteString("}")
+	return bu.String()
+}
+
+// DumpBare returns the string representation of the context without wraping it in context { ... }
+func (i RyeCtx) DumpBare(e Idxs) string {
+	var bu strings.Builder
 	for j := 0; j < e.GetWordCount(); j++ {
 		if val, ok := i.state[j]; ok {
 			if val.Type() != BuiltinType {
@@ -299,7 +308,7 @@ func NewProgramStateNEW() *ProgramState {
 }
 
 func (ps *ProgramState) Dump() string {
-	return ps.Ctx.Dump(*ps.Idx)
+	return ps.Ctx.DumpBare(*ps.Idx)
 }
 
 func AddToProgramState(ps *ProgramState, ser TSeries, idx *Idxs) *ProgramState {

@@ -242,9 +242,12 @@ section "Functions that change values in-place"
 	}
 	group "reverse!"
 	mold\nowrap ?append!
-	{ { word } { object } }
+	{ { word } { object } { list } }
 	{
 		equal { b: { 4 1 7 2 } , reverse! b , b } { 2 7 1 4 } ; TOTHINK -- should it accept tagword or block directly?
+		equal { reverse! list { 1 2 3 } } list { 3 2 1 }
+		equal { reverse! list { 1 } } list { 1 }
+		equal { reverse! list {  } } list {  }
 	}
 
 }
