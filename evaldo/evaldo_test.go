@@ -3,6 +3,7 @@ package evaldo
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/loader"
@@ -406,5 +407,47 @@ func TestEvaldo_load_lsetword4(t *testing.T) {
 
 	if es.Res.(env.Integer).Value != 80 {
 		t.Error("Expected result value 80")
+	}
+}
+
+func TestEvaldo_load_block(t *testing.T) {
+	input := "a: 1 { a 2 }"
+	block, genv := loader.LoadString(input, false)
+	es := env.NewProgramState(block.(env.Block).Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	nonEvaluatedBlock := es.Res
+	if nonEvaluatedBlock.Type() != env.BlockType {
+		t.Error("Expected result type block")
+	}
+
+	if nonEvaluatedBlock.(env.Block).Series.Get(0).Type() != env.WordType {
+		t.Error("Expected first item to be evaluated to type integer but got type " + strconv.Itoa(int(nonEvaluatedBlock.(env.Block).Series.Get(0).Type())))
+	}
+	if nonEvaluatedBlock.(env.Block).Series.Get(1).Type() != env.IntegerType {
+		t.Error("Expected second item to be type integer")
+	}
+}
+
+func TestEvaldo_load_eval_block(t *testing.T) {
+	input := "a: 1 [ a 2 ]"
+	block, genv := loader.LoadString(input, false)
+	es := env.NewProgramState(block.(env.Block).Series, genv)
+	RegisterBuiltins(es)
+
+	EvalBlock(es)
+
+	evaluatedBlock := es.Res
+	if evaluatedBlock.Type() != env.BlockType {
+		t.Error("Expected result type block")
+	}
+
+	if evaluatedBlock.(env.Block).Series.Get(0).Type() != env.IntegerType {
+		t.Error("Expected first item to be evaluated to type integer but got type " + strconv.Itoa(int(evaluatedBlock.(env.Block).Series.Get(0).Type())))
+	}
+	if evaluatedBlock.(env.Block).Series.Get(1).Type() != env.IntegerType {
+		t.Error("Expected second item to be type integer")
 	}
 }

@@ -2,6 +2,7 @@ package loader
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/refaktor/rye/env"
 
@@ -250,6 +251,26 @@ func TestLoader_multiple_newlines2(t *testing.T) {
 	}
 	if block.(env.Block).Series.Get(4).Type() != env.IntegerType {
 		t.Error("Expected type integer")
+	}
+}
+
+func TestLoader_bblock(t *testing.T) {
+	input := "a: 1 [ a 2 ]"
+	block, _ := LoadString(input, false)
+	// expect setword, integer, block
+	if block.(env.Block).Series.Len() != 3 {
+		t.Error("Expected 3 items")
+	}
+	innerBlock := block.(env.Block).Series.Get(2)
+	if innerBlock.Type() != env.BlockType {
+		t.Error("Expected type block")
+	}
+	// block is not evaluated yet, only loaded
+	if innerBlock.(env.Block).Series.Get(0).Type() != env.WordType {
+		t.Error("Expected first item to be evaluated to type integer but got type " + strconv.Itoa(int(innerBlock.(env.Block).Series.Get(0).Type())))
+	}
+	if innerBlock.(env.Block).Series.Get(1).Type() != env.IntegerType {
+		t.Error("Expected second item to be type integer")
 	}
 }
 

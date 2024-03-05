@@ -292,9 +292,27 @@ func EvalExpressionConcrete(ps *env.ProgramState) *env.ProgramState {
 	//trace2("Before entering expression")
 	if object != nil {
 		switch object.Type() {
-		case env.IntegerType, env.DecimalType, env.StringType, env.BlockType, env.VoidType, env.UriType, env.EmailType: // env.TagwordType, JM 20230126
+		case env.IntegerType, env.DecimalType, env.StringType, env.VoidType, env.UriType, env.EmailType: // env.TagwordType, JM 20230126
 			if !ps.SkipFlag {
 				ps.Res = object
+			}
+		case env.BlockType:
+			if !ps.SkipFlag {
+				block := object.(env.Block)
+				// block mode 1 is for eval blocks
+				if block.Mode == 1 {
+					ser := ps.Ser
+					ps.Ser = block.Series
+					res := make([]env.Object, 0)
+					for ps.Ser.Pos() < ps.Ser.Len() {
+						EvalExpression2(ps, false)
+						res = append(res, ps.Res)
+					}
+					ps.Ser = ser
+					ps.Res = *env.NewBlock(*env.NewTSeries(res))
+				} else {
+					ps.Res = object
+				}
 			}
 		case env.TagwordType:
 			ps.Res = *env.NewWord(object.(env.Tagword).Index)
