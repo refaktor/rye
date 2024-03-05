@@ -7058,7 +7058,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_ps, ps, "ps")
 	RegisterBuiltins2(Builtins_json, ps, "json")
 	RegisterBuiltins2(Builtins_stackless, ps, "stackless")
-	RegisterBuiltins2(Builtins_eyr, ps, "eyr")
+	RegisterBuiltinsInContext(Builtins_eyr, ps, "eyr")
 	RegisterBuiltins2(Builtins_conversion, ps, "conversion")
 	RegisterBuiltins2(Builtins_http, ps, "http")
 	RegisterBuiltins2(Builtins_crypto, ps, "crypto")
@@ -7084,7 +7084,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	// RegisterBuiltins2(Builtins_cayley, ps, "cayley")
 }
 
-var BuiltinNames map[string]int
+var BuiltinNames map[string]int // TODO --- this looks like some hanging global ... it should move to ProgramState, it doesn't even really work with contrib and external probably
 
 func RegisterBuiltins2(builtins map[string]*env.Builtin, ps *env.ProgramState, name string) {
 	BuiltinNames[name] = len(builtins)
@@ -7092,6 +7092,24 @@ func RegisterBuiltins2(builtins map[string]*env.Builtin, ps *env.ProgramState, n
 		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc)
 		registerBuiltin(ps, k, *bu)
 	}
+}
+
+func RegisterBuiltinsInContext(builtins map[string]*env.Builtin, ps *env.ProgramState, name string) {
+	BuiltinNames[name] = len(builtins)
+
+	ctx := ps.Ctx
+	ps.Ctx = env.NewEnv(ps.Ctx) // make new context with no parent
+
+	for k, v := range builtins {
+		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc)
+		registerBuiltin(ps, k, *bu)
+	}
+	newctx := ps.Ctx
+	ps.Ctx = ctx
+
+	wordIdx := ps.Idx.IndexWord(name)
+	ps.Ctx.Set(wordIdx, *newctx)
+
 }
 
 func registerBuiltin(ps *env.ProgramState, word string, builtin env.Builtin) {
