@@ -19,13 +19,15 @@ this in Rye was to put them into a block, but blocks aren't evaluated by default
 If [ ] evaluate by default we reduce the need for vals function (which I couldn't find a good name yet btw. Rebol's reduce is taken, eval would be the most correct but would strongly conotate javascript's eval which does a different (bad) thing). 
 So some code becomes cleaner and runtime handles these cases in one step instead of two, which is not unimportant as it can be used a lot.
 
-### Builtins inside context's
+### Builtins inside context's [++]
 
 At integrating Fyne also it was decided that builtins should have and option to be loaded in their own context. Once a native is created we use generic methods for namespacing, but to construct them words need to be namespaced. So we have either 
 fyne-window, fyne-button, fyne-entry, ... of we put all those in it's own fyne context and we can have fyne/window, fyne/button, fyne/entry of just execute code inside that context and have only window, button, entry ... This is the best way for 
 multiple reasons so builtins must support loading in their context. If you would want at build time determine what builtins should load in their own context and what directly, or if it should be decided by the builtin maker is still an open question.
 
 Too much variability can then complicate reuse ... this would need to be determined by flags and build flags are already a per-project parameter.
+
+For now it's statically determined at development of builtins. We will explore more dynamic options later.
 
 ### Rye shell / console naming [+-]
 
