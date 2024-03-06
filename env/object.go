@@ -278,6 +278,10 @@ func (i Uri) GetPath() string {
 	return i.Path
 }
 
+func (i Uri) GetFullUri(e Idxs) string {
+	return e.GetWord(i.Scheme.Index) + "://" + i.Path
+}
+
 func (i Uri) GetProtocol() Word {
 	return i.Scheme
 }

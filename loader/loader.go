@@ -424,7 +424,7 @@ func newParser() *Parser { // TODO -- add string eaddress path url time
 	OPARROWS        <-  "<<" / "<~" / "<-" / ">=" / "<="
 	LETTER  	    <-  < [a-zA-Z^(` + "`" + `] >
 	LETTERORNUM		<-  < [a-zA-Z0-9-?=.\\!_+<>\]*()] >
-	URIPATH			<-  < [a-zA-Z0-9-?=.:@/\\!_>	()] >
+	URIPATH			<-  < [a-zA-Z0-9-?&=.,:@/\\!_>	()] >
 	UCLETTER  		<-  < [A-Z] >
 	LCLETTERORNUM  	<-  < [a-z0-9] >
     NUMBER          <-  < ("-"?[0-9]+) >

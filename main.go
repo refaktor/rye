@@ -4,7 +4,9 @@
 package main
 
 import (
+	"io/ioutil"
 	"regexp"
+	"sort"
 
 	"github.com/refaktor/rye/contrib"
 
@@ -59,9 +61,12 @@ func main() {
 		} else if os.Args[1] == "--hr" {
 			evaldo.ShowResults = false
 			main_rye_repl(os.Stdin, os.Stdout, true, false)
+		} else if os.Args[1] == "cont" {
+			ryeFile := findLastConsoleSave()
+			main_rye_file(ryeFile, false, true, true)
 		} else {
 			ryeFile := dotsToMainRye(os.Args[1])
-			main_rye_file(ryeFile, false, true)
+			main_rye_file(ryeFile, false, true, false)
 		}
 	} else if len(os.Args) >= 3 {
 		if os.Args[1] == "ryk" {
@@ -69,16 +74,45 @@ func main() {
 		} else if os.Args[1] == "--hr" {
 			ryeFile := dotsToMainRye(os.Args[2])
 			evaldo.ShowResults = false
-			main_rye_file(ryeFile, false, true)
+			main_rye_file(ryeFile, false, true, false)
 		} else if os.Args[1] == "cgi" {
 			main_cgi_file(os.Args[2], false)
 		} else if os.Args[1] == "sig" {
-			main_rye_file(os.Args[2], true, true)
+			main_rye_file(os.Args[2], true, true, false)
 		} else {
 			ryeFile := dotsToMainRye(os.Args[1])
-			main_rye_file(ryeFile, false, true)
+			main_rye_file(ryeFile, false, true, false)
 		}
 	}
+}
+
+func findLastConsoleSave() string {
+	// Read directory entries
+	entries, err := ioutil.ReadDir(".")
+	if err != nil {
+		fmt.Println("Error reading directory:", err) // TODO --- report better
+		return ""
+	}
+
+	files := make([]string, 0)
+
+	// Filter files starting with "shell_"
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue // Skip directories
+		}
+		if strings.HasPrefix(entry.Name(), "shell_") {
+			files = append(files, entry.Name())
+		}
+	}
+
+	if len(files) == 0 {
+		return ""
+	}
+
+	sort.Strings(files)
+
+	return files[len(files)-1]
 }
 
 func dotsToMainRye(ryeFile string) string {
@@ -247,7 +281,7 @@ func main_ryeco() {
 
 }
 
-func main_rye_file(file string, sig bool, subc bool) {
+func main_rye_file(file string, sig bool, subc bool, interactive bool) {
 	info := true
 	//util.PrintHeader()
 	//defer profile.Start(profile.CPUProfile).Stop()
@@ -285,9 +319,15 @@ func main_rye_file(file string, sig bool, subc bool) {
 
 		evaldo.EvalBlock(es)
 		evaldo.MaybeDisplayFailureOrError(es, genv)
+
+		if interactive {
+			evaldo.DoRyeRepl(es, evaldo.ShowResults)
+		}
+
 	case env.Error:
 		fmt.Println(val.Message)
 	}
+
 }
 
 func main_cgi_file(file string, sig bool) {

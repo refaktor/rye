@@ -5,11 +5,13 @@ import (
 	"crypto/rand"
 	"fmt"
 	"io"
+	"log"
 	"math"
 	"math/big"
 	"os"
 	"os/exec"
 	"reflect"
+	"runtime"
 	"sort"
 
 	"github.com/refaktor/rye/env"
@@ -6929,6 +6931,36 @@ var builtins = map[string]*env.Builtin{
 				//				return env.ToRyeValue(string(stdout))
 			default:
 				return makeError(ps, "Arg 1 should be String")
+			}
+			return nil
+		},
+	},
+
+	"os\\open": { // todo -- variation is not meant for grouping inside context ... just for function variations ... just temp to test
+		Argsn: 1,
+		Doc:   "",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s0 := arg0.(type) {
+			case env.Uri:
+
+				var err error
+				url := s0.GetFullUri(*ps.Idx)
+
+				switch runtime.GOOS {
+				case "linux":
+					err = exec.Command("xdg-open", url).Start()
+				case "windows":
+					err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+				case "darwin":
+					err = exec.Command("open", url).Start()
+				default:
+					err = fmt.Errorf("unsupported platform")
+				}
+				if err != nil {
+					log.Fatal(err)
+				}
+			default:
+				return makeError(ps, "Arg 1 should be String") // TODO - make propper error
 			}
 			return nil
 		},
