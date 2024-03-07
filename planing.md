@@ -41,9 +41,40 @@ something like middot or a newline like character. Or / and it could look for op
 
 ## For 0.0.17
 
-### Web shell - make complete
+### Rye evaluator EvalExpr improvements
+
+Go over the various EvaluateExp functions and solve some confusion around them and .with { x , y } command
+
+### Rye evaluator profiling
+
+Check what pops up of we profile a fibonnaci or a game of life example
+
+### Spreadsheet improvements
+
+Join two spreadsheets, do where with a regexp, regexp split into new columns or spreadsheet.
+
+### Web console - make complete
 
 Try to make behaviour as complete as possible. Paste into shell doesn't work, Some key combinations (ctrl-d, ...) , sole keys (pageup, pagedown). Test and list here:
+
+### Save and load history
+
+Save / edit with emacs / load back
+
+### Command inline mode
+
+Maybe finally redo these flag handling and commands with a propper library
+
+```
+rye cont --inline init  # continues the shell and runs init function
+rye . --inline init # runs main.rye and function init
+rye --inline print 123 + 123
+```
+### Command interactive mode
+
+Load and do file and go to console after it (line cont, but any file, not saved state)
+
+## Random ideas
 
 ### ~~Smart history v01 (just ideas)~~
 
