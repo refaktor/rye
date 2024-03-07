@@ -41,7 +41,11 @@ something like middot or a newline like character. Or / and it could look for op
 
 ## For 0.0.17
 
-### Smart history v01
+### Web shell - make complete
+
+Try to make behaviour as complete as possible. Paste into shell doesn't work, Some key combinations (ctrl-d, ...) , sole keys (pageup, pagedown). Test and list here:
+
+### ~~Smart history v01 (just ideas)~~
 
 Just very rough idea
 
