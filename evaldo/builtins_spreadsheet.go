@@ -4,11 +4,12 @@ package evaldo
 
 import (
 	"encoding/csv"
-	"fmt"
 	"os"
+	"regexp"
 	"slices"
 	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/refaktor/rye/env"
 )
@@ -199,10 +200,62 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 				case env.String:
 					return WhereEquals(ps, spr, col.Value, arg2)
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType}, "where-equal")
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-equal")
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "where-equal")
+			}
+		},
+	},
+	"where-match": {
+		Argsn: 3,
+		Doc:   "Returns spreadsheet of rows where a specific colum matches a regex.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
+			switch spr := arg0.(type) {
+			case env.Spreadsheet:
+				switch reNative := arg2.(type) {
+				case env.Native:
+					re, ok := reNative.Value.(*regexp.Regexp)
+					if !ok {
+						return MakeArgError(ps, 2, []env.Type{env.NativeType}, "where-match")
+					}
+					switch col := arg1.(type) {
+					case env.Word:
+						return WhereMatch(ps, spr, ps.Idx.GetWord(col.Index), re)
+					case env.String:
+						return WhereMatch(ps, spr, col.Value, re)
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-match")
+					}
+				default:
+					return MakeArgError(ps, 3, []env.Type{env.NativeType}, "where-match")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "where-match")
+			}
+		},
+	},
+	"where-contains": {
+		Argsn: 3,
+		Doc:   "Returns spreadsheet of rows where specific colum contains a given string value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
+			switch spr := arg0.(type) {
+			case env.Spreadsheet:
+				switch s := arg2.(type) {
+				case env.String:
+					switch col := arg1.(type) {
+					case env.Word:
+						return WhereContains(ps, spr, ps.Idx.GetWord(col.Index), s.Value)
+					case env.String:
+						return WhereContains(ps, spr, col.Value, s.Value)
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-contains")
+					}
+				default:
+					return MakeArgError(ps, 3, []env.Type{env.StringType}, "where-contains")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "where-contains")
 			}
 		},
 	},
@@ -218,7 +271,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 				case env.String:
 					return WhereGreater(ps, spr, col.Value, arg2)
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType}, "where-greater")
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-greater")
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "where-greater")
@@ -237,10 +290,29 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 				case env.String:
 					return WhereLesser(ps, spr, col.Value, arg2)
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType}, "where-lesser")
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-lesser")
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "where-lesser")
+			}
+		},
+	},
+	"where-between": {
+		Argsn: 4,
+		Doc:   "Returns spreadsheet of rows where specific colum is between given values.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
+			switch spr := arg0.(type) {
+			case env.Spreadsheet:
+				switch col := arg1.(type) {
+				case env.Word:
+					return WhereBetween(ps, spr, ps.Idx.GetWord(col.Index), arg2, arg3)
+				case env.String:
+					return WhereBetween(ps, spr, col.Value, arg2, arg3)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-between")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "where-between")
 			}
 		},
 	},
@@ -361,15 +433,37 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Spreadsheet:
-				switch name := arg1.(type) {
+				switch newCol := arg1.(type) {
 				case env.Word:
-					switch extract := arg2.(type) {
+					switch fromCols := arg2.(type) {
 					case env.Block:
 						switch code := arg3.(type) {
 						case env.Block:
-							return GenerateColumn(ps, spr, name, extract, code)
+							return GenerateColumn(ps, spr, newCol, fromCols, code)
 						default:
 							return MakeArgError(ps, 4, []env.Type{env.BlockType}, "add-col!")
+						}
+					case env.Word:
+						switch replaceBlock := arg3.(type) {
+						case env.Block:
+							if replaceBlock.Series.Len() != 2 {
+								return MakeBuiltinError(ps, "Replacement block must contain a regex object and replacement string.", "add-col!")
+							}
+							regexNative, ok := replaceBlock.Series.S[0].(env.Native)
+							if !ok {
+								return MakeBuiltinError(ps, "First element of replacement block must be a regex object.", "add-col!")
+							}
+							regex, ok := regexNative.Value.(*regexp.Regexp)
+							if !ok {
+								return MakeBuiltinError(ps, "First element of replacement block must be a regex object.", "add-col!")
+							}
+							replaceStr, ok := replaceBlock.Series.S[1].(env.String)
+							if !ok {
+								return MakeBuiltinError(ps, "Second element of replacement block must be a string.", "add-col!")
+							}
+							return GenerateColumnRegexReplace(ps, spr, newCol, fromCols, regex, replaceStr.Value)
+						default:
+							return MakeArgError(ps, 3, []env.Type{env.BlockType}, "add-col!")
 						}
 					default:
 						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "add-col!")
@@ -468,6 +562,31 @@ func GenerateColumn(ps *env.ProgramState, s env.Spreadsheet, name env.Word, extr
 	return s
 }
 
+func GenerateColumnRegexReplace(ps *env.ProgramState, s env.Spreadsheet, name env.Word, fromColName env.Word, re *regexp.Regexp, pattern string) env.Object {
+	// add name to columns
+	s.Cols = append(s.Cols, ps.Idx.GetWord(name.Index))
+	for ix, row := range s.Rows {
+		// get value from current row
+		val, err := s.GetRowValue(ps.Idx.GetWord(fromColName.Index), row)
+		if err != nil {
+			return MakeError(ps, "Couldn't retrieve value at row "+strconv.Itoa(ix))
+		}
+
+		var newVal any
+		valStr, ok := val.(env.String)
+		if !ok {
+			newVal = ""
+		} else {
+			// replace the value with the regex
+			newVal = env.NewString(re.ReplaceAllString(valStr.Value, pattern))
+		}
+		// set the result of code block as the new column value in this row
+		row.Values = append(row.Values, newVal)
+		s.Rows[ix] = row
+	}
+	return s
+}
+
 func AddIndexes(ps *env.ProgramState, s *env.Spreadsheet, columns []env.Word) env.Object {
 	s.Indexes = make(map[string]map[any][]int, 0)
 	for _, column := range columns {
@@ -509,9 +628,7 @@ func SortByColumnDesc(ps *env.ProgramState, s *env.Spreadsheet, name string) {
 	sort.Slice(s.Rows, compareCol)
 }
 
-func WhereEquals(ps *env.ProgramState, s env.Spreadsheet, name string, val any) env.Object {
-	fmt.Println(s.Cols)
-	fmt.Println(name)
+func WhereEquals(ps *env.ProgramState, s env.Spreadsheet, name string, val env.Object) env.Object {
 	idx := slices.Index(s.Cols, name)
 	nspr := env.NewSpreadsheet(s.Cols)
 	if idx > -1 {
@@ -523,11 +640,8 @@ func WhereEquals(ps *env.ProgramState, s env.Spreadsheet, name string, val any) 
 		} else {
 			for _, row := range s.Rows {
 				if len(row.Values) > idx {
-					switch val2 := val.(type) {
-					case env.Object:
-						if val2.Equal(env.ToRyeValue(row.Values[idx])) {
-							nspr.AddRow(row)
-						}
+					if val.Equal(env.ToRyeValue(row.Values[idx])) {
+						nspr.AddRow(row)
 					}
 				}
 			}
@@ -538,17 +652,54 @@ func WhereEquals(ps *env.ProgramState, s env.Spreadsheet, name string, val any) 
 	}
 }
 
-func WhereGreater(ps *env.ProgramState, s env.Spreadsheet, name string, val any) env.Object {
+func WhereMatch(ps *env.ProgramState, s env.Spreadsheet, name string, r *regexp.Regexp) env.Object {
 	idx := slices.Index(s.Cols, name)
 	nspr := env.NewSpreadsheet(s.Cols)
 	if idx > -1 {
 		for _, row := range s.Rows {
 			if len(row.Values) > idx {
-				switch val2 := val.(type) {
-				case env.Object:
-					if greaterThanNew(row.Values[idx].(env.Object), val2) {
+				rv := row.Values[idx]
+				if rvStr, ok := rv.(env.String); ok {
+					if r.MatchString(rvStr.Value) {
 						nspr.AddRow(row)
 					}
+				}
+			}
+		}
+		return *nspr
+	} else {
+		return MakeBuiltinError(ps, "Column not found.", "WhereMatch")
+	}
+}
+
+func WhereContains(ps *env.ProgramState, s env.Spreadsheet, name string, val string) env.Object {
+	idx := slices.Index(s.Cols, name)
+	nspr := env.NewSpreadsheet(s.Cols)
+	if idx > -1 {
+		for _, row := range s.Rows {
+			if len(row.Values) > idx {
+				rv := row.Values[idx]
+				if rvStr, ok := rv.(env.String); ok {
+					if strings.Contains(rvStr.Value, val) {
+						nspr.AddRow(row)
+					}
+				}
+			}
+		}
+		return *nspr
+	} else {
+		return MakeBuiltinError(ps, "Column not found.", "WhereMatch")
+	}
+}
+
+func WhereGreater(ps *env.ProgramState, s env.Spreadsheet, name string, val env.Object) env.Object {
+	idx := slices.Index(s.Cols, name)
+	nspr := env.NewSpreadsheet(s.Cols)
+	if idx > -1 {
+		for _, row := range s.Rows {
+			if len(row.Values) > idx {
+				if greaterThanNew(row.Values[idx].(env.Object), val) {
+					nspr.AddRow(row)
 				}
 			}
 		}
@@ -558,23 +709,38 @@ func WhereGreater(ps *env.ProgramState, s env.Spreadsheet, name string, val any)
 	}
 }
 
-func WhereLesser(ps *env.ProgramState, s env.Spreadsheet, name string, val any) env.Object {
+func WhereLesser(ps *env.ProgramState, s env.Spreadsheet, name string, val env.Object) env.Object {
 	idx := slices.Index(s.Cols, name)
 	nspr := env.NewSpreadsheet(s.Cols)
 	if idx > -1 {
 		for _, row := range s.Rows {
 			if len(row.Values) > idx {
-				switch val2 := val.(type) {
-				case env.Object:
-					if lesserThanNew(row.Values[idx].(env.Object), val2) {
-						nspr.AddRow(row)
-					}
+				if lesserThanNew(row.Values[idx].(env.Object), val) {
+					nspr.AddRow(row)
 				}
 			}
 		}
 		return *nspr
 	} else {
 		return MakeBuiltinError(ps, "Column not found.", "WhereGreater")
+	}
+}
+
+func WhereBetween(ps *env.ProgramState, s env.Spreadsheet, name string, val1 env.Object, val2 env.Object) env.Object {
+	idx := slices.Index(s.Cols, name)
+	nspr := env.NewSpreadsheet(s.Cols)
+	if idx > -1 {
+		for _, row := range s.Rows {
+			if len(row.Values) > idx {
+				rv := row.Values[idx].(env.Object)
+				if greaterThanNew(rv, val1) && lesserThanNew(rv, val2) {
+					nspr.AddRow(row)
+				}
+			}
+		}
+		return *nspr
+	} else {
+		return MakeBuiltinError(ps, "Column not found.", "WhereBetween")
 	}
 }
 
