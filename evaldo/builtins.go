@@ -4478,7 +4478,7 @@ var builtins = map[string]*env.Builtin{
 
 	"sort!": { // **
 		Argsn: 1,
-		Doc:   "Accepts a block of values and returns maximal value.",
+		Doc:   "Accepts a block or list and sorts in place in ascending order and returns it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch block := arg0.(type) {
 			case env.Block:
@@ -5293,49 +5293,22 @@ var builtins = map[string]*env.Builtin{
 			case env.Block:
 				switch b2 := arg1.(type) {
 				case env.Block:
-					inter := util.UnionOfLists(ps, s1.Series.S, b2.Series.S)
-					return *env.NewBlock(*env.NewTSeries(inter))
+					union := util.UnionOfBlocks(ps, s1, b2)
+					return *env.NewBlock(*env.NewTSeries(union))
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "union")
 				}
 			case env.List:
-				switch secondBlock := arg1.(type) {
-				case env.Block:
-					mergedSlice := make([]env.Object, 0)
-					// Initially fill first block data
-					for _, v := range s1.Data {
-						mergedSlice = append(mergedSlice, env.ToRyeValue(v))
-					}
-					// If isAvailable is false then it is new value
-					isAvailable := false
-					for _, v1 := range secondBlock.Series.S {
-						isAvailable = false
-						for _, v2 := range s1.Data {
-							if env.RyeToRaw(v1) == v2 {
-								isAvailable = true
-								break
-							}
-						}
-						// If new value then add in List
-						if !isAvailable {
-							mergedSlice = append(mergedSlice, v1)
-						}
-					}
-					// Create list of array
-					unionSlice := make([]any, 0, len(mergedSlice))
-					for _, value := range mergedSlice {
-						unionSlice = append(unionSlice, value)
-					}
-					// return List
-					return *env.NewList(unionSlice)
-
+				switch l2 := arg1.(type) {
+				case env.List:
+					union := util.UnionOfLists(ps, s1, l2)
+					return *env.NewList(union)
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "union")
+					return MakeArgError(ps, 2, []env.Type{env.ListType}, "union")
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "union")
 			}
-
 		},
 	},
 
@@ -5356,34 +5329,57 @@ var builtins = map[string]*env.Builtin{
 			case env.Block:
 				switch b2 := arg1.(type) {
 				case env.Block:
-					inter := util.IntersectLists(ps, s1.Series.S, b2.Series.S)
+					inter := util.IntersectBlocks(ps, s1, b2)
 					return *env.NewBlock(*env.NewTSeries(inter))
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "intersect")
 				}
 			case env.List:
-				switch secondBlock := arg1.(type) {
-				case env.Block:
-					commonSlice := make([]env.Object, 0)
-					for _, v1 := range s1.Data {
-						for _, v2 := range secondBlock.Series.S {
-							// get matching value in both blocks
-							if env.RyeToRaw(v2) == v1 {
-								commonSlice = append(commonSlice, v2)
-							}
-						}
-					}
-					intersectSlice := make([]any, 0, len(commonSlice))
-					for _, value := range commonSlice {
-						intersectSlice = append(intersectSlice, value)
-					}
-					// return List
-					return *env.NewList(intersectSlice)
+				switch l2 := arg1.(type) {
+				case env.List:
+					inter := util.IntersectLists(ps, s1, l2)
+					return *env.NewList(inter)
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "intersect")
+					return MakeArgError(ps, 2, []env.Type{env.ListType}, "intersect")
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType, env.ListType}, "intersect")
+			}
+		},
+	},
+
+	"difference": {
+		Argsn: 2,
+		Doc:   "Finds the difference (values in first but not in second) of two values.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				switch s2 := arg1.(type) {
+				case env.String:
+					diff := util.DiffStrings(s1.Value, s2.Value)
+					return *env.NewString(diff)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "difference")
+				}
+			case env.Block:
+				switch b2 := arg1.(type) {
+				case env.Block:
+					diff := util.DiffBlocks(ps, s1, b2)
+					return *env.NewBlock(*env.NewTSeries(diff))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "difference")
+				}
+			case env.List:
+				switch l2 := arg1.(type) {
+				case env.List:
+					diff := util.DiffLists(ps, s1, l2)
+					return *env.NewList(diff)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.ListType}, "difference")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType, env.ListType}, "difference")
 			}
 		},
 	},

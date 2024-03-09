@@ -4,6 +4,7 @@ package util
 import (
 	"fmt"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -203,32 +204,44 @@ func SplitEveryList(s []env.Object, chunkSize int) [][]env.Object {
 }
 
 func IntersectStrings(a string, b string) string {
-	res := ""
+	set := make(map[rune]bool)
+	var bu strings.Builder
 	for _, ch := range a {
-		if strings.Contains(b, string(ch)) && !strings.Contains(res, string(ch)) {
-			res = res + string(ch)
+		if strings.ContainsRune(b, ch) && !set[ch] {
+			bu.WriteRune(ch)
 		}
 	}
+	return bu.String()
+}
 
+func IntersectBlocks(ps *env.ProgramState, a env.Block, b env.Block) []env.Object {
+	set := make(map[env.Object]bool)
+	res := make([]env.Object, 0)
+	for _, v := range a.Series.S {
+		if ContainsVal(ps, b.Series.S, v) && !set[v] {
+			res = append(res, v)
+		}
+	}
 	return res
 }
 
-func IntersectLists(ps *env.ProgramState, a []env.Object, b []env.Object) []env.Object {
-	set := make([]env.Object, 0)
-	for _, v := range a {
-		if ContainsVal(ps, b, v) && !ContainsVal(ps, set, v) {
-			set = append(set, v)
+func IntersectLists(ps *env.ProgramState, a env.List, b env.List) []any {
+	set := make(map[any]bool)
+	res := make([]any, 0)
+	for _, v := range a.Data {
+		if slices.Contains(b.Data, v) && !set[v] {
+			res = append(res, v)
 		}
 	}
-	return set
+	return res
 }
 
-func UnionOfLists(ps *env.ProgramState, a []env.Object, b []env.Object) []env.Object {
+func UnionOfBlocks(ps *env.ProgramState, a env.Block, b env.Block) []env.Object {
 	elementMap := make(map[env.Object]bool)
-	for _, element := range a {
+	for _, element := range a.Series.S {
 		elementMap[element] = true
 	}
-	for _, element := range b {
+	for _, element := range b.Series.S {
 		elementMap[element] = true
 	}
 	mergedSlice := make([]env.Object, 0)
@@ -236,6 +249,57 @@ func UnionOfLists(ps *env.ProgramState, a []env.Object, b []env.Object) []env.Ob
 		mergedSlice = append(mergedSlice, element)
 	}
 	return mergedSlice
+}
+
+func UnionOfLists(ps *env.ProgramState, a env.List, b env.List) []any {
+	elementMap := make(map[any]bool)
+	for _, element := range a.Data {
+		elementMap[element] = true
+	}
+	for _, element := range b.Data {
+		elementMap[element] = true
+	}
+	mergedSlice := make([]any, 0)
+	for element := range elementMap {
+		mergedSlice = append(mergedSlice, element)
+	}
+	return mergedSlice
+}
+
+func DiffStrings(a string, b string) string {
+	set := make(map[rune]bool)
+	var bu strings.Builder
+	for _, ch := range a {
+		if !strings.ContainsRune(b, ch) && !set[ch] {
+			set[ch] = true
+			bu.WriteRune(ch)
+		}
+	}
+	return bu.String()
+}
+
+func DiffBlocks(ps *env.ProgramState, a env.Block, b env.Block) []env.Object {
+	set := make(map[env.Object]bool)
+	res := make([]env.Object, 0)
+	for _, v := range a.Series.S {
+		if !ContainsVal(ps, b.Series.S, v) && !set[v] {
+			set[v] = true
+			res = append(res, v)
+		}
+	}
+	return res
+}
+
+func DiffLists(ps *env.ProgramState, a env.List, b env.List) []any {
+	set := make(map[any]bool)
+	res := make([]any, 0)
+	for _, v := range a.Data {
+		if !slices.Contains(b.Data, v) && !set[v] {
+			set[v] = true
+			res = append(res, v)
+		}
+	}
+	return res
 }
 
 func SplitMulti(s string, seps string) []string {
