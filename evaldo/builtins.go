@@ -367,6 +367,25 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"to-decimal": { // ***
+		Argsn: 1,
+		Doc:   "Tries to change a Rye value (like string) to integer.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch addr := arg0.(type) {
+			case env.String:
+				floatVal, err := strconv.ParseFloat(addr.Value, 64)
+
+				if err != nil {
+					// Handle the error if the conversion fails (e.g., invalid format)
+					return MakeBuiltinError(ps, err.Error(), "to-decimal")
+				}
+				return *env.NewDecimal(float64(floatVal))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "to-integer")
+			}
+		},
+	},
+
 	"to-string": { // ***
 		Argsn: 1,
 		Doc:   "Tries to turn a Rye value to string.",
@@ -674,20 +693,21 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"save\\state": {
+	// TODO -- make save\\context ctx %file
+	"save\\current": {
 		Argsn: 0,
 		Doc:   "Saves current state of the program to a file.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			s := ps.Dump()
-			fileName := fmt.Sprintf("shell_%s.rye", time.Now().Format("060102_150405"))
+			fileName := fmt.Sprintf("console_%s.rye", time.Now().Format("060102_150405"))
 
 			err := os.WriteFile(fileName, []byte(s), 0600)
 			if err != nil {
 				ps.FailureFlag = true
 				return MakeBuiltinError(ps, fmt.Sprintf("error writing state: %s", err.Error()), "save\\state")
 			}
-			fmt.Println("State saved to \033[1m" + fileName + "\033[0m.")
+			fmt.Println("State current context to \033[1m" + fileName + "\033[0m.")
 			return *env.NewInteger(1)
 		},
 	},

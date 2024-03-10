@@ -96,12 +96,11 @@ func findLastConsoleSave() string {
 
 	files := make([]string, 0)
 
-	// Filter files starting with "shell_"
 	for _, entry := range entries {
 		if entry.IsDir() {
 			continue // Skip directories
 		}
-		if strings.HasPrefix(entry.Name(), "shell_") {
+		if strings.HasPrefix(entry.Name(), "console_") {
 			files = append(files, entry.Name())
 		}
 	}
