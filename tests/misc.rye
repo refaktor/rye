@@ -215,10 +215,13 @@ section "Functions that change values in-place"
 	
 	group "append!"
 	mold\nowrap ?append!
-	{ { word } { object } }
+	{ { word } { object } { list } }
 	{
 		equal { b: { 1 2 3 } , append! 4 'b , b } { 1 2 3 4 }
 		equal { b: { 1 2 3 } , append! { 4 5 } 'b , b } { 1 2 3 { 4 5 } }
+		equal { b: list { 3 4 } , append! list { 1 2 } 'b , b } list { 3 4 1 2 }
+		equal { append! "ab" "cd" } "cdab"
+		equal { append! { 3 4 } { 1 2 } } { 1 2 3 4 }
 	}
 
 	group "change\ nth!"
