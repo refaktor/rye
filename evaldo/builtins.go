@@ -6120,6 +6120,26 @@ var builtins = map[string]*env.Builtin{
 						oldval.Series = *s.Append(arg0)
 						ctx.Set(wrd.Index, oldval)
 						return oldval
+					case env.List:
+						dataSlice := make([]any, 0)
+						switch listData := arg0.(type) {
+						case env.List:
+							for _, v1 := range oldval.Data {
+								dataSlice = append(dataSlice, env.ToRyeValue(v1))
+							}
+							for _, v2 := range listData.Data {
+								dataSlice = append(dataSlice, env.ToRyeValue(v2))
+							}
+						default:
+							return makeError(ps, "Need to pass List of data")
+						}
+						combineList := make([]any, 0, len(dataSlice))
+						for _, v := range dataSlice {
+							combineList = append(combineList, env.ToRyeValue(v))
+						}
+						finalList := *env.NewList(combineList)
+						ctx.Set(wrd.Index, finalList)
+						return finalList
 					default:
 						return makeError(ps, "Type of tagword is not String or Block")
 					}
@@ -6128,8 +6148,16 @@ var builtins = map[string]*env.Builtin{
 			case env.Block:
 				s := &wrd.Series
 				wrd.Series = *s.Append(arg0)
-				//ctx.Set(wrd.Index, oldval)
-				return nil
+				return *env.NewBlock(wrd.Series)
+			case env.String:
+				finalStr := ""
+				switch str := arg0.(type) {
+				case env.String:
+					finalStr = wrd.Value + str.Value
+				case env.Integer:
+					finalStr = wrd.Value + strconv.Itoa(int(str.Value))
+				}
+				return *env.NewString(finalStr)
 			default:
 				return makeError(ps, "Value not tagword")
 			}
