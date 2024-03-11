@@ -49,7 +49,7 @@ Go over the various EvaluateExp functions and solve some confusion around them a
 
 Check what pops up of we profile a fibonnaci or a game of life example
 
-### Spreadsheet improvements
+### Spreadsheet improvements [++]
 
 Join two spreadsheets, do where with a regexp, regexp split into new columns or spreadsheet.
 
@@ -61,15 +61,16 @@ Try to make behaviour as complete as possible. Paste into shell doesn't work, So
 
 Save / edit with emacs / load back
 
-### Command inline mode
+### Command inline mode [+-]
 
 Maybe finally redo these flag handling and commands with a propper library
 
 ```
-rye cont --inline init  # continues the shell and runs init function
-rye . --inline init # runs main.rye and function init
-rye --inline print 123 + 123
+rye cont --do 'loop 3 { init }'      # implemented ... --do so it's more visible and explicit you are about to run something ... CLI injection? 
+rye . --do 'init'                    # TODO runs main.rye and function init
+rye --do 'print 123 + 123' --quit    # TODO
 ```
+
 ### Command interactive mode
 
 Load and do file and go to console after it (line cont, but any file, not saved state)
