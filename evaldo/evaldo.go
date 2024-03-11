@@ -510,8 +510,12 @@ func CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, toLeft
 			fnCtx = env.NewEnv(ps.PCtx)
 		} else {
 			if fn.Ctx != nil { // if context was defined at definition time, pass it as parent.
-				fn.Ctx.Parent = ctx
-				fnCtx = env.NewEnv(fn.Ctx)
+				if fn.InCtx {
+					fnCtx = fn.Ctx
+				} else {
+					fn.Ctx.Parent = ctx
+					fnCtx = env.NewEnv(fn.Ctx)
+				}
 			} else {
 				fnCtx = env.NewEnv(ctx)
 			}

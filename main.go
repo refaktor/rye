@@ -5,6 +5,7 @@ package main
 
 import (
 	"regexp"
+	"sort"
 
 	"github.com/refaktor/rye/contrib"
 
@@ -49,6 +50,9 @@ var CODE []any
 func main() {
 	evaldo.ShowResults = true
 
+	// TODO -- this is still handled totally ad-hoc because we are experimenting, but slowly it should
+	// be formalized and we should use a proper library to handle all cases consistently, offer standard help, etc
+
 	if len(os.Args) == 1 {
 		main_rye_repl(os.Stdin, os.Stdout, true, false)
 	} else if len(os.Args) == 2 {
@@ -59,9 +63,12 @@ func main() {
 		} else if os.Args[1] == "--hr" {
 			evaldo.ShowResults = false
 			main_rye_repl(os.Stdin, os.Stdout, true, false)
+		} else if os.Args[1] == "cont" {
+			ryeFile := findLastConsoleSave()
+			main_rye_file(ryeFile, false, true, true, "")
 		} else {
 			ryeFile := dotsToMainRye(os.Args[1])
-			main_rye_file(ryeFile, false, true)
+			main_rye_file(ryeFile, false, true, false, "")
 		}
 	} else if len(os.Args) >= 3 {
 		if os.Args[1] == "ryk" {
@@ -69,16 +76,51 @@ func main() {
 		} else if os.Args[1] == "--hr" {
 			ryeFile := dotsToMainRye(os.Args[2])
 			evaldo.ShowResults = false
-			main_rye_file(ryeFile, false, true)
+			main_rye_file(ryeFile, false, true, false, "")
 		} else if os.Args[1] == "cgi" {
 			main_cgi_file(os.Args[2], false)
 		} else if os.Args[1] == "sig" {
-			main_rye_file(os.Args[2], true, true)
+			main_rye_file(os.Args[2], true, true, false, "")
+		} else if os.Args[1] == "cont" {
+			ryeFile := findLastConsoleSave()
+			var code string
+			if os.Args[2] == "--do" {
+				code = os.Args[3]
+			}
+			main_rye_file(ryeFile, false, true, true, code)
 		} else {
 			ryeFile := dotsToMainRye(os.Args[1])
-			main_rye_file(ryeFile, false, true)
+			main_rye_file(ryeFile, false, true, false, "")
 		}
 	}
+}
+
+func findLastConsoleSave() string {
+	// Read directory entries
+	entries, err := os.ReadDir(".")
+	if err != nil {
+		fmt.Println("Error reading directory:", err) // TODO --- report better
+		return ""
+	}
+
+	files := make([]string, 0)
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue // Skip directories
+		}
+		if strings.HasPrefix(entry.Name(), "console_") {
+			files = append(files, entry.Name())
+		}
+	}
+
+	if len(files) == 0 {
+		return ""
+	}
+
+	sort.Strings(files)
+
+	return files[len(files)-1]
 }
 
 func dotsToMainRye(ryeFile string) string {
@@ -247,7 +289,7 @@ func main_ryeco() {
 
 }
 
-func main_rye_file(file string, sig bool, subc bool) {
+func main_rye_file(file string, sig bool, subc bool, interactive bool, code string) {
 	info := true
 	//util.PrintHeader()
 	//defer profile.Start(profile.CPUProfile).Stop()
@@ -271,7 +313,7 @@ func main_rye_file(file string, sig bool, subc bool) {
 		}
 	}
 
-	block, genv := loader.LoadString(content, sig)
+	block, genv := loader.LoadString(content+"\n"+code, sig)
 	switch val := block.(type) {
 	case env.Block:
 		es := env.NewProgramState(block.(env.Block).Series, genv)
@@ -285,6 +327,11 @@ func main_rye_file(file string, sig bool, subc bool) {
 
 		evaldo.EvalBlock(es)
 		evaldo.MaybeDisplayFailureOrError(es, genv)
+
+		if interactive {
+			evaldo.DoRyeRepl(es, evaldo.ShowResults)
+		}
+
 	case env.Error:
 		fmt.Println(val.Message)
 	}
@@ -334,7 +381,7 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool) {
 	// userHomeDir, _ := os.UserHomeDir()
 	// profile_path := filepath.Join(userHomeDir, ".rye-profile")
 
-	fmt.Println("Welcome to Rye shell. ls to list current or lsp or lsp\\ \"prin\" to list parent context.")
+	fmt.Println("Welcome to Rye console. Use ls for current or lsp or lsp\\ \"prin\" to list parent context.")
 
 	//if _, err := os.Stat(profile_path); err == nil {
 	//content, err := os.ReadFile(profile_path)

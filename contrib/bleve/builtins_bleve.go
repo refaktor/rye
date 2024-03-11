@@ -5,7 +5,6 @@ package bleve
 
 import (
 	"encoding/json"
-	"strings"
 
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/evaldo"
@@ -28,8 +27,8 @@ var Builtins_bleve = map[string]*env.Builtin{
 			case env.Native:
 				switch s := arg1.(type) {
 				case env.Uri:
-					path := strings.Split(s.Path, "://")
-					iindex, err := bleve.New(path[1], mpi.Value.(mapping.IndexMapping))
+					path := s.Path
+					iindex, err := bleve.New(path, mpi.Value.(mapping.IndexMapping))
 					if err != nil {
 						return evaldo.MakeError(ps, err.Error())
 					}
@@ -48,8 +47,8 @@ var Builtins_bleve = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Uri:
-				path := strings.Split(s.Path, "://")
-				iindex, err := bleve.Open(path[1])
+				path := s.Path
+				iindex, err := bleve.Open(path)
 				if err != nil {
 					return evaldo.MakeError(ps, err.Error())
 				}

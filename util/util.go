@@ -330,6 +330,18 @@ func RemoveDuplicate(ps *env.ProgramState, slice []env.Object) []env.Object {
 	return list
 }
 
+func TruncateString(s string, maxLen int) string {
+	s = strings.ReplaceAll(s, "\n", "\\-")
+	runes := []rune(s)
+	if len(runes) <= maxLen {
+		return s
+	}
+	if maxLen < 3 {
+		maxLen = 3
+	}
+	return string(runes[0:maxLen-3]) + "..."
+}
+
 /*
 func RemoveDuplicate[T comparable](sliceList []T) []T {
 	allKeys := make(map[T]bool)

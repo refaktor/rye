@@ -4,6 +4,7 @@ package evaldo
 
 import (
 	"encoding/csv"
+	"fmt"
 	"os"
 	"regexp"
 	"slices"
@@ -12,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/refaktor/rye/env"
+	"github.com/refaktor/rye/util"
 )
 
 var Builtins_spreadsheet = map[string]*env.Builtin{
@@ -188,6 +190,62 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+	"save\\csv": {
+		Argsn: 2,
+		Doc:   "Saves a spreadsheet to a .csv file.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch spr := arg0.(type) {
+			case env.Spreadsheet:
+				switch file := arg1.(type) {
+				case env.Uri:
+					// rows, err := db1.Value.(*sql.DB).Query(sqlstr, vals...)
+					f, err := os.Create(file.GetPath())
+					if err != nil {
+						// log.Fatal("Unable to read input file "+filePath, err)
+						return MakeBuiltinError(ps, "Unable to create input file.", "save\\csv")
+					}
+					defer f.Close()
+
+					cLen := len(spr.Cols)
+
+					csvWriter := csv.NewWriter(f)
+
+					err1 := csvWriter.Write(spr.Cols)
+					if err1 != nil {
+						return MakeBuiltinError(ps, "Unable to create write header.", "save\\csv")
+					}
+
+					for ir, row := range spr.Rows {
+						strVals := make([]string, cLen)
+						// TODO -- just adhoc ... move to a general function in utils RyeValsToString or something like it
+						for i, v := range row.Values {
+							var sv string
+							switch tv := v.(type) {
+							case env.String:
+								sv = tv.Value
+							case env.Integer:
+								sv = strconv.Itoa(int(tv.Value))
+							case env.Decimal:
+								sv = fmt.Sprintf("%f", tv.Value)
+							}
+							strVals[i] = sv
+						}
+						err := csvWriter.Write(strVals)
+						if err != nil {
+							return MakeBuiltinError(ps, "Unable to write line: "+strconv.Itoa(ir), "save\\csv")
+						}
+					}
+					csvWriter.Flush()
+					f.Close()
+					return spr
+				default:
+					return MakeArgError(ps, 1, []env.Type{env.UriType}, "save\\csv")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "save\\csv")
+			}
+		},
+	},
 	"where-equal": {
 		Argsn: 3,
 		Doc:   "Returns spreadsheet of rows where specific colum is equal to given value.",
@@ -245,9 +303,33 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 				case env.String:
 					switch col := arg1.(type) {
 					case env.Word:
-						return WhereContains(ps, spr, ps.Idx.GetWord(col.Index), s.Value)
+						return WhereContains(ps, spr, ps.Idx.GetWord(col.Index), s.Value, false)
 					case env.String:
-						return WhereContains(ps, spr, col.Value, s.Value)
+						return WhereContains(ps, spr, col.Value, s.Value, false)
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-contains")
+					}
+				default:
+					return MakeArgError(ps, 3, []env.Type{env.StringType}, "where-contains")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "where-contains")
+			}
+		},
+	},
+	"where-not-contains": {
+		Argsn: 3,
+		Doc:   "Returns spreadsheet of rows where specific colum contains a given string value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
+			switch spr := arg0.(type) {
+			case env.Spreadsheet:
+				switch s := arg2.(type) {
+				case env.String:
+					switch col := arg1.(type) {
+					case env.Word:
+						return WhereContains(ps, spr, ps.Idx.GetWord(col.Index), s.Value, true)
+					case env.String:
+						return WhereContains(ps, spr, col.Value, s.Value, true)
 					default:
 						return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-contains")
 					}
@@ -313,6 +395,30 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "where-between")
+			}
+		},
+	},
+	"where-in": {
+		Argsn: 3,
+		Doc:   "Returns spreadsheet of rows where specific colum value if found in block of values.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
+			switch spr := arg0.(type) {
+			case env.Spreadsheet:
+				switch s := arg2.(type) {
+				case env.Block:
+					switch col := arg1.(type) {
+					case env.Word:
+						return WhereIn(ps, spr, ps.Idx.GetWord(col.Index), s.Series.S)
+					case env.String:
+						return WhereIn(ps, spr, col.Value, s.Series.S)
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-in")
+					}
+				default:
+					return MakeArgError(ps, 3, []env.Type{env.StringType}, "where-in")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "where-in")
 			}
 		},
 	},
@@ -672,7 +778,7 @@ func WhereMatch(ps *env.ProgramState, s env.Spreadsheet, name string, r *regexp.
 	}
 }
 
-func WhereContains(ps *env.ProgramState, s env.Spreadsheet, name string, val string) env.Object {
+func WhereContains(ps *env.ProgramState, s env.Spreadsheet, name string, val string, not bool) env.Object {
 	idx := slices.Index(s.Cols, name)
 	nspr := env.NewSpreadsheet(s.Cols)
 	if idx > -1 {
@@ -680,8 +786,14 @@ func WhereContains(ps *env.ProgramState, s env.Spreadsheet, name string, val str
 			if len(row.Values) > idx {
 				rv := row.Values[idx]
 				if rvStr, ok := rv.(env.String); ok {
-					if strings.Contains(rvStr.Value, val) {
-						nspr.AddRow(row)
+					if !not {
+						if strings.Contains(rvStr.Value, val) {
+							nspr.AddRow(row)
+						}
+					} else {
+						if !strings.Contains(rvStr.Value, val) {
+							nspr.AddRow(row)
+						}
 					}
 				}
 			}
@@ -689,6 +801,26 @@ func WhereContains(ps *env.ProgramState, s env.Spreadsheet, name string, val str
 		return *nspr
 	} else {
 		return MakeBuiltinError(ps, "Column not found.", "WhereMatch")
+	}
+}
+
+func WhereIn(ps *env.ProgramState, s env.Spreadsheet, name string, b []env.Object) env.Object {
+	idx := slices.Index(s.Cols, name)
+	nspr := env.NewSpreadsheet(s.Cols)
+	if idx > -1 {
+		for _, row := range s.Rows {
+			if len(row.Values) > idx {
+				rv := row.Values[idx]
+				if rvObj, ok := rv.(env.Object); ok {
+					if util.ContainsVal(ps, b, rvObj) {
+						nspr.AddRow(row)
+					}
+				}
+			}
+		}
+		return *nspr
+	} else {
+		return MakeBuiltinError(ps, "Column not found.", "WhereIn")
 	}
 }
 

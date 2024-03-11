@@ -365,6 +365,25 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"to-decimal": { // ***
+		Argsn: 1,
+		Doc:   "Tries to change a Rye value (like string) to integer.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch addr := arg0.(type) {
+			case env.String:
+				floatVal, err := strconv.ParseFloat(addr.Value, 64)
+
+				if err != nil {
+					// Handle the error if the conversion fails (e.g., invalid format)
+					return MakeBuiltinError(ps, err.Error(), "to-decimal")
+				}
+				return *env.NewDecimal(floatVal)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "to-integer")
+			}
+		},
+	},
+
 	"to-string": { // ***
 		Argsn: 1,
 		Doc:   "Tries to turn a Rye value to string.",
@@ -672,20 +691,21 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"save\\state": {
+	// TODO -- make save\\context ctx %file
+	"save\\current": {
 		Argsn: 0,
 		Doc:   "Saves current state of the program to a file.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			s := ps.Dump()
-			fileName := fmt.Sprintf("shell_%s.rye", time.Now().Format("060102_150405"))
+			fileName := fmt.Sprintf("console_%s.rye", time.Now().Format("060102_150405"))
 
 			err := os.WriteFile(fileName, []byte(s), 0600)
 			if err != nil {
 				ps.FailureFlag = true
 				return MakeBuiltinError(ps, fmt.Sprintf("error writing state: %s", err.Error()), "save\\state")
 			}
-			fmt.Println("State saved to \033[1m" + fileName + "\033[0m.")
+			fmt.Println("State current context to \033[1m" + fileName + "\033[0m.")
 			return *env.NewInteger(1)
 		},
 	},
@@ -4791,7 +4811,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"fnc": {
+	"fnc": { // TODO -- fnc will maybe become fn\par context is set as parrent, fn\in will be executed directly in context
 		// a function with context	 bb: 10 add10 [ a ] context [ b: bb ] [ add a b ]
 		// 							add10 [ a ] this [ add a b ]
 		// later maybe			   add10 [ a ] [ b: b ] [ add a b ]
@@ -4806,7 +4826,69 @@ var builtins = map[string]*env.Builtin{
 				case env.RyeCtx:
 					switch body := arg2.(type) {
 					case env.Block:
-						return *env.NewFunctionC(args, body, &ctx, false)
+						return *env.NewFunctionC(args, body, &ctx, false, false)
+					default:
+						ps.ErrorFlag = true
+						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "fnc")
+					}
+				default:
+					ps.ErrorFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.CtxType}, "fnc")
+				}
+			default:
+				ps.ErrorFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "fnc")
+			}
+		},
+	},
+
+	"fn\\par": {
+		// a function with context	 bb: 10 add10 [ a ] context [ b: bb ] [ add a b ]
+		// 							add10 [ a ] this [ add a b ]
+		// later maybe			   add10 [ a ] [ b: b ] [ add a b ]
+		//  						   add10 [ a ] [ 'b ] [ add a b ]
+		Argsn: 3,
+		Doc:   "Creates a function with specific context.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch args := arg0.(type) {
+			case env.Block:
+				switch ctx := arg1.(type) {
+				case env.RyeCtx:
+					switch body := arg2.(type) {
+					case env.Block:
+						return *env.NewFunctionC(args, body, &ctx, false, false)
+					default:
+						ps.ErrorFlag = true
+						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "fnc")
+					}
+				default:
+					ps.ErrorFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.CtxType}, "fnc")
+				}
+			default:
+				ps.ErrorFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "fnc")
+			}
+		},
+	},
+
+	"fn\\in": {
+		// a function with context	 bb: 10 add10 [ a ] context [ b: bb ] [ add a b ]
+		// 							add10 [ a ] this [ add a b ]
+		// later maybe			   add10 [ a ] [ b: b ] [ add a b ]
+		//  						   add10 [ a ] [ 'b ] [ add a b ]
+		Argsn: 3,
+		Doc:   "Creates a function with specific context.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch args := arg0.(type) {
+			case env.Block:
+				switch ctx := arg1.(type) {
+				case env.RyeCtx:
+					switch body := arg2.(type) {
+					case env.Block:
+						return *env.NewFunctionC(args, body, &ctx, false, true)
 					default:
 						ps.ErrorFlag = true
 						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "fnc")
@@ -4836,7 +4918,7 @@ var builtins = map[string]*env.Builtin{
 			case env.Block:
 				switch body := arg1.(type) {
 				case env.Block:
-					return *env.NewFunctionC(args, body, ctx, false)
+					return *env.NewFunctionC(args, body, ctx, false, false)
 				default:
 					ps.ErrorFlag = true
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "fnc")
@@ -6967,6 +7049,39 @@ var builtins = map[string]*env.Builtin{
 			return nil
 		},
 	},
+
+	/* TODO: * whitelist only to http and https prefix
+	         * os\open is temp name, figure out where it belongs, maybe os module and subcontext
+			 * figure out which other functions would belong in os module and if it makes sense
+	 "os\\open": { // todo -- variation is not meant for grouping inside context ... just for function variations ... just temp to test
+		Argsn: 1,
+		Doc:   "",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s0 := arg0.(type) {
+			case env.Uri:
+
+				var err error
+				url := s0.GetFullUri(*ps.Idx)
+
+				switch runtime.GOOS {
+				case "linux":
+					err = exec.Command("xdg-open", url).Start()
+				case "windows":
+					err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+				case "darwin":
+					err = exec.Command("open", url).Start()
+				default:
+					err = fmt.Errorf("unsupported platform")
+				}
+				if err != nil {
+					log.Fatal(err)
+				}
+			default:
+				return makeError(ps, "Arg 1 should be String") // TODO - make proper error
+			}
+			return nil
+		},
+	}, */
 
 	"rye": {
 		Argsn: 0,
