@@ -1069,15 +1069,16 @@ type Function struct {
 	Ctx   *RyeCtx
 	Pure  bool
 	Doc   string
+	InCtx bool
 }
 
 func NewFunction(spec Block, body Block, pure bool) *Function {
-	o := Function{spec.Series.Len(), spec, body, nil, pure, ""}
+	o := Function{spec.Series.Len(), spec, body, nil, pure, "", false}
 	return &o
 }
 
-func NewFunctionC(spec Block, body Block, ctx *RyeCtx, pure bool) *Function {
-	o := Function{spec.Series.Len(), spec, body, ctx, pure, ""}
+func NewFunctionC(spec Block, body Block, ctx *RyeCtx, pure bool, inCtx bool) *Function {
+	o := Function{spec.Series.Len(), spec, body, ctx, pure, "", inCtx}
 	return &o
 }
 
@@ -1088,7 +1089,7 @@ func NewFunctionDoc(spec Block, body Block, pure bool, doc string) *Function {
 	} else {
 		argn = spec.Series.Len()
 	}
-	o := Function{argn, spec, body, nil, pure, doc}
+	o := Function{argn, spec, body, nil, pure, doc, false}
 	return &o
 }
 

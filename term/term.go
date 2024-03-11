@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/refaktor/rye/env"
+	"github.com/refaktor/rye/util"
 
 	"github.com/pkg/term"
 )
@@ -471,6 +472,9 @@ func DisplayTable(bloc env.Spreadsheet, idx *env.Idxs) (env.Object, bool) {
 			switch val := v.(type) {
 			case string:
 				ww = len(val) + 2
+				if ww > 52 {
+					ww = 52
+				}
 			case int64:
 				ww = len(strconv.Itoa(int(val))) + 1
 			case env.Integer:
@@ -481,6 +485,9 @@ func DisplayTable(bloc env.Spreadsheet, idx *env.Idxs) (env.Object, bool) {
 				ww = len(strconv.FormatFloat(val.Value, 'f', 2, 64)) + 1
 			case env.String:
 				ww = len(val.Print(*idx))
+				if ww > 52 {
+					ww = 52
+				}
 				//if ww > 60 {
 				// ww = 60
 				//}
@@ -525,7 +532,7 @@ DODO:
 				switch ob := v.(type) {
 				case env.Object:
 					if mode == 0 {
-						fmt.Printf("| %-"+strconv.Itoa(widths[ic])+"s", ob.Print(*idx))
+						fmt.Printf("| %-"+strconv.Itoa(widths[ic])+"s", util.TruncateString(ob.Print(*idx), widths[ic]))
 						//fmt.Print("| " +  + "\t")
 					} else {
 						fmt.Printf("| %-"+strconv.Itoa(widths[ic])+"s", ob.Inspect(*idx))

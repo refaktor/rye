@@ -232,7 +232,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 						}
 						err := csvWriter.Write(strVals)
 						if err != nil {
-							return MakeBuiltinError(ps, "Unable to write line: "+strconv.Itoa(int(ir)), "save\\csv")
+							return MakeBuiltinError(ps, "Unable to write line: "+strconv.Itoa(ir), "save\\csv")
 						}
 					}
 					csvWriter.Flush()

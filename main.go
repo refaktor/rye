@@ -4,7 +4,6 @@
 package main
 
 import (
-	"io/ioutil"
 	"regexp"
 	"sort"
 
@@ -51,6 +50,9 @@ var CODE []any
 func main() {
 	evaldo.ShowResults = true
 
+	// TODO -- this is still handled totally ad-hoc because we are experimenting, but slowly it should
+	// be formalized and we should use a proper library to handle all cases consistently, offer standard help, etc
+
 	if len(os.Args) == 1 {
 		main_rye_repl(os.Stdin, os.Stdout, true, false)
 	} else if len(os.Args) == 2 {
@@ -63,10 +65,10 @@ func main() {
 			main_rye_repl(os.Stdin, os.Stdout, true, false)
 		} else if os.Args[1] == "cont" {
 			ryeFile := findLastConsoleSave()
-			main_rye_file(ryeFile, false, true, true)
+			main_rye_file(ryeFile, false, true, true, "")
 		} else {
 			ryeFile := dotsToMainRye(os.Args[1])
-			main_rye_file(ryeFile, false, true, false)
+			main_rye_file(ryeFile, false, true, false, "")
 		}
 	} else if len(os.Args) >= 3 {
 		if os.Args[1] == "ryk" {
@@ -74,21 +76,28 @@ func main() {
 		} else if os.Args[1] == "--hr" {
 			ryeFile := dotsToMainRye(os.Args[2])
 			evaldo.ShowResults = false
-			main_rye_file(ryeFile, false, true, false)
+			main_rye_file(ryeFile, false, true, false, "")
 		} else if os.Args[1] == "cgi" {
 			main_cgi_file(os.Args[2], false)
 		} else if os.Args[1] == "sig" {
-			main_rye_file(os.Args[2], true, true, false)
+			main_rye_file(os.Args[2], true, true, false, "")
+		} else if os.Args[1] == "cont" {
+			ryeFile := findLastConsoleSave()
+			var code string
+			if os.Args[2] == "--do" {
+				code = os.Args[3]
+			}
+			main_rye_file(ryeFile, false, true, true, code)
 		} else {
 			ryeFile := dotsToMainRye(os.Args[1])
-			main_rye_file(ryeFile, false, true, false)
+			main_rye_file(ryeFile, false, true, false, "")
 		}
 	}
 }
 
 func findLastConsoleSave() string {
 	// Read directory entries
-	entries, err := ioutil.ReadDir(".")
+	entries, err := os.ReadDir(".")
 	if err != nil {
 		fmt.Println("Error reading directory:", err) // TODO --- report better
 		return ""
@@ -280,7 +289,7 @@ func main_ryeco() {
 
 }
 
-func main_rye_file(file string, sig bool, subc bool, interactive bool) {
+func main_rye_file(file string, sig bool, subc bool, interactive bool, code string) {
 	info := true
 	//util.PrintHeader()
 	//defer profile.Start(profile.CPUProfile).Stop()
@@ -304,7 +313,7 @@ func main_rye_file(file string, sig bool, subc bool, interactive bool) {
 		}
 	}
 
-	block, genv := loader.LoadString(content, sig)
+	block, genv := loader.LoadString(content+"\n"+code, sig)
 	switch val := block.(type) {
 	case env.Block:
 		es := env.NewProgramState(block.(env.Block).Series, genv)
@@ -326,7 +335,6 @@ func main_rye_file(file string, sig bool, subc bool, interactive bool) {
 	case env.Error:
 		fmt.Println(val.Message)
 	}
-
 }
 
 func main_cgi_file(file string, sig bool) {

@@ -379,7 +379,7 @@ var builtins = map[string]*env.Builtin{
 					// Handle the error if the conversion fails (e.g., invalid format)
 					return MakeBuiltinError(ps, err.Error(), "to-decimal")
 				}
-				return *env.NewDecimal(float64(floatVal))
+				return *env.NewDecimal(floatVal)
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "to-integer")
 			}
@@ -4813,7 +4813,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"fnc": {
+	"fnc": { // TODO -- fnc will maybe become fn\par context is set as parrent, fn\in will be executed directly in context
 		// a function with context	 bb: 10 add10 [ a ] context [ b: bb ] [ add a b ]
 		// 							add10 [ a ] this [ add a b ]
 		// later maybe			   add10 [ a ] [ b: b ] [ add a b ]
@@ -4828,7 +4828,69 @@ var builtins = map[string]*env.Builtin{
 				case env.RyeCtx:
 					switch body := arg2.(type) {
 					case env.Block:
-						return *env.NewFunctionC(args, body, &ctx, false)
+						return *env.NewFunctionC(args, body, &ctx, false, false)
+					default:
+						ps.ErrorFlag = true
+						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "fnc")
+					}
+				default:
+					ps.ErrorFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.CtxType}, "fnc")
+				}
+			default:
+				ps.ErrorFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "fnc")
+			}
+		},
+	},
+
+	"fn\\par": {
+		// a function with context	 bb: 10 add10 [ a ] context [ b: bb ] [ add a b ]
+		// 							add10 [ a ] this [ add a b ]
+		// later maybe			   add10 [ a ] [ b: b ] [ add a b ]
+		//  						   add10 [ a ] [ 'b ] [ add a b ]
+		Argsn: 3,
+		Doc:   "Creates a function with specific context.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch args := arg0.(type) {
+			case env.Block:
+				switch ctx := arg1.(type) {
+				case env.RyeCtx:
+					switch body := arg2.(type) {
+					case env.Block:
+						return *env.NewFunctionC(args, body, &ctx, false, false)
+					default:
+						ps.ErrorFlag = true
+						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "fnc")
+					}
+				default:
+					ps.ErrorFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.CtxType}, "fnc")
+				}
+			default:
+				ps.ErrorFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "fnc")
+			}
+		},
+	},
+
+	"fn\\in": {
+		// a function with context	 bb: 10 add10 [ a ] context [ b: bb ] [ add a b ]
+		// 							add10 [ a ] this [ add a b ]
+		// later maybe			   add10 [ a ] [ b: b ] [ add a b ]
+		//  						   add10 [ a ] [ 'b ] [ add a b ]
+		Argsn: 3,
+		Doc:   "Creates a function with specific context.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch args := arg0.(type) {
+			case env.Block:
+				switch ctx := arg1.(type) {
+				case env.RyeCtx:
+					switch body := arg2.(type) {
+					case env.Block:
+						return *env.NewFunctionC(args, body, &ctx, false, true)
 					default:
 						ps.ErrorFlag = true
 						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "fnc")
@@ -4858,7 +4920,7 @@ var builtins = map[string]*env.Builtin{
 			case env.Block:
 				switch body := arg1.(type) {
 				case env.Block:
-					return *env.NewFunctionC(args, body, ctx, false)
+					return *env.NewFunctionC(args, body, ctx, false, false)
 				default:
 					ps.ErrorFlag = true
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "fnc")
@@ -7014,7 +7076,7 @@ var builtins = map[string]*env.Builtin{
 					log.Fatal(err)
 				}
 			default:
-				return makeError(ps, "Arg 1 should be String") // TODO - make propper error
+				return makeError(ps, "Arg 1 should be String") // TODO - make proper error
 			}
 			return nil
 		},
