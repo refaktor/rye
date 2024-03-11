@@ -5,13 +5,11 @@ import (
 	"crypto/rand"
 	"fmt"
 	"io"
-	"log"
 	"math"
 	"math/big"
 	"os"
 	"os/exec"
 	"reflect"
-	"runtime"
 	"sort"
 
 	"github.com/refaktor/rye/env"
@@ -7052,7 +7050,10 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"os\\open": { // todo -- variation is not meant for grouping inside context ... just for function variations ... just temp to test
+	/* TODO: * whitelist only to http and https prefix
+	         * os\open is temp name, figure out where it belongs, maybe os module and subcontext
+			 * figure out which other functions would belong in os module and if it makes sense
+	 "os\\open": { // todo -- variation is not meant for grouping inside context ... just for function variations ... just temp to test
 		Argsn: 1,
 		Doc:   "",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -7080,7 +7081,7 @@ var builtins = map[string]*env.Builtin{
 			}
 			return nil
 		},
-	},
+	}, */
 
 	"rye": {
 		Argsn: 0,
