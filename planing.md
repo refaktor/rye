@@ -51,7 +51,17 @@ Check what pops up of we profile a fibonnaci or a game of life example
 
 ### Spreadsheet improvements [++]
 
-Join two spreadsheets, do where with a regexp, regexp split into new columns or spreadsheet.
+```
+where-match (regex), wher-contains (string), save\csv, where-in
+```
+
+### More spreadsheet []
+
+Creates a new spreadsheet with category column, each category once and agregated values from a block.
+```
+group-by 'category { price: sum  age: avg }
+```
+same could be later added for multifield where.
 
 ### Web console - make complete
 
