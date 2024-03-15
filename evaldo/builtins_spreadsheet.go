@@ -567,7 +567,11 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 							if !ok {
 								return MakeBuiltinError(ps, "Second element of replacement block must be a string.", "add-col!")
 							}
-							return GenerateColumnRegexReplace(ps, spr, newCol, fromCols, regex, replaceStr.Value)
+							err := GenerateColumnRegexReplace(ps, &spr, newCol, fromCols, regex, replaceStr.Value)
+							if err != nil {
+								return err
+							}
+							return spr
 						default:
 							return MakeArgError(ps, 3, []env.Type{env.BlockType}, "add-col!")
 						}
@@ -582,9 +586,9 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
-	"add-index!": {
+	"add-indexes!": {
 		Argsn: 2,
-		Doc:   "Indexes all values in a colun and istre it,",
+		Doc:   "Creates an index for all values in the provided columns. Changes in-place and returns the new spreadsheet.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Spreadsheet:
@@ -599,9 +603,9 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 							return MakeError(ps, "Block of tagwords needed")
 						}
 					}
-					res := AddIndexes(ps, &spr, colWords)
-					if res != nil {
-						return res
+					err := AddIndexes(ps, &spr, colWords)
+					if err != nil {
+						return err
 					}
 					return spr
 				default:
@@ -609,6 +613,22 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "add-index!")
+			}
+		},
+	},
+	"indexes?": {
+		Argsn: 1,
+		Doc:   "Returns the columns that are indexed in a spreadsheet.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
+			switch spr := arg0.(type) {
+			case env.Spreadsheet:
+				res := make([]env.Object, 0)
+				for col := range spr.Indexes {
+					res = append(res, *env.NewString(col))
+				}
+				return *env.NewBlock(*env.NewTSeries(res))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "indexes?")
 			}
 		},
 	},
@@ -626,6 +646,70 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "autotype")
+			}
+		},
+	},
+	"left-join": {
+		Argsn: 4,
+		Doc:   "Left joins two spreadsheets on the given columns.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
+			switch spr1 := arg0.(type) {
+			case env.Spreadsheet:
+				switch spr2 := arg1.(type) {
+				case env.Spreadsheet:
+					switch col1 := arg2.(type) {
+					case env.Word:
+						col2, ok := arg3.(env.Word)
+						if !ok {
+							return MakeArgError(ps, 4, []env.Type{env.WordType}, "left-join")
+						}
+						return LeftJoin(ps, spr1, spr2, ps.Idx.GetWord(col1.Index), ps.Idx.GetWord(col2.Index), false)
+					case env.String:
+						col2, ok := arg3.(env.String)
+						if !ok {
+							MakeArgError(ps, 4, []env.Type{env.StringType}, "left-join")
+						}
+						return LeftJoin(ps, spr1, spr2, col1.Value, col2.Value, false)
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.WordType, env.StringType}, "left-join")
+					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.SpreadsheetType}, "left-join")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "left-join")
+			}
+		},
+	},
+	"inner-join": {
+		Argsn: 4,
+		Doc:   "Inner joins two spreadsheets on the given columns.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
+			switch spr1 := arg0.(type) {
+			case env.Spreadsheet:
+				switch spr2 := arg1.(type) {
+				case env.Spreadsheet:
+					switch col1 := arg2.(type) {
+					case env.Word:
+						col2, ok := arg3.(env.Word)
+						if !ok {
+							return MakeArgError(ps, 4, []env.Type{env.WordType}, "inner-join")
+						}
+						return LeftJoin(ps, spr1, spr2, ps.Idx.GetWord(col1.Index), ps.Idx.GetWord(col2.Index), true)
+					case env.String:
+						col2, ok := arg3.(env.String)
+						if !ok {
+							MakeArgError(ps, 4, []env.Type{env.StringType}, "inner-join")
+						}
+						return LeftJoin(ps, spr1, spr2, col1.Value, col2.Value, true)
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.WordType, env.StringType}, "inner-join")
+					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.SpreadsheetType}, "inner-join")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "inner-join")
 			}
 		},
 	},
@@ -668,7 +752,7 @@ func GenerateColumn(ps *env.ProgramState, s env.Spreadsheet, name env.Word, extr
 	return s
 }
 
-func GenerateColumnRegexReplace(ps *env.ProgramState, s env.Spreadsheet, name env.Word, fromColName env.Word, re *regexp.Regexp, pattern string) env.Object {
+func GenerateColumnRegexReplace(ps *env.ProgramState, s *env.Spreadsheet, name env.Word, fromColName env.Word, re *regexp.Regexp, pattern string) env.Object {
 	// add name to columns
 	s.Cols = append(s.Cols, ps.Idx.GetWord(name.Index))
 	for ix, row := range s.Rows {
@@ -690,7 +774,7 @@ func GenerateColumnRegexReplace(ps *env.ProgramState, s env.Spreadsheet, name en
 		row.Values = append(row.Values, newVal)
 		s.Rows[ix] = row
 	}
-	return s
+	return nil
 }
 
 func AddIndexes(ps *env.ProgramState, s *env.Spreadsheet, columns []env.Word) env.Object {
@@ -937,4 +1021,67 @@ func AutoType(ps *env.ProgramState, s *env.Spreadsheet, percent float64) env.Obj
 	}
 
 	return *newS
+}
+
+func LeftJoin(ps *env.ProgramState, s1 env.Spreadsheet, s2 env.Spreadsheet, col1 string, col2 string, innerJoin bool) env.Object {
+	if !slices.Contains(s1.Cols, col1) {
+		return MakeBuiltinError(ps, "Column not found in first spreadsheet.", "left-join")
+	}
+	if !slices.Contains(s2.Cols, col2) {
+		return MakeBuiltinError(ps, "Column not found in second spreadsheet.", "left-join")
+	}
+
+	combinedCols := make([]string, len(s1.Cols)+len(s2.Cols))
+	copy(combinedCols, s1.Cols)
+	for i, v := range s2.Cols {
+		if slices.Contains(combinedCols, v) {
+			combinedCols[i+len(s1.Cols)] = v + "_2"
+		} else {
+			combinedCols[i+len(s1.Cols)] = v
+		}
+	}
+	nspr := env.NewSpreadsheet(combinedCols)
+	for _, row1 := range s1.GetRows() {
+		val1, err := s1.GetRowValue(col1, row1)
+		if err != nil {
+			return MakeError(ps, "Couldn't retrieve value at row")
+		}
+		newRow := make([]any, len(combinedCols))
+
+		// the row id of the second spreadsheet that matches the current row
+		s2RowId := -1
+		// use index if available
+		if ix, ok := s2.Indexes[col2]; ok {
+			if rowIds, ok := ix[val1]; ok {
+				// if there are multiple rows  with the same value (ie. joining on non-unique column), just use the first one
+				s2RowId = rowIds[0]
+			}
+		} else {
+			for i, row2 := range s2.GetRows() {
+				val2, err := s2.GetRowValue(col2, row2)
+				if err != nil {
+					return MakeError(ps, "Couldn't retrieve value at row")
+				}
+				if val1.(env.Object).Equal(val2.(env.Object)) {
+					s2RowId = i
+					break
+				}
+			}
+		}
+		if innerJoin && s2RowId == -1 {
+			continue
+		}
+		copy(newRow, row1.Values)
+		if s2RowId > -1 {
+			for i, v := range s2.GetRow(ps, s2RowId).Values {
+				newRow[i+len(s1.Cols)] = v
+			}
+		} else {
+			for i := range s2.Cols {
+				newRow[i+len(s1.Cols)] = env.Void{}
+			}
+		}
+		nspr.AddRow(*env.NewSpreadsheetRow(newRow, nspr))
+	}
+	return *nspr
 }

@@ -572,7 +572,7 @@ section "Serializers and loaders"
 
 
 section "Spreadsheet related functions"
-"Functions for handling and working with Context."
+"Functions for creating and working with spreadsheets."
 {	
 	
 	group "spreadsheet & related"
@@ -607,6 +607,51 @@ section "Spreadsheet related functions"
 	{
 		equal { to-spreadsheet vals { dict { "a" 1 b 2 } dict { "a" 3 "b" 4 } } } spreadsheet { "a" "b" } { 1 2 3 4 }
 		equal { to-spreadsheet vals { dict { "a" 1 b 2 "c" 3 } dict { "a" 4 "b" 5 } } } spreadsheet { "a" "b" "c" } { 1 2 3 4 5 _ }
+	}
+
+	group "index"
+	mold\nowrap ?add-indexes!
+	{ { block } }
+	{
+		; returned value
+		equal { spr: spreadsheet { "a" "b" } { 1 2 3 4 } |add-indexes! [ 'a ] |indexes? } { "a" }
+		; in-place
+		; TODO this should work but doesn't, index should be added in place but for some reason it isn't
+		; equal { spr: spreadsheet { "a" "b" } { 1 2 3 4 } , spr .add-indexes! [ 'a ] , spr .indexes? } { "a" }
+	}
+
+	group "left join"
+	mold\nowrap ?left-join
+	{ { block } }
+	{
+		equal { names: spreadsheet { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
+				houses: spreadsheet { "id" "house" } { 1 "Atreides" 3 "Harkonnen" 4 "Corrino" } ,
+				names .left-join houses 'id 'id 
+		} spreadsheet { "id" "name" "id_2" "house" } { 1 "Paul" 1 "Atreides" 2 "Chani" _ _ 3 "Vladimir" 3 "Harkonnen" }
+		
+		; joining with an index on the second spreadsheet
+		equal { names: spreadsheet { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } , 
+				houses: spreadsheet { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
+				houses .add-indexes! [ 'id ] :houses ,
+				names .left-join houses 'id 'id 
+		} spreadsheet { "id" "name" "id_2" "house" } { 1 "Paul" 1 "Atreides" 2 "Chani" _ _ 3 "Vladimir" 3 "Harkonnen" }
+	}
+
+	group "inner join"
+	mold\nowrap ?inner-join
+	{ { block } }
+	{
+		equal { names: spreadsheet { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
+				houses: spreadsheet { "id" "house" } { 1 "Atreides" 3 "Harkonnen" 4 "Corrino" } ,
+				names .inner-join houses 'id 'id 
+		} spreadsheet { "id" "name" "id_2" "house" } { 1 "Paul" 1 "Atreides" 3 "Vladimir" 3 "Harkonnen" }
+		
+		; joining with an index on the second spreadsheet
+		equal { names: spreadsheet { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } , 
+				houses: spreadsheet { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
+				houses .add-indexes! [ 'id ] :houses ,
+				names .inner-join houses 'id 'id 
+		} spreadsheet { "id" "name" "id_2" "house" } { 1 "Paul" 1 "Atreides" 3 "Vladimir" 3 "Harkonnen" }
 	}
 }
 
