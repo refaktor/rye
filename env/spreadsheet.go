@@ -201,7 +201,7 @@ func (s Spreadsheet) Columns(ps *ProgramState, names []string) Object {
 	return *nspr
 }
 
-func (s Spreadsheet) GetRow(ps *ProgramState, index int) Object {
+func (s Spreadsheet) GetRow(ps *ProgramState, index int) SpreadsheetRow {
 	row := s.Rows[index]
 	row.Uplink = &s
 	return row
