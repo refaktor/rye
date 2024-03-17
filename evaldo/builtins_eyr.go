@@ -88,7 +88,7 @@ func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toL
 
 		arg1 = stack.Pop()
 		if bi.Argsn == 2 {
-			ps.Res = bi.Fn(ps, arg0, arg1, nil, nil, nil)
+			ps.Res = bi.Fn(ps, arg1, arg0, nil, nil, nil)
 			stack.Push(ps.Res)
 		}
 	}
@@ -149,6 +149,8 @@ func Eyr_EvalExpression(es *env.ProgramState, stack *EyrStack) *env.ProgramState
 	if object != nil {
 		switch object.Type() {
 		case env.IntegerType:
+			stack.Push(object)
+		case env.DecimalType:
 			stack.Push(object)
 		case env.StringType:
 			stack.Push(object)
