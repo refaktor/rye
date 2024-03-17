@@ -62,7 +62,7 @@ var (
 func main() {
 	flag.Usage = func() {
 		fmt.Println("╭────────────────────────────────────────────────────────────────╮")
-		fmt.Println("│ \033[1mRye\033[0m language. Visit \033[36mhttps://ryelang.org\033[0m to find out more.      │")
+		fmt.Println("│ \033[1mRye\033[0m language. Visit \033[36mhttps://ryelang.org\033[0m to learn more.         │")
 		fmt.Println("╰────────────────────────────────────────────────────────────────╯")
 		fmt.Println("\n Usage: \033[1mrye\033[0m [\033[1mfilename\033[0m or \033[1mcommand\033[0m] [\033[1moptions\033[0m]")
 		fmt.Println("\n To enter \033[1mRye console\033[0m provide no filename or command.")

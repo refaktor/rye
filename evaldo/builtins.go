@@ -1527,8 +1527,10 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// fmt.Println()
 			str := arg0.Print(*env1.Idx)
-			if str[0] == '{' || str[0] == '[' {
-				str = str[1 : len(str)-1]
+			if len(str) > 0 {
+				if str[0] == '{' || str[0] == '[' {
+					str = str[1 : len(str)-1]
+				}
 			}
 			str = strings.ReplaceAll(str, "._", "")  // temporary solution for special op-words
 			str = strings.ReplaceAll(str, "|_", "|") // temporary solution for special op-words
@@ -7207,7 +7209,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_ps, ps, "ps")
 	RegisterBuiltins2(Builtins_json, ps, "json")
 	RegisterBuiltins2(Builtins_stackless, ps, "stackless")
-	RegisterBuiltinsInContext(Builtins_eyr, ps, "eyr")
+	RegisterBuiltins2(Builtins_eyr, ps, "eyr")
 	RegisterBuiltins2(Builtins_conversion, ps, "conversion")
 	RegisterBuiltins2(Builtins_http, ps, "http")
 	RegisterBuiltins2(Builtins_crypto, ps, "crypto")

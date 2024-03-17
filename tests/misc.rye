@@ -286,4 +286,61 @@ section "Date and time functions"
 
 ;	TODO	equal { list { 3 4 5 6 } |map { .factor-of 3 } } list { 1 0 0 1 } 
 
+section "Math functions"
+""
+{
+	
+	group "mod"
+	mold\nowrap "" ; TODO -- get word out of context doesn't work ... should we add it? , same for op and pipe words
+	{ { integer decimal } { integer decimal } }
+	{
+		equal { math/mod 10 3 } 1.0
+		equal { math/mod 14 5 } 4.0
+	}
+
+	group "log2"
+	mold\nowrap "" ; TODO -- get word out of context doesn't work ... should we add it? , same for op and pipe words
+	{ { integer decimal } }
+	{
+		equal { math/log2 4 } 2.0
+		equal { math/log2 32 } 5.0
+	}
+
+	group "sin"
+	mold\nowrap "" ; TODO -- get word out of context doesn't work ... should we add it? , same for op and pipe words
+	{ { string } }
+	{
+		equal { do\in math { sin pi |near-zero } } 1
+		equal { do\in math { sin pi / 2 |is-near 1.0 } } 1
+	}
+
+	group "cos"
+	mold\nowrap "" ; TODO -- get word out of context doesn't work ... should we add it? , same for op and pipe words
+	{ { string } }
+	{
+		equal { do\in math { cos pi |is-near -1.0 } } 1
+		equal { do\in math { cos pi / 2 |near-zero } } 1
+	}
+
+	group "sqrt"
+	mold\nowrap "" ; TODO -- get word out of context doesn't work ... should we add it? , same for op and pipe words
+	{ { string } }
+	{
+		equal { do\in math { sqrt 144 } } 12.0
+		equal { do\in math { sqrt 9.0 } } 3.0
+	}
+
+	group "abs"
+	mold\nowrap "" ; TODO -- get word out of context doesn't work ... should we add it? , same for op and pipe words
+	{ { string } }
+	{
+		equal { do\in math { abs -100 } } 100.0
+		equal { do\in math { abs 99.0 } } 99.0
+	}
+
+	; TODO add sin and cos ... need PI constant
+	
+}
+
+
 end
