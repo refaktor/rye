@@ -1118,7 +1118,7 @@ var builtins = map[string]*env.Builtin{
 						ps.FailureFlag = true
 						return MakeBuiltinError(ps, "Can't divide by Zero.", "_/")
 					}
-					return *env.NewInteger(a.Value / b.Value)
+					return *env.NewDecimal(float64(a.Value) / float64(b.Value))
 				case env.Decimal:
 					if b.Value == 0.0 {
 						ps.FailureFlag = true
@@ -6873,9 +6873,9 @@ var builtins = map[string]*env.Builtin{
 			case env.Vector:
 				return *env.NewInteger(int64(s1.Value.Len()))
 			default:
-				fmt.Println("Error")
+				fmt.Println(s1)
+				return MakeArgError(ps, 2, []env.Type{env.StringType, env.DictType, env.ListType, env.BlockType, env.SpreadsheetType, env.VectorType}, "range")
 			}
-			return nil
 		},
 	},
 	"ncols": {

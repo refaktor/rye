@@ -4,6 +4,7 @@
 package main
 
 import (
+	"flag"
 	"regexp"
 	"sort"
 
@@ -47,7 +48,75 @@ var CODE []any
 // main function. Dispatches to appropriate mode function
 //
 
+// NEW FLASGS HANDLING
+
+var (
+	// fileName = flag.String("file", "", "Path to the Rye file (default: none)")
+	do     = flag.String("do", "", "Evaluates code after it loads a file or last save.")
+	silent = flag.Bool("silent", false, "Console doesn't display return values")
+	//	quit    = flag.Bool("quit", false, "Quits after executing.")
+	console = flag.Bool("console", false, "Enters console after a file is evaluated.")
+	help    = flag.Bool("help", false, "Displays this help message.")
+)
+
 func main() {
+	flag.Usage = func() {
+		fmt.Println("╭────────────────────────────────────────────────────────────────╮")
+		fmt.Println("│ \033[1mRye\033[0m language. Visit \033[36mhttps://ryelang.org\033[0m to find out more.      │")
+		fmt.Println("╰────────────────────────────────────────────────────────────────╯")
+		fmt.Println("\n Usage: \033[1mrye\033[0m [\033[1mfilename\033[0m or \033[1mcommand\033[0m] [\033[1moptions\033[0m]")
+		fmt.Println("\n To enter \033[1mRye console\033[0m provide no filename or command.")
+		fmt.Println("\n \033[1mFilename:\033[0m (optional)")
+		fmt.Println("  [filename]   \n       Executes a Rye file")
+		fmt.Println("  .            \n       Executes a main.rye in current directory")
+		fmt.Println("  [some/path]/.\n       Executes a main.rye on some path")
+		fmt.Println("\n \033[1mCommands:\033[0m (optional)")
+		fmt.Println("  cont\n     Continue console from the last save")
+		fmt.Println("  here\n     Starts in Rye here mode")
+		fmt.Println("\n \033[1mOptions\033[0m (optional)")
+		flag.PrintDefaults()
+		fmt.Println("")
+	}
+	// Parse flags
+	flag.Parse()
+
+	evaldo.ShowResults = !*silent
+
+	// Check for --help flag
+	if flag.NFlag() == 0 && flag.NArg() == 0 {
+		main_rye_repl(os.Stdin, os.Stdout, true, false)
+	} else {
+		// Check for --help flag
+		if *help {
+			flag.Usage()
+			os.Exit(0)
+		}
+
+		// Check for subcommands (cont) and handle them
+		if flag.NArg() > 0 {
+			if os.Args[1] == "cont" {
+				fmt.Println("CONT")
+				var code string
+				if *do != "" {
+					code = *do
+				}
+				ryeFile := findLastConsoleSave()
+				main_rye_file(ryeFile, false, true, true, code)
+			} else if os.Args[1] == "here" {
+				main_rye_repl(os.Stdin, os.Stdout, true, true)
+			} else {
+				ryeFile := dotsToMainRye(os.Args[1])
+				main_rye_file(ryeFile, false, true, *console, "")
+			}
+		} else {
+			main_rye_repl(os.Stdin, os.Stdout, true, false)
+		}
+	}
+}
+
+// END OF NEW FLAGS
+
+func main_OLD() {
 	evaldo.ShowResults = true
 
 	// TODO -- this is still handled totally ad-hoc because we are experimenting, but slowly it should
@@ -60,7 +129,7 @@ func main() {
 			main_rysh()
 		} else if os.Args[1] == "here" {
 			main_rye_repl(os.Stdin, os.Stdout, true, true)
-		} else if os.Args[1] == "--hr" {
+		} else if os.Args[1] == "--silent" {
 			evaldo.ShowResults = false
 			main_rye_repl(os.Stdin, os.Stdout, true, false)
 		} else if os.Args[1] == "cont" {
@@ -73,7 +142,7 @@ func main() {
 	} else if len(os.Args) >= 3 {
 		if os.Args[1] == "ryk" {
 			main_ryk()
-		} else if os.Args[1] == "--hr" {
+		} else if os.Args[1] == "--silent" {
 			ryeFile := dotsToMainRye(os.Args[2])
 			evaldo.ShowResults = false
 			main_rye_file(ryeFile, false, true, false, "")

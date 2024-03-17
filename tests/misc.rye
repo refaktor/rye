@@ -144,7 +144,7 @@ section "Failure handling functions"
 	{ }
 	{
 		equal { 100 / 0 |fix { 99 } |+ 1 } 100
-		equal { 100 / 1 |fix { 99 } |+ 1 } 101
+		equal { 100 / 1 |fix { 99 } |+ 1 } 101.0000
 	}
 
 	group "assert-equal"
