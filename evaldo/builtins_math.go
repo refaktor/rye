@@ -82,7 +82,7 @@ func DialectMath(env1 *env.ProgramState, arg0 env.Object) env.Object {
 var Builtins_math = map[string]*env.Builtin{
 
 	"mod": {
-		Argsn: 1,
+		Argsn: 2,
 		Doc:   "Return a decimal remainder.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch a := arg0.(type) {
@@ -152,6 +152,8 @@ var Builtins_math = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
+				return *env.NewDecimal(float64(math.Abs(float64(val.Value))))
+			case env.Decimal:
 				return *env.NewDecimal(float64(math.Abs(float64(val.Value))))
 			}
 			return nil // TODO
