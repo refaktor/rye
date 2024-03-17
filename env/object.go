@@ -146,8 +146,13 @@ func (i Decimal) GetKind() int {
 
 func (i Decimal) Equal(o Object) bool {
 	if i.Type() != o.Type() {
+		fmt.Println(i.Type())
+		fmt.Println(o.Type())
+		fmt.Println("TYPES")
 		return false
 	}
+	fmt.Println(i.Value)
+	fmt.Println(o.(Decimal).Value)
 	return i.Value == o.(Decimal).Value
 }
 

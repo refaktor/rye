@@ -57,8 +57,8 @@ func (s *EyrStack) Pop() env.Object {
 }
 
 func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft bool, stack *EyrStack) *env.ProgramState {
-	arg0 := bi.Cur0 //env.Object(bi.Cur0)
-	arg1 := bi.Cur1
+	arg0 := bi.Cur0     //env.Object(bi.Cur0)
+	var arg1 env.Object // := bi.Cur1
 
 	if bi.Argsn > 0 && bi.Cur0 == nil {
 		//fmt.Println(" ARG 1 ")
@@ -71,6 +71,10 @@ func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toL
 			return ps
 		}
 		arg0 = stack.Pop()
+		if bi.Argsn == 1 {
+			ps.Res = bi.Fn(ps, arg0, nil, nil, nil, nil)
+			stack.Push(ps.Res)
+		}
 	}
 	if bi.Argsn > 1 && bi.Cur1 == nil {
 		//evalExprFn(ps, true) // <---- THESE DETERMINE IF IT CONSUMES WHOLE EXPRESSION OR NOT IN CASE OF PIPEWORDS .. HM*... MAYBE WOULD COULD HAVE A WORD MODIFIER?? a: 2 |add 5 a:: 2 |add 5 print* --TODO
@@ -83,10 +87,11 @@ func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toL
 		//fmt.Println(ps.Res)
 
 		arg1 = stack.Pop()
+		if bi.Argsn == 2 {
+			ps.Res = bi.Fn(ps, arg1, arg0, nil, nil, nil)
+			stack.Push(ps.Res)
+		}
 	}
-	ps.Res = bi.Fn(ps, arg1, arg0, nil, nil, nil)
-
-	stack.Push(ps.Res)
 	return ps
 }
 
@@ -144,6 +149,8 @@ func Eyr_EvalExpression(es *env.ProgramState, stack *EyrStack) *env.ProgramState
 	if object != nil {
 		switch object.Type() {
 		case env.IntegerType:
+			stack.Push(object)
+		case env.DecimalType:
 			stack.Push(object)
 		case env.StringType:
 			stack.Push(object)

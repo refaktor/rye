@@ -1118,7 +1118,7 @@ var builtins = map[string]*env.Builtin{
 						ps.FailureFlag = true
 						return MakeBuiltinError(ps, "Can't divide by Zero.", "_/")
 					}
-					return *env.NewInteger(a.Value / b.Value)
+					return *env.NewDecimal(float64(a.Value) / float64(b.Value))
 				case env.Decimal:
 					if b.Value == 0.0 {
 						ps.FailureFlag = true
@@ -1527,8 +1527,10 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// fmt.Println()
 			str := arg0.Print(*env1.Idx)
-			if str[0] == '{' || str[0] == '[' {
-				str = str[1 : len(str)-1]
+			if len(str) > 0 {
+				if str[0] == '{' || str[0] == '[' {
+					str = str[1 : len(str)-1]
+				}
 			}
 			str = strings.ReplaceAll(str, "._", "")  // temporary solution for special op-words
 			str = strings.ReplaceAll(str, "|_", "|") // temporary solution for special op-words
@@ -6873,9 +6875,9 @@ var builtins = map[string]*env.Builtin{
 			case env.Vector:
 				return *env.NewInteger(int64(s1.Value.Len()))
 			default:
-				fmt.Println("Error")
+				fmt.Println(s1)
+				return MakeArgError(ps, 2, []env.Type{env.StringType, env.DictType, env.ListType, env.BlockType, env.SpreadsheetType, env.VectorType}, "range")
 			}
-			return nil
 		},
 	},
 	"ncols": {
@@ -7207,7 +7209,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_ps, ps, "ps")
 	RegisterBuiltins2(Builtins_json, ps, "json")
 	RegisterBuiltins2(Builtins_stackless, ps, "stackless")
-	RegisterBuiltinsInContext(Builtins_eyr, ps, "eyr")
+	RegisterBuiltins2(Builtins_eyr, ps, "eyr")
 	RegisterBuiltins2(Builtins_conversion, ps, "conversion")
 	RegisterBuiltins2(Builtins_http, ps, "http")
 	RegisterBuiltins2(Builtins_crypto, ps, "crypto")
@@ -7223,7 +7225,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_bson, ps, "bson")
 	RegisterBuiltins2(Builtins_smtpd, ps, "smtpd")
 	RegisterBuiltins2(Builtins_mail, ps, "mail")
-	RegisterBuiltins2(Builtins_math, ps, "math")
+	RegisterBuiltinsInContext(Builtins_math, ps, "math")
 	// ## Archived modules
 	// RegisterBuiltins2(Builtins_gtk, ps, "gtk")
 	// RegisterBuiltins2(Builtins_nats, ps, "nats")
