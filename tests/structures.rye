@@ -653,6 +653,23 @@ section "Spreadsheet related functions"
 				names .inner-join houses 'id 'id 
 		} spreadsheet { "id" "name" "id_2" "house" } { 1 "Paul" 1 "Atreides" 3 "Vladimir" 3 "Harkonnen" }
 	}
+
+	group "group by"
+	mold\nowrap ?group-by
+	{ { block } }
+	{
+		equal { spreadsheet { "name" "val" } { "a" 1 "b" 2 } |group-by 'name { } |sort-col! 'name
+		} spreadsheet { "name" } { "a" "b" }
+
+		equal { spreadsheet { "name" "val" } { "a" 1 "b" 6 "a" 5 "b" 10 "a" 7 } 
+				|group-by 'name { 'name count 'val sum 'val min 'val max 'val avg } 
+				|sort-col! 'name
+		} spreadsheet { "name" "name_count" "val_sum" "val_min" "val_max" "val_avg" } 
+					{ 
+						"a" 3 13.0 1.0 7.0 4.333333333333333
+						"b" 2 16.0 6.0 10.0 8.0
+					}
+	}
 }
 
 

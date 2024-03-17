@@ -222,7 +222,7 @@ func (s Spreadsheet) GetRowValue(column string, rrow SpreadsheetRow) (any, error
 		}
 	}
 	if index < 0 {
-		return "", nil
+		return "", fmt.Errorf("column %s not found", column)
 	}
 	return rrow.Values[index], nil
 }
