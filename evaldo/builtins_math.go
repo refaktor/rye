@@ -106,22 +106,9 @@ var Builtins_math = map[string]*env.Builtin{
 		Argsn: 2,
 		Doc:   "Return a decimal remainder",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			var fa, fb float64
-			switch a := arg0.(type) {
-			case env.Integer:
-				fa = float64(a.Value)
-			case *env.Decimal:
-				fa = a.Value
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.BlockType}, "mod")
-			}
-			switch b := arg1.(type) {
-			case env.Integer:
-				fb = float64(b.Value)
-			case *env.Decimal:
-				fb = b.Value
-			default:
-				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.BlockType}, "mod")
+			fa, fb, errPos := assureFloats(arg0, arg1)
+			if errPos > 0 {
+				return MakeArgError(ps, errPos, []env.Type{env.IntegerType, env.BlockType}, "mod")
 			}
 			return *env.NewDecimal(math.Mod(fa, fb))
 		},
