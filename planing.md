@@ -1,6 +1,6 @@
 # Planning
 
-## For 0.0.16
+## For 0.0.16 [+]
 
 ### Subc flag default [++]
 
@@ -39,7 +39,44 @@ is approachable than shell, which is contrary to what I thought.
 We shell needs to support multiline, for some examples in docs to work. It can work the same as Regular shell, where if the last character is space it goes into multiline mode. In this case the space character should be made visible, via 
 something like middot or a newline like character. Or / and it could look for open parenthesis and go into multiple lines until it's closed.
 
-## For 0.0.17
+## For 0.0.17 [+]
+
+### Command line arguments improvement [++]
+
+* add --do option - does rye code after it loads files (named, dot (.), or cont mode)
+* add cont command - continues from previous shell save
+* Redo flag handling to flag library, include help
+
+#TODO: add more examples:
+```
+rye cont --do 'loop 3 { init }'      # runs last saved state and then --do so it's more visible and explicit you are about to run something ... CLI injection? 
+rye . --do 'init'                    # runs main.rye and function init
+```
+
+### Spreadsheet improvements [+++]
+
+More where options:
+* where-match regexp
+* where-contains
+* where-in
+* save\csv
+  
+**Group-by** function creates a new spreadsheet with category column and agregated columns:
+```
+spr .group-by 'category { price: avg  qty: sum  category: count }
+```
+
+**left-join** and **inner-join** joins two spreadsheet given two columns of them.  
+```
+users .left-join groups 'group_id 'id
+```
+### Math dialect improvements [+++]
+
+* added support for custom functions, unary or binary
+* function arguments are defines inside parenthesis, like math syntax usually is
+* added math subcontext that includes typical math functions and math dialect, added first few
+
+## For 0.0.18
 
 ### Rye evaluator EvalExpr improvements
 
@@ -49,19 +86,6 @@ Go over the various EvaluateExp functions and solve some confusion around them a
 
 Check what pops up of we profile a fibonnaci or a game of life example
 
-### Spreadsheet improvements [++]
-
-```
-where-match (regex), wher-contains (string), save\csv, where-in
-```
-
-### More spreadsheet []
-
-Creates a new spreadsheet with category column, each category once and agregated values from a block.
-```
-group-by 'category { price: sum  age: avg }
-```
-same could be later added for multifield where.
 
 ### Web console - make complete
 
@@ -70,10 +94,6 @@ Try to make behaviour as complete as possible. Paste into shell doesn't work, So
 ### Save and load history
 
 Save / edit with emacs / load back
-
-### Command inline mode [+-]
-
-Maybe finally redo these flag handling and commands with a propper library
 
 ```
 rye cont --do 'loop 3 { init }'      # implemented ... --do so it's more visible and explicit you are about to run something ... CLI injection? 
