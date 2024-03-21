@@ -814,7 +814,7 @@ func GenerateColumnRegexReplace(ps *env.ProgramState, s *env.Spreadsheet, name e
 			newVal = ""
 		} else {
 			// replace the value with the regex
-			newVal = env.NewString(re.ReplaceAllString(valStr.Value, pattern))
+			newVal = *env.NewString(re.ReplaceAllString(valStr.Value, pattern))
 		}
 		// set the result of code block as the new column value in this row
 		row.Values = append(row.Values, newVal)

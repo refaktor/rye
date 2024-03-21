@@ -23,6 +23,7 @@ import (
 
 	"github.com/refaktor/rye/util"
 
+	"golang.org/x/crypto/ssh/terminal"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -680,6 +681,32 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"get": { // *** currently a concept in testing ... for getting a code of a function, maybe same would be needed for context?
+		Argsn: 1,
+		Doc:   "Returns value of the word in context",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch w := arg0.(type) {
+			case env.Word:
+				object, found := ps.Ctx.Get(w.Index)
+				if found {
+					return object
+				} else {
+					return MakeBuiltinError(ps, "Word not found in contexts	", "get")
+				}
+			case env.Opword:
+				object, found := ps.Ctx.Get(w.Index)
+				if found {
+					return object
+				} else {
+					return MakeBuiltinError(ps, "Word not found in contexts	", "get")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.WordType}, "set")
+			}
+		},
+	},
+
 	// CONTINUE WORK HERE - SYSTEMATISATION
 
 	"dump": { // *** currently a concept in testing ... for getting a code of a function, maybe same would be needed for context?
@@ -705,6 +732,32 @@ var builtins = map[string]*env.Builtin{
 				ps.FailureFlag = true
 				return MakeBuiltinError(ps, fmt.Sprintf("error writing state: %s", err.Error()), "save\\state")
 			}
+			fmt.Println("State current context to \033[1m" + fileName + "\033[0m.")
+			return *env.NewInteger(1)
+		},
+	},
+
+	// TODO -- make save\\context ctx %file
+	"save\\current\\secure": {
+		Argsn: 0,
+		Doc:   "Saves current state of the program to a file.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
+			s := ps.Dump()
+			fileName := fmt.Sprintf("console_%s.rye.enc", time.Now().Format("060102_150405"))
+
+			fmt.Print("Enter Password: ")
+			bytePassword, err := terminal.ReadPassword(int(os.Stdin.Fd()))
+			if err != nil {
+				panic(err)
+			}
+			password := string(bytePassword)
+
+			util.SaveSecure(s, fileName, password)
+			/*  err != nil {
+				ps.FailureFlag = true
+				return MakeBuiltinError(ps, fmt.Sprintf("error writing state: %s", err.Error()), "save\\state")
+			}*/
 			fmt.Println("State current context to \033[1m" + fileName + "\033[0m.")
 			return *env.NewInteger(1)
 		},

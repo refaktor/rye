@@ -505,7 +505,7 @@ func (i Word) Equal(o Object) bool {
 }
 
 func (i Word) Dump(e Idxs) string {
-	return e.GetWord(i.Index)
+	return "'" + e.GetWord(i.Index)
 }
 
 //
