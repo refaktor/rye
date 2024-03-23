@@ -19,7 +19,7 @@
   - [Modules](#modules)
     - [Base](#base)
     - [Contrib](#contrib)
-  -  [Rye-front project](#rye-front-project)
+  -  [Rye-front project (GUI)](#rye-front-project-gui)
   - [Follow development](#follow-development)
     - [Rye blog](#rye-blog)
     - [Ryelang reddit](#ryelang-reddit)
@@ -159,7 +159,7 @@ The author of Factor once said that at the end *it's not about the language, but
 
 legend: ⭐ priority , 🧪 tests
 
-## Rye-front project
+## Rye-front project (GUI)
 
 If you are interested in "fontend" / desktop technologies check out separate project that works on extending Rye lanuage with GUI, Game engine and a Webview. It 
 integrates these cool Go libraries:
