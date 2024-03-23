@@ -14,6 +14,7 @@
     - [Few oneliners](#few-one-liners)
     - [Meet Rye](#meet-rye)
     - [Examples](#examples)
+    - [Aciinema demos](#asciinema-demos)
     - [Rye vs. Python](#rye-vs-python)
   - [Modules](#modules)
     - [Base](#base)
@@ -109,6 +110,14 @@ These pages are littered with examples. You can find them on this **README** pag
 
   * [Examples folder](./examples/) - unorganized so far, will change
   * [Solutions to simple compression puzzle](https://github.com/otobrglez/compression-puzzle/tree/master/src/rye)
+
+### Asciinema demos
+
+Rye's focus is also interactive use. Check out these asciinema demos: 
+
+  * **[Spreadsheet and CSV demo](https://asciinema.org/a/647708)** - new
+  * [Exploring JSON](https://asciinema.org/a/615327)
+  * [Testing vector functions](https://asciinema.org/a/575970)
 
 ### Rye vs. Python
 
