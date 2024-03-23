@@ -1720,7 +1720,7 @@ func NewList(data []any) *List {
 	return &List{data, Word{0}}
 }
 
-func RyeToRaw(res Object) any {
+func RyeToRaw(res Object) any { // TODO -- MOVE TO UTIL ... provide reverse named symetrically
 	// fmt.Printf("Type: %T", res)
 	switch v := res.(type) {
 	case nil:
@@ -1751,7 +1751,7 @@ func NewListFromSeries(block TSeries) List {
 	data := make([]any, block.Len())
 	for block.Pos() < block.Len() {
 		i := block.Pos()
-		k1 := block.Pop()
+		k1 := block.Pop() // TODO -- USE RyeToRaw
 		switch k := k1.(type) {
 		case String:
 			data[i] = k.Value
@@ -1764,6 +1764,23 @@ func NewListFromSeries(block TSeries) List {
 		}
 	}
 	return List{data, Word{0}}
+}
+
+func NewBlockFromList(list List) TSeries {
+	data := make([]Object, len(list.Data))
+	for i, v := range list.Data {
+		switch k := v.(type) {
+		case string:
+			data[i] = *NewString(k)
+		case int64:
+			data[i] = *NewInteger(k)
+		case float64:
+			data[i] = *NewDecimal(k)
+		case List:
+			data[i] = *NewString("not handeled 3") // TODO -- just temp result
+		}
+	}
+	return *NewTSeries(data)
 }
 
 func (i List) Type() Type {

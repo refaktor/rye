@@ -681,7 +681,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"get": { // *** currently a concept in testing ... for getting a code of a function, maybe same would be needed for context?
+	"get_": { // *** find a name or decide on order of naming with generic words clashes with
 		Argsn: 1,
 		Doc:   "Returns value of the word in context",
 		Pure:  true,
