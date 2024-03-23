@@ -186,7 +186,7 @@ If code speaks to you, our Github page is the central location for all things Ry
 
 ## Getting Rye
 
-Rye is developed on Linux, but has also been compiled on macOS, Docker and as WASM module. If you need additional architecture or OS, post an Issue.
+Rye is developed on Linux and Mac, but we also have a Docker and as WASM module. If you need additional architecture or OS, post an Issue. Rye could run anywhere Go compiles to.
 
 ### Binaries
 
