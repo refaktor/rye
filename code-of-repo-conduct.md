@@ -15,6 +15,20 @@ We shouldn't have too many principles (or rules), we are not trying to create a 
 
 ## Q&A
 
-How can I create commits / PR-s / merge them so that Github homepage feed and release notes are as informative as possible?
+### How to create commits / PR-s / merge them so that feed and release notes are as informative as possible?
 
-...
+_work-in-progress-text-propose-changes_
+
+If there is only one commit per PR then the message is stored and used (check this).
+
+If there are multiple commits's then messages get lost unless we merge with *Squash and merge*. This joins messages together and uses them (positive) but also joins all code changes into one commit. 
+A) If reason for multiple commits is iterating on a set of changes, or making them comple (adding tests, making golint-ci pass, ...)  then this makes sense. 
+B) If PR is composed of multiple commits each for different set of changes then some information is lost with Squash.
+
+* Should the choice be per-case based?
+* What to do in case (B) then?
+* Is there a third option?
+* Should in case of (B) these be multiple PR-s anyway?
+
+
+
