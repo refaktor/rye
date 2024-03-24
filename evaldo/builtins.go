@@ -23,8 +23,8 @@ import (
 
 	"github.com/refaktor/rye/util"
 
-	"golang.org/x/crypto/ssh/terminal"
 	"golang.org/x/sync/errgroup"
+	goterm "golang.org/x/term"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -747,7 +747,7 @@ var builtins = map[string]*env.Builtin{
 			fileName := fmt.Sprintf("console_%s.rye.enc", time.Now().Format("060102_150405"))
 
 			fmt.Print("Enter Password: ")
-			bytePassword, err := terminal.ReadPassword(int(os.Stdin.Fd()))
+			bytePassword, err := goterm.ReadPassword(int(os.Stdin.Fd()))
 			if err != nil {
 				panic(err)
 			}
@@ -933,7 +933,7 @@ var builtins = map[string]*env.Builtin{
 
 	// BASIC FUNCTIONS WITH NUMBERS
 
-	"factor-of": { // ***
+	"multiple-of": { // ***
 		Argsn: 2,
 		Doc:   "Checks if a first argument is a factor of second.",
 		Pure:  true,
@@ -948,10 +948,10 @@ var builtins = map[string]*env.Builtin{
 						return *env.NewInteger(0)
 					}
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "factor-of")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "multiple-of")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "factor-of")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "multiple-of")
 			}
 		},
 	},

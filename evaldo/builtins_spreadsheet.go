@@ -25,8 +25,9 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			switch header1 := arg0.(type) {
 			case env.Block:
 				header := header1.Series
-				cols := make([]string, header.Len())
-				for header.Pos() < header.Len() {
+				hlen := header.Len()
+				cols := make([]string, hlen)
+				for header.Pos() < hlen {
 					i := header.Pos()
 					k1 := header.Pop()
 					switch k := k1.(type) {
@@ -34,24 +35,26 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 						cols[i] = k.Value
 					}
 				}
+				fmt.Println(cols)
 				spr := env.NewSpreadsheet(cols)
 				switch data1 := arg1.(type) {
 				case env.Block:
 					rdata := data1.Series.S
-					for _, v := range rdata {
-						rowd := make([]any, header.Len())
-						for ii := 0; ii < header.Len(); ii++ {
-							rowd[ii] = v
+
+					for i := 0; i < len(rdata)/hlen; i++ {
+						rowd := make([]any, hlen)
+						for ii := 0; ii < hlen; ii++ {
+							rowd[ii] = rdata[i*hlen+ii]
 						}
 						spr.AddRow(*env.NewSpreadsheetRow(rowd, spr))
 					}
 					return *spr
 				case env.List:
 					rdata := data1.Data
-					for _, v := range rdata {
-						rowd := make([]any, header.Len())
-						for ii := 0; ii < header.Len(); ii++ {
-							rowd[ii] = v
+					for i := 0; i < len(rdata)/hlen; i++ {
+						rowd := make([]any, hlen)
+						for ii := 0; ii < hlen; ii++ {
+							rowd[ii] = rdata[i*hlen+ii]
 						}
 						spr.AddRow(*env.NewSpreadsheetRow(rowd, spr))
 					}

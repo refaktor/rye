@@ -8,8 +8,7 @@ import (
 	"regexp"
 	"sort"
 
-	"github.com/refaktor/rye/contrib"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 
 	"bufio"
 	"errors"
@@ -21,6 +20,7 @@ import (
 
 	"net/http"
 
+	"github.com/refaktor/rye/contrib"
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/evaldo"
 	"github.com/refaktor/rye/loader"
@@ -368,7 +368,7 @@ func main_rye_file(file string, sig bool, subc bool, interactive bool, code stri
 
 	if file[len(file)-4:] == ".enc" {
 		fmt.Print("Enter Password: ")
-		bytePassword, err := terminal.ReadPassword(int(os.Stdin.Fd()))
+		bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
 		if err != nil {
 			panic(err)
 		}

@@ -23,11 +23,10 @@ func SaveSecure(textToEncrypt string, filename string, password string) {
 	}
 
 	// Write encrypted data to a file
-	err = os.WriteFile(filename, encryptedData, 0644)
+	err = os.WriteFile(filename, encryptedData, 0600)
 	if err != nil {
 		panic(err)
 	}
-
 }
 
 func ReadSecure(filename string, password string) string {

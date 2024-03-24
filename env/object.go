@@ -505,7 +505,7 @@ func (i Word) Equal(o Object) bool {
 }
 
 func (i Word) Dump(e Idxs) string {
-	return "'" + e.GetWord(i.Index)
+	return e.GetWord(i.Index)
 }
 
 //
@@ -1720,7 +1720,7 @@ func NewList(data []any) *List {
 	return &List{data, Word{0}}
 }
 
-func RyeToRaw(res Object) any { // TODO -- MOVE TO UTIL ... provide reverse named symetrically
+func RyeToRaw(res Object) any { // TODO -- MOVE TO UTIL ... provide reverse named symmetrically
 	// fmt.Printf("Type: %T", res)
 	switch v := res.(type) {
 	case nil:

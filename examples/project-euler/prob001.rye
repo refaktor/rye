@@ -2,7 +2,7 @@
 ; sum all factors of 3 and 5 smaller than 1000
 
 range 0 1000
-|filter { :x all { x .factor-of 3  x .factor-of 5 } }
+|filter { :x all { x .multiple-of 3  x .multiple-of 5 } }
 |sum .print
 
 ; result 33165
