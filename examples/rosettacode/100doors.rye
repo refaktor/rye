@@ -8,7 +8,7 @@ rye .needs { xhofs }
 produce 100 { } { + [ 0 ] } :doors
 
 toggle: fn { doors step } {
-	.map\pos 'i { :v either i .factor-of step { not v } { v } } :ds
+	.map\pos 'i { :v either i .multiple-of step { not v } { v } } :ds
 	^if step = 100 { ds }
 	toggle ds step + 1
 }

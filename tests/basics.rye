@@ -166,12 +166,12 @@ section "Working with numbers"
 		equal { is-zero 0.1 } 0
 	}
 
-	group "factor-of"
-	mold\nowrap ?factor-of
+	group "multiple-of"
+	mold\nowrap ?multiple-of
 	{ { integer } { integer } }
 	{
-		equal { factor-of 10 2 } 1
-		equal { 10 .factor-of 3 } 0		
+		equal { multiple-of 10 2 } 1
+		equal { 10 .multiple-of 3 } 0		
 	}
 
 	group "odd"

@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"sort"
 
-	"github.com/refaktor/rye/contrib"
+	"golang.org/x/term"
 
 	"bufio"
 	"errors"
@@ -20,6 +20,7 @@ import (
 
 	"net/http"
 
+	"github.com/refaktor/rye/contrib"
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/evaldo"
 	"github.com/refaktor/rye/loader"
@@ -363,12 +364,24 @@ func main_rye_file(file string, sig bool, subc bool, interactive bool, code stri
 	//util.PrintHeader()
 	//defer profile.Start(profile.CPUProfile).Stop()
 
-	bcontent, err := os.ReadFile(file)
-	if err != nil {
-		log.Fatal(err)
-	}
+	var content string
 
-	content := string(bcontent)
+	if file[len(file)-4:] == ".enc" {
+		fmt.Print("Enter Password: ")
+		bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
+		if err != nil {
+			panic(err)
+		}
+		password := string(bytePassword)
+
+		content = util.ReadSecure(file, password)
+	} else {
+		bcontent, err := os.ReadFile(file)
+		if err != nil {
+			log.Fatal(err)
+		}
+		content = string(bcontent)
+	}
 
 	if info {
 		pattern := regexp.MustCompile(`^; (#[^\n]*)`)

@@ -24,25 +24,37 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch header1 := arg0.(type) {
 			case env.Block:
+				header := header1.Series
+				hlen := header.Len()
+				cols := make([]string, hlen)
+				for header.Pos() < hlen {
+					i := header.Pos()
+					k1 := header.Pop()
+					switch k := k1.(type) {
+					case env.String:
+						cols[i] = k.Value
+					}
+				}
+				fmt.Println(cols)
+				spr := env.NewSpreadsheet(cols)
 				switch data1 := arg1.(type) {
 				case env.Block:
-					header := header1.Series
-					cols := make([]string, header.Len())
-					for header.Pos() < header.Len() {
-						i := header.Pos()
-						k1 := header.Pop()
-						switch k := k1.(type) {
-						case env.String:
-							cols[i] = k.Value
+					rdata := data1.Series.S
+
+					for i := 0; i < len(rdata)/hlen; i++ {
+						rowd := make([]any, hlen)
+						for ii := 0; ii < hlen; ii++ {
+							rowd[ii] = rdata[i*hlen+ii]
 						}
+						spr.AddRow(*env.NewSpreadsheetRow(rowd, spr))
 					}
-					spr := env.NewSpreadsheet(cols)
-					data := data1.Series
-					for data.Pos() < data.Len() {
-						rowd := make([]any, header.Len())
-						for ii := 0; ii < header.Len(); ii++ {
-							k1 := data.Pop()
-							rowd[ii] = k1
+					return *spr
+				case env.List:
+					rdata := data1.Data
+					for i := 0; i < len(rdata)/hlen; i++ {
+						rowd := make([]any, hlen)
+						for ii := 0; ii < hlen; ii++ {
+							rowd[ii] = rdata[i*hlen+ii]
 						}
 						spr.AddRow(*env.NewSpreadsheetRow(rowd, spr))
 					}
@@ -50,6 +62,14 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "spreadsheet")
 				}
+				/* for data.Pos() < data.Len() {
+					rowd := make([]any, header.Len())
+					for ii := 0; ii < header.Len(); ii++ {
+						k1 := data.Pop()
+						rowd[ii] = k1
+					}
+					spr.AddRow(*env.NewSpreadsheetRow(rowd, spr))
+				} */
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "spreadsheet")
 			}
@@ -814,7 +834,7 @@ func GenerateColumnRegexReplace(ps *env.ProgramState, s *env.Spreadsheet, name e
 			newVal = ""
 		} else {
 			// replace the value with the regex
-			newVal = env.NewString(re.ReplaceAllString(valStr.Value, pattern))
+			newVal = *env.NewString(re.ReplaceAllString(valStr.Value, pattern))
 		}
 		// set the result of code block as the new column value in this row
 		row.Values = append(row.Values, newVal)
@@ -1144,15 +1164,20 @@ func GroupBy(ps *env.ProgramState, s env.Spreadsheet, col string, aggregations m
 		if err != nil {
 			return MakeError(ps, fmt.Sprintf("Couldn't retrieve value at row %d (%s)", i, err))
 		}
-		groupValStr, ok := groupingVal.(env.String)
-		if !ok {
+		var groupValStr string
+		switch val := groupingVal.(type) {
+		case env.String:
+			groupValStr = val.Value
+		case string:
+			groupValStr = val
+		default:
 			return MakeBuiltinError(ps, "Grouping column value must be a string", "group-by")
 		}
 
-		if _, ok := aggregatesByGroup[groupValStr.Value]; !ok {
-			aggregatesByGroup[groupValStr.Value] = make(map[string]float64)
+		if _, ok := aggregatesByGroup[groupValStr]; !ok {
+			aggregatesByGroup[groupValStr] = make(map[string]float64)
 		}
-		groupAggregates := aggregatesByGroup[groupValStr.Value]
+		groupAggregates := aggregatesByGroup[groupValStr]
 
 		for aggCol, funs := range aggregations {
 			for _, fun := range funs {
@@ -1182,7 +1207,7 @@ func GroupBy(ps *env.ProgramState, s env.Spreadsheet, col string, aggregations m
 					groupAggregates[colAgg] += val
 				case "avg":
 					groupAggregates[colAgg] += val
-					countByGroup[groupValStr.Value]++
+					countByGroup[groupValStr]++
 				case "min":
 					if min, ok := groupAggregates[colAgg]; !ok || val < min {
 						groupAggregates[colAgg] = val
