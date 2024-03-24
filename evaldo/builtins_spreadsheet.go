@@ -35,7 +35,6 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 						cols[i] = k.Value
 					}
 				}
-				fmt.Println(cols)
 				spr := env.NewSpreadsheet(cols)
 				switch data1 := arg1.(type) {
 				case env.Block:
@@ -78,7 +77,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 
 	"to-spreadsheet": {
 		Argsn: 1,
-		Doc:   "Create a spreadsheet by accepting block of dicts",
+		Doc:   "Create a spreadsheet by accepting block or list of dicts",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			switch block := arg0.(type) {
 			case env.Block:
@@ -118,8 +117,45 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 				}
 				return *spr
 
+			case env.List:
+				data := block.Data
+				if len(data) == 0 {
+					return MakeBuiltinError(ps, "List is empty", "to-spreadsheet")
+				}
+				k := make(map[string]struct{})
+				for _, obj := range data {
+					switch dict := obj.(type) {
+					case map[string]any:
+						for key := range dict {
+							k[key] = struct{}{}
+						}
+					default:
+						return MakeBuiltinError(ps, "List must contain only dicts", "to-spreadsheet")
+					}
+				}
+				var keys []string
+				for key := range k {
+					keys = append(keys, key)
+				}
+				spr := env.NewSpreadsheet(keys)
+				for _, obj := range data {
+					row := make([]any, len(keys))
+					switch dict := obj.(type) {
+					case map[string]any:
+						for i, key := range keys {
+							data, ok := dict[key]
+							if !ok {
+								data = env.Void{}
+							}
+							row[i] = data
+						}
+					}
+					spr.AddRow(*env.NewSpreadsheetRow(row, spr))
+				}
+				return *spr
+
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "to-spreadsheet")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "to-spreadsheet")
 			}
 		},
 	},
