@@ -15,6 +15,6 @@ We shouldn't have too many principles (or rules), we are not trying to create a 
 
 ## Q&A
 
-How can I create commits / PR-s / merge them so that Github homepage feed is as informative as possible?
+How can I create commits / PR-s / merge them so that Github homepage feed and release notes are as informative as possible?
 
 ...
