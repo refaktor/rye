@@ -14,11 +14,12 @@
     - [Few oneliners](#few-one-liners)
     - [Meet Rye](#meet-rye)
     - [Examples](#examples)
+    - [Aciinema demos](#asciinema-demos)
     - [Rye vs. Python](#rye-vs-python)
   - [Modules](#modules)
     - [Base](#base)
     - [Contrib](#contrib)
-  -  [Rye-front project](#rye-front-project)
+  -  [Rye-front project (GUI)](#rye-front-project-gui)
   - [Follow development](#follow-development)
     - [Rye blog](#rye-blog)
     - [Ryelang reddit](#ryelang-reddit)
@@ -110,6 +111,14 @@ These pages are littered with examples. You can find them on this **README** pag
   * [Examples folder](./examples/) - unorganized so far, will change
   * [Solutions to simple compression puzzle](https://github.com/otobrglez/compression-puzzle/tree/master/src/rye)
 
+### Asciinema demos
+
+Rye's focus is also interactive use. Check out these asciinema demos: 
+
+  * **[Spreadsheet and CSV demo](https://asciinema.org/a/647708)** - new
+  * [Exploring JSON](https://asciinema.org/a/615327)
+  * [Testing vector functions](https://asciinema.org/a/575970)
+
 ### Rye vs. Python
 
 Python is the *lingua franca* of dynamic programming languages, so comparing examples in Python and Rye can be helpful to some:
@@ -150,7 +159,7 @@ The author of Factor once said that at the end *it's not about the language, but
 
 legend: ⭐ priority , 🧪 tests
 
-## Rye-front project
+## Rye-front project (GUI)
 
 If you are interested in "fontend" / desktop technologies check out separate project that works on extending Rye lanuage with GUI, Game engine and a Webview. It 
 integrates these cool Go libraries:
@@ -177,7 +186,7 @@ If code speaks to you, our Github page is the central location for all things Ry
 
 ## Getting Rye
 
-Rye is developed on Linux, but has also been compiled on macOS, Docker and as WASM module. If you need additional architecture or OS, post an Issue.
+Rye is developed on Linux and Mac, but we also have a Docker and as WASM module. If you need additional architecture or OS, post an Issue. Rye could run anywhere Go compiles to.
 
 ### Binaries
 
