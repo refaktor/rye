@@ -771,7 +771,7 @@ func (i Xword) Inspect(e Idxs) string {
 }
 
 func (b Xword) Print(e Idxs) string {
-	return e.GetWord(b.Index)
+	return "<" + e.GetWord(b.Index) + ">"
 }
 
 func (i Xword) Trace(msg string) {
@@ -820,7 +820,7 @@ func (i EXword) Inspect(e Idxs) string {
 }
 
 func (b EXword) Print(e Idxs) string {
-	return e.GetWord(b.Index)
+	return "</" + e.GetWord(b.Index) + ">"
 }
 
 func (i EXword) Trace(msg string) {

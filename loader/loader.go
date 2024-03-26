@@ -397,7 +397,7 @@ func newParser() *Parser { // TODO -- add string eaddress path url time
 	BLOCK       	<-  "{" SPACES SERIES* "}"
 	BBLOCK       	<-  "[" SPACES SERIES* "]"
     GROUP       	<-  "(" SPACES SERIES* ")"
-    SERIES     	<-  (GROUP / COMMENT / URI / EMAIL / STRING / DECIMAL / NUMBER / COMMA / SETWORD / LSETWORD / ONECHARPIPE / PIPEWORD / XWORD / OPWORD / TAGWORD / EXWORD / CPATH / FPATH / KINDWORD / GENWORD / GETWORD / WORD / VOID / BLOCK / GROUP / BBLOCK / ARGBLOCK ) SPACES
+    SERIES     	<-  (GROUP / COMMENT / URI / EMAIL / STRING / DECIMAL / NUMBER / COMMA / SETWORD / LSETWORD / ONECHARPIPE / PIPEWORD / EXWORD / XWORD / OPWORD / TAGWORD / CPATH / FPATH / KINDWORD / GENWORD / GETWORD / WORD / VOID / BLOCK / GROUP / BBLOCK / ARGBLOCK ) SPACES
     ARGBLOCK       	<-  "{" WORD ":" WORD "}"
     WORD           	<-  LETTER LETTERORNUM* / NORMOPWORDS
 	GENWORD 		<-  "~" UCLETTER LCLETTERORNUM* 
@@ -409,7 +409,7 @@ func newParser() *Parser { // TODO -- add string eaddress path url time
 	OPWORD    		<-  "." LETTER LETTERORNUM* / "." NORMOPWORDS / OPARROWS / ONECHARWORDS / "[*" LETTERORNUM*
 	TAGWORD    		<-  "'" LETTER LETTERORNUM*
 	KINDWORD    	<-  "~(" LETTER LETTERORNUM* ")~"?
-	XWORD    		<-  "<" LETTER LETTERORNUM* ">"?
+	XWORD    		<-  "<" LETTER LETTERORNUMNOX* " "? XPARAMS* ">"
 	EXWORD    		<-  "</" LETTER LETTERORNUM* ">"?
 	STRING			<-  ('"' STRINGCHAR* '"') / ("$" STRINGCHAR1* "$")
 	SPACES			<-  SPACE+
@@ -424,6 +424,8 @@ func newParser() *Parser { // TODO -- add string eaddress path url time
 	OPARROWS        <-  "<<" / "<~" / "<-" / ">=" / "<="
 	LETTER  	    <-  < [a-zA-Z^(` + "`" + `] >
 	LETTERORNUM		<-  < [a-zA-Z0-9-?=.\\!_+<>\]*()] >
+	LETTERORNUMNOX	<-  < [a-zA-Z0-9-?=.\\!_+\]*()] >
+	XPARAMS  		<-  < !">" . >
 	URIPATH			<-  < [a-zA-Z0-9-?&=.,:@/\\!_>	()] >
 	UCLETTER  		<-  < [A-Z] >
 	LCLETTERORNUM  	<-  < [a-z0-9] >

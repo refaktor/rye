@@ -343,6 +343,18 @@ var builtins = map[string]*env.Builtin{
 				return *env.NewWord(idx)
 			case env.Word:
 				return *env.NewWord(str.Index)
+			case env.Xword:
+				return *env.NewWord(str.Index)
+			case env.EXword:
+				return *env.NewWord(str.Index)
+			case env.Tagword:
+				return *env.NewWord(str.Index)
+			case env.Setword:
+				return *env.NewWord(str.Index)
+			case env.LSetword:
+				return *env.NewWord(str.Index)
+			case env.Getword:
+				return *env.NewWord(str.Index)
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType, env.WordType}, "to-word")
 			}
@@ -609,6 +621,31 @@ var builtins = map[string]*env.Builtin{
 					switch iintval := intval.(type) {
 					case env.Integer:
 						ctx.Set(arg.Index, *env.NewInteger(1 + iintval.Value))
+						return *env.NewInteger(1 + iintval.Value)
+					default:
+						return MakeBuiltinError(ps, "Value in word is not integer.", "inc!")
+					}
+				}
+				return MakeBuiltinError(ps, "Word not found in context.", "inc!")
+
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.WordType}, "inc!")
+			}
+		},
+	},
+
+	"dec!": { // ***
+		Argsn: 1,
+		Doc:   "Searches for a word and increments it's integer value in-place.",
+		Pure:  false,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg := arg0.(type) {
+			case env.Word:
+				intval, found, ctx := ps.Ctx.Get2(arg.Index)
+				if found {
+					switch iintval := intval.(type) {
+					case env.Integer:
+						ctx.Set(arg.Index, *env.NewInteger(iintval.Value - 1))
 						return *env.NewInteger(1 + iintval.Value)
 					default:
 						return MakeBuiltinError(ps, "Value in word is not integer.", "inc!")
@@ -2886,6 +2923,7 @@ var builtins = map[string]*env.Builtin{
 					acc := arg1
 					ser := ps.Ser
 					ps.Ser = bloc.Series
+					ps.Res = arg1
 					for i := 0; int64(i) < cond.Value; i++ {
 						ps = EvalBlockInj(ps, acc, true)
 						if ps.ErrorFlag {
@@ -3113,6 +3151,35 @@ var builtins = map[string]*env.Builtin{
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType, env.SpreadsheetType}, "for")
+			}
+		},
+	},
+
+	"for-all": { // **
+		Argsn: 2,
+		Doc:   "Accepts a block of values and a block of code, does the code for each of the values, injecting them.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch block := arg0.(type) {
+			case env.Block:
+				switch code := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = code.Series
+					for i := 0; i < block.Series.Len(); i++ {
+						ps = EvalBlockInj(ps, block, true)
+						if ps.ErrorFlag {
+							return ps.Res
+						}
+						block.Series.Next()
+						ps.Ser.Reset()
+					}
+					ps.Ser = ser
+					return ps.Res
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "for")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "for")
 			}
 		},
 	},
