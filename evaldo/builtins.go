@@ -3155,7 +3155,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"for-all": { // **
+	"walk": { // **
 		Argsn: 2,
 		Doc:   "Accepts a block of values and a block of code, does the code for each of the values, injecting them.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -3165,12 +3165,21 @@ var builtins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = code.Series
-					for i := 0; i < block.Series.Len(); i++ {
+
+					for block.Series.GetPos() < block.Series.Len() {
 						ps = EvalBlockInj(ps, block, true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
-						block.Series.Next()
+						if ps.ReturnFlag {
+							return ps.Res
+						}
+						block1, ok := ps.Res.(env.Block) // TODO ... switch and throw error if not block
+						if ok {
+							block = block1
+						} else {
+							fmt.Println("ERROR 1231241")
+						}
 						ps.Ser.Reset()
 					}
 					ps.Ser = ser

@@ -397,6 +397,9 @@ func (b Block) Inspect(e Idxs) string {
 	r.WriteString("[Block: ")
 	for i := 0; i < b.Series.Len(); i += 1 {
 		if b.Series.Get(i) != nil {
+			if b.Series.GetPos() == i {
+				r.WriteString("^")
+			}
 			r.WriteString(b.Series.Get(i).Inspect(e))
 			r.WriteString(" ")
 		}
@@ -481,7 +484,7 @@ func (i Word) Type() Type {
 }
 
 func (i Word) Inspect(e Idxs) string {
-	return "[Word: " + strconv.FormatInt(int64(i.Index), 10) + ", " + i.Print(e) + "]"
+	return "[Word: " + i.Print(e) + "]"
 }
 
 func (i Word) Print(e Idxs) string {
@@ -526,7 +529,7 @@ func (i Setword) Type() Type {
 }
 
 func (i Setword) Inspect(e Idxs) string {
-	return "[Setword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + "]"
+	return "[Setword: " + e.GetWord(i.Index) + "]"
 }
 
 func (b Setword) Print(e Idxs) string {
@@ -571,7 +574,7 @@ func (i LSetword) Type() Type {
 }
 
 func (i LSetword) Inspect(e Idxs) string {
-	return "[LSetword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + "]"
+	return "[LSetword: " + e.GetWord(i.Index) + "]"
 }
 
 func (b LSetword) Print(e Idxs) string {
@@ -617,7 +620,7 @@ func (i Opword) Type() Type {
 }
 
 func (i Opword) Inspect(e Idxs) string {
-	return "[Opword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + "]"
+	return "[Opword: " + e.GetWord(i.Index) + "]"
 }
 
 func (b Opword) Print(e Idxs) string {
@@ -668,7 +671,7 @@ func (i Pipeword) Type() Type {
 }
 
 func (i Pipeword) Inspect(e Idxs) string {
-	return "[Pipeword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + "]"
+	return "[Pipeword: " + e.GetWord(i.Index) + "]"
 }
 
 func (b Pipeword) Print(e Idxs) string {
@@ -718,7 +721,7 @@ func (i Tagword) Type() Type {
 }
 
 func (i Tagword) Inspect(e Idxs) string {
-	return "[Tagword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + "]"
+	return "[Tagword: " + e.GetWord(i.Index) + "]"
 }
 
 func (b Tagword) Print(e Idxs) string {
@@ -755,10 +758,11 @@ func (i Tagword) Dump(e Idxs) string {
 
 type Xword struct {
 	Index int
+	Args  string
 }
 
-func NewXword(index int) *Xword {
-	nat := Xword{index}
+func NewXword(index int, args string) *Xword {
+	nat := Xword{index, args}
 	return &nat
 }
 
@@ -766,12 +770,17 @@ func (i Xword) Type() Type {
 	return XwordType
 }
 
+// + strconv.FormatInt(int64(i.Index), 10) +
 func (i Xword) Inspect(e Idxs) string {
-	return "[Xword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + "]"
+	return "[Xword: " + e.GetWord(i.Index) + "]"
 }
 
 func (b Xword) Print(e Idxs) string {
-	return "<" + e.GetWord(b.Index) + ">"
+	spc := ""
+	if len(b.Args) > 0 {
+		spc = " "
+	}
+	return "<" + e.GetWord(b.Index) + spc + b.Args + ">"
 }
 
 func (i Xword) Trace(msg string) {
@@ -780,7 +789,7 @@ func (i Xword) Trace(msg string) {
 }
 
 func (i Xword) ToWord() Word {
-	return Word(i)
+	return *NewWord(i.Index)
 }
 
 func (i Xword) GetKind() int {
@@ -816,7 +825,7 @@ func (i EXword) Type() Type {
 }
 
 func (i EXword) Inspect(e Idxs) string {
-	return "[EXword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + "]"
+	return "[EXword: " + e.GetWord(i.Index) + "]"
 }
 
 func (b EXword) Print(e Idxs) string {
@@ -865,7 +874,7 @@ func (i Kindword) Type() Type {
 }
 
 func (i Kindword) Inspect(e Idxs) string {
-	return "[Kindword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + "]"
+	return "[Kindword: " + e.GetWord(i.Index) + "]"
 }
 
 func (b Kindword) Print(e Idxs) string {
@@ -914,7 +923,7 @@ func (i Getword) Type() Type {
 }
 
 func (i Getword) Inspect(e Idxs) string {
-	return "[Getword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + "]"
+	return "[Getword: " + e.GetWord(i.Index) + "]"
 }
 
 func (b Getword) Print(e Idxs) string {
@@ -963,7 +972,7 @@ func (i Genword) Type() Type {
 }
 
 func (i Genword) Inspect(e Idxs) string {
-	return "[Genword: " + strconv.FormatInt(int64(i.Index), 10) + ", " + e.GetWord(i.Index) + "]"
+	return "[Genword: " + e.GetWord(i.Index) + "]"
 }
 
 func (b Genword) Print(e Idxs) string {

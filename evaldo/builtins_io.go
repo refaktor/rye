@@ -24,7 +24,7 @@ import (
 func __input(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch str := arg0.(type) {
 	case env.String:
-		fmt.Print("Enter text: " + str.Value)
+		fmt.Print("" + str.Value)
 		var input string
 		fmt.Scanln(&input)
 		fmt.Print(input)

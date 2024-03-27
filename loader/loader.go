@@ -330,9 +330,14 @@ func parseTagword(v *Values, d Any) (Any, error) {
 
 func parseXword(v *Values, d Any) (Any, error) {
 	//fmt.Println("TAGWORD:" + v.Token())
-	word := v.Token()
-	idx := wordIndex.IndexWord(word[1 : len(word)-1])
-	return *env.NewXword(idx), nil
+	cont := v.Token()
+	conts := strings.Split(cont[1:len(cont)-1], " ")
+	idx := wordIndex.IndexWord(conts[0])
+	args := ""
+	if len(conts) > 1 {
+		args = conts[1]
+	}
+	return *env.NewXword(idx, args), nil
 }
 
 func parseKindword(v *Values, d Any) (Any, error) {
