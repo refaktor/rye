@@ -86,10 +86,31 @@ Go over the various EvaluateExp functions and solve some confusion around them a
 
 Check what pops up of we profile a fibonnaci or a game of life example
 
-
 ### Web console - make complete
 
 Try to make behaviour as complete as possible. Paste into shell doesn't work, Some key combinations (ctrl-d, ...) , sole keys (pageup, pagedown). Test and list here:
+
+### Additional functions, value types
+
++ walk - good for dialects, recursive algos, ...
++ xword, exword improvements, xword accepts args, equality - matching still works
+- import function like "do load %file" but only looks for files local to the main script file, not CWD
+
+### do_main build flag
+
+if build flag do_main is used make the dot behaviour work even without the dot. Usefull for distributing binary and main.rye , also to test to produce a mobil APK with Fyne.
+
+### Dot cli path behaviour
+
+if the file argument is . or some/path/. look for main.rye in that location and run it. 
+
+### Cont cli command - Save\current\secure [++]
+
+Let state saves be encrypted with password and console_.....rye.enc ask for same password. Demo it with simple contextplay password manager.
+
+### Console with standard ansi colors
+
+Test using standard colors, we will see if they work in Emacs ansi-term then, we will see if maybe general terminal theming works on them, also xterm.js probably has theming, test.
 
 ### Save and load history
 
