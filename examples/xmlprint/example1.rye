@@ -1,0 +1,32 @@
+
+do load %xmlprint.rye
+
+; xmlprint dialect consists of <xwords> and </exwords>,
+; blocks of Rye code, of which the result gets printed 
+; and strings which turn to xml comments
+template: {
+   <data>	
+	<header>
+	  <event> ( header/author ) </event>
+	  "Date of the event"
+	  <date> ( header/date ) </date>
+	  <type>
+ 	  <subtype> ( header/type ) </subtype>
+	  </type>
+	</header>
+	<person>
+	"Redundant but standard requires it"
+	<fullname> ( .fullname ) </fullname>
+	<name id="first"> ( -> "name" ) </name>
+	    <surname> ( -> "surname" ) </surname>
+	</person>
+   </data>
+} ; the line intentation is intentionally off
+
+
+fullname: fn { d } { join\with [ d -> "name"  d -> "surname" ] " " }
+
+header: context { author: "Bob Fett"  date: now  type: "XIW" }
+
+xmlprint dict { name: "Jim" surname: "Metelko" } template
+
