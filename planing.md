@@ -94,10 +94,16 @@ Let state saves be encrypted with password and console_.....rye.enc ask for same
 - More key combinations (ctrl-d, ...)
 - Sole keys (pageup, pagedown)
 
-### Additional functions, value types
+### Additional functions, value types [++]
 
 + walk - useful for dialects, recursive algos, ...
 + xword, exword improvements, xword accepts args, equality - matching still works
+
+### Mod-words - experiment
+
+`word::  ::word` would be mod-words and would allow changing existing values to words. So set-words would only create and fail if word already is set in current context. Mod-words would only change and fail if word
+is not yet defined. We rarely modify at all ... to much modifying is a smell that code could be written better. word:: visually is not horrible, or that noticable, but jsut noticable enough I think. So let's do this and
+we will see what practice shows. For starters just add it to loader but it could behave the same as set-word so we woule volontarily use it and see hot it looks and feels at all. If it seems ok, we change the interpreter.
 
 ### Import function
 
@@ -106,15 +112,15 @@ Try to make import always relative to current script, so interpreter should have
 
 This would also be needed for loader errors in case of multiple files, so you know what file the loader failed.
 
-### do_main build flag
-
-if build flag do_main is used make the dot behaviour work even without the dot. Usefull for distributing binary and main.rye , also to test to produce a mobil APK with Fyne.
-
 ### Console with standard ansi colors
 
-Test using standard colors, we will see if they work in Emacs ansi-term then, we will see if maybe general terminal theming works on them, also xterm.js probably has theming, test.
+Test using standard colors, we will see if they work in Emacs ansi-term then, we will see if maybe general terminal theming works on them, also xterm.js probably has theming, test it, make build flag if possible, update refaktor/liner for it.
 
 ## LATER
+
+### do_main build flag and Android test
+
+if build flag do_main is used make the dot behaviour work even without the dot. Usefull for distributing binary and main.rye , also to test to produce a mobil APK with Fyne.
 
 ### MakeArgError improve output
 
