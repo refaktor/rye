@@ -1,0 +1,71 @@
+
+; This is a simple xmlprint dialect that exposes just one function xmlprint
+; It prints the XML, handles the line padding and check if the tags match
+
+; private function creates a context evaluates the code within context
+; but just returns the result of the code. It can be used to create pockets
+; of specialised code that doesn't spill out
+
+private {
+	
+	spaces: fn1 { .produce "" { + " " } }
+	prn\pad: fn { t d } { prn spaces d , prn t } 
+	newline: fn1 { .if { print "" } }
+	is-not: fn { a b } { .to-word = to-word b \not }
+	comment: fn1 { .concat* "<!--" \concat "-->" }
+	
+	process: fn\par { block values depth current } current-ctx  {
+		\pass { exited: false }
+		\walk { :blk
+			\peek :token .type? .switch {
+				xword {
+					newline depth
+					prn\pad token depth
+					process next blk values inc depth token
+					\pass { exited: true }
+				}
+				exword {
+					either exited { newline true , prn\pad token depth - 1 } { prn token }
+					if token .is-not current { fail "Error: tag mismatch" }
+					return next blk
+				}
+				block {
+					with values token :res
+					if res .type? .is-not 'function { prn res }
+					next blk
+				}
+				string { 
+					newline depth
+					prn\pad comment token depth
+					next blk
+				}
+			}
+		}
+		newline true
+	}
+
+	; Only this function will get returned and set to xmlgen word
+	fn\par { values block } current-ctx { process block values 0 'no }
+	
+} :xmlprint
+
+
+; \word is just ex |pipe-word ... I'm experimenting with this format because | was
+; too agressive visually especially in the same line use
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+; match: fn { val blk } { .type? .switch blk } ; TODO -- match in switch confuses return function. Look into it soon.

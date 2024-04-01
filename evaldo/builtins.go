@@ -1345,6 +1345,20 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
+	"embed": { // **
+		Argsn: 2,
+		Doc:   "Embeds a value in string.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg := arg1.(type) {
+			case env.String:
+				vals := arg0.Print(*ps.Idx)
+				news := strings.ReplaceAll(arg.Value, "{}", vals)
+				return *env.NewString(news)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "esc")
+			}
+		},
+	},
 	"prnv": { // **
 		Argsn: 2,
 		Doc:   "Prints a value.",
@@ -1355,7 +1369,7 @@ var builtins = map[string]*env.Builtin{
 				news := strings.ReplaceAll(arg.Value, "{}", vals)
 				fmt.Print(news)
 			default:
-				fmt.Print(arg0.Print(*ps.Idx))
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "esc")
 			}
 			return arg0
 		},
@@ -1370,22 +1384,7 @@ var builtins = map[string]*env.Builtin{
 				news := strings.ReplaceAll(arg.Value, "{}", vals)
 				fmt.Println(news)
 			default:
-				fmt.Println(arg0.Print(*ps.Idx))
-			}
-			return arg0
-		},
-	},
-	"print\\val": { // DEPRECATED ... too visually noisy ... new is printv and accepts just {}
-		Argsn: 2,
-		Doc:   "Prints a value and adds a newline.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch arg := arg1.(type) {
-			case env.String:
-				vals := arg0.Print(*ps.Idx)
-				news := strings.ReplaceAll(arg.Value, "{{}}", vals)
-				fmt.Println(news)
-			default:
-				fmt.Println(arg0.Print(*ps.Idx))
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "esc")
 			}
 			return arg0
 		},
@@ -4965,6 +4964,31 @@ var builtins = map[string]*env.Builtin{
 				default:
 					ps.ErrorFlag = true
 					return MakeArgError(ps, 2, []env.Type{env.CtxType}, "fnc")
+				}
+			default:
+				ps.ErrorFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "fnc")
+			}
+		},
+	},
+
+	"fn\\cc": {
+		// a function with context	 bb: 10 add10 [ a ] context [ b: bb ] [ add a b ]
+		// 							add10 [ a ] this [ add a b ]
+		// later maybe			   add10 [ a ] [ b: b ] [ add a b ]
+		//  						   add10 [ a ] [ 'b ] [ add a b ]
+		Argsn: 2,
+		Doc:   "Creates a function with specific context.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch args := arg0.(type) {
+			case env.Block:
+				switch body := arg1.(type) {
+				case env.Block:
+					return *env.NewFunctionC(args, body, ps.Ctx, false, false)
+				default:
+					ps.ErrorFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "fnc")
 				}
 			default:
 				ps.ErrorFlag = true
