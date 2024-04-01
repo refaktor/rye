@@ -1357,7 +1357,6 @@ var builtins = map[string]*env.Builtin{
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "esc")
 			}
-			return arg0
 		},
 	},
 	"prnv": { // **
