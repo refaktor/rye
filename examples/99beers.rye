@@ -1,0 +1,23 @@
+
+rye                                  ; Testing with \word instead of |word for pipe-words
+
+; function private creates a context, executes code in it and just returns the last value
+; experimenting with using it for "ultra-private" environments and verbiage :)
+
+private {
+
+	bottles: fn1 { = 1 \either { "bottle" } { "bottles" } }
+	verse1: fn\cc { n } { .embed join [ "{} " bottles n " of beer on the wall" ] }
+	verse2: fn\cc { n } { .embed join [ "{} " bottles n " of beer" ] }
+	verse3: does { "Take one down and pass it around, " }
+
+	fn\cc { n } {
+		prn join [ verse1 n ", " verse2 n "." newline verse3 ]
+		n - 1 :m \either
+		{ verse1 m |+ "." \print , beers m }
+		{ print "no more bottles of beer on the wall." }
+	}
+} :beers
+
+99 - 90 \beers
+
