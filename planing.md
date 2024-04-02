@@ -88,35 +88,46 @@ If the file argument is . or some/path/. look for main.rye in that location and 
 
 Let state saves be encrypted with password and console_.....rye.enc ask for same password. Demo it with simple contextplay password manager.
 
-### Web console - fwd
-
-- Make paste into shell work
-- More key combinations (ctrl-d, ...)
-- Sole keys (pageup, pagedown)
-
 ### Additional functions, value types [++]
 
 + walk - useful for dialects, recursive algos, ...
 + xword, exword improvements, xword accepts args, equality - matching still works
-
-### Mod-words - experiment
-
-`word::  ::word` would be mod-words and would allow changing existing values to words. So set-words would only create and fail if word already is set in current context. Mod-words would only change and fail if word
-is not yet defined. We rarely modify at all ... to much modifying is a smell that code could be written better. word:: visually is not horrible, or that noticable, but jsut noticable enough I think. So let's do this and
-we will see what practice shows. For starters just add it to loader but it could behave the same as set-word so we woule volontarily use it and see hot it looks and feels at all. If it seems ok, we change the interpreter.
-
-### Import function
+  
+### Import function , current path / script [--]
 
 Import function like "do load %file" but only looks for files local to the main script file or current script file basically. 
 Try to make import always relative to current script, so interpreter should have a concept of "current script" at loplevel. Maybe a specific "do" variant that is invoked in improt and is script location aware.
 
 This would also be needed for loader errors in case of multiple files, so you know what file the loader failed.
 
-### Console with standard ansi colors
+### Improve errors with current path / script [--]
+
+At least loader errors should be able to display filename next to location. Toplevel code at least should also be aware of script filename, or should we look in direction of a stacktrace. Would we need to manually manage the stack of callees'
+maybe only in debug flag since it would impact performance. Maybe functionname => number of calls so recursion doesn't push out the stack info.
+
+### Liner with standard ansi colors, some improvements [--]
 
 Test using standard colors, we will see if they work in Emacs ansi-term then, we will see if maybe general terminal theming works on them, also xterm.js probably has theming, test it, make build flag if possible, update refaktor/liner for it.
 
+We could also try to add some low hanging fruit improvements of syntax highligher for specific word types and jumping logic when we are already updating this.
+
+### Web console - fwd [--]
+
+- Make paste into shell work
+- More key combinations (ctrl-d, ...)
+- Sole keys (pageup, pagedown)
+
 ## LATER
+
+### Math dialect fwd
+
+Let math dialect call rye functions also, not just builtins. It would be good if we could just use function "math" ... not context math and in it function math or math/do ... but still preserve the usable context too. Hmmmm ....
+
+### Mod-words - experiment
+
+`word::  ::word` would be mod-words and would allow changing existing values to words. So set-words would only create and fail if word already is set in current context. Mod-words would only change and fail if word
+is not yet defined. We rarely modify at all ... to much modifying is a smell that code could be written better. word:: visually is not horrible, or that noticable, but jsut noticable enough I think. So let's do this and
+we will see what practice shows. For starters just add it to loader but it could behave the same as set-word so we woule volontarily use it and see hot it looks and feels at all. If it seems ok, we change the interpreter.
 
 ### do_main build flag and Android test
 
