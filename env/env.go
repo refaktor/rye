@@ -263,6 +263,7 @@ type ProgramState struct {
 	ForcedResult Object
 	SkipFlag     bool
 	InErrHandler bool
+	ScriptPath   string // holds the path to the script that is being imported (doed) currently
 }
 
 func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
@@ -282,6 +283,7 @@ func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
 		nil,
 		false,
 		false,
+		"",
 	}
 	return &ps
 }
@@ -303,6 +305,7 @@ func NewProgramStateNEW() *ProgramState {
 		nil,
 		false,
 		false,
+		"",
 	}
 	return &ps
 }

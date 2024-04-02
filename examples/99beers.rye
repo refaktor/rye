@@ -14,7 +14,7 @@ private {
 	fn\cc { n } {
 		prn join [ verse1 n ", " verse2 n "." newline verse3 ]
 		n - 1 :m \either
-		{ verse1 m |+ "." \print , beers m }
+		{ verse1 m \+ "." \print , beers m }
 		{ print "no more bottles of beer on the wall." }
 	}
 } :beers

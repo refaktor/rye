@@ -1556,6 +1556,31 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"import": { // **
+		Argsn: 1,
+		Doc:   "Imports a file, loads and does it from script local path.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Uri:
+				var str string
+				fileIdx, _ := ps.Idx.GetIndex("file")
+				if s1.Scheme.Index == fileIdx {
+					b, err := os.ReadFile(s1.GetPath())
+					if err != nil {
+						return makeError(ps, err.Error())
+					}
+					str = string(b) // convert content to a 'string'
+				}
+				block, _ := loader.LoadString(str, false)
+				//ps = env.AddToProgramState(ps, block.Series, genv)
+				return block
+			default:
+				ps.FailureFlag = true
+				return env.NewError("Must be string or file TODO")
+			}
+		},
+	},
+
 	"load": { // **
 		Argsn: 1,
 		Doc:   "Loads a string into Rye values.",

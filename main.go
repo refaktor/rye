@@ -395,6 +395,80 @@ func main_rye_file(file string, sig bool, subc bool, interactive bool, code stri
 		}
 	}
 
+	ps := env.NewProgramStateNEW()
+	evaldo.RegisterBuiltins(ps)
+	contrib.RegisterBuiltins(ps, &evaldo.BuiltinNames)
+	// ctx := ps.Ctx
+	// ps.Ctx = env.NewEnv(ctx)
+	//ES = ps
+	// evaldo.ShowResults = false
+
+	block := loader.LoadStringNEW(" "+content+" ", sig, ps)
+	switch val := block.(type) {
+	case env.Block:
+
+		//	block, genv := loader.LoadString(content+"\n"+code, sig)
+		//	switch val := block.(type) {
+		//	case env.Block:
+		//es := env.NewProgramState(block.(env.Block).Series, genv)
+		//evaldo.RegisterBuiltins(es)
+		// contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
+
+		ps = env.AddToProgramState(ps, val.Series, ps.Idx)
+
+		if subc {
+			ctx := ps.Ctx
+			ps.Ctx = env.NewEnv(ctx)
+		}
+
+		evaldo.EvalBlock(ps)
+		evaldo.MaybeDisplayFailureOrError(ps, ps.Idx)
+
+		if interactive {
+			evaldo.DoRyeRepl(ps, evaldo.ShowResults)
+		}
+
+	case env.Error:
+		fmt.Println(val.Message)
+	}
+}
+
+func main_rye_file_OLD(file string, sig bool, subc bool, interactive bool, code string) {
+	info := true
+	//util.PrintHeader()
+	//defer profile.Start(profile.CPUProfile).Stop()
+
+	var content string
+
+	if file[len(file)-4:] == ".enc" {
+		fmt.Print("Enter Password: ")
+		bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
+		if err != nil {
+			panic(err)
+		}
+		password := string(bytePassword)
+
+		content = util.ReadSecure(file, password)
+	} else {
+		bcontent, err := os.ReadFile(file)
+		if err != nil {
+			log.Fatal(err)
+		}
+		content = string(bcontent)
+	}
+
+	if info {
+		pattern := regexp.MustCompile(`^; (#[^\n]*)`)
+
+		lines := pattern.FindAllStringSubmatch(content, -1)
+
+		for _, line := range lines {
+			if line[1] != "" {
+				fmt.Println(line[1])
+			}
+		}
+	}
+
 	block, genv := loader.LoadString(content+"\n"+code, sig)
 	switch val := block.(type) {
 	case env.Block:
