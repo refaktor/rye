@@ -78,6 +78,68 @@ users .left-join groups 'group_id 'id
 
 ## For 0.0.18
 
+### Rye force console, silent, do, help, dot behaviour [++]
+
+Run Rye by running a file or . and if this option is set still go to console after ending file. Like cont does, but for any file. Command is named console. Add proper Arg parser and help.
+
+If the file argument is . or some/path/. look for main.rye in that location and run it. 
+
+### Cont cli command - Save\current\secure [++]
+
+Let state saves be encrypted with password and console_.....rye.enc ask for same password. Demo it with simple contextplay password manager.
+
+### Additional functions, value types [++]
+
++ walk - useful for dialects, recursive algos, ...
++ xword, exword improvements, xword accepts args, equality - matching still works
+  
+### Import function , current path / script [--]
+
+Import function like "do load %file" but only looks for files local to the main script file or current script file basically. 
+Try to make import always relative to current script, so interpreter should have a concept of "current script" at loplevel. Maybe a specific "do" variant that is invoked in improt and is script location aware.
+
+This would also be needed for loader errors in case of multiple files, so you know what file the loader failed.
+
+### Improve errors with current path / script [--]
+
+At least loader errors should be able to display filename next to location. Toplevel code at least should also be aware of script filename, or should we look in direction of a stacktrace. Would we need to manually manage the stack of callees'
+maybe only in debug flag since it would impact performance. Maybe functionname => number of calls so recursion doesn't push out the stack info.
+
+### Liner with standard ansi colors, some improvements [--]
+
+Test using standard colors, we will see if they work in Emacs ansi-term then, we will see if maybe general terminal theming works on them, also xterm.js probably has theming, test it, make build flag if possible, update refaktor/liner for it.
+
+We could also try to add some low hanging fruit improvements of syntax highligher for specific word types and jumping logic when we are already updating this.
+
+### Web console - fwd [--]
+
+- Make paste into shell work
+- More key combinations (ctrl-d, ...)
+- Sole keys (pageup, pagedown)
+
+## LATER
+
+### Math dialect fwd
+
+Let math dialect call rye functions also, not just builtins. It would be good if we could just use function "math" ... not context math and in it function math or math/do ... but still preserve the usable context too. Hmmmm ....
+
+### Mod-words - experiment
+
+`word::  ::word` would be mod-words and would allow changing existing values to words. So set-words would only create and fail if word already is set in current context. Mod-words would only change and fail if word
+is not yet defined. We rarely modify at all ... to much modifying is a smell that code could be written better. word:: visually is not horrible, or that noticable, but jsut noticable enough I think. So let's do this and
+we will see what practice shows. For starters just add it to loader but it could behave the same as set-word so we woule volontarily use it and see hot it looks and feels at all. If it seems ok, we change the interpreter.
+
+### do_main build flag and Android test
+
+if build flag do_main is used make the dot behaviour work even without the dot. Usefull for distributing binary and main.rye , also to test to produce a mobil APK with Fyne.
+
+### MakeArgError improve output
+
+We could try to display more information at MakeArgError. We know what type the value was. We don't but if we knew the names of arguments it would be even better. But builtins in Rye currently don't have named 
+arguments at all. And we don't want to store that per-function in runtime, as it would make them heavier. Maybe stored outside somehow? Think about this ... if we would be generating Go code this would also be 
+generated. Maybe try to see how can we make it look and if we can retain simplicity and ability to compile and load the Go versions. Maybe we can even better use the go versions as they wouldn't be defined in 
+and Array.
+
 ### Rye evaluator EvalExpr improvements
 
 Go over the various EvaluateExp functions and solve some confusion around them and .with { x , y } command
@@ -85,32 +147,6 @@ Go over the various EvaluateExp functions and solve some confusion around them a
 ### Rye evaluator profiling
 
 Check what pops up of we profile a fibonnaci or a game of life example
-
-### Web console - make complete
-
-Try to make behaviour as complete as possible. Paste into shell doesn't work, Some key combinations (ctrl-d, ...) , sole keys (pageup, pagedown). Test and list here:
-
-### Additional functions, value types
-
-+ walk - good for dialects, recursive algos, ...
-+ xword, exword improvements, xword accepts args, equality - matching still works
-- import function like "do load %file" but only looks for files local to the main script file, not CWD
-
-### do_main build flag
-
-if build flag do_main is used make the dot behaviour work even without the dot. Usefull for distributing binary and main.rye , also to test to produce a mobil APK with Fyne.
-
-### Dot cli path behaviour
-
-if the file argument is . or some/path/. look for main.rye in that location and run it. 
-
-### Cont cli command - Save\current\secure [++]
-
-Let state saves be encrypted with password and console_.....rye.enc ask for same password. Demo it with simple contextplay password manager.
-
-### Console with standard ansi colors
-
-Test using standard colors, we will see if they work in Emacs ansi-term then, we will see if maybe general terminal theming works on them, also xterm.js probably has theming, test.
 
 ### Save and load history
 
@@ -121,10 +157,6 @@ rye cont --do 'loop 3 { init }'      # implemented ... --do so it's more visible
 rye . --do 'init'                    # TODO runs main.rye and function init
 rye --do 'print 123 + 123' --quit    # TODO
 ```
-
-### Command interactive mode
-
-Load and do file and go to console after it (line cont, but any file, not saved state)
 
 ## Random ideas
 

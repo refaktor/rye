@@ -9,6 +9,7 @@ import (
 	"math/big"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"reflect"
 	"sort"
 
@@ -1564,19 +1565,36 @@ var builtins = map[string]*env.Builtin{
 			case env.Uri:
 				var str string
 				fileIdx, _ := ps.Idx.GetIndex("file")
+				fullpath := filepath.Join(filepath.Dir(ps.ScriptPath), s1.GetPath())
 				if s1.Scheme.Index == fileIdx {
-					b, err := os.ReadFile(s1.GetPath())
+					b, err := os.ReadFile(fullpath)
 					if err != nil {
-						return makeError(ps, err.Error())
+						return MakeBuiltinError(ps, err.Error(), "import")
 					}
 					str = string(b) // convert content to a 'string'
 				}
-				block, _ := loader.LoadString(str, false)
+				script_ := ps.ScriptPath
+				ps.ScriptPath = fullpath
+				block_ := loader.LoadStringNEW(str, false, ps)
+				switch block := block_.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = block.Series
+					EvalBlock(ps)
+					ps.Ser = ser
+				case env.Error:
+					ps.ScriptPath = script_
+					ps.ErrorFlag = true
+					return MakeBuiltinError(ps, block.Message, "import")
+				default:
+					fmt.Println(block)
+					panic("Not block and not error in import builtin.") // TODO -- Think how best to handle this
+				}
+				ps.ScriptPath = script_
 				//ps = env.AddToProgramState(ps, block.Series, genv)
-				return block
+				return ps.Res
 			default:
-				ps.FailureFlag = true
-				return env.NewError("Must be string or file TODO")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "import")
 			}
 		},
 	},
@@ -1600,7 +1618,10 @@ var builtins = map[string]*env.Builtin{
 					}
 					str = string(b) // convert content to a 'string'
 				}
-				block, _ := loader.LoadString(str, false)
+				scrip := ps.ScriptPath
+				ps.ScriptPath = s1.GetPath()
+				block := loader.LoadStringNEW(str, false, ps)
+				ps.ScriptPath = scrip
 				//ps = env.AddToProgramState(ps, block.Series, genv)
 				return block
 			default:

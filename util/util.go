@@ -2,7 +2,6 @@
 package util
 
 import (
-	"fmt"
 	"regexp"
 	"slices"
 	"strconv"
@@ -11,10 +10,12 @@ import (
 	"github.com/refaktor/rye/env"
 )
 
-func PrintHeader() {
-	fmt.Println("=-===============-===-===-=============-=")   // Output: -3
-	fmt.Println(" _/|\\\\_-~*>%,_  Rejy ZERO  _,%<*~-_//|\\_") // Output: -3
-	fmt.Println("=-===============-===-===-=============-=")   // Output: -3
+func TermBold(s string) string {
+	return "\033[1m" + s + "\033[22m"
+}
+
+func TermError(s string) string {
+	return "\033[31m" + s + "\033[0m"
 }
 
 func IndexOfAt(s, sep string, n int) int {

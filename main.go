@@ -361,7 +361,7 @@ func main_ryeco() {
 
 func main_rye_file(file string, sig bool, subc bool, interactive bool, code string) {
 	info := true
-	//util.PrintHeader()
+
 	//defer profile.Start(profile.CPUProfile).Stop()
 
 	var content string
@@ -396,6 +396,7 @@ func main_rye_file(file string, sig bool, subc bool, interactive bool, code stri
 	}
 
 	ps := env.NewProgramStateNEW()
+	ps.ScriptPath = file
 	evaldo.RegisterBuiltins(ps)
 	contrib.RegisterBuiltins(ps, &evaldo.BuiltinNames)
 	// ctx := ps.Ctx
@@ -429,7 +430,7 @@ func main_rye_file(file string, sig bool, subc bool, interactive bool, code stri
 		}
 
 	case env.Error:
-		fmt.Println(val.Message)
+		fmt.Println(util.TermError(val.Message))
 	}
 }
 
