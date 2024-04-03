@@ -88,7 +88,8 @@ func main() {
 		fmt.Println("\033[33m  rye -do 'print 123' -console .       \033[36m# evaluates main.rye in current dir. evaluates do code and enters console")
 		fmt.Println("\033[33m  rye -silent                          \033[36m# enters console in that doesn't show return values - silent mode")
 		fmt.Println("\033[33m  rye -silent -console file.rye        \033[36m# evaluates file.re and enters console in silent mode")
-		fmt.Println("\033[0m\n Thank you for trying out \033[1mRye\033[22m ...\n")
+		fmt.Println("\033[0m\n Thank you for trying out \033[1mRye\033[22m ...")
+		fmt.Println("")
 	}
 	// Parse flags
 	flag.Parse()
