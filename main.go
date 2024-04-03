@@ -62,11 +62,13 @@ var (
 
 func main() {
 	flag.Usage = func() {
-		fmt.Println("╭────────────────────────────────────────────────────────────────╮")
-		fmt.Println("│ \033[1mRye\033[0m language. Visit \033[36mhttps://ryelang.org\033[0m to learn more.         │")
-		fmt.Println("╰────────────────────────────────────────────────────────────────╯")
-		fmt.Println("\n Usage: \033[1mrye\033[0m [\033[1mfilename\033[0m or \033[1mcommand\033[0m] [\033[1moptions\033[0m]")
+		fmt.Println("╭────────────────────────────────────────────────────────────────────────────────────────────---")
+		fmt.Println("│ \033[1mRye\033[0m language. Visit \033[36mhttps://ryelang.org\033[0m to learn more.                            ")
+		fmt.Println("╰───────────────────────────────────────────────────────────────────────────────────────---")
+		fmt.Println("\n Usage: \033[1mrye\033[0m [\033[1moptions\033[0m] [\033[1mfilename\033[0m or \033[1mcommand\033[0m]")
 		fmt.Println("\n To enter \033[1mRye console\033[0m provide no filename or command.")
+		fmt.Println("\n \033[1mOptions\033[0m (optional)")
+		flag.PrintDefaults()
 		fmt.Println("\n \033[1mFilename:\033[0m (optional)")
 		fmt.Println("  [filename]   \n       Executes a Rye file")
 		fmt.Println("  .            \n       Executes a main.rye in current directory")
@@ -74,9 +76,19 @@ func main() {
 		fmt.Println("\n \033[1mCommands:\033[0m (optional)")
 		fmt.Println("  cont\n     Continue console from the last save")
 		fmt.Println("  here\n     Starts in Rye here mode")
-		fmt.Println("\n \033[1mOptions\033[0m (optional)")
-		flag.PrintDefaults()
-		fmt.Println("")
+		fmt.Println(" \033[1mExamples:\033[0m")
+		fmt.Println("\033[33m  rye                                  \033[36m# enters console/REPL")
+		fmt.Println("\033[33m  rye cont                             \033[36m# loads last saved state and enters console")
+		fmt.Println("\033[33m  rye -do 'print 10 + 10' cont         \033[36m# loads last saved state, evaluates do code and enters console")
+		fmt.Println("\033[33m  rye filename.rye                     \033[36m# evaluates filename.rye")
+		fmt.Println("\033[33m  rye .                                \033[36m# evaluates main.rye in current directory")
+		fmt.Println("\033[33m  rye some/path/.                      \033[36m# evaluates main.rye in some/path/")
+		fmt.Println("\033[33m  rye -do 'print \"Hello\" path/.        \033[36m# evaluates main.rye in path/ and then do code")
+		fmt.Println("\033[33m  rye -console file.rye                \033[36m# evaluates file.rye and enters console")
+		fmt.Println("\033[33m  rye -do 'print 123' -console .       \033[36m# evaluates main.rye in current dir. evaluates do code and enters console")
+		fmt.Println("\033[33m  rye -silent                          \033[36m# enters console in that doesn't show return values - silent mode")
+		fmt.Println("\033[33m  rye -silent -console file.rye        \033[36m# evaluates file.re and enters console in silent mode")
+		fmt.Println("\033[0m\n Thank you for trying out \033[1mRye\033[22m ...\n")
 	}
 	// Parse flags
 	flag.Parse()
@@ -93,21 +105,23 @@ func main() {
 			os.Exit(0)
 		}
 
+		var code string
+		if *do != "" {
+			code = *do
+		}
+
+		args := flag.Args()
 		// Check for subcommands (cont) and handle them
-		if flag.NArg() > 0 {
-			if os.Args[1] == "cont" {
-				fmt.Println("CONT")
-				var code string
-				if *do != "" {
-					code = *do
-				}
+		if len(args) > 0 {
+			if args[0] == "cont" {
+				fmt.Println("[continuing...]")
 				ryeFile := findLastConsoleSave()
 				main_rye_file(ryeFile, false, true, true, code)
-			} else if os.Args[1] == "here" {
+			} else if args[0] == "here" {
 				main_rye_repl(os.Stdin, os.Stdout, true, true)
 			} else {
-				ryeFile := dotsToMainRye(os.Args[1])
-				main_rye_file(ryeFile, false, true, *console, "")
+				ryeFile := dotsToMainRye(args[0])
+				main_rye_file(ryeFile, false, true, *console, code)
 			}
 		} else {
 			main_rye_repl(os.Stdin, os.Stdout, true, false)
@@ -366,7 +380,7 @@ func main_rye_file(file string, sig bool, subc bool, interactive bool, code stri
 
 	var content string
 
-	if file[len(file)-4:] == ".enc" {
+	if len(file) > 4 && file[len(file)-4:] == ".enc" {
 		fmt.Print("Enter Password: ")
 		bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
 		if err != nil {
@@ -404,7 +418,7 @@ func main_rye_file(file string, sig bool, subc bool, interactive bool, code stri
 	//ES = ps
 	// evaldo.ShowResults = false
 
-	block := loader.LoadStringNEW(" "+content+" ", sig, ps)
+	block := loader.LoadStringNEW(" "+content+"\n"+code, sig, ps)
 	switch val := block.(type) {
 	case env.Block:
 
