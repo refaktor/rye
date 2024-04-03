@@ -143,7 +143,6 @@ func LoadStringNEW(input string, sig bool, ps *env.ProgramState) env.Object {
 	wordIndexMutex.Unlock()
 
 	if err != nil {
-
 		var bu strings.Builder
 		bu.WriteString("In file " + util.TermBold(ps.ScriptPath) + "\n")
 		errStr := err.Error()
