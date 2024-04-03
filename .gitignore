@@ -41,3 +41,5 @@ data.txt
 bin/
 dist/
 tests/*.html
+shell_*.rye
+console_*.rye

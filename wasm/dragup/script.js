@@ -13,6 +13,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
         let reader = new FileReader();
         reader.onload = function(e) {
             fileContent.style.display = 'block';
+	    fileContent.style.left = "670px";
+	    fileContent.style.top = "40px";
             fileContent.innerText = e.target.result;
         };
         reader.readAsText(file);

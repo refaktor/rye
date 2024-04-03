@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/refaktor/rye/env"
+	"github.com/refaktor/rye/util"
 
 	//. "github.com/yhirose/go-peg"
 	//. "github.com/CWood1/go-peg"
@@ -142,15 +143,16 @@ func LoadStringNEW(input string, sig bool, ps *env.ProgramState) env.Object {
 	wordIndexMutex.Unlock()
 
 	if err != nil {
-		fmt.Print("\x1b[35;3m")
+		var bu strings.Builder
+		bu.WriteString("In file " + util.TermBold(ps.ScriptPath) + "\n")
 		errStr := err.Error()
-		fmt.Print(errStr)
-		fmt.Println("\x1b[0m")
-		fmt.Print("\r")
+		bu.WriteString(errStr)
 
-		empty1 := make([]env.Object, 0)
-		ser := env.NewTSeries(empty1)
-		return *env.NewBlock(*ser)
+		ps.FailureFlag = true
+		return *env.NewError(bu.String())
+		// empty1 := make([]env.Object, 0)
+		// ser := env.NewTSeries(empty1)
+		// return *env.NewBlock(*ser)
 	}
 
 	if val != nil {
