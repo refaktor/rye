@@ -33,7 +33,7 @@ require (
 	github.com/thomasberger/parsemail v1.2.6
 	go.mongodb.org/mongo-driver v1.14.0
 	golang.org/x/crypto v0.21.0
-	golang.org/x/net v0.21.0
+	golang.org/x/net v0.23.0
 	golang.org/x/sync v0.6.0
 	golang.org/x/term v0.18.0
 	golang.org/x/text v0.14.0
