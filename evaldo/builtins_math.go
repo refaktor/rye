@@ -183,6 +183,46 @@ var Builtins_math = map[string]*env.Builtin{
 			}
 		},
 	},
+	"acos": {
+		Argsn: 1,
+		Doc:   "Returns the arccosine.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Integer:
+				if val.Value < -1.0 || val.Value > 1.0 {
+					return MakeBuiltinError(ps, "Invalid input: Acos is only defined for -1 <= x <= 1.", "acos")
+				}
+				return *env.NewDecimal(math.Acos(float64(val.Value)))
+			case env.Decimal:
+				if val.Value < -1.0 || val.Value > 1.0 {
+					return MakeBuiltinError(ps, "Invalid input: Acos is only defined for -1 <= x <= 1.", "acos")
+				}
+				return *env.NewDecimal(math.Acos(val.Value))
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "acos")
+			}
+		},
+	},
+	"acosh": {
+		Argsn: 1,
+		Doc:   "Returns the inverse hyperbolic cosine.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Integer:
+				if val.Value < 1.0 {
+					return MakeBuiltinError(ps, " Acosh is only defined for x >= 1.", "acosh")
+				}
+				return *env.NewDecimal(math.Log(float64(val.Value) + math.Sqrt(float64(val.Value)*float64(val.Value)-1)))
+			case env.Decimal:
+				if val.Value < 1.0 {
+					return MakeBuiltinError(ps, " Acosh is only defined for x >= 1.", "acosh")
+				}
+				return *env.NewDecimal(math.Log(val.Value + math.Sqrt(val.Value*val.Value-1)))
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "acosh")
+			}
+		},
+	},
 	"pi": {
 		Argsn: 0,
 		Doc:   "Return Pi constant.",
