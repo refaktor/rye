@@ -367,6 +367,18 @@ func (s SpreadsheetRow) Type() Type {
 	return SpreadsheetRowType
 }
 
+func (s SpreadsheetRow) ToDict() Dict {
+	ser := make([]string, len(s.Values))
+	for i, v := range s.Values {
+		ser[i] = fmt.Sprint(v)
+	}
+	d := NewDict(map[string]any{})
+	for i, v := range s.Values {
+		d.Data[s.Uplink.Cols[i]] = v
+	}
+	return *d
+}
+
 func (s Spreadsheet) GetColumns() List {
 	lst := make([]any, len(s.Cols))
 	for i, v := range s.Cols {
