@@ -7424,7 +7424,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_smtpd, ps, "smtpd")
 	RegisterBuiltins2(Builtins_mail, ps, "mail")
 	RegisterBuiltinsInContext(Builtins_math, ps, "math")
-	RegisterBuiltinsInContext(Builtins_ps, ps, "devops")
+	RegisterBuiltinsInContext(Builtins_devops, ps, "devops")
 	// ## Archived modules
 	// RegisterBuiltins2(Builtins_gtk, ps, "gtk")
 	// RegisterBuiltins2(Builtins_nats, ps, "nats")

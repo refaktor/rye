@@ -22,11 +22,11 @@ section "Printing functions"
 	{
 		stdout { prns 123 } "123 "
 	}
-	group "print\val"
-	mold\nowrap ?print\val
+	group "printv"
+	mold\nowrap ?printv
 	{ { object } }
 	{
-		stdout { print\val 33 "value is: {{}}" } "value is: 33" + newline
+		stdout { printv 33 "value is: {}" } "value is: 33" + newline
 		; stdout { print\val "OK" "value is: {{}}" } "value is: 33" + newline ; TODO-BUG quotes the string
 		; stdout { { "Jane Austen" } print\val "Hello {{}}!" } "value is: 33" + newline
 	}
