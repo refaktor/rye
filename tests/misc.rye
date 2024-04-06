@@ -338,6 +338,23 @@ section "Math functions"
 		equal { do\in math { abs 99.0 } } 99.0
 	}
 
+	group "acos"
+	mold\nowrap "" 
+	{ { string } }
+	{
+		equal { do\in math { acos -1 } } 3.141592653589793
+		equal { do\in math { acos 0.5 } } 1.0471975511965976
+		equal { do\in math { acos 1 } } 0.000000
+	}
+
+	group "acosh"
+	mold\nowrap "" 
+	{ { string } }
+	{
+		equal { do\in math { acosh 1 } } 0.000000
+		equal { do\in math { acosh 2 } } 1.3169578969248166
+	}
+
 	; TODO add sin and cos ... need PI constant
 	
 }

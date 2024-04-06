@@ -123,7 +123,6 @@ Rye's focus is also interactive use. Check out these asciinema demos:
 
 Python is the *lingua franca* of dynamic programming languages, so comparing examples in Python and Rye can be helpful to some:
 
-  * [Less variables, more flows example vs Python](https://ryelang.blogspot.com/2021/11/less-variables-more-flows-example-vs.html)
   * [Simple compression puzzle - from Python to Rye solution](https://github.com/otobrglez/compression-puzzle/blob/master/src/rye/compress_jm_rec_steps.rye)
   
 ## Modules
