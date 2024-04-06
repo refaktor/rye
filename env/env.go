@@ -264,6 +264,7 @@ type ProgramState struct {
 	SkipFlag     bool
 	InErrHandler bool
 	ScriptPath   string // holds the path to the script that is being imported (doed) currently
+	WorkingPath  string // holds the path to CWD (can be changed in program with specific functions)
 }
 
 func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
@@ -283,6 +284,7 @@ func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
 		nil,
 		false,
 		false,
+		"",
 		"",
 	}
 	return &ps
@@ -305,6 +307,7 @@ func NewProgramStateNEW() *ProgramState {
 		nil,
 		false,
 		false,
+		"",
 		"",
 	}
 	return &ps

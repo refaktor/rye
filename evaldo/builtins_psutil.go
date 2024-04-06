@@ -1,10 +1,13 @@
-//go:build b_psutil
-// +build b_psutil
+//go:build b_devops
+// +build b_devops
 
 package evaldo
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -20,7 +23,120 @@ import (
 // In request we return a raw-map, because it's very inside loop call, this is sparse call, and we get tons of fields, so it would be best
 // to turn them to normal Rye map (which is now Env / later Context or something like it), and they query it from Rye.
 
-var Builtins_ps = map[string]*env.Builtin{
+func FileExists(filePath string) int {
+	_, err := os.Stat(filePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return 0 // fmt.Println("File does not exist")
+		} else {
+			return -1 // fmt.Println("Error checking file:", err)
+		}
+	} else {
+		return 1
+	}
+}
+
+var Builtins_devops = map[string]*env.Builtin{
+
+	"cd": {
+		Argsn: 1,
+		Doc:   "Changes current directory.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch path := arg0.(type) {
+			case env.Uri:
+				new := filepath.Join(filepath.Dir(ps.WorkingPath), path.GetPath())
+				res := FileExists(new)
+				if res == 1 {
+					ps.WorkingPath = filepath.Join(filepath.Dir(ps.WorkingPath), path.GetPath())
+					return arg0
+				} else if res == 0 {
+					return MakeBuiltinError(ps, "Path doesn't exist", "cd")
+				} else {
+					return MakeBuiltinError(ps, "Error determining if path exists", "cd")
+				}
+				// TODO -- check if it exists
+			default:
+				return *MakeArgError(ps, 1, []env.Type{env.UriType}, "cd")
+			}
+		},
+	},
+
+	"mkdir": {
+		Argsn: 1,
+		Doc:   "Creates a directory.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch path := arg0.(type) {
+			case env.Uri:
+				newDir := filepath.Join(filepath.Dir(ps.WorkingPath), path.GetPath())
+				err := os.Mkdir(newDir, 0755) // Create directory with permissions 0755
+				if err != nil {
+					return *MakeBuiltinError(ps, "Error creating directory: "+err.Error(), "mkdir")
+				} else {
+					return arg0
+				}
+			default:
+				return *MakeArgError(ps, 1, []env.Type{env.UriType}, "mkdir")
+			}
+		},
+	},
+
+	"mv": {
+		Argsn: 2,
+		Doc:   "Creates a directory.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch path := arg0.(type) {
+			case env.Uri:
+				switch path2 := arg1.(type) {
+				case env.Uri:
+					old := filepath.Join(filepath.Dir(ps.WorkingPath), path.GetPath())
+					new := filepath.Join(filepath.Dir(ps.WorkingPath), path2.GetPath())
+					err := os.Rename(old, new)
+					if err != nil {
+						fmt.Println("Error renaming file:", err)
+						return *MakeBuiltinError(ps, "Error renaming file: "+err.Error(), "mv")
+					} else {
+						return arg1
+					}
+				default:
+					return *MakeArgError(ps, 1, []env.Type{env.UriType}, "mkdir")
+				}
+			default:
+				return *MakeArgError(ps, 1, []env.Type{env.UriType}, "mkdir")
+			}
+		},
+	},
+
+	"cwd": {
+		Argsn: 0,
+		Doc:   "Returns current working directory.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return *env.NewUri1(ps.Idx, "file://"+ps.WorkingPath)
+		},
+	},
+
+	"ls": {
+		Argsn: 0,
+		Doc:   "Returns current working directory.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+
+			files, err := ioutil.ReadDir(ps.WorkingPath + "/")
+			if err != nil {
+				return *MakeBuiltinError(ps, "Error reading directory:"+err.Error(), "ls")
+			}
+
+			items := make([]env.Object, len(files))
+
+			for i, file := range files {
+				// fmt.Println(file.Name()) // Print only file/directory names
+
+				items[i] = *env.NewUri1(ps.Idx, "file://"+file.Name())
+			}
+			return *env.NewBlock(*env.NewTSeries(items))
+
+		},
+	},
+
+	// GOPSUTIL
 
 	"host-info?": {
 		Argsn: 0,
@@ -78,7 +194,7 @@ var Builtins_ps = map[string]*env.Builtin{
 			r.Data["1"] = *env.NewDecimal(v.Load1)
 			r.Data["5"] = *env.NewDecimal(v.Load5)
 			r.Data["15"] = *env.NewDecimal(v.Load15)
-			return r
+			return *r
 		},
 	},
 	"virtual-memory?": {
@@ -139,7 +255,7 @@ var Builtins_ps = map[string]*env.Builtin{
 			for i, p := range pids {
 				pids2[i] = env.NewInteger(int64(p))
 			}
-			return env.NewBlock(*env.NewTSeries(pids2))
+			return *env.NewBlock(*env.NewTSeries(pids2))
 		},
 	},
 	"processes?": {
@@ -171,7 +287,7 @@ var Builtins_ps = map[string]*env.Builtin{
 				processSpreadsheetAdd(s, process)
 				return s.Rows[0].ToDict()
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "process")
+				return *MakeArgError(ps, 1, []env.Type{env.IntegerType}, "process")
 			}
 		},
 	},

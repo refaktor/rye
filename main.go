@@ -52,7 +52,7 @@ var CODE []any
 // NEW FLASGS HANDLING
 
 var (
-	// fileName = flag.String("file", "", "Path to the Rye file (default: none)")
+	// fileName = flag.String("fiimle", "", "Path to the Rye file (default: none)")
 	do     = flag.String("do", "", "Evaluates code after it loads a file or last save.")
 	silent = flag.Bool("silent", false, "Console doesn't display return values")
 	//	quit    = flag.Bool("quit", false, "Quits after executing.")
@@ -75,11 +75,13 @@ func main() {
 		fmt.Println("  [some/path]/.\n       Executes a main.rye on some path")
 		fmt.Println("\n \033[1mCommands:\033[0m (optional)")
 		fmt.Println("  cont\n     Continue console from the last save")
-		fmt.Println("  here\n     Starts in Rye here mode")
+		fmt.Println("  here\n     Starts in Rye here mode (wip)")
 		fmt.Println(" \033[1mExamples:\033[0m")
 		fmt.Println("\033[33m  rye                                  \033[36m# enters console/REPL")
-		fmt.Println("\033[33m  rye cont                             \033[36m# loads last saved state and enters console")
-		fmt.Println("\033[33m  rye -do 'print 10 + 10' cont         \033[36m# loads last saved state, evaluates do code and enters console")
+		fmt.Println("\033[33m  rye -do \"print 33 * 42\"              \033[36m# evaluates the do code")
+		fmt.Println("\033[33m  rye -do 'name: \"Jim\"' console        \033[36m# evaluates the do code and enters console")
+		fmt.Println("\033[33m  rye cont                             \033[36m# continues/loads last saved state and enters console")
+		fmt.Println("\033[33m  rye -do 'print 10 + 10' cont         \033[36m# continues/loads last saved state, evaluates do code and enters console")
 		fmt.Println("\033[33m  rye filename.rye                     \033[36m# evaluates filename.rye")
 		fmt.Println("\033[33m  rye .                                \033[36m# evaluates main.rye in current directory")
 		fmt.Println("\033[33m  rye some/path/.                      \033[36m# evaluates main.rye in some/path/")
@@ -125,7 +127,11 @@ func main() {
 				main_rye_file(ryeFile, false, true, *console, code)
 			}
 		} else {
-			main_rye_repl(os.Stdin, os.Stdout, true, false)
+			if *do != "" {
+				main_rye_file("", false, true, *console, code)
+			} else {
+				main_rye_repl(os.Stdin, os.Stdout, true, false)
+			}
 		}
 	}
 }
@@ -390,12 +396,14 @@ func main_rye_file(file string, sig bool, subc bool, interactive bool, code stri
 		password := string(bytePassword)
 
 		content = util.ReadSecure(file, password)
-	} else {
+	} else if file != "" {
 		bcontent, err := os.ReadFile(file)
 		if err != nil {
 			log.Fatal(err)
 		}
 		content = string(bcontent)
+	} else {
+		content = ""
 	}
 
 	if info {
@@ -412,6 +420,7 @@ func main_rye_file(file string, sig bool, subc bool, interactive bool, code stri
 
 	ps := env.NewProgramStateNEW()
 	ps.ScriptPath = file
+	ps.WorkingPath, _ = os.Getwd() // TODO -- WHAT SHOULD WE DO IF GETWD FAILS?
 	evaldo.RegisterBuiltins(ps)
 	contrib.RegisterBuiltins(ps, &evaldo.BuiltinNames)
 	// ctx := ps.Ctx
