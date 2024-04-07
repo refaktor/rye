@@ -355,6 +355,35 @@ section "Math functions"
 		equal { do\in math { acosh 2 } } 1.3169578969248166
 	}
 
+	group "asin"
+	mold\nowrap "" 
+	{ { string } }
+	{
+		equal { do\in math { asin -1 } } -1.5707963267948966
+		equal { do\in math { asin 0 } } 0
+		equal { do\in math { asin 1 } } 1.5707963267948966
+	}
+
+	group "asinh"
+	mold\nowrap "" 
+	{ { string } }
+	{
+		equal { do\in math { asinh -1 } } -0.8813735870195428
+		equal { do\in math { asinh 0 } } 0
+		equal { do\in math { asinh 1 } } 0.8813735870195429
+	}
+
+
+group "atan"
+	mold\nowrap "" 
+	{ { string } }
+	{
+		equal { do\in math { atan -1 } } -0.7853981633974483
+		equal { do\in math { atan 0 } } 0
+		equal { do\in math { atan 1 } } 0.7853981633974483
+	}
+
+
 	; TODO add sin and cos ... need PI constant
 	
 }
