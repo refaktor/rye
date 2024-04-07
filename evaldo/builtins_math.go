@@ -223,6 +223,54 @@ var Builtins_math = map[string]*env.Builtin{
 			}
 		},
 	},
+	"asin": {
+		Argsn: 1,
+		Doc:   "Returns the arcsine (inverse sine).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Integer:
+				if val.Value < -1.0 || val.Value > 1.0 {
+					return MakeBuiltinError(ps, "Invalid input: Asin is only defined for -1 <= x <= 1.", "asin")
+				}
+				return *env.NewDecimal(math.Asin(float64(val.Value)))
+			case env.Decimal:
+				if val.Value < -1.0 || val.Value > 1.0 {
+					return MakeBuiltinError(ps, "Invalid input: Asin is only defined for -1 <= x <= 1.", "asin")
+				}
+				return *env.NewDecimal(math.Asin(val.Value))
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "asin")
+			}
+		},
+	},
+	"asinh": {
+		Argsn: 1,
+		Doc:   "Returns the inverse hyperbolic sine.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Integer:
+				return *env.NewDecimal(math.Log(float64(val.Value) + math.Sqrt(float64(val.Value)*float64(val.Value)+1)))
+			case env.Decimal:
+				return *env.NewDecimal(math.Log(val.Value + math.Sqrt(val.Value*val.Value+1)))
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "asinh")
+			}
+		},
+	},
+	"atan": {
+		Argsn: 1,
+		Doc:   "Returns the arctangent (inverse tangent).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Integer:
+				return *env.NewDecimal(math.Atan(float64(val.Value)))
+			case env.Decimal:
+				return *env.NewDecimal(math.Atan(val.Value))
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "atan")
+			}
+		},
+	},
 	"pi": {
 		Argsn: 0,
 		Doc:   "Return Pi constant.",
