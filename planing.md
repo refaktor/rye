@@ -1,5 +1,5 @@
 # Planning
-
+---
 ## For 0.0.16 [+]
 
 ### Subc flag default [++]
@@ -39,6 +39,8 @@ is approachable than shell, which is contrary to what I thought.
 We shell needs to support multiline, for some examples in docs to work. It can work the same as Regular shell, where if the last character is space it goes into multiline mode. In this case the space character should be made visible, via 
 something like middot or a newline like character. Or / and it could look for open parenthesis and go into multiple lines until it's closed.
 
+---
+
 ## For 0.0.17 [+]
 
 ### Command line arguments improvement [++]
@@ -76,6 +78,8 @@ users .left-join groups 'group_id 'id
 * function arguments are defines inside parenthesis, like math syntax usually is
 * added math subcontext that includes typical math functions and math dialect, added first few
 
+---
+
 ## For 0.0.18
 
 ### Rye force console, silent, do, help, dot behaviour [++]
@@ -100,6 +104,8 @@ Try to make import always relative to current script, so interpreter should have
 
 This would also be needed for loader errors in case of multiple files, so you know what file the loader failed.
 
+---
+
 ## For 0.0.19
 
 ### Improve errors with current path / script [+-]
@@ -121,13 +127,21 @@ We could also try to add some low hanging fruit improvements of syntax highlighe
 
 ### Math dialect fwd
 
-Let math dialect call rye functions also, not just builtins. It would be good if we could just use function "math" ... not context math and in it function math or math/do ... but still preserve the usable context too. Hmmmm ....
+Let math dialect call rye functions also, not just builtins. It would be good if we could just use function "math" ... not context math and in it function math or math/do ... but still preserve the usable context too.
+
+Pratik is adding standard math functions from https://pkg.go.dev/math to the context. 
 
 ### Devops context fwd [+-]
+
+- Integrate relevant function from https://github.com/shirou/gopsutil [++]
+- Create standard commands / utils like cd / ls / mkdir / cp / mv [+-]
+- Integrate awesome script library for many standard piping commands https://github.com/bitfield/script [--]
 
 ### do_main build flag and Android test
 
 if build flag do_main is used make the dot behaviour work even without the dot. Usefull for distributing binary and main.rye , also to test to produce a mobil APK with Fyne.
+
+---
 
 ## LATER
 
@@ -162,7 +176,9 @@ rye . --do 'init'                    # TODO runs main.rye and function init
 rye --do 'print 123 + 123' --quit    # TODO
 ```
 
-## Random ideas
+---
+
+## RANDOM
 
 ### ~~Smart history v01 (just ideas)~~
 
