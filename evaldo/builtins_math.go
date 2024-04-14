@@ -271,6 +271,48 @@ var Builtins_math = map[string]*env.Builtin{
 			}
 		},
 	},
+	"atan2": {
+		Argsn: 2,
+		Doc:   "Returns the arc tangent of y/x, using the signs of the two to determine the quadrant of the return value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Integer:
+				switch val2 := arg1.(type) {
+				case env.Integer:
+					return *env.NewDecimal(math.Atan2(float64(val.Value), float64(val2.Value)))
+				case env.Decimal:
+					return *env.NewDecimal(math.Atan2(float64(val.Value), val2.Value))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "atan2")
+				}
+			case env.Decimal:
+				switch val2 := arg1.(type) {
+				case env.Integer:
+					return *env.NewDecimal(math.Atan2(val.Value, float64(val2.Value)))
+				case env.Decimal:
+					return *env.NewDecimal(math.Atan2(val.Value, val2.Value))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "atan2")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "atan2")
+			}
+		},
+	},
+	"atanh": {
+		Argsn: 1,
+		Doc:   "Returns the inverse hyperbolic tangent.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Integer:
+				return *env.NewDecimal(math.Atanh(float64(val.Value)))
+			case env.Decimal:
+				return *env.NewDecimal(math.Atanh(val.Value))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "atanh")
+			}
+		},
+	},
 	"pi": {
 		Argsn: 0,
 		Doc:   "Return Pi constant.",
