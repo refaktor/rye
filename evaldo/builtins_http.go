@@ -44,7 +44,7 @@ TODO -- integrate gowabs into this and implement their example first just as han
 
 var Builtins_http = map[string]*env.Builtin{
 
-	"new-server": {
+	"http-server": {
 		Argsn: 1,
 		Doc:   "Create new http server.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

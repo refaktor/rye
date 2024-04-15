@@ -7423,6 +7423,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_bson, ps, "bson")
 	RegisterBuiltins2(Builtins_smtpd, ps, "smtpd")
 	RegisterBuiltins2(Builtins_mail, ps, "mail")
+	RegisterBuiltins2(Builtins_ssh, ps, "ssh")
 	RegisterBuiltinsInContext(Builtins_math, ps, "math")
 	RegisterBuiltinsInContext(Builtins_devops, ps, "devops")
 	// ## Archived modules
