@@ -5281,6 +5281,34 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"nl": {
+		Argsn: 1,
+		Doc:   "Returns the argument 1 a d a newline character.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				return *env.NewString(s1.Value + "\n")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "left")
+			}
+		},
+	},
+
+	"pink": {
+		Argsn: 1,
+		Doc:   "Returns the argument 1 a d a newline character.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				return *env.NewString("\033[35m" + s1.Value + "\033[0m")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "left")
+			}
+		},
+	},
+
 	"trim": {
 		Argsn: 1,
 		Doc:   "Trims the String of spacing characters.",
@@ -7423,6 +7451,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_bson, ps, "bson")
 	RegisterBuiltins2(Builtins_smtpd, ps, "smtpd")
 	RegisterBuiltins2(Builtins_mail, ps, "mail")
+	RegisterBuiltins2(Builtins_ssh, ps, "ssh")
 	RegisterBuiltinsInContext(Builtins_math, ps, "math")
 	RegisterBuiltinsInContext(Builtins_devops, ps, "devops")
 	// ## Archived modules

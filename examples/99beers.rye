@@ -1,5 +1,5 @@
 
-       rye.!!!!__a<>|sdsd                                  ; Testing with \word instead of |word for pipe-words
+rye                                  ; Testing with \word instead of |word for pipe-words
 
 ; function private creates a context, executes code in it and just returns the last value
 ; experimenting with using it for "ultra-private" environments and verbiage :)

@@ -360,7 +360,7 @@ section "Math functions"
 	{ { string } }
 	{
 		equal { do\in math { asin -1 } } -1.5707963267948966
-		equal { do\in math { asin 0 } } 0
+		equal { do\in math { asin 0 } } 0.000
 		equal { do\in math { asin 1 } } 1.5707963267948966
 	}
 
@@ -369,17 +369,16 @@ section "Math functions"
 	{ { string } }
 	{
 		equal { do\in math { asinh -1 } } -0.8813735870195428
-		equal { do\in math { asinh 0 } } 0
+		equal { do\in math { asinh 0 } } 0.000
 		equal { do\in math { asinh 1 } } 0.8813735870195429
 	}
 
-
-group "atan"
+	group "atan"
 	mold\nowrap "" 
 	{ { string } }
 	{
 		equal { do\in math { atan -1 } } -0.7853981633974483
-		equal { do\in math { atan 0 } } 0
+		equal { do\in math { atan 0 } } 0.00000
 		equal { do\in math { atan 1 } } 0.7853981633974483
 	}
 
@@ -396,9 +395,6 @@ group "atanh"
 	{
 		equal { do\in math { atanh 0.5 } } 0.5493061443340548
 	}
-
-
-	; TODO add sin and cos ... need PI constant
 	
 }
 

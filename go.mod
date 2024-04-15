@@ -13,6 +13,7 @@ require (
 	github.com/blevesearch/bleve/v2 v2.4.0
 	github.com/blevesearch/bleve_index_api v1.1.6
 	github.com/drewlanenga/govector v0.0.0-20220726163947-b958ac08bc93
+	github.com/gliderlabs/ssh v0.3.7
 	github.com/go-gomail/gomail v0.0.0-20160411212932-81ebce5c23df
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
@@ -27,7 +28,7 @@ require (
 	github.com/mrz1836/postmark v1.6.4
 	github.com/pkg/term v1.1.0
 	github.com/refaktor/go-peg v0.0.0-20220116201714-31e3dfa8dc7d
-	github.com/refaktor/liner v1.2.6
+	github.com/refaktor/liner v1.2.10
 	github.com/sashabaranov/go-openai v1.20.4
 	github.com/shirou/gopsutil/v3 v3.24.3
 	github.com/thomasberger/parsemail v1.2.6
@@ -42,6 +43,7 @@ require (
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/RoaringBitmap/roaring v1.2.3 // indirect
+	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.10 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.1 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.5 // indirect

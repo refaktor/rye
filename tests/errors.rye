@@ -1,0 +1,32 @@
+section "Runtime error detection"
+""
+{
+	group "do"
+	""
+	{ { object } }
+	{
+		error { do { print } } 
+		error { do { 1 / 0 } }
+	}
+	group "loop"
+	""
+	{ { object } }
+	{
+		error { loop 2 { print } } 
+		error { loop 2 { 1 / 0 } }
+	}
+	group "for"
+	""
+	{ { object } }
+	{
+		error { for [ 1 2 ] { print } } 
+		error { for [ 1 2 ] { 1 / 0 } }
+	}
+	group "with"
+	""
+	{ { object } }
+	{
+		error { with { print } } 
+		error { with { 1 / 0 } }
+	}
+}
