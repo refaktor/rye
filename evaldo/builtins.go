@@ -56,6 +56,12 @@ func MakeArgError(env1 *env.ProgramState, N int, typ []env.Type, fn string) *env
 	return env.NewError("Function " + fn + " requires argument " + strconv.Itoa(N) + " to be of	: " + types + ".")
 }
 
+func MakeNativeArgError(env1 *env.ProgramState, N int, knd []string, fn string) *env.Error {
+	env1.FailureFlag = true
+	kinds := strings.Join(knd, ", ")
+	return env.NewError("Function " + fn + " requires native argument " + strconv.Itoa(N) + " to be of kind	: " + kinds + ".")
+}
+
 func MakeRyeError(env1 *env.ProgramState, val env.Object, er *env.Error) *env.Error {
 	switch val := val.(type) {
 	case env.String: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
