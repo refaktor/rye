@@ -395,6 +395,22 @@ group "atanh"
 	{
 		equal { do\in math { atanh 0.5 } } 0.5493061443340548
 	}
+
+group "ceil"
+	mold\nowrap "" 
+	{ { string } }
+	{
+		equal { do\in math { ceil 5.7 } } 6.000000
+		equal { do\in math { ceil 4.9 } } 5.000000
+	}
+
+group "cbrt"
+	mold\nowrap "" 
+	{ { string } }
+	{
+		equal { do\in math { cbrt 27 } } 3.000000
+		equal { do\in math { cbrt 12.3 } } 2.308350239753609
+	}
 	
 }
 
