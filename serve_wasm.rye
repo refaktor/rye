@@ -5,7 +5,7 @@
 
 rye .needs { http }
 
-new-server ":8085"
+http-server ":8085"
 |handle "/" new-static-handler %wasm
 |serve
 

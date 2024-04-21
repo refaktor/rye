@@ -98,19 +98,24 @@ func main() {
 
 	evaldo.ShowResults = !*silent
 
+	var code string
+	if *do != "" {
+		code = *do
+	}
+
 	// Check for --help flag
 	if flag.NFlag() == 0 && flag.NArg() == 0 {
-		main_rye_repl(os.Stdin, os.Stdout, true, false)
+		if Option_Do_Main {
+			ryeFile := dotsToMainRye(".")
+			main_rye_file(ryeFile, false, true, *console, code)
+		} else {
+			main_rye_repl(os.Stdin, os.Stdout, true, false)
+		}
 	} else {
 		// Check for --help flag
 		if *help {
 			flag.Usage()
 			os.Exit(0)
-		}
-
-		var code string
-		if *do != "" {
-			code = *do
 		}
 
 		args := flag.Args()

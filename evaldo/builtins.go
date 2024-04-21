@@ -7399,7 +7399,11 @@ var builtins = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return *env.NewString(strings.Join(os.Args[2:], " "))
+			if len(os.Args) > 1 {
+				return *env.NewString(strings.Join(os.Args[2:], " "))
+			} else {
+				return *env.NewString("")
+			}
 			// block, _ := loader.LoadString(os.Args[0], false)
 			// return block
 		},
