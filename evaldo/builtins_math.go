@@ -313,6 +313,34 @@ var Builtins_math = map[string]*env.Builtin{
 			}
 		},
 	},
+	"ceil": {
+		Argsn: 1,
+		Doc:   "Returns the least integer value greater than or equal to x.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Integer:
+				return *env.NewDecimal(math.Ceil(float64(val.Value)))
+			case env.Decimal:
+				return *env.NewDecimal(math.Ceil(val.Value))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "ceil")
+			}
+		},
+	},
+	"cbrt": {
+		Argsn: 1,
+		Doc:   "Returns returns the cube root of x.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Integer:
+				return *env.NewDecimal(math.Cbrt(float64(val.Value)))
+			case env.Decimal:
+				return *env.NewDecimal(math.Cbrt(val.Value))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "cbrt")
+			}
+		},
+	},
 	"pi": {
 		Argsn: 0,
 		Doc:   "Return Pi constant.",
