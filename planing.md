@@ -121,9 +121,9 @@ We could also try to add some low hanging fruit improvements of syntax highlighe
 
 ### Web console - fwd [--]
 
-- Make paste into shell work
-- More key combinations (ctrl-d, ...)
-- Sole keys (pageup, pagedown)
+- Make paste into shell work [+]
+- More key combinations (ctrl-l, ctrl-d, ...) [+--] 
+- Sole keys (pageup, pagedown) [--]
 
 ### Math dialect fwd
 
