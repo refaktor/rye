@@ -9,7 +9,7 @@ retract v0.0.11 // Published accidentally with a bug
 require (
 	github.com/aws/aws-sdk-go-v2 v1.26.1
 	github.com/aws/aws-sdk-go-v2/config v1.27.10
-	github.com/aws/aws-sdk-go-v2/service/ses v1.22.4
+	github.com/aws/aws-sdk-go-v2/service/ses v1.22.5
 	github.com/bitfield/script v0.22.0
 	github.com/blevesearch/bleve/v2 v2.4.0
 	github.com/blevesearch/bleve_index_api v1.1.6
