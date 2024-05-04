@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# This is a first **proof of concept** only, the naming, the functionality might change. Please propose changes if you see any faults,
+# especially security implications.
+
+# Assumes normal rye build (at least tiny is on the PATH), but we don't define RYE_HOME or anything like this for now, maybe we should 
+
+rye $RYE_HOME/util/ryel.rye $@

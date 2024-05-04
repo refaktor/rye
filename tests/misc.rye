@@ -382,29 +382,31 @@ section "Math functions"
 		equal { do\in math { atan 1 } } 0.7853981633974483
 	}
 
-group "atan2"
+	group "atan2"
 	mold\nowrap "" 
 	{ { string } }
 	{
 		equal { do\in math { atan2 3 4 } } 0.6435011087932844
 	}
-
-group "atanh"
+	
+	group "atanh"
 	mold\nowrap "" 
 	{ { string } }
 	{
 		equal { do\in math { atanh 0.5 } } 0.5493061443340548
 	}
-
-group "ceil"
+	
+	group "ceil"
 	mold\nowrap "" 
 	{ { string } }
 	{
 		equal { do\in math { ceil 5.7 } } 6.000000
 		equal { do\in math { ceil 4.9 } } 5.000000
 	}
-
-group "cbrt"
+	
+	; TODO add sin and cos ... need PI constant
+	
+	group "cbrt"
 	mold\nowrap "" 
 	{ { string } }
 	{

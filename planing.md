@@ -137,7 +137,7 @@ Pratik is adding standard math functions from https://pkg.go.dev/math to the con
 - Create standard commands / utils like cd / ls / mkdir / cp / mv [+-]
 - Integrate awesome script library for many standard piping commands https://github.com/bitfield/script [--]
 
-### do_main build flag and Android test
+### do_main build flag and Android test [+-]
 
 if build flag do_main is used make the dot behaviour work even without the dot. Usefull for distributing binary and main.rye , also to test to produce a mobil APK with Fyne.
 

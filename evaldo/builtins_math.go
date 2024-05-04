@@ -393,7 +393,7 @@ var Builtins_math = map[string]*env.Builtin{
 			return DialectMath(ps, arg0)
 		},
 	},
-	"math": {
+	"calc": {
 		Argsn: 1,
 		Doc:   "Do math dialect",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

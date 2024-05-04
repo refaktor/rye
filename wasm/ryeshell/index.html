@@ -261,7 +261,7 @@
 	  convertEol: true,
 	  rows: 30,
       })
-      
+    
       //      term.setOption('theme', theme)
       term.options.theme = theme;
       //      term.setOption('theme', theme)
@@ -269,7 +269,15 @@
       //		term.loadAddon(fitAddon)
       //		fitAddon.fit()
       
-      
+      term.attachCustomKeyEventHandler((arg) => {
+        if (arg.ctrlKey && arg.code === "KeyV" && arg.type === "keydown") {
+            navigator.clipboard.readText()
+              .then(text => {
+                term.write(text);
+              })
+        };
+        return true;
+    });  
       //		term.open(document.getElementById('terminal-container'))
       
       //     var term = new Terminal();

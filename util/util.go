@@ -71,6 +71,7 @@ func StringToFieldsWithQuoted(str string, sepa string, quote string) env.Block {
 		return !quoted && string(r) == sepa
 	})
 	lst := make([]env.Object, len(spl))
+
 	re := regexp.MustCompile("[0-9]+")
 	for i := 0; i < len(spl); i++ {
 		//fmt.Println(spl[i])
@@ -78,7 +79,6 @@ func StringToFieldsWithQuoted(str string, sepa string, quote string) env.Block {
 		// val, _ := loader.LoadString(spl[i], false)
 		// numeric, _ := regexp.MatchString("[0-9]+", spl[i])
 		numeric := re.MatchString(spl[i])
-		// fmt.Println(numeric)
 		pass := false
 		if numeric {
 			num, err := strconv.Atoi(spl[i])

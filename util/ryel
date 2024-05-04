@@ -1,9 +1,0 @@
-#!/bin/bash
-
-FILE=$PWD/ryel
-if [ -f "$FILE" ]; then
-    echo "Starting local rye interpreter"
-    $FILE "$@"
-else 
-    echo "You don't have local Ryel binary yet. Define ryel.mod if needed and run ryelc build"
-fi

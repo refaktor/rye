@@ -1,0 +1,51 @@
+; Rye local binary
+;
+; *This is experimental way to work with rye interpreter*
+;
+; This Rye script looks at local rye.mod and tries to build Rye binary with listed bindings
+
+; for outside of rye source dir
+; a=$PWD ; cd ~/go/src/rye ; go build -tags "b_tiny,b_http,b_bleve" -o "$a/ryel" ; cd "$a"
+
+print-header: does {
+	print "___      ____,          .     __"
+	print "|__) \ / |__  |     /\  |\ | / _`"
+	print "|  \  |  |___ |___ /~~\ | \| \__>"
+	print "===================================="
+	print "Building local Rye interpreter with modules:"
+}
+
+build-ryel: fn { tags } {
+	
+	print-header
+	
+	open %ryel.mod
+	|fix\either
+	{ print "Create rye.mod file and list modules." " nil " }
+	{ .read-all }
+	|load
+	|map { .to-string .concat* "b_" }
+	|join\with " " :modules |print
+
+	cp-embed: either tags = "embed_main" { "cp main.rye %RYE_HOME/buildtemp/. ; " } { "" }
+	
+	command: join { cp-embed $ a=%PWD ; cd %RYE_HOME ; go build -tags "$ + modules + " " + tags $" -o "%a/ryel" ; cd "%a"$ } ; $ delimiter for string is just temporary ... ' conflicts with lit-words and Rebols { } with blocks so this question is open so far
+	command .replace "%" "$" :command
+	; print "Build command: " + command
+	cmd command
+}
+	
+install-ryel: fn { } {
+  print-header
+  print "TODO: Installing Ryel ..."
+}
+
+rye .args -> 0 \fix { "" } :mode
+rye .args -> 1 \fix { "" } :tags
+
+switch mode {
+	"build"   { build-ryel tags }
+	"install" { install-ryel }
+}
+
+; Later when script is executed and it returns a failure of missing known binding it adds it to the list

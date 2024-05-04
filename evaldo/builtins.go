@@ -233,9 +233,8 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 			if posMode {
 				idx--
 			}
-			v := s1.Data[idx]
-			ok := true
-			if ok {
+			if len(s1.Data) >= int(idx)+1 {
+				v := s1.Data[idx]
 				return env.ToRyeValue(v)
 			} else {
 				ps.FailureFlag = true
@@ -249,9 +248,8 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 			if posMode {
 				idx--
 			}
-			v := s1.Data[idx]
-			ok := true
-			if ok {
+			if len(s1.Data) >= int(idx)+1 {
+				v := s1.Data[idx]
 				return env.ToRyeValue(v)
 			} else {
 				ps.FailureFlag = true
@@ -265,9 +263,8 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 			if posMode {
 				idx--
 			}
-			v := s1.Series.Get(int(idx))
-			ok := true
-			if ok {
+			if len(s1.Series.S) >= int(idx)+1 {
+				v := s1.Series.Get(int(idx))
 				return v
 			} else {
 				ps.FailureFlag = true
@@ -7405,7 +7402,11 @@ var builtins = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return *env.NewString(strings.Join(os.Args[2:], " "))
+			if len(os.Args) > 1 {
+				return *env.NewString(strings.Join(os.Args[2:], " "))
+			} else {
+				return *env.NewString("")
+			}
 			// block, _ := loader.LoadString(os.Args[0], false)
 			// return block
 		},

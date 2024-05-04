@@ -464,6 +464,9 @@ startOfHere:
 					line = line[:pos]
 					s.needRefresh = true
 				}
+			case "l":
+				s.eraseScreen()
+				s.needRefresh = true
 			}
 		} else if next.Alt {
 			switch strings.ToLower(next.Key) {

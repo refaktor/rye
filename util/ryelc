@@ -1,3 +1,0 @@
-#!/bin/bash
-
-/home/nano/go/src/rye/rye /home/nano/go/src/rye/ryel.rye $1
