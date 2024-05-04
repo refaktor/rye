@@ -105,7 +105,9 @@ func main() {
 
 	// Check for --help flag
 	if flag.NFlag() == 0 && flag.NArg() == 0 {
-		if Option_Do_Main {
+		if Option_Embed_Main {
+			main_rye_file("buildtemp/main.rye", false, true, *console, code)
+		} else if Option_Do_Main {
 			ryeFile := dotsToMainRye(".")
 			main_rye_file(ryeFile, false, true, *console, code)
 		} else {
@@ -223,7 +225,7 @@ func dotsToMainRye(ryeFile string) string {
 	re := regexp.MustCompile(`^\.$|/\.$`)
 	if re.MatchString(ryeFile) {
 		main_path := ryeFile[:len(ryeFile)-1] + "main.rye"
-		if _, err := os.Stat(main_path); err == nil {
+		if _, err := os.Stat(main_path); err == nil || Option_Embed_Main {
 			_, err := os.ReadFile(main_path)
 			if err != nil {
 				log.Fatal(err)
@@ -402,7 +404,13 @@ func main_rye_file(file string, sig bool, subc bool, interactive bool, code stri
 
 		content = util.ReadSecure(file, password)
 	} else if file != "" {
-		bcontent, err := os.ReadFile(file)
+		var bcontent []byte
+		var err error
+		if Option_Embed_Main {
+			bcontent, err = Rye_files.ReadFile(file)
+		} else {
+			bcontent, err = os.ReadFile(file)
+		}
 		if err != nil {
 			log.Fatal(err)
 		}

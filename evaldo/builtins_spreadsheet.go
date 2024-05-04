@@ -496,39 +496,44 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		},
 	},
 
-	"sort-col!": {
-		Argsn: 2,
+	"sort-by!": {
+		Argsn: 3,
 		Doc:   "Sorts row by given column.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			dir, ok := arg2.(env.Word)
+			if !ok {
+				return MakeArgError(ps, 3, []env.Type{env.WordType}, "sort-col!")
+			}
+			var dirAsc bool
+			if dir.Index == ps.Idx.IndexWord("asc") {
+				dirAsc = true
+			} else if dir.Index == ps.Idx.IndexWord("desc") {
+				dirAsc = false
+			} else {
+				return MakeBuiltinError(ps, "Direction can be just asc or desc.", "sort-col!")
+			}
 			switch spr := arg0.(type) {
 			case env.Spreadsheet:
 				switch col := arg1.(type) {
+				case env.String:
+					if dirAsc {
+						SortByColumn(ps, &spr, col.Value)
+					} else {
+						SortByColumnDesc(ps, &spr, col.Value)
+					}
+					return spr
 				case env.Word:
-					SortByColumn(ps, &spr, ps.Idx.GetWord(col.Index))
+					if dirAsc {
+						SortByColumn(ps, &spr, ps.Idx.GetWord(col.Index))
+					} else {
+						SortByColumnDesc(ps, &spr, ps.Idx.GetWord(col.Index))
+					}
 					return spr
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.WordType}, "sort-col!")
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "sort-col!")
-			}
-		},
-	},
-	"sort-col\\desc!": {
-		Argsn: 2,
-		Doc:   "Sorts rows by given column, descending.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch spr := arg0.(type) {
-			case env.Spreadsheet:
-				switch col := arg1.(type) {
-				case env.Word:
-					SortByColumnDesc(ps, &spr, ps.Idx.GetWord(col.Index))
-					return spr
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType}, "sort-col\\desc!")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "sort-col\\desc!")
 			}
 		},
 	},

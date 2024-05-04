@@ -42,8 +42,7 @@ func __input(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Ob
 func __open(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch s := arg0.(type) {
 	case env.Uri:
-		path := strings.Split(s.Path, "://")
-		file, err := os.Open(path[1])
+		file, err := os.Open(s.Path)
 		if err != nil {
 			return makeError(ps, err.Error())
 		}

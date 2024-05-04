@@ -658,12 +658,12 @@ section "Spreadsheet related functions"
 	mold\nowrap ?group-by
 	{ { block } }
 	{
-		equal { spreadsheet { "name" "val" } { "a" 1 "b" 2 } |group-by 'name { } |sort-col! 'name
+		equal { spreadsheet { "name" "val" } { "a" 1 "b" 2 } |group-by 'name { } |sort-by! 'name 'asc
 		} spreadsheet { "name" } { "a" "b" }
 
 		equal { spreadsheet { "name" "val" } { "a" 1 "b" 6 "a" 5 "b" 10 "a" 7 } 
 				|group-by 'name { 'name count 'val sum 'val min 'val max 'val avg } 
-				|sort-col! 'name
+				|sort-by! 'name 'asc
 		} spreadsheet { "name" "name_count" "val_sum" "val_min" "val_max" "val_avg" } 
 					{ 
 						"a" 3 13.0 1.0 7.0 4.333333333333333

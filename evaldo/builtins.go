@@ -233,9 +233,8 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 			if posMode {
 				idx--
 			}
-			v := s1.Data[idx]
-			ok := true
-			if ok {
+			if len(s1.Data) >= int(idx)+1 {
+				v := s1.Data[idx]
 				return env.ToRyeValue(v)
 			} else {
 				ps.FailureFlag = true
@@ -249,9 +248,8 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 			if posMode {
 				idx--
 			}
-			v := s1.Data[idx]
-			ok := true
-			if ok {
+			if len(s1.Data) >= int(idx)+1 {
+				v := s1.Data[idx]
 				return env.ToRyeValue(v)
 			} else {
 				ps.FailureFlag = true
@@ -265,9 +263,8 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 			if posMode {
 				idx--
 			}
-			v := s1.Series.Get(int(idx))
-			ok := true
-			if ok {
+			if len(s1.Series.S) >= int(idx)+1 {
+				v := s1.Series.Get(int(idx))
 				return v
 			} else {
 				ps.FailureFlag = true

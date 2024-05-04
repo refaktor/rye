@@ -116,7 +116,7 @@ var Builtins_devops = map[string]*env.Builtin{
 		},
 	},
 
-	"ls": {
+	"lsd": {
 		Argsn: 0,
 		Doc:   "Returns current working directory.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

@@ -410,7 +410,7 @@ func (b Block) Inspect(e Idxs) string {
 
 func (b Block) Print(e Idxs) string {
 	var r strings.Builder
-	r.WriteString("{ ")
+	// r.WriteString("{ ")
 	for i := 0; i < b.Series.Len(); i += 1 {
 		if b.Series.Get(i) != nil {
 			r.WriteString(b.Series.Get(i).Print(e))
@@ -419,7 +419,7 @@ func (b Block) Print(e Idxs) string {
 			r.WriteString("[NIL]")
 		}
 	}
-	r.WriteString("}")
+	// r.WriteString("}")
 	return r.String()
 }
 
