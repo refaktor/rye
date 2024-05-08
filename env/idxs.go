@@ -48,6 +48,10 @@ var NativeTypes = [...]string{ // Todo change to BuiltinTypes
 	"SpreadsheetRowType",
 	"Decimal",
 	"Vector",
+	"OpCPath",
+	"PipeCPath",
+	"Modword",
+	"LModword",
 }
 
 func (e *Idxs) IndexWord(w string) int {

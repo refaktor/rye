@@ -329,6 +329,8 @@ func EvalExpressionConcrete(ps *env.ProgramState) *env.ProgramState {
 			return EvalGenword(ps, object.(env.Genword), nil, false)
 		case env.SetwordType:
 			return EvalSetword(ps, object.(env.Setword))
+		case env.ModwordType:
+			return EvalModword(ps, object.(env.Modword))
 		case env.GetwordType:
 			return EvalGetword(ps, object.(env.Getword), nil, false)
 		case env.CommaType:
@@ -495,7 +497,22 @@ func EvalSetword(ps *env.ProgramState, word env.Setword) *env.ProgramState {
 	// es1 := EvalExpression(es)
 	ps1, _ := EvalExpressionInj(ps, nil, false)
 	idx := word.Index
-	ps1.Ctx.Set(idx, ps1.Res)
+	ps1.Res = ps1.Ctx.Set(idx, ps1.Res)
+	if ps1.Res.Type() == env.ErrorType {
+		ps1.ErrorFlag = true
+	}
+	return ps1
+}
+
+// evaluates expression to the right and sets the result of it to a word in current context
+func EvalModword(ps *env.ProgramState, word env.Modword) *env.ProgramState {
+	// es1 := EvalExpression(es)
+	ps1, _ := EvalExpressionInj(ps, nil, false)
+	idx := word.Index
+	ps1.Res = ps1.Ctx.Mod(idx, ps1.Res)
+	if ps1.Res.Type() == env.ErrorType {
+		ps1.ErrorFlag = true
+	}
 	return ps1
 }
 

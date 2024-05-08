@@ -571,11 +571,11 @@ func main_cgi_file(file string, sig bool) {
 }
 
 func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool) {
-	input := " 123 " // "name: \"Rye\" version: \"0.011 alpha\""
+	input := " " // "name: \"Rye\" version: \"0.011 alpha\""
 	// userHomeDir, _ := os.UserHomeDir()
 	// profile_path := filepath.Join(userHomeDir, ".rye-profile")
 
-	fmt.Println("Welcome to Rye console. Use ls for current or lsp or lsp\\ \"prin\" to list parent context.")
+	fmt.Println("Welcome to Rye console. Use ls to list current or lsp and lsp\\ \"prin\" to list parent contexts.")
 
 	//if _, err := os.Stat(profile_path); err == nil {
 	//content, err := os.ReadFile(profile_path)
