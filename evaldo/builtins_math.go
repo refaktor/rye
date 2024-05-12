@@ -5,6 +5,7 @@ import (
 	"math"
 
 	"github.com/refaktor/rye/env"
+	"github.com/refaktor/rye/util"
 )
 
 // Integer represents an integer.
@@ -338,6 +339,62 @@ var Builtins_math = map[string]*env.Builtin{
 				return *env.NewDecimal(math.Cbrt(val.Value))
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "cbrt")
+			}
+		},
+	},
+	"copysign": {
+		Argsn: 2,
+		Doc:   "Copysign returns a value with the magnitude of arg1 and the sign of arg2.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Integer:
+				switch val2 := arg1.(type) {
+				case env.Integer:
+					return *env.NewDecimal(math.Copysign(float64(val.Value), float64(val2.Value)))
+				case env.Decimal:
+					return *env.NewDecimal(math.Copysign(float64(val.Value), val2.Value))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "copysign")
+				}
+			case env.Decimal:
+				switch val2 := arg1.(type) {
+				case env.Integer:
+					return *env.NewDecimal(math.Copysign(val.Value, float64(val2.Value)))
+				case env.Decimal:
+					return *env.NewDecimal(math.Copysign(val.Value, val2.Value))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "copysign")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "copysign")
+			}
+		},
+	},
+	"dim": {
+		Argsn: 2,
+		Doc:   "Dim returns the maximum of arg1-arg2 or 0.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Integer:
+				switch val2 := arg1.(type) {
+				case env.Integer:
+					return *env.NewDecimal(util.GetDimValue(float64(val.Value), float64(val2.Value)))
+				case env.Decimal:
+					return *env.NewDecimal(util.GetDimValue(float64(val.Value), val2.Value))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "dim")
+				}
+			case env.Decimal:
+				switch val2 := arg1.(type) {
+				case env.Integer:
+					return *env.NewDecimal(util.GetDimValue(val.Value, float64(val2.Value)))
+				case env.Decimal:
+					return *env.NewDecimal(util.GetDimValue(val.Value, val2.Value))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "dim")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "dim")
 			}
 		},
 	},
