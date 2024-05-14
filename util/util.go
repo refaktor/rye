@@ -343,6 +343,15 @@ func TruncateString(s string, maxLen int) string {
 	return string(runes[0:maxLen-3]) + "..."
 }
 
+// GetDimValue get max x-y or 0 value
+func GetDimValue(x, y float64) float64 {
+	difference := x - y
+	if difference > 0 {
+		return difference
+	}
+	return 0
+}
+
 /*
 func RemoveDuplicate[T comparable](sliceList []T) []T {
 	allKeys := make(map[T]bool)

@@ -413,6 +413,23 @@ section "Math functions"
 		equal { do\in math { cbrt 27 } } 3.000000
 		equal { do\in math { cbrt 12.3 } } 2.308350239753609
 	}
+
+	group "copysign"
+	mold\nowrap "" 
+	{ { string } }
+	{
+		equal { do\in math { copysign 4.9 -1 } } -4.9
+		equal { do\in math { copysign 4.9 1 } } 4.9
+	}
+
+	group "dim"
+	mold\nowrap "" 
+	{ { string } }
+	{
+		equal { do\in math { dim 2 -3 } } 5.000000
+		equal { do\in math { dim 8 -1 } } 9.000000
+		equal { do\in math { dim -4 -2 } } 0.000000
+	}
 	
 }
 
