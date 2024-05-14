@@ -251,6 +251,32 @@ func MaybeEvalOpwordOnRight(nextObj env.Object, ps *env.ProgramState, limited bo
 		ps.Ser.Next()
 		ps = EvalWord(ps, opword.ToWord(), ps.Res, false, opword.Force > 0)
 		return MaybeEvalOpwordOnRight(ps.Ser.Peek(), ps, limited)
+	case env.CPath:
+		if opword.Mode == 1 {
+			ps.Ser.Next()
+			ps = EvalWord(ps, opword, ps.Res, false, false) // WWWWWWWWWWWWWWWWWWWWWWWWWWWW error interface converions
+			// when calling cpath
+			return MaybeEvalOpwordOnRight(ps.Ser.Peek(), ps, limited)
+		} else if opword.Mode == 2 {
+			if limited {
+				return ps
+			}
+			ps.Ser.Next()
+			ps = EvalWord(ps, opword, ps.Res, false, false) // TODO .. check opword force
+			if ps.ReturnFlag {
+				return ps //... not sure if we need this
+			}
+			// checkFlagsBi()
+			/*if ps.FailureFlag { // uncommented 202008017
+				ps.FailureFlag = false
+				ps.ErrorFlag = true
+				ps.ReturnFlag = true
+				return ps
+			}*/
+			return MaybeEvalOpwordOnRight(ps.Ser.Peek(), ps, limited)
+		} else {
+			ps.SkipFlag = false
+		}
 	case env.Pipeword:
 		if limited {
 			return ps
@@ -274,7 +300,25 @@ func MaybeEvalOpwordOnRight(nextObj env.Object, ps *env.ProgramState, limited bo
 		}
 		//ProcOpword(nextObj, es)
 		idx := opword.Index
-		ps.Ctx.Set(idx, ps.Res)
+		ps.Res = ps.Ctx.Set(idx, ps.Res)
+		if ps.Res.Type() == env.ErrorType {
+			ps.ErrorFlag = true
+			return ps
+		}
+		ps.Ser.Next()
+		ps.SkipFlag = false
+		return MaybeEvalOpwordOnRight(ps.Ser.Peek(), ps, limited)
+	case env.LModword:
+		if limited {
+			return ps
+		}
+		//ProcOpword(nextObj, es)
+		idx := opword.Index
+		ps.Res = ps.Ctx.Mod(idx, ps.Res)
+		if ps.Res.Type() == env.ErrorType {
+			ps.ErrorFlag = true
+			return ps
+		}
 		ps.Ser.Next()
 		ps.SkipFlag = false
 		return MaybeEvalOpwordOnRight(ps.Ser.Peek(), ps, limited)
@@ -362,7 +406,6 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 	case env.Opword:
 		object, found := ps.Ctx.Get(word.Index)
 		return found, object, nil
-
 	case env.CPath:
 		currCtx := ps.Ctx
 		i := 1
@@ -423,8 +466,9 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 			}
 		}
 		// fmt.Println(kind)
-		if leftVal != nil && ps.Ctx.Kind.Index != -1 { // don't use generic words if context kind is -1 --- TODO temporary solution to isolates, think about it more
-			object, found = ps.Gen.Get(kind, word.(env.Word).Index)
+		rword, ok := word.(env.Word)
+		if ok && leftVal != nil && ps.Ctx.Kind.Index != -1 { // don't use generic words if context kind is -1 --- TODO temporary solution to isolates, think about it more
+			object, found = ps.Gen.Get(kind, rword.Index)
 		}
 	}
 	if found {

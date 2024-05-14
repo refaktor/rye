@@ -1542,6 +1542,7 @@ func (i Argword) Dump(e Idxs) string {
 //
 
 type CPath struct {
+	Mode  int // 0 Cpath, 1 OpCpath , 2 PipeCPath
 	Cnt   int
 	Word1 Word
 	Word2 Word
@@ -1585,15 +1586,17 @@ func (i CPath) GetKind() int {
 	return int(CPathType)
 }
 
-func NewCPath2(w1 Word, w2 Word) *CPath {
+func NewCPath2(mode int, w1 Word, w2 Word) *CPath {
 	var cp CPath
+	cp.Mode = mode
 	cp.Cnt = 2
 	cp.Word1 = w1
 	cp.Word2 = w2
 	return &cp
 }
-func NewCPath3(w1 Word, w2 Word, w3 Word) *CPath {
+func NewCPath3(mode int, w1 Word, w2 Word, w3 Word) *CPath {
 	var cp CPath
+	cp.Mode = mode
 	cp.Cnt = 3
 	cp.Word1 = w1
 	cp.Word2 = w2

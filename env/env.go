@@ -251,6 +251,15 @@ func (e *RyeCtx) Set(word int, val Object) Object {
 	}
 }
 
+func (e *RyeCtx) Unset(word int) Object {
+	if _, exists := e.state[word]; !exists {
+		return NewError("Can't unset non-existing word in this context")
+	} else {
+		delete(e.state, word)
+		return NewInteger(1)
+	}
+}
+
 func (e *RyeCtx) Mod(word int, val Object) Object {
 	if _, exists := e.state[word]; exists {
 		e.state[word] = val

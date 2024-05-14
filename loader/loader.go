@@ -266,11 +266,32 @@ func parseFpath(v *Values, d Any) (Any, error) {
 func parseCPath(v *Values, d Any) (Any, error) {
 	switch len(v.Vs) {
 	case 2:
-		return *env.NewCPath2(v.Vs[0].(env.Word), v.Vs[1].(env.Word)), nil
+		return *env.NewCPath2(0, v.Vs[0].(env.Word), v.Vs[1].(env.Word)), nil
 	case 3:
-		return *env.NewCPath3(v.Vs[0].(env.Word), v.Vs[1].(env.Word), v.Vs[2].(env.Word)), nil
+		return *env.NewCPath3(0, v.Vs[0].(env.Word), v.Vs[1].(env.Word), v.Vs[2].(env.Word)), nil
 	default:
-		return *env.NewCPath3(v.Vs[0].(env.Word), v.Vs[1].(env.Word), v.Vs[2].(env.Word)), nil
+		return *env.NewCPath3(0, v.Vs[0].(env.Word), v.Vs[1].(env.Word), v.Vs[2].(env.Word)), nil
+	}
+}
+
+func parseOpCPath(v *Values, d Any) (Any, error) {
+	switch len(v.Vs) {
+	case 2:
+		return *env.NewCPath2(1, v.Vs[0].(env.Word), v.Vs[1].(env.Word)), nil
+	case 3:
+		return *env.NewCPath3(1, v.Vs[0].(env.Word), v.Vs[1].(env.Word), v.Vs[2].(env.Word)), nil
+	default:
+		return *env.NewCPath3(1, v.Vs[0].(env.Word), v.Vs[1].(env.Word), v.Vs[2].(env.Word)), nil
+	}
+}
+func parsePipeCPath(v *Values, d Any) (Any, error) {
+	switch len(v.Vs) {
+	case 2:
+		return *env.NewCPath2(2, v.Vs[0].(env.Word), v.Vs[1].(env.Word)), nil
+	case 3:
+		return *env.NewCPath3(2, v.Vs[0].(env.Word), v.Vs[1].(env.Word), v.Vs[2].(env.Word)), nil
+	default:
+		return *env.NewCPath3(2, v.Vs[0].(env.Word), v.Vs[1].(env.Word), v.Vs[2].(env.Word)), nil
 	}
 }
 
@@ -442,7 +463,7 @@ func newParser() *Parser { // TODO -- add string eaddress path url time
 	FPATH 	   		<-  "%" URIPATH*
 	CPATH    		<-  WORD ( "/" WORD )+
 	OPCPATH    		<-  "." WORD ( "/" WORD )+
-	PIPECPATH    	<-  "\\" WORD ( "/" WORD )+
+	PIPECPATH    	<-  "\\" WORD ( "/" WORD )+ / "|" WORD ( "/" WORD )+
 	ONECHARWORDS	<-  < [<>*+-=/] >
 	NORMOPWORDS	    <-  < ("_"[<>*+-=/]) >
 	PIPEARROWS      <-  ">>" / "~>" / "->"
@@ -498,8 +519,8 @@ func newParser() *Parser { // TODO -- add string eaddress path url time
 	g["URI"].Action = parseUri
 	g["FPATH"].Action = parseFpath
 	g["CPATH"].Action = parseCPath
-	g["OPCPATH"].Action = parseCPath
-	g["PIPECPATH"].Action = parseCPath
+	g["OPCPATH"].Action = parseOpCPath
+	g["PIPECPATH"].Action = parsePipeCPath
 	g["COMMENT"].Action = parseComment
 	/* g["SERIES"].Action = func(v *Values, d Any) (Any, error) {
 		return v, nil
