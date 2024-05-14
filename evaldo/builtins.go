@@ -722,6 +722,20 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"unset!": { // ***
+		Argsn: 1,
+		Doc:   "Unset a word in current context",
+		Pure:  false,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch word := arg0.(type) {
+			case env.Word:
+				return ps.Ctx.Unset(word.Index)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.WordType}, "set")
+			}
+		},
+	},
+
 	"get_": { // *** find a name or decide on order of naming with generic words clashes with
 		Argsn: 1,
 		Doc:   "Returns value of the word in context",

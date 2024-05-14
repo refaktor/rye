@@ -266,11 +266,32 @@ func parseFpath(v *Values, d Any) (Any, error) {
 func parseCPath(v *Values, d Any) (Any, error) {
 	switch len(v.Vs) {
 	case 2:
-		return *env.NewCPath2(v.Vs[0].(env.Word), v.Vs[1].(env.Word)), nil
+		return *env.NewCPath2(0, v.Vs[0].(env.Word), v.Vs[1].(env.Word)), nil
 	case 3:
-		return *env.NewCPath3(v.Vs[0].(env.Word), v.Vs[1].(env.Word), v.Vs[2].(env.Word)), nil
+		return *env.NewCPath3(0, v.Vs[0].(env.Word), v.Vs[1].(env.Word), v.Vs[2].(env.Word)), nil
 	default:
-		return *env.NewCPath3(v.Vs[0].(env.Word), v.Vs[1].(env.Word), v.Vs[2].(env.Word)), nil
+		return *env.NewCPath3(0, v.Vs[0].(env.Word), v.Vs[1].(env.Word), v.Vs[2].(env.Word)), nil
+	}
+}
+
+func parseOpCPath(v *Values, d Any) (Any, error) {
+	switch len(v.Vs) {
+	case 2:
+		return *env.NewCPath2(1, v.Vs[0].(env.Word), v.Vs[1].(env.Word)), nil
+	case 3:
+		return *env.NewCPath3(1, v.Vs[0].(env.Word), v.Vs[1].(env.Word), v.Vs[2].(env.Word)), nil
+	default:
+		return *env.NewCPath3(1, v.Vs[0].(env.Word), v.Vs[1].(env.Word), v.Vs[2].(env.Word)), nil
+	}
+}
+func parsePipeCPath(v *Values, d Any) (Any, error) {
+	switch len(v.Vs) {
+	case 2:
+		return *env.NewCPath2(2, v.Vs[0].(env.Word), v.Vs[1].(env.Word)), nil
+	case 3:
+		return *env.NewCPath3(2, v.Vs[0].(env.Word), v.Vs[1].(env.Word), v.Vs[2].(env.Word)), nil
+	default:
+		return *env.NewCPath3(2, v.Vs[0].(env.Word), v.Vs[1].(env.Word), v.Vs[2].(env.Word)), nil
 	}
 }
 
@@ -303,6 +324,20 @@ func parseLSetword(v *Values, d Any) (Any, error) {
 	word := v.Token()
 	idx := wordIndex.IndexWord(word[1:])
 	return *env.NewLSetword(idx), nil
+}
+
+func parseModword(v *Values, d Any) (Any, error) {
+	//fmt.Println("SETWORD:" + v.Token())
+	word := v.Token()
+	idx := wordIndex.IndexWord(word[:len(word)-2])
+	return *env.NewModword(idx), nil
+}
+
+func parseLModword(v *Values, d Any) (Any, error) {
+	//fmt.Println("SETWORD:" + v.Token())
+	word := v.Token()
+	idx := wordIndex.IndexWord(word[2:])
+	return *env.NewLModword(idx), nil
 }
 
 func parseOpword(v *Values, d Any) (Any, error) {
@@ -404,12 +439,14 @@ func newParser() *Parser { // TODO -- add string eaddress path url time
 	BLOCK       	<-  "{" SPACES SERIES* "}"
 	BBLOCK       	<-  "[" SPACES SERIES* "]"
     GROUP       	<-  "(" SPACES SERIES* ")"
-    SERIES     	<-  (GROUP / COMMENT / URI / EMAIL / STRING / DECIMAL / NUMBER / COMMA / SETWORD / LSETWORD / ONECHARPIPE / PIPEWORD / EXWORD / XWORD / OPWORD / TAGWORD / CPATH / FPATH / KINDWORD / GENWORD / GETWORD / WORD / VOID / BLOCK / GROUP / BBLOCK / ARGBLOCK ) SPACES
+    SERIES     	<-  (GROUP / COMMENT / URI / EMAIL / STRING / DECIMAL / NUMBER / COMMA / MODWORD / SETWORD / LMODWORD / LSETWORD / ONECHARPIPE / PIPECPATH / PIPEWORD / EXWORD / XWORD / OPCPATH / OPWORD / TAGWORD / CPATH / FPATH / KINDWORD / GENWORD / GETWORD / WORD / VOID / BLOCK / GROUP / BBLOCK / ARGBLOCK ) SPACES
     ARGBLOCK       	<-  "{" WORD ":" WORD "}"
     WORD           	<-  LETTER LETTERORNUM* / NORMOPWORDS
 	GENWORD 		<-  "~" UCLETTER LCLETTERORNUM* 
 	SETWORD    		<-  LETTER LETTERORNUM* ":"
+	MODWORD    		<-  LETTER LETTERORNUM* "::"
 	LSETWORD    	<-  ":" LETTER LETTERORNUM*
+	LMODWORD    	<-  "::" LETTER LETTERORNUM*
 	GETWORD   		<-  "?" LETTER LETTERORNUM*
 	PIPEWORD   		<-  "\\" LETTER LETTERORNUM* / "|" LETTER LETTERORNUM* / PIPEARROWS / "|" NORMOPWORDS  
 	ONECHARPIPE    	<-  "|" ONECHARWORDS
@@ -425,6 +462,8 @@ func newParser() *Parser { // TODO -- add string eaddress path url time
 	EMAILPART		<-  < ([a-zA-Z0-9._]+) >
 	FPATH 	   		<-  "%" URIPATH*
 	CPATH    		<-  WORD ( "/" WORD )+
+	OPCPATH    		<-  "." WORD ( "/" WORD )+
+	PIPECPATH    	<-  "\\" WORD ( "/" WORD )+ / "|" WORD ( "/" WORD )+
 	ONECHARWORDS	<-  < [<>*+-=/] >
 	NORMOPWORDS	    <-  < ("_"[<>*+-=/]) >
 	PIPEARROWS      <-  ">>" / "~>" / "->"
@@ -462,6 +501,8 @@ func newParser() *Parser { // TODO -- add string eaddress path url time
 	g["VOID"].Action = parseVoid
 	g["SETWORD"].Action = parseSetword
 	g["LSETWORD"].Action = parseLSetword
+	g["MODWORD"].Action = parseModword
+	g["LMODWORD"].Action = parseLModword
 	g["OPWORD"].Action = parseOpword
 	g["PIPEWORD"].Action = parsePipeword
 	g["ONECHARPIPE"].Action = parseOnecharpipe
@@ -478,6 +519,8 @@ func newParser() *Parser { // TODO -- add string eaddress path url time
 	g["URI"].Action = parseUri
 	g["FPATH"].Action = parseFpath
 	g["CPATH"].Action = parseCPath
+	g["OPCPATH"].Action = parseOpCPath
+	g["PIPECPATH"].Action = parsePipeCPath
 	g["COMMENT"].Action = parseComment
 	/* g["SERIES"].Action = func(v *Values, d Any) (Any, error) {
 		return v, nil

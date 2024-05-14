@@ -48,6 +48,10 @@ const (
 	SpreadsheetRowType Type = 33
 	DecimalType        Type = 34
 	VectorType         Type = 35
+	OpCPathType        Type = 36
+	PipeCPathType      Type = 37
+	ModwordType        Type = 38
+	LModwordType       Type = 39
 )
 
 // after adding new type here, also add string to idxs.go
@@ -598,6 +602,96 @@ func (i LSetword) Equal(o Object) bool {
 }
 
 func (i LSetword) Dump(e Idxs) string {
+	return ":" + e.GetWord(i.Index)
+}
+
+//
+// MODWORD
+//
+
+type Modword struct {
+	Index int
+}
+
+func NewModword(index int) *Modword {
+	nat := Modword{index}
+	return &nat
+}
+
+func (i Modword) Type() Type {
+	return ModwordType
+}
+
+func (i Modword) Inspect(e Idxs) string {
+	return "[Modword: " + e.GetWord(i.Index) + "]"
+}
+
+func (b Modword) Print(e Idxs) string {
+	return e.GetWord(b.Index) + ":"
+}
+
+func (i Modword) Trace(msg string) {
+	fmt.Print(msg + "(Modword): ")
+	fmt.Println(i.Index)
+}
+
+func (i Modword) GetKind() int {
+	return int(ModwordType)
+}
+
+func (i Modword) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	return i.Index == o.(Modword).Index
+}
+
+func (i Modword) Dump(e Idxs) string {
+	return e.GetWord(i.Index) + ":"
+}
+
+//
+// LMODWORD
+//
+
+type LModword struct {
+	Index int
+}
+
+func NewLModword(index int) *LModword {
+	nat := LModword{index}
+	return &nat
+}
+
+func (i LModword) Type() Type {
+	return LModwordType
+}
+
+func (i LModword) Inspect(e Idxs) string {
+	return "[LModword: " + e.GetWord(i.Index) + "]"
+}
+
+func (b LModword) Print(e Idxs) string {
+	return ":" + e.GetWord(b.Index)
+}
+
+func (i LModword) Trace(msg string) {
+	fmt.Print(msg + "(lModword): ")
+	fmt.Println(i.Index)
+}
+
+func (i LModword) GetKind() int {
+	return int(LModwordType)
+}
+
+func (i LModword) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	return i.Index == o.(LModword).Index
+}
+
+func (i LModword) Dump(e Idxs) string {
 	return ":" + e.GetWord(i.Index)
 }
 
@@ -1448,6 +1542,7 @@ func (i Argword) Dump(e Idxs) string {
 //
 
 type CPath struct {
+	Mode  int // 0 Cpath, 1 OpCpath , 2 PipeCPath
 	Cnt   int
 	Word1 Word
 	Word2 Word
@@ -1491,15 +1586,17 @@ func (i CPath) GetKind() int {
 	return int(CPathType)
 }
 
-func NewCPath2(w1 Word, w2 Word) *CPath {
+func NewCPath2(mode int, w1 Word, w2 Word) *CPath {
 	var cp CPath
+	cp.Mode = mode
 	cp.Cnt = 2
 	cp.Word1 = w1
 	cp.Word2 = w2
 	return &cp
 }
-func NewCPath3(w1 Word, w2 Word, w3 Word) *CPath {
+func NewCPath3(mode int, w1 Word, w2 Word, w3 Word) *CPath {
 	var cp CPath
+	cp.Mode = mode
 	cp.Cnt = 3
 	cp.Word1 = w1
 	cp.Word2 = w2

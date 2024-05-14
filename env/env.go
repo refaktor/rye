@@ -243,8 +243,30 @@ func (e *RyeCtx) Get2(word int) (Object, bool, *RyeCtx) {
 }
 
 func (e *RyeCtx) Set(word int, val Object) Object {
-	e.state[word] = val
-	return val
+	if _, exists := e.state[word]; exists {
+		return NewError("Can't set already set word, try using modword")
+	} else {
+		e.state[word] = val
+		return val
+	}
+}
+
+func (e *RyeCtx) Unset(word int) Object {
+	if _, exists := e.state[word]; !exists {
+		return NewError("Can't unset non-existing word in this context")
+	} else {
+		delete(e.state, word)
+		return NewInteger(1)
+	}
+}
+
+func (e *RyeCtx) Mod(word int, val Object) Object {
+	if _, exists := e.state[word]; exists {
+		e.state[word] = val
+		return val
+	} else {
+		return NewError("Can't mod an unset word, try using setword")
+	}
 }
 
 type ProgramState struct {
