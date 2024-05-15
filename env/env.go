@@ -243,30 +243,35 @@ func (e *RyeCtx) Get2(word int) (Object, bool, *RyeCtx) {
 }
 
 func (e *RyeCtx) Set(word int, val Object) Object {
-	if _, exists := e.state[word]; exists {
-		return NewError("Can't set already set word, try using modword")
-	} else {
-		e.state[word] = val
-		return val
-	}
+	e.state[word] = val
+	return val
 }
 
-func (e *RyeCtx) Unset(word int) Object {
+func (e *RyeCtx) Unset(word int, idxs *Idxs) Object {
 	if _, exists := e.state[word]; !exists {
-		return NewError("Can't unset non-existing word in this context")
+		return *NewError("Can't unset non-existing word " + idxs.GetWord(word) + " in this context")
 	} else {
 		delete(e.state, word)
 		return NewInteger(1)
 	}
 }
 
-func (e *RyeCtx) Mod(word int, val Object) Object {
+func (e *RyeCtx) SetNew(word int, val Object, idxs *Idxs) bool {
 	if _, exists := e.state[word]; exists {
-		e.state[word] = val
-		return val
+		return false
 	} else {
-		return NewError("Can't mod an unset word, try using setword")
+		e.state[word] = val
+		return true
 	}
+}
+
+func (e *RyeCtx) Mod(word int, val Object) bool {
+	// if _, exists := e.state[word]; exists {
+	e.state[word] = val
+	return true
+	// } else {
+	//	return NewError("Can't mod an unset word " + idxs.GetWord(word) + ", try using setword")
+	// }
 }
 
 type ProgramState struct {
@@ -350,11 +355,11 @@ func AddToProgramState(ps *ProgramState, ser TSeries, idx *Idxs) *ProgramState {
 func SetValue(ps *ProgramState, word string, val Object) {
 	idx, found := ps.Idx.GetIndex(word)
 	if found {
-		ps.Ctx.Set(idx, val)
+		ps.Ctx.SetNew(idx, val, ps.Idx)
 		switch valf := val.(type) {
 		case Function:
 			if valf.Pure {
-				ps.PCtx.Set(idx, val)
+				ps.PCtx.SetNew(idx, val, ps.Idx)
 			}
 		}
 	}

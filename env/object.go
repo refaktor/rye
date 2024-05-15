@@ -627,7 +627,7 @@ func (i Modword) Inspect(e Idxs) string {
 }
 
 func (b Modword) Print(e Idxs) string {
-	return e.GetWord(b.Index) + ":"
+	return e.GetWord(b.Index) + "::"
 }
 
 func (i Modword) Trace(msg string) {
@@ -647,7 +647,7 @@ func (i Modword) Equal(o Object) bool {
 }
 
 func (i Modword) Dump(e Idxs) string {
-	return e.GetWord(i.Index) + ":"
+	return e.GetWord(i.Index) + "::"
 }
 
 //
@@ -672,7 +672,7 @@ func (i LModword) Inspect(e Idxs) string {
 }
 
 func (b LModword) Print(e Idxs) string {
-	return ":" + e.GetWord(b.Index)
+	return "::" + e.GetWord(b.Index)
 }
 
 func (i LModword) Trace(msg string) {
@@ -1185,8 +1185,14 @@ func NewFunction(spec Block, body Block, pure bool) *Function {
 	return &o
 }
 
-func NewFunctionC(spec Block, body Block, ctx *RyeCtx, pure bool, inCtx bool) *Function {
-	o := Function{spec.Series.Len(), spec, body, ctx, pure, "", inCtx}
+func NewFunctionC(spec Block, body Block, ctx *RyeCtx, pure bool, inCtx bool, doc string) *Function {
+	var argn int
+	if doc > "" {
+		argn = spec.Series.Len() - 1
+	} else {
+		argn = spec.Series.Len()
+	}
+	o := Function{argn, spec, body, ctx, pure, doc, inCtx}
 	return &o
 }
 

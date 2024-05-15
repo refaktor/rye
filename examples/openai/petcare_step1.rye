@@ -8,9 +8,9 @@ print "Loading Questions and Answers:"
 read %petcare.txt
 |split newline
 |purge { .length? = 0 }
-|new-spreadsheet* { "text" }
+|spreadsheet* { "text" }
 |pass { .display , print "Creating embeddings ..." }
-|gen-col 'embedding { text } { .create-embeddings* ai } :spr
+|add-col! 'embedding { text } { .create-embeddings* ai } :spr
 
 get-input "Enter your search phrase: "
 |create-embeddings* ai :q1

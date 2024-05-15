@@ -1,0 +1,16 @@
+; blogpost:
+; lobster: 
+; curl 'https://api.github.com/orgs/golang/repos' > repos.json
+
+get https://api.github.com/orgs/golang/repos
+|parse-json
+|map { -> "license" |fix\either { "no" } { -> "key" } }
+|spreadsheet* { "license" }
+|group-by 'license { 'license count } |display
+
+; | license      | license_count |
+; +------------------------------+
+; | bsd-3-clause | 23            |
+; | apache-2.0   | 5             |
+; | no           | 2             |
+

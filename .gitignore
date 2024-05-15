@@ -45,3 +45,5 @@ shell_*.rye
 console_*.rye
 
 buildtemp/main.rye
+*.bson
+

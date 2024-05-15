@@ -455,7 +455,7 @@ func newParser() *Parser { // TODO -- add string eaddress path url time
 	KINDWORD    	<-  "~(" LETTER LETTERORNUM* ")~"?
 	XWORD    		<-  "<" LETTER LETTERORNUMNOX* " "? XPARAMS* ">"
 	EXWORD    		<-  "</" LETTER LETTERORNUM* ">"?
-	STRING			<-  ('"' STRINGCHAR* '"') / ("$" STRINGCHAR1* "$")
+	STRING			<-  ('"' STRINGCHAR* '"') / ("` + "`" + `" STRINGCHAR1* "` + "`" + `")
 	SPACES			<-  SPACE+
 	URI    			<-  WORD "://" URIPATH*
 	EMAIL			<-  EMAILPART "@" EMAILPART 
@@ -479,7 +479,7 @@ func newParser() *Parser { // TODO -- add string eaddress path url time
     DECIMAL         <-  < ("-"?[0-9]+.[0-9]+) >
 	SPACE			<-  < [ \t\r\n] >
 	STRINGCHAR		<-  < !'"' . >
-	STRINGCHAR1		<-  < !"$" . >
+	STRINGCHAR1		<-  < !"` + "`" + `" . >
 	COMMA			<-  ","
 	VOID			<-  "_"
 	COMMENT			<-  (";" NOTENDLINE* )

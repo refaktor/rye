@@ -1,0 +1,6 @@
+print "Start Lib"
+
+import %lib2.rye
+
+print "End Lib1"
+

@@ -1,6 +1,7 @@
 
-; This is a simple xmlprint dialect that exposes just one function xmlprint
-; It prints the XML, handles the line padding and check if the tags match
+doc
+`This is a simple xmlprint dialect that exposes just one function xmlprint
+It prints the XML, handles the line padding and check if the tags match`
 
 ; private function creates a context evaluates the code within context
 ; but just returns the result of the code. It can be used to create pockets
@@ -15,14 +16,14 @@ private {
 	comment: fn1 { .concat* "<!--" \concat "-->" }
 	
 	process: fn\par { block values depth current } current-ctx  {
-		\pass { exited: false }
-		\walk { :blk
-			\peek :token .type? .switch {
+		\pass { exited: false blk: false token: false }
+		\walk { ::blk
+			\peek ::token .type? .switch {
 				xword {
 					newline depth
 					prn\pad token depth
 					process next blk values inc depth token
-					\pass { exited: true }
+					\pass { exited:: true }
 				}
 				exword {
 					either exited { newline true , prn\pad token depth - 1 } { prn token }
@@ -45,7 +46,7 @@ private {
 	}
 
 	; Only this function will get returned and set to xmlgen word
-	fn\par { values block } current-ctx { process block values 0 'no }
+	fn\par { values block "Accepts dict of values and a block of xtags extags and code" } current-ctx { process block values 0 'no }
 	
 } :xmlprint
 

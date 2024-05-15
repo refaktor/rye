@@ -14,6 +14,10 @@ test-framework: context {
 	
 	group: fn { name descr args code } { inc! 'cnt print " GROUP: " + name , do code }
 	
+	error-: fn { test } {
+		; try { do\in root-ctx test }
+		probe test |try |probe
+	}
 	error: fn { test } {
 		; try { do\in root-ctx test }
 		try test :got \type? |= 'error \either { print join { "  - OK: " mold got } } { inc! 'failed , print join { "  - Error: expected error but got: " mold got } }
@@ -84,7 +88,7 @@ menu: { "basics" "structures" "validation" "misc" "errors" }
 switch arg {
 	"test" {
 		errors: 0
-		for menu { + ".rye" |to-file |probe |probe |load |do\in* test-framework |+ errors :errors }
+		for menu { + ".rye" |to-file |probe |probe |load |do\in* test-framework |+ errors ::errors }
 		print "==============="
 		print "FAILED TESTS: " + errors
 	}

@@ -1,0 +1,6 @@
+print "Before"
+
+import %lib1.rye
+
+print "After"
+
