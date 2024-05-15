@@ -4,16 +4,16 @@
 ; create a spreadsheet with two rows
 
 gamers: spreadsheet { "name" "gender" "scores" } 
- evalu { "Jim" "M" vector { 120 190  56 } 
-  	     "Ane" "F" vector { 140 165 154 } }
+[ "Jim" "M" vector { 120 190  56 } 
+	"Ane" "F" vector { 140 165 154 } ]
 
 ; add a row
 
-gamers .add-rows evalu { "Bob" "M" vector { 86 110 } }
+gamers .add-rows [ "Bob" "M" vector { 86 110 } ]
 
 ; generate column with average scores
 
-|gen-col 'avg-score { scores } { .avg }
+|add-col! 'avg-score { scores } { .avg }
 |to-bson
 |write* %gamers.bson
 

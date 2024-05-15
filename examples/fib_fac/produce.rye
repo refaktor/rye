@@ -1,0 +1,17 @@
+
+doc! "demonstrates 6 ways to calculate a factorial and one fibbonaci"
+
+fib1: fn { n "recursive" } { either n < 2 { n } { fib0 n - 1 |+ fib0 n - 2 } }
+
+fac1: fn { n "recursive" } { either n > 1 { n * fac1 n - 1 } { 1 } }
+
+fac2: fn1 { i: 0 , .produce 1 { i:: inc i , * i } }
+
+fac3: fn { x "loop" } { acc: 1 loop x { * acc ::acc } }
+
+fac4: fn { n i ac "recur-if\3 set a2 & a3 to 1" } { print i recur-if\3 n > i  n i + 1  ac * i  }
+
+fac5: fn1 { .range* 1 |fold 'acc 1 { * acc } }
+
+fac6: fn1 { .range* 1 |mul }
+

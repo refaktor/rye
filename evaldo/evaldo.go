@@ -300,8 +300,9 @@ func MaybeEvalOpwordOnRight(nextObj env.Object, ps *env.ProgramState, limited bo
 		}
 		//ProcOpword(nextObj, es)
 		idx := opword.Index
-		ps.Res = ps.Ctx.Set(idx, ps.Res)
-		if ps.Res.Type() == env.ErrorType {
+		ok := ps.Ctx.SetNew(idx, ps.Res, ps.Idx)
+		if !ok {
+			ps.Res = *env.NewError("Can't set already set word " + ps.Idx.GetWord(idx) + ", try using modword")
 			ps.ErrorFlag = true
 			return ps
 		}
@@ -314,11 +315,7 @@ func MaybeEvalOpwordOnRight(nextObj env.Object, ps *env.ProgramState, limited bo
 		}
 		//ProcOpword(nextObj, es)
 		idx := opword.Index
-		ps.Res = ps.Ctx.Mod(idx, ps.Res)
-		if ps.Res.Type() == env.ErrorType {
-			ps.ErrorFlag = true
-			return ps
-		}
+		ps.Ctx.Mod(idx, ps.Res)
 		ps.Ser.Next()
 		ps.SkipFlag = false
 		return MaybeEvalOpwordOnRight(ps.Ser.Peek(), ps, limited)
@@ -541,11 +538,13 @@ func EvalSetword(ps *env.ProgramState, word env.Setword) *env.ProgramState {
 	// es1 := EvalExpression(es)
 	ps1, _ := EvalExpressionInj(ps, nil, false)
 	idx := word.Index
-	ps1.Res = ps1.Ctx.Set(idx, ps1.Res)
-	if ps1.Res.Type() == env.ErrorType {
-		ps1.ErrorFlag = true
+	ok := ps1.Ctx.SetNew(idx, ps1.Res, ps.Idx)
+	if !ok {
+		ps.Res = *env.NewError("Can't set already set word " + ps.Idx.GetWord(idx) + ", try using modword")
+		ps.FailureFlag = true
+		ps.ErrorFlag = true
 	}
-	return ps1
+	return ps
 }
 
 // evaluates expression to the right and sets the result of it to a word in current context
@@ -553,10 +552,7 @@ func EvalModword(ps *env.ProgramState, word env.Modword) *env.ProgramState {
 	// es1 := EvalExpression(es)
 	ps1, _ := EvalExpressionInj(ps, nil, false)
 	idx := word.Index
-	ps1.Res = ps1.Ctx.Mod(idx, ps1.Res)
-	if ps1.Res.Type() == env.ErrorType {
-		ps1.ErrorFlag = true
-	}
+	ps1.Ctx.Mod(idx, ps1.Res)
 	return ps1
 }
 

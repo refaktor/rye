@@ -343,6 +343,30 @@ func TruncateString(s string, maxLen int) string {
 	return string(runes[0:maxLen-3]) + "..."
 }
 
+func ProcessFunctionSpec(args env.Block) (bool, string) {
+	var doc string
+	if args.Series.Len() > 0 {
+		var hasDoc bool
+		switch a := args.Series.S[len(args.Series.S)-1].(type) {
+		case env.String:
+			doc = a.Value
+			hasDoc = true
+			//fmt.Println("DOC DOC")
+			// default:
+			//return MakeBuiltinError(ps, "Series type should be string.", "fn")
+		}
+		for i, o := range args.Series.GetAll() {
+			if i == len(args.Series.S)-1 && hasDoc {
+				break
+			}
+			if o.Type() != env.WordType {
+				return false, "Function arguments should be words"
+			}
+		}
+	}
+	return true, doc
+}
+
 // GetDimValue get max x-y or 0 value
 func GetDimValue(x, y float64) float64 {
 	difference := x - y

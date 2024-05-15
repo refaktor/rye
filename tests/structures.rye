@@ -279,7 +279,7 @@ section "Working with blocks and lists"
 }
 
 
-$ section "Context functions"
+` section "Context functions"
 "Functions that mostly work with blocks."
 {
 	group "doc"
@@ -296,7 +296,7 @@ $ section "Context functions"
 		; TODO
 	}
 
-} $
+} `
 
 
 
@@ -457,7 +457,7 @@ section "Context related functions"
 	mold\nowrap ?parent-ctx
 	{ }
 	{
-		equal { cc: context { f: does { parent-ctx |type? } } , cc/f } 'ctx
+		equal { cc:: context { f: does { parent-ctx |type? } } , cc/f } 'ctx
 	}	
 
 	; TODO -- make something that clears color formatting or solve it some other way
@@ -472,28 +472,28 @@ section "Context related functions"
 	mold\nowrap ?context
 	{ { block } }
 	{
-		equal { context { x: does { 1 + 1 } } :cc , cc/x } 2
+		equal { context { x: does { 1 + 1 } } ::cc , cc/x } 2
 	}	
 
 	group "isolate"
 	mold\nowrap ?isolate
 	{ { block } }
 	{
-		equal { isolate { x: does { 1 + 1 } } :cc , try { cc/x } |type? } 'error
+		equal { isolate { x: does { 1 + 1 } } ::cc , try { cc/x } |type? } 'error
 	}	
 
 	group "raw-context"
 	mold\nowrap ?raw-context
 	{ { block } }
 	{
-		equal { cc: raw-context { name: "Jim" } |type? } 'ctx
+		equal { cc:: raw-context { name: "Jim" } |type? } 'ctx
 	}	
 
 	group "private"
 	mold\nowrap ?private
 	{ { block } }
 	{
-		equal { private { x: 3 , x + 30 } :x } 33 
+		equal { private { x: 3 , x + 30 } ::x } 33 
 	}	
 
 	group "extend"
@@ -507,14 +507,14 @@ section "Context related functions"
 	mold\nowrap ?bind
 	{ { block } }
 	{
-		equal { isolate { x: does { 1 + 1 } } |bind current-ctx :cc , cc/x } 2
+		equal { isolate { x: does { 1 + 1 } } |bind current-ctx ::cc , cc/x } 2
 	}	
 
 	group "unbind"
 	mold\nowrap ?unbind
 	{ { block } }
 	{
-		equal { context { x: does { 1 + 1 } } |unbind :cc , try { cc/x } |type? } 'error
+		equal { context { x: does { 1 + 1 } } |unbind ::cc , try { cc/x } |type? } 'error
 	}	
 
 }
@@ -533,7 +533,7 @@ section "Serializers and loaders"
 	mold\nowrap ?mold\nowrap
 	{ { function } }
 	{
-		equal { mold\nowrap "33" } $33$ ; TODO --- unify this ... just changed probe to not have quotes
+		equal { mold\nowrap "33" } `33` ; TODO --- unify this ... just changed probe to not have quotes
 	}
 	group "capture-stdout"
 	mold\nowrap ?capture-stdout
@@ -580,7 +580,7 @@ section "Spreadsheet related functions"
 	{ }
 	{
 		equal { spreadsheet { "name" "rating" "weight" }
-			{ "Enno" 4.3 120 "Enya" 6 132 "Shizuuchi" 7.2 168 "Kunishima" 2 68 } :spr |type? } 'spreadsheet
+			{ "Enno" 4.3 120 "Enya" 6 132 "Shizuuchi" 7.2 168 "Kunishima" 2 68 } ::spr |type? } 'spreadsheet
 		equal { spr |length? } 4
 		equal { spr |columns? |length? } 3
 		equal\todo { spr -> 2 -> 'name } "Enya"
@@ -614,7 +614,7 @@ section "Spreadsheet related functions"
 	{ { block } }
 	{
 		; returned value
-		equal { spr: spreadsheet { "a" "b" } { 1 2 3 4 } |add-indexes! [ 'a ] |indexes? } { "a" }
+		equal { spr:: spreadsheet { "a" "b" } { 1 2 3 4 } |add-indexes! [ 'a ] |indexes? } { "a" }
 		; in-place
 		; TODO this should work but doesn't, index should be added in place but for some reason it isn't
 		; equal { spr: spreadsheet { "a" "b" } { 1 2 3 4 } , spr .add-indexes! [ 'a ] , spr .indexes? } { "a" }
@@ -624,15 +624,15 @@ section "Spreadsheet related functions"
 	mold\nowrap ?left-join
 	{ { block } }
 	{
-		equal { names: spreadsheet { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
-				houses: spreadsheet { "id" "house" } { 1 "Atreides" 3 "Harkonnen" 4 "Corrino" } ,
+		equal { names:: spreadsheet { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
+				houses:: spreadsheet { "id" "house" } { 1 "Atreides" 3 "Harkonnen" 4 "Corrino" } ,
 				names .left-join houses 'id 'id 
 		} spreadsheet { "id" "name" "id_2" "house" } { 1 "Paul" 1 "Atreides" 2 "Chani" _ _ 3 "Vladimir" 3 "Harkonnen" }
 		
 		; joining with an index on the second spreadsheet
-		equal { names: spreadsheet { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } , 
-				houses: spreadsheet { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
-				houses .add-indexes! [ 'id ] :houses ,
+		equal { names:: spreadsheet { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } , 
+				houses:: spreadsheet { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
+				houses .add-indexes! [ 'id ] ::houses ,
 				names .left-join houses 'id 'id 
 		} spreadsheet { "id" "name" "id_2" "house" } { 1 "Paul" 1 "Atreides" 2 "Chani" _ _ 3 "Vladimir" 3 "Harkonnen" }
 	}
@@ -641,15 +641,15 @@ section "Spreadsheet related functions"
 	mold\nowrap ?inner-join
 	{ { block } }
 	{
-		equal { names: spreadsheet { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
-				houses: spreadsheet { "id" "house" } { 1 "Atreides" 3 "Harkonnen" 4 "Corrino" } ,
+		equal { names:: spreadsheet { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
+				houses:: spreadsheet { "id" "house" } { 1 "Atreides" 3 "Harkonnen" 4 "Corrino" } ,
 				names .inner-join houses 'id 'id 
 		} spreadsheet { "id" "name" "id_2" "house" } { 1 "Paul" 1 "Atreides" 3 "Vladimir" 3 "Harkonnen" }
 		
 		; joining with an index on the second spreadsheet
-		equal { names: spreadsheet { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } , 
-				houses: spreadsheet { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
-				houses .add-indexes! [ 'id ] :houses ,
+		equal { names:: spreadsheet { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } , 
+				houses:: spreadsheet { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
+				houses .add-indexes! [ 'id ] ::houses ,
 				names .inner-join houses 'id 'id 
 		} spreadsheet { "id" "name" "id_2" "house" } { 1 "Paul" 1 "Atreides" 3 "Vladimir" 3 "Harkonnen" }
 	}

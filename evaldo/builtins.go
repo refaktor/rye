@@ -729,7 +729,7 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch word := arg0.(type) {
 			case env.Word:
-				return ps.Ctx.Unset(word.Index)
+				return ps.Ctx.Unset(word.Index, ps.Idx)
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.WordType}, "set")
 			}
@@ -818,7 +818,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"doc": { // ***
+	"doc!": { // ***
 		Argsn: 1,
 		Doc:   "Sets docstring of the current context.",
 		Pure:  true,
@@ -4950,25 +4950,9 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch args := arg0.(type) {
 			case env.Block:
-				var doc string
-				if args.Series.Len() > 0 {
-					var hasDoc bool
-					switch a := args.Series.S[len(args.Series.S)-1].(type) {
-					case env.String:
-						doc = a.Value
-						hasDoc = true
-						//fmt.Println("DOC DOC")
-						// default:
-						//return MakeBuiltinError(ps, "Series type should be string.", "fn")
-					}
-					for i, o := range args.Series.GetAll() {
-						if i == len(args.Series.S)-1 && hasDoc {
-							break
-						}
-						if o.Type() != env.WordType {
-							return MakeBuiltinError(ps, "Function arguments should be words", "fn")
-						}
-					}
+				ok, doc := util.ProcessFunctionSpec(args)
+				if !ok {
+					return MakeBuiltinError(ps, doc, "fn")
 				}
 				switch body := arg1.(type) {
 				case env.Block:
@@ -4992,9 +4976,13 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch args := arg0.(type) {
 			case env.Block:
+				ok, doc := util.ProcessFunctionSpec(args)
+				if !ok {
+					return MakeBuiltinError(ps, doc, "fn")
+				}
 				switch body := arg1.(type) {
 				case env.Block:
-					return *env.NewFunction(args, body, true)
+					return *env.NewFunctionDoc(args, body, true, doc)
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "pfn")
 				}
@@ -5015,11 +5003,15 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch args := arg0.(type) {
 			case env.Block:
+				ok, doc := util.ProcessFunctionSpec(args)
+				if !ok {
+					return MakeBuiltinError(ps, doc, "fn")
+				}
 				switch ctx := arg1.(type) {
 				case env.RyeCtx:
 					switch body := arg2.(type) {
 					case env.Block:
-						return *env.NewFunctionC(args, body, &ctx, false, false)
+						return *env.NewFunctionC(args, body, &ctx, false, false, doc)
 					default:
 						ps.ErrorFlag = true
 						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "fnc")
@@ -5046,9 +5038,13 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch args := arg0.(type) {
 			case env.Block:
+				ok, doc := util.ProcessFunctionSpec(args)
+				if !ok {
+					return MakeBuiltinError(ps, doc, "fn")
+				}
 				switch body := arg1.(type) {
 				case env.Block:
-					return *env.NewFunctionC(args, body, ps.Ctx, false, false)
+					return *env.NewFunctionC(args, body, ps.Ctx, false, false, doc)
 				default:
 					ps.ErrorFlag = true
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "fnc")
@@ -5071,11 +5067,15 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch args := arg0.(type) {
 			case env.Block:
+				ok, doc := util.ProcessFunctionSpec(args)
+				if !ok {
+					return MakeBuiltinError(ps, doc, "fn")
+				}
 				switch ctx := arg1.(type) {
 				case env.RyeCtx:
 					switch body := arg2.(type) {
 					case env.Block:
-						return *env.NewFunctionC(args, body, &ctx, false, false)
+						return *env.NewFunctionC(args, body, &ctx, false, false, doc)
 					default:
 						ps.ErrorFlag = true
 						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "fnc")
@@ -5102,11 +5102,15 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch args := arg0.(type) {
 			case env.Block:
+				ok, doc := util.ProcessFunctionSpec(args)
+				if !ok {
+					return MakeBuiltinError(ps, doc, "fn")
+				}
 				switch ctx := arg1.(type) {
 				case env.RyeCtx:
 					switch body := arg2.(type) {
 					case env.Block:
-						return *env.NewFunctionC(args, body, &ctx, false, true)
+						return *env.NewFunctionC(args, body, &ctx, false, true, doc)
 					default:
 						ps.ErrorFlag = true
 						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "fnc")
@@ -5134,9 +5138,13 @@ var builtins = map[string]*env.Builtin{
 			ctx := ps.Ctx
 			switch args := arg0.(type) {
 			case env.Block:
+				ok, doc := util.ProcessFunctionSpec(args)
+				if !ok {
+					return MakeBuiltinError(ps, doc, "fn")
+				}
 				switch body := arg1.(type) {
 				case env.Block:
-					return *env.NewFunctionC(args, body, ctx, false, false)
+					return *env.NewFunctionC(args, body, ctx, false, false, doc)
 				default:
 					ps.ErrorFlag = true
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "fnc")
