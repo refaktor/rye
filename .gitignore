@@ -44,6 +44,10 @@ tests/*.html
 shell_*.rye
 console_*.rye
 
+<<<<<<< HEAD
 buildtemp/main.rye
 *.bson
 
+=======
+buildtemp/main.rye
+>>>>>>> 48009d9729854bd7bbbc0a943f839fc579a2943b

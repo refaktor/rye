@@ -367,9 +367,13 @@ func ProcessFunctionSpec(args env.Block) (bool, string) {
 	return true, doc
 }
 
-func MakeBuiltinError(env1 *env.ProgramState, msg string, fn string) *env.Error {
-	env1.FailureFlag = true
-	return env.NewError(msg + " in builtin " + fn + ".")
+// GetDimValue get max x-y or 0 value
+func GetDimValue(x, y float64) float64 {
+	difference := x - y
+	if difference > 0 {
+		return difference
+	}
+	return 0
 }
 
 /*
