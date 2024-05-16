@@ -1,5 +1,5 @@
 
-doc
+doc!
 `This is a simple xmlprint dialect that exposes just one function xmlprint
 It prints the XML, handles the line padding and check if the tags match`
 
