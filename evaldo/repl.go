@@ -194,6 +194,15 @@ func DoRyeRepl(es *env.ProgramState, showResults bool) {
 		if code, err := line.Prompt(prompt); err == nil {
 			// strip comment
 
+			es.LiveObj.PsMutex.Lock()
+			for _, update := range es.LiveObj.Updates {
+				fmt.Println("\033[35m((Reloading " + update + "))\033[0m")
+				block_, script_ := LoadScriptLocalFile(es, *env.NewUri1(es.Idx, "file://"+update))
+				es.Res = EvaluateLoadedValue(es, block_, script_, true)
+			}
+			es.LiveObj.ClearUpdates()
+			es.LiveObj.PsMutex.Unlock()
+
 			multiline := len(code) > 1 && code[len(code)-1:] == " "
 
 			comment := regexp.MustCompile(`\s*;`)

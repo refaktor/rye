@@ -73,6 +73,7 @@ func MakeRyeError(env1 *env.ProgramState, val env.Object, er *env.Error) *env.Er
 		return env.NewError4(int(val.Value), "", er, nil)
 	case env.Block: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
 		// TODO -- this is only temporary it takes numeric value as first and string as second arg
+		// TODONOW implement the dialect
 		code := val.Series.Get(0)
 		message := val.Series.Get(1)
 		if code.Type() == env.IntegerType && message.Type() == env.StringType {
@@ -332,6 +333,44 @@ func (s RyeListSort) Less(i, j int) bool {
 	return greaterThanNew(env.ToRyeValue(s[j]), env.ToRyeValue(s[i]))
 }
 
+func LoadScriptLocalFile(ps *env.ProgramState, s1 env.Uri) (env.Object, string) {
+	var str string
+	fileIdx, _ := ps.Idx.GetIndex("file")
+	fullpath := filepath.Join(filepath.Dir(ps.ScriptPath), s1.GetPath())
+	if s1.Scheme.Index == fileIdx {
+		b, err := os.ReadFile(fullpath)
+		if err != nil {
+			return MakeBuiltinError(ps, err.Error(), "import"), ps.ScriptPath
+		}
+		str = string(b) // convert content to a 'string'
+	}
+	script_ := ps.ScriptPath
+	ps.ScriptPath = fullpath
+	block_ := loader.LoadStringNEW(str, false, ps)
+	return block_, script_
+}
+
+func EvaluateLoadedValue(ps *env.ProgramState, block_ env.Object, script_ string, allowMod bool) env.Object {
+	switch block := block_.(type) {
+	case env.Block:
+		ser := ps.Ser
+		ps.Ser = block.Series
+		ps.AllowMod = allowMod
+		EvalBlock(ps)
+		ps.AllowMod = false
+		ps.Ser = ser
+		return ps.Res
+	case env.Error:
+		ps.ScriptPath = script_
+		ps.ErrorFlag = true
+		return MakeBuiltinError(ps, block.Message, "import")
+	default:
+		fmt.Println(block)
+		panic("Not block and not error in import builtin.") // TODO -- Think how best to handle this
+		// return env.Void{}
+	}
+}
+
 var ShowResults bool
 
 var builtins = map[string]*env.Builtin{
@@ -376,6 +415,8 @@ var builtins = map[string]*env.Builtin{
 					return MakeBuiltinError(ps, err.Error(), "to-integer")
 				}
 				return *env.NewInteger(int64(iValue))
+			case env.Decimal:
+				return *env.NewInteger(int64(addr.Value))
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "to-integer")
 			}
@@ -1580,20 +1621,24 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Uri:
-				var str string
-				fileIdx, _ := ps.Idx.GetIndex("file")
-				fullpath := filepath.Join(filepath.Dir(ps.ScriptPath), s1.GetPath())
-				if s1.Scheme.Index == fileIdx {
-					b, err := os.ReadFile(fullpath)
-					if err != nil {
-						return MakeBuiltinError(ps, err.Error(), "import")
+				block_, script_ := LoadScriptLocalFile(ps, s1)
+				/*
+					var str string
+					fileIdx, _ := ps.Idx.GetIndex("file")
+					fullpath := filepath.Join(filepath.Dir(ps.ScriptPath), s1.GetPath())
+					if s1.Scheme.Index == fileIdx {
+						b, err := os.ReadFile(fullpath)
+						if err != nil {
+							return MakeBuiltinError(ps, err.Error(), "import")
+						}
+						str = string(b) // convert content to a 'string'
 					}
-					str = string(b) // convert content to a 'string'
-				}
-				script_ := ps.ScriptPath
-				ps.ScriptPath = fullpath
-				block_ := loader.LoadStringNEW(str, false, ps)
-				switch block := block_.(type) {
+					script_ := ps.ScriptPath
+					ps.ScriptPath = fullpath
+					block_ := loader.LoadStringNEW(str, false, ps)
+				*/
+				ps.Res = EvaluateLoadedValue(ps, block_, script_, false)
+				/* switch block := block_.(type) {
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = block.Series
@@ -1606,7 +1651,25 @@ var builtins = map[string]*env.Builtin{
 				default:
 					fmt.Println(block)
 					panic("Not block and not error in import builtin.") // TODO -- Think how best to handle this
-				}
+				} */
+				ps.ScriptPath = script_
+				//ps = env.AddToProgramState(ps, block.Series, genv)
+				return ps.Res
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "import")
+			}
+		},
+	},
+
+	"import\\live": { // **
+		Argsn: 1,
+		Doc:   "Imports a file, loads and does it from script local path.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Uri:
+				block_, script_ := LoadScriptLocalFile(ps, s1)
+				ps.Res = EvaluateLoadedValue(ps, block_, script_, false)
+				ps.LiveObj.Add(s1.GetPath()) // add to watcher
 				ps.ScriptPath = script_
 				//ps = env.AddToProgramState(ps, block.Series, genv)
 				return ps.Res
@@ -1648,7 +1711,78 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"load-sig": {
+	// TODO -- refactor load variants so they use common function LoadString and LoadFile
+
+	"load\\mod": { // **
+		Argsn: 1,
+		Doc:   "Loads a string into Rye values. During load it allows modification of words.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				block, _ := loader.LoadString(s1.Value, false)
+				//ps = env.AddToProgramState(ps, block.Series, genv)
+				return block
+			case env.Uri:
+				var str string
+				fileIdx, _ := ps.Idx.GetIndex("file")
+				if s1.Scheme.Index == fileIdx {
+					b, err := os.ReadFile(s1.GetPath())
+					if err != nil {
+						return makeError(ps, err.Error())
+					}
+					str = string(b) // convert content to a 'string'
+				}
+				scrip := ps.ScriptPath
+				ps.AllowMod = true
+				ps.ScriptPath = s1.GetPath()
+				block := loader.LoadStringNEW(str, false, ps)
+				ps.AllowMod = false
+				ps.ScriptPath = scrip
+				//ps = env.AddToProgramState(ps, block.Series, genv)
+				return block
+			default:
+				ps.FailureFlag = true
+				return env.NewError("Must be string or file TODO")
+			}
+		},
+	},
+
+	"load\\live": { // **
+		Argsn: 1,
+		Doc:   "Loads a string into Rye values. During load it allows modification of words.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				block, _ := loader.LoadString(s1.Value, false)
+				//ps = env.AddToProgramState(ps, block.Series, genv)
+				return block
+			case env.Uri:
+				var str string
+				fileIdx, _ := ps.Idx.GetIndex("file")
+				if s1.Scheme.Index == fileIdx {
+					b, err := os.ReadFile(s1.GetPath())
+					ps.LiveObj.Add(s1.GetPath()) // add to watcher
+					if err != nil {
+						return makeError(ps, err.Error())
+					}
+					str = string(b) // convert content to a 'string'
+				}
+				scrip := ps.ScriptPath
+				ps.AllowMod = true
+				ps.ScriptPath = s1.GetPath()
+				block := loader.LoadStringNEW(str, false, ps)
+				ps.AllowMod = false
+				ps.ScriptPath = scrip
+				//ps = env.AddToProgramState(ps, block.Series, genv)
+				return block
+			default:
+				ps.FailureFlag = true
+				return env.NewError("Must be string or file TODO")
+			}
+		},
+	},
+
+	"load\\sig": {
 		Argsn: 1,
 		Doc:   "Checks the signature, if OK then loads a string into Rye values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

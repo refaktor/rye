@@ -525,7 +525,7 @@ func __https_request__do(ps *env.ProgramState, arg0 env.Object, arg1 env.Object,
 	case env.Native:
 		client := &http.Client{}
 		resp, err := client.Do(req.Value.(*http.Request))
-		defer resp.Body.Close()
+		defer resp.Body.Close() // TODO -- comment this and figure out goling bodyclose
 		if err != nil {
 			return MakeBuiltinError(ps, err.Error(), "__https_request__do")
 		}

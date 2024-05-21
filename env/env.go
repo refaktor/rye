@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"sync"
+
+	"github.com/fsnotify/fsnotify"
 )
 
 /* type Envi interface {
@@ -244,7 +247,7 @@ func (e *RyeCtx) Get2(word int) (Object, bool, *RyeCtx) {
 
 func (e *RyeCtx) Set(word int, val Object) Object {
 	if _, exists := e.state[word]; exists {
-		return NewError("Can't set already set word, try using modword")
+		return NewError("Can't set already set word, try using modword! FIXME !")
 	} else {
 		e.state[word] = val
 		return val
@@ -296,6 +299,8 @@ type ProgramState struct {
 	InErrHandler bool
 	ScriptPath   string // holds the path to the script that is being imported (doed) currently
 	WorkingPath  string // holds the path to CWD (can be changed in program with specific functions)
+	AllowMod     bool
+	LiveObj      *LiveEnv
 }
 
 func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
@@ -317,6 +322,8 @@ func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
 		false,
 		"",
 		"",
+		false,
+		NewLiveEnv(),
 	}
 	return &ps
 }
@@ -340,6 +347,8 @@ func NewProgramStateNEW() *ProgramState {
 		false,
 		"",
 		"",
+		false,
+		NewLiveEnv(),
 	}
 	return &ps
 }
@@ -367,4 +376,55 @@ func SetValue(ps *ProgramState, word string, val Object) {
 			}
 		}
 	}
+}
+
+// LiveEnv -- a experiment in live realoading
+
+type LiveEnv struct {
+	Active  bool
+	Watcher *fsnotify.Watcher
+	PsMutex sync.Mutex
+	Updates []string
+}
+
+func NewLiveEnv() *LiveEnv {
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		fmt.Println("Error creating watcher:", err)
+		return nil
+	}
+	// defer watcher.Close()
+
+	// Watch current directory for changes in any Go source file (*.go)
+
+	liveEnv := &LiveEnv{true, watcher, sync.Mutex{}, make([]string, 0)}
+
+	go func() {
+		for {
+			select {
+			case event := <-watcher.Events:
+				if event.Op&fsnotify.Write == fsnotify.Write {
+					// fmt.Println("LiveEnv file changed:", event.Name)
+					liveEnv.PsMutex.Lock()
+					liveEnv.Updates = append(liveEnv.Updates, event.Name)
+					liveEnv.PsMutex.Unlock()
+				}
+			case err := <-watcher.Errors:
+				fmt.Println("LiveEnv error watching files:", err)
+			}
+		}
+	}()
+
+	return liveEnv
+}
+
+func (le *LiveEnv) Add(file string) {
+	err := le.Watcher.Add(".")
+	if err != nil {
+		fmt.Println("LiveEnv: Error adding directory to watch:", err)
+	}
+}
+
+func (le *LiveEnv) ClearUpdates() {
+	le.Updates = make([]string, 0)
 }
