@@ -398,6 +398,20 @@ var Builtins_math = map[string]*env.Builtin{
 			}
 		},
 	},
+	"erf": {
+		Argsn: 1,
+		Doc:   "Returns the error function of value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Integer:
+				return *env.NewDecimal(math.Erf(float64(val.Value)))
+			case env.Decimal:
+				return *env.NewDecimal(math.Erf(val.Value))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "erf")
+			}
+		},
+	},
 	"pi": {
 		Argsn: 0,
 		Doc:   "Return Pi constant.",
