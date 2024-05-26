@@ -430,6 +430,40 @@ section "Math functions"
 		equal { do\in math { dim 8 -1 } } 9.000000
 		equal { do\in math { dim -4 -2 } } 0.000000
 	}
+
+	group "erf"
+	mold\nowrap "" 
+	{ { string } }
+	{
+		equal { do\in math { erf 1.5 } } 0.9661051464753108
+	}
+
+	group "erfc"
+	mold\nowrap "" 
+	{ { string } }
+	{
+		equal { do\in math { erfc 1.5 } } 0.033894853524689274
+	}
+
+	group "erfcinv"
+	mold\nowrap "" 
+	{ { string } }
+	{
+		equal { do\in math { erfcinv 1.5 } } -0.4769362762044699
+		equal { do\in math { erfcinv 0 } } +Inf
+		equal { do\in math { erfcinv 2 } } -Inf
+		equal { do\in math { erfcinv 2.2 } } NaN
+	}
+
+	group "erfinv"
+	mold\nowrap "" 
+	{ { string } }
+	{
+		equal { do\in math { erfcinv 0.5 } } 0.4769362762044699
+		equal { do\in math { erfcinv 1 } } +Inf
+		equal { do\in math { erfcinv -1 } } -Inf
+		equal { do\in math { erfcinv 1.5 } } NaN
+	}
 	
 }
 
