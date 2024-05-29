@@ -29,8 +29,8 @@ build-ryel: fn { tags } {
 
 	cp-embed: either tags = "embed_main" { "cp main.rye %RYE_HOME/buildtemp/. ; " } { "" }
 	
-	command: join { cp-embed $ a=%PWD ; cd %RYE_HOME ; go build -tags "$ + modules + " " + tags $" -o "%a/ryel" ; cd "%a"$ } ; $ delimiter for string is just temporary ... ' conflicts with lit-words and Rebols { } with blocks so this question is open so far
-	command .replace "%" "$" :command
+	command: join { cp-embed ` a=%PWD ; cd %RYE_HOME ; go build -tags "` + modules + " " + tags `" -o "%a/ryel" ; cd "%a"` } ; ` delimiter for string is just temporary ... ' conflicts with lit-words and Rebols { } with blocks so this question is open so far
+	command .replace "%" "$" ::command
 	; print "Build command: " + command
 	cmd command
 }

@@ -81,7 +81,7 @@ linters-settings:
 linters:
   disable-all: true
   enable:
-    - bodyclose
+    # - bodyclose ... some functions can't clsoe a body themselves because it will have to be read from another function
     - depguard
     - dogsled
     # - dupl

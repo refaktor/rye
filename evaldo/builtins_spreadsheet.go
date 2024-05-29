@@ -277,6 +277,12 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 						for i, v := range row.Values {
 							var sv string
 							switch tv := v.(type) {
+							case string:
+								sv = tv
+							case int64:
+								sv = strconv.Itoa(int(tv))
+							case float64:
+								sv = strconv.FormatFloat(tv, 'f', -1, 64)
 							case env.String:
 								sv = tv.Value
 							case env.Integer:
@@ -1169,9 +1175,27 @@ func LeftJoin(ps *env.ProgramState, s1 env.Spreadsheet, s2 env.Spreadsheet, col1
 				if err != nil {
 					return MakeError(ps, fmt.Sprintf("Couldn't retrieve value at row %d (%s)", j, err))
 				}
-				if val1.(env.Object).Equal(val2.(env.Object)) {
-					s2RowId = j
-					break
+				val1o, ok := val1.(env.Object)
+				if ok {
+					val2o, ok1 := val2.(env.Object)
+					if ok1 {
+						if val1o.Equal(val2o) {
+							s2RowId = j
+							break
+						}
+					} else {
+						if env.RyeToRaw(val1o) == val2 {
+							s2RowId = j
+							break
+						}
+					}
+				}
+				val1s, ok := val1.(string)
+				if ok {
+					if val1s == val2.(string) {
+						s2RowId = j
+						break
+					}
 				}
 			}
 		}
