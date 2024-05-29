@@ -2713,6 +2713,14 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"current-ctx!!": { // **
+		Argsn: 0,
+		Doc:   "Returns current context.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return ps.Ctx
+		},
+	},
+
 	"parent-ctx": { // **
 		Argsn: 0,
 		Doc:   "Returns parent context of the current context.",
@@ -2954,7 +2962,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"bind": { // **
+	"bind!": { // **
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch swCtx1 := arg0.(type) {
@@ -2972,7 +2980,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"unbind": { // **
+	"unbind!": { // **
 		Argsn: 1,
 		Doc:   "Accepts a Context and unbinds it from it's parent Context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -5241,6 +5249,14 @@ var builtins = map[string]*env.Builtin{
 					return MakeBuiltinError(ps, doc, "fn")
 				}
 				switch ctx := arg1.(type) {
+				case *env.RyeCtx:
+					switch body := arg2.(type) {
+					case env.Block:
+						return *env.NewFunctionC(args, body, ctx, false, true, doc)
+					default:
+						ps.ErrorFlag = true
+						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "fnc")
+					}
 				case env.RyeCtx:
 					switch body := arg2.(type) {
 					case env.Block:

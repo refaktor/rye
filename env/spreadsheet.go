@@ -192,7 +192,8 @@ func (s Spreadsheet) Columns(ps *ProgramState, names []string) Object {
 		row2 := make([]any, len(names))
 		for col := range idxs {
 			if len(row.Values) > col {
-				row2[col] = row.Values[idxs[col]].(Object)
+				//				row2[col] = row.Values[idxs[col]].(Object)
+				row2[col] = row.Values[idxs[col]]
 			}
 		}
 		nspr.AddRow(SpreadsheetRow{row2, nspr})

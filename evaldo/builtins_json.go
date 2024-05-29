@@ -52,15 +52,19 @@ func RyeToJSON(res any) string {
 		if v[0] == '[' && v[len(v)-1:] == "]" {
 			return v
 		}
-		return "\"" + v + "\""
+		return "\"" + EscapeJson(v) + "\""
 	case env.String:
-		return "\"" + v.Value + "\""
+		return "\"" + EscapeJson(v.Value) + "\""
 	case env.Integer:
 		return strconv.Itoa(int(v.Value))
 	case env.Decimal:
 		return strconv.Itoa(int(v.Value))
+	case env.Dict:
+		return DictToJSON(v)
 	case env.Spreadsheet:
 		return SpreadsheetToJSON(v)
+	case env.SpreadsheetRow:
+		return SpreadsheetRowToJSON(v)
 	case *env.Error:
 		status := ""
 		if v.Status != 0 {
@@ -88,6 +92,78 @@ func RyeToJSON(res any) string {
 	}
 }
 
+func RyeToJSONLines(res any) string {
+	// fmt.Printf("Type: %T", res)
+	switch v := res.(type) {
+	case env.Spreadsheet:
+		return SpreadsheetToJSONLines(v)
+	case *env.Error:
+		status := ""
+		if v.Status != 0 {
+			status = "\"status\": " + RyeToJSON(v.Status)
+		}
+		var b strings.Builder
+		b.WriteString("{ " + status + ", \"message\": " + RyeToJSON(v.Message))
+		if v.Parent != nil {
+			b.WriteString(", \"parent\": " + RyeToJSON(v.Parent))
+		}
+		b.WriteString(", \"data\": { ")
+		for k, v := range v.Values {
+			switch ob := v.(type) {
+			case env.Object:
+				b.WriteString(" " + RyeToJSON(k) + ": " + RyeToJSON(ob) + ", ")
+			}
+		}
+		b.WriteString("} }")
+		return b.String()
+	case env.RyeCtx:
+		return "{ 'state': 'todo' }"
+	default:
+		return "\"not handeled\""
+		// TODO-FIXME
+	}
+}
+
+func EscapeJson(val string) string {
+	res := strings.ReplaceAll(val, "\"", "\\\"")
+	return res
+}
+
+// Inspect returns a string representation of the Integer.
+func DictToJSON(dict env.Dict) string {
+	var bu strings.Builder
+	bu.WriteString("{")
+	i := 0
+	for key, val := range dict.Data {
+		if i > 0 {
+			bu.WriteString(", ")
+		}
+		bu.WriteString(RyeToJSON(key))
+		bu.WriteString(": ")
+		bu.WriteString(RyeToJSON(val))
+		i = i + 1
+	}
+	bu.WriteString("} ")
+	return bu.String()
+}
+
+// Inspect returns a string representation of the Integer.
+func SpreadsheetRowToJSON(row env.SpreadsheetRow) string {
+	var bu strings.Builder
+	bu.WriteString("{")
+	for i, val := range row.Values {
+		if i > 0 {
+			bu.WriteString(", ")
+		}
+		bu.WriteString("\"")
+		bu.WriteString(row.Uplink.Cols[i])
+		bu.WriteString("\": ")
+		bu.WriteString(RyeToJSON(val))
+	}
+	bu.WriteString("} ")
+	return bu.String()
+}
+
 // Inspect returns a string representation of the Integer.
 func SpreadsheetToJSON(s env.Spreadsheet) string {
 	//fmt.Println("IN TO Html")
@@ -98,19 +174,22 @@ func SpreadsheetToJSON(s env.Spreadsheet) string {
 		if i > 0 {
 			bu.WriteString(", ")
 		}
-		bu.WriteString("{")
-		for i, val := range row.Values {
-			if i > 0 {
-				bu.WriteString(", ")
-			}
-			bu.WriteString("\"")
-			bu.WriteString(s.Cols[i])
-			bu.WriteString("\": ")
-			bu.WriteString(RyeToJSON(val))
-		}
-		bu.WriteString("} ")
+		bu.WriteString(SpreadsheetRowToJSON(row))
 	}
 	bu.WriteString("]")
+	//fmt.Println(bu.String())
+	return bu.String()
+}
+
+func SpreadsheetToJSONLines(s env.Spreadsheet) string {
+	//fmt.Println("IN TO Html")
+	var bu strings.Builder
+	//fmt.Println(len(s.Rows))
+	for _, row := range s.Rows {
+		bu.WriteString(SpreadsheetRowToJSON(row))
+		bu.WriteString("\n")
+
+	}
 	//fmt.Println(bu.String())
 	return bu.String()
 }
@@ -147,6 +226,13 @@ var Builtins_json = map[string]*env.Builtin{
 		Doc:   "Takes a Rye value and returns it encoded into JSON.",
 		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(RyeToJSON(arg0))
+		},
+	},
+	"to-json\\lines": {
+		Argsn: 1,
+		Doc:   "Takes a Rye value and returns it encoded into JSON.",
+		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return *env.NewString(RyeToJSONLines(arg0))
 		},
 	},
 }
