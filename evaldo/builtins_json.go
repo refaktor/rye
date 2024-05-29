@@ -59,6 +59,8 @@ func RyeToJSON(res any) string {
 		return strconv.Itoa(int(v.Value))
 	case env.Decimal:
 		return strconv.Itoa(int(v.Value))
+	case env.List:
+		return ListToJSON(v)
 	case env.Dict:
 		return DictToJSON(v)
 	case env.Spreadsheet:
@@ -127,6 +129,20 @@ func RyeToJSONLines(res any) string {
 func EscapeJson(val string) string {
 	res := strings.ReplaceAll(val, "\"", "\\\"")
 	return res
+}
+
+// Inspect returns a string representation of the Integer.
+func ListToJSON(list env.List) string {
+	var bu strings.Builder
+	bu.WriteString("[")
+	for i, val := range list.Data {
+		if i > 0 {
+			bu.WriteString(", ")
+		}
+		bu.WriteString(RyeToJSON(val))
+	}
+	bu.WriteString("] ")
+	return bu.String()
 }
 
 // Inspect returns a string representation of the Integer.
