@@ -1177,8 +1177,8 @@ func LeftJoin(ps *env.ProgramState, s1 env.Spreadsheet, s2 env.Spreadsheet, col1
 				}
 				val1o, ok := val1.(env.Object)
 				if ok {
-					val2o, ok := val2.(env.Object)
-					if ok {
+					val2o, ok1 := val2.(env.Object)
+					if ok1 {
 						if val1o.Equal(val2o) {
 							s2RowId = j
 							break

@@ -188,7 +188,6 @@ func SpreadsheetToJSONLines(s env.Spreadsheet) string {
 	for _, row := range s.Rows {
 		bu.WriteString(SpreadsheetRowToJSON(row))
 		bu.WriteString("\n")
-
 	}
 	//fmt.Println(bu.String())
 	return bu.String()
