@@ -30,7 +30,7 @@ type ShellEd struct {
 }
 
 func genPrompt(shellEd *ShellEd, line string) (string, string) {
-	if shellEd.Mode != "" {
+	if shellEd != nil && shellEd.Mode != "" {
 		a := shellEd.Askfor
 		if len(a) > 0 {
 			x := a[0]
@@ -148,9 +148,167 @@ func MoveCursorBackward(bias int) {
 	fmt.Printf("\033[%dD", bias)
 }
 
-//
+func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here because of some odd options we were experimentally adding
+	//codestr := ""
+	//codelines := strings.Split(codestr, ",\n")
 
-func DoRyeRepl(es *env.ProgramState, showResults bool) {
+	line := liner.NewLiner()
+	defer line.Close()
+
+	line.SetCtrlCAborts(true)
+
+	line.SetCompleter(func(line string) (c []string) {
+		for i := 0; i < es.Idx.GetWordCount(); i++ {
+			if strings.HasPrefix(es.Idx.GetWord(i), strings.ToLower(line)) {
+				c = append(c, es.Idx.GetWord(i))
+			}
+		}
+		return
+	})
+
+	if f, err := os.Open(history_fn); err == nil {
+		if _, err := line.ReadHistory(f); err != nil {
+			log.Print("Error reading history file: ", err)
+		}
+		f.Close()
+	}
+
+	line2 := ""
+
+	var prevResult env.Object
+
+	stack := NewEyrStack()
+
+	for {
+		prompt, _ := genPrompt(nil, line2)
+
+		if code, err := line.Prompt(prompt); err == nil {
+			// strip comment
+
+			es.LiveObj.PsMutex.Lock()
+			for _, update := range es.LiveObj.Updates {
+				fmt.Println("\033[35m((Reloading " + update + "))\033[0m")
+				block_, script_ := LoadScriptLocalFile(es, *env.NewUri1(es.Idx, "file://"+update))
+				es.Res = EvaluateLoadedValue(es, block_, script_, true)
+			}
+			es.LiveObj.ClearUpdates()
+			es.LiveObj.PsMutex.Unlock()
+
+			multiline := len(code) > 1 && code[len(code)-1:] == " "
+
+			comment := regexp.MustCompile(`\s*;`)
+			line1 := comment.Split(code, 2) //--- just very temporary solution for some comments in repl. Later should probably be part of loader ... maybe?
+			lineReal := strings.Trim(line1[0], "\t")
+
+			if multiline {
+				line2 += lineReal + "\n"
+			} else {
+				line2 += lineReal
+
+				block, genv := loader.LoadString(line2, false)
+				block1 := block.(env.Block)
+				es = env.AddToProgramState(es, block1.Series, genv)
+
+				// EVAL THE DO DIALECT
+				if dialect == "do" {
+					EvalBlockInj(es, prevResult, true)
+				} else if dialect == "eyr" {
+					Eyr_EvalBlock(es, stack, true)
+				}
+
+				MaybeDisplayFailureOrError(es, genv)
+
+				if !es.ErrorFlag && es.Res != nil {
+					prevResult = es.Res
+					if showResults {
+						fmt.Println("\033[38;5;37m" + es.Res.Inspect(*genv) + "\x1b[0m")
+					}
+				}
+
+				es.ReturnFlag = false
+				es.ErrorFlag = false
+				es.FailureFlag = false
+
+				line2 = ""
+			}
+
+			line.AppendHistory(code)
+		} else if err == liner.ErrPromptAborted {
+			break
+		} else {
+			log.Print("Error reading line: ", err)
+			break
+		}
+	}
+
+	if f, err := os.Create(history_fn); err != nil {
+		log.Print("Error writing history file: ", err)
+	} else {
+		if _, err := line.WriteHistory(f); err != nil {
+			log.Print("Error writing history file: ", err)
+		}
+		f.Close()
+	}
+}
+
+func MaybeDisplayFailureOrError(es *env.ProgramState, genv *env.Idxs) {
+	if es.FailureFlag {
+		fmt.Println("\x1b[33m" + "Failure" + "\x1b[0m")
+	}
+	if es.ErrorFlag {
+		fmt.Println("\x1b[31m" + es.Res.Print(*genv))
+		switch err := es.Res.(type) {
+		case env.Error:
+			fmt.Println(err.CodeBlock.PositionAndSurroundingElements(*genv))
+			fmt.Println("Error not pointer so bug. #temp")
+		case *env.Error:
+			fmt.Println("At location:")
+			fmt.Print(err.CodeBlock.PositionAndSurroundingElements(*genv))
+		}
+		fmt.Println("\x1b[0m")
+	}
+}
+
+func MaybeDisplayFailureOrErrorWASM(es *env.ProgramState, genv *env.Idxs, printfn func(string)) {
+	if es.FailureFlag {
+		printfn("\x1b[33m" + "Failure" + "\x1b[0m")
+	}
+	if es.ErrorFlag {
+		printfn("\x1b[31;3m" + es.Res.Print(*genv))
+		switch err := es.Res.(type) {
+		case env.Error:
+			printfn(err.CodeBlock.PositionAndSurroundingElements(*genv))
+			printfn("Error not pointer so bug. #temp")
+		case *env.Error:
+			printfn("At location:")
+			printfn(err.CodeBlock.PositionAndSurroundingElements(*genv))
+		}
+		printfn("\x1b[0m")
+	}
+}
+
+/*  THIS WAS DISABLED TEMP FOR WASM MODE .. 20250116 func DoGeneralInput(es *env.ProgramState, prompt string) {
+	line := liner.NewLiner()
+	defer line.Close()
+	if code, err := line.SimplePrompt(prompt); err == nil {
+		es.Res = *env.NewString(code)
+	} else {
+		log.Print("Error reading line: ", err)
+	}
+}
+
+func DoGeneralInputField(es *env.ProgramState, prompt string) {
+	line := liner.NewLiner()
+	defer line.Close()
+	if code, err := line.SimpleTextField(prompt, 5); err == nil {
+		es.Res = *env.NewString(code)
+	} else {
+		log.Print("Error reading line: ", err)
+	}
+}
+*/
+
+func DoRyeRepl_OLD(es *env.ProgramState, showResults bool) { // here because of some odd options we were experimentally adding
 	codestr := "a: 100\nb: \"jim\"\nprint 10 + 20 + b"
 	codelines := strings.Split(codestr, ",\n")
 
@@ -244,6 +402,8 @@ func DoRyeRepl(es *env.ProgramState, showResults bool) {
 					block, genv := loader.LoadString(line2, false)
 					block1 := block.(env.Block)
 					es = env.AddToProgramState(es, block1.Series, genv)
+
+					// EVAL THE DO DIALECT
 					EvalBlockInj(es, prevResult, true)
 
 					if arg != "" {
@@ -308,60 +468,3 @@ func DoRyeRepl(es *env.ProgramState, showResults bool) {
 		f.Close()
 	}
 }
-
-func MaybeDisplayFailureOrError(es *env.ProgramState, genv *env.Idxs) {
-	if es.FailureFlag {
-		fmt.Println("\x1b[33m" + "Failure" + "\x1b[0m")
-	}
-	if es.ErrorFlag {
-		fmt.Println("\x1b[31m" + es.Res.Print(*genv))
-		switch err := es.Res.(type) {
-		case env.Error:
-			fmt.Println(err.CodeBlock.PositionAndSurroundingElements(*genv))
-			fmt.Println("Error not pointer so bug. #temp")
-		case *env.Error:
-			fmt.Println("At location:")
-			fmt.Print(err.CodeBlock.PositionAndSurroundingElements(*genv))
-		}
-		fmt.Println("\x1b[0m")
-	}
-}
-
-func MaybeDisplayFailureOrErrorWASM(es *env.ProgramState, genv *env.Idxs, printfn func(string)) {
-	if es.FailureFlag {
-		printfn("\x1b[33m" + "Failure" + "\x1b[0m")
-	}
-	if es.ErrorFlag {
-		printfn("\x1b[31;3m" + es.Res.Print(*genv))
-		switch err := es.Res.(type) {
-		case env.Error:
-			printfn(err.CodeBlock.PositionAndSurroundingElements(*genv))
-			printfn("Error not pointer so bug. #temp")
-		case *env.Error:
-			printfn("At location:")
-			printfn(err.CodeBlock.PositionAndSurroundingElements(*genv))
-		}
-		printfn("\x1b[0m")
-	}
-}
-
-/*  THIS WAS DISABLED TEMP FOR WASM MODE .. 20250116 func DoGeneralInput(es *env.ProgramState, prompt string) {
-	line := liner.NewLiner()
-	defer line.Close()
-	if code, err := line.SimplePrompt(prompt); err == nil {
-		es.Res = *env.NewString(code)
-	} else {
-		log.Print("Error reading line: ", err)
-	}
-}
-
-func DoGeneralInputField(es *env.ProgramState, prompt string) {
-	line := liner.NewLiner()
-	defer line.Close()
-	if code, err := line.SimpleTextField(prompt, 5); err == nil {
-		es.Res = *env.NewString(code)
-	} else {
-		log.Print("Error reading line: ", err)
-	}
-}
-*/

@@ -1873,6 +1873,8 @@ func NewListFromSeries(block TSeries) List {
 			data[i] = k.Value
 		case List:
 			data[i] = k
+		case Dict:
+			data[i] = k
 		}
 	}
 	return List{data, Word{0}}

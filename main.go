@@ -54,6 +54,7 @@ var CODE []any
 var (
 	// fileName = flag.String("fiimle", "", "Path to the Rye file (default: none)")
 	do     = flag.String("do", "", "Evaluates code after it loads a file or last save.")
+	lang   = flag.String("lang", "do", "Select a dialect / language (do, eyr, ...)")
 	silent = flag.Bool("silent", false, "Console doesn't display return values")
 	//	quit    = flag.Bool("quit", false, "Quits after executing.")
 	console = flag.Bool("console", false, "Enters console after a file is evaluated.")
@@ -111,7 +112,7 @@ func main() {
 			ryeFile := dotsToMainRye(".")
 			main_rye_file(ryeFile, false, true, *console, code)
 		} else {
-			main_rye_repl(os.Stdin, os.Stdout, true, false)
+			main_rye_repl(os.Stdin, os.Stdout, true, false, *lang)
 		}
 	} else {
 		// Check for --help flag
@@ -128,7 +129,7 @@ func main() {
 				ryeFile := findLastConsoleSave()
 				main_rye_file(ryeFile, false, true, true, code)
 			} else if args[0] == "here" {
-				main_rye_repl(os.Stdin, os.Stdout, true, true)
+				main_rye_repl(os.Stdin, os.Stdout, true, true, *lang)
 			} else {
 				ryeFile := dotsToMainRye(args[0])
 				main_rye_file(ryeFile, false, true, *console, code)
@@ -137,7 +138,7 @@ func main() {
 			if *do != "" {
 				main_rye_file("", false, true, *console, code)
 			} else {
-				main_rye_repl(os.Stdin, os.Stdout, true, false)
+				main_rye_repl(os.Stdin, os.Stdout, true, false, *lang)
 			}
 		}
 	}
@@ -152,15 +153,15 @@ func main_OLD() {
 	// be formalized and we should use a proper library to handle all cases consistently, offer standard help, etc
 
 	if len(os.Args) == 1 {
-		main_rye_repl(os.Stdin, os.Stdout, true, false)
+		main_rye_repl(os.Stdin, os.Stdout, true, false, "do")
 	} else if len(os.Args) == 2 {
 		if os.Args[1] == "shell" {
 			main_rysh()
 		} else if os.Args[1] == "here" {
-			main_rye_repl(os.Stdin, os.Stdout, true, true)
+			main_rye_repl(os.Stdin, os.Stdout, true, true, "do")
 		} else if os.Args[1] == "--silent" {
 			evaldo.ShowResults = false
-			main_rye_repl(os.Stdin, os.Stdout, true, false)
+			main_rye_repl(os.Stdin, os.Stdout, true, false, "do")
 		} else if os.Args[1] == "cont" {
 			ryeFile := findLastConsoleSave()
 			main_rye_file(ryeFile, false, true, true, "")
@@ -463,7 +464,7 @@ func main_rye_file(file string, sig bool, subc bool, interactive bool, code stri
 		evaldo.MaybeDisplayFailureOrError(ps, ps.Idx)
 
 		if interactive {
-			evaldo.DoRyeRepl(ps, evaldo.ShowResults)
+			evaldo.DoRyeRepl(ps, "do", evaldo.ShowResults)
 		}
 
 	case env.Error:
@@ -523,7 +524,7 @@ func main_rye_file_OLD(file string, sig bool, subc bool, interactive bool, code 
 		evaldo.MaybeDisplayFailureOrError(es, genv)
 
 		if interactive {
-			evaldo.DoRyeRepl(es, evaldo.ShowResults)
+			evaldo.DoRyeRepl(es, "do", evaldo.ShowResults)
 		}
 
 	case env.Error:
@@ -570,7 +571,7 @@ func main_cgi_file(file string, sig bool) {
 	}
 }
 
-func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool) {
+func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string) {
 	input := " " // "name: \"Rye\" version: \"0.011 alpha\""
 	// userHomeDir, _ := os.UserHomeDir()
 	// profile_path := filepath.Join(userHomeDir, ".rye-profile")
@@ -614,7 +615,7 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool) {
 		}
 	}
 
-	evaldo.DoRyeRepl(es, evaldo.ShowResults)
+	evaldo.DoRyeRepl(es, lang, evaldo.ShowResults)
 }
 
 func main_rysh() {
