@@ -2261,7 +2261,7 @@ var builtins = map[string]*env.Builtin{
 						}
 					}*/
 
-				DoRyeRepl(ps, ShowResults)
+				DoRyeRepl(ps, "do", ShowResults)
 				fmt.Println("-------------------------------------------------------------")
 				// ps.Ser = ser
 				return ps.Res

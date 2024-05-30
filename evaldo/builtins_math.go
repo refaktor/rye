@@ -516,7 +516,7 @@ var Builtins_math = map[string]*env.Builtin{
 				stack := NewEyrStack()
 				ser := ps.Ser
 				ps.Ser = block.Series
-				Eyr_EvalBlock(ps, stack)
+				Eyr_EvalBlock(ps, stack, false)
 				ps.Ser = ser
 				return ps.Res
 			default:
