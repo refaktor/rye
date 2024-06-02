@@ -454,6 +454,48 @@ var Builtins_math = map[string]*env.Builtin{
 			}
 		},
 	},
+	"exp": {
+		Argsn: 1,
+		Doc:   "Returns e**x, the base-e exponential of x.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Integer:
+				return *env.NewDecimal(math.Exp(float64(val.Value)))
+			case env.Decimal:
+				return *env.NewDecimal(math.Exp(val.Value))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "exp")
+			}
+		},
+	},
+	"exp2": {
+		Argsn: 1,
+		Doc:   "Returns 2**x, the base-2 exponential of x.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Integer:
+				return *env.NewDecimal(math.Exp2(float64(val.Value)))
+			case env.Decimal:
+				return *env.NewDecimal(math.Exp2(val.Value))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "exp2")
+			}
+		},
+	},
+	"expm1": {
+		Argsn: 1,
+		Doc:   "Returns e**x - 1, the base-e exponential of x minus 1. It is more accurate than exp(x) - 1 when x is near zero.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Integer:
+				return *env.NewDecimal(math.Expm1(float64(val.Value)))
+			case env.Decimal:
+				return *env.NewDecimal(math.Expm1(val.Value))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "expm1")
+			}
+		},
+	},
 	"pi": {
 		Argsn: 0,
 		Doc:   "Return Pi constant.",
