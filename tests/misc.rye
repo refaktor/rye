@@ -464,6 +464,31 @@ section "Math functions"
 		equal { do\in math { erfcinv -1 } } "-Inf"
 		equal { do\in math { erfcinv 1.5 } } "NaN"
 	}
+
+	group "exp"
+	mold\nowrap "" 
+	{ { string } }
+	{
+		equal { do\in math { exp 2 } } 7.38905609893065
+	}
+	group "exp2"
+	mold\nowrap "" 
+	{ { string } }
+	{
+		equal { do\in math { exp2 5 } } 32.000000
+	}
+	group "expm1"
+	mold\nowrap "" 
+	{ { string } }
+	{
+		equal { do\in math { expm1 2 } } 6.389056
+	}
+	group "fma"
+	mold\nowrap "" 
+	{ { string } }
+	{
+		equal { do\in math { fma 2.0 4.0 6.0 } } 14.00
+	}
 	
 }
 
