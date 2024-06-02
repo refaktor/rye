@@ -481,7 +481,7 @@ section "Math functions"
 	mold\nowrap "" 
 	{ { string } }
 	{
-		equal { do\in math { expm1 2 } } 6.389056
+		equal { do\in math { expm1 2 } } 6.38905609893065
 	}
 	group "fma"
 	mold\nowrap "" 
