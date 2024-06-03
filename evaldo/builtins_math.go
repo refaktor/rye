@@ -509,6 +509,104 @@ var Builtins_math = map[string]*env.Builtin{
 			}
 		},
 	},
+	"exp": {
+		Argsn: 1,
+		Doc:   "Returns e**x, the base-e exponential of x.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Integer:
+				return *env.NewDecimal(math.Exp(float64(val.Value)))
+			case env.Decimal:
+				return *env.NewDecimal(math.Exp(val.Value))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "exp")
+			}
+		},
+	},
+	"exp2": {
+		Argsn: 1,
+		Doc:   "Returns 2**x, the base-2 exponential of x.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Integer:
+				return *env.NewDecimal(math.Exp2(float64(val.Value)))
+			case env.Decimal:
+				return *env.NewDecimal(math.Exp2(val.Value))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "exp2")
+			}
+		},
+	},
+	"expm1": {
+		Argsn: 1,
+		Doc:   "Returns e**x - 1, the base-e exponential of x minus 1. It is more accurate than exp(x) - 1 when x is near zero.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Integer:
+				return *env.NewDecimal(math.Expm1(float64(val.Value)))
+			case env.Decimal:
+				return *env.NewDecimal(math.Expm1(val.Value))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "expm1")
+			}
+		},
+	},
+	"fma": {
+		Argsn: 3,
+		Doc:   "Returns x * y + z, computed with only one rounding. (That is, FMA returns the fused multiply-add of x, y, and z.)",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val1 := arg0.(type) {
+			case env.Integer:
+				switch val2 := arg1.(type) {
+				case env.Integer:
+					switch val3 := arg2.(type) {
+					case env.Integer:
+						return *env.NewDecimal(math.FMA(float64(val1.Value), float64(val2.Value), float64(val3.Value)))
+					case env.Decimal:
+						return *env.NewDecimal(math.FMA(float64(val1.Value), float64(val2.Value), val3.Value))
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.IntegerType, env.DecimalType}, "fma")
+					}
+				case env.Decimal:
+					switch val3 := arg2.(type) {
+					case env.Integer:
+						return *env.NewDecimal(math.FMA(float64(val1.Value), val2.Value, float64(val3.Value)))
+					case env.Decimal:
+						return *env.NewDecimal(math.FMA(float64(val1.Value), val2.Value, val3.Value))
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.IntegerType, env.DecimalType}, "fma")
+					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "fma")
+				}
+			case env.Decimal:
+				switch val2 := arg1.(type) {
+				case env.Integer:
+					switch val3 := arg2.(type) {
+					case env.Integer:
+						return *env.NewDecimal(math.FMA(val1.Value, float64(val2.Value), float64(val3.Value)))
+					case env.Decimal:
+						return *env.NewDecimal(math.FMA(val1.Value, float64(val2.Value), val3.Value))
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.IntegerType, env.DecimalType}, "fma")
+					}
+				case env.Decimal:
+					switch val3 := arg2.(type) {
+					case env.Integer:
+						return *env.NewDecimal(math.FMA(val1.Value, val2.Value, float64(val3.Value)))
+					case env.Decimal:
+						return *env.NewDecimal(math.FMA(val1.Value, val2.Value, val3.Value))
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.IntegerType, env.DecimalType}, "fma")
+					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "fma")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "fma")
+			}
+		},
+	},
 	"pi": {
 		Argsn: 0,
 		Doc:   "Return Pi constant.",
