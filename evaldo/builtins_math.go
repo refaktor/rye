@@ -114,6 +114,17 @@ var Builtins_math = map[string]*env.Builtin{
 			return *env.NewDecimal(math.Mod(fa, fb))
 		},
 	},
+	"pow": {
+		Argsn: 2,
+		Doc:   "Return the power of",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			fa, fb, errPos := assureFloats(arg0, arg1)
+			if errPos > 0 {
+				return MakeArgError(ps, errPos, []env.Type{env.IntegerType, env.BlockType}, "mod")
+			}
+			return *env.NewDecimal(math.Pow(fa, fb))
+		},
+	},
 	"log2": {
 		Argsn: 1,
 		Doc:   "Return binary logarithm of x",
@@ -123,6 +134,20 @@ var Builtins_math = map[string]*env.Builtin{
 				return *env.NewDecimal(math.Log2(float64(val.Value)))
 			case env.Decimal:
 				return *env.NewDecimal(math.Log2(val.Value))
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.BlockType}, "mod")
+			}
+		},
+	},
+	"sq": {
+		Argsn: 1,
+		Doc:   "Return the sine of the radian argument.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Integer:
+				return *env.NewDecimal(math.Pow(float64(val.Value), 2.0))
+			case env.Decimal:
+				return *env.NewDecimal(math.Pow(val.Value, 2.0))
 			default:
 				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.BlockType}, "mod")
 			}
@@ -395,6 +420,36 @@ var Builtins_math = map[string]*env.Builtin{
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "dim")
+			}
+		},
+	},
+	"round\\to": {
+		Argsn: 2,
+		Doc:   "Round to a number of digits.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Decimal:
+				switch precision := arg1.(type) {
+				case env.Integer:
+					ratio := math.Pow(10, float64(precision.Value))
+					return env.NewDecimal(math.Round(val.Value*ratio) / ratio)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "dim")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.DecimalType}, "dim")
+			}
+		},
+	},
+	"round": {
+		Argsn: 1,
+		Doc:   "Round to nearest integer.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Decimal:
+				return env.NewDecimal(math.Round(val.Value))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.DecimalType}, "dim")
 			}
 		},
 	},

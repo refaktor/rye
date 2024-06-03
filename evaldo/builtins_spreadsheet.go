@@ -840,13 +840,25 @@ func GenerateColumn(ps *env.ProgramState, s env.Spreadsheet, name env.Word, extr
 			switch w := word.(type) {
 			case env.Word:
 				val, er := s.GetRowValue(ps.Idx.GetWord(w.Index), row)
+				if val == nil {
+					val = ""
+				}
+				// fmt.Println(val)
 				if er != nil {
 					return nil
 				}
 				if firstVal == nil {
-					firstVal = val.(env.Object)
+					var ok bool
+					firstVal, ok = val.(env.Object)
+					if !ok {
+						firstVal = *env.NewString(val.(string))
+					}
 				}
-				ctx.Set(w.Index, val.(env.Object))
+				val1, ok := val.(env.Object)
+				if !ok {
+					val1 = *env.NewString(val.(string))
+				}
+				ctx.Set(w.Index, val1)
 			}
 		}
 		// execute the block of code injected with first value

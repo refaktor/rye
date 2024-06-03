@@ -2422,6 +2422,34 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"do\\par": { // **
+		Argsn: 2,
+		Doc:   "Takes a Context and a Block. It Does a block in current context but with parent a given Context.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch ctx := arg0.(type) {
+			case env.RyeCtx:
+				switch bloc := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = bloc.Series
+					temp := ps.Ctx.Parent
+					ps.Ctx.Parent = &ctx
+					EvalBlock(ps)
+					ps.Ctx.Parent = temp
+					ps.Ser = ser
+					return ps.Res
+				default:
+					ps.ErrorFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "do-in")
+				}
+			default:
+				ps.ErrorFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "do-in")
+			}
+
+		},
+	},
+
 	"capture-stdout": { // **
 		Argsn: 1,
 		Doc:   "Takes a block of code and does (runs) it.",
@@ -2705,7 +2733,7 @@ var builtins = map[string]*env.Builtin{
 
 	// CONTEXT
 
-	"current-ctx": { // **
+	"current-ctx": { // ** deprecated ... current from now on
 		Argsn: 0,
 		Doc:   "Returns current context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2713,7 +2741,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"current-ctx!!": { // **
+	"current": { // **
 		Argsn: 0,
 		Doc:   "Returns current context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2721,7 +2749,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"parent-ctx": { // **
+	"parent": { // **
 		Argsn: 0,
 		Doc:   "Returns parent context of the current context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2934,7 +2962,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"extend": { // ** exclamation mark, because it as it is now extends/changes the source context too .. in place
+	"extends": { // ** add one with exclamation mark, which it as it is now extends/changes the source context too .. in place
 		Argsn: 2,
 		Doc:   "Extends a context with a new context in place and returns it.",
 		Pure:  false,
@@ -2946,7 +2974,8 @@ var builtins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ctx := ps.Ctx
 					ps.Ser = bloc.Series
-					ps.Ctx = ctx0.Copy() // make new context with no parent
+					// ps.Ctx = ctx0.Copy() // make new context with no parent
+					ps.Ctx = env.NewEnv(&ctx0) // make new context with no parent
 					EvalBlock(ps)
 					rctx := ps.Ctx
 					ps.Ctx = ctx
