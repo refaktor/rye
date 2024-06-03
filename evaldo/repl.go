@@ -214,6 +214,25 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 					EvalBlockInj(es, prevResult, true)
 				} else if dialect == "eyr" {
 					Eyr_EvalBlock(es, stack, true)
+				} else if dialect == "math" {
+					idxx, _ := es.Idx.GetIndex("math")
+					s1, ok := es.Ctx.Get(idxx)
+					if ok {
+						switch ss := s1.(type) {
+						case env.RyeCtx: /*  */
+							es.Ctx = &ss
+							// return s1
+						}
+					}
+					res := DialectMath(es, block1)
+					switch block := res.(type) {
+					case env.Block:
+						stack := NewEyrStack()
+						ser := es.Ser
+						es.Ser = block.Series
+						Eyr_EvalBlock(es, stack, false)
+						es.Ser = ser
+					}
 				}
 
 				MaybeDisplayFailureOrError(es, genv)

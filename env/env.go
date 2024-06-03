@@ -390,7 +390,7 @@ type LiveEnv struct {
 func NewLiveEnv() *LiveEnv {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		fmt.Println("Error creating watcher:", err)
+		// 	fmt.Println("Error creating watcher:", err)
 		return nil
 	}
 	// defer watcher.Close()
