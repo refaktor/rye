@@ -13,13 +13,13 @@ import (
 	"sort"
 	"strings"
 
+	"golang.org/x/term"
+
 	"github.com/refaktor/rye/contrib"
-	"github.com/refaktor/rye/current"
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/evaldo"
 	"github.com/refaktor/rye/loader"
 	"github.com/refaktor/rye/util"
-	"golang.org/x/term"
 )
 
 var (
@@ -187,7 +187,6 @@ func main_ryk() {
 	es := env.NewProgramState(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
 	contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
-	current.RegisterBuiltins(es)
 	evaldo.EvalBlock(es)
 
 	if len(os.Args) >= 4 {
@@ -438,7 +437,6 @@ func main_rye_file_OLD(file string, sig bool, subc bool, interactive bool, code 
 		es := env.NewProgramState(block.(env.Block).Series, genv)
 		evaldo.RegisterBuiltins(es)
 		contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
-		current.RegisterBuiltins(es)
 
 		if subc {
 			ctx := es.Ctx
@@ -467,7 +465,6 @@ func main_cgi_file(file string, sig bool) {
 		es := env.NewProgramState(block.(env.Block).Series, genv)
 		evaldo.RegisterBuiltins(es)
 		contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
-		current.RegisterBuiltins(es)
 
 		evaldo.EvalBlock(es)
 		env.SetValue(es, "w", *env.NewNative(es.Idx, w, "Go-server-response-writer"))
@@ -486,7 +483,6 @@ func main_cgi_file(file string, sig bool) {
 			es = env.AddToProgramState(es, block.(env.Block).Series, genv)
 			evaldo.RegisterBuiltins(es)
 			contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
-			current.RegisterBuiltins(es)
 
 			evaldo.EvalBlock(es)
 			evaldo.MaybeDisplayFailureOrError(es, genv)
