@@ -2606,9 +2606,10 @@ var builtins = map[string]*env.Builtin{
 				for _, val := range bloc.Series.S {
 					switch val_ := val.(type) {
 					case env.Block:
-						for _, val2 := range val_.Series.S {
-							res = append(res, val2)
-						}
+						res = append(res, val_.Series.S...)
+						//for _, val2 := range val_.Series.S {
+						//	res = append(res, val2)
+						// }
 					default:
 						res = append(res, val)
 					}
