@@ -2596,39 +2596,27 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"unpack": { // ** WWWWWWWWWWWWWWWWWWWW ----
+	"unpack": {
 		Argsn: 1,
 		Doc:   "Takes a block of Rye values and evaluates each value or expression.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
-				ser := ps.Ser
-				ps.Ser = bloc.Series
 				res := make([]env.Object, 0)
-				for ps.Ser.Pos() < ps.Ser.Len() {
-					// ps, injnow = EvalExpressionInj(ps, inj, injnow)
-					EvalExpression2(ps, false)
-					res = append(res, ps.Res)
-					// check and raise the flags if needed if true (error) return
-					//if checkFlagsAfterBlock(ps, 101) {
-					//	return ps
-					//}
-					// if return flag was raised return ( errorflag I think would return in previous if anyway)
-					//if checkErrorReturnFlag(ps) {
-					//	return ps
-					//}
-					// ps, injnow = MaybeAcceptComma(ps, inj, injnow)
+				for _, val := range bloc.Series.S {
+					switch val_ := val.(type) {
+					case env.Block:
+						res = append(res, val_.Series.S...)
+						//for _, val2 := range val_.Series.S {
+						//	res = append(res, val2)
+						// }
+					default:
+						res = append(res, val)
+					}
 				}
-				ps.Ser = ser
 				return *env.NewBlock(*env.NewTSeries(res))
-			case env.Word:
-				val, found := ps.Ctx.Get(bloc.Index)
-				if found {
-					return val
-				}
-				return MakeBuiltinError(ps, "Value not found.", "vals")
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.WordType}, "vals")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "unpack")
 			}
 		},
 	},
