@@ -1,7 +1,7 @@
 //go:build !embed_main
 // +build !embed_main
 
-package main
+package runner
 
 import "embed"
 

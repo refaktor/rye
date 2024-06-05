@@ -713,7 +713,7 @@ var builtins = map[string]*env.Builtin{
 			case env.Word:
 				val, found, ctx := ps.Ctx.Get2(arg.Index)
 				if found {
-					ctx.Set(arg.Index, arg0)
+					ctx.Mod(arg.Index, arg0)
 					var res int64
 					if arg0.GetKind() == val.GetKind() && arg0.Inspect(*ps.Idx) == val.Inspect(*ps.Idx) {
 						res = 0
@@ -729,14 +729,14 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"set": { // ***
+	"set!": { // ***
 		Argsn: 2,
-		Doc:   "Set words by deconstructing block",
+		Doc:   "Set word or words by deconstructing block",
 		Pure:  false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch vals := arg0.(type) {
+			switch words := arg1.(type) {
 			case env.Block:
-				switch words := arg1.(type) {
+				switch vals := arg0.(type) {
 				case env.Block:
 					for i, word_ := range words.Series.S {
 						switch word := word_.(type) {
@@ -747,7 +747,10 @@ var builtins = map[string]*env.Builtin{
 							}
 							val := vals.Series.S[i]
 							// if it exists then we set it to word from words
-							ps.Ctx.Set(word.Index, val)
+							res := ps.Ctx.Set(word.Index, val)
+							if res.Type() == env.ErrorType {
+								return MakeBuiltinError(ps, res.(env.Error).Message, "set")
+							}
 						default:
 							fmt.Println(word)
 							return MakeBuiltinError(ps, "Only words in words block", "set")
@@ -755,10 +758,12 @@ var builtins = map[string]*env.Builtin{
 					}
 					return arg0
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType}, "set")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "set")
 				}
+			case env.Word:
+				return ps.Ctx.Set(words.Index, arg0)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.WordType}, "set")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "set")
 			}
 		},
 	},
@@ -2587,6 +2592,43 @@ var builtins = map[string]*env.Builtin{
 				return *env.NewBlock(*env.NewTSeries(res))
 			default:
 				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "vals\\with")
+			}
+		},
+	},
+
+	"unpack": { // ** WWWWWWWWWWWWWWWWWWWW ----
+		Argsn: 1,
+		Doc:   "Takes a block of Rye values and evaluates each value or expression.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg0.(type) {
+			case env.Block:
+				ser := ps.Ser
+				ps.Ser = bloc.Series
+				res := make([]env.Object, 0)
+				for ps.Ser.Pos() < ps.Ser.Len() {
+					// ps, injnow = EvalExpressionInj(ps, inj, injnow)
+					EvalExpression2(ps, false)
+					res = append(res, ps.Res)
+					// check and raise the flags if needed if true (error) return
+					//if checkFlagsAfterBlock(ps, 101) {
+					//	return ps
+					//}
+					// if return flag was raised return ( errorflag I think would return in previous if anyway)
+					//if checkErrorReturnFlag(ps) {
+					//	return ps
+					//}
+					// ps, injnow = MaybeAcceptComma(ps, inj, injnow)
+				}
+				ps.Ser = ser
+				return *env.NewBlock(*env.NewTSeries(res))
+			case env.Word:
+				val, found := ps.Ctx.Get(bloc.Index)
+				if found {
+					return val
+				}
+				return MakeBuiltinError(ps, "Value not found.", "vals")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.WordType}, "vals")
 			}
 		},
 	},

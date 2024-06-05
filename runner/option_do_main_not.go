@@ -1,6 +1,6 @@
 //go:build !do_main
 // +build !do_main
 
-package main
+package runner
 
 const Option_Do_Main bool = false
