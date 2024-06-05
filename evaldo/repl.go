@@ -285,7 +285,13 @@ func MaybeDisplayFailureOrError(es *env.ProgramState, genv *env.Idxs) {
 			fmt.Print(err.CodeBlock.PositionAndSurroundingElements(*genv))
 		}
 		fmt.Println("\x1b[0m")
+
+		// ENTER CONSOLE ON ERROR
+		es.ErrorFlag = false
+		es.FailureFlag = false
+		DoRyeRepl(es, "do", true)
 	}
+	// cebelca2659- vklopi kontne skupine
 }
 
 func MaybeDisplayFailureOrErrorWASM(es *env.ProgramState, genv *env.Idxs, printfn func(string)) {
