@@ -7,7 +7,7 @@ import (
 )
 
 type Idxs struct {
-	words1 [1000]string
+	words1 [3000]string
 	words2 map[string]int
 	wordsn int
 }
