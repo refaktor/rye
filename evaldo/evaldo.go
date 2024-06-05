@@ -645,6 +645,7 @@ func CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, toLeft
 		result = EvalBlock(ps)
 	}
 	//	}
+	MaybeDisplayFailureOrError(result, result.Idx)
 	if result.ForcedResult != nil {
 		ps.Res = result.ForcedResult
 		result.ForcedResult = nil
