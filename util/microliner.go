@@ -313,7 +313,7 @@ func (s *MLState) refreshSingleLine(prompt []rune, buf []rune, pos int) error {
 	if true { // pLen+bLen < s.columns {
 		// _, err = fmt.Print(VerySimpleRyeHighlight(string(buf)))
 		// s.cursorPos(0)
-		s.sendBack(VerySimpleRyeHighlight(string(buf)))
+		s.sendBack(RyeHighlight(string(buf)))
 		trace(pLen + pos)
 		s.cursorPos(pLen + pos)
 		trace("SETTING CURSOR POS AFER HIGHLIGHT")
@@ -549,7 +549,11 @@ startOfHere:
 			switch next.Code {
 			case 13: // Enter
 				historyStale = true
-				s.sendBack("\n\r")
+				if len(line) > 0 && unicode.IsSpace(line[len(line)-1]) {
+					s.sendBack(fmt.Sprintf("%s⏎\n\r%s", color_background_red, reset))
+				} else {
+					s.sendBack("\n\r")
+				}
 				xx := s.enterLine(string(line))
 				pos = 0
 				if xx == "next line" {
@@ -1053,61 +1057,128 @@ const color_word2 = "\033[38;5;214m"
 const color_num2 = "\033[38;5;202m"
 const color_string2 = "\033[38;5;148m"
 const color_comment = "\033[38;5;247m"
+const color_background_red = "\033[41m"
 
-func VerySimpleRyeHighlight(c string) string {
-	var r strings.Builder
-	s_in := 0
-	s_instr := 0
-	s_word := 0
-	s_num := 0
-	s_comment := 0
-	for _, char := range c {
-		if s_comment == 2 {
-			r.WriteRune(char)
-		} else if s_in == 0 && char == ';' {
-			//			if len(c) > pos+1 && c[pos+1] == '/' {
-			r.WriteString(color_comment)
-			s_comment = 1
-			s_in = 1
-			//}
-			r.WriteRune(char)
-		} else if s_in == 0 && unicode.IsNumber(char) {
-			if s_num == 0 {
-				s_num = 1
-				s_in = 1
-				r.WriteString(color_num2)
-				r.WriteRune(char)
-			}
-		} else if s_in == 0 && (unicode.IsLetter(char) || char == '.' || char == '|') {
-			if s_word == 0 {
-				s_word = 1
-				s_in = 1
-				//				r.WriteString(bright)
-				r.WriteString(color_word2)
-				r.WriteRune(char)
-			}
-		} else if char == '"' {
-			if s_instr == 0 {
-				s_instr = 1
-				s_in = 1
-				r.WriteString(color_string2)
-				r.WriteRune(char)
-			} else {
-				r.WriteRune(char)
-				r.WriteString(reset)
-				s_instr = 0
-				s_in = 0
-			}
-		} else if s_in == 1 && s_instr == 0 && s_comment == 0 && char == ' ' {
-			r.WriteRune(char)
-			r.WriteString(reset)
-			s_word = 0
-			s_num = 0
-			s_in = 0
-		} else {
-			r.WriteRune(char)
+type HighlightedStringBuilder struct {
+	b strings.Builder
+}
+
+func (h *HighlightedStringBuilder) WriteRune(c rune) {
+	h.b.WriteRune(c)
+}
+
+func (h *HighlightedStringBuilder) String() string {
+	return h.b.String()
+}
+
+func (h *HighlightedStringBuilder) ColoredString() string {
+	return h.getColor() + h.b.String() + reset
+}
+
+func (h *HighlightedStringBuilder) Reset() {
+	h.b.Reset()
+}
+
+func (h *HighlightedStringBuilder) getColor() string {
+	s := h.b.String()
+	if len(s) == 0 {
+		return ""
+	}
+	if strings.HasPrefix(s, ";") {
+		return color_comment
+	}
+	if hasPrefixMultiple(s, "\"", "`") {
+		return color_string2
+	}
+	if strings.HasPrefix(s, "%") && len(s) != 1 {
+		return color_string2
+	}
+	if hasPrefixMultiple(s, "?", "~", "|", "\\", ".", "'", "<") {
+		if len(s) != 1 {
+			return color_word2
 		}
 	}
-	r.WriteString(reset)
-	return r.String()
+	if strings.HasPrefix(s, ":") {
+		if strings.HasPrefix(s, "::") {
+			if len(s) != 2 {
+				return color_background_red
+			}
+		} else if len(s) != 1 {
+			return color_word2
+		}
+	}
+	if strings.HasSuffix(s, ":") {
+		if strings.HasSuffix(s, "::") {
+			if len(s) != 2 {
+				return color_background_red
+			}
+		} else if len(s) != 1 {
+			return color_word2
+		}
+	}
+	if unicode.IsNumber(rune(s[0])) {
+		return color_num2
+	}
+	if unicode.IsLetter(rune(s[0])) {
+		if strings.Contains(s, "://") {
+			return color_string2
+		}
+		if strings.HasSuffix(s, "!") {
+			return color_background_red
+		}
+		return color_word2
+	}
+	return ""
+}
+
+func hasPrefixMultiple(s string, prefixes ...string) bool {
+	for _, p := range prefixes {
+		if strings.HasPrefix(s, p) {
+			return true
+		}
+	}
+	return false
+}
+
+func RyeHighlight(s string) string {
+	var fullB strings.Builder
+	var hb HighlightedStringBuilder
+
+	var inComment, inStr1, inStr2 bool
+	for _, c := range s {
+		if inComment {
+			hb.WriteRune(c)
+		} else if c == ';' && !inStr1 && !inStr2 {
+			inComment = true
+			hb.WriteRune(c)
+		} else if c == '"' {
+			hb.WriteRune(c)
+			if inStr1 {
+				inStr1 = false
+				fullB.WriteString(hb.ColoredString())
+				hb.Reset()
+			} else {
+				inStr1 = true
+			}
+		} else if c == '`' {
+			hb.WriteRune(c)
+			if inStr2 {
+				inStr2 = false
+				fullB.WriteString(hb.ColoredString())
+				hb.Reset()
+			} else {
+				inStr2 = true
+			}
+		} else if unicode.IsSpace(c) && !inComment && !inStr1 && !inStr2 {
+			fullB.WriteString(hb.ColoredString())
+			hb.Reset()
+
+			fullB.WriteRune(c)
+		} else {
+			hb.WriteRune(c)
+		}
+	}
+	fullB.WriteString(hb.ColoredString())
+	hb.Reset()
+	return fullB.String()
 }
