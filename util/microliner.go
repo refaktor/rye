@@ -119,13 +119,15 @@ func (s *MLState) emitNewLine() {
 
 // State represents an open terminal
 type MLState struct {
-	needRefresh  bool
-	next         <-chan KeyEvent
-	sendBack     func(msg string)
-	enterLine    func(line string) string
-	history      []string
-	historyMutex sync.RWMutex
-	columns      int
+	needRefresh    bool
+	next           <-chan KeyEvent
+	sendBack       func(msg string)
+	enterLine      func(line string) string
+	history        []string
+	historyMutex   sync.RWMutex
+	columns        int
+	inString       bool
+	lastLineString bool
 	// killRing *ring.Ring
 	//	completer         WordCompleter
 	// pending     []rune
@@ -285,7 +287,13 @@ func (s *MLState) yank(p []rune, text []rune, pos int) ([]rune, int, interface{}
 
 func trace(t any) {
 	if false {
-		trace(t)
+		fmt.Println(t)
+	}
+}
+
+func trace2(t any) {
+	if true {
+		fmt.Println(t)
 	}
 }
 
@@ -313,7 +321,11 @@ func (s *MLState) refreshSingleLine(prompt []rune, buf []rune, pos int) error {
 	if true { // pLen+bLen < s.columns {
 		// _, err = fmt.Print(VerySimpleRyeHighlight(string(buf)))
 		// s.cursorPos(0)
-		s.sendBack(RyeHighlight(string(buf)))
+		text, inString := RyeHighlight(string(buf), s.lastLineString)
+		s.sendBack(text)
+		trace("*************** IN STRING: ******************++")
+		trace(inString)
+		s.inString = inString
 		trace(pLen + pos)
 		s.cursorPos(pLen + pos)
 		trace("SETTING CURSOR POS AFER HIGHLIGHT")
@@ -549,8 +561,13 @@ startOfHere:
 			switch next.Code {
 			case 13: // Enter
 				historyStale = true
+				s.lastLineString = false
+				// trace2("NL")
 				if len(line) > 0 && unicode.IsSpace(line[len(line)-1]) {
-					s.sendBack(fmt.Sprintf("%s⏎\n\r%s", color_background_red, reset))
+					s.sendBack(fmt.Sprintf("%s⏎\n\r%s", color_emph, reset))
+					if s.inString {
+						s.lastLineString = true
+					}
 				} else {
 					s.sendBack("\n\r")
 				}
@@ -1052,12 +1069,12 @@ const white = "\x1b[37m"
 const reset = "\x1b[0m"
 const reset2 = "\033[39;49m"
 
-const color_word = "\x1b[38;5;45m"
-const color_word2 = "\033[38;5;214m"
-const color_num2 = "\033[38;5;202m"
-const color_string2 = "\033[38;5;148m"
-const color_comment = "\033[38;5;247m"
-const color_background_red = "\033[41m"
+const color_word1 = cyan
+const color_word2 = yellow
+const color_num2 = magenta
+const color_string2 = green
+const color_comment = dim + white
+const color_emph = bright
 
 type HighlightedStringBuilder struct {
 	b strings.Builder
@@ -1071,15 +1088,15 @@ func (h *HighlightedStringBuilder) String() string {
 	return h.b.String()
 }
 
-func (h *HighlightedStringBuilder) ColoredString() string {
-	return h.getColor() + h.b.String() + reset
+func (h *HighlightedStringBuilder) ColoredString(inStr bool) string {
+	return h.getColor(inStr) + h.b.String() + reset
 }
 
 func (h *HighlightedStringBuilder) Reset() {
 	h.b.Reset()
 }
 
-func (h *HighlightedStringBuilder) getColor() string {
+func (h *HighlightedStringBuilder) getColor(inStr bool) string {
 	s := h.b.String()
 	if len(s) == 0 {
 		return ""
@@ -1087,7 +1104,7 @@ func (h *HighlightedStringBuilder) getColor() string {
 	if strings.HasPrefix(s, ";") {
 		return color_comment
 	}
-	if hasPrefixMultiple(s, "\"", "`") {
+	if inStr || hasPrefixMultiple(s, "\"", "`") {
 		return color_string2
 	}
 	if strings.HasPrefix(s, "%") && len(s) != 1 {
@@ -1101,19 +1118,19 @@ func (h *HighlightedStringBuilder) getColor() string {
 	if strings.HasPrefix(s, ":") {
 		if strings.HasPrefix(s, "::") {
 			if len(s) != 2 {
-				return color_background_red
+				return color_emph + color_word1
 			}
 		} else if len(s) != 1 {
-			return color_word2
+			return color_word1
 		}
 	}
 	if strings.HasSuffix(s, ":") {
 		if strings.HasSuffix(s, "::") {
 			if len(s) != 2 {
-				return color_background_red
+				return color_emph + color_word1
 			}
 		} else if len(s) != 1 {
-			return color_word2
+			return color_word1
 		}
 	}
 	if unicode.IsNumber(rune(s[0])) {
@@ -1123,8 +1140,8 @@ func (h *HighlightedStringBuilder) getColor() string {
 		if strings.Contains(s, "://") {
 			return color_string2
 		}
-		if strings.HasSuffix(s, "!") {
-			return color_background_red
+		if strings.HasSuffix(s, "!") || strings.HasPrefix(s, "set-") {
+			return color_emph + color_word2
 		}
 		return color_word2
 	}
@@ -1140,11 +1157,13 @@ func hasPrefixMultiple(s string, prefixes ...string) bool {
 	return false
 }
 
-func RyeHighlight(s string) string {
+func RyeHighlight(s string, inStrX bool) (string, bool) {
 	var fullB strings.Builder
 	var hb HighlightedStringBuilder
 
 	var inComment, inStr1, inStr2 bool
+	inStr1 = inStrX
+
 	for _, c := range s {
 		if inComment {
 			hb.WriteRune(c)
@@ -1154,8 +1173,9 @@ func RyeHighlight(s string) string {
 		} else if c == '"' {
 			hb.WriteRune(c)
 			if inStr1 {
+				// trace2(".")
+				fullB.WriteString(hb.ColoredString(inStr1))
 				inStr1 = false
-				fullB.WriteString(hb.ColoredString())
 				hb.Reset()
 			} else {
 				inStr1 = true
@@ -1164,13 +1184,13 @@ func RyeHighlight(s string) string {
 			hb.WriteRune(c)
 			if inStr2 {
 				inStr2 = false
-				fullB.WriteString(hb.ColoredString())
+				fullB.WriteString(hb.ColoredString(inStr1))
 				hb.Reset()
 			} else {
 				inStr2 = true
 			}
 		} else if unicode.IsSpace(c) && !inComment && !inStr1 && !inStr2 {
-			fullB.WriteString(hb.ColoredString())
+			fullB.WriteString(hb.ColoredString(inStr1))
 			hb.Reset()
 
 			fullB.WriteRune(c)
@@ -1178,7 +1198,7 @@ func RyeHighlight(s string) string {
 			hb.WriteRune(c)
 		}
 	}
-	fullB.WriteString(hb.ColoredString())
+	fullB.WriteString(hb.ColoredString(inStr1))
 	hb.Reset()
-	return fullB.String()
+	return fullB.String(), inStr1
 }
