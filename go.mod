@@ -31,7 +31,7 @@ require (
 	github.com/pkg/term v1.1.0
 	github.com/refaktor/go-peg v0.0.0-20220116201714-31e3dfa8dc7d
 	github.com/refaktor/liner v1.2.10
-	github.com/sashabaranov/go-openai v1.24.0
+	github.com/sashabaranov/go-openai v1.24.1
 	github.com/shirou/gopsutil/v3 v3.24.4
 	github.com/thomasberger/parsemail v1.2.6
 	go.mongodb.org/mongo-driver v1.15.0
