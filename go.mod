@@ -31,12 +31,12 @@ require (
 	github.com/pkg/term v1.2.0-beta.2.0.20211217091447-1a4a3b719465
 	github.com/refaktor/go-peg v0.0.0-20220116201714-31e3dfa8dc7d
 	github.com/refaktor/liner v1.2.10
-	github.com/sashabaranov/go-openai v1.24.0
-	github.com/shirou/gopsutil/v3 v3.24.4
+	github.com/sashabaranov/go-openai v1.24.1
+	github.com/shirou/gopsutil/v3 v3.24.5
 	github.com/thomasberger/parsemail v1.2.6
 	go.mongodb.org/mongo-driver v1.15.0
 	golang.org/x/crypto v0.23.0
-	golang.org/x/net v0.24.0
+	golang.org/x/net v0.25.0
 	golang.org/x/sync v0.7.0
 	golang.org/x/term v0.20.0
 	golang.org/x/text v0.15.0
