@@ -201,8 +201,8 @@ github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsT
 github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
 github.com/technoweenie/multipartstreamer v1.0.1 h1:XRztA5MXiR1TIRHxH2uNxXxaIkKQDeX7m2XsSOlQEnM=
 github.com/technoweenie/multipartstreamer v1.0.1/go.mod h1:jNVxdtShOxzAsukZwTSw6MDx5eUJoiEBsSvzDU9uzog=
-github.com/thomasberger/parsemail v1.2.6 h1:vBeb8ifrmbRcHK2EyI+496VN8dCdQMZzvlCaJV5qIG4=
-github.com/thomasberger/parsemail v1.2.6/go.mod h1:tdLcf4AbEDI3JuognWe7Xun8x/ZKVSQxf9hsQReCS8E=
+github.com/thomasberger/parsemail v1.2.7 h1:UIgLPPDFb2Sc4FT168i6yinw48vzezkqXiXOTrBlkwo=
+github.com/thomasberger/parsemail v1.2.7/go.mod h1:tdLcf4AbEDI3JuognWe7Xun8x/ZKVSQxf9hsQReCS8E=
 github.com/tklauser/go-sysconf v0.3.13 h1:GBUpcahXSpR2xN01jhkNAbTLRk2Yzgggk8IM08lq3r4=
 github.com/tklauser/go-sysconf v0.3.13/go.mod h1:zwleP4Q4OehZHGn4CYZDipCgg9usW5IJePewFCGVEa0=
 github.com/tklauser/numcpus v0.7.0 h1:yjuerZP127QG9m5Zh/mSO4wqurYil27tHrqwRoRjpr4=

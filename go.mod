@@ -33,7 +33,7 @@ require (
 	github.com/refaktor/liner v1.2.10
 	github.com/sashabaranov/go-openai v1.24.1
 	github.com/shirou/gopsutil/v3 v3.24.5
-	github.com/thomasberger/parsemail v1.2.6
+	github.com/thomasberger/parsemail v1.2.7
 	go.mongodb.org/mongo-driver v1.15.0
 	golang.org/x/crypto v0.23.0
 	golang.org/x/net v0.25.0
