@@ -7,9 +7,8 @@ import (
 )
 
 type Idxs struct {
-	words1 [3000]string
+	words1 []string
 	words2 map[string]int
-	wordsn int
 }
 
 var NativeTypes = [...]string{ // Todo change to BuiltinTypes
@@ -59,10 +58,9 @@ func (e *Idxs) IndexWord(w string) int {
 	if ok {
 		return idx
 	} else {
-		e.words1[e.wordsn] = w
-		e.words2[w] = e.wordsn
-		e.wordsn += 1
-		return e.wordsn - 1
+		e.words1 = append(e.words1, w)
+		e.words2[w] = len(e.words1) - 1
+		return len(e.words1) - 1
 	}
 }
 
@@ -83,20 +81,20 @@ func (e Idxs) GetWord(i int) string {
 
 func (e Idxs) Print() {
 	fmt.Print("<IDXS: ")
-	for i := 0; i < e.wordsn; i++ {
+	for i := range e.words1 {
 		fmt.Print(strconv.FormatInt(int64(i), 10) + ": " + e.words1[i] + " ")
 	}
 	fmt.Println(">")
 }
 
 func (e Idxs) GetWordCount() int {
-	return e.wordsn
+	return len(e.words1)
 }
 
 func NewIdxs() *Idxs {
 	var e Idxs
+	e.words1 = []string{""}
 	e.words2 = make(map[string]int)
-	e.wordsn = 1
 
 	/*
 		BlockType    Type = 1
