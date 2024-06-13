@@ -59,8 +59,8 @@ func (e *Idxs) IndexWord(w string) int {
 		return idx
 	} else {
 		e.words1 = append(e.words1, w)
-		e.words2[w] = len(e.words1)-1
-		return len(e.words1)-1
+		e.words2[w] = len(e.words1) - 1
+		return len(e.words1) - 1
 	}
 }
 
