@@ -168,7 +168,7 @@ func (i RyeCtx) Equal(o Object) bool {
 	if i.locked != oCtx.locked {
 		return false
 	}
-	return false
+	return true
 }
 
 func (i RyeCtx) Dump(e Idxs) string {

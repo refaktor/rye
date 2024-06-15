@@ -287,9 +287,9 @@ func MaybeDisplayFailureOrError(es *env.ProgramState, genv *env.Idxs) {
 		fmt.Println("\x1b[0m")
 
 		// ENTER CONSOLE ON ERROR
-		es.ErrorFlag = false
-		es.FailureFlag = false
-		DoRyeRepl(es, "do", true)
+		// es.ErrorFlag = false
+		// es.FailureFlag = false
+		// DoRyeRepl(es, "do", true)
 	}
 	// cebelca2659- vklopi kontne skupine
 }
