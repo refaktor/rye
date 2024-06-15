@@ -1412,7 +1412,7 @@ var builtins = map[string]*env.Builtin{
 	},
 	"format": { // **
 		Argsn: 2,
-		Doc:   "Prints a value and adds a newline.",
+		Doc:   "Formats a value according to Go-s sprintf format",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var res string
 			switch arg := arg1.(type) {
@@ -1436,7 +1436,7 @@ var builtins = map[string]*env.Builtin{
 	},
 	"prnf": { // **
 		Argsn: 2,
-		Doc:   "Prints a value and adds a newline.",
+		Doc:   "Formats a value according to Go-s sprintf format and prn-s it",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg1.(type) {
 			case env.String:
@@ -5640,6 +5640,24 @@ var builtins = map[string]*env.Builtin{
 				return *env.NewString(strings.TrimSpace(s1.Value))
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "trim")
+			}
+		},
+	},
+	"trim\\": {
+		Argsn: 2,
+		Doc:   "Trims the String of specific characters.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				switch s2 := arg1.(type) {
+				case env.String:
+					return *env.NewString(strings.Trim(s1.Value, s2.Value))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "trim\\")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "trim\\")
 			}
 		},
 	},
