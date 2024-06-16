@@ -5630,7 +5630,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"trim": {
+	"trim\\space": {
 		Argsn: 1,
 		Doc:   "Trims the String of spacing characters.",
 		Pure:  true,
@@ -5643,7 +5643,7 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-	"trim\\": {
+	"trim": {
 		Argsn: 2,
 		Doc:   "Trims the String of specific characters.",
 		Pure:  true,
@@ -5653,6 +5653,42 @@ var builtins = map[string]*env.Builtin{
 				switch s2 := arg1.(type) {
 				case env.String:
 					return *env.NewString(strings.Trim(s1.Value, s2.Value))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "trim\\")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "trim\\")
+			}
+		},
+	},
+	"trim\\right": {
+		Argsn: 2,
+		Doc:   "Trims the String of specific characters.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				switch s2 := arg1.(type) {
+				case env.String:
+					return *env.NewString(strings.TrimRight(s1.Value, s2.Value))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "trim\\")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "trim\\")
+			}
+		},
+	},
+	"trim\\left": {
+		Argsn: 2,
+		Doc:   "Trims the String of specific characters.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				switch s2 := arg1.(type) {
+				case env.String:
+					return *env.NewString(strings.TrimLeft(s1.Value, s2.Value))
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.StringType}, "trim\\")
 				}
