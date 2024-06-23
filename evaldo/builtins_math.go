@@ -663,6 +663,34 @@ var Builtins_math = map[string]*env.Builtin{
 			}
 		},
 	},
+	"yn": {
+		Argsn: 1,
+		Doc:   "Returns the order-n Bessel function of the second kind.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch v1 := arg0.(type) {
+			case env.Integer:
+				switch v2 := arg1.(type) {
+				case env.Integer:
+					return *env.NewDecimal(math.Yn(int(v1.Value), float64(v2.Value)))
+				case env.Decimal:
+					return *env.NewDecimal(math.Yn(int(v1.Value), v2.Value))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "yn")
+				}
+			case env.Decimal:
+				switch v2 := arg1.(type) {
+				case env.Integer:
+					return *env.NewDecimal(math.Yn(int(v1.Value), float64(v2.Value)))
+				case env.Decimal:
+					return *env.NewDecimal(math.Yn(int(v1.Value), v2.Value))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "yn")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "yn")
+			}
+		},
+	},
 	"pi": {
 		Argsn: 0,
 		Doc:   "Return Pi constant.",
