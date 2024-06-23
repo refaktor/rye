@@ -607,6 +607,62 @@ var Builtins_math = map[string]*env.Builtin{
 			}
 		},
 	},
+	"j0": {
+		Argsn: 1,
+		Doc:   "Returns the order-zero Bessel function of the first kind.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Integer:
+				return *env.NewDecimal(math.J0(float64(val.Value)))
+			case env.Decimal:
+				return *env.NewDecimal(math.J0(val.Value))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "j0")
+			}
+		},
+	},
+	"j1": {
+		Argsn: 1,
+		Doc:   "Returns the order-one Bessel function of the first kind.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Integer:
+				return *env.NewDecimal(math.J1(float64(val.Value)))
+			case env.Decimal:
+				return *env.NewDecimal(math.J1(val.Value))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "j1")
+			}
+		},
+	},
+	"y0": {
+		Argsn: 1,
+		Doc:   "Returns the order-zero Bessel function of the second kind.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Integer:
+				return *env.NewDecimal(math.Y0(float64(val.Value)))
+			case env.Decimal:
+				return *env.NewDecimal(math.Y0(val.Value))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "Y0")
+			}
+		},
+	},
+	"y1": {
+		Argsn: 1,
+		Doc:   "Returns the order-one Bessel function of the second kind.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Integer:
+				return *env.NewDecimal(math.Y1(float64(val.Value)))
+			case env.Decimal:
+				return *env.NewDecimal(math.Y1(val.Value))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "Y1")
+			}
+		},
+	},
 	"pi": {
 		Argsn: 0,
 		Doc:   "Return Pi constant.",
