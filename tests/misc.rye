@@ -489,6 +489,42 @@ section "Math functions"
 	{
 		equal { do\in math { fma 2.0 4.0 6.0 } } 14.00
 	}
+	group "j0"
+	mold\nowrap "" 
+	{ { string } }
+	{
+		equal { do\in math { j0 2.1 } } 0.16660698033199028
+	}
+	group "j1"
+	mold\nowrap "" 
+	{ { string } }
+	{
+		equal { do\in math { j1 2.1 } } 0.5682921357570385
+	}	
+	group "y0"
+	mold\nowrap "" 
+	{ { string } }
+	{
+		equal { do\in math { y0 2.1 } } 0.5182937375137607
+	}	
+	group "y1"
+	mold\nowrap ""
+	{ { string } }
+	{
+		equal { do\in math { y1 2.1 } } -0.051678612130423546
+	}	
+	group "jn"
+	mold\nowrap ""
+	{ { string } }
+	{
+		equal { do\in math { jn 1 2.1 } } 0.5682921357570385
+	}		
+	group "yn"
+	mold\nowrap ""
+	{ { string } }
+	{
+		equal { do\in math { yn 1 2.1 } } -0.051678612130423546
+	}			
 	
 }
 
