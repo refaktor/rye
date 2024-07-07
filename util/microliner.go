@@ -443,6 +443,8 @@ startOfHere:
 		pLen := countGlyphs(p)
 		if next.Ctrl {
 			switch strings.ToLower(next.Key) {
+			case "c":
+				return "", nil
 			case "a":
 				pos = 0
 				// s.needRefresh = true
@@ -547,6 +549,7 @@ startOfHere:
 					line = append(line[:pos], line[pos+1:]...)
 					trace(buf)
 				}
+				s.needRefresh = true
 				// Save the result on the killRing
 				/*if killAction > 0 {
 					s.addToKillRing(buf, 2) // Add in prepend mode
