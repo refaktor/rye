@@ -982,6 +982,48 @@ func DirectlyCallBuiltin(ps *env.ProgramState, bi env.Builtin, a0 env.Object, a1
 	return bi.Fn(ps, arg0, arg1, arg2, arg3, arg4)
 }
 
+func MaybeDisplayFailureOrError(es *env.ProgramState, genv *env.Idxs) {
+	if es.FailureFlag {
+		fmt.Println("\x1b[33m" + "Failure" + "\x1b[0m")
+	}
+	if es.ErrorFlag {
+		fmt.Println("\x1b[31m" + es.Res.Print(*genv))
+		switch err := es.Res.(type) {
+		case env.Error:
+			fmt.Println(err.CodeBlock.PositionAndSurroundingElements(*genv))
+			fmt.Println("Error not pointer so bug. #temp")
+		case *env.Error:
+			fmt.Println("At location:")
+			fmt.Print(err.CodeBlock.PositionAndSurroundingElements(*genv))
+		}
+		fmt.Println("\x1b[0m")
+
+		// ENTER CONSOLE ON ERROR
+		// es.ErrorFlag = false
+		// es.FailureFlag = false
+		// DoRyeRepl(es, "do", true)
+	}
+	// cebelca2659- vklopi kontne skupine
+}
+
+func MaybeDisplayFailureOrErrorWASM(es *env.ProgramState, genv *env.Idxs, printfn func(string)) {
+	if es.FailureFlag {
+		printfn("\x1b[33m" + "Failure" + "\x1b[0m")
+	}
+	if es.ErrorFlag {
+		printfn("\x1b[31;3m" + es.Res.Print(*genv))
+		switch err := es.Res.(type) {
+		case env.Error:
+			printfn(err.CodeBlock.PositionAndSurroundingElements(*genv))
+			printfn("Error not pointer so bug. #temp")
+		case *env.Error:
+			printfn("At location:")
+			printfn(err.CodeBlock.PositionAndSurroundingElements(*genv))
+		}
+		printfn("\x1b[0m")
+	}
+}
+
 // if there is failure flag and given builtin doesn't accept failure
 // then error flag is raised and true returned
 // otherwise false
