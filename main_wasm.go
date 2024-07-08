@@ -86,7 +86,7 @@ func main() {
 
 	js.Global().Set("SendKeypress", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		if len(args) > 0 {
-			cc := util.KeyEvent{args[0].String(), args[1].Int(), args[2].Bool(), args[3].Bool(), args[4].Bool()}
+			cc := util.NewKeyEvent(args[0].String(), args[1].Int(), args[2].Bool(), args[3].Bool(), args[4].Bool())
 			c <- cc
 		}
 		return nil

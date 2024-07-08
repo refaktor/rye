@@ -77,6 +77,10 @@ type KeyEvent struct {
 	Shift bool
 }
 
+func NewKeyEvent(key string, code int, ctrl bool, alt bool, shift bool) KeyEvent {
+	return KeyEvent{key, code, ctrl, alt, shift}
+}
+
 func (s *MLState) cursorPos(x int) {
 	// 'C' is "Cursor Forward (CUF)"
 	s.sendBack("\r")

@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/eiannone/keyboard"
+
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/loader"
 	"github.com/refaktor/rye/util"
@@ -301,7 +302,7 @@ func constructKeyEvent(r rune, k keyboard.Key) util.KeyEvent {
 	case keyboard.KeySpace:
 		ch = " "
 	}
-	return util.KeyEvent{ch, code, ctrl, alt, false}
+	return util.NewKeyEvent(ch, code, ctrl, alt, false)
 }
 
 func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here because of some odd options we were experimentally adding
