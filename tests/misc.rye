@@ -524,7 +524,13 @@ section "Math functions"
 	{ { string } }
 	{
 		equal { do\in math { yn 1 2.1 } } -0.051678612130423546
-	}			
+	}		
+	group "trunc"
+	mold\nowrap ""
+	{ { string } }
+	{
+		equal { do\in math { trunc 1.234567 } } 1.000000
+	}		
 	
 }
 
