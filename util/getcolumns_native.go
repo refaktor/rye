@@ -4,23 +4,15 @@
 package util
 
 import (
-	"syscall"
-	"unsafe"
+	tsize "github.com/kopoli/go-terminal-size"
 )
 
-type winSize struct {
-	row, col       uint16
-	xpixel, ypixel uint16
-}
-
 func GetTerminalColumns() int {
-	var ws winSize
-	// TODO -- MOVE THIS OUTSIDE ... in case of native use this, in case of browser check how we can get the numer of columns
-	ok, _, _ := syscall.Syscall(syscall.SYS_IOCTL, uintptr(syscall.Stdout),
-		syscall.TIOCGWINSZ, uintptr(unsafe.Pointer(&ws)))
-	if int(ok) < 0 {
-		return 50
+	var s tsize.Size
+
+	s, err := tsize.GetSize()
+	if err == nil {
+		return s.Width
 	}
-	columns := int(ws.col)
-	return columns
+	return 50
 }
