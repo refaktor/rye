@@ -18,7 +18,7 @@ builds:
       - CGO_ENABLED=0
     goos:
       - linux
-      # - windows
+      - windows
       - darwin
       - js
     goarch:
@@ -28,10 +28,8 @@ builds:
       - wasm
     
     ignore: # List of combinations of GOOS + GOARCH + GOARM to ignore.
-      # - goos: windows
-      #   goarch: arm64
-      # - goos: windows
-      #   goarch: arm
+      - goos: windows
+        goarch: arm
 
     flags:
     - -tags=b_tiny

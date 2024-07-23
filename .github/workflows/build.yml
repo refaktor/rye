@@ -20,7 +20,7 @@ jobs:
         image:
           - macos-latest
           - ubuntu-latest
-          # - windows-latest
+          - windows-latest
     runs-on: ${{ matrix.image }}
 
     steps:
