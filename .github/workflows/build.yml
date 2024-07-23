@@ -70,6 +70,7 @@ jobs:
       timeout-minutes: 1
 
     - name: Build WASM
+      if: runner.os == 'Linux'
       run: |
         GOOS=js GOARCH=wasm go build -v -tags "b_tiny" -o wasm/rye.wasm main_wasm.go
 
