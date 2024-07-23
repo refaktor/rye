@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
-	"syscall"
 	"unicode"
-	"unsafe"
 
 	"github.com/mattn/go-runewidth"
 )
@@ -151,19 +149,8 @@ func NewMicroLiner(ch chan KeyEvent, sb func(msg string), el func(line string) s
 	return &s
 }
 
-type winSize struct {
-	row, col       uint16
-	xpixel, ypixel uint16
-}
-
 func (s *MLState) getColumns() bool {
-	var ws winSize
-	ok, _, _ := syscall.Syscall(syscall.SYS_IOCTL, uintptr(syscall.Stdout),
-		syscall.TIOCGWINSZ, uintptr(unsafe.Pointer(&ws)))
-	if int(ok) < 0 {
-		return false
-	}
-	s.columns = int(ws.col)
+	s.columns = GetTerminalColumns()
 	// fmt.Print("*getColumns* : ")
 	// fmt.Println(s.columns)
 	return true
@@ -365,7 +352,7 @@ func (s *MLState) refreshSingleLine(prompt []rune, buf []rune, pos int) error {
 
 	// inString := false
 	// text2 := wordwrap.String(text, 5)
-	for i, _ := range texts {
+	for i := range texts {
 		if i > 0 && len(texts[i]) > 1 {
 			s.cursorPos(0)
 			s.sendBack("\033[K") // delete line
@@ -1268,11 +1255,11 @@ func RyeHighlight(s string, inStrX bool, columns int) (string, bool) {
 	var inComment, inStr1, inStr2 bool
 	inStr1 = inStrX
 
-	for i, c := range s {
-		if (i+2)%columns == 0 {
-			//	hb.WriteRune('\n')
-			// hb.WriteRune('\r')
-		}
+	for _, c := range s {
+		//if (i+2)%columns == 0 {
+		//	hb.WriteRune('\n')
+		// hb.WriteRune('\r')
+		// }
 		if inComment {
 			hb.WriteRune(c)
 		} else if c == ';' && !inStr1 && !inStr2 {
