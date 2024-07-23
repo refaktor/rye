@@ -1,4 +1,4 @@
-//go:build b_norepl
+//go:build b_norepl && (wasm || js)
 
 package evaldo
 

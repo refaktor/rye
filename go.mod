@@ -14,6 +14,7 @@ require (
 	github.com/blevesearch/bleve/v2 v2.4.0
 	github.com/blevesearch/bleve_index_api v1.1.8
 	github.com/drewlanenga/govector v0.0.0-20220726163947-b958ac08bc93
+	github.com/eiannone/keyboard v0.0.0-20220611211555-0d226195f203
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/gliderlabs/ssh v0.3.7
 	github.com/go-gomail/gomail v0.0.0-20160411212932-81ebce5c23df

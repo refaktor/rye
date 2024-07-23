@@ -77,6 +77,10 @@ type KeyEvent struct {
 	Shift bool
 }
 
+func NewKeyEvent(key string, code int, ctrl bool, alt bool, shift bool) KeyEvent {
+	return KeyEvent{key, code, ctrl, alt, shift}
+}
+
 func (s *MLState) cursorPos(x int) {
 	// 'C' is "Cursor Forward (CUF)"
 	s.sendBack("\r")
@@ -443,6 +447,8 @@ startOfHere:
 		pLen := countGlyphs(p)
 		if next.Ctrl {
 			switch strings.ToLower(next.Key) {
+			case "c":
+				return "", nil
 			case "a":
 				pos = 0
 				// s.needRefresh = true
@@ -547,6 +553,7 @@ startOfHere:
 					line = append(line[:pos], line[pos+1:]...)
 					trace(buf)
 				}
+				s.needRefresh = true
 				// Save the result on the killRing
 				/*if killAction > 0 {
 					s.addToKillRing(buf, 2) // Add in prepend mode
