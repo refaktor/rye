@@ -1,10 +1,13 @@
 package util
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 	"sync"
+	"syscall"
 	"unicode"
+	"unsafe"
 
 	"github.com/mattn/go-runewidth"
 )
@@ -146,6 +149,24 @@ func NewMicroLiner(ch chan KeyEvent, sb func(msg string), el func(line string) s
 	s.enterLine = el
 	//	s.r = bufio.NewReader(os.Stdin)
 	return &s
+}
+
+type winSize struct {
+	row, col       uint16
+	xpixel, ypixel uint16
+}
+
+func (s *MLState) getColumns() bool {
+	var ws winSize
+	ok, _, _ := syscall.Syscall(syscall.SYS_IOCTL, uintptr(syscall.Stdout),
+		syscall.TIOCGWINSZ, uintptr(unsafe.Pointer(&ws)))
+	if int(ok) < 0 {
+		return false
+	}
+	s.columns = int(ws.col)
+	// fmt.Print("*getColumns* : ")
+	// fmt.Println(s.columns)
+	return true
 }
 
 // Redrawing input
@@ -301,7 +322,82 @@ func trace2(t any) {
 	}
 }
 
+func splitText(text string, splitLength int) []string {
+	result := []string{}
+	current := bytes.NewBufferString("")
+	for _, char := range text {
+		if current.Len() == splitLength {
+			result = append(result, current.String())
+			current.Reset()
+		}
+		current.WriteRune(char)
+	}
+	if current.Len() > 0 {
+		result = append(result, current.String())
+	}
+	return result
+}
+
 func (s *MLState) refreshSingleLine(prompt []rune, buf []rune, pos int) error {
+	trace("---refreshing line---")
+	trace(prompt)
+	trace(buf)
+	trace(pos)
+	s.sendBack("\033[?25l")
+	s.cursorPos(0)
+	s.sendBack("\033[K")
+	s.cursorPos(0)
+	s.sendBack(string(prompt))
+
+	/// pLen := countGlyphs(prompt)
+	// bLen := countGlyphs(buf)
+	// on some OS / terminals extra column is needed to place the cursor char
+	///// pos = countGlyphs(buf[:pos])
+
+	// bLen := countGlyphs(buf)
+	// on some OS / terminals extra column is needed to place the cursor char
+	/*	if cursorColumn {
+		bLen++
+	}*/
+	cols := s.columns - 6
+	text := string(buf)
+	texts := splitText(text, cols)
+
+	// inString := false
+	// text2 := wordwrap.String(text, 5)
+	for i, _ := range texts {
+		if i > 0 && len(texts[i]) > 1 {
+			s.cursorPos(0)
+			s.sendBack("\033[K") // delete line
+			s.sendBack("\033[A")
+		}
+	}
+	s.cursorPos(0)
+	s.sendBack("\033[K") // delete line
+	s.sendBack(string(prompt))
+	for i, tt := range texts {
+		if i > 0 {
+			s.sendBack("\n\rx  ")
+		}
+		// tt2, inString := tt, false // RyeHighlight(tt, s.lastLineString, 6)
+		tt2, inString := RyeHighlight(tt, s.lastLineString, cols)
+		s.sendBack(tt2)
+		s.inString = inString
+	}
+
+	/* text, inString := RyeHighlight(string(buf), s.lastLineString)
+	s.sendBack(text)
+	trace("*************** IN STRING: ******************++")
+	trace(inString)
+	s.inString = inString
+	trace(pLen + pos)
+	s.cursorPos(pLen + pos)
+	trace("SETTING CURSOR POS AFER HIGHLIGHT") */
+	s.sendBack("\033[?25h")
+	return nil
+}
+
+func (s *MLState) refreshSingleLine_OLD2(prompt []rune, buf []rune, pos int) error {
 	trace("---refreshing line---")
 	trace(prompt)
 	trace(buf)
@@ -325,7 +421,7 @@ func (s *MLState) refreshSingleLine(prompt []rune, buf []rune, pos int) error {
 	if true { // pLen+bLen < s.columns {
 		// _, err = fmt.Print(VerySimpleRyeHighlight(string(buf)))
 		// s.cursorPos(0)
-		text, inString := RyeHighlight(string(buf), s.lastLineString)
+		text, inString := RyeHighlight(string(buf), s.lastLineString, 6)
 		s.sendBack(text)
 		trace("*************** IN STRING: ******************++")
 		trace(inString)
@@ -417,6 +513,7 @@ startOfHere:
 	// LBL restart:
 	//	s.startPrompt()
 	//	s.getColumns()
+	s.getColumns()
 
 	// JM
 	//	s_instr := 0
@@ -1164,7 +1261,57 @@ func hasPrefixMultiple(s string, prefixes ...string) bool {
 	return false
 }
 
-func RyeHighlight(s string, inStrX bool) (string, bool) {
+func RyeHighlight(s string, inStrX bool, columns int) (string, bool) {
+	var fullB strings.Builder
+	var hb HighlightedStringBuilder
+
+	var inComment, inStr1, inStr2 bool
+	inStr1 = inStrX
+
+	for i, c := range s {
+		if (i+2)%columns == 0 {
+			//	hb.WriteRune('\n')
+			// hb.WriteRune('\r')
+		}
+		if inComment {
+			hb.WriteRune(c)
+		} else if c == ';' && !inStr1 && !inStr2 {
+			inComment = true
+			hb.WriteRune(c)
+		} else if c == '"' {
+			hb.WriteRune(c)
+			if inStr1 {
+				// trace2(".")
+				fullB.WriteString(hb.ColoredString(inStr1))
+				inStr1 = false
+				hb.Reset()
+			} else {
+				inStr1 = true
+			}
+		} else if c == '`' {
+			hb.WriteRune(c)
+			if inStr2 {
+				inStr2 = false
+				fullB.WriteString(hb.ColoredString(inStr1))
+				hb.Reset()
+			} else {
+				inStr2 = true
+			}
+		} else if unicode.IsSpace(c) && !inComment && !inStr1 && !inStr2 {
+			fullB.WriteString(hb.ColoredString(inStr1))
+			hb.Reset()
+
+			fullB.WriteRune(c)
+		} else {
+			hb.WriteRune(c)
+		}
+	}
+	fullB.WriteString(hb.ColoredString(inStr1))
+	hb.Reset()
+	return fullB.String(), inStr1
+}
+
+func RyeHighlight_OLD1(s string, inStrX bool) (string, bool) {
 	var fullB strings.Builder
 	var hb HighlightedStringBuilder
 
