@@ -162,8 +162,8 @@ github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421/go.mod h1:6dJ
 github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742/go.mod h1:bx2lNnkwVCuqBIxFjflWJWanXIb3RllmbCylyMrvgv0=
 github.com/modern-go/reflect2 v1.0.1 h1:9f412s+6RmYXLWZSEzVVgPGK7C2PphHj5RJrvfx9AWI=
 github.com/modern-go/reflect2 v1.0.1/go.mod h1:bx2lNnkwVCuqBIxFjflWJWanXIb3RllmbCylyMrvgv0=
-github.com/mrz1836/postmark v1.6.4 h1:x5g0zjFE1q1wOgZ3N22rtGMyfKd3GBo4O874cAUw6bQ=
-github.com/mrz1836/postmark v1.6.4/go.mod h1:6z5MxAH00Kj44owtQaryv9Pbqp5OKT3wWcRSydB0p0A=
+github.com/mrz1836/postmark v1.6.5 h1:FSlysQmx9n4NnU4IsvZ0nN+rylNqPHvqYcHtuSk9yi8=
+github.com/mrz1836/postmark v1.6.5/go.mod h1:6z5MxAH00Kj44owtQaryv9Pbqp5OKT3wWcRSydB0p0A=
 github.com/mschoch/smat v0.2.0 h1:8imxQsjDm8yFEAVBe7azKmKSgzSkZXDuKkSq9374khM=
 github.com/mschoch/smat v0.2.0/go.mod h1:kc9mz7DoBKqDyiRL7VZN8KvXQMWeTaVnttLRXOlotKw=
 github.com/pkg/term v1.2.0-beta.2.0.20211217091447-1a4a3b719465 h1:J1AQza02ffZ4VP77HnZ5kRyzf6ak1LkjYQutOCdvckI=
