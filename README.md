@@ -158,18 +158,15 @@ The author of Factor once said that at the end *it's not about the language, but
 
 legend: ⭐ priority , 🧪 tests
 
-## Rye-front project (GUI)
+## External extension: rye-fyne - a GUI toolkit
 
-If you are interested in "fontend" / desktop technologies check out separate project that works on extending Rye lanuage with GUI, Game engine and a Webview. It 
-integrates these cool Go libraries:
-
-  * Fyne - Cross platform Material design inspired GUI framework ⭐⭐ 
-  * Ebitengine - 2d game engine
-  * Webview - Webview GUI
+Fyne is a cross platform pure **Go** GUI toolkit that we're integrating into Rye. A lot of widgets already work but it's not finished yet.
 
 ![Fyne Feedback example](https://ryelang.org/rye-fyne-2.png)
 
-**[Visit Rye-front repo](https://github.com/refaktor/rye-front)**
+* **[Rye-fyne repository](https://github.com/refaktor/rye-fyne)**
+* ![Rye-fyne demo video](https://youtu.be/L4gPrXBI8UY?si=4QIDws9c3ub-5reY)
+* [Fyne website](https://fyne.io)
     
 ## Follow development
 
@@ -187,13 +184,19 @@ If code speaks to you, our Github page is the central location for all things Ry
 
 ## Getting Rye
 
-Rye is developed on Linux and Mac, but we also have a Docker and as WASM module. If you need additional architecture or OS, post an Issue. Rye could run anywhere Go compiles to.
+Rye is developed and should work on Linux and Mac and Windows. We also have a Docker and as WASM modules. If you need additional architecture or OS, post an Issue. Rye could run anywhere Go compiles to.
 
 ### Binaries
 
 You can find precompiled Binaries for **Linux** and **macOS** under [Releases](https://github.com/refaktor/rye/releases).
 
 Docker images are published under [Packages](https://github.com/refaktor/rye/pkgs/container/rye).
+
+### Homebrew
+
+Rye is avaliable for instalation through brew command: `brew install ryelang`
+
+More about it: [Homebrew formulae](https://formulae.brew.sh/formula/ryelang#default)
 
 ### Docker images
 
@@ -299,7 +302,7 @@ Rye has Syntax highlighting for Emacs and VS Code. For VS Code just search for *
   
   [Arturo](https://arturo-lang.io/) - Another unique language that builds on Rebol's core ideas.
 
-  [Charm](https://github.com/tim-hardcastle/Charm) - Not related to Rebol, but an interesting Go based language with some similar runtime ideas and challenges.
+  [Pipefish](https://github.com/tim-hardcastle/Charm) - Not related to Rebol, but an interesting Go based language with some similar runtime ideas and challenges.
   
   [Ren-c](https://github.com/metaeducation/ren-c) - Rebol 3 fork maintained by HostileFork, more liberal with changes to the language. 
   
