@@ -7,7 +7,7 @@ go 1.21
 retract v0.0.11 // Published accidentally with a bug
 
 require (
-	github.com/aws/aws-sdk-go-v2 v1.27.2
+	github.com/aws/aws-sdk-go-v2 v1.30.3
 	github.com/aws/aws-sdk-go-v2/config v1.27.16
 	github.com/aws/aws-sdk-go-v2/service/ses v1.22.11
 	github.com/bitfield/script v0.22.1
@@ -58,7 +58,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sso v1.20.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.24.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.28.10 // indirect
-	github.com/aws/smithy-go v1.20.2 // indirect
+	github.com/aws/smithy-go v1.20.3 // indirect
 	github.com/bits-and-blooms/bitset v1.2.0 // indirect
 	github.com/blevesearch/geo v0.1.20 // indirect
 	github.com/blevesearch/go-faiss v1.0.13 // indirect
