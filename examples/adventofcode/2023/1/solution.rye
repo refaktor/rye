@@ -20,12 +20,12 @@ read\lines %puzzle.txt
 nums: { "one" "two" "three" "four" "five" "six" "seven" "eight" "nine" }
 
 fwd: regexp "(\d)|" + join\with nums "|"
-rev: regexp "(\d)|" + reverse join\with nums "|"
+rev: regexp "(\d)|" + reverse! join\with nums "|"
 
 convert: fn { x } { .position? nums |fix { x .to-integer } }
 
 read\lines %puzzle.txt
-|map { .vals\with { .match?* fwd |convert , .reverse .match?* rev |reverse |convert  } |join .to-integer }
+|map { .vals\with { .match?* fwd |convert , .reverse! .match?* rev |reverse! |convert  } |join .to-integer }
 |sum |print
 
 
