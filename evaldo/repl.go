@@ -1,8 +1,9 @@
-//go:build !b_norepl
+//go:build !b_norepl && !wasm && !js
 
 package evaldo
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -10,8 +11,11 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/eiannone/keyboard"
+
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/loader"
+	"github.com/refaktor/rye/util"
 
 	"github.com/refaktor/liner"
 )
@@ -148,167 +152,201 @@ func MoveCursorBackward(bias int) {
 	fmt.Printf("\033[%dD", bias)
 }
 
-func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here because of some odd options we were experimentally adding
-	//codestr := ""
-	//codelines := strings.Split(codestr, ",\n")
+type Repl struct {
+	ps *env.ProgramState
+	ml *util.MLState
 
-	line := liner.NewLiner()
-	defer line.Close()
+	dialect     string
+	showResults bool
 
-	line.SetCtrlCAborts(true)
+	fullCode string
 
-	line.SetCompleter(func(line string) (c []string) {
-		for i := 0; i < es.Idx.GetWordCount(); i++ {
-			if strings.HasPrefix(es.Idx.GetWord(i), strings.ToLower(line)) {
-				c = append(c, es.Idx.GetWord(i))
-			}
-		}
-		return
-	})
-
-	if f, err := os.Open(history_fn); err == nil {
-		if _, err := line.ReadHistory(f); err != nil {
-			log.Print("Error reading history file: ", err)
-		}
-		f.Close()
-	}
-
-	line2 := ""
-
-	var prevResult env.Object
-
-	stack := NewEyrStack()
-
-	for {
-		prompt, _ := genPrompt(nil, line2)
-
-		if code, err := line.Prompt(prompt); err == nil {
-			// strip comment
-
-			es.LiveObj.PsMutex.Lock()
-			for _, update := range es.LiveObj.Updates {
-				fmt.Println("\033[35m((Reloading " + update + "))\033[0m")
-				block_, script_ := LoadScriptLocalFile(es, *env.NewUri1(es.Idx, "file://"+update))
-				es.Res = EvaluateLoadedValue(es, block_, script_, true)
-			}
-			es.LiveObj.ClearUpdates()
-			es.LiveObj.PsMutex.Unlock()
-
-			multiline := len(code) > 1 && code[len(code)-1:] == " "
-
-			comment := regexp.MustCompile(`\s*;`)
-			line1 := comment.Split(code, 2) //--- just very temporary solution for some comments in repl. Later should probably be part of loader ... maybe?
-			lineReal := strings.Trim(line1[0], "\t")
-
-			if multiline {
-				line2 += lineReal + "\n"
-			} else {
-				line2 += lineReal
-
-				block, genv := loader.LoadString(line2, false)
-				block1 := block.(env.Block)
-				es = env.AddToProgramState(es, block1.Series, genv)
-
-				// EVAL THE DO DIALECT
-				if dialect == "do" {
-					EvalBlockInj(es, prevResult, true)
-				} else if dialect == "eyr" {
-					Eyr_EvalBlock(es, stack, true)
-				} else if dialect == "math" {
-					idxx, _ := es.Idx.GetIndex("math")
-					s1, ok := es.Ctx.Get(idxx)
-					if ok {
-						switch ss := s1.(type) {
-						case env.RyeCtx: /*  */
-							es.Ctx = &ss
-							// return s1
-						}
-					}
-					res := DialectMath(es, block1)
-					switch block := res.(type) {
-					case env.Block:
-						stack := NewEyrStack()
-						ser := es.Ser
-						es.Ser = block.Series
-						Eyr_EvalBlock(es, stack, false)
-						es.Ser = ser
-					}
-				}
-
-				MaybeDisplayFailureOrError(es, genv)
-
-				if !es.ErrorFlag && es.Res != nil {
-					prevResult = es.Res
-					if showResults {
-						fmt.Println("\033[38;5;37m" + es.Res.Inspect(*genv) + "\x1b[0m")
-					}
-				}
-
-				es.ReturnFlag = false
-				es.ErrorFlag = false
-				es.FailureFlag = false
-
-				line2 = ""
-			}
-
-			line.AppendHistory(code)
-		} else if err == liner.ErrPromptAborted {
-			break
-		} else {
-			log.Print("Error reading line: ", err)
-			break
-		}
-	}
-
-	if f, err := os.Create(history_fn); err != nil {
-		log.Print("Error writing history file: ", err)
-	} else {
-		if _, err := line.WriteHistory(f); err != nil {
-			log.Print("Error writing history file: ", err)
-		}
-		f.Close()
-	}
+	stack      *EyrStack
+	prevResult env.Object
 }
 
-func MaybeDisplayFailureOrError(es *env.ProgramState, genv *env.Idxs) {
-	if es.FailureFlag {
-		fmt.Println("\x1b[33m" + "Failure" + "\x1b[0m")
-	}
-	if es.ErrorFlag {
-		fmt.Println("\x1b[31m" + es.Res.Print(*genv))
-		switch err := es.Res.(type) {
-		case env.Error:
-			fmt.Println(err.CodeBlock.PositionAndSurroundingElements(*genv))
-			fmt.Println("Error not pointer so bug. #temp")
-		case *env.Error:
-			fmt.Println("At location:")
-			fmt.Print(err.CodeBlock.PositionAndSurroundingElements(*genv))
-		}
-		fmt.Println("\x1b[0m")
+func (r *Repl) recieveMessage(message string) {
+	fmt.Print(message)
+}
 
-		// ENTER CONSOLE ON ERROR
+func (r *Repl) recieveLine(line string) string {
+	res := r.evalLine(r.ps, line)
+	if r.showResults {
+		fmt.Print(res)
+	}
+	return res
+}
+
+func (r *Repl) evalLine(es *env.ProgramState, code string) string {
+	es.LiveObj.PsMutex.Lock()
+	for _, update := range es.LiveObj.Updates {
+		fmt.Println("\033[35m((Reloading " + update + "))\033[0m")
+		block_, script_ := LoadScriptLocalFile(es, *env.NewUri1(es.Idx, "file://"+update))
+		es.Res = EvaluateLoadedValue(es, block_, script_, true)
+	}
+	es.LiveObj.ClearUpdates()
+	es.LiveObj.PsMutex.Unlock()
+
+	multiline := len(code) > 1 && code[len(code)-1:] == " "
+
+	comment := regexp.MustCompile(`\s*;`)
+	line := comment.Split(code, 2) //--- just very temporary solution for some comments in repl. Later should probably be part of loader ... maybe?
+	lineReal := strings.Trim(line[0], "\t")
+
+	output := ""
+	if multiline {
+		r.fullCode += lineReal + "\n"
+	} else {
+		r.fullCode += lineReal
+
+		block, genv := loader.LoadString(r.fullCode, false)
+		block1 := block.(env.Block)
+		es = env.AddToProgramState(es, block1.Series, genv)
+
+		// EVAL THE DO DIALECT
+		if r.dialect == "do" {
+			EvalBlockInj(es, r.prevResult, true)
+		} else if r.dialect == "eyr" {
+			Eyr_EvalBlock(es, r.stack, true)
+		} else if r.dialect == "math" {
+			idxx, _ := es.Idx.GetIndex("math")
+			s1, ok := es.Ctx.Get(idxx)
+			if ok {
+				switch ss := s1.(type) {
+				case env.RyeCtx: /*  */
+					es.Ctx = &ss
+					// return s1
+				}
+			}
+			res := DialectMath(es, block1)
+			switch block := res.(type) {
+			case env.Block:
+				stack := NewEyrStack()
+				ser := es.Ser
+				es.Ser = block.Series
+				Eyr_EvalBlock(es, stack, false)
+				es.Ser = ser
+			}
+		}
+
+		MaybeDisplayFailureOrError(es, genv)
+
+		if !es.ErrorFlag && es.Res != nil {
+			r.prevResult = es.Res
+			output = fmt.Sprintf("\033[38;5;37m" + es.Res.Inspect(*genv) + "\x1b[0m")
+		}
+
+		es.ReturnFlag = false
 		es.ErrorFlag = false
 		es.FailureFlag = false
-		DoRyeRepl(es, "do", true)
+
+		r.fullCode = ""
 	}
-	// cebelca2659- vklopi kontne skupine
+
+	r.ml.AppendHistory(code)
+	return output
 }
 
-func MaybeDisplayFailureOrErrorWASM(es *env.ProgramState, genv *env.Idxs, printfn func(string)) {
-	if es.FailureFlag {
-		printfn("\x1b[33m" + "Failure" + "\x1b[0m")
+// constructKeyEvent maps a rune and keyboard.Key to a util.KeyEvent, which uses javascript key event codes
+// only keys used in microliner are mapped
+func constructKeyEvent(r rune, k keyboard.Key) util.KeyEvent {
+	var ctrl bool
+	alt := k == keyboard.KeyEsc
+	var code int
+	ch := string(r)
+	switch k {
+	case keyboard.KeyCtrlA:
+		ch = "a"
+		ctrl = true
+	case keyboard.KeyCtrlC:
+		ch = "c"
+		ctrl = true
+	case keyboard.KeyCtrlB:
+		ch = "b"
+		ctrl = true
+	case keyboard.KeyCtrlD:
+		ch = "d"
+		ctrl = true
+	case keyboard.KeyCtrlE:
+		ch = "e"
+		ctrl = true
+	case keyboard.KeyCtrlF:
+		ch = "f"
+		ctrl = true
+	case keyboard.KeyCtrlK:
+		ch = "k"
+		ctrl = true
+	case keyboard.KeyCtrlL:
+		ch = "l"
+		ctrl = true
+
+	case keyboard.KeyEnter:
+		code = 13
+	case keyboard.KeyBackspace, keyboard.KeyBackspace2:
+		code = 8
+	case keyboard.KeyDelete:
+		code = 46
+	case keyboard.KeyArrowRight:
+		code = 39
+	case keyboard.KeyArrowLeft:
+		code = 37
+	case keyboard.KeyArrowUp:
+		code = 38
+	case keyboard.KeyArrowDown:
+		code = 40
+	case keyboard.KeyHome:
+		code = 36
+	case keyboard.KeyEnd:
+		code = 35
+
+	case keyboard.KeySpace:
+		ch = " "
 	}
-	if es.ErrorFlag {
-		printfn("\x1b[31;3m" + es.Res.Print(*genv))
-		switch err := es.Res.(type) {
-		case env.Error:
-			printfn(err.CodeBlock.PositionAndSurroundingElements(*genv))
-			printfn("Error not pointer so bug. #temp")
-		case *env.Error:
-			printfn("At location:")
-			printfn(err.CodeBlock.PositionAndSurroundingElements(*genv))
+	return util.NewKeyEvent(ch, code, ctrl, alt, false)
+}
+
+func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here because of some odd options we were experimentally adding
+	err := keyboard.Open()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer keyboard.Close()
+
+	c := make(chan util.KeyEvent)
+	r := Repl{
+		ps:          es,
+		dialect:     dialect,
+		showResults: showResults,
+		stack:       NewEyrStack(),
+	}
+	ml := util.NewMicroLiner(c, r.recieveMessage, r.recieveLine)
+	r.ml = ml
+
+	ctx := context.Background()
+	defer ctx.Done()
+	go func(ctx context.Context) {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				r, k, keyErr := keyboard.GetKey()
+				if err != nil {
+					fmt.Println(keyErr)
+					break
+				}
+				if k == keyboard.KeyCtrlC {
+					ctx.Done()
+				}
+				c <- constructKeyEvent(r, k)
+			}
 		}
-		printfn("\x1b[0m")
+	}(ctx)
+
+	_, err = ml.MicroPrompt("x> ", "", 0)
+	if err != nil {
+		fmt.Println(err)
 	}
 }
 

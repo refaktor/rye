@@ -665,7 +665,7 @@ var builtins = map[string]*env.Builtin{
 				if found {
 					switch iintval := intval.(type) {
 					case env.Integer:
-						ctx.Set(arg.Index, *env.NewInteger(1 + iintval.Value))
+						ctx.Mod(arg.Index, *env.NewInteger(1 + iintval.Value))
 						return *env.NewInteger(1 + iintval.Value)
 					default:
 						return MakeBuiltinError(ps, "Value in word is not integer.", "inc!")
@@ -690,7 +690,7 @@ var builtins = map[string]*env.Builtin{
 				if found {
 					switch iintval := intval.(type) {
 					case env.Integer:
-						ctx.Set(arg.Index, *env.NewInteger(iintval.Value - 1))
+						ctx.Mod(arg.Index, *env.NewInteger(iintval.Value - 1))
 						return *env.NewInteger(1 + iintval.Value)
 					default:
 						return MakeBuiltinError(ps, "Value in word is not integer.", "inc!")
@@ -731,7 +731,7 @@ var builtins = map[string]*env.Builtin{
 
 	"set!": { // ***
 		Argsn: 2,
-		Doc:   "Set word or words by deconstructing block",
+		Doc:   "Set word to value or words by deconstructing a block",
 		Pure:  false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch words := arg1.(type) {
@@ -747,10 +747,10 @@ var builtins = map[string]*env.Builtin{
 							}
 							val := vals.Series.S[i]
 							// if it exists then we set it to word from words
-							res := ps.Ctx.Set(word.Index, val)
-							if res.Type() == env.ErrorType {
+							ps.Ctx.Mod(word.Index, val)
+							/* if res.Type() == env.ErrorType {
 								return MakeBuiltinError(ps, res.(env.Error).Message, "set")
-							}
+							}*/
 						default:
 							fmt.Println(word)
 							return MakeBuiltinError(ps, "Only words in words block", "set")
@@ -761,7 +761,8 @@ var builtins = map[string]*env.Builtin{
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "set")
 				}
 			case env.Word:
-				return ps.Ctx.Set(words.Index, arg0)
+				ps.Ctx.Mod(words.Index, arg0)
+				return arg0
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "set")
 			}
@@ -1407,6 +1408,53 @@ var builtins = map[string]*env.Builtin{
 				fmt.Println(arg0.Print(*ps.Idx))
 			}
 			return arg0
+		},
+	},
+	"format": { // **
+		Argsn: 2,
+		Doc:   "Formats a value according to Go-s sprintf format",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var res string
+			switch arg := arg1.(type) {
+			case env.String:
+				switch val := arg0.(type) {
+				case env.String:
+					res = fmt.Sprintf(arg.Value, val.Value)
+				case env.Integer:
+					res = fmt.Sprintf(arg.Value, val.Value)
+				case env.Decimal:
+					res = fmt.Sprintf(arg.Value, val.Value)
+					// TODO make option with multiple values and block as second arg
+				default:
+					return MakeArgError(ps, 1, []env.Type{env.StringType, env.DecimalType, env.IntegerType}, "format")
+				}
+				return *env.NewString(res)
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.StringType}, "format")
+			}
+		},
+	},
+	"prnf": { // **
+		Argsn: 2,
+		Doc:   "Formats a value according to Go-s sprintf format and prn-s it",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg := arg1.(type) {
+			case env.String:
+				switch val := arg0.(type) {
+				case env.String:
+					fmt.Printf(arg.Value, val.Value)
+				case env.Integer:
+					fmt.Printf(arg.Value, val.Value)
+				case env.Decimal:
+					fmt.Printf(arg.Value, val.Value)
+					// TODO make option with multiple values and block as second arg
+				default:
+					return MakeArgError(ps, 1, []env.Type{env.StringType, env.DecimalType, env.IntegerType}, "format")
+				}
+				return arg0
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.StringType}, "format")
+			}
 		},
 	},
 	"embed": { // **
@@ -2229,53 +2277,6 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"enter-console": {
-		Argsn: 1,
-		Doc:   "Stops execution and gives you a Rye console, to test the code inside environment.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch name := arg0.(type) {
-			case env.String:
-				/* ser := ps.Ser
-				ps.Ser = bloc.Series
-				EvalBlock(ps)
-				ps.Ser = ser */
-				//reader := bufio.NewReader(os.Stdin)
-
-				fmt.Println("Welcome to console: \033[1m" + name.Value + "\033[0m")
-				fmt.Println("* use \033[1mls\033[0m to list current context")
-				fmt.Println("-------------------------------------------------------------")
-				/*
-					for {
-						fmt.Print("{ rye dropin }")
-						text, _ := reader.ReadString('\n')
-						//fmt.Println(1111)
-						// convert CRLF to LF
-						text = strings.Replace(text, "\n", "", -1)
-						//fmt.Println(1111)
-						if strings.Compare("(lc)", text) == 0 {
-							fmt.Println(ps.Ctx.Print(*ps.Idx))
-						} else if strings.Compare("(r)", text) == 0 {
-							ps.Ser = ser
-							return ps.Res
-						} else {
-							// fmt.Println(1111)
-							block, genv := loader.LoadString("{ " + text + " }")
-							ps := env.AddToProgramState(ps, block.Series, genv)
-							EvalBlock(ps)
-							fmt.Println(ps.Res.Inspect(*ps.Idx))
-						}
-					}*/
-
-				DoRyeRepl(ps, "do", ShowResults)
-				fmt.Println("-------------------------------------------------------------")
-				// ps.Ser = ser
-				return ps.Res
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "enter-console")
-			}
-		},
-	},
-
 	/* TEMP FOR WASM 20250116
 	"get-input": {
 		Argsn: 1,
@@ -2369,7 +2370,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"do\\in": { // **
+	"do\\inside": { // **
 		Argsn: 2,
 		Doc:   "Takes a Context and a Block. It Does a block inside a given Context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2394,7 +2395,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"do\\in\\try": { // **
+	"do\\inside\\try": { // **
 		Argsn: 2,
 		Doc:   "Takes a Context and a Block. It Does a block inside a given Context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2427,7 +2428,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"do\\par": { // **
+	"do\\in": { // **
 		Argsn: 2,
 		Doc:   "Takes a Context and a Block. It Does a block in current context but with parent a given Context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2437,10 +2438,33 @@ var builtins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
+					tempCtx := &ctx
+					for {
+						// fmt.Println("UP ->")
+						// do we change parents globally (and we have to fix them back) or just in local copy of a value? check
+						if tempCtx.Parent == ps.Ctx {
+							// fmt.Println("ISTI PARENT")
+							// temp = ctx.Parent
+							tempCtx.Parent = ps.Ctx.Parent
+							break
+						}
+						if tempCtx.Parent != nil {
+							tempCtx = tempCtx.Parent
+						} else {
+							break
+						}
+					}
+					//var temp *env.RyeCtx
+					// set argument's parent context to current parent context
+					// }
+					// set argument context as parent
 					temp := ps.Ctx.Parent
 					ps.Ctx.Parent = &ctx
 					EvalBlock(ps)
+					// if temp != nil {
 					ps.Ctx.Parent = temp
+					// ctx.Parent = temp
+					// }
 					ps.Ser = ser
 					return ps.Res
 				default:
@@ -2775,7 +2799,7 @@ var builtins = map[string]*env.Builtin{
 		Argsn: 0,
 		Doc:   "Returns current context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return ps.Ctx
+			return *ps.Ctx
 		},
 	},
 
@@ -2784,6 +2808,21 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Returns parent context of the current context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *ps.Ctx.Parent
+		},
+	},
+
+	"parent?": { // **
+		Argsn: 1,
+		Doc:   "Returns parent context of the current context.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch c := arg0.(type) {
+			case env.RyeCtx:
+				return *c.Parent
+			case *env.RyeCtx:
+				return *c.Parent
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "parent?")
+			}
 		},
 	},
 
@@ -2841,6 +2880,7 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.RyeCtx:
+				s1.Parent = ps.Ctx // TODO ... this is temporary so ccp works, but some other method must be figured out as changing the parent is not OK
 				ps.Ctx = &s1
 				return s1
 			default:
@@ -5543,7 +5583,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"trim": {
+	"trim\\space": {
 		Argsn: 1,
 		Doc:   "Trims the String of spacing characters.",
 		Pure:  true,
@@ -5553,6 +5593,60 @@ var builtins = map[string]*env.Builtin{
 				return *env.NewString(strings.TrimSpace(s1.Value))
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "trim")
+			}
+		},
+	},
+	"trim": {
+		Argsn: 2,
+		Doc:   "Trims the String of specific characters.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				switch s2 := arg1.(type) {
+				case env.String:
+					return *env.NewString(strings.Trim(s1.Value, s2.Value))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "trim\\")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "trim\\")
+			}
+		},
+	},
+	"trim\\right": {
+		Argsn: 2,
+		Doc:   "Trims the String of specific characters.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				switch s2 := arg1.(type) {
+				case env.String:
+					return *env.NewString(strings.TrimRight(s1.Value, s2.Value))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "trim\\")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "trim\\")
+			}
+		},
+	},
+	"trim\\left": {
+		Argsn: 2,
+		Doc:   "Trims the String of specific characters.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				switch s2 := arg1.(type) {
+				case env.String:
+					return *env.NewString(strings.TrimLeft(s1.Value, s2.Value))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "trim\\")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "trim\\")
 			}
 		},
 	},
@@ -6657,13 +6751,13 @@ var builtins = map[string]*env.Builtin{
 						case env.Integer:
 							newval = *env.NewString(oldval.Value + strconv.Itoa(int(s3.Value)))
 						}
-						ctx.Set(wrd.Index, newval)
+						ctx.Mod(wrd.Index, newval)
 						return newval
 					case env.Block: // TODO
 						// 	fmt.Println(123)
 						s := &oldval.Series
 						oldval.Series = *s.Append(arg0)
-						ctx.Set(wrd.Index, oldval)
+						ctx.Mod(wrd.Index, oldval)
 						return oldval
 					case env.List:
 						dataSlice := make([]any, 0)
@@ -6683,7 +6777,7 @@ var builtins = map[string]*env.Builtin{
 							combineList = append(combineList, env.ToRyeValue(v))
 						}
 						finalList := *env.NewList(combineList)
-						ctx.Set(wrd.Index, finalList)
+						ctx.Mod(wrd.Index, finalList)
 						return finalList
 					default:
 						return makeError(ps, "Type of tagword is not String or Block")
@@ -7227,7 +7321,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// BASIC ENV / Dict FUNCTIONS
-	"format": {
+	"format-": { // TODO ... format is not sprintf ... find a name
 		Argsn: 1,
 		Doc:   "Accepts a Dict and returns formatted presentation of it as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -7690,6 +7784,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_smtpd, ps, "smtpd")
 	RegisterBuiltins2(Builtins_mail, ps, "mail")
 	RegisterBuiltins2(Builtins_ssh, ps, "ssh")
+	RegisterBuiltins2(Builtins_console, ps, "console")
 	RegisterBuiltinsInContext(Builtins_math, ps, "math")
 	RegisterBuiltinsInContext(Builtins_devops, ps, "devops")
 	// ## Archived modules
