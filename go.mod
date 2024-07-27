@@ -23,6 +23,7 @@ require (
 	github.com/gobwas/ws v1.4.0
 	github.com/gorilla/sessions v1.2.2
 	github.com/jinzhu/copier v0.4.0
+	github.com/kopoli/go-terminal-size v0.0.0-20170219200355-5c97524c8b54
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/lib/pq v1.10.9
 	github.com/mattn/go-runewidth v0.0.15
