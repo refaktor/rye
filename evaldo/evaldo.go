@@ -606,13 +606,15 @@ func CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, toLeft
 	// evalExprFn := EvalExpression // 2020-01-12 .. changed to ion2
 	evalExprFn := EvalExpression2
 	if arg0 != nil {
-		index := fn.Spec.Series.Get(ii).(env.Word).Index
-		fnCtx.Set(index, arg0)
-		ps.Args[ii] = index
-		ii = 1
-		if !toLeft {
-			//evalExprFn = EvalExpression_ // 2020-01-12 .. changed to ion2
-			evalExprFn = EvalExpression2
+		if fn.Spec.Series.Len() > 0 {
+			index := fn.Spec.Series.Get(ii).(env.Word).Index
+			fnCtx.Set(index, arg0)
+			ps.Args[ii] = index
+			ii = 1
+			if !toLeft {
+				//evalExprFn = EvalExpression_ // 2020-01-12 .. changed to ion2
+				evalExprFn = EvalExpression2
+			}
 		}
 	}
 	// collect arguments
