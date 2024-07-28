@@ -3,6 +3,7 @@ package util
 import (
 	"bytes"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 	"unicode"
@@ -86,9 +87,22 @@ func (s *MLState) cursorPos(x int) {
 	// 'C' is "Cursor Forward (CUF)"
 	s.sendBack("\r")
 	if x > 0 {
+		s.sendBack(fmt.Sprintf("\x1b[%dC", x))
+	}
+}
+
+func (s *MLState) cursorPos2(x int, y int) {
+	// 'C' is "Cursor Forward (CUF)"
+	s.sendBack("\r")
+	if x > 0 {
 		trace("CURSOR POS:")
 		trace(x)
 		s.sendBack(fmt.Sprintf("\x1b[%dC", x))
+	}
+	if y > 0 {
+		trace("CURSOR POS:")
+		trace(y)
+		s.sendBack(fmt.Sprintf("\x1b[%dA", y))
 	}
 }
 
@@ -133,6 +147,8 @@ type MLState struct {
 	columns        int
 	inString       bool
 	lastLineString bool
+	prevLines      int
+	prevCursorLine int
 	// killRing *ring.Ring
 	//	completer         WordCompleter
 	// pending     []rune
@@ -297,6 +313,28 @@ func (s *MLState) yank(p []rune, text []rune, pos int) ([]rune, int, interface{}
 }
 */
 
+func traceTop(t any, n int) {
+	if false {
+		// Save cursor position
+		fmt.Printf("\033[s")
+
+		// Move cursor to top
+		fmt.Printf("\033[H")
+		// Move down
+		if n > 0 {
+			fmt.Printf("\033[%dB", n)
+		}
+		// Move cursor to top
+		fmt.Printf("\033[K")
+
+		// Print text
+		fmt.Println(t)
+
+		// Restore cursor position
+		fmt.Printf("\033[u")
+	}
+}
+
 func trace(t any) {
 	if false {
 		fmt.Println(t)
@@ -304,7 +342,7 @@ func trace(t any) {
 }
 
 func trace2(t any) {
-	if true {
+	if false {
 		fmt.Println(t)
 	}
 }
@@ -325,75 +363,30 @@ func splitText(text string, splitLength int) []string {
 	return result
 }
 
-func (s *MLState) refreshSingleLine(prompt []rune, buf []rune, pos int) error {
-	trace("---refreshing line---")
-	trace(prompt)
-	trace(buf)
-	trace(pos)
-	s.sendBack("\033[?25l")
-	s.cursorPos(0)
-	s.sendBack("\033[K")
-	s.cursorPos(0)
-	s.sendBack(string(prompt))
-
-	/// pLen := countGlyphs(prompt)
-	// bLen := countGlyphs(buf)
-	// on some OS / terminals extra column is needed to place the cursor char
-	///// pos = countGlyphs(buf[:pos])
-
-	// bLen := countGlyphs(buf)
-	// on some OS / terminals extra column is needed to place the cursor char
-	/*	if cursorColumn {
-		bLen++
-	}*/
-	cols := s.columns - 6
-	text := string(buf)
-	texts := splitText(text, cols)
-
-	// inString := false
-	// text2 := wordwrap.String(text, 5)
-	for i := range texts {
-		if i > 0 && len(texts[i]) > 1 {
-			s.cursorPos(0)
-			s.sendBack("\033[K") // delete line
-			s.sendBack("\033[A")
+func splitText2(text string, splitLength int) []string {
+	result := []string{}
+	current := bytes.NewBufferString("")
+	for _, char := range text {
+		current.WriteRune(char)
+		if current.Len() == splitLength {
+			result = append(result, current.String())
+			traceTop("appending", 3)
+			current.Reset()
 		}
 	}
-	s.cursorPos(0)
-	s.sendBack("\033[K") // delete line
-	s.sendBack(string(prompt))
-	for i, tt := range texts {
-		if i > 0 {
-			s.sendBack("\n\rx  ")
-		}
-		// tt2, inString := tt, false // RyeHighlight(tt, s.lastLineString, 6)
-		tt2, inString := RyeHighlight(tt, s.lastLineString, cols)
-		s.sendBack(tt2)
-		s.inString = inString
-	}
-
-	/* text, inString := RyeHighlight(string(buf), s.lastLineString)
-	s.sendBack(text)
-	trace("*************** IN STRING: ******************++")
-	trace(inString)
-	s.inString = inString
-	trace(pLen + pos)
-	s.cursorPos(pLen + pos)
-	trace("SETTING CURSOR POS AFER HIGHLIGHT") */
-	s.sendBack("\033[?25h")
-	return nil
+	//if current.Len() > 0 {
+	result = append(result, current.String())
+	//}
+	return result
 }
 
-func (s *MLState) refreshSingleLine_OLD2(prompt []rune, buf []rune, pos int) error {
-	trace("---refreshing line---")
-	trace(prompt)
-	trace(buf)
-	trace(pos)
-	s.sendBack("\033[?25l")
-	s.cursorPos(0)
-	s.sendBack("\033[K")
-	s.cursorPos(0)
-	s.sendBack(string(prompt))
+func (s *MLState) refreshSingleLine(prompt []rune, buf []rune, pos int) error {
+	traceTop(pos, 0)
+	// s.sendBack("\033[?25l") // hide cursors
+	/// s.cursorPos(0)
+	/// s.sendBack("\033[K")
+	/// s.cursorPos(0)
+	// s.sendBack(string(prompt))
 
 	pLen := countGlyphs(prompt)
 	// bLen := countGlyphs(buf)
@@ -405,57 +398,59 @@ func (s *MLState) refreshSingleLine_OLD2(prompt []rune, buf []rune, pos int) err
 	/*	if cursorColumn {
 		bLen++
 	}*/
-	if true { // pLen+bLen < s.columns {
-		// _, err = fmt.Print(VerySimpleRyeHighlight(string(buf)))
-		// s.cursorPos(0)
-		text, inString := RyeHighlight(string(buf), s.lastLineString, 6)
-		s.sendBack(text)
-		trace("*************** IN STRING: ******************++")
-		trace(inString)
+	cols := s.columns - 6
+	text := string(buf)
+	texts := splitText2(text, cols)
+
+	traceTop(len(texts), 0)
+
+	// inString := false
+	// text2 := wordwrap.String(text, 5)
+	s.cursorPos(0)
+	s.sendBack("\033[K") // delete line
+	for i := 0; i < s.prevLines; i++ {
+		//if i > 0 && len(texts[i]) > 1 {
+		if i > 0 {
+			s.cursorPos(0)
+			s.sendBack("\033[A")
+			s.sendBack("\033[K") // delete line
+		}
+	}
+	// s.sendBack("\033[s")
+	s.sendBack(string(prompt))
+	for i, tt := range texts {
+		if i > 0 {
+			s.sendBack("\n\rx  ")
+		}
+		// tt2, inString := tt, false // RyeHighlight(tt, s.lastLineString, 6)
+		tt2, inString := RyeHighlight(tt, s.lastLineString, cols)
+		s.sendBack(tt2)
 		s.inString = inString
-		trace(pLen + pos)
-		s.cursorPos(pLen + pos)
-		trace("SETTING CURSOR POS AFER HIGHLIGHT")
-		s.sendBack("\033[?25h")
-	} /* else {
-		// Find space available
-		space := s.columns - pLen
-		space-- // space for cursor
-		start := pos - space/2
-		end := start + space
-		if end > bLen {
-			end = bLen
-			start = end - space
-		}
-		if start < 0 {
-			start = 0
-			end = space
-		}
-		pos -= start
+	}
 
-		// Leave space for markers
-		if start > 0 {
-			start++
-		}
-		if end < bLen {
-			end--
-		}
-		startRune := len(getPrefixGlyphs(buf, start))
-		line := getPrefixGlyphs(buf[startRune:], end-start)
+	s.prevLines = len(texts)
 
-		// Output
-		if start > 0 {
-			fmt.Print("{")
-		}
-		fmt.Print(string(line))
-		if end < bLen {
-			fmt.Print("}")
-		}
+	/* text, inString := RyeHighlight(string(buf), s.lastLineString)
+	s.sendBack(text)
+	trace("*************** IN STRING: ******************++")dlk
+	trace(inString)
+	s.inString = inString
+	trace(pLen + pos)
+	trace("SETTING CURSOR POS AFER HIGHLIGHT") */
+	curLineN := pos / cols
+	curLines := len(text) / cols
+	traceTop(curLineN, 1)
+	traceTop(curLines, 2)
+	curUp := curLineN - s.prevCursorLine
+	curLeft := pLen + ((pos) % cols)
+	// traceTop("---", 3)
+	traceTop(curUp, 4)
+	traceTop(curLeft, 5)
+	// s.sendBack("\033[u")
 
-		// Set cursor position
-		s.eraseLine()
-		s.cursorPos(pLen + pos)
-	} */
+	s.cursorPos2(curLeft, 0) // s.prevCursorLine-curLineN)
+	s.prevCursorLine = curLineN
+	//s.sendBack("\033[?25h") // show cursor
 	return nil
 }
 
@@ -501,6 +496,7 @@ startOfHere:
 	//	s.startPrompt()
 	//	s.getColumns()
 	s.getColumns()
+	traceTop(strconv.Itoa(s.columns)+"**", 0)
 
 	// JM
 	//	s_instr := 0
@@ -528,7 +524,7 @@ startOfHere:
 		/* if pos == len(line) && !s.multiLineMode &&
 		len(p)+len(line) < s.columns*4 && // Avoid countGlyphs on large lines
 		countGlyphs(p)+countGlyphs(line) < s.columns-1 {*/
-		pLen := countGlyphs(p)
+		///// pLen := countGlyphs(p)
 		if next.Ctrl {
 			switch strings.ToLower(next.Key) {
 			case "c":
@@ -709,6 +705,7 @@ startOfHere:
 			case 37: // Left
 				if pos > 0 {
 					pos -= len(getSuffixGlyphs(line[:pos], 1))
+					traceTop(pos, 3)
 				} else {
 					s.doBeep()
 				}
@@ -1129,14 +1126,15 @@ startOfHere:
 			}
 			s.needRefresh = true
 		} */
-		if s.needRefresh { //&& !s.inputWaiting() {
-			err := s.refresh(p, line, pos)
-			if err != nil {
-				return "", err
-			}
-		} else {
-			s.cursorPos(pLen + pos)
+		//if true || s.needRefresh { //&& !s.inputWaiting() {
+		// ALWAYS REFRESH SO WE HAVE JUST ONE TRUTH
+		err := s.refresh(p, line, pos)
+		if err != nil {
+			return "", err
 		}
+		// } else {
+		///// s.cursorPos(pLen + pos)
+		// }
 		/*if !historyAction {
 			historyStale = true
 		}
