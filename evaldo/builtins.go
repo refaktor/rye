@@ -5384,7 +5384,7 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Creates a function with specific context.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			ctx := ps.Ctx
+			ctx := *ps.Ctx
 			switch args := arg0.(type) {
 			case env.Block:
 				ok, doc := util.ProcessFunctionSpec(args)
@@ -5393,7 +5393,7 @@ var builtins = map[string]*env.Builtin{
 				}
 				switch body := arg1.(type) {
 				case env.Block:
-					return *env.NewFunctionC(args, body, ctx, false, false, doc)
+					return *env.NewFunctionC(args, body, &ctx, false, false, doc)
 				default:
 					ps.ErrorFlag = true
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "fnc")
