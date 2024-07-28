@@ -531,6 +531,24 @@ section "Math functions"
 	{
 		equal { do\in math { trunc 1.234567 } } 1.000000
 	}		
+	group "log10"
+	mold\nowrap ""
+	{ { integer decimal } }
+	{
+		equal { do\in math { log10 100 } } 2.000000
+	}	
+	group "log1"
+	mold\nowrap ""
+	{ { integer decimal } }
+	{
+		equal { do\in math { log1p 10.58 } } 2.449279472144849
+	}	
+	group "logb"
+	mold\nowrap ""
+	{ { integer decimal } }
+	{
+		equal { do\in math { logb 123.45 } } 6.000000
+	}	
 	
 }
 
