@@ -495,6 +495,20 @@ var Builtins_math = map[string]*env.Builtin{
 			}
 		},
 	},
+	"roundtoeven": {
+		Argsn: 1,
+		Doc:   "Returns the nearest integer, rounding ties to even.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Decimal:
+				return env.NewDecimal(math.RoundToEven(val.Value))
+			case env.Integer:
+				return env.NewDecimal(math.RoundToEven(float64(val.Value)))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.DecimalType, env.IntegerType}, "roundtoeven")
+			}
+		},
+	},
 	"erf": {
 		Argsn: 1,
 		Doc:   "Returns the error function of value.",
