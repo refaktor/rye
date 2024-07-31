@@ -1,2 +1,486 @@
+; Test / docs definition ... mold/nowrap ?function get's docstrings from live functions
+; title "Function reference: core builtins"
+
+section "Printing functions"
+"Functions that print values to stdout."
+{
+	group "print"
+	mold\nowrap ?print
+	{ { object } }
+	{
+		stdout { print 123 } "123" + newline
+	}
+	group "prn"
+	mold\nowrap ?prn
+	{ { object } }
+	{
+		stdout { prn 123 } "123"
+	}
+	group "prns"
+	mold\nowrap ?prns
+	{ { object } }
+	{
+		stdout { prns 123 } "123 "
+	}
+	group "printv"
+	mold\nowrap ?printv
+	{ { object } }
+	{
+		stdout { printv 33 "value is: {}" } "value is: 33" + newline
+		; stdout { print\val "OK" "value is: {{}}" } "value is: 33" + newline ; TODO-BUG quotes the string
+		; stdout { { "Jane Austen" } print\val "Hello {{}}!" } "value is: 33" + newline
+		;}
+	}
+	
+	; group "print-ssv"
+	; mold\nowrap ?print-ssv
+	; { { function } }
+	; {
+	; }
+	;group "print-csv"
+	;mold\nowrap ?print-csv
+	;{ { function } }
+	;{
+	;}
+	;group "print-json"
+	;mold\nowrap ?print-json
+	;{ { function } }
+	;{
+	;}
+	group "probe"
+	mold\nowrap ?probe
+	{ { function } }
+	{
+		stdout { probe 33 } "[Integer: 33]" + newline
+	}
+	; group "inspect"
+	; mold\nowrap ?inspect
+	; { { function } }
+	; {
+	;	stdout { inspect 33 } "33"
+	; }
+}
+
+section "Logic functions"
+"Function that help with logical operations."
+{	
+
+	group "true"
+	mold\nowrap ?true
+	{ { } }
+	{
+		equal { true } 1
+	}
+
+	group "false"
+	mold\nowrap ?false
+	{ { function } }
+	{
+		equal { false } 0
+	}
+	
+	group "not"
+	mold\nowrap ?not
+	{ { function } }
+	{
+		equal { not 0 } 1
+		equal { not 1 } 0
+	}
+
+	group "and"
+	mold\nowrap ?and
+	{ { function } }
+	{
+		equal { 1 .and 0 } 0
+		equal { 1 .and 1 } 1
+		equal { 0 .and 0 } 0
+	}
+	
+	group "or"
+	mold\nowrap ?or
+	{ { function } }
+	{
+		equal { 1 .or 0 } 1
+		equal { 1 .or 1 } 1
+		equal { 0 .or 0 } 0
+	}
+
+	group "xor"
+	mold\nowrap ?xor
+	{ { function } }
+	{
+		equal { 0 .xor 0 } 0
+		equal { 1 .xor 1 } 0
+		equal { 0 .xor 1 } 1
+		equal { 1 .xor 0 } 1
+	}	
+	group "all"
+	mold\nowrap ?all
+	{ { block } }
+	{
+		equal { all { 1 1 1 } } 1
+		equal { { 0 0 1 } .all } 0
+	}
+
+	group "any"
+	mold\nowrap ?any
+	{ { block } }
+	{
+		equal { any { 0 0 1 } } 1
+		equal { { 0 0 0 } .any } 0
+	}
+
+	;group "any\with"
+	;mold\nowrap ?any\with
+	;{ { object } { block } }
+	;{
+	;	equal { any\with 1 {  + 0 , + 0  } } 1
+	;}
+}
+
+section "Working with numbers"
+"Functions that mostly work with numbers."
+{
+	group "inc"
+	mold\nowrap ?inc
+	{ { integer } }
+	{
+		equal { inc 100 } 101
+	}
+
+	group "is-positive"
+	mold\nowrap ?is-positive
+	{ { integer decimal } }
+	{
+		equal { is-positive 1 } 1 
+		equal { 0 .is-positive } 0 
+		; TODO equal { -1 .is-positive } 0
+		; TODO -- same for decimal
+	}
+
+	group "is-zero"
+	mold\nowrap ?is-zero
+	{ { integer decimal } }
+	{
+		equal { is-zero 0 } 1
+		equal { 0 .is-zero } 1
+		equal { is-zero 0.0 } 1
+		equal { is-zero 0.1 } 0
+	}
+
+	group "multiple-of"
+	mold\nowrap ?multiple-of
+	{ { integer } { integer } }
+	{
+		equal { multiple-of 10 2 } 1
+		equal { 10 .multiple-of 3 } 0		
+	}
+
+	group "odd"
+	mold\nowrap ?odd
+	{ { integer } }
+	{
+		equal { odd 3 } 1
+		; TODO 
+	}
+
+	group "even"
+	mold\nowrap ?even
+	{ { integer } }
+	{
+		equal { even 2 } 1
+		; TODO
+	}
+
+	group "mod"
+	mold\nowrap ?mod
+	{ { integer } { integer } }
+	{
+		equal { 3 .mod 2 } 1
+		; TODO
+	}
+
+	`
+	group "+-*/"
+	""
+	{ { integer decimal } { integer decimal } }
+	{
+	}
+
+
+	group "!=><+"
+	""
+	{ { integer decimal } { integer decimal } }
+	{
+	} `
+
+}
+
+
+section "Working with strings"
+"Functions that mostly work with strings."
+{	
+
+	group "capitalize"
+	mold\nowrap ?capitalize
+	{ { string } }
+	{
+		equal { capitalize "anne" } "Anne"
+	}
+
+	group "to-lower"
+	mold\nowrap ?to-lower
+	{ { string } }
+	{
+		equal { to-lower "ANNE" } "anne"
+	}
+
+	group "to-upper"
+	mold\nowrap ?to-upper
+	{ { string } }
+	{
+		equal { to-upper "anne" } "ANNE"
+	}
+
+	group "join"
+	mold\nowrap ?join
+	{ { block list } }
+	{
+		equal { join [ "Marry" "Anne" ] } "MarryAnne"
+	}
+	
+	group "join\with"
+	mold\nowrap ?join\with
+	{ { block list } { string } }
+	{
+		equal { join\with [ "Marry" "Anne" ] "," } "Marry,Anne"
+	}
+
+	group "split"
+	mold\nowrap ?split
+	{ { string } { string } }
+	{
+		equal { split "Marry,Anne" "," } { "Marry" "Anne" }
+	}
+
+	group "split\quoted"
+	mold\nowrap ?split\quoted
+	{ { string } { string } }
+	{
+		equal { split\quoted `"Marry,Anne",Joe` "," `"` } { "Marry,Anne" "Joe" } ;" }
+	}
+	
+	group "split\every"
+	mold\nowrap ?split\every
+	{ { string } { integer } }
+	{
+		equal { split\every "abcbce" 3 } { "abc" "bce" }
+	}
+	
+	comment "Many of functions that work with other collections also work with strings."
+}
+
+
+
+section "Conditional functions"
+"Program flow control functions"
+{	
+	
+	group "if"
+	mold\nowrap ?if
+	{ { object } { block } }
+	{
+		equal { if 1 { 101 } } 101
+		equal { if 0 { 101 } } 0
+	}
+	group "otherwise"
+	mold\nowrap ?otherwise
+	{ { object } { block } }
+	{
+		equal { otherwise 1 { 101 } } 0
+		equal { otherwise 0 { 101 } } 101
+	}
+	group "^if"
+	mold\nowrap ?^if
+	{ { object } { block } }
+	{
+		equal { ^if 1 { 101 } } 101
+		equal { ^if 0 { 101 } } 0
+	}
+	group "^otherwise"
+	mold\nowrap ?^otherwise
+	{ { object } { block } }
+	{
+		equal { ^otherwise 1 { 101 } } 0
+		equal { ^otherwise 0 { 101 } } 101
+	}
+	group "either"
+	mold\nowrap ?either
+	{ { object } { block } { block } }
+	{
+		equal { either 1 { 101 } { 202 } } 101
+		equal { either 0 { 101 } { 202 } } 202
+	}
+	group "switch"
+	mold\nowrap ?switch
+	{ { object } { block } }
+	{
+		equal { switch 1 { 1 { 101 } 2 { 202 } } } 101
+		equal { switch 2 { 1 { 101 } 2 { 202 } } } 202
+	}
+	group "cases"
+	mold\nowrap ?cases
+	{ { object } { block } { block } }
+	{
+		equal { cases 1 { { 1 } { + 10 } { 1 } { + 100 } } } 111
+		equal { cases 1 { { 0 } { + 10 } { 1 } { + 100 } } } 101
+		; TODO cases doesn't do error handling well yet
+	}
+}
+
+section "Looping functions"
+"Program flow control functions"
+{	
+	
+	group "loop"
+	mold\nowrap ?if
+	{ { object } { block } }
+	{
+		stdout { loop 3 { prns "x" } } "x x x "
+	}
+	group "for"
+	mold\nowrap ?otherwise
+	{ { object } { block } }
+	{
+		stdout { for { 1 2 3 } { prns "x" } } "x x x "
+		stdout { { "a" "b" "c" } .for { .prns } } "a b c "
+	}
+	group "forever"
+	mold\nowrap ?forever
+	{ { object } { block } }
+	{
+		stdout { forever { "once" .prn .return } } "once" 
+	}
+	group "forever\with"
+	mold\nowrap ?forever\with
+	{ { object } { block } }
+	{
+		stdout { forever\with 1 { .prn .return } } "1" 
+	}
+}
+
+
+section "Doers and evaluators"
+"Functions that do code and evaluate blocks."
+{	
+	
+	group "do"
+	mold\nowrap ?do
+	{ { block } }
+	{
+		equal { do { 101 + 101 } } 202
+	}
+
+	group "do\in"
+	mold\nowrap ?do\in
+	{ { context } { block } }
+	{
+		equal { cc: context { x: 101 } do\in cc { x + 101 } } 202
+	}
+
+	group "with"
+	mold\nowrap ?with
+	{ { object } { block } }
+	{
+		equal { 1 .with { + 100 } } 101
+	}
+
+	
+	group "try"
+	mold\nowrap ?try
+	{ { block } }
+	{
+		equal { try { 10 + unknown } |type? } 'error 
+	}
+	
+	group "do\in\try"
+	mold\nowrap ?do\in\try
+	{ { context } { block } }
+	{
+		equal { ctx: context { x: 101 } do\in\try ctx { x / 0 } |type? } 'error
+	}
+
+	group "vals"
+	mold\nowrap ?vals
+	{ { block } }
+	{
+		equal { x: 101 vals { x } } { 101 }
+		equal { name: "Anne" vals { name "Goodall" } } { "Anne" "Goodall" }
+		equal { y: 202 vals { 101  y  y + 101 } } { 101 202 303 }
+		; TODO expression guards don't work
+	}
+
+	group "vals\with"
+	mold\nowrap ?vals\with
+	{ { object } { block } }
+	{
+		equal { vals\with 100 { + 1 } } { 101 }
+		; TODO equal { x: 303 vals\with 100 { + 1 } } { 101 } ; loops forever
+	}
+
+	group "time-it"
+	mold\nowrap ?time-it
+	{ { object } { block } }
+	{
+		equal { time-it { 1 + 1 } } 0
+	}
+}
+
+section "Function creating functions"
+"Functions that create functions."
+{	
+	
+	group "does"
+	mold\nowrap ?does
+	{ { block } }
+	{
+		stdout { f: does { prns "Hey" } f f } "Hey Hey "
+	}
+
+	group "fn"
+	mold\nowrap ?fn
+	{ { block } }
+	{
+		stdout { f:: fn { x } { prns x } f "A" f "B" } "A B "
+	}
+
+	group "fn1"
+	mold\nowrap ?fn1
+	{ { block } }
+	{
+		stdout { f:: fn1 { .prns } f "A" f "B" } "A B "
+	}
+
+	group "pfn"
+	mold\nowrap ?pfn
+	{ { block } }
+	{
+		equal { add10: pfn { x } { x + 10 } add10 9 } 19
+		equal { x:: 10 f:: pfn { } { prns 1 } try { f } |type? } 'error  ; prns is not a pure function so isn't avail.
+		equal { y:: 10 f:: pfn { } { y } try { f } |type? } 'error  ; x from parent context is also not avail, even read 
+	}
+	comment "Pure functions only have access to other pure functions."
+
+
+	group "closure"
+	mold\nowrap ?closure
+	{ { block } }
+	{
+		stdout { x:: 10 cl:: fn { } { prns x } , context { x: 99 cl } } "99 "
+		stdout { x:: 10 cl:: closure { } { prns x } , context { x: 99 cl } } "10 "
+	}
+
+	
+}
 
 end
