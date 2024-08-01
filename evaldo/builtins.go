@@ -2370,7 +2370,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"do\\inside": { // **
+	"do\\in": { // **
 		Argsn: 2,
 		Doc:   "Takes a Context and a Block. It Does a block inside a given Context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2395,7 +2395,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"do\\inside\\try": { // **
+	"do\\in\\try": { // **
 		Argsn: 2,
 		Doc:   "Takes a Context and a Block. It Does a block inside a given Context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2428,7 +2428,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"do\\in": { // **
+	"do\\par": { // **
 		Argsn: 2,
 		Doc:   "Takes a Context and a Block. It Does a block in current context but with parent a given Context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2839,7 +2839,11 @@ var builtins = map[string]*env.Builtin{
 		Argsn: 0,
 		Doc:   "Lists words in current context",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			fmt.Println(ps.Ctx.Parent.Preview(*ps.Idx, ""))
+			if ps.Ctx.Parent != nil {
+				fmt.Println(ps.Ctx.Parent.Preview(*ps.Idx, ""))
+			} else {
+				fmt.Println("No parent")
+			}
 			return env.Void{}
 		},
 	},
@@ -2866,7 +2870,11 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
-				fmt.Println(ps.Ctx.Parent.Preview(*ps.Idx, s1.Value))
+				if ps.Ctx.Parent != nil {
+					fmt.Println(ps.Ctx.Parent.Preview(*ps.Idx, s1.Value))
+				} else {
+					fmt.Println("No parent")
+				}
 				return env.Void{}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "ls\\")
