@@ -139,6 +139,48 @@ var Builtins_math = map[string]*env.Builtin{
 			}
 		},
 	},
+	"log10": {
+		Argsn: 1,
+		Doc:   "Returns the decimal logarithm of x",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Integer:
+				return *env.NewDecimal(math.Log10(float64(val.Value)))
+			case env.Decimal:
+				return *env.NewDecimal(math.Log10(val.Value))
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "log10")
+			}
+		},
+	},
+	"log1p": {
+		Argsn: 1,
+		Doc:   "Returns the natural logarithm of 1 plus its argument x",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Integer:
+				return *env.NewDecimal(math.Log1p(float64(val.Value)))
+			case env.Decimal:
+				return *env.NewDecimal(math.Log1p(val.Value))
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "log1p")
+			}
+		},
+	},
+	"logb": {
+		Argsn: 1,
+		Doc:   "logb returns the binary exponent of x",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Integer:
+				return *env.NewDecimal(math.Logb(float64(val.Value)))
+			case env.Decimal:
+				return *env.NewDecimal(math.Logb(val.Value))
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "logb")
+			}
+		},
+	},
 	"sq": {
 		Argsn: 1,
 		Doc:   "Return the sine of the radian argument.",
@@ -450,6 +492,20 @@ var Builtins_math = map[string]*env.Builtin{
 				return env.NewDecimal(math.Round(val.Value))
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.DecimalType}, "dim")
+			}
+		},
+	},
+	"roundtoeven": {
+		Argsn: 1,
+		Doc:   "Returns the nearest integer, rounding ties to even.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Decimal:
+				return env.NewDecimal(math.RoundToEven(val.Value))
+			case env.Integer:
+				return env.NewDecimal(math.RoundToEven(float64(val.Value)))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.DecimalType, env.IntegerType}, "roundtoeven")
 			}
 		},
 	},
