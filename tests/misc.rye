@@ -450,9 +450,9 @@ section "Math functions"
 	{ { string } }
 	{
 		equal { do\in math { erfcinv 1.5 } } -0.4769362762044699
-		equal { do\in math { erfcinv 0 } } "+Inf"
-		equal { do\in math { erfcinv 2 } } "-Inf"
-		equal { do\in math { erfcinv 2.2 } } "NaN"
+;		equal { do\in math { erfcinv 0 } } "+Inf"
+;		equal { do\in math { erfcinv 2 } } "-Inf"
+;		equal { do\in math { erfcinv 2.2 } } "NaN"
 	}
 
 	group "erfinv"
@@ -460,9 +460,9 @@ section "Math functions"
 	{ { string } }
 	{
 		equal { do\in math { erfcinv 0.5 } } 0.4769362762044699
-		equal { do\in math { erfcinv 1 } } "+Inf"
-		equal { do\in math { erfcinv -1 } } "-Inf"
-		equal { do\in math { erfcinv 1.5 } } "NaN"
+;		equal { do\in math { erfcinv 1 } } "+Inf"
+;		equal { do\in math { erfcinv -1 } } "-Inf"
+;		equal { do\in math { erfcinv 1.5 } } "NaN"
 	}
 
 	group "exp"

@@ -514,7 +514,7 @@ section "Context related functions"
 	mold\nowrap ?unbind!
 	{ { block } }
 	{
-		equal { context { x: does { 1 + 1 } } |unbind! ::cc , try { cc/x } |type? } 'error
+		equal { context { x: does { t { 1 + 1 } } t: ?try } |unbind! ::cc , cc/x |type? } 'error
 	}	
 
 }
