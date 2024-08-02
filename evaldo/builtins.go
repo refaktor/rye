@@ -3397,7 +3397,7 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = code.Series
 					for _, ch := range block.Value {
 						ps = EvalBlockInj(ps, *env.NewString(string(ch)), true)
-						if ps.ErrorFlag {
+						if ps.ErrorFlag || ps.ReturnFlag {
 							return ps.Res
 						}
 						ps.Ser.Reset()
@@ -3414,7 +3414,7 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = code.Series
 					for i := 0; i < block.Series.Len(); i++ {
 						ps = EvalBlockInj(ps, block.Series.Get(i), true)
-						if ps.ErrorFlag {
+						if ps.ErrorFlag || ps.ReturnFlag {
 							return ps.Res
 						}
 						ps.Ser.Reset()
@@ -3431,7 +3431,7 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = code.Series
 					for i := 0; i < len(block.Data); i++ {
 						ps = EvalBlockInj(ps, env.ToRyeValue(block.Data[i]), true)
-						if ps.ErrorFlag {
+						if ps.ErrorFlag || ps.ReturnFlag {
 							return ps.Res
 						}
 						ps.Ser.Reset()
@@ -3450,7 +3450,7 @@ var builtins = map[string]*env.Builtin{
 						row := block.Rows[i]
 						row.Uplink = &block
 						ps = EvalBlockInj(ps, row, true)
-						if ps.ErrorFlag {
+						if ps.ErrorFlag || ps.ReturnFlag {
 							return ps.Res
 						}
 						ps.Ser.Reset()
