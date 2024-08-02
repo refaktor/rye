@@ -612,6 +612,13 @@ section "Spreadsheet related functions"
 		equal { to-spreadsheet vals { dict { "a" 1 b 2 "c" 3 } dict { "a" 4 "b" 5 } } } spreadsheet { "a" "b" "c" } { 1 2 3 4 5 _ }
 	}
 
+	group "add-col"
+	mold\nowrap ?add-col!
+	{ { block } }
+	{
+		equal { try { spreadsheet { "n" } [ 1 ] |add-col! 'm { x } { x } } |type? } 'error
+	}
+
 	group "index"
 	mold\nowrap ?add-indexes!
 	{ { block } }
