@@ -1,1 +1,1 @@
-go build -tags "b_sqlite,b_http,b_sql,b_postgres,b_bson,b_mail,b_bcrypt,b_telegram,b_html,b_email,b_mail,b_mysql,b_fyne,b_contrib,b_bleve,b_devops,b_ssh," -o bin/rye
+go build -o bin/rye
