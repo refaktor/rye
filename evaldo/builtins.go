@@ -6373,6 +6373,9 @@ var builtins = map[string]*env.Builtin{
 				}
 				return *env.NewString(string(str[0]))
 			case env.Spreadsheet:
+				if s1.NRows() == 0 {
+					return MakeBuiltinError(ps, "Spreadsheet is empty.", "first")
+				}
 				return s1.GetRow(ps, int(0))
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType, env.BlockType, env.StringType, env.ListType}, "first")

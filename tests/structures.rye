@@ -21,6 +21,7 @@ section "Working with blocks and lists"
 		equal { try { first { } } |type? } 'error
 		equal { try { first list { } } |type? } 'error
 		equal { try { first "" } |type? } 'error
+		equal { try { first spreadsheet { "Name" } [ ] } |type? } 'error
 	}
 
 	group "rest"
