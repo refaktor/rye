@@ -1,5 +1,5 @@
-//go:build !b_no_json
-// +build !b_no_json
+//go:build !no_json
+// +build !no_json
 
 package evaldo
 

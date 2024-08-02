@@ -1,5 +1,5 @@
-//go:build b_smtpd
-// +build b_smtpd
+//go:build !no_smtpd
+// +build !no_smtpd
 
 package evaldo
 

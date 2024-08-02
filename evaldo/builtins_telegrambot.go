@@ -1,5 +1,5 @@
-//go:build b_telegram
-// +build b_telegram
+//go:build !no_telegram
+// +build !no_telegram
 
 package evaldo
 

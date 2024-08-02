@@ -1,5 +1,5 @@
-//go:build !b_devops
-// +build !b_devops
+//go:build no_devops
+// +build no_devops
 
 package evaldo
 

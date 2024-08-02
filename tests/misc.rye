@@ -449,6 +449,7 @@ section "Math functions"
 	mold\nowrap "" 
 	{ { string } }
 	{
+		; TODO --- make equal-floats or something like that that compares with some margin
 ; decimals		equal { do\in math { erfcinv 1.5 } } -0.4769362762044699
 ;		equal { do\in math { erfcinv 0 } } "+Inf"
 ;		equal { do\in math { erfcinv 2 } } "-Inf"

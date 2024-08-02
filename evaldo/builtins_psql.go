@@ -1,9 +1,7 @@
-//go:build b_psql
-// +build b_psql
+//go:build !no_psql
+// +build !no_psql
 
 package evaldo
-
-// import "C"
 
 import (
 	"database/sql"

@@ -1,5 +1,5 @@
-//go:build b_mail
-// +build b_mail
+//go:build !no_mail
+// +build !no_mail
 
 package evaldo
 

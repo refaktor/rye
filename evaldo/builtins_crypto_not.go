@@ -1,5 +1,5 @@
-//go:build !b_crypto
-// +build !b_crypto
+//go:build no_crypto
+// +build no_crypto
 
 package evaldo
 

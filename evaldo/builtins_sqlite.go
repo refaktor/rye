@@ -1,9 +1,9 @@
-//go:build b_sqlite
-// +build b_sqlite
+//go:build !no_sqlite
+// +build !no_sqlite
 
 package evaldo
 
-import "C"
+// import "C"
 
 import (
 	"database/sql"

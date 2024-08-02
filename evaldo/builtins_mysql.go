@@ -1,9 +1,7 @@
-//go:build b_mysql
-// +build b_mysql
+//go:build !not_mysql
+// +build !not_mysql
 
 package evaldo
-
-// import "C"
 
 import (
 	"database/sql"

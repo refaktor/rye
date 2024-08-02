@@ -1,24 +1,19 @@
-//go:build b_http
-// +build b_http
+//go:build !no_http
+// +build !no_http
 
 package evaldo
 
-import "C"
+// import "C"
 
 import (
-	"io"
-	//"context"
 	"fmt"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"net/url"
 
 	"github.com/refaktor/rye/env"
 
-	//"time"
-	//"golang.org/x/time/rate"
-	// "nhooyr.io/websocket"
-	//"github.com/gorilla/websocket"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 	"github.com/gorilla/sessions"
