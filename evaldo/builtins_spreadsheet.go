@@ -1107,6 +1107,10 @@ func AutoType(ps *env.ProgramState, s *env.Spreadsheet, percent float64) env.Obj
 				} else {
 					colTypeCount[i]["str"]++
 				}
+			case env.Integer:
+				colTypeCount[i]["int"]++
+			case env.Decimal:
+				colTypeCount[i]["dec"]++
 			default:
 				continue
 			}
@@ -1134,11 +1138,31 @@ func AutoType(ps *env.ProgramState, s *env.Spreadsheet, percent float64) env.Obj
 		for i, row := range s.Rows {
 			switch newType {
 			case "int":
-				intVal, _ := strconv.Atoi(row.Values[colNum].(env.String).Value)
-				newS.Rows[i].Values[colNum] = *env.NewInteger(int64(intVal))
+				switch val := row.Values[colNum].(type) {
+				case env.String:
+					intVal, _ := strconv.Atoi(val.Value)
+					newS.Rows[i].Values[colNum] = *env.NewInteger(int64(intVal))
+				case env.Integer:
+					//intVal, _ := strconv.Atoi(row.Values[colNum].(env.String).Value)
+					newS.Rows[i].Values[colNum] = val
+				case env.Decimal:
+					//intVal, _ := strconv.Atoi(row.Values[colNum].(env.String).Value)
+					newS.Rows[i].Values[colNum] = val
+				}
 			case "dec":
-				floatVal, _ := strconv.ParseFloat(row.Values[colNum].(env.String).Value, 64)
-				newS.Rows[i].Values[colNum] = *env.NewDecimal(floatVal)
+				switch val1 := row.Values[colNum].(type) {
+				case env.String:
+					floatVal, _ := strconv.ParseFloat(val1.Value, 64)
+					newS.Rows[i].Values[colNum] = *env.NewDecimal(floatVal)
+				case env.Integer:
+					//intVal, _ := strconv.Atoi(row.Values[colNum].(env.String).Value)
+					//newS.Rows[i].Values[colNum] = *env.NewInteger(int64(intVal))
+					newS.Rows[i].Values[colNum] = *env.NewDecimal(float64(val1.Value))
+				case env.Decimal:
+					//intVal, _ := strconv.Atoi(row.Values[colNum].(env.String).Value)
+					//newS.Rows[i].Values[colNum] = *env.NewInteger(int64(intVal))
+					newS.Rows[i].Values[colNum] = val1
+				}
 			case "str":
 				newS.Rows[i].Values[colNum] = row.Values[colNum]
 			}

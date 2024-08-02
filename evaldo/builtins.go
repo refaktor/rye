@@ -2313,6 +2313,7 @@ var builtins = map[string]*env.Builtin{
 	"do": { // **
 		Argsn: 1,
 		Doc:   "Takes a block of code and does (runs) it.",
+		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -2330,6 +2331,7 @@ var builtins = map[string]*env.Builtin{
 	"try": { // **
 		Argsn: 1,
 		Doc:   "Takes a block of code and does (runs) it.",
+		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -3305,7 +3307,7 @@ var builtins = map[string]*env.Builtin{
 					switch accu := arg2.(type) {
 					case env.Word:
 						acc := arg1
-						ps.Ctx.Set(accu.Index, acc)
+						ps.Ctx.Mod(accu.Index, acc)
 						ser := ps.Ser
 						ps.Ser = bloc.Series
 						for i := 0; int64(i) < cond.Value; i++ {
@@ -3397,7 +3399,7 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = code.Series
 					for _, ch := range block.Value {
 						ps = EvalBlockInj(ps, *env.NewString(string(ch)), true)
-						if ps.ErrorFlag {
+						if ps.ErrorFlag || ps.ReturnFlag {
 							return ps.Res
 						}
 						ps.Ser.Reset()
@@ -3414,7 +3416,7 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = code.Series
 					for i := 0; i < block.Series.Len(); i++ {
 						ps = EvalBlockInj(ps, block.Series.Get(i), true)
-						if ps.ErrorFlag {
+						if ps.ErrorFlag || ps.ReturnFlag {
 							return ps.Res
 						}
 						ps.Ser.Reset()
@@ -3431,7 +3433,7 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = code.Series
 					for i := 0; i < len(block.Data); i++ {
 						ps = EvalBlockInj(ps, env.ToRyeValue(block.Data[i]), true)
-						if ps.ErrorFlag {
+						if ps.ErrorFlag || ps.ReturnFlag {
 							return ps.Res
 						}
 						ps.Ser.Reset()
@@ -3450,7 +3452,7 @@ var builtins = map[string]*env.Builtin{
 						row := block.Rows[i]
 						row.Uplink = &block
 						ps = EvalBlockInj(ps, row, true)
-						if ps.ErrorFlag {
+						if ps.ErrorFlag || ps.ReturnFlag {
 							return ps.Res
 						}
 						ps.Ser.Reset()
@@ -3632,7 +3634,7 @@ var builtins = map[string]*env.Builtin{
 								ps.Ser.Reset()
 							}
 							ps.Ser = ser
-							ctx.Set(wrd.Index, block)
+							ctx.Mod(wrd.Index, block)
 							return env.NewBlock(*env.NewTSeries(purged))
 						default:
 							return MakeArgError(ps, 1, []env.Type{env.BlockType}, "purge!")
@@ -3770,7 +3772,7 @@ var builtins = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
-							ps.Ctx.Set(accu.Index, *env.NewInteger(int64(i + 1)))
+							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i + 1)))
 							ps = EvalBlockInj(ps, list.Series.Get(i), true)
 							if ps.ErrorFlag {
 								return ps.Res
@@ -3796,7 +3798,7 @@ var builtins = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
-							ps.Ctx.Set(accu.Index, *env.NewInteger(int64(i + 1)))
+							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i + 1)))
 							ps = EvalBlockInj(ps, env.ToRyeValue(list.Data[i]), true)
 							if ps.ErrorFlag {
 								return ps.Res
@@ -3823,7 +3825,7 @@ var builtins = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
-							ps.Ctx.Set(accu.Index, *env.NewInteger(int64(i + 1)))
+							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i + 1)))
 							ps = EvalBlockInj(ps, *env.NewString(string(input[i])), true)
 							if ps.ErrorFlag {
 								return ps.Res
@@ -3863,7 +3865,7 @@ var builtins = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
-							ps.Ctx.Set(accu.Index, *env.NewInteger(int64(i)))
+							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i)))
 							ps = EvalBlockInj(ps, list.Series.Get(i), true)
 							if ps.ErrorFlag {
 								return ps.Res
@@ -3889,7 +3891,7 @@ var builtins = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
-							ps.Ctx.Set(accu.Index, *env.NewInteger(int64(i)))
+							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i)))
 							ps = EvalBlockInj(ps, env.ToRyeValue(list.Data[i]), true)
 							if ps.ErrorFlag {
 								return ps.Res
@@ -3916,7 +3918,7 @@ var builtins = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
-							ps.Ctx.Set(accu.Index, *env.NewInteger(int64(i)))
+							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i)))
 							ps = EvalBlockInj(ps, *env.NewString(string(input[i])), true)
 							if ps.ErrorFlag {
 								return ps.Res
@@ -3960,7 +3962,7 @@ var builtins = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 1; i < l; i++ {
-							ps.Ctx.Set(accu.Index, acc)
+							ps.Ctx.Mod(accu.Index, acc)
 							ps = EvalBlockInj(ps, list.Series.Get(i), true)
 							if ps.ErrorFlag {
 								return ps.Res
@@ -3993,7 +3995,7 @@ var builtins = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 1; i < l; i++ {
-							ps.Ctx.Set(accu.Index, acc)
+							ps.Ctx.Mod(accu.Index, acc)
 							ps = EvalBlockInj(ps, env.ToRyeValue(list.Data[i]), true)
 							if ps.ErrorFlag {
 								return ps.Res
@@ -4023,7 +4025,7 @@ var builtins = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 1; i < len(input); i++ {
-							ps.Ctx.Set(accu.Index, acc)
+							ps.Ctx.Mod(accu.Index, acc)
 							ps = EvalBlockInj(ps, *env.NewString(string(input[i])), true)
 							if ps.ErrorFlag {
 								return ps.Res
@@ -4066,7 +4068,7 @@ var builtins = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
-							ps.Ctx.Set(accu.Index, acc)
+							ps.Ctx.Mod(accu.Index, acc)
 							ps = EvalBlockInj(ps, list.Series.Get(i), true)
 							if ps.ErrorFlag {
 								return ps.Res
@@ -4093,7 +4095,7 @@ var builtins = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
-							ps.Ctx.Set(accu.Index, acc)
+							ps.Ctx.Mod(accu.Index, acc)
 							ps = EvalBlockInj(ps, env.ToRyeValue(list.Data[i]), true)
 							if ps.ErrorFlag {
 								return ps.Res
@@ -4120,7 +4122,7 @@ var builtins = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 0; i < len(input); i++ {
-							ps.Ctx.Set(accu.Index, acc)
+							ps.Ctx.Mod(accu.Index, acc)
 							ps = EvalBlockInj(ps, *env.NewString(string(input[i])), true)
 							if ps.ErrorFlag {
 								return ps.Res
@@ -5076,7 +5078,7 @@ var builtins = map[string]*env.Builtin{
 				if cond.Value > 0 {
 					switch arg := arg1.(type) {
 					case env.Integer:
-						ps.Ctx.Set(ps.Args[0], arg)
+						ps.Ctx.Mod(ps.Args[0], arg)
 						ps.Ser.Reset()
 						return nil
 					default:
@@ -6728,7 +6730,7 @@ var builtins = map[string]*env.Builtin{
 					case env.Block:
 						s := &oldval.Series
 						oldval.Series = *s.RmLast()
-						ctx.Set(wrd.Index, oldval)
+						ctx.Mod(wrd.Index, oldval)
 						return oldval
 					default:
 						return MakeBuiltinError(ps, "Old value should be Block type.", "remove-last!")
@@ -7828,7 +7830,7 @@ func RegisterBuiltinsInContext(builtins map[string]*env.Builtin, ps *env.Program
 	ps.Ctx = ctx
 
 	wordIdx := ps.Idx.IndexWord(name)
-	ps.Ctx.Set(wordIdx, *newctx)
+	ps.Ctx.Mod(wordIdx, *newctx)
 }
 
 func registerBuiltin(ps *env.ProgramState, word string, builtin env.Builtin) {
