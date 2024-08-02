@@ -845,7 +845,7 @@ func GenerateColumn(ps *env.ProgramState, s env.Spreadsheet, name env.Word, extr
 				}
 				// fmt.Println(val)
 				if er != nil {
-					return nil
+					return MakeBuiltinError(ps, er.Error(), "add-col!")
 				}
 				if firstVal == nil {
 					var ok bool
