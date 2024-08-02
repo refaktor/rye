@@ -11,6 +11,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/refaktor/rye/env"
 
@@ -45,7 +46,8 @@ var Builtins_http = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch addr := arg0.(type) {
 			case env.String:
-				return *env.NewNative(ps.Idx, &http.Server{Addr: addr.Value}, "Go-server")
+				server := &http.Server{Addr: addr.Value, ReadHeaderTimeout: 10 * time.Second}
+				return *env.NewNative(ps.Idx, server, "Go-server")
 			default:
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "new-server")
@@ -60,7 +62,10 @@ var Builtins_http = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch server := arg0.(type) {
 			case env.Native:
-				server.Value.(*http.Server).ListenAndServe()
+				err := server.Value.(*http.Server).ListenAndServe()
+				if err != nil {
+					return makeError(ps, err.Error())
+				}
 				return arg0
 			default:
 				ps.FailureFlag = true
@@ -70,13 +75,16 @@ var Builtins_http = map[string]*env.Builtin{
 		},
 	},
 
-	"Go-server//serve\\port": {
+	/* "Go-server//serve\\port": {
 		Argsn: 1,
 		Doc:   "Listen and serve with port.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch host := arg0.(type) {
 			case env.String:
-				http.ListenAndServe(host.Value, nil)
+				err := server.Value.(*http.Server).ListenAndServe(host.Value, nil)
+				if err != nil {
+					return makeError(ps, err.Error())
+				}
 				return arg0
 			default:
 				ps.FailureFlag = true
@@ -84,7 +92,7 @@ var Builtins_http = map[string]*env.Builtin{
 			}
 
 		},
-	},
+	}, */
 
 	"Go-server//handle": {
 		Argsn: 3,
@@ -104,7 +112,11 @@ var Builtins_http = map[string]*env.Builtin{
 						ps.ErrorFlag = false
 						ps.ReturnFlag = false
 						psTemp := env.ProgramState{}
-						copier.Copy(&psTemp, &ps)
+						err := copier.Copy(&psTemp, &ps)
+						if err != nil {
+							fmt.Println(err.Error())
+							// TODO return makeError(ps, err.Error())
+						}
 						CallFunctionArgs2(handler, ps, *env.NewNative(ps.Idx, w, "Go-server-response-writer"), *env.NewNative(ps.Idx, r, "Go-server-request"), nil)
 					})
 					return arg0
@@ -237,7 +249,11 @@ var Builtins_http = map[string]*env.Builtin{
 							fmt.Println("<< Call Function Args 2 >>")
 							fmt.Println(ps.Ser.PositionAndSurroundingElements(*ps.Idx))
 							psTemp := env.ProgramState{}
-							copier.Copy(&psTemp, &ps)
+							err := copier.Copy(&psTemp, &ps)
+							if err != nil {
+								fmt.Println(err.Error())
+								// return makeError(ps, "Can't Listen and Serve")
+							}
 							CallFunctionArgs2(handler, &psTemp, *env.NewNative(psTemp.Idx, conn, "Go-server-websocket"), *env.NewNative(psTemp.Idx, "asd", "Go-server-context"), nil)
 							/*							for {
 														msg, op, err := wsutil.ReadClientData(conn)
@@ -431,7 +447,10 @@ var Builtins_http = map[string]*env.Builtin{
 				switch key := arg1.(type) {
 				case env.String:
 					r := req.Value.(*http.Request)
-					r.ParseForm()
+					err := r.ParseForm()
+					if err != nil {
+						return makeError(ps, err.Error())
+					}
 					val := r.FormValue(key.Value)
 					if len(val) < 1 {
 						ps.FailureFlag = true
@@ -456,7 +475,10 @@ var Builtins_http = map[string]*env.Builtin{
 			switch req := arg0.(type) {
 			case env.Native:
 				r := req.Value.(*http.Request)
-				r.ParseForm()
+				err := r.ParseForm()
+				if err != nil {
+					return makeError(ps, err.Error())
+				}
 				dict := make(map[string]any)
 				for key, val := range r.Form {
 					dict[key] = val[0]
@@ -477,7 +499,10 @@ var Builtins_http = map[string]*env.Builtin{
 			case env.Native:
 				r := req.Value.(*http.Request)
 				// 10 MB files max
-				r.ParseMultipartForm(10 << 20)
+				err := r.ParseMultipartForm(10 << 20)
+				if err != nil {
+					return makeError(ps, err.Error())
+				}
 				return arg0
 			default:
 				ps.FailureFlag = true
@@ -571,13 +596,13 @@ var Builtins_http = map[string]*env.Builtin{
 						//fmt.Println("asdsad 2")
 						ps.FailureFlag = true
 						return *env.NewError("arg 0 should be String")
-						return MakeArgError(ps, 3, []env.Type{env.StringType}, "Http-cookie-store//get")
+						// return MakeArgError(ps, 3, []env.Type{env.StringType}, "Http-cookie-store//get")
 					}
 				default:
 					//fmt.Println("asdsad 3")
 					ps.FailureFlag = true
 					return *env.NewError("arg 0 should be String")
-					return MakeArgError(ps, 2, []env.Type{env.NativeType}, "Http-cookie-store//get")
+					// return MakeArgError(ps, 2, []env.Type{env.NativeType}, "Http-cookie-store//get")
 				}
 			default:
 				//fmt.Println("asdsad 4")
@@ -609,7 +634,7 @@ var Builtins_http = map[string]*env.Builtin{
 						return MakeArgError(ps, 3, []env.Type{env.StringType, env.IntegerType}, "Http-session//set")
 					}
 					//return env.NewError("XOSADOSADOA SDAS DO" + key.Value)
-					return arg2 // env.String{ctx.Value.(echo.Context).QueryParam(key.Value)}
+					// return arg2 // env.String{ctx.Value.(echo.Context).QueryParam(key.Value)}
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.StringType}, "Http-session//set")
 				}
@@ -632,9 +657,9 @@ var Builtins_http = map[string]*env.Builtin{
 					if val != nil {
 						switch val2 := val.(type) {
 						case int:
-							return env.Integer{int64(val2)}
+							return env.NewInteger(int64(val2))
 						case string:
-							return env.String{val2}
+							return env.NewString(val2)
 						case env.Object:
 							return val2
 						default:
@@ -670,7 +695,7 @@ var Builtins_http = map[string]*env.Builtin{
 							errMsg := fmt.Sprintf("Can't save: %v", err.Error())
 							return MakeBuiltinError(ps, errMsg, "Http-session//save")
 						}
-						return env.Integer{1}
+						return env.NewInteger(1)
 					default:
 						return MakeArgError(ps, 3, []env.Type{env.NativeType}, "Http-session//save")
 					}

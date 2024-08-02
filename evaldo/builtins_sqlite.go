@@ -134,7 +134,7 @@ var Builtins_sqlite = map[string]*env.Builtin{
 					//fmt.Println("BLOCK ****** *****")
 					ser := ps.Ser
 					ps.Ser = str.Series
-					values := make([]any, 0, 0)
+					values := make([]any, 0)
 					_, vals = SQL_EvalBlock(ps, MODE_SQLITE, values)
 					sqlstr = ps.Res.(env.String).Value
 					ps.Ser = ser
@@ -173,7 +173,7 @@ var Builtins_sqlite = map[string]*env.Builtin{
 					//fmt.Println("BLOCK ****** *****")
 					ser := ps.Ser
 					ps.Ser = str.Series
-					values := make([]any, 0, 0)
+					values := make([]any, 0)
 					_, vals = SQL_EvalBlock(ps, MODE_SQLITE, values)
 					sqlstr = ps.Res.(env.String).Value
 					ps.Ser = ser
@@ -189,7 +189,7 @@ var Builtins_sqlite = map[string]*env.Builtin{
 					}
 					columns, _ := rows.Columns()
 					spr := env.NewSpreadsheet(columns)
-					result := make([]map[string]any, 0)
+					// result := make([]map[string]any, 0)
 					if err != nil {
 						fmt.Println(err.Error())
 					} else {
@@ -202,10 +202,10 @@ var Builtins_sqlite = map[string]*env.Builtin{
 								columnPointers[i] = &columns[i]
 							}
 
-							// Scan the result into the column pointers...
-							if err := rows.Scan(columnPointers...); err != nil {
-								//return err
-							}
+							// TODO Scan the result into the column pointers...
+							// if err := rows.Scan(columnPointers...); err != nil {
+							// TODO return err
+							// }
 
 							// Create our map, and retrieve the value for each column from the pointers slice,
 							// storing it in the map with the name of the column as the key.
@@ -216,7 +216,7 @@ var Builtins_sqlite = map[string]*env.Builtin{
 								sr.Values = append(sr.Values, *val)
 							}
 							spr.AddRow(sr)
-							result = append(result, m)
+							// result = append(result, m)
 							// Outputs: map[columnName:value columnName2:value2 columnName3:value3 ...]
 						}
 						rows.Close() //good habit to close

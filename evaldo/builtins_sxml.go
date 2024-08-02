@@ -164,7 +164,6 @@ func do_sxml(ps *env.ProgramState, reader io.Reader, rmap env.Dict) env.Object {
 				m := len(tags) - 1 // Top element
 				curtag = tags[m]
 				tags = tags[:m] // Pop
-
 			}
 		default:
 		}

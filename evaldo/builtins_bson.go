@@ -22,7 +22,7 @@ func ValueToBSON(arg0 env.Object, topLevel bool) any {
 	case env.Integer:
 		val = obj.Value
 	case env.Decimal:
-		val = float64(obj.Value)
+		val = obj.Value
 	case env.String:
 		val = obj.Value
 	case env.Vector:
@@ -82,22 +82,20 @@ func ValueToBSON(arg0 env.Object, topLevel bool) any {
 }
 
 func BsonToValue_Map(ps *env.ProgramState, val any, typ string, meta any, topLevel bool) env.Object {
-
 	/*fmt.Println("BSONToVALUE_MAP")
 	fmt.Println(val)
 	fmt.Println(typ)
 	fmt.Println(meta)
 	fmt.Printf("Type: %T\n", val)*/
-
 	switch rval := val.(type) {
 	case int64:
-		return env.Integer{int64(rval)}
+		return *env.NewInteger(int64(rval))
 	case float32:
-		return env.Decimal{float64(rval)}
+		return *env.NewDecimal(float64(rval))
 	case float64:
-		return env.Decimal{float64(rval)}
+		return *env.NewDecimal(rval)
 	case string:
-		return env.String{rval}
+		return *env.NewString(rval)
 	case bson.M:
 		return BsonToValue_Map(ps, rval["val"], rval["typ"].(string), rval["met"], false)
 	case map[string]any:
@@ -116,19 +114,15 @@ func BsonToValue_Map(ps *env.ProgramState, val any, typ string, meta any, topLev
 				spr := env.NewSpreadsheet(rcols)
 				//rows := make([]interface{}, len(spr.Cols))
 				for ii := 0; ii < len(rval); ii++ {
-
-					//fmt.Printf("Type: %T\n", rval[ii])
-					//fmt.Println(rval[ii])
-
 					switch rrval := rval[ii].(type) {
 					case bson.A:
 						cells := make([]any, len(rrval))
 						for iii, rrrval := range rrval {
 							cells[iii] = BsonToValue_Map(ps, rrrval, "", nil, false)
 						}
-						spr.AddRow(env.SpreadsheetRow{cells, spr})
+						spr.AddRow(*env.NewSpreadsheetRow(cells, spr))
 					case []any:
-						spr.AddRow(env.SpreadsheetRow{rrval, spr})
+						spr.AddRow(*env.NewSpreadsheetRow(rrval, spr))
 					}
 				}
 				return *spr
@@ -162,10 +156,6 @@ func BsonToValue_Map(ps *env.ProgramState, val any, typ string, meta any, topLev
 }
 
 func BsonToValue_Val(ps *env.ProgramState, val any, topLevel bool) env.Object {
-
-	//fmt.Printf("Type: %T\n", val)
-	//fmt.Println(val)
-
 	switch rval := val.(type) {
 	case bson.M:
 		/*fmt.Println("~~")

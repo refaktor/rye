@@ -115,7 +115,7 @@ var Builtins_psql = map[string]*env.Builtin{
 					//					fmt.Println(sqlstr)
 					//					fmt.Println(vals)
 					rows, err := db1.Value.(*sql.DB).Query(sqlstr, vals...)
-					result := make([]map[string]any, 0)
+					// result := make([]map[string]any, 0)
 					if err != nil {
 						ps.FailureFlag = true
 						return MakeBuiltinError(ps, err.Error(), "Rye-psql//query")
@@ -134,9 +134,9 @@ var Builtins_psql = map[string]*env.Builtin{
 							}
 
 							// Scan the result into the column pointers...
-							if err := rows.Scan(columnPointers...); err != nil {
-								//return err
-							}
+							// if err := rows.Scan(columnPointers...); err != nil {
+							//return err
+							// }
 
 							// Create our map, and retrieve the value for each column from the pointers slice,
 							// storing it in the map with the name of the column as the key.
@@ -147,7 +147,7 @@ var Builtins_psql = map[string]*env.Builtin{
 								sr.Values = append(sr.Values, *val)
 							}
 							spr.AddRow(sr)
-							result = append(result, m)
+							// result = append(result, m)
 							// Outputs: map[columnName:value columnName2:value2 columnName3:value3 ...]
 							i++
 						}
