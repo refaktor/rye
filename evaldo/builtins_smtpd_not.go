@@ -1,5 +1,5 @@
-//go:build !b_smtpd
-// +build !b_smtpd
+//go:build no_smtpd
+// +build no_smtpd
 
 package evaldo
 
@@ -8,8 +8,3 @@ import (
 )
 
 var Builtins_smtpd = map[string]*env.Builtin{}
-
-// todo - NAUK POA+''
-// * mail.ReadMEssage/(bytes..)
-// * msfg.header.Get(subject)
-// .... attachment , text, gXSXS

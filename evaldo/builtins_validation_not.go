@@ -1,5 +1,5 @@
-//go:build b_no_validate
-// +build b_no_validate
+//go:build no_validation
+// +build no_validation
 
 package evaldo
 

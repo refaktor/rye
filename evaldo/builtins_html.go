@@ -1,5 +1,5 @@
-//go:build b_html
-// +build b_html
+//go:build !no_html
+// +build !no_html
 
 package evaldo
 
@@ -53,7 +53,6 @@ type HtmlDialectNode struct {
 // xwords after another or conditions mean that we dive deeper, like a block { } would be
 
 func load_html_Dict(es *env.ProgramState, block env.Block) (env.Dict, *env.Error) {
-
 	var key string
 	var condition *HtmlNavigCondition
 	var keys []string                    // keys
@@ -153,7 +152,6 @@ func load_html_Dict(es *env.ProgramState, block env.Block) (env.Dict, *env.Error
 }
 
 func do_html(es *env.ProgramState, reader io.Reader, dmap env.Dict) env.Object {
-
 	trace8("**** DO HTML **** ")
 	// fmt.Println(dmap)
 
@@ -181,9 +179,7 @@ func do_html(es *env.ProgramState, reader io.Reader, dmap env.Dict) env.Object {
 
 myloop:
 	for {
-
 		//fmt.Println(dmap)
-
 		// Read tokens from the XML document in a stream.
 		rawtoken := decoder.Next()
 		// Inspect the type of the token just read.
@@ -315,7 +311,7 @@ myloop:
 					// fmt.Println("IN BLOCK")
 					ser := es.Ser // TODO -- make helper function that "does" a block
 					es.Ser = node.Code.Series
-					EvalBlockInj(es, env.String{string(tok.Data)}, true)
+					EvalBlockInj(es, env.NewString(tok.Data), true)
 					if es.ErrorFlag {
 						return es.Res
 					}
@@ -359,10 +355,8 @@ myloop:
 				m := len(tags) - 1 // Top element
 				curtag = tags[m]
 				tags = tags[:m] // Pop
-
 				// fmt.Println(stack)
 				// fmt.Println(tags)
-
 			}
 		case html.ErrorToken:
 			break myloop
@@ -426,14 +420,14 @@ var Builtins_html = map[string]*env.Builtin{
 					switch n := arg1.(type) {
 					case env.Integer:
 						if int(n.Value) < len(tok.Attr) {
-							return env.String{tok.Attr[int(n.Value)].Val}
+							return env.NewString(tok.Attr[int(n.Value)].Val)
 						} else {
 							return env.Void{}
 						}
 					case env.Word:
 						for _, a := range tok.Attr {
 							if a.Key == ps.Idx.GetWord(n.Index) {
-								return env.String{a.Val}
+								return env.NewString(a.Val)
 							}
 						}
 						return env.Void{}
@@ -457,9 +451,9 @@ var Builtins_html = map[string]*env.Builtin{
 			case env.Native:
 				switch tok := tok1.Value.(type) {
 				case html.Token:
-					return env.String{tok.Data}
+					return env.NewString(tok.Data)
 				default:
-					return MakeBuiltinError(ps, "Not xml-strat element.", "rye-html-start//name?")
+					return MakeBuiltinError(ps, "Not xml-start element.", "rye-html-start//name?")
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "rye-html-start//name?")
@@ -476,7 +470,7 @@ var Builtins_html = map[string]*env.Builtin{
 				case xml.StartElement:
 					return env.String{obj1.Name.Local}
 				default:
-					return env.NewError("Not xml-strat element")
+					return env.NewError("Not xml-start element")
 				}
 			default:
 				return env.NewError("first argument should be native")

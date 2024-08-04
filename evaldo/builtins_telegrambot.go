@@ -1,5 +1,5 @@
-//go:build b_telegram
-// +build b_telegram
+//go:build !no_telegram
+// +build !no_telegram
 
 package evaldo
 
@@ -98,7 +98,7 @@ var Builtins_telegrambot = map[string]*env.Builtin{
 						ps.Ser.Reset()
 					}
 					ps.Ser = ser
-					return env.Integer{1}
+					return env.NewInteger(1)
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "telegram-bot//on-update")
 				}
@@ -116,7 +116,10 @@ var Builtins_telegrambot = map[string]*env.Builtin{
 			case env.Native:
 				switch bot := arg1.(type) {
 				case env.Native:
-					bot.Value.(*tgm.BotAPI).Send(msg.Value.(tgm.MessageConfig))
+					_, err := bot.Value.(*tgm.BotAPI).Send(msg.Value.(tgm.MessageConfig))
+					if err != nil {
+						return makeError(ps, err.Error())
+					}
 					return arg0
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.NativeType}, "telegram-message//send")
