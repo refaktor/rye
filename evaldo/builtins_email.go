@@ -115,7 +115,6 @@ func __attach(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.O
 		ps.FailureFlag = true
 		return MakeArgError(ps, 1, []env.Type{env.NativeType}, "gomail-message//attach")
 	}
-
 }
 
 func __addAlternative(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

@@ -89,7 +89,7 @@ func BsonToValue_Map(ps *env.ProgramState, val any, typ string, meta any, topLev
 	fmt.Printf("Type: %T\n", val)*/
 	switch rval := val.(type) {
 	case int64:
-		return *env.NewInteger(int64(rval))
+		return *env.NewInteger(rval)
 	case float32:
 		return *env.NewDecimal(float64(rval))
 	case float64:
@@ -109,7 +109,7 @@ func BsonToValue_Map(ps *env.ProgramState, val any, typ string, meta any, topLev
 			case bson.A:
 				rcols := make([]string, len(cols))
 				for i, rr := range cols {
-					rcols[i] = string(rr.(string))
+					rcols[i] = rr.(string)
 				}
 				spr := env.NewSpreadsheet(rcols)
 				//rows := make([]interface{}, len(spr.Cols))

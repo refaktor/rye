@@ -29,7 +29,7 @@ func SQL_EvalBlock(es *env.ProgramState, mode int, values []any) (*env.ProgramSt
 		//fmt.Println(bu.String())
 	}
 	//fmt.Println(bu.String())
-	es.Res = env.String{bu.String()}
+	es.Res = env.NewString(bu.String())
 	return es, values
 }
 
@@ -85,7 +85,7 @@ func SQL_EvalExpression(es *env.ProgramState, vals []any, mode int) (*env.Progra
 		fmt.Println("OTHER SQL NODE")
 		return es, "Error 123112431", vals
 	}
-	return es, "ERROR", vals
+	// return es, "ERROR", vals
 }
 
 var Builtins_sqlite = map[string]*env.Builtin{
@@ -113,7 +113,7 @@ var Builtins_sqlite = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.Spreadsheet:
-				return env.String{str.ToHtml()}
+				return env.NewString(str.ToHtml())
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "htmlize")
 			}

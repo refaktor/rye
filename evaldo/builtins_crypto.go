@@ -74,7 +74,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch addr := arg0.(type) {
 			case env.Native:
-				return env.String{hex.EncodeToString(addr.Value.([]byte))}
+				return env.NewString(hex.EncodeToString(addr.Value.([]byte)))
 			default:
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-bytes//to-string")
@@ -88,7 +88,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch addr := arg0.(type) {
 			case env.Native:
-				return env.String{hex.EncodeToString(addr.Value.(ed25519.PublicKey))}
+				return env.NewString(hex.EncodeToString(addr.Value.(ed25519.PublicKey)))
 			default:
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Ed25519-pub-key//to-string")
@@ -102,7 +102,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch addr := arg0.(type) {
 			case env.Native:
-				return env.String{hex.EncodeToString(addr.Value.(ed25519.PrivateKey))}
+				return env.NewString(hex.EncodeToString(addr.Value.(ed25519.PrivateKey)))
 			default:
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Ed25519-priv-key//to-string")
@@ -120,8 +120,8 @@ var Builtins_crypto = map[string]*env.Builtin{
 				ps.FailureFlag = true
 				return MakeBuiltinError(ps, "Failed to generate keys.", "ed25519-generate-keys")
 			}
-			keys[0] = *env.NewNative(ps.Idx, ed25519.PublicKey(puk), "Ed25519-pub-key")
-			keys[1] = *env.NewNative(ps.Idx, ed25519.PrivateKey(pvk), "Ed25519-priv-key")
+			keys[0] = *env.NewNative(ps.Idx, puk, "Ed25519-pub-key")
+			keys[1] = *env.NewNative(ps.Idx, pvk, "Ed25519-priv-key")
 			ser := *env.NewTSeries(keys)
 			return *env.NewBlock(ser)
 		},
@@ -208,7 +208,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 				h := sha512.New()
 				h.Write([]byte(s.Value))
 				bs := h.Sum(nil)
-				return env.String{hex.EncodeToString(bs[:])}
+				return env.NewString(hex.EncodeToString(bs[:]))
 			default:
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "sha512")

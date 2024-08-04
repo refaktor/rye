@@ -72,7 +72,7 @@ var Builtins_psql = map[string]*env.Builtin{
 					} else {
 						num, _ := res.RowsAffected()
 						if num > 0 {
-							return env.Integer{1}
+							return env.NewInteger(1)
 						} else {
 							ps.FailureFlag = true
 							return MakeBuiltinError(ps, "No rows affected.", "Rye-psql//exec")

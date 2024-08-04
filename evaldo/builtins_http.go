@@ -299,7 +299,7 @@ var Builtins_http = map[string]*env.Builtin{
 					return MakeBuiltinError(ps, "Error in reading client data.", "Go-server-websocket//read")
 				}
 				// fmt.Fprintf(path.Value.(http.ResponseWriter), handler.Value)
-				return env.String{string(msg)}
+				return env.NewString(string(msg))
 			default:
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-websocket//read")
@@ -371,7 +371,7 @@ var Builtins_http = map[string]*env.Builtin{
 						return MakeBuiltinError(ps, "Key is missing.", "Go-server-request//query?")
 					}
 					//return env.NewError("XOSADOSADOA SDAS DO" + key.Value)
-					return env.String{vals[0]}
+					return env.NewString(vals[0])
 				default:
 					ps.FailureFlag = true
 					return MakeArgError(ps, 2, []env.Type{env.StringType}, "Go-server-request//query?")
@@ -405,7 +405,7 @@ var Builtins_http = map[string]*env.Builtin{
 			switch req := arg0.(type) {
 			case env.Native:
 				val := req.Value.(*url.URL).Path
-				return env.String{val}
+				return env.NewString(val)
 			default:
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-url//path?")
@@ -426,7 +426,7 @@ var Builtins_http = map[string]*env.Builtin{
 						ps.FailureFlag = true
 						return MakeBuiltinError(ps, "Cookie key is missing.", "Go-server-request//cookie-val?")
 					}
-					return env.String{cookie.Value}
+					return env.NewString(cookie.Value)
 				default:
 					ps.FailureFlag = true
 					return MakeArgError(ps, 2, []env.Type{env.StringType}, "Go-server-request//cookie-val?")
@@ -456,7 +456,7 @@ var Builtins_http = map[string]*env.Builtin{
 						ps.FailureFlag = true
 						return MakeBuiltinError(ps, "Value is missing.", "Go-server-request//form?")
 					}
-					return env.String{val}
+					return env.NewString(val)
 				default:
 					ps.FailureFlag = true
 					return MakeArgError(ps, 2, []env.Type{env.StringType}, "Go-server-request//form?")
@@ -550,7 +550,7 @@ var Builtins_http = map[string]*env.Builtin{
 			switch req := arg0.(type) {
 			case env.Native:
 				r := req.Value.(*multipart.FileHeader)
-				return env.String{r.Filename}
+				return env.NewString(r.Filename)
 			default:
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "rye-multipart-header//filename?")

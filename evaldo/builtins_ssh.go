@@ -1,5 +1,5 @@
-//go:build !no_ssh
-// +build !no_ssh
+//go:build add_ssh
+// +build add_ssh
 
 package evaldo
 
