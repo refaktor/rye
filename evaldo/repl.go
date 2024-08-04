@@ -279,6 +279,15 @@ func constructKeyEvent(r rune, k keyboard.Key) util.KeyEvent {
 	case keyboard.KeyCtrlL:
 		ch = "l"
 		ctrl = true
+	case keyboard.KeyCtrlN:
+		ch = "n"
+		ctrl = true
+	case keyboard.KeyCtrlP:
+		ch = "p"
+		ctrl = true
+	case keyboard.KeyCtrlU:
+		ch = "u"
+		ctrl = true
 
 	case keyboard.KeyEnter:
 		code = 13

@@ -498,6 +498,45 @@ startOfHere:
 	s.getColumns()
 	traceTop(strconv.Itoa(s.columns)+"**", 0)
 
+	histPrev := func() {
+		if historyStale {
+			historyPrefix = s.getHistoryByPrefix(string(line))
+			historyPos = len(historyPrefix)
+			historyStale = false
+		}
+		if historyPos > 0 {
+			if historyPos == len(historyPrefix) {
+				historyEnd = string(line)
+			}
+			historyPos--
+			line = []rune(historyPrefix[historyPos])
+			pos = len(line)
+			s.needRefresh = true
+		} else {
+			s.doBeep()
+		}
+	}
+
+	histNext := func() {
+		if historyStale {
+			historyPrefix = s.getHistoryByPrefix(string(line))
+			historyPos = len(historyPrefix)
+			historyStale = false
+		}
+		if historyPos < len(historyPrefix) {
+			historyPos++
+			if historyPos == len(historyPrefix) {
+				line = []rune(historyEnd)
+			} else {
+				line = []rune(historyPrefix[historyPos])
+			}
+			pos = len(line)
+			s.needRefresh = true
+		} else {
+			s.doBeep()
+		}
+	}
+
 	// JM
 	//	s_instr := 0
 
@@ -565,6 +604,18 @@ startOfHere:
 			case "l":
 				s.eraseScreen()
 				s.needRefresh = true
+			case "u": // delete to beginning of line
+				if pos == 0 {
+					s.doBeep()
+				} else {
+					line = line[pos:]
+					pos = 0
+					s.needRefresh = true
+				}
+			case "n":
+				histNext()
+			case "p":
+				histPrev()
 			}
 		} else if next.Alt {
 			switch strings.ToLower(next.Key) {
@@ -710,42 +761,9 @@ startOfHere:
 					s.doBeep()
 				}
 			case 38: // Up
-				// historyAction = true
-				if historyStale {
-					historyPrefix = s.getHistoryByPrefix(string(line))
-					historyPos = len(historyPrefix)
-					historyStale = false
-				}
-				if historyPos > 0 {
-					if historyPos == len(historyPrefix) {
-						historyEnd = string(line)
-					}
-					historyPos--
-					line = []rune(historyPrefix[historyPos])
-					pos = len(line)
-					s.needRefresh = true
-				} else {
-					s.doBeep()
-				}
+				histPrev()
 			case 40: // Down
-				// historyAction = true
-				if historyStale {
-					historyPrefix = s.getHistoryByPrefix(string(line))
-					historyPos = len(historyPrefix)
-					historyStale = false
-				}
-				if historyPos < len(historyPrefix) {
-					historyPos++
-					if historyPos == len(historyPrefix) {
-						line = []rune(historyEnd)
-					} else {
-						line = []rune(historyPrefix[historyPos])
-					}
-					pos = len(line)
-					s.needRefresh = true
-				} else {
-					s.doBeep()
-				}
+				histNext()
 			case 36: // Home
 				pos = 0
 			case 35: // End
