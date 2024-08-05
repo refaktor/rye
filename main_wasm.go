@@ -62,6 +62,9 @@ var (
 func sendMessageToJS(message string) {
 	jsCallback.Invoke(message)
 }
+func sendMessageToJSNL(message string) {
+	jsCallback.Invoke(message + "\n")
+}
 
 func sendLineToJS(line string) string {
 	ret := jsCallback2.Invoke(line)
@@ -179,7 +182,7 @@ func RyeEvalShellLine(this js.Value, args []js.Value) any {
 		}
 
 		evaldo.EvalBlockInj(ps, prevResult, true)
-		evaldo.MaybeDisplayFailureOrErrorWASM(ps, ps.Idx, sendMessageToJS)
+		evaldo.MaybeDisplayFailureOrErrorWASM(ps, ps.Idx, sendMessageToJSNL)
 
 		prevResult = ps.Res
 

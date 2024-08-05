@@ -2,6 +2,7 @@ package evaldo
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/refaktor/rye/env"
 	//"fmt"
@@ -207,6 +208,10 @@ func EvalExpressionInjLimited(ps *env.ProgramState, inj env.Object, injnow bool)
 		if ps.ReturnFlag {
 			return ps, injnow
 		}
+		fmt.Println("XY")
+		if esleft.Res.Type() == env.ErrorType {
+			fmt.Println("XX")
+		}
 	} else {
 		// otherwise set program state to specific one and injected value to result
 		// set injnow to false and if return flag return
@@ -392,7 +397,7 @@ func EvalExpressionConcrete(ps *env.ProgramState) *env.ProgramState {
 		}
 	} else {
 		ps.ErrorFlag = true
-		ps.Res = env.NewError("expected rye value but got nothing")
+		ps.Res = env.NewError("expected rye value but it's missing")
 	}
 
 	return ps
@@ -924,6 +929,7 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 			return ps
 		}
 		if checkErrorReturnFlag(ps) {
+			ps.Res = env.NewError4(0, "argument 1 of "+strconv.Itoa(bi.Argsn+1)+" missing of builtin: '"+bi.Doc+"'", ps.Res.(*env.Error), nil)
 			return ps
 		}
 		if ps.Res.Type() == env.VoidType {
@@ -942,6 +948,7 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 			return ps
 		}
 		if checkErrorReturnFlag(ps) {
+			ps.Res = env.NewError4(0, "argument 2 of "+strconv.Itoa(bi.Argsn+1)+" missing of builtin: '"+bi.Doc+"'", ps.Res.(*env.Error), nil)
 			return ps
 		}
 		//fmt.Println(ps.Res)
@@ -958,6 +965,7 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 			return ps
 		}
 		if checkErrorReturnFlag(ps) {
+			ps.Res = env.NewError4(0, "argument 3 missing", ps.Res.(*env.Error), nil)
 			return ps
 		}
 		if ps.Res.Type() == env.VoidType {
@@ -1103,7 +1111,7 @@ func checkFlagsBi(bi env.Builtin, ps *env.ProgramState, n int) bool {
 		if bi.AcceptFailure {
 			trace2("----- > Accept Failure")
 		} else {
-			fmt.Println("checkFlagsBi***")
+			// fmt.Println("checkFlagsBi***")
 			trace2("Fail ------->  Error.")
 			switch err := ps.Res.(type) {
 			case env.Error:
