@@ -53,7 +53,7 @@ func MakeArgError(env1 *env.ProgramState, N int, typ []env.Type, fn string) *env
 		}
 		types += env.NativeTypes[tt-1]
 	}
-	return env.NewError("Function " + fn + " requires argument " + strconv.Itoa(N) + " to be of	: " + types + ".")
+	return env.NewError("builtin `" + fn + "` requires argument " + strconv.Itoa(N) + " to be: " + types + ".")
 }
 
 func MakeNativeArgError(env1 *env.ProgramState, N int, knd []string, fn string) *env.Error {
