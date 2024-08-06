@@ -225,6 +225,9 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 					// log.Fatal("Unable to parse file as CSV for "+filePath, err)
 					return MakeBuiltinError(ps, "Unable to parse file as CSV.", "load\\csv")
 				}
+				if len(rows) == 0 {
+					return MakeBuiltinError(ps, "File is empty", "load\\csv")
+				}
 				spr := env.NewSpreadsheet(rows[0])
 				//				for i, row := range rows {
 				//	if i > 0 {
