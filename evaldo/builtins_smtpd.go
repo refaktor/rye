@@ -16,7 +16,7 @@ import (
 
 var Builtins_smtpd = map[string]*env.Builtin{
 
-	"new-smtpd": {
+	"smtp-server": {
 		Argsn: 1,
 		Doc:   "Creates SMTP server",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

@@ -3,7 +3,7 @@
 
 rye .needs { http }
 
-new-server ":9090"
+http-server ":9090"
 |handle-ws "/echo" fn { s ctx } { forever { read s |write* s } }
 |handle-ws "/captcha" fn { s ctx } { 
 	write s "Hasta la vista," 

@@ -26,7 +26,7 @@ handle-file-get: fn { w r } {
 	file .copy w	
 }
 
-new-server ":8080"
+http-server ":8080"
 |handle "/get" ?handle-file-get
 |serve
 
@@ -59,7 +59,7 @@ new-server ":8080"
 ;	|send-file\attachment w "application/x-pkcs12" "mycert.p12"
 ; }
 
-; new-server ":8080"
+; http-server ":8080"
 ; |flaskish-handle "/get" ?get-file
 ; |serve
 

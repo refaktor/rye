@@ -6,7 +6,7 @@ rye .needs { http }
 
 sh: new-static-handler %static
 
-new-server ":8083"
+http-server ":8083"
 |handle "/static/" strip-prefix sh "/static/"
 |handle "/" fn { w r } { .write to-string now }
 |serve

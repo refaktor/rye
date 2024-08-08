@@ -23,7 +23,7 @@ upload: fn { w r } {
 	write w "OK"
 }
 
-new-server ":8080"
+http-server ":8080"
 |handle "/" new-static-handler %www
 |handle "/upload" ?upload
 |serve

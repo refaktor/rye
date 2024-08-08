@@ -7,13 +7,13 @@ rye .needs { http }
 
 ; serve hello world
 
-new-server ":8081"
+http-server ":8081"
 |handle "/hello" fn { w r } { .write "Hello world" }
 |serve
 
 ; serve all static files from www folder
 
-new-server ":8080"
+http-server ":8080"
 |handle "/" new-static-handler %www ; TODO rename, integrate http-dir
 |serve
 
@@ -22,7 +22,7 @@ new-server ":8080"
 
 sh: new-static-handler %static
 
-new-server ":8082"
+http-server ":8082"
 |handle "/static/" sh
 |handle "/" fn { w r } { .write now }
 |serve
@@ -37,7 +37,7 @@ get-user: fn { w r } {
 	|to-json |write* w
 }
 
-new-server ":8080"
+http-server ":8080"
 |handle "/user/" get-user
 |serve
 
@@ -51,7 +51,7 @@ upload: fn { w r } {
 	copy holder file
 }
 
-new-server ":8080"
+http-server ":8080"
 |handle "/" new-static-handler %www
 |handle "/upload" ?upload
 |serve

@@ -31,6 +31,6 @@ handle-public-api: fn { s c } {
 	}
 }
 
-new-server ":8080"
+http-server ":8080"
 |handle "/pub-api" ?handle-public-api  
 |serve
