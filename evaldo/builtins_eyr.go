@@ -46,10 +46,11 @@ func (s *EyrStack) Push(x env.Object) {
 }
 
 // Pop removes and returns the top element of stack.
-func (s *EyrStack) Pop() env.Object {
+func (s *EyrStack) Pop(es *env.ProgramState) env.Object {
 	if s.IsEmpty() {
-		fmt.Printf("stack underflow\n")
-		os.Exit(0)
+		es.ErrorFlag = true
+		es.Res = env.NewError("stack underflow")
+		return es.Res
 	}
 	s.I--
 	x := s.D[s.I]
@@ -68,7 +69,10 @@ func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toL
 		if ps.ErrorFlag || ps.ReturnFlag {
 			return ps
 		}
-		arg0 = stack.Pop()
+		arg0 = stack.Pop(ps)
+		if ps.ErrorFlag {
+			return ps
+		}
 		if bi.Argsn == 1 {
 			ps.Res = bi.Fn(ps, arg0, nil, nil, nil, nil)
 			// stack.Push(ps.Res)
@@ -82,7 +86,10 @@ func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toL
 			return ps
 		}
 
-		arg1 = stack.Pop()
+		arg1 = stack.Pop(ps)
+		if ps.ErrorFlag {
+			return ps
+		}
 		if bi.Argsn == 2 {
 			ps.Res = bi.Fn(ps, arg1, arg0, nil, nil, nil)
 			// stack.Push(ps.Res)
@@ -96,7 +103,10 @@ func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toL
 			return ps
 		}
 
-		arg2 = stack.Pop()
+		arg2 = stack.Pop(ps)
+		if ps.ErrorFlag {
+			return ps
+		}
 		if bi.Argsn == 3 {
 			ps.Res = bi.Fn(ps, arg2, arg1, arg0, nil, nil)
 			//stack.Push(ps.Res)
@@ -141,7 +151,10 @@ func Eyr_EvalWord(es *env.ProgramState, word env.Object, leftVal env.Object, toL
 
 func Eyr_EvalLSetword(ps *env.ProgramState, word env.LSetword, leftVal env.Object, toLeft bool, stack *EyrStack) *env.ProgramState {
 	idx := word.Index
-	val := stack.Pop()
+	val := stack.Pop(ps)
+	if ps.ErrorFlag {
+		return ps
+	}
 	ps.Ctx.Mod(idx, val)
 	return ps
 }
@@ -159,10 +172,14 @@ func Eyr_EvalExpression(es *env.ProgramState, stack *EyrStack) *env.ProgramState
 			stack.Push(object)
 		case env.BlockType:
 			stack.Push(object)
+		case env.UriType:
+			stack.Push(object)
+		case env.EmailType:
+			stack.Push(object)
 		case env.WordType:
 			rr := Eyr_EvalWord(es, object.(env.Word), nil, false, stack)
 			return rr
-		case env.OpwordType: // + and orther operators are basically opwords too
+		case env.OpwordType: // + and other operators are basically opwords too
 			rr := Eyr_EvalWord(es, object.(env.Opword), nil, false, stack)
 			return rr
 		case env.LSetwordType:
@@ -195,7 +212,7 @@ func Eyr_EvalBlock(es *env.ProgramState, stack *EyrStack, full bool) *env.Progra
 	if full {
 		es.Res = *env.NewBlock(*env.NewTSeries(stack.D[0:stack.I]))
 	} else {
-		es.Res = stack.Pop()
+		es.Res = stack.Pop(es)
 	}
 	return es
 }
