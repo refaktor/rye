@@ -14,7 +14,7 @@ handle-api: fn { w r } {
 
 ; the server
 
-new-server ":8080"
+http-server ":8080"
 |handle "/" fn { w req } { write w page "Demo" "Use the /api, Luke" }
 |handle "/api" ?handle-api
 |serve

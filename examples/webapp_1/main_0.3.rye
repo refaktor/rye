@@ -27,6 +27,6 @@ handle-api: fn { w r } {
 
 print hello-resource
 
-new-server ":8080"
+http-server ":8080"
 |handle "/api" ?handle-api  
 |serve
