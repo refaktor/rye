@@ -814,7 +814,7 @@ func CallFunctionArgs4(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 	return ps
 }
 
-func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, args ...env.Object) *env.ProgramState {
+func DetermineContext(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx) *env.RyeCtx {
 	var fnCtx *env.RyeCtx
 	env0 := ps.Ctx  // store reference to current env in local
 	if ctx != nil { // called via contextpath and this is the context
@@ -841,6 +841,11 @@ func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, a
 			}
 		}
 	}
+	return fnCtx
+}
+
+func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, args ...env.Object) *env.ProgramState {
+	var fnCtx = DetermineContext(fn, ps, ctx)
 	if checkErrorReturnFlag(ps) {
 		return ps
 	}

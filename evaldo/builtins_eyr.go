@@ -115,6 +115,51 @@ func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toL
 	return ps
 }
 
+// This is separate from CallFuncitonArgsN so it can manage pulling args directly off of the eyr stack
+func Eyr_CallFunction(fn env.Function, es *env.ProgramState, leftVal env.Object, toLeft bool, session *env.RyeCtx, stack *EyrStack) *env.ProgramState {
+	var fnCtx = DetermineContext(fn, es, session)
+	if checkErrorReturnFlag(es) {
+		return es
+	}
+
+	var arg0 env.Object = nil
+	for i := fn.Argsn - 1; i >= 0; i-- {
+		var stackElem = stack.Pop(es)
+		// TODO: Consider doing check once outside of loop once this version is ready as a correctness comparison point
+		if es.ErrorFlag {
+			return es
+		}
+		if arg0 == nil {
+			arg0 = stackElem
+		}
+		fnCtx.Set(fn.Spec.Series.Get(i).(env.Word).Index, stackElem)
+	}
+
+	// setup
+	psX := env.NewProgramState(fn.Body.Series, es.Idx)
+	psX.Ctx = fnCtx
+	psX.PCtx = es.PCtx
+	psX.Gen = es.Gen
+
+	var result *env.ProgramState
+	es.Ser.SetPos(0)
+	if fn.Argsn > 0 {
+		result = EvalBlockInj(psX, arg0, arg0 != nil)
+	} else {
+		result = EvalBlock(psX)
+	}
+	MaybeDisplayFailureOrError(result, result.Idx)
+
+	if result.ForcedResult != nil {
+		es.Res = result.ForcedResult
+		result.ForcedResult = nil
+	} else {
+		es.Res = result.Res
+	}
+	es.ReturnFlag = false
+	return es
+}
+
 func Eyr_EvalObject(es *env.ProgramState, object env.Object, leftVal env.Object, toLeft bool, session *env.RyeCtx, stack *EyrStack, bakein bool) *env.ProgramState {
 	//fmt.Print("EVAL OBJECT")
 	switch object.Type() {
@@ -127,6 +172,10 @@ func Eyr_EvalObject(es *env.ProgramState, object env.Object, leftVal env.Object,
 			return es
 		}
 		return Eyr_CallBuiltin(bu, es, leftVal, toLeft, stack)
+	case env.FunctionType:
+		fn := object.(env.Function)
+		return Eyr_CallFunction(fn, es, leftVal, toLeft, session, stack)
+
 	default:
 		es.Res = object
 		return es
@@ -212,64 +261,10 @@ func Eyr_EvalBlock(es *env.ProgramState, stack *EyrStack, full bool) *env.Progra
 	if full {
 		es.Res = *env.NewBlock(*env.NewTSeries(stack.D[0:stack.I]))
 	} else {
+		// Will set error flag in case of stack undeflow
 		es.Res = stack.Pop(es)
 	}
 	return es
-}
-
-func CompileWord(block *env.Block, ps *env.ProgramState, word env.Word, eyrBlock *env.Block) {
-	// LOCAL FIRST
-	found, object, _ := findWordValue(ps, word)
-	pos := ps.Ser.GetPos()
-	if found {
-		switch obj := object.(type) {
-		case env.Integer:
-			eyrBlock.Series.Append(obj)
-		case env.Builtin:
-			for i := 0; i < obj.Argsn; i++ {
-				// fmt.Println("**")
-				block = CompileStepRyeToEyr(block, ps, eyrBlock)
-			}
-			eyrBlock.Series.Append(word)
-		}
-	} else {
-		ps.ErrorFlag = true
-		if !ps.FailureFlag {
-			ps.Ser.SetPos(pos)
-			ps.Res = env.NewError2(5, "word not found: "+word.Print(*ps.Idx))
-		}
-	}
-}
-
-func CompileRyeToEyr(block *env.Block, ps *env.ProgramState, eyrBlock *env.Block) *env.Block {
-	for block.Series.Pos() < block.Series.Len() {
-		block = CompileStepRyeToEyr(block, ps, eyrBlock)
-	}
-	return block
-}
-
-func CompileStepRyeToEyr(block *env.Block, ps *env.ProgramState, eyrBlock *env.Block) *env.Block {
-	// for block.Series.Pos() < block.Series.Len() {
-	switch xx := block.Series.Pop().(type) {
-	case env.Word:
-		// 	fmt.Println("W")
-		CompileWord(block, ps, xx, eyrBlock)
-		// get value of word
-		// if function
-		// get argnum
-		// add argnum args to mstack (values, words or compiled expressions (recur))
-		// add word to mstack
-		// else add word to value list
-	case env.Opword:
-		fmt.Println("O")
-	case env.Pipeword:
-		fmt.Println("P")
-	case env.Integer:
-		// fmt.Println("I")
-		eyrBlock.Series.Append(xx)
-	}
-	// }
-	return block
 }
 
 var Builtins_eyr = map[string]*env.Builtin{
@@ -286,21 +281,6 @@ var Builtins_eyr = map[string]*env.Builtin{
 				Eyr_EvalBlock(ps, stack, false)
 				ps.Ser = ser
 				return ps.Res
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "eyr")
-			}
-		},
-	},
-
-	"to-eyr": {
-		Argsn: 1,
-		Doc:   "Evaluates Rye block as Eyr (postfix) stack based code.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch bloc := arg0.(type) {
-			case env.Block:
-				eBlock := env.NewBlock(*env.NewTSeries(make([]env.Object, 0)))
-				CompileRyeToEyr(&bloc, ps, eBlock)
-				return *eBlock
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "eyr")
 			}
