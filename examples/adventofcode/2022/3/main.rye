@@ -11,25 +11,18 @@
     
     read\lines %rucksacks.txt :lines
     |fold 'priority 0 {
-    	.length? / 2 :mid ,
-    	.split-every mid |pass { .first :left } |second
-    	|intersect left |fold 'priority1 0 {
+	.length? / 2 |to-integer ::mid ,
+	.split\every mid |pass { .first ::left } |second
+	|intersection left |unique |fold 'priority1 0 {
             .get-priority + priority1
-    	} |+ priority
+	} |+ priority
     } |print
     
     ; part 2
 
-    lines .split-every 3 |fold 'priority 0 {
-    	-> 0 :line0 ,
-    	-> 1 :line1 ,
-    	-> 2 |intersect line1 |intersect line0
-    	|get-priority + priority
+    lines .split\every 3 |fold 'priority 0 {
+    	-> 0 ::line0 ,
+    	-> 1 ::line1 ,
+    	-> 2 |intersection line1 |intersection line0
+        |unique	|get-priority + priority
     } |print
-
-
-
-
-
-
-

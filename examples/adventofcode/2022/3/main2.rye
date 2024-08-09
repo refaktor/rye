@@ -9,21 +9,21 @@
     
     ; part 1
     
-    read\lines %rucksacks.txt :lines |add-up {
-    	.length? / 2 :mid ,
-	    .split-every mid
-	    |with { .first :left , .second }
-    	|intersect left |add-up { .get-priority }
-    } |print
+    read\lines %rucksacks.txt :lines |map {
+    	.length? / 2 |to-integer ::mid ,
+	    .split\every mid
+	    |with { .first ::left , .second }
+    	|intersection left |unique .map { .get-priority } |sum
+    } |sum |print
     
     ; part 2
 
-    lines .split-every 3 |add-up {
-    	-> 0 :line0 ,
-    	-> 1 :line1 ,
-    	-> 2 |intersect line1 |intersect line0
-    	|get-priority
-    } |print
+    lines .split\every 3 |map {
+    	-> 0 ::line0 ,
+    	-> 1 ::line1 ,
+    	-> 2 |intersection line1 |intersection line0
+    	|unique .get-priority
+    } |sum |print
 
 
 
