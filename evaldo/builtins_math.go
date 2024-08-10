@@ -814,7 +814,7 @@ var Builtins_math = map[string]*env.Builtin{
 	},
 	"near-zero": {
 		Argsn: 1,
-		Doc:   "Returns true if two decimals are close.",
+		Doc:   "Returns true if a decimal is close to zero.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var fa float64
 			switch a := arg0.(type) {
@@ -823,7 +823,7 @@ var Builtins_math = map[string]*env.Builtin{
 			case env.Integer:
 				fa = float64(a.Value)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.BlockType}, "is-zero")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.BlockType}, "near-zero")
 			}
 			// const epsilon = math.SmallestNonzeroFloat64
 			const epsilon = 0.0000000000001 // math.SmallestNonzeroFloat64
