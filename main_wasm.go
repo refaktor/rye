@@ -4,6 +4,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
@@ -99,7 +100,9 @@ func main() {
 	jsCallback = js.Global().Get("receiveMessageFromGo")
 	jsCallback2 = js.Global().Get("receiveLineFromGo")
 
-	ml.MicroPrompt("x> ", "", 0)
+	ctx := context.Background()
+
+	ml.MicroPrompt("x> ", "", 0, ctx)
 
 	/* for {
 		key := <-c
