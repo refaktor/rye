@@ -2387,11 +2387,11 @@ var builtins = map[string]*env.Builtin{
 					return ps.Res
 				default:
 					ps.ErrorFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "do-in")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "do\\in")
 				}
 			default:
 				ps.ErrorFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "do-in")
+				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "do\\in")
 			}
 
 		},
@@ -2420,11 +2420,11 @@ var builtins = map[string]*env.Builtin{
 					return ps.Res
 				default:
 					ps.ErrorFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "do-in")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "do\\in\\try")
 				}
 			default:
 				ps.ErrorFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "do-in")
+				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "do\\in\\try")
 			}
 
 		},
@@ -2471,11 +2471,11 @@ var builtins = map[string]*env.Builtin{
 					return ps.Res
 				default:
 					ps.ErrorFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "do-in")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "do\\par")
 				}
 			default:
 				ps.ErrorFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "do-in")
+				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "do\\par")
 			}
 
 		},
@@ -5064,7 +5064,7 @@ var builtins = map[string]*env.Builtin{
 					return ps.Res
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "recur-if\\1")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "recur-if")
 			}
 		},
 	},
@@ -6278,13 +6278,13 @@ var builtins = map[string]*env.Builtin{
 					case env.String:
 						return util.StringToFieldsWithQuoted(str.Value, sepa.Value, quote.Value)
 					default:
-						return MakeArgError(ps, 3, []env.Type{env.StringType}, "split-quoted")
+						return MakeArgError(ps, 3, []env.Type{env.StringType}, "split\\quoted")
 					}
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.StringType}, "split-quoted")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "split\\quoted")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "split-quoted")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "split\\quoted")
 			}
 		},
 	},
@@ -6329,7 +6329,7 @@ var builtins = map[string]*env.Builtin{
 					}
 					return *env.NewBlock(*env.NewTSeries(spl2))
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "split-every")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "split\\every")
 				}
 			case env.Block:
 				switch sepa := arg1.(type) {
@@ -6341,10 +6341,10 @@ var builtins = map[string]*env.Builtin{
 					}
 					return *env.NewBlock(*env.NewTSeries(spl2))
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "split-every")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "split\\every")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType}, "split-every")
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType}, "split\\every")
 			}
 		},
 	},
