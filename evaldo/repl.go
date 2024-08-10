@@ -356,7 +356,10 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 				if k == keyboard.KeyCtrlC {
 					// fmt.Println("Ctrl C 1")
 					cancel()
-					syscall.Kill(os.Getpid(), syscall.SIGINT)
+					err1 := syscall.Kill(os.Getpid(), syscall.SIGINT)
+					if err1 != nil {
+						fmt.Println(err.Error()) // TODO -- temprorary just printed
+					}
 					//ctx.Done()
 					// fmt.Println("")
 					// return
@@ -374,7 +377,6 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 		fmt.Println(err)
 	}
 	// fmt.Println("END")
-
 }
 
 /*  THIS WAS DISABLED TEMP FOR WASM MODE .. 20250116 func DoGeneralInput(es *env.ProgramState, prompt string) {
