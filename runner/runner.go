@@ -542,6 +542,18 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 		}
 	}
 
+	// c := make(chan os.Signal, 1)
+	// signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+
+	//go func() {
+	// sig := <-c
+	// fmt.Println()
+	// fmt.Println("Captured signal:", sig)
+	// Perform cleanup or other actions here
+	// os.Exit(0)
+	//}()
+	//fmt.Println("Waiting for signal")
+
 	evaldo.DoRyeRepl(es, lang, evaldo.ShowResults)
 }
 

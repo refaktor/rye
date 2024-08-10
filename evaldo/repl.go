@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"syscall"
 
 	"github.com/eiannone/keyboard"
 
@@ -320,7 +321,6 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 		fmt.Println(err)
 		return
 	}
-	defer keyboard.Close()
 
 	c := make(chan util.KeyEvent)
 	r := Repl{
@@ -332,31 +332,49 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 	ml := util.NewMicroLiner(c, r.recieveMessage, r.recieveLine)
 	r.ml = ml
 
-	ctx := context.Background()
-	defer ctx.Done()
+	ctx, cancel := context.WithCancel(context.Background())
+
+	defer cancel()
+
+	// ctx := context.Background()
+	// defer os.Exit(0)
+	// defer ctx.Done()
+	defer keyboard.Close()
 	go func(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
+				// fmt.Println("Done")
 				return
 			default:
+				// fmt.Println("Select default")
 				r, k, keyErr := keyboard.GetKey()
 				if err != nil {
 					fmt.Println(keyErr)
 					break
 				}
 				if k == keyboard.KeyCtrlC {
-					ctx.Done()
+					// fmt.Println("Ctrl C 1")
+					cancel()
+					syscall.Kill(os.Getpid(), syscall.SIGINT)
+					//ctx.Done()
+					// fmt.Println("")
+					// return
+					//break
+					//					os.Exit(0)
 				}
 				c <- constructKeyEvent(r, k)
 			}
 		}
 	}(ctx)
 
-	_, err = ml.MicroPrompt("x> ", "", 0)
+	// fmt.Println("MICRO")
+	_, err = ml.MicroPrompt("x> ", "", 0, ctx)
 	if err != nil {
 		fmt.Println(err)
 	}
+	// fmt.Println("END")
+
 }
 
 /*  THIS WAS DISABLED TEMP FOR WASM MODE .. 20250116 func DoGeneralInput(es *env.ProgramState, prompt string) {

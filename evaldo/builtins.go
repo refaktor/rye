@@ -1262,7 +1262,7 @@ var builtins = map[string]*env.Builtin{
 	},
 	"_/": { // **
 		Argsn: 2,
-		Doc:   "Divided two numbers.",
+		Doc:   "Divide two numbers and return a decimal.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch a := arg0.(type) {
@@ -1297,6 +1297,51 @@ var builtins = map[string]*env.Builtin{
 						return MakeBuiltinError(ps, "Can't divide by Zero.", "_/")
 					}
 					return *env.NewDecimal(a.Value / b.Value)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "_/")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "_/")
+			}
+		},
+	},
+	"_//": { // **
+		Argsn: 2,
+		Doc:   "Divides two numbers and return truncated integer.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch a := arg0.(type) {
+			case env.Integer:
+				switch b := arg1.(type) {
+				case env.Integer:
+					if b.Value == 0 {
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, "Can't divide by Zero.", "_/")
+					}
+					return *env.NewInteger(a.Value / b.Value)
+				case env.Decimal:
+					if b.Value == 0.0 {
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, "Can't divide by Zero.", "_/")
+					}
+					return *env.NewInteger(a.Value / int64(b.Value))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "_/")
+				}
+			case env.Decimal:
+				switch b := arg1.(type) {
+				case env.Integer:
+					if b.Value == 0 {
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, "Can't divide by Zero.", "_/")
+					}
+					return *env.NewInteger(int64(a.Value) / b.Value)
+				case env.Decimal:
+					if b.Value == 0.0 {
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, "Can't divide by Zero.", "_/")
+					}
+					return *env.NewInteger(int64(a.Value) / int64(b.Value))
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "_/")
 				}
@@ -7842,7 +7887,7 @@ func registerBuiltin(ps *env.ProgramState, word string, builtin env.Builtin) {
 	// in future a map will probably not be a map but an array and builtin will also support the Kind value
 
 	idxk := 0
-	if strings.Index(word, "//") > 0 {
+	if word != "_//" && strings.Index(word, "//") > 0 {
 		temp := strings.Split(word, "//")
 		word = temp[1]
 		idxk = ps.Idx.IndexWord(temp[0])
