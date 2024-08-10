@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"syscall"
 
 	"github.com/eiannone/keyboard"
 
@@ -356,7 +355,8 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 				if k == keyboard.KeyCtrlC {
 					// fmt.Println("Ctrl C 1")
 					cancel()
-					err1 := syscall.Kill(os.Getpid(), syscall.SIGINT)
+					err1 := util.KillProcess(os.Getpid())
+					// err1 := syscall.Kill(os.Getpid(), syscall.SIGINT)
 					if err1 != nil {
 						fmt.Println(err.Error()) // TODO -- temprorary just printed
 					}
