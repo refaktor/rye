@@ -300,7 +300,7 @@ var Builtins_eyr = map[string]*env.Builtin{
 				ps.Ser = ser
 				return ps.Res
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "eyr")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "eyr\\full")
 			}
 		},
 	},
@@ -323,10 +323,10 @@ var Builtins_eyr = map[string]*env.Builtin{
 					ps.Ser = ser
 					return ps.Res
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "eyr-loop")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "eyr\\loop")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "eyr-loop")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "eyr\\loop")
 			}
 		},
 	},

@@ -200,14 +200,23 @@ section "Working with numbers"
 		; TODO
 	}
 
-	`
-	group "+-*/"
+	
+	group "+-*/ //"
 	""
 	{ { integer decimal } { integer decimal } }
 	{
+		equal { 5 / 2 } 2.5
+		equal { 5.0 / 2 } 2.5
+		equal { 5 / 2.0 } 2.5
+		equal { 5.0 / 2.0 } 2.5
+
+		equal { 5 // 2 } 2
+		equal { 5.0 // 2 } 2
+		equal { 5 // 2.0 } 2
+		equal { 5.0 // 2.0 } 2
 	}
 
-
+    `
 	group "!=><+"
 	""
 	{ { integer decimal } { integer decimal } }

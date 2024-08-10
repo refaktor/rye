@@ -76,7 +76,7 @@ handle-private-api: fn { s c } {
 	}
 }
 
-new-server ":8080"
+http-server ":8080"
 |handle "/pub-api" ?handle-public-api  
 |handle "/priv-api" ?handle-private-api  
 |handle-files-from "/" %static/

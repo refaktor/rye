@@ -3,7 +3,7 @@
 
 rye .needs { http }
 
-new-server ":8081"
+http-server ":8081"
 |handle "/hello" fn { w r } { .write "Hello world" }
 |serve
 

@@ -3,7 +3,7 @@
 
 rye .needs { http }
 
-new-server ":8082"
+http-server ":8082"
 |handle "/" new-static-handler %public_html
 |serve
 

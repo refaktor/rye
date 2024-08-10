@@ -66,6 +66,6 @@ handle-api: fn { w r } {
 
 db: open postgres://webapp2:password@webapp2
 
-new-server ":8080"
+http-server ":8080"
 |handle "/api" ?handle-api
 |serve
