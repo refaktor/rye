@@ -2,9 +2,6 @@
 package evaldo
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/refaktor/rye/env"
 )
 
@@ -34,11 +31,12 @@ func (s *EyrStack) IsEmpty() bool {
 }
 
 // Push adds a new number to the stack
-func (s *EyrStack) Push(x env.Object) {
+func (s *EyrStack) Push(es *env.ProgramState, x env.Object) {
 	//// *s = append(*s, x)
 	if s.I+1 >= STACK_SIZE {
-		fmt.Printf("stack overflow\n")
-		os.Exit(0)
+		es.ErrorFlag = true
+		es.Res = env.NewError("stack overflow")
+		return
 	}
 	s.D[s.I] = x
 	s.I++
@@ -50,6 +48,7 @@ func (s *EyrStack) Pop(es *env.ProgramState) env.Object {
 	if s.IsEmpty() {
 		es.ErrorFlag = true
 		es.Res = env.NewError("stack underflow")
+		panic("stack underflow")
 		return es.Res
 	}
 	s.I--
@@ -142,7 +141,7 @@ func Eyr_CallFunction(fn env.Function, es *env.ProgramState, leftVal env.Object,
 	psX.Gen = es.Gen
 
 	var result *env.ProgramState
-	es.Ser.SetPos(0)
+	// es.Ser.SetPos(0)
 	if fn.Argsn > 0 {
 		result = EvalBlockInj(psX, arg0, arg0 != nil)
 	} else {
@@ -187,7 +186,7 @@ func Eyr_EvalWord(es *env.ProgramState, word env.Object, leftVal env.Object, toL
 	found, object, ctx := findWordValue(es, word)
 	if found {
 		es = Eyr_EvalObject(es, object, leftVal, toLeft, ctx, stack, true) //ww0128a *
-		stack.Push(es.Res)
+		stack.Push(es, es.Res)
 		return es
 	} else {
 		es.ErrorFlag = true
@@ -214,17 +213,17 @@ func Eyr_EvalExpression(es *env.ProgramState, stack *EyrStack) *env.ProgramState
 	if object != nil {
 		switch object.Type() {
 		case env.IntegerType:
-			stack.Push(object)
+			stack.Push(es, object)
 		case env.DecimalType:
-			stack.Push(object)
+			stack.Push(es, object)
 		case env.StringType:
-			stack.Push(object)
+			stack.Push(es, object)
 		case env.BlockType:
-			stack.Push(object)
+			stack.Push(es, object)
 		case env.UriType:
-			stack.Push(object)
+			stack.Push(es, object)
 		case env.EmailType:
-			stack.Push(object)
+			stack.Push(es, object)
 		case env.WordType:
 			rr := Eyr_EvalWord(es, object.(env.Word), nil, false, stack)
 			return rr
@@ -232,6 +231,7 @@ func Eyr_EvalExpression(es *env.ProgramState, stack *EyrStack) *env.ProgramState
 			rr := Eyr_EvalWord(es, object.(env.Opword), nil, false, stack)
 			return rr
 		case env.LSetwordType:
+			print(stack)
 			rr := Eyr_EvalLSetword(es, object.(env.LSetword), nil, false, stack)
 			return rr
 		case env.BuiltinType:
@@ -258,12 +258,14 @@ func Eyr_EvalBlock(es *env.ProgramState, stack *EyrStack, full bool) *env.Progra
 			return es
 		}
 	}
-	if full {
+	if stack.I > 1 && full {
 		es.Res = *env.NewBlock(*env.NewTSeries(stack.D[0:stack.I]))
-	} else {
-		// Will set error flag in case of stack undeflow
+	} else if stack.I == 1 || (!full && !stack.IsEmpty()) {
 		es.Res = stack.Pop(es)
+	} else if stack.IsEmpty() {
+		es.Res = env.Void{}
 	}
+
 	return es
 }
 
