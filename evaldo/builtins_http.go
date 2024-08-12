@@ -50,7 +50,7 @@ var Builtins_http = map[string]*env.Builtin{
 				return *env.NewNative(ps.Idx, server, "Go-server")
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "new-server")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "http-server")
 			}
 
 		},
