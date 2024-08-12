@@ -2,6 +2,8 @@
 package evaldo
 
 import (
+	"fmt"
+
 	"github.com/refaktor/rye/env"
 )
 
@@ -48,7 +50,6 @@ func (s *EyrStack) Pop(es *env.ProgramState) env.Object {
 	if s.IsEmpty() {
 		es.ErrorFlag = true
 		es.Res = env.NewError("stack underflow")
-		panic("stack underflow")
 		return es.Res
 	}
 	s.I--
@@ -230,6 +231,9 @@ func Eyr_EvalExpression(es *env.ProgramState, stack *EyrStack) *env.ProgramState
 		case env.OpwordType: // + and other operators are basically opwords too
 			rr := Eyr_EvalWord(es, object.(env.Opword), nil, false, stack)
 			return rr
+		case env.CPathType:
+			rr := Eyr_EvalWord(es, object.(env.CPath), nil, false, stack)
+			return rr
 		case env.LSetwordType:
 			print(stack)
 			rr := Eyr_EvalLSetword(es, object.(env.LSetword), nil, false, stack)
@@ -267,6 +271,60 @@ func Eyr_EvalBlock(es *env.ProgramState, stack *EyrStack, full bool) *env.Progra
 	}
 
 	return es
+}
+func CompileWord(block *env.Block, ps *env.ProgramState, word env.Word, eyrBlock *env.Block) {
+	// LOCAL FIRST
+	found, object, _ := findWordValue(ps, word)
+	pos := ps.Ser.GetPos()
+	if found {
+		switch obj := object.(type) {
+		case env.Integer:
+			eyrBlock.Series.Append(obj)
+		case env.Builtin:
+			for i := 0; i < obj.Argsn; i++ {
+				// fmt.Println("**")
+				block = CompileStepRyeToEyr(block, ps, eyrBlock)
+			}
+			eyrBlock.Series.Append(word)
+		}
+	} else {
+		ps.ErrorFlag = true
+		if !ps.FailureFlag {
+			ps.Ser.SetPos(pos)
+			ps.Res = env.NewError2(5, "word not found: "+word.Print(*ps.Idx))
+		}
+	}
+}
+
+func CompileRyeToEyr(block *env.Block, ps *env.ProgramState, eyrBlock *env.Block) *env.Block {
+	for block.Series.Pos() < block.Series.Len() {
+		block = CompileStepRyeToEyr(block, ps, eyrBlock)
+	}
+	return block
+}
+
+func CompileStepRyeToEyr(block *env.Block, ps *env.ProgramState, eyrBlock *env.Block) *env.Block {
+	// for block.Series.Pos() < block.Series.Len() {
+	switch xx := block.Series.Pop().(type) {
+	case env.Word:
+		// 	fmt.Println("W")
+		CompileWord(block, ps, xx, eyrBlock)
+		// get value of word
+		// if function
+		// get argnum
+		// add argnum args to mstack (values, words or compiled expressions (recur))
+		// add word to mstack
+		// else add word to value list
+	case env.Opword:
+		fmt.Println("O")
+	case env.Pipeword:
+		fmt.Println("P")
+	case env.Integer:
+		// fmt.Println("I")
+		eyrBlock.Series.Append(xx)
+	}
+	// }
+	return block
 }
 
 var Builtins_eyr = map[string]*env.Builtin{
@@ -329,6 +387,20 @@ var Builtins_eyr = map[string]*env.Builtin{
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "eyr\\loop")
+			}
+		},
+	},
+	"to-eyr": {
+		Argsn: 1,
+		Doc:   "Evaluates Rye block as Eyr (postfix) stack based code.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg0.(type) {
+			case env.Block:
+				eBlock := env.NewBlock(*env.NewTSeries(make([]env.Object, 0)))
+				CompileRyeToEyr(&bloc, ps, eBlock)
+				return *eBlock
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "eyr")
 			}
 		},
 	},
