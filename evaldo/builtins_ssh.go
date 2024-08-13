@@ -76,11 +76,11 @@ var Builtins_ssh = map[string]*env.Builtin{
 					return arg0
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.FunctionType}, "ssh-server//handle")
+					return MakeArgError(ps, 2, []env.Type{env.FunctionType}, "ssh-server//password-auth")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ssh-server//handle")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ssh-server//password-auth")
 			}
 		},
 	},
@@ -94,7 +94,7 @@ var Builtins_ssh = map[string]*env.Builtin{
 				return arg0
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server//serve")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ssh-server//serve")
 			}
 		},
 	},

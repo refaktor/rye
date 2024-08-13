@@ -120,7 +120,7 @@ var Builtins_math = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			fa, fb, errPos := assureFloats(arg0, arg1)
 			if errPos > 0 {
-				return MakeArgError(ps, errPos, []env.Type{env.IntegerType, env.BlockType}, "mod")
+				return MakeArgError(ps, errPos, []env.Type{env.IntegerType, env.BlockType}, "pow")
 			}
 			return *env.NewDecimal(math.Pow(fa, fb))
 		},
@@ -135,7 +135,7 @@ var Builtins_math = map[string]*env.Builtin{
 			case env.Decimal:
 				return *env.NewDecimal(math.Log2(val.Value))
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.BlockType}, "mod")
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.BlockType}, "log2")
 			}
 		},
 	},
@@ -191,7 +191,7 @@ var Builtins_math = map[string]*env.Builtin{
 			case env.Decimal:
 				return *env.NewDecimal(math.Pow(val.Value, 2.0))
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.BlockType}, "mod")
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.BlockType}, "sq")
 			}
 		},
 	},
@@ -205,7 +205,7 @@ var Builtins_math = map[string]*env.Builtin{
 			case env.Decimal:
 				return *env.NewDecimal(math.Sin(val.Value))
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.BlockType}, "mod")
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.BlockType}, "sin")
 			}
 		},
 	},
@@ -219,7 +219,7 @@ var Builtins_math = map[string]*env.Builtin{
 			case env.Decimal:
 				return *env.NewDecimal(math.Cos(val.Value))
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.BlockType}, "mod")
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.BlockType}, "cos")
 			}
 		},
 	},
@@ -233,7 +233,7 @@ var Builtins_math = map[string]*env.Builtin{
 			case env.Decimal:
 				return *env.NewDecimal(math.Sqrt(val.Value))
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.BlockType}, "mod")
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.BlockType}, "sqrt")
 			}
 		},
 	},
@@ -247,7 +247,7 @@ var Builtins_math = map[string]*env.Builtin{
 			case env.Decimal:
 				return *env.NewDecimal(math.Abs(val.Value))
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.BlockType}, "mod")
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.BlockType}, "abs")
 			}
 		},
 	},
@@ -476,10 +476,10 @@ var Builtins_math = map[string]*env.Builtin{
 					ratio := math.Pow(10, float64(precision.Value))
 					return env.NewDecimal(math.Round(val.Value*ratio) / ratio)
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "dim")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "round\\to")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.DecimalType}, "dim")
+				return MakeArgError(ps, 1, []env.Type{env.DecimalType}, "round\\to")
 			}
 		},
 	},
@@ -491,7 +491,7 @@ var Builtins_math = map[string]*env.Builtin{
 			case env.Decimal:
 				return env.NewDecimal(math.Round(val.Value))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.DecimalType}, "dim")
+				return MakeArgError(ps, 1, []env.Type{env.DecimalType}, "round\\to")
 			}
 		},
 	},
@@ -701,7 +701,7 @@ var Builtins_math = map[string]*env.Builtin{
 			case env.Decimal:
 				return *env.NewDecimal(math.Y0(val.Value))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "Y0")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "y0")
 			}
 		},
 	},
@@ -715,7 +715,7 @@ var Builtins_math = map[string]*env.Builtin{
 			case env.Decimal:
 				return *env.NewDecimal(math.Y1(val.Value))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "Y1")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "y1")
 			}
 		},
 	},
@@ -802,7 +802,7 @@ var Builtins_math = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			fa, fb, errPos := assureFloats(arg0, arg1)
 			if errPos > 0 {
-				return MakeArgError(ps, errPos, []env.Type{env.IntegerType, env.BlockType}, "equals")
+				return MakeArgError(ps, errPos, []env.Type{env.IntegerType, env.BlockType}, "is-near")
 			}
 			const epsilon = 0.0000000000001 // math.SmallestNonzeroFloat64
 			if math.Abs(fa-fb) <= (epsilon) {

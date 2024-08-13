@@ -56,18 +56,18 @@ var Builtins_mysql = map[string]*env.Builtin{
 						//fmt.Println("Error1")
 						ps.FailureFlag = true
 						errMsg := fmt.Sprintf("Error opening SQL: %v", err.Error())
-						return MakeBuiltinError(ps, errMsg, "mysql-schema//open")
+						return MakeBuiltinError(ps, errMsg, "mysql-schema//open\\pwd")
 					} else {
 						//fmt.Println("Error2")
 						return *env.NewNative(ps.Idx, db, "Rye-mysql")
 					}
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.StringType}, "mysql-schema//open")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "mysql-schema//open\\pwd")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "mysql-schema//open")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "mysql-schema//open\\pwd")
 			}
 		},
 	},
