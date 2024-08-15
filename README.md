@@ -228,7 +228,7 @@ docker run -ti refaktor/rye
 
 ### Building Rye from source
 
-Use official documentation or lines below to install Golang 1.19.3 https://go.dev/doc/install (at the time of writing):
+Use official documentation or lines below to install Golang 1.21.5 https://go.dev/doc/install (at the time of writing):
 
     wget https://go.dev/dl/go1.21.5.linux-amd64.tar.gz
     rm -rf /usr/local/go && tar -C /usr/local -xzf go1.21.5.linux-amd64.tar.gz
@@ -239,40 +239,52 @@ Clone the main branch from the Rye repository:
 
     git clone https://github.com/refaktor/rye.git && cd rye
 
-Build the tiny version of Rye:
+Build the tiny version of Rye (with minimal modules):
 
-    go build -tags "b_tiny"
+    go build -tags "b_tiny" -o bin/rye
+
+Build the normal version of Rye (with most "batteries" packed in):
+
+    go build -o bin/rye 
+    
+    # or just run
+    ./build
 
 Run the rye file:
 
-    ./rye hello.rye
+    bin/rye hello.rye
 
 Run the Rye Console
 
-    ./rye
+    bin/rye
 
 Install build-essential if you don't already have it, for packages that require cgo (like sqlite):
 
     sudo apt install build-essential
 
-#### Build Rye with specific modules
+<!-- #### Build Rye with specific modules
 
 Rye has many bindings, that you can determine at build time, so (currently) you get a specific Rye binary for your specific project. This is an example of a build with many bindings. 
 I've been working on a way to make this more elegant and systematic, but the manual version is:
 
     go build -tags "b_tiny,b_sqlite,b_http,b_sql,b_postgres,b_openai,b_bson,b_crypto,b_smtpd,b_mail,b_postmark,b_bcrypt,b_telegram"
-	
+-->
+ 
 #### Build WASM version
 
 Rye can also work inside your browser or any other WASM container. I will add examples, html pages and info about it, but to build it:
 
     GOOS=js GOARCH=wasm go build -tags "b_tiny" -o wasm/rye.wasm main_wasm.go
-	
-Run the demo server for testing WASM version
+
+    # or just use
+    ./buildwasm
+    # which will also start a webserver, visit http://localhost:8085/ryeshell/ then
+ 
+<!-- Run the demo server for testing WASM version
 
     bin/rye serve_wasm.rye
 	
-Then visit http://localhost:8085 or http://localhost:8085/ryeshell/
+Then visit http://localhost:8085 or http://localhost:8085/ryeshell/ -->
 
 #### Tests and function reference
 
@@ -289,6 +301,12 @@ Build the function reference out of tests:
 ## Editor support
 
 Rye has Syntax highlighting for Emacs and VS Code. For VS Code just search for **ryelang** in the Extension marketplace. For Emacs it will be published soon on github. 
+
+## Rye related projects
+
+  [Rye-fyne](https://github.com/refaktor/rye-fyne) - external binding for Fyne GUI toolkit (wip)
+  [Pipefish](https://github.com/refaktor/rye-ebitengine) - external binding for Ebitengine game engine (wip)
+  [ryegen](https://github.com/refaktor/ryegen) - Rye binging generation toolkit (wip)
 
 ## Related links
 

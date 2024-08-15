@@ -63,10 +63,10 @@ var Builtins_web = map[string]*env.Builtin{
 				case env.String:
 					return env.String{"<" + wrp.Value + ">" + str.Value + "</" + wrp.Value + ">"}
 				default:
-					return MakeArgError(ps, 1, []env.Type{env.StringType}, "wrap")
+					return MakeArgError(ps, 1, []env.Type{env.StringType}, "tag")
 				}
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.StringType}, "wrap")
+				return MakeArgError(ps, 2, []env.Type{env.StringType}, "tag")
 			}
 
 		},

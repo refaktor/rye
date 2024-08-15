@@ -49,7 +49,7 @@ var Builtins_vector = map[string]*env.Builtin{
 			case env.Vector:
 				return *env.NewDecimal(govector.Norm(val.Value, 2.0))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.VectorType}, "norm")
+				return MakeArgError(ps, 1, []env.Type{env.VectorType}, "normalize")
 			}
 		},
 	},
@@ -62,7 +62,7 @@ var Builtins_vector = map[string]*env.Builtin{
 			case env.Vector:
 				return *env.NewDecimal(val.Value.Sd())
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.VectorType}, "std-deviation")
+				return MakeArgError(ps, 1, []env.Type{env.VectorType}, "std-deviation?")
 			}
 		},
 	},
@@ -77,14 +77,14 @@ var Builtins_vector = map[string]*env.Builtin{
 				case env.Vector:
 					res, err := govector.Cosine(v1.Value, v2.Value)
 					if err != nil {
-						return MakeBuiltinError(ps, err.Error(), "cosine-similarity")
+						return MakeBuiltinError(ps, err.Error(), "cosine-similarity?")
 					}
 					return *env.NewDecimal(res)
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.VectorType}, "cosine-similarity")
+					return MakeArgError(ps, 2, []env.Type{env.VectorType}, "cosine-similarity?")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.VectorType}, "cosine-similarity")
+				return MakeArgError(ps, 1, []env.Type{env.VectorType}, "cosine-similarity?")
 			}
 		},
 	},

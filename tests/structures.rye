@@ -567,6 +567,12 @@ section "Serializers and loaders"
 		equal { load "1 2 { print 4 }" |third |first |type? } 'word
 	}
 
+	group "load\csv"
+	mold\nowrap ?load\csv
+	{ { block } }
+	{
+		equal { try { load\csv file:///dev/null } |type? } 'error
+	}
 
 }
 

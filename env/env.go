@@ -2,7 +2,6 @@ package env
 
 import (
 	"fmt"
-	"os"
 	"sort"
 	"strings"
 	"sync"
@@ -463,11 +462,12 @@ func (s *EyrStack) IsEmpty() bool {
 }
 
 // Push adds a new number to the stack
-func (s *EyrStack) Push(x Object) {
+func (s *EyrStack) Push(es *ProgramState, x Object) {
 	//// *s = append(*s, x)
 	if s.I+1 >= STACK_SIZE {
-		fmt.Printf("stack overflow\n")
-		os.Exit(0)
+		es.ErrorFlag = true
+		es.Res = NewError("stack overflow")
+		return
 	}
 	s.D[s.I] = x
 	s.I++
@@ -475,10 +475,11 @@ func (s *EyrStack) Push(x Object) {
 }
 
 // Pop removes and returns the top element of stack.
-func (s *EyrStack) Pop() Object {
+func (s *EyrStack) Pop(es *ProgramState) Object {
 	if s.IsEmpty() {
-		fmt.Printf("stack underflow\n")
-		os.Exit(0)
+		es.ErrorFlag = true
+		es.Res = NewError("stack underflow")
+		return es.Res
 	}
 	s.I--
 	x := s.D[s.I]
