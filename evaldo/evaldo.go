@@ -47,7 +47,12 @@ func NewProgramState(ser env.TSeries, idx env.Idxs) *ProgramState {
 
 // DESCR: the most general EvalBlock
 func EvalBlock(ps *env.ProgramState) *env.ProgramState {
-	return EvalBlockInj(ps, nil, false)
+	switch ps.Dialect {
+	case env.EyrDialect:
+		return Eyr_EvalBlock(ps, ps.Stack, false) // TODO ps.Stack is already in ps ... refactor
+	default:
+		return EvalBlockInj(ps, nil, false)
+	}
 }
 
 // DESCR: eval a block in specific context
@@ -66,6 +71,15 @@ func EvalBlockInCtxInj(ps *env.ProgramState, ctx *env.RyeCtx, inj env.Object, in
 	res := EvalBlockInj(ps, inj, injnow)
 	ps.Ctx = ctx2
 	return res
+}
+
+func EvalBlockInjMultiDialect(ps *env.ProgramState, inj env.Object, injnow bool) *env.ProgramState { // TODO temp name -- refactor
+	switch ps.Dialect {
+	case env.EyrDialect:
+		return Eyr_EvalBlock(ps, ps.Stack, false) // TODO ps.Stack is already in ps ... refactor
+	default:
+		return EvalBlockInj(ps, inj, injnow)
+	}
 }
 
 // DESCR: the main evaluator of block

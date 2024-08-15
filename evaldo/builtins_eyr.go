@@ -206,25 +206,25 @@ func Eyr_EvalExpression(es *env.ProgramState, stack *env.EyrStack) *env.ProgramS
 	return es
 }
 
-func Eyr_EvalBlock(es *env.ProgramState, stack *env.EyrStack, full bool) *env.ProgramState {
-	for es.Ser.Pos() < es.Ser.Len() {
-		es = Eyr_EvalExpression(es, stack)
-		if checkFlagsAfterBlock(es, 101) {
-			return es
+func Eyr_EvalBlock(ps *env.ProgramState, stack *env.EyrStack, full bool) *env.ProgramState {
+	for ps.Ser.Pos() < ps.Ser.Len() {
+		ps = Eyr_EvalExpression(ps, stack)
+		if checkFlagsAfterBlock(ps, 101) {
+			return ps
 		}
-		if es.ReturnFlag || es.ErrorFlag {
-			return es
+		if ps.ReturnFlag || ps.ErrorFlag {
+			return ps
 		}
 	}
 	if stack.I > 1 && full {
-		es.Res = *env.NewBlock(*env.NewTSeries(stack.D[0:stack.I]))
+		ps.Res = *env.NewBlock(*env.NewTSeries(stack.D[0:stack.I]))
 	} else if stack.I == 1 || (!full && !stack.IsEmpty()) {
-		es.Res = stack.Pop(es)
+		ps.Res = stack.Pop(ps)
 	} else if stack.IsEmpty() {
-		es.Res = env.Void{}
+		ps.Res = env.Void{}
 	}
 
-	return es
+	return ps
 }
 
 var Builtins_eyr = map[string]*env.Builtin{
@@ -238,6 +238,7 @@ var Builtins_eyr = map[string]*env.Builtin{
 				stack := env.NewEyrStack()
 				ser := ps.Ser
 				ps.Ser = bloc.Series
+				ps.Dialect = env.EyrDialect
 				Eyr_EvalBlock(ps, stack, false)
 				ps.Ser = ser
 				return ps.Res
@@ -256,6 +257,7 @@ var Builtins_eyr = map[string]*env.Builtin{
 				stack := env.NewEyrStack()
 				ser := ps.Ser
 				ps.Ser = bloc.Series
+				ps.Dialect = env.EyrDialect
 				Eyr_EvalBlock(ps, stack, true)
 				ps.Ser = ser
 				return ps.Res
@@ -273,6 +275,7 @@ var Builtins_eyr = map[string]*env.Builtin{
 			case env.Integer:
 				switch bloc := arg1.(type) {
 				case env.Block:
+					ps.Dialect = env.EyrDialect
 					ser := ps.Ser
 					ps.Ser = bloc.Series
 					stack := env.NewEyrStack()

@@ -204,9 +204,10 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 		es = env.AddToProgramState(es, block1.Series, genv)
 
 		// EVAL THE DO DIALECT
-		if r.dialect == "do" {
+		if r.dialect == "rye" {
 			EvalBlockInj(es, r.prevResult, true)
 		} else if r.dialect == "eyr" {
+			es.Dialect = env.EyrDialect
 			Eyr_EvalBlock(es, r.stack, true)
 		} else if r.dialect == "math" {
 			idxx, _ := es.Idx.GetIndex("math")

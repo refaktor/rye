@@ -1980,7 +1980,7 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = bloc.Series
 					// we eval the block (current context / scope stays the same as it was in parent block)
 					// Inj means we inject the condition value into the block, because it costs us very little. we could do "if name { .print }"
-					EvalBlockInj(ps, arg0, true)
+					EvalBlockInjMultiDialect(ps, arg0, true)
 					// we set temporary series back to current program state
 					ps.Ser = ser
 					// we return the last return value (the return value of executing the block) "a: if 1 { 100 }" a becomes 100,
@@ -2036,7 +2036,7 @@ var builtins = map[string]*env.Builtin{
 				if !cond1 {
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlockInj(ps, arg0, true)
+					EvalBlockInjMultiDialect(ps, arg0, true)
 					ps.Ser = ser
 					ps.ReturnFlag = true
 					return ps.Res
@@ -2080,7 +2080,7 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = bloc2.Series
 						ps.Ser.Reset()
 					}
-					EvalBlockInj(ps, arg0, true)
+					EvalBlockInjMultiDialect(ps, arg0, true)
 					ps.Ser = ser
 					return ps.Res
 				default:
@@ -2164,7 +2164,7 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = cc.Series
 						// we eval the block (current context / scope stays the same as it was in parent block)
 						// Inj means we inject the condition value into the block, because it costs us very little. we could do "if name { .print }"
-						EvalBlockInj(ps, arg0, true)
+						EvalBlockInjMultiDialect(ps, arg0, true)
 						// we set temporary series back to current program state
 						ps.Ser = ser
 						// we return the last return value (the return value of executing the block) "a: if 1 { 100 }" a becomes 100,
@@ -2229,7 +2229,7 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = cc.Series
 						// we eval the block (current context / scope stays the same as it was in parent block)
 						// Inj means we inject the condition value into the block, because it costs us very little. we could do "if name { .print }"
-						EvalBlockInj(ps, arg0, true)
+						EvalBlockInjMultiDialect(ps, arg0, true)
 						// we set temporary series back to current program state
 						ps.Ser = ser
 						// we return the last return value (the return value of executing the block) "a: if 1 { 100 }" a becomes 100,
@@ -2303,7 +2303,7 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = blk.Series
 						// we eval the block (current context / scope stays the same as it was in parent block)
 						// Inj means we inject the condition value into the block, because it costs us very little. we could do "if name { .print }"
-						EvalBlockInj(ps, cumul, true)
+						EvalBlockInjMultiDialect(ps, cumul, true)
 						cumul = ps.Res
 					}
 					if bloc.Series.AtLast() {
@@ -2368,7 +2368,7 @@ var builtins = map[string]*env.Builtin{
 				case env.Rye2Dialect:
 					EvalBlock(ps)
 				case env.EyrDialect:
-					EvalBlock(ps)
+					Eyr_EvalBlock(ps, ps.Stack, false)
 				}
 				ps.Ser = ser
 				return ps.Res
@@ -2413,7 +2413,7 @@ var builtins = map[string]*env.Builtin{
 			case env.Block:
 				ser := ps.Ser
 				ps.Ser = bloc.Series
-				EvalBlockInj(ps, arg0, true)
+				EvalBlockInjMultiDialect(ps, arg0, true)
 				ps.Ser = ser
 				return ps.Res
 			default:
@@ -3164,7 +3164,7 @@ var builtins = map[string]*env.Builtin{
 				res := arg0
 				ser := ps.Ser
 				ps.Ser = bloc.Series
-				EvalBlockInj(ps, arg0, true)
+				EvalBlockInjMultiDialect(ps, arg0, true)
 				if ps.ErrorFlag {
 					return ps.Res
 				}
@@ -3189,20 +3189,20 @@ var builtins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = wrap.Series
-					EvalBlockInj(ps, arg0, true)
+					EvalBlockInjMultiDialect(ps, arg0, true)
 					if ps.ReturnFlag {
 						return ps.Res
 					}
 
 					ps.Ser = bloc.Series
-					EvalBlockInj(ps, arg0, true)
+					EvalBlockInjMultiDialect(ps, arg0, true)
 					if ps.ReturnFlag {
 						return ps.Res
 					}
 					res := ps.Res
 
 					ps.Ser = wrap.Series
-					EvalBlockInj(ps, arg0, true)
+					EvalBlockInjMultiDialect(ps, arg0, true)
 					ps.Ser = ser
 					if ps.ReturnFlag {
 						return ps.Res
@@ -3227,13 +3227,13 @@ var builtins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = b1.Series
-					EvalBlockInj(ps, arg0, true)
+					EvalBlockInjMultiDialect(ps, arg0, true)
 					if ps.ErrorFlag {
 						return ps.Res
 					}
 					res := ps.Res
 					ps.Ser = b2.Series
-					EvalBlockInj(ps, arg0, true)
+					EvalBlockInjMultiDialect(ps, arg0, true)
 					ps.Ser = ser
 					return res
 				default:
@@ -3258,7 +3258,7 @@ var builtins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = bloc.Series
 					for i := 0; int64(i) < cond.Value; i++ {
-						ps = EvalBlockInj(ps, *env.NewInteger(int64(i + 1)), true)
+						ps = EvalBlockInjMultiDialect(ps, *env.NewInteger(int64(i + 1)), true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -3288,7 +3288,7 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = bloc.Series
 					ps.Res = arg1
 					for i := 0; int64(i) < cond.Value; i++ {
-						ps = EvalBlockInj(ps, acc, true)
+						ps = EvalBlockInjMultiDialect(ps, acc, true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -3318,7 +3318,7 @@ var builtins = map[string]*env.Builtin{
 					ser := ps.Ser
 					for {
 						ps.Ser = cond.Series
-						ps = EvalBlockInj(ps, acc, true)
+						ps = EvalBlockInjMultiDialect(ps, acc, true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -3329,7 +3329,7 @@ var builtins = map[string]*env.Builtin{
 						}
 						ps.Ser.Reset()
 						ps.Ser = bloc.Series
-						ps = EvalBlockInj(ps, acc, true)
+						ps = EvalBlockInjMultiDialect(ps, acc, true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -3361,7 +3361,7 @@ var builtins = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = bloc.Series
 						for i := 0; int64(i) < cond.Value; i++ {
-							ps = EvalBlockInj(ps, acc, true)
+							ps = EvalBlockInjMultiDialect(ps, acc, true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -3418,7 +3418,7 @@ var builtins = map[string]*env.Builtin{
 				ser := ps.Ser
 				ps.Ser = bloc.Series
 				for {
-					EvalBlockInj(ps, arg0, true)
+					EvalBlockInjMultiDialect(ps, arg0, true)
 					if ps.ErrorFlag {
 						return ps.Res
 					}
@@ -3448,7 +3448,7 @@ var builtins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = code.Series
 					for _, ch := range block.Value {
-						ps = EvalBlockInj(ps, *env.NewString(string(ch)), true)
+						ps = EvalBlockInjMultiDialect(ps, *env.NewString(string(ch)), true)
 						if ps.ErrorFlag || ps.ReturnFlag {
 							return ps.Res
 						}
@@ -3465,7 +3465,7 @@ var builtins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = code.Series
 					for i := 0; i < block.Series.Len(); i++ {
-						ps = EvalBlockInj(ps, block.Series.Get(i), true)
+						ps = EvalBlockInjMultiDialect(ps, block.Series.Get(i), true)
 						if ps.ErrorFlag || ps.ReturnFlag {
 							return ps.Res
 						}
@@ -3482,7 +3482,7 @@ var builtins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = code.Series
 					for i := 0; i < len(block.Data); i++ {
-						ps = EvalBlockInj(ps, env.ToRyeValue(block.Data[i]), true)
+						ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(block.Data[i]), true)
 						if ps.ErrorFlag || ps.ReturnFlag {
 							return ps.Res
 						}
@@ -3501,7 +3501,7 @@ var builtins = map[string]*env.Builtin{
 					for i := 0; i < len(block.Rows); i++ {
 						row := block.Rows[i]
 						row.Uplink = &block
-						ps = EvalBlockInj(ps, row, true)
+						ps = EvalBlockInjMultiDialect(ps, row, true)
 						if ps.ErrorFlag || ps.ReturnFlag {
 							return ps.Res
 						}
@@ -3530,7 +3530,7 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = code.Series
 
 					for block.Series.GetPos() < block.Series.Len() {
-						ps = EvalBlockInj(ps, block, true)
+						ps = EvalBlockInjMultiDialect(ps, block, true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -3570,7 +3570,7 @@ var builtins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = code.Series
 					for i := 0; i < block.Series.Len(); i++ {
-						ps = EvalBlockInj(ps, block.Series.Get(i), true)
+						ps = EvalBlockInjMultiDialect(ps, block.Series.Get(i), true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -3591,7 +3591,7 @@ var builtins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = code.Series
 					for i := 0; i < len(block.Data); i++ {
-						ps = EvalBlockInj(ps, env.ToRyeValue(block.Data[i]), true)
+						ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(block.Data[i]), true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -3614,7 +3614,7 @@ var builtins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = code.Series
 					for i := 0; i < len(input); i++ {
-						ps = EvalBlockInj(ps, env.ToRyeValue(input[i]), true)
+						ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(input[i]), true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -3634,7 +3634,7 @@ var builtins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = code.Series
 					for i := 0; i < len(block.Rows); i++ {
-						ps = EvalBlockInj(ps, block.Rows[i], true)
+						ps = EvalBlockInjMultiDialect(ps, block.Rows[i], true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -3672,7 +3672,7 @@ var builtins = map[string]*env.Builtin{
 							ps.Ser = code.Series
 							purged := make([]env.Object, 0)
 							for i := 0; i < block.Series.Len(); i++ {
-								ps = EvalBlockInj(ps, block.Series.Get(i), true)
+								ps = EvalBlockInjMultiDialect(ps, block.Series.Get(i), true)
 								if ps.ErrorFlag {
 									return ps.Res
 								}
@@ -3721,7 +3721,7 @@ var builtins = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
-							ps = EvalBlockInj(ps, list.Series.Get(i), true)
+							ps = EvalBlockInjMultiDialect(ps, list.Series.Get(i), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -3750,7 +3750,7 @@ var builtins = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
-							ps = EvalBlockInj(ps, env.ToRyeValue(list.Data[i]), true)
+							ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(list.Data[i]), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -3780,7 +3780,7 @@ var builtins = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
-							ps = EvalBlockInj(ps, *env.NewString(string(input[i])), true)
+							ps = EvalBlockInjMultiDialect(ps, *env.NewString(string(input[i])), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -3823,7 +3823,7 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
 							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i + 1)))
-							ps = EvalBlockInj(ps, list.Series.Get(i), true)
+							ps = EvalBlockInjMultiDialect(ps, list.Series.Get(i), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -3849,7 +3849,7 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
 							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i + 1)))
-							ps = EvalBlockInj(ps, env.ToRyeValue(list.Data[i]), true)
+							ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(list.Data[i]), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -3876,7 +3876,7 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
 							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i + 1)))
-							ps = EvalBlockInj(ps, *env.NewString(string(input[i])), true)
+							ps = EvalBlockInjMultiDialect(ps, *env.NewString(string(input[i])), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -3916,7 +3916,7 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
 							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i)))
-							ps = EvalBlockInj(ps, list.Series.Get(i), true)
+							ps = EvalBlockInjMultiDialect(ps, list.Series.Get(i), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -3942,7 +3942,7 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
 							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i)))
-							ps = EvalBlockInj(ps, env.ToRyeValue(list.Data[i]), true)
+							ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(list.Data[i]), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -3969,7 +3969,7 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
 							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i)))
-							ps = EvalBlockInj(ps, *env.NewString(string(input[i])), true)
+							ps = EvalBlockInjMultiDialect(ps, *env.NewString(string(input[i])), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -4013,7 +4013,7 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = block.Series
 						for i := 1; i < l; i++ {
 							ps.Ctx.Mod(accu.Index, acc)
-							ps = EvalBlockInj(ps, list.Series.Get(i), true)
+							ps = EvalBlockInjMultiDialect(ps, list.Series.Get(i), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -4046,7 +4046,7 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = block.Series
 						for i := 1; i < l; i++ {
 							ps.Ctx.Mod(accu.Index, acc)
-							ps = EvalBlockInj(ps, env.ToRyeValue(list.Data[i]), true)
+							ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(list.Data[i]), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -4076,7 +4076,7 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = block.Series
 						for i := 1; i < len(input); i++ {
 							ps.Ctx.Mod(accu.Index, acc)
-							ps = EvalBlockInj(ps, *env.NewString(string(input[i])), true)
+							ps = EvalBlockInjMultiDialect(ps, *env.NewString(string(input[i])), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -4119,7 +4119,7 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
 							ps.Ctx.Mod(accu.Index, acc)
-							ps = EvalBlockInj(ps, list.Series.Get(i), true)
+							ps = EvalBlockInjMultiDialect(ps, list.Series.Get(i), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -4146,7 +4146,7 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
 							ps.Ctx.Mod(accu.Index, acc)
-							ps = EvalBlockInj(ps, env.ToRyeValue(list.Data[i]), true)
+							ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(list.Data[i]), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -4173,7 +4173,7 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = block.Series
 						for i := 0; i < len(input); i++ {
 							ps.Ctx.Mod(accu.Index, acc)
-							ps = EvalBlockInj(ps, *env.NewString(string(input[i])), true)
+							ps = EvalBlockInjMultiDialect(ps, *env.NewString(string(input[i])), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -4232,7 +4232,7 @@ var builtins = map[string]*env.Builtin{
 							item = lo[i]
 						}
 						// ps.Ctx.Set(accu.Index, acc)
-						ps = EvalBlockInj(ps, env.ToRyeValue(item), true)
+						ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(item), true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -4300,7 +4300,7 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
 							curval := list.Series.Get(i)
-							ps = EvalBlockInj(ps, curval, true)
+							ps = EvalBlockInjMultiDialect(ps, curval, true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -4349,7 +4349,7 @@ var builtins = map[string]*env.Builtin{
 						for i := 0; i < l; i++ {
 							curval := list.Data[i]
 							curvalRye := env.ToRyeValue(list.Data[i])
-							ps = EvalBlockInj(ps, curvalRye, true)
+							ps = EvalBlockInjMultiDialect(ps, curvalRye, true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -4396,7 +4396,7 @@ var builtins = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for _, curval := range list.Value {
-							ps = EvalBlockInj(ps, *env.NewString(string(curval)), true)
+							ps = EvalBlockInjMultiDialect(ps, *env.NewString(string(curval)), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -4471,7 +4471,7 @@ var builtins = map[string]*env.Builtin{
 						} else {
 							curval = lo[i]
 						}
-						ps = EvalBlockInj(ps, curval, true)
+						ps = EvalBlockInjMultiDialect(ps, curval, true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -4583,7 +4583,7 @@ var builtins = map[string]*env.Builtin{
 						} else {
 							item = env.ToRyeValue(ls[i])
 						}
-						ps = EvalBlockInj(ps, env.ToRyeValue(item), true)
+						ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(item), true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -4678,7 +4678,7 @@ var builtins = map[string]*env.Builtin{
 						} else {
 							item = *env.NewString(string(ls[i]))
 						}
-						ps = EvalBlockInj(ps, env.ToRyeValue(item), true)
+						ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(item), true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -7258,7 +7258,7 @@ var builtins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlockInj(ps, arg0, true)
+					EvalBlockInjMultiDialect(ps, arg0, true)
 					ps.Ser = ser
 					return ps.Res
 				default:
@@ -7283,7 +7283,7 @@ var builtins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlockInj(ps, arg0, true)
+					EvalBlockInjMultiDialect(ps, arg0, true)
 					ps.Ser = ser
 					ps.ReturnFlag = true
 					return ps.Res
@@ -7309,7 +7309,7 @@ var builtins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlockInj(ps, arg0, true)
+					EvalBlockInjMultiDialect(ps, arg0, true)
 					ps.Ser = ser
 					ps.SkipFlag = true
 					return ps.Res
@@ -7335,7 +7335,7 @@ var builtins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlockInj(ps, arg0, true)
+					EvalBlockInjMultiDialect(ps, arg0, true)
 					ps.Ser = ser
 					return ps.Res
 				default:
@@ -7347,7 +7347,7 @@ var builtins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlockInj(ps, arg0, true)
+					EvalBlockInjMultiDialect(ps, arg0, true)
 					ps.Ser = ser
 					return ps.Res
 				default:
@@ -7370,7 +7370,7 @@ var builtins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlockInj(ps, arg0, true)
+					EvalBlockInjMultiDialect(ps, arg0, true)
 					ps.Ser = ser
 					return ps.Res
 				default:
