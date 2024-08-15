@@ -301,7 +301,16 @@ type ProgramState struct {
 	WorkingPath  string // holds the path to CWD (can be changed in program with specific functions)
 	AllowMod     bool
 	LiveObj      *LiveEnv
+	Dialect      DoDialect
+	Stack        *EyrStack
 }
+
+type DoDialect int
+
+const (
+	Rye2Dialect DoDialect = 1
+	EyrDialect  DoDialect = 2
+)
 
 func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
 	ps := ProgramState{
@@ -324,6 +333,8 @@ func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
 		"",
 		false,
 		NewLiveEnv(),
+		Rye2Dialect,
+		NewEyrStack(),
 	}
 	return &ps
 }
@@ -349,6 +360,8 @@ func NewProgramStateNEW() *ProgramState {
 		"",
 		false,
 		NewLiveEnv(),
+		Rye2Dialect,
+		NewEyrStack(),
 	}
 	return &ps
 }
@@ -427,4 +440,48 @@ func (le *LiveEnv) Add(file string) {
 
 func (le *LiveEnv) ClearUpdates() {
 	le.Updates = make([]string, 0)
+}
+
+const STACK_SIZE int = 1000
+
+type EyrStack struct {
+	D []Object
+	I int
+}
+
+func NewEyrStack() *EyrStack {
+	st := EyrStack{}
+	st.D = make([]Object, STACK_SIZE)
+	st.I = 0
+	return &st
+}
+
+// IsEmpty checks if our stack is empty.
+func (s *EyrStack) IsEmpty() bool {
+	return s.I == 0
+}
+
+// Push adds a new number to the stack
+func (s *EyrStack) Push(es *ProgramState, x Object) {
+	//// *s = append(*s, x)
+	if s.I+1 >= STACK_SIZE {
+		es.ErrorFlag = true
+		es.Res = NewError("stack overflow")
+		return
+	}
+	s.D[s.I] = x
+	s.I++
+	// appending takes a lot of time .. pushing values ...
+}
+
+// Pop removes and returns the top element of stack.
+func (s *EyrStack) Pop(es *ProgramState) Object {
+	if s.IsEmpty() {
+		es.ErrorFlag = true
+		es.Res = NewError("stack underflow")
+		return es.Res
+	}
+	s.I--
+	x := s.D[s.I]
+	return x
 }

@@ -161,7 +161,7 @@ type Repl struct {
 
 	fullCode string
 
-	stack      *EyrStack
+	stack      *env.EyrStack // part of PS no ... move there, remove here
 	prevResult env.Object
 }
 
@@ -204,9 +204,10 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 		es = env.AddToProgramState(es, block1.Series, genv)
 
 		// EVAL THE DO DIALECT
-		if r.dialect == "do" {
+		if r.dialect == "rye" {
 			EvalBlockInj(es, r.prevResult, true)
 		} else if r.dialect == "eyr" {
+			es.Dialect = env.EyrDialect
 			Eyr_EvalBlock(es, r.stack, true)
 		} else if r.dialect == "math" {
 			idxx, _ := es.Idx.GetIndex("math")
@@ -221,7 +222,7 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 			res := DialectMath(es, block1)
 			switch block := res.(type) {
 			case env.Block:
-				stack := NewEyrStack()
+				stack := env.NewEyrStack()
 				ser := es.Ser
 				es.Ser = block.Series
 				Eyr_EvalBlock(es, stack, false)
@@ -326,7 +327,7 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 		ps:          es,
 		dialect:     dialect,
 		showResults: showResults,
-		stack:       NewEyrStack(),
+		stack:       env.NewEyrStack(),
 	}
 	ml := util.NewMicroLiner(c, r.recieveMessage, r.recieveLine)
 	r.ml = ml
