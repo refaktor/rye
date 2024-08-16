@@ -7864,7 +7864,7 @@ var BuiltinNames map[string]int // TODO --- this looks like some hanging global 
 func RegisterBuiltins2(builtins map[string]*env.Builtin, ps *env.ProgramState, name string) {
 	BuiltinNames[name] = len(builtins)
 	for k, v := range builtins {
-		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc)
+		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc+" ("+name+")")
 		registerBuiltin(ps, k, *bu)
 	}
 }
@@ -7876,7 +7876,7 @@ func RegisterBuiltinsInContext(builtins map[string]*env.Builtin, ps *env.Program
 	ps.Ctx = env.NewEnv(ps.Ctx) // make new context with no parent
 
 	for k, v := range builtins {
-		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc)
+		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc+" ("+k+")")
 		registerBuiltin(ps, k, *bu)
 	}
 	newctx := ps.Ctx
@@ -7890,7 +7890,7 @@ func registerBuiltin(ps *env.ProgramState, word string, builtin env.Builtin) {
 	// indexWord
 	// TODO -- this with string separator is a temporary way of how we define generic builtins
 	// in future a map will probably not be a map but an array and builtin will also support the Kind value
-
+	builtin.Doc = builtin.Doc + " (" + word + ")"
 	idxk := 0
 	if word != "_//" && strings.Index(word, "//") > 0 {
 		temp := strings.Split(word, "//")
