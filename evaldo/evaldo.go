@@ -948,7 +948,7 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 			return ps
 		}
 		if checkErrorReturnFlag(ps) {
-			ps.Res = env.NewError4(0, "argument 1 of "+strconv.Itoa(bi.Argsn+1)+" missing of builtin: '"+bi.Doc+"'", ps.Res.(*env.Error), nil)
+			ps.Res = env.NewError4(0, "argument 1 of "+strconv.Itoa(bi.Argsn)+" missing of builtin: '"+bi.Doc+"'", ps.Res.(*env.Error), nil)
 			return ps
 		}
 		if ps.Res.Type() == env.VoidType {
@@ -967,7 +967,7 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 			return ps
 		}
 		if checkErrorReturnFlag(ps) {
-			ps.Res = env.NewError4(0, "argument 2 of "+strconv.Itoa(bi.Argsn+1)+" missing of builtin: '"+bi.Doc+"'", ps.Res.(*env.Error), nil)
+			ps.Res = env.NewError4(0, "argument 2 of "+strconv.Itoa(bi.Argsn)+" missing of builtin: '"+bi.Doc+"'", ps.Res.(*env.Error), nil)
 			return ps
 		}
 		//fmt.Println(ps.Res)

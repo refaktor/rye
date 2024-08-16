@@ -94,11 +94,12 @@ func Eyr_CallFunction(fn env.Function, es *env.ProgramState, leftVal env.Object,
 	psX.Ctx = fnCtx
 	psX.PCtx = es.PCtx
 	psX.Gen = es.Gen
+	psX.Dialect = es.Dialect
 
 	var result *env.ProgramState
 	// es.Ser.SetPos(0)
 	if fn.Argsn > 0 {
-		result = EvalBlockInj(psX, arg0, arg0 != nil)
+		result = EvalBlockInjMultiDialect(psX, arg0, arg0 != nil)
 	} else {
 		result = EvalBlock(psX)
 	}
@@ -110,6 +111,7 @@ func Eyr_CallFunction(fn env.Function, es *env.ProgramState, leftVal env.Object,
 	} else {
 		es.Res = result.Res
 	}
+	es.Stack.Push(es, es.Res)
 	es.ReturnFlag = false
 	return es
 }

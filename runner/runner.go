@@ -27,7 +27,7 @@ import (
 var (
 	// fileName = flag.String("fiimle", "", "Path to the Rye file (default: none)")
 	do     = flag.String("do", "", "Evaluates code after it loads a file or last save.")
-	lang   = flag.String("lang", "do", "Select a dialect / language (do, eyr, ...)")
+	lang   = flag.String("lang", "rye", "Select a dialect / language (do, eyr, ...)")
 	silent = flag.Bool("silent", false, "Console doesn't display return values")
 	//	quit    = flag.Bool("quit", false, "Quits after executing.")
 	console = flag.Bool("console", false, "Enters console after a file is evaluated.")
