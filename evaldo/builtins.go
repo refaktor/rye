@@ -2368,7 +2368,7 @@ var builtins = map[string]*env.Builtin{
 				case env.Rye2Dialect:
 					EvalBlock(ps)
 				case env.EyrDialect:
-					Eyr_EvalBlock(ps, ps.Stack, false)
+					Eyr_EvalBlock(ps, false)
 				}
 				ps.Ser = ser
 				return ps.Res

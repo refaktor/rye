@@ -49,7 +49,7 @@ func NewProgramState(ser env.TSeries, idx env.Idxs) *ProgramState {
 func EvalBlock(ps *env.ProgramState) *env.ProgramState {
 	switch ps.Dialect {
 	case env.EyrDialect:
-		return Eyr_EvalBlock(ps, ps.Stack, false) // TODO ps.Stack is already in ps ... refactor
+		return Eyr_EvalBlock(ps, false) // TODO ps.Stack is already in ps ... refactor
 	default:
 		return EvalBlockInj(ps, nil, false)
 	}
@@ -76,7 +76,7 @@ func EvalBlockInCtxInj(ps *env.ProgramState, ctx *env.RyeCtx, inj env.Object, in
 func EvalBlockInjMultiDialect(ps *env.ProgramState, inj env.Object, injnow bool) *env.ProgramState { // TODO temp name -- refactor
 	switch ps.Dialect {
 	case env.EyrDialect:
-		return Eyr_EvalBlock(ps, ps.Stack, false) // TODO ps.Stack is already in ps ... refactor
+		return Eyr_EvalBlock(ps, false) // TODO ps.Stack is already in ps ... refactor
 	default:
 		return EvalBlockInj(ps, inj, injnow)
 	}

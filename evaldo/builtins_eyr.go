@@ -2,6 +2,8 @@
 package evaldo
 
 import (
+	"fmt"
+
 	"github.com/refaktor/rye/env"
 )
 
@@ -11,7 +13,7 @@ import (
 // while loop pogleda naslednji arg, če je literal nastavi arg in poveča argc če je argc nargs potem pokliče frame in iz stacka potegne naslednjega, če ni potem zalopa
 // 									če je builtin potem pusha trenuten frame na stack in kreira novega
 
-func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft bool, stack *env.EyrStack) *env.ProgramState {
+func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft bool) *env.ProgramState {
 	arg0 := bi.Cur0     //env.Object(bi.Cur0)
 	var arg1 env.Object // := bi.Cur1
 	var arg2 env.Object
@@ -23,7 +25,7 @@ func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toL
 		if ps.ErrorFlag || ps.ReturnFlag {
 			return ps
 		}
-		arg0 = stack.Pop(ps)
+		arg0 = ps.Stack.Pop(ps)
 		if ps.ErrorFlag {
 			return ps
 		}
@@ -40,7 +42,7 @@ func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toL
 			return ps
 		}
 
-		arg1 = stack.Pop(ps)
+		arg1 = ps.Stack.Pop(ps)
 		if ps.ErrorFlag {
 			return ps
 		}
@@ -57,7 +59,7 @@ func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toL
 			return ps
 		}
 
-		arg2 = stack.Pop(ps)
+		arg2 = ps.Stack.Pop(ps)
 		if ps.ErrorFlag {
 			return ps
 		}
@@ -70,7 +72,7 @@ func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toL
 }
 
 // This is separate from CallFuncitonArgsN so it can manage pulling args directly off of the eyr stack
-func Eyr_CallFunction(fn env.Function, es *env.ProgramState, leftVal env.Object, toLeft bool, session *env.RyeCtx, stack *env.EyrStack) *env.ProgramState {
+func Eyr_CallFunction(fn env.Function, es *env.ProgramState, leftVal env.Object, toLeft bool, session *env.RyeCtx) *env.ProgramState {
 	var fnCtx = DetermineContext(fn, es, session)
 	if checkErrorReturnFlag(es) {
 		return es
@@ -78,7 +80,7 @@ func Eyr_CallFunction(fn env.Function, es *env.ProgramState, leftVal env.Object,
 
 	var arg0 env.Object = nil
 	for i := fn.Argsn - 1; i >= 0; i-- {
-		var stackElem = stack.Pop(es)
+		var stackElem = es.Stack.Peek(es, i)
 		// TODO: Consider doing check once outside of loop once this version is ready as a correctness comparison point
 		if es.ErrorFlag {
 			return es
@@ -89,34 +91,45 @@ func Eyr_CallFunction(fn env.Function, es *env.ProgramState, leftVal env.Object,
 		fnCtx.Set(fn.Spec.Series.Get(i).(env.Word).Index, stackElem)
 	}
 
+	tempCtx := es.Ctx
+	tempSer := es.Ser
+
+	fn.Body.Series.Reset()
+
+	es.Ctx = fnCtx
+	es.Ser = fn.Body.Series
 	// setup
-	psX := env.NewProgramState(fn.Body.Series, es.Idx)
+	/* psX := env.NewProgramState(fn.Body.Series, es.Idx)
 	psX.Ctx = fnCtx
 	psX.PCtx = es.PCtx
 	psX.Gen = es.Gen
 	psX.Dialect = es.Dialect
+	psX.Stack = es.Stack
 
-	var result *env.ProgramState
+	var result *env.ProgramState */
 	// es.Ser.SetPos(0)
+	fmt.Println("***")
 	if fn.Argsn > 0 {
-		result = EvalBlockInjMultiDialect(psX, arg0, arg0 != nil)
+		EvalBlockInjMultiDialect(es, arg0, arg0 != nil)
 	} else {
-		result = EvalBlock(psX)
+		EvalBlock(es)
 	}
-	MaybeDisplayFailureOrError(result, result.Idx)
+	// MaybeDisplayFailureOrError(result, result.Idx)
 
-	if result.ForcedResult != nil {
+	/* if result.ForcedResult != nil {
 		es.Res = result.ForcedResult
 		result.ForcedResult = nil
 	} else {
 		es.Res = result.Res
 	}
-	es.Stack.Push(es, es.Res)
+	es.Stack.Push(es, es.Res) */
+	es.Ser = tempSer
+	es.Ctx = tempCtx
 	es.ReturnFlag = false
 	return es
 }
 
-func Eyr_EvalObject(es *env.ProgramState, object env.Object, leftVal env.Object, toLeft bool, session *env.RyeCtx, stack *env.EyrStack, bakein bool) *env.ProgramState {
+func Eyr_EvalObject(es *env.ProgramState, object env.Object, leftVal env.Object, toLeft bool, session *env.RyeCtx, bakein bool) *env.ProgramState {
 	//fmt.Print("EVAL OBJECT")
 	switch object.Type() {
 	case env.BuiltinType:
@@ -127,10 +140,12 @@ func Eyr_EvalObject(es *env.ProgramState, object env.Object, leftVal env.Object,
 		if checkFlagsBi(bu, es, 333) {
 			return es
 		}
-		return Eyr_CallBuiltin(bu, es, leftVal, toLeft, stack)
+		es := Eyr_CallBuiltin(bu, es, leftVal, toLeft)
+		es.Stack.Push(es, es.Res)
+		return es
 	case env.FunctionType:
 		fn := object.(env.Function)
-		return Eyr_CallFunction(fn, es, leftVal, toLeft, session, stack)
+		return Eyr_CallFunction(fn, es, leftVal, toLeft, session)
 
 	default:
 		es.Res = object
@@ -138,12 +153,12 @@ func Eyr_EvalObject(es *env.ProgramState, object env.Object, leftVal env.Object,
 	}
 }
 
-func Eyr_EvalWord(es *env.ProgramState, word env.Object, leftVal env.Object, toLeft bool, stack *env.EyrStack) *env.ProgramState {
+func Eyr_EvalWord(es *env.ProgramState, word env.Object, leftVal env.Object, toLeft bool) *env.ProgramState {
 	// LOCAL FIRST
 	found, object, ctx := findWordValue(es, word)
 	if found {
-		es = Eyr_EvalObject(es, object, leftVal, toLeft, ctx, stack, true) //ww0128a *
-		stack.Push(es, es.Res)
+		es = Eyr_EvalObject(es, object, leftVal, toLeft, ctx, true) //ww0128a *
+		// es.Stack.Push(es, ¸.Res)
 		return es
 	} else {
 		es.ErrorFlag = true
@@ -154,9 +169,9 @@ func Eyr_EvalWord(es *env.ProgramState, word env.Object, leftVal env.Object, toL
 	}
 }
 
-func Eyr_EvalLSetword(ps *env.ProgramState, word env.LSetword, leftVal env.Object, toLeft bool, stack *env.EyrStack) *env.ProgramState {
+func Eyr_EvalLSetword(ps *env.ProgramState, word env.LSetword, leftVal env.Object, toLeft bool) *env.ProgramState {
 	idx := word.Index
-	val := stack.Pop(ps)
+	val := ps.Stack.Pop(ps)
 	if ps.ErrorFlag {
 		return ps
 	}
@@ -164,68 +179,68 @@ func Eyr_EvalLSetword(ps *env.ProgramState, word env.LSetword, leftVal env.Objec
 	return ps
 }
 
-func Eyr_EvalExpression(es *env.ProgramState, stack *env.EyrStack) *env.ProgramState {
-	object := es.Ser.Pop()
+func Eyr_EvalExpression(ps *env.ProgramState) *env.ProgramState {
+	object := ps.Ser.Pop()
 	trace2("Before entering expression")
 	if object != nil {
 		switch object.Type() {
 		case env.IntegerType:
-			stack.Push(es, object)
+			ps.Stack.Push(ps, object)
 		case env.DecimalType:
-			stack.Push(es, object)
+			ps.Stack.Push(ps, object)
 		case env.StringType:
-			stack.Push(es, object)
+			ps.Stack.Push(ps, object)
 		case env.BlockType:
-			stack.Push(es, object)
+			ps.Stack.Push(ps, object)
 		case env.UriType:
-			stack.Push(es, object)
+			ps.Stack.Push(ps, object)
 		case env.EmailType:
-			stack.Push(es, object)
+			ps.Stack.Push(ps, object)
 		case env.WordType:
-			rr := Eyr_EvalWord(es, object.(env.Word), nil, false, stack)
+			rr := Eyr_EvalWord(ps, object.(env.Word), nil, false)
 			return rr
 		case env.OpwordType: // + and other operators are basically opwords too
-			rr := Eyr_EvalWord(es, object.(env.Opword), nil, false, stack)
+			rr := Eyr_EvalWord(ps, object.(env.Opword), nil, false)
 			return rr
 		case env.CPathType:
-			rr := Eyr_EvalWord(es, object.(env.CPath), nil, false, stack)
+			rr := Eyr_EvalWord(ps, object.(env.CPath), nil, false)
 			return rr
 		case env.LSetwordType:
-			print(stack)
-			rr := Eyr_EvalLSetword(es, object.(env.LSetword), nil, false, stack)
+			// print(stack)
+			rr := Eyr_EvalLSetword(ps, object.(env.LSetword), nil, false)
 			return rr
-		case env.BuiltinType:
-			return Eyr_EvalObject(es, object, nil, false, nil, stack, false) //ww0128a *
+		// case env.BuiltinType:
+		//	return Eyr_EvalObject(ps, object, nil, false, nil, false) //ww0128a *
 		default:
-			es.ErrorFlag = true
-			es.Res = env.NewError("Not known type for Eyr")
+			ps.ErrorFlag = true
+			ps.Res = env.NewError("Not known type for Eyr")
 		}
 	} else {
-		es.ErrorFlag = true
-		es.Res = env.NewError("Not known type (nil)")
+		ps.ErrorFlag = true
+		ps.Res = env.NewError("Not known type (nil)")
 	}
 
-	return es
+	return ps
 }
 
-func Eyr_EvalBlock(ps *env.ProgramState, stack *env.EyrStack, full bool) *env.ProgramState {
+func Eyr_EvalBlock(ps *env.ProgramState, full bool) *env.ProgramState {
 	for ps.Ser.Pos() < ps.Ser.Len() {
-		ps = Eyr_EvalExpression(ps, stack)
+		fmt.Println(ps.Ser.Pos())
+		ps = Eyr_EvalExpression(ps)
 		if checkFlagsAfterBlock(ps, 101) {
+			fmt.Println("yy")
 			return ps
 		}
 		if ps.ReturnFlag || ps.ErrorFlag {
+			fmt.Println("xx")
 			return ps
 		}
 	}
-	if stack.I > 1 && full {
-		ps.Res = *env.NewBlock(*env.NewTSeries(stack.D[0:stack.I]))
-	} else if stack.I == 1 || (!full && !stack.IsEmpty()) {
-		ps.Res = stack.Pop(ps)
-	} else if stack.IsEmpty() {
-		ps.Res = env.Void{}
+	if full {
+		ps.Res = *env.NewBlock(*env.NewTSeries(ps.Stack.D[0:ps.Stack.I]))
+	} else {
+		ps.Res = ps.Stack.Peek(ps, 0)
 	}
-
 	return ps
 }
 
@@ -237,11 +252,10 @@ var Builtins_eyr = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
-				stack := env.NewEyrStack()
 				ser := ps.Ser
 				ps.Ser = bloc.Series
 				ps.Dialect = env.EyrDialect
-				Eyr_EvalBlock(ps, stack, false)
+				Eyr_EvalBlock(ps, false)
 				ps.Ser = ser
 				return ps.Res
 			default:
@@ -256,11 +270,10 @@ var Builtins_eyr = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
-				stack := env.NewEyrStack()
 				ser := ps.Ser
 				ps.Ser = bloc.Series
 				ps.Dialect = env.EyrDialect
-				Eyr_EvalBlock(ps, stack, true)
+				Eyr_EvalBlock(ps, true)
 				ps.Ser = ser
 				return ps.Res
 			default:
@@ -280,9 +293,8 @@ var Builtins_eyr = map[string]*env.Builtin{
 					ps.Dialect = env.EyrDialect
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					stack := env.NewEyrStack()
 					for i := 0; int64(i) < cond.Value; i++ {
-						ps = Eyr_EvalBlock(ps, stack, false)
+						ps = Eyr_EvalBlock(ps, false)
 						ps.Ser.Reset()
 					}
 					ps.Ser = ser

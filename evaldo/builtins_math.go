@@ -848,10 +848,11 @@ var Builtins_math = map[string]*env.Builtin{
 			res := DialectMath(ps, arg0)
 			switch block := res.(type) {
 			case env.Block:
-				stack := env.NewEyrStack() // TODO -- stack moved to PS ... look it up if it requires changes here
+				// stack := env.NewEyrStack() // TODO -- stack moved to PS ... look it up if it requires changes here
+				ps.ResetStack()
 				ser := ps.Ser
 				ps.Ser = block.Series
-				Eyr_EvalBlock(ps, stack, false)
+				Eyr_EvalBlock(ps, false)
 				ps.Ser = ser
 				return ps.Res
 			default:
