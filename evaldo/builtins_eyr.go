@@ -2,7 +2,7 @@
 package evaldo
 
 import (
-	"fmt"
+	// "fmt"
 
 	"github.com/refaktor/rye/env"
 )
@@ -80,7 +80,7 @@ func Eyr_CallFunction(fn env.Function, es *env.ProgramState, leftVal env.Object,
 
 	var arg0 env.Object = nil
 	for i := fn.Argsn - 1; i >= 0; i-- {
-		var stackElem = es.Stack.Peek(es, i)
+		var stackElem = es.Stack.Pop(es)
 		// TODO: Consider doing check once outside of loop once this version is ready as a correctness comparison point
 		if es.ErrorFlag {
 			return es
@@ -108,9 +108,10 @@ func Eyr_CallFunction(fn env.Function, es *env.ProgramState, leftVal env.Object,
 
 	var result *env.ProgramState */
 	// es.Ser.SetPos(0)
-	fmt.Println("***")
+	// fmt.Println("***")
 	if fn.Argsn > 0 {
-		EvalBlockInjMultiDialect(es, arg0, arg0 != nil)
+		EvalBlock(es)
+		// EvalBlockInjMultiDialect(es, arg0, arg0 != nil)
 	} else {
 		EvalBlock(es)
 	}
@@ -141,14 +142,16 @@ func Eyr_EvalObject(es *env.ProgramState, object env.Object, leftVal env.Object,
 			return es
 		}
 		es := Eyr_CallBuiltin(bu, es, leftVal, toLeft)
-		es.Stack.Push(es, es.Res)
+		if es.Res.Type() != env.VoidType {
+			es.Stack.Push(es, es.Res)
+		}
 		return es
 	case env.FunctionType:
 		fn := object.(env.Function)
 		return Eyr_CallFunction(fn, es, leftVal, toLeft, session)
-
 	default:
 		es.Res = object
+		es.Stack.Push(es, es.Res)
 		return es
 	}
 }
@@ -185,6 +188,7 @@ func Eyr_EvalExpression(ps *env.ProgramState) *env.ProgramState {
 	if object != nil {
 		switch object.Type() {
 		case env.IntegerType:
+			// fmt.Println("** INTEGER")
 			ps.Stack.Push(ps, object)
 		case env.DecimalType:
 			ps.Stack.Push(ps, object)
@@ -197,9 +201,11 @@ func Eyr_EvalExpression(ps *env.ProgramState) *env.ProgramState {
 		case env.EmailType:
 			ps.Stack.Push(ps, object)
 		case env.WordType:
+			// fmt.Println("** WORD")
 			rr := Eyr_EvalWord(ps, object.(env.Word), nil, false)
 			return rr
 		case env.OpwordType: // + and other operators are basically opwords too
+			// fmt.Println("** OPWORD")
 			rr := Eyr_EvalWord(ps, object.(env.Opword), nil, false)
 			return rr
 		case env.CPathType:
@@ -209,8 +215,9 @@ func Eyr_EvalExpression(ps *env.ProgramState) *env.ProgramState {
 			// print(stack)
 			rr := Eyr_EvalLSetword(ps, object.(env.LSetword), nil, false)
 			return rr
-		// case env.BuiltinType:
-		//	return Eyr_EvalObject(ps, object, nil, false, nil, false) //ww0128a *
+		case env.BuiltinType:
+			// fmt.Println("** BUILTIN")
+			return Eyr_EvalObject(ps, object, nil, false, nil, false) //ww0128a *
 		default:
 			ps.ErrorFlag = true
 			ps.Res = env.NewError("Not known type for Eyr")
@@ -225,14 +232,16 @@ func Eyr_EvalExpression(ps *env.ProgramState) *env.ProgramState {
 
 func Eyr_EvalBlock(ps *env.ProgramState, full bool) *env.ProgramState {
 	for ps.Ser.Pos() < ps.Ser.Len() {
-		fmt.Println(ps.Ser.Pos())
+		// fmt.Println(ps.Ser.Pos())
 		ps = Eyr_EvalExpression(ps)
 		if checkFlagsAfterBlock(ps, 101) {
-			fmt.Println("yy")
+			// fmt.Println("yy")
 			return ps
 		}
 		if ps.ReturnFlag || ps.ErrorFlag {
-			fmt.Println("xx")
+			// fmt.Println(ps.ReturnFlag)
+			// fmt.Println(ps.ErrorFlag)
+			// fmt.Println("xx")
 			return ps
 		}
 	}

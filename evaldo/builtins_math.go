@@ -796,6 +796,22 @@ var Builtins_math = map[string]*env.Builtin{
 			return *env.NewDecimal(float64(math.Pi))
 		},
 	},
+	"deg->rad": {
+		Argsn: 1,
+		Doc:   "Convert degrees to radians.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var fa float64
+			switch a := arg0.(type) {
+			case env.Decimal:
+				fa = a.Value
+			case env.Integer:
+				fa = float64(a.Value)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "deg->rad")
+			}
+			return *env.NewDecimal(fa * float64(math.Pi) / 180.0)
+		},
+	},
 	"is-near": {
 		Argsn: 2,
 		Doc:   "Returns true if two decimals are close.",
