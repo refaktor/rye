@@ -427,6 +427,9 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 	case env.Opword:
 		object, found := ps.Ctx.Get(word.Index)
 		return found, object, nil
+	case env.Pipeword:
+		object, found := ps.Ctx.Get(word.Index)
+		return found, object, nil
 	case env.CPath:
 		currCtx := ps.Ctx
 		i := 1
