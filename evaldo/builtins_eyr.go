@@ -4,6 +4,8 @@ package evaldo
 import (
 	// "fmt"
 
+	"fmt"
+
 	"github.com/refaktor/rye/env"
 )
 
@@ -30,6 +32,7 @@ func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toL
 			return ps
 		}
 		if bi.Argsn == 1 {
+			fmt.Println("** CALL BI")
 			ps.Res = bi.Fn(ps, arg0, nil, nil, nil, nil)
 			// stack.Push(ps.Res)
 		}
@@ -142,7 +145,7 @@ func Eyr_EvalObject(es *env.ProgramState, object env.Object, leftVal env.Object,
 			return es
 		}
 		es := Eyr_CallBuiltin(bu, es, leftVal, toLeft)
-		if es.Res.Type() != env.VoidType {
+		if es.Res != nil && es.Res.Type() != env.VoidType {
 			es.Stack.Push(es, es.Res)
 		}
 		return es
@@ -230,18 +233,41 @@ func Eyr_EvalExpression(ps *env.ProgramState) *env.ProgramState {
 	return ps
 }
 
-func Eyr_EvalBlock(ps *env.ProgramState, full bool) *env.ProgramState {
+func Eyr_EvalBlockInside(ps *env.ProgramState) *env.ProgramState {
+	fmt.Println("** EVALB INSIDE")
 	for ps.Ser.Pos() < ps.Ser.Len() {
-		// fmt.Println(ps.Ser.Pos())
+		fmt.Println(ps.Ser.Pos())
 		ps = Eyr_EvalExpression(ps)
 		if checkFlagsAfterBlock(ps, 101) {
-			// fmt.Println("yy")
+			fmt.Println("yy")
 			return ps
 		}
 		if ps.ReturnFlag || ps.ErrorFlag {
-			// fmt.Println(ps.ReturnFlag)
-			// fmt.Println(ps.ErrorFlag)
-			// fmt.Println("xx")
+			fmt.Println(ps.ReturnFlag)
+			fmt.Println(ps.ErrorFlag)
+			fmt.Println("xx")
+			return ps
+		}
+	}
+	fmt.Println("** EVAL BLOCK PS RES")
+	fmt.Println(ps.Res)
+	ps.Res = env.NewVoid()
+	return ps
+}
+
+func Eyr_EvalBlock(ps *env.ProgramState, full bool) *env.ProgramState {
+	fmt.Println("** EVALB")
+	for ps.Ser.Pos() < ps.Ser.Len() {
+		fmt.Println(ps.Ser.Pos())
+		ps = Eyr_EvalExpression(ps)
+		if checkFlagsAfterBlock(ps, 101) {
+			fmt.Println("yy")
+			return ps
+		}
+		if ps.ReturnFlag || ps.ErrorFlag {
+			fmt.Println(ps.ReturnFlag)
+			fmt.Println(ps.ErrorFlag)
+			fmt.Println("xx")
 			return ps
 		}
 	}
@@ -250,6 +276,8 @@ func Eyr_EvalBlock(ps *env.ProgramState, full bool) *env.ProgramState {
 	} else {
 		ps.Res = ps.Stack.Peek(ps, 0)
 	}
+	fmt.Println("** EVAL BLOCK PS RES")
+	fmt.Println(ps.Res)
 	return ps
 }
 

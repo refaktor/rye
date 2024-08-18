@@ -2373,12 +2373,7 @@ var builtins = map[string]*env.Builtin{
 			case env.Block:
 				ser := ps.Ser
 				ps.Ser = bloc.Series
-				switch ps.Dialect {
-				case env.Rye2Dialect:
-					EvalBlock(ps)
-				case env.EyrDialect:
-					Eyr_EvalBlock(ps, false)
-				}
+				EvalBlock(ps)
 				ps.Ser = ser
 				return ps.Res
 			default:
