@@ -529,6 +529,7 @@ DODO:
 		}
 		for ic, v := range r.Values {
 			if ic < len(widths) {
+				// fmt.Println(v)
 				switch ob := v.(type) {
 				case env.Object:
 					if mode == 0 {

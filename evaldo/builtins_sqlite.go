@@ -29,7 +29,7 @@ func SQL_EvalBlock(es *env.ProgramState, mode int, values []any) (*env.ProgramSt
 		//fmt.Println(bu.String())
 	}
 	//fmt.Println(bu.String())
-	es.Res = env.NewString(bu.String())
+	es.Res = *env.NewString(bu.String())
 	return es, values
 }
 
@@ -113,7 +113,7 @@ var Builtins_sqlite = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.Spreadsheet:
-				return env.NewString(str.ToHtml())
+				return *env.NewString(str.ToHtml())
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "htmlize")
 			}
@@ -203,15 +203,16 @@ var Builtins_sqlite = map[string]*env.Builtin{
 							}
 
 							// TODO Scan the result into the column pointers...
-							// if err := rows.Scan(columnPointers...); err != nil {
-							// TODO return err
-							// }
+							if err := rows.Scan(columnPointers...); err != nil {
+								return env.NewError(err.Error())
+							}
 
 							// Create our map, and retrieve the value for each column from the pointers slice,
 							// storing it in the map with the name of the column as the key.
 							m := make(map[string]any)
 							for i, colName := range cols {
 								val := columnPointers[i].(*any)
+								// fmt.Println(val)
 								m[colName] = *val
 								sr.Values = append(sr.Values, *val)
 							}
