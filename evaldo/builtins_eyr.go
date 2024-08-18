@@ -5,6 +5,7 @@ import (
 	// "fmt"
 
 	"fmt"
+	"slices"
 
 	"github.com/refaktor/rye/env"
 )
@@ -20,7 +21,7 @@ func Eyr_CallBuiltinPipe(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object)
 	//var arg1 env.Object // := bi.Cur1
 	//var arg2 env.Object
 
-	// for now works just with functions taht accept block as a first and only argument ... will have to conceptualize other options first
+	// for now works just with functions that accept block as a first and only argument ... will have to conceptualize other options first
 
 	if bi.Argsn > 0 && bi.Cur0 == nil {
 		if checkFlagsBi(bi, ps, 0) {
@@ -32,9 +33,9 @@ func Eyr_CallBuiltinPipe(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object)
 		if ps.ErrorFlag {
 			return ps
 		}
-		block := stackToBlock(ps.Stack)
+		block := stackToBlock(ps.Stack, true)
 		if bi.Argsn == 1 {
-			fmt.Println("** CALL BI")
+			// fmt.Println("** CALL BI")
 			ps.Res = bi.Fn(ps, block, nil, nil, nil, nil)
 			// stack.Push(ps.Res)
 		}
@@ -59,7 +60,7 @@ func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toL
 			return ps
 		}
 		if bi.Argsn == 1 {
-			fmt.Println("** CALL BI")
+			// fmt.Println("** CALL BI")
 			ps.Res = bi.Fn(ps, arg0, nil, nil, nil, nil)
 			// stack.Push(ps.Res)
 		}
@@ -200,7 +201,7 @@ func Eyr_EvalWord(es *env.ProgramState, word env.Object, leftVal env.Object, pip
 	} else {
 		es.ErrorFlag = true
 		if !es.FailureFlag {
-			es.Res = *env.NewError2(5, "Word not found: "+word.Inspect(*es.Idx))
+			es.Res = env.NewError2(5, "Word not found: "+word.Inspect(*es.Idx))
 		}
 		return es
 	}
@@ -269,55 +270,64 @@ func Eyr_EvalExpression(ps *env.ProgramState) *env.ProgramState {
 }
 
 func Eyr_EvalBlockInside(ps *env.ProgramState) *env.ProgramState {
-	fmt.Println("** EVALB INSIDE")
+	// fmt.Println("** EVALB INSIDE")
 	for ps.Ser.Pos() < ps.Ser.Len() {
-		fmt.Println(ps.Ser.Pos())
+		// fmt.Println(ps.Ser.Pos())
 		ps = Eyr_EvalExpression(ps)
 		if checkFlagsAfterBlock(ps, 101) {
-			fmt.Println("yy")
+			// fmt.Println("yy")
 			return ps
 		}
 		if ps.ReturnFlag || ps.ErrorFlag {
-			fmt.Println(ps.ReturnFlag)
+			/* fmt.Println(ps.ReturnFlag)
 			fmt.Println(ps.ErrorFlag)
-			fmt.Println("xx")
+			fmt.Println("xx") */
 			return ps
 		}
 	}
-	fmt.Println("** EVAL BLOCK PS RES")
-	fmt.Println(ps.Res)
+	// fmt.Println("** EVAL BLOCK PS RES")
+	// fmt.Println(ps.Res)
 	ps.Res = env.NewVoid()
 	return ps
 }
 
 func Eyr_EvalBlock(ps *env.ProgramState, full bool) *env.ProgramState {
-	fmt.Println("** EVALB")
+	// fmt.Println("** EVALB")
 	for ps.Ser.Pos() < ps.Ser.Len() {
-		fmt.Println(ps.Ser.Pos())
+		// fmt.Println(ps.Ser.Pos())
 		ps = Eyr_EvalExpression(ps)
 		if checkFlagsAfterBlock(ps, 101) {
-			fmt.Println("yy")
+			// fmt.Println("yy")
 			return ps
 		}
 		if ps.ReturnFlag || ps.ErrorFlag {
-			fmt.Println(ps.ReturnFlag)
+			/* fmt.Println(ps.ReturnFlag)
 			fmt.Println(ps.ErrorFlag)
-			fmt.Println("xx")
+			fmt.Println("xx") */
 			return ps
 		}
 	}
 	if full {
-		ps.Res = stackToBlock(ps.Stack)
+		ps.Res = stackToBlock(ps.Stack, false)
 	} else {
 		ps.Res = ps.Stack.Peek(ps, 0)
 	}
-	fmt.Println("** EVAL BLOCK PS RES")
-	fmt.Println(ps.Res)
+	// fmt.Println("** EVAL BLOCK PS RES")
+	// fmt.Println(ps.Res)
 	return ps
 }
 
-func stackToBlock(stack *env.EyrStack) env.Block {
-	return *env.NewBlock(*env.NewTSeries(stack.D[0:stack.I]))
+func stackToBlock(stack *env.EyrStack, reverse bool) env.Block {
+	real := stack.D[0:stack.I]
+	cpy := make([]env.Object, stack.I)
+	copy(cpy, real)
+	fmt.Println(real)
+	if reverse {
+		fmt.Println("REVE")
+		slices.Reverse(cpy)
+	}
+	fmt.Println(cpy)
+	return *env.NewBlock(*env.NewTSeries(cpy))
 }
 
 var Builtins_eyr = map[string]*env.Builtin{
