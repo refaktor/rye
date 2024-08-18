@@ -1138,6 +1138,11 @@ func (i Comma) Dump(e Idxs) string {
 
 type Void struct{}
 
+func NewVoid() *Void {
+	o := Void{}
+	return &o
+}
+
 func (i Void) Type() Type {
 	return VoidType
 }

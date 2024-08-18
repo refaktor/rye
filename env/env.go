@@ -370,6 +370,10 @@ func (ps *ProgramState) Dump() string {
 	return ps.Ctx.DumpBare(*ps.Idx)
 }
 
+func (ps *ProgramState) ResetStack() {
+	ps.Stack = NewEyrStack()
+}
+
 func AddToProgramState(ps *ProgramState, ser TSeries, idx *Idxs) *ProgramState {
 	ps.Ser = ser
 	ps.Res = nil
@@ -466,7 +470,7 @@ func (s *EyrStack) Push(es *ProgramState, x Object) {
 	//// *s = append(*s, x)
 	if s.I+1 >= STACK_SIZE {
 		es.ErrorFlag = true
-		es.Res = NewError("stack overflow")
+		es.Res = NewError("stack overflow (maxed)")
 		return
 	}
 	s.D[s.I] = x
@@ -478,10 +482,26 @@ func (s *EyrStack) Push(es *ProgramState, x Object) {
 func (s *EyrStack) Pop(es *ProgramState) Object {
 	if s.IsEmpty() {
 		es.ErrorFlag = true
-		es.Res = NewError("stack underflow")
+		es.Res = NewError("stack underflow (empty)")
 		return es.Res
 	}
 	s.I--
 	x := s.D[s.I]
+	return x
+}
+
+// Pop removes and returns the top element of stack.
+func (s *EyrStack) Peek(es *ProgramState, offset int) Object {
+	if s.IsEmpty() {
+		es.ErrorFlag = true
+		es.Res = NewError("stack underflow (empty 2)")
+		return es.Res
+	}
+	if s.I-offset < 0 {
+		es.ErrorFlag = true
+		es.Res = NewError("stack underflow (offset)")
+		return es.Res
+	}
+	x := s.D[s.I-offset]
 	return x
 }

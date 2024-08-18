@@ -1111,6 +1111,15 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"_.": { // ***
+		Argsn: 1,
+		Doc:   "Accepts argument and returns void, meant to be used as drop in Eyr, void is not a valid runtime value.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return *env.NewVoid()
+		},
+	},
+
 	"_+": { // **
 		Argsn: 2,
 		Doc:   "Adds or joins two values together (Integers, Strings, Uri-s and Blocks)",
@@ -2364,12 +2373,7 @@ var builtins = map[string]*env.Builtin{
 			case env.Block:
 				ser := ps.Ser
 				ps.Ser = bloc.Series
-				switch ps.Dialect {
-				case env.Rye2Dialect:
-					EvalBlock(ps)
-				case env.EyrDialect:
-					Eyr_EvalBlock(ps, ps.Stack, false)
-				}
+				EvalBlock(ps)
 				ps.Ser = ser
 				return ps.Res
 			default:
