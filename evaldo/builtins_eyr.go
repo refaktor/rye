@@ -4,7 +4,6 @@ package evaldo
 import (
 	// "fmt"
 
-	"fmt"
 	"slices"
 
 	"github.com/refaktor/rye/env"
@@ -191,19 +190,47 @@ func Eyr_EvalObject(es *env.ProgramState, object env.Object, leftVal env.Object,
 	}
 }
 
-func Eyr_EvalWord(es *env.ProgramState, word env.Object, leftVal env.Object, pipeWord bool) *env.ProgramState {
-	// LOCAL FIRST
-	found, object, ctx := findWordValue(es, word)
-	if found {
-		es = Eyr_EvalObject(es, object, leftVal, pipeWord, ctx, true) //ww0128a *
-		// es.Stack.Push(es, ¸.Res)
-		return es
-	} else {
-		es.ErrorFlag = true
-		if !es.FailureFlag {
-			es.Res = env.NewError2(5, "Word not found: "+word.Inspect(*es.Idx))
+func findLastStart(stack *env.EyrStack) (env.Object, bool) {
+	for i := stack.I - 1; i > 0; i-- {
+		// fmt.Println(i)
+		obj := stack.D[i]
+		// fmt.Println(obj)
+		if obj.GetKind() == int(env.CommaType) {
+			if i < stack.I-1 {
+				return stack.D[i+1], true
+			} else {
+				return nil, false
+			}
 		}
-		return es
+	}
+	return stack.D[0], true
+}
+
+func Eyr_EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, pipeWord bool) *env.ProgramState {
+	// LOCAL FIRST
+	found, object, ctx := findWordValue(ps, word)
+	if !found { // look at Generic words, but first check type
+		first, ok := findLastStart(ps.Stack) // get the value on stack before the comma (expression guard)
+		if ok {
+			kind := first.GetKind()
+			//fmt.Println(kind)
+			rword, ok := word.(env.Word)
+			// fmt.Println(rword)
+			if ok && ps.Ctx.Kind.Index != -1 { // don't use generic words if context kind is -1 --- TODO temporary solution to isolates, think about it more
+				object, found = ps.Gen.Get(kind, rword.Index)
+			}
+		}
+	}
+	if found {
+		ps = Eyr_EvalObject(ps, object, leftVal, pipeWord, ctx, true) //ww0128a *
+		// es.Stack.Push(es, ¸.Res)
+		return ps
+	} else {
+		ps.ErrorFlag = true
+		if !ps.FailureFlag {
+			ps.Res = env.NewError2(5, "Word not found: "+word.Inspect(*ps.Idx))
+		}
+		return ps
 	}
 }
 
@@ -222,6 +249,9 @@ func Eyr_EvalExpression(ps *env.ProgramState) *env.ProgramState {
 	trace2("Before entering expression")
 	if object != nil {
 		switch object.Type() {
+		case env.CommaType:
+			// fmt.Println("** INTEGER")
+			ps.Stack.Push(ps, object)
 		case env.IntegerType:
 			// fmt.Println("** INTEGER")
 			ps.Stack.Push(ps, object)
@@ -235,6 +265,8 @@ func Eyr_EvalExpression(ps *env.ProgramState) *env.ProgramState {
 			ps.Stack.Push(ps, object)
 		case env.EmailType:
 			ps.Stack.Push(ps, object)
+		case env.TagwordType:
+			ps.Stack.Push(ps, env.NewWord(object.(env.Tagword).Index))
 		case env.WordType:
 			// fmt.Println("** WORD")
 			rr := Eyr_EvalWord(ps, object.(env.Word), nil, false)
@@ -321,12 +353,12 @@ func stackToBlock(stack *env.EyrStack, reverse bool) env.Block {
 	real := stack.D[0:stack.I]
 	cpy := make([]env.Object, stack.I)
 	copy(cpy, real)
-	fmt.Println(real)
+	// fmt.Println(real)
 	if reverse {
-		fmt.Println("REVE")
+		// fmt.Println("REVE")
 		slices.Reverse(cpy)
 	}
-	fmt.Println(cpy)
+	// fmt.Println(cpy)
 	return *env.NewBlock(*env.NewTSeries(cpy))
 }
 
