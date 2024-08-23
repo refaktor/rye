@@ -200,6 +200,8 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 				return v1
 			case *env.List:
 				return v1
+			case env.Native:
+				return v1
 			case nil:
 				ps.FailureFlag = true
 				return env.NewError("missing key")
