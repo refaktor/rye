@@ -38,7 +38,7 @@ handle-file-get: fn { w r } {
 }
 
 ; setup the server
-new-server ":8080"
+http-server ":8080"
 |handle "/get" ?handle-file-get
 |handle "/" new-static-handler %www
 |serve

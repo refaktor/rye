@@ -1,5 +1,5 @@
-//go:build !b_devops
-// +build !b_devops
+//go:build !add_psutil
+// +build !add_psutil
 
 package evaldo
 

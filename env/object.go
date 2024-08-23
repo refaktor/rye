@@ -1138,6 +1138,11 @@ func (i Comma) Dump(e Idxs) string {
 
 type Void struct{}
 
+func NewVoid() *Void {
+	o := Void{}
+	return &o
+}
+
 func (i Void) Type() Type {
 	return VoidType
 }
@@ -1399,6 +1404,10 @@ func (i Error) Inspect(e Idxs) string {
 }
 
 func (i Error) Print(e Idxs) string {
+	return i.Print2(e, 1)
+}
+
+func (i Error) Print2(e Idxs, depth int) string {
 	status := ""
 	if i.Status != 0 {
 		status = "(" + strconv.Itoa(i.Status) + ")"
@@ -1406,7 +1415,11 @@ func (i Error) Print(e Idxs) string {
 	var b strings.Builder
 	b.WriteString("Error" + status + ": " + i.Message + " ")
 	if i.Parent != nil {
-		b.WriteString("\n\t" + i.Parent.Print(e))
+		b.WriteString("\n")
+		for i := 0; i < depth; i++ {
+			b.WriteString("  ")
+		}
+		b.WriteString(i.Parent.Print2(e, depth+1))
 	}
 	for k, v := range i.Values {
 		switch ob := v.(type) {

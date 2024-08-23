@@ -1,9 +1,7 @@
-//go:build b_mysql
-// +build b_mysql
+//go:build !not_mysql
+// +build !not_mysql
 
 package evaldo
-
-// import "C"
 
 import (
 	"database/sql"
@@ -58,18 +56,18 @@ var Builtins_mysql = map[string]*env.Builtin{
 						//fmt.Println("Error1")
 						ps.FailureFlag = true
 						errMsg := fmt.Sprintf("Error opening SQL: %v", err.Error())
-						return MakeBuiltinError(ps, errMsg, "mysql-schema//open")
+						return MakeBuiltinError(ps, errMsg, "mysql-schema//open\\pwd")
 					} else {
 						//fmt.Println("Error2")
 						return *env.NewNative(ps.Idx, db, "Rye-mysql")
 					}
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.StringType}, "mysql-schema//open")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "mysql-schema//open\\pwd")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "mysql-schema//open")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "mysql-schema//open\\pwd")
 			}
 		},
 	},
@@ -107,7 +105,7 @@ var Builtins_mysql = map[string]*env.Builtin{
 					} else {
 						num, _ := res.RowsAffected()
 						if num > 0 {
-							return env.Integer{1}
+							return env.NewInteger(1)
 						} else {
 							ps.FailureFlag = true
 							return MakeBuiltinError(ps, "No rows affected.", "Rye-mysql//exec")
@@ -149,7 +147,7 @@ var Builtins_mysql = map[string]*env.Builtin{
 					//					fmt.Println(sqlstr)
 					//					fmt.Println(vals)
 					rows, err := db1.Value.(*sql.DB).Query(sqlstr, vals...)
-					result := make([]map[string]any, 0)
+					// result := make([]map[string]any, 0)
 					if err != nil {
 						ps.FailureFlag = true
 						return MakeBuiltinError(ps, err.Error(), "Rye-mysql//exec")
@@ -168,9 +166,9 @@ var Builtins_mysql = map[string]*env.Builtin{
 							}
 
 							// Scan the result into the column pointers...
-							if err := rows.Scan(columnPointers...); err != nil {
-								//return err
-							}
+							// if err := rows.Scan(columnPointers...); err != nil {
+							//return err
+							// }
 
 							// Create our map, and retrieve the value for each column from the pointers slice,
 							// storing it in the map with the name of the column as the key.
@@ -189,7 +187,7 @@ var Builtins_mysql = map[string]*env.Builtin{
 								}
 							}
 							spr.AddRow(sr)
-							result = append(result, m)
+							// result = append(result, m)
 							// Outputs: map[columnName:value columnName2:value2 columnName3:value3 ...]
 							i++
 						}

@@ -1,5 +1,5 @@
-//go:build !b_html
-// +build !b_html
+//go:build no_html
+// +build no_html
 
 package evaldo
 

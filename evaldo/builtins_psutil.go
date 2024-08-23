@@ -1,5 +1,5 @@
-//go:build b_devops
-// +build b_devops
+//go:build add_psutil
+// +build add_psutil
 
 package evaldo
 
@@ -100,10 +100,10 @@ var Builtins_devops = map[string]*env.Builtin{
 						return arg1
 					}
 				default:
-					return MakeArgError(ps, 1, []env.Type{env.UriType}, "mkdir")
+					return MakeArgError(ps, 1, []env.Type{env.UriType}, "mv")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "mkdir")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "mv")
 			}
 		},
 	},

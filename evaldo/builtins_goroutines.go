@@ -118,7 +118,7 @@ var Builtins_goroutines = map[string]*env.Builtin{
 				return *env.NewNative(ps.Idx, ch, "Rye-channel")
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "new-channel")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "channel")
 			}
 		},
 	},
@@ -249,11 +249,11 @@ var Builtins_goroutines = map[string]*env.Builtin{
 					if ok {
 						if hasDeafult {
 							ps.FailureFlag = true
-							return MakeBuiltinError(ps, "select can only have one default case", "select")
+							return MakeBuiltinError(ps, "select can only have one default case", "select\\fn")
 						}
 						if defaultFn.Argsn != 0 {
 							ps.FailureFlag = true
-							return MakeBuiltinError(ps, "function with 0 args required", "select")
+							return MakeBuiltinError(ps, "function with 0 args required", "select\\fn")
 						}
 						defaultCase := make(chan struct{})
 						close(defaultCase) // close it immediately so it's always ready to receive
@@ -269,12 +269,12 @@ var Builtins_goroutines = map[string]*env.Builtin{
 					native, ok := ps.Res.(env.Native)
 					if !ok {
 						ps.FailureFlag = true
-						return MakeBuiltinError(ps, "first argument of a case must be a channel", "select")
+						return MakeBuiltinError(ps, "first argument of a case must be a channel", "select\\fn")
 					}
 					ch, ok := native.Value.(chan *env.Object)
 					if !ok {
 						ps.FailureFlag = true
-						return MakeBuiltinError(ps, "first argument of a case must be a channel", "select")
+						return MakeBuiltinError(ps, "first argument of a case must be a channel", "select\\fn")
 					}
 					cases = append(cases, reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(ch)})
 
@@ -282,11 +282,11 @@ var Builtins_goroutines = map[string]*env.Builtin{
 					fn, ok := ps.Res.(env.Function)
 					if !ok {
 						ps.FailureFlag = true
-						return MakeBuiltinError(ps, "second argument of a case must be a function", "select")
+						return MakeBuiltinError(ps, "second argument of a case must be a function", "select\\fn")
 					}
 					if fn.Argsn > 1 {
 						ps.FailureFlag = true
-						return MakeBuiltinError(ps, "function with 0 or 1 arg required", "select")
+						return MakeBuiltinError(ps, "function with 0 or 1 arg required", "select\\fn")
 					}
 					funcs = append(funcs, fn)
 				}
@@ -299,14 +299,14 @@ var Builtins_goroutines = map[string]*env.Builtin{
 				err := copier.Copy(&psTemp, &ps)
 				if err != nil {
 					ps.FailureFlag = true
-					return MakeBuiltinError(ps, fmt.Sprintf("failed to copy ps: %s", err), "select")
+					return MakeBuiltinError(ps, fmt.Sprintf("failed to copy ps: %s", err), "select\\fn")
 				}
 				var arg env.Object = nil
 				if recvOK {
 					val, ok := value.Interface().(*env.Object)
 					if !ok {
 						ps.FailureFlag = true
-						return MakeBuiltinError(ps, "value from channel is not an object", "select")
+						return MakeBuiltinError(ps, "value from channel is not an object", "select\\fn")
 					}
 					arg = *val
 				}
@@ -317,7 +317,7 @@ var Builtins_goroutines = map[string]*env.Builtin{
 
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "select")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "select\\fn")
 			}
 			return arg0
 		},

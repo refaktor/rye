@@ -1,9 +1,9 @@
-//go:build b_sqlite
-// +build b_sqlite
+//go:build !no_sqlite
+// +build !no_sqlite
 
 package evaldo
 
-import "C"
+// import "C"
 
 import (
 	"database/sql"
@@ -29,7 +29,7 @@ func SQL_EvalBlock(es *env.ProgramState, mode int, values []any) (*env.ProgramSt
 		//fmt.Println(bu.String())
 	}
 	//fmt.Println(bu.String())
-	es.Res = env.String{bu.String()}
+	es.Res = *env.NewString(bu.String())
 	return es, values
 }
 
@@ -85,7 +85,7 @@ func SQL_EvalExpression(es *env.ProgramState, vals []any, mode int) (*env.Progra
 		fmt.Println("OTHER SQL NODE")
 		return es, "Error 123112431", vals
 	}
-	return es, "ERROR", vals
+	// return es, "ERROR", vals
 }
 
 var Builtins_sqlite = map[string]*env.Builtin{
@@ -113,7 +113,7 @@ var Builtins_sqlite = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.Spreadsheet:
-				return env.String{str.ToHtml()}
+				return *env.NewString(str.ToHtml())
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "htmlize")
 			}
@@ -134,7 +134,7 @@ var Builtins_sqlite = map[string]*env.Builtin{
 					//fmt.Println("BLOCK ****** *****")
 					ser := ps.Ser
 					ps.Ser = str.Series
-					values := make([]any, 0, 0)
+					values := make([]any, 0)
 					_, vals = SQL_EvalBlock(ps, MODE_SQLITE, values)
 					sqlstr = ps.Res.(env.String).Value
 					ps.Ser = ser
@@ -173,7 +173,7 @@ var Builtins_sqlite = map[string]*env.Builtin{
 					//fmt.Println("BLOCK ****** *****")
 					ser := ps.Ser
 					ps.Ser = str.Series
-					values := make([]any, 0, 0)
+					values := make([]any, 0)
 					_, vals = SQL_EvalBlock(ps, MODE_SQLITE, values)
 					sqlstr = ps.Res.(env.String).Value
 					ps.Ser = ser
@@ -189,7 +189,7 @@ var Builtins_sqlite = map[string]*env.Builtin{
 					}
 					columns, _ := rows.Columns()
 					spr := env.NewSpreadsheet(columns)
-					result := make([]map[string]any, 0)
+					// result := make([]map[string]any, 0)
 					if err != nil {
 						fmt.Println(err.Error())
 					} else {
@@ -202,9 +202,9 @@ var Builtins_sqlite = map[string]*env.Builtin{
 								columnPointers[i] = &columns[i]
 							}
 
-							// Scan the result into the column pointers...
+							// TODO Scan the result into the column pointers...
 							if err := rows.Scan(columnPointers...); err != nil {
-								//return err
+								return env.NewError(err.Error())
 							}
 
 							// Create our map, and retrieve the value for each column from the pointers slice,
@@ -212,11 +212,12 @@ var Builtins_sqlite = map[string]*env.Builtin{
 							m := make(map[string]any)
 							for i, colName := range cols {
 								val := columnPointers[i].(*any)
+								// fmt.Println(val)
 								m[colName] = *val
 								sr.Values = append(sr.Values, *val)
 							}
 							spr.AddRow(sr)
-							result = append(result, m)
+							// result = append(result, m)
 							// Outputs: map[columnName:value columnName2:value2 columnName3:value3 ...]
 						}
 						rows.Close() //good habit to close

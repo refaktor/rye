@@ -27,7 +27,7 @@ import (
 var (
 	// fileName = flag.String("fiimle", "", "Path to the Rye file (default: none)")
 	do     = flag.String("do", "", "Evaluates code after it loads a file or last save.")
-	lang   = flag.String("lang", "do", "Select a dialect / language (do, eyr, ...)")
+	lang   = flag.String("lang", "rye", "Select a dialect / language (do, eyr, ...)")
 	silent = flag.Bool("silent", false, "Console doesn't display return values")
 	//	quit    = flag.Bool("quit", false, "Quits after executing.")
 	console = flag.Bool("console", false, "Enters console after a file is evaluated.")
@@ -541,6 +541,18 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 			fmt.Println("There was no `here` file.")
 		}
 	}
+
+	// c := make(chan os.Signal, 1)
+	// signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+
+	//go func() {
+	// sig := <-c
+	// fmt.Println()
+	// fmt.Println("Captured signal:", sig)
+	// Perform cleanup or other actions here
+	// os.Exit(0)
+	//}()
+	//fmt.Println("Waiting for signal")
 
 	evaldo.DoRyeRepl(es, lang, evaldo.ShowResults)
 }

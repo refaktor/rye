@@ -1,5 +1,5 @@
-//go:build !b_bson
-// +build !b_bson
+//go:build no_bson
+// +build no_bson
 
 package evaldo
 

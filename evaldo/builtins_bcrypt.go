@@ -1,5 +1,5 @@
-//go:build b_bcrypt
-// +build b_bcrypt
+//go:build !no_bcrypt
+// +build !no_bcrypt
 
 package evaldo
 
@@ -20,7 +20,7 @@ func __bcrypt_hash(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 
 			ps.FailureFlag = true
 			return MakeBuiltinError(ps, "Problem in hashing.", "__bcrypt_hash")
 		}
-		return env.String{string(bytes)}
+		return env.NewString(string(bytes))
 	default:
 		ps.FailureFlag = true
 		return MakeArgError(ps, 1, []env.Type{env.StringType}, "__bcrypt_hash")
@@ -34,9 +34,9 @@ func __bcrypt_check(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2
 		case env.String:
 			err := bcrypt.CompareHashAndPassword([]byte(hash.Value), []byte(password.Value))
 			if err == nil {
-				return env.Integer{1}
+				return env.NewInteger(1)
 			} else {
-				return env.Integer{0}
+				return env.NewInteger(0)
 			}
 		default:
 			ps.FailureFlag = true
@@ -55,7 +55,7 @@ func __generate_token(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, ar
 		if _, err := rand.Read(b); err != nil {
 			return MakeBuiltinError(ps, "Problem reading random stream.", "__generate_token")
 		}
-		return env.String{hex.EncodeToString(b)}
+		return env.NewString(hex.EncodeToString(b))
 	default:
 		ps.FailureFlag = true
 		return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "__generate_token")

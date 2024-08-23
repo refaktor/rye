@@ -53,7 +53,7 @@ func MakeArgError(env1 *env.ProgramState, N int, typ []env.Type, fn string) *env
 		}
 		types += env.NativeTypes[tt-1]
 	}
-	return env.NewError("Function " + fn + " requires argument " + strconv.Itoa(N) + " to be of	: " + types + ".")
+	return env.NewError("builtin `" + fn + "` requires argument " + strconv.Itoa(N) + " to be: " + types + ".")
 }
 
 func MakeNativeArgError(env1 *env.ProgramState, N int, knd []string, fn string) *env.Error {
@@ -439,7 +439,7 @@ var builtins = map[string]*env.Builtin{
 				}
 				return *env.NewDecimal(floatVal)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "to-integer")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "to-decimal")
 			}
 		},
 	},
@@ -530,7 +530,7 @@ var builtins = map[string]*env.Builtin{
 			case env.String:
 				return *env.NewUri1(ps.Idx, val.Value) // TODO turn to switch
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "to-file")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "to-uri")
 			}
 
 		},
@@ -695,13 +695,13 @@ var builtins = map[string]*env.Builtin{
 						ctx.Mod(arg.Index, *env.NewInteger(iintval.Value - 1))
 						return *env.NewInteger(1 + iintval.Value)
 					default:
-						return MakeBuiltinError(ps, "Value in word is not integer.", "inc!")
+						return MakeBuiltinError(ps, "Value in word is not integer.", "dec!")
 					}
 				}
-				return MakeBuiltinError(ps, "Word not found in context.", "inc!")
+				return MakeBuiltinError(ps, "Word not found in context.", "dec!")
 
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.WordType}, "inc!")
+				return MakeArgError(ps, 1, []env.Type{env.WordType}, "dec!")
 			}
 		},
 	},
@@ -745,7 +745,7 @@ var builtins = map[string]*env.Builtin{
 						case env.Word:
 							// get nth value from values
 							if len(vals.Series.S) < i {
-								return MakeBuiltinError(ps, "More words than values.", "set")
+								return MakeBuiltinError(ps, "More words than values.", "set!")
 							}
 							val := vals.Series.S[i]
 							// if it exists then we set it to word from words
@@ -755,18 +755,18 @@ var builtins = map[string]*env.Builtin{
 							}*/
 						default:
 							fmt.Println(word)
-							return MakeBuiltinError(ps, "Only words in words block", "set")
+							return MakeBuiltinError(ps, "Only words in words block", "set!")
 						}
 					}
 					return arg0
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "set")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "set!")
 				}
 			case env.Word:
 				ps.Ctx.Mod(words.Index, arg0)
 				return arg0
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "set")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "set!")
 			}
 		},
 	},
@@ -780,7 +780,7 @@ var builtins = map[string]*env.Builtin{
 			case env.Word:
 				return ps.Ctx.Unset(word.Index, ps.Idx)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.WordType}, "set")
+				return MakeArgError(ps, 1, []env.Type{env.WordType}, "unset!")
 			}
 		},
 	},
@@ -796,17 +796,17 @@ var builtins = map[string]*env.Builtin{
 				if found {
 					return object
 				} else {
-					return MakeBuiltinError(ps, "Word not found in contexts	", "get")
+					return MakeBuiltinError(ps, "Word not found in contexts	", "get_")
 				}
 			case env.Opword:
 				object, found := ps.Ctx.Get(w.Index)
 				if found {
 					return object
 				} else {
-					return MakeBuiltinError(ps, "Word not found in contexts	", "get")
+					return MakeBuiltinError(ps, "Word not found in contexts	", "get_")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.WordType}, "set")
+				return MakeArgError(ps, 1, []env.Type{env.WordType}, "get_")
 			}
 		},
 	},
@@ -877,7 +877,7 @@ var builtins = map[string]*env.Builtin{
 				env1.Ctx.Doc = d.Value
 				return *env.NewInteger(1)
 			default:
-				return MakeArgError(env1, 1, []env.Type{env.StringType}, "doc")
+				return MakeArgError(env1, 1, []env.Type{env.StringType}, "doc!")
 			}
 		},
 	},
@@ -1089,7 +1089,7 @@ var builtins = map[string]*env.Builtin{
 					return *env.NewInteger(0)
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "odd")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "even")
 			}
 		},
 	},
@@ -1110,6 +1110,15 @@ var builtins = map[string]*env.Builtin{
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "mod")
 			}
+		},
+	},
+
+	"_.": { // ***
+		Argsn: 1,
+		Doc:   "Accepts argument and returns void, meant to be used as drop in Eyr, void is not a valid runtime value.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return *env.NewVoid()
 		},
 	},
 
@@ -1264,7 +1273,7 @@ var builtins = map[string]*env.Builtin{
 	},
 	"_/": { // **
 		Argsn: 2,
-		Doc:   "Divided two numbers.",
+		Doc:   "Divide two numbers and return a decimal.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch a := arg0.(type) {
@@ -1304,6 +1313,51 @@ var builtins = map[string]*env.Builtin{
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "_/")
+			}
+		},
+	},
+	"_//": { // **
+		Argsn: 2,
+		Doc:   "Divides two numbers and return truncated integer.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch a := arg0.(type) {
+			case env.Integer:
+				switch b := arg1.(type) {
+				case env.Integer:
+					if b.Value == 0 {
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, "Can't divide by Zero.", "_//")
+					}
+					return *env.NewInteger(a.Value / b.Value)
+				case env.Decimal:
+					if b.Value == 0.0 {
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, "Can't divide by Zero.", "_//")
+					}
+					return *env.NewInteger(a.Value / int64(b.Value))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "_//")
+				}
+			case env.Decimal:
+				switch b := arg1.(type) {
+				case env.Integer:
+					if b.Value == 0 {
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, "Can't divide by Zero.", "_//")
+					}
+					return *env.NewInteger(int64(a.Value) / b.Value)
+				case env.Decimal:
+					if b.Value == 0.0 {
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, "Can't divide by Zero.", "_//")
+					}
+					return *env.NewInteger(int64(a.Value) / int64(b.Value))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "_//")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "_//")
 			}
 		},
 	},
@@ -1451,11 +1505,11 @@ var builtins = map[string]*env.Builtin{
 					fmt.Printf(arg.Value, val.Value)
 					// TODO make option with multiple values and block as second arg
 				default:
-					return MakeArgError(ps, 1, []env.Type{env.StringType, env.DecimalType, env.IntegerType}, "format")
+					return MakeArgError(ps, 1, []env.Type{env.StringType, env.DecimalType, env.IntegerType}, "prnf")
 				}
 				return arg0
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.StringType}, "format")
+				return MakeArgError(ps, 2, []env.Type{env.StringType}, "prnf")
 			}
 		},
 	},
@@ -1498,7 +1552,7 @@ var builtins = map[string]*env.Builtin{
 				news := strings.ReplaceAll(arg.Value, "{}", vals)
 				fmt.Println(news)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "esc")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "printv")
 			}
 			return arg0
 		},
@@ -1729,7 +1783,7 @@ var builtins = map[string]*env.Builtin{
 				//ps = env.AddToProgramState(ps, block.Series, genv)
 				return ps.Res
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "import")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "import\\live")
 			}
 		},
 	},
@@ -1937,7 +1991,7 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = bloc.Series
 					// we eval the block (current context / scope stays the same as it was in parent block)
 					// Inj means we inject the condition value into the block, because it costs us very little. we could do "if name { .print }"
-					EvalBlockInj(ps, arg0, true)
+					EvalBlockInjMultiDialect(ps, arg0, true)
 					// we set temporary series back to current program state
 					ps.Ser = ser
 					// we return the last return value (the return value of executing the block) "a: if 1 { 100 }" a becomes 100,
@@ -1993,7 +2047,7 @@ var builtins = map[string]*env.Builtin{
 				if !cond1 {
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlockInj(ps, arg0, true)
+					EvalBlockInjMultiDialect(ps, arg0, true)
 					ps.Ser = ser
 					ps.ReturnFlag = true
 					return ps.Res
@@ -2037,7 +2091,7 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = bloc2.Series
 						ps.Ser.Reset()
 					}
-					EvalBlockInj(ps, arg0, true)
+					EvalBlockInjMultiDialect(ps, arg0, true)
 					ps.Ser = ser
 					return ps.Res
 				default:
@@ -2121,7 +2175,7 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = cc.Series
 						// we eval the block (current context / scope stays the same as it was in parent block)
 						// Inj means we inject the condition value into the block, because it costs us very little. we could do "if name { .print }"
-						EvalBlockInj(ps, arg0, true)
+						EvalBlockInjMultiDialect(ps, arg0, true)
 						// we set temporary series back to current program state
 						ps.Ser = ser
 						// we return the last return value (the return value of executing the block) "a: if 1 { 100 }" a becomes 100,
@@ -2186,7 +2240,7 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = cc.Series
 						// we eval the block (current context / scope stays the same as it was in parent block)
 						// Inj means we inject the condition value into the block, because it costs us very little. we could do "if name { .print }"
-						EvalBlockInj(ps, arg0, true)
+						EvalBlockInjMultiDialect(ps, arg0, true)
 						// we set temporary series back to current program state
 						ps.Ser = ser
 						// we return the last return value (the return value of executing the block) "a: if 1 { 100 }" a becomes 100,
@@ -2260,7 +2314,7 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = blk.Series
 						// we eval the block (current context / scope stays the same as it was in parent block)
 						// Inj means we inject the condition value into the block, because it costs us very little. we could do "if name { .print }"
-						EvalBlockInj(ps, cumul, true)
+						EvalBlockInjMultiDialect(ps, cumul, true)
 						cumul = ps.Res
 					}
 					if bloc.Series.AtLast() {
@@ -2315,6 +2369,7 @@ var builtins = map[string]*env.Builtin{
 	"do": { // **
 		Argsn: 1,
 		Doc:   "Takes a block of code and does (runs) it.",
+		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -2332,6 +2387,7 @@ var builtins = map[string]*env.Builtin{
 	"try": { // **
 		Argsn: 1,
 		Doc:   "Takes a block of code and does (runs) it.",
+		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -2349,7 +2405,7 @@ var builtins = map[string]*env.Builtin{
 				ps.Ser = ser
 				return ps.Res
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "do")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "try")
 			}
 		},
 	},
@@ -2363,7 +2419,7 @@ var builtins = map[string]*env.Builtin{
 			case env.Block:
 				ser := ps.Ser
 				ps.Ser = bloc.Series
-				EvalBlockInj(ps, arg0, true)
+				EvalBlockInjMultiDialect(ps, arg0, true)
 				ps.Ser = ser
 				return ps.Res
 			default:
@@ -2372,7 +2428,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"do\\inside": { // **
+	"do\\in": { // **
 		Argsn: 2,
 		Doc:   "Takes a Context and a Block. It Does a block inside a given Context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2387,17 +2443,17 @@ var builtins = map[string]*env.Builtin{
 					return ps.Res
 				default:
 					ps.ErrorFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "do-in")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "do\\in")
 				}
 			default:
 				ps.ErrorFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "do-in")
+				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "do\\in")
 			}
 
 		},
 	},
 
-	"do\\inside\\try": { // **
+	"do\\in\\try": { // **
 		Argsn: 2,
 		Doc:   "Takes a Context and a Block. It Does a block inside a given Context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2420,17 +2476,17 @@ var builtins = map[string]*env.Builtin{
 					return ps.Res
 				default:
 					ps.ErrorFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "do-in")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "do\\in\\try")
 				}
 			default:
 				ps.ErrorFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "do-in")
+				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "do\\in\\try")
 			}
 
 		},
 	},
 
-	"do\\in": { // **
+	"do\\par": { // **
 		Argsn: 2,
 		Doc:   "Takes a Context and a Block. It Does a block in current context but with parent a given Context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2471,11 +2527,11 @@ var builtins = map[string]*env.Builtin{
 					return ps.Res
 				default:
 					ps.ErrorFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "do-in")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "do\\par")
 				}
 			default:
 				ps.ErrorFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "do-in")
+				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "do\\par")
 			}
 
 		},
@@ -2841,7 +2897,11 @@ var builtins = map[string]*env.Builtin{
 		Argsn: 0,
 		Doc:   "Lists words in current context",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			fmt.Println(ps.Ctx.Parent.Preview(*ps.Idx, ""))
+			if ps.Ctx.Parent != nil {
+				fmt.Println(ps.Ctx.Parent.Preview(*ps.Idx, ""))
+			} else {
+				fmt.Println("No parent")
+			}
 			return env.Void{}
 		},
 	},
@@ -2868,10 +2928,14 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
-				fmt.Println(ps.Ctx.Parent.Preview(*ps.Idx, s1.Value))
+				if ps.Ctx.Parent != nil {
+					fmt.Println(ps.Ctx.Parent.Preview(*ps.Idx, s1.Value))
+				} else {
+					fmt.Println("No parent")
+				}
 				return env.Void{}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "ls\\")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "lsp\\")
 			}
 		},
 	},
@@ -3054,11 +3118,11 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = ser
 					return *rctx // return the resulting context
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "extend")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "extends")
 				}
 			default:
 				ps.ErrorFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "extend")
+				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "extends")
 			}
 		},
 	},
@@ -3073,10 +3137,10 @@ var builtins = map[string]*env.Builtin{
 					swCtx1.Parent = &swCtx2
 					return swCtx1
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.CtxType}, "bind")
+					return MakeArgError(ps, 2, []env.Type{env.CtxType}, "bind!")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "bind")
+				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "bind!")
 			}
 		},
 	},
@@ -3090,7 +3154,7 @@ var builtins = map[string]*env.Builtin{
 				swCtx1.Parent = nil
 				return swCtx1
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "unbind")
+				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "unbind!")
 			}
 		},
 	},
@@ -3106,7 +3170,7 @@ var builtins = map[string]*env.Builtin{
 				res := arg0
 				ser := ps.Ser
 				ps.Ser = bloc.Series
-				EvalBlockInj(ps, arg0, true)
+				EvalBlockInjMultiDialect(ps, arg0, true)
 				if ps.ErrorFlag {
 					return ps.Res
 				}
@@ -3131,20 +3195,20 @@ var builtins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = wrap.Series
-					EvalBlockInj(ps, arg0, true)
+					EvalBlockInjMultiDialect(ps, arg0, true)
 					if ps.ReturnFlag {
 						return ps.Res
 					}
 
 					ps.Ser = bloc.Series
-					EvalBlockInj(ps, arg0, true)
+					EvalBlockInjMultiDialect(ps, arg0, true)
 					if ps.ReturnFlag {
 						return ps.Res
 					}
 					res := ps.Res
 
 					ps.Ser = wrap.Series
-					EvalBlockInj(ps, arg0, true)
+					EvalBlockInjMultiDialect(ps, arg0, true)
 					ps.Ser = ser
 					if ps.ReturnFlag {
 						return ps.Res
@@ -3169,13 +3233,13 @@ var builtins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = b1.Series
-					EvalBlockInj(ps, arg0, true)
+					EvalBlockInjMultiDialect(ps, arg0, true)
 					if ps.ErrorFlag {
 						return ps.Res
 					}
 					res := ps.Res
 					ps.Ser = b2.Series
-					EvalBlockInj(ps, arg0, true)
+					EvalBlockInjMultiDialect(ps, arg0, true)
 					ps.Ser = ser
 					return res
 				default:
@@ -3200,7 +3264,7 @@ var builtins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = bloc.Series
 					for i := 0; int64(i) < cond.Value; i++ {
-						ps = EvalBlockInj(ps, *env.NewInteger(int64(i + 1)), true)
+						ps = EvalBlockInjMultiDialect(ps, *env.NewInteger(int64(i + 1)), true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -3230,7 +3294,7 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = bloc.Series
 					ps.Res = arg1
 					for i := 0; int64(i) < cond.Value; i++ {
-						ps = EvalBlockInj(ps, acc, true)
+						ps = EvalBlockInjMultiDialect(ps, acc, true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -3260,7 +3324,7 @@ var builtins = map[string]*env.Builtin{
 					ser := ps.Ser
 					for {
 						ps.Ser = cond.Series
-						ps = EvalBlockInj(ps, acc, true)
+						ps = EvalBlockInjMultiDialect(ps, acc, true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -3271,7 +3335,7 @@ var builtins = map[string]*env.Builtin{
 						}
 						ps.Ser.Reset()
 						ps.Ser = bloc.Series
-						ps = EvalBlockInj(ps, acc, true)
+						ps = EvalBlockInjMultiDialect(ps, acc, true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -3280,10 +3344,10 @@ var builtins = map[string]*env.Builtin{
 						acc = ps.Res
 					}
 				default:
-					return MakeArgError(ps, 3, []env.Type{env.BlockType}, "produce")
+					return MakeArgError(ps, 3, []env.Type{env.BlockType}, "produce\\while")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "produce")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "produce\\while")
 			}
 		},
 	},
@@ -3299,11 +3363,11 @@ var builtins = map[string]*env.Builtin{
 					switch accu := arg2.(type) {
 					case env.Word:
 						acc := arg1
-						ps.Ctx.Set(accu.Index, acc)
+						ps.Ctx.Mod(accu.Index, acc)
 						ser := ps.Ser
 						ps.Ser = bloc.Series
 						for i := 0; int64(i) < cond.Value; i++ {
-							ps = EvalBlockInj(ps, acc, true)
+							ps = EvalBlockInjMultiDialect(ps, acc, true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -3360,7 +3424,7 @@ var builtins = map[string]*env.Builtin{
 				ser := ps.Ser
 				ps.Ser = bloc.Series
 				for {
-					EvalBlockInj(ps, arg0, true)
+					EvalBlockInjMultiDialect(ps, arg0, true)
 					if ps.ErrorFlag {
 						return ps.Res
 					}
@@ -3390,8 +3454,8 @@ var builtins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = code.Series
 					for _, ch := range block.Value {
-						ps = EvalBlockInj(ps, *env.NewString(string(ch)), true)
-						if ps.ErrorFlag {
+						ps = EvalBlockInjMultiDialect(ps, *env.NewString(string(ch)), true)
+						if ps.ErrorFlag || ps.ReturnFlag {
 							return ps.Res
 						}
 						ps.Ser.Reset()
@@ -3407,8 +3471,8 @@ var builtins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = code.Series
 					for i := 0; i < block.Series.Len(); i++ {
-						ps = EvalBlockInj(ps, block.Series.Get(i), true)
-						if ps.ErrorFlag {
+						ps = EvalBlockInjMultiDialect(ps, block.Series.Get(i), true)
+						if ps.ErrorFlag || ps.ReturnFlag {
 							return ps.Res
 						}
 						ps.Ser.Reset()
@@ -3424,8 +3488,8 @@ var builtins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = code.Series
 					for i := 0; i < len(block.Data); i++ {
-						ps = EvalBlockInj(ps, env.ToRyeValue(block.Data[i]), true)
-						if ps.ErrorFlag {
+						ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(block.Data[i]), true)
+						if ps.ErrorFlag || ps.ReturnFlag {
 							return ps.Res
 						}
 						ps.Ser.Reset()
@@ -3443,8 +3507,8 @@ var builtins = map[string]*env.Builtin{
 					for i := 0; i < len(block.Rows); i++ {
 						row := block.Rows[i]
 						row.Uplink = &block
-						ps = EvalBlockInj(ps, row, true)
-						if ps.ErrorFlag {
+						ps = EvalBlockInjMultiDialect(ps, row, true)
+						if ps.ErrorFlag || ps.ReturnFlag {
 							return ps.Res
 						}
 						ps.Ser.Reset()
@@ -3472,7 +3536,7 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = code.Series
 
 					for block.Series.GetPos() < block.Series.Len() {
-						ps = EvalBlockInj(ps, block, true)
+						ps = EvalBlockInjMultiDialect(ps, block, true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -3490,10 +3554,10 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = ser
 					return ps.Res
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "for")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "walk")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "for")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "walk")
 			}
 		},
 	},
@@ -3512,7 +3576,7 @@ var builtins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = code.Series
 					for i := 0; i < block.Series.Len(); i++ {
-						ps = EvalBlockInj(ps, block.Series.Get(i), true)
+						ps = EvalBlockInjMultiDialect(ps, block.Series.Get(i), true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -3533,7 +3597,7 @@ var builtins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = code.Series
 					for i := 0; i < len(block.Data); i++ {
-						ps = EvalBlockInj(ps, env.ToRyeValue(block.Data[i]), true)
+						ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(block.Data[i]), true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -3556,7 +3620,7 @@ var builtins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = code.Series
 					for i := 0; i < len(input); i++ {
-						ps = EvalBlockInj(ps, env.ToRyeValue(input[i]), true)
+						ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(input[i]), true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -3576,7 +3640,7 @@ var builtins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = code.Series
 					for i := 0; i < len(block.Rows); i++ {
-						ps = EvalBlockInj(ps, block.Rows[i], true)
+						ps = EvalBlockInjMultiDialect(ps, block.Rows[i], true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -3614,7 +3678,7 @@ var builtins = map[string]*env.Builtin{
 							ps.Ser = code.Series
 							purged := make([]env.Object, 0)
 							for i := 0; i < block.Series.Len(); i++ {
-								ps = EvalBlockInj(ps, block.Series.Get(i), true)
+								ps = EvalBlockInjMultiDialect(ps, block.Series.Get(i), true)
 								if ps.ErrorFlag {
 									return ps.Res
 								}
@@ -3626,7 +3690,7 @@ var builtins = map[string]*env.Builtin{
 								ps.Ser.Reset()
 							}
 							ps.Ser = ser
-							ctx.Set(wrd.Index, block)
+							ctx.Mod(wrd.Index, block)
 							return env.NewBlock(*env.NewTSeries(purged))
 						default:
 							return MakeArgError(ps, 1, []env.Type{env.BlockType}, "purge!")
@@ -3663,7 +3727,7 @@ var builtins = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
-							ps = EvalBlockInj(ps, list.Series.Get(i), true)
+							ps = EvalBlockInjMultiDialect(ps, list.Series.Get(i), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -3692,7 +3756,7 @@ var builtins = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
-							ps = EvalBlockInj(ps, env.ToRyeValue(list.Data[i]), true)
+							ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(list.Data[i]), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -3722,7 +3786,7 @@ var builtins = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
-							ps = EvalBlockInj(ps, *env.NewString(string(input[i])), true)
+							ps = EvalBlockInjMultiDialect(ps, *env.NewString(string(input[i])), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -3764,8 +3828,8 @@ var builtins = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
-							ps.Ctx.Set(accu.Index, *env.NewInteger(int64(i + 1)))
-							ps = EvalBlockInj(ps, list.Series.Get(i), true)
+							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i + 1)))
+							ps = EvalBlockInjMultiDialect(ps, list.Series.Get(i), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -3790,8 +3854,8 @@ var builtins = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
-							ps.Ctx.Set(accu.Index, *env.NewInteger(int64(i + 1)))
-							ps = EvalBlockInj(ps, env.ToRyeValue(list.Data[i]), true)
+							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i + 1)))
+							ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(list.Data[i]), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -3817,8 +3881,8 @@ var builtins = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
-							ps.Ctx.Set(accu.Index, *env.NewInteger(int64(i + 1)))
-							ps = EvalBlockInj(ps, *env.NewString(string(input[i])), true)
+							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i + 1)))
+							ps = EvalBlockInjMultiDialect(ps, *env.NewString(string(input[i])), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -3857,8 +3921,8 @@ var builtins = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
-							ps.Ctx.Set(accu.Index, *env.NewInteger(int64(i)))
-							ps = EvalBlockInj(ps, list.Series.Get(i), true)
+							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i)))
+							ps = EvalBlockInjMultiDialect(ps, list.Series.Get(i), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -3868,10 +3932,10 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = ser
 						return *env.NewBlock(*env.NewTSeries(newl))
 					default:
-						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "map\\pos")
+						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "map\\idx")
 					}
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType}, "map\\pos")
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "map\\idx")
 				}
 			case env.List:
 				switch block := arg2.(type) {
@@ -3883,8 +3947,8 @@ var builtins = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
-							ps.Ctx.Set(accu.Index, *env.NewInteger(int64(i)))
-							ps = EvalBlockInj(ps, env.ToRyeValue(list.Data[i]), true)
+							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i)))
+							ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(list.Data[i]), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -3894,10 +3958,10 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = ser
 						return *env.NewList(newl)
 					default:
-						return MakeArgError(ps, 2, []env.Type{env.WordType}, "map\\pos")
+						return MakeArgError(ps, 2, []env.Type{env.WordType}, "map\\idx")
 					}
 				default:
-					return MakeArgError(ps, 3, []env.Type{env.BlockType}, "map\\pos")
+					return MakeArgError(ps, 3, []env.Type{env.BlockType}, "map\\idx")
 				}
 			case env.String:
 				input := []rune(list.Value)
@@ -3910,8 +3974,8 @@ var builtins = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
-							ps.Ctx.Set(accu.Index, *env.NewInteger(int64(i)))
-							ps = EvalBlockInj(ps, *env.NewString(string(input[i])), true)
+							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i)))
+							ps = EvalBlockInjMultiDialect(ps, *env.NewString(string(input[i])), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -3923,13 +3987,13 @@ var builtins = map[string]*env.Builtin{
 
 						return *env.NewBlock(*env.NewTSeries(newl))
 					default:
-						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "map\\pos")
+						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "map\\idx")
 					}
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType}, "map\\pos")
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "map\\idx")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "map\\pos")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "map\\idx")
 			}
 		},
 	},
@@ -3954,8 +4018,8 @@ var builtins = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 1; i < l; i++ {
-							ps.Ctx.Set(accu.Index, acc)
-							ps = EvalBlockInj(ps, list.Series.Get(i), true)
+							ps.Ctx.Mod(accu.Index, acc)
+							ps = EvalBlockInjMultiDialect(ps, list.Series.Get(i), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -3987,8 +4051,8 @@ var builtins = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 1; i < l; i++ {
-							ps.Ctx.Set(accu.Index, acc)
-							ps = EvalBlockInj(ps, env.ToRyeValue(list.Data[i]), true)
+							ps.Ctx.Mod(accu.Index, acc)
+							ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(list.Data[i]), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -4017,8 +4081,8 @@ var builtins = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 1; i < len(input); i++ {
-							ps.Ctx.Set(accu.Index, acc)
-							ps = EvalBlockInj(ps, *env.NewString(string(input[i])), true)
+							ps.Ctx.Mod(accu.Index, acc)
+							ps = EvalBlockInjMultiDialect(ps, *env.NewString(string(input[i])), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -4060,8 +4124,8 @@ var builtins = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
-							ps.Ctx.Set(accu.Index, acc)
-							ps = EvalBlockInj(ps, list.Series.Get(i), true)
+							ps.Ctx.Mod(accu.Index, acc)
+							ps = EvalBlockInjMultiDialect(ps, list.Series.Get(i), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -4087,8 +4151,8 @@ var builtins = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
-							ps.Ctx.Set(accu.Index, acc)
-							ps = EvalBlockInj(ps, env.ToRyeValue(list.Data[i]), true)
+							ps.Ctx.Mod(accu.Index, acc)
+							ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(list.Data[i]), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -4114,8 +4178,8 @@ var builtins = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 0; i < len(input); i++ {
-							ps.Ctx.Set(accu.Index, acc)
-							ps = EvalBlockInj(ps, *env.NewString(string(input[i])), true)
+							ps.Ctx.Mod(accu.Index, acc)
+							ps = EvalBlockInjMultiDialect(ps, *env.NewString(string(input[i])), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -4174,7 +4238,7 @@ var builtins = map[string]*env.Builtin{
 							item = lo[i]
 						}
 						// ps.Ctx.Set(accu.Index, acc)
-						ps = EvalBlockInj(ps, env.ToRyeValue(item), true)
+						ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(item), true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -4242,7 +4306,7 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
 							curval := list.Series.Get(i)
-							ps = EvalBlockInj(ps, curval, true)
+							ps = EvalBlockInjMultiDialect(ps, curval, true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -4291,7 +4355,7 @@ var builtins = map[string]*env.Builtin{
 						for i := 0; i < l; i++ {
 							curval := list.Data[i]
 							curvalRye := env.ToRyeValue(list.Data[i])
-							ps = EvalBlockInj(ps, curvalRye, true)
+							ps = EvalBlockInjMultiDialect(ps, curvalRye, true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -4338,7 +4402,7 @@ var builtins = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for _, curval := range list.Value {
-							ps = EvalBlockInj(ps, *env.NewString(string(curval)), true)
+							ps = EvalBlockInjMultiDialect(ps, *env.NewString(string(curval)), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -4413,7 +4477,7 @@ var builtins = map[string]*env.Builtin{
 						} else {
 							curval = lo[i]
 						}
-						ps = EvalBlockInj(ps, curval, true)
+						ps = EvalBlockInjMultiDialect(ps, curval, true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -4525,7 +4589,7 @@ var builtins = map[string]*env.Builtin{
 						} else {
 							item = env.ToRyeValue(ls[i])
 						}
-						ps = EvalBlockInj(ps, env.ToRyeValue(item), true)
+						ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(item), true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -4620,7 +4684,7 @@ var builtins = map[string]*env.Builtin{
 						} else {
 							item = *env.NewString(string(ls[i]))
 						}
-						ps = EvalBlockInj(ps, env.ToRyeValue(item), true)
+						ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(item), true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -4877,7 +4941,7 @@ var builtins = map[string]*env.Builtin{
 
 	"mul": { // **
 		Argsn: 1,
-		Doc:   "Accepts a Block or List of values and returns the sum.",
+		Doc:   "Accepts a Block or List of values and returns the product.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var sum float64 = 1
 			switch block := arg0.(type) {
@@ -4893,7 +4957,7 @@ var builtins = map[string]*env.Builtin{
 						sum *= val1.Value
 						onlyInts = false
 					default:
-						return MakeBuiltinError(ps, "Block type should be Integer or Decimal.", "sum")
+						return MakeBuiltinError(ps, "Block type should be Integer or Decimal.", "mul")
 					}
 				}
 				if onlyInts {
@@ -4913,7 +4977,7 @@ var builtins = map[string]*env.Builtin{
 						sum *= val1
 						onlyInts = false
 					default:
-						return MakeBuiltinError(ps, "List type should be Integer or Decimal.", "sum")
+						return MakeBuiltinError(ps, "List type should be Integer or Decimal.", "mul")
 					}
 				}
 				if onlyInts {
@@ -4925,7 +4989,7 @@ var builtins = map[string]*env.Builtin{
 			case env.Vector:
 				return *env.NewDecimal(block.Value.Sum())
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.VectorType}, "sum")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.VectorType}, "mul")
 			}
 		},
 	},
@@ -5056,7 +5120,7 @@ var builtins = map[string]*env.Builtin{
 					return ps.Res
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "recur-if\\1")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "recur-if")
 			}
 		},
 	},
@@ -5070,7 +5134,7 @@ var builtins = map[string]*env.Builtin{
 				if cond.Value > 0 {
 					switch arg := arg1.(type) {
 					case env.Integer:
-						ps.Ctx.Set(ps.Args[0], arg)
+						ps.Ctx.Mod(ps.Args[0], arg)
 						ps.Ser.Reset()
 						return nil
 					default:
@@ -5290,11 +5354,11 @@ var builtins = map[string]*env.Builtin{
 					return *env.NewFunctionC(args, body, ps.Ctx, false, false, doc)
 				default:
 					ps.ErrorFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "fnc")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "fn\\cc")
 				}
 			default:
 				ps.ErrorFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "fnc")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "fn\\cc")
 			}
 		},
 	},
@@ -5325,11 +5389,11 @@ var builtins = map[string]*env.Builtin{
 					}
 				default:
 					ps.ErrorFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.CtxType}, "fnc")
+					return MakeArgError(ps, 2, []env.Type{env.CtxType}, "fn\\par")
 				}
 			default:
 				ps.ErrorFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "fnc")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "fn\\par")
 			}
 		},
 	},
@@ -5347,7 +5411,7 @@ var builtins = map[string]*env.Builtin{
 			case env.Block:
 				ok, doc := util.ProcessFunctionSpec(args)
 				if !ok {
-					return MakeBuiltinError(ps, doc, "fn")
+					return MakeBuiltinError(ps, doc, "fn\\in")
 				}
 				switch ctx := arg1.(type) {
 				case *env.RyeCtx:
@@ -5356,7 +5420,7 @@ var builtins = map[string]*env.Builtin{
 						return *env.NewFunctionC(args, body, ctx, false, true, doc)
 					default:
 						ps.ErrorFlag = true
-						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "fnc")
+						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "fn\\in")
 					}
 				case env.RyeCtx:
 					switch body := arg2.(type) {
@@ -5364,15 +5428,15 @@ var builtins = map[string]*env.Builtin{
 						return *env.NewFunctionC(args, body, &ctx, false, true, doc)
 					default:
 						ps.ErrorFlag = true
-						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "fnc")
+						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "fn\\in")
 					}
 				default:
 					ps.ErrorFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.CtxType}, "fnc")
+					return MakeArgError(ps, 2, []env.Type{env.CtxType}, "fn\\in")
 				}
 			default:
 				ps.ErrorFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "fnc")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "fn\\in")
 			}
 		},
 	},
@@ -5386,19 +5450,19 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Creates a function with specific context.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			ctx := ps.Ctx
+			ctx := *ps.Ctx
 			switch args := arg0.(type) {
 			case env.Block:
 				ok, doc := util.ProcessFunctionSpec(args)
 				if !ok {
-					return MakeBuiltinError(ps, doc, "fn")
+					return MakeBuiltinError(ps, doc, "closure")
 				}
 				switch body := arg1.(type) {
 				case env.Block:
-					return *env.NewFunctionC(args, body, ctx, false, false, doc)
+					return *env.NewFunctionC(args, body, &ctx, false, false, doc)
 				default:
 					ps.ErrorFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "fnc")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "closure")
 				}
 			default:
 				ps.ErrorFlag = true
@@ -5566,21 +5630,21 @@ var builtins = map[string]*env.Builtin{
 			case env.String:
 				return *env.NewString(s1.Value + "\n")
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "left")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "nl")
 			}
 		},
 	},
 
 	"pink": {
 		Argsn: 1,
-		Doc:   "Returns the argument 1 a d a newline character.",
+		Doc:   "Returns the argument 1 with ANSI escape codes for magenta display.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
 				return *env.NewString("\033[35m" + s1.Value + "\033[0m")
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "left")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "pink")
 			}
 		},
 	},
@@ -5594,7 +5658,7 @@ var builtins = map[string]*env.Builtin{
 			case env.String:
 				return *env.NewString(strings.TrimSpace(s1.Value))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "trim")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "trim\\space")
 			}
 		},
 	},
@@ -5609,10 +5673,10 @@ var builtins = map[string]*env.Builtin{
 				case env.String:
 					return *env.NewString(strings.Trim(s1.Value, s2.Value))
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.StringType}, "trim\\")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "trim")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "trim\\")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "trim")
 			}
 		},
 	},
@@ -5627,10 +5691,10 @@ var builtins = map[string]*env.Builtin{
 				case env.String:
 					return *env.NewString(strings.TrimRight(s1.Value, s2.Value))
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.StringType}, "trim\\")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "trim\\right")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "trim\\")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "trim\\right")
 			}
 		},
 	},
@@ -5645,10 +5709,10 @@ var builtins = map[string]*env.Builtin{
 				case env.String:
 					return *env.NewString(strings.TrimLeft(s1.Value, s2.Value))
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.StringType}, "trim\\")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "trim\\left")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "trim\\")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "trim\\left")
 			}
 		},
 	},
@@ -5876,7 +5940,7 @@ var builtins = map[string]*env.Builtin{
 			case env.String:
 				return *env.NewString(s1.Value + " ")
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "concat")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "space")
 			}
 		},
 	},
@@ -5963,7 +6027,7 @@ var builtins = map[string]*env.Builtin{
 					inter := util.IntersectStrings(s1.Value, s2.Value)
 					return *env.NewString(inter)
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.StringType}, "intersect")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "intersection")
 				}
 			case env.Block:
 				switch b2 := arg1.(type) {
@@ -5971,7 +6035,7 @@ var builtins = map[string]*env.Builtin{
 					inter := util.IntersectBlocks(ps, s1, b2)
 					return *env.NewBlock(*env.NewTSeries(inter))
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "intersect")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "intersection")
 				}
 			case env.List:
 				switch l2 := arg1.(type) {
@@ -5979,10 +6043,10 @@ var builtins = map[string]*env.Builtin{
 					inter := util.IntersectLists(ps, s1, l2)
 					return *env.NewList(inter)
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.ListType}, "intersect")
+					return MakeArgError(ps, 2, []env.Type{env.ListType}, "intersection")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType, env.ListType}, "intersect")
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType, env.ListType}, "intersection")
 			}
 		},
 	},
@@ -6270,13 +6334,13 @@ var builtins = map[string]*env.Builtin{
 					case env.String:
 						return util.StringToFieldsWithQuoted(str.Value, sepa.Value, quote.Value)
 					default:
-						return MakeArgError(ps, 3, []env.Type{env.StringType}, "split-quoted")
+						return MakeArgError(ps, 3, []env.Type{env.StringType}, "split\\quoted")
 					}
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.StringType}, "split-quoted")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "split\\quoted")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "split-quoted")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "split\\quoted")
 			}
 		},
 	},
@@ -6321,7 +6385,7 @@ var builtins = map[string]*env.Builtin{
 					}
 					return *env.NewBlock(*env.NewTSeries(spl2))
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "split-every")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "split\\every")
 				}
 			case env.Block:
 				switch sepa := arg1.(type) {
@@ -6333,10 +6397,10 @@ var builtins = map[string]*env.Builtin{
 					}
 					return *env.NewBlock(*env.NewTSeries(spl2))
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "split-every")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "split\\every")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType}, "split-every")
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType}, "split\\every")
 			}
 		},
 	},
@@ -6365,6 +6429,9 @@ var builtins = map[string]*env.Builtin{
 				}
 				return *env.NewString(string(str[0]))
 			case env.Spreadsheet:
+				if s1.NRows() == 0 {
+					return MakeBuiltinError(ps, "Spreadsheet is empty.", "first")
+				}
 				return s1.GetRow(ps, int(0))
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType, env.BlockType, env.StringType, env.ListType}, "first")
@@ -6722,7 +6789,7 @@ var builtins = map[string]*env.Builtin{
 					case env.Block:
 						s := &oldval.Series
 						oldval.Series = *s.RmLast()
-						ctx.Set(wrd.Index, oldval)
+						ctx.Mod(wrd.Index, oldval)
 						return oldval
 					default:
 						return MakeBuiltinError(ps, "Old value should be Block type.", "remove-last!")
@@ -7047,7 +7114,7 @@ var builtins = map[string]*env.Builtin{
 			case *env.Error:
 				return MakeRyeError(ps, arg0, er)
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.ErrorType}, "wrap\\error")
+				return MakeArgError(ps, 2, []env.Type{env.ErrorType}, "wrap\\failure")
 			}
 		},
 	},
@@ -7197,7 +7264,7 @@ var builtins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlockInj(ps, arg0, true)
+					EvalBlockInjMultiDialect(ps, arg0, true)
 					ps.Ser = ser
 					return ps.Res
 				default:
@@ -7222,7 +7289,7 @@ var builtins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlockInj(ps, arg0, true)
+					EvalBlockInjMultiDialect(ps, arg0, true)
 					ps.Ser = ser
 					ps.ReturnFlag = true
 					return ps.Res
@@ -7248,7 +7315,7 @@ var builtins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlockInj(ps, arg0, true)
+					EvalBlockInjMultiDialect(ps, arg0, true)
 					ps.Ser = ser
 					ps.SkipFlag = true
 					return ps.Res
@@ -7274,7 +7341,7 @@ var builtins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlockInj(ps, arg0, true)
+					EvalBlockInjMultiDialect(ps, arg0, true)
 					ps.Ser = ser
 					return ps.Res
 				default:
@@ -7286,7 +7353,7 @@ var builtins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlockInj(ps, arg0, true)
+					EvalBlockInjMultiDialect(ps, arg0, true)
 					ps.Ser = ser
 					return ps.Res
 				default:
@@ -7309,7 +7376,7 @@ var builtins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlockInj(ps, arg0, true)
+					EvalBlockInjMultiDialect(ps, arg0, true)
 					ps.Ser = ser
 					return ps.Res
 				default:
@@ -7433,7 +7500,7 @@ var builtins = map[string]*env.Builtin{
 				return *env.NewInteger(int64(s1.Value.Len()))
 			default:
 				fmt.Println(s1)
-				return MakeArgError(ps, 2, []env.Type{env.StringType, env.DictType, env.ListType, env.BlockType, env.SpreadsheetType, env.VectorType}, "range")
+				return MakeArgError(ps, 2, []env.Type{env.StringType, env.DictType, env.ListType, env.BlockType, env.SpreadsheetType, env.VectorType}, "length?")
 			}
 		},
 	},
@@ -7803,7 +7870,7 @@ var BuiltinNames map[string]int // TODO --- this looks like some hanging global 
 func RegisterBuiltins2(builtins map[string]*env.Builtin, ps *env.ProgramState, name string) {
 	BuiltinNames[name] = len(builtins)
 	for k, v := range builtins {
-		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc)
+		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc+" ("+name+")")
 		registerBuiltin(ps, k, *bu)
 	}
 }
@@ -7815,23 +7882,23 @@ func RegisterBuiltinsInContext(builtins map[string]*env.Builtin, ps *env.Program
 	ps.Ctx = env.NewEnv(ps.Ctx) // make new context with no parent
 
 	for k, v := range builtins {
-		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc)
+		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc+" ("+k+")")
 		registerBuiltin(ps, k, *bu)
 	}
 	newctx := ps.Ctx
 	ps.Ctx = ctx
 
 	wordIdx := ps.Idx.IndexWord(name)
-	ps.Ctx.Set(wordIdx, *newctx)
+	ps.Ctx.Mod(wordIdx, *newctx)
 }
 
 func registerBuiltin(ps *env.ProgramState, word string, builtin env.Builtin) {
 	// indexWord
 	// TODO -- this with string separator is a temporary way of how we define generic builtins
 	// in future a map will probably not be a map but an array and builtin will also support the Kind value
-
+	builtin.Doc = builtin.Doc + " (" + word + ")"
 	idxk := 0
-	if strings.Index(word, "//") > 0 {
+	if word != "_//" && strings.Index(word, "//") > 0 {
 		temp := strings.Split(word, "//")
 		word = temp[1]
 		idxk = ps.Idx.IndexWord(temp[0])

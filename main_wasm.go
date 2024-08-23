@@ -4,6 +4,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
@@ -62,6 +63,9 @@ var (
 func sendMessageToJS(message string) {
 	jsCallback.Invoke(message)
 }
+func sendMessageToJSNL(message string) {
+	jsCallback.Invoke(message + "\n")
+}
 
 func sendLineToJS(line string) string {
 	ret := jsCallback2.Invoke(line)
@@ -96,7 +100,9 @@ func main() {
 	jsCallback = js.Global().Get("receiveMessageFromGo")
 	jsCallback2 = js.Global().Get("receiveLineFromGo")
 
-	ml.MicroPrompt("x> ", "", 0)
+	ctx := context.Background()
+
+	ml.MicroPrompt("x> ", "", 0, ctx)
 
 	/* for {
 		key := <-c
@@ -179,7 +185,7 @@ func RyeEvalShellLine(this js.Value, args []js.Value) any {
 		}
 
 		evaldo.EvalBlockInj(ps, prevResult, true)
-		evaldo.MaybeDisplayFailureOrErrorWASM(ps, ps.Idx, sendMessageToJS)
+		evaldo.MaybeDisplayFailureOrErrorWASM(ps, ps.Idx, sendMessageToJSNL)
 
 		prevResult = ps.Res
 

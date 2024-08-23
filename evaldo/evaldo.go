@@ -2,6 +2,7 @@ package evaldo
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/refaktor/rye/env"
 	//"fmt"
@@ -46,7 +47,12 @@ func NewProgramState(ser env.TSeries, idx env.Idxs) *ProgramState {
 
 // DESCR: the most general EvalBlock
 func EvalBlock(ps *env.ProgramState) *env.ProgramState {
-	return EvalBlockInj(ps, nil, false)
+	switch ps.Dialect {
+	case env.EyrDialect:
+		return Eyr_EvalBlockInside(ps) // TODO ps.Stack is already in ps ... refactor
+	default:
+		return EvalBlockInj(ps, nil, false)
+	}
 }
 
 // DESCR: eval a block in specific context
@@ -65,6 +71,15 @@ func EvalBlockInCtxInj(ps *env.ProgramState, ctx *env.RyeCtx, inj env.Object, in
 	res := EvalBlockInj(ps, inj, injnow)
 	ps.Ctx = ctx2
 	return res
+}
+
+func EvalBlockInjMultiDialect(ps *env.ProgramState, inj env.Object, injnow bool) *env.ProgramState { // TODO temp name -- refactor
+	switch ps.Dialect {
+	case env.EyrDialect:
+		return Eyr_EvalBlockInside(ps) // TODO ps.Stack is already in ps ... refactor
+	default:
+		return EvalBlockInj(ps, inj, injnow)
+	}
 }
 
 // DESCR: the main evaluator of block
@@ -207,6 +222,10 @@ func EvalExpressionInjLimited(ps *env.ProgramState, inj env.Object, injnow bool)
 		if ps.ReturnFlag {
 			return ps, injnow
 		}
+		fmt.Println("XY")
+		if esleft.Res.Type() == env.ErrorType {
+			fmt.Println("XX")
+		}
 	} else {
 		// otherwise set program state to specific one and injected value to result
 		// set injnow to false and if return flag return
@@ -305,7 +324,8 @@ func MaybeEvalOpwordOnRight(nextObj env.Object, ps *env.ProgramState, limited bo
 		} else {
 			ok := ps.Ctx.SetNew(idx, ps.Res, ps.Idx)
 			if !ok {
-				ps.Res = *env.NewError("Can't set already set word " + ps.Idx.GetWord(idx) + ", try using modword")
+				ps.Res = env.NewError("Can't set already set word " + ps.Idx.GetWord(idx) + ", try using modword (1)")
+				ps.FailureFlag = true
 				ps.ErrorFlag = true
 				return ps
 			}
@@ -391,7 +411,7 @@ func EvalExpressionConcrete(ps *env.ProgramState) *env.ProgramState {
 		}
 	} else {
 		ps.ErrorFlag = true
-		ps.Res = env.NewError("expected rye value but got nothing")
+		ps.Res = env.NewError("expected rye value but it's missing")
 	}
 
 	return ps
@@ -405,6 +425,9 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 		object, found := ps.Ctx.Get(word.Index)
 		return found, object, nil
 	case env.Opword:
+		object, found := ps.Ctx.Get(word.Index)
+		return found, object, nil
+	case env.Pipeword:
 		object, found := ps.Ctx.Get(word.Index)
 		return found, object, nil
 	case env.CPath:
@@ -547,7 +570,7 @@ func EvalSetword(ps *env.ProgramState, word env.Setword) *env.ProgramState {
 	} else {
 		ok := ps1.Ctx.SetNew(idx, ps1.Res, ps.Idx)
 		if !ok {
-			ps.Res = *env.NewError("Can't set already set word " + ps.Idx.GetWord(idx) + ", try using modword")
+			ps.Res = env.NewError("Can't set already set word " + ps.Idx.GetWord(idx) + ", try using modword (2)")
 			ps.FailureFlag = true
 			ps.ErrorFlag = true
 		}
@@ -606,13 +629,15 @@ func CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, toLeft
 	// evalExprFn := EvalExpression // 2020-01-12 .. changed to ion2
 	evalExprFn := EvalExpression2
 	if arg0 != nil {
-		index := fn.Spec.Series.Get(ii).(env.Word).Index
-		fnCtx.Set(index, arg0)
-		ps.Args[ii] = index
-		ii = 1
-		if !toLeft {
-			//evalExprFn = EvalExpression_ // 2020-01-12 .. changed to ion2
-			evalExprFn = EvalExpression2
+		if fn.Spec.Series.Len() > 0 {
+			index := fn.Spec.Series.Get(ii).(env.Word).Index
+			fnCtx.Set(index, arg0)
+			ps.Args[ii] = index
+			ii = 1
+			if !toLeft {
+				//evalExprFn = EvalExpression_ // 2020-01-12 .. changed to ion2
+				evalExprFn = EvalExpression2
+			}
 		}
 	}
 	// collect arguments
@@ -806,7 +831,7 @@ func CallFunctionArgs4(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 	return ps
 }
 
-func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, args ...env.Object) *env.ProgramState {
+func DetermineContext(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx) *env.RyeCtx {
 	var fnCtx *env.RyeCtx
 	env0 := ps.Ctx  // store reference to current env in local
 	if ctx != nil { // called via contextpath and this is the context
@@ -833,6 +858,11 @@ func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, a
 			}
 		}
 	}
+	return fnCtx
+}
+
+func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, args ...env.Object) *env.ProgramState {
+	var fnCtx = DetermineContext(fn, ps, ctx)
 	if checkErrorReturnFlag(ps) {
 		return ps
 	}
@@ -921,6 +951,7 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 			return ps
 		}
 		if checkErrorReturnFlag(ps) {
+			ps.Res = env.NewError4(0, "argument 1 of "+strconv.Itoa(bi.Argsn)+" missing of builtin: '"+bi.Doc+"'", ps.Res.(*env.Error), nil)
 			return ps
 		}
 		if ps.Res.Type() == env.VoidType {
@@ -939,6 +970,7 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 			return ps
 		}
 		if checkErrorReturnFlag(ps) {
+			ps.Res = env.NewError4(0, "argument 2 of "+strconv.Itoa(bi.Argsn)+" missing of builtin: '"+bi.Doc+"'", ps.Res.(*env.Error), nil)
 			return ps
 		}
 		//fmt.Println(ps.Res)
@@ -955,6 +987,7 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 			return ps
 		}
 		if checkErrorReturnFlag(ps) {
+			ps.Res = env.NewError4(0, "argument 3 missing", ps.Res.(*env.Error), nil)
 			return ps
 		}
 		if ps.Res.Type() == env.VoidType {
@@ -1100,7 +1133,7 @@ func checkFlagsBi(bi env.Builtin, ps *env.ProgramState, n int) bool {
 		if bi.AcceptFailure {
 			trace2("----- > Accept Failure")
 		} else {
-			fmt.Println("checkFlagsBi***")
+			// fmt.Println("checkFlagsBi***")
 			trace2("Fail ------->  Error.")
 			switch err := ps.Res.(type) {
 			case env.Error:

@@ -161,7 +161,7 @@ type Repl struct {
 
 	fullCode string
 
-	stack      *EyrStack
+	stack      *env.EyrStack // part of PS no ... move there, remove here
 	prevResult env.Object
 }
 
@@ -204,10 +204,11 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 		es = env.AddToProgramState(es, block1.Series, genv)
 
 		// EVAL THE DO DIALECT
-		if r.dialect == "do" {
+		if r.dialect == "rye" {
 			EvalBlockInj(es, r.prevResult, true)
 		} else if r.dialect == "eyr" {
-			Eyr_EvalBlock(es, r.stack, true)
+			es.Dialect = env.EyrDialect
+			Eyr_EvalBlock(es, true)
 		} else if r.dialect == "math" {
 			idxx, _ := es.Idx.GetIndex("math")
 			s1, ok := es.Ctx.Get(idxx)
@@ -221,10 +222,11 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 			res := DialectMath(es, block1)
 			switch block := res.(type) {
 			case env.Block:
-				stack := NewEyrStack()
+				//stack := env.NewEyrStack()
+				es.ResetStack()
 				ser := es.Ser
 				es.Ser = block.Series
-				Eyr_EvalBlock(es, stack, false)
+				Eyr_EvalBlock(es, false)
 				es.Ser = ser
 			}
 		}
@@ -279,6 +281,15 @@ func constructKeyEvent(r rune, k keyboard.Key) util.KeyEvent {
 	case keyboard.KeyCtrlL:
 		ch = "l"
 		ctrl = true
+	case keyboard.KeyCtrlN:
+		ch = "n"
+		ctrl = true
+	case keyboard.KeyCtrlP:
+		ch = "p"
+		ctrl = true
+	case keyboard.KeyCtrlU:
+		ch = "u"
+		ctrl = true
 
 	case keyboard.KeyEnter:
 		code = 13
@@ -311,43 +322,63 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 		fmt.Println(err)
 		return
 	}
-	defer keyboard.Close()
 
 	c := make(chan util.KeyEvent)
 	r := Repl{
 		ps:          es,
 		dialect:     dialect,
 		showResults: showResults,
-		stack:       NewEyrStack(),
+		stack:       env.NewEyrStack(),
 	}
 	ml := util.NewMicroLiner(c, r.recieveMessage, r.recieveLine)
 	r.ml = ml
 
-	ctx := context.Background()
-	defer ctx.Done()
+	ctx, cancel := context.WithCancel(context.Background())
+
+	defer cancel()
+
+	// ctx := context.Background()
+	// defer os.Exit(0)
+	// defer ctx.Done()
+	defer keyboard.Close()
 	go func(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
+				// fmt.Println("Done")
 				return
 			default:
+				// fmt.Println("Select default")
 				r, k, keyErr := keyboard.GetKey()
 				if err != nil {
 					fmt.Println(keyErr)
 					break
 				}
 				if k == keyboard.KeyCtrlC {
-					ctx.Done()
+					// fmt.Println("Ctrl C 1")
+					cancel()
+					err1 := util.KillProcess(os.Getpid())
+					// err1 := syscall.Kill(os.Getpid(), syscall.SIGINT)
+					if err1 != nil {
+						fmt.Println(err.Error()) // TODO -- temprorary just printed
+					}
+					//ctx.Done()
+					// fmt.Println("")
+					// return
+					//break
+					//					os.Exit(0)
 				}
 				c <- constructKeyEvent(r, k)
 			}
 		}
 	}(ctx)
 
-	_, err = ml.MicroPrompt("x> ", "", 0)
+	// fmt.Println("MICRO")
+	_, err = ml.MicroPrompt("x> ", "", 0, ctx)
 	if err != nil {
 		fmt.Println(err)
 	}
+	// fmt.Println("END")
 }
 
 /*  THIS WAS DISABLED TEMP FOR WASM MODE .. 20250116 func DoGeneralInput(es *env.ProgramState, prompt string) {

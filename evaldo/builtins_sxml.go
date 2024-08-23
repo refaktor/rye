@@ -1,5 +1,5 @@
-//go:build b_sxml
-// +build b_sxml
+//go:build !no_sxml
+// +build !no_sxml
 
 package evaldo
 
@@ -16,7 +16,6 @@ import (
 // { <person> { _ [ .print ] <name> <surname> <age> { _ [ .print2 ";" ] } }
 
 func load_saxml_Dict(ps *env.ProgramState, block env.Block) (env.Dict, *env.Error) {
-
 	var keys []string
 
 	data := make(map[string]any)
@@ -74,7 +73,6 @@ func load_saxml_Dict(ps *env.ProgramState, block env.Block) (env.Dict, *env.Erro
 }
 
 func do_sxml(ps *env.ProgramState, reader io.Reader, rmap env.Dict) env.Object {
-
 	var stack []env.Dict
 	var tags []string
 	var curtag string
@@ -131,7 +129,7 @@ func do_sxml(ps *env.ProgramState, reader io.Reader, rmap env.Dict) env.Object {
 				case env.Block:
 					ser := ps.Ser // TODO -- make helper function that "does" a block
 					ps.Ser = obj.Series
-					EvalBlockInj(ps, env.String{string(se.Copy())}, true)
+					EvalBlockInj(ps, env.NewString(string(se.Copy())), true)
 					ps.Ser = ser
 				}
 			}
@@ -164,7 +162,6 @@ func do_sxml(ps *env.ProgramState, reader io.Reader, rmap env.Dict) env.Object {
 				m := len(tags) - 1 // Top element
 				curtag = tags[m]
 				tags = tags[:m] // Pop
-
 			}
 		default:
 		}
@@ -204,7 +201,7 @@ var Builtins_sxml = map[string]*env.Builtin{
 					switch n := arg1.(type) {
 					case env.Integer:
 						if int(n.Value) < len(obj1.Attr) {
-							return env.String{obj1.Attr[int(n.Value)].Value}
+							return env.NewString(obj1.Attr[int(n.Value)].Value)
 						} else {
 							return env.Void{}
 						}
@@ -212,7 +209,7 @@ var Builtins_sxml = map[string]*env.Builtin{
 						return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "rye-sxml-start//get-attr")
 					}
 				default:
-					return MakeBuiltinError(ps, "Not xml-strat element.", "rye-sxml-start//get-attr")
+					return MakeBuiltinError(ps, "Not xml-start element.", "rye-sxml-start//get-attr")
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "rye-sxml-start//get-attr")
@@ -227,9 +224,9 @@ var Builtins_sxml = map[string]*env.Builtin{
 			case env.Native:
 				switch obj1 := obj.Value.(type) {
 				case xml.StartElement:
-					return env.String{obj1.Name.Local}
+					return env.NewString(obj1.Name.Local)
 				default:
-					return MakeBuiltinError(ps, "Not xml-strat element.", "rye-sxml-start//name?")
+					return MakeBuiltinError(ps, "Not xml-start element.", "rye-sxml-start//name?")
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "rye-sxml-start//name?")

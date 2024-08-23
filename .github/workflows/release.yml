@@ -98,7 +98,7 @@ jobs:
     permissions: read-all
     steps:
       - name: Install the verifier
-        uses: slsa-framework/slsa-verifier/actions/installer@v2.5.1
+        uses: slsa-framework/slsa-verifier/actions/installer@v2.6.0
 
       - name: Download assets
         env:
@@ -152,27 +152,27 @@ jobs:
              --certificate-identity-regexp '^https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v[0-9]+.[0-9]+.[0-9]+$' \
              $IMAGE@$DIGEST
 
-  docker-publish:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Login
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-  
-      - name: Build Image
-        run: |
-          cp .docker/Dockerfile .
-          docker buildx build -t "refaktor/rye:latest" .
-          docker buildx build -t "refaktor/rye:${GITHUB_REF_NAME}" .
-
-      - name: Release
-        run: |
-          docker push "refaktor/rye:latest"
-          docker push "refaktor/rye:${GITHUB_REF_NAME}"
+#  docker-publish:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v4
+#
+#      - name: Login
+#        uses: docker/login-action@v3
+#        with:
+#          registry: ghcr.io
+#          username: ${{ github.actor }}
+#          password: ${{ secrets.GITHUB_TOKEN }}
+#  
+#      - name: Build Image
+#        run: |
+#          cp .docker/Dockerfile .
+#          docker buildx build -t "refaktor/rye:latest" .
+#          docker buildx build -t "refaktor/rye:${GITHUB_REF_NAME}" .
+#
+#      - name: Release
+#        run: |
+#          docker push "refaktor/rye:latest"
+#          docker push "refaktor/rye:${GITHUB_REF_NAME}"
   

@@ -200,14 +200,23 @@ section "Working with numbers"
 		; TODO
 	}
 
-	`
-	group "+-*/"
+	
+	group "+-*/ //"
 	""
 	{ { integer decimal } { integer decimal } }
 	{
+		equal { 5 / 2 } 2.5
+		equal { 5.0 / 2 } 2.5
+		equal { 5 / 2.0 } 2.5
+		equal { 5.0 / 2.0 } 2.5
+
+		equal { 5 // 2 } 2
+		equal { 5.0 // 2 } 2
+		equal { 5 // 2.0 } 2
+		equal { 5.0 // 2.0 } 2
 	}
 
-
+    `
 	group "!=><+"
 	""
 	{ { integer decimal } { integer decimal } }
@@ -466,8 +475,8 @@ section "Function creating functions"
 	{ { block } }
 	{
 		equal { add10: pfn { x } { x + 10 } add10 9 } 19
-		equal { x:: 10 f:: pfn { } { prns 1 } try { f } |type? } 'error  ; prns is not a pure function so isn't avail.
-		equal { y:: 10 f:: pfn { } { y } try { f } |type? } 'error  ; x from parent context is also not avail, even read 
+		equal { x:: 10 f:: pfn { } { try { prns 1 } } f |type? } 'error  ; prns is not a pure function so isn't avail.
+		equal { y:: 10 f:: pfn { } { try { y } } f |type? } 'error  ; x from parent context is also not avail, even read 
 	}
 	comment "Pure functions only have access to other pure functions."
 

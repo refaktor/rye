@@ -2,7 +2,9 @@ package util
 
 import (
 	"bytes"
+	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 	"unicode"
@@ -86,9 +88,22 @@ func (s *MLState) cursorPos(x int) {
 	// 'C' is "Cursor Forward (CUF)"
 	s.sendBack("\r")
 	if x > 0 {
+		s.sendBack(fmt.Sprintf("\x1b[%dC", x))
+	}
+}
+
+func (s *MLState) cursorPos2(x int, y int) {
+	// 'C' is "Cursor Forward (CUF)"
+	s.sendBack("\r")
+	if x > 0 {
 		trace("CURSOR POS:")
 		trace(x)
 		s.sendBack(fmt.Sprintf("\x1b[%dC", x))
+	}
+	if y > 0 {
+		trace("CURSOR POS:")
+		trace(y)
+		s.sendBack(fmt.Sprintf("\x1b[%dA", y))
 	}
 }
 
@@ -133,6 +148,8 @@ type MLState struct {
 	columns        int
 	inString       bool
 	lastLineString bool
+	prevLines      int
+	prevCursorLine int
 	// killRing *ring.Ring
 	//	completer         WordCompleter
 	// pending     []rune
@@ -297,6 +314,28 @@ func (s *MLState) yank(p []rune, text []rune, pos int) ([]rune, int, interface{}
 }
 */
 
+func traceTop(t any, n int) {
+	if false {
+		// Save cursor position
+		fmt.Printf("\033[s")
+
+		// Move cursor to top
+		fmt.Printf("\033[H")
+		// Move down
+		if n > 0 {
+			fmt.Printf("\033[%dB", n)
+		}
+		// Move cursor to top
+		fmt.Printf("\033[K")
+
+		// Print text
+		fmt.Println(t)
+
+		// Restore cursor position
+		fmt.Printf("\033[u")
+	}
+}
+
 func trace(t any) {
 	if false {
 		fmt.Println(t)
@@ -304,7 +343,7 @@ func trace(t any) {
 }
 
 func trace2(t any) {
-	if true {
+	if false {
 		fmt.Println(t)
 	}
 }
@@ -325,75 +364,30 @@ func splitText(text string, splitLength int) []string {
 	return result
 }
 
-func (s *MLState) refreshSingleLine(prompt []rune, buf []rune, pos int) error {
-	trace("---refreshing line---")
-	trace(prompt)
-	trace(buf)
-	trace(pos)
-	s.sendBack("\033[?25l")
-	s.cursorPos(0)
-	s.sendBack("\033[K")
-	s.cursorPos(0)
-	s.sendBack(string(prompt))
-
-	/// pLen := countGlyphs(prompt)
-	// bLen := countGlyphs(buf)
-	// on some OS / terminals extra column is needed to place the cursor char
-	///// pos = countGlyphs(buf[:pos])
-
-	// bLen := countGlyphs(buf)
-	// on some OS / terminals extra column is needed to place the cursor char
-	/*	if cursorColumn {
-		bLen++
-	}*/
-	cols := s.columns - 6
-	text := string(buf)
-	texts := splitText(text, cols)
-
-	// inString := false
-	// text2 := wordwrap.String(text, 5)
-	for i := range texts {
-		if i > 0 && len(texts[i]) > 1 {
-			s.cursorPos(0)
-			s.sendBack("\033[K") // delete line
-			s.sendBack("\033[A")
+func splitText2(text string, splitLength int) []string {
+	result := []string{}
+	current := bytes.NewBufferString("")
+	for _, char := range text {
+		current.WriteRune(char)
+		if current.Len() == splitLength {
+			result = append(result, current.String())
+			traceTop("appending", 3)
+			current.Reset()
 		}
 	}
-	s.cursorPos(0)
-	s.sendBack("\033[K") // delete line
-	s.sendBack(string(prompt))
-	for i, tt := range texts {
-		if i > 0 {
-			s.sendBack("\n\rx  ")
-		}
-		// tt2, inString := tt, false // RyeHighlight(tt, s.lastLineString, 6)
-		tt2, inString := RyeHighlight(tt, s.lastLineString, cols)
-		s.sendBack(tt2)
-		s.inString = inString
-	}
-
-	/* text, inString := RyeHighlight(string(buf), s.lastLineString)
-	s.sendBack(text)
-	trace("*************** IN STRING: ******************++")
-	trace(inString)
-	s.inString = inString
-	trace(pLen + pos)
-	s.cursorPos(pLen + pos)
-	trace("SETTING CURSOR POS AFER HIGHLIGHT") */
-	s.sendBack("\033[?25h")
-	return nil
+	//if current.Len() > 0 {
+	result = append(result, current.String())
+	//}
+	return result
 }
 
-func (s *MLState) refreshSingleLine_OLD2(prompt []rune, buf []rune, pos int) error {
-	trace("---refreshing line---")
-	trace(prompt)
-	trace(buf)
-	trace(pos)
-	s.sendBack("\033[?25l")
-	s.cursorPos(0)
-	s.sendBack("\033[K")
-	s.cursorPos(0)
-	s.sendBack(string(prompt))
+func (s *MLState) refreshSingleLine(prompt []rune, buf []rune, pos int) error {
+	traceTop(pos, 0)
+	// s.sendBack("\033[?25l") // hide cursors
+	/// s.cursorPos(0)
+	/// s.sendBack("\033[K")
+	/// s.cursorPos(0)
+	// s.sendBack(string(prompt))
 
 	pLen := countGlyphs(prompt)
 	// bLen := countGlyphs(buf)
@@ -405,62 +399,64 @@ func (s *MLState) refreshSingleLine_OLD2(prompt []rune, buf []rune, pos int) err
 	/*	if cursorColumn {
 		bLen++
 	}*/
-	if true { // pLen+bLen < s.columns {
-		// _, err = fmt.Print(VerySimpleRyeHighlight(string(buf)))
-		// s.cursorPos(0)
-		text, inString := RyeHighlight(string(buf), s.lastLineString, 6)
-		s.sendBack(text)
-		trace("*************** IN STRING: ******************++")
-		trace(inString)
+	cols := s.columns - 6
+	text := string(buf)
+	texts := splitText2(text, cols)
+
+	traceTop(len(texts), 0)
+
+	// inString := false
+	// text2 := wordwrap.String(text, 5)
+	s.cursorPos(0)
+	s.sendBack("\033[K") // delete line
+	for i := 0; i < s.prevLines; i++ {
+		//if i > 0 && len(texts[i]) > 1 {
+		if i > 0 {
+			s.cursorPos(0)
+			s.sendBack("\033[A")
+			s.sendBack("\033[K") // delete line
+		}
+	}
+	// s.sendBack("\033[s")
+	s.sendBack(string(prompt))
+	for i, tt := range texts {
+		if i > 0 {
+			s.sendBack("\n\rx  ")
+		}
+		// tt2, inString := tt, false // RyeHighlight(tt, s.lastLineString, 6)
+		tt2, inString := RyeHighlight(tt, s.lastLineString, cols)
+		s.sendBack(tt2)
 		s.inString = inString
-		trace(pLen + pos)
-		s.cursorPos(pLen + pos)
-		trace("SETTING CURSOR POS AFER HIGHLIGHT")
-		s.sendBack("\033[?25h")
-	} /* else {
-		// Find space available
-		space := s.columns - pLen
-		space-- // space for cursor
-		start := pos - space/2
-		end := start + space
-		if end > bLen {
-			end = bLen
-			start = end - space
-		}
-		if start < 0 {
-			start = 0
-			end = space
-		}
-		pos -= start
+	}
 
-		// Leave space for markers
-		if start > 0 {
-			start++
-		}
-		if end < bLen {
-			end--
-		}
-		startRune := len(getPrefixGlyphs(buf, start))
-		line := getPrefixGlyphs(buf[startRune:], end-start)
+	s.prevLines = len(texts)
 
-		// Output
-		if start > 0 {
-			fmt.Print("{")
-		}
-		fmt.Print(string(line))
-		if end < bLen {
-			fmt.Print("}")
-		}
+	/* text, inString := RyeHighlight(string(buf), s.lastLineString)
+	s.sendBack(text)
+	trace("*************** IN STRING: ******************++")dlk
+	trace(inString)
+	s.inString = inString
+	trace(pLen + pos)
+	trace("SETTING CURSOR POS AFER HIGHLIGHT") */
+	curLineN := pos / cols
+	curLines := len(text) / cols
+	traceTop(curLineN, 1)
+	traceTop(curLines, 2)
+	curUp := curLineN - s.prevCursorLine
+	curLeft := pLen + ((pos) % cols)
+	// traceTop("---", 3)
+	traceTop(curUp, 4)
+	traceTop(curLeft, 5)
+	// s.sendBack("\033[u")
 
-		// Set cursor position
-		s.eraseLine()
-		s.cursorPos(pLen + pos)
-	} */
+	s.cursorPos2(curLeft, 0) // s.prevCursorLine-curLineN)
+	s.prevCursorLine = curLineN
+	//s.sendBack("\033[?25h") // show cursor
 	return nil
 }
 
 // signals end-of-file by pressing Ctrl-D.
-func (s *MLState) MicroPrompt(prompt string, text string, pos int) (string, error) {
+func (s *MLState) MicroPrompt(prompt string, text string, pos int, ctx1 context.Context) (string, error) {
 	// history related
 	historyEnd := ""
 	var historyPrefix []string
@@ -501,648 +497,680 @@ startOfHere:
 	//	s.startPrompt()
 	//	s.getColumns()
 	s.getColumns()
+	traceTop(strconv.Itoa(s.columns)+"**", 0)
+
+	histPrev := func() {
+		if historyStale {
+			historyPrefix = s.getHistoryByPrefix(string(line))
+			historyPos = len(historyPrefix)
+			historyStale = false
+		}
+		if historyPos > 0 {
+			if historyPos == len(historyPrefix) {
+				historyEnd = string(line)
+			}
+			historyPos--
+			line = []rune(historyPrefix[historyPos])
+			pos = len(line)
+			s.needRefresh = true
+		} else {
+			s.doBeep()
+		}
+	}
+
+	histNext := func() {
+		if historyStale {
+			historyPrefix = s.getHistoryByPrefix(string(line))
+			historyPos = len(historyPrefix)
+			historyStale = false
+		}
+		if historyPos < len(historyPrefix) {
+			historyPos++
+			if historyPos == len(historyPrefix) {
+				line = []rune(historyEnd)
+			} else {
+				line = []rune(historyPrefix[historyPos])
+			}
+			pos = len(line)
+			s.needRefresh = true
+		} else {
+			s.doBeep()
+		}
+	}
 
 	// JM
 	//	s_instr := 0
 
 	// mainLoop:
 	for {
-		trace("POS: ")
-		trace(pos)
-		// receive next character from channel
-		next := <-s.next
-		// s.sendBack(next)
-		// err := nil
-		// LBL haveNext:
-		/* if err != nil {
-			if s.shouldRestart != nil && s.shouldRestart(err) {
-				goto restart
-			}
-			return "", err
-		}*/
-
-		// historyAction = false
-		//switch v := next.(type) {
-		//case string:
-		//}
-		/* if pos == len(line) && !s.multiLineMode &&
-		len(p)+len(line) < s.columns*4 && // Avoid countGlyphs on large lines
-		countGlyphs(p)+countGlyphs(line) < s.columns-1 {*/
-		pLen := countGlyphs(p)
-		if next.Ctrl {
-			switch strings.ToLower(next.Key) {
-			case "c":
-				return "", nil
-			case "a":
-				pos = 0
-				// s.needRefresh = true
-			case "e":
-				pos = len(line)
-				// s.needRefresh = true
-			case "b":
-				if pos > 0 {
-					pos -= len(getSuffixGlyphs(line[:pos], 1))
-					//s.needRefresh = true
-				} else {
-					s.doBeep()
+		select {
+		case <-ctx1.Done():
+			// fmt.Println("Exitin due to coancelation")
+			return "", nil
+		default:
+			trace("POS: ")
+			trace(pos)
+			// receive next character from channel
+			next := <-s.next
+			// s.sendBack(next)
+			// err := nil
+			// LBL haveNext:
+			/* if err != nil {
+				if s.shouldRestart != nil && s.shouldRestart(err) {
+					goto restart
 				}
-			case "f": // right
-				if pos < len(line) {
-					pos += len(getPrefixGlyphs(line[pos:], 1))
+				return "", err
+			}*/
+
+			// historyAction = false
+			//switch v := next.(type) {
+			//case string:
+			//}
+			/* if pos == len(line) && !s.multiLineMode &&
+			len(p)+len(line) < s.columns*4 && // Avoid countGlyphs on large lines
+			countGlyphs(p)+countGlyphs(line) < s.columns-1 {*/
+			///// pLen := countGlyphs(p)
+			if next.Ctrl {
+				switch strings.ToLower(next.Key) {
+				case "c":
+					/* return "", ErrPromptAborted
+					line = line[:0]
+					pos = 0
+					s.restartPrompt() */
+					// fmt.Print("case C")
+					return "", nil
+				case "a":
+					pos = 0
 					// s.needRefresh = true
-				} else {
-					s.doBeep()
-				}
-			case "k": // delete remainder of line
-				if pos >= len(line) {
-					// s.doBeep()
-				} else {
-					// if killAction > 0 {
-					//	s.addToKillRing(line[pos:], 1) // Add in apend mode
-					// } else {
-					//	s.addToKillRing(line[pos:], 0) // Add in normal mode
-					// }
-					// killAction = 2 // Mark that there was a kill action
-					line = line[:pos]
-					s.needRefresh = true
-				}
-			case "l":
-				s.eraseScreen()
-				s.needRefresh = true
-			}
-		} else if next.Alt {
-			switch strings.ToLower(next.Key) {
-			case "b":
-				if pos > 0 {
-					var spaceHere, spaceLeft, leftKnown bool
-					for {
-						pos--
-						if pos == 0 {
-							break
-						}
-						if leftKnown {
-							spaceHere = spaceLeft
-						} else {
-							spaceHere = unicode.IsSpace(line[pos])
-						}
-						spaceLeft, leftKnown = unicode.IsSpace(line[pos-1]), true
-						if !spaceHere && spaceLeft {
-							break
-						}
-					}
-				} else {
-					s.doBeep()
-				}
-			case "f":
-				if pos < len(line) {
-					var spaceHere, spaceLeft, hereKnown bool
-					for {
-						pos++
-						if pos == len(line) {
-							break
-						}
-						if hereKnown {
-							spaceLeft = spaceHere
-						} else {
-							spaceLeft = unicode.IsSpace(line[pos-1])
-						}
-						spaceHere, hereKnown = unicode.IsSpace(line[pos]), true
-						if spaceHere && !spaceLeft {
-							break
-						}
-					}
-				} else {
-					s.doBeep()
-				}
-			case "d": // Delete next word
-				if pos == len(line) {
-					s.doBeep()
-					break
-				}
-				// Remove whitespace to the right
-				var buf []rune // Store the deleted chars in a buffer
-				for {
-					if pos == len(line) || !unicode.IsSpace(line[pos]) {
-						break
-					}
-					buf = append(buf, line[pos])
-					line = append(line[:pos], line[pos+1:]...)
-				}
-				// Remove non-whitespace to the right
-				for {
-					if pos == len(line) || unicode.IsSpace(line[pos]) {
-						break
-					}
-					buf = append(buf, line[pos])
-					line = append(line[:pos], line[pos+1:]...)
-					trace(buf)
-				}
-				s.needRefresh = true
-				// Save the result on the killRing
-				/*if killAction > 0 {
-					s.addToKillRing(buf, 2) // Add in prepend mode
-				} else {
-					s.addToKillRing(buf, 0) // Add in normal mode
-				} */
-				// killAction = 2 // Mark that there was some killing
-				//			case "bs": // Erase word
-				//				pos, line, killAction = s.eraseWord(pos, line, killAction)
-			}
-		} else {
-			switch next.Code {
-			case 13: // Enter
-				historyStale = true
-				s.lastLineString = false
-				// trace2("NL")
-				if len(line) > 0 && unicode.IsSpace(line[len(line)-1]) {
-					s.sendBack(fmt.Sprintf("%s⏎\n\r%s", color_emph, reset))
-					if s.inString {
-						s.lastLineString = true
-					}
-				} else {
-					s.sendBack("\n\r")
-				}
-				xx := s.enterLine(string(line))
-				pos = 0
-				if xx == "next line" {
-					multiline = true
-				} else {
-					s.sendBack("\n\r")
-				}
-				line = make([]rune, 0)
-				trace(line)
-				goto startOfHere
-			case 8: // Backspace
-				if pos <= 0 {
-					s.doBeep()
-				} else {
-					// pos += 1
-					n := len(getSuffixGlyphs(line[:pos], 1))
-					trace("<---line--->")
-					trace(line[:pos-n])
-					trace(line[pos:])
-					trace(n)
-					trace(pos)
-					trace(line)
-					// line = append(line[:pos-n], ' ')
-					line = append(line[:pos-n], line[pos:]...)
-					//						line = line[:pos-1]
-					trace(line)
-					// line = append(line[:pos-n], line[pos:]...)
-					pos -= n
-					s.needRefresh = true
-				}
-			case 46: // Del
-				if pos >= len(line) {
-					s.doBeep()
-				} else {
-					n := len(getPrefixGlyphs(line[pos:], 1))
-					line = append(line[:pos], line[pos+n:]...)
-					s.needRefresh = true
-				}
-			case 39: // Right
-				if pos < len(line) {
-					pos += len(getPrefixGlyphs(line[pos:], 1))
-				} else {
-					s.doBeep()
-				}
-			case 37: // Left
-				if pos > 0 {
-					pos -= len(getSuffixGlyphs(line[:pos], 1))
-				} else {
-					s.doBeep()
-				}
-			case 38: // Up
-				// historyAction = true
-				if historyStale {
-					historyPrefix = s.getHistoryByPrefix(string(line))
-					historyPos = len(historyPrefix)
-					historyStale = false
-				}
-				if historyPos > 0 {
-					if historyPos == len(historyPrefix) {
-						historyEnd = string(line)
-					}
-					historyPos--
-					line = []rune(historyPrefix[historyPos])
+				case "e":
 					pos = len(line)
-					s.needRefresh = true
-				} else {
-					s.doBeep()
-				}
-			case 40: // Down
-				// historyAction = true
-				if historyStale {
-					historyPrefix = s.getHistoryByPrefix(string(line))
-					historyPos = len(historyPrefix)
-					historyStale = false
-				}
-				if historyPos < len(historyPrefix) {
-					historyPos++
-					if historyPos == len(historyPrefix) {
-						line = []rune(historyEnd)
+					// s.needRefresh = true
+				case "b":
+					if pos > 0 {
+						pos -= len(getSuffixGlyphs(line[:pos], 1))
+						//s.needRefresh = true
 					} else {
-						line = []rune(historyPrefix[historyPos])
+						s.doBeep()
 					}
-					pos = len(line)
-					s.needRefresh = true
-				} else {
-					s.doBeep()
-				}
-			case 36: // Home
-				pos = 0
-			case 35: // End
-				pos = len(line)
-			default:
-				trace("***************************** ALARM *******************")
-				vs := []rune(next.Key)
-				v := vs[0]
-
-				if pos >= countGlyphs(p)+countGlyphs(line) {
-					line = append(line, v)
-					//s.sendBack(fmt.Sprintf("%c", v))
-					s.needRefresh = true // JM ---
-					pos++
-				} else {
-					line = append(line[:pos], append([]rune{v}, line[pos:]...)...)
-					pos++
-					s.needRefresh = true
-				}
-			}
-		}
-
-		/* } else {
-			line = append(line[:pos], append([]rune{v}, line[pos:]...)...)
-			pos++
-			s.needRefresh = true
-		} */
-
-		/* case rune:
-			switch v {
-			case cr, lf:
-				if s.needRefresh {
-					err := s.refresh(p, line, pos)
-					if err != nil {
-						return "", err
-					}
-				}
-				if s.multiLineMode {
-					s.resetMultiLine(p, line, pos)
-				}
-				trace()
-				break mainLoop
-			case ctrlA: // Start of line
-				pos = 0
-				s.needRefresh = true
-			case ctrlE: // End of line
-				pos = len(line)
-				s.needRefresh = true
-			case ctrlB: // left
-				if pos > 0 {
-					pos -= len(getSuffixGlyphs(line[:pos], 1))
-					s.needRefresh = true
-				} else {
-					s.doBeep()
-				}
-			case ctrlF: // right
-				if pos < len(line) {
-					pos += len(getPrefixGlyphs(line[pos:], 1))
-					s.needRefresh = true
-				} else {
-					s.doBeep()
-				}
-			case ctrlD: // del
-				if pos == 0 && len(line) == 0 {
-					// exit
-					return "", io.EOF
-				}
-
-				// ctrlD is a potential EOF, so the rune reader shuts down.
-				// Therefore, if it isn't actually an EOF, we must re-startPrompt.
-				s.restartPrompt()
-
-				if pos >= len(line) {
-					s.doBeep()
-				} else {
-					n := len(getPrefixGlyphs(line[pos:], 1))
-					line = append(line[:pos], line[pos+n:]...)
-					s.needRefresh = true
-				}
-			case ctrlK: // delete remainder of line
-				if pos >= len(line) {
-					s.doBeep()
-				} else {
-					if killAction > 0 {
-						s.addToKillRing(line[pos:], 1) // Add in apend mode
+				case "f": // right
+					if pos < len(line) {
+						pos += len(getPrefixGlyphs(line[pos:], 1))
+						// s.needRefresh = true
 					} else {
-						s.addToKillRing(line[pos:], 0) // Add in normal mode
+						s.doBeep()
 					}
-
-					killAction = 2 // Mark that there was a kill action
-					line = line[:pos]
-					s.needRefresh = true
-				}
-			case ctrlP: // up
-				historyAction = true
-				if historyStale {
-					historyPrefix = s.getHistoryByPrefix(string(line))
-					historyPos = len(historyPrefix)
-					historyStale = false
-				}
-				if historyPos > 0 {
-					if historyPos == len(historyPrefix) {
-						historyEnd = string(line)
-					}
-					historyPos--
-					line = []rune(historyPrefix[historyPos])
-					pos = len(line)
-					s.needRefresh = true
-				} else {
-					s.doBeep()
-				}
-			case ctrlN: // down
-				historyAction = true
-				if historyStale {
-					historyPrefix = s.getHistoryByPrefix(string(line))
-					historyPos = len(historyPrefix)
-					historyStale = false
-				}
-				if historyPos < len(historyPrefix) {
-					historyPos++
-					if historyPos == len(historyPrefix) {
-						line = []rune(historyEnd)
+				case "k": // delete remainder of line
+					if pos >= len(line) {
+						// s.doBeep()
 					} else {
-						line = []rune(historyPrefix[historyPos])
+						// if killAction > 0 {
+						//	s.addToKillRing(line[pos:], 1) // Add in apend mode
+						// } else {
+						//	s.addToKillRing(line[pos:], 0) // Add in normal mode
+						// }
+						// killAction = 2 // Mark that there was a kill action
+						line = line[:pos]
+						s.needRefresh = true
 					}
-					pos = len(line)
+				case "l":
+					s.eraseScreen()
 					s.needRefresh = true
-				} else {
-					s.doBeep()
+				case "u": // delete to beginning of line
+					if pos == 0 {
+						s.doBeep()
+					} else {
+						line = line[pos:]
+						pos = 0
+						s.needRefresh = true
+					}
+				case "n":
+					histNext()
+				case "p":
+					histPrev()
 				}
-			case ctrlT: // transpose prev glyph with glyph under cursor
-				if len(line) < 2 || pos < 1 {
-					s.doBeep()
-				} else {
+			} else if next.Alt {
+				switch strings.ToLower(next.Key) {
+				case "b":
+					if pos > 0 {
+						var spaceHere, spaceLeft, leftKnown bool
+						for {
+							pos--
+							if pos == 0 {
+								break
+							}
+							if leftKnown {
+								spaceHere = spaceLeft
+							} else {
+								spaceHere = unicode.IsSpace(line[pos])
+							}
+							spaceLeft, leftKnown = unicode.IsSpace(line[pos-1]), true
+							if !spaceHere && spaceLeft {
+								break
+							}
+						}
+					} else {
+						s.doBeep()
+					}
+				case "f":
+					if pos < len(line) {
+						var spaceHere, spaceLeft, hereKnown bool
+						for {
+							pos++
+							if pos == len(line) {
+								break
+							}
+							if hereKnown {
+								spaceLeft = spaceHere
+							} else {
+								spaceLeft = unicode.IsSpace(line[pos-1])
+							}
+							spaceHere, hereKnown = unicode.IsSpace(line[pos]), true
+							if spaceHere && !spaceLeft {
+								break
+							}
+						}
+					} else {
+						s.doBeep()
+					}
+				case "d": // Delete next word
 					if pos == len(line) {
-						pos -= len(getSuffixGlyphs(line, 1))
+						s.doBeep()
+						break
 					}
-					prev := getSuffixGlyphs(line[:pos], 1)
-					next := getPrefixGlyphs(line[pos:], 1)
-					scratch := make([]rune, len(prev))
-					copy(scratch, prev)
-					copy(line[pos-len(prev):], next)
-					copy(line[pos-len(prev)+len(next):], scratch)
-					pos += len(next)
-					s.needRefresh = true
-				}
-			case ctrlL: // clear screen
-				s.eraseScreen()
-				s.needRefresh = true
-			case ctrlC: // reset
-				trace("^C")
-				if s.multiLineMode {
-					s.resetMultiLine(p, line, pos)
-				}
-				if s.ctrlCAborts {
-					return "", ErrPromptAborted
-				}
-				line = line[:0]
-				pos = 0
-				fmt.Print(prompt)
-				s.restartPrompt()
-			case ctrlH, bs: // Backspace
-				if pos <= 0 {
-					s.doBeep()
-				} else {
-					n := len(getSuffixGlyphs(line[:pos], 1))
-					line = append(line[:pos-n], line[pos:]...)
-					pos -= n
-					s.needRefresh = true
-				}
-			case ctrlU: // Erase line before cursor
-				if killAction > 0 {
-					s.addToKillRing(line[:pos], 2) // Add in prepend mode
-				} else {
-					s.addToKillRing(line[:pos], 0) // Add in normal mode
-				}
-
-				killAction = 2 // Mark that there was some killing
-				line = line[pos:]
-				pos = 0
-				s.needRefresh = true
-			case ctrlW: // Erase word
-				pos, line, killAction = s.eraseWord(pos, line, killAction)
-			case ctrlY: // Paste from Yank buffer
-				line, pos, next, err = s.yank(p, line, pos)
-				goto haveNext
-			case ctrlR: // Reverse Search
-				line, pos, next, err = s.reverseISearch(line, pos)
-				s.needRefresh = true
-				goto haveNext
-			case tab: // Tab completion
-				line, pos, next, err = s.tabComplete(p, line, pos)
-				goto haveNext
-			// Catch keys that do nothing, but you don't want them to beep
-			case esc:
-				// DO NOTHING
-			// Unused keys
-			case ctrlG:
-				// JM experimenting 20200108
-				//for _, l := range codelines {
-				//		MoveCursorDown(2)
-				//		fmt.Print(l)
-				//	}
-				//MoveCursorDown(len(codelines))
-				return "", ErrJMCodeUp
-				//line = []rune(codelines[len(codelines)-1])
-				//pos = len(line)
-				s.needRefresh = true
-			case ctrlS, ctrlO, ctrlQ, ctrlV, ctrlX, ctrlZ:
-				fallthrough
-			// Catch unhandled control codes (anything <= 31)
-			case 0, 28, 29, 30, 31:
-				s.doBeep()
-			default:
-				if pos == len(line) && !s.multiLineMode &&
-					len(p)+len(line) < s.columns*4 && // Avoid countGlyphs on large lines
-					countGlyphs(p)+countGlyphs(line) < s.columns-1 {
-					line = append(line, v)
-					fmt.Printf("%c", v)
-					s.needRefresh = true // JM ---
-					pos++
-
-				} else {
-					line = append(line[:pos], append([]rune{v}, line[pos:]...)...)
-					pos++
-					s.needRefresh = true
-				}
-				if s_instr == 2 && string(v) == "\"" {
-					s_instr = 0
-				}
-			}
-		case action:
-			switch v {
-			case del:
-				if pos >= len(line) {
-					s.doBeep()
-				} else {
-					n := len(getPrefixGlyphs(line[pos:], 1))
-					line = append(line[:pos], line[pos+n:]...)
-				}
-			case left:
-				if pos > 0 {
-					pos -= len(getSuffixGlyphs(line[:pos], 1))
-				} else {
-					s.doBeep()
-				}
-			case wordLeft, altB:
-				if pos > 0 {
-					var spaceHere, spaceLeft, leftKnown bool
+					// Remove whitespace to the right
+					var buf []rune // Store the deleted chars in a buffer
 					for {
-						pos--
-						if pos == 0 {
+						if pos == len(line) || !unicode.IsSpace(line[pos]) {
 							break
 						}
-						if leftKnown {
-							spaceHere = spaceLeft
-						} else {
-							spaceHere = unicode.IsSpace(line[pos])
-						}
-						spaceLeft, leftKnown = unicode.IsSpace(line[pos-1]), true
-						if !spaceHere && spaceLeft {
-							break
-						}
+						buf = append(buf, line[pos])
+						line = append(line[:pos], line[pos+1:]...)
 					}
-				} else {
-					s.doBeep()
-				}
-			case right:
-				if pos < len(line) {
-					pos += len(getPrefixGlyphs(line[pos:], 1))
-				} else {
-					s.doBeep()
-				}
-			case wordRight, altF:
-				if pos < len(line) {
-					var spaceHere, spaceLeft, hereKnown bool
+					// Remove non-whitespace to the right
 					for {
-						pos++
-						if pos == len(line) {
+						if pos == len(line) || unicode.IsSpace(line[pos]) {
 							break
 						}
-						if hereKnown {
-							spaceLeft = spaceHere
-						} else {
-							spaceLeft = unicode.IsSpace(line[pos-1])
-						}
-						spaceHere, hereKnown = unicode.IsSpace(line[pos]), true
-						if spaceHere && !spaceLeft {
-							break
-						}
+						buf = append(buf, line[pos])
+						line = append(line[:pos], line[pos+1:]...)
+						trace(buf)
 					}
-				} else {
-					s.doBeep()
-				}
-			case up:
-				historyAction = true
-				if historyStale {
-					historyPrefix = s.getHistoryByPrefix(string(line))
-					historyPos = len(historyPrefix)
-					historyStale = false
-				}
-				if historyPos > 0 {
-					if historyPos == len(historyPrefix) {
-						historyEnd = string(line)
-					}
-					historyPos--
-					line = []rune(historyPrefix[historyPos])
-					pos = len(line)
-				} else {
-					s.doBeep()
-				}
-			case down:
-				historyAction = true
-				if historyStale {
-					historyPrefix = s.getHistoryByPrefix(string(line))
-					historyPos = len(historyPrefix)
-					historyStale = false
-				}
-				if historyPos < len(historyPrefix) {
-					historyPos++
-					if historyPos == len(historyPrefix) {
-						line = []rune(historyEnd)
+					s.needRefresh = true
+					// Save the result on the killRing
+					/*if killAction > 0 {
+						s.addToKillRing(buf, 2) // Add in prepend mode
 					} else {
-						line = []rune(historyPrefix[historyPos])
+						s.addToKillRing(buf, 0) // Add in normal mode
+					} */
+					// killAction = 2 // Mark that there was some killing
+					//			case "bs": // Erase word
+					//				pos, line, killAction = s.eraseWord(pos, line, killAction)
+				}
+			} else {
+				switch next.Code {
+				case 13: // Enter
+					historyStale = true
+					s.lastLineString = false
+					// trace2("NL")
+					if len(line) > 0 && unicode.IsSpace(line[len(line)-1]) {
+						s.sendBack(fmt.Sprintf("%s⏎\n\r%s", color_emph, reset))
+						if s.inString {
+							s.lastLineString = true
+						}
+					} else {
+						s.sendBack("\n\r")
 					}
+					xx := s.enterLine(string(line))
+					pos = 0
+					if xx == "next line" {
+						multiline = true
+					} else {
+						s.sendBack("\n\r")
+					}
+					line = make([]rune, 0)
+					trace(line)
+					goto startOfHere
+				case 8: // Backspace
+					if pos <= 0 {
+						s.doBeep()
+					} else {
+						// pos += 1
+						n := len(getSuffixGlyphs(line[:pos], 1))
+						trace("<---line--->")
+						trace(line[:pos-n])
+						trace(line[pos:])
+						trace(n)
+						trace(pos)
+						trace(line)
+						// line = append(line[:pos-n], ' ')
+						line = append(line[:pos-n], line[pos:]...)
+						//						line = line[:pos-1]
+						trace(line)
+						// line = append(line[:pos-n], line[pos:]...)
+						pos -= n
+						s.needRefresh = true
+					}
+				case 46: // Del
+					if pos >= len(line) {
+						s.doBeep()
+					} else {
+						n := len(getPrefixGlyphs(line[pos:], 1))
+						line = append(line[:pos], line[pos+n:]...)
+						s.needRefresh = true
+					}
+				case 39: // Right
+					if pos < len(line) {
+						pos += len(getPrefixGlyphs(line[pos:], 1))
+					} else {
+						s.doBeep()
+					}
+				case 37: // Left
+					if pos > 0 {
+						pos -= len(getSuffixGlyphs(line[:pos], 1))
+						traceTop(pos, 3)
+					} else {
+						s.doBeep()
+					}
+				case 38: // Up
+					histPrev()
+				case 40: // Down
+					histNext()
+				case 36: // Home
+					pos = 0
+				case 35: // End
 					pos = len(line)
-				} else {
-					s.doBeep()
-				}
-			case home: // Start of line
-				pos = 0
-			case end: // End of line
-				pos = len(line)
-			case altD: // Delete next word
-				if pos == len(line) {
-					s.doBeep()
-					break
-				}
-				// Remove whitespace to the right
-				var buf []rune // Store the deleted chars in a buffer
-				for {
-					if pos == len(line) || !unicode.IsSpace(line[pos]) {
-						break
+				default:
+					trace("***************************** ALARM *******************")
+					vs := []rune(next.Key)
+					v := vs[0]
+
+					if pos >= countGlyphs(p)+countGlyphs(line) {
+						line = append(line, v)
+						//s.sendBack(fmt.Sprintf("%c", v))
+						s.needRefresh = true // JM ---
+						pos++
+					} else {
+						line = append(line[:pos], append([]rune{v}, line[pos:]...)...)
+						pos++
+						s.needRefresh = true
 					}
-					buf = append(buf, line[pos])
-					line = append(line[:pos], line[pos+1:]...)
-				}
-				// Remove non-whitespace to the right
-				for {
-					if pos == len(line) || unicode.IsSpace(line[pos]) {
-						break
-					}
-					buf = append(buf, line[pos])
-					line = append(line[:pos], line[pos+1:]...)
-				}
-				// Save the result on the killRing
-				if killAction > 0 {
-					s.addToKillRing(buf, 2) // Add in prepend mode
-				} else {
-					s.addToKillRing(buf, 0) // Add in normal mode
-				}
-				killAction = 2 // Mark that there was some killing
-			case altBs: // Erase word
-				pos, line, killAction = s.eraseWord(pos, line, killAction)
-			case winch: // Window change
-				if s.multiLineMode {
-					if s.maxRows-s.cursorRows > 0 {
-						s.moveDown(s.maxRows - s.cursorRows)
-					}
-					for i := 0; i < s.maxRows-1; i++ {
-						s.cursorPos(0)
-						s.eraseLine()
-						s.moveUp(1)
-					}
-					s.maxRows = 1
-					s.cursorRows = 1
 				}
 			}
-			s.needRefresh = true
-		} */
-		if s.needRefresh { //&& !s.inputWaiting() {
+
+			/* } else {
+				line = append(line[:pos], append([]rune{v}, line[pos:]...)...)
+				pos++
+				s.needRefresh = true
+			} */
+
+			/* case rune:
+				switch v {
+				case cr, lf:
+					if s.needRefresh {
+						err := s.refresh(p, line, pos)
+						if err != nil {
+							return "", err
+						}
+					}
+					if s.multiLineMode {
+						s.resetMultiLine(p, line, pos)
+					}
+					trace()
+					break mainLoop
+				case ctrlA: // Start of line
+					pos = 0
+					s.needRefresh = true
+				case ctrlE: // End of line
+					pos = len(line)
+					s.needRefresh = true
+				case ctrlB: // left
+					if pos > 0 {
+						pos -= len(getSuffixGlyphs(line[:pos], 1))
+						s.needRefresh = true
+					} else {
+						s.doBeep()
+					}
+				case ctrlF: // right
+					if pos < len(line) {
+						pos += len(getPrefixGlyphs(line[pos:], 1))
+						s.needRefresh = true
+					} else {
+						s.doBeep()
+					}
+				case ctrlD: // del
+					if pos == 0 && len(line) == 0 {
+						// exit
+						return "", io.EOF
+					}
+
+					// ctrlD is a potential EOF, so the rune reader shuts down.
+					// Therefore, if it isn't actually an EOF, we must re-startPrompt.
+					s.restartPrompt()
+
+					if pos >= len(line) {
+						s.doBeep()
+					} else {
+						n := len(getPrefixGlyphs(line[pos:], 1))
+						line = append(line[:pos], line[pos+n:]...)
+						s.needRefresh = true
+					}
+				case ctrlK: // delete remainder of line
+					if pos >= len(line) {
+						s.doBeep()
+					} else {
+						if killAction > 0 {
+							s.addToKillRing(line[pos:], 1) // Add in apend mode
+						} else {
+							s.addToKillRing(line[pos:], 0) // Add in normal mode
+						}
+
+						killAction = 2 // Mark that there was a kill action
+						line = line[:pos]
+						s.needRefresh = true
+					}
+				case ctrlP: // up
+					historyAction = true
+					if historyStale {
+						historyPrefix = s.getHistoryByPrefix(string(line))
+						historyPos = len(historyPrefix)
+						historyStale = false
+					}
+					if historyPos > 0 {
+						if historyPos == len(historyPrefix) {
+							historyEnd = string(line)
+						}
+						historyPos--
+						line = []rune(historyPrefix[historyPos])
+						pos = len(line)
+						s.needRefresh = true
+					} else {
+						s.doBeep()
+					}
+				case ctrlN: // down
+					historyAction = true
+					if historyStale {
+						historyPrefix = s.getHistoryByPrefix(string(line))
+						historyPos = len(historyPrefix)
+						historyStale = false
+					}
+					if historyPos < len(historyPrefix) {
+						historyPos++
+						if historyPos == len(historyPrefix) {
+							line = []rune(historyEnd)
+						} else {
+							line = []rune(historyPrefix[historyPos])
+						}
+						pos = len(line)
+						s.needRefresh = true
+					} else {
+						s.doBeep()
+					}
+				case ctrlT: // transpose prev glyph with glyph under cursor
+					if len(line) < 2 || pos < 1 {
+						s.doBeep()
+					} else {
+						if pos == len(line) {
+							pos -= len(getSuffixGlyphs(line, 1))
+						}
+						prev := getSuffixGlyphs(line[:pos], 1)
+						next := getPrefixGlyphs(line[pos:], 1)
+						scratch := make([]rune, len(prev))
+						copy(scratch, prev)
+						copy(line[pos-len(prev):], next)
+						copy(line[pos-len(prev)+len(next):], scratch)
+						pos += len(next)
+						s.needRefresh = true
+					}
+				case ctrlL: // clear screen
+					s.eraseScreen()
+					s.needRefresh = true
+				case ctrlC: // reset
+					trace("^C")
+					if s.multiLineMode {
+						s.resetMultiLine(p, line, pos)
+					}
+					if s.ctrlCAborts {
+						return "", ErrPromptAborted
+					}
+					line = line[:0]
+					pos = 0
+					fmt.Print(prompt)
+					s.restartPrompt()
+				case ctrlH, bs: // Backspace
+					if pos <= 0 {
+						s.doBeep()
+					} else {
+						n := len(getSuffixGlyphs(line[:pos], 1))
+						line = append(line[:pos-n], line[pos:]...)
+						pos -= n
+						s.needRefresh = true
+					}
+				case ctrlU: // Erase line before cursor
+					if killAction > 0 {
+						s.addToKillRing(line[:pos], 2) // Add in prepend mode
+					} else {
+						s.addToKillRing(line[:pos], 0) // Add in normal mode
+					}
+
+					killAction = 2 // Mark that there was some killing
+					line = line[pos:]
+					pos = 0
+					s.needRefresh = true
+				case ctrlW: // Erase word
+					pos, line, killAction = s.eraseWord(pos, line, killAction)
+				case ctrlY: // Paste from Yank buffer
+					line, pos, next, err = s.yank(p, line, pos)
+					goto haveNext
+				case ctrlR: // Reverse Search
+					line, pos, next, err = s.reverseISearch(line, pos)
+					s.needRefresh = true
+					goto haveNext
+				case tab: // Tab completion
+					line, pos, next, err = s.tabComplete(p, line, pos)
+					goto haveNext
+				// Catch keys that do nothing, but you don't want them to beep
+				case esc:
+					// DO NOTHING
+				// Unused keys
+				case ctrlG:
+					// JM experimenting 20200108
+					//for _, l := range codelines {
+					//		MoveCursorDown(2)
+					//		fmt.Print(l)
+					//	}
+					//MoveCursorDown(len(codelines))
+					return "", ErrJMCodeUp
+					//line = []rune(codelines[len(codelines)-1])
+					//pos = len(line)
+					s.needRefresh = true
+				case ctrlS, ctrlO, ctrlQ, ctrlV, ctrlX, ctrlZ:
+					fallthrough
+				// Catch unhandled control codes (anything <= 31)
+				case 0, 28, 29, 30, 31:
+					s.doBeep()
+				default:
+					if pos == len(line) && !s.multiLineMode &&
+						len(p)+len(line) < s.columns*4 && // Avoid countGlyphs on large lines
+						countGlyphs(p)+countGlyphs(line) < s.columns-1 {
+						line = append(line, v)
+						fmt.Printf("%c", v)
+						s.needRefresh = true // JM ---
+						pos++
+
+					} else {
+						line = append(line[:pos], append([]rune{v}, line[pos:]...)...)
+						pos++
+						s.needRefresh = true
+					}
+					if s_instr == 2 && string(v) == "\"" {
+						s_instr = 0
+					}
+				}
+			case action:
+				switch v {
+				case del:
+					if pos >= len(line) {
+						s.doBeep()
+					} else {
+						n := len(getPrefixGlyphs(line[pos:], 1))
+						line = append(line[:pos], line[pos+n:]...)
+					}
+				case left:
+					if pos > 0 {
+						pos -= len(getSuffixGlyphs(line[:pos], 1))
+					} else {
+						s.doBeep()
+					}
+				case wordLeft, altB:
+					if pos > 0 {
+						var spaceHere, spaceLeft, leftKnown bool
+						for {
+							pos--
+							if pos == 0 {
+								break
+							}
+							if leftKnown {
+								spaceHere = spaceLeft
+							} else {
+								spaceHere = unicode.IsSpace(line[pos])
+							}
+							spaceLeft, leftKnown = unicode.IsSpace(line[pos-1]), true
+							if !spaceHere && spaceLeft {
+								break
+							}
+						}
+					} else {
+						s.doBeep()
+					}
+				case right:
+					if pos < len(line) {
+						pos += len(getPrefixGlyphs(line[pos:], 1))
+					} else {
+						s.doBeep()
+					}
+				case wordRight, altF:
+					if pos < len(line) {
+						var spaceHere, spaceLeft, hereKnown bool
+						for {
+							pos++
+							if pos == len(line) {
+								break
+							}
+							if hereKnown {
+								spaceLeft = spaceHere
+							} else {
+								spaceLeft = unicode.IsSpace(line[pos-1])
+							}
+							spaceHere, hereKnown = unicode.IsSpace(line[pos]), true
+							if spaceHere && !spaceLeft {
+								break
+							}
+						}
+					} else {
+						s.doBeep()
+					}
+				case up:
+					historyAction = true
+					if historyStale {
+						historyPrefix = s.getHistoryByPrefix(string(line))
+						historyPos = len(historyPrefix)
+						historyStale = false
+					}
+					if historyPos > 0 {
+						if historyPos == len(historyPrefix) {
+							historyEnd = string(line)
+						}
+						historyPos--
+						line = []rune(historyPrefix[historyPos])
+						pos = len(line)
+					} else {
+						s.doBeep()
+					}
+				case down:
+					historyAction = true
+					if historyStale {
+						historyPrefix = s.getHistoryByPrefix(string(line))
+						historyPos = len(historyPrefix)
+						historyStale = false
+					}
+					if historyPos < len(historyPrefix) {
+						historyPos++
+						if historyPos == len(historyPrefix) {
+							line = []rune(historyEnd)
+						} else {
+							line = []rune(historyPrefix[historyPos])
+						}
+						pos = len(line)
+					} else {
+						s.doBeep()
+					}
+				case home: // Start of line
+					pos = 0
+				case end: // End of line
+					pos = len(line)
+				case altD: // Delete next word
+					if pos == len(line) {
+						s.doBeep()
+						break
+					}
+					// Remove whitespace to the right
+					var buf []rune // Store the deleted chars in a buffer
+					for {
+						if pos == len(line) || !unicode.IsSpace(line[pos]) {
+							break
+						}
+						buf = append(buf, line[pos])
+						line = append(line[:pos], line[pos+1:]...)
+					}
+					// Remove non-whitespace to the right
+					for {
+						if pos == len(line) || unicode.IsSpace(line[pos]) {
+							break
+						}
+						buf = append(buf, line[pos])
+						line = append(line[:pos], line[pos+1:]...)
+					}
+					// Save the result on the killRing
+					if killAction > 0 {
+						s.addToKillRing(buf, 2) // Add in prepend mode
+					} else {
+						s.addToKillRing(buf, 0) // Add in normal mode
+					}
+					killAction = 2 // Mark that there was some killing
+				case altBs: // Erase word
+					pos, line, killAction = s.eraseWord(pos, line, killAction)
+				case winch: // Window change
+					if s.multiLineMode {
+						if s.maxRows-s.cursorRows > 0 {
+							s.moveDown(s.maxRows - s.cursorRows)
+						}
+						for i := 0; i < s.maxRows-1; i++ {
+							s.cursorPos(0)
+							s.eraseLine()
+							s.moveUp(1)
+						}
+						s.maxRows = 1
+						s.cursorRows = 1
+					}
+				}
+				s.needRefresh = true
+			} */
+			//if true || s.needRefresh { //&& !s.inputWaiting() {
+			// ALWAYS REFRESH SO WE HAVE JUST ONE TRUTH
 			err := s.refresh(p, line, pos)
 			if err != nil {
 				return "", err
 			}
-		} else {
-			s.cursorPos(pLen + pos)
+			// } else {
+			///// s.cursorPos(pLen + pos)
+			// }
+			/*if !historyAction {
+				historyStale = true
+			}
+			if killAction > 0 {
+				killAction--
+			}*/
 		}
-		/*if !historyAction {
-			historyStale = true
-		}
-		if killAction > 0 {
-			killAction--
-		}*/
 	}
 	// return string(line), nil
 }

@@ -120,7 +120,7 @@ var Builtins_math = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			fa, fb, errPos := assureFloats(arg0, arg1)
 			if errPos > 0 {
-				return MakeArgError(ps, errPos, []env.Type{env.IntegerType, env.BlockType}, "mod")
+				return MakeArgError(ps, errPos, []env.Type{env.IntegerType, env.BlockType}, "pow")
 			}
 			return *env.NewDecimal(math.Pow(fa, fb))
 		},
@@ -135,7 +135,49 @@ var Builtins_math = map[string]*env.Builtin{
 			case env.Decimal:
 				return *env.NewDecimal(math.Log2(val.Value))
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.BlockType}, "mod")
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.BlockType}, "log2")
+			}
+		},
+	},
+	"log10": {
+		Argsn: 1,
+		Doc:   "Returns the decimal logarithm of x",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Integer:
+				return *env.NewDecimal(math.Log10(float64(val.Value)))
+			case env.Decimal:
+				return *env.NewDecimal(math.Log10(val.Value))
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "log10")
+			}
+		},
+	},
+	"log1p": {
+		Argsn: 1,
+		Doc:   "Returns the natural logarithm of 1 plus its argument x",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Integer:
+				return *env.NewDecimal(math.Log1p(float64(val.Value)))
+			case env.Decimal:
+				return *env.NewDecimal(math.Log1p(val.Value))
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "log1p")
+			}
+		},
+	},
+	"logb": {
+		Argsn: 1,
+		Doc:   "logb returns the binary exponent of x",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Integer:
+				return *env.NewDecimal(math.Logb(float64(val.Value)))
+			case env.Decimal:
+				return *env.NewDecimal(math.Logb(val.Value))
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "logb")
 			}
 		},
 	},
@@ -149,7 +191,7 @@ var Builtins_math = map[string]*env.Builtin{
 			case env.Decimal:
 				return *env.NewDecimal(math.Pow(val.Value, 2.0))
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.BlockType}, "mod")
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.BlockType}, "sq")
 			}
 		},
 	},
@@ -163,7 +205,7 @@ var Builtins_math = map[string]*env.Builtin{
 			case env.Decimal:
 				return *env.NewDecimal(math.Sin(val.Value))
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.BlockType}, "mod")
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.BlockType}, "sin")
 			}
 		},
 	},
@@ -177,7 +219,7 @@ var Builtins_math = map[string]*env.Builtin{
 			case env.Decimal:
 				return *env.NewDecimal(math.Cos(val.Value))
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.BlockType}, "mod")
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.BlockType}, "cos")
 			}
 		},
 	},
@@ -191,7 +233,7 @@ var Builtins_math = map[string]*env.Builtin{
 			case env.Decimal:
 				return *env.NewDecimal(math.Sqrt(val.Value))
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.BlockType}, "mod")
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.BlockType}, "sqrt")
 			}
 		},
 	},
@@ -205,7 +247,7 @@ var Builtins_math = map[string]*env.Builtin{
 			case env.Decimal:
 				return *env.NewDecimal(math.Abs(val.Value))
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.BlockType}, "mod")
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.BlockType}, "abs")
 			}
 		},
 	},
@@ -434,10 +476,10 @@ var Builtins_math = map[string]*env.Builtin{
 					ratio := math.Pow(10, float64(precision.Value))
 					return env.NewDecimal(math.Round(val.Value*ratio) / ratio)
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "dim")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "round\\to")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.DecimalType}, "dim")
+				return MakeArgError(ps, 1, []env.Type{env.DecimalType}, "round\\to")
 			}
 		},
 	},
@@ -449,7 +491,21 @@ var Builtins_math = map[string]*env.Builtin{
 			case env.Decimal:
 				return env.NewDecimal(math.Round(val.Value))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.DecimalType}, "dim")
+				return MakeArgError(ps, 1, []env.Type{env.DecimalType}, "round\\to")
+			}
+		},
+	},
+	"roundtoeven": {
+		Argsn: 1,
+		Doc:   "Returns the nearest integer, rounding ties to even.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Decimal:
+				return env.NewDecimal(math.RoundToEven(val.Value))
+			case env.Integer:
+				return env.NewDecimal(math.RoundToEven(float64(val.Value)))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.DecimalType, env.IntegerType}, "roundtoeven")
 			}
 		},
 	},
@@ -645,7 +701,7 @@ var Builtins_math = map[string]*env.Builtin{
 			case env.Decimal:
 				return *env.NewDecimal(math.Y0(val.Value))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "Y0")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "y0")
 			}
 		},
 	},
@@ -659,7 +715,7 @@ var Builtins_math = map[string]*env.Builtin{
 			case env.Decimal:
 				return *env.NewDecimal(math.Y1(val.Value))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "Y1")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "y1")
 			}
 		},
 	},
@@ -740,13 +796,29 @@ var Builtins_math = map[string]*env.Builtin{
 			return *env.NewDecimal(float64(math.Pi))
 		},
 	},
+	"deg->rad": {
+		Argsn: 1,
+		Doc:   "Convert degrees to radians.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var fa float64
+			switch a := arg0.(type) {
+			case env.Decimal:
+				fa = a.Value
+			case env.Integer:
+				fa = float64(a.Value)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "deg->rad")
+			}
+			return *env.NewDecimal(fa * float64(math.Pi) / 180.0)
+		},
+	},
 	"is-near": {
 		Argsn: 2,
 		Doc:   "Returns true if two decimals are close.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			fa, fb, errPos := assureFloats(arg0, arg1)
 			if errPos > 0 {
-				return MakeArgError(ps, errPos, []env.Type{env.IntegerType, env.BlockType}, "equals")
+				return MakeArgError(ps, errPos, []env.Type{env.IntegerType, env.BlockType}, "is-near")
 			}
 			const epsilon = 0.0000000000001 // math.SmallestNonzeroFloat64
 			if math.Abs(fa-fb) <= (epsilon) {
@@ -758,7 +830,7 @@ var Builtins_math = map[string]*env.Builtin{
 	},
 	"near-zero": {
 		Argsn: 1,
-		Doc:   "Returns true if two decimals are close.",
+		Doc:   "Returns true if a decimal is close to zero.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var fa float64
 			switch a := arg0.(type) {
@@ -767,7 +839,7 @@ var Builtins_math = map[string]*env.Builtin{
 			case env.Integer:
 				fa = float64(a.Value)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.BlockType}, "is-zero")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.BlockType}, "near-zero")
 			}
 			// const epsilon = math.SmallestNonzeroFloat64
 			const epsilon = 0.0000000000001 // math.SmallestNonzeroFloat64
@@ -792,10 +864,11 @@ var Builtins_math = map[string]*env.Builtin{
 			res := DialectMath(ps, arg0)
 			switch block := res.(type) {
 			case env.Block:
-				stack := NewEyrStack()
+				// stack := env.NewEyrStack() // TODO -- stack moved to PS ... look it up if it requires changes here
+				ps.ResetStack()
 				ser := ps.Ser
 				ps.Ser = block.Series
-				Eyr_EvalBlock(ps, stack, false)
+				Eyr_EvalBlock(ps, false)
 				ps.Ser = ser
 				return ps.Res
 			default:

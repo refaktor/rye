@@ -40,10 +40,10 @@ var Builtins_regexp = map[string]*env.Builtin{
 						return *env.NewInteger(0)
 					}
 				default:
-					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "regexp//matches")
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "regexp//is-match")
 				}
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.StringType}, "regexp//matches")
+				return MakeArgError(ps, 2, []env.Type{env.StringType}, "regexp//is-match")
 			}
 		},
 	},

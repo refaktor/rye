@@ -106,7 +106,7 @@ func (ser TSeries) Len() int {
 // PositionAndSurroundingElements returns a string of the position of the series, marked with (here) and 10 surrounding elements.
 func (ser TSeries) PositionAndSurroundingElements(idxs Idxs) string {
 	var bu strings.Builder
-	bu.WriteString("{ ")
+	bu.WriteString("  ")
 	st := 0
 	if ser.Pos() > 10 {
 		bu.WriteString("... ")
@@ -130,6 +130,6 @@ func (ser TSeries) PositionAndSurroundingElements(idxs Idxs) string {
 	if ser.Len() > ser.Pos()+9 {
 		bu.WriteString("... ")
 	}
-	bu.WriteString("}")
+	bu.WriteString("")
 	return bu.String()
 }

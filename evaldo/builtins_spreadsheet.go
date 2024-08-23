@@ -225,6 +225,9 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 					// log.Fatal("Unable to parse file as CSV for "+filePath, err)
 					return MakeBuiltinError(ps, "Unable to parse file as CSV.", "load\\csv")
 				}
+				if len(rows) == 0 {
+					return MakeBuiltinError(ps, "File is empty", "load\\csv")
+				}
 				spr := env.NewSpreadsheet(rows[0])
 				//				for i, row := range rows {
 				//	if i > 0 {
@@ -393,13 +396,13 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 					case env.String:
 						return WhereContains(ps, spr, col.Value, s.Value, true)
 					default:
-						return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-contains")
+						return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-not-contains")
 					}
 				default:
-					return MakeArgError(ps, 3, []env.Type{env.StringType}, "where-contains")
+					return MakeArgError(ps, 3, []env.Type{env.StringType}, "where-not-contains")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "where-contains")
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "where-not-contains")
 			}
 		},
 	},
@@ -508,7 +511,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			dir, ok := arg2.(env.Word)
 			if !ok {
-				return MakeArgError(ps, 3, []env.Type{env.WordType}, "sort-col!")
+				return MakeArgError(ps, 3, []env.Type{env.WordType}, "sort-by!")
 			}
 			var dirAsc bool
 			if dir.Index == ps.Idx.IndexWord("asc") {
@@ -516,7 +519,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			} else if dir.Index == ps.Idx.IndexWord("desc") {
 				dirAsc = false
 			} else {
-				return MakeBuiltinError(ps, "Direction can be just asc or desc.", "sort-col!")
+				return MakeBuiltinError(ps, "Direction can be just asc or desc.", "sort-by!")
 			}
 			switch spr := arg0.(type) {
 			case env.Spreadsheet:
@@ -536,10 +539,10 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 					}
 					return spr
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType}, "sort-col!")
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "sort-by!")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "sort-col!")
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "sort-by!")
 			}
 		},
 	},
@@ -676,10 +679,10 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 					}
 					return spr
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "add-index!")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "add-indexes!")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "add-index!")
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "add-indexes!")
 			}
 		},
 	},
@@ -845,7 +848,7 @@ func GenerateColumn(ps *env.ProgramState, s env.Spreadsheet, name env.Word, extr
 				}
 				// fmt.Println(val)
 				if er != nil {
-					return nil
+					return MakeBuiltinError(ps, er.Error(), "add-col!")
 				}
 				if firstVal == nil {
 					var ok bool
@@ -1107,6 +1110,10 @@ func AutoType(ps *env.ProgramState, s *env.Spreadsheet, percent float64) env.Obj
 				} else {
 					colTypeCount[i]["str"]++
 				}
+			case env.Integer:
+				colTypeCount[i]["int"]++
+			case env.Decimal:
+				colTypeCount[i]["dec"]++
 			default:
 				continue
 			}
@@ -1134,11 +1141,31 @@ func AutoType(ps *env.ProgramState, s *env.Spreadsheet, percent float64) env.Obj
 		for i, row := range s.Rows {
 			switch newType {
 			case "int":
-				intVal, _ := strconv.Atoi(row.Values[colNum].(env.String).Value)
-				newS.Rows[i].Values[colNum] = *env.NewInteger(int64(intVal))
+				switch val := row.Values[colNum].(type) {
+				case env.String:
+					intVal, _ := strconv.Atoi(val.Value)
+					newS.Rows[i].Values[colNum] = *env.NewInteger(int64(intVal))
+				case env.Integer:
+					//intVal, _ := strconv.Atoi(row.Values[colNum].(env.String).Value)
+					newS.Rows[i].Values[colNum] = val
+				case env.Decimal:
+					//intVal, _ := strconv.Atoi(row.Values[colNum].(env.String).Value)
+					newS.Rows[i].Values[colNum] = val
+				}
 			case "dec":
-				floatVal, _ := strconv.ParseFloat(row.Values[colNum].(env.String).Value, 64)
-				newS.Rows[i].Values[colNum] = *env.NewDecimal(floatVal)
+				switch val1 := row.Values[colNum].(type) {
+				case env.String:
+					floatVal, _ := strconv.ParseFloat(val1.Value, 64)
+					newS.Rows[i].Values[colNum] = *env.NewDecimal(floatVal)
+				case env.Integer:
+					//intVal, _ := strconv.Atoi(row.Values[colNum].(env.String).Value)
+					//newS.Rows[i].Values[colNum] = *env.NewInteger(int64(intVal))
+					newS.Rows[i].Values[colNum] = *env.NewDecimal(float64(val1.Value))
+				case env.Decimal:
+					//intVal, _ := strconv.Atoi(row.Values[colNum].(env.String).Value)
+					//newS.Rows[i].Values[colNum] = *env.NewInteger(int64(intVal))
+					newS.Rows[i].Values[colNum] = val1
+				}
 			case "str":
 				newS.Rows[i].Values[colNum] = row.Values[colNum]
 			}

@@ -19,6 +19,6 @@ hub: fn { ch } {
 
 go-with events ?hub
 
-new-server ":8080"
+http-server ":8080"
 |handle-ws "/chat" ?handle-chat  
 |serve
