@@ -7855,7 +7855,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_ssh, ps, "ssh")
 	RegisterBuiltins2(Builtins_console, ps, "console")
 	RegisterBuiltinsInContext(Builtins_math, ps, "math")
-	RegisterBuiltinsInContext(Builtins_devops, ps, "devops")
+	RegisterBuiltinsInContext(Builtins_devops, ps, "os")
 	// ## Archived modules
 	// RegisterBuiltins2(Builtins_gtk, ps, "gtk")
 	// RegisterBuiltins2(Builtins_nats, ps, "nats")
