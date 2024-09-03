@@ -375,6 +375,12 @@ func EvalExpressionConcrete(ps *env.ProgramState) *env.ProgramState {
 					}
 					ps.Ser = ser
 					ps.Res = *env.NewBlock(*env.NewTSeries(res))
+				} else if block.Mode == 2 {
+					ser := ps.Ser
+					ps.Ser = block.Series
+					EvalBlock(ps)
+					ps.Ser = ser
+					// return ps.Res
 				} else {
 					ps.Res = object
 				}

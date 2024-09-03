@@ -1,20 +1,19 @@
-//go:build add_psutil
-// +build add_psutil
+//go:build !no_devops
+// +build !no_devops
 
 package evaldo
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
 
-	"github.com/bitfield/script"
 	"github.com/refaktor/rye/env"
 
+	"github.com/bitfield/script"
 	"github.com/shirou/gopsutil/v3/disk"
 	"github.com/shirou/gopsutil/v3/host"
 	"github.com/shirou/gopsutil/v3/load"
@@ -40,7 +39,37 @@ func FileExists(filePath string) int {
 
 var Builtins_devops = map[string]*env.Builtin{
 
+	"cwd": {
+		Argsn: 0,
+		Doc:   "Returns current working directory.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			path, err := os.Getwd()
+			if err != nil {
+				return MakeBuiltinError(ps, err.Error(), "cwd")
+			}
+			return *env.NewUri1(ps.Idx, "file://"+path)
+		},
+	},
+
 	"cd": {
+		Argsn: 1,
+		Doc:   "Changes current directory.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch path := arg0.(type) {
+			case env.Uri:
+
+				err := os.Chdir(path.GetPath())
+				if err != nil {
+					return MakeBuiltinError(ps, err.Error(), "cd")
+				}
+				return arg0
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "cd")
+			}
+		},
+	},
+
+	"cd_": {
 		Argsn: 1,
 		Doc:   "Changes current directory.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -108,7 +137,7 @@ var Builtins_devops = map[string]*env.Builtin{
 		},
 	},
 
-	"cwd": {
+	"cwd_": {
 		Argsn: 0,
 		Doc:   "Returns current working directory.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -121,7 +150,7 @@ var Builtins_devops = map[string]*env.Builtin{
 		Doc:   "Returns current working directory.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 
-			files, err := ioutil.ReadDir(ps.WorkingPath + "/")
+			files, err := os.ReadDir(".")
 			if err != nil {
 				return MakeBuiltinError(ps, "Error reading directory:"+err.Error(), "ls")
 			}
@@ -140,7 +169,7 @@ var Builtins_devops = map[string]*env.Builtin{
 
 	// SCRIPT PIPES
 
-	"p-new-file": {
+	"(file)": {
 		Argsn: 1,
 		Doc:   "Creates a new pipe object from a file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -154,7 +183,7 @@ var Builtins_devops = map[string]*env.Builtin{
 		},
 	},
 
-	"p-new-find-files": {
+	"(find-files)": {
 		Argsn: 1,
 		Doc:   "Creates a pipe object listing all the files in the directory and its subdirectories recursively, one per line.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -168,7 +197,7 @@ var Builtins_devops = map[string]*env.Builtin{
 		},
 	},
 
-	"p-new-list-files": {
+	"(list-files)": {
 		Argsn: 1,
 		Doc:   "Creates a pipe object listing all the files in the directory, one per line. Accepts and URI or glob pattern.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -185,7 +214,7 @@ var Builtins_devops = map[string]*env.Builtin{
 		},
 	},
 
-	"p-new-block": {
+	"(block)": {
 		Argsn: 1,
 		Doc:   "Creates a pipe object from a block of strings, one per line.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -208,7 +237,7 @@ var Builtins_devops = map[string]*env.Builtin{
 		},
 	},
 
-	"p-new-echo": {
+	"(echo)": {
 		Argsn: 1,
 		Doc:   "Creates a pipe object from a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -222,7 +251,7 @@ var Builtins_devops = map[string]*env.Builtin{
 		},
 	},
 
-	"p-new-if-exists": {
+	"(if-exists)": {
 		Argsn: 1,
 		Doc:   "Creates a pipe object from a file if it exists, otherwise returns an empty pipe object.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -236,7 +265,7 @@ var Builtins_devops = map[string]*env.Builtin{
 		},
 	},
 
-	"p-new-exec": {
+	"(exec)": {
 		Argsn: 1,
 		Doc:   "Creates a pipe object from a command that is executed.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -250,7 +279,7 @@ var Builtins_devops = map[string]*env.Builtin{
 		},
 	},
 
-	"p-exec": {
+	"exec": {
 		Argsn: 2,
 		Doc:   "Executes a command by sending it the contents of the pipe as input and returns a pipe object.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -274,7 +303,7 @@ var Builtins_devops = map[string]*env.Builtin{
 		},
 	},
 
-	"p-exec-for-each": {
+	"exec-for-each": {
 		Argsn: 2,
 		Doc:   "Executes a command from a Go template for each line in the pipe and returns a pipe object with the output of each command.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -298,7 +327,7 @@ var Builtins_devops = map[string]*env.Builtin{
 		},
 	},
 
-	"p-string": {
+	"string": {
 		Argsn: 1,
 		Doc:   "Returns pipe contents as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -320,7 +349,7 @@ var Builtins_devops = map[string]*env.Builtin{
 		},
 	},
 
-	"p-write-file": {
+	"write-file": {
 		Argsn: 2,
 		Doc:   "Writes pipe contents to a file and returns the number of bytes written.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -334,7 +363,7 @@ var Builtins_devops = map[string]*env.Builtin{
 						if err != nil {
 							return MakeBuiltinError(ps, err.Error(), "p-write-file")
 						}
-						return *env.NewInteger(int64(i))
+						return *env.NewInteger(i)
 					default:
 						return MakeArgError(ps, 2, []env.Type{env.UriType}, "p-write-file")
 					}
@@ -347,7 +376,7 @@ var Builtins_devops = map[string]*env.Builtin{
 		},
 	},
 
-	"p-stdout": {
+	"stdout": {
 		Argsn: 1,
 		Doc:   "Prints pipe contents to stdout and returns the number of bytes written.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -369,7 +398,7 @@ var Builtins_devops = map[string]*env.Builtin{
 		},
 	},
 
-	"p-first-n": {
+	"first-n": {
 		Argsn: 2,
 		Doc:   "Returns a pipe with the first n lines from the pipe.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -393,7 +422,7 @@ var Builtins_devops = map[string]*env.Builtin{
 		},
 	},
 
-	"p-last-n": {
+	"tail": {
 		Argsn: 2,
 		Doc:   "Returns a pipe with the last n lines from the pipe.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -856,7 +885,7 @@ var Builtins_devops = map[string]*env.Builtin{
 					*env.NewInteger(int64(usage.Total)),
 					*env.NewInteger(int64(usage.Used)),
 					*env.NewInteger(int64(usage.Free)),
-					*env.NewDecimal(float64(usage.UsedPercent)),
+					*env.NewDecimal(usage.UsedPercent),
 					*env.NewInteger(int64(usage.InodesUsed)),
 					*env.NewInteger(int64(usage.InodesFree)),
 					*env.NewInteger(int64(usage.InodesUsedPercent)),
