@@ -301,8 +301,11 @@ func Eyr_EvalExpression(ps *env.ProgramState) *env.ProgramState {
 	return ps
 }
 
-func Eyr_EvalBlockInside(ps *env.ProgramState) *env.ProgramState {
+func Eyr_EvalBlockInside(ps *env.ProgramState, inj env.Object, injnow bool) *env.ProgramState {
 	// fmt.Println("** EVALB INSIDE")
+	if injnow {
+		ps.Stack.Push(ps, inj)
+	}
 	for ps.Ser.Pos() < ps.Ser.Len() {
 		// fmt.Println(ps.Ser.Pos())
 		ps = Eyr_EvalExpression(ps)
