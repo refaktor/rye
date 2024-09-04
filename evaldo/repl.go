@@ -171,8 +171,8 @@ func (r *Repl) recieveMessage(message string) {
 
 func (r *Repl) recieveLine(line string) string {
 	res := r.evalLine(r.ps, line)
-	if r.showResults {
-		fmt.Print(res)
+	if r.showResults && len(res) > 0 {
+		fmt.Println(res)
 	}
 	return res
 }
@@ -520,7 +520,7 @@ func DoRyeRepl_OLD(es *env.ProgramState, showResults bool) { // here because of 
 							// TEMP - make conditional
 							// print the result
 							if showResults {
-								fmt.Println("\033[38;5;37m" + es.Res.Inspect(*genv) + "\x1b[0m")
+								fmt.Println("\033[38;5;37m" + es.Res.Inspect(*genv) + "\x1b[0m..")
 							}
 							if es.Res != nil && shellEd.Mode != "" && !shellEd.Pause && es.Res == shellEd.Return {
 								fmt.Println(" <- the correct value was returned")
