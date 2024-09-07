@@ -47,6 +47,19 @@ func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toL
 	var arg1 env.Object // := bi.Cur1
 	var arg2 env.Object
 
+	if bi.Argsn == 0 && bi.Cur0 == nil {
+		if checkFlagsBi(bi, ps, 0) {
+			return ps
+		}
+		if ps.ErrorFlag || ps.ReturnFlag {
+			return ps
+		}
+		if bi.Argsn == 0 {
+			// fmt.Println("** CALL BI")
+			ps.Res = bi.Fn(ps, nil, nil, nil, nil, nil)
+			// stack.Push(ps.Res)
+		}
+	}
 	if bi.Argsn > 0 && bi.Cur0 == nil {
 		if checkFlagsBi(bi, ps, 0) {
 			return ps
@@ -301,8 +314,11 @@ func Eyr_EvalExpression(ps *env.ProgramState) *env.ProgramState {
 	return ps
 }
 
-func Eyr_EvalBlockInside(ps *env.ProgramState) *env.ProgramState {
+func Eyr_EvalBlockInside(ps *env.ProgramState, inj env.Object, injnow bool) *env.ProgramState {
 	// fmt.Println("** EVALB INSIDE")
+	if injnow {
+		ps.Stack.Push(ps, inj)
+	}
 	for ps.Ser.Pos() < ps.Ser.Len() {
 		// fmt.Println(ps.Ser.Pos())
 		ps = Eyr_EvalExpression(ps)

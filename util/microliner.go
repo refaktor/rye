@@ -421,7 +421,7 @@ func (s *MLState) refreshSingleLine(prompt []rune, buf []rune, pos int) error {
 	s.sendBack(string(prompt))
 	for i, tt := range texts {
 		if i > 0 {
-			s.sendBack("\n\rx  ")
+			s.sendBack("\nx  ")
 		}
 		// tt2, inString := tt, false // RyeHighlight(tt, s.lastLineString, 6)
 		tt2, inString := RyeHighlight(tt, s.lastLineString, cols)
@@ -713,19 +713,19 @@ startOfHere:
 					s.lastLineString = false
 					// trace2("NL")
 					if len(line) > 0 && unicode.IsSpace(line[len(line)-1]) {
-						s.sendBack(fmt.Sprintf("%s⏎\n\r%s", color_emph, reset))
+						s.sendBack(fmt.Sprintf("%s⏎\n%s", color_emph, reset))
 						if s.inString {
 							s.lastLineString = true
 						}
 					} else {
-						s.sendBack("\n\r")
+						s.sendBack("\n")
 					}
 					xx := s.enterLine(string(line))
 					pos = 0
 					if xx == "next line" {
 						multiline = true
 					} else {
-						s.sendBack("\n\r")
+						s.sendBack("") // WW?
 					}
 					line = make([]rune, 0)
 					trace(line)
