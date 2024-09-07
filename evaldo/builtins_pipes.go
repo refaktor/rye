@@ -634,6 +634,47 @@ var Builtins_pipes = map[string]*env.Builtin{
 		},
 	},
 
+	"sha256sum": {
+		Argsn: 1,
+		Doc:   "Returns the hex-encoded SHA-256 hash of the entire contents of the pipe.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch p := arg0.(type) {
+			case env.Native:
+				switch pipe := p.Value.(type) {
+				case *script.Pipe:
+					sha256, err := pipe.SHA256Sum()
+					if err != nil {
+						return MakeBuiltinError(ps, err.Error(), "pipes/sha256sum")
+					}
+					return *env.NewString(sha256)
+				default:
+					return MakeNativeArgError(ps, 1, []string{"script-pipe"}, "pipes/sha256sum")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "pipes/sha256sum")
+			}
+		},
+	},
+
+	"sha256sums": {
+		Argsn: 1,
+		Doc:   "Reads paths from the pipe, one per line, and produces the hex-encoded SHA-256 hash of each corresponding file, one per line.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch p := arg0.(type) {
+			case env.Native:
+				switch pipe := p.Value.(type) {
+				case *script.Pipe:
+					newPipe := pipe.SHA256Sums()
+					return *env.NewNative(ps.Idx, newPipe, "script-pipe")
+				default:
+					return MakeNativeArgError(ps, 1, []string{"script-pipe"}, "pipes/sha256sums")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "pipes/sha256sums")
+			}
+		},
+	},
+
 	// GOPSUTIL
 
 }
