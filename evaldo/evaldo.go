@@ -751,7 +751,7 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 	/// ps.Ctx = fnCtx
 
 	var result *env.ProgramState
-	ps.Ser.SetPos(0)
+	psX.Ser.SetPos(0)
 	result = EvalBlockInj(psX, arg0, true)
 	// fmt.Println(result)
 	// fmt.Println(result.Res)
@@ -818,7 +818,7 @@ func CallFunctionArgs4(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 
 	// END TRY
 	var result *env.ProgramState
-	ps.Ser.SetPos(0)
+	psX.Ser.SetPos(0)
 	result = EvalBlockInj(psX, arg0, true)
 	MaybeDisplayFailureOrError(result, result.Idx)
 	if result.ForcedResult != nil {
@@ -878,7 +878,7 @@ func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, a
 
 	// END TRY
 	var result *env.ProgramState
-	ps.Ser.SetPos(0)
+	psX.Ser.SetPos(0)
 	if len(args) > 0 {
 		result = EvalBlockInj(psX, args[0], true)
 	} else {
