@@ -166,6 +166,8 @@ func DictToJSON(dict env.Dict) string {
 // Inspect returns a string representation of the Integer.
 func SpreadsheetRowToJSON(row env.SpreadsheetRow) string {
 	var bu strings.Builder
+	fmt.Printf("%v %+v\n", len(row.Values), row.Values)
+	fmt.Printf("%v %+v\n", len(row.Uplink.Cols), row.Uplink.Cols)
 	bu.WriteString("{")
 	for i, val := range row.Values {
 		if i > 0 {

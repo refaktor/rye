@@ -54,6 +54,7 @@ func ValueToBSON(arg0 env.Object, topLevel bool) any {
 			}
 		}
 		val = vals
+	case *env.Spreadsheet:
 	case env.Spreadsheet:
 		// spr["val"] = obj.Rows
 		//data := make([]interface{}, len(obj.Rows))
