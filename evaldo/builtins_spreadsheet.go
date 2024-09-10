@@ -204,7 +204,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		},
 	},
 
-	// TODO 2 -- this could move to a go functio so it could be called by general load that uses extension to define the loader
+	// TODO 2 -- this could move to a go function so it could be called by general load that uses extension to define the loader
 	"load\\csv": {
 		Argsn: 1,
 		Doc:   "Loads a .csv file to a spreadsheet datatype.",
@@ -615,7 +615,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 					case env.Block:
 						switch code := arg3.(type) {
 						case env.Block:
-							return GenerateColumn(ps, spr, newCol, fromCols, code)
+							return GenerateColumn(ps, &spr, newCol, fromCols, code)
 						default:
 							return MakeArgError(ps, 4, []env.Type{env.BlockType}, "add-col!")
 						}
@@ -831,7 +831,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	},
 }
 
-func GenerateColumn(ps *env.ProgramState, s env.Spreadsheet, name env.Word, extractCols env.Block, code env.Block) env.Object {
+func GenerateColumn(ps *env.ProgramState, s *env.Spreadsheet, name env.Word, extractCols env.Block, code env.Block) env.Object {
 	// add name to columns
 	s.Cols = append(s.Cols, ps.Idx.GetWord(name.Index))
 	for ix, row := range s.Rows {
