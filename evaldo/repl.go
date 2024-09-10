@@ -171,8 +171,8 @@ func (r *Repl) recieveMessage(message string) {
 
 func (r *Repl) recieveLine(line string) string {
 	res := r.evalLine(r.ps, line)
-	if r.showResults {
-		fmt.Print(res)
+	if r.showResults && len(res) > 0 {
+		fmt.Println(res)
 	}
 	return res
 }
@@ -208,7 +208,7 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 			EvalBlockInj(es, r.prevResult, true)
 		} else if r.dialect == "eyr" {
 			es.Dialect = env.EyrDialect
-			Eyr_EvalBlock(es, r.stack, true)
+			Eyr_EvalBlock(es, true)
 		} else if r.dialect == "math" {
 			idxx, _ := es.Idx.GetIndex("math")
 			s1, ok := es.Ctx.Get(idxx)
@@ -222,10 +222,11 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 			res := DialectMath(es, block1)
 			switch block := res.(type) {
 			case env.Block:
-				stack := env.NewEyrStack()
+				//stack := env.NewEyrStack()
+				es.ResetStack()
 				ser := es.Ser
 				es.Ser = block.Series
-				Eyr_EvalBlock(es, stack, false)
+				Eyr_EvalBlock(es, false)
 				es.Ser = ser
 			}
 		}
@@ -234,7 +235,11 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 
 		if !es.ErrorFlag && es.Res != nil {
 			r.prevResult = es.Res
-			output = fmt.Sprintf("\033[38;5;37m" + es.Res.Inspect(*genv) + "\x1b[0m")
+			resultStr := es.Res.Inspect(*genv)
+			if r.dialect == "eyr" {
+				resultStr = strings.Replace(resultStr, "Block:", "Stack:", 1) // TODO --- temp / hackish way ... make stack display itself or another approach
+			}
+			output = fmt.Sprintf("\033[38;5;37m" + resultStr + "\x1b[0m")
 		}
 
 		es.ReturnFlag = false
@@ -519,7 +524,7 @@ func DoRyeRepl_OLD(es *env.ProgramState, showResults bool) { // here because of 
 							// TEMP - make conditional
 							// print the result
 							if showResults {
-								fmt.Println("\033[38;5;37m" + es.Res.Inspect(*genv) + "\x1b[0m")
+								fmt.Println("\033[38;5;37m" + es.Res.Inspect(*genv) + "\x1b[0m..")
 							}
 							if es.Res != nil && shellEd.Mode != "" && !shellEd.Pause && es.Res == shellEd.Return {
 								fmt.Println(" <- the correct value was returned")

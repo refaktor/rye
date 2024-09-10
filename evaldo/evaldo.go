@@ -49,7 +49,7 @@ func NewProgramState(ser env.TSeries, idx env.Idxs) *ProgramState {
 func EvalBlock(ps *env.ProgramState) *env.ProgramState {
 	switch ps.Dialect {
 	case env.EyrDialect:
-		return Eyr_EvalBlock(ps, ps.Stack, false) // TODO ps.Stack is already in ps ... refactor
+		return Eyr_EvalBlockInside(ps, nil, false) // TODO ps.Stack is already in ps ... refactor
 	default:
 		return EvalBlockInj(ps, nil, false)
 	}
@@ -76,7 +76,7 @@ func EvalBlockInCtxInj(ps *env.ProgramState, ctx *env.RyeCtx, inj env.Object, in
 func EvalBlockInjMultiDialect(ps *env.ProgramState, inj env.Object, injnow bool) *env.ProgramState { // TODO temp name -- refactor
 	switch ps.Dialect {
 	case env.EyrDialect:
-		return Eyr_EvalBlock(ps, ps.Stack, false) // TODO ps.Stack is already in ps ... refactor
+		return Eyr_EvalBlockInside(ps, inj, injnow) // TODO ps.Stack is already in ps ... refactor
 	default:
 		return EvalBlockInj(ps, inj, injnow)
 	}
@@ -375,6 +375,12 @@ func EvalExpressionConcrete(ps *env.ProgramState) *env.ProgramState {
 					}
 					ps.Ser = ser
 					ps.Res = *env.NewBlock(*env.NewTSeries(res))
+				} else if block.Mode == 2 {
+					ser := ps.Ser
+					ps.Ser = block.Series
+					EvalBlock(ps)
+					ps.Ser = ser
+					// return ps.Res
 				} else {
 					ps.Res = object
 				}
@@ -425,6 +431,9 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 		object, found := ps.Ctx.Get(word.Index)
 		return found, object, nil
 	case env.Opword:
+		object, found := ps.Ctx.Get(word.Index)
+		return found, object, nil
+	case env.Pipeword:
 		object, found := ps.Ctx.Get(word.Index)
 		return found, object, nil
 	case env.CPath:
@@ -948,7 +957,7 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 			return ps
 		}
 		if checkErrorReturnFlag(ps) {
-			ps.Res = env.NewError4(0, "argument 1 of "+strconv.Itoa(bi.Argsn+1)+" missing of builtin: '"+bi.Doc+"'", ps.Res.(*env.Error), nil)
+			ps.Res = env.NewError4(0, "argument 1 of "+strconv.Itoa(bi.Argsn)+" missing of builtin: '"+bi.Doc+"'", ps.Res.(*env.Error), nil)
 			return ps
 		}
 		if ps.Res.Type() == env.VoidType {
@@ -967,7 +976,7 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 			return ps
 		}
 		if checkErrorReturnFlag(ps) {
-			ps.Res = env.NewError4(0, "argument 2 of "+strconv.Itoa(bi.Argsn+1)+" missing of builtin: '"+bi.Doc+"'", ps.Res.(*env.Error), nil)
+			ps.Res = env.NewError4(0, "argument 2 of "+strconv.Itoa(bi.Argsn)+" missing of builtin: '"+bi.Doc+"'", ps.Res.(*env.Error), nil)
 			return ps
 		}
 		//fmt.Println(ps.Res)

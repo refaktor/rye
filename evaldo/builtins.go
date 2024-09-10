@@ -200,6 +200,8 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 				return v1
 			case *env.List:
 				return v1
+			case env.Native:
+				return v1
 			case nil:
 				ps.FailureFlag = true
 				return env.NewError("missing key")
@@ -540,8 +542,10 @@ var builtins = map[string]*env.Builtin{
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
+			case env.Integer:
+				return *env.NewFileUri(ps.Idx, strconv.Itoa(int(val.Value))) // TODO turn to switch
 			case env.String:
-				return *env.NewUri1(ps.Idx, "file://"+val.Value) // TODO turn to switch
+				return *env.NewFileUri(ps.Idx, val.Value) // TODO turn to switch
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "to-file")
 			}
@@ -1108,6 +1112,15 @@ var builtins = map[string]*env.Builtin{
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "mod")
 			}
+		},
+	},
+
+	"_.": { // ***
+		Argsn: 1,
+		Doc:   "Accepts argument and returns void, meant to be used as drop in Eyr, void is not a valid runtime value.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return *env.NewVoid()
 		},
 	},
 
@@ -2364,12 +2377,7 @@ var builtins = map[string]*env.Builtin{
 			case env.Block:
 				ser := ps.Ser
 				ps.Ser = bloc.Series
-				switch ps.Dialect {
-				case env.Rye2Dialect:
-					EvalBlock(ps)
-				case env.EyrDialect:
-					Eyr_EvalBlock(ps, ps.Stack, false)
-				}
+				EvalBlock(ps)
 				ps.Ser = ser
 				return ps.Res
 			default:
@@ -2878,7 +2886,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"ls": {
+	"lc": {
 		Argsn: 0,
 		Doc:   "Lists words in current context",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2887,7 +2895,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"lsp": {
+	"lcp": {
 		Argsn: 0,
 		Doc:   "Lists words in current context",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2900,7 +2908,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"ls\\": {
+	"lc\\": {
 		Argsn: 1,
 		Doc:   "Lists words in current context with string filter",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2916,7 +2924,7 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-	"lsp\\": {
+	"lcp\\": {
 		Argsn: 1,
 		Doc:   "Lists words in current context with string filter",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -7849,7 +7857,8 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_ssh, ps, "ssh")
 	RegisterBuiltins2(Builtins_console, ps, "console")
 	RegisterBuiltinsInContext(Builtins_math, ps, "math")
-	RegisterBuiltinsInContext(Builtins_devops, ps, "devops")
+	osctx := RegisterBuiltinsInContext(Builtins_os, ps, "os")
+	RegisterBuiltinsInSubContext(Builtins_pipes, ps, osctx, "pipes")
 	// ## Archived modules
 	// RegisterBuiltins2(Builtins_gtk, ps, "gtk")
 	// RegisterBuiltins2(Builtins_nats, ps, "nats")
@@ -7864,19 +7873,19 @@ var BuiltinNames map[string]int // TODO --- this looks like some hanging global 
 func RegisterBuiltins2(builtins map[string]*env.Builtin, ps *env.ProgramState, name string) {
 	BuiltinNames[name] = len(builtins)
 	for k, v := range builtins {
-		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc)
+		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc+" ("+name+")")
 		registerBuiltin(ps, k, *bu)
 	}
 }
 
-func RegisterBuiltinsInContext(builtins map[string]*env.Builtin, ps *env.ProgramState, name string) {
+func RegisterBuiltinsInContext(builtins map[string]*env.Builtin, ps *env.ProgramState, name string) *env.RyeCtx {
 	BuiltinNames[name] = len(builtins)
 
 	ctx := ps.Ctx
 	ps.Ctx = env.NewEnv(ps.Ctx) // make new context with no parent
 
 	for k, v := range builtins {
-		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc)
+		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc+" ("+k+")")
 		registerBuiltin(ps, k, *bu)
 	}
 	newctx := ps.Ctx
@@ -7884,13 +7893,34 @@ func RegisterBuiltinsInContext(builtins map[string]*env.Builtin, ps *env.Program
 
 	wordIdx := ps.Idx.IndexWord(name)
 	ps.Ctx.Mod(wordIdx, *newctx)
+
+	return newctx
+}
+
+func RegisterBuiltinsInSubContext(builtins map[string]*env.Builtin, ps *env.ProgramState, parent *env.RyeCtx, name string) *env.RyeCtx {
+	BuiltinNames[name] = len(builtins)
+
+	ctx := ps.Ctx
+	ps.Ctx = env.NewEnv(parent) // make new context with no parent
+
+	for k, v := range builtins {
+		bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc+" ("+k+")")
+		registerBuiltin(ps, k, *bu)
+	}
+	newctx := ps.Ctx
+	ps.Ctx = ctx
+
+	wordIdx := ps.Idx.IndexWord(name)
+	ps.Ctx.Mod(wordIdx, *newctx)
+
+	return newctx
 }
 
 func registerBuiltin(ps *env.ProgramState, word string, builtin env.Builtin) {
 	// indexWord
 	// TODO -- this with string separator is a temporary way of how we define generic builtins
 	// in future a map will probably not be a map but an array and builtin will also support the Kind value
-
+	builtin.Doc = builtin.Doc + " (" + word + ")"
 	idxk := 0
 	if word != "_//" && strings.Index(word, "//") > 0 {
 		temp := strings.Split(word, "//")

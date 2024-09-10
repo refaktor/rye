@@ -162,7 +162,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 
 	"get-rows": {
 		Argsn: 1,
-		Doc:   "Create a spreadsheet by accepting block of column names and flat block of values",
+		Doc:   "Get rows as a native",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Spreadsheet:
@@ -176,7 +176,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 
 	"add-rows": {
 		Argsn: 2,
-		Doc:   "Create a spreadsheet by accepting block of column names and flat block of values",
+		Doc:   "Add one or more rows to a spreadsheet",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Spreadsheet:
@@ -505,9 +505,9 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		},
 	},
 
-	"sort-by!": {
+	"order-by!": {
 		Argsn: 3,
-		Doc:   "Sorts row by given column.",
+		Doc:   "Sorts row by given column, changes spreadsheet in place.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			dir, ok := arg2.(env.Word)
 			if !ok {
@@ -546,9 +546,9 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
-	"columns": {
+	"columns?": {
 		Argsn: 2,
-		Doc:   "Returs spreasheet with just given columns.",
+		Doc:   "Returns spreadsheet with just given columns.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Spreadsheet:
@@ -572,9 +572,9 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
-	"columns?": {
+	"header?": {
 		Argsn: 1,
-		Doc:   "Gets the column names as block.",
+		Doc:   "Gets the column names (header) as block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Spreadsheet:
@@ -603,7 +603,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
-	"add-col!": {
+	"add-column!": {
 		Argsn: 4,
 		Doc:   "Adds a new column to spreadsheet. Changes in-place and returns the new spreadsheet.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1274,6 +1274,10 @@ func GroupBy(ps *env.ProgramState, s env.Spreadsheet, col string, aggregations m
 			groupValStr = val.Value
 		case string:
 			groupValStr = val
+		case env.Integer:
+			groupValStr = strconv.Itoa(int(val.Value))
+		case int:
+			groupValStr = strconv.Itoa(val)
 		default:
 			return MakeBuiltinError(ps, "Grouping column value must be a string", "group-by")
 		}

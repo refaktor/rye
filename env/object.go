@@ -274,6 +274,15 @@ func NewUri1(index *Idxs, path string) *Uri {
 	return &nat
 }
 
+func NewFileUri(index *Idxs, path string) *Uri {
+	scheme := "file" // + "-schema" // TODO -- this is just temporary .. so we test it further, make proper once at that level
+	idxSch := index.IndexWord(scheme)
+	kind := scheme + "-schema"
+	idxKind := index.IndexWord(kind)
+	nat := Uri{Word{idxSch}, path, Word{idxKind}}
+	return &nat
+}
+
 func NewUri(index *Idxs, scheme Word, path string) *Uri {
 	scheme2 := strings.Split(path, "://")
 	kindstr := strings.Split(path, "://")[0] + "-schema" // TODO -- this is just temporary .. so we test it further, make proper once at that level
@@ -1137,6 +1146,11 @@ func (i Comma) Dump(e Idxs) string {
 //
 
 type Void struct{}
+
+func NewVoid() *Void {
+	o := Void{}
+	return &o
+}
 
 func (i Void) Type() Type {
 	return VoidType
