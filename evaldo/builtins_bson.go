@@ -55,6 +55,13 @@ func ValueToBSON(arg0 env.Object, topLevel bool) any {
 		}
 		val = vals
 	case *env.Spreadsheet:
+		rows := make([]any, len(obj.Rows))
+		for i, valu := range obj.Rows {
+			rows[i] = ValueToBSON(valu, false)
+		}
+		val = rows
+		typ = "spr"
+		met = obj.Cols
 	case env.Spreadsheet:
 		// spr["val"] = obj.Rows
 		//data := make([]interface{}, len(obj.Rows))

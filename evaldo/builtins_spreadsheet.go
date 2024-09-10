@@ -953,6 +953,7 @@ func GenerateColumn(ps *env.ProgramState, s *env.Spreadsheet, name env.Word, ext
 		// set the result of code block as the new column value in this row
 		// TODO -- make
 		row.Values = append(row.Values, ps.Res)
+		row.Uplink = s
 		s.Rows[ix] = row
 	}
 	return s

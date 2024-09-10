@@ -12,7 +12,7 @@ gamers: spreadsheet { "name" "gender" "scores" }
 withScores: gamers .add-rows [ "Bob" "M" vector { 86 110 } ]
 
 ; generate column with average scores
-|add-col! 'avg-score { scores } { .avg }
+|add-column! 'avg-score { scores } { .avg }
 
 print withScores
 withScores .to-json |write* %gamers.json
