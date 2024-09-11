@@ -211,7 +211,6 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 			es.Dialect = env.EyrDialect
 			Eyr_EvalBlock(es, true)
 		} else if r.dialect == "math" {
-
 			idxx, _ := es.Idx.GetIndex("math")
 			s1, ok := es.Ctx.Get(idxx)
 			if ok {
