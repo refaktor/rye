@@ -1,5 +1,5 @@
-//go:build no_devops
-// +build no_devops
+//go:build no_pipes
+// +build no_pipes
 
 package evaldo
 
@@ -7,4 +7,4 @@ import (
 	"github.com/refaktor/rye/env"
 )
 
-var Builtins_devops = map[string]*env.Builtin{}
+var Builtins_os = map[string]*env.Builtin{}

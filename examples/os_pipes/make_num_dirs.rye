@@ -1,0 +1,13 @@
+;
+;
+;
+
+
+cc os cc pipes ; temporary ... make a command to combine contexts and do code in that
+
+; GOAL:
+; create folders with numbers 1 to 20
+; in odd numbered folders create files odd
+; in even numbered folders create sqlite databases with one table
+
+
