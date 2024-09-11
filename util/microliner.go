@@ -570,8 +570,28 @@ startOfHere:
 			len(p)+len(line) < s.columns*4 && // Avoid countGlyphs on large lines
 			countGlyphs(p)+countGlyphs(line) < s.columns-1 {*/
 			///// pLen := countGlyphs(p)
+
 			if next.Ctrl {
 				switch strings.ToLower(next.Key) {
+				case "x":
+					// TEMP copy of code below ... refactor
+					historyStale = true
+					s.lastLineString = false
+					// trace2("NL")
+					s.sendBack(fmt.Sprintf("%s⏎\n%s", color_emph, reset))
+					if s.inString {
+						s.lastLineString = true
+					}
+					s.enterLine(string(line) + " ")
+					pos = 0
+					//if xx == "next line" {
+					multiline = true
+					//} else {
+					//	s.sendBack("") // WW?
+					//}
+					line = make([]rune, 0)
+					trace(line)
+					goto startOfHere
 				case "c":
 					/* return "", ErrPromptAborted
 					line = line[:0]

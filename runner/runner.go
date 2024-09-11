@@ -389,7 +389,7 @@ func main_rye_file(file string, sig bool, subc bool, interactive bool, code stri
 		evaldo.MaybeDisplayFailureOrError(ps, ps.Idx)
 
 		if interactive {
-			evaldo.DoRyeRepl(ps, "do", evaldo.ShowResults)
+			evaldo.DoRyeRepl(ps, "rye", evaldo.ShowResults)
 		}
 
 	case env.Error:
@@ -449,7 +449,7 @@ func main_rye_file_OLD(file string, sig bool, subc bool, interactive bool, code 
 		evaldo.MaybeDisplayFailureOrError(es, genv)
 
 		if interactive {
-			evaldo.DoRyeRepl(es, "do", evaldo.ShowResults)
+			evaldo.DoRyeRepl(es, "rye", evaldo.ShowResults)
 		}
 
 	case env.Error:

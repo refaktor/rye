@@ -5,7 +5,6 @@ package evaldo
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -16,8 +15,6 @@ import (
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/loader"
 	"github.com/refaktor/rye/util"
-
-	"github.com/refaktor/liner"
 )
 
 var (
@@ -33,7 +30,7 @@ type ShellEd struct {
 	Return  env.Object
 }
 
-func genPrompt(shellEd *ShellEd, line string) (string, string) {
+func genPrompt(shellEd *ShellEd, line string, multiline bool) (string, string) {
 	if shellEd != nil && shellEd.Mode != "" {
 		a := shellEd.Askfor
 		if len(a) > 0 {
@@ -49,7 +46,11 @@ func genPrompt(shellEd *ShellEd, line string) (string, string) {
 		if len(line) > 0 {
 			return "        ", ""
 		} else {
-			return "×> ", ""
+			if multiline {
+				return " > ", ""
+			} else {
+				return "×> ", ""
+			}
 		}
 	}
 }
@@ -210,6 +211,7 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 			es.Dialect = env.EyrDialect
 			Eyr_EvalBlock(es, true)
 		} else if r.dialect == "math" {
+
 			idxx, _ := es.Idx.GetIndex("math")
 			s1, ok := es.Ctx.Get(idxx)
 			if ok {
@@ -229,6 +231,8 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 				Eyr_EvalBlock(es, false)
 				es.Ser = ser
 			}
+		} else {
+			fmt.Println("Unknown dialect: " + r.dialect)
 		}
 
 		MaybeDisplayFailureOrError(es, genv)
@@ -293,6 +297,9 @@ func constructKeyEvent(r rune, k keyboard.Key) util.KeyEvent {
 		ctrl = true
 	case keyboard.KeyCtrlU:
 		ch = "u"
+		ctrl = true
+	case keyboard.KeyCtrlX:
+		ch = "x"
 		ctrl = true
 
 	case keyboard.KeyEnter:
@@ -383,6 +390,16 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 		fmt.Println(err)
 	}
 	// fmt.Println("END")
+
+	// TODO -- make it save history
+	/* if f, err := os.Create(history_fn); err != nil {
+		log.Print("Error writing history file: ", err)
+	} else {
+		if _, err := line.WriteHistory(f); err != nil {
+			log.Print("Error writing history file: ", err)
+		}
+		f.Close()
+	}*/
 }
 
 /*  THIS WAS DISABLED TEMP FOR WASM MODE .. 20250116 func DoGeneralInput(es *env.ProgramState, prompt string) {
@@ -406,7 +423,7 @@ func DoGeneralInputField(es *env.ProgramState, prompt string) {
 }
 */
 
-func DoRyeRepl_OLD(es *env.ProgramState, showResults bool) { // here because of some odd options we were experimentally adding
+/* func DoRyeRepl_OLD(es *env.ProgramState, showResults bool) { // here because of some odd options we were experimentally adding
 	codestr := "a: 100\nb: \"jim\"\nprint 10 + 20 + b"
 	codelines := strings.Split(codestr, ",\n")
 
@@ -444,8 +461,10 @@ func DoRyeRepl_OLD(es *env.ProgramState, showResults bool) { // here because of 
 
 	var prevResult env.Object
 
+	multiline := false
+
 	for {
-		prompt, arg := genPrompt(&shellEd, line2)
+		prompt, arg := genPrompt(&shellEd, line2, multiline)
 
 		if code, err := line.Prompt(prompt); err == nil {
 			// strip comment
@@ -459,7 +478,7 @@ func DoRyeRepl_OLD(es *env.ProgramState, showResults bool) { // here because of 
 			es.LiveObj.ClearUpdates()
 			es.LiveObj.PsMutex.Unlock()
 
-			multiline := len(code) > 1 && code[len(code)-1:] == " "
+			multiline = len(code) > 1 && code[len(code)-1:] == " "
 
 			comment := regexp.MustCompile(`\s*;`)
 			line1 := comment.Split(code, 2) //--- just very temporary solution for some comments in repl. Later should probably be part of loader ... maybe?
@@ -550,14 +569,14 @@ func DoRyeRepl_OLD(es *env.ProgramState, showResults bool) { // here because of 
 			for _, c := range codelines {
 				fmt.Println(c)
 			}
-			MoveCursorUp(len(codelines))*/
+			MoveCursorUp(len(codelines)) * /
 		} else {
 			log.Print("Error reading line: ", err)
 			break
 		}
 	}
 
-	if f, err := os.Create(history_fn); err != nil {
+ 	if f, err := os.Create(history_fn); err != nil {
 		log.Print("Error writing history file: ", err)
 	} else {
 		if _, err := line.WriteHistory(f); err != nil {
@@ -566,3 +585,4 @@ func DoRyeRepl_OLD(es *env.ProgramState, showResults bool) { // here because of 
 		f.Close()
 	}
 }
+*/
