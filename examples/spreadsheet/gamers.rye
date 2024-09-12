@@ -9,11 +9,21 @@ gamers: spreadsheet { "name" "gender" "scores" }
 
 ; add a row
 
-gamers .add-rows [ "Bob" "M" vector { 86 110 } ]
+withScores: gamers .add-rows [ "Bob" "M" vector { 86 110 } ]
 
 ; generate column with average scores
+|add-column! 'avg-score { scores } { .avg }
 
-|add-col! 'avg-score { scores } { .avg }
-|to-bson
-|write* %gamers.bson
+print withScores
+withScores .to-json |write* %gamers.json
+withScores .to-bson |write* %gamers.bson
 
+withoutScores: drop-column withScores { scores avg-score }
+print withoutScores
+withoutScores .to-json |write* %gamers-no-scores.json
+withoutScores .to-bson |write* %gamers-no-scores.bson
+
+withoutAvgScore: drop-column withScores "avg-score"
+print withoutAvgScore
+withoutAvgScore .to-json |write* %gamers-no-avg-score.json
+withoutAvgScore .to-bson |write* %gamers-no-avg-score.bson

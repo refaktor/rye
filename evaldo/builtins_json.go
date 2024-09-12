@@ -61,8 +61,12 @@ func RyeToJSON(res any) string {
 		return strconv.Itoa(int(v.Value))
 	case env.List:
 		return ListToJSON(v)
+	case env.Vector:
+		return VectorToJSON(v)
 	case env.Dict:
 		return DictToJSON(v)
+	case *env.Spreadsheet:
+		return SpreadsheetToJSON(*v)
 	case env.Spreadsheet:
 		return SpreadsheetToJSON(v)
 	case env.SpreadsheetRow:
@@ -89,7 +93,7 @@ func RyeToJSON(res any) string {
 	case env.RyeCtx:
 		return "{ 'state': 'todo' }"
 	default:
-		return "\"not handeled\""
+		return fmt.Sprintf("\"type %T not handeled\"", v)
 		// TODO-FIXME
 	}
 }
@@ -129,6 +133,19 @@ func RyeToJSONLines(res any) string {
 func EscapeJson(val string) string {
 	res := strings.ReplaceAll(val, "\"", "\\\"")
 	return res
+}
+
+func VectorToJSON(vector env.Vector) string {
+	var bu strings.Builder
+	bu.WriteString("[")
+	for i, val := range vector.Value {
+		if i > 0 {
+			bu.WriteString(", ")
+		}
+		bu.WriteString(RyeToJSON(val))
+	}
+	bu.WriteString("]")
+	return bu.String()
 }
 
 // Inspect returns a string representation of the Integer.
