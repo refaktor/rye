@@ -274,6 +274,22 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 				return env.NewError1(5) // NOT_FOUND
 			}
 		}
+	case env.Spreadsheet:
+		switch s2 := key.(type) {
+		case env.Integer:
+			idx := s2.Value
+			if posMode {
+				idx--
+			}
+			v := s1.Rows[idx]
+			ok := true
+			if ok {
+				return v
+			} else {
+				ps.FailureFlag = true
+				return env.NewError1(5) // NOT_FOUND
+			}
+		}
 	case env.SpreadsheetRow:
 		switch s2 := key.(type) {
 		case env.String:
