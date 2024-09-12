@@ -863,7 +863,6 @@ func DropColumnBlock(ps *env.ProgramState, s env.Spreadsheet, names env.Block) e
 }
 
 func DropColumn(ps *env.ProgramState, s env.Spreadsheet, name env.String) env.Object {
-
 	return DropColumns(ps, s, []env.String{name})
 }
 
