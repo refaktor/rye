@@ -18,3 +18,12 @@ print withScores
 withScores .to-json |write* %gamers.json
 withScores .to-bson |write* %gamers.bson
 
+withoutScores: drop-column withScores { scores avg-score }
+print withoutScores
+withoutScores .to-json |write* %gamers-no-scores.json
+withoutScores .to-bson |write* %gamers-no-scores.bson
+
+withoutAvgScore: drop-column withScores "avg-score"
+print withoutAvgScore
+withoutAvgScore .to-json |write* %gamers-no-avg-score.json
+withoutAvgScore .to-bson |write* %gamers-no-avg-score.bson

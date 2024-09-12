@@ -610,7 +610,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			switch spr := arg0.(type) {
 			case env.Spreadsheet:
 				switch rmCol := arg1.(type) {
-				case env.Word:
+				case env.String:
 					return DropColumn(ps, spr, rmCol)
 				case env.Block:
 					return DropColumnBlock(ps, spr, rmCol)
@@ -633,7 +633,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 					case env.Block:
 						switch code := arg3.(type) {
 						case env.Block:
-							return GenerateColumn(ps, &spr, newCol, fromCols, code)
+							return GenerateColumn(ps, spr, newCol, fromCols, code)
 						default:
 							return MakeArgError(ps, 4, []env.Type{env.BlockType}, "add-col!")
 						}
@@ -850,11 +850,11 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 }
 
 func DropColumnBlock(ps *env.ProgramState, s env.Spreadsheet, names env.Block) env.Object {
-	toDrop := make([]env.Word, 0)
+	toDrop := make([]env.String, 0)
 	for _, obj := range names.Series.S {
 		switch word := obj.(type) {
 		case env.Word:
-			toDrop = append(toDrop, word)
+			toDrop = append(toDrop, *env.NewString(ps.Idx.GetWord(word.Index)))
 		default:
 			return MakeError(ps, "Cannot use a non-word to specify a column to drop")
 		}
@@ -862,18 +862,20 @@ func DropColumnBlock(ps *env.ProgramState, s env.Spreadsheet, names env.Block) e
 	return DropColumns(ps, s, toDrop)
 }
 
-func DropColumn(ps *env.ProgramState, s env.Spreadsheet, name env.Word) env.Object {
-	return DropColumns(ps, s, []env.Word{name})
+func DropColumn(ps *env.ProgramState, s env.Spreadsheet, name env.String) env.Object {
+
+	return DropColumns(ps, s, []env.String{name})
 }
 
 // Drop one or more columns from a spreadsheet, returning a new spreadsheet
-func DropColumns(ps *env.ProgramState, s env.Spreadsheet, names []env.Word) env.Object {
+func DropColumns(ps *env.ProgramState, s env.Spreadsheet, names []env.String) env.Object {
 	var columnsToCopy []int = make([]int, len(s.Cols)-len(names))
 	var keepColIdx int = 0
+
 	for colIdx, col := range s.Cols {
 		keep := true
 		for _, name := range names {
-			nameStr := ps.Idx.GetWord(name.Index)
+			nameStr := name.Value
 			if col == nameStr {
 				keep = false
 				break
@@ -881,6 +883,7 @@ func DropColumns(ps *env.ProgramState, s env.Spreadsheet, names []env.Word) env.
 		}
 		if keep {
 			columnsToCopy[keepColIdx] = colIdx
+			keepColIdx++
 		}
 	}
 
@@ -900,6 +903,7 @@ func DropColumns(ps *env.ProgramState, s env.Spreadsheet, names []env.Word) env.
 		}
 		newSheet.Rows[rowIdx] = *env.NewSpreadsheetRow(newValues, newSheet)
 	}
+	newSheet.Indexes = make(map[string]map[any][]int)
 
 	for _, colName := range newCols {
 		newSheet.Indexes[colName] = s.Indexes[colName]
@@ -909,7 +913,7 @@ func DropColumns(ps *env.ProgramState, s env.Spreadsheet, names []env.Word) env.
 	return newSheet
 }
 
-func GenerateColumn(ps *env.ProgramState, s *env.Spreadsheet, name env.Word, extractCols env.Block, code env.Block) env.Object {
+func GenerateColumn(ps *env.ProgramState, s env.Spreadsheet, name env.Word, extractCols env.Block, code env.Block) env.Object {
 	// add name to columns
 	s.Cols = append(s.Cols, ps.Idx.GetWord(name.Index))
 	for ix, row := range s.Rows {
@@ -926,7 +930,7 @@ func GenerateColumn(ps *env.ProgramState, s *env.Spreadsheet, name env.Word, ext
 				}
 				// fmt.Println(val)
 				if er != nil {
-					return MakeBuiltinError(ps, er.Error(), "add-col!")
+					return MakeBuiltinError(ps, er.Error(), "add-column!")
 				}
 				if firstVal == nil {
 					var ok bool
@@ -953,7 +957,7 @@ func GenerateColumn(ps *env.ProgramState, s *env.Spreadsheet, name env.Word, ext
 		// set the result of code block as the new column value in this row
 		// TODO -- make
 		row.Values = append(row.Values, ps.Res)
-		row.Uplink = s
+		row.Uplink = &s
 		s.Rows[ix] = row
 	}
 	return s
