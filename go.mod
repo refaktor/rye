@@ -10,7 +10,7 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.30.5
 	github.com/aws/aws-sdk-go-v2/config v1.27.33
 	github.com/aws/aws-sdk-go-v2/service/ses v1.26.2
-	github.com/bitfield/script v0.22.1
+	github.com/bitfield/script v0.23.0
 	github.com/blevesearch/bleve/v2 v2.4.2
 	github.com/blevesearch/bleve_index_api v1.1.11
 	github.com/drewlanenga/govector v0.0.0-20220726163947-b958ac08bc93
