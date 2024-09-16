@@ -694,6 +694,25 @@ var Builtins_pipes = map[string]*env.Builtin{
 		},
 	},
 
+	"encodeBase64": {
+		Argsn: 1,
+		Doc:   "encodeBase64 produces the base64 encoding of the input.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch p := arg0.(type) {
+			case env.Native:
+				switch pipe := p.Value.(type) {
+				case *script.Pipe:
+					newPipe := pipe.EncodeBase64()
+					return *env.NewNative(ps.Idx, newPipe, "script-pipe")
+				default:
+					return MakeNativeArgError(ps, 1, []string{"script-pipe"}, "encodeBase64")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "encodeBase64")
+			}
+		},
+	},
+
 	// GOPSUTIL
 
 }
