@@ -7823,6 +7823,56 @@ var builtins = map[string]*env.Builtin{
 			// return block
 		},
 	},
+
+	"sleep": {
+		Argsn: 1,
+		Doc:   "Accepts an integer and Sleeps for given number of miliseconds.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg := arg0.(type) {
+			case env.Integer:
+				time.Sleep(time.Duration(int(arg.Value)) * time.Millisecond)
+				return arg
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "sleep")
+			}
+		},
+	},
+	"seconds": {
+		Argsn: 1,
+		Doc:   "Accepts an integer and Sleeps for given number of miliseconds.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg := arg0.(type) {
+			case env.Integer:
+				return *env.NewInteger(int64(arg.Value * 1000))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "sleep")
+			}
+		},
+	},
+	"minutes": {
+		Argsn: 1,
+		Doc:   "Accepts an integer and Sleeps for given number of miliseconds.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg := arg0.(type) {
+			case env.Integer:
+				return *env.NewInteger(int64(arg.Value * 1000 * 60))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "sleep")
+			}
+		},
+	},
+	"hours": {
+		Argsn: 1,
+		Doc:   "Accepts an integer and Sleeps for given number of miliseconds.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg := arg0.(type) {
+			case env.Integer:
+				return *env.NewInteger(int64(arg.Value * 1000 * 60 * 60))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "sleep")
+			}
+		},
+	},
 }
 
 /* Terminal functions .. move to it's own later */

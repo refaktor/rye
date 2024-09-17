@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"reflect"
 	"sync"
-	"time"
 
 	"github.com/refaktor/rye/env"
 
@@ -19,20 +18,6 @@ import (
 func strimpg() { fmt.Println("") }
 
 var Builtins_goroutines = map[string]*env.Builtin{
-
-	"sleep": {
-		Argsn: 1,
-		Doc:   "Accepts an integer and Sleeps for given number of miliseconds.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch arg := arg0.(type) {
-			case env.Integer:
-				time.Sleep(time.Duration(int(arg.Value)) * time.Millisecond)
-				return arg
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "sleep")
-			}
-		},
-	},
 
 	"go-with": {
 		Argsn: 2,
