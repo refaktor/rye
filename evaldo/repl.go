@@ -179,14 +179,16 @@ func (r *Repl) recieveLine(line string) string {
 }
 
 func (r *Repl) evalLine(es *env.ProgramState, code string) string {
-	es.LiveObj.PsMutex.Lock()
-	for _, update := range es.LiveObj.Updates {
-		fmt.Println("\033[35m((Reloading " + update + "))\033[0m")
-		block_, script_ := LoadScriptLocalFile(es, *env.NewUri1(es.Idx, "file://"+update))
-		es.Res = EvaluateLoadedValue(es, block_, script_, true)
+	if es.LiveObj != nil {
+		es.LiveObj.PsMutex.Lock()
+		for _, update := range es.LiveObj.Updates {
+			fmt.Println("\033[35m((Reloading " + update + "))\033[0m")
+			block_, script_ := LoadScriptLocalFile(es, *env.NewUri1(es.Idx, "file://"+update))
+			es.Res = EvaluateLoadedValue(es, block_, script_, true)
+		}
+		es.LiveObj.ClearUpdates()
+		es.LiveObj.PsMutex.Unlock()
 	}
-	es.LiveObj.ClearUpdates()
-	es.LiveObj.PsMutex.Unlock()
 
 	multiline := len(code) > 1 && code[len(code)-1:] == " "
 

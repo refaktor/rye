@@ -26,6 +26,8 @@ func resultToJS(res env.Object) any {
 		return v.Value
 	case env.Decimal:
 		return v.Value
+	case *env.Decimal:
+		return v.Value
 	case env.RyeCtx:
 		return "{ 'state': 'todo' }"
 	default:
@@ -58,7 +60,7 @@ func RyeToJSON(res any) string {
 	case env.Integer:
 		return strconv.Itoa(int(v.Value))
 	case env.Decimal:
-		return strconv.Itoa(int(v.Value))
+		return strconv.FormatFloat(v.Value, 'f', -1, 64)
 	case env.List:
 		return ListToJSON(v)
 	case env.Vector:

@@ -1,4 +1,3 @@
-
 ; Serve static files on /static/ route
 ; and current time on root
 
@@ -10,4 +9,3 @@ http-server ":8083"
 |handle "/static/" strip-prefix sh "/static/"
 |handle "/" fn { w r } { .write to-string now }
 |serve
-

@@ -407,9 +407,10 @@ type LiveEnv struct {
 func NewLiveEnv() *LiveEnv {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		// 	fmt.Println("Error creating watcher:", err)
+		fmt.Println("Error creating watcher:", err) // TODO -- if this fails show error in red, but make it so that rye runs anyway (check if null at repl for starters)
 		return nil
 	}
+
 	// defer watcher.Close()
 
 	// Watch current directory for changes in any Go source file (*.go)
