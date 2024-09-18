@@ -474,7 +474,7 @@ var Builtins_math = map[string]*env.Builtin{
 				switch precision := arg1.(type) {
 				case env.Integer:
 					ratio := math.Pow(10, float64(precision.Value))
-					return env.NewDecimal(math.Round(val.Value*ratio) / ratio)
+					return *env.NewDecimal(math.Round(val.Value*ratio) / ratio)
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "round\\to")
 				}
@@ -489,7 +489,7 @@ var Builtins_math = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Decimal:
-				return env.NewDecimal(math.Round(val.Value))
+				return *env.NewDecimal(math.Round(val.Value))
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.DecimalType}, "round\\to")
 			}
@@ -501,9 +501,9 @@ var Builtins_math = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Decimal:
-				return env.NewDecimal(math.RoundToEven(val.Value))
+				return *env.NewDecimal(math.RoundToEven(val.Value))
 			case env.Integer:
-				return env.NewDecimal(math.RoundToEven(float64(val.Value)))
+				return *env.NewDecimal(math.RoundToEven(float64(val.Value)))
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.DecimalType, env.IntegerType}, "roundtoeven")
 			}

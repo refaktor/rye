@@ -7471,6 +7471,97 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"year-day?": {
+		Argsn: 0,
+		Doc:   "Returns current Time.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Time:
+				return *env.NewInteger(int64(s1.Value.YearDay()))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TimeType}, "hour?")
+			}
+		},
+	},
+
+	"year?": {
+		Argsn: 0,
+		Doc:   "Returns current Time.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Time:
+				return *env.NewInteger(int64(s1.Value.Year()))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TimeType}, "hour?")
+			}
+		},
+	},
+
+	"month?": {
+		Argsn: 0,
+		Doc:   "Returns current Time.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Time:
+				return *env.NewInteger(int64(s1.Value.Month()))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TimeType}, "hour?")
+			}
+		},
+	},
+
+	"day?": {
+		Argsn: 0,
+		Doc:   "Returns current Time.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Time:
+				return *env.NewInteger(int64(s1.Value.Day()))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TimeType}, "hour?")
+			}
+		},
+	},
+
+	"hour?": {
+		Argsn: 0,
+		Doc:   "Returns current Time.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Time:
+				return *env.NewInteger(int64(s1.Value.Hour()))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TimeType}, "hour?")
+			}
+		},
+	},
+
+	"minute?": {
+		Argsn: 0,
+		Doc:   "Returns current Time.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Time:
+				return *env.NewInteger(int64(s1.Value.Minute()))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TimeType}, "hour?")
+			}
+		},
+	},
+
+	"second?": {
+		Argsn: 0,
+		Doc:   "Returns current Time.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Time:
+				return *env.NewInteger(int64(s1.Value.Second()))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TimeType}, "hour?")
+			}
+		},
+	},
+
 	// end of date time functions
 
 	"range": { // **
@@ -7843,7 +7934,7 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Integer:
-				return *env.NewInteger(int64(arg.Value * 1000))
+				return *env.NewInteger(arg.Value * 1000)
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "sleep")
 			}
@@ -7855,7 +7946,7 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Integer:
-				return *env.NewInteger(int64(arg.Value * 1000 * 60))
+				return *env.NewInteger(arg.Value * 1000 * 60)
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "sleep")
 			}
@@ -7867,7 +7958,7 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Integer:
-				return *env.NewInteger(int64(arg.Value * 1000 * 60 * 60))
+				return *env.NewInteger(arg.Value * 1000 * 60 * 60)
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "sleep")
 			}
