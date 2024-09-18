@@ -713,6 +713,25 @@ var Builtins_pipes = map[string]*env.Builtin{
 		},
 	},
 
+	"join": {
+		Argsn: 1,
+		Doc:   "joins all the lines in the pipe's contents into a single space-separated string, which will always end with a newline.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch p := arg0.(type) {
+			case env.Native:
+				switch pipe := p.Value.(type) {
+				case *script.Pipe:
+					newPipe := pipe.Join()
+					return *env.NewNative(ps.Idx, newPipe, "script-pipe")
+				default:
+					return MakeNativeArgError(ps, 1, []string{"script-pipe"}, "p-join")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "p-join")
+			}
+		},
+	},
+
 	// GOPSUTIL
 
 }
