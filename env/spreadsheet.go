@@ -48,6 +48,10 @@ func (s *Spreadsheet) AddRow(vals SpreadsheetRow) {
 	s.Rows = append(s.Rows, vals)
 }
 
+func (s *Spreadsheet) RemoveRowByIndex(index int64) {
+	s.Rows = append(s.Rows[:index], s.Rows[index+1:]...)
+}
+
 func (s *Spreadsheet) GetRows() []SpreadsheetRow {
 	return s.Rows
 }

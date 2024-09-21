@@ -204,6 +204,54 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		},
 	},
 
+	"add-rows!": {
+		Argsn: 2,
+		Doc:   "Add one or more rows to a spreadsheet",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch spr := arg0.(type) {
+			case *env.Spreadsheet:
+				switch data1 := arg1.(type) {
+				case env.Block:
+					data := data1.Series
+					for data.Pos() < data.Len() {
+						rowd := make([]any, len(spr.Cols))
+						for ii := 0; ii < len(spr.Cols); ii++ {
+							k1 := data.Pop()
+							rowd[ii] = k1
+						}
+						spr.AddRow(*env.NewSpreadsheetRow(rowd, spr))
+					}
+					return spr
+				case env.Native:
+					spr.Rows = append(spr.Rows, data1.Value.([]env.SpreadsheetRow)...)
+					return spr
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.NativeType}, "add-rows!")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "add-rows!")
+			}
+		},
+	},
+	"remove-row!": {
+		Argsn: 2,
+		Doc:   "Remove a row from a spreadsheet by index",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch spr := arg0.(type) {
+			case *env.Spreadsheet:
+				switch data1 := arg1.(type) {
+				case env.Integer:
+					spr.RemoveRowByIndex(data1.Value)
+					return spr
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.NativeType}, "remove-row!")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "remove-row!")
+			}
+		},
+	},
+
 	// TODO 2 -- this could move to a go function so it could be called by general load that uses extension to define the loader
 	"load\\csv": {
 		Argsn: 1,
@@ -577,10 +625,12 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		Doc:   "Gets the column names (header) as block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
+			case *env.Spreadsheet:
+				return spr.GetColumns()
 			case env.Spreadsheet:
 				return spr.GetColumns()
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "columns?")
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "headers?")
 			}
 		},
 	},
