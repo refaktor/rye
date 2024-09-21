@@ -635,25 +635,25 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 						case env.Block:
 							return GenerateColumn(ps, spr, newCol, fromCols, code)
 						default:
-							return MakeArgError(ps, 4, []env.Type{env.BlockType}, "add-col!")
+							return MakeArgError(ps, 4, []env.Type{env.BlockType}, "add-column!")
 						}
 					case env.Word:
 						switch replaceBlock := arg3.(type) {
 						case env.Block:
 							if replaceBlock.Series.Len() != 2 {
-								return MakeBuiltinError(ps, "Replacement block must contain a regex object and replacement string.", "add-col!")
+								return MakeBuiltinError(ps, "Replacement block must contain a regex object and replacement string.", "add-column!")
 							}
 							regexNative, ok := replaceBlock.Series.S[0].(env.Native)
 							if !ok {
-								return MakeBuiltinError(ps, "First element of replacement block must be a regex object.", "add-col!")
+								return MakeBuiltinError(ps, "First element of replacement block must be a regex object.", "add-column!")
 							}
 							regex, ok := regexNative.Value.(*regexp.Regexp)
 							if !ok {
-								return MakeBuiltinError(ps, "First element of replacement block must be a regex object.", "add-col!")
+								return MakeBuiltinError(ps, "First element of replacement block must be a regex object.", "add-column!")
 							}
 							replaceStr, ok := replaceBlock.Series.S[1].(env.String)
 							if !ok {
-								return MakeBuiltinError(ps, "Second element of replacement block must be a string.", "add-col!")
+								return MakeBuiltinError(ps, "Second element of replacement block must be a string.", "add-column!")
 							}
 							err := GenerateColumnRegexReplace(ps, &spr, newCol, fromCols, regex, replaceStr.Value)
 							if err != nil {
@@ -661,16 +661,16 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 							}
 							return spr
 						default:
-							return MakeArgError(ps, 3, []env.Type{env.BlockType}, "add-col!")
+							return MakeArgError(ps, 3, []env.Type{env.BlockType}, "add-column!")
 						}
 					default:
-						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "add-col!")
+						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "add-column!")
 					}
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType}, "add-col!")
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "add-column!")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "add-col!")
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "add-column!")
 			}
 		},
 	},
