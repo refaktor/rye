@@ -204,6 +204,54 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		},
 	},
 
+	"add-rows!": {
+		Argsn: 2,
+		Doc:   "Add one or more rows to a spreadsheet",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch spr := arg0.(type) {
+			case *env.Spreadsheet:
+				switch data1 := arg1.(type) {
+				case env.Block:
+					data := data1.Series
+					for data.Pos() < data.Len() {
+						rowd := make([]any, len(spr.Cols))
+						for ii := 0; ii < len(spr.Cols); ii++ {
+							k1 := data.Pop()
+							rowd[ii] = k1
+						}
+						spr.AddRow(*env.NewSpreadsheetRow(rowd, spr))
+					}
+					return spr
+				case env.Native:
+					spr.Rows = append(spr.Rows, data1.Value.([]env.SpreadsheetRow)...)
+					return spr
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.NativeType}, "add-rows!")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "add-rows!")
+			}
+		},
+	},
+	"remove-row!": {
+		Argsn: 2,
+		Doc:   "Remove a row from a spreadsheet by index",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch spr := arg0.(type) {
+			case *env.Spreadsheet:
+				switch data1 := arg1.(type) {
+				case env.Integer:
+					spr.RemoveRowByIndex(data1.Value)
+					return spr
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.NativeType}, "remove-row!")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "remove-row!")
+			}
+		},
+	},
+
 	// TODO 2 -- this could move to a go function so it could be called by general load that uses extension to define the loader
 	"load\\csv": {
 		Argsn: 1,
@@ -577,10 +625,12 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		Doc:   "Gets the column names (header) as block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
+			case *env.Spreadsheet:
+				return spr.GetColumns()
 			case env.Spreadsheet:
 				return spr.GetColumns()
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "columns?")
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "headers?")
 			}
 		},
 	},
@@ -635,25 +685,25 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 						case env.Block:
 							return GenerateColumn(ps, spr, newCol, fromCols, code)
 						default:
-							return MakeArgError(ps, 4, []env.Type{env.BlockType}, "add-col!")
+							return MakeArgError(ps, 4, []env.Type{env.BlockType}, "add-column!")
 						}
 					case env.Word:
 						switch replaceBlock := arg3.(type) {
 						case env.Block:
 							if replaceBlock.Series.Len() != 2 {
-								return MakeBuiltinError(ps, "Replacement block must contain a regex object and replacement string.", "add-col!")
+								return MakeBuiltinError(ps, "Replacement block must contain a regex object and replacement string.", "add-column!")
 							}
 							regexNative, ok := replaceBlock.Series.S[0].(env.Native)
 							if !ok {
-								return MakeBuiltinError(ps, "First element of replacement block must be a regex object.", "add-col!")
+								return MakeBuiltinError(ps, "First element of replacement block must be a regex object.", "add-column!")
 							}
 							regex, ok := regexNative.Value.(*regexp.Regexp)
 							if !ok {
-								return MakeBuiltinError(ps, "First element of replacement block must be a regex object.", "add-col!")
+								return MakeBuiltinError(ps, "First element of replacement block must be a regex object.", "add-column!")
 							}
 							replaceStr, ok := replaceBlock.Series.S[1].(env.String)
 							if !ok {
-								return MakeBuiltinError(ps, "Second element of replacement block must be a string.", "add-col!")
+								return MakeBuiltinError(ps, "Second element of replacement block must be a string.", "add-column!")
 							}
 							err := GenerateColumnRegexReplace(ps, &spr, newCol, fromCols, regex, replaceStr.Value)
 							if err != nil {
@@ -661,16 +711,16 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 							}
 							return spr
 						default:
-							return MakeArgError(ps, 3, []env.Type{env.BlockType}, "add-col!")
+							return MakeArgError(ps, 3, []env.Type{env.BlockType}, "add-column!")
 						}
 					default:
-						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "add-col!")
+						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "add-column!")
 					}
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType}, "add-col!")
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "add-column!")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "add-col!")
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "add-column!")
 			}
 		},
 	},

@@ -803,6 +803,22 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"thaw": {
+		Argsn: 1,
+		Doc:   "Makes a value (currently only spreadsheets) mutable instead of immutable",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch sp := arg0.(type) {
+			case env.Spreadsheet:
+				return &sp
+			case *env.Spreadsheet:
+				return sp
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "thaw")
+			}
+		},
+	},
+
 	"get_": { // *** find a name or decide on order of naming with generic words clashes with
 		Argsn: 1,
 		Doc:   "Returns value of the word in context",
