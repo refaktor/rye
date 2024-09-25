@@ -2,6 +2,7 @@ package env
 
 import (
 	"fmt"
+	"reflect"
 	"sort"
 	"strings"
 	"sync"
@@ -13,6 +14,12 @@ import (
 	Get(word int) (Object, bool)
 	Set(word int, val Object) Object
 } */
+
+// UTIL
+
+func IsPointer(v interface{}) bool {
+	return reflect.TypeOf(v).Kind() == reflect.Ptr
+}
 
 // This is experimental env without map for Functions with up to two variables
 

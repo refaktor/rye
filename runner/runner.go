@@ -441,7 +441,7 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 	// userHomeDir, _ := os.UserHomeDir()
 	// profile_path := filepath.Join(userHomeDir, ".rye-profile")
 
-	fmt.Println("Welcome to Rye console. Use ls to list current or lsp and lsp\\ \"prin\" to list parent contexts.")
+	fmt.Println("Welcome to Rye console. Use lc to list current or lcp and lcp\\ \"pri\" to list parent contexts.")
 
 	//if _, err := os.Stat(profile_path); err == nil {
 	//content, err := os.ReadFile(profile_path)
