@@ -813,6 +813,34 @@ var builtins = map[string]*env.Builtin{
 				return &sp
 			case *env.Spreadsheet:
 				return sp
+			case env.Dict:
+				return &sp
+			case env.List:
+				return &sp
+			case env.Block:
+				return &sp
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "thaw")
+			}
+		},
+	},
+
+	"freeze": {
+		Argsn: 1,
+		Doc:   "Makes a value (currently only spreadsheets) again immutable",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch sp := arg0.(type) {
+			case env.Spreadsheet:
+				return sp
+			case *env.Spreadsheet:
+				return *sp
+			case *env.Dict:
+				return *sp
+			case *env.List:
+				return *sp
+			case *env.Block:
+				return *sp
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "thaw")
 			}
@@ -1684,8 +1712,18 @@ var builtins = map[string]*env.Builtin{
 				if !esc {
 					return obj
 				}
+			case *env.Block:
+				obj, esc := term.DisplayBlock(*bloc, ps.Idx)
+				if !esc {
+					return obj
+				}
 			case env.Dict:
 				obj, esc := term.DisplayDict(bloc, ps.Idx)
+				if !esc {
+					return obj
+				}
+			case *env.Dict:
+				obj, esc := term.DisplayDict(*bloc, ps.Idx)
 				if !esc {
 					return obj
 				}
@@ -1694,8 +1732,18 @@ var builtins = map[string]*env.Builtin{
 				if !esc {
 					return obj
 				}
+			case *env.Spreadsheet:
+				obj, esc := term.DisplayTable(*bloc, ps.Idx)
+				if !esc {
+					return obj
+				}
 			case env.SpreadsheetRow:
 				obj, esc := term.DisplaySpreadsheetRow(bloc, ps.Idx)
+				if !esc {
+					return obj
+				}
+			case *env.SpreadsheetRow:
+				obj, esc := term.DisplaySpreadsheetRow(*bloc, ps.Idx)
 				if !esc {
 					return obj
 				}

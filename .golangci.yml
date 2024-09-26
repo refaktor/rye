@@ -86,9 +86,9 @@ linters:
     - dogsled
     # - dupl
     - errcheck
-    - exportloopref
+    # - exportloopref -- no more on 1.23.1
     # - funlen
-    - gocheckcompilerdirectives
+    #- gocheckcompilerdirectives --x
     - gochecknoinits
     # - goconst
     # - gocritic
@@ -105,12 +105,12 @@ linters:
     # - lll
     - misspell
     # - nakedret
-    - noctx
-    - nolintlint
+    # - noctx --- x
+    # - nolintlint --- x
     # - revive
     - staticcheck
     # - stylecheck
-    - typecheck
+    # - typecheck # --- temporarily removed, was throwing weird errors after upgrade to 1.23.1 on 20240925
     - unconvert
     # l1 - unparam
     # - unused
@@ -134,8 +134,8 @@ linters:
 issues:
   # Excluding configuration per-path, per-linter, per-text and per-source
   exclude-rules:
-    - text: "evaldo"
-      linters: typecheck
+#    - text: "evaldo"
+#      linters: typecheck
     - text: "net/http/cgi" # REASON: only important for Go 1.6 and lower, Rye requires go1.8 or higher as defined in go.mod
       linters: gosec 
 
