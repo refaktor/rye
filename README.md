@@ -319,13 +319,11 @@ Rye has Syntax highlighting for Emacs and VS Code. For VS Code just search for *
   [Red](https://red-lang.org) - Another language inspired by Rebol from well known Rebol developer  DocKimbel and his colleagues. A concrete endeavor, with its low level language, compiler, GUI, ...
   
   [Oldes' Rebol 3](https://oldes.github.io/Rebol3/) - Rebol3 fork maintained by Oldes (from Amanita Design), tries to resolve issues without unnecessarily changing the language itself.
+
+  [Ren-c](https://github.com/metaeducation/ren-c) - Rebol 3 fork maintained by HostileFork, more liberal / experimental with changes to the language.
   
   [Arturo](https://arturo-lang.io/) - Another unique language that builds on Rebol's core ideas.
 
-  [Pipefish](https://github.com/tim-hardcastle/Charm) - Not related to Rebol, but an interesting Go based language with some similar runtime ideas and challenges.
-  
-  [Ren-c](https://github.com/metaeducation/ren-c) - Rebol 3 fork maintained by HostileFork, more liberal with changes to the language. 
-  
  ## Questions, contact
   
 You can post an **[Issue](https://github.com/refaktor/rye/issues)** visit github **[Discussions](https://github.com/refaktor/rye/discussions)** or contact me through <a href="mailto:janko .itm+rye[ ]gmail .com">gmail</a> or <a href="https://twitter.com/refaktor">twitter</a>.</p>
