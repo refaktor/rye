@@ -2702,15 +2702,15 @@ var builtins = map[string]*env.Builtin{
 				for ps.Ser.Pos() < ps.Ser.Len() {
 					// ps, injnow = EvalExpressionInj(ps, inj, injnow)
 					EvalExpression2(ps, false)
+					if checkErrorReturnFlag(ps) {
+						return ps.Res
+					}
 					res = append(res, ps.Res)
 					// check and raise the flags if needed if true (error) return
 					//if checkFlagsAfterBlock(ps, 101) {
 					//	return ps
 					//}
 					// if return flag was raised return ( errorflag I think would return in previous if anyway)
-					//if checkErrorReturnFlag(ps) {
-					//	return ps
-					//}
 					// ps, injnow = MaybeAcceptComma(ps, inj, injnow)
 				}
 				ps.Ser = ser

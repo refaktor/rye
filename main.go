@@ -6,6 +6,7 @@ package main
 import (
 	"errors"
 
+	"github.com/jwalton/go-supportscolor"
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/runner"
 )
@@ -33,6 +34,7 @@ var CODE []any
 // NEW FLASGS HANDLING
 
 func main() {
+	supportscolor.Stdout()
 	runner.DoMain(func(ps *env.ProgramState) {})
 }
 

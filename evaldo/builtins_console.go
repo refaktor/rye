@@ -22,7 +22,7 @@ var Builtins_console = map[string]*env.Builtin{
 				//reader := bufio.NewReader(os.Stdin)
 
 				fmt.Println("Welcome to console: \033[1m" + name.Value + "\033[0m")
-				fmt.Println("* use \033[1mls\033[0m to list current context")
+				fmt.Println("* use \033[1mlc\033[0m to list current context")
 				fmt.Println("-------------------------------------------------------------")
 				/*
 					for {
