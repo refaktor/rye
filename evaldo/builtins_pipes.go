@@ -732,6 +732,74 @@ var Builtins_pipes = map[string]*env.Builtin{
 		},
 	},
 
+	"exit-status": {
+		Argsn: 1,
+		Doc:   "Returns the integer exit status of a previous command. This will be zero unless the pipe's error status is set and the error matches the pattern.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch p := arg0.(type) {
+			case env.Native:
+				switch pipe := p.Value.(type) {
+				case *script.Pipe:
+					status := pipe.ExitStatus()
+					return *env.NewInteger(int64(status))
+				default:
+					return MakeNativeArgError(ps, 1, []string{"script-pipe"}, "p-exit-status")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "p-exit-status")
+			}
+		},
+	},
+
+	"args": {
+		Argsn: 0,
+		Doc:   "Creates a pipe containing the program's command-line arguments from os.Args, excluding the program name, one per line.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			newPipe := script.Args()
+			return *env.NewNative(ps.Idx, newPipe, "script-pipe")
+		},
+	},
+
+	"concat": {
+		Argsn: 1,
+		Doc:   "concat reads paths from the pipe, one per line, and produces the contents of all the corresponding files in sequence. If there are any errors (for example, non-existent files), these will be ignored, execution will continue, and the pipe's error status will not be set.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch p := arg0.(type) {
+			case env.Native:
+				switch pipe := p.Value.(type) {
+				case *script.Pipe:
+					newPipe := pipe.Concat()
+					return *env.NewNative(ps.Idx, newPipe, "script-pipe")
+				default:
+					return MakeNativeArgError(ps, 1, []string{"script-pipe"}, "p-concat")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "p-concat")
+			}
+		},
+	},
+
+	"close": {
+		Argsn: 1,
+		Doc:   "Closes the pipe's associated reader.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch p := arg0.(type) {
+			case env.Native:
+				switch pipe := p.Value.(type) {
+				case *script.Pipe:
+					closeErr := pipe.Close()
+					if closeErr != nil {
+						return *env.NewError("Error closing pipe")
+					}
+					return nil
+				default:
+					return MakeNativeArgError(ps, 1, []string{"script-pipe"}, "p-close")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "p-close")
+			}
+		},
+	},
 	// GOPSUTIL
 
 }
