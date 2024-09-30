@@ -28,6 +28,7 @@ var (
 	// fileName = flag.String("fiimle", "", "Path to the Rye file (default: none)")
 	do     = flag.String("do", "", "Evaluates code after it loads a file or last save.")
 	lang   = flag.String("lang", "rye", "Select a dialect / language (do, eyr, ...)")
+	ctx    = flag.String("ctx", "", "Enter context or context chain")
 	silent = flag.Bool("silent", false, "Console doesn't display return values")
 	//	quit    = flag.Bool("quit", false, "Quits after executing.")
 	console = flag.Bool("console", false, "Enters console after a file is evaluated.")
@@ -48,13 +49,13 @@ func DoMain(regfn func(*env.ProgramState)) {
 		fmt.Println("  .            \n       Executes a main.rye in current directory")
 		fmt.Println("  [some/path]/.\n       Executes a main.rye on some path")
 		fmt.Println("\n \033[1mCommands:\033[0m (optional)")
-		fmt.Println("  cont\n     Continue console from the last save")
+		fmt.Println("  cont[inue]\n     Continue console from the last save")
 		fmt.Println("  here\n     Starts in Rye here mode (wip)")
 		fmt.Println(" \033[1mExamples:\033[0m")
 		fmt.Println("\033[33m  rye                                  \033[36m# enters console/REPL")
 		fmt.Println("\033[33m  rye -do \"print 33 * 42\"              \033[36m# evaluates the do code")
 		fmt.Println("\033[33m  rye -do 'name: \"Jim\"' console        \033[36m# evaluates the do code and enters console")
-		fmt.Println("\033[33m  rye cont                             \033[36m# continues/loads last saved state and enters console")
+		fmt.Println("\033[33m  rye continue                             \033[36m# continues/loads last saved state and enters console")
 		fmt.Println("\033[33m  rye -do 'print 10 + 10' cont         \033[36m# continues/loads last saved state, evaluates do code and enters console")
 		fmt.Println("\033[33m  rye filename.rye                     \033[36m# evaluates filename.rye")
 		fmt.Println("\033[33m  rye .                                \033[36m# evaluates main.rye in current directory")
@@ -64,6 +65,8 @@ func DoMain(regfn func(*env.ProgramState)) {
 		fmt.Println("\033[33m  rye -do 'print 123' -console .       \033[36m# evaluates main.rye in current dir. evaluates do code and enters console")
 		fmt.Println("\033[33m  rye -silent                          \033[36m# enters console in that doesn't show return values - silent mode")
 		fmt.Println("\033[33m  rye -silent -console file.rye        \033[36m# evaluates file.re and enters console in silent mode")
+		fmt.Println("\033[33m  rye -lang eyr                        # enter console of stack based Eyr language")
+		fmt.Println("\033[33m  rye -lang math                       # enter console of math dialect")
 		fmt.Println("\033[0m\n Thank you for trying out \033[1mRye\033[22m ...")
 		fmt.Println("")
 	}
@@ -77,15 +80,22 @@ func DoMain(regfn func(*env.ProgramState)) {
 		code = *do
 	}
 
+	if *ctx != "" {
+		ctxs_ := strings.Split(*ctx, " ")
+		for _, v := range ctxs_ {
+			code = code + " cc " + v + " "
+		}
+	}
+
 	// Check for --help flag
 	if flag.NFlag() == 0 && flag.NArg() == 0 {
 		if Option_Embed_Main {
-			main_rye_file("buildtemp/main.rye", false, true, *console, code, regfn)
+			main_rye_file("buildtemp/main.rye", false, true, false, *console, code, *lang, regfn)
 		} else if Option_Do_Main {
 			ryeFile := dotsToMainRye(".")
-			main_rye_file(ryeFile, false, true, *console, code, regfn)
+			main_rye_file(ryeFile, false, true, false, *console, code, *lang, regfn)
 		} else {
-			main_rye_repl(os.Stdin, os.Stdout, true, false, *lang, regfn)
+			main_rye_repl(os.Stdin, os.Stdout, true, false, *lang, code, regfn)
 		}
 	} else {
 		// Check for --help flag
@@ -97,21 +107,25 @@ func DoMain(regfn func(*env.ProgramState)) {
 		args := flag.Args()
 		// Check for subcommands (cont) and handle them
 		if len(args) > 0 {
-			if args[0] == "cont" {
+			if args[0] == "cont" || args[0] == "continue" {
 				fmt.Println("[continuing...]")
 				ryeFile := findLastConsoleSave()
-				main_rye_file(ryeFile, false, true, true, code, regfn)
+				main_rye_file(ryeFile, false, true, false, true, code, *lang, regfn)
 			} else if args[0] == "here" {
-				main_rye_repl(os.Stdin, os.Stdout, true, true, *lang, regfn)
+				if *do != "" {
+					main_rye_file("", false, true, true, *console, code, *lang, regfn)
+				} else {
+					main_rye_repl(os.Stdin, os.Stdout, true, true, *lang, code, regfn)
+				}
 			} else {
 				ryeFile := dotsToMainRye(args[0])
-				main_rye_file(ryeFile, false, true, *console, code, regfn)
+				main_rye_file(ryeFile, false, true, false, *console, code, *lang, regfn)
 			}
 		} else {
 			if *do != "" {
-				main_rye_file("", false, true, *console, code, regfn)
+				main_rye_file("", false, true, false, *console, code, *lang, regfn)
 			} else {
-				main_rye_repl(os.Stdin, os.Stdout, true, false, *lang, regfn)
+				main_rye_repl(os.Stdin, os.Stdout, true, false, *lang, code, regfn)
 			}
 		}
 	}
@@ -311,7 +325,8 @@ func main_ryeco() {
 
 }
 
-func main_rye_file(file string, sig bool, subc bool, interactive bool, code string, regfn func(*env.ProgramState)) {
+func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool, code string, lang string, regfn func(*env.ProgramState)) {
+	// fmt.Println("RYE FILE")
 	info := true
 
 	//defer profile.Start(profile.CPUProfile).Stop()
@@ -361,6 +376,26 @@ func main_rye_file(file string, sig bool, subc bool, interactive bool, code stri
 	evaldo.RegisterBuiltins(ps)
 	contrib.RegisterBuiltins(ps, &evaldo.BuiltinNames)
 	regfn(ps)
+
+	if here {
+		if _, err := os.Stat(".rye-here"); err == nil {
+			content, err := os.ReadFile(".rye-here")
+			if err != nil {
+				log.Fatal(err)
+			}
+			inputH := string(content)
+			block := loader.LoadStringNEW(inputH, false, ps)
+			block1 := block.(env.Block)
+			ps = env.AddToProgramState(ps, block1.Series, ps.Idx)
+			//fmt.Println("XX")
+			evaldo.EvalBlockInjMultiDialect(ps, nil, false)
+			//fmt.Println("YYY")
+			evaldo.MaybeDisplayFailureOrError(ps, ps.Idx)
+		} else {
+			fmt.Println("There was no `here` file.")
+		}
+	}
+
 	// current.RegisterBuiltins(ps)
 	// ctx := ps.Ctx
 	// ps.Ctx = env.NewEnv(ctx)
@@ -385,11 +420,20 @@ func main_rye_file(file string, sig bool, subc bool, interactive bool, code stri
 			ps.Ctx = env.NewEnv(ctx)
 		}
 
-		evaldo.EvalBlock(ps)
+		if lang == "eyr" {
+			// fmt.Println("****")
+			ps.Dialect = env.EyrDialect
+		}
+
+		evaldo.EvalBlockInjMultiDialect(ps, nil, false)
 		evaldo.MaybeDisplayFailureOrError(ps, ps.Idx)
 
 		if interactive {
 			evaldo.DoRyeRepl(ps, "rye", evaldo.ShowResults)
+		} else {
+			if file == "" && evaldo.ShowResults { // TODO -- move this to some instance ... to ProgramState? or is more of a ReplState?
+				fmt.Println(ps.Res.Print(*ps.Idx))
+			}
 		}
 
 	case env.Error:
@@ -436,8 +480,9 @@ func main_cgi_file(file string, sig bool) {
 	}
 }
 
-func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, regfn func(*env.ProgramState)) {
-	input := " " // "name: \"Rye\" version: \"0.011 alpha\""
+func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, code string, regfn func(*env.ProgramState)) {
+	// fmt.Println("RYE REPL")
+	input := code // "name: \"Rye\" version: \"0.011 alpha\""
 	// userHomeDir, _ := os.UserHomeDir()
 	// profile_path := filepath.Join(userHomeDir, ".rye-profile")
 
@@ -459,7 +504,10 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 	contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
 	regfn(es)
 
-	evaldo.EvalBlock(es)
+	if lang == "eyr" {
+		es.Dialect = env.EyrDialect
+	}
+	evaldo.EvalBlockInjMultiDialect(es, nil, false)
 
 	if subc {
 		ctx := es.Ctx

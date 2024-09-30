@@ -371,6 +371,9 @@ func EvalExpressionConcrete(ps *env.ProgramState) *env.ProgramState {
 					res := make([]env.Object, 0)
 					for ps.Ser.Pos() < ps.Ser.Len() {
 						EvalExpression2(ps, false)
+						if checkErrorReturnFlag(ps) {
+							return ps
+						}
 						res = append(res, ps.Res)
 					}
 					ps.Ser = ser
