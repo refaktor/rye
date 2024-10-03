@@ -791,7 +791,7 @@ var Builtins_pipes = map[string]*env.Builtin{
 					if closeErr != nil {
 						return *env.NewError("Error closing pipe")
 					}
-					return nil
+					return *env.NewInteger(0)
 				default:
 					return MakeNativeArgError(ps, 1, []string{"script-pipe"}, "p-close")
 				}
