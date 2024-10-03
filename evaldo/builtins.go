@@ -1268,6 +1268,14 @@ var builtins = map[string]*env.Builtin{
 				default:
 					return MakeBuiltinError(ps, "Value in Block is not block type.", "_+")
 				}
+			case env.Time:
+				switch b2 := arg1.(type) {
+				case env.Integer:
+					v := s1.Value.Add(time.Duration(b2.Value))
+					return *env.NewTime(v)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "_+")
+				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType, env.IntegerType, env.BlockType, env.DecimalType, env.UriType}, "_+")
 			}
@@ -1298,6 +1306,18 @@ var builtins = map[string]*env.Builtin{
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "_-")
 				}
+			case env.Time:
+				switch b2 := arg1.(type) {
+				case env.Integer:
+					v := a.Value.Add(time.Duration(-1 * b2.Value))
+					return *env.NewTime(v)
+				case env.Time:
+					v1 := a.Value.Sub(b2.Value)
+					return *env.NewInteger(int64(v1))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "_+")
+				}
+
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "_-")
 			}
@@ -7536,7 +7556,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	"year-day?": {
-		Argsn: 0,
+		Argsn: 1,
 		Doc:   "Returns current Time.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
@@ -7549,7 +7569,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	"year?": {
-		Argsn: 0,
+		Argsn: 1,
 		Doc:   "Returns current Time.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
@@ -7562,7 +7582,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	"month?": {
-		Argsn: 0,
+		Argsn: 1,
 		Doc:   "Returns current Time.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
@@ -7574,8 +7594,22 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"days-in-month?": {
+		Argsn: 1,
+		Doc:   "Returns current Time.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Time:
+				days := time.Date(s1.Value.Year(), s1.Value.Month()+1, 0, 0, 0, 0, 0, time.UTC).Day()
+				return *env.NewInteger(int64(days))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TimeType}, "days-in-month?")
+			}
+		},
+	},
+
 	"day?": {
-		Argsn: 0,
+		Argsn: 1,
 		Doc:   "Returns current Time.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
@@ -7588,7 +7622,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	"hour?": {
-		Argsn: 0,
+		Argsn: 1,
 		Doc:   "Returns current Time.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
@@ -7601,7 +7635,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	"minute?": {
-		Argsn: 0,
+		Argsn: 1,
 		Doc:   "Returns current Time.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
@@ -7614,7 +7648,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	"second?": {
-		Argsn: 0,
+		Argsn: 1,
 		Doc:   "Returns current Time.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
@@ -7998,7 +8032,7 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Integer:
-				return *env.NewInteger(arg.Value * 1000)
+				return *env.NewInteger(int64(time.Duration(arg.Value) * time.Second))
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "sleep")
 			}
@@ -8010,7 +8044,7 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Integer:
-				return *env.NewInteger(arg.Value * 1000 * 60)
+				return *env.NewInteger(int64(time.Duration(arg.Value) * time.Minute))
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "sleep")
 			}
@@ -8022,7 +8056,7 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Integer:
-				return *env.NewInteger(arg.Value * 1000 * 60 * 60)
+				return *env.NewInteger(int64(time.Duration(arg.Value) * time.Hour))
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "sleep")
 			}

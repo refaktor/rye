@@ -1,6 +1,7 @@
 module github.com/refaktor/rye
 
-go 1.21
+go 1.23
+
 toolchain go1.23.1
 
 retract v0.0.11 // Published accidentally with a bug

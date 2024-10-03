@@ -111,6 +111,10 @@ func DoMain(regfn func(*env.ProgramState)) {
 				fmt.Println("[continuing...]")
 				ryeFile := findLastConsoleSave()
 				main_rye_file(ryeFile, false, true, false, true, code, *lang, regfn)
+			} else if args[0] == "shell" {
+				main_rysh()
+			} else if args[0] == "rwk" {
+				main_ryk()
 			} else if args[0] == "here" {
 				if *do != "" {
 					main_rye_file("", false, true, true, *console, code, *lang, regfn)
