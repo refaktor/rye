@@ -1,6 +1,7 @@
 module github.com/refaktor/rye
 
 go 1.21
+toolchain go1.23.1
 
 retract v0.0.11 // Published accidentally with a bug
 
@@ -19,7 +20,7 @@ require (
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/gobwas/ws v1.4.0
-	github.com/gorilla/sessions v1.3.0
+	github.com/gorilla/sessions v1.4.0
 	github.com/jinzhu/copier v0.4.0
 	github.com/jwalton/go-supportscolor v1.2.0
 	github.com/kopoli/go-terminal-size v0.0.0-20170219200355-5c97524c8b54
