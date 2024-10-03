@@ -800,6 +800,31 @@ var Builtins_pipes = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	"get": {
+		Argsn: 2,
+		Doc:   "Get makes an HTTP GET request to url, sending the contents of the pipe as the request body, and produces the server's response.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch p := arg0.(type) {
+			case env.Native:
+				switch pipe := p.Value.(type) {
+				case *script.Pipe:
+					switch s := arg1.(type) {
+					case env.String:
+						newPipe := pipe.Get(s.Value)
+						return *env.NewNative(ps.Idx, newPipe, "script-pipe")
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.StringType}, "p-get")
+					}
+				default:
+					return MakeNativeArgError(ps, 1, []string{"script-pipe"}, "p-get")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "p-get")
+			}
+		},
+	},
+
 	// GOPSUTIL
 
 }
