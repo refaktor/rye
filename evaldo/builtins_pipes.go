@@ -858,6 +858,28 @@ var Builtins_pipes = map[string]*env.Builtin{
 		},
 	},
 
+	"wait": {
+		Argsn: 1,
+		Doc:   "Wait reads the pipe to completion and returns any error present on the pipe, or 0 otherwise..",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch p := arg0.(type) {
+			case env.Native:
+				switch pipe := p.Value.(type) {
+				case *script.Pipe:
+					waitErr := pipe.Wait()
+					if waitErr != nil {
+						return *env.NewError("Error in pipe during waiting")
+					}
+					return *env.NewInteger(0)
+				default:
+					return MakeNativeArgError(ps, 1, []string{"script-pipe"}, "p-wait")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "p-wait")
+			}
+		},
+	},
+
 	// GOPSUTIL
 
 }
