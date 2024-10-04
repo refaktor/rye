@@ -849,6 +849,15 @@ var Builtins_pipes = map[string]*env.Builtin{
 		},
 	},
 
+	"new": {
+		Argsn: 0,
+		Doc:   "new creates a new pipe with an empty reader.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			newPipe := script.NewPipe()
+			return *env.NewNative(ps.Idx, newPipe, "script-pipe")
+		},
+	},
+
 	// GOPSUTIL
 
 }
