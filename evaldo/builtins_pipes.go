@@ -849,6 +849,73 @@ var Builtins_pipes = map[string]*env.Builtin{
 		},
 	},
 
+	"new": {
+		Argsn: 0,
+		Doc:   "new creates a new pipe with an empty reader.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			newPipe := script.NewPipe()
+			return *env.NewNative(ps.Idx, newPipe, "script-pipe")
+		},
+	},
+
+	"wait": {
+		Argsn: 1,
+		Doc:   "Wait reads the pipe to completion and returns any error present on the pipe, or 0 otherwise..",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch p := arg0.(type) {
+			case env.Native:
+				switch pipe := p.Value.(type) {
+				case *script.Pipe:
+					waitErr := pipe.Wait()
+					if waitErr != nil {
+						return *env.NewError("Error in pipe during waiting")
+					}
+					return *env.NewInteger(0)
+				default:
+					return MakeNativeArgError(ps, 1, []string{"script-pipe"}, "p-wait")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "p-wait")
+			}
+		},
+	},
+
+	"append-to-file": {
+		Argsn: 2,
+		Doc:   "append-to-file appends the contents of the pipe to the file path, creating it if necessary, and returns the number of bytes successfully written, or an error.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch p := arg0.(type) {
+			case env.Native:
+				switch pipe := p.Value.(type) {
+				case *script.Pipe:
+					switch s := arg1.(type) {
+					case env.String:
+						writtenBytes, err := pipe.AppendFile(s.Value)
+						if err != nil {
+							return *env.NewError("Error while appending data to files.")
+						}
+						return *env.NewInteger(writtenBytes)
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.StringType}, "p-append-to-file")
+					}
+				default:
+					return MakeNativeArgError(ps, 1, []string{"script-pipe"}, "p-append-to-file")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "p-append-to-file")
+			}
+		},
+	},
+
+	"stdin": {
+		Argsn: 0,
+		Doc:   "Stdin creates a pipe that reads from os.Stdin.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			newPipe := script.Stdin()
+			return *env.NewNative(ps.Idx, newPipe, "script-pipe")
+		},
+	},
+
 	// GOPSUTIL
 
 }
