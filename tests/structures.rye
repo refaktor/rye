@@ -589,7 +589,7 @@ section "Spreadsheet related functions"
 		equal { spreadsheet { "name" "rating" "weight" }
 			{ "Enno" 4.3 120 "Enya" 6 132 "Shizuuchi" 7.2 168 "Kunishima" 2 68 } ::spr |type? } 'spreadsheet
 		equal { spr |length? } 4
-		equal { spr |columns? |length? } 3
+		equal { spr |header? |length? } 3
 		equal\todo { spr -> 2 -> 'name } "Enya"
 		equal { spr .first -> "name" } "Enno"
 		equal { spr .where-equal 'name "Enya" |length? } 1
@@ -618,8 +618,8 @@ section "Spreadsheet related functions"
 		equal { to-spreadsheet vals { dict { "a" 1 b 2 "c" 3 } dict { "a" 4 "b" 5 } } } spreadsheet { "a" "b" "c" } { 1 2 3 4 5 _ }
 	}
 
-	group "add-col"
-	mold\nowrap ?add-col!
+	group "add-column"
+	mold\nowrap ?add-column!
 	{ { block } }
 	{
 		equal { try { spreadsheet { "n" } [ 1 ] |add-col! 'm { x } { x } } |type? } 'error
@@ -674,12 +674,12 @@ section "Spreadsheet related functions"
 	mold\nowrap ?group-by
 	{ { block } }
 	{
-		equal { spreadsheet { "name" "val" } { "a" 1 "b" 2 } |group-by 'name { } |sort-by! 'name 'asc
+		equal { spreadsheet { "name" "val" } { "a" 1 "b" 2 } |group-by 'name { } |order-by! 'name 'asc
 		} spreadsheet { "name" } { "a" "b" }
 
 		equal { spreadsheet { "name" "val" } { "a" 1 "b" 6 "a" 5 "b" 10 "a" 7 } 
 				|group-by 'name { 'name count 'val sum 'val min 'val max 'val avg } 
-				|sort-by! 'name 'asc
+				|order-by! 'name 'asc
 		} spreadsheet { "name" "name_count" "val_sum" "val_min" "val_max" "val_avg" } 
 					{ 
 						"a" 3 13.0 1.0 7.0 4.333333333333333

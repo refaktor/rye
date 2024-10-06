@@ -20,7 +20,7 @@ test-framework: context {
 	}
 	error: fn { test } {
 		; try { do\in root-ctx test }
-		try test :got \type? |= 'error \either { print join { "  - OK: " mold got } } { inc! 'failed , print join { "  - Error: expected error but got: " mold got } }
+		try test :got |type? |= 'error |either { print join { "  - OK: " mold got } } { inc! 'failed , print join { "  - Error: expected error but got: " mold got } }
 	}
 
 	equal: fn { test res } {
@@ -83,7 +83,7 @@ generate-doc-file: fn { filename menu } {
 	} |write* to-file filename + ".html"
 }
 
-menu: { "basics" "structures" "validation" "misc" "errors" }
+menu: { "basics" "structures" "validation" "misc" "spreadsheet_mutations" }
 
 switch arg {
 	"test" {

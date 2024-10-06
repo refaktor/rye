@@ -24,6 +24,18 @@ func NewSpreadsheetRow(values []any, uplink *Spreadsheet) *SpreadsheetRow {
 	return &nat
 }
 
+func SpreadsheetRowFromDict(dict Dict, uplink *Spreadsheet) (bool, string, *SpreadsheetRow) {
+	row := SpreadsheetRow{make([]any, len(uplink.Cols)), uplink}
+	for i, v := range uplink.Cols {
+		if val, ok := dict.Data[v]; ok {
+			row.Values[i] = val
+		} else {
+			return false, v, nil
+		}
+	}
+	return true, "", &row
+}
+
 type Spreadsheet struct {
 	Cols    []string
 	Rows    []SpreadsheetRow

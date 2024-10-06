@@ -1,0 +1,36 @@
+section "spreadsheet mutations"
+"Functions that mutate thawed spreadsheets"
+{
+
+    group "add-row!" "add-row!" 
+    { { block } }
+    {
+        equal {
+        spreadsheet { "title"  "isbn" "price" "quantity" }
+        {
+            "Do Androids Dream of Electric Sheep?" "9781608866403" 12.99 4
+            "Animal Farm" "9780151002177" 2.49 10
+            "An Oxford Anthology of Shakespeare" "9780198129356" 19.99 10
+            "And Then There Were None" "9780062073488" 3.99 10
+        } |thaw ::cart 
+         cart |nth 1 -> "title" } "Do Androids Dream of Electric Sheep?" 
+        equal { cart |nth 3 -> "price" } 19.99
+
+        equal { cart .remove-row! 1 cart .nth 1 -> "title" } "Animal Farm"
+        equal { 
+            rowdict: dict { "title" "Windowlight" "isbn" "0000000000000" "price" 0.99 "quantity" 1 } 
+            probe rowdict
+            print rowdict .type?
+            cart .update-row! 1 rowdict
+            cart .nth 1 -> "isbn"
+        } "0000000000000"
+        equal {
+            updatefn: fn { row } { dict { "title" "I see the moon" "isbn" "0123456789012" "price" 0.99 "quantity" 1  }  }
+            cart .update-row! 3 updatefn
+            cart .nth 3 -> "isbn"
+        } "0123456789012"
+        
+    }
+
+}
+

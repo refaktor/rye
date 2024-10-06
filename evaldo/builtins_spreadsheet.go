@@ -233,6 +233,55 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+	"update-row!": {
+		Argsn: 3, // Spreadsheet, index function/dict
+		Doc: `Update the row at the given index. If given a dict or a spreadsheet row, replace the row with that.` +
+			`If given a function, pass the row, its index and replace the row with the return value from the function`,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch spr := arg0.(type) {
+			case *env.Spreadsheet:
+				switch idx := arg1.(type) {
+				case env.Integer:
+					if idx.Value < 1 || (idx.Value-1) > int64(len(spr.Rows)) {
+						errMsg := fmt.Sprintf("update-row! called with row index %i, but spreadsheet only has %i rows", idx.Value, len(spr.Rows))
+						return makeError(ps, errMsg)
+					}
+					switch updater := arg2.(type) {
+					case env.Function:
+						CallFunctionArgs4(updater, ps, spr.Rows[idx.Value-1], idx, nil, nil, ps.Ctx)
+						if !ps.ReturnFlag {
+							return makeError(ps, "Function given to update-row! should have returned a value, but didn't")
+						}
+						if ok, err, row := RyeValueToSpreadsheetRow(spr, ps.Res); ok {
+							spr.Rows[idx.Value-1] = *row
+							return spr
+						} else if len(err) > 0 {
+							return makeError(ps, err)
+						} else {
+							return makeError(ps, fmt.Sprintf(
+								"Function given to update-row! should have returned a Dict or a SpreadsheetRow, but returned a %s instead",
+								NameOfRyeType(ps.Res.Type()),
+							))
+						}
+
+					default:
+						if ok, err, row := RyeValueToSpreadsheetRow(spr, updater); ok {
+							spr.Rows[idx.Value-1] = *row
+							return ps.Res
+						} else if len(err) > 0 {
+							return makeError(ps, err)
+						}
+						return MakeArgError(ps, 3, []env.Type{env.DictType, env.SpreadsheetRowType}, "update-row")
+					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "update-row!")
+				}
+			default:
+				return MakeNeedsThawedArgError(ps, "update-row!")
+			}
+
+		},
+	},
 	"remove-row!": {
 		Argsn: 2,
 		Doc:   "Remove a row from a spreadsheet by index",
@@ -241,8 +290,12 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			case *env.Spreadsheet:
 				switch data1 := arg1.(type) {
 				case env.Integer:
-					spr.RemoveRowByIndex(data1.Value)
-					return spr
+					if data1.Value > 0 && data1.Value <= int64(len(spr.Rows)) {
+						spr.RemoveRowByIndex(data1.Value - 1)
+						return spr
+					} else {
+						return makeError(ps, fmt.Sprintf("Spreadsheet had less then %d rows", data1.Value))
+					}
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.NativeType}, "remove-row!")
 				}
@@ -897,6 +950,24 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+}
+
+func RyeValueToSpreadsheetRow(spr *env.Spreadsheet, obj env.Object) (bool, string, *env.SpreadsheetRow) {
+	switch updater := obj.(type) {
+	case env.Dict:
+		success, missing, row := env.SpreadsheetRowFromDict(updater, spr)
+		if !success {
+			return false, "update-row! given a dict that is missing value for the " + missing + " column!", nil
+		} else {
+			return true, "", row
+
+		}
+	case env.SpreadsheetRow:
+		return true, "", &updater
+	default:
+		return false, "", nil
+	}
+
 }
 
 func DropColumnBlock(ps *env.ProgramState, s env.Spreadsheet, names env.Block) env.Object {

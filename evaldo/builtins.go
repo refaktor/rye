@@ -44,16 +44,32 @@ func MakeBuiltinError(env1 *env.ProgramState, msg string, fn string) *env.Error 
 	return env.NewError(msg + " in builtin " + fn + ".")
 }
 
-func MakeArgError(env1 *env.ProgramState, N int, typ []env.Type, fn string) *env.Error {
-	env1.FailureFlag = true
+func NameOfRyeType(t env.Type) string {
+	if t < 0 || int(t) >= len(env.NativeTypes) {
+		return "INVALID TYPE (" + strconv.FormatInt(int64(t), 10) + ")"
+	}
+	return env.NativeTypes[t]
+}
+
+func MakeArgErrorMessage(N int, allowedTypes []env.Type, fn string) string {
 	types := ""
-	for i, tt := range typ {
+	for i, tt := range allowedTypes {
 		if i > 0 {
 			types += ", "
 		}
 		types += env.NativeTypes[tt-1]
 	}
-	return env.NewError("builtin `" + fn + "` requires argument " + strconv.Itoa(N) + " to be: " + types + ".")
+	return "builtin `" + fn + "` requires argument " + strconv.Itoa(N) + " to be: " + types + "."
+}
+
+func MakeArgError(env1 *env.ProgramState, N int, typ []env.Type, fn string) *env.Error {
+	env1.FailureFlag = true
+	return env.NewError(MakeArgErrorMessage(N, typ, fn))
+}
+
+func MakeNeedsThawedArgError(env1 *env.ProgramState, fn string) *env.Error {
+	env1.FailureFlag = true
+	return env.NewError("builtin `" + fn + "` requires a thawed spreadsheet as the first argument")
 }
 
 func MakeNativeArgError(env1 *env.ProgramState, N int, knd []string, fn string) *env.Error {
@@ -6799,8 +6815,22 @@ var builtins = map[string]*env.Builtin{
 						return MakeBuiltinError(ps, fmt.Sprintf("String has less than %d elements.", num.Value), "nth")
 					}
 					return *env.NewString(string(str[num.Value-1 : num.Value]))
+				case env.Spreadsheet:
+					rows := s1.GetRows()
+					if num.Value > int64(len(rows)) {
+						return MakeBuiltinError(ps, fmt.Sprintf("Spreadhseet has less than %d rows.", num.Value), "nth")
+					}
+					return rows[num.Value-1]
+				case *env.Spreadsheet:
+					rows := s1.GetRows()
+					if num.Value > int64(len(rows)) {
+						return MakeBuiltinError(ps, fmt.Sprintf("Spreadhseet has less than %d rows.", num.Value), "nth")
+					}
+					return rows[num.Value-1]
 				default:
-					return MakeArgError(ps, 1, []env.Type{env.BlockType}, "nth")
+					return MakeArgError(ps, 1,
+						[]env.Type{env.BlockType, env.ListType, env.StringType, env.SpreadsheetType},
+						"nth")
 				}
 			default:
 				return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "nth")
