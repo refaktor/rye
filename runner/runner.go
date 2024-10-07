@@ -383,7 +383,7 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 	// READ STDIN IF
 
 	var stValue env.Object
-	stValue = env.NewString("")
+	stValue = *env.NewString("")
 
 	if stin == "all" || stin == "a" { // TODO add modes like lines, maybe load / lines, do / lines)
 		var stInput string
@@ -395,7 +395,7 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 			}
 			stInput += stLine
 		}
-		stValue = env.NewString(stInput)
+		stValue = *env.NewString(stInput)
 	}
 
 	ps := env.NewProgramStateNEW()
