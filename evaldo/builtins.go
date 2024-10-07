@@ -835,6 +835,33 @@ var builtins = map[string]*env.Builtin{
 				return &sp
 			case env.Block:
 				return &sp
+			case env.Native:
+				return &sp
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "thaw")
+			}
+		},
+	},
+
+	"ref": { // temp duplicate
+		Argsn: 1,
+		Doc:   "Makes a value (currently only spreadsheets) mutable instead of immutable",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch sp := arg0.(type) {
+			case env.Spreadsheet:
+				return &sp
+			case *env.Spreadsheet:
+				return sp
+			case env.Dict:
+				return &sp
+			case env.List:
+				return &sp
+			case env.Block:
+				return &sp
+			case env.Native:
+				sp.Value = env.ReferenceAny(sp.Value)
+				return &sp
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "thaw")
 			}
@@ -856,6 +883,31 @@ var builtins = map[string]*env.Builtin{
 			case *env.List:
 				return *sp
 			case *env.Block:
+				return *sp
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "thaw")
+			}
+		},
+	},
+
+	"deref": { // TEMP duplicate
+		Argsn: 1,
+		Doc:   "Makes a value (currently only spreadsheets) again immutable",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch sp := arg0.(type) {
+			case env.Spreadsheet:
+				return sp
+			case *env.Spreadsheet:
+				return *sp
+			case *env.Dict:
+				return *sp
+			case *env.List:
+				return *sp
+			case *env.Block:
+				return *sp
+			case *env.Native:
+				sp.Value = env.DereferenceAny(sp.Value)
 				return *sp
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "thaw")
@@ -1698,7 +1750,11 @@ var builtins = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "Prints information about a value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			fmt.Println(arg0.Inspect(*ps.Idx))
+			p := ""
+			if env.IsPointer(arg0) {
+				p = "REF:"
+			}
+			fmt.Println(p + arg0.Inspect(*ps.Idx))
 			return arg0
 		},
 	},
@@ -1709,6 +1765,19 @@ var builtins = map[string]*env.Builtin{
 			return *env.NewString(arg0.Inspect(*ps.Idx))
 		},
 	},
+	"is-ref": { // **
+		Argsn: 1,
+		Doc:   "Prints information about a value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			// fmt.Println(arg0.Inspect(*ps.Idx))
+			if env.IsPointer(arg0) {
+				return env.NewInteger(1)
+			} else {
+				return env.NewInteger(0)
+			}
+		},
+	},
+
 	"esc": {
 		Argsn: 1,
 		Doc:   "Creates an escape sequence \033{}",
