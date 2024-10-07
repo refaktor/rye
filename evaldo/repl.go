@@ -240,11 +240,15 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 
 		if !es.ErrorFlag && es.Res != nil {
 			r.prevResult = es.Res
+			p := ""
+			if env.IsPointer(es.Res) {
+				p = "Ref"
+			}
 			resultStr := es.Res.Inspect(*genv)
 			if r.dialect == "eyr" {
 				resultStr = strings.Replace(resultStr, "Block:", "Stack:", 1) // TODO --- temp / hackish way ... make stack display itself or another approach
 			}
-			output = fmt.Sprintf("\033[38;5;37m" + resultStr + "\x1b[0m")
+			output = fmt.Sprintf("\033[38;5;37m" + p + resultStr + "\x1b[0m")
 		}
 
 		es.ReturnFlag = false

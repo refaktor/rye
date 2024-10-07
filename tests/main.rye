@@ -2,7 +2,7 @@
 ; Run test cases: ../rye main.rye test
 ; Generate documentation: ../rye main.rye doc > builtins.html
 
-rye .args\raw :arg
+rye .args\raw |load :args
 root-ctx: current-ctx
 
 test-framework: context {
@@ -85,14 +85,19 @@ generate-doc-file: fn { filename menu } {
 
 menu: { "basics" "structures" "validation" "misc" "spreadsheet_mutations" }
 
-switch arg {
-	"test" {
+switch first args  {
+	test {
 		errors: 0
-		for menu { + ".rye" |to-file |probe |probe |load |do\in* test-framework |+ errors ::errors }
-		print "==============="
-		print "FAILED TESTS: " + errors
+		either args .length? = 1 {
+			for menu { + ".rye" |to-file |load |do\in* test-framework |+ errors ::errors }
+		} {
+			
+			args .second + ".rye" |to-file |load |do\in* test-framework |+ errors ::errors
+		}
+		print "==================="
+		print " FAILED TESTS: " + errors
 	}
-	"doc"  {
+	doc  {
 		for menu { .generate-doc-file menu }
 	}
 	_ { print "use test or doc command" }

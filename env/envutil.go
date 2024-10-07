@@ -2,6 +2,7 @@ package env
 
 import (
 	"fmt"
+	"reflect"
 	"time"
 )
 
@@ -38,4 +39,23 @@ func ToRyeValue(val any) Object {
 		// TODO-FIXME
 		return Void{}
 	}
+}
+
+func IsPointer(x any) bool {
+	return reflect.TypeOf(x).Kind() == reflect.Pointer
+}
+
+func IsPointer2(x reflect.Value) bool {
+	return x.Kind() == reflect.Ptr
+}
+
+func DereferenceAny(x any) any {
+	if reflect.TypeOf(x).Kind() == reflect.Ptr {
+		return reflect.ValueOf(x).Elem().Interface()
+	}
+	return x
+}
+
+func ReferenceAny(x any) any {
+	return &x
 }
