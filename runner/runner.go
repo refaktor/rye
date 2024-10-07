@@ -27,9 +27,11 @@ import (
 var (
 	// fileName = flag.String("fiimle", "", "Path to the Rye file (default: none)")
 	do     = flag.String("do", "", "Evaluates code after it loads a file or last save.")
+	sdo    = flag.String("sdo", "", "Evaluates code after it loads a file or last save.")
 	lang   = flag.String("lang", "rye", "Select a dialect / language (do, eyr, ...)")
 	ctx    = flag.String("ctx", "", "Enter context or context chain")
 	silent = flag.Bool("silent", false, "Console doesn't display return values")
+	stin   = flag.String("stin", "no", "Inject first value from stdin")
 	//	quit    = flag.Bool("quit", false, "Quits after executing.")
 	console = flag.Bool("console", false, "Enters console after a file is evaluated.")
 	help    = flag.Bool("help", false, "Displays this help message.")
@@ -79,6 +81,10 @@ func DoMain(regfn func(*env.ProgramState)) {
 	if *do != "" {
 		code = *do
 	}
+	if *sdo != "" {
+		code = *sdo
+		evaldo.ShowResults = false
+	}
 
 	if *ctx != "" {
 		ctxs_ := strings.Split(*ctx, " ")
@@ -90,10 +96,10 @@ func DoMain(regfn func(*env.ProgramState)) {
 	// Check for --help flag
 	if flag.NFlag() == 0 && flag.NArg() == 0 {
 		if Option_Embed_Main {
-			main_rye_file("buildtemp/main.rye", false, true, false, *console, code, *lang, regfn)
+			main_rye_file("buildtemp/main.rye", false, true, false, *console, code, *lang, regfn, *stin)
 		} else if Option_Do_Main {
 			ryeFile := dotsToMainRye(".")
-			main_rye_file(ryeFile, false, true, false, *console, code, *lang, regfn)
+			main_rye_file(ryeFile, false, true, false, *console, code, *lang, regfn, *stin)
 		} else {
 			main_rye_repl(os.Stdin, os.Stdout, true, false, *lang, code, regfn)
 		}
@@ -110,24 +116,24 @@ func DoMain(regfn func(*env.ProgramState)) {
 			if args[0] == "cont" || args[0] == "continue" {
 				fmt.Println("[continuing...]")
 				ryeFile := findLastConsoleSave()
-				main_rye_file(ryeFile, false, true, false, true, code, *lang, regfn)
+				main_rye_file(ryeFile, false, true, false, true, code, *lang, regfn, *stin)
 			} else if args[0] == "shell" {
 				main_rysh()
 			} else if args[0] == "rwk" {
 				main_ryk()
 			} else if args[0] == "here" {
 				if *do != "" {
-					main_rye_file("", false, true, true, *console, code, *lang, regfn)
+					main_rye_file("", false, true, true, *console, code, *lang, regfn, *stin)
 				} else {
 					main_rye_repl(os.Stdin, os.Stdout, true, true, *lang, code, regfn)
 				}
 			} else {
 				ryeFile := dotsToMainRye(args[0])
-				main_rye_file(ryeFile, false, true, false, *console, code, *lang, regfn)
+				main_rye_file(ryeFile, false, true, false, *console, code, *lang, regfn, *stin)
 			}
 		} else {
-			if *do != "" {
-				main_rye_file("", false, true, false, *console, code, *lang, regfn)
+			if *do != "" || *sdo != "" {
+				main_rye_file("", false, true, false, *console, code, *lang, regfn, *stin)
 			} else {
 				main_rye_repl(os.Stdin, os.Stdout, true, false, *lang, code, regfn)
 			}
@@ -329,7 +335,7 @@ func main_ryeco() {
 
 }
 
-func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool, code string, lang string, regfn func(*env.ProgramState)) {
+func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool, code string, lang string, regfn func(*env.ProgramState), stin string) {
 	// fmt.Println("RYE FILE")
 	info := true
 
@@ -372,6 +378,24 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 				fmt.Println(line[1])
 			}
 		}
+	}
+
+	// READ STDIN IF
+
+	var stValue env.Object
+	stValue = env.NewString("")
+
+	if stin == "all" || stin == "a" { // TODO add modes like lines, maybe load / lines, do / lines)
+		var stInput string
+		stReader := bufio.NewReader(os.Stdin)
+		for {
+			stLine, err := stReader.ReadString('\n')
+			if err != nil {
+				break
+			}
+			stInput += stLine
+		}
+		stValue = env.NewString(stInput)
 	}
 
 	ps := env.NewProgramStateNEW()
@@ -429,7 +453,7 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 			ps.Dialect = env.EyrDialect
 		}
 
-		evaldo.EvalBlockInjMultiDialect(ps, nil, false)
+		evaldo.EvalBlockInjMultiDialect(ps, stValue, true)
 		evaldo.MaybeDisplayFailureOrError(ps, ps.Idx)
 
 		if interactive {
