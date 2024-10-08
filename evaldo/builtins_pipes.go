@@ -4,6 +4,7 @@
 package evaldo
 
 import (
+	"errors"
 	"regexp"
 
 	"github.com/refaktor/rye/env"
@@ -895,8 +896,14 @@ var Builtins_pipes = map[string]*env.Builtin{
 							return *env.NewError("Error while appending data to files.")
 						}
 						return *env.NewInteger(writtenBytes)
+					case env.Uri:
+						writtenBytes, err := pipe.AppendFile(s.Path)
+						if err != nil {
+							return *env.NewError("Error while appending data to rey-file.")
+						}
+						return *env.NewInteger(writtenBytes)
 					default:
-						return MakeArgError(ps, 2, []env.Type{env.StringType}, "p-append-to-file")
+						return MakeArgError(ps, 2, []env.Type{env.StringType, env.UriType}, "p-append-to-file")
 					}
 				default:
 					return MakeNativeArgError(ps, 1, []string{"script-pipe"}, "p-append-to-file")
@@ -913,6 +920,53 @@ var Builtins_pipes = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			newPipe := script.Stdin()
 			return *env.NewNative(ps.Idx, newPipe, "script-pipe")
+		},
+	},
+
+	"error": {
+		Argsn: 1,
+		Doc:   "error - returns any error present on the pipe, or 0 otherwise.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch p := arg0.(type) {
+			case env.Native:
+				switch pipe := p.Value.(type) {
+				case *script.Pipe:
+					waitErr := pipe.Error()
+					if waitErr != nil {
+						return *env.NewError("Error in pipe: " + waitErr.Error())
+					}
+					return *env.NewInteger(0)
+				default:
+					return MakeNativeArgError(ps, 1, []string{"script-pipe"}, "p-error")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "p-error")
+			}
+		},
+	},
+
+	"set-error": {
+		Argsn: 2,
+		Doc:   "set-error sets the error err on the pipe and return it.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch p := arg0.(type) {
+			case env.Native:
+				switch pipe := p.Value.(type) {
+				case *script.Pipe:
+					switch errStr := arg1.(type) {
+					case env.String:
+						err := errors.New(errStr.Value)
+						pipe.SetError(err)
+						return *env.NewNative(ps.Idx, pipe, "script-pipe")
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.StringType}, "p-set-error")
+					}
+				default:
+					return MakeNativeArgError(ps, 1, []string{"script-pipe"}, "p-set-error")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "p-set-error")
+			}
 		},
 	},
 
