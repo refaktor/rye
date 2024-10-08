@@ -85,32 +85,47 @@ generate-doc-file: fn { filename menu } {
 
 menu: { "basics" "structures" "validation" "misc" "spreadsheet_mutations" }
 
-switch first args  {
+print-help: does {
+	print `# Rye's simple testing tool
+	
+ use test or doc command
+
+Examples: 
+ rye . test           # runs all tests
+ rye . doc            # generates the docs out of tests
+ rye . test ls        # lists the test sections available
+ rye . test basics    # runs a specific test section
+`
+}
+
+first args |^fix { print-help } |switch {
 	test {
-		errors: 0
-		either args .length? = 1 {
-			for menu { + ".rye" |to-file |load |do\in* test-framework |+ errors ::errors }
+		sections: { }
+		either args .length? > 1 {
+			either ( second args ) = 'ls {
+				print "Test sections available:"
+				menu .for { .concat* " * " |print }
+			} {
+				sections:: [ second args ]
+			}
 		} {
-			
-			args .second + ".rye" |to-file |load |do\in* test-framework |+ errors ::errors
+			sections:: menu
 		}
-		print "==================="
-		print " FAILED TESTS: " + errors
+		if sections .length? > 0 {  ; todo add is-empty builtin
+			errors: 0
+			for sections { .to-string + ".rye" |to-file |load |^check { "group does not exist!" } |do\in* test-framework |+ errors ::errors }
+			print "==================="
+		    print " FAILED TESTS: " + errors
+		    print ""
+		    print "run  `rye .` to see the new test tool options"
+		}
 	}
 	doc  {
-		for menu { .generate-doc-file menu }
+	    for menu { .generate-doc-file menu }
+	    print "docs generated" 
 	}
-	_ { print "use test or doc command" }
-} 
-
-
-
-
-
-
-
-
-
+	_ { print-help }
+}
 
 ;   maybe we need this at some point 
 ;	true: fn { test } {
