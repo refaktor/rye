@@ -4,6 +4,7 @@
 package evaldo
 
 import (
+	"errors"
 	"regexp"
 
 	"github.com/refaktor/rye/env"
@@ -932,14 +933,40 @@ var Builtins_pipes = map[string]*env.Builtin{
 				case *script.Pipe:
 					waitErr := pipe.Error()
 					if waitErr != nil {
-						return *env.NewError("Error in pipe.")
+						return *env.NewError("Error in pipe: " + waitErr.Error())
 					}
 					return *env.NewInteger(0)
 				default:
-					return MakeNativeArgError(ps, 1, []string{"script-pipe"}, "p-wait")
+					return MakeNativeArgError(ps, 1, []string{"script-pipe"}, "p-error")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "p-wait")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "p-error")
+			}
+		},
+	},
+
+	"set-error": {
+		Argsn: 2,
+		Doc:   "set-error sets the error err on the pipe.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch p := arg0.(type) {
+			case env.Native:
+				switch pipe := p.Value.(type) {
+				case *script.Pipe:
+					switch errStr := arg1.(type) {
+					case env.String:
+						err := errors.New(errStr.Value)
+						pipe.SetError(err)
+						return *env.NewNative(ps.Idx, pipe, "script-pipe")
+						//return *env.NewInteger(0)
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.StringType}, "p-set-error")
+					}
+				default:
+					return MakeNativeArgError(ps, 1, []string{"script-pipe"}, "p-set-error")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "p-set-error")
 			}
 		},
 	},
