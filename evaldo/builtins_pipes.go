@@ -958,7 +958,6 @@ var Builtins_pipes = map[string]*env.Builtin{
 						err := errors.New(errStr.Value)
 						pipe.SetError(err)
 						return *env.NewNative(ps.Idx, pipe, "script-pipe")
-						//return *env.NewInteger(0)
 					default:
 						return MakeArgError(ps, 2, []env.Type{env.StringType}, "p-set-error")
 					}
