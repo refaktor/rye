@@ -947,7 +947,7 @@ var Builtins_pipes = map[string]*env.Builtin{
 
 	"set-error": {
 		Argsn: 2,
-		Doc:   "set-error sets the error err on the pipe.",
+		Doc:   "set-error sets the error err on the pipe and return it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p := arg0.(type) {
 			case env.Native:
