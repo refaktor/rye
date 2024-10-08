@@ -895,8 +895,14 @@ var Builtins_pipes = map[string]*env.Builtin{
 							return *env.NewError("Error while appending data to files.")
 						}
 						return *env.NewInteger(writtenBytes)
+					case env.Uri:
+						writtenBytes, err := pipe.AppendFile(s.Path)
+						if err != nil {
+							return *env.NewError("Error while appending data to rey-file.")
+						}
+						return *env.NewInteger(writtenBytes)
 					default:
-						return MakeArgError(ps, 2, []env.Type{env.StringType}, "p-append-to-file")
+						return MakeArgError(ps, 2, []env.Type{env.StringType, env.UriType}, "p-append-to-file")
 					}
 				default:
 					return MakeNativeArgError(ps, 1, []string{"script-pipe"}, "p-append-to-file")
