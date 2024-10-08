@@ -322,11 +322,7 @@ func (s SpreadsheetRow) GetKind() int {
 
 // Inspect returns a string
 func (s SpreadsheetRow) Inspect(e Idxs) string {
-	p := ""
-	if IsPointer(s) {
-		p = "REF:"
-	}
-	return "[" + p + "SpreadsheetRow(" + strconv.Itoa(len(s.Values)) + ")" + "]"
+	return "[SpreadsheetRow(" + strconv.Itoa(len(s.Values)) + ")" + "]"
 }
 
 // Inspect returns a string representation of the Integer.
