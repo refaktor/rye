@@ -8097,7 +8097,13 @@ var builtins = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return util.StringToFieldsWithQuoted(strings.Join(os.Args[2:], " "), " ", "\"")
+			var firstArg int
+			if ps.Embedded {
+				firstArg = 1
+			} else {
+				firstArg = 2
+			}
+			return util.StringToFieldsWithQuoted(strings.Join(os.Args[firstArg:], " "), " ", "\"")
 			// block, _ := loader.LoadString(os.Args[0], false)
 			// return block
 		},
@@ -8106,8 +8112,14 @@ var builtins = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var firstArg int
+			if ps.Embedded {
+				firstArg = 1
+			} else {
+				firstArg = 2
+			}
 			if len(os.Args) > 1 {
-				return *env.NewString(strings.Join(os.Args[2:], " "))
+				return *env.NewString(strings.Join(os.Args[firstArg:], " "))
 			} else {
 				return *env.NewString("")
 			}

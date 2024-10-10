@@ -92,50 +92,54 @@ func DoMain(regfn func(*env.ProgramState)) {
 			code = code + " cc " + v + " "
 		}
 	}
-
-	// Check for --help flag
-	if flag.NFlag() == 0 && flag.NArg() == 0 {
-		if Option_Embed_Main {
-			main_rye_file("buildtemp/main.rye", false, true, false, *console, code, *lang, regfn, *stin)
-		} else if Option_Do_Main {
-			ryeFile := dotsToMainRye(".")
-			main_rye_file(ryeFile, false, true, false, *console, code, *lang, regfn, *stin)
-		} else {
-			main_rye_repl(os.Stdin, os.Stdout, true, false, *lang, code, regfn)
-		}
+	if Option_Embed_Main {
+		main_rye_file("buildtemp/main.rye", false, true, false, *console, code, *lang, regfn, *stin)
 	} else {
 		// Check for --help flag
-		if *help {
-			flag.Usage()
-			os.Exit(0)
-		}
-
-		args := flag.Args()
-		// Check for subcommands (cont) and handle them
-		if len(args) > 0 {
-			if args[0] == "cont" || args[0] == "continue" {
-				fmt.Println("[continuing...]")
-				ryeFile := findLastConsoleSave()
-				main_rye_file(ryeFile, false, true, false, true, code, *lang, regfn, *stin)
-			} else if args[0] == "shell" {
-				main_rysh()
-			} else if args[0] == "rwk" {
-				main_ryk()
-			} else if args[0] == "here" {
-				if *do != "" {
-					main_rye_file("", false, true, true, *console, code, *lang, regfn, *stin)
-				} else {
-					main_rye_repl(os.Stdin, os.Stdout, true, true, *lang, code, regfn)
-				}
-			} else {
-				ryeFile := dotsToMainRye(args[0])
+		if flag.NFlag() == 0 && flag.NArg() == 0 {
+			if Option_Embed_Main {
+				fmt.Println("CASE OPT EMBED MAIN 2")
+				main_rye_file("buildtemp/main.rye", false, true, false, *console, code, *lang, regfn, *stin)
+			} else if Option_Do_Main {
+				ryeFile := dotsToMainRye(".")
 				main_rye_file(ryeFile, false, true, false, *console, code, *lang, regfn, *stin)
-			}
-		} else {
-			if *do != "" || *sdo != "" {
-				main_rye_file("", false, true, false, *console, code, *lang, regfn, *stin)
 			} else {
 				main_rye_repl(os.Stdin, os.Stdout, true, false, *lang, code, regfn)
+			}
+		} else {
+			// Check for --help flag
+			if *help {
+				flag.Usage()
+				os.Exit(0)
+			}
+
+			args := flag.Args()
+			// Check for subcommands (cont) and handle them
+			if len(args) > 0 {
+				if args[0] == "cont" || args[0] == "continue" {
+					fmt.Println("[continuing...]")
+					ryeFile := findLastConsoleSave()
+					main_rye_file(ryeFile, false, true, false, true, code, *lang, regfn, *stin)
+				} else if args[0] == "shell" {
+					main_rysh()
+				} else if args[0] == "rwk" {
+					main_ryk()
+				} else if args[0] == "here" {
+					if *do != "" {
+						main_rye_file("", false, true, true, *console, code, *lang, regfn, *stin)
+					} else {
+						main_rye_repl(os.Stdin, os.Stdout, true, true, *lang, code, regfn)
+					}
+				} else {
+					ryeFile := dotsToMainRye(args[0])
+					main_rye_file(ryeFile, false, true, false, *console, code, *lang, regfn, *stin)
+				}
+			} else {
+				if *do != "" || *sdo != "" {
+					main_rye_file("", false, true, false, *console, code, *lang, regfn, *stin)
+				} else {
+					main_rye_repl(os.Stdin, os.Stdout, true, false, *lang, code, regfn)
+				}
 			}
 		}
 	}
@@ -399,6 +403,7 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 	}
 
 	ps := env.NewProgramStateNEW()
+	ps.Embedded = Option_Embed_Main
 	ps.ScriptPath = file
 	ps.WorkingPath, _ = os.Getwd() // TODO -- WHAT SHOULD WE DO IF GETWD FAILS?
 	evaldo.RegisterBuiltins(ps)
