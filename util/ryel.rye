@@ -27,9 +27,9 @@ build-ryel: fn { tags } {
 	|map { .to-string .concat* "b_" }
 	|join\with " " :modules |print
 
-	cp-embed: either tags = "embed_main" { "cp main.rye %RYE_HOME/buildtemp/. ; " } { "" }
+	cp-embed: either tags = "embed_main" { "cp main.rye %RYE_HOME/runner/buildtemp/. ; " } { "" }
 	
-	command: join { cp-embed ` a=%PWD ; cd %RYE_HOME ; go build -tags "` + modules + " " + tags `" -o "%a/ryel" ; cd "%a"` } ; ` delimiter for string is just temporary ... ' conflicts with lit-words and Rebols { } with blocks so this question is open so far
+	command: join { cp-embed ` a=%PWD ; cd %RYE_HOME-fyne ; go build -tags "` + modules + " " + tags `" -o "%a/ryel" ; cd "%a"` } ; ` delimiter for string is just temporary ... ' conflicts with lit-words and Rebols { } with blocks so this question is open so far
 	command .replace "%" "$" ::command
 	; print "Build command: " + command
 	cmd command
@@ -40,8 +40,8 @@ install-ryel: fn { } {
   print "TODO: Installing Ryel ..."
 }
 
-rye .args -> 0 \fix { "" } :mode
-rye .args -> 1 \fix { "" } :tags
+rye .args -> 0 |fix { "" } :mode
+rye .args -> 1 |fix { "" } :tags
 
 switch mode {
 	"build"   { build-ryel tags }

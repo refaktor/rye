@@ -1,0 +1,13 @@
+section "spreadsheet ref"
+"Functions that mutate refed spreadsheets"
+{
+
+ 	group "ref" "" 
+    { { block } }
+    {
+		equal {
+			spreadsheet { "a" "b" } { 1 10 2 20 3 30 } |is-ref
+		} false
+	}
+}
+

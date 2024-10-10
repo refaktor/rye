@@ -303,6 +303,7 @@ type ProgramState struct {
 	LiveObj      *LiveEnv
 	Dialect      DoDialect
 	Stack        *EyrStack
+	Embedded     bool
 }
 
 type DoDialect int
@@ -335,6 +336,7 @@ func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
 		nil, // NewLiveEnv(),
 		Rye2Dialect,
 		NewEyrStack(),
+		false,
 	}
 	return &ps
 }
@@ -362,6 +364,7 @@ func NewProgramStateNEW() *ProgramState {
 		NewLiveEnv(),
 		Rye2Dialect,
 		NewEyrStack(),
+		false,
 	}
 	return &ps
 }

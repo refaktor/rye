@@ -263,15 +263,23 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 								NameOfRyeType(ps.Res.Type()),
 							))
 						}
+					case env.Dict:
+						// dict should be able to have only the columns you want to update
+						row := spr.Rows[idx.Value-1]
 
-					default:
-						if ok, err, row := RyeValueToSpreadsheetRow(spr, updater); ok {
-							spr.Rows[idx.Value-1] = *row
-							return ps.Res
-						} else if len(err) > 0 {
-							return makeError(ps, err)
+						for keyStr, val := range updater.Data {
+							index := spr.GetColumnIndex(keyStr)
+							if index < 0 {
+								return makeError(ps, "Column "+keyStr+" was not found")
+							}
+							row.Values[index] = val
 						}
-						return MakeArgError(ps, 3, []env.Type{env.DictType, env.SpreadsheetRowType}, "update-row")
+						return spr
+					case env.SpreadsheetRow:
+						spr.Rows[idx.Value-1] = updater
+						return spr
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.FunctionType, env.DictType, env.SpreadsheetRowType}, "update-row")
 					}
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "update-row!")
