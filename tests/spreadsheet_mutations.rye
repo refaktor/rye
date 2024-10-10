@@ -2,26 +2,26 @@ section "spreadsheet mutations"
 "Functions that mutate thawed spreadsheets"
 {
 
-    group "add-row!" "add-row!" 
+    comment "add-row!" "add-row!" 
     { { block } }
     {
         equal {
-        spreadsheet { "title"  "isbn" "price" "quantity" }
-        {
-            "Do Androids Dream of Electric Sheep?" "9781608866403" 12.99 4
-            "Animal Farm" "9780151002177" 2.49 10
-            "An Oxford Anthology of Shakespeare" "9780198129356" 19.99 10
-            "And Then There Were None" "9780062073488" 3.99 10
-        } |thaw ::cart 
-         cart |nth 1 -> "title" } "Do Androids Dream of Electric Sheep?" 
+			spreadsheet { "title"  "isbn" "price" "quantity" }
+			{
+				"Do Androids Dream of Electric Sheep?" "9781608866403" 12.99 4
+				"Animal Farm" "9780151002177" 2.49 10
+				"An Oxford Anthology of Shakespeare" "9780198129356" 19.99 10
+				"And Then There Were None" "9780062073488" 3.99 10
+			} |thaw ::cart 
+			cart |nth 1 -> "title"
+		} "Do Androids Dream of Electric Sheep?" 
         equal { cart |nth 3 -> "price" } 19.99
-
         equal { cart .remove-row! 1 cart .nth 1 -> "title" } "Animal Farm"
-        equal { 
+        comment { 
             rowdict: dict { "title" "Windowlight" "isbn" "0000000000000" "price" 0.99 "quantity" 1 } 
             probe rowdict
             print rowdict .type?
-            cart .update-row! 1 rowdict
+            ; cart .update-row! 1 rowdict
             cart .nth 1 -> "isbn"
         } "0000000000000"
         equal {
@@ -30,6 +30,45 @@ section "spreadsheet mutations"
             cart .nth 3 -> "isbn"
         } "0123456789012"
         
+    }
+	group "ref" "" 
+    { { block } }
+    {
+		equal {
+			spreadsheet { "a" "b" } { 1 10 2 20 3 30 } |is-ref
+		} false
+	}
+	group "ref" "" 
+    { { block } }
+    {
+		equal {
+			spr1: ref spreadsheet { "a" "b" } { 1 10 2 20 3 30 }
+			spr1 .is-ref
+		} true
+	}
+    group "add-rows!" "add-rows!" 
+    { { block } }
+    {
+        equal {
+			spr1 .add-rows! [ 4 40 ]
+			spr1 .deref .length?
+		} 4
+    }
+    group "update-row!" "update-row!" 
+    { { block } }
+    {
+        equal { 
+			spr1 .update-row! 1 dict [ "a" 101 ]
+			spr1 .deref .A1
+		} 101
+    }
+    group "delete-row!" "delete-row!" 
+    { { block } }
+    {
+        equal {
+			spr1 .remove-row! 1
+			spr1 .deref .length?
+		} 3
     }
 
 }

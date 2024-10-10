@@ -403,3 +403,14 @@ func (s Spreadsheet) GetColumns() List {
 	}
 	return *NewList(lst)
 }
+
+func (s Spreadsheet) GetColumnIndex(column string) int {
+	index := -1
+	for i, v := range s.Cols {
+		if v == column {
+			index = i
+			break
+		}
+	}
+	return index
+}
