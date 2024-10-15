@@ -7954,6 +7954,30 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s0 := arg0.(type) {
 			case env.String:
+
+				r := exec.Command("/bin/bash", "-c", s0.Value) //nolint: gosec
+				// stdout, stderr := r.Output()
+				r.Stdout = os.Stdout
+				r.Stderr = os.Stderr
+
+				err := r.Run()
+				if err != nil {
+					fmt.Println("ERROR")
+					fmt.Println(err)
+				}
+			default:
+				return makeError(ps, "Arg 1 should be String")
+			}
+			return nil
+		},
+	},
+
+	"cmd\\capture": {
+		Argsn: 1,
+		Doc:   "",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s0 := arg0.(type) {
+			case env.String:
 				/*				cmd := exec.Command("date")
 								err := cmd.Run()
 								if err != nil {
