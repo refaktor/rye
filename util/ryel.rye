@@ -34,7 +34,27 @@ build-ryel: fn { tags } {
 	; print "Build command: " + command
 	cmd command
 }
+
+build-fyne: fn { tags } {
 	
+	print-header
+	
+	open %ryel.mod
+	|fix\either
+	{ print "Create rye.mod file and list modules." " nil " }
+	{ .read-all }
+	|load
+	|map { .to-string .concat* "b_" }
+	|join\with " " :modules |print
+
+	cp-embed: either tags = "embed_main" { "cp main.rye %RYE_HOME/runner/buildtemp/. ; " } { "" }
+	
+	command: join { cp-embed ` a=%PWD ; cd %RYE_HOME-fyne ; fyne release -os android -appID com.refaktorlabs.fynetest1 -icon Icon.png -appVersion 0.0.1  -tags "` + modules + " " + tags `"; cd "%a"` } ; ` delimiter for string is just temporary ... ' conflicts with lit-words and Rebols { } with blocks so this question is open so far
+	command .replace "%" "$" ::command
+	; print "Build command: " + command
+	cmd command
+}
+
 install-ryel: fn { } {
   print-header
   print "TODO: Installing Ryel ..."
@@ -44,6 +64,7 @@ rye .args -> 0 |fix { "" } :mode
 rye .args -> 1 |fix { "" } :tags
 
 switch mode {
+	"buildfyne"   { build-fyne tags }
 	"build"   { build-ryel tags }
 	"install" { install-ryel }
 }
