@@ -1,7 +1,7 @@
 //go:build !wasm
 // +build !wasm
 
-package util
+package term
 
 import (
 	tsize "github.com/kopoli/go-terminal-size"

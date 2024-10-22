@@ -1,4 +1,4 @@
-package util
+package term
 
 import (
 	"bytes"
@@ -8,8 +8,10 @@ import (
 	"strings"
 	"sync"
 	"unicode"
+	"unicode/utf8"
 
 	"github.com/mattn/go-runewidth"
+	// "github.com/refaktor/rye/term"
 )
 
 // These character classes are mostly zero width (when combined).
@@ -107,6 +109,123 @@ func (s *MLState) cursorPos2(x int, y int) {
 	}
 }
 
+func (s *MLState) circularTabs(items []string) func(direction int) (string, error) {
+	item := -1
+	return func(direction int) (string, error) {
+		if direction == 1 {
+			if item < len(items)-1 {
+				item++
+			} else {
+				item = 0
+			}
+		}
+		return items[item], nil
+	}
+}
+
+func (s *MLState) tabComplete(p []rune, line []rune, pos int, mode int) ([]rune, int, KeyEvent, error) {
+	// if no completer defined
+	if s.completer == nil {
+		return line, pos, KeyEvent{Code: 27}, nil
+	}
+	// ifcompleter run it
+	head, list, tail := s.completer(string(line), pos, mode)
+	if len(list) <= 0 {
+		return line, pos, KeyEvent{Code: 27}, nil
+	}
+	// if there is one result
+	hl := utf8.RuneCountInString(head)
+	if len(list) == 1 {
+		err := s.refresh(p, []rune(head+list[0]+tail), hl+utf8.RuneCountInString(list[0]))
+		return []rune(head + list[0] + tail), hl + utf8.RuneCountInString(list[0]), KeyEvent{Code: 27}, err
+	}
+	// same as no result for now
+	//	return line, pos, KeyEvent{Code: 27}, nil
+
+	direction := 1
+	tabPrinter := s.circularTabs(list)
+	for {
+		pick, err := tabPrinter(direction)
+		if err != nil {
+			return line, pos, KeyEvent{Code: 27}, err
+		}
+		err = s.refresh(p, []rune(head+pick+tail), hl+utf8.RuneCountInString(pick))
+		if err != nil {
+			return line, pos, KeyEvent{Code: 27}, err
+		}
+
+		next := <-s.next
+		//if err != nil {
+		//	return line, pos, KeyEvent{Code: 27}, err
+		// }
+		if next.Code == 9 {
+			direction = 1
+			continue
+		}
+		if next.Code == 27 {
+			return line, pos, KeyEvent{Code: 27}, nil
+		}
+		return []rune(head + pick + tail), hl + utf8.RuneCountInString(pick), next, nil
+	}
+
+	/*
+		direction := tabForward
+
+		if s.tabStyle == TabPrints {
+			tabPrinter = s.printedTabs(list)
+		}
+
+		for {
+			pick, err := tabPrinter(direction)
+			if err != nil {
+				return line, pos, rune(27), err
+			}
+			err = s.refresh(p, []rune(head+pick+tail), hl+utf8.RuneCountInString(pick))
+			if err != nil {
+				return line, pos, rune(27), err
+			}
+
+			next, err := s.readNext()
+			if err != nil {
+				return line, pos, rune(27), err
+			}
+			if key, ok := next.(rune); ok {
+				if key == 9 {
+					direction = tabForward
+					continue
+				}
+				if key == 27 {
+					return line, pos, rune(27), nil
+				}
+			}
+			if a, ok := next.(action); ok && a == shiftTab {
+				direction = tabReverse
+				continue
+			}
+			return []rune(head + pick + tail), hl + utf8.RuneCountInString(pick), next, nil
+		} */
+}
+
+// Completer takes the currently edited line content at the left of the cursor
+// to the completer which may return {"Hello, world", "Hello, Word"} to have "Hello, world!!!".
+type Completer func(line string, mode int) []string
+
+// WordCompleter takes the currently edited line with the cursor position and
+// to the completer which may returns ("Hello, ", {"world", "Word"}, "!!!") to have "Hello, world!!!".
+type WordCompleter func(line string, pos int, mode int) (head string, completions []string, tail string)
+
+// SetCompleter sets the completion function that Liner will call to
+// fetch completion candidates when the user presses tab.
+func (s *MLState) SetCompleter(f Completer) {
+	if f == nil {
+		s.completer = nil
+		return
+	}
+	s.completer = func(line string, pos int, mode int) (string, []string, string) {
+		return "", f(string([]rune(line)[:pos]), mode), string([]rune(line)[pos:])
+	}
+}
+
 func (s *MLState) eraseLine() {
 	//str := fmt.Sprintf("\x1b[0K")
 	// s.sendBack("\x1b[0K")
@@ -151,7 +270,7 @@ type MLState struct {
 	prevLines      int
 	prevCursorLine int
 	// killRing *ring.Ring
-	//	completer         WordCompleter
+	completer WordCompleter
 	// pending     []rune
 }
 
@@ -541,6 +660,8 @@ startOfHere:
 	// JM
 	//	s_instr := 0
 
+	tabCompletionWasActive := false
+
 	// mainLoop:
 	for {
 		select {
@@ -570,7 +691,7 @@ startOfHere:
 			len(p)+len(line) < s.columns*4 && // Avoid countGlyphs on large lines
 			countGlyphs(p)+countGlyphs(line) < s.columns-1 {*/
 			///// pLen := countGlyphs(p)
-
+		haveNext:
 			if next.Ctrl {
 				switch strings.ToLower(next.Key) {
 				case "x":
@@ -647,6 +768,11 @@ startOfHere:
 					histNext()
 				case "p":
 					histPrev()
+				case "s": // seek in context #experimental
+					fmt.Print("*")
+					line, pos, next, _ = s.tabComplete(p, line, pos, 1)
+					tabCompletionWasActive = true
+					goto haveNext
 				}
 			} else if next.Alt {
 				switch strings.ToLower(next.Key) {
@@ -729,6 +855,12 @@ startOfHere:
 			} else {
 				switch next.Code {
 				case 13: // Enter
+					if tabCompletionWasActive {
+						// TODO --- make it into a function - deduplicate
+						fmt.Println("")
+						ClearLine()
+						CurUp(1)
+					}
 					historyStale = true
 					s.lastLineString = false
 					// trace2("NL")
@@ -770,6 +902,10 @@ startOfHere:
 						pos -= n
 						s.needRefresh = true
 					}
+				case 9: // Tab completion
+					line, pos, next, _ = s.tabComplete(p, line, pos, 0)
+					tabCompletionWasActive = true
+					goto haveNext
 				case 46: // Del
 					if pos >= len(line) {
 						s.doBeep()
@@ -799,8 +935,17 @@ startOfHere:
 					pos = 0
 				case 35: // End
 					pos = len(line)
+				case 27: // Escape
+
 				default:
-					trace("***************************** ALARM *******************")
+					if (next.Key == " ") && tabCompletionWasActive {
+						// TODO --- make it into a function - deduplicate
+						// CurDown(1)
+						fmt.Println("")
+						ClearLine()
+						CurUp(1)
+					}
+
 					vs := []rune(next.Key)
 					v := vs[0]
 

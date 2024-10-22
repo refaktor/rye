@@ -58,6 +58,10 @@ func (e RyeCtx) Copy() *RyeCtx {
 	return nc
 }
 
+func (e RyeCtx) GetState() map[int]Object {
+	return e.state
+}
+
 func (e RyeCtx) Print(idxs Idxs) string {
 	var bu strings.Builder
 	bu.WriteString("[Context (" + e.Kind.Print(idxs) + "): ")

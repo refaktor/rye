@@ -14,6 +14,7 @@ import (
 
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/loader"
+	"github.com/refaktor/rye/term"
 	"github.com/refaktor/rye/util"
 )
 
@@ -155,7 +156,7 @@ func MoveCursorBackward(bias int) {
 
 type Repl struct {
 	ps *env.ProgramState
-	ml *util.MLState
+	ml *term.MLState
 
 	dialect     string
 	showResults bool
@@ -264,7 +265,7 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 
 // constructKeyEvent maps a rune and keyboard.Key to a util.KeyEvent, which uses javascript key event codes
 // only keys used in microliner are mapped
-func constructKeyEvent(r rune, k keyboard.Key) util.KeyEvent {
+func constructKeyEvent(r rune, k keyboard.Key) term.KeyEvent {
 	var ctrl bool
 	alt := k == keyboard.KeyEsc
 	var code int
@@ -272,6 +273,9 @@ func constructKeyEvent(r rune, k keyboard.Key) util.KeyEvent {
 	switch k {
 	case keyboard.KeyCtrlA:
 		ch = "a"
+		ctrl = true
+	case keyboard.KeyCtrlS:
+		ch = "s"
 		ctrl = true
 	case keyboard.KeyCtrlC:
 		ch = "c"
@@ -309,6 +313,8 @@ func constructKeyEvent(r rune, k keyboard.Key) util.KeyEvent {
 
 	case keyboard.KeyEnter:
 		code = 13
+	case keyboard.KeyTab:
+		code = 9
 	case keyboard.KeyBackspace, keyboard.KeyBackspace2:
 		code = 8
 	case keyboard.KeyDelete:
@@ -328,8 +334,15 @@ func constructKeyEvent(r rune, k keyboard.Key) util.KeyEvent {
 
 	case keyboard.KeySpace:
 		ch = " "
+		code = 20
 	}
-	return util.NewKeyEvent(ch, code, ctrl, alt, false)
+	return term.NewKeyEvent(ch, code, ctrl, alt, false)
+}
+
+func isCursorAtBottom() bool { // TODO --- doesn't seem to work and probably don't need it ... test and remove if doesn't work
+	// Implement a more robust check for the cursor's position if needed
+	// For a simple approximation, you can check if the terminal height matches the current cursor position
+	return true || os.Getenv("TERM_LINES") != "" && os.Getenv("TERM_LINES") == os.Getenv("TERM_ROW")
 }
 
 func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here because of some odd options we were experimentally adding
@@ -339,15 +352,62 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 		return
 	}
 
-	c := make(chan util.KeyEvent)
+	c := make(chan term.KeyEvent)
 	r := Repl{
 		ps:          es,
 		dialect:     dialect,
 		showResults: showResults,
 		stack:       env.NewEyrStack(),
 	}
-	ml := util.NewMicroLiner(c, r.recieveMessage, r.recieveLine)
+	ml := term.NewMicroLiner(c, r.recieveMessage, r.recieveLine)
 	r.ml = ml
+
+	ml.SetCompleter(func(line string, mode int) (c []string) {
+		// #IMPROV #IDEA words defined in current context should be bold
+		// #IMPROV #Q how would we cycle just through words in current context?
+		// #TODO don't display more than N words
+		// #TODO make current word bold
+
+		// fmt.Println("****")
+		switch mode {
+		case 0:
+			for i := 0; i < es.Idx.GetWordCount(); i++ {
+				// fmt.Print(es.Idx.GetWord(i))
+				if strings.HasPrefix(es.Idx.GetWord(i), strings.ToLower(line)) {
+					c = append(c, es.Idx.GetWord(i))
+				}
+			}
+		case 1:
+			for key := range es.Ctx.GetState() {
+				// fmt.Print(es.Idx.GetWord(i))
+				if strings.HasPrefix(es.Idx.GetWord(key), strings.ToLower(line)) {
+					c = append(c, es.Idx.GetWord(key))
+				}
+			}
+		}
+
+		// TODO -- make this sremlines and use local term functions
+		if isCursorAtBottom() {
+			// If at the bottom, print a new line to create a space
+			fmt.Println()
+		}
+
+		// Move the cursor one line down
+		// term.CurDown(1) //"\033[B")
+
+		// Delete the line
+		term.ClearLine() //"\033[2K")
+
+		// Print something
+		term.ColorMagenta()
+		fmt.Print(c)
+		term.CloseProps() //	fmt.Print("This is the new line.")
+
+		// Move the cursor back to the previous line
+		term.CurUp(1) //"\033[A")
+
+		return
+	})
 
 	ctx, cancel := context.WithCancel(context.Background())
 

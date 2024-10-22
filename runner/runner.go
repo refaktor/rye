@@ -67,8 +67,10 @@ func DoMain(regfn func(*env.ProgramState)) {
 		fmt.Println("\033[33m  rye -do 'print 123' -console .       \033[36m# evaluates main.rye in current dir. evaluates do code and enters console")
 		fmt.Println("\033[33m  rye -silent                          \033[36m# enters console in that doesn't show return values - silent mode")
 		fmt.Println("\033[33m  rye -silent -console file.rye        \033[36m# evaluates file.re and enters console in silent mode")
-		fmt.Println("\033[33m  rye -lang eyr                        # enter console of stack based Eyr language")
-		fmt.Println("\033[33m  rye -lang math                       # enter console of math dialect")
+		fmt.Println("\033[33m  rye -lang eyr                        \033[36m# enter console of stack based Eyr language")
+		fmt.Println("\033[33m  rye -lang math                       \033[36m# enter console of math dialect")
+		fmt.Println("\033[33m  rye -ctx os                          \033[36m# enter console and enter os context")
+		fmt.Println("\033[33m  rye -ctx 'os pipes'                  \033[36m# enter console and enter os and then pipes context")
 		fmt.Println("\033[0m\n Thank you for trying out \033[1mRye\033[22m ...")
 		fmt.Println("")
 	}
@@ -77,21 +79,27 @@ func DoMain(regfn func(*env.ProgramState)) {
 
 	evaldo.ShowResults = !*silent
 
-	var code string
+	doCode := ""
+
 	if *do != "" {
-		code = *do
+		doCode = *do
 	}
+
 	if *sdo != "" {
-		code = *sdo
+		doCode = *sdo
 		evaldo.ShowResults = false
 	}
 
+	ctxCode := ""
 	if *ctx != "" {
 		ctxs_ := strings.Split(*ctx, " ")
 		for _, v := range ctxs_ {
-			code = code + " cc " + v + " "
+			ctxCode = ctxCode + " cc " + v + " "
 		}
 	}
+
+	code := ctxCode + " " + doCode
+
 	if Option_Embed_Main {
 		main_rye_file("buildtemp/main.rye", false, true, false, *console, code, *lang, regfn, *stin)
 	} else {
