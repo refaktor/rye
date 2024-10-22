@@ -160,15 +160,15 @@ The author of Factor once said that at the end *it's not about the language, but
 
 legend: ⭐ priority , 🧪 tests
 
-## External extension: rye-fyne - a GUI toolkit
+## External extensions
 
-Fyne is a cross platform pure **Go** GUI toolkit that we're integrating into Rye. A lot of widgets already work but it's not finished yet.
+Fyne is a cross platform pure **Go** GUI toolkit that we integrated into Rye. Gio is immediate mode GUI library for Go, and Ebitengine is a 2D game endgine for Go. 
 
 ![Fyne Feedback example](https://ryelang.org/rye-fyne-2.png)
 
-* **[Rye-fyne repository](https://github.com/refaktor/rye-fyne)**
-* ![Rye-fyne demo video](https://youtu.be/L4gPrXBI8UY?si=4QIDws9c3ub-5reY)
-* [Fyne website](https://fyne.io)
+* **[Rye-Fyne repository](https://github.com/refaktor/rye-fyne)**
+* **[Rye-Gio repository](https://github.com/refaktor/rye-gio)**
+* **[Rye-Ebitengine repository](https://github.com/refaktor/rye-ebitengine)**
     
 ## Follow development
 
