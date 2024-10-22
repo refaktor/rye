@@ -311,7 +311,7 @@ myloop:
 					// fmt.Println("IN BLOCK")
 					ser := es.Ser // TODO -- make helper function that "does" a block
 					es.Ser = node.Code.Series
-					EvalBlockInj(es, env.NewString(tok.Data), true)
+					EvalBlockInj(es, *env.NewString(tok.Data), true)
 					if es.ErrorFlag {
 						return es.Res
 					}
@@ -420,14 +420,14 @@ var Builtins_html = map[string]*env.Builtin{
 					switch n := arg1.(type) {
 					case env.Integer:
 						if int(n.Value) < len(tok.Attr) {
-							return env.NewString(tok.Attr[int(n.Value)].Val)
+							return *env.NewString(tok.Attr[int(n.Value)].Val)
 						} else {
 							return env.Void{}
 						}
 					case env.Word:
 						for _, a := range tok.Attr {
 							if a.Key == ps.Idx.GetWord(n.Index) {
-								return env.NewString(a.Val)
+								return *env.NewString(a.Val)
 							}
 						}
 						return env.Void{}
@@ -451,7 +451,7 @@ var Builtins_html = map[string]*env.Builtin{
 			case env.Native:
 				switch tok := tok1.Value.(type) {
 				case html.Token:
-					return env.NewString(tok.Data)
+					return *env.NewString(tok.Data)
 				default:
 					return MakeBuiltinError(ps, "Not xml-start element.", "rye-html-start//name?")
 				}

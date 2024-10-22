@@ -1895,11 +1895,29 @@ var builtins = map[string]*env.Builtin{
 			}
 			return nil
 		},
-	}, */
+		}, */
 
-	"random-integer": {
+	"random": {
 		Argsn: 1,
-		Doc:   "Accepts an integer n and eturns a random integer between 0 and n in the half-open interval [0,n).",
+		Doc:   "Accepts an integer n and returns a random integer between 0 and n in the half-open interval [0,n).",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg := arg0.(type) {
+			case env.Block:
+				val, err := rand.Int(rand.Reader, big.NewInt(int64(len(arg.Series.S))))
+				if err != nil {
+					return MakeBuiltinError(ps, err.Error(), "random-integer")
+				}
+				return arg.Series.S[int(val.Int64())]
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "random-integer")
+			}
+		},
+	},
+
+	"random\\integer": {
+		Argsn: 1,
+		Doc:   "Accepts an integer n and returns a random integer between 0 and n in the half-open interval [0,n).",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
@@ -8253,6 +8271,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltinsInContext(Builtins_math, ps, "math")
 	osctx := RegisterBuiltinsInContext(Builtins_os, ps, "os")
 	RegisterBuiltinsInSubContext(Builtins_pipes, ps, osctx, "pipes")
+	RegisterBuiltinsInContext(Builtins_term, ps, "term")
 	// ## Archived modules
 	// RegisterBuiltins2(Builtins_gtk, ps, "gtk")
 	// RegisterBuiltins2(Builtins_nats, ps, "nats")

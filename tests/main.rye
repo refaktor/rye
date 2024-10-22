@@ -10,9 +10,9 @@ test-framework: context {
 	cnt: 0
 	failed: 0
 	
-	section: fn { name descr code } { print join { "SECTION: " name newline " * " descr } , do code }
+	section: fn { name descr code } { term/magenta term/bold print name term/reset\all print " " + descr , do code print "" }
 	
-	group: fn { name descr args code } { inc! 'cnt print " GROUP: " + name , do code }
+	group: fn { name descr args code } { inc! 'cnt  term/blue prns " " + name term/reset\all , do code }
 	
 	error-: fn { test } {
 		; try { do\in root-ctx test }
@@ -20,12 +20,12 @@ test-framework: context {
 	}
 	error: fn { test } {
 		; try { do\in root-ctx test }
-		try test :got |type? |= 'error |either { print join { "  - OK: " mold got } } { inc! 'failed , print join { "  - Error: expected error but got: " mold got } }
+		try test :got |type? |= 'error |either { prns join { "✓" mold got } } { inc! 'failed , term/red prns " ✗ Failed:" term/reset\all   print join { newline "expected error but got: " mold got } }
 	}
 
 	equal: fn { test res } {
 		do\in root-ctx test :got = res
-		|either { print "  - OK" } { inc! 'failed , print join { "  - Error: expected " mold res ", got " mold got } }
+		|either { term/green prns "✓" term/reset\all } { inc! 'failed , term/red prns " ✗ Failed:" term/reset\all print join { "expected " mold res ", got " mold got } }
 	}
 	
 	equal\todo: fn { test res } {
@@ -33,14 +33,22 @@ test-framework: context {
 
 	stdout: fn { test res } {
 		capture-stdout { do\in root-ctx test } :got = res
-		|either { print "  - OK" } { inc! 'failed , print join { "  - Error: expected " mold res ", got " mold got } }
+		|either { term/green prns "✓" term/reset\all } { inc! 'failed , term/red prns " ✗ Failed:" term/reset\all  print join { "expected " mold res ", got " mold got } }
 	}
 
 	comment: fn { str } {
 		
 	}
 
-	end: fn { } { wrap { print "---------------" } { print "CNT: " + cnt , print "FAILED: " + failed , if failed > 0 { exit 1 } } }
+	end: fn { } { ;prns "Tests:" term/bold prn cnt term/reset\bold , print "FAILED: " + failed , if failed > 0 { exit 1 } }
+		prns "\nTests:" term/bold prn cnt term/reset\bold
+		either is-zero failed
+		{ term/bold term/green print "\nALL PASSED" term/reset\all }
+		{ term/red print "\nFAILED: " + failed  term/reset\all }
+
+		if failed > 0 { exit 1 }
+	}
+
 
 }
 
@@ -99,32 +107,40 @@ Examples:
 }
 
 first args |^fix { print-help } |switch {
-	test {
-		sections: { }
-		either args .length? > 1 {
-			either ( second args ) = 'ls {
-				print "Test sections available:"
-				menu .for { .concat* " * " |print }
-			} {
-				sections:: [ second args ]
-			}
+test {
+	sections: { }
+	either args .length? > 1 {
+		either ( second args ) = 'ls {
+			print "Test sections available:"
+			menu .for { .concat* " * " |print }
 		} {
-			sections:: menu
+			sections:: [ second args ]
 		}
-		if sections .length? > 0 {  ; todo add is-empty builtin
-			errors: 0
-			for sections { .to-string + ".rye" |to-file |load |^check { "group does not exist!" } |do\in* test-framework |+ errors ::errors }
-			print "==================="
-		    print " FAILED TESTS: " + errors
-		    print ""
-		    print "run  `rye .` to see the new test tool options"
+	} {
+		sections:: menu
+	}
+	if sections .length? > 0 {  ; todo add is-empty builtin
+		errors: 0
+		for sections {
+			.to-string .pass { term/bold , prns "\n#" , .to-upper .prns , print "#\n" }
+			|+ ".rye" |to-file |load |^check { "group does not exist!" } |do\in* test-framework |+ errors ::errors }
+		print ""
+	
+		if ( length? sections ) > 1 { 
+			term/orange
+			term/bold
+			print "TOTAL FAILED TESTS: " + errors
+			print ""
+			term/reset\all
 		}
+		print ""
 	}
-	doc  {
-	    for menu { .generate-doc-file menu }
-	    print "docs generated" 
-	}
-	_ { print-help }
+}
+doc  {
+	for menu { .generate-doc-file menu }
+	print "docs generated" 
+}
+_ { print-help }
 }
 
 ;   maybe we need this at some point 
