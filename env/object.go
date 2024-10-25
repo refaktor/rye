@@ -69,6 +69,17 @@ type Object interface {
 	Dump(e Idxs) string
 }
 
+func NewBoolean(val bool) *Integer {
+	var ret int64
+	if val {
+		ret = 1
+	} else {
+		ret = 0
+	}
+	nat := Integer{ret}
+	return &nat
+}
+
 //
 // INTEGER
 //
@@ -285,9 +296,15 @@ func NewFileUri(index *Idxs, path string) *Uri {
 
 func NewUri(index *Idxs, scheme Word, path string) *Uri {
 	scheme2 := strings.Split(path, "://")
-	kindstr := strings.Split(path, "://")[0] + "-schema" // TODO -- this is just temporary .. so we test it further, make proper once at that level
+	kindstr := index.GetWord(scheme.Index) + "-schema" // TODO -- this is just temporary .. so we test it further, make proper once at that level
 	idx := index.IndexWord(kindstr)
-	nat := Uri{scheme, scheme2[1], Word{idx}}
+	var path2 string
+	if len(scheme2) > 1 { // TODO --- look at all this code and improve, this is just BAD
+		path2 = scheme2[1]
+	} else {
+		path2 = path
+	}
+	nat := Uri{scheme, path2, Word{idx}}
 	//	nat := Uri{Word{idxSch}, scheme2[1], Word{idxKind}}
 	return &nat
 }
@@ -1854,7 +1871,7 @@ func NewList(data []any) *List {
 	return &List{data, Word{0}}
 }
 
-func RyeToRaw(res Object) any { // TODO -- MOVE TO UTIL ... provide reverse named symmetrically
+func RyeToRaw(res Object, idx *Idxs) any { // TODO -- MOVE TO UTIL ... provide reverse named symmetrically
 	// fmt.Printf("Type: %T", res)
 	switch v := res.(type) {
 	case nil:
@@ -1875,6 +1892,8 @@ func RyeToRaw(res Object) any { // TODO -- MOVE TO UTIL ... provide reverse name
 		return v
 	case *List:
 		return *v
+	case Uri: // Open question: what should list do with values that don't have raw equivalents
+		return idx.GetWord(v.Scheme.Index) + v.Path
 	default:
 		return "not handeled 2"
 		// TODO-FIXME
