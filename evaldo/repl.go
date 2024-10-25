@@ -10,7 +10,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/eiannone/keyboard"
+	// "github.com/eiannone/keyboard"
+	"github.com/cszczepaniak/keyboard"
 
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/loader"
@@ -266,6 +267,8 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 // constructKeyEvent maps a rune and keyboard.Key to a util.KeyEvent, which uses javascript key event codes
 // only keys used in microliner are mapped
 func constructKeyEvent(r rune, k keyboard.Key) term.KeyEvent {
+	// fmt.Println(r)
+	// fmt.Println(k)
 	var ctrl bool
 	alt := k == keyboard.KeyEsc
 	var code int

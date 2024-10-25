@@ -1,4 +1,4 @@
-//
+// SECTION: Core/spreadsheets
 
 package evaldo
 
@@ -18,9 +18,14 @@ import (
 
 var Builtins_spreadsheet = map[string]*env.Builtin{
 
+	// Tests:
+	//  equals { spreadsheet { "a" } { 1 2 } |type? } 'spreadsheet
+	// Args:
+	//  * columns
+	//  * data
 	"spreadsheet": {
 		Argsn: 2,
-		Doc:   "Create a spreadsheet by accepting block of column names and flat block of values",
+		Doc:   "Creates a spreadsheet by accepting block of column names and flat block of values",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch header1 := arg0.(type) {
 			case env.Block:
@@ -75,9 +80,13 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	//  equals { to-spreadsheet dict { "a" 1 "a" b } |type? } 'spreadsheet
+	// Args:
+	//  * data
 	"to-spreadsheet": {
 		Argsn: 1,
-		Doc:   "Create a spreadsheet by accepting block or list of dicts",
+		Doc:   "Creates a spreadsheet by accepting block or list of dicts",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			switch block := arg0.(type) {
 			case env.Block:
@@ -1434,7 +1443,7 @@ func LeftJoin(ps *env.ProgramState, s1 env.Spreadsheet, s2 env.Spreadsheet, col1
 							break
 						}
 					} else {
-						if env.RyeToRaw(val1o) == val2 {
+						if env.RyeToRaw(val1o, ps.Idx) == val2 {
 							s2RowId = j
 							break
 						}

@@ -46,3 +46,4 @@ console_*.rye
 
 buildtemp/main.rye
 *.bson
+cmd/parse_builtins/parse_builtins

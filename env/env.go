@@ -178,7 +178,7 @@ func (i RyeCtx) Equal(o Object) bool {
 func (i RyeCtx) Dump(e Idxs) string {
 	var bu strings.Builder
 	bu.WriteString("context {\n")
-	bu.WriteString(fmt.Sprintf("doc \"%s\"\n", i.Doc))
+	//bu.WriteString(fmt.Sprintf("doc \"%s\"\n", i.Doc))
 	bu.WriteString(i.DumpBare(e))
 	bu.WriteString("}")
 	return bu.String()

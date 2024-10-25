@@ -485,6 +485,22 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equals { list [ 1 2 3 ] |to-block |first } 1
+	"to-block": { // ***
+		Argsn: 1,
+		Doc:   "Turns a List to a Block",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch list := arg0.(type) {
+			case env.List:
+				return util.List2Block(ps, list)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.DictType}, "to-context")
+			}
+		},
+	},
+
 	"to-context": { // ***
 		Argsn: 1,
 		Doc:   "Takes a Dict and returns a Context with same names and values.",
@@ -1667,17 +1683,24 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	// equals { embed 101 "val {}" } "val 101"
 	"embed": { // **
 		Argsn: 2,
-		Doc:   "Embeds a value in string.",
+		Doc:   "Embeds a value into a string with {} placeholder.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch arg := arg1.(type) {
+			switch val := arg1.(type) {
 			case env.String:
 				vals := arg0.Print(*ps.Idx)
-				news := strings.ReplaceAll(arg.Value, "{}", vals)
+				news := strings.ReplaceAll(val.Value, "{}", vals)
 				return *env.NewString(news)
+			case env.Uri:
+				vals := arg0.Print(*ps.Idx)
+				news := strings.ReplaceAll(val.Path, "{}", vals)
+				return *env.NewUri(ps.Idx, val.Scheme, news)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "esc")
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.UriType}, "embed")
 			}
 		},
 	},
@@ -2981,7 +3004,7 @@ var builtins = map[string]*env.Builtin{
 
 	// EXPERIMENTAL: COLLECTION AND RETURNING FUNCTIONS ... NOT DETERMINED IF WILL BE INCLUDED YET
 
-	"returns": {
+	"returns!": {
 		Argsn: 1,
 		Doc:   "Sets up a value to return at the end of function.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2990,7 +3013,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"collect": {
+	"collect!": {
 		Argsn: 1,
 		Doc:   "Collects values into an implicit block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -3004,7 +3027,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"collect-key": {
+	"collect-key!": {
 		Argsn: 2,
 		Doc:   "Collects key value pars to implicit block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -3019,7 +3042,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"collect-update-key": {
+	"collect-update-key!": {
 		Argsn: 2,
 		Doc:   "Collects key value pars to implicit block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -3042,7 +3065,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"pop-collected": {
+	"pop-collected!": {
 		Argsn: 0,
 		Doc:   "Returns the implicit collected data structure and resets it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -3969,7 +3992,7 @@ var builtins = map[string]*env.Builtin{
 							if ps.ErrorFlag {
 								return ps.Res
 							}
-							newl[i] = env.RyeToRaw(ps.Res)
+							newl[i] = env.RyeToRaw(ps.Res, ps.Idx)
 							ps.Ser.Reset()
 						}
 						ps.Ser = ser
@@ -4068,7 +4091,7 @@ var builtins = map[string]*env.Builtin{
 							if ps.ErrorFlag {
 								return ps.Res
 							}
-							newl[i] = env.RyeToRaw(ps.Res)
+							newl[i] = env.RyeToRaw(ps.Res, ps.Idx)
 							ps.Ser.Reset()
 						}
 						ps.Ser = ser
@@ -4161,7 +4184,7 @@ var builtins = map[string]*env.Builtin{
 							if ps.ErrorFlag {
 								return ps.Res
 							}
-							newl[i] = env.RyeToRaw(ps.Res)
+							newl[i] = env.RyeToRaw(ps.Res, ps.Idx)
 							ps.Ser.Reset()
 						}
 						ps.Ser = ser
@@ -4706,7 +4729,7 @@ var builtins = map[string]*env.Builtin{
 						}
 						switch ee := entry.(type) { // list in dict is a pointer
 						case *env.List:
-							ee.Data = append(ee.Data, env.RyeToRaw(curval))
+							ee.Data = append(ee.Data, env.RyeToRaw(curval, ps.Idx))
 						default:
 							return MakeBuiltinError(ps, "Entry type should be List.", "group")
 						}
@@ -4738,7 +4761,7 @@ var builtins = map[string]*env.Builtin{
 						}
 						switch ee := entry.(type) { // list in dict is a pointer
 						case *env.List:
-							ee.Data = append(ee.Data, env.RyeToRaw(curval))
+							ee.Data = append(ee.Data, env.RyeToRaw(curval, ps.Idx))
 						default:
 							return MakeBuiltinError(ps, "Entry type should be List.", "group")
 						}
@@ -5262,7 +5285,7 @@ var builtins = map[string]*env.Builtin{
 				uniqueStr := ""
 				// converting object to string and append final
 				for _, value := range uniqueStringSlice {
-					uniqueStr = uniqueStr + env.RyeToRaw(value).(string)
+					uniqueStr = uniqueStr + env.RyeToRaw(value, ps.Idx).(string)
 				}
 				return *env.NewString(uniqueStr)
 			default:
@@ -7123,7 +7146,7 @@ var builtins = map[string]*env.Builtin{
 					if num.Value > int64(len(s1.Data)) {
 						return MakeBuiltinError(ps, fmt.Sprintf("List has less than %d elements.", num.Value), "change\\nth!")
 					}
-					s1.Data[num.Value-1] = env.RyeToRaw(arg2)
+					s1.Data[num.Value-1] = env.RyeToRaw(arg2, ps.Idx)
 					return s1
 				default:
 					return MakeArgError(ps, 1, []env.Type{env.BlockType}, "change\\nth!")
@@ -7806,7 +7829,33 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-
+	// Tests:
+	// equals { { } .is-empty } 1
+	"is-empty": { // **
+		Argsn: 1,
+		Doc:   "Accepts a collection (String, Block, Dict, Spreadsheet) and returns it's length.", // TODO -- accept list, context also
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				return *env.NewBoolean(len(s1.Value) == 0)
+			case env.Dict:
+				return *env.NewBoolean(len(s1.Data) == 0)
+			case env.List:
+				return *env.NewBoolean(len(s1.Data) == 0)
+			case env.Block:
+				return *env.NewBoolean(s1.Series.Len() == 0)
+			case env.Spreadsheet:
+				return *env.NewBoolean(len(s1.Rows) == 0)
+			case env.RyeCtx:
+				return *env.NewBoolean(s1.GetWords(*ps.Idx).Series.Len() == 0)
+			case env.Vector:
+				return *env.NewBoolean(s1.Value.Len() == 0)
+			default:
+				fmt.Println(s1)
+				return MakeArgError(ps, 2, []env.Type{env.StringType, env.DictType, env.ListType, env.BlockType, env.SpreadsheetType, env.VectorType}, "length?")
+			}
+		},
+	},
 	"length?": { // **
 		Argsn: 1,
 		Doc:   "Accepts a collection (String, Block, Dict, Spreadsheet) and returns it's length.", // TODO -- accept list, context also
@@ -7980,7 +8029,6 @@ var builtins = map[string]*env.Builtin{
 
 				err := r.Run()
 				if err != nil {
-					fmt.Println("ERROR")
 					fmt.Println(err)
 				}
 			default:
