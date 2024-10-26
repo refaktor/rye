@@ -483,7 +483,14 @@ func (i Block) Equal(o Object) bool {
 
 func (i Block) Dump(e Idxs) string {
 	var bu strings.Builder
-	bu.WriteString("{ ")
+	switch i.Mode {
+	case 0:
+		bu.WriteString("{ ")
+	case 1:
+		bu.WriteString("[ ")
+	case 2:
+		bu.WriteString("( ")
+	}
 	for _, obj := range i.Series.GetAll() {
 		if obj != nil {
 			bu.WriteString(obj.Dump(e))
@@ -492,7 +499,14 @@ func (i Block) Dump(e Idxs) string {
 			bu.WriteString("'nil ")
 		}
 	}
-	bu.WriteString("}")
+	switch i.Mode {
+	case 0:
+		bu.WriteString(" }")
+	case 1:
+		bu.WriteString(" ]")
+	case 2:
+		bu.WriteString(" )")
+	}
 	return bu.String()
 }
 
@@ -769,7 +783,11 @@ func (i Opword) Equal(o Object) bool {
 }
 
 func (i Opword) Dump(e Idxs) string {
-	return "." + e.GetWord(i.Index)
+	var ssecond string
+	if i.Force == 1 {
+		ssecond = "*"
+	}
+	return "." + e.GetWord(i.Index) + ssecond
 }
 
 //
@@ -820,7 +838,11 @@ func (i Pipeword) Equal(o Object) bool {
 }
 
 func (i Pipeword) Dump(e Idxs) string {
-	return "|" + e.GetWord(i.Index)
+	var ssecond string
+	if i.Force == 1 {
+		ssecond = "*"
+	}
+	return "|" + e.GetWord(i.Index) + ssecond
 }
 
 //
