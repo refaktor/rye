@@ -371,20 +371,57 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 		// #TODO don't display more than N words
 		// #TODO make current word bold
 
-		// fmt.Println("****")
+		// # TRICK: we don't have the cursor position, but the caller code handles that already so we can suggest in the middle
+		suggestions := make([]string, 0)
+		var wordpart string
+		spacePos := strings.LastIndex(line, " ")
+		var prefix string
+		if spacePos < 0 {
+			fmt.Println("*")
+			wordpart = line
+			prefix = ""
+		} else {
+			wordpart = strings.TrimSpace(line[spacePos:])
+			fmt.Print("=(")
+			fmt.Print(wordpart)
+			fmt.Print(")=")
+			prefix = line[0:spacePos] + " "
+			if wordpart == "" { // we are probably 1 space after last word
+				fmt.Println("+")
+				return
+			}
+		}
+
+		fmt.Print("=[")
+		fmt.Print(wordpart)
+		fmt.Print("]=")
 		switch mode {
 		case 0:
 			for i := 0; i < es.Idx.GetWordCount(); i++ {
 				// fmt.Print(es.Idx.GetWord(i))
-				if strings.HasPrefix(es.Idx.GetWord(i), strings.ToLower(line)) {
-					c = append(c, es.Idx.GetWord(i))
+				if strings.HasPrefix(es.Idx.GetWord(i), strings.ToLower(wordpart)) {
+					c = append(c, prefix+es.Idx.GetWord(i))
+					suggestions = append(suggestions, es.Idx.GetWord(i))
+				} else if strings.HasPrefix("."+es.Idx.GetWord(i), strings.ToLower(wordpart)) {
+					c = append(c, prefix+"."+es.Idx.GetWord(i))
+					suggestions = append(suggestions, es.Idx.GetWord(i))
+				} else if strings.HasPrefix("|"+es.Idx.GetWord(i), strings.ToLower(wordpart)) {
+					c = append(c, prefix+"|"+es.Idx.GetWord(i))
+					suggestions = append(suggestions, es.Idx.GetWord(i))
 				}
 			}
 		case 1:
 			for key := range es.Ctx.GetState() {
 				// fmt.Print(es.Idx.GetWord(i))
-				if strings.HasPrefix(es.Idx.GetWord(key), strings.ToLower(line)) {
-					c = append(c, es.Idx.GetWord(key))
+				if strings.HasPrefix(es.Idx.GetWord(key), strings.ToLower(wordpart)) {
+					c = append(c, prefix+es.Idx.GetWord(key))
+					suggestions = append(suggestions, es.Idx.GetWord(key))
+				} else if strings.HasPrefix("."+es.Idx.GetWord(key), strings.ToLower(wordpart)) {
+					c = append(c, prefix+"."+es.Idx.GetWord(key))
+					suggestions = append(suggestions, es.Idx.GetWord(key))
+				} else if strings.HasPrefix("|"+es.Idx.GetWord(key), strings.ToLower(wordpart)) {
+					c = append(c, prefix+"|"+es.Idx.GetWord(key))
+					suggestions = append(suggestions, es.Idx.GetWord(key))
 				}
 			}
 		}
@@ -403,7 +440,7 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 
 		// Print something
 		term.ColorMagenta()
-		fmt.Print(c)
+		fmt.Print(suggestions)
 		term.CloseProps() //	fmt.Print("This is the new line.")
 
 		// Move the cursor back to the previous line
