@@ -3,6 +3,16 @@
 
 package term
 
+var ColumnNum int
+
 func GetTerminalColumns() int {
-	return 50
+	if ColumnNum == 0 {
+		return 60
+	} else {
+		return ColumnNum
+	}
+}
+
+func SetTerminalColumns(c int) {
+	ColumnNum = c
 }

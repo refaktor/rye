@@ -87,6 +87,8 @@ func main() {
 
 	js.Global().Set("InitRyeShell", js.FuncOf(InitRyeShell))
 
+	js.Global().Set("SetTerminalSize", js.FuncOf(SetTerminalSize))
+
 	js.Global().Set("SendKeypress", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		if len(args) > 0 {
 			cc := term.NewKeyEvent(args[0].String(), args[1].Int(), args[2].Bool(), args[3].Bool(), args[4].Bool())
@@ -113,6 +115,12 @@ func main() {
 		sendMessageToJS(response)
 	} */
 
+}
+
+func SetTerminalSize(this js.Value, args []js.Value) any {
+	term.SetTerminalColumns(args[0].Int())
+	ml.SetColumns(term.GetTerminalColumns())
+	return "Ok"
 }
 
 func InitRyeShell(this js.Value, args []js.Value) any {
