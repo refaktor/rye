@@ -4,12 +4,27 @@
 package evaldo
 
 import (
+	"os"
+
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/term"
+	goterm "golang.org/x/term"
 )
 
 var Builtins_term = map[string]*env.Builtin{
 
+	"width?": {
+		Argsn: 0,
+		Doc:   "Get the terminal width",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			fd := int(os.Stdout.Fd())
+			width, _, err := goterm.GetSize(fd)
+			if err != nil {
+				return MakeBuiltinError(ps, err.Error(), "width?")
+			}
+			return env.NewInteger(int64(width))
+		},
+	},
 	"red": {
 		Argsn: 0,
 		Doc:   "Take input from a user.",

@@ -287,8 +287,15 @@ func NewMicroLiner(ch chan KeyEvent, sb func(msg string), el func(line string) s
 
 func (s *MLState) getColumns() bool {
 	s.columns = GetTerminalColumns()
-	// fmt.Print("*getColumns* : ")
-	// fmt.Println(s.columns)
+	fmt.Print("*getColumns* : ")
+	fmt.Println(s.columns)
+	return true
+}
+
+func (s *MLState) SetColumns(cols int) bool {
+	s.columns = cols
+	fmt.Print("*setColumns* : ")
+	fmt.Println(s.columns)
 	return true
 }
 

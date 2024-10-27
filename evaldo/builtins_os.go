@@ -37,7 +37,7 @@ func FileExists(filePath string) int {
 
 var Builtins_os = map[string]*env.Builtin{
 
-	"cwd": {
+	"cwd?": {
 		Argsn: 0,
 		Doc:   "Returns current working directory.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -63,6 +63,24 @@ var Builtins_os = map[string]*env.Builtin{
 				return arg0
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.UriType}, "cd")
+			}
+		},
+	},
+
+	"env?": {
+		Argsn: 1,
+		Doc:   "Gets the environment variable.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch variable_name := arg0.(type) {
+			case env.String:
+
+				val, ok := os.LookupEnv(variable_name.Value)
+				if !ok {
+					return MakeBuiltinError(ps, "Variable couldn't be read", "env?")
+				}
+				return env.NewString(val)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "env?")
 			}
 		},
 	},
