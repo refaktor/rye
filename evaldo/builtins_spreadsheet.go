@@ -213,9 +213,23 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		},
 	},
 
+	// Add oneor more rows to a spreadsheet ref
+	// The `rows` argument takes a block that has one or more
+	// rows worth of data. This is given as a single flat collection.
+	// which means that if your sheet has N columns, your block
+	// should have `N * NumRows` values.
+	// Tests:
+	//  equal {
+	//	 ref spreadsheet { "a" "b"  } { 1 10 2 20 } :sheet
+	//   sheet .add-rows! [ 3 30 ] sheet .deref .length?
+	//  } 3
+	// Args:
+	// * sheet - the reference to the sheet that is getting rows added to it
+	// * rows - a block containing one or more rows worth of values, or a SpreadsheetRow Native value
+	// Tags: #spreasheet #mutation #data
 	"add-rows!": {
 		Argsn: 2,
-		Doc:   "Add one or more rows to a spreadsheet",
+		Doc:   "Add one or more rows to a spreadsheet ref",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case *env.Spreadsheet:
@@ -242,10 +256,28 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Update the row at a given index. If given a dict or spreadhseet row, replace the row with that
+	// If given a function, pass the row, its index and replace the row with the return value from the
+	// function.
+	// Tests:
+	//  equal {
+	//	 spr1: ref spreadsheet { "a" "b" } { 1 10 2 20 }
+	//	 spr1 .update-row! 1 dict [ "a" 111 ]
+	//   spr1 .deref .A1
+	//  } 111
+	//  equal {
+	//	 spr1: ref spreadsheet { "a" "b" } { 1 10 2 20 }
+	//	 incrA: fn { row } { row -> "a" + 1 :new-a dict { "a" new-a } }
+	//	 spr1 .update-row! 1 dict incrA
+	//   spr1 .deref .A1
+	//  } 11
+	// Args:
+	// * sheet-ref - A ref to a spreadsheet
+	// * idx - the index of the row to update, 1-based
+	// * updater - One of either a function, a dict, or a Spreadsheet Row
 	"update-row!": {
 		Argsn: 3, // Spreadsheet, index function/dict
-		Doc: `Update the row at the given index. If given a dict or a spreadsheet row, replace the row with that.` +
-			`If given a function, pass the row, its index and replace the row with the return value from the function`,
+		Doc:   `Update the row at the given index.`,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case *env.Spreadsheet:
