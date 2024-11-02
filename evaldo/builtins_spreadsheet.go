@@ -762,6 +762,10 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		},
 	},
 
+	// Example: Order by age ascending
+	//  sheet: spreadsheet { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19  }
+	//  sheet .order-by! 'age 'asc
+	// Tags: #spreadsheet
 	"order-by!": {
 		Argsn: 3,
 		Doc:   "Sorts row by given column, changes spreadsheet in place.",
@@ -803,6 +807,11 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Example: Select "name" and "age" columns
+	//  sheet: spreadsheet { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
+	//  sheet .columns? { 'name 'age }
+	// Tags: #spreadsheet
 	"columns?": {
 		Argsn: 2,
 		Doc:   "Returns spreadsheet with just given columns.",
@@ -829,6 +838,10 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Example: Get sheet column names
+	//  sheet: spreadsheet { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
+	//  sheet .header? ; { "name" "age" "job_title" }
+	// Tags: #spreadsheet
 	"header?": {
 		Argsn: 1,
 		Doc:   "Gets the column names (header) as block.",
@@ -843,6 +856,11 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Example: Get sheet column names
+	//  sheet: spreadsheet { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
+	//  sheet .column? 'name ; => { "Bob" "Alice" "Charlie" }
+	// Tags: #spreadsheet
 	"column?": {
 		Argsn: 2,
 		Doc:   "Gets all values of a column as a block.",
@@ -862,6 +880,14 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Example: Drop "job_title" column from sheet
+	//  sheet: spreadsheet { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
+	//  sheet .drop-column 'job_title ;
+	// Example: Drop name and age columns from sheet
+	//  sheet: spreadsheet { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
+	//  sheet .drop-column { "name" "age" } ;
+	// Tags: #spreadsheet
 	"drop-column": {
 		Argsn: 2,
 		Doc:   "Remove a column from a spreadsheet. Returns new spreadsheet",
@@ -880,6 +906,10 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "drop-column")
 		},
 	},
+	// Example: Add a column to a sheet
+	//  sheet: spreadsheet { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
+	//  sheet .add-column! 'job_title { "Jantior" "Librarian" "Line Cook" } ;
+	// Tags: #spreadsheet
 	"add-column!": {
 		Argsn: 4,
 		Doc:   "Adds a new column to spreadsheet. Changes in-place and returns the new spreadsheet.",
@@ -933,6 +963,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Tags: #spreadsheet
 	"add-indexes!": {
 		Argsn: 2,
 		Doc:   "Creates an index for all values in the provided columns. Changes in-place and returns the new spreadsheet.",
@@ -963,6 +994,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Tags: #spreadsheet
 	"indexes?": {
 		Argsn: 1,
 		Doc:   "Returns the columns that are indexed in a spreadsheet.",
@@ -979,6 +1011,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Tags: #spreadsheet
 	"autotype": {
 		Argsn: 2,
 		Doc:   "Takes a spreadsheet and tries to determine and change the types of columns.",
@@ -996,6 +1029,11 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Example: join two spreadsheets, putting in empty cells if the left sheet doesn't have a value
+	//  names: spreadsheet { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
+	//  houses: spreadsheet { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
+	//  names .left-join houses 'id 'id
+	// Tags: #spreadsheet
 	"left-join": {
 		Argsn: 4,
 		Doc:   "Left joins two spreadsheets on the given columns.",
@@ -1028,6 +1066,11 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Example: join two spreadsheets
+	//  names: spreadsheet { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
+	//  houses: spreadsheet { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
+	//  names .inner-join houses 'id 'id
+	// Tags: #spreadsheet
 	"inner-join": {
 		Argsn: 4,
 		Doc:   "Inner joins two spreadsheets on the given columns.",
@@ -1060,6 +1103,11 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Example: group spreadsheet rows by name, runing various aggregations on the val column
+	//  spreadsheet { "name" "val" } { "a" 1 "b" 6 "a" 5 "b" 10 "a" 7 }
+	// 	|group-by 'name { 'name count 'val sum 'val min 'val max 'val avg }
+	// 	|order-by! 'name 'asc
+	// Tags: #spreadsheet
 	"group-by": {
 		Argsn: 3,
 		Doc:   "Groups a spreadsheet by the given column and (optional) aggregations.",
