@@ -632,7 +632,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	// * sheet
 	// * column
 	// * value
-	// Tags: #filter #spreadsheets
+	// Tags: #filter #spreadsheet
 	"where-greater": {
 		Argsn: 3,
 		Doc:   "Returns spreadsheet of rows where specific colum is greater than given value.",
@@ -659,7 +659,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	// * sheet
 	// * column
 	// * value
-	// Tags: #filter #spreadsheets
+	// Tags: #filter #spreadsheet
 	"where-lesser": {
 		Argsn: 3,
 		Doc:   "Returns spreadsheet of rows where specific colum is lesser than given value.",
@@ -689,7 +689,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	// * column
 	// * lower-limit
 	// * upper-limit
-	// Tags: #filter #spreadsheets
+	// Tags: #filter #spreadsheet
 	"where-between": {
 		Argsn: 4,
 		Doc:   "Returns spreadsheet of rows where specific colum is between given values.",
@@ -717,7 +717,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	// * sheet
 	// * column
 	// * values-filtered-for
-	// Tags: #filter #spreadsheets
+	// Tags: #filter #spreadsheet
 	"where-in": {
 		Argsn: 3,
 		Doc:   "Returns spreadsheet of rows where specific colum value if found in block of values.",
@@ -742,6 +742,8 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tags: #spreadsheet
 	"limit": {
 		Argsn: 2,
 		Doc:   "Returns spreadsheet with number of rows limited to second argument.",
