@@ -169,6 +169,9 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		},
 	},
 
+	// Get rows as a native. This value can be used in `add-rows` and `add-rows!``
+	// Args:
+	// * sheet
 	"get-rows": {
 		Argsn: 1,
 		Doc:   "Get rows as a native",
@@ -183,6 +186,20 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		},
 	},
 
+	// Add one or more rows to a spreadsheet, returning a new spreadsheet
+	// The `rows` argument can take one of two types:
+	// 1) a block that has one or more rows worth of data.
+	// This is given as a single flat collection. This means that if your
+	//  sheet has `NumColumns` columns, your block should have `NumColumns * NumRows` values.
+	// 2) A native that is a slice of SpreadsheetRows, like the value returned from `get-rows`
+	// Tests:
+	//  equal {
+	//	 ref spreadsheet { "a" "b"  } { 1 10 2 20 } :sheet
+	//   sheet .add-rows! [ 3 30 ] sheet .deref .length?
+	//  } 3
+	// Args:
+	// * sheet -the sheet that is getting rows added to it
+	// * rows - a block containing one or more rows worth of values, or a SpreadsheetRow Native value
 	"add-rows": {
 		Argsn: 2,
 		Doc:   "Add one or more rows to a spreadsheet",
@@ -213,9 +230,21 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		},
 	},
 
+	// Add one or more rows to a spreadsheet ref. Works similary to `add-rows`, but
+	// modified the spreadsheet ref instead of returning a new copy
+	// of the spreasheet
+	// Tests:
+	//  equal {
+	//	 ref spreadsheet { "a" "b"  } { 1 10 2 20 } :sheet
+	//   sheet .add-rows! [ 3 30 ] sheet .deref .length?
+	//  } 3
+	// Args:
+	// * sheet - the reference to the sheet that is getting rows added to it
+	// * rows - a block containing one or more rows worth of values, or a SpreadsheetRow Native value
+	// Tags: #spreasheet #mutation
 	"add-rows!": {
 		Argsn: 2,
-		Doc:   "Add one or more rows to a spreadsheet",
+		Doc:   "Add one or more rows to a spreadsheet ref",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case *env.Spreadsheet:
@@ -242,10 +271,30 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Update the row at a given index. If given a dict or spreadhseet row, replace the row with that
+	// If given a function, pass the row, its index and replace the row with the return value from the
+	// function.
+	// Tests:
+	//  equal {
+	//	 spr1: ref spreadsheet { "a" "b" } { 1 10 2 20 }
+	//	 spr1 .update-row! 1 dict [ "a" 111 ]
+	//   spr1 .deref .A1
+	//  } 111
+	//  equal {
+	//	 spr1: ref spreadsheet { "a" "b" } { 1 10 2 20 }
+	//	 incrA: fn { row } { row -> "a" + 1 :new-a dict { "a" new-a } }
+	//	 spr1 .update-row! 1 dict incrA
+	//   spr1 .deref .A1
+	//  } 11
+	// Args:
+	// * sheet-ref - A ref to a spreadsheet
+	// * idx - the index of the row to update, 1-based
+	// * updater - One of either a function, a dict, or a Spreadsheet Row
+	// Tags: #spreadsheet #mutation
 	"update-row!": {
 		Argsn: 3, // Spreadsheet, index function/dict
-		Doc: `Update the row at the given index. If given a dict or a spreadsheet row, replace the row with that.` +
-			`If given a function, pass the row, its index and replace the row with the return value from the function`,
+		Doc:   `Update the row at the given index.`,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case *env.Spreadsheet:
@@ -299,6 +348,16 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 
 		},
 	},
+	// Tests:
+	//  equal {
+	//   spr1: spreadsheet { "a" "b" } { 1 10 2 20 }
+	//   spr1 .remove-row! 1
+	//   spr1 .deref .A1
+	//  } 2
+	// Args:
+	// * sheet-ref
+	// * row-idx - Index of row to remove, 1-based
+	// Tags: #spreadsheet #mutation
 	"remove-row!": {
 		Argsn: 2,
 		Doc:   "Remove a row from a spreadsheet by index",
@@ -322,8 +381,11 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		},
 	},
 
-	// TODO 2 -- this could move to a go function so it could be called by general load that uses extension to define the loader
+	// Args:
+	// * file-uri - location of csv file to load
+	// Tags: #spreadsheet #loading #csv
 	"load\\csv": {
+		// TODO 2 -- this could move to a go function so it could be called by general load that uses extension to define the loader
 		Argsn: 1,
 		Doc:   "Loads a .csv file to a spreadsheet datatype.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -367,6 +429,10 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Args:
+	// * sheet    - the sheet to save
+	// * file-url - where to save the sheet as a .csv file
+	// Tags: #spreadsheet #saving #csv
 	"save\\csv": {
 		Argsn: 2,
 		Doc:   "Saves a spreadsheet to a .csv file.",
@@ -429,6 +495,15 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Example: filtering for rows with the name "Enno"
+	//  sheet: spreadsheet { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" }
+	//  sheet .where-equal 'name "Enno"
+	// Args:
+	// * sheet
+	// * column
+	// * value
+	// Tags: #filter #spreadsheets
 	"where-equal": {
 		Argsn: 3,
 		Doc:   "Returns spreadsheet of rows where specific colum is equal to given value.",
@@ -448,6 +523,14 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Example: filting for names that start with "En"
+	//  sheet: spreadsheet { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" }
+	//  sheet .where-match 'name "En.+"
+	// Args:
+	// * sheet
+	// * column
+	// * regexp
+	// Tags: #filter #spreadsheets
 	"where-match": {
 		Argsn: 3,
 		Doc:   "Returns spreadsheet of rows where a specific colum matches a regex.",
@@ -476,6 +559,15 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Example: filting for names that contain "nn"
+	//  sheet: spreadsheet { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" "Benn" }
+	//  sheet .where-contains 'name "nn"
+	// Args:
+	// * sheet
+	// * column
+	// * substring
+	// Tags: #filter #spreadsheets
 	"where-contains": {
 		Argsn: 3,
 		Doc:   "Returns spreadsheet of rows where specific colum contains a given string value.",
@@ -500,6 +592,15 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Example: filting for names that contain "nn"
+	//  sheet: spreadsheet { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" "Benn" }
+	//  sheet .where-contains 'name "nn"
+	// Args:
+	// * sheet
+	// * column
+	// * substring
+	// Tags: #filter #spreadsheets
 	"where-not-contains": {
 		Argsn: 3,
 		Doc:   "Returns spreadsheet of rows where specific colum contains a given string value.",
@@ -524,6 +625,14 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Example: filting for ages over 29
+	//  sheet: spreadsheet { "name" "age" } { "Enno" 30 "Enya" 25 "Enid" 40 "Bob" 19 "Bill" 45 "Benn" 29 }
+	//  sheet .where-greater 'age 29
+	// Args:
+	// * sheet
+	// * column
+	// * value
+	// Tags: #filter #spreadsheet
 	"where-greater": {
 		Argsn: 3,
 		Doc:   "Returns spreadsheet of rows where specific colum is greater than given value.",
@@ -543,6 +652,14 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Example: filting for names that contain "nn"
+	//  sheet: spreadsheet { "name" "age" } { "Enno" 30 "Enya" 25 "Enid" 40 "Bob" 19 "Bill" 45 "Benn" 29 }
+	//  sheet .where-lesser 'age 29
+	// Args:
+	// * sheet
+	// * column
+	// * value
+	// Tags: #filter #spreadsheet
 	"where-lesser": {
 		Argsn: 3,
 		Doc:   "Returns spreadsheet of rows where specific colum is lesser than given value.",
@@ -562,6 +679,17 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Returns a spreadhsheet of rows where the given column is between the given
+	// values, non-inclusive.
+	// Example: filtering for folks in their 20s
+	//  sheet: spreadsheet { "name" "age" } { "Enno" 30 "Enya" 25 "Enid" 40 "Bob" 19 "Bill" 45 "Benn" 29 }
+	//  sheet .where-between 'age 19 30
+	// Args:
+	// * sheet
+	// * column
+	// * lower-limit
+	// * upper-limit
+	// Tags: #filter #spreadsheet
 	"where-between": {
 		Argsn: 4,
 		Doc:   "Returns spreadsheet of rows where specific colum is between given values.",
@@ -581,6 +709,15 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Example: filtering for folks named "Enno" or "Enya"
+	//  sheet: spreadsheet { "name" "age" } { "Enno" 30 "Enya" 25 "Enid" 40 "Bob" 19 "Bill" 45 "Benn" 29 }
+	//  sheet .where-in 'name { "Enno" "Enya" }
+	// Args:
+	// * sheet
+	// * column
+	// * values-filtered-for
+	// Tags: #filter #spreadsheet
 	"where-in": {
 		Argsn: 3,
 		Doc:   "Returns spreadsheet of rows where specific colum value if found in block of values.",
@@ -605,6 +742,8 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tags: #spreadsheet
 	"limit": {
 		Argsn: 2,
 		Doc:   "Returns spreadsheet with number of rows limited to second argument.",
@@ -623,6 +762,10 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		},
 	},
 
+	// Example: Order by age ascending
+	//  sheet: spreadsheet { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19  }
+	//  sheet .order-by! 'age 'asc
+	// Tags: #spreadsheet
 	"order-by!": {
 		Argsn: 3,
 		Doc:   "Sorts row by given column, changes spreadsheet in place.",
@@ -664,6 +807,11 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Example: Select "name" and "age" columns
+	//  sheet: spreadsheet { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
+	//  sheet .columns? { 'name 'age }
+	// Tags: #spreadsheet
 	"columns?": {
 		Argsn: 2,
 		Doc:   "Returns spreadsheet with just given columns.",
@@ -690,6 +838,10 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Example: Get sheet column names
+	//  sheet: spreadsheet { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
+	//  sheet .header? ; { "name" "age" "job_title" }
+	// Tags: #spreadsheet
 	"header?": {
 		Argsn: 1,
 		Doc:   "Gets the column names (header) as block.",
@@ -704,6 +856,11 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Example: Get sheet column names
+	//  sheet: spreadsheet { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
+	//  sheet .column? 'name ; => { "Bob" "Alice" "Charlie" }
+	// Tags: #spreadsheet
 	"column?": {
 		Argsn: 2,
 		Doc:   "Gets all values of a column as a block.",
@@ -723,6 +880,14 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Example: Drop "job_title" column from sheet
+	//  sheet: spreadsheet { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
+	//  sheet .drop-column 'job_title ;
+	// Example: Drop name and age columns from sheet
+	//  sheet: spreadsheet { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
+	//  sheet .drop-column { "name" "age" } ;
+	// Tags: #spreadsheet
 	"drop-column": {
 		Argsn: 2,
 		Doc:   "Remove a column from a spreadsheet. Returns new spreadsheet",
@@ -741,6 +906,10 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "drop-column")
 		},
 	},
+	// Example: Add a column to a sheet
+	//  sheet: spreadsheet { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
+	//  sheet .add-column! 'job_title { "Jantior" "Librarian" "Line Cook" } ;
+	// Tags: #spreadsheet
 	"add-column!": {
 		Argsn: 4,
 		Doc:   "Adds a new column to spreadsheet. Changes in-place and returns the new spreadsheet.",
@@ -794,6 +963,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Tags: #spreadsheet
 	"add-indexes!": {
 		Argsn: 2,
 		Doc:   "Creates an index for all values in the provided columns. Changes in-place and returns the new spreadsheet.",
@@ -824,6 +994,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Tags: #spreadsheet
 	"indexes?": {
 		Argsn: 1,
 		Doc:   "Returns the columns that are indexed in a spreadsheet.",
@@ -840,6 +1011,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Tags: #spreadsheet
 	"autotype": {
 		Argsn: 2,
 		Doc:   "Takes a spreadsheet and tries to determine and change the types of columns.",
@@ -857,6 +1029,11 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Example: join two spreadsheets, putting in empty cells if the left sheet doesn't have a value
+	//  names: spreadsheet { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
+	//  houses: spreadsheet { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
+	//  names .left-join houses 'id 'id
+	// Tags: #spreadsheet
 	"left-join": {
 		Argsn: 4,
 		Doc:   "Left joins two spreadsheets on the given columns.",
@@ -889,6 +1066,11 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Example: join two spreadsheets
+	//  names: spreadsheet { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
+	//  houses: spreadsheet { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
+	//  names .inner-join houses 'id 'id
+	// Tags: #spreadsheet
 	"inner-join": {
 		Argsn: 4,
 		Doc:   "Inner joins two spreadsheets on the given columns.",
@@ -921,6 +1103,11 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Example: group spreadsheet rows by name, runing various aggregations on the val column
+	//  spreadsheet { "name" "val" } { "a" 1 "b" 6 "a" 5 "b" 10 "a" 7 }
+	// 	|group-by 'name { 'name count 'val sum 'val min 'val max 'val avg }
+	// 	|order-by! 'name 'asc
+	// Tags: #spreadsheet
 	"group-by": {
 		Argsn: 3,
 		Doc:   "Groups a spreadsheet by the given column and (optional) aggregations.",
