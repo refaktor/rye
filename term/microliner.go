@@ -287,15 +287,15 @@ func NewMicroLiner(ch chan KeyEvent, sb func(msg string), el func(line string) s
 
 func (s *MLState) getColumns() bool {
 	s.columns = GetTerminalColumns()
-	fmt.Print("*getColumns* : ")
-	fmt.Println(s.columns)
+	// fmt.Print("*getColumns* : ")
+	// fmt.Println(s.columns)
 	return true
 }
 
 func (s *MLState) SetColumns(cols int) bool {
 	s.columns = cols
-	fmt.Print("*setColumns* : ")
-	fmt.Println(s.columns)
+	//	fmt.Print("*setColumns* : ")
+	//	fmt.Println(s.columns)
 	return true
 }
 
@@ -601,7 +601,7 @@ startOfHere:
 	} else {
 		s.sendBack("   ")
 		p = []rune("   ")
-		multiline = false
+		//// WWW multiline = false
 	}
 
 	// defer s.stopPrompt()
@@ -881,6 +881,7 @@ startOfHere:
 					}
 					xx := s.enterLine(string(line))
 					pos = 0
+					multiline = false
 					if xx == "next line" {
 						multiline = true
 					} else {
@@ -935,7 +936,12 @@ startOfHere:
 						s.doBeep()
 					}
 				case 38: // Up
-					histPrev()
+					if multiline {
+						CurUp(1)
+						fmt.Println("*")
+					} else {
+						histPrev()
+					}
 				case 40: // Down
 					histNext()
 				case 36: // Home
