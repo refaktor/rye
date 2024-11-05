@@ -312,8 +312,34 @@ func (s Spreadsheet) Equal(o Object) bool {
 }
 
 func (s Spreadsheet) Dump(e Idxs) string {
-	// TODO
-	return fmt.Sprintf("\"serlization of %s is not yet supported\" ", s.Inspect(e))
+	var sb strings.Builder
+	sb.WriteString("spreadsheet {")
+
+	for _, col := range s.Cols {
+		sb.WriteString(" ")
+		sb.WriteString("\"")
+		sb.WriteString(col)
+		sb.WriteString("\"")
+	}
+	sb.WriteString(" } [")
+
+	for _, row := range s.Rows {
+		for _, val := range row.Values {
+			sb.WriteString(" ")
+			ryeVal := ToRyeValue(val)
+			if ryeVal != nil {
+				sb.WriteString(ryeVal.Dump(e))
+			} else {
+				sb.WriteString("_")
+			}
+		}
+		// Fill in missing columns (if they exist) with void (_)
+		for i := len(row.Values); i < len(s.Cols); i++ {
+			sb.WriteString(" _")
+		}
+	}
+	sb.WriteString(" ]")
+	return sb.String()
 }
 
 func (s SpreadsheetRow) GetKind() int {
