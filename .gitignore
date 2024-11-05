@@ -43,6 +43,7 @@ dist/
 tests/*.html
 shell_*.rye
 console_*.rye
+console_*.rye.enc
 
 buildtemp/main.rye
 *.bson
