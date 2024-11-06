@@ -269,9 +269,11 @@ type MLState struct {
 	lastLineString bool
 	prevLines      int
 	prevCursorLine int
-	// killRing *ring.Ring
-	completer WordCompleter
+	completer      WordCompleter
+	lines          []string // added for the multiline behaviour
+	currline       int      // same
 	// pending     []rune
+	// killRing *ring.Ring
 }
 
 // NewLiner initializes a new *State, and sets the terminal into raw mode. To
@@ -701,22 +703,19 @@ startOfHere:
 		haveNext:
 			if next.Ctrl {
 				switch strings.ToLower(next.Key) {
+				// next line
 				case "x":
-					// TEMP copy of code below ... refactor
 					historyStale = true
 					s.lastLineString = false
-					// trace2("NL")
 					s.sendBack(fmt.Sprintf("%s⏎\n%s", color_emph, reset))
 					if s.inString {
 						s.lastLineString = true
 					}
-					s.enterLine(string(line) + " ")
+					// DONT SEND LINE BACK BUT STORE IT
+					// s.enterLine(string(line) + " ")
+					s.lines = append(s.lines, string(line))
 					pos = 0
-					//if xx == "next line" {
 					multiline = true
-					//} else {
-					//	s.sendBack("") // WW?
-					//}
 					line = make([]rune, 0)
 					trace(line)
 					goto startOfHere
@@ -861,7 +860,24 @@ startOfHere:
 				}
 			} else {
 				switch next.Code {
-				case 13: // Enter
+				case 13: // Enter Newline
+					if s.inString {
+						// This is copy from ctrl+x code above ... deduplicate and systemize TODO
+						historyStale = true
+						s.lastLineString = false
+						s.sendBack(fmt.Sprintf("%s⏎\n%s", color_emph, reset))
+						if s.inString {
+							s.lastLineString = true
+						}
+						// DONT SEND LINE BACK BUT STORE IT
+						// s.enterLine(string(line) + " ")
+						s.lines = append(s.lines, string(line))
+						pos = 0
+						multiline = true
+						line = make([]rune, 0)
+						trace(line)
+						goto startOfHere
+					}
 					if tabCompletionWasActive {
 						// TODO --- make it into a function - deduplicate
 						fmt.Println("")
@@ -879,7 +895,15 @@ startOfHere:
 					} else {
 						s.sendBack("\n")
 					}
-					xx := s.enterLine(string(line))
+					xx := ""
+					if multiline {
+						s.lines = append(s.lines, string(line))
+						xx = s.enterLine(strings.Join(s.lines, " "))
+
+					} else {
+						xx = s.enterLine(string(line))
+
+					}
 					pos = 0
 					multiline = false
 					if xx == "next line" {
@@ -938,7 +962,14 @@ startOfHere:
 				case 38: // Up
 					if multiline {
 						CurUp(1)
-						fmt.Println("*")
+						// append the last line -- only when in last line but ok for now
+						if s.currline == 0 {
+							s.lines = append(s.lines, string(line))
+						} else {
+							s.lines[len(s.lines)-1-s.currline] = string(line)
+						}
+						s.currline += 1 // later increment
+						line = []rune(s.lines[len(s.lines)-1-s.currline])
 					} else {
 						histPrev()
 					}
