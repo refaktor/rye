@@ -527,7 +527,10 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 	// userHomeDir, _ := os.UserHomeDir()
 	// profile_path := filepath.Join(userHomeDir, ".rye-profile")
 
-	fmt.Println("Welcome to Rye console. Use lc to list current or lcp and lcp\\ \"pri\" to list parent contexts.")
+	// fmt.Println("Welcome to Rye console. Use lc to list current or lcp and lcp\\ \"pri\" to list parent contexts.")
+	fmt.Println("Welcome to Rye console. We're still W-I-P. Visit \033[38;5;14mryelang.org\033[0m for more info.")
+	fmt.Println("- \033[38;5;246mtype in lcp (list context parent) too see functions, or lc to see your context\033[0m")
+	//fmt.Println("--------------------------------------------------------------------------------")
 
 	//if _, err := os.Stat(profile_path); err == nil {
 	//content, err := os.ReadFile(profile_path)
