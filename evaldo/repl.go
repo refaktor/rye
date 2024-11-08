@@ -192,6 +192,8 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 		es.LiveObj.PsMutex.Unlock()
 	}
 
+	// if last character is space is turns to multiline more and doesn't eval yet, but we
+	// want to move this to microliner, so we can edit multiple lines there
 	multiline := len(code) > 1 && code[len(code)-1:] == " "
 
 	comment := regexp.MustCompile(`\s*;`)
@@ -371,7 +373,7 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 		// #TODO don't display more than N words
 		// #TODO make current word bold
 
-		// # TRICK: we don't have the cursor position, but the caller code handles that already so we can suggest in the middle
+		// # TRICK: we don't have the cursor position, but the caller code handles that already so we can suggest in the 	middle
 		suggestions := make([]string, 0)
 		var wordpart string
 		spacePos := strings.LastIndex(line, " ")

@@ -269,9 +269,11 @@ type MLState struct {
 	lastLineString bool
 	prevLines      int
 	prevCursorLine int
-	// killRing *ring.Ring
-	completer WordCompleter
+	completer      WordCompleter
+	lines          []string // added for the multiline behaviour
+	currline       int      // same
 	// pending     []rune
+	// killRing *ring.Ring
 }
 
 // NewLiner initializes a new *State, and sets the terminal into raw mode. To
@@ -287,15 +289,15 @@ func NewMicroLiner(ch chan KeyEvent, sb func(msg string), el func(line string) s
 
 func (s *MLState) getColumns() bool {
 	s.columns = GetTerminalColumns()
-	fmt.Print("*getColumns* : ")
-	fmt.Println(s.columns)
+	// fmt.Print("*getColumns* : ")
+	// fmt.Println(s.columns)
 	return true
 }
 
 func (s *MLState) SetColumns(cols int) bool {
 	s.columns = cols
-	fmt.Print("*setColumns* : ")
-	fmt.Println(s.columns)
+	//	fmt.Print("*setColumns* : ")
+	//	fmt.Println(s.columns)
 	return true
 }
 
@@ -581,6 +583,16 @@ func (s *MLState) refreshSingleLine(prompt []rune, buf []rune, pos int) error {
 	return nil
 }
 
+func getLengthOfLastLine(input string) (int, bool) {
+	if !strings.Contains(input, "\n") {
+		return len(input), false
+	}
+
+	lines := strings.Split(input, "\n")
+	lastLine := lines[len(lines)-1]
+	return len(lastLine) - 3, true // for the prefix because currently string isn't padded on left line TODO unify this
+}
+
 // signals end-of-file by pressing Ctrl-D.
 func (s *MLState) MicroPrompt(prompt string, text string, pos int, ctx1 context.Context) (string, error) {
 	// history related
@@ -601,7 +613,7 @@ startOfHere:
 	} else {
 		s.sendBack("   ")
 		p = []rune("   ")
-		multiline = false
+		//// WWW multiline = false
 	}
 
 	// defer s.stopPrompt()
@@ -637,7 +649,11 @@ startOfHere:
 			}
 			historyPos--
 			line = []rune(historyPrefix[historyPos])
-			pos = len(line)
+			pos, multiline = getLengthOfLastLine(string(line)) // TODO
+			if multiline {
+				s.lines = strings.Split(string(line), "\n")
+				s.currline = len(s.lines) - 1
+			}
 			s.needRefresh = true
 		} else {
 			s.doBeep()
@@ -657,7 +673,11 @@ startOfHere:
 			} else {
 				line = []rune(historyPrefix[historyPos])
 			}
-			pos = len(line)
+			pos, multiline = getLengthOfLastLine(string(line))
+			if multiline {
+				s.lines = strings.Split(string(line), "\n")
+				s.currline = len(s.lines) - 1
+			}
 			s.needRefresh = true
 		} else {
 			s.doBeep()
@@ -700,23 +720,25 @@ startOfHere:
 			///// pLen := countGlyphs(p)
 		haveNext:
 			if next.Ctrl {
+				switch next.Code {
+				case 13: // Enter Newline
+					fmt.Println("CLCLCLCLCLC")
+				}
 				switch strings.ToLower(next.Key) {
+				// next line
 				case "x":
-					// TEMP copy of code below ... refactor
 					historyStale = true
 					s.lastLineString = false
-					// trace2("NL")
-					s.sendBack(fmt.Sprintf("%s⏎\n%s", color_emph, reset))
+					s.sendBack(fmt.Sprintf("%s\n%s", color_emph, reset)) // ⏎
 					if s.inString {
 						s.lastLineString = true
 					}
-					s.enterLine(string(line) + " ")
+					// DONT SEND LINE BACK BUT STORE IT
+					// s.enterLine(string(line) + " ")
+					s.currline += 1
+					s.lines = append(s.lines, string(line))
 					pos = 0
-					//if xx == "next line" {
 					multiline = true
-					//} else {
-					//	s.sendBack("") // WW?
-					//}
 					line = make([]rune, 0)
 					trace(line)
 					goto startOfHere
@@ -861,7 +883,25 @@ startOfHere:
 				}
 			} else {
 				switch next.Code {
-				case 13: // Enter
+				case 13: // Enter Newline
+					if s.inString {
+						// This is copy from ctrl+x code above ... deduplicate and systemize TODO
+						historyStale = true
+						s.lastLineString = false
+						s.sendBack(fmt.Sprintf("%s\n%s", color_emph, reset)) //
+						if s.inString {
+							s.lastLineString = true
+						}
+						// DONT SEND LINE BACK BUT STORE IT
+						// s.enterLine(string(line) + " ")
+						s.lines = append(s.lines, string(line))
+						pos = 0
+						multiline = true
+						s.currline += 1
+						line = make([]rune, 0)
+						trace(line)
+						goto startOfHere
+					}
 					if tabCompletionWasActive {
 						// TODO --- make it into a function - deduplicate
 						fmt.Println("")
@@ -872,20 +912,36 @@ startOfHere:
 					s.lastLineString = false
 					// trace2("NL")
 					if len(line) > 0 && unicode.IsSpace(line[len(line)-1]) {
-						s.sendBack(fmt.Sprintf("%s⏎\n%s", color_emph, reset))
+						s.sendBack(fmt.Sprintf("%s\n%s", color_emph, reset))
 						if s.inString {
 							s.lastLineString = true
 						}
 					} else {
 						s.sendBack("\n")
 					}
-					xx := s.enterLine(string(line))
+					xx := ""
+					if multiline {
+						// fmt.Println(s.currline)
+						// fmt.Println(len(s.lines))
+						if s.currline > len(s.lines)-1 {
+							s.lines = append(s.lines, string(line))
+						} else {
+							s.lines[s.currline] = string(line)
+						}
+						xx = s.enterLine(strings.Join(s.lines, "\n"))
+					} else {
+						xx = s.enterLine(string(line))
+
+					}
 					pos = 0
+					multiline = false
 					if xx == "next line" {
 						multiline = true
 					} else {
 						s.sendBack("") // WW?
 					}
+					s.currline = 0
+					s.lines = make([]string, 0)
 					line = make([]rune, 0)
 					trace(line)
 					goto startOfHere
@@ -935,9 +991,39 @@ startOfHere:
 						s.doBeep()
 					}
 				case 38: // Up
-					histPrev()
+					if multiline {
+						if s.currline > 0 { //  len(s.lines) {
+							CurUp(1)
+							// append the last line -- only when in last line but ok for now
+							if s.currline > len(s.lines)-1 {
+								s.lines = append(s.lines, string(line))
+							} else {
+								s.lines[s.currline] = string(line)
+							}
+							s.currline -= 1                    // later increment
+							line = []rune(s.lines[s.currline]) // + "⏎")
+							if pos > len(line) {
+								pos = len(line) - 1
+							}
+						}
+					} else {
+						histPrev()
+					}
 				case 40: // Down
-					histNext()
+					if multiline {
+						if s.currline < len(s.lines)-1 {
+							CurDown(1)
+							// append the last line -- only when in last line but ok for now
+							s.lines[s.currline] = string(line)
+							s.currline += 1                    // later increment
+							line = []rune(s.lines[s.currline]) // + "⏎...")
+							if pos > len(line) {
+								pos = len(line) - 1
+							}
+						}
+					} else {
+						histNext()
+					}
 				case 36: // Home
 					pos = 0
 				case 35: // End

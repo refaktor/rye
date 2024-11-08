@@ -64,7 +64,7 @@ func (e RyeCtx) GetState() map[int]Object {
 
 func (e RyeCtx) Print(idxs Idxs) string {
 	var bu strings.Builder
-	bu.WriteString("[Context (" + e.Kind.Print(idxs) + "): ")
+	bu.WriteString("[Context (" + e.Kind.Print(idxs) + ") \"" + e.Doc + "\": ")
 	for k, v := range e.state {
 		bu.WriteString(idxs.GetWord(k) + ": " + v.Inspect(idxs) + " ")
 	}
@@ -251,7 +251,7 @@ func (e *RyeCtx) Get2(word int) (Object, bool, *RyeCtx) {
 
 func (e *RyeCtx) Set(word int, val Object) Object {
 	if _, exists := e.state[word]; exists {
-		return NewError("Can't set already set word, try using modword! FIXME !")
+		return *NewError("Can't set already set word, try using modword! FIXME !")
 	} else {
 		e.state[word] = val
 		return val

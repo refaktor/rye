@@ -924,13 +924,15 @@ var builtins = map[string]*env.Builtin{
 				return *sp
 			case *env.Block:
 				return *sp
+			case *env.RyeCtx:
+				return *sp
 			case *env.String:
 				return *sp
 			case *env.Native:
 				sp.Value = env.DereferenceAny(sp.Value)
 				return *sp
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "thaw")
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType, env.DictType, env.ListType, env.BlockType, env.StringType, env.NativeType, env.CtxType}, "thaw")
 			}
 		},
 	},
@@ -3181,6 +3183,10 @@ var builtins = map[string]*env.Builtin{
 				s1.Parent = ps.Ctx // TODO ... this is temporary so ccp works, but some other method must be figured out as changing the parent is not OK
 				ps.Ctx = &s1
 				return s1
+			case *env.RyeCtx:
+				s1.Parent = ps.Ctx // TODO ... this is temporary so ccp works, but some other method must be figured out as changing the parent is not OK
+				ps.Ctx = s1
+				return s1
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "cc")
 			}
@@ -3204,7 +3210,11 @@ var builtins = map[string]*env.Builtin{
 			switch word := arg0.(type) {
 			case env.Word:
 				newctx := env.NewEnv(ps.Ctx)
-				ps.Ctx.Set(word.Index, *newctx)
+				ret := ps.Ctx.Set(word.Index, newctx)
+				s, ok := ret.(env.Error)
+				if ok {
+					return s
+				}
 				ctx := ps.Ctx
 				ps.Ctx = newctx // make new context with current par
 				return *ctx
@@ -7748,6 +7758,32 @@ var builtins = map[string]*env.Builtin{
 				return *env.NewInteger(int64(days))
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.TimeType}, "days-in-month?")
+			}
+		},
+	},
+
+	"time?": {
+		Argsn: 1,
+		Doc:   "Returns Time part of a datetime.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Time:
+				return *env.NewString(s1.Value.Format("15:04:05"))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TimeType}, "hour?")
+			}
+		},
+	},
+
+	"date?": {
+		Argsn: 1,
+		Doc:   "Returns date part of datetime.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Time:
+				return *env.NewString(s1.Value.Format("2006-01-02"))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TimeType}, "hour?")
 			}
 		},
 	},
