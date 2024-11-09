@@ -1605,15 +1605,13 @@ func LeftJoin(ps *env.ProgramState, s1 env.Spreadsheet, s2 env.Spreadsheet, col1
 		if err != nil {
 			return MakeError(ps, fmt.Sprintf("Couldn't retrieve value at row %d (%s)", i, err))
 		}
-		newRow := make([]any, len(combinedCols))
 
-		// the row id of the second spreadsheet that matches the current row
-		s2RowId := -1
+		// the row ids of the second spreadsheet which match the values in the current first spreadsheet row
+		var s2RowIds []int
 		// use index if available
 		if ix, ok := s2.Indexes[col2]; ok {
 			if rowIds, ok := ix[val1]; ok {
-				// if there are multiple rows  with the same value (ie. joining on non-unique column), just use the first one
-				s2RowId = rowIds[0]
+				s2RowIds = rowIds
 			}
 		} else {
 			for j, row2 := range s2.GetRows() {
@@ -1626,39 +1624,58 @@ func LeftJoin(ps *env.ProgramState, s1 env.Spreadsheet, s2 env.Spreadsheet, col1
 					val2o, ok1 := val2.(env.Object)
 					if ok1 {
 						if val1o.Equal(val2o) {
-							s2RowId = j
-							break
+							s2RowIds = append(s2RowIds, j)
+							continue
 						}
 					} else {
 						if env.RyeToRaw(val1o, ps.Idx) == val2 {
-							s2RowId = j
-							break
+							s2RowIds = append(s2RowIds, j)
+							continue
 						}
 					}
 				}
 				val1s, ok := val1.(string)
 				if ok {
 					if val1s == val2.(string) {
-						s2RowId = j
-						break
+						s2RowIds = append(s2RowIds, j)
+						continue
 					}
 				}
 			}
 		}
-		if innerJoin && s2RowId == -1 {
+		if innerJoin && len(s2RowIds) == 0 {
 			continue
 		}
-		copy(newRow, row1.Values)
-		if s2RowId > -1 {
-			for i, v := range s2.GetRow(ps, s2RowId).Values {
-				newRow[i+len(s1.Cols)] = v
+		buildCombinedRow := func(row1Values []any, row2Values []any) []any {
+			newRow := make([]any, len(combinedCols))
+			copy(newRow, row1Values)
+
+			if row2Values != nil {
+				// copy values from second spreadsheet
+				for i, v := range row2Values {
+					newRow[i+len(s1.Cols)] = v
+				}
+			} else {
+				// fill with Void{} values when no match
+				for i := len(s1.Cols); i < len(combinedCols); i++ {
+					newRow[i] = env.Void{}
+				}
+			}
+			return newRow
+		}
+
+		if len(s2RowIds) > 0 {
+			// add a row for each matching record from s2
+			for _, s2RowId := range s2RowIds {
+				row2Values := s2.GetRow(ps, s2RowId).Values
+				combinedValues := buildCombinedRow(row1.Values, row2Values)
+				nspr.AddRow(*env.NewSpreadsheetRow(combinedValues, nspr))
 			}
 		} else {
-			for k := range s2.Cols {
-				newRow[k+len(s1.Cols)] = env.Void{}
-			}
+			// add a single row with Void values for s2 columns
+			combinedValues := buildCombinedRow(row1.Values, nil)
+			nspr.AddRow(*env.NewSpreadsheetRow(combinedValues, nspr))
 		}
-		nspr.AddRow(*env.NewSpreadsheetRow(newRow, nspr))
 	}
 	return *nspr
 }
