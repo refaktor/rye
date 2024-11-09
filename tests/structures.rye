@@ -651,6 +651,18 @@ section "Spreadsheet related functions"
 				houses .add-indexes! [ 'id ] ::houses ,
 				names .left-join houses 'id 'id 
 		} spreadsheet { "id" "name" "id_2" "house" } { 1 "Paul" 1 "Atreides" 2 "Chani" _ _ 3 "Vladimir" 3 "Harkonnen" }
+
+		equal {	a:: spreadsheet { "a" "b" } { 1 "one" 2 "two" } ,
+				c:: spreadsheet { "a" "c" } { 1 "ena" 1 "eden" 1 "eno" } ,
+				a .left-join c "a" "a"
+		} spreadsheet { "a" "b" "a_2" "c" } { 1 "one" 1 "ena" 1 "one" 1 "eden" 1 "one" 1 "eno" 2 "two" _ _ } 
+
+		; joining with an index on the second spreadsheet
+		equal {	a:: spreadsheet { "a" "b" } { 1 "one" 2 "two" } ,
+				c:: spreadsheet { "a" "c" } { 1 "ena" 1 "eden" 1 "eno" } ,
+				c .add-indexes! [ 'a ] ::c ,
+				a .left-join c "a" "a"
+		} spreadsheet { "a" "b" "a_2" "c" } { 1 "one" 1 "ena" 1 "one" 1 "eden" 1 "one" 1 "eno" 2 "two" _ _ } 
 	}
 
 	group "inner join"
@@ -668,6 +680,20 @@ section "Spreadsheet related functions"
 				houses .add-indexes! [ 'id ] ::houses ,
 				names .inner-join houses 'id 'id 
 		} spreadsheet { "id" "name" "id_2" "house" } { 1 "Paul" 1 "Atreides" 3 "Vladimir" 3 "Harkonnen" }
+
+
+		equal {	a:: spreadsheet { "a" "b" } { 1 "one" 2 "two" } ,
+				c:: spreadsheet { "a" "c" } { 1 "ena" 1 "eden" 1 "eno" } ,
+				a .inner-join c "a" "a"
+		} spreadsheet { "a" "b" "a_2" "c" } { 1 "one" 1 "ena" 1 "one" 1 "eden" 1 "one" 1 "eno" } 
+
+		; joining with an index on the second spreadsheet
+		equal {	a:: spreadsheet { "a" "b" } { 1 "one" 2 "two" } ,
+				c:: spreadsheet { "a" "c" } { 1 "ena" 1 "eden" 1 "eno" } ,
+				c .add-indexes! [ 'a ] ::c ,
+				a .inner-join c "a" "a"
+		} spreadsheet { "a" "b" "a_2" "c" } { 1 "one" 1 "ena" 1 "one" 1 "eden" 1 "one" 1 "eno" } 
+
 	}
 
 	group "group by"
