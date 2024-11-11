@@ -4,6 +4,9 @@
 package evaldo
 
 import (
+	"fmt"
+
+	"github.com/jinzhu/copier"
 	"github.com/refaktor/rye/env"
 
 	tgm "github.com/go-telegram-bot-api/telegram-bot-api"
@@ -57,7 +60,7 @@ func TelegramUpdateToRyeDict(update_ tgm.Update) env.Dict {
 
 var Builtins_telegrambot = map[string]*env.Builtin{
 
-	"new-telegram-bot": {
+	"bot": {
 		Argsn: 1,
 		Doc:   "Create new telegram bot using API value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -99,6 +102,27 @@ var Builtins_telegrambot = map[string]*env.Builtin{
 					}
 					ps.Ser = ser
 					return env.NewInteger(1)
+				case env.Function:
+					u := tgm.NewUpdate(0)
+					u.Timeout = 60
+
+					updates, _ := bot.Value.(*tgm.BotAPI).GetUpdatesChan(u)
+
+					for update := range updates {
+						dict := TelegramUpdateToRyeDict(update)
+						ps.FailureFlag = false
+						ps.ErrorFlag = false
+						ps.ReturnFlag = false
+						psTemp := env.ProgramState{}
+						err := copier.Copy(&psTemp, &ps)
+						if err != nil {
+							fmt.Println(err.Error())
+							// TODO return makeError(ps, err.Error())
+						}
+						CallFunctionArgsN(code, ps, nil, dict)
+					}
+					return env.NewInteger(1)
+
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "telegram-bot//on-update")
 				}
@@ -116,7 +140,7 @@ var Builtins_telegrambot = map[string]*env.Builtin{
 			case env.Native:
 				switch bot := arg1.(type) {
 				case env.Native:
-					_, err := bot.Value.(*tgm.BotAPI).Send(msg.Value.(tgm.MessageConfig))
+					_, err := bot.Value.(*tgm.BotAPI).Send(msg.Value.(*tgm.MessageConfig))
 					if err != nil {
 						return makeError(ps, err.Error())
 					}
@@ -130,7 +154,29 @@ var Builtins_telegrambot = map[string]*env.Builtin{
 
 		},
 	},
-	"new-telegram-message": {
+
+	"telegram-message//parse-mode!": {
+		Argsn: 2,
+		Doc:   "Set the parse mode of the message",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch msg := arg0.(type) {
+			case env.Native:
+				switch mode := arg1.(type) {
+				case env.String:
+					message, _ := msg.Value.(tgm.MessageConfig)
+					message.ParseMode = mode.Value
+					return msg
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.NativeType}, "telegram-message//send")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "telegram-message//send")
+			}
+
+		},
+	},
+
+	"message": {
 		Argsn: 2,
 		Doc:   "Create new telegram bot message.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -139,7 +185,8 @@ var Builtins_telegrambot = map[string]*env.Builtin{
 				switch txt := arg1.(type) {
 				case env.String:
 					msg := tgm.NewMessage(cid.Value, txt.Value)
-					return *env.NewNative(ps.Idx, msg, "telegram-message")
+					msg.ParseMode = "HTML"
+					return *env.NewNative(ps.Idx, &msg, "telegram-message")
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.StringType}, "new-telegram-message")
 				}

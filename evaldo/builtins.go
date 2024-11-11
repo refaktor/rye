@@ -485,6 +485,20 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"to-char": { // ***
+		Argsn: 1,
+		Doc:   "Tries to turn a Rye value to string.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch value := arg0.(type) {
+			case env.Integer:
+				return *env.NewString(string(value.Value))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "to-char")
+			}
+		},
+	},
+
 	// Tests:
 	// equals { list [ 1 2 3 ] |to-block |first } 1
 	"to-block": { // ***
@@ -2687,13 +2701,13 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"do\\in\\try": { // **
+	"try\\in": { // **
 		Argsn: 2,
 		Doc:   "Takes a Context and a Block. It Does a block inside a given Context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch ctx := arg0.(type) {
+			switch ctx := arg1.(type) {
 			case env.RyeCtx:
-				switch bloc := arg1.(type) {
+				switch bloc := arg0.(type) {
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
@@ -2809,6 +2823,9 @@ var builtins = map[string]*env.Builtin{
 				}
 				out := <-outC
 
+				if ps.ErrorFlag {
+					return ps.Res
+				}
 				// reading our temp stdout
 				// fmt.Println("previous output:")
 				// fmt.Print(out)
@@ -8344,7 +8361,6 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_bcrypt, ps, "bcrypt")
 	RegisterBuiltins2(Builtins_email, ps, "email")
 	RegisterBuiltins2(Builtins_structures, ps, "structs")
-	RegisterBuiltins2(Builtins_telegrambot, ps, "telegram")
 	RegisterBuiltins2(Builtins_spreadsheet, ps, "spreadsheet")
 	RegisterBuiltins2(Builtins_vector, ps, "vector")
 	RegisterBuiltins2(Builtins_bson, ps, "bson")
@@ -8352,6 +8368,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_mail, ps, "mail")
 	RegisterBuiltins2(Builtins_ssh, ps, "ssh")
 	RegisterBuiltins2(Builtins_console, ps, "console")
+	RegisterBuiltinsInContext(Builtins_telegrambot, ps, "telegram")
 	RegisterBuiltinsInContext(Builtins_math, ps, "math")
 	osctx := RegisterBuiltinsInContext(Builtins_os, ps, "os")
 	RegisterBuiltinsInSubContext(Builtins_pipes, ps, osctx, "pipes")
