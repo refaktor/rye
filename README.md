@@ -306,7 +306,8 @@ Rye has Syntax highlighting for Emacs and VS Code. For VS Code just search for *
 
 ## Rye related projects
 
-  * [Rye-fyne](https://github.com/refaktor/rye-fyne) - external binding for Fyne GUI toolkit (wip)
+  * [Rye-fyne](https://github.com/refaktor/rye-fyne) - external binding for Fyne GUI toolkit
+  * [Rye-gio](https://github.com/refaktor/rye-gio) - external binding for Gioui GUI toolkit (wip)
   * [Rye-ebitengine](https://github.com/refaktor/rye-ebitengine) - external binding for Ebitengine game engine (wip)
   * [ryegen](https://github.com/refaktor/ryegen) - Rye binging generation toolkit (wip)
 
