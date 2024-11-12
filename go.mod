@@ -7,6 +7,7 @@ toolchain go1.23.1
 retract v0.0.11 // Published accidentally with a bug
 
 require (
+	github.com/atotto/clipboard v0.1.4
 	github.com/aws/aws-sdk-go-v2 v1.32.3
 	github.com/aws/aws-sdk-go-v2/config v1.28.1
 	github.com/aws/aws-sdk-go-v2/service/ses v1.28.3

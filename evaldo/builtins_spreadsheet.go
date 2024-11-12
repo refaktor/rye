@@ -477,7 +477,9 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 							case env.Decimal:
 								sv = fmt.Sprintf("%f", tv.Value)
 							}
-							strVals[i] = sv
+							if i < cLen {
+								strVals[i] = sv
+							}
 						}
 						err := csvWriter.Write(strVals)
 						if err != nil {

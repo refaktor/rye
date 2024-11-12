@@ -1,5 +1,5 @@
-//go:build no_os
-// +build no_os
+//go:build no_os || b_wasm
+// +build no_os b_wasm
 
 package evaldo
 
