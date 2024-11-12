@@ -1,5 +1,4 @@
-//go:build !no_devops
-// +build !no_devops
+//go:build !no_os && !b_wasm
 
 package evaldo
 
