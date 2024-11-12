@@ -5,11 +5,13 @@ package evaldo
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/atotto/clipboard"
 	"github.com/refaktor/rye/env"
 
 	"github.com/shirou/gopsutil/v3/disk"
@@ -333,6 +335,81 @@ var Builtins_os = map[string]*env.Builtin{
 			default:
 				return *MakeArgError(ps, 1, []env.Type{env.IntegerType}, "process")
 			}
+		},
+	},
+
+	"ip-lookup": {
+		Argsn: 1,
+		Doc:   "Get address of an IP.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch ip := arg0.(type) {
+			case env.String:
+				names, err := net.LookupAddr(ip.Value)
+				if err != nil {
+					return MakeBuiltinError(ps, err.Error(), "ip-lookup")
+				}
+
+				items := make([]env.Object, len(names))
+
+				for i, name := range names {
+					items[i] = *env.NewString(name)
+				}
+				return *env.NewBlock(*env.NewTSeries(items))
+			default:
+				return *MakeArgError(ps, 1, []env.Type{env.StringType}, "ip-lookup")
+			}
+		},
+	},
+
+	"address-lookup": {
+		Argsn: 1,
+		Doc:   "Get IP of an address.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch ip := arg0.(type) {
+			case env.String:
+				names, err := net.LookupIP(ip.Value)
+				if err != nil {
+					return MakeBuiltinError(ps, err.Error(), "ip-lookup")
+				}
+
+				items := make([]env.Object, len(names))
+
+				for i, name := range names {
+					items[i] = *env.NewString(name.String())
+				}
+				return *env.NewBlock(*env.NewTSeries(items))
+			default:
+				return *MakeArgError(ps, 1, []env.Type{env.StringType}, "ip-lookup")
+			}
+		},
+	},
+
+	"write\\clipboard": {
+		Argsn: 1,
+		Doc:   "Writes value to OS clipboard",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.String:
+				err := clipboard.WriteAll(val.Value)
+				if err != nil {
+					return MakeBuiltinError(ps, err.Error(), "write\\clipboard")
+				}
+				return arg0
+			default:
+				return *MakeArgError(ps, 1, []env.Type{env.StringType}, "write\\clipboard")
+			}
+		},
+	},
+
+	"read\\clipboard": {
+		Argsn: 0,
+		Doc:   "Reads value from OS clipboard",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			val, err := clipboard.ReadAll()
+			if err != nil {
+				return MakeBuiltinError(ps, err.Error(), "read\\clipboard")
+			}
+			return *env.NewString(val)
 		},
 	},
 }

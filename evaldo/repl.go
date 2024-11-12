@@ -379,7 +379,7 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 		spacePos := strings.LastIndex(line, " ")
 		var prefix string
 		if spacePos < 0 {
-			fmt.Println("*")
+			// fmt.Println("*")
 			wordpart = line
 			prefix = ""
 		} else {

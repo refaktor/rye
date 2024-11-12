@@ -48,6 +48,7 @@ require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/RoaringBitmap/roaring v1.9.3 // indirect
 	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
+	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.42 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.18 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.22 // indirect
