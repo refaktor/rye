@@ -25,6 +25,13 @@ type builtinInfo struct {
 	tags      []string   // extracted from comment
 }
 
+type counters struct {
+	functions        int
+	tested_functions int
+	tests            int
+	examples         int
+}
+
 // Helper function to get comments above the map key
 func getCommentsAboveKey(fset *token.FileSet, comments []*ast.CommentGroup, keyPos token.Pos) string {
 	for _, commentGroup := range comments {
@@ -33,6 +40,43 @@ func getCommentsAboveKey(fset *token.FileSet, comments []*ast.CommentGroup, keyP
 		}
 	}
 	return ""
+}
+
+// Helper function to get comments above the map key
+func parseCommentsAboveKey(input string, info *builtinInfo) builtinInfo {
+
+	// info := builtinInfo{}
+
+	// Step 1: Split input into lines and trim whitespace
+	lines := strings.Split(strings.TrimSpace(input), "\n")
+
+	// Step 2: Separate header and tests
+	var headerLines []string
+	//	var testLines []string
+	isTestSection := false
+
+	fmt.Println("!!!!!!!!!!!!!!!**************")
+
+	for _, line := range lines {
+		line = strings.TrimSpace(line) // Remove leading and trailing whitespace
+		fmt.Println("LLLL:" + line)
+		fmt.Println(line)
+		if line == "Tests:" {
+			fmt.Println("***** TEST ****")
+			isTestSection = true
+			continue
+		}
+
+		if isTestSection {
+			fmt.Println(line)
+			info.tests = append(info.tests, line)
+		} else {
+			headerLines = append(headerLines, line)
+		}
+	}
+	// Step 3: Combine the header lines into a single string
+	info.doc = strings.Join(headerLines, "\n")
+	return *info
 }
 
 func main() {
@@ -58,6 +102,8 @@ func main() {
 		return
 	}
 
+	c := counters{0, 0, 0, 0}
+
 	// Traverse the AST and find map literals
 	ast.Inspect(node, func(n ast.Node) bool {
 		switch x := n.(type) {
@@ -78,9 +124,13 @@ func main() {
 							comment := getCommentsAboveKey(fset, node.Comments, key.Pos())
 							if comment != "" {
 								fmt.Printf("Comment above key: %s\n", strings.TrimSpace(comment))
+								info = parseCommentsAboveKey(comment, &info)
+								c.functions = c.functions + 1
+								if len(info.tests) > 0 {
+									c.tested_functions = c.tested_functions + 1
+									c.tests = c.tests + len(info.tests)
+								}
 							}
-							// TODO NEXT - make a function that parses the comment extracting doc, args (opt), examples, tests and tags
-							info.doc = strings.TrimSpace(comment)
 						}
 					}
 					infoList = append(infoList, info)
@@ -91,4 +141,8 @@ func main() {
 	})
 
 	fmt.Println(infoList)
+
+	fmt.Println("********")
+
+	fmt.Println(c)
 }
