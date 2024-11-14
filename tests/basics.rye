@@ -412,11 +412,11 @@ section "Doers and evaluators"
 		equal { try { 10 + unknown } |type? } 'error 
 	}
 	
-	group "do\in\try"
-	mold\nowrap ?do\in\try
+	group "try\in"
+	mold\nowrap ?try\in
 	{ { context } { block } }
 	{
-		equal { ctx: context { x: 101 } do\in\try ctx { x / 0 } |type? } 'error
+		equal { ctx: context { x: 101 } try\in { x / 0 } ctx |type? } 'error
 	}
 
 	group "vals"

@@ -408,8 +408,10 @@ func EvaluateLoadedValue(ps *env.ProgramState, block_ env.Object, script_ string
 var ShowResults bool
 
 var builtins = map[string]*env.Builtin{
-
-	"to-word": { // ***
+	// Tests:
+	// equal { to-word "test" } 'test
+	// error { to-word "123" }
+	"to-word": {
 		Argsn: 1,
 		Doc:   "Tries to change a Rye value to a word with same name.",
 		Pure:  true,
@@ -438,7 +440,13 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"to-integer": { // ***
+	// Tests:
+	// equal { to-integer "123" } 123
+	// equal { to-integer "123.4" } 123
+	// equal { to-integer "123.6" } 123
+	// equal { to-integer "123.4" } 123
+	// error { to-integer "abc" }
+	"to-integer": {
 		Argsn: 1,
 		Doc:   "Tries to change a Rye value (like string) to integer.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -457,9 +465,12 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"to-decimal": { // ***
+	// Tests:
+	// equal { to-decimal "123.4" } 123.4
+	// error { to-decimal "abc" }
+	"to-decimal": {
 		Argsn: 1,
-		Doc:   "Tries to change a Rye value (like string) to integer.",
+		Doc:   "Tries to change a Rye value (like string) to decimal.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch addr := arg0.(type) {
 			case env.String:
@@ -476,6 +487,11 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { to-string 'test } "test"
+	// equal { to-string 123 } "123"
+	// equal { to-string 123.4 } "123.4000"
+	// equal { to-string "test" } "test"
 	"to-string": { // ***
 		Argsn: 1,
 		Doc:   "Tries to turn a Rye value to string.",
@@ -485,9 +501,12 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { to-char 42 } "*"
+	// error { to-char "*" }
 	"to-char": { // ***
 		Argsn: 1,
-		Doc:   "Tries to turn a Rye value to string.",
+		Doc:   "Tries to turn a Rye value (like integer) to ascii character.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch value := arg0.(type) {
@@ -500,6 +519,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
+	// equals { list [ 1 2 3 ] |to-block |type } 'block
 	// equals { list [ 1 2 3 ] |to-block |first } 1
 	"to-block": { // ***
 		Argsn: 1,
@@ -515,6 +535,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equals { dict [ "a" 1 "b" 2 "c" 3 ] |to-context |type } 'context
+	// equals { dict [ "a" 1 ] |to-context do\in { a } } '1
 	"to-context": { // ***
 		Argsn: 1,
 		Doc:   "Takes a Dict and returns a Context with same names and values.",
@@ -531,6 +554,10 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equals { is-string "test" } 1
+	// equals { is-string 'test } 0
+	// equals { is-string 123 } 0
 	"is-string": { // ***
 		Argsn: 1,
 		Doc:   "Returns true if value is a string.",
@@ -544,6 +571,10 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equals { is-integer 123 } 1
+	// equals { is-integer 123.4 } 0
+	// equals { is-integer "123" } 0
 	"is-integer": { // ***
 		Argsn: 1,
 		Doc:   "Returns true if value is an integer.",
@@ -557,6 +588,10 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equals { is-decimal 123.0 } 1
+	// equals { is-decimal 123 } 0
+	// equals { is-decimal "123.4" } 0
 	"is-decimal": { // ***
 		Argsn: 1,
 		Doc:   "Returns true if value is a decimal.",
@@ -570,6 +605,10 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equals { is-number 123 } 1
+	// equals { is-number 123.4 } 1
+	// equals { is-number "123" } 0
 	"is-number": { // ***
 		Argsn: 1,
 		Doc:   "Returns true if value is a number (integer or decimal).",
@@ -583,6 +622,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equals { to-uri "https://example.com" } https://example.com
+	// error { to-uri "not-uri" }
 	"to-uri": { // ** TODO-FIXME: return possible failures
 		Argsn: 1,
 		Doc:   "Tries to change Rye value to an URI.",
@@ -598,6 +640,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equals { to-file "example.txt" } %example.txt
+	// error { to-file 123 }
 	"to-file": { // **  TODO-FIXME: return possible failures
 		Argsn: 1,
 		Doc:   "Tries to change Rye value to a file.",
@@ -613,7 +658,9 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-
+	// Tests:
+	// equals { type? "test" } 'string
+	// equals { type? 123.4 } 'decimal
 	"type?": { // ***
 		Argsn: 1,
 		Doc:   "Returns the type of Rye value as a word.",
@@ -623,6 +670,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equals { types? { "test" 123 } } { string integer }
 	"types?": { // TODO
 		Argsn: 1,
 		Doc:   "Returns the types of Rye values in a block or spreadsheet row as a block of words.",
@@ -656,8 +705,11 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	// NUMBERS
+	// ## WORING WITH NUMBERS
 
+	// Tests:
+	// equals { inc 123 } 124
+	// error { inc "123" }
 	"inc": { // ***
 		Argsn: 1,
 		Doc:   "Returns integer value incremented by 1.",
@@ -672,6 +724,10 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equals { is-positive 123 } 1
+	// equals { is-positive -123 } 0
+	// error { is-positive "123" }
 	"is-positive": { // ***
 		Argsn: 1,
 		Doc:   "Returns true if integer is positive.",
@@ -696,6 +752,10 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equals { is-zero 0 } 1
+	// equals { is-zero 123 } 0
+	// error { is-zero "123" }
 	"is-zero": { // ***
 		Argsn: 1,
 		Doc:   "Returns true if integer is zero.",
@@ -720,6 +780,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equals { a: 123 inc! 'a a } 124
+	// error { inc! 123 }
 	"inc!": { // ***
 		Argsn: 1,
 		Doc:   "Searches for a word and increments it's integer value in-place.",
@@ -745,6 +808,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equals { a: 123 dec! 'a a } 122
+	// error { dec! 123 }
 	"dec!": { // ***
 		Argsn: 1,
 		Doc:   "Searches for a word and increments it's integer value in-place.",
@@ -770,6 +836,10 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equals { a: 123 change! 333 'a a } 333
+	// equals { a: 123 change! 124 } 1
+	// equals { a: 123 change! 123 } 0
 	"change!": { // ***
 		Argsn: 2,
 		Doc:   "Searches for a word and changes it's value in-place. If value changes returns true otherwise false",
@@ -795,6 +865,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equals { set { a b } { 123 234 } b } 234
 	"set!": { // ***
 		Argsn: 2,
 		Doc:   "Set word to value or words by deconstructing a block",
