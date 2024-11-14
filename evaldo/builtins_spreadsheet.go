@@ -79,7 +79,15 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
-
+	// Example:
+	//  spreadsheet\columns { 'a 'b } { { 1 2 } { "x" "y" } }
+	"spreadsheet\\columns": {
+		Argsn: 2,
+		Doc:   "Creats a spreadsheet by accepting a block of columns",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
+			return SheetFromColumns(ps, arg0, arg1)
+		},
+	},
 	// Tests:
 	//  equals { to-spreadsheet dict { "a" 1 "a" b } |type? } 'spreadsheet
 	// Args:
@@ -1174,6 +1182,157 @@ func RyeValueToSpreadsheetRow(spr *env.Spreadsheet, obj env.Object) (bool, strin
 		return false, "", nil
 	}
 
+}
+
+func ColNames(ps *env.ProgramState, from env.Object, fnName string) ([]string, env.Object) {
+	switch columns := from.(type) {
+	case env.Block:
+		colNames := columns.Series
+		numCols := colNames.Len()
+		if numCols == 0 {
+			return nil, MakeBuiltinError(ps, "Block of column names is empty", fnName)
+		}
+		cols := make([]string, numCols)
+		for colNames.Pos() < numCols {
+			i := colNames.Pos()
+			k1 := colNames.Pop()
+			switch k := k1.(type) {
+			case env.String:
+				cols[i] = k.Value
+			case env.Word:
+				cols[i] = ps.Idx.GetWord(k.Index)
+			default:
+				return nil, MakeBuiltinError(ps, fmt.Sprintf("Expected a string or word instead of %V", k), fnName)
+			}
+			// TODO: Error here?
+		}
+		return cols, nil
+	case env.List:
+		colNames := columns.Data
+		numCols := len(colNames)
+		if numCols == 0 {
+			return nil, MakeBuiltinError(ps, "Block of column names is empty", fnName)
+		}
+		cols := make([]string, numCols)
+		for i, k1 := range colNames {
+			switch k := k1.(type) {
+			case env.String:
+				cols[i] = k.Value
+			case env.Word:
+				cols[i] = ps.Idx.GetWord(k.Index)
+			default:
+				return nil, MakeBuiltinError(ps, fmt.Sprintf("Expected a string or word instead of %V", k), fnName)
+			}
+			// TODO: Error here?
+		}
+		return cols, nil
+	default:
+		return nil, MakeBuiltinError(ps, fmt.Sprintf("Expected a block or a list instead of %V", from), fnName)
+	}
+}
+
+func MakeColError(ps *env.ProgramState, builtinName string, colName string, expectedRowCount int, actualRowCount int) *env.Error {
+	return MakeBuiltinError(
+		ps,
+		fmt.Sprintf("Column %s should have %d rows of data, but has %d instead",
+			colName,
+			expectedRowCount,
+			actualRowCount,
+		),
+		builtinName,
+	)
+}
+
+func LoadColumnData(ps *env.ProgramState, data any, colIdx int, numRows int, colData []env.SpreadsheetRow, cols []string) *env.Error {
+	switch colSeries := data.(type) {
+	case env.Block:
+		if colSeries.Series.Len() != numRows {
+			return MakeColError(ps, "spreadsheet\\columns", cols[colIdx], numRows, colSeries.Series.Len())
+		}
+		for rowIdx, value := range colSeries.Series.S {
+			colData[rowIdx].Values[colIdx] = value
+		}
+	case env.List:
+		if len(colSeries.Data) != numRows {
+			return MakeColError(ps, "spreadsheet\\columns", cols[colIdx], numRows, len(colSeries.Data))
+		}
+		for rowIdx, value := range colSeries.Data {
+			colData[rowIdx].Values[colIdx] = value
+		}
+	}
+	return nil
+}
+
+func GetNumRowsFrom(ps *env.ProgramState, data any) (int, *env.Error) {
+
+	switch firstCol := data.(type) {
+	case env.Block:
+		return firstCol.Series.Len(), nil
+	case env.List:
+		return len(firstCol.Data), nil
+	default:
+		return -1, MakeBuiltinError(ps, fmt.Sprintf("Expected a block or a list instead of %V", firstCol), "spreadsheet\\columns")
+	}
+
+}
+
+func SheetFromColumnsMapData(ps *env.ProgramState, cols []string, arg1 env.Object) env.Object {
+	spr := env.NewSpreadsheet(cols)
+	numCols := len(cols)
+
+	var colData []env.SpreadsheetRow
+
+	switch colSet := arg1.(type) {
+	case env.Block:
+		blockColData := colSet.Series.S
+		numRows, err := GetNumRowsFrom(ps, blockColData[0])
+		if err != nil {
+			return err
+		}
+
+		colData = make([]env.SpreadsheetRow, numRows)
+		for rowIdx := 0; rowIdx < numRows; rowIdx++ {
+			colData[rowIdx].Values = make([]any, numCols)
+		}
+
+		for colIdx, c := range blockColData {
+			err := LoadColumnData(ps, c, colIdx, numRows, colData, cols)
+			if err != nil {
+				return err
+			}
+		}
+		spr.Rows = colData
+		return spr
+	case env.List:
+		blockColData := colSet.Data
+		numRows, err := GetNumRowsFrom(ps, blockColData[0])
+		if err != nil {
+			return err
+		}
+
+		colData = make([]env.SpreadsheetRow, numRows)
+		for rowIdx := 0; rowIdx < numRows; rowIdx++ {
+			colData[rowIdx].Values = make([]any, numCols)
+		}
+		for colIdx, c := range blockColData {
+			err := LoadColumnData(ps, c, colIdx, numRows, colData, cols)
+			if err != nil {
+				return err
+			}
+		}
+		return spr
+	default:
+		return MakeBuiltinError(ps, fmt.Sprintf("Expected either a Block of a list of data columns, got %v instead", colSet), "spreadhseet\\columns")
+	}
+}
+
+func SheetFromColumns(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) (res env.Object) {
+	cols, err := ColNames(ps, arg0, "spreadsheet\\columns")
+	if err != nil {
+		return err
+	}
+
+	return SheetFromColumnsMapData(ps, cols, arg1)
 }
 
 func DropColumnBlock(ps *env.ProgramState, s env.Spreadsheet, names env.Block) env.Object {
