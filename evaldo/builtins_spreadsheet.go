@@ -79,7 +79,100 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Example:
+	//  spreadsheet\columns { 'a 'b } { { 1 2 } { "x" "y" } }
+	"spreadsheet\\columns": {
+		Argsn: 2,
+		Doc:   "Creats a spreadsheet by accepting a block of columns",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
+			switch columns := arg0.(type) {
+			case env.Block:
+				colNames := columns.Series
+				numCols := colNames.Len()
+				if numCols == 0 {
+					return MakeBuiltinError(ps, "Block of column names is empty", "spreadsheet\\columns")
+				}
+				cols := make([]string, numCols)
+				for colNames.Pos() < numCols {
+					i := colNames.Pos()
+					k1 := colNames.Pop()
+					switch k := k1.(type) {
+					case env.String:
+						cols[i] = k.Value
+					case env.Word:
+						cols[i] = ps.Idx.GetWord(k.Index)
+					default:
+						return MakeBuiltinError(ps, fmt.Sprintf("Expected a string or word instead of %V", k), "spreadsheet\\columns")
+					}
+					// TODO: Error here?
+				}
 
+				spr := env.NewSpreadsheet(cols)
+
+				var colData []env.SpreadsheetRow
+
+				switch colSet := arg1.(type) {
+				case env.Block:
+					blockColData := colSet.Series.S
+					var numRows int
+					switch firstCol := blockColData[0].(type) {
+					case env.Block:
+						numRows = firstCol.Series.Len()
+					case env.List:
+						numRows = len(firstCol.Data)
+					default:
+						return MakeBuiltinError(ps, fmt.Sprintf("Expected a block or a list instead of %V", firstCol), "spreadsheet\\columns")
+					}
+
+					colData = make([]env.SpreadsheetRow, numRows)
+					for rowIdx := 0; rowIdx < numRows; rowIdx++ {
+						colData[rowIdx].Values = make([]any, numCols)
+					}
+
+					for colIdx, c := range blockColData {
+						switch colSeries := c.(type) {
+						case env.Block:
+							if colSeries.Series.Len() != numRows {
+								return MakeBuiltinError(
+									ps,
+									fmt.Sprintf("Column %s should have %d rows of data, but has %d instead",
+										cols[colIdx],
+										numRows,
+										colSeries.Series.Len(),
+									),
+									"spreadsheet\\columns",
+								)
+							}
+							for rowIdx, value := range colSeries.Series.S {
+								colData[rowIdx].Values[colIdx] = value
+							}
+						case env.List:
+							if len(colSeries.Data) != numRows {
+								return MakeBuiltinError(
+									ps,
+									fmt.Sprintf("Column %s should have %d rows of data, but has %d instead",
+										cols[colIdx],
+										numRows,
+										len(colSeries.Data),
+									),
+									"spreadsheet\\columns",
+								)
+							}
+							for rowIdx, value := range colSeries.Data {
+								colData[rowIdx].Values[colIdx] = value
+							}
+						}
+					}
+					spr.Rows = colData
+					return spr
+				default:
+					return MakeBuiltinError(ps, "", "")
+				}
+			default:
+				return MakeBuiltinError(ps, "", "")
+			}
+		},
+	},
 	// Tests:
 	//  equals { to-spreadsheet dict { "a" 1 "a" b } |type? } 'spreadsheet
 	// Args:
