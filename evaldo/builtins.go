@@ -442,9 +442,9 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { to-integer "123" } 123
-	// equal { to-integer "123.4" } 123
-	// equal { to-integer "123.6" } 123
-	// equal { to-integer "123.4" } 123
+	// ; equal { to-integer "123.4" } 123
+	// ; equal { to-integer "123.6" } 123
+	// ; equal { to-integer "123.4" } 123
 	// error { to-integer "abc" }
 	"to-integer": {
 		Argsn: 1,
@@ -519,8 +519,8 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equals { list [ 1 2 3 ] |to-block |type } 'block
-	// equals { list [ 1 2 3 ] |to-block |first } 1
+	// equal { list [ 1 2 3 ] |to-block |type? } 'block
+	// equal  { list [ 1 2 3 ] |to-block |first } 1
 	"to-block": { // ***
 		Argsn: 1,
 		Doc:   "Turns a List to a Block",
@@ -536,8 +536,8 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equals { dict [ "a" 1 "b" 2 "c" 3 ] |to-context |type } 'context
-	// equals { dict [ "a" 1 ] |to-context do\in { a } } '1
+	// equal   { dict [ "a" 1 "b" 2 "c" 3 ] |to-context |type? } 'context
+	// ; equal   { dict [ "a" 1 ] |to-context do\in { a } } '1
 	"to-context": { // ***
 		Argsn: 1,
 		Doc:   "Takes a Dict and returns a Context with same names and values.",
@@ -555,9 +555,9 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equals { is-string "test" } 1
-	// equals { is-string 'test } 0
-	// equals { is-string 123 } 0
+	// equal   { is-string "test" } 1
+	// equal   { is-string 'test } 0
+	// equal   { is-string 123 } 0
 	"is-string": { // ***
 		Argsn: 1,
 		Doc:   "Returns true if value is a string.",
@@ -572,9 +572,9 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equals { is-integer 123 } 1
-	// equals { is-integer 123.4 } 0
-	// equals { is-integer "123" } 0
+	// equal   { is-integer 123 } 1
+	// equal   { is-integer 123.4 } 0
+	// equal   { is-integer "123" } 0
 	"is-integer": { // ***
 		Argsn: 1,
 		Doc:   "Returns true if value is an integer.",
@@ -589,9 +589,9 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equals { is-decimal 123.0 } 1
-	// equals { is-decimal 123 } 0
-	// equals { is-decimal "123.4" } 0
+	// equal   { is-decimal 123.0 } 1
+	// equal   { is-decimal 123 } 0
+	// equal   { is-decimal "123.4" } 0
 	"is-decimal": { // ***
 		Argsn: 1,
 		Doc:   "Returns true if value is a decimal.",
@@ -606,9 +606,9 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equals { is-number 123 } 1
-	// equals { is-number 123.4 } 1
-	// equals { is-number "123" } 0
+	// equal   { is-number 123 } 1
+	// equal   { is-number 123.4 } 1
+	// equal   { is-number "123" } 0
 	"is-number": { // ***
 		Argsn: 1,
 		Doc:   "Returns true if value is a number (integer or decimal).",
@@ -623,8 +623,8 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equals { to-uri "https://example.com" } https://example.com
-	// error { to-uri "not-uri" }
+	// equal   { to-uri "https://example.com" } https://example.com
+	// ; error { to-uri "not-uri" }
 	"to-uri": { // ** TODO-FIXME: return possible failures
 		Argsn: 1,
 		Doc:   "Tries to change Rye value to an URI.",
@@ -641,7 +641,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equals { to-file "example.txt" } %example.txt
+	// equal   { to-file "example.txt" } %example.txt
 	// error { to-file 123 }
 	"to-file": { // **  TODO-FIXME: return possible failures
 		Argsn: 1,
@@ -659,8 +659,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 	// Tests:
-	// equals { type? "test" } 'string
-	// equals { type? 123.4 } 'decimal
+	// equal   { type? "test" } 'string
+	// equal   { type? 123.4 } 'decimal
 	"type?": { // ***
 		Argsn: 1,
 		Doc:   "Returns the type of Rye value as a word.",
@@ -671,7 +671,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equals { types? { "test" 123 } } { string integer }
+	// equal   { types? { "test" 123 } } { string integer }
 	"types?": { // TODO
 		Argsn: 1,
 		Doc:   "Returns the types of Rye values in a block or spreadsheet row as a block of words.",
@@ -708,7 +708,7 @@ var builtins = map[string]*env.Builtin{
 	// ## WORING WITH NUMBERS
 
 	// Tests:
-	// equals { inc 123 } 124
+	// equal   { inc 123 } 124
 	// error { inc "123" }
 	"inc": { // ***
 		Argsn: 1,
@@ -725,8 +725,8 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equals { is-positive 123 } 1
-	// equals { is-positive -123 } 0
+	// equal   { is-positive 123 } 1
+	// equal   { is-positive -123 } 0
 	// error { is-positive "123" }
 	"is-positive": { // ***
 		Argsn: 1,
@@ -753,8 +753,8 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equals { is-zero 0 } 1
-	// equals { is-zero 123 } 0
+	// equal   { is-zero 0 } 1
+	// equal   { is-zero 123 } 0
 	// error { is-zero "123" }
 	"is-zero": { // ***
 		Argsn: 1,
@@ -781,7 +781,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equals { a: 123 inc! 'a a } 124
+	// equal   { a:: 123 inc! 'a a } 124
 	// error { inc! 123 }
 	"inc!": { // ***
 		Argsn: 1,
@@ -809,7 +809,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equals { a: 123 dec! 'a a } 122
+	// equal   { a:: 123 dec! 'a a } 122
 	// error { dec! 123 }
 	"dec!": { // ***
 		Argsn: 1,
@@ -837,9 +837,9 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equals { a: 123 change! 333 'a a } 333
-	// equals { a: 123 change! 124 } 1
-	// equals { a: 123 change! 123 } 0
+	// equal   { a:: 123 change! 333 'a a } 333
+	// equal   { a:: 123 change! 124 'a } 1
+	// equal   { a:: 123 change! 123 'a } 0
 	"change!": { // ***
 		Argsn: 2,
 		Doc:   "Searches for a word and changes it's value in-place. If value changes returns true otherwise false",
@@ -866,7 +866,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equals { set { a b } { 123 234 } b } 234
+	// equal   { set! { 123 234 } { a b }  b } 234
 	"set!": { // ***
 		Argsn: 2,
 		Doc:   "Set word to value or words by deconstructing a block",
@@ -1773,7 +1773,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equals { embed 101 "val {}" } "val 101"
+	// equal   { embed 101 "val {}" } "val 101"
 	"embed": { // **
 		Argsn: 2,
 		Doc:   "Embeds a value into a string with {} placeholder.",
@@ -7955,7 +7955,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 	// Tests:
-	// equals { { } .is-empty } 1
+	// equal   { { } .is-empty } 1
 	"is-empty": { // **
 		Argsn: 1,
 		Doc:   "Accepts a collection (String, Block, Dict, Spreadsheet) and returns it's length.", // TODO -- accept list, context also

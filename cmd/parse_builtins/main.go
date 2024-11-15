@@ -55,20 +55,20 @@ func parseCommentsAboveKey(input string, info *builtinInfo) builtinInfo {
 	//	var testLines []string
 	isTestSection := false
 
-	fmt.Println("!!!!!!!!!!!!!!!**************")
+	//	fmt.Println("!!!!!!!!!!!!!!!**************")
 
 	for _, line := range lines {
 		line = strings.TrimSpace(line) // Remove leading and trailing whitespace
-		fmt.Println("LLLL:" + line)
-		fmt.Println(line)
+		// fmt.Println("LLLL:" + line)
+		// fmt.Println(line)
 		if line == "Tests:" {
-			fmt.Println("***** TEST ****")
+			// fmt.Println("***** TEST ****")
 			isTestSection = true
 			continue
 		}
 
 		if isTestSection {
-			fmt.Println(line)
+			// fmt.Println(line)
 			info.tests = append(info.tests, line)
 		} else {
 			headerLines = append(headerLines, line)
@@ -77,6 +77,22 @@ func parseCommentsAboveKey(input string, info *builtinInfo) builtinInfo {
 	// Step 3: Combine the header lines into a single string
 	info.doc = strings.Join(headerLines, "\n")
 	return *info
+}
+
+func outputInfo(infos []builtinInfo) {
+	fmt.Println("section \"base\" \"base text\" {\n") // name
+	for _, info := range infos {
+		if len(info.tests) > 0 {
+			fmt.Printf("\tgroup %s \n", info.name)   // name
+			fmt.Printf("\t\"%s\"\n", info.docstring) // docstring
+			fmt.Print("\t{ }\n\t{\n")                // args
+			for _, t := range info.tests {
+				fmt.Println("\t\t" + t)
+			}
+			fmt.Println("\t}\n")
+		}
+	}
+	fmt.Println("}\n")
 }
 
 func main() {
@@ -117,13 +133,13 @@ func main() {
 						if key, ok := kv.Key.(*ast.BasicLit); ok {
 							// Extract the key
 
-							fmt.Printf("Key: %s\n", key.Value)
+							/// fmt.Printf("Key: %s\n", key.Value)
 							// TODO NEXT - parse key into two values
 							info.name = key.Value
 							// Get comments above the key
 							comment := getCommentsAboveKey(fset, node.Comments, key.Pos())
 							if comment != "" {
-								fmt.Printf("Comment above key: %s\n", strings.TrimSpace(comment))
+								/// fmt.Printf("Comment above key: %s\n", strings.TrimSpace(comment))
 								info = parseCommentsAboveKey(comment, &info)
 								c.functions = c.functions + 1
 								if len(info.tests) > 0 {
@@ -140,9 +156,13 @@ func main() {
 		return true
 	})
 
-	fmt.Println(infoList)
+	//	fmt.Println(infoList)
 
-	fmt.Println("********")
+	//	fmt.Println("===================================================")
 
-	fmt.Println(c)
+	outputInfo(infoList)
+
+	// 	fmt.Println("===================================================")
+
+	// fmt.Println(c)
 }
