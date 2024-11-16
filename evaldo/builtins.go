@@ -907,9 +907,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"unset!": { // ***
+	"unset!!": { // ***
 		Argsn: 1,
-		Doc:   "Unset a word in current context",
+		Doc:   "Unset a word in current context, only meant to be used in console.",
 		Pure:  false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch word := arg0.(type) {
@@ -917,30 +917,6 @@ var builtins = map[string]*env.Builtin{
 				return ps.Ctx.Unset(word.Index, ps.Idx)
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.WordType}, "unset!")
-			}
-		},
-	},
-
-	"thaw": {
-		Argsn: 1,
-		Doc:   "Makes a value (currently only spreadsheets) mutable instead of immutable",
-		Pure:  true,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch sp := arg0.(type) {
-			case env.Spreadsheet:
-				return &sp
-			case *env.Spreadsheet:
-				return sp
-			case env.Dict:
-				return &sp
-			case env.List:
-				return &sp
-			case env.Block:
-				return &sp
-			case env.Native:
-				return &sp
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "thaw")
 			}
 		},
 	},
@@ -972,29 +948,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"freeze": {
-		Argsn: 1,
-		Doc:   "Makes a value (currently only spreadsheets) again immutable",
-		Pure:  true,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch sp := arg0.(type) {
-			case env.Spreadsheet:
-				return sp
-			case *env.Spreadsheet:
-				return *sp
-			case *env.Dict:
-				return *sp
-			case *env.List:
-				return *sp
-			case *env.Block:
-				return *sp
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "thaw")
-			}
-		},
-	},
-
-	"deref": { // TEMP duplicate
+	"deref": {
 		Argsn: 1,
 		Doc:   "Makes a value (currently only spreadsheets) again immutable",
 		Pure:  true,
@@ -1051,6 +1005,8 @@ var builtins = map[string]*env.Builtin{
 
 	// CONTINUE WORK HERE - SYSTEMATISATION
 
+	// Tests:
+	// equal { does { 1 } |dump } "fn { } { 1 }"
 	"dump": { // *** currently a concept in testing ... for getting a code of a function, maybe same would be needed for context?
 		Argsn: 1,
 		Doc:   "Returns (dumps) Rye code representing the object.",
@@ -1150,6 +1106,8 @@ var builtins = map[string]*env.Builtin{
 
 	// VALUES
 
+	// Tests:
+	// equal { dict { "a" 123 } -> "b" } 123
 	"dict": { // ***
 		Argsn: 1,
 		Doc:   "Constructs a Dict from the Block of key and value pairs.",
@@ -1162,6 +1120,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { list { "a" 123 } -> 1 } "a"
 	"list": { // ***
 		Argsn: 1,
 		Doc:   "Constructs a List from the Block of values.",
@@ -1192,6 +1152,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { not true } 0
 	"not": { // ***
 		Argsn: 1,
 		Doc:   "Turns a truthy value to a non-truthy and reverse.",
@@ -1205,6 +1167,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { true .and true } 1
+	// equal { false .and true } 0
 	"and": {
 		Argsn: 2,
 		Doc:   "Bitwise AND operation between two values.",
@@ -1223,6 +1188,12 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	// equal { true .or true } 1
+	// equal { false .or true } 1
+	// equal { true .or false } 1
+	// equal { false .or false } 0
 	"or": {
 		Argsn: 2,
 		Doc:   "Bitwise OR operation between two values.",
@@ -4465,6 +4436,20 @@ var builtins = map[string]*env.Builtin{
 						}
 						ps.Ser = ser
 						return acc
+					case env.Function:
+						l := len(list.Series.S)
+						acc := arg2
+						for i := 0; i < l; i++ {
+							var item any
+							item = list.Series.Get(i)
+							ps.Ctx.Mod(accu.Index, acc)
+							CallFunctionArgsN(block, ps, ps.Ctx, env.ToRyeValue(item)) // , env.NewInteger(int64(i)))
+							if ps.ErrorFlag {
+								return ps.Res
+							}
+							acc = ps.Res
+						}
+						return acc
 					default:
 						return MakeArgError(ps, 4, []env.Type{env.BlockType}, "fold")
 					}
@@ -4904,7 +4889,7 @@ var builtins = map[string]*env.Builtin{
 			}
 
 			switch block := arg1.(type) {
-			case env.Block, env.Builtin:
+			case env.Block, env.Builtin, env.Function:
 				var newlo []env.Object
 				var newll []any
 				switch block := block.(type) {
@@ -4936,6 +4921,27 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser.Reset()
 					}
 					ps.Ser = ser
+				case env.Function:
+					for i := 0; i < llen; i++ {
+						var item any
+						if modeObj == 1 {
+							item = ll[i]
+						} else if modeObj == 2 {
+							item = lo[i]
+						} else {
+							item = env.ToRyeValue(ls[i])
+						}
+						CallFunctionArgsN(block, ps, ps.Ctx, env.ToRyeValue(item)) // , env.NewInteger(int64(i)))
+						if util.IsTruthy(ps.Res) {                                 // todo -- move these to util or something
+							if modeObj == 1 {
+								newll = append(newll, ll[i])
+							} else if modeObj == 2 {
+								newlo = append(newlo, lo[i])
+							} else {
+								newlo = append(newlo, item.(env.Object))
+							}
+						}
+					}
 				case env.Builtin:
 					for i := 0; i < llen; i++ {
 						var item any
@@ -8140,9 +8146,11 @@ var builtins = map[string]*env.Builtin{
 
 	/* Terminal functions .. move to it's own later */
 
+	// Tests:
+	// equal { cmd `echo "hello"` } 1
 	"cmd": {
 		Argsn: 1,
-		Doc:   "",
+		Doc:   "Execute a shell command.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s0 := arg0.(type) {
 			case env.String:
@@ -8157,15 +8165,15 @@ var builtins = map[string]*env.Builtin{
 					fmt.Println(err)
 				}
 			default:
-				return makeError(ps, "Arg 1 should be String")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "cmd\\capture")
 			}
-			return nil
+			return env.NewInteger(1)
 		},
 	},
 
 	"cmd\\capture": {
 		Argsn: 1,
-		Doc:   "",
+		Doc:   "Execute a shell command and capture the output, return it as string",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s0 := arg0.(type) {
 			case env.String:
@@ -8195,7 +8203,7 @@ var builtins = map[string]*env.Builtin{
 								return env.ToRyeValue(" "-----------" + string(stdout)) */
 				//				return env.ToRyeValue(string(stdout))
 			default:
-				return makeError(ps, "Arg 1 should be String")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "cmd\\capture")
 			}
 			return nil
 		},
@@ -8442,8 +8450,8 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_console, ps, "console")
 	RegisterBuiltinsInContext(Builtins_telegrambot, ps, "telegram")
 	RegisterBuiltinsInContext(Builtins_math, ps, "math")
-	osctx := RegisterBuiltinsInContext(Builtins_os, ps, "os")
-	RegisterBuiltinsInSubContext(Builtins_pipes, ps, osctx, "pipes")
+	RegisterBuiltinsInContext(Builtins_os, ps, "os")
+	RegisterBuiltinsInContext(Builtins_pipes, ps, "pipes")
 	RegisterBuiltinsInContext(Builtins_term, ps, "term")
 	// ## Archived modules
 	// RegisterBuiltins2(Builtins_gtk, ps, "gtk")
