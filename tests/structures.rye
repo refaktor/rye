@@ -586,8 +586,11 @@ section "Spreadsheet related functions"
 	mold\nowrap ?spreadsheet
 	{ }
 	{
-		equal { spreadsheet { "name" "rating" "weight" }
-			{ "Enno" 4.3 120 "Enya" 6 132 "Shizuuchi" 7.2 168 "Kunishima" 2 68 } ::spr |type? } 'spreadsheet
+		equal { spreadsheet\columns { "name" "rating" "weight" }
+			{ { "Enno" "Enya" "Shizuuchi" "Kunishima" }
+			  { 4.3    6       7.2          2 }
+			  { 120    132     168         68 }
+			 } ::spr |type? } 'spreadsheet
 		equal { spr |length? } 4
 		equal { spr |header? |length? } 3
 		equal\todo { spr -> 2 -> 'name } "Enya"
