@@ -923,7 +923,7 @@ var builtins = map[string]*env.Builtin{
 
 	"ref": { // temp duplicate
 		Argsn: 1,
-		Doc:   "Makes a value (currently only spreadsheets) mutable instead of immutable",
+		Doc:   "Makes a value mutable instead of immutable",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch sp := arg0.(type) {
@@ -950,7 +950,7 @@ var builtins = map[string]*env.Builtin{
 
 	"deref": {
 		Argsn: 1,
-		Doc:   "Makes a value (currently only spreadsheets) again immutable",
+		Doc:   "Makes a value again immutable",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch sp := arg0.(type) {
@@ -1154,6 +1154,7 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { not true } 0
+	// equal { not false } 1
 	"not": { // ***
 		Argsn: 1,
 		Doc:   "Turns a truthy value to a non-truthy and reverse.",
@@ -1268,6 +1269,9 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Tests:
+	// equal { 3 .odd } 1
+	// equal { 2 .odd } 0
 	"odd": { // ***
 		Argsn: 1,
 		Doc:   "Checks if a number is odd.",
@@ -1285,6 +1289,9 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Tests:
+	// equal { 3 .odd } 0
+	// equal { 2 .odd } 1
 	"even": { // ***
 		Argsn: 1,
 		Doc:   "Checks if a number is even.",
@@ -1303,6 +1310,10 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { 4 .mod 2 } 0
+	// equal { 5 .mod 2 } 1
+	// equal { 5 .mod 3 } 2
 	"mod": { // ***
 		Argsn: 2,
 		Doc:   "Calculates module (remainder) of two integers.",
@@ -1331,6 +1342,13 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { 1 + 1 } 2
+	// equal { 3 + 4 } 7
+	// equal { 5.6 + 7.8 } 13.4
+	// equal { "A" + "b" } "Ab"
+	// equal { "A" + 1 } "A1"
+	// equal { { 1 2 } { 3 4 } } { 1 2 3 4 }
 	"_+": { // **
 		Argsn: 2,
 		Doc:   "Adds or joins two values together (Integers, Strings, Uri-s and Blocks)",
@@ -1429,6 +1447,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { 2 - 1 } 1
+	// equal { 5 - 6 } -1
 	"_-": { // **
 		Argsn: 2,
 		Doc:   "Subtracts two numbers.",
@@ -7806,7 +7827,7 @@ var builtins = map[string]*env.Builtin{
 
 	"year-day?": {
 		Argsn: 1,
-		Doc:   "Returns current Time.",
+		Doc:   "Returns the day in the current year Time.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Time:
