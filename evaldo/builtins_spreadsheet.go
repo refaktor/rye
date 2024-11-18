@@ -45,12 +45,14 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 				case env.Block:
 					rdata := data1.Series.S
 
-					for i := 0; i < len(rdata)/hlen; i++ {
-						rowd := make([]any, hlen)
-						for ii := 0; ii < hlen; ii++ {
-							rowd[ii] = rdata[i*hlen+ii]
+					if hlen > 0 {
+						for i := 0; i < len(rdata)/hlen; i++ {
+							rowd := make([]any, hlen)
+							for ii := 0; ii < hlen; ii++ {
+								rowd[ii] = rdata[i*hlen+ii]
+							}
+							spr.AddRow(*env.NewSpreadsheetRow(rowd, spr))
 						}
-						spr.AddRow(*env.NewSpreadsheetRow(rowd, spr))
 					}
 					return *spr
 				case env.List:
@@ -1208,6 +1210,124 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "group-by")
+			}
+		},
+	},
+
+	// TODO --- moved from base ... name appropriately and deduplicate
+	// Args:
+	// * sheet
+	"ncols": {
+		Doc:   "Accepts a Spreadsheet and returns number of columns.",
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Dict:
+			case env.Block:
+			case env.Spreadsheet:
+				return *env.NewInteger(int64(len(s1.Cols)))
+			default:
+				fmt.Println("Error")
+			}
+			return nil
+		},
+	},
+	// Tests:
+	// equal { spreadsheet { 'a } { 1 2 3 } |col-sum "a" } 6
+	"col-sum": {
+		Argsn: 2,
+		Doc:   "Accepts a spreadsheet and a column name and returns a sum of a column.", // TODO -- let it accept a block and list also
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var name string
+			switch s1 := arg0.(type) {
+			case env.Spreadsheet:
+				switch s2 := arg1.(type) {
+				case env.Word:
+					name = ps.Idx.GetWord(s2.Index)
+				case env.String:
+					name = s2.Value
+				default:
+					ps.ErrorFlag = true
+					return env.NewError("second arg not string")
+				}
+				r := s1.Sum(name)
+				if r.Type() == env.ErrorType {
+					ps.ErrorFlag = true
+				}
+				return r
+
+			default:
+				ps.ErrorFlag = true
+				return env.NewError("first arg not spreadsheet")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { spreadsheet { 'a } { 1 2 3 } |col-avg 'a } 2
+	"col-avg": {
+		Argsn: 2,
+		Doc:   "Accepts a spreadsheet and a column name and returns a sum of a column.", // TODO -- let it accept a block and list also
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var name string
+			switch s1 := arg0.(type) {
+			case env.Spreadsheet:
+				switch s2 := arg1.(type) {
+				case env.Word:
+					name = ps.Idx.GetWord(s2.Index)
+				case env.String:
+					name = s2.Value
+				default:
+					ps.ErrorFlag = true
+					return env.NewError("second arg not string")
+				}
+				r, err := s1.Sum_Just(name)
+				if err != nil {
+					ps.ErrorFlag = true
+					return env.NewError(err.Error())
+				}
+				n := s1.NRows()
+				return *env.NewDecimal(r / float64(n))
+
+			default:
+				ps.ErrorFlag = true
+				return env.NewError("first arg not spreadsheet")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { spreadsheet { 'a } { 1 2 3 } |A1 } 1
+
+	"A1": {
+		Argsn: 1,
+		Doc:   "Accepts a Spreadsheet and returns the first row first column cell.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s0 := arg0.(type) {
+			case env.Spreadsheet:
+				r := s0.Rows[0].Values[0]
+				return env.ToRyeValue(r)
+
+			default:
+				ps.ErrorFlag = true
+				return env.NewError("first arg not spreadsheet")
+			}
+		},
+	},
+	// Tests:
+	// equal { spreadsheet { 'a } { 1 2 3 } |B1 } 2
+	"B1": {
+		Argsn: 1,
+		Doc:   "Accepts a Spreadsheet and returns the first row second column cell.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s0 := arg0.(type) {
+			case env.Spreadsheet:
+				r := s0.Rows[0].Values[1]
+				return env.ToRyeValue(r)
+
+			default:
+				ps.ErrorFlag = true
+				return env.NewError("first arg not spreadsheet")
 			}
 		},
 	},
