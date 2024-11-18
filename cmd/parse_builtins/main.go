@@ -45,6 +45,14 @@ func getCommentsAboveKey(fset *token.FileSet, comments []*ast.CommentGroup, keyP
 // Helper function to get comments above the map key
 func parseCommentsAboveKey(input string, info *builtinInfo) builtinInfo {
 
+	const (
+		inDoc = iota
+		inTests
+		inExamples
+		inArgs
+	)
+	position := inDoc
+
 	// info := builtinInfo{}
 
 	// Step 1: Split input into lines and trim whitespace
@@ -53,7 +61,6 @@ func parseCommentsAboveKey(input string, info *builtinInfo) builtinInfo {
 	// Step 2: Separate header and tests
 	var headerLines []string
 	//	var testLines []string
-	isTestSection := false
 
 	//	fmt.Println("!!!!!!!!!!!!!!!**************")
 
@@ -61,17 +68,27 @@ func parseCommentsAboveKey(input string, info *builtinInfo) builtinInfo {
 		line = strings.TrimSpace(line) // Remove leading and trailing whitespace
 		// fmt.Println("LLLL:" + line)
 		// fmt.Println(line)
-		if line == "Tests:" {
-			// fmt.Println("***** TEST ****")
-			isTestSection = true
+		switch line {
+		case "Tests:":
+			position = inTests
+			continue
+		case "Examples:":
+			position = inExamples
+			continue
+		case "Args:":
+			position = inArgs
 			continue
 		}
 
-		if isTestSection {
-			// fmt.Println(line)
+		switch position {
+		case inTests:
 			info.tests = append(info.tests, line)
-		} else {
+		case inDoc:
 			headerLines = append(headerLines, line)
+		case inExamples:
+			info.examples = append(info.examples, line) // TODO --- examples can be multiline, there is a name also
+		case inArgs:
+			info.args = append(info.args, line)
 		}
 	}
 	// Step 3: Combine the header lines into a single string
@@ -85,7 +102,14 @@ func outputInfo(infos []builtinInfo) {
 		if len(info.tests) > 0 {
 			fmt.Printf("\tgroup %s \n", info.name)   // name
 			fmt.Printf("\t\"%s\"\n", info.docstring) // docstring
-			fmt.Print("\t{ }\n\t{\n")                // args
+
+			fmt.Print("\t{\n") // args
+			for _, t := range info.args {
+				fmt.Println("\t\targ \"" + t + "\"")
+			}
+			fmt.Println("\t}\n")
+
+			fmt.Print("\t{\n")
 			for _, t := range info.tests {
 				fmt.Println("\t\t" + t)
 			}

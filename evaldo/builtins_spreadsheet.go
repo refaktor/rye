@@ -19,7 +19,7 @@ import (
 var Builtins_spreadsheet = map[string]*env.Builtin{
 
 	// Tests:
-	//  equals { spreadsheet { "a" } { 1 2 } |type? } 'spreadsheet
+	//  equal { spreadsheet { "a" } { 1 2 } |type? } 'spreadsheet
 	// Args:
 	//  * columns
 	//  * data
@@ -89,7 +89,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		},
 	},
 	// Tests:
-	//  equals { to-spreadsheet dict { "a" 1 "a" b } |type? } 'spreadsheet
+	//  equal { to-spreadsheet list [ dict { "a" 1 } dict { "a" b } ] |type? } 'spreadsheet
 	// Args:
 	//  * data
 	"to-spreadsheet": {
@@ -146,6 +146,10 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 						for key := range dict {
 							k[key] = struct{}{}
 						}
+					case env.Dict:
+						for key := range dict.Data {
+							k[key] = struct{}{}
+						}
 					default:
 						return MakeBuiltinError(ps, "List must contain only dicts", "to-spreadsheet")
 					}
@@ -166,8 +170,18 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 							}
 							row[i] = data
 						}
+						spr.AddRow(*env.NewSpreadsheetRow(row, spr))
+					case env.Dict:
+						row := make([]any, len(keys))
+						for i, key := range keys {
+							data, ok := dict.Data[key]
+							if !ok {
+								data = env.Void{}
+							}
+							row[i] = data
+						}
+						spr.AddRow(*env.NewSpreadsheetRow(row, spr))
 					}
-					spr.AddRow(*env.NewSpreadsheetRow(row, spr))
 				}
 				return *spr
 
@@ -202,7 +216,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	// 2) A native that is a slice of SpreadsheetRows, like the value returned from `get-rows`
 	// Tests:
 	//  equal {
-	//	 ref spreadsheet { "a" "b"  } { 1 10 2 20 } :sheet
+	//	 ref spreadsheet { "a" "b" } { 1 10 2 20 } ::sheet
 	//   sheet .add-rows! [ 3 30 ] sheet .deref .length?
 	//  } 3
 	// Args:

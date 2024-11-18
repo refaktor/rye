@@ -2,7 +2,9 @@ section "base" "base text" {
 
 	group "to-word" 
 	""
-	{ }
+	{
+	}
+
 	{
 		equal { to-word "test" } 'test
 		error { to-word "123" }
@@ -10,7 +12,9 @@ section "base" "base text" {
 
 	group "to-integer" 
 	""
-	{ }
+	{
+	}
+
 	{
 		equal { to-integer "123" } 123
 		; equal { to-integer "123.4" } 123
@@ -21,7 +25,9 @@ section "base" "base text" {
 
 	group "to-decimal" 
 	""
-	{ }
+	{
+	}
+
 	{
 		equal { to-decimal "123.4" } 123.4
 		error { to-decimal "abc" }
@@ -29,7 +35,9 @@ section "base" "base text" {
 
 	group "to-string" 
 	""
-	{ }
+	{
+	}
+
 	{
 		equal { to-string 'test } "test"
 		equal { to-string 123 } "123"
@@ -39,7 +47,9 @@ section "base" "base text" {
 
 	group "to-char" 
 	""
-	{ }
+	{
+	}
+
 	{
 		equal { to-char 42 } "*"
 		error { to-char "*" }
@@ -47,7 +57,9 @@ section "base" "base text" {
 
 	group "to-block" 
 	""
-	{ }
+	{
+	}
+
 	{
 		equal { list [ 1 2 3 ] |to-block |type? } 'block
 		equal  { list [ 1 2 3 ] |to-block |first } 1
@@ -55,7 +67,9 @@ section "base" "base text" {
 
 	group "to-context" 
 	""
-	{ }
+	{
+	}
+
 	{
 		equal   { dict [ "a" 1 "b" 2 "c" 3 ] |to-context |type? } 'context
 		; equal   { dict [ "a" 1 ] |to-context do\in { a } } '1
@@ -63,7 +77,9 @@ section "base" "base text" {
 
 	group "is-string" 
 	""
-	{ }
+	{
+	}
+
 	{
 		equal   { is-string "test" } 1
 		equal   { is-string 'test } 0
@@ -72,7 +88,9 @@ section "base" "base text" {
 
 	group "is-integer" 
 	""
-	{ }
+	{
+	}
+
 	{
 		equal   { is-integer 123 } 1
 		equal   { is-integer 123.4 } 0
@@ -81,7 +99,9 @@ section "base" "base text" {
 
 	group "is-decimal" 
 	""
-	{ }
+	{
+	}
+
 	{
 		equal   { is-decimal 123.0 } 1
 		equal   { is-decimal 123 } 0
@@ -90,7 +110,9 @@ section "base" "base text" {
 
 	group "is-number" 
 	""
-	{ }
+	{
+	}
+
 	{
 		equal   { is-number 123 } 1
 		equal   { is-number 123.4 } 1
@@ -99,7 +121,9 @@ section "base" "base text" {
 
 	group "to-uri" 
 	""
-	{ }
+	{
+	}
+
 	{
 		equal   { to-uri "https://example.com" } https://example.com
 		; error { to-uri "not-uri" }
@@ -107,7 +131,9 @@ section "base" "base text" {
 
 	group "to-file" 
 	""
-	{ }
+	{
+	}
+
 	{
 		equal   { to-file "example.txt" } %example.txt
 		error { to-file 123 }
@@ -115,7 +141,9 @@ section "base" "base text" {
 
 	group "type?" 
 	""
-	{ }
+	{
+	}
+
 	{
 		equal   { type? "test" } 'string
 		equal   { type? 123.4 } 'decimal
@@ -123,14 +151,18 @@ section "base" "base text" {
 
 	group "types?" 
 	""
-	{ }
+	{
+	}
+
 	{
 		equal   { types? { "test" 123 } } { string integer }
 	}
 
 	group "inc" 
 	""
-	{ }
+	{
+	}
+
 	{
 		equal   { inc 123 } 124
 		error { inc "123" }
@@ -138,7 +170,9 @@ section "base" "base text" {
 
 	group "is-positive" 
 	""
-	{ }
+	{
+	}
+
 	{
 		equal   { is-positive 123 } 1
 		equal   { is-positive -123 } 0
@@ -147,7 +181,9 @@ section "base" "base text" {
 
 	group "is-zero" 
 	""
-	{ }
+	{
+	}
+
 	{
 		equal   { is-zero 0 } 1
 		equal   { is-zero 123 } 0
@@ -156,7 +192,9 @@ section "base" "base text" {
 
 	group "inc!" 
 	""
-	{ }
+	{
+	}
+
 	{
 		equal   { a:: 123 inc! 'a a } 124
 		error { inc! 123 }
@@ -164,7 +202,9 @@ section "base" "base text" {
 
 	group "dec!" 
 	""
-	{ }
+	{
+	}
+
 	{
 		equal   { a:: 123 dec! 'a a } 122
 		error { dec! 123 }
@@ -172,7 +212,9 @@ section "base" "base text" {
 
 	group "change!" 
 	""
-	{ }
+	{
+	}
+
 	{
 		equal   { a:: 123 change! 333 'a a } 333
 		equal   { a:: 123 change! 124 'a } 1
@@ -181,23 +223,96 @@ section "base" "base text" {
 
 	group "set!" 
 	""
-	{ }
+	{
+	}
+
 	{
 		equal   { set! { 123 234 } { a b }  b } 234
 	}
 
+	group "dump" 
+	""
+	{
+	}
+
+	{
+		equal { does { 1 } |dump } "fn { } { 1 }"
+	}
+
+	group "dict" 
+	""
+	{
+	}
+
+	{
+		equal { dict { "a" 123 } -> "b" } 123
+	}
+
+	group "list" 
+	""
+	{
+	}
+
+	{
+		equal { list { "a" 123 } -> 1 } "a"
+	}
+
+	group "not" 
+	""
+	{
+	}
+
+	{
+		equal { not true } 0
+	}
+
+	group "and" 
+	""
+	{
+	}
+
+	{
+		equal { true .and true } 1
+		equal { false .and true } 0
+	}
+
+	group "or" 
+	""
+	{
+	}
+
+	{
+		equal { true .or true } 1
+		equal { false .or true } 1
+		equal { true .or false } 1
+		equal { false .or false } 0
+	}
+
 	group "embed" 
 	""
-	{ }
+	{
+	}
+
 	{
 		equal   { embed 101 "val {}" } "val 101"
 	}
 
 	group "is-empty" 
 	""
-	{ }
+	{
+	}
+
 	{
 		equal   { { } .is-empty } 1
+	}
+
+	group "cmd" 
+	""
+	{
+	}
+
+	{
+		equal { cmd `echo "hello"` } 1
 	}
 
 }

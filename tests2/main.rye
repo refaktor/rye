@@ -12,7 +12,7 @@ test-framework: context {
 	
 	section: fn { name descr code } { term/magenta term/bold print name term/reset\all print " " + descr , do code print "" }
 	
-	group: fn { name descr args code } { inc! 'cnt  term/blue prns " " + name term/reset\all , do code }
+	group: fn { name descr args code } { inc! 'cnt  term/green prns " " + name term/reset\all , do code }
 	
 	error-: fn { test } {
 		; try { do\in root-ctx test }
@@ -86,12 +86,12 @@ generate-menu: fn { menu } {
 generate-doc-file: fn { filename menu } {
 	join {
 		%tpl/header.html .read .replace "{{title}}" capitalize filename ; |replace "{{menu}}" generate-menu menu
-		capture-stdout { do\in docs-framework load to-file filename + ".rye" }
+		capture-stdout { do\in docs-framework load to-file filename + ".tests.rye" }
 		read %tpl/footer.html
 	} |write* to-file filename + ".html"
 }
 
-menu: { "base" }
+menu: { "base" "spreadsheet" }
 
 print-help: does {
 	print `# Rye's simple testing tool
@@ -123,7 +123,7 @@ test {
 		errors: 0
 		for sections {
 			.to-string .pass { term/bold , prns "\n#" , .to-upper .prns , print "#\n" }
-			|+ ".rye" |to-file |load |^check { "group does not exist!" } |do\in* test-framework |+ errors ::errors }
+			|+ ".tests.rye" |to-file |load |^check { "group does not exist!" } |do\in* test-framework |+ errors ::errors }
 		print ""
 	
 		if ( length? sections ) > 1 { 
