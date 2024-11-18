@@ -6409,6 +6409,10 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { "abcde" .difference "cde" } "ab"
+	// equal { difference { 1 2 3 4 } { 2 4 } } { 1 3 }
+	// equal { difference list { "Bob" "Sal" "Joe" } { "Joe" } } { "Bob" "Sal" }
 	"difference": {
 		Argsn: 2,
 		Doc:   "Finds the difference (values in first but not in second) of two values.",
@@ -6459,10 +6463,12 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { capitalize "abcde" } "Abcde"
 	"capitalize": { // **
 		Argsn: 1,
 		Pure:  true,
-		Doc:   "Takes a String and returns the same String, but  with first character turned to upper case.",
+		Doc:   "Takes a String and returns the same String, but with first character turned to upper case.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -6475,10 +6481,12 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { to-lower "ABCDE" } "abcde"
 	"to-lower": { // **
 		Argsn: 1,
 		Pure:  true,
-		Doc:   "Takes a String and returns the same String, but  with all characters turned to lower case.",
+		Doc:   "Takes a String and returns the same String, but with all characters turned to lower case.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -6489,6 +6497,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { to-upper "abcde" } "ABCDE"
 	"to-upper": { // **
 		Argsn: 1,
 		Pure:  true,
@@ -6527,6 +6537,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { join { "Mary" "Anne" } } "MaryAnne"
+	// equal { join { "Spot" "Fido" "Rex" } } "SpotFidoRex"
 	"join": { // **
 		Argsn: 1,
 		Pure:  true,
@@ -6597,6 +6610,12 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { join\with { "Mary" "Anne" } " " } "Mary Anne"
+	// equal { join\with { "Spot" "Fido" "Rex" } "/" } "Spot/Fido/Rex"
+	// Args:
+	// * to-join
+	// * delimiter
 	"join\\with": { // **
 		Argsn: 2,
 		Pure:  true,
@@ -6655,6 +6674,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { split "a,b,c" "," } { "a" "b" "c" }
 	"split": { // **
 		Argsn: 2,
 		Pure:  true,
@@ -6679,6 +6700,12 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { split\quoted "`a,b`,c,d" "," "`" } { "`a,b`" "c" "d" }
+	// Args:
+	// to-split
+	// splitter
+	// quote
 	"split\\quoted": { // **
 		Argsn: 3,
 		Pure:  true,
@@ -6703,10 +6730,16 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { split\many "192.0.0.1" "." } { "192" "0" "0" "1" }
+	// equal { split\many "abcde..e.q|bar" ".|" } { "abcd" "e" "q" "bar" }
+	// Args:
+	// * string
+	// * separator-set
 	"split\\many": {
 		Argsn: 2,
 		Pure:  true,
-		Doc:   "Splits a string into a block of values using a separator",
+		Doc:   "Splits a string into a block of values using each character in seperators as a split value",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.String:
@@ -6727,10 +6760,17 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Args:
+	// * string
+	// * N
+	// Tests:
+	// equal { split\every "abcdefg" 3 } { "abc" "def" "g" }
+	// equal { split\every "abcdefg" 2 } { "ab" "cd" "ef" "g" }
+	// equal { split\every "abcdef" 2 } { "ab" "cd" "ef" }
 	"split\\every": { // **
 		Argsn: 2,
 		Pure:  true,
-		Doc:   "Splits a string into a block of values using a separator",
+		Doc:   "Splits a string into chunks of length N. Leftover characters go in the last chunk",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.String:
@@ -6765,6 +6805,10 @@ var builtins = map[string]*env.Builtin{
 
 	// BASIC SERIES FUNCTIONS
 
+	// Tests:
+	// equal { first { 1 2 3 4 } } 1
+	// equal { rest "abcde" } "a"
+	// equal { rest list { 1 2 3 } } 1
 	"first": { // **
 		Argsn: 1,
 		Doc:   "Accepts a Block, List or String and returns the first item.",
@@ -6797,6 +6841,10 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { rest { 1 2 3 4 } } { 2 3 4 }
+	// equal { rest "abcde" } "bcde"
+	// equal { rest list { 1 2 3 } } list { 2 3 }
 	"rest": { // **
 		Argsn: 1,
 		Doc:   "Accepts a Block, List or String and returns all but first item.",
@@ -6824,6 +6872,10 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { rest\from { 1 2 3 4 5 6 } 3 } { 4 5 6 }
+	// equal { rest\from "abcdefg" 1 } "bcdefg"
+	// equal { rest\from list { 1 2 3 4 } 2 } list { 3 4 }
 	"rest\\from": { // **
 		Argsn: 2,
 		Doc:   "Accepts a Block, List or String and an Integer N, returns all but first N items.",
@@ -6865,6 +6917,10 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { tail { 1 2 3 4 5 6 7 } 3 } { 5 6 7 }
+	// equal { tail "abcdefg" 4 } "defg"
+	// equal { tail list { 1 2 3 4 } 1 } list { 4 }
 	"tail": { // **
 		Argsn: 2,
 		Doc:   "Accepts a Block, List or String and Integer N, returns the last N items.",
@@ -6961,6 +7017,10 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { last { 1 2 } } 2
+	// equal { last "abcd" } "d"
+	// equal { list { 4 5 6 } } 6
 	"last": { // **
 		Argsn: 1,
 		Doc:   "Accepts a Block, List or String and returns the last value in it.",
@@ -6987,6 +7047,11 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { head { 4 5 6 7 } 3 } { 4 5 6 }
+	// equal { head "abcdefg" 2 } "ab"
+	// equal { head "abcdefg" 4 } "abcd"
+	// equal { head list { 10 20 30 40 } 2 } list { 10 20 }
 	"head": { // **
 		Argsn: 2,
 		Doc:   "Accepts a Block, List or String and an Integer N, returns the first N values.",
@@ -7032,6 +7097,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { nth { 1 2 3 4 5 } 4 } 4
+	// equal { nth { "a" "b" "c" "d" "e" } 2 } "b"
 	"nth": { // **
 		Argsn: 2,
 		Doc:   "Accepts a Block, List or String and Integer N, returns the N-th value.",
@@ -7078,6 +7146,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { dict { "a" 1 "b" 2 "c" 3 } |values } { 1 2 3 }
 	"values": { // **
 		Argsn: 1,
 		Doc:   "Accepts a Dict and returns a List of just values.",
@@ -7147,7 +7217,8 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-	//
+	// Test:
+	// equal { remove-last! { 1 2 3 4 } } 4
 	"remove-last!": { // **
 		Argsn: 1,
 		Pure:  false,
@@ -7333,9 +7404,12 @@ var builtins = map[string]*env.Builtin{
 		},
 	}, */
 
+	// Args:
+	// * sheet
+	// * new-row
 	"add-row": {
 		Argsn: 2,
-		Doc:   "Constructs an empty table, accepts a block of column names",
+		Doc:   "Returns a spreadsheet with new-row added to it",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch table := arg0.(type) {
 			case env.Spreadsheet:
@@ -7825,9 +7899,11 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Args:
+	// * time
 	"year-day?": {
 		Argsn: 1,
-		Doc:   "Returns the day in the current year Time.",
+		Doc:   "Returns the day in the given time.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Time:
@@ -7838,35 +7914,41 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Args:
+	// * time
 	"year?": {
 		Argsn: 1,
-		Doc:   "Returns current Time.",
+		Doc:   "Returns the year of the given time.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Time:
 				return *env.NewInteger(int64(s1.Value.Year()))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.TimeType}, "hour?")
+				return MakeArgError(ps, 1, []env.Type{env.TimeType}, "year?")
 			}
 		},
 	},
 
+	// Args:
+	// * time
 	"month?": {
 		Argsn: 1,
-		Doc:   "Returns current Time.",
+		Doc:   "Returns current month as an integer.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Time:
 				return *env.NewInteger(int64(s1.Value.Month()))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.TimeType}, "hour?")
+				return MakeArgError(ps, 1, []env.Type{env.TimeType}, "month?")
 			}
 		},
 	},
 
+	// Args:
+	// * time
 	"days-in-month?": {
 		Argsn: 1,
-		Doc:   "Returns current Time.",
+		Doc:   "Returns the days in the month that `time` is in.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Time:
@@ -7878,6 +7960,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Args:
+	// * time
 	"time?": {
 		Argsn: 1,
 		Doc:   "Returns Time part of a datetime.",
@@ -7886,11 +7970,13 @@ var builtins = map[string]*env.Builtin{
 			case env.Time:
 				return *env.NewString(s1.Value.Format("15:04:05"))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.TimeType}, "hour?")
+				return MakeArgError(ps, 1, []env.Type{env.TimeType}, "time?")
 			}
 		},
 	},
 
+	// Args:
+	// * time
 	"date?": {
 		Argsn: 1,
 		Doc:   "Returns date part of datetime.",
@@ -7899,27 +7985,31 @@ var builtins = map[string]*env.Builtin{
 			case env.Time:
 				return *env.NewString(s1.Value.Format("2006-01-02"))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.TimeType}, "hour?")
+				return MakeArgError(ps, 1, []env.Type{env.TimeType}, "date?")
 			}
 		},
 	},
 
+	// Args:
+	// * time
 	"day?": {
 		Argsn: 1,
-		Doc:   "Returns current Time.",
+		Doc:   "Returns the day of month of the given time.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Time:
 				return *env.NewInteger(int64(s1.Value.Day()))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.TimeType}, "hour?")
+				return MakeArgError(ps, 1, []env.Type{env.TimeType}, "day?")
 			}
 		},
 	},
 
+	// Args:
+	// * time
 	"hour?": {
 		Argsn: 1,
-		Doc:   "Returns current Time.",
+		Doc:   "Returns the hour of the given time.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Time:
@@ -7930,37 +8020,46 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Args:
+	// * time
 	"minute?": {
 		Argsn: 1,
-		Doc:   "Returns current Time.",
+		Doc:   "Returns the minute of the given time.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Time:
 				return *env.NewInteger(int64(s1.Value.Minute()))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.TimeType}, "hour?")
+				return MakeArgError(ps, 1, []env.Type{env.TimeType}, "minute?")
 			}
 		},
 	},
 
+	// Args:
+	// * time
 	"second?": {
 		Argsn: 1,
-		Doc:   "Returns current Time.",
+		Doc:   "Returns the second of the given time.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Time:
 				return *env.NewInteger(int64(s1.Value.Second()))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.TimeType}, "hour?")
+				return MakeArgError(ps, 1, []env.Type{env.TimeType}, "second?")
 			}
 		},
 	},
 
 	// end of date time functions
 
+	// Args:
+	// * low-value
+	// * high-value
+	// Tests:
+	// equal { range 1 5 } { 1 2 3 4 5 }
 	"range": { // **
 		Argsn: 2,
-		Doc:   "Takes two integers and returns a block of integers between them. (Will change to lazy list/generator later)",
+		Doc:   "Takes two integers and returns a block of integers between them, inclusive. (Will change to lazy list/generator later)",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch i1 := arg0.(type) {
 			case env.Integer:
@@ -7982,10 +8081,12 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 	// Tests:
-	// equal   { { } .is-empty } 1
+	// equal { { } .is-empty } 1
+	// equal { dict .is-empty } 1
+	// equal { spreadsheet { } { } .is-empty } 1
 	"is-empty": { // **
 		Argsn: 1,
-		Doc:   "Accepts a collection (String, Block, Dict, Spreadsheet) and returns it's length.", // TODO -- accept list, context also
+		Doc:   "Accepts a collection (String, Block, Dict, Spreadsheet) and returns it's length.", // TODO -- accept context
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -8008,6 +8109,11 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Tests:
+	// equal { { 1 2 3 } .length? } 3
+	// equal { length? "abcd" } 4
+	// equal { spreadsheet { 'val } { 1 2 3 4 } |length? } 4
+	// equal { vector { 10 20 30 } |length? } 3
 	"length?": { // **
 		Argsn: 1,
 		Doc:   "Accepts a collection (String, Block, Dict, Spreadsheet) and returns it's length.", // TODO -- accept list, context also
@@ -8033,6 +8139,8 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Args:
+	// * sheet
 	"ncols": {
 		Doc:   "Accepts a Spreadsheet and returns number of columns.",
 		Argsn: 1,
@@ -8048,6 +8156,9 @@ var builtins = map[string]*env.Builtin{
 			return nil
 		},
 	},
+	// Tests:
+	// equal { dict { "a" 1 "b" 2 "c" 3 } |keys } { "a" "b" "c" }
+	// equal { spreadsheet { 'a 'b 'c } { 1 2 3 } |keys } { 'a 'b 'c }
 	"keys": {
 		Argsn: 1,
 		Doc:   "Accepts Dict or Spreadsheet and returns a Block of keys or column names.", // TODO -- accept context also
@@ -8074,6 +8185,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { spreadsheet { 'a } { 1 2 3 } .col-sum 'a } 6
 	"col-sum": {
 		Argsn: 2,
 		Doc:   "Accepts a spreadsheet and a column name and returns a sum of a column.", // TODO -- let it accept a block and list also
@@ -8103,6 +8216,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { spreadsheet { 'a } { 1 2 3 } .col-avg 'a } 2.
 	"col-avg": {
 		Argsn: 2,
 		Doc:   "Accepts a spreadsheet and a column name and returns a sum of a column.", // TODO -- let it accept a block and list also
@@ -8134,6 +8249,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { spreadsheet { 'a } { 1 2 3 } .A1 } 1
+
 	"A1": {
 		Argsn: 1,
 		Doc:   "Accepts a Spreadsheet and returns the first row first column cell.",
@@ -8149,6 +8267,8 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Tests:
+	// equal { spreadsheet { 'a } { 1 2 3 } .B1 } 2
 	"B1": {
 		Argsn: 1,
 		Doc:   "Accepts a Spreadsheet and returns the first row second column cell.",
