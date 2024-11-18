@@ -6770,6 +6770,11 @@ var builtins = map[string]*env.Builtin{
 					return MakeBuiltinError(ps, "Spreadsheet is empty.", "first")
 				}
 				return s1.GetRow(ps, int(0))
+			case *env.Spreadsheet:
+				if s1.NRows() == 0 {
+					return MakeBuiltinError(ps, "Spreadsheet is empty.", "first")
+				}
+				return s1.GetRow(ps, int(0))
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType, env.BlockType, env.StringType, env.ListType}, "first")
 			}
@@ -7977,6 +7982,8 @@ var builtins = map[string]*env.Builtin{
 				return *env.NewBoolean(s1.Series.Len() == 0)
 			case env.Spreadsheet:
 				return *env.NewBoolean(len(s1.Rows) == 0)
+			case *env.Spreadsheet:
+				return *env.NewBoolean(len(s1.Rows) == 0)
 			case env.RyeCtx:
 				return *env.NewBoolean(s1.GetWords(*ps.Idx).Series.Len() == 0)
 			case env.Vector:
@@ -8001,6 +8008,8 @@ var builtins = map[string]*env.Builtin{
 			case env.Block:
 				return *env.NewInteger(int64(s1.Series.Len()))
 			case env.Spreadsheet:
+				return *env.NewInteger(int64(len(s1.Rows)))
+			case *env.Spreadsheet:
 				return *env.NewInteger(int64(len(s1.Rows)))
 			case env.RyeCtx:
 				return *env.NewInteger(int64(s1.GetWords(*ps.Idx).Series.Len()))
