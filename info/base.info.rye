@@ -1,0 +1,602 @@
+section "base" "base text" {
+
+	group "to-word" 
+	""
+	{
+	}
+
+	{
+		equal { to-word "test" } 'test
+		error { to-word "123" }
+	}
+
+	group "to-integer" 
+	""
+	{
+	}
+
+	{
+		equal { to-integer "123" } 123
+		; equal { to-integer "123.4" } 123
+		; equal { to-integer "123.6" } 123
+		; equal { to-integer "123.4" } 123
+		error { to-integer "abc" }
+	}
+
+	group "to-decimal" 
+	""
+	{
+	}
+
+	{
+		equal { to-decimal "123.4" } 123.4
+		error { to-decimal "abc" }
+	}
+
+	group "to-string" 
+	""
+	{
+	}
+
+	{
+		equal { to-string 'test } "test"
+		equal { to-string 123 } "123"
+		equal { to-string 123.4 } "123.4000"
+		equal { to-string "test" } "test"
+	}
+
+	group "to-char" 
+	""
+	{
+	}
+
+	{
+		equal { to-char 42 } "*"
+		error { to-char "*" }
+	}
+
+	group "to-block" 
+	""
+	{
+	}
+
+	{
+		equal { list [ 1 2 3 ] |to-block |type? } 'block
+		equal  { list [ 1 2 3 ] |to-block |first } 1
+	}
+
+	group "to-context" 
+	""
+	{
+	}
+
+	{
+		equal   { dict [ "a" 1 "b" 2 "c" 3 ] |to-context |type? } 'context
+		; equal   { dict [ "a" 1 ] |to-context do\in { a } } '1
+	}
+
+	group "is-string" 
+	""
+	{
+	}
+
+	{
+		equal   { is-string "test" } 1
+		equal   { is-string 'test } 0
+		equal   { is-string 123 } 0
+	}
+
+	group "is-integer" 
+	""
+	{
+	}
+
+	{
+		equal   { is-integer 123 } 1
+		equal   { is-integer 123.4 } 0
+		equal   { is-integer "123" } 0
+	}
+
+	group "is-decimal" 
+	""
+	{
+	}
+
+	{
+		equal   { is-decimal 123.0 } 1
+		equal   { is-decimal 123 } 0
+		equal   { is-decimal "123.4" } 0
+	}
+
+	group "is-number" 
+	""
+	{
+	}
+
+	{
+		equal   { is-number 123 } 1
+		equal   { is-number 123.4 } 1
+		equal   { is-number "123" } 0
+	}
+
+	group "to-uri" 
+	""
+	{
+	}
+
+	{
+		equal   { to-uri "https://example.com" } https://example.com
+		; error { to-uri "not-uri" }
+	}
+
+	group "to-file" 
+	""
+	{
+	}
+
+	{
+		equal   { to-file "example.txt" } %example.txt
+		error { to-file 123 }
+	}
+
+	group "type?" 
+	""
+	{
+	}
+
+	{
+		equal   { type? "test" } 'string
+		equal   { type? 123.4 } 'decimal
+	}
+
+	group "types?" 
+	""
+	{
+	}
+
+	{
+		equal   { types? { "test" 123 } } { string integer }
+	}
+
+	group "inc" 
+	""
+	{
+	}
+
+	{
+		equal   { inc 123 } 124
+		error { inc "123" }
+	}
+
+	group "is-positive" 
+	""
+	{
+	}
+
+	{
+		equal   { is-positive 123 } 1
+		equal   { is-positive -123 } 0
+		error { is-positive "123" }
+	}
+
+	group "is-zero" 
+	""
+	{
+	}
+
+	{
+		equal   { is-zero 0 } 1
+		equal   { is-zero 123 } 0
+		error { is-zero "123" }
+	}
+
+	group "inc!" 
+	""
+	{
+	}
+
+	{
+		equal   { a:: 123 inc! 'a a } 124
+		error { inc! 123 }
+	}
+
+	group "dec!" 
+	""
+	{
+	}
+
+	{
+		equal   { a:: 123 dec! 'a a } 122
+		error { dec! 123 }
+	}
+
+	group "change!" 
+	""
+	{
+	}
+
+	{
+		equal   { a:: 123 change! 333 'a a } 333
+		equal   { a:: 123 change! 124 'a } 1
+		equal   { a:: 123 change! 123 'a } 0
+	}
+
+	group "set!" 
+	""
+	{
+	}
+
+	{
+		equal   { set! { 123 234 } { a b }  b } 234
+	}
+
+	group "dump" 
+	""
+	{
+	}
+
+	{
+		equal { does { 1 } |dump } "fn { } { 1 }"
+	}
+
+	group "dict" 
+	""
+	{
+	}
+
+	{
+		equal { dict { "a" 123 } -> "a" } 123
+	}
+
+	group "list" 
+	""
+	{
+	}
+
+	{
+		equal { list { "a" 123 } -> 1 } "a"
+	}
+
+	group "not" 
+	""
+	{
+	}
+
+	{
+		equal { not true } 0
+		equal { not false } 1
+	}
+
+	group "and" 
+	""
+	{
+	}
+
+	{
+		equal { true .and true } 1
+		equal { false .and true } 0
+	}
+
+	group "or" 
+	""
+	{
+	}
+
+	{
+		equal { true .or true } 1
+		equal { false .or true } 1
+		equal { true .or false } 1
+		equal { false .or false } 0
+	}
+
+	group "odd" 
+	""
+	{
+	}
+
+	{
+		equal { 3 .odd } 1
+		equal { 2 .odd } 0
+	}
+
+	group "even" 
+	""
+	{
+	}
+
+	{
+		equal { 3 .odd } 0
+		equal { 2 .odd } 1
+	}
+
+	group "mod" 
+	""
+	{
+	}
+
+	{
+		equal { 4 .mod 2 } 0
+		equal { 5 .mod 2 } 1
+		equal { 5 .mod 3 } 2
+	}
+
+	group "_+" 
+	""
+	{
+	}
+
+	{
+		equal { 1 + 1 } 2
+		equal { 3 + 4 } 7
+		equal { 5.6 + 7.8 } 13.4
+		equal { "A" + "b" } "Ab"
+		equal { "A" + 1 } "A1"
+		equal { { 1 2 } { 3 4 } } { 1 2 3 4 }
+	}
+
+	group "_-" 
+	""
+	{
+	}
+
+	{
+		equal { 2 - 1 } 1
+		equal { 5 - 6 } -1
+	}
+
+	group "embed" 
+	""
+	{
+	}
+
+	{
+		equal   { embed 101 "val {}" } "val 101"
+	}
+
+	group "difference" 
+	""
+	{
+	}
+
+	{
+		equal { "abcde" .difference "cde" } "ab"
+		equal { difference { 1 2 3 4 } { 2 4 } } { 1 3 }
+		equal { difference list { "Bob" "Sal" "Joe" } list { "Joe" } } { "Bob" "Sal" }
+	}
+
+	group "capitalize" 
+	""
+	{
+	}
+
+	{
+		equal { capitalize "abcde" } "Abcde"
+	}
+
+	group "to-lower" 
+	""
+	{
+	}
+
+	{
+		equal { to-lower "ABCDE" } "abcde"
+	}
+
+	group "to-upper" 
+	""
+	{
+	}
+
+	{
+		equal { to-upper "abcde" } "ABCDE"
+	}
+
+	group "join" 
+	""
+	{
+	}
+
+	{
+		equal { join { "Mary" "Anne" } } "MaryAnne"
+		equal { join { "Spot" "Fido" "Rex" } } "SpotFidoRex"
+	}
+
+	group "join\\with" 
+	""
+	{
+		arg "* to-join"
+		arg "* delimiter"
+	}
+
+	{
+		equal { join\with { "Mary" "Anne" } " " } "Mary Anne"
+		equal { join\with { "Spot" "Fido" "Rex" } "/" } "Spot/Fido/Rex"
+	}
+
+	group "split" 
+	""
+	{
+	}
+
+	{
+		equal { split "a,b,c" "," } { "a" "b" "c" }
+	}
+
+	group "split\\quoted" 
+	""
+	{
+		arg "to-split"
+		arg "splitter"
+		arg "quote"
+	}
+
+	{
+		equal { split\quoted "`a,b`,c,d" "," "`" } { "`a,b`" "c" "d" }
+	}
+
+	group "split\\many" 
+	""
+	{
+		arg "* string"
+		arg "* separator-set"
+	}
+
+	{
+		equal { split\many "192.0.0.1" "." } { "192" "0" "0" "1" }
+		equal { split\many "abcde..e.q|bar" ".|" } { "abcd" "e" "q" "bar" }
+	}
+
+	group "split\\every" 
+	""
+	{
+		arg "* string"
+		arg "* N"
+	}
+
+	{
+		equal { split\every "abcdefg" 3 } { "abc" "def" "g" }
+		equal { split\every "abcdefg" 2 } { "ab" "cd" "ef" "g" }
+		equal { split\every "abcdef" 2 } { "ab" "cd" "ef" }
+	}
+
+	group "first" 
+	""
+	{
+	}
+
+	{
+		equal { first { 1 2 3 4 } } 1
+		equal { rest "abcde" } "a"
+		equal { rest list { 1 2 3 } } 1
+	}
+
+	group "rest" 
+	""
+	{
+	}
+
+	{
+		equal { rest { 1 2 3 4 } } { 2 3 4 }
+		equal { rest "abcde" } "bcde"
+		equal { rest list { 1 2 3 } } list { 2 3 }
+	}
+
+	group "rest\\from" 
+	""
+	{
+	}
+
+	{
+		equal { rest\from { 1 2 3 4 5 6 } 3 } { 4 5 6 }
+		equal { rest\from "abcdefg" 1 } "bcdefg"
+		equal { rest\from list { 1 2 3 4 } 2 } list { 3 4 }
+	}
+
+	group "tail" 
+	""
+	{
+	}
+
+	{
+		equal { tail { 1 2 3 4 5 6 7 } 3 } { 5 6 7 }
+		equal { tail "abcdefg" 4 } "defg"
+		equal { tail list { 1 2 3 4 } 1 } list { 4 }
+	}
+
+	group "last" 
+	""
+	{
+	}
+
+	{
+		equal { last { 1 2 } } 2
+		equal { last "abcd" } "d"
+		equal { list { 4 5 6 } } 6
+	}
+
+	group "head" 
+	""
+	{
+	}
+
+	{
+		equal { head { 4 5 6 7 } 3 } { 4 5 6 }
+		equal { head "abcdefg" 2 } "ab"
+		equal { head "abcdefg" 4 } "abcd"
+		equal { head list { 10 20 30 40 } 2 } list { 10 20 }
+	}
+
+	group "nth" 
+	""
+	{
+	}
+
+	{
+		equal { nth { 1 2 3 4 5 } 4 } 4
+		equal { nth { "a" "b" "c" "d" "e" } 2 } "b"
+	}
+
+	group "values" 
+	""
+	{
+	}
+
+	{
+		equal { dict { "a" 1 "b" 2 "c" 3 } |values } { 1 2 3 }
+	}
+
+	group "range" 
+	""
+	{
+		arg "* low-value"
+		arg "* high-value"
+	}
+
+	{
+		equal { range 1 5 } { 1 2 3 4 5 }
+	}
+
+	group "is-empty" 
+	""
+	{
+	}
+
+	{
+		equal { { } .is-empty } 1
+		equal { dict { } |is-empty } 1
+		equal { spreadsheet { } { } |is-empty } 1
+	}
+
+	group "length?" 
+	""
+	{
+	}
+
+	{
+		equal { { 1 2 3 } .length? } 3
+		equal { length? "abcd" } 4
+		equal { spreadsheet { 'val } { 1 2 3 4 } |length? } 4
+		equal { vector { 10 20 30 } |length? } 3
+	}
+
+	group "keys" 
+	""
+	{
+	}
+
+	{
+		equal { dict { "a" 1 "b" 2 "c" 3 } |keys } { "a" "b" "c" }
+		equal { spreadsheet { 'a 'b 'c } { 1 2 3 } |keys } { 'a 'b 'c }
+	}
+
+	group "cmd" 
+	""
+	{
+	}
+
+	{
+		equal { cmd `echo "hello"` } 1
+	}
+
+}
+

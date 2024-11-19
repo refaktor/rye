@@ -12,7 +12,7 @@ test-framework: context {
 	
 	section: fn { name descr code } { term/magenta term/bold print name term/reset\all print " " + descr , do code print "" }
 	
-	group: fn { name descr args code } { inc! 'cnt  term/green prns " " + name term/reset\all , do code }
+	group: fn { name descr args code } { print "" , inc! 'cnt  term/green prns " " + name term/reset\all , do  code }
 	
 	error-: fn { test } {
 		; try { do\in root-ctx test }
@@ -24,7 +24,8 @@ test-framework: context {
 	}
 
 	equal: fn { test res } {
-		do\in root-ctx test :got = res
+		cc: extends root-ctx { }
+		do\in cc test :got = res
 		|either { term/green prns "✓" term/reset\all } { inc! 'failed , term/red prns " ✗ Failed:" term/reset\all print join { "expected " mold res ", got " mold got } }
 	}
 	
@@ -32,7 +33,8 @@ test-framework: context {
 	}
 
 	stdout: fn { test res } {
-		capture-stdout { do\in root-ctx test } :got = res
+		cc: extends root-ctx { }
+		capture-stdout { do\in cc test } :got = res
 		|either { term/green prns "✓" term/reset\all } { inc! 'failed , term/red prns " ✗ Failed:" term/reset\all  print join { "expected " mold res ", got " mold got } }
 	}
 
@@ -48,8 +50,6 @@ test-framework: context {
 
 		if failed > 0 { exit 1 }
 	}
-
-
 }
 
 docs-framework: context {
@@ -59,7 +59,8 @@ docs-framework: context {
 	group: fn { name descr args code }   { print join { "<h3>" name "</h3><p>" descr "</p><div class='group'>" } , do code , print "</div>" }
 
 	equal: fn { test res } {
-		do\in root-ctx test :got = res
+		cc: extends root-ctx { }
+		do\in cc test :got = res
 		|if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" mold\nowrap test newline "; returns "  replace mold got newline newline + "; "  "</code></pre>" ] }
 	}
 
@@ -67,7 +68,8 @@ docs-framework: context {
 	}
 
 	stdout: fn { test res } {
-		capture-stdout { do\in root-ctx test } :got = res
+		cc: extends root-ctx { }
+		capture-stdout { do\in cc test } :got = res
 		1 |if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" mold\nowrap test newline "; prints " replace mold\nowrap got newline newline + "; " "</code></pre>" ] }
 	}
 
@@ -86,12 +88,12 @@ generate-menu: fn { menu } {
 generate-doc-file: fn { filename menu } {
 	join {
 		%tpl/header.html .read .replace "{{title}}" capitalize filename ; |replace "{{menu}}" generate-menu menu
-		capture-stdout { do\in docs-framework load to-file filename + ".tests.rye" }
+		capture-stdout { do\in docs-framework load to-file filename + ".info.rye" }
 		read %tpl/footer.html
 	} |write* to-file filename + ".html"
 }
 
-menu: { "base" "spreadsheet" }
+menu: { "base" "spreadsheet" "demo" }
 
 print-help: does {
 	print `# Rye's simple testing tool
@@ -123,7 +125,7 @@ test {
 		errors: 0
 		for sections {
 			.to-string .pass { term/bold , prns "\n#" , .to-upper .prns , print "#\n" }
-			|+ ".tests.rye" |to-file |load |^check { "group does not exist!" } |do\in* test-framework |+ errors ::errors }
+			|+ ".info.rye" |to-file |load |^check { "group does not exist!" } |do\in* test-framework |+ errors ::errors }
 		print ""
 	
 		if ( length? sections ) > 1 { 

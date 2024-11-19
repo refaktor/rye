@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"go/ast"
 	"go/parser"
@@ -119,18 +120,66 @@ func outputInfo(infos []builtinInfo) {
 	fmt.Println("}\n")
 }
 
+func outputStats(cnt counters) {
+	fmt.Println("stats {\n") // name
+	fmt.Printf("\tfunctions       \t%d\n", cnt.functions)
+	fmt.Printf("\ttested-functions\t%d\n", cnt.tested_functions)
+	fmt.Printf("\ttests           \t%d\n", cnt.tests)
+	fmt.Printf("\texamples        \t%d\n", cnt.examples)
+	fmt.Printf("\n")
+	fmt.Printf("\ttest-coverage   \t%.1f%%\n", 100*float64(cnt.tested_functions)/float64(cnt.functions))
+	fmt.Printf("\ttests-per-func  \t%.1f\n", float64(cnt.tests)/float64(cnt.tested_functions))
+	fmt.Println("}\n")
+}
+
+var (
+	// fileName = flag.String("fiimle", "", "Path to the Rye file (default: none)")
+	stats = flag.Bool("stats", false, "Show stats about builtins file")
+	ls    = flag.Bool("ls", false, "List builtins files")
+	help  = flag.Bool("help", false, "Displays this help message.")
+)
+
 func main() {
+
+	flag.Usage = func() {
+		fmt.Println("╭────────────────────────────────────────────────────────────────────────────────────────────---")
+		fmt.Println("│ \033[1mrbit - rye builtin info tool")
+		fmt.Println("╰───────────────────────────────────────────────────────────────────────────────────────---")
+		fmt.Println("\n Usage: \033[1mparse\033[0m [\033[1moptions\033[0m] [\033[1mfilename\033[0m or \033[1mcommand\033[0m]")
+		flag.PrintDefaults()
+		fmt.Println("\033[33m  rbit                                                         \033[36m# shows helo")
+		fmt.Println("\033[33m  rbit ../../evaldo/builtins.go > ../../info/base.info.rye   \033[36m# generates the info file")
+		fmt.Println("\033[33m  rbit -stats ../../evaldo/builtins.go                          \033[36m# gets bi coverage stats")
+		fmt.Println("\033[33m  rbit -ls ../../evaldo/                                        \033[36m# lists bi files")
+		fmt.Println("\033[0m\n Thank you for trying out \033[1mRye\033[22m ...")
+		fmt.Println("")
+	}
+	// Parse flags
+	flag.Parse()
+	args := flag.Args()
+
+	if flag.NFlag() == 0 && flag.NArg() == 0 {
+		flag.Usage()
+		os.Exit(0)
+	} else if *ls {
+		fmt.Println("TODO 1")
+	} else {
+		doParsing(args)
+	}
+	// asd
+}
+
+func doParsing(args []string) {
+	/// ###
 
 	infoList := make([]builtinInfo, 0)
 
-	// Check if a filename is provided as an argument
-	if len(os.Args) < 2 {
-		fmt.Println("Usage: go run main.go <filename>")
+	if len(args) < 1 {
+		fmt.Println("File argument missing")
 		return
 	}
-
 	// Get the filename from the first argument
-	filename := os.Args[1]
+	filename := args[0]
 
 	// Create a new token file set
 	fset := token.NewFileSet()
@@ -157,6 +206,7 @@ func main() {
 						if key, ok := kv.Key.(*ast.BasicLit); ok {
 							// Extract the key
 
+							c.functions = c.functions + 1
 							/// fmt.Printf("Key: %s\n", key.Value)
 							// TODO NEXT - parse key into two values
 							info.name = key.Value
@@ -165,7 +215,6 @@ func main() {
 							if comment != "" {
 								/// fmt.Printf("Comment above key: %s\n", strings.TrimSpace(comment))
 								info = parseCommentsAboveKey(comment, &info)
-								c.functions = c.functions + 1
 								if len(info.tests) > 0 {
 									c.tested_functions = c.tested_functions + 1
 									c.tests = c.tests + len(info.tests)
@@ -184,7 +233,11 @@ func main() {
 
 	//	fmt.Println("===================================================")
 
-	outputInfo(infoList)
+	if *stats {
+		outputStats(c)
+	} else {
+		outputInfo(infoList)
+	}
 
 	// 	fmt.Println("===================================================")
 

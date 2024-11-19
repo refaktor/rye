@@ -907,9 +907,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"unset!!": { // ***
+	"unset!": { // ***
 		Argsn: 1,
-		Doc:   "Unset a word in current context, only meant to be used in console.",
+		Doc:   "Unset a word in current context, only meant to be used in console",
 		Pure:  false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch word := arg0.(type) {
@@ -977,7 +977,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"get_": { // *** find a name or decide on order of naming with generic words clashes with
+	"pick": {
 		Argsn: 1,
 		Doc:   "Returns value of the word in context",
 		Pure:  true,
@@ -1107,7 +1107,7 @@ var builtins = map[string]*env.Builtin{
 	// VALUES
 
 	// Tests:
-	// equal { dict { "a" 123 } -> "b" } 123
+	// equal { dict { "a" 123 } -> "a" } 123
 	"dict": { // ***
 		Argsn: 1,
 		Doc:   "Constructs a Dict from the Block of key and value pairs.",
@@ -6412,7 +6412,7 @@ var builtins = map[string]*env.Builtin{
 	// Tests:
 	// equal { "abcde" .difference "cde" } "ab"
 	// equal { difference { 1 2 3 4 } { 2 4 } } { 1 3 }
-	// equal { difference list { "Bob" "Sal" "Joe" } { "Joe" } } { "Bob" "Sal" }
+	// equal { difference list { "Bob" "Sal" "Joe" } list { "Joe" } } { "Bob" "Sal" }
 	"difference": {
 		Argsn: 2,
 		Doc:   "Finds the difference (values in first but not in second) of two values.",
@@ -8087,8 +8087,8 @@ var builtins = map[string]*env.Builtin{
 	},
 	// Tests:
 	// equal { { } .is-empty } 1
-	// equal { dict .is-empty } 1
-	// equal { spreadsheet { } { } .is-empty } 1
+	// equal { dict { } |is-empty } 1
+	// equal { spreadsheet { } { } |is-empty } 1
 	"is-empty": { // **
 		Argsn: 1,
 		Doc:   "Accepts a collection (String, Block, Dict, Spreadsheet) and returns it's length.", // TODO -- accept context
@@ -8148,23 +8148,6 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-	// Args:
-	// * sheet
-	"ncols": {
-		Doc:   "Accepts a Spreadsheet and returns number of columns.",
-		Argsn: 1,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s1 := arg0.(type) {
-			case env.Dict:
-			case env.Block:
-			case env.Spreadsheet:
-				return *env.NewInteger(int64(len(s1.Cols)))
-			default:
-				fmt.Println("Error")
-			}
-			return nil
-		},
-	},
 	// Tests:
 	// equal { dict { "a" 1 "b" 2 "c" 3 } |keys } { "a" "b" "c" }
 	// equal { spreadsheet { 'a 'b 'c } { 1 2 3 } |keys } { 'a 'b 'c }
@@ -8191,106 +8174,6 @@ var builtins = map[string]*env.Builtin{
 				fmt.Println("Error")
 			}
 			return nil
-		},
-	},
-
-	// Tests:
-	// equal { spreadsheet { 'a } { 1 2 3 } .col-sum 'a } 6
-	"col-sum": {
-		Argsn: 2,
-		Doc:   "Accepts a spreadsheet and a column name and returns a sum of a column.", // TODO -- let it accept a block and list also
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			var name string
-			switch s1 := arg0.(type) {
-			case env.Spreadsheet:
-				switch s2 := arg1.(type) {
-				case env.Word:
-					name = ps.Idx.GetWord(s2.Index)
-				case env.String:
-					name = s2.Value
-				default:
-					ps.ErrorFlag = true
-					return env.NewError("second arg not string")
-				}
-				r := s1.Sum(name)
-				if r.Type() == env.ErrorType {
-					ps.ErrorFlag = true
-				}
-				return r
-
-			default:
-				ps.ErrorFlag = true
-				return env.NewError("first arg not spreadsheet")
-			}
-		},
-	},
-
-	// Tests:
-	// equal { spreadsheet { 'a } { 1 2 3 } .col-avg 'a } 2.
-	"col-avg": {
-		Argsn: 2,
-		Doc:   "Accepts a spreadsheet and a column name and returns a sum of a column.", // TODO -- let it accept a block and list also
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			var name string
-			switch s1 := arg0.(type) {
-			case env.Spreadsheet:
-				switch s2 := arg1.(type) {
-				case env.Word:
-					name = ps.Idx.GetWord(s2.Index)
-				case env.String:
-					name = s2.Value
-				default:
-					ps.ErrorFlag = true
-					return env.NewError("second arg not string")
-				}
-				r, err := s1.Sum_Just(name)
-				if err != nil {
-					ps.ErrorFlag = true
-					return env.NewError(err.Error())
-				}
-				n := s1.NRows()
-				return *env.NewDecimal(r / float64(n))
-
-			default:
-				ps.ErrorFlag = true
-				return env.NewError("first arg not spreadsheet")
-			}
-		},
-	},
-
-	// Tests:
-	// equal { spreadsheet { 'a } { 1 2 3 } .A1 } 1
-
-	"A1": {
-		Argsn: 1,
-		Doc:   "Accepts a Spreadsheet and returns the first row first column cell.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s0 := arg0.(type) {
-			case env.Spreadsheet:
-				r := s0.Rows[0].Values[0]
-				return env.ToRyeValue(r)
-
-			default:
-				ps.ErrorFlag = true
-				return env.NewError("first arg not spreadsheet")
-			}
-		},
-	},
-	// Tests:
-	// equal { spreadsheet { 'a } { 1 2 3 } .B1 } 2
-	"B1": {
-		Argsn: 1,
-		Doc:   "Accepts a Spreadsheet and returns the first row second column cell.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s0 := arg0.(type) {
-			case env.Spreadsheet:
-				r := s0.Rows[0].Values[1]
-				return env.ToRyeValue(r)
-
-			default:
-				ps.ErrorFlag = true
-				return env.NewError("first arg not spreadsheet")
-			}
 		},
 	},
 

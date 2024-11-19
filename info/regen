@@ -1,0 +1,2 @@
+../cmd/rbit/rbit ../evaldo/builtins.go > base.info.rye
+../cmd/rbit/rbit ../evaldo/builtins_spreadsheet.go > spreadsheet.info.rye

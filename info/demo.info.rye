@@ -1,0 +1,23 @@
+section "demo" "just testing the testing" {
+
+	group "demo1" 
+	""
+	{
+		arg "* columns"
+		arg "* data"
+	}
+
+	{
+		equal { x: 123 } 123
+	}
+
+	group "demo2" 
+	""
+	{
+		arg "* data"
+	}
+
+	{
+		equal { x: 234 } 234
+	}
+}
