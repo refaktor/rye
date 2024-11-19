@@ -30,8 +30,8 @@ section "base" "base text" {
 
 	{
 		equal {
-		ref spreadsheet { "a" "b" } { 1 10 2 20 } ::sheet
-		sheet .add-rows! [ 3 30 ] sheet .deref .length?
+		ref spreadsheet { "a" "b" } { 1 10 2 20 } :sheet
+		sheet .add-rows [ 3 30 ] sheet .deref .length?
 		} 3
 	}
 
@@ -87,6 +87,33 @@ section "base" "base text" {
 		spr1 .remove-row! 1
 		spr1 .deref .A1
 		} 2
+	}
+
+	group "col-sum" 
+	""
+	{
+	}
+
+	{
+		equal { spreadsheet { 'a } { 1 2 3 } |col-sum "a" } 6
+	}
+
+	group "col-avg" 
+	""
+	{
+	}
+
+	{
+		equal { spreadsheet { 'a } { 1 2 3 } |col-avg 'a } 2
+	}
+
+	group "B1" 
+	""
+	{
+	}
+
+	{
+		equal { spreadsheet { 'a } { 1 2 3 } |B1 } 2
 	}
 
 }

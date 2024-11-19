@@ -218,8 +218,8 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	// 2) A native that is a slice of SpreadsheetRows, like the value returned from `get-rows`
 	// Tests:
 	//  equal {
-	//	 ref spreadsheet { "a" "b" } { 1 10 2 20 } ::sheet
-	//   sheet .add-rows! [ 3 30 ] sheet .deref .length?
+	//	 ref spreadsheet { "a" "b" } { 1 10 2 20 } :sheet
+	//   sheet .add-rows [ 3 30 ] sheet .deref .length?
 	//  } 3
 	// Args:
 	// * sheet -the sheet that is getting rows added to it

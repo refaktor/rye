@@ -907,9 +907,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"unset!!": { // ***
+	"unset!": { // ***
 		Argsn: 1,
-		Doc:   "Unset a word in current context, only meant to be used in console.",
+		Doc:   "Unset a word in current context, only meant to be used in console",
 		Pure:  false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch word := arg0.(type) {
@@ -977,7 +977,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"get_": { // *** find a name or decide on order of naming with generic words clashes with
+	"pick": {
 		Argsn: 1,
 		Doc:   "Returns value of the word in context",
 		Pure:  true,
