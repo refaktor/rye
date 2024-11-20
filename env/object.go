@@ -3,6 +3,7 @@ package env
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -168,7 +169,12 @@ func (i Decimal) Equal(o Object) bool {
 	}
 	// fmt.Println(i.Value)
 	// fmt.Println(o.(Decimal).Value)
-	return i.Value == o.(Decimal).Value
+	const epsilon = 0.0000000000001 // math.SmallestNonzeroFloat64
+	if math.Abs(i.Value-o.(Decimal).Value) <= (epsilon) {
+		return true
+	} else {
+		return false
+	}
 }
 
 func (i Decimal) Dump(e Idxs) string {

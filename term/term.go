@@ -30,7 +30,7 @@ DODO:
 		ClearLine()
 		if i == curr {
 			ColorBrGreen()
-			ColorBold()
+			Bold()
 			fmt.Print("\u00bb ")
 		} else {
 			fmt.Print(" ")
@@ -120,7 +120,7 @@ DODO1:
 		CurRight(right)
 		if i/2 == curr {
 			ColorMagenta()
-			ColorBold()
+			Bold()
 			fmt.Print("\u00bb ")
 		} else {
 			fmt.Print(" ")
@@ -268,12 +268,12 @@ DODO:
 		ClearLine()
 		if ii == curr {
 			ColorBrGreen()
-			ColorBold()
+			Bold()
 			fmt.Print("\u00bb ")
 		} else {
 			fmt.Print(" ")
 		}
-		ColorBold()
+		Bold()
 		fmt.Print(k + ": ")
 		ResetBold()
 		switch ob := v.(type) {
@@ -380,12 +380,12 @@ DODO:
 		ClearLine()
 		if ii == curr {
 			ColorBrGreen()
-			ColorBold()
+			Bold()
 			fmt.Print("\u00bb ")
 		} else {
 			fmt.Print(" ")
 		}
-		ColorBold()
+		Bold()
 		fmt.Print(k + ": ")
 		ResetBold()
 		switch ob := v.(type) {
@@ -510,7 +510,147 @@ DODO:
 	}
 	SaveCurPos()
 	for ic, cn := range bloc.Cols {
-		ColorBold()
+		Bold()
+		fmt.Printf("| %-"+strconv.Itoa(widths[ic])+"s", cn)
+		CloseProps()
+	}
+	fmt.Println("|")
+	fmt.Println("+" + strings.Repeat("-", fulwidth-1) + "+")
+
+	for range bloc.Rows {
+		ClearLine()
+	}
+	for i, r := range bloc.Rows {
+		if i == curr {
+			ColorBrGreen()
+			fmt.Print("")
+		} else {
+			fmt.Print("")
+		}
+		for ic, v := range r.Values {
+			if ic < len(widths) {
+				// fmt.Println(v)
+				switch ob := v.(type) {
+				case env.Object:
+					if mode == 0 {
+						fmt.Printf("| %-"+strconv.Itoa(widths[ic])+"s", util.TruncateString(ob.Print(*idx), widths[ic]))
+						//fmt.Print("| " +  + "\t")
+					} else {
+						fmt.Printf("| %-"+strconv.Itoa(widths[ic])+"s", ob.Inspect(*idx))
+						//fmt.Print("| " +  + "\t")
+					}
+				default:
+					fmt.Printf("| %-"+strconv.Itoa(widths[ic])+"s", fmt.Sprint(ob))
+					///fmt.Print("| " + +"\t")
+				}
+			}
+			// term.CurUp(1)
+		}
+		CloseProps()
+		fmt.Println("|")
+	}
+
+	moveUp = len(bloc.Rows) + 2
+
+	defer func() {
+		// Show cursor.
+		fmt.Printf("\033[?25h")
+	}()
+
+	// RestoreCurPos()
+
+	for {
+		ascii, keyCode, err := GetChar()
+
+		if (ascii == 3 || ascii == 27) || err != nil {
+			fmt.Println()
+			ShowCur()
+			return nil, true
+		}
+
+		if ascii == 13 {
+			fmt.Println()
+			return bloc.GetRowNew(curr), false // bloc.Series.Get(curr), false
+		}
+
+		if ascii == 77 || ascii == 109 {
+			if mode == 0 {
+				mode = 1
+			} else {
+				mode = 0
+			}
+			goto DODO
+		}
+
+		if keyCode == 40 {
+			curr++
+			goto DODO
+		} else if keyCode == 38 {
+			curr--
+			goto DODO
+		}
+	}
+}
+
+// ideation:
+// .display\custom fn { x } { -> 'subject .elipsis 20 .red .prn , spacer 2 , -> 'score .align-right 10 .print }
+func DisplayTableCustom(bloc env.Spreadsheet, code env.Block, idx *env.Idxs) (env.Object, bool) {
+	HideCur()
+	curr := 0
+	moveUp := 0
+	mode := 0 // 0 - human, 1 - dev
+	// get the ideal widths of columns
+	widths := make([]int, len(bloc.Cols))
+	// check all col names
+	for ic, col := range bloc.Cols {
+		widths[ic] = len(col) + 1
+	}
+	// check all data
+	for _, r := range bloc.Rows {
+		for ic, v := range r.Values {
+			ww := 5
+			switch val := v.(type) {
+			case string:
+				ww = len(val) + 2
+				if ww > 52 {
+					ww = 52
+				}
+			case int64:
+				ww = len(strconv.Itoa(int(val))) + 1
+			case env.Integer:
+				ww = len(strconv.Itoa(int(val.Value))) + 1
+			case float64:
+				ww = len(strconv.FormatFloat(val, 'f', 2, 64)) + 1
+			case env.Decimal:
+				ww = len(strconv.FormatFloat(val.Value, 'f', 2, 64)) + 1
+			case env.String:
+				ww = len(val.Print(*idx))
+				if ww > 52 {
+					ww = 52
+				}
+				//if ww > 60 {
+				// ww = 60
+				//}
+			case env.Vector:
+				ww = len(val.Print(*idx))
+			}
+			if len(widths) > ic && widths[ic] < ww {
+				widths[ic] = ww + 1
+			}
+		}
+	}
+	fulwidth := 0
+	for _, w := range widths {
+		fulwidth += w + 2
+	}
+
+DODO:
+	if moveUp > 0 {
+		CurUp(moveUp)
+	}
+	SaveCurPos()
+	for ic, cn := range bloc.Cols {
+		Bold()
 		fmt.Printf("| %-"+strconv.Itoa(widths[ic])+"s", cn)
 		CloseProps()
 	}
@@ -615,13 +755,17 @@ func RestoreCurPos() {
 	fmt.Print("\x1b8")
 }
 
+// Standard colors
+func ColorBlack() {
+	fmt.Printf("\x1b[30m")
+}
 func ColorRed() {
 	fmt.Printf("\x1b[31m")
 }
 func ColorGreen() {
 	fmt.Printf("\x1b[32m")
 }
-func ColorOrange() {
+func ColorYellow() {
 	fmt.Printf("\x1b[33m")
 }
 func ColorBlue() {
@@ -636,17 +780,107 @@ func ColorCyan() {
 func ColorWhite() {
 	fmt.Printf("\x1b[37m")
 }
+
+// Standard colors returned
+func StrColorBlack() string {
+	return "\x1b[30m"
+}
+func StrColorRed() string {
+	return "\x1b[31m"
+}
+func StrColorGreen() string {
+	return "\x1b[32m"
+}
+func StrColorYellow() string {
+	return "\x1b[33m"
+}
+func StrColorBlue() string {
+	return "\x1b[34m"
+}
+func StrColorMagenta() string {
+	return "\x1b[35m"
+}
+func StrColorCyan() string {
+	return "\x1b[36m"
+}
+func StrColorWhite() string {
+	return "\x1b[37m"
+}
+
+func StrColorBrBlack() string {
+	return "\x1b[30;1m"
+}
+
+// Bright colors
+func ColorBrBlack() {
+	fmt.Printf("\x1b[30;1m")
+}
+func ColorBrRed() {
+	fmt.Printf("\x1b[31;1m")
+}
 func ColorBrGreen() {
 	fmt.Printf("\x1b[32;1m")
 }
-func ColorBold() {
+func ColorBrYellow() {
+	fmt.Printf("\x1b[33;1m")
+}
+func ColorBrBlue() {
+	fmt.Printf("\x1b[34;1m")
+}
+func ColorBrMagenta() {
+	fmt.Printf("\x1b[36;1m")
+}
+func ColorBrCyan() {
+	fmt.Printf("\x1b[37;1m")
+}
+func ColorBrWhite() {
+	fmt.Printf("\x1b[37;1m")
+}
+
+// Background
+func ColorBgBlack() {
+	fmt.Printf("\x1b[40m")
+}
+func ColorBgRed() {
+	fmt.Printf("\x1b[41m")
+}
+func ColorBgGreen() {
+	fmt.Printf("\x1b[42m")
+}
+func ColorBgYellow() {
+	fmt.Printf("\x1b[43m")
+}
+func ColorBgBlue() {
+	fmt.Printf("\x1b[44m")
+}
+func ColorBgMagenta() {
+	fmt.Printf("\x1b[45m")
+}
+func ColorBgCyan() {
+	fmt.Printf("\x1b[46m")
+}
+func ColorBgWhite() {
+	fmt.Printf("\x1b[47m")
+}
+
+// Font style
+func Bold() {
 	fmt.Printf("\x1b[1m")
+}
+func Italic() {
+	fmt.Printf("\x1b[3m")
+}
+func Underline() {
+	fmt.Printf("\x1b[4m")
 }
 func ResetBold() {
 	fmt.Printf("\x1b[22m")
 }
 func CloseProps() {
 	fmt.Printf("\x1b[0m")
+}
+func StrCloseProps() string {
+	return "\x1b[0m"
 }
 func CurUp(n int) {
 	fmt.Printf("\x1b[%dA", n)

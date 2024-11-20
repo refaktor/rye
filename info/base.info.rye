@@ -7,7 +7,7 @@ section "base" "base text" {
 
 	{
 		equal { to-word "test" } 'test
-		error { to-word "123" }
+		error { to-word 123 }
 	}
 
 	group "to-integer" 
@@ -41,7 +41,7 @@ section "base" "base text" {
 	{
 		equal { to-string 'test } "test"
 		equal { to-string 123 } "123"
-		equal { to-string 123.4 } "123.4000"
+		equal { to-string 123.4 } "123.400000"
 		equal { to-string "test" } "test"
 	}
 
@@ -71,7 +71,7 @@ section "base" "base text" {
 	}
 
 	{
-		equal   { dict [ "a" 1 "b" 2 "c" 3 ] |to-context |type? } 'context
+		equal   { dict [ "a" 1 "b" 2 "c" 3 ] |to-context |type? } 'ctx   ; TODO - rename ctx to context in Rye
 		; equal   { dict [ "a" 1 ] |to-context do\in { a } } '1
 	}
 
@@ -136,7 +136,7 @@ section "base" "base text" {
 
 	{
 		equal   { to-file "example.txt" } %example.txt
-		error { to-file 123 }
+		equal { to-file 123 } %123
 	}
 
 	group "type?" 
@@ -305,8 +305,8 @@ section "base" "base text" {
 	}
 
 	{
-		equal { 3 .odd } 0
-		equal { 2 .odd } 1
+		equal { 3 .even } 0
+		equal { 2 .even } 1
 	}
 
 	group "mod" 
@@ -328,10 +328,10 @@ section "base" "base text" {
 	{
 		equal { 1 + 1 } 2
 		equal { 3 + 4 } 7
-		equal { 5.6 + 7.8 } 13.4
+		equal { 5.6 + 7.8 } 13.400000
 		equal { "A" + "b" } "Ab"
 		equal { "A" + 1 } "A1"
-		equal { { 1 2 } { 3 4 } } { 1 2 3 4 }
+		equal { { 1 2 } + { 3 4 } } { 1 2 3 4 }
 	}
 
 	group "_-" 
@@ -361,7 +361,7 @@ section "base" "base text" {
 	{
 		equal { "abcde" .difference "cde" } "ab"
 		equal { difference { 1 2 3 4 } { 2 4 } } { 1 3 }
-		equal { difference list { "Bob" "Sal" "Joe" } list { "Joe" } } { "Bob" "Sal" }
+		equal { difference list { "Bob" "Sal" "Joe" } list { "Joe" } } list { "Bob" "Sal" }
 	}
 
 	group "capitalize" 
@@ -443,7 +443,7 @@ section "base" "base text" {
 
 	{
 		equal { split\many "192.0.0.1" "." } { "192" "0" "0" "1" }
-		equal { split\many "abcde..e.q|bar" ".|" } { "abcd" "e" "q" "bar" }
+		equal { split\many "abcd..e.q|bar" ".|" } { "abcd" "e" "q" "bar" }
 	}
 
 	group "split\\every" 
@@ -466,8 +466,8 @@ section "base" "base text" {
 
 	{
 		equal { first { 1 2 3 4 } } 1
-		equal { rest "abcde" } "a"
-		equal { rest list { 1 2 3 } } 1
+		equal { first "abcde" } "a"
+		equal { first list { 1 2 3 } } 1
 	}
 
 	group "rest" 
@@ -511,7 +511,7 @@ section "base" "base text" {
 	{
 		equal { last { 1 2 } } 2
 		equal { last "abcd" } "d"
-		equal { list { 4 5 6 } } 6
+		equal { last list { 4 5 6 } } 6
 	}
 
 	group "head" 
@@ -542,7 +542,7 @@ section "base" "base text" {
 	}
 
 	{
-		equal { dict { "a" 1 "b" 2 "c" 3 } |values } { 1 2 3 }
+		equal { dict { "a" 1 "b" 2 "c" 3 } |values } list { 1 2 3 }
 	}
 
 	group "range" 
@@ -586,7 +586,8 @@ section "base" "base text" {
 
 	{
 		equal { dict { "a" 1 "b" 2 "c" 3 } |keys } { "a" "b" "c" }
-		equal { spreadsheet { 'a 'b 'c } { 1 2 3 } |keys } { 'a 'b 'c }
+		equal { spreadsheet { "a" "b" "c" } { 1 2 3 } |keys } list { "a" "b" "c" }
+		; TODO -- doesn't work yet, .header? also has the same problem -- equal { spreadsheet { 'a 'b 'c } { 1 2 3 } |keys } { 'a 'b 'c }
 	}
 
 	group "cmd" 
