@@ -812,44 +812,6 @@ var Builtins_math = map[string]*env.Builtin{
 			return *env.NewDecimal(fa * float64(math.Pi) / 180.0)
 		},
 	},
-	"is-near": {
-		Argsn: 2,
-		Doc:   "Returns true if two decimals are close.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			fa, fb, errPos := assureFloats(arg0, arg1)
-			if errPos > 0 {
-				return MakeArgError(ps, errPos, []env.Type{env.IntegerType, env.BlockType}, "is-near")
-			}
-			const epsilon = 0.0000000000001 // math.SmallestNonzeroFloat64
-			if math.Abs(fa-fb) <= (epsilon) {
-				return env.NewInteger(1)
-			} else {
-				return env.NewInteger(0)
-			}
-		},
-	},
-	"near-zero": {
-		Argsn: 1,
-		Doc:   "Returns true if a decimal is close to zero.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			var fa float64
-			switch a := arg0.(type) {
-			case env.Decimal:
-				fa = a.Value
-			case env.Integer:
-				fa = float64(a.Value)
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.BlockType}, "near-zero")
-			}
-			// const epsilon = math.SmallestNonzeroFloat64
-			const epsilon = 0.0000000000001 // math.SmallestNonzeroFloat64
-			if math.Abs(fa) <= epsilon {
-				return env.NewInteger(1)
-			} else {
-				return env.NewInteger(0)
-			}
-		},
-	},
 	"to-eyr": {
 		Argsn: 1,
 		Doc:   "Math dialect to Eyr dialect",

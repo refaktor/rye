@@ -143,14 +143,15 @@ func main() {
 
 	flag.Usage = func() {
 		fmt.Println("╭────────────────────────────────────────────────────────────────────────────────────────────---")
-		fmt.Println("│ \033[1mrbit - rye builtin info tool")
+		fmt.Println("│ \033[1mrbit - rye builtin info tool - https://ryelang.org")
 		fmt.Println("╰───────────────────────────────────────────────────────────────────────────────────────---")
-		fmt.Println("\n Usage: \033[1mparse\033[0m [\033[1moptions\033[0m] [\033[1mfilename\033[0m or \033[1mcommand\033[0m]")
+		fmt.Println("\n Usage: \033[1mparse\033[0m [\033[1moptions\033[0m] [\033[1mfilename\033[0m]")
 		flag.PrintDefaults()
-		fmt.Println("\033[33m  rbit                                                         \033[36m# shows helo")
+		fmt.Println("\033[33m  rbit                                                       \033[36m# shows this help")
 		fmt.Println("\033[33m  rbit ../../evaldo/builtins.go > ../../info/base.info.rye   \033[36m# generates the info file")
-		fmt.Println("\033[33m  rbit -stats ../../evaldo/builtins.go                          \033[36m# gets bi coverage stats")
-		fmt.Println("\033[33m  rbit -ls ../../evaldo/                                        \033[36m# lists bi files")
+		fmt.Println("\033[33m  rbit -stats ../../evaldo/builtins.go                       \033[36m# gets builtins file stats")
+		fmt.Println("\033[33m  rbit -ls ../../evaldo/                                     \033[36m# lists builtin files")
+		fmt.Println("\033[33m  rbit -help                                                 \033[36m# shows this help")
 		fmt.Println("\033[0m\n Thank you for trying out \033[1mRye\033[22m ...")
 		fmt.Println("")
 	}

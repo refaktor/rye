@@ -252,8 +252,8 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 			if posMode {
 				idx--
 			}
-			if len(s1.Data) >= int(idx)+1 {
-				v := s1.Data[idx]
+			if len(s1.Data) > int(idx) && idx >= 0 {
+				v := s1.Data[idx-1]
 				return env.ToRyeValue(v)
 			} else {
 				ps.FailureFlag = true
@@ -267,8 +267,8 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 			if posMode {
 				idx--
 			}
-			if len(s1.Data) >= int(idx)+1 {
-				v := s1.Data[idx]
+			if len(s1.Data) > int(idx) && idx >= 0 {
+				v := s1.Data[idx-1]
 				return env.ToRyeValue(v)
 			} else {
 				ps.FailureFlag = true
@@ -410,7 +410,7 @@ var ShowResults bool
 var builtins = map[string]*env.Builtin{
 	// Tests:
 	// equal { to-word "test" } 'test
-	// error { to-word "123" }
+	// error { to-word 123 }
 	"to-word": {
 		Argsn: 1,
 		Doc:   "Tries to change a Rye value to a word with same name.",
@@ -490,7 +490,7 @@ var builtins = map[string]*env.Builtin{
 	// Tests:
 	// equal { to-string 'test } "test"
 	// equal { to-string 123 } "123"
-	// equal { to-string 123.4 } "123.4000"
+	// equal { to-string 123.4 } "123.400000"
 	// equal { to-string "test" } "test"
 	"to-string": { // ***
 		Argsn: 1,
@@ -536,7 +536,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal   { dict [ "a" 1 "b" 2 "c" 3 ] |to-context |type? } 'context
+	// equal   { dict [ "a" 1 "b" 2 "c" 3 ] |to-context |type? } 'ctx   ; TODO - rename ctx to context in Rye
 	// ; equal   { dict [ "a" 1 ] |to-context do\in { a } } '1
 	"to-context": { // ***
 		Argsn: 1,
@@ -642,7 +642,7 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal   { to-file "example.txt" } %example.txt
-	// error { to-file 123 }
+	// equal { to-file 123 } %123
 	"to-file": { // **  TODO-FIXME: return possible failures
 		Argsn: 1,
 		Doc:   "Tries to change Rye value to a file.",
@@ -1290,8 +1290,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 	// Tests:
-	// equal { 3 .odd } 0
-	// equal { 2 .odd } 1
+	// equal { 3 .even } 0
+	// equal { 2 .even } 1
 	"even": { // ***
 		Argsn: 1,
 		Doc:   "Checks if a number is even.",
@@ -1345,10 +1345,10 @@ var builtins = map[string]*env.Builtin{
 	// Tests:
 	// equal { 1 + 1 } 2
 	// equal { 3 + 4 } 7
-	// equal { 5.6 + 7.8 } 13.4
+	// equal { 5.6 + 7.8 } 13.400000
 	// equal { "A" + "b" } "Ab"
 	// equal { "A" + 1 } "A1"
-	// equal { { 1 2 } { 3 4 } } { 1 2 3 4 }
+	// equal { { 1 2 } + { 3 4 } } { 1 2 3 4 }
 	"_+": { // **
 		Argsn: 2,
 		Doc:   "Adds or joins two values together (Integers, Strings, Uri-s and Blocks)",
@@ -1960,7 +1960,28 @@ var builtins = map[string]*env.Builtin{
 					return obj
 				}
 			}
-
+			return arg0
+		},
+	},
+	"display\\custom": {
+		Argsn: 2,
+		Doc:   "Work in progress Interactively displays a value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			// This is temporary implementation for experimenting what it would work like at all
+			// later it should belong to the object (and the medium of display, terminal, html ..., it's part of the frontend)
+			term.SaveCurPos()
+			switch bloc := arg0.(type) {
+			case env.Spreadsheet:
+				obj, esc := term.DisplayTable(bloc, ps.Idx)
+				if !esc {
+					return obj
+				}
+			case *env.Spreadsheet:
+				obj, esc := term.DisplayTable(*bloc, ps.Idx)
+				if !esc {
+					return obj
+				}
+			}
 			return arg0
 		},
 	},
@@ -6412,7 +6433,7 @@ var builtins = map[string]*env.Builtin{
 	// Tests:
 	// equal { "abcde" .difference "cde" } "ab"
 	// equal { difference { 1 2 3 4 } { 2 4 } } { 1 3 }
-	// equal { difference list { "Bob" "Sal" "Joe" } list { "Joe" } } { "Bob" "Sal" }
+	// equal { difference list { "Bob" "Sal" "Joe" } list { "Joe" } } list { "Bob" "Sal" }
 	"difference": {
 		Argsn: 2,
 		Doc:   "Finds the difference (values in first but not in second) of two values.",
@@ -6732,7 +6753,7 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { split\many "192.0.0.1" "." } { "192" "0" "0" "1" }
-	// equal { split\many "abcde..e.q|bar" ".|" } { "abcd" "e" "q" "bar" }
+	// equal { split\many "abcd..e.q|bar" ".|" } { "abcd" "e" "q" "bar" }
 	// Args:
 	// * string
 	// * separator-set
@@ -6807,8 +6828,8 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { first { 1 2 3 4 } } 1
-	// equal { rest "abcde" } "a"
-	// equal { rest list { 1 2 3 } } 1
+	// equal { first "abcde" } "a"
+	// equal { first list { 1 2 3 } } 1
 	"first": { // **
 		Argsn: 1,
 		Doc:   "Accepts a Block, List or String and returns the first item.",
@@ -7025,7 +7046,7 @@ var builtins = map[string]*env.Builtin{
 	// Tests:
 	// equal { last { 1 2 } } 2
 	// equal { last "abcd" } "d"
-	// equal { list { 4 5 6 } } 6
+	// equal { last list { 4 5 6 } } 6
 	"last": { // **
 		Argsn: 1,
 		Doc:   "Accepts a Block, List or String and returns the last value in it.",
@@ -7152,7 +7173,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { dict { "a" 1 "b" 2 "c" 3 } |values } { 1 2 3 }
+	// equal { dict { "a" 1 "b" 2 "c" 3 } |values } list { 1 2 3 }
 	"values": { // **
 		Argsn: 1,
 		Doc:   "Accepts a Dict and returns a List of just values.",
@@ -8150,7 +8171,8 @@ var builtins = map[string]*env.Builtin{
 	},
 	// Tests:
 	// equal { dict { "a" 1 "b" 2 "c" 3 } |keys } { "a" "b" "c" }
-	// equal { spreadsheet { 'a 'b 'c } { 1 2 3 } |keys } { 'a 'b 'c }
+	// equal { spreadsheet { "a" "b" "c" } { 1 2 3 } |keys } list { "a" "b" "c" }
+	// ; TODO -- doesn't work yet, .header? also has the same problem -- equal { spreadsheet { 'a 'b 'c } { 1 2 3 } |keys } { 'a 'b 'c }
 	"keys": {
 		Argsn: 1,
 		Doc:   "Accepts Dict or Spreadsheet and returns a Block of keys or column names.", // TODO -- accept context also
@@ -8165,11 +8187,7 @@ var builtins = map[string]*env.Builtin{
 				}
 				return *env.NewBlock(*env.NewTSeries(keys))
 			case env.Spreadsheet:
-				keys := make([]env.Object, len(s1.Cols))
-				for i, k := range s1.Cols {
-					keys[i] = *env.NewString(k)
-				}
-				return *env.NewBlock(*env.NewTSeries(keys))
+				return s1.GetColumns()
 			default:
 				fmt.Println("Error")
 			}
