@@ -1970,16 +1970,25 @@ var builtins = map[string]*env.Builtin{
 			// This is temporary implementation for experimenting what it would work like at all
 			// later it should belong to the object (and the medium of display, terminal, html ..., it's part of the frontend)
 			term.SaveCurPos()
-			switch bloc := arg0.(type) {
-			case env.Spreadsheet:
-				obj, esc := term.DisplayTable(bloc, ps.Idx)
-				if !esc {
-					return obj
-				}
-			case *env.Spreadsheet:
-				obj, esc := term.DisplayTable(*bloc, ps.Idx)
-				if !esc {
-					return obj
+			switch fnc := arg1.(type) {
+			case env.Function:
+				switch bloc := arg0.(type) {
+				case env.Spreadsheet:
+					obj, esc := term.DisplayTableCustom(
+						bloc,
+						func(row env.Object, iscurr env.Integer) { CallFunctionArgsN(fnc, ps, ps.Ctx, row, iscurr) },
+						ps.Idx)
+					if !esc {
+						return obj
+					}
+				case *env.Spreadsheet:
+					obj, esc := term.DisplayTableCustom(
+						*bloc,
+						func(row env.Object, iscurr env.Integer) { CallFunctionArgsN(fnc, ps, ps.Ctx, row, iscurr) },
+						ps.Idx)
+					if !esc {
+						return obj
+					}
 				}
 			}
 			return arg0

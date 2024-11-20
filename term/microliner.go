@@ -1,9 +1,11 @@
 package term
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"strings"
 	"sync"
 	"unicode"
@@ -106,6 +108,58 @@ func (s *MLState) cursorPos2(x int, y int) {
 		trace(y)
 		s.sendBack(fmt.Sprintf("\x1b[%dA", y))
 	}
+}
+
+// HISTORY
+
+func (s *MLState) ReadHistory(r io.Reader) (num int, err error) {
+	s.historyMutex.Lock()
+	defer s.historyMutex.Unlock()
+
+	in := bufio.NewReader(r)
+	num = 0
+	for {
+		line, part, err := in.ReadLine()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return num, err
+		}
+		if part {
+			return num, fmt.Errorf("line %d is too long", num+1)
+		}
+		if !utf8.Valid(line) {
+			return num, fmt.Errorf("invalid string at line %d", num+1)
+		}
+		num++
+		s.history = append(s.history, string(line))
+		if len(s.history) > HistoryLimit {
+			s.history = s.history[1:]
+		}
+	}
+	return num, nil
+}
+
+// WriteHistory writes scrollback history to w. Returns the number of lines
+// successfully written, and any write error.
+//
+// Unlike the rest of liner's API, WriteHistory is safe to call
+// from another goroutine while Prompt is in progress.
+// This exception is to facilitate the saving of the history buffer
+// during an unexpected exit (for example, due to Ctrl-C being invoked)
+func (s *MLState) WriteHistory(w io.Writer) (num int, err error) {
+	s.historyMutex.RLock()
+	defer s.historyMutex.RUnlock()
+
+	for _, item := range s.history {
+		_, err := fmt.Fprintln(w, item)
+		if err != nil {
+			return num, err
+		}
+		num++
+	}
+	return num, nil
 }
 
 // TAB COMPLETER
@@ -763,7 +817,7 @@ startOfHere:
 					line = line[:0]
 					pos = 0
 					s.restartPrompt() */
-					// fmt.Print("case C")
+					fmt.Print("case C")
 					return "", nil
 				case "a":
 					pos = 0
