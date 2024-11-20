@@ -30,7 +30,7 @@ func DisplayBlock(bloc env.Block, idx *env.Idxs) (env.Object, bool) {
 		ClearLine()
 		if i == curr {
 			ColorBrGreen()
-			ColorBold()
+			Bold()
 			fmt.Print("\u00bb ")
 		} else {
 			fmt.Print(" ")
@@ -137,13 +137,17 @@ func RestoreCurPos() {
 	sendBack("\x1b8")
 }
 
+// Standard colors
+func ColorBlack() {
+	sendBack("\x1b[30m")
+}
 func ColorRed() {
 	sendBack("\x1b[31m")
 }
 func ColorGreen() {
 	sendBack("\x1b[32m")
 }
-func ColorOrange() {
+func ColorYellow() {
 	sendBack("\x1b[33m")
 }
 func ColorBlue() {
@@ -158,17 +162,108 @@ func ColorCyan() {
 func ColorWhite() {
 	sendBack("\x1b[37m")
 }
+
+// Standard colors returned
+func StrColorBlack() string {
+	return "\x1b[30m"
+}
+func StrColorRed() string {
+	return "\x1b[31m"
+}
+func StrColorGreen() string {
+	return "\x1b[32m"
+}
+func StrColorYellow() string {
+	return "\x1b[33m"
+}
+func StrColorBlue() string {
+	return "\x1b[34m"
+}
+func StrColorMagenta() string {
+	return "\x1b[35m"
+}
+func StrColorCyan() string {
+	return "\x1b[36m"
+}
+func StrColorWhite() string {
+	return "\x1b[37m"
+}
+
+func StrColorBrBlack() string {
+	return "\x1b[30;1m"
+}
+
+// Bright colors
+func ColorBrBlack() {
+	sendBack("\x1b[30;1m")
+}
+func ColorBrRed() {
+	sendBack("\x1b[31;1m")
+}
 func ColorBrGreen() {
 	sendBack("\x1b[32;1m")
 }
-func ColorBold() {
+func ColorBrYellow() {
+	sendBack("\x1b[33;1m")
+}
+func ColorBrBlue() {
+	sendBack("\x1b[34;1m")
+}
+func ColorBrMagenta() {
+	sendBack("\x1b[36;1m")
+}
+func ColorBrCyan() {
+	sendBack("\x1b[37;1m")
+}
+func ColorBrWhite() {
+	sendBack("\x1b[37;1m")
+}
+
+// Background
+func ColorBgBlack() {
+	sendBack("\x1b[40m")
+}
+func ColorBgRed() {
+	sendBack("\x1b[41m")
+}
+func ColorBgGreen() {
+	sendBack("\x1b[42m")
+}
+func ColorBgYellow() {
+	sendBack("\x1b[43m")
+}
+func ColorBgBlue() {
+	sendBack("\x1b[44m")
+}
+func ColorBgMagenta() {
+	sendBack("\x1b[45m")
+}
+func ColorBgCyan() {
+	sendBack("\x1b[46m")
+}
+func ColorBgWhite() {
+	sendBack("\x1b[47m")
+}
+
+// Font style
+func Bold() {
 	sendBack("\x1b[1m")
 }
+func Italic() {
+	sendBack("\x1b[3m")
+}
+func Underline() {
+	sendBack("\x1b[4m")
+}
+
 func ResetBold() {
 	sendBack("\x1b[22m")
 }
 func CloseProps() {
 	sendBack("\x1b[0m")
+}
+func StrCloseProps() string {
+	return "\x1b[0m"
 }
 func CurUp(n int) {
 	sendBack(fmt.Sprintf("\x1b[%dA", n))
