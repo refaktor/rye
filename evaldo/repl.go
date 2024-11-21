@@ -5,6 +5,7 @@ package evaldo
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -20,7 +21,7 @@ import (
 )
 
 var (
-	history_fn = filepath.Join(os.TempDir(), ".rye_repl_history")
+	history_fn = filepath.Join(os.TempDir(), ".rye_console_history")
 	names      = []string{"add", "join", "return", "fn", "fail", "if"}
 )
 
@@ -367,6 +368,14 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 	ml := term.NewMicroLiner(c, r.recieveMessage, r.recieveLine)
 	r.ml = ml
 
+	if f, err := os.Open(history_fn); err == nil {
+		if _, err := ml.ReadHistory(f); err != nil {
+			log.Print("Error reading history file: ", err)
+		}
+		fmt.Println("Read history")
+		f.Close()
+	}
+
 	ml.SetCompleter(func(line string, mode int) (c []string) {
 		// #IMPROV #IDEA words defined in current context should be bold
 		// #IMPROV #Q how would we cycle just through words in current context?
@@ -491,6 +500,19 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 		}
 	}(ctx)
 
+	defer func() {
+		// TODO -- make it save hist
+		if f, err := os.Create(history_fn); err != nil {
+			fmt.Println("Error writing history file: ", err)
+		} else {
+			if _, err := ml.WriteHistory(f); err != nil {
+				fmt.Println("Error writing history file: ", err)
+			}
+			f.Close()
+		}
+		fmt.Println("Wrote history")
+	}()
+
 	// fmt.Println("MICRO")
 	_, err = ml.MicroPrompt("x> ", "", 0, ctx)
 	if err != nil {
@@ -498,15 +520,6 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 	}
 	// fmt.Println("END")
 
-	// TODO -- make it save history
-	/* if f, err := os.Create(history_fn); err != nil {
-		log.Print("Error writing history file: ", err)
-	} else {
-		if _, err := line.WriteHistory(f); err != nil {
-			log.Print("Error writing history file: ", err)
-		}
-		f.Close()
-	}*/
 }
 
 /*  THIS WAS DISABLED TEMP FOR WASM MODE .. 20250116 func DoGeneralInput(es *env.ProgramState, prompt string) {

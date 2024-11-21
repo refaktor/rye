@@ -118,6 +118,10 @@ func DisplayTable(bloc env.Spreadsheet, idx *env.Idxs) (env.Object, bool) {
 	panic("unimplemented")
 }
 
+func DisplayTableCustom(bloc env.Spreadsheet, myfn func(row env.Object, iscurr env.Integer), idx *env.Idxs) (env.Object, bool) {
+	panic("unimplemented")
+}
+
 func ShowCur() {
 	sendBack("\x1b[?25h")
 }

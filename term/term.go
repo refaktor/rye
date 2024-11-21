@@ -594,7 +594,7 @@ DODO:
 
 // ideation:
 // .display\custom fn { x } { -> 'subject .elipsis 20 .red .prn , spacer 2 , -> 'score .align-right 10 .print }
-func DisplayTableCustom(bloc env.Spreadsheet, code env.Block, idx *env.Idxs) (env.Object, bool) {
+func DisplayTableCustom(bloc env.Spreadsheet, myfn func(row env.Object, iscurr env.Integer), idx *env.Idxs) (env.Object, bool) {
 	HideCur()
 	curr := 0
 	moveUp := 0
@@ -649,48 +649,32 @@ DODO:
 		CurUp(moveUp)
 	}
 	SaveCurPos()
-	for ic, cn := range bloc.Cols {
+	/* for ic, cn := range bloc.Cols {
 		Bold()
 		fmt.Printf("| %-"+strconv.Itoa(widths[ic])+"s", cn)
 		CloseProps()
 	}
 	fmt.Println("|")
 	fmt.Println("+" + strings.Repeat("-", fulwidth-1) + "+")
+	*/
 
 	for range bloc.Rows {
 		ClearLine()
 	}
 	for i, r := range bloc.Rows {
+		iscurr := *env.NewInteger(0)
 		if i == curr {
-			ColorBrGreen()
-			fmt.Print("")
-		} else {
-			fmt.Print("")
+			iscurr = *env.NewInteger(1)
 		}
-		for ic, v := range r.Values {
-			if ic < len(widths) {
-				// fmt.Println(v)
-				switch ob := v.(type) {
-				case env.Object:
-					if mode == 0 {
-						fmt.Printf("| %-"+strconv.Itoa(widths[ic])+"s", util.TruncateString(ob.Print(*idx), widths[ic]))
-						//fmt.Print("| " +  + "\t")
-					} else {
-						fmt.Printf("| %-"+strconv.Itoa(widths[ic])+"s", ob.Inspect(*idx))
-						//fmt.Print("| " +  + "\t")
-					}
-				default:
-					fmt.Printf("| %-"+strconv.Itoa(widths[ic])+"s", fmt.Sprint(ob))
-					///fmt.Print("| " + +"\t")
-				}
-			}
-			// term.CurUp(1)
-		}
-		CloseProps()
-		fmt.Println("|")
+
+		// call funtion with row and is-current value
+		myfn(r, iscurr)
+
+		//CloseProps()
+		// fmt.Println("|")
 	}
 
-	moveUp = len(bloc.Rows) + 2
+	moveUp = len(bloc.Rows)
 
 	defer func() {
 		// Show cursor.
