@@ -21,7 +21,7 @@ import (
 )
 
 var (
-	history_fn = filepath.Join(os.TempDir(), ".rye_repl_history")
+	history_fn = filepath.Join(os.TempDir(), ".rye_console_history")
 	names      = []string{"add", "join", "return", "fn", "fail", "if"}
 )
 
@@ -372,7 +372,7 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 		if _, err := ml.ReadHistory(f); err != nil {
 			log.Print("Error reading history file: ", err)
 		}
-		fmt.Println("Reading history")
+		fmt.Println("Read history")
 		f.Close()
 	}
 
@@ -501,17 +501,16 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 	}(ctx)
 
 	defer func() {
-		fmt.Println("Writing history 1")
 		// TODO -- make it save hist
 		if f, err := os.Create(history_fn); err != nil {
 			fmt.Println("Error writing history file: ", err)
 		} else {
-			fmt.Println("Writing history 2")
 			if _, err := ml.WriteHistory(f); err != nil {
 				fmt.Println("Error writing history file: ", err)
 			}
 			f.Close()
 		}
+		fmt.Println("Wrote history")
 	}()
 
 	// fmt.Println("MICRO")

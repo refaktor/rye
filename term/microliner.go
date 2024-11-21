@@ -817,7 +817,7 @@ startOfHere:
 					line = line[:0]
 					pos = 0
 					s.restartPrompt() */
-					fmt.Print("case C")
+					fmt.Print("Ctrl+C detected")
 					return "", nil
 				case "a":
 					pos = 0

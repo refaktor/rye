@@ -1,0 +1,21 @@
+
+list: { 1 2 5 3 5 7 }
+
+should-keept: fn { v arr } { either is-empty arr { true } { v >= last arr } }
+; x> 2 .is-keept { }
+;[Integer: 1]
+; x> 2 .is-keept { 3 }
+; [Integer: 0]
+; x> 2 .is-keept { 1 }
+; [Integer: 1]
+list .fold 'a { } { .should-keep a ~if { a + [ x ] } { a } }
+
+
+; TODO --.- negative-infinity is lower than anything ...
+; TODO --- make it fail if you compare integer and string for example : Principle: code shouldn't work because of hidden knowledge or specific lanugage quirks
+;  the neg-infinity ... lowest-value can compare with anything but is always lowest ... similar highest value
+
+
+should-drop: fn { v arr } { any { not is-empty arr  v < last arr } }
+
+list .fold 'a { } fn1 { .should-drop a |^if { a } , .concat* a }
