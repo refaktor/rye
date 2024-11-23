@@ -8118,7 +8118,7 @@ var builtins = map[string]*env.Builtin{
 	// Tests:
 	// equal { { } .is-empty } 1
 	// equal { dict { } |is-empty } 1
-	// equal { spreadsheet { } { } |is-empty } 1
+	// equal { spreadsheet { 'a 'b } { } |is-empty } 1
 	"is-empty": { // **
 		Argsn: 1,
 		Doc:   "Accepts a collection (String, Block, Dict, Spreadsheet) and returns it's length.", // TODO -- accept context

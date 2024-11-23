@@ -11,6 +11,18 @@ section "base" "base text" {
 		equal { spreadsheet { "a" } { 1 2 } |type? } 'spreadsheet
 	}
 
+	group "spreadsheet\\rows" 
+	""
+	{
+		arg "* columns - names of the columns"
+		arg "* data - block or list of rows (each row is a block or list)"
+	}
+
+	{
+		equal { spreadsheet\rows { 'a 'b } { { 1 2 } { 3 4 } } } spreadsheet { 'a 'b } { 1 2 3 4 }
+		equal { spreadsheet\rows { 'a 'b } vals { list { 1 2 } list { 3 4 } } |type? } 'spreadsheet
+	}
+
 	group "to-spreadsheet" 
 	""
 	{
@@ -24,7 +36,7 @@ section "base" "base text" {
 	group "add-rows" 
 	""
 	{
-		arg "* sheet -the sheet that is getting rows added to it"
+		arg "* sheet - the sheet that is getting rows added to it"
 		arg "* rows - a block containing one or more rows worth of values, or a SpreadsheetRow Native value"
 	}
 

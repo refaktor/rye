@@ -29,16 +29,10 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch header1 := arg0.(type) {
 			case env.Block:
-				header := header1.Series
-				hlen := header.Len()
-				cols := make([]string, hlen)
-				for header.Pos() < hlen {
-					i := header.Pos()
-					k1 := header.Pop()
-					switch k := k1.(type) {
-					case env.String:
-						cols[i] = k.Value
-					}
+				hlen := header1.Series.Len()
+				cols, err := ColNames(ps, header1, "spreadsheet")
+				if err != nil {
+					return err
 				}
 				spr := env.NewSpreadsheet(cols)
 				switch data1 := arg1.(type) {
@@ -88,6 +82,45 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		Doc:   "Creats a spreadsheet by accepting a block of columns",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			return SheetFromColumns(ps, arg0, arg1)
+		},
+	},
+	// Tests:
+	//  equal { spreadsheet\rows { 'a 'b } { { 1 2 } { 3 4 } } } spreadsheet { 'a 'b } { 1 2 3 4 }
+	//  equal { spreadsheet\rows { 'a 'b } vals { list { 1 2 } list { 3 4 } } |type? } 'spreadsheet
+	// Args:
+	//  * columns - names of the columns
+	//  * data - block or list of rows (each row is a block or list)
+	"spreadsheet\\rows": {
+		Argsn: 2,
+		Doc:   "Creates a spreadsheet by accepting a block or list of rows",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
+			cols, err := ColNames(ps, arg0, "spreadsheet\\rows	")
+			if err != nil {
+				return err
+			}
+			spr := env.NewSpreadsheet(cols)
+			switch rows := arg1.(type) {
+			case env.Block:
+				for _, objRow := range rows.Series.S {
+					row, err := SpreadsheetRowsFromBlockOrList(ps, spr, len(cols), objRow)
+					if err != nil {
+						return err
+					}
+					spr.AddRow(*row)
+				}
+				return *spr
+			case env.List:
+				for _, listRow := range rows.Data {
+					row, err := SpreadsheetRowsFromBlockOrList(ps, spr, len(cols), listRow)
+					if err != nil {
+						return err
+					}
+					spr.AddRow(*row)
+				}
+				return *spr
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.BlockType, env.ListType}, "spreadsheet\\rows")
+			}
 		},
 	},
 	// Tests:
@@ -222,7 +255,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	//   sheet .add-rows [ 3 30 ] sheet .deref .length?
 	//  } 3
 	// Args:
-	// * sheet -the sheet that is getting rows added to it
+	// * sheet - the sheet that is getting rows added to it
 	// * rows - a block containing one or more rows worth of values, or a SpreadsheetRow Native value
 	"add-rows": {
 		Argsn: 2,
@@ -254,7 +287,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		},
 	},
 
-	// Add one or more rows to a spreadsheet ref. Works similary to `add-rows`, but
+	// Add one or more rows to a spreadsheet ref. Works similarly to `add-rows`, but
 	// modified the spreadsheet ref instead of returning a new copy
 	// of the spreasheet
 	// Tests:
@@ -296,7 +329,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		},
 	},
 
-	// Update the row at a given index. If given a dict or spreadhseet row, replace the row with that
+	// Update the row at a given index. If given a dict or spreadsheet row, replace the row with that
 	// If given a function, pass the row, its index and replace the row with the return value from the
 	// function.
 	// Tests:
@@ -325,7 +358,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 				switch idx := arg1.(type) {
 				case env.Integer:
 					if idx.Value < 1 || (idx.Value-1) > int64(len(spr.Rows)) {
-						errMsg := fmt.Sprintf("update-row! called with row index %i, but spreadsheet only has %i rows", idx.Value, len(spr.Rows))
+						errMsg := fmt.Sprintf("update-row! called with row index %d, but spreadsheet only has %d rows", idx.Value, len(spr.Rows))
 						return makeError(ps, errMsg)
 					}
 					switch updater := arg2.(type) {
@@ -1162,7 +1195,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
-	// Example: group spreadsheet rows by name, runing various aggregations on the val column
+	// Example: group spreadsheet rows by name, running various aggregations on the val column
 	//  spreadsheet { "name" "val" } { "a" 1 "b" 6 "a" 5 "b" 10 "a" 7 }
 	// 	|group-by 'name { 'name count 'val sum 'val min 'val max 'val avg }
 	// 	|order-by! 'name 'asc
@@ -1341,14 +1374,12 @@ func RyeValueToSpreadsheetRow(spr *env.Spreadsheet, obj env.Object) (bool, strin
 			return false, "update-row! given a dict that is missing value for the " + missing + " column!", nil
 		} else {
 			return true, "", row
-
 		}
 	case env.SpreadsheetRow:
 		return true, "", &updater
 	default:
 		return false, "", nil
 	}
-
 }
 
 func ColNames(ps *env.ProgramState, from env.Object, fnName string) ([]string, env.Object) {
@@ -1366,7 +1397,7 @@ func ColNames(ps *env.ProgramState, from env.Object, fnName string) ([]string, e
 			switch k := k1.(type) {
 			case env.String:
 				cols[i] = k.Value
-			case env.Word:
+			case env.Tagword:
 				cols[i] = ps.Idx.GetWord(k.Index)
 			default:
 				return nil, MakeBuiltinError(ps, fmt.Sprintf("Expected a string or word instead of %V", k), fnName)
@@ -1431,7 +1462,6 @@ func LoadColumnData(ps *env.ProgramState, data any, colIdx int, numRows int, col
 }
 
 func GetNumRowsFrom(ps *env.ProgramState, data any) (int, *env.Error) {
-
 	switch firstCol := data.(type) {
 	case env.Block:
 		return firstCol.Series.Len(), nil
@@ -1440,7 +1470,6 @@ func GetNumRowsFrom(ps *env.ProgramState, data any) (int, *env.Error) {
 	default:
 		return -1, MakeBuiltinError(ps, fmt.Sprintf("Expected a block or a list instead of %V", firstCol), "spreadsheet\\columns")
 	}
-
 }
 
 func SheetFromColumnsMapData(ps *env.ProgramState, cols []string, arg1 env.Object) env.Object {
@@ -1489,7 +1518,7 @@ func SheetFromColumnsMapData(ps *env.ProgramState, cols []string, arg1 env.Objec
 		}
 		return spr
 	default:
-		return MakeBuiltinError(ps, fmt.Sprintf("Expected either a Block of a list of data columns, got %v instead", colSet), "spreadhseet\\columns")
+		return MakeBuiltinError(ps, fmt.Sprintf("Expected either a Block of a list of data columns, got %v instead", colSet), "spreadsheet\\columns")
 	}
 }
 
@@ -1500,6 +1529,36 @@ func SheetFromColumns(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) (r
 	}
 
 	return SheetFromColumnsMapData(ps, cols, arg1)
+}
+
+func SpreadsheetRowsFromBlockOrList(ps *env.ProgramState, spr *env.Spreadsheet, numCols int, arg1 any) (*env.SpreadsheetRow, *env.Error) {
+	switch row := arg1.(type) {
+	case env.Block:
+		if len(row.Series.S) != numCols {
+			return nil, MakeBuiltinError(
+				ps,
+				fmt.Sprintf("All rows must have the same number elements as the number of columns (%d)", numCols),
+				"spreadsheet\\rows",
+			)
+		}
+		rowAny := make([]any, len(row.Series.S))
+		for i, d := range row.Series.S {
+			rowAny[i] = d
+		}
+
+		return env.NewSpreadsheetRow(rowAny, spr), nil
+	case env.List:
+		if len(row.Data) != numCols {
+			return nil, MakeBuiltinError(
+				ps,
+				fmt.Sprintf("All rows must have the same number elements as the number of columns (%d)", numCols),
+				"spreadsheet\\rows",
+			)
+		}
+		return env.NewSpreadsheetRow(row.Data, spr), nil
+	default:
+		return nil, MakeBuiltinError(ps, "Rows must be blocks or lists", "spreadsheet\\rows")
+	}
 }
 
 func DropColumnBlock(ps *env.ProgramState, s env.Spreadsheet, names env.Block) env.Object {
