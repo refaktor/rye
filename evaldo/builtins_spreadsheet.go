@@ -20,6 +20,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 
 	// Tests:
 	//  equal { spreadsheet { "a" } { 1 2 } |type? } 'spreadsheet
+	//  equal { spreadsheet { 'a } { 1 2 } |type? } 'spreadsheet
 	// Args:
 	//  * columns
 	//  * data
@@ -86,7 +87,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	},
 	// Tests:
 	//  equal { spreadsheet\rows { 'a 'b } { { 1 2 } { 3 4 } } } spreadsheet { 'a 'b } { 1 2 3 4 }
-	//  equal { spreadsheet\rows { 'a 'b } vals { list { 1 2 } list { 3 4 } } |type? } 'spreadsheet
+	//  equal { spreadsheet\rows { 'a 'b } list [ list [ 1 2 ] list [ 3 4 ] ] |type? } 'spreadsheet
 	// Args:
 	//  * columns - names of the columns
 	//  * data - block or list of rows (each row is a block or list)
