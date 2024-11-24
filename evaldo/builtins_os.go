@@ -128,6 +128,18 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
+	"mktmp": {
+		Argsn: 0,
+		Doc:   "Creates a temporary directory.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			dir, err := os.MkdirTemp("", "rye-tmp-")
+			if err != nil {
+				return MakeBuiltinError(ps, "Error creating temporary directory: "+err.Error(), "mktmp")
+			}
+			return *env.NewUri1(ps.Idx, "file://"+dir)
+		},
+	},
+
 	"mv": {
 		Argsn: 2,
 		Doc:   "Creates a directory.",

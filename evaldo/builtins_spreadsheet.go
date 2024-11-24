@@ -406,6 +406,15 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	//  equal {
+	//	 cc os
+	//   f: mktmp + "/test.csv"
+	//   spr1: spreadsheet { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+	//   spr1 .save\csv f
+	//   spr2: load\csv f |autotype 1.0
+	//   spr1 = spr2
+	//  } true
 	// Args:
 	// * file-uri - location of csv file to load
 	// Tags: #spreadsheet #loading #csv
@@ -454,6 +463,16 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	//  equal {
+	//	 cc os
+	//   f:: mktmp + "/test.csv"
+	//   spr1:: spreadsheet { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+	//   spr1 .save\csv f
+	//   spr2:: load\csv f |autotype 1.0
+	//   spr1 = spr2
+	//  } true
 	// Args:
 	// * sheet    - the sheet to save
 	// * file-url - where to save the sheet as a .csv file
@@ -523,6 +542,15 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	//  equal {
+	//	 cc os
+	//   f:: mktmp + "/test.xlsx"
+	//   spr1:: spreadsheet { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+	//   spr1 .save\xlsx f
+	//   spr2:: load\xlsx f |autotype 1.0
+	//   spr1 = spr2
+	//  } true
 	// Args:
 	// * file-uri - location of xlsx file to load
 	// Tags: #spreadsheet #loading #xlsx
@@ -579,6 +607,15 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	//  equal {
+	//	 cc os
+	//   f:: mktmp + "/test.xlsx"
+	//   spr1:: spreadsheet { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+	//   spr1 .save\xlsx f
+	//   spr2:: load\xlsx f |autotype 1.0
+	//   spr1 = spr2
+	//  } true
 	// Args:
 	// * spreadsheet    - the spreadsheet to save
 	// * file-url 		- where to save the spreadsheet as a .xlsx file
