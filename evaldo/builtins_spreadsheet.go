@@ -14,6 +14,7 @@ import (
 
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/util"
+	"github.com/xuri/excelize/v2"
 )
 
 var Builtins_spreadsheet = map[string]*env.Builtin{
@@ -439,6 +440,15 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	//  equal {
+	//	 cc os
+	//   f: mktmp + "/test.csv"
+	//   spr1: spreadsheet { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+	//   spr1 .save\csv f
+	//   spr2: load\csv f |autotype 1.0
+	//   spr1 = spr2
+	//  } true
 	// Args:
 	// * file-uri - location of csv file to load
 	// Tags: #spreadsheet #loading #csv
@@ -487,6 +497,16 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	//  equal {
+	//	 cc os
+	//   f:: mktmp + "/test.csv"
+	//   spr1:: spreadsheet { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+	//   spr1 .save\csv f
+	//   spr2:: load\csv f |autotype 1.0
+	//   spr1 = spr2
+	//  } true
 	// Args:
 	// * sheet    - the sheet to save
 	// * file-url - where to save the sheet as a .csv file
@@ -552,6 +572,144 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.UriType}, "save\\csv")
+			}
+		},
+	},
+
+	// Tests:
+	//  equal {
+	//	 cc os
+	//   f:: mktmp + "/test.xlsx"
+	//   spr1:: spreadsheet { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+	//   spr1 .save\xlsx f
+	//   spr2:: load\xlsx f |autotype 1.0
+	//   spr1 = spr2
+	//  } true
+	// Args:
+	// * file-uri - location of xlsx file to load
+	// Tags: #spreadsheet #loading #xlsx
+	"load\\xlsx": {
+		Argsn: 1,
+		Doc:   "Loads the first sheet in an .xlsx file to a Spreadsheet.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch file := arg0.(type) {
+			case env.Uri:
+				f, err := excelize.OpenFile(file.GetPath())
+				if err != nil {
+					return MakeBuiltinError(ps, fmt.Sprintf("Unable to open file: %s", err), "load\\xlsx")
+				}
+				defer f.Close()
+
+				sheetMap := f.GetSheetMap()
+				if len(sheetMap) == 0 {
+					return MakeBuiltinError(ps, "No sheets found in file", "load\\xlsx")
+				}
+				// sheets map index is 1-based
+				sheetName := sheetMap[1]
+				rows, err := f.Rows(sheetName)
+				if err != nil {
+					return MakeBuiltinError(ps, fmt.Sprintf("Unable to get rows from sheet: %s", err), "load\\xlsx")
+				}
+				rows.Next()
+				header, err := rows.Columns()
+				if err != nil {
+					return MakeBuiltinError(ps, fmt.Sprintf("Unable to get columns from sheet: %s", err), "load\\xlsx")
+				}
+				if len(header) == 0 {
+					return MakeBuiltinError(ps, "Header row is empty", "load\\xlsx")
+				}
+				spr := env.NewSpreadsheet(header)
+				for rows.Next() {
+					row, err := rows.Columns()
+					if err != nil {
+						return MakeBuiltinError(ps, fmt.Sprintf("Unable to get row: %s", err), "load\\xlsx")
+					}
+					anyRow := make([]any, len(row))
+					for i, v := range row {
+						anyRow[i] = *env.NewString(v)
+					}
+					// fill in any missing columns with empty strings
+					for i := len(row); i < len(spr.Cols); i++ {
+						anyRow[i] = *env.NewString("")
+					}
+					spr.AddRow(*env.NewSpreadsheetRow(anyRow, spr))
+				}
+				return *spr
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "load\\xlsx")
+			}
+		},
+	},
+
+	// Tests:
+	//  equal {
+	//	 cc os
+	//   f:: mktmp + "/test.xlsx"
+	//   spr1:: spreadsheet { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+	//   spr1 .save\xlsx f
+	//   spr2:: load\xlsx f |autotype 1.0
+	//   spr1 = spr2
+	//  } true
+	// Args:
+	// * spreadsheet    - the spreadsheet to save
+	// * file-url 		- where to save the spreadsheet as a .xlsx file
+	// Tags: #spreadsheet #saving #xlsx
+	"save\\xlsx": {
+		Argsn: 2,
+		Doc:   "Saves a Spreadsheet to a .xlsx file.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch spr := arg0.(type) {
+			case env.Spreadsheet:
+				switch file := arg1.(type) {
+				case env.Uri:
+					sheetName := "Sheet1"
+					f := excelize.NewFile()
+					index, err := f.NewSheet(sheetName)
+					if err != nil {
+						return MakeBuiltinError(ps, fmt.Sprintf("Unable to create new sheet: %s", err), "save\\xlsx")
+					}
+					err = f.SetSheetRow(sheetName, "A1", &spr.Cols)
+					if err != nil {
+						return MakeBuiltinError(ps, fmt.Sprintf("Unable to set header row: %s", err), "save\\xlsx")
+					}
+					for i, row := range spr.Rows {
+						// 1-based and skip header row
+						rowIndex := i + 2
+						vals := make([]any, len(row.Values))
+						for j, v := range row.Values {
+							switch val := v.(type) {
+							case env.String:
+								vals[j] = val.Value
+							case string:
+								vals[j] = val
+							case env.Integer:
+								vals[j] = val.Value
+							case int64:
+								vals[j] = val
+							case env.Decimal:
+								vals[j] = val.Value
+							case float64:
+								vals[j] = val
+							default:
+								return MakeBuiltinError(ps, fmt.Sprintf("Unable to save spreadsheet: unsupported type %T", val), "save\\xlsx")
+							}
+						}
+						err = f.SetSheetRow(sheetName, fmt.Sprintf("A%d", rowIndex), &vals)
+						if err != nil {
+							return MakeBuiltinError(ps, fmt.Sprintf("Unable to set row %d: %s", rowIndex, err), "save\\xlsx")
+						}
+					}
+					f.SetActiveSheet(index)
+					err = f.SaveAs(file.GetPath())
+					if err != nil {
+						return MakeBuiltinError(ps, fmt.Sprintf("Unable to save spreadsheet: %s", err), "save\\xlsx")
+					}
+					return spr
+				default:
+					return MakeArgError(ps, 1, []env.Type{env.UriType}, "save\\xlsx")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "save\\xlsx")
 			}
 		},
 	},
