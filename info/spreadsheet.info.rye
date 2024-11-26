@@ -9,6 +9,19 @@ section "base" "base text" {
 
 	{
 		equal { spreadsheet { "a" } { 1 2 } |type? } 'spreadsheet
+		equal { spreadsheet { 'a } { 1 2 } |type? } 'spreadsheet
+	}
+
+	group "spreadsheet\\rows" 
+	""
+	{
+		arg "* columns - names of the columns"
+		arg "* data - block or list of rows (each row is a block or list)"
+	}
+
+	{
+		equal { spreadsheet\rows { 'a 'b } { { 1 2 } { 3 4 } } } spreadsheet { 'a 'b } { 1 2 3 4 }
+		equal { spreadsheet\rows { 'a 'b } list [ list [ 1 2 ] list [ 3 4 ] ] |type? } 'spreadsheet
 	}
 
 	group "to-spreadsheet" 
@@ -24,7 +37,7 @@ section "base" "base text" {
 	group "add-rows" 
 	""
 	{
-		arg "* sheet -the sheet that is getting rows added to it"
+		arg "* sheet - the sheet that is getting rows added to it"
 		arg "* rows - a block containing one or more rows worth of values, or a SpreadsheetRow Native value"
 	}
 
@@ -87,6 +100,80 @@ section "base" "base text" {
 		spr1 .remove-row! 1
 		spr1 .deref .A1
 		} 2
+	}
+
+	group "load\\csv" 
+	""
+	{
+		arg "* file-uri - location of csv file to load"
+		arg "Tags: #spreadsheet #loading #csv"
+	}
+
+	{
+		equal {
+		cc os
+		f: mktmp + "/test.csv"
+		spr1: spreadsheet { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+		spr1 .save\csv f
+		spr2: load\csv f |autotype 1.0
+		spr1 = spr2
+		} true
+	}
+
+	group "save\\csv" 
+	""
+	{
+		arg "* sheet    - the sheet to save"
+		arg "* file-url - where to save the sheet as a .csv file"
+		arg "Tags: #spreadsheet #saving #csv"
+	}
+
+	{
+		equal {
+		cc os
+		f:: mktmp + "/test.csv"
+		spr1:: spreadsheet { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+		spr1 .save\csv f
+		spr2:: load\csv f |autotype 1.0
+		spr1 = spr2
+		} true
+	}
+
+	group "load\\xlsx" 
+	""
+	{
+		arg "* file-uri - location of xlsx file to load"
+		arg "Tags: #spreadsheet #loading #xlsx"
+	}
+
+	{
+		equal {
+		cc os
+		f:: mktmp + "/test.xlsx"
+		spr1:: spreadsheet { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+		spr1 .save\xlsx f
+		spr2:: load\xlsx f |autotype 1.0
+		spr1 = spr2
+		} true
+	}
+
+	group "save\\xlsx" 
+	""
+	{
+		arg "* spreadsheet    - the spreadsheet to save"
+		arg "* file-url 		- where to save the spreadsheet as a .xlsx file"
+		arg "Tags: #spreadsheet #saving #xlsx"
+	}
+
+	{
+		equal {
+		cc os
+		f:: mktmp + "/test.xlsx"
+		spr1:: spreadsheet { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+		spr1 .save\xlsx f
+		spr2:: load\xlsx f |autotype 1.0
+		spr1 = spr2
+		} true
 	}
 
 	group "col-sum" 

@@ -48,3 +48,5 @@ console_*.rye.enc
 buildtemp/main.rye
 *.bson
 cmd/parse_builtins/parse_builtinscmd/rbit/rbit
+
+cmd/rbit/rbit

@@ -564,7 +564,7 @@ section "base" "base text" {
 	{
 		equal { { } .is-empty } 1
 		equal { dict { } |is-empty } 1
-		equal { spreadsheet { } { } |is-empty } 1
+		equal { spreadsheet { 'a 'b } { } |is-empty } 1
 	}
 
 	group "length?" 

@@ -38,7 +38,7 @@ func BenchmarkAutotype(b *testing.B) {
 		RegisterBuiltins(es)
 		res := EvalBlock(es)
 		if res != nil && res.ErrorFlag {
-			fmt.Println("error")
+			fmt.Println(res.Res.Print(*es.Idx))
 		}
 	}
 }
