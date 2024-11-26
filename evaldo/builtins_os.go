@@ -349,7 +349,7 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
-	"ip-lookup": {
+	"lookup-address": {
 		Argsn: 1,
 		Doc:   "Get address of an IP.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -372,7 +372,7 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
-	"address-lookup": {
+	"lookup-ip": {
 		Argsn: 1,
 		Doc:   "Get IP of an address.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
