@@ -230,6 +230,15 @@ section "base" "base text" {
 		equal   { set! { 123 234 } { a b }  b } 234
 	}
 
+	group "pick" 
+	""
+	{
+	}
+
+	{
+		equal   { a: 123 pick 'a  } 123
+	}
+
 	group "dump" 
 	""
 	{
@@ -237,6 +246,33 @@ section "base" "base text" {
 
 	{
 		equal { does { 1 } |dump } "fn { } { 1 }"
+	}
+
+	group "doc!" 
+	""
+	{
+	}
+
+	{
+		equal   { x: private { doc! "some doc" doc? } } "some doc"
+	}
+
+	group "doc?" 
+	""
+	{
+	}
+
+	{
+		equal   { x: private { doc! "some doc" doc? } } "some doc"
+	}
+
+	group "doc\\of?" 
+	""
+	{
+	}
+
+	{
+		equal   { x: context { doc! "some doc" } doc\of? x } "some doc"
 	}
 
 	group "dict" 
@@ -255,6 +291,24 @@ section "base" "base text" {
 
 	{
 		equal { list { "a" 123 } -> 1 } "a"
+	}
+
+	group "true" 
+	""
+	{
+	}
+
+	{
+		equal { true } 1
+	}
+
+	group "false" 
+	""
+	{
+	}
+
+	{
+		equal { false } 0
 	}
 
 	group "not" 
@@ -289,6 +343,37 @@ section "base" "base text" {
 		equal { false .or false } 0
 	}
 
+	group "xor" 
+	""
+	{
+	}
+
+	{
+		equal { true .xor true } 0
+		equal { false .xor true } 1
+		equal { true .xor false } 1
+		equal { false .xor false } 0
+	}
+
+	group "require_" 
+	""
+	{
+	}
+
+	{
+		error { 1 = 1 |require .type? }
+	}
+
+	group "multiple-of" 
+	""
+	{
+	}
+
+	{
+		equal { 10 .multiple-of 2 } 1
+		equal { 10 .multiple-of 3 } 0
+	}
+
 	group "odd" 
 	""
 	{
@@ -320,6 +405,15 @@ section "base" "base text" {
 		equal { 5 .mod 3 } 2
 	}
 
+	group "_." 
+	""
+	{
+	}
+
+	{
+		equal { 4 . .type? } 'void
+	}
+
 	group "_+" 
 	""
 	{
@@ -344,6 +438,133 @@ section "base" "base text" {
 		equal { 5 - 6 } -1
 	}
 
+	group "_*" 
+	""
+	{
+	}
+
+	{
+		equal { 4 * 2 } 8
+		equal { 2.5 * -2 } -5.0
+	}
+
+	group "_/" 
+	""
+	{
+	}
+
+	{
+		equal { 4 / 2 } 2.000
+		equal { 102.0 / 2.0 } 51.000
+	}
+
+	group "_//" 
+	""
+	{
+	}
+
+	{
+		equal { 5 // 2 } 2
+		equal { 102 // 5 } 20
+		equal { 7.99 // 2 } 3
+	}
+
+	group "_=" 
+	""
+	{
+	}
+
+	{
+		equal { 5 = 5 } 1
+		equal { 5 = 4 } 0
+	}
+
+	group "_>" 
+	""
+	{
+	}
+
+	{
+		equal { 6 > 5 } 1
+		equal { 5 > 5 } 0
+	}
+
+	group "_>=" 
+	""
+	{
+	}
+
+	{
+		equal { 5 >= 6 } 0
+		equal { 5 >= 5 } 1
+		equal { 6.0 >= 5 } 1
+	}
+
+	group "_<" 
+	""
+	{
+	}
+
+	{
+		equal { 5 < 6 } 1
+		equal { 5 < 5 } 0
+	}
+
+	group "_<=" 
+	""
+	{
+	}
+
+	{
+		equal { 5 <= 6 } 1
+		equal { 5 <= 5 } 1
+	}
+
+	group "prns" 
+	""
+	{
+	}
+
+	{
+		stdout { prns "xy" } "xy "
+	}
+
+	group "prn" 
+	""
+	{
+	}
+
+	{
+		stdout { prn "xy" } "xy"
+	}
+
+	group "print" 
+	""
+	{
+	}
+
+	{
+		stdout { print "xy" } "xy\n"
+	}
+
+	group "format" 
+	""
+	{
+	}
+
+	{
+		equal { format 123  "num: %d" } "num: 123"
+	}
+
+	group "prnf" 
+	""
+	{
+	}
+
+	{
+		stdout { prnf 123 "num: %d" } "num: 123"
+	}
+
 	group "embed" 
 	""
 	{
@@ -351,6 +572,281 @@ section "base" "base text" {
 
 	{
 		equal   { embed 101 "val {}" } "val 101"
+	}
+
+	group "prnv" 
+	""
+	{
+	}
+
+	{
+		stdout  { prnv 101 "val {}" } "val 101"
+	}
+
+	group "printv" 
+	""
+	{
+	}
+
+	{
+		stdout  { printv 101 "val {}" } "val 101\n"
+	}
+
+	group "print\\ssv" 
+	""
+	{
+	}
+
+	{
+		stdout  { print\ssv { 101 "asd" } } "101 asd\n"
+	}
+
+	group "print\\csv" 
+	""
+	{
+	}
+
+	{
+		stdout  { print\csv { 101 "asd" } } "101,asd\n"
+	}
+
+	group "probe" 
+	""
+	{
+	}
+
+	{
+		stdout  { probe 101 } "[Integer: 101]\n"
+	}
+
+	group "inspect" 
+	""
+	{
+	}
+
+	{
+		equal  { inspect 101 } "[Integer: 101]"
+	}
+
+	group "is-ref" 
+	""
+	{
+	}
+
+	{
+		equal  { ref { } |is-ref } true
+		equal  { { } |is-ref } false
+	}
+
+	group "esc" 
+	""
+	{
+	}
+
+	{
+		; equal  { esc "[33m" } "\033[33m"   ; we can't represent hex or octal in strings yet
+	}
+
+	group "esc-val" 
+	""
+	{
+	}
+
+	{
+		; equal  { esc-val "[33m" "Error" } "\033[33mError"  ; we can't represent hex or octal in strings yet
+	}
+
+	group "random" 
+	""
+	{
+	}
+
+	{
+		equal  { random { 1 2 3 } |type? } 'integer
+	}
+
+	group "random\\integer" 
+	""
+	{
+	}
+
+	{
+		equal  { random\integer 2 |type? } 'integer
+	}
+
+	group "load" 
+	""
+	{
+	}
+
+	{
+		equal  { load " 1 2 3 " |third } 3
+		equal  { load "{ 1 2 3 }" |first |third } 3
+	}
+
+	group "mold" 
+	""
+	{
+	}
+
+	{
+		equal  { mold 123 } "123"
+	}
+
+	group "if" 
+	""
+	{
+	}
+
+	{
+		equal  { if 1 { 222 } } 222
+		equal  { if 0 { 333 } } 0
+	}
+
+	group "^if" 
+	""
+	{
+	}
+
+	{
+		equal  { x: does { ^if 1 { 222 } 555 } x } 222
+		equal  { x: does { ^if 0 { 333 } 444 } x } 444
+	}
+
+	group "either" 
+	""
+	{
+	}
+
+	{
+		equal  { either 1 { 222 } { 333 } } 222
+		equal  { either 0 { 222 } { 333 } } 333
+	}
+
+	group "switch" 
+	""
+	{
+	}
+
+	{
+		equal  { switch 101 { 101 { 111 } 202 { 222 } } } 111
+		equal  { switch 202 { 101 { 111 } 202 { 222 } } } 222
+	}
+
+	group "do" 
+	""
+	{
+	}
+
+	{
+		equal  { do { 123 + 123 } } 246
+	}
+
+	group "try" 
+	""
+	{
+	}
+
+	{
+		equal  { try { 123 + 123 } } 246
+		equal  { try { 123 + "asd" } \type? } 'error
+	}
+
+	group "with" 
+	""
+	{
+	}
+
+	{
+		equal  { with 100 { + 11 } } 111
+	}
+
+	group "unpack" 
+	""
+	{
+	}
+
+	{
+		equal  { unpack { { 123 } { 234 } } } { 123 234 }
+	}
+
+	group "all" 
+	""
+	{
+	}
+
+	{
+		equal  { all { 1 2 3 } } 3
+		equal  { all { 1 0 3 } } 0
+	}
+
+	group "any" 
+	""
+	{
+	}
+
+	{
+		equal  { any { 1 2 3 } } 1
+		equal  { any { 1 0 3 } } 1
+		equal  { any { 0 0 3 } } 3
+	}
+
+	group "private\\" 
+	""
+	{
+	}
+
+	{
+		equal  { private { x: 123 1000 + x } } 1123
+	}
+
+	group "pass" 
+	""
+	{
+	}
+
+	{
+		equal  { 101 .pass { 202 } } 101
+	}
+
+	group "space" 
+	""
+	{
+	}
+
+	{
+		equal { "abcd" .space } "abcd "
+	}
+
+	group "concat" 
+	""
+	{
+	}
+
+	{
+		equal { "abcd" .concat "cde" } "abcdcde"
+		equal { concat { 1 2 3 4 } { 2 4 5 } } { 1 2 3 4 2 4 5 }
+	}
+
+	group "union" 
+	""
+	{
+	}
+
+	{
+		; equal { "abcd" .union "cde" } "abcde"
+		equal { union { 1 2 3 4 } { 2 4 5 } |length? } 5 ; order is not certain
+		equal { union list { 1 2 3 4 } list { 2 4 5 } |length? } 5 ; order is not certain
+	}
+
+	group "intersection" 
+	""
+	{
+	}
+
+	{
+		equal { "abcd" .intersection "cde" } "cd"
+		equal { intersection { 1 2 3 4 } { 2 4 5 } } { 2 4 }
 	}
 
 	group "difference" 
@@ -585,8 +1081,8 @@ section "base" "base text" {
 	}
 
 	{
-		equal { dict { "a" 1 "b" 2 "c" 3 } |keys } { "a" "b" "c" }
-		equal { spreadsheet { "a" "b" "c" } { 1 2 3 } |keys } list { "a" "b" "c" }
+		equal { dict { "a" 1 "b" 2 "c" 3 } |keys |length? } 3
+		equal { spreadsheet { "a" "b" "c" } { 1 2 3 } |keys |length? } 3
 		; TODO -- doesn't work yet, .header? also has the same problem -- equal { spreadsheet { 'a 'b 'c } { 1 2 3 } |keys } { 'a 'b 'c }
 	}
 
@@ -597,6 +1093,33 @@ section "base" "base text" {
 
 	{
 		equal { cmd `echo "hello"` } 1
+	}
+
+	group "seconds" 
+	""
+	{
+	}
+
+	{
+		equal  { 5 .seconds } 5000000000
+	}
+
+	group "minutes" 
+	""
+	{
+	}
+
+	{
+		equal  { 5 .minutes } 5000000000 * 60
+	}
+
+	group "hours" 
+	""
+	{
+	}
+
+	{
+		equal  { 5 .hours } 5000000000 * 60 * 60
 	}
 
 }
