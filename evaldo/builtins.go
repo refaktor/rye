@@ -921,7 +921,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"ref": { // temp duplicate
+	"ref": {
 		Argsn: 1,
 		Doc:   "Makes a value mutable instead of immutable",
 		Pure:  true,
@@ -977,6 +977,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal   { a: 123 pick 'a  } 123
 	"pick": {
 		Argsn: 1,
 		Doc:   "Returns value of the word in context",
@@ -1016,7 +1018,6 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	// TODO -- make save\\context ctx %file
 	"save\\current": {
 		Argsn: 0,
 		Doc:   "Saves current state of the program to a file.",
@@ -1035,7 +1036,6 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	// TODO -- make save\\context ctx %file
 	"save\\current\\secure": {
 		Argsn: 0,
 		Doc:   "Saves current state of the program to a file.",
@@ -1061,6 +1061,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal   { x: private { doc! "some doc" doc? } } "some doc"
 	"doc!": { // ***
 		Argsn: 1,
 		Doc:   "Sets docstring of the current context.",
@@ -1076,6 +1078,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal   { x: private { doc! "some doc" doc? } } "some doc"
 	"doc?": { // ***
 		Argsn: 0,
 		Doc:   "Gets docstring of the current context.",
@@ -1085,6 +1089,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal   { x: context { doc! "some doc" } doc\of? x } "some doc"
 	"doc\\of?": { // **
 		Argsn: 1,
 		Doc:   "Get docstring of the passed context.",
@@ -1108,7 +1114,7 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { dict { "a" 123 } -> "a" } 123
-	"dict": { // ***
+	"dict": {
 		Argsn: 1,
 		Doc:   "Constructs a Dict from the Block of key and value pairs.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1122,7 +1128,7 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { list { "a" 123 } -> 1 } "a"
-	"list": { // ***
+	"list": {
 		Argsn: 1,
 		Doc:   "Constructs a List from the Block of values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1134,18 +1140,22 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"true": { // ***
+	// Tests:
+	// equal { true } 1
+	"true": {
 		Argsn: 0,
-		Doc:   "Returns a truthy value.",
+		Doc:   "Returns a truthy value. Will change to exact True value.",
 		Pure:  true,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewInteger(1)
 		},
 	},
 
-	"false": { // ***
+	// Tests:
+	// equal { false } 0
+	"false": {
 		Argsn: 0,
-		Doc:   "Returns a falsy value.",
+		Doc:   "Returns a falsy value. Will change to exact Falce value",
 		Pure:  true,
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewInteger(0)
@@ -1155,7 +1165,7 @@ var builtins = map[string]*env.Builtin{
 	// Tests:
 	// equal { not true } 0
 	// equal { not false } 1
-	"not": { // ***
+	"not": {
 		Argsn: 1,
 		Doc:   "Turns a truthy value to a non-truthy and reverse.",
 		Pure:  true,
@@ -1213,6 +1223,12 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	// equal { true .xor true } 0
+	// equal { false .xor true } 1
+	// equal { true .xor false } 1
+	// equal { false .xor false } 0
 	"xor": {
 		Argsn: 2,
 		Doc:   "Bitwise XOR operation between two values.",
@@ -1232,7 +1248,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"require_": { //
+	// Tests:
+	// error { 1 = 1 |require .type? }
+	"require_": {
 		Argsn: 1,
 		Doc:   "Requite a truthy value or produce a failure.",
 		Pure:  true,
@@ -1245,8 +1263,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	// BASIC FUNCTIONS WITH NUMBERS
-
+	// Tests:
+	// equal { 10 .multiple-of 2 } 1
+	// equal { 10 .multiple-of 3 } 0
 	"multiple-of": { // ***
 		Argsn: 2,
 		Doc:   "Checks if a first argument is a factor of second.",
@@ -1333,6 +1352,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { 4 . .type? } 'void
 	"_.": { // ***
 		Argsn: 1,
 		Doc:   "Accepts argument and returns void, meant to be used as drop in Eyr, void is not a valid runtime value.",
@@ -1492,6 +1513,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { 4 * 2 } 8
+	// equal { 2.5 * -2 } -5.0
 	"_*": { // **
 		Argsn: 2,
 		Doc:   "Multiplies two numbers.",
@@ -1521,6 +1545,10 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	// equal { 4 / 2 } 2.000
+	// equal { 102.0 / 2.0 } 51.000
 	"_/": { // **
 		Argsn: 2,
 		Doc:   "Divide two numbers and return a decimal.",
@@ -1566,6 +1594,11 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	// equal { 5 // 2 } 2
+	// equal { 102 // 5 } 20
+	// equal { 7.99 // 2 } 3
 	"_//": { // **
 		Argsn: 2,
 		Doc:   "Divides two numbers and return truncated integer.",
@@ -1611,6 +1644,10 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	// equal { 5 = 5 } 1
+	// equal { 5 = 4 } 0
 	"_=": { // ***
 		Argsn: 2,
 		Doc:   "Checks if two Rye values are equal.",
@@ -1626,6 +1663,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { 6 > 5 } 1
+	// equal { 5 > 5 } 0
 	"_>": { // *** // ENDED FIXING DOCSTRINGS HERE
 		Argsn: 2,
 		Doc:   "Checks if first argument is greater than the second.",
@@ -1638,6 +1678,11 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	// equal { 5 >= 6 } 0
+	// equal { 5 >= 5 } 1
+	// equal { 6.0 >= 5 } 1
 	"_>=": { // * *
 		Argsn: 2,
 		Doc:   "Checks if first argument is greater or equal than the second.",
@@ -1650,6 +1695,10 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	// equal { 5 < 6 } 1
+	// equal { 5 < 5 } 0
 	"_<": { // **
 		Argsn: 2,
 		Doc:   "Tests if Arg1 is lesser than Arg 2.",
@@ -1662,6 +1711,10 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	// equal { 5 <= 6 } 1
+	// equal { 5 <= 5 } 1
 	"_<=": {
 		Argsn: 2,
 		Doc:   "Tests if Arg1 is lesser than Arg 2.",
@@ -1675,8 +1728,10 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	// BASIC GENERAL FUNCTIONS
+	// Section: PRINTING
 
+	// Tests:
+	// stdout { prns "xy" } "xy "
 	"prns": { // **
 		Argsn: 1,
 		Doc:   "Prints a value and adds a space.",
@@ -1690,6 +1745,9 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
+
+	// Tests:
+	// stdout { prn "xy" } "xy"
 	"prn": { // **
 		Argsn: 1,
 		Doc:   "Prints a value without newline.",
@@ -1703,6 +1761,9 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
+
+	// Tests:
+	// stdout { print "xy" } "xy\n"
 	"print": { // **
 		Argsn: 1,
 		Doc:   "Prints a value and adds a newline.",
@@ -1716,7 +1777,10 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
-	"format": { // **
+
+	// Tests:
+	// equal { format 123  "num: %d" } "num: 123"
+	"format": {
 		Argsn: 2,
 		Doc:   "Formats a value according to Go-s sprintf format",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1740,6 +1804,9 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	// stdout { prnf 123 "num: %d" } "num: 123"
 	"prnf": { // **
 		Argsn: 2,
 		Doc:   "Formats a value according to Go-s sprintf format and prn-s it",
@@ -1784,6 +1851,9 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	// stdout  { prnv 101 "val {}" } "val 101"
 	"prnv": { // **
 		Argsn: 2,
 		Doc:   "Prints a value.",
@@ -1799,6 +1869,9 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
+
+	// Tests:
+	// stdout  { printv 101 "val {}" } "val 101\n"
 	"printv": { // **
 		Argsn: 2,
 		Doc:   "Prints a value and adds a newline.",
@@ -1814,7 +1887,10 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
-	"print\\ssv": { //
+
+	// Tests:
+	// stdout  { print\ssv { 101 "asd" } } "101 asd\n"
+	"print\\ssv": {
 		Argsn: 1,
 		Doc:   "Prints a value and adds a newline.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1827,6 +1903,9 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
+
+	// Tests:
+	// stdout  { print\csv { 101 "asd" } } "101,asd\n"
 	"print\\csv": { //
 		Argsn: 1,
 		Doc:   "Prints a value and adds a newline.",
@@ -1840,19 +1919,9 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
-	"print\\json": { //
-		Argsn: 1,
-		Doc:   "Prints a value and adds a newline.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch arg := arg0.(type) {
-			case env.Object:
-				fmt.Println(util.FormatJson(arg, *ps.Idx))
-			default:
-				return MakeBuiltinError(ps, "Not Rye object.", "print-json")
-			}
-			return arg0
-		},
-	},
+
+	// Tests:
+	// stdout  { probe 101 } "[Integer: 101]\n"
 	"probe": { // **
 		Argsn: 1,
 		Doc:   "Prints information about a value.",
@@ -1865,6 +1934,9 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
+
+	// Tests:
+	// equal  { inspect 101 } "[Integer: 101]"
 	"inspect": { // **
 		Argsn: 1,
 		Doc:   "Returs information about a value.",
@@ -1872,6 +1944,10 @@ var builtins = map[string]*env.Builtin{
 			return *env.NewString(arg0.Inspect(*ps.Idx))
 		},
 	},
+
+	// Tests:
+	// equal  { ref { } |is-ref } true
+	// equal  { { } |is-ref } false
 	"is-ref": { // **
 		Argsn: 1,
 		Doc:   "Prints information about a value.",
@@ -1885,6 +1961,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// ; equal  { esc "[33m" } "\033[33m"   ; we can't represent hex or octal in strings yet
 	"esc": {
 		Argsn: 1,
 		Doc:   "Creates an escape sequence \033{}",
@@ -1897,6 +1975,9 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	// ; equal  { esc-val "[33m" "Error" } "\033[33mError"  ; we can't represent hex or octal in strings yet
 	"esc-val": {
 		Argsn: 2,
 		Doc:   "Escapes a value and adds a newline.",
@@ -1904,7 +1985,7 @@ var builtins = map[string]*env.Builtin{
 			switch base := arg1.(type) {
 			case env.String:
 				vals := arg0.Print(*ps.Idx)
-				news := strings.ReplaceAll(base.Value, "(*)", vals)
+				news := strings.ReplaceAll(base.Value, "{}", vals)
 				return *env.NewString("\033" + news)
 			default:
 				return MakeArgError(ps, 2, []env.Type{env.StringType}, "esc-val")
@@ -2030,6 +2111,8 @@ var builtins = map[string]*env.Builtin{
 		},
 		}, */
 
+	// Tests:
+	// equal  { random { 1 2 3 } |type? } 'integer
 	"random": {
 		Argsn: 1,
 		Doc:   "Accepts an integer n and returns a random integer between 0 and n in the half-open interval [0,n).",
@@ -2048,6 +2131,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal  { random\integer 2 |type? } 'integer
 	"random\\integer": {
 		Argsn: 1,
 		Doc:   "Accepts an integer n and returns a random integer between 0 and n in the half-open interval [0,n).",
@@ -2130,6 +2215,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal  { load " 1 2 3 " |third } 3
+	// equal  { load "{ 1 2 3 }" |first |third } 3
 	"load": { // **
 		Argsn: 1,
 		Doc:   "Loads a string into Rye values.",
@@ -2249,6 +2337,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal  { mold 123 } "123"
 	"mold": { // **
 		Argsn: 1,
 		Doc:   "Turn value to it's string representation.",
@@ -2277,31 +2367,9 @@ var builtins = map[string]*env.Builtin{
 
 	// CONTROL WORDS
 
-	"otherwise": { // **
-		Argsn: 2,
-		Doc:   "Conditional if not. Takes condition and a block of code.",
-		Pure:  true,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch bloc := arg1.(type) {
-			case env.Block:
-				cond1 := util.IsTruthy(arg0)
-				if !cond1 {
-					ser := ps.Ser
-					ps.Ser = bloc.Series
-					EvalBlock(ps)
-					ps.Ser = ser
-					return ps.Res
-				}
-				return *env.NewInteger(0)
-				// else {
-				//	return MakeBuiltinError(ps, "Truthiness condition is not correct.", "otherwise")
-				// }
-			default:
-				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "otherwise")
-			}
-		},
-	},
-
+	// Tests:
+	// equal  { if 1 { 222 } } 222
+	// equal  { if 0 { 333 } } 0
 	"if": { // **
 		Argsn: 2,
 		Doc:   "Basic conditional. Takes a condition and a block of code.",
@@ -2352,6 +2420,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal  { x: does { ^if 1 { 222 } 555 } x } 222
+	// equal  { x: does { ^if 0 { 333 } 444 } x } 444
 	"^if": { // **
 		Argsn: 2,
 		Doc:   "Basic conditional with a Returning mechanism when true. Takes a condition and a block of code.",
@@ -2378,32 +2449,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"^otherwise": { // **
-		Argsn: 2,
-		Doc:   "Basic conditional with a Returning mechanism when true. Takes a condition and a block of code.",
-		Pure:  true,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch bloc := arg1.(type) {
-			case env.Block:
-				cond1 := util.IsTruthy(arg0)
-				if !cond1 {
-					ser := ps.Ser
-					ps.Ser = bloc.Series
-					EvalBlockInjMultiDialect(ps, arg0, true)
-					ps.Ser = ser
-					ps.ReturnFlag = true
-					return ps.Res
-				}
-				return *env.NewInteger(0)
-				// else {
-				// 	return MakeBuiltinError(ps, "Truthiness condition is not correct.", "^otherwise")
-				// }
-			default:
-				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "^otherwise")
-			}
-		},
-	},
-
+	// Tests:
+	// equal  { either 1 { 222 } { 333 } } 222
+	// equal  { either 0 { 222 } { 333 } } 333
 	"either": { // **
 		Argsn: 3,
 		Doc:   "The if/else conditional. Takes a value and true and false block of code.",
@@ -2543,6 +2591,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal  { switch 101 { 101 { 111 } 202 { 222 } } } 111
+	// equal  { switch 202 { 101 { 111 } 202 { 222 } } } 222
 	"switch": { // **
 		Argsn:         2,
 		Doc:           "Classic switch function. Takes a word and multiple possible values and block of code to do.",
@@ -2708,7 +2759,9 @@ var builtins = map[string]*env.Builtin{
 
 	// DOERS
 
-	"do": { // **
+	// Tests:
+	// equal  { do { 123 + 123 } } 246
+	"do": {
 		Argsn: 1,
 		Doc:   "Takes a block of code and does (runs) it.",
 		Pure:  true,
@@ -2726,6 +2779,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal  { try { 123 + 123 } } 246
+	// equal  { try { 123 + "asd" } \type? } 'error
 	"try": { // **
 		Argsn: 1,
 		Doc:   "Takes a block of code and does (runs) it.",
@@ -2752,6 +2808,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal  { with 100 { + 11 } } 111
 	"with": { // **
 		AcceptFailure: true,
 		Doc:           "Takes a value and a block of code. It does the code with the value injected.",
@@ -3023,6 +3081,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal  { unpack { { 123 } { 234 } } } { 123 234 }
 	"unpack": {
 		Argsn: 1,
 		Doc:   "Takes a block of Rye values and evaluates each value or expression.",
@@ -3048,6 +3108,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal  { all { 1 2 3 } } 3
+	// equal  { all { 1 0 3 } } 0
 	"all": { // **
 		Argsn: 1,
 		Doc:   "Takes a block, if all values or expressions are truthy it returns the last one, otherwise false.",
@@ -3070,6 +3133,10 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal  { any { 1 2 3 } } 1
+	// equal  { any { 1 0 3 } } 1
+	// equal  { any { 0 0 3 } } 3
 	"any": { // **
 		Argsn: 1,
 		Doc:   "Takes a block, if any of the values or expressions are truthy, the it returns that one, in none false.",
@@ -3425,6 +3492,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal  { private { x: 123 1000 + x } } 1123
 	"private\\": {
 		Argsn: 2,
 		Doc:   "Creates a new context with current parent, returns last value",
@@ -3514,6 +3583,8 @@ var builtins = map[string]*env.Builtin{
 
 	// COMBINATORS
 
+	// Tests:
+	// equal  { 101 .pass { 202 } } 101
 	"pass": { // **
 		Argsn: 2,
 		Doc:   "Accepts a value and a block. It does the block, with value injected, and returns (passes on) the initial value.",
@@ -6319,6 +6390,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { "abcd" .space } "abcd "
 	"space": {
 		Argsn: 1,
 		Doc:   "Adds space to the end of argument",
@@ -6333,9 +6406,12 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { "abcd" .concat "cde" } "abcdcde"
+	// equal { concat { 1 2 3 4 } { 2 4 5 } } { 1 2 3 4 2 4 5 }
 	"concat": {
 		Argsn: 2,
-		Doc:   "Joins two strings together.",
+		Doc:   "Joins two series values together.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
@@ -6376,7 +6452,11 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"union": { // **
+	// Tests:
+	// ; equal { "abcd" .union "cde" } "abcde"
+	// equal { union { 1 2 3 4 } { 2 4 5 } |length? } 5 ; order is not certain
+	// equal { union list { 1 2 3 4 } list { 2 4 5 } |length? } 5 ; order is not certain
+	"union": {
 		Argsn: 2,
 		Doc:   "Accepts a block or list of values and returns only unique values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -6403,6 +6483,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { "abcd" .intersection "cde" } "cd"
+	// equal { intersection { 1 2 3 4 } { 2 4 5 } } { 2 4 }
 	"intersection": {
 		Argsn: 2,
 		Doc:   "Finds the intersection of two values.",
@@ -6475,20 +6558,6 @@ var builtins = map[string]*env.Builtin{
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType, env.ListType}, "difference")
-			}
-		},
-	},
-
-	"str": {
-		Argsn: 1,
-		Doc:   "Turn Rye value to String.",
-		Pure:  true,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s1 := arg0.(type) {
-			case env.Integer:
-				return *env.NewString(strconv.Itoa(int(s1.Value)))
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "str")
 			}
 		},
 	},
@@ -7871,7 +7940,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// BASIC ENV / Dict FUNCTIONS
-	"format-": { // TODO ... format is not sprintf ... find a name
+	"format-": { // TODO ... format is now sprintf like function ... find a name for this
 		Argsn: 1,
 		Doc:   "Accepts a Dict and returns formatted presentation of it as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -8179,8 +8248,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 	// Tests:
-	// equal { dict { "a" 1 "b" 2 "c" 3 } |keys } { "a" "b" "c" }
-	// equal { spreadsheet { "a" "b" "c" } { 1 2 3 } |keys } list { "a" "b" "c" }
+	// equal { dict { "a" 1 "b" 2 "c" 3 } |keys |length? } 3
+	// equal { spreadsheet { "a" "b" "c" } { 1 2 3 } |keys |length? } 3
 	// ; TODO -- doesn't work yet, .header? also has the same problem -- equal { spreadsheet { 'a 'b 'c } { 1 2 3 } |keys } { 'a 'b 'c }
 	"keys": {
 		Argsn: 1,
@@ -8411,6 +8480,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Example: sleep
+	// sleep 1 .seconds
 	"sleep": {
 		Argsn: 1,
 		Doc:   "Accepts an integer and Sleeps for given number of miliseconds.",
@@ -8424,6 +8495,9 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	// equal  { 5 .seconds } 5000000000
 	"seconds": {
 		Argsn: 1,
 		Doc:   "Accepts an integer and Sleeps for given number of miliseconds.",
@@ -8436,6 +8510,8 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Tests:
+	// equal  { 5 .minutes } 5000000000 * 60
 	"minutes": {
 		Argsn: 1,
 		Doc:   "Accepts an integer and Sleeps for given number of miliseconds.",
@@ -8448,6 +8524,9 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	// equal  { 5 .hours } 5000000000 * 60 * 60
 	"hours": {
 		Argsn: 1,
 		Doc:   "Accepts an integer and Sleeps for given number of miliseconds.",

@@ -19,6 +19,8 @@ import (
 
 	"net/http"
 	"net/http/cgi"
+
+	"github.com/jlaffaye/ftp"
 )
 
 func __input(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -69,8 +71,8 @@ func __openFile(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env
 func __create(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch s := arg0.(type) {
 	case env.Uri:
-		path := strings.Split(s.Path, "://")
-		file, err := os.Create(path[1])
+		// path := strings.Split(s.Path, "://")
+		file, err := os.Create(s.Path)
 		if err != nil {
 			ps.ReturnFlag = true
 			ps.FailureFlag = true
@@ -87,8 +89,7 @@ func __create(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.O
 func __open_reader(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 	switch s := arg0.(type) {
 	case env.Uri:
-		path := strings.Split(s.Path, "://")
-		file, err := os.Open(path[1])
+		file, err := os.Open(s.Path)
 		//trace3(path)
 		if err != nil {
 			ps.FailureFlag = true
@@ -712,6 +713,45 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
+	"https-schema//open": {
+		Argsn: 1,
+		Doc:   "Open a HTTPS GET request.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch f := arg0.(type) {
+			case env.Uri:
+				// ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Second*10))
+				// defer cancel()
+				proto := ps.Idx.GetWord(f.GetProtocol().Index)
+				// req, err := http.NewRequestWithContext(ctx, http.MethodGet, proto+"://"+f.GetPath(), nil)
+				req, err := http.NewRequest(http.MethodGet, proto+"://"+f.GetPath(), nil)
+				if err != nil {
+					ps.FailureFlag = true
+					return *env.NewError(err.Error())
+				}
+				resp, err := http.DefaultClient.Do(req)
+				if err != nil {
+					ps.FailureFlag = true
+					return *env.NewError(err.Error())
+				}
+				// Print the HTTP Status Code and Status Name
+				//mt.Println("HTTP Response Status:", resp.StatusCode, http.StatusText(resp.StatusCode))
+				// defer resp.Body.Close()
+				// body, _ := io.ReadAll(resp.Body)
+
+				if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
+					return *env.NewNative(ps.Idx, resp.Body, "rye-reader")
+				} else {
+					ps.FailureFlag = true
+					errMsg := fmt.Sprintf("Status Code: %v, Body: %v", resp.StatusCode)
+					return MakeBuiltinError(ps, errMsg, "__https_s_get")
+				}
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "__https_s_get")
+			}
+		},
+	},
+
 	"https-schema//get": {
 		Argsn: 1,
 		Doc:   "Make a HTTPS GET request.",
@@ -826,6 +866,86 @@ var Builtins_io = map[string]*env.Builtin{
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.WordType}, "serve-cgi")
+			}
+		},
+	},
+
+	"ftp-schema//open": {
+		Argsn: 1,
+		Doc:   "Open connection to FTP Server",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+
+			switch s := arg0.(type) {
+			case env.Uri:
+				conn, err := ftp.Dial(s.Path)
+				if err != nil {
+					fmt.Println("Error connecting to FTP server:", err)
+					return MakeBuiltinError(ps, "Error connecting to FTP server: "+err.Error(), "ftp-schema//open")
+				}
+				//trace3(path)
+				if err != nil {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Error opening file.", "ftp-schema//open")
+				}
+				return *env.NewNative(ps.Idx, conn, "ftp-connection")
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.UriType, env.StringType}, "ftp-schema//open")
+			}
+		},
+	},
+
+	"ftp-connection//login": {
+		Argsn: 3,
+		Doc:   "Login to connection to FTP Server",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+
+			switch s := arg0.(type) {
+			case env.Native:
+				username, ok := arg1.(env.String)
+				if !ok {
+					// TODO ARG ERROR
+					return nil
+				}
+				pwd, ok := arg2.(env.String)
+				if !ok {
+					// TODO ARG ERROR
+					return nil
+				}
+				err := s.Value.(*ftp.ServerConn).Login(username.Value, pwd.Value)
+				if err != nil {
+					// TODO
+					fmt.Println("Error logging in:", err)
+					return nil
+				}
+				return s
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.UriType, env.StringType}, "ftp-connection//login")
+			}
+		},
+	},
+
+	"ftp-connection//retrieve": {
+		Argsn: 2,
+		Doc:   "Retrieve file from connection to FTP Server",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+
+			switch s := arg0.(type) {
+			case env.Native:
+				path, ok := arg1.(env.String)
+				if !ok {
+					// TODO ARG ERROR
+				}
+				resp, err := s.Value.(*ftp.ServerConn).Retr(path.Value)
+				if err != nil {
+					fmt.Println("Error retrieving:", err)
+					return nil
+				}
+				return *env.NewNative(ps.Idx, resp, "rye-reader")
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.UriType, env.StringType}, "ftp-connection//login")
 			}
 		},
 	},

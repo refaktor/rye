@@ -463,7 +463,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 				f, err := os.Open(file.GetPath())
 				if err != nil {
 					// log.Fatal("Unable to read input file "+filePath, err)
-					return MakeBuiltinError(ps, "Unable to read input file.", "load\\csv")
+					return MakeBuiltinError(ps, "Unable to read input file:"+err.Error(), "load\\csv")
 				}
 				defer f.Close()
 
@@ -471,7 +471,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 				rows, err := csvReader.ReadAll()
 				if err != nil {
 					// log.Fatal("Unable to parse file as CSV for "+filePath, err)
-					return MakeBuiltinError(ps, "Unable to parse file as CSV.", "load\\csv")
+					return MakeBuiltinError(ps, "Unable to parse file as CSV: "+err.Error(), "load\\csv")
 				}
 				if len(rows) == 0 {
 					return MakeBuiltinError(ps, "File is empty", "load\\csv")
@@ -742,6 +742,38 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 					return WhereEquals(ps, spr, ps.Idx.GetWord(col.Index), arg2)
 				case env.String:
 					return WhereEquals(ps, spr, col.Value, arg2)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-equal")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "where-equal")
+			}
+		},
+	},
+	// Args:
+	// * sheet
+	// * column
+	// Tags: #filter #spreadsheets
+	"where-void": {
+		Argsn: 2,
+		Doc:   "Returns spreadsheet of rows where specific colum is equal to given value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch spr := arg0.(type) {
+			case *env.Spreadsheet:
+				switch col := arg1.(type) {
+				case env.Word:
+					return WhereEquals(ps, *spr, ps.Idx.GetWord(col.Index), env.NewVoid())
+				case env.String:
+					return WhereEquals(ps, *spr, col.Value, env.NewVoid())
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-equal")
+				}
+			case env.Spreadsheet:
+				switch col := arg1.(type) {
+				case env.Word:
+					return WhereEquals(ps, spr, ps.Idx.GetWord(col.Index), env.NewVoid())
+				case env.String:
+					return WhereEquals(ps, spr, col.Value, env.NewVoid())
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-equal")
 				}
@@ -1155,6 +1187,34 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 				}
 			}
 			return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "drop-column")
+		},
+	},
+	// Example: Drop "job_title" column from sheet
+	//  sheet: spreadsheet { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
+	//  sheet .drop-column 'job_title ;
+	// Example: Drop name and age columns from sheet
+	//  sheet: spreadsheet { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
+	//  sheet .drop-column { "name" "age" } ;
+	// Tags: #spreadsheet
+	"rename-column!": {
+		Argsn: 3,
+		Doc:   "Remove a column from a spreadsheet. Returns new spreadsheet",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch spr := arg0.(type) {
+			case *env.Spreadsheet:
+				switch oldName := arg1.(type) {
+				case env.String:
+					switch newName := arg2.(type) {
+					case env.String:
+						return RenameColumn(ps, spr, oldName, newName)
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.WordType, env.BlockType}, "rename-column")
+					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.BlockType}, "rename-column")
+				}
+			}
+			return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "rename-column")
 		},
 	},
 	// Example: Add a column to a sheet
@@ -1781,6 +1841,21 @@ func DropColumns(ps *env.ProgramState, s env.Spreadsheet, names []env.String) en
 	newSheet.Kind = s.Kind
 
 	return newSheet
+}
+
+// Drop one or more columns from a spreadsheet, returning a new spreadsheet
+func RenameColumn(ps *env.ProgramState, s *env.Spreadsheet, oldName env.String, newName env.String) env.Object {
+	var colI int
+
+	for i, name := range s.Cols {
+		if name == oldName.Value {
+			colI = i
+			break
+		}
+	}
+
+	s.Cols[colI] = newName.Value
+	return s
 }
 
 func GenerateColumn(ps *env.ProgramState, s env.Spreadsheet, name env.Word, extractCols env.Block, code env.Block) env.Object {
