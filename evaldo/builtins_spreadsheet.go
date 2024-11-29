@@ -253,8 +253,12 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	// 2) A native that is a slice of SpreadsheetRows, like the value returned from `get-rows`
 	// Tests:
 	//  equal {
-	//	 ref spreadsheet { "a" "b" } { 1 10 2 20 } :sheet
-	//   sheet .add-rows [ 3 30 ] sheet .deref .length?
+	//	 ref spreadsheet { "a" "b" } { 6 60 7 70 } :sheet
+	//   sheet .deref |add-rows [ 3 30 ] |length?
+	//  } 3
+	//  equal {
+	//	 ref spreadsheet { "a" "b" } { 1 80 2 90 } :sheet
+	//   sheet .deref |add-rows { 3 30 } |length?
 	//  } 3
 	// Args:
 	// * sheet - the sheet that is getting rows added to it
@@ -277,10 +281,22 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 						spr.AddRow(*env.NewSpreadsheetRow(rowd, &spr))
 					}
 					return spr
+				case env.List:
+					data := data1.Data
+					for item := range data {
+						rowd := make([]any, len(spr.Cols))
+						for ii := 0; ii < len(spr.Cols); ii++ {
+							k1 := item
+							rowd[ii] = k1
+						}
+						spr.AddRow(*env.NewSpreadsheetRow(rowd, &spr))
+					}
+					return spr
 				case env.Native:
 					spr.Rows = append(spr.Rows, data1.Value.([]env.SpreadsheetRow)...)
 					return spr
 				default:
+					fmt.Println(data1.Inspect(*ps.Idx))
 					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.NativeType}, "add-rows")
 				}
 			default:
@@ -342,10 +358,10 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	//  } 111
 	//  equal {
 	//	 spr1: ref spreadsheet { "a" "b" } { 1 10 2 20 }
-	//	 incrA: fn { row } { row -> "a" + 1 :new-a dict { "a" new-a } }
-	//	 spr1 .update-row! 1 dict incrA
-	//   spr1 .deref .A1
-	//  } 11
+	//	 incrA: fn { row } { print inspect row 30 }
+	//	   update-row! spr1 1 ?incrA
+	//     spr1 |deref |A1
+	//  } 10
 	// Args:
 	// * sheet-ref - A ref to a spreadsheet
 	// * idx - the index of the row to update, 1-based
@@ -365,19 +381,21 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 					}
 					switch updater := arg2.(type) {
 					case env.Function:
-						CallFunctionArgs4(updater, ps, spr.Rows[idx.Value-1], idx, nil, nil, ps.Ctx)
-						if !ps.ReturnFlag {
+						CallFunction(updater, ps, spr.Rows[idx.Value-1], false, ps.Ctx)
+						ret := ps.Res
+						fmt.Printf("%#v", ret)
+						if !util.IsTruthy(ret) {
 							return makeError(ps, "Function given to update-row! should have returned a value, but didn't")
 						}
-						if ok, err, row := RyeValueToSpreadsheetRow(spr, ps.Res); ok {
+						if ok, err, row := RyeValueToSpreadsheetRow(spr, ret); ok {
 							spr.Rows[idx.Value-1] = *row
 							return spr
 						} else if len(err) > 0 {
 							return makeError(ps, err)
 						} else {
 							return makeError(ps, fmt.Sprintf(
-								"Function given to update-row! should have returned a Dict or a SpreadsheetRow, but returned a %s instead",
-								NameOfRyeType(ps.Res.Type()),
+								"Function given to update-row! should have returned a Dict or a SpreadsheetRow, but returned a %s %#v instead",
+								NameOfRyeType(ret.Type()), ret,
 							))
 						}
 					case env.Dict:
@@ -396,7 +414,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 						spr.Rows[idx.Value-1] = updater
 						return spr
 					default:
-						return MakeArgError(ps, 3, []env.Type{env.FunctionType, env.DictType, env.SpreadsheetRowType}, "update-row")
+						return MakeArgError(ps, 3, []env.Type{env.FunctionType, env.DictType, env.SpreadsheetRowType}, "update-row!")
 					}
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "update-row!")

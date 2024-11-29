@@ -43,8 +43,12 @@ section "base" "base text" {
 
 	{
 		equal {
-		ref spreadsheet { "a" "b" } { 1 10 2 20 } :sheet
-		sheet .add-rows [ 3 30 ] sheet .deref .length?
+		ref spreadsheet { "a" "b" } { 6 60 7 70 } :sheet
+		sheet .deref |add-rows [ 3 30 ] |length?
+		} 3
+		equal {
+		ref spreadsheet { "a" "b" } { 1 80 2 90 } :sheet
+		sheet .deref |add-rows { 3 30 } |length?
 		} 3
 	}
 
@@ -80,10 +84,10 @@ section "base" "base text" {
 		} 111
 		equal {
 		spr1: ref spreadsheet { "a" "b" } { 1 10 2 20 }
-		incrA: fn { row } { row -> "a" + 1 :new-a dict { "a" new-a } }
-		spr1 .update-row! 1 dict incrA
-		spr1 .deref .A1
-		} 11
+		incrA: fn { row } { print inspect row 30 }
+		update-row! spr1 1 ?incrA
+		spr1 |deref |A1
+		} 10
 	}
 
 	group "remove-row!" 

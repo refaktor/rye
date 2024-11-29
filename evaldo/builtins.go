@@ -338,6 +338,7 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 			}
 		}
 	}
+	fmt.Printf("GETFROM: %#v %#v %#v\n", data, key, posMode)
 	return makeError(ps, "Wrong type or missing key for get-arrow")
 }
 
