@@ -190,7 +190,7 @@ Rye is developed and should work on Linux and Mac and Windows. We also have a Do
 
 ### Binaries
 
-You can find precompiled Binaries for **Linux** and **macOS** under [Releases](https://github.com/refaktor/rye/releases).
+You can find precompiled Binaries for **Linux**, **macOS**, **Windows** and **Wasm** under [Releases](https://github.com/refaktor/rye/releases).
 
 Docker images are published under [Packages](https://github.com/refaktor/rye/pkgs/container/rye).
 
