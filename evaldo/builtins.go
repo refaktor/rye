@@ -1248,9 +1248,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	// Tests:
-	// error { 1 = 1 |require .type? }
-	"require_": {
+	// There is require with arity 2 below which makes more sense
+	// error { 1 = 0 |require |type? }
+	/* "require": {
 		Argsn: 1,
 		Doc:   "Requite a truthy value or produce a failure.",
 		Pure:  true,
@@ -1261,7 +1261,7 @@ var builtins = map[string]*env.Builtin{
 				return MakeBuiltinError(ps, "Requirement failed.", "require_")
 			}
 		},
-	},
+	}, */
 
 	// Tests:
 	// equal { 10 .multiple-of 2 } 1

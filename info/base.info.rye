@@ -355,15 +355,6 @@ section "base" "base text" {
 		equal { false .xor false } 0
 	}
 
-	group "require_" 
-	""
-	{
-	}
-
-	{
-		error { 1 = 1 |require .type? }
-	}
-
 	group "multiple-of" 
 	""
 	{
