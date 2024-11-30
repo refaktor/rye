@@ -679,7 +679,7 @@ func CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, toLeft
 		result = EvalBlock(ps)
 	}
 	//	}
-	MaybeDisplayFailureOrError(result, result.Idx)
+	// MaybeDisplayFailureOrError(result, result.Idx, "call function")
 	if result.ForcedResult != nil {
 		ps.Res = result.ForcedResult
 		result.ForcedResult = nil
@@ -764,7 +764,7 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 	result = EvalBlockInj(psX, arg0, true)
 	// fmt.Println(result)
 	// fmt.Println(result.Res)
-	MaybeDisplayFailureOrError(result, result.Idx)
+	MaybeDisplayFailureOrError(result, result.Idx, "call func args 2")
 	if result.ForcedResult != nil {
 		ps.Res = result.ForcedResult
 		result.ForcedResult = nil
@@ -829,7 +829,7 @@ func CallFunctionArgs4(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 	var result *env.ProgramState
 	psX.Ser.SetPos(0)
 	result = EvalBlockInj(psX, arg0, true)
-	MaybeDisplayFailureOrError(result, result.Idx)
+	MaybeDisplayFailureOrError(result, result.Idx, "call func args 4")
 	if result.ForcedResult != nil {
 		ps.Res = result.ForcedResult
 		result.ForcedResult = nil
@@ -893,7 +893,7 @@ func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, a
 	} else {
 		result = EvalBlock(psX)
 	}
-	MaybeDisplayFailureOrError(result, result.Idx)
+	MaybeDisplayFailureOrError(result, result.Idx, "call func args N")
 	if result.ForcedResult != nil {
 		ps.Res = result.ForcedResult
 		result.ForcedResult = nil
@@ -1083,9 +1083,10 @@ func DirectlyCallBuiltin(ps *env.ProgramState, bi env.Builtin, a0 env.Object, a1
 	return bi.Fn(ps, arg0, arg1, arg2, arg3, arg4)
 }
 
-func MaybeDisplayFailureOrError(es *env.ProgramState, genv *env.Idxs) {
+func MaybeDisplayFailureOrError(es *env.ProgramState, genv *env.Idxs, tag string) {
 	if es.FailureFlag {
 		fmt.Println("\x1b[33m" + "Failure" + "\x1b[0m")
+		fmt.Println(tag)
 	}
 	if es.ErrorFlag {
 		fmt.Println("\x1b[31m" + es.Res.Print(*genv))
@@ -1098,7 +1099,7 @@ func MaybeDisplayFailureOrError(es *env.ProgramState, genv *env.Idxs) {
 			fmt.Print(err.CodeBlock.PositionAndSurroundingElements(*genv))
 		}
 		fmt.Println("\x1b[0m")
-
+		fmt.Println(tag)
 		// ENTER CONSOLE ON ERROR
 		// es.ErrorFlag = false
 		// es.FailureFlag = false

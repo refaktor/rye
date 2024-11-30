@@ -8,7 +8,6 @@ import (
 
 	"github.com/refaktor/rye/env"
 
-	"fmt"
 	"io"
 )
 
@@ -170,7 +169,7 @@ func do_sxml(ps *env.ProgramState, reader io.Reader, rmap env.Dict) env.Object {
 }
 
 func trace5(s string) {
-	fmt.Println(s)
+	// fmt.Println(s)
 }
 
 var Builtins_sxml = map[string]*env.Builtin{

@@ -733,6 +733,21 @@ section "base" "base text" {
 		equal  { switch 202 { 101 { 111 } 202 { 222 } } } 222
 	}
 
+	group "cases" 
+	""
+	{
+	}
+
+	{
+		equal  { cases 0 { { 1 > 0 } { + 100 } { 2 > 1 } { + 1000 } } } 1100
+		equal  { cases 0 { { 1 > 0 } { + 100 } { 2 < 1 } { + 1000 } } } 100
+		equal  { cases 0 { { 1 < 0 } { + 100 } { 2 > 1 } { + 1000 } } } 1000
+		equal  { cases 0 { { 1 < 0 } { + 100 } { 2 < 1 } { + 1000 } } } 0
+		equal  { cases 1 { { 1 > 0 } { + 100 } { 2 < 1 } { + 1000 } _ { * 3 } } } 101
+		equal  { cases 1 { { 1 < 0 } { + 100 } { 2 > 1 } { + 1000 } _ { * 3 } } } 1001
+		equal  { cases 1 { { 1 < 0 } { + 100 } { 2 < 1 } { + 1000 } _ { * 3 } } } 3
+	}
+
 	group "do" 
 	""
 	{
@@ -740,6 +755,7 @@ section "base" "base text" {
 
 	{
 		equal  { do { 123 + 123 } } 246
+		error  { do { 123 + } }
 	}
 
 	group "try" 
@@ -750,6 +766,7 @@ section "base" "base text" {
 	{
 		equal  { try { 123 + 123 } } 246
 		equal  { try { 123 + "asd" } \type? } 'error
+		equal  { try { 123 + } \type? } 'error
 	}
 
 	group "with" 
@@ -759,6 +776,75 @@ section "base" "base text" {
 
 	{
 		equal  { with 100 { + 11 } } 111
+		equal  { with 100 { + 11 , * 3 } } 300
+	}
+
+	group "do\\in" 
+	""
+	{
+	}
+
+	{
+		equal  { c: context { x: 100 } do\in c { x * 9.99 } } 999.0
+		equal  { c: context { x: 100 } do\in c { inc! 'x } } 101
+		equal  { c: context { x: 100 } do\in c { x:: 200 } c/x } 200
+		equal  { c: context { x: 100 } do\in c { x:: 200 , x } } 200
+	}
+
+	group "try\\in" 
+	""
+	{
+	}
+
+	{
+		equal  { c: context { x: 100 } try\in c { x * 9.99 } } 999.0
+		equal  { c: context { x: 100 } try\in c { inc! 'x } } 101
+		equal  { c: context { x: 100 } try\in c { x:: 200 , x } } 200
+		equal  { c: context { x: 100 } try\in c { x:: 200 } c/x } 200
+		equal  { c: context { x: 100 } try\in c { inc! 'y } |type? } 'error
+	}
+
+	group "do\\par" 
+	""
+	{
+	}
+
+	{
+		equal  { c: context { x: 100 } do\par c { x * 9.99 } } 999.0
+		equal  { c: context { x: 100 } do\par c { inc! 'x } } 101
+		equal  { c: context { x: 100 } do\par c { x:: 200 , x } } 200
+		equal  { c: context { x: 100 } do\par c { x:: 200 } c/x } 100
+	}
+
+	group "capture-stdout" 
+	""
+	{
+	}
+
+	{
+		equal { capture-stdout { print "hello" } } "hello\n"
+		equal { capture-stdout { loop 3 { prns "x" } } } "x x x "
+	}
+
+	group "vals" 
+	""
+	{
+	}
+
+	{
+		equal { x: 1 y: 2 vals { x y } } { 1 2 }
+		equal { x: 1 y: 2 vals { 1 y } } { 1 2 }
+		equal { x: 1 y: 2 try { vals { z y } } |type? } 'error
+	}
+
+	group "vals\\with" 
+	""
+	{
+	}
+
+	{
+		equal { x: 1 y: 2 vals\with 10 { + x , * y } } { 11 20 }
+		equal { x: 1 y: 2 vals\with 100 { + 10 , * 8.9 } } { 110 890.0 }
 	}
 
 	group "unpack" 
@@ -768,6 +854,7 @@ section "base" "base text" {
 
 	{
 		equal  { unpack { { 123 } { 234 } } } { 123 234 }
+		equal  { unpack { { { 123 } } { 234 } } } { { 123 } 234 }
 	}
 
 	group "all" 
@@ -791,13 +878,89 @@ section "base" "base text" {
 		equal  { any { 0 0 3 } } 3
 	}
 
+	group "any\\with" 
+	""
+	{
+	}
+
+	{
+		equal  { any\with 10 { + 10 , * 10 } } 20
+		; equal  { any\with -10 { + 10 , * 10 } } -200 ... halts TODO -- fix
+	}
+
+	group "current" 
+	""
+	{
+	}
+
+	{
+		equal { c: context { x: 9999 , incr: fn\in { } current { x:: inc x } } c/incr c/x } 10000
+	}
+
+	group "parent" 
+	""
+	{
+	}
+
+	{
+		equal { y: 99 c: context { incr: fn\in { } parent { y:: inc y } } c/incr y } 100
+	}
+
+	group "raw-context" 
+	""
+	{
+	}
+
+	{
+		equal { c: raw-context { x: 123 } c/x } 123
+		equal { y: 123 try { c: raw-context { x: y } } |type? } 'error ; word not found y
+		equal { try { c: raw-context { x: inc 10 } } |type? } 'error ; word not found inc
+	}
+
+	group "isolate" 
+	""
+	{
+	}
+
+	{
+		equal { c: isolate { x: 123 } c/x } 123
+		equal { y: 123 c: isolate { x: y } c/x } 123
+		equal { c: isolate { x: inc 10 } c/x } 11
+		equal { y: 99 c: isolate { x: does { y } } try { c/x } |type? } 'error
+		equal { y: 99 c: isolate { t: ?try x: does { t { y } } } c/x |type? } 'error
+	}
+
+	group "context" 
+	""
+	{
+	}
+
+	{
+		equal { c: context { x: 123 } c/x } 123
+		equal { y: 123 c: context { x: y } c/x } 123
+		equal { c: context { x: inc 10 } c/x } 11
+		equal { y: 123 c: context { x: does { y } } c/x } 123
+	}
+
+	group "private" 
+	""
+	{
+	}
+
+	{
+		equal { private { x: 123 } } 123
+		equal { y: 123 private { x: y } } 123
+		equal { private { x: inc 10 } } 11
+		equal { y: 123 private { does { y } } :f f } 123
+	}
+
 	group "private\\" 
 	""
 	{
 	}
 
 	{
-		equal  { private { x: 123 1000 + x } } 1123
+		equal  { private\ "what are we doing here" { x: 234 1000 + x } } 1234
 	}
 
 	group "pass" 
