@@ -192,7 +192,7 @@ func RyeEvalShellLine(this js.Value, args []js.Value) any {
 		}
 
 		evaldo.EvalBlockInj(ps, prevResult, true)
-		evaldo.MaybeDisplayFailureOrErrorWASM(ps, ps.Idx, sendMessageToJSNL)
+		evaldo.MaybeDisplayFailureOrErrorWASM(ps, ps.Idx, sendMessageToJSNL, "rye shell line wasm")
 
 		prevResult = ps.Res
 
@@ -239,7 +239,7 @@ func RyeEvalString(this js.Value, args []js.Value) any {
 		}
 
 		evaldo.EvalBlock(es)
-		evaldo.MaybeDisplayFailureOrError(es, genv)
+		evaldo.MaybeDisplayFailureOrError(es, genv, "rye eval string wasm")
 		return es.Res.Print(*es.Idx)
 	case env.Error:
 		fmt.Println(val.Message)
