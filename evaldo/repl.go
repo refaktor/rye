@@ -241,7 +241,7 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 			fmt.Println("Unknown dialect: " + r.dialect)
 		}
 
-		MaybeDisplayFailureOrError(es, genv)
+		MaybeDisplayFailureOrError(es, genv, "repl / eval Line")
 
 		if !es.ErrorFlag && es.Res != nil {
 			r.prevResult = es.Res

@@ -1248,9 +1248,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	// Tests:
-	// error { 1 = 1 |require .type? }
-	"require_": {
+	// There is require with arity 2 below which makes more sense
+	// error { 1 = 0 |require |type? }
+	/* "require": {
 		Argsn: 1,
 		Doc:   "Requite a truthy value or produce a failure.",
 		Pure:  true,
@@ -1261,7 +1261,7 @@ var builtins = map[string]*env.Builtin{
 				return MakeBuiltinError(ps, "Requirement failed.", "require_")
 			}
 		},
-	},
+	}, */
 
 	// Tests:
 	// equal { 10 .multiple-of 2 } 1
@@ -2655,6 +2655,14 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal  { cases 0 { { 1 > 0 } { + 100 } { 2 > 1 } { + 1000 } } } 1100
+	// equal  { cases 0 { { 1 > 0 } { + 100 } { 2 < 1 } { + 1000 } } } 100
+	// equal  { cases 0 { { 1 < 0 } { + 100 } { 2 > 1 } { + 1000 } } } 1000
+	// equal  { cases 0 { { 1 < 0 } { + 100 } { 2 < 1 } { + 1000 } } } 0
+	// equal  { cases 1 { { 1 > 0 } { + 100 } { 2 < 1 } { + 1000 } _ { * 3 } } } 101
+	// equal  { cases 1 { { 1 < 0 } { + 100 } { 2 > 1 } { + 1000 } _ { * 3 } } } 1001
+	// equal  { cases 1 { { 1 < 0 } { + 100 } { 2 < 1 } { + 1000 } _ { * 3 } } } 3
 	"cases": { // ** , TODO-FIXME: error handling
 		Argsn: 2,
 		Doc:   "Similar to Case function, but checks all the cases, even after a match. It combines the outputs.",
@@ -2761,6 +2769,7 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal  { do { 123 + 123 } } 246
+	// error  { do { 123 + } }
 	"do": {
 		Argsn: 1,
 		Doc:   "Takes a block of code and does (runs) it.",
@@ -2782,6 +2791,7 @@ var builtins = map[string]*env.Builtin{
 	// Tests:
 	// equal  { try { 123 + 123 } } 246
 	// equal  { try { 123 + "asd" } \type? } 'error
+	// equal  { try { 123 + } \type? } 'error
 	"try": { // **
 		Argsn: 1,
 		Doc:   "Takes a block of code and does (runs) it.",
@@ -2810,6 +2820,7 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal  { with 100 { + 11 } } 111
+	// equal  { with 100 { + 11 , * 3 } } 300
 	"with": { // **
 		AcceptFailure: true,
 		Doc:           "Takes a value and a block of code. It does the code with the value injected.",
@@ -2828,6 +2839,11 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal  { c: context { x: 100 } do\in c { x * 9.99 } } 999.0
+	// equal  { c: context { x: 100 } do\in c { inc! 'x } } 101
+	// equal  { c: context { x: 100 } do\in c { x:: 200 } c/x } 200
+	// equal  { c: context { x: 100 } do\in c { x:: 200 , x } } 200
 	"do\\in": { // **
 		Argsn: 2,
 		Doc:   "Takes a Context and a Block. It Does a block inside a given Context.",
@@ -2853,13 +2869,19 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal  { c: context { x: 100 } try\in c { x * 9.99 } } 999.0
+	// equal  { c: context { x: 100 } try\in c { inc! 'x } } 101
+	// equal  { c: context { x: 100 } try\in c { x:: 200 , x } } 200
+	// equal  { c: context { x: 100 } try\in c { x:: 200 } c/x } 200
+	// equal  { c: context { x: 100 } try\in c { inc! 'y } |type? } 'error
 	"try\\in": { // **
 		Argsn: 2,
 		Doc:   "Takes a Context and a Block. It Does a block inside a given Context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch ctx := arg1.(type) {
+			switch ctx := arg0.(type) {
 			case env.RyeCtx:
-				switch bloc := arg0.(type) {
+				switch bloc := arg1.(type) {
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
@@ -2876,16 +2898,21 @@ var builtins = map[string]*env.Builtin{
 					return ps.Res
 				default:
 					ps.ErrorFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "do\\in\\try")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "try\\in")
 				}
 			default:
 				ps.ErrorFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "do\\in\\try")
+				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "try\\in")
 			}
 
 		},
 	},
 
+	// Tests:
+	// equal  { c: context { x: 100 } do\par c { x * 9.99 } } 999.0
+	// equal  { c: context { x: 100 } do\par c { inc! 'x } } 101
+	// equal  { c: context { x: 100 } do\par c { x:: 200 , x } } 200
+	// equal  { c: context { x: 100 } do\par c { x:: 200 } c/x } 100
 	"do\\par": { // **
 		Argsn: 2,
 		Doc:   "Takes a Context and a Block. It Does a block in current context but with parent a given Context.",
@@ -2937,6 +2964,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { capture-stdout { print "hello" } } "hello\n"
+	// equal { capture-stdout { loop 3 { prns "x" } } } "x x x "
 	"capture-stdout": { // **
 		Argsn: 1,
 		Doc:   "Takes a block of code and does (runs) it.",
@@ -3011,6 +3041,10 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { x: 1 y: 2 vals { x y } } { 1 2 }
+	// equal { x: 1 y: 2 vals { 1 y } } { 1 2 }
+	// equal { x: 1 y: 2 try { vals { z y } } |type? } 'error
 	"vals": { // **
 		Argsn: 1,
 		Doc:   "Takes a block of Rye values and evaluates each value or expression.",
@@ -3048,7 +3082,10 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"vals\\with": { // **
+	// Tests:
+	// equal { x: 1 y: 2 vals\with 10 { + x , * y } } { 11 20 }
+	// equal { x: 1 y: 2 vals\with 100 { + 10 , * 8.9 } } { 110 890.0 }
+	"vals\\with": {
 		Argsn: 2,
 		Doc:   "Evaluate a block with injecting the first argument.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -3083,6 +3120,7 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal  { unpack { { 123 } { 234 } } } { 123 234 }
+	// equal  { unpack { { { 123 } } { 234 } } } { { 123 } 234 }
 	"unpack": {
 		Argsn: 1,
 		Doc:   "Takes a block of Rye values and evaluates each value or expression.",
@@ -3159,6 +3197,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal  { any\with 10 { + 10 , * 10 } } 20
+	// ; equal  { any\with -10 { + 10 , * 10 } } -200 ... halts TODO -- fix
 	"any\\with": { // TODO-FIXME error handling, halts on multiple expressions
 		Argsn: 2,
 		Doc:   "Takes a block, if any of the values or expressions are truthy, then it returns that one, in none false.",
@@ -3257,14 +3298,8 @@ var builtins = map[string]*env.Builtin{
 
 	// CONTEXT
 
-	"current-ctx": { // ** deprecated ... current from now on
-		Argsn: 0,
-		Doc:   "Returns current context.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return *ps.Ctx
-		},
-	},
-
+	// Tests:
+	// equal { c: context { x: 9999 , incr: fn\in { } current { x:: inc x } } c/incr c/x } 10000
 	"current": { // **
 		Argsn: 0,
 		Doc:   "Returns current context.",
@@ -3273,6 +3308,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { y: 99 c: context { incr: fn\in { } parent { y:: inc y } } c/incr y } 100
 	"parent": { // **
 		Argsn: 0,
 		Doc:   "Returns parent context of the current context.",
@@ -3281,7 +3318,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"parent?": { // **
+	"parent?": { // WORK: Duplicate? probably should remove
 		Argsn: 1,
 		Doc:   "Returns parent context of the current context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -3402,6 +3439,10 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { c: raw-context { x: 123 } c/x } 123
+	// equal { y: 123 try { c: raw-context { x: y } } |type? } 'error ; word not found y
+	// equal { try { c: raw-context { x: inc 10 } } |type? } 'error ; word not found inc
 	"raw-context": { // **
 		Argsn: 1,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -3425,7 +3466,13 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"isolate": { // **
+	// Tests:
+	// equal { c: isolate { x: 123 } c/x } 123
+	// equal { y: 123 c: isolate { x: y } c/x } 123
+	// equal { c: isolate { x: inc 10 } c/x } 11
+	// equal { y: 99 c: isolate { x: does { y } } try { c/x } |type? } 'error
+	// equal { y: 99 c: isolate { t: ?try x: does { t { y } } } c/x |type? } 'error
+	"isolate": {
 		Argsn: 1,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
@@ -3450,7 +3497,12 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"context": { // **
+	// Tests:
+	// equal { c: context { x: 123 } c/x } 123
+	// equal { y: 123 c: context { x: y } c/x } 123
+	// equal { c: context { x: inc 10 } c/x } 11
+	// equal { y: 123 c: context { x: does { y } } c/x } 123
+	"context": {
 		Argsn: 1,
 		Doc:   "Creates a new context with no parent",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -3471,6 +3523,11 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { private { x: 123 } } 123
+	// equal { y: 123 private { x: y } } 123
+	// equal { private { x: inc 10 } } 11
+	// equal { y: 123 private { does { y } } :f f } 123
 	"private": { // **
 		Argsn: 1,
 		Doc:   "Creates a new context with current parent, returns last value",
@@ -3493,10 +3550,10 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal  { private { x: 123 1000 + x } } 1123
+	// equal  { private\ "what are we doing here" { x: 234 1000 + x } } 1234
 	"private\\": {
 		Argsn: 2,
-		Doc:   "Creates a new context with current parent, returns last value",
+		Doc:   "Creates a new context with current parent, adds documentation, returns last value",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch doc := arg0.(type) {
 			case env.String:

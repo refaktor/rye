@@ -433,7 +433,7 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 			//fmt.Println("XX")
 			evaldo.EvalBlockInjMultiDialect(ps, nil, false)
 			//fmt.Println("YYY")
-			evaldo.MaybeDisplayFailureOrError(ps, ps.Idx)
+			evaldo.MaybeDisplayFailureOrError(ps, ps.Idx, "main rye file")
 		} else {
 			fmt.Println("There was no `here` file.")
 		}
@@ -469,7 +469,7 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 		}
 
 		evaldo.EvalBlockInjMultiDialect(ps, stValue, true)
-		evaldo.MaybeDisplayFailureOrError(ps, ps.Idx)
+		evaldo.MaybeDisplayFailureOrError(ps, ps.Idx, "main rye file #2")
 
 		if interactive {
 			evaldo.DoRyeRepl(ps, "rye", evaldo.ShowResults)
@@ -514,7 +514,7 @@ func main_cgi_file(file string, sig bool) {
 			contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
 
 			evaldo.EvalBlock(es)
-			evaldo.MaybeDisplayFailureOrError(es, genv)
+			evaldo.MaybeDisplayFailureOrError(es, genv, "main cgi file")
 		case env.Error:
 			fmt.Println(val.Message)
 		}

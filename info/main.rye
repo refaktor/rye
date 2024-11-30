@@ -3,7 +3,7 @@
 ; Generate documentation: ../rye main.rye doc > builtins.html
 
 rye .args\raw |load :args
-root-ctx: current-ctx
+root-ctx: current
 
 t: ?term
 
