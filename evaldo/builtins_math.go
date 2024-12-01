@@ -243,7 +243,7 @@ var Builtins_math = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.Integer:
-				return *env.NewDecimal(math.Abs(float64(val.Value)))
+				return *env.NewInteger(int64(math.Abs(float64(val.Value))))
 			case env.Decimal:
 				return *env.NewDecimal(math.Abs(val.Value))
 			default:

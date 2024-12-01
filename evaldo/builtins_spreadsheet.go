@@ -1152,9 +1152,29 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			case env.Spreadsheet:
 				switch col := arg1.(type) {
 				case env.Word:
-					return spr.Column(ps.Idx.GetWord(col.Index))
+					return spr.GetColumn(ps.Idx.GetWord(col.Index))
 				case env.String:
-					return spr.Column(col.Value)
+					return spr.GetColumn(col.Value)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "column?")
+				}
+			case env.Block:
+				switch col := arg1.(type) {
+				case env.Integer:
+					col1 := make([]env.Object, len(spr.Series.S))
+					if col.Value < 0 {
+						return MakeBuiltinError(ps, "Index can't be negative", "column?")
+					}
+					for i, item_ := range spr.Series.S {
+						switch item := item_.(type) {
+						case env.Block:
+							if len(item.Series.S) < int(col.Value) {
+								return MakeBuiltinError(ps, "index out of bounds for item: "+strconv.Itoa(i), "column?")
+							}
+							col1[i] = item.Series.S[col.Value]
+						}
+					}
+					return *env.NewBlock(*env.NewTSeries(col1))
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "column?")
 				}
@@ -1692,7 +1712,7 @@ func GetNumRowsFrom(ps *env.ProgramState, data any) (int, *env.Error) {
 }
 
 func SheetFromColumnsMapData(ps *env.ProgramState, cols []string, arg1 env.Object) env.Object {
-	spr := env.NewSpreadsheet(cols)
+	spr := *env.NewSpreadsheet(cols)
 	numCols := len(cols)
 
 	var colData []env.SpreadsheetRow

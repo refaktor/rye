@@ -1,0 +1,15 @@
+; # AoC 2024 Day 1+
+
+; Part 1 (spreadsheet)
+
+load %input.txt |split\every 2
+|with { .map { .first } :left .sort! , .map { .second } :rigth .sort! }
+
+; part 1
+spreadsheet\columns { "l" "r" } [ left rigth ]
+|deref
+|add-column! 'dif { l r } { l - r |math/abs }
+|column? 'dif
+|sum |to-integer |print
+
+; # AoC 2024 Day 1 Part 1 (spreadsheet)
