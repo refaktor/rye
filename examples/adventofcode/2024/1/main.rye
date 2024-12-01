@@ -1,0 +1,63 @@
+; # AoC 2024 :: Day 1
+
+private\ "Part 1: initial try, load and split" { 
+
+	load %input.txt |split\every 2 :pairs
+	|with { .column? 0 |sort! :left , .column? 1 |sort! :right }
+	
+	spreadsheet\columns { "l" "r" } [ left right ]
+	|add-column! 'dif { l r } { l - r |math/abs }
+	|column? 'dif
+	|sum
+
+} |print
+	
+; 2430334
+
+private\ "Part 1: using some variables" { 
+
+	read\lines %input.txt |map ?load :pairs
+	pairs .column? 0 |sort! :left
+	pairs .column? 1 |sort! :right
+	
+	spreadsheet\columns { "l" "r" } [ left right ]
+	|add-column! 'dif { l r } { math/abs l - r }
+	|column? 'dif |sum
+
+} |print
+
+private\ "Part 1: util func, just pipe" {
+
+	prep-col: fn { b n } { .column? n |sort! }
+
+	read\lines %input.txt
+	|map ?load
+	|vals\with { .prep-col 0 , .prep-col 1 }
+	|spreadsheet\columns* { 'l 'r }
+	|add-column! 'dif { l r } { math/abs l - r }
+	|column? 'dif |sum
+
+} |print
+
+private\ "Part 1: util func, loose the spreadsheet, add transpose" {
+
+	
+	; Advent of Code 2024 :: Day 1
+	
+	prep-col: fn { b n } { .column? n |sort! }
+
+	read\lines %input.txt
+	|map ?load
+	|vals\with { .prep-col 0 , .prep-col 1 } :cols
+	|transpose
+	|map { .set! { l r } , math/abs l - r }
+	|sum |print ;part 1
+
+	cols .set! { left right }
+	map left { ::x * length? filter right { = x } }
+	|sum |print ;part 2
+	
+
+
+}
+

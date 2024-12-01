@@ -7365,6 +7365,9 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Question: Should blocks really have cursor, like in Rebol? We don't really use them in that stateful way, except maybe when they
+	// represent code? Look at it.
 	"next": {
 		Argsn: 1,
 		Doc:   "Accepts Block and returns the next value from it.",
@@ -7378,6 +7381,63 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	// equal { { { 1 2 3 } { 4 5 6 } } .transpose } { { 1 4 } { 2 5 } { 3 6 } }
+	// equal { { { 1 4 } { 2 5 } { 3 6 } } .transpose } { 1 2 3 } { 4 5 6 }
+	"transpose": {
+		Argsn: 1,
+		Doc:   "Accepts Block and returns the next value from it.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch blk := arg0.(type) {
+			case env.Block:
+
+				// Get the number of subblocks
+				rows := len(blk.Series.S)
+
+				// get the size of first block
+				frstBlk, ok := blk.Series.S[0].(env.Block)
+				if !ok {
+					return MakeBuiltinError(ps, "First element is not block", "transpose")
+				}
+				cols := len(frstBlk.Series.S)
+
+				// Create the matrix from which new blocks will be created
+				transposed := make([][]env.Object, cols)
+				for i := range transposed {
+					transposed[i] = make([]env.Object, rows)
+				}
+
+				// Fill the contents of new block
+				for i := 0; i < rows; i++ {
+					subBlk, ok := blk.Series.S[i].(env.Block)
+					if !ok {
+						return MakeBuiltinError(ps, fmt.Sprintf("Element %d is not block", i), "transpose")
+					}
+					for j := 0; j < cols; j++ {
+						transposed[j][i] = subBlk.Series.S[j]
+					}
+				}
+
+				// we could probably make this in for loop above ... look at it in the future
+				newblk := make([]env.Object, cols)
+				for top := 0; top < cols; top++ {
+					subblk := make([]env.Object, rows)
+					for sub := 0; sub < rows; sub++ {
+						subblk[sub] = transposed[top][sub]
+					}
+					newblk[top] = *env.NewBlock(*env.NewTSeries(subblk))
+				}
+
+				return *env.NewBlock(*env.NewTSeries(newblk))
+				// From the matrix create the new subblocks and blocks
+
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "next")
+			}
+		},
+	},
+
 	// Test:
 	// equal { remove-last! { 1 2 3 4 } } 4
 	"remove-last!": { // **

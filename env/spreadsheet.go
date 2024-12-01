@@ -111,7 +111,7 @@ func (s Spreadsheet) ToTxt() string {
 	return bu.String()
 }
 
-func (s Spreadsheet) Column(name string) Object {
+func (s Spreadsheet) GetColumn(name string) Object {
 	col1 := make([]Object, len(s.Rows))
 	idx := slices.Index[[]string](s.Cols, name)
 	if idx > -1 {
