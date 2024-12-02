@@ -43,8 +43,12 @@ section "base" "base text" {
 
 	{
 		equal {
-		ref spreadsheet { "a" "b" } { 1 10 2 20 } :sheet
-		sheet .add-rows [ 3 30 ] sheet .deref .length?
+		ref spreadsheet { "a" "b" } { 6 60 7 70 } :sheet
+		sheet .deref |add-rows [ 3 30 ] |length?
+		} 3
+		equal {
+		ref spreadsheet { "a" "b" } { 1 80 2 90 } :sheet
+		sheet .deref |add-rows { 3 30 } |length?
 		} 3
 	}
 
@@ -80,10 +84,10 @@ section "base" "base text" {
 		} 111
 		equal {
 		spr1: ref spreadsheet { "a" "b" } { 1 10 2 20 }
-		incrA: fn { row } { row -> "a" + 1 :new-a dict { "a" new-a } }
-		spr1 .update-row! 1 dict incrA
-		spr1 .deref .A1
-		} 11
+		incrA: fn { row } { row + [ "a" ( "a" <- row ) + 9 ] }
+		update-row! spr1 1 ?incrA
+		spr1 |deref |A1
+		} 10
 	}
 
 	group "remove-row!" 
@@ -96,7 +100,7 @@ section "base" "base text" {
 
 	{
 		equal {
-		spr1: spreadsheet { "a" "b" } { 1 10 2 20 }
+		spr1: ref spreadsheet { "a" "b" } { 1 10 2 20 }
 		spr1 .remove-row! 1
 		spr1 .deref .A1
 		} 2
@@ -191,7 +195,7 @@ section "base" "base text" {
 	}
 
 	{
-		equal { spreadsheet { 'a } { 1 2 3 } |col-avg 'a } 2
+		equal { spreadsheet { 'a } { 1 2 3 } |col-avg 'a } 2.0
 	}
 
 	group "B1" 

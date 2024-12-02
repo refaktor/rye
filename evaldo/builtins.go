@@ -338,6 +338,7 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 			}
 		}
 	}
+	fmt.Printf("GETFROM: %#v %#v %#v\n", data, key, posMode)
 	return makeError(ps, "Wrong type or missing key for get-arrow")
 }
 
@@ -1370,6 +1371,8 @@ var builtins = map[string]*env.Builtin{
 	// equal { "A" + "b" } "Ab"
 	// equal { "A" + 1 } "A1"
 	// equal { { 1 2 } + { 3 4 } } { 1 2 3 4 }
+	// equal { dict { "a" 1 } |+ { "b" 2 } } dict { "a" 1 "b" 2 }
+	// equal { dict { "a" 1 } |+ dict { "b" 2 } } dict { "a" 1 "b" 2 }
 	"_+": { // **
 		Argsn: 2,
 		Doc:   "Adds or joins two values together (Integers, Strings, Uri-s and Blocks)",
@@ -1453,6 +1456,24 @@ var builtins = map[string]*env.Builtin{
 					return s1
 				default:
 					return MakeBuiltinError(ps, "Value in Block is not block type.", "_+")
+				}
+			case env.Dict:
+				switch b2 := arg1.(type) {
+				case env.Dict:
+					return env.MergeTwoDicts(s1, b2)
+				case env.Block:
+					return env.MergeDictAndBlock(s1, b2.Series, ps.Idx)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.DictType, env.BlockType}, "_+")
+				}
+			case env.SpreadsheetRow:
+				switch b2 := arg1.(type) {
+				case env.Dict:
+					return env.AddSpreadsheetRowAndDict(s1, b2)
+				case env.Block:
+					return env.AddSpreadsheetRowAndBlock(s1, b2.Series, ps.Idx)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.DictType, env.BlockType}, "_+")
 				}
 			case env.Time:
 				switch b2 := arg1.(type) {
