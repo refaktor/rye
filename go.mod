@@ -24,6 +24,7 @@ require (
 	github.com/gobwas/ws v1.4.0
 	github.com/gorilla/sessions v1.4.0
 	github.com/jinzhu/copier v0.4.0
+	github.com/jlaffaye/ftp v0.2.0
 	github.com/jwalton/go-supportscolor v1.2.0
 	github.com/kopoli/go-terminal-size v0.0.0-20170219200355-5c97524c8b54
 	github.com/labstack/echo v3.3.10+incompatible
@@ -37,8 +38,9 @@ require (
 	github.com/sashabaranov/go-openai v1.32.5
 	github.com/shirou/gopsutil/v3 v3.24.5
 	github.com/thomasberger/parsemail v1.2.7
+	github.com/xuri/excelize/v2 v2.9.0
 	go.mongodb.org/mongo-driver v1.17.1
-	golang.org/x/crypto v0.28.0
+	golang.org/x/crypto v0.29.0
 	golang.org/x/net v0.30.0
 	golang.org/x/sync v0.9.0
 	golang.org/x/term v0.26.0
@@ -89,7 +91,6 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/itchyny/gojq v0.12.13 // indirect
 	github.com/itchyny/timefmt-go v0.1.5 // indirect
-	github.com/jlaffaye/ftp v0.2.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.11 // indirect
 	github.com/labstack/gommon v0.4.1 // indirect
@@ -111,7 +112,6 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/xuri/efp v0.0.0-20240408161823-9ad904a10d6d // indirect
-	github.com/xuri/excelize/v2 v2.9.0 // indirect
 	github.com/xuri/nfp v0.0.0-20240318013403-ab9948c2c4a7 // indirect
 	github.com/yhirose/go-peg v0.0.0-20210804202551-de25d6753cf1 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
