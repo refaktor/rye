@@ -12,7 +12,6 @@ type Idxs struct {
 }
 
 var NativeTypes = [...]string{ // Todo change to BuiltinTypes
-	"INVALID",
 	"Block",
 	"Integer",
 	"Word",

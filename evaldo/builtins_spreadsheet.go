@@ -358,7 +358,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	//  } 111
 	//  equal {
 	//	 spr1: ref spreadsheet { "a" "b" } { 1 10 2 20 }
-	//	 incrA: fn { row } { print inspect row 30 }
+	//	 incrA: fn { row } { row + [ "a" ( "a" <- row ) + 9 ] }
 	//	   update-row! spr1 1 ?incrA
 	//     spr1 |deref |A1
 	//  } 10
@@ -383,10 +383,6 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 					case env.Function:
 						CallFunction(updater, ps, spr.Rows[idx.Value-1], false, ps.Ctx)
 						ret := ps.Res
-						fmt.Printf("%#v", ret)
-						if !util.IsTruthy(ret) {
-							return makeError(ps, "Function given to update-row! should have returned a value, but didn't")
-						}
 						if ok, err, row := RyeValueToSpreadsheetRow(spr, ret); ok {
 							spr.Rows[idx.Value-1] = *row
 							return spr
@@ -427,7 +423,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	},
 	// Tests:
 	//  equal {
-	//   spr1: spreadsheet { "a" "b" } { 1 10 2 20 }
+	//   spr1: ref spreadsheet { "a" "b" } { 1 10 2 20 }
 	//   spr1 .remove-row! 1
 	//   spr1 .deref .A1
 	//  } 2
@@ -1534,7 +1530,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { spreadsheet { 'a } { 1 2 3 } |col-avg 'a } 2
+	// equal { spreadsheet { 'a } { 1 2 3 } |col-avg 'a } 2.0
 	"col-avg": {
 		Argsn: 2,
 		Doc:   "Accepts a spreadsheet and a column name and returns a sum of a column.", // TODO -- let it accept a block and list also
@@ -1592,7 +1588,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s0 := arg0.(type) {
 			case env.Spreadsheet:
-				r := s0.Rows[0].Values[1]
+				r := s0.Rows[1].Values[0]
 				return env.ToRyeValue(r)
 
 			default:
