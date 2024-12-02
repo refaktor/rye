@@ -24,6 +24,43 @@ func NewSpreadsheetRow(values []any, uplink *Spreadsheet) *SpreadsheetRow {
 	return &nat
 }
 
+func AddSpreadsheetRowAndBlock(row SpreadsheetRow, updatesBlock TSeries, idx *Idxs) SpreadsheetRow {
+	data := make(map[string]any)
+
+	for updatesBlock.Pos() < updatesBlock.Len() {
+		key := updatesBlock.Pop()
+		val := updatesBlock.Pop()
+		// v001 -- only process the typical case of string val
+		switch k := key.(type) {
+		case String:
+			data[k.Value] = val
+		case Tagword:
+			data[idx.GetWord(k.Index)] = val
+		case Word:
+			data[idx.GetWord(k.Index)] = val
+		case Setword:
+			data[idx.GetWord(k.Index)] = val
+		}
+	}
+
+	return AddSpreadsheetRowAndMap(row, data)
+}
+
+func AddSpreadsheetRowAndDict(row SpreadsheetRow, dict Dict) SpreadsheetRow {
+	return AddSpreadsheetRowAndMap(row, dict.Data)
+}
+
+func AddSpreadsheetRowAndMap(row SpreadsheetRow, dict map[string]any) SpreadsheetRow {
+	newRow := SpreadsheetRow{row.Values, row.Uplink}
+
+	for i, v := range row.Uplink.Cols {
+		if val, ok := dict[v]; ok {
+			newRow.Values[i] = val
+		}
+	}
+	return newRow
+}
+
 func SpreadsheetRowFromDict(dict Dict, uplink *Spreadsheet) (bool, string, *SpreadsheetRow) {
 	row := SpreadsheetRow{make([]any, len(uplink.Cols)), uplink}
 	for i, v := range uplink.Cols {

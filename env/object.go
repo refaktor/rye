@@ -1781,6 +1781,42 @@ func NewDict(data map[string]any) *Dict {
 	return &Dict{data, Word{0}}
 }
 
+func MergeTwoDicts(base Dict, toAdd Dict) Dict {
+	data := make(map[string]any)
+	for k, v := range base.Data {
+		data[k] = v
+	}
+	for k, v := range toAdd.Data {
+		data[k] = v
+	}
+	return Dict{data, Word{0}}
+}
+
+func MergeDictAndBlock(base Dict, updatesBlock TSeries, idx *Idxs) Dict {
+	data := make(map[string]any)
+	for k, v := range base.Data {
+		data[k] = v
+	}
+
+	for updatesBlock.Pos() < updatesBlock.Len() {
+		key := updatesBlock.Pop()
+		val := updatesBlock.Pop()
+		// v001 -- only process the typical case of string val
+		switch k := key.(type) {
+		case String:
+			data[k.Value] = val
+		case Tagword:
+			data[idx.GetWord(k.Index)] = val
+		case Word:
+			data[idx.GetWord(k.Index)] = val
+		case Setword:
+			data[idx.GetWord(k.Index)] = val
+		}
+	}
+	return Dict{data, Word{0}}
+
+}
+
 func NewDictFromSeries(block TSeries, idx *Idxs) Dict {
 	data := make(map[string]any)
 	for block.Pos() < block.Len() {

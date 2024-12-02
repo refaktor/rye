@@ -417,6 +417,8 @@ section "base" "base text" {
 		equal { "A" + "b" } "Ab"
 		equal { "A" + 1 } "A1"
 		equal { { 1 2 } + { 3 4 } } { 1 2 3 4 }
+		equal { dict { "a" 1 } |+ { "b" 2 } } dict { "a" 1 "b" 2 }
+		equal { dict { "a" 1 } |+ dict { "b" 2 } } dict { "a" 1 "b" 2 }
 	}
 
 	group "_-" 
