@@ -1,36 +1,29 @@
-{
-	
+; Advent of Code 2024 :: Day 2 - hard but *no brute-force* for p2! :)
 
-
-	; Advent of Code 2024 :: Day 2 - hard but *no brute-force* for p2! :)
-	
-	is-ok: fn { dif sign } {
-		any { all { sign > 0 dif > 0  dif <  4 }
-			  all { sign < 0 dif < 0  dif > -4 } }
-	}
-	
-	calc-sign: fn { r } {
-		.split\every ( r .length? / 2 |to-integer )
-		|map ?avg |set! { a b } , b - a
-	}
-	
-	is-safe: fn { row tolerance } {
-		bad: 0 sign: calc-sign row ,
-		.reduce 'prev {
-			::cur - prev ::x ,
-			either all { is-ok x sign } { cur } { inc! 'bad , prev }
-		}
-		bad <= tolerance
-	}
-	
-	read\lines %input.txt |map ?load :data
-	
-	data |map { .is-safe 0 } |sum |print ; part 1
-	
-	data |map { .is-safe 1 ::x , .reverse! .is-safe 1 ::z , any { x z } }
-	|sum |print ; part 2
-
-	
-
-
+is-ok: fn { dif sign } {
+	any { all { sign > 0 dif > 0  dif <  4 }
+		all { sign < 0 dif < 0  dif > -4 } }
 }
+
+calc-sign: fn { r } {
+	.split\every ( r .length? / 2 |to-integer )
+	|map ?avg |set! { a b } , b - a
+}
+
+is-safe: fn { row tolerance } {
+	bad: 0 sign: calc-sign row ,
+	.reduce 'prev {
+		::cur - prev ::x ,
+		either is-ok x sign { cur } { inc! 'bad , prev }
+	}
+	bad <= tolerance
+}
+
+read\lines %input.txt |map ?load :data
+
+data |map { .is-safe 0 } |sum |print ; part 1
+
+data |map { .is-safe 1 ::x , .reverse! .is-safe 1 ::z , any { x z } }
+|sum |print ; part 2
+
+   
