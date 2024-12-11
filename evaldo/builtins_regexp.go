@@ -111,6 +111,38 @@ var Builtins_regexp = map[string]*env.Builtin{
 		},
 	},
 
+	"regexp//submatches\\all?": {
+		Argsn: 2,
+		Doc:   "Get all regexp submatches in a Block.",
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg1.(type) {
+			case env.String:
+				switch s := arg0.(type) {
+				case env.Native:
+					res := s.Value.(*regexp.Regexp).FindAllStringSubmatch(val.Value, -1)
+					if len(res) > 0 {
+						blks := make([]env.Object, len(res))
+						for i, mtch := range res {
+							strs := make([]env.Object, len(mtch)-1)
+							for j, row := range mtch {
+								if j > 0 {
+									strs[j-1] = *env.NewString(row)
+								}
+							}
+							blks[i] = *env.NewBlock(*env.NewTSeries(strs))
+						}
+						return *env.NewBlock(*env.NewTSeries(blks))
+					}
+					return MakeBuiltinError(env1, "No results", "submatches?")
+				default:
+					return MakeError(env1, "Arg2 not Native")
+				}
+			default:
+				return MakeError(env1, "Arg1 not String")
+			}
+		},
+	},
+
 	"regexp//find-all": {
 		Argsn: 2,
 		Doc:   "Find all matches and return them in a Block",

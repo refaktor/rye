@@ -579,6 +579,8 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
+	// We have duplication rye-reader rye-file TODO think about this ... is it worth
+	// changing how kinds work, making them more complex? not sure yet
 	"rye-file//copy": {
 		Argsn: 2,
 		Doc:   "Copy Rye file to ouptut.",
@@ -752,24 +754,45 @@ var Builtins_io = map[string]*env.Builtin{
 				case env.Native:
 					writer, ok := ww.Value.(*os.File)
 					if !ok {
-						return MakeBuiltinError(ps, "Native not io.Reader", "rye-file//seek\\end")
+						return MakeBuiltinError(ps, "Native not io.File", "rye-writer//write\\string")
 					}
 					_, err := writer.WriteString(s.Value)
 					if err != nil {
-						return MakeBuiltinError(ps, "Error at write: "+err.Error(), "rye-file//seek\\end")
+						return MakeBuiltinError(ps, "Error at write: "+err.Error(), "rye-writer//write\\string")
 					}
 					return arg0
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "rye-file//seek\\end")
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "rye-writer//write\\string")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "rye-file//seek\\end")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "rye-writer//write\\string")
 			}
 
 		},
 	},
+
+	/*
+		"file-schema//open": {
+			Argsn: 1,
+			Doc:   "Open a file, get a reader",
+			Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+				switch f := arg0.(type) {
+				case env.Uri:
+					file, err := os.Open(s.Path)
+					//trace3(path)
+					if err != nil {
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, "Error opening file.", "file-schema//open")
+					}
+					return *env.NewNative(ps.Idx, bufio.NewReader(file), "file-schema//open")
+				default:
+					ps.FailureFlag = true
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "file-schema//open")
+				}
+			},
+		}, */
 
 	"https-schema//open": {
 		Argsn: 1,
@@ -797,15 +820,15 @@ var Builtins_io = map[string]*env.Builtin{
 				// body, _ := io.ReadAll(resp.Body)
 
 				if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
-					return *env.NewNative(ps.Idx, resp.Body, "rye-reader")
+					return *env.NewNative(ps.Idx, resp.Body, "https-schema://open")
 				} else {
 					ps.FailureFlag = true
 					errMsg := fmt.Sprintf("Status Code: %v, Body: %v", resp.StatusCode)
-					return MakeBuiltinError(ps, errMsg, "__https_s_get")
+					return MakeBuiltinError(ps, errMsg, "https-schema://open")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "__https_s_get")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "https-schema://open")
 			}
 		},
 	},

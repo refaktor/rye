@@ -7,7 +7,6 @@ import (
 	"io"
 
 	"github.com/refaktor/rye/env"
-
 	"github.com/thomasberger/parsemail"
 )
 
@@ -36,9 +35,9 @@ var Builtins_mail = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch email := arg0.(type) {
 			case env.Native:
-				return env.NewString(email.Value.(parsemail.Email).Subject)
+				return *env.NewString(email.Value.(parsemail.Email).Subject)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "parsed-email//subject?")
+				return *MakeArgError(ps, 1, []env.Type{env.NativeType}, "parsed-email//subject?")
 			}
 		},
 	},
@@ -86,7 +85,7 @@ var Builtins_mail = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch email := arg0.(type) {
 			case env.Native:
-				return env.NewString(email.Value.(parsemail.Email).MessageID)
+				return *env.NewString(email.Value.(parsemail.Email).MessageID)
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "parsed-email//message-id?")
 			}
@@ -99,7 +98,7 @@ var Builtins_mail = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch email := arg0.(type) {
 			case env.Native:
-				return env.NewString(email.Value.(parsemail.Email).HTMLBody)
+				return *env.NewString(email.Value.(parsemail.Email).HTMLBody)
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "parsed-email//html-body?")
 			}
@@ -112,7 +111,7 @@ var Builtins_mail = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch email := arg0.(type) {
 			case env.Native:
-				return env.NewString(email.Value.(parsemail.Email).TextBody)
+				return *env.NewString(email.Value.(parsemail.Email).TextBody)
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "parsed-email//text-body?")
 			}

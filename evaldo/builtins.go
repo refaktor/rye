@@ -3,6 +3,7 @@ package evaldo
 import (
 	"bytes"
 	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"math"
@@ -3899,8 +3900,8 @@ var builtins = map[string]*env.Builtin{
 			case env.Block:
 				ser := ps.Ser
 				ps.Ser = bloc.Series
-				for {
-					ps = EvalBlock(ps)
+				for i := 0; i == i; i++ {
+					ps = EvalBlockInjMultiDialect(ps, env.NewInteger(int64(i)), true)
 					if ps.ErrorFlag {
 						return ps.Res
 					}
@@ -6464,6 +6465,26 @@ var builtins = map[string]*env.Builtin{
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "right")
+			}
+		},
+	},
+
+	// Tests:
+
+	"base64-decode": {
+		Argsn: 1,
+		Doc:   "decode base 64 string",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				ata, err := base64.StdEncoding.DecodeString(s1.Value)
+				if err != nil {
+					return MakeBuiltinError(ps, err.Error(), "base64-decode")
+				}
+				return *env.NewString(string(ata))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "base64-encode")
 			}
 		},
 	},

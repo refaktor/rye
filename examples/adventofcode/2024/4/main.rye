@@ -1,0 +1,28 @@
+; testing ideas of more functinal approach and no position gynmansitcs
+
+{ "abcd" "efgh" "ijkl" } :t
+
+private\ "context to turn text to diagonals" {
+	
+	calc-diagonal:: fn { w h ln } {
+		y: min [ ln h - 1 ] , x: ln - y ,
+		produce\while { all { x < w - 1 y >= 0 } } { }
+		{ + [ [ x y ] ] |pass { inc! 'x dec! 'y } }
+	}
+	
+	get-diagonal: fn { ts w h line } {
+		calc-diagonal w h line |probe
+		|map { .set! { x y } , ts -> x |substring y y + 1 }
+		|join
+	}
+	
+	fn\in { ts } current {
+		i: 0 , w: ts .first .length? h: ts .length?
+		( w + h ) .produce { } { + probe [ get-diagonal ts w h i ] .pass { inc! 'i } }
+	}
+
+	; calc-diagonal 4 3 0 |probe
+
+} :get-diagonals
+
+get-diagonals t |probe

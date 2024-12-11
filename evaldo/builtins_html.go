@@ -10,6 +10,8 @@ import (
 
 	"golang.org/x/net/html"
 
+	htmltomarkdown "github.com/JohannesKaufmann/html-to-markdown/v2"
+
 	//"fmt"
 	"io"
 	// "strings"
@@ -393,6 +395,22 @@ func trace8(s string) {
 }
 
 var Builtins_html = map[string]*env.Builtin{
+
+	"html->markdown": {
+		Argsn: 1,
+		Doc:   "Converts HTML text to markdown",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			text, ok := arg0.(env.String)
+			if !ok {
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "html->markdown")
+			}
+			mkd, err := htmltomarkdown.ConvertString(text.Value)
+			if err != nil {
+				return MakeBuiltinError(ps, err.Error(), "html->markdown")
+			}
+			return env.NewString(mkd)
+		},
+	},
 
 	"rye-reader//parse-html": {
 		Argsn: 2,
