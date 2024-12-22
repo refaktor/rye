@@ -2,10 +2,12 @@
 package util
 
 import (
+	"math/rand"
 	"regexp"
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/refaktor/rye/env"
 )
@@ -373,6 +375,25 @@ func ProcessFunctionSpec(args env.Block) (bool, string) {
 		}
 	}
 	return true, doc
+}
+
+func GenSampleIndexes(length int, num int) []int {
+	rand.Seed(time.Now().UnixNano())
+
+	// Use a map to track unique numbers
+	uniqueNumbers := make(map[int]struct{})
+	for len(uniqueNumbers) < num {
+		num := rand.Intn(length) // Generate a number from 0 to 10
+		uniqueNumbers[num] = struct{}{}
+	}
+
+	// Convert map keys to a slice
+	randomNumbers := make([]int, 0, len(uniqueNumbers))
+	for num := range uniqueNumbers {
+		randomNumbers = append(randomNumbers, num)
+	}
+
+	return randomNumbers
 }
 
 // GetDimValue get max x-y or 0 value

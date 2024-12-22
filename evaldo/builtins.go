@@ -2153,6 +2153,47 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"sample": {
+		Argsn: 2,
+		Doc:   "Accepts an integer n and returns a random integer between 0 and n in the half-open interval [0,n).",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			num, ok := arg1.(env.Integer)
+			if !ok {
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "sample")
+			}
+			switch arg := arg0.(type) {
+			case env.Block:
+				blkLen := len(arg.Series.S)
+				if blkLen < int(num.Value) {
+					return MakeBuiltinError(ps, "size smaller than sample size", "sample")
+				}
+				indexes := util.GenSampleIndexes(len(arg.Series.S), int(num.Value))
+				newl := make([]env.Object, len(indexes))
+				for i := 0; i < len(indexes); i++ {
+					newl[i] = arg.Series.S[indexes[i]]
+				}
+				return *env.NewBlock(*env.NewTSeries(newl))
+			case env.Spreadsheet:
+				blkLen := len(arg.Rows)
+				if blkLen < int(num.Value) {
+					return MakeBuiltinError(ps, "size smaller than sample size", "sample")
+				}
+				indexes := util.GenSampleIndexes(len(arg.Rows), int(num.Value))
+				nspr := env.NewSpreadsheet(arg.Cols)
+
+				newl := make([]env.SpreadsheetRow, len(indexes))
+				for i := 0; i < len(indexes); i++ {
+					newl[i] = arg.Rows[indexes[i]]
+				}
+				nspr.Rows = newl
+				return *nspr
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "random-integer")
+			}
+		},
+	},
+
 	// Tests:
 	// equal  { random\integer 2 |type? } 'integer
 	"random\\integer": {
@@ -3538,6 +3579,9 @@ var builtins = map[string]*env.Builtin{
 				rctx := ps.Ctx
 				ps.Ctx = ctx
 				ps.Ser = ser
+				if ps.ErrorFlag {
+					return ps.Res
+				}
 				return *rctx // return the resulting context
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "context")
@@ -4704,6 +4748,47 @@ var builtins = map[string]*env.Builtin{
 							ps.Ser.Reset()
 						}
 						ps.Ser = ser
+						return acc
+					default:
+						return MakeArgError(ps, 4, []env.Type{env.BlockType}, "fold")
+					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "fold")
+				}
+			case env.Spreadsheet:
+				switch accu := arg1.(type) {
+				case env.Word:
+					// ps.Ctx.Set(accu.Index)
+					switch block := arg3.(type) {
+					case env.Block:
+						l := len(list.Rows)
+						acc := arg2
+						ser := ps.Ser
+						ps.Ser = block.Series
+						for i := 0; i < l; i++ {
+							ps.Ctx.Mod(accu.Index, acc)
+							ps = EvalBlockInjMultiDialect(ps, list.Rows[i], true)
+							if ps.ErrorFlag {
+								return ps.Res
+							}
+							acc = ps.Res
+							ps.Ser.Reset()
+						}
+						ps.Ser = ser
+						return acc
+					case env.Function:
+						l := len(list.Rows)
+						acc := arg2
+						for i := 0; i < l; i++ {
+							var item any
+							item = list.Rows[i]
+							ps.Ctx.Mod(accu.Index, acc)
+							CallFunctionArgsN(block, ps, ps.Ctx, env.ToRyeValue(item)) // , env.NewInteger(int64(i)))
+							if ps.ErrorFlag {
+								return ps.Res
+							}
+							acc = ps.Res
+						}
 						return acc
 					default:
 						return MakeArgError(ps, 4, []env.Type{env.BlockType}, "fold")
@@ -7157,6 +7242,10 @@ var builtins = map[string]*env.Builtin{
 						numVal = len(str)
 					}
 					return *env.NewString(string(str[len(str)-numVal:]))
+				case env.Spreadsheet:
+					nspr := env.NewSpreadsheet(s1.Cols)
+					nspr.Rows = s1.Rows[len(s1.Rows)-numVal:]
+					return *nspr
 				default:
 					return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "tail")
 				}
@@ -7291,8 +7380,12 @@ var builtins = map[string]*env.Builtin{
 						numVal = len(str)
 					}
 					return *env.NewString(string(str[0:numVal]))
+				case env.Spreadsheet:
+					nspr := env.NewSpreadsheet(s1.Cols)
+					nspr.Rows = s1.Rows[0:numVal]
+					return *nspr
 				default:
-					return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "head")
+					return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType, env.SpreadsheetType}, "head")
 				}
 			default:
 				return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "head")
