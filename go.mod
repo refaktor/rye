@@ -13,7 +13,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.28.6
 	github.com/aws/aws-sdk-go-v2/service/ses v1.28.3
 	github.com/bitfield/script v0.23.0
-	github.com/blevesearch/bleve/v2 v2.4.2
+	github.com/blevesearch/bleve/v2 v2.4.4
 	github.com/blevesearch/bleve_index_api v1.1.13
 	github.com/cszczepaniak/keyboard v0.1.0
 	github.com/drewlanenga/govector v0.0.0-20220726163947-b958ac08bc93
@@ -66,11 +66,11 @@ require (
 	github.com/aws/smithy-go v1.22.1 // indirect
 	github.com/bits-and-blooms/bitset v1.12.0 // indirect
 	github.com/blevesearch/geo v0.1.20 // indirect
-	github.com/blevesearch/go-faiss v1.0.20 // indirect
+	github.com/blevesearch/go-faiss v1.0.24 // indirect
 	github.com/blevesearch/go-porterstemmer v1.0.3 // indirect
 	github.com/blevesearch/gtreap v0.1.1 // indirect
 	github.com/blevesearch/mmap-go v1.0.4 // indirect
-	github.com/blevesearch/scorch_segment_api/v2 v2.2.15 // indirect
+	github.com/blevesearch/scorch_segment_api/v2 v2.2.16 // indirect
 	github.com/blevesearch/segment v0.9.1 // indirect
 	github.com/blevesearch/snowballstem v0.9.0 // indirect
 	github.com/blevesearch/upsidedown_store_api v1.0.2 // indirect
@@ -79,8 +79,8 @@ require (
 	github.com/blevesearch/zapx/v12 v12.3.10 // indirect
 	github.com/blevesearch/zapx/v13 v13.3.10 // indirect
 	github.com/blevesearch/zapx/v14 v14.3.10 // indirect
-	github.com/blevesearch/zapx/v15 v15.3.13 // indirect
-	github.com/blevesearch/zapx/v16 v16.1.5 // indirect
+	github.com/blevesearch/zapx/v15 v15.3.16 // indirect
+	github.com/blevesearch/zapx/v16 v16.1.9-0.20241217210638-a0519e7caf3b // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect
