@@ -1040,25 +1040,6 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		},
 	},
 
-	// Tags: #spreadsheet
-	"limit": {
-		Argsn: 2,
-		Doc:   "Returns spreadsheet with number of rows limited to second argument.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch spr := arg0.(type) {
-			case env.Spreadsheet:
-				switch n := arg1.(type) {
-				case env.Integer:
-					return Limit(ps, spr, int(n.Value))
-				default:
-					return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "limit")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "limit")
-			}
-		},
-	},
-
 	// Example: Order by age ascending
 	//  sheet: spreadsheet { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19  }
 	//  sheet .order-by! 'age 'asc
@@ -1096,6 +1077,56 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 						SortByColumnDesc(ps, &spr, ps.Idx.GetWord(col.Index))
 					}
 					return spr
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "sort-by!")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "sort-by!")
+			}
+		},
+	},
+
+	// Example: Order by age ascending
+	//  sheet: spreadsheet { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19  }
+	//  sheet .order-by 'age 'asc
+	// Tags: #spreadsheet
+	"order-by": {
+		Argsn: 3,
+		Doc:   "Sorts row by given column, changes spreadsheet in place.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			dir, ok := arg2.(env.Word)
+			if !ok {
+				return MakeArgError(ps, 3, []env.Type{env.WordType}, "sort-by!")
+			}
+			var dirAsc bool
+			if dir.Index == ps.Idx.IndexWord("asc") {
+				dirAsc = true
+			} else if dir.Index == ps.Idx.IndexWord("desc") {
+				dirAsc = false
+			} else {
+				return MakeBuiltinError(ps, "Direction can be just asc or desc.", "sort-by!")
+			}
+			switch spr := arg0.(type) {
+			case env.Spreadsheet:
+				copied := make([]env.SpreadsheetRow, len(spr.Rows))
+				copy(copied, spr.Rows)
+				newSpr := env.NewSpreadsheet(spr.Cols)
+				newSpr.Rows = copied
+				switch col := arg1.(type) {
+				case env.String:
+					if dirAsc {
+						SortByColumn(ps, newSpr, col.Value)
+					} else {
+						SortByColumnDesc(ps, newSpr, col.Value)
+					}
+					return *newSpr
+				case env.Word:
+					if dirAsc {
+						SortByColumn(ps, newSpr, ps.Idx.GetWord(col.Index))
+					} else {
+						SortByColumnDesc(ps, newSpr, ps.Idx.GetWord(col.Index))
+					}
+					return *newSpr
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.WordType}, "sort-by!")
 				}
@@ -1253,9 +1284,9 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	},
 	// Example: Add a column to a sheet
 	//  sheet: spreadsheet { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
-	//  sheet .add-column! 'job_title { "Jantior" "Librarian" "Line Cook" } ;
+	//  sheet .add-column 'job_title { "Jantior" "Librarian" "Line Cook" } ;
 	// Tags: #spreadsheet
-	"add-column!": {
+	"add-column": {
 		Argsn: 4,
 		Doc:   "Adds a new column to spreadsheet. Changes in-place and returns the new spreadsheet.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2148,12 +2179,6 @@ func WhereBetween(ps *env.ProgramState, s *env.Spreadsheet, name string, val1 en
 	} else {
 		return MakeBuiltinError(ps, "Column not found.", "WhereBetween")
 	}
-}
-
-func Limit(ps *env.ProgramState, s env.Spreadsheet, n int) env.Object {
-	nspr := env.NewSpreadsheet(s.Cols)
-	nspr.Rows = s.Rows[0:n]
-	return *nspr
 }
 
 func AutoType(ps *env.ProgramState, s *env.Spreadsheet, percent float64) env.Object {
