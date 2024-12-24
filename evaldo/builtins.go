@@ -2153,6 +2153,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal  { sample { 1 2 3 4 } 2 |length? } 2
+	// equal  { sample { 123 123 123 123 } 3 -> 0 } 123
 	"sample": {
 		Argsn: 2,
 		Doc:   "Accepts an integer n and returns a random integer between 0 and n in the half-open interval [0,n).",
@@ -2402,18 +2405,23 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal  { mold 123 } "123"
+	// equal  { mold { 123 } } "{ 123 }"
 	"mold": { // **
 		Argsn: 1,
 		Doc:   "Turn value to it's string representation.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// fmt.Println()
-			return *env.NewString(arg0.Print(*env1.Idx))
+			return *env.NewString(arg0.Dump(*env1.Idx))
 		},
 	},
 
+	// Tests:
+	// equal  { mold\nowrap 123 } "123"
+	// equal  { mold\nowrap { 123 } } "123"
+	// equal  { mold\nowrap { 123 234 } } "123 234"
 	"mold\\nowrap": { // **
 		Argsn: 1,
-		Doc:   "Turn value to it's string representation.",
+		Doc:   "Turn value to it's string representation. Doesn't wrap the blocks",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// fmt.Println()
 			str := arg0.Print(*env1.Idx)
@@ -3381,7 +3389,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"parent?": { // WORK: Duplicate? probably should remove
+	// Tests:
+	// equal { ct: context { p: 123 } parent\of ct |= current } 1
+	"parent\\of": {
 		Argsn: 1,
 		Doc:   "Returns parent context of the current context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -3643,6 +3653,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { ct: context { p: 123 } cn: extends ct { r: p + 234 } cn/r } 357
 	"extends": { // ** add one with exclamation mark, which it as it is now extends/changes the source context too .. in place
 		Argsn: 2,
 		Doc:   "Extends a context with a new context in place and returns it.",
@@ -3732,6 +3744,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// stdout { wrap { prn "*" } { prn "x" } } "*x*"
 	"wrap": { // **
 		Argsn: 2,
 		Doc:   "Accepts a value and a block. It does the block, with value injected, and returns (passes on) the initial value.",
@@ -3770,6 +3784,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal  { 20 .keep { + 202 } { + 101 } } 222
 	"keep": { // **
 		Argsn: 3,
 		Doc:   "Do the first block, then the second one but return the result of the first one.",
@@ -3800,7 +3816,11 @@ var builtins = map[string]*env.Builtin{
 
 	// LOOPING
 
-	"loop": { // **
+	// Tests:
+	// stdout { 3 .loop { prns "x" } } "x x x "
+	// equal  { 3 .loop { + 1 } } 4
+	// ; equal  { 3 .loop { } } 3  ; TODO should pass the value
+	"loop": {
 		Argsn: 2,
 		Doc:   "Accepts a number and a block of code. Does the block of code number times, injecting the number.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -3828,9 +3848,13 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"produce": { // **
+	// Tests:
+	// equal { produce 5 0 { + 3 } } 15
+	// equal { produce 3 ">" { + "x>" } } ">x>x>x>"
+	// equal { produce 3 { } { .concat "x" } } { "x" "x" "x" }
+	"produce": {
 		Argsn: 3,
-		Doc:   "Accepts a number, initial value and a block of code. Does the block of code number times, injecting the number.",
+		Doc:   "Accepts a number, initial value and a block of code. Does the block of code number of times, injecting the initial value or last result.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cond := arg0.(type) {
 			case env.Integer:
@@ -3859,7 +3883,10 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"produce\\while": { // **
+	// Tests:
+	// equal { x: 0 produce\while { x < 100 } 1 { * 2 ::x } } 64
+	// stdout { x: 0 produce\while { x < 100 } 1 { * 2 ::x .prns } } "2 4 8 16 32 64 128 "
+	"produce\\while": {
 		Argsn: 3,
 		Doc:   "Accepts a while condition, initial value and a block of code. Does the block of code number times, injecting the number first and then result of block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -3868,6 +3895,7 @@ var builtins = map[string]*env.Builtin{
 				switch bloc := arg2.(type) {
 				case env.Block:
 					acc := arg1
+					last := arg1
 					ser := ps.Ser
 					for {
 						ps.Ser = cond.Series
@@ -3878,7 +3906,9 @@ var builtins = map[string]*env.Builtin{
 						if !util.IsTruthy(ps.Res) {
 							ps.Ser.Reset()
 							ps.Ser = ser
-							return acc
+							return last
+						} else {
+							last = acc
 						}
 						ps.Ser.Reset()
 						ps.Ser = bloc.Series
@@ -3899,9 +3929,11 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	//  equal { produce\ 5 1 'acc { * acc , + 1 } } 1  ; Look at what we were trying to do here
 	"produce\\": {
 		Argsn: 4,
-		Doc:   "produce\\ 5 1 'acc { * acc , + 1 }",
+		Doc:   " TODO ",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cond := arg0.(type) {
 			case env.Integer:
@@ -3936,6 +3968,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	//  stdout { forever { "once" .prn .return } } "once"
+	//  equal { forever { "once" .return } } "once"
 	"forever": { // **
 		Argsn: 1,
 		Doc:   "Accepts a block and does it forever.",
@@ -3963,6 +3998,8 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Tests:
+	//  stdout { forever\with 1 { .prn .return } } "1"
 	"forever\\with": { // **
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -3989,7 +4026,9 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-
+	// Tests:
+	// stdout { for { 1 2 3 } { prns "x" } } "x x x "
+	// stdout { { "a" "b" "c" } .for { .prns } } "a b c "
 	"for": { // **
 		Argsn: 2,
 		Doc:   "Accepts a block of values and a block of code, does the code for each of the values, injecting them.",
@@ -4070,7 +4109,6 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-
 	"walk": { // **
 		Argsn: 2,
 		Doc:   "Accepts a block of values and a block of code, does the code for each of the values, injecting them.",
@@ -4110,7 +4148,13 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Higher order functions
-
+	// Tests:
+	//  equal { purge { 1 2 3 } { .even } } { 1 3 }
+	//  equal { purge { } { .even } } { }
+	//  equal { purge list { 1 2 3 } { .even } } list { 1 3 }
+	//  equal { purge list { } { .even } } list { }
+	//  equal { purge "1234" { .to-integer .even } } { "1" "3" }
+	//  equal { purge "" { .to-integer .even } } { }
 	"purge": { // TODO ... doesn't fully work
 		Argsn: 2,
 		Doc:   "Purges values from a series based on return of a injected code block.",
@@ -4258,6 +4302,17 @@ var builtins = map[string]*env.Builtin{
 	// it should accept a block of code, a function and a builtin
 	// it should use injected block so it doesn't need a variable defined like map [ 1 2 3 ] x [ add a 100 ]
 	// map [ 1 2 3 ] { .add 3 }
+	// Tests:
+	//  equal { map { 1 2 3 } { + 1 } } { 2 3 4 }
+	//  equal { map { } { + 1 } } { }
+	//  equal { map { "aaa" "bb" "c" } { .length? } } { 3 2 1 }
+	//  equal { map list { "aaa" "bb" "c" } { .length? } } list { 3 2 1 }
+	//  equal { map list { 3 4 5 6 } { .multiple-of 3 } } list { 1 0 0 1 }
+	//  equal { map list { } { + 1 } } list { }
+	//  ; equal { map "abc" { + "-" } .join } "a-b-c-" ; TODO doesn't work, fix join
+	//  equal { map "123" { .to-integer } } { 1 2 3 }
+	//  equal { map "123" ?to-integer } { 1 2 3 }
+	//  equal { map "" { + "-" } } { }
 	"map": { // **
 		Argsn: 2,
 		Doc:   "Maps values of a block to a new block by evaluating a block of code.",
@@ -4359,6 +4414,13 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	//  equal { map\pos { 1 2 3 } 'i { + i } } { 2 4 6 }
+	//  equal { map\pos { } 'i { + i } } { }
+	//  equal { map\pos list { 1 2 3 } 'i { + i } } list { 2 4 6 }
+	//  equal { map\pos list { } 'i { + i } } list { }
+	//  equal { map\pos "abc" 'i { + i } } { "a1" "b2" "c3" }
+	//  equal { map\pos "" 'i { + i } } { }
 	"map\\pos": { // TODO -- deduplicate map\pos and map\idx
 		Argsn: 3,
 		Doc:   "Maps values of a block to a new block by evaluating a block of code.",
@@ -4544,7 +4606,13 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-
+	// Tests:
+	//  equal { reduce { 1 2 3 } 'acc { + acc } } 6
+	//  equal { reduce list { 1 2 3 } 'acc { + acc } } 6
+	//  equal { reduce "abc" 'acc { + acc } } "cba"
+	//  equal { try { reduce { } 'acc { + acc } } |type? } 'error
+	//  equal { try { reduce list { } 'acc { + acc } } |type? } 'error
+	//  equal { try { reduce "" 'acc { + acc } } |type? } 'error
 	"reduce": { // **
 		Argsn: 3,
 		Doc:   "Reduces values of a block to a new block by evaluating a block of code ...",
@@ -4654,6 +4722,13 @@ var builtins = map[string]*env.Builtin{
 	// it should accept a block of code, a function and a builtin
 	// it should use injected block so it doesn't need a variable defined like map [ 1 2 3 ] x [ add a 100 ]
 	// reduce [ 1 2 3 ] 'acc { + acc }
+	// Tests:
+	//  equal { fold { 1 2 3 } 'acc 1 { + acc } } 7
+	//  equal { fold { } 'acc 1 { + acc } } 1
+	//  equal { fold list { 1 2 3 } 'acc 1 { + acc } } 7
+	//  equal { fold list { } 'acc 1 { + acc } } 1
+	//  equal { fold "abc" 'acc "123" { + acc } } "cba123"
+	//  equal { fold "" 'acc "123" { + acc } } "123"
 	"fold": { // **
 		Argsn: 4,
 		Doc:   "Reduces values of a block to a new block by evaluating a block of code ...",
@@ -4889,6 +4964,17 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	//  equal { partition { 1 2 3 4 } { > 2 } } { { 1 2 } { 3 4 } }
+	//  equal { partition { "a" "b" 1 "c" "d" } { .is-integer } } { { "a" "b" } { 1 } { "c" "d" } }
+	//  equal { partition { "a" "b" 1 "c" "d" } ?is-integer } { { "a" "b" } { 1 } { "c" "d" } }
+	//  equal { partition { } { > 2 } } { { } }
+	//  equal { partition list { 1 2 3 4 } { > 2 } } list vals { list { 1 2 } list { 3 4 } }
+	//  equal { partition list { "a" "b" 1 "c" "d" } ?is-integer } list vals { list { "a" "b" } list { 1 } list { "c" "d" } }
+	//  equal { partition list { } { > 2 } } list vals { list { } }
+	//  equal { partition "aaabbccc" { , } } list { "aaa" "bb" "ccc" }
+	//  equal { partition "" { , } } list { "" }
+	//  equal { partition "aaabbccc" ?is-string } list { "aaabbccc" }
 	"partition": { // **
 		Argsn: 2,
 		Doc:   "Partitions a series by evaluating a block of code.",
@@ -5043,6 +5129,15 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	//  ; Equality for dicts doesn't yet work consistently
+	//  ;equal { { "Anne" "Mitch" "Anya" } .group { .first } } dict vals { "A" list { "Anne" "Anya" } "M" list { "Mitch" } }
+	//  ;equal { { "Anne" "Mitch" "Anya" } .group ?first } dict vals { "A" list { "Anne" "Anya" } "M" list { "Mitch" } }
+	//  ;equal { { } .group { .first } } dict vals { }
+	//  ;equal { { "Anne" "Mitch" "Anya" } .list .group { .first } } dict vals { "A" list { "Anne" "Anya" } "M" list { "Mitch" } }
+	//  ;equal { { "Anne" "Mitch" "Anya" } .list .group ?first } dict vals { "A" list { "Anne" "Anya" } "M" list { "Mitch" } }
+	//  equal { { } .list .group { .first } } dict vals { }
+	//  equal { try { { 1 2 3 4 } .group { .even } } |type? } 'error ; TODO keys can only be string currently
 	"group": { // **
 		Argsn: 2,
 		Doc:   "Groups a block or list of values given condition.",
@@ -5147,6 +5242,16 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// filter [ 1 2 3 ] { .add 3 }
+	// Tests:
+	//  equal { filter { 1 2 3 4 } { .even } } { 2 4 }
+	//  equal { filter { 1 2 3 4 } ?even } { 2 4 }
+	//  equal { filter { } { .even } } { }
+	//  equal { filter list { 1 2 3 4 } { .even } } list { 2 4 }
+	//  equal { filter list { 1 2 3 4 } ?even } list { 2 4 }
+	//  equal { filter list { } { .even } } list { }
+	//  equal { filter "1234" { .to-integer .even } } { "2" "4" }
+	//  equal { filter "01234" ?to-integer } { "1" "2" "3" "4" }
+	//  equal { filter "" { .to-integer .even } } { }
 	"filter": { // **
 		Argsn: 2,
 		Doc:   "Filters values from a seris based on return of a injected code block.",
@@ -5265,7 +5370,13 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-
+	// Tests:
+	//  equal { seek { 1 2 3 4 } { .even } } 2
+	//  equal { seek list { 1 2 3 4 } { .even } } 2
+	//  equal { seek "1234" { .to-integer .even } } "2"
+	//  equal { try { seek { 1 2 3 4 } { > 5 } } |type? } 'error
+	//  equal { try { seek list { 1 2 3 4 } { > 5 } } |type? } 'error
+	//  equal { try { seek "1234" { .to-integer > 5 } } |type? } 'error
 	"seek": { // **
 		Argsn: 2,
 		Doc:   "Seek over a series until a Block of code returns True and return the value.",
@@ -5344,7 +5455,11 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// collections exploration functions
-
+	// Tests:
+	//  equal { max { 8 2 10 6 } } 10
+	//  equal { max list { 8 2 10 6 } } 10
+	//  equal { try { max { } } |type? } 'error
+	//  equal { try { max list { } } |type? } 'error
 	"max": { // **
 		Argsn: 1,
 		Doc:   "Accepts a Block or List of values and returns the maximal value.",
@@ -5395,7 +5510,11 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-
+	// Tests:
+	//  equal { min { 8 2 10 6 } } 2
+	//  equal { min list { 8 2 10 6 } } 2
+	//  equal { try { min { } } |type? } 'error
+	//  equal { try { min list { } } |type? } 'error
 	"min": { // **
 		Argsn: 1,
 		Doc:   "Accepts a Block or List of values and returns the minimal value.",
@@ -5459,6 +5578,11 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	//  equal { avg { 8 2 10 6 } } 6.5
+	//  equal { avg list { 8 2 10 6 } } 6.5
+	//  equal { try { avg { } } |type? } 'error
+	//  equal { try { avg list { } } |type? } 'error
 	"avg": { // **
 		Argsn: 1,
 		Doc:   "Accepts a Block or List of values and returns the average value.",
@@ -5506,7 +5630,13 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-
+	// Tests:
+	//  equal { sum { 8 2 10 6 } } 26
+	//  equal { sum { 8 2 10 6.5 } } 26.5
+	//  equal { sum { } } 0
+	//  equal { sum list { 8 2 10 6 } } 26
+	//  equal { sum list { 8 2 10 6.5 } } 26.5
+	//  equal { sum list { } } 0
 	"sum": { // **
 		Argsn: 1,
 		Doc:   "Accepts a Block or List of values and returns the sum.",
@@ -6640,6 +6770,15 @@ var builtins = map[string]*env.Builtin{
 	// ; equal { "abcd" .union "cde" } "abcde"
 	// equal { union { 1 2 3 4 } { 2 4 5 } |length? } 5 ; order is not certain
 	// equal { union list { 1 2 3 4 } list { 2 4 5 } |length? } 5 ; order is not certain
+	// equal { union { 8 2 } { 1 9 } |sort! } { 1 2 8 9 }
+	// equal { union { 1 2 } { } |sort! } { 1 2 }
+	// equal { union { } { 1 9 } |sort! }  { 1 9 }
+	// equal { union { } { } } { }
+	// equal { union list { 1 2 } list { 1 2 3 4 } |sort! } list { 1 2 3 4 }
+	// equal { union list { 1 2 } list { 1 } |sort! } list { 1 2 }
+	// e/qual { union list { 1 2 } list { } |sort! } list { 1 2 }
+	// equal { union list { } list { 1 2 } |sort! } list { 1 2 }
+	// equal { union list { } list { } } list { }
 	"union": {
 		Argsn: 2,
 		Doc:   "Accepts a block or list of values and returns only unique values.",
@@ -6668,8 +6807,18 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { "abcd" .intersection "cde" } "cd"
-	// equal { intersection { 1 2 3 4 } { 2 4 5 } } { 2 4 }
+	//  equal { "abcd" .intersection "cde" } "cd"
+	//  equal { intersection { 1 2 3 4 } { 2 4 5 } } { 2 4 }
+	//  equal { intersection { 1 3 5 6 } { 2 3 4 5 } } { 3 5 }
+	//  equal { intersection { 1 2 3 } { } } {  }
+	//  equal { intersection { } { 2 3 4  } } { }
+	//  equal { intersection { 1 2 3 } { 4 5 6 } } { }
+	//  equal { intersection { } { } } { }
+	//  equal { intersection list { 1 3 5 6 } list { 2 3 4 5 } } list { 3 5 }
+	//  equal { intersection list { 1 2 3 } list { } } list {  }
+	//  equal { intersection list { } list { 2 3 4 } } list { }
+	//  equal { intersection list { 1 2 3 } list { 4 5 6 } } list { }
+	//  equal { intersection list { } list { } } list { }
 	"intersection": {
 		Argsn: 2,
 		Doc:   "Finds the intersection of two values.",
@@ -6707,9 +6856,21 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { "abcde" .difference "cde" } "ab"
-	// equal { difference { 1 2 3 4 } { 2 4 } } { 1 3 }
-	// equal { difference list { "Bob" "Sal" "Joe" } list { "Joe" } } list { "Bob" "Sal" }
+	//  equal { "abcde" .difference "cde" } "ab"
+	//  equal { difference { 1 2 3 4 } { 2 4 } } { 1 3 }
+	//  equal { difference list { "Bob" "Sal" "Joe" } list { "Joe" } } list { "Bob" "Sal" }
+	//  equal { difference "abc" "bc" } "a"
+	//  equal { difference "abc" "abc" } ""
+	//  equal { difference "abc" "" } "abc"
+	//  equal { difference "" "" } ""
+	//  equal { difference { 1 3 5 6 } { 2 3 4 5 } } { 1 6 }
+	//  equal { difference { 1 2 3 } {  } } { 1 2 3 }
+	//  equal { difference { } { 2 3 4  } } { }
+	//  equal { difference { } { } } { }
+	//  equal { difference list { 1 3 5 6 } list { 2 3 4 5 } } list { 1 6 }
+	//  equal { difference list { 1 2 3 } liast {  } } list { 1 2 3 }
+	//  equal { difference list { } list { 2 3 4 } } list { }
+	//  equal { difference list { } list { } } list { }
 	"difference": {
 		Argsn: 2,
 		Doc:   "Finds the difference (values in first but not in second) of two values.",

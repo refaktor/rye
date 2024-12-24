@@ -6,12 +6,66 @@ package evaldo
 import (
 	"os"
 
+	"github.com/muesli/reflow/indent"
+	"github.com/muesli/reflow/wordwrap"
+	"github.com/muesli/reflow/wrap"
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/term"
 	goterm "golang.org/x/term"
 )
 
 var Builtins_term = map[string]*env.Builtin{
+
+	"wrap": {
+		Argsn: 2,
+		Doc:   "Wraps string to certain width",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			text, ok := arg0.(env.String)
+			if !ok {
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "wrap")
+			}
+			wdt, ok := arg1.(env.Integer)
+			if !ok {
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "wrap")
+			}
+			mkd := wrap.String(text.Value, wdth.Value)
+			return *env.NewString(mkd)
+		},
+	},
+
+	"wrap\\words": {
+		Argsn: 2,
+		Doc:   "Wraps string to certain width",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			text, ok := arg0.(env.String)
+			if !ok {
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "wrap")
+			}
+			wdt, ok := arg1.(env.Integer)
+			if !ok {
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "wrap")
+			}
+			mkd := wordwrap.String(text.Value, wdth.Value)
+			return *env.NewString(mkd)
+		},
+	},
+
+	"indent": {
+		Argsn: 2,
+		Doc:   "Wraps string to certain width",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			text, ok := arg0.(env.String)
+			if !ok {
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "wrap")
+			}
+			wdt, ok := arg1.(env.Integer)
+			if !ok {
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "wrap")
+			}
+			mkd := indent.String(text.Value, wdth.Value)
+			return *env.NewString(mkd)
+		},
+	},
 
 	"width?": {
 		Argsn: 0,

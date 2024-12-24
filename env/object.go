@@ -507,11 +507,11 @@ func (i Block) Dump(e Idxs) string {
 	}
 	switch i.Mode {
 	case 0:
-		bu.WriteString(" }")
+		bu.WriteString("}")
 	case 1:
-		bu.WriteString(" ]")
+		bu.WriteString("]")
 	case 2:
-		bu.WriteString(" )")
+		bu.WriteString(")")
 	}
 	return bu.String()
 }

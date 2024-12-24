@@ -396,6 +396,32 @@ func trace8(s string) {
 
 var Builtins_html = map[string]*env.Builtin{
 
+	"unescape\\html": {
+		Argsn: 1,
+		Doc:   "Unescapes HTML string",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			text, ok := arg0.(env.String)
+			if !ok {
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "unescape\\html")
+			}
+			mkd := html.UnescapeString(text.Value)
+			return *env.NewString(mkd)
+		},
+	},
+
+	"escape\\html": {
+		Argsn: 1,
+		Doc:   "Unescapes HTML string",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			text, ok := arg0.(env.String)
+			if !ok {
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "unescape\\html")
+			}
+			mkd := html.EscapeString(text.Value)
+			return *env.NewString(mkd)
+		},
+	},
+
 	"html->markdown": {
 		Argsn: 1,
 		Doc:   "Converts HTML text to markdown",
