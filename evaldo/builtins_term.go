@@ -24,11 +24,11 @@ var Builtins_term = map[string]*env.Builtin{
 			if !ok {
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "wrap")
 			}
-			wdt, ok := arg1.(env.Integer)
+			wdth, ok := arg1.(env.Integer)
 			if !ok {
 				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "wrap")
 			}
-			mkd := wrap.String(text.Value, wdth.Value)
+			mkd := wrap.String(text.Value, int(wdth.Value))
 			return *env.NewString(mkd)
 		},
 	},
@@ -39,13 +39,13 @@ var Builtins_term = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			text, ok := arg0.(env.String)
 			if !ok {
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "wrap")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "wrap\\words")
 			}
-			wdt, ok := arg1.(env.Integer)
+			wdth, ok := arg1.(env.Integer)
 			if !ok {
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "wrap")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "wrap\\words")
 			}
-			mkd := wordwrap.String(text.Value, wdth.Value)
+			mkd := wordwrap.String(text.Value, int(wdth.Value))
 			return *env.NewString(mkd)
 		},
 	},
@@ -56,13 +56,13 @@ var Builtins_term = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			text, ok := arg0.(env.String)
 			if !ok {
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "wrap")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "indent")
 			}
-			wdt, ok := arg1.(env.Integer)
+			wdth, ok := arg1.(env.Integer)
 			if !ok {
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "wrap")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "indent")
 			}
-			mkd := indent.String(text.Value, wdth.Value)
+			mkd := indent.String(text.Value, uint(wdth.Value))
 			return *env.NewString(mkd)
 		},
 	},

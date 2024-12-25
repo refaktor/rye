@@ -434,7 +434,7 @@ var Builtins_html = map[string]*env.Builtin{
 			if err != nil {
 				return MakeBuiltinError(ps, err.Error(), "html->markdown")
 			}
-			return env.NewString(mkd)
+			return *env.NewString(mkd)
 		},
 	},
 
