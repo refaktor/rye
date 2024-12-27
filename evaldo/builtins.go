@@ -14,7 +14,6 @@ import (
 	"reflect"
 	"sort"
 
-	"github.com/cszczepaniak/keyboard"
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/term"
 
@@ -8170,8 +8169,9 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Accepts one value and returns it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// close the keyboard opened for terminal
-			fmt.Println("Closing keyboard in Exit")
-			keyboard.Close()
+			// fmt.Println("Closing keyboard in Exit")
+			// keyboard.Close()
+			util.BeforeExit()
 			switch code := arg0.(type) {
 			case env.Integer:
 				os.Exit(int(code.Value))
