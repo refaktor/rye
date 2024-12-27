@@ -14,6 +14,7 @@ import (
 	"reflect"
 	"sort"
 
+	"github.com/cszczepaniak/keyboard"
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/term"
 
@@ -339,7 +340,7 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 			}
 		}
 	}
-	fmt.Printf("GETFROM: %#v %#v %#v\n", data, key, posMode)
+	// fmt.Printf("GETFROM: %#v %#v %#v\n", data, key, posMode)
 	return makeError(ps, "Wrong type or missing key for get-arrow")
 }
 
@@ -909,6 +910,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal   { x: 1 unset! 'x x: 2 } 2 ; otherwise would produce an error
 	"unset!": { // ***
 		Argsn: 1,
 		Doc:   "Unset a word in current context, only meant to be used in console",
@@ -923,6 +926,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal   { is-ref ref { 1 2 3 } } 1
 	"ref": {
 		Argsn: 1,
 		Doc:   "Makes a value mutable instead of immutable",
@@ -950,6 +955,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal   { is-ref deref ref { 1 2 3 } } 0
 	"deref": {
 		Argsn: 1,
 		Doc:   "Makes a value again immutable",
@@ -975,6 +982,22 @@ var builtins = map[string]*env.Builtin{
 				return *sp
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType, env.DictType, env.ListType, env.BlockType, env.StringType, env.NativeType, env.CtxType}, "thaw")
+			}
+		},
+	},
+
+	// Tests:
+	// equal  { ref { } |is-ref } true
+	// equal  { { } |is-ref } false
+	"is-ref": { // **
+		Argsn: 1,
+		Doc:   "Prints information about a value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			// fmt.Println(arg0.Inspect(*ps.Idx))
+			if env.IsPointer(arg0) {
+				return env.NewInteger(1)
+			} else {
+				return env.NewInteger(0)
 			}
 		},
 	},
@@ -1964,22 +1987,6 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Returs information about a value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(arg0.Inspect(*ps.Idx))
-		},
-	},
-
-	// Tests:
-	// equal  { ref { } |is-ref } true
-	// equal  { { } |is-ref } false
-	"is-ref": { // **
-		Argsn: 1,
-		Doc:   "Prints information about a value.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			// fmt.Println(arg0.Inspect(*ps.Idx))
-			if env.IsPointer(arg0) {
-				return env.NewInteger(1)
-			} else {
-				return env.NewInteger(0)
-			}
 		},
 	},
 
@@ -4514,7 +4521,14 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"map\\idx": { // TODO -- deduplicate map\pos and map\idx
+	// Tests:
+	// equal { map\idx { 1 2 3 } 'i { + i } } { 1 3 5 }
+	// equal { map\idx { } 'i { + i } } { }
+	// equal { map\idx list { 1 2 3 } 'i { + i } } list { 1 3 5 }
+	// equal { map\idx list { } 'i { + i } } list { }
+	// equal { map\idx "abc" 'i { + i } } { "a0" "b1" "c2" }
+	// equal { map\idx "" 'i { + i } } { }
+	"map\\idx": { // TODO -- deduplicate map\idx and map\idx
 		Argsn: 3,
 		Doc:   "Maps values of a block to a new block by evaluating a block of code.",
 		Pure:  true,
@@ -4877,6 +4891,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	/* This is too specialised and should be removed probably
 	"sum-up": { // **
 		Argsn: 2,
 		Doc:   "Reduces values of a block or list by evaluating a block of code and summing the values.",
@@ -4963,6 +4978,7 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+	*/
 
 	// Tests:
 	//  equal { partition { 1 2 3 4 } { > 2 } } { { 1 2 } { 3 4 } }
@@ -5691,7 +5707,9 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-
+	// Tests:
+	//  equal { mul { 1 2 3 4 5 } } 120
+	//  equal { mul { 1 2.0 3.3 4 5 } } 132.0
 	"mul": { // **
 		Argsn: 1,
 		Doc:   "Accepts a Block or List of values and returns the product.",
@@ -5747,25 +5765,61 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"sort!": { // **
+	// Tests:
+	//  equal { sort { 6 12 1 } } { 1 6 12 }
+	//  equal { sort x: { 6 12 1 } x } { 6 12 1 }
+	//  equal { sort { "b" "c" "a" } } { "a" "b" "c" }
+	"sort": { // TODO -- make sort (not in place) and  decide if sort will only work on ref
 		Argsn: 1,
 		Doc:   "Accepts a block or list and sorts in place in ascending order and returns it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch block := arg0.(type) {
 			case env.Block:
-				ss := block.Series.S
-				sort.Sort(RyeBlockSort(ss))
-				return *env.NewBlock(*env.NewTSeries(ss))
+				copied := make([]env.Object, len(block.Series.S))
+				copy(copied, block.Series.S)
+				sort.Sort(RyeBlockSort(copied))
+				return *env.NewBlock(*env.NewTSeries(copied))
 			case env.List:
-				ss := block.Data
-				sort.Sort(RyeListSort(ss))
-				return *env.NewList(ss)
+				copied := make([]any, len(block.Data))
+				copy(copied, block.Data)
+				sort.Sort(RyeListSort(copied))
+				return *env.NewList(copied)
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "sort!")
 			}
 		},
 	},
 
+	// Tests:
+	//  error { x: { 6 12 1 } , sort! x }
+	//  equal { x: ref { 6 12 1 } , sort! x , x } { 1 6 12 }
+	"sort!": { // TODO -- make sort (not in place) and  decide if sort will only work on ref
+		Argsn: 1,
+		Doc:   "Accepts a block or list and sorts in place in ascending order and returns it.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch block := arg0.(type) {
+			case *env.Block:
+				ss := block.Series.S
+				sort.Sort(RyeBlockSort(ss))
+				return *env.NewBlock(*env.NewTSeries(ss))
+			case *env.List:
+				ss := block.Data
+				sort.Sort(RyeListSort(ss))
+				return *env.NewList(ss)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "sort!") // TODO make it report ref
+			}
+		},
+	},
+
+	// Tests:
+	// equal { list { 3 2 3 5 3 2 } .unique |sort } list { 2 3 5 }
+	// equal { unique list { 1 1 2 2 3 } |sort } list { 1 2 3 }
+	// equal { unique list { 1 1 2 2 } |sort } list { 1 2 }
+	// equal { unique { 1 1 2 2 3 } |sort } { 1 2 3 }
+	// equal { unique { 1 1 2 2 } |sort } { 1 2 }
+	// equal { unique "aabbc" |length? } 3
+	// equal { unique "ab" |length? } 2
 	"unique": { // **
 		Argsn: 1,
 		Doc:   "Accepts a block or list of values and returns only unique values.",
@@ -5815,13 +5869,17 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"reverse!": { // **
+	// Tests:
+	// equal { reverse { 3 1 2 3 } } { 3 2 1 3 }
+	// equal { reverse { 3 1 2 3 } } { 3 2 1 3 }
+	"reverse": { // **
 		Argsn: 1,
 		Doc:   "Accepts a block of values and returns maximal value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch block := arg0.(type) {
 			case env.Block:
-				a := block.Series.S
+				a := make([]env.Object, len(block.Series.S))
+				copy(a, block.Series.S)
 				for left, right := 0, len(a)-1; left < right; left, right = left+1, right-1 {
 					a[left], a[right] = a[right], a[left]
 				}
@@ -5834,7 +5892,45 @@ var builtins = map[string]*env.Builtin{
 					reversed += string(s[i])
 				}
 				return *env.NewString(reversed)
-			case env.List:
+			case env.List: // TODO - check if this all is needed, decide in global if list is a temporary data format or keeper
+				//                                                should list turn to block after being processed or remain lists?
+				// Create slice of env.Object
+				dataSlice := make([]env.Object, 0)
+				for _, v := range block.Data {
+					dataSlice = append(dataSlice, env.ToRyeValue(v))
+				}
+				// Reverse slice data
+				for left, right := 0, len(dataSlice)-1; left < right; left, right = left+1, right-1 {
+					dataSlice[left], dataSlice[right] = dataSlice[right], dataSlice[left]
+				}
+				// Create list frol slice data
+				reverseList := make([]any, 0, len(dataSlice))
+				for _, value := range dataSlice {
+					reverseList = append(reverseList, value)
+				}
+				return *env.NewList(reverseList)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.StringType, env.ListType}, "reverse!")
+			}
+		},
+	},
+
+	// Tests:
+	// error { reverse! { 3 1 2 3 } }
+	// equal { reverse! ref { 3 1 2 3 } } { 3 2 1 3 }
+	"reverse!": { // **
+		Argsn: 1,
+		Doc:   "Accepts a block of values and returns maximal value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch block := arg0.(type) {
+			case *env.Block:
+				a := block.Series.S
+				for left, right := 0, len(a)-1; left < right; left, right = left+1, right-1 {
+					a[left], a[right] = a[right], a[left]
+				}
+				// sort.Sort(RyeBlockSort(ss))
+				return *env.NewBlock(*env.NewTSeries(a))
+			case *env.List:
 				// Create slice of env.Object
 				dataSlice := make([]env.Object, 0)
 				for _, v := range block.Data {
@@ -5971,6 +6067,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { does { 123 } |type? } 'function
+	// equal { x: does { 123 } x } 123
 	"does": { // **
 		Argsn: 1,
 		Doc:   "Creates a function without arguments.",
@@ -5987,6 +6086,11 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { fn1 { .pass { } } |type? } 'function
+	// equal { x: fn1 { } , x 123 } 123
+	// equal { x: fn1 { .pass { } } , x 123 } 123
+	// equal { x: fn1 { + 1 } , x 123 } 124
 	"fn1": { // **
 		Argsn: 1,
 		Doc:   "Creates a function that accepts one anonymouse argument.",
@@ -6003,6 +6107,11 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { fn { } { } |type? } 'function
+	// equal { x: fn { } { 234 } , x } 234
+	// equal { x: fn { x } { x } , x 123 } 123
+	// equal { x: fn { x } { + 123 } , x 123 } 246
 	"fn": {
 		Argsn: 2,
 		Doc:   "Creates a function.",
@@ -6029,6 +6138,10 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { pfn { } { } |type? } 'function
+	// equal { x: pfn { x } { + 123 } , x 123 } 246
+	// error { x: pfn { x } { .print } , x 123 }
 	"pfn": {
 		Argsn: 2,
 		Doc:   "Creates a pure function.",
@@ -6052,40 +6165,41 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"fnc": { // TODO -- fnc will maybe become fn\par context is set as parrent, fn\in will be executed directly in context
-		// a function with context	 bb: 10 add10 [ a ] context [ b: bb ] [ add a b ]
-		// 							add10 [ a ] this [ add a b ]
-		// later maybe			   add10 [ a ] [ b: b ] [ add a b ]
-		//  						   add10 [ a ] [ 'b ] [ add a b ]
-		Argsn: 3,
-		Doc:   "Creates a function with specific context.",
-		Pure:  true,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch args := arg0.(type) {
-			case env.Block:
-				ok, doc := util.ProcessFunctionSpec(args)
-				if !ok {
-					return MakeBuiltinError(ps, doc, "fn")
-				}
-				switch ctx := arg1.(type) {
-				case env.RyeCtx:
-					switch body := arg2.(type) {
-					case env.Block:
-						return *env.NewFunctionC(args, body, &ctx, false, false, doc)
+	/*
+		"fnc": { // TODO -- fnc will maybe become fn\par context is set as parrent, fn\in will be executed directly in context
+			// a function with context	 bb: 10 add10 [ a ] context [ b: bb ] [ add a b ]
+			// 							add10 [ a ] this [ add a b ]
+			// later maybe			   add10 [ a ] [ b: b ] [ add a b ]
+			//  						   add10 [ a ] [ 'b ] [ add a b ]
+			Argsn: 3,
+			Doc:   "Creates a function with specific context.",
+			Pure:  true,
+			Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+				switch args := arg0.(type) {
+				case env.Block:
+					ok, doc := util.ProcessFunctionSpec(args)
+					if !ok {
+						return MakeBuiltinError(ps, doc, "fn")
+					}
+					switch ctx := arg1.(type) {
+					case env.RyeCtx:
+						switch body := arg2.(type) {
+						case env.Block:
+							return *env.NewFunctionC(args, body, &ctx, false, false, doc)
+						default:
+							ps.ErrorFlag = true
+							return MakeArgError(ps, 3, []env.Type{env.BlockType}, "fnc")
+						}
 					default:
 						ps.ErrorFlag = true
-						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "fnc")
+						return MakeArgError(ps, 2, []env.Type{env.CtxType}, "fnc")
 					}
 				default:
 					ps.ErrorFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.CtxType}, "fnc")
+					return MakeArgError(ps, 1, []env.Type{env.BlockType}, "fnc")
 				}
-			default:
-				ps.ErrorFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "fnc")
-			}
-		},
-	},
+			},
+		}, */
 
 	"fn\\cc": {
 		// a function with context	 bb: 10 add10 [ a ] context [ b: bb ] [ add a b ]
@@ -6346,6 +6460,7 @@ var builtins = map[string]*env.Builtin{
 
 	// BASIC STRING FUNCTIONS
 
+	// TO REMOVE -- head does this
 	"left": {
 		Argsn: 2,
 		Doc:   "Returns the left N characters of the String.",
@@ -6388,21 +6503,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"pink": {
-		Argsn: 1,
-		Doc:   "Returns the argument 1 with ANSI escape codes for magenta display.",
-		Pure:  true,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s1 := arg0.(type) {
-			case env.String:
-				return *env.NewString("\033[35m" + s1.Value + "\033[0m")
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "pink")
-			}
-		},
-	},
-
-	"trim\\space": {
+	// Tests:
+	// equal { trim " ASDF " } "ASDF"
+	"trim": {
 		Argsn: 1,
 		Doc:   "Trims the String of spacing characters.",
 		Pure:  true,
@@ -6415,7 +6518,10 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-	"trim": {
+
+	// Tests:
+	// equal { trim\ "__ASDF__" "_" } "ASDF"
+	"trim\\": {
 		Argsn: 2,
 		Doc:   "Trims the String of specific characters.",
 		Pure:  true,
@@ -6433,6 +6539,9 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	// equal { trim\right "__ASDF__" "_" } "__ASDF"
 	"trim\\right": {
 		Argsn: 2,
 		Doc:   "Trims the String of specific characters.",
@@ -6451,6 +6560,8 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Tests:
+	// equal { trim\left "___ASDF__" "_" } "ASDF__"
 	"trim\\left": {
 		Argsn: 2,
 		Doc:   "Trims the String of specific characters.",
@@ -6469,7 +6580,8 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-
+	// Tests:
+	// equal { replace "...xoxo..." "xo" "LoL" } "...LoLLoL..."
 	"replace": {
 		Argsn: 3,
 		Doc:   "Returns the string with all parts of the strings replaced.",
@@ -6493,7 +6605,8 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-
+	// Tests:
+	// equal { substring "...xoxo..." 3 7 } "xoxo"
 	"substring": {
 		Argsn: 3,
 		Doc:   "Returns part of the String between two positions.",
@@ -6517,7 +6630,9 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-
+	// Tests:
+	// equal { contains "...xoxo..." "xo" } 1
+	// equal { contains "...xoxo..." "lol" } 0
 	"contains": {
 		Argsn: 2,
 		Doc:   "Returns true if argument 2 contains argument 1",
@@ -6572,7 +6687,9 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-
+	// Tests:
+	// equal { has-suffix "xoxo..." "xoxo" } 0
+	// equal { has-suffix "...xoxo" "xoxo" } 1
 	"has-suffix": {
 		Argsn: 2,
 		Doc:   "Returns part of the String between two positions.",
@@ -6595,7 +6712,9 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-
+	// Tests:
+	// equal { has-prefix "xoxo..." "xoxo" } 1
+	// equal { has-prefix "...xoxo" "xoxo" } 0
 	"has-prefix": {
 		Argsn: 2,
 		Doc:   "Returns part of the String between two positions.",
@@ -6619,14 +6738,18 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Todos:
+	// - fail if not found
+	// Tests:
+	// equal { index? "...xo..." "xo" } 3
 	"index?": {
 		Argsn: 2,
 		Doc:   "Returns part of the String between two positions.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s1 := arg0.(type) {
+			switch s1 := arg1.(type) {
 			case env.String:
-				switch s2 := arg1.(type) {
+				switch s2 := arg0.(type) {
 				case env.String:
 					res := strings.Index(s2.Value, s1.Value)
 					return *env.NewInteger(int64(res))
@@ -6638,7 +6761,10 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-
+	// Todos:
+	// - fail if not found
+	// Tests:
+	// equal { position? "...xo..." "xo" } 4
 	"position?": {
 		Argsn: 2,
 		Doc:   "Returns part of the String between two positions.",
@@ -6648,7 +6774,7 @@ var builtins = map[string]*env.Builtin{
 			case env.String: // TODO-FIX ... let s1 be any type if s2 is block, and string only if s2 is string .. reverse nesting in switches
 				switch s2 := arg1.(type) {
 				case env.String:
-					res := strings.Index(s2.Value, s1.Value)
+					res := strings.Index(s1.Value, s2.Value)
 					return *env.NewInteger(int64(res + 1))
 				case env.Block:
 					res := util.IndexOfSlice(ps, s2.Series.S, s1)
@@ -6665,6 +6791,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// This is tail for strings ... TO-REMOVE
 	"right": {
 		Argsn: 2,
 		Doc:   "Returns the N characters from the right of the String.",
@@ -6685,8 +6812,25 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
+	// equal { encode\base64 "abcd" } "YWJjZA=="
+	"encode\\base64": {
+		Argsn: 1,
+		Doc:   "decode base 64 string",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				ata := base64.StdEncoding.EncodeToString([]byte(s1.Value))
+				return *env.NewString(string(ata))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "base64-encode")
+			}
+		},
+	},
 
-	"base64-decode": {
+	// Tests:
+	// equal { decode\base64 encode\base64 "abcd" } "abcd"
+	"decode\\base64": {
 		Argsn: 1,
 		Doc:   "decode base 64 string",
 		Pure:  true,
@@ -6770,14 +6914,14 @@ var builtins = map[string]*env.Builtin{
 	// ; equal { "abcd" .union "cde" } "abcde"
 	// equal { union { 1 2 3 4 } { 2 4 5 } |length? } 5 ; order is not certain
 	// equal { union list { 1 2 3 4 } list { 2 4 5 } |length? } 5 ; order is not certain
-	// equal { union { 8 2 } { 1 9 } |sort! } { 1 2 8 9 }
-	// equal { union { 1 2 } { } |sort! } { 1 2 }
-	// equal { union { } { 1 9 } |sort! }  { 1 9 }
+	// equal { union { 8 2 } { 1 9 } |sort } { 1 2 8 9 }
+	// equal { union { 1 2 } { } |sort } { 1 2 }
+	// equal { union { } { 1 9 } |sort }  { 1 9 }
 	// equal { union { } { } } { }
-	// equal { union list { 1 2 } list { 1 2 3 4 } |sort! } list { 1 2 3 4 }
-	// equal { union list { 1 2 } list { 1 } |sort! } list { 1 2 }
-	// e/qual { union list { 1 2 } list { } |sort! } list { 1 2 }
-	// equal { union list { } list { 1 2 } |sort! } list { 1 2 }
+	// equal { union list { 1 2 } list { 1 2 3 4 } |sort } list { 1 2 3 4 }
+	// equal { union list { 1 2 } list { 1 } |sort } list { 1 2 }
+	// equal { union list { 1 2 } list { } |sort } list { 1 2 }
+	// equal { union list { } list { 1 2 } |sort } list { 1 2 }
 	// equal { union list { } list { } } list { }
 	"union": {
 		Argsn: 2,
@@ -6868,7 +7012,7 @@ var builtins = map[string]*env.Builtin{
 	//  equal { difference { } { 2 3 4  } } { }
 	//  equal { difference { } { } } { }
 	//  equal { difference list { 1 3 5 6 } list { 2 3 4 5 } } list { 1 6 }
-	//  equal { difference list { 1 2 3 } liast {  } } list { 1 2 3 }
+	//  equal { difference list { 1 2 3 } list {  } } list { 1 2 3 }
 	//  equal { difference list { } list { 2 3 4 } } list { }
 	//  equal { difference list { } list { } } list { }
 	"difference": {
@@ -6957,6 +7101,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { concat3 "aa" "BB" "cc" } "aaBBcc"
 	"concat3": {
 		Argsn: 3,
 		Pure:  true,
@@ -7416,6 +7562,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { second { 123 234 345 } } 234
 	"second": { // **
 		Argsn: 1,
 		Doc:   "Accepts a Block, List or String and returns the second value in it.",
@@ -7443,7 +7591,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"third": { // **
+	// Tests:
+	// equal { third { 123 234 345 } } 345
+	"third": {
 		Argsn: 1,
 		Doc:   "Accepts a Block, List or String and returns the third value in it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -7680,7 +7830,7 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { { { 1 2 3 } { 4 5 6 } } .transpose } { { 1 4 } { 2 5 } { 3 6 } }
-	// equal { { { 1 4 } { 2 5 } { 3 6 } } .transpose } { 1 2 3 } { 4 5 6 }
+	// equal { { { 1 4 } { 2 5 } { 3 6 } } .transpose } { { 1 2 3 } { 4 5 6 } }
 	"transpose": {
 		Argsn: 1,
 		Doc:   "Accepts Block and returns the next value from it.",
@@ -7734,8 +7884,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	// Test:
-	// equal { remove-last! { 1 2 3 4 } } 4
+	// Tests:
+	// equal { x: ref { 1 2 3 4 } remove-last! 'x x } { 1 2 3 }
+	// equal { x: ref { 1 2 3 4 } remove-last! 'x } { 1 2 3 }
 	"remove-last!": { // **
 		Argsn: 1,
 		Pure:  false,
@@ -7746,7 +7897,7 @@ var builtins = map[string]*env.Builtin{
 				val, found, ctx := ps.Ctx.Get2(wrd.Index)
 				if found {
 					switch oldval := val.(type) {
-					case env.Block:
+					case *env.Block:
 						s := &oldval.Series
 						oldval.Series = *s.RmLast()
 						ctx.Mod(wrd.Index, oldval)
@@ -7762,6 +7913,9 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Tests:
+	// ; TODO equal { x: ref { 1 2 3 } append! { 4 } x , x } { 1 2 3 4 }
+	// equal { x: ref { 1 2 3 } append! 4 'x , x } { 1 2 3 4 }
 	"append!": { // **
 		Argsn: 2,
 		Doc:   "Accepts Rye value and Tagword with a Block or String. Appends Rye value to Block/String in place, also returns it	.",
@@ -7782,13 +7936,13 @@ var builtins = map[string]*env.Builtin{
 						}
 						ctx.Mod(wrd.Index, newval)
 						return newval
-					case env.Block: // TODO
+					case *env.Block: // TODO
 						// 	fmt.Println(123)
 						s := &oldval.Series
 						oldval.Series = *s.Append(arg0)
 						ctx.Mod(wrd.Index, oldval)
 						return oldval
-					case env.List:
+					case *env.List:
 						dataSlice := make([]any, 0)
 						switch listData := arg0.(type) {
 						case env.List:
@@ -7813,7 +7967,7 @@ var builtins = map[string]*env.Builtin{
 					}
 				}
 				return makeError(ps, "Tagword not found.")
-			case env.Block:
+			case *env.Block:
 				dataSlice := make([]env.Object, 0)
 				switch blockData := arg0.(type) {
 				case env.Block:
@@ -7827,21 +7981,22 @@ var builtins = map[string]*env.Builtin{
 					return makeError(ps, "Need to pass block of data")
 				}
 				return *env.NewBlock(*env.NewTSeries(dataSlice))
+			/* case env.String:
+			finalStr := ""
+			switch str := arg0.(type) {
 			case env.String:
-				finalStr := ""
-				switch str := arg0.(type) {
-				case env.String:
-					finalStr = wrd.Value + str.Value
-				case env.Integer:
-					finalStr = wrd.Value + strconv.Itoa(int(str.Value))
-				}
-				return *env.NewString(finalStr)
+				finalStr = wrd.Value + str.Value
+			case env.Integer:
+				finalStr = wrd.Value + strconv.Itoa(int(str.Value))
+			}
+			return *env.NewString(finalStr)*/
 			default:
 				return makeError(ps, "Value not tagword")
 			}
 		},
 	},
-
+	// Tests:
+	// equal { x: ref { 1 2 3 } change\nth! x 2 222 , x } { 1 222 3 }
 	"change\\nth!": { // **
 		Argsn: 3,
 		Doc:   "Accepts a Block or List, Integer n and a value. Changes the n-th value in the Block in place. Also returns the new series.",
@@ -7850,13 +8005,13 @@ var builtins = map[string]*env.Builtin{
 			switch num := arg1.(type) {
 			case env.Integer:
 				switch s1 := arg0.(type) {
-				case env.Block:
+				case *env.Block:
 					if num.Value > int64(s1.Series.Len()) {
 						return MakeBuiltinError(ps, fmt.Sprintf("Block has less than %d elements.", num.Value), "change\\nth!")
 					}
 					s1.Series.S[num.Value-1] = arg2
 					return s1
-				case env.List:
+				case *env.List:
 					if num.Value > int64(len(s1.Data)) {
 						return MakeBuiltinError(ps, fmt.Sprintf("List has less than %d elements.", num.Value), "change\\nth!")
 					}
@@ -7921,37 +8076,18 @@ var builtins = map[string]*env.Builtin{
 		},
 	}, */
 
-	// Args:
-	// * sheet
-	// * new-row
-	"add-row": {
-		Argsn: 2,
-		Doc:   "Returns a spreadsheet with new-row added to it",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch table := arg0.(type) {
-			case env.Spreadsheet:
-				switch bloc := arg1.(type) {
-				case env.Block:
-					vals := make([]any, bloc.Series.Len())
-					for i := 0; i < bloc.Series.Len(); i++ {
-						vals[i] = bloc.Series.Get(i)
-					}
-					table.AddRow(*env.NewSpreadsheetRow(vals, &table))
-					return table
-				}
-				return nil
-			}
-			return nil
-		},
-	},
-
 	// BASIC ENV / Dict FUNCTIONS
+	// Tests:
+	// equal { { 23 34 45 } -> 1 } 34
 	"_->": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return getFrom(ps, arg0, arg1, false)
 		},
 	},
+	// BASIC ENV / Dict FUNCTIONS
+	// Tests:
+	// equal { 0 <- { 23 34 45 } } 23
 	"_<-": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -7984,12 +8120,16 @@ var builtins = map[string]*env.Builtin{
 			return nil
 		},
 	},*/
+	// Tests:
+	// equal { 2 <~ { 23 34 45 } } 34
 	"_<~": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return getFrom(ps, arg1, arg0, true)
 		},
 	},
+	// Tests:
+	// equal { { 23 34 45 } ~> 1 } 23
 	"_~>": {
 		Argsn: 2,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -7998,6 +8138,8 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// return , error , failure functions
+	// Tests:
+	// equal { x: fn { } { return 101 202 } x } 101
 	"return": { // **
 		Argsn: 1,
 		Doc:   "Accepts one value and returns it.",
@@ -8027,6 +8169,9 @@ var builtins = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "Accepts one value and returns it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			// close the keyboard opened for terminal
+			fmt.Println("Closing keyboard in Exit")
+			keyboard.Close()
 			switch code := arg0.(type) {
 			case env.Integer:
 				os.Exit(int(code.Value))

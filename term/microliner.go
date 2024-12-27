@@ -767,7 +767,7 @@ startOfHere:
 	for {
 		select {
 		case <-ctx1.Done():
-			// fmt.Println("Exitin due to coancelation")
+			fmt.Println("Exiting due to cancelation")
 			return "", nil
 		default:
 			trace("POS: ")
@@ -817,7 +817,14 @@ startOfHere:
 					line = line[:0]
 					pos = 0
 					s.restartPrompt() */
-					fmt.Print("Ctrl+C detected")
+					fmt.Println("[ Ctrl+C detected in Microliner , Use Ctrl+D to Exit ]")
+					// return "", nil
+				case "d":
+					/* return "", ErrPromptAborted
+					line = line[:0]
+					pos = 0
+					s.restartPrompt() */
+					fmt.Println("Ctrl+D detected in Microliner")
 					return "", nil
 				case "a":
 					pos = 0
@@ -1494,6 +1501,7 @@ startOfHere:
 					}
 					err := s.refresh(p, []rune(line1), pos)
 					if err != nil {
+						fmt.Println("Exiting due to error at refreshAllLines")
 						return "", err
 					}
 				}
@@ -1509,6 +1517,7 @@ startOfHere:
 				}
 				err := s.refresh(p, line, pos)
 				if err != nil {
+					fmt.Println("Exiting due to error at refresh")
 					return "", err
 				}
 			}

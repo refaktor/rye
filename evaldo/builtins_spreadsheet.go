@@ -237,7 +237,35 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 
 	// Tests:
 	//  equal {
-	//	 spreadsheet { "a" "b" } { 6 60 7 70 } get-rows |type?
+	//	 spreadsheet { "a" "b" } { 6 60 7 70 } |add-row { 8 80 } -> 2 -> "b"
+	//  } 80
+	// Args:
+	// * sheet
+	// * new-row
+	"add-row": {
+		Argsn: 2,
+		Doc:   "Returns a spreadsheet with new-row added to it",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch table := arg0.(type) {
+			case env.Spreadsheet:
+				switch bloc := arg1.(type) {
+				case env.Block:
+					vals := make([]any, bloc.Series.Len())
+					for i := 0; i < bloc.Series.Len(); i++ {
+						vals[i] = bloc.Series.Get(i)
+					}
+					table.AddRow(*env.NewSpreadsheetRow(vals, &table))
+					return table
+				}
+				return nil
+			}
+			return nil
+		},
+	},
+
+	// Tests:
+	//  equal {
+	//	 spreadsheet { "a" "b" } { 6 60 7 70 } |get-rows |type?
 	//  } 'spreadsheet-row
 	// Args:
 	// * sheet
@@ -738,11 +766,11 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		},
 	},
 
-	// Tests:
-	//  equal { spreadsheet { 'a } { 1 2 3 2 } |where-equal "a" 2 |length? } 2
 	// Example: filtering for rows with the name "Enno"
 	//  sheet: spreadsheet { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" }
 	//  sheet .where-equal 'name "Enno"
+	// Tests:
+	//  equal { spreadsheet { 'a } { 1 2 3 2 } |where-equal "a" 2 |length? } 2
 	// Args:
 	// * sheet
 	// * column

@@ -230,6 +230,43 @@ section "base" "base text" {
 		equal   { set! { 123 234 } { a b }  b } 234
 	}
 
+	group "unset!" 
+	""
+	{
+	}
+
+	{
+		equal   { x: 1 unset! 'x x: 2 } 2 ; otherwise would produce an error
+	}
+
+	group "ref" 
+	""
+	{
+	}
+
+	{
+		equal   { is-ref ref { 1 2 3 } } 1
+	}
+
+	group "deref" 
+	""
+	{
+	}
+
+	{
+		equal   { is-ref deref ref { 1 2 3 } } 0
+	}
+
+	group "is-ref" 
+	""
+	{
+	}
+
+	{
+		equal  { ref { } |is-ref } true
+		equal  { { } |is-ref } false
+	}
+
 	group "pick" 
 	""
 	{
@@ -619,16 +656,6 @@ section "base" "base text" {
 
 	{
 		equal  { inspect 101 } "[Integer: 101]"
-	}
-
-	group "is-ref" 
-	""
-	{
-	}
-
-	{
-		equal  { ref { } |is-ref } true
-		equal  { { } |is-ref } false
 	}
 
 	group "esc" 
@@ -1139,6 +1166,20 @@ section "base" "base text" {
 		equal { map\pos "" 'i { + i } } { }
 	}
 
+	group "map\\idx" 
+	""
+	{
+	}
+
+	{
+		equal { map\idx { 1 2 3 } 'i { + i } } { 1 3 5 }
+		equal { map\idx { } 'i { + i } } { }
+		equal { map\idx list { 1 2 3 } 'i { + i } } list { 1 3 5 }
+		equal { map\idx list { } 'i { + i } } list { }
+		equal { map\idx "abc" 'i { + i } } { "a0" "b1" "c2" }
+		equal { map\idx "" 'i { + i } } { }
+	}
+
 	group "reduce" 
 	""
 	{
@@ -1282,6 +1323,237 @@ section "base" "base text" {
 		equal { sum list { } } 0
 	}
 
+	group "mul" 
+	""
+	{
+	}
+
+	{
+		equal { mul { 1 2 3 4 5 } } 120
+		equal { mul { 1 2.0 3.3 4 5 } } 132.0
+	}
+
+	group "sort" 
+	""
+	{
+	}
+
+	{
+		equal { sort { 6 12 1 } } { 1 6 12 }
+		equal { sort x: { 6 12 1 } x } { 6 12 1 }
+		equal { sort { "b" "c" "a" } } { "a" "b" "c" }
+	}
+
+	group "sort!" 
+	""
+	{
+	}
+
+	{
+		error { x: { 6 12 1 } , sort! x }
+		equal { x: ref { 6 12 1 } , sort! x , x } { 1 6 12 }
+	}
+
+	group "unique" 
+	""
+	{
+	}
+
+	{
+		equal { list { 3 2 3 5 3 2 } .unique |sort } list { 2 3 5 }
+		equal { unique list { 1 1 2 2 3 } |sort } list { 1 2 3 }
+		equal { unique list { 1 1 2 2 } |sort } list { 1 2 }
+		equal { unique { 1 1 2 2 3 } |sort } { 1 2 3 }
+		equal { unique { 1 1 2 2 } |sort } { 1 2 }
+		equal { unique "aabbc" |length? } 3
+		equal { unique "ab" |length? } 2
+	}
+
+	group "reverse" 
+	""
+	{
+	}
+
+	{
+		equal { reverse { 3 1 2 3 } } { 3 2 1 3 }
+		equal { reverse { 3 1 2 3 } } { 3 2 1 3 }
+	}
+
+	group "reverse!" 
+	""
+	{
+	}
+
+	{
+		error { reverse! { 3 1 2 3 } }
+		equal { reverse! ref { 3 1 2 3 } } { 3 2 1 3 }
+	}
+
+	group "does" 
+	""
+	{
+	}
+
+	{
+		equal { does { 123 } |type? } 'function
+		equal { x: does { 123 } x } 123
+	}
+
+	group "fn1" 
+	""
+	{
+	}
+
+	{
+		equal { fn1 { .pass { } } |type? } 'function
+		equal { x: fn1 { } , x 123 } 123
+		equal { x: fn1 { .pass { } } , x 123 } 123
+		equal { x: fn1 { + 1 } , x 123 } 124
+	}
+
+	group "fn" 
+	""
+	{
+	}
+
+	{
+		equal { fn { } { } |type? } 'function
+		equal { x: fn { } { 234 } , x } 234
+		equal { x: fn { x } { x } , x 123 } 123
+		equal { x: fn { x } { + 123 } , x 123 } 246
+	}
+
+	group "pfn" 
+	""
+	{
+	}
+
+	{
+		equal { pfn { } { } |type? } 'function
+		equal { x: pfn { x } { + 123 } , x 123 } 246
+		error { x: pfn { x } { .print } , x 123 }
+	}
+
+	group "trim" 
+	""
+	{
+	}
+
+	{
+		equal { trim " ASDF " } "ASDF"
+	}
+
+	group "trim\\" 
+	""
+	{
+	}
+
+	{
+		equal { trim\ "__ASDF__" "_" } "ASDF"
+	}
+
+	group "trim\\right" 
+	""
+	{
+	}
+
+	{
+		equal { trim\right "__ASDF__" "_" } "__ASDF"
+	}
+
+	group "trim\\left" 
+	""
+	{
+	}
+
+	{
+		equal { trim\left "___ASDF__" "_" } "ASDF__"
+	}
+
+	group "replace" 
+	""
+	{
+	}
+
+	{
+		equal { replace "...xoxo..." "xo" "LoL" } "...LoLLoL..."
+	}
+
+	group "substring" 
+	""
+	{
+	}
+
+	{
+		equal { substring "...xoxo..." 3 7 } "xoxo"
+	}
+
+	group "contains" 
+	""
+	{
+	}
+
+	{
+		equal { contains "...xoxo..." "xo" } 1
+		equal { contains "...xoxo..." "lol" } 0
+	}
+
+	group "has-suffix" 
+	""
+	{
+	}
+
+	{
+		equal { has-suffix "xoxo..." "xoxo" } 0
+		equal { has-suffix "...xoxo" "xoxo" } 1
+	}
+
+	group "has-prefix" 
+	""
+	{
+	}
+
+	{
+		equal { has-prefix "xoxo..." "xoxo" } 1
+		equal { has-prefix "...xoxo" "xoxo" } 0
+	}
+
+	group "index?" 
+	""
+	{
+	}
+
+	{
+		equal { index? "...xo..." "xo" } 3
+	}
+
+	group "position?" 
+	""
+	{
+	}
+
+	{
+		equal { position? "...xo..." "xo" } 4
+	}
+
+	group "encode\\base64" 
+	""
+	{
+	}
+
+	{
+		equal { encode\base64 "abcd" } "YWJjZA=="
+	}
+
+	group "decode\\base64" 
+	""
+	{
+	}
+
+	{
+		equal { decode\base64 encode\base64 "abcd" } "abcd"
+	}
+
 	group "space" 
 	""
 	{
@@ -1310,14 +1582,14 @@ section "base" "base text" {
 		; equal { "abcd" .union "cde" } "abcde"
 		equal { union { 1 2 3 4 } { 2 4 5 } |length? } 5 ; order is not certain
 		equal { union list { 1 2 3 4 } list { 2 4 5 } |length? } 5 ; order is not certain
-		equal { union { 8 2 } { 1 9 } |sort! } { 1 2 8 9 }
-		equal { union { 1 2 } { } |sort! } { 1 2 }
-		equal { union { } { 1 9 } |sort! }  { 1 9 }
+		equal { union { 8 2 } { 1 9 } |sort } { 1 2 8 9 }
+		equal { union { 1 2 } { } |sort } { 1 2 }
+		equal { union { } { 1 9 } |sort }  { 1 9 }
 		equal { union { } { } } { }
-		equal { union list { 1 2 } list { 1 2 3 4 } |sort! } list { 1 2 3 4 }
-		equal { union list { 1 2 } list { 1 } |sort! } list { 1 2 }
-		e/qual { union list { 1 2 } list { } |sort! } list { 1 2 }
-		equal { union list { } list { 1 2 } |sort! } list { 1 2 }
+		equal { union list { 1 2 } list { 1 2 3 4 } |sort } list { 1 2 3 4 }
+		equal { union list { 1 2 } list { 1 } |sort } list { 1 2 }
+		equal { union list { 1 2 } list { } |sort } list { 1 2 }
+		equal { union list { } list { 1 2 } |sort } list { 1 2 }
 		equal { union list { } list { } } list { }
 	}
 
@@ -1359,7 +1631,7 @@ section "base" "base text" {
 		equal { difference { } { 2 3 4  } } { }
 		equal { difference { } { } } { }
 		equal { difference list { 1 3 5 6 } list { 2 3 4 5 } } list { 1 6 }
-		equal { difference list { 1 2 3 } liast {  } } list { 1 2 3 }
+		equal { difference list { 1 2 3 } list {  } } list { 1 2 3 }
 		equal { difference list { } list { 2 3 4 } } list { }
 		equal { difference list { } list { } } list { }
 	}
@@ -1389,6 +1661,15 @@ section "base" "base text" {
 
 	{
 		equal { to-upper "abcde" } "ABCDE"
+	}
+
+	group "concat3" 
+	""
+	{
+	}
+
+	{
+		equal { concat3 "aa" "BB" "cc" } "aaBBcc"
 	}
 
 	group "join" 
@@ -1503,6 +1784,24 @@ section "base" "base text" {
 		equal { tail list { 1 2 3 4 } 1 } list { 4 }
 	}
 
+	group "second" 
+	""
+	{
+	}
+
+	{
+		equal { second { 123 234 345 } } 234
+	}
+
+	group "third" 
+	""
+	{
+	}
+
+	{
+		equal { third { 123 234 345 } } 345
+	}
+
 	group "last" 
 	""
 	{
@@ -1552,7 +1851,72 @@ section "base" "base text" {
 
 	{
 		equal { { { 1 2 3 } { 4 5 6 } } .transpose } { { 1 4 } { 2 5 } { 3 6 } }
-		equal { { { 1 4 } { 2 5 } { 3 6 } } .transpose } { 1 2 3 } { 4 5 6 }
+		equal { { { 1 4 } { 2 5 } { 3 6 } } .transpose } { { 1 2 3 } { 4 5 6 } }
+	}
+
+	group "remove-last!" 
+	""
+	{
+	}
+
+	{
+		equal { x: ref { 1 2 3 4 } remove-last! 'x x } { 1 2 3 }
+		equal { x: ref { 1 2 3 4 } remove-last! 'x } { 1 2 3 }
+	}
+
+	group "append!" 
+	""
+	{
+	}
+
+	{
+		; TODO equal { x: ref { 1 2 3 } append! { 4 } x , x } { 1 2 3 4 }
+		equal { x: ref { 1 2 3 } append! 4 'x , x } { 1 2 3 4 }
+	}
+
+	group "change\\nth!" 
+	""
+	{
+	}
+
+	{
+		equal { x: ref { 1 2 3 } change\nth! x 2 222 , x } { 1 222 3 }
+	}
+
+	group "_->" 
+	""
+	{
+	}
+
+	{
+		equal { { 23 34 45 } -> 1 } 34
+	}
+
+	group "_<-" 
+	""
+	{
+	}
+
+	{
+		equal { 0 <- { 23 34 45 } } 23
+	}
+
+	group "_<~" 
+	""
+	{
+	}
+
+	{
+		equal { 2 <~ { 23 34 45 } } 34
+	}
+
+	group "_~>" 
+	""
+	{
+	}
+
+	{
+		equal { { 23 34 45 } ~> 1 } 34
 	}
 
 	group "range" 

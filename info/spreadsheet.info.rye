@@ -48,6 +48,19 @@ section "base" "base text" {
 		equal { to-spreadsheet list [ dict { "a" 1 } dict { "a" b } ] |type? } 'spreadsheet
 	}
 
+	group "add-row" 
+	""
+	{
+		arg "* sheet"
+		arg "* new-row"
+	}
+
+	{
+		equal {
+		spreadsheet { "a" "b" } { 6 60 7 70 } |add-row { 8 80 } -> 2 -> "b"
+		} 80
+	}
+
 	group "get-rows" 
 	""
 	{
@@ -56,7 +69,7 @@ section "base" "base text" {
 
 	{
 		equal {
-		spreadsheet { "a" "b" } { 6 60 7 70 } get-rows |type?
+		spreadsheet { "a" "b" } { 6 60 7 70 } |get-rows |type?
 		} 'spreadsheet-row
 	}
 
@@ -217,9 +230,6 @@ section "base" "base text" {
 
 	{
 		equal { spreadsheet { 'a } { 1 2 3 2 } |where-equal "a" 2 |length? } 2
-		Example: filtering for rows with the name "Enno"
-		sheet: spreadsheet { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" }
-		sheet .where-equal 'name "Enno"
 	}
 
 	group "where-match" 
