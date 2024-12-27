@@ -77,8 +77,14 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Tests:
+	//  equal { spreadsheet\columns { "a" } { { 1 2 3 } } |type? } 'spreadsheet
+	//  equal { spreadsheet\columns { "a" "b" } { { 1 2 3 } { 4 5 6 } } |length? } 3
 	// Example:
 	//  spreadsheet\columns { 'a 'b } { { 1 2 } { "x" "y" } }
+	// Args:
+	//  * columns - names of the columns
+	//  * data - block or list of columns (each column is a block or list)
 	"spreadsheet\\columns": {
 		Argsn: 2,
 		Doc:   "Creats a spreadsheet by accepting a block of columns",
@@ -86,6 +92,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			return SheetFromColumns(ps, arg0, arg1)
 		},
 	},
+
 	// Tests:
 	//  equal { spreadsheet\rows { 'a 'b } { { 1 2 } { 3 4 } } } spreadsheet { 'a 'b } { 1 2 3 4 }
 	//  equal { spreadsheet\rows { 'a 'b } list [ list [ 1 2 ] list [ 3 4 ] ] |type? } 'spreadsheet
@@ -228,12 +235,43 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		},
 	},
 
-	// Get rows as a native. This value can be used in `add-rows` and `add-rows!``
+	// Tests:
+	//  equal {
+	//	 spreadsheet { "a" "b" } { 6 60 7 70 } |add-row { 8 80 } -> 2 -> "b"
+	//  } 80
+	// Args:
+	// * sheet
+	// * new-row
+	"add-row": {
+		Argsn: 2,
+		Doc:   "Returns a spreadsheet with new-row added to it",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch table := arg0.(type) {
+			case env.Spreadsheet:
+				switch bloc := arg1.(type) {
+				case env.Block:
+					vals := make([]any, bloc.Series.Len())
+					for i := 0; i < bloc.Series.Len(); i++ {
+						vals[i] = bloc.Series.Get(i)
+					}
+					table.AddRow(*env.NewSpreadsheetRow(vals, &table))
+					return table
+				}
+				return nil
+			}
+			return nil
+		},
+	},
+
+	// Tests:
+	//  equal {
+	//	 spreadsheet { "a" "b" } { 6 60 7 70 } |get-rows |type?
+	//  } 'spreadsheet-row
 	// Args:
 	// * sheet
 	"get-rows": {
 		Argsn: 1,
-		Doc:   "Get rows as a native",
+		Doc:   "Get rows as a native. This value can be used in `add-rows` and `add-rows!`",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Spreadsheet:
@@ -731,6 +769,8 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	// Example: filtering for rows with the name "Enno"
 	//  sheet: spreadsheet { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" }
 	//  sheet .where-equal 'name "Enno"
+	// Tests:
+	//  equal { spreadsheet { 'a } { 1 2 3 2 } |where-equal "a" 2 |length? } 2
 	// Args:
 	// * sheet
 	// * column
@@ -796,6 +836,9 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	//  equal { spreadsheet { 'a } { "1" "2" "a3" "2b" } |where-match 'a regexp "^[0-9]$" |length? } 2
 	// Example: filting for names that start with "En"
 	//  sheet: spreadsheet { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" }
 	//  sheet .where-match 'name "En.+"
@@ -837,6 +880,8 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	//  equal { spreadsheet { 'a } { "1" "2" "a3" "2b" } |where-contains 'a "2" |length? } 2
 	// Example: filting for names that contain "nn"
 	//  sheet: spreadsheet { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" "Benn" }
 	//  sheet .where-contains 'name "nn"
@@ -874,6 +919,8 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	//  equal { spreadsheet { 'a } { "1" "2" "a3" "2b" } |where-not-contains 'a "3" |length? } 3
 	// Example: filting for names that contain "nn"
 	//  sheet: spreadsheet { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" "Benn" }
 	//  sheet .where-contains 'name "nn"
@@ -910,6 +957,8 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Tests:
+	//  equal { spreadsheet { 'a } { 1 2 3 2 } |where-greater 'a 1 |length? } 3
 	// Example: filting for ages over 29
 	//  sheet: spreadsheet { "name" "age" } { "Enno" 30 "Enya" 25 "Enid" 40 "Bob" 19 "Bill" 45 "Benn" 29 }
 	//  sheet .where-greater 'age 29

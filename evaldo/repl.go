@@ -462,17 +462,21 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 
 	ctx, cancel := context.WithCancel(context.Background())
 
+	defer func() {
+		fmt.Println("Closing keyboard ...")
+		keyboard.Close()
+	}()
+
 	defer cancel()
 
 	// ctx := context.Background()
 	// defer os.Exit(0)
 	// defer ctx.Done()
-	defer keyboard.Close()
 	go func(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
-				// fmt.Println("Done")
+				fmt.Println("Done Signaled")
 				return
 			default:
 				// fmt.Println("Select default")
@@ -481,8 +485,8 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 					fmt.Println(keyErr)
 					break
 				}
-				if k == keyboard.KeyCtrlC {
-					// fmt.Println("Ctrl C 1")
+				if k == keyboard.KeyCtrlC && false {
+					fmt.Println("Keyboard Ctrl+C in REPL detected. Calcel called.")
 					cancel()
 					err1 := util.KillProcess(os.Getpid())
 					// err1 := syscall.Kill(os.Getpid(), syscall.SIGINT)
@@ -510,7 +514,7 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 			}
 			f.Close()
 		}
-		fmt.Println("Wrote history")
+		fmt.Println("Wrote history ...")
 	}()
 
 	// fmt.Println("MICRO")
@@ -518,7 +522,7 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 	if err != nil {
 		fmt.Println(err)
 	}
-	// fmt.Println("END")
+	fmt.Println("End of Function in REPL ...")
 
 }
 

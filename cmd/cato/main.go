@@ -242,7 +242,21 @@ func main() { // here because of some odd options we were experimentally adding
 					break
 				}
 				if k == keyboard.KeyCtrlC {
-					// fmt.Println("Ctrl C 1")
+					fmt.Println("Ctrl+C in Main detected")
+					cancel()
+					err1 := util.KillProcess(os.Getpid())
+					// err1 := syscall.Kill(os.Getpid(), syscall.SIGINT)
+					if err1 != nil {
+						fmt.Println(err.Error()) // TODO -- temprorary just printed
+					}
+					//ctx.Done()
+					// fmt.Println("")
+					// return
+					//break
+					//					os.Exit(0)
+				}
+				if k == keyboard.KeyCtrlD {
+					fmt.Println("Ctrl+D in Main detected")
 					cancel()
 					err1 := util.KillProcess(os.Getpid())
 					// err1 := syscall.Kill(os.Getpid(), syscall.SIGINT)

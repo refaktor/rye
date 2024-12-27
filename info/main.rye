@@ -131,7 +131,7 @@ test {
 		print ""
 	
 		if ( length? sections ) > 1 { 
-			term/orange
+			term/yellow
 			term/bold
 			print "TOTAL FAILED TESTS: " + errors
 			print ""

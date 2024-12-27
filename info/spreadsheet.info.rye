@@ -12,6 +12,20 @@ section "base" "base text" {
 		equal { spreadsheet { 'a } { 1 2 } |type? } 'spreadsheet
 	}
 
+	group "spreadsheet\\columns" 
+	""
+	{
+		arg "* columns - names of the columns"
+		arg "* data - block or list of columns (each column is a block or list)"
+	}
+
+	{
+		equal { spreadsheet\columns { "a" } { { 1 2 3 } } |type? } 'spreadsheet
+		equal { spreadsheet\columns { "a" "b" } { { 1 2 3 } { 4 5 6 } } |length? } 3
+		Example:
+		spreadsheet\columns { 'a 'b } { { 1 2 } { "x" "y" } }
+	}
+
 	group "spreadsheet\\rows" 
 	""
 	{
@@ -32,6 +46,31 @@ section "base" "base text" {
 
 	{
 		equal { to-spreadsheet list [ dict { "a" 1 } dict { "a" b } ] |type? } 'spreadsheet
+	}
+
+	group "add-row" 
+	""
+	{
+		arg "* sheet"
+		arg "* new-row"
+	}
+
+	{
+		equal {
+		spreadsheet { "a" "b" } { 6 60 7 70 } |add-row { 8 80 } -> 2 -> "b"
+		} 80
+	}
+
+	group "get-rows" 
+	""
+	{
+		arg "* sheet"
+	}
+
+	{
+		equal {
+		spreadsheet { "a" "b" } { 6 60 7 70 } |get-rows |type?
+		} 'spreadsheet-row
 	}
 
 	group "add-rows" 
@@ -178,6 +217,83 @@ section "base" "base text" {
 		spr2:: load\xlsx f |autotype 1.0
 		spr1 = spr2
 		} true
+	}
+
+	group "where-equal" 
+	""
+	{
+		arg "* sheet"
+		arg "* column"
+		arg "* value"
+		arg "Tags: #filter #spreadsheets"
+	}
+
+	{
+		equal { spreadsheet { 'a } { 1 2 3 2 } |where-equal "a" 2 |length? } 2
+	}
+
+	group "where-match" 
+	""
+	{
+		arg "* sheet"
+		arg "* column"
+		arg "* regexp"
+		arg "Tags: #filter #spreadsheets"
+	}
+
+	{
+		equal { spreadsheet { 'a } { "1" "2" "a3" "2b" } |where-match 'a regexp "^[0-9]$" |length? } 2
+		Example: filting for names that start with "En"
+		sheet: spreadsheet { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" }
+		sheet .where-match 'name "En.+"
+	}
+
+	group "where-contains" 
+	""
+	{
+		arg "* sheet"
+		arg "* column"
+		arg "* substring"
+		arg "Tags: #filter #spreadsheets"
+	}
+
+	{
+		equal { spreadsheet { 'a } { "1" "2" "a3" "2b" } |where-contains 'a "2" |length? } 2
+		Example: filting for names that contain "nn"
+		sheet: spreadsheet { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" "Benn" }
+		sheet .where-contains 'name "nn"
+	}
+
+	group "where-not-contains" 
+	""
+	{
+		arg "* sheet"
+		arg "* column"
+		arg "* substring"
+		arg "Tags: #filter #spreadsheets"
+	}
+
+	{
+		equal { spreadsheet { 'a } { "1" "2" "a3" "2b" } |where-not-contains 'a "3" |length? } 3
+		Example: filting for names that contain "nn"
+		sheet: spreadsheet { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" "Benn" }
+		sheet .where-contains 'name "nn"
+	}
+
+	group "where-greater" 
+	""
+	{
+		arg "* sheet"
+		arg "* column"
+		arg "* value"
+		arg "Tags: #filter #spreadsheet"
+	}
+
+	{
+		equal { spreadsheet { 'a } { 1 2 3 2 } |where-greater 'a 1 |length? } 3
+		Example: filting for ages over 29
+		sheet: spreadsheet { "name" "age" } { "Enno" 30 "Enya" 25 "Enid" 40 "Bob" 19 "Bill" 45 "Benn" 29 }
+		sheet .where-greater 'age 29
 	}
 
 	group "col-sum" 
