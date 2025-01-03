@@ -1,3 +1,14 @@
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+}
+
 function generateMenuFromHeadings(node, hh) {
     // Select all H2 elements
     const h2Elements = node.querySelectorAll(hh);
@@ -14,7 +25,7 @@ function generateMenuFromHeadings(node, hh) {
         // menuItem.textContent = h2.textContent;
 
         // Optionally, set an id on the H2 for navigation
-	var index = h2.textContent;
+	var index = escapeHtml(h2.textContent);
 	
         const h2Id = `heading-${index}`;
         h2.setAttribute('id', h2Id);
