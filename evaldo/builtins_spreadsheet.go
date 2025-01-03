@@ -550,6 +550,54 @@ var Builtins_table = map[string]*env.Builtin{
 		},
 	},
 
+	// TODO -- deduplicate with above
+	"load\\tsv": {
+		// TODO 2 -- this could move to a go function so it could be called by general load that uses extension to define the loader
+		Argsn: 1,
+		Doc:   "Loads a .csv file to a table datatype.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch file := arg0.(type) {
+			case env.Uri:
+				// rows, err := db1.Value.(*sql.DB).Query(sqlstr, vals...)
+				f, err := os.Open(file.GetPath())
+				if err != nil {
+					// log.Fatal("Unable to read input file "+filePath, err)
+					return MakeBuiltinError(ps, "Unable to read input file:"+err.Error(), "load\\csv")
+				}
+				defer f.Close()
+
+				csvReader := csv.NewReader(f)
+				csvReader.Comma = '\t'
+				rows, err := csvReader.ReadAll()
+				if err != nil {
+					// log.Fatal("Unable to parse file as CSV for "+filePath, err)
+					return MakeBuiltinError(ps, "Unable to parse file as CSV: "+err.Error(), "load\\csv")
+				}
+				if len(rows) == 0 {
+					return MakeBuiltinError(ps, "File is empty", "load\\csv")
+				}
+				spr := env.NewTable(rows[0])
+				//				for i, row := range rows {
+				//	if i > 0 {
+				//		anyRow := make([]any, len(row))
+				//		for i, v := range row {
+				//			anyRow[i] = v
+				if len(rows) > 1 {
+					for _, row := range rows[1:] {
+						anyRow := make([]any, len(row))
+						for i, v := range row {
+							anyRow[i] = *env.NewString(v)
+						}
+						spr.AddRow(*env.NewTableRow(anyRow, spr))
+					}
+				}
+				return *spr
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "load\\csv")
+			}
+		},
+	},
+
 	// Tests:
 	//  equal {
 	//	 cc os
