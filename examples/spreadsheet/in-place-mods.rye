@@ -1,6 +1,6 @@
-; Create a spreadsheet
+; Create a table
 
-deliveries: thaw spreadsheet { "street" "city" "zip" "contents" } 
+deliveries: thaw table { "street" "city" "zip" "contents" } 
 [
 	"Maple" "Onowa" "55555" "A bottle of Maple Syrup"
 	"Oak" "Springfield" "11111" "A donut-shaped stuffed animal"

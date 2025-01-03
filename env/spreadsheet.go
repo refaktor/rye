@@ -14,17 +14,17 @@ func makeError(env1 *ProgramState, msg string) *Error {
 	return NewError(msg)
 }
 
-type SpreadsheetRow struct {
+type TableRow struct {
 	Values []any
-	Uplink *Spreadsheet
+	Uplink *Table
 }
 
-func NewSpreadsheetRow(values []any, uplink *Spreadsheet) *SpreadsheetRow {
-	nat := SpreadsheetRow{values, uplink}
+func NewTableRow(values []any, uplink *Table) *TableRow {
+	nat := TableRow{values, uplink}
 	return &nat
 }
 
-func AddSpreadsheetRowAndBlock(row SpreadsheetRow, updatesBlock TSeries, idx *Idxs) SpreadsheetRow {
+func AddTableRowAndBlock(row TableRow, updatesBlock TSeries, idx *Idxs) TableRow {
 	data := make(map[string]any)
 
 	for updatesBlock.Pos() < updatesBlock.Len() {
@@ -43,15 +43,15 @@ func AddSpreadsheetRowAndBlock(row SpreadsheetRow, updatesBlock TSeries, idx *Id
 		}
 	}
 
-	return AddSpreadsheetRowAndMap(row, data)
+	return AddTableRowAndMap(row, data)
 }
 
-func AddSpreadsheetRowAndDict(row SpreadsheetRow, dict Dict) SpreadsheetRow {
-	return AddSpreadsheetRowAndMap(row, dict.Data)
+func AddTableRowAndDict(row TableRow, dict Dict) TableRow {
+	return AddTableRowAndMap(row, dict.Data)
 }
 
-func AddSpreadsheetRowAndMap(row SpreadsheetRow, dict map[string]any) SpreadsheetRow {
-	newRow := SpreadsheetRow{row.Values, row.Uplink}
+func AddTableRowAndMap(row TableRow, dict map[string]any) TableRow {
+	newRow := TableRow{row.Values, row.Uplink}
 
 	for i, v := range row.Uplink.Cols {
 		if val, ok := dict[v]; ok {
@@ -61,8 +61,8 @@ func AddSpreadsheetRowAndMap(row SpreadsheetRow, dict map[string]any) Spreadshee
 	return newRow
 }
 
-func SpreadsheetRowFromDict(dict Dict, uplink *Spreadsheet) (bool, string, *SpreadsheetRow) {
-	row := SpreadsheetRow{make([]any, len(uplink.Cols)), uplink}
+func TableRowFromDict(dict Dict, uplink *Table) (bool, string, *TableRow) {
+	row := TableRow{make([]any, len(uplink.Cols)), uplink}
 	for i, v := range uplink.Cols {
 		if val, ok := dict.Data[v]; ok {
 			row.Values[i] = val
@@ -73,45 +73,45 @@ func SpreadsheetRowFromDict(dict Dict, uplink *Spreadsheet) (bool, string, *Spre
 	return true, "", &row
 }
 
-type Spreadsheet struct {
+type Table struct {
 	Cols    []string
-	Rows    []SpreadsheetRow
+	Rows    []TableRow
 	Kind    Word
 	Indexes map[string]map[any][]int
 }
 
-func NewSpreadsheet(cols []string) *Spreadsheet {
-	var ps Spreadsheet
+func NewTable(cols []string) *Table {
+	var ps Table
 	ps.Cols = cols
-	ps.Rows = make([]SpreadsheetRow, 0)
+	ps.Rows = make([]TableRow, 0)
 	/*
-		ps := Spreadsheet{
+		ps := Table{
 			cols,
-			make([]SpreadsheetRow, 1)
+			make([]TableRow, 1)
 		} */
 	return &ps
 }
 
 // Inspect returns a string representation of the Integer.
-func (s *Spreadsheet) AddRow(vals SpreadsheetRow) {
+func (s *Table) AddRow(vals TableRow) {
 	s.Rows = append(s.Rows, vals)
 }
 
-func (s *Spreadsheet) RemoveRowByIndex(index int64) {
+func (s *Table) RemoveRowByIndex(index int64) {
 	s.Rows = append(s.Rows[:index], s.Rows[index+1:]...)
 }
 
-func (s *Spreadsheet) GetRows() []SpreadsheetRow {
+func (s *Table) GetRows() []TableRow {
 	return s.Rows
 }
 
 // Inspect returns a string representation of the Integer.
-func (s *Spreadsheet) SetCols(vals []string) {
+func (s *Table) SetCols(vals []string) {
 	s.Cols = vals
 }
 
 // Inspect returns a string representation of the Integer.
-func (s Spreadsheet) ToHtml() string {
+func (s Table) ToHtml() string {
 	//fmt.Println("IN TO Html")
 	var bu strings.Builder
 	bu.WriteString("<table>")
@@ -130,7 +130,7 @@ func (s Spreadsheet) ToHtml() string {
 }
 
 // Inspect returns a string representation of the Integer.
-func (s Spreadsheet) ToTxt() string {
+func (s Table) ToTxt() string {
 	var bu strings.Builder
 	for _, name := range s.Cols {
 		bu.WriteString(fmt.Sprint(name))
@@ -148,7 +148,7 @@ func (s Spreadsheet) ToTxt() string {
 	return bu.String()
 }
 
-func (s Spreadsheet) GetColumn(name string) Object {
+func (s Table) GetColumn(name string) Object {
 	col1 := make([]Object, len(s.Rows))
 	idx := slices.Index[[]string](s.Cols, name)
 	if idx > -1 {
@@ -161,7 +161,7 @@ func (s Spreadsheet) GetColumn(name string) Object {
 	}
 }
 
-func (s Spreadsheet) Sum(name string) Object {
+func (s Table) Sum(name string) Object {
 	var sum int64
 	var sumf float64
 	idx := slices.Index[[]string](s.Cols, name)
@@ -193,7 +193,7 @@ func (s Spreadsheet) Sum(name string) Object {
 	}
 }
 
-func (s Spreadsheet) Sum_Just(name string) (float64, error) {
+func (s Table) Sum_Just(name string) (float64, error) {
 	var sum int64
 	var sumf float64
 	idx := slices.Index[[]string](s.Cols, name)
@@ -226,11 +226,11 @@ func (s Spreadsheet) Sum_Just(name string) (float64, error) {
 	}
 }
 
-func (s Spreadsheet) NRows() int {
+func (s Table) NRows() int {
 	return len(s.Rows)
 }
 
-func (s Spreadsheet) Columns(ps *ProgramState, names []string) Object {
+func (s Table) Columns(ps *ProgramState, names []string) Object {
 	idxs := make([]int, len(names))
 	for name := range names {
 		idx := slices.Index[[]string](s.Cols, names[name])
@@ -239,7 +239,7 @@ func (s Spreadsheet) Columns(ps *ProgramState, names []string) Object {
 		}
 		idxs[name] = idx
 	}
-	nspr := NewSpreadsheet(names)
+	nspr := NewTable(names)
 
 	for _, row := range s.Rows {
 		row2 := make([]any, len(names))
@@ -249,25 +249,25 @@ func (s Spreadsheet) Columns(ps *ProgramState, names []string) Object {
 				row2[col] = row.Values[idxs[col]]
 			}
 		}
-		nspr.AddRow(SpreadsheetRow{row2, nspr})
+		nspr.AddRow(TableRow{row2, nspr})
 	}
 	//nspr.(res)
 	return *nspr
 }
 
-func (s Spreadsheet) GetRow(ps *ProgramState, index int) SpreadsheetRow {
+func (s Table) GetRow(ps *ProgramState, index int) TableRow {
 	row := s.Rows[index]
 	row.Uplink = &s
 	return row
 }
 
-func (s Spreadsheet) GetRowNew(index int) Object {
+func (s Table) GetRowNew(index int) Object {
 	row := s.Rows[index]
 	row.Uplink = &s
 	return row
 }
 
-func (s Spreadsheet) GetRowValue(column string, rrow SpreadsheetRow) (any, error) {
+func (s Table) GetRowValue(column string, rrow TableRow) (any, error) {
 	index := -1
 	for i, v := range s.Cols {
 		if v == column {
@@ -282,39 +282,39 @@ func (s Spreadsheet) GetRowValue(column string, rrow SpreadsheetRow) (any, error
 }
 
 // Type returns the type of the Integer.
-func (s Spreadsheet) Type() Type {
-	return SpreadsheetType
+func (s Table) Type() Type {
+	return TableType
 }
 
 // Inspect returns a string
-func (s Spreadsheet) Inspect(e Idxs) string {
+func (s Table) Inspect(e Idxs) string {
 	rows := strconv.Itoa(len(s.Rows))
 	var kindStr string
 	//fmt.Println(s.GetKind())
-	if s.GetKind() != int(SpreadsheetType) {
+	if s.GetKind() != int(TableType) {
 		kindStr = " of kind " + s.Kind.Print(e)
 	}
-	return "[Spreadsheet(" + strconv.Itoa(len(s.Cols)) + " " + rows + ")" + kindStr + "]"
+	return "[Table(" + strconv.Itoa(len(s.Cols)) + " " + rows + ")" + kindStr + "]"
 }
 
 // Inspect returns a string representation of the Integer.
-func (s Spreadsheet) Print(e Idxs) string {
+func (s Table) Print(e Idxs) string {
 	return s.ToTxt()
 }
 
-func (s Spreadsheet) Trace(msg string) {
-	fmt.Print(msg + " (spreadsheet): ")
+func (s Table) Trace(msg string) {
+	fmt.Print(msg + " (table): ")
 }
 
-func (s Spreadsheet) GetKind() int {
-	return int(SpreadsheetType)
+func (s Table) GetKind() int {
+	return int(TableType)
 }
 
-func (s Spreadsheet) Equal(o Object) bool {
+func (s Table) Equal(o Object) bool {
 	if s.Type() != o.Type() {
 		return false
 	}
-	oSpr := o.(Spreadsheet)
+	oSpr := o.(Table)
 	if len(s.Cols) != len(oSpr.Cols) {
 		return false
 	}
@@ -348,9 +348,9 @@ func (s Spreadsheet) Equal(o Object) bool {
 	return true
 }
 
-func (s Spreadsheet) Dump(e Idxs) string {
+func (s Table) Dump(e Idxs) string {
 	var sb strings.Builder
-	sb.WriteString("spreadsheet {")
+	sb.WriteString("table {")
 
 	for _, col := range s.Cols {
 		sb.WriteString(" ")
@@ -379,27 +379,27 @@ func (s Spreadsheet) Dump(e Idxs) string {
 	return sb.String()
 }
 
-func (s SpreadsheetRow) GetKind() int {
+func (s TableRow) GetKind() int {
 	return int(0)
 }
 
 // Inspect returns a string
-func (s SpreadsheetRow) Inspect(e Idxs) string {
-	return "[SpreadsheetRow(" + strconv.Itoa(len(s.Values)) + ")" + "]"
+func (s TableRow) Inspect(e Idxs) string {
+	return "[TableRow(" + strconv.Itoa(len(s.Values)) + ")" + "]"
 }
 
 // Inspect returns a string representation of the Integer.
-func (s SpreadsheetRow) Print(e Idxs) string {
+func (s TableRow) Print(e Idxs) string {
 	return s.ToTxt()
 }
 
-// Do not use when comparing a spreadsheet as a whole
+// Do not use when comparing a table as a whole
 // because column ordering is not guaranteed
-func (s SpreadsheetRow) Equal(o Object) bool {
+func (s TableRow) Equal(o Object) bool {
 	if s.Type() != o.Type() {
 		return false
 	}
-	oSprRow := o.(SpreadsheetRow)
+	oSprRow := o.(TableRow)
 	if len(s.Values) != len(oSprRow.Values) {
 		return false
 	}
@@ -420,12 +420,12 @@ func (s SpreadsheetRow) Equal(o Object) bool {
 	return true
 }
 
-func (s SpreadsheetRow) Dump(e Idxs) string {
+func (s TableRow) Dump(e Idxs) string {
 	// TODO
 	return fmt.Sprintf("\"serlization of %s is not yet supported\" ", s.Inspect(e))
 }
 
-func (s SpreadsheetRow) ToTxt() string {
+func (s TableRow) ToTxt() string {
 	var bu strings.Builder
 	bu.WriteString("[ ")
 	for i, val := range s.Values {
@@ -438,16 +438,16 @@ func (s SpreadsheetRow) ToTxt() string {
 	return bu.String()
 }
 
-func (s SpreadsheetRow) Trace(msg string) {
-	fmt.Print(msg + " (spreadsheet): ")
+func (s TableRow) Trace(msg string) {
+	fmt.Print(msg + " (table): ")
 }
 
 // Type returns the type of the Integer.
-func (s SpreadsheetRow) Type() Type {
-	return SpreadsheetRowType
+func (s TableRow) Type() Type {
+	return TableRowType
 }
 
-func (s SpreadsheetRow) ToDict() Dict {
+func (s TableRow) ToDict() Dict {
 	ser := make([]string, len(s.Values))
 	for i, v := range s.Values {
 		ser[i] = fmt.Sprint(v)
@@ -459,7 +459,7 @@ func (s SpreadsheetRow) ToDict() Dict {
 	return *d
 }
 
-func (s Spreadsheet) GetColumns() List {
+func (s Table) GetColumns() List {
 	lst := make([]any, len(s.Cols))
 	for i, v := range s.Cols {
 		lst[i] = v
@@ -467,7 +467,7 @@ func (s Spreadsheet) GetColumns() List {
 	return *NewList(lst)
 }
 
-func (s Spreadsheet) GetColumnIndex(column string) int {
+func (s Table) GetColumnIndex(column string) int {
 	index := -1
 	for i, v := range s.Cols {
 		if v == column {

@@ -14,7 +14,7 @@ read\bytes %petcare_1000x.bson |fix\either {
 	read %petcare.txt
 	|split newline
 	|purge { .length? = 0 } :lines1
-	|spreadsheet* { "text" }
+	|table* { "text" }
 	|display
 	|pass-print "Creating embeddings ..."
 	|gen-col 'embedding { text } { .create-embeddings* ai }

@@ -219,14 +219,14 @@ var Builtins_os = map[string]*env.Builtin{
 	},
 	"users?": {
 		Argsn: 0,
-		Doc:   "Get information about users as a spreadsheet.",
+		Doc:   "Get information about users as a table.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			users, err := host.Users()
 			if err != nil {
 				return MakeBuiltinError(ps, err.Error(), "users?")
 			}
 			fmt.Println(users)
-			s := env.NewSpreadsheet([]string{"User", "Terminal", "Host", "Started"})
+			s := env.NewTable([]string{"User", "Terminal", "Host", "Started"})
 			for _, user := range users {
 				vals := []any{
 					*env.NewString(user.User),
@@ -234,7 +234,7 @@ var Builtins_os = map[string]*env.Builtin{
 					*env.NewString(user.Host),
 					*env.NewInteger(int64(user.Started)),
 				}
-				s.AddRow(*env.NewSpreadsheetRow(vals, s))
+				s.AddRow(*env.NewTableRow(vals, s))
 			}
 			return *s
 		},
@@ -271,13 +271,13 @@ var Builtins_os = map[string]*env.Builtin{
 	},
 	"disk-usage?": {
 		Argsn: 0,
-		Doc:   "Get disk usage information as a spreadsheet.",
+		Doc:   "Get disk usage information as a table.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			partitions, err := disk.Partitions(true)
 			if err != nil {
 				return MakeBuiltinError(ps, err.Error(), "disk-usage?")
 			}
-			s := env.NewSpreadsheet([]string{"Filesystem", "Size", "Used", "Available", "Capacity", "iused", "ifree", "%iused", "Mounted on"})
+			s := env.NewTable([]string{"Filesystem", "Size", "Used", "Available", "Capacity", "iused", "ifree", "%iused", "Mounted on"})
 			for _, partition := range partitions {
 				usage, err := disk.Usage(partition.Mountpoint)
 				if err != nil {
@@ -294,7 +294,7 @@ var Builtins_os = map[string]*env.Builtin{
 					*env.NewInteger(int64(usage.InodesUsedPercent)),
 					*env.NewString(usage.Path),
 				}
-				s.AddRow(*env.NewSpreadsheetRow(vals, s))
+				s.AddRow(*env.NewTableRow(vals, s))
 			}
 			return *s
 		},
@@ -317,15 +317,15 @@ var Builtins_os = map[string]*env.Builtin{
 	},
 	"processes?": {
 		Argsn: 0,
-		Doc:   "Get information about all processes as a spreadsheet.",
+		Doc:   "Get information about all processes as a table.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			processes, err := process.Processes()
 			if err != nil {
 				return MakeBuiltinError(ps, err.Error(), "processes?")
 			}
-			s := proccesSpreadsheetBase()
+			s := proccesTableBase()
 			for _, process := range processes {
-				processSpreadsheetAdd(s, process)
+				processTableAdd(s, process)
 			}
 			return *s
 		},
@@ -340,8 +340,8 @@ var Builtins_os = map[string]*env.Builtin{
 				if err != nil {
 					return MakeBuiltinError(ps, err.Error(), "process")
 				}
-				s := proccesSpreadsheetBase()
-				processSpreadsheetAdd(s, process)
+				s := proccesTableBase()
+				processTableAdd(s, process)
 				return s.Rows[0].ToDict()
 			default:
 				return *MakeArgError(ps, 1, []env.Type{env.IntegerType}, "process")
@@ -425,8 +425,8 @@ var Builtins_os = map[string]*env.Builtin{
 	},
 }
 
-func proccesSpreadsheetBase() *env.Spreadsheet {
-	return env.NewSpreadsheet([]string{
+func proccesTableBase() *env.Table {
+	return env.NewTable([]string{
 		"User",
 		"PID",
 		"Status",
@@ -444,7 +444,7 @@ func proccesSpreadsheetBase() *env.Spreadsheet {
 	})
 }
 
-func processSpreadsheetAdd(s *env.Spreadsheet, process *process.Process) {
+func processTableAdd(s *env.Table, process *process.Process) {
 	var status env.String
 	stat, err := process.Status()
 	if err == nil {
@@ -513,7 +513,7 @@ func processSpreadsheetAdd(s *env.Spreadsheet, process *process.Process) {
 		cpuTime,
 		maybeString(process.Cmdline),
 	}
-	s.AddRow(*env.NewSpreadsheetRow(vals, s))
+	s.AddRow(*env.NewTableRow(vals, s))
 }
 
 func maybeString(f func() (string, error)) env.Object {

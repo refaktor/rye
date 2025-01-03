@@ -67,12 +67,12 @@ func RyeToJSON(res any) string {
 		return VectorToJSON(v)
 	case env.Dict:
 		return DictToJSON(v)
-	case *env.Spreadsheet:
-		return SpreadsheetToJSON(*v)
-	case env.Spreadsheet:
-		return SpreadsheetToJSON(v)
-	case env.SpreadsheetRow:
-		return SpreadsheetRowToJSON(v)
+	case *env.Table:
+		return TableToJSON(*v)
+	case env.Table:
+		return TableToJSON(v)
+	case env.TableRow:
+		return TableRowToJSON(v)
 	case *env.Error:
 		status := ""
 		if v.Status != 0 {
@@ -103,8 +103,8 @@ func RyeToJSON(res any) string {
 func RyeToJSONLines(res any) string {
 	// fmt.Printf("Type: %T", res)
 	switch v := res.(type) {
-	case env.Spreadsheet:
-		return SpreadsheetToJSONLines(v)
+	case env.Table:
+		return TableToJSONLines(v)
 	case *env.Error:
 		status := ""
 		if v.Status != 0 {
@@ -183,7 +183,7 @@ func DictToJSON(dict env.Dict) string {
 }
 
 // Inspect returns a string representation of the Integer.
-func SpreadsheetRowToJSON(row env.SpreadsheetRow) string {
+func TableRowToJSON(row env.TableRow) string {
 	var bu strings.Builder
 	bu.WriteString("{")
 	for i, val := range row.Values {
@@ -200,7 +200,7 @@ func SpreadsheetRowToJSON(row env.SpreadsheetRow) string {
 }
 
 // Inspect returns a string representation of the Integer.
-func SpreadsheetToJSON(s env.Spreadsheet) string {
+func TableToJSON(s env.Table) string {
 	//fmt.Println("IN TO Html")
 	var bu strings.Builder
 	bu.WriteString("[")
@@ -209,19 +209,19 @@ func SpreadsheetToJSON(s env.Spreadsheet) string {
 		if i > 0 {
 			bu.WriteString(", ")
 		}
-		bu.WriteString(SpreadsheetRowToJSON(row))
+		bu.WriteString(TableRowToJSON(row))
 	}
 	bu.WriteString("]")
 	//fmt.Println(bu.String())
 	return bu.String()
 }
 
-func SpreadsheetToJSONLines(s env.Spreadsheet) string {
+func TableToJSONLines(s env.Table) string {
 	//fmt.Println("IN TO Html")
 	var bu strings.Builder
 	//fmt.Println(len(s.Rows))
 	for _, row := range s.Rows {
-		bu.WriteString(SpreadsheetRowToJSON(row))
+		bu.WriteString(TableRowToJSON(row))
 		bu.WriteString("\n")
 	}
 	//fmt.Println(bu.String())

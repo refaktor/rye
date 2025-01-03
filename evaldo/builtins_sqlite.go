@@ -112,10 +112,10 @@ var Builtins_sqlite = map[string]*env.Builtin{
 		Doc:   "Converting to html.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
-			case env.Spreadsheet:
+			case env.Table:
 				return *env.NewString(str.ToHtml())
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "htmlize")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "htmlize")
 			}
 
 		},
@@ -188,14 +188,14 @@ var Builtins_sqlite = map[string]*env.Builtin{
 						return MakeBuiltinError(ps, err.Error(), "Rye-sqlite//query")
 					}
 					columns, _ := rows.Columns()
-					spr := env.NewSpreadsheet(columns)
+					spr := env.NewTable(columns)
 					// result := make([]map[string]any, 0)
 					if err != nil {
 						fmt.Println(err.Error())
 					} else {
 						cols, _ := rows.Columns()
 						for rows.Next() {
-							var sr env.SpreadsheetRow
+							var sr env.TableRow
 							columns := make([]any, len(cols))
 							columnPointers := make([]any, len(cols))
 							for i := range columns {
@@ -223,7 +223,7 @@ var Builtins_sqlite = map[string]*env.Builtin{
 						rows.Close() //good habit to close
 						//fmt.Println("+++++")
 						//fmt.Print(result)
-						// return *env.NewNative(ps.Idx, *spr, "Rye-spreadsheet")
+						// return *env.NewNative(ps.Idx, *spr, "Rye-table")
 						return *spr
 					}
 					return MakeBuiltinError(ps, "Empty SQL.", "Rye-sqlite//query")

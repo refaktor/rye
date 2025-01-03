@@ -37,7 +37,7 @@ some general conventions everyone is already used to.
 * **Adjectives** usually return boolean results (is-hot, is-cold, is-red) and start with "is-"
 * **Nouns** starting with "is-" also return boolean result (is-integer, is-email, is-zero)
 * **Nouns** ending with **?** stand for **get-**. Usually it's used when a **noun** is a property (length?, color?, age?)
-* **Nouns** that are types or kinds in the language are constructors (fn, context, dict, list, spreadsheet)
+* **Nouns** that are types or kinds in the language are constructors (fn, context, dict, list, table)
 
 More conventions
   
@@ -123,7 +123,7 @@ Blocks are like lists or arrays, but also all Rye code lives in blocks and you s
 
 Context is another datatypes of Rye that is heavily used by the language itself. All code is executed in a context. 
 
-## Spreadsheet datatype
+## Table datatype
 
 Some languages claim that they are high level languages. I claim for Rye, that it's even higher (than usual) level language. For one, if language want's to be higher level it should also have higher level structures. Higher 
 usually means more towards the human. So I believe structures should also be speaking more about human's view on information, than some computer science concept ...

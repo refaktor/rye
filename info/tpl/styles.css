@@ -1,0 +1,50 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+.container {
+    display: flex;
+    height: 100vh;
+}
+
+.sidebar {
+    width: 300px; /* Adjust as needed */
+    overflow-y: auto; /* Makes the sidebar scrollable when content exceeds viewport height */
+    background-color: #f0f0f0;
+}
+
+.sidebar ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.sidebar li {
+    padding: 10px;
+}
+
+.sidebar p , .sidebar h3 {
+    padding: 5px 30px;
+}
+
+.sidebar a {
+    text-decoration: none;
+    color: #333;
+}
+
+.content {
+    flex: 1; /* Takes up the remaining space */
+    overflow-y: auto; /* Makes the main area scrollable when content exceeds viewport height */
+    padding: 20px;
+}
+
+/* Basic responsive design */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+    .sidebar {
+        width: 100%;
+    }
+}

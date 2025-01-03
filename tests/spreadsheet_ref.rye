@@ -1,12 +1,12 @@
-section "spreadsheet ref"
-"Functions that mutate refed spreadsheets"
+section "table ref"
+"Functions that mutate refed tables"
 {
 
     comment "add-row!" "add-row!" 
     { { block } }
     {
         equal {
-			spreadsheet { "title"  "isbn" "price" "quantity" }
+			table { "title"  "isbn" "price" "quantity" }
 			{
 				"Do Androids Dream of Electric Sheep?" "9781608866403" 12.99 4
 				"Animal Farm" "9780151002177" 2.49 10
@@ -35,14 +35,14 @@ section "spreadsheet ref"
     { { block } }
     {
 		equal {
-			spreadsheet { "a" "b" } { 1 10 2 20 3 30 } |is-ref
+			table { "a" "b" } { 1 10 2 20 3 30 } |is-ref
 		} false
 	}
 	group "ref" "" 
     { { block } }
     {
 		equal {
-			spr1: ref spreadsheet { "a" "b" } { 1 10 2 20 3 30 }
+			spr1: ref table { "a" "b" } { 1 10 2 20 3 30 }
 			spr1 .is-ref
 		} true
 	}

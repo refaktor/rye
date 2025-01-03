@@ -40,13 +40,13 @@ const (
 	CPathType          Type = 24
 	XwordType          Type = 25
 	EXwordType         Type = 26
-	SpreadsheetType    Type = 27
+	TableType    Type = 27
 	EmailType          Type = 28
 	KindType           Type = 29
 	KindwordType       Type = 30
 	ConverterType      Type = 31
 	TimeType           Type = 32
-	SpreadsheetRowType Type = 33
+	TableRowType Type = 33
 	DecimalType        Type = 34
 	VectorType         Type = 35
 	OpCPathType        Type = 36

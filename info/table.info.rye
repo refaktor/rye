@@ -1,5 +1,4 @@
-section "base" "base text" {
-
+section "Default" "" {
 	group "table" 
 	""
 	{
@@ -12,7 +11,7 @@ section "base" "base text" {
 		equal { table { 'a } { 1 2 } |type? } 'table
 	}
 
-	group "table\\columns" 
+	group "table\columns" 
 	""
 	{
 		arg "* columns - names of the columns"
@@ -26,7 +25,7 @@ section "base" "base text" {
 		table\columns { 'a 'b } { { 1 2 } { "x" "y" } }
 	}
 
-	group "table\\rows" 
+	group "table\rows" 
 	""
 	{
 		arg "* columns - names of the columns"
@@ -145,7 +144,7 @@ section "base" "base text" {
 		} 2
 	}
 
-	group "load\\csv" 
+	group "load\csv" 
 	""
 	{
 		arg "* file-uri - location of csv file to load"
@@ -163,7 +162,7 @@ section "base" "base text" {
 		} true
 	}
 
-	group "save\\csv" 
+	group "save\csv" 
 	""
 	{
 		arg "* sheet    - the sheet to save"
@@ -182,7 +181,7 @@ section "base" "base text" {
 		} true
 	}
 
-	group "load\\xlsx" 
+	group "load\xlsx" 
 	""
 	{
 		arg "* file-uri - location of xlsx file to load"
@@ -200,7 +199,7 @@ section "base" "base text" {
 		} true
 	}
 
-	group "save\\xlsx" 
+	group "save\xlsx" 
 	""
 	{
 		arg "* table    - the table to save"

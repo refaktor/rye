@@ -1,7 +1,7 @@
 
 rye
 
-spr: new-spreadsheet { "name" "score" } { "Jim" 120  "Anne" 230 "Bob" 140 }
+spr: new-table { "name" "score" } { "Jim" 120  "Anne" 230 "Bob" 140 }
 |display
 ; | name   | score |
 ; +----------------+
