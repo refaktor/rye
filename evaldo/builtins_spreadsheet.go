@@ -1,4 +1,4 @@
-// SECTION: Core/spreadsheets
+// SECTION: Core/tables
 
 package evaldo
 
@@ -17,26 +17,26 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
-var Builtins_spreadsheet = map[string]*env.Builtin{
+var Builtins_table = map[string]*env.Builtin{
 
 	// Tests:
-	//  equal { spreadsheet { "a" } { 1 2 } |type? } 'spreadsheet
-	//  equal { spreadsheet { 'a } { 1 2 } |type? } 'spreadsheet
+	//  equal { table { "a" } { 1 2 } |type? } 'table
+	//  equal { table { 'a } { 1 2 } |type? } 'table
 	// Args:
 	//  * columns
 	//  * data
-	"spreadsheet": {
+	"table": {
 		Argsn: 2,
-		Doc:   "Creates a spreadsheet by accepting block of column names and flat block of values",
+		Doc:   "Creates a table by accepting block of column names and flat block of values",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch header1 := arg0.(type) {
 			case env.Block:
 				hlen := header1.Series.Len()
-				cols, err := ColNames(ps, header1, "spreadsheet")
+				cols, err := ColNames(ps, header1, "table")
 				if err != nil {
 					return err
 				}
-				spr := env.NewSpreadsheet(cols)
+				spr := env.NewTable(cols)
 				switch data1 := arg1.(type) {
 				case env.Block:
 					rdata := data1.Series.S
@@ -47,7 +47,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 							for ii := 0; ii < hlen; ii++ {
 								rowd[ii] = rdata[i*hlen+ii]
 							}
-							spr.AddRow(*env.NewSpreadsheetRow(rowd, spr))
+							spr.AddRow(*env.NewTableRow(rowd, spr))
 						}
 					}
 					return *spr
@@ -58,11 +58,11 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 						for ii := 0; ii < hlen; ii++ {
 							rowd[ii] = rdata[i*hlen+ii]
 						}
-						spr.AddRow(*env.NewSpreadsheetRow(rowd, spr))
+						spr.AddRow(*env.NewTableRow(rowd, spr))
 					}
 					return *spr
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "spreadsheet")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "table")
 				}
 				/* for data.Pos() < data.Len() {
 					rowd := make([]any, header.Len())
@@ -70,48 +70,48 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 						k1 := data.Pop()
 						rowd[ii] = k1
 					}
-					spr.AddRow(*env.NewSpreadsheetRow(rowd, spr))
+					spr.AddRow(*env.NewTableRow(rowd, spr))
 				} */
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "spreadsheet")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "table")
 			}
 		},
 	},
 	// Tests:
-	//  equal { spreadsheet\columns { "a" } { { 1 2 3 } } |type? } 'spreadsheet
-	//  equal { spreadsheet\columns { "a" "b" } { { 1 2 3 } { 4 5 6 } } |length? } 3
+	//  equal { table\columns { "a" } { { 1 2 3 } } |type? } 'table
+	//  equal { table\columns { "a" "b" } { { 1 2 3 } { 4 5 6 } } |length? } 3
 	// Example:
-	//  spreadsheet\columns { 'a 'b } { { 1 2 } { "x" "y" } }
+	//  table\columns { 'a 'b } { { 1 2 } { "x" "y" } }
 	// Args:
 	//  * columns - names of the columns
 	//  * data - block or list of columns (each column is a block or list)
-	"spreadsheet\\columns": {
+	"table\\columns": {
 		Argsn: 2,
-		Doc:   "Creats a spreadsheet by accepting a block of columns",
+		Doc:   "Creats a table by accepting a block of columns",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			return SheetFromColumns(ps, arg0, arg1)
 		},
 	},
 
 	// Tests:
-	//  equal { spreadsheet\rows { 'a 'b } { { 1 2 } { 3 4 } } } spreadsheet { 'a 'b } { 1 2 3 4 }
-	//  equal { spreadsheet\rows { 'a 'b } list [ list [ 1 2 ] list [ 3 4 ] ] |type? } 'spreadsheet
+	//  equal { table\rows { 'a 'b } { { 1 2 } { 3 4 } } } table { 'a 'b } { 1 2 3 4 }
+	//  equal { table\rows { 'a 'b } list [ list [ 1 2 ] list [ 3 4 ] ] |type? } 'table
 	// Args:
 	//  * columns - names of the columns
 	//  * data - block or list of rows (each row is a block or list)
-	"spreadsheet\\rows": {
+	"table\\rows": {
 		Argsn: 2,
-		Doc:   "Creates a spreadsheet by accepting a block or list of rows",
+		Doc:   "Creates a table by accepting a block or list of rows",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
-			cols, err := ColNames(ps, arg0, "spreadsheet\\rows	")
+			cols, err := ColNames(ps, arg0, "table\\rows	")
 			if err != nil {
 				return err
 			}
-			spr := env.NewSpreadsheet(cols)
+			spr := env.NewTable(cols)
 			switch rows := arg1.(type) {
 			case env.Block:
 				for _, objRow := range rows.Series.S {
-					row, err := SpreadsheetRowsFromBlockOrList(ps, spr, len(cols), objRow)
+					row, err := TableRowsFromBlockOrList(ps, spr, len(cols), objRow)
 					if err != nil {
 						return err
 					}
@@ -120,7 +120,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 				return *spr
 			case env.List:
 				for _, listRow := range rows.Data {
-					row, err := SpreadsheetRowsFromBlockOrList(ps, spr, len(cols), listRow)
+					row, err := TableRowsFromBlockOrList(ps, spr, len(cols), listRow)
 					if err != nil {
 						return err
 					}
@@ -128,23 +128,23 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 				}
 				return *spr
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.BlockType, env.ListType}, "spreadsheet\\rows")
+				return MakeArgError(ps, 2, []env.Type{env.BlockType, env.ListType}, "table\\rows")
 			}
 		},
 	},
 	// Tests:
-	//  equal { to-spreadsheet list [ dict { "a" 1 } dict { "a" b } ] |type? } 'spreadsheet
+	//  equal { to-table list [ dict { "a" 1 } dict { "a" b } ] |type? } 'table
 	// Args:
 	//  * data
-	"to-spreadsheet": {
+	"to-table": {
 		Argsn: 1,
-		Doc:   "Creates a spreadsheet by accepting block or list of dicts",
+		Doc:   "Creates a table by accepting block or list of dicts",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			switch block := arg0.(type) {
 			case env.Block:
 				data := block.Series
 				if data.Len() == 0 {
-					return MakeBuiltinError(ps, "Block is empty", "to-spreadsheet")
+					return MakeBuiltinError(ps, "Block is empty", "to-table")
 				}
 				k := make(map[string]struct{})
 				for _, obj := range data.S {
@@ -154,14 +154,14 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 							k[key] = struct{}{}
 						}
 					default:
-						return MakeBuiltinError(ps, "Block must contain only dicts", "to-spreadsheet")
+						return MakeBuiltinError(ps, "Block must contain only dicts", "to-table")
 					}
 				}
 				var keys []string
 				for key := range k {
 					keys = append(keys, key)
 				}
-				spr := env.NewSpreadsheet(keys)
+				spr := env.NewTable(keys)
 				for _, obj := range data.S {
 					switch dict := obj.(type) {
 					case env.Dict:
@@ -173,7 +173,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 							}
 							row[i] = data
 						}
-						spr.AddRow(*env.NewSpreadsheetRow(row, spr))
+						spr.AddRow(*env.NewTableRow(row, spr))
 					}
 				}
 				return *spr
@@ -181,7 +181,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 			case env.List:
 				data := block.Data
 				if len(data) == 0 {
-					return MakeBuiltinError(ps, "List is empty", "to-spreadsheet")
+					return MakeBuiltinError(ps, "List is empty", "to-table")
 				}
 				k := make(map[string]struct{})
 				for _, obj := range data {
@@ -195,14 +195,14 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 							k[key] = struct{}{}
 						}
 					default:
-						return MakeBuiltinError(ps, "List must contain only dicts", "to-spreadsheet")
+						return MakeBuiltinError(ps, "List must contain only dicts", "to-table")
 					}
 				}
 				var keys []string
 				for key := range k {
 					keys = append(keys, key)
 				}
-				spr := env.NewSpreadsheet(keys)
+				spr := env.NewTable(keys)
 				for _, obj := range data {
 					row := make([]any, len(keys))
 					switch dict := obj.(type) {
@@ -214,7 +214,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 							}
 							row[i] = data
 						}
-						spr.AddRow(*env.NewSpreadsheetRow(row, spr))
+						spr.AddRow(*env.NewTableRow(row, spr))
 					case env.Dict:
 						row := make([]any, len(keys))
 						for i, key := range keys {
@@ -224,37 +224,37 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 							}
 							row[i] = data
 						}
-						spr.AddRow(*env.NewSpreadsheetRow(row, spr))
+						spr.AddRow(*env.NewTableRow(row, spr))
 					}
 				}
 				return *spr
 
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "to-spreadsheet")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "to-table")
 			}
 		},
 	},
 
 	// Tests:
 	//  equal {
-	//	 spreadsheet { "a" "b" } { 6 60 7 70 } |add-row { 8 80 } -> 2 -> "b"
+	//	 table { "a" "b" } { 6 60 7 70 } |add-row { 8 80 } -> 2 -> "b"
 	//  } 80
 	// Args:
 	// * sheet
 	// * new-row
 	"add-row": {
 		Argsn: 2,
-		Doc:   "Returns a spreadsheet with new-row added to it",
+		Doc:   "Returns a table with new-row added to it",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch table := arg0.(type) {
-			case env.Spreadsheet:
+			case env.Table:
 				switch bloc := arg1.(type) {
 				case env.Block:
 					vals := make([]any, bloc.Series.Len())
 					for i := 0; i < bloc.Series.Len(); i++ {
 						vals[i] = bloc.Series.Get(i)
 					}
-					table.AddRow(*env.NewSpreadsheetRow(vals, &table))
+					table.AddRow(*env.NewTableRow(vals, &table))
 					return table
 				}
 				return nil
@@ -265,8 +265,8 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 
 	// Tests:
 	//  equal {
-	//	 spreadsheet { "a" "b" } { 6 60 7 70 } |get-rows |type?
-	//  } 'spreadsheet-row
+	//	 table { "a" "b" } { 6 60 7 70 } |get-rows |type?
+	//  } 'table-row
 	// Args:
 	// * sheet
 	"get-rows": {
@@ -274,39 +274,39 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		Doc:   "Get rows as a native. This value can be used in `add-rows` and `add-rows!`",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
-			case env.Spreadsheet:
+			case env.Table:
 				rows := spr.GetRows()
-				return *env.NewNative(ps.Idx, rows, "spreadsheet-rows")
+				return *env.NewNative(ps.Idx, rows, "table-rows")
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "get-rows")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "get-rows")
 			}
 		},
 	},
 
-	// Add one or more rows to a spreadsheet, returning a new spreadsheet
+	// Add one or more rows to a table, returning a new table
 	// The `rows` argument can take one of two types:
 	// 1) a block that has one or more rows worth of data.
 	// This is given as a single flat collection. This means that if your
 	//  sheet has `NumColumns` columns, your block should have `NumColumns * NumRows` values.
-	// 2) A native that is a slice of SpreadsheetRows, like the value returned from `get-rows`
+	// 2) A native that is a slice of TableRows, like the value returned from `get-rows`
 	// Tests:
 	//  equal {
-	//	 ref spreadsheet { "a" "b" } { 6 60 7 70 } :sheet
+	//	 ref table { "a" "b" } { 6 60 7 70 } :sheet
 	//   sheet .deref |add-rows [ 3 30 ] |length?
 	//  } 3
 	//  equal {
-	//	 ref spreadsheet { "a" "b" } { 1 80 2 90 } :sheet
+	//	 ref table { "a" "b" } { 1 80 2 90 } :sheet
 	//   sheet .deref |add-rows { 3 30 } |length?
 	//  } 3
 	// Args:
 	// * sheet - the sheet that is getting rows added to it
-	// * rows - a block containing one or more rows worth of values, or a SpreadsheetRow Native value
+	// * rows - a block containing one or more rows worth of values, or a TableRow Native value
 	"add-rows": {
 		Argsn: 2,
-		Doc:   "Add one or more rows to a spreadsheet",
+		Doc:   "Add one or more rows to a table",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
-			case env.Spreadsheet:
+			case env.Table:
 				switch data1 := arg1.(type) {
 				case env.Block:
 					data := data1.Series
@@ -316,7 +316,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 							k1 := data.Pop()
 							rowd[ii] = k1
 						}
-						spr.AddRow(*env.NewSpreadsheetRow(rowd, &spr))
+						spr.AddRow(*env.NewTableRow(rowd, &spr))
 					}
 					return spr
 				case env.List:
@@ -327,40 +327,40 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 							k1 := item
 							rowd[ii] = k1
 						}
-						spr.AddRow(*env.NewSpreadsheetRow(rowd, &spr))
+						spr.AddRow(*env.NewTableRow(rowd, &spr))
 					}
 					return spr
 				case env.Native:
-					spr.Rows = append(spr.Rows, data1.Value.([]env.SpreadsheetRow)...)
+					spr.Rows = append(spr.Rows, data1.Value.([]env.TableRow)...)
 					return spr
 				default:
 					fmt.Println(data1.Inspect(*ps.Idx))
 					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.NativeType}, "add-rows")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "add-rows")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "add-rows")
 			}
 		},
 	},
 
-	// Add one or more rows to a spreadsheet ref. Works similarly to `add-rows`, but
-	// modified the spreadsheet ref instead of returning a new copy
+	// Add one or more rows to a table ref. Works similarly to `add-rows`, but
+	// modified the table ref instead of returning a new copy
 	// of the spreasheet
 	// Tests:
 	//  equal {
-	//	 ref spreadsheet { "a" "b"  } { 1 10 2 20 } :sheet
+	//	 ref table { "a" "b"  } { 1 10 2 20 } :sheet
 	//   sheet .add-rows! [ 3 30 ] sheet .deref .length?
 	//  } 3
 	// Args:
 	// * sheet - the reference to the sheet that is getting rows added to it
-	// * rows - a block containing one or more rows worth of values, or a SpreadsheetRow Native value
+	// * rows - a block containing one or more rows worth of values, or a TableRow Native value
 	// Tags: #spreasheet #mutation
 	"add-rows!": {
 		Argsn: 2,
-		Doc:   "Add one or more rows to a spreadsheet ref",
+		Doc:   "Add one or more rows to a table ref",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
-			case *env.Spreadsheet:
+			case *env.Table:
 				switch data1 := arg1.(type) {
 				case env.Block:
 					data := data1.Series
@@ -370,65 +370,65 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 							k1 := data.Pop()
 							rowd[ii] = k1
 						}
-						spr.AddRow(*env.NewSpreadsheetRow(rowd, spr))
+						spr.AddRow(*env.NewTableRow(rowd, spr))
 					}
 					return spr
 				case env.Native:
-					spr.Rows = append(spr.Rows, data1.Value.([]env.SpreadsheetRow)...)
+					spr.Rows = append(spr.Rows, data1.Value.([]env.TableRow)...)
 					return spr
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.NativeType}, "add-rows!")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "add-rows!")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "add-rows!")
 			}
 		},
 	},
 
-	// Update the row at a given index. If given a dict or spreadsheet row, replace the row with that
+	// Update the row at a given index. If given a dict or table row, replace the row with that
 	// If given a function, pass the row, its index and replace the row with the return value from the
 	// function.
 	// Tests:
 	//  equal {
-	//	 spr1: ref spreadsheet { "a" "b" } { 1 10 2 20 }
+	//	 spr1: ref table { "a" "b" } { 1 10 2 20 }
 	//	 spr1 .update-row! 1 dict [ "a" 111 ]
 	//   spr1 .deref .A1
 	//  } 111
 	//  equal {
-	//	 spr1: ref spreadsheet { "a" "b" } { 1 10 2 20 }
+	//	 spr1: ref table { "a" "b" } { 1 10 2 20 }
 	//	 incrA: fn { row } { row + [ "a" ( "a" <- row ) + 9 ] }
 	//	   update-row! spr1 1 ?incrA
 	//     spr1 |deref |A1
 	//  } 10
 	// Args:
-	// * sheet-ref - A ref to a spreadsheet
+	// * sheet-ref - A ref to a table
 	// * idx - the index of the row to update, 1-based
-	// * updater - One of either a function, a dict, or a Spreadsheet Row
-	// Tags: #spreadsheet #mutation
+	// * updater - One of either a function, a dict, or a Table Row
+	// Tags: #table #mutation
 	"update-row!": {
-		Argsn: 3, // Spreadsheet, index function/dict
+		Argsn: 3, // Table, index function/dict
 		Doc:   `Update the row at the given index.`,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
-			case *env.Spreadsheet:
+			case *env.Table:
 				switch idx := arg1.(type) {
 				case env.Integer:
 					if idx.Value < 1 || (idx.Value-1) > int64(len(spr.Rows)) {
-						errMsg := fmt.Sprintf("update-row! called with row index %d, but spreadsheet only has %d rows", idx.Value, len(spr.Rows))
+						errMsg := fmt.Sprintf("update-row! called with row index %d, but table only has %d rows", idx.Value, len(spr.Rows))
 						return makeError(ps, errMsg)
 					}
 					switch updater := arg2.(type) {
 					case env.Function:
 						CallFunction(updater, ps, spr.Rows[idx.Value-1], false, ps.Ctx)
 						ret := ps.Res
-						if ok, err, row := RyeValueToSpreadsheetRow(spr, ret); ok {
+						if ok, err, row := RyeValueToTableRow(spr, ret); ok {
 							spr.Rows[idx.Value-1] = *row
 							return spr
 						} else if len(err) > 0 {
 							return makeError(ps, err)
 						} else {
 							return makeError(ps, fmt.Sprintf(
-								"Function given to update-row! should have returned a Dict or a SpreadsheetRow, but returned a %s %#v instead",
+								"Function given to update-row! should have returned a Dict or a TableRow, but returned a %s %#v instead",
 								NameOfRyeType(ret.Type()), ret,
 							))
 						}
@@ -444,11 +444,11 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 							row.Values[index] = val
 						}
 						return spr
-					case env.SpreadsheetRow:
+					case env.TableRow:
 						spr.Rows[idx.Value-1] = updater
 						return spr
 					default:
-						return MakeArgError(ps, 3, []env.Type{env.FunctionType, env.DictType, env.SpreadsheetRowType}, "update-row!")
+						return MakeArgError(ps, 3, []env.Type{env.FunctionType, env.DictType, env.TableRowType}, "update-row!")
 					}
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "update-row!")
@@ -461,33 +461,33 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	},
 	// Tests:
 	//  equal {
-	//   spr1: ref spreadsheet { "a" "b" } { 1 10 2 20 }
+	//   spr1: ref table { "a" "b" } { 1 10 2 20 }
 	//   spr1 .remove-row! 1
 	//   spr1 .deref .A1
 	//  } 2
 	// Args:
 	// * sheet-ref
 	// * row-idx - Index of row to remove, 1-based
-	// Tags: #spreadsheet #mutation
+	// Tags: #table #mutation
 	"remove-row!": {
 		Argsn: 2,
-		Doc:   "Remove a row from a spreadsheet by index",
+		Doc:   "Remove a row from a table by index",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
-			case *env.Spreadsheet:
+			case *env.Table:
 				switch data1 := arg1.(type) {
 				case env.Integer:
 					if data1.Value > 0 && data1.Value <= int64(len(spr.Rows)) {
 						spr.RemoveRowByIndex(data1.Value - 1)
 						return spr
 					} else {
-						return makeError(ps, fmt.Sprintf("Spreadsheet had less then %d rows", data1.Value))
+						return makeError(ps, fmt.Sprintf("Table had less then %d rows", data1.Value))
 					}
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.NativeType}, "remove-row!")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "remove-row!")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "remove-row!")
 			}
 		},
 	},
@@ -496,18 +496,18 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	//  equal {
 	//	 cc os
 	//   f: mktmp + "/test.csv"
-	//   spr1: spreadsheet { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+	//   spr1: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
 	//   spr1 .save\csv f
 	//   spr2: load\csv f |autotype 1.0
 	//   spr1 = spr2
 	//  } true
 	// Args:
 	// * file-uri - location of csv file to load
-	// Tags: #spreadsheet #loading #csv
+	// Tags: #table #loading #csv
 	"load\\csv": {
 		// TODO 2 -- this could move to a go function so it could be called by general load that uses extension to define the loader
 		Argsn: 1,
-		Doc:   "Loads a .csv file to a spreadsheet datatype.",
+		Doc:   "Loads a .csv file to a table datatype.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch file := arg0.(type) {
 			case env.Uri:
@@ -528,7 +528,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 				if len(rows) == 0 {
 					return MakeBuiltinError(ps, "File is empty", "load\\csv")
 				}
-				spr := env.NewSpreadsheet(rows[0])
+				spr := env.NewTable(rows[0])
 				//				for i, row := range rows {
 				//	if i > 0 {
 				//		anyRow := make([]any, len(row))
@@ -540,7 +540,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 						for i, v := range row {
 							anyRow[i] = *env.NewString(v)
 						}
-						spr.AddRow(*env.NewSpreadsheetRow(anyRow, spr))
+						spr.AddRow(*env.NewTableRow(anyRow, spr))
 					}
 				}
 				return *spr
@@ -554,7 +554,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	//  equal {
 	//	 cc os
 	//   f:: mktmp + "/test.csv"
-	//   spr1:: spreadsheet { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+	//   spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
 	//   spr1 .save\csv f
 	//   spr2:: load\csv f |autotype 1.0
 	//   spr1 = spr2
@@ -562,13 +562,13 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	// Args:
 	// * sheet    - the sheet to save
 	// * file-url - where to save the sheet as a .csv file
-	// Tags: #spreadsheet #saving #csv
+	// Tags: #table #saving #csv
 	"save\\csv": {
 		Argsn: 2,
-		Doc:   "Saves a spreadsheet to a .csv file.",
+		Doc:   "Saves a table to a .csv file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
-			case env.Spreadsheet:
+			case env.Table:
 				switch file := arg1.(type) {
 				case env.Uri:
 					// rows, err := db1.Value.(*sql.DB).Query(sqlstr, vals...)
@@ -632,17 +632,17 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	//  equal {
 	//	 cc os
 	//   f:: mktmp + "/test.xlsx"
-	//   spr1:: spreadsheet { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+	//   spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
 	//   spr1 .save\xlsx f
 	//   spr2:: load\xlsx f |autotype 1.0
 	//   spr1 = spr2
 	//  } true
 	// Args:
 	// * file-uri - location of xlsx file to load
-	// Tags: #spreadsheet #loading #xlsx
+	// Tags: #table #loading #xlsx
 	"load\\xlsx": {
 		Argsn: 1,
-		Doc:   "Loads the first sheet in an .xlsx file to a Spreadsheet.",
+		Doc:   "Loads the first sheet in an .xlsx file to a Table.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch file := arg0.(type) {
 			case env.Uri:
@@ -670,7 +670,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 				if len(header) == 0 {
 					return MakeBuiltinError(ps, "Header row is empty", "load\\xlsx")
 				}
-				spr := env.NewSpreadsheet(header)
+				spr := env.NewTable(header)
 				for rows.Next() {
 					row, err := rows.Columns()
 					if err != nil {
@@ -684,7 +684,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 					for i := len(row); i < len(spr.Cols); i++ {
 						anyRow[i] = *env.NewString("")
 					}
-					spr.AddRow(*env.NewSpreadsheetRow(anyRow, spr))
+					spr.AddRow(*env.NewTableRow(anyRow, spr))
 				}
 				return *spr
 			default:
@@ -697,21 +697,21 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	//  equal {
 	//	 cc os
 	//   f:: mktmp + "/test.xlsx"
-	//   spr1:: spreadsheet { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+	//   spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
 	//   spr1 .save\xlsx f
 	//   spr2:: load\xlsx f |autotype 1.0
 	//   spr1 = spr2
 	//  } true
 	// Args:
-	// * spreadsheet    - the spreadsheet to save
-	// * file-url 		- where to save the spreadsheet as a .xlsx file
-	// Tags: #spreadsheet #saving #xlsx
+	// * table    - the table to save
+	// * file-url 		- where to save the table as a .xlsx file
+	// Tags: #table #saving #xlsx
 	"save\\xlsx": {
 		Argsn: 2,
-		Doc:   "Saves a Spreadsheet to a .xlsx file.",
+		Doc:   "Saves a Table to a .xlsx file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
-			case env.Spreadsheet:
+			case env.Table:
 				switch file := arg1.(type) {
 				case env.Uri:
 					sheetName := "Sheet1"
@@ -743,7 +743,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 							case float64:
 								vals[j] = val
 							default:
-								return MakeBuiltinError(ps, fmt.Sprintf("Unable to save spreadsheet: unsupported type %T", val), "save\\xlsx")
+								return MakeBuiltinError(ps, fmt.Sprintf("Unable to save table: unsupported type %T", val), "save\\xlsx")
 							}
 						}
 						err = f.SetSheetRow(sheetName, fmt.Sprintf("A%d", rowIndex), &vals)
@@ -754,34 +754,34 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 					f.SetActiveSheet(index)
 					err = f.SaveAs(file.GetPath())
 					if err != nil {
-						return MakeBuiltinError(ps, fmt.Sprintf("Unable to save spreadsheet: %s", err), "save\\xlsx")
+						return MakeBuiltinError(ps, fmt.Sprintf("Unable to save table: %s", err), "save\\xlsx")
 					}
 					return spr
 				default:
 					return MakeArgError(ps, 1, []env.Type{env.UriType}, "save\\xlsx")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "save\\xlsx")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "save\\xlsx")
 			}
 		},
 	},
 
 	// Example: filtering for rows with the name "Enno"
-	//  sheet: spreadsheet { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" }
+	//  sheet: table { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" }
 	//  sheet .where-equal 'name "Enno"
 	// Tests:
-	//  equal { spreadsheet { 'a } { 1 2 3 2 } |where-equal "a" 2 |length? } 2
+	//  equal { table { 'a } { 1 2 3 2 } |where-equal "a" 2 |length? } 2
 	// Args:
 	// * sheet
 	// * column
 	// * value
-	// Tags: #filter #spreadsheets
+	// Tags: #filter #tables
 	"where-equal": {
 		Argsn: 3,
-		Doc:   "Returns spreadsheet of rows where specific colum is equal to given value.",
+		Doc:   "Returns table of rows where specific colum is equal to given value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
-			case *env.Spreadsheet:
+			case *env.Table:
 				switch col := arg1.(type) {
 				case env.Word:
 					return WhereEquals(ps, *spr, ps.Idx.GetWord(col.Index), arg2)
@@ -790,7 +790,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-equal")
 				}
-			case env.Spreadsheet:
+			case env.Table:
 				switch col := arg1.(type) {
 				case env.Word:
 					return WhereEquals(ps, spr, ps.Idx.GetWord(col.Index), arg2)
@@ -800,20 +800,20 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-equal")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "where-equal")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-equal")
 			}
 		},
 	},
 	// Args:
 	// * sheet
 	// * column
-	// Tags: #filter #spreadsheets
+	// Tags: #filter #tables
 	"where-void": {
 		Argsn: 2,
-		Doc:   "Returns spreadsheet of rows where specific colum is equal to given value.",
+		Doc:   "Returns table of rows where specific colum is equal to given value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
-			case *env.Spreadsheet:
+			case *env.Table:
 				switch col := arg1.(type) {
 				case env.Word:
 					return WhereEquals(ps, *spr, ps.Idx.GetWord(col.Index), env.NewVoid())
@@ -822,7 +822,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-equal")
 				}
-			case env.Spreadsheet:
+			case env.Table:
 				switch col := arg1.(type) {
 				case env.Word:
 					return WhereEquals(ps, spr, ps.Idx.GetWord(col.Index), env.NewVoid())
@@ -832,33 +832,33 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-equal")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "where-equal")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-equal")
 			}
 		},
 	},
 
 	// Tests:
-	//  equal { spreadsheet { 'a } { "1" "2" "a3" "2b" } |where-match 'a regexp "^[0-9]$" |length? } 2
+	//  equal { table { 'a } { "1" "2" "a3" "2b" } |where-match 'a regexp "^[0-9]$" |length? } 2
 	// Example: filting for names that start with "En"
-	//  sheet: spreadsheet { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" }
+	//  sheet: table { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" }
 	//  sheet .where-match 'name "En.+"
 	// Args:
 	// * sheet
 	// * column
 	// * regexp
-	// Tags: #filter #spreadsheets
+	// Tags: #filter #tables
 	"where-match": {
 		Argsn: 3,
-		Doc:   "Returns spreadsheet of rows where a specific colum matches a regex.",
+		Doc:   "Returns table of rows where a specific colum matches a regex.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
-			var spr *env.Spreadsheet
+			var spr *env.Table
 			switch sheet := arg0.(type) {
-			case env.Spreadsheet:
+			case env.Table:
 				spr = &sheet
-			case *env.Spreadsheet:
+			case *env.Table:
 				spr = sheet
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "where-match")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-match")
 			}
 			switch reNative := arg2.(type) {
 			case env.Native:
@@ -881,27 +881,27 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	//  equal { spreadsheet { 'a } { "1" "2" "a3" "2b" } |where-contains 'a "2" |length? } 2
+	//  equal { table { 'a } { "1" "2" "a3" "2b" } |where-contains 'a "2" |length? } 2
 	// Example: filting for names that contain "nn"
-	//  sheet: spreadsheet { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" "Benn" }
+	//  sheet: table { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" "Benn" }
 	//  sheet .where-contains 'name "nn"
 	// Args:
 	// * sheet
 	// * column
 	// * substring
-	// Tags: #filter #spreadsheets
+	// Tags: #filter #tables
 	"where-contains": {
 		Argsn: 3,
-		Doc:   "Returns spreadsheet of rows where specific colum contains a given string value.",
+		Doc:   "Returns table of rows where specific colum contains a given string value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
-			var spr *env.Spreadsheet
+			var spr *env.Table
 			switch sheet := arg0.(type) {
-			case env.Spreadsheet:
+			case env.Table:
 				spr = &sheet
-			case *env.Spreadsheet:
+			case *env.Table:
 				spr = sheet
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "where-match")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-match")
 			}
 			switch s := arg2.(type) {
 			case env.String:
@@ -920,27 +920,27 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	//  equal { spreadsheet { 'a } { "1" "2" "a3" "2b" } |where-not-contains 'a "3" |length? } 3
+	//  equal { table { 'a } { "1" "2" "a3" "2b" } |where-not-contains 'a "3" |length? } 3
 	// Example: filting for names that contain "nn"
-	//  sheet: spreadsheet { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" "Benn" }
+	//  sheet: table { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" "Benn" }
 	//  sheet .where-contains 'name "nn"
 	// Args:
 	// * sheet
 	// * column
 	// * substring
-	// Tags: #filter #spreadsheets
+	// Tags: #filter #tables
 	"where-not-contains": {
 		Argsn: 3,
-		Doc:   "Returns spreadsheet of rows where specific colum contains a given string value.",
+		Doc:   "Returns table of rows where specific colum contains a given string value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
-			var spr *env.Spreadsheet
+			var spr *env.Table
 			switch sheet := arg0.(type) {
-			case env.Spreadsheet:
+			case env.Table:
 				spr = &sheet
-			case *env.Spreadsheet:
+			case *env.Table:
 				spr = sheet
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "where-match")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-match")
 			}
 			switch s := arg2.(type) {
 			case env.String:
@@ -958,27 +958,27 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		},
 	},
 	// Tests:
-	//  equal { spreadsheet { 'a } { 1 2 3 2 } |where-greater 'a 1 |length? } 3
+	//  equal { table { 'a } { 1 2 3 2 } |where-greater 'a 1 |length? } 3
 	// Example: filting for ages over 29
-	//  sheet: spreadsheet { "name" "age" } { "Enno" 30 "Enya" 25 "Enid" 40 "Bob" 19 "Bill" 45 "Benn" 29 }
+	//  sheet: table { "name" "age" } { "Enno" 30 "Enya" 25 "Enid" 40 "Bob" 19 "Bill" 45 "Benn" 29 }
 	//  sheet .where-greater 'age 29
 	// Args:
 	// * sheet
 	// * column
 	// * value
-	// Tags: #filter #spreadsheet
+	// Tags: #filter #table
 	"where-greater": {
 		Argsn: 3,
-		Doc:   "Returns spreadsheet of rows where specific colum is greater than given value.",
+		Doc:   "Returns table of rows where specific colum is greater than given value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			var spr *env.Spreadsheet
+			var spr *env.Table
 			switch sheet := arg0.(type) {
-			case env.Spreadsheet:
+			case env.Table:
 				spr = &sheet
-			case *env.Spreadsheet:
+			case *env.Table:
 				spr = sheet
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "where-match")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-match")
 			}
 			switch col := arg1.(type) {
 			case env.Word:
@@ -991,25 +991,25 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		},
 	},
 	// Example: filting for names that contain "nn"
-	//  sheet: spreadsheet { "name" "age" } { "Enno" 30 "Enya" 25 "Enid" 40 "Bob" 19 "Bill" 45 "Benn" 29 }
+	//  sheet: table { "name" "age" } { "Enno" 30 "Enya" 25 "Enid" 40 "Bob" 19 "Bill" 45 "Benn" 29 }
 	//  sheet .where-lesser 'age 29
 	// Args:
 	// * sheet
 	// * column
 	// * value
-	// Tags: #filter #spreadsheet
+	// Tags: #filter #table
 	"where-lesser": {
 		Argsn: 3,
-		Doc:   "Returns spreadsheet of rows where specific colum is lesser than given value.",
+		Doc:   "Returns table of rows where specific colum is lesser than given value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			var spr *env.Spreadsheet
+			var spr *env.Table
 			switch sheet := arg0.(type) {
-			case env.Spreadsheet:
+			case env.Table:
 				spr = &sheet
-			case *env.Spreadsheet:
+			case *env.Table:
 				spr = sheet
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "where-match")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-match")
 			}
 			switch col := arg1.(type) {
 			case env.Word:
@@ -1024,26 +1024,26 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	// Returns a spreadhsheet of rows where the given column is between the given
 	// values, non-inclusive.
 	// Example: filtering for folks in their 20s
-	//  sheet: spreadsheet { "name" "age" } { "Enno" 30 "Enya" 25 "Enid" 40 "Bob" 19 "Bill" 45 "Benn" 29 }
+	//  sheet: table { "name" "age" } { "Enno" 30 "Enya" 25 "Enid" 40 "Bob" 19 "Bill" 45 "Benn" 29 }
 	//  sheet .where-between 'age 19 30
 	// Args:
 	// * sheet
 	// * column
 	// * lower-limit
 	// * upper-limit
-	// Tags: #filter #spreadsheet
+	// Tags: #filter #table
 	"where-between": {
 		Argsn: 4,
-		Doc:   "Returns spreadsheet of rows where specific colum is between given values.",
+		Doc:   "Returns table of rows where specific colum is between given values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
-			var spr *env.Spreadsheet
+			var spr *env.Table
 			switch sheet := arg0.(type) {
-			case env.Spreadsheet:
+			case env.Table:
 				spr = &sheet
-			case *env.Spreadsheet:
+			case *env.Table:
 				spr = sheet
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "where-match")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-match")
 			}
 			switch col := arg1.(type) {
 			case env.Word:
@@ -1057,19 +1057,19 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	},
 
 	// Example: filtering for folks named "Enno" or "Enya"
-	//  sheet: spreadsheet { "name" "age" } { "Enno" 30 "Enya" 25 "Enid" 40 "Bob" 19 "Bill" 45 "Benn" 29 }
+	//  sheet: table { "name" "age" } { "Enno" 30 "Enya" 25 "Enid" 40 "Bob" 19 "Bill" 45 "Benn" 29 }
 	//  sheet .where-in 'name { "Enno" "Enya" }
 	// Args:
 	// * sheet
 	// * column
 	// * values-filtered-for
-	// Tags: #filter #spreadsheet
+	// Tags: #filter #table
 	"where-in": {
 		Argsn: 3,
-		Doc:   "Returns spreadsheet of rows where specific colum value if found in block of values.",
+		Doc:   "Returns table of rows where specific colum value if found in block of values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			switch spr := arg0.(type) {
-			case env.Spreadsheet:
+			case env.Table:
 				switch s := arg2.(type) {
 				case env.Block:
 					switch col := arg1.(type) {
@@ -1084,18 +1084,18 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 					return MakeArgError(ps, 3, []env.Type{env.StringType}, "where-in")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "where-in")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-in")
 			}
 		},
 	},
 
 	// Example: Order by age ascending
-	//  sheet: spreadsheet { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19  }
+	//  sheet: table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19  }
 	//  sheet .order-by! 'age 'asc
-	// Tags: #spreadsheet
+	// Tags: #table
 	"order-by!": {
 		Argsn: 3,
-		Doc:   "Sorts row by given column, changes spreadsheet in place.",
+		Doc:   "Sorts row by given column, changes table in place.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			dir, ok := arg2.(env.Word)
 			if !ok {
@@ -1110,7 +1110,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 				return MakeBuiltinError(ps, "Direction can be just asc or desc.", "sort-by!")
 			}
 			switch spr := arg0.(type) {
-			case env.Spreadsheet:
+			case env.Table:
 				switch col := arg1.(type) {
 				case env.String:
 					if dirAsc {
@@ -1130,18 +1130,18 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 					return MakeArgError(ps, 2, []env.Type{env.WordType}, "sort-by!")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "sort-by!")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "sort-by!")
 			}
 		},
 	},
 
 	// Example: Order by age ascending
-	//  sheet: spreadsheet { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19  }
+	//  sheet: table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19  }
 	//  sheet .order-by 'age 'asc
-	// Tags: #spreadsheet
+	// Tags: #table
 	"order-by": {
 		Argsn: 3,
-		Doc:   "Sorts row by given column, changes spreadsheet in place.",
+		Doc:   "Sorts row by given column, changes table in place.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			dir, ok := arg2.(env.Word)
 			if !ok {
@@ -1156,10 +1156,10 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 				return MakeBuiltinError(ps, "Direction can be just asc or desc.", "sort-by!")
 			}
 			switch spr := arg0.(type) {
-			case env.Spreadsheet:
-				copied := make([]env.SpreadsheetRow, len(spr.Rows))
+			case env.Table:
+				copied := make([]env.TableRow, len(spr.Rows))
 				copy(copied, spr.Rows)
-				newSpr := env.NewSpreadsheet(spr.Cols)
+				newSpr := env.NewTable(spr.Cols)
 				newSpr.Rows = copied
 				switch col := arg1.(type) {
 				case env.String:
@@ -1180,21 +1180,21 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 					return MakeArgError(ps, 2, []env.Type{env.WordType}, "sort-by!")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "sort-by!")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "sort-by!")
 			}
 		},
 	},
 
 	// Example: Select "name" and "age" columns
-	//  sheet: spreadsheet { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
+	//  sheet: table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
 	//  sheet .columns? { 'name 'age }
-	// Tags: #spreadsheet
+	// Tags: #table
 	"columns?": {
 		Argsn: 2,
-		Doc:   "Returns spreadsheet with just given columns.",
+		Doc:   "Returns table with just given columns.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
-			case env.Spreadsheet:
+			case env.Table:
 				switch col := arg1.(type) {
 				case env.Block:
 					cols := make([]string, col.Series.Len())
@@ -1211,39 +1211,39 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 					return MakeArgError(ps, 1, []env.Type{env.BlockType}, "columns")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "columns")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "columns")
 			}
 		},
 	},
 	// Example: Get sheet column names
-	//  sheet: spreadsheet { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
+	//  sheet: table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
 	//  sheet .header? ; { "name" "age" "job_title" }
-	// Tags: #spreadsheet
+	// Tags: #table
 	"header?": {
 		Argsn: 1,
 		Doc:   "Gets the column names (header) as block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
-			case *env.Spreadsheet:
+			case *env.Table:
 				return spr.GetColumns()
-			case env.Spreadsheet:
+			case env.Table:
 				return spr.GetColumns()
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "headers?")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "headers?")
 			}
 		},
 	},
 
 	// Example: Get sheet column names
-	//  sheet: spreadsheet { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
+	//  sheet: table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
 	//  sheet .column? 'name ; => { "Bob" "Alice" "Charlie" }
-	// Tags: #spreadsheet
+	// Tags: #table
 	"column?": {
 		Argsn: 2,
 		Doc:   "Gets all values of a column as a block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			switch spr := arg0.(type) {
-			case env.Spreadsheet:
+			case env.Table:
 				switch col := arg1.(type) {
 				case env.Word:
 					return spr.GetColumn(ps.Idx.GetWord(col.Index))
@@ -1273,24 +1273,24 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "column?")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "column?")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "column?")
 			}
 		},
 	},
 
 	// Example: Drop "job_title" column from sheet
-	//  sheet: spreadsheet { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
+	//  sheet: table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
 	//  sheet .drop-column 'job_title ;
 	// Example: Drop name and age columns from sheet
-	//  sheet: spreadsheet { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
+	//  sheet: table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
 	//  sheet .drop-column { "name" "age" } ;
-	// Tags: #spreadsheet
+	// Tags: #table
 	"drop-column": {
 		Argsn: 2,
-		Doc:   "Remove a column from a spreadsheet. Returns new spreadsheet",
+		Doc:   "Remove a column from a table. Returns new table",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
-			case env.Spreadsheet:
+			case env.Table:
 				switch rmCol := arg1.(type) {
 				case env.String:
 					return DropColumn(ps, spr, rmCol)
@@ -1300,22 +1300,22 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 					return MakeArgError(ps, 2, []env.Type{env.WordType, env.BlockType}, "drop-column")
 				}
 			}
-			return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "drop-column")
+			return MakeArgError(ps, 1, []env.Type{env.TableType}, "drop-column")
 		},
 	},
 	// Example: Drop "job_title" column from sheet
-	//  sheet: spreadsheet { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
+	//  sheet: table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
 	//  sheet .drop-column 'job_title ;
 	// Example: Drop name and age columns from sheet
-	//  sheet: spreadsheet { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
+	//  sheet: table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
 	//  sheet .drop-column { "name" "age" } ;
-	// Tags: #spreadsheet
+	// Tags: #table
 	"rename-column!": {
 		Argsn: 3,
-		Doc:   "Remove a column from a spreadsheet. Returns new spreadsheet",
+		Doc:   "Remove a column from a table. Returns new table",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
-			case *env.Spreadsheet:
+			case *env.Table:
 				switch oldName := arg1.(type) {
 				case env.String:
 					switch newName := arg2.(type) {
@@ -1328,19 +1328,19 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 					return MakeArgError(ps, 2, []env.Type{env.WordType, env.BlockType}, "rename-column")
 				}
 			}
-			return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "rename-column")
+			return MakeArgError(ps, 1, []env.Type{env.TableType}, "rename-column")
 		},
 	},
 	// Example: Add a column to a sheet
-	//  sheet: spreadsheet { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
+	//  sheet: table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
 	//  sheet .add-column 'job_title { "Jantior" "Librarian" "Line Cook" } ;
-	// Tags: #spreadsheet
+	// Tags: #table
 	"add-column": {
 		Argsn: 4,
-		Doc:   "Adds a new column to spreadsheet. Changes in-place and returns the new spreadsheet.",
+		Doc:   "Adds a new column to table. Changes in-place and returns the new table.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
-			case env.Spreadsheet:
+			case env.Table:
 				switch newCol := arg1.(type) {
 				case env.Word:
 					switch fromCols := arg2.(type) {
@@ -1384,17 +1384,17 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 					return MakeArgError(ps, 2, []env.Type{env.WordType}, "add-column!")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "add-column!")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "add-column!")
 			}
 		},
 	},
-	// Tags: #spreadsheet
+	// Tags: #table
 	"add-indexes!": {
 		Argsn: 2,
-		Doc:   "Creates an index for all values in the provided columns. Changes in-place and returns the new spreadsheet.",
+		Doc:   "Creates an index for all values in the provided columns. Changes in-place and returns the new table.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
-			case env.Spreadsheet:
+			case env.Table:
 				switch col := arg1.(type) {
 				case env.Block:
 					colWords := make([]env.Word, col.Series.Len())
@@ -1415,34 +1415,34 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "add-indexes!")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "add-indexes!")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "add-indexes!")
 			}
 		},
 	},
-	// Tags: #spreadsheet
+	// Tags: #table
 	"indexes?": {
 		Argsn: 1,
-		Doc:   "Returns the columns that are indexed in a spreadsheet.",
+		Doc:   "Returns the columns that are indexed in a table.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			switch spr := arg0.(type) {
-			case env.Spreadsheet:
+			case env.Table:
 				res := make([]env.Object, 0)
 				for col := range spr.Indexes {
 					res = append(res, *env.NewString(col))
 				}
 				return *env.NewBlock(*env.NewTSeries(res))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "indexes?")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "indexes?")
 			}
 		},
 	},
-	// Tags: #spreadsheet
+	// Tags: #table
 	"autotype": {
 		Argsn: 2,
-		Doc:   "Takes a spreadsheet and tries to determine and change the types of columns.",
+		Doc:   "Takes a table and tries to determine and change the types of columns.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			switch spr := arg0.(type) {
-			case env.Spreadsheet:
+			case env.Table:
 				switch percent := arg1.(type) {
 				case env.Decimal:
 					return AutoType(ps, &spr, percent.Value)
@@ -1450,23 +1450,23 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 					return MakeArgError(ps, 2, []env.Type{env.DecimalType}, "autotype")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "autotype")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "autotype")
 			}
 		},
 	},
-	// Example: join two spreadsheets, putting in empty cells if the left sheet doesn't have a value
-	//  names: spreadsheet { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
-	//  houses: spreadsheet { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
+	// Example: join two tables, putting in empty cells if the left sheet doesn't have a value
+	//  names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
+	//  houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
 	//  names .left-join houses 'id 'id
-	// Tags: #spreadsheet
+	// Tags: #table
 	"left-join": {
 		Argsn: 4,
-		Doc:   "Left joins two spreadsheets on the given columns.",
+		Doc:   "Left joins two tables on the given columns.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			switch spr1 := arg0.(type) {
-			case env.Spreadsheet:
+			case env.Table:
 				switch spr2 := arg1.(type) {
-				case env.Spreadsheet:
+				case env.Table:
 					switch col1 := arg2.(type) {
 					case env.Word:
 						col2, ok := arg3.(env.Word)
@@ -1484,26 +1484,26 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 						return MakeArgError(ps, 3, []env.Type{env.WordType, env.StringType}, "left-join")
 					}
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.SpreadsheetType}, "left-join")
+					return MakeArgError(ps, 2, []env.Type{env.TableType}, "left-join")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "left-join")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "left-join")
 			}
 		},
 	},
-	// Example: join two spreadsheets
-	//  names: spreadsheet { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
-	//  houses: spreadsheet { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
+	// Example: join two tables
+	//  names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
+	//  houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
 	//  names .inner-join houses 'id 'id
-	// Tags: #spreadsheet
+	// Tags: #table
 	"inner-join": {
 		Argsn: 4,
-		Doc:   "Inner joins two spreadsheets on the given columns.",
+		Doc:   "Inner joins two tables on the given columns.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			switch spr1 := arg0.(type) {
-			case env.Spreadsheet:
+			case env.Table:
 				switch spr2 := arg1.(type) {
-				case env.Spreadsheet:
+				case env.Table:
 					switch col1 := arg2.(type) {
 					case env.Word:
 						col2, ok := arg3.(env.Word)
@@ -1521,24 +1521,24 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 						return MakeArgError(ps, 3, []env.Type{env.WordType, env.StringType}, "inner-join")
 					}
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.SpreadsheetType}, "inner-join")
+					return MakeArgError(ps, 2, []env.Type{env.TableType}, "inner-join")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "inner-join")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "inner-join")
 			}
 		},
 	},
-	// Example: group spreadsheet rows by name, running various aggregations on the val column
-	//  spreadsheet { "name" "val" } { "a" 1 "b" 6 "a" 5 "b" 10 "a" 7 }
+	// Example: group table rows by name, running various aggregations on the val column
+	//  table { "name" "val" } { "a" 1 "b" 6 "a" 5 "b" 10 "a" 7 }
 	// 	|group-by 'name { 'name count 'val sum 'val min 'val max 'val avg }
 	// 	|order-by! 'name 'asc
-	// Tags: #spreadsheet
+	// Tags: #table
 	"group-by": {
 		Argsn: 3,
-		Doc:   "Groups a spreadsheet by the given column and (optional) aggregations.",
+		Doc:   "Groups a table by the given column and (optional) aggregations.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			switch spr := arg0.(type) {
-			case env.Spreadsheet:
+			case env.Table:
 				switch aggBlock := arg2.(type) {
 				case env.Block:
 					if len(aggBlock.Series.S)%2 != 0 {
@@ -1575,7 +1575,7 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 					return MakeArgError(ps, 3, []env.Type{env.BlockType}, "group-by")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.SpreadsheetType}, "group-by")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "group-by")
 			}
 		},
 	},
@@ -1584,13 +1584,13 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 	// Args:
 	// * sheet
 	"ncols": {
-		Doc:   "Accepts a Spreadsheet and returns number of columns.",
+		Doc:   "Accepts a Table and returns number of columns.",
 		Argsn: 1,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Dict:
 			case env.Block:
-			case env.Spreadsheet:
+			case env.Table:
 				return *env.NewInteger(int64(len(s1.Cols)))
 			default:
 				fmt.Println("Error")
@@ -1599,14 +1599,14 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 		},
 	},
 	// Tests:
-	// equal { spreadsheet { 'a } { 1 2 3 } |col-sum "a" } 6
+	// equal { table { 'a } { 1 2 3 } |col-sum "a" } 6
 	"col-sum": {
 		Argsn: 2,
-		Doc:   "Accepts a spreadsheet and a column name and returns a sum of a column.", // TODO -- let it accept a block and list also
+		Doc:   "Accepts a table and a column name and returns a sum of a column.", // TODO -- let it accept a block and list also
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var name string
 			switch s1 := arg0.(type) {
-			case env.Spreadsheet:
+			case env.Table:
 				switch s2 := arg1.(type) {
 				case env.Word:
 					name = ps.Idx.GetWord(s2.Index)
@@ -1624,20 +1624,20 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 
 			default:
 				ps.ErrorFlag = true
-				return env.NewError("first arg not spreadsheet")
+				return env.NewError("first arg not table")
 			}
 		},
 	},
 
 	// Tests:
-	// equal { spreadsheet { 'a } { 1 2 3 } |col-avg 'a } 2.0
+	// equal { table { 'a } { 1 2 3 } |col-avg 'a } 2.0
 	"col-avg": {
 		Argsn: 2,
-		Doc:   "Accepts a spreadsheet and a column name and returns a sum of a column.", // TODO -- let it accept a block and list also
+		Doc:   "Accepts a table and a column name and returns a sum of a column.", // TODO -- let it accept a block and list also
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var name string
 			switch s1 := arg0.(type) {
-			case env.Spreadsheet:
+			case env.Table:
 				switch s2 := arg1.(type) {
 				case env.Word:
 					name = ps.Idx.GetWord(s2.Index)
@@ -1657,58 +1657,58 @@ var Builtins_spreadsheet = map[string]*env.Builtin{
 
 			default:
 				ps.ErrorFlag = true
-				return env.NewError("first arg not spreadsheet")
+				return env.NewError("first arg not table")
 			}
 		},
 	},
 
 	// Tests:
-	// equal { spreadsheet { 'a } { 1 2 3 } |A1 } 1
+	// equal { table { 'a } { 1 2 3 } |A1 } 1
 
 	"A1": {
 		Argsn: 1,
-		Doc:   "Accepts a Spreadsheet and returns the first row first column cell.",
+		Doc:   "Accepts a Table and returns the first row first column cell.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s0 := arg0.(type) {
-			case env.Spreadsheet:
+			case env.Table:
 				r := s0.Rows[0].Values[0]
 				return env.ToRyeValue(r)
 
 			default:
 				ps.ErrorFlag = true
-				return env.NewError("first arg not spreadsheet")
+				return env.NewError("first arg not table")
 			}
 		},
 	},
 	// Tests:
-	// equal { spreadsheet { 'a } { 1 2 3 } |B1 } 2
+	// equal { table { 'a } { 1 2 3 } |B1 } 2
 	"B1": {
 		Argsn: 1,
-		Doc:   "Accepts a Spreadsheet and returns the first row second column cell.",
+		Doc:   "Accepts a Table and returns the first row second column cell.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s0 := arg0.(type) {
-			case env.Spreadsheet:
+			case env.Table:
 				r := s0.Rows[1].Values[0]
 				return env.ToRyeValue(r)
 
 			default:
 				ps.ErrorFlag = true
-				return env.NewError("first arg not spreadsheet")
+				return env.NewError("first arg not table")
 			}
 		},
 	},
 }
 
-func RyeValueToSpreadsheetRow(spr *env.Spreadsheet, obj env.Object) (bool, string, *env.SpreadsheetRow) {
+func RyeValueToTableRow(spr *env.Table, obj env.Object) (bool, string, *env.TableRow) {
 	switch updater := obj.(type) {
 	case env.Dict:
-		success, missing, row := env.SpreadsheetRowFromDict(updater, spr)
+		success, missing, row := env.TableRowFromDict(updater, spr)
 		if !success {
 			return false, "update-row! given a dict that is missing value for the " + missing + " column!", nil
 		} else {
 			return true, "", row
 		}
-	case env.SpreadsheetRow:
+	case env.TableRow:
 		return true, "", &updater
 	default:
 		return false, "", nil
@@ -1774,18 +1774,18 @@ func MakeColError(ps *env.ProgramState, builtinName string, colName string, expe
 	)
 }
 
-func LoadColumnData(ps *env.ProgramState, data any, colIdx int, numRows int, colData []env.SpreadsheetRow, cols []string) *env.Error {
+func LoadColumnData(ps *env.ProgramState, data any, colIdx int, numRows int, colData []env.TableRow, cols []string) *env.Error {
 	switch colSeries := data.(type) {
 	case env.Block:
 		if colSeries.Series.Len() != numRows {
-			return MakeColError(ps, "spreadsheet\\columns", cols[colIdx], numRows, colSeries.Series.Len())
+			return MakeColError(ps, "table\\columns", cols[colIdx], numRows, colSeries.Series.Len())
 		}
 		for rowIdx, value := range colSeries.Series.S {
 			colData[rowIdx].Values[colIdx] = value
 		}
 	case env.List:
 		if len(colSeries.Data) != numRows {
-			return MakeColError(ps, "spreadsheet\\columns", cols[colIdx], numRows, len(colSeries.Data))
+			return MakeColError(ps, "table\\columns", cols[colIdx], numRows, len(colSeries.Data))
 		}
 		for rowIdx, value := range colSeries.Data {
 			colData[rowIdx].Values[colIdx] = value
@@ -1801,15 +1801,15 @@ func GetNumRowsFrom(ps *env.ProgramState, data any) (int, *env.Error) {
 	case env.List:
 		return len(firstCol.Data), nil
 	default:
-		return -1, MakeBuiltinError(ps, fmt.Sprintf("Expected a block or a list instead of %V", firstCol), "spreadsheet\\columns")
+		return -1, MakeBuiltinError(ps, fmt.Sprintf("Expected a block or a list instead of %V", firstCol), "table\\columns")
 	}
 }
 
 func SheetFromColumnsMapData(ps *env.ProgramState, cols []string, arg1 env.Object) env.Object {
-	spr := *env.NewSpreadsheet(cols)
+	spr := *env.NewTable(cols)
 	numCols := len(cols)
 
-	var colData []env.SpreadsheetRow
+	var colData []env.TableRow
 
 	switch colSet := arg1.(type) {
 	case env.Block:
@@ -1819,7 +1819,7 @@ func SheetFromColumnsMapData(ps *env.ProgramState, cols []string, arg1 env.Objec
 			return err
 		}
 
-		colData = make([]env.SpreadsheetRow, numRows)
+		colData = make([]env.TableRow, numRows)
 		for rowIdx := 0; rowIdx < numRows; rowIdx++ {
 			colData[rowIdx].Values = make([]any, numCols)
 		}
@@ -1839,7 +1839,7 @@ func SheetFromColumnsMapData(ps *env.ProgramState, cols []string, arg1 env.Objec
 			return err
 		}
 
-		colData = make([]env.SpreadsheetRow, numRows)
+		colData = make([]env.TableRow, numRows)
 		for rowIdx := 0; rowIdx < numRows; rowIdx++ {
 			colData[rowIdx].Values = make([]any, numCols)
 		}
@@ -1851,12 +1851,12 @@ func SheetFromColumnsMapData(ps *env.ProgramState, cols []string, arg1 env.Objec
 		}
 		return spr
 	default:
-		return MakeBuiltinError(ps, fmt.Sprintf("Expected either a Block of a list of data columns, got %v instead", colSet), "spreadsheet\\columns")
+		return MakeBuiltinError(ps, fmt.Sprintf("Expected either a Block of a list of data columns, got %v instead", colSet), "table\\columns")
 	}
 }
 
 func SheetFromColumns(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) (res env.Object) {
-	cols, err := ColNames(ps, arg0, "spreadsheet\\columns")
+	cols, err := ColNames(ps, arg0, "table\\columns")
 	if err != nil {
 		return err
 	}
@@ -1864,14 +1864,14 @@ func SheetFromColumns(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) (r
 	return SheetFromColumnsMapData(ps, cols, arg1)
 }
 
-func SpreadsheetRowsFromBlockOrList(ps *env.ProgramState, spr *env.Spreadsheet, numCols int, arg1 any) (*env.SpreadsheetRow, *env.Error) {
+func TableRowsFromBlockOrList(ps *env.ProgramState, spr *env.Table, numCols int, arg1 any) (*env.TableRow, *env.Error) {
 	switch row := arg1.(type) {
 	case env.Block:
 		if len(row.Series.S) != numCols {
 			return nil, MakeBuiltinError(
 				ps,
 				fmt.Sprintf("All rows must have the same number elements as the number of columns (%d)", numCols),
-				"spreadsheet\\rows",
+				"table\\rows",
 			)
 		}
 		rowAny := make([]any, len(row.Series.S))
@@ -1879,22 +1879,22 @@ func SpreadsheetRowsFromBlockOrList(ps *env.ProgramState, spr *env.Spreadsheet, 
 			rowAny[i] = d
 		}
 
-		return env.NewSpreadsheetRow(rowAny, spr), nil
+		return env.NewTableRow(rowAny, spr), nil
 	case env.List:
 		if len(row.Data) != numCols {
 			return nil, MakeBuiltinError(
 				ps,
 				fmt.Sprintf("All rows must have the same number elements as the number of columns (%d)", numCols),
-				"spreadsheet\\rows",
+				"table\\rows",
 			)
 		}
-		return env.NewSpreadsheetRow(row.Data, spr), nil
+		return env.NewTableRow(row.Data, spr), nil
 	default:
-		return nil, MakeBuiltinError(ps, "Rows must be blocks or lists", "spreadsheet\\rows")
+		return nil, MakeBuiltinError(ps, "Rows must be blocks or lists", "table\\rows")
 	}
 }
 
-func DropColumnBlock(ps *env.ProgramState, s env.Spreadsheet, names env.Block) env.Object {
+func DropColumnBlock(ps *env.ProgramState, s env.Table, names env.Block) env.Object {
 	toDrop := make([]env.String, 0)
 	for _, obj := range names.Series.S {
 		switch word := obj.(type) {
@@ -1907,12 +1907,12 @@ func DropColumnBlock(ps *env.ProgramState, s env.Spreadsheet, names env.Block) e
 	return DropColumns(ps, s, toDrop)
 }
 
-func DropColumn(ps *env.ProgramState, s env.Spreadsheet, name env.String) env.Object {
+func DropColumn(ps *env.ProgramState, s env.Table, name env.String) env.Object {
 	return DropColumns(ps, s, []env.String{name})
 }
 
-// Drop one or more columns from a spreadsheet, returning a new spreadsheet
-func DropColumns(ps *env.ProgramState, s env.Spreadsheet, names []env.String) env.Object {
+// Drop one or more columns from a table, returning a new table
+func DropColumns(ps *env.ProgramState, s env.Table, names []env.String) env.Object {
 	var columnsToCopy []int = make([]int, len(s.Cols)-len(names))
 	var keepColIdx int = 0
 
@@ -1937,15 +1937,15 @@ func DropColumns(ps *env.ProgramState, s env.Spreadsheet, names []env.String) en
 		newCols[toIdx] = s.Cols[fromIdx]
 	}
 
-	newSheet := env.NewSpreadsheet(newCols)
-	newSheet.Rows = make([]env.SpreadsheetRow, len(s.Rows))
+	newSheet := env.NewTable(newCols)
+	newSheet.Rows = make([]env.TableRow, len(s.Rows))
 
 	for rowIdx, row := range s.Rows {
 		newValues := make([]any, len(columnsToCopy))
 		for toIdx, fromIdx := range columnsToCopy {
 			newValues[toIdx] = row.Values[fromIdx]
 		}
-		newSheet.Rows[rowIdx] = *env.NewSpreadsheetRow(newValues, newSheet)
+		newSheet.Rows[rowIdx] = *env.NewTableRow(newValues, newSheet)
 	}
 	newSheet.Indexes = make(map[string]map[any][]int)
 
@@ -1957,8 +1957,8 @@ func DropColumns(ps *env.ProgramState, s env.Spreadsheet, names []env.String) en
 	return newSheet
 }
 
-// Drop one or more columns from a spreadsheet, returning a new spreadsheet
-func RenameColumn(ps *env.ProgramState, s *env.Spreadsheet, oldName env.String, newName env.String) env.Object {
+// Drop one or more columns from a table, returning a new table
+func RenameColumn(ps *env.ProgramState, s *env.Table, oldName env.String, newName env.String) env.Object {
 	var colI int
 
 	for i, name := range s.Cols {
@@ -1972,7 +1972,7 @@ func RenameColumn(ps *env.ProgramState, s *env.Spreadsheet, oldName env.String, 
 	return s
 }
 
-func GenerateColumn(ps *env.ProgramState, s env.Spreadsheet, name env.Word, extractCols env.Block, code env.Block) env.Object {
+func GenerateColumn(ps *env.ProgramState, s env.Table, name env.Word, extractCols env.Block, code env.Block) env.Object {
 	// add name to columns
 	s.Cols = append(s.Cols, ps.Idx.GetWord(name.Index))
 	for ix, row := range s.Rows {
@@ -2022,7 +2022,7 @@ func GenerateColumn(ps *env.ProgramState, s env.Spreadsheet, name env.Word, extr
 	return s
 }
 
-func GenerateColumnRegexReplace(ps *env.ProgramState, s *env.Spreadsheet, name env.Word, fromColName env.Word, re *regexp.Regexp, pattern string) env.Object {
+func GenerateColumnRegexReplace(ps *env.ProgramState, s *env.Table, name env.Word, fromColName env.Word, re *regexp.Regexp, pattern string) env.Object {
 	// add name to columns
 	s.Cols = append(s.Cols, ps.Idx.GetWord(name.Index))
 	for ix, row := range s.Rows {
@@ -2047,7 +2047,7 @@ func GenerateColumnRegexReplace(ps *env.ProgramState, s *env.Spreadsheet, name e
 	return nil
 }
 
-func AddIndexes(ps *env.ProgramState, s *env.Spreadsheet, columns []env.Word) env.Object {
+func AddIndexes(ps *env.ProgramState, s *env.Table, columns []env.Word) env.Object {
 	s.Indexes = make(map[string]map[any][]int, 0)
 	for _, column := range columns {
 		colstr := ps.Idx.GetWord(column.Index)
@@ -2068,7 +2068,7 @@ func AddIndexes(ps *env.ProgramState, s *env.Spreadsheet, columns []env.Word) en
 	return nil
 }
 
-func SortByColumn(ps *env.ProgramState, s *env.Spreadsheet, name string) {
+func SortByColumn(ps *env.ProgramState, s *env.Table, name string) {
 	idx := slices.Index[[]string](s.Cols, name)
 
 	compareCol := func(i, j int) bool {
@@ -2078,7 +2078,7 @@ func SortByColumn(ps *env.ProgramState, s *env.Spreadsheet, name string) {
 	sort.Slice(s.Rows, compareCol)
 }
 
-func SortByColumnDesc(ps *env.ProgramState, s *env.Spreadsheet, name string) {
+func SortByColumnDesc(ps *env.ProgramState, s *env.Table, name string) {
 	idx := slices.Index[[]string](s.Cols, name)
 
 	compareCol := func(i, j int) bool {
@@ -2088,9 +2088,9 @@ func SortByColumnDesc(ps *env.ProgramState, s *env.Spreadsheet, name string) {
 	sort.Slice(s.Rows, compareCol)
 }
 
-func WhereEquals(ps *env.ProgramState, s env.Spreadsheet, name string, val env.Object) env.Object {
+func WhereEquals(ps *env.ProgramState, s env.Table, name string, val env.Object) env.Object {
 	idx := slices.Index(s.Cols, name)
-	nspr := env.NewSpreadsheet(s.Cols)
+	nspr := env.NewTable(s.Cols)
 	if idx > -1 {
 		if index, ok := s.Indexes[name]; ok {
 			idxs := index[val]
@@ -2112,9 +2112,9 @@ func WhereEquals(ps *env.ProgramState, s env.Spreadsheet, name string, val env.O
 	}
 }
 
-func WhereMatch(ps *env.ProgramState, s *env.Spreadsheet, name string, r *regexp.Regexp) env.Object {
+func WhereMatch(ps *env.ProgramState, s *env.Table, name string, r *regexp.Regexp) env.Object {
 	idx := slices.Index(s.Cols, name)
-	nspr := env.NewSpreadsheet(s.Cols)
+	nspr := env.NewTable(s.Cols)
 	if idx > -1 {
 		for _, row := range s.Rows {
 			if len(row.Values) > idx {
@@ -2132,9 +2132,9 @@ func WhereMatch(ps *env.ProgramState, s *env.Spreadsheet, name string, r *regexp
 	}
 }
 
-func WhereContains(ps *env.ProgramState, s *env.Spreadsheet, name string, val string, not bool) env.Object {
+func WhereContains(ps *env.ProgramState, s *env.Table, name string, val string, not bool) env.Object {
 	idx := slices.Index(s.Cols, name)
-	nspr := env.NewSpreadsheet(s.Cols)
+	nspr := env.NewTable(s.Cols)
 	if idx > -1 {
 		for _, row := range s.Rows {
 			if len(row.Values) > idx {
@@ -2158,9 +2158,9 @@ func WhereContains(ps *env.ProgramState, s *env.Spreadsheet, name string, val st
 	}
 }
 
-func WhereIn(ps *env.ProgramState, s env.Spreadsheet, name string, b []env.Object) env.Object {
+func WhereIn(ps *env.ProgramState, s env.Table, name string, b []env.Object) env.Object {
 	idx := slices.Index(s.Cols, name)
-	nspr := env.NewSpreadsheet(s.Cols)
+	nspr := env.NewTable(s.Cols)
 	if idx > -1 {
 		for _, row := range s.Rows {
 			if len(row.Values) > idx {
@@ -2178,9 +2178,9 @@ func WhereIn(ps *env.ProgramState, s env.Spreadsheet, name string, b []env.Objec
 	}
 }
 
-func WhereGreater(ps *env.ProgramState, s *env.Spreadsheet, name string, val env.Object) env.Object {
+func WhereGreater(ps *env.ProgramState, s *env.Table, name string, val env.Object) env.Object {
 	idx := slices.Index(s.Cols, name)
-	nspr := env.NewSpreadsheet(s.Cols)
+	nspr := env.NewTable(s.Cols)
 	if idx > -1 {
 		for _, row := range s.Rows {
 			if len(row.Values) > idx {
@@ -2195,9 +2195,9 @@ func WhereGreater(ps *env.ProgramState, s *env.Spreadsheet, name string, val env
 	}
 }
 
-func WhereLesser(ps *env.ProgramState, s *env.Spreadsheet, name string, val env.Object) env.Object {
+func WhereLesser(ps *env.ProgramState, s *env.Table, name string, val env.Object) env.Object {
 	idx := slices.Index(s.Cols, name)
-	nspr := env.NewSpreadsheet(s.Cols)
+	nspr := env.NewTable(s.Cols)
 	if idx > -1 {
 		for _, row := range s.Rows {
 			if len(row.Values) > idx {
@@ -2212,9 +2212,9 @@ func WhereLesser(ps *env.ProgramState, s *env.Spreadsheet, name string, val env.
 	}
 }
 
-func WhereBetween(ps *env.ProgramState, s *env.Spreadsheet, name string, val1 env.Object, val2 env.Object) env.Object {
+func WhereBetween(ps *env.ProgramState, s *env.Table, name string, val1 env.Object, val2 env.Object) env.Object {
 	idx := slices.Index(s.Cols, name)
-	nspr := env.NewSpreadsheet(s.Cols)
+	nspr := env.NewTable(s.Cols)
 	if idx > -1 {
 		for _, row := range s.Rows {
 			if len(row.Values) > idx {
@@ -2230,7 +2230,7 @@ func WhereBetween(ps *env.ProgramState, s *env.Spreadsheet, name string, val1 en
 	}
 }
 
-func AutoType(ps *env.ProgramState, s *env.Spreadsheet, percent float64) env.Object {
+func AutoType(ps *env.ProgramState, s *env.Table, percent float64) env.Object {
 	colTypeCount := make(map[int]map[string]int)
 	for i := range s.Cols {
 		colTypeCount[i] = make(map[string]int)
@@ -2257,10 +2257,10 @@ func AutoType(ps *env.ProgramState, s *env.Spreadsheet, percent float64) env.Obj
 	}
 
 	lenRows := len(s.Rows)
-	newS := env.NewSpreadsheet(s.Cols)
+	newS := env.NewTable(s.Cols)
 	for range s.Rows {
 		newRow := make([]any, len(s.Cols))
-		newS.AddRow(*env.NewSpreadsheetRow(newRow, newS))
+		newS.AddRow(*env.NewTableRow(newRow, newS))
 	}
 
 	for colNum, typeCount := range colTypeCount {
@@ -2311,12 +2311,12 @@ func AutoType(ps *env.ProgramState, s *env.Spreadsheet, percent float64) env.Obj
 	return *newS
 }
 
-func LeftJoin(ps *env.ProgramState, s1 env.Spreadsheet, s2 env.Spreadsheet, col1 string, col2 string, innerJoin bool) env.Object {
+func LeftJoin(ps *env.ProgramState, s1 env.Table, s2 env.Table, col1 string, col2 string, innerJoin bool) env.Object {
 	if !slices.Contains(s1.Cols, col1) {
-		return MakeBuiltinError(ps, "Column not found in first spreadsheet.", "left-join")
+		return MakeBuiltinError(ps, "Column not found in first table.", "left-join")
 	}
 	if !slices.Contains(s2.Cols, col2) {
-		return MakeBuiltinError(ps, "Column not found in second spreadsheet.", "left-join")
+		return MakeBuiltinError(ps, "Column not found in second table.", "left-join")
 	}
 
 	combinedCols := make([]string, len(s1.Cols)+len(s2.Cols))
@@ -2328,14 +2328,14 @@ func LeftJoin(ps *env.ProgramState, s1 env.Spreadsheet, s2 env.Spreadsheet, col1
 			combinedCols[i+len(s1.Cols)] = v
 		}
 	}
-	nspr := env.NewSpreadsheet(combinedCols)
+	nspr := env.NewTable(combinedCols)
 	for i, row1 := range s1.GetRows() {
 		val1, err := s1.GetRowValue(col1, row1)
 		if err != nil {
 			return MakeError(ps, fmt.Sprintf("Couldn't retrieve value at row %d (%s)", i, err))
 		}
 
-		// the row ids of the second spreadsheet which match the values in the current first spreadsheet row
+		// the row ids of the second table which match the values in the current first table row
 		var s2RowIds []int
 		// use index if available
 		if ix, ok := s2.Indexes[col2]; ok {
@@ -2380,7 +2380,7 @@ func LeftJoin(ps *env.ProgramState, s1 env.Spreadsheet, s2 env.Spreadsheet, col1
 			copy(newRow, row1Values)
 
 			if row2Values != nil {
-				// copy values from second spreadsheet
+				// copy values from second table
 				for i, v := range row2Values {
 					newRow[i+len(s1.Cols)] = v
 				}
@@ -2398,18 +2398,18 @@ func LeftJoin(ps *env.ProgramState, s1 env.Spreadsheet, s2 env.Spreadsheet, col1
 			for _, s2RowId := range s2RowIds {
 				row2Values := s2.GetRow(ps, s2RowId).Values
 				combinedValues := buildCombinedRow(row1.Values, row2Values)
-				nspr.AddRow(*env.NewSpreadsheetRow(combinedValues, nspr))
+				nspr.AddRow(*env.NewTableRow(combinedValues, nspr))
 			}
 		} else {
 			// add a single row with Void values for s2 columns
 			combinedValues := buildCombinedRow(row1.Values, nil)
-			nspr.AddRow(*env.NewSpreadsheetRow(combinedValues, nspr))
+			nspr.AddRow(*env.NewTableRow(combinedValues, nspr))
 		}
 	}
 	return *nspr
 }
 
-func GroupBy(ps *env.ProgramState, s env.Spreadsheet, col string, aggregations map[string][]string) env.Object {
+func GroupBy(ps *env.ProgramState, s env.Table, col string, aggregations map[string][]string) env.Object {
 	if !slices.Contains(s.Cols, col) {
 		return MakeBuiltinError(ps, "Column not found.", "group-by")
 	}
@@ -2489,7 +2489,7 @@ func GroupBy(ps *env.ProgramState, s env.Spreadsheet, col string, aggregations m
 			newCols = append(newCols, aggCol+"_"+fun)
 		}
 	}
-	newS := env.NewSpreadsheet(newCols)
+	newS := env.NewTable(newCols)
 	for groupVal, groupAggregates := range aggregatesByGroup {
 		newRow := make([]any, len(newCols))
 		newRow[0] = *env.NewString(groupVal)
@@ -2502,7 +2502,7 @@ func GroupBy(ps *env.ProgramState, s env.Spreadsheet, col string, aggregations m
 				newRow[i+1] = *env.NewDecimal(groupAggregates[col])
 			}
 		}
-		newS.AddRow(*env.NewSpreadsheetRow(newRow, newS))
+		newS.AddRow(*env.NewTableRow(newRow, newS))
 	}
 	return *newS
 }

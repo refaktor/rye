@@ -153,11 +153,11 @@ var Builtins_mysql = map[string]*env.Builtin{
 						return MakeBuiltinError(ps, err.Error(), "Rye-mysql//exec")
 					} else {
 						cols, _ := rows.Columns()
-						spr := env.NewSpreadsheet(cols)
+						spr := env.NewTable(cols)
 						i := 0
 						for rows.Next() {
 
-							var sr env.SpreadsheetRow
+							var sr env.TableRow
 
 							columns := make([]any, len(cols))
 							columnPointers := make([]any, len(cols))
@@ -199,7 +199,7 @@ var Builtins_mysql = map[string]*env.Builtin{
 							return MakeBuiltinError(ps, "No data.", "Rye-mysql//query")
 						}
 						return *spr
-						//return *env.NewNative(ps.Idx, *spr, "Rye-spreadsheet")
+						//return *env.NewNative(ps.Idx, *spr, "Rye-table")
 					}
 				} else {
 					return MakeBuiltinError(ps, "Empty SQL.", "Rye-mysql//query")

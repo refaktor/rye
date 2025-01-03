@@ -5,7 +5,7 @@ private\ "Part 1: initial try, load and split" {
 	load %input.txt |split\every 2 :pairs
 	|with { .column? 0 |sort! :left , .column? 1 |sort! :right }
 	
-	spreadsheet\columns { "l" "r" } [ left right ]
+	table\columns { "l" "r" } [ left right ]
 	|add-column! 'dif { l r } { l - r |math/abs }
 	|column? 'dif
 	|sum
@@ -20,7 +20,7 @@ private\ "Part 1: using some variables" {
 	pairs .column? 0 |sort! :left
 	pairs .column? 1 |sort! :right
 	
-	spreadsheet\columns { "l" "r" } [ left right ]
+	table\columns { "l" "r" } [ left right ]
 	|add-column! 'dif { l r } { math/abs l - r }
 	|column? 'dif |sum
 
@@ -33,13 +33,13 @@ private\ "Part 1: util func, just pipe" {
 	read\lines %input.txt
 	|map ?load
 	|vals\with { .prep-col 0 , .prep-col 1 }
-	|spreadsheet\columns* { 'l 'r }
+	|table\columns* { 'l 'r }
 	|add-column! 'dif { l r } { math/abs l - r }
 	|column? 'dif |sum
 
 } |print
 
-private\ "Part 1: util func, loose the spreadsheet, add transpose" {
+private\ "Part 1: util func, loose the table, add transpose" {
 
 	
 	; Advent of Code 2024 :: Day 1

@@ -8,7 +8,7 @@ print "Loading Questions and Answers:"
 read %petcare.txt
 |split newline
 |purge { .length? = 0 }
-|spreadsheet* { "text" }
+|table* { "text" }
 |pass { .display , print "Creating embeddings ..." }
 |add-col! 'embedding { text } { .create-embeddings* ai } :spr
 

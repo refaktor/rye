@@ -11,7 +11,7 @@ At the time of writing there were solutions for mostly static languages like:
 - F#
 
 I will make a blogpost about this on the Rye blog. Short code in Rye's case
-is mostly due to the very high level datatype Spreadsheet. More about thinking
+is mostly due to the very high level datatype Table. More about thinking
 around it here:
 https://ryelang.blogspot.com/2022/10/the-user-interface-spectrum-and.html
 

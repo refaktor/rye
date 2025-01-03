@@ -1,0 +1,1429 @@
+<html>
+  <head>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,700|Roboto:300,400,700&subset=latin-ext' rel='stylesheet' type='text/css'>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Londrina+Solid:wght@300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="tpl/main.3.css?a001" />
+    <link rel="stylesheet" href="tpl/styles.css?a001" />
+    <script src="tpl/menu.js?a001"></script>
+    <script src="tpl/jsGoo.js"></script>
+    <!-- syntax highlighting -->
+    <link rel="stylesheet" type="text/css" href="tpl/desert.css" />
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/prettify/r298/run_prettify.js"></script>
+    <script type="text/javascript" src="./tpl/lang-rye.js"></script>
+    <!-- syntax highlightinh end -->
+  </head>
+  <body onload="generateMenu()">
+    <!--div id="menu-holder">
+	</div-->
+    <!--p>
+      <a href="/">main page</a>
+    </p>
+    <h1>Rye reference: Base</h1-->
+    <div class="container">
+      <aside class="sidebar" id="menu-holder">
+        <nav>
+          <ul>
+            <li><a href="https://ryelang.org">← Home</a></li>
+            <!-- More menu items here -->
+          </ul>
+        </nav>
+	<p>
+	  This is Rye function reference generated from unit tests in info/ folder. Examples can be little dry, but they are short and correct.
+	</p>
+	<h3>Base functions</h3>
+      </aside>
+      <main class="content">
+        
+<h2>Boolean logic </h2><p>Functions that work with true and false values.</p><div class='section'>
+<h3>true</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>true
+; returns 1</code></pre>
+</div>
+<h3>false</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>false
+; returns 0</code></pre>
+</div>
+<h3>not</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>not true
+; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>not false
+; returns 1</code></pre>
+</div>
+<h3>and</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>true .and true
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>false .and true
+; returns 0</code></pre>
+</div>
+<h3>or</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>true .or true
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>false .or true
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>true .or false
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>false .or false
+; returns 0</code></pre>
+</div>
+<h3>xor</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>true .xor true
+; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>false .xor true
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>true .xor false
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>false .xor false
+; returns 0</code></pre>
+</div>
+<h3>all</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>all { 1 2 3 }
+; returns 3</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>all { 1 0 3 }
+; returns 0</code></pre>
+</div>
+<h3>any</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>any { 1 2 3 }
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>any { 1 0 3 }
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>any { 0 0 3 }
+; returns 3</code></pre>
+</div>
+<h3>any\with</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>any\with 10 { + 10 , * 10 }
+; returns 20</code></pre>
+</div>
+</div>
+<h2>Numbers </h2><p>Working with numbers, integers and decimals.</p><div class='section'>
+<h3>inc</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>inc 123
+; returns 124</code></pre>
+[Block: ^[Word: inc] [String: 123] ]
+REF[Error: builtin `inc` requires argument 1 to be: Integer. ]
+</div>
+<h3>is-positive</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-positive 123
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-positive -123
+; returns 0</code></pre>
+[Block: ^[Word: is-positive] [String: 123] ]
+REF[Error: builtin `is-positive` requires argument 1 to be: Integer, Decimal. ]
+</div>
+<h3>is-zero</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-zero 0
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-zero 123
+; returns 0</code></pre>
+[Block: ^[Word: is-zero] [String: 123] ]
+REF[Error: builtin `is-zero` requires argument 1 to be: Integer, Decimal. ]
+</div>
+<h3>multiple-of</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>10 .multiple-of 2
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>10 .multiple-of 3
+; returns 0</code></pre>
+</div>
+<h3>odd</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>3 .odd
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>2 .odd
+; returns 0</code></pre>
+</div>
+<h3>even</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>3 .even
+; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>2 .even
+; returns 1</code></pre>
+</div>
+<h3>mod</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>4 .mod 2
+; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>5 .mod 2
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>5 .mod 3
+; returns 2</code></pre>
+</div>
+<h3>random\integer</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>random\integer 2 |type?
+; returns integer</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>random\integer 1 |< 2
+; returns 1</code></pre>
+</div>
+<h3>inc!</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>a:: 123 inc! 'a a
+; returns 124</code></pre>
+[Block: ^[Word: inc!] [Integer: 123] ]
+REF[Error: builtin `inc!` requires argument 1 to be: Word. ]
+</div>
+<h3>dec!</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>a:: 123 dec! 'a a
+; returns 122</code></pre>
+[Block: ^[Word: dec!] [Integer: 123] ]
+REF[Error: builtin `dec!` requires argument 1 to be: Word. ]
+</div>
+<h3>_.</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>4 . .type?
+; returns void</code></pre>
+</div>
+<h3>_+</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>1 + 1
+; returns 2</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>3 + 4
+; returns 7</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>5.6 + 7.8
+; returns 13.399999999999999</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>"A" + "b"
+; returns "Ab"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>"A" + 1
+; returns "A1"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>{ 1 2 } + { 3 4 }
+; returns { 1 2 3 4 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 } |+ { "b" 2 }
+; returns dict { b 2 a 1 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 } |+ dict { "b" 2 }
+; returns dict { b 2 a 1 }</code></pre>
+</div>
+<h3>_-</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>2 - 1
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>5 - 6
+; returns -1</code></pre>
+</div>
+<h3>_*</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>4 * 2
+; returns 8</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>2.5 * -2
+; returns -5</code></pre>
+</div>
+<h3>_/</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>4 / 2
+; returns 2</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>102 / 2
+; returns 51</code></pre>
+</div>
+<h3>_//</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>5 // 2
+; returns 2</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>102 // 5
+; returns 20</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>7.99 // 2
+; returns 3</code></pre>
+</div>
+<h3>_=</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>5 = 5
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>5 = 4
+; returns 0</code></pre>
+</div>
+<h3>_></h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>6 > 5
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>5 > 5
+; returns 0</code></pre>
+</div>
+<h3>_>=</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>5 >= 6
+; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>5 >= 5
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>6 >= 5
+; returns 1</code></pre>
+</div>
+<h3>_<</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>5 < 6
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>5 < 5
+; returns 0</code></pre>
+</div>
+<h3>_<=</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>5 <= 6
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>5 <= 5
+; returns 1</code></pre>
+</div>
+</div>
+<h2>Strings </h2><p></p><div class='section'>
+<h3>newline</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>newline
+; returns "
+; "</code></pre>
+</div>
+<h3>ln</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>"123" .ln
+; returns "123
+; "</code></pre>
+</div>
+<h3>trim</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>trim " ASDF "
+; returns "ASDF"</code></pre>
+</div>
+<h3>trim\</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>trim\ "__ASDF__" "_"
+; returns "ASDF"</code></pre>
+</div>
+<h3>trim\right</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>trim\right "__ASDF__" "_"
+; returns "__ASDF"</code></pre>
+</div>
+<h3>trim\left</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>trim\left "___ASDF__" "_"
+; returns "ASDF__"</code></pre>
+</div>
+<h3>replace</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>replace "...xoxo..." "xo" "LoL"
+; returns "...LoLLoL..."</code></pre>
+</div>
+<h3>substring</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>substring "...xoxo..." 3 7
+; returns "xoxo"</code></pre>
+</div>
+<h3>contains</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>contains "...xoxo..." "xo"
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>contains "...xoxo..." "lol"
+; returns 0</code></pre>
+</div>
+<h3>has-suffix</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>has-suffix "xoxo..." "xoxo"
+; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>has-suffix "...xoxo" "xoxo"
+; returns 1</code></pre>
+</div>
+<h3>has-prefix</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>has-prefix "xoxo..." "xoxo"
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>has-prefix "...xoxo" "xoxo"
+; returns 0</code></pre>
+</div>
+<h3>index?</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>index? "...xo..." "xo"
+; returns 3</code></pre>
+</div>
+<h3>position?</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>position? "...xo..." "xo"
+; returns 4</code></pre>
+</div>
+<h3>encode\base64</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>encode\base64 "abcd"
+; returns "YWJjZA=="</code></pre>
+</div>
+<h3>decode\base64</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>decode\base64 encode\base64 "abcd"
+; returns "abcd"</code></pre>
+</div>
+<h3>space</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>"abcd" .space
+; returns "abcd "</code></pre>
+</div>
+<h3>capitalize</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>capitalize "abcde"
+; returns "Abcde"</code></pre>
+</div>
+<h3>to-lower</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-lower "ABCDE"
+; returns "abcde"</code></pre>
+</div>
+<h3>to-upper</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-upper "abcde"
+; returns "ABCDE"</code></pre>
+</div>
+<h3>concat3</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>concat3 "aa" "BB" "cc"
+; returns "aaBBcc"</code></pre>
+</div>
+<h3>join</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>join { "Mary" "Anne" }
+; returns "MaryAnne"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>join { "Spot" "Fido" "Rex" }
+; returns "SpotFidoRex"</code></pre>
+</div>
+<h3>join\with</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>join\with { "Mary" "Anne" } " "
+; returns "Mary Anne"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>join\with { "Spot" "Fido" "Rex" } "/"
+; returns "Spot/Fido/Rex"</code></pre>
+</div>
+<h3>split</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>split "a,b,c" ","
+; returns { "a" "b" "c" }</code></pre>
+</div>
+<h3>split\quoted</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>split\quoted "`a,b`,c,d" "," "`"
+; returns { "`a,b`" "c" "d" }</code></pre>
+</div>
+<h3>split\many</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>split\many "192.0.0.1" "."
+; returns { "192" "0" "0" "1" }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>split\many "abcd..e.q|bar" ".|"
+; returns { "abcd" "e" "q" "bar" }</code></pre>
+</div>
+<h3>split\every</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>split\every "abcdefg" 3
+; returns { "abc" "def" "g" }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>split\every "abcdefg" 2
+; returns { "ab" "cd" "ef" "g" }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>split\every "abcdef" 2
+; returns { "ab" "cd" "ef" }</code></pre>
+</div>
+</div>
+<h2>Collections </h2><p></p><div class='section'>
+<h3>random</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>random { 1 2 3 } |type?
+; returns integer</code></pre>
+</div>
+<h3>unpack</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>unpack { { 123 } { 234 } }
+; returns { 123 234 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>unpack { { { 123 } } { 234 } }
+; returns { { 123 } 234 }</code></pre>
+</div>
+<h3>sample</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>sample { 1 2 3 4 } 2 |length?
+; returns 2</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>sample { 123 123 123 123 } 3 |-> 0
+; returns 123</code></pre>
+</div>
+<h3>max</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>max { 8 2 10 6 }
+; returns 10</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>max list { 8 2 10 6 }
+; returns 10</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { max { } } |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { max list { } } |type?
+; returns error</code></pre>
+</div>
+<h3>min</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>min { 8 2 10 6 }
+; returns 2</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>min list { 8 2 10 6 }
+; returns 2</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { min { } } |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { min list { } } |type?
+; returns error</code></pre>
+</div>
+<h3>avg</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>avg { 8 2 10 6 }
+; returns 6.5</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>avg list { 8 2 10 6 }
+; returns 6.5</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { avg { } } |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { avg list { } } |type?
+; returns error</code></pre>
+</div>
+<h3>sum</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>sum { 8 2 10 6 }
+; returns 26</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>sum { 8 2 10 6.5 }
+; returns 26.5</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>sum { }
+; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>sum list { 8 2 10 6 }
+; returns 26</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>sum list { 8 2 10 6.5 }
+; returns 26.5</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>sum list { }
+; returns 0</code></pre>
+</div>
+<h3>mul</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>mul { 1 2 3 4 5 }
+; returns 120</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>mul { 1 2 3.3 4 5 }
+; returns 132</code></pre>
+</div>
+<h3>first</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>first { 1 2 3 4 }
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>first "abcde"
+; returns "a"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>first list { 1 2 3 }
+; returns 1</code></pre>
+</div>
+<h3>rest</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>rest { 1 2 3 4 }
+; returns { 2 3 4 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>rest "abcde"
+; returns "bcde"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>rest list { 1 2 3 }
+; returns list { 2 3 }</code></pre>
+</div>
+<h3>rest\from</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>rest\from { 1 2 3 4 5 6 } 3
+; returns { 4 5 6 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>rest\from "abcdefg" 1
+; returns "bcdefg"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>rest\from list { 1 2 3 4 } 2
+; returns list { 3 4 }</code></pre>
+</div>
+<h3>tail</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>tail { 1 2 3 4 5 6 7 } 3
+; returns { 5 6 7 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>tail "abcdefg" 4
+; returns "defg"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>tail list { 1 2 3 4 } 1
+; returns list { 4 }</code></pre>
+</div>
+<h3>second</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>second { 123 234 345 }
+; returns 234</code></pre>
+</div>
+<h3>third</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>third { 123 234 345 }
+; returns 345</code></pre>
+</div>
+<h3>last</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>last { 1 2 }
+; returns 2</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>last "abcd"
+; returns "d"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>last list { 4 5 6 }
+; returns 6</code></pre>
+</div>
+<h3>head</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>head { 4 5 6 7 } 3
+; returns { 4 5 6 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>head "abcdefg" 2
+; returns "ab"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>head "abcdefg" 4
+; returns "abcd"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>head list { 10 20 30 40 } 2
+; returns list { 10 20 }</code></pre>
+</div>
+<h3>nth</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>nth { 1 2 3 4 5 } 4
+; returns 4</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>nth { "a" "b" "c" "d" "e" } 2
+; returns "b"</code></pre>
+</div>
+<h3>values</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 "b" 2 "c" 3 } |values
+; returns list { 1 2 3 }</code></pre>
+</div>
+<h3>sort</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>sort { 6 12 1 }
+; returns { 1 6 12 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>sort x: { 6 12 1 } x
+; returns { 6 12 1 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>sort { "b" "c" "a" }
+; returns { "a" "b" "c" }</code></pre>
+</div>
+<h3>sort!</h3><p></p><div class='group'>
+[Block: ^[Setword: x] [Block: ^[Integer: 6] [Integer: 12] [Integer: 1] ] [Comma] [Word: sort!] [Word: x] ]
+REF[Error: builtin `sort!` requires argument 1 to be: Block, List. ]
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: ref { 1 6 12 } , sort! x , x
+; returns { 1 6 12 }</code></pre>
+</div>
+<h3>unique</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>list { 3 2 3 5 3 2 } .unique |sort
+; returns list { 2 3 5 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>unique list { 1 1 2 2 3 } |sort
+; returns list { 1 2 3 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>unique list { 1 1 2 2 } |sort
+; returns list { 1 2 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>unique { 1 1 2 2 3 } |sort
+; returns { 1 2 3 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>unique { 1 1 2 2 } |sort
+; returns { 1 2 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>unique "aabbc" |length?
+; returns 3</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>unique "ab" |length?
+; returns 2</code></pre>
+</div>
+<h3>reverse</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>reverse { 3 1 2 3 }
+; returns { 3 2 1 3 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>reverse { 3 1 2 3 }
+; returns { 3 2 1 3 }</code></pre>
+</div>
+<h3>reverse!</h3><p></p><div class='group'>
+[Block: ^[Word: reverse!] [Block: ^[Integer: 3] [Integer: 1] [Integer: 2] [Integer: 3] ] ]
+REF[Error: builtin `reverse!` requires argument 1 to be: Block, String, List. ]
+<pre class='prettyprint lang-rye'><code language='lang-rye'>reverse! ref { 3 2 1 3 }
+; returns { 3 2 1 3 }</code></pre>
+</div>
+<h3>concat</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>"abcd" .concat "cde"
+; returns "abcdcde"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>concat { 1 2 3 4 } { 2 4 5 }
+; returns { 1 2 3 4 2 4 5 }</code></pre>
+</div>
+<h3>union</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>union { 1 2 3 4 } { 2 4 5 } |length?
+; returns 5</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>union list { 1 2 3 4 } list { 2 4 5 } |length?
+; returns 5</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>union { 8 2 } { 1 9 } |sort
+; returns { 1 2 8 9 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>union { 1 2 } { } |sort
+; returns { 1 2 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>union { } { 1 9 } |sort
+; returns { 1 9 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>union { } { }
+; returns { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>union list { 1 2 } list { 1 2 3 4 } |sort
+; returns list { 1 2 3 4 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>union list { 1 2 } list { 1 } |sort
+; returns list { 1 2 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>union list { 1 2 } list { } |sort
+; returns list { 1 2 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>union list { } list { 1 2 } |sort
+; returns list { 1 2 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>union list { } list { }
+; returns list { }</code></pre>
+</div>
+<h3>range</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>range 1 5
+; returns { 1 2 3 4 5 }</code></pre>
+</div>
+<h3>is-empty</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>{ } .is-empty
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>dict { } |is-empty
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a 'b } { } |is-empty
+; returns 1</code></pre>
+</div>
+<h3>length?</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>{ 1 2 3 } .length?
+; returns 3</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>length? "abcd"
+; returns 4</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'val } { 1 2 3 4 } |length?
+; returns 4</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>vector { 10 20 30 } |length?
+; returns 3</code></pre>
+</div>
+<h3>keys</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 "b" 2 "c" 3 } |keys |length?
+; returns 3</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { "a" "b" "c" } { 1 2 3 } |keys |length?
+; returns 3</code></pre>
+</div>
+<h3>_-></h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>{ 23 34 45 } |-> 1
+; returns 34</code></pre>
+</div>
+<h3>_<-</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>0 <- { 23 34 45 }
+; returns 23</code></pre>
+</div>
+<h3>_<~</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>2 <~ { 23 34 45 }
+; returns 34</code></pre>
+</div>
+<h3>_~></h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>{ 23 34 45 } |~> 1
+; returns 23</code></pre>
+</div>
+<h3>intersection</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>"abcd" .intersection "cde"
+; returns "cd"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>intersection { 1 2 3 4 } { 2 4 5 }
+; returns { 2 4 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>intersection { 1 3 5 6 } { 2 3 4 5 }
+; returns { 3 5 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>intersection { 1 2 3 } { }
+; returns { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>intersection { } { 2 3 4 }
+; returns { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>intersection { 1 2 3 } { 4 5 6 }
+; returns { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>intersection { } { }
+; returns { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>intersection list { 1 3 5 6 } list { 2 3 4 5 }
+; returns list { 3 5 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>intersection list { 1 2 3 } list { }
+; returns list { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>intersection list { } list { 2 3 4 }
+; returns list { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>intersection list { 1 2 3 } list { 4 5 6 }
+; returns list { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>intersection list { } list { }
+; returns list { }</code></pre>
+</div>
+<h3>difference</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>"abcde" .difference "cde"
+; returns "ab"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>difference { 1 2 3 4 } { 2 4 }
+; returns { 1 3 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>difference list { "Bob" "Sal" "Joe" } list { "Joe" }
+; returns list { "Bob" "Sal" }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>difference "abc" "bc"
+; returns "a"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>difference "abc" "abc"
+; returns ""</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>difference "abc" ""
+; returns "abc"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>difference "" ""
+; returns ""</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>difference { 1 3 5 6 } { 2 3 4 5 }
+; returns { 1 6 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>difference { 1 2 3 } { }
+; returns { 1 2 3 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>difference { } { 2 3 4 }
+; returns { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>difference { } { }
+; returns { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>difference list { 1 3 5 6 } list { 2 3 4 5 }
+; returns list { 1 6 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>difference list { 1 2 3 } list { }
+; returns list { 1 2 3 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>difference list { } list { 2 3 4 }
+; returns list { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>difference list { } list { }
+; returns list { }</code></pre>
+</div>
+<h3>transpose</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>{ { 1 2 3 } { 4 5 6 } } .transpose
+; returns { { 1 4 } { 2 5 } { 3 6 } }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>{ { 1 4 } { 2 5 } { 3 6 } } .transpose
+; returns { { 1 2 3 } { 4 5 6 } }</code></pre>
+</div>
+<h3>remove-last!</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: ref { 1 2 3 4 } remove-last! 'x x
+; returns { 1 2 3 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: ref { 1 2 3 4 } remove-last! 'x
+; returns { 1 2 3 }</code></pre>
+</div>
+<h3>append!</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: ref { 1 2 3 } append! 4 'x , x
+; returns { 1 2 3 4 }</code></pre>
+</div>
+<h3>change
+th!</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: ref { 1 222 3 } change\nth! x 2 222 , x
+; returns { 1 222 3 }</code></pre>
+</div>
+</div>
+<h2>Contexts </h2><p>Context related functions</p><div class='section'>
+<h3>raw-context</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: raw-context { x: 123 } c/x
+; returns 123</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>y: 123 try { c: raw-context { x: y } } |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { c: raw-context { x: inc 10 } } |type?
+; returns error</code></pre>
+</div>
+<h3>isolate</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: isolate { x: 123 } c/x
+; returns 123</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>y: 123 c: isolate { x: y } c/x
+; returns 123</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: isolate { x: inc 10 } c/x
+; returns 11</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>y: 99 c: isolate { x: does { y } } try { c/x } |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>y: 99 c: isolate { t: ?try x: does { t { y } } } c/x |type?
+; returns error</code></pre>
+</div>
+<h3>context</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 123 } c/x
+; returns 123</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>y: 123 c: context { x: y } c/x
+; returns 123</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: inc 10 } c/x
+; returns 11</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>y: 123 c: context { x: does { y } } c/x
+; returns 123</code></pre>
+</div>
+<h3>private</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>private { x: 123 }
+; returns 123</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>y: 123 private { x: y }
+; returns 123</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>private { x: inc 10 }
+; returns 11</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>y: 123 private { does { y } } :f f
+; returns 123</code></pre>
+</div>
+<h3>private\</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>private\ "what are we doing here" { x: 234 1000 + x }
+; returns 1234</code></pre>
+</div>
+<h3>extends</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>ct: context { p: 123 } cn: extends ct { r: p + 234 } cn/r
+; returns 357</code></pre>
+</div>
+<h3>bind!</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { y: 123 } cc: bind! context { z: does { y + 234 } } c , cc/z
+; returns 357</code></pre>
+</div>
+<h3>unbind</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { y: 123 } cc: bind! context { z: does { y + 234 } } c , unbind cc cc/z
+; returns 357</code></pre>
+[Block: ^[Setword: c] [Word: context] [Block: ^[Setword: y] [Integer: 123] ] [Setword: cc] [Word: bind!] [Word: context] [Block: ^[Setword: z] [Word: does] [Block: ^[Word: y] [Opword: _+] [Integer: 234] ] ] [Word: c] [Comma] [Setword: dd] [Word: unbind] [Word: cc] [CPath: [Word: dd]/[Word: z]] ]
+[Opword: _+]
+REF[Error(5): word not found: y ]
+</div>
+<h3>pass</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>101 .pass { 202 }
+; returns 101</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>101 .pass { 202 + 303 }
+; returns 101</code></pre>
+</div>
+<h3>wrap</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>wrap { prn "*" } { prn "x" }
+; prints "*x*"</code></pre>
+</div>
+<h3>keep</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>20 .keep { + 202 } { + 101 }
+; returns 222</code></pre>
+</div>
+<h3>change!</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: 123 , change! 234 'x , x
+; returns 234</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>a:: 123 change! 333 'a a
+; returns 333</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>a:: 123 change! 124 'a
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>a:: 123 change! 123 'a
+; returns 0</code></pre>
+</div>
+<h3>set!</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>set! { 123 234 } { a b } b
+; returns 234</code></pre>
+</div>
+<h3>unset!</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: 1 unset! 'x x: 2
+; returns 2</code></pre>
+</div>
+</div>
+<h2>Functions </h2><p>functions that create functions</p><div class='section'>
+<h3>does</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>does { 123 } |type?
+; returns function</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: does { 123 } x
+; returns 123</code></pre>
+</div>
+<h3>fn1</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>fn1 { .pass { } } |type?
+; returns function</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: fn1 { } , x 123
+; returns 123</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: fn1 { .pass { } } , x 123
+; returns 123</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: fn1 { + 1 } , x 123
+; returns 124</code></pre>
+</div>
+<h3>fn</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>fn { } { } |type?
+; returns function</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: fn { } { 234 } , x
+; returns 234</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: fn { x } { x } , x 123
+; returns 123</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: fn { x } { + 123 } , x 123
+; returns 246</code></pre>
+</div>
+<h3>pfn</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>pfn { } { } |type?
+; returns function</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: pfn { x } { + 123 } , x 123
+; returns 246</code></pre>
+[Block: ^[Setword: x] [Word: pfn] [Block: ^[Word: x] ] [Block: ^[Opword: print] ] [Comma] [Word: x] [Integer: 123] ]
+REF[Error(5): word not found: print ]
+</div>
+<h3>to-word</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-word "test"
+; returns test</code></pre>
+[Block: ^[Word: to-word] [Integer: 123] ]
+REF[Error: builtin `to-word` requires argument 1 to be: String, Word. ]
+</div>
+<h3>to-integer</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-integer "123"
+; returns 123</code></pre>
+[Block: ^[Word: to-integer] [String: abc] ]
+REF[Error: strconv.Atoi: parsing "abc": invalid syntax in builtin to-integer. ]
+</div>
+<h3>to-decimal</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-decimal "123.4"
+; returns 123.4</code></pre>
+[Block: ^[Word: to-decimal] [String: abc] ]
+REF[Error: strconv.ParseFloat: parsing "abc": invalid syntax in builtin to-decimal. ]
+</div>
+<h3>to-string</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-string 'test
+; returns "test"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-string 123
+; returns "123"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-string 123.4
+; returns "123.400000"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-string "test"
+; returns "test"</code></pre>
+</div>
+<h3>to-char</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-char 42
+; returns "*"</code></pre>
+[Block: ^[Word: to-char] [String: *] ]
+REF[Error: builtin `to-char` requires argument 1 to be: Integer. ]
+</div>
+<h3>to-block</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>list [ 1 2 3 ] |to-block |type?
+; returns block</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>list [ 1 2 3 ] |to-block |first
+; returns 1</code></pre>
+</div>
+<h3>to-context</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>dict [ "a" 1 "b" 2 "c" 3 ] |to-context |type?
+; returns ctx</code></pre>
+</div>
+<h3>is-string</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-string "test"
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-string 'test
+; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-string 123
+; returns 0</code></pre>
+</div>
+<h3>is-integer</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-integer 123
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-integer 123.4
+; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-integer "123"
+; returns 0</code></pre>
+</div>
+<h3>is-decimal</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-decimal 123
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-decimal 123
+; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-decimal "123.4"
+; returns 0</code></pre>
+</div>
+<h3>is-number</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-number 123
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-number 123.4
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-number "123"
+; returns 0</code></pre>
+</div>
+<h3>to-uri</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-uri "https://example.com"
+; returns https://example.com</code></pre>
+</div>
+<h3>to-file</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-file "example.txt"
+; returns file://example.txt</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-file 123
+; returns file://123</code></pre>
+</div>
+<h3>type?</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>type? "test"
+; returns string</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>type? 123.4
+; returns decimal</code></pre>
+</div>
+<h3>types?</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>types? { "test" 123 }
+; returns { string integer }</code></pre>
+</div>
+<h3>dump</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>does { 1 } |dump
+; returns "fn { } { 1 }"</code></pre>
+</div>
+<h3>mold</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>mold 123
+; returns "123"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>mold { 123 }
+; returns "{ 123 }"</code></pre>
+</div>
+<h3>mold
+owrap</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>mold\nowrap 123
+; returns "123"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>mold\nowrap { 123 }
+; returns "123"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>mold\nowrap { 123 234 }
+; returns "123 234"</code></pre>
+</div>
+<h3>doc!</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: private { doc! "some doc" doc? }
+; returns "some doc"</code></pre>
+</div>
+<h3>doc?</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: private { doc! "some doc" doc? }
+; returns "some doc"</code></pre>
+</div>
+<h3>doc\of?</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: context { doc! "some doc" } doc\of? x
+; returns "some doc"</code></pre>
+</div>
+<h3>ref</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-ref ref { 1 2 3 }
+; returns 1</code></pre>
+</div>
+<h3>deref</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-ref deref ref { 1 2 3 }
+; returns 0</code></pre>
+</div>
+<h3>is-ref</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>ref { } |is-ref
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>{ } |is-ref
+; returns 0</code></pre>
+</div>
+<h3>dict</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 123 } |-> "a"
+; returns 123</code></pre>
+</div>
+<h3>list</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>list { "a" 123 } |-> 1
+; returns "a"</code></pre>
+</div>
+</div>
+<h2>Printing </h2><p></p><div class='section'>
+<h3>prns</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>prns "xy"
+; prints "xy "</code></pre>
+</div>
+<h3>prn</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>prn "xy"
+; prints "xy"</code></pre>
+</div>
+<h3>print</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>print "xy"
+; prints "xy
+; "</code></pre>
+</div>
+<h3>format</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>format 123 "num: %d"
+; returns "num: 123"</code></pre>
+</div>
+<h3>prnf</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>prnf 123 "num: %d"
+; prints "num: 123"</code></pre>
+</div>
+<h3>embed</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>embed 101 "val {}"
+; returns "val 101"</code></pre>
+</div>
+<h3>prnv</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>prnv 101 "val {}"
+; prints "val 101"</code></pre>
+</div>
+<h3>printv</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>printv 101 "val {}"
+; prints "val 101
+; "</code></pre>
+</div>
+<h3>print\ssv</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>print\ssv { 101 "asd" }
+; prints "101 asd
+; "</code></pre>
+</div>
+<h3>print\csv</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>print\csv { 101 "asd" }
+; prints "101,asd
+; "</code></pre>
+</div>
+<h3>probe</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>probe 101
+; prints "[Integer: 101]
+; "</code></pre>
+</div>
+<h3>inspect</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>inspect 101
+; returns "[Integer: 101]"</code></pre>
+</div>
+<h3>esc</h3><p></p><div class='group'>
+</div>
+<h3>esc-val</h3><p></p><div class='group'>
+</div>
+<h3>load</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>load " 1 2 3 " |third
+; returns 3</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>load "{ 1 2 3 }" |first |third
+; returns 3</code></pre>
+</div>
+</div>
+<h2>Flow control </h2><p></p><div class='section'>
+<h3>if</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>if 1 { 222 }
+; returns 222</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>if 0 { 333 }
+; returns 0</code></pre>
+</div>
+<h3>^if</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: does { ^if 1 { 222 } 555 } x
+; returns 222</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: does { ^if 0 { 333 } 444 } x
+; returns 444</code></pre>
+</div>
+<h3>either</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>either 1 { 222 } { 333 }
+; returns 222</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>either 0 { 222 } { 333 }
+; returns 333</code></pre>
+</div>
+<h3>switch</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>switch 101 { 101 { 111 } 202 { 222 } }
+; returns 111</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>switch 202 { 101 { 111 } 202 { 222 } }
+; returns 222</code></pre>
+</div>
+<h3>cases</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cases 0 { { 1 > 0 } { + 100 } { 2 > 1 } { + 1000 } }
+; returns 1100</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cases 0 { { 1 > 0 } { + 100 } { 2 < 1 } { + 1000 } }
+; returns 100</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cases 0 { { 1 < 0 } { + 100 } { 2 > 1 } { + 1000 } }
+; returns 1000</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cases 0 { { 1 < 0 } { + 100 } { 2 < 1 } { + 1000 } }
+; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cases 1 { { 1 > 0 } { + 100 } { 2 < 1 } { + 1000 } _ { * 3 } }
+; returns 101</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cases 1 { { 1 < 0 } { + 100 } { 2 > 1 } { + 1000 } _ { * 3 } }
+; returns 1001</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cases 1 { { 1 < 0 } { + 100 } { 2 < 1 } { + 1000 } _ { * 3 } }
+; returns 3</code></pre>
+</div>
+<h3>do</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do { 123 + 123 }
+; returns 246</code></pre>
+[Block: ^[Word: do] [Block: ^[Integer: 123] [Opword: _+] ] ]
+REF[Error: argument 2 of 2 missing of builtin: 'Adds or joins two values together (Integers, Strings, Uri-s and Blocks) (core) (_+)' 
+  Error: expected rye value but it's missing ]
+</div>
+<h3>try</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { 123 + 123 }
+; returns 246</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { 123 + "asd" } |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { 123 + } |type?
+; returns error</code></pre>
+</div>
+<h3>with</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>with 100 { + 11 }
+; returns 111</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>with 100 { + 11 , * 3 }
+; returns 300</code></pre>
+</div>
+<h3>do\in</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } do\in c { x * 9.99 }
+; returns 999</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } do\in c { inc! 'x }
+; returns 101</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } do\in c { x:: 200 } c/x
+; returns 200</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } do\in c { x:: 200 , x }
+; returns 200</code></pre>
+</div>
+<h3>try\in</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } try\in c { x * 9.99 }
+; returns 999</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } try\in c { inc! 'x }
+; returns 101</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } try\in c { x:: 200 , x }
+; returns 200</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } try\in c { x:: 200 } c/x
+; returns 200</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } try\in c { inc! 'y } |type?
+; returns error</code></pre>
+</div>
+<h3>do\par</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } do\par c { x * 9.99 }
+; returns 999</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } do\par c { inc! 'x }
+; returns 101</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } do\par c { x:: 200 , x }
+; returns 200</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } do\par c { x:: 200 } c/x
+; returns 100</code></pre>
+</div>
+<h3>capture-stdout</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>capture-stdout { print "hello" }
+; returns "hello
+; "</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>capture-stdout { loop 3 { prns "x" } }
+; returns "x x x "</code></pre>
+</div>
+<h3>time-it</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>time-it { sleep 100 }
+; returns 100</code></pre>
+</div>
+<h3>vals</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: 1 y: 2 vals { x y }
+; returns { 1 2 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: 1 y: 2 vals { 1 y }
+; returns { 1 2 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: 1 y: 2 try { vals { z y } } |type?
+; returns error</code></pre>
+</div>
+<h3>vals\with</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: 1 y: 2 vals\with 10 { + x , * y }
+; returns { 11 20 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: 1 y: 2 vals\with 100 { + 10 , * 8.9 }
+; returns { 110 890 }</code></pre>
+</div>
+<h3>current</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 9999 , incr: fn\in { } current { x:: inc x } } c/incr c/x
+; returns 10000</code></pre>
+</div>
+<h3>parent</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>y: 99 c: context { incr: fn\in { } parent { y:: inc y } } c/incr y
+; returns 100</code></pre>
+</div>
+<h3>parent\of</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>ct: context { p: 123 } parent\of ct |= current
+; returns 1</code></pre>
+</div>
+</div>
+<h2>Iteration </h2><p>Iteration over collections</p><div class='section'>
+<h3>loop</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>3 .loop { prns "x" }
+; prints "x x x "</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>3 .loop { + 1 }
+; returns 4</code></pre>
+</div>
+<h3>produce</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>produce 5 0 { + 3 }
+; returns 15</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>produce 3 ">" { + "x>" }
+; returns ">x>x>x>"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>produce 3 { } { .concat "x" }
+; returns { "x" "x" "x" }</code></pre>
+</div>
+<h3>produce\while</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: 0 produce\while { x < 100 } 1 { * 2 :x }
+; returns 64</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: 0 produce\while { x < 100 } 1 { * 2 :x .prns }
+; prints "2 4 8 16 32 64 128 "</code></pre>
+</div>
+<h3>produce\</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>produce\ 5 1 'acc { * acc , + 1 }
+; returns 1</code></pre>
+</div>
+<h3>forever</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>forever { "once" .prn .return }
+; prints "once"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>forever { "once" .return }
+; returns "once"</code></pre>
+</div>
+<h3>forever\with</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>forever\with 1 { .prn .return }
+; prints "1"</code></pre>
+</div>
+<h3>for</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>for { 1 2 3 } { prns "x" }
+; prints "x x x "</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>{ "a" "b" "c" } .for { .prns }
+; prints "a b c "</code></pre>
+</div>
+<h3>walk</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>walk { 1 2 3 } { .prns .rest }
+; prints "1 2 3  2 3  3  "</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: 0 walk { 1 2 3 } { :b .first + x :x , b .rest } x
+; returns 6</code></pre>
+</div>
+<h3>purge</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>purge { 1 3 3 } { .even }
+; returns { 1 3 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>purge { } { .even }
+; returns { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>purge list { 1 2 3 } { .even }
+; returns list { 1 3 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>purge list { } { .even }
+; returns list { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>purge "1234" { .to-integer .even }
+; returns { "1" "3" }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>purge "" { .to-integer .even }
+; returns { }</code></pre>
+</div>
+<h3>purge!</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>{ 1 3 3 } :x purge! { .even } 'x , x
+; returns { 1 3 }</code></pre>
+</div>
+<h3>map</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map { 1 2 3 } { + 1 }
+; returns { 2 3 4 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map { } { + 1 }
+; returns { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map { "aaa" "bb" "c" } { .length? }
+; returns { 3 2 1 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map list { "aaa" "bb" "c" } { .length? }
+; returns list { 3 2 1 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map list { 3 4 5 6 } { .multiple-of 3 }
+; returns list { 1 0 0 1 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map list { } { + 1 }
+; returns list { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map "123" { .to-integer }
+; returns { 1 2 3 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map "123" ?to-integer
+; returns { 1 2 3 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map "" { + "-" }
+; returns { }</code></pre>
+</div>
+<h3>map\pos</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map\pos { 1 2 3 } 'i { + i }
+; returns { 2 4 6 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map\pos { } 'i { + i }
+; returns { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map\pos list { 1 2 3 } 'i { + i }
+; returns list { 2 4 6 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map\pos list { } 'i { + i }
+; returns list { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map\pos "abc" 'i { + i }
+; returns { "a1" "b2" "c3" }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map\pos "" 'i { + i }
+; returns { }</code></pre>
+</div>
+<h3>map\idx</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map\idx { 1 2 3 } 'i { + i }
+; returns { 1 3 5 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map\idx { } 'i { + i }
+; returns { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map\idx list { 1 2 3 } 'i { + i }
+; returns list { 1 3 5 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map\idx list { } 'i { + i }
+; returns list { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map\idx "abc" 'i { + i }
+; returns { "a0" "b1" "c2" }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map\idx "" 'i { + i }
+; returns { }</code></pre>
+</div>
+<h3>reduce</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>reduce { 1 2 3 } 'acc { + acc }
+; returns 6</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>reduce list { 1 2 3 } 'acc { + acc }
+; returns 6</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>reduce "abc" 'acc { + acc }
+; returns "cba"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { reduce { } 'acc { + acc } } |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { reduce list { } 'acc { + acc } } |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { reduce "" 'acc { + acc } } |type?
+; returns error</code></pre>
+</div>
+<h3>fold</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>fold { 1 2 3 } 'acc 1 { + acc }
+; returns 7</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>fold { } 'acc 1 { + acc }
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>fold list { 1 2 3 } 'acc 1 { + acc }
+; returns 7</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>fold list { } 'acc 1 { + acc }
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>fold "abc" 'acc "123" { + acc }
+; returns "cba123"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>fold "" 'acc "123" { + acc }
+; returns "123"</code></pre>
+</div>
+<h3>partition</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>partition { 1 2 3 4 } { > 2 }
+; returns { { 1 2 } { 3 4 } }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>partition { "a" "b" 1 "c" "d" } { .is-integer }
+; returns { { "a" "b" } { 1 } { "c" "d" } }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>partition { "a" "b" 1 "c" "d" } ?is-integer
+; returns { { "a" "b" } { 1 } { "c" "d" } }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>partition { } { > 2 }
+; returns { { } }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>partition list { 1 2 3 4 } { > 2 }
+; returns list { list { 1 2 } list { 3 4 } }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>partition list { "a" "b" 1 "c" "d" } ?is-integer
+; returns list { list { "a" "b" } list { 1 } list { "c" "d" } }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>partition list { } { > 2 }
+; returns list { list { } }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>partition "aaabbccc" { , }
+; returns list { "aaa" "bb" "ccc" }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>partition "" { , }
+; returns list { "" }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>partition "aaabbccc" ?is-string
+; returns list { "aaabbccc" }</code></pre>
+</div>
+<h3>group</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>{ } .list .group { .first }
+; returns dict { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { { 1 2 3 4 } .group { .even } } |type?
+; returns error</code></pre>
+</div>
+<h3>filter</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>filter { 1 2 3 4 } { .even }
+; returns { 2 4 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>filter { 1 2 3 4 } ?even
+; returns { 2 4 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>filter { } { .even }
+; returns { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>filter list { 1 2 3 4 } { .even }
+; returns list { 2 4 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>filter list { 1 2 3 4 } ?even
+; returns list { 2 4 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>filter list { } { .even }
+; returns list { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>filter "1234" { .to-integer .even }
+; returns { "2" "4" }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>filter "01234" ?to-integer
+; returns { "1" "2" "3" "4" }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>filter "" { .to-integer .even }
+; returns { }</code></pre>
+</div>
+<h3>seek</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>seek { 1 2 3 4 } { .even }
+; returns 2</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>seek list { 1 2 3 4 } { .even }
+; returns 2</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>seek "1234" { .to-integer .even }
+; returns "2"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { seek { 1 2 3 4 } { > 5 } } |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { seek list { 1 2 3 4 } { > 5 } } |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { seek "1234" { .to-integer > 5 } } |type?
+; returns error</code></pre>
+</div>
+</div>
+<h2>Other </h2><p>functions related to date and time</p><div class='section'>
+<h3>return</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: fn { } { return 101 202 } x
+; returns 101</code></pre>
+</div>
+<h3>cmd</h3><p></p><div class='group'>
+hello
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cmd "echo "hello""
+; returns 1</code></pre>
+</div>
+<h3>rye</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>rye .type?
+; returns native</code></pre>
+</div>
+<h3>sleep</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>time-it { sleep 10 }
+; returns 10</code></pre>
+</div>
+<h3>seconds</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>5 .seconds
+; returns 5000000000</code></pre>
+</div>
+<h3>minutes</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>5 .minutes
+; returns 300000000000</code></pre>
+</div>
+<h3>hours</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>5 .hours
+; returns 18000000000000</code></pre>
+</div>
+</div>
+</main>
+</div>
+<script type="text/javascript">
+var sc_project=12932344; 
+var sc_invisible=1; 
+var sc_security="6e399927"; 
+</script>
+<script type="text/javascript"
+src="https://www.statcounter.com/counter/counter.js"
+async></script>
+<noscript><div class="statcounter"><a title="Web Analytics"
+href="https://statcounter.com/" target="_blank"><img
+class="statcounter"
+src="https://c.statcounter.com/12932344/0/6e399927/1/"
+alt="Web Analytics"
+referrerPolicy="no-referrer-when-downgrade"></a></div></noscript>
+</body>
+</html>

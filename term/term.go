@@ -355,7 +355,7 @@ DODO:
 	}
 }
 
-func DisplaySpreadsheetRow(bloc env.SpreadsheetRow, idx *env.Idxs) (env.Object, bool) {
+func DisplayTableRow(bloc env.TableRow, idx *env.Idxs) (env.Object, bool) {
 	HideCur()
 	curr := 0
 	moveUp := 0
@@ -454,7 +454,7 @@ DODO:
 	}
 }
 
-func DisplayTable(bloc env.Spreadsheet, idx *env.Idxs) (env.Object, bool) {
+func DisplayTable(bloc env.Table, idx *env.Idxs) (env.Object, bool) {
 	HideCur()
 	curr := 0
 	moveUp := 0
@@ -594,7 +594,7 @@ DODO:
 
 // ideation:
 // .display\custom fn { x } { -> 'subject .elipsis 20 .red .prn , spacer 2 , -> 'score .align-right 10 .print }
-func DisplayTableCustom(bloc env.Spreadsheet, myfn func(row env.Object, iscurr env.Integer), idx *env.Idxs) (env.Object, bool) {
+func DisplayTableCustom(bloc env.Table, myfn func(row env.Object, iscurr env.Integer), idx *env.Idxs) (env.Object, bool) {
 	HideCur()
 	curr := 0
 	moveUp := 0

@@ -21,7 +21,7 @@ section "Working with blocks and lists"
 		equal { try { first { } } |type? } 'error
 		equal { try { first list { } } |type? } 'error
 		equal { try { first "" } |type? } 'error
-		equal { try { first spreadsheet { "Name" } [ ] } |type? } 'error
+		equal { try { first table { "Name" } [ ] } |type? } 'error
 	}
 
 	group "rest"
@@ -578,19 +578,19 @@ section "Serializers and loaders"
 
 
 
-section "Spreadsheet related functions"
-"Functions for creating and working with spreadsheets."
+section "Table related functions"
+"Functions for creating and working with tables."
 {	
 	
-	group "spreadsheet & related"
-	mold\nowrap ?spreadsheet
+	group "table & related"
+	mold\nowrap ?table
 	{ }
 	{
-		equal { spreadsheet\columns { "name" "rating" "weight" }
+		equal { table\columns { "name" "rating" "weight" }
 			{ { "Enno" "Enya" "Shizuuchi" "Kunishima" }
 			  { 4.3    6       7.2          2 }
 			  { 120    132     168         68 }
-			 } ::spr |type? } 'spreadsheet
+			 } ::spr |type? } 'table
 		equal { spr |length? } 4
 		equal { spr |header? |length? } 3
 		equal\todo { spr -> 2 -> 'name } "Enya"
@@ -604,28 +604,28 @@ section "Spreadsheet related functions"
 	}
 
 	group "autotype"
-	mold\nowrap ?to-spreadsheet
+	mold\nowrap ?to-table
 	{ { block } }
 	{
-		equal { spreadsheet { "a" "b" } { "aa" "2" "bb" "4" } |autotype 1.0     }  spreadsheet { "a" "b" } { "aa" 2   "bb" 4 }
-		equal { spreadsheet { "a" "b" } { "aa" "2.1" "bb" "4.3" } |autotype 1.0 }  spreadsheet { "a" "b" } { "aa" 2.1 "bb" 4.3 }
-		equal { spreadsheet { "a" "b" } { "aa" 2.1 "bb" "4.3" } |autotype 1.0 }  spreadsheet { "a" "b" } { "aa" 2.1 "bb" 4.3 }
-		equal { spreadsheet { "a" "b" } { "aa" "2" "bb" 4 } |autotype 1.0 }  spreadsheet { "a" "b" } { "aa" 2 "bb" 4 }
+		equal { table { "a" "b" } { "aa" "2" "bb" "4" } |autotype 1.0     }  table { "a" "b" } { "aa" 2   "bb" 4 }
+		equal { table { "a" "b" } { "aa" "2.1" "bb" "4.3" } |autotype 1.0 }  table { "a" "b" } { "aa" 2.1 "bb" 4.3 }
+		equal { table { "a" "b" } { "aa" 2.1 "bb" "4.3" } |autotype 1.0 }  table { "a" "b" } { "aa" 2.1 "bb" 4.3 }
+		equal { table { "a" "b" } { "aa" "2" "bb" 4 } |autotype 1.0 }  table { "a" "b" } { "aa" 2 "bb" 4 }
 	}
 	
-	group "to-spreadsheet"
-	mold\nowrap ?to-spreadsheet
+	group "to-table"
+	mold\nowrap ?to-table
 	{ { block } }
 	{
-		equal { to-spreadsheet vals { dict { "a" 1 b 2 } dict { "a" 3 "b" 4 } } } spreadsheet { "a" "b" } { 1 2 3 4 }
-		equal { to-spreadsheet vals { dict { "a" 1 b 2 "c" 3 } dict { "a" 4 "b" 5 } } } spreadsheet { "a" "b" "c" } { 1 2 3 4 5 _ }
+		equal { to-table vals { dict { "a" 1 b 2 } dict { "a" 3 "b" 4 } } } table { "a" "b" } { 1 2 3 4 }
+		equal { to-table vals { dict { "a" 1 b 2 "c" 3 } dict { "a" 4 "b" 5 } } } table { "a" "b" "c" } { 1 2 3 4 5 _ }
 	}
 
 	group "add-column"
 	mold\nowrap ?add-column!
 	{ { block } }
 	{
-		equal { try { spreadsheet { "n" } [ 1 ] |add-col! 'm { x } { x } } |type? } 'error
+		equal { try { table { "n" } [ 1 ] |add-col! 'm { x } { x } } |type? } 'error
 	}
 
 	group "index"
@@ -633,69 +633,69 @@ section "Spreadsheet related functions"
 	{ { block } }
 	{
 		; returned value
-		equal { spr:: spreadsheet { "a" "b" } { 1 2 3 4 } |add-indexes! [ 'a ] |indexes? } { "a" }
+		equal { spr:: table { "a" "b" } { 1 2 3 4 } |add-indexes! [ 'a ] |indexes? } { "a" }
 		; in-place
 		; TODO this should work but doesn't, index should be added in place but for some reason it isn't
-		; equal { spr: spreadsheet { "a" "b" } { 1 2 3 4 } , spr .add-indexes! [ 'a ] , spr .indexes? } { "a" }
+		; equal { spr: table { "a" "b" } { 1 2 3 4 } , spr .add-indexes! [ 'a ] , spr .indexes? } { "a" }
 	}
 
 	group "left join"
 	mold\nowrap ?left-join
 	{ { block } }
 	{
-		equal { names:: spreadsheet { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
-				houses:: spreadsheet { "id" "house" } { 1 "Atreides" 3 "Harkonnen" 4 "Corrino" } ,
+		equal { names:: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
+				houses:: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" 4 "Corrino" } ,
 				names .left-join houses 'id 'id 
-		} spreadsheet { "id" "name" "id_2" "house" } { 1 "Paul" 1 "Atreides" 2 "Chani" _ _ 3 "Vladimir" 3 "Harkonnen" }
+		} table { "id" "name" "id_2" "house" } { 1 "Paul" 1 "Atreides" 2 "Chani" _ _ 3 "Vladimir" 3 "Harkonnen" }
 		
-		; joining with an index on the second spreadsheet
-		equal { names:: spreadsheet { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } , 
-				houses:: spreadsheet { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
+		; joining with an index on the second table
+		equal { names:: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } , 
+				houses:: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
 				houses .add-indexes! [ 'id ] ::houses ,
 				names .left-join houses 'id 'id 
-		} spreadsheet { "id" "name" "id_2" "house" } { 1 "Paul" 1 "Atreides" 2 "Chani" _ _ 3 "Vladimir" 3 "Harkonnen" }
+		} table { "id" "name" "id_2" "house" } { 1 "Paul" 1 "Atreides" 2 "Chani" _ _ 3 "Vladimir" 3 "Harkonnen" }
 
-		equal {	a:: spreadsheet { "a" "b" } { 1 "one" 2 "two" } ,
-				c:: spreadsheet { "a" "c" } { 1 "ena" 1 "eden" 1 "eno" } ,
+		equal {	a:: table { "a" "b" } { 1 "one" 2 "two" } ,
+				c:: table { "a" "c" } { 1 "ena" 1 "eden" 1 "eno" } ,
 				a .left-join c "a" "a"
-		} spreadsheet { "a" "b" "a_2" "c" } { 1 "one" 1 "ena" 1 "one" 1 "eden" 1 "one" 1 "eno" 2 "two" _ _ } 
+		} table { "a" "b" "a_2" "c" } { 1 "one" 1 "ena" 1 "one" 1 "eden" 1 "one" 1 "eno" 2 "two" _ _ } 
 
-		; joining with an index on the second spreadsheet
-		equal {	a:: spreadsheet { "a" "b" } { 1 "one" 2 "two" } ,
-				c:: spreadsheet { "a" "c" } { 1 "ena" 1 "eden" 1 "eno" } ,
+		; joining with an index on the second table
+		equal {	a:: table { "a" "b" } { 1 "one" 2 "two" } ,
+				c:: table { "a" "c" } { 1 "ena" 1 "eden" 1 "eno" } ,
 				c .add-indexes! [ 'a ] ::c ,
 				a .left-join c "a" "a"
-		} spreadsheet { "a" "b" "a_2" "c" } { 1 "one" 1 "ena" 1 "one" 1 "eden" 1 "one" 1 "eno" 2 "two" _ _ } 
+		} table { "a" "b" "a_2" "c" } { 1 "one" 1 "ena" 1 "one" 1 "eden" 1 "one" 1 "eno" 2 "two" _ _ } 
 	}
 
 	group "inner join"
 	mold\nowrap ?inner-join
 	{ { block } }
 	{
-		equal { names:: spreadsheet { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
-				houses:: spreadsheet { "id" "house" } { 1 "Atreides" 3 "Harkonnen" 4 "Corrino" } ,
+		equal { names:: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
+				houses:: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" 4 "Corrino" } ,
 				names .inner-join houses 'id 'id 
-		} spreadsheet { "id" "name" "id_2" "house" } { 1 "Paul" 1 "Atreides" 3 "Vladimir" 3 "Harkonnen" }
+		} table { "id" "name" "id_2" "house" } { 1 "Paul" 1 "Atreides" 3 "Vladimir" 3 "Harkonnen" }
 		
-		; joining with an index on the second spreadsheet
-		equal { names:: spreadsheet { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } , 
-				houses:: spreadsheet { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
+		; joining with an index on the second table
+		equal { names:: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } , 
+				houses:: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
 				houses .add-indexes! [ 'id ] ::houses ,
 				names .inner-join houses 'id 'id 
-		} spreadsheet { "id" "name" "id_2" "house" } { 1 "Paul" 1 "Atreides" 3 "Vladimir" 3 "Harkonnen" }
+		} table { "id" "name" "id_2" "house" } { 1 "Paul" 1 "Atreides" 3 "Vladimir" 3 "Harkonnen" }
 
 
-		equal {	a:: spreadsheet { "a" "b" } { 1 "one" 2 "two" } ,
-				c:: spreadsheet { "a" "c" } { 1 "ena" 1 "eden" 1 "eno" } ,
+		equal {	a:: table { "a" "b" } { 1 "one" 2 "two" } ,
+				c:: table { "a" "c" } { 1 "ena" 1 "eden" 1 "eno" } ,
 				a .inner-join c "a" "a"
-		} spreadsheet { "a" "b" "a_2" "c" } { 1 "one" 1 "ena" 1 "one" 1 "eden" 1 "one" 1 "eno" } 
+		} table { "a" "b" "a_2" "c" } { 1 "one" 1 "ena" 1 "one" 1 "eden" 1 "one" 1 "eno" } 
 
-		; joining with an index on the second spreadsheet
-		equal {	a:: spreadsheet { "a" "b" } { 1 "one" 2 "two" } ,
-				c:: spreadsheet { "a" "c" } { 1 "ena" 1 "eden" 1 "eno" } ,
+		; joining with an index on the second table
+		equal {	a:: table { "a" "b" } { 1 "one" 2 "two" } ,
+				c:: table { "a" "c" } { 1 "ena" 1 "eden" 1 "eno" } ,
 				c .add-indexes! [ 'a ] ::c ,
 				a .inner-join c "a" "a"
-		} spreadsheet { "a" "b" "a_2" "c" } { 1 "one" 1 "ena" 1 "one" 1 "eden" 1 "one" 1 "eno" } 
+		} table { "a" "b" "a_2" "c" } { 1 "one" 1 "ena" 1 "one" 1 "eden" 1 "one" 1 "eno" } 
 
 	}
 
@@ -703,13 +703,13 @@ section "Spreadsheet related functions"
 	mold\nowrap ?group-by
 	{ { block } }
 	{
-		equal { spreadsheet { "name" "val" } { "a" 1 "b" 2 } |group-by 'name { } |order-by! 'name 'asc
-		} spreadsheet { "name" } { "a" "b" }
+		equal { table { "name" "val" } { "a" 1 "b" 2 } |group-by 'name { } |order-by! 'name 'asc
+		} table { "name" } { "a" "b" }
 
-		equal { spreadsheet { "name" "val" } { "a" 1 "b" 6 "a" 5 "b" 10 "a" 7 } 
+		equal { table { "name" "val" } { "a" 1 "b" 6 "a" 5 "b" 10 "a" 7 } 
 				|group-by 'name { 'name count 'val sum 'val min 'val max 'val avg } 
 				|order-by! 'name 'asc
-		} spreadsheet { "name" "name_count" "val_sum" "val_min" "val_max" "val_avg" } 
+		} table { "name" "name_count" "val_sum" "val_min" "val_max" "val_avg" } 
 					{ 
 						"a" 3 13.0 1.0 7.0 4.333333333333333
 						"b" 2 16.0 6.0 10.0 8.0

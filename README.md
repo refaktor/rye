@@ -94,7 +94,7 @@ range 1 10 |map { .fac } |print\csv
 
 kind: "admin"
 open sqlite://data.db |query { select * from user where kind = ?kind }
-; returns: Spreadsheet of admins
+; returns: Table of admins
 
 read %name.txt |fix { "Anonymous" } |post* https://example.com/postname 'text
 ; makes HTTP post of the name read from a file, or "Anonymous" if file failed to be read
@@ -117,7 +117,7 @@ These pages are littered with examples. You can find them on this **README** pag
 
 Rye's focus is also interactive use. Check out these asciinema demos: 
 
-  * **[Spreadsheet and CSV demo](https://asciinema.org/a/647708)** - new
+  * **[Table and CSV demo](https://asciinema.org/a/647708)** - new
   * [Exploring JSON](https://asciinema.org/a/615327)
   * [Testing vector functions](https://asciinema.org/a/575970)
 

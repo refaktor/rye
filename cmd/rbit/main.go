@@ -7,12 +7,19 @@ import (
 	"go/parser"
 	"go/token"
 	"os"
+	"regexp"
 	"strings"
 )
 
 // data that we want to optionally extract from builtins code and store as a general structure that
 // * Rye runtime will be able to provide to the user
 // * Test tool will run tests on
+type builtinSection struct {
+	name      string
+	docstring string
+	builtins  []builtinInfo
+}
+
 type builtinInfo struct {
 	name      string     // from key value
 	gentype   string     // optional from key value
@@ -44,13 +51,14 @@ func getCommentsAboveKey(fset *token.FileSet, comments []*ast.CommentGroup, keyP
 }
 
 // Helper function to get comments above the map key
-func parseCommentsAboveKey(input string, info *builtinInfo) builtinInfo {
+func parseCommentsAboveKey(input string, info *builtinInfo) (builtinInfo, *builtinSection) {
 
 	const (
 		inDoc = iota
 		inTests
 		inExamples
 		inArgs
+		x
 	)
 	position := inDoc
 
@@ -59,16 +67,24 @@ func parseCommentsAboveKey(input string, info *builtinInfo) builtinInfo {
 	// Step 1: Split input into lines and trim whitespace
 	lines := strings.Split(strings.TrimSpace(input), "\n")
 
+	var section *builtinSection
+
 	// Step 2: Separate header and tests
 	var headerLines []string
 	//	var testLines []string
 
 	//	fmt.Println("!!!!!!!!!!!!!!!**************")
 
+	re := regexp.MustCompile(`^##### ([A-Za-z0-9 ]+)#####\s+"([^"]*)"`)
+
 	for _, line := range lines {
 		line = strings.TrimSpace(line) // Remove leading and trailing whitespace
 		// fmt.Println("LLLL:" + line)
 		// fmt.Println(line)
+		match := re.FindStringSubmatch(line)
+		if match != nil {
+			section = &builtinSection{match[1], match[2], make([]builtinInfo, 0)}
+		}
 		switch line {
 		case "Tests:":
 			position = inTests
@@ -94,27 +110,42 @@ func parseCommentsAboveKey(input string, info *builtinInfo) builtinInfo {
 	}
 	// Step 3: Combine the header lines into a single string
 	info.doc = strings.Join(headerLines, "\n")
-	return *info
+
+	return *info, section
 }
 
-func outputInfo(infos []builtinInfo) {
-	fmt.Println("section \"base\" \"base text\" {\n") // name
-	for _, info := range infos {
-		if len(info.tests) > 0 {
-			fmt.Printf("\tgroup %s \n", info.name)   // name
-			fmt.Printf("\t\"%s\"\n", info.docstring) // docstring
+func outputInfo(sections *[]builtinSection) {
+	for _, section := range *sections {
+		fmt.Printf("section \"%s\" \"%s\" {\n", section.name, section.docstring) // name
+		for _, info := range section.builtins {
+			if len(info.tests) > 0 {
+				fmt.Printf("\tgroup \"%s\" \n", strings.Replace(info.name, "\\\\", "\\", -1)) // name
+				fmt.Printf("\t\"%s\"\n", info.docstring)                                      // docstring
 
-			fmt.Print("\t{\n") // args
-			for _, t := range info.args {
-				fmt.Println("\t\targ \"" + t + "\"")
-			}
-			fmt.Println("\t}\n")
+				fmt.Print("\t{\n") // args
+				for _, t := range info.args {
+					fmt.Println("\t\targ \"" + t + "\"")
+				}
+				fmt.Println("\t}\n")
 
-			fmt.Print("\t{\n")
-			for _, t := range info.tests {
-				fmt.Println("\t\t" + t)
+				fmt.Print("\t{\n")
+				for _, t := range info.tests {
+					fmt.Println("\t\t" + t)
+				}
+				fmt.Println("\t}\n")
 			}
-			fmt.Println("\t}\n")
+		}
+		fmt.Println("}\n")
+	}
+}
+
+func outputMissing(sections *[]builtinSection) {
+	fmt.Println("missing {") // name
+	for _, section := range *sections {
+		for _, info := range section.builtins {
+			if len(info.tests) == 0 {
+				fmt.Printf("\t %s %q\n", info.name, info.docstring) // docstring
+			}
 		}
 	}
 	fmt.Println("}\n")
@@ -134,9 +165,10 @@ func outputStats(cnt counters) {
 
 var (
 	// fileName = flag.String("fiimle", "", "Path to the Rye file (default: none)")
-	stats = flag.Bool("stats", false, "Show stats about builtins file")
-	ls    = flag.Bool("ls", false, "List builtins files")
-	help  = flag.Bool("help", false, "Displays this help message.")
+	stats   = flag.Bool("stats", false, "Show stats about builtins file")
+	ls      = flag.Bool("ls", false, "List builtins files")
+	missing = flag.Bool("missing", false, "Lists functions missing the tests")
+	help    = flag.Bool("help", false, "Displays this help message.")
 )
 
 func main() {
@@ -162,6 +194,9 @@ func main() {
 	if flag.NFlag() == 0 && flag.NArg() == 0 {
 		flag.Usage()
 		os.Exit(0)
+	} else if *help {
+		flag.Usage()
+		os.Exit(0)
 	} else if *ls {
 		fmt.Println("TODO 1")
 	} else {
@@ -173,7 +208,9 @@ func main() {
 func doParsing(args []string) {
 	/// ###
 
-	infoList := make([]builtinInfo, 0)
+	stemp := make([]builtinSection, 0)
+	sectionList := &stemp
+	// infoList := make([]builtinInfo, 0)
 
 	if len(args) < 1 {
 		fmt.Println("File argument missing")
@@ -194,6 +231,10 @@ func doParsing(args []string) {
 
 	c := counters{0, 0, 0, 0}
 
+	var section *builtinSection
+
+	section = &builtinSection{"Default", "", make([]builtinInfo, 0)}
+
 	// Traverse the AST and find map literals
 	ast.Inspect(node, func(n ast.Node) bool {
 		switch x := n.(type) {
@@ -210,12 +251,19 @@ func doParsing(args []string) {
 							c.functions = c.functions + 1
 							/// fmt.Printf("Key: %s\n", key.Value)
 							// TODO NEXT - parse key into two values
-							info.name = key.Value
+							info.name = key.Value[1 : len(key.Value)-1]
 							// Get comments above the key
 							comment := getCommentsAboveKey(fset, node.Comments, key.Pos())
 							if comment != "" {
 								/// fmt.Printf("Comment above key: %s\n", strings.TrimSpace(comment))
-								info = parseCommentsAboveKey(comment, &info)
+								info, tempSection := parseCommentsAboveKey(comment, &info)
+								if tempSection != nil {
+									// fmt.Println(tempSection)
+									if len(section.builtins) > 0 {
+										*sectionList = append(*sectionList, *section)
+									}
+									section = tempSection
+								}
 								if len(info.tests) > 0 {
 									c.tested_functions = c.tested_functions + 1
 									c.tests = c.tests + len(info.tests)
@@ -223,12 +271,15 @@ func doParsing(args []string) {
 							}
 						}
 					}
-					infoList = append(infoList, info)
+					section.builtins = append(section.builtins, info)
 				}
 			}
 		}
 		return true
 	})
+
+	// fmt.Println(section)
+	*sectionList = append(*sectionList, *section)
 
 	//	fmt.Println(infoList)
 
@@ -236,8 +287,10 @@ func doParsing(args []string) {
 
 	if *stats {
 		outputStats(c)
+	} else if *missing {
+		outputMissing(sectionList)
 	} else {
-		outputInfo(infoList)
+		outputInfo(sectionList)
 	}
 
 	// 	fmt.Println("===================================================")

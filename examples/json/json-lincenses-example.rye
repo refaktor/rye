@@ -5,7 +5,7 @@
 get https://api.github.com/orgs/golang/repos
 |parse-json
 |map { -> "license" |fix\either { "no" } { -> "key" } }
-|spreadsheet* { "license" }
+|table* { "license" }
 |group-by 'license { 'license count } |display
 
 ; | license      | license_count |

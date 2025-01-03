@@ -35,7 +35,7 @@ func ValueToBSON(arg0 env.Object, topLevel bool) any {
 		}
 		val = vals
 		typ = "block"
-	/*case env.SpreadsheetRow:
+	/*case env.TableRow:
 	vals := make([]interface{}, len(obj.Values))
 	for i, valu := range obj.Values {
 		switch val := valu.(type) {
@@ -45,7 +45,7 @@ func ValueToBSON(arg0 env.Object, topLevel bool) any {
 	}
 	val = vals
 	typ = "sprr"*/
-	case env.SpreadsheetRow:
+	case env.TableRow:
 		vals := make([]any, len(obj.Values))
 		for i, valu := range obj.Values {
 			switch val := valu.(type) {
@@ -54,7 +54,7 @@ func ValueToBSON(arg0 env.Object, topLevel bool) any {
 			}
 		}
 		val = vals
-	case *env.Spreadsheet:
+	case *env.Table:
 		rows := make([]any, len(obj.Rows))
 		for i, valu := range obj.Rows {
 			rows[i] = ValueToBSON(valu, false)
@@ -62,7 +62,7 @@ func ValueToBSON(arg0 env.Object, topLevel bool) any {
 		val = rows
 		typ = "spr"
 		met = obj.Cols
-	case env.Spreadsheet:
+	case env.Table:
 		// spr["val"] = obj.Rows
 		//data := make([]interface{}, len(obj.Rows))
 		//cols := make([]string, len(obj.Cols))
@@ -119,7 +119,7 @@ func BsonToValue_Map(ps *env.ProgramState, val any, typ string, meta any, topLev
 				for i, rr := range cols {
 					rcols[i] = rr.(string)
 				}
-				spr := env.NewSpreadsheet(rcols)
+				spr := env.NewTable(rcols)
 				//rows := make([]interface{}, len(spr.Cols))
 				for ii := 0; ii < len(rval); ii++ {
 					switch rrval := rval[ii].(type) {
@@ -128,9 +128,9 @@ func BsonToValue_Map(ps *env.ProgramState, val any, typ string, meta any, topLev
 						for iii, rrrval := range rrval {
 							cells[iii] = BsonToValue_Map(ps, rrrval, "", nil, false)
 						}
-						spr.AddRow(*env.NewSpreadsheetRow(cells, spr))
+						spr.AddRow(*env.NewTableRow(cells, spr))
 					case []any:
-						spr.AddRow(*env.NewSpreadsheetRow(rrval, spr))
+						spr.AddRow(*env.NewTableRow(rrval, spr))
 					}
 				}
 				return *spr

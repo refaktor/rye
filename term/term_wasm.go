@@ -108,17 +108,17 @@ func DisplayDict(bloc env.Dict, idx *env.Idxs) (env.Object, bool) {
 	panic("unimplemented")
 }
 
-// DisplaySpreadsheetRow is dummy non-implementation for wasm for display builtin
-func DisplaySpreadsheetRow(bloc env.SpreadsheetRow, idx *env.Idxs) (env.Object, bool) {
+// DisplayTableRow is dummy non-implementation for wasm for display builtin
+func DisplayTableRow(bloc env.TableRow, idx *env.Idxs) (env.Object, bool) {
 	panic("unimplemented")
 }
 
 // DisplayTable is dummy non-implementation for wasm for display builtin
-func DisplayTable(bloc env.Spreadsheet, idx *env.Idxs) (env.Object, bool) {
+func DisplayTable(bloc env.Table, idx *env.Idxs) (env.Object, bool) {
 	panic("unimplemented")
 }
 
-func DisplayTableCustom(bloc env.Spreadsheet, myfn func(row env.Object, iscurr env.Integer), idx *env.Idxs) (env.Object, bool) {
+func DisplayTableCustom(bloc env.Table, myfn func(row env.Object, iscurr env.Integer), idx *env.Idxs) (env.Object, bool) {
 	panic("unimplemented")
 }
 

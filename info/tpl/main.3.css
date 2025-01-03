@@ -1,0 +1,66 @@
+body {
+    font-family: Roboto;
+    background-color: white;
+    padding: 20px;
+    font-size: 15px;
+}
+
+
+div.group {
+    width: 465px;
+    background-color: #3e3e3e;
+    border: 1px solid #eee;
+    padding: 2px 15px;
+    border-radius: 10px;
+}
+pre.prettyprint {
+    __border: 1px solid green;
+    width: 520px;
+    background-color: transparent;
+    padding: 10px;
+    box-model: content;
+    font-size: 13px;
+    border-radius: 4px;
+}
+div.group pre.prettyprint {
+    border: none;
+    padding: 6px;
+    white-space: pre-wrap;
+    border-radius: 10px;
+}
+
+
+
+#menu-holder {
+    width: 400px;
+    /*! background-color: #fdfdfd; */
+    _top: 160px;
+    _left: 850px;
+    _position: absolute;
+    padding: 20px;
+    _border-left: 4px solid #e1e1e1;
+}
+#menu-holder a {
+    color: #353535;
+    text-decoration: none;
+    font-weight: bold;
+}
+#menu-holder ul {
+    list-style: none;
+    padding-left: 20px;
+}
+#menu-holder > ul > li {
+    margin-top: 4px;
+}
+#menu-holder li ul {
+    padding-left: 0px;
+}
+#menu-holder li li {
+    display: inline-block;
+    padding: 5px 13px 5px 2px;
+}
+#menu-holder li li a {
+    color: #1e7fa6;
+    text-decoration: none;
+    font-weight: normal;
+}

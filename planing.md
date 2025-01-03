@@ -55,7 +55,7 @@ rye cont --do 'loop 3 { init }'      # runs last saved state and then --do so it
 rye . --do 'init'                    # runs main.rye and function init
 ```
 
-### Spreadsheet improvements [+++]
+### Table improvements [+++]
 
 More where options:
 * where-match regexp
@@ -63,12 +63,12 @@ More where options:
 * where-in
 * save\csv
   
-**Group-by** function creates a new spreadsheet with category column and agregated columns:
+**Group-by** function creates a new table with category column and agregated columns:
 ```
 spr .group-by 'category { price: avg  qty: sum  category: count }
 ```
 
-**left-join** and **inner-join** joins two spreadsheet given two columns of them.  
+**left-join** and **inner-join** joins two table given two columns of them.  
 ```
 users .left-join groups 'group_id 'id
 ```
