@@ -7,7 +7,7 @@ toolchain go1.23.1
 retract v0.0.11 // Published accidentally with a bug
 
 require (
-	github.com/JohannesKaufmann/html-to-markdown/v2 v2.2.1
+	github.com/JohannesKaufmann/html-to-markdown/v2 v2.2.2
 	github.com/atotto/clipboard v0.1.4
 	github.com/aws/aws-sdk-go-v2 v1.32.7
 	github.com/aws/aws-sdk-go-v2/config v1.28.6
@@ -51,7 +51,7 @@ require (
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
-	github.com/JohannesKaufmann/dom v0.1.1-0.20240706125338-ff9f3b772364 // indirect
+	github.com/JohannesKaufmann/dom v0.2.0 // indirect
 	github.com/RoaringBitmap/roaring v1.9.3 // indirect
 	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.47 // indirect
