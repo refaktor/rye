@@ -1,9 +1,9 @@
 filippo.io/edwards25519 v1.1.0 h1:FNf4tywRC1HmFuKW5xopWpigGjJKiJSV0Cqo0cJWDaA=
 filippo.io/edwards25519 v1.1.0/go.mod h1:BxyFTGdWcka3PhytdK4V28tE5sGfRvvvRV7EaN4VDT4=
-github.com/JohannesKaufmann/dom v0.1.1-0.20240706125338-ff9f3b772364 h1:TDlO/A2QqlNhdvH+hDnu8cv1rouhfHgLwhGzJeHGgFQ=
-github.com/JohannesKaufmann/dom v0.1.1-0.20240706125338-ff9f3b772364/go.mod h1:U+fBZLZTYiZCOwQUT04V3J4I+0TxyLNnj0R8nBlO4fk=
-github.com/JohannesKaufmann/html-to-markdown/v2 v2.2.1 h1:CTdlXnVjuOA8nh2NRjPx2hZvrSirvqWmgMfYSsgh3+8=
-github.com/JohannesKaufmann/html-to-markdown/v2 v2.2.1/go.mod h1:/4SMA6sya4rFx35o6hHFhK47vKunlKqrw1anAVsihGQ=
+github.com/JohannesKaufmann/dom v0.2.0 h1:1bragmEb19K8lHAqgFgqCpiPCFEZMTXzOIEjuxkUfLQ=
+github.com/JohannesKaufmann/dom v0.2.0/go.mod h1:57iSUl5RKric4bUkgos4zu6Xt5LMHUnw3TF1l5CbGZo=
+github.com/JohannesKaufmann/html-to-markdown/v2 v2.2.2 h1:R1085yJXsGfROq7qpXziLhGBqwA1BYDiUo2iYir1GUg=
+github.com/JohannesKaufmann/html-to-markdown/v2 v2.2.2/go.mod h1:SEAzpYwRyt41M2gOentwAt1Wubr3UHyPPSYtC2CIiNg=
 github.com/RoaringBitmap/roaring v1.9.3 h1:t4EbC5qQwnisr5PrP9nt0IRhRTb9gMUgQF4t4S2OByM=
 github.com/RoaringBitmap/roaring v1.9.3/go.mod h1:6AXUsoIEzDTFFQCe1RbGA6uFONMhvejWj5rqITANK90=
 github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be h1:9AeTilPcZAjCFIImctFaOjnTIavg87rW78vTPkQqLI8=
