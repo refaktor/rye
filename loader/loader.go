@@ -121,9 +121,9 @@ func LoadStringNEW(input string, sig bool, ps *env.ProgramState) env.Object {
 	if sig {
 		signed := checkCodeSignature(input)
 		if signed == -1 {
-			return *env.NewError("")
+			return env.NewError("Sig err: 1")
 		} else if signed == -2 {
-			return *env.NewError("")
+			return env.NewError("Sig err: 2")
 		}
 	}
 
@@ -149,7 +149,7 @@ func LoadStringNEW(input string, sig bool, ps *env.ProgramState) env.Object {
 		bu.WriteString(errStr)
 
 		ps.FailureFlag = true
-		return *env.NewError(bu.String())
+		return env.NewError(bu.String())
 		// empty1 := make([]env.Object, 0)
 		// ser := env.NewTSeries(empty1)
 		// return *env.NewBlock(*ser)
