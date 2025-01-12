@@ -5501,7 +5501,7 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
-				block, _ := loader.LoadString(s1.Value, false)
+				block := loader.LoadStringNEW(s1.Value, false, ps)
 				//ps = env.AddToProgramState(ps, block.Series, genv)
 				return block
 			case env.Uri:
@@ -5522,7 +5522,7 @@ var builtins = map[string]*env.Builtin{
 				return block
 			default:
 				ps.FailureFlag = true
-				return env.NewError("Must be string or file TODO")
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.UriType}, "import\\live")
 			}
 		},
 	},
