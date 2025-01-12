@@ -12,7 +12,7 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.32.7
 	github.com/aws/aws-sdk-go-v2/config v1.28.7
 	github.com/aws/aws-sdk-go-v2/service/ses v1.28.3
-	github.com/bitfield/script v0.23.0
+	github.com/bitfield/script v0.24.0
 	github.com/blevesearch/bleve/v2 v2.4.4
 	github.com/blevesearch/bleve_index_api v1.2.0
 	github.com/cszczepaniak/keyboard v0.1.0
