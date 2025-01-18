@@ -220,6 +220,7 @@ func IntersectStrings(a string, b string) string {
 	for _, ch := range a {
 		if strings.ContainsRune(b, ch) && !set[ch] {
 			bu.WriteRune(ch)
+			set[ch] = true
 		}
 	}
 	return bu.String()
@@ -231,6 +232,7 @@ func IntersectBlocks(ps *env.ProgramState, a env.Block, b env.Block) []env.Objec
 	for _, v := range a.Series.S {
 		if ContainsVal(ps, b.Series.S, v) && !set[v] {
 			res = append(res, v)
+			set[v] = true
 		}
 	}
 	return res

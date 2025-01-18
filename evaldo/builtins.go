@@ -369,6 +369,71 @@ func (s RyeListSort) Less(i, j int) bool {
 	return greaterThanNew(env.ToRyeValue(s[j]), env.ToRyeValue(s[i]))
 }
 
+// Custom Sort object interface
+type RyeBlockCustomSort struct {
+	data []env.Object
+	fn   env.Function
+	ps   *env.ProgramState
+}
+
+func (s RyeBlockCustomSort) Len() int {
+	return len(s.data)
+}
+func (s RyeBlockCustomSort) Swap(i, j int) {
+	s.data[i], s.data[j] = s.data[j], s.data[i]
+}
+func (s RyeBlockCustomSort) Less(i, j int) bool {
+	CallFunctionArgs2(s.fn, s.ps, s.data[i], s.data[j], nil)
+	return util.IsTruthy(s.ps.Res)
+}
+
+// Custom Sort object interface
+type RyeListCustomSort struct {
+	data []any
+	fn   env.Function
+	ps   *env.ProgramState
+}
+
+func (s RyeListCustomSort) Len() int {
+	return len(s.data)
+}
+func (s RyeListCustomSort) Swap(i, j int) {
+	s.data[i], s.data[j] = s.data[j], s.data[i]
+}
+func (s RyeListCustomSort) Less(i, j int) bool {
+	CallFunctionArgs2(s.fn, s.ps, env.ToRyeValue(s.data[i]), env.ToRyeValue(s.data[j]), nil)
+	return util.IsTruthy(s.ps.Res)
+}
+
+func IntersectStringsCustom(a env.String, b env.String, ps *env.ProgramState, fn env.Function) string {
+	set := make(map[rune]bool)
+	var bu strings.Builder
+	for _, ch := range a.Value {
+		CallFunctionArgs2(fn, ps, b, *env.NewString(string(ch)), nil)
+		res := util.IsTruthy(ps.Res)
+		if res && !set[ch] {
+			bu.WriteRune(ch)
+			set[ch] = true
+		}
+	}
+	return bu.String()
+}
+
+func IntersectBlocksCustom(a env.Block, b env.Block, ps *env.ProgramState, fn env.Function) []env.Object {
+	set := make(map[string]bool)
+	res := make([]env.Object, 0)
+	for _, v := range a.Series.S {
+		CallFunctionArgs2(fn, ps, b, v, nil)
+		r := util.IsTruthy(ps.Res)
+		strv := v.Inspect(*ps.Idx)
+		if r && !set[strv] {
+			res = append(res, v)
+			set[strv] = true
+		}
+	}
+	return res
+}
+
 func LoadScriptLocalFile(ps *env.ProgramState, s1 env.Uri) (env.Object, string) {
 	var str string
 	fileIdx, _ := ps.Idx.GetIndex("file")
@@ -1432,14 +1497,14 @@ var builtins = map[string]*env.Builtin{
 			//contains block
 			case env.Block:
 				switch value := arg1.(type) {
-				case env.Integer:
+				case env.Object:
 					if util.ContainsVal(ps, s1.Series.S, value) {
 						return *env.NewInteger(1)
 					} else {
 						return *env.NewInteger(0)
 					}
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "contains")
+					return MakeArgError(ps, 2, []env.Type{}, "contains")
 				}
 			// contains list
 			case env.List:
@@ -2780,6 +2845,43 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
+	//  equal { sort\by { 6 12 1 } fn { a b } { a < b } } { 1 6 12 }
+	//  equal { sort\by { 6 12 1 } fn { a b } { a > b } } { 12 6 1 }
+	//  equal { sort\by { { x 6 } { x 12 } { x 1 } } fn { a b } { second a |< second b } } { { x 1 } { x 6 } { x 12 } }
+	"sort\\by": { // TODO -- make sort (not in place) and  decide if sort will only work on ref
+		Argsn: 2,
+		Doc:   "Accepts a block or list and sorts in place in ascending order and returns it.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch block := arg0.(type) {
+			case env.Block:
+				switch fn := arg1.(type) {
+				case env.Function:
+					copied := make([]env.Object, len(block.Series.S))
+					copy(copied, block.Series.S)
+					sorter := RyeBlockCustomSort{copied, fn, ps}
+					sort.Sort(sorter)
+					return *env.NewBlock(*env.NewTSeries(copied))
+				default:
+					return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "sort!")
+				}
+			case env.List:
+				switch fn := arg1.(type) {
+				case env.Function:
+					copied := make([]any, len(block.Data))
+					copy(copied, block.Data)
+					sorter := RyeListCustomSort{copied, fn, ps}
+					sort.Sort(sorter)
+					return *env.NewList(copied)
+				default:
+					return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "sort!")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "sort!")
+			}
+		},
+	},
+
+	// Tests:
 	// equal { list { 3 2 3 5 3 2 } .unique |sort } list { 2 3 5 }
 	// equal { unique list { 1 1 2 2 3 } |sort } list { 1 2 3 }
 	// equal { unique list { 1 1 2 2 } |sort } list { 1 2 }
@@ -3226,6 +3328,58 @@ var builtins = map[string]*env.Builtin{
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.ListType}, "intersection")
 				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType, env.ListType}, "intersection")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { intersection\by "foobar" "fbx" fn { a b } { a .contains b } } "fb"
+	// equal { intersection\by "fooBar" "Fbx" fn { a b } { a .to-lower .contains to-lower b } } "fB"
+	// equal { intersection\by { "foo" 33 } { 33 33 } fn { a b } { a .contains b } } { 33 }
+	// equal { intersection\by { "foo" "bar" 33 } { 42 } fn { a b } { map a { .type? } |contains b .type? } } { 33 }
+	// equal { intersection\by { { "foo" x } { "bar" y } } { { "bar" z } } fn { a b } { map a { .first } |contains first b } } { { "bar" y } }
+	"intersection\\by": {
+		Argsn: 3,
+		Doc:   "Finds the intersection of two values by custom function.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				switch s2 := arg1.(type) {
+				case env.String:
+					switch s3 := arg2.(type) {
+					case env.Function:
+						inter := IntersectStringsCustom(s1, s2, ps, s3)
+						return *env.NewString(inter)
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.FunctionType}, "intersection\\by")
+					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "intersection\\by")
+				}
+			case env.Block:
+				switch b2 := arg1.(type) {
+				case env.Block:
+					switch s3 := arg2.(type) {
+					case env.Function:
+						inter := IntersectBlocksCustom(s1, b2, ps, s3)
+						return *env.NewBlock(*env.NewTSeries(inter))
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.FunctionType}, "intersection\\by")
+					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "intersection\\by")
+				}
+			/* case env.List:
+			switch l2 := arg1.(type) {
+			case env.List:
+				inter := util.IntersectLists(ps, s1, l2)
+				return *env.NewList(inter)
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.ListType}, "intersection")
+			} */
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType, env.ListType}, "intersection")
 			}
@@ -4497,32 +4651,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	/* "table": {
-		Argsn: 1,
-		Doc:   "Constructs an empty table, accepts a block of column names",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch bloc := arg0.(type) {
-			case env.Block:
-				vv := bloc.Series.Peek()
-				switch vv.(type) {
-				case env.String:
-					cols := make([]string, bloc.Series.Len())
-					for i := 0; i < bloc.Series.Len(); i++ {
-						cols[i] = bloc.Series.Get(i).(env.String).Value
-					}
-					return *env.NewTable(cols)
-
-				case env.Word:
-					// TODO
-				}
-				return nil
-			}
-			return nil
-		},
-	}, */
-
 	//
-	// ##### Values & Types ##### ""
+	// ##### Values and Types ##### ""
 	//
 	// Tests:
 	// equal { to-word "test" } 'test
@@ -6647,6 +6777,8 @@ var builtins = map[string]*env.Builtin{
 	// equal { produce 5 0 { + 3 } } 15
 	// equal { produce 3 ">" { + "x>" } } ">x>x>x>"
 	// equal { produce 3 { } { .concat "x" } } { "x" "x" "x" }
+	// equal { produce 3 { } { ::x .concat length? x } } { 0 1 2 }
+	// equal { produce 5 { 2 } { ::acc .last ::x * x |concat* acc } } { 2 4 16 256 65536 4294967296 }
 	"produce": {
 		Argsn: 3,
 		Doc:   "Accepts a number, initial value and a block of code. Does the block of code number of times, injecting the initial value or last result.",
@@ -8366,6 +8498,23 @@ var builtins = map[string]*env.Builtin{
 				return *env.NewInteger(int64(er.Status))
 			case *env.Error:
 				return *env.NewInteger(int64(er.Status))
+			default:
+				ps.FailureFlag = true
+				return env.NewError("arg 0 not error")
+			}
+		},
+	},
+
+	"message?": { // **
+		AcceptFailure: true,
+		Argsn:         1,
+		Doc:           "Returns the status code of the Error.", // TODO -- seems duplicate of status
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch er := arg0.(type) {
+			case env.Error:
+				return *env.NewString(er.Message)
+			case *env.Error:
+				return *env.NewString(er.Message)
 			default:
 				ps.FailureFlag = true
 				return env.NewError("arg 0 not error")

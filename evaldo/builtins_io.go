@@ -18,7 +18,7 @@ import (
 	"github.com/refaktor/rye/env"
 
 	"net/http"
-	"net/http/cgi"
+	//	"net/http/cgi"
 
 	"github.com/jlaffaye/ftp"
 )
@@ -910,44 +910,6 @@ var Builtins_io = map[string]*env.Builtin{
 		Doc:   "Send email.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __email_send(ps, arg0, arg1, arg2, arg3, arg4)
-		},
-	},
-
-	"serve-cgi": {
-		Argsn: 3,
-		Doc:   "Serve CGI.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch rword := arg0.(type) {
-			case env.Word:
-				switch wword := arg1.(type) {
-				case env.Word:
-					switch bloc := arg2.(type) {
-					case env.Block:
-						var rctx *env.RyeCtx
-						if err := cgi.Serve(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-							ser := ps.Ser
-							ctx := ps.Ctx
-							ps.Ser = bloc.Series
-							ps.Ctx = env.NewEnv(ps.Ctx) // make new context with no parent
-							ps.Ctx.Set(rword.Index, *env.NewNative(ps.Idx, w, "Go-server-response-writer"))
-							ps.Ctx.Set(wword.Index, *env.NewNative(ps.Idx, r, "Go-server-request"))
-							EvalBlock(ps)
-							rctx = ps.Ctx
-							ps.Ctx = ctx
-							ps.Ser = ser
-						})); err != nil {
-							return MakeBuiltinError(ps, err.Error(), "serve-cgi")
-						}
-						return *rctx
-					default:
-						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "serve-cgi")
-					}
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType}, "serve-cgi")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.WordType}, "serve-cgi")
-			}
 		},
 	},
 

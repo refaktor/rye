@@ -77,9 +77,9 @@ func LoadString(input string, sig bool) (env.Object, *env.Idxs) {
 	if sig {
 		signed := checkCodeSignature(input)
 		if signed == -1 {
-			return *env.NewError(""), wordIndex
+			return env.NewError(""), wordIndex
 		} else if signed == -2 {
-			return *env.NewError(""), wordIndex
+			return env.NewError(""), wordIndex
 		}
 	}
 
@@ -246,6 +246,10 @@ func parseString(v *Values, d Any) (Any, error) {
 	str := v.Token()[1 : len(v.Token())-1]
 	// turn \n to newlines
 	str = strings.Replace(str, "\\n", "\n", -1)
+	str = strings.Replace(str, "\\r", "\r", -1)
+	str = strings.Replace(str, "\\t", "\t", -1)
+	str = strings.Replace(str, "\\\"", "\"", -1)
+	str = strings.Replace(str, "\\\\", "\\", -1)
 	return *env.NewString(str), nil
 }
 
