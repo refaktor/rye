@@ -71,7 +71,8 @@ docs-framework: context {
 
 	error: fn { test } {
 		; try { do\in root-ctx test }
-		probe test |try |probe
+		test |try :got |type? |= 'error
+		|if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" mold\nowrap test newline "; correctly causes error:\n; " message? got " </code></pre>" ] }
 	}
 
 	stdout: fn { test res } {

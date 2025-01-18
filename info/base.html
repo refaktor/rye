@@ -100,24 +100,27 @@
 <h3>inc</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>inc 123
 ; returns 124</code></pre>
-[Block: ^[Word: inc] [String: 123] ]
-REF[Error: builtin `inc` requires argument 1 to be: Integer. ]
+<pre class='prettyprint lang-rye'><code language='lang-rye'>inc "123"
+; correctly causes error:
+; builtin `inc` requires argument 1 to be: Integer. </code></pre>
 </div>
 <h3>is-positive</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>is-positive 123
 ; returns 1</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>is-positive -123
 ; returns 0</code></pre>
-[Block: ^[Word: is-positive] [String: 123] ]
-REF[Error: builtin `is-positive` requires argument 1 to be: Integer, Decimal. ]
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-positive "123"
+; correctly causes error:
+; builtin `is-positive` requires argument 1 to be: Integer, Decimal. </code></pre>
 </div>
 <h3>is-zero</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>is-zero 0
 ; returns 1</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>is-zero 123
 ; returns 0</code></pre>
-[Block: ^[Word: is-zero] [String: 123] ]
-REF[Error: builtin `is-zero` requires argument 1 to be: Integer, Decimal. ]
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-zero "123"
+; correctly causes error:
+; builtin `is-zero` requires argument 1 to be: Integer, Decimal. </code></pre>
 </div>
 <h3>multiple-of</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>10 .multiple-of 2
@@ -154,14 +157,16 @@ REF[Error: builtin `is-zero` requires argument 1 to be: Integer, Decimal. ]
 <h3>inc!</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>a:: 123 inc! 'a a
 ; returns 124</code></pre>
-[Block: ^[Word: inc!] [Integer: 123] ]
-REF[Error: builtin `inc!` requires argument 1 to be: Word. ]
+<pre class='prettyprint lang-rye'><code language='lang-rye'>inc! 123
+; correctly causes error:
+; builtin `inc!` requires argument 1 to be: Word. </code></pre>
 </div>
 <h3>dec!</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>a:: 123 dec! 'a a
 ; returns 122</code></pre>
-[Block: ^[Word: dec!] [Integer: 123] ]
-REF[Error: builtin `dec!` requires argument 1 to be: Word. ]
+<pre class='prettyprint lang-rye'><code language='lang-rye'>dec! 123
+; correctly causes error:
+; builtin `dec!` requires argument 1 to be: Word. </code></pre>
 </div>
 <h3>_.</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>4 . .type?
@@ -181,9 +186,9 @@ REF[Error: builtin `dec!` requires argument 1 to be: Word. ]
 <pre class='prettyprint lang-rye'><code language='lang-rye'>{ 1 2 } + { 3 4 }
 ; returns { 1 2 3 4 }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 } |+ { "b" 2 }
-; returns dict { b 2 a 1 }</code></pre>
+; returns dict { a 1 b 2 }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 } |+ dict { "b" 2 }
-; returns dict { b 2 a 1 }</code></pre>
+; returns dict { a 1 b 2 }</code></pre>
 </div>
 <h3>_-</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>2 - 1
@@ -263,7 +268,7 @@ REF[Error: builtin `dec!` requires argument 1 to be: Word. ]
 <pre class='prettyprint lang-rye'><code language='lang-rye'>trim\ "__ASDF__" "_"
 ; returns "ASDF"</code></pre>
 </div>
-<h3>trim\right</h3><p></p><div class='group'>
+<h3>trimight</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>trim\right "__ASDF__" "_"
 ; returns "__ASDF"</code></pre>
 </div>
@@ -501,7 +506,7 @@ REF[Error: builtin `dec!` requires argument 1 to be: Word. ]
 </div>
 <h3>values</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 "b" 2 "c" 3 } |values
-; returns list { 1 2 3 }</code></pre>
+; returns list { 3 1 2 }</code></pre>
 </div>
 <h3>sort</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>sort { 6 12 1 }
@@ -512,10 +517,19 @@ REF[Error: builtin `dec!` requires argument 1 to be: Word. ]
 ; returns { "a" "b" "c" }</code></pre>
 </div>
 <h3>sort!</h3><p></p><div class='group'>
-[Block: ^[Setword: x] [Block: ^[Integer: 6] [Integer: 12] [Integer: 1] ] [Comma] [Word: sort!] [Word: x] ]
-REF[Error: builtin `sort!` requires argument 1 to be: Block, List. ]
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: { 6 12 1 } , sort! x
+; correctly causes error:
+; builtin `sort!` requires argument 1 to be: Block, List. </code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>x: ref { 1 6 12 } , sort! x , x
 ; returns { 1 6 12 }</code></pre>
+</div>
+<h3>sort\by</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>sort\by { 6 12 1 } fn { a b } { a < b }
+; returns { 1 6 12 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>sort\by { 6 12 1 } fn { a b } { a > b }
+; returns { 12 6 1 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>sort\by { { x 6 } { x 12 } { x 1 } } fn { a b } { second a |< second b }
+; returns { { x 1 } { x 6 } { x 12 } }</code></pre>
 </div>
 <h3>unique</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>list { 3 2 3 5 3 2 } .unique |sort
@@ -540,8 +554,9 @@ REF[Error: builtin `sort!` requires argument 1 to be: Block, List. ]
 ; returns { 3 2 1 3 }</code></pre>
 </div>
 <h3>reverse!</h3><p></p><div class='group'>
-[Block: ^[Word: reverse!] [Block: ^[Integer: 3] [Integer: 1] [Integer: 2] [Integer: 3] ] ]
-REF[Error: builtin `reverse!` requires argument 1 to be: Block, String, List. ]
+<pre class='prettyprint lang-rye'><code language='lang-rye'>reverse! { 3 1 2 3 }
+; correctly causes error:
+; builtin `reverse!` requires argument 1 to be: Block, String, List. </code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>reverse! ref { 3 2 1 3 }
 ; returns { 3 2 1 3 }</code></pre>
 </div>
@@ -644,6 +659,18 @@ REF[Error: builtin `reverse!` requires argument 1 to be: Block, String, List. ]
 ; returns list { }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>intersection list { } list { }
 ; returns list { }</code></pre>
+</div>
+<h3>intersection\by</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>intersection\by "foobar" "fbx" fn { a b } { a .contains b }
+; returns "fb"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>intersection\by "fooBar" "Fbx" fn { a b } { a .to-lower .contains to-lower b }
+; returns "fB"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>intersection\by { "foo" 33 } { 33 33 } fn { a b } { a .contains b }
+; returns { 33 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>intersection\by { "foo" "bar" 33 } { 42 } fn { a b } { map a { .type? } |contains b .type? }
+; returns { 33 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>intersection\by { { "foo" x } { "bar" y } } { { "bar" z } } fn { a b } { map a { .first } |contains first b }
+; returns { { "bar" y } }</code></pre>
 </div>
 <h3>difference</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>"abcde" .difference "cde"
@@ -755,9 +782,10 @@ th!</h3><p></p><div class='group'>
 <h3>unbind</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { y: 123 } cc: bind! context { z: does { y + 234 } } c , unbind cc cc/z
 ; returns 357</code></pre>
-[Block: ^[Setword: c] [Word: context] [Block: ^[Setword: y] [Integer: 123] ] [Setword: cc] [Word: bind!] [Word: context] [Block: ^[Setword: z] [Word: does] [Block: ^[Word: y] [Opword: _+] [Integer: 234] ] ] [Word: c] [Comma] [Setword: dd] [Word: unbind] [Word: cc] [CPath: [Word: dd]/[Word: z]] ]
 [Opword: _+]
-REF[Error(5): word not found: y ]
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { y: 123 } cc: bind! context { z: does { y + 234 } } c , dd: unbind cc dd/z
+; correctly causes error:
+; word not found: y </code></pre>
 </div>
 <h3>pass</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>101 .pass { 202 }
@@ -824,26 +852,32 @@ REF[Error(5): word not found: y ]
 ; returns function</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>x: pfn { x } { + 123 } , x 123
 ; returns 246</code></pre>
-[Block: ^[Setword: x] [Word: pfn] [Block: ^[Word: x] ] [Block: ^[Opword: print] ] [Comma] [Word: x] [Integer: 123] ]
-REF[Error(5): word not found: print ]
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: pfn { x } { .print } , x 123
+; correctly causes error:
+; word not found: print </code></pre>
 </div>
+</div>
+<h2>Values and Types </h2><p></p><div class='section'>
 <h3>to-word</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>to-word "test"
 ; returns test</code></pre>
-[Block: ^[Word: to-word] [Integer: 123] ]
-REF[Error: builtin `to-word` requires argument 1 to be: String, Word. ]
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-word 123
+; correctly causes error:
+; builtin `to-word` requires argument 1 to be: String, Word. </code></pre>
 </div>
 <h3>to-integer</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>to-integer "123"
 ; returns 123</code></pre>
-[Block: ^[Word: to-integer] [String: abc] ]
-REF[Error: strconv.Atoi: parsing "abc": invalid syntax in builtin to-integer. ]
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-integer "abc"
+; correctly causes error:
+; strconv.Atoi: parsing "abc": invalid syntax in builtin to-integer. </code></pre>
 </div>
 <h3>to-decimal</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>to-decimal "123.4"
 ; returns 123.4</code></pre>
-[Block: ^[Word: to-decimal] [String: abc] ]
-REF[Error: strconv.ParseFloat: parsing "abc": invalid syntax in builtin to-decimal. ]
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-decimal "abc"
+; correctly causes error:
+; strconv.ParseFloat: parsing "abc": invalid syntax in builtin to-decimal. </code></pre>
 </div>
 <h3>to-string</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>to-string 'test
@@ -858,8 +892,9 @@ REF[Error: strconv.ParseFloat: parsing "abc": invalid syntax in builtin to-decim
 <h3>to-char</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>to-char 42
 ; returns "*"</code></pre>
-[Block: ^[Word: to-char] [String: *] ]
-REF[Error: builtin `to-char` requires argument 1 to be: Integer. ]
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-char "*"
+; correctly causes error:
+; builtin `to-char` requires argument 1 to be: Integer. </code></pre>
 </div>
 <h3>to-block</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>list [ 1 2 3 ] |to-block |type?
@@ -1086,9 +1121,9 @@ owrap</h3><p></p><div class='group'>
 <h3>do</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>do { 123 + 123 }
 ; returns 246</code></pre>
-[Block: ^[Word: do] [Block: ^[Integer: 123] [Opword: _+] ] ]
-REF[Error: argument 2 of 2 missing of builtin: 'Adds or joins two values together (Integers, Strings, Uri-s and Blocks) (core) (_+)' 
-  Error: expected rye value but it's missing ]
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do { 123 + }
+; correctly causes error:
+; argument 2 of 2 missing of builtin: 'Adds or joins two values together (Integers, Strings, Uri-s and Blocks) (core) (_+)' </code></pre>
 </div>
 <h3>try</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>try { 123 + 123 }
@@ -1188,6 +1223,10 @@ REF[Error: argument 2 of 2 missing of builtin: 'Adds or joins two values togethe
 ; returns ">x>x>x>"</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>produce 3 { } { .concat "x" }
 ; returns { "x" "x" "x" }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>produce 3 { } { :x .concat length? x }
+; returns { 0 1 2 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>produce 5 { 2 } { :acc .last :x * x |concat* acc }
+; returns { 2 4 16 256 65536 4294967296 }</code></pre>
 </div>
 <h3>produce\while</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>x: 0 produce\while { x < 100 } 1 { * 2 :x }
