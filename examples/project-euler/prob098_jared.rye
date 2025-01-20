@@ -1,0 +1,67 @@
+;# Project Euler: Problem 98 - Solution by Jared Krinke in his 100-languages project
+; https://github.com/jaredkrinke/100-languages/blob/main/src/p98.rye
+;
+; Algorithm: first, count characters in words to find anagrams, then compute
+; the transformation required for each anagram pair (by counting the first
+; character as "1", second as "2", etc., using previous digits for repeated
+; characters--note that the pattern of the source word must also be included to
+; distinguish "abc" from "abb" or "aba"), and finally find the intersection of
+; word and square transformations and take the largest square.
+
+; Utilities
+split\characters: fn { s } { s |split "" }
+contains?: fn { l i } { ( filter l { = i } ) .length? > 0 }
+concat\lists: fn { list } { reduce list 'acc { .concat* acc } }
+pairs\permutations: fn { list } { list |map { ::x list |filter { = x |not } |map { ::y [ x y ] } } |concat\lists }
+group: fn { list get-key } {
+  info: list |map { ::o [ o ( do concat { o } get-key ) ] } ,
+  groups: info |map { .second } |sort |unique ,
+  groups |map { ::key , [ key ( info |filter { .second = key } ) |map { .first } ] }
+}
+
+; Anagram finder (list of lists)
+sort-word: fn { word } { word |split\characters |sort |join }
+find-anagrams: fn { l } {
+  info: l |map { ::w [ w sort-word w ] } ,
+  anagrams: info |map { .second } |sort |partition { , } |filter { .length? > 1 } |map { .first } ,
+  info
+    |filter { ::x contains? anagrams second x }
+    |map { .first }
+    |group { .sort-word }
+    |map { .second .pairs\permutations }
+    |concat\lists
+}
+
+; "Normalize" two words (could be digits or letters) by calculating the position of characters of a in b
+get-transformation: fn { pair } {
+  a: first pair ,
+  b: second pair ,
+  al: ( a |split\characters ) ,
+  a1: al |map { .position?* a } |join ,
+  a2: al |map { .position?* b } |join ,
+  join [ a1 "-" a2 ]
+}
+
+; Find anagrams from words file and keep transformations only
+word-anagrams:
+  ( split\quoted read %0098_words.txt "," `"` )                              ; "
+    |find-anagrams
+    |map { .get-transformation }
+  ,
+
+; Find square anagrams and compute each pair's transformation, keeping that and the larger square
+square-anagrams:
+  range 1 1000
+    |map { ::n n * n }
+    |map { .to-string }
+    |find-anagrams
+    |map { ::pair [ ( max ( pair |map { .to-integer } ) ) ( get-transformation pair ) ] }
+  ,
+
+; Intersect the two lists
+anagramic-squares:
+  square-anagrams
+    |filter { ::o contains? word-anagrams ( second o ) }
+    |map { .first }
+    |print
+  ,

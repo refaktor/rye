@@ -48,14 +48,6 @@ func IsTruthy(o env.Object) bool {
 	}
 }
 
-func List2Block(ps *env.ProgramState, s env.List) env.Block {
-	blk := make([]env.Object, len(s.Data))
-	for i, val := range s.Data {
-		blk[i] = env.ToRyeValue(val)
-	}
-	return *env.NewBlock(*env.NewTSeries(blk))
-}
-
 func Dict2Context(ps *env.ProgramState, s1 env.Dict) env.RyeCtx {
 	ctx := env.NewEnv(ps.Ctx)
 	for k, v := range s1.Data {
