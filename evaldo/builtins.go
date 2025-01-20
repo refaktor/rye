@@ -369,6 +369,19 @@ func (s RyeListSort) Less(i, j int) bool {
 	return greaterThanNew(env.ToRyeValue(s[j]), env.ToRyeValue(s[i]))
 }
 
+// Sort list interface
+type RyeStringSort []rune
+
+func (s RyeStringSort) Len() int {
+	return len(s)
+}
+func (s RyeStringSort) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+func (s RyeStringSort) Less(i, j int) bool {
+	return s[i] < s[j]
+}
+
 // Custom Sort object interface
 type RyeBlockCustomSort struct {
 	data []env.Object
@@ -1590,15 +1603,21 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Returns part of the String between two positions.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s1 := arg1.(type) {
+			switch s2 := arg1.(type) {
 			case env.String:
-				switch s2 := arg0.(type) {
+				switch s1 := arg0.(type) {
 				case env.String:
-					res := strings.Index(s2.Value, s1.Value)
+					res := strings.Index(s1.Value, s2.Value)
 					return *env.NewInteger(int64(res))
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.StringType}, "index?")
 				}
+			case env.Block:
+				res := util.IndexOfSlice(ps, s2.Series.S, arg0)
+				if res == -1 {
+					return MakeBuiltinError(ps, "not found", "index?")
+				}
+				return *env.NewInteger(int64(res))
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "index?")
 			}
@@ -1613,21 +1632,21 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Returns part of the String between two positions.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s1 := arg0.(type) {
-			case env.String: // TODO-FIX ... let s1 be any type if s2 is block, and string only if s2 is string .. reverse nesting in switches
-				switch s2 := arg1.(type) {
+			switch s2 := arg1.(type) {
+			case env.String:
+				switch s1 := arg0.(type) {
 				case env.String:
 					res := strings.Index(s1.Value, s2.Value)
-					return *env.NewInteger(int64(res + 1))
-				case env.Block:
-					res := util.IndexOfSlice(ps, s2.Series.S, s1)
-					if res == -1 {
-						return MakeBuiltinError(ps, "not found", "position?")
-					}
 					return *env.NewInteger(int64(res + 1))
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.StringType}, "position?")
 				}
+			case env.Block:
+				res := util.IndexOfSlice(ps, s2.Series.S, arg0)
+				if res == -1 {
+					return MakeBuiltinError(ps, "not found", "position?")
+				}
+				return *env.NewInteger(int64(res + 1))
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "position?")
 			}
@@ -2073,6 +2092,20 @@ var builtins = map[string]*env.Builtin{
 					}
 				}
 				return *env.NewBlock(*env.NewTSeries(res))
+			case env.List:
+				res := make([]any, 0)
+				for _, val := range bloc.Data {
+					switch val_ := val.(type) {
+					case env.List:
+						res = append(res, val_.Data...)
+						//for _, val2 := range val_.Series.S {
+						//	res = append(res, val2)
+						// }
+					default:
+						res = append(res, val)
+					}
+				}
+				return *env.NewList(res)
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "unpack")
 			}
@@ -2816,8 +2849,13 @@ var builtins = map[string]*env.Builtin{
 				copy(copied, block.Data)
 				sort.Sort(RyeListSort(copied))
 				return *env.NewList(copied)
+			case env.String:
+				copied := []rune(block.Value)
+				// copy(copied, block.Data)
+				sort.Sort(RyeStringSort(copied))
+				return *env.NewString(string(copied))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "sort!")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "sort")
 			}
 		},
 	},
@@ -4774,7 +4812,7 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch list := arg0.(type) {
 			case env.List:
-				return util.List2Block(ps, list)
+				return env.List2Block(ps, list)
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.DictType}, "to-context")
 			}
