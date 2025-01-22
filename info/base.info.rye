@@ -343,6 +343,7 @@ section "Strings " "" {
 
 	{
 		equal { trim " ASDF " } "ASDF"
+		equal { trim "   ASDF   " } "ASDF"
 	}
 
 	group "trim\" 
@@ -361,6 +362,7 @@ section "Strings " "" {
 
 	{
 		equal { trim\right "__ASDF__" "_" } "__ASDF"
+		equal { trim\right "  ASDF  " " " } "  ASDF"
 	}
 
 	group "trim\left" 
@@ -378,6 +380,7 @@ section "Strings " "" {
 	}
 
 	{
+		equal { replace "...xo..." "xo" "LoL" } "...LoL..."
 		equal { replace "...xoxo..." "xo" "LoL" } "...LoLLoL..."
 	}
 
@@ -387,6 +390,7 @@ section "Strings " "" {
 	}
 
 	{
+		equal { substring "xoxo..." 0 4 } "xoxo"
 		equal { substring "...xoxo..." 3 7 } "xoxo"
 	}
 
@@ -396,8 +400,10 @@ section "Strings " "" {
 	}
 
 	{
-		equal { contains "...xoxo..." "xo" } 1
+		equal { contains "...xoxo..." "xo"  } 1
 		equal { contains "...xoxo..." "lol" } 0
+		equal { contains { ".." "xoxo" ".." } "xoxo" } 1
+		equal { contains { ".." "xoxo" ".." } "lol"  } 0
 	}
 
 	group "has-suffix" 
@@ -427,6 +433,9 @@ section "Strings " "" {
 
 	{
 		equal { index? "...xo..." "xo" } 3
+		equal { index? "xo..." "xo" } 0
+		equal { index? { "xo" ".." } "xo" } 0
+		equal { index? { ".." "xo" ".." } "xo" } 1
 	}
 
 	group "position?" 
@@ -436,6 +445,9 @@ section "Strings " "" {
 
 	{
 		equal { position? "...xo..." "xo" } 4
+		equal { position? "xo..." "xo" } 1
+		equal { position? { "xo" ".." } "xo" } 1
+		equal { position? { ".." "xo" ".." } "xo" } 2
 	}
 
 	group "encode\base64" 

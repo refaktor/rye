@@ -1,0 +1,26 @@
+; # Project Euler - problem 31
+
+coin-values: [ 200 100 50 20 10 5 2 1 ]
+
+recurse: fn { values target count } {
+	^if target = 0 { count + 1 } ,              ; ^if is a returning function
+	.filter { <= target }                       ; filter takes values, first argument
+	|fold 'acc count { ::value ,                ; fold over filtered values
+		recurse rest\from values
+		  ( value .index? values )
+		  target - value
+		  acc
+	}
+}
+
+recurse coin-values 200 0 |print
+
+
+
+
+
+
+
+
+
+

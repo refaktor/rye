@@ -30,6 +30,10 @@ div.group pre.prettyprint {
 }
 
 
+.menu-item {
+    text-transform: capitalize;  
+}
+
 
 #menu-holder {
     width: 400px;

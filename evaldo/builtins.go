@@ -1361,6 +1361,7 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { trim " ASDF " } "ASDF"
+	// equal { trim "   ASDF   " } "ASDF"
 	"trim": {
 		Argsn: 1,
 		Doc:   "Trims the String of spacing characters.",
@@ -1398,6 +1399,7 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { trim\right "__ASDF__" "_" } "__ASDF"
+	// equal { trim\right "  ASDF  " " " } "  ASDF"
 	"trim\\right": {
 		Argsn: 2,
 		Doc:   "Trims the String of specific characters.",
@@ -1437,6 +1439,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 	// Tests:
+	// equal { replace "...xo..." "xo" "LoL" } "...LoL..."
 	// equal { replace "...xoxo..." "xo" "LoL" } "...LoLLoL..."
 	"replace": {
 		Argsn: 3,
@@ -1461,7 +1464,9 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Todo: this could be a general slice function that also works with blocks and
 	// Tests:
+	// equal { substring "xoxo..." 0 4 } "xoxo"
 	// equal { substring "...xoxo..." 3 7 } "xoxo"
 	"substring": {
 		Argsn: 3,
@@ -1487,8 +1492,10 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 	// Tests:
-	// equal { contains "...xoxo..." "xo" } 1
+	// equal { contains "...xoxo..." "xo"  } 1
 	// equal { contains "...xoxo..." "lol" } 0
+	// equal { contains { ".." "xoxo" ".." } "xoxo" } 1
+	// equal { contains { ".." "xoxo" ".." } "lol"  } 0
 	"contains": {
 		Argsn: 2,
 		Doc:   "Returns true if argument 2 contains argument 1",
@@ -1598,14 +1605,17 @@ var builtins = map[string]*env.Builtin{
 	// - fail if not found
 	// Tests:
 	// equal { index? "...xo..." "xo" } 3
+	// equal { index? "xo..." "xo" } 0
+	// equal { index? { "xo" ".." } "xo" } 0
+	// equal { index? { ".." "xo" ".." } "xo" } 1
 	"index?": {
 		Argsn: 2,
 		Doc:   "Returns part of the String between two positions.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s2 := arg1.(type) {
+			switch s1 := arg0.(type) {
 			case env.String:
-				switch s1 := arg0.(type) {
+				switch s2 := arg1.(type) {
 				case env.String:
 					res := strings.Index(s1.Value, s2.Value)
 					return *env.NewInteger(int64(res))
@@ -1613,13 +1623,13 @@ var builtins = map[string]*env.Builtin{
 					return MakeArgError(ps, 2, []env.Type{env.StringType}, "index?")
 				}
 			case env.Block:
-				res := util.IndexOfSlice(ps, s2.Series.S, arg0)
+				res := util.IndexOfSlice(ps, s1.Series.S, arg1)
 				if res == -1 {
 					return MakeBuiltinError(ps, "not found", "index?")
 				}
 				return *env.NewInteger(int64(res))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "index?")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.StringType}, "index?")
 			}
 		},
 	},
@@ -1627,14 +1637,17 @@ var builtins = map[string]*env.Builtin{
 	// - fail if not found
 	// Tests:
 	// equal { position? "...xo..." "xo" } 4
+	// equal { position? "xo..." "xo" } 1
+	// equal { position? { "xo" ".." } "xo" } 1
+	// equal { position? { ".." "xo" ".." } "xo" } 2
 	"position?": {
 		Argsn: 2,
 		Doc:   "Returns part of the String between two positions.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s2 := arg1.(type) {
+			switch s1 := arg0.(type) {
 			case env.String:
-				switch s1 := arg0.(type) {
+				switch s2 := arg1.(type) {
 				case env.String:
 					res := strings.Index(s1.Value, s2.Value)
 					return *env.NewInteger(int64(res + 1))
@@ -1642,13 +1655,13 @@ var builtins = map[string]*env.Builtin{
 					return MakeArgError(ps, 2, []env.Type{env.StringType}, "position?")
 				}
 			case env.Block:
-				res := util.IndexOfSlice(ps, s2.Series.S, arg0)
+				res := util.IndexOfSlice(ps, s1.Series.S, arg1)
 				if res == -1 {
 					return MakeBuiltinError(ps, "not found", "position?")
 				}
 				return *env.NewInteger(int64(res + 1))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "position?")
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType}, "position?")
 			}
 		},
 	},
