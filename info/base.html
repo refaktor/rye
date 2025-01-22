@@ -25,7 +25,7 @@
       <aside class="sidebar" id="menu-holder">
         <nav>
           <ul>
-            <li><a href="https://ryelang.org">← Home</a></li>
+            <li><a href="https://ryelang.org">← Home</a>  &middot; <a class='menu-item' href='base.html'>base</a> &middot; <a class='menu-item' href='table.html'>table</a> &middot; <a class='menu-item' href='regexp.html'>regexp</a></li>
             <!-- More menu items here -->
           </ul>
         </nav>
@@ -263,6 +263,8 @@
 <h3>trim</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>trim " ASDF "
 ; returns "ASDF"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>trim "   ASDF   "
+; returns "ASDF"</code></pre>
 </div>
 <h3>trim\</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>trim\ "__ASDF__" "_"
@@ -271,16 +273,22 @@
 <h3>trimight</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>trim\right "__ASDF__" "_"
 ; returns "__ASDF"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>trim\right "  ASDF  " " "
+; returns "  ASDF"</code></pre>
 </div>
 <h3>trim\left</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>trim\left "___ASDF__" "_"
 ; returns "ASDF__"</code></pre>
 </div>
 <h3>replace</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>replace "...xo..." "xo" "LoL"
+; returns "...LoL..."</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>replace "...xoxo..." "xo" "LoL"
 ; returns "...LoLLoL..."</code></pre>
 </div>
 <h3>substring</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>substring "xoxo..." 0 4
+; returns "xoxo"</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>substring "...xoxo..." 3 7
 ; returns "xoxo"</code></pre>
 </div>
@@ -288,6 +296,10 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>contains "...xoxo..." "xo"
 ; returns 1</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>contains "...xoxo..." "lol"
+; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>contains { ".." "xoxo" ".." } "xoxo"
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>contains { ".." "xoxo" ".." } "lol"
 ; returns 0</code></pre>
 </div>
 <h3>has-suffix</h3><p></p><div class='group'>
@@ -305,10 +317,22 @@
 <h3>index?</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>index? "...xo..." "xo"
 ; returns 3</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>index? "xo..." "xo"
+; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>index? { "xo" ".." } "xo"
+; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>index? { ".." "xo" ".." } "xo"
+; returns 1</code></pre>
 </div>
 <h3>position?</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>position? "...xo..." "xo"
 ; returns 4</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>position? "xo..." "xo"
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>position? { "xo" ".." } "xo"
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>position? { ".." "xo" ".." } "xo"
+; returns 2</code></pre>
 </div>
 <h3>encode\base64</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>encode\base64 "abcd"
@@ -506,7 +530,7 @@
 </div>
 <h3>values</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 "b" 2 "c" 3 } |values
-; returns list { 3 1 2 }</code></pre>
+; returns list { 1 2 3 }</code></pre>
 </div>
 <h3>sort</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>sort { 6 12 1 }

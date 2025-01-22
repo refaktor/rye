@@ -1,2 +1,3 @@
 ../cmd/rbit/rbit ../evaldo/builtins.go > base.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_spreadsheet.go > table.info.rye
+../cmd/rbit/rbit ../evaldo/builtins_regexp.go > regexp.info.rye

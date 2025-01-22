@@ -1,0 +1,81 @@
+section "Default" "" {
+	group "regexp" 
+	""
+	{
+		arg "* pattern: regular expression"
+	}
+
+	{
+		equal { regexp "[0-9]" |type? } 'native
+	}
+
+	group "regexp//is-match" 
+	""
+	{
+		arg "* regexp - native regexp value"
+		arg "* input - value to test for matching"
+	}
+
+	{
+		equal { regexp "[0-9]" |is-match "5" } 1
+		equal { regexp "[0-9]" |is-match "a" } 0
+	}
+
+	group "regexp//submatch?" 
+	""
+	{
+	}
+
+	{
+		equal { regexp "x([0-9]+)y" |submatch? "x123y" } "123"
+	}
+
+	group "regexp//submatches?" 
+	""
+	{
+	}
+
+	{
+		equal { regexp "x([0-9]+)y" |submatches? "x123y x234y" } { "123" }
+	}
+
+	group "regexp//submatches\all?" 
+	""
+	{
+	}
+
+	{
+		equal { regexp "x([0-9]+)(y+)?" |submatches\all? "x11yy x22" } { { "11" "yy" } { "22" "" } }
+	}
+
+	group "regexp//find-all" 
+	""
+	{
+	}
+
+	{
+		equal { regexp "[0-9]+" |find-all "x123y x234y" } { "123" "234" }
+	}
+
+	group "regexp//match?" 
+	""
+	{
+		arg "* regexp value"
+		arg "* input"
+	}
+
+	{
+		equal { regexp "[0-9]+c+" |match? "aa33bb55cc" } "55cc"
+	}
+
+	group "regexp//replace-all" 
+	""
+	{
+	}
+
+	{
+		equal { regexp "[0-9]+" |replace-all "x123y x234y" "XXX" } "xXXXy xXXXy"
+	}
+
+}
+

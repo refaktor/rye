@@ -59,7 +59,7 @@ var Builtins_regexp = map[string]*env.Builtin{
 	},
 
 	// Tests:
-
+	//  equal { regexp "x([0-9]+)y" |submatch? "x123y" } "123"
 	"regexp//submatch?": {
 		Argsn: 2,
 		Doc:   "Get the first submatch from string given the regular exprepesion.",
@@ -83,6 +83,8 @@ var Builtins_regexp = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	//  equal { regexp "x([0-9]+)y" |submatches? "x123y x234y" } { "123" }
 	"regexp//submatches?": {
 		Argsn: 2,
 		Doc:   "Get all regexp submatches in a Block.",
@@ -111,6 +113,8 @@ var Builtins_regexp = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	//  equal { regexp "x([0-9]+)(y+)?" |submatches\all? "x11yy x22" } { { "11" "yy" } { "22" "" } }
 	"regexp//submatches\\all?": {
 		Argsn: 2,
 		Doc:   "Get all regexp submatches in a Block.",
@@ -143,6 +147,8 @@ var Builtins_regexp = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	//  equal { regexp "[0-9]+" |find-all "x123y x234y" } { "123" "234" }
 	"regexp//find-all": {
 		Argsn: 2,
 		Doc:   "Find all matches and return them in a Block",
@@ -193,6 +199,8 @@ var Builtins_regexp = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	//  equal { regexp "[0-9]+" |replace-all "x123y x234y" "XXX" } "xXXXy xXXXy"
 	"regexp//replace-all": {
 		Argsn: 3,
 		Doc:   "Replace all mathes in a string given the regexp with another string.",

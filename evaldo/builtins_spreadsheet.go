@@ -21,7 +21,7 @@ var Builtins_table = map[string]*env.Builtin{
 
 	// Tests:
 	//  equal { table { "a" } { 1 2 } |type? } 'table
-	//  equal { table { 'a } { 1 2 } |type? } 'table
+	//  equal { table { 'a  } { 1 2 } |type? } 'table
 	// Args:
 	//  * columns
 	//  * data
@@ -266,7 +266,7 @@ var Builtins_table = map[string]*env.Builtin{
 	// Tests:
 	//  equal {
 	//	 table { "a" "b" } { 6 60 7 70 } |get-rows |type?
-	//  } 'table-row
+	//  } 'native
 	// Args:
 	// * sheet
 	"get-rows": {
@@ -885,11 +885,11 @@ var Builtins_table = map[string]*env.Builtin{
 		},
 	},
 
-	// Tests:
-	//  equal { table { 'a } { "1" "2" "a3" "2b" } |where-match 'a regexp "^[0-9]$" |length? } 2
 	// Example: filting for names that start with "En"
 	//  sheet: table { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" }
 	//  sheet .where-match 'name "En.+"
+	// Tests:
+	//  equal { table { 'a } { "1" "2" "a3" "2b" } |where-match 'a regexp "^[0-9]$" |length? } 2
 	// Args:
 	// * sheet
 	// * column
@@ -928,11 +928,11 @@ var Builtins_table = map[string]*env.Builtin{
 		},
 	},
 
-	// Tests:
-	//  equal { table { 'a } { "1" "2" "a3" "2b" } |where-contains 'a "2" |length? } 2
-	// Example: filting for names that contain "nn"
+	// Example:
 	//  sheet: table { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" "Benn" }
 	//  sheet .where-contains 'name "nn"
+	// Tests:
+	//  equal { table { 'a } { "1" "2" "a3" "2b" } |where-contains 'a "2" |length? } 2
 	// Args:
 	// * sheet
 	// * column
@@ -967,11 +967,11 @@ var Builtins_table = map[string]*env.Builtin{
 		},
 	},
 
-	// Tests:
-	//  equal { table { 'a } { "1" "2" "a3" "2b" } |where-not-contains 'a "3" |length? } 3
-	// Example: filting for names that contain "nn"
+	// Example:
 	//  sheet: table { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" "Benn" }
 	//  sheet .where-contains 'name "nn"
+	// Tests:
+	//  equal { table { 'a } { "1" "2" "a3" "2b" } |where-not-contains 'a "3" |length? } 3
 	// Args:
 	// * sheet
 	// * column
@@ -1005,11 +1005,11 @@ var Builtins_table = map[string]*env.Builtin{
 			}
 		},
 	},
-	// Tests:
-	//  equal { table { 'a } { 1 2 3 2 } |where-greater 'a 1 |length? } 3
-	// Example: filting for ages over 29
+	// Example:
 	//  sheet: table { "name" "age" } { "Enno" 30 "Enya" 25 "Enid" 40 "Bob" 19 "Bill" 45 "Benn" 29 }
 	//  sheet .where-greater 'age 29
+	// Tests:
+	//  equal { table { 'a } { 1 2 3 2 } |where-greater 'a 1 |length? } 3
 	// Args:
 	// * sheet
 	// * column
@@ -1711,8 +1711,7 @@ var Builtins_table = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { table { 'a } { 1 2 3 } |A1 } 1
-
+	// equal { table { 'a } { 123 234 345 } |A1 } 123
 	"A1": {
 		Argsn: 1,
 		Doc:   "Accepts a Table and returns the first row first column cell.",
@@ -1729,7 +1728,7 @@ var Builtins_table = map[string]*env.Builtin{
 		},
 	},
 	// Tests:
-	// equal { table { 'a } { 1 2 3 } |B1 } 2
+	// equal { table { 'a } { 123 234 345 } |B1 } 234
 	"B1": {
 		Argsn: 1,
 		Doc:   "Accepts a Table and returns the first row second column cell.",

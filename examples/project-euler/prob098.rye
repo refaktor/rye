@@ -37,7 +37,7 @@ get-transformation: fn { pair } {
 word-anagrams:
   split\quoted read %0098_words.txt "," `"`                     ;"
     |find-anagrams
-    |map { .get-transformation } |probe
+    |map { .get-transformation }
   ,
 
 ; Find square anagrams and compute each pair's transformation, keeping that and the larger square
@@ -45,7 +45,7 @@ square-anagrams:
   range 1 1000
     |map { ::n , n * n |to-string }
     |find-anagrams
-    |map { .vals\with { .map { .to-integer } |max , .get-transformation } } |probe
+    |map { .vals\with { .map { .to-integer } |max , .get-transformation } }
   ,
 
 ; Intersect the two lists

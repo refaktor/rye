@@ -1,0 +1,160 @@
+<html>
+  <head>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,700|Roboto:300,400,700&subset=latin-ext' rel='stylesheet' type='text/css'>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Londrina+Solid:wght@300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="tpl/main.3.css?a001" />
+    <link rel="stylesheet" href="tpl/styles.css?a001" />
+    <script src="tpl/menu.js?a001"></script>
+    <script src="tpl/jsGoo.js"></script>
+    <!-- syntax highlighting -->
+    <link rel="stylesheet" type="text/css" href="tpl/desert.css" />
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/prettify/r298/run_prettify.js"></script>
+    <script type="text/javascript" src="./tpl/lang-rye.js"></script>
+    <!-- syntax highlightinh end -->
+  </head>
+  <body onload="generateMenu()">
+    <!--div id="menu-holder">
+	</div-->
+    <!--p>
+      <a href="/">main page</a>
+    </p>
+    <h1>Rye reference: Table</h1-->
+    <div class="container">
+      <aside class="sidebar" id="menu-holder">
+        <nav>
+          <ul>
+            <li><a href="https://ryelang.org">← Home</a>  &middot; <a class='menu-item' href='base.html'>base</a> &middot; <a class='menu-item' href='table.html'>table</a> &middot; <a class='menu-item' href='regexp.html'>regexp</a></li>
+            <!-- More menu items here -->
+          </ul>
+        </nav>
+	<p>
+	  This is Rye function reference generated from unit tests in info/ folder. Examples can be little dry, but they are short and correct.
+	</p>
+	<h3>Base functions</h3>
+      </aside>
+      <main class="content">
+        
+<h2>Default</h2><p></p><div class='section'>
+<h3>table</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { "a" } { 1 2 } |type?
+; returns table</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a } { 1 2 } |type?
+; returns table</code></pre>
+</div>
+<h3>table\columns</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table\columns { "a" } { { 1 2 3 } } |type?
+; returns table</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table\columns { "a" "b" } { { 1 2 3 } { 4 5 6 } } |length?
+; returns 3</code></pre>
+</div>
+<h3>tableows</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table\rows { 'a 'b } { { 1 2 } { 3 4 } }
+; returns table { "a" "b" } [ 1 2 3 4 ]</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table\rows { 'a 'b } list [ list [ 1 2 ] list [ 3 4 ] ] |type?
+; returns table</code></pre>
+</div>
+<h3>to-table</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-table list [ dict { "a" 1 } dict { "a" b } ] |type?
+; returns table</code></pre>
+</div>
+<h3>add-row</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { "a" "b" } { 6 60 7 70 } |add-row { 8 80 } |-> 2 |-> "b"
+; returns 80</code></pre>
+</div>
+<h3>get-rows</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { "a" "b" } { 6 60 7 70 } |get-rows |type?
+; returns native</code></pre>
+</div>
+<h3>add-rows</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>ref table { "a" "b" } { 6 60 7 70 } :sheet sheet .deref |add-rows [ 3 30 ] |length?
+; returns 3</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>ref table { "a" "b" } { 1 80 2 90 } :sheet sheet .deref |add-rows { 3 30 } |length?
+; returns 3</code></pre>
+</div>
+<h3>add-rows!</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>ref table { "a" "b" } { 1 10 2 20 } :sheet sheet .add-rows! [ 3 30 ] sheet .deref .length?
+; returns 3</code></pre>
+</div>
+<h3>update-row!</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>spr1: ref table { "a" "b" } { 1 10 2 20 } spr1 .update-row! 1 dict [ "a" 111 ] spr1 .deref .A1
+; returns 111</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>spr1: ref table { "a" "b" } { 1 10 2 20 } incrA: fn { row } { row + [ "a" ( "a" <- row ) + 9 ] } update-row! spr1 1 ?incrA spr1 |deref |A1
+; returns 10</code></pre>
+</div>
+<h3>remove-row!</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>spr1: ref table { "a" "b" } { 1 10 2 20 } spr1 .remove-row! 1 spr1 .deref .A1
+; returns 2</code></pre>
+</div>
+<h3>load\csv</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc os f: mktmp + "/test.csv" spr1: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" } spr1 .save\csv f spr2: load\csv f |autotype 1 spr1 = spr2
+; returns 1</code></pre>
+</div>
+<h3>save\csv</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc os f:: mktmp + "/test.csv" spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" } spr1 .save\csv f spr2:: load\csv f |autotype 1 spr1 = spr2
+; returns 1</code></pre>
+</div>
+<h3>load\xlsx</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc os f:: mktmp + "/test.xlsx" spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" } spr1 .save\xlsx f spr2:: load\xlsx f |autotype 1 spr1 = spr2
+; returns 1</code></pre>
+</div>
+<h3>save\xlsx</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc os f:: mktmp + "/test.xlsx" spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" } spr1 .save\xlsx f spr2:: load\xlsx f |autotype 1 spr1 = spr2
+; returns 1</code></pre>
+</div>
+<h3>where-equal</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a } { 1 2 3 2 } |where-equal "a" 2 |length?
+; returns 2</code></pre>
+</div>
+<h3>where-match</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a } { "1" "2" "a3" "2b" } |where-match 'a regexp "^[0-9]$" |length?
+; returns 2</code></pre>
+</div>
+<h3>where-contains</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a } { "1" "2" "a3" "2b" } |where-contains 'a "2" |length?
+; returns 2</code></pre>
+</div>
+<h3>where-not-contains</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a } { "1" "2" "a3" "2b" } |where-not-contains 'a "3" |length?
+; returns 3</code></pre>
+</div>
+<h3>where-greater</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a } { 1 2 3 2 } |where-greater 'a 1 |length?
+; returns 3</code></pre>
+</div>
+<h3>col-sum</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a } { 1 2 3 } |col-sum "a"
+; returns 6</code></pre>
+</div>
+<h3>col-avg</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a } { 1 2 3 } |col-avg 'a
+; returns 2</code></pre>
+</div>
+<h3>A1</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a } { 123 234 345 } |A1
+; returns 123</code></pre>
+</div>
+<h3>B1</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a } { 123 234 345 } |B1
+; returns 234</code></pre>
+</div>
+</div>
+</main>
+</div>
+<script type="text/javascript">
+var sc_project=12932344; 
+var sc_invisible=1; 
+var sc_security="6e399927"; 
+</script>
+<script type="text/javascript"
+src="https://www.statcounter.com/counter/counter.js"
+async></script>
+<noscript><div class="statcounter"><a title="Web Analytics"
+href="https://statcounter.com/" target="_blank"><img
+class="statcounter"
+src="https://c.statcounter.com/12932344/0/6e399927/1/"
+alt="Web Analytics"
+referrerPolicy="no-referrer-when-downgrade"></a></div></noscript>
+</body>
+</html>
