@@ -14,7 +14,7 @@
     <script type="text/javascript" src="./tpl/lang-rye.js"></script>
     <!-- syntax highlightinh end -->
   </head>
-  <body onload="generateMenu()">
+  <body onload="generateMenu(); styleCurrentTab();">
     <!--div id="menu-holder">
 	</div-->
     <!--p>
@@ -25,14 +25,14 @@
       <aside class="sidebar" id="menu-holder">
         <nav>
           <ul>
-            <li><a href="https://ryelang.org">← Home</a>  &middot; <a class='menu-item' href='base.html'>base</a> &middot; <a class='menu-item' href='table.html'>table</a> &middot; <a class='menu-item' href='regexp.html'>regexp</a></li>
+            <li><a href="https://ryelang.org">← Home</a>  &middot; <a class='menu-item' id='maintab-base' href='base.html'>base</a> &middot; <a class='menu-item' id='maintab-table' href='table.html'>table</a> &middot; <a class='menu-item' id='maintab-regexp' href='regexp.html'>regexp</a></li>
             <!-- More menu items here -->
           </ul>
         </nav>
 	<p>
 	  This is Rye function reference generated from unit tests in info/ folder. Examples can be little dry, but they are short and correct.
 	</p>
-	<h3>Base functions</h3>
+	<h3>Functions</h3>
       </aside>
       <main class="content">
         

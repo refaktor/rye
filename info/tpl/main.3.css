@@ -31,7 +31,13 @@ div.group pre.prettyprint {
 
 
 .menu-item {
-    text-transform: capitalize;  
+    text-transform: capitalize;
+    padding: 2px 4px;
+}
+
+.menu-item.current {
+    border-bottom: 1px solid gray;
+    _background-color: #e7e7e7;
 }
 
 
