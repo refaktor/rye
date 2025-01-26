@@ -253,12 +253,14 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 			if posMode {
 				idx--
 			}
+			if idx < 0 {
+				return makeError(ps, "Index too low")
+			}
 			if len(s1.Data) > int(idx) && idx >= 0 {
-				v := s1.Data[idx-1]
+				v := s1.Data[idx]
 				return env.ToRyeValue(v)
 			} else {
-				ps.FailureFlag = true
-				return env.NewError1(5) // NOT_FOUND
+				return makeError(ps, "Index larger than length")
 			}
 		}
 	case *env.List:
@@ -268,12 +270,14 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 			if posMode {
 				idx--
 			}
+			if idx < 0 {
+				return makeError(ps, "Index too low")
+			}
 			if len(s1.Data) > int(idx) && idx >= 0 {
-				v := s1.Data[idx-1]
+				v := s1.Data[idx]
 				return env.ToRyeValue(v)
 			} else {
-				ps.FailureFlag = true
-				return env.NewError1(5) // NOT_FOUND
+				return makeError(ps, "Index larger than length")
 			}
 		}
 	case env.Block:
@@ -283,12 +287,14 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 			if posMode {
 				idx--
 			}
+			if idx < 0 {
+				return makeError(ps, "Index too low")
+			}
 			if len(s1.Series.S) >= int(idx)+1 {
 				v := s1.Series.Get(int(idx))
 				return v
 			} else {
-				ps.FailureFlag = true
-				return env.NewError1(5) // NOT_FOUND
+				return makeError(ps, "Index larger than length")
 			}
 		}
 	case env.Table:
@@ -298,13 +304,15 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 			if posMode {
 				idx--
 			}
+			if idx < 0 {
+				return makeError(ps, "Index too low")
+			}
 			v := s1.Rows[idx]
 			ok := true
 			if ok {
 				return v
 			} else {
-				ps.FailureFlag = true
-				return env.NewError1(5) // NOT_FOUND
+				return makeError(ps, "Index larger than length")
 			}
 		}
 	case env.TableRow:
@@ -321,8 +329,7 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 			if true {
 				return env.ToRyeValue(v)
 			} else {
-				ps.FailureFlag = true
-				return env.NewError1(5) // NOT_FOUND
+				return makeError(ps, "Index larger than length")
 			}
 		case env.Integer:
 			idx := s2.Value
@@ -334,8 +341,7 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 			if ok {
 				return env.ToRyeValue(v)
 			} else {
-				ps.FailureFlag = true
-				return env.NewError1(5) // NOT_FOUND
+				return makeError(ps, "Index larger than length")
 			}
 		}
 	}
