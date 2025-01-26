@@ -14,7 +14,7 @@
     <script type="text/javascript" src="./tpl/lang-rye.js"></script>
     <!-- syntax highlightinh end -->
   </head>
-  <body onload="generateMenu()">
+  <body onload="generateMenu(); styleCurrentTab();">
     <!--div id="menu-holder">
 	</div-->
     <!--p>
@@ -25,18 +25,18 @@
       <aside class="sidebar" id="menu-holder">
         <nav>
           <ul>
-            <li><a href="https://ryelang.org">← Home</a>  &middot; <a class='menu-item' href='base.html'>base</a> &middot; <a class='menu-item' href='table.html'>table</a> &middot; <a class='menu-item' href='regexp.html'>regexp</a></li>
+            <li><a href="https://ryelang.org">← Home</a>  &middot; <a class='menu-item' id='maintab-base' href='base.html'>base</a> &middot; <a class='menu-item' id='maintab-table' href='table.html'>table</a> &middot; <a class='menu-item' id='maintab-regexp' href='regexp.html'>regexp</a></li>
             <!-- More menu items here -->
           </ul>
         </nav>
 	<p>
 	  This is Rye function reference generated from unit tests in info/ folder. Examples can be little dry, but they are short and correct.
 	</p>
-	<h3>Base functions</h3>
+	<h3>Functions</h3>
       </aside>
       <main class="content">
         
-<h2>Default</h2><p></p><div class='section'>
+<h2>Constructors </h2><p>Functions that construct a table.</p><div class='section'>
 <h3>table</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>table { "a" } { 1 2 } |type?
 ; returns table</code></pre>
@@ -49,16 +49,64 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>table\columns { "a" "b" } { { 1 2 3 } { 4 5 6 } } |length?
 ; returns 3</code></pre>
 </div>
-<h3>tableows</h3><p></p><div class='group'>
+<h3>table\rows</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>table\rows { 'a 'b } { { 1 2 } { 3 4 } }
 ; returns table { "a" "b" } [ 1 2 3 4 ]</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>table\rows { 'a 'b } list [ list [ 1 2 ] list [ 3 4 ] ] |type?
 ; returns table</code></pre>
 </div>
 <h3>to-table</h3><p></p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>to-table list [ dict { "a" 1 } dict { "a" b } ] |type?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-table list [ dict { "a" 1 } dict { "a" 2 } ] |type?
 ; returns table</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-table list [ dict { "a" 1 "b" "Jim" } dict { "a" 2 "b" "Bob" } ] |header? |sort
+; returns list { "a" "b" }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-table list [ dict { "a" 1 "b" "Jim" } dict { "a" 2 "b" "Bob" } ] |column? "b" |first
+; returns "Jim"</code></pre>
 </div>
+</div>
+<h2>Filtering </h2><p>Functions that construct a table.</p><div class='section'>
+<h3>where-equal</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a } { 1 2 3 2 } |where-equal "a" 2 |length?
+; returns 2</code></pre>
+</div>
+<h3>where-void</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a } { 1 _ 3 _ } |where-void "a" |length?
+; returns 2</code></pre>
+</div>
+<h3>where-match</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a } { "1" "2" "a3" "2b" } |where-match 'a regexp "^[0-9]$" |length?
+; returns 2</code></pre>
+</div>
+<h3>where-contains</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a } { "1" "2" "a3" "2b" } |where-contains 'a "2" |length?
+; returns 2</code></pre>
+</div>
+<h3>where-not-contains</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a } { "1" "2" "a3" "2b" } |where-not-contains 'a "3" |length?
+; returns 3</code></pre>
+</div>
+<h3>where-greater</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a } { 1 2 3 2 } |where-greater 'a 1 |length?
+; returns 3</code></pre>
+</div>
+<h3>where-lesser</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a } { 1 2 3 2 } |where-lesser 'a 3 |length?
+; returns 3</code></pre>
+</div>
+<h3>where-between</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a } { 1 2 3 2 } |where-between 'a 1 3 |length?
+; returns 2</code></pre>
+</div>
+<h3>where-between\inclusive</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a } { 1 2 3 2 5 } |where-between\inclusive 'a 2 3 |length?
+; returns 3</code></pre>
+</div>
+<h3>where-in</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { "name" "age" } { "Enno" 30 "Enya" 25 "Bob" 19 } |where-in 'name { "Enno" "Enya" "Roger" } |column? "age"
+; returns { 30 25 }</code></pre>
+</div>
+</div>
+<h2>Row level functions </h2><p>Functions that construct a table.</p><div class='section'>
 <h3>add-row</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>table { "a" "b" } { 6 60 7 70 } |add-row { 8 80 } |-> 2 |-> "b"
 ; returns 80</code></pre>
@@ -87,12 +135,106 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>spr1: ref table { "a" "b" } { 1 10 2 20 } spr1 .remove-row! 1 spr1 .deref .A1
 ; returns 2</code></pre>
 </div>
+</div>
+<h2>Column level functions </h2><p>Functions that construct a table.</p><div class='section'>
+<h3>columns?</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 } |columns? { 'name 'age } |header?
+; returns list { "name" "age" }</code></pre>
+</div>
+<h3>header?</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { "age" "name" } { 123 "Jim" 29 "Anne" } |header?
+; returns list { "age" "name" }</code></pre>
+</div>
+<h3>column?</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Teacher" } |column? 'name
+; returns { "Bob" "Alice" }</code></pre>
+</div>
+<h3>drop-column</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" } |drop-column "name" |header?
+; returns list { "age" "job_title" }</code></pre>
+</div>
+<h3>rename-column!</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>tab: ref table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 } tab .rename-column! "name" "first_name" , tab .header?
+; returns list { "first_name" "age" }</code></pre>
+</div>
+<h3>add-column</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 } |add-column 'job { } { "Cook" } |column? "job"
+; returns { "Cook" "Cook" "Cook" }</code></pre>
+</div>
+</div>
+<h2>Miscelaneous </h2><p></p><div class='section'>
+<h3>order-by!</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>tab: table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 } tab .order-by! 'age 'asc |column? "age"
+; returns { 19 25 29 }</code></pre>
+</div>
+<h3>order-by</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>tab: table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 } |order-by 'age 'desc |column? "age"
+; returns { 29 25 19 }</code></pre>
+</div>
+<h3>add-indexes!</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 } |add-indexes! { name } |indexes?
+; returns { "name" }</code></pre>
+</div>
+<h3>indexes?</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 } |add-indexes! { name age } |indexes?
+; returns { "name" "age" }</code></pre>
+</div>
+<h3>autotype</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { "age" } { 123 29 19 } |autotype 1 |types?
+; returns { integer }</code></pre>
+</div>
+<h3>left-join</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } , houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } , names .inner-join houses 'id 'id |header?
+; returns list { "id" "name" "id_2" "house" }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } , houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } , names .left-join houses 'id 'id |column? "name"
+; returns { "Paul" "Chani" "Vladimir" }</code></pre>
+</div>
+<h3>inner-join</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } , houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } , names .inner-join houses 'id 'id |header?
+; returns list { "id" "name" "id_2" "house" }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } , houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } , names .inner-join houses 'id 'id |column? "name"
+; returns { "Paul" "Vladimir" }</code></pre>
+</div>
+<h3>group-by</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { "name" "val" } { "a" 1 "b" 6 "a" 5 "b" 10 "a" 7 } |group-by 'name { 'name count 'val sum } |column? "val_sum" |sort
+; returns { 13 16 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { "name" "val" } { "a" 1 "b" 6 "a" 5 "b" 10 "a" 7 } |group-by 'name { 'name count 'val min } |column? "val_min" |sort
+; returns { 1 6 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { "name" "val" } { "a" 1 "b" 6 "a" 5 "b" 10 "a" 12 } |group-by 'name { 'name count 'val avg } |column? "val_avg" |sort
+; returns { 6 8 }</code></pre>
+</div>
+<h3>A1</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a } { 123 234 345 } |A1
+; returns 123</code></pre>
+</div>
+<h3>B1</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a 'b } { 123 234 345 456 } |B1
+; returns 234</code></pre>
+</div>
+<h3>A2</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a 'b } { 123 234 345 456 } |A2
+; returns 345</code></pre>
+</div>
+<h3>B2</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a 'b } { 123 234 345 456 } |B2
+; returns 456</code></pre>
+</div>
+</div>
+<h2>Loading and saving </h2><p>Functions that construct a table.</p><div class='section'>
 <h3>load\csv</h3><p></p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>cc os f: mktmp + "/test.csv" spr1: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" } spr1 .save\csv f spr2: load\csv f |autotype 1 spr1 = spr2
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc os f:: mktmp + "/test.csv" spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" } spr1 .save\csv f spr2:: load\csv f |autotype 1 spr1 = spr2
+; returns 1</code></pre>
+</div>
+<h3>load\tsv</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc os f:: mktmp + "/test.tsv" spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" } spr1 .save\tsv f spr2:: load\tsv f |autotype 1 spr1 = spr2
 ; returns 1</code></pre>
 </div>
 <h3>save\csv</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>cc os f:: mktmp + "/test.csv" spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" } spr1 .save\csv f spr2:: load\csv f |autotype 1 spr1 = spr2
+; returns 1</code></pre>
+</div>
+<h3>save\tsv</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc os f:: mktmp + "/test.csv" spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" } spr1 .save\tsv f spr2:: load\tsv f |autotype 1 spr1 = spr2
 ; returns 1</code></pre>
 </div>
 <h3>load\xlsx</h3><p></p><div class='group'>
@@ -102,42 +244,6 @@
 <h3>save\xlsx</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>cc os f:: mktmp + "/test.xlsx" spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" } spr1 .save\xlsx f spr2:: load\xlsx f |autotype 1 spr1 = spr2
 ; returns 1</code></pre>
-</div>
-<h3>where-equal</h3><p></p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a } { 1 2 3 2 } |where-equal "a" 2 |length?
-; returns 2</code></pre>
-</div>
-<h3>where-match</h3><p></p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a } { "1" "2" "a3" "2b" } |where-match 'a regexp "^[0-9]$" |length?
-; returns 2</code></pre>
-</div>
-<h3>where-contains</h3><p></p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a } { "1" "2" "a3" "2b" } |where-contains 'a "2" |length?
-; returns 2</code></pre>
-</div>
-<h3>where-not-contains</h3><p></p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a } { "1" "2" "a3" "2b" } |where-not-contains 'a "3" |length?
-; returns 3</code></pre>
-</div>
-<h3>where-greater</h3><p></p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a } { 1 2 3 2 } |where-greater 'a 1 |length?
-; returns 3</code></pre>
-</div>
-<h3>col-sum</h3><p></p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a } { 1 2 3 } |col-sum "a"
-; returns 6</code></pre>
-</div>
-<h3>col-avg</h3><p></p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a } { 1 2 3 } |col-avg 'a
-; returns 2</code></pre>
-</div>
-<h3>A1</h3><p></p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a } { 123 234 345 } |A1
-; returns 123</code></pre>
-</div>
-<h3>B1</h3><p></p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a } { 123 234 345 } |B1
-; returns 234</code></pre>
 </div>
 </div>
 </main>

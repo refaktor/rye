@@ -91,3 +91,11 @@ function generateMenuFromH2_original(div) {
     // Append the menu to the document, for example, to the body or a specific div
     document.getElementById("menu-holder").appendChild(menu);
 }
+
+
+//
+
+function styleCurrentTab() {
+    var cur = document.location.pathname.match(/\/([a-z]+).html$/)[1];
+    document.getElementById("maintab-"+cur).className += " current";
+}

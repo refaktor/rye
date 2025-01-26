@@ -19,6 +19,9 @@ import (
 
 var Builtins_table = map[string]*env.Builtin{
 
+	//
+	// ##### Constructors #####  "Functions that construct a table."
+	//
 	// Tests:
 	//  equal { table { "a" } { 1 2 } |type? } 'table
 	//  equal { table { 'a  } { 1 2 } |type? } 'table
@@ -132,8 +135,12 @@ var Builtins_table = map[string]*env.Builtin{
 			}
 		},
 	},
+	// WARN: dict seems not to retain order of keys, so columns aren't ordered as in dict
+
 	// Tests:
-	//  equal { to-table list [ dict { "a" 1 } dict { "a" b } ] |type? } 'table
+	//  equal { to-table list [ dict { "a" 1 } dict { "a" 2 } ] |type? } 'table
+	//  equal { to-table list [ dict { "a" 1 "b" "Jim" } dict { "a" 2 "b" "Bob" } ] |header? |sort } list { "a" "b" }
+	//  equal { to-table list [ dict { "a" 1 "b" "Jim" } dict { "a" 2 "b" "Bob" } ] |column? "b" |first } "Jim"
 	// Args:
 	//  * data
 	"to-table": {
@@ -234,7 +241,383 @@ var Builtins_table = map[string]*env.Builtin{
 			}
 		},
 	},
+	//
+	// ##### Filtering #####  "Functions that construct a table."
+	//
+	// Example: filtering for rows with the name "Enno"
+	//  sheet: table { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" }
+	//  sheet .where-equal 'name "Enno"
+	// Tests:
+	//  equal { table { 'a } { 1 2 3 2 } |where-equal "a" 2 |length? } 2
+	// Args:
+	// * sheet
+	// * column
+	// * value
+	// Tags: #filter #tables
+	"where-equal": {
+		Argsn: 3,
+		Doc:   "Returns table of rows where specific colum is equal to given value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch spr := arg0.(type) {
+			case *env.Table:
+				switch col := arg1.(type) {
+				case env.Word:
+					return WhereEquals(ps, *spr, ps.Idx.GetWord(col.Index), arg2)
+				case env.String:
+					return WhereEquals(ps, *spr, col.Value, arg2)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-equal")
+				}
+			case env.Table:
+				switch col := arg1.(type) {
+				case env.Word:
+					return WhereEquals(ps, spr, ps.Idx.GetWord(col.Index), arg2)
+				case env.String:
+					return WhereEquals(ps, spr, col.Value, arg2)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-equal")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-equal")
+			}
+		},
+	},
+	// Notes:
+	// Void is not a value that any function can accept or return so far in Rye. But there can be missing data
+	// in tables ... for example from SQL query with left-join or plain null values in databases
 
+	// Tests:
+	//  equal { table { 'a } { 1 _ 3 _ } |where-void "a" |length? } 2
+	// Args:
+	// * sheet
+	// * column
+	// Tags: #filter #tables
+	"where-void": {
+		Argsn: 2,
+		Doc:   "Returns table of rows where specific colum is equal to given value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch spr := arg0.(type) {
+			case *env.Table:
+				switch col := arg1.(type) {
+				case env.Word:
+					return WhereEquals(ps, *spr, ps.Idx.GetWord(col.Index), env.NewVoid())
+				case env.String:
+					return WhereEquals(ps, *spr, col.Value, env.NewVoid())
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-equal")
+				}
+			case env.Table:
+				switch col := arg1.(type) {
+				case env.Word:
+					return WhereEquals(ps, spr, ps.Idx.GetWord(col.Index), env.NewVoid())
+				case env.String:
+					return WhereEquals(ps, spr, col.Value, env.NewVoid())
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-equal")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-equal")
+			}
+		},
+	},
+
+	// Example: filting for names that start with "En"
+	//  sheet: table { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" }
+	//  sheet .where-match 'name "En.+"
+	// Tests:
+	//  equal { table { 'a } { "1" "2" "a3" "2b" } |where-match 'a regexp "^[0-9]$" |length? } 2
+	// Args:
+	// * sheet
+	// * column
+	// * regexp
+	// Tags: #filter #tables
+	"where-match": {
+		Argsn: 3,
+		Doc:   "Returns table of rows where a specific colum matches a regex.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
+			var spr *env.Table
+			switch sheet := arg0.(type) {
+			case env.Table:
+				spr = &sheet
+			case *env.Table:
+				spr = sheet
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-match")
+			}
+			switch reNative := arg2.(type) {
+			case env.Native:
+				re, ok := reNative.Value.(*regexp.Regexp)
+				if !ok {
+					return MakeArgError(ps, 2, []env.Type{env.NativeType}, "where-match")
+				}
+				switch col := arg1.(type) {
+				case env.Word:
+					return WhereMatch(ps, spr, ps.Idx.GetWord(col.Index), re)
+				case env.String:
+					return WhereMatch(ps, spr, col.Value, re)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-match")
+				}
+			default:
+				return MakeArgError(ps, 3, []env.Type{env.NativeType}, "where-match")
+			}
+		},
+	},
+
+	// Example:
+	//  sheet: table { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" "Benn" }
+	//  sheet .where-contains 'name "nn"
+	// Tests:
+	//  equal { table { 'a } { "1" "2" "a3" "2b" } |where-contains 'a "2" |length? } 2
+	// Args:
+	// * sheet
+	// * column
+	// * substring
+	// Tags: #filter #tables
+	"where-contains": {
+		Argsn: 3,
+		Doc:   "Returns table of rows where specific colum contains a given string value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
+			var spr *env.Table
+			switch sheet := arg0.(type) {
+			case env.Table:
+				spr = &sheet
+			case *env.Table:
+				spr = sheet
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-match")
+			}
+			switch s := arg2.(type) {
+			case env.String:
+				switch col := arg1.(type) {
+				case env.Word:
+					return WhereContains(ps, spr, ps.Idx.GetWord(col.Index), s.Value, false)
+				case env.String:
+					return WhereContains(ps, spr, col.Value, s.Value, false)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-contains")
+				}
+			default:
+				return MakeArgError(ps, 3, []env.Type{env.StringType}, "where-contains")
+			}
+		},
+	},
+
+	// Example:
+	//  sheet: table { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" "Benn" }
+	//  sheet .where-contains 'name "nn"
+	// Tests:
+	//  equal { table { 'a } { "1" "2" "a3" "2b" } |where-not-contains 'a "3" |length? } 3
+	// Args:
+	// * sheet
+	// * column
+	// * substring
+	// Tags: #filter #tables
+	"where-not-contains": {
+		Argsn: 3,
+		Doc:   "Returns table of rows where specific colum contains a given string value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
+			var spr *env.Table
+			switch sheet := arg0.(type) {
+			case env.Table:
+				spr = &sheet
+			case *env.Table:
+				spr = sheet
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-match")
+			}
+			switch s := arg2.(type) {
+			case env.String:
+				switch col := arg1.(type) {
+				case env.Word:
+					return WhereContains(ps, spr, ps.Idx.GetWord(col.Index), s.Value, true)
+				case env.String:
+					return WhereContains(ps, spr, col.Value, s.Value, true)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-not-contains")
+				}
+			default:
+				return MakeArgError(ps, 3, []env.Type{env.StringType}, "where-not-contains")
+			}
+		},
+	},
+	// Example:
+	//  sheet: table { "name" "age" } { "Enno" 30 "Enya" 25 "Enid" 40 "Bob" 19 "Bill" 45 "Benn" 29 }
+	//  sheet .where-greater 'age 29
+	// Tests:
+	//  equal { table { 'a } { 1 2 3 2 } |where-greater 'a 1 |length? } 3
+	// Args:
+	// * sheet
+	// * column
+	// * value
+	// Tags: #filter #table
+	"where-greater": {
+		Argsn: 3,
+		Doc:   "Returns table of rows where specific colum is greater than given value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var spr *env.Table
+			switch sheet := arg0.(type) {
+			case env.Table:
+				spr = &sheet
+			case *env.Table:
+				spr = sheet
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-match")
+			}
+			switch col := arg1.(type) {
+			case env.Word:
+				return WhereGreater(ps, spr, ps.Idx.GetWord(col.Index), arg2)
+			case env.String:
+				return WhereGreater(ps, spr, col.Value, arg2)
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-greater")
+			}
+		},
+	},
+	// Example: filting for names that contain "nn"
+	//  sheet: table { "name" "age" } { "Enno" 30 "Enya" 25 "Enid" 40 "Bob" 19 "Bill" 45 "Benn" 29 }
+	//  sheet .where-lesser 'age 29
+	// Tests:
+	//  equal { table { 'a } { 1 2 3 2 } |where-lesser 'a 3 |length? } 3
+	// Args:
+	// * sheet
+	// * column
+	// * value
+	// Tags: #filter #table
+	"where-lesser": {
+		Argsn: 3,
+		Doc:   "Returns table of rows where specific colum is lesser than given value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var spr *env.Table
+			switch sheet := arg0.(type) {
+			case env.Table:
+				spr = &sheet
+			case *env.Table:
+				spr = sheet
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-match")
+			}
+			switch col := arg1.(type) {
+			case env.Word:
+				return WhereLesser(ps, spr, ps.Idx.GetWord(col.Index), arg2)
+			case env.String:
+				return WhereLesser(ps, spr, col.Value, arg2)
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-lesser")
+			}
+		},
+	},
+	// Returns a spreadhsheet of rows where the given column is between the given
+	// values, non-inclusive.
+	// Example: filtering for folks in their 20s
+	//  sheet: table { "name" "age" } { "Enno" 30 "Enya" 25 "Enid" 40 "Bob" 19 "Bill" 45 "Benn" 29 }
+	//  sheet .where-between 'age 19 30
+	// Tests:
+	//  equal { table { 'a } { 1 2 3 2 } |where-between 'a 1 3 |length? } 2
+	// Args:
+	// * sheet
+	// * column
+	// * lower-limit
+	// * upper-limit
+	// Tags: #filter #table
+	"where-between": {
+		Argsn: 4,
+		Doc:   "Returns table of rows where specific colum is between given values.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
+			var spr *env.Table
+			switch sheet := arg0.(type) {
+			case env.Table:
+				spr = &sheet
+			case *env.Table:
+				spr = sheet
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-match")
+			}
+			switch col := arg1.(type) {
+			case env.Word:
+				return WhereBetween(ps, spr, ps.Idx.GetWord(col.Index), arg2, arg3, false)
+			case env.String:
+				return WhereBetween(ps, spr, col.Value, arg2, arg3, false)
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-between")
+			}
+		},
+	},
+
+	// Returns a spreadhsheet of rows where the given column is between the given
+	// values, non-inclusive.
+	// Tests:
+	//  equal { table { 'a } { 1 2 3 2 5 } |where-between\inclusive 'a 2 3 |length? } 3
+	// Args:
+	// * sheet
+	// * column
+	// * lower-limit
+	// * upper-limit
+	// Tags: #filter #table
+	"where-between\\inclusive": {
+		Argsn: 4,
+		Doc:   "Returns table of rows where specific colum is between given values.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
+			var spr *env.Table
+			switch sheet := arg0.(type) {
+			case env.Table:
+				spr = &sheet
+			case *env.Table:
+				spr = sheet
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-match")
+			}
+			switch col := arg1.(type) {
+			case env.Word:
+				return WhereBetween(ps, spr, ps.Idx.GetWord(col.Index), arg2, arg3, true)
+			case env.String:
+				return WhereBetween(ps, spr, col.Value, arg2, arg3, true)
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-between")
+			}
+		},
+	},
+
+	// Example: filtering for folks named "Enno" or "Enya"
+	//  sheet: table { "name" "age" } { "Enno" 30 "Enya" 25 "Enid" 40 "Bob" 19 "Bill" 45 "Benn" 29 }
+	//  sheet .where-in 'name { "Enno" "Enya" }
+	// Tests:
+	//  equal { table { "name" "age" } { "Enno" 30 "Enya" 25 "Bob" 19 }
+	//          |where-in 'name { "Enno" "Enya" "Roger" } |column? "age"
+	//  } { 30 25 }
+	// Args:
+	// * sheet
+	// * column
+	// * values-filtered-for
+	// Tags: #filter #table
+	"where-in": {
+		Argsn: 3,
+		Doc:   "Returns table of rows where specific colum value if found in block of values.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
+			switch spr := arg0.(type) {
+			case env.Table:
+				switch s := arg2.(type) {
+				case env.Block:
+					switch col := arg1.(type) {
+					case env.Word:
+						return WhereIn(ps, spr, ps.Idx.GetWord(col.Index), s.Series.S)
+					case env.String:
+						return WhereIn(ps, spr, col.Value, s.Series.S)
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-in")
+					}
+				default:
+					return MakeArgError(ps, 3, []env.Type{env.StringType}, "where-in")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-in")
+			}
+		},
+	},
+
+	//
+	// ##### Row level functions #####  "Functions that construct a table."
+	//
 	// Tests:
 	//  equal {
 	//	 table { "a" "b" } { 6 60 7 70 } |add-row { 8 80 } -> 2 -> "b"
@@ -492,13 +875,640 @@ var Builtins_table = map[string]*env.Builtin{
 		},
 	},
 
+	//
+	// ##### Column level functions #####  "Functions that construct a table."
+	//
+	// Example: Select "name" and "age" columns
+	//  sheet: table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
+	//  sheet .columns? { 'name 'age }
+	// Tests:
+	//  equal { table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 }
+	//   |columns? { 'name 'age } |header? } list { "name" "age" }
+	"columns?": {
+		Argsn: 2,
+		Doc:   "Returns table with just given columns.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch spr := arg0.(type) {
+			case env.Table:
+				switch col := arg1.(type) {
+				case env.Block:
+					cols := make([]string, col.Series.Len())
+					for c := range col.Series.S {
+						switch ww := col.Series.S[c].(type) {
+						case env.String:
+							cols[c] = ww.Value
+						case env.Tagword:
+							cols[c] = ps.Idx.GetWord(ww.Index)
+						}
+					}
+					return spr.Columns(ps, cols)
+				default:
+					return MakeArgError(ps, 1, []env.Type{env.BlockType}, "columns")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "columns")
+			}
+		},
+	},
+	// Example: Get sheet column names
+	//  sheet: table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
+	//  sheet .header? ; { "name" "age" "job_title" }
+	// Tests:
+	//  equal { table { "age" "name" } { 123 "Jim" 29 "Anne" }
+	//   |header? } list { "age" "name" }
+	"header?": {
+		Argsn: 1,
+		Doc:   "Gets the column names (header) as block.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch spr := arg0.(type) {
+			case *env.Table:
+				return spr.GetColumns()
+			case env.Table:
+				return spr.GetColumns()
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "headers?")
+			}
+		},
+	},
+
+	// Example: Get sheet column names
+	//  sheet: table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
+	//  sheet .column? 'name ; => { "Bob" "Alice" "Charlie" }
+	// Tests:
+	//  equal { table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Teacher" }
+	//  |column? 'name }  { "Bob" "Alice" }
+	"column?": {
+		Argsn: 2,
+		Doc:   "Gets all values of a column as a block.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
+			switch spr := arg0.(type) {
+			case env.Table:
+				switch col := arg1.(type) {
+				case env.Word:
+					return spr.GetColumn(ps.Idx.GetWord(col.Index))
+				case env.String:
+					return spr.GetColumn(col.Value)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "column?")
+				}
+			case env.Block:
+				switch col := arg1.(type) {
+				case env.Integer:
+					col1 := make([]env.Object, len(spr.Series.S))
+					if col.Value < 0 {
+						return MakeBuiltinError(ps, "Index can't be negative", "column?")
+					}
+					for i, item_ := range spr.Series.S {
+						switch item := item_.(type) {
+						case env.Block:
+							if len(item.Series.S) < int(col.Value) {
+								return MakeBuiltinError(ps, "index out of bounds for item: "+strconv.Itoa(i), "column?")
+							}
+							col1[i] = item.Series.S[col.Value]
+						}
+					}
+					return *env.NewBlock(*env.NewTSeries(col1))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "column?")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "column?")
+			}
+		},
+	},
+
+	// Example: Drop "job_title" column from sheet
+	//  sheet: table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
+	//  sheet .drop-column 'job_title ;
+	// Tests:
+	//  equal { table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" }
+	//  |drop-column "name" |header? } list { "age" "job_title" }
+	"drop-column": {
+		Argsn: 2,
+		Doc:   "Remove a column from a table. Returns new table",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch spr := arg0.(type) {
+			case env.Table:
+				switch rmCol := arg1.(type) {
+				case env.String:
+					return DropColumn(ps, spr, rmCol)
+				case env.Block:
+					return DropColumnBlock(ps, spr, rmCol)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.BlockType}, "drop-column")
+				}
+			}
+			return MakeArgError(ps, 1, []env.Type{env.TableType}, "drop-column")
+		},
+	},
+	// Tests:
+	//  equal { tab: ref table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
+	//  tab .rename-column! "name" "first_name" , tab .header? } list { "first_name" "age" }
+	"rename-column!": {
+		Argsn: 3,
+		Doc:   "Remove a column from a table. Returns new table",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch spr := arg0.(type) {
+			case *env.Table:
+				switch oldName := arg1.(type) {
+				case env.String:
+					switch newName := arg2.(type) {
+					case env.String:
+						return RenameColumn(ps, spr, oldName, newName)
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.WordType, env.BlockType}, "rename-column")
+					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.BlockType}, "rename-column")
+				}
+			}
+			return MakeArgError(ps, 1, []env.Type{env.TableType}, "rename-column")
+		},
+	},
+	// TODO: also create add-column\i 'name { +100 }   ( or  \idx \pos)
+	// Example: Add a column to a sheet
+	//  sheet: table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
+	//  sheet .add-column 'job_title { "Jantior" "Librarian" "Line Cook" } ;
+	// Tests:
+	//  equal { table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
+	//  |add-column 'job { } { "Cook" } |column? "job" } { "Cook" "Cook" "Cook" }
+	"add-column": {
+		Argsn: 4,
+		Doc:   "Adds a new column to table. Changes in-place and returns the new table.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch spr := arg0.(type) {
+			case env.Table:
+				switch newCol := arg1.(type) {
+				case env.Word:
+					switch fromCols := arg2.(type) {
+					case env.Block:
+						switch code := arg3.(type) {
+						case env.Block:
+							return GenerateColumn(ps, spr, newCol, fromCols, code)
+						default:
+							return MakeArgError(ps, 4, []env.Type{env.BlockType}, "add-column")
+						}
+					case env.Word:
+						switch replaceBlock := arg3.(type) {
+						case env.Block:
+							if replaceBlock.Series.Len() != 2 {
+								return MakeBuiltinError(ps, "Replacement block must contain a regex object and replacement string.", "add-column")
+							}
+							regexNative, ok := replaceBlock.Series.S[0].(env.Native)
+							if !ok {
+								return MakeBuiltinError(ps, "First element of replacement block must be a regex object.", "add-column")
+							}
+							regex, ok := regexNative.Value.(*regexp.Regexp)
+							if !ok {
+								return MakeBuiltinError(ps, "First element of replacement block must be a regex object.", "add-column")
+							}
+							replaceStr, ok := replaceBlock.Series.S[1].(env.String)
+							if !ok {
+								return MakeBuiltinError(ps, "Second element of replacement block must be a string.", "add-column")
+							}
+							err := GenerateColumnRegexReplace(ps, &spr, newCol, fromCols, regex, replaceStr.Value)
+							if err != nil {
+								return err
+							}
+							return spr
+						default:
+							return MakeArgError(ps, 3, []env.Type{env.BlockType}, "add-column")
+						}
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "add-column")
+					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "add-column")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "add-column")
+			}
+		},
+	},
+
+	//
+	// ##### Miscelaneous #####  ""
+	//
+	// Example: Order by age ascending
+	//  sheet: table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19  }
+	//  sheet .order-by! 'age 'asc
+	// Tests:
+	//  equal { tab: table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19  }
+	//  tab .order-by! 'age 'asc |column? "age" } { 19 25 29 }
+	"order-by!": {
+		Argsn: 3,
+		Doc:   "Sorts row by given column, changes table in place.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			dir, ok := arg2.(env.Word)
+			if !ok {
+				return MakeArgError(ps, 3, []env.Type{env.WordType}, "sort-by!")
+			}
+			var dirAsc bool
+			if dir.Index == ps.Idx.IndexWord("asc") {
+				dirAsc = true
+			} else if dir.Index == ps.Idx.IndexWord("desc") {
+				dirAsc = false
+			} else {
+				return MakeBuiltinError(ps, "Direction can be just asc or desc.", "sort-by!")
+			}
+			switch spr := arg0.(type) {
+			case env.Table:
+				switch col := arg1.(type) {
+				case env.String:
+					if dirAsc {
+						SortByColumn(ps, &spr, col.Value)
+					} else {
+						SortByColumnDesc(ps, &spr, col.Value)
+					}
+					return spr
+				case env.Word:
+					if dirAsc {
+						SortByColumn(ps, &spr, ps.Idx.GetWord(col.Index))
+					} else {
+						SortByColumnDesc(ps, &spr, ps.Idx.GetWord(col.Index))
+					}
+					return spr
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "sort-by!")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "sort-by!")
+			}
+		},
+	},
+
+	// Example: Order by age ascending
+	//  sheet: table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19  }
+	//  sheet .order-by 'age 'asc
+	// Tests:
+	//  equal { tab: table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19  }
+	//  |order-by 'age 'desc |column? "age" } { 29 25 19 }
+	"order-by": {
+		Argsn: 3,
+		Doc:   "Sorts row by given column, changes table in place.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			dir, ok := arg2.(env.Word)
+			if !ok {
+				return MakeArgError(ps, 3, []env.Type{env.WordType}, "sort-by!")
+			}
+			var dirAsc bool
+			if dir.Index == ps.Idx.IndexWord("asc") {
+				dirAsc = true
+			} else if dir.Index == ps.Idx.IndexWord("desc") {
+				dirAsc = false
+			} else {
+				return MakeBuiltinError(ps, "Direction can be just asc or desc.", "sort-by!")
+			}
+			switch spr := arg0.(type) {
+			case env.Table:
+				copied := make([]env.TableRow, len(spr.Rows))
+				copy(copied, spr.Rows)
+				newSpr := env.NewTable(spr.Cols)
+				newSpr.Rows = copied
+				switch col := arg1.(type) {
+				case env.String:
+					if dirAsc {
+						SortByColumn(ps, newSpr, col.Value)
+					} else {
+						SortByColumnDesc(ps, newSpr, col.Value)
+					}
+					return *newSpr
+				case env.Word:
+					if dirAsc {
+						SortByColumn(ps, newSpr, ps.Idx.GetWord(col.Index))
+					} else {
+						SortByColumnDesc(ps, newSpr, ps.Idx.GetWord(col.Index))
+					}
+					return *newSpr
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "sort-by!")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "sort-by!")
+			}
+		},
+	},
+
+	// Tests:
+	//  equal { table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
+	//  |add-indexes! { name } |indexes? } { "name" }
+	"add-indexes!": {
+		Argsn: 2,
+		Doc:   "Creates an index for all values in the provided columns. Changes in-place and returns the new table.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch spr := arg0.(type) {
+			case env.Table:
+				switch col := arg1.(type) {
+				case env.Block:
+					colWords := make([]env.Word, col.Series.Len())
+					for c := range col.Series.S {
+						switch ww := col.Series.S[c].(type) {
+						case env.Word:
+							colWords[c] = ww
+						default:
+							return MakeError(ps, "Block of tagwords needed")
+						}
+					}
+					err := AddIndexes(ps, &spr, colWords)
+					if err != nil {
+						return err
+					}
+					return spr
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "add-indexes!")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "add-indexes!")
+			}
+		},
+	},
+	// Tests:
+	//  equal { table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
+	//  |add-indexes! { name age } |indexes? } { "name" "age" }
+	"indexes?": {
+		Argsn: 1,
+		Doc:   "Returns the columns that are indexed in a table.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
+			switch spr := arg0.(type) {
+			case env.Table:
+				res := make([]env.Object, 0)
+				for col := range spr.Indexes {
+					res = append(res, *env.NewString(col))
+				}
+				return *env.NewBlock(*env.NewTSeries(res))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "indexes?")
+			}
+		},
+	},
+	// Tests:
+	//  equal { table { "age" } { 123 29 19 }
+	//  |autotype 1.0 |types? } { integer }
+	"autotype": {
+		Argsn: 2,
+		Doc:   "Takes a table and tries to determine and change the types of columns.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
+			switch spr := arg0.(type) {
+			case env.Table:
+				switch percent := arg1.(type) {
+				case env.Decimal:
+					return AutoType(ps, &spr, percent.Value)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.DecimalType}, "autotype")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "autotype")
+			}
+		},
+	},
+	// Example: join two tables, putting in empty cells if the left sheet doesn't have a value
+	//  names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
+	//  houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
+	//  names .left-join houses 'id 'id
+	// Tests:
+	//  equal {
+	//    names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
+	//    houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
+	//
+	//    names .inner-join houses 'id 'id |header?
+	//  } list { "id" "name" "id_2" "house" }
+	//  equal {
+	//    names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
+	//    houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
+	//
+	//    names .left-join houses 'id 'id |column? "name"
+	//  } { "Paul" "Chani" "Vladimir" }
+	"left-join": {
+		Argsn: 4,
+		Doc:   "Left joins two tables on the given columns.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
+			switch spr1 := arg0.(type) {
+			case env.Table:
+				switch spr2 := arg1.(type) {
+				case env.Table:
+					switch col1 := arg2.(type) {
+					case env.Word:
+						col2, ok := arg3.(env.Word)
+						if !ok {
+							return MakeArgError(ps, 4, []env.Type{env.WordType}, "left-join")
+						}
+						return LeftJoin(ps, spr1, spr2, ps.Idx.GetWord(col1.Index), ps.Idx.GetWord(col2.Index), false)
+					case env.String:
+						col2, ok := arg3.(env.String)
+						if !ok {
+							MakeArgError(ps, 4, []env.Type{env.StringType}, "left-join")
+						}
+						return LeftJoin(ps, spr1, spr2, col1.Value, col2.Value, false)
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.WordType, env.StringType}, "left-join")
+					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.TableType}, "left-join")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "left-join")
+			}
+		},
+	},
+	// Example: join two tables
+	//  names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
+	//  houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
+	//  names .inner-join houses 'id 'id
+
+	// Tests:
+	//  equal {
+	//    names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
+	//    houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
+	//
+	//    names .inner-join houses 'id 'id |header?
+	//  } list { "id" "name" "id_2" "house" }
+	//  equal {
+	//    names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
+	//    houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
+	//
+	//    names .inner-join houses 'id 'id |column? "name"
+	//  } {  "Paul" "Vladimir" }
+	"inner-join": {
+		Argsn: 4,
+		Doc:   "Inner joins two tables on the given columns.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
+			switch spr1 := arg0.(type) {
+			case env.Table:
+				switch spr2 := arg1.(type) {
+				case env.Table:
+					switch col1 := arg2.(type) {
+					case env.Word:
+						col2, ok := arg3.(env.Word)
+						if !ok {
+							return MakeArgError(ps, 4, []env.Type{env.WordType}, "inner-join")
+						}
+						return LeftJoin(ps, spr1, spr2, ps.Idx.GetWord(col1.Index), ps.Idx.GetWord(col2.Index), true)
+					case env.String:
+						col2, ok := arg3.(env.String)
+						if !ok {
+							MakeArgError(ps, 4, []env.Type{env.StringType}, "inner-join")
+						}
+						return LeftJoin(ps, spr1, spr2, col1.Value, col2.Value, true)
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.WordType, env.StringType}, "inner-join")
+					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.TableType}, "inner-join")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "inner-join")
+			}
+		},
+	},
+	// Example: group table rows by name, running various aggregations on the val column
+	//  table { "name" "val" } { "a" 1 "b" 6 "a" 5 "b" 10 "a" 7 }
+	// 	|group-by 'name { 'name count 'val sum 'val min 'val max 'val avg }
+	// 	|order-by! 'name 'asc
+	// Tests:
+	//  equal {
+	//    table { "name" "val" } { "a" 1 "b" 6 "a" 5 "b" 10 "a" 7 }
+	// 	  |group-by 'name { 'name count 'val sum } |column? "val_sum" |sort
+	//   } { 13.0 16.0 }
+	// Tests:
+	//  equal {
+	//    table { "name" "val" } { "a" 1 "b" 6 "a" 5 "b" 10 "a" 7 }
+	// 	  |group-by 'name { 'name count 'val min } |column? "val_min" |sort
+	//   } { 1.0 6.0 }
+	// Tests:
+	//  equal {
+	//    table { "name" "val" } { "a" 1 "b" 6 "a" 5 "b" 10 "a" 12 }
+	// 	  |group-by 'name { 'name count 'val avg } |column? "val_avg" |sort
+	//   } { 6.0 8.0 }
+	"group-by": {
+		Argsn: 3,
+		Doc:   "Groups a table by the given column and (optional) aggregations.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
+			switch spr := arg0.(type) {
+			case env.Table:
+				switch aggBlock := arg2.(type) {
+				case env.Block:
+					if len(aggBlock.Series.S)%2 != 0 {
+						return MakeBuiltinError(ps, "Aggregation block must contain pairs of column name and function for each aggregation.", "group-by")
+					}
+					aggregations := make(map[string][]string)
+					for i := 0; i < len(aggBlock.Series.S); i += 2 {
+						col := aggBlock.Series.S[i]
+						fun, ok := aggBlock.Series.S[i+1].(env.Word)
+						if !ok {
+							return MakeBuiltinError(ps, "Aggregation function must be a word", "group-by")
+						}
+						colStr := ""
+						switch col := col.(type) {
+						case env.Tagword:
+							colStr = ps.Idx.GetWord(col.Index)
+						case env.String:
+							colStr = col.Value
+						default:
+							return MakeBuiltinError(ps, "Aggregation column must be a word or string", "group-by")
+						}
+						funStr := ps.Idx.GetWord(fun.Index)
+						aggregations[colStr] = append(aggregations[colStr], funStr)
+					}
+					switch col := arg1.(type) {
+					case env.Word:
+						return GroupBy(ps, spr, ps.Idx.GetWord(col.Index), aggregations)
+					case env.String:
+						return GroupBy(ps, spr, col.Value, aggregations)
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "group-by")
+					}
+				default:
+					return MakeArgError(ps, 3, []env.Type{env.BlockType}, "group-by")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "group-by")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { table { 'a } { 123 234 345 } |A1 } 123
+	"A1": {
+		Argsn: 1,
+		Doc:   "Accepts a Table and returns the first row first column cell.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s0 := arg0.(type) {
+			case env.Table:
+				r := s0.Rows[0].Values[0]
+				return env.ToRyeValue(r)
+
+			default:
+				ps.ErrorFlag = true
+				return env.NewError("first arg not table")
+			}
+		},
+	},
+	// TODO: Check for size
+
+	// Tests:
+	// equal { table { 'a 'b } { 123 234 345 456 } |B1 } 234
+	"B1": {
+		Argsn: 1,
+		Doc:   "Accepts a Table and returns the first row second column cell.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s0 := arg0.(type) {
+			case env.Table:
+				r := s0.Rows[0].Values[1]
+				return env.ToRyeValue(r)
+
+			default:
+				ps.ErrorFlag = true
+				return env.NewError("first arg not table")
+			}
+		},
+	},
+	// TODO: check for size
+
+	// Tests:
+	// equal { table { 'a 'b } { 123 234 345 456 } |A2 } 345
+	"A2": {
+		Argsn: 1,
+		Doc:   "Accepts a Table and returns the first row first column cell.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s0 := arg0.(type) {
+			case env.Table:
+				r := s0.Rows[1].Values[0]
+				return env.ToRyeValue(r)
+
+			default:
+				ps.ErrorFlag = true
+				return env.NewError("first arg not table")
+			}
+		},
+	},
+	// Tests:
+	// equal { table { 'a 'b } { 123 234 345 456 } |B2 } 456
+	"B2": {
+		Argsn: 1,
+		Doc:   "Accepts a Table and returns the first row second column cell.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s0 := arg0.(type) {
+			case env.Table:
+				r := s0.Rows[1].Values[1]
+				return env.ToRyeValue(r)
+
+			default:
+				ps.ErrorFlag = true
+				return env.NewError("first arg not table")
+			}
+		},
+	},
+
+	//
+	// ##### Loading and saving #####  "Functions that construct a table."
+	//
 	// Tests:
 	//  equal {
 	//	 cc os
-	//   f: mktmp + "/test.csv"
-	//   spr1: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+	//   f:: mktmp + "/test.csv"
+	//   spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
 	//   spr1 .save\csv f
-	//   spr2: load\csv f |autotype 1.0
+	//   spr2:: load\csv f |autotype 1.0
 	//   spr1 = spr2
 	//  } true
 	// Args:
@@ -551,6 +1561,18 @@ var Builtins_table = map[string]*env.Builtin{
 	},
 
 	// TODO -- deduplicate with above
+
+	// Tests:
+	//  equal {
+	//	 cc os
+	//   f:: mktmp + "/test.tsv"
+	//   spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+	//   spr1 .save\tsv f
+	//   spr2:: load\tsv f |autotype 1.0
+	//   spr1 = spr2
+	//  } true
+	// Args:
+	// * file-uri - location of csv file to load
 	"load\\tsv": {
 		// TODO 2 -- this could move to a go function so it could be called by general load that uses extension to define the loader
 		Argsn: 1,
@@ -631,6 +1653,86 @@ var Builtins_table = map[string]*env.Builtin{
 
 					csvWriter := csv.NewWriter(f)
 
+					err1 := csvWriter.Write(spr.Cols)
+					if err1 != nil {
+						return MakeBuiltinError(ps, "Unable to create write header.", "save\\csv")
+					}
+
+					for ir, row := range spr.Rows {
+						strVals := make([]string, cLen)
+						// TODO -- just adhoc ... move to a general function in utils RyeValsToString or something like it
+						for i, v := range row.Values {
+							var sv string
+							switch tv := v.(type) {
+							case string:
+								sv = tv
+							case int64:
+								sv = strconv.Itoa(int(tv))
+							case float64:
+								sv = strconv.FormatFloat(tv, 'f', -1, 64)
+							case env.String:
+								sv = tv.Value
+							case env.Integer:
+								sv = strconv.Itoa(int(tv.Value))
+							case env.Decimal:
+								sv = fmt.Sprintf("%f", tv.Value)
+							}
+							if i < cLen {
+								strVals[i] = sv
+							}
+						}
+						err := csvWriter.Write(strVals)
+						if err != nil {
+							return MakeBuiltinError(ps, "Unable to write line: "+strconv.Itoa(ir), "save\\csv")
+						}
+					}
+					csvWriter.Flush()
+					f.Close()
+					return spr
+				default:
+					return MakeArgError(ps, 1, []env.Type{env.UriType}, "save\\csv")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "save\\csv")
+			}
+		},
+	},
+
+	// TODO: deduplicate with load\csv
+
+	// Tests:
+	//  equal {
+	//	 cc os
+	//   f:: mktmp + "/test.csv"
+	//   spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+	//   spr1 .save\tsv f
+	//   spr2:: load\tsv f |autotype 1.0
+	//   spr1 = spr2
+	//  } true
+	// Args:
+	// * sheet    - the table to save
+	// * file-url - where to save the sheet as a .csv file
+	// Tags: #table #saving #csv
+	"save\\tsv": {
+		Argsn: 2,
+		Doc:   "Saves a table to a .csv file.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch spr := arg0.(type) {
+			case env.Table:
+				switch file := arg1.(type) {
+				case env.Uri:
+					// rows, err := db1.Value.(*sql.DB).Query(sqlstr, vals...)
+					f, err := os.Create(file.GetPath())
+					if err != nil {
+						// log.Fatal("Unable to read input file "+filePath, err)
+						return MakeBuiltinError(ps, "Unable to create input file.", "save\\csv")
+					}
+					defer f.Close()
+
+					cLen := len(spr.Cols)
+
+					csvWriter := csv.NewWriter(f)
+					csvWriter.Comma = '\t'
 					err1 := csvWriter.Write(spr.Cols)
 					if err1 != nil {
 						return MakeBuiltinError(ps, "Unable to create write header.", "save\\csv")
@@ -814,838 +1916,27 @@ var Builtins_table = map[string]*env.Builtin{
 		},
 	},
 
-	// Example: filtering for rows with the name "Enno"
-	//  sheet: table { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" }
-	//  sheet .where-equal 'name "Enno"
-	// Tests:
-	//  equal { table { 'a } { 1 2 3 2 } |where-equal "a" 2 |length? } 2
-	// Args:
-	// * sheet
-	// * column
-	// * value
-	// Tags: #filter #tables
-	"where-equal": {
-		Argsn: 3,
-		Doc:   "Returns table of rows where specific colum is equal to given value.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch spr := arg0.(type) {
-			case *env.Table:
-				switch col := arg1.(type) {
-				case env.Word:
-					return WhereEquals(ps, *spr, ps.Idx.GetWord(col.Index), arg2)
-				case env.String:
-					return WhereEquals(ps, *spr, col.Value, arg2)
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-equal")
-				}
-			case env.Table:
-				switch col := arg1.(type) {
-				case env.Word:
-					return WhereEquals(ps, spr, ps.Idx.GetWord(col.Index), arg2)
-				case env.String:
-					return WhereEquals(ps, spr, col.Value, arg2)
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-equal")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-equal")
-			}
-		},
-	},
-	// Args:
-	// * sheet
-	// * column
-	// Tags: #filter #tables
-	"where-void": {
-		Argsn: 2,
-		Doc:   "Returns table of rows where specific colum is equal to given value.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch spr := arg0.(type) {
-			case *env.Table:
-				switch col := arg1.(type) {
-				case env.Word:
-					return WhereEquals(ps, *spr, ps.Idx.GetWord(col.Index), env.NewVoid())
-				case env.String:
-					return WhereEquals(ps, *spr, col.Value, env.NewVoid())
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-equal")
-				}
-			case env.Table:
-				switch col := arg1.(type) {
-				case env.Word:
-					return WhereEquals(ps, spr, ps.Idx.GetWord(col.Index), env.NewVoid())
-				case env.String:
-					return WhereEquals(ps, spr, col.Value, env.NewVoid())
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-equal")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-equal")
-			}
-		},
-	},
-
-	// Example: filting for names that start with "En"
-	//  sheet: table { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" }
-	//  sheet .where-match 'name "En.+"
-	// Tests:
-	//  equal { table { 'a } { "1" "2" "a3" "2b" } |where-match 'a regexp "^[0-9]$" |length? } 2
-	// Args:
-	// * sheet
-	// * column
-	// * regexp
-	// Tags: #filter #tables
-	"where-match": {
-		Argsn: 3,
-		Doc:   "Returns table of rows where a specific colum matches a regex.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
-			var spr *env.Table
-			switch sheet := arg0.(type) {
-			case env.Table:
-				spr = &sheet
-			case *env.Table:
-				spr = sheet
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-match")
-			}
-			switch reNative := arg2.(type) {
-			case env.Native:
-				re, ok := reNative.Value.(*regexp.Regexp)
-				if !ok {
-					return MakeArgError(ps, 2, []env.Type{env.NativeType}, "where-match")
-				}
-				switch col := arg1.(type) {
-				case env.Word:
-					return WhereMatch(ps, spr, ps.Idx.GetWord(col.Index), re)
-				case env.String:
-					return WhereMatch(ps, spr, col.Value, re)
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-match")
-				}
-			default:
-				return MakeArgError(ps, 3, []env.Type{env.NativeType}, "where-match")
-			}
-		},
-	},
-
-	// Example:
-	//  sheet: table { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" "Benn" }
-	//  sheet .where-contains 'name "nn"
-	// Tests:
-	//  equal { table { 'a } { "1" "2" "a3" "2b" } |where-contains 'a "2" |length? } 2
-	// Args:
-	// * sheet
-	// * column
-	// * substring
-	// Tags: #filter #tables
-	"where-contains": {
-		Argsn: 3,
-		Doc:   "Returns table of rows where specific colum contains a given string value.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
-			var spr *env.Table
-			switch sheet := arg0.(type) {
-			case env.Table:
-				spr = &sheet
-			case *env.Table:
-				spr = sheet
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-match")
-			}
-			switch s := arg2.(type) {
-			case env.String:
-				switch col := arg1.(type) {
-				case env.Word:
-					return WhereContains(ps, spr, ps.Idx.GetWord(col.Index), s.Value, false)
-				case env.String:
-					return WhereContains(ps, spr, col.Value, s.Value, false)
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-contains")
-				}
-			default:
-				return MakeArgError(ps, 3, []env.Type{env.StringType}, "where-contains")
-			}
-		},
-	},
-
-	// Example:
-	//  sheet: table { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" "Benn" }
-	//  sheet .where-contains 'name "nn"
-	// Tests:
-	//  equal { table { 'a } { "1" "2" "a3" "2b" } |where-not-contains 'a "3" |length? } 3
-	// Args:
-	// * sheet
-	// * column
-	// * substring
-	// Tags: #filter #tables
-	"where-not-contains": {
-		Argsn: 3,
-		Doc:   "Returns table of rows where specific colum contains a given string value.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
-			var spr *env.Table
-			switch sheet := arg0.(type) {
-			case env.Table:
-				spr = &sheet
-			case *env.Table:
-				spr = sheet
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-match")
-			}
-			switch s := arg2.(type) {
-			case env.String:
-				switch col := arg1.(type) {
-				case env.Word:
-					return WhereContains(ps, spr, ps.Idx.GetWord(col.Index), s.Value, true)
-				case env.String:
-					return WhereContains(ps, spr, col.Value, s.Value, true)
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-not-contains")
-				}
-			default:
-				return MakeArgError(ps, 3, []env.Type{env.StringType}, "where-not-contains")
-			}
-		},
-	},
-	// Example:
-	//  sheet: table { "name" "age" } { "Enno" 30 "Enya" 25 "Enid" 40 "Bob" 19 "Bill" 45 "Benn" 29 }
-	//  sheet .where-greater 'age 29
-	// Tests:
-	//  equal { table { 'a } { 1 2 3 2 } |where-greater 'a 1 |length? } 3
-	// Args:
-	// * sheet
-	// * column
-	// * value
-	// Tags: #filter #table
-	"where-greater": {
-		Argsn: 3,
-		Doc:   "Returns table of rows where specific colum is greater than given value.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			var spr *env.Table
-			switch sheet := arg0.(type) {
-			case env.Table:
-				spr = &sheet
-			case *env.Table:
-				spr = sheet
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-match")
-			}
-			switch col := arg1.(type) {
-			case env.Word:
-				return WhereGreater(ps, spr, ps.Idx.GetWord(col.Index), arg2)
-			case env.String:
-				return WhereGreater(ps, spr, col.Value, arg2)
-			default:
-				return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-greater")
-			}
-		},
-	},
-	// Example: filting for names that contain "nn"
-	//  sheet: table { "name" "age" } { "Enno" 30 "Enya" 25 "Enid" 40 "Bob" 19 "Bill" 45 "Benn" 29 }
-	//  sheet .where-lesser 'age 29
-	// Args:
-	// * sheet
-	// * column
-	// * value
-	// Tags: #filter #table
-	"where-lesser": {
-		Argsn: 3,
-		Doc:   "Returns table of rows where specific colum is lesser than given value.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			var spr *env.Table
-			switch sheet := arg0.(type) {
-			case env.Table:
-				spr = &sheet
-			case *env.Table:
-				spr = sheet
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-match")
-			}
-			switch col := arg1.(type) {
-			case env.Word:
-				return WhereLesser(ps, spr, ps.Idx.GetWord(col.Index), arg2)
-			case env.String:
-				return WhereLesser(ps, spr, col.Value, arg2)
-			default:
-				return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-lesser")
-			}
-		},
-	},
-	// Returns a spreadhsheet of rows where the given column is between the given
-	// values, non-inclusive.
-	// Example: filtering for folks in their 20s
-	//  sheet: table { "name" "age" } { "Enno" 30 "Enya" 25 "Enid" 40 "Bob" 19 "Bill" 45 "Benn" 29 }
-	//  sheet .where-between 'age 19 30
-	// Args:
-	// * sheet
-	// * column
-	// * lower-limit
-	// * upper-limit
-	// Tags: #filter #table
-	"where-between": {
-		Argsn: 4,
-		Doc:   "Returns table of rows where specific colum is between given values.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
-			var spr *env.Table
-			switch sheet := arg0.(type) {
-			case env.Table:
-				spr = &sheet
-			case *env.Table:
-				spr = sheet
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-match")
-			}
-			switch col := arg1.(type) {
-			case env.Word:
-				return WhereBetween(ps, spr, ps.Idx.GetWord(col.Index), arg2, arg3)
-			case env.String:
-				return WhereBetween(ps, spr, col.Value, arg2, arg3)
-			default:
-				return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-between")
-			}
-		},
-	},
-
-	// Example: filtering for folks named "Enno" or "Enya"
-	//  sheet: table { "name" "age" } { "Enno" 30 "Enya" 25 "Enid" 40 "Bob" 19 "Bill" 45 "Benn" 29 }
-	//  sheet .where-in 'name { "Enno" "Enya" }
-	// Args:
-	// * sheet
-	// * column
-	// * values-filtered-for
-	// Tags: #filter #table
-	"where-in": {
-		Argsn: 3,
-		Doc:   "Returns table of rows where specific colum value if found in block of values.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
-			switch spr := arg0.(type) {
-			case env.Table:
-				switch s := arg2.(type) {
-				case env.Block:
-					switch col := arg1.(type) {
-					case env.Word:
-						return WhereIn(ps, spr, ps.Idx.GetWord(col.Index), s.Series.S)
-					case env.String:
-						return WhereIn(ps, spr, col.Value, s.Series.S)
-					default:
-						return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-in")
-					}
-				default:
-					return MakeArgError(ps, 3, []env.Type{env.StringType}, "where-in")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-in")
-			}
-		},
-	},
-
-	// Example: Order by age ascending
-	//  sheet: table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19  }
-	//  sheet .order-by! 'age 'asc
-	// Tags: #table
-	"order-by!": {
-		Argsn: 3,
-		Doc:   "Sorts row by given column, changes table in place.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			dir, ok := arg2.(env.Word)
-			if !ok {
-				return MakeArgError(ps, 3, []env.Type{env.WordType}, "sort-by!")
-			}
-			var dirAsc bool
-			if dir.Index == ps.Idx.IndexWord("asc") {
-				dirAsc = true
-			} else if dir.Index == ps.Idx.IndexWord("desc") {
-				dirAsc = false
-			} else {
-				return MakeBuiltinError(ps, "Direction can be just asc or desc.", "sort-by!")
-			}
-			switch spr := arg0.(type) {
-			case env.Table:
-				switch col := arg1.(type) {
-				case env.String:
-					if dirAsc {
-						SortByColumn(ps, &spr, col.Value)
-					} else {
-						SortByColumnDesc(ps, &spr, col.Value)
-					}
-					return spr
-				case env.Word:
-					if dirAsc {
-						SortByColumn(ps, &spr, ps.Idx.GetWord(col.Index))
-					} else {
-						SortByColumnDesc(ps, &spr, ps.Idx.GetWord(col.Index))
-					}
-					return spr
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType}, "sort-by!")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType}, "sort-by!")
-			}
-		},
-	},
-
-	// Example: Order by age ascending
-	//  sheet: table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19  }
-	//  sheet .order-by 'age 'asc
-	// Tags: #table
-	"order-by": {
-		Argsn: 3,
-		Doc:   "Sorts row by given column, changes table in place.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			dir, ok := arg2.(env.Word)
-			if !ok {
-				return MakeArgError(ps, 3, []env.Type{env.WordType}, "sort-by!")
-			}
-			var dirAsc bool
-			if dir.Index == ps.Idx.IndexWord("asc") {
-				dirAsc = true
-			} else if dir.Index == ps.Idx.IndexWord("desc") {
-				dirAsc = false
-			} else {
-				return MakeBuiltinError(ps, "Direction can be just asc or desc.", "sort-by!")
-			}
-			switch spr := arg0.(type) {
-			case env.Table:
-				copied := make([]env.TableRow, len(spr.Rows))
-				copy(copied, spr.Rows)
-				newSpr := env.NewTable(spr.Cols)
-				newSpr.Rows = copied
-				switch col := arg1.(type) {
-				case env.String:
-					if dirAsc {
-						SortByColumn(ps, newSpr, col.Value)
-					} else {
-						SortByColumnDesc(ps, newSpr, col.Value)
-					}
-					return *newSpr
-				case env.Word:
-					if dirAsc {
-						SortByColumn(ps, newSpr, ps.Idx.GetWord(col.Index))
-					} else {
-						SortByColumnDesc(ps, newSpr, ps.Idx.GetWord(col.Index))
-					}
-					return *newSpr
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType}, "sort-by!")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType}, "sort-by!")
-			}
-		},
-	},
-
-	// Example: Select "name" and "age" columns
-	//  sheet: table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
-	//  sheet .columns? { 'name 'age }
-	// Tags: #table
-	"columns?": {
-		Argsn: 2,
-		Doc:   "Returns table with just given columns.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch spr := arg0.(type) {
-			case env.Table:
-				switch col := arg1.(type) {
-				case env.Block:
-					cols := make([]string, col.Series.Len())
-					for c := range col.Series.S {
-						switch ww := col.Series.S[c].(type) {
-						case env.String:
-							cols[c] = ww.Value
-						case env.Tagword:
-							cols[c] = ps.Idx.GetWord(ww.Index)
-						}
-					}
-					return spr.Columns(ps, cols)
-				default:
-					return MakeArgError(ps, 1, []env.Type{env.BlockType}, "columns")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType}, "columns")
-			}
-		},
-	},
-	// Example: Get sheet column names
-	//  sheet: table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
-	//  sheet .header? ; { "name" "age" "job_title" }
-	// Tags: #table
-	"header?": {
-		Argsn: 1,
-		Doc:   "Gets the column names (header) as block.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch spr := arg0.(type) {
-			case *env.Table:
-				return spr.GetColumns()
-			case env.Table:
-				return spr.GetColumns()
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType}, "headers?")
-			}
-		},
-	},
-
-	// Example: Get sheet column names
-	//  sheet: table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
-	//  sheet .column? 'name ; => { "Bob" "Alice" "Charlie" }
-	// Tags: #table
-	"column?": {
-		Argsn: 2,
-		Doc:   "Gets all values of a column as a block.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
-			switch spr := arg0.(type) {
-			case env.Table:
-				switch col := arg1.(type) {
-				case env.Word:
-					return spr.GetColumn(ps.Idx.GetWord(col.Index))
-				case env.String:
-					return spr.GetColumn(col.Value)
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "column?")
-				}
-			case env.Block:
-				switch col := arg1.(type) {
-				case env.Integer:
-					col1 := make([]env.Object, len(spr.Series.S))
-					if col.Value < 0 {
-						return MakeBuiltinError(ps, "Index can't be negative", "column?")
-					}
-					for i, item_ := range spr.Series.S {
-						switch item := item_.(type) {
-						case env.Block:
-							if len(item.Series.S) < int(col.Value) {
-								return MakeBuiltinError(ps, "index out of bounds for item: "+strconv.Itoa(i), "column?")
-							}
-							col1[i] = item.Series.S[col.Value]
-						}
-					}
-					return *env.NewBlock(*env.NewTSeries(col1))
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "column?")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType}, "column?")
-			}
-		},
-	},
-
-	// Example: Drop "job_title" column from sheet
-	//  sheet: table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
-	//  sheet .drop-column 'job_title ;
-	// Example: Drop name and age columns from sheet
-	//  sheet: table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
-	//  sheet .drop-column { "name" "age" } ;
-	// Tags: #table
-	"drop-column": {
-		Argsn: 2,
-		Doc:   "Remove a column from a table. Returns new table",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch spr := arg0.(type) {
-			case env.Table:
-				switch rmCol := arg1.(type) {
-				case env.String:
-					return DropColumn(ps, spr, rmCol)
-				case env.Block:
-					return DropColumnBlock(ps, spr, rmCol)
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType, env.BlockType}, "drop-column")
-				}
-			}
-			return MakeArgError(ps, 1, []env.Type{env.TableType}, "drop-column")
-		},
-	},
-	// Example: Drop "job_title" column from sheet
-	//  sheet: table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
-	//  sheet .drop-column 'job_title ;
-	// Example: Drop name and age columns from sheet
-	//  sheet: table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" "Charlie" 19 "Line Cook" }
-	//  sheet .drop-column { "name" "age" } ;
-	// Tags: #table
-	"rename-column!": {
-		Argsn: 3,
-		Doc:   "Remove a column from a table. Returns new table",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch spr := arg0.(type) {
-			case *env.Table:
-				switch oldName := arg1.(type) {
-				case env.String:
-					switch newName := arg2.(type) {
-					case env.String:
-						return RenameColumn(ps, spr, oldName, newName)
-					default:
-						return MakeArgError(ps, 2, []env.Type{env.WordType, env.BlockType}, "rename-column")
-					}
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType, env.BlockType}, "rename-column")
-				}
-			}
-			return MakeArgError(ps, 1, []env.Type{env.TableType}, "rename-column")
-		},
-	},
-	// Example: Add a column to a sheet
-	//  sheet: table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
-	//  sheet .add-column 'job_title { "Jantior" "Librarian" "Line Cook" } ;
-	// Tags: #table
-	"add-column": {
-		Argsn: 4,
-		Doc:   "Adds a new column to table. Changes in-place and returns the new table.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch spr := arg0.(type) {
-			case env.Table:
-				switch newCol := arg1.(type) {
-				case env.Word:
-					switch fromCols := arg2.(type) {
-					case env.Block:
-						switch code := arg3.(type) {
-						case env.Block:
-							return GenerateColumn(ps, spr, newCol, fromCols, code)
-						default:
-							return MakeArgError(ps, 4, []env.Type{env.BlockType}, "add-column!")
-						}
-					case env.Word:
-						switch replaceBlock := arg3.(type) {
-						case env.Block:
-							if replaceBlock.Series.Len() != 2 {
-								return MakeBuiltinError(ps, "Replacement block must contain a regex object and replacement string.", "add-column!")
-							}
-							regexNative, ok := replaceBlock.Series.S[0].(env.Native)
-							if !ok {
-								return MakeBuiltinError(ps, "First element of replacement block must be a regex object.", "add-column!")
-							}
-							regex, ok := regexNative.Value.(*regexp.Regexp)
-							if !ok {
-								return MakeBuiltinError(ps, "First element of replacement block must be a regex object.", "add-column!")
-							}
-							replaceStr, ok := replaceBlock.Series.S[1].(env.String)
-							if !ok {
-								return MakeBuiltinError(ps, "Second element of replacement block must be a string.", "add-column!")
-							}
-							err := GenerateColumnRegexReplace(ps, &spr, newCol, fromCols, regex, replaceStr.Value)
-							if err != nil {
-								return err
-							}
-							return spr
-						default:
-							return MakeArgError(ps, 3, []env.Type{env.BlockType}, "add-column!")
-						}
-					default:
-						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "add-column!")
-					}
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType}, "add-column!")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType}, "add-column!")
-			}
-		},
-	},
-	// Tags: #table
-	"add-indexes!": {
-		Argsn: 2,
-		Doc:   "Creates an index for all values in the provided columns. Changes in-place and returns the new table.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch spr := arg0.(type) {
-			case env.Table:
-				switch col := arg1.(type) {
-				case env.Block:
-					colWords := make([]env.Word, col.Series.Len())
-					for c := range col.Series.S {
-						switch ww := col.Series.S[c].(type) {
-						case env.Word:
-							colWords[c] = ww
-						default:
-							return MakeError(ps, "Block of tagwords needed")
-						}
-					}
-					err := AddIndexes(ps, &spr, colWords)
-					if err != nil {
-						return err
-					}
-					return spr
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "add-indexes!")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType}, "add-indexes!")
-			}
-		},
-	},
-	// Tags: #table
-	"indexes?": {
-		Argsn: 1,
-		Doc:   "Returns the columns that are indexed in a table.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
-			switch spr := arg0.(type) {
-			case env.Table:
-				res := make([]env.Object, 0)
-				for col := range spr.Indexes {
-					res = append(res, *env.NewString(col))
-				}
-				return *env.NewBlock(*env.NewTSeries(res))
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType}, "indexes?")
-			}
-		},
-	},
-	// Tags: #table
-	"autotype": {
-		Argsn: 2,
-		Doc:   "Takes a table and tries to determine and change the types of columns.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
-			switch spr := arg0.(type) {
-			case env.Table:
-				switch percent := arg1.(type) {
-				case env.Decimal:
-					return AutoType(ps, &spr, percent.Value)
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.DecimalType}, "autotype")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType}, "autotype")
-			}
-		},
-	},
-	// Example: join two tables, putting in empty cells if the left sheet doesn't have a value
-	//  names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
-	//  houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
-	//  names .left-join houses 'id 'id
-	// Tags: #table
-	"left-join": {
-		Argsn: 4,
-		Doc:   "Left joins two tables on the given columns.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
-			switch spr1 := arg0.(type) {
-			case env.Table:
-				switch spr2 := arg1.(type) {
-				case env.Table:
-					switch col1 := arg2.(type) {
-					case env.Word:
-						col2, ok := arg3.(env.Word)
-						if !ok {
-							return MakeArgError(ps, 4, []env.Type{env.WordType}, "left-join")
-						}
-						return LeftJoin(ps, spr1, spr2, ps.Idx.GetWord(col1.Index), ps.Idx.GetWord(col2.Index), false)
-					case env.String:
-						col2, ok := arg3.(env.String)
-						if !ok {
-							MakeArgError(ps, 4, []env.Type{env.StringType}, "left-join")
-						}
-						return LeftJoin(ps, spr1, spr2, col1.Value, col2.Value, false)
-					default:
-						return MakeArgError(ps, 3, []env.Type{env.WordType, env.StringType}, "left-join")
-					}
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.TableType}, "left-join")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType}, "left-join")
-			}
-		},
-	},
-	// Example: join two tables
-	//  names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
-	//  houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
-	//  names .inner-join houses 'id 'id
-	// Tags: #table
-	"inner-join": {
-		Argsn: 4,
-		Doc:   "Inner joins two tables on the given columns.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
-			switch spr1 := arg0.(type) {
-			case env.Table:
-				switch spr2 := arg1.(type) {
-				case env.Table:
-					switch col1 := arg2.(type) {
-					case env.Word:
-						col2, ok := arg3.(env.Word)
-						if !ok {
-							return MakeArgError(ps, 4, []env.Type{env.WordType}, "inner-join")
-						}
-						return LeftJoin(ps, spr1, spr2, ps.Idx.GetWord(col1.Index), ps.Idx.GetWord(col2.Index), true)
-					case env.String:
-						col2, ok := arg3.(env.String)
-						if !ok {
-							MakeArgError(ps, 4, []env.Type{env.StringType}, "inner-join")
-						}
-						return LeftJoin(ps, spr1, spr2, col1.Value, col2.Value, true)
-					default:
-						return MakeArgError(ps, 3, []env.Type{env.WordType, env.StringType}, "inner-join")
-					}
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.TableType}, "inner-join")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType}, "inner-join")
-			}
-		},
-	},
-	// Example: group table rows by name, running various aggregations on the val column
-	//  table { "name" "val" } { "a" 1 "b" 6 "a" 5 "b" 10 "a" 7 }
-	// 	|group-by 'name { 'name count 'val sum 'val min 'val max 'val avg }
-	// 	|order-by! 'name 'asc
-	// Tags: #table
-	"group-by": {
-		Argsn: 3,
-		Doc:   "Groups a table by the given column and (optional) aggregations.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
-			switch spr := arg0.(type) {
-			case env.Table:
-				switch aggBlock := arg2.(type) {
-				case env.Block:
-					if len(aggBlock.Series.S)%2 != 0 {
-						return MakeBuiltinError(ps, "Aggregation block must contain pairs of column name and function for each aggregation.", "group-by")
-					}
-					aggregations := make(map[string][]string)
-					for i := 0; i < len(aggBlock.Series.S); i += 2 {
-						col := aggBlock.Series.S[i]
-						fun, ok := aggBlock.Series.S[i+1].(env.Word)
-						if !ok {
-							return MakeBuiltinError(ps, "Aggregation function must be a word", "group-by")
-						}
-						colStr := ""
-						switch col := col.(type) {
-						case env.Tagword:
-							colStr = ps.Idx.GetWord(col.Index)
-						case env.String:
-							colStr = col.Value
-						default:
-							return MakeBuiltinError(ps, "Aggregation column must be a word or string", "group-by")
-						}
-						funStr := ps.Idx.GetWord(fun.Index)
-						aggregations[colStr] = append(aggregations[colStr], funStr)
-					}
-					switch col := arg1.(type) {
-					case env.Word:
-						return GroupBy(ps, spr, ps.Idx.GetWord(col.Index), aggregations)
-					case env.String:
-						return GroupBy(ps, spr, col.Value, aggregations)
-					default:
-						return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "group-by")
-					}
-				default:
-					return MakeArgError(ps, 3, []env.Type{env.BlockType}, "group-by")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType}, "group-by")
-			}
-		},
-	},
-
+	// Decided to remove ... .header? .length? seems better than new "vocabulary entry" for frequency of use I expect
 	// TODO --- moved from base ... name appropriately and deduplicate
 	// Args:
 	// * sheet
-	"ncols": {
-		Doc:   "Accepts a Table and returns number of columns.",
-		Argsn: 1,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s1 := arg0.(type) {
-			case env.Dict:
-			case env.Block:
-			case env.Table:
-				return *env.NewInteger(int64(len(s1.Cols)))
-			default:
-				fmt.Println("Error")
-			}
-			return nil
-		},
-	},
+	/*
+		"ncols": {
+			Doc:   "Accepts a Table and returns number of columns.",
+			Argsn: 1,
+			Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+				switch s1 := arg0.(type) {
+				case env.Dict:
+				case env.Block:
+				case env.Table:
+					return *env.NewInteger(int64(len(s1.Cols)))
+				default:
+					fmt.Println("Error")
+				}
+				return nil
+			},
+		}, */
+	/* 20250126 -- removed ... column? sum makes more sense than another specific word
 	// Tests:
 	// equal { table { 'a } { 1 2 3 } |col-sum "a" } 6
 	"col-sum": {
@@ -1708,42 +1999,9 @@ var Builtins_table = map[string]*env.Builtin{
 				return env.NewError("first arg not table")
 			}
 		},
-	},
+	}, */
+	// TODO: Check for size
 
-	// Tests:
-	// equal { table { 'a } { 123 234 345 } |A1 } 123
-	"A1": {
-		Argsn: 1,
-		Doc:   "Accepts a Table and returns the first row first column cell.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s0 := arg0.(type) {
-			case env.Table:
-				r := s0.Rows[0].Values[0]
-				return env.ToRyeValue(r)
-
-			default:
-				ps.ErrorFlag = true
-				return env.NewError("first arg not table")
-			}
-		},
-	},
-	// Tests:
-	// equal { table { 'a } { 123 234 345 } |B1 } 234
-	"B1": {
-		Argsn: 1,
-		Doc:   "Accepts a Table and returns the first row second column cell.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s0 := arg0.(type) {
-			case env.Table:
-				r := s0.Rows[1].Values[0]
-				return env.ToRyeValue(r)
-
-			default:
-				ps.ErrorFlag = true
-				return env.NewError("first arg not table")
-			}
-		},
-	},
 }
 
 func RyeValueToTableRow(spr *env.Table, obj env.Object) (bool, string, *env.TableRow) {
@@ -2259,15 +2517,21 @@ func WhereLesser(ps *env.ProgramState, s *env.Table, name string, val env.Object
 	}
 }
 
-func WhereBetween(ps *env.ProgramState, s *env.Table, name string, val1 env.Object, val2 env.Object) env.Object {
+func WhereBetween(ps *env.ProgramState, s *env.Table, name string, val1 env.Object, val2 env.Object, inclusiveMode bool) env.Object {
 	idx := slices.Index(s.Cols, name)
 	nspr := env.NewTable(s.Cols)
 	if idx > -1 {
 		for _, row := range s.Rows {
 			if len(row.Values) > idx {
 				rv := row.Values[idx].(env.Object)
-				if greaterThanNew(rv, val1) && lesserThanNew(rv, val2) {
-					nspr.AddRow(row)
+				if inclusiveMode {
+					if !greaterThanNew(rv, val2) && !lesserThanNew(rv, val1) {
+						nspr.AddRow(row)
+					}
+				} else {
+					if greaterThanNew(rv, val1) && lesserThanNew(rv, val2) {
+						nspr.AddRow(row)
+					}
 				}
 			}
 		}

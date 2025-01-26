@@ -1,4 +1,4 @@
-section "Default" "" {
+section "Constructors " "Functions that construct a table." {
 	group "table" 
 	""
 	{
@@ -44,9 +44,150 @@ section "Default" "" {
 	}
 
 	{
-		equal { to-table list [ dict { "a" 1 } dict { "a" b } ] |type? } 'table
+		equal { to-table list [ dict { "a" 1 } dict { "a" 2 } ] |type? } 'table
+		equal { to-table list [ dict { "a" 1 "b" "Jim" } dict { "a" 2 "b" "Bob" } ] |header? |sort } list { "a" "b" }
+		equal { to-table list [ dict { "a" 1 "b" "Jim" } dict { "a" 2 "b" "Bob" } ] |column? "b" |first } "Jim"
 	}
 
+}
+
+section "Filtering " "Functions that construct a table." {
+	group "where-equal" 
+	""
+	{
+		arg "* sheet"
+		arg "* column"
+		arg "* value"
+		arg "Tags: #filter #tables"
+	}
+
+	{
+		equal { table { 'a } { 1 2 3 2 } |where-equal "a" 2 |length? } 2
+	}
+
+	group "where-void" 
+	""
+	{
+		arg "* sheet"
+		arg "* column"
+		arg "Tags: #filter #tables"
+	}
+
+	{
+		equal { table { 'a } { 1 _ 3 _ } |where-void "a" |length? } 2
+	}
+
+	group "where-match" 
+	""
+	{
+		arg "* sheet"
+		arg "* column"
+		arg "* regexp"
+		arg "Tags: #filter #tables"
+	}
+
+	{
+		equal { table { 'a } { "1" "2" "a3" "2b" } |where-match 'a regexp "^[0-9]$" |length? } 2
+	}
+
+	group "where-contains" 
+	""
+	{
+		arg "* sheet"
+		arg "* column"
+		arg "* substring"
+		arg "Tags: #filter #tables"
+	}
+
+	{
+		equal { table { 'a } { "1" "2" "a3" "2b" } |where-contains 'a "2" |length? } 2
+	}
+
+	group "where-not-contains" 
+	""
+	{
+		arg "* sheet"
+		arg "* column"
+		arg "* substring"
+		arg "Tags: #filter #tables"
+	}
+
+	{
+		equal { table { 'a } { "1" "2" "a3" "2b" } |where-not-contains 'a "3" |length? } 3
+	}
+
+	group "where-greater" 
+	""
+	{
+		arg "* sheet"
+		arg "* column"
+		arg "* value"
+		arg "Tags: #filter #table"
+	}
+
+	{
+		equal { table { 'a } { 1 2 3 2 } |where-greater 'a 1 |length? } 3
+	}
+
+	group "where-lesser" 
+	""
+	{
+		arg "* sheet"
+		arg "* column"
+		arg "* value"
+		arg "Tags: #filter #table"
+	}
+
+	{
+		equal { table { 'a } { 1 2 3 2 } |where-lesser 'a 3 |length? } 3
+	}
+
+	group "where-between" 
+	""
+	{
+		arg "* sheet"
+		arg "* column"
+		arg "* lower-limit"
+		arg "* upper-limit"
+		arg "Tags: #filter #table"
+	}
+
+	{
+		equal { table { 'a } { 1 2 3 2 } |where-between 'a 1 3 |length? } 2
+	}
+
+	group "where-between\inclusive" 
+	""
+	{
+		arg "* sheet"
+		arg "* column"
+		arg "* lower-limit"
+		arg "* upper-limit"
+		arg "Tags: #filter #table"
+	}
+
+	{
+		equal { table { 'a } { 1 2 3 2 5 } |where-between\inclusive 'a 2 3 |length? } 3
+	}
+
+	group "where-in" 
+	""
+	{
+		arg "* sheet"
+		arg "* column"
+		arg "* values-filtered-for"
+		arg "Tags: #filter #table"
+	}
+
+	{
+		equal { table { "name" "age" } { "Enno" 30 "Enya" 25 "Bob" 19 }
+		|where-in 'name { "Enno" "Enya" "Roger" } |column? "age"
+		} { 30 25 }
+	}
+
+}
+
+section "Row level functions " "Functions that construct a table." {
 	group "add-row" 
 	""
 	{
@@ -144,6 +285,221 @@ section "Default" "" {
 		} 2
 	}
 
+}
+
+section "Column level functions " "Functions that construct a table." {
+	group "columns?" 
+	""
+	{
+	}
+
+	{
+		equal { table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 }
+		|columns? { 'name 'age } |header? } list { "name" "age" }
+	}
+
+	group "header?" 
+	""
+	{
+	}
+
+	{
+		equal { table { "age" "name" } { 123 "Jim" 29 "Anne" }
+		|header? } list { "age" "name" }
+	}
+
+	group "column?" 
+	""
+	{
+	}
+
+	{
+		equal { table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Teacher" }
+		|column? 'name }  { "Bob" "Alice" }
+	}
+
+	group "drop-column" 
+	""
+	{
+	}
+
+	{
+		equal { table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" }
+		|drop-column "name" |header? } list { "age" "job_title" }
+	}
+
+	group "rename-column!" 
+	""
+	{
+	}
+
+	{
+		equal { tab: ref table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
+		tab .rename-column! "name" "first_name" , tab .header? } list { "first_name" "age" }
+	}
+
+	group "add-column" 
+	""
+	{
+	}
+
+	{
+		equal { table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
+		|add-column 'job { } { "Cook" } |column? "job" } { "Cook" "Cook" "Cook" }
+	}
+
+}
+
+section "Miscelaneous " "" {
+	group "order-by!" 
+	""
+	{
+	}
+
+	{
+		equal { tab: table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19  }
+		tab .order-by! 'age 'asc |column? "age" } { 19 25 29 }
+	}
+
+	group "order-by" 
+	""
+	{
+	}
+
+	{
+		equal { tab: table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19  }
+		|order-by 'age 'desc |column? "age" } { 29 25 19 }
+	}
+
+	group "add-indexes!" 
+	""
+	{
+	}
+
+	{
+		equal { table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
+		|add-indexes! { name } |indexes? } { "name" }
+	}
+
+	group "indexes?" 
+	""
+	{
+	}
+
+	{
+		equal { table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
+		|add-indexes! { name age } |indexes? } { "name" "age" }
+	}
+
+	group "autotype" 
+	""
+	{
+	}
+
+	{
+		equal { table { "age" } { 123 29 19 }
+		|autotype 1.0 |types? } { integer }
+	}
+
+	group "left-join" 
+	""
+	{
+	}
+
+	{
+		equal {
+		names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
+		houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
+		
+		names .inner-join houses 'id 'id |header?
+		} list { "id" "name" "id_2" "house" }
+		equal {
+		names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
+		houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
+		
+		names .left-join houses 'id 'id |column? "name"
+		} { "Paul" "Chani" "Vladimir" }
+	}
+
+	group "inner-join" 
+	""
+	{
+	}
+
+	{
+		equal {
+		names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
+		houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
+		
+		names .inner-join houses 'id 'id |header?
+		} list { "id" "name" "id_2" "house" }
+		equal {
+		names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
+		houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
+		
+		names .inner-join houses 'id 'id |column? "name"
+		} {  "Paul" "Vladimir" }
+	}
+
+	group "group-by" 
+	""
+	{
+	}
+
+	{
+		equal {
+		table { "name" "val" } { "a" 1 "b" 6 "a" 5 "b" 10 "a" 7 }
+		|group-by 'name { 'name count 'val sum } |column? "val_sum" |sort
+		} { 13.0 16.0 }
+		equal {
+		table { "name" "val" } { "a" 1 "b" 6 "a" 5 "b" 10 "a" 7 }
+		|group-by 'name { 'name count 'val min } |column? "val_min" |sort
+		} { 1.0 6.0 }
+		equal {
+		table { "name" "val" } { "a" 1 "b" 6 "a" 5 "b" 10 "a" 12 }
+		|group-by 'name { 'name count 'val avg } |column? "val_avg" |sort
+		} { 6.0 8.0 }
+	}
+
+	group "A1" 
+	""
+	{
+	}
+
+	{
+		equal { table { 'a } { 123 234 345 } |A1 } 123
+	}
+
+	group "B1" 
+	""
+	{
+	}
+
+	{
+		equal { table { 'a 'b } { 123 234 345 456 } |B1 } 234
+	}
+
+	group "A2" 
+	""
+	{
+	}
+
+	{
+		equal { table { 'a 'b } { 123 234 345 456 } |A2 } 345
+	}
+
+	group "B2" 
+	""
+	{
+	}
+
+	{
+		equal { table { 'a 'b } { 123 234 345 456 } |B2 } 456
+	}
+
+}
+
+section "Loading and saving " "Functions that construct a table." {
 	group "load\csv" 
 	""
 	{
@@ -154,10 +510,27 @@ section "Default" "" {
 	{
 		equal {
 		cc os
-		f: mktmp + "/test.csv"
-		spr1: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+		f:: mktmp + "/test.csv"
+		spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
 		spr1 .save\csv f
-		spr2: load\csv f |autotype 1.0
+		spr2:: load\csv f |autotype 1.0
+		spr1 = spr2
+		} true
+	}
+
+	group "load\tsv" 
+	""
+	{
+		arg "* file-uri - location of csv file to load"
+	}
+
+	{
+		equal {
+		cc os
+		f:: mktmp + "/test.tsv"
+		spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+		spr1 .save\tsv f
+		spr2:: load\tsv f |autotype 1.0
 		spr1 = spr2
 		} true
 	}
@@ -177,6 +550,25 @@ section "Default" "" {
 		spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
 		spr1 .save\csv f
 		spr2:: load\csv f |autotype 1.0
+		spr1 = spr2
+		} true
+	}
+
+	group "save\tsv" 
+	""
+	{
+		arg "* sheet    - the table to save"
+		arg "* file-url - where to save the sheet as a .csv file"
+		arg "Tags: #table #saving #csv"
+	}
+
+	{
+		equal {
+		cc os
+		f:: mktmp + "/test.csv"
+		spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+		spr1 .save\tsv f
+		spr2:: load\tsv f |autotype 1.0
 		spr1 = spr2
 		} true
 	}
@@ -216,107 +608,6 @@ section "Default" "" {
 		spr2:: load\xlsx f |autotype 1.0
 		spr1 = spr2
 		} true
-	}
-
-	group "where-equal" 
-	""
-	{
-		arg "* sheet"
-		arg "* column"
-		arg "* value"
-		arg "Tags: #filter #tables"
-	}
-
-	{
-		equal { table { 'a } { 1 2 3 2 } |where-equal "a" 2 |length? } 2
-	}
-
-	group "where-match" 
-	""
-	{
-		arg "* sheet"
-		arg "* column"
-		arg "* regexp"
-		arg "Tags: #filter #tables"
-	}
-
-	{
-		equal { table { 'a } { "1" "2" "a3" "2b" } |where-match 'a regexp "^[0-9]$" |length? } 2
-	}
-
-	group "where-contains" 
-	""
-	{
-		arg "* sheet"
-		arg "* column"
-		arg "* substring"
-		arg "Tags: #filter #tables"
-	}
-
-	{
-		equal { table { 'a } { "1" "2" "a3" "2b" } |where-contains 'a "2" |length? } 2
-	}
-
-	group "where-not-contains" 
-	""
-	{
-		arg "* sheet"
-		arg "* column"
-		arg "* substring"
-		arg "Tags: #filter #tables"
-	}
-
-	{
-		equal { table { 'a } { "1" "2" "a3" "2b" } |where-not-contains 'a "3" |length? } 3
-	}
-
-	group "where-greater" 
-	""
-	{
-		arg "* sheet"
-		arg "* column"
-		arg "* value"
-		arg "Tags: #filter #table"
-	}
-
-	{
-		equal { table { 'a } { 1 2 3 2 } |where-greater 'a 1 |length? } 3
-	}
-
-	group "col-sum" 
-	""
-	{
-	}
-
-	{
-		equal { table { 'a } { 1 2 3 } |col-sum "a" } 6
-	}
-
-	group "col-avg" 
-	""
-	{
-	}
-
-	{
-		equal { table { 'a } { 1 2 3 } |col-avg 'a } 2.0
-	}
-
-	group "A1" 
-	""
-	{
-	}
-
-	{
-		equal { table { 'a } { 123 234 345 } |A1 } 123
-	}
-
-	group "B1" 
-	""
-	{
-	}
-
-	{
-		equal { table { 'a } { 123 234 345 } |B1 } 234
 	}
 
 }
