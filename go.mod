@@ -41,7 +41,7 @@ require (
 	github.com/shirou/gopsutil/v3 v3.24.5
 	github.com/thomasberger/parsemail v1.2.7
 	github.com/xuri/excelize/v2 v2.9.0
-	go.mongodb.org/mongo-driver v1.17.1
+	go.mongodb.org/mongo-driver v1.17.2
 	golang.org/x/crypto v0.32.0
 	golang.org/x/net v0.34.0
 	golang.org/x/sync v0.10.0
