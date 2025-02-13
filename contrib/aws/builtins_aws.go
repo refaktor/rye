@@ -4,7 +4,10 @@
 package aws
 
 import (
+	"bufio"
 	"bytes"
+	"io"
+	"time"
 
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/evaldo"
@@ -17,12 +20,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	"github.com/aws/aws-sdk-go-v2/service/ses/types"
-	//"github.com/aws/aws-sdk-go/aws"
-	//"github.com/aws/aws-sdk-go/aws/client"
-	//"github.com/aws/aws-sdk-go/aws/session"
-	//"github.com/aws/aws-sdk-go/service/ses"
 )
 
 var Builtins_aws = map[string]*env.Builtin{
@@ -33,14 +33,136 @@ var Builtins_aws = map[string]*env.Builtin{
 			switch region := arg0.(type) {
 			case env.String:
 				cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(region.Value))
-				fmt.Println(cfg)
-				fmt.Println(err)
 				if err != nil {
 					return evaldo.MakeError(ps, "Error creating new AWS session: "+err.Error())
 				}
 				return *env.NewNative(ps.Idx, cfg, "aws-session")
 			default:
 				return evaldo.MakeError(ps, "A1 not String")
+			}
+		},
+	},
+
+	"aws-session//open-s3": {
+		Argsn: 1,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch sess := arg0.(type) {
+			case env.Native:
+				client := s3.NewFromConfig(sess.Value.(aws.Config))
+				return *env.NewNative(ps.Idx, client, "aws-s3-client")
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "aws-session//new-s3-client")
+			}
+		},
+	},
+
+	"aws-s3-client//put-object": {
+		Argsn: 4,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch client := arg0.(type) {
+			case env.Native:
+				switch bucket := arg1.(type) {
+				case env.String:
+					switch key := arg2.(type) {
+					case env.String:
+						switch r := arg3.(type) {
+						case env.Native:
+							reader, ok := r.Value.(*bufio.Reader)
+							if !ok {
+								return evaldo.MakeError(ps, "Reader argument is not a reader")
+							}
+							readerCopy := *reader
+							// Read all content into a buffer to get the size, we need it to call PutObject for buffered readers
+							// TODO: This is definitely not OK and just temporary!
+							// 	     Think about if we want to limit this function to only work with non-buffered readers or files.
+							content, err := io.ReadAll(&readerCopy)
+							if err != nil {
+								return evaldo.MakeError(ps, "Error reading reader: "+err.Error())
+							}
+
+							ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+							defer cancel()
+							s3Client := client.Value.(*s3.Client)
+							_, err = s3Client.PutObject(ctx, &s3.PutObjectInput{
+								Bucket:        aws.String(bucket.Value),
+								Key:           aws.String(key.Value),
+								Body:          bytes.NewReader(content),
+								ContentLength: aws.Int64(int64(len(content))),
+							})
+							if err != nil {
+								return evaldo.MakeError(ps, "Error putting object: "+err.Error())
+							}
+							return arg0
+						default:
+							return evaldo.MakeArgError(ps, 4, []env.Type{env.NativeType}, "aws-s3-client//put-object")
+						}
+					default:
+						return evaldo.MakeArgError(ps, 3, []env.Type{env.StringType}, "aws-s3-client//put-object")
+					}
+				default:
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "aws-s3-client//put-object")
+				}
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "aws-s3-client//put-object")
+			}
+		},
+	},
+
+	"aws-s3-client//get-object": {
+		Argsn: 3,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch client := arg0.(type) {
+			case env.Native:
+				switch bucket := arg1.(type) {
+				case env.String:
+					switch key := arg2.(type) {
+					case env.String:
+						ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+						defer cancel()
+						s3Client := client.Value.(*s3.Client)
+						output, err := s3Client.GetObject(ctx, &s3.GetObjectInput{Bucket: aws.String(bucket.Value), Key: aws.String(key.Value)})
+						if err != nil {
+							return evaldo.MakeError(ps, "Error getting object: "+err.Error())
+						}
+						// TODO: the output.Body is a reader that is bound to the context, we need to copy it to a new reader
+						return *env.NewNative(ps.Idx, bufio.NewReader(output.Body), "rye-reader")
+					default:
+						return evaldo.MakeArgError(ps, 3, []env.Type{env.StringType}, "aws-s3-client//get-object")
+					}
+				default:
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "aws-s3-client//get-object")
+				}
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "aws-s3-client//get-object")
+			}
+		},
+	},
+
+	"aws-s3-client//delete-object": {
+		Argsn: 3,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch client := arg0.(type) {
+			case env.Native:
+				switch bucket := arg1.(type) {
+				case env.String:
+					switch key := arg2.(type) {
+					case env.String:
+						ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+						defer cancel()
+						s3Client := client.Value.(*s3.Client)
+						_, err := s3Client.DeleteObject(ctx, &s3.DeleteObjectInput{Bucket: aws.String(bucket.Value), Key: aws.String(key.Value)})
+						if err != nil {
+							return evaldo.MakeError(ps, "Error deleting object: "+err.Error())
+						}
+						return arg0
+					default:
+						return evaldo.MakeArgError(ps, 3, []env.Type{env.StringType}, "aws-s3-client//delete-object")
+					}
+				default:
+					return evaldo.MakeArgError(ps, 2, []env.Type{env.StringType}, "aws-s3-client//delete-object")
+				}
+			default:
+				return evaldo.MakeArgError(ps, 1, []env.Type{env.NativeType}, "aws-s3-client//delete-object")
 			}
 		},
 	},
