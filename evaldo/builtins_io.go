@@ -496,7 +496,7 @@ var Builtins_io = map[string]*env.Builtin{
 				}
 				return *env.NewNative(ps.Idx, bufio.NewReader(file), "rye-reader")
 			case env.String:
-				return *env.NewNative(ps.Idx, strings.NewReader(s.Value), "rye-reader")
+				return *env.NewNative(ps.Idx, bufio.NewReader(strings.NewReader(s.Value)), "rye-reader")
 			default:
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.UriType, env.StringType}, "__open_reader")
@@ -523,7 +523,7 @@ var Builtins_io = map[string]*env.Builtin{
 
 	"rye-reader//read\\string": {
 		Argsn: 2,
-		Doc:   "Read string from a reader.",
+		Doc:   "Read string from a reader up to the first character of the ending string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch r := arg0.(type) {
 			case env.Native:
@@ -533,21 +533,21 @@ var Builtins_io = map[string]*env.Builtin{
 					reader, ok := r.Value.(*bufio.Reader)
 					if !ok {
 						ps.FailureFlag = true
-						return MakeBuiltinError(ps, "Not Reader", "__copy")
+						return MakeBuiltinError(ps, "Not Reader", "__read\\string")
 					}
 					inp, err := reader.ReadString(ending.Value[0])
 					if err != nil {
 						ps.FailureFlag = true
-						return MakeBuiltinError(ps, err.Error(), "__copy")
+						return MakeBuiltinError(ps, err.Error(), "__read\\string")
 					}
 					return *env.NewString(inp)
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.NativeType}, "__copy")
+					return MakeArgError(ps, 2, []env.Type{env.NativeType}, "__read\\string")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "__copy")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "__read\\string")
 			}
 
 		},
