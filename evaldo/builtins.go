@@ -5234,7 +5234,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { list { "a" 123 } -> 1 } "a"
+	// equal { list { "a" 123 } -> 0 } "a"
 	"list": {
 		Argsn: 1,
 		Doc:   "Constructs a List from the Block of values.",
@@ -7013,7 +7013,7 @@ var builtins = map[string]*env.Builtin{
 	// Tests:
 	// stdout { for { 1 2 3 } { prns "x" } } "x x x "
 	// stdout { { "a" "b" "c" } .for { .prns } } "a b c "
-	"for": { // **
+	"for___": { // **
 		Argsn: 2,
 		Doc:   "Accepts a block of values and a block of code, does the code for each of the values, injecting them.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -7078,6 +7078,36 @@ var builtins = map[string]*env.Builtin{
 						row := block.Rows[i]
 						row.Uplink = &block
 						ps = EvalBlockInjMultiDialect(ps, row, true)
+						if ps.ErrorFlag || ps.ReturnFlag {
+							return ps.Res
+						}
+						ps.Ser.Reset()
+					}
+					ps.Ser = ser
+					return ps.Res
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "for")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType, env.TableType}, "for")
+			}
+		},
+	},
+	// Tests:
+	// stdout { for { 1 2 3 } { prns "x" } } "x x x "
+	// stdout { { "a" "b" "c" } .for { .prns } } "a b c "
+	"for": { // **
+		Argsn: 2,
+		Doc:   "Accepts a block of values and a block of code, does the code for each of the values, injecting them.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch block := arg0.(type) {
+			case env.Collection:
+				switch code := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = code.Series
+					for i := 0; i < block.Length(); i++ {
+						ps = EvalBlockInjMultiDialect(ps, block.Get(i), true)
 						if ps.ErrorFlag || ps.ReturnFlag {
 							return ps.Res
 						}
@@ -7238,6 +7268,7 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+
 	// Tests:
 	//  equal { { 1 2 3 } :x purge! { .even } 'x , x } { 1 3 }
 	"purge!": { // TODO ... doesn't fully work
@@ -7301,7 +7332,7 @@ var builtins = map[string]*env.Builtin{
 	//  equal { map "123" { .to-integer } } { 1 2 3 }
 	//  equal { map "123" ?to-integer } { 1 2 3 }
 	//  equal { map "" { + "-" } } { }
-	"map": { // **
+	"map___": { // **
 		Argsn: 2,
 		Doc:   "Maps values of a block to a new block by evaluating a block of code.",
 		Pure:  true,
@@ -7402,6 +7433,62 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// map should at the end map over block, raw-map, etc ...
+	// it should accept a block of code, a function and a builtin
+	// it should use injected block so it doesn't need a variable defined like map [ 1 2 3 ] x [ add a 100 ]
+	// map [ 1 2 3 ] { .add 3 }
+	// Tests:
+	//  equal { map { 1 2 3 } { + 1 } } { 2 3 4 }
+	//  equal { map { } { + 1 } } { }
+	//  equal { map { "aaa" "bb" "c" } { .length? } } { 3 2 1 }
+	//  equal { map list { "aaa" "bb" "c" } { .length? } } list { 3 2 1 }
+	//  equal { map list { 3 4 5 6 } { .multiple-of 3 } } list { 1 0 0 1 }
+	//  equal { map list { } { + 1 } } list { }
+	//  ; equal { map "abc" { + "-" } .join } "a-b-c-" ; TODO doesn't work, fix join
+	//  equal { map "123" { .to-integer } } { 1 2 3 }
+	//  equal { map "123" ?to-integer } { 1 2 3 }
+	//  equal { map "" { + "-" } } { }
+	"map": { // **
+		Argsn: 2,
+		Doc:   "Maps values of a block to a new block by evaluating a block of code.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch list := arg0.(type) {
+			case env.Collection:
+				switch block := arg1.(type) {
+				case env.Block, env.Builtin:
+					l := list.Length()
+					newl := make([]env.Object, l)
+					switch block := block.(type) {
+					case env.Block:
+						ser := ps.Ser
+						ps.Ser = block.Series
+						for i := 0; i < l; i++ {
+							ps = EvalBlockInjMultiDialect(ps, list.Get(i), true)
+							if ps.ErrorFlag {
+								return ps.Res
+							}
+							newl[i] = ps.Res
+							ps.Ser.Reset()
+						}
+						ps.Ser = ser
+					case env.Builtin:
+						for i := 0; i < l; i++ {
+							newl[i] = DirectlyCallBuiltin(ps, block, list.Get(i), nil)
+						}
+					default:
+						return MakeBuiltinError(ps, "Block value should be builtin or block type.", "map")
+					}
+					return list.MakeNew(newl)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.BuiltinType}, "map")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "map")
+			}
+		},
+	},
+
 	// Tests:
 	//  equal { map\pos { 1 2 3 } 'i { + i } } { 2 4 6 }
 	//  equal { map\pos { } 'i { + i } } { }
@@ -7409,24 +7496,24 @@ var builtins = map[string]*env.Builtin{
 	//  equal { map\pos list { } 'i { + i } } list { }
 	//  equal { map\pos "abc" 'i { + i } } { "a1" "b2" "c3" }
 	//  equal { map\pos "" 'i { + i } } { }
-	"map\\pos": { // TODO -- deduplicate map\pos and map\idx
+	"map\\pos": { // *TODO -- deduplicate map\pos and map\idx
 		Argsn: 3,
 		Doc:   "Maps values of a block to a new block by evaluating a block of code.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch list := arg0.(type) {
-			case env.Block:
+			case env.Collection:
 				switch accu := arg1.(type) {
 				case env.Word:
 					switch block := arg2.(type) {
 					case env.Block:
-						l := list.Series.Len()
+						l := list.Length()
 						newl := make([]env.Object, l)
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
 							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i + 1)))
-							ps = EvalBlockInjMultiDialect(ps, list.Series.Get(i), true)
+							ps = EvalBlockInjMultiDialect(ps, list.Get(i), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -7434,62 +7521,7 @@ var builtins = map[string]*env.Builtin{
 							ps.Ser.Reset()
 						}
 						ps.Ser = ser
-						return *env.NewBlock(*env.NewTSeries(newl))
-					default:
-						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "map\\pos")
-					}
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType}, "map\\pos")
-				}
-			case env.List:
-				switch block := arg2.(type) {
-				case env.Block:
-					l := len(list.Data)
-					newl := make([]any, l)
-					switch accu := arg1.(type) {
-					case env.Word:
-						ser := ps.Ser
-						ps.Ser = block.Series
-						for i := 0; i < l; i++ {
-							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i + 1)))
-							ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(list.Data[i]), true)
-							if ps.ErrorFlag {
-								return ps.Res
-							}
-							newl[i] = env.RyeToRaw(ps.Res, ps.Idx)
-							ps.Ser.Reset()
-						}
-						ps.Ser = ser
-						return *env.NewList(newl)
-					default:
-						return MakeArgError(ps, 2, []env.Type{env.WordType}, "map\\pos")
-					}
-				default:
-					return MakeArgError(ps, 3, []env.Type{env.BlockType}, "map\\pos")
-				}
-			case env.String:
-				input := []rune(list.Value)
-				l := len(input)
-				switch accu := arg1.(type) {
-				case env.Word:
-					switch block := arg2.(type) {
-					case env.Block:
-						newl := make([]env.Object, l)
-						ser := ps.Ser
-						ps.Ser = block.Series
-						for i := 0; i < l; i++ {
-							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i + 1)))
-							ps = EvalBlockInjMultiDialect(ps, *env.NewString(string(input[i])), true)
-							if ps.ErrorFlag {
-								return ps.Res
-							}
-							newl[i] = ps.Res
-
-							ps.Ser.Reset()
-						}
-						ps.Ser = ser
-
-						return *env.NewBlock(*env.NewTSeries(newl))
+						return list.MakeNew(newl)
 					default:
 						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "map\\pos")
 					}
@@ -7515,18 +7547,18 @@ var builtins = map[string]*env.Builtin{
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch list := arg0.(type) {
-			case env.Block:
+			case env.Collection:
 				switch accu := arg1.(type) {
 				case env.Word:
 					switch block := arg2.(type) {
 					case env.Block:
-						l := list.Series.Len()
+						l := list.Length()
 						newl := make([]env.Object, l)
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
 							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i)))
-							ps = EvalBlockInjMultiDialect(ps, list.Series.Get(i), true)
+							ps = EvalBlockInjMultiDialect(ps, list.Get(i), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -7534,62 +7566,7 @@ var builtins = map[string]*env.Builtin{
 							ps.Ser.Reset()
 						}
 						ps.Ser = ser
-						return *env.NewBlock(*env.NewTSeries(newl))
-					default:
-						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "map\\idx")
-					}
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType}, "map\\idx")
-				}
-			case env.List:
-				switch block := arg2.(type) {
-				case env.Block:
-					l := len(list.Data)
-					newl := make([]any, l)
-					switch accu := arg1.(type) {
-					case env.Word:
-						ser := ps.Ser
-						ps.Ser = block.Series
-						for i := 0; i < l; i++ {
-							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i)))
-							ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(list.Data[i]), true)
-							if ps.ErrorFlag {
-								return ps.Res
-							}
-							newl[i] = env.RyeToRaw(ps.Res, ps.Idx)
-							ps.Ser.Reset()
-						}
-						ps.Ser = ser
-						return *env.NewList(newl)
-					default:
-						return MakeArgError(ps, 2, []env.Type{env.WordType}, "map\\idx")
-					}
-				default:
-					return MakeArgError(ps, 3, []env.Type{env.BlockType}, "map\\idx")
-				}
-			case env.String:
-				input := []rune(list.Value)
-				l := len(input)
-				switch accu := arg1.(type) {
-				case env.Word:
-					switch block := arg2.(type) {
-					case env.Block:
-						newl := make([]env.Object, l)
-						ser := ps.Ser
-						ps.Ser = block.Series
-						for i := 0; i < l; i++ {
-							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i)))
-							ps = EvalBlockInjMultiDialect(ps, *env.NewString(string(input[i])), true)
-							if ps.ErrorFlag {
-								return ps.Res
-							}
-							newl[i] = ps.Res
-
-							ps.Ser.Reset()
-						}
-						ps.Ser = ser
-
-						return *env.NewBlock(*env.NewTSeries(newl))
+						return list.MakeNew(newl)
 					default:
 						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "map\\idx")
 					}
@@ -7614,8 +7591,8 @@ var builtins = map[string]*env.Builtin{
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch list := arg0.(type) {
-			case env.Block:
-				l := len(list.Series.S)
+			case env.Collection:
+				l := list.Length()
 				if l == 0 {
 					return MakeBuiltinError(ps, "Block is empty.", "reduce")
 				}
@@ -7624,75 +7601,15 @@ var builtins = map[string]*env.Builtin{
 					// ps.Ctx.Set(accu.Index)
 					switch block := arg2.(type) {
 					case env.Block:
-						acc := list.Series.Get(0)
+						acc := list.Get(0)
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 1; i < l; i++ {
 							ps.Ctx.Mod(accu.Index, acc)
-							ps = EvalBlockInjMultiDialect(ps, list.Series.Get(i), true)
+							ps = EvalBlockInjMultiDialect(ps, list.Get(i), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
-							if ps.ErrorFlag {
-								return ps.Res
-							}
-							acc = ps.Res
-							ps.Ser.Reset()
-						}
-						ps.Ser = ser
-						return acc
-					default:
-						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "reduce")
-					}
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType}, "reduce")
-				}
-			case env.List:
-				l := len(list.Data)
-				if l == 0 {
-					return MakeBuiltinError(ps, "List is empty.", "reduce")
-				}
-				switch accu := arg1.(type) {
-				case env.Word:
-					// ps.Ctx.Set(accu.Index)
-					switch block := arg2.(type) {
-					case env.Block:
-						acc := env.ToRyeValue(list.Data[0])
-						ser := ps.Ser
-						ps.Ser = block.Series
-						for i := 1; i < l; i++ {
-							ps.Ctx.Mod(accu.Index, acc)
-							ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(list.Data[i]), true)
-							if ps.ErrorFlag {
-								return ps.Res
-							}
-							acc = ps.Res
-							ps.Ser.Reset()
-						}
-						ps.Ser = ser
-						return acc
-					default:
-						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "reduce")
-					}
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType}, "reduce")
-				}
-			case env.String:
-				if len(list.Value) == 0 {
-					return MakeBuiltinError(ps, "String is empty.", "reduce")
-				}
-				switch accu := arg1.(type) {
-				case env.Word:
-					switch block := arg2.(type) {
-					case env.Block:
-						input := []rune(list.Value)
-						var acc env.Object
-						acc = *env.NewString(string(input[0]))
-						ser := ps.Ser
-						ps.Ser = block.Series
-						for i := 1; i < len(input); i++ {
-							ps.Ctx.Mod(accu.Index, acc)
-							ps = EvalBlockInjMultiDialect(ps, *env.NewString(string(input[i])), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -7730,19 +7647,19 @@ var builtins = map[string]*env.Builtin{
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch list := arg0.(type) {
-			case env.Block:
+			case env.Collection:
 				switch accu := arg1.(type) {
 				case env.Word:
 					// ps.Ctx.Set(accu.Index)
 					switch block := arg3.(type) {
 					case env.Block:
-						l := len(list.Series.S)
+						l := list.Length()
 						acc := arg2
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
 							ps.Ctx.Mod(accu.Index, acc)
-							ps = EvalBlockInjMultiDialect(ps, list.Series.Get(i), true)
+							ps = EvalBlockInjMultiDialect(ps, list.Get(i), true)
 							if ps.ErrorFlag {
 								return ps.Res
 							}
@@ -7752,106 +7669,11 @@ var builtins = map[string]*env.Builtin{
 						ps.Ser = ser
 						return acc
 					case env.Function:
-						l := len(list.Series.S)
+						l := list.Length()
 						acc := arg2
 						for i := 0; i < l; i++ {
 							var item any
-							item = list.Series.Get(i)
-							ps.Ctx.Mod(accu.Index, acc)
-							CallFunctionArgsN(block, ps, ps.Ctx, env.ToRyeValue(item)) // , env.NewInteger(int64(i)))
-							if ps.ErrorFlag {
-								return ps.Res
-							}
-							acc = ps.Res
-						}
-						return acc
-					default:
-						return MakeArgError(ps, 4, []env.Type{env.BlockType}, "fold")
-					}
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType}, "fold")
-				}
-			case env.List:
-				switch accu := arg1.(type) {
-				case env.Word:
-					// ps.Ctx.Set(accu.Index)
-					switch block := arg3.(type) {
-					case env.Block:
-						l := len(list.Data)
-						acc := arg2
-						ser := ps.Ser
-						ps.Ser = block.Series
-						for i := 0; i < l; i++ {
-							ps.Ctx.Mod(accu.Index, acc)
-							ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(list.Data[i]), true)
-							if ps.ErrorFlag {
-								return ps.Res
-							}
-							acc = ps.Res
-							ps.Ser.Reset()
-						}
-						ps.Ser = ser
-						return acc
-					default:
-						return MakeArgError(ps, 4, []env.Type{env.BlockType}, "fold")
-					}
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType}, "fold")
-				}
-			case env.String:
-				switch accu := arg1.(type) {
-				case env.Word:
-					switch block := arg3.(type) {
-					case env.Block:
-						input := []rune(list.Value)
-						var acc env.Object
-						acc = arg2
-						ser := ps.Ser
-						ps.Ser = block.Series
-						for i := 0; i < len(input); i++ {
-							ps.Ctx.Mod(accu.Index, acc)
-							ps = EvalBlockInjMultiDialect(ps, *env.NewString(string(input[i])), true)
-							if ps.ErrorFlag {
-								return ps.Res
-							}
-							acc = ps.Res
-							ps.Ser.Reset()
-						}
-						ps.Ser = ser
-						return acc
-					default:
-						return MakeArgError(ps, 4, []env.Type{env.BlockType}, "fold")
-					}
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType}, "fold")
-				}
-			case env.Table:
-				switch accu := arg1.(type) {
-				case env.Word:
-					// ps.Ctx.Set(accu.Index)
-					switch block := arg3.(type) {
-					case env.Block:
-						l := len(list.Rows)
-						acc := arg2
-						ser := ps.Ser
-						ps.Ser = block.Series
-						for i := 0; i < l; i++ {
-							ps.Ctx.Mod(accu.Index, acc)
-							ps = EvalBlockInjMultiDialect(ps, list.Rows[i], true)
-							if ps.ErrorFlag {
-								return ps.Res
-							}
-							acc = ps.Res
-							ps.Ser.Reset()
-						}
-						ps.Ser = ser
-						return acc
-					case env.Function:
-						l := len(list.Rows)
-						acc := arg2
-						for i := 0; i < l; i++ {
-							var item any
-							item = list.Rows[i]
+							item = list.Get(i)
 							ps.Ctx.Mod(accu.Index, acc)
 							CallFunctionArgsN(block, ps, ps.Ctx, env.ToRyeValue(item)) // , env.NewInteger(int64(i)))
 							if ps.ErrorFlag {
@@ -7978,104 +7800,6 @@ var builtins = map[string]*env.Builtin{
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch list := arg0.(type) {
-			case env.Block:
-				switch block := arg1.(type) {
-				case env.Block, env.Builtin:
-					l := list.Series.Len()
-					newl := make([]env.Object, 0)
-					subl := make([]env.Object, 0)
-					var prevres env.Object
-					switch block := block.(type) {
-					case env.Block:
-						ser := ps.Ser
-						ps.Ser = block.Series
-						for i := 0; i < l; i++ {
-							curval := list.Series.Get(i)
-							ps = EvalBlockInjMultiDialect(ps, curval, true)
-							if ps.ErrorFlag {
-								return ps.Res
-							}
-							if prevres == nil || ps.Res.Equal(prevres) {
-								subl = append(subl, curval)
-							} else {
-								newl = append(newl, *env.NewBlock(*env.NewTSeries(subl)))
-								subl = []env.Object{curval}
-							}
-							prevres = ps.Res
-							ps.Ser.Reset()
-						}
-						newl = append(newl, *env.NewBlock(*env.NewTSeries(subl)))
-						ps.Ser = ser
-					case env.Builtin:
-						for i := 0; i < l; i++ {
-							curval := list.Series.Get(i)
-							res := DirectlyCallBuiltin(ps, block, curval, nil)
-							if prevres == nil || res.Equal(prevres) {
-								subl = append(subl, curval)
-							} else {
-								newl = append(newl, *env.NewBlock(*env.NewTSeries(subl)))
-								subl = []env.Object{curval}
-							}
-							prevres = res
-						}
-						newl = append(newl, *env.NewBlock(*env.NewTSeries(subl)))
-					default:
-						return MakeBuiltinError(ps, "Block type should be Builtin or Block.", "partition")
-					}
-					return *env.NewBlock(*env.NewTSeries(newl))
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.BuiltinType}, "partition")
-				}
-			case env.List:
-				switch block := arg1.(type) {
-				case env.Block, env.Builtin:
-					l := len(list.Data)
-					newl := make([]any, 0)
-					subl := make([]any, 0)
-					var prevres env.Object
-					switch block := block.(type) {
-					case env.Block:
-						ser := ps.Ser
-						ps.Ser = block.Series
-						for i := 0; i < l; i++ {
-							curval := list.Data[i]
-							curvalRye := env.ToRyeValue(list.Data[i])
-							ps = EvalBlockInjMultiDialect(ps, curvalRye, true)
-							if ps.ErrorFlag {
-								return ps.Res
-							}
-							if prevres == nil || ps.Res.Equal(prevres) {
-								subl = append(subl, curval)
-							} else {
-								newl = append(newl, env.NewList(subl))
-								subl = []any{curval}
-							}
-							prevres = ps.Res
-							ps.Ser.Reset()
-						}
-						newl = append(newl, env.NewList(subl))
-						ps.Ser = ser
-					case env.Builtin:
-						for i := 0; i < l; i++ {
-							curval := list.Data[i]
-							curvalRye := env.ToRyeValue(list.Data[i])
-							res := DirectlyCallBuiltin(ps, block, curvalRye, nil)
-							if prevres == nil || res.Equal(prevres) {
-								subl = append(subl, curval)
-							} else {
-								newl = append(newl, env.NewList(subl))
-								subl = []any{curval}
-							}
-							prevres = res
-						}
-						newl = append(newl, env.NewList(subl))
-					default:
-						return MakeBuiltinError(ps, "Block type should be Builtin or Block.", "partition")
-					}
-					return *env.NewList(newl)
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.BuiltinType}, "partition")
-				}
 			case env.String:
 				switch block := arg1.(type) {
 				case env.Block, env.Builtin:
@@ -8117,6 +7841,58 @@ var builtins = map[string]*env.Builtin{
 						return MakeBuiltinError(ps, "Block type should be Builtin or Block.", "partition")
 					}
 					return *env.NewList(newl)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.BuiltinType}, "partition")
+				}
+			case env.Collection:
+				switch block := arg1.(type) {
+				case env.Block, env.Builtin:
+					l := list.Length()
+					newl := make([]env.Object, 0)
+					subl := make([]env.Object, 0)
+					var prevres env.Object
+					switch block := block.(type) {
+					case env.Block:
+						ser := ps.Ser
+						ps.Ser = block.Series
+						for i := 0; i < l; i++ {
+							curval := list.Get(i)
+							ps = EvalBlockInjMultiDialect(ps, curval, true)
+							if ps.ErrorFlag {
+								return ps.Res
+							}
+							if prevres == nil || ps.Res.Equal(prevres) {
+								subl = append(subl, curval)
+							} else {
+								newl = append(newl, list.MakeNew(subl))
+								//newl = append(newl, *env.NewBlock(*env.NewTSeries(subl)))
+								subl = []env.Object{curval}
+							}
+							prevres = ps.Res
+							ps.Ser.Reset()
+						}
+						newl = append(newl, list.MakeNew(subl))
+						// newl = append(newl, *env.NewBlock(*env.NewTSeries(subl)))
+						ps.Ser = ser
+					case env.Builtin:
+						for i := 0; i < l; i++ {
+							curval := list.Get(i)
+							res := DirectlyCallBuiltin(ps, block, curval, nil)
+							if prevres == nil || res.Equal(prevres) {
+								subl = append(subl, curval)
+							} else {
+								newl = append(newl, list.MakeNew(subl))
+								//newl = append(newl, *env.NewBlock(*env.NewTSeries(subl)))
+								subl = []env.Object{curval}
+							}
+							prevres = res
+						}
+						newl = append(newl, list.MakeNew(subl))
+						// newl = append(newl, *env.NewBlock(*env.NewTSeries(subl)))
+					default:
+						return MakeBuiltinError(ps, "Block type should be Builtin or Block.", "partition")
+					}
+					return list.MakeNew(newl)
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.BuiltinType}, "partition")
 				}
@@ -8827,6 +8603,7 @@ var builtins = map[string]*env.Builtin{
 					return env.NewError("expecting block")
 				}
 			} else {
+				ps.FailureFlag = false
 				return arg0
 			}
 		},

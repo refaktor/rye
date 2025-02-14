@@ -207,7 +207,7 @@ func dotsToMainRye(ryeFile string) string {
 func main_ryk() {
 	argIdx := 2
 	ignore := 0
-	separator := " "
+	separator := ""
 	input := " 1 "
 
 	// 	fmt.Print("preload")
@@ -242,6 +242,10 @@ func main_ryk() {
 			separator = "\t"
 			argIdx++
 		}
+		if os.Args[argIdx] == "--ssp" {
+			separator = " "
+			argIdx++
+		}
 	}
 
 	var filter *regexp.Regexp
@@ -252,6 +256,7 @@ func main_ryk() {
 			block, genv := loader.LoadString(os.Args[argIdx+1], false)
 			es = env.AddToProgramState(es, block.(env.Block).Series, genv)
 			evaldo.EvalBlockInj(es, es.ForcedResult, true)
+			evaldo.MaybeDisplayFailureOrError(es, es.Idx, "rwk begin")
 			es.Ser.Reset()
 			argIdx += 2
 		}
@@ -293,20 +298,30 @@ func main_ryk() {
 				//idx2 := es.Idx.IndexWord("f2") // turn to _0, _1 or something like it via separator later ..
 				//printidx, _ := es.Idx.GetIndex("print")
 				// val0, er := strconv.ParseInt(scanner.Text(), 10, 64)
-				val0 := util.StringToFieldsWithQuoted(scanner.Text(), separator, "\"")
+				var val0 env.Object
+				if separator == "" {
+					val := *env.NewString(scanner.Text())
+					es.Ctx.Set(L, *env.NewInteger(int64(len(val.Value))))
+					val0 = val
+				} else {
+					val := util.StringToFieldsWithQuoted(scanner.Text(), separator, "\"")
+					es.Ctx.Set(L, *env.NewInteger(int64(val.Series.Len())))
+					val0 = val
+				}
 				// if er == nil {
 				es.Ctx.Set(N, *env.NewInteger(int64(nn)))
-				es.Ctx.Set(L, *env.NewInteger(int64(val0.Series.Len())))
 				if filterBlock != nil {
 					blk := *filterBlock
 					es.Ser = blk.(env.Block).Series
 					evaldo.EvalBlockInj(es, val0, true)
+					evaldo.MaybeDisplayFailureOrError(es, es.Idx, "rwk main filter")
 					es.Ser.Reset()
 					doLine = util.IsTruthy(es.Res)
 				}
 				if doLine {
 					es.Ser = block1.(env.Block).Series
 					evaldo.EvalBlockInj(es, val0, true)
+					evaldo.MaybeDisplayFailureOrError(es, es.Idx, "rwk main doline")
 					es.Ser.Reset()
 				}
 				//} else {
@@ -328,6 +343,7 @@ func main_ryk() {
 			block, genv := loader.LoadString(os.Args[argIdx+1], false)
 			es = env.AddToProgramState(es, block.(env.Block).Series, genv)
 			evaldo.EvalBlockInj(es, es.ForcedResult, true)
+			evaldo.MaybeDisplayFailureOrError(es, es.Idx, "rwk end")
 			es.Ser.Reset()
 		}
 	}

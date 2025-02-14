@@ -477,3 +477,17 @@ func (s Table) GetColumnIndex(column string) int {
 	}
 	return index
 }
+
+// Collections
+
+func (o Table) Length() int {
+	return len(o.Rows)
+}
+
+func (o Table) Get(i int) Object {
+	return o.Rows[i]
+}
+
+func (o Table) MakeNew(data []Object) Object {
+	return *NewBlock(*NewTSeries(data))
+}

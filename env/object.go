@@ -14,45 +14,45 @@ import (
 type Type int
 
 const (
-	BlockType          Type = 1
-	IntegerType        Type = 2
-	WordType           Type = 3
-	SetwordType        Type = 4
-	OpwordType         Type = 5
-	PipewordType       Type = 6
-	BuiltinType        Type = 7
-	FunctionType       Type = 8
-	ErrorType          Type = 9
-	CommaType          Type = 10
-	VoidType           Type = 11
-	StringType         Type = 12
-	TagwordType        Type = 13
-	GenwordType        Type = 14
-	GetwordType        Type = 15
-	ArgwordType        Type = 16
-	NativeType         Type = 17
-	UriType            Type = 18
-	LSetwordType       Type = 19
-	CtxType            Type = 20
-	DictType           Type = 21
-	ListType           Type = 22
-	DateType           Type = 23
-	CPathType          Type = 24
-	XwordType          Type = 25
-	EXwordType         Type = 26
-	TableType    Type = 27
-	EmailType          Type = 28
-	KindType           Type = 29
-	KindwordType       Type = 30
-	ConverterType      Type = 31
-	TimeType           Type = 32
-	TableRowType Type = 33
-	DecimalType        Type = 34
-	VectorType         Type = 35
-	OpCPathType        Type = 36
-	PipeCPathType      Type = 37
-	ModwordType        Type = 38
-	LModwordType       Type = 39
+	BlockType     Type = 1
+	IntegerType   Type = 2
+	WordType      Type = 3
+	SetwordType   Type = 4
+	OpwordType    Type = 5
+	PipewordType  Type = 6
+	BuiltinType   Type = 7
+	FunctionType  Type = 8
+	ErrorType     Type = 9
+	CommaType     Type = 10
+	VoidType      Type = 11
+	StringType    Type = 12
+	TagwordType   Type = 13
+	GenwordType   Type = 14
+	GetwordType   Type = 15
+	ArgwordType   Type = 16
+	NativeType    Type = 17
+	UriType       Type = 18
+	LSetwordType  Type = 19
+	CtxType       Type = 20
+	DictType      Type = 21
+	ListType      Type = 22
+	DateType      Type = 23
+	CPathType     Type = 24
+	XwordType     Type = 25
+	EXwordType    Type = 26
+	TableType     Type = 27
+	EmailType     Type = 28
+	KindType      Type = 29
+	KindwordType  Type = 30
+	ConverterType Type = 31
+	TimeType      Type = 32
+	TableRowType  Type = 33
+	DecimalType   Type = 34
+	VectorType    Type = 35
+	OpCPathType   Type = 36
+	PipeCPathType Type = 37
+	ModwordType   Type = 38
+	LModwordType  Type = 39
 )
 
 // after adding new type here, also add string to idxs.go
@@ -69,6 +69,25 @@ type Object interface {
 	// Dump returns a string representation of the Object, intended for serialization.
 	Dump(e Idxs) string
 }
+
+// NEW 20250129
+
+// string, list, block, spreadsheet, spreadsheetrow
+type Collection interface {
+	Length() int
+	Get(int) Object
+	MakeNew([]Object) Object
+	// TODO: some way to Iterate or to generalize all iterations? something we could use for all Coolection types for for / map / reduce / ....
+}
+
+// dict, context
+type Mapping interface {
+	Length() int
+	Get(Object) Object
+	// TODO: some way to Iterate or to generalize all iterations? something we could use for all Coolection types for for / map / reduce / ....
+}
+
+// CONCRETE TYPES
 
 func NewBoolean(val bool) *Integer {
 	var ret int64
@@ -224,6 +243,18 @@ func (i String) Equal(o Object) bool {
 
 func (i String) Dump(e Idxs) string {
 	return fmt.Sprintf("\"%s\"", i.Value)
+}
+
+func (o String) Length() int {
+	return len(o.Value)
+}
+
+func (o String) Get(i int) Object {
+	return *NewString(string(o.Value[i]))
+}
+
+func (o String) MakeNew(data []Object) Object {
+	return *NewBlock(*NewTSeries(data))
 }
 
 //
@@ -514,6 +545,18 @@ func (i Block) Dump(e Idxs) string {
 		bu.WriteString(")")
 	}
 	return bu.String()
+}
+
+func (o Block) Length() int {
+	return o.Series.Len()
+}
+
+func (o Block) Get(i int) Object {
+	return o.Series.S[i]
+}
+
+func (o Block) MakeNew(data []Object) Object {
+	return *NewBlock(*NewTSeries(data))
 }
 
 //
@@ -1982,7 +2025,7 @@ func NewListFromSeries(block TSeries) List {
 			data[i] = k
 		}
 	}
-	return List{data, Word{0}}
+	return *NewList(data)
 }
 
 func NewBlockFromList(list List) TSeries {
@@ -2085,6 +2128,22 @@ func (i List) Dump(e Idxs) string {
 	}
 	b.WriteString("}")
 	return b.String()
+}
+
+func (o List) Length() int {
+	return len(o.Data)
+}
+
+func (o List) Get(i int) Object {
+	return ToRyeValue(o.Data[i])
+}
+
+func (o List) MakeNew(data []Object) Object {
+	data2 := make([]any, len(data))
+	for i, obj := range data {
+		data2[i] = obj // Implicit conversion to interface{}
+	}
+	return *NewList(data2)
 }
 
 //
