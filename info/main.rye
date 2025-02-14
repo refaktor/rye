@@ -16,10 +16,6 @@ test-framework: context {
 	
 	group: fn { name descr args code } { print "" , inc! 'cnt t/yellow prns " " + name t/reset\all , do  code }
 	
-	error-: fn { test } {
-		; try { do\in root-ctx test }
-		probe test |try |probe
-	}
 	error: fn { test } {
 		; try { do\in root-ctx test }
 		try test :got |type? |= 'error |either { t/br-green prns join { "✓" } } { inc! 'failed , t/red prns " ✗ Failed:" t/reset\all   prns join { newline "expected error but got: " t/str\br-black inspect got t/str\reset } }
@@ -31,9 +27,6 @@ test-framework: context {
 		|either { t/green prns "✓" t/reset\all } { inc! 'failed , t/red prns " ✗ Failed:" t/reset\all prns join { "expected " t/str\br-black inspect res t/str\reset ", got " t/str\br-black inspect got t/str\reset } }
 	}
 	
-	equal\todo: fn { test res } {
-	}
-
 	stdout: fn { test res } {
 		cc: extends root-ctx { }
 		capture-stdout { do\in cc test } :got = res
@@ -64,9 +57,6 @@ docs-framework: context {
 		cc: extends root-ctx { }
 		do\in cc test :got = res
 		|if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" mold\nowrap test newline "; returns "  replace mold got newline newline + "; "  "</code></pre>" ] }
-	}
-
-	equal\todo: fn { test res } {
 	}
 
 	error: fn { test } {
