@@ -8,6 +8,9 @@ import (
 
 var Builtins_regexp = map[string]*env.Builtin{
 
+	//
+	// ##### Regexp #####  "Go like Regular expressions"
+	//
 	// Tests:
 	//  equal { regexp "[0-9]" |type? } 'native
 	// Args:

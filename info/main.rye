@@ -47,6 +47,8 @@ test-framework: context {
 	}
 }
 
+escape-html: fn { x } { x |replace "&" "&amp;" |replace "<" "&lt;" |replace ">" "&gt;" }
+
 docs-framework: context {
 	
 	section: fn { name descr code } { print join { "<h2>" name "</h2><p>" descr "</p><div class='section'>" } , do code , print "</div>" }
@@ -56,19 +58,19 @@ docs-framework: context {
 	equal: fn { test res } {
 		cc: extends root-ctx { }
 		do\in cc test :got = res
-		|if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" mold\nowrap test newline "; returns "  replace mold got newline newline + "; "  "</code></pre>" ] }
+		|if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" escape-html mold\nowrap test newline "; returns "  replace escape-html mold got newline newline + "; "  "</code></pre>" ] }
 	}
 
 	error: fn { test } {
 		; try { do\in root-ctx test }
 		test |try :got |type? |= 'error
-		|if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" mold\nowrap test newline "; correctly causes error:\n; " message? got " </code></pre>" ] }
+		|if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" escape-html mold\nowrap test newline "; correctly causes error:\n; " message? got " </code></pre>" ] }
 	}
 
 	stdout: fn { test res } {
 		cc: extends root-ctx { }
 		capture-stdout { do\in cc test } :got = res
-		1 |if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" mold\nowrap test newline "; prints " replace mold\nowrap got newline newline + "; " "</code></pre>" ] }
+		1 |if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" escape-html mold\nowrap test newline "; prints " replace escape-html mold\nowrap got newline newline + "; " "</code></pre>" ] }
 	}
 
 	comment: fn { str } {
@@ -91,7 +93,7 @@ generate-doc-file: fn { filename menu } {
 	} |write* to-file filename + ".html"
 }
 
-menu: { "base" "table" "regexp" }
+menu: { "base" "table" "formats" }
 
 print-help: does {
 	print `# Rye's simple testing tool

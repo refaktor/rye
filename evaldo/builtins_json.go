@@ -233,8 +233,12 @@ func TableToJSONLines(s env.Table) string {
 
 var Builtins_json = map[string]*env.Builtin{
 
+	//
+	// ##### JSON #####  "parsing and generating JSON"
+	//
 	// Tests:
-	// equals { "[ 1, 2, 3 ]" |parse-json |length? } 3
+	// equal { "[ 1, 2, 3 ]" |parse-json |length? } 3
+	// equal { "[ 1, 2, 3 ]" |parse-json |type? } 'list
 	"parse-json": {
 		Argsn: 1,
 		Doc:   "Parses JSON to and turns them to Rye values.",
@@ -253,6 +257,10 @@ var Builtins_json = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	// equal { list { 1 2 3 } |to-json } "[1, 2, 3] "
+	// equal { dict { a: 1 b: 2 c: 3 } |to-json } `{"a": 1, "b": 2, "c": 3} `
 	"to-json": {
 		Argsn: 1,
 		Doc:   "Takes a Rye value and returns it encoded into JSON.",
@@ -260,6 +268,8 @@ var Builtins_json = map[string]*env.Builtin{
 			return *env.NewString(RyeToJSON(arg0))
 		},
 	},
+	// Tests:
+	// equal { table { "a" "b" } { 2 "x" 3 "y" } |to-json\lines } `{"a": 2, "b": "x"} \n{"a": 3, "b": "y"} \n`
 	"to-json\\lines": {
 		Argsn: 1,
 		Doc:   "Takes a Rye value and returns it encoded into JSON.",
