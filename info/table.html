@@ -25,7 +25,7 @@
       <aside class="sidebar" id="menu-holder">
         <nav>
           <ul>
-            <li><a href="https://ryelang.org">← Home</a>  &middot; <a class='menu-item' id='maintab-base' href='base.html'>base</a> &middot; <a class='menu-item' id='maintab-table' href='table.html'>table</a> &middot; <a class='menu-item' id='maintab-regexp' href='regexp.html'>regexp</a></li>
+            <li><a href="https://ryelang.org">← Home</a>  &middot; <a class='menu-item' id='maintab-base' href='base.html'>base</a> &middot; <a class='menu-item' id='maintab-table' href='table.html'>table</a> &middot; <a class='menu-item' id='maintab-formats' href='formats.html'>formats</a></li>
             <!-- More menu items here -->
           </ul>
         </nav>
@@ -108,7 +108,7 @@
 </div>
 <h2>Row level functions </h2><p>Functions that construct a table.</p><div class='section'>
 <h3>add-row</h3><p></p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>table { "a" "b" } { 6 60 7 70 } |add-row { 8 80 } |-> 2 |-> "b"
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { "a" "b" } { 6 60 7 70 } |add-row { 8 80 } |-&gt; 2 |-&gt; "b"
 ; returns 80</code></pre>
 </div>
 <h3>get-rows</h3><p></p><div class='group'>
@@ -128,7 +128,7 @@
 <h3>update-row!</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>spr1: ref table { "a" "b" } { 1 10 2 20 } spr1 .update-row! 1 dict [ "a" 111 ] spr1 .deref .A1
 ; returns 111</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>spr1: ref table { "a" "b" } { 1 10 2 20 } incrA: fn { row } { row + [ "a" ( "a" <- row ) + 9 ] } update-row! spr1 1 ?incrA spr1 |deref |A1
+<pre class='prettyprint lang-rye'><code language='lang-rye'>spr1: ref table { "a" "b" } { 1 10 2 20 } incrA: fn { row } { row + [ "a" ( "a" &lt;- row ) + 9 ] } update-row! spr1 1 ?incrA spr1 |deref |A1
 ; returns 10</code></pre>
 </div>
 <h3>remove-row!</h3><p></p><div class='group'>

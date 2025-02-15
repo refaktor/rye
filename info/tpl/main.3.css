@@ -7,7 +7,7 @@ body {
 
 
 div.group {
-    width: 520px;
+    width: 550px;
     background-color: #3e3e3e;
     border: 1px solid #eee;
     padding: 2px 15px;
@@ -15,7 +15,7 @@ div.group {
 }
 pre.prettyprint {
     __border: 1px solid green;
-    width: 520px;
+    width: 550px;
     background-color: transparent;
     padding: 10px;
     box-model: content;

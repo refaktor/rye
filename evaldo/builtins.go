@@ -205,6 +205,8 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 				return env.ToRyeValue(v1)
 			case env.Integer:
 				return v1
+			case env.Decimal:
+				return v1
 			case env.String:
 				return v1
 			case env.Date:
@@ -775,9 +777,9 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { 10 .multiple-of 2 } 1
-	// equal { 10 .multiple-of 3 } 0
-	"multiple-of": { // ***
+	// equal { 10 .is-multiple-of 2 } 1
+	// equal { 10 .is-multiple-of 3 } 0
+	"is-multiple-of": { // ***
 		Argsn: 2,
 		Doc:   "Checks if a first argument is a factor of second.",
 		Pure:  true,
@@ -800,9 +802,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 	// Tests:
-	// equal { 3 .odd } 1
-	// equal { 2 .odd } 0
-	"odd": { // ***
+	// equal { 3 .is-odd } 1
+	// equal { 2 .is-odd } 0
+	"is-odd": { // ***
 		Argsn: 1,
 		Doc:   "Checks if a number is odd.",
 		Pure:  true,
@@ -820,9 +822,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 	// Tests:
-	// equal { 3 .even } 0
-	// equal { 2 .even } 1
-	"even": { // ***
+	// equal { 3 .is-even } 0
+	// equal { 2 .is-even } 1
+	"is-even": { // ***
 		Argsn: 1,
 		Doc:   "Checks if a number is even.",
 		Pure:  true,
@@ -7166,12 +7168,12 @@ var builtins = map[string]*env.Builtin{
 
 	// Higher order functions
 	// Tests:
-	//  equal { purge { 1 2 3 } { .even } } { 1 3 }
-	//  equal { purge { } { .even } } { }
-	//  equal { purge list { 1 2 3 } { .even } } list { 1 3 }
-	//  equal { purge list { } { .even } } list { }
-	//  equal { purge "1234" { .to-integer .even } } { "1" "3" }
-	//  equal { purge "" { .to-integer .even } } { }
+	//  equal { purge { 1 2 3 } { .is-even } } { 1 3 }
+	//  equal { purge { } { .is-even } } { }
+	//  equal { purge list { 1 2 3 } { .is-even } } list { 1 3 }
+	//  equal { purge list { } { .is-even } } list { }
+	//  equal { purge "1234" { .to-integer .is-even } } { "1" "3" }
+	//  equal { purge "" { .to-integer .is-even } } { }
 	"purge": { // TODO ... doesn't fully work
 		Argsn: 2,
 		Doc:   "Purges values from a series based on return of a injected code block.",
@@ -7270,7 +7272,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	//  equal { { 1 2 3 } :x purge! { .even } 'x , x } { 1 3 }
+	//  equal { { 1 2 3 } :x purge! { .is-even } 'x , x } { 1 3 }
 	"purge!": { // TODO ... doesn't fully work
 		Argsn: 2,
 		Doc:   "Purges values from a series based on return of a injected code block.",
@@ -7326,7 +7328,7 @@ var builtins = map[string]*env.Builtin{
 	//  equal { map { } { + 1 } } { }
 	//  equal { map { "aaa" "bb" "c" } { .length? } } { 3 2 1 }
 	//  equal { map list { "aaa" "bb" "c" } { .length? } } list { 3 2 1 }
-	//  equal { map list { 3 4 5 6 } { .multiple-of 3 } } list { 1 0 0 1 }
+	//  equal { map list { 3 4 5 6 } { .is-multiple-of 3 } } list { 1 0 0 1 }
 	//  equal { map list { } { + 1 } } list { }
 	//  ; equal { map "abc" { + "-" } .join } "a-b-c-" ; TODO doesn't work, fix join
 	//  equal { map "123" { .to-integer } } { 1 2 3 }
@@ -7442,7 +7444,7 @@ var builtins = map[string]*env.Builtin{
 	//  equal { map { } { + 1 } } { }
 	//  equal { map { "aaa" "bb" "c" } { .length? } } { 3 2 1 }
 	//  equal { map list { "aaa" "bb" "c" } { .length? } } list { 3 2 1 }
-	//  equal { map list { 3 4 5 6 } { .multiple-of 3 } } list { 1 0 0 1 }
+	//  equal { map list { 3 4 5 6 } { .is-multiple-of 3 } } list { 1 0 0 1 }
 	//  equal { map list { } { + 1 } } list { }
 	//  ; equal { map "abc" { + "-" } .join } "a-b-c-" ; TODO doesn't work, fix join
 	//  equal { map "123" { .to-integer } } { 1 2 3 }
@@ -7910,7 +7912,7 @@ var builtins = map[string]*env.Builtin{
 	//  ;equal { { "Anne" "Mitch" "Anya" } .list .group { .first } } dict vals { "A" list { "Anne" "Anya" } "M" list { "Mitch" } }
 	//  ;equal { { "Anne" "Mitch" "Anya" } .list .group ?first } dict vals { "A" list { "Anne" "Anya" } "M" list { "Mitch" } }
 	//  equal { { } .list .group { .first } } dict vals { }
-	//  equal { try { { 1 2 3 4 } .group { .even } } |type? } 'error ; TODO keys can only be string currently
+	//  equal { try { { 1 2 3 4 } .group { .is-even } } |type? } 'error ; TODO keys can only be string currently
 	"group": { // **
 		Argsn: 2,
 		Doc:   "Groups a block or list of values given condition.",
@@ -8016,15 +8018,15 @@ var builtins = map[string]*env.Builtin{
 
 	// filter [ 1 2 3 ] { .add 3 }
 	// Tests:
-	//  equal { filter { 1 2 3 4 } { .even } } { 2 4 }
-	//  equal { filter { 1 2 3 4 } ?even } { 2 4 }
-	//  equal { filter { } { .even } } { }
-	//  equal { filter list { 1 2 3 4 } { .even } } list { 2 4 }
-	//  equal { filter list { 1 2 3 4 } ?even } list { 2 4 }
-	//  equal { filter list { } { .even } } list { }
-	//  equal { filter "1234" { .to-integer .even } } { "2" "4" }
+	//  equal { filter { 1 2 3 4 } { .is-even } } { 2 4 }
+	//  equal { filter { 1 2 3 4 } ?is-even } { 2 4 }
+	//  equal { filter { } { .is-even } } { }
+	//  equal { filter list { 1 2 3 4 } { .is-even } } list { 2 4 }
+	//  equal { filter list { 1 2 3 4 } ?is-even } list { 2 4 }
+	//  equal { filter list { } { .is-even } } list { }
+	//  equal { filter "1234" { .to-integer .is-even } } { "2" "4" }
 	//  equal { filter "01234" ?to-integer } { "1" "2" "3" "4" }
-	//  equal { filter "" { .to-integer .even } } { }
+	//  equal { filter "" { .to-integer .is-even } } { }
 	"filter": { // **
 		Argsn: 2,
 		Doc:   "Filters values from a seris based on return of a injected code block.",
@@ -8144,9 +8146,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 	// Tests:
-	//  equal { seek { 1 2 3 4 } { .even } } 2
-	//  equal { seek list { 1 2 3 4 } { .even } } 2
-	//  equal { seek "1234" { .to-integer .even } } "2"
+	//  equal { seek { 1 2 3 4 } { .is-even } } 2
+	//  equal { seek list { 1 2 3 4 } { .is-even } } 2
+	//  equal { seek "1234" { .to-integer .is-even } } "2"
 	//  equal { try { seek { 1 2 3 4 } { > 5 } } |type? } 'error
 	//  equal { try { seek list { 1 2 3 4 } { > 5 } } |type? } 'error
 	//  equal { try { seek "1234" { .to-integer > 5 } } |type? } 'error
@@ -8321,7 +8323,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"code?": { // **
+	"status?": { // **
 		AcceptFailure: true,
 		Argsn:         1,
 		Doc:           "Returns the status code of the Error.", // TODO -- seems duplicate of status
@@ -8352,6 +8354,29 @@ var builtins = map[string]*env.Builtin{
 				ps.FailureFlag = true
 				return env.NewError("arg 0 not error")
 			}
+		},
+	},
+
+	"details?": { // **
+		AcceptFailure: true,
+		Argsn:         1,
+		Doc:           "Returns the status code of the Error.", // TODO -- seems duplicate of status
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var originalMap map[string]env.Object
+			switch er := arg0.(type) {
+			case env.Error:
+			case *env.Error:
+				originalMap = er.Values
+			default:
+				ps.FailureFlag = true
+				return env.NewError("arg 0 not error")
+			}
+			// originalMap := er.Values // map[string]env.Object
+			convertedMap := make(map[string]any)
+			for key, value := range originalMap {
+				convertedMap[key] = value
+			}
+			return env.NewDict(convertedMap)
 		},
 	},
 

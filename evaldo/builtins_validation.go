@@ -196,8 +196,12 @@ func evalDecimal(val any) (any, env.Object) {
 	switch val1 := val.(type) {
 	case float64:
 		return *env.NewDecimal(val1), nil
+	case int64:
+		return *env.NewDecimal(float64(val1)), nil
 	case env.Decimal:
 		return val1, nil
+	case env.Integer:
+		return *env.NewDecimal(float64(val1.Value)), nil
 	case string:
 		v, e := strconv.ParseFloat(val1, 64)
 		if e != nil {
@@ -257,9 +261,8 @@ func parseDate(v string) (any, env.Object) {
 		if e != nil {
 			return v, *env.NewString("not date")
 		}
-		fmt.Println(d)
 		return *env.NewDate(d), nil
-	} else if strings.Index(v[3:5], ":") > 0 {
+	} else if strings.Index(v[3:5], "-") > 0 {
 		d, e := time.Parse("2006-01-02", v)
 		if e != nil {
 			return v, *env.NewString("not date")
@@ -314,6 +317,33 @@ func something() {
 
 var Builtins_validation = map[string]*env.Builtin{
 
+	//
+	// ##### Validation ##### "validation dialect for Rye values"
+	//
+	// Tests:
+	// equal { validate dict { a: 1 } { a: required } } dict { a: 1 }
+	// equal { validate dict { a: 1 } { b: optional 2 } } dict { b: 2 }
+	// equal { validate dict { a: 1 } { a: optional 0 b: optional 2 } } dict { a: 1 b: 2 }
+	// equal { validate dict { a: 1 } { a: required integer } } dict { a: 1 }
+	// equal { validate dict { a: "1" } { a: required integer } } dict { a: 1 }
+	// equal { validate dict { a: "1" } { a: required integer } -> "a" |type? } 'integer
+	// equal { validate dict { a: 3.14 } { a: required decimal } } dict { a: 3.14 }
+	// equal { validate dict { a: 3 } { a: required decimal } } dict { a: 3.0 }
+	// equal { validate dict { a: "3.14" } { a: required decimal } } dict { a: 3.14 }
+	// equal { validate dict { a: "3.14" } { a: required decimal } -> "a" |type? } 'decimal
+	// equal { validate dict { a: "jim" } { a: required string } } dict { a: "jim" }
+	// equal { validate dict { a: "e@ma.il" } { a: required email } } dict { a: "e@ma.il" }
+	// equal { validate dict { a: "e@ma.il" } { a: required email } -> "a" |type? } 'string
+	// equal { validate dict { a: "30.12.2024" } { a: required date } } dict [ "a" date "2024-12-30" ]
+	// equal { validate dict { a: "2024-12-30" } { a: required date } } dict [ "a" date "2024-12-30" ]
+	// equal { validate dict { a: "2024-12-30" } { a: required date } -> "a" |type? } 'date
+	// equal { validate dict { a: 5 } { a: required integer check { < 10 } } } dict [ "a" 5 ]
+	// equal { validate dict { a: 5 } { a: required integer calc { + 10 } } } dict [ "a" 15 ]
+	// equal { validate dict { a: 5 } { b: required } |disarm |type? } 'error
+	// equal { validate dict { b: "5c" } { b: optional 0 integer } |disarm |type? } 'error
+	// equal { validate dict { b: "2x0" } { b: required decimal } |disarm |status? } 403   ;  ("The server understood the request, but is refusing to fulfill it"). Contrary to popular opinion, RFC2616 doesn't say "403 is only intended for failed authentication", but "403: I know what you want, but I won't do that". That condition may or may not be due to authentication.
+	// equal { validate dict { b: "not-mail" } { b: required email } |disarm |message? } "validation error"
+	// equal { validate dict { b: "2023-1-1" } { b: required date } |disarm |details? } dict { b: "not date" }
 	"validate": {
 		Argsn: 2,
 		Doc:   "Validates Dictionary using the Validation dialect and returns result or a Failure.",
@@ -322,6 +352,9 @@ var Builtins_validation = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { validate>ctx dict { a: 1 } { a: required } |type? } 'ctx    ; TODO rename to context
+	// equal { validate>ctx dict { a: 1 } { a: optional 0 } -> 'a } 1
 	"validate>ctx": {
 		Argsn: 2,
 		Doc:   "Validates Dictionary using the Validation dialect and returns result as a Context or a Failure.",

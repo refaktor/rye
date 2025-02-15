@@ -396,6 +396,11 @@ func trace8(s string) {
 
 var Builtins_html = map[string]*env.Builtin{
 
+	//
+	// ##### HTML ##### "streaming, Sax like HTML dialect (still in design)"
+	//
+	// Tests:
+	// equal { unescape\html "&gt;hello&lt;" } ">hello<"
 	"unescape\\html": {
 		Argsn: 1,
 		Doc:   "Unescapes HTML string",
@@ -409,6 +414,8 @@ var Builtins_html = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { escape\html "<hello>" } "&lt;hello&gt;"
 	"escape\\html": {
 		Argsn: 1,
 		Doc:   "Unescapes HTML string",
@@ -422,6 +429,8 @@ var Builtins_html = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { html->markdown "<h1>title</h1><p>para</p>" } "# title\n\npara"
 	"html->markdown": {
 		Argsn: 1,
 		Doc:   "Converts HTML text to markdown",
@@ -438,6 +447,11 @@ var Builtins_html = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// stdout { "<html><body><div class='menu'><a href='/'>home</a><a href='/about/'>about</a>" |reader
+	//   .parse-html { <a> [ .attr? 'href |prns ] }
+	// } "/ /about/ "
+	// ;
 	"rye-reader//parse-html": {
 		Argsn: 2,
 		Doc:   "Parses HTML string with a HTML dialect.",

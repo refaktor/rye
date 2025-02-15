@@ -11,9 +11,6 @@ import (
 	"io"
 )
 
-// { <person> [ .print ] }
-// { <person> { _ [ .print ] <name> <surname> <age> { _ [ .print2 ";" ] } }
-
 func load_saxml_Dict(ps *env.ProgramState, block env.Block) (env.Dict, *env.Error) {
 	var keys []string
 
@@ -89,6 +86,9 @@ func do_sxml(ps *env.ProgramState, reader io.Reader, rmap env.Dict) env.Object {
 			trace5("START")
 			tag := se.Name.Local
 			ob, ok := rmap.Data[tag]
+			// if !ok {
+			//	ob, ok = rmap.Data["-any-"]
+			// }
 			if ok {
 				trace5("START2")
 				tags = append(tags, curtag)
@@ -120,6 +120,36 @@ func do_sxml(ps *env.ProgramState, reader io.Reader, rmap env.Dict) env.Object {
 					EvalBlockInj(ps, *env.NewNative(ps.Idx, se, "rye-sxml-start"), true)
 					ps.Ser = ser
 				}
+			} else {
+				inElement := se.Name.Local
+				trace5("END")
+				//fmt.Println(curtag)
+				if true || inElement == curtag { // TODO -- solve the case of same named elements inside <person><person></person></person>
+					trace5("END2")
+					//fmt.Println(rmap)
+					b, ok := rmap.Data["-any-"]
+					if ok {
+						switch obj := b.(type) {
+						case env.Block:
+							ser := ps.Ser // TODO -- make helper function that "does" a block
+							ps.Ser = obj.Series
+							EvalBlockInj(ps, *env.NewNative(ps.Idx, se, "rye-sxml-start"), true)
+							ps.Ser = ser
+						default:
+							// TODO Err
+						}
+					}
+
+					//fmt.Println(stack)
+					//fmt.Println(tags)
+					// n := len(stack) - 1 // Top element
+					// rmap = stack[n]
+					// stack = stack[:n] // Pop
+
+					// m := len(tags) - 1 // Top element
+					// curtag = tags[m]
+					// tags = tags[:m] // Pop
+				}
 			}
 		case xml.CharData:
 			ob, ok := rmap.Data[""]
@@ -128,7 +158,7 @@ func do_sxml(ps *env.ProgramState, reader io.Reader, rmap env.Dict) env.Object {
 				case env.Block:
 					ser := ps.Ser // TODO -- make helper function that "does" a block
 					ps.Ser = obj.Series
-					EvalBlockInj(ps, env.NewString(string(se.Copy())), true)
+					EvalBlockInj(ps, *env.NewString(string(se.Copy())), true)
 					ps.Ser = ser
 				}
 			}
@@ -174,6 +204,28 @@ func trace5(s string) {
 
 var Builtins_sxml = map[string]*env.Builtin{
 
+	// { <person> [ .print ] }
+	// { <person> { _ [ .print ] <name> <surname> <age> { _ [ .print2 ";" ] } }
+	//
+	// ##### SXML ##### "streaming, Sax like XML dialect (still in design)"
+	//
+	// Tests:
+	// stdout {
+	//   "<scene><bot>C3PO</bot><bot>R2D2</bot><jedi>Luke</jedi></scene>" |reader
+	//   .do-sxml { _ [ .prns ] }
+	// } "C3PO R2D2 Luke "
+	// stdout {
+	//   "<scene><bot>C3PO</bot><bot>R2D2</bot><jedi>Luke</jedi></scene>" |reader
+	//   .do-sxml { <bot> { _ [ .prns ] } }
+	// } "C3PO R2D2 "
+	// stdout {
+	//   "<scene><ship>XWing</ship><bot>R2D2</bot><jedi>Luke</jedi></scene>" |reader
+	//   .do-sxml { <bot> <jedi> { _ [ .prns ] } }
+	// } "R2D2 Luke "
+	// stdout {
+	//   "<scene><xwing><bot>R2D2</bot><person>Luke</person></xwing><destroyer><person>Vader</person></destroyer></scene>" |reader
+	//   .do-sxml { <xwing> { <person> { _ [ .prns ] } } }
+	// } "Luke "
 	"rye-reader//do-sxml": {
 		Argsn: 2,
 		Doc:   "TODODOC",
@@ -188,8 +240,16 @@ var Builtins_sxml = map[string]*env.Builtin{
 		},
 	},
 
-	//se.Attr[1].Value
-	"rye-sxml-start//get-attr": {
+	// Tests:
+	// stdout {
+	//   `<scene><ship type="xwing"><person age="25">Luke</person></ship><ship type="destroyer"><person age="55">Vader</person></ship></scene>` |reader
+	//   .do-sxml { <ship> [ .attr? 0 |prns	 ] }
+	// } "xwing destroyer "
+	// stdout {
+	//   `<scene><ship type="xwing"><person age="25">Luke</person></ship><ship type="destroyer"><person age="55">Vader</person></ship></scene>` |reader
+	//   .do-sxml { <person> [ .attr? 0 |prns	 ] }
+	// } "25 55 "
+	"rye-sxml-start//attr?": {
 		Argsn: 2,
 		Doc:   "TODODOC",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -200,7 +260,7 @@ var Builtins_sxml = map[string]*env.Builtin{
 					switch n := arg1.(type) {
 					case env.Integer:
 						if int(n.Value) < len(obj1.Attr) {
-							return env.NewString(obj1.Attr[int(n.Value)].Value)
+							return *env.NewString(obj1.Attr[int(n.Value)].Value)
 						} else {
 							return env.Void{}
 						}
@@ -215,6 +275,11 @@ var Builtins_sxml = map[string]*env.Builtin{
 			}
 		},
 	},
+	// TODO:
+	// stdout {
+	//   "<scene><xwing><bot>R2D2</bot><person><name>Luke</name></person></xwing><destroyer><person>Vader</person></destroyer></scene>" |reader
+	//   .do-sxml { <xwing> { 'start [ prns "YYY" ] <bot> [ print "***" ] 'any [ .name? .probe ] 'end [ print "xx" ] } }
+	// } "bot R2D2 \nperson name Luke \n"
 	"rye-sxml-start//name?": {
 		Argsn: 1,
 		Doc:   "TODODOC",
@@ -223,7 +288,7 @@ var Builtins_sxml = map[string]*env.Builtin{
 			case env.Native:
 				switch obj1 := obj.Value.(type) {
 				case xml.StartElement:
-					return env.NewString(obj1.Name.Local)
+					return *env.NewString(obj1.Name.Local)
 				default:
 					return MakeBuiltinError(ps, "Not xml-start element.", "rye-sxml-start//name?")
 				}
