@@ -864,6 +864,25 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	"_%": { // ***
+		Argsn: 2,
+		Doc:   "Calculates module (remainder) of two integers.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch a := arg0.(type) {
+			case env.Integer:
+				switch b := arg1.(type) {
+				case env.Integer:
+					return *env.NewInteger(a.Value % b.Value)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "mod")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "mod")
+			}
+		},
+	},
 	// Tests:
 	// equal  { random\integer 2 |type? } 'integer
 	// equal  { random\integer 1 |< 2 } 1
@@ -2734,6 +2753,10 @@ var builtins = map[string]*env.Builtin{
 	// equal { head "abcdefg" 2 } "ab"
 	// equal { head "abcdefg" 4 } "abcd"
 	// equal { head list { 10 20 30 40 } 2 } list { 10 20 }
+	// equal { head { 4 5 6 7 } -2 } { 4 5 }
+	// equal { head "abcdefg" -1 } "abcdef"
+	// equal { head "abcdefg" -5 } "ab"
+	// equal { head list { 10 20 30 40 } -1 } list { 10 20 30 }
 	"head": { // **
 		Argsn: 2,
 		Doc:   "Accepts a Block, List or String and an Integer N, returns the first N values.",
@@ -2760,6 +2783,9 @@ var builtins = map[string]*env.Builtin{
 					if len(s1.Data) < numVal {
 						numVal = len(s1.Data)
 					}
+					if numVal < 0 {
+						numVal = len(s1.Data) + numVal // warn: numVal is negative so we must add
+					}
 					return *env.NewList(s1.Data[0:numVal])
 				case env.String:
 					str := []rune(s1.Value)
@@ -2768,6 +2794,9 @@ var builtins = map[string]*env.Builtin{
 					}
 					if len(str) < numVal {
 						numVal = len(str)
+					}
+					if numVal < 0 {
+						numVal = len(str) + numVal // warn: numVal is negative so we must add
 					}
 					return *env.NewString(string(str[0:numVal]))
 				case env.Table:

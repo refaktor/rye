@@ -756,6 +756,10 @@ section "Collections " "" {
 		equal { head "abcdefg" 2 } "ab"
 		equal { head "abcdefg" 4 } "abcd"
 		equal { head list { 10 20 30 40 } 2 } list { 10 20 }
+		equal { head { 4 5 6 7 } -2 } { 4 5 }
+		equal { head "abcdefg" -1 } "abcdef"
+		equal { head "abcdefg" -5 } "ab"
+		equal { head list { 10 20 30 40 } -1 } list { 10 20 30 }
 	}
 
 	group "nth" 
