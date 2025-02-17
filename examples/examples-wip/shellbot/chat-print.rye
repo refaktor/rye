@@ -4,7 +4,7 @@ term: context {
 	extend: fn { n c } { produce n "" { .concat c } }
 	line: fn1 { .extend "─" }
 		
-	timely-print: fn1 { .for { .prin , sleep 50 } }
+	timely-print: fn1 { .for { .prn , sleep 50 } }
 
 	draw-box: fn { cols rows offset } {
 		right offset , "╭" |+ line cols + 3 |+ "╮" |print
@@ -35,14 +35,14 @@ term: context {
 		tui\selection ch 62
 	}
 	
-	up:    fn1 { .esc-val "[(*)A" |prin }
-	down:  fn1 { .esc-val "[(*)B" |prin }
-	right: fn1 { .esc-val "[(*)C" |prin }
-	left:  fn1 { .esc-val "[(*)D" |prin }
-	bold:  does { esc "[1m" |prin }
-	reset:  does { esc "[22m" |prin }
+	up:    fn1 { .esc-val "[(*)A" |prn }
+	down:  fn1 { .esc-val "[(*)B" |prn }
+	right: fn1 { .esc-val "[(*)C" |prn }
+	left:  fn1 { .esc-val "[(*)D" |prn }
+	bold:  does { esc "[1m" |prn }
+	reset:  does { esc "[22m" |prn }
 
-	color\red: does { esc "[31m" |prin }
-	color\default:  does { esc "[39m" |prin }
-	color\reset:  does { esc "[0m" |prin }
+	color\red: does { esc "[31m" |prn }
+	color\default:  does { esc "[39m" |prn }
+	color\reset:  does { esc "[0m" |prn }
 }

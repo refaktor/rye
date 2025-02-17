@@ -1,0 +1,204 @@
+<html>
+  <head>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,700|Roboto:300,400,700&subset=latin-ext' rel='stylesheet' type='text/css'>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Londrina+Solid:wght@300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="tpl/main.3.css?a001" />
+    <link rel="stylesheet" href="tpl/styles.css?a001" />
+    <script src="tpl/menu.js?a001"></script>
+    <script src="tpl/jsGoo.js"></script>
+    <!-- syntax highlighting -->
+    <link rel="stylesheet" type="text/css" href="tpl/desert.css" />
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/prettify/r298/run_prettify.js"></script>
+    <script type="text/javascript" src="./tpl/lang-rye.js"></script>
+    <!-- syntax highlightinh end -->
+  </head>
+  <body onload="generateMenu(); styleCurrentTab();">
+    <!--div id="menu-holder">
+	</div-->
+    <!--p>
+      <a href="/">main page</a>
+    </p>
+    <h1>Rye reference: Formats</h1-->
+    <div class="container">
+      <aside class="sidebar" id="menu-holder">
+        <nav>
+          <ul>
+            <li><a href="https://ryelang.org">← Home</a>  &middot; <a class='menu-item' id='maintab-base' href='base.html'>base</a> &middot; <a class='menu-item' id='maintab-table' href='table.html'>table</a> &middot; <a class='menu-item' id='maintab-formats' href='formats.html'>formats</a></li>
+            <!-- More menu items here -->
+          </ul>
+        </nav>
+	<p>
+	  This is Rye function reference generated from unit tests in info/ folder. Examples can be little dry, but they are short and correct.
+	</p>
+	<h3>Functions</h3>
+      </aside>
+      <main class="content">
+        
+<h2>Regexp </h2><p>Go like Regular expressions</p><div class='section'>
+<h3>regexp</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>regexp "[0-9]" |type?
+; returns native</code></pre>
+</div>
+<h3>regexp//is-match</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>regexp "[0-9]" |is-match "5"
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>regexp "[0-9]" |is-match "a"
+; returns 0</code></pre>
+</div>
+<h3>regexp//submatch?</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>regexp "x([0-9]+)y" |submatch? "x123y"
+; returns "123"</code></pre>
+</div>
+<h3>regexp//submatches?</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>regexp "x([0-9]+)y" |submatches? "x123y x234y"
+; returns { "123" }</code></pre>
+</div>
+<h3>regexp//submatches\all?</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>regexp "x([0-9]+)(y+)?" |submatches\all? "x11yy x22"
+; returns { { "11" "yy" } { "22" "" } }</code></pre>
+</div>
+<h3>regexp//find-all</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>regexp "[0-9]+" |find-all "x123y x234y"
+; returns { "123" "234" }</code></pre>
+</div>
+<h3>regexp//match?</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>regexp "[0-9]+c+" |match? "aa33bb55cc"
+; returns "55cc"</code></pre>
+</div>
+<h3>regexp//replace-all</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>regexp "[0-9]+" |replace-all "x123y x234y" "XXX"
+; returns "xXXXy xXXXy"</code></pre>
+</div>
+</div>
+<h2>Validation </h2><p>validation dialect for Rye values</p><div class='section'>
+<h3>validate</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: 1 } { a: required }
+; returns dict { a 1 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: 1 } { b: optional 2 }
+; returns dict { b 2 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: 1 } { a: optional 0 b: optional 2 }
+; returns dict { b 2 a 1 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: 1 } { a: required integer }
+; returns dict { a 1 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: "1" } { a: required integer }
+; returns dict { a 1 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: "1" } { a: required integer } |-&gt; "a" |type?
+; returns integer</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: 3.14 } { a: required decimal }
+; returns dict { a 3.14 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: 3 } { a: required decimal }
+; returns dict { a 3 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: "3.14" } { a: required decimal }
+; returns dict { a 3.14 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: "3.14" } { a: required decimal } |-&gt; "a" |type?
+; returns decimal</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: "jim" } { a: required string }
+; returns dict { a "jim" }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: "e@ma.il" } { a: required email }
+; returns dict { a "e@ma.il" }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: "e@ma.il" } { a: required email } |-&gt; "a" |type?
+; returns string</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: "30.12.2024" } { a: required date }
+; returns dict { a 2024-12-30 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: "2024-12-30" } { a: required date }
+; returns dict { a 2024-12-30 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: "2024-12-30" } { a: required date } |-&gt; "a" |type?
+; returns date</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: 5 } { a: required integer check { &lt; 10 } }
+; returns dict { a 5 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: 5 } { a: required integer calc { + 10 } }
+; returns dict { a 15 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: 5 } { b: required } |disarm |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { b: "5c" } { b: optional 0 integer } |disarm |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { b: "2x0" } { b: required decimal } |disarm |status?
+; returns 403</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { b: "not-mail" } { b: required email } |disarm |message?
+; returns "validation error"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { b: "2023-1-1" } { b: required date } |disarm |details?
+; returns dict { b "not date" }</code></pre>
+</div>
+<h3>validate>ctx</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>validate&gt;ctx dict { a: 1 } { a: required } |type?
+; returns ctx</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>validate&gt;ctx dict { a: 1 } { a: optional 0 } |-&gt; 'a
+; returns 1</code></pre>
+</div>
+</div>
+<h2>JSON </h2><p>parsing and generating JSON</p><div class='section'>
+<h3>parse-json</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>"[ 1, 2, 3 ]" |parse-json |length?
+; returns 3</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>"[ 1, 2, 3 ]" |parse-json |type?
+; returns list</code></pre>
+</div>
+<h3>to-json</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>list { 1 2 3 } |to-json
+; returns "[1, 2, 3] "</code></pre>
+</div>
+<h3>to-json\lines</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { "a" "b" } { 2 "x" 3 "y" } |to-json\lines
+; returns "{"a": 2, "b": "x"} 
+; {"a": 3, "b": "y"} 
+; "</code></pre>
+</div>
+</div>
+<h2>SXML </h2><p>streaming, Sax like XML dialect (still in design)</p><div class='section'>
+<h3>rye-reader//do-sxml</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>"&lt;scene&gt;&lt;bot&gt;C3PO&lt;/bot&gt;&lt;bot&gt;R2D2&lt;/bot&gt;&lt;jedi&gt;Luke&lt;/jedi&gt;&lt;/scene&gt;" |reader .do-sxml { _ [ .prns ] }
+; prints "C3PO R2D2 Luke "</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>"&lt;scene&gt;&lt;bot&gt;C3PO&lt;/bot&gt;&lt;bot&gt;R2D2&lt;/bot&gt;&lt;jedi&gt;Luke&lt;/jedi&gt;&lt;/scene&gt;" |reader .do-sxml { &lt;bot&gt; { _ [ .prns ] } }
+; prints "C3PO R2D2 "</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>"&lt;scene&gt;&lt;ship&gt;XWing&lt;/ship&gt;&lt;bot&gt;R2D2&lt;/bot&gt;&lt;jedi&gt;Luke&lt;/jedi&gt;&lt;/scene&gt;" |reader .do-sxml { &lt;bot&gt; &lt;jedi&gt; { _ [ .prns ] } }
+; prints "R2D2 Luke "</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>"&lt;scene&gt;&lt;xwing&gt;&lt;bot&gt;R2D2&lt;/bot&gt;&lt;person&gt;Luke&lt;/person&gt;&lt;/xwing&gt;&lt;destroyer&gt;&lt;person&gt;Vader&lt;/person&gt;&lt;/destroyer&gt;&lt;/scene&gt;" |reader .do-sxml { &lt;xwing&gt; { &lt;person&gt; { _ [ .prns ] } } }
+; prints "Luke "</code></pre>
+</div>
+<h3>rye-sxml-start//attr?</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>"&lt;scene&gt;&lt;ship type="xwing"&gt;&lt;person age="25"&gt;Luke&lt;/person&gt;&lt;/ship&gt;&lt;ship type="destroyer"&gt;&lt;person age="55"&gt;Vader&lt;/person&gt;&lt;/ship&gt;&lt;/scene&gt;" |reader .do-sxml { &lt;ship&gt; [ .attr? 0 |prns ] }
+; prints "xwing destroyer "</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>"&lt;scene&gt;&lt;ship type="xwing"&gt;&lt;person age="25"&gt;Luke&lt;/person&gt;&lt;/ship&gt;&lt;ship type="destroyer"&gt;&lt;person age="55"&gt;Vader&lt;/person&gt;&lt;/ship&gt;&lt;/scene&gt;" |reader .do-sxml { &lt;person&gt; [ .attr? 0 |prns ] }
+; prints "25 55 "</code></pre>
+</div>
+</div>
+<h2>HTML </h2><p>streaming, Sax like HTML dialect (still in design)</p><div class='section'>
+<h3>unescape\html</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>unescape\html "&amp;gt;hello&amp;lt;"
+; returns "&gt;hello&lt;"</code></pre>
+</div>
+<h3>escape\html</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>escape\html "&lt;hello&gt;"
+; returns "&amp;lt;hello&amp;gt;"</code></pre>
+</div>
+<h3>html->markdown</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>html-&gt;markdown "&lt;h1&gt;title&lt;/h1&gt;&lt;p&gt;para&lt;/p&gt;"
+; returns "# title
+; 
+; para"</code></pre>
+</div>
+<h3>rye-reader//parse-html</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>"&lt;html&gt;&lt;body&gt;&lt;div class='menu'&gt;&lt;a href='/'&gt;home&lt;/a&gt;&lt;a href='/about/'&gt;about&lt;/a&gt;" |reader .parse-html { &lt;a&gt; [ .attr? 'href |prns ] }
+; prints "/ /about/ "</code></pre>
+</div>
+</div>
+</main>
+</div>
+<script type="text/javascript">
+var sc_project=12932344; 
+var sc_invisible=1; 
+var sc_security="6e399927"; 
+</script>
+<script type="text/javascript"
+src="https://www.statcounter.com/counter/counter.js"
+async></script>
+<noscript><div class="statcounter"><a title="Web Analytics"
+href="https://statcounter.com/" target="_blank"><img
+class="statcounter"
+src="https://c.statcounter.com/12932344/0/6e399927/1/"
+alt="Web Analytics"
+referrerPolicy="no-referrer-when-downgrade"></a></div></noscript>
+</body>
+</html>

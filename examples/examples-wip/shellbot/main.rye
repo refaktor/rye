@@ -1,7 +1,7 @@
 
 do load %chat-print.rye
 
-do-in term {
+do\in term {
 
 	choice { more "Izvedi več o tem" first "Prikaži prvo nalogo" }
 	

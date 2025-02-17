@@ -45,6 +45,9 @@ tests/*.html
 shell_*.rye
 console_*.rye
 console_*.rye.enc
+temp.*
+*.cast
+*.nogo
 
 buildtemp/main.rye
 *.bson
