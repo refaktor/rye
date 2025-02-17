@@ -107,7 +107,7 @@ func (e RyeCtx) Preview(idxs Idxs, filter string) string {
 			default:
 				color = color_string2
 			}
-			arr = append(arr, str1+": "+reset+color_comment+v.Inspect(idxs)+reset+"|||"+color) // idxs.GetWord(v.GetKind()
+			arr = append(arr, str1+" "+reset+color_comment+v.Inspect(idxs)+reset+"|||"+color) // idxs.GetWord(v.GetKind()
 			// bu.WriteString(" " + idxs.GetWord(k) + ": " + v.Inspect(idxs) + "\n")
 			i += 1
 		}

@@ -17,6 +17,16 @@ section "Boolean logic " "Functions that work with true and false values." {
 		equal { false } 0
 	}
 
+	group "_|" 
+	""
+	{
+	}
+
+	{
+		equal { not true } 0
+		equal { not false } 1
+	}
+
 	group "not" 
 	""
 	{

@@ -2,7 +2,9 @@ package env
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
+	"strings"
 )
 
 // Gen -- generic functions dictionary
@@ -42,4 +44,65 @@ func (e *Gen) Set(kind int, word int, val Object) Object {
 	}
 	e.dict[kind][word] = val
 	return val
+}
+
+func (e *Gen) GetKinds() map[int]int {
+	keys := make(map[int]int)
+	for k, v := range e.dict {
+		keys[k] = len(v)
+	}
+	return keys
+}
+
+func (e *Gen) GetMethods(kind int) []int {
+	meths := make([]int, len(e.dict[kind]))
+	i := 0
+	for k := range e.dict[kind] {
+		meths[i] = k
+		i++
+	}
+	return meths
+}
+
+func (e Gen) PreviewKinds(idxs Idxs, filter string) string {
+	var bu strings.Builder
+	bu.WriteString("Kinds:")
+	arr := make([]string, 0)
+	for k, _ := range e.dict {
+		str1 := idxs.GetWord(k)
+		if strings.Contains(str1, filter) {
+			color := color_word2
+			arr = append(arr, reset+color+str1+reset) // idxs.GetWord(v.GetKind()
+		}
+	}
+	sort.Strings(arr)
+	for aa := range arr {
+		line := arr[aa]
+		//pars := strings.Split(line, "|||")
+		bu.WriteString("\n\r " + line)
+	}
+	return bu.String()
+}
+
+// const color_comment = "\033[38;5;247m"
+
+func (e Gen) PreviewMethods(idxs Idxs, kind int, filter string) string {
+	var bu strings.Builder
+	bu.WriteString("Methods (" + idxs.GetWord(kind) + "):")
+	arr := make([]string, 0)
+	for k, v := range e.dict[kind] {
+		str1 := idxs.GetWord(k)
+		if strings.Contains(str1, filter) {
+			color := color_word2
+			// arr = append(arr, reset+color+str1+reset)                                 // idxs.GetWord(v.GetKind()
+			arr = append(arr, color+str1+" "+reset+color_comment+v.Inspect(idxs)+reset) // idxs.GetWord(v.GetKind()
+		}
+	}
+	sort.Strings(arr)
+	for aa := range arr {
+		line := arr[aa]
+		//pars := strings.Split(line, "|||")
+		bu.WriteString("\n\r " + line)
+	}
+	return bu.String()
 }

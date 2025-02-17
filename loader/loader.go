@@ -349,7 +349,7 @@ func parseOpword(v *Values, d Any) (Any, error) {
 	word := v.Token()
 	force := 0
 	var idx int
-	if len(word) == 1 || word == "<<" || word == "<-" || word == "<~" || word == ">=" || word == "<=" || word == "//" {
+	if len(word) == 1 || word == "<<" || word == "<-" || word == "<~" || word == ">=" || word == "<=" || word == "//" || word == ".." || word == "." || word == "|" {
 		// onecharopwords < > + * ... their naming is equal to _< _> _* ...
 		idx = wordIndex.IndexWord("_" + word)
 	} else {
@@ -399,7 +399,7 @@ func parsePipeword(v *Values, d Any) (Any, error) {
 	word := v.Token()
 	force := 0
 	var idx int
-	if word == ">>" || word == "->" || word == "~>" || word == "-->" {
+	if word == ">>" || word == "->" || word == "~>" || word == "-->" || word == ".." || word == "|" {
 		idx = wordIndex.IndexWord("_" + word)
 	} else {
 		if word[len(word)-1:] == "*" {
@@ -470,7 +470,7 @@ func newParser() *Parser { // TODO -- add string eaddress path url time
 	PIPECPATH    	<-  "\\" WORD ( "/" WORD )+ / "|" WORD ( "/" WORD )+
 	ONECHARWORDS	<-  < [<>*+-=/%] >
 	NORMOPWORDS	    <-  < ("_"[<>*+-=/%]) >
-	PIPEARROWS      <-  ">>" / "~>" / "->"
+	PIPEARROWS      <-  ">>" / "~>" / "->" / "|" / ".."
 	OPARROWS        <-  "<<" / "<~" / "<-" / ">=" / "<=" / "//"
 	LETTER  	    <-  < [a-zA-Z^(` + "`" + `] >
 	LETTERORNUM		<-  < [a-zA-Z0-9-?=.\\!_+<>\]*()] >
