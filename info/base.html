@@ -188,7 +188,7 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 } |+ { "b" 2 }
 ; returns dict { a 1 b 2 }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 } |+ dict { "b" 2 }
-; returns dict { a 1 b 2 }</code></pre>
+; returns dict { b 2 a 1 }</code></pre>
 </div>
 <h3>_-</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>2 - 1
@@ -521,6 +521,14 @@
 ; returns "abcd"</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>head list { 10 20 30 40 } 2
 ; returns list { 10 20 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>head { 4 5 6 7 } -2
+; returns { 4 5 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>head "abcdefg" -1
+; returns "abcdef"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>head "abcdefg" -5
+; returns "ab"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>head list { 10 20 30 40 } -1
+; returns list { 10 20 30 }</code></pre>
 </div>
 <h3>nth</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>nth { 1 2 3 4 5 } 4
@@ -530,7 +538,7 @@
 </div>
 <h3>values</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 "b" 2 "c" 3 } |values
-; returns list { 3 1 2 }</code></pre>
+; returns list { 1 2 3 }</code></pre>
 </div>
 <h3>sort</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>sort { 6 12 1 }

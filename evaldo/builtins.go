@@ -525,6 +525,18 @@ var builtins = map[string]*env.Builtin{
 	// Tests:
 	// equal { not true } 0
 	// equal { not false } 1
+	"_|": {
+		Argsn: 1,
+		Doc:   "Turns a truthy value to a non-truthy and reverse.",
+		Pure:  true,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return arg0
+		},
+	},
+
+	// Tests:
+	// equal { not true } 0
+	// equal { not false } 1
 	"not": {
 		Argsn: 1,
 		Doc:   "Turns a truthy value to a non-truthy and reverse.",
@@ -847,6 +859,25 @@ var builtins = map[string]*env.Builtin{
 	// equal { 5 .mod 2 } 1
 	// equal { 5 .mod 3 } 2
 	"mod": { // ***
+		Argsn: 2,
+		Doc:   "Calculates module (remainder) of two integers.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch a := arg0.(type) {
+			case env.Integer:
+				switch b := arg1.(type) {
+				case env.Integer:
+					return *env.NewInteger(a.Value % b.Value)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "mod")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "mod")
+			}
+		},
+	},
+
+	"_%": { // ***
 		Argsn: 2,
 		Doc:   "Calculates module (remainder) of two integers.",
 		Pure:  true,
@@ -2734,6 +2765,10 @@ var builtins = map[string]*env.Builtin{
 	// equal { head "abcdefg" 2 } "ab"
 	// equal { head "abcdefg" 4 } "abcd"
 	// equal { head list { 10 20 30 40 } 2 } list { 10 20 }
+	// equal { head { 4 5 6 7 } -2 } { 4 5 }
+	// equal { head "abcdefg" -1 } "abcdef"
+	// equal { head "abcdefg" -5 } "ab"
+	// equal { head list { 10 20 30 40 } -1 } list { 10 20 30 }
 	"head": { // **
 		Argsn: 2,
 		Doc:   "Accepts a Block, List or String and an Integer N, returns the first N values.",
@@ -2760,6 +2795,9 @@ var builtins = map[string]*env.Builtin{
 					if len(s1.Data) < numVal {
 						numVal = len(s1.Data)
 					}
+					if numVal < 0 {
+						numVal = len(s1.Data) + numVal // warn: numVal is negative so we must add
+					}
 					return *env.NewList(s1.Data[0:numVal])
 				case env.String:
 					str := []rune(s1.Value)
@@ -2768,6 +2806,9 @@ var builtins = map[string]*env.Builtin{
 					}
 					if len(str) < numVal {
 						numVal = len(str)
+					}
+					if numVal < 0 {
+						numVal = len(str) + numVal // warn: numVal is negative so we must add
 					}
 					return *env.NewString(string(str[0:numVal]))
 				case env.Table:
@@ -5550,6 +5591,58 @@ var builtins = map[string]*env.Builtin{
 			return arg0
 		},
 	},
+	"_..": {
+		Argsn: 1,
+		Doc:   "Work in progress Interactively displays a value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			// This is temporary implementation for experimenting what it would work like at all
+			// later it should belong to the object (and the medium of display, terminal, html ..., it's part of the frontend)
+			term.SaveCurPos()
+			switch bloc := arg0.(type) {
+			case env.Block:
+				obj, esc := term.DisplayBlock(bloc, ps.Idx)
+				if !esc {
+					return obj
+				}
+			case *env.Block:
+				obj, esc := term.DisplayBlock(*bloc, ps.Idx)
+				if !esc {
+					return obj
+				}
+			case env.Dict:
+				obj, esc := term.DisplayDict(bloc, ps.Idx)
+				if !esc {
+					return obj
+				}
+			case *env.Dict:
+				obj, esc := term.DisplayDict(*bloc, ps.Idx)
+				if !esc {
+					return obj
+				}
+			case env.Table:
+				obj, esc := term.DisplayTable(bloc, ps.Idx)
+				if !esc {
+					return obj
+				}
+			case *env.Table:
+				obj, esc := term.DisplayTable(*bloc, ps.Idx)
+				if !esc {
+					return obj
+				}
+			case env.TableRow:
+				obj, esc := term.DisplayTableRow(bloc, ps.Idx)
+				if !esc {
+					return obj
+				}
+			case *env.TableRow:
+				obj, esc := term.DisplayTableRow(*bloc, ps.Idx)
+				if !esc {
+					return obj
+				}
+			}
+			return arg0
+		},
+	},
 	"display\\custom": {
 		Argsn: 2,
 		Doc:   "Work in progress Interactively displays a value.",
@@ -6729,6 +6822,7 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+
 	"lcp\\": {
 		Argsn: 1,
 		Doc:   "Lists words in current context with string filter",
@@ -6797,6 +6891,28 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"lk": {
+		Argsn: 0,
+		Doc:   "Lists available kinds",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			fmt.Println(ps.Gen.PreviewKinds(*ps.Idx, ""))
+			return env.Void{}
+		},
+	},
+
+	"lg": {
+		Argsn: 1,
+		Doc:   "Lists generic words related to specific kind",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Word:
+				fmt.Println(ps.Gen.PreviewMethods(*ps.Idx, s1.Index, ""))
+				return env.Void{}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "ls\\")
+			}
+		},
+	},
 	//
 	// ##### Iteration ##### "Iteration over collections"
 	//

@@ -1,0 +1,58 @@
+
+; HTTP server that accepts IPN requests from PayPal and stores payment info to DB
+; * first it extracts data and validates it
+; * if validation doesn't pass it returns a validation error to the client
+; * it opens a database and creates a table if it's not yet there
+; * it inserts information into the table and retursn OK
+;
+; Code uses SQL and Validation dialects which are the usual part of Ryelang
+
+rye |needs { sqlite http }
+
+assure-requests-table: fn { db } {
+      exec db {
+           CREATE TABLE IF NOT EXISTS requests (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT ,
+                  payment_status varchar(30) ,
+                  business varchar(100) ,
+                  receiver_email varchar(100) ,
+                  mc_gross double ,
+            )
+      }
+}
+
+
+handle-paypal-ipn: fn { w r } {
+	
+	full-form? r |validate {
+		payment_status: required
+		business: required email
+		receiver_email: required email
+		mc_gross: required decimal
+	}
+	|^fix {
+		write-header w 403 ,
+		.to-string .write* w
+	}
+	|pass {
+		db: open sqlite://paypal_ipn.db
+		|assure-requests-table
+	}
+	|to-context .do-in {
+		exec db {
+            insert into requests ( id , payment_status , business , receiver_email , mc_gross  )
+            values               ( null , ?payment_status , ?business , ?receiver_email , ?mc_gross )
+		}
+		close db
+	}
+	write w "OK"
+}
+
+; the server
+http-server ":8080"
+|handle "/paypal-ipn" ?handle-paypal-ipn
+|serve
+
+
+
+

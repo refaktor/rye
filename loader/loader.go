@@ -349,7 +349,7 @@ func parseOpword(v *Values, d Any) (Any, error) {
 	word := v.Token()
 	force := 0
 	var idx int
-	if len(word) == 1 || word == "<<" || word == "<-" || word == "<~" || word == ">=" || word == "<=" || word == "//" {
+	if len(word) == 1 || word == "<<" || word == "<-" || word == "<~" || word == ">=" || word == "<=" || word == "//" || word == ".." || word == "." || word == "|" {
 		// onecharopwords < > + * ... their naming is equal to _< _> _* ...
 		idx = wordIndex.IndexWord("_" + word)
 	} else {
@@ -399,7 +399,7 @@ func parsePipeword(v *Values, d Any) (Any, error) {
 	word := v.Token()
 	force := 0
 	var idx int
-	if word == ">>" || word == "->" || word == "~>" || word == "-->" {
+	if word == ">>" || word == "->" || word == "~>" || word == "-->" || word == ".." || word == "|" {
 		idx = wordIndex.IndexWord("_" + word)
 	} else {
 		if word[len(word)-1:] == "*" {
@@ -443,7 +443,7 @@ func newParser() *Parser { // TODO -- add string eaddress path url time
 	BLOCK       	<-  "{" SPACES SERIES* "}"
 	BBLOCK       	<-  "[" SPACES SERIES* "]"
     GROUP       	<-  "(" SPACES SERIES* ")"
-    SERIES     	<-  (GROUP / COMMENT / URI / EMAIL / STRING / DECIMAL / NUMBER / COMMA / MODWORD / SETWORD / LMODWORD / LSETWORD / ONECHARPIPE / PIPECPATH / PIPEWORD / EXWORD / XWORD / OPCPATH / OPWORD / TAGWORD / CPATH / FPATH / KINDWORD / GENWORD / GETWORD / WORD / VOID / BLOCK / GROUP / BBLOCK / ARGBLOCK ) SPACES
+    SERIES     	<-  (GROUP / COMMENT / URI / EMAIL / STRING / DECIMAL / NUMBER / COMMA / MODWORD / SETWORD / LMODWORD / LSETWORD / ONECHARPIPE / PIPECPATH / PIPEWORD / EXWORD / XWORD / OPCPATH / FPATH / OPWORD / TAGWORD / CPATH / KINDWORD / GENWORD / GETWORD / WORD / VOID / BLOCK / GROUP / BBLOCK / ARGBLOCK ) SPACES
     ARGBLOCK       	<-  "{" WORD ":" WORD "}"
     WORD           	<-  LETTER LETTERORNUM* / NORMOPWORDS
 	GENWORD 		<-  "~" UCLETTER LCLETTERORNUM* 
@@ -464,13 +464,13 @@ func newParser() *Parser { // TODO -- add string eaddress path url time
 	URI    			<-  WORD "://" URIPATH*
 	EMAIL			<-  EMAILPART "@" EMAILPART 
 	EMAILPART		<-  < ([a-zA-Z0-9._]+) >
-	FPATH 	   		<-  "%" URIPATH*
+	FPATH 	   		<-  "%" URIPATH+
 	CPATH    		<-  WORD ( "/" WORD )+
 	OPCPATH    		<-  "." WORD ( "/" WORD )+
 	PIPECPATH    	<-  "\\" WORD ( "/" WORD )+ / "|" WORD ( "/" WORD )+
-	ONECHARWORDS	<-  < [<>*+-=/] >
-	NORMOPWORDS	    <-  < ("_"[<>*+-=/]) >
-	PIPEARROWS      <-  ">>" / "~>" / "->"
+	ONECHARWORDS	<-  < [<>*+-=/%] >
+	NORMOPWORDS	    <-  < ("_"[<>*+-=/%]) >
+	PIPEARROWS      <-  ">>" / "~>" / "->" / "|" / ".."
 	OPARROWS        <-  "<<" / "<~" / "<-" / ">=" / "<=" / "//"
 	LETTER  	    <-  < [a-zA-Z^(` + "`" + `] >
 	LETTERORNUM		<-  < [a-zA-Z0-9-?=.\\!_+<>\]*()] >

@@ -1,0 +1,23 @@
+
+rye |needs { http crypto }
+
+do load %flaskish.rye
+
+get-file: fn { w r } {
+	
+	query? r "key"
+	|^fix { respond w "missing key" 400 }
+	|sha512 :name
+	
+	open %storage/ + name
+	|^fix { respond w "wrong key" 404 }
+	|send-file\attachment w "application/x-pkcs12" "mycert.p12"
+}
+
+http-server ":8080"
+|handle "/get" ?get-file
+|serve
+
+
+; Code after adding two functions to be more in line with
+; Flask example (functions are respond and send-file\attachment)

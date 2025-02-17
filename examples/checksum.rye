@@ -1,0 +1,25 @@
+
+; Luhn's checksum algorithm
+
+luhn-checksum: context {
+
+	calc-luhn-sum: fn { val } {
+		.reverse |map\idx 'i {
+			.to-integer ::x ,
+			either i .is-even {
+				either ( y:: x * 2 ) > 9
+				{ y % 10 |+ y // 10 } { y }
+			} { x }
+		} |sum
+	}
+	
+	stamp: fn { val } {
+		.calc-luhn-sum .mod 10 :z
+		( 10 - z ) % 10 |concat* val
+	}
+
+	check: fn { val } {
+		.tail 1 |to-integer :chk ,
+		.head -1 |calc-luhn-sum + chk |% 10 |= 0
+	}
+}

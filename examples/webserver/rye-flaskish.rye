@@ -1,0 +1,30 @@
+
+rye |needs { http }
+
+respond: fn { w response status } {
+	.write-header status ,
+	.write response
+}
+
+send-file\attachment: fn { file w mime name } {
+	with w {
+		.set-header 'Content-Type mime ,
+		.set-header 'Content-Length probe to-string file .stat .size? ,
+		.set-header 'Content-Disposition "attachment; filename=" + name ,
+		.write-header 200 ,
+		.copy* file ,
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
