@@ -1,0 +1,29 @@
+; Example uploads a file to S3, downloads it, prints the content, and deletes the file.
+; AWS credentials are defined in ~/.aws/credentials
+
+rye .needs { aws }
+
+bucket: "test-bucket-cebelca"
+key: "test-key"
+
+r: reader "Hello, S3!\n"
+
+new-aws-session "us-east-1"
+|open-s3 :client 
+|put-object bucket key r
+
+print "Putting object to S3."
+client |get-object bucket key |read\string "\n" |fix { |print } :content
+print "Got content from S3: " + content
+
+; TODO: how can we close the reader and content?
+
+print "Deleting object from S3."
+client |delete-object bucket key
+
+; check if the object is deleted
+print "Checking if the object is deleted."
+client |get-object bucket key |fix { |print }
+
+
+print "Done."

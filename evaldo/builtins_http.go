@@ -526,7 +526,7 @@ var Builtins_http = map[string]*env.Builtin{
 					file, handler, err := r.FormFile(key.Value)
 					if err != nil {
 						ps.FailureFlag = true
-						return MakeBuiltinError(ps, "Failed to read from file.", "Go-server-request//form-file?")
+						return MakeBuiltinError(ps, fmt.Sprintf("Failed to read from file: '%v'", err.Error()), "Go-server-request//form-file?")
 					}
 					pair := make([]env.Object, 2)
 					pair[0] = *env.NewNative(ps.Idx, file, "rye-reader")
