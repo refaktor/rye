@@ -1,0 +1,62 @@
+; This one will be a doozy, we will parse csv, add columns to the table,
+; make a http server that uses it (in a goroutine), then call that server,
+; parse it's response, and notify folks in response via email
+
+; we will load our team's data from csv file
+load\csv %blindsight.csv
+|display
+
+; we will add two more columns, generate them from existing data
+|add-col! 'fullname { name surname } { name + " " + surname }
+|add-col! 'status { oxygen } { either oxygen .to-integer < 150 { "danger" } { "OK" } }
+|display
+
+; we will create new table with just selected columns
+|columns { 'fullname 'species 'status }
+|display
+:team
+
+; we can filter just the ones in danger
+|where-equal 'species "vampire" |display
+; we can turn it to json
+|to-json
+
+; we will make a closure that returns endangered members
+get-endangered: closure { } { team .where-equal 'status "danger" }
+
+; and a http server handler, we could do that inline
+handler: fn { r w } { .write to-json get-endangered }
+
+; and now we create a web server, but in it's own goroutine, so we can use the shell further 
+go does { http-server ":8080" |handle "/danger" ?handler |serve }
+
+; make a HTTP GET request to the server we've just made
+get http://localhost:8080/danger
+|parse-json :dang
+|first .keys
+
+; get fullnames out of JSON and turn them to email addresses
+dang .map { -> "fullname" }
+|map { .replace " " "." |concat "@refaktorlabs.com" }
+:emails
+
+; We will alert endangered members via email using Postmark API
+
+; first we load the postmark token
+token: first load %.token 
+
+; we make a function that builds our email object
+build-email: fn { email subject } {
+	new-postmark-email
+	|from<- podpora@cebelca.biz
+	|to<- email
+	|subject<- subject
+	|text-body<- ""
+}
+
+;  now we will notify the endangered team members
+for emails { .build-email "OXYGEN LOW" |send open-postmark token }
+	
+
+
+

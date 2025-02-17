@@ -1,0 +1,17 @@
+
+
+game: context {
+
+	x: 0
+	
+	update: fn\par { } current {
+		x:: x + 1 |change! 'x
+		 ; print x
+	}
+
+	draw: fn\par { } current { print x }
+	
+}
+
+
+loop 10 { game/update game/draw }
