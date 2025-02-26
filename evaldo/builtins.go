@@ -4249,7 +4249,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"pick": {
+	"val": {
 		Argsn: 1,
 		Doc:   "Returns value of the word in context",
 		Pure:  true,
@@ -5206,11 +5206,13 @@ var builtins = map[string]*env.Builtin{
 				return &sp
 			case env.String:
 				return &sp
+			case env.RyeCtx:
+				return &sp
 			case env.Native:
 				sp.Value = env.ReferenceAny(sp.Value)
 				return &sp
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType}, "thaw")
+				return MakeArgError(ps, 1, []env.Type{env.TableType, env.DictType, env.ListType, env.BlockType, env.StringType, env.NativeType, env.CtxType}, "deref")
 			}
 		},
 	},
@@ -5241,7 +5243,7 @@ var builtins = map[string]*env.Builtin{
 				sp.Value = env.DereferenceAny(sp.Value)
 				return *sp
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType, env.DictType, env.ListType, env.BlockType, env.StringType, env.NativeType, env.CtxType}, "thaw")
+				return MakeArgError(ps, 1, []env.Type{env.TableType, env.DictType, env.ListType, env.BlockType, env.StringType, env.NativeType, env.CtxType}, "deref")
 			}
 		},
 	},
@@ -6793,6 +6795,29 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"lc\\data": {
+		Argsn: 0,
+		Doc:   "Lists words in current context",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return ps.Ctx.GetWords(*ps.Idx)
+		},
+	},
+
+	"lc\\data\\": {
+		Argsn: 1,
+		Doc:   "Lists words in current context",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch c := arg0.(type) {
+			case env.RyeCtx:
+				return c.GetWords(*ps.Idx)
+			case *env.RyeCtx:
+				return c.GetWords(*ps.Idx)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "parent?")
+			}
+		},
+	},
+
 	"lcp": {
 		Argsn: 0,
 		Doc:   "Lists words in current context",
@@ -6847,11 +6872,11 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.RyeCtx:
-				s1.Parent = ps.Ctx // TODO ... this is temporary so ccp works, but some other method must be figured out as changing the parent is not OK
+				// s1.Parent = ps.Ctx // TODO ... this is temporary so ccp works, but some other method must be figured out as changing the parent is not OK
 				ps.Ctx = &s1
 				return s1
 			case *env.RyeCtx:
-				s1.Parent = ps.Ctx // TODO ... this is temporary so ccp works, but some other method must be figured out as changing the parent is not OK
+				// s1.Parent = ps.Ctx // TODO ... this is temporary so ccp works, but some other method must be figured out as changing the parent is not OK
 				ps.Ctx = s1
 				return s1
 			default:
