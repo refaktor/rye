@@ -66,7 +66,13 @@ func (e RyeCtx) Print(idxs Idxs) string {
 	var bu strings.Builder
 	bu.WriteString("[Context (" + e.Kind.Print(idxs) + ") \"" + e.Doc + "\": ")
 	for k, v := range e.state {
-		bu.WriteString(idxs.GetWord(k) + ": " + v.Inspect(idxs) + " ")
+		bu.WriteString(idxs.GetWord(k) + ": ")
+		ctx, ok := v.(RyeCtx)
+		if ok || &ctx == &e {
+			bu.WriteString(" [self reference] ")
+		} else {
+			bu.WriteString(v.Inspect(idxs) + " ")
+		}
 	}
 	bu.WriteString("]")
 	return bu.String()
@@ -107,7 +113,14 @@ func (e RyeCtx) Preview(idxs Idxs, filter string) string {
 			default:
 				color = color_string2
 			}
-			arr = append(arr, str1+" "+reset+color_comment+v.Inspect(idxs)+reset+"|||"+color) // idxs.GetWord(v.GetKind()
+			var strVal string
+			ctx, ok := v.(RyeCtx)
+			if ok || &ctx == &e {
+				strVal = " [self reference]"
+			} else {
+				strVal = v.Inspect(idxs)
+			}
+			arr = append(arr, str1+" "+reset+color_comment+strVal+reset+"|||"+color) // idxs.GetWord(v.GetKind()
 			// bu.WriteString(" " + idxs.GetWord(k) + ": " + v.Inspect(idxs) + "\n")
 			i += 1
 		}
@@ -140,11 +153,21 @@ func (i RyeCtx) GetKind() int {
 	return i.Kind.Index
 }
 
+func (e RyeCtx) GetWordsAsStrings(idxs Idxs) Block {
+	objs := make([]Object, len(e.state))
+	idx := 0
+	for k := range e.state {
+		objs[idx] = *NewString(idxs.GetWord(k))
+		idx += 1
+	}
+	return *NewBlock(*NewTSeries(objs))
+}
+
 func (e RyeCtx) GetWords(idxs Idxs) Block {
 	objs := make([]Object, len(e.state))
 	idx := 0
 	for k := range e.state {
-		objs[idx] = String{idxs.GetWord(k)}
+		objs[idx] = *NewWord(k)
 		idx += 1
 	}
 	return *NewBlock(*NewTSeries(objs))
@@ -315,6 +338,7 @@ type DoDialect int
 const (
 	Rye2Dialect DoDialect = 1
 	EyrDialect  DoDialect = 2
+	Rye0Dialect DoDialect = 3
 )
 
 func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
