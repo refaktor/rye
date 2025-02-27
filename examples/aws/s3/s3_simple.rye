@@ -13,7 +13,7 @@ new-aws-session "us-east-1"
 |put-object bucket key r
 
 print "Putting object to S3."
-client |get-object bucket key |read\string "\n" |fix { |print } :content
+client |get-object bucket key |read\string |fix { |print } :content
 print "Got content from S3: " + content
 
 ; TODO: how can we close the reader and content?
