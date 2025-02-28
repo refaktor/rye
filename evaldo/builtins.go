@@ -5017,6 +5017,17 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
+	// equal   { kind? %file } 'string
+	"kind?": { // ***
+		Argsn: 1,
+		Doc:   "Returns the type of Rye value as a word.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return *env.NewWord(int(arg0.GetKind()))
+		},
+	},
+
+	// Tests:
 	// equal   { types? { "test" 123 } } { string integer }
 	"types?": { // TODO
 		Argsn: 1,
@@ -6305,6 +6316,12 @@ var builtins = map[string]*env.Builtin{
 	// Tests:
 	// equal  { do { 123 + 123 } } 246
 	// error  { do { 123 + } }
+	// equal  { do { _+ _+ 12 23 34 } } 69
+	// equal  { do { 12 * 23 |+ 34 } } 310
+	// equal  { do { ( 12 * 23 ) + 34 } } 310
+	// equal  { do { 12 * 23 | + 34 } } 310
+	// equal  { do { 12 * 23 :a + 34 } } 310
+	// equal  { do { 12 * 23 :a a + 34 } } 310
 	"do": {
 		Argsn: 1,
 		Doc:   "Takes a block of code and does (runs) it.",

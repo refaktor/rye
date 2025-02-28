@@ -125,7 +125,7 @@ var Builtins_aws = map[string]*env.Builtin{
 							return evaldo.MakeError(ps, "Error getting object: "+err.Error())
 						}
 						// TODO: the output.Body is a reader that is bound to the context, we need to copy it to a new reader
-						return *env.NewNative(ps.Idx, bufio.NewReader(output.Body), "rye-reader")
+						return *env.NewNative(ps.Idx, bufio.NewReader(output.Body), "reader")
 					default:
 						return evaldo.MakeArgError(ps, 3, []env.Type{env.StringType}, "aws-s3-client//get-object")
 					}

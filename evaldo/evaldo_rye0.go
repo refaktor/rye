@@ -5,79 +5,23 @@ import (
 	"strconv"
 
 	"github.com/refaktor/rye/env"
-	//"fmt"
-	//"strconv"
 )
 
-// TODO NEXT -- figure out how to call a builtin function .. look at monkey
-// TODO NEXT -- figure out how to map a builtin function ... directly by word index or by the value after the index?? can the value be Go-s compiled function?
-/*
-type ProgramState struct {
-	Ser env.TSeries
-	Res env.Object
-	Env env.Env
-	Idx env.Idxs
-}
-
-func NewProgramState(ser env.TSeries, idx env.Idxs) *ProgramState {
-	ps := ProgramState{
-		ser,
-		nil,
-		*env.NewEnv(),
-		idx,
-	}
-	return &ps
-}
-*/
-// Rejy0 DO dialect evaluator works like this:
-// literal values (numbers) evaluate to itself
-// blocks return itself, don't evaluate it's contents
-// words are referenced in Env, and evaluate to it's value (which can be a literal, block, word, function or builtin)
-//  word returns it's value and evaluates it
-// functions evaluate by executing, taking objects according to spec setting local Env and evaluating body block
-// builtins evaluate by executing, collecting arguments and calling a builtin function with them
-// setwords take expression on the right and sets an environment reference to that word
-//
-// The basic goal of Rejy0 evaluator is to run fibonacci and (factorial 10000x) and make basic function calls fast enough
-//  Goal is to reach speed similar to Rebol2 and Red
-//
-// Rejy1 and 2 will have a little more complex evaluators with strings, infix, postfix, ...
-// We should keep separate evaluators possible at any time to test for regressions while adding those features
-//
-
-// DESCR: the main evaluator of block
+// Descr: Main evaluator of a block that injects a value
 func Rye0_EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) *env.ProgramState {
-	//fmt.Println("BEFORE BLOCK ***")
 	// repeats until at the end of the block
 	for ps.Ser.Pos() < ps.Ser.Len() {
-		//fmt.Println("EVALBLOCK: " + strconv.FormatInt(int64(es.Ser.Pos()), 10))
-		//fmt.Println("EVALBLOCK N: " + strconv.FormatInt(int64(es.Ser.Len()), 10))
-		// TODO --- look at JS code for eval .. what state we carry around
-		// TODO --- probably block, position, env ... pack all this into one struct
-		//		--- that could be passed in and returned from eval functions (I think)
-		// evaluate expression
+		// evaluate expression at the block cursor
 		ps, injnow = Rye0_EvalExpressionInj(ps, inj, injnow)
-		// check and raise the flags if needed if true (error) return
-		// --- 20201213: removed because require didn't really work :	if checkFlagsAfterBlock(ps, 101) {
-		// we could add current error, block and position to the trace
-		//		return ps
-		//	}
+		// If flags raised return program state
 		if checkFlagsAfterBlock(ps, 101) {
 			return ps
 		}
-		// if return flag was raised return ( errorflag I think would return in previous if anyway)
-		// --- 20201213 --
 		if checkErrorReturnFlag(ps) {
 			return ps
 		}
 		//ps, injnow = MaybeAcceptComma(ps, inj, injnow)
-		//es.Res.Trace("After eval expression")
 	}
-	// added here from above 20201213
-	//if checkErrorReturnFlag(ps) {
-	//	return ps
-	//}
-	//es.Inj = nil
 	return ps
 }
 
@@ -86,17 +30,9 @@ func Rye0_EvalExpression2(ps *env.ProgramState, limited bool) *env.ProgramState 
 	if ps.ReturnFlag {
 		return ps
 	}
-	////// OPWORDWWW
-	// IF WE COMMENT IN NEXT LINE IT WORKS WITHOUT OPWORDS PROCESSING
-	//fmt.Println("EvalExpression")
-	//fmt.Println(es.Ser.GetPos())
-	return ps // MaybeEvalOpwordOnRight(esleft.Ser.Peek(), esleft, limited)
-	//return esleft
+	return ps
 }
 
-// I don't fully get this function in this review ... it's this way so it handles op and pipe words
-// mainly, but I need to get deeper again to write a proper explanation
-// TODO -- return to this and explain
 func Rye0_EvalExpressionInj(ps *env.ProgramState, inj env.Object, injnow bool) (*env.ProgramState, bool) {
 	var esleft *env.ProgramState
 	if inj == nil || !injnow {
@@ -111,18 +47,8 @@ func Rye0_EvalExpressionInj(ps *env.ProgramState, inj env.Object, injnow bool) (
 		esleft = ps
 		esleft.Res = inj
 		injnow = false
-		if ps.ReturnFlag { //20200817
-			return ps, injnow
-		}
-		//esleft.Inj = nil
 	}
-	////// OPWORDWWW
-	// IF WE COMMENT IN NEXT LINE IT WORKS WITHOUT OPWORDS PROCESSING
-	//fmt.Println("EvalExpression")
-	//fmt.Println(es.Ser.GetPos())
-	// trace2("Calling Maybe from EvalExp Inj")
 	return ps, injnow
-	//return esleft
 }
 
 // the main part of evaluator, if it were a polish only we would need almost only this
