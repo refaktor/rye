@@ -12,7 +12,7 @@ import (
 
 var Builtins_mail = map[string]*env.Builtin{
 
-	"rye-reader//parse-email": {
+	"reader//parse-email": {
 		Argsn: 1,
 		Doc:   "Parse email.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -20,11 +20,11 @@ var Builtins_mail = map[string]*env.Builtin{
 			case env.Native:
 				email, err := parsemail.Parse(reader.Value.(io.Reader))
 				if err != nil {
-					return MakeBuiltinError(ps, err.Error(), "rye-reader//parse-email")
+					return MakeBuiltinError(ps, err.Error(), "reader//parse-email")
 				}
 				return *env.NewNative(ps.Idx, email, "parsed-email")
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "rye-reader//parse-email")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "reader//parse-email")
 			}
 		},
 	},

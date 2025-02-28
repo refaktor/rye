@@ -49,7 +49,7 @@ var Builtins_smtpd = map[string]*env.Builtin{
 								for i, v := range to {
 									lstTo[i] = v
 								}
-								CallFunctionArgs4(handler, ps, *env.NewNative(ps.Idx, bytes.NewReader(data), "rye-reader"), env.NewString(from), *env.NewList(lstTo), *env.NewNative(ps.Idx, origin, "new-addr"), nil)
+								CallFunctionArgs4(handler, ps, *env.NewNative(ps.Idx, bytes.NewReader(data), "reader"), env.NewString(from), *env.NewList(lstTo), *env.NewNative(ps.Idx, origin, "new-addr"), nil)
 								//msg, _ := mail.ReadMessage(bytes.NewReader(data))
 								//subject := msg.Header.Get("Subject")
 								//log.Printf("Received mail from %s for %s with subject %s", from, to[0], subject)

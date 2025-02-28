@@ -38,6 +38,11 @@ func FileExists(filePath string) int {
 
 var Builtins_os = map[string]*env.Builtin{
 
+	//
+	// ##### OS ##### "OS related functions"
+	//
+	// Tests:
+	// equal { cd %/tmp cwd? } %/tmp
 	"cwd?": {
 		Argsn: 0,
 		Doc:   "Returns current working directory.",
@@ -50,6 +55,8 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { cd %/tmp cwd? } %/tmp
 	"cd": {
 		Argsn: 1,
 		Doc:   "Changes current directory.",
@@ -109,6 +116,8 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	}, */
 
+	// Tests:
+	// equal { mkdir %/delme } %/delme
 	"mkdir": {
 		Argsn: 1,
 		Doc:   "Creates a directory.",

@@ -1410,6 +1410,15 @@ section "Values and Types " "" {
 		equal   { type? 123.4 } 'decimal
 	}
 
+	group "kind?" 
+	""
+	{
+	}
+
+	{
+		equal   { kind? %file } 'file-schema
+	}
+
 	group "types?" 
 	""
 	{
@@ -1727,6 +1736,12 @@ section "Flow control " "" {
 	{
 		equal  { do { 123 + 123 } } 246
 		error  { do { 123 + } }
+		equal  { do { _+ _+ 12 23 34 } } 69
+		equal  { do { 12 * 23 |+ 34 } } 310
+		equal  { do { ( 12 * 23 ) + 34 } } 310
+		equal  { do { 12 * 23 | + 34 } } 310
+		equal  { do { 12 * 23 :a + 34 } } 310
+		equal  { do { 12 * 23 :a a + 34 } } 310
 	}
 
 	group "try" 
