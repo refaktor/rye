@@ -5017,7 +5017,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal   { kind? %file } 'string
+	// equal   { kind? %file } 'file-schema
 	"kind?": { // ***
 		Argsn: 1,
 		Doc:   "Returns the type of Rye value as a word.",

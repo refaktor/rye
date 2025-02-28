@@ -1416,7 +1416,7 @@ section "Values and Types " "" {
 	}
 
 	{
-		equal   { kind? %file } 'string
+		equal   { kind? %file } 'file-schema
 	}
 
 	group "types?" 
