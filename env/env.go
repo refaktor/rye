@@ -118,7 +118,7 @@ func (e RyeCtx) Preview(idxs Idxs, filter string) string {
 			if ok || &ctx == &e {
 				strVal = " [self reference]"
 			} else {
-				strV	al = v.Inspect(idxs)
+				strVal = v.Inspect(idxs)
 			}
 			arr = append(arr, str1+" "+reset+color_comment+strVal+reset+"|||"+color) // idxs.GetWord(v.GetKind()
 			// bu.WriteString(" " + idxs.GetWord(k) + ": " + v.Inspect(idxs) + "\n")
