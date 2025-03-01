@@ -11,6 +11,7 @@ require (
 	github.com/atotto/clipboard v0.1.4
 	github.com/aws/aws-sdk-go-v2 v1.36.1
 	github.com/aws/aws-sdk-go-v2/config v1.29.4
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.76.1
 	github.com/aws/aws-sdk-go-v2/service/ses v1.29.9
 	github.com/bitfield/script v0.24.0
 	github.com/blevesearch/bleve/v2 v2.4.4
@@ -20,7 +21,7 @@ require (
 	github.com/fsnotify/fsnotify v1.8.0
 	github.com/gliderlabs/ssh v0.3.8
 	github.com/go-gomail/gomail v0.0.0-20160411212932-81ebce5c23df
-	github.com/go-sql-driver/mysql v1.8.1
+	github.com/go-sql-driver/mysql v1.9.0
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/gobwas/ws v1.4.0
 	github.com/gorilla/sessions v1.4.0
@@ -65,7 +66,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.6.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.13 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.18.13 // indirect
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.76.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.24.14 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.28.13 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.12 // indirect
