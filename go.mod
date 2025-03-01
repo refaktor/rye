@@ -11,6 +11,7 @@ require (
 	github.com/atotto/clipboard v0.1.4
 	github.com/aws/aws-sdk-go-v2 v1.36.1
 	github.com/aws/aws-sdk-go-v2/config v1.29.4
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.76.1
 	github.com/aws/aws-sdk-go-v2/service/ses v1.29.9
 	github.com/bitfield/script v0.24.0
 	github.com/blevesearch/bleve/v2 v2.4.4
@@ -37,7 +38,7 @@ require (
 	github.com/muesli/reflow v0.3.0
 	github.com/pkg/term v1.2.0-beta.2.0.20211217091447-1a4a3b719465
 	github.com/refaktor/go-peg v0.0.0-20220116201714-31e3dfa8dc7d
-	github.com/sashabaranov/go-openai v1.36.1
+	github.com/sashabaranov/go-openai v1.38.0
 	github.com/shirou/gopsutil/v3 v3.24.5
 	github.com/thomasberger/parsemail v1.2.7
 	github.com/xuri/excelize/v2 v2.9.0
@@ -65,7 +66,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.6.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.13 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.18.13 // indirect
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.76.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.24.14 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.28.13 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.12 // indirect
