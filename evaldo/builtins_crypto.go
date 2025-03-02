@@ -301,74 +301,100 @@ var Builtins_crypto = map[string]*env.Builtin{
 
 	"age-encrypt": {
 		Argsn: 2,
-		Doc:   "Encrypts a file with age for the provided recipient.",
+		Doc:   "Encrypts a reader with age for the provided age recipient or string password and returns a reader.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			// TODO accept a reader?
-			switch buff := arg0.(type) {
-			case env.String:
+			switch r := arg0.(type) {
+			case env.Native:
+				if ps.Idx.GetWord(r.GetKind()) != "rye-reader" {
+					ps.FailureFlag = true
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "age-encrypt")
+				}
+				reader := r.Value.(io.Reader)
+				var recipient age.Recipient
 				switch rec := arg1.(type) {
 				case env.Native:
 					if ps.Idx.GetWord(rec.GetKind()) != "age-recipient" {
 						ps.FailureFlag = true
 						return MakeArgError(ps, 1, []env.Type{env.NativeType}, "age-encrypt")
 					}
-					recipient := rec.Value.(*age.X25519Recipient)
-					buf := new(bytes.Buffer)
-					w, err := age.Encrypt(buf, recipient)
+					recipient = rec.Value.(*age.X25519Recipient)
+				case env.String:
+					var err error
+					recipient, err = age.NewScryptRecipient(rec.Value)
 					if err != nil {
 						ps.FailureFlag = true
-						return MakeBuiltinError(ps, "Error in encrypting: "+err.Error(), "age-encrypt")
+						return MakeBuiltinError(ps, "Error in creating recipient: "+err.Error(), "age-encrypt")
 					}
-					if _, err := w.Write([]byte(buff.Value)); err != nil {
-						ps.FailureFlag = true
-						return MakeBuiltinError(ps, "Error in writing to buffer: "+err.Error(), "age-encrypt")
-					}
-					w.Close()
-					return *env.NewString(hex.EncodeToString(buf.Bytes()))
-					// return *env.NewNative(ps.Idx, buf.Bytes(), "Go-bytes")
+				default:
+					ps.FailureFlag = true
+					return MakeArgError(ps, 1, []env.Type{env.NativeType, env.StringType}, "age-encrypt")
 				}
+				buf := new(bytes.Buffer)
+				w, err := age.Encrypt(buf, recipient)
+				if err != nil {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Error in encrypting: "+err.Error(), "age-encrypt")
+				}
+
+				data, err := io.ReadAll(reader)
+				if err != nil {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Error reading from reader: "+err.Error(), "age-encrypt")
+				}
+
+				if _, err := w.Write(data); err != nil {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Error in writing to buffer: "+err.Error(), "age-encrypt")
+				}
+				w.Close()
+				return *env.NewNative(ps.Idx, bytes.NewReader(buf.Bytes()), "rye-reader")
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "age-encrypt")
 			}
-			// TODO type error handling
-			return nil
 		},
 	},
 
 	"age-decrypt": {
 		Argsn: 2,
-		Doc:   "Decrypts a file with age with the provided identity.",
+		Doc:   "Decrypts a reader with age with the provided age identity or string password and returns a reader.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch buff := arg0.(type) {
-			case env.String:
+			switch r := arg0.(type) {
+			case env.Native:
+				if ps.Idx.GetWord(r.GetKind()) != "rye-reader" {
+					ps.FailureFlag = true
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "age-decrypt")
+				}
+				reader := r.Value.(io.Reader)
+				var identity age.Identity
 				switch ident := arg1.(type) {
 				case env.Native:
 					if ps.Idx.GetWord(ident.GetKind()) != "age-identity" {
 						ps.FailureFlag = true
 						return MakeArgError(ps, 1, []env.Type{env.NativeType}, "age-decrypt")
 					}
-					identity := ident.Value.(*age.X25519Identity)
-					// TODO this is just for testing
-					b, err := hex.DecodeString(buff.Value)
+					identity = ident.Value.(*age.X25519Identity)
+				case env.String:
+					var err error
+					identity, err = age.NewScryptIdentity(ident.Value)
 					if err != nil {
 						ps.FailureFlag = true
-						return MakeBuiltinError(ps, "Error in decoding string: "+err.Error(), "age-decrypt")
+						return MakeBuiltinError(ps, "Error in creating identity: "+err.Error(), "age-decrypt")
 					}
-					buf := bytes.NewBuffer(b)
-					r, err := age.Decrypt(buf, identity)
-					if err != nil {
-						ps.FailureFlag = true
-						return MakeBuiltinError(ps, "Error in decrypting: "+err.Error(), "age-decrypt")
-					}
-					bs, err := io.ReadAll(r)
-					if err != nil {
-						ps.FailureFlag = true
-						return MakeBuiltinError(ps, "Error in reading from buffer: "+err.Error(), "age-decrypt")
-					}
-					// return *env.NewNative(ps.Idx, bs, "Go-bytes")
-					return *env.NewString(hex.EncodeToString(bs))
+				default:
+					ps.FailureFlag = true
+					return MakeArgError(ps, 1, []env.Type{env.NativeType, env.StringType}, "age-decrypt")
 				}
+				decrypted, err := age.Decrypt(reader, identity)
+				if err != nil {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Error in decrypting: "+err.Error(), "age-decrypt")
+				}
+				return *env.NewNative(ps.Idx, decrypted, "rye-reader")
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "age-decrypt")
 			}
-			// TODO type error handling
-			return nil
 		},
 	},
 }

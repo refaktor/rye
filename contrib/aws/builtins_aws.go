@@ -4,7 +4,6 @@
 package aws
 
 import (
-	"bufio"
 	"bytes"
 	"io"
 	"time"
@@ -124,8 +123,13 @@ var Builtins_aws = map[string]*env.Builtin{
 						if err != nil {
 							return evaldo.MakeError(ps, "Error getting object: "+err.Error())
 						}
+						defer output.Body.Close()
 						// TODO: the output.Body is a reader that is bound to the context, we need to copy it to a new reader
-						return *env.NewNative(ps.Idx, bufio.NewReader(output.Body), "rye-reader")
+						b, err := io.ReadAll(output.Body)
+						if err != nil {
+							return evaldo.MakeError(ps, "Error reading object: "+err.Error())
+						}
+						return *env.NewNative(ps.Idx, bytes.NewReader(b), "rye-reader")
 					default:
 						return evaldo.MakeArgError(ps, 3, []env.Type{env.StringType}, "aws-s3-client//get-object")
 					}
