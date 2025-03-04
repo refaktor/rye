@@ -4,11 +4,15 @@
 package evaldo
 
 import (
+	"bytes"
 	"crypto/ed25519"
 	"crypto/sha512"
 	"encoding/hex"
+	"io"
 
 	"github.com/refaktor/rye/env"
+
+	"filippo.io/age"
 )
 
 /* Our strategy to only support signed files
@@ -212,6 +216,206 @@ var Builtins_crypto = map[string]*env.Builtin{
 			default:
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "sha512")
+			}
+		},
+	},
+
+	//
+	// ##### Age ##### "Age encryption/decryption and key generation"
+	//
+	// Tests:
+	// equal { age-generate-keys |first |type? } 'native
+	// equal { age-generate-keys |first |kind? } 'age-identity
+	// equal { age-generate-keys |second |type? } 'native
+	// equal { age-generate-keys |second |kind? } 'age-recipient
+	"age-generate-keys": {
+		Argsn: 0,
+		Doc:   "Generates a new age key pair (identity and recipient).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			identity, err := age.GenerateX25519Identity()
+			if err != nil {
+				ps.FailureFlag = true
+				return MakeBuiltinError(ps, "Failed to generate key pair.", "age-generate-keys")
+			}
+			keys := make([]env.Object, 2)
+			keys[0] = *env.NewNative(ps.Idx, identity, "age-identity")
+			keys[1] = *env.NewNative(ps.Idx, identity.Recipient(), "age-recipient")
+			ser := *env.NewTSeries(keys)
+			return *env.NewBlock(ser)
+		},
+	},
+
+	// Tests:
+	// equal { age-identity "AGE-SECRET-KEY-1UMNMNLE5ADV4V0X8LRMG4GVWM3WJ7GVH6JP3J2XSRDFENLJVVX4SDLWXML" |type? } 'native
+	// equal { age-identity "AGE-SECRET-KEY-1UMNMNLE5ADV4V0X8LRMG4GVWM3WJ7GVH6JP3J2XSRDFENLJVVX4SDLWXML" |kind? } 'age-identity
+	// equal { age-identity "invalid" |disarm |type? } 'error
+	"age-identity": {
+		Argsn: 1,
+		Doc:   "Creates an age identity from a string or bytes.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var identity *age.X25519Identity
+			var err error
+			switch ident := arg0.(type) {
+			case env.Native:
+				if ps.Idx.GetWord(ident.GetKind()) != "Go-bytes" {
+					ps.FailureFlag = true
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "age-identity")
+				}
+				identity, err = age.ParseX25519Identity(hex.EncodeToString(ident.Value.([]byte)))
+				if err != nil {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Error in parsing identity: "+err.Error(), "age-identity")
+				}
+			case env.String:
+				identity, err = age.ParseX25519Identity(ident.Value)
+				if err != nil {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Error in decoding string: "+err.Error(), "age-identity")
+				}
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType, env.StringType}, "age-identity")
+			}
+			return *env.NewNative(ps.Idx, identity, "age-identity")
+		},
+	},
+
+	// Tests:
+	// equal { age-recipient "age1zwya0qq8c824n5ncxppekrm4egk6gnvfhag6dmr87xjqaeuwlsgq68mqj4" |type? } 'native
+	// equal { age-recipient "age1zwya0qq8c824n5ncxppekrm4egk6gnvfhag6dmr87xjqaeuwlsgq68mqj4" |kind? } 'age-recipient
+	// equal { age-recipient "invalid" |disarm |type? } 'error
+	"age-recipient": {
+		Argsn: 1,
+		Doc:   "Creates an age recipient from a string or bytes.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var recipient *age.X25519Recipient
+			var err error
+			switch rec := arg0.(type) {
+			case env.Native:
+				if ps.Idx.GetWord(rec.GetKind()) != "Go-bytes" {
+					ps.FailureFlag = true
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "age-recipient")
+				}
+				recipient, err = age.ParseX25519Recipient(hex.EncodeToString(rec.Value.([]byte)))
+				if err != nil {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Error in parsing recipient: "+err.Error(), "age-recipient")
+				}
+			case env.String:
+				recipient, err = age.ParseX25519Recipient(rec.Value)
+				if err != nil {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Error in decoding string: "+err.Error(), "age-recipient")
+				}
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType, env.StringType}, "age-recipient")
+			}
+			return *env.NewNative(ps.Idx, recipient, "age-recipient")
+		},
+	},
+
+	// Tests:
+	// equal {
+	//     age-generate-keys |set! { identity recipient }
+	//     "SUPER SECRET" |reader |age-encrypt recipient |age-decrypt identity |read\string
+	// } "SUPER SECRET"
+	// equal { "SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |read\string } "SUPER SECRET"
+	"age-encrypt": {
+		Argsn: 2,
+		Doc:   "Encrypts a reader with age for the provided age recipient or string password and returns a reader.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch r := arg0.(type) {
+			case env.Native:
+				if ps.Idx.GetWord(r.GetKind()) != "reader" {
+					ps.FailureFlag = true
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "age-encrypt")
+				}
+				reader := r.Value.(io.Reader)
+				var recipient age.Recipient
+				switch rec := arg1.(type) {
+				case env.Native:
+					if ps.Idx.GetWord(rec.GetKind()) != "age-recipient" {
+						ps.FailureFlag = true
+						return MakeArgError(ps, 1, []env.Type{env.NativeType}, "age-encrypt")
+					}
+					recipient = rec.Value.(*age.X25519Recipient)
+				case env.String:
+					var err error
+					recipient, err = age.NewScryptRecipient(rec.Value)
+					if err != nil {
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, "Error in creating recipient: "+err.Error(), "age-encrypt")
+					}
+				default:
+					ps.FailureFlag = true
+					return MakeArgError(ps, 1, []env.Type{env.NativeType, env.StringType}, "age-encrypt")
+				}
+				buf := new(bytes.Buffer)
+				w, err := age.Encrypt(buf, recipient)
+				if err != nil {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Error in encrypting: "+err.Error(), "age-encrypt")
+				}
+
+				data, err := io.ReadAll(reader)
+				if err != nil {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Error reading from reader: "+err.Error(), "age-encrypt")
+				}
+
+				if _, err := w.Write(data); err != nil {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Error in writing to buffer: "+err.Error(), "age-encrypt")
+				}
+				w.Close()
+				return *env.NewNative(ps.Idx, bytes.NewReader(buf.Bytes()), "reader")
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "age-encrypt")
+			}
+		},
+	},
+
+	"age-decrypt": {
+		Argsn: 2,
+		Doc:   "Decrypts a reader with age with the provided age identity or string password and returns a reader.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch r := arg0.(type) {
+			case env.Native:
+				if ps.Idx.GetWord(r.GetKind()) != "reader" {
+					ps.FailureFlag = true
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "age-decrypt")
+				}
+				reader := r.Value.(io.Reader)
+				var identity age.Identity
+				switch ident := arg1.(type) {
+				case env.Native:
+					if ps.Idx.GetWord(ident.GetKind()) != "age-identity" {
+						ps.FailureFlag = true
+						return MakeArgError(ps, 1, []env.Type{env.NativeType}, "age-decrypt")
+					}
+					identity = ident.Value.(*age.X25519Identity)
+				case env.String:
+					var err error
+					identity, err = age.NewScryptIdentity(ident.Value)
+					if err != nil {
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, "Error in creating identity: "+err.Error(), "age-decrypt")
+					}
+				default:
+					ps.FailureFlag = true
+					return MakeArgError(ps, 1, []env.Type{env.NativeType, env.StringType}, "age-decrypt")
+				}
+				decrypted, err := age.Decrypt(reader, identity)
+				if err != nil {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Error in decrypting: "+err.Error(), "age-decrypt")
+				}
+				return *env.NewNative(ps.Idx, decrypted, "reader")
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "age-decrypt")
 			}
 		},
 	},

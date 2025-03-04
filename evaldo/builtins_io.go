@@ -557,31 +557,25 @@ var Builtins_io = map[string]*env.Builtin{
 	// TODO: add scanner ScanString method ... look at: https://stackoverflow.com/questions/47479564/go-bufio-readstring-in-loop-is-infinite
 
 	// Tests:
-	// equal { reader "some\nstring" |read\string "\n" } "some\n"
+	// equal { reader "some string" |read\string } "some string"
 	"reader//read\\string": {
-		Argsn: 2,
-		Doc:   "Read string from a reader up to the first character of the ending string.",
+		Argsn: 1,
+		Doc:   "Read string from a reader and return it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch r := arg0.(type) {
 			case env.Native:
-				switch ending := arg1.(type) {
-				case env.String:
-					// Writer , Reader
-					reader, ok := r.Value.(*bufio.Reader)
-					if !ok {
-						ps.FailureFlag = true
-						return MakeBuiltinError(ps, "Not Reader", "__read\\string")
-					}
-					inp, err := reader.ReadString(ending.Value[0])
-					if err != nil {
-						ps.FailureFlag = true
-						return MakeBuiltinError(ps, err.Error(), "__read\\string")
-					}
-					return *env.NewString(inp)
-				default:
+				reader, ok := r.Value.(io.Reader)
+				if !ok {
 					ps.FailureFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.NativeType}, "__read\\string")
+					return MakeBuiltinError(ps, "Not Reader", "__read\\string")
 				}
+				buf := new(strings.Builder)
+				_, err := io.Copy(buf, reader)
+				if err != nil {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, err.Error(), "__read\\string")
+				}
+				return *env.NewString(buf.String())
 			default:
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "__read\\string")

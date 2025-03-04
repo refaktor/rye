@@ -371,7 +371,7 @@ var Builtins_http = map[string]*env.Builtin{
 						return MakeBuiltinError(ps, "Key is missing.", "Go-server-request//query?")
 					}
 					//return env.NewError("XOSADOSADOA SDAS DO" + key.Value)
-					return env.NewString(vals[0])
+					return *env.NewString(vals[0])
 				default:
 					ps.FailureFlag = true
 					return MakeArgError(ps, 2, []env.Type{env.StringType}, "Go-server-request//query?")

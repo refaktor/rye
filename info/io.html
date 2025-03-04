@@ -1,0 +1,136 @@
+<html>
+  <head>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,700|Roboto:300,400,700&subset=latin-ext' rel='stylesheet' type='text/css'>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Londrina+Solid:wght@300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="tpl/main.3.css?a001" />
+    <link rel="stylesheet" href="tpl/styles.css?a001" />
+    <script src="tpl/menu.js?a001"></script>
+    <script src="tpl/jsGoo.js"></script>
+    <!-- syntax highlighting -->
+    <link rel="stylesheet" type="text/css" href="tpl/desert.css" />
+    <script type="text/javascript" src="./tpl/run_prettify.js"></script>
+    <script type="text/javascript" src="./tpl/lang-rye.js"></script>
+    <!-- syntax highlightinh end -->
+  </head>
+  <body onload="generateMenu(); styleCurrentTab();">
+    <!--div id="menu-holder">
+	</div-->
+    <!--p>
+      <a href="/">main page</a>
+    </p>
+    <h1>Rye reference: Io</h1-->
+    <div class="container">
+      <aside class="sidebar" id="menu-holder">
+        <nav>
+          <ul>
+            <li><a href="https://ryelang.org">← Home</a>  &middot; <a class='menu-item' id='maintab-base' href='base.html'>base</a> &middot; <a class='menu-item' id='maintab-table' href='table.html'>table</a> &middot; <a class='menu-item' id='maintab-formats' href='formats.html'>formats</a> &middot; <a class='menu-item' id='maintab-io' href='io.html'>io</a> &middot; <a class='menu-item' id='maintab-crypto' href='crypto.html'>crypto</a></li>
+            <!-- More menu items here -->
+          </ul>
+        </nav>
+	<p>
+	  This is Rye function reference generated from unit tests in info/ folder. Examples can be little dry, but they are short and correct.
+	</p>
+	<h3>Functions</h3>
+      </aside>
+      <main class="content">
+        
+<h2>Default</h2><p></p><div class='section'>
+</div>
+<h2>IO </h2><p>IO related functions</p><div class='section'>
+<h3>file-schema//open</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>open file://data/file.txt |type?
+; returns native</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>open file://data/file.txt |kind?
+; returns file</code></pre>
+</div>
+<h3>file-schema//open\append</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>open\append file://data/file.txt |type?
+; returns native</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>open\append file://data/file.txt |kind?
+; returns writer</code></pre>
+</div>
+<h3>file-schema//create</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>create file://data/created.txt |type?
+; returns native</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>create file://data/created.txt |kind?
+; returns file</code></pre>
+</div>
+<h3>file-ext?</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>file-ext? file://data/file.txt
+; returns ".txt"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>file-ext? file://data/file.temp.png
+; returns ".png"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>file-ext? "data/file.temp.png"
+; returns ".png"</code></pre>
+</div>
+<h3>reader</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>reader file://data/file.txt |kind?
+; returns reader</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>reader open file://data/file.txt |kind?
+; returns reader</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>reader "some string" |kind?
+; returns reader</code></pre>
+</div>
+<h3>reader//read\string</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>reader "some string" |read\string
+; returns "some string"</code></pre>
+</div>
+<h3>file//stat</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>stat open file://data/file.txt |kind?
+; returns file-info</code></pre>
+</div>
+<h3>file-info//size?</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>size? stat open file://data/file.txt
+; returns 16</code></pre>
+</div>
+<h3>file//read-all</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>read-all open file://data/file.txt
+; returns "hello text file
+; "</code></pre>
+</div>
+<h3>file//close</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>close open file://data/file.txt
+; returns ""</code></pre>
+</div>
+<h3>file-schema//read</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>read file://data/file.txt
+; returns "hello text file
+; "</code></pre>
+</div>
+<h3>file-schema//read\bytes</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>read file://data/file.txt
+; returns "hello text file
+; "</code></pre>
+</div>
+<h3>file-schema//read\lines</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>read file://data/file.txt
+; returns "hello text file
+; "</code></pre>
+</div>
+<h3>file-schema//write</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>write file://data/write.txt "written
+"
+; returns "written
+; "</code></pre>
+</div>
+</div>
+</main>
+</div>
+<script type="text/javascript">
+var sc_project=12932344; 
+var sc_invisible=1; 
+var sc_security="6e399927"; 
+</script>
+<script type="text/javascript"
+src="https://www.statcounter.com/counter/counter.js"
+async></script>
+<noscript><div class="statcounter"><a title="Web Analytics"
+href="https://statcounter.com/" target="_blank"><img
+class="statcounter"
+src="https://c.statcounter.com/12932344/0/6e399927/1/"
+alt="Web Analytics"
+referrerPolicy="no-referrer-when-downgrade"></a></div></noscript>
+</body>
+</html>

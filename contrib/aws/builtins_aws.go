@@ -4,7 +4,6 @@
 package aws
 
 import (
-	"bufio"
 	"bytes"
 	"io"
 	"time"
@@ -67,15 +66,15 @@ var Builtins_aws = map[string]*env.Builtin{
 					case env.String:
 						switch r := arg3.(type) {
 						case env.Native:
-							reader, ok := r.Value.(*bufio.Reader)
+							reader, ok := r.Value.(io.Reader)
 							if !ok {
 								return evaldo.MakeError(ps, "Reader argument is not a reader")
 							}
-							readerCopy := *reader
+							readerCopy := reader
 							// Read all content into a buffer to get the size, we need it to call PutObject for buffered readers
 							// TODO: This is definitely not OK and just temporary!
 							// 	     Think about if we want to limit this function to only work with non-buffered readers or files.
-							content, err := io.ReadAll(&readerCopy)
+							content, err := io.ReadAll(readerCopy)
 							if err != nil {
 								return evaldo.MakeError(ps, "Error reading reader: "+err.Error())
 							}
@@ -124,8 +123,13 @@ var Builtins_aws = map[string]*env.Builtin{
 						if err != nil {
 							return evaldo.MakeError(ps, "Error getting object: "+err.Error())
 						}
+						defer output.Body.Close()
 						// TODO: the output.Body is a reader that is bound to the context, we need to copy it to a new reader
-						return *env.NewNative(ps.Idx, bufio.NewReader(output.Body), "reader")
+						b, err := io.ReadAll(output.Body)
+						if err != nil {
+							return evaldo.MakeError(ps, "Error reading object: "+err.Error())
+						}
+						return *env.NewNative(ps.Idx, bytes.NewReader(b), "reader")
 					default:
 						return evaldo.MakeArgError(ps, 3, []env.Type{env.StringType}, "aws-s3-client//get-object")
 					}
