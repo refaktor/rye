@@ -220,6 +220,12 @@ var Builtins_crypto = map[string]*env.Builtin{
 		},
 	},
 
+	//
+	// ##### Age ##### "Age encryption/decryption and key generation"
+	//
+	// Tests:
+	// equal { age-generate-keys |first |type? } 'native
+	// equal { age-generate-keys |second |type? } 'native
 	"age-generate-keys": {
 		Argsn: 0,
 		Doc:   "Generates a new age key pair (identity and recipient).",
@@ -237,6 +243,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { age-identity "AGE-SECRET-KEY-1UMNMNLE5ADV4V0X8LRMG4GVWM3WJ7GVH6JP3J2XSRDFENLJVVX4SDLWXML" |type? } 'native
+	// equal { age-identity "invalid" |disarm |type? } 'error
 	"age-identity": {
 		Argsn: 1,
 		Doc:   "Creates an age identity from a string or bytes.",
@@ -268,6 +277,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { age-recipient "age1zwya0qq8c824n5ncxppekrm4egk6gnvfhag6dmr87xjqaeuwlsgq68mqj4" |type? } 'native
+	// equal { age-recipient "invalid" |disarm |type? } 'error
 	"age-recipient": {
 		Argsn: 1,
 		Doc:   "Creates an age recipient from a string or bytes.",
@@ -299,6 +311,12 @@ var Builtins_crypto = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal {
+	//     age-generate-keys |set! { identity recipient }
+	//     "SUPER SECRET" |reader |age-encrypt recipient |age-decrypt identity |read\string
+	// } "SUPER SECRET"
+	// equal { "SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |read\string } "SUPER SECRET"
 	"age-encrypt": {
 		Argsn: 2,
 		Doc:   "Encrypts a reader with age for the provided age recipient or string password and returns a reader.",

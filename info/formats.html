@@ -10,7 +10,7 @@
     <script src="tpl/jsGoo.js"></script>
     <!-- syntax highlighting -->
     <link rel="stylesheet" type="text/css" href="tpl/desert.css" />
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/prettify/r298/run_prettify.js"></script>
+    <script type="text/javascript" src="./tpl/run_prettify.js"></script>
     <script type="text/javascript" src="./tpl/lang-rye.js"></script>
     <!-- syntax highlightinh end -->
   </head>
@@ -25,7 +25,7 @@
       <aside class="sidebar" id="menu-holder">
         <nav>
           <ul>
-            <li><a href="https://ryelang.org">← Home</a>  &middot; <a class='menu-item' id='maintab-base' href='base.html'>base</a> &middot; <a class='menu-item' id='maintab-table' href='table.html'>table</a> &middot; <a class='menu-item' id='maintab-formats' href='formats.html'>formats</a></li>
+            <li><a href="https://ryelang.org">← Home</a>  &middot; <a class='menu-item' id='maintab-base' href='base.html'>base</a> &middot; <a class='menu-item' id='maintab-table' href='table.html'>table</a> &middot; <a class='menu-item' id='maintab-formats' href='formats.html'>formats</a> &middot; <a class='menu-item' id='maintab-crypto' href='crypto.html'>crypto</a></li>
             <!-- More menu items here -->
           </ul>
         </nav>
@@ -79,7 +79,7 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: 1 } { b: optional 2 }
 ; returns dict { b 2 }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: 1 } { a: optional 0 b: optional 2 }
-; returns dict { b 2 a 1 }</code></pre>
+; returns dict { a 1 b 2 }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: 1 } { a: required integer }
 ; returns dict { a 1 }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: "1" } { a: required integer }
@@ -138,6 +138,8 @@
 <h3>to-json</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>list { 1 2 3 } |to-json
 ; returns "[1, 2, 3] "</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>dict { a: 1 b: 2 c: 3 } |to-json
+; returns "{"a": 1, "b": 2, "c": 3} "</code></pre>
 </div>
 <h3>to-json\lines</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>table { "a" "b" } { 2 "x" 3 "y" } |to-json\lines

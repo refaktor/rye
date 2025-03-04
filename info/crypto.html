@@ -1,0 +1,84 @@
+<html>
+  <head>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,700|Roboto:300,400,700&subset=latin-ext' rel='stylesheet' type='text/css'>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Londrina+Solid:wght@300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="tpl/main.3.css?a001" />
+    <link rel="stylesheet" href="tpl/styles.css?a001" />
+    <script src="tpl/menu.js?a001"></script>
+    <script src="tpl/jsGoo.js"></script>
+    <!-- syntax highlighting -->
+    <link rel="stylesheet" type="text/css" href="tpl/desert.css" />
+    <script type="text/javascript" src="./tpl/run_prettify.js"></script>
+    <script type="text/javascript" src="./tpl/lang-rye.js"></script>
+    <!-- syntax highlightinh end -->
+  </head>
+  <body onload="generateMenu(); styleCurrentTab();">
+    <!--div id="menu-holder">
+	</div-->
+    <!--p>
+      <a href="/">main page</a>
+    </p>
+    <h1>Rye reference: Crypto</h1-->
+    <div class="container">
+      <aside class="sidebar" id="menu-holder">
+        <nav>
+          <ul>
+            <li><a href="https://ryelang.org">← Home</a>  &middot; <a class='menu-item' id='maintab-base' href='base.html'>base</a> &middot; <a class='menu-item' id='maintab-table' href='table.html'>table</a> &middot; <a class='menu-item' id='maintab-formats' href='formats.html'>formats</a> &middot; <a class='menu-item' id='maintab-crypto' href='crypto.html'>crypto</a></li>
+            <!-- More menu items here -->
+          </ul>
+        </nav>
+	<p>
+	  This is Rye function reference generated from unit tests in info/ folder. Examples can be little dry, but they are short and correct.
+	</p>
+	<h3>Functions</h3>
+      </aside>
+      <main class="content">
+        
+<h2>Default</h2><p></p><div class='section'>
+</div>
+<h2>Age </h2><p>Age encryption/decryption and key generation</p><div class='section'>
+<h3>age-generate-keys</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>age-generate-keys |first |type?
+; returns native</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>age-generate-keys |second |type?
+; returns native</code></pre>
+</div>
+<h3>age-identity</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>age-identity "AGE-SECRET-KEY-1UMNMNLE5ADV4V0X8LRMG4GVWM3WJ7GVH6JP3J2XSRDFENLJVVX4SDLWXML" |type?
+; returns native</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>age-identity "invalid" |disarm |type?
+; returns error</code></pre>
+</div>
+<h3>age-recipient</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>age-recipient "age1zwya0qq8c824n5ncxppekrm4egk6gnvfhag6dmr87xjqaeuwlsgq68mqj4" |type?
+; returns native</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>age-recipient "invalid" |disarm |type?
+; returns error</code></pre>
+</div>
+<h3>age-encrypt</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>age-generate-keys |set! { identity recipient } "SUPER SECRET" |reader |age-encrypt recipient |age-decrypt identity |read\string
+; returns "SUPER SECRET"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>"SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |read\string
+; returns "SUPER SECRET"</code></pre>
+</div>
+</div>
+</main>
+</div>
+<script type="text/javascript">
+var sc_project=12932344; 
+var sc_invisible=1; 
+var sc_security="6e399927"; 
+</script>
+<script type="text/javascript"
+src="https://www.statcounter.com/counter/counter.js"
+async></script>
+<noscript><div class="statcounter"><a title="Web Analytics"
+href="https://statcounter.com/" target="_blank"><img
+class="statcounter"
+src="https://c.statcounter.com/12932344/0/6e399927/1/"
+alt="Web Analytics"
+referrerPolicy="no-referrer-when-downgrade"></a></div></noscript>
+</body>
+</html>
