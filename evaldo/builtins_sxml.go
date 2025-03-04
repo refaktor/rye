@@ -57,12 +57,12 @@ func load_saxml_Dict(ps *env.ProgramState, block env.Block) (env.Dict, *env.Erro
 						keys = []string{}
 					}
 				} else {
-					return _emptyRM(), MakeBuiltinError(ps, "No selectors before tag map.", "rye-reader//do-sxml")
+					return _emptyRM(), MakeBuiltinError(ps, "No selectors before tag map.", "reader//do-sxml")
 				}
 			}
 		default:
 			// ni Dict ampak blok kode, vrni blok
-			return _emptyRM(), MakeBuiltinError(ps, "Unknown type in block parsing TODO.", "rye-reader//do-sxml")
+			return _emptyRM(), MakeBuiltinError(ps, "Unknown type in block parsing TODO.", "reader//do-sxml")
 		}
 	}
 	return rmap, nil
@@ -226,7 +226,7 @@ var Builtins_sxml = map[string]*env.Builtin{
 	//   "<scene><xwing><bot>R2D2</bot><person>Luke</person></xwing><destroyer><person>Vader</person></destroyer></scene>" |reader
 	//   .do-sxml { <xwing> { <person> { _ [ .prns ] } } }
 	// } "Luke "
-	"rye-reader//do-sxml": {
+	"reader//do-sxml": {
 		Argsn: 2,
 		Doc:   "TODODOC",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

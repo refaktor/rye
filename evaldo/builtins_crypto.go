@@ -225,7 +225,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	//
 	// Tests:
 	// equal { age-generate-keys |first |type? } 'native
+	// equal { age-generate-keys |first |kind? } 'age-identity
 	// equal { age-generate-keys |second |type? } 'native
+	// equal { age-generate-keys |second |kind? } 'age-recipient
 	"age-generate-keys": {
 		Argsn: 0,
 		Doc:   "Generates a new age key pair (identity and recipient).",
@@ -245,6 +247,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { age-identity "AGE-SECRET-KEY-1UMNMNLE5ADV4V0X8LRMG4GVWM3WJ7GVH6JP3J2XSRDFENLJVVX4SDLWXML" |type? } 'native
+	// equal { age-identity "AGE-SECRET-KEY-1UMNMNLE5ADV4V0X8LRMG4GVWM3WJ7GVH6JP3J2XSRDFENLJVVX4SDLWXML" |kind? } 'age-identity
 	// equal { age-identity "invalid" |disarm |type? } 'error
 	"age-identity": {
 		Argsn: 1,
@@ -279,6 +282,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { age-recipient "age1zwya0qq8c824n5ncxppekrm4egk6gnvfhag6dmr87xjqaeuwlsgq68mqj4" |type? } 'native
+	// equal { age-recipient "age1zwya0qq8c824n5ncxppekrm4egk6gnvfhag6dmr87xjqaeuwlsgq68mqj4" |kind? } 'age-recipient
 	// equal { age-recipient "invalid" |disarm |type? } 'error
 	"age-recipient": {
 		Argsn: 1,
@@ -323,7 +327,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch r := arg0.(type) {
 			case env.Native:
-				if ps.Idx.GetWord(r.GetKind()) != "rye-reader" {
+				if ps.Idx.GetWord(r.GetKind()) != "reader" {
 					ps.FailureFlag = true
 					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "age-encrypt")
 				}
@@ -365,7 +369,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 					return MakeBuiltinError(ps, "Error in writing to buffer: "+err.Error(), "age-encrypt")
 				}
 				w.Close()
-				return *env.NewNative(ps.Idx, bytes.NewReader(buf.Bytes()), "rye-reader")
+				return *env.NewNative(ps.Idx, bytes.NewReader(buf.Bytes()), "reader")
 			default:
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "age-encrypt")
@@ -379,7 +383,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch r := arg0.(type) {
 			case env.Native:
-				if ps.Idx.GetWord(r.GetKind()) != "rye-reader" {
+				if ps.Idx.GetWord(r.GetKind()) != "reader" {
 					ps.FailureFlag = true
 					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "age-decrypt")
 				}
@@ -408,7 +412,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 					ps.FailureFlag = true
 					return MakeBuiltinError(ps, "Error in decrypting: "+err.Error(), "age-decrypt")
 				}
-				return *env.NewNative(ps.Idx, decrypted, "rye-reader")
+				return *env.NewNative(ps.Idx, decrypted, "reader")
 			default:
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "age-decrypt")

@@ -51,7 +51,7 @@ func __create(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.O
 			ps.FailureFlag = true
 			return MakeBuiltinError(ps, err.Error(), "__create")
 		}
-		return *env.NewNative(ps.Idx, file, "rye-file")
+		return *env.NewNative(ps.Idx, file, "file")
 	default:
 		ps.ReturnFlag = true
 		ps.FailureFlag = true
@@ -414,6 +414,12 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
+	//
+	// ##### IO ##### "IO related functions"
+	//
+	// Tests:
+	// equal { open %data/file.txt |type? } 'native
+	// equal { open %data/file.txt |kind? } 'file
 	"file-schema//open": {
 		Argsn: 1,
 		Doc:   "Open file.",
@@ -424,13 +430,16 @@ var Builtins_io = map[string]*env.Builtin{
 				if err != nil {
 					return makeError(ps, err.Error())
 				}
-				return *env.NewNative(ps.Idx, file, "rye-file")
+				return *env.NewNative(ps.Idx, file, "file")
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-schema//open")
 			}
 		},
 	},
 
+	// Tests:
+	// equal { open\append %data/file.txt |type? } 'native
+	// equal { open\append %data/file.txt |kind? } 'writer
 	"file-schema//open\\append": {
 		Argsn: 1,
 		Doc:   "Open file.",
@@ -441,29 +450,49 @@ var Builtins_io = map[string]*env.Builtin{
 				if err != nil {
 					return MakeBuiltinError(ps, err.Error(), "__openFile")
 				}
-				return *env.NewNative(ps.Idx, file, "rye-writer")
+				return *env.NewNative(ps.Idx, file, "writer")
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.UriType}, "__openFile")
 			}
 		},
 	},
 
+	// Tests:
+	// equal { create %data/created.txt |type? } 'native
+	// equal { create %data/created.txt |kind? } 'file
 	"file-schema//create": {
 		Argsn: 1,
 		Doc:   "Create file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __create(ps, arg0, arg1, arg2, arg3, arg4)
+			switch s := arg0.(type) {
+			case env.Uri:
+				// path := strings.Split(s.Path, "://")
+				file, err := os.Create(s.Path)
+				if err != nil {
+					ps.ReturnFlag = true
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, err.Error(), "__create")
+				}
+				return *env.NewNative(ps.Idx, file, "file")
+			default:
+				ps.ReturnFlag = true
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "__create")
+			}
 		},
 	},
 
+	// Tests:
+	// equal { file-ext? %data/file.txt } ".txt"
+	// equal { file-ext? %data/file.temp.png } ".png"
+	// equal { file-ext? "data/file.temp.png" } ".png"
 	"file-ext?": {
 		Argsn: 1,
 		Doc:   "Get file extension.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Uri:
-				path := strings.Split(s.Path, "://")
-				ext := filepath.Ext(path[1])
+				ext := filepath.Ext(s.Path)
 				return *env.NewString(ext)
 			case env.String:
 				ext := filepath.Ext(s.Value)
@@ -475,6 +504,10 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 
 	// should this be generic method or not?
+	// Tests:
+	// equal { reader %data/file.txt |kind? } 'reader
+	// equal { reader open %data/file.txt |kind? } 'reader
+	// equal { reader "some string" |kind? } 'reader
 	"reader": {
 		Argsn: 1,
 		Doc:   "Open new reader.",
@@ -487,16 +520,16 @@ var Builtins_io = map[string]*env.Builtin{
 					ps.FailureFlag = true
 					return MakeBuiltinError(ps, "Error opening file.", "__open_reader")
 				}
-				return *env.NewNative(ps.Idx, bufio.NewReader(file), "rye-reader")
+				return *env.NewNative(ps.Idx, bufio.NewReader(file), "reader")
 			case env.Native:
 				file, ok := s.Value.(*os.File)
 				if !ok {
 					ps.FailureFlag = true
 					return MakeBuiltinError(ps, "Error opening file.", "__open_reader")
 				}
-				return *env.NewNative(ps.Idx, bufio.NewReader(file), "rye-reader")
+				return *env.NewNative(ps.Idx, bufio.NewReader(file), "reader")
 			case env.String:
-				return *env.NewNative(ps.Idx, bufio.NewReader(strings.NewReader(s.Value)), "rye-reader")
+				return *env.NewNative(ps.Idx, bufio.NewReader(strings.NewReader(s.Value)), "reader")
 			default:
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.UriType, env.StringType}, "__open_reader")
@@ -509,7 +542,7 @@ var Builtins_io = map[string]*env.Builtin{
 		Argsn: 0,
 		Doc:   "Standard input.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return *env.NewNative(ps.Idx, os.Stdin, "rye-reader")
+			return *env.NewNative(ps.Idx, os.Stdin, "reader")
 		},
 	},
 
@@ -517,11 +550,15 @@ var Builtins_io = map[string]*env.Builtin{
 		Argsn: 0,
 		Doc:   "Standard output.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return *env.NewNative(env1.Idx, os.Stdout, "rye-writer")
+			return *env.NewNative(env1.Idx, os.Stdout, "writer")
 		},
 	},
 
-	"rye-reader//read\\string": {
+	// TODO: add scanner ScanString method ... look at: https://stackoverflow.com/questions/47479564/go-bufio-readstring-in-loop-is-infinite
+
+	// Tests:
+	// equal { reader "some string" |read\string } "some string"
+	"reader//read\\string": {
 		Argsn: 1,
 		Doc:   "Read string from a reader and return it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -546,7 +583,8 @@ var Builtins_io = map[string]*env.Builtin{
 
 		},
 	},
-	"rye-reader//copy": {
+
+	"reader//copy": {
 		Argsn: 2,
 		Doc:   "Copy from a reader to a writer.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -573,9 +611,9 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
-	// We have duplication rye-reader rye-file TODO think about this ... is it worth
+	// We have duplication reader file TODO think about this ... is it worth
 	// changing how kinds work, making them more complex? not sure yet
-	"rye-file//copy": {
+	"file//copy": {
 		Argsn: 2,
 		Doc:   "Copy Rye file to ouptut.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -602,7 +640,9 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
-	"rye-file//stat": {
+	// Tests:
+	// equal { stat open %data/file.txt |kind? } 'file-info
+	"file//stat": {
 		Argsn: 1,
 		Doc:   "Get stat of a file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -610,6 +650,8 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { size? stat open %data/file.txt } 16
 	"file-info//size?": {
 		Argsn: 1,
 		Doc:   "Get size of a file.",
@@ -624,7 +666,9 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
-	"rye-file//read-all": {
+	// Tests:
+	// equal { read-all open %data/file.txt } "hello text file\n"
+	"file//read-all": {
 		Argsn: 1,
 		Doc:   "Read all file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -643,7 +687,7 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
-	"rye-file//seek\\end": {
+	"file//seek\\end": {
 		Argsn: 1,
 		Doc:   "Write to a file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -651,18 +695,20 @@ var Builtins_io = map[string]*env.Builtin{
 			case env.Native:
 				reader, ok := s.Value.(*os.File)
 				if !ok {
-					return MakeBuiltinError(ps, "Native not io.Reader", "rye-file//seek\\end")
+					return MakeBuiltinError(ps, "Native not io.Reader", "file//seek\\end")
 				}
 				reader.Seek(0, os.SEEK_END)
 				return arg0
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "rye-file//seek\\end")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "file//seek\\end")
 			}
 		},
 	},
 
-	"rye-file//close": {
+	// Tests:
+	// equal { close open %data/file.txt } ""
+	"file//close": {
 		Argsn: 1,
 		Doc:   "Closes an open file or reader or writer.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -682,6 +728,8 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { read %data/file.txt } "hello text file\n"
 	"file-schema//read": {
 		Argsn: 1,
 		Doc:   "Read a file given the path.",
@@ -690,6 +738,8 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { read %data/file.txt } "hello text file\n"
 	"file-schema//read\\bytes": {
 		Argsn: 1,
 		Doc:   "Read a specific number of bytes from a file path.",
@@ -698,6 +748,8 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { read %data/file.txt } "hello text file\n"
 	"file-schema//read\\lines": {
 		Argsn: 1,
 		Doc:   "Read files into the block of lines.",
@@ -706,6 +758,8 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { write %data/write.txt "written\n" } "written\n"
 	"file-schema//write": {
 		Argsn: 2,
 		Doc:   "Write to a file.",
@@ -738,7 +792,7 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
-	"rye-writer//write\\string": {
+	"writer//write\\string": {
 		Argsn: 2,
 		Doc:   "Write string to a writer.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -748,20 +802,20 @@ var Builtins_io = map[string]*env.Builtin{
 				case env.Native:
 					writer, ok := ww.Value.(*os.File)
 					if !ok {
-						return MakeBuiltinError(ps, "Native not io.File", "rye-writer//write\\string")
+						return MakeBuiltinError(ps, "Native not io.File", "writer//write\\string")
 					}
 					_, err := writer.WriteString(s.Value)
 					if err != nil {
-						return MakeBuiltinError(ps, "Error at write: "+err.Error(), "rye-writer//write\\string")
+						return MakeBuiltinError(ps, "Error at write: "+err.Error(), "writer//write\\string")
 					}
 					return arg0
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "rye-writer//write\\string")
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "writer//write\\string")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "rye-writer//write\\string")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "writer//write\\string")
 			}
 
 		},
@@ -979,7 +1033,7 @@ var Builtins_io = map[string]*env.Builtin{
 					fmt.Println("Error retrieving:", err)
 					return nil
 				}
-				return *env.NewNative(ps.Idx, resp, "rye-reader")
+				return *env.NewNative(ps.Idx, resp, "reader")
 			default:
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.UriType, env.StringType}, "ftp-connection//login")

@@ -156,7 +156,7 @@ section "JSON " "parsing and generating JSON" {
 }
 
 section "SXML " "streaming, Sax like XML dialect (still in design)" {
-	group "rye-reader//do-sxml" 
+	group "reader//do-sxml" 
 	""
 	{
 	}
@@ -226,7 +226,7 @@ section "HTML " "streaming, Sax like HTML dialect (still in design)" {
 		equal { html->markdown "<h1>title</h1><p>para</p>" } "# title\n\npara"
 	}
 
-	group "rye-reader//parse-html" 
+	group "reader//parse-html" 
 	""
 	{
 	}

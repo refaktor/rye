@@ -25,7 +25,7 @@
       <aside class="sidebar" id="menu-holder">
         <nav>
           <ul>
-            <li><a href="https://ryelang.org">← Home</a>  &middot; <a class='menu-item' id='maintab-base' href='base.html'>base</a> &middot; <a class='menu-item' id='maintab-table' href='table.html'>table</a> &middot; <a class='menu-item' id='maintab-formats' href='formats.html'>formats</a> &middot; <a class='menu-item' id='maintab-crypto' href='crypto.html'>crypto</a></li>
+            <li><a href="https://ryelang.org">← Home</a>  &middot; <a class='menu-item' id='maintab-base' href='base.html'>base</a> &middot; <a class='menu-item' id='maintab-table' href='table.html'>table</a> &middot; <a class='menu-item' id='maintab-formats' href='formats.html'>formats</a> &middot; <a class='menu-item' id='maintab-io' href='io.html'>io</a> &middot; <a class='menu-item' id='maintab-crypto' href='crypto.html'>crypto</a></li>
             <!-- More menu items here -->
           </ul>
         </nav>
@@ -149,7 +149,7 @@
 </div>
 </div>
 <h2>SXML </h2><p>streaming, Sax like XML dialect (still in design)</p><div class='section'>
-<h3>rye-reader//do-sxml</h3><p></p><div class='group'>
+<h3>reader//do-sxml</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>"&lt;scene&gt;&lt;bot&gt;C3PO&lt;/bot&gt;&lt;bot&gt;R2D2&lt;/bot&gt;&lt;jedi&gt;Luke&lt;/jedi&gt;&lt;/scene&gt;" |reader .do-sxml { _ [ .prns ] }
 ; prints "C3PO R2D2 Luke "</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>"&lt;scene&gt;&lt;bot&gt;C3PO&lt;/bot&gt;&lt;bot&gt;R2D2&lt;/bot&gt;&lt;jedi&gt;Luke&lt;/jedi&gt;&lt;/scene&gt;" |reader .do-sxml { &lt;bot&gt; { _ [ .prns ] } }
@@ -181,7 +181,7 @@
 ; 
 ; para"</code></pre>
 </div>
-<h3>rye-reader//parse-html</h3><p></p><div class='group'>
+<h3>reader//parse-html</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>"&lt;html&gt;&lt;body&gt;&lt;div class='menu'&gt;&lt;a href='/'&gt;home&lt;/a&gt;&lt;a href='/about/'&gt;about&lt;/a&gt;" |reader .parse-html { &lt;a&gt; [ .attr? 'href |prns ] }
 ; prints "/ /about/ "</code></pre>
 </div>

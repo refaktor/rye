@@ -129,7 +129,7 @@ var Builtins_aws = map[string]*env.Builtin{
 						if err != nil {
 							return evaldo.MakeError(ps, "Error reading object: "+err.Error())
 						}
-						return *env.NewNative(ps.Idx, bytes.NewReader(b), "rye-reader")
+						return *env.NewNative(ps.Idx, bytes.NewReader(b), "reader")
 					default:
 						return evaldo.MakeArgError(ps, 3, []env.Type{env.StringType}, "aws-s3-client//get-object")
 					}

@@ -452,7 +452,7 @@ var Builtins_html = map[string]*env.Builtin{
 	//   .parse-html { <a> [ .attr? 'href |prns ] }
 	// } "/ /about/ "
 	// ;
-	"rye-reader//parse-html": {
+	"reader//parse-html": {
 		Argsn: 2,
 		Doc:   "Parses HTML string with a HTML dialect.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -461,7 +461,7 @@ var Builtins_html = map[string]*env.Builtin{
 			// fmt.Println(rm)
 			if err != nil {
 				ps.FailureFlag = true
-				return MakeBuiltinError(ps, "Error to load html dict.", "rye-reader//parse-html")
+				return MakeBuiltinError(ps, "Error to load html dict.", "reader//parse-html")
 			}
 			return do_html(ps, arg0.(env.Native).Value.(io.Reader), rm)
 		},

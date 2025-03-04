@@ -9,7 +9,9 @@ section "Age " "Age encryption/decryption and key generation" {
 
 	{
 		equal { age-generate-keys |first |type? } 'native
+		equal { age-generate-keys |first |kind? } 'age-identity
 		equal { age-generate-keys |second |type? } 'native
+		equal { age-generate-keys |second |kind? } 'age-recipient
 	}
 
 	group "age-identity" 
@@ -19,6 +21,7 @@ section "Age " "Age encryption/decryption and key generation" {
 
 	{
 		equal { age-identity "AGE-SECRET-KEY-1UMNMNLE5ADV4V0X8LRMG4GVWM3WJ7GVH6JP3J2XSRDFENLJVVX4SDLWXML" |type? } 'native
+		equal { age-identity "AGE-SECRET-KEY-1UMNMNLE5ADV4V0X8LRMG4GVWM3WJ7GVH6JP3J2XSRDFENLJVVX4SDLWXML" |kind? } 'age-identity
 		equal { age-identity "invalid" |disarm |type? } 'error
 	}
 
@@ -29,6 +32,7 @@ section "Age " "Age encryption/decryption and key generation" {
 
 	{
 		equal { age-recipient "age1zwya0qq8c824n5ncxppekrm4egk6gnvfhag6dmr87xjqaeuwlsgq68mqj4" |type? } 'native
+		equal { age-recipient "age1zwya0qq8c824n5ncxppekrm4egk6gnvfhag6dmr87xjqaeuwlsgq68mqj4" |kind? } 'age-recipient
 		equal { age-recipient "invalid" |disarm |type? } 'error
 	}
 

@@ -529,7 +529,7 @@ var Builtins_http = map[string]*env.Builtin{
 						return MakeBuiltinError(ps, fmt.Sprintf("Failed to read from file: '%v'", err.Error()), "Go-server-request//form-file?")
 					}
 					pair := make([]env.Object, 2)
-					pair[0] = *env.NewNative(ps.Idx, file, "rye-reader")
+					pair[0] = *env.NewNative(ps.Idx, file, "reader")
 					pair[1] = *env.NewNative(ps.Idx, handler, "rye-multipart-header")
 					return *env.NewBlock(*env.NewTSeries(pair))
 				default:
