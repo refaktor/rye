@@ -6,7 +6,7 @@ toolchain go1.23.1
 
 retract v0.0.11 // Published accidentally with a bug
 
-replace github.com/refaktor/keyboard => ../keyboard
+// replace github.com/refaktor/keyboard => ../keyboard
 
 require (
 	filippo.io/age v1.2.1
