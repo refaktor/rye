@@ -1,0 +1,139 @@
+section "Default" "" {
+}
+
+section "IO " "IO related functions" {
+	group "file-schema//open" 
+	""
+	{
+	}
+
+	{
+		equal { open %data/file.txt |type? } 'native
+		equal { open %data/file.txt |kind? } 'file
+	}
+
+	group "file-schema//open\append" 
+	""
+	{
+	}
+
+	{
+		equal { open\append %data/file.txt |type? } 'native
+		equal { open\append %data/file.txt |kind? } 'writer
+	}
+
+	group "file-schema//create" 
+	""
+	{
+	}
+
+	{
+		equal { create %data/created.txt |type? } 'native
+		equal { create %data/created.txt |kind? } 'file
+	}
+
+	group "file-ext?" 
+	""
+	{
+	}
+
+	{
+		equal { file-ext? %data/file.txt } ".txt"
+		equal { file-ext? %data/file.temp.png } ".png"
+		equal { file-ext? "data/file.temp.png" } ".png"
+	}
+
+	group "reader" 
+	""
+	{
+	}
+
+	{
+		equal { reader %data/file.txt |kind? } 'reader
+		equal { reader open %data/file.txt |kind? } 'reader
+		equal { reader "some string" |kind? } 'reader
+	}
+
+	group "reader//read\string" 
+	""
+	{
+	}
+
+	{
+		equal { reader "some\nstring" |read\string "\n" } "some\n"
+	}
+
+	group "file//stat" 
+	""
+	{
+	}
+
+	{
+		equal { stat open %data/file.txt |kind? } 'file-info
+	}
+
+	group "file-info//size?" 
+	""
+	{
+	}
+
+	{
+		equal { size? stat open %data/file.txt } 16
+	}
+
+	group "file//read-all" 
+	""
+	{
+	}
+
+	{
+		equal { read-all open %data/file.txt } "hello text file\n"
+	}
+
+	group "file//close" 
+	""
+	{
+	}
+
+	{
+		equal { close open %data/file.txt } ""
+	}
+
+	group "file-schema//read" 
+	""
+	{
+	}
+
+	{
+		equal { read %data/file.txt } "hello text file\n"
+	}
+
+	group "file-schema//read\bytes" 
+	""
+	{
+	}
+
+	{
+		equal { read %data/file.txt } "hello text file\n"
+	}
+
+	group "file-schema//read\lines" 
+	""
+	{
+	}
+
+	{
+		equal { read %data/file.txt } "hello text file\n"
+	}
+
+	group "file-schema//write" 
+	""
+	{
+	}
+
+	{
+		equal { write %data/write.txt "written\n" } "written\n"
+	}
+
+}
+
