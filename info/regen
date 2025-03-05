@@ -6,3 +6,4 @@
 ../cmd/rbit/rbit ../evaldo/builtins_sxml.go >> formats.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_html.go >> formats.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_io.go > io.info.rye
+../cmd/rbit/rbit ../evaldo/builtins_crypto.go > crypto.info.rye

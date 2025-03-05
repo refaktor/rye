@@ -25,7 +25,7 @@
       <aside class="sidebar" id="menu-holder">
         <nav>
           <ul>
-            <li><a href="https://ryelang.org">← Home</a>  &middot; <a class='menu-item' id='maintab-base' href='base.html'>base</a> &middot; <a class='menu-item' id='maintab-table' href='table.html'>table</a> &middot; <a class='menu-item' id='maintab-formats' href='formats.html'>formats</a> &middot; <a class='menu-item' id='maintab-io' href='io.html'>io</a></li>
+            <li><a href="https://ryelang.org">← Home</a>  &middot; <a class='menu-item' id='maintab-base' href='base.html'>base</a> &middot; <a class='menu-item' id='maintab-table' href='table.html'>table</a> &middot; <a class='menu-item' id='maintab-formats' href='formats.html'>formats</a> &middot; <a class='menu-item' id='maintab-io' href='io.html'>io</a> &middot; <a class='menu-item' id='maintab-crypto' href='crypto.html'>crypto</a></li>
             <!-- More menu items here -->
           </ul>
         </nav>
@@ -993,6 +993,8 @@ th!</h3><p></p><div class='group'>
 ; returns decimal</code></pre>
 </div>
 <h3>kind?</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>kind? file://file
+; returns file-schema</code></pre>
 </div>
 <h3>types?</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>types? { "test" 123 }
@@ -1164,6 +1166,18 @@ owrap</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>do { 123 + }
 ; correctly causes error:
 ; argument 2 of 2 missing of builtin: 'Adds or joins two values together (Integers, Strings, Uri-s and Blocks) (core) (_+)' </code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do { _+ _+ 12 23 34 }
+; returns 69</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do { 12 * 23 |+ 34 }
+; returns 310</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do { ( 12 * 23 ) + 34 }
+; returns 310</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do { 12 * 23 || + 34 }
+; returns 310</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do { 12 * 23 :a + 34 }
+; returns 310</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do { 12 * 23 :a a + 34 }
+; returns 310</code></pre>
 </div>
 <h3>try</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>try { 123 + 123 }
@@ -1219,8 +1233,6 @@ owrap</h3><p></p><div class='group'>
 ; returns "x x x "</code></pre>
 </div>
 <h3>time-it</h3><p></p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>time-it { sleep 100 }
-; returns 100</code></pre>
 </div>
 <h3>vals</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>x: 1 y: 2 vals { x y }
@@ -1498,8 +1510,6 @@ hello
 ; returns native</code></pre>
 </div>
 <h3>sleep</h3><p></p><div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>time-it { sleep 10 }
-; returns 10</code></pre>
 </div>
 <h3>seconds</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>5 .seconds
