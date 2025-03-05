@@ -12,18 +12,18 @@ private {
 	spaces: fn1 { .produce "" { + " " } }
 	prn\pad: fn { t d } { prn spaces d , prn t } 
 	newline: fn1 { .if { print "" } }
-	is-not: fn { a b } { .to-word = to-word b \not }
-	comment: fn1 { .concat* "<!--" \concat "-->" }
+	is-not: fn { a b } { .to-word = to-word b |not }
+	comment: fn1 { .concat* "<!--" |concat "-->" }
 	
-	process: fn\par { block values depth current } current-ctx  {
-		\pass { exited: false blk: false token: false }
-		\walk { ::blk
-			\peek ::token .type? .switch {
+	process: fn\par { block values depth current } current {
+		|pass { exited: false blk: false token: false }
+		|walk { ::blk
+			|peek ::token .type? .switch {
 				xword {
 					newline depth
 					prn\pad token depth
 					process next blk values inc depth token
-					\pass { exited:: true }
+					|pass { exited:: true }
 				}
 				exword {
 					either exited { newline true , prn\pad token depth - 1 } { prn token }
@@ -46,12 +46,12 @@ private {
 	}
 
 	; Only this function will get returned and set to xmlgen word
-	fn\par { values block "Accepts dict of values and a block of xtags extags and code" } current-ctx { process block values 0 'no }
+	fn\par { values block "Accepts dict of values and a block of xtags extags and code" } current { process block values 0 'no }
 	
 } :xmlprint
 
 
-; \word is just ex |pipe-word ... I'm experimenting with this format because | was
+; |word is just ex |pipe-word ... I'm experimenting with this format because | was
 ; too agressive visually especially in the same line use
 
 

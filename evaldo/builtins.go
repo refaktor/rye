@@ -91,10 +91,20 @@ func MakeRyeError(env1 *env.ProgramState, val env.Object, er *env.Error) *env.Er
 	case env.Block: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
 		// TODO -- this is only temporary it takes numeric value as first and string as second arg
 		// TODONOW implement the dialect
-		code := val.Series.Get(0)
-		message := val.Series.Get(1)
-		if code.Type() == env.IntegerType && message.Type() == env.StringType {
-			return env.NewError4(int(code.(env.Integer).Value), message.(env.String).Value, er, nil)
+		var code env.Object
+		if len(val.Series.S) > 0 {
+			code = val.Series.Get(0)
+			if code.Type() == env.IntegerType {
+				return env.NewError4(int(code.(env.Integer).Value), "", er, nil)
+			}
+		} else {
+			return makeError(env1, "Empty error constructor block")
+		}
+		if len(val.Series.S) > 1 {
+			message := val.Series.Get(1)
+			if code.Type() == env.IntegerType && message.Type() == env.StringType {
+				return env.NewError4(int(code.(env.Integer).Value), message.(env.String).Value, er, nil)
+			}
 		}
 
 		return makeError(env1, "Wrong error constructor")
@@ -5063,13 +5073,15 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
+	// equal { dump 123 } "123"
+	// equal { dump "string" } `"string"`
 	// equal { does { 1 } |dump } "fn { } { 1 }"
 	"dump": { // *** currently a concept in testing ... for getting a code of a function, maybe same would be needed for context?
 		Argsn: 1,
 		Doc:   "Returns (dumps) Rye code representing the object.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return env.NewString(arg0.Dump(*ps.Idx))
+			return *env.NewString(arg0.Dump(*ps.Idx))
 		},
 	},
 

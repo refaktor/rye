@@ -18,7 +18,7 @@ test-framework: context {
 	
 	error: fn { test } {
 		; try { do\in root-ctx test }
-		try test :got |type? |= 'error |either { t/br-green prns join { "✓" } } { inc! 'failed , t/red prns " ✗ Failed:" t/reset\all   prns join { newline "expected error but got: " t/str\br-black inspect got t/str\reset } }
+		try test :got |type? |= 'error |either { t/br-green prns join { "✓" } } { inc! 'failed , t/red prns " ✗ Failed:" t/reset\all   prns join { "expected error but got: " t/str\br-black inspect got t/str\reset } }
 	}
 
 	equal: fn { test res } {
@@ -30,7 +30,7 @@ test-framework: context {
 	stdout: fn { test res } {
 		cc: extends root-ctx { }
 		capture-stdout { do\in cc test } :got = res
-		|either { term/green prns "✓" term/reset\all } { inc! 'failed , term/br-red prns " ✗ Failed:" term/reset\all  prns join { "expected " t/str\br-black inspect res t/str\reset ", got " t/str\br-black inspect got t/str\reset } }
+		|either { term/green prns "✓" term/reset\all } { inc! 'failed , term/red prns " ✗ Failed:" term/reset\all  prns join { "expected " t/str\br-black inspect res t/str\reset ", got " t/str\br-black inspect got t/str\reset } }
 	}
 
 	comment: fn { str } {
@@ -38,10 +38,10 @@ test-framework: context {
 	}
 
 	end: fn { } { ;prns "Tests:" term/bold prn cnt term/reset\bold , print "FAILED: " + failed , if failed > 0 { exit 1 } }
-		prns "\nTests:" term/bold prn cnt term/reset\bold
+		prns "\nGroups:" term/bold prn cnt term/reset\bold
 		either is-zero failed
 		{ term/bold term/green print "\nALL PASSED" term/reset\all }
-		{ term/red print "\nFAILED: " + failed  term/reset\all }
+		{ term/red print "\nFailed tests: " + failed  term/reset\all }
 
 		if failed > 0 { exit 1 }
 	}

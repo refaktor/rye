@@ -181,6 +181,13 @@ func BsonToValue_Val(ps *env.ProgramState, val any, topLevel bool) env.Object {
 
 var Builtins_bson = map[string]*env.Builtin{
 
+	//
+	// ##### BSON ##### ""
+	//
+	// Tests:
+	// equal { "abc" |to-bson |from-bson } "abc"
+	// equal { 123 |to-bson |from-bson } 123
+	// equal { { 123 "asd" } |to-bson |from-bson } { 123 "asd" }
 	"from-bson": {
 		Argsn: 1,
 		Doc:   "Takes a BSON value and returns it encoded into Rye values.",

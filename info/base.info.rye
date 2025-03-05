@@ -1434,6 +1434,8 @@ section "Values and Types " "" {
 	}
 
 	{
+		equal { dump 123 } "123"
+		equal { dump "string" } `"string"`
 		equal { does { 1 } |dump } "fn { } { 1 }"
 	}
 
