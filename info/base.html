@@ -982,9 +982,9 @@ th!</h3><p></p><div class='group'>
 </div>
 <h3>to-file</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>to-file "example.txt"
-; returns file://example.txt</code></pre>
+; returns %example.txt</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>to-file 123
-; returns file://123</code></pre>
+; returns %123</code></pre>
 </div>
 <h3>type?</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>type? "test"
@@ -993,12 +993,18 @@ th!</h3><p></p><div class='group'>
 ; returns decimal</code></pre>
 </div>
 <h3>kind?</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>kind? %file
+; returns file-schema</code></pre>
 </div>
 <h3>types?</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>types? { "test" 123 }
 ; returns { string integer }</code></pre>
 </div>
 <h3>dump</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>dump 123
+; returns "123"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>dump "string"
+; returns ""string""</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>does { 1 } |dump
 ; returns "fn { } { 1 }"</code></pre>
 </div>
@@ -1164,6 +1170,18 @@ owrap</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>do { 123 + }
 ; correctly causes error:
 ; argument 2 of 2 missing of builtin: 'Adds or joins two values together (Integers, Strings, Uri-s and Blocks) (core) (_+)' </code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do { _+ _+ 12 23 34 }
+; returns 69</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do { 12 * 23 |+ 34 }
+; returns 310</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do { ( 12 * 23 ) + 34 }
+; returns 310</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do { 12 * 23 || + 34 }
+; returns 310</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do { 12 * 23 :a + 34 }
+; returns 310</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do { 12 * 23 :a a + 34 }
+; returns 310</code></pre>
 </div>
 <h3>try</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>try { 123 + 123 }

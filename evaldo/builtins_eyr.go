@@ -428,8 +428,10 @@ var Builtins_eyr = map[string]*env.Builtin{
 			case env.Block:
 				ser := ps.Ser
 				ps.Ser = bloc.Series
+				dialect := ps.Dialect
 				ps.Dialect = env.EyrDialect
 				Eyr_EvalBlock(ps, true)
+				ps.Dialect = dialect
 				ps.Ser = ser
 				return ps.Res
 			default:

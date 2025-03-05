@@ -148,6 +148,16 @@
 ; "</code></pre>
 </div>
 </div>
+<h2>BSON </h2><p></p><div class='section'>
+<h3>from-bson</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>"abc" |to-bson |from-bson
+; returns "abc"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>123 |to-bson |from-bson
+; returns 123</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>{ 123 "asd" } |to-bson |from-bson
+; returns { 123 "asd" }</code></pre>
+</div>
+</div>
 <h2>SXML </h2><p>streaming, Sax like XML dialect (still in design)</p><div class='section'>
 <h3>reader//do-sxml</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>"&lt;scene&gt;&lt;bot&gt;C3PO&lt;/bot&gt;&lt;bot&gt;R2D2&lt;/bot&gt;&lt;jedi&gt;Luke&lt;/jedi&gt;&lt;/scene&gt;" |reader .do-sxml { _ [ .prns ] }

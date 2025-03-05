@@ -5,7 +5,7 @@ package util
 
 import (
 	"fmt"
-	"github.com/cszczepaniak/keyboard"
+	"github.com/refaktor/keyboard"
 
 )
 

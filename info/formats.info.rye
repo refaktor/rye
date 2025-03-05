@@ -155,6 +155,20 @@ section "JSON " "parsing and generating JSON" {
 
 }
 
+section "BSON " "" {
+	group "from-bson" 
+	""
+	{
+	}
+
+	{
+		equal { "abc" |to-bson |from-bson } "abc"
+		equal { 123 |to-bson |from-bson } 123
+		equal { { 123 "asd" } |to-bson |from-bson } { 123 "asd" }
+	}
+
+}
+
 section "SXML " "streaming, Sax like XML dialect (still in design)" {
 	group "reader//do-sxml" 
 	""

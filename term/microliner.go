@@ -879,6 +879,26 @@ startOfHere:
 					line, pos, next, _ = s.tabComplete(p, line, pos, 1)
 					tabCompletionWasActive = true
 					goto haveNext
+					// Add new case for Ctrl+Backspace
+				case "backspace": // or check `next.Code == 8` if needed
+					if pos <= 0 {
+						s.doBeep()
+					} else {
+						// Find the start of the current word
+						newPos := pos
+						// Skip trailing whitespace
+						for newPos > 0 && unicode.IsSpace(line[newPos-1]) {
+							newPos--
+						}
+						// Skip non-whitespace (the word itself)
+						for newPos > 0 && !unicode.IsSpace(line[newPos-1]) {
+							newPos--
+						}
+						// Delete from newPos to pos
+						line = append(line[:newPos], line[pos:]...)
+						pos = newPos
+						s.needRefresh = true
+					}
 				}
 			} else if next.Alt {
 				switch strings.ToLower(next.Key) {
@@ -957,6 +977,26 @@ startOfHere:
 					// killAction = 2 // Mark that there was some killing
 					//			case "bs": // Erase word
 					//				pos, line, killAction = s.eraseWord(pos, line, killAction)
+
+				case string(0x7f): // or check `next.Code == 8` if needed
+					if pos <= 0 {
+						s.doBeep()
+					} else {
+						// Find the start of the current word
+						newPos := pos
+						// Skip trailing whitespace
+						for newPos > 0 && unicode.IsSpace(line[newPos-1]) {
+							newPos--
+						}
+						// Skip non-whitespace (the word itself)
+						for newPos > 0 && !unicode.IsSpace(line[newPos-1]) {
+							newPos--
+						}
+						// Delete from newPos to pos
+						line = append(line[:newPos], line[pos:]...)
+						pos = newPos
+						s.needRefresh = true
+					}
 				}
 			} else {
 				switch next.Code {

@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/cszczepaniak/keyboard"
+	"github.com/refaktor/keyboard"
 	"github.com/refaktor/rye/term"
 	"github.com/refaktor/rye/util"
 )
@@ -74,6 +74,17 @@ func constructKeyEvent(r rune, k keyboard.Key) term.KeyEvent {
 	alt := k == keyboard.KeyEsc
 	var code int
 	ch := string(r)
+
+	// Check for Ctrl modifier with Backspace
+	if k == keyboard.KeyBackspace || k == keyboard.KeyBackspace2 {
+		code = 8
+		// Ctrl+Backspace might send a different rune (e.g., \x17) or require modifier detection
+		if r == '\x17' { // ETB character, common for Ctrl+Backspace in some terminals
+			ctrl = true
+			ch = "backspace"
+		}
+	}
+
 	switch k {
 	case keyboard.KeyCtrlA:
 		ch = "a"

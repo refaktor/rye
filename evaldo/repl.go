@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	// "github.com/eiannone/keyboard"
-	"github.com/cszczepaniak/keyboard"
+	"github.com/refaktor/keyboard"
 
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/loader"
@@ -253,7 +253,7 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 			if r.dialect == "eyr" {
 				resultStr = strings.Replace(resultStr, "Block:", "Stack:", 1) // TODO --- temp / hackish way ... make stack display itself or another approach
 			}
-			output = fmt.Sprintf("\033[38;5;37m" + p + resultStr + "\x1b[0m")
+			output = fmt.Sprint("\033[38;5;37m" + p + resultStr + "\x1b[0m")
 		}
 
 		es.ReturnFlag = false
@@ -276,6 +276,18 @@ func constructKeyEvent(r rune, k keyboard.Key) term.KeyEvent {
 	alt := k == keyboard.KeyEsc
 	var code int
 	ch := string(r)
+
+	// Check for Ctrl modifier with Backspace
+	if k == keyboard.KeyBackspace || k == keyboard.KeyBackspace2 {
+		code = 8
+		// Ctrl+Backspace might send a different rune (e.g., \x17) or require modifier detection
+		if r == '\x17' { // ETB character, common for Ctrl+Backspace in some terminals
+			fmt.Println("*")
+			ctrl = true
+			ch = "backspace"
+		}
+	}
+
 	switch k {
 	case keyboard.KeyCtrlA:
 		ch = "a"
@@ -321,8 +333,16 @@ func constructKeyEvent(r rune, k keyboard.Key) term.KeyEvent {
 		code = 13
 	case keyboard.KeyTab:
 		code = 9
-	case keyboard.KeyBackspace, keyboard.KeyBackspace2:
+	case keyboard.KeyBackspace:
+		ch = "backspace"
+		ctrl = true
+		code = 8 // Consistent with plain Backspace
+	case keyboard.KeyBackspace2:
 		code = 8
+	// case keyboard.KeyAltBackspace:
+	//	ch = "backspace"
+	//	alt = true
+	//	code = 8 // Consistent with plain Backspace
 	case keyboard.KeyDelete:
 		code = 46
 	case keyboard.KeyArrowRight:
@@ -337,10 +357,13 @@ func constructKeyEvent(r rune, k keyboard.Key) term.KeyEvent {
 		code = 36
 	case keyboard.KeyEnd:
 		code = 35
-
 	case keyboard.KeySpace:
 		ch = " "
 		code = 20
+		//case keyboard.KeyCtrlBackspace:
+		//	ch = "backspace"
+		//	ctrl = true
+		//	code = 8 // Consistent with plain Backspace
 	}
 	return term.NewKeyEvent(ch, code, ctrl, alt, false)
 }
