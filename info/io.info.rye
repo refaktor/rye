@@ -60,7 +60,7 @@ section "IO " "IO related functions" {
 	}
 
 	{
-		equal { reader "some\nstring" |read\string "\n" } "some\n"
+		equal { reader "some string" |read\string } "some string"
 	}
 
 	group "file//stat" 

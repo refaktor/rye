@@ -25,7 +25,7 @@
       <aside class="sidebar" id="menu-holder">
         <nav>
           <ul>
-            <li><a href="https://ryelang.org">← Home</a>  &middot; <a class='menu-item' id='maintab-base' href='base.html'>base</a> &middot; <a class='menu-item' id='maintab-table' href='table.html'>table</a> &middot; <a class='menu-item' id='maintab-formats' href='formats.html'>formats</a> &middot; <a class='menu-item' id='maintab-io' href='io.html'>io</a></li>
+            <li><a href="https://ryelang.org">← Home</a>  &middot; <a class='menu-item' id='maintab-base' href='base.html'>base</a> &middot; <a class='menu-item' id='maintab-table' href='table.html'>table</a> &middot; <a class='menu-item' id='maintab-formats' href='formats.html'>formats</a> &middot; <a class='menu-item' id='maintab-io' href='io.html'>io</a> &middot; <a class='menu-item' id='maintab-crypto' href='crypto.html'>crypto</a></li>
             <!-- More menu items here -->
           </ul>
         </nav>
@@ -40,6 +40,7 @@
 </div>
 <h2>IO </h2><p>IO related functions</p><div class='section'>
 <h3>file-schema//open</h3><p></p><div class='group'>
+<<<<<<< HEAD
 <pre class='prettyprint lang-rye'><code language='lang-rye'>open %data/file.txt |type?
 ; returns native</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>open %data/file.txt |kind?
@@ -61,19 +62,49 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>file-ext? %data/file.txt
 ; returns ".txt"</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>file-ext? %data/file.temp.png
+=======
+<pre class='prettyprint lang-rye'><code language='lang-rye'>open file://data/file.txt |type?
+; returns native</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>open file://data/file.txt |kind?
+; returns file</code></pre>
+</div>
+<h3>file-schema//open\append</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>open\append file://data/file.txt |type?
+; returns native</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>open\append file://data/file.txt |kind?
+; returns writer</code></pre>
+</div>
+<h3>file-schema//create</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>create file://data/created.txt |type?
+; returns native</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>create file://data/created.txt |kind?
+; returns file</code></pre>
+</div>
+<h3>file-ext?</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>file-ext? file://data/file.txt
+; returns ".txt"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>file-ext? file://data/file.temp.png
+>>>>>>> bf5a3df6eb1fdef1c7e53eba8dc5de93c179a0b8
 ; returns ".png"</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>file-ext? "data/file.temp.png"
 ; returns ".png"</code></pre>
 </div>
 <h3>reader</h3><p></p><div class='group'>
+<<<<<<< HEAD
 <pre class='prettyprint lang-rye'><code language='lang-rye'>reader %data/file.txt |kind?
 ; returns reader</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>reader open %data/file.txt |kind?
+=======
+<pre class='prettyprint lang-rye'><code language='lang-rye'>reader file://data/file.txt |kind?
+; returns reader</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>reader open file://data/file.txt |kind?
+>>>>>>> bf5a3df6eb1fdef1c7e53eba8dc5de93c179a0b8
 ; returns reader</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>reader "some string" |kind?
 ; returns reader</code></pre>
 </div>
 <h3>reader//read\string</h3><p></p><div class='group'>
+<<<<<<< HEAD
 <pre class='prettyprint lang-rye'><code language='lang-rye'>reader "some
 string" |read\string "
 "
@@ -90,30 +121,65 @@ string" |read\string "
 </div>
 <h3>file//read-all</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>read-all open %data/file.txt
+=======
+<pre class='prettyprint lang-rye'><code language='lang-rye'>reader "some string" |read\string
+; returns "some string"</code></pre>
+</div>
+<h3>file//stat</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>stat open file://data/file.txt |kind?
+; returns file-info</code></pre>
+</div>
+<h3>file-info//size?</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>size? stat open file://data/file.txt
+; returns 16</code></pre>
+</div>
+<h3>file//read-all</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>read-all open file://data/file.txt
+>>>>>>> bf5a3df6eb1fdef1c7e53eba8dc5de93c179a0b8
 ; returns "hello text file
 ; "</code></pre>
 </div>
 <h3>file//close</h3><p></p><div class='group'>
+<<<<<<< HEAD
 <pre class='prettyprint lang-rye'><code language='lang-rye'>close open %data/file.txt
 ; returns ""</code></pre>
 </div>
 <h3>file-schema//read</h3><p></p><div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>read %data/file.txt
+=======
+<pre class='prettyprint lang-rye'><code language='lang-rye'>close open file://data/file.txt
+; returns ""</code></pre>
+</div>
+<h3>file-schema//read</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>read file://data/file.txt
+>>>>>>> bf5a3df6eb1fdef1c7e53eba8dc5de93c179a0b8
 ; returns "hello text file
 ; "</code></pre>
 </div>
 <h3>file-schema//read\bytes</h3><p></p><div class='group'>
+<<<<<<< HEAD
 <pre class='prettyprint lang-rye'><code language='lang-rye'>read %data/file.txt
+=======
+<pre class='prettyprint lang-rye'><code language='lang-rye'>read file://data/file.txt
+>>>>>>> bf5a3df6eb1fdef1c7e53eba8dc5de93c179a0b8
 ; returns "hello text file
 ; "</code></pre>
 </div>
 <h3>file-schema//read\lines</h3><p></p><div class='group'>
+<<<<<<< HEAD
 <pre class='prettyprint lang-rye'><code language='lang-rye'>read %data/file.txt
+=======
+<pre class='prettyprint lang-rye'><code language='lang-rye'>read file://data/file.txt
+>>>>>>> bf5a3df6eb1fdef1c7e53eba8dc5de93c179a0b8
 ; returns "hello text file
 ; "</code></pre>
 </div>
 <h3>file-schema//write</h3><p></p><div class='group'>
+<<<<<<< HEAD
 <pre class='prettyprint lang-rye'><code language='lang-rye'>write %data/write.txt "written
+=======
+<pre class='prettyprint lang-rye'><code language='lang-rye'>write file://data/write.txt "written
+>>>>>>> bf5a3df6eb1fdef1c7e53eba8dc5de93c179a0b8
 "
 ; returns "written
 ; "</code></pre>
