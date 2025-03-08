@@ -744,7 +744,16 @@ var Builtins_io = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "Read a specific number of bytes from a file path.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __fs_read_bytes(ps, arg0, arg1, arg2, arg3, arg4)
+			switch f := arg0.(type) {
+			case env.Uri:
+				data, err := os.ReadFile(f.GetPath())
+				if err != nil {
+					return MakeBuiltinError(ps, err.Error(), "__fs_read_bytes")
+				}
+				return *env.NewNative(ps.Idx, data, "bytes")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "__fs_read_bytes")
+			} // return __fs_read_bytes(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 

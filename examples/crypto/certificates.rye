@@ -1,0 +1,39 @@
+; Work in progress
+
+; load pkcs12 file and turn in to block of pem-blocks
+
+read\bytes %client-identity.p12 |pkcs12-to-pem "ppp"
+; returns
+; [Block: ^[Native of kind pem-block] [Native of kind pem-block] ]
+
+
+; print the types and headers of pem blocks
+
+read\bytes %client-identity.p12 |pkcs12-to-pem "ppp" |for { .block-type? .print , .headers? .print }
+; prints
+; CERTIFICATE
+; [
+;  localKeyId: 2706efcc950c8205aa8852e12c9fa01563e61a13
+; ]
+; PRIVATE KEY
+; [
+;  localKeyId: 2706efcc950c8205aa8852e12c9fa01563e61a13
+; ]
+
+; get start and end date of the certificate
+
+read\bytes %client-identity.p12 |pkcs12-to-pem "ppp" |seek { .block-type? = "CERTIFICATE" }
+|x509-parse-certificate .vals\with { .not-after? , .not-before? }
+; returns
+; [Block: ^[Time: 2026-03-08 00:21:51] [Time: 2025-03-08 00:21:51] ]
+
+
+; utility function
+p12->certificate: fn { file pwd } {
+	.read\bytes |pkcs12-to-pem pwd
+	|seek { .block-type? = "CERTIFICATE" }
+	|x509-parse-certificate
+}
+
+; print expiration date status of the certificate in p12 file 
+client.p12 .p12->certificate "ppp" |not-after? |print > now |either { "VALID" } { "EXPIRED" }
