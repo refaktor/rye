@@ -37,3 +37,21 @@ p12->certificate: fn { file pwd } {
 
 ; print expiration date status of the certificate in p12 file 
 client.p12 .p12->certificate "ppp" |not-after? |print > now |either { "VALID" } { "EXPIRED" }
+
+; create a self-signed certificate and save it to pem file or to p12
+
+generate-self-signed-certificate 2048 dict { CommonName: "Jimbo" }
+; [Block: ^[Native of kind x509-certificate] [Native of kind rsa-private-key] ]
+|set! { cert pkey }
+; [Block: ^[Native of kind x509-certificate] [Native of kind rsa-private-key] ]
+
+save-to-p12 cert pkey "pwd"
+; [Native of kind Go-bytes]
+|write\bytes "cert1.p12"
+;[Integer: 1]
+
+
+save-to-pem cert pkey
+; [Block: ^[Native of kind Go-bytes] [Native of kind Go-bytes] ]
+.with { .first .write\bytes "cert.pem" , .second .write\bytes "pkey.pem" }
+;[Integer: 1]

@@ -6,10 +6,14 @@ package evaldo
 import (
 	"bytes"
 	"crypto/ed25519"
+	"crypto/rand"
+	"crypto/rsa"
 	"crypto/sha512"
+	"crypto/x509/pkix"
 	"encoding/hex"
 	"encoding/pem"
 	"io"
+	"math/big"
 
 	"crypto/x509"
 	"fmt"
@@ -19,7 +23,8 @@ import (
 	// "x/crypto/pkcs12"
 
 	"github.com/refaktor/rye/env"
-	//"software.sslmate.com/src/go-pkcs12"
+	sslmate "software.sslmate.com/src/go-pkcs12"
+
 	"filippo.io/age"
 	"golang.org/x/crypto/pkcs12"
 )
@@ -670,6 +675,174 @@ var Builtins_crypto = map[string]*env.Builtin{
 			default:
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "x509-certificate//is-expired")
+			}
+		},
+	},
+
+	"generate-self-signed-certificate": {
+		Argsn: 2,
+		Doc:   "Generates a self-signed X.509 certificate with a new RSA key pair. Args: key-size (int), subject (dict). Returns block with [certificate, private-key].",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			// Arg0: Key size (int)
+			switch keySize := arg0.(type) {
+			case env.Integer:
+				if keySize.Value < 2048 {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Key size must be at least 2048 bits", "generate-self-signed-certificate")
+				}
+				// Arg1: Subject info (dict with fields like "CommonName", "Organization", etc.)
+				switch subjectDict := arg1.(type) {
+				case env.Dict:
+					// Generate RSA key pair
+					privateKey, err := rsa.GenerateKey(rand.Reader, int(keySize.Value))
+					if err != nil {
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, fmt.Sprintf("Failed to generate RSA key: %v", err), "generate-self-signed-certificate")
+					}
+
+					// Set up certificate template
+					serialNumber, _ := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), 128)) // Random 128-bit serial number
+					template := x509.Certificate{
+						SerialNumber: serialNumber,
+						Subject:      pkix.Name{},
+						NotBefore:    time.Now(),
+						NotAfter:     time.Now().Add(365 * 24 * time.Hour), // Valid for 1 year
+						KeyUsage:     x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+						ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+						IsCA:         true, // Self-signed, so it’s a CA
+					}
+
+					// Populate subject from dict
+					if cn, ok := subjectDict.Data["CommonName"]; ok {
+						if cnStr, ok := cn.(string); ok {
+							template.Subject.CommonName = cnStr
+						}
+					}
+					if org, ok := subjectDict.Data["Organization"]; ok {
+						if orgStr, ok := org.(string); ok {
+							template.Subject.Organization = []string{orgStr}
+						}
+					}
+					// Add more fields (Country, Locality, etc.) as needed
+
+					// Create self-signed certificate
+					certBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, &privateKey.PublicKey, privateKey)
+					if err != nil {
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, fmt.Sprintf("Failed to create certificate: %v", err), "generate-self-signed-certificate")
+					}
+
+					// Return block with [certificate, private-key]
+					objects := []env.Object{
+						*env.NewNative(ps.Idx, &x509.Certificate{Raw: certBytes}, "x509-certificate"),
+						*env.NewNative(ps.Idx, privateKey, "rsa-private-key"),
+					}
+					ser := *env.NewTSeries(objects)
+					return *env.NewBlock(ser)
+				default:
+					ps.FailureFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.DictType}, "generate-self-signed-certificate")
+				}
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "generate-self-signed-certificate")
+			}
+		},
+	},
+
+	"save-to-pem": {
+		Argsn: 2,
+		Doc:   "Saves a certificate and private key as PEM-encoded data. Args: certificate (x509-certificate), private-key (rsa-private-key). Returns block with [cert-bytes, key-bytes] as Go-bytes.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch certObj := arg0.(type) {
+			case env.Native:
+				if ps.Idx.GetWord(certObj.GetKind()) != "x509-certificate" {
+					ps.FailureFlag = true
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "save-to-pem")
+				}
+				cert := certObj.Value.(*x509.Certificate)
+				switch keyObj := arg1.(type) {
+				case env.Native:
+					if ps.Idx.GetWord(keyObj.GetKind()) != "rsa-private-key" {
+						ps.FailureFlag = true
+						return MakeArgError(ps, 2, []env.Type{env.NativeType}, "save-to-pem")
+					}
+					privateKey := keyObj.Value.(*rsa.PrivateKey)
+					// Encode certificate to PEM
+					certPEM := &bytes.Buffer{}
+					err := pem.Encode(certPEM, &pem.Block{
+						Type:  "CERTIFICATE",
+						Bytes: cert.Raw,
+					})
+					if err != nil {
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, fmt.Sprintf("Failed to encode certificate to PEM: %v", err), "save-to-pem")
+					}
+					// Encode private key to PEM
+					keyPEM := &bytes.Buffer{}
+					err = pem.Encode(keyPEM, &pem.Block{
+						Type:  "RSA PRIVATE KEY",
+						Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
+					})
+					if err != nil {
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, fmt.Sprintf("Failed to encode private key to PEM: %v", err), "save-to-pem")
+					}
+					// Return block with [cert-bytes, key-bytes]
+					objects := []env.Object{
+						*env.NewNative(ps.Idx, certPEM.Bytes(), "Go-bytes"),
+						*env.NewNative(ps.Idx, keyPEM.Bytes(), "Go-bytes"),
+					}
+					ser := *env.NewTSeries(objects)
+					return *env.NewBlock(ser)
+				default:
+					ps.FailureFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.NativeType}, "save-to-pem")
+				}
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "save-to-pem")
+			}
+		},
+	},
+
+	"save-to-p12": {
+		Argsn: 3,
+		Doc:   "Saves a certificate and private key to a PKCS#12 (.p12) file. Args: certificate (x509-certificate), private-key (rsa-private-key), password (string). Returns Go-bytes.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch certObj := arg0.(type) {
+			case env.Native:
+				if ps.Idx.GetWord(certObj.GetKind()) != "x509-certificate" {
+					ps.FailureFlag = true
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "save-to-p12")
+				}
+				cert := certObj.Value.(*x509.Certificate)
+				switch keyObj := arg1.(type) {
+				case env.Native:
+					if ps.Idx.GetWord(keyObj.GetKind()) != "rsa-private-key" {
+						ps.FailureFlag = true
+						return MakeArgError(ps, 2, []env.Type{env.NativeType}, "save-to-p12")
+					}
+					privateKey := keyObj.Value.(*rsa.PrivateKey)
+					switch password := arg2.(type) {
+					case env.String:
+						p12Bytes, err := sslmate.Encode(rand.Reader, privateKey, cert, nil, password.Value)
+						if err != nil {
+							ps.FailureFlag = true
+							return MakeBuiltinError(ps, fmt.Sprintf("Failed to encode to .p12: %v", err), "save-to-p12")
+						}
+						return *env.NewNative(ps.Idx, p12Bytes, "Go-bytes")
+					default:
+						ps.FailureFlag = true
+						return MakeArgError(ps, 3, []env.Type{env.StringType}, "save-to-p12")
+					}
+				default:
+					ps.FailureFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.NativeType}, "save-to-p12")
+				}
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "save-to-p12")
 			}
 		},
 	},
