@@ -54,3 +54,4 @@ buildtemp/main.rye
 cmd/parse_builtins/parse_builtinscmd/rbit/rbit
 
 cmd/rbit/rbit
+cmd/cato/cato
