@@ -744,7 +744,16 @@ var Builtins_io = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "Read a specific number of bytes from a file path.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __fs_read_bytes(ps, arg0, arg1, arg2, arg3, arg4)
+			switch f := arg0.(type) {
+			case env.Uri:
+				data, err := os.ReadFile(f.GetPath())
+				if err != nil {
+					return MakeBuiltinError(ps, err.Error(), "__fs_read_bytes")
+				}
+				return *env.NewNative(ps.Idx, data, "bytes")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "__fs_read_bytes")
+			} // return __fs_read_bytes(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
@@ -789,6 +798,65 @@ var Builtins_io = map[string]*env.Builtin{
 				return MakeArgError(ps, 1, []env.Type{env.UriType}, "__fs_write")
 			}
 
+		},
+	},
+
+	// TODO: make it generic of file schema
+	"write\\bytes": {
+		Argsn: 2,
+		Doc:   "Writes bytes to a file. Args: bytes (Go-bytes), path (string).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bytesObj := arg0.(type) {
+			case env.Native:
+				if ps.Idx.GetWord(bytesObj.GetKind()) != "Go-bytes" {
+					ps.FailureFlag = true
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "write-file")
+				}
+				switch path := arg1.(type) {
+				case env.String:
+					err := os.WriteFile(path.Value, bytesObj.Value.([]byte), 0644)
+					if err != nil {
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, fmt.Sprintf("Failed to write file: %v", err), "write-file")
+					}
+					return env.Integer{1} // Success indicator
+				default:
+					ps.FailureFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "write-file")
+				}
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "write-file")
+			}
+		},
+	},
+
+	"append\\bytes": {
+		Argsn: 2,
+		Doc:   "Appends two Go-bytes objects into one. Args: bytes1 (Go-bytes), bytes2 (Go-bytes). Returns Go-bytes.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bytes1 := arg0.(type) {
+			case env.Native:
+				if ps.Idx.GetWord(bytes1.GetKind()) != "bytes" {
+					ps.FailureFlag = true
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "append-bytes")
+				}
+				switch bytes2 := arg1.(type) {
+				case env.Native:
+					if ps.Idx.GetWord(bytes2.GetKind()) != "bytes" {
+						ps.FailureFlag = true
+						return MakeArgError(ps, 2, []env.Type{env.NativeType}, "append-bytes")
+					}
+					combined := append(bytes1.Value.([]byte), bytes2.Value.([]byte)...)
+					return *env.NewNative(ps.Idx, combined, "bytes")
+				default:
+					ps.FailureFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.NativeType}, "append-bytes")
+				}
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "append-bytes")
+			}
 		},
 	},
 

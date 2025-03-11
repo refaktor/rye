@@ -3,7 +3,7 @@
 
 rye .needs { aws }
 
-bucket: "test-bucket-cebelca"
+bucket: "test-bucket-rye"
 key: "test-key"
 
 r: reader "Hello, S3!\n"
@@ -16,7 +16,7 @@ print "Putting object to S3."
 client |get-object bucket key |read\string |fix { |print } :content
 print "Got content from S3: " + content
 
-; TODO: how can we close the reader and content?
+; TODO: how can we close the reader
 
 print "Deleting object from S3."
 client |delete-object bucket key
@@ -27,3 +27,4 @@ client |get-object bucket key |fix { |print }
 
 
 print "Done."
+

@@ -46,6 +46,7 @@ require (
 	github.com/thomasberger/parsemail v1.2.7
 	github.com/xuri/excelize/v2 v2.9.0
 	go.mongodb.org/mongo-driver v1.17.2
+	software.sslmate.com/src/go-pkcs12 v0.5.0
 	golang.org/x/crypto v0.36.0
 	golang.org/x/net v0.35.0
 	golang.org/x/sync v0.12.0

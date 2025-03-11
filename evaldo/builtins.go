@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/pem"
 	"fmt"
 	"io"
 	"math"
@@ -1723,11 +1724,29 @@ var builtins = map[string]*env.Builtin{
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
+			case env.Native:
+				switch ps.Idx.GetWord(s1.GetKind()) {
+				case "bytes":
+					bb, ok := s1.Value.([]byte)
+					if ok {
+						ata := base64.StdEncoding.EncodeToString(bb)
+						return *env.NewString(string(ata))
+					}
+					return MakeError(ps, "Native not of kind 1: bytes")
+				case "pem-block":
+					bb, ok := s1.Value.(*pem.Block)
+					if ok {
+						ata := base64.StdEncoding.EncodeToString(bb.Bytes)
+						return *env.NewString(string(ata))
+					}
+					return MakeError(ps, "Native not of kind 2: bytes")
+				}
+				return MakeError(ps, "Native not of kind 3: bytes")
 			case env.String:
 				ata := base64.StdEncoding.EncodeToString([]byte(s1.Value))
 				return *env.NewString(string(ata))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "base64-encode")
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.NativeType}, "base64-encode")
 			}
 		},
 	},
@@ -8365,9 +8384,11 @@ var builtins = map[string]*env.Builtin{
 						}
 						ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(item), true)
 						if ps.ErrorFlag {
+							ps.Ser = ser
 							return ps.Res
 						}
 						if util.IsTruthy(ps.Res) { // todo -- move these to util or something
+							ps.Ser = ser
 							return env.ToRyeValue(item)
 						}
 						ps.Ser.Reset()
@@ -8778,7 +8799,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"fix\\else": {
+	"continue": {
 		AcceptFailure: true,
 		Argsn:         2,
 		Doc:           "Do a block of code if Arg 1 is not a failure.",
