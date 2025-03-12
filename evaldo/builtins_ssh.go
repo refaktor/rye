@@ -14,9 +14,18 @@ import (
 
 var Builtins_ssh = map[string]*env.Builtin{
 
+	//
+	// ##### SSH ##### "SSH server functions"
+	//
+	// Tests:
+	// equal { ssh-server "localhost:2222" |type? } 'native
+	// Args:
+	// * address: String containing host:port address to listen on
+	// Returns:
+	// * native SSH server object
 	"ssh-server": {
 		Argsn: 1,
-		Doc:   "Create new ssh server.",
+		Doc:   "Creates a new SSH server that listens on the specified address.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch addr := arg0.(type) {
 			case env.String:
@@ -28,9 +37,17 @@ var Builtins_ssh = map[string]*env.Builtin{
 
 		},
 	},
+
+	// Tests:
+	// equal { server: ssh-server "localhost:2222" , server |ssh-server//handle :{ |session| session |ssh-session//write "Hello" } |type? } 'native
+	// Args:
+	// * server: SSH server object
+	// * handler: Function that receives an SSH session object
+	// Returns:
+	// * the SSH server object
 	"ssh-server//handle": {
 		Argsn: 2,
-		Doc:   "HTTP handle function for server.",
+		Doc:   "Sets a handler function for SSH sessions on the server.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch server := arg0.(type) {
 			case env.Native:
@@ -55,9 +72,17 @@ var Builtins_ssh = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	// equal { server: ssh-server "localhost:2222" , server |ssh-server//password-auth :{ |pass| pass = "secret" } |type? } 'native
+	// Args:
+	// * server: SSH server object
+	// * handler: Function that receives a password string and returns true/false
+	// Returns:
+	// * the SSH server object
 	"ssh-server//password-auth": {
 		Argsn: 2,
-		Doc:   "HTTP handler for password authentication.",
+		Doc:   "Sets a password authentication handler for the SSH server.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch server := arg0.(type) {
 			case env.Native:
@@ -84,9 +109,16 @@ var Builtins_ssh = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	// equal { server: ssh-server "localhost:2222" , server |ssh-server//serve |type? } 'native
+	// Args:
+	// * server: SSH server object
+	// Returns:
+	// * the SSH server object
 	"ssh-server//serve": {
 		Argsn: 1,
-		Doc:   "Listen and serve new server.",
+		Doc:   "Starts the SSH server, listening for connections.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch server := arg0.(type) {
 			case env.Native:
@@ -99,9 +131,16 @@ var Builtins_ssh = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { session: ssh-session-mock , session |ssh-session//write "Hello" |type? } 'native
+	// Args:
+	// * session: SSH session object
+	// * text: String to write to the session
+	// Returns:
+	// * the SSH session object
 	"ssh-session//write": {
 		Argsn: 2,
-		Doc:   "SSH session write function.",
+		Doc:   "Writes a string to an SSH session.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch session := arg0.(type) {
 			case env.Native:

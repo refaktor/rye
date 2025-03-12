@@ -1,9 +1,130 @@
 section "Default" "" {
+	group "decode\hex" 
+	"Decodes a hexadecimal string to a bytes native value."
+	{
+		arg `hex-string: hexadecimal encoded string to decode`
+		returns `native bytes object containing the decoded data`
+	}
+
+	{
+		equal { "48656c6c6f20776f726c64" |decode\hex |type? } 'native
+		equal { "48656c6c6f20776f726c64" |decode\hex |kind? } 'bytes
+		equal { "invalid" |decode\hex |disarm |type? } 'error
+	}
+
+	group "encode\hex" 
+	"Encodes a bytes native value to a hexadecimal string."
+	{
+		arg `bytes: native bytes object to encode`
+		returns `string containing the hexadecimal representation of the bytes`
+	}
+
+	{
+		equal { "48656c6c6f20776f726c64" |decode\hex |encode\hex } "48656c6c6f20776f726c64"
+		equal { "Hello world" |sha512 |decode\hex |encode\hex |type? } 'string
+	}
+
+	group "Ed25519-pub-key//to-string" 
+	"Converts an Ed25519 public key to its hexadecimal string representation."
+	{
+		arg `key: Ed25519 public key as a native value`
+		returns `string containing the hexadecimal representation of the public key`
+	}
+
+	{
+		equal { ed25519-generate-keys |first |to-string |type? } 'string
+	}
+
+	group "Ed25519-priv-key//to-string" 
+	"Converts an Ed25519 private key to its hexadecimal string representation."
+	{
+		arg `key: Ed25519 private key as a native value`
+		returns `string containing the hexadecimal representation of the private key`
+	}
+
+	{
+		equal { ed25519-generate-keys |second |to-string |type? } 'string
+	}
+
+	group "ed25519-generate-keys" 
+	"Generates a new Ed25519 key pair and returns them in a block with public key first, then private key."
+	{
+		arg `none`
+		returns `block containing [public-key, private-key] as native values`
+	}
+
+	{
+		equal { ed25519-generate-keys |type? } 'block
+		equal { ed25519-generate-keys |length? } 2
+		equal { ed25519-generate-keys |first |type? } 'native
+		equal { ed25519-generate-keys |first |kind? } 'Ed25519-pub-key
+		equal { ed25519-generate-keys |second |type? } 'native
+		equal { ed25519-generate-keys |second |kind? } 'Ed25519-priv-key
+	}
+
+	group "ed25519-private-key" 
+	"Creates an Ed25519 private key from a hexadecimal string or bytes value."
+	{
+		arg `key-data: string containing hexadecimal representation of the key or bytes native value`
+		returns `Ed25519 private key as a native value`
+	}
+
+	{
+		; equal { ed25519-generate-keys |second |ed25519-private-key |type? } 'native
+		; equal { ed25519-generate-keys |second |to-string |probe |ed25519-private-key |kind? } 'Ed25519-priv-key
+		equal { "invalid" |ed25519-private-key |disarm |type? } 'error
+	}
+
+	group "ed25519-public-key" 
+	"Creates an Ed25519 public key from a hexadecimal string or bytes value."
+	{
+		arg `key-data: string containing hexadecimal representation of the key or bytes native value`
+		returns `Ed25519 public key as a native value`
+	}
+
+	{
+		; equal { ed25519-generate-keys |first |to-string |ed25519-public-key |type? } 'native
+		; equal { ed25519-generate-keys |first |to-string |ed25519-public-key |kind? } 'Ed25519-pub-key
+		equal { "invalid" |ed25519-public-key |disarm |type? } 'error
+	}
+
+	group "Ed25519-priv-key//sign" 
+	"Signs a string message with an Ed25519 private key and returns the signature as bytes."
+	{
+		arg `key: Ed25519 private key as a native value`
+		arg `message: string to sign`
+		returns `signature as a native bytes value`
+	}
+
+	{
+		; equal {
+		;   ed25519-generate-keys |set! { pub priv }
+		;   "Hello world" priv |sign |type?
+		; } 'native
+		; equal {
+		;   ed25519-generate-keys |set! { pub priv }
+		;  "Hello world" priv |sign |kind?
+		; } 'bytes
+	}
+
+	group "sha512" 
+	"Calculates the SHA-512 hash of a string and returns the result as a hexadecimal string."
+	{
+		arg `input: string to hash`
+		returns `string containing the hexadecimal representation of the SHA-512 hash`
+	}
+
+	{
+		equal { "Hello world" |sha512 |type? } 'string
+		equal { "Hello world" |sha512 |length? } 128
+		equal { "" |sha512 } "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e"
+	}
+
 }
 
 section "Age " "Age encryption/decryption and key generation" {
 	group "age-generate-keys" 
-	""
+	"Generates a new age key pair (identity and recipient)."
 	{
 	}
 
@@ -15,7 +136,7 @@ section "Age " "Age encryption/decryption and key generation" {
 	}
 
 	group "age-identity" 
-	""
+	"Creates an age identity from a string or bytes."
 	{
 	}
 
@@ -26,7 +147,7 @@ section "Age " "Age encryption/decryption and key generation" {
 	}
 
 	group "age-recipient" 
-	""
+	"Creates an age recipient from a string or bytes."
 	{
 	}
 
@@ -37,7 +158,7 @@ section "Age " "Age encryption/decryption and key generation" {
 	}
 
 	group "age-encrypt" 
-	""
+	"Encrypts a reader with age for the provided age recipient or string password and returns a reader."
 	{
 	}
 
@@ -47,6 +168,171 @@ section "Age " "Age encryption/decryption and key generation" {
 		"SUPER SECRET" |reader |age-encrypt recipient |age-decrypt identity |read\string
 		} "SUPER SECRET"
 		equal { "SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |read\string } "SUPER SECRET"
+	}
+
+	group "age-decrypt" 
+	"Decrypts a reader with age using the provided age identity or string password and returns a reader with the decrypted content."
+	{
+		arg `reader: encrypted data as a reader native value`
+		arg `identity-or-password: age identity native value or password string`
+		returns `decrypted data as a reader native value`
+	}
+
+	{
+		equal {
+		age-generate-keys |set! { identity recipient }
+		"SUPER SECRET" |reader |age-encrypt recipient |age-decrypt identity |read\string
+		} "SUPER SECRET"
+		equal { "SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |read\string } "SUPER SECRET"
+	}
+
+	group "pkcs12-to-pem" 
+	"Converts a PKCS#12 (.p12) file bytes to PEM blocks using the provided password. Returns a block of pem-block native values."
+	{
+		arg `p12-data: PKCS#12 file content as bytes native value`
+		arg `password: string password for the PKCS#12 file`
+		returns `block containing PEM blocks as native values`
+	}
+
+	{
+		; equal { "cert.p12" read-file "password" pkcs12-to-pem |type? } 'block
+		; equal { "cert.p12" read-file "password" pkcs12-to-pem |first |type? } 'native
+		; equal { "cert.p12" read-file "password" pkcs12-to-pem |first |kind? } 'pem-block
+	}
+
+	group "pkcs12-decode" 
+	"Decodes a PKCS#12 (.p12) file bytes into certificate and private key using the provided password. Returns a block with [private-key, certificate]."
+	{
+		arg `p12-data: PKCS#12 file content as bytes native value`
+		arg `password: string password for the PKCS#12 file`
+		returns `block containing [private-key, x509-certificate] as native values`
+	}
+
+	{
+		; equal { "cert.p12" read-file "password" pkcs12-decode |type? } 'block
+		; equal { "cert.p12" read-file "password" pkcs12-decode |length? } 2
+		; equal { "cert.p12" read-file "password" pkcs12-decode |first |type? } 'native
+		; equal { "cert.p12" read-file "password" pkcs12-decode |first |kind? } 'private-key
+		; equal { "cert.p12" read-file "password" pkcs12-decode |second |type? } 'native
+		; equal { "cert.p12" read-file "password" pkcs12-decode |second |kind? } 'x509-certificate
+	}
+
+	group "pem-block//block-type?" 
+	"Returns the type of a PEM block as a string (e.g., 'CERTIFICATE', 'RSA PRIVATE KEY')."
+	{
+		arg `pem-block: PEM block as a native value`
+		returns `string containing the block type (e.g., "CERTIFICATE", "RSA PRIVATE KEY")`
+	}
+
+	{
+		; equal { "cert.pem" read-file |pem-decode |block-type? } "CERTIFICATE"
+	}
+
+	group "pem-block//headers?" 
+	"Returns the headers of a PEM block as a dictionary."
+	{
+		arg `pem-block: PEM block as a native value`
+		returns `dictionary containing the PEM block headers`
+	}
+
+	{
+		; equal { "cert.pem" read-file |pem-decode |headers? |type? } 'dict
+	}
+
+	group "x509-parse-certificate" 
+	"Parses a PEM block into an X.509 certificate native value."
+	{
+		arg `pem-block: PEM block as a native value containing a certificate`
+		returns `X.509 certificate as a native value`
+	}
+
+	{
+		; equal { "cert.pem" read-file |pem-decode |x509-parse-certificate |type? } 'native
+		; equal { "cert.pem" read-file |pem-decode |x509-parse-certificate |kind? } 'x509-certificate
+	}
+
+	group "x509-certificate//not-after?" 
+	"Returns the expiration date (NotAfter) of an X.509 certificate as a time value."
+	{
+		arg `certificate: X.509 certificate as a native value`
+		returns `time value representing the certificate's expiration date`
+	}
+
+	{
+		; equal { "cert.pem" read-file |pem-decode |x509-parse-certificate |not-after? |type? } 'time
+	}
+
+	group "x509-certificate//not-before?" 
+	"Returns the start date (NotBefore) of an X.509 certificate as a time value."
+	{
+		arg `certificate: X.509 certificate as a native value`
+		returns `time value representing the certificate's start date`
+	}
+
+	{
+		; equal { "cert.pem" read-file |pem-decode |x509-parse-certificate |not-before? |type? } 'time
+	}
+
+	group "x509-certificate//is-expired" 
+	"Checks if an X.509 certificate has expired. Returns 1 if expired, 0 otherwise."
+	{
+		arg `certificate: X.509 certificate as a native value`
+		returns `integer 1 if the certificate has expired, 0 otherwise`
+	}
+
+	{
+		; equal { "cert.pem" read-file |pem-decode |x509-parse-certificate |is-expired |type? } 'integer
+		; equal { "cert.pem" read-file |pem-decode |x509-parse-certificate |is-expired } 0 ; assuming cert is not expired
+	}
+
+	group "generate-self-signed-certificate" 
+	"Generates a self-signed X.509 certificate with a new RSA key pair."
+	{
+		arg `key-size: integer, must be at least 2048 bits`
+		arg `subject: dictionary with fields like "CommonName" and "Organization"`
+		returns `block containing [certificate, private-key] as native values`
+	}
+
+	{
+		; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |type? } 'block
+		; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |length? } 2
+		; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |at 0 |type? } 'native
+		; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |at 0 |kind? } 'x509-certificate
+		; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |at 1 |type? } 'native
+		; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |at 1 |kind? } 'rsa-private-key
+		; equal { generate-self-signed-certificate 1024 { "CommonName" "test.com" } |disarm |type? } 'error
+	}
+
+	group "encode-to-pem" 
+	"Encodes a certificate and private key as PEM-formatted data."
+	{
+		arg `certificate: X.509 certificate as a native value`
+		arg `private-key: RSA private key as a native value`
+		returns `block with [cert-bytes, key-bytes] as Go-bytes native values`
+	}
+
+	{
+		; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key } cert key encode-to-pem |type? } 'block
+		; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key }   cert key encode-to-pem |length? } 2
+		; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key }   cert key encode-to-pem |at 0 |type? } 'native
+		; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key }   cert key encode-to-pem |at 0 |kind? } 'Go-bytes
+		; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key }   cert key encode-to-pem |at 1 |type? } 'native
+		; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key }   cert key encode-to-pem |at 1 |kind? } 'Go-bytes
+		; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key }   cert key encode-to-pem |at 0 "data/cert.pem" write-file "data/cert.pem" read-file |x509-parse-certificate |is-expired } 0
+	}
+
+	group "encode-to-p12" 
+	"Encodes a certificate and private key into a PKCS#12 (.p12) file with password protection."
+	{
+		arg `certificate: X.509 certificate as a native value`
+		arg `private-key: RSA private key as a native value`
+		arg `password: string password to protect the PKCS#12 file`
+		returns `PKCS#12 encoded data as Go-bytes native value`
+	}
+
+	{
+		; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key } cert key "password" encode-to-p12 |type? } 'native
+		; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key } cert key "password" encode-to-p12 |kind? } 'Go-bytes
 	}
 
 }

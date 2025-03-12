@@ -21,12 +21,13 @@ type builtinSection struct {
 }
 
 type builtinInfo struct {
-	name      string     // from key value
-	gentype   string     // optional from key value
-	docstring string     // part of builtin definition
-	doc       string     // free text at the top of the comment
-	nargs     int        // part of builtin definition
-	args      []string   // extracted from comment or variable names
+	name      string   // from key value
+	gentype   string   // optional from key value
+	docstring string   // part of builtin definition
+	doc       string   // free text at the top of the comment
+	nargs     int      // part of builtin definition
+	args      []string // extracted from comment or variable names
+	returns   string
 	argtypes  [][]string // extracted from switch statements or conversions
 	tests     []string   // extracted from comment
 	examples  []string   // extracted from comment
@@ -58,6 +59,7 @@ func parseCommentsAboveKey(input string, info *builtinInfo) (builtinInfo, *built
 		inTests
 		inExamples
 		inArgs
+		inReturns
 		x
 	)
 	position := inDoc
@@ -77,6 +79,8 @@ func parseCommentsAboveKey(input string, info *builtinInfo) (builtinInfo, *built
 
 	re := regexp.MustCompile(`^##### ([A-Za-z0-9 ]+)#####\s+"([^"]*)"`)
 
+	re_star := regexp.MustCompile("^\\* ")
+
 	for _, line := range lines {
 		line = strings.TrimSpace(line) // Remove leading and trailing whitespace
 		// fmt.Println("LLLL:" + line)
@@ -95,6 +99,9 @@ func parseCommentsAboveKey(input string, info *builtinInfo) (builtinInfo, *built
 		case "Args:":
 			position = inArgs
 			continue
+		case "Returns:":
+			position = inReturns
+			continue
 		}
 
 		switch position {
@@ -105,7 +112,9 @@ func parseCommentsAboveKey(input string, info *builtinInfo) (builtinInfo, *built
 		case inExamples:
 			info.examples = append(info.examples, line) // TODO --- examples can be multiline, there is a name also
 		case inArgs:
-			info.args = append(info.args, line)
+			info.args = append(info.args, re_star.ReplaceAllString(line, ""))
+		case inReturns:
+			info.returns = info.returns + re_star.ReplaceAllString(line, "")
 		}
 	}
 	// Step 3: Combine the header lines into a single string
@@ -118,16 +127,17 @@ func outputInfo(sections *[]builtinSection) {
 	for _, section := range *sections {
 		fmt.Printf("section \"%s\" \"%s\" {\n", section.name, section.docstring) // name
 		for _, info := range section.builtins {
-			if len(info.tests) > 0 {
+			if len(info.tests) > 0 || len(info.args) > 0 {
 				fmt.Printf("\tgroup \"%s\" \n", strings.Replace(info.name, "\\\\", "\\", -1)) // name
 				fmt.Printf("\t\"%s\"\n", info.docstring)                                      // docstring
-
-				fmt.Print("\t{\n") // args
+				fmt.Print("\t{\n")                                                            // args
 				for _, t := range info.args {
-					fmt.Println("\t\targ \"" + t + "\"")
+					fmt.Println("\t\targ `" + t + "`")
+				}
+				if len(info.returns) > 0 {
+					fmt.Println("\t\treturns `" + info.returns + "`")
 				}
 				fmt.Println("\t}\n")
-
 				fmt.Print("\t{\n")
 				for _, t := range info.tests {
 					fmt.Println("\t\t" + t)
@@ -267,6 +277,25 @@ func doParsing(args []string) {
 								if len(info.tests) > 0 {
 									c.tested_functions = c.tested_functions + 1
 									c.tests = c.tests + len(info.tests)
+								}
+							}
+
+							// Extract the Doc field from the Builtin struct
+							if compLit, ok := kv.Value.(*ast.CompositeLit); ok {
+								for _, elt := range compLit.Elts {
+									if kvField, ok := elt.(*ast.KeyValueExpr); ok {
+										if keyField, ok := kvField.Key.(*ast.Ident); ok {
+											if keyField.Name == "Doc" {
+												if docValue, ok := kvField.Value.(*ast.BasicLit); ok {
+													// Extract the Doc value (removing quotes)
+													docString := docValue.Value[1 : len(docValue.Value)-1]
+													info.docstring = docString
+													// Debug print
+													// fmt.Printf("Function: %s, Doc: %s\n", info.name, info.docstring)
+												}
+											}
+										}
+									}
 								}
 							}
 						}

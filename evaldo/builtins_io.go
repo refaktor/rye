@@ -406,9 +406,13 @@ func __https_response__read_body(ps *env.ProgramState, arg0 env.Object, arg1 env
 
 var Builtins_io = map[string]*env.Builtin{
 
+	// Args:
+	// * prompt: string to display as a prompt
+	// Returns:
+	// * string containing the user's input
 	"input": {
 		Argsn: 1,
-		Doc:   "Take input from a user.",
+		Doc:   "Prompts for and reads user input from the console.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __input(ps, arg0, arg1, arg2, arg3, arg4)
 		},
@@ -420,9 +424,13 @@ var Builtins_io = map[string]*env.Builtin{
 	// Tests:
 	// equal { open %data/file.txt |type? } 'native
 	// equal { open %data/file.txt |kind? } 'file
+	// Args:
+	// * path: uri representing the file to open
+	// Returns:
+	// * native file object
 	"file-schema//open": {
 		Argsn: 1,
-		Doc:   "Open file.",
+		Doc:   "Opens a file for reading.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Uri:
@@ -440,9 +448,13 @@ var Builtins_io = map[string]*env.Builtin{
 	// Tests:
 	// equal { open\append %data/file.txt |type? } 'native
 	// equal { open\append %data/file.txt |kind? } 'writer
+	// Args:
+	// * path: uri representing the file to open for appending
+	// Returns:
+	// * native writer object
 	"file-schema//open\\append": {
 		Argsn: 1,
-		Doc:   "Open file.",
+		Doc:   "Opens a file for appending.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Uri:
@@ -460,9 +472,13 @@ var Builtins_io = map[string]*env.Builtin{
 	// Tests:
 	// equal { create %data/created.txt |type? } 'native
 	// equal { create %data/created.txt |kind? } 'file
+	// Args:
+	// * path: uri representing the file to create
+	// Returns:
+	// * native file object
 	"file-schema//create": {
 		Argsn: 1,
-		Doc:   "Create file.",
+		Doc:   "Creates a new file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Uri:
@@ -486,9 +502,13 @@ var Builtins_io = map[string]*env.Builtin{
 	// equal { file-ext? %data/file.txt } ".txt"
 	// equal { file-ext? %data/file.temp.png } ".png"
 	// equal { file-ext? "data/file.temp.png" } ".png"
+	// Args:
+	// * path: uri or string representing a file path
+	// Returns:
+	// * string containing the file extension (including the dot)
 	"file-ext?": {
 		Argsn: 1,
-		Doc:   "Get file extension.",
+		Doc:   "Gets the extension of a file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Uri:
@@ -508,9 +528,13 @@ var Builtins_io = map[string]*env.Builtin{
 	// equal { reader %data/file.txt |kind? } 'reader
 	// equal { reader open %data/file.txt |kind? } 'reader
 	// equal { reader "some string" |kind? } 'reader
+	// Args:
+	// * source: uri, file object, or string to read from
+	// Returns:
+	// * native reader object
 	"reader": {
 		Argsn: 1,
-		Doc:   "Open new reader.",
+		Doc:   "Creates a new reader from a file path, file object, or string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Uri:
@@ -538,17 +562,25 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
+	// Args:
+	// * none
+	// Returns:
+	// * native reader object connected to standard input
 	"stdin": {
 		Argsn: 0,
-		Doc:   "Standard input.",
+		Doc:   "Gets a reader for standard input.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewNative(ps.Idx, os.Stdin, "reader")
 		},
 	},
 
+	// Args:
+	// * none
+	// Returns:
+	// * native writer object connected to standard output
 	"stdout": {
 		Argsn: 0,
-		Doc:   "Standard output.",
+		Doc:   "Gets a writer for standard output.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewNative(env1.Idx, os.Stdout, "writer")
 		},
@@ -558,9 +590,13 @@ var Builtins_io = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { reader "some string" |read\string } "some string"
+	// Args:
+	// * reader: native reader object
+	// Returns:
+	// * string containing all content from the reader
 	"reader//read\\string": {
 		Argsn: 1,
-		Doc:   "Read string from a reader and return it.",
+		Doc:   "Reads all content from a reader as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch r := arg0.(type) {
 			case env.Native:
@@ -584,9 +620,14 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
+	// Args:
+	// * reader: native reader object
+	// * writer: native writer object
+	// Returns:
+	// * the reader object if successful
 	"reader//copy": {
 		Argsn: 2,
-		Doc:   "Copy from a reader to a writer.",
+		Doc:   "Copies all content from a reader to a writer.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch r := arg0.(type) {
 			case env.Native:
@@ -613,9 +654,14 @@ var Builtins_io = map[string]*env.Builtin{
 
 	// We have duplication reader file TODO think about this ... is it worth
 	// changing how kinds work, making them more complex? not sure yet
+	// Args:
+	// * file: native file object
+	// * writer: native writer object
+	// Returns:
+	// * the file object if successful
 	"file//copy": {
 		Argsn: 2,
-		Doc:   "Copy Rye file to ouptut.",
+		Doc:   "Copies content from a file to a writer.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch r := arg0.(type) {
 			case env.Native:
@@ -642,9 +688,13 @@ var Builtins_io = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { stat open %data/file.txt |kind? } 'file-info
+	// Args:
+	// * file: native file object
+	// Returns:
+	// * native file-info object
 	"file//stat": {
 		Argsn: 1,
-		Doc:   "Get stat of a file.",
+		Doc:   "Gets file information (stat) for a file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __stat(ps, arg0, arg1, arg2, arg3, arg4)
 		},
@@ -652,9 +702,13 @@ var Builtins_io = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { size? stat open %data/file.txt } 16
+	// Args:
+	// * file-info: native file-info object
+	// Returns:
+	// * integer representing the file size in bytes
 	"file-info//size?": {
 		Argsn: 1,
-		Doc:   "Get size of a file.",
+		Doc:   "Gets the size of a file in bytes.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Native:
@@ -668,9 +722,13 @@ var Builtins_io = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { read-all open %data/file.txt } "hello text file\n"
+	// Args:
+	// * file: native file object
+	// Returns:
+	// * string containing the entire file content
 	"file//read-all": {
 		Argsn: 1,
-		Doc:   "Read all file.",
+		Doc:   "Reads the entire content of a file as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Native:
@@ -687,9 +745,13 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
+	// Args:
+	// * file: native file object
+	// Returns:
+	// * the same file object with position set to end of file
 	"file//seek\\end": {
 		Argsn: 1,
-		Doc:   "Write to a file.",
+		Doc:   "Seeks to the end of a file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Native:
@@ -708,9 +770,13 @@ var Builtins_io = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { close open %data/file.txt } ""
+	// Args:
+	// * file: native file object
+	// Returns:
+	// * empty string if successful
 	"file//close": {
 		Argsn: 1,
-		Doc:   "Closes an open file or reader or writer.",
+		Doc:   "Closes an open file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Native:
@@ -730,9 +796,13 @@ var Builtins_io = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { read %data/file.txt } "hello text file\n"
+	// Args:
+	// * path: uri representing the file to read
+	// Returns:
+	// * string containing the entire file content
 	"file-schema//read": {
 		Argsn: 1,
-		Doc:   "Read a file given the path.",
+		Doc:   "Reads the entire content of a file as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __fs_read(ps, arg0, arg1, arg2, arg3, arg4)
 		},
@@ -740,9 +810,13 @@ var Builtins_io = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { read %data/file.txt } "hello text file\n"
+	// Args:
+	// * path: uri representing the file to read
+	// Returns:
+	// * native bytes object containing the file content
 	"file-schema//read\\bytes": {
 		Argsn: 1,
-		Doc:   "Read a specific number of bytes from a file path.",
+		Doc:   "Reads the entire content of a file as bytes.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch f := arg0.(type) {
 			case env.Uri:
@@ -759,9 +833,13 @@ var Builtins_io = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { read %data/file.txt } "hello text file\n"
+	// Args:
+	// * path: uri representing the file to read
+	// Returns:
+	// * block of strings, each representing a line from the file
 	"file-schema//read\\lines": {
 		Argsn: 1,
-		Doc:   "Read files into the block of lines.",
+		Doc:   "Reads a file and returns its content as a block of lines.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __fs_read_lines(ps, arg0, arg1, arg2, arg3, arg4)
 		},
@@ -769,9 +847,14 @@ var Builtins_io = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { write %data/write.txt "written\n" } "written\n"
+	// Args:
+	// * path: uri representing the file to write to
+	// * content: string or bytes to write to the file
+	// Returns:
+	// * the content that was written
 	"file-schema//write": {
 		Argsn: 2,
-		Doc:   "Write to a file.",
+		Doc:   "Writes content to a file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch f := arg0.(type) {
 			case env.Uri:
@@ -802,9 +885,14 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 
 	// TODO: make it generic of file schema
+	// Args:
+	// * bytes: Go-bytes native value to write
+	// * path: string path to the file to write
+	// Returns:
+	// * integer 1 if successful
 	"write\\bytes": {
 		Argsn: 2,
-		Doc:   "Writes bytes to a file. Args: bytes (Go-bytes), path (string).",
+		Doc:   "Writes bytes to a file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bytesObj := arg0.(type) {
 			case env.Native:
@@ -831,9 +919,14 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
+	// Args:
+	// * bytes1: first Go-bytes native value
+	// * bytes2: second Go-bytes native value
+	// Returns:
+	// * combined bytes as a native bytes object
 	"append\\bytes": {
 		Argsn: 2,
-		Doc:   "Appends two Go-bytes objects into one. Args: bytes1 (Go-bytes), bytes2 (Go-bytes). Returns Go-bytes.",
+		Doc:   "Appends two byte arrays into one.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bytes1 := arg0.(type) {
 			case env.Native:
@@ -860,9 +953,14 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
+	// Args:
+	// * writer: native writer object
+	// * content: string to write
+	// Returns:
+	// * the writer object if successful
 	"writer//write\\string": {
 		Argsn: 2,
-		Doc:   "Write string to a writer.",
+		Doc:   "Writes a string to a writer.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg1.(type) {
 			case env.String:
@@ -910,9 +1008,13 @@ var Builtins_io = map[string]*env.Builtin{
 			},
 		}, */
 
+	// Args:
+	// * url: uri representing the HTTPS URL to request
+	// Returns:
+	// * native reader object for the response body
 	"https-schema//open": {
 		Argsn: 1,
-		Doc:   "Open a HTTPS GET request.",
+		Doc:   "Opens a HTTPS GET request and returns a reader for the response body.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch f := arg0.(type) {
 			case env.Uri:
@@ -949,89 +1051,144 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
+	// Args:
+	// * url: uri representing the HTTPS URL to request
+	// Returns:
+	// * string containing the response body
 	"https-schema//get": {
 		Argsn: 1,
-		Doc:   "Make a HTTPS GET request.",
+		Doc:   "Makes a HTTPS GET request and returns the response body as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __https_s_get(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
+	// Args:
+	// * url: uri representing the HTTPS URL to request
+	// * data: string containing the request body
+	// * content-type: word specifying the content type (e.g., 'json', 'text')
+	// Returns:
+	// * string containing the response body
 	"https-schema//post": {
 		Argsn: 3,
-		Doc:   "Make a HTTPS POST request.",
+		Doc:   "Makes a HTTPS POST request and returns the response body as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __http_s_post(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
+	// Args:
+	// * url: uri representing the HTTP URL to request
+	// Returns:
+	// * string containing the response body
 	"http-schema//get": {
 		Argsn: 1,
-		Doc:   "Make a HTTP GET request.",
+		Doc:   "Makes a HTTP GET request and returns the response body as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __https_s_get(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
+	// Args:
+	// * url: uri representing the HTTP URL to request
+	// * data: string containing the request body
+	// * content-type: word specifying the content type (e.g., 'json', 'text')
+	// Returns:
+	// * string containing the response body
 	"http-schema//post": {
 		Argsn: 3,
-		Doc:   "Make a HTTP POST request.",
+		Doc:   "Makes a HTTP POST request and returns the response body as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __http_s_post(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
+	// Args:
+	// * url: uri representing the HTTPS URL to request
+	// * method: word specifying the HTTP method (e.g., 'GET', 'POST')
+	// * data: string containing the request body
+	// Returns:
+	// * native https-request object
 	"https-schema//new-request": {
 		Argsn: 3,
-		Doc:   "Create a new HTTPS Request object.",
+		Doc:   "Creates a new HTTPS request object.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __https_s__new_request(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
+	// Args:
+	// * request: native https-request object
+	// * name: word representing the header name
+	// * value: string containing the header value
+	// Returns:
+	// * the request object if successful
 	"https-request//set-header": {
 		Argsn: 3,
-		Doc:   "Set header to the HTTPS Request.",
+		Doc:   "Sets a header on a HTTPS request.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __https_request__set_header(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
+	// Args:
+	// * request: native https-request object
+	// * username: string containing the username
+	// * password: string containing the password
+	// Returns:
+	// * the request object if successful
 	"https-request//set-basic-auth": {
 		Argsn: 3,
-		Doc:   "Set Basic Auth to the HTTPS Request.",
+		Doc:   "Sets Basic Authentication on a HTTPS request.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __https_request__set_basic_auth(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
+	// Args:
+	// * request: native https-request object
+	// Returns:
+	// * native https-response object
 	"https-request//call": {
 		Argsn: 1,
-		Doc:   "Call a HTTPS Request.",
+		Doc:   "Executes a HTTPS request and returns the response.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __https_request__do(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
+	// Args:
+	// * response: native https-response object
+	// Returns:
+	// * string containing the response body
 	"https-response//read-body": {
 		Argsn: 1,
-		Doc:   "Read body of HTTPS response.",
+		Doc:   "Reads the body of a HTTPS response as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __https_response__read_body(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
+	// Args:
+	// * to: email address to send to
+	// * message: string containing the email message
+	// Returns:
+	// * integer 1 if successful
 	"email//send": {
 		Argsn: 2,
-		Doc:   "Send email.",
+		Doc:   "Sends an email to the specified address.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return __email_send(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
 
+	// Args:
+	// * server: uri representing the FTP server to connect to
+	// Returns:
+	// * native ftp-connection object
 	"ftp-schema//open": {
 		Argsn: 1,
-		Doc:   "Open connection to FTP Server",
+		Doc:   "Opens a connection to an FTP server.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 
 			switch s := arg0.(type) {
@@ -1054,9 +1211,15 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
+	// Args:
+	// * connection: native ftp-connection object
+	// * username: string containing the username
+	// * password: string containing the password
+	// Returns:
+	// * the connection object if successful
 	"ftp-connection//login": {
 		Argsn: 3,
-		Doc:   "Login to connection to FTP Server",
+		Doc:   "Logs in to an FTP server connection.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 
 			switch s := arg0.(type) {
@@ -1085,9 +1248,14 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
+	// Args:
+	// * connection: native ftp-connection object
+	// * path: string containing the path of the file to retrieve
+	// Returns:
+	// * native reader object for the retrieved file
 	"ftp-connection//retrieve": {
 		Argsn: 2,
-		Doc:   "Retrieve file from connection to FTP Server",
+		Doc:   "Retrieves a file from an FTP server.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 
 			switch s := arg0.(type) {

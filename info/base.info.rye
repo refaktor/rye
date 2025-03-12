@@ -1,6 +1,6 @@
 section "Boolean logic " "Functions that work with true and false values." {
 	group "true" 
-	""
+	"Returns a truthy value. Will change to exact True value."
 	{
 	}
 
@@ -9,7 +9,7 @@ section "Boolean logic " "Functions that work with true and false values." {
 	}
 
 	group "false" 
-	""
+	"Returns a falsy value. Will change to exact Falce value"
 	{
 	}
 
@@ -18,7 +18,7 @@ section "Boolean logic " "Functions that work with true and false values." {
 	}
 
 	group "_|" 
-	""
+	"Turns a truthy value to a non-truthy and reverse."
 	{
 	}
 
@@ -28,7 +28,7 @@ section "Boolean logic " "Functions that work with true and false values." {
 	}
 
 	group "not" 
-	""
+	"Turns a truthy value to a non-truthy and reverse."
 	{
 	}
 
@@ -38,7 +38,7 @@ section "Boolean logic " "Functions that work with true and false values." {
 	}
 
 	group "and" 
-	""
+	"Bitwise AND operation between two values."
 	{
 	}
 
@@ -48,7 +48,7 @@ section "Boolean logic " "Functions that work with true and false values." {
 	}
 
 	group "or" 
-	""
+	"Bitwise OR operation between two values."
 	{
 	}
 
@@ -60,7 +60,7 @@ section "Boolean logic " "Functions that work with true and false values." {
 	}
 
 	group "xor" 
-	""
+	"Bitwise XOR operation between two values."
 	{
 	}
 
@@ -72,7 +72,7 @@ section "Boolean logic " "Functions that work with true and false values." {
 	}
 
 	group "all" 
-	""
+	"Takes a block, if all values or expressions are truthy it returns the last one, otherwise false."
 	{
 	}
 
@@ -82,7 +82,7 @@ section "Boolean logic " "Functions that work with true and false values." {
 	}
 
 	group "any" 
-	""
+	"Takes a block, if any of the values or expressions are truthy, the it returns that one, in none false."
 	{
 	}
 
@@ -93,7 +93,7 @@ section "Boolean logic " "Functions that work with true and false values." {
 	}
 
 	group "any\with" 
-	""
+	"Takes a block, if any of the values or expressions are truthy, then it returns that one, in none false."
 	{
 	}
 
@@ -106,7 +106,7 @@ section "Boolean logic " "Functions that work with true and false values." {
 
 section "Numbers " "Working with numbers, integers and decimals." {
 	group "inc" 
-	""
+	"Returns integer value incremented by 1."
 	{
 	}
 
@@ -116,7 +116,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	group "is-positive" 
-	""
+	"Returns true if integer is positive."
 	{
 	}
 
@@ -127,7 +127,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	group "is-zero" 
-	""
+	"Returns true if integer is zero."
 	{
 	}
 
@@ -138,7 +138,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	group "is-multiple-of" 
-	""
+	"Checks if a first argument is a factor of second."
 	{
 	}
 
@@ -148,7 +148,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	group "is-odd" 
-	""
+	"Checks if a number is odd."
 	{
 	}
 
@@ -158,7 +158,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	group "is-even" 
-	""
+	"Checks if a number is even."
 	{
 	}
 
@@ -168,7 +168,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	group "mod" 
-	""
+	"Calculates module (remainder) of two integers."
 	{
 	}
 
@@ -179,7 +179,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	group "random\integer" 
-	""
+	"Accepts an integer n and returns a random integer between 0 and n in the half-open interval [0,n)."
 	{
 	}
 
@@ -189,7 +189,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	group "inc!" 
-	""
+	"Searches for a word and increments it's integer value in-place."
 	{
 	}
 
@@ -199,7 +199,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	group "dec!" 
-	""
+	"Searches for a word and increments it's integer value in-place."
 	{
 	}
 
@@ -209,7 +209,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	group "_." 
-	""
+	"Accepts argument and returns void, meant to be used as drop in Eyr, void is not a valid runtime value."
 	{
 	}
 
@@ -218,7 +218,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	group "_+" 
-	""
+	"Adds or joins two values together (Integers, Strings, Uri-s and Blocks)"
 	{
 	}
 
@@ -234,7 +234,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	group "_-" 
-	""
+	"Subtracts two numbers."
 	{
 	}
 
@@ -244,7 +244,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	group "_*" 
-	""
+	"Multiplies two numbers."
 	{
 	}
 
@@ -254,7 +254,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	group "_/" 
-	""
+	"Divide two numbers and return a decimal."
 	{
 	}
 
@@ -264,7 +264,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	group "_//" 
-	""
+	"Divides two numbers and return truncated integer."
 	{
 	}
 
@@ -275,7 +275,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	group "_=" 
-	""
+	"Checks if two Rye values are equal."
 	{
 	}
 
@@ -285,7 +285,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	group "_>" 
-	""
+	"Checks if first argument is greater than the second."
 	{
 	}
 
@@ -295,7 +295,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	group "_>=" 
-	""
+	"Checks if first argument is greater or equal than the second."
 	{
 	}
 
@@ -306,7 +306,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	group "_<" 
-	""
+	"Tests if Arg1 is lesser than Arg 2."
 	{
 	}
 
@@ -316,7 +316,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	group "_<=" 
-	""
+	"Tests if Arg1 is lesser than Arg 2."
 	{
 	}
 
@@ -329,7 +329,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 
 section "Strings " "" {
 	group "newline" 
-	""
+	"Returns the newline character."
 	{
 	}
 
@@ -338,7 +338,7 @@ section "Strings " "" {
 	}
 
 	group "ln" 
-	""
+	"Returns the argument 1 a d a newline character."
 	{
 	}
 
@@ -347,7 +347,7 @@ section "Strings " "" {
 	}
 
 	group "trim" 
-	""
+	"Trims the String of spacing characters."
 	{
 	}
 
@@ -357,7 +357,7 @@ section "Strings " "" {
 	}
 
 	group "trim\" 
-	""
+	"Trims the String of specific characters."
 	{
 	}
 
@@ -366,7 +366,7 @@ section "Strings " "" {
 	}
 
 	group "trim\right" 
-	""
+	"Trims the String of specific characters."
 	{
 	}
 
@@ -376,7 +376,7 @@ section "Strings " "" {
 	}
 
 	group "trim\left" 
-	""
+	"Trims the String of specific characters."
 	{
 	}
 
@@ -385,7 +385,7 @@ section "Strings " "" {
 	}
 
 	group "replace" 
-	""
+	"Returns the string with all parts of the strings replaced."
 	{
 	}
 
@@ -395,7 +395,7 @@ section "Strings " "" {
 	}
 
 	group "substring" 
-	""
+	"Returns part of the String between two positions."
 	{
 	}
 
@@ -405,7 +405,7 @@ section "Strings " "" {
 	}
 
 	group "contains" 
-	""
+	"Returns true if argument 2 contains argument 1"
 	{
 	}
 
@@ -417,7 +417,7 @@ section "Strings " "" {
 	}
 
 	group "has-suffix" 
-	""
+	"Returns part of the String between two positions."
 	{
 	}
 
@@ -427,7 +427,7 @@ section "Strings " "" {
 	}
 
 	group "has-prefix" 
-	""
+	"Returns part of the String between two positions."
 	{
 	}
 
@@ -437,7 +437,7 @@ section "Strings " "" {
 	}
 
 	group "index?" 
-	""
+	"Returns part of the String between two positions."
 	{
 	}
 
@@ -449,7 +449,7 @@ section "Strings " "" {
 	}
 
 	group "position?" 
-	""
+	"Returns part of the String between two positions."
 	{
 	}
 
@@ -461,7 +461,7 @@ section "Strings " "" {
 	}
 
 	group "encode\base64" 
-	""
+	"decode base 64 string"
 	{
 	}
 
@@ -470,7 +470,7 @@ section "Strings " "" {
 	}
 
 	group "decode\base64" 
-	""
+	"decode base 64 string"
 	{
 	}
 
@@ -479,7 +479,7 @@ section "Strings " "" {
 	}
 
 	group "space" 
-	""
+	"Adds space to the end of argument"
 	{
 	}
 
@@ -488,7 +488,7 @@ section "Strings " "" {
 	}
 
 	group "capitalize" 
-	""
+	"Takes a String and returns the same String, but with first character turned to upper case."
 	{
 	}
 
@@ -497,7 +497,7 @@ section "Strings " "" {
 	}
 
 	group "to-lower" 
-	""
+	"Takes a String and returns the same String, but with all characters turned to lower case."
 	{
 	}
 
@@ -506,7 +506,7 @@ section "Strings " "" {
 	}
 
 	group "to-upper" 
-	""
+	"Takes a String and returns the same String, but with all characters turned to upper case."
 	{
 	}
 
@@ -515,7 +515,7 @@ section "Strings " "" {
 	}
 
 	group "concat3" 
-	""
+	"Joins 3 Rye values together."
 	{
 	}
 
@@ -524,7 +524,7 @@ section "Strings " "" {
 	}
 
 	group "join" 
-	""
+	"Joins Block or list of values together."
 	{
 	}
 
@@ -534,10 +534,10 @@ section "Strings " "" {
 	}
 
 	group "join\with" 
-	""
+	"Joins Block or list of values together."
 	{
-		arg "* to-join"
-		arg "* delimiter"
+		arg `to-join`
+		arg `delimiter`
 	}
 
 	{
@@ -546,7 +546,7 @@ section "Strings " "" {
 	}
 
 	group "split" 
-	""
+	"Splits a string into a block of values using a separator"
 	{
 	}
 
@@ -555,11 +555,11 @@ section "Strings " "" {
 	}
 
 	group "split\quoted" 
-	""
+	"Splits a line of string into values by separator by respecting quotes"
 	{
-		arg "to-split"
-		arg "splitter"
-		arg "quote"
+		arg `to-split`
+		arg `splitter`
+		arg `quote`
 	}
 
 	{
@@ -567,10 +567,10 @@ section "Strings " "" {
 	}
 
 	group "split\many" 
-	""
+	"Splits a string into a block of values using each character in seperators as a split value"
 	{
-		arg "* string"
-		arg "* separator-set"
+		arg `string`
+		arg `separator-set`
 	}
 
 	{
@@ -579,10 +579,10 @@ section "Strings " "" {
 	}
 
 	group "split\every" 
-	""
+	"Splits a string into chunks of length N. Leftover characters go in the last chunk"
 	{
-		arg "* string"
-		arg "* N"
+		arg `string`
+		arg `N`
 	}
 
 	{
@@ -595,7 +595,7 @@ section "Strings " "" {
 
 section "Collections " "" {
 	group "random" 
-	""
+	"Accepts an integer n and returns a random integer between 0 and n in the half-open interval [0,n)."
 	{
 	}
 
@@ -604,7 +604,7 @@ section "Collections " "" {
 	}
 
 	group "unpack" 
-	""
+	"Takes a block of Rye values and evaluates each value or expression."
 	{
 	}
 
@@ -614,7 +614,7 @@ section "Collections " "" {
 	}
 
 	group "sample" 
-	""
+	"Accepts an integer n and returns a random integer between 0 and n in the half-open interval [0,n)."
 	{
 	}
 
@@ -624,7 +624,7 @@ section "Collections " "" {
 	}
 
 	group "max" 
-	""
+	"Accepts a Block or List of values and returns the maximal value."
 	{
 	}
 
@@ -636,7 +636,7 @@ section "Collections " "" {
 	}
 
 	group "min" 
-	""
+	"Accepts a Block or List of values and returns the minimal value."
 	{
 	}
 
@@ -648,7 +648,7 @@ section "Collections " "" {
 	}
 
 	group "avg" 
-	""
+	"Accepts a Block or List of values and returns the average value."
 	{
 	}
 
@@ -660,7 +660,7 @@ section "Collections " "" {
 	}
 
 	group "sum" 
-	""
+	"Accepts a Block or List of values and returns the sum."
 	{
 	}
 
@@ -674,7 +674,7 @@ section "Collections " "" {
 	}
 
 	group "mul" 
-	""
+	"Accepts a Block or List of values and returns the product."
 	{
 	}
 
@@ -684,7 +684,7 @@ section "Collections " "" {
 	}
 
 	group "first" 
-	""
+	"Accepts a Block, List or String and returns the first item."
 	{
 	}
 
@@ -695,7 +695,7 @@ section "Collections " "" {
 	}
 
 	group "rest" 
-	""
+	"Accepts a Block, List or String and returns all but first item."
 	{
 	}
 
@@ -706,7 +706,7 @@ section "Collections " "" {
 	}
 
 	group "rest\from" 
-	""
+	"Accepts a Block, List or String and an Integer N, returns all but first N items."
 	{
 	}
 
@@ -717,7 +717,7 @@ section "Collections " "" {
 	}
 
 	group "tail" 
-	""
+	"Accepts a Block, List or String and Integer N, returns the last N items."
 	{
 	}
 
@@ -728,7 +728,7 @@ section "Collections " "" {
 	}
 
 	group "second" 
-	""
+	"Accepts a Block, List or String and returns the second value in it."
 	{
 	}
 
@@ -737,7 +737,7 @@ section "Collections " "" {
 	}
 
 	group "third" 
-	""
+	"Accepts a Block, List or String and returns the third value in it."
 	{
 	}
 
@@ -746,7 +746,7 @@ section "Collections " "" {
 	}
 
 	group "last" 
-	""
+	"Accepts a Block, List or String and returns the last value in it."
 	{
 	}
 
@@ -757,7 +757,7 @@ section "Collections " "" {
 	}
 
 	group "head" 
-	""
+	"Accepts a Block, List or String and an Integer N, returns the first N values."
 	{
 	}
 
@@ -773,7 +773,7 @@ section "Collections " "" {
 	}
 
 	group "nth" 
-	""
+	"Accepts a Block, List or String and Integer N, returns the N-th value."
 	{
 	}
 
@@ -783,7 +783,7 @@ section "Collections " "" {
 	}
 
 	group "values" 
-	""
+	"Accepts a Dict and returns a List of just values."
 	{
 	}
 
@@ -792,7 +792,7 @@ section "Collections " "" {
 	}
 
 	group "sort" 
-	""
+	"Accepts a block or list and sorts in place in ascending order and returns it."
 	{
 	}
 
@@ -803,7 +803,7 @@ section "Collections " "" {
 	}
 
 	group "sort!" 
-	""
+	"Accepts a block or list and sorts in place in ascending order and returns it."
 	{
 	}
 
@@ -813,7 +813,7 @@ section "Collections " "" {
 	}
 
 	group "sort\by" 
-	""
+	"Accepts a block or list and sorts in place in ascending order and returns it."
 	{
 	}
 
@@ -824,7 +824,7 @@ section "Collections " "" {
 	}
 
 	group "unique" 
-	""
+	"Accepts a block or list of values and returns only unique values."
 	{
 	}
 
@@ -839,7 +839,7 @@ section "Collections " "" {
 	}
 
 	group "reverse" 
-	""
+	"Accepts a block of values and returns maximal value."
 	{
 	}
 
@@ -849,7 +849,7 @@ section "Collections " "" {
 	}
 
 	group "reverse!" 
-	""
+	"Accepts a block of values and returns maximal value."
 	{
 	}
 
@@ -859,7 +859,7 @@ section "Collections " "" {
 	}
 
 	group "concat" 
-	""
+	"Joins two series values together."
 	{
 	}
 
@@ -869,7 +869,7 @@ section "Collections " "" {
 	}
 
 	group "union" 
-	""
+	"Accepts a block or list of values and returns only unique values."
 	{
 	}
 
@@ -889,10 +889,10 @@ section "Collections " "" {
 	}
 
 	group "range" 
-	""
+	"Takes two integers and returns a block of integers between them, inclusive. (Will change to lazy list/generator later)"
 	{
-		arg "* low-value"
-		arg "* high-value"
+		arg `low-value`
+		arg `high-value`
 	}
 
 	{
@@ -900,7 +900,7 @@ section "Collections " "" {
 	}
 
 	group "is-empty" 
-	""
+	"Accepts a collection (String, Block, Dict, Table) and returns it's length."
 	{
 	}
 
@@ -911,7 +911,7 @@ section "Collections " "" {
 	}
 
 	group "length?" 
-	""
+	"Accepts a collection (String, Block, Dict, Table) and returns it's length."
 	{
 	}
 
@@ -923,7 +923,7 @@ section "Collections " "" {
 	}
 
 	group "keys" 
-	""
+	"Accepts Dict or Table and returns a Block of keys or column names."
 	{
 	}
 
@@ -970,7 +970,7 @@ section "Collections " "" {
 	}
 
 	group "intersection" 
-	""
+	"Finds the intersection of two values."
 	{
 	}
 
@@ -990,7 +990,7 @@ section "Collections " "" {
 	}
 
 	group "intersection\by" 
-	""
+	"Finds the intersection of two values by custom function."
 	{
 	}
 
@@ -1003,7 +1003,7 @@ section "Collections " "" {
 	}
 
 	group "difference" 
-	""
+	"Finds the difference (values in first but not in second) of two values."
 	{
 	}
 
@@ -1026,7 +1026,7 @@ section "Collections " "" {
 	}
 
 	group "transpose" 
-	""
+	"Accepts Block and returns the next value from it."
 	{
 	}
 
@@ -1036,7 +1036,7 @@ section "Collections " "" {
 	}
 
 	group "remove-last!" 
-	""
+	"Accepts Block and returns the next value and removes it from the Block."
 	{
 	}
 
@@ -1046,7 +1046,7 @@ section "Collections " "" {
 	}
 
 	group "append!" 
-	""
+	"Accepts Rye value and Tagword with a Block or String. Appends Rye value to Block/String in place, also returns it	."
 	{
 	}
 
@@ -1056,7 +1056,7 @@ section "Collections " "" {
 	}
 
 	group "change\nth!" 
-	""
+	"Accepts a Block or List, Integer n and a value. Changes the n-th value in the Block in place. Also returns the new series."
 	{
 	}
 
@@ -1092,7 +1092,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	group "context" 
-	""
+	"Creates a new context with no parent"
 	{
 	}
 
@@ -1104,7 +1104,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	group "private" 
-	""
+	"Creates a new context with current parent, returns last value"
 	{
 	}
 
@@ -1116,7 +1116,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	group "private\" 
-	""
+	"Creates a new context with current parent, adds documentation, returns last value"
 	{
 	}
 
@@ -1125,7 +1125,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	group "extends" 
-	""
+	"Extends a context with a new context in place and returns it."
 	{
 	}
 
@@ -1143,7 +1143,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	group "unbind" 
-	""
+	"Accepts a Context and unbinds it from it's parent Context."
 	{
 	}
 
@@ -1153,7 +1153,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	group "pass" 
-	""
+	"Accepts a value and a block. It does the block, with value injected, and returns (passes on) the initial value."
 	{
 	}
 
@@ -1163,7 +1163,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	group "wrap" 
-	""
+	"Accepts a value and a block. It does the block, with value injected, and returns (passes on) the initial value."
 	{
 	}
 
@@ -1172,7 +1172,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	group "keep" 
-	""
+	"Do the first block, then the second one but return the result of the first one."
 	{
 	}
 
@@ -1181,7 +1181,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	group "change!" 
-	""
+	"Searches for a word and changes it's value in-place. If value changes returns true otherwise false"
 	{
 	}
 
@@ -1193,7 +1193,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	group "set!" 
-	""
+	"Set word to value or words by deconstructing a block"
 	{
 	}
 
@@ -1202,7 +1202,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	group "unset!" 
-	""
+	"Unset a word in current context, only meant to be used in console"
 	{
 	}
 
@@ -1214,7 +1214,7 @@ section "Contexts " "Context related functions" {
 
 section "Functions " "functions that create functions" {
 	group "does" 
-	""
+	"Creates a function without arguments."
 	{
 	}
 
@@ -1224,7 +1224,7 @@ section "Functions " "functions that create functions" {
 	}
 
 	group "fn1" 
-	""
+	"Creates a function that accepts one anonymouse argument."
 	{
 	}
 
@@ -1236,7 +1236,7 @@ section "Functions " "functions that create functions" {
 	}
 
 	group "fn" 
-	""
+	"Creates a function."
 	{
 	}
 
@@ -1248,7 +1248,7 @@ section "Functions " "functions that create functions" {
 	}
 
 	group "pfn" 
-	""
+	"Creates a pure function."
 	{
 	}
 
@@ -1262,7 +1262,7 @@ section "Functions " "functions that create functions" {
 
 section "Values and Types " "" {
 	group "to-word" 
-	""
+	"Tries to change a Rye value to a word with same name."
 	{
 	}
 
@@ -1272,7 +1272,7 @@ section "Values and Types " "" {
 	}
 
 	group "to-integer" 
-	""
+	"Tries to change a Rye value (like string) to integer."
 	{
 	}
 
@@ -1285,7 +1285,7 @@ section "Values and Types " "" {
 	}
 
 	group "to-decimal" 
-	""
+	"Tries to change a Rye value (like string) to decimal."
 	{
 	}
 
@@ -1295,7 +1295,7 @@ section "Values and Types " "" {
 	}
 
 	group "to-string" 
-	""
+	"Tries to turn a Rye value to string."
 	{
 	}
 
@@ -1307,7 +1307,7 @@ section "Values and Types " "" {
 	}
 
 	group "to-char" 
-	""
+	"Tries to turn a Rye value (like integer) to ascii character."
 	{
 	}
 
@@ -1317,7 +1317,7 @@ section "Values and Types " "" {
 	}
 
 	group "to-block" 
-	""
+	"Turns a List to a Block"
 	{
 	}
 
@@ -1327,7 +1327,7 @@ section "Values and Types " "" {
 	}
 
 	group "to-context" 
-	""
+	"Takes a Dict and returns a Context with same names and values."
 	{
 	}
 
@@ -1337,7 +1337,7 @@ section "Values and Types " "" {
 	}
 
 	group "is-string" 
-	""
+	"Returns true if value is a string."
 	{
 	}
 
@@ -1348,7 +1348,7 @@ section "Values and Types " "" {
 	}
 
 	group "is-integer" 
-	""
+	"Returns true if value is an integer."
 	{
 	}
 
@@ -1359,7 +1359,7 @@ section "Values and Types " "" {
 	}
 
 	group "is-decimal" 
-	""
+	"Returns true if value is a decimal."
 	{
 	}
 
@@ -1370,7 +1370,7 @@ section "Values and Types " "" {
 	}
 
 	group "is-number" 
-	""
+	"Returns true if value is a number (integer or decimal)."
 	{
 	}
 
@@ -1381,7 +1381,7 @@ section "Values and Types " "" {
 	}
 
 	group "to-uri" 
-	""
+	"Tries to change Rye value to an URI."
 	{
 	}
 
@@ -1391,7 +1391,7 @@ section "Values and Types " "" {
 	}
 
 	group "to-file" 
-	""
+	"Tries to change Rye value to a file."
 	{
 	}
 
@@ -1401,7 +1401,7 @@ section "Values and Types " "" {
 	}
 
 	group "type?" 
-	""
+	"Returns the type of Rye value as a word."
 	{
 	}
 
@@ -1411,7 +1411,7 @@ section "Values and Types " "" {
 	}
 
 	group "kind?" 
-	""
+	"Returns the type of Rye value as a word."
 	{
 	}
 
@@ -1420,7 +1420,7 @@ section "Values and Types " "" {
 	}
 
 	group "types?" 
-	""
+	"Returns the types of Rye values in a block or table row as a block of words."
 	{
 	}
 
@@ -1429,7 +1429,7 @@ section "Values and Types " "" {
 	}
 
 	group "dump" 
-	""
+	"Returns (dumps) Rye code representing the object."
 	{
 	}
 
@@ -1440,7 +1440,7 @@ section "Values and Types " "" {
 	}
 
 	group "mold" 
-	""
+	"Turn value to it's string representation."
 	{
 	}
 
@@ -1450,7 +1450,7 @@ section "Values and Types " "" {
 	}
 
 	group "mold\nowrap" 
-	""
+	"Turn value to it's string representation. Doesn't wrap the blocks"
 	{
 	}
 
@@ -1461,7 +1461,7 @@ section "Values and Types " "" {
 	}
 
 	group "doc!" 
-	""
+	"Sets docstring of the current context."
 	{
 	}
 
@@ -1470,7 +1470,7 @@ section "Values and Types " "" {
 	}
 
 	group "doc?" 
-	""
+	"Gets docstring of the current context."
 	{
 	}
 
@@ -1479,7 +1479,7 @@ section "Values and Types " "" {
 	}
 
 	group "doc\of?" 
-	""
+	"Get docstring of the passed context."
 	{
 	}
 
@@ -1488,7 +1488,7 @@ section "Values and Types " "" {
 	}
 
 	group "ref" 
-	""
+	"Makes a value mutable instead of immutable"
 	{
 	}
 
@@ -1497,7 +1497,7 @@ section "Values and Types " "" {
 	}
 
 	group "deref" 
-	""
+	"Makes a value again immutable"
 	{
 	}
 
@@ -1506,7 +1506,7 @@ section "Values and Types " "" {
 	}
 
 	group "is-ref" 
-	""
+	"Prints information about a value."
 	{
 	}
 
@@ -1516,7 +1516,7 @@ section "Values and Types " "" {
 	}
 
 	group "dict" 
-	""
+	"Constructs a Dict from the Block of key and value pairs."
 	{
 	}
 
@@ -1525,7 +1525,7 @@ section "Values and Types " "" {
 	}
 
 	group "list" 
-	""
+	"Constructs a List from the Block of values."
 	{
 	}
 
@@ -1537,7 +1537,7 @@ section "Values and Types " "" {
 
 section "Printing " "" {
 	group "prns" 
-	""
+	"Prints a value and adds a space."
 	{
 	}
 
@@ -1546,7 +1546,7 @@ section "Printing " "" {
 	}
 
 	group "prn" 
-	""
+	"Prints a value without newline."
 	{
 	}
 
@@ -1555,7 +1555,7 @@ section "Printing " "" {
 	}
 
 	group "print" 
-	""
+	"Prints a value and adds a newline."
 	{
 	}
 
@@ -1564,7 +1564,7 @@ section "Printing " "" {
 	}
 
 	group "format" 
-	""
+	"Formats a value according to Go-s sprintf format"
 	{
 	}
 
@@ -1573,7 +1573,7 @@ section "Printing " "" {
 	}
 
 	group "prnf" 
-	""
+	"Formats a value according to Go-s sprintf format and prn-s it"
 	{
 	}
 
@@ -1582,7 +1582,7 @@ section "Printing " "" {
 	}
 
 	group "embed" 
-	""
+	"Embeds a value into a string with {} placeholder."
 	{
 	}
 
@@ -1591,7 +1591,7 @@ section "Printing " "" {
 	}
 
 	group "prnv" 
-	""
+	"Prints a value."
 	{
 	}
 
@@ -1600,7 +1600,7 @@ section "Printing " "" {
 	}
 
 	group "printv" 
-	""
+	"Prints a value and adds a newline."
 	{
 	}
 
@@ -1609,7 +1609,7 @@ section "Printing " "" {
 	}
 
 	group "print\ssv" 
-	""
+	"Prints a value and adds a newline."
 	{
 	}
 
@@ -1618,7 +1618,7 @@ section "Printing " "" {
 	}
 
 	group "print\csv" 
-	""
+	"Prints a value and adds a newline."
 	{
 	}
 
@@ -1627,7 +1627,7 @@ section "Printing " "" {
 	}
 
 	group "probe" 
-	""
+	"Prints information about a value."
 	{
 	}
 
@@ -1636,7 +1636,7 @@ section "Printing " "" {
 	}
 
 	group "inspect" 
-	""
+	"Returs information about a value."
 	{
 	}
 
@@ -1645,7 +1645,7 @@ section "Printing " "" {
 	}
 
 	group "esc" 
-	""
+	"Creates an escape sequence \033{}"
 	{
 	}
 
@@ -1654,7 +1654,7 @@ section "Printing " "" {
 	}
 
 	group "esc-val" 
-	""
+	"Escapes a value and adds a newline."
 	{
 	}
 
@@ -1663,7 +1663,7 @@ section "Printing " "" {
 	}
 
 	group "load" 
-	""
+	"Loads a string into Rye values."
 	{
 	}
 
@@ -1676,7 +1676,7 @@ section "Printing " "" {
 
 section "Flow control " "" {
 	group "if" 
-	""
+	"Basic conditional. Takes a condition and a block of code."
 	{
 	}
 
@@ -1686,7 +1686,7 @@ section "Flow control " "" {
 	}
 
 	group "^if" 
-	""
+	"Basic conditional with a Returning mechanism when true. Takes a condition and a block of code."
 	{
 	}
 
@@ -1696,7 +1696,7 @@ section "Flow control " "" {
 	}
 
 	group "either" 
-	""
+	"The if/else conditional. Takes a value and true and false block of code."
 	{
 	}
 
@@ -1706,7 +1706,7 @@ section "Flow control " "" {
 	}
 
 	group "switch" 
-	""
+	"Classic switch function. Takes a word and multiple possible values and block of code to do."
 	{
 	}
 
@@ -1716,7 +1716,7 @@ section "Flow control " "" {
 	}
 
 	group "cases" 
-	""
+	"Similar to Case function, but checks all the cases, even after a match. It combines the outputs."
 	{
 	}
 
@@ -1731,7 +1731,7 @@ section "Flow control " "" {
 	}
 
 	group "do" 
-	""
+	"Takes a block of code and does (runs) it."
 	{
 	}
 
@@ -1747,7 +1747,7 @@ section "Flow control " "" {
 	}
 
 	group "try" 
-	""
+	"Takes a block of code and does (runs) it."
 	{
 	}
 
@@ -1758,7 +1758,7 @@ section "Flow control " "" {
 	}
 
 	group "with" 
-	""
+	"Takes a value and a block of code. It does the code with the value injected."
 	{
 	}
 
@@ -1768,7 +1768,7 @@ section "Flow control " "" {
 	}
 
 	group "do\in" 
-	""
+	"Takes a Context and a Block. It Does a block inside a given Context."
 	{
 	}
 
@@ -1780,7 +1780,7 @@ section "Flow control " "" {
 	}
 
 	group "try\in" 
-	""
+	"Takes a Context and a Block. It Does a block inside a given Context."
 	{
 	}
 
@@ -1793,7 +1793,7 @@ section "Flow control " "" {
 	}
 
 	group "do\par" 
-	""
+	"Takes a Context and a Block. It Does a block in current context but with parent a given Context."
 	{
 	}
 
@@ -1805,7 +1805,7 @@ section "Flow control " "" {
 	}
 
 	group "capture-stdout" 
-	""
+	"Takes a block of code and does (runs) it."
 	{
 	}
 
@@ -1815,7 +1815,7 @@ section "Flow control " "" {
 	}
 
 	group "time-it" 
-	""
+	"Accepts a block, does it and times it's execution time."
 	{
 	}
 
@@ -1824,7 +1824,7 @@ section "Flow control " "" {
 	}
 
 	group "vals" 
-	""
+	"Takes a block of Rye values and evaluates each value or expression."
 	{
 	}
 
@@ -1835,7 +1835,7 @@ section "Flow control " "" {
 	}
 
 	group "vals\with" 
-	""
+	"Evaluate a block with injecting the first argument."
 	{
 	}
 
@@ -1845,7 +1845,7 @@ section "Flow control " "" {
 	}
 
 	group "current" 
-	""
+	"Returns current context."
 	{
 	}
 
@@ -1854,7 +1854,7 @@ section "Flow control " "" {
 	}
 
 	group "parent" 
-	""
+	"Returns parent context of the current context."
 	{
 	}
 
@@ -1863,7 +1863,7 @@ section "Flow control " "" {
 	}
 
 	group "parent\of" 
-	""
+	"Returns parent context of the current context."
 	{
 	}
 
@@ -1875,7 +1875,7 @@ section "Flow control " "" {
 
 section "Iteration " "Iteration over collections" {
 	group "loop" 
-	""
+	"Accepts a number and a block of code. Does the block of code number times, injecting the number."
 	{
 	}
 
@@ -1886,7 +1886,7 @@ section "Iteration " "Iteration over collections" {
 	}
 
 	group "produce" 
-	""
+	"Accepts a number, initial value and a block of code. Does the block of code number of times, injecting the initial value or last result."
 	{
 	}
 
@@ -1899,7 +1899,7 @@ section "Iteration " "Iteration over collections" {
 	}
 
 	group "produce\while" 
-	""
+	"Accepts a while condition, initial value and a block of code. Does the block of code number times, injecting the number first and then result of block."
 	{
 	}
 
@@ -1909,7 +1909,7 @@ section "Iteration " "Iteration over collections" {
 	}
 
 	group "produce\" 
-	""
+	" TODO "
 	{
 	}
 
@@ -1918,7 +1918,7 @@ section "Iteration " "Iteration over collections" {
 	}
 
 	group "forever" 
-	""
+	"Accepts a block and does it forever."
 	{
 	}
 
@@ -1937,7 +1937,7 @@ section "Iteration " "Iteration over collections" {
 	}
 
 	group "for___" 
-	""
+	"Accepts a block of values and a block of code, does the code for each of the values, injecting them."
 	{
 	}
 
@@ -1947,7 +1947,7 @@ section "Iteration " "Iteration over collections" {
 	}
 
 	group "for" 
-	""
+	"Accepts a block of values and a block of code, does the code for each of the values, injecting them."
 	{
 	}
 
@@ -1957,7 +1957,7 @@ section "Iteration " "Iteration over collections" {
 	}
 
 	group "walk" 
-	""
+	"Accepts a block of values and a block of code, does the code for each of the values, injecting them."
 	{
 	}
 
@@ -1967,7 +1967,7 @@ section "Iteration " "Iteration over collections" {
 	}
 
 	group "purge" 
-	""
+	"Purges values from a series based on return of a injected code block."
 	{
 	}
 
@@ -1981,7 +1981,7 @@ section "Iteration " "Iteration over collections" {
 	}
 
 	group "purge!" 
-	""
+	"Purges values from a series based on return of a injected code block."
 	{
 	}
 
@@ -1990,7 +1990,7 @@ section "Iteration " "Iteration over collections" {
 	}
 
 	group "map___" 
-	""
+	"Maps values of a block to a new block by evaluating a block of code."
 	{
 	}
 
@@ -2008,7 +2008,7 @@ section "Iteration " "Iteration over collections" {
 	}
 
 	group "map" 
-	""
+	"Maps values of a block to a new block by evaluating a block of code."
 	{
 	}
 
@@ -2026,7 +2026,7 @@ section "Iteration " "Iteration over collections" {
 	}
 
 	group "map\pos" 
-	""
+	"Maps values of a block to a new block by evaluating a block of code."
 	{
 	}
 
@@ -2040,7 +2040,7 @@ section "Iteration " "Iteration over collections" {
 	}
 
 	group "map\idx" 
-	""
+	"Maps values of a block to a new block by evaluating a block of code."
 	{
 	}
 
@@ -2054,7 +2054,7 @@ section "Iteration " "Iteration over collections" {
 	}
 
 	group "reduce" 
-	""
+	"Reduces values of a block to a new block by evaluating a block of code ..."
 	{
 	}
 
@@ -2068,7 +2068,7 @@ section "Iteration " "Iteration over collections" {
 	}
 
 	group "fold" 
-	""
+	"Reduces values of a block to a new block by evaluating a block of code ..."
 	{
 	}
 
@@ -2082,7 +2082,7 @@ section "Iteration " "Iteration over collections" {
 	}
 
 	group "partition" 
-	""
+	"Partitions a series by evaluating a block of code."
 	{
 	}
 
@@ -2100,7 +2100,7 @@ section "Iteration " "Iteration over collections" {
 	}
 
 	group "group" 
-	""
+	"Groups a block or list of values given condition."
 	{
 	}
 
@@ -2116,7 +2116,7 @@ section "Iteration " "Iteration over collections" {
 	}
 
 	group "filter" 
-	""
+	"Filters values from a seris based on return of a injected code block."
 	{
 	}
 
@@ -2133,7 +2133,7 @@ section "Iteration " "Iteration over collections" {
 	}
 
 	group "seek" 
-	""
+	"Seek over a series until a Block of code returns True and return the value."
 	{
 	}
 
@@ -2150,7 +2150,7 @@ section "Iteration " "Iteration over collections" {
 
 section "Other " "functions related to date and time" {
 	group "return" 
-	""
+	"Accepts one value and returns it."
 	{
 	}
 
@@ -2158,8 +2158,98 @@ section "Other " "functions related to date and time" {
 		equal { x: fn { } { return 101 202 } x } 101
 	}
 
+	group "year-day?" 
+	"Returns the day in the given time."
+	{
+		arg `time`
+	}
+
+	{
+	}
+
+	group "year?" 
+	"Returns the year of the given time."
+	{
+		arg `time`
+	}
+
+	{
+	}
+
+	group "month?" 
+	"Returns current month as an integer."
+	{
+		arg `time`
+	}
+
+	{
+	}
+
+	group "days-in-month?" 
+	"Returns the days in the month that `time` is in."
+	{
+		arg `time`
+	}
+
+	{
+	}
+
+	group "time?" 
+	"Returns Time part of a datetime."
+	{
+		arg `time`
+	}
+
+	{
+	}
+
+	group "date?" 
+	"Returns date part of datetime."
+	{
+		arg `time`
+	}
+
+	{
+	}
+
+	group "day?" 
+	"Returns the day of month of the given time."
+	{
+		arg `time`
+	}
+
+	{
+	}
+
+	group "hour?" 
+	"Returns the hour of the given time."
+	{
+		arg `time`
+	}
+
+	{
+	}
+
+	group "minute?" 
+	"Returns the minute of the given time."
+	{
+		arg `time`
+	}
+
+	{
+	}
+
+	group "second?" 
+	"Returns the second of the given time."
+	{
+		arg `time`
+	}
+
+	{
+	}
+
 	group "cmd" 
-	""
+	"Execute a shell command."
 	{
 	}
 
@@ -2177,7 +2267,7 @@ section "Other " "functions related to date and time" {
 	}
 
 	group "sleep" 
-	""
+	"Accepts an integer and Sleeps for given number of miliseconds."
 	{
 	}
 
@@ -2186,7 +2276,7 @@ section "Other " "functions related to date and time" {
 	}
 
 	group "seconds" 
-	""
+	"Accepts an integer and Sleeps for given number of miliseconds."
 	{
 	}
 
@@ -2195,7 +2285,7 @@ section "Other " "functions related to date and time" {
 	}
 
 	group "minutes" 
-	""
+	"Accepts an integer and Sleeps for given number of miliseconds."
 	{
 	}
 
@@ -2204,7 +2294,7 @@ section "Other " "functions related to date and time" {
 	}
 
 	group "hours" 
-	""
+	"Accepts an integer and Sleeps for given number of miliseconds."
 	{
 	}
 

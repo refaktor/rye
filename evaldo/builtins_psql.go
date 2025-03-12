@@ -14,9 +14,18 @@ import (
 
 var Builtins_psql = map[string]*env.Builtin{
 
+	//
+	// ##### PostgreSQL ##### "PostgreSQL database functions"
+	//
+	// Tests:
+	// equal { postgres-schema//open %"postgres://user:pass@localhost:5432/dbname" |type? } 'native
+	// Args:
+	// * uri: PostgreSQL connection string URI
+	// Returns:
+	// * native PostgreSQL database connection
 	"postgres-schema//open": {
 		Argsn: 1,
-		Doc:   "Open Postgresql connection.",
+		Doc:   "Opens a connection to a PostgreSQL database.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.Uri:
@@ -39,9 +48,16 @@ var Builtins_psql = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { db: postgres-schema//open %"postgres://user:pass@localhost:5432/dbname" , db |Rye-psql//exec "INSERT INTO test VALUES (1, 'test')" |type? } 'integer
+	// Args:
+	// * db: PostgreSQL database connection
+	// * sql: SQL statement as string or block
+	// Returns:
+	// * integer 1 if rows were affected, error otherwise
 	"Rye-psql//exec": {
 		Argsn: 2,
-		Doc:   "Execute sql query in for postgresql.",
+		Doc:   "Executes a SQL statement that modifies data (INSERT, UPDATE, DELETE).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var sqlstr string
 			var vals []any
@@ -88,9 +104,16 @@ var Builtins_psql = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { db: postgres-schema//open %"postgres://user:pass@localhost:5432/dbname" , db |Rye-psql//query "SELECT * FROM test" |type? } 'table
+	// Args:
+	// * db: PostgreSQL database connection
+	// * sql: SQL query as string or block
+	// Returns:
+	// * table containing query results
 	"Rye-psql//query": {
 		Argsn: 2,
-		Doc:   "Sql query to get rows data.",
+		Doc:   "Executes a SQL query and returns results as a table.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var sqlstr string
 			var vals []any

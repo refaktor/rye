@@ -90,9 +90,18 @@ func SQL_EvalExpression(es *env.ProgramState, vals []any, mode int) (*env.Progra
 
 var Builtins_sqlite = map[string]*env.Builtin{
 
+	//
+	// ##### SQLite ##### "SQLite database functions"
+	//
+	// Tests:
+	// equal { sqlite-schema//open %"test.db" |type? } 'native
+	// Args:
+	// * uri: path to SQLite database file
+	// Returns:
+	// * native SQLite database connection
 	"sqlite-schema//open": {
 		Argsn: 1,
-		Doc:   "Opening sqlite schema.",
+		Doc:   "Opens a connection to a SQLite database file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// arg0.Trace("SQLITE OPEN TODO :::::::::")
 			switch str := arg0.(type) {
@@ -107,9 +116,15 @@ var Builtins_sqlite = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { table { "name" "age" } { "Bob" 25 "Alice" 30 } |htmlize |type? } 'string
+	// Args:
+	// * table: table to convert to HTML
+	// Returns:
+	// * string containing HTML representation of the table
 	"htmlize": {
 		Argsn: 1,
-		Doc:   "Converting to html.",
+		Doc:   "Converts a table to HTML format.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.Table:
@@ -121,9 +136,16 @@ var Builtins_sqlite = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { db: sqlite-schema//open %"test.db" , db |Rye-sqlite//exec "CREATE TABLE IF NOT EXISTS test (id INTEGER, name TEXT)" |type? } 'native
+	// Args:
+	// * db: SQLite database connection
+	// * sql: SQL statement as string or block
+	// Returns:
+	// * database connection
 	"Rye-sqlite//exec": {
 		Argsn: 2,
-		Doc:   "Executes SQL over a database.",
+		Doc:   "Executes a SQL statement that doesn't return rows.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var sqlstr string
 			var vals []any
@@ -160,9 +182,16 @@ var Builtins_sqlite = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { db: sqlite-schema//open %"test.db" , db |Rye-sqlite//query "SELECT * FROM test" |type? } 'table
+	// Args:
+	// * db: SQLite database connection
+	// * sql: SQL query as string or block
+	// Returns:
+	// * table containing query results
 	"Rye-sqlite//query": {
 		Argsn: 2,
-		Doc:   "Query a SQLite database with SQL.",
+		Doc:   "Executes a SQL query and returns results as a table.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var sqlstr string
 			var vals []any

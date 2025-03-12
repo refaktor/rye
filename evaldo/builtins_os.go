@@ -43,9 +43,13 @@ var Builtins_os = map[string]*env.Builtin{
 	//
 	// Tests:
 	// equal { cd %/tmp cwd? } %/tmp
+	// Args:
+	// * none
+	// Returns:
+	// * uri representing the current working directory
 	"cwd?": {
 		Argsn: 0,
-		Doc:   "Returns current working directory.",
+		Doc:   "Gets the current working directory.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			path, err := os.Getwd()
 			if err != nil {
@@ -57,9 +61,13 @@ var Builtins_os = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { cd %/tmp cwd? } %/tmp
+	// Args:
+	// * path: uri representing the directory to change to
+	// Returns:
+	// * the same uri if successful
 	"cd": {
 		Argsn: 1,
-		Doc:   "Changes current directory.",
+		Doc:   "Changes the current working directory.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg0.(type) {
 			case env.Uri:
@@ -75,9 +83,13 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
+	// Args:
+	// * variable_name: string containing the name of the environment variable
+	// Returns:
+	// * string containing the value of the environment variable
 	"env?": {
 		Argsn: 1,
-		Doc:   "Gets the environment variable.",
+		Doc:   "Gets the value of an environment variable.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch variable_name := arg0.(type) {
 			case env.String:
@@ -118,9 +130,13 @@ var Builtins_os = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { mkdir %/delme } %/delme
+	// Args:
+	// * path: uri representing the directory to create
+	// Returns:
+	// * the same uri if successful
 	"mkdir": {
 		Argsn: 1,
-		Doc:   "Creates a directory.",
+		Doc:   "Creates a new directory.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg0.(type) {
 			case env.Uri:
@@ -137,9 +153,13 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
+	// Args:
+	// * none
+	// Returns:
+	// * uri representing the created temporary directory
 	"mktmp": {
 		Argsn: 0,
-		Doc:   "Creates a temporary directory.",
+		Doc:   "Creates a new temporary directory.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			dir, err := os.MkdirTemp("", "rye-tmp-")
 			if err != nil {
@@ -149,9 +169,14 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
+	// Args:
+	// * source: uri representing the source file or directory
+	// * destination: uri representing the destination file or directory
+	// Returns:
+	// * destination uri if successful
 	"mv": {
 		Argsn: 2,
-		Doc:   "Creates a directory.",
+		Doc:   "Moves or renames a file or directory.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg0.(type) {
 			case env.Uri:
@@ -183,9 +208,13 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	}, */
 
+	// Args:
+	// * none
+	// Returns:
+	// * block of uris representing files and directories in the current directory
 	"ls": {
 		Argsn: 0,
-		Doc:   "Returns current working directory.",
+		Doc:   "Lists files and directories in the current directory.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 
 			files, err := os.ReadDir(".")
@@ -204,9 +233,13 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
+	// Args:
+	// * none
+	// Returns:
+	// * dictionary containing information about the host system (hostname, uptime, OS, etc.)
 	"host-info?": {
 		Argsn: 0,
-		Doc:   "Get information about the host system.",
+		Doc:   "Gets information about the host system.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			v, err := host.Info()
 			if err != nil {
@@ -226,9 +259,13 @@ var Builtins_os = map[string]*env.Builtin{
 			return *r
 		},
 	},
+	// Args:
+	// * none
+	// Returns:
+	// * table containing information about users (user, terminal, host, started)
 	"users?": {
 		Argsn: 0,
-		Doc:   "Get information about users as a table.",
+		Doc:   "Gets information about users currently logged into the system.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			users, err := host.Users()
 			if err != nil {
@@ -248,9 +285,13 @@ var Builtins_os = map[string]*env.Builtin{
 			return *s
 		},
 	},
+	// Args:
+	// * none
+	// Returns:
+	// * dictionary with keys "1", "5", and "15" representing load averages
 	"load-avg?": {
 		Argsn: 0,
-		Doc:   "Get the load average as a dict representing load average over the last 1, 5, and 15 minutes.",
+		Doc:   "Gets the system load average over the last 1, 5, and 15 minutes.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			v, err := load.Avg()
 			if err != nil {
@@ -263,9 +304,13 @@ var Builtins_os = map[string]*env.Builtin{
 			return *r
 		},
 	},
+	// Args:
+	// * none
+	// Returns:
+	// * dictionary containing information about virtual memory (total, free, used-percent)
 	"virtual-memory?": {
 		Argsn: 0,
-		Doc:   "Get information about virtual memory usage.",
+		Doc:   "Gets information about virtual memory usage.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			v, err := mem.VirtualMemory()
 			if err != nil {
@@ -278,9 +323,13 @@ var Builtins_os = map[string]*env.Builtin{
 			return *r
 		},
 	},
+	// Args:
+	// * none
+	// Returns:
+	// * table containing disk usage information for all partitions
 	"disk-usage?": {
 		Argsn: 0,
-		Doc:   "Get disk usage information as a table.",
+		Doc:   "Gets disk usage information for all partitions.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			partitions, err := disk.Partitions(true)
 			if err != nil {
@@ -308,9 +357,13 @@ var Builtins_os = map[string]*env.Builtin{
 			return *s
 		},
 	},
+	// Args:
+	// * none
+	// Returns:
+	// * block of integers representing process IDs
 	"pids?": {
 		Argsn: 0,
-		Doc:   "Get process pids as a block.",
+		Doc:   "Gets a list of all process IDs currently running.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			pids, err := process.Pids()
 			if err != nil {
@@ -324,9 +377,13 @@ var Builtins_os = map[string]*env.Builtin{
 			return *env.NewBlock(*env.NewTSeries(pids2))
 		},
 	},
+	// Args:
+	// * none
+	// Returns:
+	// * table containing detailed information about all running processes
 	"processes?": {
 		Argsn: 0,
-		Doc:   "Get information about all processes as a table.",
+		Doc:   "Gets detailed information about all running processes.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			processes, err := process.Processes()
 			if err != nil {
@@ -339,9 +396,13 @@ var Builtins_os = map[string]*env.Builtin{
 			return *s
 		},
 	},
+	// Args:
+	// * pid: integer process ID
+	// Returns:
+	// * dictionary containing detailed information about the specified process
 	"process": {
 		Argsn: 1,
-		Doc:   "Get information about process with a given PID.",
+		Doc:   "Gets detailed information about a specific process by PID.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch pid := arg0.(type) {
 			case env.Integer:
@@ -358,9 +419,13 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
+	// Args:
+	// * ip: string containing an IP address
+	// Returns:
+	// * block of strings containing hostnames associated with the IP
 	"lookup-address": {
 		Argsn: 1,
-		Doc:   "Get address of an IP.",
+		Doc:   "Performs a reverse DNS lookup to get hostnames for an IP address.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch ip := arg0.(type) {
 			case env.String:
@@ -381,9 +446,13 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
+	// Args:
+	// * hostname: string containing a hostname
+	// Returns:
+	// * block of strings containing IP addresses associated with the hostname
 	"lookup-ip": {
 		Argsn: 1,
-		Doc:   "Get IP of an address.",
+		Doc:   "Performs a DNS lookup to get IP addresses for a hostname.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch ip := arg0.(type) {
 			case env.String:
@@ -404,9 +473,13 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
+	// Args:
+	// * value: string to write to the clipboard
+	// Returns:
+	// * the same string if successful
 	"write\\clipboard": {
 		Argsn: 1,
-		Doc:   "Writes value to OS clipboard",
+		Doc:   "Writes a string value to the system clipboard.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
 			case env.String:
@@ -421,9 +494,13 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
+	// Args:
+	// * none
+	// Returns:
+	// * string containing the current contents of the clipboard
 	"read\\clipboard": {
 		Argsn: 0,
-		Doc:   "Reads value from OS clipboard",
+		Doc:   "Reads the current contents of the system clipboard.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			val, err := clipboard.ReadAll()
 			if err != nil {

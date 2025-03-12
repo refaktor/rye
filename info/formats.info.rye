@@ -1,8 +1,9 @@
 section "Regexp " "Go like Regular expressions" {
 	group "regexp" 
-	""
+	"Creates a compiled regular expression object from a pattern string."
 	{
-		arg "* pattern: regular expression"
+		arg `pattern: String containing a regular expression pattern`
+		returns `native regexp object or error if pattern is invalid`
 	}
 
 	{
@@ -10,10 +11,11 @@ section "Regexp " "Go like Regular expressions" {
 	}
 
 	group "regexp//is-match" 
-	""
+	"Tests if a string matches the regular expression pattern."
 	{
-		arg "* regexp - native regexp value"
-		arg "* input - value to test for matching"
+		arg `regexp: Native regexp object`
+		arg `input: String to test against the pattern`
+		returns `integer 1 if the string matches the pattern, 0 otherwise`
 	}
 
 	{
@@ -22,8 +24,11 @@ section "Regexp " "Go like Regular expressions" {
 	}
 
 	group "regexp//submatch?" 
-	""
+	"Extracts the first captured group from a string using the regular expression."
 	{
+		arg `regexp: Regular expression with capturing groups`
+		arg `input: String to search in`
+		returns `string containing the first captured group or error if no submatch found`
 	}
 
 	{
@@ -31,8 +36,11 @@ section "Regexp " "Go like Regular expressions" {
 	}
 
 	group "regexp//submatches?" 
-	""
+	"Extracts all captured groups from the first match as a block of strings."
 	{
+		arg `regexp: Regular expression with capturing groups`
+		arg `input: String to search in`
+		returns `block containing all captured groups from the first match or error if no match found`
 	}
 
 	{
@@ -40,8 +48,11 @@ section "Regexp " "Go like Regular expressions" {
 	}
 
 	group "regexp//submatches\all?" 
-	""
+	"Extracts all captured groups from all matches as a nested block structure."
 	{
+		arg `regexp: Regular expression with capturing groups`
+		arg `input: String to search in`
+		returns `block of blocks, each inner block containing the captured groups from one match`
 	}
 
 	{
@@ -49,8 +60,11 @@ section "Regexp " "Go like Regular expressions" {
 	}
 
 	group "regexp//find-all" 
-	""
+	"Finds all substrings matching the regular expression and returns them as a block."
 	{
+		arg `regexp: Regular expression pattern`
+		arg `input: String to search in`
+		returns `block containing all matching substrings or error if no matches found`
 	}
 
 	{
@@ -58,10 +72,11 @@ section "Regexp " "Go like Regular expressions" {
 	}
 
 	group "regexp//match?" 
-	""
+	"Finds the first substring matching the regular expression."
 	{
-		arg "* regexp value"
-		arg "* input"
+		arg `regexp: Regular expression pattern`
+		arg `input: String to search in`
+		returns `string containing the first match or empty string if no match found`
 	}
 
 	{
@@ -69,8 +84,12 @@ section "Regexp " "Go like Regular expressions" {
 	}
 
 	group "regexp//replace-all" 
-	""
+	"Replaces all occurrences of the regular expression pattern with the specified replacement string."
 	{
+		arg `regexp: Regular expression pattern`
+		arg `input: String to modify`
+		arg `replacement: String to replace matches with`
+		returns `string with all matches replaced by the replacement string`
 	}
 
 	{
@@ -81,8 +100,11 @@ section "Regexp " "Go like Regular expressions" {
 
 section "Validation " "validation dialect for Rye values" {
 	group "validate" 
-	""
+	"Validates and transforms data according to specified rules, returning a dictionary with converted values or an error."
 	{
+		arg `data: Dictionary or List to validate`
+		arg `rules: Block containing validation rules`
+		returns `validated Dictionary with converted values or error if validation fails`
 	}
 
 	{
@@ -112,8 +134,11 @@ section "Validation " "validation dialect for Rye values" {
 	}
 
 	group "validate>ctx" 
-	""
+	"Validates and transforms data according to specified rules, returning a context object for easy field access."
 	{
+		arg `data: Dictionary to validate`
+		arg `rules: Block containing validation rules`
+		returns `validated Context with converted values or error if validation fails`
 	}
 
 	{
@@ -123,10 +148,12 @@ section "Validation " "validation dialect for Rye values" {
 
 }
 
-section "JSON " "parsing and generating JSON" {
+section "JSON " "Parsing and generating JSON" {
 	group "parse-json" 
-	""
+	"Parses JSON string into Rye values."
 	{
+		arg `json: string containing JSON data`
+		returns `parsed Rye value (list, dict, string, integer, etc.)`
 	}
 
 	{
@@ -135,8 +162,10 @@ section "JSON " "parsing and generating JSON" {
 	}
 
 	group "to-json" 
-	""
+	"Converts a Rye value to a JSON string."
 	{
+		arg `value: any Rye value to encode (list, dict, string, integer, etc.)`
+		returns `string containing the JSON representation`
 	}
 
 	{
@@ -145,8 +174,10 @@ section "JSON " "parsing and generating JSON" {
 	}
 
 	group "to-json\lines" 
-	""
+	"Converts a table to JSON with each row on a separate line."
 	{
+		arg `table: table value to encode`
+		returns `string containing the JSON representation with each row on a new line`
 	}
 
 	{
@@ -155,10 +186,12 @@ section "JSON " "parsing and generating JSON" {
 
 }
 
-section "BSON " "" {
+section "BSON " "BSON encoding and decoding" {
 	group "from-bson" 
-	""
+	"Decodes BSON data into Rye values."
 	{
+		arg `bytes: native bytes object containing BSON data`
+		returns `decoded Rye value (string, integer, decimal, block, etc.)`
 	}
 
 	{
@@ -167,12 +200,27 @@ section "BSON " "" {
 		equal { { 123 "asd" } |to-bson |from-bson } { 123 "asd" }
 	}
 
+	group "to-bson" 
+	"Encodes a Rye value into BSON format."
+	{
+		arg `value: any Rye value to encode (string, integer, decimal, block, etc.)`
+		returns `native bytes object containing the BSON-encoded data`
+	}
+
+	{
+		equal { "abc" |to-bson |type? } 'native
+		equal { "abc" |to-bson |kind? } 'bytes
+	}
+
 }
 
-section "SXML " "streaming, Sax like XML dialect (still in design)" {
+section "SXML " "Streaming, SAX-like XML processing" {
 	group "reader//do-sxml" 
-	""
+	"Processes XML using a streaming SAX-like approach with tag handlers."
 	{
+		arg `reader: XML reader object`
+		arg `block: SXML processing block with tag handlers`
+		returns `result of processing the XML`
 	}
 
 	{
@@ -195,8 +243,11 @@ section "SXML " "streaming, Sax like XML dialect (still in design)" {
 	}
 
 	group "rye-sxml-start//attr?" 
-	""
+	"Retrieves an attribute value by index from an XML start element."
 	{
+		arg `element: XML start element`
+		arg `index: Integer index of the attribute to retrieve`
+		returns `string value of the attribute or void if not found`
 	}
 
 	{
@@ -210,12 +261,24 @@ section "SXML " "streaming, Sax like XML dialect (still in design)" {
 		} "25 55 "
 	}
 
+	group "rye-sxml-start//name?" 
+	"Returns the name of an XML start element."
+	{
+		arg `element: XML start element`
+		returns `string name of the XML element`
+	}
+
+	{
+	}
+
 }
 
-section "HTML " "streaming, Sax like HTML dialect (still in design)" {
+section "HTML " "HTML processing functions" {
 	group "unescape\html" 
-	""
+	"Converts HTML entities to their character equivalents."
 	{
+		arg `text: HTML-escaped string`
+		returns `string with HTML entities converted to their character equivalents`
 	}
 
 	{
@@ -223,8 +286,10 @@ section "HTML " "streaming, Sax like HTML dialect (still in design)" {
 	}
 
 	group "escape\html" 
-	""
+	"Converts special characters to HTML entities."
 	{
+		arg `text: String containing HTML special characters`
+		returns `string with special characters converted to HTML entities`
 	}
 
 	{
@@ -232,8 +297,10 @@ section "HTML " "streaming, Sax like HTML dialect (still in design)" {
 	}
 
 	group "html->markdown" 
-	""
+	"Converts HTML text to markdown format."
 	{
+		arg `html: HTML string to convert`
+		returns `string containing markdown equivalent of the HTML`
 	}
 
 	{
@@ -241,15 +308,41 @@ section "HTML " "streaming, Sax like HTML dialect (still in design)" {
 	}
 
 	group "reader//parse-html" 
-	""
+	"Parses HTML using a streaming approach with tag handlers."
 	{
+		arg `reader: HTML reader object`
+		arg `block: HTML processing block with tag handlers`
+		returns `result of processing the HTML`
 	}
 
 	{
 		stdout { "<html><body><div class='menu'><a href='/'>home</a><a href='/about/'>about</a>" |reader
 		.parse-html { <a> [ .attr? 'href |prns ] }
 		} "/ /about/ "
-		;
+	}
+
+	group "rye-html-start//attr?" 
+	"Retrieves an attribute value by name or index from an HTML element."
+	{
+		arg `element: HTML token element`
+		arg `name-or-index: Attribute name (as word) or index (as integer)`
+		returns `string value of the attribute or void if not found`
+	}
+
+	{
+		stdout { "<div class='menu' id='nav'></div>" |reader .parse-html { <div> [ .attr? 'class |prn ] } } "menu"
+		stdout { "<div class='menu' id='nav'></div>" |reader .parse-html { <div> [ .attr? 'id |prn ] } } "nav"
+	}
+
+	group "rye-html-start//name?" 
+	"Returns the name of an HTML element."
+	{
+		arg `element: HTML token element`
+		returns `string name of the HTML element`
+	}
+
+	{
+		stdout { "<div></div>" |reader .parse-html { <div> [ .name? |print ] } } "div"
 	}
 
 }

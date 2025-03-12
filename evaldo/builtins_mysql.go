@@ -15,9 +15,18 @@ import (
 
 var Builtins_mysql = map[string]*env.Builtin{
 
+	//
+	// ##### MySQL ##### "MySQL database functions"
+	//
+	// Tests:
+	// equal { mysql-schema//open %"user:pass@tcp(localhost:3306)/dbname" |type? } 'native
+	// Args:
+	// * uri: MySQL connection string URI
+	// Returns:
+	// * native MySQL database connection
 	"mysql-schema//open": {
 		Argsn: 1,
-		Doc:   "Open Mysql connection.",
+		Doc:   "Opens a connection to a MySQL database.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.Uri:
@@ -40,9 +49,16 @@ var Builtins_mysql = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { mysql-schema//open\pwd %"user@tcp(localhost:3306)/dbname" "password" |type? } 'native
+	// Args:
+	// * uri: MySQL connection string URI without password
+	// * password: Password for the database connection
+	// Returns:
+	// * native MySQL database connection
 	"mysql-schema//open\\pwd": {
 		Argsn: 2,
-		Doc:   "Open Mysql connection.",
+		Doc:   "Opens a connection to a MySQL database with separate password parameter.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.Uri:
@@ -72,9 +88,16 @@ var Builtins_mysql = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { db: mysql-schema//open %"user:pass@tcp(localhost:3306)/dbname" , db |Rye-mysql//exec "INSERT INTO test VALUES (1, 'test')" |type? } 'integer
+	// Args:
+	// * db: MySQL database connection
+	// * sql: SQL statement as string or block
+	// Returns:
+	// * integer 1 if rows were affected, error otherwise
 	"Rye-mysql//exec": {
 		Argsn: 2,
-		Doc:   "Execute sql query in for mysql.",
+		Doc:   "Executes a SQL statement that modifies data (INSERT, UPDATE, DELETE).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var sqlstr string
 			var vals []any
@@ -120,9 +143,16 @@ var Builtins_mysql = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { db: mysql-schema//open %"user:pass@tcp(localhost:3306)/dbname" , db |Rye-mysql//query "SELECT * FROM test" |type? } 'table
+	// Args:
+	// * db: MySQL database connection
+	// * sql: SQL query as string or block
+	// Returns:
+	// * table containing query results
 	"Rye-mysql//query": {
 		Argsn: 2,
-		Doc:   "Sql query to get rows data",
+		Doc:   "Executes a SQL query and returns results as a table.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var sqlstr string
 			var vals []any

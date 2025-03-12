@@ -182,15 +182,19 @@ func BsonToValue_Val(ps *env.ProgramState, val any, topLevel bool) env.Object {
 var Builtins_bson = map[string]*env.Builtin{
 
 	//
-	// ##### BSON ##### ""
+	// ##### BSON ##### "BSON encoding and decoding"
 	//
 	// Tests:
 	// equal { "abc" |to-bson |from-bson } "abc"
 	// equal { 123 |to-bson |from-bson } 123
 	// equal { { 123 "asd" } |to-bson |from-bson } { 123 "asd" }
+	// Args:
+	// * bytes: native bytes object containing BSON data
+	// Returns:
+	// * decoded Rye value (string, integer, decimal, block, etc.)
 	"from-bson": {
 		Argsn: 1,
-		Doc:   "Takes a BSON value and returns it encoded into Rye values.",
+		Doc:   "Decodes BSON data into Rye values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var val map[string]any
 			// var val interface{}
@@ -205,9 +209,16 @@ var Builtins_bson = map[string]*env.Builtin{
 			// return makeError(ps, "bson type not found")
 		},
 	},
+	// Tests:
+	// equal { "abc" |to-bson |type? } 'native
+	// equal { "abc" |to-bson |kind? } 'bytes
+	// Args:
+	// * value: any Rye value to encode (string, integer, decimal, block, etc.)
+	// Returns:
+	// * native bytes object containing the BSON-encoded data
 	"to-bson": {
 		Argsn: 1,
-		Doc:   "Takes a Rye value and returns it encoded into BSON.",
+		Doc:   "Encodes a Rye value into BSON format.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			value := ValueToBSON(arg0, true)
 			encoded, err := bson.Marshal(value)
