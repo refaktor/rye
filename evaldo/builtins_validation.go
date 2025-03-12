@@ -344,9 +344,14 @@ var Builtins_validation = map[string]*env.Builtin{
 	// equal { validate dict { b: "2x0" } { b: required decimal } |disarm |status? } 403   ;  ("The server understood the request, but is refusing to fulfill it"). Contrary to popular opinion, RFC2616 doesn't say "403 is only intended for failed authentication", but "403: I know what you want, but I won't do that". That condition may or may not be due to authentication.
 	// equal { validate dict { b: "not-mail" } { b: required email } |disarm |message? } "validation error"
 	// equal { validate dict { b: "2023-1-1" } { b: required date } |disarm |details? } dict { b: "not date" }
+	// Args:
+	// * data: Dictionary or List to validate
+	// * rules: Block containing validation rules
+	// Returns:
+	// * validated Dictionary with converted values or error if validation fails
 	"validate": {
 		Argsn: 2,
-		Doc:   "Validates Dictionary using the Validation dialect and returns result or a Failure.",
+		Doc:   "Validates and transforms data according to specified rules, returning a dictionary with converted values or an error.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return BuiValidate(env1, arg0, arg1)
 		},
@@ -355,9 +360,14 @@ var Builtins_validation = map[string]*env.Builtin{
 	// Tests:
 	// equal { validate>ctx dict { a: 1 } { a: required } |type? } 'ctx    ; TODO rename to context
 	// equal { validate>ctx dict { a: 1 } { a: optional 0 } -> 'a } 1
+	// Args:
+	// * data: Dictionary to validate
+	// * rules: Block containing validation rules
+	// Returns:
+	// * validated Context with converted values or error if validation fails
 	"validate>ctx": {
 		Argsn: 2,
-		Doc:   "Validates Dictionary using the Validation dialect and returns result as a Context or a Failure.",
+		Doc:   "Validates and transforms data according to specified rules, returning a context object for easy field access.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			obj := BuiValidate(env1, arg0, arg1)
 			switch obj1 := obj.(type) {

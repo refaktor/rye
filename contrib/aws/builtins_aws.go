@@ -26,8 +26,19 @@ import (
 
 var Builtins_aws = map[string]*env.Builtin{
 
+	//
+	// ##### AWS ##### "AWS SDK functions"
+	//
+	// Tests:
+	// equal { new-aws-session "us-east-1" |type? } 'native
+	// equal { new-aws-session "us-east-1" |kind? } 'aws-session
+	// Args:
+	// * region: string containing the AWS region (e.g., "us-east-1")
+	// Returns:
+	// * native aws-session object
 	"new-aws-session": {
 		Argsn: 1,
+		Doc:   "Creates a new AWS session with the specified region.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch region := arg0.(type) {
 			case env.String:
@@ -42,8 +53,16 @@ var Builtins_aws = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { new-aws-session "us-east-1" |open-s3 |type? } 'native
+	// equal { new-aws-session "us-east-1" |open-s3 |kind? } 'aws-s3-client
+	// Args:
+	// * session: native aws-session object
+	// Returns:
+	// * native aws-s3-client object
 	"aws-session//open-s3": {
 		Argsn: 1,
+		Doc:   "Creates an S3 client from an AWS session.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch sess := arg0.(type) {
 			case env.Native:
@@ -55,8 +74,18 @@ var Builtins_aws = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { new-aws-session "us-east-1" |open-s3 |put-object "bucket" "key" reader "content" |kind? } 'aws-s3-client
+	// Args:
+	// * client: native aws-s3-client object
+	// * bucket: string containing the S3 bucket name
+	// * key: string containing the S3 object key
+	// * reader: native reader object containing the data to upload
+	// Returns:
+	// * the aws-s3-client object if successful
 	"aws-s3-client//put-object": {
 		Argsn: 4,
+		Doc:   "Uploads an object to an S3 bucket.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch client := arg0.(type) {
 			case env.Native:
@@ -107,8 +136,17 @@ var Builtins_aws = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { new-aws-session "us-east-1" |open-s3 |get-object "bucket" "key" |kind? } 'reader
+	// Args:
+	// * client: native aws-s3-client object
+	// * bucket: string containing the S3 bucket name
+	// * key: string containing the S3 object key
+	// Returns:
+	// * native reader object containing the downloaded data
 	"aws-s3-client//get-object": {
 		Argsn: 3,
+		Doc:   "Downloads an object from an S3 bucket.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch client := arg0.(type) {
 			case env.Native:
@@ -142,8 +180,17 @@ var Builtins_aws = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { new-aws-session "us-east-1" |open-s3 |delete-object "bucket" "key" |kind? } 'aws-s3-client
+	// Args:
+	// * client: native aws-s3-client object
+	// * bucket: string containing the S3 bucket name
+	// * key: string containing the S3 object key
+	// Returns:
+	// * the aws-s3-client object if successful
 	"aws-s3-client//delete-object": {
 		Argsn: 3,
+		Doc:   "Deletes an object from an S3 bucket.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch client := arg0.(type) {
 			case env.Native:
@@ -171,8 +218,16 @@ var Builtins_aws = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { new-aws-session "us-east-1" |open-ses |type? } 'native
+	// equal { new-aws-session "us-east-1" |open-ses |kind? } 'aws-ses-session
+	// Args:
+	// * session: native aws-session object
+	// Returns:
+	// * native aws-ses-session object
 	"aws-session//open-ses": {
 		Argsn: 1,
+		Doc:   "Creates an SES client from an AWS session.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cfg := arg0.(type) {
 			case env.Native:
@@ -187,9 +242,18 @@ var Builtins_aws = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { new-aws-session "us-east-1" |open-ses |send-raw message "sender@example.com" [ "recipient@example.com" ] |kind? } 'aws-ses-session
+	// Args:
+	// * session: native aws-ses-session object
+	// * message: native gomail-message object
+	// * recipients: block of strings or emails containing recipient addresses
+	// * from: email address to send from
+	// Returns:
+	// * the aws-ses-session object if successful
 	"aws-ses-session//send-raw": {
 		Argsn: 4,
-		Doc:   "[ ses-session* gomail-message from-email recipients ]",
+		Doc:   "Sends a raw email using Amazon SES.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch svc := arg0.(type) {
 			case env.Native:

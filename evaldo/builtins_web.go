@@ -27,17 +27,33 @@ func PopOutBuffer() string {
 
 var Builtins_web = map[string]*env.Builtin{
 
+	//
+	// ##### Web ##### "Web and HTML generation functions"
+	//
+	// Tests:
+	// equal { echo "Hello" , out-buffer } "Hello"
+	// Args:
+	// * none
+	// Returns:
+	// * string containing the current output buffer
 	"out-buffer": {
 		Argsn: 0,
-		Doc:   "TODODOC",
+		Doc:   "Returns the current content of the output buffer.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return env.String{OutBuffer}
 		},
 	},
 
+	// Tests:
+	// equal { echo "Hello" } "Hello"
+	// equal { echo 123 } 123
+	// Args:
+	// * value: String or integer to append to the output buffer
+	// Returns:
+	// * the input value
 	"echo": {
 		Argsn: 1,
-		Doc:   "TODODOC",
+		Doc:   "Appends a string or integer to the output buffer.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.String:
@@ -53,9 +69,16 @@ var Builtins_web = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { "Hello" |tag "div" } "<div>Hello</div>"
+	// Args:
+	// * content: String content to wrap in HTML tag
+	// * tag: String name of the HTML tag
+	// Returns:
+	// * string with content wrapped in the specified HTML tag
 	"tag": {
 		Argsn: 2,
-		Doc:   "TODODOC",
+		Doc:   "Wraps content in an HTML tag.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch wrp := arg1.(type) {
 			case env.String:
@@ -72,11 +95,16 @@ var Builtins_web = map[string]*env.Builtin{
 		},
 	},
 
-	// BASIC FUNCTIONS WITH NUMBERS
-
+	// Tests:
+	// equal { ctx: echo-context-mock , ctx |form? "username" } "user1"
+	// Args:
+	// * context: Echo context object
+	// * name: String name of the form field
+	// Returns:
+	// * string value of the form field
 	"form?": {
 		Argsn: 2,
-		Doc:   "TODODOC",
+		Doc:   "Gets a form field value from an Echo context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch ctx := arg0.(type) {
 			case env.Native:
@@ -92,9 +120,16 @@ var Builtins_web = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { ctx: echo-context-mock , ctx |query? "search" } "keyword"
+	// Args:
+	// * context: Echo context object
+	// * name: String name of the query parameter
+	// Returns:
+	// * string value of the query parameter
 	"query?": {
 		Argsn: 2,
-		Doc:   "TODODOC",
+		Doc:   "Gets a query parameter value from an Echo context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			fmt.Println("YOYOYOYOYOYO ------------- - - -  --")
 			//return env.String{"QUERY - VAL"}
@@ -113,9 +148,17 @@ var Builtins_web = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { session: echo-session-mock , session |Rye-echo-session//set "user" "john" |type? } 'string
+	// Args:
+	// * session: Echo session object
+	// * key: String key for the session value
+	// * value: String value to store in the session
+	// Returns:
+	// * the stored value
 	"Rye-echo-session//set": { // after we make kinds ... session native will be tagged with session, and set will be multimetod on session
 		Argsn: 3,
-		Doc:   "TODODOC",
+		Doc:   "Sets a value in an Echo session.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			fmt.Println("YOYOYOYOYOYO ------------- - - -  --")
 			//return env.String{"QUERY - VAL"}
@@ -142,9 +185,16 @@ var Builtins_web = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { session: echo-session-mock , session |Rye-echo-session//get "user" } "john"
+	// Args:
+	// * session: Echo session object
+	// * key: String key for the session value
+	// Returns:
+	// * the stored value or "NO VALUE" if not found
 	"Rye-echo-session//get": { // after we make kinds ... session native will be tagged with session, and set will be multimetod on sessio
 		Argsn: 2,
-		Doc:   "TODODOC",
+		Doc:   "Gets a value from an Echo session.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			fmt.Println("YOYOYOYOYOYO ------------- - - -  --")
 			//return env.String{"QUERY - VAL"}

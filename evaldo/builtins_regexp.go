@@ -14,10 +14,12 @@ var Builtins_regexp = map[string]*env.Builtin{
 	// Tests:
 	//  equal { regexp "[0-9]" |type? } 'native
 	// Args:
-	// * pattern: regular expression
+	// * pattern: String containing a regular expression pattern
+	// Returns:
+	// * native regexp object or error if pattern is invalid
 	"regexp": {
 		Argsn: 1,
-		Doc:   "Creates a Regular Expression native value.",
+		Doc:   "Creates a compiled regular expression object from a pattern string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.String:
@@ -36,11 +38,13 @@ var Builtins_regexp = map[string]*env.Builtin{
 	//  equal { regexp "[0-9]" |is-match "5" } 1
 	//  equal { regexp "[0-9]" |is-match "a" } 0
 	// Args:
-	// * regexp - native regexp value
-	// * input - value to test for matching
+	// * regexp: Native regexp object
+	// * input: String to test against the pattern
+	// Returns:
+	// * integer 1 if the string matches the pattern, 0 otherwise
 	"regexp//is-match": {
 		Argsn: 2,
-		Doc:   "Check if string matches the given regular epression.",
+		Doc:   "Tests if a string matches the regular expression pattern.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg1.(type) {
 			case env.String:
@@ -63,9 +67,14 @@ var Builtins_regexp = map[string]*env.Builtin{
 
 	// Tests:
 	//  equal { regexp "x([0-9]+)y" |submatch? "x123y" } "123"
+	// Args:
+	// * regexp: Regular expression with capturing groups
+	// * input: String to search in
+	// Returns:
+	// * string containing the first captured group or error if no submatch found
 	"regexp//submatch?": {
 		Argsn: 2,
-		Doc:   "Get the first submatch from string given the regular exprepesion.",
+		Doc:   "Extracts the first captured group from a string using the regular expression.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg1.(type) {
 			case env.String:
@@ -88,9 +97,14 @@ var Builtins_regexp = map[string]*env.Builtin{
 
 	// Tests:
 	//  equal { regexp "x([0-9]+)y" |submatches? "x123y x234y" } { "123" }
+	// Args:
+	// * regexp: Regular expression with capturing groups
+	// * input: String to search in
+	// Returns:
+	// * block containing all captured groups from the first match or error if no match found
 	"regexp//submatches?": {
 		Argsn: 2,
-		Doc:   "Get all regexp submatches in a Block.",
+		Doc:   "Extracts all captured groups from the first match as a block of strings.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg1.(type) {
 			case env.String:
@@ -118,9 +132,14 @@ var Builtins_regexp = map[string]*env.Builtin{
 
 	// Tests:
 	//  equal { regexp "x([0-9]+)(y+)?" |submatches\all? "x11yy x22" } { { "11" "yy" } { "22" "" } }
+	// Args:
+	// * regexp: Regular expression with capturing groups
+	// * input: String to search in
+	// Returns:
+	// * block of blocks, each inner block containing the captured groups from one match
 	"regexp//submatches\\all?": {
 		Argsn: 2,
-		Doc:   "Get all regexp submatches in a Block.",
+		Doc:   "Extracts all captured groups from all matches as a nested block structure.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg1.(type) {
 			case env.String:
@@ -152,9 +171,14 @@ var Builtins_regexp = map[string]*env.Builtin{
 
 	// Tests:
 	//  equal { regexp "[0-9]+" |find-all "x123y x234y" } { "123" "234" }
+	// Args:
+	// * regexp: Regular expression pattern
+	// * input: String to search in
+	// Returns:
+	// * block containing all matching substrings or error if no matches found
 	"regexp//find-all": {
 		Argsn: 2,
-		Doc:   "Find all matches and return them in a Block",
+		Doc:   "Finds all substrings matching the regular expression and returns them as a block.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg1.(type) {
 			case env.String:
@@ -181,11 +205,13 @@ var Builtins_regexp = map[string]*env.Builtin{
 	// Tests:
 	//	equal { regexp "[0-9]+c+" |match? "aa33bb55cc" } "55cc"
 	// Args:
-	// * regexp value
-	// * input
+	// * regexp: Regular expression pattern
+	// * input: String to search in
+	// Returns:
+	// * string containing the first match or empty string if no match found
 	"regexp//match?": {
 		Argsn: 2,
-		Doc:   "Get the regexp match.",
+		Doc:   "Finds the first substring matching the regular expression.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg1.(type) {
 			case env.String:
@@ -204,9 +230,15 @@ var Builtins_regexp = map[string]*env.Builtin{
 
 	// Tests:
 	//  equal { regexp "[0-9]+" |replace-all "x123y x234y" "XXX" } "xXXXy xXXXy"
+	// Args:
+	// * regexp: Regular expression pattern
+	// * input: String to modify
+	// * replacement: String to replace matches with
+	// Returns:
+	// * string with all matches replaced by the replacement string
 	"regexp//replace-all": {
 		Argsn: 3,
-		Doc:   "Replace all mathes in a string given the regexp with another string.",
+		Doc:   "Replaces all occurrences of the regular expression pattern with the specified replacement string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch re := arg0.(type) {
 			case env.Native:

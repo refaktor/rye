@@ -2,14 +2,15 @@
 
 ; load pkcs12 file and turn in to block of pem-blocks
 
-read\bytes %client-identity.p12 |pkcs12-to-pem "ppp"
+read\bytes %identity.p12 |pkcs12-to-pem "ppp"
 ; returns
 ; [Block: ^[Native of kind pem-block] [Native of kind pem-block] ]
 
 
 ; print the types and headers of pem blocks
 
-read\bytes %client-identity.p12 |pkcs12-to-pem "ppp" |for { .block-type? .print , .headers? .print }
+read\bytes %identity.p12 |pkcs12-to-pem "ppp"
+|for { .block-type? .print , .headers? .print }
 ; prints
 ; CERTIFICATE
 ; [
@@ -22,7 +23,7 @@ read\bytes %client-identity.p12 |pkcs12-to-pem "ppp" |for { .block-type? .print 
 
 ; get start and end date of the certificate
 
-read\bytes %client-identity.p12 |pkcs12-to-pem "ppp" |seek { .block-type? = "CERTIFICATE" }
+read\bytes %identity.p12 |pkcs12-to-pem "ppp" |seek { .block-type? = "CERTIFICATE" }
 |x509-parse-certificate .vals\with { .not-after? , .not-before? }
 ; returns
 ; [Block: ^[Time: 2026-03-08 00:21:51] [Time: 2025-03-08 00:21:51] ]

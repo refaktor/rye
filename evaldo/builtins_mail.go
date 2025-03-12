@@ -12,9 +12,19 @@ import (
 
 var Builtins_mail = map[string]*env.Builtin{
 
+	//
+	// ##### Mail ##### "Email parsing functions"
+	//
+	// Tests:
+	// equal { reader %email.eml |parse-email |type? } 'native
+	// equal { reader %email.eml |parse-email |kind? } 'parsed-email
+	// Args:
+	// * reader: native reader object containing email data
+	// Returns:
+	// * native parsed-email object
 	"reader//parse-email": {
 		Argsn: 1,
-		Doc:   "Parse email.",
+		Doc:   "Parses email data from a reader.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch reader := arg0.(type) {
 			case env.Native:
@@ -29,9 +39,15 @@ var Builtins_mail = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { reader %email.eml |parse-email |subject? |type? } 'string
+	// Args:
+	// * email: native parsed-email object
+	// Returns:
+	// * string containing the email subject
 	"parsed-email//subject?": {
 		Argsn: 1,
-		Doc:   "Get subject value from parsed email.",
+		Doc:   "Gets the subject from a parsed email.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch email := arg0.(type) {
 			case env.Native:
@@ -79,9 +95,15 @@ var Builtins_mail = map[string]*env.Builtin{
 
 	*/
 
+	// Tests:
+	// equal { reader %email.eml |parse-email |message-id? |type? } 'string
+	// Args:
+	// * email: native parsed-email object
+	// Returns:
+	// * string containing the email message ID
 	"parsed-email//message-id?": {
 		Argsn: 1,
-		Doc:   "Get message-id from parsed email.",
+		Doc:   "Gets the message ID from a parsed email.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch email := arg0.(type) {
 			case env.Native:
@@ -92,9 +114,15 @@ var Builtins_mail = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { reader %email.eml |parse-email |html-body? |type? } 'string
+	// Args:
+	// * email: native parsed-email object
+	// Returns:
+	// * string containing the HTML body of the email
 	"parsed-email//html-body?": {
 		Argsn: 1,
-		Doc:   "Get HTML body from parsed email",
+		Doc:   "Gets the HTML body from a parsed email.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch email := arg0.(type) {
 			case env.Native:
@@ -105,9 +133,15 @@ var Builtins_mail = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { reader %email.eml |parse-email |text-body? |type? } 'string
+	// Args:
+	// * email: native parsed-email object
+	// Returns:
+	// * string containing the plain text body of the email
 	"parsed-email//text-body?": {
 		Argsn: 1,
-		Doc:   "Get text body from parsed email.",
+		Doc:   "Gets the plain text body from a parsed email.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch email := arg0.(type) {
 			case env.Native:
@@ -117,16 +151,24 @@ var Builtins_mail = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Args:
+	// * email: native parsed-email object
+	// Returns:
+	// * native object containing email attachments
 	"parsed-email//attachments?": {
 		Argsn: 1,
-		Doc:   "TODODOC",
+		Doc:   "Gets the attachments from a parsed email.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewNative(ps.Idx, arg0, "smtpd")
 		},
 	},
+	// Args:
+	// * email: native parsed-email object
+	// Returns:
+	// * native object containing embedded files from the email
 	"parsed-email//embedded-files?": {
 		Argsn: 1,
-		Doc:   "TODODOC",
+		Doc:   "Gets the embedded files from a parsed email.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewNative(ps.Idx, arg0, "smtpd")
 		},

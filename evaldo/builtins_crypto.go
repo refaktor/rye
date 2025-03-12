@@ -67,9 +67,17 @@ verify buffer pubk sigb
 
 var Builtins_crypto = map[string]*env.Builtin{
 
-	"string//to-bytes": {
+	// Tests:
+	//  equal { "48656c6c6f20776f726c64" |decode\hex |type? } 'native
+	//  equal { "48656c6c6f20776f726c64" |decode\hex |kind? } 'bytes
+	//  equal { "invalid" |decode\hex |disarm |type? } 'error
+	// Args:
+	// * hex-string: hexadecimal encoded string to decode
+	// Returns:
+	// * native bytes object containing the decoded data
+	"decode\\hex": {
 		Argsn: 1,
-		Doc:   "Decode string to bytes.",
+		Doc:   "Decodes a hexadecimal string to a bytes native value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch addr := arg0.(type) {
 			case env.String:
@@ -86,13 +94,20 @@ var Builtins_crypto = map[string]*env.Builtin{
 		},
 	},
 
-	"bytes//to-string": {
+	// Tests:
+	//  equal { "48656c6c6f20776f726c64" |decode\hex |encode\hex } "48656c6c6f20776f726c64"
+	//  equal { "Hello world" |sha512 |decode\hex |encode\hex |type? } 'string
+	// Args:
+	// * bytes: native bytes object to encode
+	// Returns:
+	// * string containing the hexadecimal representation of the bytes
+	"encode\\hex": {
 		Argsn: 1,
-		Doc:   "Encoding value to string.",
+		Doc:   "Encodes a bytes native value to a hexadecimal string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch addr := arg0.(type) {
 			case env.Native:
-				return env.NewString(hex.EncodeToString(addr.Value.([]byte)))
+				return *env.NewString(hex.EncodeToString(addr.Value.([]byte)))
 			default:
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "bytes//to-string")
@@ -100,13 +115,19 @@ var Builtins_crypto = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	//  equal { ed25519-generate-keys |first |to-string |type? } 'string
+	// Args:
+	// * key: Ed25519 public key as a native value
+	// Returns:
+	// * string containing the hexadecimal representation of the public key
 	"Ed25519-pub-key//to-string": {
 		Argsn: 1,
-		Doc:   "Turns public key to string.",
+		Doc:   "Converts an Ed25519 public key to its hexadecimal string representation.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch addr := arg0.(type) {
 			case env.Native:
-				return env.NewString(hex.EncodeToString(addr.Value.(ed25519.PublicKey)))
+				return *env.NewString(hex.EncodeToString(addr.Value.(ed25519.PublicKey)))
 			default:
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Ed25519-pub-key//to-string")
@@ -114,13 +135,19 @@ var Builtins_crypto = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	//  equal { ed25519-generate-keys |second |to-string |type? } 'string
+	// Args:
+	// * key: Ed25519 private key as a native value
+	// Returns:
+	// * string containing the hexadecimal representation of the private key
 	"Ed25519-priv-key//to-string": {
 		Argsn: 1,
-		Doc:   "Turns private key to string.",
+		Doc:   "Converts an Ed25519 private key to its hexadecimal string representation.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch addr := arg0.(type) {
 			case env.Native:
-				return env.NewString(hex.EncodeToString(addr.Value.(ed25519.PrivateKey)))
+				return *env.NewString(hex.EncodeToString(addr.Value.(ed25519.PrivateKey)))
 			default:
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Ed25519-priv-key//to-string")
@@ -128,9 +155,20 @@ var Builtins_crypto = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	//  equal { ed25519-generate-keys |type? } 'block
+	//  equal { ed25519-generate-keys |length? } 2
+	//  equal { ed25519-generate-keys |first |type? } 'native
+	//  equal { ed25519-generate-keys |first |kind? } 'Ed25519-pub-key
+	//  equal { ed25519-generate-keys |second |type? } 'native
+	//  equal { ed25519-generate-keys |second |kind? } 'Ed25519-priv-key
+	// Args:
+	// * none
+	// Returns:
+	// * block containing [public-key, private-key] as native values
 	"ed25519-generate-keys": {
 		Argsn: 0,
-		Doc:   "Generates private and public key, returns them in a block. Public first.",
+		Doc:   "Generates a new Ed25519 key pair and returns them in a block with public key first, then private key.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			keys := make([]env.Object, 2)
 			puk, pvk, err := ed25519.GenerateKey(nil)
@@ -145,9 +183,17 @@ var Builtins_crypto = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	//  ; equal { ed25519-generate-keys |second |ed25519-private-key |type? } 'native
+	//  ; equal { ed25519-generate-keys |second |to-string |probe |ed25519-private-key |kind? } 'Ed25519-priv-key
+	//  equal { "invalid" |ed25519-private-key |disarm |type? } 'error
+	// Args:
+	// * key-data: string containing hexadecimal representation of the key or bytes native value
+	// Returns:
+	// * Ed25519 private key as a native value
 	"ed25519-private-key": {
 		Argsn: 1,
-		Doc:   "Creates private key from string or bytes.",
+		Doc:   "Creates an Ed25519 private key from a hexadecimal string or bytes value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var pkey []byte
 			var err error
@@ -169,9 +215,17 @@ var Builtins_crypto = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	//  ; equal { ed25519-generate-keys |first |to-string |ed25519-public-key |type? } 'native
+	//  ; equal { ed25519-generate-keys |first |to-string |ed25519-public-key |kind? } 'Ed25519-pub-key
+	//  equal { "invalid" |ed25519-public-key |disarm |type? } 'error
+	// Args:
+	// * key-data: string containing hexadecimal representation of the key or bytes native value
+	// Returns:
+	// * Ed25519 public key as a native value
 	"ed25519-public-key": {
 		Argsn: 1,
-		Doc:   "Creates public key from string or bytes.",
+		Doc:   "Creates an Ed25519 public key from a hexadecimal string or bytes value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var pkey []byte
 			var err error
@@ -193,12 +247,23 @@ var Builtins_crypto = map[string]*env.Builtin{
 		},
 	},
 
-	//    	sigb := ed25519.Sign(pvk, buffer)
-	//    	pubb, _ := hex.DecodeString(pub)
-
+	// Tests:
+	//  ; equal {
+	//  ;   ed25519-generate-keys |set! { pub priv }
+	//  ;   "Hello world" priv |sign |type?
+	//  ; } 'native
+	//  ; equal {
+	//  ;   ed25519-generate-keys |set! { pub priv }
+	//  ;  "Hello world" priv |sign |kind?
+	//  ; } 'bytes
+	// Args:
+	// * key: Ed25519 private key as a native value
+	// * message: string to sign
+	// Returns:
+	// * signature as a native bytes value
 	"Ed25519-priv-key//sign": {
 		Argsn: 2,
-		Doc:   "Signs string with private key. Returns signature in bytes.",
+		Doc:   "Signs a string message with an Ed25519 private key and returns the signature as bytes.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch pvk := arg0.(type) {
 			case env.Native:
@@ -217,16 +282,24 @@ var Builtins_crypto = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	//  equal { "Hello world" |sha512 |type? } 'string
+	//  equal { "Hello world" |sha512 |length? } 128
+	//  equal { "" |sha512 } "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e"
+	// Args:
+	// * input: string to hash
+	// Returns:
+	// * string containing the hexadecimal representation of the SHA-512 hash
 	"sha512": {
 		Argsn: 1,
-		Doc:   "Calculates SHA512 on string.",
+		Doc:   "Calculates the SHA-512 hash of a string and returns the result as a hexadecimal string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.String:
 				h := sha512.New()
 				h.Write([]byte(s.Value))
 				bs := h.Sum(nil)
-				return env.NewString(hex.EncodeToString(bs[:]))
+				return *env.NewString(hex.EncodeToString(bs[:]))
 			default:
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "sha512")
@@ -391,9 +464,20 @@ var Builtins_crypto = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal {
+	//     age-generate-keys |set! { identity recipient }
+	//     "SUPER SECRET" |reader |age-encrypt recipient |age-decrypt identity |read\string
+	// } "SUPER SECRET"
+	// equal { "SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |read\string } "SUPER SECRET"
+	// Args:
+	// * reader: encrypted data as a reader native value
+	// * identity-or-password: age identity native value or password string
+	// Returns:
+	// * decrypted data as a reader native value
 	"age-decrypt": {
 		Argsn: 2,
-		Doc:   "Decrypts a reader with age with the provided age identity or string password and returns a reader.",
+		Doc:   "Decrypts a reader with age using the provided age identity or string password and returns a reader with the decrypted content.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch r := arg0.(type) {
 			case env.Native:
@@ -436,9 +520,18 @@ var Builtins_crypto = map[string]*env.Builtin{
 
 	// pkcs12
 
+	// Tests:
+	// ; equal { "cert.p12" read-file "password" pkcs12-to-pem |type? } 'block
+	// ; equal { "cert.p12" read-file "password" pkcs12-to-pem |first |type? } 'native
+	// ; equal { "cert.p12" read-file "password" pkcs12-to-pem |first |kind? } 'pem-block
+	// Args:
+	// * p12-data: PKCS#12 file content as bytes native value
+	// * password: string password for the PKCS#12 file
+	// Returns:
+	// * block containing PEM blocks as native values
 	"pkcs12-to-pem": {
 		Argsn: 2,
-		Doc:   "Converts a PKCS#12 (.p12) file bytes to PEM blocks using a password.",
+		Doc:   "Converts a PKCS#12 (.p12) file bytes to PEM blocks using the provided password. Returns a block of pem-block native values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p12Data := arg0.(type) {
 			case env.Native:
@@ -507,9 +600,21 @@ var Builtins_crypto = map[string]*env.Builtin{
 		},
 	},*/
 
+	// Tests:
+	// ; equal { "cert.p12" read-file "password" pkcs12-decode |type? } 'block
+	// ; equal { "cert.p12" read-file "password" pkcs12-decode |length? } 2
+	// ; equal { "cert.p12" read-file "password" pkcs12-decode |first |type? } 'native
+	// ; equal { "cert.p12" read-file "password" pkcs12-decode |first |kind? } 'private-key
+	// ; equal { "cert.p12" read-file "password" pkcs12-decode |second |type? } 'native
+	// ; equal { "cert.p12" read-file "password" pkcs12-decode |second |kind? } 'x509-certificate
+	// Args:
+	// * p12-data: PKCS#12 file content as bytes native value
+	// * password: string password for the PKCS#12 file
+	// Returns:
+	// * block containing [private-key, x509-certificate] as native values
 	"pkcs12-decode": {
 		Argsn: 2,
-		Doc:   "Decodes a PKCS#12 (.p12) file bytes into certificate and private key using a password.",
+		Doc:   "Decodes a PKCS#12 (.p12) file bytes into certificate and private key using the provided password. Returns a block with [private-key, certificate].",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p12Data := arg0.(type) {
 			case env.Native:
@@ -541,9 +646,15 @@ var Builtins_crypto = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// ; equal { "cert.pem" read-file |pem-decode |block-type? } "CERTIFICATE"
+	// Args:
+	// * pem-block: PEM block as a native value
+	// Returns:
+	// * string containing the block type (e.g., "CERTIFICATE", "RSA PRIVATE KEY")
 	"pem-block//block-type?": {
 		Argsn: 1,
-		Doc:   "Parses bytes into an X.509 certificate.",
+		Doc:   "Returns the type of a PEM block as a string (e.g., 'CERTIFICATE', 'RSA PRIVATE KEY').",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch certData := arg0.(type) {
 			case env.Native:
@@ -564,9 +675,15 @@ var Builtins_crypto = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// ; equal { "cert.pem" read-file |pem-decode |headers? |type? } 'dict
+	// Args:
+	// * pem-block: PEM block as a native value
+	// Returns:
+	// * dictionary containing the PEM block headers
 	"pem-block//headers?": {
 		Argsn: 1,
-		Doc:   "Parses bytes into an X.509 certificate.",
+		Doc:   "Returns the headers of a PEM block as a dictionary.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch certData := arg0.(type) {
 			case env.Native:
@@ -591,9 +708,16 @@ var Builtins_crypto = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// ; equal { "cert.pem" read-file |pem-decode |x509-parse-certificate |type? } 'native
+	// ; equal { "cert.pem" read-file |pem-decode |x509-parse-certificate |kind? } 'x509-certificate
+	// Args:
+	// * pem-block: PEM block as a native value containing a certificate
+	// Returns:
+	// * X.509 certificate as a native value
 	"x509-parse-certificate": {
 		Argsn: 1,
-		Doc:   "Parses bytes into an X.509 certificate.",
+		Doc:   "Parses a PEM block into an X.509 certificate native value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch certData := arg0.(type) {
 			case env.Native:
@@ -619,9 +743,15 @@ var Builtins_crypto = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// ; equal { "cert.pem" read-file |pem-decode |x509-parse-certificate |not-after? |type? } 'time
+	// Args:
+	// * certificate: X.509 certificate as a native value
+	// Returns:
+	// * time value representing the certificate's expiration date
 	"x509-certificate//not-after?": {
 		Argsn: 1,
-		Doc:   "Checks if an X.509 certificate has expired.",
+		Doc:   "Returns the expiration date (NotAfter) of an X.509 certificate as a time value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cert := arg0.(type) {
 			case env.Native:
@@ -630,7 +760,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "x509-certificate//is-expired")
 				}
 				c := cert.Value.(*x509.Certificate)
-				return env.NewTime(c.NotAfter)
+				return *env.NewTime(c.NotAfter)
 			default:
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "x509-certificate//is-expired")
@@ -638,9 +768,15 @@ var Builtins_crypto = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// ; equal { "cert.pem" read-file |pem-decode |x509-parse-certificate |not-before? |type? } 'time
+	// Args:
+	// * certificate: X.509 certificate as a native value
+	// Returns:
+	// * time value representing the certificate's start date
 	"x509-certificate//not-before?": {
 		Argsn: 1,
-		Doc:   "Checks if an X.509 certificate has expired.",
+		Doc:   "Returns the start date (NotBefore) of an X.509 certificate as a time value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cert := arg0.(type) {
 			case env.Native:
@@ -649,7 +785,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "x509-certificate//is-expired")
 				}
 				c := cert.Value.(*x509.Certificate)
-				return env.NewTime(c.NotBefore)
+				return *env.NewTime(c.NotBefore)
 			default:
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "x509-certificate//is-expired")
@@ -657,9 +793,16 @@ var Builtins_crypto = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// ; equal { "cert.pem" read-file |pem-decode |x509-parse-certificate |is-expired |type? } 'integer
+	// ; equal { "cert.pem" read-file |pem-decode |x509-parse-certificate |is-expired } 0 ; assuming cert is not expired
+	// Args:
+	// * certificate: X.509 certificate as a native value
+	// Returns:
+	// * integer 1 if the certificate has expired, 0 otherwise
 	"x509-certificate//is-expired": {
 		Argsn: 1,
-		Doc:   "Checks if an X.509 certificate has expired.",
+		Doc:   "Checks if an X.509 certificate has expired. Returns 1 if expired, 0 otherwise.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cert := arg0.(type) {
 			case env.Native:
@@ -679,9 +822,22 @@ var Builtins_crypto = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// ; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |type? } 'block
+	// ; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |length? } 2
+	// ; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |at 0 |type? } 'native
+	// ; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |at 0 |kind? } 'x509-certificate
+	// ; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |at 1 |type? } 'native
+	// ; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |at 1 |kind? } 'rsa-private-key
+	// ; equal { generate-self-signed-certificate 1024 { "CommonName" "test.com" } |disarm |type? } 'error
+	// Args:
+	// * key-size: integer, must be at least 2048 bits
+	// * subject: dictionary with fields like "CommonName" and "Organization"
+	// Returns:
+	// * block containing [certificate, private-key] as native values
 	"generate-self-signed-certificate": {
 		Argsn: 2,
-		Doc:   "Generates a self-signed X.509 certificate with a new RSA key pair. Args: key-size (int), subject (dict). Returns block with [certificate, private-key].",
+		Doc:   "Generates a self-signed X.509 certificate with a new RSA key pair.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// Arg0: Key size (int)
 			switch keySize := arg0.(type) {
@@ -750,22 +906,35 @@ var Builtins_crypto = map[string]*env.Builtin{
 		},
 	},
 
-	"save-to-pem": {
+	// Tests:
+	// ; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key } cert key encode-to-pem |type? } 'block
+	// ; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key }   cert key encode-to-pem |length? } 2
+	// ; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key }   cert key encode-to-pem |at 0 |type? } 'native
+	// ; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key }   cert key encode-to-pem |at 0 |kind? } 'Go-bytes
+	// ; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key }   cert key encode-to-pem |at 1 |type? } 'native
+	// ; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key }   cert key encode-to-pem |at 1 |kind? } 'Go-bytes
+	// ; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key }   cert key encode-to-pem |at 0 "data/cert.pem" write-file "data/cert.pem" read-file |x509-parse-certificate |is-expired } 0
+	// Args:
+	// * certificate: X.509 certificate as a native value
+	// * private-key: RSA private key as a native value
+	// Returns:
+	// * block with [cert-bytes, key-bytes] as Go-bytes native values
+	"encode-to-pem": {
 		Argsn: 2,
-		Doc:   "Saves a certificate and private key as PEM-encoded data. Args: certificate (x509-certificate), private-key (rsa-private-key). Returns block with [cert-bytes, key-bytes] as Go-bytes.",
+		Doc:   "Encodes a certificate and private key as PEM-formatted data.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch certObj := arg0.(type) {
 			case env.Native:
 				if ps.Idx.GetWord(certObj.GetKind()) != "x509-certificate" {
 					ps.FailureFlag = true
-					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "save-to-pem")
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "encode-to-pem")
 				}
 				cert := certObj.Value.(*x509.Certificate)
 				switch keyObj := arg1.(type) {
 				case env.Native:
 					if ps.Idx.GetWord(keyObj.GetKind()) != "rsa-private-key" {
 						ps.FailureFlag = true
-						return MakeArgError(ps, 2, []env.Type{env.NativeType}, "save-to-pem")
+						return MakeArgError(ps, 2, []env.Type{env.NativeType}, "encode-to-pem")
 					}
 					privateKey := keyObj.Value.(*rsa.PrivateKey)
 					// Encode certificate to PEM
@@ -776,7 +945,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 					})
 					if err != nil {
 						ps.FailureFlag = true
-						return MakeBuiltinError(ps, fmt.Sprintf("Failed to encode certificate to PEM: %v", err), "save-to-pem")
+						return MakeBuiltinError(ps, fmt.Sprintf("Failed to encode certificate to PEM: %v", err), "encode-to-pem")
 					}
 					// Encode private key to PEM
 					keyPEM := &bytes.Buffer{}
@@ -786,7 +955,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 					})
 					if err != nil {
 						ps.FailureFlag = true
-						return MakeBuiltinError(ps, fmt.Sprintf("Failed to encode private key to PEM: %v", err), "save-to-pem")
+						return MakeBuiltinError(ps, fmt.Sprintf("Failed to encode private key to PEM: %v", err), "encode-to-pem")
 					}
 					// Return block with [cert-bytes, key-bytes]
 					objects := []env.Object{
@@ -797,31 +966,40 @@ var Builtins_crypto = map[string]*env.Builtin{
 					return *env.NewBlock(ser)
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.NativeType}, "save-to-pem")
+					return MakeArgError(ps, 2, []env.Type{env.NativeType}, "encode-to-pem")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "save-to-pem")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "encode-to-pem")
 			}
 		},
 	},
 
-	"save-to-p12": {
+	// Tests:
+	// ; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key } cert key "password" encode-to-p12 |type? } 'native
+	// ; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key } cert key "password" encode-to-p12 |kind? } 'Go-bytes
+	// Args:
+	// * certificate: X.509 certificate as a native value
+	// * private-key: RSA private key as a native value
+	// * password: string password to protect the PKCS#12 file
+	// Returns:
+	// * PKCS#12 encoded data as Go-bytes native value
+	"encode-to-p12": {
 		Argsn: 3,
-		Doc:   "Saves a certificate and private key to a PKCS#12 (.p12) file. Args: certificate (x509-certificate), private-key (rsa-private-key), password (string). Returns Go-bytes.",
+		Doc:   "Encodes a certificate and private key into a PKCS#12 (.p12) file with password protection.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch certObj := arg0.(type) {
 			case env.Native:
 				if ps.Idx.GetWord(certObj.GetKind()) != "x509-certificate" {
 					ps.FailureFlag = true
-					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "save-to-p12")
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "encode-to-p12")
 				}
 				cert := certObj.Value.(*x509.Certificate)
 				switch keyObj := arg1.(type) {
 				case env.Native:
 					if ps.Idx.GetWord(keyObj.GetKind()) != "rsa-private-key" {
 						ps.FailureFlag = true
-						return MakeArgError(ps, 2, []env.Type{env.NativeType}, "save-to-p12")
+						return MakeArgError(ps, 2, []env.Type{env.NativeType}, "encode-to-p12")
 					}
 					privateKey := keyObj.Value.(*rsa.PrivateKey)
 					switch password := arg2.(type) {
@@ -829,20 +1007,20 @@ var Builtins_crypto = map[string]*env.Builtin{
 						p12Bytes, err := sslmate.Encode(rand.Reader, privateKey, cert, nil, password.Value)
 						if err != nil {
 							ps.FailureFlag = true
-							return MakeBuiltinError(ps, fmt.Sprintf("Failed to encode to .p12: %v", err), "save-to-p12")
+							return MakeBuiltinError(ps, fmt.Sprintf("Failed to encode to .p12: %v", err), "encode-to-p12")
 						}
 						return *env.NewNative(ps.Idx, p12Bytes, "Go-bytes")
 					default:
 						ps.FailureFlag = true
-						return MakeArgError(ps, 3, []env.Type{env.StringType}, "save-to-p12")
+						return MakeArgError(ps, 3, []env.Type{env.StringType}, "encode-to-p12")
 					}
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.NativeType}, "save-to-p12")
+					return MakeArgError(ps, 2, []env.Type{env.NativeType}, "encode-to-p12")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "save-to-p12")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "encode-to-p12")
 			}
 		},
 	},

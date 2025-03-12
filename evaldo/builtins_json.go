@@ -234,14 +234,18 @@ func TableToJSONLines(s env.Table) string {
 var Builtins_json = map[string]*env.Builtin{
 
 	//
-	// ##### JSON #####  "parsing and generating JSON"
+	// ##### JSON #####  "Parsing and generating JSON"
 	//
 	// Tests:
 	// equal { "[ 1, 2, 3 ]" |parse-json |length? } 3
 	// equal { "[ 1, 2, 3 ]" |parse-json |type? } 'list
+	// Args:
+	// * json: string containing JSON data
+	// Returns:
+	// * parsed Rye value (list, dict, string, integer, etc.)
 	"parse-json": {
 		Argsn: 1,
-		Doc:   "Parses JSON to and turns them to Rye values.",
+		Doc:   "Parses JSON string into Rye values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch input := arg0.(type) {
 			case env.String:
@@ -261,18 +265,26 @@ var Builtins_json = map[string]*env.Builtin{
 	// Tests:
 	// equal { list { 1 2 3 } |to-json } "[1, 2, 3] "
 	// equal { dict { a: 1 b: 2 c: 3 } |to-json } `{"a": 1, "b": 2, "c": 3} `
+	// Args:
+	// * value: any Rye value to encode (list, dict, string, integer, etc.)
+	// Returns:
+	// * string containing the JSON representation
 	"to-json": {
 		Argsn: 1,
-		Doc:   "Takes a Rye value and returns it encoded into JSON.",
+		Doc:   "Converts a Rye value to a JSON string.",
 		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(RyeToJSON(arg0))
 		},
 	},
 	// Tests:
 	// equal { table { "a" "b" } { 2 "x" 3 "y" } |to-json\lines } `{"a": 2, "b": "x"} \n{"a": 3, "b": "y"} \n`
+	// Args:
+	// * table: table value to encode
+	// Returns:
+	// * string containing the JSON representation with each row on a new line
 	"to-json\\lines": {
 		Argsn: 1,
-		Doc:   "Takes a Rye value and returns it encoded into JSON.",
+		Doc:   "Converts a table to JSON with each row on a separate line.",
 		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(RyeToJSONLines(arg0))
 		},

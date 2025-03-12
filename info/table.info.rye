@@ -1,9 +1,9 @@
 section "Constructors " "Functions that construct a table." {
 	group "table" 
-	""
+	"Creates a table by accepting block of column names and flat block of values"
 	{
-		arg "* columns"
-		arg "* data"
+		arg `columns`
+		arg `data`
 	}
 
 	{
@@ -12,10 +12,10 @@ section "Constructors " "Functions that construct a table." {
 	}
 
 	group "table\columns" 
-	""
+	"Creats a table by accepting a block of columns"
 	{
-		arg "* columns - names of the columns"
-		arg "* data - block or list of columns (each column is a block or list)"
+		arg `columns - names of the columns`
+		arg `data - block or list of columns (each column is a block or list)`
 	}
 
 	{
@@ -26,10 +26,10 @@ section "Constructors " "Functions that construct a table." {
 	}
 
 	group "table\rows" 
-	""
+	"Creates a table by accepting a block or list of rows"
 	{
-		arg "* columns - names of the columns"
-		arg "* data - block or list of rows (each row is a block or list)"
+		arg `columns - names of the columns`
+		arg `data - block or list of rows (each row is a block or list)`
 	}
 
 	{
@@ -38,9 +38,9 @@ section "Constructors " "Functions that construct a table." {
 	}
 
 	group "to-table" 
-	""
+	"Creates a table by accepting block or list of dicts"
 	{
-		arg "* data"
+		arg `data`
 	}
 
 	{
@@ -53,12 +53,12 @@ section "Constructors " "Functions that construct a table." {
 
 section "Filtering " "Functions that construct a table." {
 	group "where-equal" 
-	""
+	"Returns table of rows where specific colum is equal to given value."
 	{
-		arg "* sheet"
-		arg "* column"
-		arg "* value"
-		arg "Tags: #filter #tables"
+		arg `sheet`
+		arg `column`
+		arg `value`
+		arg `Tags: #filter #tables`
 	}
 
 	{
@@ -66,11 +66,11 @@ section "Filtering " "Functions that construct a table." {
 	}
 
 	group "where-void" 
-	""
+	"Returns table of rows where specific colum is equal to given value."
 	{
-		arg "* sheet"
-		arg "* column"
-		arg "Tags: #filter #tables"
+		arg `sheet`
+		arg `column`
+		arg `Tags: #filter #tables`
 	}
 
 	{
@@ -78,12 +78,12 @@ section "Filtering " "Functions that construct a table." {
 	}
 
 	group "where-match" 
-	""
+	"Returns table of rows where a specific colum matches a regex."
 	{
-		arg "* sheet"
-		arg "* column"
-		arg "* regexp"
-		arg "Tags: #filter #tables"
+		arg `sheet`
+		arg `column`
+		arg `regexp`
+		arg `Tags: #filter #tables`
 	}
 
 	{
@@ -91,12 +91,12 @@ section "Filtering " "Functions that construct a table." {
 	}
 
 	group "where-contains" 
-	""
+	"Returns table of rows where specific colum contains a given string value."
 	{
-		arg "* sheet"
-		arg "* column"
-		arg "* substring"
-		arg "Tags: #filter #tables"
+		arg `sheet`
+		arg `column`
+		arg `substring`
+		arg `Tags: #filter #tables`
 	}
 
 	{
@@ -104,12 +104,12 @@ section "Filtering " "Functions that construct a table." {
 	}
 
 	group "where-not-contains" 
-	""
+	"Returns table of rows where specific colum contains a given string value."
 	{
-		arg "* sheet"
-		arg "* column"
-		arg "* substring"
-		arg "Tags: #filter #tables"
+		arg `sheet`
+		arg `column`
+		arg `substring`
+		arg `Tags: #filter #tables`
 	}
 
 	{
@@ -117,12 +117,12 @@ section "Filtering " "Functions that construct a table." {
 	}
 
 	group "where-greater" 
-	""
+	"Returns table of rows where specific colum is greater than given value."
 	{
-		arg "* sheet"
-		arg "* column"
-		arg "* value"
-		arg "Tags: #filter #table"
+		arg `sheet`
+		arg `column`
+		arg `value`
+		arg `Tags: #filter #table`
 	}
 
 	{
@@ -130,12 +130,12 @@ section "Filtering " "Functions that construct a table." {
 	}
 
 	group "where-lesser" 
-	""
+	"Returns table of rows where specific colum is lesser than given value."
 	{
-		arg "* sheet"
-		arg "* column"
-		arg "* value"
-		arg "Tags: #filter #table"
+		arg `sheet`
+		arg `column`
+		arg `value`
+		arg `Tags: #filter #table`
 	}
 
 	{
@@ -143,13 +143,13 @@ section "Filtering " "Functions that construct a table." {
 	}
 
 	group "where-between" 
-	""
+	"Returns table of rows where specific colum is between given values."
 	{
-		arg "* sheet"
-		arg "* column"
-		arg "* lower-limit"
-		arg "* upper-limit"
-		arg "Tags: #filter #table"
+		arg `sheet`
+		arg `column`
+		arg `lower-limit`
+		arg `upper-limit`
+		arg `Tags: #filter #table`
 	}
 
 	{
@@ -157,13 +157,13 @@ section "Filtering " "Functions that construct a table." {
 	}
 
 	group "where-between\inclusive" 
-	""
+	"Returns table of rows where specific colum is between given values."
 	{
-		arg "* sheet"
-		arg "* column"
-		arg "* lower-limit"
-		arg "* upper-limit"
-		arg "Tags: #filter #table"
+		arg `sheet`
+		arg `column`
+		arg `lower-limit`
+		arg `upper-limit`
+		arg `Tags: #filter #table`
 	}
 
 	{
@@ -171,12 +171,12 @@ section "Filtering " "Functions that construct a table." {
 	}
 
 	group "where-in" 
-	""
+	"Returns table of rows where specific colum value if found in block of values."
 	{
-		arg "* sheet"
-		arg "* column"
-		arg "* values-filtered-for"
-		arg "Tags: #filter #table"
+		arg `sheet`
+		arg `column`
+		arg `values-filtered-for`
+		arg `Tags: #filter #table`
 	}
 
 	{
@@ -189,10 +189,10 @@ section "Filtering " "Functions that construct a table." {
 
 section "Row level functions " "Functions that construct a table." {
 	group "add-row" 
-	""
+	"Returns a table with new-row added to it"
 	{
-		arg "* sheet"
-		arg "* new-row"
+		arg `sheet`
+		arg `new-row`
 	}
 
 	{
@@ -202,9 +202,9 @@ section "Row level functions " "Functions that construct a table." {
 	}
 
 	group "get-rows" 
-	""
+	"Get rows as a native. This value can be used in `add-rows` and `add-rows!`"
 	{
-		arg "* sheet"
+		arg `sheet`
 	}
 
 	{
@@ -214,10 +214,10 @@ section "Row level functions " "Functions that construct a table." {
 	}
 
 	group "add-rows" 
-	""
+	"Add one or more rows to a table"
 	{
-		arg "* sheet - the sheet that is getting rows added to it"
-		arg "* rows - a block containing one or more rows worth of values, or a TableRow Native value"
+		arg `sheet - the sheet that is getting rows added to it`
+		arg `rows - a block containing one or more rows worth of values, or a TableRow Native value`
 	}
 
 	{
@@ -232,11 +232,11 @@ section "Row level functions " "Functions that construct a table." {
 	}
 
 	group "add-rows!" 
-	""
+	"Add one or more rows to a table ref"
 	{
-		arg "* sheet - the reference to the sheet that is getting rows added to it"
-		arg "* rows - a block containing one or more rows worth of values, or a TableRow Native value"
-		arg "Tags: #spreasheet #mutation"
+		arg `sheet - the reference to the sheet that is getting rows added to it`
+		arg `rows - a block containing one or more rows worth of values, or a TableRow Native value`
+		arg `Tags: #spreasheet #mutation`
 	}
 
 	{
@@ -247,12 +247,12 @@ section "Row level functions " "Functions that construct a table." {
 	}
 
 	group "update-row!" 
-	""
+	"Update the row at the given index."
 	{
-		arg "* sheet-ref - A ref to a table"
-		arg "* idx - the index of the row to update, 1-based"
-		arg "* updater - One of either a function, a dict, or a Table Row"
-		arg "Tags: #table #mutation"
+		arg `sheet-ref - A ref to a table`
+		arg `idx - the index of the row to update, 1-based`
+		arg `updater - One of either a function, a dict, or a Table Row`
+		arg `Tags: #table #mutation`
 	}
 
 	{
@@ -270,11 +270,11 @@ section "Row level functions " "Functions that construct a table." {
 	}
 
 	group "remove-row!" 
-	""
+	"Remove a row from a table by index"
 	{
-		arg "* sheet-ref"
-		arg "* row-idx - Index of row to remove, 1-based"
-		arg "Tags: #table #mutation"
+		arg `sheet-ref`
+		arg `row-idx - Index of row to remove, 1-based`
+		arg `Tags: #table #mutation`
 	}
 
 	{
@@ -289,7 +289,7 @@ section "Row level functions " "Functions that construct a table." {
 
 section "Column level functions " "Functions that construct a table." {
 	group "columns?" 
-	""
+	"Returns table with just given columns."
 	{
 	}
 
@@ -299,7 +299,7 @@ section "Column level functions " "Functions that construct a table." {
 	}
 
 	group "header?" 
-	""
+	"Gets the column names (header) as block."
 	{
 	}
 
@@ -309,7 +309,7 @@ section "Column level functions " "Functions that construct a table." {
 	}
 
 	group "column?" 
-	""
+	"Gets all values of a column as a block."
 	{
 	}
 
@@ -319,7 +319,7 @@ section "Column level functions " "Functions that construct a table." {
 	}
 
 	group "drop-column" 
-	""
+	"Remove a column from a table. Returns new table"
 	{
 	}
 
@@ -329,7 +329,7 @@ section "Column level functions " "Functions that construct a table." {
 	}
 
 	group "rename-column!" 
-	""
+	"Remove a column from a table. Returns new table"
 	{
 	}
 
@@ -339,7 +339,7 @@ section "Column level functions " "Functions that construct a table." {
 	}
 
 	group "add-column" 
-	""
+	"Adds a new column to table. Changes in-place and returns the new table."
 	{
 	}
 
@@ -352,7 +352,7 @@ section "Column level functions " "Functions that construct a table." {
 
 section "Miscelaneous " "" {
 	group "order-by!" 
-	""
+	"Sorts row by given column, changes table in place."
 	{
 	}
 
@@ -362,7 +362,7 @@ section "Miscelaneous " "" {
 	}
 
 	group "order-by" 
-	""
+	"Sorts row by given column, changes table in place."
 	{
 	}
 
@@ -372,7 +372,7 @@ section "Miscelaneous " "" {
 	}
 
 	group "add-indexes!" 
-	""
+	"Creates an index for all values in the provided columns. Changes in-place and returns the new table."
 	{
 	}
 
@@ -382,7 +382,7 @@ section "Miscelaneous " "" {
 	}
 
 	group "indexes?" 
-	""
+	"Returns the columns that are indexed in a table."
 	{
 	}
 
@@ -392,7 +392,7 @@ section "Miscelaneous " "" {
 	}
 
 	group "autotype" 
-	""
+	"Takes a table and tries to determine and change the types of columns."
 	{
 	}
 
@@ -402,7 +402,7 @@ section "Miscelaneous " "" {
 	}
 
 	group "left-join" 
-	""
+	"Left joins two tables on the given columns."
 	{
 	}
 
@@ -422,7 +422,7 @@ section "Miscelaneous " "" {
 	}
 
 	group "inner-join" 
-	""
+	"Inner joins two tables on the given columns."
 	{
 	}
 
@@ -442,7 +442,7 @@ section "Miscelaneous " "" {
 	}
 
 	group "group-by" 
-	""
+	"Groups a table by the given column and (optional) aggregations."
 	{
 	}
 
@@ -462,7 +462,7 @@ section "Miscelaneous " "" {
 	}
 
 	group "A1" 
-	""
+	"Accepts a Table and returns the first row first column cell."
 	{
 	}
 
@@ -471,7 +471,7 @@ section "Miscelaneous " "" {
 	}
 
 	group "B1" 
-	""
+	"Accepts a Table and returns the first row second column cell."
 	{
 	}
 
@@ -480,7 +480,7 @@ section "Miscelaneous " "" {
 	}
 
 	group "A2" 
-	""
+	"Accepts a Table and returns the first row first column cell."
 	{
 	}
 
@@ -489,7 +489,7 @@ section "Miscelaneous " "" {
 	}
 
 	group "B2" 
-	""
+	"Accepts a Table and returns the first row second column cell."
 	{
 	}
 
@@ -501,10 +501,10 @@ section "Miscelaneous " "" {
 
 section "Loading and saving " "Functions that construct a table." {
 	group "load\csv" 
-	""
+	"Loads a .csv file to a table datatype."
 	{
-		arg "* file-uri - location of csv file to load"
-		arg "Tags: #table #loading #csv"
+		arg `file-uri - location of csv file to load`
+		arg `Tags: #table #loading #csv`
 	}
 
 	{
@@ -519,9 +519,9 @@ section "Loading and saving " "Functions that construct a table." {
 	}
 
 	group "load\tsv" 
-	""
+	"Loads a .csv file to a table datatype."
 	{
-		arg "* file-uri - location of csv file to load"
+		arg `file-uri - location of csv file to load`
 	}
 
 	{
@@ -536,11 +536,11 @@ section "Loading and saving " "Functions that construct a table." {
 	}
 
 	group "save\csv" 
-	""
+	"Saves a table to a .csv file."
 	{
-		arg "* sheet    - the sheet to save"
-		arg "* file-url - where to save the sheet as a .csv file"
-		arg "Tags: #table #saving #csv"
+		arg `sheet    - the sheet to save`
+		arg `file-url - where to save the sheet as a .csv file`
+		arg `Tags: #table #saving #csv`
 	}
 
 	{
@@ -555,11 +555,11 @@ section "Loading and saving " "Functions that construct a table." {
 	}
 
 	group "save\tsv" 
-	""
+	"Saves a table to a .csv file."
 	{
-		arg "* sheet    - the table to save"
-		arg "* file-url - where to save the sheet as a .csv file"
-		arg "Tags: #table #saving #csv"
+		arg `sheet    - the table to save`
+		arg `file-url - where to save the sheet as a .csv file`
+		arg `Tags: #table #saving #csv`
 	}
 
 	{
@@ -574,10 +574,10 @@ section "Loading and saving " "Functions that construct a table." {
 	}
 
 	group "load\xlsx" 
-	""
+	"Loads the first sheet in an .xlsx file to a Table."
 	{
-		arg "* file-uri - location of xlsx file to load"
-		arg "Tags: #table #loading #xlsx"
+		arg `file-uri - location of xlsx file to load`
+		arg `Tags: #table #loading #xlsx`
 	}
 
 	{
@@ -592,11 +592,11 @@ section "Loading and saving " "Functions that construct a table." {
 	}
 
 	group "save\xlsx" 
-	""
+	"Saves a Table to a .xlsx file."
 	{
-		arg "* table    - the table to save"
-		arg "* file-url 		- where to save the table as a .xlsx file"
-		arg "Tags: #table #saving #xlsx"
+		arg `table    - the table to save`
+		arg `file-url 		- where to save the table as a .xlsx file`
+		arg `Tags: #table #saving #xlsx`
 	}
 
 	{

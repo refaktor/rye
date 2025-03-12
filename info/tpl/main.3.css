@@ -74,3 +74,19 @@ div.group pre.prettyprint {
     text-decoration: none;
     font-weight: normal;
 }
+
+p.arg {
+    margin: 2px 0px;
+    color: 
+}
+p.arg b {
+    color: #855;
+    font-weight: 600;
+}
+
+p.returns {
+    margin: 2px 0px 12px 0;
+}
+p.returns b {
+    color: #585;
+}

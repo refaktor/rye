@@ -204,10 +204,11 @@ func trace5(s string) {
 
 var Builtins_sxml = map[string]*env.Builtin{
 
+	//
+	// ##### SXML ##### "Streaming, SAX-like XML processing"
+	//
 	// { <person> [ .print ] }
 	// { <person> { _ [ .print ] <name> <surname> <age> { _ [ .print2 ";" ] } }
-	//
-	// ##### SXML ##### "streaming, Sax like XML dialect (still in design)"
 	//
 	// Tests:
 	// stdout {
@@ -226,9 +227,14 @@ var Builtins_sxml = map[string]*env.Builtin{
 	//   "<scene><xwing><bot>R2D2</bot><person>Luke</person></xwing><destroyer><person>Vader</person></destroyer></scene>" |reader
 	//   .do-sxml { <xwing> { <person> { _ [ .prns ] } } }
 	// } "Luke "
+	// Args:
+	// * reader: XML reader object
+	// * block: SXML processing block with tag handlers
+	// Returns:
+	// * result of processing the XML
 	"reader//do-sxml": {
 		Argsn: 2,
-		Doc:   "TODODOC",
+		Doc:   "Processes XML using a streaming SAX-like approach with tag handlers.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			rm, err := load_saxml_Dict(ps, arg1.(env.Block))
 			//fmt.Println(rm)
@@ -249,9 +255,14 @@ var Builtins_sxml = map[string]*env.Builtin{
 	//   `<scene><ship type="xwing"><person age="25">Luke</person></ship><ship type="destroyer"><person age="55">Vader</person></ship></scene>` |reader
 	//   .do-sxml { <person> [ .attr? 0 |prns	 ] }
 	// } "25 55 "
+	// Args:
+	// * element: XML start element
+	// * index: Integer index of the attribute to retrieve
+	// Returns:
+	// * string value of the attribute or void if not found
 	"rye-sxml-start//attr?": {
 		Argsn: 2,
-		Doc:   "TODODOC",
+		Doc:   "Retrieves an attribute value by index from an XML start element.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch obj := arg0.(type) {
 			case env.Native:
@@ -280,9 +291,13 @@ var Builtins_sxml = map[string]*env.Builtin{
 	//   "<scene><xwing><bot>R2D2</bot><person><name>Luke</name></person></xwing><destroyer><person>Vader</person></destroyer></scene>" |reader
 	//   .do-sxml { <xwing> { 'start [ prns "YYY" ] <bot> [ print "***" ] 'any [ .name? .probe ] 'end [ print "xx" ] } }
 	// } "bot R2D2 \nperson name Luke \n"
+	// Args:
+	// * element: XML start element
+	// Returns:
+	// * string name of the XML element
 	"rye-sxml-start//name?": {
 		Argsn: 1,
-		Doc:   "TODODOC",
+		Doc:   "Returns the name of an XML start element.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch obj := arg0.(type) {
 			case env.Native:

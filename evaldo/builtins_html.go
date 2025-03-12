@@ -397,13 +397,17 @@ func trace8(s string) {
 var Builtins_html = map[string]*env.Builtin{
 
 	//
-	// ##### HTML ##### "streaming, Sax like HTML dialect (still in design)"
+	// ##### HTML ##### "HTML processing functions"
 	//
 	// Tests:
 	// equal { unescape\html "&gt;hello&lt;" } ">hello<"
+	// Args:
+	// * text: HTML-escaped string
+	// Returns:
+	// * string with HTML entities converted to their character equivalents
 	"unescape\\html": {
 		Argsn: 1,
-		Doc:   "Unescapes HTML string",
+		Doc:   "Converts HTML entities to their character equivalents.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			text, ok := arg0.(env.String)
 			if !ok {
@@ -416,9 +420,13 @@ var Builtins_html = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { escape\html "<hello>" } "&lt;hello&gt;"
+	// Args:
+	// * text: String containing HTML special characters
+	// Returns:
+	// * string with special characters converted to HTML entities
 	"escape\\html": {
 		Argsn: 1,
-		Doc:   "Unescapes HTML string",
+		Doc:   "Converts special characters to HTML entities.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			text, ok := arg0.(env.String)
 			if !ok {
@@ -431,9 +439,13 @@ var Builtins_html = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { html->markdown "<h1>title</h1><p>para</p>" } "# title\n\npara"
+	// Args:
+	// * html: HTML string to convert
+	// Returns:
+	// * string containing markdown equivalent of the HTML
 	"html->markdown": {
 		Argsn: 1,
-		Doc:   "Converts HTML text to markdown",
+		Doc:   "Converts HTML text to markdown format.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			text, ok := arg0.(env.String)
 			if !ok {
@@ -451,10 +463,14 @@ var Builtins_html = map[string]*env.Builtin{
 	// stdout { "<html><body><div class='menu'><a href='/'>home</a><a href='/about/'>about</a>" |reader
 	//   .parse-html { <a> [ .attr? 'href |prns ] }
 	// } "/ /about/ "
-	// ;
+	// Args:
+	// * reader: HTML reader object
+	// * block: HTML processing block with tag handlers
+	// Returns:
+	// * result of processing the HTML
 	"reader//parse-html": {
 		Argsn: 2,
-		Doc:   "Parses HTML string with a HTML dialect.",
+		Doc:   "Parses HTML using a streaming approach with tag handlers.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			rm, err := load_html_Dict(ps, arg1.(env.Block))
 			trace8("*** _--- GOT RM ++**")
@@ -467,9 +483,17 @@ var Builtins_html = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// stdout { "<div class='menu' id='nav'></div>" |reader .parse-html { <div> [ .attr? 'class |prn ] } } "menu"
+	// stdout { "<div class='menu' id='nav'></div>" |reader .parse-html { <div> [ .attr? 'id |prn ] } } "nav"
+	// Args:
+	// * element: HTML token element
+	// * name-or-index: Attribute name (as word) or index (as integer)
+	// Returns:
+	// * string value of the attribute or void if not found
 	"rye-html-start//attr?": {
 		Argsn: 2,
-		Doc:   "Gets an attribute on node start.",
+		Doc:   "Retrieves an attribute value by name or index from an HTML element.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch tok1 := arg0.(type) {
 			case env.Native:
@@ -501,9 +525,15 @@ var Builtins_html = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// stdout { "<div></div>" |reader .parse-html { <div> [ .name? |print ] } } "div"
+	// Args:
+	// * element: HTML token element
+	// Returns:
+	// * string name of the HTML element
 	"rye-html-start//name?": {
 		Argsn: 1,
-		Doc:   "Gets the name of the node.",
+		Doc:   "Returns the name of an HTML element.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch tok1 := arg0.(type) {
 			case env.Native:
