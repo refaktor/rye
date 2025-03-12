@@ -46,7 +46,7 @@ builds:
 
 
 archives:
-  - format: tar.gz
+  - formats: [ 'tar.gz' ]
     # this name template makes the OS and Arch compatible with the results of `uname`.
     name_template: >-
       {{ .ProjectName }}_
@@ -58,10 +58,11 @@ archives:
     # use zip for windows archives
     format_overrides:
       - goos: windows
-        format: zip
+        formats: [ 'zip' ]
 
 kos:  # See https://goreleaser.com/customization/ko/
-  - repository: ghcr.io/refaktor/rye
+  - repositories:
+    - ghcr.io/refaktor/rye
     tags:
     - '{{.Version}}'
     - latest
@@ -72,7 +73,7 @@ kos:  # See https://goreleaser.com/customization/ko/
     - linux/arm64
 
 snapshot:
-  name_template: "{{ incpatch .Version }}-next"
+  version_template: "{{ incpatch .Version }}-next"
 changelog: # See https://goreleaser.com/customization/changelog/
   use: github
   sort: asc
