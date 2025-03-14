@@ -1,1157 +1,4 @@
-section "Boolean logic " "Functions that work with true and false values." {
-	group "true" 
-	"Returns a truthy value. Will change to exact True value."
-	{
-	}
-
-	{
-		equal { true } 1
-	}
-
-	group "false" 
-	"Returns a falsy value. Will change to exact Falce value"
-	{
-	}
-
-	{
-		equal { false } 0
-	}
-
-	group "_|" 
-	"Turns a truthy value to a non-truthy and reverse."
-	{
-	}
-
-	{
-		equal { not true } 0
-		equal { not false } 1
-	}
-
-	group "not" 
-	"Turns a truthy value to a non-truthy and reverse."
-	{
-	}
-
-	{
-		equal { not true } 0
-		equal { not false } 1
-	}
-
-	group "and" 
-	"Bitwise AND operation between two values."
-	{
-	}
-
-	{
-		equal { true .and true } 1
-		equal { false .and true } 0
-	}
-
-	group "or" 
-	"Bitwise OR operation between two values."
-	{
-	}
-
-	{
-		equal { true .or true } 1
-		equal { false .or true } 1
-		equal { true .or false } 1
-		equal { false .or false } 0
-	}
-
-	group "xor" 
-	"Bitwise XOR operation between two values."
-	{
-	}
-
-	{
-		equal { true .xor true } 0
-		equal { false .xor true } 1
-		equal { true .xor false } 1
-		equal { false .xor false } 0
-	}
-
-	group "all" 
-	"Takes a block, if all values or expressions are truthy it returns the last one, otherwise false."
-	{
-	}
-
-	{
-		equal  { all { 1 2 3 } } 3
-		equal  { all { 1 0 3 } } 0
-	}
-
-	group "any" 
-	"Takes a block, if any of the values or expressions are truthy, the it returns that one, in none false."
-	{
-	}
-
-	{
-		equal  { any { 1 2 3 } } 1
-		equal  { any { 1 0 3 } } 1
-		equal  { any { 0 0 3 } } 3
-	}
-
-	group "any\with" 
-	"Takes a block, if any of the values or expressions are truthy, then it returns that one, in none false."
-	{
-	}
-
-	{
-		equal  { any\with 10 { + 10 , * 10 } } 20
-		; equal  { any\with -10 { + 10 , * 10 } } -200 ... halts TODO -- fix
-	}
-
-}
-
-section "Numbers " "Working with numbers, integers and decimals." {
-	group "inc" 
-	"Returns integer value incremented by 1."
-	{
-	}
-
-	{
-		equal   { inc 123 } 124
-		error { inc "123" }
-	}
-
-	group "is-positive" 
-	"Returns true if integer is positive."
-	{
-	}
-
-	{
-		equal   { is-positive 123 } 1
-		equal   { is-positive -123 } 0
-		error { is-positive "123" }
-	}
-
-	group "is-zero" 
-	"Returns true if integer is zero."
-	{
-	}
-
-	{
-		equal   { is-zero 0 } 1
-		equal   { is-zero 123 } 0
-		error { is-zero "123" }
-	}
-
-	group "is-multiple-of" 
-	"Checks if a first argument is a factor of second."
-	{
-	}
-
-	{
-		equal { 10 .is-multiple-of 2 } 1
-		equal { 10 .is-multiple-of 3 } 0
-	}
-
-	group "is-odd" 
-	"Checks if a number is odd."
-	{
-	}
-
-	{
-		equal { 3 .is-odd } 1
-		equal { 2 .is-odd } 0
-	}
-
-	group "is-even" 
-	"Checks if a number is even."
-	{
-	}
-
-	{
-		equal { 3 .is-even } 0
-		equal { 2 .is-even } 1
-	}
-
-	group "mod" 
-	"Calculates module (remainder) of two integers."
-	{
-	}
-
-	{
-		equal { 4 .mod 2 } 0
-		equal { 5 .mod 2 } 1
-		equal { 5 .mod 3 } 2
-	}
-
-	group "random\integer" 
-	"Accepts an integer n and returns a random integer between 0 and n in the half-open interval [0,n)."
-	{
-	}
-
-	{
-		equal  { random\integer 2 |type? } 'integer
-		equal  { random\integer 1 |< 2 } 1
-	}
-
-	group "inc!" 
-	"Searches for a word and increments it's integer value in-place."
-	{
-	}
-
-	{
-		equal   { a:: 123 inc! 'a a } 124
-		error { inc! 123 }
-	}
-
-	group "dec!" 
-	"Searches for a word and increments it's integer value in-place."
-	{
-	}
-
-	{
-		equal   { a:: 123 dec! 'a a } 122
-		error { dec! 123 }
-	}
-
-	group "_." 
-	"Accepts argument and returns void, meant to be used as drop in Eyr, void is not a valid runtime value."
-	{
-	}
-
-	{
-		equal { 4 . .type? } 'void
-	}
-
-	group "_+" 
-	"Adds or joins two values together (Integers, Strings, Uri-s and Blocks)"
-	{
-	}
-
-	{
-		equal { 1 + 1 } 2
-		equal { 3 + 4 } 7
-		equal { 5.6 + 7.8 } 13.400000
-		equal { "A" + "b" } "Ab"
-		equal { "A" + 1 } "A1"
-		equal { { 1 2 } + { 3 4 } } { 1 2 3 4 }
-		equal { dict { "a" 1 } |+ { "b" 2 } } dict { "a" 1 "b" 2 }
-		equal { dict { "a" 1 } |+ dict { "b" 2 } } dict { "a" 1 "b" 2 }
-	}
-
-	group "_-" 
-	"Subtracts two numbers."
-	{
-	}
-
-	{
-		equal { 2 - 1 } 1
-		equal { 5 - 6 } -1
-	}
-
-	group "_*" 
-	"Multiplies two numbers."
-	{
-	}
-
-	{
-		equal { 4 * 2 } 8
-		equal { 2.5 * -2 } -5.0
-	}
-
-	group "_/" 
-	"Divide two numbers and return a decimal."
-	{
-	}
-
-	{
-		equal { 4 / 2 } 2.000
-		equal { 102.0 / 2.0 } 51.000
-	}
-
-	group "_//" 
-	"Divides two numbers and return truncated integer."
-	{
-	}
-
-	{
-		equal { 5 // 2 } 2
-		equal { 102 // 5 } 20
-		equal { 7.99 // 2 } 3
-	}
-
-	group "_=" 
-	"Checks if two Rye values are equal."
-	{
-	}
-
-	{
-		equal { 5 = 5 } 1
-		equal { 5 = 4 } 0
-	}
-
-	group "_>" 
-	"Checks if first argument is greater than the second."
-	{
-	}
-
-	{
-		equal { 6 > 5 } 1
-		equal { 5 > 5 } 0
-	}
-
-	group "_>=" 
-	"Checks if first argument is greater or equal than the second."
-	{
-	}
-
-	{
-		equal { 5 >= 6 } 0
-		equal { 5 >= 5 } 1
-		equal { 6.0 >= 5 } 1
-	}
-
-	group "_<" 
-	"Tests if Arg1 is lesser than Arg 2."
-	{
-	}
-
-	{
-		equal { 5 < 6 } 1
-		equal { 5 < 5 } 0
-	}
-
-	group "_<=" 
-	"Tests if Arg1 is lesser than Arg 2."
-	{
-	}
-
-	{
-		equal { 5 <= 6 } 1
-		equal { 5 <= 5 } 1
-	}
-
-}
-
-section "Strings " "" {
-	group "newline" 
-	"Returns the newline character."
-	{
-	}
-
-	{
-		equal { newline } "\n"
-	}
-
-	group "ln" 
-	"Returns the argument 1 a d a newline character."
-	{
-	}
-
-	{
-		equal { "123" .ln } "123\n"
-	}
-
-	group "trim" 
-	"Trims the String of spacing characters."
-	{
-	}
-
-	{
-		equal { trim " ASDF " } "ASDF"
-		equal { trim "   ASDF   " } "ASDF"
-	}
-
-	group "trim\" 
-	"Trims the String of specific characters."
-	{
-	}
-
-	{
-		equal { trim\ "__ASDF__" "_" } "ASDF"
-	}
-
-	group "trim\right" 
-	"Trims the String of specific characters."
-	{
-	}
-
-	{
-		equal { trim\right "__ASDF__" "_" } "__ASDF"
-		equal { trim\right "  ASDF  " " " } "  ASDF"
-	}
-
-	group "trim\left" 
-	"Trims the String of specific characters."
-	{
-	}
-
-	{
-		equal { trim\left "___ASDF__" "_" } "ASDF__"
-	}
-
-	group "replace" 
-	"Returns the string with all parts of the strings replaced."
-	{
-	}
-
-	{
-		equal { replace "...xo..." "xo" "LoL" } "...LoL..."
-		equal { replace "...xoxo..." "xo" "LoL" } "...LoLLoL..."
-	}
-
-	group "substring" 
-	"Returns part of the String between two positions."
-	{
-	}
-
-	{
-		equal { substring "xoxo..." 0 4 } "xoxo"
-		equal { substring "...xoxo..." 3 7 } "xoxo"
-	}
-
-	group "contains" 
-	"Returns true if argument 2 contains argument 1"
-	{
-	}
-
-	{
-		equal { contains "...xoxo..." "xo"  } 1
-		equal { contains "...xoxo..." "lol" } 0
-		equal { contains { ".." "xoxo" ".." } "xoxo" } 1
-		equal { contains { ".." "xoxo" ".." } "lol"  } 0
-	}
-
-	group "has-suffix" 
-	"Returns part of the String between two positions."
-	{
-	}
-
-	{
-		equal { has-suffix "xoxo..." "xoxo" } 0
-		equal { has-suffix "...xoxo" "xoxo" } 1
-	}
-
-	group "has-prefix" 
-	"Returns part of the String between two positions."
-	{
-	}
-
-	{
-		equal { has-prefix "xoxo..." "xoxo" } 1
-		equal { has-prefix "...xoxo" "xoxo" } 0
-	}
-
-	group "index?" 
-	"Returns part of the String between two positions."
-	{
-	}
-
-	{
-		equal { index? "...xo..." "xo" } 3
-		equal { index? "xo..." "xo" } 0
-		equal { index? { "xo" ".." } "xo" } 0
-		equal { index? { ".." "xo" ".." } "xo" } 1
-	}
-
-	group "position?" 
-	"Returns part of the String between two positions."
-	{
-	}
-
-	{
-		equal { position? "...xo..." "xo" } 4
-		equal { position? "xo..." "xo" } 1
-		equal { position? { "xo" ".." } "xo" } 1
-		equal { position? { ".." "xo" ".." } "xo" } 2
-	}
-
-	group "encode\base64" 
-	"decode base 64 string"
-	{
-	}
-
-	{
-		equal { encode\base64 "abcd" } "YWJjZA=="
-	}
-
-	group "decode\base64" 
-	"decode base 64 string"
-	{
-	}
-
-	{
-		equal { decode\base64 encode\base64 "abcd" } "abcd"
-	}
-
-	group "space" 
-	"Adds space to the end of argument"
-	{
-	}
-
-	{
-		equal { "abcd" .space } "abcd "
-	}
-
-	group "capitalize" 
-	"Takes a String and returns the same String, but with first character turned to upper case."
-	{
-	}
-
-	{
-		equal { capitalize "abcde" } "Abcde"
-	}
-
-	group "to-lower" 
-	"Takes a String and returns the same String, but with all characters turned to lower case."
-	{
-	}
-
-	{
-		equal { to-lower "ABCDE" } "abcde"
-	}
-
-	group "to-upper" 
-	"Takes a String and returns the same String, but with all characters turned to upper case."
-	{
-	}
-
-	{
-		equal { to-upper "abcde" } "ABCDE"
-	}
-
-	group "concat3" 
-	"Joins 3 Rye values together."
-	{
-	}
-
-	{
-		equal { concat3 "aa" "BB" "cc" } "aaBBcc"
-	}
-
-	group "join" 
-	"Joins Block or list of values together."
-	{
-	}
-
-	{
-		equal { join { "Mary" "Anne" } } "MaryAnne"
-		equal { join { "Spot" "Fido" "Rex" } } "SpotFidoRex"
-	}
-
-	group "join\with" 
-	"Joins Block or list of values together."
-	{
-		arg `to-join`
-		arg `delimiter`
-	}
-
-	{
-		equal { join\with { "Mary" "Anne" } " " } "Mary Anne"
-		equal { join\with { "Spot" "Fido" "Rex" } "/" } "Spot/Fido/Rex"
-	}
-
-	group "split" 
-	"Splits a string into a block of values using a separator"
-	{
-	}
-
-	{
-		equal { split "a,b,c" "," } { "a" "b" "c" }
-	}
-
-	group "split\quoted" 
-	"Splits a line of string into values by separator by respecting quotes"
-	{
-		arg `to-split`
-		arg `splitter`
-		arg `quote`
-	}
-
-	{
-		equal { split\quoted "`a,b`,c,d" "," "`" } { "`a,b`" "c" "d" }
-	}
-
-	group "split\many" 
-	"Splits a string into a block of values using each character in seperators as a split value"
-	{
-		arg `string`
-		arg `separator-set`
-	}
-
-	{
-		equal { split\many "192.0.0.1" "." } { "192" "0" "0" "1" }
-		equal { split\many "abcd..e.q|bar" ".|" } { "abcd" "e" "q" "bar" }
-	}
-
-	group "split\every" 
-	"Splits a string into chunks of length N. Leftover characters go in the last chunk"
-	{
-		arg `string`
-		arg `N`
-	}
-
-	{
-		equal { split\every "abcdefg" 3 } { "abc" "def" "g" }
-		equal { split\every "abcdefg" 2 } { "ab" "cd" "ef" "g" }
-		equal { split\every "abcdef" 2 } { "ab" "cd" "ef" }
-	}
-
-}
-
-section "Collections " "" {
-	group "random" 
-	"Accepts an integer n and returns a random integer between 0 and n in the half-open interval [0,n)."
-	{
-	}
-
-	{
-		equal  { random { 1 2 3 } |type? } 'integer
-	}
-
-	group "unpack" 
-	"Takes a block of Rye values and evaluates each value or expression."
-	{
-	}
-
-	{
-		equal  { unpack { { 123 } { 234 } } } { 123 234 }
-		equal  { unpack { { { 123 } } { 234 } } } { { 123 } 234 }
-	}
-
-	group "sample" 
-	"Accepts an integer n and returns a random integer between 0 and n in the half-open interval [0,n)."
-	{
-	}
-
-	{
-		equal  { sample { 1 2 3 4 } 2 |length? } 2
-		equal  { sample { 123 123 123 123 } 3 -> 0 } 123
-	}
-
-	group "max" 
-	"Accepts a Block or List of values and returns the maximal value."
-	{
-	}
-
-	{
-		equal { max { 8 2 10 6 } } 10
-		equal { max list { 8 2 10 6 } } 10
-		equal { try { max { } } |type? } 'error
-		equal { try { max list { } } |type? } 'error
-	}
-
-	group "min" 
-	"Accepts a Block or List of values and returns the minimal value."
-	{
-	}
-
-	{
-		equal { min { 8 2 10 6 } } 2
-		equal { min list { 8 2 10 6 } } 2
-		equal { try { min { } } |type? } 'error
-		equal { try { min list { } } |type? } 'error
-	}
-
-	group "avg" 
-	"Accepts a Block or List of values and returns the average value."
-	{
-	}
-
-	{
-		equal { avg { 8 2 10 6 } } 6.5
-		equal { avg list { 8 2 10 6 } } 6.5
-		equal { try { avg { } } |type? } 'error
-		equal { try { avg list { } } |type? } 'error
-	}
-
-	group "sum" 
-	"Accepts a Block or List of values and returns the sum."
-	{
-	}
-
-	{
-		equal { sum { 8 2 10 6 } } 26
-		equal { sum { 8 2 10 6.5 } } 26.5
-		equal { sum { } } 0
-		equal { sum list { 8 2 10 6 } } 26
-		equal { sum list { 8 2 10 6.5 } } 26.5
-		equal { sum list { } } 0
-	}
-
-	group "mul" 
-	"Accepts a Block or List of values and returns the product."
-	{
-	}
-
-	{
-		equal { mul { 1 2 3 4 5 } } 120
-		equal { mul { 1 2.0 3.3 4 5 } } 132.0
-	}
-
-	group "first" 
-	"Accepts a Block, List or String and returns the first item."
-	{
-	}
-
-	{
-		equal { first { 1 2 3 4 } } 1
-		equal { first "abcde" } "a"
-		equal { first list { 1 2 3 } } 1
-	}
-
-	group "rest" 
-	"Accepts a Block, List or String and returns all but first item."
-	{
-	}
-
-	{
-		equal { rest { 1 2 3 4 } } { 2 3 4 }
-		equal { rest "abcde" } "bcde"
-		equal { rest list { 1 2 3 } } list { 2 3 }
-	}
-
-	group "rest\from" 
-	"Accepts a Block, List or String and an Integer N, returns all but first N items."
-	{
-	}
-
-	{
-		equal { rest\from { 1 2 3 4 5 6 } 3 } { 4 5 6 }
-		equal { rest\from "abcdefg" 1 } "bcdefg"
-		equal { rest\from list { 1 2 3 4 } 2 } list { 3 4 }
-	}
-
-	group "tail" 
-	"Accepts a Block, List or String and Integer N, returns the last N items."
-	{
-	}
-
-	{
-		equal { tail { 1 2 3 4 5 6 7 } 3 } { 5 6 7 }
-		equal { tail "abcdefg" 4 } "defg"
-		equal { tail list { 1 2 3 4 } 1 } list { 4 }
-	}
-
-	group "second" 
-	"Accepts a Block, List or String and returns the second value in it."
-	{
-	}
-
-	{
-		equal { second { 123 234 345 } } 234
-	}
-
-	group "third" 
-	"Accepts a Block, List or String and returns the third value in it."
-	{
-	}
-
-	{
-		equal { third { 123 234 345 } } 345
-	}
-
-	group "last" 
-	"Accepts a Block, List or String and returns the last value in it."
-	{
-	}
-
-	{
-		equal { last { 1 2 } } 2
-		equal { last "abcd" } "d"
-		equal { last list { 4 5 6 } } 6
-	}
-
-	group "head" 
-	"Accepts a Block, List or String and an Integer N, returns the first N values."
-	{
-	}
-
-	{
-		equal { head { 4 5 6 7 } 3 } { 4 5 6 }
-		equal { head "abcdefg" 2 } "ab"
-		equal { head "abcdefg" 4 } "abcd"
-		equal { head list { 10 20 30 40 } 2 } list { 10 20 }
-		equal { head { 4 5 6 7 } -2 } { 4 5 }
-		equal { head "abcdefg" -1 } "abcdef"
-		equal { head "abcdefg" -5 } "ab"
-		equal { head list { 10 20 30 40 } -1 } list { 10 20 30 }
-	}
-
-	group "nth" 
-	"Accepts a Block, List or String and Integer N, returns the N-th value."
-	{
-	}
-
-	{
-		equal { nth { 1 2 3 4 5 } 4 } 4
-		equal { nth { "a" "b" "c" "d" "e" } 2 } "b"
-	}
-
-	group "values" 
-	"Accepts a Dict and returns a List of just values."
-	{
-	}
-
-	{
-		equal { dict { "a" 1 "b" 2 "c" 3 } |values } list { 1 2 3 }
-	}
-
-	group "sort" 
-	"Accepts a block or list and sorts in place in ascending order and returns it."
-	{
-	}
-
-	{
-		equal { sort { 6 12 1 } } { 1 6 12 }
-		equal { sort x: { 6 12 1 } x } { 6 12 1 }
-		equal { sort { "b" "c" "a" } } { "a" "b" "c" }
-	}
-
-	group "sort!" 
-	"Accepts a block or list and sorts in place in ascending order and returns it."
-	{
-	}
-
-	{
-		error { x: { 6 12 1 } , sort! x }
-		equal { x: ref { 6 12 1 } , sort! x , x } { 1 6 12 }
-	}
-
-	group "sort\by" 
-	"Accepts a block or list and sorts in place in ascending order and returns it."
-	{
-	}
-
-	{
-		equal { sort\by { 6 12 1 } fn { a b } { a < b } } { 1 6 12 }
-		equal { sort\by { 6 12 1 } fn { a b } { a > b } } { 12 6 1 }
-		equal { sort\by { { x 6 } { x 12 } { x 1 } } fn { a b } { second a |< second b } } { { x 1 } { x 6 } { x 12 } }
-	}
-
-	group "unique" 
-	"Accepts a block or list of values and returns only unique values."
-	{
-	}
-
-	{
-		equal { list { 3 2 3 5 3 2 } .unique |sort } list { 2 3 5 }
-		equal { unique list { 1 1 2 2 3 } |sort } list { 1 2 3 }
-		equal { unique list { 1 1 2 2 } |sort } list { 1 2 }
-		equal { unique { 1 1 2 2 3 } |sort } { 1 2 3 }
-		equal { unique { 1 1 2 2 } |sort } { 1 2 }
-		equal { unique "aabbc" |length? } 3
-		equal { unique "ab" |length? } 2
-	}
-
-	group "reverse" 
-	"Accepts a block of values and returns maximal value."
-	{
-	}
-
-	{
-		equal { reverse { 3 1 2 3 } } { 3 2 1 3 }
-		equal { reverse { 3 1 2 3 } } { 3 2 1 3 }
-	}
-
-	group "reverse!" 
-	"Accepts a block of values and returns maximal value."
-	{
-	}
-
-	{
-		error { reverse! { 3 1 2 3 } }
-		equal { reverse! ref { 3 1 2 3 } } { 3 2 1 3 }
-	}
-
-	group "concat" 
-	"Joins two series values together."
-	{
-	}
-
-	{
-		equal { "abcd" .concat "cde" } "abcdcde"
-		equal { concat { 1 2 3 4 } { 2 4 5 } } { 1 2 3 4 2 4 5 }
-	}
-
-	group "union" 
-	"Accepts a block or list of values and returns only unique values."
-	{
-	}
-
-	{
-		; equal { "abcd" .union "cde" } "abcde"
-		equal { union { 1 2 3 4 } { 2 4 5 } |length? } 5 ; order is not certain
-		equal { union list { 1 2 3 4 } list { 2 4 5 } |length? } 5 ; order is not certain
-		equal { union { 8 2 } { 1 9 } |sort } { 1 2 8 9 }
-		equal { union { 1 2 } { } |sort } { 1 2 }
-		equal { union { } { 1 9 } |sort }  { 1 9 }
-		equal { union { } { } } { }
-		equal { union list { 1 2 } list { 1 2 3 4 } |sort } list { 1 2 3 4 }
-		equal { union list { 1 2 } list { 1 } |sort } list { 1 2 }
-		equal { union list { 1 2 } list { } |sort } list { 1 2 }
-		equal { union list { } list { 1 2 } |sort } list { 1 2 }
-		equal { union list { } list { } } list { }
-	}
-
-	group "range" 
-	"Takes two integers and returns a block of integers between them, inclusive. (Will change to lazy list/generator later)"
-	{
-		arg `low-value`
-		arg `high-value`
-	}
-
-	{
-		equal { range 1 5 } { 1 2 3 4 5 }
-	}
-
-	group "is-empty" 
-	"Accepts a collection (String, Block, Dict, Table) and returns it's length."
-	{
-	}
-
-	{
-		equal { { } .is-empty } 1
-		equal { dict { } |is-empty } 1
-		equal { table { 'a 'b } { } |is-empty } 1
-	}
-
-	group "length?" 
-	"Accepts a collection (String, Block, Dict, Table) and returns it's length."
-	{
-	}
-
-	{
-		equal { { 1 2 3 } .length? } 3
-		equal { length? "abcd" } 4
-		equal { table { 'val } { 1 2 3 4 } |length? } 4
-		equal { vector { 10 20 30 } |length? } 3
-	}
-
-	group "keys" 
-	"Accepts Dict or Table and returns a Block of keys or column names."
-	{
-	}
-
-	{
-		equal { dict { "a" 1 "b" 2 "c" 3 } |keys |length? } 3
-		equal { table { "a" "b" "c" } { 1 2 3 } |keys |length? } 3
-		; TODO -- doesn't work yet, .header? also has the same problem -- equal { table { 'a 'b 'c } { 1 2 3 } |keys } { 'a 'b 'c }
-	}
-
-	group "_->" 
-	""
-	{
-	}
-
-	{
-		equal { { 23 34 45 } -> 1 } 34
-	}
-
-	group "_<-" 
-	""
-	{
-	}
-
-	{
-		equal { 0 <- { 23 34 45 } } 23
-	}
-
-	group "_<~" 
-	""
-	{
-	}
-
-	{
-		equal { 2 <~ { 23 34 45 } } 34
-	}
-
-	group "_~>" 
-	""
-	{
-	}
-
-	{
-		equal { { 23 34 45 } ~> 1 } 23
-	}
-
-	group "intersection" 
-	"Finds the intersection of two values."
-	{
-	}
-
-	{
-		equal { "abcd" .intersection "cde" } "cd"
-		equal { intersection { 1 2 3 4 } { 2 4 5 } } { 2 4 }
-		equal { intersection { 1 3 5 6 } { 2 3 4 5 } } { 3 5 }
-		equal { intersection { 1 2 3 } { } } {  }
-		equal { intersection { } { 2 3 4  } } { }
-		equal { intersection { 1 2 3 } { 4 5 6 } } { }
-		equal { intersection { } { } } { }
-		equal { intersection list { 1 3 5 6 } list { 2 3 4 5 } } list { 3 5 }
-		equal { intersection list { 1 2 3 } list { } } list {  }
-		equal { intersection list { } list { 2 3 4 } } list { }
-		equal { intersection list { 1 2 3 } list { 4 5 6 } } list { }
-		equal { intersection list { } list { } } list { }
-	}
-
-	group "intersection\by" 
-	"Finds the intersection of two values by custom function."
-	{
-	}
-
-	{
-		equal { intersection\by "foobar" "fbx" fn { a b } { a .contains b } } "fb"
-		equal { intersection\by "fooBar" "Fbx" fn { a b } { a .to-lower .contains to-lower b } } "fB"
-		equal { intersection\by { "foo" 33 } { 33 33 } fn { a b } { a .contains b } } { 33 }
-		equal { intersection\by { "foo" "bar" 33 } { 42 } fn { a b } { map a { .type? } |contains b .type? } } { 33 }
-		equal { intersection\by { { "foo" x } { "bar" y } } { { "bar" z } } fn { a b } { map a { .first } |contains first b } } { { "bar" y } }
-	}
-
-	group "difference" 
-	"Finds the difference (values in first but not in second) of two values."
-	{
-	}
-
-	{
-		equal { "abcde" .difference "cde" } "ab"
-		equal { difference { 1 2 3 4 } { 2 4 } } { 1 3 }
-		equal { difference list { "Bob" "Sal" "Joe" } list { "Joe" } } list { "Bob" "Sal" }
-		equal { difference "abc" "bc" } "a"
-		equal { difference "abc" "abc" } ""
-		equal { difference "abc" "" } "abc"
-		equal { difference "" "" } ""
-		equal { difference { 1 3 5 6 } { 2 3 4 5 } } { 1 6 }
-		equal { difference { 1 2 3 } {  } } { 1 2 3 }
-		equal { difference { } { 2 3 4  } } { }
-		equal { difference { } { } } { }
-		equal { difference list { 1 3 5 6 } list { 2 3 4 5 } } list { 1 6 }
-		equal { difference list { 1 2 3 } list {  } } list { 1 2 3 }
-		equal { difference list { } list { 2 3 4 } } list { }
-		equal { difference list { } list { } } list { }
-	}
-
-	group "transpose" 
-	"Accepts Block and returns the next value from it."
-	{
-	}
-
-	{
-		equal { { { 1 2 3 } { 4 5 6 } } .transpose } { { 1 4 } { 2 5 } { 3 6 } }
-		equal { { { 1 4 } { 2 5 } { 3 6 } } .transpose } { { 1 2 3 } { 4 5 6 } }
-	}
-
-	group "remove-last!" 
-	"Accepts Block and returns the next value and removes it from the Block."
-	{
-	}
-
-	{
-		equal { x: ref { 1 2 3 4 } remove-last! 'x x } { 1 2 3 }
-		equal { x: ref { 1 2 3 4 } remove-last! 'x } { 1 2 3 }
-	}
-
-	group "append!" 
-	"Accepts Rye value and Tagword with a Block or String. Appends Rye value to Block/String in place, also returns it	."
-	{
-	}
-
-	{
-		; TODO equal { x: ref { 1 2 3 } append! { 4 } x , x } { 1 2 3 4 }
-		equal { x: ref { 1 2 3 } append! 4 'x , x } { 1 2 3 4 }
-	}
-
-	group "change\nth!" 
-	"Accepts a Block or List, Integer n and a value. Changes the n-th value in the Block in place. Also returns the new series."
-	{
-	}
-
-	{
-		equal { x: ref { 1 2 3 } change\nth! x 2 222 , x } { 1 222 3 }
-	}
-
-}
-
-section "Contexts " "Context related functions" {
-	group "raw-context" 
-	""
-	{
-	}
-
-	{
-		equal { c: raw-context { x: 123 } c/x } 123
-		equal { y: 123 try { c: raw-context { x: y } } |type? } 'error ; word not found y
-		equal { try { c: raw-context { x: inc 10 } } |type? } 'error ; word not found inc
-	}
-
-	group "isolate" 
-	""
-	{
-	}
-
-	{
-		equal { c: isolate { x: 123 } c/x } 123
-		equal { y: 123 c: isolate { x: y } c/x } 123
-		equal { c: isolate { x: inc 10 } c/x } 11
-		equal { y: 99 c: isolate { x: does { y } } try { c/x } |type? } 'error
-		equal { y: 99 c: isolate { t: ?try x: does { t { y } } } c/x |type? } 'error
-	}
-
-	group "context" 
-	"Creates a new context with no parent"
-	{
-	}
-
-	{
-		equal { c: context { x: 123 } c/x } 123
-		equal { y: 123 c: context { x: y } c/x } 123
-		equal { c: context { x: inc 10 } c/x } 11
-		equal { y: 123 c: context { x: does { y } } c/x } 123
-	}
-
-	group "private" 
-	"Creates a new context with current parent, returns last value"
-	{
-	}
-
-	{
-		equal { private { x: 123 } } 123
-		equal { y: 123 private { x: y } } 123
-		equal { private { x: inc 10 } } 11
-		equal { y: 123 private { does { y } } :f f } 123
-	}
-
-	group "private\" 
-	"Creates a new context with current parent, adds documentation, returns last value"
-	{
-	}
-
-	{
-		equal  { private\ "what are we doing here" { x: 234 1000 + x } } 1234
-	}
-
-	group "extends" 
-	"Extends a context with a new context in place and returns it."
-	{
-	}
-
-	{
-		equal { ct: context { p: 123 } cn: extends ct { r: p + 234 } cn/r } 357
-	}
-
-	group "bind!" 
-	""
-	{
-	}
-
-	{
-		equal { c: context { y: 123 } cc: bind! context { z: does { y + 234 } } c , cc/z } 357
-	}
-
-	group "unbind" 
-	"Accepts a Context and unbinds it from it's parent Context."
-	{
-	}
-
-	{
-		equal { c: context { y: 123 } cc: bind! context { z: does { y + 234 } } c , unbind cc cc/z } 357
-		error { c: context { y: 123 } cc: bind! context { z: does { y + 234 } } c , dd: unbind cc dd/z }
-	}
-
+section "Default" "" {
 	group "pass" 
 	"Accepts a value and a block. It does the block, with value injected, and returns (passes on) the initial value."
 	{
@@ -1208,54 +55,6 @@ section "Contexts " "Context related functions" {
 
 	{
 		equal   { x: 1 unset! 'x x: 2 } 2 ; otherwise would produce an error
-	}
-
-}
-
-section "Functions " "functions that create functions" {
-	group "does" 
-	"Creates a function without arguments."
-	{
-	}
-
-	{
-		equal { does { 123 } |type? } 'function
-		equal { x: does { 123 } x } 123
-	}
-
-	group "fn1" 
-	"Creates a function that accepts one anonymouse argument."
-	{
-	}
-
-	{
-		equal { fn1 { .pass { } } |type? } 'function
-		equal { x: fn1 { } , x 123 } 123
-		equal { x: fn1 { .pass { } } , x 123 } 123
-		equal { x: fn1 { + 1 } , x 123 } 124
-	}
-
-	group "fn" 
-	"Creates a function."
-	{
-	}
-
-	{
-		equal { fn { } { } |type? } 'function
-		equal { x: fn { } { 234 } , x } 234
-		equal { x: fn { x } { x } , x 123 } 123
-		equal { x: fn { x } { + 123 } , x 123 } 246
-	}
-
-	group "pfn" 
-	"Creates a pure function."
-	{
-	}
-
-	{
-		equal { pfn { } { } |type? } 'function
-		equal { x: pfn { x } { + 123 } , x 123 } 246
-		error { x: pfn { x } { .print } , x 123 }
 	}
 
 }
@@ -1676,13 +475,15 @@ section "Printing " "" {
 
 section "Flow control " "" {
 	group "if" 
-	"Basic conditional. Takes a condition and a block of code."
+	"Basic conditional. Takes a boolean condition and a block of code."
 	{
 	}
 
 	{
-		equal  { if 1 { 222 } } 222
-		equal  { if 0 { 333 } } 0
+		equal  { if true { 222 } } 222
+		equal  { if false { 333 } } false
+		error  { if 1 { 222 } }
+		error  { if 0 { 333 } }
 	}
 
 	group "^if" 
@@ -1696,13 +497,15 @@ section "Flow control " "" {
 	}
 
 	group "either" 
-	"The if/else conditional. Takes a value and true and false block of code."
+	"The if/else conditional. Takes a boolean condition and true and false blocks of code."
 	{
 	}
 
 	{
-		equal  { either 1 { 222 } { 333 } } 222
-		equal  { either 0 { 222 } { 333 } } 333
+		equal  { either true { 222 } { 333 } } 222
+		equal  { either false { 222 } { 333 } } 333
+		error  { either 1 { 222 } { 333 } }
+		error  { either 0 { 222 } { 333 } }
 	}
 
 	group "switch" 
@@ -2158,96 +961,6 @@ section "Other " "functions related to date and time" {
 		equal { x: fn { } { return 101 202 } x } 101
 	}
 
-	group "year-day?" 
-	"Returns the day in the given time."
-	{
-		arg `time`
-	}
-
-	{
-	}
-
-	group "year?" 
-	"Returns the year of the given time."
-	{
-		arg `time`
-	}
-
-	{
-	}
-
-	group "month?" 
-	"Returns current month as an integer."
-	{
-		arg `time`
-	}
-
-	{
-	}
-
-	group "days-in-month?" 
-	"Returns the days in the month that `time` is in."
-	{
-		arg `time`
-	}
-
-	{
-	}
-
-	group "time?" 
-	"Returns Time part of a datetime."
-	{
-		arg `time`
-	}
-
-	{
-	}
-
-	group "date?" 
-	"Returns date part of datetime."
-	{
-		arg `time`
-	}
-
-	{
-	}
-
-	group "day?" 
-	"Returns the day of month of the given time."
-	{
-		arg `time`
-	}
-
-	{
-	}
-
-	group "hour?" 
-	"Returns the hour of the given time."
-	{
-		arg `time`
-	}
-
-	{
-	}
-
-	group "minute?" 
-	"Returns the minute of the given time."
-	{
-		arg `time`
-	}
-
-	{
-	}
-
-	group "second?" 
-	"Returns the second of the given time."
-	{
-		arg `time`
-	}
-
-	{
-	}
-
 	group "cmd" 
 	"Execute a shell command."
 	{
@@ -2266,40 +979,1708 @@ section "Other " "functions related to date and time" {
 		equal { rye .type? } 'native
 	}
 
-	group "sleep" 
-	"Accepts an integer and Sleeps for given number of miliseconds."
+}
+
+section "Boolean logic " "Functions that work with true and false values." {
+	group "true" 
+	"Returns a boolean true value."
 	{
+		arg `none`
+		returns `boolean true value`
 	}
 
 	{
-		equal { time-it { sleep 10 } } 10
+		equal { true } true
+		equal { true |type? } 'boolean
 	}
 
-	group "seconds" 
-	"Accepts an integer and Sleeps for given number of miliseconds."
+	group "false" 
+	"Returns a boolean false value."
 	{
-	}
-
-	{
-		equal  { 5 .seconds } 5000000000
-	}
-
-	group "minutes" 
-	"Accepts an integer and Sleeps for given number of miliseconds."
-	{
+		arg `none`
+		returns `boolean false value`
 	}
 
 	{
-		equal  { 5 .minutes } 5000000000 * 60
+		equal { false } false
+		equal { false |type? } 'boolean
 	}
 
-	group "hours" 
-	"Accepts an integer and Sleeps for given number of miliseconds."
+	group "_|" 
+	"Pipeline operator that passes the value through unchanged (used with 'not' and other operations)."
 	{
+		arg `value: Any value to be negated`
+		returns `the original value (used in pipeline operations)`
 	}
 
 	{
-		equal  { 5 .hours } 5000000000 * 60 * 60
+		equal { not true } 0
+		equal { not false } 1
+	}
+
+	group "not" 
+	"Performs logical negation on boolean values only."
+	{
+		arg `value: Boolean value to be negated`
+		returns `boolean false if the input is true, true if the input is false`
+	}
+
+	{
+		equal { not true } false
+		equal { not false } true
+		error { not 0 }
+		error { not 5 }
+	}
+
+	group "and" 
+	"Performs a logical AND operation between two boolean values, or a bitwise AND operation between two integer values."
+	{
+		arg `value1: First value (boolean or integer)`
+		arg `value2: Second value (boolean or integer)`
+		returns `boolean result of logical AND operation if both inputs are booleans, otherwise integer result of bitwise AND`
+	}
+
+	{
+		equal { true .and true } true
+		equal { false .and true } false
+		equal { true .and false } false
+		equal { false .and false } false
+		equal { 3 .and 5 } 1  ; bitwise 011 AND 101 = 001
+	}
+
+	group "or" 
+	"Performs a logical OR operation between two boolean values, or a bitwise OR operation between two integer values."
+	{
+		arg `value1: First value (boolean or integer)`
+		arg `value2: Second value (boolean or integer)`
+		returns `boolean result of logical OR operation if both inputs are booleans, otherwise integer result of bitwise OR`
+	}
+
+	{
+		equal { true .or true } true
+		equal { false .or true } true
+		equal { true .or false } true
+		equal { false .or false } false
+		equal { 3 .or 5 } 7  ; bitwise 011 OR 101 = 111
+	}
+
+	group "xor" 
+	"Performs a logical XOR (exclusive OR) operation between two boolean values, or a bitwise XOR operation between two integer values."
+	{
+		arg `value1: First value (boolean or integer)`
+		arg `value2: Second value (boolean or integer)`
+		returns `boolean result of logical XOR operation if both inputs are booleans, otherwise integer result of bitwise XOR`
+	}
+
+	{
+		equal { true .xor true } false
+		equal { false .xor true } true
+		equal { true .xor false } true
+		equal { false .xor false } false
+		equal { 3 .xor 5 } 6  ; bitwise 011 XOR 101 = 110
+	}
+
+	group "all" 
+	"Evaluates all expressions in a block and returns the last value if all are truthy, or the first falsy value encountered."
+	{
+		arg `block: Block of expressions to evaluate`
+		returns `the last value if all expressions are truthy, otherwise the first falsy value encountered`
+	}
+
+	{
+		equal { all { 1 2 3 } } 3
+		equal { all { 1 0 3 } } 0
+		equal { all { true true true } } 1
+	}
+
+	group "any" 
+	"Evaluates expressions in a block until a truthy value is found and returns it, or returns the last value if none are truthy."
+	{
+		arg `block: Block of expressions to evaluate`
+		returns `the first truthy value encountered, or the last value if none are truthy`
+	}
+
+	{
+		equal { any { 1 2 3 } } 1
+		equal { any { 0 1 3 } } 1
+		equal { any { 0 0 3 } } 3
+		equal { any { 0 0 0 } } 0
+	}
+
+	group "any\with" 
+	"Applies each expression in the block to the provided value until a truthy result is found and returns it."
+	{
+		arg `value: Value to be used in the expressions`
+		arg `block: Block of expressions to evaluate with the provided value`
+		returns `the first truthy result of applying an expression to the value, or the last result if none are truthy`
+	}
+
+	{
+		equal { any\with 10 { + 10 , * 10 } } 20
+		; equal { any\with -10 { + 10 , * 10 } } -100  ; TODO -- fix halting issue
+	}
+
+}
+
+section "Numbers " "Working with numbers, integers and decimals." {
+	group "inc" 
+	"Increments an integer value by 1."
+	{
+		arg `value: Integer to increment`
+		returns `integer value incremented by 1`
+	}
+
+	{
+		equal { inc 123 } 124
+		equal { inc 0 } 1
+		equal { inc -5 } -4
+		error { inc "123" }
+	}
+
+	group "is-positive" 
+	"Checks if a number is positive (greater than zero)."
+	{
+		arg `value: Integer or decimal to check`
+		returns `boolean true if the value is positive, false otherwise`
+	}
+
+	{
+		equal { is-positive 123 } true
+		equal { is-positive -123 } false
+		equal { is-positive 0 } false
+		equal { is-positive 5.5 } true
+		error { is-positive "123" }
+	}
+
+	group "is-zero" 
+	"Checks if a number is exactly zero."
+	{
+		arg `value: Integer or decimal to check`
+		returns `boolean true if the value is zero, false otherwise`
+	}
+
+	{
+		equal { is-zero 0 } true
+		equal { is-zero 123 } false
+		equal { is-zero 0.0 } true
+		error { is-zero "123" }
+	}
+
+	group "is-multiple-of" 
+	"Checks if the first integer is evenly divisible by the second integer."
+	{
+		arg `value: Integer to check`
+		arg `divisor: Integer divisor to check against`
+		returns `boolean true if value is divisible by divisor with no remainder, false otherwise`
+	}
+
+	{
+		equal { 10 .is-multiple-of 2 } true
+		equal { 10 .is-multiple-of 3 } false
+		equal { 15 .is-multiple-of 5 } true
+		equal { 0 .is-multiple-of 5 } true
+	}
+
+	group "is-odd" 
+	"Checks if an integer is odd (not divisible by 2)."
+	{
+		arg `value: Integer to check`
+		returns `boolean true if the value is odd, false if even`
+	}
+
+	{
+		equal { 3 .is-odd } true
+		equal { 2 .is-odd } false
+		equal { 0 .is-odd } false
+		equal { -5 .is-odd } true
+	}
+
+	group "is-even" 
+	"Checks if an integer is even (divisible by 2)."
+	{
+		arg `value: Integer to check`
+		returns `boolean true if the value is even, false if odd`
+	}
+
+	{
+		equal { 3 .is-even } false
+		equal { 2 .is-even } true
+		equal { 0 .is-even } true
+		equal { -4 .is-even } true
+	}
+
+	group "mod" 
+	"Calculates the modulo (remainder) when dividing the first integer by the second."
+	{
+		arg `value: Integer dividend`
+		arg `divisor: Integer divisor`
+		returns `integer remainder after division`
+	}
+
+	{
+		equal { 4 .mod 2 } 0
+		equal { 5 .mod 2 } 1
+		equal { 5 .mod 3 } 2
+		equal { -5 .mod 3 } -2
+	}
+
+	group "_%" 
+	"Alias for mod - calculates the modulo (remainder) when dividing the first integer by the second."
+	{
+		arg `value: Integer dividend`
+		arg `divisor: Integer divisor`
+		returns `integer remainder after division`
+	}
+
+	{
+		equal { 4 % 2 } 0
+		equal { 5 % 2 } 1
+		equal { 5 % 3 } 2
+	}
+
+	group "random\integer" 
+	"Generates a cryptographically secure random integer between 0 (inclusive) and the specified maximum (exclusive)."
+	{
+		arg `max: Upper bound (exclusive) for the random number`
+		returns `random integer in the range [0, max)`
+	}
+
+	{
+		equal { random\integer 2 |type? } 'integer
+		equal { random\integer 1 |< 2 } 1
+		equal { random\integer 100 | >= 0 } 1
+	}
+
+	group "inc!" 
+	"Increments an integer value stored in a variable (word) by 1 and updates the variable in-place."
+	{
+		arg `word: Word referring to an integer value to increment`
+		returns `the new incremented integer value`
+	}
+
+	{
+		equal { a:: 123 inc! 'a a } 124
+		equal { counter:: 0 inc! 'counter counter } 1
+		error { inc! 123 }
+	}
+
+	group "dec!" 
+	"Decrements an integer value stored in a variable (word) by 1 and updates the variable in-place."
+	{
+		arg `word: Word referring to an integer value to decrement`
+		returns `the new decremented integer value`
+	}
+
+	{
+		equal { a:: 123 dec! 'a a } 122
+		equal { counter:: 1 dec! 'counter counter } 0
+		error { dec! 123 }
+	}
+
+	group "_." 
+	"Discards the input value and returns a void value, useful for ignoring unwanted results in a pipeline."
+	{
+		arg `value: Any value to discard`
+		returns `void value (used to discard values)`
+	}
+
+	{
+		equal { 4 . .type? } 'void
+		equal { "hello" . .type? } 'void
+	}
+
+	group "_+" 
+	"Adds or joins two values together, with behavior depending on types: adds numbers, concatenates strings/blocks, merges dictionaries, etc."
+	{
+		arg `value1: First value (number, string, block, dict, etc.)`
+		arg `value2: Second value to add or join`
+		returns `result of adding or joining the values, type depends on input types`
+	}
+
+	{
+		equal { 1 + 1 } 2
+		equal { 3 + 4 } 7
+		equal { 5.6 + 7.8 } 13.400000
+		equal { "A" + "b" } "Ab"
+		equal { "A" + 1 } "A1"
+		equal { { 1 2 } + { 3 4 } } { 1 2 3 4 }
+		equal { dict { "a" 1 } |+ { "b" 2 } } dict { "a" 1 "b" 2 }
+		equal { dict { "a" 1 } |+ dict { "b" 2 } } dict { "a" 1 "b" 2 }
+	}
+
+	group "_-" 
+	"Subtracts the second number from the first, working with both integers and decimals."
+	{
+		arg `value1: First number (integer or decimal)`
+		arg `value2: Second number to subtract from the first`
+		returns `result of subtracting value2 from value1`
+	}
+
+	{
+		equal { 2 - 1 } 1
+		equal { 5 - 6 } -1
+		equal { 5.5 - 2.2 } 3.3
+		equal { 5 - 2.5 } 2.5
+	}
+
+	group "_*" 
+	"Multiplies two numbers, working with both integers and decimals."
+	{
+		arg `value1: First number (integer or decimal)`
+		arg `value2: Second number to multiply by`
+		returns `product of the two numbers`
+	}
+
+	{
+		equal { 4 * 2 } 8
+		equal { 2.5 * -2 } -5.0
+		equal { 0 * 5 } 0
+		equal { 1.5 * 2.5 } 3.75
+	}
+
+	group "_/" 
+	"Divides the first number by the second and returns a decimal result, with error checking for division by zero."
+	{
+		arg `value1: Dividend (integer or decimal)`
+		arg `value2: Divisor (integer or decimal, must not be zero)`
+		returns `decimal result of dividing value1 by value2`
+	}
+
+	{
+		equal { 4 / 2 } 2.000
+		equal { 102.0 / 2.0 } 51.000
+		equal { 5 / 2 } 2.5
+		error { 5 / 0 }
+	}
+
+	group "_//" 
+	"Performs integer division, dividing the first number by the second and truncating to an integer result."
+	{
+		arg `value1: Dividend (integer or decimal)`
+		arg `value2: Divisor (integer or decimal, must not be zero)`
+		returns `integer result of dividing value1 by value2 (truncated)`
+	}
+
+	{
+		equal { 5 // 2 } 2
+		equal { 102 // 5 } 20
+		equal { 7.99 // 2 } 3
+		equal { -5 // 2 } -2
+		error { 5 // 0 }
+	}
+
+	group "_=" 
+	"Compares two values for equality, returning 1 if equal or 0 if not equal."
+	{
+		arg `value1: First value to compare`
+		arg `value2: Second value to compare`
+		returns `boolean true if values are equal, false otherwise`
+	}
+
+	{
+		equal { 5 = 5 } true
+		equal { 5 = 4 } false
+		equal { "abc" = "abc" } true
+		equal { { 1 2 } = { 1 2 } } true
+		equal { { 1 2 } = { 2 1 } } false
+	}
+
+	group "_>" 
+	"Compares if the first value is greater than the second value."
+	{
+		arg `value1: First value to compare`
+		arg `value2: Second value to compare`
+		returns `boolean true if value1 is greater than value2, false otherwise`
+	}
+
+	{
+		equal { 6 > 5 } true
+		equal { 5 > 5 } false
+		equal { 4 > 5 } false
+		equal { 5.5 > 5 } true
+		equal { "b" > "a" } true
+	}
+
+	group "_>=" 
+	"Compares if the first value is greater than or equal to the second value."
+	{
+		arg `value1: First value to compare`
+		arg `value2: Second value to compare`
+		returns `boolean true if value1 is greater than or equal to value2, false otherwise`
+	}
+
+	{
+		equal { 5 >= 6 } false
+		equal { 5 >= 5 } true
+		equal { 6.0 >= 5 } true
+		equal { 4 >= 5 } false
+		equal { "b" >= "a" } true
+		equal { "a" >= "a" } true
+	}
+
+	group "_<" 
+	"Compares if the first value is less than the second value."
+	{
+		arg `value1: First value to compare`
+		arg `value2: Second value to compare`
+		returns `boolean true if value1 is less than value2, false otherwise`
+	}
+
+	{
+		equal { 5 < 6 } true
+		equal { 5 < 5 } false
+		equal { 6 < 5 } false
+		equal { 4.5 < 5 } true
+		equal { "a" < "b" } true
+	}
+
+	group "_<=" 
+	"Compares if the first value is less than or equal to the second value."
+	{
+		arg `value1: First value to compare`
+		arg `value2: Second value to compare`
+		returns `boolean true if value1 is less than or equal to value2, false otherwise`
+	}
+
+	{
+		equal { 5 <= 6 } true
+		equal { 5 <= 5 } true
+		equal { 6 <= 5 } false
+		equal { 4.5 <= 5 } true
+		equal { "a" <= "b" } true
+		equal { "a" <= "a" } true
+	}
+
+}
+
+section "Strings " "" {
+	group "newline" 
+	"Returns a string containing a single newline character."
+	{
+		arg `none`
+		returns `a string containing a single newline character`
+	}
+
+	{
+		equal { newline } "\n"
+	}
+
+	group "ln" 
+	"Appends a newline character to the end of a string."
+	{
+		arg `string: String to append a newline to`
+		returns `a new string with a newline character appended`
+	}
+
+	{
+		equal { "123" .ln } "123\n"
+		equal { "hello" .ln } "hello\n"
+	}
+
+	group "trim" 
+	"Removes all leading and trailing whitespace characters from a string."
+	{
+		arg `string: String to trim`
+		returns `a new string with leading and trailing whitespace removed`
+	}
+
+	{
+		equal { trim " ASDF " } "ASDF"
+		equal { trim "   ASDF   " } "ASDF"
+		equal { trim "\t\nASDF\r\n" } "ASDF"
+	}
+
+	group "trim\" 
+	"Removes all leading and trailing occurrences of the specified characters from a string."
+	{
+		arg `string: String to trim`
+		arg `cutset: String containing the characters to trim`
+		returns `a new string with specified characters removed from both ends`
+	}
+
+	{
+		equal { trim\ "__ASDF__" "_" } "ASDF"
+		equal { trim\ "##Hello##" "#" } "Hello"
+	}
+
+	group "trim\right" 
+	"Removes all trailing occurrences of the specified characters from a string."
+	{
+		arg `string: String to trim`
+		arg `cutset: String containing the characters to trim`
+		returns `a new string with specified characters removed from the right end`
+	}
+
+	{
+		equal { trim\right "__ASDF__" "_" } "__ASDF"
+		equal { trim\right "  ASDF  " " " } "  ASDF"
+		equal { trim\right "Hello!!!" "!" } "Hello"
+	}
+
+	group "trim\left" 
+	"Removes all leading occurrences of the specified characters from a string."
+	{
+		arg `string: String to trim`
+		arg `cutset: String containing the characters to trim`
+		returns `a new string with specified characters removed from the left end`
+	}
+
+	{
+		equal { trim\left "___ASDF__" "_" } "ASDF__"
+		equal { trim\left "  ASDF  " " " } "ASDF  "
+		equal { trim\left "###Hello" "#" } "Hello"
+	}
+
+	group "replace" 
+	"Replaces all occurrences of a substring with another string."
+	{
+		arg `string: Original string`
+		arg `old: Substring to replace`
+		arg `new: Replacement string`
+		returns `a new string with all occurrences of old replaced by new`
+	}
+
+	{
+		equal { replace "...xo..." "xo" "LoL" } "...LoL..."
+		equal { replace "...xoxo..." "xo" "LoL" } "...LoLLoL..."
+		equal { replace "hello world" "world" "everyone" } "hello everyone"
+	}
+
+	group "substring" 
+	"Extracts a portion of a string between the specified start and end positions."
+	{
+		arg `string: String to extract from`
+		arg `start: Starting position (0-based, inclusive)`
+		arg `end: Ending position (0-based, exclusive)`
+		returns `a new string containing the specified substring`
+	}
+
+	{
+		equal { substring "xoxo..." 0 4 } "xoxo"
+		equal { substring "...xoxo..." 3 7 } "xoxo"
+		equal { substring "hello world" 6 11 } "world"
+	}
+
+	group "contains" 
+	"Checks if a string, block or list contains a specific value, returning 1 if found or 0 if not found."
+	{
+		arg `collection: String, block or list to search in`
+		arg `value: Value to search for`
+		returns `integer 1 if the collection contains the value, 0 otherwise`
+	}
+
+	{
+		equal { contains "...xoxo..." "xo"  } 1
+		equal { contains "...xoxo..." "lol" } 0
+		equal { contains { ".." "xoxo" ".." } "xoxo" } 1
+		equal { contains { ".." "xoxo" ".." } "lol"  } 0
+		equal { contains list { 1 2 3 } 2 } 1
+	}
+
+	group "has-suffix" 
+	"Checks if a string ends with a specific suffix, returning 1 if true or 0 if false."
+	{
+		arg `string: String to check`
+		arg `suffix: Suffix to look for`
+		returns `integer 1 if the string ends with the suffix, 0 otherwise`
+	}
+
+	{
+		equal { has-suffix "xoxo..." "xoxo" } 0
+		equal { has-suffix "...xoxo" "xoxo" } 1
+		equal { has-suffix "hello.txt" ".txt" } 1
+	}
+
+	group "has-prefix" 
+	"Checks if a string starts with a specific prefix, returning 1 if true or 0 if false."
+	{
+		arg `string: String to check`
+		arg `prefix: Prefix to look for`
+		returns `integer 1 if the string starts with the prefix, 0 otherwise`
+	}
+
+	{
+		equal { has-prefix "xoxo..." "xoxo" } 1
+		equal { has-prefix "...xoxo" "xoxo" } 0
+		equal { has-prefix "http://example.com" "http://" } 1
+	}
+
+	group "index?" 
+	"Finds the 0-based index of the first occurrence of a value in a string or block."
+	{
+		arg `collection: String or block to search in`
+		arg `value: Value to search for`
+		returns `integer index (0-based) of the first occurrence of the value, or -1 if not found`
+	}
+
+	{
+		equal { index? "...xo..." "xo" } 3
+		equal { index? "xo..." "xo" } 0
+		equal { index? { "xo" ".." } "xo" } 0
+		equal { index? { ".." "xo" ".." } "xo" } 1
+	}
+
+	group "position?" 
+	"Finds the 1-based position of the first occurrence of a value in a string or block."
+	{
+		arg `collection: String or block to search in`
+		arg `value: Value to search for`
+		returns `integer position (1-based) of the first occurrence of the value, or error if not found`
+	}
+
+	{
+		equal { position? "...xo..." "xo" } 4
+		equal { position? "xo..." "xo" } 1
+		equal { position? { "xo" ".." } "xo" } 1
+		equal { position? { ".." "xo" ".." } "xo" } 2
+	}
+
+	group "encode\base64" 
+	"Encodes a string or binary data as a base64 string."
+	{
+		arg `data: String or native bytes/pem-block to encode`
+		returns `base64-encoded string`
+	}
+
+	{
+		equal { encode\base64 "abcd" } "YWJjZA=="
+		equal { encode\base64 "hello world" } "aGVsbG8gd29ybGQ="
+	}
+
+	group "decode\base64" 
+	"Decodes a base64-encoded string back to its original form."
+	{
+		arg `string: Base64-encoded string to decode`
+		returns `decoded string`
+	}
+
+	{
+		equal { decode\base64 encode\base64 "abcd" } "abcd"
+		equal { decode\base64 "aGVsbG8gd29ybGQ=" } "hello world"
+	}
+
+	group "space" 
+	"Appends a space character to the end of a string."
+	{
+		arg `string: String to append a space to`
+		returns `a new string with a space character appended`
+	}
+
+	{
+		equal { "abcd" .space } "abcd "
+		equal { "" .space } " "
+	}
+
+	group "capitalize" 
+	"Converts the first character of a string to uppercase, leaving the rest unchanged."
+	{
+		arg `string: String to capitalize`
+		returns `a new string with the first character converted to uppercase`
+	}
+
+	{
+		equal { capitalize "abcde" } "Abcde"
+		equal { capitalize "hello world" } "Hello World"
+		equal { capitalize "HELLO" } "Hello"
+	}
+
+	group "to-lower" 
+	"Converts all characters in a string to lowercase."
+	{
+		arg `string: String to convert`
+		returns `a new string with all characters converted to lowercase`
+	}
+
+	{
+		equal { to-lower "ABCDE" } "abcde"
+		equal { to-lower "Hello World" } "hello world"
+		equal { to-lower "123ABC" } "123abc"
+	}
+
+	group "to-upper" 
+	"Converts all characters in a string to uppercase."
+	{
+		arg `string: String to convert`
+		returns `a new string with all characters converted to uppercase`
+	}
+
+	{
+		equal { to-upper "abcde" } "ABCDE"
+		equal { to-upper "Hello World" } "HELLO WORLD"
+		equal { to-upper "123abc" } "123ABC"
+	}
+
+	group "concat3" 
+	"Concatenates three strings together into a single string."
+	{
+		arg `string1: First string`
+		arg `string2: Second string`
+		arg `string3: Third string`
+		returns `a new string containing all three strings concatenated together`
+	}
+
+	{
+		equal { concat3 "aa" "BB" "cc" } "aaBBcc"
+		equal { concat3 "hello" " " "world" } "hello world"
+	}
+
+	group "join" 
+	"Concatenates all strings or numbers in a block or list into a single string with no separator."
+	{
+		arg `collection: Block or list of strings or numbers to join`
+		returns `a single string with all values concatenated together`
+	}
+
+	{
+		equal { join { "Mary" "Anne" } } "MaryAnne"
+		equal { join { "Spot" "Fido" "Rex" } } "SpotFidoRex"
+		equal { join { 1 2 3 } } "123"
+	}
+
+	group "join\with" 
+	"Concatenates all strings or numbers in a block or list into a single string with a specified delimiter between values."
+	{
+		arg `collection: Block or list of strings or numbers to join`
+		arg `delimiter: String to insert between each value`
+		returns `a single string with all values concatenated with the delimiter between them`
+	}
+
+	{
+		equal { join\with { "Mary" "Anne" } " " } "Mary Anne"
+		equal { join\with { "Spot" "Fido" "Rex" } "/" } "Spot/Fido/Rex"
+		equal { join\with { 1 2 3 } "-" } "1-2-3"
+	}
+
+	group "split" 
+	"Splits a string into a block of strings using a separator string."
+	{
+		arg `string: String to split`
+		arg `separator: String that separates values`
+		returns `a block of strings resulting from splitting the input string`
+	}
+
+	{
+		equal { split "a,b,c" "," } { "a" "b" "c" }
+		equal { split "hello world" " " } { "hello" "world" }
+		equal { split "one::two::three" "::" } { "one" "two" "three" }
+	}
+
+	group "split\quoted" 
+	"Splits a string into a block of strings using a separator, while respecting quoted sections that should remain intact."
+	{
+		arg `string: String to split`
+		arg `separator: String that separates values`
+		arg `quote: String that marks quoted sections that should not be split`
+		returns `a block of strings resulting from splitting the input string, preserving quoted sections`
+	}
+
+	{
+		equal { split\quoted "`a,b`,c,d" "," "`" } { "`a,b`" "c" "d" }
+		equal { split\quoted "'hello, world',foo,bar" "," "'" } { "'hello, world'" "foo" "bar" }
+	}
+
+	group "split\many" 
+	"Splits a string into a block of strings using any character in the separators string as a delimiter."
+	{
+		arg `string: String to split`
+		arg `separators: String containing all characters that should be treated as separators`
+		returns `a block of strings resulting from splitting the input string at any of the separator characters`
+	}
+
+	{
+		equal { split\many "192.0.0.1" "." } { "192" "0" "0" "1" }
+		equal { split\many "abcd..e.q|bar" ".|" } { "abcd" "e" "q" "bar" }
+		equal { split\many "a;b,c:d" ";,:" } { "a" "b" "c" "d" }
+	}
+
+	group "split\every" 
+	"Splits a string or block into chunks of the specified size, with any remaining elements in the last chunk."
+	{
+		arg `collection: String or block to split`
+		arg `size: Number of elements in each chunk`
+		returns `a block of strings or blocks, each containing at most 'size' elements`
+	}
+
+	{
+		equal { split\every "abcdefg" 3 } { "abc" "def" "g" }
+		equal { split\every "abcdefg" 2 } { "ab" "cd" "ef" "g" }
+		equal { split\every "abcdef" 2 } { "ab" "cd" "ef" }
+		equal { split\every { 1 2 3 4 5 } 2 } { { 1 2 } { 3 4 } { 5 } }
+	}
+
+}
+
+section "Collections " "" {
+	group "random" 
+	"Selects a random value from a block of values."
+	{
+		arg `block: Block of values to select from`
+		returns `a randomly selected value from the block`
+	}
+
+	{
+		equal { random { 1 2 3 } |type? } 'integer
+		equal { random { 1 2 3 } |contains* { 1 2 3 } } 1
+	}
+
+	group "unpack" 
+	"Flattens a block of blocks or list of lists by one level, combining all inner collections into a single collection."
+	{
+		arg `collection: Block or list of blocks/lists to unpack`
+		returns `a flattened block or list with all inner blocks/lists unpacked`
+	}
+
+	{
+		equal { unpack { { 123 } { 234 } } } { 123 234 }
+		equal { unpack { { { 123 } } { 234 } } } { { 123 } 234 }
+		; equal { unpack list { list { 1 2 } list { 3 4 } } } list { 1 2 3 4 }
+	}
+
+	group "sample" 
+	"Randomly selects a specified number of elements from a collection without replacement."
+	{
+		arg `collection: Block, list or table to sample from`
+		arg `count: Number of random elements to select`
+		returns `a new collection with randomly selected elements`
+	}
+
+	{
+		equal { sample { 1 2 3 4 } 2 |length? } 2
+		equal { sample { 123 123 123 123 } 3 -> 0 } 123
+		; equal { sample list { 1 2 3 4 5 } 3 |length? } 3
+	}
+
+	group "max" 
+	"Finds the maximum value in a block or list of comparable values."
+	{
+		arg `collection: Block or list of comparable values`
+		returns `the maximum value in the collection`
+	}
+
+	{
+		equal { max { 8 2 10 6 } } 10
+		equal { max list { 8 2 10 6 } } 10
+		equal { try { max { } } |type? } 'error
+		equal { try { max list { } } |type? } 'error
+	}
+
+	group "min" 
+	"Finds the minimum value in a block or list of comparable values."
+	{
+		arg `collection: Block or list of comparable values`
+		returns `the minimum value in the collection`
+	}
+
+	{
+		equal { min { 8 2 10 6 } } 2
+		equal { min list { 8 2 10 6 } } 2
+		equal { try { min { } } |type? } 'error
+		equal { try { min list { } } |type? } 'error
+	}
+
+	group "avg" 
+	"Calculates the arithmetic mean (average) of numeric values in a collection."
+	{
+		arg `collection: Block, list or vector of numeric values`
+		returns `the arithmetic mean (average) of the values as a decimal`
+	}
+
+	{
+		equal { avg { 8 2 10 6 } } 6.5
+		equal { avg list { 8 2 10 6 } } 6.5
+		equal { avg { 1 2 3 } } 2.0
+		equal { try { avg { } } |type? } 'error
+		equal { try { avg list { } } |type? } 'error
+	}
+
+	group "sum" 
+	"Calculates the sum of all numeric values in a collection."
+	{
+		arg `collection: Block, list or vector of numeric values`
+		returns `the sum of all values (integer if all values are integers, decimal otherwise)`
+	}
+
+	{
+		equal { sum { 8 2 10 6 } } 26
+		equal { sum { 8 2 10 6.5 } } 26.5
+		equal { sum { } } 0
+		equal { sum list { 8 2 10 6 } } 26
+		equal { sum list { 8 2 10 6.5 } } 26.5
+		equal { sum list { } } 0
+	}
+
+	group "mul" 
+	"Calculates the product of all numeric values in a collection."
+	{
+		arg `collection: Block, list or vector of numeric values`
+		returns `the product of all values (integer if all values are integers, decimal otherwise)`
+	}
+
+	{
+		equal { mul { 1 2 3 4 5 } } 120
+		equal { mul { 1 2.0 3.3 4 5 } } 132.0
+		equal { mul { 2 3 4 } } 24
+	}
+
+	group "first" 
+	"Retrieves the first item from a collection (block, list, string, or table)."
+	{
+		arg `collection: Block, list, string or table to get the first item from`
+		returns `the first item in the collection`
+	}
+
+	{
+		equal { first { 1 2 3 4 } } 1
+		equal { first "abcde" } "a"
+		equal { first list { 1 2 3 } } 1
+		; equal { first table { 'a 'b } { 1 2 } { 3 4 } } table-row { 'a 1 'b 2 }
+	}
+
+	group "rest" 
+	"Creates a new collection with all items except the first one from the input collection."
+	{
+		arg `collection: Block, list or string to get all but the first item from`
+		returns `a new collection containing all items except the first one`
+	}
+
+	{
+		equal { rest { 1 2 3 4 } } { 2 3 4 }
+		equal { rest "abcde" } "bcde"
+		equal { rest list { 1 2 3 } } list { 2 3 }
+		equal { rest { 1 } } { }
+	}
+
+	group "rest\from" 
+	"Creates a new collection with all items starting from the specified position in the input collection."
+	{
+		arg `collection: Block, list or string to get items from`
+		arg `n: Integer position to start from (0-based)`
+		returns `a new collection containing all items starting from position n`
+	}
+
+	{
+		equal { rest\from { 1 2 3 4 5 6 } 3 } { 4 5 6 }
+		equal { rest\from "abcdefg" 1 } "bcdefg"
+		equal { rest\from list { 1 2 3 4 } 2 } list { 3 4 }
+		equal { rest\from { 1 2 3 } 0 } { 1 2 3 }
+	}
+
+	group "tail" 
+	"Creates a new collection with the last n items from the input collection."
+	{
+		arg `collection: Block, list, string or table to get the last items from`
+		arg `n: Number of items to retrieve from the end`
+		returns `a new collection containing the last n items`
+	}
+
+	{
+		equal { tail { 1 2 3 4 5 6 7 } 3 } { 5 6 7 }
+		equal { tail "abcdefg" 4 } "defg"
+		equal { tail list { 1 2 3 4 } 1 } list { 4 }
+		equal { tail { 1 2 } 5 } { 1 2 }
+	}
+
+	group "second" 
+	"Retrieves the second item from a collection (block, list, or string)."
+	{
+		arg `collection: Block, list or string to get the second item from`
+		returns `the second item in the collection`
+	}
+
+	{
+		equal { second { 123 234 345 } } 234
+		equal { second "abc" } "b"
+		equal { second list { 10 20 30 } } 20
+	}
+
+	group "third" 
+	"Retrieves the third item from a collection (block, list, or string)."
+	{
+		arg `collection: Block, list or string to get the third item from`
+		returns `the third item in the collection`
+	}
+
+	{
+		equal { third { 123 234 345 } } 345
+		equal { third "abcde" } "c"
+		equal { third list { 10 20 30 40 } } 30
+	}
+
+	group "last" 
+	"Retrieves the last item from a collection (block, list, or string)."
+	{
+		arg `collection: Block, list or string to get the last item from`
+		returns `the last item in the collection`
+	}
+
+	{
+		equal { last { 1 2 } } 2
+		equal { last "abcd" } "d"
+		equal { last list { 4 5 6 } } 6
+		equal { try { last { } } |type? } 'error
+	}
+
+	group "head" 
+	"Creates a new collection with the first n items from the input collection, or all but the last |n| items if n is negative."
+	{
+		arg `collection: Block, list, string or table to get the first items from`
+		arg `n: Number of items to retrieve (if positive) or number to exclude from the end (if negative)`
+		returns `a new collection containing the first n items or all but the last |n| items`
+	}
+
+	{
+		equal { head { 4 5 6 7 } 3 } { 4 5 6 }
+		equal { head "abcdefg" 2 } "ab"
+		equal { head "abcdefg" 4 } "abcd"
+		equal { head list { 10 20 30 40 } 2 } list { 10 20 }
+		equal { head { 4 5 6 7 } -2 } { 4 5 }
+		equal { head "abcdefg" -1 } "abcdef"
+		equal { head "abcdefg" -5 } "ab"
+		equal { head list { 10 20 30 40 } -1 } list { 10 20 30 }
+	}
+
+	group "nth" 
+	"Retrieves the item at the specified position (1-based indexing) from a collection."
+	{
+		arg `collection: Block, list, string or table to get an item from`
+		arg `n: Position of the item to retrieve (1-based)`
+		returns `the item at position n in the collection`
+	}
+
+	{
+		equal { nth { 1 2 3 4 5 } 4 } 4
+		equal { nth { "a" "b" "c" "d" "e" } 2 } "b"
+		equal { nth "abcde" 3 } "c"
+		equal { nth list { 10 20 30 40 } 2 } 20
+		; equal { nth table { 'a 'b } { 1 2 } { 3 4 } 2 } table-row { 'a 3 'b 4 }
+	}
+
+	group "values" 
+	"Extracts all values from a dictionary and returns them as a list."
+	{
+		arg `dict: Dictionary object to extract values from`
+		returns `list containing all values from the dictionary`
+	}
+
+	{
+		equal { dict { "a" 1 "b" 2 "c" 3 } |values } list { 1 2 3 }
+		equal { dict { "x" 10 "y" 20 } |values |length? } 2
+	}
+
+	group "sort" 
+	"Creates a new collection with items sorted in ascending order."
+	{
+		arg `collection: Block, list or string to sort`
+		returns `a new collection with items sorted in ascending order`
+	}
+
+	{
+		equal { sort { 6 12 1 } } { 1 6 12 }
+		equal { sort x: { 6 12 1 } x } { 6 12 1 }
+		equal { sort { "b" "c" "a" } } { "a" "b" "c" }
+		equal { sort list { 5 3 1 4 } } list { 1 3 4 5 }
+		equal { sort "cba" } "abc"
+	}
+
+	group "sort!" 
+	"Sorts a block or list in-place in ascending order and returns the modified collection."
+	{
+		arg `collection: Reference to a block or list to sort in-place`
+		returns `the sorted collection (same reference, modified in-place)`
+	}
+
+	{
+		error { x: { 6 12 1 } , sort! x }
+		equal { x: ref { 6 12 1 } , sort! x , x } { 1 6 12 }
+		equal { x: ref list { 5 3 1 4 } , sort! x , x } list { 1 3 4 5 }
+	}
+
+	group "sort\by" 
+	"Creates a new collection with items sorted according to a custom comparison function."
+	{
+		arg `collection: Block or list to sort`
+		arg `comparator: Function that takes two arguments and returns a truthy value if they are in the correct order`
+		returns `a new collection with items sorted according to the comparator function`
+	}
+
+	{
+		equal { sort\by { 6 12 1 } fn { a b } { a < b } } { 1 6 12 }
+		equal { sort\by { 6 12 1 } fn { a b } { a > b } } { 12 6 1 }
+		equal { sort\by { { x 6 } { x 12 } { x 1 } } fn { a b } { second a |< second b } } { { x 1 } { x 6 } { x 12 } }
+		equal { sort\by list { 5 3 1 4 } fn { a b } { a > b } } list { 5 4 3 1 }
+	}
+
+	group "unique" 
+	"Creates a new collection with duplicate values removed, keeping only the first occurrence of each value."
+	{
+		arg `collection: Block, list or string to remove duplicates from`
+		returns `a new collection with duplicate values removed`
+	}
+
+	{
+		equal { list { 3 2 3 5 3 2 } .unique |sort } list { 2 3 5 }
+		equal { unique list { 1 1 2 2 3 } |sort } list { 1 2 3 }
+		equal { unique list { 1 1 2 2 } |sort } list { 1 2 }
+		equal { unique { 1 1 2 2 3 } |sort } { 1 2 3 }
+		equal { unique { 1 1 2 2 } |sort } { 1 2 }
+		equal { unique "aabbc" |length? } 3
+		equal { unique "ab" |length? } 2
+	}
+
+	group "reverse" 
+	"Creates a new collection with items in reverse order from the input collection."
+	{
+		arg `collection: Block, list or string to reverse`
+		returns `a new collection with items in reverse order`
+	}
+
+	{
+		equal { reverse { 3 1 2 3 } } { 3 2 1 3 }
+		equal { reverse "abcd" } "dcba"
+		equal { reverse list { 1 2 3 4 } } list { 4 3 2 1 }
+		equal { reverse { } } { }
+	}
+
+	group "reverse!" 
+	"Reverses a block or list in-place and returns the modified collection."
+	{
+		arg `collection: Reference to a block or list to reverse in-place`
+		returns `the reversed collection (same reference, modified in-place)`
+	}
+
+	{
+		error { reverse! { 3 1 2 3 } }
+		equal { reverse! ref { 3 1 2 3 } } { 3 2 1 3 }
+		equal { x: ref list { 1 2 3 } , reverse! x , x } list { 3 2 1 }
+	}
+
+	group "concat" 
+	"Joins two series values together."
+	{
+		arg `value1: First value (string, integer, block) to concatenate`
+		arg `value2: Second value to concatenate with the first`
+		returns `result of concatenating the two values`
+	}
+
+	{
+		equal { "abcd" .concat "cde" } "abcdcde"
+		equal { concat { 1 2 3 4 } { 2 4 5 } } { 1 2 3 4 2 4 5 }
+		equal { 123 .concat "abc" } "123abc"
+	}
+
+	group "union" 
+	"Combines two collections, removing any duplicate values to create a union of all unique values."
+	{
+		arg `collection1: First block or list`
+		arg `collection2: Second block or list`
+		returns `a new collection containing all unique values from both collections`
+	}
+
+	{
+		; equal { "abcd" .union "cde" } "abcde"
+		equal { union { 1 2 3 4 } { 2 4 5 } |length? } 5 ; order is not certain
+		equal { union list { 1 2 3 4 } list { 2 4 5 } |length? } 5 ; order is not certain
+		equal { union { 8 2 } { 1 9 } |sort } { 1 2 8 9 }
+		equal { union { 1 2 } { } |sort } { 1 2 }
+		equal { union { } { 1 9 } |sort }  { 1 9 }
+		equal { union { } { } } { }
+		equal { union list { 1 2 } list { 1 2 3 4 } |sort } list { 1 2 3 4 }
+		equal { union list { 1 2 } list { 1 } |sort } list { 1 2 }
+		equal { union list { 1 2 } list { } |sort } list { 1 2 }
+		equal { union list { } list { 1 2 } |sort } list { 1 2 }
+		equal { union list { } list { } } list { }
+	}
+
+	group "range" 
+	"Creates a block containing all integers from the start value to the end value, inclusive."
+	{
+		arg `start: Integer starting value (inclusive)`
+		arg `end: Integer ending value (inclusive)`
+		returns `a block containing all integers from start to end, inclusive`
+	}
+
+	{
+		equal { range 1 5 } { 1 2 3 4 5 }
+		equal { range 5 10 } { 5 6 7 8 9 10 }
+		equal { range -2 2 } { -2 -1 0 1 2 }
+	}
+
+	group "is-empty" 
+	"Checks if a collection is empty, returning 1 for empty collections and 0 otherwise."
+	{
+		arg `collection: String, block, dict, list, table, context or vector to check`
+		returns `integer 1 if the collection is empty, 0 otherwise`
+	}
+
+	{
+		equal { { } .is-empty } 1
+		equal { dict { } |is-empty } 1
+		equal { table { 'a 'b } { } |is-empty } 1
+		equal { "abc" .is-empty } 0
+		equal { { 1 2 3 } .is-empty } 0
+	}
+
+	group "length?" 
+	"Returns the number of elements in a collection."
+	{
+		arg `collection: String, block, dict, list, table, context or vector to measure`
+		returns `integer count of elements in the collection`
+	}
+
+	{
+		equal { { 1 2 3 } .length? } 3
+		equal { length? "abcd" } 4
+		equal { table { 'val } { 1 2 3 4 } |length? } 4
+		equal { vector { 10 20 30 } |length? } 3
+		equal { dict { "a" 1 "b" 2 } |length? } 2
+	}
+
+	group "keys" 
+	"Extracts the keys from a dictionary or column names from a table as a block."
+	{
+		arg `collection: Dict or table to extract keys from`
+		returns `block containing all keys from the dictionary or column names from the table`
+	}
+
+	{
+		equal { dict { "a" 1 "b" 2 "c" 3 } |keys |length? } 3
+		equal { table { "a" "b" "c" } { 1 2 3 } |keys |length? } 3
+		; TODO -- doesn't work yet, .header? also has the same problem -- equal { table { 'a 'b 'c } { 1 2 3 } |keys } { 'a 'b 'c }
+	}
+
+	group "_->" 
+	"Accesses a value in a collection by index or key (1-based indexing for blocks and lists)."
+	{
+		arg `collection: Block, list, dict or other indexable collection`
+		arg `index: Index or key to access`
+		returns `value at the specified index or key`
+	}
+
+	{
+		equal { { 23 34 45 } -> 1 } 34
+		equal { { "a" "b" "c" } -> 0 } "a"
+		equal { dict { "a" 1 "b" 2 } -> "b" } 2
+	}
+
+	group "_<-" 
+	"Accesses a value in a collection by index or key, with reversed argument order (0-based indexing for blocks and lists)."
+	{
+		arg `index: Index or key to access`
+		arg `collection: Block, list, dict or other indexable collection`
+		returns `value at the specified index or key`
+	}
+
+	{
+		equal { 0 <- { 23 34 45 } } 23
+		equal { 2 <- { "a" "b" "c" } } "c"
+		equal { "a" <- dict { "a" 1 "b" 2 } } 1
+	}
+
+	group "_<~" 
+	"Accesses a value in a collection by index with reversed argument order (1-based indexing)."
+	{
+		arg `index: Index to access (1-based)`
+		arg `collection: Block, list or other indexable collection`
+		returns `value at the specified index`
+	}
+
+	{
+		equal { 2 <~ { 23 34 45 } } 34
+		equal { 1 <~ { "a" "b" "c" } } "b"
+	}
+
+	group "_~>" 
+	"Accesses a value in a collection by index (0-based indexing)."
+	{
+		arg `collection: Block, list or other indexable collection`
+		arg `index: Index to access (0-based)`
+		returns `value at the specified index`
+	}
+
+	{
+		equal { { 23 34 45 } ~> 1 } 23
+		equal { { "a" "b" "c" } ~> 1 } "a"
+	}
+
+	group "intersection" 
+	"Finds the common elements between two collections, returning only values that appear in both."
+	{
+		arg `collection1: First string, block or list`
+		arg `collection2: Second string, block or list (same type as first)`
+		returns `a new collection containing only values that appear in both input collections`
+	}
+
+	{
+		equal { "abcd" .intersection "cde" } "cd"
+		equal { intersection { 1 2 3 4 } { 2 4 5 } } { 2 4 }
+		equal { intersection { 1 3 5 6 } { 2 3 4 5 } } { 3 5 }
+		equal { intersection { 1 2 3 } { } } {  }
+		equal { intersection { } { 2 3 4  } } { }
+		equal { intersection { 1 2 3 } { 4 5 6 } } { }
+		equal { intersection { } { } } { }
+		equal { intersection list { 1 3 5 6 } list { 2 3 4 5 } } list { 3 5 }
+		equal { intersection list { 1 2 3 } list { } } list {  }
+		equal { intersection list { } list { 2 3 4 } } list { }
+		equal { intersection list { 1 2 3 } list { 4 5 6 } } list { }
+		equal { intersection list { } list { } } list { }
+	}
+
+	group "intersection\by" 
+	"Finds the intersection of two collections using a custom comparison function to determine matching elements."
+	{
+		arg `collection1: First string or block`
+		arg `collection2: Second string or block`
+		arg `comparator: Function that takes two arguments and returns a truthy value if they should be considered matching`
+		returns `a new collection containing values from the first collection that match with values from the second collection according to the comparator`
+	}
+
+	{
+		equal { intersection\by "foobar" "fbx" fn { a b } { a .contains b } } "fb"
+		equal { intersection\by "fooBar" "Fbx" fn { a b } { a .to-lower .contains to-lower b } } "fB"
+		equal { intersection\by { "foo" 33 } { 33 33 } fn { a b } { a .contains b } } { 33 }
+		equal { intersection\by { "foo" "bar" 33 } { 42 } fn { a b } { map a { .type? } |contains b .type? } } { 33 }
+		equal { intersection\by { { "foo" x } { "bar" y } } { { "bar" z } } fn { a b } { map a { .first } |contains first b } } { { "bar" y } }
+	}
+
+	group "difference" 
+	"Creates a new collection containing elements from the first collection that are not present in the second collection."
+	{
+		arg `collection1: First string, block or list`
+		arg `collection2: Second string, block or list (same type as first)`
+		returns `a new collection containing values from the first collection that do not appear in the second collection`
+	}
+
+	{
+		equal { "abcde" .difference "cde" } "ab"
+		equal { difference { 1 2 3 4 } { 2 4 } } { 1 3 }
+		equal { difference list { "Bob" "Sal" "Joe" } list { "Joe" } } list { "Bob" "Sal" }
+		equal { difference "abc" "bc" } "a"
+		equal { difference "abc" "abc" } ""
+		equal { difference "abc" "" } "abc"
+		equal { difference "" "" } ""
+		equal { difference { 1 3 5 6 } { 2 3 4 5 } } { 1 6 }
+		equal { difference { 1 2 3 } {  } } { 1 2 3 }
+		equal { difference { } { 2 3 4  } } { }
+		equal { difference { } { } } { }
+		equal { difference list { 1 3 5 6 } list { 2 3 4 5 } } list { 1 6 }
+		equal { difference list { 1 2 3 } list {  } } list { 1 2 3 }
+		equal { difference list { } list { 2 3 4 } } list { }
+		equal { difference list { } list { } } list { }
+	}
+
+	group "transpose" 
+	"Transposes a matrix (block of blocks), converting rows to columns and columns to rows."
+	{
+		arg `matrix: Block of blocks representing a matrix`
+		returns `transposed matrix (rows become columns and columns become rows)`
+	}
+
+	{
+		equal { { { 1 2 3 } { 4 5 6 } } .transpose } { { 1 4 } { 2 5 } { 3 6 } }
+		equal { { { 1 4 } { 2 5 } { 3 6 } } .transpose } { { 1 2 3 } { 4 5 6 } }
+	}
+
+	group "remove-last!" 
+	"Removes the last element from a block in-place and returns the modified block."
+	{
+		arg `word: Word referring to a block to modify`
+		returns `the modified block with the last element removed`
+	}
+
+	{
+		equal { x: ref { 1 2 3 4 } remove-last! 'x x } { 1 2 3 }
+		equal { x: ref { 1 2 3 4 } remove-last! 'x } { 1 2 3 }
+	}
+
+	group "append!" 
+	"Appends a value to a block, list or string in-place and returns the modified collection."
+	{
+		arg `value: Value to append`
+		arg `word: Word referring to a block, list or string to modify`
+		returns `the modified collection with the value appended`
+	}
+
+	{
+		; TODO equal { x: ref { 1 2 3 } append! { 4 } x , x } { 1 2 3 4 }
+		equal { x: ref { 1 2 3 } append! 4 'x , x } { 1 2 3 4 }
+		equal { s: "hello" append! " world" 's , s } "hello world"
+	}
+
+	group "change\nth!" 
+	"Changes the value at a specific position in a block or list in-place and returns the modified collection."
+	{
+		arg `collection: Reference to a block or list to modify`
+		arg `position: Position of the element to change (1-based)`
+		arg `value: New value to set at the specified position`
+		returns `the modified collection with the value changed at the specified position`
+	}
+
+	{
+		equal { x: ref { 1 2 3 } change\nth! x 2 222 , x } { 1 222 3 }
+		equal { x: ref list { "a" "b" "c" } change\nth! x 1 "X" , x } list { "X" "b" "c" }
+	}
+
+	group "peek" 
+	"Returns the current value at a block's cursor position without advancing the cursor."
+	{
+		arg `block: Block to peek at`
+		returns `the current value at the block's cursor position without advancing the cursor`
+	}
+
+	{
+		equal { x: { 1 2 3 } peek x } 1
+	}
+
+	group "pop" 
+	"Returns the current value at a block's cursor position and advances the cursor."
+	{
+		arg `block: Block to pop from`
+		returns `the current value at the block's cursor position, advancing the cursor`
+	}
+
+	{
+		equal { x: { 1 2 3 } pop x } 1
+	}
+
+	group "pos" 
+	"Returns the current cursor position in a block."
+	{
+		arg `block: Block to get position from`
+		returns `the current cursor position in the block`
+	}
+
+	{
+		equal { x: { 1 2 3 } pos x } 0
+		equal { x: { 1 2 3 } next x pos x } 1
+	}
+
+	group "next" 
+	"Advances the cursor position in a block and returns the block."
+	{
+		arg `block: Block to advance cursor in`
+		returns `the block with its cursor advanced to the next position`
+	}
+
+	{
+		equal { x: { 1 2 3 } next x pos x } 1
+	}
+
+}
+
+section "Contexts " "Context related functions" {
+	group "raw-context" 
+	"Creates a completely isolated context with no parent, where only built-in functions are available."
+	{
+		arg `block: Block of expressions to evaluate in a new isolated context`
+		returns `context object with the values defined in the block`
+	}
+
+	{
+		equal { c: raw-context { x: 123 } c/x } 123
+		equal { y: 123 try { c: raw-context { x: y } } |type? } 'error ; word not found y
+		equal { try { c: raw-context { x: inc 10 } } |type? } 'error ; word not found inc
+	}
+
+	group "isolate" 
+	"Creates a context that can access the parent context during creation, but becomes isolated afterward."
+	{
+		arg `block: Block of expressions to evaluate in a temporary context`
+		returns `context object with the values defined in the block, but isolated from parent contexts`
+	}
+
+	{
+		equal { c: isolate { x: 123 } c/x } 123
+		equal { y: 123 c: isolate { x: y } c/x } 123
+		equal { c: isolate { x: inc 10 } c/x } 11
+		equal { y: 99 c: isolate { x: does { y } } try { c/x } |type? } 'error
+		equal { y: 99 c: isolate { t: ?try x: does { t { y } } } c/x |type? } 'error
+	}
+
+	group "context" 
+	"Creates a new context that maintains access to its parent context."
+	{
+		arg `block: Block of expressions to evaluate in a new context`
+		returns `context object with the values defined in the block and access to parent context`
+	}
+
+	{
+		equal { c: context { x: 123 } c/x } 123
+		equal { y: 123 c: context { x: y } c/x } 123
+		equal { c: context { x: inc 10 } c/x } 11
+		equal { y: 123 c: context { x: does { y } } c/x } 123
+	}
+
+	group "private" 
+	"Creates a temporary private context for evaluating expressions, returning the last value instead of the context."
+	{
+		arg `block: Block of expressions to evaluate in a private context`
+		returns `the last value from evaluating the block (not the context itself)`
+	}
+
+	{
+		equal { private { x: 123 } } 123
+		equal { y: 123 private { x: y } } 123
+		equal { private { x: inc 10 } } 11
+		equal { y: 123 private { does { y } } :f f } 123
+	}
+
+	group "private\" 
+	"Creates a documented private context for evaluating expressions, returning the last value instead of the context."
+	{
+		arg `doc: String containing documentation for the context`
+		arg `block: Block of expressions to evaluate in a private context`
+		returns `the last value from evaluating the block (not the context itself)`
+	}
+
+	{
+		equal { private\ "what are we doing here" { x: 234 1000 + x } } 1234
+	}
+
+	group "extends" 
+	"Creates a new context that inherits from a specified parent context."
+	{
+		arg `parent: Context object to extend`
+		arg `block: Block of expressions to evaluate in the new context`
+		returns `new context object that inherits from the parent context`
+	}
+
+	{
+		equal { ct: context { p: 123 } cn: extends ct { r: p + 234 } cn/r } 357
+		error { ct: context { p: 123 } cn: extends ct { r: p + 234 } cn/r |type? }
+	}
+
+	group "bind!" 
+	"Binds a context to a parent context, allowing it to access the parent's values."
+	{
+		arg `child: Context object to be bound`
+		arg `parent: Context object to bind to as parent`
+		returns `the modified child context with its parent set to the specified parent context`
+	}
+
+	{
+		equal { c: context { y: 123 } cc: bind! context { z: does { y + 234 } } c , cc/z } 357
+	}
+
+	group "unbind" 
+	"Removes the parent relationship from a context, making it a standalone context."
+	{
+		arg `ctx: Context object to unbind from its parent`
+		returns `the modified context with no parent`
+	}
+
+	{
+		equal { c: context { y: 123 } cc: bind! context { z: does { y + 234 } } c , unbind cc cc/z } 357
+		error { c: context { y: 123 } cc: bind! context { z: does { y + 234 } } c , dd: unbind cc dd/z }
+	}
+
+}
+
+section "Functions " "functions that create functions" {
+	group "does" 
+	"Creates a function with no arguments that executes the given block when called."
+	{
+		arg `body: Block containing the function body code`
+		returns `function object with no parameters`
+	}
+
+	{
+		equal { does { 123 } |type? } 'function
+		equal { x: does { 123 } x } 123
+		equal { x: does { 1 + 2 } x } 3
+	}
+
+	group "fn1" 
+	"Creates a function that accepts one anonymous argument and executes the given block with that argument."
+	{
+		arg `body: Block containing the function body code`
+		returns `function object that accepts one anonymous argument`
+	}
+
+	{
+		equal { fn1 { .pass { } } |type? } 'function
+		equal { x: fn1 { } , x 123 } 123
+		equal { x: fn1 { .pass { } } , x 123 } 123
+		equal { x: fn1 { + 1 } , x 123 } 124
+	}
+
+	group "fn" 
+	"Creates a function with named parameters specified in the first block and code in the second block."
+	{
+		arg `spec: Block containing parameter specifications`
+		arg `body: Block containing the function body code`
+		returns `function object with the specified parameters`
+	}
+
+	{
+		equal { fn { } { } |type? } 'function
+		equal { x: fn { } { 234 } , x } 234
+		equal { x: fn { x } { x } , x 123 } 123
+		equal { x: fn { x } { + 123 } , x 123 } 246
+	}
+
+	group "pfn" 
+	"Creates a pure function (no side effects allowed) with named parameters and code body."
+	{
+		arg `spec: Block containing parameter specifications`
+		arg `body: Block containing the function body code`
+		returns `pure function object with the specified parameters`
+	}
+
+	{
+		equal { pfn { } { } |type? } 'function
+		equal { x: pfn { x } { + 123 } , x 123 } 246
+		error { x: pfn { x } { .print } , x 123 }
+	}
+
+	group "fn\cc" 
+	"Creates a function that captures the current context, allowing access to variables from the enclosing scope."
+	{
+		arg `spec: Block containing parameter specifications`
+		arg `body: Block containing the function body code`
+		returns `function object with the current context captured`
+	}
+
+	{
+		equal { fn\cc { x } { x + y } |type? } 'function
+		equal { y: 5 , f: fn\cc { x } { x + y } , f 3 } 8
+	}
+
+	group "fn\par" 
+	"Creates a function with a specified parent context, allowing access to variables from that context."
+	{
+		arg `spec: Block containing parameter specifications`
+		arg `context: Context object to use as parent context`
+		arg `body: Block containing the function body code`
+		returns `function object with the specified parent context`
+	}
+
+	{
+		equal { ctx: context { y: 5 } , f: fn\par { x } ctx { x + y } , f 3 } 8
+	}
+
+	group "fn\in" 
+	"Creates a function that executes directly in the specified context rather than creating a new execution context."
+	{
+		arg `spec: Block containing parameter specifications`
+		arg `context: Context object to execute the function in`
+		arg `body: Block containing the function body code`
+		returns `function object that executes directly in the specified context`
+	}
+
+	{
+		equal { ctx: context { y: 5 } , f: fn\in { x } ctx { x + y } , f 3 } 8
+	}
+
+	group "closure" 
+	"Creates a closure that captures the current context at creation time, preserving access to variables in that scope."
+	{
+		arg `spec: Block containing parameter specifications`
+		arg `body: Block containing the function body code`
+		returns `function object that captures the current context at creation time`
+	}
+
+	{
+		equal { y: 5 , f: closure { x } { x + y } , f 3 } 8
 	}
 
 }

@@ -53,6 +53,7 @@ const (
 	PipeCPathType Type = 37
 	ModwordType   Type = 38
 	LModwordType  Type = 39
+	BooleanType   Type = 40
 )
 
 // after adding new type here, also add string to idxs.go
@@ -89,15 +90,55 @@ type Mapping interface {
 
 // CONCRETE TYPES
 
-func NewBoolean(val bool) *Integer {
-	var ret int64
-	if val {
-		ret = 1
-	} else {
-		ret = 0
-	}
-	nat := Integer{ret}
+func NewBoolean(val bool) *Boolean {
+	nat := Boolean{val}
 	return &nat
+}
+
+//
+// BOOLEAN
+//
+
+type Boolean struct {
+	Value bool
+}
+
+func (i Boolean) Type() Type {
+	return BooleanType
+}
+
+func (i Boolean) Inspect(e Idxs) string {
+	return "[Boolean: " + i.Print(e) + "]"
+}
+
+func (i Boolean) Print(e Idxs) string {
+	if i.Value {
+		return "true"
+	}
+	return "false"
+}
+
+func (i Boolean) Trace(msg string) {
+	fmt.Print(msg + "(boolean): ")
+	fmt.Println(i.Value)
+}
+
+func (i Boolean) GetKind() int {
+	return int(BooleanType)
+}
+
+func (i Boolean) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	return i.Value == o.(Boolean).Value
+}
+
+func (i Boolean) Dump(e Idxs) string {
+	if i.Value {
+		return "true"
+	}
+	return "false"
 }
 
 //
@@ -1997,6 +2038,8 @@ func RyeToRaw(res Object, idx *Idxs) any { // TODO -- MOVE TO UTIL ... provide r
 	case Decimal:
 		return v.Value
 		// return strconv.Itoa(int(v.Value))
+	case Boolean:
+		return v.Value
 	case Word:
 		return "word"
 	case Block:
@@ -2025,6 +2068,8 @@ func NewListFromSeries(block TSeries) List {
 			data[i] = k.Value
 		case Decimal:
 			data[i] = k.Value
+		case Boolean:
+			data[i] = k.Value
 		case List:
 			data[i] = k
 		case Dict:
@@ -2044,6 +2089,8 @@ func NewBlockFromList(list List) TSeries {
 			data[i] = *NewInteger(k)
 		case float64:
 			data[i] = *NewDecimal(k)
+		case bool:
+			data[i] = *NewBoolean(k)
 		case List:
 			data[i] = *NewString("not handeled 3") // TODO -- just temp result
 		}
