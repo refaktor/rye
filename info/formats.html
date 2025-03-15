@@ -136,10 +136,6 @@
 ; returns dict { a "e@ma.il" }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: "e@ma.il" } { a: required email } |-&gt; "a" |type?
 ; returns string</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: "30.12.2024" } { a: required date }
-; returns dict { a 2024-12-30 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: "2024-12-30" } { a: required date }
-; returns dict { a 2024-12-30 }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: "2024-12-30" } { a: required date } |-&gt; "a" |type?
 ; returns date</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: 5 } { a: required integer check { &lt; 10 } }
@@ -184,8 +180,6 @@
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>list { 1 2 3 } |to-json
 ; returns "[1, 2, 3] "</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>dict { a: 1 b: 2 c: 3 } |to-json
-; returns "{"a": 1, "b": 2, "c": 3} "</code></pre>
 </div>
 <h3>to-json\lines</h3><p>Converts a table to JSON with each row on a separate line.</p>
 <p class='arg'><b>table</b> table value to encode</p>
@@ -296,9 +290,6 @@
 <p class='arg'><b>element</b> HTML token element</p>
 <p class='returns'><b>returns</b> string name of the HTML element</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>"&lt;div&gt;&lt;/div&gt;" |reader .parse-html { &lt;div&gt; [ .name? |print ] }
-; prints "div
-; "</code></pre>
 </div>
 </div>
 </main>

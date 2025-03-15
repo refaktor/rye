@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	// "github.com/eiannone/keyboard"
 	"github.com/refaktor/keyboard"
@@ -17,7 +18,6 @@ import (
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/loader"
 	"github.com/refaktor/rye/term"
-	"github.com/refaktor/rye/util"
 )
 
 var (
@@ -193,9 +193,64 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 		es.LiveObj.PsMutex.Unlock()
 	}
 
-	// if last character is space is turns to multiline more and doesn't eval yet, but we
-	// want to move this to microliner, so we can edit multiple lines there
-	multiline := len(code) > 1 && code[len(code)-1:] == " "
+	// More robust multiline input detection
+	// Check for explicit multiline indicators or incomplete syntax
+	multiline := false
+
+	// 1. Check for explicit continuation character at the end (backslash)
+	if len(code) > 0 && strings.HasSuffix(strings.TrimSpace(code), "\\") {
+		multiline = true
+		// Remove the continuation character for processing
+		code = strings.TrimSuffix(strings.TrimSpace(code), "\\")
+	}
+
+	// 2. Check for unbalanced brackets/braces/parentheses
+	if !multiline {
+		openBraces := 0
+		openBrackets := 0
+		openParens := 0
+		inString := false
+		stringChar := ' '
+
+		for _, char := range code {
+			// Handle string literals to avoid counting brackets inside strings
+			if (char == '"' || char == '`') && (stringChar == ' ' || stringChar == char) {
+				if !inString {
+					inString = true
+					stringChar = char
+				} else {
+					inString = false
+					stringChar = ' '
+				}
+				continue
+			}
+
+			if !inString {
+				switch char {
+				case '{':
+					openBraces++
+				case '}':
+					openBraces--
+				case '[':
+					openBrackets++
+				case ']':
+					openBrackets--
+				case '(':
+					openParens++
+				case ')':
+					openParens--
+				}
+			}
+		}
+
+		// If any delimiters are unbalanced, consider it multiline
+		multiline = openBraces > 0 || openBrackets > 0 || openParens > 0
+	}
+
+	// 3. Check for incomplete block definitions that end with a colon
+	if !multiline && strings.HasSuffix(strings.TrimSpace(code), ":") {
+		multiline = true
+	}
 
 	comment := regexp.MustCompile(`\s*;`)
 	line := comment.Split(code, 2) //--- just very temporary solution for some comments in repl. Later should probably be part of loader ... maybe?
@@ -208,6 +263,14 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 		r.fullCode += lineReal
 
 		block, genv := loader.LoadString(r.fullCode, false)
+
+		// Check if the result is an error
+		if err, isError := block.(env.Error); isError {
+			fmt.Println("\033[31mParsing error: " + err.Message + "\033[0m")
+			r.fullCode = ""
+			return ""
+		}
+
 		block1 := block.(env.Block)
 		es = env.AddToProgramState(es, block1.Series, genv)
 
@@ -375,11 +438,19 @@ func isCursorAtBottom() bool { // TODO --- doesn't seem to work and probably don
 }
 
 func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here because of some odd options we were experimentally adding
+	// Improved error handling for keyboard initialization
 	err := keyboard.Open()
 	if err != nil {
-		fmt.Println(err)
+		log.Printf("Failed to initialize keyboard: %v", err)
 		return
 	}
+	// Ensure keyboard is closed when function exits
+	defer func() {
+		fmt.Println("Closing keyboard...")
+		if err := keyboard.Close(); err != nil {
+			log.Printf("Error closing keyboard: %v", err)
+		}
+	}()
 
 	c := make(chan term.KeyEvent)
 	r := Repl{
@@ -391,12 +462,18 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 	ml := term.NewMicroLiner(c, r.recieveMessage, r.recieveLine)
 	r.ml = ml
 
-	if f, err := os.Open(history_fn); err == nil {
-		if _, err := ml.ReadHistory(f); err != nil {
-			log.Print("Error reading history file: ", err)
+	// Improved error handling for history file operations
+	f, err := os.Open(history_fn)
+	if err != nil {
+		log.Printf("Could not open history file: %v", err)
+	} else {
+		defer f.Close() // Ensure file is closed even if ReadHistory panics
+
+		if count, err := ml.ReadHistory(f); err != nil {
+			log.Printf("Error reading history file: %v", err)
+		} else {
+			fmt.Printf("Read %d history entries\n", count)
 		}
-		fmt.Println("Read history")
-		f.Close()
 	}
 
 	ml.SetCompleter(func(line string, mode int) (c []string) {
@@ -483,70 +560,74 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 		return
 	})
 
-	ctx, cancel := context.WithCancel(context.Background())
-
-	defer func() {
-		fmt.Println("Closing keyboard ...")
-		keyboard.Close()
-	}()
-
+	// Create context with timeout to prevent potential deadlocks
+	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Hour)
 	defer cancel()
 
-	// ctx := context.Background()
-	// defer os.Exit(0)
-	// defer ctx.Done()
+	// Improved error handling for keyboard events
 	go func(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
-				fmt.Println("Done Signaled")
+				fmt.Println("Context done, keyboard handler exiting")
 				return
 			default:
-				// fmt.Println("Select default")
 				r, k, keyErr := keyboard.GetKey()
-				if err != nil {
-					fmt.Println(keyErr)
-					break
+				if keyErr != nil {
+					log.Printf("Keyboard error: %v", keyErr)
+					// Don't break on transient errors, just continue
+					continue
 				}
-				if k == keyboard.KeyCtrlC && false {
-					fmt.Println("Keyboard Ctrl+C in REPL detected. Calcel called.")
-					cancel()
-					err1 := util.KillProcess(os.Getpid())
-					// err1 := syscall.Kill(os.Getpid(), syscall.SIGINT)
-					if err1 != nil {
-						fmt.Println(err.Error()) // TODO -- temprorary just printed
-					}
-					//ctx.Done()
-					// fmt.Println("")
-					// return
-					//break
-					//					os.Exit(0)
+
+				if k == keyboard.KeyCtrlC {
+					// Handle Ctrl+C properly
+					fmt.Println("\nKeyboard Ctrl+C in REPL detected. Use Ctrl-D to Exit.")
+					// cancel()
+
+					// Try to kill the process gracefully
+					// err := util.KillProcess(os.Getpid())
+					// if err != nil {
+					//	log.Printf("Error killing process: %v", err)
+					// }
+					//return
 				}
-				c <- constructKeyEvent(r, k)
+
+				// Send the key event to the channel
+				select {
+				case c <- constructKeyEvent(r, k):
+					// Key event sent successfully
+				case <-ctx.Done():
+					// Context was cancelled while trying to send
+					return
+				}
 			}
 		}
 	}(ctx)
 
+	// Improved error handling for saving history
 	defer func() {
-		// TODO -- make it save hist
-		if f, err := os.Create(history_fn); err != nil {
-			fmt.Println("Error writing history file: ", err)
-		} else {
-			if _, err := ml.WriteHistory(f); err != nil {
-				fmt.Println("Error writing history file: ", err)
-			}
-			f.Close()
+		f, err := os.Create(history_fn)
+		if err != nil {
+			log.Printf("Error creating history file: %v", err)
+			return
 		}
-		fmt.Println("Wrote history ...")
+		defer f.Close() // Ensure file is closed even if WriteHistory panics
+
+		count, err := ml.WriteHistory(f)
+		if err != nil {
+			log.Printf("Error writing history file: %v", err)
+		} else {
+			fmt.Printf("Wrote %d history entries\n", count)
+		}
 	}()
 
-	// fmt.Println("MICRO")
+	// Run the REPL with improved error handling
 	_, err = ml.MicroPrompt("x> ", "", 0, ctx)
 	if err != nil {
-		fmt.Println(err)
+		log.Printf("MicroPrompt error: %v", err)
 	}
-	fmt.Println("End of Function in REPL ...")
 
+	fmt.Println("End of Function in REPL...")
 }
 
 /*  THIS WAS DISABLED TEMP FOR WASM MODE .. 20250116 func DoGeneralInput(es *env.ProgramState, prompt string) {

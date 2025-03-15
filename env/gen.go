@@ -32,10 +32,14 @@ func (e *Gen) Print(idxs Idxs) {
 }
 
 func (e *Gen) Get(kind int, word int) (Object, bool) {
-	obj, exists := e.dict[kind][word]
-	// since here is no parent ... this lookup could be faster maybe ... that parent lookup was taking a lot of time
-	// in Env
-	return obj, exists
+	// Check if the kind exists in the dictionary
+	if kindMap, ok := e.dict[kind]; ok {
+		// If kind exists, check if the word exists in that kind's map
+		obj, exists := kindMap[word]
+		return obj, exists
+	}
+	// Kind doesn't exist
+	return nil, false
 }
 
 func (e *Gen) Set(kind int, word int, val Object) Object {
@@ -55,13 +59,18 @@ func (e *Gen) GetKinds() map[int]int {
 }
 
 func (e *Gen) GetMethods(kind int) []int {
-	meths := make([]int, len(e.dict[kind]))
-	i := 0
-	for k := range e.dict[kind] {
-		meths[i] = k
-		i++
+	// Check if the kind exists in the dictionary
+	if kindMap, ok := e.dict[kind]; ok {
+		meths := make([]int, len(kindMap))
+		i := 0
+		for k := range kindMap {
+			meths[i] = k
+			i++
+		}
+		return meths
 	}
-	return meths
+	// Kind doesn't exist, return empty slice
+	return []int{}
 }
 
 func (e Gen) PreviewKinds(idxs Idxs, filter string) string {
@@ -90,14 +99,19 @@ func (e Gen) PreviewMethods(idxs Idxs, kind int, filter string) string {
 	var bu strings.Builder
 	bu.WriteString("Methods (" + idxs.GetWord(kind) + "):")
 	arr := make([]string, 0)
-	for k, v := range e.dict[kind] {
-		str1 := idxs.GetWord(k)
-		if strings.Contains(str1, filter) {
-			color := color_word2
-			// arr = append(arr, reset+color+str1+reset)                                 // idxs.GetWord(v.GetKind()
-			arr = append(arr, color+str1+" "+reset+color_comment+v.Inspect(idxs)+reset) // idxs.GetWord(v.GetKind()
+
+	// Check if the kind exists in the dictionary
+	if kindMap, ok := e.dict[kind]; ok {
+		for k, v := range kindMap {
+			str1 := idxs.GetWord(k)
+			if strings.Contains(str1, filter) {
+				color := color_word2
+				// arr = append(arr, reset+color+str1+reset)                                 // idxs.GetWord(v.GetKind()
+				arr = append(arr, color+str1+" "+reset+color_comment+v.Inspect(idxs)+reset) // idxs.GetWord(v.GetKind()
+			}
 		}
 	}
+
 	sort.Strings(arr)
 	for aa := range arr {
 		line := arr[aa]

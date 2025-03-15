@@ -37,12 +37,17 @@ func IndexOfSlice(ps *env.ProgramState, slice []env.Object, value env.Object) in
 	return -1 // not found
 }
 
+// As suggested by hostile fork ... only real false should break the any all blocks
+// so we don't get to problems where numbers pass but certain number doesn't
+// and if we want to break we have to be specific in expression all { not is-zero? x  not is-empty? s }
 func IsTruthy(o env.Object) bool {
 	switch oo := o.(type) {
+	case env.Boolean:
+		return oo.Value
 	case env.Integer:
-		return oo.Value > 0
+		return true
 	case env.String:
-		return len(oo.Value) > 0
+		return true
 	default:
 		return false
 	}
@@ -53,12 +58,16 @@ func Dict2Context(ps *env.ProgramState, s1 env.Dict) env.RyeCtx {
 	for k, v := range s1.Data {
 		word := ps.Idx.IndexWord(k)
 		switch v1 := v.(type) {
+		case env.Boolean:
+			ctx.Set(word, v1)
 		case env.Integer:
 			ctx.Set(word, v1)
 		case env.String:
 			ctx.Set(word, v1)
 		case string:
 			ctx.Set(word, *env.NewString(v1))
+		case bool:
+			ctx.Set(word, *env.NewBoolean(v1))
 		}
 	}
 	return *ctx

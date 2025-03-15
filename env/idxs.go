@@ -51,6 +51,7 @@ var NativeTypes = [...]string{ // Todo change to BuiltinTypes
 	"PipeCPath",
 	"Modword",
 	"LModword",
+	"Boolean",
 }
 
 func (e *Idxs) IndexWord(w string) int {

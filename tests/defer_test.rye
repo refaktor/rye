@@ -1,0 +1,49 @@
+; Test defer functionality
+
+; Basic test - defer should execute after function returns
+test-defer-basic: fn { } {
+    x: 0
+    defer { x:: 1 }
+    return x
+}
+
+; Test multiple defers - should execute in LIFO order
+test-defer-multiple: fn { } {
+    x: ""
+    defer { x:: x + "1" }
+    defer { x:: x + "2" }
+    defer { x:: x + "3" }
+    return x
+}
+
+; Test defer in nested functions
+test-defer-nested: fn { } {
+    x: 0
+    inner: fn { } {
+        defer { x:: x + 10 }
+        return 5
+    }
+    defer { x:: x + 1 }
+    inner
+    return x
+}
+
+; Run tests
+print "Running defer tests..."
+
+print "Test 1: Basic defer"
+result: test-defer-basic
+print "Result should be 0 (before defer): " result
+print "x should be 1 (after defer): " x
+
+print "Test 2: Multiple defers (LIFO order)"
+result: test-defer-multiple
+print "Result should be empty string (before defers): " result
+print "x should be '321' (after defers in LIFO order): " x
+
+print "Test 3: Nested defers"
+result: test-defer-nested
+print "Result should be 0 (before defers): " result
+print "x should be 11 (after both defers): " x
+
+print "All tests completed."

@@ -55,13 +55,20 @@ func checkCodeSignature(content string) int {
 	}
 
 	signature := parts[1]
-	// fmt.Println(content)
-	// fmt.Println(signature)
-	// fmt.Println(strings.Index(signature, ";#codesig "))
 	sig := strings.TrimSpace(signature)
-	bsig, _ := hex.DecodeString(sig)
+	bsig, err := hex.DecodeString(sig)
+	if err != nil {
+		fmt.Println("\x1b[33m" + "Invalid signature format: " + err.Error() + "\x1b[0m")
+		return -2
+	}
+
 	// ba8eaa125ee3c8abfc98d8b2b7e5d900bfec0073b701e5c3ca9187a39508b2f1827ba5f0904227678bf33446abbca8bf6a3a5333815920741eb475582a4c31dd privk
-	puk, _ := hex.DecodeString("827ba5f0904227678bf33446abbca8bf6a3a5333815920741eb475582a4c31dd") // pubk
+	puk, err := hex.DecodeString("827ba5f0904227678bf33446abbca8bf6a3a5333815920741eb475582a4c31dd") // pubk
+	if err != nil {
+		fmt.Println("\x1b[33m" + "Invalid public key format: " + err.Error() + "\x1b[0m")
+		return -2
+	}
+
 	bbpuk := ed25519.PublicKey(puk)
 	if !ed25519.Verify(bbpuk, []byte(content), bsig) {
 		fmt.Println("\x1b[33m" + "Rye signature is not valid! Exiting." + "\x1b[0m")
@@ -74,12 +81,15 @@ func LoadString(input string, sig bool) (env.Object, *env.Idxs) {
 	//fmt.Println(input)
 
 	InitIndex()
+	wordIndexMutex.Lock()
+	defer wordIndexMutex.Unlock()
+
 	if sig {
 		signed := checkCodeSignature(input)
 		if signed == -1 {
-			return env.NewError(""), wordIndex
+			return *env.NewError("Signature not found"), wordIndex
 		} else if signed == -2 {
-			return env.NewError(""), wordIndex
+			return *env.NewError("Invalid signature"), wordIndex
 		}
 	}
 
@@ -89,22 +99,14 @@ func LoadString(input string, sig bool) (env.Object, *env.Idxs) {
 	if len(inp1) == 0 || strings.Index("{", inp1) != 0 {
 		input = "{ " + input + " }"
 	}
-	// fmt.Println("input")
-	// fmt.Print(input)
-	// fmt.Println("input")
+
 	parser := newParser()
 	val, err := parser.ParseAndGetValue(input, nil)
 
 	if err != nil {
-		fmt.Print("\x1b[35;3m")
+		// Create a proper error object with the error message instead of just printing
 		errStr := err.Error()
-		fmt.Print(errStr)
-		fmt.Println("\x1b[0m")
-		fmt.Print("\r")
-
-		empty1 := make([]env.Object, 0)
-		ser := env.NewTSeries(empty1)
-		return *env.NewBlock(*ser), wordIndex
+		return *env.NewError(errStr), wordIndex
 	}
 
 	//InspectNode(val)
@@ -121,9 +123,9 @@ func LoadStringNEW(input string, sig bool, ps *env.ProgramState) env.Object {
 	if sig {
 		signed := checkCodeSignature(input)
 		if signed == -1 {
-			return env.NewError("Sig err: 1")
+			return *env.NewError("Signature not found")
 		} else if signed == -2 {
-			return env.NewError("Sig err: 2")
+			return *env.NewError("Invalid signature")
 		}
 	}
 
@@ -149,10 +151,7 @@ func LoadStringNEW(input string, sig bool, ps *env.ProgramState) env.Object {
 		bu.WriteString(errStr)
 
 		ps.FailureFlag = true
-		return env.NewError(bu.String())
-		// empty1 := make([]env.Object, 0)
-		// ser := env.NewTSeries(empty1)
-		// return *env.NewBlock(*ser)
+		return *env.NewError(bu.String())
 	}
 
 	if val != nil {
@@ -233,23 +232,29 @@ func parseGroup(v *Values, d Any) (Any, error) {
 }
 
 func parseNumber(v *Values, d Any) (Any, error) {
-	val, er := strconv.ParseInt(v.Token(), 10, 64)
-	return *env.NewInteger(val), er
+	val, err := strconv.ParseInt(v.Token(), 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("invalid number format: %s", err.Error())
+	}
+	return *env.NewInteger(val), nil
 }
 
 func parseDecimal(v *Values, d Any) (Any, error) {
-	val, er := strconv.ParseFloat(v.Token(), 64)
-	return *env.NewDecimal(val), er
+	val, err := strconv.ParseFloat(v.Token(), 64)
+	if err != nil {
+		return nil, fmt.Errorf("invalid decimal format: %s", err.Error())
+	}
+	return *env.NewDecimal(val), nil
 }
 
 func parseString(v *Values, d Any) (Any, error) {
 	str := v.Token()[1 : len(v.Token())-1]
-	// turn \n to newlines
+	// Process escape sequences
 	str = strings.Replace(str, "\\n", "\n", -1)
-	//str = strings.Replace(str, "\\r", "\r", -1)
-	//str = strings.Replace(str, "\\t", "\t", -1)
-	//str = strings.Replace(str, "\\\"", "\"", -1)
-	//str = strings.Replace(str, "\\\\", "\\", -1)
+	str = strings.Replace(str, "\\r", "\r", -1)
+	str = strings.Replace(str, "\\t", "\t", -1)
+	str = strings.Replace(str, "\\\"", "\"", -1)
+	str = strings.Replace(str, "\\\\", "\\", -1)
 	return *env.NewString(str), nil
 }
 

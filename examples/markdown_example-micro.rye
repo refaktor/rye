@@ -1,0 +1,31 @@
+`# Sample Markdown Document
+
+This is a paragraph.
+
+## Code Example
+
+    func main() {
+        fmt.Println("Hello, World!")
+    }
+
+` :md
+
+print "--Convert markdown to HTML--"
+md .markdown->html |print
+
+print "--Process markdown--"
+md .reader .do-markdown {
+    ; Handle headings
+    h1 [ .concat* "Heading 1: " |print ]
+    h2 [ .concat* "Heading 2: " |print ]
+    
+    ; Handle paragraphs
+    paragraph [ .concat* "Paragraph: " |print ]
+    
+    ; Handle code blocks
+    code [ .concat* "Code: " |print ]
+}
+
+
+
+

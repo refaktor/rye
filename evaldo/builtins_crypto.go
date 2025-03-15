@@ -68,9 +68,9 @@ verify buffer pubk sigb
 var Builtins_crypto = map[string]*env.Builtin{
 
 	// Tests:
-	//  equal { "48656c6c6f20776f726c64" |decode\hex |type? } 'native
-	//  equal { "48656c6c6f20776f726c64" |decode\hex |kind? } 'bytes
-	//  equal { "invalid" |decode\hex |disarm |type? } 'error
+	//  equal { cc crypto "48656c6c6f20776f726c64" |decode\hex |type? } 'native
+	//  equal { cc crypto "48656c6c6f20776f726c64" |decode\hex |kind? } 'bytes
+	//  equal { cc crypto "invalid" |decode\hex |disarm |type? } 'error
 	// Args:
 	// * hex-string: hexadecimal encoded string to decode
 	// Returns:
@@ -95,13 +95,13 @@ var Builtins_crypto = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	//  equal { "48656c6c6f20776f726c64" |decode\hex |encode\hex } "48656c6c6f20776f726c64"
-	//  equal { "Hello world" |sha512 |decode\hex |encode\hex |type? } 'string
+	//  equal { cc crypto "48656c6c6f20776f726c64" |decode\hex |encode-to\hex } "48656c6c6f20776f726c64"
+	//  equal { cc crypto "Hello world" |sha512 |decode\hex |encode-to\hex |type? } 'string
 	// Args:
 	// * bytes: native bytes object to encode
 	// Returns:
 	// * string containing the hexadecimal representation of the bytes
-	"encode\\hex": {
+	"encode-to\\hex": {
 		Argsn: 1,
 		Doc:   "Encodes a bytes native value to a hexadecimal string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -116,7 +116,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	//  equal { ed25519-generate-keys |first |to-string |type? } 'string
+	//  equal { cc crypto ed25519-generate-keys |first |to-string |type? } 'string
 	// Args:
 	// * key: Ed25519 public key as a native value
 	// Returns:
@@ -136,7 +136,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	//  equal { ed25519-generate-keys |second |to-string |type? } 'string
+	//  equal { cc crypto ed25519-generate-keys |second |to-string |type? } 'string
 	// Args:
 	// * key: Ed25519 private key as a native value
 	// Returns:
@@ -156,12 +156,12 @@ var Builtins_crypto = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	//  equal { ed25519-generate-keys |type? } 'block
-	//  equal { ed25519-generate-keys |length? } 2
-	//  equal { ed25519-generate-keys |first |type? } 'native
-	//  equal { ed25519-generate-keys |first |kind? } 'Ed25519-pub-key
-	//  equal { ed25519-generate-keys |second |type? } 'native
-	//  equal { ed25519-generate-keys |second |kind? } 'Ed25519-priv-key
+	//  equal { cc crypto ed25519-generate-keys |type? } 'block
+	//  equal { cc crypto ed25519-generate-keys |length? } 2
+	//  equal { cc crypto ed25519-generate-keys |first |type? } 'native
+	//  equal { cc crypto ed25519-generate-keys |first |kind? } 'Ed25519-pub-key
+	//  equal { cc crypto ed25519-generate-keys |second |type? } 'native
+	//  equal { cc crypto ed25519-generate-keys |second |kind? } 'Ed25519-priv-key
 	// Args:
 	// * none
 	// Returns:
@@ -184,9 +184,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	//  ; equal { ed25519-generate-keys |second |ed25519-private-key |type? } 'native
-	//  ; equal { ed25519-generate-keys |second |to-string |probe |ed25519-private-key |kind? } 'Ed25519-priv-key
-	//  equal { "invalid" |ed25519-private-key |disarm |type? } 'error
+	//  ; equal { cc crypto ed25519-generate-keys |second |ed25519-private-key |type? } 'native
+	//  ; equal { cc crypto ed25519-generate-keys |second |to-string |probe |ed25519-private-key |kind? } 'Ed25519-priv-key
+	//  equal { cc crypto "invalid" |ed25519-private-key |disarm |type? } 'error
 	// Args:
 	// * key-data: string containing hexadecimal representation of the key or bytes native value
 	// Returns:
@@ -216,9 +216,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	//  ; equal { ed25519-generate-keys |first |to-string |ed25519-public-key |type? } 'native
-	//  ; equal { ed25519-generate-keys |first |to-string |ed25519-public-key |kind? } 'Ed25519-pub-key
-	//  equal { "invalid" |ed25519-public-key |disarm |type? } 'error
+	//  ; equal { cc crypto ed25519-generate-keys |first |to-string |ed25519-public-key |type? } 'native
+	//  ; equal { cc crypto ed25519-generate-keys |first |to-string |ed25519-public-key |kind? } 'Ed25519-pub-key
+	//  equal { cc crypto "invalid" |ed25519-public-key |disarm |type? } 'error
 	// Args:
 	// * key-data: string containing hexadecimal representation of the key or bytes native value
 	// Returns:
@@ -248,11 +248,11 @@ var Builtins_crypto = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	//  ; equal {
+	//  ; equal { cc crypto
 	//  ;   ed25519-generate-keys |set! { pub priv }
 	//  ;   "Hello world" priv |sign |type?
 	//  ; } 'native
-	//  ; equal {
+	//  ; equal { cc crypto
 	//  ;   ed25519-generate-keys |set! { pub priv }
 	//  ;  "Hello world" priv |sign |kind?
 	//  ; } 'bytes
@@ -283,9 +283,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	//  equal { "Hello world" |sha512 |type? } 'string
-	//  equal { "Hello world" |sha512 |length? } 128
-	//  equal { "" |sha512 } "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e"
+	//  equal { cc crypto "Hello world" |sha512 |type? } 'string
+	//  equal { cc crypto "Hello world" |sha512 |length? } 128
+	//  equal { cc crypto "" |sha512 } "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e"
 	// Args:
 	// * input: string to hash
 	// Returns:
@@ -311,10 +311,10 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// ##### Age ##### "Age encryption/decryption and key generation"
 	//
 	// Tests:
-	// equal { age-generate-keys |first |type? } 'native
-	// equal { age-generate-keys |first |kind? } 'age-identity
-	// equal { age-generate-keys |second |type? } 'native
-	// equal { age-generate-keys |second |kind? } 'age-recipient
+	// equal { cc crypto age-generate-keys |first |type? } 'native
+	// equal { cc crypto age-generate-keys |first |kind? } 'age-identity
+	// equal { cc crypto age-generate-keys |second |type? } 'native
+	// equal { cc crypto age-generate-keys |second |kind? } 'age-recipient
 	"age-generate-keys": {
 		Argsn: 0,
 		Doc:   "Generates a new age key pair (identity and recipient).",
@@ -333,9 +333,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { age-identity "AGE-SECRET-KEY-1UMNMNLE5ADV4V0X8LRMG4GVWM3WJ7GVH6JP3J2XSRDFENLJVVX4SDLWXML" |type? } 'native
-	// equal { age-identity "AGE-SECRET-KEY-1UMNMNLE5ADV4V0X8LRMG4GVWM3WJ7GVH6JP3J2XSRDFENLJVVX4SDLWXML" |kind? } 'age-identity
-	// equal { age-identity "invalid" |disarm |type? } 'error
+	// equal { cc crypto age-identity "AGE-SECRET-KEY-1UMNMNLE5ADV4V0X8LRMG4GVWM3WJ7GVH6JP3J2XSRDFENLJVVX4SDLWXML" |type? } 'native
+	// equal { cc crypto age-identity "AGE-SECRET-KEY-1UMNMNLE5ADV4V0X8LRMG4GVWM3WJ7GVH6JP3J2XSRDFENLJVVX4SDLWXML" |kind? } 'age-identity
+	// equal { cc crypto age-identity "invalid" |disarm |type? } 'error
 	"age-identity": {
 		Argsn: 1,
 		Doc:   "Creates an age identity from a string or bytes.",
@@ -368,9 +368,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { age-recipient "age1zwya0qq8c824n5ncxppekrm4egk6gnvfhag6dmr87xjqaeuwlsgq68mqj4" |type? } 'native
-	// equal { age-recipient "age1zwya0qq8c824n5ncxppekrm4egk6gnvfhag6dmr87xjqaeuwlsgq68mqj4" |kind? } 'age-recipient
-	// equal { age-recipient "invalid" |disarm |type? } 'error
+	// equal { cc crypto age-recipient "age1zwya0qq8c824n5ncxppekrm4egk6gnvfhag6dmr87xjqaeuwlsgq68mqj4" |type? } 'native
+	// equal { cc crypto age-recipient "age1zwya0qq8c824n5ncxppekrm4egk6gnvfhag6dmr87xjqaeuwlsgq68mqj4" |kind? } 'age-recipient
+	// equal { cc crypto age-recipient "invalid" |disarm |type? } 'error
 	"age-recipient": {
 		Argsn: 1,
 		Doc:   "Creates an age recipient from a string or bytes.",
@@ -403,11 +403,11 @@ var Builtins_crypto = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal {
+	// equal { cc crypto
 	//     age-generate-keys |set! { identity recipient }
 	//     "SUPER SECRET" |reader |age-encrypt recipient |age-decrypt identity |read\string
 	// } "SUPER SECRET"
-	// equal { "SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |read\string } "SUPER SECRET"
+	// equal { cc crypto "SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |read\string } "SUPER SECRET"
 	"age-encrypt": {
 		Argsn: 2,
 		Doc:   "Encrypts a reader with age for the provided age recipient or string password and returns a reader.",
@@ -465,11 +465,11 @@ var Builtins_crypto = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal {
+	// equal { cc crypto
 	//     age-generate-keys |set! { identity recipient }
 	//     "SUPER SECRET" |reader |age-encrypt recipient |age-decrypt identity |read\string
 	// } "SUPER SECRET"
-	// equal { "SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |read\string } "SUPER SECRET"
+	// equal { cc crypto "SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |read\string } "SUPER SECRET"
 	// Args:
 	// * reader: encrypted data as a reader native value
 	// * identity-or-password: age identity native value or password string
@@ -521,9 +521,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// pkcs12
 
 	// Tests:
-	// ; equal { "cert.p12" read-file "password" pkcs12-to-pem |type? } 'block
-	// ; equal { "cert.p12" read-file "password" pkcs12-to-pem |first |type? } 'native
-	// ; equal { "cert.p12" read-file "password" pkcs12-to-pem |first |kind? } 'pem-block
+	// ; equal { cc crypto "cert.p12" read-file "password" pkcs12-to-pem |type? } 'block
+	// ; equal { cc crypto "cert.p12" read-file "password" pkcs12-to-pem |first |type? } 'native
+	// ; equal { cc crypto "cert.p12" read-file "password" pkcs12-to-pem |first |kind? } 'pem-block
 	// Args:
 	// * p12-data: PKCS#12 file content as bytes native value
 	// * password: string password for the PKCS#12 file
@@ -601,12 +601,12 @@ var Builtins_crypto = map[string]*env.Builtin{
 	},*/
 
 	// Tests:
-	// ; equal { "cert.p12" read-file "password" pkcs12-decode |type? } 'block
-	// ; equal { "cert.p12" read-file "password" pkcs12-decode |length? } 2
-	// ; equal { "cert.p12" read-file "password" pkcs12-decode |first |type? } 'native
-	// ; equal { "cert.p12" read-file "password" pkcs12-decode |first |kind? } 'private-key
-	// ; equal { "cert.p12" read-file "password" pkcs12-decode |second |type? } 'native
-	// ; equal { "cert.p12" read-file "password" pkcs12-decode |second |kind? } 'x509-certificate
+	// ; equal { cc crypto "cert.p12" read-file "password" pkcs12-decode |type? } 'block
+	// ; equal { cc crypto "cert.p12" read-file "password" pkcs12-decode |length? } 2
+	// ; equal { cc crypto "cert.p12" read-file "password" pkcs12-decode |first |type? } 'native
+	// ; equal { cc crypto "cert.p12" read-file "password" pkcs12-decode |first |kind? } 'private-key
+	// ; equal { cc crypto "cert.p12" read-file "password" pkcs12-decode |second |type? } 'native
+	// ; equal { cc crypto "cert.p12" read-file "password" pkcs12-decode |second |kind? } 'x509-certificate
 	// Args:
 	// * p12-data: PKCS#12 file content as bytes native value
 	// * password: string password for the PKCS#12 file
@@ -647,7 +647,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// ; equal { "cert.pem" read-file |pem-decode |block-type? } "CERTIFICATE"
+	// ; equal { cc crypto "cert.pem" read-file |pem-decode |block-type? } "CERTIFICATE"
 	// Args:
 	// * pem-block: PEM block as a native value
 	// Returns:
@@ -676,7 +676,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// ; equal { "cert.pem" read-file |pem-decode |headers? |type? } 'dict
+	// ; equal { cc crypto "cert.pem" read-file |pem-decode |headers? |type? } 'dict
 	// Args:
 	// * pem-block: PEM block as a native value
 	// Returns:
@@ -709,8 +709,8 @@ var Builtins_crypto = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// ; equal { "cert.pem" read-file |pem-decode |x509-parse-certificate |type? } 'native
-	// ; equal { "cert.pem" read-file |pem-decode |x509-parse-certificate |kind? } 'x509-certificate
+	// ; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |type? } 'native
+	// ; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |kind? } 'x509-certificate
 	// Args:
 	// * pem-block: PEM block as a native value containing a certificate
 	// Returns:
@@ -744,7 +744,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// ; equal { "cert.pem" read-file |pem-decode |x509-parse-certificate |not-after? |type? } 'time
+	// ; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |not-after? |type? } 'time
 	// Args:
 	// * certificate: X.509 certificate as a native value
 	// Returns:
@@ -769,7 +769,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// ; equal { "cert.pem" read-file |pem-decode |x509-parse-certificate |not-before? |type? } 'time
+	// ; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |not-before? |type? } 'time
 	// Args:
 	// * certificate: X.509 certificate as a native value
 	// Returns:
@@ -794,8 +794,8 @@ var Builtins_crypto = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// ; equal { "cert.pem" read-file |pem-decode |x509-parse-certificate |is-expired |type? } 'integer
-	// ; equal { "cert.pem" read-file |pem-decode |x509-parse-certificate |is-expired } 0 ; assuming cert is not expired
+	// ; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |is-expired |type? } 'integer
+	// ; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |is-expired } 0 ; assuming cert is not expired
 	// Args:
 	// * certificate: X.509 certificate as a native value
 	// Returns:
@@ -823,13 +823,13 @@ var Builtins_crypto = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// ; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |type? } 'block
-	// ; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |length? } 2
-	// ; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |at 0 |type? } 'native
-	// ; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |at 0 |kind? } 'x509-certificate
-	// ; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |at 1 |type? } 'native
-	// ; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |at 1 |kind? } 'rsa-private-key
-	// ; equal { generate-self-signed-certificate 1024 { "CommonName" "test.com" } |disarm |type? } 'error
+	// ; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |type? } 'block
+	// ; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |length? } 2
+	// ; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |at 0 |type? } 'native
+	// ; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |at 0 |kind? } 'x509-certificate
+	// ; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |at 1 |type? } 'native
+	// ; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |at 1 |kind? } 'rsa-private-key
+	// ; equal { cc crypto generate-self-signed-certificate 1024 { "CommonName" "test.com" } |disarm |type? } 'error
 	// Args:
 	// * key-size: integer, must be at least 2048 bits
 	// * subject: dictionary with fields like "CommonName" and "Organization"
@@ -907,13 +907,13 @@ var Builtins_crypto = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// ; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key } cert key encode-to-pem |type? } 'block
-	// ; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key }   cert key encode-to-pem |length? } 2
-	// ; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key }   cert key encode-to-pem |at 0 |type? } 'native
-	// ; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key }   cert key encode-to-pem |at 0 |kind? } 'Go-bytes
-	// ; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key }   cert key encode-to-pem |at 1 |type? } 'native
-	// ; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key }   cert key encode-to-pem |at 1 |kind? } 'Go-bytes
-	// ; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key }   cert key encode-to-pem |at 0 "data/cert.pem" write-file "data/cert.pem" read-file |x509-parse-certificate |is-expired } 0
+	// ; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key } cert key encode-to-pem |type? } 'block
+	// ; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key }   cert key encode-to-pem |length? } 2
+	// ; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key }   cert key encode-to-pem |at 0 |type? } 'native
+	// ; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key }   cert key encode-to-pem |at 0 |kind? } 'Go-bytes
+	// ; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key }   cert key encode-to-pem |at 1 |type? } 'native
+	// ; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key }   cert key encode-to-pem |at 1 |kind? } 'Go-bytes
+	// ; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key }   cert key encode-to-pem |at 0 "data/cert.pem" write-file "data/cert.pem" read-file |x509-parse-certificate |is-expired } 0
 	// Args:
 	// * certificate: X.509 certificate as a native value
 	// * private-key: RSA private key as a native value
@@ -976,8 +976,8 @@ var Builtins_crypto = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// ; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key } cert key "password" encode-to-p12 |type? } 'native
-	// ; equal { generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key } cert key "password" encode-to-p12 |kind? } 'Go-bytes
+	// ; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key } cert key "password" encode-to-p12 |type? } 'native
+	// ; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key } cert key "password" encode-to-p12 |kind? } 'Go-bytes
 	// Args:
 	// * certificate: X.509 certificate as a native value
 	// * private-key: RSA private key as a native value

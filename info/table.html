@@ -55,7 +55,7 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>table\columns { "a" "b" } { { 1 2 3 } { 4 5 6 } } |length?
 ; returns 3</code></pre>
 </div>
-<h3>table\rows</h3><p>Creates a table by accepting a block or list of rows</p>
+<h3>tableows</h3><p>Creates a table by accepting a block or list of rows</p>
 <p class='arg'>columns - names of the columns</p>
 <p class='arg'>data - block or list of rows (each row is a block or list)</p>
 <div class='group'>
@@ -269,8 +269,6 @@
 </div>
 <h3>indexes?</h3><p>Returns the columns that are indexed in a table.</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 } |add-indexes! { name age } |indexes?
-; returns { "name" "age" }</code></pre>
 </div>
 <h3>autotype</h3><p>Takes a table and tries to determine and change the types of columns.</p>
 <div class='group'>
@@ -327,13 +325,13 @@
 <p class='arg'><b>Tags</b> #table #loading #csv</p>
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>cc os f:: mktmp + "/test.csv" spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" } spr1 .save\csv f spr2:: load\csv f |autotype 1 spr1 = spr2
-; returns 1</code></pre>
+; returns true</code></pre>
 </div>
-<h3>load\tsv</h3><p>Loads a .csv file to a table datatype.</p>
+<h3>load	sv</h3><p>Loads a .csv file to a table datatype.</p>
 <p class='arg'>file-uri - location of csv file to load</p>
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>cc os f:: mktmp + "/test.tsv" spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" } spr1 .save\tsv f spr2:: load\tsv f |autotype 1 spr1 = spr2
-; returns 1</code></pre>
+; returns true</code></pre>
 </div>
 <h3>save\csv</h3><p>Saves a table to a .csv file.</p>
 <p class='arg'>sheet    - the sheet to save</p>
@@ -341,22 +339,22 @@
 <p class='arg'><b>Tags</b> #table #saving #csv</p>
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>cc os f:: mktmp + "/test.csv" spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" } spr1 .save\csv f spr2:: load\csv f |autotype 1 spr1 = spr2
-; returns 1</code></pre>
+; returns true</code></pre>
 </div>
-<h3>save\tsv</h3><p>Saves a table to a .csv file.</p>
+<h3>save	sv</h3><p>Saves a table to a .csv file.</p>
 <p class='arg'>sheet    - the table to save</p>
 <p class='arg'>file-url - where to save the sheet as a .csv file</p>
 <p class='arg'><b>Tags</b> #table #saving #csv</p>
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>cc os f:: mktmp + "/test.csv" spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" } spr1 .save\tsv f spr2:: load\tsv f |autotype 1 spr1 = spr2
-; returns 1</code></pre>
+; returns true</code></pre>
 </div>
 <h3>load\xlsx</h3><p>Loads the first sheet in an .xlsx file to a Table.</p>
 <p class='arg'>file-uri - location of xlsx file to load</p>
 <p class='arg'><b>Tags</b> #table #loading #xlsx</p>
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>cc os f:: mktmp + "/test.xlsx" spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" } spr1 .save\xlsx f spr2:: load\xlsx f |autotype 1 spr1 = spr2
-; returns 1</code></pre>
+; returns true</code></pre>
 </div>
 <h3>save\xlsx</h3><p>Saves a Table to a .xlsx file.</p>
 <p class='arg'>table    - the table to save</p>
@@ -364,7 +362,7 @@
 <p class='arg'><b>Tags</b> #table #saving #xlsx</p>
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>cc os f:: mktmp + "/test.xlsx" spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" } spr1 .save\xlsx f spr2:: load\xlsx f |autotype 1 spr1 = spr2
-; returns 1</code></pre>
+; returns true</code></pre>
 </div>
 </div>
 </main>

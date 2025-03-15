@@ -109,6 +109,11 @@ func EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) *env.Progra
 		// if return flag was raised return ( errorflag I think would return in previous if anyway)
 		// --- 20201213 --
 		if checkErrorReturnFlag(ps) {
+			// Execute deferred blocks before returning
+			if len(ps.DeferBlocks) > 0 {
+				fmt.Println(111111)
+				// ExecuteDeferredBlocks(ps)
+			}
 			return ps
 		}
 		ps, injnow = MaybeAcceptComma(ps, inj, injnow)
@@ -119,6 +124,12 @@ func EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) *env.Progra
 	//	return ps
 	//}
 	//es.Inj = nil
+
+	// Execute deferred blocks before returning from the block
+	// if len(ps.DeferBlocks) > 0 {
+	//	fmt.Println(222)
+	// ExecuteDeferredBlocks(ps)
+	// }
 	return ps
 }
 
@@ -602,6 +613,7 @@ func EvalModword(ps *env.ProgramState, word env.Modword) *env.ProgramState {
 
 func CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, toLeft bool, ctx *env.RyeCtx) *env.ProgramState {
 	// fmt.Println(1)
+
 	env0 := ps.Ctx // store reference to current env in local
 	var fnCtx *env.RyeCtx
 	if ctx != nil { // called via contextpath and this is the context
@@ -654,6 +666,13 @@ func CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, toLeft
 			}
 		}
 	}
+
+	defer func() {
+		if len(ps.DeferBlocks) > 0 {
+			ExecuteDeferredBlocks(ps)
+		}
+	}()
+
 	// collect arguments
 	for i := ii; i < fn.Argsn; i += 1 {
 		ps = evalExprFn(ps, true)
@@ -695,6 +714,7 @@ func CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, toLeft
 	ps.Ser = ser0
 	ps.ReturnFlag = false
 	trace2("Before user function returns")
+
 	return ps
 	/*         for (var i=0;i<h.length;i+=1) {
 	    var e = this.evalExpr(block,pos,state,depth+1);
@@ -764,6 +784,11 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 	/// ps.Ser = fn.Body.Series
 	/// env0 = ps.Ctx
 	/// ps.Ctx = fnCtx
+	defer func() {
+		if len(psX.DeferBlocks) > 0 {
+			ExecuteDeferredBlocks(ps)
+		}
+	}()
 
 	var result *env.ProgramState
 	psX.Ser.SetPos(0)
@@ -835,6 +860,12 @@ func CallFunctionArgs4(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 	// END TRY
 	var result *env.ProgramState
 	psX.Ser.SetPos(0)
+	defer func() {
+		if len(psX.DeferBlocks) > 0 {
+			ExecuteDeferredBlocks(ps)
+		}
+	}()
+
 	result = EvalBlockInj(psX, arg0, true)
 	MaybeDisplayFailureOrError(result, result.Idx, "call func args 4")
 	if result.ForcedResult != nil {
@@ -910,6 +941,12 @@ func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, a
 	// END TRY
 	var result *env.ProgramState
 	psX.Ser.SetPos(0)
+	defer func() {
+		if len(psX.DeferBlocks) > 0 {
+			ExecuteDeferredBlocks(ps)
+		}
+	}()
+
 	if len(args) > 0 {
 		result = EvalBlockInj(psX, args[0], true)
 	} else {
@@ -1297,4 +1334,28 @@ func trace3(x any) {
 	fmt.Print("\x1b[56m")
 	fmt.Print(x)
 	fmt.Println("\x1b[0m")
+}
+
+// ExecuteDeferredBlocks executes all deferred blocks in LIFO order (last in, first out)
+// and clears the deferred blocks list
+func ExecuteDeferredBlocks(ps *env.ProgramState) {
+	// Execute blocks in reverse order (LIFO - last in, first out)
+	for i := len(ps.DeferBlocks) - 1; i >= 0; i-- {
+		// Save current series and result
+		currentSer := ps.Ser
+		currentRes := ps.Res
+
+		// Set series to the deferred block
+		ps.Ser = ps.DeferBlocks[i].Series
+
+		// Evaluate the block
+		EvalBlock(ps)
+
+		// Restore series and result
+		ps.Ser = currentSer
+		ps.Res = currentRes
+	}
+
+	// Clear the deferred blocks
+	ps.DeferBlocks = make([]env.Block, 0)
 }

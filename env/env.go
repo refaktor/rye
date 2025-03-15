@@ -331,6 +331,7 @@ type ProgramState struct {
 	Dialect      DoDialect
 	Stack        *EyrStack
 	Embedded     bool
+	DeferBlocks  []Block // blocks to be executed when function exits or program terminates
 }
 
 type DoDialect int
@@ -365,6 +366,7 @@ func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
 		Rye2Dialect,
 		NewEyrStack(),
 		false,
+		make([]Block, 0), // Initialize empty slice for deferred blocks
 	}
 	return &ps
 }
@@ -393,6 +395,7 @@ func NewProgramStateNEW() *ProgramState {
 		Rye2Dialect,
 		NewEyrStack(),
 		false,
+		make([]Block, 0), // Initialize empty slice for deferred blocks
 	}
 	return &ps
 }
