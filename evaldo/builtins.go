@@ -520,6 +520,11 @@ var builtins = map[string]*env.Builtin{
 	// Tests:
 	// equal  { 101 .pass { 202 } } 101
 	// equal  { 101 .pass { 202 + 303 } } 101
+	// Args:
+	// * value: Any value that will be passed to the block and returned
+	// * block: Block of code to execute with the value injected
+	// Returns:
+	// * The original value, regardless of what the block returns
 	"pass": { // **
 		Argsn: 2,
 		Doc:   "Accepts a value and a block. It does the block, with value injected, and returns (passes on) the initial value.",
@@ -546,9 +551,14 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// stdout { wrap { prn "*" } { prn "x" } } "*x*"
+	// Args:
+	// * wrapper: Block of code to execute before and after the main block
+	// * block: Main block of code to execute between wrapper executions
+	// Returns:
+	// * The result of the main block execution
 	"wrap": { // **
 		Argsn: 2,
-		Doc:   "Accepts a value and a block. It does the block, with value injected, and returns (passes on) the initial value.",
+		Doc:   "Executes a wrapper block before and after executing a main block, returning the result of the main block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch wrap := arg0.(type) {
 			case env.Block:
@@ -586,6 +596,12 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal  { 20 .keep { + 202 } { + 101 } } 222
+	// Args:
+	// * value: Value to be injected into both blocks
+	// * block1: First block whose result will be returned
+	// * block2: Second block to execute after the first one
+	// Returns:
+	// * The result of the first block, ignoring the result of the second block
 	"keep": { // **
 		Argsn: 3,
 		Doc:   "Do the first block, then the second one but return the result of the first one.",
@@ -619,6 +635,11 @@ var builtins = map[string]*env.Builtin{
 	// equal   { a:: 123 change! 333 'a a } 333
 	// equal   { a:: 123 change! 124 'a } 1
 	// equal   { a:: 123 change! 123 'a } 0
+	// Args:
+	// * value: New value to assign to the word
+	// * word: Word whose value should be changed
+	// Returns:
+	// * Integer 1 if the value changed, 0 if the new value is the same as the old value
 	"change!": { // ***
 		Argsn: 2,
 		Doc:   "Searches for a word and changes it's value in-place. If value changes returns true otherwise false",
@@ -646,6 +667,11 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal   { set! { 123 234 } { a b }  b } 234
+	// Args:
+	// * values: Value or block of values to assign to the word(s)
+	// * words: Word or block of words to be set
+	// Returns:
+	// * The value or block of values that was assigned
 	"set!": { // ***
 		Argsn: 2,
 		Doc:   "Set word to value or words by deconstructing a block",
@@ -688,6 +714,10 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal   { x: 1 unset! 'x x: 2 } 2 ; otherwise would produce an error
+	// Args:
+	// * word: Word to be unset from the current context
+	// Returns:
+	// * Void value
 	"unset!": { // ***
 		Argsn: 1,
 		Doc:   "Unset a word in current context, only meant to be used in console",
@@ -702,6 +732,13 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal   { x: 123 val 'x } 123
+	// equal   { x: 123 y: 'x val y } 123
+	// Args:
+	// * word: Word whose value should be retrieved
+	// Returns:
+	// * The value associated with the word in the current context
 	"val": {
 		Argsn: 1,
 		Doc:   "Returns value of the word in context",
@@ -728,6 +765,13 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal   { kind 'person { name: "" age: 0 } |type? } 'kind
+	// Args:
+	// * name: Word that will be the name of the kind
+	// * spec: Block containing the specification for the kind
+	// Returns:
+	// * A new kind object
 	"kind": {
 		Argsn: 2,
 		Doc:   "Creates new kind.",
@@ -746,6 +790,13 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal   { person: kind 'person { name: "" age: 0 } dict { "name" "John" "age" 30 } _>> person |type? } 'ctx
+	// Args:
+	// * value: Dict or context to convert
+	// * kind: Kind to convert the value to
+	// Returns:
+	// * A new context of the specified kind
 	"_>>": {
 		Argsn: 2,
 		Doc:   "Converts first argument to a specific kind.",
@@ -784,6 +835,13 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal   { person: kind 'person { name: "" age: 0 } person _<< dict { "name" "John" "age" 30 } |type? } 'ctx
+	// Args:
+	// * kind: Kind to convert the value to
+	// * value: Dict or context to convert
+	// Returns:
+	// * A new context of the specified kind
 	"_<<": {
 		Argsn: 2,
 		Doc:   "Converts a value to specific kind (R to L)",
@@ -822,6 +880,13 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal   { person: kind 'person { name: "" age: 0 } assure-kind dict { "name" "John" "age" 30 } person |type? } 'ctx
+	// Args:
+	// * value: Dict to convert to a specific kind
+	// * kind: Kind to convert the value to
+	// Returns:
+	// * A new context of the specified kind
 	"assure-kind": {
 		Argsn: 2,
 		Doc:   "Assuring kind.",
@@ -849,6 +914,14 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// FUNCTIONALITY AROUND GENERIC METHODS
+	// Tests:
+	// equal   { generic 'integer 'add fn { a b } { a + b } |type? } 'function
+	// Args:
+	// * kind: Word representing the kind for which to register the function
+	// * method: Word representing the method name
+	// * function: Function to register for the kind and method
+	// Returns:
+	// * The registered function
 	// generic <integer> <add> fn [ a b ] [ a + b ] // tagwords are temporary here
 	"generic": {
 		Argsn: 3,
@@ -880,6 +953,10 @@ var builtins = map[string]*env.Builtin{
 	// Tests:
 	// equal { to-word "test" } 'test
 	// error { to-word 123 }
+	// Args:
+	// * value: String or word-like value to convert to a word
+	// Returns:
+	// * A word with the same name as the input value
 	"to-word": {
 		Argsn: 1,
 		Doc:   "Tries to change a Rye value to a word with same name.",
@@ -915,6 +992,10 @@ var builtins = map[string]*env.Builtin{
 	// ; equal { to-integer "123.6" } 123
 	// ; equal { to-integer "123.4" } 123
 	// error { to-integer "abc" }
+	// Args:
+	// * value: String or decimal value to convert to an integer
+	// Returns:
+	// * An integer value
 	"to-integer": {
 		Argsn: 1,
 		Doc:   "Tries to change a Rye value (like string) to integer.",
@@ -937,6 +1018,10 @@ var builtins = map[string]*env.Builtin{
 	// Tests:
 	// equal { to-decimal "123.4" } 123.4
 	// error { to-decimal "abc" }
+	// Args:
+	// * value: String value to convert to a decimal
+	// Returns:
+	// * A decimal value
 	"to-decimal": {
 		Argsn: 1,
 		Doc:   "Tries to change a Rye value (like string) to decimal.",
@@ -961,6 +1046,10 @@ var builtins = map[string]*env.Builtin{
 	// equal { to-string 123 } "123"
 	// equal { to-string 123.4 } "123.400000"
 	// equal { to-string "test" } "test"
+	// Args:
+	// * value: Any Rye value to convert to a string
+	// Returns:
+	// * A string representation of the value
 	"to-string": { // ***
 		Argsn: 1,
 		Doc:   "Tries to turn a Rye value to string.",
@@ -973,6 +1062,10 @@ var builtins = map[string]*env.Builtin{
 	// Tests:
 	// equal { to-char 42 } "*"
 	// error { to-char "*" }
+	// Args:
+	// * value: Integer representing an ASCII code point
+	// Returns:
+	// * A string containing the character corresponding to the ASCII code
 	"to-char": { // ***
 		Argsn: 1,
 		Doc:   "Tries to turn a Rye value (like integer) to ascii character.",
@@ -990,6 +1083,10 @@ var builtins = map[string]*env.Builtin{
 	// Tests:
 	// equal { list [ 1 2 3 ] |to-block |type? } 'block
 	// equal  { list [ 1 2 3 ] |to-block |first } 1
+	// Args:
+	// * list: List value to convert to a block
+	// Returns:
+	// * A block containing the same elements as the input list
 	"to-block": { // ***
 		Argsn: 1,
 		Doc:   "Turns a List to a Block",
@@ -1007,6 +1104,10 @@ var builtins = map[string]*env.Builtin{
 	// Tests:
 	// equal   { dict [ "a" 1 "b" 2 "c" 3 ] |to-context |type? } 'ctx   ; TODO - rename ctx to context in Rye
 	// ; equal   { dict [ "a" 1 ] |to-context do\in { a } } '1
+	// Args:
+	// * dict: Dict value to convert to a context
+	// Returns:
+	// * A context with the same keys and values as the input dict
 	"to-context": { // ***
 		Argsn: 1,
 		Doc:   "Takes a Dict and returns a Context with same names and values.",
@@ -1027,6 +1128,10 @@ var builtins = map[string]*env.Builtin{
 	// equal   { is-string "test" } 1
 	// equal   { is-string 'test } 0
 	// equal   { is-string 123 } 0
+	// Args:
+	// * value: Any Rye value to test
+	// Returns:
+	// * Integer 1 if the value is a string, 0 otherwise
 	"is-string": { // ***
 		Argsn: 1,
 		Doc:   "Returns true if value is a string.",
@@ -1044,6 +1149,10 @@ var builtins = map[string]*env.Builtin{
 	// equal   { is-integer 123 } 1
 	// equal   { is-integer 123.4 } 0
 	// equal   { is-integer "123" } 0
+	// Args:
+	// * value: Any Rye value to test
+	// Returns:
+	// * Integer 1 if the value is an integer, 0 otherwise
 	"is-integer": { // ***
 		Argsn: 1,
 		Doc:   "Returns true if value is an integer.",
@@ -1061,6 +1170,10 @@ var builtins = map[string]*env.Builtin{
 	// equal   { is-decimal 123.0 } 1
 	// equal   { is-decimal 123 } 0
 	// equal   { is-decimal "123.4" } 0
+	// Args:
+	// * value: Any Rye value to test
+	// Returns:
+	// * Integer 1 if the value is a decimal, 0 otherwise
 	"is-decimal": { // ***
 		Argsn: 1,
 		Doc:   "Returns true if value is a decimal.",
@@ -1078,6 +1191,10 @@ var builtins = map[string]*env.Builtin{
 	// equal   { is-number 123 } 1
 	// equal   { is-number 123.4 } 1
 	// equal   { is-number "123" } 0
+	// Args:
+	// * value: Any Rye value to test
+	// Returns:
+	// * Integer 1 if the value is a number (integer or decimal), 0 otherwise
 	"is-number": { // ***
 		Argsn: 1,
 		Doc:   "Returns true if value is a number (integer or decimal).",
@@ -1130,6 +1247,10 @@ var builtins = map[string]*env.Builtin{
 	// Tests:
 	// equal   { type? "test" } 'string
 	// equal   { type? 123.4 } 'decimal
+	// Args:
+	// * value: Any Rye value to check the type of
+	// Returns:
+	// * A word representing the type of the value
 	"type?": { // ***
 		Argsn: 1,
 		Doc:   "Returns the type of Rye value as a word.",
@@ -1141,9 +1262,13 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal   { kind? %file } 'file-schema
+	// Args:
+	// * value: Any Rye value to check the kind of
+	// Returns:
+	// * A word representing the kind of the value
 	"kind?": { // ***
 		Argsn: 1,
-		Doc:   "Returns the type of Rye value as a word.",
+		Doc:   "Returns the kind of Rye value as a word.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewWord(int(arg0.GetKind()))
@@ -1152,6 +1277,10 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal   { types? { "test" 123 } } { string integer }
+	// Args:
+	// * collection: A block, table, or table row containing values to check types of
+	// Returns:
+	// * A block of words representing the types of each value in the collection
 	"types?": { // TODO
 		Argsn: 1,
 		Doc:   "Returns the types of Rye values in a block or table row as a block of words.",
@@ -1189,6 +1318,10 @@ var builtins = map[string]*env.Builtin{
 	// equal { dump 123 } "123"
 	// equal { dump "string" } `"string"`
 	// equal { does { 1 } |dump } "fn { } { 1 }"
+	// Args:
+	// * value: Any Rye value to dump as code
+	// Returns:
+	// * A string containing the Rye code representation of the value
 	"dump": { // *** currently a concept in testing ... for getting a code of a function, maybe same would be needed for context?
 		Argsn: 1,
 		Doc:   "Returns (dumps) Rye code representing the object.",
@@ -1201,6 +1334,10 @@ var builtins = map[string]*env.Builtin{
 	// Tests:
 	// equal  { mold 123 } "123"
 	// equal  { mold { 123 } } "{ 123 }"
+	// Args:
+	// * value: Any Rye value to convert to a string representation
+	// Returns:
+	// * A string containing the representation of the value
 	"mold": { // **
 		Argsn: 1,
 		Doc:   "Turn value to it's string representation.",
@@ -1214,6 +1351,10 @@ var builtins = map[string]*env.Builtin{
 	// equal  { mold\nowrap 123 } "123"
 	// equal  { mold\nowrap { 123 } } "123"
 	// equal  { mold\nowrap { 123 234 } } "123 234"
+	// Args:
+	// * value: Any Rye value to convert to a string representation
+	// Returns:
+	// * A string containing the representation of the value without block wrapping
 	"mold\\nowrap": { // **
 		Argsn: 1,
 		Doc:   "Turn value to it's string representation. Doesn't wrap the blocks",
@@ -1231,6 +1372,12 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal  { save\current |type? } 'integer
+	// Args:
+	// * None
+	// Returns:
+	// * Integer 1 on success
 	"save\\current": {
 		Argsn: 0,
 		Doc:   "Saves current state of the program to a file.",
@@ -1249,9 +1396,15 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal  { save\current\secure |type? } 'integer
+	// Args:
+	// * None
+	// Returns:
+	// * Integer 1 on success
 	"save\\current\\secure": {
 		Argsn: 0,
-		Doc:   "Saves current state of the program to a file.",
+		Doc:   "Saves current state of the program to a file with password protection.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			s := ps.Dump()
@@ -1276,6 +1429,10 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal   { x: private { doc! "some doc" doc? } } "some doc"
+	// Args:
+	// * doc: String to set as the docstring for the current context
+	// Returns:
+	// * Integer 1 on success
 	"doc!": { // ***
 		Argsn: 1,
 		Doc:   "Sets docstring of the current context.",
@@ -1293,6 +1450,10 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal   { x: private { doc! "some doc" doc? } } "some doc"
+	// Args:
+	// * None
+	// Returns:
+	// * String containing the docstring of the current context
 	"doc?": { // ***
 		Argsn: 0,
 		Doc:   "Gets docstring of the current context.",
@@ -1304,6 +1465,10 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal   { x: context { doc! "some doc" } doc\of? x } "some doc"
+	// Args:
+	// * value: Function, builtin, or context to get the docstring from
+	// Returns:
+	// * String containing the docstring of the provided value
 	"doc\\of?": { // **
 		Argsn: 1,
 		Doc:   "Get docstring of the passed context.",
@@ -1324,6 +1489,10 @@ var builtins = map[string]*env.Builtin{
 	},
 	// Tests:
 	// equal   { is-ref ref { 1 2 3 } } 1
+	// Args:
+	// * value: Value to make mutable
+	// Returns:
+	// * A mutable reference to the value
 	"ref": {
 		Argsn: 1,
 		Doc:   "Makes a value mutable instead of immutable",
@@ -1355,6 +1524,10 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal   { is-ref deref ref { 1 2 3 } } 0
+	// Args:
+	// * value: Mutable reference to make immutable
+	// Returns:
+	// * An immutable copy of the value
 	"deref": {
 		Argsn: 1,
 		Doc:   "Makes a value again immutable",
@@ -1387,9 +1560,13 @@ var builtins = map[string]*env.Builtin{
 	// Tests:
 	// equal  { ref { } |is-ref } true
 	// equal  { { } |is-ref } false
+	// Args:
+	// * value: Any value to check if it's a reference
+	// Returns:
+	// * Integer 1 if the value is a reference, 0 otherwise
 	"is-ref": { // **
 		Argsn: 1,
-		Doc:   "Prints information about a value.",
+		Doc:   "Checks if a value is a mutable reference.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// fmt.Println(arg0.Inspect(*ps.Idx))
 			if env.IsPointer(arg0) {
@@ -1402,6 +1579,10 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { dict { "a" 123 } -> "a" } 123
+	// Args:
+	// * block: Block containing alternating keys and values
+	// Returns:
+	// * A new Dict with the specified keys and values
 	"dict": {
 		Argsn: 1,
 		Doc:   "Constructs a Dict from the Block of key and value pairs.",
@@ -1416,6 +1597,10 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { list { "a" 123 } -> 0 } "a"
+	// Args:
+	// * block: Block containing values to put in the list
+	// Returns:
+	// * A new List with the values from the block
 	"list": {
 		Argsn: 1,
 		Doc:   "Constructs a List from the Block of values.",
@@ -3062,1439 +3247,6 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
-	//
-	// ##### Iteration ##### "Iteration over collections"
-	//
-	// Tests:
-	// stdout { 3 .loop { prns "x" } } "x x x "
-	// equal  { 3 .loop { + 1 } } 4
-	// ; equal  { 3 .loop { } } 3  ; TODO should pass the value
-	"loop": {
-		Argsn: 2,
-		Doc:   "Accepts a number and a block of code. Does the block of code number times, injecting the number.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch cond := arg0.(type) {
-			case env.Integer:
-				switch bloc := arg1.(type) {
-				case env.Block:
-					ser := ps.Ser
-					ps.Ser = bloc.Series
-					for i := 0; int64(i) < cond.Value; i++ {
-						ps = EvalBlockInjMultiDialect(ps, *env.NewInteger(int64(i + 1)), true)
-						if ps.ErrorFlag {
-							return ps.Res
-						}
-						ps.Ser.Reset()
-					}
-					ps.Ser = ser
-					return ps.Res
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "loop")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "loop")
-			}
-		},
-	},
-
-	// Tests:
-	// equal { produce 5 0 { + 3 } } 15
-	// equal { produce 3 ">" { + "x>" } } ">x>x>x>"
-	// equal { produce 3 { } { .concat "x" } } { "x" "x" "x" }
-	// equal { produce 3 { } { ::x .concat length? x } } { 0 1 2 }
-	// equal { produce 5 { 2 } { ::acc .last ::x * x |concat* acc } } { 2 4 16 256 65536 4294967296 }
-	"produce": {
-		Argsn: 3,
-		Doc:   "Accepts a number, initial value and a block of code. Does the block of code number of times, injecting the initial value or last result.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch cond := arg0.(type) {
-			case env.Integer:
-				switch bloc := arg2.(type) {
-				case env.Block:
-					acc := arg1
-					ser := ps.Ser
-					ps.Ser = bloc.Series
-					ps.Res = arg1
-					for i := 0; int64(i) < cond.Value; i++ {
-						ps = EvalBlockInjMultiDialect(ps, acc, true)
-						if ps.ErrorFlag {
-							return ps.Res
-						}
-						ps.Ser.Reset()
-						acc = ps.Res
-					}
-					ps.Ser = ser
-					return ps.Res
-				default:
-					return MakeArgError(ps, 3, []env.Type{env.BlockType}, "produce")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "produce")
-			}
-		},
-	},
-
-	// Tests:
-	// equal { x: 0 produce\while { x < 100 } 1 { * 2 ::x } } 64
-	// stdout { x: 0 produce\while { x < 100 } 1 { * 2 ::x .prns } } "2 4 8 16 32 64 128 "
-	"produce\\while": {
-		Argsn: 3,
-		Doc:   "Accepts a while condition, initial value and a block of code. Does the block of code number times, injecting the number first and then result of block.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch cond := arg0.(type) {
-			case env.Block:
-				switch bloc := arg2.(type) {
-				case env.Block:
-					acc := arg1
-					last := arg1
-					ser := ps.Ser
-					for {
-						ps.Ser = cond.Series
-						ps = EvalBlockInjMultiDialect(ps, acc, true)
-						if ps.ErrorFlag {
-							return ps.Res
-						}
-						if !util.IsTruthy(ps.Res) {
-							ps.Ser.Reset()
-							ps.Ser = ser
-							return last
-						} else {
-							last = acc
-						}
-						ps.Ser.Reset()
-						ps.Ser = bloc.Series
-						ps = EvalBlockInjMultiDialect(ps, acc, true)
-						if ps.ErrorFlag {
-							return ps.Res
-						}
-						ps.Ser = ser
-						ps.Ser.Reset()
-						acc = ps.Res
-					}
-				default:
-					return MakeArgError(ps, 3, []env.Type{env.BlockType}, "produce\\while")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "produce\\while")
-			}
-		},
-	},
-
-	// Tests:
-	//  equal { produce\ 5 1 'acc { * acc , + 1 } } 1  ; Look at what we were trying to do here
-	"produce\\": {
-		Argsn: 4,
-		Doc:   " TODO ",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch cond := arg0.(type) {
-			case env.Integer:
-				switch bloc := arg3.(type) {
-				case env.Block:
-					switch accu := arg2.(type) {
-					case env.Word:
-						acc := arg1
-						ps.Ctx.Mod(accu.Index, acc)
-						ser := ps.Ser
-						ps.Ser = bloc.Series
-						for i := 0; int64(i) < cond.Value; i++ {
-							ps = EvalBlockInjMultiDialect(ps, acc, true)
-							if ps.ErrorFlag {
-								return ps.Res
-							}
-							ps.Ser.Reset()
-							acc = ps.Res
-						}
-						ps.Ser = ser
-						val, _ := ps.Ctx.Get(accu.Index)
-						return val
-					default:
-						return MakeArgError(ps, 3, []env.Type{env.WordType}, "produce\\")
-					}
-				default:
-					return MakeArgError(ps, 4, []env.Type{env.BlockType}, "produce\\")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "produce\\")
-			}
-		},
-	},
-
-	// Tests:
-	//  stdout { forever { "once" .prn .return } } "once"
-	//  equal { forever { "once" .return } } "once"
-	"forever": { // **
-		Argsn: 1,
-		Doc:   "Accepts a block and does it forever.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch bloc := arg0.(type) {
-			case env.Block:
-				ser := ps.Ser
-				ps.Ser = bloc.Series
-				for i := 0; i == i; i++ {
-					ps = EvalBlockInjMultiDialect(ps, env.NewInteger(int64(i)), true)
-					if ps.ErrorFlag {
-						return ps.Res
-					}
-					if ps.ReturnFlag {
-						ps.ReturnFlag = false
-						break
-					}
-					ps.Ser.Reset()
-				}
-				ps.Ser = ser
-				return ps.Res
-			default:
-				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "forever")
-			}
-		},
-	},
-	// Tests:
-	//  stdout { forever\with 1 { .prn .return } } "1"
-	"forever\\with": { // **
-		Argsn: 2,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch bloc := arg1.(type) {
-			case env.Block:
-				ser := ps.Ser
-				ps.Ser = bloc.Series
-				for {
-					EvalBlockInjMultiDialect(ps, arg0, true)
-					if ps.ErrorFlag {
-						return ps.Res
-					}
-					if ps.ReturnFlag {
-						ps.ReturnFlag = false
-						break
-					}
-					ps.Ser.Reset()
-				}
-				ps.Ser = ser
-				return ps.Res
-			default:
-				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "forever\\with")
-			}
-		},
-	},
-	// Tests:
-	// stdout { for { 1 2 3 } { prns "x" } } "x x x "
-	// stdout { { "a" "b" "c" } .for { .prns } } "a b c "
-	"for___": { // **
-		Argsn: 2,
-		Doc:   "Accepts a block of values and a block of code, does the code for each of the values, injecting them.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch block := arg0.(type) {
-			case env.String:
-				switch code := arg1.(type) {
-				case env.Block:
-					ser := ps.Ser
-					ps.Ser = code.Series
-					for _, ch := range block.Value {
-						ps = EvalBlockInjMultiDialect(ps, *env.NewString(string(ch)), true)
-						if ps.ErrorFlag || ps.ReturnFlag {
-							return ps.Res
-						}
-						ps.Ser.Reset()
-					}
-					ps.Ser = ser
-					return ps.Res
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "for")
-				}
-			case env.Block:
-				switch code := arg1.(type) {
-				case env.Block:
-					ser := ps.Ser
-					ps.Ser = code.Series
-					for i := 0; i < block.Series.Len(); i++ {
-						ps = EvalBlockInjMultiDialect(ps, block.Series.Get(i), true)
-						if ps.ErrorFlag || ps.ReturnFlag {
-							return ps.Res
-						}
-						ps.Ser.Reset()
-					}
-					ps.Ser = ser
-					return ps.Res
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "for")
-				}
-			case env.List:
-				switch code := arg1.(type) {
-				case env.Block:
-					ser := ps.Ser
-					ps.Ser = code.Series
-					for i := 0; i < len(block.Data); i++ {
-						ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(block.Data[i]), true)
-						if ps.ErrorFlag || ps.ReturnFlag {
-							return ps.Res
-						}
-						ps.Ser.Reset()
-					}
-					ps.Ser = ser
-					return ps.Res
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "for")
-				}
-			case env.Table:
-				switch code := arg1.(type) {
-				case env.Block:
-					ser := ps.Ser
-					ps.Ser = code.Series
-					for i := 0; i < len(block.Rows); i++ {
-						row := block.Rows[i]
-						row.Uplink = &block
-						ps = EvalBlockInjMultiDialect(ps, row, true)
-						if ps.ErrorFlag || ps.ReturnFlag {
-							return ps.Res
-						}
-						ps.Ser.Reset()
-					}
-					ps.Ser = ser
-					return ps.Res
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "for")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType, env.TableType}, "for")
-			}
-		},
-	},
-	// Tests:
-	// stdout { for { 1 2 3 } { prns "x" } } "x x x "
-	// stdout { { "a" "b" "c" } .for { .prns } } "a b c "
-	"for": { // **
-		Argsn: 2,
-		Doc:   "Accepts a block of values and a block of code, does the code for each of the values, injecting them.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch block := arg0.(type) {
-			case env.Collection:
-				switch code := arg1.(type) {
-				case env.Block:
-					ser := ps.Ser
-					ps.Ser = code.Series
-					for i := 0; i < block.Length(); i++ {
-						ps = EvalBlockInjMultiDialect(ps, block.Get(i), true)
-						if ps.ErrorFlag || ps.ReturnFlag {
-							return ps.Res
-						}
-						ps.Ser.Reset()
-					}
-					ps.Ser = ser
-					return ps.Res
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "for")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType, env.TableType}, "for")
-			}
-		},
-	},
-	// Tests:
-	//  stdout { walk { 1 2 3 } { .prns .rest } } "1 2 3  2 3  3  "
-	//  equal { x: 0 walk { 1 2 3 } { ::b .first + x ::x , b .rest } x } 6
-	"walk": { // **
-		Argsn: 2,
-		Doc:   "Accepts a block of values and a block of code, does the code for each of the values, injecting them.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch block := arg0.(type) {
-			case env.Block:
-				switch code := arg1.(type) {
-				case env.Block:
-					ser := ps.Ser
-					ps.Ser = code.Series
-
-					for block.Series.GetPos() < block.Series.Len() {
-						ps = EvalBlockInjMultiDialect(ps, block, true)
-						if ps.ErrorFlag {
-							return ps.Res
-						}
-						if ps.ReturnFlag {
-							return ps.Res
-						}
-						block1, ok := ps.Res.(env.Block) // TODO ... switch and throw error if not block
-						if ok {
-							block = block1
-						} else {
-							fmt.Println("ERROR 1231241")
-						}
-						ps.Ser.Reset()
-					}
-					ps.Ser = ser
-					return ps.Res
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "walk")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "walk")
-			}
-		},
-	},
-
-	// Higher order functions
-	// Tests:
-	//  equal { purge { 1 2 3 } { .is-even } } { 1 3 }
-	//  equal { purge { } { .is-even } } { }
-	//  equal { purge list { 1 2 3 } { .is-even } } list { 1 3 }
-	//  equal { purge list { } { .is-even } } list { }
-	//  equal { purge "1234" { .to-integer .is-even } } { "1" "3" }
-	//  equal { purge "" { .to-integer .is-even } } { }
-	"purge": { // TODO ... doesn't fully work
-		Argsn: 2,
-		Doc:   "Purges values from a series based on return of a injected code block.",
-		Pure:  false,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch block := arg0.(type) {
-			case env.Block:
-				switch code := arg1.(type) {
-				case env.Block:
-					ser := ps.Ser
-					ps.Ser = code.Series
-					for i := 0; i < block.Series.Len(); i++ {
-						ps = EvalBlockInjMultiDialect(ps, block.Series.Get(i), true)
-						if ps.ErrorFlag {
-							return ps.Res
-						}
-						if util.IsTruthy(ps.Res) {
-							block.Series.S = append(block.Series.S[:i], block.Series.S[i+1:]...)
-							i--
-						}
-						ps.Ser.Reset()
-					}
-					ps.Ser = ser
-					return block
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "purge")
-				}
-			case env.List:
-				switch code := arg1.(type) {
-				case env.Block:
-					ser := ps.Ser
-					ps.Ser = code.Series
-					for i := 0; i < len(block.Data); i++ {
-						ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(block.Data[i]), true)
-						if ps.ErrorFlag {
-							return ps.Res
-						}
-						if util.IsTruthy(ps.Res) {
-							block.Data = append(block.Data[:i], block.Data[i+1:]...)
-							i--
-						}
-						ps.Ser.Reset()
-					}
-					ps.Ser = ser
-					return block
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "purge")
-				}
-			case env.String:
-				switch code := arg1.(type) {
-				case env.Block:
-					input := []rune(block.Value)
-					var newl []env.Object
-					ser := ps.Ser
-					ps.Ser = code.Series
-					for i := 0; i < len(input); i++ {
-						ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(input[i]), true)
-						if ps.ErrorFlag {
-							return ps.Res
-						}
-						if !util.IsTruthy(ps.Res) {
-							newl = append(newl, *env.NewString(string(input[i])))
-						}
-						ps.Ser.Reset()
-					}
-					ps.Ser = ser
-					return *env.NewBlock(*env.NewTSeries(newl))
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "purge")
-				}
-			case env.Table:
-				switch code := arg1.(type) {
-				case env.Block:
-					ser := ps.Ser
-					ps.Ser = code.Series
-					for i := 0; i < len(block.Rows); i++ {
-						ps = EvalBlockInjMultiDialect(ps, block.Rows[i], true)
-						if ps.ErrorFlag {
-							return ps.Res
-						}
-						if util.IsTruthy(ps.Res) {
-							block.Rows = append(block.Rows[:i], block.Rows[i+1:]...)
-							i--
-						}
-						ps.Ser.Reset()
-					}
-					ps.Ser = ser
-					return block
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "purge")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType, env.TableType}, "purge")
-			}
-		},
-	},
-
-	// Tests:
-	//  equal { { 1 2 3 } :x purge! { .is-even } 'x , x } { 1 3 }
-	"purge!": { // TODO ... doesn't fully work
-		Argsn: 2,
-		Doc:   "Purges values from a series based on return of a injected code block.",
-		Pure:  false,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch wrd := arg1.(type) {
-			case env.Word:
-				val, found, ctx := ps.Ctx.Get2(wrd.Index)
-				if found {
-					switch block := val.(type) {
-					case env.Block:
-						switch code := arg0.(type) {
-						case env.Block:
-							ser := ps.Ser
-							ps.Ser = code.Series
-							purged := make([]env.Object, 0)
-							for i := 0; i < block.Series.Len(); i++ {
-								ps = EvalBlockInjMultiDialect(ps, block.Series.Get(i), true)
-								if ps.ErrorFlag {
-									return ps.Res
-								}
-								if util.IsTruthy(ps.Res) {
-									purged = append(purged, block.Series.S[i])
-									block.Series.S = append(block.Series.S[:i], block.Series.S[i+1:]...)
-									i--
-								}
-								ps.Ser.Reset()
-							}
-							ps.Ser = ser
-							ctx.Mod(wrd.Index, block)
-							return env.NewBlock(*env.NewTSeries(purged))
-						default:
-							return MakeArgError(ps, 1, []env.Type{env.BlockType}, "purge!")
-						}
-					default:
-						return MakeBuiltinError(ps, "Context value should be block type.", "purge!")
-					}
-				} else {
-					return MakeBuiltinError(ps, "Word not found in context.", "purge!")
-				}
-			default:
-				return MakeArgError(ps, 2, []env.Type{env.WordType}, "purge!")
-			}
-		},
-	},
-
-	// map should at the end map over block, raw-map, etc ...
-	// it should accept a block of code, a function and a builtin
-	// it should use injected block so it doesn't need a variable defined like map [ 1 2 3 ] x [ add a 100 ]
-	// map [ 1 2 3 ] { .add 3 }
-	// Tests:
-	//  equal { map { 1 2 3 } { + 1 } } { 2 3 4 }
-	//  equal { map { } { + 1 } } { }
-	//  equal { map { "aaa" "bb" "c" } { .length? } } { 3 2 1 }
-	//  equal { map list { "aaa" "bb" "c" } { .length? } } list { 3 2 1 }
-	//  equal { map list { 3 4 5 6 } { .is-multiple-of 3 } } list { 1 0 0 1 }
-	//  equal { map list { } { + 1 } } list { }
-	//  ; equal { map "abc" { + "-" } .join } "a-b-c-" ; TODO doesn't work, fix join
-	//  equal { map "123" { .to-integer } } { 1 2 3 }
-	//  equal { map "123" ?to-integer } { 1 2 3 }
-	//  equal { map "" { + "-" } } { }
-	"map___": { // **
-		Argsn: 2,
-		Doc:   "Maps values of a block to a new block by evaluating a block of code.",
-		Pure:  true,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch list := arg0.(type) {
-			case env.Block:
-				switch block := arg1.(type) {
-				case env.Block, env.Builtin:
-					l := list.Series.Len()
-					newl := make([]env.Object, l)
-					switch block := block.(type) {
-					case env.Block:
-						ser := ps.Ser
-						ps.Ser = block.Series
-						for i := 0; i < l; i++ {
-							ps = EvalBlockInjMultiDialect(ps, list.Series.Get(i), true)
-							if ps.ErrorFlag {
-								return ps.Res
-							}
-							newl[i] = ps.Res
-							ps.Ser.Reset()
-						}
-						ps.Ser = ser
-					case env.Builtin:
-						for i := 0; i < l; i++ {
-							newl[i] = DirectlyCallBuiltin(ps, block, list.Series.Get(i), nil)
-						}
-					default:
-						return MakeBuiltinError(ps, "Block value should be builtin or block type.", "map")
-					}
-					return *env.NewBlock(*env.NewTSeries(newl))
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.BuiltinType}, "map")
-				}
-			case env.List:
-				switch block := arg1.(type) {
-				case env.Block, env.Builtin:
-					l := len(list.Data)
-					newl := make([]any, l)
-					switch block := block.(type) {
-					case env.Block:
-						ser := ps.Ser
-						ps.Ser = block.Series
-						for i := 0; i < l; i++ {
-							ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(list.Data[i]), true)
-							if ps.ErrorFlag {
-								return ps.Res
-							}
-							newl[i] = env.RyeToRaw(ps.Res, ps.Idx)
-							ps.Ser.Reset()
-						}
-						ps.Ser = ser
-					case env.Builtin:
-						for i := 0; i < l; i++ {
-							newl[i] = DirectlyCallBuiltin(ps, block, env.ToRyeValue(list.Data[i]), nil)
-						}
-					default:
-						return MakeBuiltinError(ps, "Block value should be builtin or block type.", "map")
-					}
-					return *env.NewList(newl)
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.BuiltinType}, "map")
-				}
-			case env.String:
-				input := []rune(list.Value)
-				l := len(input)
-				switch block := arg1.(type) {
-				case env.Block, env.Builtin:
-					newl := make([]env.Object, l)
-					switch block := block.(type) {
-					case env.Block:
-						ser := ps.Ser
-						ps.Ser = block.Series
-						for i := 0; i < l; i++ {
-							ps = EvalBlockInjMultiDialect(ps, *env.NewString(string(input[i])), true)
-							if ps.ErrorFlag {
-								return ps.Res
-							}
-							newl[i] = ps.Res
-
-							ps.Ser.Reset()
-						}
-						ps.Ser = ser
-					case env.Builtin:
-						for i := 0; i < l; i++ {
-							newl[i] = DirectlyCallBuiltin(ps, block, *env.NewString(string(input[i])), nil)
-						}
-					default:
-						return MakeBuiltinError(ps, "Block value should be builtin or block type.", "map")
-					}
-					return *env.NewBlock(*env.NewTSeries(newl))
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.BuiltinType}, "map")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "map")
-			}
-		},
-	},
-
-	// map should at the end map over block, raw-map, etc ...
-	// it should accept a block of code, a function and a builtin
-	// it should use injected block so it doesn't need a variable defined like map [ 1 2 3 ] x [ add a 100 ]
-	// map [ 1 2 3 ] { .add 3 }
-	// Tests:
-	//  equal { map { 1 2 3 } { + 1 } } { 2 3 4 }
-	//  equal { map { } { + 1 } } { }
-	//  equal { map { "aaa" "bb" "c" } { .length? } } { 3 2 1 }
-	//  equal { map list { "aaa" "bb" "c" } { .length? } } list { 3 2 1 }
-	//  equal { map list { 3 4 5 6 } { .is-multiple-of 3 } } list { 1 0 0 1 }
-	//  equal { map list { } { + 1 } } list { }
-	//  ; equal { map "abc" { + "-" } .join } "a-b-c-" ; TODO doesn't work, fix join
-	//  equal { map "123" { .to-integer } } { 1 2 3 }
-	//  equal { map "123" ?to-integer } { 1 2 3 }
-	//  equal { map "" { + "-" } } { }
-	"map": { // **
-		Argsn: 2,
-		Doc:   "Maps values of a block to a new block by evaluating a block of code.",
-		Pure:  true,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch list := arg0.(type) {
-			case env.Collection:
-				switch block := arg1.(type) {
-				case env.Block, env.Builtin:
-					l := list.Length()
-					newl := make([]env.Object, l)
-					switch block := block.(type) {
-					case env.Block:
-						ser := ps.Ser
-						ps.Ser = block.Series
-						for i := 0; i < l; i++ {
-							ps = EvalBlockInjMultiDialect(ps, list.Get(i), true)
-							if ps.ErrorFlag {
-								return ps.Res
-							}
-							newl[i] = ps.Res
-							ps.Ser.Reset()
-						}
-						ps.Ser = ser
-					case env.Builtin:
-						for i := 0; i < l; i++ {
-							newl[i] = DirectlyCallBuiltin(ps, block, list.Get(i), nil)
-						}
-					default:
-						return MakeBuiltinError(ps, "Block value should be builtin or block type.", "map")
-					}
-					return list.MakeNew(newl)
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.BuiltinType}, "map")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "map")
-			}
-		},
-	},
-
-	// Tests:
-	//  equal { map\pos { 1 2 3 } 'i { + i } } { 2 4 6 }
-	//  equal { map\pos { } 'i { + i } } { }
-	//  equal { map\pos list { 1 2 3 } 'i { + i } } list { 2 4 6 }
-	//  equal { map\pos list { } 'i { + i } } list { }
-	//  equal { map\pos "abc" 'i { + i } } { "a1" "b2" "c3" }
-	//  equal { map\pos "" 'i { + i } } { }
-	"map\\pos": { // *TODO -- deduplicate map\pos and map\idx
-		Argsn: 3,
-		Doc:   "Maps values of a block to a new block by evaluating a block of code.",
-		Pure:  true,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch list := arg0.(type) {
-			case env.Collection:
-				switch accu := arg1.(type) {
-				case env.Word:
-					switch block := arg2.(type) {
-					case env.Block:
-						l := list.Length()
-						newl := make([]env.Object, l)
-						ser := ps.Ser
-						ps.Ser = block.Series
-						for i := 0; i < l; i++ {
-							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i + 1)))
-							ps = EvalBlockInjMultiDialect(ps, list.Get(i), true)
-							if ps.ErrorFlag {
-								return ps.Res
-							}
-							newl[i] = ps.Res
-							ps.Ser.Reset()
-						}
-						ps.Ser = ser
-						return list.MakeNew(newl)
-					default:
-						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "map\\pos")
-					}
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType}, "map\\pos")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "map\\pos")
-			}
-		},
-	},
-
-	// Tests:
-	// equal { map\idx { 1 2 3 } 'i { + i } } { 1 3 5 }
-	// equal { map\idx { } 'i { + i } } { }
-	// equal { map\idx list { 1 2 3 } 'i { + i } } list { 1 3 5 }
-	// equal { map\idx list { } 'i { + i } } list { }
-	// equal { map\idx "abc" 'i { + i } } { "a0" "b1" "c2" }
-	// equal { map\idx "" 'i { + i } } { }
-	"map\\idx": { // TODO -- deduplicate map\idx and map\idx
-		Argsn: 3,
-		Doc:   "Maps values of a block to a new block by evaluating a block of code.",
-		Pure:  true,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch list := arg0.(type) {
-			case env.Collection:
-				switch accu := arg1.(type) {
-				case env.Word:
-					switch block := arg2.(type) {
-					case env.Block:
-						l := list.Length()
-						newl := make([]env.Object, l)
-						ser := ps.Ser
-						ps.Ser = block.Series
-						for i := 0; i < l; i++ {
-							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i)))
-							ps = EvalBlockInjMultiDialect(ps, list.Get(i), true)
-							if ps.ErrorFlag {
-								return ps.Res
-							}
-							newl[i] = ps.Res
-							ps.Ser.Reset()
-						}
-						ps.Ser = ser
-						return list.MakeNew(newl)
-					default:
-						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "map\\idx")
-					}
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType}, "map\\idx")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "map\\idx")
-			}
-		},
-	},
-	// Tests:
-	//  equal { reduce { 1 2 3 } 'acc { + acc } } 6
-	//  equal { reduce list { 1 2 3 } 'acc { + acc } } 6
-	//  equal { reduce "abc" 'acc { + acc } } "cba"
-	//  equal { try { reduce { } 'acc { + acc } } |type? } 'error
-	//  equal { try { reduce list { } 'acc { + acc } } |type? } 'error
-	//  equal { try { reduce "" 'acc { + acc } } |type? } 'error
-	"reduce": { // **
-		Argsn: 3,
-		Doc:   "Reduces values of a block to a new block by evaluating a block of code ...",
-		Pure:  true,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch list := arg0.(type) {
-			case env.Collection:
-				l := list.Length()
-				if l == 0 {
-					return MakeBuiltinError(ps, "Block is empty.", "reduce")
-				}
-				switch accu := arg1.(type) {
-				case env.Word:
-					// ps.Ctx.Set(accu.Index)
-					switch block := arg2.(type) {
-					case env.Block:
-						acc := list.Get(0)
-						ser := ps.Ser
-						ps.Ser = block.Series
-						for i := 1; i < l; i++ {
-							ps.Ctx.Mod(accu.Index, acc)
-							ps = EvalBlockInjMultiDialect(ps, list.Get(i), true)
-							if ps.ErrorFlag {
-								return ps.Res
-							}
-							if ps.ErrorFlag {
-								return ps.Res
-							}
-							acc = ps.Res
-							ps.Ser.Reset()
-						}
-						ps.Ser = ser
-						return acc
-					default:
-						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "reduce")
-					}
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType}, "reduce")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "reduce")
-			}
-		},
-	},
-
-	// map should at the end map over block, raw-map, etc ...
-	// it should accept a block of code, a function and a builtin
-	// it should use injected block so it doesn't need a variable defined like map [ 1 2 3 ] x [ add a 100 ]
-	// reduce [ 1 2 3 ] 'acc { + acc }
-	// Tests:
-	//  equal { fold { 1 2 3 } 'acc 1 { + acc } } 7
-	//  equal { fold { } 'acc 1 { + acc } } 1
-	//  equal { fold list { 1 2 3 } 'acc 1 { + acc } } 7
-	//  equal { fold list { } 'acc 1 { + acc } } 1
-	//  equal { fold "abc" 'acc "123" { + acc } } "cba123"
-	//  equal { fold "" 'acc "123" { + acc } } "123"
-	"fold": { // **
-		Argsn: 4,
-		Doc:   "Reduces values of a block to a new block by evaluating a block of code ...",
-		Pure:  true,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch list := arg0.(type) {
-			case env.Collection:
-				switch accu := arg1.(type) {
-				case env.Word:
-					// ps.Ctx.Set(accu.Index)
-					switch block := arg3.(type) {
-					case env.Block:
-						l := list.Length()
-						acc := arg2
-						ser := ps.Ser
-						ps.Ser = block.Series
-						for i := 0; i < l; i++ {
-							ps.Ctx.Mod(accu.Index, acc)
-							ps = EvalBlockInjMultiDialect(ps, list.Get(i), true)
-							if ps.ErrorFlag {
-								return ps.Res
-							}
-							acc = ps.Res
-							ps.Ser.Reset()
-						}
-						ps.Ser = ser
-						return acc
-					case env.Function:
-						l := list.Length()
-						acc := arg2
-						for i := 0; i < l; i++ {
-							var item any
-							item = list.Get(i)
-							ps.Ctx.Mod(accu.Index, acc)
-							CallFunctionArgsN(block, ps, ps.Ctx, env.ToRyeValue(item)) // , env.NewInteger(int64(i)))
-							if ps.ErrorFlag {
-								return ps.Res
-							}
-							acc = ps.Res
-						}
-						return acc
-					default:
-						return MakeArgError(ps, 4, []env.Type{env.BlockType}, "fold")
-					}
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType}, "fold")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "fold")
-			}
-		},
-	},
-
-	/* This is too specialised and should be removed probably
-	"sum-up": { // **
-		Argsn: 2,
-		Doc:   "Reduces values of a block or list by evaluating a block of code and summing the values.",
-		Pure:  true,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			var ll []any
-			var lo []env.Object
-			var llen int
-			modeObj := 0
-			switch data := arg0.(type) {
-			case env.Block:
-				lo = data.Series.S
-				llen = len(lo)
-				modeObj = 2
-			case env.List:
-				ll = data.Data
-				llen = len(ll)
-				modeObj = 1
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "sum-up")
-			}
-
-			switch block := arg1.(type) {
-			case env.Block, env.Builtin:
-				acc := *env.NewDecimal(0)
-				onlyInts := true
-				switch block := block.(type) {
-				case env.Block:
-					ser := ps.Ser
-					ps.Ser = block.Series
-					for i := 0; i < llen; i++ {
-						var item any
-						if modeObj == 1 {
-							item = ll[i]
-						} else {
-							item = lo[i]
-						}
-						// ps.Ctx.Set(accu.Index, acc)
-						ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(item), true)
-						if ps.ErrorFlag {
-							return ps.Res
-						}
-						switch res := ps.Res.(type) {
-						case env.Integer:
-							acc.Value += float64(res.Value)
-						case env.Decimal:
-							onlyInts = false
-							acc.Value += res.Value
-						default:
-							return MakeBuiltinError(ps, "Block should return integer or decimal.", "sum-up")
-						}
-						ps.Ser.Reset()
-					}
-					ps.Ser = ser
-				case env.Builtin:
-					for i := 0; i < llen; i++ {
-						var item any
-						if modeObj == 1 {
-							item = ll[i]
-						} else {
-							item = lo[i]
-						}
-						res := DirectlyCallBuiltin(ps, block, env.ToRyeValue(item), nil)
-						switch res := res.(type) {
-						case env.Integer:
-							acc.Value += float64(res.Value)
-						case env.Decimal:
-							onlyInts = false
-							acc.Value += res.Value
-						default:
-							return MakeBuiltinError(ps, "Block should return integer or decimal.", "sum-up")
-						}
-					}
-				default:
-					return MakeBuiltinError(ps, "Block type should be Builtin or Block.", "sum-up")
-				}
-				if onlyInts {
-					return *env.NewInteger(int64(acc.Value))
-				} else {
-					return acc
-				}
-			default:
-				return MakeArgError(ps, 2, []env.Type{env.BlockType, env.BuiltinType}, "sum-up")
-			}
-		},
-	},
-	*/
-
-	// Tests:
-	//  equal { partition { 1 2 3 4 } { > 2 } } { { 1 2 } { 3 4 } }
-	//  equal { partition { "a" "b" 1 "c" "d" } { .is-integer } } { { "a" "b" } { 1 } { "c" "d" } }
-	//  equal { partition { "a" "b" 1 "c" "d" } ?is-integer } { { "a" "b" } { 1 } { "c" "d" } }
-	//  equal { partition { } { > 2 } } { { } }
-	//  equal { partition list { 1 2 3 4 } { > 2 } } list vals { list { 1 2 } list { 3 4 } }
-	//  equal { partition list { "a" "b" 1 "c" "d" } ?is-integer } list vals { list { "a" "b" } list { 1 } list { "c" "d" } }
-	//  equal { partition list { } { > 2 } } list vals { list { } }
-	//  equal { partition "aaabbccc" { , } } list { "aaa" "bb" "ccc" }
-	//  equal { partition "" { , } } list { "" }
-	//  equal { partition "aaabbccc" ?is-string } list { "aaabbccc" }
-	"partition": { // **
-		Argsn: 2,
-		Doc:   "Partitions a series by evaluating a block of code.",
-		Pure:  true,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch list := arg0.(type) {
-			case env.String:
-				switch block := arg1.(type) {
-				case env.Block, env.Builtin:
-					newl := make([]any, 0)
-					var subl strings.Builder
-					var prevres env.Object
-					switch block := block.(type) {
-					case env.Block:
-						ser := ps.Ser
-						ps.Ser = block.Series
-						for _, curval := range list.Value {
-							ps = EvalBlockInjMultiDialect(ps, *env.NewString(string(curval)), true)
-							if ps.ErrorFlag {
-								return ps.Res
-							}
-							if prevres == nil || ps.Res.Equal(prevres) {
-								subl.WriteRune(curval)
-							} else {
-								newl = append(newl, subl.String())
-								subl.Reset()
-								subl.WriteRune(curval)
-							}
-							prevres = ps.Res
-							ps.Ser.Reset()
-						}
-						newl = append(newl, subl.String())
-						ps.Ser = ser
-					case env.Builtin:
-						for _, curval := range list.Value {
-							res := DirectlyCallBuiltin(ps, block, env.ToRyeValue(curval), nil)
-							if prevres == nil || res.Equal(prevres) {
-								subl.WriteRune(curval)
-							} else {
-								newl = append(newl, subl.String())
-							}
-						}
-						newl = append(newl, subl.String())
-					default:
-						return MakeBuiltinError(ps, "Block type should be Builtin or Block.", "partition")
-					}
-					return *env.NewList(newl)
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.BuiltinType}, "partition")
-				}
-			case env.Collection:
-				switch block := arg1.(type) {
-				case env.Block, env.Builtin:
-					l := list.Length()
-					newl := make([]env.Object, 0)
-					subl := make([]env.Object, 0)
-					var prevres env.Object
-					switch block := block.(type) {
-					case env.Block:
-						ser := ps.Ser
-						ps.Ser = block.Series
-						for i := 0; i < l; i++ {
-							curval := list.Get(i)
-							ps = EvalBlockInjMultiDialect(ps, curval, true)
-							if ps.ErrorFlag {
-								return ps.Res
-							}
-							if prevres == nil || ps.Res.Equal(prevres) {
-								subl = append(subl, curval)
-							} else {
-								newl = append(newl, list.MakeNew(subl))
-								//newl = append(newl, *env.NewBlock(*env.NewTSeries(subl)))
-								subl = []env.Object{curval}
-							}
-							prevres = ps.Res
-							ps.Ser.Reset()
-						}
-						newl = append(newl, list.MakeNew(subl))
-						// newl = append(newl, *env.NewBlock(*env.NewTSeries(subl)))
-						ps.Ser = ser
-					case env.Builtin:
-						for i := 0; i < l; i++ {
-							curval := list.Get(i)
-							res := DirectlyCallBuiltin(ps, block, curval, nil)
-							if prevres == nil || res.Equal(prevres) {
-								subl = append(subl, curval)
-							} else {
-								newl = append(newl, list.MakeNew(subl))
-								//newl = append(newl, *env.NewBlock(*env.NewTSeries(subl)))
-								subl = []env.Object{curval}
-							}
-							prevres = res
-						}
-						newl = append(newl, list.MakeNew(subl))
-						// newl = append(newl, *env.NewBlock(*env.NewTSeries(subl)))
-					default:
-						return MakeBuiltinError(ps, "Block type should be Builtin or Block.", "partition")
-					}
-					return list.MakeNew(newl)
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.BuiltinType}, "partition")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "partition")
-			}
-		},
-	},
-
-	// Tests:
-	//  ; Equality for dicts doesn't yet work consistently
-	//  ;equal { { "Anne" "Mitch" "Anya" } .group { .first } } dict vals { "A" list { "Anne" "Anya" } "M" list { "Mitch" } }
-	//  ;equal { { "Anne" "Mitch" "Anya" } .group ?first } dict vals { "A" list { "Anne" "Anya" } "M" list { "Mitch" } }
-	//  ;equal { { } .group { .first } } dict vals { }
-	//  ;equal { { "Anne" "Mitch" "Anya" } .list .group { .first } } dict vals { "A" list { "Anne" "Anya" } "M" list { "Mitch" } }
-	//  ;equal { { "Anne" "Mitch" "Anya" } .list .group ?first } dict vals { "A" list { "Anne" "Anya" } "M" list { "Mitch" } }
-	//  equal { { } .list .group { .first } } dict vals { }
-	//  equal { try { { 1 2 3 4 } .group { .is-even } } |type? } 'error ; TODO keys can only be string currently
-	"group": { // **
-		Argsn: 2,
-		Doc:   "Groups a block or list of values given condition.",
-		Pure:  true,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			var ll []any
-			var lo []env.Object
-			var llen int
-			modeObj := 0
-			switch data := arg0.(type) {
-			case env.Block:
-				lo = data.Series.S
-				llen = len(lo)
-				modeObj = 2
-			case env.List:
-				ll = data.Data
-				llen = len(ll)
-				modeObj = 1
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "group")
-			}
-
-			switch block := arg1.(type) {
-			case env.Block, env.Builtin:
-				newd := make(map[string]any)
-				switch block := block.(type) {
-				case env.Block:
-					ser := ps.Ser
-					ps.Ser = block.Series
-					for i := 0; i < llen; i++ {
-						var curval env.Object
-						if modeObj == 1 {
-							curval = env.ToRyeValue(ll[i])
-						} else {
-							curval = lo[i]
-						}
-						ps = EvalBlockInjMultiDialect(ps, curval, true)
-						if ps.ErrorFlag {
-							return ps.Res
-						}
-						// TODO !!! -- currently only works if results are strings
-						newkeyStr, ok := ps.Res.(env.String)
-						if !ok {
-							return MakeBuiltinError(ps, "Grouping key should be string.", "group")
-						}
-						newkey := newkeyStr.Value
-						entry, ok := newd[newkey]
-						if !ok {
-							newd[newkey] = env.NewList(make([]any, 0))
-							entry, ok = newd[newkey]
-							if !ok {
-								return MakeBuiltinError(ps, "Key not found in List.", "group")
-							}
-						}
-						switch ee := entry.(type) { // list in dict is a pointer
-						case *env.List:
-							ee.Data = append(ee.Data, env.RyeToRaw(curval, ps.Idx))
-						default:
-							return MakeBuiltinError(ps, "Entry type should be List.", "group")
-						}
-						ps.Ser.Reset()
-					}
-					ps.Ser = ser
-				case env.Builtin:
-					for i := 0; i < llen; i++ {
-						var curval env.Object
-						if modeObj == 1 {
-							curval = env.ToRyeValue(ll[i])
-						} else {
-							curval = lo[i]
-						}
-						res := DirectlyCallBuiltin(ps, block, curval, nil)
-						// TODO !!! -- currently only works if results are strings
-						newkeyStr, ok := res.(env.String)
-						if !ok {
-							return MakeBuiltinError(ps, "Grouping key should be string.", "group")
-						}
-						newkey := newkeyStr.Value
-						entry, ok := newd[newkey]
-						if !ok {
-							newd[newkey] = env.NewList(make([]any, 0))
-							entry, ok = newd[newkey]
-							if !ok {
-								return MakeBuiltinError(ps, "Key not found in List.", "group")
-							}
-						}
-						switch ee := entry.(type) { // list in dict is a pointer
-						case *env.List:
-							ee.Data = append(ee.Data, env.RyeToRaw(curval, ps.Idx))
-						default:
-							return MakeBuiltinError(ps, "Entry type should be List.", "group")
-						}
-					}
-				default:
-					return MakeBuiltinError(ps, "Block must be type of Block or builtin.", "group")
-				}
-				return *env.NewDict(newd)
-			default:
-				return MakeArgError(ps, 2, []env.Type{env.BlockType, env.BuiltinType}, "group")
-			}
-		},
-	},
-
-	// filter [ 1 2 3 ] { .add 3 }
-	// Tests:
-	//  equal { filter { 1 2 3 4 } { .is-even } } { 2 4 }
-	//  equal { filter { 1 2 3 4 } ?is-even } { 2 4 }
-	//  equal { filter { } { .is-even } } { }
-	//  equal { filter list { 1 2 3 4 } { .is-even } } list { 2 4 }
-	//  equal { filter list { 1 2 3 4 } ?is-even } list { 2 4 }
-	//  equal { filter list { } { .is-even } } list { }
-	//  equal { filter "1234" { .to-integer .is-even } } { "2" "4" }
-	//  equal { filter "01234" ?to-integer } { "1" "2" "3" "4" }
-	//  equal { filter "" { .to-integer .is-even } } { }
-	"filter": { // **
-		Argsn: 2,
-		Doc:   "Filters values from a seris based on return of a injected code block.",
-		Pure:  true,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			var ll []any
-			var lo []env.Object
-			var ls []rune
-			var llen int
-			modeObj := 0
-			switch data := arg0.(type) {
-			case env.String:
-				ls = []rune(data.Value)
-				llen = len(ls)
-				modeObj = 3
-			case env.Block:
-				lo = data.Series.S
-				llen = len(lo)
-				modeObj = 2
-			case env.List:
-				ll = data.Data
-				llen = len(ll)
-				modeObj = 1
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "filter")
-			}
-
-			switch block := arg1.(type) {
-			case env.Block, env.Builtin, env.Function:
-				var newlo []env.Object
-				var newll []any
-				switch block := block.(type) {
-				case env.Block:
-					ser := ps.Ser
-					ps.Ser = block.Series
-					for i := 0; i < llen; i++ {
-						var item any
-						if modeObj == 1 {
-							item = ll[i]
-						} else if modeObj == 2 {
-							item = lo[i]
-						} else {
-							item = env.ToRyeValue(ls[i])
-						}
-						ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(item), true)
-						if ps.ErrorFlag {
-							return ps.Res
-						}
-						if util.IsTruthy(ps.Res) { // todo -- move these to util or something
-							if modeObj == 1 {
-								newll = append(newll, ll[i])
-							} else if modeObj == 2 {
-								newlo = append(newlo, lo[i])
-							} else {
-								newlo = append(newlo, item.(env.Object))
-							}
-						}
-						ps.Ser.Reset()
-					}
-					ps.Ser = ser
-				case env.Function:
-					for i := 0; i < llen; i++ {
-						var item any
-						if modeObj == 1 {
-							item = ll[i]
-						} else if modeObj == 2 {
-							item = lo[i]
-						} else {
-							item = env.ToRyeValue(ls[i])
-						}
-						CallFunctionArgsN(block, ps, ps.Ctx, env.ToRyeValue(item)) // , env.NewInteger(int64(i)))
-						if util.IsTruthy(ps.Res) {                                 // todo -- move these to util or something
-							if modeObj == 1 {
-								newll = append(newll, ll[i])
-							} else if modeObj == 2 {
-								newlo = append(newlo, lo[i])
-							} else {
-								newlo = append(newlo, item.(env.Object))
-							}
-						}
-					}
-				case env.Builtin:
-					for i := 0; i < llen; i++ {
-						var item any
-						if modeObj == 1 {
-							item = ll[i]
-						} else if modeObj == 2 {
-							item = lo[i]
-						} else {
-							item = env.ToRyeValue(ls[i])
-						}
-						res := DirectlyCallBuiltin(ps, block, env.ToRyeValue(item), nil)
-						if util.IsTruthy(res) { // todo -- move these to util or something
-							if modeObj == 1 {
-								newll = append(newll, ll[i])
-							} else if modeObj == 2 {
-								newlo = append(newlo, lo[i])
-							} else {
-								newlo = append(newlo, item.(env.Object))
-							}
-						}
-					}
-				default:
-					return MakeBuiltinError(ps, "Block type should be Builtin or Block.", "filter")
-				}
-				if modeObj == 1 {
-					return *env.NewList(newll)
-				} else if modeObj == 2 {
-					return *env.NewBlock(*env.NewTSeries(newlo))
-				} else {
-					return *env.NewBlock(*env.NewTSeries(newlo))
-				}
-
-			default:
-				return MakeArgError(ps, 2, []env.Type{env.BlockType, env.BuiltinType}, "filter")
-			}
-		},
-	},
-	// Tests:
-	//  equal { seek { 1 2 3 4 } { .is-even } } 2
-	//  equal { seek list { 1 2 3 4 } { .is-even } } 2
-	//  equal { seek "1234" { .to-integer .is-even } } "2"
-	//  equal { try { seek { 1 2 3 4 } { > 5 } } |type? } 'error
-	//  equal { try { seek list { 1 2 3 4 } { > 5 } } |type? } 'error
-	//  equal { try { seek "1234" { .to-integer > 5 } } |type? } 'error
-	"seek": { // **
-		Argsn: 2,
-		Doc:   "Seek over a series until a Block of code returns True and return the value.",
-		Pure:  true,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			var ll []any
-			var lo []env.Object
-			var ls []rune
-			var llen int
-			modeObj := 0
-			switch data := arg0.(type) {
-			case env.String:
-				ls = []rune(data.Value)
-				llen = len(ls)
-				modeObj = 3
-			case env.Block:
-				lo = data.Series.S
-				llen = len(lo)
-				modeObj = 2
-			case env.List:
-				ll = data.Data
-				llen = len(ll)
-				modeObj = 1
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "seek")
-			}
-			switch block := arg1.(type) {
-			case env.Block, env.Builtin:
-				switch block := block.(type) {
-				case env.Block:
-					ser := ps.Ser
-					ps.Ser = block.Series
-					for i := 0; i < llen; i++ {
-						var item any
-						if modeObj == 1 {
-							item = ll[i]
-						} else if modeObj == 2 {
-							item = lo[i]
-						} else {
-							item = *env.NewString(string(ls[i]))
-						}
-						ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(item), true)
-						if ps.ErrorFlag {
-							ps.Ser = ser
-							return ps.Res
-						}
-						if util.IsTruthy(ps.Res) { // todo -- move these to util or something
-							ps.Ser = ser
-							return env.ToRyeValue(item)
-						}
-						ps.Ser.Reset()
-					}
-					ps.Ser = ser
-				case env.Builtin:
-					for i := 0; i < llen; i++ {
-						var item any
-						if modeObj == 1 {
-							item = ll[i]
-						} else if modeObj == 2 {
-							item = lo[i]
-						} else {
-							item = *env.NewString(string(ls[i]))
-						}
-						res := DirectlyCallBuiltin(ps, block, env.ToRyeValue(item), nil)
-						if util.IsTruthy(res) { // todo -- move these to util or something
-							return env.ToRyeValue(item)
-						}
-					}
-				default:
-					ps.ErrorFlag = true
-					return MakeBuiltinError(ps, "Second argument should be block, builtin (or function).", "seek")
-				}
-			default:
-				return MakeArgError(ps, 2, []env.Type{env.BlockType, env.BuiltinType}, "seek")
-			}
-			return MakeBuiltinError(ps, "No element found.", "seek")
-		},
-	},
 
 	//
 	// ##### Other ##### "functions related to date and time"
@@ -4543,360 +3295,6 @@ var builtins = map[string]*env.Builtin{
 				fmt.Println(code.Inspect(*ps.Idx))
 				os.Exit(0)
 				return nil
-			}
-		},
-	},
-
-	"^fail": {
-		Argsn: 1,
-		Doc:   "Returning Fail.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			//fmt.Println("FAIL")
-			ps.FailureFlag = true
-			ps.ReturnFlag = true
-			return MakeRyeError(ps, arg0, nil)
-		},
-	},
-
-	"fail": { // **
-		Argsn: 1,
-		Doc:   "Constructs and Fails with an Error object. Accepts String as message, Integer as code, or block for multiple parameters.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			//fmt.Println("FAIL")
-			ps.FailureFlag = true
-			return MakeRyeError(ps, arg0, nil)
-		},
-	},
-
-	"failure": { // **
-		Argsn: 1,
-		Doc:   "Constructs and Error object. Accepts String as message, Integer as code, or block for multiple parameters.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			//ps.ErrorFlag = true
-			return MakeRyeError(ps, arg0, nil)
-		},
-	},
-
-	"wrap\\failure": {
-		Argsn: 2,
-		Doc:   "Wraps an Error with another Error. Accepts String as message, Integer as code, or block for multiple parameters and Error as arguments.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch er := arg1.(type) {
-			case *env.Error:
-				return MakeRyeError(ps, arg0, er)
-			default:
-				return MakeArgError(ps, 2, []env.Type{env.ErrorType}, "wrap\\failure")
-			}
-		},
-	},
-
-	"status?": { // **
-		AcceptFailure: true,
-		Argsn:         1,
-		Doc:           "Returns the status code of the Error.", // TODO -- seems duplicate of status
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch er := arg0.(type) {
-			case env.Error:
-				return *env.NewInteger(int64(er.Status))
-			case *env.Error:
-				return *env.NewInteger(int64(er.Status))
-			default:
-				ps.FailureFlag = true
-				return env.NewError("arg 0 not error")
-			}
-		},
-	},
-
-	"message?": { // **
-		AcceptFailure: true,
-		Argsn:         1,
-		Doc:           "Returns the status code of the Error.", // TODO -- seems duplicate of status
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch er := arg0.(type) {
-			case env.Error:
-				return *env.NewString(er.Message)
-			case *env.Error:
-				return *env.NewString(er.Message)
-			default:
-				ps.FailureFlag = true
-				return env.NewError("arg 0 not error")
-			}
-		},
-	},
-
-	"details?": { // **
-		AcceptFailure: true,
-		Argsn:         1,
-		Doc:           "Returns the status code of the Error.", // TODO -- seems duplicate of status
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			var originalMap map[string]env.Object
-			switch er := arg0.(type) {
-			case env.Error:
-			case *env.Error:
-				originalMap = er.Values
-			default:
-				ps.FailureFlag = true
-				return env.NewError("arg 0 not error")
-			}
-			// originalMap := er.Values // map[string]env.Object
-			convertedMap := make(map[string]any)
-			for key, value := range originalMap {
-				convertedMap[key] = value
-			}
-			return env.NewDict(convertedMap)
-		},
-	},
-
-	"disarm": { // **
-		AcceptFailure: true,
-		Argsn:         1,
-		Doc:           "Disarms the Error.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			ps.FailureFlag = false
-			return arg0
-		},
-	},
-
-	"failed?": { // **
-		AcceptFailure: true,
-		Argsn:         1,
-		Doc:           "Checks if first argument is an Error. Returns a boolean.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			ps.FailureFlag = false
-			switch arg0.(type) {
-			case env.Error:
-				return *env.NewInteger(int64(1))
-			case *env.Error:
-				return *env.NewInteger(int64(1))
-			}
-			return *env.NewInteger(int64(0))
-		},
-	},
-
-	"check": { // **
-		AcceptFailure: true,
-		Argsn:         2,
-		Doc:           "Check if Arg 1 is not failure, if it wraps it into another Failure (Arg 2), otherwise returns Arg 1.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			if ps.FailureFlag || arg0.Type() == env.ErrorType {
-				ps.FailureFlag = false
-				switch er := arg0.(type) {
-				case *env.Error: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
-					if er.Status == 0 && er.Message == "" {
-						er = nil
-					}
-					return MakeRyeError(ps, arg1, er)
-				}
-			}
-			return arg0
-		},
-	},
-
-	"^check": {
-		AcceptFailure: true,
-		Argsn:         2,
-		Doc:           "Returning Check.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			if ps.FailureFlag {
-				ps.ReturnFlag = true
-				switch er := arg0.(type) {
-				case *env.Error: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
-					if er.Status == 0 && er.Message == "" {
-						er = nil
-					}
-					return MakeRyeError(ps, arg1, er)
-				}
-				return env.NewError("error 1")
-			}
-			return arg0
-		},
-	},
-
-	"^require": {
-		AcceptFailure: true,
-		Argsn:         2,
-		Doc:           "Returning Require.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch cond := arg0.(type) {
-			case env.Object:
-				if !util.IsTruthy(cond) {
-					ps.FailureFlag = true
-					ps.ReturnFlag = true
-					return MakeRyeError(ps, arg1, nil)
-				} else {
-					return arg0
-				}
-			}
-			return arg0
-		},
-	},
-
-	"require": { // **
-		AcceptFailure: true,
-		Argsn:         2,
-		Doc:           "Require that first argument is Truthy value, if not produce a failure based on second argument",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch cond := arg0.(type) {
-			case env.Object:
-				if !util.IsTruthy(cond) {
-					ps.FailureFlag = true
-					// ps.ReturnFlag = true
-					return MakeRyeError(ps, arg1, nil)
-				} else {
-					return arg0
-				}
-			}
-			return arg0
-		},
-	},
-
-	"assert-equal": { // **
-		Argsn: 2,
-		Doc:   "Test if two values are equal. Fail if not.",
-		Pure:  true,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			if arg0.GetKind() == arg1.GetKind() && arg0.Inspect(*ps.Idx) == arg1.Inspect(*ps.Idx) {
-				return *env.NewInteger(1)
-			} else {
-				return makeError(ps, "Values are not equal: "+arg0.Inspect(*ps.Idx)+" "+arg1.Inspect(*ps.Idx))
-			}
-		},
-	},
-
-	"fix": { // **
-		AcceptFailure: true,
-		Argsn:         2,
-		Doc:           "If Arg 1 is a failure, do a block and return the result of it, otherwise return Arg 1.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			if ps.FailureFlag || arg0.Type() == env.ErrorType {
-				ps.FailureFlag = false
-				// TODO -- create function do_block and call in all cases
-				switch bloc := arg1.(type) {
-				case env.Block:
-					ser := ps.Ser
-					ps.Ser = bloc.Series
-					EvalBlockInjMultiDialect(ps, arg0, true)
-					ps.Ser = ser
-					return ps.Res
-				default:
-					ps.FailureFlag = true
-					return env.NewError("expecting block")
-				}
-			} else {
-				return arg0
-			}
-		},
-	},
-
-	"^fix": {
-		AcceptFailure: true,
-		Argsn:         2,
-		Doc:           "Fix as a returning function. If Arg 1 is failure, do the block and return to caller.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			if ps.FailureFlag || arg0.Type() == env.ErrorType {
-				ps.FailureFlag = false
-				// TODO -- create function do_block and call in all cases
-				switch bloc := arg1.(type) {
-				case env.Block:
-					ser := ps.Ser
-					ps.Ser = bloc.Series
-					EvalBlockInjMultiDialect(ps, arg0, true)
-					ps.Ser = ser
-					ps.ReturnFlag = true
-					return ps.Res
-				default:
-					ps.FailureFlag = true
-					return env.NewError("expecting block")
-				}
-			} else {
-				return arg0
-			}
-		},
-	},
-
-	"`fix": {
-		AcceptFailure: true,
-		Argsn:         2,
-		Doc:           "Fix as a skipping function.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			if ps.FailureFlag || arg0.Type() == env.ErrorType {
-				ps.FailureFlag = false
-				// TODO -- create function do_block and call in all cases
-				switch bloc := arg1.(type) {
-				case env.Block:
-					ser := ps.Ser
-					ps.Ser = bloc.Series
-					EvalBlockInjMultiDialect(ps, arg0, true)
-					ps.Ser = ser
-					ps.SkipFlag = true
-					return ps.Res
-				default:
-					ps.FailureFlag = true
-					return env.NewError("expecting block")
-				}
-			} else {
-				return arg0
-			}
-		},
-	},
-
-	"fix\\either": {
-		AcceptFailure: true,
-		Argsn:         3,
-		Doc:           "Fix also with else block.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			if ps.FailureFlag || arg0.Type() == env.ErrorType {
-				ps.FailureFlag = false
-				// TODO -- create function do_block and call in all cases
-				switch bloc := arg1.(type) {
-				case env.Block:
-					ser := ps.Ser
-					ps.Ser = bloc.Series
-					EvalBlockInjMultiDialect(ps, arg0, true)
-					ps.Ser = ser
-					return ps.Res
-				default:
-					ps.FailureFlag = true
-					return env.NewError("expecting block")
-				}
-			} else {
-				switch bloc := arg2.(type) {
-				case env.Block:
-					ser := ps.Ser
-					ps.Ser = bloc.Series
-					EvalBlockInjMultiDialect(ps, arg0, true)
-					ps.Ser = ser
-					return ps.Res
-				default:
-					ps.FailureFlag = true
-					return env.NewError("expecting block")
-				}
-			}
-		},
-	},
-
-	"continue": {
-		AcceptFailure: true,
-		Argsn:         2,
-		Doc:           "Do a block of code if Arg 1 is not a failure.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			if !(ps.FailureFlag || arg0.Type() == env.ErrorType) {
-				ps.FailureFlag = false
-				// TODO -- create function do_block and call in all cases
-				switch bloc := arg1.(type) {
-				case env.Block:
-					ser := ps.Ser
-					ps.Ser = bloc.Series
-					EvalBlockInjMultiDialect(ps, arg0, true)
-					ps.Ser = ser
-					return ps.Res
-				default:
-					ps.FailureFlag = true
-					return env.NewError("expecting block")
-				}
-			} else {
-				ps.FailureFlag = false
-				return arg0
 			}
 		},
 	},
@@ -5155,8 +3553,10 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(builtins_time, ps, "base")
 	RegisterBuiltins2(builtins_string, ps, "base")
 	RegisterBuiltins2(builtins_collection, ps, "base")
+	RegisterBuiltins2(builtins_iteration, ps, "base")
 	RegisterBuiltins2(builtins_contexts, ps, "base")
 	RegisterBuiltins2(builtins_functions, ps, "base")
+	RegisterBuiltins2(Builtins_failure, ps, "failure")
 	RegisterBuiltins2(Builtins_table, ps, "table")
 	RegisterBuiltins2(Builtins_vector, ps, "vector")
 	RegisterBuiltins2(Builtins_io, ps, "io")
