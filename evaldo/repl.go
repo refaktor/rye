@@ -3,8 +3,10 @@
 package evaldo
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -165,8 +167,9 @@ type Repl struct {
 
 	fullCode string
 
-	stack      *env.EyrStack // part of PS no ... move there, remove here
-	prevResult env.Object
+	stack         *env.EyrStack // part of PS no ... move there, remove here
+	prevResult    env.Object
+	captureStdout bool
 }
 
 func (r *Repl) recieveMessage(message string) {
@@ -174,6 +177,7 @@ func (r *Repl) recieveMessage(message string) {
 }
 
 func (r *Repl) recieveLine(line string) string {
+	log.Println("RECV LINE: " + line)
 	res := r.evalLine(r.ps, line)
 	if r.showResults && len(res) > 0 {
 		fmt.Println(res)
@@ -274,6 +278,43 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 		block1 := block.(env.Block)
 		es = env.AddToProgramState(es, block1.Series, genv)
 
+		// STDIO CAPTURE START
+
+		// Define variables outside if statement
+		var r1 *os.File
+		var w *os.File
+		var err error
+		var oldStdout *os.File
+		var stdoutCh chan string
+
+		if r.captureStdout {
+			// Create a pipe to capture stdout
+			r1, w, err = os.Pipe()
+			if err != nil {
+				log.Printf("Failed to create pipe: %v", err)
+				// resultCh <- "Error: Failed to capture output"
+				// continue
+			}
+
+			// Save the original stdout
+			oldStdout = os.Stdout
+			// Replace stdout with our pipe writer
+			os.Stdout = w
+
+			// Create a channel for the captured output
+			stdoutCh = make(chan string)
+
+			// Start a goroutine to read from the pipe
+			go func() {
+				var buf bytes.Buffer
+				_, err := io.Copy(&buf, r1)
+				if err != nil {
+					log.Printf("Error reading from pipe: %v", err)
+				}
+				stdoutCh <- buf.String()
+			}()
+		}
+
 		// EVAL THE DO DIALECT
 		if r.dialect == "rye" {
 			EvalBlockInj(es, r.prevResult, true)
@@ -319,14 +360,34 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 			output = fmt.Sprint("\033[38;5;37m" + p + resultStr + "\x1b[0m")
 		}
 
+		if r.captureStdout {
+			// STDOUT CAPTURE
+			// Close the pipe writer to signal EOF to the reader
+			w.Close()
+
+			// Restore the original stdout
+			os.Stdout = oldStdout
+
+			// Get the captured stdout
+			capturedOutput := <-stdoutCh
+
+			log.Println("CAPTURED STDOUT")
+			log.Println(capturedOutput)
+
+			// Close the pipe reader
+			r1.Close()
+			// STDOUT CAPTURE END
+			output = capturedOutput + output
+		}
 		es.ReturnFlag = false
 		es.ErrorFlag = false
 		es.FailureFlag = false
 
 		r.fullCode = ""
+		return output
 	}
 
-	r.ml.AppendHistory(code)
+	// r.ml.AppendHistory(code)
 	return output
 }
 
@@ -454,10 +515,11 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 
 	c := make(chan term.KeyEvent)
 	r := Repl{
-		ps:          es,
-		dialect:     dialect,
-		showResults: showResults,
-		stack:       env.NewEyrStack(),
+		ps:            es,
+		dialect:       dialect,
+		showResults:   showResults,
+		stack:         env.NewEyrStack(),
+		captureStdout: false,
 	}
 	ml := term.NewMicroLiner(c, r.recieveMessage, r.recieveLine)
 	r.ml = ml

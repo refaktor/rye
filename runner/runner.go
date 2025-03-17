@@ -37,6 +37,7 @@ var (
 	stin   = flag.String("stin", "no", "Inject first value from stdin")
 	//	quit    = flag.Bool("quit", false, "Quits after executing.")
 	console = flag.Bool("console", false, "Enters console after a file is evaluated.")
+	dual    = flag.Bool("dual", false, "Starts REPL in dual-mode with two parallel panels")
 	help    = flag.Bool("help", false, "Displays this help message.")
 )
 
@@ -685,15 +686,24 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 		}
 	}()
 
+	logFile, err := os.OpenFile("debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		panic(err)
+	}
+	defer logFile.Close()
+	log.SetOutput(logFile)
+
 	// fmt.Println("RYE REPL")
 	input := code // "name: \"Rye\" version: \"0.011 alpha\""
 	// userHomeDir, _ := os.UserHomeDir()
 	// profile_path := filepath.Join(userHomeDir, ".rye-profile")
 
-	// fmt.Println("Welcome to Rye console. Use lc to list current or lcp and lcp\\ \"pri\" to list parent contexts.")
-	fmt.Println("Welcome to Rye console. We're still W-I-P. Visit \033[38;5;14mryelang.org\033[0m for more info.")
-	fmt.Println("- \033[38;5;246mtype in lcp (list context parent) too see functions, or lc to see your context\033[0m")
-	//fmt.Println("--------------------------------------------------------------------------------")
+	if !*dual {
+		// fmt.Println("Welcome to Rye console. Use lc to list current or lcp and lcp\\ \"pri\" to list parent contexts.")
+		fmt.Println("Welcome to Rye console. We're still W-I-P. Visit \033[38;5;14mryelang.org\033[0m for more info.")
+		fmt.Println("- \033[38;5;246mtype in lcp (list context parent) too see functions, or lc to see your context\033[0m")
+		//fmt.Println("--------------------------------------------------------------------------------")
+	}
 
 	// Uncomment and fix the profile loading code if needed
 	//if _, err := os.Stat(profile_path); err == nil {
@@ -758,7 +768,28 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 	}()
 	//fmt.Println("Waiting for signal")
 
-	evaldo.DoRyeRepl(es, lang, evaldo.ShowResults)
+	if *dual {
+		// Create a second program state for the right panel
+		rightEs := env.NewProgramState(block.(env.Block).Series, genv)
+		evaldo.RegisterBuiltins(rightEs)
+		contrib.RegisterBuiltins(rightEs, &evaldo.BuiltinNames)
+		regfn(rightEs)
+
+		if lang == "eyr" {
+			rightEs.Dialect = env.EyrDialect
+		}
+		evaldo.EvalBlockInjMultiDialect(rightEs, nil, false)
+
+		if subc {
+			ctx := rightEs.Ctx
+			rightEs.Ctx = env.NewEnv(ctx) // make new context with no parent
+		}
+
+		// Start dual REPL
+		evaldo.DoRyeDualRepl(es, rightEs, lang, evaldo.ShowResults)
+	} else {
+		evaldo.DoRyeRepl(es, lang, evaldo.ShowResults)
+	}
 }
 
 func main_rysh() {
