@@ -6,6 +6,8 @@ import (
 	"math"
 	"math/big"
 	"sort"
+	"strings"
+	"time"
 
 	"github.com/refaktor/rye/env"
 
@@ -1216,6 +1218,197 @@ var builtins_collection = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	// equal { "A" ++ "b" } "Ab"
+	// equal { "A" ++ 1 } "A1"
+	// equal { { 1 2 } ++ { 3 4 } } { 1 2 3 4 }
+	// equal { dict { "a" 1 } |++ { "b" 2 } } dict { "a" 1 "b" 2 }
+	// equal { dict { "a" 1 } |++ dict { "b" 2 } } dict { "a" 1 "b" 2 }
+	// Args:
+	// * value1: First value (string, block, dict, etc.)
+	// * value2: Second value to join
+	// Returns:
+	// * result of joining the values, type depends on input types
+	"_++": {
+		Argsn: 2,
+		Doc:   "Joins two values together, with behavior depending on types: concatenates strings, joins blocks, merges dictionaries, etc.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				switch s2 := arg1.(type) {
+				case env.String:
+					return *env.NewString(s1.Value + s2.Value)
+				case env.Integer:
+					return *env.NewString(s1.Value + strconv.Itoa(int(s2.Value)))
+				case env.Decimal:
+					return *env.NewString(s1.Value + strconv.FormatFloat(s2.Value, 'f', -1, 64))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType, env.IntegerType, env.DecimalType}, "_++")
+				}
+			case env.Uri:
+				switch s2 := arg1.(type) {
+				case env.String:
+					return *env.NewUri(ps.Idx, s1.Scheme, s1.Path+s2.Value)
+				case env.Integer:
+					return *env.NewUri(ps.Idx, s1.Scheme, s1.Path+strconv.Itoa(int(s2.Value)))
+				case env.Block: // -- TODO turn tagwords and valvar sb strings.Builderues to uri encoded values , turn files into paths ... think more about it
+					var str strings.Builder
+					sepa := ""
+					for i := 0; i < s2.Series.Len(); i++ {
+						switch node := s2.Series.Get(i).(type) {
+						case env.Word:
+							_, err := str.WriteString(sepa + ps.Idx.GetWord(node.Index) + "=")
+							if err != nil {
+								return MakeBuiltinError(ps, "WriteString failed for Word type.", "_++")
+							}
+							sepa = "&"
+						case env.String:
+							_, err := str.WriteString(node.Value)
+							if err != nil {
+								return MakeBuiltinError(ps, "WriteString failed for String type.", "_++")
+							}
+						case env.Integer:
+							_, err := str.WriteString(strconv.Itoa(int(node.Value)))
+							if err != nil {
+								return MakeBuiltinError(ps, "WriteString failed for Integer type.", "_++")
+							}
+						case env.Uri:
+							_, err := str.WriteString(node.GetPath())
+							if err != nil {
+								return MakeBuiltinError(ps, "WriteString failed for Uri type.", "_++")
+							}
+						default:
+							return MakeBuiltinError(ps, "Value in node is not word, string, int or uri type.", "_++")
+						}
+					}
+					return *env.NewUri(ps.Idx, s1.Scheme, s1.Path+str.String())
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType, env.IntegerType, env.BlockType}, "_++")
+				}
+			case env.Block:
+				switch b2 := arg1.(type) {
+				case env.Block:
+					s := &s1.Series
+					s1.Series = *s.AppendMul(b2.Series.GetAll())
+					return s1
+				default:
+					return MakeBuiltinError(ps, "Value in Block is not block type.", "_++")
+				}
+			case env.Dict:
+				switch b2 := arg1.(type) {
+				case env.Dict:
+					return env.MergeTwoDicts(s1, b2)
+				case env.Block:
+					return env.MergeDictAndBlock(s1, b2.Series, ps.Idx)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.DictType, env.BlockType}, "_++")
+				}
+			case env.TableRow:
+				switch b2 := arg1.(type) {
+				case env.Dict:
+					return env.AddTableRowAndDict(s1, b2)
+				case env.Block:
+					return env.AddTableRowAndBlock(s1, b2.Series, ps.Idx)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.DictType, env.BlockType}, "_++")
+				}
+			case env.Time:
+				switch b2 := arg1.(type) {
+				case env.Integer:
+					v := s1.Value.Add(time.Duration(b2.Value * 1000000))
+					return *env.NewTime(v)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "_++")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType, env.DictType, env.TableRowType, env.TimeType, env.UriType}, "_++")
+			}
+		},
+	},
+
+	/*
+			case env.String:
+			switch s2 := arg1.(type) {
+			case env.String:
+				return *env.NewString(s1.Value + s2.Value)
+			case env.Integer:
+				return *env.NewString(s1.Value + strconv.Itoa(int(s2.Value)))
+			case env.Decimal:
+				return *env.NewString(s1.Value + strconv.FormatFloat(s2.Value, 'f', -1, 64))
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.StringType, env.IntegerType, env.DecimalType}, "_+")
+			}
+		case env.Uri:
+			switch s2 := arg1.(type) {
+			case env.String:
+				return *env.NewUri(ps.Idx, s1.Scheme, s1.Path+s2.Value)
+			case env.Integer:
+				return *env.NewUri(ps.Idx, s1.Scheme, s1.Path+strconv.Itoa(int(s2.Value)))
+			case env.Block: // -- TODO turn tagwords and valvar sb strings.Builderues to uri encoded values , turn files into paths ... think more about it
+				var str strings.Builder
+				sepa := ""
+				for i := 0; i < s2.Series.Len(); i++ {
+					switch node := s2.Series.Get(i).(type) {
+					case env.Word:
+						_, err := str.WriteString(sepa + ps.Idx.GetWord(node.Index) + "=")
+						if err != nil {
+							return MakeBuiltinError(ps, "WriteString failed for Word type.", "_+")
+						}
+						sepa = "&"
+					case env.String:
+						_, err := str.WriteString(node.Value)
+						if err != nil {
+							return MakeBuiltinError(ps, "WriteString failed for String type.", "_+")
+						}
+					case env.Integer:
+						_, err := str.WriteString(strconv.Itoa(int(node.Value)))
+						if err != nil {
+							return MakeBuiltinError(ps, "WriteString failed for Integer type.", "_+")
+						}
+					case env.Uri:
+						_, err := str.WriteString(node.GetPath())
+						if err != nil {
+							return MakeBuiltinError(ps, "WriteString failed for Uri type.", "_+")
+						}
+					default:
+						return MakeBuiltinError(ps, "Value in node is not word, string, int or uri type.", "_+")
+					}
+				}
+				return *env.NewUri(ps.Idx, s1.Scheme, s1.Path+str.String())
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.StringType, env.IntegerType, env.BlockType}, "_+")
+			}
+		case env.Block:
+			switch b2 := arg1.(type) {
+			case env.Block:
+				s := &s1.Series
+				s1.Series = *s.AppendMul(b2.Series.GetAll())
+				return s1
+			default:
+				return MakeBuiltinError(ps, "Value in Block is not block type.", "_+")
+			}
+		case env.Dict:
+			switch b2 := arg1.(type) {
+			case env.Dict:
+				return env.MergeTwoDicts(s1, b2)
+			case env.Block:
+				return env.MergeDictAndBlock(s1, b2.Series, ps.Idx)
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.DictType, env.BlockType}, "_+")
+			}
+		case env.TableRow:
+			switch b2 := arg1.(type) {
+			case env.Dict:
+				return env.AddTableRowAndDict(s1, b2)
+			case env.Block:
+				return env.AddTableRowAndBlock(s1, b2.Series, ps.Idx)
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.DictType, env.BlockType}, "_+")
+			}
+
+	*/
 
 	// Tests:
 	// ; equal { "abcd" .union "cde" } "abcde"

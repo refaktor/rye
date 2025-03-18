@@ -431,13 +431,13 @@ var builtins_string = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { encode\base64 "abcd" } "YWJjZA=="
-	// equal { encode\base64 "hello world" } "aGVsbG8gd29ybGQ="
+	// equal { encode-to\base64 "abcd" } "YWJjZA=="
+	// equal { encode-to\base64 "hello world" } "aGVsbG8gd29ybGQ="
 	// Args:
 	// * data: String or native bytes/pem-block to encode
 	// Returns:
 	// * base64-encoded string
-	"encode\\base64": {
+	"encode-to\\base64": {
 		Argsn: 1,
 		Doc:   "Encodes a string or binary data as a base64 string.",
 		Pure:  true,

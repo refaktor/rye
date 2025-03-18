@@ -383,11 +383,12 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 		es.ErrorFlag = false
 		es.FailureFlag = false
 
+		r.ml.AppendHistory(code)
+
 		r.fullCode = ""
 		return output
 	}
 
-	// r.ml.AppendHistory(code)
 	return output
 }
 

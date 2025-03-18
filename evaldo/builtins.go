@@ -1664,6 +1664,27 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"print2": { // **
+		Argsn: 2,
+		Doc:   "Prints two values with a space between them and adds a newline.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg0 := arg0.(type) {
+			case env.String:
+				fmt.Print(arg0.Value)
+			default:
+				fmt.Print(arg0.Print(*ps.Idx))
+			}
+			fmt.Print(" ")
+			switch arg1 := arg1.(type) {
+			case env.String:
+				fmt.Println(arg1.Value)
+			default:
+				fmt.Println(arg1.Print(*ps.Idx))
+			}
+			return arg1
+		},
+	},
+
 	// Tests:
 	// equal { format 123  "num: %d" } "num: 123"
 	"format": {
@@ -3557,6 +3578,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(builtins_contexts, ps, "base")
 	RegisterBuiltins2(builtins_functions, ps, "base")
 	RegisterBuiltins2(Builtins_failure, ps, "failure")
+	RegisterBuiltins2(Builtins_match, ps, "match")
 	RegisterBuiltins2(Builtins_table, ps, "table")
 	RegisterBuiltins2(Builtins_vector, ps, "vector")
 	RegisterBuiltins2(Builtins_io, ps, "io")
