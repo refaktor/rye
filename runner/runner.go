@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/signal"
 	"regexp"
+	"runtime/debug"
 	"sort"
 	"strings"
 	"syscall"
@@ -36,10 +37,71 @@ var (
 	stin   = flag.String("stin", "no", "Inject first value from stdin")
 	//	quit    = flag.Bool("quit", false, "Quits after executing.")
 	console = flag.Bool("console", false, "Enters console after a file is evaluated.")
+	dual    = flag.Bool("dual", false, "Starts REPL in dual-mode with two parallel panels")
 	help    = flag.Bool("help", false, "Displays this help message.")
 )
 
+// Error handling utilities
+var (
+	errorLogFile *os.File
+	errorLogger  *log.Logger
+	logErrors    bool = true
+)
+
+// initErrorLogging initializes the error logging system
+func initErrorLogging() {
+	// Try to open error log file
+	var err error
+	errorLogFile, err = os.OpenFile("rye_errors.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: Could not open error log file: %v\n", err)
+		errorLogger = log.New(os.Stderr, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
+	} else {
+		// Create multi-writer to log to both stderr and file
+		multiWriter := io.MultiWriter(os.Stderr, errorLogFile)
+		errorLogger = log.New(multiWriter, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
+	}
+}
+
+// logError logs an error with context if logging is enabled
+func logError(err error, context string) {
+	if logErrors && err != nil {
+		errorLogger.Printf("%s: %v", context, err)
+	}
+}
+
+// handleError handles an error with the specified context
+// If fatal is true, the program will exit
+func handleError(err error, context string, fatal bool) {
+	if err != nil {
+		logError(err, context)
+		errMsg := fmt.Sprintf("Error in %s: %v", context, err)
+		if fatal {
+			fmt.Fprintln(os.Stderr, errMsg)
+			os.Exit(1)
+		} else {
+			fmt.Fprintln(os.Stderr, errMsg)
+		}
+	}
+}
+
 func DoMain(regfn func(*env.ProgramState)) {
+	// Initialize error logging
+	initErrorLogging()
+	defer func() {
+		if errorLogFile != nil {
+			errorLogFile.Close()
+		}
+	}()
+
+	// Add panic recovery
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Fprintf(os.Stderr, "Recovered from panic in DoMain: %v\n", r)
+			debug.PrintStack()
+		}
+	}()
+
 	flag.Usage = func() {
 		fmt.Println("╭────────────────────────────────────────────────────────────────────────────────────────────---")
 		fmt.Println("│ \033[1mRye\033[0m language. Visit \033[36mhttps://ryelang.org\033[0m to learn more.                            ")
@@ -159,7 +221,7 @@ func findLastConsoleSave() string {
 	// Read directory entries
 	entries, err := os.ReadDir(".")
 	if err != nil {
-		fmt.Println("Error reading directory:", err) // TODO --- report better
+		handleError(err, "reading directory for console saves", false)
 		return ""
 	}
 
@@ -170,27 +232,51 @@ func findLastConsoleSave() string {
 			continue // Skip directories
 		}
 		if strings.HasPrefix(entry.Name(), "console_") {
+			// Verify file is readable
+			if _, err := os.Stat(entry.Name()); err != nil {
+				handleError(err, fmt.Sprintf("checking console save file %s", entry.Name()), false)
+				continue // Skip this file but continue processing others
+			}
 			files = append(files, entry.Name())
 		}
 	}
 
 	if len(files) == 0 {
+		fmt.Println("No console save files found")
 		return ""
 	}
 
 	sort.Strings(files)
+	latestFile := files[len(files)-1]
 
-	return files[len(files)-1]
+	// Final verification
+	if _, err := os.ReadFile(latestFile); err != nil {
+		handleError(err, fmt.Sprintf("reading latest console save file %s", latestFile), false)
+		// Try the next most recent file if available
+		if len(files) > 1 {
+			fmt.Printf("Trying previous save file: %s\n", files[len(files)-2])
+			return files[len(files)-2]
+		}
+		return ""
+	}
+
+	return latestFile
 }
 
 func dotsToMainRye(ryeFile string) string {
-	re := regexp.MustCompile(`^\.$|/\.$`)
+	re, err := regexp.Compile(`^\.$|/\.$`)
+	if err != nil {
+		handleError(err, "compiling regex in dotsToMainRye", false)
+		return ryeFile
+	}
+
 	if re.MatchString(ryeFile) {
 		main_path := ryeFile[:len(ryeFile)-1] + "main.rye"
 		if _, err := os.Stat(main_path); err == nil || Option_Embed_Main {
 			_, err := os.ReadFile(main_path)
 			if err != nil {
-				log.Fatal(err)
+				handleError(err, fmt.Sprintf("reading main.rye at %s", main_path), false)
+				return ryeFile // Return original file on error
 			}
 			return main_path
 		} else {
@@ -205,6 +291,14 @@ func dotsToMainRye(ryeFile string) string {
 //
 
 func main_ryk() {
+	// Add panic recovery
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Fprintf(os.Stderr, "Recovered from panic in main_ryk: %v\n", r)
+			debug.PrintStack()
+		}
+	}()
+
 	argIdx := 2
 	ignore := 0
 	separator := ""
@@ -217,9 +311,11 @@ func main_ryk() {
 	if _, err := os.Stat(profile_path); err == nil {
 		content, err := os.ReadFile(profile_path)
 		if err != nil {
-			log.Fatal(err)
+			handleError(err, fmt.Sprintf("reading profile file %s", profile_path), false)
+			// Continue with default input instead of fatal error
+		} else {
+			input = string(content)
 		}
-		input = string(content)
 	}
 
 	block, genv := loader.LoadString(input, false)
@@ -263,6 +359,7 @@ func main_ryk() {
 		if os.Args[argIdx] == "--filter" {
 			code := os.Args[argIdx+1]
 			if code[0] == '/' {
+				// MustCompilePOSIX panics on error, so no error handling needed
 				filter = regexp.MustCompilePOSIX(code[1 : len(code)-1])
 			} else {
 				filterBlock1, genv1 := loader.LoadString(code, false)
@@ -333,7 +430,8 @@ func main_ryk() {
 	}
 
 	if err := scanner.Err(); err != nil {
-		log.Println(err)
+		handleError(err, "scanning input in main_ryk", false)
+		// Consider additional recovery actions if needed
 	}
 
 	argIdx += 1
@@ -350,6 +448,13 @@ func main_ryk() {
 }
 
 func main_ryeco() {
+	// Add panic recovery
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Fprintf(os.Stderr, "Recovered from panic in main_ryeco: %v\n", r)
+			debug.PrintStack()
+		}
+	}()
 
 	// this is experiment to create a golang equivalent of rye code
 	// with same datatypes and using the same builtin code
@@ -366,6 +471,15 @@ func main_ryeco() {
 }
 
 func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool, code string, lang string, regfn func(*env.ProgramState), stin string) {
+	// Add defer to recover from panics
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Fprintf(os.Stderr, "Recovered from panic in main_rye_file: %v\n", r)
+			// Log stack trace
+			debug.PrintStack()
+		}
+	}()
+
 	// fmt.Println("RYE FILE")
 	info := true
 
@@ -377,7 +491,8 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 		fmt.Print("Enter Password: ")
 		bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
 		if err != nil {
-			panic(err)
+			handleError(err, "reading password", true)
+			return
 		}
 		password := string(bytePassword)
 
@@ -391,7 +506,8 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 			bcontent, err = os.ReadFile(file)
 		}
 		if err != nil {
-			log.Fatal(err)
+			handleError(err, fmt.Sprintf("reading file %s", file), true)
+			return
 		}
 		content = string(bcontent)
 	} else {
@@ -399,13 +515,15 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 	}
 
 	if info {
-		pattern := regexp.MustCompile(`^; (#[^\n]*)`)
-
-		lines := pattern.FindAllStringSubmatch(content, -1)
-
-		for _, line := range lines {
-			if line[1] != "" {
-				fmt.Println(line[1])
+		pattern, err := regexp.Compile(`^; (#[^\n]*)`)
+		if err != nil {
+			handleError(err, "compiling info pattern regex", false)
+		} else {
+			lines := pattern.FindAllStringSubmatch(content, -1)
+			for _, line := range lines {
+				if line[1] != "" {
+					fmt.Println(line[1])
+				}
 			}
 		}
 	}
@@ -421,6 +539,9 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 		for {
 			stLine, err := stReader.ReadString('\n')
 			if err != nil {
+				if err != io.EOF {
+					handleError(err, "reading from stdin", false)
+				}
 				break
 			}
 			stInput += stLine
@@ -431,7 +552,14 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 	ps := env.NewProgramStateNEW()
 	ps.Embedded = Option_Embed_Main
 	ps.ScriptPath = file
-	ps.WorkingPath, _ = os.Getwd() // TODO -- WHAT SHOULD WE DO IF GETWD FAILS?
+
+	workingPath, err := os.Getwd()
+	if err != nil {
+		handleError(err, "getting working directory", false)
+		workingPath = "." // Use current directory as fallback
+	}
+	ps.WorkingPath = workingPath
+
 	evaldo.RegisterBuiltins(ps)
 	contrib.RegisterBuiltins(ps, &evaldo.BuiltinNames)
 	regfn(ps)
@@ -440,16 +568,16 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 		if _, err := os.Stat(".rye-here"); err == nil {
 			content, err := os.ReadFile(".rye-here")
 			if err != nil {
-				log.Fatal(err)
+				handleError(err, "reading .rye-here file", false)
+				fmt.Println("Could not read .rye-here file")
+			} else {
+				inputH := string(content)
+				block := loader.LoadStringNEW(inputH, false, ps)
+				block1 := block.(env.Block)
+				ps = env.AddToProgramState(ps, block1.Series, ps.Idx)
+				evaldo.EvalBlockInjMultiDialect(ps, nil, false)
+				evaldo.MaybeDisplayFailureOrError(ps, ps.Idx, "main rye file")
 			}
-			inputH := string(content)
-			block := loader.LoadStringNEW(inputH, false, ps)
-			block1 := block.(env.Block)
-			ps = env.AddToProgramState(ps, block1.Series, ps.Idx)
-			//fmt.Println("XX")
-			evaldo.EvalBlockInjMultiDialect(ps, nil, false)
-			//fmt.Println("YYY")
-			evaldo.MaybeDisplayFailureOrError(ps, ps.Idx, "main rye file")
 		} else {
 			fmt.Println("There was no `here` file.")
 		}
@@ -501,6 +629,14 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 }
 
 func main_cgi_file(file string, sig bool) {
+	// Add panic recovery
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Fprintf(os.Stderr, "Recovered from panic in main_cgi_file: %v\n", r)
+			debug.PrintStack()
+		}
+	}()
+
 	if err := cgi.Serve(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		//util.PrintHeader()
 		//defer profile.Start(profile.CPUProfile).Stop()
@@ -517,7 +653,9 @@ func main_cgi_file(file string, sig bool) {
 
 		bcontent, err := os.ReadFile(file)
 		if err != nil {
-			log.Fatal(err)
+			handleError(err, fmt.Sprintf("reading CGI file %s", file), true)
+			fmt.Fprintf(w, "Error reading CGI file: %v", err)
+			return
 		}
 
 		content := string(bcontent)
@@ -532,37 +670,57 @@ func main_cgi_file(file string, sig bool) {
 			evaldo.EvalBlock(es)
 			evaldo.MaybeDisplayFailureOrError(es, genv, "main cgi file")
 		case env.Error:
-			fmt.Println(val.Message)
+			fmt.Fprintf(w, "Error: %s", val.Message)
 		}
 	})); err != nil {
-		fmt.Println(err)
+		handleError(err, "serving CGI", false)
 	}
 }
 
 func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, code string, regfn func(*env.ProgramState)) {
+	// Add panic recovery
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Fprintf(os.Stderr, "Recovered from panic in main_rye_repl: %v\n", r)
+			debug.PrintStack()
+		}
+	}()
+
+	logFile, err := os.OpenFile("debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		panic(err)
+	}
+	defer logFile.Close()
+	log.SetOutput(logFile)
+
 	// fmt.Println("RYE REPL")
 	input := code // "name: \"Rye\" version: \"0.011 alpha\""
 	// userHomeDir, _ := os.UserHomeDir()
 	// profile_path := filepath.Join(userHomeDir, ".rye-profile")
 
-	// fmt.Println("Welcome to Rye console. Use lc to list current or lcp and lcp\\ \"pri\" to list parent contexts.")
-	fmt.Println("Welcome to Rye console. We're still W-I-P. Visit \033[38;5;14mryelang.org\033[0m for more info.")
-	fmt.Println("- \033[38;5;246mtype in lcp (list context parent) too see functions, or lc to see your context\033[0m")
-	//fmt.Println("--------------------------------------------------------------------------------")
+	if !*dual {
+		// fmt.Println("Welcome to Rye console. Use lc to list current or lcp and lcp\\ \"pri\" to list parent contexts.")
+		fmt.Println("Welcome to Rye console. We're still W-I-P. Visit \033[38;5;14mryelang.org\033[0m for more info.")
+		fmt.Println("- \033[38;5;246mtype in lcp (list context parent) too see functions, or lc to see your context\033[0m")
+		//fmt.Println("--------------------------------------------------------------------------------")
+	}
 
+	// Uncomment and fix the profile loading code if needed
 	//if _, err := os.Stat(profile_path); err == nil {
-	//content, err := os.ReadFile(profile_path)
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	// input = string(content)
+	//	content, err := os.ReadFile(profile_path)
+	//	if err != nil {
+	//		handleError(err, "reading profile file", false)
+	//	} else {
+	//		input = string(content)
+	//	}
 	//} else {
-	//		fmt.Println("There was no profile.")
+	//	fmt.Println("There was no profile.")
 	//}
 
 	block, genv := loader.LoadString(input, false)
 	es := env.NewProgramState(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
+	evaldo.RegisterVarBuiltins(es)
 	contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
 	regfn(es)
 
@@ -580,13 +738,19 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 		if _, err := os.Stat(".rye-here"); err == nil {
 			content, err := os.ReadFile(".rye-here")
 			if err != nil {
-				log.Fatal(err)
+				handleError(err, "reading .rye-here file", false)
+				fmt.Println("Could not read .rye-here file")
+			} else {
+				inputH := string(content)
+				block, genv := loader.LoadString(inputH, false)
+				if blockErr, ok := block.(env.Error); ok {
+					handleError(fmt.Errorf("%s", blockErr.Message), "parsing .rye-here file", false)
+				} else {
+					block1 := block.(env.Block)
+					es = env.AddToProgramState(es, block1.Series, genv)
+					evaldo.EvalBlock(es)
+				}
 			}
-			inputH := string(content)
-			block, genv := loader.LoadString(inputH, false)
-			block1 := block.(env.Block)
-			es = env.AddToProgramState(es, block1.Series, genv)
-			evaldo.EvalBlock(es)
 		} else {
 			fmt.Println("There was no `here` file.")
 		}
@@ -594,6 +758,7 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	defer signal.Stop(c) // Ensure signal resources are released
 
 	go func() {
 		sig := <-c
@@ -604,22 +769,59 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 	}()
 	//fmt.Println("Waiting for signal")
 
-	evaldo.DoRyeRepl(es, lang, evaldo.ShowResults)
+	if *dual {
+		// Create a second program state for the right panel
+		rightEs := env.NewProgramState(block.(env.Block).Series, genv)
+		evaldo.RegisterBuiltins(rightEs)
+		contrib.RegisterBuiltins(rightEs, &evaldo.BuiltinNames)
+		regfn(rightEs)
+
+		if lang == "eyr" {
+			rightEs.Dialect = env.EyrDialect
+		}
+		evaldo.EvalBlockInjMultiDialect(rightEs, nil, false)
+
+		if subc {
+			ctx := rightEs.Ctx
+			rightEs.Ctx = env.NewEnv(ctx) // make new context with no parent
+		}
+
+		// Start dual REPL
+		evaldo.DoRyeDualRepl(es, rightEs, lang, evaldo.ShowResults)
+	} else {
+		evaldo.DoRyeRepl(es, lang, evaldo.ShowResults)
+	}
 }
 
 func main_rysh() {
+	// Add panic recovery
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Fprintf(os.Stderr, "Recovered from panic in main_rysh: %v\n", r)
+			debug.PrintStack()
+		}
+	}()
+
 	reader := bufio.NewReader(os.Stdin)
 	status := 1
 
 	for status != 0 {
 		// C.enableRawMode()
-		wd, _ := os.Getwd()
+		wd, err := os.Getwd()
+		if err != nil {
+			handleError(err, "getting working directory in shell", false)
+			wd = "unknown_dir" // Fallback
+		}
 		fmt.Print("\033[36m" + wd + " -> " + "\033[m")
 
 		line, cursorPos, shellEditor := "", 0, false
 
 		for {
-			c, _ := reader.ReadByte()
+			c, err := reader.ReadByte()
+			if err != nil {
+				handleError(err, "reading input in shell", false)
+				break
+			}
 			//fmt.Print(c)
 			if c == 13 {
 				//line = line[:len(line)-1]
@@ -632,9 +834,17 @@ func main_rysh() {
 			shellEditor = false
 
 			if c == 27 {
-				c1, _ := reader.ReadByte()
+				c1, err := reader.ReadByte()
+				if err != nil {
+					handleError(err, "reading escape sequence in shell", false)
+					break
+				}
 				if c1 == '[' {
-					c2, _ := reader.ReadByte()
+					c2, err := reader.ReadByte()
+					if err != nil {
+						handleError(err, "reading escape sequence in shell", false)
+						break
+					}
 					switch c2 {
 					/*case 'A':
 						if len(HISTMEM) != 0 && histCounter < len(HISTMEM) {
@@ -761,12 +971,21 @@ func execInput(input string) error {
 		if len(args) < 2 {
 			userHomeDir, err := os.UserHomeDir()
 			if err != nil {
-				return err
+				handleError(err, "getting user home directory", false)
+				return fmt.Errorf("failed to get home directory: %w", err)
 			}
-			return os.Chdir(userHomeDir)
+			if err := os.Chdir(userHomeDir); err != nil {
+				handleError(err, fmt.Sprintf("changing directory to %s", userHomeDir), false)
+				return fmt.Errorf("failed to change directory to %s: %w", userHomeDir, err)
+			}
+			return nil
 		}
 		// Change the directory and return the error.
-		return os.Chdir(args[1])
+		if err := os.Chdir(args[1]); err != nil {
+			handleError(err, fmt.Sprintf("changing directory to %s", args[1]), false)
+			return fmt.Errorf("failed to change directory to %s: %w", args[1], err)
+		}
+		return nil
 	case "exit":
 		os.Exit(0)
 	}

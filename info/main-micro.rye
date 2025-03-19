@@ -1,0 +1,55 @@
+
+; Micro version of testing framework, for demo purposes
+
+test-framework: context {
+	
+	group: fn { name code } { prns name , do  code , print "" }
+	
+	equal: fn { test res } {
+		do test :got = res |either
+		{ prns "✓" }
+		{ prns " ✗ Failed:" 
+		  prns join { "expected " inspect res ", got " inspect got } }
+	}
+
+	error: fn { test } {
+		try test :got .type? = 'error |either
+		{ prns "✓" }
+		{ prns " ✗ Failed:"
+	      prns join { "expected error but got: " inspect got } }
+	}
+
+	stdout: fn { test res } {
+		capture-stdout { do test } :got = res |either
+		{ prns "✓" }
+		{ prns " ✗ Failed:"
+		  prns join { "expected " inspect res ", got " inspect got } }
+	}
+
+}
+
+%demo.micro.rye .load .do\in* test-framework
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+`
+`

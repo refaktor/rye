@@ -14,45 +14,47 @@ import (
 type Type int
 
 const (
-	BlockType     Type = 1
-	IntegerType   Type = 2
-	WordType      Type = 3
-	SetwordType   Type = 4
-	OpwordType    Type = 5
-	PipewordType  Type = 6
-	BuiltinType   Type = 7
-	FunctionType  Type = 8
-	ErrorType     Type = 9
-	CommaType     Type = 10
-	VoidType      Type = 11
-	StringType    Type = 12
-	TagwordType   Type = 13
-	GenwordType   Type = 14
-	GetwordType   Type = 15
-	ArgwordType   Type = 16
-	NativeType    Type = 17
-	UriType       Type = 18
-	LSetwordType  Type = 19
-	CtxType       Type = 20
-	DictType      Type = 21
-	ListType      Type = 22
-	DateType      Type = 23
-	CPathType     Type = 24
-	XwordType     Type = 25
-	EXwordType    Type = 26
-	TableType     Type = 27
-	EmailType     Type = 28
-	KindType      Type = 29
-	KindwordType  Type = 30
-	ConverterType Type = 31
-	TimeType      Type = 32
-	TableRowType  Type = 33
-	DecimalType   Type = 34
-	VectorType    Type = 35
-	OpCPathType   Type = 36
-	PipeCPathType Type = 37
-	ModwordType   Type = 38
-	LModwordType  Type = 39
+	BlockType      Type = 1
+	IntegerType    Type = 2
+	WordType       Type = 3
+	SetwordType    Type = 4
+	OpwordType     Type = 5
+	PipewordType   Type = 6
+	BuiltinType    Type = 7
+	FunctionType   Type = 8
+	ErrorType      Type = 9
+	CommaType      Type = 10
+	VoidType       Type = 11
+	StringType     Type = 12
+	TagwordType    Type = 13
+	GenwordType    Type = 14
+	GetwordType    Type = 15
+	ArgwordType    Type = 16
+	NativeType     Type = 17
+	UriType        Type = 18
+	LSetwordType   Type = 19
+	CtxType        Type = 20
+	DictType       Type = 21
+	ListType       Type = 22
+	DateType       Type = 23
+	CPathType      Type = 24
+	XwordType      Type = 25
+	EXwordType     Type = 26
+	TableType      Type = 27
+	EmailType      Type = 28
+	KindType       Type = 29
+	KindwordType   Type = 30
+	ConverterType  Type = 31
+	TimeType       Type = 32
+	TableRowType   Type = 33
+	DecimalType    Type = 34
+	VectorType     Type = 35
+	OpCPathType    Type = 36
+	PipeCPathType  Type = 37
+	ModwordType    Type = 38
+	LModwordType   Type = 39
+	BooleanType    Type = 40
+	VarBuiltinType Type = 41
 )
 
 // after adding new type here, also add string to idxs.go
@@ -89,15 +91,55 @@ type Mapping interface {
 
 // CONCRETE TYPES
 
-func NewBoolean(val bool) *Integer {
-	var ret int64
-	if val {
-		ret = 1
-	} else {
-		ret = 0
-	}
-	nat := Integer{ret}
+func NewBoolean(val bool) *Boolean {
+	nat := Boolean{val}
 	return &nat
+}
+
+//
+// BOOLEAN
+//
+
+type Boolean struct {
+	Value bool
+}
+
+func (i Boolean) Type() Type {
+	return BooleanType
+}
+
+func (i Boolean) Inspect(e Idxs) string {
+	return "[Boolean: " + i.Print(e) + "]"
+}
+
+func (i Boolean) Print(e Idxs) string {
+	if i.Value {
+		return "true"
+	}
+	return "false"
+}
+
+func (i Boolean) Trace(msg string) {
+	fmt.Print(msg + "(boolean): ")
+	fmt.Println(i.Value)
+}
+
+func (i Boolean) GetKind() int {
+	return int(BooleanType)
+}
+
+func (i Boolean) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	return i.Value == o.(Boolean).Value
+}
+
+func (i Boolean) Dump(e Idxs) string {
+	if i.Value {
+		return "true"
+	}
+	return "false"
 }
 
 //
@@ -250,7 +292,10 @@ func (o String) Length() int {
 }
 
 func (o String) Get(i int) Object {
-	return *NewString(string(o.Value[i]))
+	if i >= 0 && i < len(o.Value) {
+		return *NewString(string(o.Value[i]))
+	}
+	return *NewString("") // Return empty string for out of bounds
 }
 
 func (o String) MakeNew(data []Object) Object {
@@ -314,12 +359,20 @@ type Uri struct {
 
 func NewUri1(index *Idxs, path string) *Uri {
 	scheme2 := strings.Split(path, "://")
-	scheme := scheme2[0] // + "-schema" // TODO -- this is just temporary .. so we test it further, make proper once at that level
+	if len(scheme2) < 2 {
+		// Handle case where "://" is not in the path
+		scheme := "file" // Default to file scheme
+		idxSch := index.IndexWord(scheme)
+		kind := scheme + "-schema"
+		idxKind := index.IndexWord(kind)
+		return &Uri{Word{idxSch}, path, Word{idxKind}}
+	}
+
+	scheme := scheme2[0]
 	idxSch := index.IndexWord(scheme)
 	kind := scheme + "-schema"
 	idxKind := index.IndexWord(kind)
-	nat := Uri{Word{idxSch}, scheme2[1], Word{idxKind}}
-	return &nat
+	return &Uri{Word{idxSch}, scheme2[1], Word{idxKind}}
 }
 
 func NewFileUri(index *Idxs, path string) *Uri {
@@ -332,18 +385,19 @@ func NewFileUri(index *Idxs, path string) *Uri {
 }
 
 func NewUri(index *Idxs, scheme Word, path string) *Uri {
-	scheme2 := strings.Split(path, "://")
-	kindstr := index.GetWord(scheme.Index) + "-schema" // TODO -- this is just temporary .. so we test it further, make proper once at that level
+	kindstr := index.GetWord(scheme.Index) + "-schema"
 	idx := index.IndexWord(kindstr)
+
+	// Check if path contains "://" and extract the actual path part if it does
+	scheme2 := strings.Split(path, "://")
 	var path2 string
-	if len(scheme2) > 1 { // TODO --- look at all this code and improve, this is just BAD
+	if len(scheme2) > 1 {
 		path2 = scheme2[1]
 	} else {
 		path2 = path
 	}
-	nat := Uri{scheme, path2, Word{idx}}
-	//	nat := Uri{Word{idxSch}, scheme2[1], Word{idxKind}}
-	return &nat
+
+	return &Uri{scheme, path2, Word{idx}}
 }
 
 func (i Uri) GetPath() string {
@@ -558,7 +612,10 @@ func (o Block) Length() int {
 }
 
 func (o Block) Get(i int) Object {
-	return o.Series.S[i]
+	if i >= 0 && i < len(o.Series.S) {
+		return o.Series.S[i]
+	}
+	return *NewVoid() // Return void for out of bounds
 }
 
 func (o Block) MakeNew(data []Object) Object {
@@ -1690,10 +1747,18 @@ func (o CPath) GetWordNumber(i int) Word {
 	case 1:
 		return o.Word1
 	case 2:
-		return o.Word2
-	default:
-		return o.Word3 // TODO -- just temporary this wasy ... make ultil depth 5 or 6 and return error otherwises
+		if o.Cnt >= 2 {
+			return o.Word2
+		}
+		// Fall through to default case if Cnt < 2
+	case 3:
+		if o.Cnt >= 3 {
+			return o.Word3
+		}
+		// Fall through to default case if Cnt < 3
 	}
+	// Return Word with index 0 for out of bounds or invalid cases
+	return Word{0}
 }
 
 func (b CPath) Print(e Idxs) string {
@@ -1997,6 +2062,8 @@ func RyeToRaw(res Object, idx *Idxs) any { // TODO -- MOVE TO UTIL ... provide r
 	case Decimal:
 		return v.Value
 		// return strconv.Itoa(int(v.Value))
+	case Boolean:
+		return v.Value
 	case Word:
 		return "word"
 	case Block:
@@ -2025,6 +2092,8 @@ func NewListFromSeries(block TSeries) List {
 			data[i] = k.Value
 		case Decimal:
 			data[i] = k.Value
+		case Boolean:
+			data[i] = k.Value
 		case List:
 			data[i] = k
 		case Dict:
@@ -2044,6 +2113,8 @@ func NewBlockFromList(list List) TSeries {
 			data[i] = *NewInteger(k)
 		case float64:
 			data[i] = *NewDecimal(k)
+		case bool:
+			data[i] = *NewBoolean(k)
 		case List:
 			data[i] = *NewString("not handeled 3") // TODO -- just temp result
 		}
@@ -2141,7 +2212,10 @@ func (o List) Length() int {
 }
 
 func (o List) Get(i int) Object {
-	return ToRyeValue(o.Data[i])
+	if i >= 0 && i < len(o.Data) {
+		return ToRyeValue(o.Data[i])
+	}
+	return *NewVoid() // Return void for out of bounds
 }
 
 func (o List) MakeNew(data []Object) Object {
@@ -2435,4 +2509,72 @@ func (i Vector) Dump(e Idxs) string {
 	}
 	b.WriteString("}")
 	return b.String()
+}
+
+//
+// VARBUILTIN FUNCTION
+//
+
+// VarBuiltinFunction represents a function signature of variadic builtin functions.
+type VarBuiltinFunction func(ps *ProgramState, args ...Object) Object
+
+// VarBuiltin represents a builtin function with variadic arguments.
+type VarBuiltin struct {
+	Fn            VarBuiltinFunction
+	Argsn         int
+	AcceptFailure bool
+	Pure          bool
+	Doc           string
+}
+
+func NewVarBuiltin(fn VarBuiltinFunction, argsn int, acceptFailure bool, pure bool, doc string) *VarBuiltin {
+	bl := VarBuiltin{fn, argsn, acceptFailure, pure, doc}
+	return &bl
+}
+
+func (b VarBuiltin) Type() Type {
+	return VarBuiltinType
+}
+
+func (b VarBuiltin) Inspect(e Idxs) string {
+	return "[" + b.Print(e) + "]"
+}
+
+func (b VarBuiltin) Print(e Idxs) string {
+	var pure string
+	if b.Pure {
+		pure = "Pure "
+	}
+	return pure + "VarBFunction(" + strconv.Itoa(b.Argsn) + "): " + b.Doc
+}
+
+func (i VarBuiltin) Trace(msg string) {
+	fmt.Print(msg + " (varbfunction): ")
+	fmt.Println(i.Argsn)
+}
+
+func (i VarBuiltin) GetKind() int {
+	return int(VarBuiltinType)
+}
+
+func (i VarBuiltin) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	oVarBuiltin := o.(VarBuiltin)
+	if i.Argsn != oVarBuiltin.Argsn {
+		return false
+	}
+	if i.AcceptFailure != oVarBuiltin.AcceptFailure {
+		return false
+	}
+	if i.Pure != oVarBuiltin.Pure {
+		return false
+	}
+	return true
+}
+
+func (i VarBuiltin) Dump(e Idxs) string {
+	// Serializing builtins is not supported
+	return ""
 }
