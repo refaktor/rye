@@ -561,6 +561,7 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 	ps.WorkingPath = workingPath
 
 	evaldo.RegisterBuiltins(ps)
+	evaldo.RegisterVarBuiltins(ps)
 	contrib.RegisterBuiltins(ps, &evaldo.BuiltinNames)
 	regfn(ps)
 
