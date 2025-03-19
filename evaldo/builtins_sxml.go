@@ -49,7 +49,7 @@ func load_saxml_Dict(ps *env.ProgramState, block env.Block) (env.Dict, *env.Erro
 			} else if obj1.Mode == 0 {
 				rm, err := load_saxml_Dict(ps, obj1)
 				if err != nil {
-					return _emptyRM(), err
+					return EmptyRM(), err
 				}
 				if len(keys) > 0 {
 					for _, k := range keys {
@@ -57,12 +57,12 @@ func load_saxml_Dict(ps *env.ProgramState, block env.Block) (env.Dict, *env.Erro
 						keys = []string{}
 					}
 				} else {
-					return _emptyRM(), MakeBuiltinError(ps, "No selectors before tag map.", "reader//do-sxml")
+					return EmptyRM(), MakeBuiltinError(ps, "No selectors before tag map.", "reader//do-sxml")
 				}
 			}
 		default:
 			// ni Dict ampak blok kode, vrni blok
-			return _emptyRM(), MakeBuiltinError(ps, "Unknown type in block parsing TODO.", "reader//do-sxml")
+			return EmptyRM(), MakeBuiltinError(ps, "Unknown type in block parsing TODO.", "reader//do-sxml")
 		}
 	}
 	return rmap, nil

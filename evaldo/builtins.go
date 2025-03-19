@@ -2290,6 +2290,54 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
+	// equal  { 10 .when { > 5 } { .print } } 10
+	// equal  { 10 .when { < 5 } { .print } } 10
+	"when": { // **
+		Argsn: 3,
+		Doc:   "Conditional that injects a value into condition and action blocks. Takes a value, a condition block, and an action block.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			// function accepts 3 args: arg0 is the value to inject, arg1 is the condition block, arg2 is the action block
+
+			// Check if the second argument is a block (condition block)
+			switch condBlock := arg1.(type) {
+			case env.Block:
+				// Check if the third argument is a block (action block)
+				switch actionBlock := arg2.(type) {
+				case env.Block:
+					// Store current series
+					ser := ps.Ser
+
+					// Set series to condition block and evaluate it with the value injected
+					ps.Ser = condBlock.Series
+					EvalBlockInjMultiDialect(ps, arg0, true)
+
+					// Check if the result is truthy
+					if util.IsTruthy(ps.Res) {
+						// Set series to action block and evaluate it with the value injected
+						ps.Ser = actionBlock.Series
+						EvalBlockInjMultiDialect(ps, arg0, true)
+					}
+
+					// Restore original series
+					ps.Ser = ser
+
+					// Return the original value regardless of the evaluation result
+					return arg0
+				default:
+					// If the third argument is not a block, return an error
+					ps.FailureFlag = true
+					return MakeArgError(ps, 3, []env.Type{env.BlockType}, "when")
+				}
+			default:
+				// If the second argument is not a block, return an error
+				ps.FailureFlag = true
+				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "when")
+			}
+		},
+	},
+
+	// Tests:
 	// equal  { x: does { ^if 1 { 222 } 555 } x } 222
 	// equal  { x: does { ^if 0 { 333 } 444 } x } 444
 	"^if": { // **
@@ -3611,6 +3659,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltinsInContext(Builtins_pipes, ps, "pipes")
 	RegisterBuiltinsInContext(Builtins_term, ps, "term")
 	RegisterBuiltinsInContext(Builtins_telegrambot, ps, "telegram")
+	RegisterBuiltins2(Builtins_peg, ps, "peg")
 	// ## Archived modules
 	// RegisterBuiltins2(Builtins_gtk, ps, "gtk")
 	// RegisterBuiltins2(Builtins_nats, ps, "nats")

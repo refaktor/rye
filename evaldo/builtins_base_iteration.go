@@ -1477,4 +1477,50 @@ var builtins_iteration = map[string]*env.Builtin{
 			return MakeBuiltinError(ps, "No element found.", "seek")
 		},
 	},
+
+	// Tests:
+	// equal { x: 0 while { x < 5 } { x:: x + 1 } x } 5
+	// equal { x: 0 y: 0 while { x < 5 } { x:: x + 1 y:: y + x } y } 15
+	"while": {
+		Argsn: 2,
+		Doc:   "Executes a block of code repeatedly while a condition is true.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch cond := arg0.(type) {
+			case env.Block:
+				switch bloc := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					for {
+						// Evaluate the condition block
+						ps.Ser = cond.Series
+						ps.Ser.Reset()
+						EvalBlock(ps)
+						if ps.ErrorFlag {
+							return ps.Res
+						}
+
+						// Check if the condition is true
+						if !util.IsTruthy(ps.Res) {
+							break
+						}
+
+						// Execute the body block
+						ps.Ser = bloc.Series
+						ps.Ser.Reset()
+						EvalBlock(ps)
+						if ps.ErrorFlag || ps.ReturnFlag {
+							ps.Ser = ser
+							return ps.Res
+						}
+					}
+					ps.Ser = ser
+					return ps.Res
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "while")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "while")
+			}
+		},
+	},
 }

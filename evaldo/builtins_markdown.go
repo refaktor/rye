@@ -17,7 +17,7 @@ import (
 	"github.com/yuin/goldmark/text"
 )
 
-// Use the existing _emptyRM function from builtins_json.go
+// Use the EmptyRM function from builtins_structures.go
 
 // Parses the markdown handler block and creates a Dict with handlers for different markdown elements
 func load_markdown_Dict(ps *env.ProgramState, block env.Block) (env.Dict, *env.Error) {
@@ -34,10 +34,10 @@ func load_markdown_Dict(ps *env.ProgramState, block env.Block) (env.Dict, *env.E
 				block.Series.Next()
 				rmap.Data[key] = nextObj
 			} else {
-				return _emptyRM(), MakeBuiltinError(ps, "Expected block after markdown section specifier.", "reader//do-markdown")
+				return EmptyRM(), MakeBuiltinError(ps, "Expected block after markdown section specifier.", "reader//do-markdown")
 			}
 		default:
-			return _emptyRM(), MakeBuiltinError(ps, "Expected word specifying markdown section.", "reader//do-markdown")
+			return EmptyRM(), MakeBuiltinError(ps, "Expected word specifying markdown section.", "reader//do-markdown")
 		}
 	}
 	return rmap, nil
