@@ -14,6 +14,8 @@ func ToRyeValue(val any) Object {
 		return *NewInteger(int64(v))
 	case int64:
 		return *NewInteger(v)
+	case bool:
+		return *NewBoolean(v)
 	case string:
 		return *NewString(v)
 	case rune:
@@ -49,6 +51,8 @@ func ToRyeValueAggressive(ps *ProgramState, val any) Object { // TODO -- find be
 		return *NewInteger(int64(v))
 	case int64:
 		return *NewInteger(v)
+	case bool:
+		return *NewBoolean(v)
 	case string:
 		return *NewString(v)
 	case rune:

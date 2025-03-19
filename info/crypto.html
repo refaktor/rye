@@ -41,65 +41,65 @@
 <p class='arg'><b>hex-string</b> hexadecimal encoded string to decode</p>
 <p class='returns'><b>returns</b> native bytes object containing the decoded data</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>"48656c6c6f20776f726c64" |decode\hex |type?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto "48656c6c6f20776f726c64" |decode\hex |type?
 ; returns native</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>"48656c6c6f20776f726c64" |decode\hex |kind?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto "48656c6c6f20776f726c64" |decode\hex |kind?
 ; returns bytes</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>"invalid" |decode\hex |disarm |type?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto "invalid" |decode\hex |disarm |type?
 ; returns error</code></pre>
 </div>
-<h3>encode\hex</h3><p>Encodes a bytes native value to a hexadecimal string.</p>
+<h3>encode-to\hex</h3><p>Encodes a bytes native value to a hexadecimal string.</p>
 <p class='arg'><b>bytes</b> native bytes object to encode</p>
 <p class='returns'><b>returns</b> string containing the hexadecimal representation of the bytes</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>"48656c6c6f20776f726c64" |decode\hex |encode\hex
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto "48656c6c6f20776f726c64" |decode\hex |encode-to\hex
 ; returns "48656c6c6f20776f726c64"</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>"Hello world" |sha512 |decode\hex |encode\hex |type?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto "Hello world" |sha512 |decode\hex |encode-to\hex |type?
 ; returns string</code></pre>
 </div>
 <h3>Ed25519-pub-key//to-string</h3><p>Converts an Ed25519 public key to its hexadecimal string representation.</p>
 <p class='arg'><b>key</b> Ed25519 public key as a native value</p>
 <p class='returns'><b>returns</b> string containing the hexadecimal representation of the public key</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>ed25519-generate-keys |first |to-string |type?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto ed25519-generate-keys |first |to-string |type?
 ; returns string</code></pre>
 </div>
 <h3>Ed25519-priv-key//to-string</h3><p>Converts an Ed25519 private key to its hexadecimal string representation.</p>
 <p class='arg'><b>key</b> Ed25519 private key as a native value</p>
 <p class='returns'><b>returns</b> string containing the hexadecimal representation of the private key</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>ed25519-generate-keys |second |to-string |type?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto ed25519-generate-keys |second |to-string |type?
 ; returns string</code></pre>
 </div>
 <h3>ed25519-generate-keys</h3><p>Generates a new Ed25519 key pair and returns them in a block with public key first, then private key.</p>
 <p class='arg'>none</p>
 <p class='returns'><b>returns</b> block containing [public-key, private-key] as native values</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>ed25519-generate-keys |type?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto ed25519-generate-keys |type?
 ; returns block</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>ed25519-generate-keys |length?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto ed25519-generate-keys |length?
 ; returns 2</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>ed25519-generate-keys |first |type?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto ed25519-generate-keys |first |type?
 ; returns native</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>ed25519-generate-keys |first |kind?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto ed25519-generate-keys |first |kind?
 ; returns Ed25519-pub-key</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>ed25519-generate-keys |second |type?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto ed25519-generate-keys |second |type?
 ; returns native</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>ed25519-generate-keys |second |kind?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto ed25519-generate-keys |second |kind?
 ; returns Ed25519-priv-key</code></pre>
 </div>
 <h3>ed25519-private-key</h3><p>Creates an Ed25519 private key from a hexadecimal string or bytes value.</p>
 <p class='arg'><b>key-data</b> string containing hexadecimal representation of the key or bytes native value</p>
 <p class='returns'><b>returns</b> Ed25519 private key as a native value</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>"invalid" |ed25519-private-key |disarm |type?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto "invalid" |ed25519-private-key |disarm |type?
 ; returns error</code></pre>
 </div>
 <h3>ed25519-public-key</h3><p>Creates an Ed25519 public key from a hexadecimal string or bytes value.</p>
 <p class='arg'><b>key-data</b> string containing hexadecimal representation of the key or bytes native value</p>
 <p class='returns'><b>returns</b> Ed25519 public key as a native value</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>"invalid" |ed25519-public-key |disarm |type?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto "invalid" |ed25519-public-key |disarm |type?
 ; returns error</code></pre>
 </div>
 <h3>Ed25519-priv-key//sign</h3><p>Signs a string message with an Ed25519 private key and returns the signature as bytes.</p>
@@ -112,49 +112,49 @@
 <p class='arg'><b>input</b> string to hash</p>
 <p class='returns'><b>returns</b> string containing the hexadecimal representation of the SHA-512 hash</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>"Hello world" |sha512 |type?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto "Hello world" |sha512 |type?
 ; returns string</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>"Hello world" |sha512 |length?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto "Hello world" |sha512 |length?
 ; returns 128</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>"" |sha512
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto "" |sha512
 ; returns "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e"</code></pre>
 </div>
 </div>
 <h2>Age </h2><p>Age encryption/decryption and key generation</p><div class='section'>
 <h3>age-generate-keys</h3><p>Generates a new age key pair (identity and recipient).</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>age-generate-keys |first |type?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto age-generate-keys |first |type?
 ; returns native</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>age-generate-keys |first |kind?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto age-generate-keys |first |kind?
 ; returns age-identity</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>age-generate-keys |second |type?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto age-generate-keys |second |type?
 ; returns native</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>age-generate-keys |second |kind?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto age-generate-keys |second |kind?
 ; returns age-recipient</code></pre>
 </div>
 <h3>age-identity</h3><p>Creates an age identity from a string or bytes.</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>age-identity "AGE-SECRET-KEY-1UMNMNLE5ADV4V0X8LRMG4GVWM3WJ7GVH6JP3J2XSRDFENLJVVX4SDLWXML" |type?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto age-identity "AGE-SECRET-KEY-1UMNMNLE5ADV4V0X8LRMG4GVWM3WJ7GVH6JP3J2XSRDFENLJVVX4SDLWXML" |type?
 ; returns native</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>age-identity "AGE-SECRET-KEY-1UMNMNLE5ADV4V0X8LRMG4GVWM3WJ7GVH6JP3J2XSRDFENLJVVX4SDLWXML" |kind?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto age-identity "AGE-SECRET-KEY-1UMNMNLE5ADV4V0X8LRMG4GVWM3WJ7GVH6JP3J2XSRDFENLJVVX4SDLWXML" |kind?
 ; returns age-identity</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>age-identity "invalid" |disarm |type?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto age-identity "invalid" |disarm |type?
 ; returns error</code></pre>
 </div>
 <h3>age-recipient</h3><p>Creates an age recipient from a string or bytes.</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>age-recipient "age1zwya0qq8c824n5ncxppekrm4egk6gnvfhag6dmr87xjqaeuwlsgq68mqj4" |type?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto age-recipient "age1zwya0qq8c824n5ncxppekrm4egk6gnvfhag6dmr87xjqaeuwlsgq68mqj4" |type?
 ; returns native</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>age-recipient "age1zwya0qq8c824n5ncxppekrm4egk6gnvfhag6dmr87xjqaeuwlsgq68mqj4" |kind?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto age-recipient "age1zwya0qq8c824n5ncxppekrm4egk6gnvfhag6dmr87xjqaeuwlsgq68mqj4" |kind?
 ; returns age-recipient</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>age-recipient "invalid" |disarm |type?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto age-recipient "invalid" |disarm |type?
 ; returns error</code></pre>
 </div>
 <h3>age-encrypt</h3><p>Encrypts a reader with age for the provided age recipient or string password and returns a reader.</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>age-generate-keys |set! { identity recipient } "SUPER SECRET" |reader |age-encrypt recipient |age-decrypt identity |read\string
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto age-generate-keys |set! { identity recipient } "SUPER SECRET" |reader |age-encrypt recipient |age-decrypt identity |read\string
 ; returns "SUPER SECRET"</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>"SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |read\string
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto "SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |read\string
 ; returns "SUPER SECRET"</code></pre>
 </div>
 <h3>age-decrypt</h3><p>Decrypts a reader with age using the provided age identity or string password and returns a reader with the decrypted content.</p>
@@ -162,9 +162,9 @@
 <p class='arg'><b>identity-or-password</b> age identity native value or password string</p>
 <p class='returns'><b>returns</b> decrypted data as a reader native value</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>age-generate-keys |set! { identity recipient } "SUPER SECRET" |reader |age-encrypt recipient |age-decrypt identity |read\string
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto age-generate-keys |set! { identity recipient } "SUPER SECRET" |reader |age-encrypt recipient |age-decrypt identity |read\string
 ; returns "SUPER SECRET"</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>"SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |read\string
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto "SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |read\string
 ; returns "SUPER SECRET"</code></pre>
 </div>
 <h3>pkcs12-to-pem</h3><p>Converts a PKCS#12 (.p12) file bytes to PEM blocks using the provided password. Returns a block of pem-block native values.</p>
@@ -228,6 +228,8 @@
 <p class='returns'><b>returns</b> PKCS#12 encoded data as Go-bytes native value</p>
 <div class='group'>
 </div>
+</div>
+<h2>Default</h2><p></p><div class='section'>
 </div>
 </main>
 </div>
