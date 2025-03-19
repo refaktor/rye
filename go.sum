@@ -204,6 +204,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c h1:ncq/mPwQF4JjgDlrVEn3C11VoGHZN7m8qihwgMEtzYw=
 github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c/go.mod h1:OmDBASR4679mdNQnz2pUhc2G8CO2JrUAVFDRBDP/hJE=
+github.com/refaktor/go-peg v0.0.0-20220116201714-31e3dfa8dc7d h1:FXrWUGgPRzhaZIBho8zNLSrMp0VpP8E9+wbRRnJYlbE=
+github.com/refaktor/go-peg v0.0.0-20220116201714-31e3dfa8dc7d/go.mod h1:iIkrsFobLIWX8kQ6Oqj4cl4nwdMSE92DWpWwk9YlG9s=
 github.com/refaktor/keyboard v0.0.0-20250228210936-7313460a8299 h1:CSO4voXfD4YLvkScaCobeWEn0qxWBzRCi/vnKjbWf1g=
 github.com/refaktor/keyboard v0.0.0-20250228210936-7313460a8299/go.mod h1:GwFCpZSiID9sqQ9Zm0tCmw8eeI9hThLQ7pv1wcTp0I0=
 github.com/richardlehane/mscfb v1.0.4 h1:WULscsljNPConisD5hR0+OyZjwK46Pfyr6mPu5ZawpM=
