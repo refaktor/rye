@@ -561,6 +561,7 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 	ps.WorkingPath = workingPath
 
 	evaldo.RegisterBuiltins(ps)
+	evaldo.RegisterVarBuiltins(ps)
 	contrib.RegisterBuiltins(ps, &evaldo.BuiltinNames)
 	regfn(ps)
 
@@ -720,6 +721,7 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 	block, genv := loader.LoadString(input, false)
 	es := env.NewProgramState(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
+	evaldo.RegisterVarBuiltins(es)
 	contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
 	regfn(es)
 

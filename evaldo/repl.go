@@ -386,9 +386,11 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 		r.ml.AppendHistory(code)
 
 		r.fullCode = ""
+		r.ml.AppendHistory(code)
 		return output
 	}
 
+	r.ml.AppendHistory(code)
 	return output
 }
 

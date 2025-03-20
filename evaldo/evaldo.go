@@ -414,6 +414,8 @@ func EvalExpressionConcrete(ps *env.ProgramState) *env.ProgramState {
 			return rr
 		case env.BuiltinType:
 			return CallBuiltin(object.(env.Builtin), ps, nil, false, false, nil)
+		case env.VarBuiltinType:
+			return CallVarBuiltin(object.(env.VarBuiltin), ps, nil, false, false, nil)
 		case env.GenwordType:
 			return EvalGenword(ps, object.(env.Genword), nil, false)
 		case env.SetwordType:
@@ -576,6 +578,13 @@ func EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toL
 			return ps
 		}
 		return CallBuiltin(bu, ps, leftVal, toLeft, pipeSecond, firstVal)
+	case env.VarBuiltinType:
+		bu := object.(env.VarBuiltin)
+
+		if checkFlagsVarBi(bu, ps, 333) {
+			return ps
+		}
+		return CallVarBuiltin(bu, ps, leftVal, toLeft, pipeSecond, firstVal)
 	default:
 		if !ps.SkipFlag {
 			ps.Res = object
@@ -1113,6 +1122,45 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 	return ps
 }
 
+func CallVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, arg0_ env.Object, toLeft bool, pipeSecond bool, firstVal env.Object) *env.ProgramState {
+
+	args := make([]env.Object, bi.Argsn)
+	ii := 0
+
+	if bi.Argsn > 0 {
+		if arg0_ != nil && !pipeSecond {
+			args[ii] = arg0_
+			ii++
+		} else if firstVal != nil && pipeSecond {
+			args[ii] = firstVal
+			ii++
+		} else if bi.Argsn > 0 {
+			EvalExpression2(ps, true)
+			args[ii] = ps.Res
+			ii++
+		}
+
+		if arg0_ != nil && pipeSecond {
+			args[ii] = arg0_
+			ii++
+		} else if bi.Argsn > 1 {
+			EvalExpression2(ps, true)
+			args[ii] = ps.Res
+			ii++
+		}
+		//variadic version
+		for i := 2; i < bi.Argsn; i += 1 {
+			EvalExpression2(ps, true)
+			args[ii] = ps.Res
+			ii++
+
+		}
+	}
+
+	ps.Res = bi.Fn(ps, args...)
+	return ps
+}
+
 func DirectlyCallBuiltin(ps *env.ProgramState, bi env.Builtin, a0 env.Object, a1 env.Object) env.Object {
 	// let's try to make it without array allocation and without variadic arguments that also maybe actualizes splice
 	// up to 2 curried variables and 2 in caller
@@ -1195,6 +1243,46 @@ func MaybeDisplayFailureOrErrorWASM(es *env.ProgramState, genv *env.Idxs, printf
 //
 //	and rewrite
 func checkFlagsBi(bi env.Builtin, ps *env.ProgramState, n int) bool {
+	trace("CHECK FLAGS BI")
+	//trace(n)
+	//trace(ps.Res)
+	//	trace(bi)
+	if ps.FailureFlag {
+		trace("------ > FailureFlag")
+		if bi.AcceptFailure {
+			trace2("----- > Accept Failure")
+		} else {
+			// fmt.Println("checkFlagsBi***")
+			trace2("Fail ------->  Error.")
+			switch err := ps.Res.(type) {
+			case env.Error:
+				if err.CodeBlock.Len() == 0 {
+					err.CodeBlock = ps.Ser
+					err.CodeContext = ps.Ctx
+				}
+			case *env.Error:
+				if err.CodeBlock.Len() == 0 {
+					err.CodeBlock = ps.Ser
+					err.CodeContext = ps.Ctx
+				}
+			}
+			ps.ErrorFlag = true
+			return true
+		}
+	} else {
+		trace2("NOT FailuteFlag")
+	}
+	return false
+}
+
+// if there is failure flag and given builtin doesn't accept failure
+// then error flag is raised and true returned
+// otherwise false
+// USED -- before evaluating a builtin
+// TODO -- once we know it works in all situations remove all debug lines
+//
+//	and rewrite
+func checkFlagsVarBi(bi env.VarBuiltin, ps *env.ProgramState, n int) bool {
 	trace("CHECK FLAGS BI")
 	//trace(n)
 	//trace(ps.Res)

@@ -351,6 +351,42 @@ var builtins_time = map[string]*env.Builtin{
 	// * n: Integer number of seconds
 	// Returns:
 	// * integer representing the equivalent number of milliseconds
+	"thousands": {
+		Argsn: 1,
+		Doc:   "Converts seconds to milliseconds (multiplies by 1000).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg := arg0.(type) {
+			case env.Integer:
+				return *env.NewInteger(arg.Value * 1000)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "sleep")
+			}
+		},
+	},
+	// Tests:
+	// equal { 5 .seconds } 5000
+	// Args:
+	// * n: Integer number of seconds
+	// Returns:
+	// * integer representing the equivalent number of milliseconds
+	"millions": {
+		Argsn: 1,
+		Doc:   "Converts seconds to milliseconds (multiplies by 1000).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg := arg0.(type) {
+			case env.Integer:
+				return *env.NewInteger(arg.Value * 1000000)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "sleep")
+			}
+		},
+	},
+	// Tests:
+	// equal { 5 .seconds } 5000
+	// Args:
+	// * n: Integer number of seconds
+	// Returns:
+	// * integer representing the equivalent number of milliseconds
 	"seconds": {
 		Argsn: 1,
 		Doc:   "Converts seconds to milliseconds (multiplies by 1000).",
