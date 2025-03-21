@@ -95,12 +95,12 @@ func DoMain(regfn func(*env.ProgramState)) {
 	}()
 
 	// Add panic recovery
-	defer func() {
-		if r := recover(); r != nil {
-			fmt.Fprintf(os.Stderr, "Recovered from panic in DoMain: %v\n", r)
-			debug.PrintStack()
-		}
-	}()
+	// defer func() {
+	//	if r := recover(); r != nil {
+	//		fmt.Fprintf(os.Stderr, "Recovered from panic in DoMain: %v\n", r)
+	//		debug.PrintStack()
+	//	}
+	// }()
 
 	flag.Usage = func() {
 		fmt.Println("╭────────────────────────────────────────────────────────────────────────────────────────────---")
@@ -680,12 +680,12 @@ func main_cgi_file(file string, sig bool) {
 
 func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, code string, regfn func(*env.ProgramState)) {
 	// Add panic recovery
-	defer func() {
-		if r := recover(); r != nil {
-			fmt.Fprintf(os.Stderr, "Recovered from panic in main_rye_repl: %v\n", r)
-			debug.PrintStack()
-		}
-	}()
+	//defer func() {
+	//	if r := recover(); r != nil {
+	//		fmt.Fprintf(os.Stderr, "Recovered from panic in main_rye_repl: %v\n", r)
+	//		debug.PrintStack()
+	//	}
+	//}()
 
 	logFile, err := os.OpenFile("debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {

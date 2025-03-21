@@ -473,4 +473,27 @@ var builtins_time = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// TODOC
+	// Tests:
+	// equal { time-it { sleep 100 } } 100
+	"time-it": { // **
+		Argsn: 1,
+		Doc:   "Accepts a block, does it and times it's execution time.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg0.(type) {
+			case env.Block:
+				ser := ps.Ser
+				ps.Ser = bloc.Series
+				start := time.Now()
+				EvalBlock(ps)
+				t := time.Now()
+				elapsed := t.Sub(start)
+				ps.Ser = ser
+				return *env.NewInteger(elapsed.Nanoseconds() / 1000000)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "time-it")
+			}
+		},
+	},
 }

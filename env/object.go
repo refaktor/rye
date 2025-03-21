@@ -1547,6 +1547,7 @@ func (i Builtin) Dump(e Idxs) string {
 //
 
 type Error struct {
+	Kind        Word
 	Status      int
 	Message     string
 	Parent      *Error
@@ -1622,13 +1623,23 @@ func NewError4(status int, message string, error *Error, values map[string]Objec
 	return &e
 }
 
+func NewError5(kind Word, status int, message string, error *Error, values map[string]Object) *Error {
+	var e Error
+	e.Kind = kind
+	e.Status = status
+	e.Message = message
+	e.Parent = error
+	e.Values = values
+	return &e
+}
+
 func (i Error) Trace(msg string) {
 	fmt.Print(msg + "(error): ")
 	fmt.Println(i.Message)
 }
 
 func (i Error) GetKind() int {
-	return int(IntegerType)
+	return i.Kind.Index
 }
 
 func (i Error) Equal(o Object) bool {

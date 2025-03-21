@@ -51,10 +51,27 @@ func EvalBlock(ps *env.ProgramState) *env.ProgramState {
 	case env.EyrDialect:
 		return Eyr_EvalBlockInside(ps, nil, false) // TODO ps.Stack is already in ps ... refactor
 	case env.Rye0Dialect:
+		// Check if we should use the fast evaluator
+		if useFastEvaluator {
+			return Rye0_FastEvalBlock(ps)
+		}
 		return Rye0_EvalBlockInj(ps, nil, false) // TODO ps.Stack is already in ps ... refactor
 	default:
 		return EvalBlockInj(ps, nil, false)
 	}
+}
+
+// Flag to control whether to use the fast evaluator
+var useFastEvaluator = false
+
+// EnableFastEvaluator enables the fast evaluator for Rye0 dialect
+func EnableFastEvaluator() {
+	useFastEvaluator = true
+}
+
+// DisableFastEvaluator disables the fast evaluator for Rye0 dialect
+func DisableFastEvaluator() {
+	useFastEvaluator = false
 }
 
 // DESCR: eval a block in specific context
@@ -973,64 +990,67 @@ func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, a
 }
 
 func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft bool, pipeSecond bool, firstVal env.Object) *env.ProgramState {
-	////args := make([]env.Object, bi.Argsn)
-	/*pospos := ps.Ser.GetPos()
-	for i := 0; i < bi.Argsn; i += 1 {
-		EvalExpression(ps)
-		args[i] = ps.Res
+	// Fast path 1: direct function call with no arguments
+	if bi.Argsn == 0 {
+		ps.Res = bi.Fn(ps, nil, nil, nil, nil, nil)
+		return ps
 	}
-	ps.Ser.SetPos(pospos)*/
 
-	// let's try to make it without array allocation and without variadic arguments that also maybe actualizes splice
-	arg0 := bi.Cur0 //env.Object(bi.Cur0)
+	// Fast path 2: all arguments are already available via curried values or direct arguments
+	if !ps.SkipFlag && !curry_needed(bi, arg0_, pipeSecond, firstVal) {
+		// Initialize arguments with curried values
+		arg0 := get_arg0(bi, arg0_, pipeSecond, firstVal)
+		arg1 := get_arg1(bi, arg0_, pipeSecond)
+		arg2 := bi.Cur2
+		arg3 := bi.Cur3
+		arg4 := bi.Cur4
+
+		// Handle special case for dynamic currying (experimental feature)
+		if bi.Cur1 != nil && bi.Cur1.Type() == env.BuiltinType && bi.Cur1.(env.Builtin).Argsn == 0 {
+			arg1 = DirectlyCallBuiltin(ps, bi.Cur1.(env.Builtin), nil, nil)
+		}
+
+		// Call the function directly using the fast path
+		ps.Res = FastCallBuiltin(ps, bi, arg0, arg1, arg2, arg3, arg4)
+		return ps
+	}
+
+	// Initialize arguments with curried values
+	arg0 := bi.Cur0
 	arg1 := bi.Cur1
 	arg2 := bi.Cur2
 	arg3 := bi.Cur3
 	arg4 := bi.Cur4
 
-	// This is just experiment if we could at currying provide ?fn or ?builtin and
-	// with arity of 0 and it would get executed at call time. So closure would become
-	// closure: fnc _ ?current-context _
-	// this is maybe only useful to provide sort of dynamic constant to a curried
-	// probably not worth the special case but here for exploration for now just
-	// on arg1 . In case of arg being function this would not bind curry to static
-	// value but to a result of a function, which would let us inject some context
-	// bound dynamic value
-	// ... we will see ...
-	if bi.Cur1 != nil && bi.Cur1.Type() == env.BuiltinType {
-		if bi.Cur1.(env.Builtin).Argsn == 0 {
-			arg1 = DirectlyCallBuiltin(ps, bi.Cur1.(env.Builtin), nil, nil)
-		}
+	// Handle special case for dynamic currying (experimental feature)
+	if bi.Cur1 != nil && bi.Cur1.Type() == env.BuiltinType && bi.Cur1.(env.Builtin).Argsn == 0 {
+		arg1 = DirectlyCallBuiltin(ps, bi.Cur1.(env.Builtin), nil, nil)
 	}
-	// end of experiment
 
-	evalExprFn := EvalExpression2
+	// Flag for currying
 	curry := false
+	evalExprFn := EvalExpression2
 
-	trace("*** BUILTIN ***")
-	trace(bi)
-
+	// Handle first argument
 	if arg0_ != nil && !pipeSecond {
-		//fmt.Println("ARG0 = LEFT")
+		// Use provided arg0_
 		arg0 = arg0_
-		//if !toLeft {
-		//fmt.Println("L TO R *** ")
-		//evalExprFn = EvalExpression_
-		// }
 	} else if firstVal != nil && pipeSecond {
+		// Use firstVal for pipe
 		arg0 = firstVal
 	} else if bi.Argsn > 0 && bi.Cur0 == nil {
-		//fmt.Println(" ARG 1 ")
-		//fmt.Println(ps.Ser.GetPos())
+		// Evaluate first argument
 		evalExprFn(ps, true)
 
-		if checkFlagsBi(bi, ps, 0) {
+		// Check for errors
+		if ps.ErrorFlag || ps.ReturnFlag {
+			if !ps.ErrorFlag {
+				ps.Res = env.NewError4(0, "argument 1 of "+strconv.Itoa(bi.Argsn)+" missing of builtin: '"+bi.Doc+"'", ps.Res.(*env.Error), nil)
+			}
 			return ps
 		}
-		if checkErrorReturnFlag(ps) {
-			ps.Res = env.NewError4(0, "argument 1 of "+strconv.Itoa(bi.Argsn)+" missing of builtin: '"+bi.Doc+"'", ps.Res.(*env.Error), nil)
-			return ps
-		}
+
+		// Check for void (currying)
 		if ps.Res.Type() == env.VoidType {
 			curry = true
 		} else {
@@ -1038,67 +1058,74 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 		}
 	}
 
+	// Handle second argument
 	if arg0_ != nil && pipeSecond {
 		arg1 = arg0_
-	} else if bi.Argsn > 1 && bi.Cur1 == nil {
-		evalExprFn(ps, true) // <---- THESE DETERMINE IF IT CONSUMES WHOLE EXPRESSION OR NOT IN CASE OF PIPEWORDS .. HM*... MAYBE WOULD COULD HAVE A WORD MODIFIER?? a: 2 |add 5 a:: 2 |add 5 print* --TODO
+	} else if bi.Argsn > 1 && bi.Cur1 == nil && !curry {
+		evalExprFn(ps, true)
 
-		if checkFlagsBi(bi, ps, 1) {
+		// Check for errors
+		if ps.ErrorFlag || ps.ReturnFlag {
+			if !ps.ErrorFlag {
+				ps.Res = env.NewError4(0, "argument 2 of "+strconv.Itoa(bi.Argsn)+" missing of builtin: '"+bi.Doc+"'", ps.Res.(*env.Error), nil)
+			}
 			return ps
 		}
-		if checkErrorReturnFlag(ps) {
-			ps.Res = env.NewError4(0, "argument 2 of "+strconv.Itoa(bi.Argsn)+" missing of builtin: '"+bi.Doc+"'", ps.Res.(*env.Error), nil)
-			return ps
-		}
-		//fmt.Println(ps.Res)
+
+		// Check for void (currying)
 		if ps.Res.Type() == env.VoidType {
 			curry = true
 		} else {
 			arg1 = ps.Res
 		}
 	}
-	if bi.Argsn > 2 {
-		evalExprFn(ps, true)
 
-		if checkFlagsBi(bi, ps, 2) {
-			return ps
+	// Handle remaining arguments (only if not currying)
+	if !curry {
+		// Third argument
+		if bi.Argsn > 2 && bi.Cur2 == nil {
+			evalExprFn(ps, true)
+
+			// Check for errors
+			if ps.ErrorFlag || ps.ReturnFlag {
+				if !ps.ErrorFlag {
+					ps.Res = env.NewError4(0, "argument 3 missing", ps.Res.(*env.Error), nil)
+				}
+				return ps
+			}
+
+			// Check for void (currying)
+			if ps.Res.Type() == env.VoidType {
+				curry = true
+			} else {
+				arg2 = ps.Res
+			}
 		}
-		if checkErrorReturnFlag(ps) {
-			ps.Res = env.NewError4(0, "argument 3 missing", ps.Res.(*env.Error), nil)
-			return ps
+
+		// Fourth argument
+		if bi.Argsn > 3 && bi.Cur3 == nil && !curry {
+			evalExprFn(ps, true)
+			if ps.Res.Type() == env.VoidType {
+				curry = true
+			} else {
+				arg3 = ps.Res
+			}
 		}
-		if ps.Res.Type() == env.VoidType {
-			curry = true
-		} else {
-			arg2 = ps.Res
+
+		// Fifth argument
+		if bi.Argsn > 4 && bi.Cur4 == nil && !curry {
+			evalExprFn(ps, true)
+			if ps.Res.Type() == env.VoidType {
+				curry = true
+			} else {
+				arg4 = ps.Res
+			}
 		}
 	}
-	if bi.Argsn > 3 {
-		evalExprFn(ps, true)
-		if ps.Res.Type() == env.VoidType {
-			curry = true
-		} else {
-			arg3 = ps.Res
-		}
-	}
-	if bi.Argsn > 4 {
-		evalExprFn(ps, true)
-		if ps.Res.Type() == env.VoidType {
-			curry = true
-		} else {
-			arg4 = ps.Res
-		}
-	}
-	/*
-		variadic version
-		for i := 0; i < bi.Argsn; i += 1 {
-			EvalExpression(ps)
-			args[i] = ps.Res
-		}
-		ps.Res = bi.Fn(ps, args...)
-	*/
-	trace("YOYOYOYOYOYOYOYOYOYO ---")
+
+	// Handle currying or execute the function
 	if curry {
+		// Create a curried function
 		bi.Cur0 = arg0
 		bi.Cur1 = arg1
 		bi.Cur2 = arg2
@@ -1106,20 +1133,67 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 		bi.Cur4 = arg4
 		ps.Res = bi
 	} else {
+		// Skip flag check
 		if ps.SkipFlag {
-			trace2("SKIPPING ....")
-			//if arg0_ != nil {
-			trace2("PIPE ....")
 			return ps
-			//} else {
-			//	trace2("RESETING ....")
-			//ps.SkipFlag = false
-			//}
 		}
+
+		// Call the function directly
 		ps.Res = bi.Fn(ps, arg0, arg1, arg2, arg3, arg4)
 	}
-	trace2(" ------------- Before builtin returns")
+
 	return ps
+}
+
+// Helper function to determine if currying is needed
+func curry_needed(bi env.Builtin, arg0_ env.Object, pipeSecond bool, firstVal env.Object) bool {
+	// Check if all required arguments are available
+	if bi.Argsn == 0 {
+		return false
+	}
+
+	// Check first argument
+	if bi.Argsn >= 1 && bi.Cur0 == nil && arg0_ == nil && !pipeSecond && firstVal == nil {
+		return true
+	}
+
+	// Check second argument
+	if bi.Argsn >= 2 && bi.Cur1 == nil && !(arg0_ != nil && pipeSecond) {
+		return true
+	}
+
+	// Check remaining arguments
+	if bi.Argsn >= 3 && bi.Cur2 == nil {
+		return true
+	}
+	if bi.Argsn >= 4 && bi.Cur3 == nil {
+		return true
+	}
+	if bi.Argsn >= 5 && bi.Cur4 == nil {
+		return true
+	}
+
+	return false
+}
+
+// Helper function to get the first argument
+func get_arg0(bi env.Builtin, arg0_ env.Object, pipeSecond bool, firstVal env.Object) env.Object {
+	if arg0_ != nil && !pipeSecond {
+		return arg0_
+	} else if firstVal != nil && pipeSecond {
+		return firstVal
+	} else {
+		return bi.Cur0
+	}
+}
+
+// Helper function to get the second argument
+func get_arg1(bi env.Builtin, arg0_ env.Object, pipeSecond bool) env.Object {
+	if arg0_ != nil && pipeSecond {
+		return arg0_
+	} else {
+		return bi.Cur1
+	}
 }
 
 func CallVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, arg0_ env.Object, toLeft bool, pipeSecond bool, firstVal env.Object) *env.ProgramState {
