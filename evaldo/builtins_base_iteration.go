@@ -27,27 +27,45 @@ var builtins_iteration = map[string]*env.Builtin{
 		Argsn: 2,
 		Doc:   "Executes a block of code a specified number of times, injecting the current iteration number (starting from 1).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch cond := arg0.(type) {
-			case env.Integer:
-				switch bloc := arg1.(type) {
-				case env.Block:
-					ser := ps.Ser
-					ps.Ser = bloc.Series
-					for i := 0; int64(i) < cond.Value; i++ {
-						ps = EvalBlockInjMultiDialect(ps, *env.NewInteger(int64(i + 1)), true)
-						if ps.ErrorFlag {
-							return ps.Res
-						}
-						ps.Ser.Reset()
-					}
-					ps.Ser = ser
-					return ps.Res
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "loop")
-				}
-			default:
+			// Type checking for arguments
+			count, ok := arg0.(env.Integer)
+			if !ok {
 				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "loop")
 			}
+
+			block, ok := arg1.(env.Block)
+			if !ok {
+				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "loop")
+			}
+
+			// Save original series
+			ser := ps.Ser
+			ps.Ser = block.Series
+
+			// Pre-allocate a single Integer object to reuse
+			iterObj := env.Integer{Value: 1}
+
+			// Main loop
+			for i := int64(0); i < count.Value; i++ {
+				// Update the iteration counter
+				iterObj.Value = i + 1
+
+				// Evaluate the block with the current iteration number
+				ps = EvalBlockInjMultiDialect(ps, iterObj, true)
+
+				// Check for errors
+				if ps.ErrorFlag {
+					ps.Ser = ser // Restore original series before returning
+					return ps.Res
+				}
+
+				// Reset series position for next iteration
+				ps.Ser.Reset()
+			}
+
+			// Restore original series
+			ps.Ser = ser
+			return ps.Res
 		},
 	},
 

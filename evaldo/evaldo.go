@@ -98,6 +98,7 @@ func EvalBlockInjMultiDialect(ps *env.ProgramState, inj env.Object, injnow bool)
 		return Eyr_EvalBlockInside(ps, inj, injnow) // TODO ps.Stack is already in ps ... refactor
 	case env.Rye0Dialect:
 		return Rye0_EvalBlockInj(ps, inj, injnow) // TODO ps.Stack is already in ps ... refactor
+		// return Rye0_EvaluateBlock(ps) // TODO ps.Stack is already in ps ... refactor
 	default:
 		return EvalBlockInj(ps, inj, injnow)
 	}

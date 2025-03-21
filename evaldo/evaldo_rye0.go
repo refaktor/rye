@@ -49,7 +49,7 @@ func Rye0_EvalExpressionConcrete(ps *env.ProgramState) *env.ProgramState {
 
 	if object == nil {
 		ps.ErrorFlag = true
-		ps.Res = env.NewError("Expected Rye value but it's missing")
+		ps.Res = errMissingValue
 		return ps
 	}
 
@@ -68,7 +68,8 @@ func Rye0_EvalExpressionConcrete(ps *env.ProgramState) *env.ProgramState {
 
 	// Word types
 	case env.TagwordType:
-		ps.Res = *env.NewWord(object.(env.Tagword).Index)
+		// Create a Word directly without allocation
+		ps.Res = env.Word{Index: object.(env.Tagword).Index}
 		return ps
 	case env.WordType:
 		return Rye0_EvalWord(ps, object.(env.Word), nil, false, false)
@@ -100,10 +101,33 @@ func Rye0_EvalExpressionConcrete(ps *env.ProgramState) *env.ProgramState {
 	return ps
 }
 
+// Pre-allocated common error messages to avoid allocations
+var (
+	errMissingValue    = env.NewError("Expected Rye value but it's missing")
+	errExpressionGuard = env.NewError("Expression guard inside expression")
+	errErrorObject     = env.NewError("Error object encountered")
+	errArg1Missing     = env.NewError4(0, "Argument 1 missing for builtin", nil, nil)
+	errArg2Missing     = env.NewError4(0, "Argument 2 missing for builtin", nil, nil)
+	errArg3Missing     = env.NewError4(0, "Argument 3 missing for builtin", nil, nil)
+	// This is a template error that will be customized with the specific word
+	errCantSetWord = env.NewError("Can't set already set word %s, try using modword (::)")
+)
+
 // Helper function to set error state
 func setError(ps *env.ProgramState, message string) {
 	ps.ErrorFlag = true
-	ps.Res = env.NewError(message)
+
+	// Use pre-allocated errors for common messages
+	switch message {
+	case "Expected Rye value but it's missing":
+		ps.Res = errMissingValue
+	case "Expression guard inside expression":
+		ps.Res = errExpressionGuard
+	case "Error object encountered":
+		ps.Res = errErrorObject
+	default:
+		ps.Res = env.NewError(message)
+	}
 }
 
 // Rye0_EvaluateBlock handles the evaluation of a block object.
@@ -114,7 +138,10 @@ func Rye0_EvaluateBlock(ps *env.ProgramState, block env.Block) *env.ProgramState
 	switch block.Mode {
 	case 1: // Eval blocks
 		ps.Ser = block.Series
-		res := make([]env.Object, 0)
+		// Pre-allocate the result slice with estimated capacity to avoid reallocations
+		estimatedSize := ps.Ser.Len() - ps.Ser.Pos()
+		res := make([]env.Object, 0, estimatedSize)
+
 		for ps.Ser.Pos() < ps.Ser.Len() {
 			Rye0_EvalExpression2(ps, false)
 			if Rye0_checkErrorReturnFlag(ps) {
@@ -124,7 +151,10 @@ func Rye0_EvaluateBlock(ps *env.ProgramState, block env.Block) *env.ProgramState
 			res = append(res, ps.Res)
 		}
 		ps.Ser = ser // Restore original series
-		ps.Res = *env.NewBlock(*env.NewTSeries(res))
+
+		// Create series and block in one step to reduce allocations
+		series := env.NewTSeries(res)
+		ps.Res = *env.NewBlock(*series)
 	case 2:
 		ps.Ser = block.Series
 		EvalBlock(ps)
@@ -158,6 +188,9 @@ func Rye0_findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Objec
 	}
 }
 
+// Pre-allocated string for Dict case in Rye0_findCPathValue to avoid allocation
+var dictPathString = env.NewString("TODO... what is this?")
+
 // Rye0_findCPathValue handles the lookup of context path values.
 func Rye0_findCPathValue(ps *env.ProgramState, word env.CPath) (bool, env.Object, *env.RyeCtx) {
 	currCtx := ps.Ctx
@@ -177,7 +210,8 @@ func Rye0_findCPathValue(ps *env.ProgramState, word env.CPath) (bool, env.Object
 				currCtx = &swObj
 				i++
 			case env.Dict:
-				return found, *env.NewString("asdsad"), currCtx
+				// Use pre-allocated string to avoid allocation
+				return found, *dictPathString, currCtx
 			default:
 				return false, nil, nil
 			}
@@ -295,7 +329,8 @@ func Rye0_EvalSetword(ps *env.ProgramState, word env.Setword) *env.ProgramState 
 	} else {
 		ok := ps1.Ctx.SetNew(idx, ps1.Res, ps.Idx)
 		if !ok {
-			ps.Res = env.NewError("Can't set already set word " + ps.Idx.GetWord(idx) + ", try using modword (::)")
+			// Use the pre-allocated error template and format it with the specific word
+			ps.Res = env.NewError(fmt.Sprintf(errCantSetWord.Message, ps.Idx.GetWord(idx)))
 			ps.FailureFlag = true
 			ps.ErrorFlag = true
 		}
@@ -538,7 +573,7 @@ func Rye0_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, to
 		}
 
 		if ps.ErrorFlag || ps.ReturnFlag {
-			ps.Res = env.NewError4(0, "Argument 1 missing for builtin", ps.Res.(*env.Error), nil)
+			ps.Res = errArg1Missing
 			return ps
 		}
 
@@ -559,7 +594,7 @@ func Rye0_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, to
 		}
 
 		if ps.ErrorFlag || ps.ReturnFlag {
-			ps.Res = env.NewError4(0, "Argument 2 missing for builtin", ps.Res.(*env.Error), nil)
+			ps.Res = errArg2Missing
 			return ps
 		}
 
@@ -580,7 +615,7 @@ func Rye0_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, to
 		}
 
 		if ps.ErrorFlag || ps.ReturnFlag {
-			ps.Res = env.NewError4(0, "Argument 3 missing for builtin", ps.Res.(*env.Error), nil)
+			ps.Res = errArg3Missing
 			return ps
 		}
 
@@ -612,7 +647,7 @@ func Rye0_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, to
 //
 // Returns:
 //   - The result of the builtin function
-func Rye0_DirectlyCallBuiltin(ps *env.ProgramState, bi env.Builtin, a0 env.Object, a1 env.Object) env.Object {
+/* func Rye0_DirectlyCallBuiltin(ps *env.ProgramState, bi env.Builtin, a0 env.Object, a1 env.Object) env.Object {
 	// Determine arguments based on curried values
 	var arg0, arg1 env.Object
 
@@ -634,7 +669,9 @@ func Rye0_DirectlyCallBuiltin(ps *env.ProgramState, bi env.Builtin, a0 env.Objec
 
 	// Call the builtin function
 	return bi.Fn(ps, arg0, arg1, bi.Cur2, bi.Cur3, bi.Cur4)
-}
+}*/
+
+// ERROR AND FLAG CHECKS
 
 // Rye0_MaybeDisplayFailureOrError displays failure or error information if present.
 // Parameters:
@@ -704,20 +741,14 @@ func updateErrorCodeContext(ps *env.ProgramState) {
 
 // Rye0_checkFlagsBi checks if there are failure flags and handles them appropriately.
 func Rye0_checkFlagsBi(bi env.Builtin, ps *env.ProgramState, n int) bool {
-	trace("CHECK FLAGS BI")
-
 	if ps.FailureFlag {
-		trace("------ > FailureFlag")
 		if bi.AcceptFailure {
-			trace2("----- > Accept Failure")
+			// Accept failure
 		} else {
-			trace2("Fail ------->  Error.")
 			updateErrorCodeContext(ps)
 			ps.ErrorFlag = true
 			return true
 		}
-	} else {
-		trace2("NOT FailuteFlag")
 	}
 	return false
 }
@@ -756,23 +787,14 @@ func Rye0_checkContextErrorHandler(ps *env.ProgramState) bool {
 
 // Rye0_checkFlagsAfterBlock checks if there are failure flags after evaluating a block.
 func Rye0_checkFlagsAfterBlock(ps *env.ProgramState, n int) bool {
-	trace2("CHECK FLAGS AFTER BLOCKS")
-	trace2(n)
-
 	if ps.FailureFlag && !ps.ReturnFlag {
-		trace2("FailureFlag")
-		trace2("Fail->Error.")
-
 		if !ps.InErrHandler && Rye0_checkContextErrorHandler(ps) {
 			return false // Error should be picked up in the handler block
 		}
 
 		updateErrorCodeContext(ps)
-		trace2("FAIL -> ERROR blk")
 		ps.ErrorFlag = true
 		return true
-	} else {
-		trace2("NOT FailureFlag")
 	}
 	return false
 }
@@ -783,5 +805,5 @@ func Rye0_checkErrorReturnFlag(ps *env.ProgramState) bool {
 		updateErrorCodeContext(ps)
 		return true
 	}
-	return ps.ReturnFlag
+	return false
 }
