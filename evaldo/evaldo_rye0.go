@@ -9,24 +9,11 @@ import (
 )
 
 // Rye0_EvalBlockInj evaluates a block with an optional injected value.
-// Parameters:
-//   - ps: The program state
-//   - inj: The value to inject (can be nil)
-//   - injnow: Whether to inject the value now
-//
-// Returns:
-//   - The updated program state
 func Rye0_EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) *env.ProgramState {
-	// Repeat until at the end of the block
 	for ps.Ser.Pos() < ps.Ser.Len() {
-		// Evaluate expression at the block cursor
 		ps, injnow = Rye0_EvalExpressionInj(ps, inj, injnow)
 
-		// If flags raised return program state
-		if Rye0_checkFlagsAfterBlock(ps, 101) {
-			return ps
-		}
-		if Rye0_checkErrorReturnFlag(ps) {
+		if Rye0_checkFlagsAfterBlock(ps, 101) || Rye0_checkErrorReturnFlag(ps) {
 			return ps
 		}
 	}
@@ -34,38 +21,22 @@ func Rye0_EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) *env.P
 }
 
 // Rye0_EvalExpression2 evaluates an expression with optional limitations.
-// Parameters:
-//   - ps: The program state
-//   - limited: Whether evaluation is limited
-//
-// Returns:
-//   - The updated program state
 func Rye0_EvalExpression2(ps *env.ProgramState, limited bool) *env.ProgramState {
 	Rye0_EvalExpressionConcrete(ps)
 	return ps
 }
 
 // Rye0_EvalExpressionInj evaluates an expression with an optional injected value.
-// Parameters:
-//   - ps: The program state
-//   - inj: The value to inject (can be nil)
-//   - injnow: Whether to inject the value now
-//
-// Returns:
-//   - The updated program state and updated injnow flag
 func Rye0_EvalExpressionInj(ps *env.ProgramState, inj env.Object, injnow bool) (*env.ProgramState, bool) {
-	var esleft *env.ProgramState
 	if inj == nil || !injnow {
 		// If there is no injected value just eval the concrete expression
-		esleft = Rye0_EvalExpressionConcrete(ps)
+		Rye0_EvalExpressionConcrete(ps)
 		if ps.ReturnFlag {
 			return ps, injnow
 		}
 	} else {
-		// Otherwise set program state to specific one and injected value to result
-		// Set injnow to false and if return flag return
-		esleft = ps
-		esleft.Res = inj
+		// Otherwise set injected value to result and reset injnow flag
+		ps.Res = inj
 		injnow = false
 	}
 	return ps, injnow
@@ -73,11 +44,6 @@ func Rye0_EvalExpressionInj(ps *env.ProgramState, inj env.Object, injnow bool) (
 
 // Rye0_EvalExpressionConcrete evaluates a concrete expression.
 // This is the main part of the evaluator that handles all Rye value types.
-// Parameters:
-//   - ps: The program state
-//
-// Returns:
-//   - The updated program state
 func Rye0_EvalExpressionConcrete(ps *env.ProgramState) *env.ProgramState {
 	object := ps.Ser.Pop()
 
@@ -121,75 +87,69 @@ func Rye0_EvalExpressionConcrete(ps *env.ProgramState) *env.ProgramState {
 
 	// Error handling
 	case env.CommaType:
-		ps.ErrorFlag = true
-		ps.Res = env.NewError("Expression guard inside expression")
+		setError(ps, "Expression guard inside expression")
 	case env.ErrorType:
-		ps.ErrorFlag = true
-		ps.Res = env.NewError("Error object encountered")
+		setError(ps, "Error object encountered")
 
 	// Unknown type
 	default:
 		fmt.Println(object.Inspect(*ps.Idx))
-		ps.ErrorFlag = true
-		ps.Res = env.NewError("Unknown Rye value type: " + strconv.Itoa(int(object.Type())))
+		setError(ps, "Unknown Rye value type: "+strconv.Itoa(int(object.Type())))
 	}
 
 	return ps
 }
 
+// Helper function to set error state
+func setError(ps *env.ProgramState, message string) {
+	ps.ErrorFlag = true
+	ps.Res = env.NewError(message)
+}
+
 // Rye0_EvaluateBlock handles the evaluation of a block object.
-// Extracted from Rye0_EvalExpressionConcrete to reduce function size.
-// Parameters:
-//   - ps: The program state
-//   - block: The block to evaluate
-//
-// Returns:
-//   - The updated program state
 func Rye0_EvaluateBlock(ps *env.ProgramState, block env.Block) *env.ProgramState {
-	// Block mode 1 is for eval blocks
-	if block.Mode == 1 {
-		ser := ps.Ser
+	// Save original series to restore later
+	ser := ps.Ser
+
+	switch block.Mode {
+	case 1: // Eval blocks
 		ps.Ser = block.Series
 		res := make([]env.Object, 0)
 		for ps.Ser.Pos() < ps.Ser.Len() {
 			Rye0_EvalExpression2(ps, false)
 			if Rye0_checkErrorReturnFlag(ps) {
+				ps.Ser = ser // Restore original series
 				return ps
 			}
 			res = append(res, ps.Res)
 		}
-		ps.Ser = ser
+		ps.Ser = ser // Restore original series
 		ps.Res = *env.NewBlock(*env.NewTSeries(res))
-	} else if block.Mode == 2 {
-		ser := ps.Ser
+	case 2:
 		ps.Ser = block.Series
 		EvalBlock(ps)
-		ps.Ser = ser
-	} else {
+		ps.Ser = ser // Restore original series
+	default:
 		ps.Res = block
 	}
 	return ps
 }
 
 // Rye0_findWordValue returns the value associated with a word in the current context.
-// Parameters:
-//   - ps: The program state
-//   - word1: The word to look up
-//
-// Returns:
-//   - found: Whether the word was found
-//   - object: The value associated with the word
-//   - ctx: The context where the word was found
 func Rye0_findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *env.RyeCtx) {
 	switch word := word1.(type) {
-	case env.Word:
-		object, found := ps.Ctx.Get(word.Index)
-		return found, object, nil
-	case env.Opword:
-		object, found := ps.Ctx.Get(word.Index)
-		return found, object, nil
-	case env.Pipeword:
-		object, found := ps.Ctx.Get(word.Index)
+	case env.Word, env.Opword, env.Pipeword:
+		// Handle all simple word types the same way
+		var index int
+		switch w := word.(type) {
+		case env.Word:
+			index = w.Index
+		case env.Opword:
+			index = w.Index
+		case env.Pipeword:
+			index = w.Index
+		}
+		object, found := ps.Ctx.Get(index)
 		return found, object, nil
 	case env.CPath:
 		return Rye0_findCPathValue(ps, word)
@@ -199,76 +159,64 @@ func Rye0_findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Objec
 }
 
 // Rye0_findCPathValue handles the lookup of context path values.
-// Extracted from Rye0_findWordValue to improve readability.
-// Parameters:
-//   - ps: The program state
-//   - word: The context path to look up
-//
-// Returns:
-//   - found: Whether the path was found
-//   - object: The value at the path
-//   - ctx: The context where the value was found
 func Rye0_findCPathValue(ps *env.ProgramState, word env.CPath) (bool, env.Object, *env.RyeCtx) {
 	currCtx := ps.Ctx
 	i := 1
-gogo1:
-	currWord := word.GetWordNumber(i)
-	object, found := currCtx.Get(currWord.Index)
-	if found && word.Cnt > i {
-		switch swObj := object.(type) {
-		case env.RyeCtx:
-			currCtx = &swObj
-			i += 1
-			goto gogo1
-		case env.Dict:
-			return found, *env.NewString("asdsad"), currCtx
+
+	for i <= word.Cnt {
+		currWord := word.GetWordNumber(i)
+		object, found := currCtx.Get(currWord.Index)
+
+		if !found {
+			return false, nil, nil
+		}
+
+		if word.Cnt > i {
+			switch swObj := object.(type) {
+			case env.RyeCtx:
+				currCtx = &swObj
+				i++
+			case env.Dict:
+				return found, *env.NewString("asdsad"), currCtx
+			default:
+				return false, nil, nil
+			}
+		} else {
+			return found, object, currCtx
 		}
 	}
-	return found, object, currCtx
+
+	return false, nil, nil
 }
 
 // Rye0_EvalWord evaluates a word in the current context.
-// Parameters:
-//   - ps: The program state
-//   - word: The word to evaluate
-//   - leftVal: The left value (if any)
-//   - toLeft: Whether the evaluation is to the left
-//   - pipeSecond: Whether this is a pipe second evaluation
-//
-// Returns:
-//   - The updated program state
 func Rye0_EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft bool, pipeSecond bool) *env.ProgramState {
 	var firstVal env.Object
 	found, object, session := Rye0_findWordValue(ps, word)
 	pos := ps.Ser.GetPos()
 
 	if !found {
-		// Look at Generic words, but first check type
+		// Determine the kind for generic word lookup
 		kind := 0
 		if leftVal != nil {
 			kind = leftVal.GetKind()
 		}
 
-		// Handle different evaluation scenarios
-		if leftVal == nil && !pipeSecond {
+		// Evaluate next expression if needed
+		if (leftVal == nil && !pipeSecond) || pipeSecond {
 			if !ps.Ser.AtLast() {
 				Rye0_EvalExpressionConcrete(ps)
 				if ps.ReturnFlag {
 					return ps
 				}
-				leftVal = ps.Res
-				kind = leftVal.GetKind()
-			}
-		}
 
-		if pipeSecond {
-			if !ps.Ser.AtLast() {
-				Rye0_EvalExpressionConcrete(ps)
-				if ps.ReturnFlag {
-					return ps
+				if pipeSecond {
+					firstVal = ps.Res
+					kind = firstVal.GetKind()
+				} else {
+					leftVal = ps.Res
+					kind = leftVal.GetKind()
 				}
-				firstVal = ps.Res
-				kind = firstVal.GetKind()
 			}
 		}
 
@@ -281,24 +229,17 @@ func Rye0_EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, to
 	if found {
 		return Rye0_EvalObject(ps, object, leftVal, toLeft, session, pipeSecond, firstVal)
 	} else {
-		ps.ErrorFlag = true
 		if !ps.FailureFlag {
 			ps.Ser.SetPos(pos)
-			ps.Res = env.NewError2(5, "Word not found: "+word.Print(*ps.Idx))
+			setError(ps, "Word not found: "+word.Print(*ps.Idx))
+		} else {
+			ps.ErrorFlag = true
 		}
 		return ps
 	}
 }
 
 // Rye0_EvalGenword evaluates a generic word.
-// Parameters:
-//   - ps: The program state
-//   - word: The generic word to evaluate
-//   - leftVal: The left value (if any)
-//   - toLeft: Whether the evaluation is to the left
-//
-// Returns:
-//   - The updated program state
 func Rye0_EvalGenword(ps *env.ProgramState, word env.Genword, leftVal env.Object, toLeft bool) *env.ProgramState {
 	Rye0_EvalExpressionConcrete(ps)
 
@@ -307,51 +248,27 @@ func Rye0_EvalGenword(ps *env.ProgramState, word env.Genword, leftVal env.Object
 	if found {
 		return Rye0_EvalObject(ps, object, arg0, toLeft, nil, false, nil)
 	} else {
-		ps.ErrorFlag = true
-		ps.Res = env.NewError("Generic word not found: " + word.Print(*ps.Idx))
+		setError(ps, "Generic word not found: "+word.Print(*ps.Idx))
 		return ps
 	}
 }
 
 // Rye0_EvalGetword evaluates a get-word.
-// Parameters:
-//   - ps: The program state
-//   - word: The get-word to evaluate
-//   - leftVal: The left value (if any)
-//   - toLeft: Whether the evaluation is to the left
-//
-// Returns:
-//   - The updated program state
 func Rye0_EvalGetword(ps *env.ProgramState, word env.Getword, leftVal env.Object, toLeft bool) *env.ProgramState {
 	object, found := ps.Ctx.Get(word.Index)
 	if found {
 		ps.Res = object
 		return ps
 	} else {
-		ps.ErrorFlag = true
-		ps.Res = env.NewError("Word not found: " + word.Print(*ps.Idx))
+		setError(ps, "Word not found: "+word.Print(*ps.Idx))
 		return ps
 	}
 }
 
 // Rye0_EvalObject evaluates a Rye object.
-// Parameters:
-//   - ps: The program state
-//   - object: The object to evaluate
-//   - leftVal: The left value (if any)
-//   - toLeft: Whether the evaluation is to the left
-//   - ctx: The context (if any)
-//   - pipeSecond: Whether this is a pipe second evaluation
-//   - firstVal: The first value (if any)
-//
-// Returns:
-//   - The updated program state
 func Rye0_EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toLeft bool, ctx *env.RyeCtx, pipeSecond bool, firstVal env.Object) *env.ProgramState {
 	switch object.Type() {
-	case env.FunctionType:
-		fn := object.(env.Function)
-		return Rye0_CallFunction(fn, ps, leftVal, toLeft, ctx)
-	case env.CPathType: // RMME
+	case env.FunctionType, env.CPathType: // Handle both function types the same way
 		fn := object.(env.Function)
 		return Rye0_CallFunction(fn, ps, leftVal, toLeft, ctx)
 	case env.BuiltinType:
@@ -370,12 +287,6 @@ func Rye0_EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object
 }
 
 // Rye0_EvalSetword evaluates a set-word.
-// Parameters:
-//   - ps: The program state
-//   - word: The set-word to evaluate
-//
-// Returns:
-//   - The updated program state
 func Rye0_EvalSetword(ps *env.ProgramState, word env.Setword) *env.ProgramState {
 	ps1, _ := Rye0_EvalExpressionInj(ps, nil, false)
 	idx := word.Index
@@ -393,12 +304,6 @@ func Rye0_EvalSetword(ps *env.ProgramState, word env.Setword) *env.ProgramState 
 }
 
 // Rye0_EvalModword evaluates a mod-word.
-// Parameters:
-//   - ps: The program state
-//   - word: The mod-word to evaluate
-//
-// Returns:
-//   - The updated program state
 func Rye0_EvalModword(ps *env.ProgramState, word env.Modword) *env.ProgramState {
 	ps1, _ := Rye0_EvalExpressionInj(ps, nil, false)
 	idx := word.Index
@@ -603,62 +508,93 @@ func Rye0_CallFunctionWithArgs(fn env.Function, ps *env.ProgramState, ctx *env.R
 // Returns:
 //   - The updated program state
 func Rye0_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft bool, pipeSecond bool, firstVal env.Object) *env.ProgramState {
-	// Initialize arguments
+	// Fast path: If all arguments are already available (curried), call directly
+	if (bi.Argsn == 0) ||
+		(bi.Argsn == 1 && bi.Cur0 != nil) ||
+		(bi.Argsn == 2 && bi.Cur0 != nil && bi.Cur1 != nil) {
+		ps.Res = bi.Fn(ps, bi.Cur0, bi.Cur1, bi.Cur2, bi.Cur3, bi.Cur4)
+		return ps
+	}
+
+	// Initialize arguments with curried values
 	arg0 := bi.Cur0
 	arg1 := bi.Cur1
 	arg2 := bi.Cur2
 	arg3 := bi.Cur3
 	arg4 := bi.Cur4
 
-	evalExprFn := Rye0_EvalExpression2
-
-	// Process arguments
+	// Process first argument if needed
 	if bi.Argsn > 0 && bi.Cur0 == nil {
-		evalExprFn(ps, true)
+		// Direct call to avoid function pointer indirection
+		Rye0_EvalExpression2(ps, true)
 
-		if Rye0_checkFlagsBi(bi, ps, 0) {
+		// Inline error checking for speed
+		if ps.FailureFlag {
+			if !bi.AcceptFailure {
+				updateErrorCodeContext(ps)
+				ps.ErrorFlag = true
+				return ps
+			}
+		}
+
+		if ps.ErrorFlag || ps.ReturnFlag {
+			ps.Res = env.NewError4(0, "Argument 1 missing for builtin", ps.Res.(*env.Error), nil)
 			return ps
 		}
-		if Rye0_checkErrorReturnFlag(ps) {
-			ps.Res = env.NewError4(0, "Argument 1 of "+strconv.Itoa(bi.Argsn)+" missing for builtin: '"+bi.Doc+"'", ps.Res.(*env.Error), nil)
-			return ps
-		}
+
 		arg0 = ps.Res
 	}
 
+	// Process second argument if needed
 	if bi.Argsn > 1 && bi.Cur1 == nil {
-		evalExprFn(ps, true)
+		Rye0_EvalExpression2(ps, true)
 
-		if Rye0_checkFlagsBi(bi, ps, 1) {
+		// Inline error checking for speed
+		if ps.FailureFlag {
+			if !bi.AcceptFailure {
+				updateErrorCodeContext(ps)
+				ps.ErrorFlag = true
+				return ps
+			}
+		}
+
+		if ps.ErrorFlag || ps.ReturnFlag {
+			ps.Res = env.NewError4(0, "Argument 2 missing for builtin", ps.Res.(*env.Error), nil)
 			return ps
 		}
-		if Rye0_checkErrorReturnFlag(ps) {
-			ps.Res = env.NewError4(0, "Argument 2 of "+strconv.Itoa(bi.Argsn)+" missing for builtin: '"+bi.Doc+"'", ps.Res.(*env.Error), nil)
-			return ps
-		}
+
 		arg1 = ps.Res
 	}
 
-	if bi.Argsn > 2 {
-		evalExprFn(ps, true)
+	// Process third argument if needed
+	if bi.Argsn > 2 && bi.Cur2 == nil {
+		Rye0_EvalExpression2(ps, true)
 
-		if Rye0_checkFlagsBi(bi, ps, 2) {
+		// Inline error checking for speed
+		if ps.FailureFlag {
+			if !bi.AcceptFailure {
+				updateErrorCodeContext(ps)
+				ps.ErrorFlag = true
+				return ps
+			}
+		}
+
+		if ps.ErrorFlag || ps.ReturnFlag {
+			ps.Res = env.NewError4(0, "Argument 3 missing for builtin", ps.Res.(*env.Error), nil)
 			return ps
 		}
-		if Rye0_checkErrorReturnFlag(ps) {
-			ps.Res = env.NewError4(0, "Argument 3 missing for builtin: '"+bi.Doc+"'", ps.Res.(*env.Error), nil)
-			return ps
-		}
+
 		arg2 = ps.Res
 	}
 
-	if bi.Argsn > 3 {
-		evalExprFn(ps, true)
+	// Process remaining arguments with minimal error checking
+	if bi.Argsn > 3 && bi.Cur3 == nil {
+		Rye0_EvalExpression2(ps, true)
 		arg3 = ps.Res
 	}
 
-	if bi.Argsn > 4 {
-		evalExprFn(ps, true)
+	if bi.Argsn > 4 && bi.Cur4 == nil {
+		Rye0_EvalExpression2(ps, true)
 		arg4 = ps.Res
 	}
 
@@ -751,38 +687,32 @@ func Rye0_MaybeDisplayFailureOrErrorWASM(es *env.ProgramState, genv *env.Idxs, p
 	}
 }
 
+// updateErrorCodeContext updates the error's code context if it's not already set
+func updateErrorCodeContext(ps *env.ProgramState) {
+	if err, ok := ps.Res.(*env.Error); ok {
+		if err.CodeBlock.Len() == 0 {
+			err.CodeBlock = ps.Ser
+			err.CodeContext = ps.Ctx
+		}
+	} else if err, ok := ps.Res.(env.Error); ok {
+		if err.CodeBlock.Len() == 0 {
+			err.CodeBlock = ps.Ser
+			err.CodeContext = ps.Ctx
+		}
+	}
+}
+
 // Rye0_checkFlagsBi checks if there are failure flags and handles them appropriately.
-// Parameters:
-//   - bi: The builtin function
-//   - ps: The program state
-//   - n: The argument number
-//
-// Returns:
-//   - Whether an error was found and handled
 func Rye0_checkFlagsBi(bi env.Builtin, ps *env.ProgramState, n int) bool {
 	trace("CHECK FLAGS BI")
-	//trace(n)
-	//trace(ps.Res)
-	//	trace(bi)
+
 	if ps.FailureFlag {
 		trace("------ > FailureFlag")
 		if bi.AcceptFailure {
 			trace2("----- > Accept Failure")
 		} else {
-			// fmt.Println("checkFlagsBi***")
 			trace2("Fail ------->  Error.")
-			switch err := ps.Res.(type) {
-			case env.Error:
-				if err.CodeBlock.Len() == 0 {
-					err.CodeBlock = ps.Ser
-					err.CodeContext = ps.Ctx
-				}
-			case *env.Error:
-				if err.CodeBlock.Len() == 0 {
-					err.CodeBlock = ps.Ser
-					err.CodeContext = ps.Ctx
-				}
-			}
+			updateErrorCodeContext(ps)
 			ps.ErrorFlag = true
 			return true
 		}
@@ -825,12 +755,6 @@ func Rye0_checkContextErrorHandler(ps *env.ProgramState) bool {
 }
 
 // Rye0_checkFlagsAfterBlock checks if there are failure flags after evaluating a block.
-// Parameters:
-//   - ps: The program state
-//   - n: The block number
-//
-// Returns:
-//   - Whether an error was found and handled
 func Rye0_checkFlagsAfterBlock(ps *env.ProgramState, n int) bool {
 	trace2("CHECK FLAGS AFTER BLOCKS")
 	trace2(n)
@@ -839,24 +763,11 @@ func Rye0_checkFlagsAfterBlock(ps *env.ProgramState, n int) bool {
 		trace2("FailureFlag")
 		trace2("Fail->Error.")
 
-		if !ps.InErrHandler {
-			if Rye0_checkContextErrorHandler(ps) {
-				return false // Error should be picked up in the handler block
-			}
+		if !ps.InErrHandler && Rye0_checkContextErrorHandler(ps) {
+			return false // Error should be picked up in the handler block
 		}
 
-		switch err := ps.Res.(type) {
-		case env.Error:
-			if err.CodeBlock.Len() == 0 {
-				err.CodeBlock = ps.Ser
-				err.CodeContext = ps.Ctx
-			}
-		case *env.Error:
-			if err.CodeBlock.Len() == 0 {
-				err.CodeBlock = ps.Ser
-				err.CodeContext = ps.Ctx
-			}
-		}
+		updateErrorCodeContext(ps)
 		trace2("FAIL -> ERROR blk")
 		ps.ErrorFlag = true
 		return true
@@ -867,25 +778,9 @@ func Rye0_checkFlagsAfterBlock(ps *env.ProgramState, n int) bool {
 }
 
 // Rye0_checkErrorReturnFlag checks if there are error or return flags.
-// Parameters:
-//   - ps: The program state
-//
-// Returns:
-//   - Whether an error or return flag was found
 func Rye0_checkErrorReturnFlag(ps *env.ProgramState) bool {
 	if ps.ErrorFlag {
-		switch err := ps.Res.(type) {
-		case env.Error:
-			if err.CodeBlock.Len() == 0 {
-				err.CodeBlock = ps.Ser
-				err.CodeContext = ps.Ctx
-			}
-		case *env.Error:
-			if err.CodeBlock.Len() == 0 {
-				err.CodeBlock = ps.Ser
-				err.CodeContext = ps.Ctx
-			}
-		}
+		updateErrorCodeContext(ps)
 		return true
 	}
 	return ps.ReturnFlag
