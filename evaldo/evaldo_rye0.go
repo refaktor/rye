@@ -166,26 +166,58 @@ func Rye0_EvaluateBlock(ps *env.ProgramState, block env.Block) *env.ProgramState
 }
 
 // Rye0_findWordValue returns the value associated with a word in the current context.
+// It also checks if the word refers to a builtin in a parent context, and if so,
+// it can replace the word with the builtin directly in the series for faster future lookups.
 func Rye0_findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *env.RyeCtx) {
-	switch word := word1.(type) {
-	case env.Word, env.Opword, env.Pipeword:
-		// Handle all simple word types the same way
-		var index int
-		switch w := word.(type) {
-		case env.Word:
-			index = w.Index
-		case env.Opword:
-			index = w.Index
-		case env.Pipeword:
-			index = w.Index
-		}
-		object, found := ps.Ctx.Get(index)
-		return found, object, nil
-	case env.CPath:
-		return Rye0_findCPathValue(ps, word)
+	// Handle CPath type separately
+	if cpath, ok := word1.(env.CPath); ok {
+		return Rye0_findCPathValue(ps, cpath)
+	}
+
+	// Extract the word index from different word types
+	var index int
+	switch w := word1.(type) {
+	case env.Word:
+		index = w.Index
+	case env.Opword:
+		index = w.Index
+	case env.Pipeword:
+		index = w.Index
 	default:
 		return false, nil, nil
 	}
+
+	// First try to get the value from the current context
+	object, found := ps.Ctx.Get(index)
+	if found {
+		// Disable word replacement optimization for benchmarking
+		if object.Type() == env.BuiltinType && ps.Ser.Pos() > 0 {
+			fmt.Println("**")
+			ps.Ser.Put(object)
+		}
+		return found, object, nil
+	}
+
+	// If not found in the current context and there's no parent, return not found
+	if ps.Ctx.Parent == nil {
+		return false, nil, nil
+	}
+
+	// Try to get the value directly from the parent context
+	object, found = ps.Ctx.Parent.Get(index)
+	if found {
+		fmt.Println("-")
+		// Disable word replacement optimization for benchmarking
+		if object.Type() == env.BuiltinType && ps.Ser.Pos() > 0 {
+			fmt.Println("**")
+			ps.Ser.Put(object)
+		}
+		return found, object, ps.Ctx.Parent
+	}
+
+	// If not found in the parent context, use the regular Get2 method to search up the context chain
+	object, found, foundCtx := ps.Ctx.Get2(index)
+	return found, object, foundCtx
 }
 
 // Pre-allocated string for Dict case in Rye0_findCPathValue to avoid allocation
