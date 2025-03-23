@@ -467,6 +467,10 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 	switch word := word1.(type) {
 	case env.Word:
 		object, found := ps.Ctx.Get(word.Index)
+		//if object.Type() == env.BuiltinType {
+		//	fmt.Println("*")
+		//	ps.Ser.Put(object)
+		//}
 		return found, object, nil
 	case env.Opword:
 		object, found := ps.Ctx.Get(word.Index)

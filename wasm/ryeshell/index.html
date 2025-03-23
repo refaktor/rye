@@ -197,9 +197,9 @@
       function evaluateShellLine(code, term) {
 	  
 	  var ret = RyeEvalShellLine(code);
-	  console.log("EVAL SHELL LINE:");
-	  console.log(ret);
-	  return ret;
+	  	console.log("EVAL SHELL LINE:");
+	  	console.log(ret);
+	  	return ret;
 	  // term.write(ret);
       }
       
@@ -213,16 +213,16 @@
 	     });*/
       }
       function receiveMessageFromGo(ret) {
-	  console.log("Message received from Go:", ret);
-	  term.write(ret);
+	  	console.log("XX Message received from Go:", ret);
+	  	term.write(ret);
       }
       
       function receiveLineFromGo(line) {
-	  return evaluateShellLine(line, term);
+	  	return evaluateShellLine(line, term);
       }
 
       function onWasmStdout(out) {
-	  term.write(out+"\n\r")
+	  	term.write(out+"\n\r")
       }
     </script>
   </head>
@@ -290,8 +290,8 @@
       //     var term = new Terminal();
       term.open(document.getElementById('terminal'));
       term.focus()
-      term.writeln("Welcome to Rye web console. It's a work in progress. Visit \033[38;5;14mryelang.org\33[0m for more.")
-      term.writeln("- \033[38;5;246mtype in lcp (list context parent) too see some functions, or lc to see yours \033[0m-")
+      term.writeln("Welcome to Rye web console. It's a work in progress. Visit \x1b[38;5;14mryelang.org\x1b[0m for more.")
+      term.writeln("- \x1b[38;5;246mtype in lcp (list context parent) too see some functions, or lc to see yours \x1b[0m-")
       term.writeln("--------------------------------------------------------------------------------")
       
       var currLine = "";
@@ -364,4 +364,3 @@
     <button onclick="sendToTerminal('print 123', term)">hello world</button>
   </body>
 </html>
-

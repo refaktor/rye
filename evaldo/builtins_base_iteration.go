@@ -48,16 +48,16 @@ var builtins_iteration = map[string]*env.Builtin{
 			// Main loop
 			for i := int64(0); i < count.Value; i++ {
 				// Update the iteration counter
-				iterObj.Value = i + 1
+				// iterObj.Value = i + 1
 
 				// Evaluate the block with the current iteration number
 				ps = EvalBlockInjMultiDialect(ps, iterObj, true)
 
 				// Check for errors
-				if ps.ErrorFlag {
-					ps.Ser = ser // Restore original series before returning
-					return ps.Res
-				}
+				//if ps.ErrorFlag {
+				//	ps.Ser = ser // Restore original series before returning
+				//	return ps.Res
+				//}
 
 				// Reset series position for next iteration
 				ps.Ser.Reset()

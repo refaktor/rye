@@ -192,7 +192,7 @@ func Rye0_findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Objec
 	if found {
 		// Disable word replacement optimization for benchmarking
 		if object.Type() == env.BuiltinType && ps.Ser.Pos() > 0 {
-			fmt.Println("**")
+			fmt.Println("*")
 			ps.Ser.Put(object)
 		}
 		return found, object, nil

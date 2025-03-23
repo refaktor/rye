@@ -6,6 +6,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 	"syscall/js"
@@ -66,12 +67,35 @@ func sendMessageToJSNL(message string) {
 	jsCallback.Invoke(message + "\n")
 }
 
+// browserConsoleLog sends a message to the browser's console.log
+func browserConsoleLog(message string) {
+	js.Global().Get("console").Call("log", message)
+}
+
 func sendLineToJS(line string) string {
 	ret := jsCallback2.Invoke(line)
 	return ret.String()
 }
 
+// BrowserConsoleWriter is a custom io.Writer that writes to the browser console
+type BrowserConsoleWriter struct{}
+
+// Write implements the io.Writer interface
+func (w *BrowserConsoleWriter) Write(p []byte) (n int, err error) {
+	// Convert bytes to string and log to browser console
+	message := string(p)
+	// Remove trailing newlines for cleaner console output
+	message = strings.TrimSuffix(message, "\n")
+	// Send to browser console without prefix for cleaner output
+	browserConsoleLog(message)
+	return len(p), nil
+}
+
 func main() {
+	// Override standard log output to redirect to browser console
+	log.SetOutput(&BrowserConsoleWriter{})
+	// Set log flags to not include date/time prefix
+	log.SetFlags(0)
 
 	term.SetSB(sendMessageToJS)
 
@@ -89,6 +113,14 @@ func main() {
 
 	js.Global().Set("SetTerminalSize", js.FuncOf(SetTerminalSize))
 
+	// Add a function to explicitly log to browser console
+	js.Global().Set("LogToBrowserConsole", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		if len(args) > 0 {
+			browserConsoleLog(args[0].String())
+		}
+		return nil
+	}))
+
 	js.Global().Set("SendKeypress", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		if len(args) > 0 {
 			cc := term.NewKeyEvent(args[0].String(), args[1].Int(), args[2].Bool(), args[3].Bool(), args[4].Bool())
@@ -100,6 +132,22 @@ func main() {
 	// Get the JavaScript function to call back
 	jsCallback = js.Global().Get("receiveMessageFromGo")
 	jsCallback2 = js.Global().Get("receiveLineFromGo")
+
+	// Redirect fmt.Println and log.Println output to browser console
+	// This is done by creating custom writers that write to both xterm.js and browser console
+	/* r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	go func() {
+		scanner := bufio.NewScanner(r)
+		for scanner.Scan() {
+			text := scanner.Text()
+			// Send to xterm.js console
+			sendMessageToJSNL(text)
+			// Also send to browser console
+			browserConsoleLog(text)
+		}
+	}() */
 
 	ctx := context.Background()
 
@@ -132,7 +180,7 @@ func InitRyeShell(this js.Value, args []js.Value) any {
 	ctx := ps.Ctx
 	ps.Ctx = env.NewEnv(ctx)
 	ES = ps
-	evaldo.ShowResults = false
+	evaldo.ShowResults = true
 	/* bloc	k := loader.LoadString(" ", false)
 	switch val := block.(type) {
 	case env.Block:

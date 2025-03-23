@@ -11,6 +11,68 @@ import (
 
 var builtins_numbers = map[string]*env.Builtin{
 
+	// Tests:
+	// equal { 1 addnums 1 } 2
+	// equal { 3 addnums 4 } 7
+	// equal { 5.6 addnums 7.8 } 13.400000
+	// equal { 5 addnums 2.5 } 7.5
+	// Args:
+	// * value1: First number (integer or decimal)
+	// * value2: Second number to add
+	// Returns:
+	// * sum of the two numbers
+	"addnums": {
+		Argsn: 2,
+		Doc:   "Optimized version of + that adds two numbers, working with both integers and decimals.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			// Fast path for the most common case: Integer + Integer
+			if i1, ok1 := arg0.(env.Integer); ok1 {
+				if i2, ok2 := arg1.(env.Integer); ok2 {
+					// Direct integer addition without creating a new object until the end
+					i1.Value = i1.Value + i2.Value
+					return i1 // we don't have to create new Value as it's already copied by value
+					// return *env.NewInteger(i1.Value + i2.Value)
+				}
+
+				// Handle Integer + Decimal case
+				if d2, ok2 := arg1.(env.Decimal); ok2 {
+					return *env.NewDecimal(float64(i1.Value) + d2.Value)
+				}
+
+				// Type error for second argument
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "addnums")
+			}
+
+			// Handle Decimal + (Integer or Decimal) case
+			if d1, ok1 := arg0.(env.Decimal); ok1 {
+				if i2, ok2 := arg1.(env.Integer); ok2 {
+					return *env.NewDecimal(d1.Value + float64(i2.Value))
+				}
+
+				if d2, ok2 := arg1.(env.Decimal); ok2 {
+					return *env.NewDecimal(d1.Value + d2.Value)
+				}
+
+				// Type error for second argument
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "addnums")
+			}
+
+			// Handle Time + Integer case
+			if t1, ok1 := arg0.(env.Time); ok1 {
+				if i2, ok2 := arg1.(env.Integer); ok2 {
+					return *env.NewTime(t1.Value.Add(time.Duration(i2.Value * 1000000)))
+				}
+
+				// Error for invalid first argument type
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "addnums")
+			}
+
+			// Type error for first argument
+			return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType, env.TimeType}, "addnums")
+		},
+	},
+
 	//
 	// ##### Numbers ##### "Working with numbers, integers and decimals."
 	//
