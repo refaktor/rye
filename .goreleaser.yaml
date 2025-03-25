@@ -43,6 +43,11 @@ builds:
       flags:
       - -tags=b_tiny,b_wasm
       - -trimpath
+    - goarch: arm
+      goos: linux
+      goarm: 6
+      env:
+      - CGO_ENABLED=0
 
 
 archives:

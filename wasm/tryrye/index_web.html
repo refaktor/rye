@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <script src="wasm_exec.js"></script>
+    <script src="jsGoo.js"></script>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,700|Roboto:300,400,700&subset=latin-ext' rel='stylesheet' type='text/css'>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Londrina+Solid:wght@300&display=swap" rel="stylesheet">
+    
+    
+    
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>Rye evaluator - Rye Language</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">    
+    <link rel="icon" href="https://ryelang.org/favicon.png">
+    <!-- <link rel="stylesheet" href="/css/style.css"> -->
+    <link rel="stylesheet" href="xterm.css" />
+    <script src="xterm.js"></script>
+    
+    <style>
+      body {
+	  font-family: Roboto;
+	  background-color: #222;
+	  padding: 20px;
+	  font-size: 13px;
+      }
+      main {
+	  __border: 1px solid #f1f1f1;
+	  width: 740px;
+	  margin: auto;
+      }
+      h1 {
+	  font-size: 110%;
+      }
+      textarea {
+	  width: 320px;
+	  box-model: content;
+	  padding: 10px;
+	  border: 0px solid red;
+      }
+      div#info pre {
+	  width: 80%;
+	  padding: 5px;
+      }
+      div#info pre.inl {
+	  display: inline;
+      }
+      pre {
+	  __border: 1px solid green;
+	  width: 320px;
+	  background-color: #c7fbf4;
+	  padding: 10px;
+	  box-model: content;
+	  font-size: 13px;
+      }
+      #header {
+	  padding: 10px 20px;
+	  background-color: #aeffff;
+	  margin-bottom: 10px;
+	  __box-shadow: 2px 2px 4px 0px #cacaca;
+	  color: #595856;
+	  border-radius: 5px;
+      }
+      #info {
+	  float: left;
+	  width: 350px;
+	  padding: 10px;
+      }
+      #solution {
+	  float: left;
+	  width: 350px;
+	  padding: 10px;
+	  color: #556a62;
+      }
+      #code, .code_s {
+	  font-family: mono;
+	  font-size: 13px;
+	  border: 1px solid #c6c6c6;
+	  width: 360px;
+	  background-color: #f1f1f1;
+      }
+      #code_static1, #code_static2, .code_s {
+	  padding: 10px;
+      }
+      .cloud > div > img {
+	  width: 22px;
+	  vertical-align: bottom;
+      }
+      .cloud {
+	  margin: 0 0 10px 0;
+	  border-radius: 24px;
+	  padding: 15px;
+	  min-height: 45px;
+	  position: relative;
+	  color: #333;
+      }
+      .cloud > div {
+	  float: right;
+	  position: absolute;
+	  right: 15px;
+	  bottom: 12px;
+      }
+      .sample {
+	  background-color: #f1f1f1;
+      }
+      .task {
+	  background-color: #f1f1f1;
+      }
+      #intro {
+	  display: block;
+	  border: 1px solid #c1d5db;
+	  padding: 10px 20px 60px 20px;
+	  box-shadow: turquoise 1px 1px 10px;
+      }
+      #intro h3 {
+	  font-family: 'Londrina Solid', sans-serif;
+	  font-size: 22px;
+	  color: #3e1764;
+	  margin-bottom: 40px;
+      }
+      #intro p {
+	  margin-bottom: 25px;
+      }
+      #intro p.note {
+	  background-color: #dfffce;
+	  padding: 10px;
+	  color: #4f8c12;
+	  border-radius: 7px;
+      }
+      button {
+	  padding: 3px 6px 2px 6px;
+	  font-size: 13px;
+	  cursor: pointer;
+	  border: none;
+	  border-radius: 15px;
+	  __background-color: yellowgreen;
+      }
+      button.nav {
+	  border: none;
+	  background-color: transparent;
+      }
+      button.nav:disabled {
+	  opacity: 0.3;
+      }
+    </style>	
+    <script>	
+      
+      if (WebAssembly) {
+	  // WebAssembly.instantiateStreaming is not currently available in Safari
+	  if (WebAssembly && !WebAssembly.instantiateStreaming) { // polyfill
+	      WebAssembly.instantiateStreaming = async (resp, importObject) => {
+		  const source = await (await resp).arrayBuffer();
+		  return await WebAssembly.instantiate(source, importObject);
+	      };
+	  }  
+	  
+	  const go = new Go();
+	  WebAssembly.instantiateStreaming(fetch('main.wasm'), go.importObject).then(function(dat) {
+	      go.run(dat.instance);
+	      InitRyeShell();
+	      console.log("INIT RYE SHELL")
+	  });
+	  
+	  
+	  /* const stdoutFd = WASI.fdopen(wasmModule.exports.stdout, 'r');
+	     const stdoutStream = nodejs.fs.createWriteStream('stdout.txt');
+	     
+	     nodejs.fs.read(stdoutFd, stdoutStream, (err) => {
+	     if (err) {
+	     console.error('Error reading stdout from WASM module:', err);
+	     return;
+	     }
+	     
+	     console.log('Successfully redirected stdout from WASM module to console');
+	     });*/
+	  
+	  /*const go = new Go();
+	    WebAssembly.instantiateStreaming(fetch("rye.wasm"), go.importObject).then((result) => {
+	    go.run(result.instance);
+	    });*/
+      } else {
+	  console.log("WebAssembly is not supported in your browser")
+      }
+      
+      function evaluate(code, term) {
+	  
+	  var ret = RyeEvalString(code);
+	  
+	  term.write(ret);
+	  
+      }
+      
+      function evaluateShellLine(code, term) {
+	  
+	  var ret = RyeEvalShellLine(code);
+	  console.log("EVAL SHELL LINE:");
+	  console.log(ret);
+	  return ret;
+	  // term.write(ret);
+      }
+      
+      function onLoadX() {
+	  // var input = document.getElementById("inputX");
+	  //console.log(input)
+	  /* input.addEventListener('keypress', (event) => {
+	     const key = event.key;
+	     window.sendKeypress(key);
+	     console.log(key);
+	     });*/
+      }
+      function receiveMessageFromGo(ret) {
+	  console.log("Message received from Go:", ret);
+	  term.write(ret);
+      }
+      
+      function receiveLineFromGo(line) {
+	  return evaluateShellLine(line, term);
+      }
+
+      function onWasmStdout(out) {
+	  term.write(out+"\n\r")
+      }
+    </script>
+  </head>
+
+  <body onload="onLoadX()" class='page page-default-single'><!doctype html>
+    
+    <h3 style="font-family: mono; font-weight: normal; font-size: 14px; color: #999; padding: 0px 10px;">Rye console (web)</h3>
+    <div id="terminal" style="width: 620px; padding: 10px; border: 1px solid gray; background-color: #111; " ></div>
+    <script>
+      
+      let theme = {
+	  foreground: '#F8F8F8',
+	  background: '#111314',
+	  selection: '#5DA5D533',
+	  black: '#1E1E1D',
+	  brightBlack: '#262625',
+	  red: '#CE5C5C',
+	  brightRed: '#FF7272',
+	  green: '#5BCC5B',
+	  brightGreen: '#72FF72',
+	  yellow: '#CCCC5B',
+	  brightYellow: '#FFFF72',
+	  blue: '#5D5DD3',
+	  brightBlue: '#7279FF',
+	  magenta: '#BC5ED1',
+	  brightMagenta: '#E572FF',
+	  cyan: '#5DA5D5',
+	  brightCyan: '#72F0FF',
+	  white: '#F8F8F8',
+	  brightWhite: '#FFFFFF'
+      }
+      
+      term = new Terminal({
+	  windowsMode: ['Windows', 'Win16', 'Win32', 'WinCE'].indexOf(navigator.platform) >= 0,
+	  fontFamily: '"Cascadia Code", Menlo, monospace',
+	  fontSize: 13,
+	  convertEol: true,
+	  rows: 30,
+      })
+    
+      //      term.setOption('theme', theme)
+      term.options.theme = theme;
+      //      term.setOption('theme', theme)
+      term.options.cursorBlink = true;
+      //		term.loadAddon(fitAddon)
+      //		fitAddon.fit()
+      
+      term.attachCustomKeyEventHandler((arg) => {
+        if (arg.ctrlKey && arg.code === "KeyV" && arg.type === "keydown") {
+            navigator.clipboard.readText()
+              .then(text => {
+                term.write(text);
+              })
+        };
+        return true;
+    });  
+      //		term.open(document.getElementById('terminal-container'))
+      
+      //     var term = new Terminal();
+      term.open(document.getElementById('terminal'));
+      term.focus()
+      term.writeln("Welcome to Rye web console. It's a work in progress. Visit \033[38;5;14mryelang.org\33[0m for more.")
+      term.writeln("- \033[38;5;246mtype in lsp (list parent context) too see some functions, or ls to see yours \033[0m-")
+      term.writeln("--------------------------------------------------------------------------------")
+      
+      var currLine = "";
+      var entries = [];
+      term.onKey((ev) => {
+	  window.SendKeypress(ev.domEvent.key, ev.domEvent.keyCode, ev.domEvent.ctrlKey, ev.domEvent.altKey, ev.domEvent.shiftKey);
+	  // console.log(ev.domEvent)
+	  /* if (ev.domEvent.key == "Enter") {
+	     if (currLine) {
+	     entries.push(currLine);
+	     term.write("\r\n");
+	     evaluate(currLine, term);
+	     //Send cmd to backend here!
+	     }
+	     } else if (ev.domEvent.key == "Backspace") {
+	     if (currLine) {
+	     currLine = currLine.slice(0, currLine.length - 1);
+	     term.write("\b \b");
+	     }
+	     } else {
+	     currLine += ev.key
+	     //	      term.write(ev.key);
+	     } */
+      }); 
+      
+      function sendToTerminal(str, term) {
+	  for (var i=0; i<str.length; i++) {
+	      if (str[i] == "\n") {
+		  window.SendKeypress('', 13, false, false, false);
+	      } else {   
+		  window.SendKeypress(str[i], 0, false, false, false);
+	      }
+	      term.focus();
+	  }
+      }
+
+      function sendLinesToTerminal(multilineString, delay = 1000, term) {
+	  const lines = multilineString.split("\n");
+	  let index = 0;
+	  let isPaused = false;
+
+	  /* const button = document.getElementById("pauseButton"); // Assuming a button with ID "pauseButton"
+
+	     button.addEventListener("click", () => {
+	     isPaused = !isPaused;
+	     button.textContent = isPaused ? "Resume" : "Pause";
+	     }); */
+
+	  function printLine() {
+	      if (index > 0) {
+		  sendToTerminal("\n", term);
+	      }
+	      if (index < lines.length && !isPaused) {
+		  // console.log(lines[index]);
+		  sendToTerminal(lines[index], term)
+		  index++;
+		  setTimeout(printLine, delay);
+	      }
+	  }
+
+	  return {
+	      start: () => printLine(), // Function to start printing
+	      pause: () => (isPaused = true), // Function to pause printing
+	      resume: () => (isPaused = false), // Function to resume printing
+	  };
+      }
+
+    </script>
+    <br/>
+    <button onclick="sendToTerminal('print 123', term)">hello world</button>
+  </body>
+</html>
+

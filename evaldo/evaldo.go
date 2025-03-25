@@ -1294,10 +1294,11 @@ func MaybeDisplayFailureOrError(es *env.ProgramState, genv *env.Idxs, tag string
 	// cebelca2659- vklopi kontne skupine
 }
 
-func MaybeDisplayFailureOrErrorWASM(es *env.ProgramState, genv *env.Idxs, printfn func(string), tag string) {
+func MaybeDisplayFailureOrErrorWASM(es *env.ProgramState, genv *env.Idxs, printfn2 func(string), tag string) {
+	printfn := fmt.Println
 	if es.FailureFlag {
 		printfn("\x1b[33m" + "Failure" + "\x1b[0m")
-		printfn(tag)
+		// printfn(tag)
 	}
 	if es.ErrorFlag {
 		printfn("\x1b[31;3m" + es.Res.Print(*genv))
@@ -1310,7 +1311,7 @@ func MaybeDisplayFailureOrErrorWASM(es *env.ProgramState, genv *env.Idxs, printf
 			printfn(err.CodeBlock.PositionAndSurroundingElements(*genv))
 		}
 		printfn("\x1b[0m")
-		printfn(tag)
+		// 	printfn(tag)
 	}
 }
 

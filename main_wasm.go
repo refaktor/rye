@@ -56,8 +56,9 @@ func main1() {
 //
 
 var (
-	jsCallback  js.Value
-	jsCallback2 js.Value
+	jsCallback        js.Value
+	jsCallback2       js.Value
+	jsCallBack_noterm js.Value
 )
 
 func sendMessageToJS(message string) {
@@ -65,6 +66,10 @@ func sendMessageToJS(message string) {
 }
 func sendMessageToJSNL(message string) {
 	jsCallback.Invoke(message + "\n")
+}
+
+func sendMessageToJS_NOTERM(message string) {
+	jsCallBack_noterm.Invoke(message)
 }
 
 // browserConsoleLog sends a message to the browser's console.log
@@ -97,15 +102,13 @@ func main() {
 	// Set log flags to not include date/time prefix
 	log.SetFlags(0)
 
-	term.SetSB(sendMessageToJS)
-
 	c := make(chan term.KeyEvent)
 
 	ml = term.NewMicroLiner(c, sendMessageToJS, sendLineToJS)
 
 	js.Global().Set("RyeEvalString", js.FuncOf(RyeEvalString))
 
-	js.Global().Set("RyeEvalString2", js.FuncOf(RyeEvalString))
+	js.Global().Set("RyeEvalStringNoTerm", js.FuncOf(RyeEvalStringNoTerm))
 
 	js.Global().Set("RyeEvalShellLine", js.FuncOf(RyeEvalShellLine))
 
@@ -132,6 +135,7 @@ func main() {
 	// Get the JavaScript function to call back
 	jsCallback = js.Global().Get("receiveMessageFromGo")
 	jsCallback2 = js.Global().Get("receiveLineFromGo")
+	jsCallBack_noterm = js.Global().Get("receiveLineFromGo_noterm")
 
 	// Redirect fmt.Println and log.Println output to browser console
 	// This is done by creating custom writers that write to both xterm.js and browser console
@@ -240,12 +244,12 @@ func RyeEvalShellLine(this js.Value, args []js.Value) any {
 		}
 
 		evaldo.EvalBlockInj(ps, prevResult, true)
-		evaldo.MaybeDisplayFailureOrErrorWASM(ps, ps.Idx, sendMessageToJSNL, "rye shell line wasm")
+		evaldo.MaybeDisplayFailureOrErrorWASM(ps, ps.Idx, sendMessageToJSNL, "(Invoked by: Eval console line)")
 
 		prevResult = ps.Res
 
 		if !ps.ErrorFlag && ps.Res != nil {
-			sendMessageToJS("\033[38;5;37m" + ps.Res.Inspect(*ps.Idx) + "\x1b[0m")
+			sendMessageToJS("\033[38;5;37m" + ps.Res.Inspect(*ps.Idx) + "\x1b[0m\n")
 		}
 
 		ps.ReturnFlag = false
@@ -257,7 +261,7 @@ func RyeEvalShellLine(this js.Value, args []js.Value) any {
 		return ""
 
 	case env.Error:
-		fmt.Println(val.Message)
+		fmt.Println("\033[31mParsing error: " + val.Message + "\033[0m")
 		return "Error"
 	}
 	return "Other"
@@ -268,6 +272,7 @@ func RyeEvalString(this js.Value, args []js.Value) any {
 	subc := false
 
 	code := args[0].String()
+
 	//fmt.Println("RYE EVAL STRING")
 	// fmt.Println(code)
 
@@ -277,7 +282,7 @@ func RyeEvalString(this js.Value, args []js.Value) any {
 	block, genv := loader.LoadString(code, sig)
 	switch val := block.(type) {
 	case env.Block:
-		es := env.NewProgramState(block.(env.Block).Series, genv)
+		es := env.NewProgramState(val.Series, genv)
 		evaldo.RegisterBuiltins(es)
 		contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
 
@@ -290,7 +295,57 @@ func RyeEvalString(this js.Value, args []js.Value) any {
 		evaldo.MaybeDisplayFailureOrError(es, genv, "rye eval string wasm")
 		return es.Res.Print(*es.Idx)
 	case env.Error:
-		fmt.Println(val.Message)
+		// Check if the result is an error
+		fmt.Println("\033[31mParsing error: " + val.Message + "\033[0m")
+		// r.fullCode = ""
+		//return ""
+		//fmt.Println(val.Message)
+		return "Error"
+	}
+	return "Other"
+}
+
+func RyeEvalStringNoTerm(this js.Value, args []js.Value) any {
+	sig := false
+	subc := false
+
+	code := args[0].String()
+
+	if ES == nil {
+		return "Error: Rye is not initialized"
+	}
+
+	ps := ES
+	block := loader.LoadStringNEW(" "+code+" ", sig, ps)
+	switch val := block.(type) {
+	case env.Block:
+
+		ps = env.AddToProgramState(ps, val.Series, ps.Idx)
+
+		if subc {
+			ctx := ps.Ctx
+			ps.Ctx = env.NewEnv(ctx)
+		}
+
+		evaldo.EvalBlockInj(ps, prevResult, true)
+		evaldo.MaybeDisplayFailureOrErrorWASM(ps, ps.Idx, sendMessageToJSNL, "(Invoked by: Eval console line)")
+
+		prevResult = ps.Res
+
+		//if !ps.ErrorFlag && ps.Res != nil {
+		// 	sendMessageToJS("\033[38;5;37m" + ps.Res.Inspect(*ps.Idx) + "\x1b[0m\n")
+		// }
+
+		ps.ReturnFlag = false
+		ps.ErrorFlag = false
+		ps.FailureFlag = false
+
+		// ml.AppendHistory(code)
+
+		return ps.Res.Inspect(*ps.Idx)
+
+	case env.Error:
+		fmt.Println("\033[31mParsing error: " + val.Message + "\033[0m")
 		return "Error"
 	}
 	return "Other"
