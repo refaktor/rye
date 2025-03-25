@@ -1918,7 +1918,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 }
 
 func RegisterVarBuiltins(ps *env.ProgramState) {
-	RegisterVarBuiltins2(VarBuiltins_demo, ps, "test")
+	// RegisterVarBuiltins2(VarBuiltins_demo, ps, "test")
 }
 
 var BuiltinNames map[string]int // TODO --- this looks like some hanging global ... it should move to ProgramState, it doesn't even really work with contrib and external probably
