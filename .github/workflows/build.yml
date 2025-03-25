@@ -54,11 +54,24 @@ jobs:
       if: runner.os == 'macOS'
       run: |
         # b_gtk: https://github.com/gotk3/gotk3/blob/master/.github/workflows/macos.yml
-        # brew install gobject-introspection gtk+3  
+        # brew install gobject-introspection gtk+3
+
+    - name: Install Windows CGO dependencies
+      if: runner.os == 'Windows'
+      run: |
+        # Install MinGW (provides gcc for Windows)
+        choco install mingw -y
+      env:
+        # Required for choco (Chocolatey) on Windows runners
+        ChocolateyInstall: C:\ProgramData\chocolatey
 
     - name: Build
       # Enable all features for CI builds. 
+      env:
+        # Enable CGO for Windows and other platforms
+        CGO_ENABLED: 1
       run: |
+        # Explicitly enable CGO and build
         go build -v -o bin/rye
         ls -l bin/rye
         file bin/rye
