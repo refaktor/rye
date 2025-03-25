@@ -17,7 +17,7 @@ before:
 
 builds:
   - env:
-      - CGO_ENABLED=0
+      - CGO_ENABLED=1
     goos:
       - linux
       - windows
@@ -43,6 +43,11 @@ builds:
       flags:
       - -tags=b_tiny,b_wasm
       - -trimpath
+    - goarch: arm
+      goos: linux
+      goarm: 6
+      env:
+      - CGO_ENABLED=0
 
 
 archives:

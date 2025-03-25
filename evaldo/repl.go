@@ -177,6 +177,9 @@ func (r *Repl) recieveMessage(message string) {
 }
 
 func (r *Repl) recieveLine(line string) string {
+	// Use fmt.Println for terminal output, log.Println for debugging
+	// This ensures log messages go to the browser console in WASM mode
+	// and don't interfere with terminal output
 	log.Println("RECV LINE: " + line)
 	res := r.evalLine(r.ps, line)
 	if r.showResults && len(res) > 0 {
@@ -186,6 +189,11 @@ func (r *Repl) recieveLine(line string) string {
 }
 
 func (r *Repl) evalLine(es *env.ProgramState, code string) string {
+	// Ensure we print a newline before processing to prevent overwriting previous output
+	if r.fullCode == "" {
+		fmt.Println()
+	}
+	
 	if es.LiveObj != nil {
 		es.LiveObj.PsMutex.Lock()
 		for _, update := range es.LiveObj.Updates {
@@ -386,9 +394,11 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 		r.ml.AppendHistory(code)
 
 		r.fullCode = ""
+		r.ml.AppendHistory(code)
 		return output
 	}
 
+	r.ml.AppendHistory(code)
 	return output
 }
 
@@ -500,6 +510,12 @@ func isCursorAtBottom() bool { // TODO --- doesn't seem to work and probably don
 }
 
 func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here because of some odd options we were experimentally adding
+	// Configure log to not include date/time prefix for cleaner output
+	log.SetFlags(0)
+	
+	// Print a welcome message with a newline to ensure proper spacing
+	fmt.Println("\nRye REPL started. Terminal output will be properly spaced.")
+	
 	// Improved error handling for keyboard initialization
 	err := keyboard.Open()
 	if err != nil {
@@ -834,14 +850,7 @@ func DoGeneralInputField(es *env.ProgramState, prompt string) {
 							// TEMP - make conditional
 							// print the result
 							if showResults {
-								fmt.Println("\033[38;5;37m" + es.Res.Inspect(*genv) + "\x1b[0m..")
-							}
-							if es.Res != nil && shellEd.Mode != "" && !shellEd.Pause && es.Res == shellEd.Return {
-								fmt.Println(" <- the correct value was returned")
-							}
-						}
-
-						es.ReturnFlag = false
+								fmt.Println("\033[38;5;37m" + es.Res.Inspect(*genv) + "\x1b
 						es.ErrorFlag = false
 						es.FailureFlag = false
 					}
@@ -860,20 +869,20 @@ func DoGeneralInputField(es *env.ProgramState, prompt string) {
 			for _, c := range codelines {
 				fmt.Println(c)
 			}
-			MoveCursorUp(len(codelines)) * /
-		} else {
-			log.Print("Error reading line: ", err)
-			break
+			MoveCursorUp(len(codelines))
+			} else {
+				log.Print("Error reading line: ", err)
+				break
+			}
 		}
-	}
-
- 	if f, err := os.Create(history_fn); err != nil {
-		log.Print("Error writing history file: ", err)
-	} else {
-		if _, err := line.WriteHistory(f); err != nil {
+	
+		 if f, err := os.Create(history_fn); err != nil {
 			log.Print("Error writing history file: ", err)
+		} else {
+			if _, err := line.WriteHistory(f); err != nil {
+				log.Print("Error writing history file: ", err)
+			}
+			f.Close()
 		}
-		f.Close()
 	}
-}
-*/
+	*/

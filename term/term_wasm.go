@@ -53,7 +53,7 @@ func DisplayBlock(bloc env.Block, idx *env.Idxs) (env.Object, bool) {
 
 	defer func() {
 		// Show cursor.
-		sendBack("\033[?25h")
+		fmt.Println("\033[?25h")
 	}()
 
 	// RestoreCurPos()

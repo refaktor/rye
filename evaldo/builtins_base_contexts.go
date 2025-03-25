@@ -1,6 +1,8 @@
 package evaldo
 
 import (
+	"fmt"
+
 	"github.com/refaktor/rye/env"
 	// JM 20230825	"github.com/refaktor/rye/term"
 )
@@ -253,6 +255,174 @@ var builtins_contexts = map[string]*env.Builtin{
 				return swCtx1
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "unbind!")
+			}
+		},
+	},
+
+	// TODOC
+	// Tests:
+	// equal { c: context { x: 9999 , incr: fn\in { } current { x:: inc x } } c/incr c/x } 10000
+	"current": { // **
+		Argsn: 0,
+		Doc:   "Returns current context.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return *ps.Ctx
+		},
+	},
+
+	// Tests:
+	// equal { y: 99 c: context { incr: fn\in { } parent { y:: inc y } } c/incr y } 100
+	"parent": { // **
+		Argsn: 0,
+		Doc:   "Returns parent context of the current context.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return *ps.Ctx.Parent
+		},
+	},
+
+	// Tests:
+	// equal { ct: context { p: 123 } parent\of ct |= current } 1
+	"parent\\of": {
+		Argsn: 1,
+		Doc:   "Returns parent context of the current context.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch c := arg0.(type) {
+			case env.RyeCtx:
+				return *c.Parent
+			case *env.RyeCtx:
+				return *c.Parent
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "parent?")
+			}
+		},
+	},
+
+	"lc": {
+		Argsn: 0,
+		Doc:   "Lists words in current context",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			fmt.Println(ps.Ctx.Preview(*ps.Idx, ""))
+			return env.Void{}
+		},
+	},
+
+	"lc\\data": {
+		Argsn: 0,
+		Doc:   "Lists words in current context",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return ps.Ctx.GetWords(*ps.Idx)
+		},
+	},
+
+	"lc\\data\\": {
+		Argsn: 1,
+		Doc:   "Lists words in current context",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch c := arg0.(type) {
+			case env.RyeCtx:
+				return c.GetWords(*ps.Idx)
+			case *env.RyeCtx:
+				return c.GetWords(*ps.Idx)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "parent?")
+			}
+		},
+	},
+
+	"lcp": {
+		Argsn: 0,
+		Doc:   "Lists words in current context",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			if ps.Ctx.Parent != nil {
+				fmt.Println(ps.Ctx.Parent.Preview(*ps.Idx, ""))
+			} else {
+				fmt.Println("No parent")
+			}
+			return env.Void{}
+		},
+	},
+
+	"lc\\": {
+		Argsn: 1,
+		Doc:   "Lists words in current context with string filter",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				fmt.Println(ps.Ctx.Preview(*ps.Idx, s1.Value))
+				return env.Void{}
+			case env.RyeCtx:
+				fmt.Println(s1.Preview(*ps.Idx, ""))
+				return env.Void{}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "ls\\")
+			}
+		},
+	},
+
+	"lcp\\": {
+		Argsn: 1,
+		Doc:   "Lists words in current context with string filter",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				if ps.Ctx.Parent != nil {
+					fmt.Println(ps.Ctx.Parent.Preview(*ps.Idx, s1.Value))
+				} else {
+					fmt.Println("No parent")
+				}
+				return env.Void{}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "lsp\\")
+			}
+		},
+	},
+
+	"cc": {
+		Argsn: 1,
+		Doc:   "Change to context",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.RyeCtx:
+				// s1.Parent = ps.Ctx // TODO ... this is temporary so ccp works, but some other method must be figured out as changing the parent is not OK
+				ps.Ctx = &s1
+				return s1
+			case *env.RyeCtx:
+				// s1.Parent = ps.Ctx // TODO ... this is temporary so ccp works, but some other method must be figured out as changing the parent is not OK
+				ps.Ctx = s1
+				return s1
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "cc")
+			}
+		},
+	},
+
+	"ccp": {
+		Argsn: 0,
+		Doc:   "Change to context",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			cc := ps.Ctx
+			ps.Ctx = ps.Ctx.Parent
+			return *cc
+		},
+	},
+
+	"mkcc": {
+		Argsn: 1,
+		Doc:   "Make context with current as parent and change to it.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch word := arg0.(type) {
+			case env.Word:
+				newctx := env.NewEnv(ps.Ctx)
+				ret := ps.Ctx.Set(word.Index, newctx)
+				s, ok := ret.(env.Error)
+				if ok {
+					return s
+				}
+				ctx := ps.Ctx
+				ps.Ctx = newctx // make new context with current par
+				return *ctx
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.WordType}, "mkcc")
 			}
 		},
 	},

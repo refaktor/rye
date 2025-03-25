@@ -52,6 +52,7 @@ var NativeTypes = [...]string{ // Todo change to BuiltinTypes
 	"Modword",
 	"LModword",
 	"Boolean",
+	"VarBuiltin",
 }
 
 func (e *Idxs) IndexWord(w string) int {
