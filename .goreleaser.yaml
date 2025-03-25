@@ -48,6 +48,10 @@ builds:
       goarm: 6
       env:
       - CGO_ENABLED=0
+    - goarch: arm64
+      goos: linux
+      env:
+      - CGO_ENABLED=0
 
 
 archives:
