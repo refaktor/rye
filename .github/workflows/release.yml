@@ -34,6 +34,11 @@ jobs:
         with:
           go-version: 'stable'
 
+      - name: Install MinGW for Windows cross-compilation
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-mingw-w64
+
       - name: Run GoReleaser
         id: goreleaser
         uses: goreleaser/goreleaser-action@v6
@@ -175,4 +180,3 @@ jobs:
 #        run: |
 #          docker push "refaktor/rye:latest"
 #          docker push "refaktor/rye:${GITHUB_REF_NAME}"
-  

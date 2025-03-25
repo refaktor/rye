@@ -1,4 +1,4 @@
-# This is an example .goreleaser.yml file with some sensible defaults.
+  # This is an example .goreleaser.yml file with some sensible defaults.
 # Make sure to check the documentation at https://goreleaser.com
 
 # The lines below are called `modelines`. See `:help modeline`
@@ -52,6 +52,11 @@ builds:
       goos: linux
       env:
       - CGO_ENABLED=0
+    - goarch: amd64
+      goos: windows
+      env:
+      - CGO_ENABLED=1
+      - CGO_CFLAGS=-pthread
 
 
 archives:
