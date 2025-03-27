@@ -8,7 +8,7 @@
 [![GitHub Release](https://img.shields.io/github/release/refaktor/rye.svg?style=flat)](https://github.com/refaktor/rye/releases/latest)
 [![Homebrew](https://img.shields.io/homebrew/v/ryelang.svg?style=flat)](https://formulae.brew.sh/formula/ryelang)
 
-- [Rye language 🌾](#rye-language-)
+- [Rye language 🌾](#rye-language-) 
   - [What is Rye](#what-is-rye)
   - [Status: Alpha](#status-alpha)
   - [Language overview](#language-overview)
