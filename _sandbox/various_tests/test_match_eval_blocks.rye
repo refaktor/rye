@@ -1,0 +1,40 @@
+; Test match-block with evaluating blocks in the pattern
+
+; Test evaluating a block with the value injected
+print "Test 1: match-block with evaluating a block"
+x: 0
+result1: match-block { 1000 } { [ ::x ] }
+print2 "x =" x
+print2 "result1 =" result1
+print ""
+
+; Test evaluating a block with the value injected and printing it
+print "Test 2: match-block with evaluating a block that prints the value"
+stdout: capture-stdout {
+    result2: match-block { "Hello, World!" } { [ .print ] }
+}
+print2 "stdout =" stdout
+print2 "result2 =" result2
+print ""
+
+; Test evaluating a block with the value injected in a multi-value pattern
+print "Test 3: match-block with evaluating a block in a multi-value pattern"
+a: 0
+b: 0
+result3: match-block { 100 200 300 } { [ ::a ] [ ::b ] c }
+print2 "a =" a
+print2 "b =" b
+print2 "c =" c
+print2 "result3 =" result3
+print ""
+
+; Test evaluating a block with the value injected in a nested pattern
+print "Test 4: match-block with evaluating a block in a nested pattern"
+d: 0
+result4: match-block { 123 { "hi" 44 } 789 } { x { y [ ::d ] } z }
+print2 "x =" x
+print2 "y =" y
+print2 "d =" d
+print2 "z =" z
+print2 "result4 =" result4
+print ""

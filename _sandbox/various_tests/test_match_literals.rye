@@ -1,0 +1,34 @@
+; Test match-block with literal values in the pattern
+
+; Test successful matching with literal values
+print "Test 1: match-block with string literal"
+result1: match-block { 123 "hi" 44 } { a "hi" b }
+print2 "a =" a
+print2 "b =" b
+print2 "result1 =" result1
+print ""
+
+; Test failure due to literal value not matching
+print "Test 2: match-block with non-matching literal (should fail)"
+try {
+    result2: match-block { 123 "hi" 44 } { a "bye" b }
+    print "This should not print if match-block fails correctly"
+}
+print "match-block correctly failed due to literal value not matching"
+print ""
+
+; Test with integer literal
+print "Test 3: match-block with integer literal"
+result3: match-block { 123 456 789 } { a 456 c }
+print2 "a =" a
+print2 "c =" c
+print2 "result3 =" result3
+print ""
+
+; Test with multiple literals
+print "Test 4: match-block with multiple literals"
+result4: match-block { 1 2 3 4 5 } { a 2 3 d e }
+print2 "a =" a
+print2 "d =" d
+print2 "e =" e
+print2 "result4 =" result4

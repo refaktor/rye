@@ -1,0 +1,33 @@
+; Simple benchmark to test the word replacement optimization
+print "Starting benchmark (no optimization)..."
+
+; Run multiple iterations to get a more accurate measurement
+iterations: 5
+total-time: 0
+current-iteration: 1
+
+loop iterations {
+    print [ "Running iteration " current-iteration "/" iterations "..." ]
+    
+    ; Run a tight loop with a simple operation
+    start-time:: now/precise
+    loop 1000000 {
+        1 + 1
+    }
+    end-time:: now/precise
+    
+    ; Calculate elapsed time in microseconds
+    elapsed:: end-time - start-time
+    miliseconds:: elapsed / 1000000
+    
+    print [ "  Time for this iteration: " miliseconds " miliseconds" ]
+    total-time:: total-time + elapsed
+    current-iteration:: current-iteration + 1
+}
+
+; Calculate average time
+average-time: total-time / iterations
+average-us: average-time / 1000000
+
+print [ "Average time: " average-us " miliseconds for 1,000,000 iterations" ]
+print [ "Time per iteration: " average-us / 1000000 " microseconds" ]

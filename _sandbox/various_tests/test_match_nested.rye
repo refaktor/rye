@@ -1,0 +1,41 @@
+; Test match-block with nested blocks
+
+; Test successful matching with nested blocks
+print "Test 1: match-block with nested blocks"
+result1: match-block { 123 { "hi" 44 } 789 } { a { b c } d }
+print2 "a =" a
+print2 "b =" b
+print2 "c =" c
+print2 "d =" d
+print2 "result1 =" result1
+print ""
+
+; Test with multiple levels of nesting
+print "Test 2: match-block with multiple levels of nesting"
+result2: match-block { 1 { 2 { 3 4 } 5 } 6 } { x { y { z w } v } u }
+print2 "x =" x
+print2 "y =" y
+print2 "z =" z
+print2 "w =" w
+print2 "v =" v
+print2 "u =" u
+print2 "result2 =" result2
+print ""
+
+; Test with literal values in nested blocks
+print "Test 3: match-block with literal values in nested blocks"
+result3: match-block { 100 { 200 "test" 300 } 400 } { a { b "test" c } d }
+print2 "a =" a
+print2 "b =" b
+print2 "c =" c
+print2 "d =" d
+print2 "result3 =" result3
+print ""
+
+; Test failure due to nested block not matching
+print "Test 4: match-block with non-matching nested block (should fail)"
+try {
+    result4: match-block { 1 { 2 3 } 4 } { a { b "wrong" } c }
+    print "This should not print if match-block fails correctly"
+}
+print "match-block correctly failed due to nested block not matching"

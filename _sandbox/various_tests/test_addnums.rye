@@ -1,0 +1,73 @@
+; Test the new optimized addnums function and compare with the original _+ function
+
+; Test integer addition
+print "Testing integer addition:"
+print "1 + 2 = " 1 + 2
+print "1 addnums 2 = " 1 .addnums 2
+print ""
+
+; Test decimal addition
+print "Testing decimal addition:"
+print "3.5 + 2.5 = " 3.5 + 2.5
+print "3.5 addnums 2.5 = " 3.5 .addnums 2.5
+print ""
+
+; Test mixed integer and decimal
+print "Testing mixed integer and decimal:"
+print "5 + 2.5 = " 5 + 2.5
+print "5 addnums 2.5 = " 5 .addnums 2.5
+print ""
+
+; Test time addition (if supported)
+print "Testing time addition (if supported):"
+t:: now
+print "Current time + 1000 = " t + 1000
+print "Current time addnums 1000 = " t .addnums 1000
+print ""
+
+; Simple benchmark to compare performance
+print "Simple benchmark (adding integers 1000000 times):"
+
+start-time:: now
+
+loop 10000000 {
+    _+ 1 1
+}
+
+end-time:: now
+print2 "Time using + operator:  " end-time - start-time "ms"
+
+; Reset and test with addnums
+i:: 0
+sum:: 0
+start-time:: now
+
+loop 10000000 {
+    addnums 1 1
+}
+
+end-time:: now
+print2 "Time using addnums:     " end-time - start-time "ms"
+
+start-time:: now
+rye0 {
+loop 10000000 {
+    _+ 1 1
+}
+}
+
+end-time:: now
+print2 "Time using + operator:  " end-time - start-time "ms"
+
+; Reset and test with addnums
+i:: 0
+sum:: 0
+start-time:: now
+rye0 {
+loop 10000000 {
+    addnums 1 1
+}
+}
+
+end-time:: now
+print2 "Time using addnums:     " end-time - start-time "ms"

@@ -1,0 +1,214 @@
+; Test the PEG parser functionality
+
+; Create a simple calculator grammar
+calc-grammar: peg-grammar {
+    Expr "NUMBER (PLUS NUMBER)*"
+    NUMBER "[0-9]+"
+    PLUS "\\+"
+    SPACES "[ \\t\\r\\n]*"
+}
+
+; Add actions to the grammar
+calc-actions: dict {
+    "Expr" {
+        ; Get the first number
+        first-num: peg-values-get values 0
+        
+        ; If there are more values, add them up
+        result: to-integer first-num
+        
+        i: 1
+        n: peg-values-len values
+        loop n - 1 [
+            ; Skip the PLUS token
+            i: i + 1
+            ; Get the next number
+            next-num: peg-values-get values i
+            ; Add it to the result
+            result: result + to-integer next-num
+            ; Move to the next token
+            i: i + 1
+        ]
+        
+        return result
+    }
+    
+    "NUMBER" {
+        ; Just return the token
+        return token
+    }
+}
+
+; Apply the actions to the grammar
+calc-grammar: peg-actions calc-grammar calc-actions
+
+; Test parsing expressions
+print "Testing calculator grammar:"
+print "Parsing '123':"
+result1: peg-parse calc-grammar "123"
+print "Result: " result1
+print ""
+
+print "Parsing '123+456':"
+result2: peg-parse calc-grammar "123+456"
+print "Result: " result2
+print ""
+
+print "Parsing '1+2+3+4+5':"
+result3: peg-parse calc-grammar "1+2+3+4+5"
+print "Result: " result3
+print ""
+
+; Create a more complex grammar for JSON-like data
+json-grammar: peg-grammar {
+    Value "Object / Array / String / Number / Boolean / Null"
+    Object "'{' (Pair (',' Pair)*)? '}'"
+    Pair "String ':' Value"
+    Array "'[' (Value (',' Value)*)? ']'"
+    String `'"' [^"\\]* '"'`
+    Number "-?[0-9]+(\\.[0-9]+)?"
+    Boolean "true / false"
+    Null "null"
+    SPACES "[ \\t\\r\\n]*"
+}
+
+; Add actions to the JSON grammar
+json-actions: dict {
+    "Value" {
+        ; Just return the first value
+        return peg-values-get values 0
+    }
+    
+    "Object" {
+        ; Create a new dictionary
+        result: dict {}
+        
+        ; Check if there are any pairs
+        if { peg-values-len values > 2 } [
+            ; Get the first pair
+            first-pair: peg-values-get values 1
+            
+            ; Add the first pair to the dictionary
+            key: first-pair/1
+            value: first-pair/2
+            result: dict { key value }
+            
+            ; If there are more pairs, add them too
+            i: 2
+            while { i < (peg-values-len values - 1) } [
+                ; Get the next pair
+                next-pair: peg-values-get values i + 1
+                
+                ; Add it to the dictionary
+                key: next-pair/1
+                value: next-pair/2
+                result: dict { key value }
+                
+                ; Move to the next pair
+                i: i + 2
+            ]
+        ]
+        
+        return result
+    }
+    
+    "Pair" {
+        ; Return a block with the key and value
+        key: peg-values-get values 0
+        value: peg-values-get values 2
+        
+        ; Remove quotes from the key
+        key: copy token 1 (length? token) - 2
+        
+        return { key value }
+    }
+    
+    "Array" {
+        ; Create a new block
+        result: {}
+        
+        ; Check if there are any values
+        if { peg-values-len values > 2 } [
+            ; Get the first value
+            first-value: peg-values-get values 1
+            
+            ; Add the first value to the block
+            result: { first-value }
+            
+            ; If there are more values, add them too
+            i: 2
+            while { i < (peg-values-len values - 1) } [
+                ; Get the next value
+                next-value: peg-values-get values i + 1
+                
+                ; Add it to the block
+                append result next-value
+                
+                ; Move to the next value
+                i: i + 2
+            ]
+        ]
+        
+        return result
+    }
+    
+    "String" {
+        ; Remove the quotes
+        return copy token 1 (length? token) - 2
+    }
+    
+    "Number" {
+        ; Convert to a number
+        if { find token "." } [
+            return to-decimal token
+        ] [
+            return to-integer token
+        ]
+    }
+    
+    "Boolean" {
+        ; Convert to a boolean
+        if { token = "true" } [
+            return true
+        ] [
+            return false
+        ]
+    }
+    
+    "Null" {
+        ; Return void
+        return _
+    }
+}
+
+; Apply the actions to the JSON grammar
+json-grammar: peg-actions json-grammar json-actions
+
+; Test parsing JSON-like data
+print "Testing JSON-like grammar:"
+print "Parsing '{\"name\": \"John\", \"age\": 30}':"
+result4: peg-parse json-grammar "{\"name\": \"John\", \"age\": 30}"
+print "Result: " result4
+print ""
+
+print "Parsing '[1, 2, 3]':"
+result5: peg-parse json-grammar "[1, 2, 3]"
+print "Result: " result5
+print ""
+
+print "Parsing 'true':"
+result6: peg-parse json-grammar "true"
+print "Result: " result6
+print ""
+
+; Test using the standard Rye parser
+print "Testing standard Rye parser:"
+print "Parsing '{ 1 + 2 }':"
+result7: peg-load-string "{ 1 + 2 }"
+print "Result: " result7
+print ""
+
+; Get rule names from a grammar
+print "Rule names in the calculator grammar:"
+rule-names: peg-rule-names calc-grammar
+print rule-names
