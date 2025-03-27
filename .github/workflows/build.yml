@@ -60,16 +60,16 @@ jobs:
       if: runner.os == 'Windows'
       run: |
         # Install MinGW (provides gcc for Windows)
-        choco install mingw -y
+        # choco install mingw -y
       env:
         # Required for choco (Chocolatey) on Windows runners
-        ChocolateyInstall: C:\ProgramData\chocolatey
+        # ChocolateyInstall: C:\ProgramData\chocolatey
 
     - name: Build
       # Enable all features for CI builds. 
       env:
         # Enable CGO for Windows and other platforms
-        CGO_ENABLED: 1
+        # CGO_ENABLED: 1
       run: |
         # Explicitly enable CGO and build
         go build -v -o bin/rye
