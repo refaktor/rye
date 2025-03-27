@@ -43,6 +43,7 @@ func main() {
 
 	// Get indices for words we'll need
 	addIdx, _ := idx.GetIndex("add")
+	xIdx, _ := idx.GetIndex("x")
 
 	// Create a builtin for addition
 	addBuiltin := env.NewBuiltin(
@@ -108,6 +109,7 @@ func main() {
 		// Create a simple series with just a single integer
 		standardSeries := *env.NewTSeries([]env.Object{
 			// TEST adding builtin directly into block and evaluating that, no lookup
+			// *env.NewModword(xIdx),
 			*addBuiltin,
 			*env.NewInteger(123),
 			*env.NewInteger(123),
@@ -146,6 +148,7 @@ func main() {
 		// Create a simple series with just a single integer
 		standardSeries := *env.NewTSeries([]env.Object{
 			// TEST adding builtin directly into block and evaluating that, no lookup
+			//			*env.NewModword(xIdx),
 			*addBuiltin,
 			*env.NewInteger(123),
 			*env.NewInteger(123),
@@ -181,6 +184,7 @@ func main() {
 
 		// Create a simple series with just a single integer
 		series := *env.NewTSeries([]env.Object{
+			*env.NewSetword(xIdx),
 			*env.NewInteger(123),
 			*env.NewInteger(123),
 			*env.NewWord(addIdx),

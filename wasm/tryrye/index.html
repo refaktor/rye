@@ -337,6 +337,10 @@
       return true;
     });
     
+    // Show loading message in terminal and context output
+    term.writeln("\x1b[38;5;14m\r\nLoading WebAssembly module...\x1b[0m");
+    document.getElementById('context-output').innerHTML = "<div style='color: #5DA5D5; padding: 10px; text-align: center; font-size: 14px;'><div style='margin-bottom: 10px;'>⏳ Loading WebAssembly module...</div><div>Please wait while the Rye environment is being initialized.</div></div>";
+    
     // Initialize WebAssembly
     if (WebAssembly) {
       // WebAssembly.instantiateStreaming polyfill for Safari
@@ -348,7 +352,15 @@
       }
       
       const go = new Go();
+      // Show progress message
+      term.writeln("\x1b[38;5;246m\r\nThis may take a few moments depending on your connection speed...\x1b[0m");
+      
       WebAssembly.instantiateStreaming(fetch('main.wasm'), go.importObject).then(function(dat) {
+        term.writeln("\x1b[38;5;10m\r\nWebAssembly module loaded successfully!\x1b[0m");
+        term.writeln("Welcome to Rye web console. It's a work in progress. Visit \x1b[38;5;14mryelang.org\x1b[0m for more.");
+        term.writeln("- \x1b[38;5;246mtype in lcp (list context parent) too see some functions, or lc to see yours \x1b[0m-");
+        term.writeln("--------------------------------------------------------------------------------");
+    
         go.run(dat.instance);
         InitRyeShell();
         window.SetTerminalSize(term.cols, term.rows);
@@ -364,10 +376,11 @@
       });
     } else {
       console.log("WebAssembly is not supported in your browser");
-      document.getElementById('context-output').innerHTML = "<div style='color: #ff6b6b;'>WebAssembly is not supported in your browser. This application requires WebAssembly support.</div>";
+      term.writeln("\x1b[38;5;9m\r\nError: WebAssembly is not supported in your browser.\x1b[0m");
+      document.getElementById('context-output').innerHTML = "<div style='color: #ff6b6b; padding: 10px; text-align: center;'><div style='font-size: 16px; margin-bottom: 10px;'>⚠️ WebAssembly Not Supported</div><div>This application requires WebAssembly support. Please try a different browser.</div></div>";
     }
     
-    // Open terminal and display welcome message
+    // Open terminal
     term.open(document.getElementById('terminal'));
     term.focus();
     
@@ -397,10 +410,7 @@
     // Initial resize and set up window resize listener
     setTimeout(resizeTerminal, 100);
     window.addEventListener('resize', resizeTerminal);
-    term.writeln("Welcome to Rye web console. It's a work in progress. Visit \x1b[38;5;14mryelang.org\x1b[0m for more.");
-    term.writeln("- \x1b[38;5;246mtype in lcp (list context parent) too see some functions, or lc to see yours \x1b[0m-");
-    term.writeln("--------------------------------------------------------------------------------");
-    
+
     // Note: Context initialization is now done after WebAssembly is loaded
     
     // Handle key events
@@ -479,7 +489,7 @@
         try {
           // Check if WebAssembly is initialized
           if (!wasmInitialized || typeof RyeEvalStringNoTerm !== 'function') {
-            contextOutput.innerHTML = "<div style='color: #ff6b6b;'>WebAssembly environment is still initializing. Please try again in a moment.</div>";
+            contextOutput.innerHTML = "<div style='color: #ff6b6b; padding: 10px;'>WebAssembly environment is still initializing. Please wait for the loading process to complete.</div>";
             return;
           }
           

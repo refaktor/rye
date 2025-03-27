@@ -4,6 +4,7 @@ package runner
 
 import (
 	"bufio"
+	"bytes"
 	"flag"
 	"fmt"
 	"io"
@@ -36,9 +37,10 @@ var (
 	silent = flag.Bool("silent", false, "Console doesn't display return values")
 	stin   = flag.String("stin", "no", "Inject first value from stdin")
 	//	quit    = flag.Bool("quit", false, "Quits after executing.")
-	console = flag.Bool("console", false, "Enters console after a file is evaluated.")
-	dual    = flag.Bool("dual", false, "Starts REPL in dual-mode with two parallel panels")
-	help    = flag.Bool("help", false, "Displays this help message.")
+	console  = flag.Bool("console", false, "Enters console after a file is evaluated.")
+	dual     = flag.Bool("dual", false, "Starts REPL in dual-mode with two parallel panels")
+	template = flag.Bool("template", false, "Process file as a template, evaluating Rye code in {{ }} blocks")
+	help     = flag.Bool("help", false, "Displays this help message.")
 )
 
 // Error handling utilities
@@ -135,6 +137,7 @@ func DoMain(regfn func(*env.ProgramState)) {
 		fmt.Println("\033[33m  rye -lang math                       \033[36m# enter console of math dialect")
 		fmt.Println("\033[33m  rye -ctx os                          \033[36m# enter console and enter os context")
 		fmt.Println("\033[33m  rye -ctx 'os pipes'                  \033[36m# enter console and enter os and then pipes context")
+		fmt.Println("\033[33m  rye -template template.txt           \033[36m# processes template.txt, evaluating Rye code in {{ }} blocks")
 		fmt.Println("\033[0m\n Thank you for trying out \033[1mRye\033[22m ...")
 		fmt.Println("")
 	}
@@ -202,6 +205,8 @@ func DoMain(regfn func(*env.ProgramState)) {
 					} else {
 						main_rye_repl(os.Stdin, os.Stdout, true, true, *lang, code, regfn)
 					}
+				} else if *template {
+					processTemplate(args[0], regfn)
 				} else {
 					ryeFile := dotsToMainRye(args[0])
 					main_rye_file(ryeFile, false, true, false, *console, code, *lang, regfn, *stin)
@@ -956,6 +961,107 @@ func main_rysh() {
 			fmt.Fprintln(os.Stderr, err)
 		}
 	}
+}
+
+// processTemplate reads a template file and processes it by evaluating Rye code in {{ }} blocks
+func processTemplate(file string, regfn func(*env.ProgramState)) {
+	// Add panic recovery
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Fprintf(os.Stderr, "Recovered from panic in processTemplate: %v\n", r)
+			debug.PrintStack()
+		}
+	}()
+
+	// Read the template file
+	content, err := os.ReadFile(file)
+	if err != nil {
+		handleError(err, fmt.Sprintf("reading template file %s", file), true)
+		return
+	}
+
+	// Create a program state for evaluating Rye code
+	ps := env.NewProgramStateNEW()
+	ps.ScriptPath = file
+
+	workingPath, err := os.Getwd()
+	if err != nil {
+		handleError(err, "getting working directory", false)
+		workingPath = "." // Use current directory as fallback
+	}
+	ps.WorkingPath = workingPath
+
+	// Register builtins
+	evaldo.RegisterBuiltins(ps)
+	evaldo.RegisterVarBuiltins(ps)
+	contrib.RegisterBuiltins(ps, &evaldo.BuiltinNames)
+	regfn(ps)
+
+	// Regular expression to find {{ ... }} blocks (with (?s) flag to match across multiple lines)
+	re := regexp.MustCompile(`(?s)\{\{\s*(.*?)\s*\}\}`)
+
+	// Process the template
+	result := re.ReplaceAllStringFunc(string(content), func(match string) string {
+		// Extract the Rye code from the match
+		submatch := re.FindStringSubmatch(match)
+		if len(submatch) < 2 {
+			return match // Return the original match if no submatch found
+		}
+
+		ryeCode := submatch[1]
+
+		// Create a block to evaluate
+		block := loader.LoadStringNEW(ryeCode, false, ps)
+
+		// Check for errors in the code
+		if blockErr, ok := block.(env.Error); ok {
+			fmt.Fprintf(os.Stderr, "Error in template code %s: %s\n", ryeCode, blockErr.Message)
+			return fmt.Sprintf("[ERROR: %s]", blockErr.Message)
+		}
+
+		// Set up for capturing stdout
+		old := os.Stdout
+		r, w, _ := os.Pipe()
+		os.Stdout = w
+
+		// Create a channel to receive the captured output
+		outC := make(chan string)
+
+		// Copy the output in a separate goroutine
+		go func() {
+			var buf bytes.Buffer
+			_, err := io.Copy(&buf, r)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error capturing output: %v\n", err)
+			}
+			outC <- buf.String()
+		}()
+
+		// Evaluate the block
+		switch val := block.(type) {
+		case env.Block:
+			ser := ps.Ser
+			ps.Ser = val.Series
+			evaldo.EvalBlock(ps)
+			ps.Ser = ser
+		}
+
+		// Restore stdout and get the captured output
+		w.Close()
+		os.Stdout = old
+		out := <-outC
+
+		// If there was an error during evaluation, return an error message
+		if ps.ErrorFlag {
+			return fmt.Sprintf("[ERROR: %s]", ps.Res.Print(*ps.Idx))
+		}
+
+		// Return the captured output (without trailing newline if present)
+		return strings.TrimSuffix(out, "\n")
+	})
+
+	// Print the processed template
+	fmt.Print(result)
 }
 
 func execInput(input string) error {

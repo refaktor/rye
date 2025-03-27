@@ -576,6 +576,8 @@ var builtins_string = map[string]*env.Builtin{
 		Doc:   "Converts all characters in a string to uppercase.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
+			case *env.String:
+				return *env.NewString(strings.ToUpper(s1.Value))
 			case env.String:
 				return *env.NewString(strings.ToUpper(s1.Value))
 			default:

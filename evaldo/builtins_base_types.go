@@ -192,6 +192,10 @@ var builtins_types = map[string]*env.Builtin{
 				return *env.NewWord(idx)
 			case env.Word:
 				return *env.NewWord(str.Index)
+			case env.Opword:
+				return *env.NewWord(str.Index)
+			case env.Pipeword:
+				return *env.NewWord(str.Index)
 			case env.Xword:
 				return *env.NewWord(str.Index)
 			case env.EXword:
@@ -205,7 +209,7 @@ var builtins_types = map[string]*env.Builtin{
 			case env.Getword:
 				return *env.NewWord(str.Index)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType, env.WordType}, "to-word")
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.WordType, env.OpwordType, env.PipewordType, env.XwordType, env.EXwordType}, "to-word")
 			}
 		},
 	},

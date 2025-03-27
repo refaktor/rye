@@ -4,6 +4,7 @@ package evaldo
 import (
 	"fmt"
 	"strconv"
+	"sync"
 
 	"github.com/refaktor/rye/env"
 )
@@ -420,6 +421,13 @@ func Rye0_DetermineContext(fn env.Function, ps *env.ProgramState, ctx *env.RyeCt
 	return fnCtx
 }
 
+// functionCallPool is a sync.Pool for reusing ProgramState objects specifically for function calls
+var functionCallPool = sync.Pool{
+	New: func() interface{} {
+		return env.NewProgramStateNEW()
+	},
+}
+
 // Rye0_CallFunction calls a function.
 // Parameters:
 //   - fn: The function to call
@@ -433,7 +441,6 @@ func Rye0_DetermineContext(fn env.Function, ps *env.ProgramState, ctx *env.RyeCt
 func Rye0_CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, toLeft bool, ctx *env.RyeCtx) *env.ProgramState {
 	// Determine the function context
 	fnCtx := Rye0_DetermineContext(fn, ps, ctx)
-	env0 := ps.Ctx
 
 	// Set up arguments
 	ii := 0
@@ -469,17 +476,26 @@ func Rye0_CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, t
 		}
 	}
 
-	// Save current state
-	ser0 := ps.Ser
-	ps.Ser = fn.Body.Series
-	ps.Ctx = fnCtx
+	// Get a program state from the pool instead of modifying the current one
+	psX := functionCallPool.Get().(*env.ProgramState)
+	resetProgramState(psX, fn.Body.Series, ps.Idx)
+
+	// Set up the program state
+	psX.Ctx = fnCtx
+	psX.PCtx = ps.PCtx
+	psX.Gen = ps.Gen
+	psX.Dialect = ps.Dialect
+	psX.WorkingPath = ps.WorkingPath
+	psX.ScriptPath = ps.ScriptPath
+	psX.LiveObj = ps.LiveObj
+	psX.Embedded = ps.Embedded
 
 	// Evaluate the function body
 	var result *env.ProgramState
 	if arg0 != nil {
-		result = Rye0_EvalBlockInj(ps, arg0, true)
+		result = Rye0_EvalBlockInj(psX, arg0, true)
 	} else {
-		result = EvalBlock(ps)
+		result = EvalBlock(psX)
 	}
 
 	// Process the result
@@ -490,12 +506,33 @@ func Rye0_CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, t
 		ps.Res = result.Res
 	}
 
-	// Restore state
-	ps.Ctx = env0
-	ps.Ser = ser0
-	ps.ReturnFlag = false
+	// Put the program state back in the pool
+	functionCallPool.Put(psX)
 
+	ps.ReturnFlag = false
 	return ps
+}
+
+// programStatePool is a sync.Pool for reusing ProgramState objects
+var programStatePool = sync.Pool{
+	New: func() interface{} {
+		return env.NewProgramStateNEW()
+	},
+}
+
+// resetProgramState resets a program state for reuse
+func resetProgramState(ps *env.ProgramState, ser env.TSeries, idx *env.Idxs) {
+	ps.Ser = ser
+	ps.Res = nil
+	ps.ReturnFlag = false
+	ps.ErrorFlag = false
+	ps.FailureFlag = false
+	ps.ForcedResult = nil
+	ps.SkipFlag = false
+	ps.InErrHandler = false
+	ps.Injnow = false
+	ps.Inj = nil
+	ps.Idx = idx
 }
 
 // Rye0_CallFunctionWithArgs calls a function with the given arguments.
@@ -535,11 +572,19 @@ func Rye0_CallFunctionWithArgs(fn env.Function, ps *env.ProgramState, ctx *env.R
 		}
 	}
 
-	// Create a new program state for evaluation
-	psX := env.NewProgramState(fn.Body.Series, ps.Idx)
+	// Get a program state from the pool instead of creating a new one
+	psX := programStatePool.Get().(*env.ProgramState)
+	resetProgramState(psX, fn.Body.Series, ps.Idx)
+
+	// Set up the program state
 	psX.Ctx = fnCtx
 	psX.PCtx = ps.PCtx
 	psX.Gen = ps.Gen
+	psX.Dialect = ps.Dialect
+	psX.WorkingPath = ps.WorkingPath
+	psX.ScriptPath = ps.ScriptPath
+	psX.LiveObj = ps.LiveObj
+	psX.Embedded = ps.Embedded
 
 	// Evaluate the function body
 	var result *env.ProgramState
@@ -558,6 +603,9 @@ func Rye0_CallFunctionWithArgs(fn env.Function, ps *env.ProgramState, ctx *env.R
 	} else {
 		ps.Res = result.Res
 	}
+
+	// Put the program state back in the pool
+	programStatePool.Put(psX)
 
 	ps.ReturnFlag = false
 	return ps

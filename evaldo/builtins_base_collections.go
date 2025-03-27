@@ -2088,7 +2088,12 @@ var builtins_collection = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
-				return s1.Series.Peek()
+				r := s1.Series.Peek()
+				if r != nil {
+					return r
+				} else {
+					return MakeBuiltinError(ps, "past end", "peek")
+				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "peek")
 			}
