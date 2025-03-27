@@ -1190,6 +1190,25 @@ startOfHere:
 						pos -= n
 						s.needRefresh = true
 					}
+				case 127: // Alt+Backspace (Delete word)
+					if pos <= 0 {
+						s.doBeep()
+					} else {
+						// Find the start of the current word
+						newPos := pos
+						// Skip trailing whitespace
+						for newPos > 0 && unicode.IsSpace(line[newPos-1]) {
+							newPos--
+						}
+						// Skip non-whitespace (the word itself)
+						for newPos > 0 && !unicode.IsSpace(line[newPos-1]) {
+							newPos--
+						}
+						// Delete from newPos to pos
+						line = append(line[:newPos], line[pos:]...)
+						pos = newPos
+						s.needRefresh = true
+					}
 				case 9: // Tab completion
 					line, pos, next, _ = s.tabComplete(p, line, pos, 0)
 					tabCompletionWasActive = true

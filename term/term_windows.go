@@ -131,9 +131,15 @@ func GetChar() (ascii int, keyCode int, err error) {
 					case 0x0D: // Enter
 						return 13, 0, nil
 					case 0x08: // Backspace
-						// This is the key part - ensure backspace is always ASCII 8
-						// regardless of control key state
-						return 8, 0, nil
+						// Check if Alt key is pressed
+						if (keyEvent.ControlKeyState & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED)) != 0 {
+							// Return a special code for Alt+Backspace to handle word deletion
+							// Use ASCII 127 (DEL) to signal Alt+Backspace
+							return 127, 0, nil
+						} else {
+							// Regular backspace
+							return 8, 0, nil
+						}
 					default:
 						// For regular characters, return the Unicode character
 						if keyEvent.UnicodeChar != 0 {

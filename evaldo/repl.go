@@ -471,9 +471,11 @@ func constructKeyEvent(r rune, k keyboard.Key) term.KeyEvent {
 	case keyboard.KeyTab:
 		code = 9
 	case keyboard.KeyBackspace:
+		// For Ctrl+Backspace, we need to set a different code
+		// to distinguish it from regular backspace
 		ch = "backspace"
 		ctrl = true
-		code = 8 // Consistent with plain Backspace
+		code = 127 // Use DEL code for Ctrl+Backspace
 	case keyboard.KeyBackspace2:
 		code = 8
 	// Add special handling for Alt+Backspace

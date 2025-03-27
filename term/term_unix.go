@@ -82,6 +82,11 @@ func GetChar2() (letter string, ascii int, keyCode int, err error) {
 			// Left
 			keyCode = 37
 		}
+	} else if numRead == 2 && bytes[0] == 27 && bytes[1] == 127 {
+		// ESC followed by DEL/Backspace is Alt+Backspace
+		// Return DEL (127) to signal Alt+Backspace for word deletion
+		ascii = 127
+		letter = string(rune(127))
 	} else if numRead == 1 {
 		ascii = int(bytes[0])
 		letter = string(bytes[0])
