@@ -1,1 +1,1 @@
-env GOOS=js GOARCH=wasm go build  -ldflags="-s -w" -tags "b_wasm" -o wasm/ryeshell/main.wasm main_wasm.go ; bin/rye serve_wasm.rye
+env GOOS=js GOARCH=wasm go build  -ldflags="-s -w" -tags "b_wasm,no_sqlite,no_psql,no_mysql" -o wasm/tryrye/main.wasm main_wasm.go ; bin/rye serve_wasm.rye

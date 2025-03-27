@@ -725,6 +725,9 @@ func (s *MLState) refreshSingleLine_NO_WRAP(prompt []rune, buf []rune, pos int) 
 	text := string(buf)
 	cols := s.columns - 6
 
+	// Hide cursor before redrawing to prevent blinking
+	s.sendBack("\033[?25l")
+
 	// Position cursor at start of line and clear it
 	s.cursorPos(0)
 	s.sendBack("\033[K") // delete line
@@ -743,6 +746,9 @@ func (s *MLState) refreshSingleLine_NO_WRAP(prompt []rune, buf []rune, pos int) 
 		curLeft = 0
 	}
 	s.cursorPos2(curLeft, 0)
+
+	// Show cursor after redrawing is complete
+	s.sendBack("\033[?25h")
 
 	return nil
 }
@@ -1203,7 +1209,7 @@ startOfHere:
 						s.doBeep()
 					}
 				case 37: // Left
-					if pos > 1 {
+					if pos > 0 {
 						pos -= len(getSuffixGlyphs(line[:pos], 1))
 						traceTop(pos, 3)
 					} else {
