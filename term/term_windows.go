@@ -136,6 +136,10 @@ func GetChar() (ascii int, keyCode int, err error) {
 							// Return a special code for Alt+Backspace to handle word deletion
 							// Use ASCII 127 (DEL) to signal Alt+Backspace
 							return 127, 0, nil
+						} else if (keyEvent.ControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) != 0 {
+							// Return a special code for Ctrl+Backspace to handle word deletion
+							// Use ASCII 127 (DEL) to signal Ctrl+Backspace
+							return 127, 0, nil
 						} else {
 							// Regular backspace
 							return 8, 0, nil
