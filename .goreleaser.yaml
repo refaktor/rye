@@ -43,14 +43,13 @@ builds:
 
     flags:
     # - -tags=b_tiny
-    - -tags=no_sqlite
     - -trimpath
 
     overrides:
     - goarch: wasm
       goos: js
       flags:
-      - -tags=b_tiny,b_wasm,no_sqlite
+      - -tags=b_tiny,b_wasm,no_sqlite,no_psql,no_mysql
       - -trimpath
       
 archives:
