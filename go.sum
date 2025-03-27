@@ -254,6 +254,8 @@ github.com/refaktor/go-peg v0.0.0-20220116201714-31e3dfa8dc7d h1:FXrWUGgPRzhaZIB
 github.com/refaktor/go-peg v0.0.0-20220116201714-31e3dfa8dc7d/go.mod h1:iIkrsFobLIWX8kQ6Oqj4cl4nwdMSE92DWpWwk9YlG9s=
 github.com/refaktor/keyboard v0.0.0-20250228210936-7313460a8299 h1:CSO4voXfD4YLvkScaCobeWEn0qxWBzRCi/vnKjbWf1g=
 github.com/refaktor/keyboard v0.0.0-20250228210936-7313460a8299/go.mod h1:GwFCpZSiID9sqQ9Zm0tCmw8eeI9hThLQ7pv1wcTp0I0=
+github.com/refaktor/keyboard v0.0.0-20250327232248-edb0b31909c4 h1:hNN6Jy+4lzf4k4M9c/O4UygG9cooW520argkmsAs+Ho=
+github.com/refaktor/keyboard v0.0.0-20250327232248-edb0b31909c4/go.mod h1:GwFCpZSiID9sqQ9Zm0tCmw8eeI9hThLQ7pv1wcTp0I0=
 github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0/go.mod h1:qqbHyh8v60DhA7CoWK5oRCqLrMHRGoxYCSS9EjAz6Eo=
 github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec h1:W09IVJc94icq4NjY3clb7Lk8O1qJ8BdBEF8z0ibU0rE=
 github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec/go.mod h1:qqbHyh8v60DhA7CoWK5oRCqLrMHRGoxYCSS9EjAz6Eo=

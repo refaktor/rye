@@ -7,6 +7,7 @@ toolchain go1.24.1
 retract v0.0.11 // Published accidentally with a bug
 
 // replace github.com/refaktor/keyboard => ../keyboard
+
 // replace github.com/refaktor/go-peg => ../go-peg
 
 require (
@@ -42,7 +43,7 @@ require (
 	github.com/muesli/reflow v0.3.0
 	github.com/pkg/term v1.2.0-beta.2.0.20211217091447-1a4a3b719465
 	github.com/refaktor/go-peg v0.0.0-20220116201714-31e3dfa8dc7d
-	github.com/refaktor/keyboard v0.0.0-20250228210936-7313460a8299
+	github.com/refaktor/keyboard v0.0.0-20250327232248-edb0b31909c4
 	github.com/sashabaranov/go-openai v1.38.0
 	github.com/shirou/gopsutil/v3 v3.24.5
 	github.com/thomasberger/parsemail v1.2.7
