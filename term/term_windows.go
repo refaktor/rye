@@ -63,8 +63,8 @@ type KeyEventRecord struct {
 
 // GetChar reads a character from the Windows console and returns ASCII code, key code, and error
 func GetChar() (ascii int, keyCode int, err error) {
-	// Use uint32 conversion for Windows API constants
-	handle, _, err := procGetStdHandle.Call(uintptr(uint32(STD_INPUT_HANDLE)))
+	// For Windows API constants, use int32 to preserve the negative value
+	handle, _, err := procGetStdHandle.Call(uintptr(^uintptr(0) - 9))
 	if handle == 0 {
 		return 0, 0, err
 	}
