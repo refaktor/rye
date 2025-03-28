@@ -32,38 +32,47 @@ func SetSB(fn func(string)) {
 
 // GetChar reads a character from the browser terminal and returns ASCII code, key code, and error
 func GetChar() (ascii int, keyCode int, err error) {
-	// Wait for a key event from JavaScript
-	event := <-keyEventChan
+	// Use NonBlockingGetChar to avoid deadlock in DisplayBlock
+	return NonBlockingGetChar()
+}
 
-	// Convert the event to ascii and keyCode
-	ascii = 0
-	keyCode = event.Code
+// NonBlockingGetChar reads a character from the browser terminal without blocking
+// Returns default values if no key event is available
+func NonBlockingGetChar() (ascii int, keyCode int, err error) {
+	// Try to read from channel without blocking
+	select {
+	case event := <-keyEventChan:
+		// Process the event normally
+		ascii = 0
+		keyCode = event.Code
 
-	// Handle special keys
-	if event.Key == "Enter" {
-		ascii = 13
-	} else if event.Key == "Escape" {
-		ascii = 27
-	} else if event.Key == "m" || event.Key == "M" {
-		ascii = int(event.Key[0])
-	} else if len(event.Key) == 1 {
-		ascii = int(event.Key[0])
+		// Handle special keys
+		if event.Key == "Enter" {
+			ascii = 13
+		} else if event.Key == "Escape" {
+			ascii = 27
+		} else if event.Key == "m" || event.Key == "M" {
+			ascii = int(event.Key[0])
+		} else if len(event.Key) == 1 {
+			ascii = int(event.Key[0])
+		}
+
+		// Handle arrow keys
+		if event.Key == "ArrowUp" {
+			keyCode = 38
+		} else if event.Key == "ArrowDown" {
+			keyCode = 40
+		} else if event.Key == "ArrowLeft" {
+			keyCode = 37
+		} else if event.Key == "ArrowRight" {
+			keyCode = 39
+		}
+
+		return ascii, keyCode, nil
+	default:
+		// Return default values if no event is available
+		return 27, 0, nil // Return ESC key to exit DisplayBlock
 	}
-
-	// Note: In microliner.go, the control key field is named "Ctrl" not "Control"
-
-	// Handle arrow keys
-	if event.Key == "ArrowUp" {
-		keyCode = 38
-	} else if event.Key == "ArrowDown" {
-		keyCode = 40
-	} else if event.Key == "ArrowLeft" {
-		keyCode = 37
-	} else if event.Key == "ArrowRight" {
-		keyCode = 39
-	}
-
-	return ascii, keyCode, nil
 }
 
 // GetChar2 is similar to GetChar but returns the character as a string

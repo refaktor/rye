@@ -74,6 +74,8 @@ DODO:
 
 	// RestoreCurPos()
 
+	// In WASM environment, we use a non-blocking GetChar that may return ESC (27)
+	// to avoid deadlock when no key events are available
 	for {
 		ascii, keyCode, err := GetChar()
 
