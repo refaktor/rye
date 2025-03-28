@@ -106,6 +106,9 @@ func main() {
 
 	ml = term.NewMicroLiner(c, sendMessageToJS, sendLineToJS)
 
+	// Initialize the key event channel in the term package
+	term.InitKeyEventChannel(c)
+
 	js.Global().Set("RyeEvalString", js.FuncOf(RyeEvalString))
 
 	js.Global().Set("RyeEvalStringNoTerm", js.FuncOf(RyeEvalStringNoTerm))
