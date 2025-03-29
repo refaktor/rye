@@ -107,7 +107,85 @@ func main() {
 	ml = term.NewMicroLiner(c, sendMessageToJS, sendLineToJS)
 
 	// Initialize the key event channel in the term package
+	// term.SetSB(sendMessageToJSNL)
 	term.InitKeyEventChannel(c)
+
+	// Set up the completer function for tab completion
+	ml.SetCompleter(func(line string, mode int) (c []string) {
+		// Get suggestions based on the current context
+		suggestions := make([]string, 0)
+		var wordpart string
+		spacePos := strings.LastIndex(line, " ")
+		var prefix string
+
+		if spacePos < 0 {
+			wordpart = line
+			prefix = ""
+		} else {
+			wordpart = strings.TrimSpace(line[spacePos:])
+			prefix = line[0:spacePos] + " "
+			if wordpart == "" { // we are probably 1 space after last word
+				return
+			}
+		}
+
+		// Mode 0: Get all words from the index
+		// Mode 1: Get words from the current context
+		if ES != nil {
+			switch mode {
+			case 0:
+				for i := 0; i < ES.Idx.GetWordCount(); i++ {
+					if strings.HasPrefix(ES.Idx.GetWord(i), strings.ToLower(wordpart)) {
+						c = append(c, prefix+ES.Idx.GetWord(i))
+						suggestions = append(suggestions, ES.Idx.GetWord(i))
+					} else if strings.HasPrefix("."+ES.Idx.GetWord(i), strings.ToLower(wordpart)) {
+						c = append(c, prefix+"."+ES.Idx.GetWord(i))
+						suggestions = append(suggestions, ES.Idx.GetWord(i))
+					} else if strings.HasPrefix("|"+ES.Idx.GetWord(i), strings.ToLower(wordpart)) {
+						c = append(c, prefix+"|"+ES.Idx.GetWord(i))
+						suggestions = append(suggestions, ES.Idx.GetWord(i))
+					}
+				}
+			case 1:
+				if ES.Ctx != nil {
+					for key := range ES.Ctx.GetState() {
+						if strings.HasPrefix(ES.Idx.GetWord(key), strings.ToLower(wordpart)) {
+							c = append(c, prefix+ES.Idx.GetWord(key))
+							suggestions = append(suggestions, ES.Idx.GetWord(key))
+						} else if strings.HasPrefix("."+ES.Idx.GetWord(key), strings.ToLower(wordpart)) {
+							c = append(c, prefix+"."+ES.Idx.GetWord(key))
+							suggestions = append(suggestions, ES.Idx.GetWord(key))
+						} else if strings.HasPrefix("|"+ES.Idx.GetWord(key), strings.ToLower(wordpart)) {
+							c = append(c, prefix+"|"+ES.Idx.GetWord(key))
+							suggestions = append(suggestions, ES.Idx.GetWord(key))
+						}
+					}
+				}
+			}
+		}
+
+		// Display suggestions below the current line
+		if len(suggestions) > 0 {
+			// Log suggestions for debugging
+			browserConsoleLog("Tab completion suggestions: " + strings.Join(suggestions, ", "))
+
+			// Display suggestions in the terminal
+			// First, send a newline
+			sendMessageToJS("\n")
+
+			// Display the suggestions in magenta using ANSI color codes directly
+			// \033[35m is the ANSI code for magenta, \033[0m resets the color
+
+			sendMessageToJSNL("\033[35m" + strings.Join(suggestions, " ") + "\033[0m")
+
+			// Move back up to the input line using direct ANSI escape sequences
+			// \033[1A moves cursor up 1 line, \033[2K clears the line
+			sendMessageToJS("\033[1A\033[1A\033[2K")
+			term.CurUp(1)
+		}
+
+		return
+	})
 
 	js.Global().Set("RyeEvalString", js.FuncOf(RyeEvalString))
 
