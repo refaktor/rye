@@ -76,6 +76,9 @@ func Rye0_EvalExpressionConcrete(ps *env.ProgramState) *env.ProgramState {
 		return Rye0_EvalWord(ps, object.(env.Word), nil, false, false)
 	case env.CPathType:
 		return Rye0_EvalWord(ps, object, nil, false, false)
+	case env.FunctionType:
+		fn := object.(env.Function)
+		return Rye0_CallFunction_Optimized(fn, ps, nil, false, nil)
 	case env.BuiltinType:
 		return Rye0_CallBuiltin(object.(env.Builtin), ps, nil, false, false, nil)
 	case env.GenwordType:
@@ -191,9 +194,8 @@ func Rye0_findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Objec
 	// First try to get the value from the current context
 	object, found := ps.Ctx.Get(index)
 	if found {
-		// Disable word replacement optimization for benchmarking
-		if object.Type() == env.BuiltinType && ps.Ser.Pos() > 0 {
-			fmt.Println("*")
+		// Enable word replacement optimization for builtins and functions
+		if (object.Type() == env.BuiltinType || object.Type() == env.FunctionType) && ps.Ser.Pos() > 0 {
 			ps.Ser.Put(object)
 		}
 		return found, object, nil
@@ -207,10 +209,8 @@ func Rye0_findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Objec
 	// Try to get the value directly from the parent context
 	object, found = ps.Ctx.Parent.Get(index)
 	if found {
-		fmt.Println("-")
-		// Disable word replacement optimization for benchmarking
-		if object.Type() == env.BuiltinType && ps.Ser.Pos() > 0 {
-			fmt.Println("**")
+		// Enable word replacement optimization for builtins and functions
+		if (object.Type() == env.BuiltinType || object.Type() == env.FunctionType) && ps.Ser.Pos() > 0 {
 			ps.Ser.Put(object)
 		}
 		return found, object, ps.Ctx.Parent
@@ -337,7 +337,7 @@ func Rye0_EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object
 	switch object.Type() {
 	case env.FunctionType, env.CPathType: // Handle both function types the same way
 		fn := object.(env.Function)
-		return Rye0_CallFunction(fn, ps, leftVal, toLeft, ctx)
+		return Rye0_CallFunction_Optimized(fn, ps, leftVal, toLeft, ctx)
 	case env.BuiltinType:
 		bu := object.(env.Builtin)
 
@@ -546,69 +546,13 @@ func resetProgramState(ps *env.ProgramState, ser env.TSeries, idx *env.Idxs) {
 // Returns:
 //   - The updated program state
 func Rye0_CallFunctionWithArgs(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, args ...env.Object) *env.ProgramState {
-	// Determine the function context
-	fnCtx := Rye0_DetermineContext(fn, ps, ctx)
-
-	// Check for errors
+	// Check for errors first
 	if Rye0_checkErrorReturnFlag(ps) {
 		return ps
 	}
 
-	// Set arguments
-	for i, arg := range args {
-		if i < fn.Spec.Series.Len() {
-			specObj := fn.Spec.Series.Get(i)
-			if word, ok := specObj.(env.Word); ok {
-				fnCtx.Set(word.Index, arg)
-			} else {
-				ps.ErrorFlag = true
-				ps.Res = env.NewError("Expected Word in function spec but got: " + specObj.Inspect(*ps.Idx))
-				return ps
-			}
-		} else {
-			ps.ErrorFlag = true
-			ps.Res = env.NewError("Too many arguments provided to function")
-			return ps
-		}
-	}
-
-	// Get a program state from the pool instead of creating a new one
-	psX := programStatePool.Get().(*env.ProgramState)
-	resetProgramState(psX, fn.Body.Series, ps.Idx)
-
-	// Set up the program state
-	psX.Ctx = fnCtx
-	psX.PCtx = ps.PCtx
-	psX.Gen = ps.Gen
-	psX.Dialect = ps.Dialect
-	psX.WorkingPath = ps.WorkingPath
-	psX.ScriptPath = ps.ScriptPath
-	psX.LiveObj = ps.LiveObj
-	psX.Embedded = ps.Embedded
-
-	// Evaluate the function body
-	var result *env.ProgramState
-	psX.Ser.SetPos(0)
-	if len(args) > 0 {
-		result = Rye0_EvalBlockInj(psX, args[0], true)
-	} else {
-		result = EvalBlock(psX)
-	}
-
-	// Process the result
-	Rye0_MaybeDisplayFailureOrError(result, result.Idx, "call func with args")
-	if result.ForcedResult != nil {
-		ps.Res = result.ForcedResult
-		result.ForcedResult = nil
-	} else {
-		ps.Res = result.Res
-	}
-
-	// Put the program state back in the pool
-	programStatePool.Put(psX)
-
-	ps.ReturnFlag = false
-	return ps
+	// Use the fast path implementation
+	return FastCallFunctionWithArgs(fn, ps, ctx, args...)
 }
 
 // Rye0_CallBuiltin calls a builtin function.
