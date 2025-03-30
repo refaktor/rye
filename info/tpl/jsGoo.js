@@ -1046,12 +1046,12 @@ function HTMLEncode(s) {
 
 function HTMLDecode(s) {
     s = s || "";
+    s = s.replace(/&amp;/g,"&");
     s = s.replace(/&#39;/g,"'");
     s = s.replace(/&#47;/g,"/");
     s = s.replace(/&quot;/g,'"');
     s = s.replace(/&lt;/g,"<");
-    s = s.replace(/&gt;/g,">");
-    return s.replace(/&amp;/g,"&");
+    return s.replace(/&gt;/g,">");
 }
 
 //utils-shortcuts -- remove if you need to 

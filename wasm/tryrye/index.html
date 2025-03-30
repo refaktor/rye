@@ -513,8 +513,12 @@
                                   "<div style='font-weight: bold; margin-top: 20px;'>output</div><div style='border-bottom: 1px solid #444; margin-bottom: 10px;'></div>" + 
                                   stdoutHtml || "No result returned";
         } catch (error) {
-          // Handle any errors
-          contextOutput.innerHTML = "<div style='color: #ff6b6b;'>Error evaluating code: " + error.message + "</div>";
+          // Handle any errors - Create a safe div element with text content to prevent XSS
+          const errorDiv = document.createElement('div');
+          errorDiv.style.color = '#ff6b6b';
+          errorDiv.textContent = "Error evaluating code: " + error.message;
+          contextOutput.innerHTML = ''; // Clear existing content
+          contextOutput.appendChild(errorDiv);
         }
       }
     }
@@ -558,8 +562,13 @@
                                 (GLOB.CollectedStdout ? "<div style='font-weight: bold; margin-top: 20px;'>output</div><div style='border-bottom: 1px solid #444; margin-bottom: 10px;'></div>" + 
                                 stdoutHtml : "");
       } catch (error) {
-        // Handle any errors
-        document.getElementById('context-output').innerHTML = "<div style='color: #ff6b6b;'>Error updating context: " + error.message + "</div>";
+        // Handle any errors - Create a safe div element with text content to prevent XSS
+        const errorDiv = document.createElement('div');
+        errorDiv.style.color = '#ff6b6b';
+        errorDiv.textContent = "Error updating context: " + error.message;
+        const contextOutput = document.getElementById('context-output');
+        contextOutput.innerHTML = ''; // Clear existing content
+        contextOutput.appendChild(errorDiv);
       }
     }
     
