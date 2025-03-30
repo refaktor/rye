@@ -1,0 +1,28 @@
+; Test the when builtin function
+
+; This should print 10 because 10 > 5 is true
+print "Test 1: Should print 10"
+10 .when { > 5 } { .print }
+print ""
+
+; This should not print anything because 10 < 5 is false
+print "Test 2: Should not print anything"
+10 .when { < 5 } { .print }
+print ""
+
+; Test with different values
+print "Test 3: Should print 20"
+20 .when { > 15 } { .print }
+print ""
+
+; Test with a more complex condition
+print "Test 4: Should print 30"
+30 .when { x | x > 25 and x < 35 } { .print }
+print ""
+
+; Test with a more complex action
+print "Test 5: Should print 'Value: 40'"
+40 .when { > 30 } { x | print "Value: " + to-string x }
+print ""
+
+print "All tests completed"

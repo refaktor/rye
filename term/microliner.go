@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"strings"
 	"sync"
 	"unicode"
@@ -112,7 +113,14 @@ func (s *MLState) cursorPos2(x int, y int) {
 
 // HISTORY
 
+// ReadHistory reads history entries from an io.Reader and adds them to the history buffer.
+// It returns the number of entries successfully read and any error encountered.
+// If an error occurs, some entries may have been added to the history buffer.
 func (s *MLState) ReadHistory(r io.Reader) (num int, err error) {
+	if r == nil {
+		return 0, fmt.Errorf("reader cannot be nil")
+	}
+
 	s.historyMutex.Lock()
 	defer s.historyMutex.Unlock()
 
@@ -124,13 +132,13 @@ func (s *MLState) ReadHistory(r io.Reader) (num int, err error) {
 			break
 		}
 		if err != nil {
-			return num, err
+			return num, fmt.Errorf("error reading history at line %d: %w", num+1, err)
 		}
 		if part {
 			return num, fmt.Errorf("line %d is too long", num+1)
 		}
 		if !utf8.Valid(line) {
-			return num, fmt.Errorf("invalid string at line %d", num+1)
+			return num, fmt.Errorf("invalid UTF-8 string at line %d", num+1)
 		}
 		num++
 		s.history = append(s.history, string(line))
@@ -149,13 +157,17 @@ func (s *MLState) ReadHistory(r io.Reader) (num int, err error) {
 // This exception is to facilitate the saving of the history buffer
 // during an unexpected exit (for example, due to Ctrl-C being invoked)
 func (s *MLState) WriteHistory(w io.Writer) (num int, err error) {
+	if w == nil {
+		return 0, fmt.Errorf("writer cannot be nil")
+	}
+
 	s.historyMutex.RLock()
 	defer s.historyMutex.RUnlock()
 
 	for _, item := range s.history {
 		_, err := fmt.Fprintln(w, item)
 		if err != nil {
-			return num, err
+			return num, fmt.Errorf("error writing history at line %d: %w", num+1, err)
 		}
 		num++
 	}
@@ -178,41 +190,51 @@ func (s *MLState) circularTabs(items []string) func(direction int) (string, erro
 	}
 }
 
+// tabComplete handles tab completion functionality.
+// It returns the completed line, new cursor position, next key event, and any error.
 func (s *MLState) tabComplete(p []rune, line []rune, pos int, mode int) ([]rune, int, KeyEvent, error) {
 	// if no completer defined
 	if s.completer == nil {
 		return line, pos, KeyEvent{Code: 27}, nil
 	}
-	// ifcompleter run it
+
+	// Run the completer
 	head, list, tail := s.completer(string(line), pos, mode)
 	if len(list) <= 0 {
 		return line, pos, KeyEvent{Code: 27}, nil
 	}
-	// if there is one result
+
+	// If there is one result, use it immediately
 	hl := utf8.RuneCountInString(head)
 	if len(list) == 1 {
-		err := s.refresh(p, []rune(head+list[0]+tail), hl+utf8.RuneCountInString(list[0]))
-		return []rune(head + list[0] + tail), hl + utf8.RuneCountInString(list[0]), KeyEvent{Code: 27}, err
+		completedLine := []rune(head + list[0] + tail)
+		newPos := hl + utf8.RuneCountInString(list[0])
+		err := s.refresh(p, completedLine, newPos)
+		if err != nil {
+			return line, pos, KeyEvent{Code: 27}, fmt.Errorf("failed to refresh display: %w", err)
+		}
+		return completedLine, newPos, KeyEvent{Code: 27}, nil
 	}
-	// same as no result for now
-	//	return line, pos, KeyEvent{Code: 27}, nil
 
+	// Handle multiple completion options
 	direction := 1
 	tabPrinter := s.circularTabs(list)
 	for {
 		pick, err := tabPrinter(direction)
 		if err != nil {
-			return line, pos, KeyEvent{Code: 27}, err
-		}
-		err = s.refresh(p, []rune(head+pick+tail), hl+utf8.RuneCountInString(pick))
-		if err != nil {
-			return line, pos, KeyEvent{Code: 27}, err
+			return line, pos, KeyEvent{Code: 27}, fmt.Errorf("tab completion error: %w", err)
 		}
 
+		completedLine := []rune(head + pick + tail)
+		newPos := hl + utf8.RuneCountInString(pick)
+		err = s.refresh(p, completedLine, newPos)
+		if err != nil {
+			return line, pos, KeyEvent{Code: 27}, fmt.Errorf("failed to refresh display: %w", err)
+		}
+
+		// Wait for next key input
 		next := <-s.next
-		//if err != nil {
-		//	return line, pos, KeyEvent{Code: 27}, err
-		// }
+
 		if next.Code == 9 {
 			direction = 1
 			continue
@@ -220,7 +242,7 @@ func (s *MLState) tabComplete(p []rune, line []rune, pos int, mode int) ([]rune,
 		if next.Code == 27 {
 			return line, pos, KeyEvent{Code: 27}, nil
 		}
-		return []rune(head + pick + tail), hl + utf8.RuneCountInString(pick), next, nil
+		return completedLine, newPos, next, nil
 	}
 
 	/*
@@ -276,8 +298,26 @@ func (s *MLState) SetCompleter(f Completer) {
 		s.completer = nil
 		return
 	}
+
 	s.completer = func(line string, pos int, mode int) (string, []string, string) {
-		return "", f(string([]rune(line)[:pos]), mode), string([]rune(line)[pos:])
+		if pos < 0 || pos > len(line) {
+			// Handle invalid position safely
+			pos = 0
+			if len(line) > 0 {
+				pos = len(line)
+			}
+		}
+
+		// Convert to runes to handle multi-byte characters correctly
+		runes := []rune(line)
+		if pos > len(runes) {
+			pos = len(runes)
+		}
+
+		// Call the user-provided completer function
+		completions := f(string(runes[:pos]), mode)
+
+		return "", completions, string(runes[pos:])
 	}
 }
 
@@ -333,14 +373,25 @@ type MLState struct {
 	// killRing *ring.Ring
 }
 
-// NewLiner initializes a new *State, and sets the terminal into raw mode. To
-// restore the terminal to its previous state, call State.Close().
+// NewMicroLiner initializes a new *MLState with the provided event channel,
+// output function, and line handler function.
 func NewMicroLiner(ch chan KeyEvent, sb func(msg string), el func(line string) string) *MLState {
+	if ch == nil {
+		panic("KeyEvent channel cannot be nil")
+	}
+	if sb == nil {
+		panic("sendBack function cannot be nil")
+	}
+	if el == nil {
+		panic("enterLine function cannot be nil")
+	}
+
 	var s MLState
 	s.next = ch
 	s.sendBack = sb
 	s.enterLine = el
-	//	s.r = bufio.NewReader(os.Stdin)
+	s.columns = 80 // Default value, will be updated by getColumns()
+
 	return &s
 }
 
@@ -349,6 +400,10 @@ func (s *MLState) getColumns() bool {
 	// fmt.Print("*getColumns* : ")
 	// fmt.Println(s.columns)
 	return true
+}
+
+func (s *MLState) GetKeyChan() <-chan KeyEvent {
+	return s.next
 }
 
 func (s *MLState) SetColumns(cols int) bool {
@@ -361,9 +416,28 @@ func (s *MLState) SetColumns(cols int) bool {
 // Redrawing input
 // Called when it needs to redraw / refresh the current input, dispatches to single line and multiline
 
+// refresh updates the display with the current input buffer.
+// It returns any error encountered during the refresh operation.
 func (s *MLState) refresh(prompt []rune, buf []rune, pos int) error {
+	if prompt == nil {
+		prompt = []rune{}
+	}
+	if buf == nil {
+		buf = []rune{}
+	}
+	if pos < 0 {
+		pos = 0
+	}
+	if pos > len(buf) {
+		pos = len(buf)
+	}
+
 	s.needRefresh = false
-	return s.refreshSingleLine_NO_WRAP(prompt, buf, pos)
+	err := s.refreshSingleLine_NO_WRAP(prompt, buf, pos)
+	if err != nil {
+		return fmt.Errorf("refresh failed: %w", err)
+	}
+	return nil
 }
 
 // HISTORY
@@ -640,18 +714,42 @@ func (s *MLState) refreshSingleLine_WITH_WRAP_HALFMADE(prompt []rune, buf []rune
 	return nil
 }
 
+// refreshSingleLine_NO_WRAP updates the display for a single line input.
+// It handles cursor positioning and syntax highlighting.
 func (s *MLState) refreshSingleLine_NO_WRAP(prompt []rune, buf []rune, pos int) error {
+	if s.columns <= 6 {
+		return fmt.Errorf("terminal width too small: %d columns", s.columns)
+	}
+
 	pLen := countGlyphs(prompt)
 	text := string(buf)
 	cols := s.columns - 6
+
+	// Hide cursor before redrawing to prevent blinking
+	s.sendBack("\033[?25l")
+
+	// Position cursor at start of line and clear it
 	s.cursorPos(0)
 	s.sendBack("\033[K") // delete line
+
+	// Write prompt
 	s.sendBack(string(prompt))
+
+	// Apply syntax highlighting and write buffer
 	tt2, inString := RyeHighlight(text, s.lastLineString, cols)
 	s.sendBack(tt2)
 	s.inString = inString
+
+	// Position cursor correctly
 	curLeft := pLen + pos
-	s.cursorPos2(curLeft, 0) // s.prevCursorLine-curLineN)
+	if curLeft < 0 {
+		curLeft = 0
+	}
+	s.cursorPos2(curLeft, 0)
+
+	// Show cursor after redrawing is complete
+	s.sendBack("\033[?25h")
+
 	return nil
 }
 
@@ -665,8 +763,14 @@ func getLengthOfLastLine(input string) (int, bool) {
 	return len(lastLine) - 3, true // for the prefix because currently string isn't padded on left line TODO unify this
 }
 
-// signals end-of-file by pressing Ctrl-D.
+// MicroPrompt displays a prompt and handles user input with editing capabilities.
+// It returns the final input string or an error if the operation was canceled or failed.
+// The prompt is displayed with the given text and cursor position.
+// The context can be used to cancel the operation.
 func (s *MLState) MicroPrompt(prompt string, text string, pos int, ctx1 context.Context) (string, error) {
+	if ctx1 == nil {
+		return "", fmt.Errorf("context cannot be nil")
+	}
 	// history related
 	refreshAllLines := false
 	historyEnd := ""
@@ -763,17 +867,25 @@ startOfHere:
 
 	tabCompletionWasActive := false
 
+	log.Println("MicroPrompt started")
+
 	// mainLoop:
 	for {
 		select {
 		case <-ctx1.Done():
+			log.Println("Context canceled")
 			fmt.Println("Exiting due to cancelation")
-			return "", nil
+			return "", fmt.Errorf("operation canceled by context")
 		default:
 			trace("POS: ")
 			trace(pos)
 			// receive next character from channel
 			next := <-s.next
+			if s.next == nil {
+				return "", fmt.Errorf("event channel is nil")
+			}
+
+			log.Println("Received key event:", next)
 			// s.sendBack(next)
 			// err := nil
 			// LBL haveNext:
@@ -825,7 +937,7 @@ startOfHere:
 					pos = 0
 					s.restartPrompt() */
 					fmt.Println("Ctrl+D detected in Microliner")
-					return "", nil
+					return "", fmt.Errorf("input canceled with Ctrl+D")
 				case "a":
 					pos = 0
 					// s.needRefresh = true
@@ -1078,6 +1190,25 @@ startOfHere:
 						pos -= n
 						s.needRefresh = true
 					}
+				case 127: // Alt+Backspace (Delete word)
+					if pos <= 0 {
+						s.doBeep()
+					} else {
+						// Find the start of the current word
+						newPos := pos
+						// Skip trailing whitespace
+						for newPos > 0 && unicode.IsSpace(line[newPos-1]) {
+							newPos--
+						}
+						// Skip non-whitespace (the word itself)
+						for newPos > 0 && !unicode.IsSpace(line[newPos-1]) {
+							newPos--
+						}
+						// Delete from newPos to pos
+						line = append(line[:newPos], line[pos:]...)
+						pos = newPos
+						s.needRefresh = true
+					}
 				case 9: // Tab completion
 					line, pos, next, _ = s.tabComplete(p, line, pos, 0)
 					tabCompletionWasActive = true
@@ -1097,7 +1228,7 @@ startOfHere:
 						s.doBeep()
 					}
 				case 37: // Left
-					if pos > 1 {
+					if pos > 0 {
 						pos -= len(getSuffixGlyphs(line[:pos], 1))
 						traceTop(pos, 3)
 					} else {
@@ -1178,11 +1309,11 @@ startOfHere:
 				switch v {
 				case cr, lf:
 					if s.needRefresh {
-						err := s.refresh(p, line, pos)
-						if err != nil {
-							return "", err
-						}
-					}
+				err := s.refresh(p, line, pos)
+				if err != nil {
+					fmt.Println("Exiting due to error at refreshAllLines")
+					return "", fmt.Errorf("refresh error: %w", err)
+				}
 					if s.multiLineMode {
 						s.resetMultiLine(p, line, pos)
 					}
@@ -1528,7 +1659,9 @@ startOfHere:
 			} */
 			//if true || s.needRefresh { //&& !s.inputWaiting() {
 			// ALWAYS REFRESH SO WE HAVE JUST ONE TRUTH
+			log.Println("MICROPROMPT 2")
 			if refreshAllLines {
+				log.Println("REFRESH LLL ")
 				for i, line1 := range s.lines {
 					if i == 0 {
 						//	s.sendBack(prompt)
@@ -1547,6 +1680,7 @@ startOfHere:
 				}
 				refreshAllLines = false
 			} else {
+				log.Println("ELSE REFRESH LLL ")
 				if s.currline == 0 {
 					//	s.sendBack(prompt)
 					p = []rune(prompt)
@@ -1558,7 +1692,7 @@ startOfHere:
 				err := s.refresh(p, line, pos)
 				if err != nil {
 					fmt.Println("Exiting due to error at refresh")
-					return "", err
+					return "", fmt.Errorf("refresh error: %w", err)
 				}
 			}
 			// } else {

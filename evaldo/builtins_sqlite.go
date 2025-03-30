@@ -14,7 +14,7 @@ import (
 	"strconv"
 	"strings"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/glebarez/sqlite"
 )
 
 const MODE_SQLITE = 1
@@ -107,7 +107,7 @@ var Builtins_sqlite = map[string]*env.Builtin{
 			switch str := arg0.(type) {
 			case env.Uri:
 				// fmt.Println(str.Path)
-				db, _ := sql.Open("sqlite3", str.GetPath()) // TODO -- we need to make path parser in URI then this will be path
+				db, _ := sql.Open("sqlite", str.GetPath()) // TODO -- we need to make path parser in URI then this will be path
 				return *env.NewNative(ps.Idx, db, "Rye-sqlite")
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.UriType}, "sqlite-schema//open")

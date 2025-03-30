@@ -1,0 +1,56 @@
+; Test match-block with type checking using xwords
+
+; Test successful matching with integer type
+print "Test 1: match-block with integer type check"
+result1: match-block { 123 } { <integer> }
+print2 "result1 =" result1
+print ""
+
+; Test successful matching with string type
+print "Test 2: match-block with string type check"
+result2: match-block { "hello" } { <string> }
+print2 "result2 =" result2
+print ""
+
+; Test successful matching with block type
+print "Test 3: match-block with block type check"
+result3: match-block { { 1 2 3 } } { <block> }
+print2 "result3 =" result3
+print ""
+
+; Test successful matching with decimal type
+print "Test 4: match-block with decimal type check"
+result4: match-block { 123.45 } { <decimal> }
+print2 "result4 =" result4
+print ""
+
+; Test failure due to type mismatch (expecting integer, got string)
+print "Test 5: match-block with type mismatch (should fail)"
+try {
+    result5: match-block { "not an integer" } { <integer> }
+    print "This should not print if match-block fails correctly"
+}
+print "match-block correctly failed due to type mismatch"
+print ""
+
+; Test failure due to type mismatch (expecting string, got integer)
+print "Test 6: match-block with type mismatch (should fail)"
+try {
+    result6: match-block { 123 } { <string> }
+    print "This should not print if match-block fails correctly"
+}
+print "match-block correctly failed due to type mismatch"
+print ""
+
+; Test with binding and type checking
+print "Test 7: match-block with binding and type checking"
+result7: match-block { 123 "hello" { 1 2 3 } } { a <string> <block> }
+print2 "a =" a
+print2 "result7 =" result7
+print ""
+
+; Test with nested blocks and type checking
+print "Test 8: match-block with nested blocks and type checking"
+result8: match-block { 123 { "hi" 44 } } { <integer> { <string> <integer> } }
+print2 "result8 =" result8
+print ""

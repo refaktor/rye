@@ -154,7 +154,7 @@ func __https_s_get(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 
 			return *env.NewString(string(body))
 		} else {
 			ps.FailureFlag = true
-			errMsg := fmt.Sprintf("Status Code: %v, Body: %v", resp.StatusCode, string(body))
+			errMsg := fmt.Sprintf("Status Code: %v", resp.StatusCode)
 			return MakeBuiltinError(ps, errMsg, "__https_s_get")
 		}
 		// log.Printf("Data read: %s\n", data)
@@ -1041,7 +1041,7 @@ var Builtins_io = map[string]*env.Builtin{
 					return *env.NewNative(ps.Idx, resp.Body, "https-schema://open")
 				} else {
 					ps.FailureFlag = true
-					errMsg := fmt.Sprintf("Status Code: %v, Body: %v", resp.StatusCode)
+					errMsg := fmt.Sprintf("Status Code: %v", resp.StatusCode)
 					return MakeBuiltinError(ps, errMsg, "https-schema://open")
 				}
 			default:

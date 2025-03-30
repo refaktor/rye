@@ -331,6 +331,7 @@ type ProgramState struct {
 	Dialect      DoDialect
 	Stack        *EyrStack
 	Embedded     bool
+	DeferBlocks  []Block // blocks to be executed when function exits or program terminates
 }
 
 type DoDialect int
@@ -365,6 +366,7 @@ func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
 		Rye2Dialect,
 		NewEyrStack(),
 		false,
+		make([]Block, 0), // Initialize empty slice for deferred blocks
 	}
 	return &ps
 }
@@ -393,6 +395,7 @@ func NewProgramStateNEW() *ProgramState {
 		Rye2Dialect,
 		NewEyrStack(),
 		false,
+		make([]Block, 0), // Initialize empty slice for deferred blocks
 	}
 	return &ps
 }
@@ -438,7 +441,8 @@ type LiveEnv struct {
 func NewLiveEnv() *LiveEnv {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		fmt.Println("Error creating watcher:", err) // TODO -- if this fails show error in red, but make it so that rye runs anyway (check if null at repl for starters)
+		// TODO -- temporary removed for WASM and we don't use this at the moment ... solve at build time with flags
+		// fmt.Println("Error creating watcher:", err) // TODO -- if this fails show error in red, but make it so that rye runs anyway (check if null at repl for starters)
 		return nil
 	}
 

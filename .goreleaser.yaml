@@ -6,6 +6,8 @@
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
 # vim: set ts=2 sw=2 tw=0 fo=cnqoj
 
+# Trying normal build (not tiny), without CGO (sqlite was ported to pure) and for fewer platforms
+
 version: 2
 
 before:
@@ -32,19 +34,24 @@ builds:
     ignore: # List of combinations of GOOS + GOARCH + GOARM to ignore.
       - goos: windows
         goarch: arm
+      - goos: windows
+        goarch: arm64
+      - goos: linux
+        goarch: arm
+      - goos: linux
+        goarch: arm64
 
     flags:
-    - -tags=b_tiny
+    # - -tags=b_tiny
     - -trimpath
 
     overrides:
     - goarch: wasm
       goos: js
       flags:
-      - -tags=b_tiny,b_wasm
+      - -tags=b_tiny,b_wasm,no_sqlite,no_psql,no_mysql
       - -trimpath
-
-
+      
 archives:
   - formats: [ 'tar.gz' ]
     # this name template makes the OS and Arch compatible with the results of `uname`.
@@ -70,7 +77,7 @@ kos:  # See https://goreleaser.com/customization/ko/
     preserve_import_paths: false
     platforms:
     - linux/amd64
-    - linux/arm64
+    # - linux/arm64
 
 snapshot:
   version_template: "{{ incpatch .Version }}-next"

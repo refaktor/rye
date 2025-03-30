@@ -1,0 +1,53 @@
+; Test match-block with get-words
+
+; Test matching with get-words
+print "Test 1: match-block with get-words"
+x: 234
+result1: match-block { 123 234 } { 123 ?x }
+print2 "result1 =" result1
+print ""
+
+; Test failure when get-word value doesn't match
+print "Test 2: match-block with get-words (should fail)"
+y: 456
+try {
+    result2: match-block { 123 789 } { 123 ?y }
+    print "This should not print if match-block fails correctly"
+}
+print "match-block correctly failed due to value mismatch"
+print ""
+
+; Test with multiple get-words
+print "Test 3: match-block with multiple get-words"
+a: 100
+b: 200
+result3: match-block { 100 200 300 } { ?a ?b c }
+print2 "c =" c
+print2 "result3 =" result3
+print ""
+
+; Test with get-words in nested blocks
+print "Test 4: match-block with get-words in nested blocks"
+d: "hi"
+e: 44
+result4: match-block { 123 { "hi" 44 } 789 } { x { ?d ?e } z }
+print2 "x =" x
+print2 "z =" z
+print2 "result4 =" result4
+print ""
+
+; Test with get-words and type checking
+print "Test 5: match-block with get-words and type checking"
+f: 123
+result5: match-block { 123 "hello" } { ?f <string> }
+print2 "result5 =" result5
+print ""
+
+; Test with get-words and code evaluation
+print "Test 6: match-block with get-words and code evaluation"
+g: 100
+h: 0
+result6: match-block { 100 200 } { ?g [ h:: . ] }
+print2 "h =" h
+print2 "result6 =" result6
+print ""

@@ -51,10 +51,27 @@ func EvalBlock(ps *env.ProgramState) *env.ProgramState {
 	case env.EyrDialect:
 		return Eyr_EvalBlockInside(ps, nil, false) // TODO ps.Stack is already in ps ... refactor
 	case env.Rye0Dialect:
+		// Check if we should use the fast evaluator
+		if useFastEvaluator {
+			return Rye0_FastEvalBlock(ps)
+		}
 		return Rye0_EvalBlockInj(ps, nil, false) // TODO ps.Stack is already in ps ... refactor
 	default:
 		return EvalBlockInj(ps, nil, false)
 	}
+}
+
+// Flag to control whether to use the fast evaluator
+var useFastEvaluator = false
+
+// EnableFastEvaluator enables the fast evaluator for Rye0 dialect
+func EnableFastEvaluator() {
+	useFastEvaluator = true
+}
+
+// DisableFastEvaluator disables the fast evaluator for Rye0 dialect
+func DisableFastEvaluator() {
+	useFastEvaluator = false
 }
 
 // DESCR: eval a block in specific context
@@ -81,6 +98,7 @@ func EvalBlockInjMultiDialect(ps *env.ProgramState, inj env.Object, injnow bool)
 		return Eyr_EvalBlockInside(ps, inj, injnow) // TODO ps.Stack is already in ps ... refactor
 	case env.Rye0Dialect:
 		return Rye0_EvalBlockInj(ps, inj, injnow) // TODO ps.Stack is already in ps ... refactor
+		// return Rye0_EvaluateBlock(ps) // TODO ps.Stack is already in ps ... refactor
 	default:
 		return EvalBlockInj(ps, inj, injnow)
 	}
@@ -109,6 +127,11 @@ func EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) *env.Progra
 		// if return flag was raised return ( errorflag I think would return in previous if anyway)
 		// --- 20201213 --
 		if checkErrorReturnFlag(ps) {
+			// Execute deferred blocks before returning
+			if len(ps.DeferBlocks) > 0 {
+				fmt.Println(111111)
+				// ExecuteDeferredBlocks(ps)
+			}
 			return ps
 		}
 		ps, injnow = MaybeAcceptComma(ps, inj, injnow)
@@ -119,6 +142,12 @@ func EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) *env.Progra
 	//	return ps
 	//}
 	//es.Inj = nil
+
+	// Execute deferred blocks before returning from the block
+	// if len(ps.DeferBlocks) > 0 {
+	//	fmt.Println(222)
+	// ExecuteDeferredBlocks(ps)
+	// }
 	return ps
 }
 
@@ -403,6 +432,8 @@ func EvalExpressionConcrete(ps *env.ProgramState) *env.ProgramState {
 			return rr
 		case env.BuiltinType:
 			return CallBuiltin(object.(env.Builtin), ps, nil, false, false, nil)
+		case env.VarBuiltinType:
+			return CallVarBuiltin(object.(env.VarBuiltin), ps, nil, false, false, nil)
 		case env.GenwordType:
 			return EvalGenword(ps, object.(env.Genword), nil, false)
 		case env.SetwordType:
@@ -436,6 +467,10 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 	switch word := word1.(type) {
 	case env.Word:
 		object, found := ps.Ctx.Get(word.Index)
+		//if object.Type() == env.BuiltinType {
+		//	fmt.Println("*")
+		//	ps.Ser.Put(object)
+		//}
 		return found, object, nil
 	case env.Opword:
 		object, found := ps.Ctx.Get(word.Index)
@@ -565,6 +600,13 @@ func EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toL
 			return ps
 		}
 		return CallBuiltin(bu, ps, leftVal, toLeft, pipeSecond, firstVal)
+	case env.VarBuiltinType:
+		bu := object.(env.VarBuiltin)
+
+		if checkFlagsVarBi(bu, ps, 333) {
+			return ps
+		}
+		return CallVarBuiltin(bu, ps, leftVal, toLeft, pipeSecond, firstVal)
 	default:
 		if !ps.SkipFlag {
 			ps.Res = object
@@ -602,6 +644,7 @@ func EvalModword(ps *env.ProgramState, word env.Modword) *env.ProgramState {
 
 func CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, toLeft bool, ctx *env.RyeCtx) *env.ProgramState {
 	// fmt.Println(1)
+
 	env0 := ps.Ctx // store reference to current env in local
 	var fnCtx *env.RyeCtx
 	if ctx != nil { // called via contextpath and this is the context
@@ -654,6 +697,13 @@ func CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, toLeft
 			}
 		}
 	}
+
+	defer func() {
+		if len(ps.DeferBlocks) > 0 {
+			ExecuteDeferredBlocks(ps)
+		}
+	}()
+
 	// collect arguments
 	for i := ii; i < fn.Argsn; i += 1 {
 		ps = evalExprFn(ps, true)
@@ -695,6 +745,7 @@ func CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, toLeft
 	ps.Ser = ser0
 	ps.ReturnFlag = false
 	trace2("Before user function returns")
+
 	return ps
 	/*         for (var i=0;i<h.length;i+=1) {
 	    var e = this.evalExpr(block,pos,state,depth+1);
@@ -764,6 +815,11 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 	/// ps.Ser = fn.Body.Series
 	/// env0 = ps.Ctx
 	/// ps.Ctx = fnCtx
+	defer func() {
+		if len(psX.DeferBlocks) > 0 {
+			ExecuteDeferredBlocks(ps)
+		}
+	}()
 
 	var result *env.ProgramState
 	psX.Ser.SetPos(0)
@@ -835,6 +891,12 @@ func CallFunctionArgs4(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 	// END TRY
 	var result *env.ProgramState
 	psX.Ser.SetPos(0)
+	defer func() {
+		if len(psX.DeferBlocks) > 0 {
+			ExecuteDeferredBlocks(ps)
+		}
+	}()
+
 	result = EvalBlockInj(psX, arg0, true)
 	MaybeDisplayFailureOrError(result, result.Idx, "call func args 4")
 	if result.ForcedResult != nil {
@@ -910,6 +972,12 @@ func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, a
 	// END TRY
 	var result *env.ProgramState
 	psX.Ser.SetPos(0)
+	defer func() {
+		if len(psX.DeferBlocks) > 0 {
+			ExecuteDeferredBlocks(ps)
+		}
+	}()
+
 	if len(args) > 0 {
 		result = EvalBlockInj(psX, args[0], true)
 	} else {
@@ -1076,6 +1144,45 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 	return ps
 }
 
+func CallVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, arg0_ env.Object, toLeft bool, pipeSecond bool, firstVal env.Object) *env.ProgramState {
+
+	args := make([]env.Object, bi.Argsn)
+	ii := 0
+
+	if bi.Argsn > 0 {
+		if arg0_ != nil && !pipeSecond {
+			args[ii] = arg0_
+			ii++
+		} else if firstVal != nil && pipeSecond {
+			args[ii] = firstVal
+			ii++
+		} else if bi.Argsn > 0 {
+			EvalExpression2(ps, true)
+			args[ii] = ps.Res
+			ii++
+		}
+
+		if arg0_ != nil && pipeSecond {
+			args[ii] = arg0_
+			ii++
+		} else if bi.Argsn > 1 {
+			EvalExpression2(ps, true)
+			args[ii] = ps.Res
+			ii++
+		}
+		//variadic version
+		for i := 2; i < bi.Argsn; i += 1 {
+			EvalExpression2(ps, true)
+			args[ii] = ps.Res
+			ii++
+
+		}
+	}
+
+	ps.Res = bi.Fn(ps, args...)
+	return ps
+}
+
 func DirectlyCallBuiltin(ps *env.ProgramState, bi env.Builtin, a0 env.Object, a1 env.Object) env.Object {
 	// let's try to make it without array allocation and without variadic arguments that also maybe actualizes splice
 	// up to 2 curried variables and 2 in caller
@@ -1158,6 +1265,46 @@ func MaybeDisplayFailureOrErrorWASM(es *env.ProgramState, genv *env.Idxs, printf
 //
 //	and rewrite
 func checkFlagsBi(bi env.Builtin, ps *env.ProgramState, n int) bool {
+	trace("CHECK FLAGS BI")
+	//trace(n)
+	//trace(ps.Res)
+	//	trace(bi)
+	if ps.FailureFlag {
+		trace("------ > FailureFlag")
+		if bi.AcceptFailure {
+			trace2("----- > Accept Failure")
+		} else {
+			// fmt.Println("checkFlagsBi***")
+			trace2("Fail ------->  Error.")
+			switch err := ps.Res.(type) {
+			case env.Error:
+				if err.CodeBlock.Len() == 0 {
+					err.CodeBlock = ps.Ser
+					err.CodeContext = ps.Ctx
+				}
+			case *env.Error:
+				if err.CodeBlock.Len() == 0 {
+					err.CodeBlock = ps.Ser
+					err.CodeContext = ps.Ctx
+				}
+			}
+			ps.ErrorFlag = true
+			return true
+		}
+	} else {
+		trace2("NOT FailuteFlag")
+	}
+	return false
+}
+
+// if there is failure flag and given builtin doesn't accept failure
+// then error flag is raised and true returned
+// otherwise false
+// USED -- before evaluating a builtin
+// TODO -- once we know it works in all situations remove all debug lines
+//
+//	and rewrite
+func checkFlagsVarBi(bi env.VarBuiltin, ps *env.ProgramState, n int) bool {
 	trace("CHECK FLAGS BI")
 	//trace(n)
 	//trace(ps.Res)
@@ -1297,4 +1444,28 @@ func trace3(x any) {
 	fmt.Print("\x1b[56m")
 	fmt.Print(x)
 	fmt.Println("\x1b[0m")
+}
+
+// ExecuteDeferredBlocks executes all deferred blocks in LIFO order (last in, first out)
+// and clears the deferred blocks list
+func ExecuteDeferredBlocks(ps *env.ProgramState) {
+	// Execute blocks in reverse order (LIFO - last in, first out)
+	for i := len(ps.DeferBlocks) - 1; i >= 0; i-- {
+		// Save current series and result
+		currentSer := ps.Ser
+		currentRes := ps.Res
+
+		// Set series to the deferred block
+		ps.Ser = ps.DeferBlocks[i].Series
+
+		// Evaluate the block
+		EvalBlock(ps)
+
+		// Restore series and result
+		ps.Ser = currentSer
+		ps.Res = currentRes
+	}
+
+	// Clear the deferred blocks
+	ps.DeferBlocks = make([]env.Block, 0)
 }

@@ -1,0 +1,89 @@
+; Test script for the fast evaluator
+
+; Test the standard evaluator
+print "Testing standard evaluator..."
+start: now/precise
+
+; Do a simple calculation with the standard evaluator
+result: do {
+    10 + 20
+}
+
+end: now/precise
+print [ "Standard evaluator result:" result "took" ( end - start ) "seconds" ]
+
+; Test the fast evaluator
+print "Testing fast evaluator..."
+start:: now/precise
+
+; Do the same calculation with the fast evaluator
+result:: do-fast {
+    10 + 20
+}
+
+end:: now/precise
+print rejoin [ "Fast evaluator result: " result " took " ( end - start ) " seconds" ]
+
+; Test a more complex calculation
+print "Testing complex calculation with standard evaluator..."
+start:: now/precise
+
+; Do a more complex calculation with the standard evaluator
+result:: do {
+    a:: 10
+    b:: 20
+    c:: 10 + 02
+}
+
+end:: now/precise
+print rejoin [ "Standard complex result: " result " took " ( end - start ) " seconds" ]
+
+; Test a more complex calculation with the fast evaluator
+print "Testing complex calculation with fast evaluator..."
+start:: now/precise
+
+; Do the same complex calculation with the fast evaluator
+result:: do-fast {
+    a:: 10
+    b:: 20
+    c:: 10 + 02
+}
+
+end:: now/precise
+print rejoin [ "Fast complex result: " result " took " ( end - start ) " seconds" ]
+
+; Test a loop
+print "Testing loop with standard evaluator..."
+start:: now/precise
+
+; Do a loop with the standard evaluator
+result:: do {
+    sum:: 0
+    i:: 0
+    while { i < 1000 } {
+        sum:: sum + i
+        i:: i + 1
+    }
+    sum
+}
+
+end:: now/precise
+print rejoin [ "Standard loop result: " result " took " ( end - start ) " seconds" ]
+
+; Test a loop with the fast evaluator
+print "Testing loop with fast evaluator..."
+start:: now/precise
+
+; Do the same loop with the fast evaluator
+result:: do-fast {
+    sum:: 0
+    i:: 0
+    while { i < 1000 } {
+        sum:: sum + i
+        i:: i + 1
+    }
+    sum
+}
+
+end:: now/precise
+print rejoin [ "Fast loop result: " result " took " ( end - start ) " seconds" ]

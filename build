@@ -1,1 +1,1 @@
-go build -o bin/rye
+go build  -ldflags="-s -w" -o bin/rye

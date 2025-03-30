@@ -1,0 +1,52 @@
+;# Loop benchmarks
+; Doing simple loop 1million times to get some basic sense of speedo
+
+do-benchmarks: fn { dsl } { 
+
+	prns "integer:"
+
+	print time-it { dsl { prns loop 1000000 { 123 } } }
+
+	prns "string:"
+
+	print time-it { dsl { prns loop 1000000 { "124" } } }
+
+	prns "block:"
+
+	print time-it { dsl { prns loop 1000000 { { 123 } } } }
+
+	prns "builtins:"
+
+	print time-it { dsl { prns loop 1000000 { _+ _+ 1 1 1 } } }
+
+	prns "word.lookup:"
+	private {
+		a: 1 b: "2" c: { 3 }
+		print time-it { dsl { prns loop 1000000 { a b c } } }
+	}
+
+	prns "mod-word:"
+	private {
+		print time-it { dsl { prns loop 1000000 { a:: b:: c:: 123 } } }
+	}
+
+	prns "fn-flat:"
+	private {
+		a: does { 123 }
+		print time-it { dsl { prns loop 1000000 { a a a } } }
+	}
+
+	prns "fn-nest:"
+	private {
+		a: does { b } b: does { c } c: does { 123 }
+		print time-it { dsl { prns loop 1000000 { a } } }
+	}
+}
+
+print "== DO mode (base evaluator) =="
+
+do-benchmarks ?do
+
+print "== RYE0 mode (some more optimisations) =="
+
+do-benchmarks ?rye0

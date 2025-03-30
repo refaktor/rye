@@ -55,3 +55,8 @@ cmd/parse_builtins/parse_builtinscmd/rbit/rbit
 
 cmd/rbit/rbit
 cmd/cato/cato
+*ORIGINAL
+*.old
+*.bak
+*.log
+*.old.*

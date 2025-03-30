@@ -12,7 +12,7 @@ import (
 	"github.com/refaktor/rye/env"
 )
 
-func _emptyRM() env.Dict {
+func _emptyJSONDict() env.Dict {
 	return env.Dict{}
 }
 

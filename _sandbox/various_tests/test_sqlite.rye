@@ -1,0 +1,17 @@
+; Test SQLite functionality with the new driver
+
+db: open sqlite://test.db
+
+; Create a table
+db .exec "CREATE TABLE IF NOT EXISTS test_table (id INTEGER, name TEXT)"
+
+; Insert some data
+db .exec "INSERT INTO test_table VALUES (1, 'Test 1')"
+db .exec "INSERT INTO test_table VALUES (2, 'Test 2')"
+
+; Query the data
+result: db .query "SELECT * FROM test_table"
+
+; Print the result
+print "Query result:"
+display result

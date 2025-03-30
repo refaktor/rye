@@ -1,0 +1,33 @@
+
+d:: dict { add 2 inc 1 }
+code2:: { 1 "add" 2 3 "mul" 4 "add" 5 }
+
+; Rye0 compiler (stage 1 - strings as opwords, )
+
+code3:: { 1 .add 2 3 4 5 .mul 6 .add 7 .div 8 }
+
+compile-expression:: fn { b } {
+	.peek |^fix { [ 'end b ] } :w .type? .switch {
+		integer { check-fwd next b w }
+		opword { [ 'err3 next b ] }
+	}
+}
+
+check-fwd:: fn { b v } {
+	.peek |^fix { [ v b  ] } :w .type? .switch {
+		opword { r: compile-expression next b [ [ to-word w v first r ] second r ] }
+		integer { [ v b ] }
+	}
+}
+
+compile-block:: fn { b c } {
+	.peek |^fix { c } rx: compile-expression b , compile-block second rx concat c first rx
+}
+
+
+
+
+
+;	.pass { print "PILE:" , .probe }
+;	.pass { print "COM:" , .probe , probe c }
+;	.pass { print "CHECKFWD:" , .probe }

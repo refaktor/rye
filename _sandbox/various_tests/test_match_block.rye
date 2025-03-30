@@ -1,0 +1,36 @@
+; Test the match-block function
+
+; Test successful matching with simple values
+result1: match-block { 1 2 3 } { a b c }
+print "Test 1: match-block { 1 2 3 } { a b c }"
+print "a = " a
+print "b = " b
+print "c = " c
+print "result1 = " result1
+print ""
+
+; Test successful matching with mixed values
+result2: match-block { "hello" 42 true } { str num bool }
+print "Test 2: match-block with mixed values"
+print "str = " str
+print "num = " num
+print "bool = " bool
+print "result2 = " result2
+print ""
+
+; Test failure due to different lengths
+print "Test 3: match-block { 1 2 } { a b c } (should fail)"
+try {
+    result3: match-block { 1 2 } { a b c }
+    print "This should not print if match-block fails correctly"
+}
+print "match-block correctly failed due to different lengths"
+print ""
+
+; Test failure due to pattern item not matching block value
+print "Test 4: match-block { 1 2 3 } { a 5 c } (should fail)"
+try {
+    result4: match-block { 1 2 3 } { a 5 c }
+    print "This should not print if match-block fails correctly"
+}
+print "match-block correctly failed due to pattern item not matching block value"

@@ -3,13 +3,16 @@
 package evaldo
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	// "github.com/eiannone/keyboard"
 	"github.com/refaktor/keyboard"
@@ -17,7 +20,6 @@ import (
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/loader"
 	"github.com/refaktor/rye/term"
-	"github.com/refaktor/rye/util"
 )
 
 var (
@@ -165,8 +167,9 @@ type Repl struct {
 
 	fullCode string
 
-	stack      *env.EyrStack // part of PS no ... move there, remove here
-	prevResult env.Object
+	stack         *env.EyrStack // part of PS no ... move there, remove here
+	prevResult    env.Object
+	captureStdout bool
 }
 
 func (r *Repl) recieveMessage(message string) {
@@ -174,6 +177,10 @@ func (r *Repl) recieveMessage(message string) {
 }
 
 func (r *Repl) recieveLine(line string) string {
+	// Use fmt.Println for terminal output, log.Println for debugging
+	// This ensures log messages go to the browser console in WASM mode
+	// and don't interfere with terminal output
+	log.Println("RECV LINE: " + line)
 	res := r.evalLine(r.ps, line)
 	if r.showResults && len(res) > 0 {
 		fmt.Println(res)
@@ -182,6 +189,11 @@ func (r *Repl) recieveLine(line string) string {
 }
 
 func (r *Repl) evalLine(es *env.ProgramState, code string) string {
+	// Ensure we print a newline before processing to prevent overwriting previous output
+	if r.fullCode == "" {
+		fmt.Println()
+	}
+
 	if es.LiveObj != nil {
 		es.LiveObj.PsMutex.Lock()
 		for _, update := range es.LiveObj.Updates {
@@ -193,9 +205,64 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 		es.LiveObj.PsMutex.Unlock()
 	}
 
-	// if last character is space is turns to multiline more and doesn't eval yet, but we
-	// want to move this to microliner, so we can edit multiple lines there
-	multiline := len(code) > 1 && code[len(code)-1:] == " "
+	// More robust multiline input detection
+	// Check for explicit multiline indicators or incomplete syntax
+	multiline := false
+
+	// 1. Check for explicit continuation character at the end (backslash)
+	if len(code) > 0 && strings.HasSuffix(strings.TrimSpace(code), "\\") {
+		multiline = true
+		// Remove the continuation character for processing
+		code = strings.TrimSuffix(strings.TrimSpace(code), "\\")
+	}
+
+	// 2. Check for unbalanced brackets/braces/parentheses
+	if !multiline {
+		openBraces := 0
+		openBrackets := 0
+		openParens := 0
+		inString := false
+		stringChar := ' '
+
+		for _, char := range code {
+			// Handle string literals to avoid counting brackets inside strings
+			if (char == '"' || char == '`') && (stringChar == ' ' || stringChar == char) {
+				if !inString {
+					inString = true
+					stringChar = char
+				} else {
+					inString = false
+					stringChar = ' '
+				}
+				continue
+			}
+
+			if !inString {
+				switch char {
+				case '{':
+					openBraces++
+				case '}':
+					openBraces--
+				case '[':
+					openBrackets++
+				case ']':
+					openBrackets--
+				case '(':
+					openParens++
+				case ')':
+					openParens--
+				}
+			}
+		}
+
+		// If any delimiters are unbalanced, consider it multiline
+		multiline = openBraces > 0 || openBrackets > 0 || openParens > 0
+	}
+
+	// 3. Check for incomplete block definitions that end with a colon
+	if !multiline && strings.HasSuffix(strings.TrimSpace(code), ":") {
+		multiline = true
+	}
 
 	comment := regexp.MustCompile(`\s*;`)
 	line := comment.Split(code, 2) //--- just very temporary solution for some comments in repl. Later should probably be part of loader ... maybe?
@@ -208,8 +275,55 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 		r.fullCode += lineReal
 
 		block, genv := loader.LoadString(r.fullCode, false)
+
+		// Check if the result is an error
+		if err, isError := block.(env.Error); isError {
+			fmt.Println("\033[31mParsing error: " + err.Message + "\033[0m")
+			// Add the line to history even when there's a syntax error
+			r.ml.AppendHistory(code)
+			r.fullCode = ""
+			return ""
+		}
+
 		block1 := block.(env.Block)
 		es = env.AddToProgramState(es, block1.Series, genv)
+
+		// STDIO CAPTURE START
+
+		// Define variables outside if statement
+		var r1 *os.File
+		var w *os.File
+		var err error
+		var oldStdout *os.File
+		var stdoutCh chan string
+
+		if r.captureStdout {
+			// Create a pipe to capture stdout
+			r1, w, err = os.Pipe()
+			if err != nil {
+				log.Printf("Failed to create pipe: %v", err)
+				// resultCh <- "Error: Failed to capture output"
+				// continue
+			}
+
+			// Save the original stdout
+			oldStdout = os.Stdout
+			// Replace stdout with our pipe writer
+			os.Stdout = w
+
+			// Create a channel for the captured output
+			stdoutCh = make(chan string)
+
+			// Start a goroutine to read from the pipe
+			go func() {
+				var buf bytes.Buffer
+				_, err := io.Copy(&buf, r1)
+				if err != nil {
+					log.Printf("Error reading from pipe: %v", err)
+				}
+				stdoutCh <- buf.String()
+			}()
+		}
 
 		// EVAL THE DO DIALECT
 		if r.dialect == "rye" {
@@ -256,11 +370,34 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 			output = fmt.Sprint("\033[38;5;37m" + p + resultStr + "\x1b[0m")
 		}
 
+		if r.captureStdout {
+			// STDOUT CAPTURE
+			// Close the pipe writer to signal EOF to the reader
+			w.Close()
+
+			// Restore the original stdout
+			os.Stdout = oldStdout
+
+			// Get the captured stdout
+			capturedOutput := <-stdoutCh
+
+			log.Println("CAPTURED STDOUT")
+			log.Println(capturedOutput)
+
+			// Close the pipe reader
+			r1.Close()
+			// STDOUT CAPTURE END
+			output = capturedOutput + output
+		}
 		es.ReturnFlag = false
 		es.ErrorFlag = false
 		es.FailureFlag = false
 
+		r.ml.AppendHistory(code)
+
 		r.fullCode = ""
+		r.ml.AppendHistory(code)
+		return output
 	}
 
 	r.ml.AppendHistory(code)
@@ -334,15 +471,18 @@ func constructKeyEvent(r rune, k keyboard.Key) term.KeyEvent {
 	case keyboard.KeyTab:
 		code = 9
 	case keyboard.KeyBackspace:
+		// For Ctrl+Backspace, we need to set a different code
+		// to distinguish it from regular backspace
 		ch = "backspace"
 		ctrl = true
-		code = 8 // Consistent with plain Backspace
+		code = 8 // Use regular backspace code
 	case keyboard.KeyBackspace2:
 		code = 8
-	// case keyboard.KeyAltBackspace:
-	//	ch = "backspace"
-	//	alt = true
-	//	code = 8 // Consistent with plain Backspace
+	// Add special handling for Alt+Backspace
+	// In many terminals, Alt+key combinations are sent as Escape followed by the key
+	// or they might be detected in a platform-specific way
+	// We'll add a special case to detect when Alt is pressed with Backspace
+	// and map it to the correct event for word deletion
 	case keyboard.KeyDelete:
 		code = 46
 	case keyboard.KeyArrowRight:
@@ -375,28 +515,49 @@ func isCursorAtBottom() bool { // TODO --- doesn't seem to work and probably don
 }
 
 func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here because of some odd options we were experimentally adding
+	// Configure log to not include date/time prefix for cleaner output
+	log.SetFlags(0)
+
+	// Print a welcome message with a newline to ensure proper spacing
+	fmt.Println("\nRye REPL started. Terminal output will be properly spaced.")
+
+	// Improved error handling for keyboard initialization
 	err := keyboard.Open()
 	if err != nil {
-		fmt.Println(err)
+		log.Printf("Failed to initialize keyboard: %v", err)
 		return
 	}
+	// Ensure keyboard is closed when function exits
+	defer func() {
+		fmt.Println("Closing keyboard...")
+		if err := keyboard.Close(); err != nil {
+			log.Printf("Error closing keyboard: %v", err)
+		}
+	}()
 
 	c := make(chan term.KeyEvent)
 	r := Repl{
-		ps:          es,
-		dialect:     dialect,
-		showResults: showResults,
-		stack:       env.NewEyrStack(),
+		ps:            es,
+		dialect:       dialect,
+		showResults:   showResults,
+		stack:         env.NewEyrStack(),
+		captureStdout: false,
 	}
 	ml := term.NewMicroLiner(c, r.recieveMessage, r.recieveLine)
 	r.ml = ml
 
-	if f, err := os.Open(history_fn); err == nil {
-		if _, err := ml.ReadHistory(f); err != nil {
-			log.Print("Error reading history file: ", err)
+	// Improved error handling for history file operations
+	f, err := os.Open(history_fn)
+	if err != nil {
+		log.Printf("Could not open history file: %v", err)
+	} else {
+		defer f.Close() // Ensure file is closed even if ReadHistory panics
+
+		if count, err := ml.ReadHistory(f); err != nil {
+			log.Printf("Error reading history file: %v", err)
+		} else {
+			fmt.Printf("Read %d history entries\n", count)
 		}
-		fmt.Println("Read history")
-		f.Close()
 	}
 
 	ml.SetCompleter(func(line string, mode int) (c []string) {
@@ -483,70 +644,74 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 		return
 	})
 
-	ctx, cancel := context.WithCancel(context.Background())
-
-	defer func() {
-		fmt.Println("Closing keyboard ...")
-		keyboard.Close()
-	}()
-
+	// Create context with timeout to prevent potential deadlocks
+	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Hour)
 	defer cancel()
 
-	// ctx := context.Background()
-	// defer os.Exit(0)
-	// defer ctx.Done()
+	// Improved error handling for keyboard events
 	go func(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
-				fmt.Println("Done Signaled")
+				fmt.Println("Context done, keyboard handler exiting")
 				return
 			default:
-				// fmt.Println("Select default")
 				r, k, keyErr := keyboard.GetKey()
-				if err != nil {
-					fmt.Println(keyErr)
-					break
+				if keyErr != nil {
+					log.Printf("Keyboard error: %v", keyErr)
+					// Don't break on transient errors, just continue
+					continue
 				}
-				if k == keyboard.KeyCtrlC && false {
-					fmt.Println("Keyboard Ctrl+C in REPL detected. Calcel called.")
-					cancel()
-					err1 := util.KillProcess(os.Getpid())
-					// err1 := syscall.Kill(os.Getpid(), syscall.SIGINT)
-					if err1 != nil {
-						fmt.Println(err.Error()) // TODO -- temprorary just printed
-					}
-					//ctx.Done()
-					// fmt.Println("")
-					// return
-					//break
-					//					os.Exit(0)
+
+				if k == keyboard.KeyCtrlC {
+					// Handle Ctrl+C properly
+					fmt.Println("\nKeyboard Ctrl+C in REPL detected. Use Ctrl-D to Exit.")
+					// cancel()
+
+					// Try to kill the process gracefully
+					// err := util.KillProcess(os.Getpid())
+					// if err != nil {
+					//	log.Printf("Error killing process: %v", err)
+					// }
+					//return
 				}
-				c <- constructKeyEvent(r, k)
+
+				// Send the key event to the channel
+				select {
+				case c <- constructKeyEvent(r, k):
+					// Key event sent successfully
+				case <-ctx.Done():
+					// Context was cancelled while trying to send
+					return
+				}
 			}
 		}
 	}(ctx)
 
+	// Improved error handling for saving history
 	defer func() {
-		// TODO -- make it save hist
-		if f, err := os.Create(history_fn); err != nil {
-			fmt.Println("Error writing history file: ", err)
-		} else {
-			if _, err := ml.WriteHistory(f); err != nil {
-				fmt.Println("Error writing history file: ", err)
-			}
-			f.Close()
+		f, err := os.Create(history_fn)
+		if err != nil {
+			log.Printf("Error creating history file: %v", err)
+			return
 		}
-		fmt.Println("Wrote history ...")
+		defer f.Close() // Ensure file is closed even if WriteHistory panics
+
+		count, err := ml.WriteHistory(f)
+		if err != nil {
+			log.Printf("Error writing history file: %v", err)
+		} else {
+			fmt.Printf("Wrote %d history entries\n", count)
+		}
 	}()
 
-	// fmt.Println("MICRO")
+	// Run the REPL with improved error handling
 	_, err = ml.MicroPrompt("x> ", "", 0, ctx)
 	if err != nil {
-		fmt.Println(err)
+		log.Printf("MicroPrompt error: %v", err)
 	}
-	fmt.Println("End of Function in REPL ...")
 
+	fmt.Println("End of Function in REPL...")
 }
 
 /*  THIS WAS DISABLED TEMP FOR WASM MODE .. 20250116 func DoGeneralInput(es *env.ProgramState, prompt string) {
@@ -571,159 +736,152 @@ func DoGeneralInputField(es *env.ProgramState, prompt string) {
 */
 
 /* func DoRyeRepl_OLD(es *env.ProgramState, showResults bool) { // here because of some odd options we were experimentally adding
-	codestr := "a: 100\nb: \"jim\"\nprint 10 + 20 + b"
-	codelines := strings.Split(codestr, ",\n")
+codestr := "a: 100\nb: \"jim\"\nprint 10 + 20 + b"
+codelines := strings.Split(codestr, ",\n")
 
-	line := liner.NewLiner()
-	defer line.Close()
+line := liner.NewLiner()
+defer line.Close()
 
-	line.SetCtrlCAborts(true)
+line.SetCtrlCAborts(true)
 
-	line.SetCompleter(func(line string) (c []string) {
-		for i := 0; i < es.Idx.GetWordCount(); i++ {
-			if strings.HasPrefix(es.Idx.GetWord(i), strings.ToLower(line)) {
-				c = append(c, es.Idx.GetWord(i))
-			}
+line.SetCompleter(func(line string) (c []string) {
+	for i := 0; i < es.Idx.GetWordCount(); i++ {
+		if strings.HasPrefix(es.Idx.GetWord(i), strings.ToLower(line)) {
+			c = append(c, es.Idx.GetWord(i))
 		}
-		return
-	})
-
-	if f, err := os.Open(history_fn); err == nil {
-		if _, err := line.ReadHistory(f); err != nil {
-			log.Print("Error reading history file: ", err)
-		}
-		f.Close()
 	}
-	//const PROMPT = "\x1b[6;30;42m Rye \033[m "
+	return
+})
 
-	shellEd := ShellEd{env.Function{}, false, make([]string, 0), "", nil}
+if f, err := os.Open(history_fn); err == nil {
+	if _, err := line.ReadHistory(f); err != nil {
+		log.Print("Error reading history file: ", err)
+	}
+	f.Close()
+}
+//const PROMPT = "\x1b[6;30;42m Rye \033[m "
 
-	// nek variable bo z listo wordow bo ki jih želi setirat v tem okolju in dokler ne pride čez bo repl spraševal za njih
-	// name funkcije pa bo prikazal v promptu dokler smo noter , spet en state var
-	// isti potek bi lahko uporabili za kreirat live validation dialekte npr daš primer podatka Dict npr za input in potem pišeš dialekt
-	// in preverjaš rezultat ... tako z hitrim reset in ponovi workflowon in prikazom rezultata
-	// to s funkcijo se bo dalo čist dobro naredit ... potem pa tudi s kontekstom ne vidim kaj bi bil problem
+shellEd := ShellEd{env.Function{}, false, make([]string, 0), "", nil}
 
-	line2 := ""
+// nek variable bo z listo wordow bo ki jih želi setirat v tem okolju in dokler ne pride čez bo repl spraševal za njih
+// name funkcije pa bo prikazal v promptu dokler smo noter , spet en state var
+// isti potek bi lahko uporabili za kreirat live validation dialekte npr daš primer podatka Dict npr za input in potem pišeš dialekt
+// in preverjaš rezultat ... tako z hitrim reset in ponovi workflowon in prikazom rezultata
+// to s funkcijo se bo dalo čist dobro naredit ... potem pa tudi s kontekstom ne vidim kaj bi bil problem
 
-	var prevResult env.Object
+line2 := ""
 
-	multiline := false
+var prevResult env.Object
 
-	for {
-		prompt, arg := genPrompt(&shellEd, line2, multiline)
+multiline := false
 
-		if code, err := line.Prompt(prompt); err == nil {
-			// strip comment
+for {
+	prompt, arg := genPrompt(&shellEd, line2, multiline)
 
-			es.LiveObj.PsMutex.Lock()
-			for _, update := range es.LiveObj.Updates {
-				fmt.Println("\033[35m((Reloading " + update + "))\033[0m")
-				block_, script_ := LoadScriptLocalFile(es, *env.NewUri1(es.Idx, "file://"+update))
-				es.Res = EvaluateLoadedValue(es, block_, script_, true)
-			}
-			es.LiveObj.ClearUpdates()
-			es.LiveObj.PsMutex.Unlock()
+	if code, err := line.Prompt(prompt); err == nil {
+		// strip comment
 
-			multiline = len(code) > 1 && code[len(code)-1:] == " "
+		es.LiveObj.PsMutex.Lock()
+		for _, update := range es.LiveObj.Updates {
+			fmt.Println("\033[35m((Reloading " + update + "))\033[0m")
+			block_, script_ := LoadScriptLocalFile(es, *env.NewUri1(es.Idx, "file://"+update))
+			es.Res = EvaluateLoadedValue(es, block_, script_, true)
+		}
+		es.LiveObj.ClearUpdates()
+		es.LiveObj.PsMutex.Unlock()
 
-			comment := regexp.MustCompile(`\s*;`)
-			line1 := comment.Split(code, 2) //--- just very temporary solution for some comments in repl. Later should probably be part of loader ... maybe?
-			//fmt.Println(line1)
-			lineReal := strings.Trim(line1[0], "\t")
+		multiline = len(code) > 1 && code[len(code)-1:] == " "
 
-			// fmt.Println("*" + lineReal + "*")
+		comment := regexp.MustCompile(`\s*;`)
+		line1 := comment.Split(code, 2) //--- just very temporary solution for some comments in repl. Later should probably be part of loader ... maybe?
+		//fmt.Println(line1)
+		lineReal := strings.Trim(line1[0], "\t")
 
-			// JM20201008
-			if lineReal == "111" {
-				for _, c := range codelines {
-					fmt.Println(c)
-				}
-			}
+		// fmt.Println("*" + lineReal + "*")
 
-			// check for #shed commands
-			maybeDoShedCommands(lineReal, es, &shellEd)
-
-			///fmt.Println(lineReal[len(lineReal)-3 : len(lineReal)])
-
-			if multiline {
-				line2 += lineReal + "\n"
-			} else {
-				line2 += lineReal
-
-				if strings.Trim(line2, " \t\n\r") == "" {
-					// ignore
-				} else if strings.Compare("((show-results))", line2) == 0 {
-					showResults = true
-				} else if strings.Compare("((hide-results))", line2) == 0 {
-					showResults = false
-				} else if strings.Compare("((return))", line2) == 0 {
-					// es.Ser = ser
-					// fmt.Println("")
-					return
-				} else {
-					//fmt.Println(lineReal)
-					block, genv := loader.LoadString(line2, false)
-					block1 := block.(env.Block)
-					es = env.AddToProgramState(es, block1.Series, genv)
-
-					// EVAL THE DO DIALECT
-					EvalBlockInj(es, prevResult, true)
-
-					if arg != "" {
-						if arg == "<-return->" {
-							shellEd.Return = es.Res
-						} else {
-							es.Ctx.Set(es.Idx.IndexWord(arg), es.Res)
-						}
-					} else {
-						if shellEd.Mode != "" {
-							if !shellEd.Pause {
-								shellEd.CurrObj.Body.Series.AppendMul(block1.Series.GetAll())
-							}
-						}
-
-						MaybeDisplayFailureOrError(es, genv)
-
-						if !es.ErrorFlag && es.Res != nil {
-							prevResult = es.Res
-							// TEMP - make conditional
-							// print the result
-							if showResults {
-								fmt.Println("\033[38;5;37m" + es.Res.Inspect(*genv) + "\x1b[0m..")
-							}
-							if es.Res != nil && shellEd.Mode != "" && !shellEd.Pause && es.Res == shellEd.Return {
-								fmt.Println(" <- the correct value was returned")
-							}
-						}
-
-						es.ReturnFlag = false
-						es.ErrorFlag = false
-						es.FailureFlag = false
-					}
-				}
-
-				line2 = ""
-			}
-
-			line.AppendHistory(code)
-		} else if err == liner.ErrPromptAborted {
-			// log.Print("Aborted")
-			break
-			//		} else if err == liner.ErrJMCodeUp {
-			/* } else if err == liner.ErrCodeUp { ... REMOVED 04.01.2022 for cleaning , figure out why I added it and if it still makes sense
-			fmt.Println("")
+		// JM20201008
+		if lineReal == "111" {
 			for _, c := range codelines {
 				fmt.Println(c)
 			}
-			MoveCursorUp(len(codelines)) * /
+		}
+
+		// check for #shed commands
+		maybeDoShedCommands(lineReal, es, &shellEd)
+
+		///fmt.Println(lineReal[len(lineReal)-3 : len(lineReal)])
+
+		if multiline {
+			line2 += lineReal + "\n"
+		} else {
+			line2 += lineReal
+
+			if strings.Trim(line2, " \t\n\r") == "" {
+				// ignore
+			} else if strings.Compare("((show-results))", line2) == 0 {
+				showResults = true
+			} else if strings.Compare("((hide-results))", line2) == 0 {
+				showResults = false
+			} else if strings.Compare("((return))", line2) == 0 {
+				// es.Ser = ser
+				// fmt.Println("")
+				return
+			} else {
+				//fmt.Println(lineReal)
+				block, genv := loader.LoadString(line2, false)
+				block1 := block.(env.Block)
+				es = env.AddToProgramState(es, block1.Series, genv)
+
+				// EVAL THE DO DIALECT
+				EvalBlockInj(es, prevResult, true)
+
+				if arg != "" {
+					if arg == "<-return->" {
+						shellEd.Return = es.Res
+					} else {
+						es.Ctx.Set(es.Idx.IndexWord(arg), es.Res)
+					}
+				} else {
+					if shellEd.Mode != "" {
+						if !shellEd.Pause {
+							shellEd.CurrObj.Body.Series.AppendMul(block1.Series.GetAll())
+						}
+					}
+
+					MaybeDisplayFailureOrError(es, genv)
+
+					if !es.ErrorFlag && es.Res != nil {
+						prevResult = es.Res
+						// TEMP - make conditional
+						// print the result
+						if showResults {
+							fmt.Println("\033[38;5;37m" + es.Res.Inspect(*genv) + "\x1b
+					es.ErrorFlag = false
+					es.FailureFlag = false
+				}
+			}
+
+			line2 = ""
+		}
+
+		line.AppendHistory(code)
+	} else if err == liner.ErrPromptAborted {
+		// log.Print("Aborted")
+		break
+		//		} else if err == liner.ErrJMCodeUp {
+		/* } else if err == liner.ErrCodeUp { ... REMOVED 04.01.2022 for cleaning , figure out why I added it and if it still makes sense
+		fmt.Println("")
+		for _, c := range codelines {
+			fmt.Println(c)
+		}
+		MoveCursorUp(len(codelines))
 		} else {
 			log.Print("Error reading line: ", err)
 			break
 		}
 	}
 
- 	if f, err := os.Create(history_fn); err != nil {
+	 if f, err := os.Create(history_fn); err != nil {
 		log.Print("Error writing history file: ", err)
 	} else {
 		if _, err := line.WriteHistory(f); err != nil {

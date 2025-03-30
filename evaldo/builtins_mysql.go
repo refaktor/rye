@@ -1,5 +1,5 @@
-//go:build !not_mysql
-// +build !not_mysql
+//go:build !no_mysql
+// +build !no_mysql
 
 package evaldo
 

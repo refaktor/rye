@@ -127,7 +127,7 @@ func load_html_Dict(es *env.ProgramState, block env.Block) (env.Dict, *env.Error
 			} else if obj.Mode == 0 { // if block is { }
 				subdmap, err := load_html_Dict(es, obj)
 				if err != nil {
-					return _emptyRM(), err
+					return EmptyRM(), err
 				}
 				trace8(" **** FOR KEYS")
 				if len(keys) > 0 {
@@ -139,12 +139,12 @@ func load_html_Dict(es *env.ProgramState, block env.Block) (env.Dict, *env.Error
 					keys = make([]string, 0)
 					conditions = make([]*HtmlNavigCondition, 0)
 				} else {
-					return _emptyRM(), env.NewError("no selectors before tag map")
+					return EmptyRM(), env.NewError("no selectors before tag map")
 				}
 			}
 		default:
 			// ni Dict ampak blok kode, vrni blok
-			return _emptyRM(), env.NewError("unknow type in block parsing TODO")
+			return EmptyRM(), env.NewError("unknow type in block parsing TODO")
 		}
 	}
 	trace8("**** RETURNING **** ")
