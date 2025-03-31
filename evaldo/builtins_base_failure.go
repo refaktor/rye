@@ -500,7 +500,7 @@ var Builtins_failure = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlockInCtx(ps, &ctx)
+					EvalBlockInCtxInj(ps, &ctx, nil, false)
 
 					// TODO -- probably shouldn't just display error ... but we return it and then handle it / display it
 					// MaybeDisplayFailureOrError(ps, ps.Idx)

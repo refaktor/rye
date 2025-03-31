@@ -1392,7 +1392,7 @@ var builtins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlockInCtx(ps, &ctx)
+					EvalBlockInCtxInj(ps, &ctx, nil, false)
 					ps.Ser = ser
 					return ps.Res
 				default:

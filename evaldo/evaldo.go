@@ -5,46 +5,23 @@ import (
 	"strconv"
 
 	"github.com/refaktor/rye/env"
-	//"fmt"
-	//"strconv"
 )
 
-// TODO NEXT -- figure out how to call a builtin function .. look at monkey
-// TODO NEXT -- figure out how to map a builtin function ... directly by word index or by the value after the index?? can the value be Go-s compiled function?
-/*
-type ProgramState struct {
-	Ser env.TSeries
-	Res env.Object
-	Env env.Env
-	Idx env.Idxs
+// Flag to control whether to use the fast evaluator
+var useFastEvaluator = false
+
+// EnableFastEvaluator enables the fast evaluator for Rye0 dialect
+func EnableFastEvaluator() {
+	useFastEvaluator = true
 }
 
-func NewProgramState(ser env.TSeries, idx env.Idxs) *ProgramState {
-	ps := ProgramState{
-		ser,
-		nil,
-		*env.NewEnv(),
-		idx,
-	}
-	return &ps
+// DisableFastEvaluator disables the fast evaluator for Rye0 dialect
+func DisableFastEvaluator() {
+	useFastEvaluator = false
 }
-*/
-// Rejy0 DO dialect evaluator works like this:
-// literal values (numbers) evaluate to itself
-// blocks return itself, don't evaluate it's contents
-// words are referenced in Env, and evaluate to it's value (which can be a literal, block, word, function or builtin)
-//  word returns it's value and evaluates it
-// functions evaluate by executing, taking objects according to spec setting local Env and evaluating body block
-// builtins evaluate by executing, collecting arguments and calling a builtin function with them
-// setwords take expression on the right and sets an environment reference to that word
-//
-// The basic goal of Rejy0 evaluator is to run fibonacci and (factorial 10000x) and make basic function calls fast enough
-//  Goal is to reach speed similar to Rebol2 and Red
-//
-// Rejy1 and 2 will have a little more complex evaluators with strings, infix, postfix, ...
-// We should keep separate evaluators possible at any time to test for regressions while adding those features
-//
 
+// EVALUATE BLOCK
+//
 // DESCR: the most general EvalBlock
 func EvalBlock(ps *env.ProgramState) *env.ProgramState {
 	switch ps.Dialect {
@@ -61,29 +38,7 @@ func EvalBlock(ps *env.ProgramState) *env.ProgramState {
 	}
 }
 
-// Flag to control whether to use the fast evaluator
-var useFastEvaluator = false
-
-// EnableFastEvaluator enables the fast evaluator for Rye0 dialect
-func EnableFastEvaluator() {
-	useFastEvaluator = true
-}
-
-// DisableFastEvaluator disables the fast evaluator for Rye0 dialect
-func DisableFastEvaluator() {
-	useFastEvaluator = false
-}
-
-// DESCR: eval a block in specific context
-func EvalBlockInCtx(ps *env.ProgramState, ctx *env.RyeCtx) *env.ProgramState {
-	ctx2 := ps.Ctx
-	ps.Ctx = ctx
-	res := EvalBlockInj(ps, nil, false)
-	ps.Ctx = ctx2
-	return res
-}
-
-// DESCR: eval a block in specific context
+// Eval block in specific context and inject a value
 func EvalBlockInCtxInj(ps *env.ProgramState, ctx *env.RyeCtx, inj env.Object, injnow bool) *env.ProgramState {
 	ctx2 := ps.Ctx
 	ps.Ctx = ctx
@@ -92,6 +47,7 @@ func EvalBlockInCtxInj(ps *env.ProgramState, ctx *env.RyeCtx, inj env.Object, in
 	return res
 }
 
+// This is the evaluator we use for general code, because it can be multidialect
 func EvalBlockInjMultiDialect(ps *env.ProgramState, inj env.Object, injnow bool) *env.ProgramState { // TODO temp name -- refactor
 	switch ps.Dialect {
 	case env.EyrDialect:
@@ -104,50 +60,24 @@ func EvalBlockInjMultiDialect(ps *env.ProgramState, inj env.Object, injnow bool)
 	}
 }
 
-// DESCR: the main evaluator of block
 func EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) *env.ProgramState {
-	//fmt.Println("BEFORE BLOCK ***")
 	// repeats until at the end of the block
 	for ps.Ser.Pos() < ps.Ser.Len() {
-		//fmt.Println("EVALBLOCK: " + strconv.FormatInt(int64(es.Ser.Pos()), 10))
-		//fmt.Println("EVALBLOCK N: " + strconv.FormatInt(int64(es.Ser.Len()), 10))
-		// TODO --- look at JS code for eval .. what state we carry around
-		// TODO --- probably block, position, env ... pack all this into one struct
-		//		--- that could be passed in and returned from eval functions (I think)
-		// evaluate expression
 		ps, injnow = EvalExpressionInj(ps, inj, injnow)
-		// check and raise the flags if needed if true (error) return
-		// --- 20201213: removed because require didn't really work :	if checkFlagsAfterBlock(ps, 101) {
-		// we could add current error, block and position to the trace
-		//		return ps
-		//	}
 		if checkFlagsAfterBlock(ps, 101) {
 			return ps
 		}
 		// if return flag was raised return ( errorflag I think would return in previous if anyway)
-		// --- 20201213 --
 		if checkErrorReturnFlag(ps) {
 			// Execute deferred blocks before returning
 			if len(ps.DeferBlocks) > 0 {
-				fmt.Println(111111)
+				fmt.Println("TEMP: EvalBlockInj DeferBlocks triggered")
 				// ExecuteDeferredBlocks(ps)
 			}
 			return ps
 		}
 		ps, injnow = MaybeAcceptComma(ps, inj, injnow)
-		//es.Res.Trace("After eval expression")
 	}
-	// added here from above 20201213
-	//if checkErrorReturnFlag(ps) {
-	//	return ps
-	//}
-	//es.Inj = nil
-
-	// Execute deferred blocks before returning from the block
-	// if len(ps.DeferBlocks) > 0 {
-	//	fmt.Println(222)
-	// ExecuteDeferredBlocks(ps)
-	// }
 	return ps
 }
 
@@ -183,100 +113,46 @@ func MaybeAcceptComma(ps *env.ProgramState, inj env.Object, injnow bool) (*env.P
 // we need to after seeing + collect first expression without including further opwords. Return the expressions as args to
 // first opword and calling it + 1 2 then looking if there is another opword on the right, recursing and doing the same.
 //
-// later we should add processing of parenthesis / groups to this
-//
-// " 1 + ( 2 + 3 ) "
 // just quick speculation ... () will also have to work with general evaluator, not just op-words like (add 1 2) it would be best
 // if it didn't slow things down, but would just be some limit (on a stack?) of how much further current expression can go.
 // ( would add it to stack ) would stop processing another expr and throw error if not all were provided and remove from stack.
 //
-// do we need to recurse in all these cases or can we flatten it to some while loop? which could maybe be faster?
-// - while loop + stack should in general be faster .. we should try it
 
-// this functions is used to evaluate expression in the middle of block
-// currently it's called to collect arguments for builtins and functions
+// EVAL EXPRESSION
+
+// Consolidated evaluation function that handles both regular and injected evaluation
+func EvalExpression(ps *env.ProgramState, inj env.Object, injnow bool, limited bool) (*env.ProgramState, bool) {
+	var esleft *env.ProgramState
+	if inj == nil || !injnow {
+		esleft = EvalExpressionConcrete(ps)
+		if ps.ReturnFlag {
+			return ps, injnow
+		}
+	} else {
+		esleft = ps
+		esleft.Res = inj
+		injnow = false
+		if ps.ReturnFlag {
+			return ps, injnow
+		}
+	}
+	return MaybeEvalOpwordOnRight(esleft.Ser.Peek(), esleft, limited), injnow
+}
+
+// Replace EvalExpression2 with a call to EvalExpression
 func EvalExpression2(ps *env.ProgramState, limited bool) *env.ProgramState {
-	esleft := EvalExpressionConcrete(ps)
-	if ps.ReturnFlag {
-		return ps
-	}
-	////// OPWORDWWW
-	// IF WE COMMENT IN NEXT LINE IT WORKS WITHOUT OPWORDS PROCESSING
-	//fmt.Println("EvalExpression")
-	//fmt.Println(es.Ser.GetPos())
-	return MaybeEvalOpwordOnRight(esleft.Ser.Peek(), esleft, limited)
-	//return esleft
+	ps, _ = EvalExpression(ps, nil, false, limited)
+	return ps
 }
 
-// this only seems to be used for evalserword ... refactored ... DELETE later
-/* func EvalExpression(ps *env.ProgramState) *env.ProgramState {
-	es1, _ := EvalExpressionInj(ps, nil, false)
-	return es1
-} */
-
-// I don't fully get this function in this review ... it's this way so it handles op and pipe words
-// mainly, but I need to get deeper again to write a proper explanation
-// TODO -- return to this and explain
+// Replace EvalExpressionInj with a call to EvalExpression
 func EvalExpressionInj(ps *env.ProgramState, inj env.Object, injnow bool) (*env.ProgramState, bool) {
-	var esleft *env.ProgramState
-	if inj == nil || !injnow {
-		// if there is no injected value just eval the concrete expression
-		esleft = EvalExpressionConcrete(ps)
-		if ps.ReturnFlag {
-			return ps, injnow
-		}
-	} else {
-		// otherwise set program state to specific one and injected value to result
-		// set injnow to false and if return flag return
-		esleft = ps
-		esleft.Res = inj
-		injnow = false
-		if ps.ReturnFlag { //20200817
-			return ps, injnow
-		}
-		//esleft.Inj = nil
-	}
-	////// OPWORDWWW
-	// IF WE COMMENT IN NEXT LINE IT WORKS WITHOUT OPWORDS PROCESSING
-	//fmt.Println("EvalExpression")
-	//fmt.Println(es.Ser.GetPos())
-	// trace2("Calling Maybe from EvalExp Inj")
-	return MaybeEvalOpwordOnRight(esleft.Ser.Peek(), esleft, false), injnow
-	//return esleft
+	return EvalExpression(ps, inj, injnow, false)
 }
 
-// REFATOR THIS WITH CODE ABOVE
-// when seeing bigger picture, just adding fow eval-with
-func EvalExpressionInjLimited(ps *env.ProgramState, inj env.Object, injnow bool) (*env.ProgramState, bool) { // TODO -- doesn't work .. would be nice - eval-with
-	var esleft *env.ProgramState
-	if inj == nil || !injnow {
-		// if there is no injected value just eval the concrete expression
-		esleft = EvalExpressionConcrete(ps)
-		if ps.ReturnFlag {
-			return ps, injnow
-		}
-		fmt.Println("XY")
-		if esleft.Res.Type() == env.ErrorType {
-			fmt.Println("XX")
-		}
-	} else {
-		// otherwise set program state to specific one and injected value to result
-		// set injnow to false and if return flag return
-		esleft = ps
-		esleft.Res = inj
-		injnow = false
-		if ps.ReturnFlag { //20200817
-			return ps, injnow
-		}
-		//esleft.Inj = nil
-	}
-	////// OPWORDWWW
-	// IF WE COMMENT IN NEXT LINE IT WORKS WITHOUT OPWORDS PROCESSING
-	//fmt.Println("EvalExpression")
-	//fmt.Println(es.Ser.GetPos())
-	// trace2("Calling Maybe from EvalExp Inj")
-	return MaybeEvalOpwordOnRight(esleft.Ser.Peek(), esleft, false), injnow
-	//return esleft
+// Replace EvalExpressionInjLimited with a call to EvalExpression
+func EvalExpressionInjLimited(ps *env.ProgramState, inj env.Object, injnow bool) (*env.ProgramState, bool) {
+	return EvalExpression(ps, inj, injnow, true)
 }
 
 // this function get's the next object (unevaluated), progra state, limited bool (op or pipe)
@@ -294,7 +170,6 @@ func EvalExpressionInjLimited(ps *env.ProgramState, inj env.Object, injnow bool)
 //
 //	set the value to word and recurse
 func MaybeEvalOpwordOnRight(nextObj env.Object, ps *env.ProgramState, limited bool) *env.ProgramState {
-	//trace2("MaybeEvalWord -----------======--------> 1")
 	if ps.ReturnFlag || ps.ErrorFlag {
 		return ps
 	}
@@ -306,7 +181,7 @@ func MaybeEvalOpwordOnRight(nextObj env.Object, ps *env.ProgramState, limited bo
 	case env.CPath:
 		if opword.Mode == 1 {
 			ps.Ser.Next()
-			ps = EvalWord(ps, opword, ps.Res, false, false) // WWWWWWWWWWWWWWWWWWWWWWWWWWWW error interface converions
+			ps = EvalWord(ps, opword, ps.Res, false, false)
 			// when calling cpath
 			return MaybeEvalOpwordOnRight(ps.Ser.Peek(), ps, limited)
 		} else if opword.Mode == 2 {
@@ -318,13 +193,6 @@ func MaybeEvalOpwordOnRight(nextObj env.Object, ps *env.ProgramState, limited bo
 			if ps.ReturnFlag {
 				return ps //... not sure if we need this
 			}
-			// checkFlagsBi()
-			/*if ps.FailureFlag { // uncommented 202008017
-				ps.FailureFlag = false
-				ps.ErrorFlag = true
-				ps.ReturnFlag = true
-				return ps
-			}*/
 			return MaybeEvalOpwordOnRight(ps.Ser.Peek(), ps, limited)
 		} else {
 			ps.SkipFlag = false
@@ -338,19 +206,11 @@ func MaybeEvalOpwordOnRight(nextObj env.Object, ps *env.ProgramState, limited bo
 		if ps.ReturnFlag {
 			return ps //... not sure if we need this
 		}
-		// checkFlagsBi()
-		/*if ps.FailureFlag { // uncommented 202008017
-			ps.FailureFlag = false
-			ps.ErrorFlag = true
-			ps.ReturnFlag = true
-			return ps
-		}*/
 		return MaybeEvalOpwordOnRight(ps.Ser.Peek(), ps, limited)
 	case env.LSetword:
 		if limited {
 			return ps
 		}
-		//ProcOpword(nextObj, es)
 		idx := opword.Index
 		if ps.AllowMod {
 			ps.Ctx.Mod(idx, ps.Res)
@@ -370,7 +230,6 @@ func MaybeEvalOpwordOnRight(nextObj env.Object, ps *env.ProgramState, limited bo
 		if limited {
 			return ps
 		}
-		//ProcOpword(nextObj, es)
 		idx := opword.Index
 		ps.Ctx.Mod(idx, ps.Res)
 		ps.Ser.Next()
@@ -385,9 +244,7 @@ func MaybeEvalOpwordOnRight(nextObj env.Object, ps *env.ProgramState, limited bo
 // the main part of evaluator, if it were a polish only we would need almost only this
 // switches over all rye values and acts on them
 func EvalExpressionConcrete(ps *env.ProgramState) *env.ProgramState {
-	//defer trace2("EvalExpression_>>>")
 	object := ps.Ser.Pop()
-	//trace2("Before entering expression")
 	if object != nil {
 		switch object.Type() {
 		case env.IntegerType, env.DecimalType, env.StringType, env.VoidType, env.UriType, env.EmailType: // env.TagwordType, JM 20230126
@@ -499,6 +356,8 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 		return false, nil, nil
 	}
 }
+
+// EVALUATOR FUNCTIONS FOR SPECIFIC VALUE TYPES
 
 // Evaluates a word
 // first tries to find a value in normal context. If there were no generic words this would be mostly it
@@ -642,6 +501,32 @@ func EvalModword(ps *env.ProgramState, word env.Modword) *env.ProgramState {
 	return ps1
 }
 
+//
+// CALLING FUNCTIONS
+//
+
+// Consolidated function calling
+func CallFunctionWithArgs(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, args ...env.Object) *env.ProgramState {
+	ctx = DetermineContext(fn, ps, ctx)
+	if ctx == nil {
+		return ps
+	}
+
+	switch len(args) {
+	case 0:
+		return CallFunction(fn, ps, nil, false, ctx)
+	case 1:
+		return CallFunction(fn, ps, args[0], false, ctx)
+	case 2:
+		return CallFunctionArgs2(fn, ps, args[0], args[1], ctx)
+	case 4:
+		return CallFunctionArgs4(fn, ps, args[0], args[1], args[2], args[3], ctx)
+	default:
+		return CallFunctionArgsN(fn, ps, ctx, args...)
+	}
+}
+
+// This method is used in the evaluator and takes arguments from code if needed
 func CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, toLeft bool, ctx *env.RyeCtx) *env.ProgramState {
 	// fmt.Println(1)
 
@@ -760,6 +645,7 @@ func CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, toLeft
 	*/
 }
 
+// This is used in builtins and works specifically for functions with two arguments
 func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, arg1 env.Object, ctx *env.RyeCtx) *env.ProgramState {
 	// fmt.Println(2)
 	var fnCtx *env.RyeCtx
@@ -839,6 +725,7 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 	return ps
 }
 
+// This one is called from builtins and calls functions with 4 arguments
 func CallFunctionArgs4(fn env.Function, ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, ctx *env.RyeCtx) *env.ProgramState {
 	fmt.Println(3)
 	var fnCtx *env.RyeCtx
@@ -909,6 +796,50 @@ func CallFunctionArgs4(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 	return ps
 }
 
+// Used in builtins ... for variable number of arguments
+func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, args ...env.Object) *env.ProgramState {
+	// fmt.Println(6)
+	// ctx = nil
+	var fnCtx = DetermineContext(fn, ps, ctx)
+	if checkErrorReturnFlag(ps) {
+		return ps
+	}
+	for i, arg := range args {
+		index := fn.Spec.Series.Get(i).(env.Word).Index
+		fnCtx.Set(index, arg)
+	}
+	// TRY
+	psX := env.NewProgramState(fn.Body.Series, ps.Idx)
+	psX.Ctx = fnCtx
+	psX.PCtx = ps.PCtx
+	psX.Gen = ps.Gen
+
+	// END TRY
+	var result *env.ProgramState
+	psX.Ser.SetPos(0)
+	defer func() {
+		if len(psX.DeferBlocks) > 0 {
+			ExecuteDeferredBlocks(ps)
+		}
+	}()
+
+	if len(args) > 0 {
+		result = EvalBlockInj(psX, args[0], true)
+	} else {
+		result = EvalBlock(psX)
+	}
+	MaybeDisplayFailureOrError(result, result.Idx, "call func args N")
+	if result.ForcedResult != nil {
+		ps.Res = result.ForcedResult
+		result.ForcedResult = nil
+	} else {
+		ps.Res = result.Res
+	}
+	ps.ReturnFlag = false
+	return ps
+}
+
+// Determine the context for CallFunctionArgsVar
 func DetermineContext(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx) *env.RyeCtx {
 	// fmt.Println(55)
 	var fnCtx *env.RyeCtx
@@ -952,47 +883,7 @@ func DetermineContext(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx) *e
 	return fnCtx
 }
 
-func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, args ...env.Object) *env.ProgramState {
-	// fmt.Println(6)
-	// ctx = nil
-	var fnCtx = DetermineContext(fn, ps, ctx)
-	if checkErrorReturnFlag(ps) {
-		return ps
-	}
-	for i, arg := range args {
-		index := fn.Spec.Series.Get(i).(env.Word).Index
-		fnCtx.Set(index, arg)
-	}
-	// TRY
-	psX := env.NewProgramState(fn.Body.Series, ps.Idx)
-	psX.Ctx = fnCtx
-	psX.PCtx = ps.PCtx
-	psX.Gen = ps.Gen
-
-	// END TRY
-	var result *env.ProgramState
-	psX.Ser.SetPos(0)
-	defer func() {
-		if len(psX.DeferBlocks) > 0 {
-			ExecuteDeferredBlocks(ps)
-		}
-	}()
-
-	if len(args) > 0 {
-		result = EvalBlockInj(psX, args[0], true)
-	} else {
-		result = EvalBlock(psX)
-	}
-	MaybeDisplayFailureOrError(result, result.Idx, "call func args N")
-	if result.ForcedResult != nil {
-		ps.Res = result.ForcedResult
-		result.ForcedResult = nil
-	} else {
-		ps.Res = result.Res
-	}
-	ps.ReturnFlag = false
-	return ps
-}
+// CALLING BUILTINS
 
 func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft bool, pipeSecond bool, firstVal env.Object) *env.ProgramState {
 	////args := make([]env.Object, bi.Argsn)
@@ -1212,6 +1103,8 @@ func DirectlyCallBuiltin(ps *env.ProgramState, bi env.Builtin, a0 env.Object, a1
 	return bi.Fn(ps, arg0, arg1, arg2, arg3, arg4)
 }
 
+// DISPLAYING FAILURE OR ERRROR
+
 func MaybeDisplayFailureOrError(es *env.ProgramState, genv *env.Idxs, tag string) {
 	if es.FailureFlag {
 		fmt.Println("\x1b[33m" + "Failure" + "\x1b[0m")
@@ -1257,86 +1150,66 @@ func MaybeDisplayFailureOrErrorWASM(es *env.ProgramState, genv *env.Idxs, printf
 	}
 }
 
-// if there is failure flag and given builtin doesn't accept failure
-// then error flag is raised and true returned
-// otherwise false
-// USED -- before evaluating a builtin
-// TODO -- once we know it works in all situations remove all debug lines
-//
-//	and rewrite
+//  CHECKING VARIOUS FLAGS
+
+// Consolidated flag checking function
+func checkFlags(ps *env.ProgramState, n int, flags ...bool) bool {
+	if ps.ReturnFlag || ps.ErrorFlag {
+		return true
+	}
+	if ps.FailureFlag {
+		ps.ErrorFlag = true
+		return true
+	}
+	for _, flag := range flags {
+		if flag {
+			return true
+		}
+	}
+	return false
+}
+
+// Replace individual flag checking functions with calls to checkFlags
 func checkFlagsBi(bi env.Builtin, ps *env.ProgramState, n int) bool {
-	trace("CHECK FLAGS BI")
-	//trace(n)
-	//trace(ps.Res)
-	//	trace(bi)
-	if ps.FailureFlag {
-		trace("------ > FailureFlag")
-		if bi.AcceptFailure {
-			trace2("----- > Accept Failure")
-		} else {
-			// fmt.Println("checkFlagsBi***")
-			trace2("Fail ------->  Error.")
-			switch err := ps.Res.(type) {
-			case env.Error:
-				if err.CodeBlock.Len() == 0 {
-					err.CodeBlock = ps.Ser
-					err.CodeContext = ps.Ctx
-				}
-			case *env.Error:
-				if err.CodeBlock.Len() == 0 {
-					err.CodeBlock = ps.Ser
-					err.CodeContext = ps.Ctx
-				}
-			}
-			ps.ErrorFlag = true
-			return true
-		}
-	} else {
-		trace2("NOT FailuteFlag")
+	if ps.FailureFlag && !bi.AcceptFailure {
+		ps.ErrorFlag = true
+		return true
 	}
 	return false
 }
 
-// if there is failure flag and given builtin doesn't accept failure
-// then error flag is raised and true returned
-// otherwise false
-// USED -- before evaluating a builtin
-// TODO -- once we know it works in all situations remove all debug lines
-//
-//	and rewrite
 func checkFlagsVarBi(bi env.VarBuiltin, ps *env.ProgramState, n int) bool {
-	trace("CHECK FLAGS BI")
-	//trace(n)
-	//trace(ps.Res)
-	//	trace(bi)
-	if ps.FailureFlag {
-		trace("------ > FailureFlag")
-		if bi.AcceptFailure {
-			trace2("----- > Accept Failure")
-		} else {
-			// fmt.Println("checkFlagsBi***")
-			trace2("Fail ------->  Error.")
-			switch err := ps.Res.(type) {
-			case env.Error:
-				if err.CodeBlock.Len() == 0 {
-					err.CodeBlock = ps.Ser
-					err.CodeContext = ps.Ctx
-				}
-			case *env.Error:
-				if err.CodeBlock.Len() == 0 {
-					err.CodeBlock = ps.Ser
-					err.CodeContext = ps.Ctx
-				}
-			}
-			ps.ErrorFlag = true
-			return true
-		}
-	} else {
-		trace2("NOT FailuteFlag")
+	if ps.FailureFlag && !bi.AcceptFailure {
+		ps.ErrorFlag = true
+		return true
 	}
 	return false
 }
 
+func checkFlagsAfterBlock(ps *env.ProgramState, n int) bool {
+	if ps.FailureFlag && !ps.ReturnFlag {
+		if !ps.InErrHandler {
+			if checkContextErrorHandler(ps) {
+				return false
+			}
+		}
+		ps.ErrorFlag = true
+		return true
+	}
+	return false
+}
+
+func checkErrorReturnFlag(ps *env.ProgramState) bool {
+	return checkFlags(ps, 0, ps.ErrorFlag)
+}
+
+// ExecuteDeferredBlocks executes all deferred blocks in LIFO order (last in, first out)
+// and clears the deferred blocks list
+func ExecuteDeferredBlocks(ps *env.ProgramState) {
+	// TODO: Implement deferred block execution
+}
+
+// Remove unused debugging functions
 func checkContextErrorHandler(ps *env.ProgramState) bool {
 	// check if there is error-handler word defined in context (or parent).
 	erh, w_exists := ps.Idx.GetIndex("error-handler")
@@ -1359,113 +1232,4 @@ func checkContextErrorHandler(ps *env.ProgramState) bool {
 	}
 	ps.InErrHandler = false
 	return true
-	// evaluate the block, where injected value is error
-
-	// NOT SURE YET, if we proceed with failure based on return, always or what
-	// need more practical-situations to figure this out
-}
-
-// if failure flag is raised and return flag is not up
-// then raise the error flag and return true
-// USED -- on returns from block
-func checkFlagsAfterBlock(ps *env.ProgramState, n int) bool {
-	trace2("CHECK FLAGS AFTER BLOCKS")
-	trace2(n)
-	/// fmt.Println("checkFlagsAfterBlock***")
-
-	//trace(ps.Res)
-	if ps.FailureFlag && !ps.ReturnFlag {
-		trace2("FailureFlag")
-		trace2("Fail->Error.")
-
-		if !ps.InErrHandler {
-			if checkContextErrorHandler(ps) {
-				return false // error should be picked up in the handler block if not handeled -- TODO -- hopefully
-			}
-		}
-
-		switch err := ps.Res.(type) {
-		case env.Error:
-			if err.CodeBlock.Len() == 0 {
-				err.CodeBlock = ps.Ser
-				err.CodeContext = ps.Ctx
-			}
-		case *env.Error:
-			if err.CodeBlock.Len() == 0 {
-				err.CodeBlock = ps.Ser
-				err.CodeContext = ps.Ctx
-			}
-		}
-		trace2("FAIL -> ERROR blk")
-		ps.ErrorFlag = true
-		return true
-	} else {
-		trace2("NOT FailureFlag")
-	}
-	return false
-}
-
-func checkErrorReturnFlag(ps *env.ProgramState) bool {
-	// trace3("---- > return flags")
-	if ps.ErrorFlag {
-		/// fmt.Println("***checkErrorReturnFlags***")
-
-		switch err := ps.Res.(type) {
-		case env.Error:
-			if err.CodeBlock.Len() == 0 {
-				err.CodeBlock = ps.Ser
-				err.CodeContext = ps.Ctx
-			}
-		case *env.Error:
-			if err.CodeBlock.Len() == 0 {
-				err.CodeBlock = ps.Ser
-				err.CodeContext = ps.Ctx
-			}
-		}
-		return true
-	}
-	return ps.ReturnFlag
-}
-
-func fmt1() { fmt.Print(1) }
-
-func trace(x any) {
-	//fmt.Print("\x1b[36m")
-	//fmt.Print(x)
-	//fmt.Println("\x1b[0m")
-}
-func trace2(x any) {
-	//fmt.Print("\x1b[56m")
-	//fmt.Print(x)
-	//fmt.Println("\x1b[0m")
-}
-
-func trace3(x any) {
-	fmt.Print("\x1b[56m")
-	fmt.Print(x)
-	fmt.Println("\x1b[0m")
-}
-
-// ExecuteDeferredBlocks executes all deferred blocks in LIFO order (last in, first out)
-// and clears the deferred blocks list
-func ExecuteDeferredBlocks(ps *env.ProgramState) {
-	// Execute blocks in reverse order (LIFO - last in, first out)
-	for i := len(ps.DeferBlocks) - 1; i >= 0; i-- {
-		// Save current series and result
-		currentSer := ps.Ser
-		currentRes := ps.Res
-
-		// Set series to the deferred block
-		ps.Ser = ps.DeferBlocks[i].Series
-
-		// Evaluate the block
-		EvalBlock(ps)
-
-		// Restore series and result
-		ps.Ser = currentSer
-		ps.Res = currentRes
-	}
-
-	// Clear the deferred blocks
-	ps.DeferBlocks = make([]env.Block, 0)
 }
