@@ -491,19 +491,16 @@ func Rye0_CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, t
 	psX.Embedded = ps.Embedded
 
 	// Evaluate the function body
-	var result *env.ProgramState
 	if arg0 != nil {
-		result = Rye0_EvalBlockInj(psX, arg0, true)
+		Rye0_EvalBlockInj(psX, arg0, true)
 	} else {
-		result = EvalBlock(psX)
+		EvalBlock(psX)
 	}
 
 	// Process the result
-	if result.ForcedResult != nil {
-		ps.Res = result.ForcedResult
-		result.ForcedResult = nil
-	} else {
-		ps.Res = result.Res
+	if psX.ForcedResult != nil {
+		ps.Res = ps.ForcedResult
+		ps.ForcedResult = nil
 	}
 
 	// Put the program state back in the pool

@@ -259,7 +259,7 @@ func Eyr_EvalLSetword(ps *env.ProgramState, word env.LSetword, leftVal env.Objec
 
 func Eyr_EvalExpression(ps *env.ProgramState) *env.ProgramState {
 	object := ps.Ser.Pop()
-	trace2("Before entering expression")
+	trace("Before entering expression")
 	if object != nil {
 		switch object.Type() {
 		case env.CommaType:
