@@ -36,18 +36,38 @@ To build Rye with seccomp support, you need to:
 
 If you build without the seccomp tag or on a non-Linux system, the seccomp integration will be a no-op (it won't do anything).
 
-## Seccomp Profile
+## Seccomp Profiles
 
-The seccomp profile in Rye allows a wide range of system calls that are necessary for normal operation, including:
+Rye provides several seccomp profiles that you can choose from:
 
-- File operations (open, read, write, close, etc.)
-- Network operations (socket, connect, bind, listen, etc.)
-- Process management (fork, execve, wait4, etc.)
-- Memory management (mmap, munmap, mprotect, etc.)
-- Time-related operations (clock_gettime, nanosleep, etc.)
-- And many others
+1. **default**: Allows a wide range of system calls necessary for normal operation, including:
+   - File operations (open, read, write, close, etc.)
+   - Network operations (socket, connect, bind, listen, etc.)
+   - Process management (fork, execve, wait4, etc.)
+   - Memory management (mmap, munmap, mprotect, etc.)
+   - Time-related operations (clock_gettime, nanosleep, etc.)
 
-System calls that are not explicitly allowed will be blocked, and the process will receive an EPERM error if it attempts to make such a call.
+2. **strict**: A minimal set of system calls for high security, significantly reducing the attack surface. This profile includes the necessary syscalls for the Go runtime and CGO to function properly, including thread management, memory operations, and basic I/O.
+
+3. **web**: Optimized for network operations, includes all strict syscalls plus network-specific ones.
+
+4. **io**: Optimized for file I/O operations, includes all strict syscalls plus file I/O specific ones.
+
+5. **readonly**: Blocks file write operations while allowing read operations and writing to stdout/stderr. This is useful for running scripts that should only read files but not modify them, while still allowing console output.
+
+6. **cgo**: A profile specifically designed for programs using CGO (Go with C bindings). This profile allows all syscalls needed for the Go runtime and CGO to function properly, while still providing some security benefits. Use this profile if you experience crashes with the strict profile.
+
+System calls that are not explicitly allowed will be blocked, and the process will receive an EPERM error if it attempts to make such a call (or will be terminated if using the "kill" action).
+
+### Using the Readonly Profile
+
+To run Rye with the readonly profile that prevents writing to files:
+
+```
+rye -seccomp-profile=readonly script.rye
+```
+
+This will allow the script to read files but block any attempts to write to files, providing an additional layer of security for scripts that process sensitive data.
 
 ## Customizing the Seccomp Profile
 
