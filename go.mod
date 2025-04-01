@@ -18,7 +18,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ses v1.30.1
 	github.com/bitfield/script v0.24.1
 	github.com/blevesearch/bleve/v2 v2.4.4
-	github.com/blevesearch/bleve_index_api v1.2.2
+	github.com/blevesearch/bleve_index_api v1.2.7
 	github.com/drewlanenga/govector v0.0.0-20220726163947-b958ac08bc93
 	github.com/fsnotify/fsnotify v1.8.0
 	github.com/gdamore/tcell/v2 v2.8.1
