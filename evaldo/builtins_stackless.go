@@ -125,7 +125,7 @@ func Stck_EvalExpression(ps *env.ProgramState) *env.ProgramState {
 func Stck_EvalBlock(ps *env.ProgramState) *env.ProgramState {
 	for ps.Ser.Pos() < ps.Ser.Len() {
 		ps = Stck_EvalExpression(ps)
-		if checkFlagsAfterBlock(ps, 101) {
+		if tryHandleFailure(ps) {
 			return ps
 		}
 		if ps.ReturnFlag || ps.ErrorFlag {

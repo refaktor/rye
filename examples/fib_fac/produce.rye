@@ -1,7 +1,7 @@
 
 doc! "demonstrates 6 ways to calculate a factorial and one fibbonaci"
 
-fib1: fn { n "recursive" } { either n < 2 { n } { fib0 n - 1 |+ fib0 n - 2 } }
+fib1: fn { n "recursive" } { either n < 2 { n } { fib1 n - 1 |+ fib1 n - 2 } }
 
 fac1: fn { n "recursive" } { either n > 1 { n * fac1 n - 1 } { 1 } }
 

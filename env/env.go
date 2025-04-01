@@ -58,6 +58,10 @@ func (e RyeCtx) Copy() *RyeCtx {
 	return nc
 }
 
+func (e *RyeCtx) Clear() {
+	clear(e.state)
+}
+
 func (e RyeCtx) GetState() map[int]Object {
 	return e.state
 }

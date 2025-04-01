@@ -117,7 +117,7 @@ func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toL
 // This is separate from CallFuncitonArgsN so it can manage pulling args directly off of the eyr stack
 func Eyr_CallFunction(fn env.Function, es *env.ProgramState, leftVal env.Object, toLeft bool, session *env.RyeCtx) *env.ProgramState {
 	var fnCtx = DetermineContext(fn, es, session)
-	if checkErrorReturnFlag(es) {
+	if tryHandleFailure(es) {
 		return es
 	}
 
@@ -322,7 +322,7 @@ func Eyr_EvalBlockInside(ps *env.ProgramState, inj env.Object, injnow bool) *env
 	for ps.Ser.Pos() < ps.Ser.Len() {
 		// fmt.Println(ps.Ser.Pos())
 		ps = Eyr_EvalExpression(ps)
-		if checkFlagsAfterBlock(ps, 101) {
+		if tryHandleFailure(ps) {
 			// fmt.Println("yy")
 			return ps
 		}
@@ -344,7 +344,7 @@ func Eyr_EvalBlock(ps *env.ProgramState, full bool) *env.ProgramState {
 	for ps.Ser.Pos() < ps.Ser.Len() {
 		// fmt.Println(ps.Ser.Pos())
 		ps = Eyr_EvalExpression(ps)
-		if checkFlagsAfterBlock(ps, 101) {
+		if tryHandleFailure(ps) {
 			// fmt.Println("yy")
 			return ps
 		}

@@ -2176,7 +2176,7 @@ var builtins_collection = map[string]*env.Builtin{
 				for ps.Ser.Pos() < ps.Ser.Len() {
 					// ps, injnow = EvalExpressionInj(ps, inj, injnow)
 					EvalExpression2(ps, false)
-					if checkErrorReturnFlag(ps) {
+					if ps.ReturnFlag || ps.ErrorFlag {
 						return ps.Res
 					}
 					res = append(res, ps.Res)
