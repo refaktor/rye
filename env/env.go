@@ -24,16 +24,18 @@ type EnvR2 struct {
 }
 
 type RyeCtx struct {
-	state  map[int]Object
-	Parent *RyeCtx
-	Kind   Word
-	Doc    string
-	locked bool
+	state    map[int]Object
+	varFlags map[int]bool // Tracks which words are variables
+	Parent   *RyeCtx
+	Kind     Word
+	Doc      string
+	locked   bool
 }
 
 func NewEnv(par *RyeCtx) *RyeCtx {
 	var e RyeCtx
 	e.state = make(map[int]Object)
+	e.varFlags = make(map[int]bool)
 	e.Parent = par
 	return &e
 }
@@ -41,6 +43,7 @@ func NewEnv(par *RyeCtx) *RyeCtx {
 func NewEnv2(par *RyeCtx, doc string) *RyeCtx {
 	var e RyeCtx
 	e.state = make(map[int]Object)
+	e.varFlags = make(map[int]bool)
 	e.Parent = par
 	e.Doc = doc
 	return &e
@@ -52,7 +55,12 @@ func (e RyeCtx) Copy() *RyeCtx {
 	for k, v := range e.state {
 		cp[k] = v
 	}
+	cpVarFlags := make(map[int]bool)
+	for k, v := range e.varFlags {
+		cpVarFlags[k] = v
+	}
 	nc.state = cp
+	nc.varFlags = cpVarFlags
 	nc.Kind = e.Kind
 	nc.locked = e.locked
 	return nc
@@ -303,13 +311,34 @@ func (e *RyeCtx) SetNew(word int, val Object, idxs *Idxs) bool {
 	}
 }
 
+// Mark a word as a variable
+func (e *RyeCtx) MarkAsVariable(word int) {
+	e.varFlags[word] = true
+}
+
+// Check if a word is a variable
+func (e *RyeCtx) IsVariable(word int) bool {
+	isVar, exists := e.varFlags[word]
+	if exists && isVar {
+		return true
+	}
+	// Not a variable in this context
+	return false
+}
+
 func (e *RyeCtx) Mod(word int, val Object) bool {
-	// if _, exists := e.state[word]; exists {
+	if _, exists := e.state[word]; exists {
+		// Word exists, check if it's a variable
+		if !e.IsVariable(word) {
+			// Cannot modify constants
+			return false
+		}
+	} else {
+		// Word doesn't exist, create it as a variable
+		e.MarkAsVariable(word)
+	}
 	e.state[word] = val
 	return true
-	// } else {
-	//	return NewError("Can't mod an unset word " + idxs.GetWord(word) + ", try using setword")
-	// }
 }
 
 type ProgramState struct {

@@ -665,14 +665,19 @@ var builtins = map[string]*env.Builtin{
 	// * Integer 1 if the value changed, 0 if the new value is the same as the old value
 	"change!": { // ***
 		Argsn: 2,
-		Doc:   "Searches for a word and changes it's value in-place. If value changes returns true otherwise false",
+		Doc:   "Searches for a word and changes it's value in-place. Only works on variables declared with var. If value changes returns true otherwise false",
 		Pure:  false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg1.(type) {
 			case env.Word:
 				val, found, ctx := ps.Ctx.Get2(arg.Index)
 				if found {
-					ctx.Mod(arg.Index, arg0)
+					// Attempt to modify the word
+					if ok := ctx.Mod(arg.Index, arg0); !ok {
+						ps.FailureFlag = true
+						return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(arg.Index) + "', use 'var' to declare it as a variable")
+					}
+
 					var res int64
 					if arg0.GetKind() == val.GetKind() && arg0.Inspect(*ps.Idx) == val.Inspect(*ps.Idx) {
 						res = 0
@@ -697,7 +702,7 @@ var builtins = map[string]*env.Builtin{
 	// * The value or block of values that was assigned
 	"set!": { // ***
 		Argsn: 2,
-		Doc:   "Set word to value or words by deconstructing a block",
+		Doc:   "Set word to value or words by deconstructing a block. Only works on variables declared with var.",
 		Pure:  false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch words := arg1.(type) {
@@ -713,10 +718,10 @@ var builtins = map[string]*env.Builtin{
 							}
 							val := vals.Series.S[i]
 							// if it exists then we set it to word from words
-							ps.Ctx.Mod(word.Index, val)
-							/* if res.Type() == env.ErrorType {
-								return MakeBuiltinError(ps, res.(env.Error).Message, "set")
-							}*/
+							if ok := ps.Ctx.Mod(word.Index, val); !ok {
+								ps.FailureFlag = true
+								return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(word.Index) + "', use 'var' to declare it as a variable")
+							}
 						default:
 							fmt.Println(word)
 							return MakeBuiltinError(ps, "Only words in words block", "set!")
@@ -727,7 +732,10 @@ var builtins = map[string]*env.Builtin{
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "set!")
 				}
 			case env.Word:
-				ps.Ctx.Mod(words.Index, arg0)
+				if ok := ps.Ctx.Mod(words.Index, arg0); !ok {
+					ps.FailureFlag = true
+					return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(words.Index) + "', use 'var' to declare it as a variable")
+				}
 				return arg0
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "set!")
