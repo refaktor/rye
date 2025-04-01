@@ -2176,7 +2176,7 @@ var builtins_collection = map[string]*env.Builtin{
 				for ps.Ser.Pos() < ps.Ser.Len() {
 					// ps, injnow = EvalExpressionInj(ps, inj, injnow)
 					EvalExpression2(ps, false)
-					if checkErrorReturnFlag(ps) {
+					if ps.ReturnFlag || ps.ErrorFlag {
 						return ps.Res
 					}
 					res = append(res, ps.Res)
@@ -2217,7 +2217,7 @@ var builtins_collection = map[string]*env.Builtin{
 				for ps.Ser.Pos() < ps.Ser.Len() {
 					// ps, injnow = EvalExpressionInj(ps, inj, injnow)
 					//20231203 EvalExpressionInjectedVALS(ps, arg0, true)
-					ps, injnow = EvalExpressionInj(ps, arg0, injnow)
+					injnow = EvalExpressionInj(ps, arg0, injnow)
 					res = append(res, ps.Res)
 					// check and raise the flags if needed if true (error) return
 					//if checkFlagsAfterBlock(ps, 101) {
@@ -2227,7 +2227,7 @@ var builtins_collection = map[string]*env.Builtin{
 					//if checkErrorReturnFlag(ps) {
 					//	return ps
 					//}
-					ps, injnow = MaybeAcceptComma(ps, arg0, injnow)
+					injnow = MaybeAcceptComma(ps, arg0, injnow)
 				}
 				ps.Ser = ser
 				return *env.NewBlock(*env.NewTSeries(res))

@@ -94,7 +94,7 @@ var Builtins_telegrambot = map[string]*env.Builtin{
 
 					for update := range updates {
 						dict := TelegramUpdateToRyeDict(update)
-						ps = EvalBlockInj(ps, dict, true)
+						EvalBlockInj(ps, dict, true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}

@@ -68,19 +68,16 @@ func FastCallFunction(fn env.Function, ps *env.ProgramState, args []env.Object, 
 	psX.Embedded = ps.Embedded
 
 	// Evaluate the function body
-	var result *env.ProgramState
 	if len(args) > 0 {
-		result = Rye0_EvalBlockInj(psX, args[0], true)
+		Rye0_EvalBlockInj(psX, args[0], true)
 	} else {
-		result = EvalBlock(psX)
+		EvalBlock(psX)
 	}
 
 	// Process the result
-	if result.ForcedResult != nil {
-		ps.Res = result.ForcedResult
-		result.ForcedResult = nil
-	} else {
-		ps.Res = result.Res
+	if psX.ForcedResult != nil {
+		ps.Res = psX.ForcedResult
+		psX.ForcedResult = nil
 	}
 
 	// Put the program state back in the pool
