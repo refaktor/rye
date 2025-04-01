@@ -275,6 +275,8 @@ github.com/sashabaranov/go-openai v1.38.0 h1:hNN5uolKwdbpiqOn7l+Z2alch/0n0rSFyg4
 github.com/sashabaranov/go-openai v1.38.0/go.mod h1:lj5b/K+zjTSFxVLijLSTDZuP7adOgerWeFyZLUhAKRg=
 github.com/sebdah/goldie/v2 v2.5.5 h1:rx1mwF95RxZ3/83sdS4Yp7t2C5TCokvWP4TBRbAyEWY=
 github.com/sebdah/goldie/v2 v2.5.5/go.mod h1:oZ9fp0+se1eapSRjfYbsV/0Hqhbuu3bJVvKI/NNtssI=
+github.com/seccomp/libseccomp-golang v0.10.0 h1:aA4bp+/Zzi0BnWZ2F1wgNBs5gTpm+na2rWM6M9YjLpY=
+github.com/seccomp/libseccomp-golang v0.10.0/go.mod h1:JA8cRccbGaA1s33RQf7Y1+q9gHmZX1yB/z9WDN1C6fg=
 github.com/sergi/go-diff v1.3.1 h1:xkr+Oxo4BOQKmkn/B9eMK0g5Kg/983T9DqqPHwYqD+8=
 github.com/sergi/go-diff v1.3.1/go.mod h1:aMJSSKb2lpPvRNec0+w3fl7LP9IOFzdc9Pa4NFbPK1I=
 github.com/shirou/gopsutil/v3 v3.24.5 h1:i0t8kL+kQTvpAYToeuiVk3TgDeKOFioZO3Ztz/iZ9pI=

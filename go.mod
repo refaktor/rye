@@ -133,6 +133,7 @@ require (
 	github.com/richardlehane/mscfb v1.0.4 // indirect
 	github.com/richardlehane/msoleps v1.0.4 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
+	github.com/seccomp/libseccomp-golang v0.10.0 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
 	github.com/tklauser/go-sysconf v0.3.13 // indirect

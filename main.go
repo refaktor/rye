@@ -5,6 +5,8 @@ package main
 
 import (
 	"errors"
+	"fmt"
+	"os"
 
 	"github.com/jwalton/go-supportscolor"
 	"github.com/refaktor/rye/env"
@@ -34,6 +36,14 @@ var CODE []any
 // NEW FLASGS HANDLING
 
 func main() {
+	// Initialize seccomp profile
+	// This is a no-op on non-Linux systems or when built without the seccomp tag
+	if err := InitSeccomp(); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: Failed to initialize seccomp: %v\n", err)
+		// Continue execution even if seccomp initialization fails
+		// This ensures the program can run without seccomp if needed
+	}
+
 	supportscolor.Stdout()
 	runner.DoMain(func(ps *env.ProgramState) {})
 }
