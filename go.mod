@@ -51,7 +51,7 @@ require (
 	github.com/yuin/goldmark v1.7.8
 	go.mongodb.org/mongo-driver v1.17.3
 	golang.org/x/crypto v0.36.0
-	golang.org/x/net v0.35.0
+	golang.org/x/net v0.38.0
 	golang.org/x/sync v0.12.0
 	golang.org/x/term v0.30.0
 	golang.org/x/text v0.23.0
@@ -101,7 +101,7 @@ require (
 	github.com/blevesearch/zapx/v16 v16.1.9-0.20241217210638-a0519e7caf3b // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/elastic/go-seccomp-bpf v1.5.0 // indirect
+	github.com/elastic/go-seccomp-bpf v1.5.0
 	github.com/gdamore/encoding v1.0.1 // indirect
 	github.com/glebarez/go-sqlite v1.21.2 // indirect
 	github.com/glebarez/sqlite v1.11.0 // indirect

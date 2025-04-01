@@ -49,10 +49,35 @@ func main() {
 			Action:  *runner.SeccompAction,
 		}
 
-		if err := InitSeccomp(config); err != nil {
-			fmt.Fprintf(os.Stderr, "Warning: Failed to initialize seccomp: %v\n", err)
-			// Continue execution even if seccomp initialization fails
-			// This ensures the program can run without seccomp if needed
+		// Initialize seccomp2 with configuration from command-line flags
+		config2 := Seccomp2Config{
+			Enabled: *runner.Seccomp2,
+			Profile: *runner.Seccomp2Profile,
+			Action:  *runner.Seccomp2Action,
+		}
+
+		// If both seccomp and seccomp2 are enabled, only use seccomp2
+		if config.Enabled && config2.Enabled {
+			fmt.Fprintf(os.Stderr, "Warning: Both seccomp and seccomp2 are enabled. Using seccomp2 only.\n")
+			config.Enabled = false
+		}
+
+		// Initialize seccomp if enabled
+		if config.Enabled {
+			if err := InitSeccomp(config); err != nil {
+				fmt.Fprintf(os.Stderr, "Warning: Failed to initialize seccomp: %v\n", err)
+				// Continue execution even if seccomp initialization fails
+				// This ensures the program can run without seccomp if needed
+			}
+		}
+
+		// Initialize seccomp2 if enabled
+		if config2.Enabled {
+			if err := InitSeccomp2(config2); err != nil {
+				fmt.Fprintf(os.Stderr, "Warning: Failed to initialize seccomp2: %v\n", err)
+				// Continue execution even if seccomp2 initialization fails
+				// This ensures the program can run without seccomp2 if needed
+			}
 		}
 	})
 }
