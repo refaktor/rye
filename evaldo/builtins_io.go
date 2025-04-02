@@ -456,6 +456,13 @@ var Builtins_io = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "Opens a file for appending.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			// Check if we're in readonly mode
+			profile, exists := os.LookupEnv("RYE_SECCOMP_PROFILE")
+			if exists && profile == "readonly" {
+				ps.FailureFlag = true
+				return MakeBuiltinError(ps, "file append operation blocked by readonly seccomp profile", "file-schema//open\\append")
+			}
+
 			switch s := arg0.(type) {
 			case env.Uri:
 				file, err := os.OpenFile(s.Path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
@@ -480,6 +487,13 @@ var Builtins_io = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "Creates a new file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			// Check if we're in readonly mode
+			profile, exists := os.LookupEnv("RYE_SECCOMP_PROFILE")
+			if exists && profile == "readonly" {
+				ps.FailureFlag = true
+				return MakeBuiltinError(ps, "file creation blocked by readonly seccomp profile", "file-schema//create")
+			}
+
 			switch s := arg0.(type) {
 			case env.Uri:
 				// path := strings.Split(s.Path, "://")
@@ -856,6 +870,14 @@ var Builtins_io = map[string]*env.Builtin{
 		Argsn: 2,
 		Doc:   "Writes content to a file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			// Check if we're in readonly mode
+			profile, exists := os.LookupEnv("RYE_SECCOMP_PROFILE")
+			if exists && profile == "readonly" {
+				ps.FailureFlag = true
+				return MakeBuiltinError(ps, "write operation blocked by readonly seccomp profile", "file-schema//write")
+			}
+
+			// If not in readonly mode, proceed with the original function
 			switch f := arg0.(type) {
 			case env.Uri:
 				switch s := arg1.(type) {
@@ -880,7 +902,6 @@ var Builtins_io = map[string]*env.Builtin{
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.UriType}, "__fs_write")
 			}
-
 		},
 	},
 
@@ -962,6 +983,25 @@ var Builtins_io = map[string]*env.Builtin{
 		Argsn: 2,
 		Doc:   "Writes a string to a writer.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			// Check if we're in readonly mode
+			profile, exists := os.LookupEnv("RYE_SECCOMP_PROFILE")
+			if exists && profile == "readonly" {
+				// Allow writing to stdout/stderr but block writing to files
+				switch ww := arg0.(type) {
+				case env.Native:
+					writer, ok := ww.Value.(*os.File)
+					if !ok {
+						return MakeBuiltinError(ps, "Native not io.File", "writer//write\\string")
+					}
+
+					// Check if the writer is stdout or stderr
+					if writer != os.Stdout && writer != os.Stderr {
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, "write operation blocked by readonly seccomp profile", "writer//write\\string")
+					}
+				}
+			}
+
 			switch s := arg1.(type) {
 			case env.String:
 				switch ww := arg0.(type) {
@@ -983,7 +1023,6 @@ var Builtins_io = map[string]*env.Builtin{
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "writer//write\\string")
 			}
-
 		},
 	},
 

@@ -1,104 +1,53 @@
-# Seccomp Integration for Rye
+# Seccomp in Rye
 
-This document describes the seccomp integration in Rye, which provides an additional layer of security by restricting the system calls that the Rye runtime and applications can make.
+Rye now uses a pure Go seccomp implementation using `github.com/elastic/go-seccomp-bpf`.
 
-## Overview
+## What is Seccomp?
 
-[Seccomp (Secure Computing Mode)](https://en.wikipedia.org/wiki/Seccomp) is a Linux kernel feature that allows a process to restrict the system calls it can make. By limiting the available system calls, seccomp reduces the attack surface of the application, making it more difficult for attackers to exploit vulnerabilities.
+Seccomp (secure computing mode) is a Linux kernel feature that restricts the system calls a process can make, enhancing security by limiting potential damage from compromised processes.
 
-The seccomp integration in Rye is implemented at build time, which means the seccomp profile is embedded directly in the binary. This approach was chosen because:
+## Benefits of Pure Go Implementation
 
-1. It provides the strongest security guarantees - the seccomp profile cannot be bypassed at runtime
-2. It requires no configuration from end users
-3. It ensures consistent behavior across deployments
-4. It reduces the attack surface from the start
+- **No C Dependencies**: No need for the libseccomp C library
+- **Simplified Deployment**: Pure Go solution with no external dependencies
+- **Easier Cross-Compilation**: Pure Go code is easier to cross-compile for different architectures
+
+## Using Seccomp
+
+Control seccomp filtering with these flags:
+
+```
+-seccomp=true                    # Enable seccomp filtering (enabled by default)
+-seccomp-profile=strict          # Use the strict profile (only option available)
+-seccomp-action=errno            # Action for restricted syscalls (default)
+```
+
+### Available Profiles
+
+The seccomp implementation supports two profiles:
+
+1. **strict** (default): Allows essential syscalls for Go programs, including read and write operations
+   - Provides a minimal, secure set of allowed syscalls
+   - Blocks dangerous syscalls like `execve` that could be used to execute external commands
+
+2. **readonly**: Similar to strict but blocks write operations
+   - Allows read operations but blocks write operations to files
+   - Useful for running scripts that should only read from the filesystem
+   - Provides an additional layer of security for untrusted scripts
+
+### Available Actions
+
+- `errno` (default): Return EPERM for disallowed syscalls
+- `kill`: Terminate the process when a disallowed syscall is attempted
+- `trap`: Send SIGSYS signal on disallowed syscalls (causes crashes with stack trace)
+- `log`: Log disallowed syscalls but allow them (for debugging)
 
 ## Building with Seccomp Support
 
-To build Rye with seccomp support, you need to:
-
-1. Install the libseccomp development package on your system:
-   ```
-   # Debian/Ubuntu
-   sudo apt-get install libseccomp-dev
-
-   # Fedora/RHEL
-   sudo dnf install libseccomp-devel
-
-   # Arch Linux
-   sudo pacman -S libseccomp
-   ```
-
-2. Build Rye with the seccomp tag:
-   ```
-   go build -tags seccomp
-   ```
-
-If you build without the seccomp tag or on a non-Linux system, the seccomp integration will be a no-op (it won't do anything).
-
-## Seccomp Profiles
-
-Rye provides several seccomp profiles that you can choose from:
-
-1. **default**: Allows a wide range of system calls necessary for normal operation, including:
-   - File operations (open, read, write, close, etc.)
-   - Network operations (socket, connect, bind, listen, etc.)
-   - Process management (fork, execve, wait4, etc.)
-   - Memory management (mmap, munmap, mprotect, etc.)
-   - Time-related operations (clock_gettime, nanosleep, etc.)
-
-2. **strict**: A minimal set of system calls for high security, significantly reducing the attack surface. This profile includes the necessary syscalls for the Go runtime and CGO to function properly, including thread management, memory operations, and basic I/O.
-
-3. **web**: Optimized for network operations, includes all strict syscalls plus network-specific ones.
-
-4. **io**: Optimized for file I/O operations, includes all strict syscalls plus file I/O specific ones.
-
-5. **readonly**: Blocks file write operations while allowing read operations and writing to stdout/stderr. This is useful for running scripts that should only read files but not modify them, while still allowing console output.
-
-6. **cgo**: A profile specifically designed for programs using CGO (Go with C bindings). This profile allows all syscalls needed for the Go runtime and CGO to function properly, while still providing some security benefits. Use this profile if you experience crashes with the strict profile.
-
-System calls that are not explicitly allowed will be blocked, and the process will receive an EPERM error if it attempts to make such a call (or will be terminated if using the "kill" action).
-
-### Using the Readonly Profile
-
-To run Rye with the readonly profile that prevents writing to files:
-
 ```
-rye -seccomp-profile=readonly script.rye
+go build -tags seccomp
 ```
 
-This will allow the script to read files but block any attempts to write to files, providing an additional layer of security for scripts that process sensitive data.
+## Implementation Details
 
-## Customizing the Seccomp Profile
-
-If you need to customize the seccomp profile for your specific use case, you can modify the `seccomp.go` file. The profile is defined in the `InitSeccomp` function, which creates a seccomp filter and adds rules for allowed system calls.
-
-To add or remove system calls from the profile, modify the `syscalls` slice in the `InitSeccomp` function.
-
-## Debugging
-
-If you encounter issues with the seccomp integration, you can:
-
-1. Build without the seccomp tag to disable seccomp:
-   ```
-   go build
-   ```
-
-2. Use strace to see which system calls are being blocked:
-   ```
-   strace -f ./rye your_script.rye
-   ```
-
-3. Modify the `DisableSeccompForDebug` function in `seccomp.go` to disable seccomp at runtime for debugging purposes.
-
-## Future Improvements
-
-Potential future improvements to the seccomp integration include:
-
-1. **Process Start Time Integration**: Add command-line flags or environment variables to enable/disable seccomp or select different profiles at runtime.
-
-2. **Install Time Integration**: Store seccomp profiles in system-wide configuration directories with restricted permissions.
-
-3. **Module-Specific Profiles**: Create different seccomp profiles for different Rye modules based on their required system calls.
-
-4. **Capability-Based Approach**: Implement a capability-based approach where modules declare their required system calls.
+The seccomp implementation uses the `github.com/elastic/go-seccomp-bpf` library, which provides a pure Go interface to the Linux seccomp BPF system. This allows for seccomp filtering without requiring any C dependencies, making it easier to build and deploy Rye across different Linux environments.

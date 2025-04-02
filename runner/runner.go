@@ -42,15 +42,10 @@ var (
 	template = flag.Bool("template", false, "Process file as a template, evaluating Rye code in {{ }} blocks")
 	help     = flag.Bool("help", false, "Displays this help message.")
 
-	// Seccomp options (Linux only)
+	// Seccomp options (Linux only) - using pure Go library
 	Seccomp        = flag.Bool("seccomp", true, "Enable seccomp system call filtering (Linux only)")
-	SeccompProfile = flag.String("seccomp-profile", "default", "Seccomp profile to use: default, strict, web, io, readonly")
+	SeccompProfile = flag.String("seccomp-profile", "strict", "Seccomp profile to use: strict, readonly")
 	SeccompAction  = flag.String("seccomp-action", "errno", "Action on restricted syscalls: errno, kill, trap, log")
-
-	// Seccomp2 options (Linux only) - using pure Go library
-	Seccomp2        = flag.Bool("seccomp2", false, "Enable seccomp2 system call filtering using pure Go library (Linux only)")
-	Seccomp2Profile = flag.String("seccomp2-profile", "strict", "Seccomp2 profile to use: strict")
-	Seccomp2Action  = flag.String("seccomp2-action", "errno", "Action on restricted syscalls: errno, kill, trap, log")
 )
 
 // Error handling utilities
@@ -149,12 +144,9 @@ func DoMain(regfn func(*env.ProgramState)) {
 		fmt.Println("\033[33m  rye -ctx 'os pipes'                  \033[36m# enter console and enter os and then pipes context")
 		fmt.Println("\033[33m  rye -template template.txt           \033[36m# processes template.txt, evaluating Rye code in {{ }} blocks")
 		fmt.Println("\033[33m  rye -seccomp=false                   \033[36m# disable seccomp system call filtering")
-		fmt.Println("\033[33m  rye -seccomp-profile=strict          \033[36m# use the strict seccomp profile for higher security")
-		fmt.Println("\033[33m  rye -seccomp-profile=readonly script.rye \033[36m# run script with read-only filesystem access")
+		fmt.Println("\033[33m  rye -seccomp-profile=strict          \033[36m# use the strict seccomp profile")
+		fmt.Println("\033[33m  rye -seccomp-profile=readonly        \033[36m# use the readonly seccomp profile (blocks write operations)")
 		fmt.Println("\033[33m  rye -seccomp-action=kill             \033[36m# terminate process on restricted syscalls")
-		fmt.Println("\033[33m  rye -seccomp2=true                   \033[36m# enable seccomp2 system call filtering (pure Go implementation)")
-		fmt.Println("\033[33m  rye -seccomp2-profile=strict         \033[36m# use the strict seccomp2 profile")
-		fmt.Println("\033[33m  rye -seccomp2-action=kill            \033[36m# terminate process on restricted syscalls with seccomp2")
 		fmt.Println("\033[0m\n Thank you for trying out \033[1mRye\033[22m ...")
 		fmt.Println("")
 	}
