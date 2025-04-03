@@ -17,8 +17,8 @@ Seccomp (secure computing mode) is a Linux kernel feature that restricts the sys
 Control seccomp filtering with these flags:
 
 ```
--seccomp=true                    # Enable seccomp filtering (enabled by default)
--seccomp-profile=strict          # Use the strict profile (only option available)
+-seccomp-profile=strict          # Use the strict profile (seccomp is enabled when this flag is set)
+-seccomp-profile=readonly        # Use the readonly profile (blocks write operations)
 -seccomp-action=errno            # Action for restricted syscalls (default)
 ```
 

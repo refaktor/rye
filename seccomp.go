@@ -78,7 +78,7 @@ func InitSeccomp(config SeccompConfig) error {
 			"write",
 
 			// Signal handling
-			"rt_sigaction", "rt_sigprocmask", "rt_sigreturn",
+			"rt_sigaction", "rt_sigprocmask", "rt_sigreturn", "sigaltstack",
 
 			// Process/thread operations
 			"exit", "exit_group", "nanosleep", "clock_nanosleep",
@@ -101,6 +101,18 @@ func InitSeccomp(config SeccompConfig) error {
 
 			// Allow open with O_RDONLY
 			"open", "openat",
+
+			// Memory management
+			"madvise", "mincore",
+
+			// System info
+			"uname", "arch_prctl",
+
+			// I/O operations
+			"writev", "pread64", "pwrite64", "ioctl",
+
+			// Additional syscalls that might be needed with CGO_ENABLED=0
+			"rseq", "prlimit64", "statx", "newfstatat",
 		}
 	} else {
 		// Default to strict profile
@@ -206,10 +218,16 @@ func InitSeccomp(config SeccompConfig) error {
 		},
 	}
 
+	// Log seccomp initialization details
+	fmt.Printf("\033[2;37mInitializing seccomp with profile: %s, action: %s\033[0m\n", config.Profile, config.Action)
+	// DEBUG: fmt.Printf("Allowing %d syscalls\n", len(allowedSyscalls))
+
 	// Load the filter
 	if err := seccomp.LoadFilter(filter); err != nil {
 		return fmt.Errorf("failed to load seccomp filter: %w", err)
 	}
+
+	// DEBUG fmt.Printf("Seccomp filter loaded successfully\n")
 
 	// Set the global CurrentSeccompProfile variable
 	CurrentSeccompProfile = config.Profile
@@ -223,4 +241,13 @@ func InitSeccomp(config SeccompConfig) error {
 // DisableSeccompForDebug can be called to disable seccomp for debugging
 func DisableSeccompForDebug() {
 	// This function is intentionally empty in the release build
+}
+
+// SetupSeccompTrapHandler sets up a handler for SIGSYS signals that are triggered
+// when using the "trap" action with seccomp. This helps identify which syscalls
+// are being blocked and causing issues.
+func SetupSeccompTrapHandler() {
+	// This is a no-op in the release build
+	// In a debug build, this would register a signal handler for SIGSYS
+	fmt.Println("Seccomp trap handler would be set up here in debug mode")
 }

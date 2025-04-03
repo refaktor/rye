@@ -48,17 +48,24 @@ func main() {
 	runner.DoMain(func(ps *env.ProgramState) {
 		// Initialize seccomp with configuration from command-line flags
 		config := SeccompConfig{
-			Enabled: *runner.Seccomp,
+			Enabled: *runner.SeccompProfile != "",
 			Profile: *runner.SeccompProfile,
 			Action:  *runner.SeccompAction,
 		}
 
-		// Initialize seccomp if enabled
+		// Initialize seccomp if profile is set
 		if config.Enabled {
+			// If using trap action, set up the trap handler
+			if config.Action == "trap" {
+				SetupSeccompTrapHandler()
+			}
+
 			if err := InitSeccomp(config); err != nil {
 				fmt.Fprintf(os.Stderr, "Warning: Failed to initialize seccomp: %v\n", err)
 				// Continue execution even if seccomp initialization fails
 				// This ensures the program can run without seccomp if needed
+			} else {
+				// DEBUG: fmt.Fprintf(os.Stderr, "Seccomp initialized with profile: %s\n", config.Profile)
 			}
 		}
 	})

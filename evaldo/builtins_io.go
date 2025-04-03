@@ -64,11 +64,11 @@ func __fs_read(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.
 	case env.Uri:
 		data, err := os.ReadFile(f.GetPath())
 		if err != nil {
-			return MakeBuiltinError(ps, err.Error(), "__fs_read")
+			return MakeBuiltinError(ps, err.Error(), "file-schema//read")
 		}
 		return *env.NewString(string(data))
 	default:
-		return MakeArgError(ps, 1, []env.Type{env.UriType}, "__fs_read")
+		return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-schema//read")
 	}
 	// Read file to byte slice
 }

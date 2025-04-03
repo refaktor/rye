@@ -37,3 +37,8 @@ func InitSeccomp(config SeccompConfig) error {
 func DisableSeccompForDebug() {
 	// Do nothing
 }
+
+// SetupSeccompTrapHandler is a stub implementation for systems where seccomp is not available
+func SetupSeccompTrapHandler() {
+	// Do nothing on non-Linux systems or when seccomp is not enabled
+}
