@@ -11,6 +11,51 @@ var builtins_functions = map[string]*env.Builtin{
 	//
 	// ##### Functions ##### "functions that create functions"
 	//
+
+	// Tests:
+	// var 'x 10
+	// x:: 20
+	// equal x 20
+	// Args:
+	// * word: Tagword representing the variable name
+	// * value: Initial value for the variable
+	// Returns:
+	// * The initial value
+	"var": {
+		Argsn: 2,
+		Doc:   "Declares a word as a variable with the given value, allowing it to be modified. Can only be used once per word in a context.",
+		Pure:  false,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch word := arg0.(type) {
+			case env.Tagword:
+				// Convert tagword to index
+				idx := word.Index
+				// Check if word already exists in context
+				if _, exists := ps.Ctx.Get(idx); exists {
+					ps.FailureFlag = true
+					return env.NewError("Cannot redefine existing word '" + ps.Idx.GetWord(idx) + "' with var")
+				}
+				// Set the value
+				ps.Ctx.SetNew(idx, arg1, ps.Idx)
+				// Mark as variable
+				ps.Ctx.MarkAsVariable(idx)
+				return arg1
+			case env.Word:
+				// Use word index directly
+				idx := word.Index
+				// Check if word already exists in context
+				if _, exists := ps.Ctx.Get(idx); exists {
+					ps.FailureFlag = true
+					return env.NewError("Cannot redefine existing word '" + ps.Idx.GetWord(idx) + "' with var")
+				}
+				ps.Ctx.SetNew(idx, arg1, ps.Idx)
+				ps.Ctx.MarkAsVariable(idx)
+				return arg1
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TagwordType, env.WordType}, "var")
+			}
+		},
+	},
 	// Tests:
 	// equal { does { 123 } |type? } 'function
 	// equal { x: does { 123 } x } 123

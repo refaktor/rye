@@ -206,7 +206,13 @@ func MaybeEvalOpwordOnRight(nextObj env.Object, ps *env.ProgramState, limited bo
 		}
 		idx := opword.Index
 		if ps.AllowMod {
-			ps.Ctx.Mod(idx, ps.Res)
+			ok := ps.Ctx.Mod(idx, ps.Res)
+			if !ok {
+				ps.Res = env.NewError("Cannot modify constant " + ps.Idx.GetWord(idx) + ", use 'var' to declare it as a variable")
+				ps.FailureFlag = true
+				ps.ErrorFlag = true
+				return
+			}
 		} else {
 			ok := ps.Ctx.SetNew(idx, ps.Res, ps.Idx)
 			if !ok {
@@ -224,7 +230,13 @@ func MaybeEvalOpwordOnRight(nextObj env.Object, ps *env.ProgramState, limited bo
 			return
 		}
 		idx := opword.Index
-		ps.Ctx.Mod(idx, ps.Res)
+		ok := ps.Ctx.Mod(idx, ps.Res)
+		if !ok {
+			ps.Res = env.NewError("Cannot modify constant " + ps.Idx.GetWord(idx) + ", use 'var' to declare it as a variable")
+			ps.FailureFlag = true
+			ps.ErrorFlag = true
+			return
+		}
 		ps.Ser.Next()
 		MaybeEvalOpwordOnRight(ps.Ser.Peek(), ps, limited)
 		return
@@ -506,7 +518,12 @@ func EvalSetword(ps *env.ProgramState, word env.Setword) {
 	EvalExpressionInj(ps, nil, false)
 	idx := word.Index
 	if ps.AllowMod {
-		ps.Ctx.Mod(idx, ps.Res)
+		ok := ps.Ctx.Mod(idx, ps.Res)
+		if !ok {
+			ps.Res = env.NewError("Cannot modify constant " + ps.Idx.GetWord(idx) + ", use 'var' to declare it as a variable")
+			ps.FailureFlag = true
+			ps.ErrorFlag = true
+		}
 	} else {
 		ok := ps.Ctx.SetNew(idx, ps.Res, ps.Idx)
 		if !ok {
@@ -522,7 +539,12 @@ func EvalModword(ps *env.ProgramState, word env.Modword) {
 	// es1 := EvalExpression(es)
 	EvalExpressionInj(ps, nil, false)
 	idx := word.Index
-	ps.Ctx.Mod(idx, ps.Res)
+	ok := ps.Ctx.Mod(idx, ps.Res)
+	if !ok {
+		ps.Res = env.NewError("Cannot modify constant " + ps.Idx.GetWord(idx) + ", use 'var' to declare it as a variable")
+		ps.FailureFlag = true
+		ps.ErrorFlag = true
+	}
 }
 
 //
@@ -1133,7 +1155,7 @@ func DirectlyCallBuiltin(ps *env.ProgramState, bi env.Builtin, a0 env.Object, a1
 func MaybeDisplayFailureOrError(es *env.ProgramState, genv *env.Idxs, tag string) {
 	if es.FailureFlag {
 		fmt.Println("\x1b[33m" + "Failure" + "\x1b[0m")
-		fmt.Println(tag)
+		// DEBUG: fmt.Println(tag)
 	}
 	if es.ErrorFlag {
 		fmt.Println("\x1b[31m" + es.Res.Print(*genv))
@@ -1146,7 +1168,7 @@ func MaybeDisplayFailureOrError(es *env.ProgramState, genv *env.Idxs, tag string
 			fmt.Print(err.CodeBlock.PositionAndSurroundingElements(*genv))
 		}
 		fmt.Println("\x1b[0m")
-		fmt.Println(tag)
+		// fmt.Println(tag)
 		// ENTER CONSOLE ON ERROR
 		// es.ErrorFlag = false
 		// es.FailureFlag = false

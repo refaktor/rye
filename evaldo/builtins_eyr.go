@@ -253,7 +253,11 @@ func Eyr_EvalLSetword(ps *env.ProgramState, word env.LSetword, leftVal env.Objec
 	if ps.ErrorFlag {
 		return ps
 	}
-	ps.Ctx.Mod(idx, val)
+	if ok := ps.Ctx.Mod(idx, val); !ok {
+		ps.ErrorFlag = true
+		ps.FailureFlag = true
+		ps.Res = env.NewError("Cannot modify constant '" + ps.Idx.GetWord(idx) + "', use 'var' to declare it as a variable")
+	}
 	return ps
 }
 

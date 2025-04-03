@@ -1,1 +1,4 @@
-go build  -ldflags="-s -w" -o bin/rye
+# before seccomp
+# go build  -ldflags="-s -w" -o bin/rye
+
+CGO_ENABLED=0 go build -tags seccomp -o bin/rye

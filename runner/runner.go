@@ -41,6 +41,10 @@ var (
 	dual     = flag.Bool("dual", false, "Starts REPL in dual-mode with two parallel panels")
 	template = flag.Bool("template", false, "Process file as a template, evaluating Rye code in {{ }} blocks")
 	help     = flag.Bool("help", false, "Displays this help message.")
+
+	// Seccomp options (Linux only) - using pure Go library
+	SeccompProfile = flag.String("seccomp-profile", "", "Seccomp profile to use: strict, readonly")
+	SeccompAction  = flag.String("seccomp-action", "errno", "Action on restricted syscalls: errno, kill, trap, log")
 )
 
 // Error handling utilities
@@ -138,6 +142,10 @@ func DoMain(regfn func(*env.ProgramState)) {
 		fmt.Println("\033[33m  rye -ctx os                          \033[36m# enter console and enter os context")
 		fmt.Println("\033[33m  rye -ctx 'os pipes'                  \033[36m# enter console and enter os and then pipes context")
 		fmt.Println("\033[33m  rye -template template.txt           \033[36m# processes template.txt, evaluating Rye code in {{ }} blocks")
+		fmt.Println("\033[33m  rye                                  \033[36m# seccomp is disabled by default")
+		fmt.Println("\033[33m  rye -seccomp-profile=strict          \033[36m# enable seccomp with the strict profile")
+		fmt.Println("\033[33m  rye -seccomp-profile=readonly        \033[36m# enable seccomp with the readonly profile (blocks write operations)")
+		fmt.Println("\033[33m  rye -seccomp-action=kill             \033[36m# terminate process on restricted syscalls")
 		fmt.Println("\033[0m\n Thank you for trying out \033[1mRye\033[22m ...")
 		fmt.Println("")
 	}

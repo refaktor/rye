@@ -1932,7 +1932,10 @@ var builtins_collection = map[string]*env.Builtin{
 					case *env.Block:
 						s := &oldval.Series
 						oldval.Series = *s.RmLast()
-						ctx.Mod(wrd.Index, oldval)
+						if ok := ctx.Mod(wrd.Index, oldval); !ok {
+							ps.FailureFlag = true
+							return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(wrd.Index) + "', use 'var' to declare it as a variable")
+						}
 						return oldval
 					default:
 						return MakeBuiltinError(ps, "Old value should be Block type.", "remove-last!")
@@ -1972,13 +1975,19 @@ var builtins_collection = map[string]*env.Builtin{
 						case env.Integer:
 							newval = *env.NewString(oldval.Value + strconv.Itoa(int(s3.Value)))
 						}
-						ctx.Mod(wrd.Index, newval)
+						if ok := ctx.Mod(wrd.Index, newval); !ok {
+							ps.FailureFlag = true
+							return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(wrd.Index) + "', use 'var' to declare it as a variable")
+						}
 						return newval
 					case *env.Block: // TODO
 						// 	fmt.Println(123)
 						s := &oldval.Series
 						oldval.Series = *s.Append(arg0)
-						ctx.Mod(wrd.Index, oldval)
+						if ok := ctx.Mod(wrd.Index, oldval); !ok {
+							ps.FailureFlag = true
+							return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(wrd.Index) + "', use 'var' to declare it as a variable")
+						}
 						return oldval
 					case *env.List:
 						dataSlice := make([]any, 0)
@@ -1998,7 +2007,10 @@ var builtins_collection = map[string]*env.Builtin{
 							combineList = append(combineList, env.ToRyeValue(v))
 						}
 						finalList := *env.NewList(combineList)
-						ctx.Mod(wrd.Index, finalList)
+						if ok := ctx.Mod(wrd.Index, finalList); !ok {
+							ps.FailureFlag = true
+							return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(wrd.Index) + "', use 'var' to declare it as a variable")
+						}
 						return finalList
 					default:
 						return makeError(ps, "Type of tagword is not String or Block")
