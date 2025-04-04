@@ -1,9 +1,7 @@
 package env
 
 import (
-	"errors"
 	"fmt"
-	"reflect"
 	"slices"
 	"strconv"
 	"strings"
@@ -157,72 +155,7 @@ func (s Table) GetColumn(name string) Object {
 		}
 		return *NewBlock(*NewTSeries(col1))
 	} else {
-		return *NewError("Column not found")
-	}
-}
-
-func (s Table) Sum(name string) Object {
-	var sum int64
-	var sumf float64
-	idx := slices.Index[[]string](s.Cols, name)
-	if idx > -1 {
-		for _, row := range s.Rows {
-			if len(row.Values) > idx {
-				switch v := row.Values[idx].(type) {
-				case int64:
-					sum += v
-				case Integer:
-					sum += v.Value
-				case Decimal:
-					sumf += v.Value
-				default:
-					fmt.Println("row--->")
-					fmt.Println(reflect.TypeOf(v))
-				}
-			}
-		}
-		if sumf == 0 {
-			return Integer{sum}
-		} else {
-			return Decimal{sumf + float64(sum)}
-		}
-		//return sumf + float64(sum), nil
-		//return Integer{int64(sum)}
-	} else {
-		return *NewError("Column not found")
-	}
-}
-
-func (s Table) Sum_Just(name string) (float64, error) {
-	var sum int64
-	var sumf float64
-	idx := slices.Index[[]string](s.Cols, name)
-	if idx > -1 {
-		for _, row := range s.Rows {
-			if len(row.Values) > idx {
-				switch v := row.Values[idx].(type) {
-				case float64:
-					sumf += v
-				case int64:
-					sum += v
-				case Integer:
-					sum += v.Value
-				case Decimal:
-					sumf += v.Value
-				default:
-					fmt.Println("row--->")
-					fmt.Println(reflect.TypeOf(v))
-				}
-			}
-		}
-		// if sumf == 0 {
-		//	return Integer{int64(sum)}
-		//} else {
-		//	return Decimal{sumf + float64(sum)}
-		//}
-		return sumf + float64(sum), nil
-	} else {
-		return 0.0, errors.New("Column not found")
+		return NewError("Column not found")
 	}
 }
 

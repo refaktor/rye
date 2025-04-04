@@ -945,9 +945,17 @@ var Builtins_table = map[string]*env.Builtin{
 			case env.Table:
 				switch col := arg1.(type) {
 				case env.Word:
-					return spr.GetColumn(ps.Idx.GetWord(col.Index))
+					res := spr.GetColumn(ps.Idx.GetWord(col.Index))
+					if _, isErr := res.(*env.Error); isErr {
+						ps.FailureFlag = true
+					}
+					return res
 				case env.String:
-					return spr.GetColumn(col.Value)
+					res := spr.GetColumn(col.Value)
+					if _, isErr := res.(*env.Error); isErr {
+						ps.FailureFlag = true
+					}
+					return res
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "column?")
 				}
