@@ -14,7 +14,7 @@ func Rye0_EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) *env.P
 	for ps.Ser.Pos() < ps.Ser.Len() {
 		ps, injnow = Rye0_EvalExpressionInj(ps, inj, injnow)
 
-		if Rye0_checkFlagsAfterBlock(ps, 101) || Rye0_checkErrorReturnFlag(ps) {
+		if Rye0_checkFlagsAfterExpression(ps) {
 			return ps
 		}
 	}
@@ -148,7 +148,7 @@ func Rye0_EvaluateBlock(ps *env.ProgramState, block env.Block) *env.ProgramState
 
 		for ps.Ser.Pos() < ps.Ser.Len() {
 			Rye0_EvalExpression2(ps, false)
-			if Rye0_checkErrorReturnFlag(ps) {
+			if Rye0_checkErrorFlag(ps) {
 				ps.Ser = ser // Restore original series
 				return ps
 			}
@@ -341,7 +341,7 @@ func Rye0_EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object
 	case env.BuiltinType:
 		bu := object.(env.Builtin)
 
-		if Rye0_checkFlagsBi(bu, ps, 333) {
+		if Rye0_checkForFailureWithBuiltin(bu, ps, 333) {
 			return ps
 		}
 		return Rye0_CallBuiltin(bu, ps, leftVal, toLeft, pipeSecond, firstVal)
@@ -467,7 +467,7 @@ func Rye0_CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, t
 	// Collect arguments
 	for i := ii; i < fn.Argsn; i++ {
 		ps = evalExprFn(ps, true)
-		if Rye0_checkErrorReturnFlag(ps) {
+		if Rye0_checkErrorFlag(ps) {
 			return ps
 		}
 
@@ -555,7 +555,7 @@ func resetProgramState(ps *env.ProgramState, ser env.TSeries, idx *env.Idxs) {
 //   - The updated program state
 func Rye0_CallFunctionWithArgs(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, args ...env.Object) *env.ProgramState {
 	// Check for errors first
-	if Rye0_checkErrorReturnFlag(ps) {
+	if Rye0_checkErrorFlag(ps) {
 		return ps
 	}
 
@@ -771,8 +771,8 @@ func updateErrorCodeContext(ps *env.ProgramState) {
 	}
 }
 
-// Rye0_checkFlagsBi checks if there are failure flags and handles them appropriately.
-func Rye0_checkFlagsBi(bi env.Builtin, ps *env.ProgramState, n int) bool {
+// Rye0_checkForFailureWithBuiltin checks if there are failure flags and handles them appropriately.
+func Rye0_checkForFailureWithBuiltin(bi env.Builtin, ps *env.ProgramState, n int) bool {
 	if ps.FailureFlag {
 		if bi.AcceptFailure {
 			// Accept failure
@@ -817,8 +817,8 @@ func Rye0_checkContextErrorHandler(ps *env.ProgramState) bool {
 	return true
 }
 
-// Rye0_checkFlagsAfterBlock checks if there are failure flags after evaluating a block.
-func Rye0_checkFlagsAfterBlock(ps *env.ProgramState, n int) bool {
+// Rye00_checkFlagsAfterExpression checks if there are failure flags after evaluating a block.
+func Rye0_checkFlagsAfterExpression(ps *env.ProgramState) bool {
 	if ps.FailureFlag && !ps.ReturnFlag {
 		if !ps.InErrHandler && Rye0_checkContextErrorHandler(ps) {
 			return false // Error should be picked up in the handler block
@@ -831,8 +831,22 @@ func Rye0_checkFlagsAfterBlock(ps *env.ProgramState, n int) bool {
 	return false
 }
 
-// Rye0_checkErrorReturnFlag checks if there are error or return flags.
-func Rye0_checkErrorReturnFlag(ps *env.ProgramState) bool {
+/* // Rye0_checkFlagsAfterBlock checks if there are failure flags after evaluating a block.
+func Rye0_checkFlagsAfterBlock(ps *env.ProgramState, n int) bool {
+	if ps.FailureFlag && !ps.ReturnFlag {
+		if !ps.InErrHandler && Rye0_checkContextErrorHandler(ps) {
+			return false // Error should be picked up in the handler block
+		}
+
+		updateErrorCodeContext(ps)
+		ps.ErrorFlag = true
+		return true
+	}
+	return false
+}*/
+
+// Rye0_checkErrorFlag checks if there are error or return flags.
+func Rye0_checkErrorFlag(ps *env.ProgramState) bool {
 	if ps.ErrorFlag {
 		updateErrorCodeContext(ps)
 		return true

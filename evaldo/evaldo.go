@@ -490,7 +490,7 @@ func EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toL
 	switch object.Type() {
 	case env.BuiltinType:
 		bu := object.(env.Builtin)
-		if checkFlagsBi(bu, ps, 333) {
+		if checkForFailureWithBuiltin(bu, ps, 333) {
 			return
 		}
 		CallBuiltin(bu, ps, leftVal, toLeft, pipeSecond, firstVal)
@@ -506,7 +506,7 @@ func EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toL
 	case env.VarBuiltinType:
 		bu := object.(env.VarBuiltin)
 
-		if checkFlagsVarBi(bu, ps, 333) {
+		if checkForFailureWithVarBuiltin(bu, ps, 333) {
 			return
 		}
 		CallVarBuiltin(bu, ps, leftVal, toLeft, pipeSecond, firstVal)
@@ -1002,7 +1002,7 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 		//fmt.Println(ps.Ser.GetPos())
 		evalExprFn(ps, true)
 
-		if checkFlagsBi(bi, ps, 0) {
+		if checkForFailureWithBuiltin(bi, ps, 0) {
 			return
 		}
 		if ps.ReturnFlag || ps.ErrorFlag {
@@ -1021,7 +1021,7 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 	} else if bi.Argsn > 1 && bi.Cur1 == nil {
 		evalExprFn(ps, true) // <---- THESE DETERMINE IF IT CONSUMES WHOLE EXPRESSION OR NOT IN CASE OF PIPEWORDS .. HM*... MAYBE WOULD COULD HAVE A WORD MODIFIER?? a: 2 |add 5 a:: 2 |add 5 print* --TODO
 
-		if checkFlagsBi(bi, ps, 1) {
+		if checkForFailureWithBuiltin(bi, ps, 1) {
 			return
 		}
 		if ps.ReturnFlag || ps.ErrorFlag {
@@ -1038,7 +1038,7 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 	if bi.Argsn > 2 {
 		evalExprFn(ps, true)
 
-		if checkFlagsBi(bi, ps, 2) {
+		if checkForFailureWithBuiltin(bi, ps, 2) {
 			return
 		}
 		if ps.ReturnFlag || ps.ErrorFlag {
@@ -1203,25 +1203,8 @@ func MaybeDisplayFailureOrErrorWASM(es *env.ProgramState, genv *env.Idxs, printf
 
 //  CHECKING VARIOUS FLAGS
 
-// Consolidated flag checking function
-func checkFlags(ps *env.ProgramState, n int, flags ...bool) bool {
-	if ps.ReturnFlag || ps.ErrorFlag {
-		return true
-	}
-	if ps.FailureFlag {
-		ps.ErrorFlag = true
-		return true
-	}
-	for _, flag := range flags {
-		if flag {
-			return true
-		}
-	}
-	return false
-}
-
 // Replace individual flag checking functions with calls to checkFlags
-func checkFlagsBi(bi env.Builtin, ps *env.ProgramState, n int) bool {
+func checkForFailureWithBuiltin(bi env.Builtin, ps *env.ProgramState, n int) bool {
 	if ps.FailureFlag && !bi.AcceptFailure {
 		ps.ErrorFlag = true
 		return true
@@ -1229,7 +1212,7 @@ func checkFlagsBi(bi env.Builtin, ps *env.ProgramState, n int) bool {
 	return false
 }
 
-func checkFlagsVarBi(bi env.VarBuiltin, ps *env.ProgramState, n int) bool {
+func checkForFailureWithVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, n int) bool {
 	if ps.FailureFlag && !bi.AcceptFailure {
 		ps.ErrorFlag = true
 		return true
@@ -1250,19 +1233,6 @@ func tryHandleFailure(ps *env.ProgramState) bool {
 		return true // Unhandled failure
 	}
 	return false // No failure
-}
-
-func tryHandleFailure_OLD(ps *env.ProgramState, n int) bool {
-	if ps.FailureFlag && !ps.ReturnFlag {
-		if !ps.InErrHandler {
-			if checkContextErrorHandler(ps) {
-				return false
-			}
-		}
-		ps.ErrorFlag = true
-		return true
-	}
-	return false
 }
 
 // ExecuteDeferredBlocks executes all deferred blocks in LIFO order (last in, first out)
@@ -1295,3 +1265,34 @@ func checkContextErrorHandler(ps *env.ProgramState) bool {
 	ps.InErrHandler = false
 	return true
 }
+
+/* func tryHandleFailure_OLD(ps *env.ProgramState, n int) bool {
+	if ps.FailureFlag && !ps.ReturnFlag {
+		if !ps.InErrHandler {
+			if checkContextErrorHandler(ps) {
+				return false
+			}
+		}
+		ps.ErrorFlag = true
+		return true
+	}
+	return false
+}
+*/
+
+/* // Consolidated flag checking function
+func checkFlags(ps *env.ProgramState, n int, flags ...bool) bool {
+	if ps.ReturnFlag || ps.ErrorFlag {
+		return true
+	}
+	if ps.FailureFlag {
+		ps.ErrorFlag = true
+		return true
+	}
+	for _, flag := range flags {
+		if flag {
+			return true
+		}
+	}
+	return false
+} */

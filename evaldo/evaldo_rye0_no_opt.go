@@ -1,13 +1,7 @@
 // evaldo_rye0_no_opt.go - A simplified interpreter for the Rye language without word replacement optimization
 package evaldo
 
-import (
-	"strconv"
-
-	"github.com/refaktor/rye/env"
-)
-
-// Rye0_findWordValue_NoOpt returns the value associated with a word in the current context.
+/* // Rye0_findWordValue_NoOpt returns the value associated with a word in the current context.
 // This version does NOT replace the word with the builtin in the series.
 func Rye0_findWordValue_NoOpt(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *env.RyeCtx) {
 	// Handle CPath type separately
@@ -209,3 +203,4 @@ func EvalBlock_NoOpt(ps *env.ProgramState) *env.ProgramState {
 	}
 	return ps
 }
+*/

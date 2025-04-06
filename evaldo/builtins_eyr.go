@@ -23,7 +23,7 @@ func Eyr_CallBuiltinPipe(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object)
 	// for now works just with functions that accept block as a first and only argument ... will have to conceptualize other options first
 
 	if bi.Argsn > 0 && bi.Cur0 == nil {
-		if checkFlagsBi(bi, ps, 0) {
+		if checkForFailureWithBuiltin(bi, ps, 0) {
 			return ps
 		}
 		if ps.ErrorFlag || ps.ReturnFlag {
@@ -48,7 +48,7 @@ func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toL
 	var arg2 env.Object
 
 	if bi.Argsn == 0 && bi.Cur0 == nil {
-		if checkFlagsBi(bi, ps, 0) {
+		if checkForFailureWithBuiltin(bi, ps, 0) {
 			return ps
 		}
 		if ps.ErrorFlag || ps.ReturnFlag {
@@ -61,7 +61,7 @@ func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toL
 		}
 	}
 	if bi.Argsn > 0 && bi.Cur0 == nil {
-		if checkFlagsBi(bi, ps, 0) {
+		if checkForFailureWithBuiltin(bi, ps, 0) {
 			return ps
 		}
 		if ps.ErrorFlag || ps.ReturnFlag {
@@ -78,7 +78,7 @@ func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toL
 		}
 	}
 	if bi.Argsn > 1 && bi.Cur1 == nil {
-		if checkFlagsBi(bi, ps, 1) {
+		if checkForFailureWithBuiltin(bi, ps, 1) {
 			return ps
 		}
 		if ps.ErrorFlag || ps.ReturnFlag {
@@ -95,7 +95,7 @@ func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toL
 		}
 	}
 	if bi.Argsn > 2 && bi.Cur2 == nil {
-		if checkFlagsBi(bi, ps, 0) {
+		if checkForFailureWithBuiltin(bi, ps, 0) {
 			return ps
 		}
 		if ps.ErrorFlag || ps.ReturnFlag {
@@ -181,7 +181,7 @@ func Eyr_EvalObject(es *env.ProgramState, object env.Object, leftVal env.Object,
 		if bakein {
 			es.Ser.Put(bu)
 		} //es.Ser.SetPos(es.Ser.Pos() - 1)
-		if checkFlagsBi(bu, es, 333) {
+		if checkForFailureWithBuiltin(bu, es, 333) {
 			return es
 		}
 		if pipeWord {

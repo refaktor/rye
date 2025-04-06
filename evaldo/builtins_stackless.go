@@ -23,7 +23,7 @@ func Stck_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, to
 		//fmt.Println(ps.Ser.GetPos())
 		evalExprFn(ps, true)
 
-		if checkFlagsBi(bi, ps, 0) {
+		if checkForFailureWithBuiltin(bi, ps, 0) {
 			return ps
 		}
 		if ps.ErrorFlag || ps.ReturnFlag {
@@ -34,7 +34,7 @@ func Stck_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, to
 	if bi.Argsn > 1 && bi.Cur1 == nil {
 		evalExprFn(ps, true) // <---- THESE DETERMINE IF IT CONSUMES WHOLE EXPRESSION OR NOT IN CASE OF PIPEWORDS .. HM*... MAYBE WOULD COULD HAVE A WORD MODIFIER?? a: 2 |add 5 a:: 2 |add 5 print* --TODO
 
-		if checkFlagsBi(bi, ps, 1) {
+		if checkForFailureWithBuiltin(bi, ps, 1) {
 			return ps
 		}
 		if ps.ErrorFlag || ps.ReturnFlag {
@@ -60,7 +60,7 @@ func Stck_EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object
 		// OBJECT INJECTION EXPERIMENT
 		// ps.Ser.Put(bu)
 
-		if checkFlagsBi(bu, ps, 333) {
+		if checkForFailureWithBuiltin(bu, ps, 333) {
 			return ps
 		}
 		return Stck_CallBuiltin(bu, ps, leftVal, toLeft)
