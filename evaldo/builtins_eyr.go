@@ -406,7 +406,7 @@ var Builtins_eyr = map[string]*env.Builtin{
 
 	"rye0": {
 		Argsn: 1,
-		Doc:   "Evaluates Rye block as Eyr (postfix) stack based code.",
+		Doc:   "Evaluates Rye block as Rye0 dialect.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -419,7 +419,27 @@ var Builtins_eyr = map[string]*env.Builtin{
 				ps.Ser = ser
 				return ps.Res
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "eyr")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "rye0")
+			}
+		},
+	},
+
+	"rye00": {
+		Argsn: 1,
+		Doc:   "Evaluates Rye block as Rye00 dialect (builtins and integers only).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg0.(type) {
+			case env.Block:
+				ser := ps.Ser
+				ps.Ser = bloc.Series
+				dialect := ps.Dialect
+				ps.Dialect = env.Rye00Dialect
+				Rye00_EvalBlockInj(ps, nil, false)
+				ps.Dialect = dialect
+				ps.Ser = ser
+				return ps.Res
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "rye00")
 			}
 		},
 	},

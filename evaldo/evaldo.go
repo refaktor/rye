@@ -36,6 +36,8 @@ func EvalBlock(ps *env.ProgramState) {
 			Rye0_FastEvalBlock(ps)
 		}
 		Rye0_EvalBlockInj(ps, nil, false) // TODO ps.Stack is already in ps ... refactor
+	case env.Rye00Dialect:
+		Rye00_EvalBlockInj(ps, nil, false) // Simplified dialect for builtins and integers
 	default:
 		// TODO fail
 	}
@@ -51,6 +53,8 @@ func EvalBlockInjMultiDialect(ps *env.ProgramState, inj env.Object, injnow bool)
 	case env.Rye0Dialect:
 		Rye0_EvalBlockInj(ps, inj, injnow) // TODO ps.Stack is already in ps ... refactor
 		// return Rye0_EvaluateBlock(ps) // TODO ps.Stack is already in ps ... refactor
+	case env.Rye00Dialect:
+		Rye00_EvalBlockInj(ps, inj, injnow) // Simplified dialect for builtins and integers
 	default:
 		//
 	}

@@ -370,9 +370,10 @@ type ProgramState struct {
 type DoDialect int
 
 const (
-	Rye2Dialect DoDialect = 1
-	EyrDialect  DoDialect = 2
-	Rye0Dialect DoDialect = 3
+	Rye2Dialect  DoDialect = 1
+	EyrDialect   DoDialect = 2
+	Rye0Dialect  DoDialect = 3
+	Rye00Dialect DoDialect = 4 // Simplified dialect for builtins and integers
 )
 
 func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
