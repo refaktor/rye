@@ -1,0 +1,17 @@
+name: dart_rye
+description: A Dart implementation of the Rye language evaluator
+version: 0.1.0
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  # No external dependencies for now
+
+dev_dependencies:
+  lints: ^2.0.0
+  test: ^1.21.0
+
+# Specify the entry point for the application
+executables:
+  dart_rye: dart_rye
