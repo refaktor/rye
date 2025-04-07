@@ -1,6 +1,8 @@
 // rye.dart - A simplified Rye language evaluator in Dart
 
 import 'dart:io';
+import 'dart:async';
+import 'flutter/flutter_app.dart';
 
 // Type enum for Rye values
 enum RyeType {
@@ -754,6 +756,45 @@ RyeObject printBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObj
   return Error("print requires an argument");
 }
 
+// Implements the "flutter_window" builtin function
+RyeObject flutterWindowBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
+  // Check if we have a title argument
+  if (arg0 != null) {
+    String title = arg0.print(ps.idx);
+    
+    // Check if we have a message argument
+    if (arg1 != null) {
+      String message = arg1.print(ps.idx);
+      
+      // Launch the Flutter window in a separate isolate
+      stdout.writeln("Launching Flutter window with title: '$title' and message: '$message'");
+      
+      // Use Future.microtask to avoid blocking the main thread
+      Future.microtask(() async {
+        try {
+          await runFlutterApp(
+            title: title,
+            message: message,
+          );
+        } catch (e) {
+          stdout.writeln("Error launching Flutter window: $e");
+        }
+      });
+      
+      // Return a void object
+      return const Void();
+    }
+    
+    // If message argument is missing
+    ps.failureFlag = true;
+    return Error("flutter_window requires a message argument");
+  }
+  
+  // If title argument is missing
+  ps.failureFlag = true;
+  return Error("flutter_window requires a title argument");
+}
+
 // Implements the "loop" builtin function
 RyeObject loopBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
   // Check if the first argument is an integer (number of iterations)
@@ -800,7 +841,7 @@ RyeObject loopBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObje
   return Error("First argument to loop must be an integer");
 }
 
-// Register the "_+", "loop", and "print" builtin functions
+// Register the "_+", "loop", "print", and "flutter_window" builtin functions
 void registerBuiltins(ProgramState ps) {
   // Register the _+ builtin
   int plusIdx = ps.idx.indexWord("_+");
@@ -816,6 +857,11 @@ void registerBuiltins(ProgramState ps) {
   int printIdx = ps.idx.indexWord("print");
   Builtin printBuiltinObj = Builtin(printBuiltin, 1, false, false, "Prints a value to the console");
   ps.ctx.set(printIdx, printBuiltinObj);
+  
+  // Register the flutter_window builtin
+  int flutterWindowIdx = ps.idx.indexWord("flutter_window");
+  Builtin flutterWindowBuiltinObj = Builtin(flutterWindowBuiltin, 2, false, false, "Shows a Flutter window with a title and message");
+  ps.ctx.set(flutterWindowIdx, flutterWindowBuiltinObj);
 }
 
 // Rye00_MaybeDisplayFailureOrError displays failure or error information if present.
