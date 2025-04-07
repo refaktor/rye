@@ -1,6 +1,6 @@
 # Dart Rye
 
-A Dart implementation of the Rye language evaluator. This is a simplified version that only handles integers, blocks, and builtins.
+A Dart implementation of the Rye language evaluator. This is a simplified version that handles integers, blocks, builtins, and includes a parser.
 
 ## Overview
 
@@ -10,22 +10,69 @@ This project is a port of the Rye language evaluator from Go to Dart. It impleme
 - Block values
 - Word lookup
 - Builtin functions (currently only `_+` is implemented)
+- Simple parser for Rye code
 
 ## Structure
 
-The project is organized into a single file for simplicity:
+The project is organized into several files:
 
 - `rye.dart`: Contains all the core components of the Rye evaluator
-- `main.dart`: Exports the rye.dart module
+- `loader.dart`: Implements the parser for Rye code
+- `main.dart`: Exports the modules
 - `bin/dart_rye.dart`: Entry point that demonstrates the usage of the evaluator
+- `bin/loader_example.dart`: Example of using the loader
 
-## Running the Example
+## Running the Examples
 
-To run the example program (which evaluates `3 _+ 4`):
+To run the basic example (which evaluates `3 _+ 4`):
 
 ```bash
 cd _sandbox/dartRye
 dart run
+```
+
+To run the loader example (which parses and evaluates Rye code):
+
+```bash
+cd _sandbox/dartRye
+dart run bin/loader_example.dart
+```
+
+## Parser Implementation
+
+The parser is implemented using a simple tokenizer and parser approach. It splits the input into tokens and then converts each token into the appropriate Rye object.
+
+The parser supports:
+- Integers
+- Words
+- Setwords
+- Blocks
+- Basic string literals
+
+Here's an example of how the parser works:
+
+```dart
+// Sample Rye code
+final sampleCode = '''{ _+ 1 10 }''';
+
+// Load the code
+final (result, success) = loader.loadString(sampleCode);
+
+if (success) {
+  // Create a program state
+  final block = result as Block;
+  final series = block.series;
+  final ps = ProgramState(series, idx);
+  
+  // Register builtins
+  registerBuiltins(ps);
+  
+  // Evaluate the program
+  rye00_evalBlockInj(ps, null, false);
+  
+  // Display the result
+  stdout.writeln("Result: ${ps.res!.print(idx)}");
+}
 ```
 
 ## Adding More Builtins
@@ -63,11 +110,12 @@ The implementation follows the same structure as the Go code, with some adaptati
 2. **Value Types**: Implements Integer, Block, Word, and other value types
 3. **Evaluation Logic**: Implements the simplified evaluator that handles integers, blocks, and builtins
 4. **Builtin Functions**: Implements the "_+" builtin function as an example
+5. **Parser**: Uses a simple tokenizer and parser to convert Rye code into a Block object
 
 ## Future Improvements
 
-- Add more value types (strings, decimals, etc.)
+- Add more value types (decimals, etc.)
 - Implement more builtins
-- Add a parser to convert Rye code from text to a series of objects
+- Enhance the parser to support more Rye syntax (nested blocks, etc.)
 - Implement more advanced features like contexts and functions
-- Split the code into multiple files for better organization
+- Add a more sophisticated parser using a library like PetitParser

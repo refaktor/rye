@@ -2,3 +2,4 @@
 
 // Export all the components
 export 'rye.dart';
+export 'loader.dart';

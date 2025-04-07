@@ -350,7 +350,7 @@ class RyeCtx {
 
   RyeCtx(this.parent, [this.kind = const Word(0)]);
 
-  (RyeObject, bool) get(int word) {
+  (RyeObject?, bool) get(int word) {
     RyeObject? obj = state[word];
     bool exists = obj != null;
     
@@ -362,10 +362,10 @@ class RyeCtx {
       }
     }
     
-    return (obj!, exists);
+    return (obj, exists);
   }
 
-  (RyeObject, bool, RyeCtx) get2(int word) {
+  (RyeObject?, bool, RyeCtx) get2(int word) {
     RyeObject? obj = state[word];
     bool exists = obj != null;
     
@@ -378,7 +378,7 @@ class RyeCtx {
       }
     }
     
-    return (obj!, exists, this);
+    return (obj, exists, this);
   }
 
   RyeObject set(int word, RyeObject val) {
@@ -522,7 +522,7 @@ void setError00(ProgramState ps, String message) {
 
   // First try to get the value from the current context
   var (object, found) = ps.ctx.get(index);
-  if (found) {
+  if (found && object != null) {
     // Enable word replacement optimization for builtins
     if (object.type() == RyeType.builtinType && ps.ser.getPos() > 0) {
       ps.ser.put(object);
@@ -738,11 +738,84 @@ RyeObject addBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObjec
   return Error("Arguments to _+ must be integers");
 }
 
-// Register the "_+" builtin function
+// Implements the "print" builtin function
+RyeObject printBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
+  // Check if we have an argument to print
+  if (arg0 != null) {
+    // Print the argument
+    stdout.write("${arg0.print(ps.idx)}\n");
+    
+    // Return the argument (print is identity function)
+    return arg0;
+  }
+  
+  // If no argument is provided, return an error
+  ps.failureFlag = true;
+  return Error("print requires an argument");
+}
+
+// Implements the "loop" builtin function
+RyeObject loopBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
+  // Check if the first argument is an integer (number of iterations)
+  if (arg0 is Integer) {
+    // Check if the second argument is a block
+    if (arg1 is Block) {
+      int iterations = arg0.value;
+      RyeObject result = const Void();
+      
+      // Execute the block 'iterations' times
+      for (int i = 0; i < iterations; i++) {
+        // Create a new program state for each iteration with a fresh copy of the block's series
+        ProgramState blockPs = ProgramState(TSeries(List<RyeObject>.from(arg1.series.s)), ps.idx);
+        blockPs.ctx = ps.ctx;
+        
+        // Reset the series position to ensure we start from the beginning
+        blockPs.ser.reset();
+        
+        // Evaluate the block
+        rye00_evalBlockInj(blockPs, null, false);
+        
+        // Check for errors or failures
+        if (blockPs.errorFlag || blockPs.failureFlag) {
+          ps.errorFlag = blockPs.errorFlag;
+          ps.failureFlag = blockPs.failureFlag;
+          ps.res = blockPs.res;
+          return blockPs.res ?? Error("Error in loop");
+        }
+        
+        // Store the result of the last iteration
+        result = blockPs.res ?? const Void();
+      }
+      
+      return result;
+    }
+    
+    // If second argument is not a block
+    ps.failureFlag = true;
+    return Error("Second argument to loop must be a block");
+  }
+  
+  // If first argument is not an integer
+  ps.failureFlag = true;
+  return Error("First argument to loop must be an integer");
+}
+
+// Register the "_+", "loop", and "print" builtin functions
 void registerBuiltins(ProgramState ps) {
+  // Register the _+ builtin
   int plusIdx = ps.idx.indexWord("_+");
   Builtin plusBuiltin = Builtin(addBuiltin, 2, false, true, "Adds two integers");
   ps.ctx.set(plusIdx, plusBuiltin);
+  
+  // Register the loop builtin
+  int loopIdx = ps.idx.indexWord("loop");
+  Builtin loopBuiltinObj = Builtin(loopBuiltin, 2, false, false, "Executes a block a specified number of times");
+  ps.ctx.set(loopIdx, loopBuiltinObj);
+  
+  // Register the print builtin
+  int printIdx = ps.idx.indexWord("print");
+  Builtin printBuiltinObj = Builtin(printBuiltin, 1, false, false, "Prints a value to the console");
+  ps.ctx.set(printIdx, printBuiltinObj);
 }
 
 // Rye00_MaybeDisplayFailureOrError displays failure or error information if present.
