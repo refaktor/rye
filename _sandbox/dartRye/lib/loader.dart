@@ -2,6 +2,7 @@
 
 import 'dart:io';
 import 'rye.dart';
+import 'types.dart';
 
 /// RyeLoader is responsible for parsing Rye code into a Block object
 class RyeLoader {
@@ -204,35 +205,6 @@ class Setword implements RyeObject {
   bool equal(RyeObject other) {
     if (other.type() != type()) return false;
     return index == (other as Setword).index;
-  }
-
-  @override
-  int getKind() => type().index;
-}
-
-/// RyeString implementation
-class RyeString implements RyeObject {
-  final String value;
-
-  const RyeString(this.value);
-
-  @override
-  RyeType type() => RyeType.wordType; // Using wordType for now, should be stringType
-
-  @override
-  String print(Idxs idxs) {
-    return '"$value"';
-  }
-
-  @override
-  String inspect(Idxs idxs) {
-    return '[String: "$value"]';
-  }
-
-  @override
-  bool equal(RyeObject other) {
-    if (other.type() != type()) return false;
-    return value == (other as RyeString).value;
   }
 
   @override

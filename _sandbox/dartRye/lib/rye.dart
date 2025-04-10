@@ -3,6 +3,7 @@
 import 'dart:io';
 import 'dart:async';
 import 'flutter/flutter_app.dart';
+import 'loader.dart' show Setword;
 
 // Type enum for Rye values
 enum RyeType {
@@ -12,6 +13,10 @@ enum RyeType {
   builtinType,
   errorType,
   voidType,
+  stringType,
+  listType,
+  dictType,
+  contextType,
 }
 
 // Base class for all Rye values
@@ -552,30 +557,53 @@ void rye00_evalExpressionConcrete(ProgramState ps) {
     return;
   }
 
-  switch (object.type()) {
-    case RyeType.integerType:
-      ps.res = object;
-      break;
-    case RyeType.blockType:
-      ps.res = object;
-      break;
-    case RyeType.wordType:
-      rye00_evalWord(ps, object as Word, null, false, false);
-      break;
-    case RyeType.builtinType:
-      rye00_callBuiltin(object as Builtin, ps, null, false, false, null);
-      break;
-    case RyeType.errorType:
-      setError00(ps, "Error object encountered");
-      break;
-    default:
-      setError00(ps, "Unsupported type in simplified interpreter: ${object.type().index}");
-      break;
+  if (object is Setword) {
+    rye00_evalWord(ps, object, null, false, false);
+  } else {
+    switch (object.type()) {
+      case RyeType.integerType:
+      case RyeType.stringType:
+      case RyeType.listType:
+      case RyeType.dictType:
+      case RyeType.contextType:
+      case RyeType.voidType:
+        ps.res = object;
+        break;
+      case RyeType.blockType:
+        ps.res = object;
+        break;
+      case RyeType.wordType:
+        rye00_evalWord(ps, object as Word, null, false, false);
+        break;
+      case RyeType.builtinType:
+        rye00_callBuiltin(object as Builtin, ps, null, false, false, null);
+        break;
+      case RyeType.errorType:
+        setError00(ps, "Error object encountered");
+        break;
+      default:
+        setError00(ps, "Unsupported type in simplified interpreter: ${object.type().index}");
+        break;
+    }
   }
 }
 
 // Rye00_EvalWord evaluates a word in the current context.
 void rye00_evalWord(ProgramState ps, RyeObject word, RyeObject? leftVal, bool toLeft, bool pipeSecond) {
+  // Handle Setword objects
+  if (word is Setword) {
+    // Get the next value
+    rye00_evalExpressionConcrete(ps);
+    
+    if (ps.errorFlag || ps.failureFlag) {
+      return;
+    }
+    
+    // Set the value in the context
+    ps.ctx.set(word.index, ps.res!);
+    return;
+  }
+  
   var (found, object, session) = rye00_findWordValue(ps, word);
 
   if (found) {
