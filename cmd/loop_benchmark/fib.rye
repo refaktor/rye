@@ -1,0 +1,7 @@
+rye0 {
+
+	fib: fn { n "recursive" } { either _< n 2 { n } { _+ fib _- n 1  fib _- n 2 } }
+	
+	print time-it { fib 30 }
+
+}

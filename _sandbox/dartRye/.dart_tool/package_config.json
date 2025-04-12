@@ -116,6 +116,12 @@
       "languageVersion": "2.12"
     },
     {
+      "name": "intl",
+      "rootUri": "file:///home/jimez/.pub-cache/hosted/pub.dev/intl-0.18.1",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "io",
       "rootUri": "file:///home/jimez/.pub-cache/hosted/pub.dev/io-1.0.4",
       "packageUri": "lib/",
@@ -338,7 +344,7 @@
       "languageVersion": "3.0"
     }
   ],
-  "generated": "2025-04-07T00:52:11.414959Z",
+  "generated": "2025-04-10T01:59:32.580087Z",
   "generator": "pub",
   "generatorVersion": "3.3.0-48.0.dev"
 }

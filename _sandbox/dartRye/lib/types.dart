@@ -1,6 +1,280 @@
 // types.dart - Additional types for the Dart implementation of Rye
 
+import 'dart:math';
+import 'package:intl/intl.dart';
 import 'rye.dart';
+
+// Boolean implementation
+class Boolean implements RyeObject {
+  final bool value;
+
+  const Boolean(this.value);
+
+  @override
+  RyeType type() => RyeType.booleanType;
+
+  @override
+  String print(Idxs idxs) {
+    return value ? "true" : "false";
+  }
+
+  @override
+  String inspect(Idxs idxs) {
+    return '[Boolean: ${print(idxs)}]';
+  }
+
+  @override
+  bool equal(RyeObject other) {
+    if (other.type() != RyeType.booleanType) return false;
+    return value == (other as Boolean).value;
+  }
+
+  @override
+  int getKind() => RyeType.booleanType.index;
+}
+
+// Decimal implementation
+class Decimal implements RyeObject {
+  final double value;
+
+  const Decimal(this.value);
+
+  @override
+  RyeType type() => RyeType.decimalType;
+
+  @override
+  String print(Idxs idxs) {
+    return value.toString();
+  }
+
+  @override
+  String inspect(Idxs idxs) {
+    return '[Decimal: ${print(idxs)}]';
+  }
+
+  @override
+  bool equal(RyeObject other) {
+    if (other.type() != RyeType.decimalType) return false;
+    
+    // Use epsilon for floating point comparison
+    const epsilon = 0.0000000000001;
+    return (value - (other as Decimal).value).abs() <= epsilon;
+  }
+
+  @override
+  int getKind() => RyeType.decimalType.index;
+}
+
+// Time implementation
+class Time implements RyeObject {
+  final DateTime value;
+
+  Time(this.value);
+
+  @override
+  RyeType type() => RyeType.timeType;
+
+  @override
+  String print(Idxs idxs) {
+    return value.toIso8601String();
+  }
+
+  @override
+  String inspect(Idxs idxs) {
+    return '[Time: ${print(idxs)}]';
+  }
+
+  @override
+  bool equal(RyeObject other) {
+    if (other.type() != RyeType.timeType) return false;
+    return value.isAtSameMomentAs((other as Time).value);
+  }
+
+  @override
+  int getKind() => RyeType.timeType.index;
+}
+
+// Date implementation
+class Date implements RyeObject {
+  final DateTime value;
+
+  Date(this.value);
+
+  @override
+  RyeType type() => RyeType.dateType;
+
+  @override
+  String print(Idxs idxs) {
+    return DateFormat('yyyy-MM-dd').format(value);
+  }
+
+  @override
+  String inspect(Idxs idxs) {
+    return '[Date: ${print(idxs)}]';
+  }
+
+  @override
+  bool equal(RyeObject other) {
+    if (other.type() != RyeType.dateType) return false;
+    
+    DateTime otherDate = (other as Date).value;
+    return value.year == otherDate.year && 
+           value.month == otherDate.month && 
+           value.day == otherDate.day;
+  }
+
+  @override
+  int getKind() => RyeType.dateType.index;
+}
+
+// Uri implementation
+class Uri implements RyeObject {
+  final String scheme;
+  final String path;
+  final Word kind;
+
+  Uri(this.scheme, this.path, this.kind);
+
+  factory Uri.fromString(Idxs idxs, String uriString) {
+    if (uriString.startsWith('%')) {
+      // File URI
+      String path = uriString.substring(1);
+      String scheme = "file";
+      int kindIdx = idxs.indexWord("$scheme-schema");
+      return Uri(scheme, path, Word(kindIdx));
+    } else if (uriString.contains('://')) {
+      // Standard URI
+      List<String> parts = uriString.split('://');
+      String scheme = parts[0];
+      String path = parts[1];
+      int kindIdx = idxs.indexWord("$scheme-schema");
+      return Uri(scheme, path, Word(kindIdx));
+    } else {
+      // Default to file URI
+      String scheme = "file";
+      int kindIdx = idxs.indexWord("$scheme-schema");
+      return Uri(scheme, uriString, Word(kindIdx));
+    }
+  }
+
+  @override
+  RyeType type() => RyeType.uriType;
+
+  @override
+  String print(Idxs idxs) {
+    if (scheme == "file") {
+      return "%$path";
+    }
+    return "$scheme://$path";
+  }
+
+  @override
+  String inspect(Idxs idxs) {
+    return '[Uri: ${print(idxs)}]';
+  }
+
+  @override
+  bool equal(RyeObject other) {
+    if (other.type() != RyeType.uriType) return false;
+    
+    Uri otherUri = other as Uri;
+    return scheme == otherUri.scheme && 
+           path == otherUri.path && 
+           kind.equal(otherUri.kind);
+  }
+
+  @override
+  int getKind() => kind.index;
+}
+
+// Email implementation
+class Email implements RyeObject {
+  final String address;
+
+  Email(this.address);
+
+  @override
+  RyeType type() => RyeType.emailType;
+
+  @override
+  String print(Idxs idxs) {
+    return address;
+  }
+
+  @override
+  String inspect(Idxs idxs) {
+    return '[Email: ${print(idxs)}]';
+  }
+
+  @override
+  bool equal(RyeObject other) {
+    if (other.type() != RyeType.emailType) return false;
+    return address == (other as Email).address;
+  }
+
+  @override
+  int getKind() => RyeType.emailType.index;
+}
+
+// Vector implementation
+class Vector implements RyeObject {
+  final List<double> values;
+  final Word kind;
+
+  Vector(this.values, [this.kind = const Word(0)]);
+
+  @override
+  RyeType type() => RyeType.vectorType;
+
+  @override
+  String print(Idxs idxs) {
+    return "V[${values.join(', ')}]";
+  }
+
+  @override
+  String inspect(Idxs idxs) {
+    double norm = calculateNorm();
+    double mean = calculateMean();
+    return '[Vector: Len ${values.length} Norm ${norm.toStringAsFixed(2)} Mean ${mean.toStringAsFixed(2)}]';
+  }
+
+  @override
+  bool equal(RyeObject other) {
+    if (other.type() != RyeType.vectorType) return false;
+    
+    Vector otherVector = other as Vector;
+    if (values.length != otherVector.values.length) return false;
+    
+    for (int i = 0; i < values.length; i++) {
+      if (values[i] != otherVector.values[i]) {
+        return false;
+      }
+    }
+    
+    return true;
+  }
+
+  @override
+  int getKind() => RyeType.vectorType.index;
+  
+  // Helper methods for vector operations
+  double calculateNorm() {
+    double sumOfSquares = 0;
+    for (double value in values) {
+      sumOfSquares += value * value;
+    }
+    return sqrt(sumOfSquares);
+  }
+  
+  double calculateMean() {
+    if (values.isEmpty) return 0;
+    double sum = 0;
+    for (double value in values) {
+      sum += value;
+    }
+    return sum / values.length;
+  }
+}
 
 // String implementation
 class RyeString implements RyeObject {
@@ -399,6 +673,160 @@ RyeObject makeContextBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, 
   return RyeContext(ctx);
 }
 
+// Builtins for the new types
+RyeObject makeBooleanBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
+  if (arg0 == null) {
+    ps.failureFlag = true;
+    return Error("make-boolean requires an argument");
+  }
+  
+  if (arg0 is Boolean) {
+    return arg0;
+  }
+  
+  String value = arg0.print(ps.idx).toLowerCase();
+  return Boolean(value == "true" || value == "yes" || value == "1");
+}
+
+RyeObject makeDecimalBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
+  if (arg0 == null) {
+    ps.failureFlag = true;
+    return Error("make-decimal requires an argument");
+  }
+  
+  if (arg0 is Decimal) {
+    return arg0;
+  }
+  
+  if (arg0 is Integer) {
+    return Decimal(arg0.value.toDouble());
+  }
+  
+  try {
+    double value = double.parse(arg0.print(ps.idx));
+    return Decimal(value);
+  } catch (e) {
+    ps.failureFlag = true;
+    return Error("Cannot convert to decimal: ${arg0.print(ps.idx)}");
+  }
+}
+
+RyeObject makeDateBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
+  if (arg0 == null) {
+    ps.failureFlag = true;
+    return Error("make-date requires an argument");
+  }
+  
+  if (arg0 is Date) {
+    return arg0;
+  }
+  
+  if (arg0 is Time) {
+    return Date((arg0 as Time).value);
+  }
+  
+  try {
+    DateTime value = DateTime.parse(arg0.print(ps.idx).replaceAll('"', ''));
+    return Date(value);
+  } catch (e) {
+    ps.failureFlag = true;
+    return Error("Cannot convert to date: ${arg0.print(ps.idx)}");
+  }
+}
+
+RyeObject makeTimeBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
+  if (arg0 == null) {
+    ps.failureFlag = true;
+    return Error("make-time requires an argument");
+  }
+  
+  if (arg0 is Time) {
+    return arg0;
+  }
+  
+  try {
+    DateTime value = DateTime.parse(arg0.print(ps.idx).replaceAll('"', ''));
+    return Time(value);
+  } catch (e) {
+    ps.failureFlag = true;
+    return Error("Cannot convert to time: ${arg0.print(ps.idx)}");
+  }
+}
+
+RyeObject makeUriBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
+  if (arg0 == null) {
+    ps.failureFlag = true;
+    return Error("make-uri requires an argument");
+  }
+  
+  if (arg0 is Uri) {
+    return arg0;
+  }
+  
+  String uriString = arg0.print(ps.idx).replaceAll('"', '');
+  return Uri.fromString(ps.idx, uriString);
+}
+
+RyeObject makeEmailBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
+  if (arg0 == null) {
+    ps.failureFlag = true;
+    return Error("make-email requires an argument");
+  }
+  
+  if (arg0 is Email) {
+    return arg0;
+  }
+  
+  String emailString = arg0.print(ps.idx).replaceAll('"', '');
+  
+  // Simple email validation
+  if (!emailString.contains('@') || !emailString.contains('.')) {
+    ps.failureFlag = true;
+    return Error("Invalid email address: $emailString");
+  }
+  
+  return Email(emailString);
+}
+
+RyeObject makeVectorBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
+  List<double> values = [];
+  
+  // If arg0 is provided, it should be a block of numbers
+  if (arg0 != null && arg0 is Block) {
+    // Create a new program state for the block
+    ProgramState blockPs = ProgramState(TSeries(List<RyeObject>.from(arg0.series.s)), ps.idx);
+    blockPs.ctx = ps.ctx;
+    
+    // Reset the series position to ensure we start from the beginning
+    blockPs.ser.reset();
+    
+    // Evaluate each item in the block and add it to the vector
+    while (blockPs.ser.getPos() < blockPs.ser.len()) {
+      rye00_evalExpressionConcrete(blockPs);
+      
+      if (blockPs.errorFlag || blockPs.failureFlag) {
+        ps.errorFlag = blockPs.errorFlag;
+        ps.failureFlag = blockPs.failureFlag;
+        ps.res = blockPs.res;
+        return blockPs.res ?? Error("Error in make-vector");
+      }
+      
+      if (blockPs.res != null) {
+        if (blockPs.res is Integer) {
+          values.add((blockPs.res as Integer).value.toDouble());
+        } else if (blockPs.res is Decimal) {
+          values.add((blockPs.res as Decimal).value);
+        } else {
+          ps.failureFlag = true;
+          return Error("Vector elements must be numbers");
+        }
+      }
+    }
+  }
+  
+  return Vector(values);
+}
+
 // Register the new type builtins
 void registerTypeBuiltins(ProgramState ps) {
   // Register the make-string builtin
@@ -420,4 +848,39 @@ void registerTypeBuiltins(ProgramState ps) {
   int makeContextIdx = ps.idx.indexWord("make-context");
   Builtin makeContextBuiltinObj = Builtin(makeContextBuiltin, 1, false, true, "Creates a context from a block of key-value pairs");
   ps.ctx.set(makeContextIdx, makeContextBuiltinObj);
+  
+  // Register the make-boolean builtin
+  int makeBooleanIdx = ps.idx.indexWord("make-boolean");
+  Builtin makeBooleanBuiltinObj = Builtin(makeBooleanBuiltin, 1, false, true, "Creates a boolean from a value");
+  ps.ctx.set(makeBooleanIdx, makeBooleanBuiltinObj);
+  
+  // Register the make-decimal builtin
+  int makeDecimalIdx = ps.idx.indexWord("make-decimal");
+  Builtin makeDecimalBuiltinObj = Builtin(makeDecimalBuiltin, 1, false, true, "Creates a decimal from a value");
+  ps.ctx.set(makeDecimalIdx, makeDecimalBuiltinObj);
+  
+  // Register the make-date builtin
+  int makeDateIdx = ps.idx.indexWord("make-date");
+  Builtin makeDateBuiltinObj = Builtin(makeDateBuiltin, 1, false, true, "Creates a date from a value");
+  ps.ctx.set(makeDateIdx, makeDateBuiltinObj);
+  
+  // Register the make-time builtin
+  int makeTimeIdx = ps.idx.indexWord("make-time");
+  Builtin makeTimeBuiltinObj = Builtin(makeTimeBuiltin, 1, false, true, "Creates a time from a value");
+  ps.ctx.set(makeTimeIdx, makeTimeBuiltinObj);
+  
+  // Register the make-uri builtin
+  int makeUriIdx = ps.idx.indexWord("make-uri");
+  Builtin makeUriBuiltinObj = Builtin(makeUriBuiltin, 1, false, true, "Creates a URI from a value");
+  ps.ctx.set(makeUriIdx, makeUriBuiltinObj);
+  
+  // Register the make-email builtin
+  int makeEmailIdx = ps.idx.indexWord("make-email");
+  Builtin makeEmailBuiltinObj = Builtin(makeEmailBuiltin, 1, false, true, "Creates an email from a value");
+  ps.ctx.set(makeEmailIdx, makeEmailBuiltinObj);
+  
+  // Register the make-vector builtin
+  int makeVectorIdx = ps.idx.indexWord("make-vector");
+  Builtin makeVectorBuiltinObj = Builtin(makeVectorBuiltin, 1, false, true, "Creates a vector from a block of numbers");
+  ps.ctx.set(makeVectorIdx, makeVectorBuiltinObj);
 }

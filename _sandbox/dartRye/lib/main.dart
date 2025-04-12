@@ -4,3 +4,6 @@
 export 'rye.dart';
 export 'loader.dart';
 export 'types.dart';
+export 'builtins_numbers.dart';
+export 'builtins_conditionals.dart';
+export 'builtins_iteration.dart';

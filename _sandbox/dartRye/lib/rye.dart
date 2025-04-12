@@ -17,6 +17,13 @@ enum RyeType {
   listType,
   dictType,
   contextType,
+  booleanType,
+  decimalType,
+  timeType,
+  dateType,
+  uriType,
+  emailType,
+  vectorType,
 }
 
 // Base class for all Rye values
