@@ -2,7 +2,6 @@
 package loader
 
 import (
-	"crypto/ed25519"
 	"encoding/hex"
 	"fmt"
 	"strconv"
@@ -10,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/refaktor/rye/env"
+	"github.com/refaktor/rye/security"
 	"github.com/refaktor/rye/util"
 
 	//. "github.com/yhirose/go-peg"
@@ -62,19 +62,13 @@ func checkCodeSignature(content string) int {
 		return -2
 	}
 
-	// ba8eaa125ee3c8abfc98d8b2b7e5d900bfec0073b701e5c3ca9187a39508b2f1827ba5f0904227678bf33446abbca8bf6a3a5333815920741eb475582a4c31dd privk
-	puk, err := hex.DecodeString("827ba5f0904227678bf33446abbca8bf6a3a5333815920741eb475582a4c31dd") // pubk
-	if err != nil {
-		fmt.Println("\x1b[33m" + "Invalid public key format: " + err.Error() + "\x1b[0m")
-		return -2
+	// Verify the signature using the security package
+	if security.VerifySignature([]byte(content), bsig) {
+		return 1 // Signature is valid
 	}
 
-	bbpuk := ed25519.PublicKey(puk)
-	if !ed25519.Verify(bbpuk, []byte(content), bsig) {
-		fmt.Println("\x1b[33m" + "Rye signature is not valid! Exiting." + "\x1b[0m")
-		return -2
-	}
-	return 1
+	fmt.Println("\x1b[33m" + "Rye signature is not valid with any trusted public key! Exiting." + "\x1b[0m")
+	return -2
 }
 
 func LoadString(input string, sig bool) (env.Object, *env.Idxs) {

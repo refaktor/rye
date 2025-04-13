@@ -13,6 +13,7 @@ import (
 	"net/http/cgi"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"regexp"
 	"runtime/debug"
 	"sort"
@@ -50,7 +51,19 @@ var (
 	LandlockEnabled = flag.Bool("landlock", false, "Enable landlock filesystem access control")
 	LandlockProfile = flag.String("landlock-profile", "readonly", "Landlock profile: readonly, readexec, custom")
 	LandlockPaths   = flag.String("landlock-paths", "", "Comma-separated list of paths to allow access to (for custom profile)")
+
+	// Code signing options
+	// CodeSigEnabled = flag.Bool("codesig", false, "Enforce code signature verification")
+	CodeSigEnabled = true
 )
+
+// CurrentScriptDirectory stores the directory of the currently executing script
+var CurrentScriptDirectory string
+
+// GetScriptDirectory returns the directory of the currently executing script
+func GetScriptDirectory() string {
+	return CurrentScriptDirectory
+}
 
 // Error handling utilities
 var (
@@ -501,6 +514,23 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 			debug.PrintStack()
 		}
 	}()
+
+	// Override sig parameter with CodeSigEnabled flag if it's set
+	if CodeSigEnabled {
+		sig = true
+	}
+
+	// Store the script directory for code signing auto-enforcement
+	if file != "" {
+		scriptDir := filepath.Dir(file)
+		if scriptDir == "." {
+			// Get absolute path if it's a relative path
+			if absPath, err := filepath.Abs(scriptDir); err == nil {
+				scriptDir = absPath
+			}
+		}
+		CurrentScriptDirectory = scriptDir
+	}
 
 	// fmt.Println("RYE FILE")
 	info := true

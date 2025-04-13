@@ -62,6 +62,16 @@ func main() {
 			Paths:   strings.Split(*runner.LandlockPaths, ","),
 		}
 
+		// Get script directory from runner for code signing auto-enforcement
+		scriptDir := runner.GetScriptDirectory()
+
+		// Initialize code signing with configuration from command-line flags
+		codeSigConfig := security.CodeSigConfig{
+			Enabled: runner.CodeSigEnabled,
+			// PubKeys:   *runner.CodeSigPubKeys,
+			ScriptDir: scriptDir,
+		}
+
 		// Initialize seccomp if profile is set
 		if seccompConfig.Enabled {
 			// If using trap action, set up the trap handler
@@ -95,6 +105,17 @@ func main() {
 				// This ensures the program can run without landlock if needed
 			}
 		}
+
+		// Initialize code signing if enabled
+		// if codeSigConfig.Enabled {
+		if err := security.InitCodeSig(codeSigConfig); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: Failed to initialize code signing: %v\n", err)
+			// Continue execution even if code signing initialization fails
+			// This ensures the program can run without code signing if needed
+		} else {
+			fmt.Fprintf(os.Stderr, "Code signing enabled with public keys from: %s\n", codeSigConfig.PubKeys)
+		}
+		// }
 	})
 }
 
