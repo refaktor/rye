@@ -57,6 +57,11 @@ require (
 )
 
 require (
+	github.com/landlock-lsm/go-landlock v0.0.0-20250303204525-1544bccde3a3 // indirect
+	kernel.org/pub/linux/libs/security/libcap/psx v1.2.70 // indirect
+)
+
+require (
 	c2sp.org/CCTV/age v0.0.0-20250126162742-ac53b9fb362b // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/JohannesKaufmann/dom v0.2.0 // indirect

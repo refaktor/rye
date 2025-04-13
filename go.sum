@@ -184,6 +184,8 @@ github.com/labstack/echo v3.3.10+incompatible h1:pGRcYk231ExFAyoAjAfD85kQzRJCRI8
 github.com/labstack/echo v3.3.10+incompatible/go.mod h1:0INS7j/VjnFxD4E2wkz67b8cVwCLbBmJyDaka6Cmk1s=
 github.com/labstack/gommon v0.4.1 h1:gqEff0p/hTENGMABzezPoPSRtIh1Cvw0ueMOe0/dfOk=
 github.com/labstack/gommon v0.4.1/go.mod h1:TyTrpPqxR5KMk8LKVtLmfMjeQ5FEkBYdxLYPw/WfrOM=
+github.com/landlock-lsm/go-landlock v0.0.0-20250303204525-1544bccde3a3 h1:zcMi8R8vP0WrrXlFMNUBpDy/ydo3sTnCcUPowq1XmSc=
+github.com/landlock-lsm/go-landlock v0.0.0-20250303204525-1544bccde3a3/go.mod h1:RSub3ourNF8Hf+swvw49Catm3s7HVf4hzdFxDUnEzdA=
 github.com/lib/pq v1.10.9 h1:YXG7RB+JIjhP29X+OtkiDnYaXQwpS4JEWq7dtCCRUEw=
 github.com/lib/pq v1.10.9/go.mod h1:AlVN5x4E4T544tWzH6hKfbfQvm3HdbOxrmggDNAPY9o=
 github.com/lucasb-eyer/go-colorful v1.2.0 h1:1nnpGOrhyZZuNyfu1QjKiUICQ74+3FNCN69Aj6K7nkY=
@@ -385,6 +387,8 @@ gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
 gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 gorm.io/gorm v1.25.7 h1:VsD6acwRjz2zFxGO50gPO6AkNs7KKnvfzUjHQhZDz/A=
 gorm.io/gorm v1.25.7/go.mod h1:hbnx/Oo0ChWMn1BIhpy1oYozzpM15i4YPuHDmfYtwg8=
+kernel.org/pub/linux/libs/security/libcap/psx v1.2.70 h1:HsB2G/rEQiYyo1bGoQqHZ/Bvd6x1rERQTNdPr1FyWjI=
+kernel.org/pub/linux/libs/security/libcap/psx v1.2.70/go.mod h1:+l6Ee2F59XiJ2I6WR5ObpC1utCQJZ/VLsEbQCD8RG24=
 modernc.org/libc v1.22.5 h1:91BNch/e5B0uPbJFgqbxXuOnxBQjlS//icfQEGmvyjE=
 modernc.org/libc v1.22.5/go.mod h1:jj+Z7dTNX8fBScMVNRAYZ/jF91K8fdT2hYMThc3YjBY=
 modernc.org/mathutil v1.5.0 h1:rV0Ko/6SfM+8G+yKiyI830l3Wuz1zRutdslNoQ0kfiQ=
