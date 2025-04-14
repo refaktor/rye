@@ -1,0 +1,2 @@
+; Test script for landlock functionality
+print "Testing landlock functionality"

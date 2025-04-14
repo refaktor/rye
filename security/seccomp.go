@@ -4,7 +4,7 @@
 // To build with seccomp support:
 // go build -tags seccomp
 
-package main
+package security
 
 import (
 	"fmt"
@@ -19,6 +19,9 @@ type SeccompConfig struct {
 	Profile string
 	Action  string
 }
+
+// CurrentSeccompProfile stores the active seccomp profile
+var CurrentSeccompProfile string
 
 // isValidSeccompProfile checks if the specified profile is valid
 func isValidSeccompProfile(profile string) bool {
@@ -155,7 +158,7 @@ func InitSeccomp(config SeccompConfig) error {
 			// --- Go runtime essentials ---
 			/*	"read", "write", "open", "close", "fstat",
 				"mmap", "munmap", "mprotect", "brk", "rt_sigaction",
-				"rt_sigprocmask", "sched_yield", "clone", "execve", // `execve` for Go’s os/exec
+				"rt_sigprocmask", "sched_yield", "clone", "execve", // `execve` for Go's os/exec
 				"gettid", "futex", "exit", "exit_group",
 
 				// --- I/O (allow stdout/stderr) ---

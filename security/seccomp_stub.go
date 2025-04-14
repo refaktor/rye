@@ -1,7 +1,7 @@
 //go:build !linux || !seccomp
 // +build !linux !seccomp
 
-package main
+package security
 
 import (
 	"os"
@@ -13,6 +13,9 @@ type SeccompConfig struct {
 	Profile string
 	Action  string
 }
+
+// CurrentSeccompProfile stores the active seccomp profile
+var CurrentSeccompProfile string
 
 // InitSeccomp is a stub implementation for systems where seccomp is not available
 // or when the seccomp build tag is not enabled

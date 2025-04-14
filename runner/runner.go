@@ -13,6 +13,7 @@ import (
 	"net/http/cgi"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"regexp"
 	"runtime/debug"
 	"sort"
@@ -45,7 +46,24 @@ var (
 	// Seccomp options (Linux only) - using pure Go library
 	SeccompProfile = flag.String("seccomp-profile", "", "Seccomp profile to use: strict, readonly")
 	SeccompAction  = flag.String("seccomp-action", "errno", "Action on restricted syscalls: errno, kill, trap, log")
+
+	// Landlock options (Linux only) - using landlock-go library
+	LandlockEnabled = flag.Bool("landlock", false, "Enable landlock filesystem access control")
+	LandlockProfile = flag.String("landlock-profile", "readonly", "Landlock profile: readonly, readexec, custom")
+	LandlockPaths   = flag.String("landlock-paths", "", "Comma-separated list of paths to allow access to (for custom profile)")
+
+	// Code signing options
+	// CodeSigEnabled = flag.Bool("codesig", false, "Enforce code signature verification")
+	CodeSigEnabled = true
 )
+
+// CurrentScriptDirectory stores the directory of the currently executing script
+var CurrentScriptDirectory string
+
+// GetScriptDirectory returns the directory of the currently executing script
+func GetScriptDirectory() string {
+	return CurrentScriptDirectory
+}
 
 // Error handling utilities
 var (
@@ -142,10 +160,14 @@ func DoMain(regfn func(*env.ProgramState)) {
 		fmt.Println("\033[33m  rye -ctx os                          \033[36m# enter console and enter os context")
 		fmt.Println("\033[33m  rye -ctx 'os pipes'                  \033[36m# enter console and enter os and then pipes context")
 		fmt.Println("\033[33m  rye -template template.txt           \033[36m# processes template.txt, evaluating Rye code in {{ }} blocks")
-		fmt.Println("\033[33m  rye                                  \033[36m# seccomp is disabled by default")
+		fmt.Println("\033[33m  rye                                  \033[36m# seccomp and landlock are disabled by default")
 		fmt.Println("\033[33m  rye -seccomp-profile=strict          \033[36m# enable seccomp with the strict profile")
 		fmt.Println("\033[33m  rye -seccomp-profile=readonly        \033[36m# enable seccomp with the readonly profile (blocks write operations)")
 		fmt.Println("\033[33m  rye -seccomp-action=kill             \033[36m# terminate process on restricted syscalls")
+		fmt.Println("\033[33m  rye -landlock                        \033[36m# enable landlock filesystem access control")
+		fmt.Println("\033[33m  rye -landlock-profile=readonly       \033[36m# use the readonly profile (default)")
+		fmt.Println("\033[33m  rye -landlock-profile=readexec       \033[36m# use the readexec profile (allows execution)")
+		fmt.Println("\033[33m  rye -landlock-paths=/path1,/path2    \033[36m# specify paths to allow access to")
 		fmt.Println("\033[0m\n Thank you for trying out \033[1mRye\033[22m ...")
 		fmt.Println("")
 	}
@@ -492,6 +514,23 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 			debug.PrintStack()
 		}
 	}()
+
+	// Override sig parameter with CodeSigEnabled flag if it's set
+	if CodeSigEnabled {
+		sig = true
+	}
+
+	// Store the script directory for code signing auto-enforcement
+	if file != "" {
+		scriptDir := filepath.Dir(file)
+		if scriptDir == "." {
+			// Get absolute path if it's a relative path
+			if absPath, err := filepath.Abs(scriptDir); err == nil {
+				scriptDir = absPath
+			}
+		}
+		CurrentScriptDirectory = scriptDir
+	}
 
 	// fmt.Println("RYE FILE")
 	info := true
