@@ -1,7 +1,6 @@
-//go:build !windows
-// +build !windows
+//go:build windows
+// +build windows
 
-// codesig.go
 package security
 
 import (
@@ -11,9 +10,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
-	"syscall"
 )
 
 // CodeSigConfig holds configuration for code signature verification
@@ -49,17 +46,8 @@ func LoadTrustedPublicKeys(filePath string) error {
 		return fmt.Errorf("public keys file %s has insecure permissions: %s - should not be writable by group or others", filePath, mode.String())
 	}
 
-	// On Unix systems, check if the file is owned by root
-	if runtime.GOOS != "windows" {
-		// Get file system info to check ownership
-		stat, ok := fileInfo.Sys().(*syscall.Stat_t)
-		if ok {
-			// Check if owner is root (uid 0)
-			if stat.Uid != 0 {
-				return fmt.Errorf("public keys file %s is not owned by root (uid: %d)", filePath, stat.Uid)
-			}
-		}
-	}
+	// On Windows, we don't check for root ownership
+	// This is the key difference from the Unix version
 
 	// Open the file
 	file, err := os.Open(filePath)
@@ -109,7 +97,6 @@ func LoadTrustedPublicKeys(filePath string) error {
 
 // CheckForCodePksInDir checks if a .codepks file exists in the specified directory
 func CheckForCodePksInDir(dir string) (string, bool) {
-
 	if dir == "" {
 		return "", false
 	}
