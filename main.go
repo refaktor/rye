@@ -39,15 +39,13 @@ var CODE []any
 // main function. Dispatches to appropriate mode function
 //
 
-// NEW FLASGS HANDLING
-
 func main() {
 	// Initialize security profiles
 	// These are no-ops on non-Linux systems or when built without the appropriate tags
 	// The actual configuration will be set in runner.DoMain based on command-line flags
 
 	supportscolor.Stdout()
-	runner.DoMain(func(ps *env.ProgramState) {
+	runner.DoMain(func(ps *env.ProgramState) error {
 		// Initialize seccomp with configuration from command-line flags
 		seccompConfig := security.SeccompConfig{
 			Enabled: *runner.SeccompProfile != "",
@@ -67,7 +65,7 @@ func main() {
 
 		// Initialize code signing with configuration from command-line flags
 		codeSigConfig := security.CodeSigConfig{
-			Enabled: runner.CodeSigEnabled,
+			Enforced: *runner.CodeSigEnforced,
 			// PubKeys:   *runner.CodeSigPubKeys,
 			ScriptDir: scriptDir,
 		}
@@ -112,10 +110,12 @@ func main() {
 			fmt.Fprintf(os.Stderr, "Warning: Failed to initialize code signing: %v\n", err)
 			// Continue execution even if code signing initialization fails
 			// This ensures the program can run without code signing if needed
-		} else {
-			fmt.Fprintf(os.Stderr, "Code signing enabled with public keys from: %s\n", codeSigConfig.PubKeys)
-		}
+			return err
+		} // else {
+		//	fmt.Fprintf(os.Stderr, "Code signing enabled with public keys from: %s\n", codeSigConfig.PubKeys)
 		// }
+		// }
+		return nil
 	})
 }
 
