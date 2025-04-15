@@ -18,7 +18,7 @@ import (
 
 // CodeSigConfig holds configuration for code signature verification
 type CodeSigConfig struct {
-	Enabled      bool   // Whether code signature verification is enabled by flag
+	Enforced     bool   // Whether code signature verification is enabled by flag
 	PubKeys      string // Path to the file containing trusted public keys
 	ScriptDir    string // Directory of the script being executed
 	AutoEnforced bool   // Whether code signing is auto-enforced due to .codepks in script dir
@@ -137,27 +137,20 @@ func InitCodeSig(config CodeSigConfig) error {
 	}
 
 	// Determine if code signing should be enabled
-	shouldEnable := config.Enabled || autoEnforced
-	CurrentCodeSigEnabled = shouldEnable
+	CurrentCodeSigEnabled = config.Enforced || autoEnforced
 
-	if !shouldEnable {
+	if !CurrentCodeSigEnabled {
 		return nil
 	}
 
-	// Determine which .codepks file to use
-	pubKeysPath := config.PubKeys
-	if autoEnforced && codePksPath != "" {
-		// If auto-enforced, use the .codepks from the script directory
-		pubKeysPath = codePksPath
-	}
-
 	// Load trusted public keys
-	err := LoadTrustedPublicKeys(pubKeysPath)
+	err := LoadTrustedPublicKeys(codePksPath)
 	if err != nil {
 		return fmt.Errorf("failed to load trusted public keys: %w", err)
 	}
 
-	// Set environment variable for builtins to check
+	// Set environment variable for builtins to check ---
+	// Warning: temporary approach ... builtins should check internal ProgramState probably, this can probably be manipulated also
 	os.Setenv("RYE_CODESIG_ENABLED", "1")
 
 	return nil
@@ -166,6 +159,7 @@ func InitCodeSig(config CodeSigConfig) error {
 // VerifySignature verifies a signature against the content using trusted public keys
 func VerifySignature(content []byte, signature []byte) bool {
 	if !CurrentCodeSigEnabled {
+		fmt.Println("codesig not enabled")
 		return true // If code signing is not enabled, consider all signatures valid
 	}
 
