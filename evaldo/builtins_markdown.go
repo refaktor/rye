@@ -77,10 +77,12 @@ func do_markdown(ps *env.ProgramState, reader env.Object, rmap env.Dict) env.Obj
 	// Parse the markdown content
 	doc := md.Parser().Parse(text.NewReader(content))
 
+	ser := ps.Ser
 	// Process the AST
 	processNode(ps, doc, content, rmap)
 
-	return env.Void{}
+	ps.Ser = ser
+	return ps.Res
 }
 
 // Process a markdown node and its children

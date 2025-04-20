@@ -515,6 +515,13 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 		}
 	}()
 
+	logFile, err := os.OpenFile("debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		panic(err)
+	}
+	defer logFile.Close()
+	log.SetOutput(logFile)
+
 	// Override sig parameter with CodeSigEn flag if it's set
 	if *CodeSigEnforced {
 		sig = true

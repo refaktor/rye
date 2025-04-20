@@ -58,7 +58,7 @@ var builtins_iteration = map[string]*env.Builtin{
 				//	ps.Ser = ser // Restore original series before returning
 				//	return ps.Res
 				//}
-
+				iterObj.Value++
 				// Reset series position for next iteration
 				ps.Ser.Reset()
 			}

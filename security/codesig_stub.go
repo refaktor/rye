@@ -25,7 +25,7 @@ type CodeSigConfig struct {
 var TrustedPublicKeys []ed25519.PublicKey
 
 // CurrentCodeSigEnforced indicates whether code signature verification is currently enabled
-// var CurrentCodeSigEnforced bool
+var CurrentCodeSigEnabled bool
 
 // LoadTrustedPublicKeys loads trusted public keys from the specified file
 func LoadTrustedPublicKeys(filePath string) error {
