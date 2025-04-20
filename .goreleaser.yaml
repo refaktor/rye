@@ -45,6 +45,9 @@ builds:
     # - -tags=b_tiny
     - -trimpath
 
+    ldflags:
+    - "-s -w -X github.com/refaktor/rye/runner.Version={{.Version}}"
+
     overrides:
     - goarch: wasm
       goos: js
