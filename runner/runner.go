@@ -26,6 +26,7 @@ import (
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/evaldo"
 	"github.com/refaktor/rye/loader"
+	"github.com/refaktor/rye/security"
 	"github.com/refaktor/rye/util"
 )
 
@@ -53,8 +54,7 @@ var (
 	LandlockPaths   = flag.String("landlock-paths", "", "Comma-separated list of paths to allow access to (for custom profile)")
 
 	// Code signing options
-	// CodeSigEnabled = flag.Bool("codesig", false, "Enforce code signature verification")
-	CodeSigEnabled = true
+	CodeSigEnforced = flag.Bool("codesig", false, "Enforce code signature verification")
 )
 
 // CurrentScriptDirectory stores the directory of the currently executing script
@@ -109,7 +109,7 @@ func handleError(err error, context string, fatal bool) {
 	}
 }
 
-func DoMain(regfn func(*env.ProgramState)) {
+func DoMain(regfn func(*env.ProgramState) error) {
 	// Initialize error logging
 	initErrorLogging()
 	defer func() {
@@ -505,7 +505,7 @@ func main_ryeco() {
 
 }
 
-func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool, code string, lang string, regfn func(*env.ProgramState), stin string) {
+func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool, code string, lang string, regfn func(*env.ProgramState) error, stin string) {
 	// Add defer to recover from panics
 	defer func() {
 		if r := recover(); r != nil {
@@ -515,8 +515,15 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 		}
 	}()
 
-	// Override sig parameter with CodeSigEnabled flag if it's set
-	if CodeSigEnabled {
+	logFile, err := os.OpenFile("debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		panic(err)
+	}
+	defer logFile.Close()
+	log.SetOutput(logFile)
+
+	// Override sig parameter with CodeSigEn flag if it's set
+	if *CodeSigEnforced {
 		sig = true
 	}
 
@@ -615,7 +622,10 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 	evaldo.RegisterBuiltins(ps)
 	evaldo.RegisterVarBuiltins(ps)
 	contrib.RegisterBuiltins(ps, &evaldo.BuiltinNames)
-	regfn(ps)
+	if err := regfn(ps); err != nil {
+		fmt.Println(err.Error())
+		return
+	}
 
 	if here {
 		if _, err := os.Stat(".rye-here"); err == nil {
@@ -625,7 +635,7 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 				fmt.Println("Could not read .rye-here file")
 			} else {
 				inputH := string(content)
-				block := loader.LoadStringNEW(inputH, false, ps)
+				block := loader.LoadStringNEW(inputH, security.CurrentCodeSigEnabled, ps)
 				block1 := block.(env.Block)
 				ps = env.AddToProgramState(ps, block1.Series, ps.Idx)
 				evaldo.EvalBlockInjMultiDialect(ps, nil, false)
@@ -642,7 +652,7 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 	//ES = ps
 	// evaldo.ShowResults = false
 
-	block := loader.LoadStringNEW(" "+content+"\n"+code, sig, ps)
+	block := loader.LoadStringNEW(" "+content+"\n"+code, security.CurrentCodeSigEnabled, ps)
 	switch val := block.(type) {
 	case env.Block:
 
@@ -730,7 +740,7 @@ func main_cgi_file(file string, sig bool) {
 	}
 }
 
-func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, code string, regfn func(*env.ProgramState)) {
+func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, code string, regfn func(*env.ProgramState) error) {
 	// Add panic recovery
 	//defer func() {
 	//	if r := recover(); r != nil {
@@ -775,7 +785,10 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 	evaldo.RegisterBuiltins(es)
 	evaldo.RegisterVarBuiltins(es)
 	contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
-	regfn(es)
+	if err := regfn(es); err != nil {
+		fmt.Println(err.Error())
+		return
+	}
 
 	if lang == "eyr" {
 		es.Dialect = env.EyrDialect
@@ -827,7 +840,10 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 		rightEs := env.NewProgramState(block.(env.Block).Series, genv)
 		evaldo.RegisterBuiltins(rightEs)
 		contrib.RegisterBuiltins(rightEs, &evaldo.BuiltinNames)
-		regfn(rightEs)
+		if err := regfn(rightEs); err != nil {
+			fmt.Println(err.Error())
+			return
+		}
 
 		if lang == "eyr" {
 			rightEs.Dialect = env.EyrDialect
@@ -1011,7 +1027,7 @@ func main_rysh() {
 }
 
 // processTemplate reads a template file and processes it by evaluating Rye code in {{ }} blocks
-func processTemplate(file string, regfn func(*env.ProgramState)) {
+func processTemplate(file string, regfn func(*env.ProgramState) error) {
 	// Add panic recovery
 	defer func() {
 		if r := recover(); r != nil {
@@ -1042,7 +1058,10 @@ func processTemplate(file string, regfn func(*env.ProgramState)) {
 	evaldo.RegisterBuiltins(ps)
 	evaldo.RegisterVarBuiltins(ps)
 	contrib.RegisterBuiltins(ps, &evaldo.BuiltinNames)
-	regfn(ps)
+	if err := regfn(ps); err != nil {
+		fmt.Println(err.Error())
+		return
+	}
 
 	// Regular expression to find {{ ... }} blocks (with (?s) flag to match across multiple lines)
 	re := regexp.MustCompile(`(?s)\{\{\s*(.*?)\s*\}\}`)

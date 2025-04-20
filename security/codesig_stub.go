@@ -15,7 +15,7 @@ import (
 
 // CodeSigConfig holds configuration for code signature verification
 type CodeSigConfig struct {
-	Enabled      bool   // Whether code signature verification is enabled by flag
+	Enforced     bool   // Whether code signature verification is enabled by flag
 	PubKeys      string // Path to the file containing trusted public keys
 	ScriptDir    string // Directory of the script being executed
 	AutoEnforced bool   // Whether code signing is auto-enforced due to .codepks in script dir
@@ -24,7 +24,7 @@ type CodeSigConfig struct {
 // TrustedPublicKeys stores the list of trusted public keys loaded from .codepks file
 var TrustedPublicKeys []ed25519.PublicKey
 
-// CurrentCodeSigEnabled indicates whether code signature verification is currently enabled
+// CurrentCodeSigEnforced indicates whether code signature verification is currently enabled
 var CurrentCodeSigEnabled bool
 
 // LoadTrustedPublicKeys loads trusted public keys from the specified file
@@ -124,7 +124,7 @@ func InitCodeSig(config CodeSigConfig) error {
 	}
 
 	// Determine if code signing should be enabled
-	shouldEnable := config.Enabled || autoEnforced
+	shouldEnable := config.Enforced || autoEnforced
 	CurrentCodeSigEnabled = shouldEnable
 
 	if !shouldEnable {
@@ -153,6 +153,7 @@ func InitCodeSig(config CodeSigConfig) error {
 // VerifySignature verifies a signature against the content using trusted public keys
 func VerifySignature(content []byte, signature []byte) bool {
 	if !CurrentCodeSigEnabled {
+		fmt.Println("codesig not enabled")
 		return true // If code signing is not enabled, consider all signatures valid
 	}
 
