@@ -1,4 +1,7 @@
 # before seccomp
 # go build  -ldflags="-s -w" -o bin/rye
 
-CGO_ENABLED=0 go build -tags seccomp -o bin/rye
+CGO_ENABLED=0 go build \
+    -tags seccomp \
+    -ldflags="-s -w -X github.com/refaktor/rye/runner.Version=$(git describe --tag --always --broken)" \
+    -o bin/rye
