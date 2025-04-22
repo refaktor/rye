@@ -12,10 +12,10 @@ import (
 var builtins_numbers = map[string]*env.Builtin{
 
 	// Tests:
-	// equal { 1 addnums 1 } 2
-	// equal { 3 addnums 4 } 7
-	// equal { 5.6 addnums 7.8 } 13.400000
-	// equal { 5 addnums 2.5 } 7.5
+	// equal { 1 .addnums 1 } 2
+	// equal { 3 .addnums 4 } 7
+	// equal { 5.6 .addnums 7.8 } 13.400000
+	// equal { 5 .addnums 2.5 } 7.5
 	// Args:
 	// * value1: First number (integer or decimal)
 	// * value2: Second number to add
@@ -419,11 +419,11 @@ var builtins_numbers = map[string]*env.Builtin{
 	// equal { 1 + 1 } 2
 	// equal { 3 + 4 } 7
 	// equal { 5.6 + 7.8 } 13.400000
-	// equal { "A" + "b" } "Ab"
-	// equal { "A" + 1 } "A1"
-	// equal { { 1 2 } + { 3 4 } } { 1 2 3 4 }
-	// equal { dict { "a" 1 } |+ { "b" 2 } } dict { "a" 1 "b" 2 }
-	// equal { dict { "a" 1 } |+ dict { "b" 2 } } dict { "a" 1 "b" 2 }
+	// error { "A" + "b" }
+	// error { "A" + 1 }
+	// error { { 1 2 } + { 3 4 } } { 1 2 3 4 }
+	// error { dict { "a" 1 } |+ { "b" 2 } }
+	// error { dict { "a" 1 } |+ dict { "b" 2 } }
 	// Args:
 	// * value1: First value (number, string, block, dict, etc.)
 	// * value2: Second value to add or join

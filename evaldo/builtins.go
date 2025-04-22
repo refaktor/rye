@@ -406,6 +406,12 @@ func (s RyeBlockCustomSort) Swap(i, j int) {
 	s.data[i], s.data[j] = s.data[j], s.data[i]
 }
 func (s RyeBlockCustomSort) Less(i, j int) bool {
+	fmt.Println("'''''")
+	fmt.Println(s)
+	fmt.Println(s.fn)
+	fmt.Println(s.ps)
+	fmt.Println(s.data)
+
 	CallFunctionArgs2(s.fn, s.ps, s.data[i], s.data[j], nil)
 	return util.IsTruthy(s.ps.Res)
 }
@@ -612,13 +618,13 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal  { do-fast { 123 + 123 } } 246
-	// error  { do-fast { 123 + } }
-	// equal  { do-fast { _+ _+ 12 23 34 } } 69
-	// equal  { do-fast { 12 * 23 |+ 34 } } 310
-	// equal  { do-fast { ( 12 * 23 ) + 34 } } 310
-	// equal  { do-fast { 12 * 23 | + 34 } } 310
-	// equal  { do-fast { 12 * 23 :a + 34 } } 310
+	// ; equal  { do-fast { 123 + 123 } } 246
+	// ; error  { do-fast { 123 + } }
+	// ; equal  { do-fast { _+ _+ 12 23 34 } } 69
+	// ; equal  { do-fast { 12 * 23 |+ 34 } } 310
+	// ; equal  { do-fast { ( 12 * 23 ) + 34 } } 310
+	// ; equal  { do-fast { 12 * 23 | + 34 } } 310
+	// ; equal  { do-fast { 12 * 23 :a + 34 } } 310
 	"do-fast": {
 		Argsn: 1,
 		Doc:   "Takes a block of code and does (runs) it using the fast evaluator.",
@@ -654,7 +660,7 @@ var builtins = map[string]*env.Builtin{
 	}, */
 
 	// Tests:
-	// equal   { x: 123 , change! 234 'x , x } 234
+	// equal   { var 'x 123 , change! 234 'x , x } 234
 	// equal   { a:: 123 change! 333 'a a } 333
 	// equal   { a:: 123 change! 124 'a } 1
 	// equal   { a:: 123 change! 123 'a } 0
@@ -797,7 +803,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal   { person: kind 'person { name: "" age: 0 } person _<< dict { "name" "John" "age" 30 } |type? } 'ctx
+	// equal   { person: kind 'person { name: "" age: 0 } person << dict { "name" "John" "age" 30 } |type? } 'ctx
 	// Args:
 	// * kind: Kind to convert the value to
 	// * value: Dict or context to convert
@@ -866,7 +872,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal  { save\current\secure |type? } 'integer
+	// ; equal  { save\current\secure |type? } 'integer
 	// Args:
 	// * None
 	// Returns:
@@ -1388,8 +1394,8 @@ var builtins = map[string]*env.Builtin{
 	// Tests:
 	// equal  { c: context { x: 100 } do\in c { x * 9.99 } } 999.0
 	// equal  { c: context { x: 100 } do\in c { inc! 'x } } 101
-	// equal  { c: context { x: 100 } do\in c { x:: 200 } c/x } 200
-	// equal  { c: context { x: 100 } do\in c { x:: 200 , x } } 200
+	// equal  { c: context { var 'x 100 } do\in c { x:: 200 } c/x } 200
+	// equal  { c: context { x:: 100 } do\in c { x:: 200 , x } } 200
 	"do\\in": { // **
 		Argsn: 2,
 		Doc:   "Takes a Context and a Block. It Does a block inside a given Context.",
@@ -1830,9 +1836,9 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { x: 0 defer { x:: 1 } x } 0
-	// equal { fn { } { x: 0 defer { x:: 1 } x } } 0
-	// equal { fn { } { x: 0 defer { x:: 1 } } x } 1
+	// equal { x:: 0 defer { x:: 1 } x } 0
+	// equal { fn { } { var 'x 0 defer { x:: 1 } x } } 0
+	// ; equal { fn { } { x:: 0 defer { x:: 1 } } x } 1
 	"defer": {
 		Argsn: 1,
 		Doc:   "Registers a block of code to be executed when the current function exits or the program terminates.",

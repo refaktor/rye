@@ -790,7 +790,7 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 	EvalBlockInj(psX, arg0, true)
 	// fmt.Println(result)
 	// fmt.Println(result.Res)
-	MaybeDisplayFailureOrError(psX, result.Idx, "call func args 2")
+	MaybeDisplayFailureOrError(psX, psX.Idx, "call func args 2")
 	if psX.ForcedResult != nil {
 		ps.Res = result.ForcedResult
 		result.ForcedResult = nil

@@ -12,9 +12,9 @@ test-framework: context {
 	cnt: 0
 	failed: 0
 	
-	section: fn { name descr code } { term/magenta term/bold print name term/reset\all print " " + descr , do code print "" }
+	section: fn { name descr code } { term/magenta term/bold print name term/reset\all print " " ++ descr , do code print "" }
 	
-	group: fn { name descr args code } { print "" , inc! 'cnt t/yellow prns " " + name t/reset\all , do  code }
+	group: fn { name descr args code } { print "" , inc! 'cnt t/yellow prns " " ++ name t/reset\all , do  code }
 	
 	error: fn { test } {
 		; try { do\in root-ctx test }
@@ -41,7 +41,7 @@ test-framework: context {
 		prns "\nGroups:" term/bold prn cnt term/reset\bold
 		either is-zero failed
 		{ term/bold term/green print "\nALL PASSED" term/reset\all }
-		{ term/red print "\nFailed tests: " + failed  term/reset\all }
+		{ term/red print "\nFailed tests: " ++ failed  term/reset\all }
 
 		if failed > 0 { exit 1 }
 	}
@@ -58,7 +58,7 @@ docs-framework: context {
 	equal: fn { test res } {
 		cc: extends root-ctx { }
 		do\in cc test :got = res
-		|if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" escape-html mold\nowrap test newline "; returns "  replace escape-html mold got newline newline + "; "  "</code></pre>" ] }
+		|if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" escape-html mold\nowrap test newline "; returns "  replace escape-html mold got newline newline ++ "; "  "</code></pre>" ] }
 	}
 
 	error: fn { test } {
@@ -70,7 +70,7 @@ docs-framework: context {
 	stdout: fn { test res } {
 		cc: extends root-ctx { }
 		capture-stdout { do\in cc test } :got = res
-		|if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" escape-html mold\nowrap test newline "; prints " replace escape-html mold\nowrap got newline newline + "; " "</code></pre>" ] }
+		|if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" escape-html mold\nowrap test newline "; prints " replace escape-html mold\nowrap got newline newline ++ "; " "</code></pre>" ] }
 	}
 
 	comment: fn { str } {
@@ -98,9 +98,9 @@ generate-menu: fn { menu } {
 generate-doc-file: fn { filename menu } {
 	join {
 		%tpl/header.html .read .replace "{{title}}" capitalize filename |replace "{{menu}}" generate-menu menu
-		capture-stdout { do\in docs-framework load to-file filename + ".info.rye" }
+		capture-stdout { do\in docs-framework load to-file filename ++ ".info.rye" }
 		read %tpl/footer.html
-	} |write* to-file filename + ".html"
+	} |write* to-file filename ++ ".html"
 }
 
 menu: { "base" "table" "formats" "io" "crypto" }
@@ -120,7 +120,7 @@ Examples:
 
 first args |^fix { print-help } |switch {
 test {
-	sections: { }
+	var 'sections { }
 	either args .length? > 1 {
 		either ( second args ) = 'ls {
 			print "Test sections available:"
@@ -132,16 +132,16 @@ test {
 		sections:: menu
 	}
 	if sections .length? > 0 {  ; todo add is-empty builtin
-		errors: 0
+		var 'errors 0
 		for sections {
 			.to-string .pass { term/bold , prns "\n#" , .to-upper .prns , print "#\n" }
-			|+ ".info.rye" |to-file |load |^check { "group does not exist!" } |do\in* test-framework |+ errors ::errors }
+			| ++ ".info.rye" |to-file |load |^check { "group does not exist!" } |do\in* test-framework | ++ errors ::errors }
 		print ""
 	
 		if ( length? sections ) > 1 { 
 			term/yellow
 			term/bold
-			print "TOTAL FAILED TESTS: " + errors
+			print "TOTAL FAILED TESTS: " ++ errors
 			print ""
 			term/reset\all
 		}

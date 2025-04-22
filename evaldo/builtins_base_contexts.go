@@ -261,7 +261,7 @@ var builtins_contexts = map[string]*env.Builtin{
 
 	// TODOC
 	// Tests:
-	// equal { c: context { x: 9999 , incr: fn\in { } current { x:: inc x } } c/incr c/x } 10000
+	// equal { c: context { var 'x 9999 , incr: fn\in { } current { x:: inc x } } c/incr c/x } 10000
 	"current": { // **
 		Argsn: 0,
 		Doc:   "Returns current context.",
@@ -271,7 +271,7 @@ var builtins_contexts = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { y: 99 c: context { incr: fn\in { } parent { y:: inc y } } c/incr y } 100
+	// equal { var 'y 99 c: context { incr: fn\in { } parent { y:: inc y } } c/incr y } 100
 	"parent": { // **
 		Argsn: 0,
 		Doc:   "Returns parent context of the current context.",

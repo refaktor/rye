@@ -471,7 +471,7 @@ var builtins_string = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { decode\base64 encode\base64 "abcd" } "abcd"
+	// equal { decode\base64 encode-to\base64 "abcd" } "abcd"
 	// equal { decode\base64 "aGVsbG8gd29ybGQ=" } "hello world"
 	// Args:
 	// * string: Base64-encoded string to decode

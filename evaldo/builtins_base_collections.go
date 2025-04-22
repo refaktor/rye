@@ -989,7 +989,9 @@ var builtins_collection = map[string]*env.Builtin{
 				case env.Function:
 					copied := make([]env.Object, len(block.Series.S))
 					copy(copied, block.Series.S)
+					fmt.Println(fn)
 					sorter := RyeBlockCustomSort{copied, fn, ps}
+					fmt.Println(sorter)
 					sort.Sort(sorter)
 					return *env.NewBlock(*env.NewTSeries(copied))
 				default:
@@ -1223,8 +1225,8 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { "A" ++ "b" } "Ab"
 	// equal { "A" ++ 1 } "A1"
 	// equal { { 1 2 } ++ { 3 4 } } { 1 2 3 4 }
-	// equal { dict { "a" 1 } |++ { "b" 2 } } dict { "a" 1 "b" 2 }
-	// equal { dict { "a" 1 } |++ dict { "b" 2 } } dict { "a" 1 "b" 2 }
+	// equal { dict { "a" 1 } | ++ { "b" 2 } } dict { "a" 1 "b" 2 }
+	// equal { dict { "a" 1 } | ++ dict { "b" 2 } } dict { "a" 1 "b" 2 }
 	// Args:
 	// * value1: First value (string, block, dict, etc.)
 	// * value2: Second value to join
@@ -1913,8 +1915,8 @@ var builtins_collection = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { x: ref { 1 2 3 4 } remove-last! 'x x } { 1 2 3 }
-	// equal { x: ref { 1 2 3 4 } remove-last! 'x } { 1 2 3 }
+	// equal { var 'x ref { 1 2 3 4 } remove-last! 'x x } { 1 2 3 }
+	// equal { var 'x ref { 1 2 3 4 } remove-last! 'x } { 1 2 3 }
 	// Args:
 	// * word: Word referring to a block to modify
 	// Returns:
@@ -1950,8 +1952,8 @@ var builtins_collection = map[string]*env.Builtin{
 	},
 	// Tests:
 	// ; TODO equal { x: ref { 1 2 3 } append! { 4 } x , x } { 1 2 3 4 }
-	// equal { x: ref { 1 2 3 } append! 4 'x , x } { 1 2 3 4 }
-	// equal { s: "hello" append! " world" 's , s } "hello world"
+	// equal { var 'x ref { 1 2 3 } append! 4 'x , x } { 1 2 3 4 }
+	// equal { var 's "hello" append! " world" 's , s } "hello world"
 	// Args:
 	// * value: Value to append
 	// * word: Word referring to a block, list or string to modify
