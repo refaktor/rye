@@ -1,47 +1,50 @@
 section "Default" "" {
-	group "pass" 
-	"Accepts a value and a block. It does the block, with value injected, and returns (passes on) the initial value."
+	group "compile-fast" 
+	"Takes a block of code and compiles it to function pointers for the fast evaluator."
 	{
 	}
 
 	{
-		equal  { 101 .pass { 202 } } 101
-		equal  { 101 .pass { 202 + 303 } } 101
+		equal  { compile-fast { 123 + 123 } } 'block
+		equal  { compile-fast/debug { 123 + 123 } } 'block
 	}
 
-	group "wrap" 
-	"Accepts a value and a block. It does the block, with value injected, and returns (passes on) the initial value."
+	group "do-fast" 
+	"Takes a block of code and does (runs) it using the fast evaluator."
 	{
 	}
 
 	{
-		stdout { wrap { prn "*" } { prn "x" } } "*x*"
-	}
-
-	group "keep" 
-	"Do the first block, then the second one but return the result of the first one."
-	{
-	}
-
-	{
-		equal  { 20 .keep { + 202 } { + 101 } } 222
+		; equal  { do-fast { 123 + 123 } } 246
+		; error  { do-fast { 123 + } }
+		; equal  { do-fast { _+ _+ 12 23 34 } } 69
+		; equal  { do-fast { 12 * 23 |+ 34 } } 310
+		; equal  { do-fast { ( 12 * 23 ) + 34 } } 310
+		; equal  { do-fast { 12 * 23 | + 34 } } 310
+		; equal  { do-fast { 12 * 23 :a + 34 } } 310
 	}
 
 	group "change!" 
-	"Searches for a word and changes it's value in-place. If value changes returns true otherwise false"
+	"Searches for a word and changes it's value in-place. Only works on variables declared with var. If value changes returns true otherwise false"
 	{
+		arg `value: New value to assign to the word`
+		arg `word: Word whose value should be changed`
+		returns `Integer 1 if the value changed, 0 if the new value is the same as the old value`
 	}
 
 	{
-		equal   { x: 123 , change! 234 'x , x } 234
+		equal   { var 'x 123 , change! 234 'x , x } 234
 		equal   { a:: 123 change! 333 'a a } 333
 		equal   { a:: 123 change! 124 'a } 1
 		equal   { a:: 123 change! 123 'a } 0
 	}
 
 	group "set!" 
-	"Set word to value or words by deconstructing a block"
+	"Set word to value or words by deconstructing a block. Only works on variables declared with var."
 	{
+		arg `values: Value or block of values to assign to the word(s)`
+		arg `words: Word or block of words to be set`
+		returns `The value or block of values that was assigned`
 	}
 
 	{
@@ -51,217 +54,65 @@ section "Default" "" {
 	group "unset!" 
 	"Unset a word in current context, only meant to be used in console"
 	{
+		arg `word: Word to be unset from the current context`
+		returns `Void value`
 	}
 
 	{
 		equal   { x: 1 unset! 'x x: 2 } 2 ; otherwise would produce an error
 	}
 
-}
-
-section "Values and Types " "" {
-	group "to-word" 
-	"Tries to change a Rye value to a word with same name."
+	group "val" 
+	"Returns value of the word in context"
 	{
+		arg `word: Word whose value should be retrieved`
+		returns `The value associated with the word in the current context`
 	}
 
 	{
-		equal { to-word "test" } 'test
-		error { to-word 123 }
+		equal   { x: 123 val 'x } 123
+		equal   { x: 123 y: 'x val y } 123
 	}
 
-	group "to-integer" 
-	"Tries to change a Rye value (like string) to integer."
+	group "_<<" 
+	"Converts a value to specific kind (R to L)"
 	{
-	}
-
-	{
-		equal { to-integer "123" } 123
-		; equal { to-integer "123.4" } 123
-		; equal { to-integer "123.6" } 123
-		; equal { to-integer "123.4" } 123
-		error { to-integer "abc" }
-	}
-
-	group "to-decimal" 
-	"Tries to change a Rye value (like string) to decimal."
-	{
+		arg `kind: Kind to convert the value to`
+		arg `value: Dict or context to convert`
+		returns `A new context of the specified kind`
 	}
 
 	{
-		equal { to-decimal "123.4" } 123.4
-		error { to-decimal "abc" }
+		equal   { person: kind 'person { name: "" age: 0 } person << dict { "name" "John" "age" 30 } |type? } 'ctx
 	}
 
-	group "to-string" 
-	"Tries to turn a Rye value to string."
+	group "save\current" 
+	"Saves current state of the program to a file."
 	{
-	}
-
-	{
-		equal { to-string 'test } "test"
-		equal { to-string 123 } "123"
-		equal { to-string 123.4 } "123.400000"
-		equal { to-string "test" } "test"
-	}
-
-	group "to-char" 
-	"Tries to turn a Rye value (like integer) to ascii character."
-	{
+		arg `None`
+		returns `Integer 1 on success`
 	}
 
 	{
-		equal { to-char 42 } "*"
-		error { to-char "*" }
+		equal  { save\current |type? } 'integer
 	}
 
-	group "to-block" 
-	"Turns a List to a Block"
+	group "save\current\secure" 
+	"Saves current state of the program to a file with password protection."
 	{
-	}
-
-	{
-		equal { list [ 1 2 3 ] |to-block |type? } 'block
-		equal  { list [ 1 2 3 ] |to-block |first } 1
-	}
-
-	group "to-context" 
-	"Takes a Dict and returns a Context with same names and values."
-	{
+		arg `None`
+		returns `Integer 1 on success`
 	}
 
 	{
-		equal   { dict [ "a" 1 "b" 2 "c" 3 ] |to-context |type? } 'ctx   ; TODO - rename ctx to context in Rye
-		; equal   { dict [ "a" 1 ] |to-context do\in { a } } '1
-	}
-
-	group "is-string" 
-	"Returns true if value is a string."
-	{
-	}
-
-	{
-		equal   { is-string "test" } 1
-		equal   { is-string 'test } 0
-		equal   { is-string 123 } 0
-	}
-
-	group "is-integer" 
-	"Returns true if value is an integer."
-	{
-	}
-
-	{
-		equal   { is-integer 123 } 1
-		equal   { is-integer 123.4 } 0
-		equal   { is-integer "123" } 0
-	}
-
-	group "is-decimal" 
-	"Returns true if value is a decimal."
-	{
-	}
-
-	{
-		equal   { is-decimal 123.0 } 1
-		equal   { is-decimal 123 } 0
-		equal   { is-decimal "123.4" } 0
-	}
-
-	group "is-number" 
-	"Returns true if value is a number (integer or decimal)."
-	{
-	}
-
-	{
-		equal   { is-number 123 } 1
-		equal   { is-number 123.4 } 1
-		equal   { is-number "123" } 0
-	}
-
-	group "to-uri" 
-	"Tries to change Rye value to an URI."
-	{
-	}
-
-	{
-		equal   { to-uri "https://example.com" } https://example.com
-		; error { to-uri "not-uri" }
-	}
-
-	group "to-file" 
-	"Tries to change Rye value to a file."
-	{
-	}
-
-	{
-		equal   { to-file "example.txt" } %example.txt
-		equal { to-file 123 } %123
-	}
-
-	group "type?" 
-	"Returns the type of Rye value as a word."
-	{
-	}
-
-	{
-		equal   { type? "test" } 'string
-		equal   { type? 123.4 } 'decimal
-	}
-
-	group "kind?" 
-	"Returns the type of Rye value as a word."
-	{
-	}
-
-	{
-		equal   { kind? %file } 'file-schema
-	}
-
-	group "types?" 
-	"Returns the types of Rye values in a block or table row as a block of words."
-	{
-	}
-
-	{
-		equal   { types? { "test" 123 } } { string integer }
-	}
-
-	group "dump" 
-	"Returns (dumps) Rye code representing the object."
-	{
-	}
-
-	{
-		equal { dump 123 } "123"
-		equal { dump "string" } `"string"`
-		equal { does { 1 } |dump } "fn { } { 1 }"
-	}
-
-	group "mold" 
-	"Turn value to it's string representation."
-	{
-	}
-
-	{
-		equal  { mold 123 } "123"
-		equal  { mold { 123 } } "{ 123 }"
-	}
-
-	group "mold\nowrap" 
-	"Turn value to it's string representation. Doesn't wrap the blocks"
-	{
-	}
-
-	{
-		equal  { mold\nowrap 123 } "123"
-		equal  { mold\nowrap { 123 } } "123"
-		equal  { mold\nowrap { 123 234 } } "123 234"
+		; equal  { save\current\secure |type? } 'integer
 	}
 
 	group "doc!" 
 	"Sets docstring of the current context."
 	{
+		arg `doc: String to set as the docstring for the current context`
+		returns `Integer 1 on success`
 	}
 
 	{
@@ -271,6 +122,8 @@ section "Values and Types " "" {
 	group "doc?" 
 	"Gets docstring of the current context."
 	{
+		arg `None`
+		returns `String containing the docstring of the current context`
 	}
 
 	{
@@ -280,6 +133,8 @@ section "Values and Types " "" {
 	group "doc\of?" 
 	"Get docstring of the passed context."
 	{
+		arg `value: Function, builtin, or context to get the docstring from`
+		returns `String containing the docstring of the provided value`
 	}
 
 	{
@@ -289,6 +144,8 @@ section "Values and Types " "" {
 	group "ref" 
 	"Makes a value mutable instead of immutable"
 	{
+		arg `value: Value to make mutable`
+		returns `A mutable reference to the value`
 	}
 
 	{
@@ -298,6 +155,8 @@ section "Values and Types " "" {
 	group "deref" 
 	"Makes a value again immutable"
 	{
+		arg `value: Mutable reference to make immutable`
+		returns `An immutable copy of the value`
 	}
 
 	{
@@ -305,8 +164,10 @@ section "Values and Types " "" {
 	}
 
 	group "is-ref" 
-	"Prints information about a value."
+	"Checks if a value is a mutable reference."
 	{
+		arg `value: Any value to check if it's a reference`
+		returns `Integer 1 if the value is a reference, 0 otherwise`
 	}
 
 	{
@@ -317,6 +178,8 @@ section "Values and Types " "" {
 	group "dict" 
 	"Constructs a Dict from the Block of key and value pairs."
 	{
+		arg `block: Block containing alternating keys and values`
+		returns `A new Dict with the specified keys and values`
 	}
 
 	{
@@ -326,139 +189,12 @@ section "Values and Types " "" {
 	group "list" 
 	"Constructs a List from the Block of values."
 	{
+		arg `block: Block containing values to put in the list`
+		returns `A new List with the values from the block`
 	}
 
 	{
 		equal { list { "a" 123 } -> 0 } "a"
-	}
-
-}
-
-section "Printing " "" {
-	group "prns" 
-	"Prints a value and adds a space."
-	{
-	}
-
-	{
-		stdout { prns "xy" } "xy "
-	}
-
-	group "prn" 
-	"Prints a value without newline."
-	{
-	}
-
-	{
-		stdout { prn "xy" } "xy"
-	}
-
-	group "print" 
-	"Prints a value and adds a newline."
-	{
-	}
-
-	{
-		stdout { print "xy" } "xy\n"
-	}
-
-	group "format" 
-	"Formats a value according to Go-s sprintf format"
-	{
-	}
-
-	{
-		equal { format 123  "num: %d" } "num: 123"
-	}
-
-	group "prnf" 
-	"Formats a value according to Go-s sprintf format and prn-s it"
-	{
-	}
-
-	{
-		stdout { prnf 123 "num: %d" } "num: 123"
-	}
-
-	group "embed" 
-	"Embeds a value into a string with {} placeholder."
-	{
-	}
-
-	{
-		equal   { embed 101 "val {}" } "val 101"
-	}
-
-	group "prnv" 
-	"Prints a value."
-	{
-	}
-
-	{
-		stdout  { prnv 101 "val {}" } "val 101"
-	}
-
-	group "printv" 
-	"Prints a value and adds a newline."
-	{
-	}
-
-	{
-		stdout  { printv 101 "val {}" } "val 101\n"
-	}
-
-	group "print\ssv" 
-	"Prints a value and adds a newline."
-	{
-	}
-
-	{
-		stdout  { print\ssv { 101 "asd" } } "101 asd\n"
-	}
-
-	group "print\csv" 
-	"Prints a value and adds a newline."
-	{
-	}
-
-	{
-		stdout  { print\csv { 101 "asd" } } "101,asd\n"
-	}
-
-	group "probe" 
-	"Prints information about a value."
-	{
-	}
-
-	{
-		stdout  { probe 101 } "[Integer: 101]\n"
-	}
-
-	group "inspect" 
-	"Returs information about a value."
-	{
-	}
-
-	{
-		equal  { inspect 101 } "[Integer: 101]"
-	}
-
-	group "esc" 
-	"Creates an escape sequence \033{}"
-	{
-	}
-
-	{
-		; equal  { esc "[33m" } "\033[33m"   ; we can't represent hex or octal in strings yet
-	}
-
-	group "esc-val" 
-	"Escapes a value and adds a newline."
-	{
-	}
-
-	{
-		; equal  { esc-val "[33m" "Error" } "\033[33mError"  ; we can't represent hex or octal in strings yet
 	}
 
 	group "load" 
@@ -469,68 +205,6 @@ section "Printing " "" {
 	{
 		equal  { load " 1 2 3 " |third } 3
 		equal  { load "{ 1 2 3 }" |first |third } 3
-	}
-
-}
-
-section "Flow control " "" {
-	group "if" 
-	"Basic conditional. Takes a boolean condition and a block of code."
-	{
-	}
-
-	{
-		equal  { if true { 222 } } 222
-		equal  { if false { 333 } } false
-		error  { if 1 { 222 } }
-		error  { if 0 { 333 } }
-	}
-
-	group "^if" 
-	"Basic conditional with a Returning mechanism when true. Takes a condition and a block of code."
-	{
-	}
-
-	{
-		equal  { x: does { ^if 1 { 222 } 555 } x } 222
-		equal  { x: does { ^if 0 { 333 } 444 } x } 444
-	}
-
-	group "either" 
-	"The if/else conditional. Takes a boolean condition and true and false blocks of code."
-	{
-	}
-
-	{
-		equal  { either true { 222 } { 333 } } 222
-		equal  { either false { 222 } { 333 } } 333
-		error  { either 1 { 222 } { 333 } }
-		error  { either 0 { 222 } { 333 } }
-	}
-
-	group "switch" 
-	"Classic switch function. Takes a word and multiple possible values and block of code to do."
-	{
-	}
-
-	{
-		equal  { switch 101 { 101 { 111 } 202 { 222 } } } 111
-		equal  { switch 202 { 101 { 111 } 202 { 222 } } } 222
-	}
-
-	group "cases" 
-	"Similar to Case function, but checks all the cases, even after a match. It combines the outputs."
-	{
-	}
-
-	{
-		equal  { cases 0 { { 1 > 0 } { + 100 } { 2 > 1 } { + 1000 } } } 1100
-		equal  { cases 0 { { 1 > 0 } { + 100 } { 2 < 1 } { + 1000 } } } 100
-		equal  { cases 0 { { 1 < 0 } { + 100 } { 2 > 1 } { + 1000 } } } 1000
-		equal  { cases 0 { { 1 < 0 } { + 100 } { 2 < 1 } { + 1000 } } } 0
-		equal  { cases 1 { { 1 > 0 } { + 100 } { 2 < 1 } { + 1000 } _ { * 3 } } } 101
-		equal  { cases 1 { { 1 < 0 } { + 100 } { 2 > 1 } { + 1000 } _ { * 3 } } } 1001
-		equal  { cases 1 { { 1 < 0 } { + 100 } { 2 < 1 } { + 1000 } _ { * 3 } } } 3
 	}
 
 	group "do" 
@@ -547,17 +221,6 @@ section "Flow control " "" {
 		equal  { do { 12 * 23 | + 34 } } 310
 		equal  { do { 12 * 23 :a + 34 } } 310
 		equal  { do { 12 * 23 :a a + 34 } } 310
-	}
-
-	group "try" 
-	"Takes a block of code and does (runs) it."
-	{
-	}
-
-	{
-		equal  { try { 123 + 123 } } 246
-		equal  { try { 123 + "asd" } \type? } 'error
-		equal  { try { 123 + } \type? } 'error
 	}
 
 	group "with" 
@@ -578,21 +241,8 @@ section "Flow control " "" {
 	{
 		equal  { c: context { x: 100 } do\in c { x * 9.99 } } 999.0
 		equal  { c: context { x: 100 } do\in c { inc! 'x } } 101
-		equal  { c: context { x: 100 } do\in c { x:: 200 } c/x } 200
-		equal  { c: context { x: 100 } do\in c { x:: 200 , x } } 200
-	}
-
-	group "try\in" 
-	"Takes a Context and a Block. It Does a block inside a given Context."
-	{
-	}
-
-	{
-		equal  { c: context { x: 100 } try\in c { x * 9.99 } } 999.0
-		equal  { c: context { x: 100 } try\in c { inc! 'x } } 101
-		equal  { c: context { x: 100 } try\in c { x:: 200 , x } } 200
-		equal  { c: context { x: 100 } try\in c { x:: 200 } c/x } 200
-		equal  { c: context { x: 100 } try\in c { inc! 'y } |type? } 'error
+		equal  { c: context { var 'x 100 } do\in c { x:: 200 } c/x } 200
+		equal  { c: context { x:: 100 } do\in c { x:: 200 , x } } 200
 	}
 
 	group "do\par" 
@@ -605,348 +255,6 @@ section "Flow control " "" {
 		equal  { c: context { x: 100 } do\par c { inc! 'x } } 101
 		equal  { c: context { x: 100 } do\par c { x:: 200 , x } } 200
 		equal  { c: context { x: 100 } do\par c { x:: 200 } c/x } 100
-	}
-
-	group "capture-stdout" 
-	"Takes a block of code and does (runs) it."
-	{
-	}
-
-	{
-		equal { capture-stdout { print "hello" } } "hello\n"
-		equal { capture-stdout { loop 3 { prns "x" } } } "x x x "
-	}
-
-	group "time-it" 
-	"Accepts a block, does it and times it's execution time."
-	{
-	}
-
-	{
-		equal { time-it { sleep 100 } } 100
-	}
-
-	group "vals" 
-	"Takes a block of Rye values and evaluates each value or expression."
-	{
-	}
-
-	{
-		equal { x: 1 y: 2 vals { x y } } { 1 2 }
-		equal { x: 1 y: 2 vals { 1 y } } { 1 2 }
-		equal { x: 1 y: 2 try { vals { z y } } |type? } 'error
-	}
-
-	group "vals\with" 
-	"Evaluate a block with injecting the first argument."
-	{
-	}
-
-	{
-		equal { x: 1 y: 2 vals\with 10 { + x , * y } } { 11 20 }
-		equal { x: 1 y: 2 vals\with 100 { + 10 , * 8.9 } } { 110 890.0 }
-	}
-
-	group "current" 
-	"Returns current context."
-	{
-	}
-
-	{
-		equal { c: context { x: 9999 , incr: fn\in { } current { x:: inc x } } c/incr c/x } 10000
-	}
-
-	group "parent" 
-	"Returns parent context of the current context."
-	{
-	}
-
-	{
-		equal { y: 99 c: context { incr: fn\in { } parent { y:: inc y } } c/incr y } 100
-	}
-
-	group "parent\of" 
-	"Returns parent context of the current context."
-	{
-	}
-
-	{
-		equal { ct: context { p: 123 } parent\of ct |= current } 1
-	}
-
-}
-
-section "Iteration " "Iteration over collections" {
-	group "loop" 
-	"Accepts a number and a block of code. Does the block of code number times, injecting the number."
-	{
-	}
-
-	{
-		stdout { 3 .loop { prns "x" } } "x x x "
-		equal  { 3 .loop { + 1 } } 4
-		; equal  { 3 .loop { } } 3  ; TODO should pass the value
-	}
-
-	group "produce" 
-	"Accepts a number, initial value and a block of code. Does the block of code number of times, injecting the initial value or last result."
-	{
-	}
-
-	{
-		equal { produce 5 0 { + 3 } } 15
-		equal { produce 3 ">" { + "x>" } } ">x>x>x>"
-		equal { produce 3 { } { .concat "x" } } { "x" "x" "x" }
-		equal { produce 3 { } { ::x .concat length? x } } { 0 1 2 }
-		equal { produce 5 { 2 } { ::acc .last ::x * x |concat* acc } } { 2 4 16 256 65536 4294967296 }
-	}
-
-	group "produce\while" 
-	"Accepts a while condition, initial value and a block of code. Does the block of code number times, injecting the number first and then result of block."
-	{
-	}
-
-	{
-		equal { x: 0 produce\while { x < 100 } 1 { * 2 ::x } } 64
-		stdout { x: 0 produce\while { x < 100 } 1 { * 2 ::x .prns } } "2 4 8 16 32 64 128 "
-	}
-
-	group "produce\" 
-	" TODO "
-	{
-	}
-
-	{
-		equal { produce\ 5 1 'acc { * acc , + 1 } } 1  ; Look at what we were trying to do here
-	}
-
-	group "forever" 
-	"Accepts a block and does it forever."
-	{
-	}
-
-	{
-		stdout { forever { "once" .prn .return } } "once"
-		equal { forever { "once" .return } } "once"
-	}
-
-	group "forever\with" 
-	""
-	{
-	}
-
-	{
-		stdout { forever\with 1 { .prn .return } } "1"
-	}
-
-	group "for___" 
-	"Accepts a block of values and a block of code, does the code for each of the values, injecting them."
-	{
-	}
-
-	{
-		stdout { for { 1 2 3 } { prns "x" } } "x x x "
-		stdout { { "a" "b" "c" } .for { .prns } } "a b c "
-	}
-
-	group "for" 
-	"Accepts a block of values and a block of code, does the code for each of the values, injecting them."
-	{
-	}
-
-	{
-		stdout { for { 1 2 3 } { prns "x" } } "x x x "
-		stdout { { "a" "b" "c" } .for { .prns } } "a b c "
-	}
-
-	group "walk" 
-	"Accepts a block of values and a block of code, does the code for each of the values, injecting them."
-	{
-	}
-
-	{
-		stdout { walk { 1 2 3 } { .prns .rest } } "1 2 3  2 3  3  "
-		equal { x: 0 walk { 1 2 3 } { ::b .first + x ::x , b .rest } x } 6
-	}
-
-	group "purge" 
-	"Purges values from a series based on return of a injected code block."
-	{
-	}
-
-	{
-		equal { purge { 1 2 3 } { .is-even } } { 1 3 }
-		equal { purge { } { .is-even } } { }
-		equal { purge list { 1 2 3 } { .is-even } } list { 1 3 }
-		equal { purge list { } { .is-even } } list { }
-		equal { purge "1234" { .to-integer .is-even } } { "1" "3" }
-		equal { purge "" { .to-integer .is-even } } { }
-	}
-
-	group "purge!" 
-	"Purges values from a series based on return of a injected code block."
-	{
-	}
-
-	{
-		equal { { 1 2 3 } :x purge! { .is-even } 'x , x } { 1 3 }
-	}
-
-	group "map___" 
-	"Maps values of a block to a new block by evaluating a block of code."
-	{
-	}
-
-	{
-		equal { map { 1 2 3 } { + 1 } } { 2 3 4 }
-		equal { map { } { + 1 } } { }
-		equal { map { "aaa" "bb" "c" } { .length? } } { 3 2 1 }
-		equal { map list { "aaa" "bb" "c" } { .length? } } list { 3 2 1 }
-		equal { map list { 3 4 5 6 } { .is-multiple-of 3 } } list { 1 0 0 1 }
-		equal { map list { } { + 1 } } list { }
-		; equal { map "abc" { + "-" } .join } "a-b-c-" ; TODO doesn't work, fix join
-		equal { map "123" { .to-integer } } { 1 2 3 }
-		equal { map "123" ?to-integer } { 1 2 3 }
-		equal { map "" { + "-" } } { }
-	}
-
-	group "map" 
-	"Maps values of a block to a new block by evaluating a block of code."
-	{
-	}
-
-	{
-		equal { map { 1 2 3 } { + 1 } } { 2 3 4 }
-		equal { map { } { + 1 } } { }
-		equal { map { "aaa" "bb" "c" } { .length? } } { 3 2 1 }
-		equal { map list { "aaa" "bb" "c" } { .length? } } list { 3 2 1 }
-		equal { map list { 3 4 5 6 } { .is-multiple-of 3 } } list { 1 0 0 1 }
-		equal { map list { } { + 1 } } list { }
-		; equal { map "abc" { + "-" } .join } "a-b-c-" ; TODO doesn't work, fix join
-		equal { map "123" { .to-integer } } { 1 2 3 }
-		equal { map "123" ?to-integer } { 1 2 3 }
-		equal { map "" { + "-" } } { }
-	}
-
-	group "map\pos" 
-	"Maps values of a block to a new block by evaluating a block of code."
-	{
-	}
-
-	{
-		equal { map\pos { 1 2 3 } 'i { + i } } { 2 4 6 }
-		equal { map\pos { } 'i { + i } } { }
-		equal { map\pos list { 1 2 3 } 'i { + i } } list { 2 4 6 }
-		equal { map\pos list { } 'i { + i } } list { }
-		equal { map\pos "abc" 'i { + i } } { "a1" "b2" "c3" }
-		equal { map\pos "" 'i { + i } } { }
-	}
-
-	group "map\idx" 
-	"Maps values of a block to a new block by evaluating a block of code."
-	{
-	}
-
-	{
-		equal { map\idx { 1 2 3 } 'i { + i } } { 1 3 5 }
-		equal { map\idx { } 'i { + i } } { }
-		equal { map\idx list { 1 2 3 } 'i { + i } } list { 1 3 5 }
-		equal { map\idx list { } 'i { + i } } list { }
-		equal { map\idx "abc" 'i { + i } } { "a0" "b1" "c2" }
-		equal { map\idx "" 'i { + i } } { }
-	}
-
-	group "reduce" 
-	"Reduces values of a block to a new block by evaluating a block of code ..."
-	{
-	}
-
-	{
-		equal { reduce { 1 2 3 } 'acc { + acc } } 6
-		equal { reduce list { 1 2 3 } 'acc { + acc } } 6
-		equal { reduce "abc" 'acc { + acc } } "cba"
-		equal { try { reduce { } 'acc { + acc } } |type? } 'error
-		equal { try { reduce list { } 'acc { + acc } } |type? } 'error
-		equal { try { reduce "" 'acc { + acc } } |type? } 'error
-	}
-
-	group "fold" 
-	"Reduces values of a block to a new block by evaluating a block of code ..."
-	{
-	}
-
-	{
-		equal { fold { 1 2 3 } 'acc 1 { + acc } } 7
-		equal { fold { } 'acc 1 { + acc } } 1
-		equal { fold list { 1 2 3 } 'acc 1 { + acc } } 7
-		equal { fold list { } 'acc 1 { + acc } } 1
-		equal { fold "abc" 'acc "123" { + acc } } "cba123"
-		equal { fold "" 'acc "123" { + acc } } "123"
-	}
-
-	group "partition" 
-	"Partitions a series by evaluating a block of code."
-	{
-	}
-
-	{
-		equal { partition { 1 2 3 4 } { > 2 } } { { 1 2 } { 3 4 } }
-		equal { partition { "a" "b" 1 "c" "d" } { .is-integer } } { { "a" "b" } { 1 } { "c" "d" } }
-		equal { partition { "a" "b" 1 "c" "d" } ?is-integer } { { "a" "b" } { 1 } { "c" "d" } }
-		equal { partition { } { > 2 } } { { } }
-		equal { partition list { 1 2 3 4 } { > 2 } } list vals { list { 1 2 } list { 3 4 } }
-		equal { partition list { "a" "b" 1 "c" "d" } ?is-integer } list vals { list { "a" "b" } list { 1 } list { "c" "d" } }
-		equal { partition list { } { > 2 } } list vals { list { } }
-		equal { partition "aaabbccc" { , } } list { "aaa" "bb" "ccc" }
-		equal { partition "" { , } } list { "" }
-		equal { partition "aaabbccc" ?is-string } list { "aaabbccc" }
-	}
-
-	group "group" 
-	"Groups a block or list of values given condition."
-	{
-	}
-
-	{
-		; Equality for dicts doesn't yet work consistently
-		;equal { { "Anne" "Mitch" "Anya" } .group { .first } } dict vals { "A" list { "Anne" "Anya" } "M" list { "Mitch" } }
-		;equal { { "Anne" "Mitch" "Anya" } .group ?first } dict vals { "A" list { "Anne" "Anya" } "M" list { "Mitch" } }
-		;equal { { } .group { .first } } dict vals { }
-		;equal { { "Anne" "Mitch" "Anya" } .list .group { .first } } dict vals { "A" list { "Anne" "Anya" } "M" list { "Mitch" } }
-		;equal { { "Anne" "Mitch" "Anya" } .list .group ?first } dict vals { "A" list { "Anne" "Anya" } "M" list { "Mitch" } }
-		equal { { } .list .group { .first } } dict vals { }
-		equal { try { { 1 2 3 4 } .group { .is-even } } |type? } 'error ; TODO keys can only be string currently
-	}
-
-	group "filter" 
-	"Filters values from a seris based on return of a injected code block."
-	{
-	}
-
-	{
-		equal { filter { 1 2 3 4 } { .is-even } } { 2 4 }
-		equal { filter { 1 2 3 4 } ?is-even } { 2 4 }
-		equal { filter { } { .is-even } } { }
-		equal { filter list { 1 2 3 4 } { .is-even } } list { 2 4 }
-		equal { filter list { 1 2 3 4 } ?is-even } list { 2 4 }
-		equal { filter list { } { .is-even } } list { }
-		equal { filter "1234" { .to-integer .is-even } } { "2" "4" }
-		equal { filter "01234" ?to-integer } { "1" "2" "3" "4" }
-		equal { filter "" { .to-integer .is-even } } { }
-	}
-
-	group "seek" 
-	"Seek over a series until a Block of code returns True and return the value."
-	{
-	}
-
-	{
-		equal { seek { 1 2 3 4 } { .is-even } } 2
-		equal { seek list { 1 2 3 4 } { .is-even } } 2
-		equal { seek "1234" { .to-integer .is-even } } "2"
-		equal { try { seek { 1 2 3 4 } { > 5 } } |type? } 'error
-		equal { try { seek list { 1 2 3 4 } { > 5 } } |type? } 'error
-		equal { try { seek "1234" { .to-integer > 5 } } |type? } 'error
 	}
 
 }
@@ -977,6 +285,17 @@ section "Other " "functions related to date and time" {
 
 	{
 		equal { rye .type? } 'native
+	}
+
+	group "defer" 
+	"Registers a block of code to be executed when the current function exits or the program terminates."
+	{
+	}
+
+	{
+		equal { x:: 0 defer { x:: 1 } x } 0
+		equal { fn { } { var 'x 0 defer { x:: 1 } x } } 0
+		; equal { fn { } { x:: 0 defer { x:: 1 } } x } 1
 	}
 
 }
@@ -1118,6 +437,24 @@ section "Boolean logic " "Functions that work with true and false values." {
 	{
 		equal { any\with 10 { + 10 , * 10 } } 20
 		; equal { any\with -10 { + 10 , * 10 } } -100  ; TODO -- fix halting issue
+	}
+
+}
+
+section "Default" "" {
+	group "addnums" 
+	"Optimized version of + that adds two numbers, working with both integers and decimals."
+	{
+		arg `value1: First number (integer or decimal)`
+		arg `value2: Second number to add`
+		returns `sum of the two numbers`
+	}
+
+	{
+		equal { 1 .addnums 1 } 2
+		equal { 3 .addnums 4 } 7
+		equal { 5.6 .addnums 7.8 } 13.400000
+		equal { 5 .addnums 2.5 } 7.5
 	}
 
 }
@@ -1301,11 +638,11 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { 1 + 1 } 2
 		equal { 3 + 4 } 7
 		equal { 5.6 + 7.8 } 13.400000
-		equal { "A" + "b" } "Ab"
-		equal { "A" + 1 } "A1"
-		equal { { 1 2 } + { 3 4 } } { 1 2 3 4 }
-		equal { dict { "a" 1 } |+ { "b" 2 } } dict { "a" 1 "b" 2 }
-		equal { dict { "a" 1 } |+ dict { "b" 2 } } dict { "a" 1 "b" 2 }
+		error { "A" + "b" }
+		error { "A" + 1 }
+		error { { 1 2 } + { 3 4 } } { 1 2 3 4 }
+		error { dict { "a" 1 } |+ { "b" 2 } }
+		error { dict { "a" 1 } |+ dict { "b" 2 } }
 	}
 
 	group "_-" 
@@ -1635,7 +972,7 @@ section "Strings " "" {
 		equal { position? { ".." "xo" ".." } "xo" } 2
 	}
 
-	group "encode\base64" 
+	group "encode-to\base64" 
 	"Encodes a string or binary data as a base64 string."
 	{
 		arg `data: String or native bytes/pem-block to encode`
@@ -1643,8 +980,8 @@ section "Strings " "" {
 	}
 
 	{
-		equal { encode\base64 "abcd" } "YWJjZA=="
-		equal { encode\base64 "hello world" } "aGVsbG8gd29ybGQ="
+		equal { encode-to\base64 "abcd" } "YWJjZA=="
+		equal { encode-to\base64 "hello world" } "aGVsbG8gd29ybGQ="
 	}
 
 	group "decode\base64" 
@@ -1655,7 +992,7 @@ section "Strings " "" {
 	}
 
 	{
-		equal { decode\base64 encode\base64 "abcd" } "abcd"
+		equal { decode\base64 encode-to\base64 "abcd" } "abcd"
 		equal { decode\base64 "aGVsbG8gd29ybGQ=" } "hello world"
 	}
 
@@ -2168,6 +1505,22 @@ section "Collections " "" {
 		equal { 123 .concat "abc" } "123abc"
 	}
 
+	group "_++" 
+	"Joins two values together, with behavior depending on types: concatenates strings, joins blocks, merges dictionaries, etc."
+	{
+		arg `value1: First value (string, block, dict, etc.)`
+		arg `value2: Second value to join`
+		returns `result of joining the values, type depends on input types`
+	}
+
+	{
+		equal { "A" ++ "b" } "Ab"
+		equal { "A" ++ 1 } "A1"
+		equal { { 1 2 } ++ { 3 4 } } { 1 2 3 4 }
+		equal { dict { "a" 1 } | ++ { "b" 2 } } dict { "a" 1 "b" 2 }
+		equal { dict { "a" 1 } | ++ dict { "b" 2 } } dict { "a" 1 "b" 2 }
+	}
+
 	group "union" 
 	"Combines two collections, removing any duplicate values to create a union of all unique values."
 	{
@@ -2388,8 +1741,8 @@ section "Collections " "" {
 	}
 
 	{
-		equal { x: ref { 1 2 3 4 } remove-last! 'x x } { 1 2 3 }
-		equal { x: ref { 1 2 3 4 } remove-last! 'x } { 1 2 3 }
+		equal { var 'x ref { 1 2 3 4 } remove-last! 'x x } { 1 2 3 }
+		equal { var 'x ref { 1 2 3 4 } remove-last! 'x } { 1 2 3 }
 	}
 
 	group "append!" 
@@ -2402,8 +1755,8 @@ section "Collections " "" {
 
 	{
 		; TODO equal { x: ref { 1 2 3 } append! { 4 } x , x } { 1 2 3 4 }
-		equal { x: ref { 1 2 3 } append! 4 'x , x } { 1 2 3 4 }
-		equal { s: "hello" append! " world" 's , s } "hello world"
+		equal { var 'x ref { 1 2 3 } append! 4 'x , x } { 1 2 3 4 }
+		equal { var 's "hello" append! " world" 's , s } "hello world"
 	}
 
 	group "change\nth!" 
@@ -2463,6 +1816,27 @@ section "Collections " "" {
 
 	{
 		equal { x: { 1 2 3 } next x pos x } 1
+	}
+
+	group "vals" 
+	"Takes a block of Rye values and evaluates each value or expression."
+	{
+	}
+
+	{
+		equal { x: 1 y: 2 vals { x y } } { 1 2 }
+		equal { x: 1 y: 2 vals { 1 y } } { 1 2 }
+		equal { x: 1 y: 2 try { vals { z y } } |type? } 'error
+	}
+
+	group "vals\with" 
+	"Evaluate a block with injecting the first argument."
+	{
+	}
+
+	{
+		equal { x: 1 y: 2 vals\with 10 { + x , * y } } { 11 20 }
+		equal { x: 1 y: 2 vals\with 100 { + 10 , * 8.9 } } { 110 890.0 }
 	}
 
 }
@@ -2573,9 +1947,48 @@ section "Contexts " "Context related functions" {
 		error { c: context { y: 123 } cc: bind! context { z: does { y + 234 } } c , dd: unbind cc dd/z }
 	}
 
+	group "current" 
+	"Returns current context."
+	{
+	}
+
+	{
+		equal { c: context { var 'x 9999 , incr: fn\in { } current { x:: inc x } } c/incr c/x } 10000
+	}
+
+	group "parent" 
+	"Returns parent context of the current context."
+	{
+	}
+
+	{
+		equal { var 'y 99 c: context { incr: fn\in { } parent { y:: inc y } } c/incr y } 100
+	}
+
+	group "parent\of" 
+	"Returns parent context of the current context."
+	{
+	}
+
+	{
+		equal { ct: context { p: 123 } parent\of ct |= current } 1
+	}
+
 }
 
-section "Functions " "functions that create functions" {
+section "Default" "" {
+	group "var" 
+	"Declares a word as a variable with the given value, allowing it to be modified. Can only be used once per word in a context."
+	{
+		arg `word: Tagword representing the variable name`
+		arg `value: Initial value for the variable`
+		returns `The initial value`
+	}
+
+	{
+		equal { var 'x 10 x:: 20 x } 20
+	}
+
 	group "does" 
 	"Creates a function with no arguments that executes the given block when called."
 	{

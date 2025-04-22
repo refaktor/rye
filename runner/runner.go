@@ -512,13 +512,14 @@ func main_ryeco() {
 
 func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool, code string, lang string, regfn func(*env.ProgramState) error, stin string) {
 	// Add defer to recover from panics
-	defer func() {
-		if r := recover(); r != nil {
-			fmt.Fprintf(os.Stderr, "Recovered from panic in main_rye_file: %v\n", r)
-			// Log stack trace
-			debug.PrintStack()
-		}
-	}()
+	// Not sure if this makes anything better, just confuses the error message on real panic
+	//defer func() {
+	//	if r := recover(); r != nil {
+	//		fmt.Fprintf(os.Stderr, "Recovered from panic in main_rye_file: %v\n", r)
+	//		// Log stack trace
+	//		debug.PrintStack()
+	//	}
+	//}()
 
 	logFile, err := os.OpenFile("debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {

@@ -13,9 +13,7 @@ var builtins_functions = map[string]*env.Builtin{
 	//
 
 	// Tests:
-	// var 'x 10
-	// x:: 20
-	// equal x 20
+	// equal { var 'x 10 x:: 20 x } 20
 	// Args:
 	// * word: Tagword representing the variable name
 	// * value: Initial value for the variable
