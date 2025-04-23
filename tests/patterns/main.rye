@@ -1,0 +1,167 @@
+; Testing and Documenting frameworks that do test and generate html reference docs
+; Run test cases: ../rye main.rye test
+; Generate documentation: ../rye main.rye doc > builtins.html
+
+rye .args\raw |load :args
+root-ctx: current
+
+t: ?term
+
+test-framework: context {
+
+	cnt: 0
+	failed: 0
+	
+	section: fn { name descr code } { term/magenta term/bold print name term/reset\all print " " ++ descr , do code print "" }
+	
+	group: fn { name descr args code } { print "" , inc! 'cnt t/yellow prns " " ++ name t/reset\all , do  code }
+	
+	error: fn { test } {
+		; try { do\in root-ctx test }
+		try test :got |type? |= 'error |either { t/br-green prns join { "✓" } } { inc! 'failed , t/red prns " ✗ Failed:" t/reset\all   prns join { "expected error but got: " t/str\br-black inspect got t/str\reset } }
+	}
+
+	equal: fn { test res } {
+		cc: extends root-ctx { }
+		do\in cc test :got = res
+		|either { t/green prns "✓" t/reset\all } { inc! 'failed , t/red prns " ✗ Failed:" t/reset\all prns join { "expected " t/str\br-black inspect res t/str\reset ", got " t/str\br-black inspect got t/str\reset } }
+	}
+	
+	stdout: fn { test res } {
+		cc: extends root-ctx { }
+		capture-stdout { do\in cc test } :got = res
+		|either { term/green prns "✓" term/reset\all } { inc! 'failed , term/red prns " ✗ Failed:" term/reset\all  prns join { "expected " t/str\br-black inspect res t/str\reset ", got " t/str\br-black inspect got t/str\reset } }
+	}
+
+	comment: fn { str } {
+		
+	}
+
+	end: fn { } { ;prns "Tests:" term/bold prn cnt term/reset\bold , print "FAILED: " + failed , if failed > 0 { exit 1 } }
+		prns "\nGroups:" term/bold prn cnt term/reset\bold
+		either is-zero failed
+		{ term/bold term/green print "\nALL PASSED" term/reset\all }
+		{ term/red print "\nFailed tests: " ++ failed  term/reset\all }
+
+		if failed > 0 { exit 1 }
+	}
+}
+
+escape-html: fn { x } { x |replace "&" "&amp;" |replace "<" "&lt;" |replace ">" "&gt;" }
+
+docs-framework: context {
+
+	section: fn { name descr code } { print join { "<h2>" name "</h2><p>" descr "</p><div class='section'>" } , do code , print "</div>" }
+	
+	group: fn { name descr args code }   { print join { "<h3>" name "</h3><p>" descr "</p>" } , do args , print "<div class='group'>" , do code , print "</div>" }
+
+	equal: fn { test res } {
+		cc: extends root-ctx { }
+		do\in cc test :got = res
+		|if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" escape-html mold\nowrap test newline "; returns "  replace escape-html mold got newline newline ++ "; "  "</code></pre>" ] }
+	}
+
+	error: fn { test } {
+		; try { do\in root-ctx test }
+		test |try :got |type? |= 'error
+		|if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" escape-html mold\nowrap test newline "; correctly causes error:\n; " message? got " </code></pre>" ] }
+	}
+
+	stdout: fn { test res } {
+		cc: extends root-ctx { }
+		capture-stdout { do\in cc test } :got = res
+		|if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" escape-html mold\nowrap test newline "; prints " replace escape-html mold\nowrap got newline newline ++ "; " "</code></pre>" ] }
+	}
+
+	comment: fn { str } {
+		print join [ "<p class='comment'>" str "</p>" ]
+	}
+
+	arg: fn { str } {
+		print join [ "<p class='arg'>" join prep-arg str "</p>" ]
+	}
+	
+	returns: fn { str } {
+		print join [ "<p class='returns'><b>returns</b> " str "</p>" ]
+	}
+	
+	end: fn { } { }
+
+	prep-arg: fn { s } { .split ":" :x |length? > 1 |either { [ "<b>" first x "</b>" second x ] } { [ first x ] } }
+
+}
+
+generate-menu: fn { menu } {
+	.fold 'acc "" { ::x acc .concat " &middot; <a class='menu-item' id='maintab-{{}}' href='{{}}.html'>{{}}</a>" .replace "{{}}" x }
+}
+
+generate-doc-file: fn { filename menu } {
+	tests: load to-file filename ++ ".info.rye"
+	probe tests
+	join {
+		%tpl/header.html .read .replace "{{title}}" capitalize filename |replace "{{menu}}" generate-menu menu
+		capture-stdout { do\in docs-framework tests }
+		read %tpl/footer.html
+	} |write* to-file filename ++ ".html"
+}
+
+menu: { "reb-like" "fwd-flow" }
+
+print-help: does {
+	print `# Rye's simple testing tool
+	
+ use test or doc command
+
+Examples: 
+ rye . test           # runs all tests
+ rye . doc            # generates the docs out of tests
+ rye . test ls        # lists the test sections available
+ rye . test reb-like  # runs a specific test section
+`
+}
+
+first args |^fix { print-help }
+|switch {
+test {
+	var 'sections { }
+	either args .length? > 1 {
+		either ( second args ) = 'ls {
+			print "Test sections available:"
+			menu .for { .concat* " * " |print }
+		} {
+			sections:: [ second args ]
+		}
+	} {
+		sections:: menu
+	}
+	if sections .length? > 0 {  ; todo add is-empty builtin
+		var 'errors 0
+		for sections {
+			.to-string ++ ".info.rye" |to-file |load :tests ,
+			.to-string .with { term/bold , prns "\n#" , .to-upper .prns , print "#\n" }
+			tests |^check { "group does not exist!" } |do\in* test-framework | ++ errors ::errors
+		} 
+		print ""
+	
+		if ( length? sections ) > 1 { 
+			term/yellow
+			term/bold
+			print "TOTAL FAILED TESTS: " ++ errors
+			print ""
+			term/reset\all
+		}
+		print ""
+	}
+}
+doc  {
+	for menu { .generate-doc-file menu }
+	print "docs generated" 
+}
+_ { print-help }
+}
+
+;   maybe we need this at some point 
+;	true: fn { test } {
+;		do-in root-ctx test
+;		|either { print "  - OK" } { print "  - Error: not True" }
+;	}

@@ -1,0 +1,10 @@
+section "basic rebol like evaluation"
+""
+{
+	group "value"
+	mold\nowrap ?print
+	{ { object } }
+	{
+		equal { 123 } 13
+	}
+}

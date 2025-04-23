@@ -1,0 +1,69 @@
+; First, let's create a sample markdown file to parse
+`# Sample Markdown Document
+
+This is a paragraph with **bold** text.
+
+## Lists
+
+- Item 1
+- Item 2
+
+## Code Example
+
+    func main() {
+        fmt.Println("Hello, World!")
+    }
+
+## Links
+
+[Link to Rye](https://github.com/refaktor/rye)
+
+` :md
+
+
+
+; Convert to index.json for fuse.js full text search
+
+; collector state machine
+collector-sm: context {
+
+	var 'items        ref { }
+	var 'curr-heading ""
+	var 'curr-text    ""
+	
+	heading!: fn { t n } {
+		.change! 'curr-heading
+		if not is-empty curr-text {
+			print "APPENDING"
+			[ curr-heading curr-text ] |probe .append! 'items
+			change! "" 'curr-text
+		}
+		; print "."
+	}
+	
+	content!: fn { t } { .probe
+		.append! 'curr-text |print
+		; print "_"
+	}
+}
+
+convert-file: fn { md sm } {
+	
+	md .reader .do-markdown {
+		
+		h1 [ .probe .sm/heading! 1 ]
+		h2 [ .probe .sm/heading! 2 ]
+		h3 [ .probe .sm/heading! 3 ]
+		;		h4 [ .probe .sm/heading 4 print "H4" ]
+		
+		paragraph [ .sm/content! ]
+		code      [ .sm/content! ]
+		line-item [ .sm/content! ]
+		link      [ .sm/content! ]
+		bold      [ .sm/content! ]	
+	}
+
+	sm/items
+}
+
+probe convert-file md collector-sm

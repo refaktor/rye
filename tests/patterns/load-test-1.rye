@@ -1,0 +1,3 @@
+do load %subfile.rye
+
+print a

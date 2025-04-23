@@ -1,0 +1,22 @@
+`# Sample Markdown Document
+
+This is a paragraph.
+
+## Code Example
+
+    func main() {
+        fmt.Println("Hello, World!")
+    }
+
+` :md
+
+print "--Process markdown--"
+md .reader .do-markdown {
+    h1 { print 1 / 0 }
+} |probe
+
+probe "END!!!"
+
+
+
+

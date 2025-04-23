@@ -1,0 +1,25 @@
+; exprimenting
+
+opts: { "install" "build" "more info" }
+
+nl: does { print "" }
+up: does { prn esc "[1A" }
+down: does { prn esc "[1B" }
+left: does { prn esc "[1D" }
+left\n: fn { n } { .embed "[{}D" |esc |prn }
+
+( loop 3 { nl } )
+( loop 3 { up } )
+
+( for opts {
+		( for ( range 1 10 ) { ::i
+				prn "."
+				if i > 1 { down prn "-" up left }
+				if i > 2 { down down prn "+" up up left }
+				sleep 80
+			} )
+	} )
+
+( for opts { ::o .prn ( left\n ( length? o ) ) down sleep 100 } )
+
+( loop 3 { print "" } )
