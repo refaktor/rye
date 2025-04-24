@@ -16,7 +16,7 @@ left\n: fn { n } { .embed "[{}D" |esc |prn }
 				prn "."
 				if i > 1 { down prn "-" up left }
 				if i > 2 { down down prn "+" up up left }
-				sleep 80
+				sleep 30
 			} )
 	} )
 
