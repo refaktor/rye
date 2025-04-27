@@ -407,73 +407,70 @@ RyeObject lessThanOrEqualBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? ar
 
 // Register the number-related builtins
 void registerNumberBuiltins(ProgramState ps) {
-  // Register the inc builtin
-  int incIdx = ps.idx.indexWord("inc");
-  Builtin incBuiltinObj = Builtin(incBuiltin, 1, false, true, "Increments an integer value by 1");
-  ps.ctx.set(incIdx, incBuiltinObj);
-  
-  // Register the is-positive builtin
-  int isPositiveIdx = ps.idx.indexWord("is-positive");
-  Builtin isPositiveBuiltinObj = Builtin(isPositiveBuiltin, 1, false, true, "Checks if a number is positive (greater than zero)");
-  ps.ctx.set(isPositiveIdx, isPositiveBuiltinObj);
-  
-  // Register the is-zero builtin
-  int isZeroIdx = ps.idx.indexWord("is-zero");
-  Builtin isZeroBuiltinObj = Builtin(isZeroBuiltin, 1, false, true, "Checks if a number is exactly zero");
-  ps.ctx.set(isZeroIdx, isZeroBuiltinObj);
-  
-  // Register the is-odd builtin
-  int isOddIdx = ps.idx.indexWord("is-odd");
-  Builtin isOddBuiltinObj = Builtin(isOddBuiltin, 1, false, true, "Checks if an integer is odd (not divisible by 2)");
-  ps.ctx.set(isOddIdx, isOddBuiltinObj);
-  
-  // Register the is-even builtin
-  int isEvenIdx = ps.idx.indexWord("is-even");
-  Builtin isEvenBuiltinObj = Builtin(isEvenBuiltin, 1, false, true, "Checks if an integer is even (divisible by 2)");
-  ps.ctx.set(isEvenIdx, isEvenBuiltinObj);
-  
-  // Register the mod builtin
-  int modIdx = ps.idx.indexWord("mod");
-  Builtin modBuiltinObj = Builtin(modBuiltin, 2, false, true, "Calculates the modulo (remainder) when dividing the first integer by the second");
-  ps.ctx.set(modIdx, modBuiltinObj);
-  
-  // Register the _- builtin
+  // Register non-operator builtins directly in context
+  ps.ctx.set(ps.idx.indexWord("inc"), 
+    Builtin(incBuiltin, 1, false, true, "Increments an integer value by 1"));
+  ps.ctx.set(ps.idx.indexWord("is-positive"), 
+    Builtin(isPositiveBuiltin, 1, false, true, "Checks if a number is positive (greater than zero)"));
+  ps.ctx.set(ps.idx.indexWord("is-zero"), 
+    Builtin(isZeroBuiltin, 1, false, true, "Checks if a number is exactly zero"));
+  ps.ctx.set(ps.idx.indexWord("is-odd"), 
+    Builtin(isOddBuiltin, 1, false, true, "Checks if an integer is odd (not divisible by 2)"));
+  ps.ctx.set(ps.idx.indexWord("is-even"), 
+    Builtin(isEvenBuiltin, 1, false, true, "Checks if an integer is even (divisible by 2)"));
+  ps.ctx.set(ps.idx.indexWord("mod"), 
+    Builtin(modBuiltin, 2, false, true, "Calculates the modulo (remainder) when dividing the first integer by the second"));
+
+  // Register operators generically based on the type of the first argument (left-hand side)
   int minusIdx = ps.idx.indexWord("_-");
   Builtin minusBuiltinObj = Builtin(subtractBuiltin, 2, false, true, "Subtracts the second number from the first");
-  ps.ctx.set(minusIdx, minusBuiltinObj);
-  
-  // Register the _* builtin
+  ps.registerGeneric(RyeType.integerType.index, minusIdx, minusBuiltinObj);
+  ps.registerGeneric(RyeType.decimalType.index, minusIdx, minusBuiltinObj);
+  ps.registerGeneric(RyeType.timeType.index, minusIdx, minusBuiltinObj); // Time - Int/Time
+
   int multiplyIdx = ps.idx.indexWord("_*");
   Builtin multiplyBuiltinObj = Builtin(multiplyBuiltin, 2, false, true, "Multiplies two numbers");
-  ps.ctx.set(multiplyIdx, multiplyBuiltinObj);
-  
-  // Register the _/ builtin
+  ps.registerGeneric(RyeType.integerType.index, multiplyIdx, multiplyBuiltinObj);
+  ps.registerGeneric(RyeType.decimalType.index, multiplyIdx, multiplyBuiltinObj);
+
   int divideIdx = ps.idx.indexWord("_/");
   Builtin divideBuiltinObj = Builtin(divideBuiltin, 2, false, true, "Divides the first number by the second");
-  ps.ctx.set(divideIdx, divideBuiltinObj);
-  
-  // Register the _// builtin
+  ps.registerGeneric(RyeType.integerType.index, divideIdx, divideBuiltinObj);
+  ps.registerGeneric(RyeType.decimalType.index, divideIdx, divideBuiltinObj);
+
   int intDivideIdx = ps.idx.indexWord("_//");
-  Builtin intDivideBuiltinObj = Builtin(intDivideBuiltin, 2, false, true, "Performs integer division, dividing the first number by the second and truncating to an integer result");
-  ps.ctx.set(intDivideIdx, intDivideBuiltinObj);
-  
-  // Register the _> builtin
+  Builtin intDivideBuiltinObj = Builtin(intDivideBuiltin, 2, false, true, "Performs integer division");
+  ps.registerGeneric(RyeType.integerType.index, intDivideIdx, intDivideBuiltinObj);
+  ps.registerGeneric(RyeType.decimalType.index, intDivideIdx, intDivideBuiltinObj);
+
   int greaterThanIdx = ps.idx.indexWord("_>");
   Builtin greaterThanBuiltinObj = Builtin(greaterThanBuiltin, 2, false, true, "Compares if the first value is greater than the second value");
-  ps.ctx.set(greaterThanIdx, greaterThanBuiltinObj);
-  
-  // Register the _>= builtin
+  ps.registerGeneric(RyeType.integerType.index, greaterThanIdx, greaterThanBuiltinObj);
+  ps.registerGeneric(RyeType.decimalType.index, greaterThanIdx, greaterThanBuiltinObj);
+  ps.registerGeneric(RyeType.stringType.index, greaterThanIdx, greaterThanBuiltinObj); // String comparison
+
   int greaterThanOrEqualIdx = ps.idx.indexWord("_>=");
   Builtin greaterThanOrEqualBuiltinObj = Builtin(greaterThanOrEqualBuiltin, 2, false, true, "Compares if the first value is greater than or equal to the second value");
-  ps.ctx.set(greaterThanOrEqualIdx, greaterThanOrEqualBuiltinObj);
-  
-  // Register the _< builtin
+  ps.registerGeneric(RyeType.integerType.index, greaterThanOrEqualIdx, greaterThanOrEqualBuiltinObj);
+  ps.registerGeneric(RyeType.decimalType.index, greaterThanOrEqualIdx, greaterThanOrEqualBuiltinObj);
+  ps.registerGeneric(RyeType.stringType.index, greaterThanOrEqualIdx, greaterThanOrEqualBuiltinObj); // String comparison
+
   int lessThanIdx = ps.idx.indexWord("_<");
   Builtin lessThanBuiltinObj = Builtin(lessThanBuiltin, 2, false, true, "Compares if the first value is less than the second value");
-  ps.ctx.set(lessThanIdx, lessThanBuiltinObj);
-  
-  // Register the _<= builtin
+  ps.registerGeneric(RyeType.integerType.index, lessThanIdx, lessThanBuiltinObj);
+  ps.registerGeneric(RyeType.decimalType.index, lessThanIdx, lessThanBuiltinObj);
+  ps.registerGeneric(RyeType.stringType.index, lessThanIdx, lessThanBuiltinObj); // String comparison
+
   int lessThanOrEqualIdx = ps.idx.indexWord("_<=");
   Builtin lessThanOrEqualBuiltinObj = Builtin(lessThanOrEqualBuiltin, 2, false, true, "Compares if the first value is less than or equal to the second value");
-  ps.ctx.set(lessThanOrEqualIdx, lessThanOrEqualBuiltinObj);
+  ps.registerGeneric(RyeType.integerType.index, lessThanOrEqualIdx, lessThanOrEqualBuiltinObj);
+  ps.registerGeneric(RyeType.decimalType.index, lessThanOrEqualIdx, lessThanOrEqualBuiltinObj);
+  ps.registerGeneric(RyeType.stringType.index, lessThanOrEqualIdx, lessThanOrEqualBuiltinObj); // String comparison
+  
+  // Note: '+' is handled in builtins_strings.dart for String and needs specific opword handling
+  // in the evaluator to coexist with numeric addition. For now, string '+' might overwrite numeric '+'.
+  int plusIdx = ps.idx.indexWord("_+");
+  Builtin addBuiltinObj = Builtin(addBuiltin, 2, false, true, "Adds two integers"); // Assuming addBuiltin handles only integers for now
+  ps.registerGeneric(RyeType.integerType.index, plusIdx, addBuiltinObj);
+  // TODO: Add generic registration for Decimal + Decimal, etc. if addBuiltin is updated or new builtins are created.
 }

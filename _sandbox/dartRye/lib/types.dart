@@ -827,6 +827,18 @@ RyeObject makeVectorBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, R
   return Vector(values);
 }
 
+// Implements the "make-function" builtin
+RyeObject makeFunctionBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
+  if (arg0 is Block && arg1 is Block) {
+    // TODO: Add support for flags like //pure, //in-ctx if parser supports them
+    // Capture the current context (ps.ctx) for closure
+    return RyeFunction(arg0, arg1, ps.ctx); // Use RyeFunction here
+  }
+  ps.failureFlag = true;
+  return Error("make-function expects a spec block and a body block");
+}
+
+
 // Register the new type builtins
 void registerTypeBuiltins(ProgramState ps) {
   // Register the make-string builtin
@@ -883,4 +895,9 @@ void registerTypeBuiltins(ProgramState ps) {
   int makeVectorIdx = ps.idx.indexWord("make-vector");
   Builtin makeVectorBuiltinObj = Builtin(makeVectorBuiltin, 1, false, true, "Creates a vector from a block of numbers");
   ps.ctx.set(makeVectorIdx, makeVectorBuiltinObj);
+
+  // Register the make-function builtin
+  int makeFuncIdx = ps.idx.indexWord("make-function");
+  Builtin makeFuncBuiltinObj = Builtin(makeFunctionBuiltin, 2, false, true, "Creates a user-defined function");
+  ps.ctx.set(makeFuncIdx, makeFuncBuiltinObj);
 }
