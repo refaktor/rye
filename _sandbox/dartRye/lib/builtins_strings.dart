@@ -1,7 +1,8 @@
 // builtins_strings.dart - String builtins
 
-import 'rye.dart';
-import 'types.dart';
+import 'env.dart' show ProgramState; // Import ProgramState
+// Import specific types needed from types.dart
+import 'types.dart' show RyeObject, RyeString, Error, Integer, Builtin, RyeType; 
 
 // --- String Builtins ---
 

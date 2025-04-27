@@ -1,8 +1,12 @@
 // builtins_printing.dart - Printing builtins for the Dart implementation of Rye
 
 import 'dart:io';
-import 'rye.dart';
-import 'types.dart';
+// No need to alias core Uri if we use RyeUri alias consistently
+import 'env.dart' show ProgramState; // Import ProgramState
+// Import specific types needed from types.dart, including RyeUri
+import 'types.dart' show RyeObject, RyeString, Error, Integer, Decimal, Builtin, RyeUri; 
+
+// String and RegExp are available from dart:core by default
 
 // --- Printing Builtins ---
 
@@ -133,10 +137,11 @@ RyeObject embedBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObj
       String template = arg1.value;
       String result = template.replaceAll("{}", value);
       return RyeString(result);
-    } else if (arg1 is Uri) {
-      String path = arg1.path;
+    } else if (arg1 is RyeUri) { // Use the alias RyeUri
+      String path = arg1.path; // Access path getter
       String newPath = path.replaceAll("{}", value);
-      return Uri(arg1.scheme, newPath, arg1.kind);
+      // Use the fromParts constructor
+      return RyeUri.fromParts(scheme: arg1.scheme, path: newPath); 
     }
   }
   ps.failureFlag = true;

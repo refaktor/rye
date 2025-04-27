@@ -1,7 +1,8 @@
 // builtins_collections.dart - Collection builtins (List, Dict)
 
-import 'rye.dart';
-import 'types.dart';
+import 'env.dart' show ProgramState; // Import ProgramState
+// Import specific types needed from types.dart
+import 'types.dart' show RyeObject, RyeList, Integer, Error, RyeDict, RyeString, Builtin, RyeType; 
 
 // --- List Builtins ---
 
@@ -9,8 +10,9 @@ import 'types.dart';
 RyeObject listGetBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
   if (arg0 is RyeList && arg1 is Integer) {
     int index = arg1.value;
-    if (index >= 0 && index < arg0.items.length) {
-      return arg0.items[index];
+    if (index >= 0 && index < arg0.value.length) { 
+      // Return null check might be needed depending on list content type
+      return arg0.value[index] ?? Error("Null value at index $index"); 
     } else {
       ps.failureFlag = true;
       return Error("List index out of bounds: $index");
@@ -23,7 +25,7 @@ RyeObject listGetBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeO
 // Implements the "length" builtin for lists
 RyeObject listLengthBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
   if (arg0 is RyeList) {
-    return Integer(arg0.items.length.toInt());
+    return Integer(arg0.value.length); // Use .value, no need for toInt()
   }
   ps.failureFlag = true;
   return Error("length (list) expects a List");
@@ -32,7 +34,7 @@ RyeObject listLengthBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, R
 // Implements the "append" builtin for lists (modifies in place)
 RyeObject listAppendBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
   if (arg0 is RyeList && arg1 != null) {
-    arg0.items.add(arg1);
+    arg0.value.add(arg1); 
     return arg0; // Return the modified list
   }
   ps.failureFlag = true;
@@ -44,9 +46,10 @@ RyeObject listAppendBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, R
 // Implements the "get" builtin for dicts
 RyeObject dictGetBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
   if (arg0 is RyeDict && arg1 is RyeString) {
-    String key = arg1.value; // Use raw string value as key
-    if (arg0.entries.containsKey(key)) {
-      return arg0.entries[key]!;
+    String key = arg1.value; 
+    if (arg0.value.containsKey(key)) { 
+      // Return null check might be needed
+      return arg0.value[key] ?? Error("Null value for key $key"); 
     } else {
       ps.failureFlag = true;
       return Error("Key not found in dict: $key");
@@ -59,7 +62,7 @@ RyeObject dictGetBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeO
 // Implements the "length" builtin for dicts
 RyeObject dictLengthBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
   if (arg0 is RyeDict) {
-    return Integer(arg0.entries.length.toInt());
+    return Integer(arg0.value.length); // Use .value, no need for toInt()
   }
   ps.failureFlag = true;
   return Error("length (dict) expects a Dict");
@@ -69,7 +72,7 @@ RyeObject dictLengthBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, R
 RyeObject dictSetBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
   if (arg0 is RyeDict && arg1 is RyeString && arg2 != null) {
      String key = arg1.value;
-     arg0.entries[key] = arg2;
+     arg0.value[key] = arg2; 
      return arg0; // Return the modified dict
   }
   ps.failureFlag = true;

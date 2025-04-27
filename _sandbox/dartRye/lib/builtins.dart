@@ -1,297 +1,150 @@
-// builtins.dart - Core builtins for the Dart implementation of Rye
+// builtins.dart - Base builtin functions and registration for Dart Rye
 
-import 'rye.dart';
-import 'types.dart';
+import 'dart:io'; // For printBuiltin
+import 'dart:async'; // For flutterWindowBuiltin
+
+// Updated Imports:
+import 'types.dart' show RyeObject, Integer, Error, Void, Block, TSeries, Builtin; // Import specific types
+import 'env.dart' show ProgramState, RyeCtx; // Import specific env types
+import 'idxs.dart'; // Import idxs for Idxs
+import 'evaldo.dart' show evalBlockInj; // Import specific evaldo functions needed
+import 'flutter/flutter_app.dart'; // For flutterWindowBuiltin
+
+// Import other builtin modules
+import 'builtins_collections.dart';
+import 'builtins_conditionals.dart';
+import 'builtins_flow.dart';
+import 'builtins_iteration.dart';
+import 'builtins_numbers.dart';
 import 'builtins_printing.dart';
+import 'builtins_registration.dart'; // Assuming this contains registerCoreBuiltins etc.
+import 'builtins_strings.dart';
 import 'builtins_types.dart';
 
-// --- Function Creation Builtins ---
 
-// Implements the "does" builtin function
-RyeObject doesBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
-  if (arg0 is Block) {
-    // Create a function with no parameters
-    return RyeFunction(Block(TSeries([])), arg0, ps.ctx);
-  }
-  ps.failureFlag = true;
-  return Error("does expects a block argument");
-}
+// --- Builtin Implementations ---
 
-// Implements the "fn" builtin function
-RyeObject fnBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
-  if (arg0 is Block && arg1 is Block) {
-    // Process function spec (parameter block)
-    // In a full implementation, we would validate the spec block here
-    
-    // Create a function with the given parameters and body
-    return RyeFunction(arg0, arg1, ps.ctx);
-  }
-  ps.failureFlag = true;
-  return Error("fn expects two block arguments: parameters and body");
-}
+// addBuiltin moved to builtins_numbers.dart
+// printBuiltin moved to builtins_printing.dart
 
-// Implements the "fn1" builtin function
-RyeObject fn1Builtin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
-  if (arg0 is Block) {
-    // Create a function with one anonymous parameter
-    List<RyeObject> spec = [Word(1)]; // Using index 1 for the anonymous parameter
-    return RyeFunction(Block(TSeries(spec)), arg0, ps.ctx);
-  }
-  ps.failureFlag = true;
-  return Error("fn1 expects a block argument");
-}
-
-// --- Variable Builtins ---
-
-// Implements the "var" builtin function
-RyeObject varBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
-  if (arg0 is Word && arg1 != null) {
-    // Check if word already exists in context
-    if (ps.ctx.has(arg0.index)) {
-      ps.failureFlag = true;
-      return Error("Cannot redefine existing word '${ps.idx.getWord(arg0.index)}' with var");
-    }
-    
-    // Set the value and mark as variable
-    ps.ctx.set(arg0.index, arg1);
-    ps.ctx.markAsVariable(arg0.index);
-    return arg1;
-  // Removed Tagword case as it's not defined
-  }
-  ps.failureFlag = true;
-  return Error("var expects a word/tagword and a value");
-}
-
-// Implements the "val" builtin function
-RyeObject valBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
-  if (arg0 is Word) {
-    var (value, exists) = ps.ctx.get(arg0.index);
-    if (value != null) {
-      return value;
-    }
-    ps.failureFlag = true;
-    return Error("Word not found in context");
-  }
-  ps.failureFlag = true;
-  return Error("val expects a word argument");
-}
-
-// --- Context Manipulation Builtins ---
-
-
-// Implements the "with" builtin function
-RyeObject withBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
-  if (arg0 != null && arg1 is Block) {
-    // Store current series
-    TSeries ser = ps.ser;
-    
-    // Set series to the block's series
-    ps.ser = arg1.series;
-    
-    // Evaluate the block with the value injected
-    rye00_evalBlockInj(ps, arg0, true);
-    
-    // Restore original series
-    ps.ser = ser;
-    
-    // Return the result of the evaluation
-    return ps.res!;
-  }
-  ps.failureFlag = true;
-  return Error("with expects a value and a block");
-}
-
-// --- Flow Control Builtins ---
-
-// Implements the "return" builtin function
-RyeObject returnBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
+// Implements the "flutter_window" builtin function
+RyeObject flutterWindowBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
+  // Check if we have a title argument
   if (arg0 != null) {
-    ps.returnFlag = true;
-    ps.res = arg0;
-    return arg0;
-  }
-  ps.failureFlag = true;
-  return Error("return expects an argument");
-}
-
-// --- Dictionary Builtins ---
-
-// Implements the "dict" builtin function
-RyeObject dictBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
-  if (arg0 is Block) {
-    // Create a new dictionary from the block
-    Map<String, RyeObject> entries = {};
+    String title = arg0.print(ps.idx);
     
-    // Process pairs of key-value in the block
-    for (int i = 0; i < arg0.series.len() - 1; i += 2) {
-      RyeObject? key = arg0.series.get(i);
-      RyeObject? value = arg0.series.get(i + 1);
+    // Check if we have a message argument
+    if (arg1 != null) {
+      String message = arg1.print(ps.idx);
       
-      if (key is RyeString && value != null) {
-        entries[key.value] = value;
-      } else {
-        ps.failureFlag = true;
-        return Error("dict expects string keys in the block");
-      }
+      // Launch the Flutter window in a separate isolate
+      stdout.writeln("Launching Flutter window with title: '$title' and message: '$message'");
+      
+      // Use Future.microtask to avoid blocking the main thread
+      Future.microtask(() async {
+        try {
+          await runFlutterApp(
+            title: title,
+            message: message,
+          );
+        } catch (e) {
+          stdout.writeln("Error launching Flutter window: $e");
+        }
+      });
+      
+      // Return a void object
+      return const Void();
     }
     
-    return RyeDict(entries);
+    // If message argument is missing
+    ps.failureFlag = true;
+    return Error("flutter_window requires a message argument");
   }
+  
+  // If title argument is missing
   ps.failureFlag = true;
-  return Error("dict expects a block argument");
+  return Error("flutter_window requires a title argument");
 }
 
-// Implements the "list" builtin function
-RyeObject listBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
-  if (arg0 is Block) {
-    // Create a new list from the block
-    List<RyeObject> items = [];
+// Implements the "loop" builtin function
+RyeObject loopBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
+  // Check if the first argument is an integer (number of iterations)
+  if (arg0 is Integer) {
+    // Check if the second argument is a block
+    if (arg1 is Block) {
+      int iterations = arg0.value;
+      RyeObject result = const Void(); // Default result if loop runs 0 times or block is empty
+      
+      // Execute the block 'iterations' times
+      for (int i = 0; i < iterations; i++) {
+        // Store current series and context
+        TSeries ser = ps.ser;
+        RyeCtx ctx = ps.ctx; // Store context in case block evaluation changes it (though it shouldn't normally)
+        
+        // Set series to the block's series
+        ps.ser = arg1.series;
+        
+        // Reset the series position to ensure we start from the beginning
+        ps.ser.reset();
+        
+        // Evaluate the block, injecting the 1-based iteration number
+        // Use a temporary state for block evaluation if needed, or ensure evalBlockInj handles context correctly
+        evalBlockInj(ps, Integer(i + 1), true); // Use the main evalBlockInj now
     
-    // Add all items from the block to the list
-    for (int i = 0; i < arg0.series.len(); i++) {
-      RyeObject? item = arg0.series.get(i);
-      if (item != null) {
-        items.add(item);
-      }
-    }
-    
-    return RyeList(items);
-  }
-  ps.failureFlag = true;
-  return Error("list expects a block argument");
-}
-
-// Implements the "change!" builtin function
-RyeObject changeBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
-  if (arg0 != null && arg1 is Word) {
-    // Get the current value of the word
-    var (oldValue, exists) = ps.ctx.get(arg1.index);
-    if (oldValue == null) {
-      ps.failureFlag = true;
-      return Error("Word not found in context");
-    }
-    
-    // Check if the word is a variable
-    if (!ps.ctx.isVariable(arg1.index)) {
-      ps.failureFlag = true;
-      return Error("Cannot modify constant '${ps.idx.getWord(arg1.index)}', use 'var' to declare it as a variable");
-    }
-    
-    // Modify the word's value
-    ps.ctx.set(arg1.index, arg0);
-    
-    // Return 1 if the value changed, 0 if it's the same
-    if (oldValue.getKind() == arg0.getKind() && oldValue.inspect(ps.idx) == arg0.inspect(ps.idx)) {
-      return Integer(0);
-    } else {
-      return Integer(1);
-    }
-  }
-  ps.failureFlag = true;
-  return Error("change! expects a value and a word");
-}
-
-// Implements the "set!" builtin function
-RyeObject setBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
-  if (arg0 != null && arg1 is Word) {
-    // Check if the word is a variable
-    if (!ps.ctx.isVariable(arg1.index)) {
-      ps.failureFlag = true;
-      return Error("Cannot modify constant '${ps.idx.getWord(arg1.index)}', use 'var' to declare it as a variable");
-    }
-    
-    // Set the word's value
-    ps.ctx.set(arg1.index, arg0);
-    return arg0;
-  } else if (arg0 is Block && arg1 is Block) {
-    // Handle destructuring assignment
-    for (int i = 0; i < arg1.series.len(); i++) {
-      RyeObject? word = arg1.series.get(i);
-      if (word is Word) {
-        // Check if we have enough values
-        if (i >= arg0.series.len()) {
-          ps.failureFlag = true;
-          return Error("More words than values in set!");
+        // Store the result of the *last* expression evaluated in the block for this iteration
+        result = ps.res ?? const Void(); 
+        
+        // Check for errors or failures or return flag from the block
+        if (ps.errorFlag || ps.failureFlag || ps.returnFlag) {
+          // Restore original series and context before returning the error/failure/return value
+          ps.ser = ser;
+          ps.ctx = ctx; 
+          return result; // Propagate error/failure/return value
         }
         
-        RyeObject? value = arg0.series.get(i);
-        if (value != null) {
-          // Check if the word is a variable
-          if (!ps.ctx.isVariable(word.index)) {
-            ps.failureFlag = true;
-            return Error("Cannot modify constant '${ps.idx.getWord(word.index)}', use 'var' to declare it as a variable");
-          }
-          
-          // Set the word's value
-          ps.ctx.set(word.index, value);
-        }
-      } else {
-        ps.failureFlag = true;
-        return Error("Only words allowed in words block for set!");
+        // Restore original series and context for the next iteration or after loop finishes
+        ps.ser = ser;
+        ps.ctx = ctx;
       }
+      // Return the result of the last iteration (or Void if 0 iterations)
+      return result;
     }
-    return arg0;
+    
+    // If second argument is not a block
+    ps.failureFlag = true;
+    return Error("Second argument to loop must be a block");
   }
+  
+  // If first argument is not an integer
   ps.failureFlag = true;
-  return Error("set! expects a value and a word, or two blocks");
+  return Error("First argument to loop must be an integer");
 }
 
-// Implements the "unset!" builtin function
-RyeObject unsetBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
-  if (arg0 is Word) {
-    // Remove the word from the context
-    bool success = ps.ctx.unset(arg0.index);
-    if (success) {
-      return Void();
-    } else {
-      ps.failureFlag = true;
-      return Error("Word not found in context");
-    }
-  }
-  ps.failureFlag = true;
-  return Error("unset! expects a word argument");
-}
 
-// --- Registration ---
+// --- Builtin Registration ---
 
-void registerCoreBuiltins(ProgramState ps) {
-  // Register function creation builtins
-  ps.ctx.set(ps.idx.indexWord("does"), 
-    Builtin(doesBuiltin, 1, false, true, "Creates a function with no arguments that executes the given block when called"));
+// Register all builtins
+void registerBuiltins(ProgramState ps) {
+  // Register core builtins from builtins_registration.dart (assuming it exists)
+  // registerCoreBuiltins(ps); // Uncomment if registerCoreBuiltins is defined elsewhere
   
-  ps.ctx.set(ps.idx.indexWord("fn"), 
-    Builtin(fnBuiltin, 2, false, true, "Creates a function with named parameters specified in the first block and code in the second block"));
+  // Register the loop builtin
+  int loopIdx = ps.idx.indexWord("loop");
+  Builtin loopBuiltinObj = Builtin(loopBuiltin, 2, false, false, "Executes a block a specified number of times");
+  ps.ctx.set(loopIdx, loopBuiltinObj);
   
-  ps.ctx.set(ps.idx.indexWord("fn1"), 
-    Builtin(fn1Builtin, 1, false, true, "Creates a function that accepts one anonymous argument and executes the given block with that argument"));
+  // Register the flutter_window builtin
+  int flutterWindowIdx = ps.idx.indexWord("flutter_window");
+  Builtin flutterWindowBuiltinObj = Builtin(flutterWindowBuiltin, 2, false, false, "Shows a Flutter window with a title and message");
+  ps.ctx.set(flutterWindowIdx, flutterWindowBuiltinObj);
   
-  // Register variable builtins
-  ps.ctx.set(ps.idx.indexWord("var"), 
-    Builtin(varBuiltin, 2, false, false, "Declares a word as a variable with the given value, allowing it to be modified"));
-  
-  ps.ctx.set(ps.idx.indexWord("val"), 
-    Builtin(valBuiltin, 1, false, true, "Returns value of the word in context"));
-  
-  ps.ctx.set(ps.idx.indexWord("change!"), 
-    Builtin(changeBuiltin, 2, false, false, "Changes the value of a variable, returns 1 if value changed, 0 otherwise"));
-  
-  ps.ctx.set(ps.idx.indexWord("set!"), 
-    Builtin(setBuiltin, 2, false, false, "Set word to value or words by deconstructing a block"));
-  
-  ps.ctx.set(ps.idx.indexWord("unset!"), 
-    Builtin(unsetBuiltin, 1, false, false, "Unset a word in current context"));
-  
-  ps.ctx.set(ps.idx.indexWord("with"), 
-    Builtin(withBuiltin, 2, true, false, "Takes a value and a block of code. It does the code with the value injected"));
-  
-  // Register flow control builtins
-  ps.ctx.set(ps.idx.indexWord("return"), 
-    Builtin(returnBuiltin, 1, false, false, "Accepts one value and returns it"));
-  
-  // Register dictionary builtins
-  ps.ctx.set(ps.idx.indexWord("dict"), 
-    Builtin(dictBuiltin, 1, false, true, "Constructs a Dict from the Block of key and value pairs"));
-  
-  ps.ctx.set(ps.idx.indexWord("list"), 
-    Builtin(listBuiltin, 1, false, true, "Constructs a List from the Block of values"));
+  // Register builtins from other modules (assuming these functions exist)
+  registerCollectionBuiltins(ps);
+  registerStringBuiltins(ps);
+  registerFlowBuiltins(ps);
+  registerNumberBuiltins(ps);
+  registerIterationBuiltins(ps);
+  registerConditionalBuiltins(ps);
+  registerPrintingBuiltins(ps);
+  registerTypeBuiltins(ps);
 }

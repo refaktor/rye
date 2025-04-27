@@ -1,21 +1,229 @@
-// types.dart - Additional types for the Dart implementation of Rye
+// types.dart - Core data types for Dart Rye evaluator
 
-import 'dart:math';
-import 'package:intl/intl.dart';
-import 'rye.dart';
+// dart:core is imported automatically
+import 'env.dart'; // Import env for RyeCtx and ProgramState
+import 'idxs.dart'; // Import idxs for Idxs
+// Remove Comma from loader import to break circular dependency
+import 'loader.dart' show Setword, OpWord, PipeWord, LSetword, LModword, CPath, LitWord; 
+
+// Type enum for Rye values
+enum RyeType {
+  blockType,
+  integerType,
+  wordType,
+  builtinType,
+  errorType,
+  voidType,
+  stringType,
+  listType,
+  dictType,
+  contextType,
+  booleanType,
+  decimalType,
+  timeType,
+  dateType,
+  uriType,
+  emailType,
+  vectorType,
+  commaType, // Added commaType
+}
+
+// Base class for all Rye values
+abstract class RyeObject {
+  RyeType type();
+  String print(Idxs idxs);
+  String inspect(Idxs idxs);
+  bool equal(RyeObject other);
+  int getKind();
+}
+
+// Integer implementation
+class Integer implements RyeObject {
+  int value;
+
+  Integer(this.value);
+
+  @override
+  RyeType type() => RyeType.integerType;
+
+  @override
+  String print(Idxs idxs) {
+    return value.toString();
+  }
+
+  @override
+  String inspect(Idxs idxs) {
+    return '[Integer: ${print(idxs)}]';
+  }
+
+  @override
+  bool equal(RyeObject other) {
+    if (other.type() != RyeType.integerType) return false;
+    return value == (other as Integer).value;
+  }
+
+  @override
+  int getKind() => RyeType.integerType.index;
+}
+
+// Word implementation
+class Word implements RyeObject {
+  final int index;
+
+  const Word(this.index);
+
+  @override
+  RyeType type() => RyeType.wordType;
+
+  @override
+  String print(Idxs idxs) {
+    return idxs.getWord(index);
+  }
+
+  @override
+  String inspect(Idxs idxs) {
+    return '[Word: ${print(idxs)}]';
+  }
+
+  @override
+  bool equal(RyeObject other) {
+    if (other.type() != RyeType.wordType) return false;
+    return index == (other as Word).index;
+  }
+
+  @override
+  int getKind() => RyeType.wordType.index;
+}
+
+// Error implementation
+class Error implements RyeObject {
+  String message;
+  int status;
+  Error? parent;
+  RyeCtx? codeContext; // Context where the error occurred
+  int? position;      // Position in the series where the error occurred
+
+  Error(this.message, {this.status = 0, this.parent, this.codeContext, this.position});
+
+  @override
+  RyeType type() => RyeType.errorType;
+
+  @override
+  String print(Idxs idxs) {
+    String statusStr = status != 0 ? "($status)" : "";
+    StringBuffer b = StringBuffer();
+    b.write("Error$statusStr: $message ");
+    
+    if (parent != null) {
+      b.write("\n  ${parent!.print(idxs)}");
+    }
+    
+    // Optionally add position info if available
+    if (position != null) {
+       b.write(" (at pos $position)");
+    }
+    
+    return b.toString();
+  }
+
+  @override
+  String inspect(Idxs idxs) {
+    return '[${print(idxs)}]';
+  }
+
+  @override
+  bool equal(RyeObject other) {
+    if (other.type() != RyeType.errorType) return false;
+    
+    Error otherError = other as Error;
+    if (status != otherError.status) return false;
+    if (message != otherError.message) return false;
+    
+    // Check if both have parent or both don't have parent
+    if ((parent == null) != (otherError.parent == null)) return false;
+    
+    // If both have parent, check if parents are equal
+    if (parent != null && otherError.parent != null) {
+      if (!parent!.equal(otherError.parent!)) return false;
+    }
+    
+    return true;
+  }
+
+  @override
+  int getKind() => RyeType.errorType.index;
+}
+
+// Void implementation
+class Void implements RyeObject {
+  const Void();
+
+  @override
+  RyeType type() => RyeType.voidType;
+
+  @override
+  String print(Idxs idxs) {
+    return '_';
+  }
+
+  @override
+  String inspect(Idxs idxs) {
+    return '[Void]';
+  }
+
+  @override
+  bool equal(RyeObject other) {
+    return other.type() == RyeType.voidType;
+  }
+
+  @override
+  int getKind() => RyeType.voidType.index;
+}
+
+// String implementation
+class RyeString implements RyeObject {
+  String value;
+
+  RyeString(this.value);
+
+  @override
+  RyeType type() => RyeType.stringType;
+
+  @override
+  String print(Idxs idxs) {
+    // Basic print, might need escaping for inspection
+    return value;
+  }
+
+  @override
+  String inspect(Idxs idxs) {
+    // Add quotes for inspection
+    return '"${print(idxs)}"'; 
+  }
+
+  @override
+  bool equal(RyeObject other) {
+    if (other.type() != RyeType.stringType) return false;
+    return value == (other as RyeString).value;
+  }
+
+  @override
+  int getKind() => RyeType.stringType.index;
+}
 
 // Boolean implementation
 class Boolean implements RyeObject {
-  final bool value;
+  final bool value; // Ensure value is final
 
-  const Boolean(this.value);
+  // Make constructor const if possible
+  const Boolean(this.value); 
 
   @override
   RyeType type() => RyeType.booleanType;
 
   @override
   String print(Idxs idxs) {
-    return value ? "true" : "false";
+    return value.toString();
   }
 
   @override
@@ -35,9 +243,9 @@ class Boolean implements RyeObject {
 
 // Decimal implementation
 class Decimal implements RyeObject {
-  final double value;
+  double value;
 
-  const Decimal(this.value);
+  Decimal(this.value);
 
   @override
   RyeType type() => RyeType.decimalType;
@@ -55,150 +263,83 @@ class Decimal implements RyeObject {
   @override
   bool equal(RyeObject other) {
     if (other.type() != RyeType.decimalType) return false;
-    
-    // Use epsilon for floating point comparison
-    const epsilon = 0.0000000000001;
-    return (value - (other as Decimal).value).abs() <= epsilon;
+    // Consider precision for double comparison if needed
+    return value == (other as Decimal).value; 
   }
 
   @override
   int getKind() => RyeType.decimalType.index;
 }
 
-// Time implementation
-class Time implements RyeObject {
-  final DateTime value;
+// Uri implementation (using Dart's Uri) - Renamed to RyeUri
+class RyeUri implements RyeObject {
+  // Store the parsed Dart Uri object
+  final Uri value; // Use standard Uri type
 
-  Time(this.value);
+  // Private constructor
+  RyeUri._(this.value); 
 
-  @override
-  RyeType type() => RyeType.timeType;
-
-  @override
-  String print(Idxs idxs) {
-    return value.toIso8601String();
-  }
-
-  @override
-  String inspect(Idxs idxs) {
-    return '[Time: ${print(idxs)}]';
-  }
-
-  @override
-  bool equal(RyeObject other) {
-    if (other.type() != RyeType.timeType) return false;
-    return value.isAtSameMomentAs((other as Time).value);
-  }
-
-  @override
-  int getKind() => RyeType.timeType.index;
-}
-
-// Date implementation
-class Date implements RyeObject {
-  final DateTime value;
-
-  Date(this.value);
-
-  @override
-  RyeType type() => RyeType.dateType;
-
-  @override
-  String print(Idxs idxs) {
-    return DateFormat('yyyy-MM-dd').format(value);
-  }
-
-  @override
-  String inspect(Idxs idxs) {
-    return '[Date: ${print(idxs)}]';
-  }
-
-  @override
-  bool equal(RyeObject other) {
-    if (other.type() != RyeType.dateType) return false;
-    
-    DateTime otherDate = (other as Date).value;
-    return value.year == otherDate.year && 
-           value.month == otherDate.month && 
-           value.day == otherDate.day;
-  }
-
-  @override
-  int getKind() => RyeType.dateType.index;
-}
-
-// Uri implementation
-class Uri implements RyeObject {
-  final String scheme;
-  final String path;
-  final Word kind;
-
-  Uri(this.scheme, this.path, this.kind);
-
-  factory Uri.fromString(Idxs idxs, String uriString) {
-    if (uriString.startsWith('%')) {
-      // File URI
-      String path = uriString.substring(1);
-      String scheme = "file";
-      int kindIdx = idxs.indexWord("$scheme-schema");
-      return Uri(scheme, path, Word(kindIdx));
-    } else if (uriString.contains('://')) {
-      // Standard URI
-      List<String> parts = uriString.split('://');
-      String scheme = parts[0];
-      String path = parts[1];
-      int kindIdx = idxs.indexWord("$scheme-schema");
-      return Uri(scheme, path, Word(kindIdx));
-    } else {
-      // Default to file URI
-      String scheme = "file";
-      int kindIdx = idxs.indexWord("$scheme-schema");
-      return Uri(scheme, uriString, Word(kindIdx));
+  // Factory constructor using Dart's Uri.parse
+  factory RyeUri.fromString(Idxs idxs, String input) { // Rename factory
+    try {
+      // Use Dart's built-in parser
+      return RyeUri._(Uri.parse(input)); // Use standard Uri.parse
+    } catch (e) {
+      // Rethrow as ArgumentError or return a Rye Error object?
+      // Let's rethrow for now, loader might catch it.
+      throw ArgumentError("Invalid URI format: $input - $e"); 
     }
   }
+  
+  // Constructor to create a new Uri from parts (needed for the builtin)
+  RyeUri.fromParts({String scheme = '', String path = '', String? query, String? fragment}) // Rename constructor
+      : value = Uri(scheme: scheme, path: path, query: query, fragment: fragment); // Use standard Uri
+
+
+  // Expose parts via getters if needed
+  String get scheme => value.scheme;
+  String get path => value.path;
+  String get query => value.query;
+  String get fragment => value.fragment;
 
   @override
   RyeType type() => RyeType.uriType;
 
   @override
   String print(Idxs idxs) {
-    if (scheme == "file") {
-      return "%$path";
-    }
-    return "$scheme://$path";
+    // Return the full string representation
+    return value.toString();
   }
 
   @override
   String inspect(Idxs idxs) {
-    return '[Uri: ${print(idxs)}]';
+    // Use DartUri's toString for inspection representation
+    return '[Uri: ${value.toString()}]';
   }
 
   @override
   bool equal(RyeObject other) {
-    if (other.type() != RyeType.uriType) return false;
-    
-    Uri otherUri = other as Uri;
-    return scheme == otherUri.scheme && 
-           path == otherUri.path && 
-           kind.equal(otherUri.kind);
+    if (other is! RyeUri) return false; // Check against RyeUri
+    // Compare the underlying Dart Uri objects
+    return value == other.value;
   }
 
   @override
-  int getKind() => kind.index;
+  int getKind() => RyeType.uriType.index;
 }
 
-// Email implementation
+// Email implementation (similar to Uri, store as string)
 class Email implements RyeObject {
-  final String address;
+  String value;
 
-  Email(this.address);
+  Email(this.value); // Simple constructor for now
 
   @override
   RyeType type() => RyeType.emailType;
 
   @override
   String print(Idxs idxs) {
-    return address;
+    return value;
   }
 
   @override
@@ -209,695 +350,440 @@ class Email implements RyeObject {
   @override
   bool equal(RyeObject other) {
     if (other.type() != RyeType.emailType) return false;
-    return address == (other as Email).address;
+    return value == (other as Email).value;
   }
 
   @override
   int getKind() => RyeType.emailType.index;
 }
 
-// Vector implementation
-class Vector implements RyeObject {
-  final List<double> values;
-  final Word kind;
+// Date implementation (using DateTime)
+class Date implements RyeObject {
+  DateTime value;
 
-  Vector(this.values, [this.kind = const Word(0)]);
+  Date(this.value);
 
   @override
-  RyeType type() => RyeType.vectorType;
+  RyeType type() => RyeType.dateType;
 
   @override
   String print(Idxs idxs) {
-    return "V[${values.join(', ')}]";
+    // Format as YYYY-MM-DD
+    return "${value.year.toString().padLeft(4, '0')}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}";
   }
 
   @override
   String inspect(Idxs idxs) {
-    double norm = calculateNorm();
-    double mean = calculateMean();
-    return '[Vector: Len ${values.length} Norm ${norm.toStringAsFixed(2)} Mean ${mean.toStringAsFixed(2)}]';
+    return '[Date: ${print(idxs)}]';
   }
 
   @override
   bool equal(RyeObject other) {
-    if (other.type() != RyeType.vectorType) return false;
-    
-    Vector otherVector = other as Vector;
-    if (values.length != otherVector.values.length) return false;
-    
-    for (int i = 0; i < values.length; i++) {
-      if (values[i] != otherVector.values[i]) {
-        return false;
-      }
-    }
-    
-    return true;
+    if (other.type() != RyeType.dateType) return false;
+    // Compare year, month, day only for Date equality
+    DateTime otherValue = (other as Date).value;
+    return value.year == otherValue.year && 
+           value.month == otherValue.month && 
+           value.day == otherValue.day;
   }
 
   @override
-  int getKind() => RyeType.vectorType.index;
-  
-  // Helper methods for vector operations
-  double calculateNorm() {
-    double sumOfSquares = 0;
-    for (double value in values) {
-      sumOfSquares += value * value;
-    }
-    return sqrt(sumOfSquares);
-  }
-  
-  double calculateMean() {
-    if (values.isEmpty) return 0;
-    double sum = 0;
-    for (double value in values) {
-      sum += value;
-    }
-    return sum / values.length;
-  }
+  int getKind() => RyeType.dateType.index;
 }
 
-// String implementation
-class RyeString implements RyeObject {
-  final String value;
+// Time implementation (using DateTime)
+class Time implements RyeObject {
+  DateTime value;
 
-  const RyeString(this.value);
+  Time(this.value);
 
   @override
-  RyeType type() => RyeType.stringType;
+  RyeType type() => RyeType.timeType;
 
   @override
   String print(Idxs idxs) {
-    return '"$value"';
+    // Format as ISO 8601 string
+    return value.toIso8601String(); 
   }
 
   @override
   String inspect(Idxs idxs) {
-    return '[String: "$value"]';
+    return '[Time: ${print(idxs)}]';
   }
 
   @override
   bool equal(RyeObject other) {
-    if (other.type() != RyeType.stringType) return false;
-    return value == (other as RyeString).value;
+    if (other.type() != RyeType.timeType) return false;
+    // Direct DateTime comparison
+    return value == (other as Time).value; 
   }
 
   @override
-  int getKind() => RyeType.stringType.index;
+  int getKind() => RyeType.timeType.index;
 }
 
-// List implementation
+// List implementation (wrapping Dart List)
 class RyeList implements RyeObject {
-  final List<RyeObject> items;
+  List<RyeObject?> value;
 
-  RyeList(this.items);
+  RyeList(this.value);
 
   @override
   RyeType type() => RyeType.listType;
 
   @override
   String print(Idxs idxs) {
-    StringBuffer buffer = StringBuffer();
-    buffer.write('[');
-    for (int i = 0; i < items.length; i++) {
-      buffer.write(items[i].print(idxs));
-      if (i < items.length - 1) {
-        buffer.write(' ');
-      }
-    }
-    buffer.write(']');
-    return buffer.toString();
+    return value.map((e) => e?.print(idxs) ?? '_').join(' ');
   }
 
   @override
   String inspect(Idxs idxs) {
-    StringBuffer buffer = StringBuffer();
-    buffer.write('[List: ');
-    for (int i = 0; i < items.length; i++) {
-      buffer.write(items[i].inspect(idxs));
-      if (i < items.length - 1) {
-        buffer.write(' ');
-      }
-    }
-    buffer.write(']');
-    return buffer.toString();
+    return '[List: ${value.map((e) => e?.inspect(idxs) ?? '[Void]').join(' ')}]';
   }
 
   @override
   bool equal(RyeObject other) {
     if (other.type() != RyeType.listType) return false;
-    
-    RyeList otherList = other as RyeList;
-    if (items.length != otherList.items.length) return false;
-    
-    for (int i = 0; i < items.length; i++) {
-      if (!items[i].equal(otherList.items[i])) {
-        return false;
-      }
+    List<RyeObject?> otherValue = (other as RyeList).value;
+    if (value.length != otherValue.length) return false;
+    for (int i = 0; i < value.length; i++) {
+      if (value[i] == null && otherValue[i] == null) continue;
+      if (value[i] == null || otherValue[i] == null) return false;
+      if (!value[i]!.equal(otherValue[i]!)) return false;
     }
-    
     return true;
   }
 
   @override
   int getKind() => RyeType.listType.index;
-  
-  // Additional methods for list operations
-  RyeObject get(int index) {
-    if (index < 0 || index >= items.length) {
-      return Error("List index out of bounds: $index");
-    }
-    return items[index];
-  }
-  
-  void add(RyeObject item) {
-    items.add(item);
-  }
-  
-  RyeObject remove(int index) {
-    if (index < 0 || index >= items.length) {
-      return Error("List index out of bounds: $index");
-    }
-    return items.removeAt(index);
-  }
-  
-  int length() {
-    return items.length;
-  }
 }
 
-// Dict implementation
+// Dict implementation (wrapping Dart Map)
+// Using String keys for simplicity, matching Go's map[string]any approach
 class RyeDict implements RyeObject {
-  final Map<String, RyeObject> entries;
+  Map<String, RyeObject?> value;
 
-  RyeDict(this.entries);
+  RyeDict(this.value);
 
   @override
   RyeType type() => RyeType.dictType;
 
   @override
   String print(Idxs idxs) {
-    StringBuffer buffer = StringBuffer();
-    buffer.write('{');
-    bool first = true;
-    entries.forEach((key, value) {
-      if (!first) {
-        buffer.write(' ');
-      }
-      buffer.write('"$key": ${value.print(idxs)}');
-      first = false;
-    });
-    buffer.write('}');
-    return buffer.toString();
+    return '{ ${value.entries.map((e) => '"${e.key}": ${e.value?.print(idxs) ?? '_'}').join(', ')} }';
   }
 
   @override
   String inspect(Idxs idxs) {
-    StringBuffer buffer = StringBuffer();
-    buffer.write('[Dict: ');
-    bool first = true;
-    entries.forEach((key, value) {
-      if (!first) {
-        buffer.write(' ');
-      }
-      buffer.write('"$key": ${value.inspect(idxs)}');
-      first = false;
-    });
-    buffer.write(']');
-    return buffer.toString();
+    return '[Dict: ${value.entries.map((e) => '"${e.key}": ${e.value?.inspect(idxs) ?? '[Void]'}').join(', ')}]';
   }
 
   @override
   bool equal(RyeObject other) {
     if (other.type() != RyeType.dictType) return false;
-    
-    RyeDict otherDict = other as RyeDict;
-    if (entries.length != otherDict.entries.length) return false;
-    
-    for (String key in entries.keys) {
-      if (!otherDict.entries.containsKey(key)) {
-        return false;
-      }
-      
-      if (!entries[key]!.equal(otherDict.entries[key]!)) {
-        return false;
-      }
+    Map<String, RyeObject?> otherValue = (other as RyeDict).value;
+    if (value.length != otherValue.length) return false;
+    for (var key in value.keys) {
+      if (!otherValue.containsKey(key)) return false;
+      if (value[key] == null && otherValue[key] == null) continue;
+      if (value[key] == null || otherValue[key] == null) return false;
+      if (!value[key]!.equal(otherValue[key]!)) return false;
     }
-    
     return true;
   }
 
   @override
   int getKind() => RyeType.dictType.index;
-  
-  // Additional methods for dict operations
-  RyeObject get(String key) {
-    if (!entries.containsKey(key)) {
-      return Error("Key not found in dict: $key");
+}
+
+
+// TSeries represents a series of Objects with a position pointer.
+class TSeries {
+  List<RyeObject?> s; // The underlying list of Objects
+  int pos = 0; // Current position in the series
+
+  TSeries(this.s);
+
+  bool ended() {
+    return pos > s.length;
+  }
+
+  bool atLast() {
+    return pos > s.length - 1;
+  }
+
+  int getPos() {
+    return pos;
+  }
+
+  void next() {
+    pos++;
+  }
+
+  RyeObject? pop() {
+    if (pos >= s.length) {
+      return null;
     }
-    return entries[key]!;
+    RyeObject? obj = s[pos];
+    pos++;
+    return obj;
   }
-  
-  void set(String key, RyeObject value) {
-    entries[key] = value;
-  }
-  
-  RyeObject remove(String key) {
-    if (!entries.containsKey(key)) {
-      return Error("Key not found in dict: $key");
+
+  bool put(RyeObject obj) {
+    if (pos > 0 && pos <= s.length) {
+      s[pos - 1] = obj;
+      return true;
     }
-    return entries.remove(key)!;
+    return false;
   }
-  
-  bool has(String key) {
-    return entries.containsKey(key);
+
+  TSeries append(RyeObject obj) {
+    s.add(obj);
+    return this;
   }
-  
-  List<String> keys() {
-    return entries.keys.toList();
+
+  void reset() {
+    pos = 0;
   }
-  
-  int length() {
-    return entries.length;
+
+  void setPos(int position) {
+    pos = position;
+  }
+
+  List<RyeObject?> getAll() {
+    return s;
+  }
+
+  RyeObject? peek() {
+    if (s.length > pos) {
+      return s[pos];
+    }
+    return null;
+  }
+
+  RyeObject? get(int n) {
+    if (n >= 0 && n < s.length) {
+      return s[n];
+    }
+    return null;
+  }
+
+  int len() {
+    return s.length;
   }
 }
 
-// Context implementation as a RyeObject
-class RyeContext implements RyeObject {
-  final RyeCtx ctx;
+// Block implementation
+class Block implements RyeObject {
+  TSeries series;
+  int mode;
 
-  RyeContext(this.ctx);
+  Block(this.series, [this.mode = 0]);
 
   @override
-  RyeType type() => RyeType.contextType;
+  RyeType type() => RyeType.blockType;
 
   @override
   String print(Idxs idxs) {
-    return '[Context]';
+    StringBuffer r = StringBuffer();
+    for (int i = 0; i < series.len(); i++) {
+      if (series.get(i) != null) {
+        r.write(series.get(i)!.print(idxs));
+        r.write(' ');
+      } else {
+        r.write('[NIL]');
+      }
+    }
+    return r.toString();
   }
 
   @override
   String inspect(Idxs idxs) {
-    StringBuffer buffer = StringBuffer();
-    buffer.write('[Context: ');
-    
-    // Print the words in the context
-    bool first = true;
-    ctx.state.forEach((wordIdx, value) {
-      if (!first) {
-        buffer.write(' ');
+    StringBuffer r = StringBuffer();
+    r.write('[Block: ');
+    for (int i = 0; i < series.len(); i++) {
+      if (series.get(i) != null) {
+        if (series.getPos() == i) {
+          r.write('^');
+        }
+        r.write(series.get(i)!.inspect(idxs));
+        r.write(' ');
       }
-      buffer.write('${idxs.getWord(wordIdx)}: ${value.print(idxs)}');
-      first = false;
-    });
-    
-    buffer.write(']');
-    return buffer.toString();
+    }
+    r.write(']');
+    return r.toString();
   }
 
   @override
   bool equal(RyeObject other) {
-    if (other.type() != RyeType.contextType) return false;
-    return ctx == (other as RyeContext).ctx; // Reference equality
+    if (other.type() != RyeType.blockType) return false;
+    
+    Block otherBlock = other as Block;
+    if (series.len() != otherBlock.series.len()) return false;
+    if (mode != otherBlock.mode) return false;
+    
+    for (int j = 0; j < series.len(); j++) {
+      // Handle potential null values in series comparison
+      if (series.get(j) == null && otherBlock.series.get(j) == null) continue;
+      if (series.get(j) == null || otherBlock.series.get(j) == null) return false;
+      if (!series.get(j)!.equal(otherBlock.series.get(j)!)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   @override
-  int getKind() => RyeType.contextType.index;
+  int getKind() => RyeType.blockType.index;
 }
 
-// Builtins for the new types
-RyeObject makeStringBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
-  if (arg0 == null) {
-    ps.failureFlag = true;
-    return Error("make-string requires an argument");
+// Builtin function type definition - Moved here temporarily, might move to builtins_base.dart later
+typedef BuiltinFunction = RyeObject Function(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4);
+
+// Builtin implementation
+class Builtin implements RyeObject {
+  BuiltinFunction fn;
+  int argsn;
+  RyeObject? cur0;
+  RyeObject? cur1;
+  RyeObject? cur2;
+  RyeObject? cur3;
+  RyeObject? cur4;
+  bool acceptFailure;
+  bool pure;
+  String doc;
+
+  Builtin(this.fn, this.argsn, this.acceptFailure, this.pure, this.doc, 
+      {this.cur0, this.cur1, this.cur2, this.cur3, this.cur4});
+
+  @override
+  RyeType type() => RyeType.builtinType;
+
+  @override
+  String print(Idxs idxs) {
+    String pureStr = pure ? 'Pure ' : '';
+    return '${pureStr}BFunction($argsn): $doc';
   }
-  
-  return RyeString(arg0.print(ps.idx));
-}
 
-RyeObject makeListBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
-  List<RyeObject> items = [];
-  
-  // If arg0 is provided, it should be a block of items
-  if (arg0 != null && arg0 is Block) {
-    // Create a new program state for the block
-    ProgramState blockPs = ProgramState(TSeries(List<RyeObject>.from(arg0.series.s)), ps.idx);
-    blockPs.ctx = ps.ctx;
+  @override
+  String inspect(Idxs idxs) {
+    return '[${print(idxs)}]';
+  }
+
+  @override
+  bool equal(RyeObject other) {
+    if (other.type() != RyeType.builtinType) return false;
     
-    // Reset the series position to ensure we start from the beginning
-    blockPs.ser.reset();
+    Builtin otherBuiltin = other as Builtin;
+    // Function equality check is tricky in Dart. Comparing references is the most practical approach.
+    if (!identical(fn, otherBuiltin.fn)) return false; 
+    if (argsn != otherBuiltin.argsn) return false;
+    // Compare curried arguments - requires RyeObject.equal to handle nulls if necessary
+    if (!(cur0?.equal(otherBuiltin.cur0 ?? Void()) ?? (otherBuiltin.cur0 == null))) return false;
+    if (!(cur1?.equal(otherBuiltin.cur1 ?? Void()) ?? (otherBuiltin.cur1 == null))) return false;
+    if (!(cur2?.equal(otherBuiltin.cur2 ?? Void()) ?? (otherBuiltin.cur2 == null))) return false;
+    if (!(cur3?.equal(otherBuiltin.cur3 ?? Void()) ?? (otherBuiltin.cur3 == null))) return false;
+    if (!(cur4?.equal(otherBuiltin.cur4 ?? Void()) ?? (otherBuiltin.cur4 == null))) return false;
+    if (acceptFailure != otherBuiltin.acceptFailure) return false;
+    if (pure != otherBuiltin.pure) return false;
     
-    // Evaluate each item in the block and add it to the list
-    while (blockPs.ser.getPos() < blockPs.ser.len()) {
-      rye00_evalExpressionConcrete(blockPs);
-      
-      if (blockPs.errorFlag || blockPs.failureFlag) {
-        ps.errorFlag = blockPs.errorFlag;
-        ps.failureFlag = blockPs.failureFlag;
-        ps.res = blockPs.res;
-        return blockPs.res ?? Error("Error in make-list");
-      }
-      
-      if (blockPs.res != null) {
-        items.add(blockPs.res!);
-      }
-    }
+    return true;
   }
-  
-  return RyeList(items);
+
+  @override
+  int getKind() => RyeType.builtinType.index;
 }
 
-RyeObject makeDictBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
-  Map<String, RyeObject> entries = {};
-  
-  // If arg0 is provided, it should be a block of key-value pairs
-  if (arg0 != null && arg0 is Block) {
-    // Create a new program state for the block
-    ProgramState blockPs = ProgramState(TSeries(List<RyeObject>.from(arg0.series.s)), ps.idx);
-    blockPs.ctx = ps.ctx;
-    
-    // Reset the series position to ensure we start from the beginning
-    blockPs.ser.reset();
-    
-    // Evaluate key-value pairs in the block and add them to the dict
-    while (blockPs.ser.getPos() < blockPs.ser.len()) {
-      // Evaluate the key
-      rye00_evalExpressionConcrete(blockPs);
-      
-      if (blockPs.errorFlag || blockPs.failureFlag) {
-        ps.errorFlag = blockPs.errorFlag;
-        ps.failureFlag = blockPs.failureFlag;
-        ps.res = blockPs.res;
-        return blockPs.res ?? Error("Error in make-dict (key)");
-      }
-      
-      if (blockPs.res == null) {
-        ps.failureFlag = true;
-        return Error("make-dict: key cannot be null");
-      }
-      
-      String key = blockPs.res!.print(ps.idx);
-      
-      // Evaluate the value
-      rye00_evalExpressionConcrete(blockPs);
-      
-      if (blockPs.errorFlag || blockPs.failureFlag) {
-        ps.errorFlag = blockPs.errorFlag;
-        ps.failureFlag = blockPs.failureFlag;
-        ps.res = blockPs.res;
-        return blockPs.res ?? Error("Error in make-dict (value)");
-      }
-      
-      if (blockPs.res == null) {
-        ps.failureFlag = true;
-        return Error("make-dict: value cannot be null");
-      }
-      
-      entries[key] = blockPs.res!;
-    }
+/// Tagword implementation (e.g., 'word) - Similar to LitWord but distinct type?
+class Tagword implements RyeObject {
+  final int index;
+
+  const Tagword(this.index);
+
+  @override
+  RyeType type() => RyeType.wordType; // Still treated as a word type for now
+
+  @override
+  String print(Idxs idxs) {
+    // Represent tag-words with a leading quote in output for clarity
+    return "'${idxs.getWord(index)}"; 
   }
-  
-  return RyeDict(entries);
+
+  @override
+  String inspect(Idxs idxs) {
+    return "[Tagword: ${idxs.getWord(index)}]";
+  }
+
+  @override
+  bool equal(RyeObject other) {
+    if (other is! Tagword) return false;
+    return index == other.index;
+  }
+
+  @override
+  int getKind() => type().index;
 }
 
-RyeObject makeContextBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
-  // Create a new context with the current context as parent
-  RyeCtx ctx = RyeCtx(ps.ctx);
-  
-  // If arg0 is provided, it should be a block of key-value pairs
-  if (arg0 != null && arg0 is Block) {
-    // Create a new program state for the block
-    ProgramState blockPs = ProgramState(TSeries(List<RyeObject>.from(arg0.series.s)), ps.idx);
-    blockPs.ctx = ps.ctx;
-    
-    // Reset the series position to ensure we start from the beginning
-    blockPs.ser.reset();
-    
-    // Evaluate key-value pairs in the block and add them to the context
-    while (blockPs.ser.getPos() < blockPs.ser.len()) {
-      // Evaluate the key (should be a word)
-      rye00_evalExpressionConcrete(blockPs);
-      
-      if (blockPs.errorFlag || blockPs.failureFlag) {
-        ps.errorFlag = blockPs.errorFlag;
-        ps.failureFlag = blockPs.failureFlag;
-        ps.res = blockPs.res;
-        return blockPs.res ?? Error("Error in make-context (key)");
-      }
-      
-      if (blockPs.res == null || blockPs.res!.type() != RyeType.wordType) {
-        ps.failureFlag = true;
-        return Error("make-context: key must be a word");
-      }
-      
-      int wordIdx = (blockPs.res as Word).index;
-      
-      // Evaluate the value
-      rye00_evalExpressionConcrete(blockPs);
-      
-      if (blockPs.errorFlag || blockPs.failureFlag) {
-        ps.errorFlag = blockPs.errorFlag;
-        ps.failureFlag = blockPs.failureFlag;
-        ps.res = blockPs.res;
-        return blockPs.res ?? Error("Error in make-context (value)");
-      }
-      
-      if (blockPs.res == null) {
-        ps.failureFlag = true;
-        return Error("make-context: value cannot be null");
-      }
-      
-      ctx.set(wordIdx, blockPs.res!);
-    }
-  }
-  
-  return RyeContext(ctx);
-}
+/// Comma implementation (Expression separator)
+class Comma implements RyeObject {
+  const Comma();
 
-// Builtins for the new types
-RyeObject makeBooleanBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
-  if (arg0 == null) {
-    ps.failureFlag = true;
-    return Error("make-boolean requires an argument");
-  }
-  
-  if (arg0 is Boolean) {
-    return arg0;
-  }
-  
-  String value = arg0.print(ps.idx).toLowerCase();
-  return Boolean(value == "true" || value == "yes" || value == "1");
-}
+  @override
+  RyeType type() => RyeType.commaType; // Use commaType
 
-RyeObject makeDecimalBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
-  if (arg0 == null) {
-    ps.failureFlag = true;
-    return Error("make-decimal requires an argument");
+  @override
+  String print(Idxs idxs) {
+    return ','; 
   }
-  
-  if (arg0 is Decimal) {
-    return arg0;
-  }
-  
-  if (arg0 is Integer) {
-    return Decimal(arg0.value.toDouble());
-  }
-  
-  try {
-    double value = double.parse(arg0.print(ps.idx));
-    return Decimal(value);
-  } catch (e) {
-    ps.failureFlag = true;
-    return Error("Cannot convert to decimal: ${arg0.print(ps.idx)}");
-  }
-}
 
-RyeObject makeDateBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
-  if (arg0 == null) {
-    ps.failureFlag = true;
-    return Error("make-date requires an argument");
+  @override
+  String inspect(Idxs idxs) {
+    return '[Comma]';
   }
-  
-  if (arg0 is Date) {
-    return arg0;
-  }
-  
-  if (arg0 is Time) {
-    return Date((arg0 as Time).value);
-  }
-  
-  try {
-    DateTime value = DateTime.parse(arg0.print(ps.idx).replaceAll('"', ''));
-    return Date(value);
-  } catch (e) {
-    ps.failureFlag = true;
-    return Error("Cannot convert to date: ${arg0.print(ps.idx)}");
-  }
-}
 
-RyeObject makeTimeBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
-  if (arg0 == null) {
-    ps.failureFlag = true;
-    return Error("make-time requires an argument");
+  @override
+  bool equal(RyeObject other) {
+    return other is Comma;
   }
-  
-  if (arg0 is Time) {
-    return arg0;
-  }
-  
-  try {
-    DateTime value = DateTime.parse(arg0.print(ps.idx).replaceAll('"', ''));
-    return Time(value);
-  } catch (e) {
-    ps.failureFlag = true;
-    return Error("Cannot convert to time: ${arg0.print(ps.idx)}");
-  }
-}
 
-RyeObject makeUriBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
-  if (arg0 == null) {
-    ps.failureFlag = true;
-    return Error("make-uri requires an argument");
-  }
-  
-  if (arg0 is Uri) {
-    return arg0;
-  }
-  
-  String uriString = arg0.print(ps.idx).replaceAll('"', '');
-  return Uri.fromString(ps.idx, uriString);
-}
-
-RyeObject makeEmailBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
-  if (arg0 == null) {
-    ps.failureFlag = true;
-    return Error("make-email requires an argument");
-  }
-  
-  if (arg0 is Email) {
-    return arg0;
-  }
-  
-  String emailString = arg0.print(ps.idx).replaceAll('"', '');
-  
-  // Simple email validation
-  if (!emailString.contains('@') || !emailString.contains('.')) {
-    ps.failureFlag = true;
-    return Error("Invalid email address: $emailString");
-  }
-  
-  return Email(emailString);
-}
-
-RyeObject makeVectorBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
-  List<double> values = [];
-  
-  // If arg0 is provided, it should be a block of numbers
-  if (arg0 != null && arg0 is Block) {
-    // Create a new program state for the block
-    ProgramState blockPs = ProgramState(TSeries(List<RyeObject>.from(arg0.series.s)), ps.idx);
-    blockPs.ctx = ps.ctx;
-    
-    // Reset the series position to ensure we start from the beginning
-    blockPs.ser.reset();
-    
-    // Evaluate each item in the block and add it to the vector
-    while (blockPs.ser.getPos() < blockPs.ser.len()) {
-      rye00_evalExpressionConcrete(blockPs);
-      
-      if (blockPs.errorFlag || blockPs.failureFlag) {
-        ps.errorFlag = blockPs.errorFlag;
-        ps.failureFlag = blockPs.failureFlag;
-        ps.res = blockPs.res;
-        return blockPs.res ?? Error("Error in make-vector");
-      }
-      
-      if (blockPs.res != null) {
-        if (blockPs.res is Integer) {
-          values.add((blockPs.res as Integer).value.toDouble());
-        } else if (blockPs.res is Decimal) {
-          values.add((blockPs.res as Decimal).value);
-        } else {
-          ps.failureFlag = true;
-          return Error("Vector elements must be numbers");
-        }
-      }
-    }
-  }
-  
-  return Vector(values);
-}
-
-// Implements the "make-function" builtin
-RyeObject makeFunctionBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
-  if (arg0 is Block && arg1 is Block) {
-    // TODO: Add support for flags like //pure, //in-ctx if parser supports them
-    // Capture the current context (ps.ctx) for closure
-    return RyeFunction(arg0, arg1, ps.ctx); // Use RyeFunction here
-  }
-  ps.failureFlag = true;
-  return Error("make-function expects a spec block and a body block");
+  @override
+  int getKind() => type().index;
 }
 
 
-// Register the new type builtins
-void registerTypeBuiltins(ProgramState ps) {
-  // Register the make-string builtin
-  int makeStringIdx = ps.idx.indexWord("make-string");
-  Builtin makeStringBuiltinObj = Builtin(makeStringBuiltin, 1, false, true, "Creates a string from a value");
-  ps.ctx.set(makeStringIdx, makeStringBuiltinObj);
-  
-  // Register the make-list builtin
-  int makeListIdx = ps.idx.indexWord("make-list");
-  Builtin makeListBuiltinObj = Builtin(makeListBuiltin, 1, false, true, "Creates a list from a block of values");
-  ps.ctx.set(makeListIdx, makeListBuiltinObj);
-  
-  // Register the make-dict builtin
-  int makeDictIdx = ps.idx.indexWord("make-dict");
-  Builtin makeDictBuiltinObj = Builtin(makeDictBuiltin, 1, false, true, "Creates a dictionary from a block of key-value pairs");
-  ps.ctx.set(makeDictIdx, makeDictBuiltinObj);
-  
-  // Register the make-context builtin
-  int makeContextIdx = ps.idx.indexWord("make-context");
-  Builtin makeContextBuiltinObj = Builtin(makeContextBuiltin, 1, false, true, "Creates a context from a block of key-value pairs");
-  ps.ctx.set(makeContextIdx, makeContextBuiltinObj);
-  
-  // Register the make-boolean builtin
-  int makeBooleanIdx = ps.idx.indexWord("make-boolean");
-  Builtin makeBooleanBuiltinObj = Builtin(makeBooleanBuiltin, 1, false, true, "Creates a boolean from a value");
-  ps.ctx.set(makeBooleanIdx, makeBooleanBuiltinObj);
-  
-  // Register the make-decimal builtin
-  int makeDecimalIdx = ps.idx.indexWord("make-decimal");
-  Builtin makeDecimalBuiltinObj = Builtin(makeDecimalBuiltin, 1, false, true, "Creates a decimal from a value");
-  ps.ctx.set(makeDecimalIdx, makeDecimalBuiltinObj);
-  
-  // Register the make-date builtin
-  int makeDateIdx = ps.idx.indexWord("make-date");
-  Builtin makeDateBuiltinObj = Builtin(makeDateBuiltin, 1, false, true, "Creates a date from a value");
-  ps.ctx.set(makeDateIdx, makeDateBuiltinObj);
-  
-  // Register the make-time builtin
-  int makeTimeIdx = ps.idx.indexWord("make-time");
-  Builtin makeTimeBuiltinObj = Builtin(makeTimeBuiltin, 1, false, true, "Creates a time from a value");
-  ps.ctx.set(makeTimeIdx, makeTimeBuiltinObj);
-  
-  // Register the make-uri builtin
-  int makeUriIdx = ps.idx.indexWord("make-uri");
-  Builtin makeUriBuiltinObj = Builtin(makeUriBuiltin, 1, false, true, "Creates a URI from a value");
-  ps.ctx.set(makeUriIdx, makeUriBuiltinObj);
-  
-  // Register the make-email builtin
-  int makeEmailIdx = ps.idx.indexWord("make-email");
-  Builtin makeEmailBuiltinObj = Builtin(makeEmailBuiltin, 1, false, true, "Creates an email from a value");
-  ps.ctx.set(makeEmailIdx, makeEmailBuiltinObj);
-  
-  // Register the make-vector builtin
-  int makeVectorIdx = ps.idx.indexWord("make-vector");
-  Builtin makeVectorBuiltinObj = Builtin(makeVectorBuiltin, 1, false, true, "Creates a vector from a block of numbers");
-  ps.ctx.set(makeVectorIdx, makeVectorBuiltinObj);
+// Function implementation (user-defined)
+class RyeFunction implements RyeObject {
+  Block spec; // Block containing argument words
+  Block body; // Block containing the function code
+  RyeCtx? ctx; // Context where the function was defined (for closure)
+  bool pure;   // Is the function pure?
+  bool inCtx;  // Should the function execute in its definition context?
+  int argsn;   // Number of arguments expected
 
-  // Register the make-function builtin
-  int makeFuncIdx = ps.idx.indexWord("make-function");
-  Builtin makeFuncBuiltinObj = Builtin(makeFunctionBuiltin, 2, false, true, "Creates a user-defined function");
-  ps.ctx.set(makeFuncIdx, makeFuncBuiltinObj);
+  RyeFunction(this.spec, this.body, this.ctx, {this.pure = false, this.inCtx = false})
+    : argsn = spec.series.len(); // Calculate argsn based on spec length
+
+  @override
+  RyeType type() => RyeType.wordType; // Treat as word-like for now (like Go)
+
+  @override
+  String print(Idxs idxs) {
+    // Basic representation, could be improved
+    return "Function($argsn)"; 
+  }
+
+  @override
+  String inspect(Idxs idxs) {
+     return '[Function: Args ${spec.print(idxs)} Body ${body.print(idxs)}]';
+  }
+
+  @override
+  bool equal(RyeObject other) {
+     // Functions are generally compared by reference or definition location,
+     // simple equality check might not be meaningful. For now, reference equality.
+     return identical(this, other); 
+  }
+
+  @override
+  int getKind() => type().index;
 }

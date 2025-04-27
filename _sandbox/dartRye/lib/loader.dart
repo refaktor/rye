@@ -2,7 +2,8 @@
 
 import 'dart:io';
 import 'rye.dart';
-import 'types.dart';
+// Import needed types from types.dart
+import 'types.dart' show RyeObject, Block, TSeries, Idxs, Word, Setword, Boolean, Integer, Decimal, RyeString, CPath, LitWord, RyeUri, Comma, OpWord, PipeWord, LSetword, LModword, Error, Getword, Genword, Modword, Tagword; 
 
 /// RyeLoader is responsible for parsing Rye code into a Block object
 class RyeLoader {
@@ -199,7 +200,7 @@ class RyeLoader {
         // URI (basic check)
         // TODO: Improve robustness, handle potential quotes if tokenizer changes
         try {
-          objects.add(Uri.fromString(idx, token));
+          objects.add(RyeUri.fromString(idx, token)); // Use RyeUri.fromString
         } catch (e) {
            // Fallback or error handling if Uri.fromString fails
            objects.add(Word(idx.indexWord(token))); // Fallback to Word
@@ -313,7 +314,7 @@ class RyeLoader {
       } else if (token.startsWith('%') || token.contains('://')) {
         // URI (basic check)
          try {
-          blockObjects.add(Uri.fromString(idx, token));
+          blockObjects.add(RyeUri.fromString(idx, token)); // Use RyeUri.fromString
         } catch (e) {
            blockObjects.add(Word(idx.indexWord(token))); // Fallback to Word
         }
@@ -388,19 +389,138 @@ class OpWord implements RyeObject {
   int getKind() => type().index;
 }
 
+/// Getword implementation (e.g., :word)
+class Getword implements RyeObject {
+  final int index;
+
+  const Getword(this.index);
+
+  @override
+  RyeType type() => RyeType.wordType; // Using wordType for now
+
+  @override
+  String print(Idxs idxs) {
+    return ':${idxs.getWord(index)}';
+  }
+
+  @override
+  String inspect(Idxs idxs) {
+    return '[Getword: ${print(idxs)}]';
+  }
+
+  @override
+  bool equal(RyeObject other) {
+    if (other is! Getword) return false;
+    return index == other.index;
+  }
+
+  @override
+  int getKind() => type().index;
+}
+
+/// Modword implementation (e.g., word::)
+class Modword implements RyeObject {
+  final int index;
+
+  const Modword(this.index);
+
+  @override
+  RyeType type() => RyeType.wordType; // Using wordType for now
+
+  @override
+  String print(Idxs idxs) {
+    return '${idxs.getWord(index)}::';
+  }
+
+  @override
+  String inspect(Idxs idxs) {
+    return '[Modword: ${print(idxs)}]';
+  }
+
+  @override
+  bool equal(RyeObject other) {
+    if (other is! Modword) return false;
+    return index == other.index;
+  }
+
+  @override
+  int getKind() => type().index;
+}
+
+/// Genword implementation (Generic word, e.g., .word) - Assuming syntax
+class Genword implements RyeObject {
+  final int index;
+
+  const Genword(this.index);
+
+  @override
+  RyeType type() => RyeType.wordType; // Using wordType for now
+
+  @override
+  String print(Idxs idxs) {
+    // Assuming '.' prefix for generic words based on Go conventions
+    return '.${idxs.getWord(index)}'; 
+  }
+
+  @override
+  String inspect(Idxs idxs) {
+    return '[Genword: ${print(idxs)}]';
+  }
+
+  @override
+  bool equal(RyeObject other) {
+    if (other is! Genword) return false;
+    return index == other.index;
+  }
+
+  @override
+  int getKind() => type().index;
+}
+
+
+/// Setword implementation (Setword appearing before an expression)
+class Setword implements RyeObject {
+  final int index;
+
+  const Setword(this.index); // Correct constructor for Setword
+
+  @override
+  RyeType type() => RyeType.wordType; // Using wordType for now
+
+  @override
+  String print(Idxs idxs) {
+    return '${idxs.getWord(index)}:';
+  }
+
+  @override
+  String inspect(Idxs idxs) {
+    return '[Setword: ${print(idxs)}]';
+  }
+
+  @override
+  bool equal(RyeObject other) {
+    if (other is! Setword) return false; // Check against Setword
+    return index == other.index;
+  }
+
+  @override
+  int getKind() => type().index;
+}
+
 /// PipeWord implementation
 class PipeWord implements RyeObject {
   final int index;
   final bool force; // Corresponds to * in |word*
 
-  const PipeWord(this.index, [this.force = false]);
+  // Correct constructor for PipeWord
+  const PipeWord(this.index, [this.force = false]); 
 
   @override
   RyeType type() => RyeType.wordType; // Still treated as a word type for now
 
   @override
   String print(Idxs idxs) {
-    return '|${idxs.getWord(index)}'; 
+    return '|${idxs.getWord(index)}${force ? '*' : ''}'; // Add * if force is true
   }
 
   @override
@@ -417,6 +537,7 @@ class PipeWord implements RyeObject {
   @override
   int getKind() => type().index;
 }
+
 
 /// LSetword implementation (Setword appearing after an expression)
 class LSetword implements RyeObject {
@@ -540,59 +661,5 @@ class LitWord implements RyeObject {
   int getKind() => type().index;
 }
 
-
-/// Comma implementation (Expression separator)
-class Comma implements RyeObject {
-  const Comma();
-
-  @override
-  RyeType type() => RyeType.wordType; // Treat as word-like for now
-
-  @override
-  String print(Idxs idxs) {
-    return ','; 
-  }
-
-  @override
-  String inspect(Idxs idxs) {
-    return '[Comma]';
-  }
-
-  @override
-  bool equal(RyeObject other) {
-    return other is Comma;
-  }
-
-  @override
-  int getKind() => type().index;
-}
-
-
-/// Setword implementation (Setword appearing before an expression)
-class Setword implements RyeObject {
-  final int index;
-
-  const Setword(this.index);
-
-  @override
-  RyeType type() => RyeType.wordType; // Using wordType for now
-
-  @override
-  String print(Idxs idxs) {
-    return '${idxs.getWord(index)}:';
-  }
-
-  @override
-  String inspect(Idxs idxs) {
-    return '[Setword: ${print(idxs)}]';
-  }
-
-  @override
-  bool equal(RyeObject other) {
-    if (other.type() != type()) return false;
-    return index == (other as Setword).index;
-  }
-
-  @override
-  int getKind() => type().index;
-}
+// Removed Comma definition (it's in types.dart)
+// Removed the duplicate Setword definition that was here.

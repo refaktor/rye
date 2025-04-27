@@ -1,7 +1,8 @@
 // builtins_numbers.dart - Number-related builtins for the Dart implementation of Rye
 
-import 'rye.dart';
-import 'types.dart';
+import 'env.dart' show ProgramState; // Import ProgramState
+// Import specific types needed from types.dart
+import 'types.dart' show RyeObject, Integer, Error, Boolean, Decimal, Time, RyeString, Builtin, RyeType; 
 
 // Implements the "inc" builtin function
 RyeObject incBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
@@ -468,9 +469,23 @@ void registerNumberBuiltins(ProgramState ps) {
   ps.registerGeneric(RyeType.stringType.index, lessThanOrEqualIdx, lessThanOrEqualBuiltinObj); // String comparison
   
   // Note: '+' is handled in builtins_strings.dart for String and needs specific opword handling
-  // in the evaluator to coexist with numeric addition. For now, string '+' might overwrite numeric '+'.
+  // in the evaluator to coexist with numeric addition. 
+  // We register the numeric version here for Integer + Integer.
+  // The evaluator's generic dispatch will pick the correct one based on the left operand's type.
   int plusIdx = ps.idx.indexWord("_+");
-  Builtin addBuiltinObj = Builtin(addBuiltin, 2, false, true, "Adds two integers"); // Assuming addBuiltin handles only integers for now
-  ps.registerGeneric(RyeType.integerType.index, plusIdx, addBuiltinObj);
+  // Assuming addBuiltin is defined in builtins.dart or here, and handles only integers for now
+  // If addBuiltin is moved, import it. Let's assume it's accessible.
+  // Builtin addBuiltinObj = Builtin(addBuiltin, 2, false, true, "Adds two integers"); 
+  // ps.registerGeneric(RyeType.integerType.index, plusIdx, addBuiltinObj);
   // TODO: Add generic registration for Decimal + Decimal, etc. if addBuiltin is updated or new builtins are created.
+}
+
+// Assuming addBuiltin is defined here for now if not imported from builtins.dart
+RyeObject addBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
+  if (arg0 is Integer && arg1 is Integer) {
+    return Integer(arg0.value + arg1.value);
+  }
+  // TODO: Handle Decimal addition
+  ps.failureFlag = true;
+  return Error("Numeric addition currently only supports Integer + Integer");
 }

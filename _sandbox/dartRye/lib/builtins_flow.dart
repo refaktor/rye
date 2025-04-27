@@ -1,7 +1,9 @@
 // builtins_flow.dart - Flow control builtins (do, defer, return, etc.)
 
-import 'rye.dart';
-import 'types.dart';
+import 'env.dart' show ProgramState, RyeCtx; // Import specific env types
+// Import specific types needed from types.dart
+import 'types.dart' show RyeObject, Block, Error, Void, Builtin, TSeries; // Added TSeries here
+import 'evaldo.dart' show evalBlockInj; // Import the correct evaluator function
 
 // Implements the "do" builtin function
 RyeObject doBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
@@ -13,7 +15,7 @@ RyeObject doBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject
     ps.ser = arg0.series;
     
     // Evaluate the block
-    rye00_evalBlockInj(ps, null, false);
+    evalBlockInj(ps, null, false); // Use evalBlockInj
     
     // Restore original series
     ps.ser = ser;
@@ -52,7 +54,7 @@ RyeObject doInBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObje
     ps.ctx = providedCtx;
     
     // Evaluate the block in the provided context
-    rye00_evalBlockInj(ps, null, false);
+    evalBlockInj(ps, null, false); // Use evalBlockInj
     
     // Restore original series and context
     ps.ser = ser;
@@ -86,7 +88,7 @@ RyeObject doParBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObj
     ps.ser = arg1.series;
     
     // Evaluate the block with the modified parent context
-    rye00_evalBlockInj(ps, null, false);
+    evalBlockInj(ps, null, false); // Use evalBlockInj
     
     // Restore original series and parent context
     ps.ser = ser;

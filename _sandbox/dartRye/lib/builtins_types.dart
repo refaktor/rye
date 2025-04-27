@@ -1,7 +1,8 @@
 // builtins_types.dart - Type-related builtins for the Dart implementation of Rye
 
-import 'rye.dart';
-import 'types.dart';
+import 'env.dart' show ProgramState; // Import ProgramState
+// Import specific types needed from types.dart
+import 'types.dart' show RyeObject, RyeString, Integer, Decimal, Error, RyeList, Block, TSeries, Word, Builtin, Uri; 
 
 // --- Type Conversion Builtins ---
 
@@ -65,9 +66,9 @@ RyeObject toCharBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeOb
 RyeObject toBlockBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
   if (arg0 is RyeList) {
     // Convert list to block
-    List<RyeObject> items = [];
-    for (RyeObject item in arg0.items) {
-      items.add(item);
+    List<RyeObject?> items = []; // Allow nulls
+    for (RyeObject? item in arg0.value) { // Use .value
+      items.add(item); // Add item (could be null)
     }
     return Block(TSeries(items));
   }
