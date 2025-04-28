@@ -901,6 +901,8 @@ func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, a
 	if psX.ForcedResult != nil {
 		ps.Res = ps.ForcedResult
 		ps.ForcedResult = nil
+	} else {
+		ps.Res = psX.Res
 	}
 	ps.ReturnFlag = false
 }
