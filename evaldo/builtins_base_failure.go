@@ -434,6 +434,66 @@ var Builtins_failure = map[string]*env.Builtin{
 		},
 	},
 
+	"fix\\either": {
+		AcceptFailure: true,
+		Argsn:         3,
+		Doc:           "Fix also with else block.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			if ps.FailureFlag || arg0.Type() == env.ErrorType {
+				ps.FailureFlag = false
+				// TODO -- create function do_block and call in all cases
+				switch bloc := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = bloc.Series
+					EvalBlockInjMultiDialect(ps, arg0, true)
+					ps.Ser = ser
+					return ps.Res
+				default:
+					ps.FailureFlag = true
+					return env.NewError("expecting block")
+				}
+			} else {
+				switch bloc := arg2.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = bloc.Series
+					EvalBlockInjMultiDialect(ps, arg0, true)
+					ps.Ser = ser
+					return ps.Res
+				default:
+					ps.FailureFlag = true
+					return env.NewError("expecting block")
+				}
+			}
+		},
+	},
+
+	"fix\\else": {
+		AcceptFailure: true,
+		Argsn:         2,
+		Doc:           "Do a block of code if Arg 1 is not a failure.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			if !(ps.FailureFlag || arg0.Type() == env.ErrorType) {
+				ps.FailureFlag = false
+				// TODO -- create function do_block and call in all cases
+				switch bloc := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = bloc.Series
+					EvalBlockInjMultiDialect(ps, arg0, true)
+					ps.Ser = ser
+					return ps.Res
+				default:
+					ps.FailureFlag = true
+					return env.NewError("expecting block")
+				}
+			} else {
+				return arg0
+			}
+		},
+	},
+
 	/* "fix\\when": {
 		Argsn: 3,
 		Doc:   "Recovers from an error if a condition is met.",
