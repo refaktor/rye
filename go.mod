@@ -34,6 +34,7 @@ require (
 	github.com/jwalton/go-supportscolor v1.2.0
 	github.com/kopoli/go-terminal-size v0.0.0-20170219200355-5c97524c8b54
 	github.com/labstack/echo v3.3.10+incompatible
+	github.com/landlock-lsm/go-landlock v0.0.0-20250303204525-1544bccde3a3
 	github.com/lib/pq v1.10.9
 	github.com/mattn/go-runewidth v0.0.16
 	github.com/mhale/smtpd v0.8.3
@@ -51,16 +52,13 @@ require (
 	golang.org/x/crypto v0.36.0
 	golang.org/x/net v0.38.0
 	golang.org/x/sync v0.12.0
-	golang.org/x/term v0.30.0
+	golang.org/x/term v0.31.0
 	golang.org/x/text v0.23.0
 	software.sslmate.com/src/go-pkcs12 v0.5.0
 )
 
 require (
-	github.com/landlock-lsm/go-landlock v0.0.0-20250303204525-1544bccde3a3 // indirect
-	github.com/mark3labs/mcp-go v0.22.0 // indirect
-	github.com/spf13/cast v1.7.1 // indirect
-	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
+	github.com/frankban/quicktest v1.14.6 // indirect
 	kernel.org/pub/linux/libs/security/libcap/psx v1.2.70 // indirect
 )
 
@@ -147,7 +145,7 @@ require (
 	github.com/yhirose/go-peg v0.0.0-20210804202551-de25d6753cf1 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	go.etcd.io/bbolt v1.3.7 // indirect
-	golang.org/x/sys v0.31.0 // indirect
+	golang.org/x/sys v0.32.0 // indirect
 	golang.org/x/tools v0.29.0 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
