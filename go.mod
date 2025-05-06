@@ -43,7 +43,7 @@ require (
 	github.com/pkg/term v1.2.0-beta.2.0.20211217091447-1a4a3b719465
 	github.com/refaktor/go-peg v0.0.0-20220116201714-31e3dfa8dc7d
 	github.com/refaktor/keyboard v0.0.0-20250327232248-edb0b31909c4
-	github.com/sashabaranov/go-openai v1.38.1
+	github.com/sashabaranov/go-openai v1.39.1
 	github.com/shirou/gopsutil/v3 v3.24.5
 	github.com/thomasberger/parsemail v1.2.7
 	github.com/xuri/excelize/v2 v2.9.0
