@@ -1887,6 +1887,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(builtins_iteration, ps, "base")
 	RegisterBuiltins2(builtins_contexts, ps, "base")
 	RegisterBuiltins2(builtins_functions, ps, "base")
+	RegisterBuiltins2(builtins_apply, ps, "base")
 	RegisterBuiltins2(Builtins_failure, ps, "failure")
 	RegisterBuiltins2(Builtins_match, ps, "match")
 	RegisterBuiltins2(Builtins_table, ps, "table")
@@ -1923,6 +1924,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltinsInContext(Builtins_telegrambot, ps, "telegram")
 	RegisterBuiltins2(Builtins_peg, ps, "peg")
 	RegisterBuiltins2(Builtins_mcp, ps, "mcp")
+	RegisterBuiltins2(builtins_trees, ps, "trees")
 	// ## Archived modules
 	// RegisterBuiltins2(Builtins_gtk, ps, "gtk")
 	// RegisterBuiltins2(Builtins_nats, ps, "nats")

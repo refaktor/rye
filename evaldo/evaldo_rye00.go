@@ -32,7 +32,7 @@ func Rye00_EvalExpressionConcrete(ps *env.ProgramState) {
 		ps.Res = errMissingValue
 	}
 
-	switch object.Type() {
+	/* switch object.Type() {
 	case env.IntegerType:
 		ps.Res = object
 	case env.BlockType:
@@ -42,6 +42,20 @@ func Rye00_EvalExpressionConcrete(ps *env.ProgramState) {
 	case env.BuiltinType:
 		Rye00_CallBuiltin(object.(env.Builtin), ps, nil, false, false, nil)
 	case env.ErrorType:
+		setError00(ps, "Error object encountered")
+	default:
+		setError00(ps, "Unsupported type in simplified interpreter: "+strconv.Itoa(int(object.Type())))
+	}*/
+	switch object.(type) {
+	case env.Integer:
+		ps.Res = object
+	case env.Block:
+		ps.Res = object
+	case env.Word:
+		Rye00_EvalWord(ps, object.(env.Word), nil, false, false)
+	case env.Builtin:
+		Rye00_CallBuiltin(object.(env.Builtin), ps, nil, false, false, nil)
+	case env.Error:
 		setError00(ps, "Error object encountered")
 	default:
 		setError00(ps, "Unsupported type in simplified interpreter: "+strconv.Itoa(int(object.Type())))

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 
+	"github.com/fxtlabs/primes"
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/util"
 )
@@ -1133,6 +1134,32 @@ var Builtins_math = map[string]*env.Builtin{
 				return env.NewInteger(1)
 			} else {
 				return env.NewInteger(0)
+			}
+		},
+	},
+	// Tests:
+	// equal { is-prime 7 } 1
+	// equal { is-prime 10 } 0
+	// Args:
+	// * n: integer value to check
+	// Returns:
+	// * integer 1 if n is prime, 0 otherwise
+	"is-prime": {
+		Argsn: 1,
+		Doc:   "Returns true if the integer is a prime number.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Integer:
+				if val.Value <= 1 {
+					return *env.NewBoolean(false) // 0 and 1 are not prime numbers
+				}
+				if primes.IsPrime(int(val.Value)) {
+					return *env.NewBoolean(true)
+				} else {
+					return *env.NewBoolean(false)
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "is-prime")
 			}
 		},
 	},

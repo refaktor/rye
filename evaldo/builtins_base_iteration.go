@@ -717,13 +717,13 @@ var builtins_iteration = map[string]*env.Builtin{
 	//  equal { map "" { + "-" } } { }
 	"map": { // **
 		Argsn: 2,
-		Doc:   "Maps values of a block to a new block by evaluating a block of code.",
+		Doc:   "Maps values of a block to a new block by evaluating a block of code or function.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch list := arg0.(type) {
 			case env.Collection:
 				switch block := arg1.(type) {
-				case env.Block, env.Builtin:
+				case env.Block, env.Builtin, env.Function:
 					l := list.Length()
 					newl := make([]env.Object, l)
 					switch block := block.(type) {
@@ -743,12 +743,20 @@ var builtins_iteration = map[string]*env.Builtin{
 						for i := 0; i < l; i++ {
 							newl[i] = DirectlyCallBuiltin(ps, block, list.Get(i), nil)
 						}
+					case env.Function:
+						for i := 0; i < l; i++ {
+							CallFunctionArgsN(block, ps, ps.Ctx, list.Get(i))
+							if ps.ErrorFlag {
+								return ps.Res
+							}
+							newl[i] = ps.Res
+						}
 					default:
-						return MakeBuiltinError(ps, "Block value should be builtin or block type.", "map")
+						return MakeBuiltinError(ps, "Block value should be builtin, block, or function type.", "map")
 					}
 					return list.MakeNew(newl)
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.BuiltinType}, "map")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.BuiltinType, env.FunctionType}, "map")
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "map")
