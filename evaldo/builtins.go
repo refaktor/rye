@@ -1927,6 +1927,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_peg, ps, "peg")
 	RegisterBuiltins2(Builtins_mcp, ps, "mcp")
 	RegisterBuiltins2(builtins_trees, ps, "trees")
+	RegisterErrorUtilsBuiltins(ps) // Register additional error handling utilities
 	// ## Archived modules
 	// RegisterBuiltins2(Builtins_gtk, ps, "gtk")
 	// RegisterBuiltins2(Builtins_nats, ps, "nats")

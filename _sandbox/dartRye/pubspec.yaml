@@ -9,6 +9,7 @@ dependencies:
   flutter:
     sdk: flutter
   intl: ^0.18.0
+  dart_console: ^1.2.0
 
 dev_dependencies:
   lints: ^2.0.0

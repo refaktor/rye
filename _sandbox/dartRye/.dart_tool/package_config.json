@@ -68,10 +68,22 @@
       "languageVersion": "2.19"
     },
     {
+      "name": "dart_console",
+      "rootUri": "file:///home/jimez/.pub-cache/hosted/pub.dev/dart_console-1.2.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
       "name": "fake_async",
       "rootUri": "file:///home/jimez/.pub-cache/hosted/pub.dev/fake_async-1.3.1",
       "packageUri": "lib/",
       "languageVersion": "2.12"
+    },
+    {
+      "name": "ffi",
+      "rootUri": "file:///home/jimez/.pub-cache/hosted/pub.dev/ffi-2.1.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
     },
     {
       "name": "file",
@@ -332,6 +344,12 @@
       "languageVersion": "3.0"
     },
     {
+      "name": "win32",
+      "rootUri": "file:///home/jimez/.pub-cache/hosted/pub.dev/win32-5.2.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
       "name": "yaml",
       "rootUri": "file:///home/jimez/.pub-cache/hosted/pub.dev/yaml-3.1.2",
       "packageUri": "lib/",
@@ -344,7 +362,7 @@
       "languageVersion": "3.0"
     }
   ],
-  "generated": "2025-04-10T01:59:32.580087Z",
+  "generated": "2025-04-26T21:49:16.433015Z",
   "generator": "pub",
   "generatorVersion": "3.3.0-48.0.dev"
 }

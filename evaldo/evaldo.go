@@ -1310,6 +1310,30 @@ func trace(s string) {
 
 func tryHandleFailure(ps *env.ProgramState) bool {
 	if ps.FailureFlag && !ps.ReturnFlag && !ps.InErrHandler {
+		// Add current code location to the error
+		if err, ok := ps.Res.(*env.Error); ok {
+			// Add source location if available
+			if ps.ScriptPath != "" {
+				values := make(map[string]env.Object)
+				if err.Values != nil {
+					values = err.Values
+				}
+				values["source-file"] = *env.NewString(ps.ScriptPath)
+				err.Values = values
+			}
+
+			// Add code context and block for better debugging
+			err.CodeContext = ps.Ctx
+			// Store the current series position for better error reporting
+			if ps.Ser.Pos() < ps.Ser.Len() {
+				pos := ps.Ser.Pos()
+				if err.Values == nil {
+					err.Values = make(map[string]env.Object)
+				}
+				err.Values["position"] = *env.NewInteger(int64(pos))
+			}
+		}
+
 		if checkContextErrorHandler(ps) {
 			return false // Successfully handled
 		}
@@ -1322,7 +1346,34 @@ func tryHandleFailure(ps *env.ProgramState) bool {
 // ExecuteDeferredBlocks executes all deferred blocks in LIFO order (last in, first out)
 // and clears the deferred blocks list
 func ExecuteDeferredBlocks(ps *env.ProgramState) {
-	// TODO: Implement deferred block execution
+	// Execute deferred blocks in LIFO order
+	for i := len(ps.DeferBlocks) - 1; i >= 0; i-- {
+		block := ps.DeferBlocks[i]
+
+		// Save current state
+		oldSer := ps.Ser
+		oldRes := ps.Res
+		oldFailureFlag := ps.FailureFlag
+		oldErrorFlag := ps.ErrorFlag
+		oldReturnFlag := ps.ReturnFlag
+
+		// Execute the deferred block
+		ps.Ser = block.Series
+		EvalBlock(ps)
+
+		// Restore state (except for Res if there was no error)
+		ps.Ser = oldSer
+		if ps.ErrorFlag {
+			// If the deferred block had an error, restore the original result
+			ps.Res = oldRes
+		}
+		ps.FailureFlag = oldFailureFlag
+		ps.ErrorFlag = oldErrorFlag
+		ps.ReturnFlag = oldReturnFlag
+	}
+
+	// Clear the deferred blocks
+	ps.DeferBlocks = ps.DeferBlocks[:0]
 }
 
 // Remove unused debugging functions

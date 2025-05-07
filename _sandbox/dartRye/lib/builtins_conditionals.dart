@@ -1,7 +1,9 @@
 // builtins_conditionals.dart - Conditional builtins for the Dart implementation of Rye
 
-import 'rye.dart';
-import 'types.dart';
+import 'env.dart' show ProgramState; // Import ProgramState
+// Import specific types needed from types.dart
+import 'types.dart' show RyeObject, Boolean, Integer, RyeString, Block, RyeList, RyeDict, Error, Void, TSeries, Builtin; 
+import 'evaldo.dart' show evalBlockInj; // Import the correct evaluator function
 
 // Helper function to check if a value is truthy
 bool isTruthy(RyeObject obj) {
@@ -14,9 +16,9 @@ bool isTruthy(RyeObject obj) {
   } else if (obj is Block) {
     return obj.series.len() > 0;
   } else if (obj is RyeList) {
-    return obj.items.isNotEmpty;
+    return obj.value.isNotEmpty; // Use .value
   } else if (obj is RyeDict) {
-    return obj.entries.isNotEmpty;
+    return obj.value.isNotEmpty; // Use .value (assuming this was also intended)
   }
   
   return false;
@@ -45,7 +47,7 @@ RyeObject ifBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject
         ps.ser.reset();
         
         // Evaluate the block with the condition value injected
-        rye00_evalBlockInj(ps, arg0, true);
+        evalBlockInj(ps, arg0, true); // Use evalBlockInj
         
         // Restore original series
         ps.ser = ser;
@@ -93,7 +95,7 @@ RyeObject eitherBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeOb
       ps.ser.reset();
       
       // Evaluate the chosen block with the condition value injected
-      rye00_evalBlockInj(ps, arg0, true);
+      evalBlockInj(ps, arg0, true); // Use evalBlockInj
       
       // Restore original series
       ps.ser = ser;
@@ -180,7 +182,7 @@ RyeObject switchBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeOb
         ps.ser.reset();
         
         // Evaluate the handler block with the value injected
-        rye00_evalBlockInj(ps, value, true);
+        evalBlockInj(ps, value, true); // Use evalBlockInj
         
         // Restore original series
         ps.ser = ser;
@@ -221,7 +223,7 @@ RyeObject whenBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObje
     ps.ser.reset();
     
     // Evaluate the condition block with the value injected
-    rye00_evalBlockInj(ps, arg0, true);
+    evalBlockInj(ps, arg0, true); // Use evalBlockInj
     
     // Check if the condition is truthy
     if (isTruthy(ps.res!)) {
@@ -232,7 +234,7 @@ RyeObject whenBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObje
       ps.ser.reset();
       
       // Evaluate the action block with the value injected
-      rye00_evalBlockInj(ps, arg0, true);
+      evalBlockInj(ps, arg0, true); // Use evalBlockInj
     }
     
     // Restore original series
@@ -264,7 +266,7 @@ RyeObject whileBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObj
       // Evaluate the condition block
       ps.ser = arg0.series;
       ps.ser.reset();
-      rye00_evalBlockInj(ps, null, false);
+      evalBlockInj(ps, null, false); // Use evalBlockInj
       
       // Check for errors
       if (ps.errorFlag) {
@@ -280,7 +282,7 @@ RyeObject whileBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObj
       // Evaluate the body block
       ps.ser = arg1.series;
       ps.ser.reset();
-      rye00_evalBlockInj(ps, null, false);
+      evalBlockInj(ps, null, false); // Use evalBlockInj
       
       // Check for errors or return flag
       if (ps.errorFlag || ps.returnFlag) {
