@@ -683,6 +683,7 @@ func CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, toLeft
 		if ps.ReturnFlag || ps.ErrorFlag {
 			return
 		}
+		// The createcurriedcaller is now created explicitly with partial builtin function
 		index := fn.Spec.Series.Get(i).(env.Word).Index
 		fnCtx.Set(index, ps.Res)
 		if i == 0 {
@@ -880,10 +881,17 @@ func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, a
 	if ps.ReturnFlag || ps.ErrorFlag {
 		return
 	}
-	for i, arg := range args {
-		index := fn.Spec.Series.Get(i).(env.Word).Index
+
+	for i, argWord := range fn.Spec.Series.S {
+		index := argWord.(env.Word).Index
+		arg := args[i]
 		fnCtx.Set(index, arg)
 	}
+	/* for i, arg := range args {
+		index := fn.Spec.Series.Get(i).(env.Word).Index
+		fnCtx.Set(index, arg)
+	}*/
+
 	// TRY
 	psX := env.NewProgramState(fn.Body.Series, ps.Idx)
 	psX.Ctx = fnCtx
@@ -957,6 +965,86 @@ func DetermineContext(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx) *e
 	return fnCtx
 }
 
+// CallCurriedCaller handles calling a curried caller
+func CallCurriedCaller(cc env.CurriedCaller, ps *env.ProgramState, arg0_ env.Object, toLeft bool, pipeSecond bool, firstVal env.Object) {
+	// Initialize arguments with curried values if available
+	var arg0 env.Object = cc.Cur0
+	var arg1 env.Object = cc.Cur1
+	var arg2 env.Object = cc.Cur2
+	var arg3 env.Object = cc.Cur3
+	var arg4 env.Object = cc.Cur4
+
+	// Determine the number of arguments needed
+	var argsn int
+	if cc.CallerType == 0 { // Builtin
+		argsn = cc.Builtin.Argsn
+	} else { // Function
+		argsn = cc.Function.Argsn
+	}
+
+	evalExprFn := EvalExpression2
+
+	// Handle arg0 - override with provided arg if available
+	if arg0_ != nil && !pipeSecond {
+		arg0 = arg0_
+	} else if firstVal != nil && pipeSecond {
+		arg0 = firstVal
+	} else if arg0 == nil && argsn > 0 {
+		// Only evaluate if we don't have a curried value
+		evalExprFn(ps, true)
+		if ps.ReturnFlag || ps.ErrorFlag {
+			return
+		}
+		arg0 = ps.Res
+	}
+
+	// Handle arg1
+	if arg0_ != nil && pipeSecond {
+		arg1 = arg0_
+	} else if arg1 == nil && argsn > 1 {
+		// Only evaluate if we don't have a curried value
+		evalExprFn(ps, true)
+		if ps.ReturnFlag || ps.ErrorFlag {
+			return
+		}
+		arg1 = ps.Res
+	}
+
+	// Handle remaining arguments - only evaluate if not curried
+	if arg2 == nil && argsn > 2 {
+		evalExprFn(ps, true)
+		if ps.ReturnFlag || ps.ErrorFlag {
+			return
+		}
+		arg2 = ps.Res
+	}
+
+	if arg3 == nil && argsn > 3 {
+		evalExprFn(ps, true)
+		if ps.ReturnFlag || ps.ErrorFlag {
+			return
+		}
+		arg3 = ps.Res
+	}
+
+	if arg4 == nil && argsn > 4 {
+		evalExprFn(ps, true)
+		if ps.ReturnFlag || ps.ErrorFlag {
+			return
+		}
+		arg4 = ps.Res
+	}
+
+	// Call the appropriate function based on caller type
+	if cc.CallerType == 0 { // Builtin
+		bi := *cc.Builtin
+		ps.Res = bi.Fn(ps, arg0, arg1, arg2, arg3, arg4)
+	} else { // Function
+		fn := *cc.Function
+		CallFunctionArgsN(fn, ps, nil, arg0, arg1, arg2, arg3, arg4)
+	}
+}
+
 // CALLING BUILTINS
 
 func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft bool, pipeSecond bool, firstVal env.Object) {
@@ -974,6 +1062,9 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 	var arg2 env.Object
 	var arg3 env.Object
 	var arg4 env.Object
+
+	// Removed experiment with currying since Cur fields were removed from Builtin type
+	// end of experiment
 
 	evalExprFn := EvalExpression2
 	curry := false
@@ -1001,11 +1092,8 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 			ps.Res = env.NewError4(0, "argument 1 of "+strconv.Itoa(bi.Argsn)+" missing of builtin: '"+bi.Doc+"'", ps.Res.(*env.Error), nil)
 			return
 		}
-		if ps.Res.Type() == env.VoidType {
-			curry = true
-		} else {
-			arg0 = ps.Res
-		}
+		// The CallCurriedCaller is now created explicitly with partial builtin function
+		arg0 = ps.Res
 	}
 
 	if arg0_ != nil && pipeSecond {
@@ -1021,11 +1109,8 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 			return
 		}
 		//fmt.Println(ps.Res)
-		if ps.Res.Type() == env.VoidType {
-			curry = true
-		} else {
-			arg1 = ps.Res
-		}
+		// The CallCurriedCaller is now created explicitly with partial builtin function
+		arg1 = ps.Res
 	}
 	if bi.Argsn > 2 {
 		evalExprFn(ps, true)
@@ -1037,27 +1122,18 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 			ps.Res = env.NewError4(0, "argument 3 missing", ps.Res.(*env.Error), nil)
 			return
 		}
-		if ps.Res.Type() == env.VoidType {
-			curry = true
-		} else {
-			arg2 = ps.Res
-		}
+		// The CallCurriedCaller is now created explicitly with partial builtin function
+		arg2 = ps.Res
 	}
 	if bi.Argsn > 3 {
 		evalExprFn(ps, true)
-		if ps.Res.Type() == env.VoidType {
-			curry = true
-		} else {
-			arg3 = ps.Res
-		}
+		// The CallCurriedCaller is now created explicitly with partial builtin function
+		arg3 = ps.Res
 	}
 	if bi.Argsn > 4 {
 		evalExprFn(ps, true)
-		if ps.Res.Type() == env.VoidType {
-			curry = true
-		} else {
-			arg4 = ps.Res
-		}
+		// The CallCurriedCaller is now created explicitly with partial builtin function
+		arg4 = ps.Res
 	}
 	/*
 		variadic version
@@ -1068,7 +1144,8 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 		ps.Res = bi.Fn(ps, args...)
 	*/
 	if curry {
-		ps.Res = *env.NewCurriedCallerFromBuiltin(bi, arg0, arg1, arg2, arg3, arg4)
+		// Currying is no longer supported since Cur fields were removed
+		ps.Res = bi.Fn(ps, arg0, arg1, arg2, arg3, arg4)
 	} else {
 		ps.Res = bi.Fn(ps, arg0, arg1, arg2, arg3, arg4)
 	}
@@ -1113,129 +1190,11 @@ func CallVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, arg0_ env.Object, t
 }
 
 func DirectlyCallBuiltin(ps *env.ProgramState, bi env.Builtin, a0 env.Object, a1 env.Object) env.Object {
-	// Direct call without currying
-	return bi.Fn(ps, a0, a1, nil, nil, nil)
-}
-
-// CallCurriedCaller handles calling a CurriedCaller object
-func CallCurriedCaller(cc env.CurriedCaller, ps *env.ProgramState, arg0_ env.Object, toLeft bool, pipeSecond bool, firstVal env.Object) {
-	var arg0 env.Object = cc.Cur0
-	var arg1 env.Object = cc.Cur1
-	var arg2 env.Object = cc.Cur2
-	var arg3 env.Object = cc.Cur3
-	var arg4 env.Object = cc.Cur4
-
-	evalExprFn := EvalExpression2
-	curry := false
-
-	// Process arguments based on what's already curried
-	if arg0_ != nil && !pipeSecond {
-		if arg0 == nil {
-			arg0 = arg0_
-		} else if arg1 == nil {
-			arg1 = arg0_
-		} else if arg2 == nil {
-			arg2 = arg0_
-		} else if arg3 == nil {
-			arg3 = arg0_
-		} else if arg4 == nil {
-			arg4 = arg0_
-		}
-	} else if firstVal != nil && pipeSecond {
-		if arg0 == nil {
-			arg0 = firstVal
-		} else if arg1 == nil {
-			arg1 = firstVal
-		} else if arg2 == nil {
-			arg2 = firstVal
-		} else if arg3 == nil {
-			arg3 = firstVal
-		} else if arg4 == nil {
-			arg4 = firstVal
-		}
-	}
-
-	// Collect any remaining arguments needed
-	if cc.Argsn > 0 && arg0 == nil {
-		evalExprFn(ps, true)
-		if ps.ReturnFlag || ps.ErrorFlag {
-			return
-		}
-		if ps.Res.Type() == env.VoidType {
-			curry = true
-		} else {
-			arg0 = ps.Res
-		}
-	}
-
-	if arg0_ != nil && pipeSecond {
-		if arg1 == nil {
-			arg1 = arg0_
-		} else if arg2 == nil {
-			arg2 = arg0_
-		} else if arg3 == nil {
-			arg3 = arg0_
-		} else if arg4 == nil {
-			arg4 = arg0_
-		}
-	} else if cc.Argsn > 1 && arg1 == nil {
-		evalExprFn(ps, true)
-		if ps.ReturnFlag || ps.ErrorFlag {
-			return
-		}
-		if ps.Res.Type() == env.VoidType {
-			curry = true
-		} else {
-			arg1 = ps.Res
-		}
-	}
-
-	if cc.Argsn > 2 && arg2 == nil {
-		evalExprFn(ps, true)
-		if ps.ReturnFlag || ps.ErrorFlag {
-			return
-		}
-		if ps.Res.Type() == env.VoidType {
-			curry = true
-		} else {
-			arg2 = ps.Res
-		}
-	}
-
-	if cc.Argsn > 3 && arg3 == nil {
-		evalExprFn(ps, true)
-		if ps.Res.Type() == env.VoidType {
-			curry = true
-		} else {
-			arg3 = ps.Res
-		}
-	}
-
-	if cc.Argsn > 4 && arg4 == nil {
-		evalExprFn(ps, true)
-		if ps.Res.Type() == env.VoidType {
-			curry = true
-		} else {
-			arg4 = ps.Res
-		}
-	}
-
-	if curry {
-		// Create a new CurriedCaller with updated arguments
-		if cc.CallerType == 0 {
-			ps.Res = *env.NewCurriedCallerFromBuiltin(*cc.Builtin, arg0, arg1, arg2, arg3, arg4)
-		} else {
-			ps.Res = *env.NewCurriedCallerFromFunction(*cc.Function, arg0, arg1, arg2, arg3, arg4)
-		}
-	} else {
-		// Execute the function with all arguments
-		if cc.CallerType == 0 {
-			ps.Res = cc.Builtin.Fn(ps, arg0, arg1, arg2, arg3, arg4)
-		} else {
-			// Call the function with the arguments
-			CallFunctionArgsN(*cc.Function, ps, nil, arg0, arg1, arg2, arg3, arg4)
-		}
-	}
+	// Since Cur fields were removed from Builtin type, we just use the provided arguments
+	var arg2 env.Object
+	var arg3 env.Object
+	var arg4 env.Object
+	return bi.Fn(ps, a0, a1, arg2, arg3, arg4)
 }
 
 // DISPLAYING FAILURE OR ERRROR
@@ -1310,30 +1269,6 @@ func trace(s string) {
 
 func tryHandleFailure(ps *env.ProgramState) bool {
 	if ps.FailureFlag && !ps.ReturnFlag && !ps.InErrHandler {
-		// Add current code location to the error
-		if err, ok := ps.Res.(*env.Error); ok {
-			// Add source location if available
-			if ps.ScriptPath != "" {
-				values := make(map[string]env.Object)
-				if err.Values != nil {
-					values = err.Values
-				}
-				values["source-file"] = *env.NewString(ps.ScriptPath)
-				err.Values = values
-			}
-
-			// Add code context and block for better debugging
-			err.CodeContext = ps.Ctx
-			// Store the current series position for better error reporting
-			if ps.Ser.Pos() < ps.Ser.Len() {
-				pos := ps.Ser.Pos()
-				if err.Values == nil {
-					err.Values = make(map[string]env.Object)
-				}
-				err.Values["position"] = *env.NewInteger(int64(pos))
-			}
-		}
-
 		if checkContextErrorHandler(ps) {
 			return false // Successfully handled
 		}
@@ -1346,34 +1281,7 @@ func tryHandleFailure(ps *env.ProgramState) bool {
 // ExecuteDeferredBlocks executes all deferred blocks in LIFO order (last in, first out)
 // and clears the deferred blocks list
 func ExecuteDeferredBlocks(ps *env.ProgramState) {
-	// Execute deferred blocks in LIFO order
-	for i := len(ps.DeferBlocks) - 1; i >= 0; i-- {
-		block := ps.DeferBlocks[i]
-
-		// Save current state
-		oldSer := ps.Ser
-		oldRes := ps.Res
-		oldFailureFlag := ps.FailureFlag
-		oldErrorFlag := ps.ErrorFlag
-		oldReturnFlag := ps.ReturnFlag
-
-		// Execute the deferred block
-		ps.Ser = block.Series
-		EvalBlock(ps)
-
-		// Restore state (except for Res if there was no error)
-		ps.Ser = oldSer
-		if ps.ErrorFlag {
-			// If the deferred block had an error, restore the original result
-			ps.Res = oldRes
-		}
-		ps.FailureFlag = oldFailureFlag
-		ps.ErrorFlag = oldErrorFlag
-		ps.ReturnFlag = oldReturnFlag
-	}
-
-	// Clear the deferred blocks
-	ps.DeferBlocks = ps.DeferBlocks[:0]
+	// TODO: Implement deferred block execution
 }
 
 // Remove unused debugging functions

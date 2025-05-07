@@ -374,4 +374,98 @@ var builtins_functions = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	// equal { prepend-star: partial ?concat [ "* " _ ] , prepend-star "hello" } "* hello"
+	// equal { add-5: partial ?add [ _ 5 ] , add-5 10 } 15
+	// equal { fn-add: fn { x y } { x + y } , add-5: partial ?fn-add [ _ 5 ] , add-5 10 } 15
+	// Args:
+	// * func: Function or builtin to partially apply
+	// * args: Block of arguments, with _ (void) for arguments to be filled later
+	// Returns:
+	// * CurriedCaller object that can be called with the remaining arguments
+	"partial": {
+		Argsn: 2,
+		Doc:   "Creates a partially applied function with specified arguments, using _ (void) for arguments to be filled later.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			// Check if first argument is a function or builtin
+			var callerType int
+
+			switch arg0.(type) {
+			case env.Builtin:
+				callerType = 0
+			case env.Function:
+				callerType = 1
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BuiltinType, env.FunctionType}, "partial")
+			}
+
+			// Check if second argument is a block
+			var args []env.Object
+			switch block := arg1.(type) {
+			case env.Block:
+				args = block.Series.GetAll()
+				if len(args) > 5 {
+					ps.FailureFlag = true
+					return env.NewError("partial currently supports up to 5 arguments")
+				}
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "partial")
+			}
+
+			// Extract arguments from the block
+			var cur0, cur1, cur2, cur3, cur4 env.Object
+
+			// Set arguments based on the block contents
+			if len(args) > 0 {
+				if args[0].Type() == env.VoidType {
+					cur0 = nil
+				} else {
+					cur0 = args[0]
+				}
+			}
+
+			if len(args) > 1 {
+				if args[1].Type() == env.VoidType {
+					cur1 = nil
+				} else {
+					cur1 = args[1]
+				}
+			}
+
+			if len(args) > 2 {
+				if args[2].Type() == env.VoidType {
+					cur2 = nil
+				} else {
+					cur2 = args[2]
+				}
+			}
+
+			if len(args) > 3 {
+				if args[3].Type() == env.VoidType {
+					cur3 = nil
+				} else {
+					cur3 = args[3]
+				}
+			}
+
+			if len(args) > 4 {
+				if args[4].Type() == env.VoidType {
+					cur4 = nil
+				} else {
+					cur4 = args[4]
+				}
+			}
+
+			// Create the CurriedCaller based on the function type
+			if callerType == 0 {
+				// Builtin
+				return *env.NewCurriedCallerFromBuiltin(arg0.(env.Builtin), cur0, cur1, cur2, cur3, cur4)
+			} else {
+				// Function
+				return *env.NewCurriedCallerFromFunction(arg0.(env.Function), cur0, cur1, cur2, cur3, cur4)
+			}
+		},
+	},
 }
