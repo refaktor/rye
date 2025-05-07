@@ -218,7 +218,10 @@ var Builtins_regexp = map[string]*env.Builtin{
 				switch s := arg0.(type) {
 				case env.Native:
 					res := s.Value.(*regexp.Regexp).FindString(val.Value)
-					return *env.NewString(res)
+					if len(res) > 0 {
+						return *env.NewString(res)
+					}
+					return MakeBuiltinError(ps, "No result", "match?")
 				default:
 					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "regexp//match?")
 				}

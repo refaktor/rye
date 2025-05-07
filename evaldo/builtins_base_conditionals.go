@@ -95,13 +95,15 @@ var builtins_conditionals = map[string]*env.Builtin{
 						// Set series to action block and evaluate it with the value injected
 						ps.Ser = actionBlock.Series
 						EvalBlockInjMultiDialect(ps, arg0, true)
+					} else {
+						ps.Res = arg0
 					}
 
 					// Restore original series
 					ps.Ser = ser
 
 					// Return the original value regardless of the evaluation result
-					return arg0
+					return ps.Res
 				default:
 					// If the third argument is not a block, return an error
 					ps.FailureFlag = true

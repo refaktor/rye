@@ -21,6 +21,7 @@ require (
 	github.com/blevesearch/bleve_index_api v1.2.8
 	github.com/drewlanenga/govector v0.0.0-20220726163947-b958ac08bc93
 	github.com/fsnotify/fsnotify v1.9.0
+	github.com/fxtlabs/primes v0.0.0-20150821004651-dad82d10a449
 	github.com/gdamore/tcell/v2 v2.8.1
 	github.com/glebarez/sqlite v1.11.0
 	github.com/gliderlabs/ssh v0.3.8

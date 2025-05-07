@@ -16,13 +16,9 @@ import (
 // 									če je builtin potem pusha trenuten frame na stack in kreira novega
 
 func Eyr_CallBuiltinPipe(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object) *env.ProgramState {
-	//arg0 := bi.Cur0     //env.Object(bi.Cur0)
-	//var arg1 env.Object // := bi.Cur1
-	//var arg2 env.Object
-
 	// for now works just with functions that accept block as a first and only argument ... will have to conceptualize other options first
 
-	if bi.Argsn > 0 && bi.Cur0 == nil {
+	if bi.Argsn > 0 {
 		if checkForFailureWithBuiltin(bi, ps, 0) {
 			return ps
 		}
@@ -43,24 +39,21 @@ func Eyr_CallBuiltinPipe(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object)
 }
 
 func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft bool) *env.ProgramState {
-	arg0 := bi.Cur0     //env.Object(bi.Cur0)
-	var arg1 env.Object // := bi.Cur1
+	var arg0 env.Object
+	var arg1 env.Object
 	var arg2 env.Object
 
-	if bi.Argsn == 0 && bi.Cur0 == nil {
+	if bi.Argsn == 0 {
 		if checkForFailureWithBuiltin(bi, ps, 0) {
 			return ps
 		}
 		if ps.ErrorFlag || ps.ReturnFlag {
 			return ps
 		}
-		if bi.Argsn == 0 {
-			// fmt.Println("** CALL BI")
-			ps.Res = bi.Fn(ps, nil, nil, nil, nil, nil)
-			// stack.Push(ps.Res)
-		}
-	}
-	if bi.Argsn > 0 && bi.Cur0 == nil {
+		// fmt.Println("** CALL BI")
+		ps.Res = bi.Fn(ps, nil, nil, nil, nil, nil)
+		// stack.Push(ps.Res)
+	} else if bi.Argsn > 0 {
 		if checkForFailureWithBuiltin(bi, ps, 0) {
 			return ps
 		}
@@ -75,40 +68,38 @@ func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toL
 			// fmt.Println("** CALL BI")
 			ps.Res = bi.Fn(ps, arg0, nil, nil, nil, nil)
 			// stack.Push(ps.Res)
-		}
-	}
-	if bi.Argsn > 1 && bi.Cur1 == nil {
-		if checkForFailureWithBuiltin(bi, ps, 1) {
-			return ps
-		}
-		if ps.ErrorFlag || ps.ReturnFlag {
-			return ps
-		}
+		} else if bi.Argsn > 1 {
+			if checkForFailureWithBuiltin(bi, ps, 1) {
+				return ps
+			}
+			if ps.ErrorFlag || ps.ReturnFlag {
+				return ps
+			}
 
-		arg1 = ps.Stack.Pop(ps)
-		if ps.ErrorFlag {
-			return ps
-		}
-		if bi.Argsn == 2 {
-			ps.Res = bi.Fn(ps, arg1, arg0, nil, nil, nil)
-			// stack.Push(ps.Res)
-		}
-	}
-	if bi.Argsn > 2 && bi.Cur2 == nil {
-		if checkForFailureWithBuiltin(bi, ps, 0) {
-			return ps
-		}
-		if ps.ErrorFlag || ps.ReturnFlag {
-			return ps
-		}
+			arg1 = ps.Stack.Pop(ps)
+			if ps.ErrorFlag {
+				return ps
+			}
+			if bi.Argsn == 2 {
+				ps.Res = bi.Fn(ps, arg1, arg0, nil, nil, nil)
+				// stack.Push(ps.Res)
+			} else if bi.Argsn > 2 {
+				if checkForFailureWithBuiltin(bi, ps, 0) {
+					return ps
+				}
+				if ps.ErrorFlag || ps.ReturnFlag {
+					return ps
+				}
 
-		arg2 = ps.Stack.Pop(ps)
-		if ps.ErrorFlag {
-			return ps
-		}
-		if bi.Argsn == 3 {
-			ps.Res = bi.Fn(ps, arg2, arg1, arg0, nil, nil)
-			//stack.Push(ps.Res)
+				arg2 = ps.Stack.Pop(ps)
+				if ps.ErrorFlag {
+					return ps
+				}
+				if bi.Argsn == 3 {
+					ps.Res = bi.Fn(ps, arg2, arg1, arg0, nil, nil)
+					//stack.Push(ps.Res)
+				}
+			}
 		}
 	}
 	return ps

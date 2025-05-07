@@ -327,6 +327,9 @@ func EvalExpressionConcrete(ps *env.ProgramState) {
 	case env.VarBuiltinType:
 		CallVarBuiltin(object.(env.VarBuiltin), ps, nil, false, false, nil)
 		return
+	case env.CurriedCallerType:
+		CallCurriedCaller(object.(env.CurriedCaller), ps, nil, false, false, nil)
+		return
 	// case env.FunctionType: // works just for regular words ... as function
 	// 	CallFunction(object.(env.Function), ps, nil, false, nil)
 	case env.GenwordType:
@@ -505,11 +508,14 @@ func EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toL
 		return
 	case env.VarBuiltinType:
 		bu := object.(env.VarBuiltin)
-
 		if checkForFailureWithVarBuiltin(bu, ps, 333) {
 			return
 		}
 		CallVarBuiltin(bu, ps, leftVal, toLeft, pipeSecond, firstVal)
+		return
+	case env.CurriedCallerType:
+		cc := object.(env.CurriedCaller)
+		CallCurriedCaller(cc, ps, leftVal, toLeft, pipeSecond, firstVal)
 		return
 	default:
 		ps.Res = object
@@ -677,6 +683,7 @@ func CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, toLeft
 		if ps.ReturnFlag || ps.ErrorFlag {
 			return
 		}
+		// The createcurriedcaller is now created explicitly with partial builtin function
 		index := fn.Spec.Series.Get(i).(env.Word).Index
 		fnCtx.Set(index, ps.Res)
 		if i == 0 {
@@ -874,10 +881,17 @@ func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, a
 	if ps.ReturnFlag || ps.ErrorFlag {
 		return
 	}
-	for i, arg := range args {
-		index := fn.Spec.Series.Get(i).(env.Word).Index
+
+	for i, argWord := range fn.Spec.Series.S {
+		index := argWord.(env.Word).Index
+		arg := args[i]
 		fnCtx.Set(index, arg)
 	}
+	/* for i, arg := range args {
+		index := fn.Spec.Series.Get(i).(env.Word).Index
+		fnCtx.Set(index, arg)
+	}*/
+
 	// TRY
 	psX := env.NewProgramState(fn.Body.Series, ps.Idx)
 	psX.Ctx = fnCtx
@@ -951,6 +965,86 @@ func DetermineContext(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx) *e
 	return fnCtx
 }
 
+// CallCurriedCaller handles calling a curried caller
+func CallCurriedCaller(cc env.CurriedCaller, ps *env.ProgramState, arg0_ env.Object, toLeft bool, pipeSecond bool, firstVal env.Object) {
+	// Initialize arguments with curried values if available
+	var arg0 env.Object = cc.Cur0
+	var arg1 env.Object = cc.Cur1
+	var arg2 env.Object = cc.Cur2
+	var arg3 env.Object = cc.Cur3
+	var arg4 env.Object = cc.Cur4
+
+	// Determine the number of arguments needed
+	var argsn int
+	if cc.CallerType == 0 { // Builtin
+		argsn = cc.Builtin.Argsn
+	} else { // Function
+		argsn = cc.Function.Argsn
+	}
+
+	evalExprFn := EvalExpression2
+
+	// Handle arg0 - override with provided arg if available
+	if arg0_ != nil && !pipeSecond {
+		arg0 = arg0_
+	} else if firstVal != nil && pipeSecond {
+		arg0 = firstVal
+	} else if arg0 == nil && argsn > 0 {
+		// Only evaluate if we don't have a curried value
+		evalExprFn(ps, true)
+		if ps.ReturnFlag || ps.ErrorFlag {
+			return
+		}
+		arg0 = ps.Res
+	}
+
+	// Handle arg1
+	if arg0_ != nil && pipeSecond {
+		arg1 = arg0_
+	} else if arg1 == nil && argsn > 1 {
+		// Only evaluate if we don't have a curried value
+		evalExprFn(ps, true)
+		if ps.ReturnFlag || ps.ErrorFlag {
+			return
+		}
+		arg1 = ps.Res
+	}
+
+	// Handle remaining arguments - only evaluate if not curried
+	if arg2 == nil && argsn > 2 {
+		evalExprFn(ps, true)
+		if ps.ReturnFlag || ps.ErrorFlag {
+			return
+		}
+		arg2 = ps.Res
+	}
+
+	if arg3 == nil && argsn > 3 {
+		evalExprFn(ps, true)
+		if ps.ReturnFlag || ps.ErrorFlag {
+			return
+		}
+		arg3 = ps.Res
+	}
+
+	if arg4 == nil && argsn > 4 {
+		evalExprFn(ps, true)
+		if ps.ReturnFlag || ps.ErrorFlag {
+			return
+		}
+		arg4 = ps.Res
+	}
+
+	// Call the appropriate function based on caller type
+	if cc.CallerType == 0 { // Builtin
+		bi := *cc.Builtin
+		ps.Res = bi.Fn(ps, arg0, arg1, arg2, arg3, arg4)
+	} else { // Function
+		fn := *cc.Function
+		CallFunctionArgsN(fn, ps, nil, arg0, arg1, arg2, arg3, arg4)
+	}
+}
+
 // CALLING BUILTINS
 
 func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft bool, pipeSecond bool, firstVal env.Object) {
@@ -963,26 +1057,13 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 	ps.Ser.SetPos(pospos)*/
 
 	// let's try to make it without array allocation and without variadic arguments that also maybe actualizes splice
-	arg0 := bi.Cur0 //env.Object(bi.Cur0)
-	arg1 := bi.Cur1
-	arg2 := bi.Cur2
-	arg3 := bi.Cur3
-	arg4 := bi.Cur4
+	var arg0 env.Object
+	var arg1 env.Object
+	var arg2 env.Object
+	var arg3 env.Object
+	var arg4 env.Object
 
-	// This is just experiment if we could at currying provide ?fn or ?builtin and
-	// with arity of 0 and it would get executed at call time. So closure would become
-	// closure: fnc _ ?current-context _
-	// this is maybe only useful to provide sort of dynamic constant to a curried
-	// probably not worth the special case but here for exploration for now just
-	// on arg1 . In case of arg being function this would not bind curry to static
-	// value but to a result of a function, which would let us inject some context
-	// bound dynamic value
-	// ... we will see ...
-	if bi.Cur1 != nil && bi.Cur1.Type() == env.BuiltinType {
-		if bi.Cur1.(env.Builtin).Argsn == 0 {
-			arg1 = DirectlyCallBuiltin(ps, bi.Cur1.(env.Builtin), nil, nil)
-		}
-	}
+	// Removed experiment with currying since Cur fields were removed from Builtin type
 	// end of experiment
 
 	evalExprFn := EvalExpression2
@@ -999,7 +1080,7 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 		// }
 	} else if firstVal != nil && pipeSecond {
 		arg0 = firstVal
-	} else if bi.Argsn > 0 && bi.Cur0 == nil {
+	} else if bi.Argsn > 0 {
 		//fmt.Println(" ARG 1 ")
 		//fmt.Println(ps.Ser.GetPos())
 		evalExprFn(ps, true)
@@ -1011,16 +1092,13 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 			ps.Res = env.NewError4(0, "argument 1 of "+strconv.Itoa(bi.Argsn)+" missing of builtin: '"+bi.Doc+"'", ps.Res.(*env.Error), nil)
 			return
 		}
-		if ps.Res.Type() == env.VoidType {
-			curry = true
-		} else {
-			arg0 = ps.Res
-		}
+		// The CallCurriedCaller is now created explicitly with partial builtin function
+		arg0 = ps.Res
 	}
 
 	if arg0_ != nil && pipeSecond {
 		arg1 = arg0_
-	} else if bi.Argsn > 1 && bi.Cur1 == nil {
+	} else if bi.Argsn > 1 {
 		evalExprFn(ps, true) // <---- THESE DETERMINE IF IT CONSUMES WHOLE EXPRESSION OR NOT IN CASE OF PIPEWORDS .. HM*... MAYBE WOULD COULD HAVE A WORD MODIFIER?? a: 2 |add 5 a:: 2 |add 5 print* --TODO
 
 		if checkForFailureWithBuiltin(bi, ps, 1) {
@@ -1031,11 +1109,8 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 			return
 		}
 		//fmt.Println(ps.Res)
-		if ps.Res.Type() == env.VoidType {
-			curry = true
-		} else {
-			arg1 = ps.Res
-		}
+		// The CallCurriedCaller is now created explicitly with partial builtin function
+		arg1 = ps.Res
 	}
 	if bi.Argsn > 2 {
 		evalExprFn(ps, true)
@@ -1047,27 +1122,18 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 			ps.Res = env.NewError4(0, "argument 3 missing", ps.Res.(*env.Error), nil)
 			return
 		}
-		if ps.Res.Type() == env.VoidType {
-			curry = true
-		} else {
-			arg2 = ps.Res
-		}
+		// The CallCurriedCaller is now created explicitly with partial builtin function
+		arg2 = ps.Res
 	}
 	if bi.Argsn > 3 {
 		evalExprFn(ps, true)
-		if ps.Res.Type() == env.VoidType {
-			curry = true
-		} else {
-			arg3 = ps.Res
-		}
+		// The CallCurriedCaller is now created explicitly with partial builtin function
+		arg3 = ps.Res
 	}
 	if bi.Argsn > 4 {
 		evalExprFn(ps, true)
-		if ps.Res.Type() == env.VoidType {
-			curry = true
-		} else {
-			arg4 = ps.Res
-		}
+		// The CallCurriedCaller is now created explicitly with partial builtin function
+		arg4 = ps.Res
 	}
 	/*
 		variadic version
@@ -1078,12 +1144,8 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 		ps.Res = bi.Fn(ps, args...)
 	*/
 	if curry {
-		bi.Cur0 = arg0
-		bi.Cur1 = arg1
-		bi.Cur2 = arg2
-		bi.Cur3 = arg3
-		bi.Cur4 = arg4
-		ps.Res = bi
+		// Currying is no longer supported since Cur fields were removed
+		ps.Res = bi.Fn(ps, arg0, arg1, arg2, arg3, arg4)
 	} else {
 		ps.Res = bi.Fn(ps, arg0, arg1, arg2, arg3, arg4)
 	}
@@ -1128,32 +1190,11 @@ func CallVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, arg0_ env.Object, t
 }
 
 func DirectlyCallBuiltin(ps *env.ProgramState, bi env.Builtin, a0 env.Object, a1 env.Object) env.Object {
-	// let's try to make it without array allocation and without variadic arguments that also maybe actualizes splice
-	// up to 2 curried variables and 2 in caller
-	// examples:
-	// 	map { 1 2 3 } add _ 10
-	var arg0 env.Object
-	var arg1 env.Object
-
-	if bi.Cur0 != nil {
-		arg0 = bi.Cur0
-		if bi.Cur1 != nil {
-			arg1 = bi.Cur1
-		} else {
-			arg1 = a0
-		}
-	} else {
-		arg0 = a0
-		if bi.Cur1 != nil {
-			arg1 = bi.Cur1
-		} else {
-			arg1 = a1
-		}
-	}
-	arg2 := bi.Cur2
-	arg3 := bi.Cur3
-	arg4 := bi.Cur4
-	return bi.Fn(ps, arg0, arg1, arg2, arg3, arg4)
+	// Since Cur fields were removed from Builtin type, we just use the provided arguments
+	var arg2 env.Object
+	var arg3 env.Object
+	var arg4 env.Object
+	return bi.Fn(ps, a0, a1, arg2, arg3, arg4)
 }
 
 // DISPLAYING FAILURE OR ERRROR

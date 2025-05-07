@@ -15,10 +15,10 @@ import (
 
 func Stck_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft bool) *env.ProgramState {
 	evalExprFn := EvalExpression2
-	arg0 := bi.Cur0 //env.Object(bi.Cur0)
-	arg1 := bi.Cur1
+	var arg0 env.Object
+	var arg1 env.Object
 
-	if bi.Argsn > 0 && bi.Cur0 == nil {
+	if bi.Argsn > 0 {
 		//fmt.Println(" ARG 1 ")
 		//fmt.Println(ps.Ser.GetPos())
 		evalExprFn(ps, true)
@@ -31,7 +31,7 @@ func Stck_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, to
 		}
 		arg0 = ps.Res
 	}
-	if bi.Argsn > 1 && bi.Cur1 == nil {
+	if bi.Argsn > 1 {
 		evalExprFn(ps, true) // <---- THESE DETERMINE IF IT CONSUMES WHOLE EXPRESSION OR NOT IN CASE OF PIPEWORDS .. HM*... MAYBE WOULD COULD HAVE A WORD MODIFIER?? a: 2 |add 5 a:: 2 |add 5 print* --TODO
 
 		if checkForFailureWithBuiltin(bi, ps, 1) {
@@ -67,6 +67,10 @@ func Stck_EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object
 
 		//ps.Res.Trace("After builtin call")
 		//return ps
+	case env.CurriedCallerType:
+		cc := object.(env.CurriedCaller)
+		CallCurriedCaller(cc, ps, leftVal, toLeft, false, nil)
+		return ps
 	default:
 		//d object.Trace("DEFAULT**")
 		ps.Res = object

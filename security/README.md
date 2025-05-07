@@ -23,7 +23,7 @@ Landlock is a Linux kernel feature that provides filesystem access control. This
 - `landlock.go`: Implementation of landlock filesystem access control for Rye
 - `landlock_stub.go`: Stub implementation for non-Linux systems
 - `landlock_README.md`: Documentation for landlock functionality
-- `test_landlock.rye`: Test script for landlock functionality
+- `test_landlock_comprehensive.rye`: Comprehensive test script for landlock functionality
 
 Landlock profiles:
 - `readonly`: Allows read-only access to specified paths
@@ -35,11 +35,23 @@ Landlock profiles:
 Code signing provides a way to verify that Rye scripts have not been tampered with and come from trusted sources. This package provides:
 
 - `codesig.go`: Implementation of code signature verification for Rye
+- `test_codesig_comprehensive.rye`: Comprehensive test script for code signing verification
 
 Code signing features:
 - Verification of Ed25519 signatures in Rye scripts
 - Loading trusted public keys from a `.codepks` file
 - Integration with the loader package for script verification
+
+### Testing Framework
+
+This package includes a comprehensive testing framework for all security features:
+
+- `test_landlock_comprehensive.rye`: Tests for Landlock filesystem access control
+- `test_seccomp_comprehensive.rye`: Tests for Seccomp system call filtering
+- `test_codesig_comprehensive.rye`: Tests for code signing verification
+- `TESTING.md`: Documentation for the security testing framework
+
+See `TESTING.md` for details on how to run the tests and what they cover.
 
 ## Usage
 

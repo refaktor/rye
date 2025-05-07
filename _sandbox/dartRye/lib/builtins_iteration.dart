@@ -1,8 +1,10 @@
 // builtins_iteration.dart - Iteration builtins for the Dart implementation of Rye
 
-import 'rye.dart';
-import 'types.dart';
-import 'builtins_conditionals.dart'; // For isTruthy function
+import 'env.dart' show ProgramState; // Import ProgramState
+// Import specific types needed from types.dart
+import 'types.dart' show RyeObject, Error, Block, RyeList, RyeString, RyeDict, Integer, Builtin, TSeries; // Import TSeries from types.dart
+import 'evaldo.dart' show evalBlockInj; // Import the correct evaluator function
+import 'builtins_conditionals.dart' show isTruthy; // For isTruthy function
 
 // Implements the "for" builtin function
 RyeObject forBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObject? arg2, RyeObject? arg3, RyeObject? arg4) {
@@ -30,7 +32,7 @@ RyeObject forBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObjec
         ps.ser.reset();
         
         // Evaluate the action block with the current item injected
-        rye00_evalBlockInj(ps, item, true);
+        evalBlockInj(ps, item, true); // Use evalBlockInj
         
         // Check for errors or return flag
         if (ps.errorFlag || ps.returnFlag) {
@@ -40,8 +42,9 @@ RyeObject forBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObjec
       }
     } else if (arg0 is RyeList) {
       // Iterate over each item in the list
-      for (int i = 0; i < arg0.items.length; i++) {
-        RyeObject item = arg0.items[i];
+      for (int i = 0; i < arg0.value.length; i++) { // Use .value instead of .items
+        RyeObject? item = arg0.value[i]; // Use .value instead of .items
+        if (item == null) continue; // Handle potential null items
         
         // Set series to the action block's series
         ps.ser = arg1.series;
@@ -50,7 +53,7 @@ RyeObject forBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObjec
         ps.ser.reset();
         
         // Evaluate the action block with the current item injected
-        rye00_evalBlockInj(ps, item, true);
+        evalBlockInj(ps, item, true); // Use evalBlockInj
         
         // Check for errors or return flag
         if (ps.errorFlag || ps.returnFlag) {
@@ -70,7 +73,7 @@ RyeObject forBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObjec
         ps.ser.reset();
         
         // Evaluate the action block with the current character injected
-        rye00_evalBlockInj(ps, item, true);
+        evalBlockInj(ps, item, true); // Use evalBlockInj
         
         // Check for errors or return flag
         if (ps.errorFlag || ps.returnFlag) {
@@ -80,7 +83,7 @@ RyeObject forBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObjec
       }
     } else if (arg0 is RyeDict) {
       // Iterate over each key in the dictionary
-      for (String key in arg0.entries.keys) {
+      for (String key in arg0.value.keys) { // Use .value instead of .entries
         RyeObject item = RyeString(key);
         
         // Set series to the action block's series
@@ -90,7 +93,7 @@ RyeObject forBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObjec
         ps.ser.reset();
         
         // Evaluate the action block with the current key injected
-        rye00_evalBlockInj(ps, item, true);
+        evalBlockInj(ps, item, true); // Use evalBlockInj
         
         // Check for errors or return flag
         if (ps.errorFlag || ps.returnFlag) {
@@ -137,7 +140,7 @@ RyeObject foreverBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeO
       ps.ser.reset();
       
       // Evaluate the block with the current iteration number injected
-      rye00_evalBlockInj(ps, Integer(i), true);
+      evalBlockInj(ps, Integer(i), true); // Use evalBlockInj
       
       // Check for errors
       if (ps.errorFlag) {
@@ -185,7 +188,7 @@ RyeObject foreverWithBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, 
       ps.ser.reset();
       
       // Evaluate the block with the value injected
-      rye00_evalBlockInj(ps, arg0, true);
+      evalBlockInj(ps, arg0, true); // Use evalBlockInj
       
       // Check for errors
       if (ps.errorFlag) {
@@ -241,7 +244,7 @@ RyeObject mapBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObjec
         ps.ser.reset();
         
         // Evaluate the mapping block with the current item injected
-        rye00_evalBlockInj(ps, item, true);
+        evalBlockInj(ps, item, true); // Use evalBlockInj
         
         // Check for errors
         if (ps.errorFlag) {
@@ -262,8 +265,9 @@ RyeObject mapBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObjec
       List<RyeObject> mappedItems = [];
       
       // Map each item in the list
-      for (int i = 0; i < arg0.items.length; i++) {
-        RyeObject item = arg0.items[i];
+      for (int i = 0; i < arg0.value.length; i++) { // Use .value instead of .items
+        RyeObject? item = arg0.value[i]; // Use .value instead of .items
+        if (item == null) continue; // Handle potential null items
         
         // Set series to the mapping block's series
         ps.ser = arg1.series;
@@ -272,7 +276,7 @@ RyeObject mapBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObjec
         ps.ser.reset();
         
         // Evaluate the mapping block with the current item injected
-        rye00_evalBlockInj(ps, item, true);
+        evalBlockInj(ps, item, true); // Use evalBlockInj
         
         // Check for errors
         if (ps.errorFlag) {
@@ -303,7 +307,7 @@ RyeObject mapBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeObjec
         ps.ser.reset();
         
         // Evaluate the mapping block with the current character injected
-        rye00_evalBlockInj(ps, item, true);
+        evalBlockInj(ps, item, true); // Use evalBlockInj
         
         // Check for errors
         if (ps.errorFlag) {
@@ -360,7 +364,7 @@ RyeObject filterBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeOb
         ps.ser.reset();
         
         // Evaluate the filter block with the current item injected
-        rye00_evalBlockInj(ps, item, true);
+        evalBlockInj(ps, item, true); // Use evalBlockInj
         
         // Check for errors
         if (ps.errorFlag) {
@@ -381,9 +385,10 @@ RyeObject filterBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeOb
       List<RyeObject> filteredItems = [];
       
       // Filter each item in the list
-      for (int i = 0; i < arg0.items.length; i++) {
-        RyeObject item = arg0.items[i];
-        
+      for (int i = 0; i < arg0.value.length; i++) { // Use .value instead of .items
+        RyeObject? item = arg0.value[i]; // Use .value instead of .items
+         if (item == null) continue; // Handle potential null items
+
         // Set series to the filter block's series
         ps.ser = arg1.series;
         
@@ -391,7 +396,7 @@ RyeObject filterBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeOb
         ps.ser.reset();
         
         // Evaluate the filter block with the current item injected
-        rye00_evalBlockInj(ps, item, true);
+        evalBlockInj(ps, item, true); // Use evalBlockInj
         
         // Check for errors
         if (ps.errorFlag) {
@@ -422,7 +427,7 @@ RyeObject filterBuiltin(ProgramState ps, RyeObject? arg0, RyeObject? arg1, RyeOb
         ps.ser.reset();
         
         // Evaluate the filter block with the current character injected
-        rye00_evalBlockInj(ps, item, true);
+        evalBlockInj(ps, item, true); // Use evalBlockInj
         
         // Check for errors
         if (ps.errorFlag) {
