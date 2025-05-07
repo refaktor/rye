@@ -68,16 +68,6 @@ For more examples and interactive demos, visit [ryelang.org/meet_rye/](https://r
    go version
    ```
 
-2. For packages requiring cgo (like SQLite):
-   ```bash
-   # For Debian/Ubuntu
-   sudo apt install build-essential
-   # For macOS
-   xcode-select --install
-   # For Windows
-   # Install MinGW or MSYS2
-   ```
-
 ### Clone and Build
 
 1. Clone the repository:
@@ -128,11 +118,11 @@ GOOS=js GOARCH=wasm go build -tags "b_tiny" -o wasm/rye.wasm main_wasm.go
 ### Running Tests
 
 ```bash
-cd tests
-../bin/rye main.rye test
+cd info
+../bin/rye . test
 
 # Generate function reference
-../bin/rye main.rye doc
+../bin/rye . doc
 ```
 
 ## Getting Rye (Pre-built)
