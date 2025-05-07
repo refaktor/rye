@@ -151,23 +151,10 @@ func Rye00_EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Objec
 // Rye00_CallBuiltin calls a builtin function.
 // Optimized version that focuses on performance.
 func Rye00_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft bool, pipeSecond bool, firstVal env.Object) {
-	// Fast path: If all arguments are already available (curried), call directly
-	if (bi.Argsn == 0) ||
-		(bi.Argsn == 1 && bi.Cur0 != nil) ||
-		(bi.Argsn == 2 && bi.Cur0 != nil && bi.Cur1 != nil) {
-		ps.Res = bi.Fn(ps, bi.Cur0, bi.Cur1, bi.Cur2, bi.Cur3, bi.Cur4)
-		return
-	}
+	var arg0, arg1, arg2, arg3, arg4 env.Object
 
-	// Initialize arguments with curried values
-	arg0 := bi.Cur0
-	arg1 := bi.Cur1
-	arg2 := bi.Cur2
-	arg3 := bi.Cur3
-	arg4 := bi.Cur4
-
-	// Process first argument if needed
-	if bi.Argsn > 0 && bi.Cur0 == nil {
+	// Process arguments based on the builtin's requirements
+	if bi.Argsn > 0 {
 		// Direct call to avoid function pointer indirection
 		Rye00_EvalExpressionConcrete(ps)
 
@@ -189,7 +176,7 @@ func Rye00_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, t
 	}
 
 	// Process second argument if needed
-	if bi.Argsn > 1 && bi.Cur1 == nil {
+	if bi.Argsn > 1 {
 		Rye00_EvalExpressionConcrete(ps)
 
 		// Inline error checking for speed
@@ -210,7 +197,7 @@ func Rye00_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, t
 	}
 
 	// Process third argument if needed
-	if bi.Argsn > 2 && bi.Cur2 == nil {
+	if bi.Argsn > 2 {
 		Rye00_EvalExpressionConcrete(ps)
 
 		// Inline error checking for speed
@@ -231,12 +218,12 @@ func Rye00_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, t
 	}
 
 	// Process remaining arguments with minimal error checking
-	if bi.Argsn > 3 && bi.Cur3 == nil {
+	if bi.Argsn > 3 {
 		Rye00_EvalExpressionConcrete(ps)
 		arg3 = ps.Res
 	}
 
-	if bi.Argsn > 4 && bi.Cur4 == nil {
+	if bi.Argsn > 4 {
 		Rye00_EvalExpressionConcrete(ps)
 		arg4 = ps.Res
 	}

@@ -14,47 +14,48 @@ import (
 type Type int
 
 const (
-	BlockType      Type = 1
-	IntegerType    Type = 2
-	WordType       Type = 3
-	SetwordType    Type = 4
-	OpwordType     Type = 5
-	PipewordType   Type = 6
-	BuiltinType    Type = 7
-	FunctionType   Type = 8
-	ErrorType      Type = 9
-	CommaType      Type = 10
-	VoidType       Type = 11
-	StringType     Type = 12
-	TagwordType    Type = 13
-	GenwordType    Type = 14
-	GetwordType    Type = 15
-	ArgwordType    Type = 16
-	NativeType     Type = 17
-	UriType        Type = 18
-	LSetwordType   Type = 19
-	CtxType        Type = 20
-	DictType       Type = 21
-	ListType       Type = 22
-	DateType       Type = 23
-	CPathType      Type = 24
-	XwordType      Type = 25
-	EXwordType     Type = 26
-	TableType      Type = 27
-	EmailType      Type = 28
-	KindType       Type = 29
-	KindwordType   Type = 30
-	ConverterType  Type = 31
-	TimeType       Type = 32
-	TableRowType   Type = 33
-	DecimalType    Type = 34
-	VectorType     Type = 35
-	OpCPathType    Type = 36
-	PipeCPathType  Type = 37
-	ModwordType    Type = 38
-	LModwordType   Type = 39
-	BooleanType    Type = 40
-	VarBuiltinType Type = 41
+	BlockType         Type = 1
+	IntegerType       Type = 2
+	WordType          Type = 3
+	SetwordType       Type = 4
+	OpwordType        Type = 5
+	PipewordType      Type = 6
+	BuiltinType       Type = 7
+	FunctionType      Type = 8
+	ErrorType         Type = 9
+	CommaType         Type = 10
+	VoidType          Type = 11
+	StringType        Type = 12
+	TagwordType       Type = 13
+	GenwordType       Type = 14
+	GetwordType       Type = 15
+	ArgwordType       Type = 16
+	NativeType        Type = 17
+	UriType           Type = 18
+	LSetwordType      Type = 19
+	CtxType           Type = 20
+	DictType          Type = 21
+	ListType          Type = 22
+	DateType          Type = 23
+	CPathType         Type = 24
+	XwordType         Type = 25
+	EXwordType        Type = 26
+	TableType         Type = 27
+	EmailType         Type = 28
+	KindType          Type = 29
+	KindwordType      Type = 30
+	ConverterType     Type = 31
+	TimeType          Type = 32
+	TableRowType      Type = 33
+	DecimalType       Type = 34
+	VectorType        Type = 35
+	OpCPathType       Type = 36
+	PipeCPathType     Type = 37
+	ModwordType       Type = 38
+	LModwordType      Type = 39
+	BooleanType       Type = 40
+	VarBuiltinType    Type = 41
+	CurriedCallerType Type = 42
 )
 
 // after adding new type here, also add string to idxs.go
@@ -1465,18 +1466,13 @@ type BuiltinFunction func(ps *ProgramState, arg0 Object, arg1 Object, arg2 Objec
 type Builtin struct {
 	Fn            BuiltinFunction
 	Argsn         int
-	Cur0          Object
-	Cur1          Object
-	Cur2          Object
-	Cur3          Object
-	Cur4          Object
 	AcceptFailure bool
 	Pure          bool
 	Doc           string
 }
 
 func NewBuiltin(fn BuiltinFunction, argsn int, acceptFailure bool, pure bool, doc string) *Builtin {
-	bl := Builtin{fn, argsn, nil, nil, nil, nil, nil, acceptFailure, pure, doc}
+	bl := Builtin{fn, argsn, acceptFailure, pure, doc}
 	return &bl
 }
 
@@ -1493,11 +1489,11 @@ func (b Builtin) Print(e Idxs) string {
 	if b.Pure {
 		pure = "Pure "
 	}
-	return pure + "BFunction(" + strconv.Itoa(b.Argsn) + "): " + b.Doc
+	return pure + "Builtin(" + strconv.Itoa(b.Argsn) + "): " + b.Doc
 }
 
 func (i Builtin) Trace(msg string) {
-	fmt.Print(msg + " (bfunction): ")
+	fmt.Print(msg + " (builtin): ")
 	fmt.Println(i.Argsn)
 }
 
@@ -1511,21 +1507,6 @@ func (i Builtin) Equal(o Object) bool {
 	}
 	oBuiltin := o.(Builtin)
 	if i.Argsn != oBuiltin.Argsn {
-		return false
-	}
-	if i.Cur0 != oBuiltin.Cur0 {
-		return false
-	}
-	if i.Cur1 != oBuiltin.Cur1 {
-		return false
-	}
-	if i.Cur2 != oBuiltin.Cur2 {
-		return false
-	}
-	if i.Cur3 != oBuiltin.Cur3 {
-		return false
-	}
-	if i.Cur4 != oBuiltin.Cur4 {
 		return false
 	}
 	if i.AcceptFailure != oBuiltin.AcceptFailure {
@@ -2556,11 +2537,11 @@ func (b VarBuiltin) Print(e Idxs) string {
 	if b.Pure {
 		pure = "Pure "
 	}
-	return pure + "VarBFunction(" + strconv.Itoa(b.Argsn) + "): " + b.Doc
+	return pure + "Varbuiltin(" + strconv.Itoa(b.Argsn) + "): " + b.Doc
 }
 
 func (i VarBuiltin) Trace(msg string) {
-	fmt.Print(msg + " (varbfunction): ")
+	fmt.Print(msg + " (varbuiltin): ")
 	fmt.Println(i.Argsn)
 }
 

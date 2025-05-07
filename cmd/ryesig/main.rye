@@ -1,0 +1,391 @@
+; ryesig - Rye Script Signing Tool
+; A command-line tool for signing and verifying Rye scripts using Ed25519 signatures
+
+; Import required modules
+; import %builtins:error-handling
+; import %builtins:crypto
+
+; Define version
+VERSION: "0.0.1"
+
+; Print usage information
+print-usage: fn { } {
+    {
+        "ryesig - Rye Script Signing Tool v" VERSION
+        "Usage: rye cmd/ryesig/main.rye [options] [script-path]"
+        ""
+        "Options:"
+        "  --help, -h                  Show this help message"
+        "  --generate, -g [path]       Generate a new Ed25519 key pair and save to [path]"
+        "  --sign, -s [key-path]       Sign the script at [script-path] using the private key at [key-path]"
+        "  --verify, -v [key-path]     Verify the script at [script-path] using the public key at [key-path]"
+        "  --check, -c                 Check if the script at [script-path] has a valid signature"
+        "  --output, -o [path]         Output path for generated files (default: same as input)"
+        "  --force, -f                 Force overwrite of existing files"
+        ""
+        "Examples:"
+        "  # Generate a new key pair"
+        "  rye cmd/ryesig/main.rye --generate keys"
+        ""
+        "  # Sign a script"
+        "  rye cmd/ryesig/main.rye --sign keys.priv script.rye"
+        ""
+        "  # Verify a script"
+        "  rye cmd/ryesig/main.rye --verify keys.pub script.rye"
+        ""
+        "  # Check if a script has a valid signature"
+        "  rye cmd/ryesig/main.rye --check script.rye"
+    } .for { .print }
+}
+
+; Generate a new Ed25519 key pair
+generate-keys: fn { output-path force } {
+    print "Generating new Ed25519 key pair..."
+    
+    ; Generate the key pair
+    keys: ed25519-generate-keys
+    pub-key: keys |first
+    priv-key: keys |second
+    
+    ; Convert keys to hex format
+    pub-hex: pub-key |encode-to\hex
+    priv-hex: priv-key |encode-to\hex
+    
+    ; Create output paths
+    pub-path: output-path + ".pub"
+    priv-path: output-path + ".priv"
+    
+    ; Check if files already exist
+    if (not force) and (file-exists? pub-path or file-exists? priv-path) {
+        print "Error: Output files already exist. Use --force to overwrite."
+        return false
+    }
+    
+    ; Write keys to files
+    file-write pub-path pub-hex
+    file-write priv-path priv-hex
+    
+    print2 "Public key written to: " pub-path
+    print2 "Private key written to: " priv-path
+    print2 "Public key: " pub-hex
+    
+    true
+}
+
+; Sign a script with a private key
+sign-script: fn { script-path key-path force } {
+    print2 "Signing script: " script-path
+    
+    ; Check if script exists
+    if not file-exists? script-path {
+        print2 "Error: Script file not found: " script-path
+        return false
+    }
+    
+    ; Check if key exists
+    if not file-exists? key-path {
+        print2 "Error: Private key file not found: " key-path
+        return false
+    }
+    
+    ; Read the script content
+    script-content: file-read script-path
+    
+    ; Remove any existing signature
+    script-content: remove-signature script-content
+    
+    ; Read the private key
+    priv-hex: file-read key-path |trim
+    priv-key: priv-hex |decode-from\hex
+    
+    ; Sign the script content
+    signature: script-content priv-key |ed25519-sign |encode-to\hex
+    
+    ; Add the signature to the script
+    new-content: script-content + "\n;ryesig " + signature
+    
+    ; Write the signed script
+    file-write script-path new-content
+    
+    print "Script signed successfully."
+    print2 "Signature: " signature
+    
+    true
+}
+
+; Verify a script with a public key
+verify-script: fn { script-path key-path } {
+    print2 "Verifying script: " script-path
+    
+    ; Check if script exists
+    if not file-exists? script-path {
+        print2 "Error: Script file not found: " script-path
+        return false
+    }
+    
+    ; Check if key exists
+    if not file-exists? key-path {
+        print2 "Error: Public key file not found: " key-path
+        return false
+    }
+    
+    ; Read the script content
+    script-content: file-read script-path
+    
+    ; Extract the signature
+    result: extract-signature script-content
+    if result |first = false {
+        print2 "Error: No signature found in script."
+        return false
+    }
+    
+    content: result |second
+    signature-hex: result |third
+    
+    ; Read the public key
+    pub-hex: file-read key-path |trim
+    pub-key: pub-hex |decode-from\hex
+    
+    ; Verify the signature
+    signature: signature-hex |decode-from\hex
+    is-valid: content signature pub-key |ed25519-verify
+    
+    if is-valid {
+        print "Signature is valid."
+    } else {
+        print "Signature is invalid."
+    }
+    
+    is-valid
+}
+
+; Check if a script has a valid signature
+check-script: fn { script-path } {
+    print2 "Checking script signature: " script-path
+    
+    ; Check if script exists
+    if not file-exists? script-path {
+        print2 "Error: Script file not found: " script-path
+        return false
+    }
+    
+    ; Read the script content
+    script-content: file-read script-path
+    
+    ; Extract the signature
+    result: extract-signature script-content
+    if result |first = false {
+        print "Error: No signature found in script."
+        return false
+    }
+    
+    print "Script has a signature."
+    print2 "Signature: " result .third
+    
+    ; Note: This only checks if a signature is present, not if it's valid
+    ; To validate the signature, use --verify with a public key
+    
+    true
+}
+
+; Helper function to remove signature from script content
+remove-signature: fn { content } {
+    lines: content |split "\n"
+    filtered-lines: []
+    
+    ; Filter out signature lines
+    for line in lines {
+        if not (line |starts-with ";ryesig") {
+            filtered-lines: filtered-lines |append line
+        }
+    }
+    
+    ; Join the lines back together
+    filtered-lines |join "\n"
+}
+
+; Helper function to extract signature from script content
+extract-signature: fn { content } {
+    lines: content |split "\n"
+    signature-line: _
+    filtered-lines: []
+    
+    ; Find the signature line and filter out signature lines
+    for line in lines {
+        either line .starts-with ";ryesig" {
+            signature-line: line
+        } {
+            filtered-lines: filtered-lines |append line
+        }
+    }
+    
+    ; If no signature line was found, return false
+    if signature-line = _ {
+        return [false _ _]
+    }
+    
+    ; Extract the signature value
+    signature: signature-line |substring 8 (signature-line |length)
+    
+    ; Join the filtered lines back together
+    filtered-content: filtered-lines .join "\n"
+    
+    [ true filtered-content signature ]
+}
+
+; Parse command-line arguments
+parse-args: fn { args } {
+    ; Default values
+    options: {
+        'help false
+        'generate false
+        'sign false
+        'verify false
+        'check false
+        'output _
+        'force false
+        'key-path _
+        'script-path _
+    }
+    
+    i: 1
+    while i < args |length {
+        arg: args |at i
+        
+        case arg {
+            "--help" or "-h" {
+                options/help: true
+            }
+            "--generate" or "-g" {
+                options/generate: true
+                if (i + 1) < args |length and not ((args |at (i + 1)) |starts-with "-") {
+                    i: i + 1
+                    options/output: args |at i
+                }
+            }
+            "--sign" or "-s" {
+                options/sign: true
+                if (i + 1) < args |length and not ((args |at (i + 1)) |starts-with "-") {
+                    i: i + 1
+                    options/key-path: args |at i
+                }
+            }
+            "--verify" or "-v" {
+                options/verify: true
+                if (i + 1) < args |length and not ((args |at (i + 1)) |starts-with "-") {
+                    i: i + 1
+                    options/key-path: args |at i
+                }
+            }
+            "--check" or "-c" {
+                options/check: true
+            }
+            "--output" or "-o" {
+                if (i + 1) < args |length and not ((args |at (i + 1)) |starts-with "-") {
+                    i: i + 1
+                    options/output: args |at i
+                }
+            }
+            "--force" or "-f" {
+                options/force: true
+            }
+            _ {
+                ; If it doesn't start with -, assume it's the script path
+                if not (arg |starts-with "-") {
+                    options/script-path: arg
+                }
+            }
+        }
+        
+        i: i + 1
+    }
+    
+    options
+}
+
+; Main function
+main: fn { } {
+    ; Get command-line arguments
+    args: command-line-args
+    
+    ; Parse arguments
+    options: parse-args args
+    
+    ; Show help if requested or no arguments provided
+    if options/help or args |length <= 1 {
+        print-usage
+        return 0
+    }
+    
+    ; Generate keys
+    if options/generate {
+        output-path: options/output
+        if output-path = _ {
+            output-path: "keys"
+        }
+        
+        success: generate-keys output-path options/force
+        if not success {
+            return 1
+        }
+        
+        return 0
+    }
+    
+    ; Check if script path is provided for other operations
+    if options/script-path = _ {
+        print "Error: No script path provided."
+        print-usage
+        return 1
+    }
+    
+    ; Sign script
+    if options/sign {
+        if options/key-path = _ {
+            print "Error: No private key path provided for signing."
+            print-usage
+            return 1
+        }
+        
+        success: sign-script options/script-path options/key-path options/force
+        if not success {
+            return 1
+        }
+        
+        return 0
+    }
+    
+    ; Verify script
+    if options/verify {
+        if options/key-path = _ {
+            print "Error: No public key path provided for verification."
+            print-usage
+            return 1
+        }
+        
+        success: verify-script options/script-path options/key-path
+        if not success {
+            return 1
+        }
+        
+        return 0
+    }
+    
+    ; Check script
+    if options/check {
+        success: check-script options/script-path
+        if not success {
+            return 1
+        }
+        
+        return 0
+    }
+    
+    ; If we get here, no valid operation was specified
+    print "Error: No valid operation specified."
+    print-usage
+    return 1
+}
+
+; Run the main function
+main

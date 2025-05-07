@@ -439,7 +439,7 @@ class Builtin implements RyeObject {
   @override
   String print(Idxs idxs) {
     String pureStr = pure ? 'Pure ' : '';
-    return '${pureStr}BFunction($argsn): $doc';
+    return '${pureStr}Builtin($argsn): $doc';
   }
 
   @override

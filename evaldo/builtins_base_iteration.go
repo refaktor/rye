@@ -25,7 +25,7 @@ var builtins_iteration = map[string]*env.Builtin{
 	// * result of the last block execution
 	"loop": {
 		Argsn: 2,
-		Doc:   "Executes a block of code a specified number of times, injecting the current iteration number (starting from 1).",
+		Doc:   "Executes a block of code, builtin, or function a specified number of times, injecting the current iteration number (starting from 1).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// Type checking for arguments
 			count, ok := arg0.(env.Integer)
@@ -33,39 +33,53 @@ var builtins_iteration = map[string]*env.Builtin{
 				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "loop")
 			}
 
-			block, ok := arg1.(env.Block)
-			if !ok {
-				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "loop")
-			}
-
-			// Save original series
-			ser := ps.Ser
-			ps.Ser = block.Series
-
 			// Pre-allocate a single Integer object to reuse
 			iterObj := env.Integer{Value: 1}
 
-			// Main loop
-			for i := int64(0); i < count.Value; i++ {
-				// Update the iteration counter
-				// iterObj.Value = i + 1
+			switch block := arg1.(type) {
+			case env.Block:
+				// Save original series
+				ser := ps.Ser
+				ps.Ser = block.Series
 
-				// Evaluate the block with the current iteration number
-				EvalBlockInjMultiDialect(ps, iterObj, true)
+				// Main loop
+				for i := int64(0); i < count.Value; i++ {
+					// Evaluate the block with the current iteration number
+					EvalBlockInjMultiDialect(ps, iterObj, true)
 
-				// Check for errors
-				//if ps.ErrorFlag {
-				//	ps.Ser = ser // Restore original series before returning
-				//	return ps.Res
-				//}
-				iterObj.Value++
-				// Reset series position for next iteration
-				ps.Ser.Reset()
+					iterObj.Value++
+					// Reset series position for next iteration
+					ps.Ser.Reset()
+				}
+
+				// Restore original series
+				ps.Ser = ser
+				return ps.Res
+			case env.Builtin:
+				// Main loop
+				for i := int64(0); i < count.Value; i++ {
+					// Call the builtin with the current iteration number
+					ps.Res = DirectlyCallBuiltin(ps, block, iterObj, nil)
+					if ps.ErrorFlag {
+						return ps.Res
+					}
+					iterObj.Value++
+				}
+				return ps.Res
+			case env.Function:
+				// Main loop
+				for i := int64(0); i < count.Value; i++ {
+					// Call the function with the current iteration number
+					CallFunctionArgsN(block, ps, ps.Ctx, iterObj)
+					if ps.ErrorFlag {
+						return ps.Res
+					}
+					iterObj.Value++
+				}
+				return ps.Res
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.BlockType, env.BuiltinType, env.FunctionType}, "loop")
 			}
-
-			// Restore original series
-			ps.Ser = ser
-			return ps.Res
 		},
 	},
 
@@ -365,7 +379,7 @@ var builtins_iteration = map[string]*env.Builtin{
 	// stdout { { "a" "b" "c" } .for { .prns } } "a b c "
 	"for": { // **
 		Argsn: 2,
-		Doc:   "Accepts a block of values and a block of code, does the code for each of the values, injecting them.",
+		Doc:   "Accepts a block of values and a block of code, builtin, or function, does the code for each of the values, injecting them.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch block := arg0.(type) {
 			case env.Collection:
@@ -382,8 +396,24 @@ var builtins_iteration = map[string]*env.Builtin{
 					}
 					ps.Ser = ser
 					return ps.Res
+				case env.Builtin:
+					for i := 0; i < block.Length(); i++ {
+						ps.Res = DirectlyCallBuiltin(ps, code, block.Get(i), nil)
+						if ps.ErrorFlag || ps.ReturnFlag {
+							return ps.Res
+						}
+					}
+					return ps.Res
+				case env.Function:
+					for i := 0; i < block.Length(); i++ {
+						CallFunctionArgsN(code, ps, ps.Ctx, block.Get(i))
+						if ps.ErrorFlag || ps.ReturnFlag {
+							return ps.Res
+						}
+					}
+					return ps.Res
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "for")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.BuiltinType, env.FunctionType}, "for")
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType, env.TableType}, "for")
