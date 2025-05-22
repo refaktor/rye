@@ -56,6 +56,7 @@ const (
 	BooleanType       Type = 40
 	VarBuiltinType    Type = 41
 	CurriedCallerType Type = 42
+	ComplexType       Type = 43
 )
 
 // after adding new type here, also add string to idxs.go
@@ -241,6 +242,89 @@ func (i Decimal) Equal(o Object) bool {
 
 func (i Decimal) Dump(e Idxs) string {
 	return strconv.FormatFloat(i.Value, 'f', -1, 64)
+}
+
+//
+// COMPLEX
+//
+
+type Complex struct {
+	Value complex128 `bson:"value"`
+}
+
+func NewComplex(val complex128) *Complex {
+	nat := Complex{val}
+	return &nat
+}
+
+// Create a complex number from real and imaginary parts
+func NewComplexFromParts(real, imag float64) *Complex {
+	return NewComplex(complex(real, imag))
+}
+
+func (i Complex) Type() Type {
+	return ComplexType
+}
+
+func (i Complex) Inspect(e Idxs) string {
+	return "[Complex: " + i.Print(e) + "]"
+}
+
+func (i Complex) Print(e Idxs) string {
+	real := real(i.Value)
+	imag := imag(i.Value)
+
+	// Format the real part
+	realStr := strconv.FormatFloat(real, 'f', 6, 64)
+
+	// Format the imaginary part with sign
+	var imagStr string
+	if imag >= 0 {
+		imagStr = "+" + strconv.FormatFloat(imag, 'f', 6, 64)
+	} else {
+		imagStr = strconv.FormatFloat(imag, 'f', 6, 64)
+	}
+
+	return realStr + imagStr + "i"
+}
+
+func (i Complex) Trace(msg string) {
+	fmt.Print(msg + "(Complex): ")
+	fmt.Println(i.Value)
+}
+
+func (i Complex) GetKind() int {
+	return int(ComplexType)
+}
+
+func (i Complex) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+
+	// Compare real and imaginary parts with epsilon for floating point comparison
+	const epsilon = 0.0000000000001
+	real1, imag1 := real(i.Value), imag(i.Value)
+	real2, imag2 := real(o.(Complex).Value), imag(o.(Complex).Value)
+
+	realEqual := math.Abs(real1-real2) <= epsilon
+	imagEqual := math.Abs(imag1-imag2) <= epsilon
+
+	return realEqual && imagEqual
+}
+
+func (i Complex) Dump(e Idxs) string {
+	real := real(i.Value)
+	imag := imag(i.Value)
+
+	var b strings.Builder
+	b.WriteString("complex { ")
+	b.WriteString(strconv.FormatFloat(real, 'f', -1, 64))
+	b.WriteString(" ")
+	b.WriteString(strconv.FormatFloat(imag, 'f', -1, 64))
+	b.WriteString(" }")
+
+	return b.String()
 }
 
 //

@@ -1877,6 +1877,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(builtins, ps, "base")
 	RegisterBuiltins2(builtins_boolean, ps, "base")
 	RegisterBuiltins2(builtins_numbers, ps, "base")
+	RegisterBuiltins2(builtins_complex, ps, "base")
 	RegisterBuiltins2(builtins_time, ps, "base")
 	RegisterBuiltins2(builtins_string, ps, "base")
 	RegisterBuiltins2(builtins_collection, ps, "base")
@@ -1925,8 +1926,10 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltinsInContext(Builtins_term, ps, "term")
 	RegisterBuiltinsInContext(Builtins_telegrambot, ps, "telegram")
 	RegisterBuiltins2(Builtins_peg, ps, "peg")
-	RegisterBuiltins2(Builtins_mcp, ps, "mcp")
+	RegisterBuiltinsInContext(Builtins_mcp, ps, "mcp")
 	RegisterBuiltins2(builtins_trees, ps, "trees")
+	RegisterBuiltinsInContext(Builtins_git, ps, "git")
+	RegisterBuiltinsInContext(Builtins_prometheus, ps, "prometheus")
 	RegisterErrorUtilsBuiltins(ps) // Register additional error handling utilities
 	// ## Archived modules
 	// RegisterBuiltins2(Builtins_gtk, ps, "gtk")

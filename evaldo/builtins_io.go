@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hpcloud/tail"
 	"github.com/refaktor/rye/env"
 
 	"net/http"
@@ -1312,6 +1313,129 @@ var Builtins_io = map[string]*env.Builtin{
 			default:
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.UriType, env.StringType}, "ftp-connection//login")
+			}
+		},
+	},
+
+	// Args:
+	// * path: uri or string representing the file to tail
+	// * follow: boolean indicating whether to follow the file for new content
+	// * reopen: boolean indicating whether to reopen the file if it's rotated
+	// Returns:
+	// * native tail-file object that can be used to read lines as they are added
+	"tail-file": {
+		Argsn: 3,
+		Doc:   "Tails a file, following it for new content. Used for monitoring log files.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var filePath string
+
+			// Get the file path from either a Uri or String
+			switch path := arg0.(type) {
+			case env.Uri:
+				filePath = path.GetPath()
+			case env.String:
+				filePath = path.Value
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.UriType, env.StringType}, "tail-file")
+			}
+
+			// Get follow option
+			follow := true // Default to true
+			if arg1 != nil {
+				switch f := arg1.(type) {
+				case env.Boolean:
+					follow = f.Value
+				default:
+					ps.FailureFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.BooleanType}, "tail-file")
+				}
+			}
+
+			// Get reopen option
+			reopen := true // Default to true
+			if arg2 != nil {
+				switch r := arg2.(type) {
+				case env.Boolean:
+					reopen = r.Value
+				default:
+					ps.FailureFlag = true
+					return MakeArgError(ps, 3, []env.Type{env.BooleanType}, "tail-file")
+				}
+			}
+
+			// Create tail configuration
+			config := tail.Config{
+				Follow: follow,
+				ReOpen: reopen,
+			}
+
+			// Tail the file
+			t, err := tail.TailFile(filePath, config)
+			if err != nil {
+				ps.FailureFlag = true
+				return MakeBuiltinError(ps, err.Error(), "tail-file")
+			}
+
+			return *env.NewNative(ps.Idx, t, "tail-file")
+		},
+	},
+
+	// Args:
+	// * tail: native tail-file object
+	// Returns:
+	// * string containing the next line from the file, or nil if no more lines
+	"tail-file//read-line": {
+		Argsn: 1,
+		Doc:   "Reads the next line from a tailed file. Blocks until a line is available.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch t := arg0.(type) {
+			case env.Native:
+				if ps.Idx.GetWord(t.GetKind()) != "tail-file" {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Expected tail-file object", "tail-file//read-line")
+				}
+
+				// Get the next line from the tail
+				line, ok := <-t.Value.(*tail.Tail).Lines
+				if !ok {
+					// Channel is closed, no more lines
+					return *env.NewVoid()
+				}
+
+				return *env.NewString(line.Text)
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "tail-file//read-line")
+			}
+		},
+	},
+
+	// Args:
+	// * tail: native tail-file object
+	// Returns:
+	// * empty string if successful
+	"tail-file//close": {
+		Argsn: 1,
+		Doc:   "Closes a tailed file, stopping the monitoring.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch t := arg0.(type) {
+			case env.Native:
+				if ps.Idx.GetWord(t.GetKind()) != "tail-file" {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Expected tail-file object", "tail-file//close")
+				}
+
+				err := t.Value.(*tail.Tail).Stop()
+				if err != nil {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, err.Error(), "tail-file//close")
+				}
+
+				return *env.NewString("")
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "tail-file//close")
 			}
 		},
 	},
