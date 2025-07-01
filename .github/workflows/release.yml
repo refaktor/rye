@@ -105,7 +105,7 @@ jobs:
     permissions: read-all
     steps:
       - name: Install the verifier
-        uses: slsa-framework/slsa-verifier/actions/installer@v2.7.0
+        uses: slsa-framework/slsa-verifier/actions/installer@v2.7.1
 
       - name: Download assets
         env:
