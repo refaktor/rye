@@ -52,7 +52,7 @@ require (
 	go.mongodb.org/mongo-driver v1.17.3
 	golang.org/x/crypto v0.38.0
 	golang.org/x/net v0.40.0
-	golang.org/x/sync v0.14.0
+	golang.org/x/sync v0.15.0
 	golang.org/x/term v0.32.0
 	golang.org/x/text v0.25.0
 	software.sslmate.com/src/go-pkcs12 v0.5.0
