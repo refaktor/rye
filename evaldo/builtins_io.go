@@ -1,5 +1,5 @@
-//go:build !b_no_io
-// +build !b_no_io
+//go:build !no_io
+// +build !no_io
 
 package evaldo
 
