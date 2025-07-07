@@ -60,3 +60,6 @@ cmd/cato/cato
 *.bak
 *.log
 *.old.*
+*.zip
+*.nocommit.*
+cmd/loop_benchmark/rye_*

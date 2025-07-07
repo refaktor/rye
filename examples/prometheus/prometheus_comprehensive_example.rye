@@ -1,0 +1,177 @@
+; Comprehensive Prometheus Example in Ryelang
+; This example demonstrates all the Prometheus metric types:
+; - Counter
+; - Gauge
+; - Histogram
+; - Summary
+
+; Import the prometheus module
+prometheus: rye .prometheus
+
+; Create a mutex for thread safety
+mutex: prometheus/new-mutex
+
+; ===== COUNTER EXAMPLE =====
+; Counters are cumulative metrics that only increase
+; Example: Number of requests processed, errors encountered, etc.
+
+; Create a counter for tracking HTTP requests
+http-requests: prometheus/new-counter "http_requests_total" "Total number of HTTP requests" {
+    "service" "api"
+}
+
+; Function to simulate HTTP requests
+simulate-http-requests: fn { } {
+    loop 100 { i |
+        ; Lock the mutex before updating the counter
+        mutex |prometheus-mutex/lock
+        
+        ; Increment the counter
+        http-requests |prometheus-counter/inc
+        
+        ; Unlock the mutex
+        mutex |prometheus-mutex/unlock
+        
+        ; Sleep to simulate request intervals
+        sleep 0.1
+    }
+    
+    print "HTTP request simulation completed"
+}
+
+; ===== GAUGE EXAMPLE =====
+; Gauges are metrics that can go up and down
+; Example: Memory usage, temperature, active connections, etc.
+
+; Create a gauge for tracking active connections
+active-connections: prometheus/new-gauge "active_connections" "Number of active connections" {
+    "service" "api"
+}
+
+; Function to simulate active connections
+simulate-connections: fn { } {
+    ; Set initial value
+    active-connections |prometheus-gauge/set 0
+    
+    loop 50 { i |
+        mutex |prometheus-mutex/lock
+        
+        ; Simulate connections being added and removed
+        if (i % 3 = 0) {
+            ; Add 2 connections
+            active-connections |prometheus-gauge/add 2
+            print ["Connections increased to: " i * 2 % 10 + 2]
+        } else if (i % 5 = 0) {
+            ; Remove 1 connection
+            active-connections |prometheus-gauge/sub 1
+            print ["Connections decreased to: " i * 2 % 10 - 1]
+        } else {
+            ; Just increment by 1
+            active-connections |prometheus-gauge/inc
+            print ["Connections changed to: " i * 2 % 10]
+        }
+        
+        mutex |prometheus-mutex/unlock
+        
+        sleep 0.2
+    }
+    
+    print "Connection simulation completed"
+}
+
+; ===== HISTOGRAM EXAMPLE =====
+; Histograms track the size and distribution of values
+; Example: Request durations, response sizes, etc.
+
+; Create a histogram for tracking request durations with custom buckets
+request-duration: prometheus/new-histogram "request_duration_seconds" "HTTP request duration in seconds" 
+    [0.1 0.3 0.5 0.7 0.9 1.0 1.5 2.0 5.0] {
+    "service" "api"
+}
+
+; Function to simulate request durations
+simulate-request-durations: fn { } {
+    loop 100 { i |
+        mutex |prometheus-mutex/lock
+        
+        ; Simulate a request duration (between 0.1 and 2.5 seconds)
+        duration: 0.1 + (i % 25) / 10.0
+        request-duration |prometheus-histogram/observe duration
+        
+        if (i % 10 = 0) {
+            print ["Observed request duration: " duration " seconds"]
+        }
+        
+        mutex |prometheus-mutex/unlock
+        
+        sleep 0.1
+    }
+    
+    print "Request duration simulation completed"
+}
+
+; ===== SUMMARY EXAMPLE =====
+; Summaries track the size and distribution of values like histograms
+; but calculate quantiles over a sliding time window
+; Example: Request durations with quantiles
+
+; Create a summary for tracking request durations with quantiles
+request-summary: prometheus/new-summary "request_summary_seconds" "HTTP request duration summary in seconds" 
+    {
+        "0.5" 0.05   ; 50th percentile with 5% error
+        "0.9" 0.01   ; 90th percentile with 1% error
+        "0.99" 0.001 ; 99th percentile with 0.1% error
+    } {
+        "service" "api"
+    }
+
+; Function to simulate request durations for summary
+simulate-request-summary: fn { } {
+    loop 100 { i |
+        mutex |prometheus-mutex/lock
+        
+        ; Simulate a request duration (between 0.1 and 2.5 seconds)
+        duration: 0.1 + (i % 25) / 10.0
+        request-summary |prometheus-summary/observe duration
+        
+        if (i % 10 = 0) {
+            print ["Observed request summary: " duration " seconds"]
+        }
+        
+        mutex |prometheus-mutex/unlock
+        
+        sleep 0.1
+    }
+    
+    print "Request summary simulation completed"
+}
+
+; Main function
+main: fn { } {
+    ; Start the HTTP server for Prometheus metrics
+    prometheus/start-http-server ":8080"
+    
+    ; Print a message
+    print "Prometheus exporter started on :8080"
+    print "Visit http://localhost:8080/metrics to see the metrics"
+    
+    ; Start simulations in separate goroutines
+    go { simulate-http-requests }
+    go { simulate-connections }
+    go { simulate-request-durations }
+    go { simulate-request-summary }
+    
+    ; Wait for simulations to complete
+    sleep 20
+    
+    print "All simulations completed. Server will continue running."
+    print "Press Ctrl+C to exit."
+    
+    ; Keep the server running
+    loop true {
+        sleep 10
+    }
+}
+
+; Run the main function
+main

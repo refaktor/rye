@@ -36,6 +36,15 @@ var builtins_string = map[string]*env.Builtin{
 		},
 	},
 
+	"tab": {
+		Argsn: 0,
+		Doc:   "Returns a string containing a single newline character.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return *env.NewString("\t")
+		},
+	},
+
 	// Tests:
 	// equal { "123" .ln } "123\n"
 	// equal { "hello" .ln } "hello\n"

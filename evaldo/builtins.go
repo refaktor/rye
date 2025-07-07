@@ -1570,7 +1570,9 @@ var builtins = map[string]*env.Builtin{
 				fmt.Println(ps.Gen.PreviewMethods(*ps.Idx, s1.Index, ""))
 				return env.Void{}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "ls\\")
+				kindIdx := arg0.GetKind()
+				fmt.Println(ps.Gen.PreviewMethods(*ps.Idx, kindIdx, ""))
+				return arg0
 			}
 		},
 	},
