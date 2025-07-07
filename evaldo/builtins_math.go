@@ -3,6 +3,7 @@ package evaldo
 import (
 	"fmt"
 	"math"
+	"math/cmplx"
 
 	"github.com/fxtlabs/primes"
 	"github.com/refaktor/rye/env"
@@ -127,20 +128,54 @@ var Builtins_math = map[string]*env.Builtin{
 	},
 	// Tests:
 	// equal { pow 2 3 } 8.0
+	// equal { pow complex 2 0 complex 3 0 |print } "8.000000+0.000000i"
+	// equal { pow complex 0 1 complex 2 0 |print } "-1.000000+0.000000i"
 	// Args:
-	// * base: integer or decimal value
-	// * exponent: integer or decimal value
+	// * base: integer, decimal, or complex value
+	// * exponent: integer, decimal, or complex value
 	// Returns:
-	// * decimal result of base raised to the power of exponent
+	// * decimal result of base raised to the power of exponent for integer/decimal inputs, complex result for complex inputs
 	"pow": {
 		Argsn: 2,
 		Doc:   "Returns base raised to the power of exponent.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			fa, fb, errPos := assureFloats(arg0, arg1)
-			if errPos > 0 {
-				return MakeArgError(ps, errPos, []env.Type{env.IntegerType, env.BlockType}, "pow")
+			switch base := arg0.(type) {
+			case env.Complex:
+				switch exp := arg1.(type) {
+				case env.Complex:
+					return *env.NewComplex(cmplx.Pow(base.Value, exp.Value))
+				case env.Integer:
+					return *env.NewComplex(cmplx.Pow(base.Value, complex(float64(exp.Value), 0)))
+				case env.Decimal:
+					return *env.NewComplex(cmplx.Pow(base.Value, complex(exp.Value, 0)))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "pow")
+				}
+			case env.Integer:
+				switch exp := arg1.(type) {
+				case env.Complex:
+					return *env.NewComplex(cmplx.Pow(complex(float64(base.Value), 0), exp.Value))
+				case env.Integer:
+					return *env.NewDecimal(math.Pow(float64(base.Value), float64(exp.Value)))
+				case env.Decimal:
+					return *env.NewDecimal(math.Pow(float64(base.Value), exp.Value))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "pow")
+				}
+			case env.Decimal:
+				switch exp := arg1.(type) {
+				case env.Complex:
+					return *env.NewComplex(cmplx.Pow(complex(base.Value, 0), exp.Value))
+				case env.Integer:
+					return *env.NewDecimal(math.Pow(base.Value, float64(exp.Value)))
+				case env.Decimal:
+					return *env.NewDecimal(math.Pow(base.Value, exp.Value))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "pow")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "pow")
 			}
-			return *env.NewDecimal(math.Pow(fa, fb))
 		},
 	},
 	// Tests:
@@ -180,6 +215,45 @@ var Builtins_math = map[string]*env.Builtin{
 				return *env.NewDecimal(math.Log10(val.Value))
 			default:
 				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "log10")
+			}
+		},
+	},
+	// Tests:
+	// equal { log 1 } 0.0
+	// equal { log 2.718281828459045 } 1.0
+	// equal { log complex 1 0 |print } "0.000000+0.000000i"
+	// equal { log complex 2.718281828459045 0 |print } "1.000000+0.000000i"
+	// error { log 0 }
+	// error { log complex 0 0 }
+	// Args:
+	// * x: integer, decimal, or complex value (must not be zero)
+	// Returns:
+	// * decimal natural logarithm of x for integer/decimal input, complex logarithm for complex input
+	"log": {
+		Argsn: 1,
+		Doc:   "Returns the natural logarithm of x.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Integer:
+				if val.Value <= 0 {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Can't compute logarithm of zero or negative number.", "log")
+				}
+				return *env.NewDecimal(math.Log(float64(val.Value)))
+			case env.Decimal:
+				if val.Value <= 0 {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Can't compute logarithm of zero or negative number.", "log")
+				}
+				return *env.NewDecimal(math.Log(val.Value))
+			case env.Complex:
+				if val.Value == complex(0, 0) {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Can't compute logarithm of zero.", "log")
+				}
+				return *env.NewComplex(cmplx.Log(val.Value))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "log")
 			}
 		},
 	},
@@ -246,10 +320,12 @@ var Builtins_math = map[string]*env.Builtin{
 	// Tests:
 	// equal { sin 0 } 0.0
 	// equal { round\to sin pi 10 } 0.0
+	// equal { sin complex 0 0 |print } "0.000000+0.000000i"
+	// equal { sin complex 1.570796326794897 0 |print } "1.000000+0.000000i"
 	// Args:
-	// * x: integer or decimal value in radians
+	// * x: integer, decimal, or complex value in radians
 	// Returns:
-	// * decimal sine of x
+	// * decimal sine of x for integer/decimal input, complex sine for complex input
 	"sin": {
 		Argsn: 1,
 		Doc:   "Returns the sine of the radian argument.",
@@ -259,17 +335,21 @@ var Builtins_math = map[string]*env.Builtin{
 				return *env.NewDecimal(math.Sin(float64(val.Value)))
 			case env.Decimal:
 				return *env.NewDecimal(math.Sin(val.Value))
+			case env.Complex:
+				return *env.NewComplex(cmplx.Sin(val.Value))
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.BlockType}, "sin")
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "sin")
 			}
 		},
 	},
 	// Tests:
 	// equal { cos 0 } 1.0
+	// equal { cos complex 0 0 |print } "1.000000+0.000000i"
+	// equal { cos complex 3.141592653589793 0 |print } "-1.000000+0.000000i"
 	// Args:
-	// * x: integer or decimal value in radians
+	// * x: integer, decimal, or complex value in radians
 	// Returns:
-	// * decimal cosine of x
+	// * decimal cosine of x for integer/decimal input, complex cosine for complex input
 	"cos": {
 		Argsn: 1,
 		Doc:   "Returns the cosine of the radian argument.",
@@ -279,17 +359,44 @@ var Builtins_math = map[string]*env.Builtin{
 				return *env.NewDecimal(math.Cos(float64(val.Value)))
 			case env.Decimal:
 				return *env.NewDecimal(math.Cos(val.Value))
+			case env.Complex:
+				return *env.NewComplex(cmplx.Cos(val.Value))
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.BlockType}, "cos")
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "cos")
+			}
+		},
+	},
+	// Tests:
+	// equal { tan 0 } 0.0
+	// equal { tan complex 0 0 |print } "0.000000+0.000000i"
+	// equal { tan complex 0.7853981633974483 0 |print } "1.000000+0.000000i"
+	// Args:
+	// * x: integer, decimal, or complex value in radians
+	// Returns:
+	// * decimal tangent of x for integer/decimal input, complex tangent for complex input
+	"tan": {
+		Argsn: 1,
+		Doc:   "Returns the tangent of the radian argument.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Integer:
+				return *env.NewDecimal(math.Tan(float64(val.Value)))
+			case env.Decimal:
+				return *env.NewDecimal(math.Tan(val.Value))
+			case env.Complex:
+				return *env.NewComplex(cmplx.Tan(val.Value))
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "tan")
 			}
 		},
 	},
 	// Tests:
 	// equal { sqrt 9 } 3.0
+	// equal { sqrt complex -1 0 |print } "0.000000+1.000000i"
 	// Args:
-	// * x: integer or decimal value
+	// * x: integer, decimal, or complex value
 	// Returns:
-	// * decimal square root of x
+	// * decimal square root of x for integer/decimal input, complex square root for complex input
 	"sqrt": {
 		Argsn: 1,
 		Doc:   "Returns the square root of x.",
@@ -299,18 +406,21 @@ var Builtins_math = map[string]*env.Builtin{
 				return *env.NewDecimal(math.Sqrt(float64(val.Value)))
 			case env.Decimal:
 				return *env.NewDecimal(math.Sqrt(val.Value))
+			case env.Complex:
+				return *env.NewComplex(cmplx.Sqrt(val.Value))
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.BlockType}, "sqrt")
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "sqrt")
 			}
 		},
 	},
 	// Tests:
 	// equal { abs -5 } 5
 	// equal { abs 5 } 5
+	// equal { abs complex 3 4 } 5.0
 	// Args:
-	// * x: integer or decimal value
+	// * x: integer, decimal, or complex value
 	// Returns:
-	// * absolute value of x (same type as input)
+	// * absolute value of x (same type as input for integer/decimal, decimal for complex)
 	"abs": {
 		Argsn: 1,
 		Doc:   "Returns the absolute value of a number.",
@@ -320,8 +430,10 @@ var Builtins_math = map[string]*env.Builtin{
 				return *env.NewInteger(int64(math.Abs(float64(val.Value))))
 			case env.Decimal:
 				return *env.NewDecimal(math.Abs(val.Value))
+			case env.Complex:
+				return *env.NewDecimal(cmplx.Abs(val.Value))
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.BlockType}, "abs")
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "abs")
 			}
 		},
 	},
@@ -757,10 +869,12 @@ var Builtins_math = map[string]*env.Builtin{
 	// Tests:
 	// equal { exp 0 } 1.0
 	// equal { exp 1 } 2.718281828459045
+	// equal { exp complex 0 0 |print } "1.000000+0.000000i"
+	// equal { exp complex 0 3.141592653589793 |print } "-1.000000+0.000000i"
 	// Args:
-	// * x: integer or decimal value
+	// * x: integer, decimal, or complex value
 	// Returns:
-	// * decimal e^x
+	// * decimal e^x for integer/decimal input, complex e^z for complex input
 	"exp": {
 		Argsn: 1,
 		Doc:   "Returns e**x, the base-e exponential of x.",
@@ -770,8 +884,10 @@ var Builtins_math = map[string]*env.Builtin{
 				return *env.NewDecimal(math.Exp(float64(val.Value)))
 			case env.Decimal:
 				return *env.NewDecimal(math.Exp(val.Value))
+			case env.Complex:
+				return *env.NewComplex(cmplx.Exp(val.Value))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "exp")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "exp")
 			}
 		},
 	},

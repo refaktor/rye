@@ -1,0 +1,123 @@
+; Prometheus Web Server Example in Ryelang
+; This example demonstrates how to use Prometheus to monitor a web server
+
+; Import the prometheus module
+prometheus: rye .prometheus
+
+; Create a mutex for thread safety
+mutex: prometheus/new-mutex
+
+; Create metrics for the web server
+; Counter for total requests
+total-requests: prometheus/new-counter "http_requests_total" "Total number of HTTP requests" {
+    "service" "web-server"
+}
+
+; Counter for request errors
+request-errors: prometheus/new-counter "http_request_errors_total" "Total number of HTTP request errors" {
+    "service" "web-server"
+}
+
+; Gauge for active connections
+active-connections: prometheus/new-gauge "http_active_connections" "Number of active HTTP connections" {
+    "service" "web-server"
+}
+
+; Histogram for request durations
+request-duration: prometheus/new-histogram "http_request_duration_seconds" "HTTP request duration in seconds" 
+    [0.01 0.05 0.1 0.5 1.0 5.0] {
+    "service" "web-server"
+}
+
+; Function to simulate handling an HTTP request
+handle-request: fn { path } {
+    ; Increment the total requests counter
+    mutex |prometheus-mutex/lock
+    total-requests |prometheus-counter/inc
+    mutex |prometheus-mutex/unlock
+    
+    ; Increment active connections
+    mutex |prometheus-mutex/lock
+    active-connections |prometheus-gauge/inc
+    mutex |prometheus-mutex/unlock
+    
+    print ["Handling request: " path]
+    
+    ; Simulate request processing time
+    start-time: now
+    
+    ; Simulate some work
+    sleep (random 0.5) + 0.1
+    
+    ; Simulate errors for certain paths
+    if (path = "/error") {
+        mutex |prometheus-mutex/lock
+        request-errors |prometheus-counter/inc
+        mutex |prometheus-mutex/unlock
+        
+        print "Error occurred while processing request"
+    }
+    
+    ; Calculate request duration
+    duration: (now - start-time) / 1000.0  ; Convert to seconds
+    
+    ; Record request duration in histogram
+    mutex |prometheus-mutex/lock
+    request-duration |prometheus-histogram/observe duration
+    mutex |prometheus-mutex/unlock
+    
+    print ["Request completed in " duration " seconds"]
+    
+    ; Decrement active connections
+    mutex |prometheus-mutex/lock
+    active-connections |prometheus-gauge/dec
+    mutex |prometheus-mutex/unlock
+}
+
+; Function to simulate a web server
+simulate-web-server: fn { } {
+    ; Define some example paths
+    paths: [
+        "/"
+        "/api/users"
+        "/api/products"
+        "/error"
+        "/static/css/main.css"
+        "/static/js/app.js"
+    ]
+    
+    ; Simulate requests
+    loop 100 { i |
+        ; Select a random path
+        path: paths |at (random (paths |length))
+        
+        ; Handle the request in a separate goroutine
+        go { handle-request path }
+        
+        ; Wait a bit before the next request
+        sleep (random 0.3)
+    }
+    
+    print "Web server simulation completed"
+}
+
+; Main function
+main: fn { } {
+    ; Start the Prometheus HTTP server
+    prometheus/start-http-server ":8080"
+    print "Prometheus HTTP server started on :8080"
+    print "Visit http://localhost:8080/metrics to see the metrics"
+    
+    ; Start the web server simulation
+    print "Starting web server simulation..."
+    simulate-web-server
+    
+    ; Wait a bit to allow viewing the metrics
+    print "Simulation completed. Waiting for 30 seconds to allow viewing metrics..."
+    sleep 30
+    
+    print "Example completed"
+}
+
+; Run the main function
+main

@@ -2,74 +2,17 @@
 package loader
 
 import (
-	"encoding/hex"
 	"fmt"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/refaktor/rye/env"
-	"github.com/refaktor/rye/security"
 	"github.com/refaktor/rye/util"
 
 	//. "github.com/yhirose/go-peg"
 	//. "github.com/CWood1/go-peg"
 	. "github.com/refaktor/go-peg"
 )
-
-func trace(x any) {
-	//fmt.Print("\x1b[56m")
-	//fmt.Print(x)
-	//fmt.Println("\x1b[0m")
-}
-
-var wordIndex *env.Idxs
-var wordIndexMutex sync.Mutex
-
-func InitIndex() {
-	if wordIndex == nil {
-		wordIndex = env.NewIdxs()
-	}
-}
-
-func GetIdxs() *env.Idxs {
-	if wordIndex == nil {
-		wordIndex = env.NewIdxs()
-	}
-	return wordIndex
-}
-
-func removeBangLine(content string) string {
-	if strings.Index(content, "#!") == 0 {
-		content = content[strings.Index(content, "\n")+1:]
-	}
-	return content
-}
-
-func checkCodeSignature(content string) int {
-	parts := strings.SplitN(content, ";ryesig ", 2)
-	content = strings.TrimSpace(parts[0])
-	if len(parts) != 2 {
-		fmt.Println("\x1b[33m" + "No rye signature found. Exiting." + "\x1b[0m")
-		return -1
-	}
-
-	signature := parts[1]
-	sig := strings.TrimSpace(signature)
-	bsig, err := hex.DecodeString(sig)
-	if err != nil {
-		fmt.Println("\x1b[33m" + "Invalid signature format: " + err.Error() + "\x1b[0m")
-		return -2
-	}
-
-	// Verify the signature using the security package
-	if security.VerifySignature([]byte(content), bsig) {
-		return 1 // Signature is valid
-	}
-
-	fmt.Println("\x1b[33m" + "Rye signature is not valid with any trusted public key! Exiting." + "\x1b[0m")
-	return -2
-}
 
 func LoadString(input string, sig bool) (env.Object, *env.Idxs) {
 	//fmt.Println(input)
