@@ -10,11 +10,10 @@ import (
 	"sort"
 	"time"
 
+	"github.com/go-git/go-git/v6"
+	"github.com/go-git/go-git/v6/plumbing"
+	"github.com/go-git/go-git/v6/plumbing/object"
 	"github.com/refaktor/rye/env"
-
-	"gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing"
-	"gopkg.in/src-d/go-git.v4/plumbing/object"
 )
 
 // fileInfo represents a file with its path and modification time
@@ -95,7 +94,7 @@ var Builtins_git = map[string]*env.Builtin{
 			case env.String:
 				switch path := arg1.(type) {
 				case env.String:
-					repo, err := git.PlainClone(path.Value, false, &git.CloneOptions{
+					repo, err := git.PlainClone(path.Value, &git.CloneOptions{
 						URL: url.Value,
 					})
 					if err != nil {
@@ -103,7 +102,7 @@ var Builtins_git = map[string]*env.Builtin{
 					}
 					return *env.NewNative(ps.Idx, repo, "git-repo")
 				case env.Uri:
-					repo, err := git.PlainClone(path.GetPath(), false, &git.CloneOptions{
+					repo, err := git.PlainClone(path.GetPath(), &git.CloneOptions{
 						URL: url.Value,
 					})
 					if err != nil {
@@ -116,7 +115,7 @@ var Builtins_git = map[string]*env.Builtin{
 			case env.Uri:
 				switch path := arg1.(type) {
 				case env.String:
-					repo, err := git.PlainClone(path.Value, false, &git.CloneOptions{
+					repo, err := git.PlainClone(path.Value, &git.CloneOptions{
 						URL: url.GetPath(),
 					})
 					if err != nil {
@@ -124,7 +123,7 @@ var Builtins_git = map[string]*env.Builtin{
 					}
 					return *env.NewNative(ps.Idx, repo, "git-repo")
 				case env.Uri:
-					repo, err := git.PlainClone(path.GetPath(), false, &git.CloneOptions{
+					repo, err := git.PlainClone(path.GetPath(), &git.CloneOptions{
 						URL: url.GetPath(),
 					})
 					if err != nil {
