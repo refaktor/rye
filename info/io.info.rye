@@ -413,5 +413,37 @@ section "IO " "IO related functions" {
 	{
 	}
 
+	group "tail-file" 
+	"Tails a file, following it for new content. Used for monitoring log files."
+	{
+		arg `path: uri or string representing the file to tail`
+		arg `follow: boolean indicating whether to follow the file for new content`
+		arg `reopen: boolean indicating whether to reopen the file if it's rotated`
+		returns `native tail-file object that can be used to read lines as they are added`
+	}
+
+	{
+	}
+
+	group "tail-file//read-line" 
+	"Reads the next line from a tailed file. Blocks until a line is available."
+	{
+		arg `tail: native tail-file object`
+		returns `string containing the next line from the file, or nil if no more lines`
+	}
+
+	{
+	}
+
+	group "tail-file//close" 
+	"Closes a tailed file, stopping the monitoring."
+	{
+		arg `tail: native tail-file object`
+		returns `empty string if successful`
+	}
+
+	{
+	}
+
 }
 
