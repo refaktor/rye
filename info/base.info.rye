@@ -646,7 +646,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	group "_-" 
-	"Subtracts the second number from the first, working with both integers and decimals."
+	"Subtracts the second number from the first, working with integers, decimals, and complex numbers."
 	{
 		arg `value1: First number (integer or decimal)`
 		arg `value2: Second number to subtract from the first`
@@ -661,7 +661,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	group "_*" 
-	"Multiplies two numbers, working with both integers and decimals."
+	"Multiplies two numbers, working with integers, decimals, and complex numbers."
 	{
 		arg `value1: First number (integer or decimal)`
 		arg `value2: Second number to multiply by`
@@ -676,7 +676,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	group "_/" 
-	"Divides the first number by the second and returns a decimal result, with error checking for division by zero."
+	"Divides the first number by the second and returns a result, with error checking for division by zero."
 	{
 		arg `value1: Dividend (integer or decimal)`
 		arg `value2: Divisor (integer or decimal, must not be zero)`
@@ -2094,6 +2094,20 @@ section "Default" "" {
 
 	{
 		equal { y: 5 , f: closure { x } { x + y } , f 3 } 8
+	}
+
+	group "partial" 
+	"Creates a partially applied function with specified arguments, using _ (void) for arguments to be filled later."
+	{
+		arg `func: Function or builtin to partially apply`
+		arg `args: Block of arguments, with _ (void) for arguments to be filled later`
+		returns `CurriedCaller object that can be called with the remaining arguments`
+	}
+
+	{
+		equal { prepend-star: partial ?concat [ "* " _ ] , prepend-star "hello" } "* hello"
+		equal { add-5: partial ?add [ _ 5 ] , add-5 10 } 15
+		equal { fn-add: fn { x y } { x + y } , add-5: partial ?fn-add [ _ 5 ] , add-5 10 } 15
 	}
 
 }
