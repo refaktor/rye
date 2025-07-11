@@ -352,8 +352,17 @@ var builtins_numbers = map[string]*env.Builtin{
 				if found {
 					switch iintval := intval.(type) {
 					case env.Integer:
-						ctx.Mod(arg.Index, *env.NewInteger(1 + iintval.Value))
-						return *env.NewInteger(1 + iintval.Value)
+
+						// Attempt to modify the word
+						ret := *env.NewInteger(1 + iintval.Value)
+
+						if ok := ctx.Mod(arg.Index, ret); !ok {
+							ps.FailureFlag = true
+							return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(arg.Index) + "', use 'var' to declare it as a variable")
+						}
+
+						return ret
+
 					default:
 						return MakeBuiltinError(ps, "Value in word is not integer.", "inc!")
 					}
