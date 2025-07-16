@@ -9,8 +9,8 @@ t: ?term
 
 test-framework: context {
 
-	cnt: 0
-	failed: 0
+	var 'cnt 0
+	var 'failed 0
 	
 	section: fn { name descr code } { term/magenta term/bold print name term/reset print " " ++ descr , do code print "" }
 	

@@ -59,7 +59,7 @@ section "Default" "" {
 	}
 
 	{
-		equal   { x: 1 unset! 'x x: 2 } 2 ; otherwise would produce an error
+		equal   { x:: 1 unset! 'x x:: 2 } 2 ; otherwise would produce an error
 	}
 
 	group "val" 
@@ -70,8 +70,8 @@ section "Default" "" {
 	}
 
 	{
-		equal   { x: 123 val 'x } 123
-		equal   { x: 123 y: 'x val y } 123
+		equal   { x:: 123 val 'x } 123
+		equal   { x:: 123 y:: 'x val y } 123
 	}
 
 	group "_<<" 
@@ -116,7 +116,7 @@ section "Default" "" {
 	}
 
 	{
-		equal   { x: private { doc! "some doc" doc? } } "some doc"
+		equal   { x:: private { doc! "some doc" doc? } } "some doc"
 	}
 
 	group "doc?" 
@@ -127,7 +127,7 @@ section "Default" "" {
 	}
 
 	{
-		equal   { x: private { doc! "some doc" doc? } } "some doc"
+		equal   { x:: private { doc! "some doc" doc? } } "some doc"
 	}
 
 	group "doc\of?" 
@@ -138,7 +138,7 @@ section "Default" "" {
 	}
 
 	{
-		equal   { x: context { doc! "some doc" } doc\of? x } "some doc"
+		equal   { x:: context { doc! "some doc" } doc\of? x } "some doc"
 	}
 
 	group "ref" 
@@ -239,8 +239,8 @@ section "Default" "" {
 	}
 
 	{
-		equal  { c: context { x: 100 } do\in c { x * 9.99 } } 999.0
-		equal  { c: context { x: 100 } do\in c { inc! 'x } } 101
+		equal  { c: context { x:: 100 } do\in c { x * 9.99 } } 999.0
+		equal  { c: context { x:: 100 } do\in c { inc! 'x } } 101
 		equal  { c: context { var 'x 100 } do\in c { x:: 200 } c/x } 200
 		equal  { c: context { x:: 100 } do\in c { x:: 200 , x } } 200
 	}
@@ -251,10 +251,10 @@ section "Default" "" {
 	}
 
 	{
-		equal  { c: context { x: 100 } do\par c { x * 9.99 } } 999.0
-		equal  { c: context { x: 100 } do\par c { inc! 'x } } 101
-		equal  { c: context { x: 100 } do\par c { x:: 200 , x } } 200
-		equal  { c: context { x: 100 } do\par c { x:: 200 } c/x } 100
+		equal  { c: context { x:: 100 } do\par c { x * 9.99 } } 999.0
+		equal  { c: context { x:: 100 } do\par c { inc! 'x } } 101
+		equal  { c: context { x:: 100 } do\par c { x:: 200 , x } } 200
+		equal  { c: context { x:: 100 } do\par c { x:: 200 } c/x } 100
 	}
 
 }
@@ -266,7 +266,7 @@ section "Other " "functions related to date and time" {
 	}
 
 	{
-		equal { x: fn { } { return 101 202 } x } 101
+		equal { x:: fn { } { return 101 202 } x } 101
 	}
 
 	group "cmd" 
@@ -578,7 +578,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	group "random\integer" 
 	"Generates a cryptographically secure random integer between 0 (inclusive) and the specified maximum (exclusive)."
 	{
-		arg `max: Upper bound (exclusive) for the random number`
+		arg `max:: Upper bound (exclusive) for the random number`
 		returns `random integer in the range [0, max)`
 	}
 
@@ -918,7 +918,7 @@ section "Strings " "" {
 	"Checks if a string ends with a specific suffix, returning 1 if true or 0 if false."
 	{
 		arg `string: String to check`
-		arg `suffix: Suffix to look for`
+		arg `suffix:: Suffix to look for`
 		returns `integer 1 if the string ends with the suffix, 0 otherwise`
 	}
 
@@ -932,7 +932,7 @@ section "Strings " "" {
 	"Checks if a string starts with a specific prefix, returning 1 if true or 0 if false."
 	{
 		arg `string: String to check`
-		arg `prefix: Prefix to look for`
+		arg `prefix:: Prefix to look for`
 		returns `integer 1 if the string starts with the prefix, 0 otherwise`
 	}
 
@@ -1413,7 +1413,7 @@ section "Collections " "" {
 
 	{
 		equal { sort { 6 12 1 } } { 1 6 12 }
-		equal { sort x: { 6 12 1 } x } { 6 12 1 }
+		equal { sort x:: { 6 12 1 } x } { 6 12 1 }
 		equal { sort { "b" "c" "a" } } { "a" "b" "c" }
 		equal { sort list { 5 3 1 4 } } list { 1 3 4 5 }
 		equal { sort "cba" } "abc"
@@ -1427,9 +1427,9 @@ section "Collections " "" {
 	}
 
 	{
-		error { x: { 6 12 1 } , sort! x }
-		equal { x: ref { 6 12 1 } , sort! x , x } { 1 6 12 }
-		equal { x: ref list { 5 3 1 4 } , sort! x , x } list { 1 3 4 5 }
+		error { x:: { 6 12 1 } , sort! x }
+		equal { x:: ref { 6 12 1 } , sort! x , x } { 1 6 12 }
+		equal { x:: ref list { 5 3 1 4 } , sort! x , x } list { 1 3 4 5 }
 	}
 
 	group "sort\by" 
@@ -1488,7 +1488,7 @@ section "Collections " "" {
 	{
 		error { reverse! { 3 1 2 3 } }
 		equal { reverse! ref { 3 1 2 3 } } { 3 2 1 3 }
-		equal { x: ref list { 1 2 3 } , reverse! x , x } list { 3 2 1 }
+		equal { x:: ref list { 1 2 3 } , reverse! x , x } list { 3 2 1 }
 	}
 
 	group "concat" 
@@ -1605,7 +1605,7 @@ section "Collections " "" {
 	"Accesses a value in a collection by index or key (1-based indexing for blocks and lists)."
 	{
 		arg `collection: Block, list, dict or other indexable collection`
-		arg `index: Index or key to access`
+		arg `index:: Index or key to access`
 		returns `value at the specified index or key`
 	}
 
@@ -1618,7 +1618,7 @@ section "Collections " "" {
 	group "_<-" 
 	"Accesses a value in a collection by index or key, with reversed argument order (0-based indexing for blocks and lists)."
 	{
-		arg `index: Index or key to access`
+		arg `index:: Index or key to access`
 		arg `collection: Block, list, dict or other indexable collection`
 		returns `value at the specified index or key`
 	}
@@ -1632,7 +1632,7 @@ section "Collections " "" {
 	group "_<~" 
 	"Accesses a value in a collection by index with reversed argument order (1-based indexing)."
 	{
-		arg `index: Index to access (1-based)`
+		arg `index:: Index to access (1-based)`
 		arg `collection: Block, list or other indexable collection`
 		returns `value at the specified index`
 	}
@@ -1646,7 +1646,7 @@ section "Collections " "" {
 	"Accesses a value in a collection by index (0-based indexing)."
 	{
 		arg `collection: Block, list or other indexable collection`
-		arg `index: Index to access (0-based)`
+		arg `index:: Index to access (0-based)`
 		returns `value at the specified index`
 	}
 
@@ -1724,7 +1724,7 @@ section "Collections " "" {
 	group "transpose" 
 	"Transposes a matrix (block of blocks), converting rows to columns and columns to rows."
 	{
-		arg `matrix: Block of blocks representing a matrix`
+		arg `matrix:: Block of blocks representing a matrix`
 		returns `transposed matrix (rows become columns and columns become rows)`
 	}
 
@@ -1754,7 +1754,7 @@ section "Collections " "" {
 	}
 
 	{
-		; TODO equal { x: ref { 1 2 3 } append! { 4 } x , x } { 1 2 3 4 }
+		; TODO equal { x:: ref { 1 2 3 } append! { 4 } x , x } { 1 2 3 4 }
 		equal { var 'x ref { 1 2 3 } append! 4 'x , x } { 1 2 3 4 }
 		equal { var 's "hello" append! " world" 's , s } "hello world"
 	}
@@ -1769,8 +1769,8 @@ section "Collections " "" {
 	}
 
 	{
-		equal { x: ref { 1 2 3 } change\nth! x 2 222 , x } { 1 222 3 }
-		equal { x: ref list { "a" "b" "c" } change\nth! x 1 "X" , x } list { "X" "b" "c" }
+		equal { x:: ref { 1 2 3 } change\nth! x 2 222 , x } { 1 222 3 }
+		equal { x:: ref list { "a" "b" "c" } change\nth! x 1 "X" , x } list { "X" "b" "c" }
 	}
 
 	group "peek" 
@@ -1781,7 +1781,7 @@ section "Collections " "" {
 	}
 
 	{
-		equal { x: { 1 2 3 } peek x } 1
+		equal { x:: { 1 2 3 } peek x } 1
 	}
 
 	group "pop" 
@@ -1792,7 +1792,7 @@ section "Collections " "" {
 	}
 
 	{
-		equal { x: { 1 2 3 } pop x } 1
+		equal { x:: { 1 2 3 } pop x } 1
 	}
 
 	group "pos" 
@@ -1803,8 +1803,8 @@ section "Collections " "" {
 	}
 
 	{
-		equal { x: { 1 2 3 } pos x } 0
-		equal { x: { 1 2 3 } next x pos x } 1
+		equal { x:: { 1 2 3 } pos x } 0
+		equal { x:: { 1 2 3 } next x pos x } 1
 	}
 
 	group "next" 
@@ -1815,7 +1815,7 @@ section "Collections " "" {
 	}
 
 	{
-		equal { x: { 1 2 3 } next x pos x } 1
+		equal { x:: { 1 2 3 } next x pos x } 1
 	}
 
 	group "vals" 
@@ -1824,9 +1824,9 @@ section "Collections " "" {
 	}
 
 	{
-		equal { x: 1 y: 2 vals { x y } } { 1 2 }
-		equal { x: 1 y: 2 vals { 1 y } } { 1 2 }
-		equal { x: 1 y: 2 try { vals { z y } } |type? } 'error
+		equal { x:: 1 y: 2 vals { x y } } { 1 2 }
+		equal { x:: 1 y: 2 vals { 1 y } } { 1 2 }
+		equal { x:: 1 y: 2 try { vals { z y } } |type? } 'error
 	}
 
 	group "vals\with" 
@@ -1835,8 +1835,8 @@ section "Collections " "" {
 	}
 
 	{
-		equal { x: 1 y: 2 vals\with 10 { + x , * y } } { 11 20 }
-		equal { x: 1 y: 2 vals\with 100 { + 10 , * 8.9 } } { 110 890.0 }
+		equal { x:: 1 y: 2 vals\with 10 { + x , * y } } { 11 20 }
+		equal { x:: 1 y: 2 vals\with 100 { + 10 , * 8.9 } } { 110 890.0 }
 	}
 
 }
@@ -1850,9 +1850,9 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-		equal { c: raw-context { x: 123 } c/x } 123
-		equal { y: 123 try { c: raw-context { x: y } } |type? } 'error ; word not found y
-		equal { try { c: raw-context { x: inc 10 } } |type? } 'error ; word not found inc
+		equal { c: raw-context { x:: 123 } c/x } 123
+		equal { y: 123 try { c: raw-context { x:: y } } |type? } 'error ; word not found y
+		equal { try { c: raw-context { x:: inc 10 } } |type? } 'error ; word not found inc
 	}
 
 	group "isolate" 
@@ -1863,11 +1863,11 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-		equal { c: isolate { x: 123 } c/x } 123
-		equal { y: 123 c: isolate { x: y } c/x } 123
-		equal { c: isolate { x: inc 10 } c/x } 11
-		equal { y: 99 c: isolate { x: does { y } } try { c/x } |type? } 'error
-		equal { y: 99 c: isolate { t: ?try x: does { t { y } } } c/x |type? } 'error
+		equal { c: isolate { x:: 123 } c/x } 123
+		equal { y: 123 c: isolate { x:: y } c/x } 123
+		equal { c: isolate { x:: inc 10 } c/x } 11
+		equal { y: 99 c: isolate { x:: does { y } } try { c/x } |type? } 'error
+		equal { y: 99 c: isolate { t: ?try x:: does { t { y } } } c/x |type? } 'error
 	}
 
 	group "context" 
@@ -1878,10 +1878,10 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-		equal { c: context { x: 123 } c/x } 123
-		equal { y: 123 c: context { x: y } c/x } 123
-		equal { c: context { x: inc 10 } c/x } 11
-		equal { y: 123 c: context { x: does { y } } c/x } 123
+		equal { c: context { x:: 123 } c/x } 123
+		equal { y: 123 c: context { x:: y } c/x } 123
+		equal { c: context { x:: inc 10 } c/x } 11
+		equal { y: 123 c: context { x:: does { y } } c/x } 123
 	}
 
 	group "private" 
@@ -1892,9 +1892,9 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-		equal { private { x: 123 } } 123
-		equal { y: 123 private { x: y } } 123
-		equal { private { x: inc 10 } } 11
+		equal { private { x:: 123 } } 123
+		equal { y: 123 private { x:: y } } 123
+		equal { private { x:: inc 10 } } 11
 		equal { y: 123 private { does { y } } :f f } 123
 	}
 
@@ -1907,7 +1907,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-		equal { private\ "what are we doing here" { x: 234 1000 + x } } 1234
+		equal { private\ "what are we doing here" { x:: 234 1000 + x } } 1234
 	}
 
 	group "extends" 
@@ -1938,7 +1938,7 @@ section "Contexts " "Context related functions" {
 	group "unbind" 
 	"Removes the parent relationship from a context, making it a standalone context."
 	{
-		arg `ctx: Context object to unbind from its parent`
+		arg `ctx:: Context object to unbind from its parent`
 		returns `the modified context with no parent`
 	}
 
@@ -1998,8 +1998,8 @@ section "Default" "" {
 
 	{
 		equal { does { 123 } |type? } 'function
-		equal { x: does { 123 } x } 123
-		equal { x: does { 1 + 2 } x } 3
+		equal { x:: does { 123 } x } 123
+		equal { x:: does { 1 + 2 } x } 3
 	}
 
 	group "fn1" 
@@ -2011,9 +2011,9 @@ section "Default" "" {
 
 	{
 		equal { fn1 { .pass { } } |type? } 'function
-		equal { x: fn1 { } , x 123 } 123
-		equal { x: fn1 { .pass { } } , x 123 } 123
-		equal { x: fn1 { + 1 } , x 123 } 124
+		equal { x:: fn1 { } , x 123 } 123
+		equal { x:: fn1 { .pass { } } , x 123 } 123
+		equal { x:: fn1 { + 1 } , x 123 } 124
 	}
 
 	group "fn" 
@@ -2026,9 +2026,9 @@ section "Default" "" {
 
 	{
 		equal { fn { } { } |type? } 'function
-		equal { x: fn { } { 234 } , x } 234
-		equal { x: fn { x } { x } , x 123 } 123
-		equal { x: fn { x } { + 123 } , x 123 } 246
+		equal { x:: fn { } { 234 } , x } 234
+		equal { x:: fn { x } { x } , x 123 } 123
+		equal { x:: fn { x } { + 123 } , x 123 } 246
 	}
 
 	group "pfn" 
@@ -2041,8 +2041,8 @@ section "Default" "" {
 
 	{
 		equal { pfn { } { } |type? } 'function
-		equal { x: pfn { x } { + 123 } , x 123 } 246
-		error { x: pfn { x } { .print } , x 123 }
+		equal { x:: pfn { x } { + 123 } , x 123 } 246
+		error { x:: pfn { x } { .print } , x 123 }
 	}
 
 	group "fn\cc" 
@@ -2068,7 +2068,7 @@ section "Default" "" {
 	}
 
 	{
-		equal { ctx: context { y: 5 } , f: fn\par { x } ctx { x + y } , f 3 } 8
+		equal { ctx:: context { y: 5 } , f: fn\par { x } ctx { x + y } , f 3 } 8
 	}
 
 	group "fn\in" 
@@ -2081,7 +2081,7 @@ section "Default" "" {
 	}
 
 	{
-		equal { ctx: context { y: 5 } , f: fn\in { x } ctx { x + y } , f 3 } 8
+		equal { ctx:: context { y: 5 } , f: fn\in { x } ctx { x + y } , f 3 } 8
 	}
 
 	group "closure" 
@@ -2106,7 +2106,7 @@ section "Default" "" {
 
 	{
 		equal { prepend-star: partial ?concat [ "* " _ ] , prepend-star "hello" } "* hello"
-		equal { add-5: partial ?add [ _ 5 ] , add-5 10 } 15
+		equal { add-5: partial ?concat [ _ 5 ] , add-5 10 } 105
 		equal { fn-add: fn { x y } { x + y } , add-5: partial ?fn-add [ _ 5 ] , add-5 10 } 15
 	}
 
