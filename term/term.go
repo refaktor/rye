@@ -65,6 +65,7 @@ DODO:
 	}
 	displayedItems := bloc.Series.S[start:end]
 	displayLen := len(displayedItems)
+	totalLines := 0
 	for i := 0; i < pageSize; i++ {
 		ClearLine()
 		if i < displayLen {
@@ -76,23 +77,29 @@ DODO:
 			} else {
 				termPrint(" ")
 			}
+			var valueStr string
 			switch ob := v.(type) {
 			case env.Object:
 				if mode == 0 {
-					termPrintln("" + ob.Print(*idx) + "")
+					valueStr = ob.Print(*idx)
 				} else {
-					termPrintln("" + ob.Inspect(*idx) + "")
+					valueStr = ob.Inspect(*idx)
 				}
 			default:
-				termPrintln("" + fmt.Sprint(ob) + "")
+				valueStr = fmt.Sprint(ob)
 			}
+			termPrintln(valueStr)
+			// Count the actual number of lines this entry takes (including newlines in the value)
+			totalLines += strings.Count(valueStr, "\n") + 1
 			CloseProps()
 		} else {
 			termPrintln("")
+			totalLines += 1
 		}
 	}
 	termPrintln(fmt.Sprintf("Page %d/%d (n=next, p=prev, m=mode)", currentPage+1, totalPages))
-	moveUp = pageSize + 1 // +1 for footer
+	totalLines += 1 // +1 for footer
+	moveUp = totalLines
 
 	defer func() {
 		// Show cursor.
@@ -330,6 +337,7 @@ DODO:
 		CurUp(moveUp)
 	}
 	SaveCurPos()
+	totalLines := 0
 	for ii, k := range keys {
 		// for k, v := range bloc.Data {
 		v := bloc.Data[k]
@@ -344,21 +352,25 @@ DODO:
 		Bold()
 		termPrint(k + ": ")
 		ResetBold()
+		var valueStr string
 		switch ob := v.(type) {
 		case env.Object:
 			if mode == 0 {
-				termPrintln("" + ob.Print(*idx) + "")
+				valueStr = ob.Print(*idx)
 			} else {
-				termPrintln("" + ob.Inspect(*idx) + "")
+				valueStr = ob.Inspect(*idx)
 			}
 		default:
-			termPrintln(" " + fmt.Sprint(ob) + " ")
+			valueStr = fmt.Sprint(ob)
 		}
+		termPrintln(valueStr)
+		// Count the actual number of lines this entry takes (including newlines in the value)
+		totalLines += strings.Count(valueStr, "\n") + 1
 		CloseProps()
 		// term.CurUp(1)
 	}
 
-	moveUp = len(bloc.Data)
+	moveUp = totalLines
 
 	defer func() {
 		// Show cursor.
@@ -442,7 +454,8 @@ DODO:
 		CurUp(moveUp)
 	}
 	SaveCurPos()
-	for ii, k := range bloc.Uplink.Cols {
+	totalLines := 0
+	for ii, k := range bloc.Uplink.GetColumnNames() {
 		// for k, v := range bloc.Data {
 		v := bloc.Values[ii]
 		ClearLine()
@@ -456,21 +469,25 @@ DODO:
 		Bold()
 		termPrint(k + ": ")
 		ResetBold()
+		var valueStr string
 		switch ob := v.(type) {
 		case env.Object:
 			if mode == 0 {
-				termPrintln("" + ob.Print(*idx) + "")
+				valueStr = ob.Print(*idx)
 			} else {
-				termPrintln("" + ob.Inspect(*idx) + "")
+				valueStr = ob.Inspect(*idx)
 			}
 		default:
-			termPrintln(" " + fmt.Sprint(ob) + " ")
+			valueStr = fmt.Sprint(ob)
 		}
+		termPrintln(valueStr)
+		// Count the actual number of lines this entry takes (including newlines in the value)
+		totalLines += strings.Count(valueStr, "\n") + 1
 		CloseProps()
 		// term.CurUp(1)
 	}
 
-	moveUp = len(bloc.Values)
+	moveUp = totalLines
 
 	defer func() {
 		// Show cursor.
@@ -494,7 +511,7 @@ DODO:
 
 		if ascii == 120 {
 			//termPrintln()
-			return env.String{Value: bloc.Uplink.Cols[curr]}, false
+			return env.String{Value: bloc.Uplink.GetColumnNames()[curr]}, false
 		}
 
 		if ascii == 77 || ascii == 109 {

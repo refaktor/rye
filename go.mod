@@ -19,6 +19,7 @@ require (
 	github.com/bitfield/script v0.24.1
 	github.com/blevesearch/bleve/v2 v2.5.0
 	github.com/blevesearch/bleve_index_api v1.2.8
+	github.com/dgraph-io/badger/v4 v4.8.0
 	github.com/drewlanenga/govector v0.0.0-20220726163947-b958ac08bc93
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/fxtlabs/primes v0.0.0-20150821004651-dad82d10a449
@@ -70,7 +71,6 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudflare/circl v1.6.1 // indirect
 	github.com/cyphar/filepath-securejoin v0.4.1 // indirect
-	github.com/dgraph-io/badger/v4 v4.8.0 // indirect
 	github.com/dgraph-io/ristretto/v2 v2.2.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/frankban/quicktest v1.14.6 // indirect

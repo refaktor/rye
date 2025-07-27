@@ -274,7 +274,7 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 	} else {
 		r.fullCode += lineReal
 
-		block, genv := loader.LoadString(r.fullCode, false)
+		block, genv := loader.LoadStringNoPEG(r.fullCode, false)
 
 		// Check if the result is an error
 		if err, isError := block.(env.Error); isError {

@@ -140,51 +140,51 @@ var Builtins_git = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { repo: git-repo//open "." , repo |git-repo//worktree |type? } 'native
+	// equal { repo: git-repo//Open "." , repo |git-repo//Worktree |type? } 'native
 	// Args:
 	// * repo: Git repository object
 	// Returns:
 	// * native Git worktree object
-	"git-repo//worktree?": {
+	"git-repo//Worktree?": {
 		Argsn: 1,
 		Doc:   "Gets the worktree for a Git repository.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch repo := arg0.(type) {
 			case env.Native:
 				if ps.Idx.GetWord(repo.Kind.Index) != "git-repo" {
-					return MakeBuiltinError(ps, "expected a Git repository object", "git-repo//worktree?")
+					return MakeBuiltinError(ps, "expected a Git repository object", "git-repo//Worktree?")
 				}
 
 				worktree, err := repo.Value.(*git.Repository).Worktree()
 				if err != nil {
-					return MakeBuiltinError(ps, fmt.Sprintf("failed to get worktree: %v", err), "git-repo//worktree?")
+					return MakeBuiltinError(ps, fmt.Sprintf("failed to get worktree: %v", err), "git-repo//Worktree?")
 				}
 				return *env.NewNative(ps.Idx, worktree, "git-worktree")
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "git-repo//worktree?")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "git-repo//Worktree?")
 			}
 		},
 	},
 
 	// Tests:
-	// equal { repo: git-repo//open "." , wt: repo |git-repo//worktree , wt |git-worktree//status |type? } 'dict
+	// equal { repo: git-repo//Open "." , wt: repo |git-repo//Worktree , wt |git-worktree//Status |type? } 'dict
 	// Args:
 	// * worktree: Git worktree object
 	// Returns:
 	// * dict containing the status of the worktree
-	"git-worktree//status?": {
+	"git-worktree//Status?": {
 		Argsn: 1,
 		Doc:   "Gets the status of a Git worktree.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch wt := arg0.(type) {
 			case env.Native:
 				if ps.Idx.GetWord(wt.Kind.Index) != "git-worktree" {
-					return MakeBuiltinError(ps, "expected a Git worktree object", "git-worktree//status?")
+					return MakeBuiltinError(ps, "expected a Git worktree object", "git-worktree//Status?")
 				}
 
 				status, err := wt.Value.(*git.Worktree).Status()
 				if err != nil {
-					return MakeBuiltinError(ps, fmt.Sprintf("failed to get status: %v", err), "git-worktree//status?")
+					return MakeBuiltinError(ps, fmt.Sprintf("failed to get status: %v", err), "git-worktree//Status?")
 				}
 
 				// Convert status to a Rye dict
@@ -198,25 +198,25 @@ var Builtins_git = map[string]*env.Builtin{
 
 				return *dict
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "git-worktree//status?")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "git-worktree//Status?")
 			}
 		},
 	},
 
 	// Tests:
-	// equal { repo: git-repo//open "." , repo |git-repo//untracked-files |type? } 'block
+	// equal { repo: git-repo//Open "." , repo |git-repo//Untracked-files |type? } 'block
 	// Args:
 	// * repo: Git repository object
 	// Returns:
 	// * block of untracked files sorted by modification time (newest first)
-	"git-repo//untracked-files?": {
+	"git-repo//Untracked-files?": {
 		Argsn: 1,
 		Doc:   "Lists all untracked files in the repository sorted by last modification time (newest first).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch repo := arg0.(type) {
 			case env.Native:
 				if ps.Idx.GetWord(repo.Kind.Index) != "git-repo" {
-					return MakeBuiltinError(ps, "expected a Git repository object", "git-repo//untracked-files")
+					return MakeBuiltinError(ps, "expected a Git repository object", "git-repo//Untracked-files?")
 				}
 
 				gitRepo := repo.Value.(*git.Repository)
@@ -224,13 +224,13 @@ var Builtins_git = map[string]*env.Builtin{
 				// Get the worktree
 				worktree, err := gitRepo.Worktree()
 				if err != nil {
-					return MakeBuiltinError(ps, fmt.Sprintf("failed to get worktree: %v", err), "git-repo//untracked-files")
+					return MakeBuiltinError(ps, fmt.Sprintf("failed to get worktree: %v", err), "git-repo//Untracked-files?")
 				}
 
 				// Get the status of the worktree
 				status, err := worktree.Status()
 				if err != nil {
-					return MakeBuiltinError(ps, fmt.Sprintf("failed to get status: %v", err), "git-repo//untracked-files")
+					return MakeBuiltinError(ps, fmt.Sprintf("failed to get status: %v", err), "git-repo//Untracked-files?")
 				}
 
 				// Get the repository path
@@ -287,25 +287,25 @@ var Builtins_git = map[string]*env.Builtin{
 
 				return *env.NewBlock(*env.NewTSeries(result))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "git-repo//untracked-files")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "git-repo//Untracked-files?")
 			}
 		},
 	},
 
 	// Tests:
-	// equal { repo: git-repo//open "." , repo |git-repo//commits |type? } 'block
+	// equal { repo: git-repo//Open "." , repo |git-repo//Commits |type? } 'block
 	// Args:
 	// * repo: Git repository object
 	// Returns:
 	// * block of commit information
-	"git-repo//commits?": {
+	"git-repo//Commits?": {
 		Argsn: 1,
 		Doc:   "Gets the commit history for a Git repository.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch repo := arg0.(type) {
 			case env.Native:
 				if ps.Idx.GetWord(repo.Kind.Index) != "git-repo" {
-					return MakeBuiltinError(ps, "expected a Git repository object", "git-repo//commits")
+					return MakeBuiltinError(ps, "expected a Git repository object", "git-repo//Commits?")
 				}
 
 				gitRepo := repo.Value.(*git.Repository)
@@ -313,13 +313,13 @@ var Builtins_git = map[string]*env.Builtin{
 				// Get the reference to HEAD
 				ref, err := gitRepo.Head()
 				if err != nil {
-					return MakeBuiltinError(ps, fmt.Sprintf("failed to get HEAD reference: %v", err), "git-repo//commits")
+					return MakeBuiltinError(ps, fmt.Sprintf("failed to get HEAD reference: %v", err), "git-repo//Commits?")
 				}
 
 				// Get the commit history
 				commitIter, err := gitRepo.Log(&git.LogOptions{From: ref.Hash()})
 				if err != nil {
-					return MakeBuiltinError(ps, fmt.Sprintf("failed to get commit history: %v", err), "git-repo//commits")
+					return MakeBuiltinError(ps, fmt.Sprintf("failed to get commit history: %v", err), "git-repo//Commits?")
 				}
 
 				// Collect commits
@@ -337,30 +337,30 @@ var Builtins_git = map[string]*env.Builtin{
 				})
 
 				if err != nil {
-					return MakeBuiltinError(ps, fmt.Sprintf("failed to iterate commits: %v", err), "git-repo//commits")
+					return MakeBuiltinError(ps, fmt.Sprintf("failed to iterate commits: %v", err), "git-repo//Commits?")
 				}
 
 				return *env.NewBlock(*env.NewTSeries(commits))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "git-repo//commits")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "git-repo//Commits?")
 			}
 		},
 	},
 
 	// Tests:
-	// equal { repo: git-repo//open "." , repo |git-repo//branches |type? } 'block
+	// equal { repo: git-repo//Open "." , repo |git-repo//Branches |type? } 'block
 	// Args:
 	// * repo: Git repository object
 	// Returns:
 	// * block of branch names
-	"git-repo//branches?": {
+	"git-repo//Branches?": {
 		Argsn: 1,
 		Doc:   "Gets the list of branches in a Git repository.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch repo := arg0.(type) {
 			case env.Native:
 				if ps.Idx.GetWord(repo.Kind.Index) != "git-repo" {
-					return MakeBuiltinError(ps, "expected a Git repository object", "git-repo//branches")
+					return MakeBuiltinError(ps, "expected a Git repository object", "git-repo//Branches?")
 				}
 
 				gitRepo := repo.Value.(*git.Repository)
@@ -368,7 +368,7 @@ var Builtins_git = map[string]*env.Builtin{
 				// Get the branches
 				branchIter, err := gitRepo.Branches()
 				if err != nil {
-					return MakeBuiltinError(ps, fmt.Sprintf("failed to get branches: %v", err), "git-repo//branches")
+					return MakeBuiltinError(ps, fmt.Sprintf("failed to get branches: %v", err), "git-repo//Branches?")
 				}
 
 				// Collect branches
@@ -383,30 +383,30 @@ var Builtins_git = map[string]*env.Builtin{
 				})
 
 				if err != nil {
-					return MakeBuiltinError(ps, fmt.Sprintf("failed to iterate branches: %v", err), "git-repo//branches")
+					return MakeBuiltinError(ps, fmt.Sprintf("failed to iterate branches: %v", err), "git-repo//Branches?")
 				}
 
 				return *env.NewBlock(*env.NewTSeries(branches))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "git-repo//branches")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "git-repo//Branches?")
 			}
 		},
 	},
 
 	// Tests:
-	// equal { repo: git-repo//open "." , repo |git-repo//remotes |type? } 'block
+	// equal { repo: git-repo//Open "." , repo |git-repo//Remotes |type? } 'block
 	// Args:
 	// * repo: Git repository object
 	// Returns:
 	// * block of remote information
-	"git-repo//remotes?": {
+	"git-repo//Remotes?": {
 		Argsn: 1,
 		Doc:   "Gets the list of remotes in a Git repository.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch repo := arg0.(type) {
 			case env.Native:
 				if ps.Idx.GetWord(repo.Kind.Index) != "git-repo" {
-					return MakeBuiltinError(ps, "expected a Git repository object", "git-repo//remotes")
+					return MakeBuiltinError(ps, "expected a Git repository object", "git-repo//Remotes?")
 				}
 
 				gitRepo := repo.Value.(*git.Repository)
@@ -414,7 +414,7 @@ var Builtins_git = map[string]*env.Builtin{
 				// Get the remotes
 				remotes, err := gitRepo.Remotes()
 				if err != nil {
-					return MakeBuiltinError(ps, fmt.Sprintf("failed to get remotes: %v", err), "git-repo//remotes")
+					return MakeBuiltinError(ps, fmt.Sprintf("failed to get remotes: %v", err), "git-repo//Remotes?")
 				}
 
 				// Collect remotes
@@ -434,25 +434,25 @@ var Builtins_git = map[string]*env.Builtin{
 
 				return *env.NewBlock(*env.NewTSeries(remotesBlock))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "git-repo//remotes")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "git-repo//Remotes?")
 			}
 		},
 	},
 
 	// Tests:
-	// equal { repo: git-repo//open "." , repo |git-repo//tags |type? } 'block
+	// equal { repo: git-repo//Open "." , repo |git-repo//Tags |type? } 'block
 	// Args:
 	// * repo: Git repository object
 	// Returns:
 	// * block of tag information
-	"git-repo//tags?": {
+	"git-repo//Tags?": {
 		Argsn: 1,
 		Doc:   "Gets the list of tags in a Git repository.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch repo := arg0.(type) {
 			case env.Native:
 				if ps.Idx.GetWord(repo.Kind.Index) != "git-repo" {
-					return MakeBuiltinError(ps, "expected a Git repository object", "git-repo//tags")
+					return MakeBuiltinError(ps, "expected a Git repository object", "git-repo//Tags?")
 				}
 
 				gitRepo := repo.Value.(*git.Repository)
@@ -460,7 +460,7 @@ var Builtins_git = map[string]*env.Builtin{
 				// Get the tags
 				tagIter, err := gitRepo.Tags()
 				if err != nil {
-					return MakeBuiltinError(ps, fmt.Sprintf("failed to get tags: %v", err), "git-repo//tags")
+					return MakeBuiltinError(ps, fmt.Sprintf("failed to get tags: %v", err), "git-repo//Tags?")
 				}
 
 				// Collect tags
@@ -475,12 +475,12 @@ var Builtins_git = map[string]*env.Builtin{
 				})
 
 				if err != nil {
-					return MakeBuiltinError(ps, fmt.Sprintf("failed to iterate tags: %v", err), "git-repo//tags")
+					return MakeBuiltinError(ps, fmt.Sprintf("failed to iterate tags: %v", err), "git-repo//Tags?")
 				}
 
 				return *env.NewBlock(*env.NewTSeries(tags))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "git-repo//tags")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "git-repo//Tags?")
 			}
 		},
 	},
@@ -492,7 +492,7 @@ var Builtins_git = map[string]*env.Builtin{
 	// * branch: Branch name to checkout
 	// Returns:
 	// * Git repository object
-	"git-repo//checkout": {
+	"git-repo//Checkout": {
 		Argsn: 2,
 		Doc:   "Checks out a branch in a Git repository.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -541,7 +541,7 @@ var Builtins_git = map[string]*env.Builtin{
 	// * branch: Branch name to create
 	// Returns:
 	// * Git repository object
-	"git-repo//create-branch": {
+	"git-repo//Create-branch": {
 		Argsn: 2,
 		Doc:   "Creates a new branch in a Git repository.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -604,7 +604,7 @@ var Builtins_git = map[string]*env.Builtin{
 	// * path: Path of the file to add
 	// Returns:
 	// * Git worktree object
-	"git-worktree//add": {
+	"git-worktree//Add": {
 		Argsn: 2,
 		Doc:   "Adds a file to the Git index.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -649,7 +649,7 @@ var Builtins_git = map[string]*env.Builtin{
 	// * email: Optional author email (default: "rye@example.com")
 	// Returns:
 	// * Git worktree object
-	"git-worktree//commit": {
+	"git-worktree//Commit": {
 		Argsn: 2,
 		Doc:   "Commits changes to the Git repository.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

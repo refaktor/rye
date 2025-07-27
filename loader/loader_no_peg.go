@@ -330,7 +330,7 @@ func isDigit(ch byte) bool {
 
 // isWordCharacter checks if a character can be part of a word
 func isWordCharacter(ch byte) bool {
-	return isLetter(ch) || isDigit(ch) || ch == '-' || ch == '+' || ch == '.' || ch == '/' ||
+	return isLetter(ch) || isDigit(ch) || ch == '-' || ch == '+' || ch == '.' ||
 		ch == '!' || ch == '*' || ch == '>' || ch == '\\' || ch == '?' || ch == '=' || ch == '_'
 }
 
@@ -447,9 +447,9 @@ func (l *Lexer) readNumber() NoPEGToken {
 		// Ensure the decimal is followed by a token delimiter
 		if !isWhitespace(l.ch) {
 			// Check if there should be spacing between tokens
-			fmt.Println("--->")
-			fmt.Println(l.pos)
-			fmt.Println(l.input[l.tokenStart:l.pos])
+			// fmt.Println("--->")
+			// fmt.Println(l.pos)
+			// fmt.Println(l.input[l.tokenStart:l.pos])
 			return l.makeTokenErr(NPEG_TOKEN_ERROR, l.input[l.tokenStart:l.pos], determineLexerError(l.ch))
 		}
 
@@ -545,7 +545,7 @@ func (l *Lexer) readOpWord() NoPEGToken {
 	cpath := false
 
 	// Read the word part
-	for isWordCharacter(l.ch) {
+	for isWordCharacter(l.ch) || l.ch == '/' {
 		// Check if it's a context path (word/word)
 		if l.ch == '/' {
 			cpath = true
@@ -572,7 +572,7 @@ func (l *Lexer) readPipeWord() NoPEGToken {
 	cpath := false
 
 	// Read the word part
-	for isWordCharacter(l.ch) {
+	for isWordCharacter(l.ch) || l.ch == '/' {
 		if l.ch == '/' {
 			cpath = true
 		}

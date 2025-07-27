@@ -39,13 +39,13 @@ var Builtins_ssh = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { server: ssh-server "localhost:2222" , server |ssh-server//handle :{ |session| session |ssh-session//write "Hello" } |type? } 'native
+	// equal { server: ssh-server "localhost:2222" , server |ssh-server//Handle :{ |session| session |ssh-session//Write "Hello" } |type? } 'native
 	// Args:
 	// * server: SSH server object
 	// * handler: Function that receives an SSH session object
 	// Returns:
 	// * the SSH server object
-	"ssh-server//handle": {
+	"ssh-server//Handle": {
 		Argsn: 2,
 		Doc:   "Sets a handler function for SSH sessions on the server.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -64,23 +64,23 @@ var Builtins_ssh = map[string]*env.Builtin{
 					return arg0
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.FunctionType}, "ssh-server//handle")
+					return MakeArgError(ps, 2, []env.Type{env.FunctionType}, "ssh-server//Handle")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ssh-server//handle")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ssh-server//Handle")
 			}
 		},
 	},
 
 	// Tests:
-	// equal { server: ssh-server "localhost:2222" , server |ssh-server//password-auth :{ |pass| pass = "secret" } |type? } 'native
+	// equal { server: ssh-server "localhost:2222" , server |ssh-server//Password-auth :{ |pass| pass = "secret" } |type? } 'native
 	// Args:
 	// * server: SSH server object
 	// * handler: Function that receives a password string and returns true/false
 	// Returns:
 	// * the SSH server object
-	"ssh-server//password-auth": {
+	"ssh-server//Password-auth": {
 		Argsn: 2,
 		Doc:   "Sets a password authentication handler for the SSH server.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -101,22 +101,22 @@ var Builtins_ssh = map[string]*env.Builtin{
 					return arg0
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.FunctionType}, "ssh-server//password-auth")
+					return MakeArgError(ps, 2, []env.Type{env.FunctionType}, "ssh-server//Password-auth")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ssh-server//password-auth")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ssh-server//Password-auth")
 			}
 		},
 	},
 
 	// Tests:
-	// equal { server: ssh-server "localhost:2222" , server |ssh-server//serve |type? } 'native
+	// equal { server: ssh-server "localhost:2222" , server |ssh-server//Serve |type? } 'native
 	// Args:
 	// * server: SSH server object
 	// Returns:
 	// * the SSH server object
-	"ssh-server//serve": {
+	"ssh-server//Serve": {
 		Argsn: 1,
 		Doc:   "Starts the SSH server, listening for connections.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -126,19 +126,19 @@ var Builtins_ssh = map[string]*env.Builtin{
 				return arg0
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ssh-server//serve")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ssh-server//Serve")
 			}
 		},
 	},
 
 	// Tests:
-	// equal { session: ssh-session-mock , session |ssh-session//write "Hello" |type? } 'native
+	// equal { session: ssh-session-mock , session |ssh-session//Write "Hello" |type? } 'native
 	// Args:
 	// * session: SSH session object
 	// * text: String to write to the session
 	// Returns:
 	// * the SSH session object
-	"ssh-session//write": {
+	"ssh-session//Write": {
 		Argsn: 2,
 		Doc:   "Writes a string to an SSH session.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -150,11 +150,11 @@ var Builtins_ssh = map[string]*env.Builtin{
 					return arg0
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.StringType}, "ssh-session//write")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "ssh-session//Write")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ssh-session//write")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ssh-session//Write")
 			}
 		},
 	},

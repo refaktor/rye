@@ -49,11 +49,53 @@ func NewEnv2(par *RyeCtx, doc string) *RyeCtx {
 	return &e
 }
 
-func (e RyeCtx) Copy() *RyeCtx {
+func (e *RyeCtx) isContextOrParent(ctx *RyeCtx) bool {
+	if ctx == nil {
+		return false
+	}
+	// Check if ctx is the same as e or if ctx is a child of e
+	// This means we check if e is in the parent chain of ctx
+	current := ctx
+	for current != nil {
+		if current == e {
+			return true
+		}
+		current = current.Parent
+	}
+	return false
+}
+
+func (e *RyeCtx) Copy() *RyeCtx {
 	nc := NewEnv(e.Parent)
 	cp := make(map[int]Object)
 	for k, v := range e.state {
-		cp[k] = v
+		// move contexts of functions (closures) to this new context
+		if fn, ok := v.(Function); ok {
+			// fmt.Printf("**** Function found, fn.Ctx=%p, e=%p\n", fn.Ctx, e)
+			// fmt.Printf("**** fn.Ctx.Parent=%p, e.Parent=%p\n", fn.Ctx.Parent, e.Parent)
+			// Check if the function's context should be updated to the new context
+			// This handles cases where the function was created with 'current' or similar
+			// We should update the function's context if:
+			// 1. It's exactly the same context (fn.Ctx == e)
+			// 2. The function's context is the same as the context being copied (they have the same parent)
+			// 3. The function's context is a child of the context being copied
+			if fn.Ctx == e ||
+				e.isContextOrParent(fn.Ctx) ||
+				(fn.Ctx != nil &&
+					fn.Ctx.Parent != nil &&
+					e.Parent != nil &&
+					fn.Ctx.Parent == e.Parent &&
+					fn.Ctx != e.Parent) {
+				//					fmt.Println("CTX IS THE SAME OR RELATED ... COPY")
+				fn.Ctx = nc
+				cp[k] = fn // store the modified function
+			} else {
+				// fmt.Println("CTX IS DIFFERENT - NOT COPYING")
+				cp[k] = v // store the original function
+			}
+		} else {
+			cp[k] = v
+		}
 	}
 	cpVarFlags := make(map[int]bool)
 	for k, v := range e.varFlags {

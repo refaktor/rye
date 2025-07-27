@@ -762,8 +762,24 @@ var Builtins_table = map[string]*env.Builtin{
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.NativeType}, "add-rows!")
 				}
+			case *env.PersistentTable:
+				switch data1 := arg1.(type) {
+				case env.Block:
+					data := data1.Series
+					for data.Pos() < data.Len() {
+						rowd := make([]any, len(spr.Cols))
+						for ii := 0; ii < len(spr.Cols); ii++ {
+							k1 := data.Pop()
+							rowd[ii] = k1
+						}
+						spr.AddRow(*env.NewTableRow(rowd, spr))
+					}
+					return spr
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "add-rows!")
+				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType}, "add-rows!")
+				return MakeArgError(ps, 1, []env.Type{env.TableType, env.PersistentTableType}, "add-rows!")
 			}
 		},
 	},
@@ -2010,6 +2026,64 @@ var Builtins_table = map[string]*env.Builtin{
 	}, */
 	// TODO: Check for size
 
+	//
+	// ##### Persistent Tables #####  "Functions for persistent tables using BadgerDB."
+	//
+
+	// Tests:
+	//  equal { persistent-table { "a" "b" } "/tmp/test_db" "test_table" |type? } 'persistent-table
+	// Args:
+	//  * columns - block of column names
+	//  * db-path - path to BadgerDB database
+	//  * table-name - name of the table
+	"persistent-table": {
+		Argsn: 3,
+		Doc:   "Creates a persistent table using BadgerDB for storage",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			cols, err := ColNames(ps, arg0, "persistent-table")
+			if err != nil {
+				return err
+			}
+
+			switch dbPath := arg1.(type) {
+			case env.String:
+				switch tableName := arg2.(type) {
+				case env.String:
+					pt, err := env.NewPersistentTable(cols, dbPath.Value, tableName.Value)
+					if err != nil {
+						return MakeBuiltinError(ps, fmt.Sprintf("Failed to create persistent table: %v", err), "persistent-table")
+					}
+					return pt
+				default:
+					return MakeArgError(ps, 3, []env.Type{env.StringType}, "persistent-table")
+				}
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.StringType}, "persistent-table")
+			}
+		},
+	},
+
+	// Tests:
+	//  equal { pt: persistent-table { "a" "b" } "/tmp/test_db" "test_table"
+	//          pt .close-persistent-table! |type? } 'persistent-table
+	// Args:
+	//  * persistent-table - the persistent table to close
+	"close-persistent-table!": {
+		Argsn: 1,
+		Doc:   "Closes the BadgerDB connection for a persistent table",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch pt := arg0.(type) {
+			case *env.PersistentTable:
+				err := pt.Close()
+				if err != nil {
+					return MakeBuiltinError(ps, fmt.Sprintf("Failed to close persistent table: %v", err), "close-persistent-table!")
+				}
+				return pt
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.PersistentTableType}, "close-persistent-table!")
+			}
+		},
+	},
 }
 
 func RyeValueToTableRow(spr *env.Table, obj env.Object) (bool, string, *env.TableRow) {

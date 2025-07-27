@@ -7,6 +7,45 @@ import (
 	"strings"
 )
 
+// TableInterface defines the common interface for all table implementations
+type TableInterface interface {
+	// Core operations
+	AddRow(row TableRow)
+	GetRows() []TableRow
+	GetRow(ps *ProgramState, index int) TableRow
+	RemoveRowByIndex(index int64)
+
+	// Column operations
+	GetColumn(name string) Object
+	GetColumns() List
+	GetColumnIndex(column string) int
+	GetColumnNames() []string
+	SetCols(vals []string)
+
+	// Query operations
+	GetRowValue(column string, rrow TableRow) (any, error)
+	Columns(ps *ProgramState, names []string) Object
+
+	// Metadata
+	Length() int
+	NRows() int
+	Type() Type
+	GetKind() int
+	Equal(o Object) bool
+
+	// Display/serialization
+	Inspect(e Idxs) string
+	Print(e Idxs) string
+	ToHtml() string
+	ToTxt() string
+	Dump(e Idxs) string
+	Trace(msg string)
+
+	// Collections interface
+	Get(i int) Object
+	MakeNew(data []Object) Object
+}
+
 func makeError(env1 *ProgramState, msg string) *Error {
 	env1.FailureFlag = true
 	return NewError(msg)
@@ -14,10 +53,10 @@ func makeError(env1 *ProgramState, msg string) *Error {
 
 type TableRow struct {
 	Values []any
-	Uplink *Table
+	Uplink TableInterface
 }
 
-func NewTableRow(values []any, uplink *Table) *TableRow {
+func NewTableRow(values []any, uplink TableInterface) *TableRow {
 	nat := TableRow{values, uplink}
 	return &nat
 }
@@ -51,7 +90,7 @@ func AddTableRowAndDict(row TableRow, dict Dict) TableRow {
 func AddTableRowAndMap(row TableRow, dict map[string]any) TableRow {
 	newRow := TableRow{row.Values, row.Uplink}
 
-	for i, v := range row.Uplink.Cols {
+	for i, v := range row.Uplink.GetColumnNames() {
 		if val, ok := dict[v]; ok {
 			newRow.Values[i] = val
 		}
@@ -362,7 +401,7 @@ func (s TableRow) ToTxt() string {
 	var bu strings.Builder
 	bu.WriteString("[ ")
 	for i, val := range s.Values {
-		bu.WriteString(s.Uplink.Cols[i])
+		bu.WriteString(s.Uplink.GetColumnNames()[i])
 		bu.WriteString(": ")
 		bu.WriteString(fmt.Sprint(val))
 		bu.WriteString("\t")
@@ -387,7 +426,7 @@ func (s TableRow) ToDict() Dict {
 	}
 	d := NewDict(map[string]any{})
 	for i, v := range s.Values {
-		d.Data[s.Uplink.Cols[i]] = v
+		d.Data[s.Uplink.GetColumnNames()[i]] = v
 	}
 	return *d
 }
@@ -409,6 +448,10 @@ func (s Table) GetColumnIndex(column string) int {
 		}
 	}
 	return index
+}
+
+func (s Table) GetColumnNames() []string {
+	return s.Cols
 }
 
 // Collections

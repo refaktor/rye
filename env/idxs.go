@@ -55,6 +55,7 @@ var NativeTypes = [...]string{ // Todo change to BuiltinTypes
 	"VarBuiltin",
 	"CurriedCaller",
 	"Complex",
+	"PersistentTable",
 }
 
 func (e *Idxs) IndexWord(w string) int {
