@@ -274,7 +274,7 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 	} else {
 		r.fullCode += lineReal
 
-		block, genv := loader.LoadString(r.fullCode, false)
+		block, genv := loader.LoadStringNoPEG(r.fullCode, false)
 
 		// Check if the result is an error
 		if err, isError := block.(env.Error); isError {
@@ -568,6 +568,7 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 
 		// # TRICK: we don't have the cursor position, but the caller code handles that already so we can suggest in the 	middle
 		suggestions := make([]string, 0)
+		suggestions2 := make([]string, 0)
 		var wordpart string
 		spacePos := strings.LastIndex(line, " ")
 		var prefix string
@@ -590,36 +591,38 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 		fmt.Print("=[")
 		fmt.Print(wordpart)
 		fmt.Print("]=")
-		switch mode {
-		case 0:
+		// switch mode {
+		// case 0:
+		if wordpart != "" {
 			for i := 0; i < es.Idx.GetWordCount(); i++ {
 				// fmt.Print(es.Idx.GetWord(i))
 				if strings.HasPrefix(es.Idx.GetWord(i), strings.ToLower(wordpart)) {
 					c = append(c, prefix+es.Idx.GetWord(i))
-					suggestions = append(suggestions, es.Idx.GetWord(i))
+					suggestions2 = append(suggestions2, es.Idx.GetWord(i))
 				} else if strings.HasPrefix("."+es.Idx.GetWord(i), strings.ToLower(wordpart)) {
 					c = append(c, prefix+"."+es.Idx.GetWord(i))
-					suggestions = append(suggestions, es.Idx.GetWord(i))
+					suggestions2 = append(suggestions2, es.Idx.GetWord(i))
 				} else if strings.HasPrefix("|"+es.Idx.GetWord(i), strings.ToLower(wordpart)) {
 					c = append(c, prefix+"|"+es.Idx.GetWord(i))
-					suggestions = append(suggestions, es.Idx.GetWord(i))
-				}
-			}
-		case 1:
-			for key := range es.Ctx.GetState() {
-				// fmt.Print(es.Idx.GetWord(i))
-				if strings.HasPrefix(es.Idx.GetWord(key), strings.ToLower(wordpart)) {
-					c = append(c, prefix+es.Idx.GetWord(key))
-					suggestions = append(suggestions, es.Idx.GetWord(key))
-				} else if strings.HasPrefix("."+es.Idx.GetWord(key), strings.ToLower(wordpart)) {
-					c = append(c, prefix+"."+es.Idx.GetWord(key))
-					suggestions = append(suggestions, es.Idx.GetWord(key))
-				} else if strings.HasPrefix("|"+es.Idx.GetWord(key), strings.ToLower(wordpart)) {
-					c = append(c, prefix+"|"+es.Idx.GetWord(key))
-					suggestions = append(suggestions, es.Idx.GetWord(key))
+					suggestions2 = append(suggestions2, es.Idx.GetWord(i))
 				}
 			}
 		}
+		// case 1:
+		for key := range es.Ctx.GetState() {
+			// fmt.Print(es.Idx.GetWord(i))
+			if strings.HasPrefix(es.Idx.GetWord(key), strings.ToLower(wordpart)) {
+				c = append(c, prefix+es.Idx.GetWord(key))
+				suggestions = append(suggestions, es.Idx.GetWord(key))
+			} else if strings.HasPrefix("."+es.Idx.GetWord(key), strings.ToLower(wordpart)) {
+				c = append(c, prefix+"."+es.Idx.GetWord(key))
+				suggestions = append(suggestions, es.Idx.GetWord(key))
+			} else if strings.HasPrefix("|"+es.Idx.GetWord(key), strings.ToLower(wordpart)) {
+				c = append(c, prefix+"|"+es.Idx.GetWord(key))
+				suggestions = append(suggestions, es.Idx.GetWord(key))
+			}
+		}
+		// }
 
 		// TODO -- make this sremlines and use local term functions
 		if isCursorAtBottom() {
@@ -633,13 +636,23 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 		// Delete the line
 		term.ClearLine() //"\033[2K")
 
+		moveLines := 2
+
 		// Print something
 		term.ColorMagenta()
+		fmt.Println("current context:")
 		fmt.Print(suggestions)
+		if len(suggestions2) > 0 {
+			fmt.Println("")
+			term.ColorBlue()
+			fmt.Println("all words:")
+			fmt.Print(suggestions2)
+			moveLines += 3
+		}
 		term.CloseProps() //	fmt.Print("This is the new line.")
 
 		// Move the cursor back to the previous line
-		term.CurUp(1) //"\033[A")
+		term.CurUp(moveLines) //"\033[A")
 
 		return
 	})

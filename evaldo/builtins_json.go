@@ -191,7 +191,7 @@ func TableRowToJSON(row env.TableRow) string {
 			bu.WriteString(", ")
 		}
 		bu.WriteString("\"")
-		bu.WriteString(row.Uplink.Cols[i])
+		bu.WriteString(row.Uplink.GetColumnNames()[i])
 		bu.WriteString("\": ")
 		bu.WriteString(RyeToJSON(val))
 	}

@@ -24,7 +24,7 @@ var Builtins_smtpd = map[string]*env.Builtin{
 		},
 	},
 
-	"smtpd//serve": {
+	"smtpd//Serve": {
 		Argsn: 4,
 		Doc:   "Serve SMTP server.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

@@ -324,8 +324,9 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 		case env.String:
 			index := 0
 			// find the column index
-			for i := 0; i < len(s1.Uplink.Cols); i++ {
-				if s1.Uplink.Cols[i] == s2.Value {
+			columnNames := s1.Uplink.GetColumnNames()
+			for i := 0; i < len(columnNames); i++ {
+				if columnNames[i] == s2.Value {
 					index = i
 				}
 			}
@@ -1231,7 +1232,7 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
-				block, _ := loader.LoadString(s1.Value, false)
+				block, _ := loader.LoadStringNoPEG(s1.Value, false)
 				//ps = env.AddToProgramState(ps, block.Series, genv)
 				return block
 			case env.Uri:
@@ -1265,7 +1266,7 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
-				block, _ := loader.LoadString(s1.Value, false)
+				block, _ := loader.LoadStringNoPEG(s1.Value, false)
 				//ps = env.AddToProgramState(ps, block.Series, genv)
 				return block
 			case env.Uri:
@@ -1300,7 +1301,7 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
-				block, _ := loader.LoadString(s1.Value, true)
+				block, _ := loader.LoadStringNoPEG(s1.Value, true)
 				//ps = env.AddToProgramState(ps, block.Series, genv)
 				return block
 			default:

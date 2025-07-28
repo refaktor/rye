@@ -121,7 +121,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// * key: Ed25519 public key as a native value
 	// Returns:
 	// * string containing the hexadecimal representation of the public key
-	"Ed25519-pub-key//to-string": {
+	"Ed25519-pub-key//To-string": {
 		Argsn: 1,
 		Doc:   "Converts an Ed25519 public key to its hexadecimal string representation.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -130,7 +130,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 				return *env.NewString(hex.EncodeToString(addr.Value.(ed25519.PublicKey)))
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Ed25519-pub-key//to-string")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Ed25519-pub-key//To-string")
 			}
 		},
 	},
@@ -141,7 +141,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// * key: Ed25519 private key as a native value
 	// Returns:
 	// * string containing the hexadecimal representation of the private key
-	"Ed25519-priv-key//to-string": {
+	"Ed25519-priv-key//To-string": {
 		Argsn: 1,
 		Doc:   "Converts an Ed25519 private key to its hexadecimal string representation.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -150,7 +150,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 				return *env.NewString(hex.EncodeToString(addr.Value.(ed25519.PrivateKey)))
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Ed25519-priv-key//to-string")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Ed25519-priv-key//To-string")
 			}
 		},
 	},
@@ -261,7 +261,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// * message: string to sign
 	// Returns:
 	// * signature as a native bytes value
-	"Ed25519-priv-key//sign": {
+	"Ed25519-priv-key//Sign": {
 		Argsn: 2,
 		Doc:   "Signs a string message with an Ed25519 private key and returns the signature as bytes.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -273,11 +273,11 @@ var Builtins_crypto = map[string]*env.Builtin{
 					return *env.NewNative(ps.Idx, sigb, "bytes")
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 1, []env.Type{env.StringType}, "Ed25519-priv-key//sign")
+					return MakeArgError(ps, 1, []env.Type{env.StringType}, "Ed25519-priv-key//Sign")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Ed25519-priv-key//sign")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Ed25519-priv-key//Sign")
 			}
 		},
 	},
@@ -602,19 +602,19 @@ var Builtins_crypto = map[string]*env.Builtin{
 
 	// Tests:
 	// ; equal { cc crypto "cert.p12" read-file "password" pkcs12-decode |type? } 'block
-	// ; equal { cc crypto "cert.p12" read-file "password" pkcs12-decode |length? } 2
+	// ; equal { cc crypto "cert.p12" read-file "password" pkcs12-decode |length? } 3
 	// ; equal { cc crypto "cert.p12" read-file "password" pkcs12-decode |first |type? } 'native
 	// ; equal { cc crypto "cert.p12" read-file "password" pkcs12-decode |first |kind? } 'private-key
-	// ; equal { cc crypto "cert.p12" read-file "password" pkcs12-decode |second |type? } 'native
-	// ; equal { cc crypto "cert.p12" read-file "password" pkcs12-decode |second |kind? } 'x509-certificate
+	// ; equal { cc crypto "cert.p12" read-file "password" pkcs12-decode |second |type? } 'block
+	// ; equal { cc crypto "cert.p12" read-file "password" pkcs12-decode |third |type? } 'block
 	// Args:
 	// * p12-data: PKCS#12 file content as bytes native value
 	// * password: string password for the PKCS#12 file
 	// Returns:
-	// * block containing [private-key, x509-certificate] as native values
+	// * block containing [private-key, certificates-block, ca-certificates-block] as native values
 	"pkcs12-decode": {
 		Argsn: 2,
-		Doc:   "Decodes a PKCS#12 (.p12) file bytes into certificate and private key using the provided password. Returns a block with [private-key, certificate].",
+		Doc:   "Decodes a PKCS#12 (.p12) file bytes into private key and certificates using the provided password. Returns a block with [private-key, certificates, ca-certificates].",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p12Data := arg0.(type) {
 			case env.Native:
@@ -624,15 +624,37 @@ var Builtins_crypto = map[string]*env.Builtin{
 				}
 				switch password := arg1.(type) {
 				case env.String:
-					key, cert, err := pkcs12.Decode(p12Data.Value.([]byte), password.Value)
+					key, cert, caCerts, err := sslmate.DecodeChain(p12Data.Value.([]byte), password.Value)
 					if err != nil {
 						ps.FailureFlag = true
 						return MakeBuiltinError(ps, fmt.Sprintf("Failed to decode .p12: %v", err), "pkcs12-decode")
 					}
-					// Return a block with [private key, certificate]
-					objects := make([]env.Object, 2)
-					objects[0] = *env.NewNative(ps.Idx, key, "private-key") // Generic private key type
-					objects[1] = *env.NewNative(ps.Idx, cert, "x509-certificate")
+
+					// Create certificates block
+					certObjects := make([]env.Object, 0)
+					if cert != nil {
+						certObjects = append(certObjects, *env.NewNative(ps.Idx, cert, "x509-certificate"))
+					}
+					certSer := *env.NewTSeries(certObjects)
+					certBlock := *env.NewBlock(certSer)
+
+					// Create CA certificates block
+					caCertObjects := make([]env.Object, len(caCerts))
+					for i, caCert := range caCerts {
+						caCertObjects[i] = *env.NewNative(ps.Idx, caCert, "x509-certificate")
+					}
+					caCertSer := *env.NewTSeries(caCertObjects)
+					caCertBlock := *env.NewBlock(caCertSer)
+
+					// Return a block with [private key, certificates, ca-certificates]
+					objects := make([]env.Object, 3)
+					if key != nil {
+						objects[0] = *env.NewNative(ps.Idx, key, "private-key")
+					} else {
+						objects[0] = *env.NewNative(ps.Idx, nil, "private-key")
+					}
+					objects[1] = certBlock
+					objects[2] = caCertBlock
 					ser := *env.NewTSeries(objects)
 					return *env.NewBlock(ser)
 				default:
@@ -652,7 +674,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// * pem-block: PEM block as a native value
 	// Returns:
 	// * string containing the block type (e.g., "CERTIFICATE", "RSA PRIVATE KEY")
-	"pem-block//block-type?": {
+	"pem-block//Block-type?": {
 		Argsn: 1,
 		Doc:   "Returns the type of a PEM block as a string (e.g., 'CERTIFICATE', 'RSA PRIVATE KEY').",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -681,7 +703,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// * pem-block: PEM block as a native value
 	// Returns:
 	// * dictionary containing the PEM block headers
-	"pem-block//headers?": {
+	"pem-block//Headers?": {
 		Argsn: 1,
 		Doc:   "Returns the headers of a PEM block as a dictionary.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -749,7 +771,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// * certificate: X.509 certificate as a native value
 	// Returns:
 	// * time value representing the certificate's expiration date
-	"x509-certificate//not-after?": {
+	"x509-certificate//Not-after?": {
 		Argsn: 1,
 		Doc:   "Returns the expiration date (NotAfter) of an X.509 certificate as a time value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -774,7 +796,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// * certificate: X.509 certificate as a native value
 	// Returns:
 	// * time value representing the certificate's start date
-	"x509-certificate//not-before?": {
+	"x509-certificate//Not-before?": {
 		Argsn: 1,
 		Doc:   "Returns the start date (NotBefore) of an X.509 certificate as a time value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -800,7 +822,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// * certificate: X.509 certificate as a native value
 	// Returns:
 	// * integer 1 if the certificate has expired, 0 otherwise
-	"x509-certificate//is-expired": {
+	"x509-certificate//Is-expired": {
 		Argsn: 1,
 		Doc:   "Checks if an X.509 certificate has expired. Returns 1 if expired, 0 otherwise.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1021,6 +1043,496 @@ var Builtins_crypto = map[string]*env.Builtin{
 			default:
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "encode-to-p12")
+			}
+		},
+	},
+
+	// Tests:
+	// ; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |subject? |type? } 'string
+	// Args:
+	// * certificate: X.509 certificate as a native value
+	// Returns:
+	// * string containing the certificate's subject DN
+	"x509-certificate//Subject?": {
+		Argsn: 1,
+		Doc:   "Returns the subject Distinguished Name (DN) of an X.509 certificate as a string.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch cert := arg0.(type) {
+			case env.Native:
+				if ps.Idx.GetWord(cert.GetKind()) != "x509-certificate" {
+					ps.FailureFlag = true
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "x509-certificate//subject?")
+				}
+				c := cert.Value.(*x509.Certificate)
+				return *env.NewString(c.Subject.String())
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "x509-certificate//subject?")
+			}
+		},
+	},
+
+	// Tests:
+	// ; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |issuer? |type? } 'string
+	// Args:
+	// * certificate: X.509 certificate as a native value
+	// Returns:
+	// * string containing the certificate's issuer DN
+	"x509-certificate//Issuer?": {
+		Argsn: 1,
+		Doc:   "Returns the issuer Distinguished Name (DN) of an X.509 certificate as a string.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch cert := arg0.(type) {
+			case env.Native:
+				if ps.Idx.GetWord(cert.GetKind()) != "x509-certificate" {
+					ps.FailureFlag = true
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "x509-certificate//issuer?")
+				}
+				c := cert.Value.(*x509.Certificate)
+				return *env.NewString(c.Issuer.String())
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "x509-certificate//issuer?")
+			}
+		},
+	},
+
+	// Tests:
+	// ; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |serial-number? |type? } 'string
+	// Args:
+	// * certificate: X.509 certificate as a native value
+	// Returns:
+	// * string containing the certificate's serial number
+	"x509-certificate//Serial-number?": {
+		Argsn: 1,
+		Doc:   "Returns the serial number of an X.509 certificate as a string.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch cert := arg0.(type) {
+			case env.Native:
+				if ps.Idx.GetWord(cert.GetKind()) != "x509-certificate" {
+					ps.FailureFlag = true
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "x509-certificate//serial-number?")
+				}
+				c := cert.Value.(*x509.Certificate)
+				return *env.NewString(c.SerialNumber.String())
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "x509-certificate//serial-number?")
+			}
+		},
+	},
+
+	// Tests:
+	// ; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |signature-algorithm? |type? } 'string
+	// Args:
+	// * certificate: X.509 certificate as a native value
+	// Returns:
+	// * string containing the certificate's signature algorithm
+	"x509-certificate//Signature-algorithm?": {
+		Argsn: 1,
+		Doc:   "Returns the signature algorithm of an X.509 certificate as a string.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch cert := arg0.(type) {
+			case env.Native:
+				if ps.Idx.GetWord(cert.GetKind()) != "x509-certificate" {
+					ps.FailureFlag = true
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "x509-certificate//signature-algorithm?")
+				}
+				c := cert.Value.(*x509.Certificate)
+				return *env.NewString(c.SignatureAlgorithm.String())
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "x509-certificate//signature-algorithm?")
+			}
+		},
+	},
+
+	// Tests:
+	// ; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |public-key-algorithm? |type? } 'string
+	// Args:
+	// * certificate: X.509 certificate as a native value
+	// Returns:
+	// * string containing the certificate's public key algorithm
+	"x509-certificate//Public-key-algorithm?": {
+		Argsn: 1,
+		Doc:   "Returns the public key algorithm of an X.509 certificate as a string.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch cert := arg0.(type) {
+			case env.Native:
+				if ps.Idx.GetWord(cert.GetKind()) != "x509-certificate" {
+					ps.FailureFlag = true
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "x509-certificate//public-key-algorithm?")
+				}
+				c := cert.Value.(*x509.Certificate)
+				return *env.NewString(c.PublicKeyAlgorithm.String())
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "x509-certificate//public-key-algorithm?")
+			}
+		},
+	},
+
+	// Tests:
+	// ; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |key-usage? |type? } 'block
+	// Args:
+	// * certificate: X.509 certificate as a native value
+	// Returns:
+	// * block containing strings of key usage flags
+	"x509-certificate//Key-usage?": {
+		Argsn: 1,
+		Doc:   "Returns the key usage flags of an X.509 certificate as a block of strings.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch cert := arg0.(type) {
+			case env.Native:
+				if ps.Idx.GetWord(cert.GetKind()) != "x509-certificate" {
+					ps.FailureFlag = true
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "x509-certificate//key-usage?")
+				}
+				c := cert.Value.(*x509.Certificate)
+				var usages []env.Object
+				if c.KeyUsage&x509.KeyUsageDigitalSignature > 0 {
+					usages = append(usages, *env.NewString("Digital Signature"))
+				}
+				if c.KeyUsage&x509.KeyUsageContentCommitment > 0 {
+					usages = append(usages, *env.NewString("Content Commitment"))
+				}
+				if c.KeyUsage&x509.KeyUsageKeyEncipherment > 0 {
+					usages = append(usages, *env.NewString("Key Encipherment"))
+				}
+				if c.KeyUsage&x509.KeyUsageDataEncipherment > 0 {
+					usages = append(usages, *env.NewString("Data Encipherment"))
+				}
+				if c.KeyUsage&x509.KeyUsageKeyAgreement > 0 {
+					usages = append(usages, *env.NewString("Key Agreement"))
+				}
+				if c.KeyUsage&x509.KeyUsageCertSign > 0 {
+					usages = append(usages, *env.NewString("Cert Sign"))
+				}
+				if c.KeyUsage&x509.KeyUsageCRLSign > 0 {
+					usages = append(usages, *env.NewString("CRL Sign"))
+				}
+				if c.KeyUsage&x509.KeyUsageEncipherOnly > 0 {
+					usages = append(usages, *env.NewString("Encipher Only"))
+				}
+				if c.KeyUsage&x509.KeyUsageDecipherOnly > 0 {
+					usages = append(usages, *env.NewString("Decipher Only"))
+				}
+				ser := *env.NewTSeries(usages)
+				return *env.NewBlock(ser)
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "x509-certificate//key-usage?")
+			}
+		},
+	},
+
+	// Tests:
+	// ; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |extended-key-usage? |type? } 'block
+	// Args:
+	// * certificate: X.509 certificate as a native value
+	// Returns:
+	// * block containing strings of extended key usage flags
+	"x509-certificate//Extended-key-usage?": {
+		Argsn: 1,
+		Doc:   "Returns the extended key usage flags of an X.509 certificate as a block of strings.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch cert := arg0.(type) {
+			case env.Native:
+				if ps.Idx.GetWord(cert.GetKind()) != "x509-certificate" {
+					ps.FailureFlag = true
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "x509-certificate//extended-key-usage?")
+				}
+				c := cert.Value.(*x509.Certificate)
+				usages := make([]env.Object, len(c.ExtKeyUsage))
+				for i, extKeyUsage := range c.ExtKeyUsage {
+					var usageStr string
+					switch extKeyUsage {
+					case x509.ExtKeyUsageServerAuth:
+						usageStr = "Server Authentication"
+					case x509.ExtKeyUsageClientAuth:
+						usageStr = "Client Authentication"
+					case x509.ExtKeyUsageCodeSigning:
+						usageStr = "Code Signing"
+					case x509.ExtKeyUsageEmailProtection:
+						usageStr = "Email Protection"
+					case x509.ExtKeyUsageTimeStamping:
+						usageStr = "Time Stamping"
+					case x509.ExtKeyUsageOCSPSigning:
+						usageStr = "OCSP Signing"
+					default:
+						usageStr = fmt.Sprintf("Unknown (%d)", int(extKeyUsage))
+					}
+					usages[i] = *env.NewString(usageStr)
+				}
+				ser := *env.NewTSeries(usages)
+				return *env.NewBlock(ser)
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "x509-certificate//extended-key-usage?")
+			}
+		},
+	},
+
+	// Tests:
+	// ; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |dns-names? |type? } 'block
+	// Args:
+	// * certificate: X.509 certificate as a native value
+	// Returns:
+	// * block containing DNS names from Subject Alternative Names
+	"x509-certificate//Dns-names?": {
+		Argsn: 1,
+		Doc:   "Returns the DNS names from Subject Alternative Names of an X.509 certificate as a block of strings.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch cert := arg0.(type) {
+			case env.Native:
+				if ps.Idx.GetWord(cert.GetKind()) != "x509-certificate" {
+					ps.FailureFlag = true
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "x509-certificate//dns-names?")
+				}
+				c := cert.Value.(*x509.Certificate)
+				names := make([]env.Object, len(c.DNSNames))
+				for i, name := range c.DNSNames {
+					names[i] = *env.NewString(name)
+				}
+				ser := *env.NewTSeries(names)
+				return *env.NewBlock(ser)
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "x509-certificate//dns-names?")
+			}
+		},
+	},
+
+	// Tests:
+	// ; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |ip-addresses? |type? } 'block
+	// Args:
+	// * certificate: X.509 certificate as a native value
+	// Returns:
+	// * block containing IP addresses from Subject Alternative Names
+	"x509-certificate//Ip-addresses?": {
+		Argsn: 1,
+		Doc:   "Returns the IP addresses from Subject Alternative Names of an X.509 certificate as a block of strings.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch cert := arg0.(type) {
+			case env.Native:
+				if ps.Idx.GetWord(cert.GetKind()) != "x509-certificate" {
+					ps.FailureFlag = true
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "x509-certificate//ip-addresses?")
+				}
+				c := cert.Value.(*x509.Certificate)
+				addresses := make([]env.Object, len(c.IPAddresses))
+				for i, addr := range c.IPAddresses {
+					addresses[i] = *env.NewString(addr.String())
+				}
+				ser := *env.NewTSeries(addresses)
+				return *env.NewBlock(ser)
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "x509-certificate//ip-addresses?")
+			}
+		},
+	},
+
+	// Tests:
+	// ; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |email-addresses? |type? } 'block
+	// Args:
+	// * certificate: X.509 certificate as a native value
+	// Returns:
+	// * block containing email addresses from Subject Alternative Names
+	"x509-certificate//Email-addresses?": {
+		Argsn: 1,
+		Doc:   "Returns the email addresses from Subject Alternative Names of an X.509 certificate as a block of strings.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch cert := arg0.(type) {
+			case env.Native:
+				if ps.Idx.GetWord(cert.GetKind()) != "x509-certificate" {
+					ps.FailureFlag = true
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "x509-certificate//email-addresses?")
+				}
+				c := cert.Value.(*x509.Certificate)
+				emails := make([]env.Object, len(c.EmailAddresses))
+				for i, email := range c.EmailAddresses {
+					emails[i] = *env.NewString(email)
+				}
+				ser := *env.NewTSeries(emails)
+				return *env.NewBlock(ser)
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "x509-certificate//email-addresses?")
+			}
+		},
+	},
+
+	// Tests:
+	// ; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |to-pem |type? } 'string
+	// Args:
+	// * certificate: X.509 certificate as a native value
+	// Returns:
+	// * string containing the PEM-encoded certificate
+	"x509-certificate//To-pem": {
+		Argsn: 1,
+		Doc:   "Converts an X.509 certificate to PEM-encoded string format.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch cert := arg0.(type) {
+			case env.Native:
+				if ps.Idx.GetWord(cert.GetKind()) != "x509-certificate" {
+					ps.FailureFlag = true
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "x509-certificate//to-pem")
+				}
+				c := cert.Value.(*x509.Certificate)
+				pemBlock := &pem.Block{Type: "CERTIFICATE", Bytes: c.Raw}
+				pemBytes := pem.EncodeToMemory(pemBlock)
+				return *env.NewString(string(pemBytes))
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "x509-certificate//to-pem")
+			}
+		},
+	},
+
+	// Tests:
+	// ; equal { cc crypto "key.pem" read-file |pem-decode |private-key-type? |type? } 'string
+	// Args:
+	// * private-key: private key as a native value
+	// Returns:
+	// * string containing the type of the private key (e.g., "*rsa.PrivateKey", "*ecdsa.PrivateKey")
+	"private-key//Type?": {
+		Argsn: 1,
+		Doc:   "Returns the type of a private key as a string.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch key := arg0.(type) {
+			case env.Native:
+				if ps.Idx.GetWord(key.GetKind()) != "private-key" {
+					ps.FailureFlag = true
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "private-key//type?")
+				}
+				return *env.NewString(fmt.Sprintf("%T", key.Value))
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "private-key//type?")
+			}
+		},
+	},
+
+	// Tests:
+	// ; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |to-dict |type? } 'dict
+	// ; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |to-dict |get "Subject" |type? } 'string
+	// Args:
+	// * certificate: X.509 certificate as a native value
+	// Returns:
+	// * dictionary containing all certificate information
+	"x509-certificate//To-dict": {
+		Argsn: 1,
+		Doc:   "Converts an X.509 certificate to a dictionary containing all certificate information for easy display and manipulation.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch cert := arg0.(type) {
+			case env.Native:
+				if ps.Idx.GetWord(cert.GetKind()) != "x509-certificate" {
+					ps.FailureFlag = true
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "x509-certificate//to-dict")
+				}
+				c := cert.Value.(*x509.Certificate)
+
+				// Create the main dictionary
+				certDict := make(map[string]interface{})
+
+				// Basic certificate information
+				certDict["Subject"] = c.Subject.String()
+				certDict["Issuer"] = c.Issuer.String()
+				certDict["SerialNumber"] = c.SerialNumber.String()
+				certDict["NotBefore"] = c.NotBefore.Format("2006-01-02 15:04:05 MST")
+				certDict["NotAfter"] = c.NotAfter.Format("2006-01-02 15:04:05 MST")
+				certDict["SignatureAlgorithm"] = c.SignatureAlgorithm.String()
+				certDict["PublicKeyAlgorithm"] = c.PublicKeyAlgorithm.String()
+				certDict["Version"] = int64(c.Version)
+				certDict["IsCA"] = c.IsCA
+
+				// Key Usage
+				var keyUsages []interface{}
+				if c.KeyUsage&x509.KeyUsageDigitalSignature > 0 {
+					keyUsages = append(keyUsages, "Digital Signature")
+				}
+				if c.KeyUsage&x509.KeyUsageContentCommitment > 0 {
+					keyUsages = append(keyUsages, "Content Commitment")
+				}
+				if c.KeyUsage&x509.KeyUsageKeyEncipherment > 0 {
+					keyUsages = append(keyUsages, "Key Encipherment")
+				}
+				if c.KeyUsage&x509.KeyUsageDataEncipherment > 0 {
+					keyUsages = append(keyUsages, "Data Encipherment")
+				}
+				if c.KeyUsage&x509.KeyUsageKeyAgreement > 0 {
+					keyUsages = append(keyUsages, "Key Agreement")
+				}
+				if c.KeyUsage&x509.KeyUsageCertSign > 0 {
+					keyUsages = append(keyUsages, "Cert Sign")
+				}
+				if c.KeyUsage&x509.KeyUsageCRLSign > 0 {
+					keyUsages = append(keyUsages, "CRL Sign")
+				}
+				if c.KeyUsage&x509.KeyUsageEncipherOnly > 0 {
+					keyUsages = append(keyUsages, "Encipher Only")
+				}
+				if c.KeyUsage&x509.KeyUsageDecipherOnly > 0 {
+					keyUsages = append(keyUsages, "Decipher Only")
+				}
+				certDict["KeyUsage"] = keyUsages
+
+				// Extended Key Usage
+				var extKeyUsages []interface{}
+				for _, extKeyUsage := range c.ExtKeyUsage {
+					var usageStr string
+					switch extKeyUsage {
+					case x509.ExtKeyUsageServerAuth:
+						usageStr = "Server Authentication"
+					case x509.ExtKeyUsageClientAuth:
+						usageStr = "Client Authentication"
+					case x509.ExtKeyUsageCodeSigning:
+						usageStr = "Code Signing"
+					case x509.ExtKeyUsageEmailProtection:
+						usageStr = "Email Protection"
+					case x509.ExtKeyUsageTimeStamping:
+						usageStr = "Time Stamping"
+					case x509.ExtKeyUsageOCSPSigning:
+						usageStr = "OCSP Signing"
+					default:
+						usageStr = fmt.Sprintf("Unknown (%d)", int(extKeyUsage))
+					}
+					extKeyUsages = append(extKeyUsages, usageStr)
+				}
+				certDict["ExtendedKeyUsage"] = extKeyUsages
+
+				// Subject Alternative Names
+				var dnsNames []interface{}
+				for _, name := range c.DNSNames {
+					dnsNames = append(dnsNames, name)
+				}
+				certDict["DNSNames"] = dnsNames
+
+				var ipAddresses []interface{}
+				for _, addr := range c.IPAddresses {
+					ipAddresses = append(ipAddresses, addr.String())
+				}
+				certDict["IPAddresses"] = ipAddresses
+
+				var emailAddresses []interface{}
+				for _, email := range c.EmailAddresses {
+					emailAddresses = append(emailAddresses, email)
+				}
+				certDict["EmailAddresses"] = emailAddresses
+
+				// PEM encoded certificate
+				pemBlock := &pem.Block{Type: "CERTIFICATE", Bytes: c.Raw}
+				pemBytes := pem.EncodeToMemory(pemBlock)
+				certDict["PEM"] = string(pemBytes)
+
+				// Expiration status
+				certDict["IsExpired"] = time.Now().After(c.NotAfter)
+
+				return *env.NewDict(certDict)
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "x509-certificate//to-dict")
 			}
 		},
 	},

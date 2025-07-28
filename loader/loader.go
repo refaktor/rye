@@ -60,7 +60,7 @@ func LoadString(input string, sig bool) (env.Object, *env.Idxs) {
 	}
 }
 
-func LoadStringNEW(input string, sig bool, ps *env.ProgramState) env.Object {
+func LoadStringNEW_ORIGINAL_PEG(input string, sig bool, ps *env.ProgramState) env.Object {
 	if sig {
 		signed := checkCodeSignature(input)
 		if signed == -1 {
@@ -105,6 +105,19 @@ func LoadStringNEW(input string, sig bool, ps *env.ProgramState) env.Object {
 		ser := env.NewTSeries(empty1)
 		return *env.NewBlock(*ser)
 	}
+}
+
+func LoadStringNEW(input string, sig bool, ps *env.ProgramState) env.Object {
+	if sig {
+		signed := checkCodeSignature(input)
+		if signed == -1 {
+			return *env.NewError("Signature not found")
+		} else if signed == -2 {
+			return *env.NewError("Invalid signature")
+		}
+	}
+
+	return LoadStringNEWNoPEG(input, sig, ps)
 }
 
 func parseBlock(v *Values, d Any) (Any, error) {

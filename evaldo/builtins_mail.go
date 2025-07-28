@@ -22,7 +22,7 @@ var Builtins_mail = map[string]*env.Builtin{
 	// * reader: native reader object containing email data
 	// Returns:
 	// * native parsed-email object
-	"reader//parse-email": {
+	"reader//Parse-email": {
 		Argsn: 1,
 		Doc:   "Parses email data from a reader.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -45,7 +45,7 @@ var Builtins_mail = map[string]*env.Builtin{
 	// * email: native parsed-email object
 	// Returns:
 	// * string containing the email subject
-	"parsed-email//subject?": {
+	"parsed-email//Subject?": {
 		Argsn: 1,
 		Doc:   "Gets the subject from a parsed email.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -60,7 +60,7 @@ var Builtins_mail = map[string]*env.Builtin{
 
 	/*
 
-		"parsed-email//from?": {
+		"parsed-email//From?": {
 			Argsn: 1,
 			Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 				switch email := arg0.(type) {
@@ -72,21 +72,21 @@ var Builtins_mail = map[string]*env.Builtin{
 			},
 		},
 
-		"parsed-email//reply-to?": {
+		"parsed-email//Reply-to?": {
 			Argsn: 1,
 			Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 				return *env.NewNative(ps.Idx, arg0, "smtpd")
 			},
 		},
 
-		"parsed-email//date?": {
+		"parsed-email//Date?": {
 			Argsn: 1,
 			Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 				return *env.NewNative(ps.Idx, arg0, "smtpd")
 			},
 		},
 
-		"parsed-email//to?": {
+		"parsed-email//To?": {
 			Argsn: 1,
 			Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 				return *env.NewNative(ps.Idx, arg0, "smtpd")
@@ -101,7 +101,7 @@ var Builtins_mail = map[string]*env.Builtin{
 	// * email: native parsed-email object
 	// Returns:
 	// * string containing the email message ID
-	"parsed-email//message-id?": {
+	"parsed-email//Message-id?": {
 		Argsn: 1,
 		Doc:   "Gets the message ID from a parsed email.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -120,7 +120,7 @@ var Builtins_mail = map[string]*env.Builtin{
 	// * email: native parsed-email object
 	// Returns:
 	// * string containing the HTML body of the email
-	"parsed-email//html-body?": {
+	"parsed-email//Html-body?": {
 		Argsn: 1,
 		Doc:   "Gets the HTML body from a parsed email.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -139,7 +139,7 @@ var Builtins_mail = map[string]*env.Builtin{
 	// * email: native parsed-email object
 	// Returns:
 	// * string containing the plain text body of the email
-	"parsed-email//text-body?": {
+	"parsed-email//Text-body?": {
 		Argsn: 1,
 		Doc:   "Gets the plain text body from a parsed email.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -155,7 +155,7 @@ var Builtins_mail = map[string]*env.Builtin{
 	// * email: native parsed-email object
 	// Returns:
 	// * native object containing email attachments
-	"parsed-email//attachments?": {
+	"parsed-email//Attachments?": {
 		Argsn: 1,
 		Doc:   "Gets the attachments from a parsed email.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -166,7 +166,7 @@ var Builtins_mail = map[string]*env.Builtin{
 	// * email: native parsed-email object
 	// Returns:
 	// * native object containing embedded files from the email
-	"parsed-email//embedded-files?": {
+	"parsed-email//Embedded-files?": {
 		Argsn: 1,
 		Doc:   "Gets the embedded files from a parsed email.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

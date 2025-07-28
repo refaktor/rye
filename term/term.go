@@ -2,9 +2,12 @@ package term
 
 import (
 	"fmt"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
+
+	goterm "golang.org/x/term"
 
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/util"
@@ -33,82 +36,136 @@ func init() {
 
 func DisplayBlock(bloc env.Block, idx *env.Idxs) (env.Object, bool) {
 	HideCur()
-	curr := 0
-	moveUp := 0
 	mode := 0 // 0 - human, 1 - dev
-	len := bloc.Series.Len()
+	totalItems := bloc.Series.Len()
+	_, height, err := goterm.GetSize(int(os.Stdout.Fd()))
+	if err != nil {
+		height = 20 // Fallback default
+	}
+	pageSize := height - 4 // Reserve lines for prompts/instructions
+	if pageSize < 1 {
+		pageSize = 1
+	}
+	totalPages := (totalItems + pageSize - 1) / pageSize // Ceiling division
+	if totalPages == 0 {
+		totalPages = 1
+	}
+	currentPage := 0
+	localCurr := 0
+	moveUp := 0
 DODO:
 	if moveUp > 0 {
 		CurUp(moveUp)
 	}
 	SaveCurPos()
-	for i, v := range bloc.Series.S {
-		ClearLine()
-		if i == curr {
-			ColorBrGreen()
-			Bold()
-			termPrint("\u00bb ")
-		} else {
-			termPrint(" ")
-		}
-		switch ob := v.(type) {
-		case env.Object:
-			if mode == 0 {
-				termPrintln("" + ob.Print(*idx) + "")
-			} else {
-				termPrintln("" + ob.Inspect(*idx) + "")
-			}
-		default:
-			termPrintln("" + fmt.Sprint(ob) + "")
-		}
-		CloseProps()
-		// term.CurUp(1)
+	start := currentPage * pageSize
+	end := start + pageSize
+	if end > totalItems {
+		end = totalItems
 	}
-
-	moveUp = bloc.Series.Len()
+	displayedItems := bloc.Series.S[start:end]
+	displayLen := len(displayedItems)
+	totalLines := 0
+	for i := 0; i < pageSize; i++ {
+		ClearLine()
+		if i < displayLen {
+			v := displayedItems[i]
+			if i == localCurr {
+				ColorBrGreen()
+				Bold()
+				termPrint("\u00bb ")
+			} else {
+				termPrint(" ")
+			}
+			var valueStr string
+			switch ob := v.(type) {
+			case env.Object:
+				if mode == 0 {
+					valueStr = ob.Print(*idx)
+				} else {
+					valueStr = ob.Inspect(*idx)
+				}
+			default:
+				valueStr = fmt.Sprint(ob)
+			}
+			termPrintln(valueStr)
+			// Count the actual number of lines this entry takes (including newlines in the value)
+			totalLines += strings.Count(valueStr, "\n") + 1
+			CloseProps()
+		} else {
+			termPrintln("")
+			totalLines += 1
+		}
+	}
+	termPrintln(fmt.Sprintf("Page %d/%d (n=next, p=prev, m=mode)", currentPage+1, totalPages))
+	totalLines += 1 // +1 for footer
+	moveUp = totalLines
 
 	defer func() {
 		// Show cursor.
 		termPrint("\033[?25h")
 	}()
 
-	// RestoreCurPos()
-
-	// In WASM environment, we use a non-blocking GetChar that may return ESC (27)
-	// to avoid deadlock when no key events are available
 	for {
 		ascii, keyCode, err := GetChar()
 
 		if (ascii == 3 || ascii == 27) || err != nil {
-			//fmt.Println()
 			ShowCur()
 			return nil, true
 		}
 
 		if ascii == 13 {
-			//fmt.Println()
-			return bloc.Series.Get(curr), false
+			globalIndex := start + localCurr
+			if globalIndex < totalItems {
+				return bloc.Series.Get(globalIndex), false
+			}
+			return nil, true // Fallback if out of bounds
 		}
 
 		if ascii == 77 || ascii == 109 {
-			if mode == 0 {
-				mode = 1
-			} else {
-				mode = 0
-			}
+			mode = 1 - mode
 			goto DODO
 		}
 
+		if ascii == 110 || ascii == 78 { // 'n' or 'N'
+			if currentPage < totalPages-1 {
+				currentPage++
+				localCurr = 0
+				goto DODO
+			}
+		} else if ascii == 112 || ascii == 80 { // 'p' or 'P'
+			if currentPage > 0 {
+				currentPage--
+				localCurr = 0
+				goto DODO
+			}
+		}
+
 		if keyCode == 40 {
-			curr++
-			if curr > len-1 {
-				curr = 0
+			localCurr++
+			if localCurr >= displayLen {
+				if currentPage < totalPages-1 {
+					currentPage++
+					localCurr = 0
+				} else {
+					currentPage = 0
+					localCurr = 0
+				}
 			}
 			goto DODO
 		} else if keyCode == 38 {
-			curr--
-			if curr < 0 {
-				curr = len - 1
+			localCurr--
+			if localCurr < 0 {
+				if currentPage > 0 {
+					currentPage--
+					localCurr = pageSize - 1
+					if localCurr >= (totalItems - currentPage*pageSize) {
+						localCurr = (totalItems - currentPage*pageSize) - 1
+					}
+				} else {
+					currentPage = totalPages - 1
+					localCurr = (totalItems - 1) % pageSize
+				}
 			}
 			goto DODO
 		}
@@ -280,6 +337,7 @@ DODO:
 		CurUp(moveUp)
 	}
 	SaveCurPos()
+	totalLines := 0
 	for ii, k := range keys {
 		// for k, v := range bloc.Data {
 		v := bloc.Data[k]
@@ -294,21 +352,25 @@ DODO:
 		Bold()
 		termPrint(k + ": ")
 		ResetBold()
+		var valueStr string
 		switch ob := v.(type) {
 		case env.Object:
 			if mode == 0 {
-				termPrintln("" + ob.Print(*idx) + "")
+				valueStr = ob.Print(*idx)
 			} else {
-				termPrintln("" + ob.Inspect(*idx) + "")
+				valueStr = ob.Inspect(*idx)
 			}
 		default:
-			termPrintln(" " + fmt.Sprint(ob) + " ")
+			valueStr = fmt.Sprint(ob)
 		}
+		termPrintln(valueStr)
+		// Count the actual number of lines this entry takes (including newlines in the value)
+		totalLines += strings.Count(valueStr, "\n") + 1
 		CloseProps()
 		// term.CurUp(1)
 	}
 
-	moveUp = len(bloc.Data)
+	moveUp = totalLines
 
 	defer func() {
 		// Show cursor.
@@ -392,7 +454,8 @@ DODO:
 		CurUp(moveUp)
 	}
 	SaveCurPos()
-	for ii, k := range bloc.Uplink.Cols {
+	totalLines := 0
+	for ii, k := range bloc.Uplink.GetColumnNames() {
 		// for k, v := range bloc.Data {
 		v := bloc.Values[ii]
 		ClearLine()
@@ -406,21 +469,25 @@ DODO:
 		Bold()
 		termPrint(k + ": ")
 		ResetBold()
+		var valueStr string
 		switch ob := v.(type) {
 		case env.Object:
 			if mode == 0 {
-				termPrintln("" + ob.Print(*idx) + "")
+				valueStr = ob.Print(*idx)
 			} else {
-				termPrintln("" + ob.Inspect(*idx) + "")
+				valueStr = ob.Inspect(*idx)
 			}
 		default:
-			termPrintln(" " + fmt.Sprint(ob) + " ")
+			valueStr = fmt.Sprint(ob)
 		}
+		termPrintln(valueStr)
+		// Count the actual number of lines this entry takes (including newlines in the value)
+		totalLines += strings.Count(valueStr, "\n") + 1
 		CloseProps()
 		// term.CurUp(1)
 	}
 
-	moveUp = len(bloc.Values)
+	moveUp = totalLines
 
 	defer func() {
 		// Show cursor.
@@ -444,7 +511,7 @@ DODO:
 
 		if ascii == 120 {
 			//termPrintln()
-			return env.String{Value: bloc.Uplink.Cols[curr]}, false
+			return env.String{Value: bloc.Uplink.GetColumnNames()[curr]}, false
 		}
 
 		if ascii == 77 || ascii == 109 {
@@ -474,9 +541,24 @@ DODO:
 
 func DisplayTable(bloc env.Table, idx *env.Idxs) (env.Object, bool) {
 	HideCur()
-	curr := 0
-	moveUp := 0
 	mode := 0 // 0 - human, 1 - dev
+	totalItems := len(bloc.Rows)
+	_, height, err := goterm.GetSize(int(os.Stdout.Fd()))
+	if err != nil {
+		height = 20 // Fallback default
+	}
+	pageSize := height - 5 // Reserve lines for header, separator, footer, prompts
+	if pageSize < 1 {
+		pageSize = 1
+	}
+	totalPages := (totalItems + pageSize - 1) / pageSize // Ceiling division
+	if totalPages == 0 {
+		totalPages = 1
+	}
+	currentPage := 0
+	localCurr := 0
+	moveUp := 0
+
 	// get the ideal widths of columns
 	widths := make([]int, len(bloc.Cols))
 	// check all col names
@@ -527,6 +609,14 @@ DODO:
 		CurUp(moveUp)
 	}
 	SaveCurPos()
+	start := currentPage * pageSize
+	end := start + pageSize
+	if end > totalItems {
+		end = totalItems
+	}
+	displayedItems := end - start
+
+	// Print header
 	for ic, cn := range bloc.Cols {
 		Bold()
 		termPrintf("| %-"+strconv.Itoa(widths[ic])+"s", cn)
@@ -535,76 +625,109 @@ DODO:
 	termPrintln("|")
 	termPrintln("+" + strings.Repeat("-", fulwidth-1) + "+")
 
-	for range bloc.Rows {
+	// Print rows and clear extra lines
+	for i := 0; i < pageSize; i++ {
 		ClearLine()
-	}
-	for i, r := range bloc.Rows {
-		if i == curr {
-			ColorBrGreen()
-			termPrint("")
-		} else {
-			termPrint("")
-		}
-		for ic, v := range r.Values {
-			if ic < len(widths) {
-				// termPrintln(v)
-				switch ob := v.(type) {
-				case env.Object:
-					if mode == 0 {
-						termPrintf("| %-"+strconv.Itoa(widths[ic])+"s", util.TruncateString(ob.Print(*idx), widths[ic]))
-						//termPrint("| " +  + "\t")
-					} else {
-						termPrintf("| %-"+strconv.Itoa(widths[ic])+"s", ob.Inspect(*idx))
-						//termPrint("| " +  + "\t")
+		if i < displayedItems {
+			r := bloc.Rows[start+i]
+			if i == localCurr {
+				ColorBrGreen()
+				termPrint("")
+			} else {
+				termPrint("")
+			}
+			for ic, v := range r.Values {
+				if ic < len(widths) {
+					switch ob := v.(type) {
+					case env.Object:
+						if mode == 0 {
+							termPrintf("| %-"+strconv.Itoa(widths[ic])+"s", util.TruncateString(ob.Print(*idx), widths[ic]))
+						} else {
+							termPrintf("| %-"+strconv.Itoa(widths[ic])+"s", ob.Inspect(*idx))
+						}
+					default:
+						termPrintf("| %-"+strconv.Itoa(widths[ic])+"s", fmt.Sprint(ob))
 					}
-				default:
-					termPrintf("| %-"+strconv.Itoa(widths[ic])+"s", fmt.Sprint(ob))
-					///termPrint("| " + +"\t")
 				}
 			}
-			// term.CurUp(1)
+			CloseProps()
+			termPrintln("|")
+		} else {
+			termPrintln("")
 		}
-		CloseProps()
-		termPrintln("|")
 	}
 
-	moveUp = len(bloc.Rows) + 2
+	// Print footer
+	termPrintln(fmt.Sprintf("Page %d/%d (n=next, p=prev, m=mode)", currentPage+1, totalPages))
+
+	moveUp = pageSize + 3 // rows + header + sep + footer
 
 	defer func() {
 		// Show cursor.
 		termPrint("\033[?25h")
 	}()
 
-	// RestoreCurPos()
-
 	for {
 		ascii, keyCode, err := GetChar()
 
 		if (ascii == 3 || ascii == 27) || err != nil {
-			termPrintln("")
 			ShowCur()
 			return nil, true
 		}
 
 		if ascii == 13 {
-			termPrintln("")
-			return bloc.GetRowNew(curr), false // bloc.Series.Get(curr), false
+			globalIndex := start + localCurr
+			if globalIndex < totalItems {
+				return bloc.GetRowNew(globalIndex), false
+			}
+			return nil, true // Fallback if out of bounds
 		}
 
 		if ascii == 77 || ascii == 109 {
-			if mode == 0 {
-				mode = 1
-			} else {
-				mode = 0
-			}
+			mode = 1 - mode
 			goto DODO
 		}
 
+		if ascii == 110 || ascii == 78 { // 'n' or 'N'
+			if currentPage < totalPages-1 {
+				currentPage++
+				localCurr = 0
+				goto DODO
+			}
+		} else if ascii == 112 || ascii == 80 { // 'p' or 'P'
+			if currentPage > 0 {
+				currentPage--
+				localCurr = 0
+				goto DODO
+			}
+		}
+
 		if keyCode == 40 {
-			curr++
+			localCurr++
+			if localCurr >= displayedItems {
+				if currentPage < totalPages-1 {
+					currentPage++
+					localCurr = 0
+				} else {
+					currentPage = 0
+					localCurr = 0
+				}
+			}
 			goto DODO
 		} else if keyCode == 38 {
-			curr--
+			localCurr--
+			if localCurr < 0 {
+				if currentPage > 0 {
+					currentPage--
+					localCurr = pageSize - 1
+					if localCurr >= (totalItems - currentPage*pageSize) {
+						localCurr = (totalItems - currentPage*pageSize) - 1
+					}
+				} else {
+					currentPage = totalPages - 1
+					localCurr = (totalItems - 1) % pageSize
+				}
+			}
 			goto DODO
 		}
 	}

@@ -551,12 +551,12 @@ var Builtins_prometheus = map[string]*env.Builtin{
 		Doc:   "Creates a new Prometheus counter with the given name, help text, and optional labels.",
 		Fn:    __prometheus_new_counter,
 	},
-	"prometheus-counter//inc": {
+	"prometheus-counter//Inc": {
 		Argsn: 1,
 		Doc:   "Increments a Prometheus counter by 1.",
 		Fn:    __prometheus_counter_inc,
 	},
-	"prometheus-counter//add": {
+	"prometheus-counter//Add": {
 		Argsn: 2,
 		Doc:   "Adds the given value to a Prometheus counter.",
 		Fn:    __prometheus_counter_add,
@@ -568,27 +568,27 @@ var Builtins_prometheus = map[string]*env.Builtin{
 		Doc:   "Creates a new Prometheus gauge with the given name, help text, and optional labels.",
 		Fn:    __prometheus_new_gauge,
 	},
-	"prometheus-gauge//set": {
+	"prometheus-gauge//Set": {
 		Argsn: 2,
 		Doc:   "Sets a Prometheus gauge to the given value.",
 		Fn:    __prometheus_gauge_set,
 	},
-	"prometheus-gauge//inc": {
+	"prometheus-gauge//Inc": {
 		Argsn: 1,
 		Doc:   "Increments a Prometheus gauge by 1.",
 		Fn:    __prometheus_gauge_inc,
 	},
-	"prometheus-gauge//dec": {
+	"prometheus-gauge//Dec": {
 		Argsn: 1,
 		Doc:   "Decrements a Prometheus gauge by 1.",
 		Fn:    __prometheus_gauge_dec,
 	},
-	"prometheus-gauge//add": {
+	"prometheus-gauge//Add": {
 		Argsn: 2,
 		Doc:   "Adds the given value to a Prometheus gauge.",
 		Fn:    __prometheus_gauge_add,
 	},
-	"prometheus-gauge//sub": {
+	"prometheus-gauge//Sub": {
 		Argsn: 2,
 		Doc:   "Subtracts the given value from a Prometheus gauge.",
 		Fn:    __prometheus_gauge_sub,
@@ -600,7 +600,7 @@ var Builtins_prometheus = map[string]*env.Builtin{
 		Doc:   "Creates a new Prometheus histogram with the given name, help text, optional buckets, and optional labels.",
 		Fn:    __prometheus_new_histogram,
 	},
-	"prometheus-histogram//observe": {
+	"prometheus-histogram//Observe": {
 		Argsn: 2,
 		Doc:   "Observes the given value in a Prometheus histogram.",
 		Fn:    __prometheus_histogram_observe,
@@ -612,7 +612,7 @@ var Builtins_prometheus = map[string]*env.Builtin{
 		Doc:   "Creates a new Prometheus summary with the given name, help text, optional objectives, and optional labels.",
 		Fn:    __prometheus_new_summary,
 	},
-	"prometheus-summary//observe": {
+	"prometheus-summary//Observe": {
 		Argsn: 2,
 		Doc:   "Observes the given value in a Prometheus summary.",
 		Fn:    __prometheus_summary_observe,
@@ -631,12 +631,12 @@ var Builtins_prometheus = map[string]*env.Builtin{
 		Doc:   "Creates a new mutex for protecting metrics from concurrent access.",
 		Fn:    __prometheus_new_mutex,
 	},
-	"prometheus-mutex//lock": {
+	"prometheus-mutex//Lock": {
 		Argsn: 1,
 		Doc:   "Locks a mutex.",
 		Fn:    __prometheus_mutex_lock,
 	},
-	"prometheus-mutex//unlock": {
+	"prometheus-mutex//Unlock": {
 		Argsn: 1,
 		Doc:   "Unlocks a mutex.",
 		Fn:    __prometheus_mutex_unlock,

@@ -18,12 +18,12 @@ var Builtins_psql = map[string]*env.Builtin{
 	// ##### PostgreSQL ##### "PostgreSQL database functions"
 	//
 	// Tests:
-	// equal { postgres-schema//open %"postgres://user:pass@localhost:5432/dbname" |type? } 'native
+	// equal { postgres-schema//Open %"postgres://user:pass@localhost:5432/dbname" |type? } 'native
 	// Args:
 	// * uri: PostgreSQL connection string URI
 	// Returns:
 	// * native PostgreSQL database connection
-	"postgres-schema//open": {
+	"postgres-schema//Open": {
 		Argsn: 1,
 		Doc:   "Opens a connection to a PostgreSQL database.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -35,27 +35,27 @@ var Builtins_psql = map[string]*env.Builtin{
 					//fmt.Println("Error1")
 					ps.FailureFlag = true
 					errMsg := fmt.Sprintf("Error opening SQL: %v" + err.Error())
-					return MakeBuiltinError(ps, errMsg, "postgres-schema//open")
+					return MakeBuiltinError(ps, errMsg, "postgres-schema//Open")
 				} else {
 					//fmt.Println("Error2")
 					return *env.NewNative(ps.Idx, db, "Rye-psql")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "postgres-schema//open")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "postgres-schema//Open")
 			}
 
 		},
 	},
 
 	// Tests:
-	// equal { db: postgres-schema//open %"postgres://user:pass@localhost:5432/dbname" , db |Rye-psql//exec "INSERT INTO test VALUES (1, 'test')" |type? } 'integer
+	// equal { db: postgres-schema//Open %"postgres://user:pass@localhost:5432/dbname" , db |Rye-psql//Exec "INSERT INTO test VALUES (1, 'test')" |type? } 'integer
 	// Args:
 	// * db: PostgreSQL database connection
 	// * sql: SQL statement as string or block
 	// Returns:
 	// * integer 1 if rows were affected, error otherwise
-	"Rye-psql//exec": {
+	"Rye-psql//Exec": {
 		Argsn: 2,
 		Doc:   "Executes a SQL statement that modifies data (INSERT, UPDATE, DELETE).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -75,7 +75,7 @@ var Builtins_psql = map[string]*env.Builtin{
 					sqlstr = str.Value
 				default:
 					ps.ErrorFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.StringType}, "Rye-psql//exec")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.StringType}, "Rye-psql//Exec")
 				}
 				if sqlstr != "" {
 					//fmt.Println(sqlstr)
@@ -91,27 +91,27 @@ var Builtins_psql = map[string]*env.Builtin{
 							return env.NewInteger(1)
 						} else {
 							ps.FailureFlag = true
-							return MakeBuiltinError(ps, "No rows affected.", "Rye-psql//exec")
+							return MakeBuiltinError(ps, "No rows affected.", "Rye-psql//Exec")
 						}
 
 					}
 				} else {
-					return MakeBuiltinError(ps, "Sql string is empty.", "Rye-psql//exec")
+					return MakeBuiltinError(ps, "Sql string is empty.", "Rye-psql//Exec")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-psql//exec")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-psql//Exec")
 			}
 		},
 	},
 
 	// Tests:
-	// equal { db: postgres-schema//open %"postgres://user:pass@localhost:5432/dbname" , db |Rye-psql//query "SELECT * FROM test" |type? } 'table
+	// equal { db: postgres-schema//Open %"postgres://user:pass@localhost:5432/dbname" , db |Rye-psql//Query "SELECT * FROM test" |type? } 'table
 	// Args:
 	// * db: PostgreSQL database connection
 	// * sql: SQL query as string or block
 	// Returns:
 	// * table containing query results
-	"Rye-psql//query": {
+	"Rye-psql//Query": {
 		Argsn: 2,
 		Doc:   "Executes a SQL query and returns results as a table.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -132,7 +132,7 @@ var Builtins_psql = map[string]*env.Builtin{
 					sqlstr = str.Value
 				default:
 					ps.ErrorFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.StringType}, "Rye-psql//query")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.StringType}, "Rye-psql//Query")
 				}
 				if sqlstr != "" {
 					//					fmt.Println(sqlstr)
@@ -141,7 +141,7 @@ var Builtins_psql = map[string]*env.Builtin{
 					// result := make([]map[string]any, 0)
 					if err != nil {
 						ps.FailureFlag = true
-						return MakeBuiltinError(ps, err.Error(), "Rye-psql//query")
+						return MakeBuiltinError(ps, err.Error(), "Rye-psql//Query")
 					} else {
 						cols, _ := rows.Columns()
 						spr := env.NewTable(cols)
@@ -179,17 +179,17 @@ var Builtins_psql = map[string]*env.Builtin{
 						//	fmt.Print(result)
 						if i == 0 {
 							ps.FailureFlag = true
-							return MakeBuiltinError(ps, "No data.", "Rye-psql//query")
+							return MakeBuiltinError(ps, "No data.", "Rye-psql//Query")
 						}
 						return *spr
 						//return *env.NewNative(ps.Idx, *spr, "Rye-table")
 					}
 				} else {
-					return MakeBuiltinError(ps, "Empty SQL.", "Rye-psql//query")
+					return MakeBuiltinError(ps, "Empty SQL.", "Rye-psql//Query")
 				}
 
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-psql//query")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-psql//Query")
 			}
 		},
 	},

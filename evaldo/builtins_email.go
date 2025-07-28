@@ -26,7 +26,7 @@ func __setHeader(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 en
 		case env.Email:
 			val = value.Address
 		default:
-			return MakeArgError(ps, 3, []env.Type{env.StringType, env.EmailType}, "gomail-message//set-header")
+			return MakeArgError(ps, 3, []env.Type{env.StringType, env.EmailType}, "gomail-message//Set-header")
 		}
 		switch field := arg1.(type) {
 		case env.String:
@@ -34,16 +34,16 @@ func __setHeader(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 en
 		case env.Tagword:
 			fld = ps.Idx.GetWord(field.Index)
 		default:
-			return MakeArgError(ps, 2, []env.Type{env.StringType, env.TagwordType}, "gomail-message//set-header")
+			return MakeArgError(ps, 2, []env.Type{env.StringType, env.TagwordType}, "gomail-message//Set-header")
 		}
 		if fld != "" && val != "" {
 			mailobj.Value.(*gomail.Message).SetHeader(fld, val)
 			return arg0
 		} else {
-			return MakeBuiltinError(ps, "Not both values were defined.", "gomail-message//set-header")
+			return MakeBuiltinError(ps, "Not both values were defined.", "gomail-message//Set-header")
 		}
 	default:
-		return MakeArgError(ps, 1, []env.Type{env.NativeType}, "gomail-message//set-header")
+		return MakeArgError(ps, 1, []env.Type{env.NativeType}, "gomail-message//Set-header")
 	}
 }
 
@@ -60,19 +60,19 @@ func __setAddressHeader(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, 
 					return arg0
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 4, []env.Type{env.StringType}, "gomail-message//set-address-header")
+					return MakeArgError(ps, 4, []env.Type{env.StringType}, "gomail-message//Set-address-header")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 3, []env.Type{env.StringType}, "gomail-message//set-address-header")
+				return MakeArgError(ps, 3, []env.Type{env.StringType}, "gomail-message//Set-address-header")
 			}
 		default:
 			ps.FailureFlag = true
-			return MakeArgError(ps, 2, []env.Type{env.StringType}, "gomail-message//set-address-header")
+			return MakeArgError(ps, 2, []env.Type{env.StringType}, "gomail-message//Set-address-header")
 		}
 	default:
 		ps.FailureFlag = true
-		return MakeArgError(ps, 1, []env.Type{env.NativeType}, "gomail-message//set-address-header")
+		return MakeArgError(ps, 1, []env.Type{env.NativeType}, "gomail-message//Set-address-header")
 	}
 }
 
@@ -87,15 +87,15 @@ func __setBody(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.
 				return arg0
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 3, []env.Type{env.StringType}, "gomail-message//set-body")
+				return MakeArgError(ps, 3, []env.Type{env.StringType}, "gomail-message//Set-body")
 			}
 		default:
 			ps.FailureFlag = true
-			return MakeArgError(ps, 2, []env.Type{env.StringType}, "gomail-message//set-body")
+			return MakeArgError(ps, 2, []env.Type{env.StringType}, "gomail-message//Set-body")
 		}
 	default:
 		ps.FailureFlag = true
-		return MakeArgError(ps, 1, []env.Type{env.NativeType}, "gomail-message//set-body")
+		return MakeArgError(ps, 1, []env.Type{env.NativeType}, "gomail-message//Set-body")
 	}
 }
 
@@ -109,11 +109,11 @@ func __attach(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.O
 			return arg0
 		default:
 			ps.FailureFlag = true
-			return MakeArgError(ps, 2, []env.Type{env.UriType}, "gomail-message//attach")
+			return MakeArgError(ps, 2, []env.Type{env.UriType}, "gomail-message//Attach")
 		}
 	default:
 		ps.FailureFlag = true
-		return MakeArgError(ps, 1, []env.Type{env.NativeType}, "gomail-message//attach")
+		return MakeArgError(ps, 1, []env.Type{env.NativeType}, "gomail-message//Attach")
 	}
 }
 
@@ -128,15 +128,15 @@ func __addAlternative(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, ar
 				return arg0
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 3, []env.Type{env.StringType}, "gomail-message//add-alternative")
+				return MakeArgError(ps, 3, []env.Type{env.StringType}, "gomail-message//Add-alternative")
 			}
 		default:
 			ps.FailureFlag = true
-			return MakeArgError(ps, 2, []env.Type{env.StringType}, "gomail-message//add-alternative")
+			return MakeArgError(ps, 2, []env.Type{env.StringType}, "gomail-message//Add-alternative")
 		}
 	default:
 		ps.FailureFlag = true
-		return MakeArgError(ps, 1, []env.Type{env.NativeType}, "gomail-message//add-alternative")
+		return MakeArgError(ps, 1, []env.Type{env.NativeType}, "gomail-message//Add-alternative")
 	}
 }
 
@@ -180,11 +180,11 @@ func __dialAndSend(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 
 			return arg0
 		default:
 			ps.FailureFlag = true
-			return MakeArgError(ps, 2, []env.Type{env.NativeType}, "gomail-dialer//dial-and-send")
+			return MakeArgError(ps, 2, []env.Type{env.NativeType}, "gomail-dialer//Dial-and-send")
 		}
 	default:
 		ps.FailureFlag = true
-		return MakeArgError(ps, 1, []env.Type{env.NativeType}, "gomail-dialer//dial-and-send")
+		return MakeArgError(ps, 1, []env.Type{env.NativeType}, "gomail-dialer//Dial-and-send")
 	}
 }
 
@@ -198,7 +198,7 @@ var Builtins_email = map[string]*env.Builtin{
 		},
 	},
 
-	"gomail-message//set-header": {
+	"gomail-message//Set-header": {
 		Argsn: 3,
 		Doc:   "Set email header.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -206,7 +206,7 @@ var Builtins_email = map[string]*env.Builtin{
 		},
 	},
 
-	"gomail-message//set-address-header": {
+	"gomail-message//Set-address-header": {
 		Argsn: 4,
 		Doc:   "TODODOC.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -214,7 +214,7 @@ var Builtins_email = map[string]*env.Builtin{
 		},
 	},
 
-	"gomail-message//set-body": {
+	"gomail-message//Set-body": {
 		Argsn: 3,
 		Doc:   "TODODOC.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -222,7 +222,7 @@ var Builtins_email = map[string]*env.Builtin{
 		},
 	},
 
-	"gomail-message//attach": {
+	"gomail-message//Attach": {
 		Argsn: 2,
 		Doc:   "TODODOC.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -230,7 +230,7 @@ var Builtins_email = map[string]*env.Builtin{
 		},
 	},
 
-	"gomail-message//add-alternative": {
+	"gomail-message//Add-alternative": {
 		Argsn: 3,
 		Doc:   "TODODOC.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -244,7 +244,7 @@ var Builtins_email = map[string]*env.Builtin{
 			return __newDialer(ps, arg0, arg1, arg2, arg3, arg4)
 		},
 	},
-	"gomail-dialer//dial-and-send": {
+	"gomail-dialer//Dial-and-send": {
 		Argsn: 2,
 		Doc:   "TODODOC.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

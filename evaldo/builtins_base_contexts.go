@@ -212,6 +212,7 @@ var builtins_contexts = map[string]*env.Builtin{
 			}
 		},
 	},
+
 	// Tests:
 	// equal { c: context { y: 123 } cc: bind! context { z: does { y + 234 } } c , cc/z } 357
 	// Args:
@@ -423,6 +424,91 @@ var builtins_contexts = map[string]*env.Builtin{
 				return *ctx
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.WordType}, "mkcc")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { c: context { x: 123 y: 456 } cc: clone c cc/x } 123
+	// equal { c: context { x: 123 y: 456 } cc: clone c cc/y } 456
+	// equal { c: context { x: 123 } cc: clone c cc .x: 999 c/x } 123 ; original unchanged
+	// equal { c: context { x: 123 } cc: clone c cc .x: 999 cc/x } 999 ; clone modified
+	// Args:
+	// * ctx: Context object to clone
+	// Returns:
+	// * a new context object that is a copy of the original context
+	"clone": {
+		Argsn: 1,
+		Doc:   "Creates a copy of a context with the same state and parent relationship.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch ctx := arg0.(type) {
+			case env.RyeCtx:
+				clonedCtx := ctx.Copy()
+				return *clonedCtx
+			case *env.RyeCtx:
+				clonedCtx := ctx.Copy()
+				return *clonedCtx
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "clone")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { c: context { x: 123 } cc: clone\ c { y: x + 100 } cc/y } 223
+	// equal { c: context { x: 123 } cc: clone\ c { y: x + 100 } c/y } 'error ; y not in original context
+	// equal { c: context { x: 123 } cc: clone\ c { x: 999 } c/x } 123 ; original unchanged
+	// equal { c: context { x: 123 } cc: clone\ c { x: 999 } cc/x } 999 ; clone modified
+	// Args:
+	// * ctx: Context object to clone
+	// * block: Block of expressions to evaluate in the cloned context
+	// Returns:
+	// * the cloned context with the block evaluated inside it
+	"clone\\": {
+		Argsn: 2,
+		Doc:   "Creates a copy of a context and evaluates a block of code inside the clone.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch ctx := arg0.(type) {
+			case env.RyeCtx:
+				switch bloc := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					origCtx := ps.Ctx
+					clonedCtx := ctx.Copy()
+					ps.Ser = bloc.Series
+					ps.Ctx = clonedCtx
+					EvalBlock(ps)
+					rctx := ps.Ctx
+					ps.Ctx = origCtx
+					ps.Ser = ser
+					if ps.ErrorFlag {
+						return ps.Res
+					}
+					return *rctx // return the resulting cloned context
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "clone\\")
+				}
+			case *env.RyeCtx:
+				switch bloc := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					origCtx := ps.Ctx
+					clonedCtx := ctx.Copy()
+					ps.Ser = bloc.Series
+					ps.Ctx = clonedCtx
+					EvalBlock(ps)
+					rctx := ps.Ctx
+					ps.Ctx = origCtx
+					ps.Ser = ser
+					if ps.ErrorFlag {
+						return ps.Res
+					}
+					return *rctx // return the resulting cloned context
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "clone\\")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "clone\\")
 			}
 		},
 	},

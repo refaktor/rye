@@ -94,12 +94,12 @@ var Builtins_sqlite = map[string]*env.Builtin{
 	// ##### SQLite ##### "SQLite database functions"
 	//
 	// Tests:
-	// equal { sqlite-schema//open %"test.db" |type? } 'native
+	// equal { sqlite-schema//Open %"test.db" |type? } 'native
 	// Args:
 	// * uri: path to SQLite database file
 	// Returns:
 	// * native SQLite database connection
-	"sqlite-schema//open": {
+	"sqlite-schema//Open": {
 		Argsn: 1,
 		Doc:   "Opens a connection to a SQLite database file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -110,7 +110,7 @@ var Builtins_sqlite = map[string]*env.Builtin{
 				db, _ := sql.Open("sqlite", str.GetPath()) // TODO -- we need to make path parser in URI then this will be path
 				return *env.NewNative(ps.Idx, db, "Rye-sqlite")
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "sqlite-schema//open")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "sqlite-schema//Open")
 			}
 
 		},
@@ -137,13 +137,13 @@ var Builtins_sqlite = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { db: sqlite-schema//open %"test.db" , db |Rye-sqlite//exec "CREATE TABLE IF NOT EXISTS test (id INTEGER, name TEXT)" |type? } 'native
+	// equal { db: sqlite-schema//Open %"test.db" , db |Rye-sqlite//Exec "CREATE TABLE IF NOT EXISTS test (id INTEGER, name TEXT)" |type? } 'native
 	// Args:
 	// * db: SQLite database connection
 	// * sql: SQL statement as string or block
 	// Returns:
 	// * database connection
-	"Rye-sqlite//exec": {
+	"Rye-sqlite//Exec": {
 		Argsn: 2,
 		Doc:   "Executes a SQL statement that doesn't return rows.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -163,33 +163,33 @@ var Builtins_sqlite = map[string]*env.Builtin{
 				case env.String:
 					sqlstr = str.Value
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.StringType}, "Rye-sqlite//exec")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.StringType}, "Rye-sqlite//Exec")
 				}
 				if sqlstr != "" {
 					db2 := db1.Value.(*sql.DB)
 					_, err := db2.Exec(sqlstr, vals...)
 					if err != nil {
-						return MakeBuiltinError(ps, err.Error(), "Rye-sqlite//exec")
+						return MakeBuiltinError(ps, err.Error(), "Rye-sqlite//Exec")
 					}
 					// rows, err := db1.Value.(*sql.DB).Query(sqlstr, vals...)
 					return arg0
 				} else {
-					return MakeBuiltinError(ps, "sql string not found.", "Rye-sqlite//exec")
+					return MakeBuiltinError(ps, "sql string not found.", "Rye-sqlite//Exec")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-sqlite//exec")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-sqlite//Exec")
 			}
 		},
 	},
 
 	// Tests:
-	// equal { db: sqlite-schema//open %"test.db" , db |Rye-sqlite//query "SELECT * FROM test" |type? } 'table
+	// equal { db: sqlite-schema//Open %"test.db" , db |Rye-sqlite//Query "SELECT * FROM test" |type? } 'table
 	// Args:
 	// * db: SQLite database connection
 	// * sql: SQL query as string or block
 	// Returns:
 	// * table containing query results
-	"Rye-sqlite//query": {
+	"Rye-sqlite//Query": {
 		Argsn: 2,
 		Doc:   "Executes a SQL query and returns results as a table.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -209,12 +209,12 @@ var Builtins_sqlite = map[string]*env.Builtin{
 				case env.String:
 					sqlstr = str.Value
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.StringType}, "Rye-sqlite//query")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.StringType}, "Rye-sqlite//Query")
 				}
 				if sqlstr != "" {
 					rows, err := db1.Value.(*sql.DB).Query(sqlstr, vals...)
 					if err != nil {
-						return MakeBuiltinError(ps, err.Error(), "Rye-sqlite//query")
+						return MakeBuiltinError(ps, err.Error(), "Rye-sqlite//Query")
 					}
 					columns, _ := rows.Columns()
 					spr := env.NewTable(columns)
@@ -255,12 +255,12 @@ var Builtins_sqlite = map[string]*env.Builtin{
 						// return *env.NewNative(ps.Idx, *spr, "Rye-table")
 						return *spr
 					}
-					return MakeBuiltinError(ps, "Empty SQL.", "Rye-sqlite//query")
+					return MakeBuiltinError(ps, "Empty SQL.", "Rye-sqlite//Query")
 				} else {
-					return MakeBuiltinError(ps, "Sql string not found.", "Rye-sqlite//query")
+					return MakeBuiltinError(ps, "Sql string not found.", "Rye-sqlite//Query")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-sqlite//query")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-sqlite//Query")
 			}
 		},
 	},
