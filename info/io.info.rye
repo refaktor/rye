@@ -12,7 +12,7 @@ section "Default" "" {
 }
 
 section "IO " "IO related functions" {
-	group "file-schema//open" 
+	group "file-schema//Open" 
 	"Opens a file for reading."
 	{
 		arg `path: uri representing the file to open`
@@ -24,7 +24,7 @@ section "IO " "IO related functions" {
 		equal { open %data/file.txt |kind? } 'file
 	}
 
-	group "file-schema//open\append" 
+	group "file-schema//Open\append" 
 	"Opens a file for appending."
 	{
 		arg `path: uri representing the file to open for appending`
@@ -36,7 +36,7 @@ section "IO " "IO related functions" {
 		equal { open\append %data/file.txt |kind? } 'writer
 	}
 
-	group "file-schema//create" 
+	group "file-schema//Create" 
 	"Creates a new file."
 	{
 		arg `path: uri representing the file to create`
@@ -94,7 +94,7 @@ section "IO " "IO related functions" {
 	{
 	}
 
-	group "reader//read\string" 
+	group "reader//Read\string" 
 	"Reads all content from a reader as a string."
 	{
 		arg `reader: native reader object`
@@ -105,7 +105,7 @@ section "IO " "IO related functions" {
 		equal { reader "some string" |read\string } "some string"
 	}
 
-	group "reader//copy" 
+	group "reader//Copy" 
 	"Copies all content from a reader to a writer."
 	{
 		arg `reader: native reader object`
@@ -116,7 +116,7 @@ section "IO " "IO related functions" {
 	{
 	}
 
-	group "file//copy" 
+	group "file//Copy" 
 	"Copies content from a file to a writer."
 	{
 		arg `file: native file object`
@@ -127,7 +127,7 @@ section "IO " "IO related functions" {
 	{
 	}
 
-	group "file//stat" 
+	group "file//Stat" 
 	"Gets file information (stat) for a file."
 	{
 		arg `file: native file object`
@@ -138,7 +138,7 @@ section "IO " "IO related functions" {
 		equal { stat open %data/file.txt |kind? } 'file-info
 	}
 
-	group "file-info//size?" 
+	group "file-info//Size?" 
 	"Gets the size of a file in bytes."
 	{
 		arg `file-info: native file-info object`
@@ -149,7 +149,7 @@ section "IO " "IO related functions" {
 		equal { size? stat open %data/file.txt } 16
 	}
 
-	group "file//read-all" 
+	group "file//Read-all" 
 	"Reads the entire content of a file as a string."
 	{
 		arg `file: native file object`
@@ -160,7 +160,7 @@ section "IO " "IO related functions" {
 		equal { read-all open %data/file.txt } "hello text file\n"
 	}
 
-	group "file//seek\end" 
+	group "file//Seek\end" 
 	"Seeks to the end of a file."
 	{
 		arg `file: native file object`
@@ -170,7 +170,7 @@ section "IO " "IO related functions" {
 	{
 	}
 
-	group "file//close" 
+	group "file//Close" 
 	"Closes an open file."
 	{
 		arg `file: native file object`
@@ -181,7 +181,7 @@ section "IO " "IO related functions" {
 		equal { close open %data/file.txt } ""
 	}
 
-	group "file-schema//read" 
+	group "file-schema//Read" 
 	"Reads the entire content of a file as a string."
 	{
 		arg `path: uri representing the file to read`
@@ -192,7 +192,7 @@ section "IO " "IO related functions" {
 		equal { read %data/file.txt } "hello text file\n"
 	}
 
-	group "file-schema//read\bytes" 
+	group "file-schema//Read\bytes" 
 	"Reads the entire content of a file as bytes."
 	{
 		arg `path: uri representing the file to read`
@@ -203,7 +203,7 @@ section "IO " "IO related functions" {
 		equal { read %data/file.txt } "hello text file\n"
 	}
 
-	group "file-schema//read\lines" 
+	group "file-schema//Read\lines" 
 	"Reads a file and returns its content as a block of lines."
 	{
 		arg `path: uri representing the file to read`
@@ -214,7 +214,7 @@ section "IO " "IO related functions" {
 		equal { read %data/file.txt } "hello text file\n"
 	}
 
-	group "file-schema//write" 
+	group "file-schema//Write" 
 	"Writes content to a file."
 	{
 		arg `path: uri representing the file to write to`
@@ -248,7 +248,7 @@ section "IO " "IO related functions" {
 	{
 	}
 
-	group "writer//write\string" 
+	group "writer//Write\string" 
 	"Writes a string to a writer."
 	{
 		arg `writer: native writer object`
@@ -259,7 +259,7 @@ section "IO " "IO related functions" {
 	{
 	}
 
-	group "https-schema//open" 
+	group "https-schema//Open" 
 	"Opens a HTTPS GET request and returns a reader for the response body."
 	{
 		arg `url: uri representing the HTTPS URL to request`
@@ -269,7 +269,7 @@ section "IO " "IO related functions" {
 	{
 	}
 
-	group "https-schema//get" 
+	group "https-schema//Get" 
 	"Makes a HTTPS GET request and returns the response body as a string."
 	{
 		arg `url: uri representing the HTTPS URL to request`
@@ -279,7 +279,7 @@ section "IO " "IO related functions" {
 	{
 	}
 
-	group "https-schema//post" 
+	group "https-schema//Post" 
 	"Makes a HTTPS POST request and returns the response body as a string."
 	{
 		arg `url: uri representing the HTTPS URL to request`
@@ -291,7 +291,7 @@ section "IO " "IO related functions" {
 	{
 	}
 
-	group "http-schema//get" 
+	group "http-schema//Get" 
 	"Makes a HTTP GET request and returns the response body as a string."
 	{
 		arg `url: uri representing the HTTP URL to request`
@@ -301,7 +301,7 @@ section "IO " "IO related functions" {
 	{
 	}
 
-	group "http-schema//post" 
+	group "http-schema//Post" 
 	"Makes a HTTP POST request and returns the response body as a string."
 	{
 		arg `url: uri representing the HTTP URL to request`
@@ -313,7 +313,7 @@ section "IO " "IO related functions" {
 	{
 	}
 
-	group "https-schema//new-request" 
+	group "https-schema//New-request" 
 	"Creates a new HTTPS request object."
 	{
 		arg `url: uri representing the HTTPS URL to request`
@@ -325,7 +325,7 @@ section "IO " "IO related functions" {
 	{
 	}
 
-	group "https-request//set-header" 
+	group "https-request//Set-header" 
 	"Sets a header on a HTTPS request."
 	{
 		arg `request: native https-request object`
@@ -337,7 +337,7 @@ section "IO " "IO related functions" {
 	{
 	}
 
-	group "https-request//set-basic-auth" 
+	group "https-request//Set-basic-auth" 
 	"Sets Basic Authentication on a HTTPS request."
 	{
 		arg `request: native https-request object`
@@ -349,7 +349,7 @@ section "IO " "IO related functions" {
 	{
 	}
 
-	group "https-request//call" 
+	group "https-request//Call" 
 	"Executes a HTTPS request and returns the response."
 	{
 		arg `request: native https-request object`
@@ -359,7 +359,7 @@ section "IO " "IO related functions" {
 	{
 	}
 
-	group "https-response//read-body" 
+	group "https-response//Read-body" 
 	"Reads the body of a HTTPS response as a string."
 	{
 		arg `response: native https-response object`
@@ -369,7 +369,7 @@ section "IO " "IO related functions" {
 	{
 	}
 
-	group "email//send" 
+	group "email//Send" 
 	"Sends an email to the specified address."
 	{
 		arg `to: email address to send to`
@@ -380,7 +380,7 @@ section "IO " "IO related functions" {
 	{
 	}
 
-	group "ftp-schema//open" 
+	group "ftp-schema//Open" 
 	"Opens a connection to an FTP server."
 	{
 		arg `server: uri representing the FTP server to connect to`
@@ -390,7 +390,7 @@ section "IO " "IO related functions" {
 	{
 	}
 
-	group "ftp-connection//login" 
+	group "ftp-connection//Login" 
 	"Logs in to an FTP server connection."
 	{
 		arg `connection: native ftp-connection object`
@@ -402,7 +402,7 @@ section "IO " "IO related functions" {
 	{
 	}
 
-	group "ftp-connection//retrieve" 
+	group "ftp-connection//Retrieve" 
 	"Retrieves a file from an FTP server."
 	{
 		arg `connection: native ftp-connection object`
@@ -425,7 +425,7 @@ section "IO " "IO related functions" {
 	{
 	}
 
-	group "tail-file//read-line" 
+	group "tail-file//Read-line" 
 	"Reads the next line from a tailed file. Blocks until a line is available."
 	{
 		arg `tail: native tail-file object`
@@ -435,7 +435,7 @@ section "IO " "IO related functions" {
 	{
 	}
 
-	group "tail-file//close" 
+	group "tail-file//Close" 
 	"Closes a tailed file, stopping the monitoring."
 	{
 		arg `tail: native tail-file object`

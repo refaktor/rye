@@ -57,6 +57,7 @@ const (
 	VarBuiltinType      Type = 41
 	CurriedCallerType   Type = 42
 	ComplexType         Type = 43
+	MarkdownType        Type = 44
 	PersistentTableType Type = 1001
 )
 
@@ -326,6 +327,51 @@ func (i Complex) Dump(e Idxs) string {
 	b.WriteString(" }")
 
 	return b.String()
+}
+
+//
+// MARKDOWN
+//
+
+type Markdown struct {
+	Value string `bson:"value"`
+}
+
+func NewMarkdown(val string) *Markdown {
+	md := Markdown{val}
+	return &md
+}
+
+func (i Markdown) Type() Type {
+	return MarkdownType
+}
+
+func (i Markdown) Inspect(e Idxs) string {
+	return "[Markdown: " + strconv.Itoa(len(i.Value)) + " chars]"
+}
+
+func (i Markdown) Print(e Idxs) string {
+	return i.Value
+}
+
+func (i Markdown) Trace(msg string) {
+	fmt.Print(msg + "(markdown): ")
+	fmt.Println(len(i.Value), "characters")
+}
+
+func (i Markdown) GetKind() int {
+	return int(MarkdownType)
+}
+
+func (i Markdown) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	return i.Value == o.(Markdown).Value
+}
+
+func (i Markdown) Dump(e Idxs) string {
+	return fmt.Sprintf("markdown \"%s\"", i.Value)
 }
 
 //

@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -229,6 +230,71 @@ var Builtins_os = map[string]*env.Builtin{
 
 				items[i] = *env.NewUri1(ps.Idx, "file://"+file.Name())
 			}
+			return *env.NewBlock(*env.NewTSeries(items))
+		},
+	},
+
+	// Args:
+	// * filter: word 'dirs' or 'files' to filter by type, string for partial name matching, or regexp to match names
+	// Returns:
+	// * block of uris representing filtered files or directories in the current directory
+	"ls\\": {
+		Argsn: 1,
+		Doc:   "Lists files or directories in the current directory based on filter. Use 'dirs' for directories only, 'files' for files only, a string for partial name matching, or a regexp to match names.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			files, err := os.ReadDir(".")
+			if err != nil {
+				return MakeBuiltinError(ps, "Error reading directory:"+err.Error(), "ls\\")
+			}
+
+			var items []env.Object
+
+			switch filterArg := arg0.(type) {
+			case env.Word:
+				filter := ps.Idx.GetWord(filterArg.Index)
+				if filter != "dirs" && filter != "files" {
+					return MakeBuiltinError(ps, "Word filter must be 'dirs' or 'files'", "ls\\")
+				}
+
+				for _, file := range files {
+					include := false
+					if filter == "dirs" {
+						include = file.IsDir()
+					} else if filter == "files" {
+						include = !file.IsDir()
+					}
+
+					if include {
+						items = append(items, *env.NewUri1(ps.Idx, "file://"+file.Name()))
+					}
+				}
+
+			case env.String:
+				// String does partial matching on file/directory names
+				pattern := filterArg.Value
+				for _, file := range files {
+					if strings.Contains(file.Name(), pattern) {
+						items = append(items, *env.NewUri1(ps.Idx, "file://"+file.Name()))
+					}
+				}
+
+			case env.Native:
+				// Check if it's a regexp
+				if ps.Idx.GetWord(filterArg.Kind.Index) != "regexp" {
+					return MakeBuiltinError(ps, "Native object must be a regexp", "ls\\")
+				}
+
+				regex := filterArg.Value.(*regexp.Regexp)
+				for _, file := range files {
+					if regex.MatchString(file.Name()) {
+						items = append(items, *env.NewUri1(ps.Idx, "file://"+file.Name()))
+					}
+				}
+
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.WordType, env.StringType, env.NativeType}, "ls\\")
+			}
+
 			return *env.NewBlock(*env.NewTSeries(items))
 		},
 	},

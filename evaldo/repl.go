@@ -545,6 +545,7 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 	}
 	ml := term.NewMicroLiner(c, r.recieveMessage, r.recieveLine)
 	r.ml = ml
+	ml.SetProgramState(es)
 
 	// Improved error handling for history file operations
 	f, err := os.Open(history_fn)
