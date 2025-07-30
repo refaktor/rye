@@ -13,6 +13,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/mattn/go-runewidth"
+	"github.com/refaktor/rye/env"
 	// "github.com/refaktor/rye/term"
 )
 
@@ -176,9 +177,9 @@ func (s *MLState) WriteHistory(w io.Writer) (num int, err error) {
 
 // TAB COMPLETER
 
-func (s *MLState) circularTabs(items []string) func(direction int) (string, error) {
+func (s *MLState) circularTabs(items []string) func(direction int) (string, int, error) {
 	item := -1
-	return func(direction int) (string, error) {
+	return func(direction int) (string, int, error) {
 		if direction == 1 {
 			if item < len(items)-1 {
 				item++
@@ -186,7 +187,107 @@ func (s *MLState) circularTabs(items []string) func(direction int) (string, erro
 				item = 0
 			}
 		}
-		return items[item], nil
+		return items[item], item, nil
+	}
+}
+
+// displayTabSuggestions shows the tab completion suggestions with the current selection highlighted
+func (s *MLState) displayTabSuggestions(items []string, currentIndex int) {
+	if len(items) == 0 {
+		return
+	}
+
+	// Save cursor position
+	s.sendBack("\033[s")
+
+	// Move cursor down to display suggestions
+	s.sendBack("\n")
+	s.sendBack("\033[K") // Clear line
+
+	// Display suggestions with highlighting
+	s.sendBack("\033[34m") // Magenta color
+	s.sendBack("current: ")
+	s.sendBack("\033[0m") // Reset color
+
+	for i, item := range items {
+		if i == currentIndex {
+			// Highlight current selection with magenta background and black text
+			s.sendBack("\033[45;30m") // Magenta background, black text
+			s.sendBack(" ")
+			s.sendBack(item)
+			s.sendBack(" ")
+			s.sendBack("\033[0m") // Reset formatting
+		} else {
+			// Non-selected items with magenta text
+			s.sendBack("\033[36m") // Magenta text
+			s.sendBack(" ")
+			s.sendBack(item)
+			s.sendBack(" ")
+			s.sendBack("\033[0m") // Reset formatting
+		}
+
+		if i < len(items)-1 {
+			s.sendBack("  ")
+		}
+	}
+
+	// Display probe/preview of the currently selected item
+	if currentIndex >= 0 && currentIndex < len(items) {
+		s.sendBack("\n")
+		s.sendBack("\033[K") // Clear line
+		// Get a preview/description of the selected item
+		probe := s.getItemProbe(items[currentIndex])
+		s.sendBack("\033[38;5;247m")
+		s.sendBack(probe)
+		s.sendBack("\033[0m") // Reset color
+	}
+
+	// Restore cursor position
+	s.sendBack("\033[u")
+}
+
+// getItemProbe returns a preview/description of the given item by looking it up in the environment
+func (s *MLState) getItemProbe(item string) string {
+	// If we don't have access to the program state, fall back to simple categorization
+	if s.programState == nil {
+		return "xxx"
+	}
+
+	// Look up the word in the index
+	wordIndex, found := s.programState.Idx.GetIndex(item)
+	if !found {
+		return fmt.Sprintf("undefined word: %s", item)
+	}
+
+	// Try to get the object from the context
+	obj, exists := s.programState.Ctx.Get(wordIndex)
+	if !exists {
+		return fmt.Sprintf("unbound word: %s", item)
+	}
+
+	// Call the Inspect method on the object to get detailed information
+	return obj.Inspect(*s.programState.Idx)
+}
+
+// getItemProbeSimple provides fallback categorization when program state is not available
+func (s *MLState) getItemProbeSimple(item string) string {
+	switch {
+	case strings.HasSuffix(item, "?"):
+		return "predicate function"
+	case strings.Contains(item, "print"):
+		return "output function"
+	case strings.Contains(item, "get"):
+		return "accessor function"
+	case strings.Contains(item, "set"):
+		return "mutator function"
+	case strings.Contains(item, "new"):
+		return "constructor function"
+	case strings.Contains(item, "load"):
+		return "loader function"
+	case strings.Contains(item, "save"):
+		return "persistence function"
+	default:
+		return fmt.Sprintf("word: %s", item)
 	}
 }
 
@@ -220,7 +321,7 @@ func (s *MLState) tabComplete(p []rune, line []rune, pos int, mode int) ([]rune,
 	direction := 1
 	tabPrinter := s.circularTabs(list)
 	for {
-		pick, err := tabPrinter(direction)
+		pick, currentIndex, err := tabPrinter(direction)
 		if err != nil {
 			return line, pos, KeyEvent{Code: 27}, fmt.Errorf("tab completion error: %w", err)
 		}
@@ -231,6 +332,9 @@ func (s *MLState) tabComplete(p []rune, line []rune, pos int, mode int) ([]rune,
 		if err != nil {
 			return line, pos, KeyEvent{Code: 27}, fmt.Errorf("failed to refresh display: %w", err)
 		}
+
+		// Display suggestions with current selection highlighted
+		s.displayTabSuggestions(list, currentIndex)
 
 		// Wait for next key input
 		next := <-s.next
@@ -367,8 +471,9 @@ type MLState struct {
 	prevLines      int
 	prevCursorLine int
 	completer      WordCompleter
-	lines          []string // added for the multiline behaviour
-	currline       int      // same
+	lines          []string          // added for the multiline behaviour
+	currline       int               // same
+	programState   *env.ProgramState // added for environment access
 	// pending     []rune
 	// killRing *ring.Ring
 }
@@ -393,6 +498,11 @@ func NewMicroLiner(ch chan KeyEvent, sb func(msg string), el func(line string) s
 	s.columns = 80 // Default value, will be updated by getColumns()
 
 	return &s
+}
+
+// SetProgramState sets the program state for environment access during tab completion
+func (s *MLState) SetProgramState(ps *env.ProgramState) {
+	s.programState = ps
 }
 
 func (s *MLState) getColumns() bool {

@@ -610,5 +610,28 @@ section "Loading and saving " "Functions that construct a table." {
 		} true
 	}
 
+	group "persistent-table" 
+	"Creates a persistent table using BadgerDB for storage"
+	{
+		arg `columns - block of column names`
+		arg `db-path - path to BadgerDB database`
+		arg `table-name - name of the table`
+	}
+
+	{
+		equal { persistent-table { "a" "b" } "/tmp/test_db" "test_table" |type? } 'persistent-table
+	}
+
+	group "close-persistent-table!" 
+	"Closes the BadgerDB connection for a persistent table"
+	{
+		arg `persistent-table - the persistent table to close`
+	}
+
+	{
+		equal { pt: persistent-table { "a" "b" } "/tmp/test_db" "test_table"
+		pt .close-persistent-table! |type? } 'persistent-table
+	}
+
 }
 
