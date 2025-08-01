@@ -54,11 +54,11 @@ require (
 	github.com/xuri/excelize/v2 v2.9.0
 	github.com/yuin/goldmark v1.7.11
 	go.mongodb.org/mongo-driver v1.17.3
-	golang.org/x/crypto v0.39.0
-	golang.org/x/net v0.41.0
-	golang.org/x/sync v0.15.0
-	golang.org/x/term v0.32.0
-	golang.org/x/text v0.26.0
+	golang.org/x/crypto v0.40.0
+	golang.org/x/net v0.42.0
+	golang.org/x/sync v0.16.0
+	golang.org/x/term v0.33.0
+	golang.org/x/text v0.27.0
 	software.sslmate.com/src/go-pkcs12 v0.5.0
 )
 
