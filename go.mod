@@ -45,7 +45,7 @@ require (
 	github.com/mrz1836/postmark v1.7.4
 	github.com/muesli/reflow v0.3.0
 	github.com/pkg/term v1.2.0-beta.2.0.20211217091447-1a4a3b719465
-	github.com/prometheus/client_golang v1.19.0
+	github.com/prometheus/client_golang v1.23.0
 	github.com/refaktor/go-peg v0.0.0-20220116201714-31e3dfa8dc7d
 	github.com/refaktor/keyboard v0.0.0-20250327232248-edb0b31909c4
 	github.com/sashabaranov/go-openai v1.39.1
@@ -82,10 +82,11 @@ require (
 	github.com/google/flatbuffers v25.2.10+incompatible // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
+	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pjbgf/sha1cd v0.3.2 // indirect
-	github.com/prometheus/client_model v0.5.0 // indirect
-	github.com/prometheus/common v0.48.0 // indirect
-	github.com/prometheus/procfs v0.12.0 // indirect
+	github.com/prometheus/client_model v0.6.2 // indirect
+	github.com/prometheus/common v0.65.0 // indirect
+	github.com/prometheus/procfs v0.16.1 // indirect
 	github.com/sergi/go-diff v1.4.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/otel v1.37.0 // indirect
