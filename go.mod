@@ -137,7 +137,7 @@ require (
 	github.com/blevesearch/zapx/v16 v16.2.2 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/elastic/go-seccomp-bpf v1.5.0
+	github.com/elastic/go-seccomp-bpf v1.6.0
 	github.com/gdamore/encoding v1.0.1 // indirect
 	github.com/glebarez/go-sqlite v1.21.2 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
