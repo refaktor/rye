@@ -218,7 +218,7 @@ func (l *Lexer) NextToken() NoPEGToken {
 		return l.readLSetWord()
 	case '?':
 		return l.readGetWord()
-	case '.', '+', '*', '/', '>': // taken for other tokens also - <
+	case '.', '+', '*', '/', '>', '=': // taken for other tokens also - <
 		return l.readOpWord()
 	case '|':
 		return l.readPipeWord()
@@ -231,9 +231,11 @@ func (l *Lexer) NextToken() NoPEGToken {
 		return l.readGenWord()
 	}*/
 	case '<':
-		if isWhitespace(l.peekChar()) {
-			l.readChar()
-			return l.makeToken(NPEG_TOKEN_OPWORD, "<")
+		pch := l.peekChar()
+		if isWhitespace(pch) || pch == '-' || pch == '~' {
+			return l.readOpWord()
+			// l.readChar()
+			// return l.makeToken(NPEG_TOKEN_OPWORD, "<")
 		}
 		return l.readXWord()
 	case '%':
@@ -545,7 +547,7 @@ func (l *Lexer) readOpWord() NoPEGToken {
 	cpath := false
 
 	// Read the word part
-	for isWordCharacter(l.ch) || l.ch == '/' {
+	for isWordCharacter(l.ch) || l.ch == '/' || l.ch == '<' {
 		// Check if it's a context path (word/word)
 		if l.ch == '/' {
 			cpath = true
@@ -572,7 +574,7 @@ func (l *Lexer) readPipeWord() NoPEGToken {
 	cpath := false
 
 	// Read the word part
-	for isWordCharacter(l.ch) || l.ch == '/' {
+	for isWordCharacter(l.ch) || l.ch == '/' || l.ch == '<' {
 		if l.ch == '/' {
 			cpath = true
 		}
@@ -840,23 +842,43 @@ func (p *NoPEGParser) parseToken() (env.Object, error) {
 		idx := p.wordIndex.IndexWord(word[1:])
 		return *env.NewGetword(idx), nil
 	case NPEG_TOKEN_OPWORD:
-		word := p.currentToken.Value
+		var word string
+		if p.currentToken.Value[0] == '.' && len(p.currentToken.Value) > 1 {
+			word = p.currentToken.Value[1:]
+		} else {
+			word = p.currentToken.Value
+		}
 		var idx int
+		force := 0
 		if len(word) == 1 || word == "<<" || word == "<-" || word == "<~" || word == ">=" || word == "<=" || word == "//" || word == ".." || word == "++" || word == "." || word == "|" {
 			idx = p.wordIndex.IndexWord("_" + word)
 		} else {
-			idx = p.wordIndex.IndexWord(word[1:])
+			if word[len(word)-1:] == "*" {
+				force = 1
+				word = word[:len(word)-1]
+			}
+			idx = p.wordIndex.IndexWord(word)
 		}
-		return *env.NewOpword(idx, 0), nil
+		return *env.NewOpword(idx, force), nil
 	case NPEG_TOKEN_PIPEWORD:
-		word := p.currentToken.Value
+		var word string
+		if p.currentToken.Value != "|" {
+			word = p.currentToken.Value[1:]
+		} else {
+			word = p.currentToken.Value
+		}
 		var idx int
-		if word == ">>" || word == "->" || word == "~>" || word == "-->" || word == ".." || word == "|" {
+		force := 0
+		if len(word) == 1 || word == ">>" || word == "->" || word == "~>" || word == "-->" || word == ".." || word == "|" {
 			idx = p.wordIndex.IndexWord("_" + word)
 		} else {
-			idx = p.wordIndex.IndexWord(word[1:])
+			if word[len(word)-1:] == "*" {
+				force = 1
+				word = word[:len(word)-1]
+			}
+			idx = p.wordIndex.IndexWord(word)
 		}
-		return *env.NewPipeword(idx, 0), nil
+		return *env.NewPipeword(idx, force), nil
 	case NPEG_TOKEN_ONECHARPIPE:
 		word := p.currentToken.Value
 		idx := p.wordIndex.IndexWord("_" + word)
