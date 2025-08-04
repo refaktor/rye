@@ -1,5 +1,5 @@
 section "Default" "" {
-	group "decode\hex" 
+	group "decode\\hex" 
 	"Decodes a hexadecimal string to a bytes native value."
 	{
 		arg `hex-string: hexadecimal encoded string to decode`
@@ -12,7 +12,7 @@ section "Default" "" {
 		equal { cc crypto "invalid" |decode\hex |disarm |type? } 'error
 	}
 
-	group "encode-to\hex" 
+	group "encode-to\\hex" 
 	"Encodes a bytes native value to a hexadecimal string."
 	{
 		arg `bytes: native bytes object to encode`

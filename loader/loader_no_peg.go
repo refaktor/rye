@@ -232,7 +232,7 @@ func (l *Lexer) NextToken() NoPEGToken {
 	}*/
 	case '<':
 		pch := l.peekChar()
-		if isWhitespace(pch) || pch == '-' || pch == '~' {
+		if isWhitespace(pch) || pch == '-' || pch == '~' || pch == '=' || pch == '<' || pch == '>' {
 			return l.readOpWord()
 			// l.readChar()
 			// return l.makeToken(NPEG_TOKEN_OPWORD, "<")
@@ -400,18 +400,24 @@ func (l *Lexer) readString() NoPEGToken {
 	l.readChar() // Skip opening quote
 
 	for l.ch != 0 && l.ch != delimiter {
-		// Handle escape sequences
-		if l.ch == '\\' && l.peekChar() == delimiter {
-			l.readChar() // Skip backslash
+		// Handle escape sequences properly
+		if l.ch == '\\' {
+			// Skip the backslash
+			l.readChar()
+			// Skip the escaped character (if any)
+			if l.ch != 0 {
+				l.readChar()
+			}
+		} else {
+			l.readChar()
 		}
-		l.readChar()
 	}
 
 	if l.ch == delimiter {
 		l.readChar() // Skip closing quote
 	}
 
-	// Ensure the number is followed by a token delimiter
+	// Ensure the string is followed by a token delimiter
 	if !isWhitespace(l.ch) {
 		// fmt.Println("--NOSPACING INVOKED*->")
 		// fmt.Println(l.pos)
@@ -542,12 +548,12 @@ func (l *Lexer) readGetWord() NoPEGToken {
 }
 
 func (l *Lexer) readOpWord() NoPEGToken {
-	l.readChar() // Skip dot
+	l.readChar() // Skip first character
 
 	cpath := false
 
 	// Read the word part
-	for isWordCharacter(l.ch) || l.ch == '/' || l.ch == '<' {
+	for isWordCharacter(l.ch) || l.ch == '/' || l.ch == '<' || l.ch == '~' {
 		// Check if it's a context path (word/word)
 		if l.ch == '/' {
 			cpath = true
@@ -926,8 +932,9 @@ func (p *NoPEGParser) parseToken() (env.Object, error) {
 		str = strings.Replace(str, "\\n", "\n", -1)
 		str = strings.Replace(str, "\\r", "\r", -1)
 		str = strings.Replace(str, "\\t", "\t", -1)
-		str = strings.Replace(str, "\\\"", "\"", -1)
 		str = strings.Replace(str, "\\\\", "\\", -1)
+		str = strings.Replace(str, "\\\"", "\"", -1)
+		// str = strings.Replace(str, "\\\\", "\\", -1)
 		return *env.NewString(str), nil
 	case NPEG_TOKEN_URI:
 		parts := strings.SplitN(p.currentToken.Value, "://", 2)

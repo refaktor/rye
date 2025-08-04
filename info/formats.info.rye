@@ -47,7 +47,7 @@ section "Regexp " "Go like Regular expressions" {
 		equal { regexp "x([0-9]+)y" |Submatches? "x123y x234y" } { "123" }
 	}
 
-	group "regexp//Submatches\all?" 
+	group "regexp//Submatches\\all?" 
 	"Extracts all captured groups from all matches as a nested block structure."
 	{
 		arg `regexp: Regular expression with capturing groups`
@@ -173,7 +173,7 @@ section "JSON " "Parsing and generating JSON" {
 		equal { dict { a: 1 b: 2 c: 3 } |to-json } `{"a": 1, "b": 2, "c": 3} `
 	}
 
-	group "to-json\lines" 
+	group "to-json\\lines" 
 	"Converts a table to JSON with each row on a separate line."
 	{
 		arg `table: table value to encode`
@@ -274,7 +274,7 @@ section "SXML " "Streaming, SAX-like XML processing" {
 }
 
 section "HTML " "HTML processing functions" {
-	group "unescape\html" 
+	group "unescape\\html" 
 	"Converts HTML entities to their character equivalents."
 	{
 		arg `text: HTML-escaped string`
@@ -285,7 +285,7 @@ section "HTML " "HTML processing functions" {
 		equal { unescape\html "&gt;hello&lt;" } ">hello<"
 	}
 
-	group "escape\html" 
+	group "escape\\html" 
 	"Converts special characters to HTML entities."
 	{
 		arg `text: String containing HTML special characters`
