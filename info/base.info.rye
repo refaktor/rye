@@ -86,7 +86,7 @@ section "Default" "" {
 		equal   { person: kind 'person { name: "" age: 0 } person << dict { "name" "John" "age" 30 } |type? } 'ctx
 	}
 
-	group "save\current" 
+	group "save\\current" 
 	"Saves current state of the program to a file."
 	{
 		arg `None`
@@ -97,7 +97,7 @@ section "Default" "" {
 		equal  { save\current |type? } 'integer
 	}
 
-	group "save\current\secure" 
+	group "save\\current\\secure" 
 	"Saves current state of the program to a file with password protection."
 	{
 		arg `None`
@@ -130,7 +130,7 @@ section "Default" "" {
 		equal   { x: private { doc! "some doc" doc? } } "some doc"
 	}
 
-	group "doc\of?" 
+	group "doc\\of?" 
 	"Get docstring of the passed context."
 	{
 		arg `value: Function, builtin, or context to get the docstring from`
@@ -233,7 +233,7 @@ section "Default" "" {
 		equal  { with 100 { + 11 , * 3 } } 300
 	}
 
-	group "do\in" 
+	group "do\\in" 
 	"Takes a Context and a Block. It Does a block inside a given Context."
 	{
 	}
@@ -245,7 +245,7 @@ section "Default" "" {
 		equal  { c: context { x:: 100 } do\in c { x:: 200 , x } } 200
 	}
 
-	group "do\par" 
+	group "do\\par" 
 	"Takes a Context and a Block. It Does a block in current context but with parent a given Context."
 	{
 	}
@@ -426,7 +426,7 @@ section "Boolean logic " "Functions that work with true and false values." {
 		equal { any { 0 0 0 } } 0
 	}
 
-	group "any\with" 
+	group "any\\with" 
 	"Applies each expression in the block to the provided value until a truthy result is found and returns it."
 	{
 		arg `value: Value to be used in the expressions`
@@ -575,7 +575,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { 5 % 3 } 2
 	}
 
-	group "random\integer" 
+	group "random\\integer" 
 	"Generates a cryptographically secure random integer between 0 (inclusive) and the specified maximum (exclusive)."
 	{
 		arg `max: Upper bound (exclusive) for the random number`
@@ -588,7 +588,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { random\integer 100 | >= 0 } 1
 	}
 
-	group "random\decimal" 
+	group "random\\decimal" 
 	"Generates a cryptographically secure random decimal between 0.0 (inclusive) and the specified maximum (exclusive)."
 	{
 		arg `max: Upper bound (exclusive) for the random number`
@@ -840,7 +840,7 @@ section "Strings " "" {
 		equal { trim "\t\nASDF\r\n" } "ASDF"
 	}
 
-	group "trim\" 
+	group "trim\\" 
 	"Removes all leading and trailing occurrences of the specified characters from a string."
 	{
 		arg `string: String to trim`
@@ -853,7 +853,7 @@ section "Strings " "" {
 		equal { trim\ "##Hello##" "#" } "Hello"
 	}
 
-	group "trim\right" 
+	group "trim\\right" 
 	"Removes all trailing occurrences of the specified characters from a string."
 	{
 		arg `string: String to trim`
@@ -867,7 +867,7 @@ section "Strings " "" {
 		equal { trim\right "Hello!!!" "!" } "Hello"
 	}
 
-	group "trim\left" 
+	group "trim\\left" 
 	"Removes all leading occurrences of the specified characters from a string."
 	{
 		arg `string: String to trim`
@@ -985,7 +985,7 @@ section "Strings " "" {
 		equal { position? { ".." "xo" ".." } "xo" } 2
 	}
 
-	group "encode-to\base64" 
+	group "encode-to\\base64" 
 	"Encodes a string or binary data as a base64 string."
 	{
 		arg `data: String or native bytes/pem-block to encode`
@@ -997,7 +997,7 @@ section "Strings " "" {
 		equal { encode-to\base64 "hello world" } "aGVsbG8gd29ybGQ="
 	}
 
-	group "decode\base64" 
+	group "decode\\base64" 
 	"Decodes a base64-encoded string back to its original form."
 	{
 		arg `string: Base64-encoded string to decode`
@@ -1087,7 +1087,7 @@ section "Strings " "" {
 		equal { join { 1 2 3 } } "123"
 	}
 
-	group "join\with" 
+	group "join\\with" 
 	"Concatenates all strings or numbers in a block or list into a single string with a specified delimiter between values."
 	{
 		arg `collection: Block or list of strings or numbers to join`
@@ -1115,7 +1115,7 @@ section "Strings " "" {
 		equal { split "one::two::three" "::" } { "one" "two" "three" }
 	}
 
-	group "split\quoted" 
+	group "split\\quoted" 
 	"Splits a string into a block of strings using a separator, while respecting quoted sections that should remain intact."
 	{
 		arg `string: String to split`
@@ -1129,7 +1129,7 @@ section "Strings " "" {
 		equal { split\quoted "'hello, world',foo,bar" "," "'" } { "'hello, world'" "foo" "bar" }
 	}
 
-	group "split\many" 
+	group "split\\many" 
 	"Splits a string into a block of strings using any character in the separators string as a delimiter."
 	{
 		arg `string: String to split`
@@ -1143,7 +1143,7 @@ section "Strings " "" {
 		equal { split\many "a;b,c:d" ";,:" } { "a" "b" "c" "d" }
 	}
 
-	group "split\every" 
+	group "split\\every" 
 	"Splits a string or block into chunks of the specified size, with any remaining elements in the last chunk."
 	{
 		arg `collection: String or block to split`
@@ -1300,7 +1300,7 @@ section "Collections " "" {
 		equal { rest { 1 } } { }
 	}
 
-	group "rest\from" 
+	group "rest\\from" 
 	"Creates a new collection with all items starting from the specified position in the input collection."
 	{
 		arg `collection: Block, list or string to get items from`
@@ -1445,7 +1445,7 @@ section "Collections " "" {
 		equal { x: ref list { 5 3 1 4 } , sort! x , x } list { 1 3 4 5 }
 	}
 
-	group "sort\by" 
+	group "sort\\by" 
 	"Creates a new collection with items sorted according to a custom comparison function."
 	{
 		arg `collection: Block or list to sort`
@@ -1651,8 +1651,8 @@ section "Collections " "" {
 	}
 
 	{
-;		equal { 2 <~ { 23 34 45 } } 34
-;		equal { 1 <~ { "a" "b" "c" } } "b"
+		equal { 2 <~ { 23 34 45 } } 34
+		equal { 1 <~ { "a" "b" "c" } } "b"
 	}
 
 	group "_~>" 
@@ -1664,8 +1664,8 @@ section "Collections " "" {
 	}
 
 	{
-;		equal { { 23 34 45 } ~> 1 } 23
-;		equal { { "a" "b" "c" } ~> 1 } "a"
+		equal { { 23 34 45 } ~> 1 } 23
+		equal { { "a" "b" "c" } ~> 1 } "a"
 	}
 
 	group "intersection" 
@@ -1691,7 +1691,7 @@ section "Collections " "" {
 		equal { intersection list { } list { } } list { }
 	}
 
-	group "intersection\by" 
+	group "intersection\\by" 
 	"Finds the intersection of two collections using a custom comparison function to determine matching elements."
 	{
 		arg `collection1: First string or block`
@@ -1772,7 +1772,7 @@ section "Collections " "" {
 		equal { var 's "hello" append! " world" 's , s } "hello world"
 	}
 
-	group "change\nth!" 
+	group "change\\nth!" 
 	"Changes the value at a specific position in a block or list in-place and returns the modified collection."
 	{
 		arg `collection: Reference to a block or list to modify`
@@ -1842,7 +1842,7 @@ section "Collections " "" {
 		equal { x: 1 y: 2 try { vals { z y } } |type? } 'error
 	}
 
-	group "vals\with" 
+	group "vals\\with" 
 	"Evaluate a block with injecting the first argument."
 	{
 	}
@@ -1911,7 +1911,7 @@ section "Contexts " "Context related functions" {
 		equal { y: 123 private { does { y } } :f f } 123
 	}
 
-	group "private\" 
+	group "private\\" 
 	"Creates a documented private context for evaluating expressions, returning the last value instead of the context."
 	{
 		arg `doc: String containing documentation for the context`
@@ -1978,7 +1978,7 @@ section "Contexts " "Context related functions" {
 		equal { var 'y 99 c: context { incr: fn\in { } parent { y:: inc y } } c/incr y } 100
 	}
 
-	group "parent\of" 
+	group "parent\\of" 
 	"Returns parent context of the current context."
 	{
 	}
@@ -1997,11 +1997,11 @@ section "Contexts " "Context related functions" {
 	{
 		equal { c: context { x: 123 y: 456 } cc: clone c cc/x } 123
 		equal { c: context { x: 123 y: 456 } cc: clone c cc/y } 456
-		equal { c: context { x: 123 } cc: clone c cc .x: 999 c/x } 123 ; original unchanged
-		equal { c: context { x: 123 } cc: clone c cc .x: 999 cc/x } 999 ; clone modified
+		equal { c: context { x: 123 } cc: clone c cc x: 999 c/x } 123 ; original unchanged
+		equal { c: context { x: 123 } cc: clone c cc x: 999 cc/x } 999 ; clone modified
 	}
 
-	group "clone\" 
+	group "clone\\" 
 	"Creates a copy of a context and evaluates a block of code inside the clone."
 	{
 		arg `ctx: Context object to clone`
@@ -2087,7 +2087,7 @@ section "Default" "" {
 		error { x: pfn { x } { .print } , x 123 }
 	}
 
-	group "fn\cc" 
+	group "fn\\cc" 
 	"Creates a function that captures the current context, allowing access to variables from the enclosing scope."
 	{
 		arg `spec: Block containing parameter specifications`
@@ -2100,7 +2100,7 @@ section "Default" "" {
 		equal { y: 5 , f: fn\cc { x } { x + y } , f 3 } 8
 	}
 
-	group "fn\par" 
+	group "fn\\par" 
 	"Creates a function with a specified parent context, allowing access to variables from that context."
 	{
 		arg `spec: Block containing parameter specifications`
@@ -2113,7 +2113,7 @@ section "Default" "" {
 		equal { ctx: context { y: 5 } , f: fn\par { x } ctx { x + y } , f 3 } 8
 	}
 
-	group "fn\in" 
+	group "fn\\in" 
 	"Creates a function that executes directly in the specified context rather than creating a new execution context."
 	{
 		arg `spec: Block containing parameter specifications`

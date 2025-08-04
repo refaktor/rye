@@ -24,7 +24,7 @@ section "IO " "IO related functions" {
 		equal { open %data/file.txt |kind? } 'file
 	}
 
-	group "file-schema//Open\append" 
+	group "file-schema//Open\\append" 
 	"Opens a file for appending."
 	{
 		arg `path: uri representing the file to open for appending`
@@ -94,7 +94,7 @@ section "IO " "IO related functions" {
 	{
 	}
 
-	group "reader//Read\string" 
+	group "reader//Read\\string" 
 	"Reads all content from a reader as a string."
 	{
 		arg `reader: native reader object`
@@ -160,7 +160,7 @@ section "IO " "IO related functions" {
 		equal { read-all open %data/file.txt } "hello text file\n"
 	}
 
-	group "file//Seek\end" 
+	group "file//Seek\\end" 
 	"Seeks to the end of a file."
 	{
 		arg `file: native file object`
@@ -192,7 +192,7 @@ section "IO " "IO related functions" {
 		equal { read %data/file.txt } "hello text file\n"
 	}
 
-	group "file-schema//Read\bytes" 
+	group "file-schema//Read\\bytes" 
 	"Reads the entire content of a file as bytes."
 	{
 		arg `path: uri representing the file to read`
@@ -203,7 +203,7 @@ section "IO " "IO related functions" {
 		equal { read %data/file.txt } "hello text file\n"
 	}
 
-	group "file-schema//Read\lines" 
+	group "file-schema//Read\\lines" 
 	"Reads a file and returns its content as a block of lines."
 	{
 		arg `path: uri representing the file to read`
@@ -226,7 +226,7 @@ section "IO " "IO related functions" {
 		equal { write %data/write.txt "written\n" } "written\n"
 	}
 
-	group "write\bytes" 
+	group "write\\bytes" 
 	"Writes bytes to a file."
 	{
 		arg `bytes: Go-bytes native value to write`
@@ -237,7 +237,7 @@ section "IO " "IO related functions" {
 	{
 	}
 
-	group "append\bytes" 
+	group "append\\bytes" 
 	"Appends two byte arrays into one."
 	{
 		arg `bytes1: first Go-bytes native value`
@@ -248,7 +248,7 @@ section "IO " "IO related functions" {
 	{
 	}
 
-	group "writer//Write\string" 
+	group "writer//Write\\string" 
 	"Writes a string to a writer."
 	{
 		arg `writer: native writer object`

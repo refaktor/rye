@@ -1200,11 +1200,37 @@ func DirectlyCallBuiltin(ps *env.ProgramState, bi env.Builtin, a0 env.Object, a1
 // DISPLAYING FAILURE OR ERRROR
 
 func MaybeDisplayFailureOrError(es *env.ProgramState, genv *env.Idxs, tag string) {
+	topLevel := false
 	if es.FailureFlag {
 		fmt.Println("\x1b[33m" + "Failure" + "\x1b[0m")
 		// DEBUG: fmt.Println(tag)
 	}
-	if es.ErrorFlag {
+	if es.ErrorFlag || (es.FailureFlag && topLevel) {
+		fmt.Println("\x1b[31m" + es.Res.Print(*genv))
+		switch es.Res.(type) {
+		case env.Error:
+			fmt.Println(es.Ser.PositionAndSurroundingElements(*genv))
+			fmt.Println("Error not pointer so bug. #temp")
+		case *env.Error:
+			fmt.Println("At location::")
+			fmt.Print(es.Ser.PositionAndSurroundingElements(*genv))
+		}
+		fmt.Println("\x1b[0m")
+		// fmt.Println(tag)
+		// ENTER CONSOLE ON ERROR
+		// es.ErrorFlag = false
+		// es.FailureFlag = false
+		// DoRyeRepl(es, "do", true)
+	}
+	// cebelca2659- vklopi kontne skupine
+}
+
+func MaybeDisplayFailureOrError_2_NEW(es *env.ProgramState, genv *env.Idxs, tag string, topLevel bool) {
+	if es.FailureFlag {
+		fmt.Println("\x1b[33m" + "Failure" + "\x1b[0m")
+		// DEBUG: fmt.Println(tag)
+	}
+	if es.ErrorFlag || (es.FailureFlag && topLevel) {
 		fmt.Println("\x1b[31m" + es.Res.Print(*genv))
 		switch es.Res.(type) {
 		case env.Error:
