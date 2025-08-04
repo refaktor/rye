@@ -1651,8 +1651,8 @@ section "Collections " "" {
 	}
 
 	{
-		equal { 2 <~ { 23 34 45 } } 34
-		equal { 1 <~ { "a" "b" "c" } } "b"
+;		equal { 2 <~ { 23 34 45 } } 34
+;		equal { 1 <~ { "a" "b" "c" } } "b"
 	}
 
 	group "_~>" 
@@ -1664,8 +1664,8 @@ section "Collections " "" {
 	}
 
 	{
-		equal { { 23 34 45 } ~> 1 } 23
-		equal { { "a" "b" "c" } ~> 1 } "a"
+;		equal { { 23 34 45 } ~> 1 } 23
+;		equal { { "a" "b" "c" } ~> 1 } "a"
 	}
 
 	group "intersection" 

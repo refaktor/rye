@@ -122,7 +122,7 @@ first args |^fix { print-help } |switch {
 test {
 	var 'sections { }
 	either args .length? > 1 {
-		either ( second args ) = 'ls {
+		either probe ( ( second args ) = 'ls ) {
 			print "Test sections available:"
 			menu .for { .concat* " * " |print }
 		} {
