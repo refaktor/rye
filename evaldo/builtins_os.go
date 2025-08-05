@@ -581,6 +581,7 @@ func proccesTableBase() *env.Table {
 	return env.NewTable([]string{
 		"User",
 		"PID",
+		"TTY",
 		"Status",
 		"%CPU",
 		"%MEM",
@@ -597,6 +598,14 @@ func proccesTableBase() *env.Table {
 }
 
 func processTableAdd(s *env.Table, process *process.Process) {
+	var tty env.Object
+	terminal, err := process.Terminal()
+	if err == nil && terminal != "" {
+		tty = *env.NewString(terminal)
+	} else {
+		tty = *env.NewString("?")
+	}
+
 	var status env.String
 	stat, err := process.Status()
 	if err == nil {
@@ -652,6 +661,7 @@ func processTableAdd(s *env.Table, process *process.Process) {
 	vals := []any{
 		maybeString(process.Username),
 		process.Pid,
+		tty,
 		status,
 		maybeFloat64(process.CPUPercent),
 		maybeFloat32(process.MemoryPercent),
