@@ -505,10 +505,7 @@ func EvaluateLoadedValue(ps *env.ProgramState, block_ env.Object, script_ string
 var ShowResults bool
 
 var builtins = map[string]*env.Builtin{
-	// Tests:
-	// equal  { compile-fast { 123 + 123 } } 'block
-	// equal  { compile-fast/debug { 123 + 123 } } 'block
-	"compile-fast": {
+	/* "compile-fast": {
 		Argsn: 1,
 		Doc:   "Takes a block of code and compiles it to function pointers for the fast evaluator.",
 		Pure:  true,
@@ -643,7 +640,7 @@ var builtins = map[string]*env.Builtin{
 				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "do-fast")
 			}
 		},
-	},
+	}, */
 
 	// There is require with arity 2 below which makes more sense
 	// error { 1 = 0 |require |type? }
@@ -1046,9 +1043,9 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// fmt.Println(arg0.Inspect(*ps.Idx))
 			if env.IsPointer(arg0) {
-				return env.NewInteger(1)
+				return env.NewBoolean(true)
 			} else {
-				return env.NewInteger(0)
+				return env.NewBoolean(false)
 			}
 		},
 	},
@@ -1394,7 +1391,7 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal  { c: context { x: 100 } do\in c { x * 9.99 } } 999.0
-	// equal  { c: context { x: 100 } do\in c { inc! 'x } } 101
+	// equal  { c: context { x:: 100 } do\in c { inc! 'x } } 101
 	// equal  { c: context { var 'x 100 } do\in c { x:: 200 } c/x } 200
 	// equal  { c: context { x:: 100 } do\in c { x:: 200 , x } } 200
 	"do\\in": { // **
@@ -1424,7 +1421,7 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal  { c: context { x: 100 } do\par c { x * 9.99 } } 999.0
-	// equal  { c: context { x: 100 } do\par c { inc! 'x } } 101
+	// equal  { c: context { x:: 100 } do\par c { inc! 'x } } 101
 	// equal  { c: context { x: 100 } do\par c { x:: 200 , x } } 200
 	// equal  { c: context { x: 100 } do\par c { x:: 200 } c/x } 100
 	"do\\par": { // **
