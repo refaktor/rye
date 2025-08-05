@@ -219,6 +219,20 @@ func (l *Lexer) NextToken() NoPEGToken {
 	case '?':
 		return l.readGetWord()
 	case '.', '+', '*', '/', '>', '=': // taken for other tokens also - <
+		// Special handling for "//" operator
+		if l.ch == '/' && l.peekChar() == '/' {
+			l.readChar() // Skip first '/'
+			l.readChar() // Skip second '/'
+			if isWhitespace(l.ch) {
+				return l.makeToken(NPEG_TOKEN_OPWORD, "//")
+			}
+			// If not followed by whitespace, continue with normal opword parsing
+			// Reset position to handle as regular opword
+			l.pos -= 2
+			l.readPos -= 2
+			l.col -= 2
+			l.ch = '/'
+		}
 		return l.readOpWord()
 	case '|':
 		return l.readPipeWord()
@@ -248,10 +262,20 @@ func (l *Lexer) NextToken() NoPEGToken {
 		return l.readComment()
 	case '-':
 		if isDigit(l.peekChar()) {
+			// fmt.Println("***0")
 			return l.readNumber()
 		} else {
-			l.readChar()
-			return l.makeToken(NPEG_TOKEN_OPWORD, "-")
+			pch := l.peekChar()
+			// fmt.Println("***1")
+			if isWhitespace(pch) {
+				l.readChar()
+				// fmt.Println("***2")
+				return l.makeToken(NPEG_TOKEN_OPWORD, "-")
+			} else {
+				// fmt.Println("***3")
+				// return l.readOpWord()
+				return l.readPipeWord()
+			}
 		}
 	default:
 		if isDigit(l.ch) {

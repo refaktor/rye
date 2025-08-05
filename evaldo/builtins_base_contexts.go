@@ -431,8 +431,8 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Tests:
 	// equal { c: context { x: 123 y: 456 } cc: clone c cc/x } 123
 	// equal { c: context { x: 123 y: 456 } cc: clone c cc/y } 456
-	// equal { c: context { x: 123 } cc: clone c cc .x: 999 c/x } 123 ; original unchanged
-	// equal { c: context { x: 123 } cc: clone c cc .x: 999 cc/x } 999 ; clone modified
+	// equal { c: context { x: 123 } cc: clone c cc x: 999 c/x } 123 ; original unchanged
+	// equal { c: context { x: 123 } cc: clone c cc x: 999 cc/x } 999 ; clone modified
 	// Args:
 	// * ctx: Context object to clone
 	// Returns:
@@ -456,9 +456,9 @@ var builtins_contexts = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { c: context { x: 123 } cc: clone\ c { y: x + 100 } cc/y } 223
-	// equal { c: context { x: 123 } cc: clone\ c { y: x + 100 } c/y } 'error ; y not in original context
-	// equal { c: context { x: 123 } cc: clone\ c { x: 999 } c/x } 123 ; original unchanged
-	// equal { c: context { x: 123 } cc: clone\ c { x: 999 } cc/x } 999 ; clone modified
+	// ; equal { c: context { x:: 123 } cc: clone\ c { y: x + 100 } c/y } 'error ; y not in original context
+	// ; equal { c: context { x:: 123 } cc: clone\ c { x: 999 } c/x } 123 ; original unchanged
+	// ; equal { c: context { x:: 123 } cc: clone\ c { x: 999 } cc/x } 999 ; clone modified
 	// Args:
 	// * ctx: Context object to clone
 	// * block: Block of expressions to evaluate in the cloned context

@@ -430,8 +430,8 @@ var builtins_numbers = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { a:: 123 dec! 'a a } 122
-	// equal { counter:: 1 dec! 'counter counter } 0
+	// equal { a:: 123 decr! 'a a } 122
+	// equal { counter:: 1 decr! 'counter counter } 0
 	// error { decr! 123 }
 	// Args:
 	// * word: Word referring to an integer value to decrement

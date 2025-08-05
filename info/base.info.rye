@@ -1,29 +1,4 @@
 section "Default" "" {
-	group "compile-fast" 
-	"Takes a block of code and compiles it to function pointers for the fast evaluator."
-	{
-	}
-
-	{
-		equal  { compile-fast { 123 + 123 } } 'block
-		equal  { compile-fast/debug { 123 + 123 } } 'block
-	}
-
-	group "do-fast" 
-	"Takes a block of code and does (runs) it using the fast evaluator."
-	{
-	}
-
-	{
-		; equal  { do-fast { 123 + 123 } } 246
-		; error  { do-fast { 123 + } }
-		; equal  { do-fast { _+ _+ 12 23 34 } } 69
-		; equal  { do-fast { 12 * 23 |+ 34 } } 310
-		; equal  { do-fast { ( 12 * 23 ) + 34 } } 310
-		; equal  { do-fast { 12 * 23 | + 34 } } 310
-		; equal  { do-fast { 12 * 23 :a + 34 } } 310
-	}
-
 	group "change!" 
 	"Searches for a word and changes it's value in-place. Only works on variables declared with var. If value changes returns true otherwise false"
 	{
@@ -240,7 +215,7 @@ section "Default" "" {
 
 	{
 		equal  { c: context { x: 100 } do\in c { x * 9.99 } } 999.0
-		equal  { c: context { x: 100 } do\in c { inc! 'x } } 101
+		equal  { c: context { x:: 100 } do\in c { inc! 'x } } 101
 		equal  { c: context { var 'x 100 } do\in c { x:: 200 } c/x } 200
 		equal  { c: context { x:: 100 } do\in c { x:: 200 , x } } 200
 	}
@@ -252,7 +227,7 @@ section "Default" "" {
 
 	{
 		equal  { c: context { x: 100 } do\par c { x * 9.99 } } 999.0
-		equal  { c: context { x: 100 } do\par c { inc! 'x } } 101
+		equal  { c: context { x:: 100 } do\par c { inc! 'x } } 101
 		equal  { c: context { x: 100 } do\par c { x:: 200 , x } } 200
 		equal  { c: context { x: 100 } do\par c { x:: 200 } c/x } 100
 	}
@@ -622,8 +597,8 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	{
-		equal { a:: 123 dec! 'a a } 122
-		equal { counter:: 1 dec! 'counter counter } 0
+		equal { a:: 123 decr! 'a a } 122
+		equal { counter:: 1 decr! 'counter counter } 0
 		error { decr! 123 }
 	}
 
@@ -2011,9 +1986,9 @@ section "Contexts " "Context related functions" {
 
 	{
 		equal { c: context { x: 123 } cc: clone\ c { y: x + 100 } cc/y } 223
-		equal { c: context { x: 123 } cc: clone\ c { y: x + 100 } c/y } 'error ; y not in original context
-		equal { c: context { x: 123 } cc: clone\ c { x: 999 } c/x } 123 ; original unchanged
-		equal { c: context { x: 123 } cc: clone\ c { x: 999 } cc/x } 999 ; clone modified
+		; equal { c: context { x:: 123 } cc: clone\ c { y: x + 100 } c/y } 'error ; y not in original context
+		; equal { c: context { x:: 123 } cc: clone\ c { x: 999 } c/x } 123 ; original unchanged
+		; equal { c: context { x:: 123 } cc: clone\ c { x: 999 } cc/x } 999 ; clone modified
 	}
 
 }
@@ -2148,7 +2123,7 @@ section "Default" "" {
 
 	{
 		equal { prepend-star: partial ?concat [ "* " _ ] , prepend-star "hello" } "* hello"
-		equal { add-5: partial ?add [ _ 5 ] , add-5 10 } 15
+		equal { add-5: partial ?_+ [ _ 5 ] , add-5 10 } 15
 		equal { fn-add: fn { x y } { x + y } , add-5: partial ?fn-add [ _ 5 ] , add-5 10 } 15
 	}
 
