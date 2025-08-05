@@ -961,7 +961,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 	// Tests:
-	// equal   { is-ref ref { 1 2 3 } } 1
+	// equal   { is-ref ref { 1 2 3 } } true
 	// Args:
 	// * value: Value to make mutable
 	// Returns:
@@ -996,7 +996,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal   { is-ref deref ref { 1 2 3 } } 0
+	// equal   { is-ref deref ref { 1 2 3 } } false
 	// Args:
 	// * value: Mutable reference to make immutable
 	// Returns:

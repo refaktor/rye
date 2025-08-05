@@ -282,6 +282,42 @@ var Builtins_table = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Tests:
+	//  equal { table { 'a } { 1 2 3 2 } |where-not-equal "a" 2 |length? } 2
+	// Args:
+	// * sheet
+	// * column
+	// * value
+	// Tags: #filter #tables
+	"where-not-equal": {
+		Argsn: 3,
+		Doc:   "Returns table of rows where specific colum is not equal to given value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch spr := arg0.(type) {
+			case *env.Table:
+				switch col := arg1.(type) {
+				case env.Word:
+					return WhereNotEquals(ps, *spr, ps.Idx.GetWord(col.Index), arg2)
+				case env.String:
+					return WhereNotEquals(ps, *spr, col.Value, arg2)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-not-equal")
+				}
+			case env.Table:
+				switch col := arg1.(type) {
+				case env.Word:
+					return WhereNotEquals(ps, spr, ps.Idx.GetWord(col.Index), arg2)
+				case env.String:
+					return WhereNotEquals(ps, spr, col.Value, arg2)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-not-equal")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-not-equal")
+			}
+		},
+	},
+
 	// Notes:
 	// Void is not a value that any function can accept or return so far in Rye. But there can be missing data
 	// in tables ... for example from SQL query with left-join or plain null values in databases
@@ -2496,6 +2532,23 @@ func WhereEquals(ps *env.ProgramState, s env.Table, name string, val env.Object)
 		return *nspr
 	} else {
 		return MakeBuiltinError(ps, "Column not found.", "WhereEquals")
+	}
+}
+
+func WhereNotEquals(ps *env.ProgramState, s env.Table, name string, val env.Object) env.Object {
+	idx := slices.Index(s.Cols, name)
+	nspr := env.NewTable(s.Cols)
+	if idx > -1 {
+		for _, row := range s.Rows {
+			if len(row.Values) > idx {
+				if !val.Equal(env.ToRyeValue(row.Values[idx])) {
+					nspr.AddRow(row)
+				}
+			}
+		}
+		return *nspr
+	} else {
+		return MakeBuiltinError(ps, "Column not found.", "WhereNotEquals")
 	}
 }
 
