@@ -200,6 +200,9 @@ func (s *MLState) displayTabSuggestions(items []string, currentIndex int) {
 	// Save cursor position
 	s.sendBack("\033[s")
 
+	// Disable line wrapping to prevent suggestions from wrapping
+	s.sendBack("\033[?7l")
+
 	// Move cursor down to display suggestions
 	s.sendBack("\n")
 	s.sendBack("\033[K") // Clear line
@@ -242,7 +245,8 @@ func (s *MLState) displayTabSuggestions(items []string, currentIndex int) {
 		s.sendBack("\033[0m") // Reset color
 	}
 
-	// Restore cursor position
+	// Re-enable line wrapping and restore cursor position
+	s.sendBack("\033[?7h")
 	s.sendBack("\033[u")
 }
 

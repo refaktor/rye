@@ -9,6 +9,47 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
+// Context represents a unified interface for all context types (RyeCtx, PersistentCtx, etc.)
+type Context interface {
+	Object // Embed the existing Object interface
+
+	// Core context operations
+	Get(word int) (Object, bool)
+	Get2(word int) (Object, bool, Context)
+	Set(word int, val Object) Object
+	Mod(word int, val Object) bool
+	Unset(word int, idxs *Idxs) Object
+	SetNew(word int, val Object, idxs *Idxs) bool
+
+	// Variable tracking
+	MarkAsVariable(word int)
+	IsVariable(word int) bool
+
+	// Context hierarchy
+	GetParent() Context
+	SetParent(parent Context)
+
+	// Context management
+	Copy() Context
+	Clear()
+	GetState() map[int]Object
+
+	// Utility methods
+	GetWords(idxs Idxs) Block
+	GetWordsAsStrings(idxs Idxs) Block
+	Preview(idxs Idxs, filter string) string
+	DumpBare(e Idxs) string
+
+	// Context-specific fields (for compatibility)
+	GetDoc() string
+	SetDoc(doc string)
+	GetKindWord() Word
+	SetKindWord(kind Word)
+
+	// Conversion methods for backward compatibility
+	AsRyeCtx() *RyeCtx
+}
+
 /* type Envi interface {
 	Get(word int) (Object, bool)
 	Set(word int, val Object) Object
@@ -65,7 +106,7 @@ func (e *RyeCtx) isContextOrParent(ctx *RyeCtx) bool {
 	return false
 }
 
-func (e *RyeCtx) Copy() *RyeCtx {
+func (e *RyeCtx) Copy() Context {
 	nc := NewEnv(e.Parent)
 	cp := make(map[int]Object)
 	for k, v := range e.state {
@@ -308,7 +349,7 @@ func (e *RyeCtx) Get(word int) (Object, bool) {
 	return obj, exists
 }
 
-func (e *RyeCtx) Get2(word int) (Object, bool, *RyeCtx) {
+func (e *RyeCtx) Get2(word int) (Object, bool, Context) {
 	obj, exists := e.state[word]
 	// recursively look at outer Environments ...
 	// only specific functions should do this and ounly for function values ... but there is only global env maybe
@@ -320,7 +361,7 @@ func (e *RyeCtx) Get2(word int) (Object, bool, *RyeCtx) {
 		if exists1 {
 			obj = obj1
 			exists = exists1
-			e = ctx
+			return obj, exists, ctx
 		}
 	}
 	return obj, exists, e
@@ -383,6 +424,51 @@ func (e *RyeCtx) Mod(word int, val Object) bool {
 	return true
 }
 
+// GetParent returns the parent context
+func (e *RyeCtx) GetParent() Context {
+	if e.Parent == nil {
+		return nil
+	}
+	return e.Parent
+}
+
+// SetParent sets the parent context
+func (e *RyeCtx) SetParent(parent Context) {
+	if parent == nil {
+		e.Parent = nil
+	} else {
+		// Type assert to *RyeCtx since that's what we're currently using
+		if ryeCtx, ok := parent.(*RyeCtx); ok {
+			e.Parent = ryeCtx
+		}
+	}
+}
+
+// GetDoc returns the documentation string
+func (e *RyeCtx) GetDoc() string {
+	return e.Doc
+}
+
+// SetDoc sets the documentation string
+func (e *RyeCtx) SetDoc(doc string) {
+	e.Doc = doc
+}
+
+// GetKindWord returns the Kind as a Word
+func (e *RyeCtx) GetKindWord() Word {
+	return e.Kind
+}
+
+// SetKindWord sets the Kind
+func (e *RyeCtx) SetKindWord(kind Word) {
+	e.Kind = kind
+}
+
+// AsRyeCtx returns the context as a *RyeCtx for backward compatibility
+func (e *RyeCtx) AsRyeCtx() *RyeCtx {
+	return e
+}
+
 type ProgramState struct {
 	Ser          TSeries // current block of code
 	Res          Object  // result of expression
@@ -407,6 +493,7 @@ type ProgramState struct {
 	Stack        *EyrStack
 	Embedded     bool
 	DeferBlocks  []Block // blocks to be executed when function exits or program terminates
+	// LastFailedCPathInfo map[string]interface{} // stores information about the last failed context path
 }
 
 type DoDialect int

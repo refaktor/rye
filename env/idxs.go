@@ -56,6 +56,7 @@ var NativeTypes = [...]string{ // Todo change to BuiltinTypes
 	"CurriedCaller",
 	"Complex",
 	"Markdown",
+	"PersistentCtx",
 	"PersistentTable",
 }
 

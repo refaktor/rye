@@ -444,10 +444,16 @@ var builtins_contexts = map[string]*env.Builtin{
 			switch ctx := arg0.(type) {
 			case env.RyeCtx:
 				clonedCtx := ctx.Copy()
-				return *clonedCtx
+				if ryeCtx, ok := clonedCtx.(*env.RyeCtx); ok {
+					return *ryeCtx
+				}
+				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "clone")
 			case *env.RyeCtx:
 				clonedCtx := ctx.Copy()
-				return *clonedCtx
+				if ryeCtx, ok := clonedCtx.(*env.RyeCtx); ok {
+					return *ryeCtx
+				}
+				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "clone")
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "clone")
 			}
@@ -475,16 +481,19 @@ var builtins_contexts = map[string]*env.Builtin{
 					ser := ps.Ser
 					origCtx := ps.Ctx
 					clonedCtx := ctx.Copy()
-					ps.Ser = bloc.Series
-					ps.Ctx = clonedCtx
-					EvalBlock(ps)
-					rctx := ps.Ctx
-					ps.Ctx = origCtx
-					ps.Ser = ser
-					if ps.ErrorFlag {
-						return ps.Res
+					if ryeCtx, ok := clonedCtx.(*env.RyeCtx); ok {
+						ps.Ser = bloc.Series
+						ps.Ctx = ryeCtx
+						EvalBlock(ps)
+						rctx := ps.Ctx
+						ps.Ctx = origCtx
+						ps.Ser = ser
+						if ps.ErrorFlag {
+							return ps.Res
+						}
+						return *rctx // return the resulting cloned context
 					}
-					return *rctx // return the resulting cloned context
+					return MakeArgError(ps, 1, []env.Type{env.CtxType}, "clone\\")
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "clone\\")
 				}
@@ -494,16 +503,19 @@ var builtins_contexts = map[string]*env.Builtin{
 					ser := ps.Ser
 					origCtx := ps.Ctx
 					clonedCtx := ctx.Copy()
-					ps.Ser = bloc.Series
-					ps.Ctx = clonedCtx
-					EvalBlock(ps)
-					rctx := ps.Ctx
-					ps.Ctx = origCtx
-					ps.Ser = ser
-					if ps.ErrorFlag {
-						return ps.Res
+					if ryeCtx, ok := clonedCtx.(*env.RyeCtx); ok {
+						ps.Ser = bloc.Series
+						ps.Ctx = ryeCtx
+						EvalBlock(ps)
+						rctx := ps.Ctx
+						ps.Ctx = origCtx
+						ps.Ser = ser
+						if ps.ErrorFlag {
+							return ps.Res
+						}
+						return *rctx // return the resulting cloned context
 					}
-					return *rctx // return the resulting cloned context
+					return MakeArgError(ps, 1, []env.Type{env.CtxType}, "clone\\")
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "clone\\")
 				}

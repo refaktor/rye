@@ -955,7 +955,8 @@ var builtins = map[string]*env.Builtin{
 			case env.RyeCtx:
 				return *env.NewString(d.Doc)
 			default:
-				return MakeArgError(env1, 1, []env.Type{env.FunctionType, env.CtxType}, "doc\\of?")
+				env1.ErrorFlag = true
+				return MakeArgError(env1, 1, []env.Type{env.CtxType, env.PersistentCtxType}, "doc\\of?")
 			}
 
 		},
@@ -1411,9 +1412,22 @@ var builtins = map[string]*env.Builtin{
 					ps.ErrorFlag = true
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "do\\in")
 				}
+			case PersistentCtx:
+				switch bloc := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = bloc.Series
+					// Use a special evaluation function for PersistentCtx
+					EvalBlockInPersistentCtx(ps, &ctx)
+					ps.Ser = ser
+					return ps.Res
+				default:
+					ps.ErrorFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "do\\in")
+				}
 			default:
 				ps.ErrorFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "do\\in")
+				return MakeArgError(ps, 1, []env.Type{env.CtxType, env.PersistentCtxType}, "do\\in")
 			}
 
 		},
@@ -1887,6 +1901,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(builtins_types, ps, "base")
 	RegisterBuiltins2(builtins_iteration, ps, "base")
 	RegisterBuiltins2(builtins_contexts, ps, "base")
+	RegisterBuiltins2(builtins_persistent_contexts, ps, "base")
 	RegisterBuiltins2(builtins_functions, ps, "base")
 	RegisterBuiltins2(builtins_apply, ps, "base")
 	RegisterBuiltins2(Builtins_error_creation, ps, "error-creation")

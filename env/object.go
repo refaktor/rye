@@ -58,6 +58,7 @@ const (
 	CurriedCallerType   Type = 42
 	ComplexType         Type = 43
 	MarkdownType        Type = 44
+	PersistentCtxType   Type = 45
 	PersistentTableType Type = 1001
 )
 
