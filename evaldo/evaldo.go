@@ -3,6 +3,7 @@ package evaldo
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/refaktor/rye/env"
@@ -311,6 +312,32 @@ func EvalExpressionConcrete(ps *env.ProgramState) {
 			EvalBlock(ps)
 			ps.Ser = ser
 			// return ps.Res
+		} else if block.Mode == 3 {
+			// OPBBLOCK - behaves like vals\with with a block argument
+			// For now, inject nil - this might need to be the previous result or context value
+			ser := ps.Ser
+			ps.Ser = block.Series
+			res := make([]env.Object, 0)
+			injnow := true
+			injVal := ps.Res // Use current result as injection value
+			for ps.Ser.Pos() < ps.Ser.Len() {
+				injnow = EvalExpressionInj(ps, injVal, injnow)
+				if ps.ReturnFlag || ps.ErrorFlag {
+					return
+				}
+				res = append(res, ps.Res)
+				injnow = MaybeAcceptComma(ps, injVal, injnow)
+			}
+			ps.Ser = ser
+			ps.Res = *env.NewBlock(*env.NewTSeries(res))
+		} else if block.Mode == 4 {
+			// OPGROUP - behaves like with function
+			ser := ps.Ser
+			ps.Ser = block.Series
+			injVal := ps.Res // Use current result as injection value
+			EvalBlockInjMultiDialect(ps, injVal, true)
+			ps.Ser = ser
+			// return ps.Res
 		}
 	case env.TagwordType:
 		ps.Res = *env.NewWord(object.(env.Tagword).Index)
@@ -400,6 +427,73 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 	}
 }
 
+// Extended version that also returns information about which word failed in a path
+func findWordValueWithFailureInfo(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *env.RyeCtx, string) {
+	switch word := word1.(type) {
+	case env.Word:
+		object, found := ps.Ctx.Get(word.Index)
+		if !found {
+			return found, object, nil, ps.Idx.GetWord(word.Index)
+		}
+		return found, object, nil, ""
+	case env.Opword:
+		object, found := ps.Ctx.Get(word.Index)
+		if !found {
+			return found, object, nil, ps.Idx.GetWord(word.Index)
+		}
+		return found, object, nil, ""
+	case env.Pipeword:
+		object, found := ps.Ctx.Get(word.Index)
+		if !found {
+			return found, object, nil, ps.Idx.GetWord(word.Index)
+		}
+		return found, object, nil, ""
+	case env.CPath:
+		currCtx := ps.Ctx
+		var contextPath strings.Builder
+		i := 1
+	gogo1:
+		currWord := word.GetWordNumber(i)
+		wordName := ps.Idx.GetWord(currWord.Index)
+		if i == 1 {
+			contextPath.WriteString(wordName)
+		} else {
+			contextPath.WriteString("/" + wordName)
+		}
+
+		object, found := currCtx.Get(currWord.Index)
+		if !found {
+			// Word not found - report which word and in which context
+			if i == 1 {
+				return false, object, currCtx, wordName
+			} else {
+				// Build context name from previous parts of the path
+				var ctxName strings.Builder
+				for j := 1; j < i; j++ {
+					if j > 1 {
+						ctxName.WriteString("/")
+					}
+					ctxName.WriteString(ps.Idx.GetWord(word.GetWordNumber(j).Index))
+				}
+				return false, object, currCtx, wordName + " (in context " + ctxName.String() + ")"
+			}
+		}
+		if found && word.Cnt > i {
+			switch swObj := object.(type) {
+			case env.RyeCtx:
+				currCtx = &swObj
+				i += 1
+				goto gogo1
+			case env.Dict:
+				return found, *env.NewString("asdsad"), currCtx, ""
+			}
+		}
+		return found, object, currCtx, ""
+	default:
+		return false, nil, nil, "unknown word type"
+	}
+}
+
 // EVALUATOR FUNCTIONS FOR SPECIFIC VALUE TYPES
 
 // Evaluates a word
@@ -408,9 +502,23 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 // and find a generic word based
 // on that, it here is leftval already present it can dispatc on it otherwise
 func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft bool, pipeSecond bool) {
+	// Special handling for getcpath (mode 3) - behave like get-word
+	if cpath, ok := word.(env.CPath); ok && cpath.Mode == 3 {
+		found, object, _, failureInfo := findWordValueWithFailureInfo(ps, word)
+		if found {
+			// For getcpath, just return the value without calling it (like get-word behavior)
+			ps.Res = object
+			return
+		} else {
+			ps.ErrorFlag = true
+			ps.Res = env.NewError2(5, "word not found: "+failureInfo)
+			return
+		}
+	}
+
 	// LOCAL FIRST
 	var firstVal env.Object
-	found, object, session := findWordValue(ps, word)
+	found, object, session, failureInfo := findWordValueWithFailureInfo(ps, word)
 	pos := ps.Ser.GetPos()
 	if !found { // look at Generic words, but first check type
 		// fmt.Println(pipeSecond)
@@ -452,7 +560,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 		ps.ErrorFlag = true
 		if !ps.FailureFlag {
 			ps.Ser.SetPos(pos)
-			ps.Res = env.NewError2(5, "word not found: "+word.Print(*ps.Idx))
+			ps.Res = env.NewError2(5, "word not found: "+failureInfo)
 		}
 		return
 	}
@@ -503,6 +611,13 @@ func EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toL
 		CallFunction(fn, ps, leftVal, toLeft, ctx)
 		return
 	case env.CPathType: // RMME
+		// Check if this is a getcpath (mode 3) - behave like get-word
+		if cpath, ok := object.(env.CPath); ok && cpath.Mode == 3 {
+			// For getcpath, just return the object without calling it (like get-word behavior)
+			ps.Res = object
+			return
+		}
+		// For other CPath modes (opcpath, pipecpath), treat as function
 		fn := object.(env.Function)
 		CallFunction(fn, ps, leftVal, toLeft, ctx)
 		return
