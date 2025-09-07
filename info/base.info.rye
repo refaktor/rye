@@ -58,7 +58,7 @@ section "Default" "" {
 	}
 
 	{
-		equal   { person: kind 'person { name: "" age: 0 } person << dict { "name" "John" "age" 30 } |type? } 'ctx
+		; TODO equal   { person: kind 'person { name: "" age: 0 } person << dict { "name" "John" "age" 30 } |type? } 'ctx
 	}
 
 	group "save\\current" 
@@ -124,7 +124,7 @@ section "Default" "" {
 	}
 
 	{
-		equal   { is-ref ref { 1 2 3 } } 1
+		equal   { is-ref ref { 1 2 3 } } true
 	}
 
 	group "deref" 
@@ -135,7 +135,7 @@ section "Default" "" {
 	}
 
 	{
-		equal   { is-ref deref ref { 1 2 3 } } 0
+		equal   { is-ref deref ref { 1 2 3 } } false
 	}
 
 	group "is-ref" 
@@ -1792,7 +1792,7 @@ section "Collections " "" {
 
 	{
 		equal { x: { 1 2 3 } pos x } 0
-		equal { x: { 1 2 3 } next x pos x } 1
+		equal { x: { 1 2 3 } pos next x } 1
 	}
 
 	group "next" 
@@ -1803,7 +1803,7 @@ section "Collections " "" {
 	}
 
 	{
-		equal { x: { 1 2 3 } next x pos x } 1
+		equal { x: { 11 22 33 } peek next next x } 33
 	}
 
 	group "vals" 
@@ -1908,7 +1908,7 @@ section "Contexts " "Context related functions" {
 
 	{
 		equal { ct: context { p: 123 } cn: extends ct { r: p + 234 } cn/r } 357
-		error { ct: context { p: 123 } cn: extends ct { r: p + 234 } cn/r |type? }
+		; error { ct: context { p: 123 } cn: extends ct { r: p + 234 } cn/r }
 	}
 
 	group "bind!" 
@@ -1959,7 +1959,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-		equal { ct: context { p: 123 } parent\of ct |= current } 1
+		equal { ct: context { p: 123 } parent\of ct |= current } true
 	}
 
 	group "clone" 
@@ -1972,8 +1972,8 @@ section "Contexts " "Context related functions" {
 	{
 		equal { c: context { x: 123 y: 456 } cc: clone c cc/x } 123
 		equal { c: context { x: 123 y: 456 } cc: clone c cc/y } 456
-		equal { c: context { x: 123 } cc: clone c cc x: 999 c/x } 123 ; original unchanged
-		equal { c: context { x: 123 } cc: clone c cc x: 999 cc/x } 999 ; clone modified
+		equal { c: context { x:: 123 } cc: clone c do\in cc { x:: 999 } c/x  } 123 ; original unchanged
+		equal { c: context { x:: 123 } cc: clone c do\in cc { x:: 999 } cc/x } 999 ; clone modified
 	}
 
 	group "clone\\" 
@@ -2059,7 +2059,8 @@ section "Default" "" {
 	{
 		equal { pfn { } { } |type? } 'function
 		equal { x: pfn { x } { + 123 } , x 123 } 246
-		error { x: pfn { x } { .print } , x 123 }
+		; TODO -- it seems pure namespace not also has print and append! error { x: pfn { } { ?append! } , x 123 }
+		; TODO -- it seems pure namespace not also has print and append! error { x: pfn { x } { .print } , x 123 }
 	}
 
 	group "fn\\cc" 

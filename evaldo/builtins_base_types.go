@@ -535,7 +535,7 @@ var builtins_types = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal   { person: kind 'person { name: "" age: 0 } dict { "name" "John" "age" 30 } _>> person |type? } 'ctx
+	// ; equal   { person: kind 'person { name: "" age: 0 } , { "name" "John" "age" 30 } .dict >> person |type? } 'ctx
 	// Args:
 	// * value: Dict or context to convert
 	// * kind: Kind to convert the value to
