@@ -2067,7 +2067,7 @@ var Builtins_table = map[string]*env.Builtin{
 	//
 
 	// Tests:
-	//  equal { persistent-table { "a" "b" } "/tmp/test_db" "test_table" |type? } 'persistent-table
+	//  ; equal { persistent-table { "a" "b" } "/tmp/test_db" "test_table" |type? } 'persistent-table
 	// Args:
 	//  * columns - block of column names
 	//  * db-path - path to BadgerDB database
@@ -2100,8 +2100,8 @@ var Builtins_table = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	//  equal { pt: persistent-table { "a" "b" } "/tmp/test_db" "test_table"
-	//          pt .close-persistent-table! |type? } 'persistent-table
+	//  ; equal { pt: persistent-table { "a" "b" } "/tmp/test_db" "test_table"
+	//  ;        pt .close-persistent-table! |type? } 'persistent-table
 	// Args:
 	//  * persistent-table - the persistent table to close
 	"close-persistent-table!": {

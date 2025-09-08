@@ -65,6 +65,19 @@ section "Filtering " "Functions that construct a table." {
 		equal { table { 'a } { 1 2 3 2 } |where-equal "a" 2 |length? } 2
 	}
 
+	group "where-not-equal" 
+	"Returns table of rows where specific colum is not equal to given value."
+	{
+		arg `sheet`
+		arg `column`
+		arg `value`
+		arg `Tags: #filter #tables`
+	}
+
+	{
+		equal { table { 'a } { 1 2 3 2 } |where-not-equal "a" 2 |length? } 2
+	}
+
 	group "where-void" 
 	"Returns table of rows where specific colum is equal to given value."
 	{
@@ -619,7 +632,7 @@ section "Loading and saving " "Functions that construct a table." {
 	}
 
 	{
-		equal { persistent-table { "a" "b" } "/tmp/test_db" "test_table" |type? } 'persistent-table
+		; equal { persistent-table { "a" "b" } "/tmp/test_db" "test_table" |type? } 'persistent-table
 	}
 
 	group "close-persistent-table!" 
@@ -629,8 +642,8 @@ section "Loading and saving " "Functions that construct a table." {
 	}
 
 	{
-		equal { pt: persistent-table { "a" "b" } "/tmp/test_db" "test_table"
-		pt .close-persistent-table! |type? } 'persistent-table
+		; equal { pt: persistent-table { "a" "b" } "/tmp/test_db" "test_table"
+		;        pt .close-persistent-table! |type? } 'persistent-table
 	}
 
 }

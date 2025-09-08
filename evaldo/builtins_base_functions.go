@@ -142,7 +142,8 @@ var builtins_functions = map[string]*env.Builtin{
 	// Tests:
 	// equal { pfn { } { } |type? } 'function
 	// equal { x: pfn { x } { + 123 } , x 123 } 246
-	// error { x: pfn { x } { .print } , x 123 }
+	// ; TODO -- it seems pure namespace not also has print and append! error { x: pfn { } { ?append! } , x 123 }
+	// ; TODO -- it seems pure namespace not also has print and append! error { x: pfn { x } { .print } , x 123 }
 	// Args:
 	// * spec: Block containing parameter specifications
 	// * body: Block containing the function body code

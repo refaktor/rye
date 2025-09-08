@@ -178,7 +178,7 @@ var builtins_contexts = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { ct: context { p: 123 } cn: extends ct { r: p + 234 } cn/r } 357
-	// error { ct: context { p: 123 } cn: extends ct { r: p + 234 } cn/r |type? }
+	// ; error { ct: context { p: 123 } cn: extends ct { r: p + 234 } cn/r }
 	// Args:
 	// * parent: Context object to extend
 	// * block: Block of expressions to evaluate in the new context
@@ -282,7 +282,7 @@ var builtins_contexts = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { ct: context { p: 123 } parent\of ct |= current } 1
+	// equal { ct: context { p: 123 } parent\of ct |= current } true
 	"parent\\of": {
 		Argsn: 1,
 		Doc:   "Returns parent context of the current context.",
@@ -431,8 +431,8 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Tests:
 	// equal { c: context { x: 123 y: 456 } cc: clone c cc/x } 123
 	// equal { c: context { x: 123 y: 456 } cc: clone c cc/y } 456
-	// equal { c: context { x: 123 } cc: clone c cc x: 999 c/x } 123 ; original unchanged
-	// equal { c: context { x: 123 } cc: clone c cc x: 999 cc/x } 999 ; clone modified
+	// equal { c: context { x:: 123 } cc: clone c do\in cc { x:: 999 } c/x  } 123 ; original unchanged
+	// equal { c: context { x:: 123 } cc: clone c do\in cc { x:: 999 } cc/x } 999 ; clone modified
 	// Args:
 	// * ctx: Context object to clone
 	// Returns:

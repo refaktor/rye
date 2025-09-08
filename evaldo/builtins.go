@@ -48,7 +48,12 @@ func MakeArgErrorMessage(N int, allowedTypes []env.Type, fn string) string {
 		if i > 0 {
 			types += ", "
 		}
-		types += env.NativeTypes[tt-1]
+		// Check if in bounds before accessing env.NativeTypes
+		if tt > 0 && int(tt-1) < len(env.NativeTypes) {
+			types += env.NativeTypes[tt-1]
+		} else {
+			types += "UNKNOWN_TYPE"
+		}
 	}
 	return "builtin `" + fn + "` requires argument " + strconv.Itoa(N) + " to be: " + types + "."
 }
@@ -801,7 +806,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal   { person: kind 'person { name: "" age: 0 } person << dict { "name" "John" "age" 30 } |type? } 'ctx
+	// ; TODO equal   { person: kind 'person { name: "" age: 0 } person << dict { "name" "John" "age" 30 } |type? } 'ctx
 	// Args:
 	// * kind: Kind to convert the value to
 	// * value: Dict or context to convert

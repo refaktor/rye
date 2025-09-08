@@ -386,7 +386,7 @@ func isDigit(ch byte) bool {
 // isWordCharacter checks if a character can be part of a word
 func isWordCharacter(ch byte) bool {
 	return isLetter(ch) || isDigit(ch) || ch == '-' || ch == '+' || ch == '.' ||
-		ch == '!' || ch == '*' || ch == '>' || ch == '\\' || ch == '?' || ch == '=' || ch == '_'
+		ch == '!' || ch == '*' || ch == '>' || ch == '<' || ch == '\\' || ch == '?' || ch == '=' || ch == '_'
 }
 
 // isWhitespaceCh checks if a character is whitespace
@@ -588,15 +588,21 @@ func (l *Lexer) readGetWord() NoPEGToken {
 	l.readChar() // Skip question mark
 
 	cpath := false
+	slashPos := -1
 
 	// Read the word part
 	for isWordCharacter(l.ch) || l.ch == '/' {
 		// Check if it's a context path (word/word)
 		if l.ch == '/' {
-			cpath = true
+			slashPos = l.pos
 		}
 
 		l.readChar()
+	}
+
+	// Only treat as context path if there's content after the slash
+	if slashPos >= 0 && slashPos < l.pos-1 {
+		cpath = true
 	}
 
 	// Ensure the token is followed by whitespace

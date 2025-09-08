@@ -2137,7 +2137,7 @@ var builtins_collection = map[string]*env.Builtin{
 	},
 	// Tests:
 	// equal { x: { 1 2 3 } pos x } 0
-	// equal { x: { 1 2 3 } next x pos x } 1
+	// equal { x: { 1 2 3 } pos next x } 1
 	// Args:
 	// * block: Block to get position from
 	// Returns:
@@ -2158,7 +2158,7 @@ var builtins_collection = map[string]*env.Builtin{
 	// Question: Should blocks really have cursor, like in Rebol? We don't really use them in that stateful way, except maybe when they
 	// represent code? Look at it.
 	// Tests:
-	// equal { x: { 1 2 3 } next x pos x } 1
+	// equal { x: { 11 22 33 } peek next next x } 33
 	// Args:
 	// * block: Block to advance cursor in
 	// Returns:
