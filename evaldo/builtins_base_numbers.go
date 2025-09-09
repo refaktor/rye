@@ -323,8 +323,8 @@ var builtins_numbers = map[string]*env.Builtin{
 	},
 	// Tests:
 	// equal { random\integer 2 |type? } 'integer
-	// equal { random\integer 1 |< 2 } 1
-	// equal { random\integer 100 | >= 0 } 1
+	// equal { random\integer 1 |< 2 } true
+	// equal { random\integer 100 | >= 0 } true
 	// Args:
 	// * max: Upper bound (exclusive) for the random number
 	// Returns:
@@ -349,8 +349,8 @@ var builtins_numbers = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { random\decimal 2.0 |type? } 'decimal
-	// equal { random\decimal 1.0 |< 1.0 } 1
-	// equal { random\decimal 100.0 | >= 0.0 } 1
+	// equal { random\decimal 1.0 |< 1.0 } true
+	// equal { random\decimal 100.0 | >= 0.0 } true
 	// Args:
 	// * max: Upper bound (exclusive) for the random number
 	// Returns:

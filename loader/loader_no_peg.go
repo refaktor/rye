@@ -645,6 +645,7 @@ func (l *Lexer) readOpWord() NoPEGToken {
 }
 
 func (l *Lexer) readPipeWord() NoPEGToken {
+	ch := l.ch
 	l.readChar() // Skip backslash or pipe
 
 	cpath := false
@@ -667,7 +668,12 @@ func (l *Lexer) readPipeWord() NoPEGToken {
 		return l.makeToken(NPEG_TOKEN_PIPECPATH, l.input[l.tokenStart:l.pos])
 	}
 
-	return l.makeToken(NPEG_TOKEN_PIPEWORD, l.input[l.tokenStart:l.pos])
+	if ch == '|' {
+		return l.makeToken(NPEG_TOKEN_PIPEWORD, l.input[l.tokenStart:l.pos])
+	} else {
+		return l.makeToken(NPEG_TOKEN_PIPEWORD, string(ch)+l.input[l.tokenStart:l.pos])
+	}
+
 }
 
 func (l *Lexer) readTagWord() NoPEGToken {

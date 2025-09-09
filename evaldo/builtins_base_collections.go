@@ -259,8 +259,8 @@ var builtins_collection = map[string]*env.Builtin{
 							isMinInt = true
 						}
 					default:
-						fmt.Println(data.Data[i])
-						fmt.Printf("t1: %T\n", data.Data[i])
+						// fmt.Println(data.Data[i])
+						// fmt.Printf("t1: %T\n", data.Data[i])
 						return MakeBuiltinError(ps, "List type should be Integer or Decimal.", "min")
 					}
 				}
@@ -989,9 +989,9 @@ var builtins_collection = map[string]*env.Builtin{
 				case env.Function:
 					copied := make([]env.Object, len(block.Series.S))
 					copy(copied, block.Series.S)
-					fmt.Println(fn)
+					// fmt.Println(fn)
 					sorter := RyeBlockCustomSort{copied, fn, ps}
-					fmt.Println(sorter)
+					// fmt.Println(sorter)
 					sort.Sort(sorter)
 					return *env.NewBlock(*env.NewTSeries(copied))
 				default:
@@ -1523,7 +1523,7 @@ var builtins_collection = map[string]*env.Builtin{
 			case env.Vector:
 				return *env.NewBoolean(s1.Value.Len() == 0)
 			default:
-				fmt.Println(s1)
+				// fmt.Println(s1)
 				return MakeArgError(ps, 2, []env.Type{env.StringType, env.DictType, env.ListType, env.BlockType, env.TableType, env.PersistentTableType, env.VectorType}, "is-empty")
 			}
 		},
@@ -1562,7 +1562,7 @@ var builtins_collection = map[string]*env.Builtin{
 			case env.Vector:
 				return *env.NewInteger(int64(s1.Value.Len()))
 			default:
-				fmt.Println(s1)
+				// fmt.Println(s1)
 				return MakeArgError(ps, 2, []env.Type{env.StringType, env.DictType, env.ListType, env.BlockType, env.TableType, env.PersistentTableType, env.VectorType}, "length?")
 			}
 		},

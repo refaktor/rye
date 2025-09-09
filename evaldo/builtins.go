@@ -412,11 +412,11 @@ func (s RyeBlockCustomSort) Swap(i, j int) {
 	s.data[i], s.data[j] = s.data[j], s.data[i]
 }
 func (s RyeBlockCustomSort) Less(i, j int) bool {
-	fmt.Println("'''''")
-	fmt.Println(s)
-	fmt.Println(s.fn)
-	fmt.Println(s.ps)
-	fmt.Println(s.data)
+	// fmt.Println("'''''")
+	// fmt.Println(s)
+	// fmt.Println(s.fn)
+	// fmt.Println(s.ps)
+	// fmt.Println(s.data)
 
 	CallFunctionArgs2(s.fn, s.ps, s.data[i], s.data[j], nil)
 	return util.IsTruthy(s.ps.Res)
