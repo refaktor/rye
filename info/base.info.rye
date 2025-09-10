@@ -1557,11 +1557,11 @@ section "Collections " "" {
 	}
 
 	{
-		equal { { } .is-empty } 1
-		equal { dict { } |is-empty } 1
-		equal { table { 'a 'b } { } |is-empty } 1
-		equal { "abc" .is-empty } 0
-		equal { { 1 2 3 } .is-empty } 0
+		equal { { } .is-empty } true
+		equal { dict { } |is-empty } true
+		equal { table { 'a 'b } { } |is-empty } true
+		equal { "abc" .is-empty } false
+		equal { { 1 2 3 } .is-empty } false
 	}
 
 	group "length?" 
@@ -1630,7 +1630,7 @@ section "Collections " "" {
 
 	{
 		equal { 2 <~ { 23 34 45 } } 34
-		equal { 1 <~ { "a" "b" "c" } } "b"
+		equal { 1 <~ { "a" "b" "c" } } "a"
 	}
 
 	group "_~>" 

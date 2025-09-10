@@ -911,12 +911,13 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 	psX.Ser.SetPos(0)
 	EvalBlockInj(psX, arg0, true)
 	// fmt.Println(result)
-	// fmt.Println(result.Res)
+	fmt.Println(psX.Res)
 	MaybeDisplayFailureOrError(psX, psX.Idx, "call func args 2")
 	if psX.ForcedResult != nil {
 		ps.Res = result.ForcedResult
 		result.ForcedResult = nil
 	}
+	ps.Res = psX.Res
 	ps.ReturnFlag = false
 }
 

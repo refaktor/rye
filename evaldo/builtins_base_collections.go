@@ -1149,20 +1149,12 @@ var builtins_collection = map[string]*env.Builtin{
 				return *env.NewBlock(*env.NewTSeries(a))
 			case *env.List:
 				// Create slice of env.Object
-				dataSlice := make([]env.Object, 0)
-				for _, v := range block.Data {
-					dataSlice = append(dataSlice, env.ToRyeValue(v))
-				}
+				dataSlice := block.Data
 				// Reverse slice data
 				for left, right := 0, len(dataSlice)-1; left < right; left, right = left+1, right-1 {
 					dataSlice[left], dataSlice[right] = dataSlice[right], dataSlice[left]
 				}
-				// Create list frol slice data
-				reverseList := make([]any, 0, len(dataSlice))
-				for _, value := range dataSlice {
-					reverseList = append(reverseList, value)
-				}
-				return *env.NewList(reverseList)
+				return *env.NewList(dataSlice)
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.StringType, env.ListType}, "reverse!")
 			}
@@ -1490,11 +1482,11 @@ var builtins_collection = map[string]*env.Builtin{
 		},
 	},
 	// Tests:
-	// equal { { } .is-empty } 1
-	// equal { dict { } |is-empty } 1
-	// equal { table { 'a 'b } { } |is-empty } 1
-	// equal { "abc" .is-empty } 0
-	// equal { { 1 2 3 } .is-empty } 0
+	// equal { { } .is-empty } true
+	// equal { dict { } |is-empty } true
+	// equal { table { 'a 'b } { } |is-empty } true
+	// equal { "abc" .is-empty } false
+	// equal { { 1 2 3 } .is-empty } false
 	// Args:
 	// * collection: String, block, dict, list, table, context or vector to check
 	// Returns:
@@ -1657,7 +1649,7 @@ var builtins_collection = map[string]*env.Builtin{
 	},*/
 	// Tests:
 	// equal { 2 <~ { 23 34 45 } } 34
-	// equal { 1 <~ { "a" "b" "c" } } "b"
+	// equal { 1 <~ { "a" "b" "c" } } "a"
 	// Args:
 	// * index: Index to access (1-based)
 	// * collection: Block, list or other indexable collection

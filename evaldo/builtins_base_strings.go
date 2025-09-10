@@ -258,9 +258,9 @@ var builtins_string = map[string]*env.Builtin{
 				switch s2 := arg1.(type) {
 				case env.String:
 					if strings.Contains(s1.Value, s2.Value) {
-						return *env.NewInteger(1)
+						return *env.NewBoolean(true)
 					} else {
-						return *env.NewInteger(0)
+						return *env.NewBoolean(false)
 					}
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.StringType}, "contains")
@@ -270,9 +270,9 @@ var builtins_string = map[string]*env.Builtin{
 				switch value := arg1.(type) {
 				case env.Object:
 					if util.ContainsVal(ps, s1.Series.S, value) {
-						return *env.NewInteger(1)
+						return *env.NewBoolean(true)
 					} else {
-						return *env.NewInteger(0)
+						return *env.NewBoolean(false)
 					}
 				default:
 					return MakeArgError(ps, 2, []env.Type{}, "contains")
@@ -289,9 +289,9 @@ var builtins_string = map[string]*env.Builtin{
 						}
 					}
 					if isListContains {
-						return *env.NewInteger(1)
+						return *env.NewBoolean(true)
 					} else {
-						return *env.NewInteger(0)
+						return *env.NewBoolean(false)
 					}
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "contains")
