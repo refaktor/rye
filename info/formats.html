@@ -44,63 +44,63 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>regexp "[0-9]" |type?
 ; returns native</code></pre>
 </div>
-<h3>regexp//is-match</h3><p>Tests if a string matches the regular expression pattern.</p>
+<h3>regexp//Is-match</h3><p>Tests if a string matches the regular expression pattern.</p>
 <p class='arg'><b>regexp</b> Native regexp object</p>
 <p class='arg'><b>input</b> String to test against the pattern</p>
 <p class='returns'><b>returns</b> integer 1 if the string matches the pattern, 0 otherwise</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>regexp "[0-9]" |is-match "5"
+<pre class='prettyprint lang-rye'><code language='lang-rye'>regexp "[0-9]" |Is-match "5"
 ; returns 1</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>regexp "[0-9]" |is-match "a"
+<pre class='prettyprint lang-rye'><code language='lang-rye'>regexp "[0-9]" |Is-match "a"
 ; returns 0</code></pre>
 </div>
-<h3>regexp//submatch?</h3><p>Extracts the first captured group from a string using the regular expression.</p>
+<h3>regexp//Submatch?</h3><p>Extracts the first captured group from a string using the regular expression.</p>
 <p class='arg'><b>regexp</b> Regular expression with capturing groups</p>
 <p class='arg'><b>input</b> String to search in</p>
 <p class='returns'><b>returns</b> string containing the first captured group or error if no submatch found</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>regexp "x([0-9]+)y" |submatch? "x123y"
+<pre class='prettyprint lang-rye'><code language='lang-rye'>regexp "x([0-9]+)y" |Submatch? "x123y"
 ; returns "123"</code></pre>
 </div>
-<h3>regexp//submatches?</h3><p>Extracts all captured groups from the first match as a block of strings.</p>
+<h3>regexp//Submatches?</h3><p>Extracts all captured groups from the first match as a block of strings.</p>
 <p class='arg'><b>regexp</b> Regular expression with capturing groups</p>
 <p class='arg'><b>input</b> String to search in</p>
 <p class='returns'><b>returns</b> block containing all captured groups from the first match or error if no match found</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>regexp "x([0-9]+)y" |submatches? "x123y x234y"
+<pre class='prettyprint lang-rye'><code language='lang-rye'>regexp "x([0-9]+)y" |Submatches? "x123y x234y"
 ; returns { "123" }</code></pre>
 </div>
-<h3>regexp//submatches\all?</h3><p>Extracts all captured groups from all matches as a nested block structure.</p>
+<h3>regexp//Submatches\all?</h3><p>Extracts all captured groups from all matches as a nested block structure.</p>
 <p class='arg'><b>regexp</b> Regular expression with capturing groups</p>
 <p class='arg'><b>input</b> String to search in</p>
 <p class='returns'><b>returns</b> block of blocks, each inner block containing the captured groups from one match</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>regexp "x([0-9]+)(y+)?" |submatches\all? "x11yy x22"
+<pre class='prettyprint lang-rye'><code language='lang-rye'>regexp "x([0-9]+)(y+)?" |Submatches\all? "x11yy x22"
 ; returns { { "11" "yy" } { "22" "" } }</code></pre>
 </div>
-<h3>regexp//find-all</h3><p>Finds all substrings matching the regular expression and returns them as a block.</p>
+<h3>regexp//Find-all</h3><p>Finds all substrings matching the regular expression and returns them as a block.</p>
 <p class='arg'><b>regexp</b> Regular expression pattern</p>
 <p class='arg'><b>input</b> String to search in</p>
 <p class='returns'><b>returns</b> block containing all matching substrings or error if no matches found</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>regexp "[0-9]+" |find-all "x123y x234y"
+<pre class='prettyprint lang-rye'><code language='lang-rye'>regexp "[0-9]+" |Find-all "x123y x234y"
 ; returns { "123" "234" }</code></pre>
 </div>
-<h3>regexp//match?</h3><p>Finds the first substring matching the regular expression.</p>
+<h3>regexp//Match?</h3><p>Finds the first substring matching the regular expression.</p>
 <p class='arg'><b>regexp</b> Regular expression pattern</p>
 <p class='arg'><b>input</b> String to search in</p>
 <p class='returns'><b>returns</b> string containing the first match or empty string if no match found</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>regexp "[0-9]+c+" |match? "aa33bb55cc"
+<pre class='prettyprint lang-rye'><code language='lang-rye'>regexp "[0-9]+c+" |Match? "aa33bb55cc"
 ; returns "55cc"</code></pre>
 </div>
-<h3>regexp//replace-all</h3><p>Replaces all occurrences of the regular expression pattern with the specified replacement string.</p>
+<h3>regexp//Replace-all</h3><p>Replaces all occurrences of the regular expression pattern with the specified replacement string.</p>
 <p class='arg'><b>regexp</b> Regular expression pattern</p>
 <p class='arg'><b>input</b> String to modify</p>
 <p class='arg'><b>replacement</b> String to replace matches with</p>
 <p class='returns'><b>returns</b> string with all matches replaced by the replacement string</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>regexp "[0-9]+" |replace-all "x123y x234y" "XXX"
+<pre class='prettyprint lang-rye'><code language='lang-rye'>regexp "[0-9]+" |Replace-all "x123y x234y" "XXX"
 ; returns "xXXXy xXXXy"</code></pre>
 </div>
 </div>
@@ -180,6 +180,8 @@
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>list { 1 2 3 } |to-json
 ; returns "[1, 2, 3] "</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>dict { a: 1 b: 2 c: 3 } |to-json
+; returns "{"a": 1, "b": 2, "c": 3} "</code></pre>
 </div>
 <h3>to-json\lines</h3><p>Converts a table to JSON with each row on a separate line.</p>
 <p class='arg'><b>table</b> table value to encode</p>

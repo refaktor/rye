@@ -20,8 +20,8 @@ section "IO " "IO related functions" {
 	}
 
 	{
-		equal { open %data/file.txt |type? } 'native
-		equal { open %data/file.txt |kind? } 'file
+		equal { Open %data/file.txt |type? } 'native
+		equal { Open %data/file.txt |kind? } 'file
 	}
 
 	group "file-schema//Open\\append" 
@@ -32,8 +32,8 @@ section "IO " "IO related functions" {
 	}
 
 	{
-		equal { open\append %data/file.txt |type? } 'native
-		equal { open\append %data/file.txt |kind? } 'writer
+		equal { Open\append %data/file.txt |type? } 'native
+		equal { Open\append %data/file.txt |kind? } 'writer
 	}
 
 	group "file-schema//Create" 
@@ -44,8 +44,8 @@ section "IO " "IO related functions" {
 	}
 
 	{
-		equal { create %data/created.txt |type? } 'native
-		equal { create %data/created.txt |kind? } 'file
+		equal { Create %data/created.txt |type? } 'native
+		equal { Create %data/created.txt |kind? } 'file
 	}
 
 	group "file-ext?" 
@@ -70,7 +70,7 @@ section "IO " "IO related functions" {
 
 	{
 		equal { reader %data/file.txt |kind? } 'reader
-		equal { reader open %data/file.txt |kind? } 'reader
+		equal { reader Open %data/file.txt |kind? } 'reader
 		equal { reader "some string" |kind? } 'reader
 	}
 
@@ -102,7 +102,7 @@ section "IO " "IO related functions" {
 	}
 
 	{
-		equal { reader "some string" |read\string } "some string"
+		equal { reader "some string" |Read\string } "some string"
 	}
 
 	group "reader//Copy" 
@@ -135,7 +135,7 @@ section "IO " "IO related functions" {
 	}
 
 	{
-		equal { stat open %data/file.txt |kind? } 'file-info
+		equal { Stat Open %data/file.txt |kind? } 'file-info
 	}
 
 	group "file-info//Size?" 
@@ -146,7 +146,7 @@ section "IO " "IO related functions" {
 	}
 
 	{
-		equal { size? stat open %data/file.txt } 16
+		equal { Size? Stat Open %data/file.txt } 16
 	}
 
 	group "file//Read-all" 
@@ -157,7 +157,7 @@ section "IO " "IO related functions" {
 	}
 
 	{
-		equal { read-all open %data/file.txt } "hello text file\n"
+		equal { Read-all Open %data/file.txt } "hello text file\n"
 	}
 
 	group "file//Seek\\end" 
@@ -178,7 +178,7 @@ section "IO " "IO related functions" {
 	}
 
 	{
-		equal { close open %data/file.txt } ""
+		equal { Close Open %data/file.txt } ""
 	}
 
 	group "file-schema//Read" 
@@ -189,7 +189,7 @@ section "IO " "IO related functions" {
 	}
 
 	{
-		equal { read %data/file.txt } "hello text file\n"
+		equal { Read %data/file.txt } "hello text file\n"
 	}
 
 	group "file-schema//Read\\bytes" 
@@ -200,7 +200,7 @@ section "IO " "IO related functions" {
 	}
 
 	{
-		equal { read %data/file.txt } "hello text file\n"
+		equal { Read %data/file.txt } "hello text file\n"
 	}
 
 	group "file-schema//Read\\lines" 
@@ -211,7 +211,7 @@ section "IO " "IO related functions" {
 	}
 
 	{
-		equal { read %data/file.txt } "hello text file\n"
+		equal { Read %data/file.txt } "hello text file\n"
 	}
 
 	group "file-schema//Write" 
@@ -223,7 +223,7 @@ section "IO " "IO related functions" {
 	}
 
 	{
-		equal { write %data/write.txt "written\n" } "written\n"
+		equal { Write %data/write.txt "written\n" } "written\n"
 	}
 
 	group "write\\bytes" 

@@ -419,6 +419,8 @@ func (s RyeBlockCustomSort) Less(i, j int) bool {
 	// fmt.Println(s.data)
 
 	CallFunctionArgs2(s.fn, s.ps, s.data[i], s.data[j], nil)
+	// TODO -- probably we should throw error if not boolean result #strictness
+	fmt.Println(s.ps.Res.Inspect(*s.ps.Idx))
 	return util.IsTruthy(s.ps.Res)
 }
 

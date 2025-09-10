@@ -289,6 +289,21 @@ func (l *Lexer) NextToken() NoPEGToken {
 		return l.readFPath()
 	case ';':
 		return l.readComment()
+	case '~':
+		pch := l.peekChar()
+		// fmt.Println("***1")
+		if isWhitespace(pch) {
+			l.readChar()
+			// fmt.Println("***2")
+			return l.makeToken(NPEG_TOKEN_OPWORD, "~")
+		} else {
+			return l.readPipeWord()
+		}
+	//if l.peekChar() == '(' {
+	//	return l.readKindWord()
+	// } else {
+	// 	return l.readGenWord()
+	// }*/
 	case '-':
 		if isDigit(l.peekChar()) {
 			// fmt.Println("***0")

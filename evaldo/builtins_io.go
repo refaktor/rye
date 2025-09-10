@@ -423,8 +423,8 @@ var Builtins_io = map[string]*env.Builtin{
 	// ##### IO ##### "IO related functions"
 	//
 	// Tests:
-	// equal { open %data/file.txt |type? } 'native
-	// equal { open %data/file.txt |kind? } 'file
+	// equal { Open %data/file.txt |type? } 'native
+	// equal { Open %data/file.txt |kind? } 'file
 	// Args:
 	// * path: uri representing the file to open
 	// Returns:
@@ -447,8 +447,8 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { open\append %data/file.txt |type? } 'native
-	// equal { open\append %data/file.txt |kind? } 'writer
+	// equal { Open\append %data/file.txt |type? } 'native
+	// equal { Open\append %data/file.txt |kind? } 'writer
 	// Args:
 	// * path: uri representing the file to open for appending
 	// Returns:
@@ -478,8 +478,8 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { create %data/created.txt |type? } 'native
-	// equal { create %data/created.txt |kind? } 'file
+	// equal { Create %data/created.txt |type? } 'native
+	// equal { Create %data/created.txt |kind? } 'file
 	// Args:
 	// * path: uri representing the file to create
 	// Returns:
@@ -541,7 +541,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// should this be generic method or not?
 	// Tests:
 	// equal { reader %data/file.txt |kind? } 'reader
-	// equal { reader open %data/file.txt |kind? } 'reader
+	// equal { reader Open %data/file.txt |kind? } 'reader
 	// equal { reader "some string" |kind? } 'reader
 	// Args:
 	// * source: uri, file object, or string to read from
@@ -604,7 +604,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// TODO: add scanner ScanString method ... look at: https://stackoverflow.com/questions/47479564/go-bufio-readstring-in-loop-is-infinite
 
 	// Tests:
-	// equal { reader "some string" |read\string } "some string"
+	// equal { reader "some string" |Read\string } "some string"
 	// Args:
 	// * reader: native reader object
 	// Returns:
@@ -702,7 +702,7 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { stat open %data/file.txt |kind? } 'file-info
+	// equal { Stat Open %data/file.txt |kind? } 'file-info
 	// Args:
 	// * file: native file object
 	// Returns:
@@ -716,7 +716,7 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { size? stat open %data/file.txt } 16
+	// equal { Size? Stat Open %data/file.txt } 16
 	// Args:
 	// * file-info: native file-info object
 	// Returns:
@@ -736,7 +736,7 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { read-all open %data/file.txt } "hello text file\n"
+	// equal { Read-all Open %data/file.txt } "hello text file\n"
 	// Args:
 	// * file: native file object
 	// Returns:
@@ -784,7 +784,7 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { close open %data/file.txt } ""
+	// equal { Close Open %data/file.txt } ""
 	// Args:
 	// * file: native file object
 	// Returns:
@@ -810,7 +810,7 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { read %data/file.txt } "hello text file\n"
+	// equal { Read %data/file.txt } "hello text file\n"
 	// Args:
 	// * path: uri representing the file to read
 	// Returns:
@@ -824,7 +824,7 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { read %data/file.txt } "hello text file\n"
+	// equal { Read %data/file.txt } "hello text file\n"
 	// Args:
 	// * path: uri representing the file to read
 	// Returns:
@@ -847,7 +847,7 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { read %data/file.txt } "hello text file\n"
+	// equal { Read %data/file.txt } "hello text file\n"
 	// Args:
 	// * path: uri representing the file to read
 	// Returns:
@@ -861,7 +861,7 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { write %data/write.txt "written\n" } "written\n"
+	// equal { Write %data/write.txt "written\n" } "written\n"
 	// Args:
 	// * path: uri representing the file to write to
 	// * content: string or bytes to write to the file

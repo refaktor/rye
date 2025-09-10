@@ -165,9 +165,9 @@ section "Age " "Age encryption/decryption and key generation" {
 	{
 		equal { cc crypto
 		age-generate-keys |set! { identity recipient }
-		"SUPER SECRET" |reader |age-encrypt recipient |age-decrypt identity |read\string
+		"SUPER SECRET" |reader |age-encrypt recipient |age-decrypt identity |Read\string
 		} "SUPER SECRET"
-		equal { cc crypto "SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |read\string } "SUPER SECRET"
+		equal { cc crypto "SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |Read\string } "SUPER SECRET"
 	}
 
 	group "age-decrypt" 
@@ -181,9 +181,9 @@ section "Age " "Age encryption/decryption and key generation" {
 	{
 		equal { cc crypto
 		age-generate-keys |set! { identity recipient }
-		"SUPER SECRET" |reader |age-encrypt recipient |age-decrypt identity |read\string
+		"SUPER SECRET" |reader |age-encrypt recipient |age-decrypt identity |Read\string
 		} "SUPER SECRET"
-		equal { cc crypto "SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |read\string } "SUPER SECRET"
+		equal { cc crypto "SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |Read\string } "SUPER SECRET"
 	}
 
 	group "pkcs12-to-pem" 
