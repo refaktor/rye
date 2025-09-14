@@ -1050,12 +1050,14 @@ var Builtins_table = map[string]*env.Builtin{
 			switch spr := arg0.(type) {
 			case env.Table:
 				switch rmCol := arg1.(type) {
+				case env.Word:
+					return DropColumn(ps, spr, *env.NewString(ps.Idx.GetWord(rmCol.Index)))
 				case env.String:
 					return DropColumn(ps, spr, rmCol)
 				case env.Block:
 					return DropColumnBlock(ps, spr, rmCol)
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType, env.BlockType}, "drop-column")
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType, env.BlockType}, "drop-column")
 				}
 			}
 			return MakeArgError(ps, 1, []env.Type{env.TableType}, "drop-column")

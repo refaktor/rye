@@ -237,11 +237,11 @@ var builtins_string = map[string]*env.Builtin{
 		},
 	},
 	// Tests:
-	// equal { contains "...xoxo..." "xo"  } 1
-	// equal { contains "...xoxo..." "lol" } 0
-	// equal { contains { ".." "xoxo" ".." } "xoxo" } 1
-	// equal { contains { ".." "xoxo" ".." } "lol"  } 0
-	// equal { contains list { 1 2 3 } 2 } 1
+	// equal { contains "...xoxo..." "xo"  } true
+	// equal { contains "...xoxo..." "lol" } false
+	// equal { contains { ".." "xoxo" ".." } "xoxo" } true
+	// equal { contains { ".." "xoxo" ".." } "lol"  } false
+	// equal { contains list { 1 2 3 } 2 } true
 	// Args:
 	// * collection: String, block or list to search in
 	// * value: Value to search for

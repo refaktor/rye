@@ -412,15 +412,10 @@ func (s RyeBlockCustomSort) Swap(i, j int) {
 	s.data[i], s.data[j] = s.data[j], s.data[i]
 }
 func (s RyeBlockCustomSort) Less(i, j int) bool {
-	// fmt.Println("'''''")
-	// fmt.Println(s)
-	// fmt.Println(s.fn)
-	// fmt.Println(s.ps)
-	// fmt.Println(s.data)
 
 	CallFunctionArgs2(s.fn, s.ps, s.data[i], s.data[j], nil)
 	// TODO -- probably we should throw error if not boolean result #strictness
-	fmt.Println(s.ps.Res.Inspect(*s.ps.Idx))
+	// fmt.Println(s.ps.Res.Inspect(*s.ps.Idx))
 	return util.IsTruthy(s.ps.Res)
 }
 
@@ -503,7 +498,7 @@ func EvaluateLoadedValue(ps *env.ProgramState, block_ env.Object, script_ string
 		ps.ErrorFlag = true
 		return MakeBuiltinError(ps, block.Message, "import")
 	default:
-		fmt.Println(block)
+		// fmt.Println(block)
 		panic("Not block and not error in import builtin.") // TODO -- Think how best to handle this
 		// return env.Void{}
 	}
@@ -1857,8 +1852,8 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { x:: 0 defer { x:: 1 } x } 0
-	// equal { fn { } { var 'x 0 defer { x:: 1 } x } } 0
+	// equal { x:: 123 defer { x:: 345 } x } 123
+	// stdout { fn { } { var 'x 123 defer { print 234 } x } } "234"
 	// ; equal { fn { } { x:: 0 defer { x:: 1 } } x } 1
 	"defer": {
 		Argsn: 1,
