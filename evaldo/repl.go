@@ -182,17 +182,16 @@ func (r *Repl) recieveLine(line string) string {
 	// and don't interfere with terminal output
 	log.Println("RECV LINE: " + line)
 	res := r.evalLine(r.ps, line)
+
 	if r.showResults && len(res) > 0 {
-		fmt.Println(res)
+		fmt.Print(res)
+		fmt.Println() // Add newline after result
 	}
 	return res
 }
 
 func (r *Repl) evalLine(es *env.ProgramState, code string) string {
-	// Ensure we print a newline before processing to prevent overwriting previous output
-	if r.fullCode == "" {
-		fmt.Println()
-	}
+	// No extra newline needed here - proper spacing handled by recieveLine
 
 	if es.LiveObj != nil {
 		es.LiveObj.PsMutex.Lock()
@@ -205,26 +204,34 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 		es.LiveObj.PsMutex.Unlock()
 	}
 
+	// Process comments and extract the real line first
+	comment := regexp.MustCompile(`\s*;`)
+	line := comment.Split(code, 2) //--- just very temporary solution for some comments in repl. Later should probably be part of loader ... maybe?
+	lineReal := strings.Trim(line[0], "\t")
+
 	// More robust multiline input detection
 	// Check for explicit multiline indicators or incomplete syntax
 	multiline := false
 
 	// 1. Check for explicit continuation character at the end (backslash)
-	if len(code) > 0 && strings.HasSuffix(strings.TrimSpace(code), "\\") {
+	if len(lineReal) > 0 && strings.HasSuffix(strings.TrimSpace(lineReal), "\\") {
 		multiline = true
 		// Remove the continuation character for processing
-		code = strings.TrimSuffix(strings.TrimSpace(code), "\\")
+		lineReal = strings.TrimSuffix(strings.TrimSpace(lineReal), "\\")
 	}
 
 	// 2. Check for unbalanced brackets/braces/parentheses
 	if !multiline {
+		// Check the accumulated code (existing + current line) for balanced delimiters
+		accumulatedCode := r.fullCode + lineReal
+
 		openBraces := 0
 		openBrackets := 0
 		openParens := 0
 		inString := false
 		stringChar := ' '
 
-		for _, char := range code {
+		for _, char := range accumulatedCode {
 			// Handle string literals to avoid counting brackets inside strings
 			if (char == '"' || char == '`') && (stringChar == ' ' || stringChar == char) {
 				if !inString {
@@ -260,13 +267,9 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 	}
 
 	// 3. Check for incomplete block definitions that end with a colon
-	if !multiline && strings.HasSuffix(strings.TrimSpace(code), ":") {
+	if !multiline && strings.HasSuffix(strings.TrimSpace(lineReal), ":") {
 		multiline = true
 	}
-
-	comment := regexp.MustCompile(`\s*;`)
-	line := comment.Split(code, 2) //--- just very temporary solution for some comments in repl. Later should probably be part of loader ... maybe?
-	lineReal := strings.Trim(line[0], "\t")
 
 	output := ""
 	if multiline {

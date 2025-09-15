@@ -471,6 +471,7 @@ type MLState struct {
 	historyMutex   sync.RWMutex
 	columns        int
 	inString       bool
+	inBlock        bool
 	lastLineString bool
 	prevLines      int
 	prevCursorLine int
@@ -877,6 +878,92 @@ func getLengthOfLastLine(input string) (int, bool) {
 	return len(lastLine) - 3, true // for the prefix because currently string isn't padded on left line TODO unify this
 }
 
+// checkIncompleteBlock checks if the accumulated text has unbalanced braces/brackets/parens
+func (s *MLState) checkIncompleteBlock(text string) bool {
+	openBraces := 0
+	openBrackets := 0
+	openParens := 0
+	inString := false
+	stringChar := ' '
+
+	for _, char := range text {
+		// Handle string literals to avoid counting brackets inside strings
+		if (char == '"' || char == '`') && (stringChar == ' ' || stringChar == char) {
+			if !inString {
+				inString = true
+				stringChar = char
+			} else {
+				inString = false
+				stringChar = ' '
+			}
+			continue
+		}
+
+		if !inString {
+			switch char {
+			case '{':
+				openBraces++
+			case '}':
+				openBraces--
+			case '[':
+				openBrackets++
+			case ']':
+				openBrackets--
+			case '(':
+				openParens++
+			case ')':
+				openParens--
+			}
+		}
+	}
+
+	// If any delimiters are unbalanced, consider it an incomplete block
+	return openBraces > 0 || openBrackets > 0 || openParens > 0
+}
+
+// calculateIndentLevel calculates the indentation level based on open braces/brackets/parens
+func (s *MLState) calculateIndentLevel(text string) int {
+	openBraces := 0
+	openBrackets := 0
+	openParens := 0
+	inString := false
+	stringChar := ' '
+
+	for _, char := range text {
+		// Handle string literals to avoid counting brackets inside strings
+		if (char == '"' || char == '`') && (stringChar == ' ' || stringChar == char) {
+			if !inString {
+				inString = true
+				stringChar = char
+			} else {
+				inString = false
+				stringChar = ' '
+			}
+			continue
+		}
+
+		if !inString {
+			switch char {
+			case '{':
+				openBraces++
+			case '}':
+				openBraces--
+			case '[':
+				openBrackets++
+			case ']':
+				openBrackets--
+			case '(':
+				openParens++
+			case ')':
+				openParens--
+			}
+		}
+	}
+
+	// Return total nesting level (each level = 2 spaces)
+	return (openBraces + openBrackets + openParens) * 2
+}
+
 // MicroPrompt displays a prompt and handles user input with editing capabilities.
 // It returns the final input string or an error if the operation was canceled or failed.
 // The prompt is displayed with the given text and cursor position.
@@ -885,6 +972,7 @@ func (s *MLState) MicroPrompt(prompt string, text string, pos int, ctx1 context.
 	if ctx1 == nil {
 		return "", fmt.Errorf("context cannot be nil")
 	}
+	lastIndentLevel := 0
 	// history related
 	refreshAllLines := false
 	historyEnd := ""
@@ -902,7 +990,8 @@ startOfHere:
 	if s.currline == 0 {
 		p = []rune(prompt)
 	} else {
-		p = []rune(".. ")
+		indent := strings.Repeat(" ", lastIndentLevel)
+		p = []rune(indent + ".. ")
 	}
 
 	// defer s.stopPrompt()
@@ -1227,7 +1316,11 @@ startOfHere:
 			} else {
 				switch next.Code {
 				case 13: // Enter Newline
-					if s.inString {
+					// Check if we should continue in multiline mode
+					allText := strings.Join(s.lines, "\n") + string(line)
+					inIncompleteBlock := s.checkIncompleteBlock(allText)
+
+					if s.inString || inIncompleteBlock {
 						// This is copy from ctrl+x code above ... deduplicate and systemize TODO
 						historyStale = true
 						s.lastLineString = false
@@ -1783,8 +1876,19 @@ startOfHere:
 					} else {
 						//	s.sendBack(".. ")
 						fmt.Println("") // turn to sendback
-						p = []rune("=> ")
-						//// WWW multiline = false
+						// Check if we're in an incomplete block vs incomplete string
+						allText := strings.Join(s.lines[:i+1], "\n")
+						if s.checkIncompleteBlock(allText) {
+							// Use distinctive prompt for incomplete blocks with indentation
+							lastIndentLevel = s.calculateIndentLevel(allText)
+							indent := strings.Repeat(" ", lastIndentLevel)
+							p = []rune(indent + " > ")
+							s.inBlock = true
+						} else {
+							// Use regular multiline prompt for strings etc
+							p = []rune("-> ")
+							s.inBlock = false
+						}
 					}
 					err := s.refresh(p, []rune(line1), pos)
 					if err != nil {
@@ -1799,9 +1903,19 @@ startOfHere:
 					//	s.sendBack(prompt)
 					p = []rune(prompt)
 				} else {
-					//	s.sendBack(".. ")
-					p = []rune("-> ")
-					//// WWW multiline = false
+					// Check if we're in an incomplete block vs incomplete string
+					allText := strings.Join(s.lines, "\n") + string(line)
+					if s.checkIncompleteBlock(allText) {
+						// Use distinctive prompt for incomplete blocks with indentation
+						lastIndentLevel = s.calculateIndentLevel(allText)
+						indent := strings.Repeat(" ", lastIndentLevel)
+						p = []rune(indent + " > ")
+						s.inBlock = true
+					} else {
+						// Use regular multiline prompt for strings etc
+						p = []rune("-> ")
+						s.inBlock = false
+					}
 				}
 				err := s.refresh(p, line, pos)
 				if err != nil {

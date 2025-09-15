@@ -540,7 +540,6 @@ DODO:
 }
 
 func DisplayTable(bloc env.Table, idx *env.Idxs) (env.Object, bool) {
-	HideCur()
 	mode := 0 // 0 - human, 1 - dev
 	totalItems := len(bloc.Rows)
 	_, height, err := goterm.GetSize(int(os.Stdout.Fd()))
@@ -555,9 +554,6 @@ func DisplayTable(bloc env.Table, idx *env.Idxs) (env.Object, bool) {
 	if totalPages == 0 {
 		totalPages = 1
 	}
-	currentPage := 0
-	localCurr := 0
-	moveUp := 0
 
 	// get the ideal widths of columns
 	widths := make([]int, len(bloc.Cols))
@@ -603,6 +599,101 @@ func DisplayTable(bloc env.Table, idx *env.Idxs) (env.Object, bool) {
 	for _, w := range widths {
 		fulwidth += w + 2
 	}
+
+	// If totalPages <= 1, use inline interactive mode
+	if totalPages <= 1 {
+		HideCur()
+		curr := 0
+		moveUp := 0
+
+		defer func() {
+			ShowCur()
+		}()
+
+	INLINE_DODO:
+		if moveUp > 0 {
+			CurUp(moveUp)
+		}
+		SaveCurPos()
+
+		// Print header
+		for ic, cn := range bloc.Cols {
+			Bold()
+			termPrintf("| %-"+strconv.Itoa(widths[ic])+"s", cn)
+			CloseProps()
+		}
+		termPrintln("|")
+		termPrintln("+" + strings.Repeat("-", fulwidth-1) + "+")
+
+		// Print all rows with cursor highlighting
+		for i, r := range bloc.Rows {
+			ClearLine()
+			if i == curr {
+				ColorBrGreen()
+				termPrint("")
+			} else {
+				termPrint("")
+			}
+			for ic, v := range r.Values {
+				if ic < len(widths) {
+					switch ob := v.(type) {
+					case env.Object:
+						if mode == 0 {
+							termPrintf("| %-"+strconv.Itoa(widths[ic])+"s", util.TruncateString(ob.Print(*idx), widths[ic]))
+						} else {
+							termPrintf("| %-"+strconv.Itoa(widths[ic])+"s", ob.Inspect(*idx))
+						}
+					default:
+						termPrintf("| %-"+strconv.Itoa(widths[ic])+"s", fmt.Sprint(ob))
+					}
+				}
+			}
+			CloseProps()
+			termPrintln("|")
+		}
+
+		moveUp = totalItems + 2 // rows + header + separator line
+
+		for {
+			ascii, keyCode, err := GetChar()
+
+			if (ascii == 3 || ascii == 27) || err != nil {
+				return bloc, true // Return full table on Ctrl+C or Esc
+			}
+
+			if ascii == 13 {
+				if curr < totalItems {
+					return bloc.GetRowNew(curr), false // Return selected row on Enter
+				}
+				return nil, true
+			}
+
+			if ascii == 77 || ascii == 109 { // 'm' or 'M' for mode toggle
+				mode = 1 - mode
+				goto INLINE_DODO
+			}
+
+			if keyCode == 40 { // Down arrow
+				curr++
+				if curr >= totalItems {
+					curr = 0 // Wrap to top
+				}
+				goto INLINE_DODO
+			} else if keyCode == 38 { // Up arrow
+				curr--
+				if curr < 0 {
+					curr = totalItems - 1 // Wrap to bottom
+				}
+				goto INLINE_DODO
+			}
+		}
+	}
+
+	// Full-screen paginated mode for tables that need pagination
+	HideCur()
+	currentPage := 0
+	localCurr := 0
+	moveUp := 0
 
 DODO:
 	if moveUp > 0 {
