@@ -35,7 +35,6 @@ func init() {
 }
 
 func DisplayBlock(bloc env.Block, idx *env.Idxs) (env.Object, bool) {
-	HideCur()
 	mode := 0 // 0 - human, 1 - dev
 	totalItems := bloc.Series.Len()
 	_, height, err := goterm.GetSize(int(os.Stdout.Fd()))
@@ -50,9 +49,94 @@ func DisplayBlock(bloc env.Block, idx *env.Idxs) (env.Object, bool) {
 	if totalPages == 0 {
 		totalPages = 1
 	}
+
+	// If totalPages <= 1, use inline interactive mode
+	if totalPages <= 1 {
+		HideCur()
+		curr := 0
+		moveUp := 0
+
+		defer func() {
+			ShowCur()
+		}()
+
+	INLINE_DODO:
+		if moveUp > 0 {
+			CurUp(moveUp)
+		}
+		SaveCurPos()
+
+		totalLines := 0
+		// Print all items with cursor highlighting
+		for i, v := range bloc.Series.S {
+			ClearLine()
+			if i == curr {
+				ColorBrGreen()
+				Bold()
+				termPrint("\u00bb ")
+			} else {
+				termPrint(" ")
+			}
+			var valueStr string
+			switch ob := v.(type) {
+			case env.Object:
+				if mode == 0 {
+					valueStr = ob.Print(*idx)
+				} else {
+					valueStr = ob.Inspect(*idx)
+				}
+			default:
+				valueStr = fmt.Sprint(ob)
+			}
+			termPrintln(valueStr)
+			// Count the actual number of lines this entry takes (including newlines in the value)
+			totalLines += strings.Count(valueStr, "\n") + 1
+			CloseProps()
+		}
+
+		moveUp = totalLines
+
+		for {
+			ascii, keyCode, err := GetChar()
+
+			if (ascii == 3 || ascii == 27) || err != nil {
+				return bloc, true // Return full block on Ctrl+C or Esc
+			}
+
+			if ascii == 13 {
+				if curr < totalItems {
+					return bloc.Series.Get(curr), false // Return selected item on Enter
+				}
+				return nil, true
+			}
+
+			if ascii == 77 || ascii == 109 { // 'm' or 'M' for mode toggle
+				mode = 1 - mode
+				goto INLINE_DODO
+			}
+
+			if keyCode == 40 { // Down arrow
+				curr++
+				if curr >= totalItems {
+					curr = 0 // Wrap to top
+				}
+				goto INLINE_DODO
+			} else if keyCode == 38 { // Up arrow
+				curr--
+				if curr < 0 {
+					curr = totalItems - 1 // Wrap to bottom
+				}
+				goto INLINE_DODO
+			}
+		}
+	}
+
+	// Full-screen paginated mode for blocks that need pagination
+	HideCur()
 	currentPage := 0
 	localCurr := 0
 	moveUp := 0
+
 DODO:
 	if moveUp > 0 {
 		CurUp(moveUp)
