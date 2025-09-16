@@ -24,7 +24,7 @@ var builtins_collection = map[string]*env.Builtin{
 	//
 	// Tests:
 	// equal { random { 1 2 3 } |type? } 'integer
-	// equal { random { 1 2 3 } |contains* { 1 2 3 } } 1
+	// equal { random { 1 2 3 } |contains* { 1 2 3 } } true
 	// Args:
 	// * block: Block of values to select from
 	// Returns:
@@ -813,6 +813,17 @@ var builtins_collection = map[string]*env.Builtin{
 					}
 					return *env.NewString(string(str[0:numVal]))
 				case env.Table:
+					if len(s1.Rows) == 0 {
+						nspr := env.NewTable(s1.Cols)
+						nspr.Rows = []env.TableRow{}
+						return *nspr
+					}
+					if len(s1.Rows) < numVal {
+						numVal = len(s1.Rows)
+					}
+					if numVal < 0 {
+						numVal = len(s1.Rows) + numVal // warn: numVal is negative so we must add
+					}
 					nspr := env.NewTable(s1.Cols)
 					nspr.Rows = s1.Rows[0:numVal]
 					return *nspr

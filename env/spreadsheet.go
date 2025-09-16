@@ -266,7 +266,7 @@ func (s Table) Inspect(e Idxs) string {
 	if s.GetKind() != int(TableType) {
 		kindStr = " of kind " + s.Kind.Print(e)
 	}
-	return "[Table(" + strconv.Itoa(len(s.Cols)) + " " + rows + ")" + kindStr + "]"
+	return "[Table(" + rows + " " + strconv.Itoa(len(s.Cols)) + ")" + kindStr + "]"
 }
 
 // Inspect returns a string representation of the Integer.

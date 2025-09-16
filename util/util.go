@@ -2,7 +2,6 @@
 package util
 
 import (
-	"fmt"
 	"math/rand"
 	"regexp"
 	"slices"
@@ -42,17 +41,17 @@ func IndexOfSlice(ps *env.ProgramState, slice []env.Object, value env.Object) in
 // so we don't get to problems where numbers pass but certain number doesn't
 // and if we want to break we have to be specific in expression all { not is-zero? x  not is-empty? s }
 func IsTruthy(o env.Object) bool {
-	fmt.Println(o)
+	// fmt.Println(o)
 	switch oo := o.(type) {
 	case env.Boolean:
-		fmt.Println("XX", oo.Value)
+		// fmt.Println("XX", oo.Value)
 		return oo.Value
 	case env.Integer:
 		return true
 	case env.String:
 		return true
 	default:
-		fmt.Println("*****")
+		// fmt.Println("*****")
 		return true
 	}
 }

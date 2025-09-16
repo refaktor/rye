@@ -268,8 +268,8 @@ section "Other " "functions related to date and time" {
 	}
 
 	{
-		equal { x:: 0 defer { x:: 1 } x } 0
-		equal { fn { } { var 'x 0 defer { x:: 1 } x } } 0
+		equal { x:: 123 defer { x:: 345 } x } 123
+		stdout { fn { } { var 'x 123 defer { print 234 } x } } "234"
 		; equal { fn { } { x:: 0 defer { x:: 1 } } x } 1
 	}
 
@@ -898,11 +898,11 @@ section "Strings " "" {
 	}
 
 	{
-		equal { contains "...xoxo..." "xo"  } 1
-		equal { contains "...xoxo..." "lol" } 0
-		equal { contains { ".." "xoxo" ".." } "xoxo" } 1
-		equal { contains { ".." "xoxo" ".." } "lol"  } 0
-		equal { contains list { 1 2 3 } 2 } 1
+		equal { contains "...xoxo..." "xo"  } true
+		equal { contains "...xoxo..." "lol" } false
+		equal { contains { ".." "xoxo" ".." } "xoxo" } true
+		equal { contains { ".." "xoxo" ".." } "lol"  } false
+		equal { contains list { 1 2 3 } 2 } true
 	}
 
 	group "has-suffix" 
@@ -1148,7 +1148,7 @@ section "Collections " "" {
 
 	{
 		equal { random { 1 2 3 } |type? } 'integer
-		equal { random { 1 2 3 } |contains* { 1 2 3 } } 1
+		equal { random { 1 2 3 } |contains* { 1 2 3 } } true
 	}
 
 	group "unpack" 

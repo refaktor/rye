@@ -85,7 +85,7 @@
 <p class='arg'>None</p>
 <p class='returns'><b>returns</b> Integer 1 on success</p>
 <div class='group'>
-State current context to [1mconsole_250910_121053.rye[0m.
+State current context to [1mconsole_250914_135649.rye[0m.
 <pre class='prettyprint lang-rye'><code language='lang-rye'>save\current |type?
 ; returns integer</code></pre>
 </div>
@@ -228,8 +228,8 @@ hello
 </div>
 <h3>defer</h3><p>Registers a block of code to be executed when the current function exits or the program terminates.</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>x:: 0 defer { x:: 1 } x
-; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x:: 123 defer { x:: 345 } x
+; returns 123</code></pre>
 </div>
 </div>
 <h2>Boolean logic </h2><p>Functions that work with true and false values.</p><div class='section'>
@@ -331,27 +331,12 @@ hello
 <p class='arg'><b>block</b> Block of expressions to evaluate</p>
 <p class='returns'><b>returns</b> the last value if all expressions are truthy, otherwise the first falsy value encountered</p>
 <div class='group'>
-{1}
-{2}
-{3}
 <pre class='prettyprint lang-rye'><code language='lang-rye'>all { 1 2 3 }
 ; returns 3</code></pre>
-{1}
-{0}
-{3}
 <pre class='prettyprint lang-rye'><code language='lang-rye'>all { 1 0 3 }
 ; returns 3</code></pre>
-{1}
-{false}
-XX false
 <pre class='prettyprint lang-rye'><code language='lang-rye'>all { 1 false 3 }
 ; returns false</code></pre>
-{true}
-XX true
-{true}
-XX true
-{true}
-XX true
 <pre class='prettyprint lang-rye'><code language='lang-rye'>all { true true true }
 ; returns true</code></pre>
 </div>
@@ -359,25 +344,12 @@ XX true
 <p class='arg'><b>block</b> Block of expressions to evaluate</p>
 <p class='returns'><b>returns</b> the first truthy value encountered, or the last value if none are truthy</p>
 <div class='group'>
-{1}
 <pre class='prettyprint lang-rye'><code language='lang-rye'>any { 1 2 3 }
 ; returns 1</code></pre>
-{0}
 <pre class='prettyprint lang-rye'><code language='lang-rye'>any { 0 1 3 }
 ; returns 0</code></pre>
-{false}
-XX false
-{false}
-XX false
-{3}
 <pre class='prettyprint lang-rye'><code language='lang-rye'>any { false false 3 }
 ; returns 3</code></pre>
-{false}
-XX false
-{false}
-XX false
-{false}
-XX false
 <pre class='prettyprint lang-rye'><code language='lang-rye'>any { false false false }
 ; returns false</code></pre>
 </div>
@@ -386,7 +358,6 @@ XX false
 <p class='arg'><b>block</b> Block of expressions to evaluate with the provided value</p>
 <p class='returns'><b>returns</b> the first truthy result of applying an expression to the value, or the last result if none are truthy</p>
 <div class='group'>
-{20}
 <pre class='prettyprint lang-rye'><code language='lang-rye'>any\with 10 { + 10 , * 10 }
 ; returns 20</code></pre>
 </div>
@@ -843,6 +814,16 @@ ASDF
 <p class='arg'><b>value</b> Value to search for</p>
 <p class='returns'><b>returns</b> integer 1 if the collection contains the value, 0 otherwise</p>
 <div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>contains "...xoxo..." "xo"
+; returns true</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>contains "...xoxo..." "lol"
+; returns false</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>contains { ".." "xoxo" ".." } "xoxo"
+; returns true</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>contains { ".." "xoxo" ".." } "lol"
+; returns false</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>contains list { 1 2 3 } 2
+; returns true</code></pre>
 </div>
 <h3>has-suffix</h3><p>Checks if a string ends with a specific suffix, returning 1 if true or 0 if false.</p>
 <p class='arg'><b>string</b> String to check</p>
@@ -1047,6 +1028,8 @@ ASDF
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>random { 1 2 3 } |type?
 ; returns integer</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>random { 1 2 3 } |contains* { 1 2 3 }
+; returns true</code></pre>
 </div>
 <h3>unpack</h3><p>Flattens a block of blocks or list of lists by one level, combining all inner collections into a single collection.</p>
 <p class='arg'><b>collection</b> Block or list of blocks/lists to unpack</p>
@@ -1300,59 +1283,12 @@ ASDF
 <p class='arg'><b>comparator</b> Function that takes two arguments and returns a truthy value if they are in the correct order</p>
 <p class='returns'><b>returns</b> a new collection with items sorted according to the comparator function</p>
 <div class='group'>
-{false}
-[Boolean: false]
-{false}
-XX false
-{true}
-[Boolean: true]
-{true}
-XX true
-{true}
-[Boolean: true]
-{true}
-XX true
 <pre class='prettyprint lang-rye'><code language='lang-rye'>sort\by { 6 12 1 } fn { a b } { a &lt; b }
 ; returns { 1 6 12 }</code></pre>
-{true}
-[Boolean: true]
-{true}
-XX true
-{false}
-[Boolean: false]
-{false}
-XX false
 <pre class='prettyprint lang-rye'><code language='lang-rye'>sort\by { 6 12 1 } fn { a b } { a &gt; b }
 ; returns { 12 6 1 }</code></pre>
-{false}
-[Boolean: false]
-{false}
-XX false
-{true}
-[Boolean: true]
-{true}
-XX true
-{true}
-[Boolean: true]
-{true}
-XX true
 <pre class='prettyprint lang-rye'><code language='lang-rye'>sort\by { { x 6 } { x 12 } { x 1 } } fn { a b } { second a |&lt; second b }
 ; returns { { x 1 } { x 6 } { x 12 } }</code></pre>
-{false}
-{false}
-XX false
-{false}
-{false}
-XX false
-{true}
-{true}
-XX true
-{true}
-{true}
-XX true
-{false}
-{false}
-XX false
 <pre class='prettyprint lang-rye'><code language='lang-rye'>sort\by list { 5 3 1 4 } fn { a b } { a &gt; b }
 ; returns list { 5 4 3 1 }</code></pre>
 </div>
@@ -1424,7 +1360,7 @@ XX false
 <pre class='prettyprint lang-rye'><code language='lang-rye'>{ 1 2 } ++ { 3 4 }
 ; returns { 1 2 3 4 }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 } || ++ { "b" 2 }
-; returns dict { b 2 a 1 }</code></pre>
+; returns dict { a 1 b 2 }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 } || ++ dict { "b" 2 }
 ; returns dict { a 1 b 2 }</code></pre>
 </div>
@@ -1587,71 +1523,14 @@ XX false
 <p class='arg'><b>comparator</b> Function that takes two arguments and returns a truthy value if they should be considered matching</p>
 <p class='returns'><b>returns</b> a new collection containing values from the first collection that match with values from the second collection according to the comparator</p>
 <div class='group'>
-{true}
-{true}
-XX true
-{false}
-{false}
-XX false
-{false}
-{false}
-XX false
-{true}
-{true}
-XX true
-{false}
-{false}
-XX false
-{false}
-{false}
-XX false
 <pre class='prettyprint lang-rye'><code language='lang-rye'>intersection\by "foobar" "fbx" fn { a b } { a .contains b }
 ; returns "fb"</code></pre>
-{true}
-{true}
-XX true
-{false}
-{false}
-XX false
-{false}
-{false}
-XX false
-{true}
-{true}
-XX true
-{false}
-{false}
-XX false
-{false}
-{false}
-XX false
 <pre class='prettyprint lang-rye'><code language='lang-rye'>intersection\by "fooBar" "Fbx" fn { a b } { a .to-lower .contains to-lower b }
 ; returns "fB"</code></pre>
-{false}
-{false}
-XX false
-{true}
-{true}
-XX true
 <pre class='prettyprint lang-rye'><code language='lang-rye'>intersection\by { "foo" 33 } { 33 33 } fn { a b } { a .contains b }
 ; returns { 33 }</code></pre>
-{false}
-{false}
-XX false
-{false}
-{false}
-XX false
-{true}
-{true}
-XX true
 <pre class='prettyprint lang-rye'><code language='lang-rye'>intersection\by { "foo" "bar" 33 } { 42 } fn { a b } { map a { .type? } |contains b .type? }
 ; returns { 33 }</code></pre>
-{false}
-{false}
-XX false
-{true}
-{true}
-XX true
 <pre class='prettyprint lang-rye'><code language='lang-rye'>intersection\by { { "foo" x } { "bar" y } } { { "bar" z } } fn { a b } { map a { .first } |contains first b }
 ; returns { { "bar" y } }</code></pre>
 </div>
@@ -1767,7 +1646,6 @@ th!</h3><p>Changes the value at a specific position in a block or list in-place 
 ; returns { 1 2 }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>x: 1 y: 2 vals { 1 y }
 ; returns { 1 2 }</code></pre>
-TEMP: EvalBlockInj DeferBlocks triggered
 <pre class='prettyprint lang-rye'><code language='lang-rye'>x: 1 y: 2 try { vals { z y } } |type?
 ; returns error</code></pre>
 </div>
@@ -1786,12 +1664,8 @@ TEMP: EvalBlockInj DeferBlocks triggered
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>c: raw-context { x: 123 } c/x
 ; returns 123</code></pre>
-TEMP: EvalBlockInj DeferBlocks triggered
-TEMP: EvalBlockInj DeferBlocks triggered
 <pre class='prettyprint lang-rye'><code language='lang-rye'>y: 123 try { c: raw-context { x: y } } |type?
 ; returns error</code></pre>
-TEMP: EvalBlockInj DeferBlocks triggered
-TEMP: EvalBlockInj DeferBlocks triggered
 <pre class='prettyprint lang-rye'><code language='lang-rye'>try { c: raw-context { x: inc 10 } } |type?
 ; returns error</code></pre>
 </div>
@@ -1805,11 +1679,8 @@ TEMP: EvalBlockInj DeferBlocks triggered
 ; returns 123</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>c: isolate { x: inc 10 } c/x
 ; returns 11</code></pre>
-TEMP: EvalBlockInj DeferBlocks triggered
-TEMP: EvalBlockInj DeferBlocks triggered
 <pre class='prettyprint lang-rye'><code language='lang-rye'>y: 99 c: isolate { x: does { y } } try { c/x } |type?
 ; returns error</code></pre>
-TEMP: EvalBlockInj DeferBlocks triggered
 <pre class='prettyprint lang-rye'><code language='lang-rye'>y: 99 c: isolate { t: ?try x: does { t { y } } } c/x |type?
 ; returns error</code></pre>
 </div>
@@ -1870,8 +1741,6 @@ TEMP: EvalBlockInj DeferBlocks triggered
 <pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { y: 123 } cc: bind! context { z: does { y + 234 } } c , unbind cc cc/z
 ; returns 357</code></pre>
 [Opword: _+]
-TEMP: EvalBlockInj DeferBlocks triggered
-TEMP: EvalBlockInj DeferBlocks triggered
 <pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { y: 123 } cc: bind! context { z: does { y + 234 } } c , dd: unbind cc dd/z
 ; correctly causes error:
 ; word not found: y </code></pre>

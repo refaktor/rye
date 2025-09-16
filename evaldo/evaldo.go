@@ -86,8 +86,8 @@ func EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) {
 		if ps.ReturnFlag || ps.ErrorFlag {
 			// Execute deferred blocks before returning
 			if len(ps.DeferBlocks) > 0 {
-				fmt.Println("TEMP: EvalBlockInj DeferBlocks triggered")
-				// ExecuteDeferredBlocks(ps)
+				// fmt.Println("TEMP: EvalBlockInj DeferBlocks triggered")
+				ExecuteDeferredBlocks(ps)
 			}
 			return
 		}
@@ -911,7 +911,7 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 	psX.Ser.SetPos(0)
 	EvalBlockInj(psX, arg0, true)
 	// fmt.Println(result)
-	fmt.Println(psX.Res)
+	// fmt.Println(psX.Res)
 	MaybeDisplayFailureOrError(psX, psX.Idx, "call func args 2")
 	if psX.ForcedResult != nil {
 		ps.Res = result.ForcedResult
