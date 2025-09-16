@@ -47,6 +47,7 @@ const (
 	NPEG_TOKEN_GROUP_START
 	NPEG_TOKEN_GROUP_END
 	NPEG_TOKEN_OPGROUP_START
+	NPEG_TOKEN_OPBLOCK_START
 	NPEG_TOKEN_COMMA
 	NPEG_TOKEN_VOID
 	NPEG_TOKEN_COMMENT
@@ -241,6 +242,19 @@ func (l *Lexer) NextToken() NoPEGToken {
 			l.readChar() // Skip '('
 			if isWhitespaceCh(l.ch) {
 				return l.makeToken(NPEG_TOKEN_OPGROUP_START, ".(")
+			}
+			// If not followed by whitespace, reset and treat as regular opword
+			l.pos -= 2
+			l.readPos -= 2
+			l.col -= 2
+			l.ch = '.'
+		}
+		// Special handling for ".{ }" (OPBLOCK) pattern
+		if l.ch == '.' && l.peekChar() == '{' {
+			l.readChar() // Skip '.'
+			l.readChar() // Skip '{'
+			if isWhitespaceCh(l.ch) {
+				return l.makeToken(NPEG_TOKEN_OPBLOCK_START, ".{")
 			}
 			// If not followed by whitespace, reset and treat as regular opword
 			l.pos -= 2
@@ -867,7 +881,8 @@ func (p *NoPEGParser) parseBlock(blockType int) (env.Object, error) {
 			p.currentToken.Type == NPEG_TOKEN_BBLOCK_END && blockType == 1 ||
 			p.currentToken.Type == NPEG_TOKEN_GROUP_END && blockType == 2 ||
 			p.currentToken.Type == NPEG_TOKEN_BBLOCK_END && blockType == 3 ||
-			p.currentToken.Type == NPEG_TOKEN_GROUP_END && blockType == 4 {
+			p.currentToken.Type == NPEG_TOKEN_GROUP_END && blockType == 4 ||
+			p.currentToken.Type == NPEG_TOKEN_BLOCK_END && blockType == 5 {
 			break
 		}
 
@@ -921,6 +936,8 @@ func (p *NoPEGParser) parseToken() (env.Object, error) {
 		return p.parseBlock(3)
 	case NPEG_TOKEN_OPGROUP_START:
 		return p.parseBlock(4)
+	case NPEG_TOKEN_OPBLOCK_START:
+		return p.parseBlock(5)
 	case NPEG_TOKEN_WORD:
 		idx := p.wordIndex.IndexWord(p.currentToken.Value)
 		return *env.NewWord(idx), nil

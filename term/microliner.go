@@ -476,9 +476,10 @@ type MLState struct {
 	prevLines      int
 	prevCursorLine int
 	completer      WordCompleter
-	lines          []string          // added for the multiline behaviour
-	currline       int               // same
-	programState   *env.ProgramState // added for environment access
+	lines          []string                                                       // added for the multiline behaviour
+	currline       int                                                            // same
+	programState   *env.ProgramState                                              // added for environment access
+	displayValue   func(*env.ProgramState, env.Object, bool) (env.Object, string) // callback for displaying values
 	// pending     []rune
 	// killRing *ring.Ring
 }
@@ -508,6 +509,11 @@ func NewMicroLiner(ch chan KeyEvent, sb func(msg string), el func(line string) s
 // SetProgramState sets the program state for environment access during tab completion
 func (s *MLState) SetProgramState(ps *env.ProgramState) {
 	s.programState = ps
+}
+
+// SetDisplayValueFunc sets the callback function used to display values
+func (s *MLState) SetDisplayValueFunc(fn func(*env.ProgramState, env.Object, bool) (env.Object, string)) {
+	s.displayValue = fn
 }
 
 func (s *MLState) getColumns() bool {
@@ -1194,6 +1200,30 @@ startOfHere:
 					line, pos, next, _ = s.tabComplete(p, line, pos, 1)
 					tabCompletionWasActive = true
 					goto haveNext
+				case "x": // display last returned value
+					if s.programState != nil && s.programState.Res != nil {
+						// Move to a new line and display the result
+						s.sendBack("\n")
+						s.sendBack("\033[K") // Clear line
+
+						// Display the last result using the displayValue function if available
+						s.sendBack("\033[38;5;37m") // Gray color for result
+						if s.displayValue != nil {
+							_, resultStr := s.displayValue(s.programState, s.programState.Res, true)
+							s.sendBack("Last result: " + resultStr)
+						} else {
+							// Fallback to Inspect if displayValue callback is not set
+							resultStr := s.programState.Res.Inspect(*s.programState.Idx)
+							s.sendBack("Last result: " + resultStr)
+						}
+						s.sendBack("\033[0m") // Reset color
+						s.sendBack("\n")      // Add another newline for separation
+
+						// Force refresh to redraw the prompt below the result
+						s.needRefresh = true
+					} else {
+						s.doBeep() // No result to display
+					}
 					// Add new case for Ctrl+Backspace
 				case "backspace": // or check `next.Code == 8` if needed
 					if pos <= 0 {
@@ -1838,8 +1868,7 @@ startOfHere:
 						}
 						buf = append(buf, line[pos])
 						line = append(line[:pos], line[pos+1:]...)
-					}
-					// Save the result on the killRing
+					}					// Save the result on the killRing
 					if killAction > 0 {
 						s.addToKillRing(buf, 2) // Add in prepend mode
 					} else {

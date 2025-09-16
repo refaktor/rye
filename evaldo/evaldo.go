@@ -338,6 +338,14 @@ func EvalExpressionConcrete(ps *env.ProgramState) {
 			EvalBlockInjMultiDialect(ps, injVal, true)
 			ps.Ser = ser
 			// return ps.Res
+		} else if block.Mode == 5 {
+			// OPBLOCK - behaves like fn1 function call
+			// Create a function with one anonymous argument and call it with current result
+			spec := []env.Object{*env.NewWord(1)}
+			ps.Res = *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), block, false)
+			// injVal := ps.Res // Use current result as argument
+			// CallFunctionWithArgs(fn, ps, nil, injVal)
+			// return ps.Res
 		}
 	case env.TagwordType:
 		ps.Res = *env.NewWord(object.(env.Tagword).Index)
