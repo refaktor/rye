@@ -1200,26 +1200,38 @@ startOfHere:
 					line, pos, next, _ = s.tabComplete(p, line, pos, 1)
 					tabCompletionWasActive = true
 					goto haveNext
-				case "x": // display last returned value
-					if s.programState != nil && s.programState.Res != nil {
-						// Move to a new line and display the result
+				case "x": // display last returned value interactively
+					if s.programState != nil && s.programState.Res != nil && s.displayValue != nil {
+						// Move to a new line
 						s.sendBack("\n")
-						s.sendBack("\033[K") // Clear line
 
-						// Display the last result using the displayValue function if available
-						s.sendBack("\033[38;5;37m") // Gray color for result
-						if s.displayValue != nil {
-							_, resultStr := s.displayValue(s.programState, s.programState.Res, true)
-							s.sendBack("Last result: " + resultStr)
-						} else {
-							// Fallback to Inspect if displayValue callback is not set
+						// Call displayValue with interactive=true to show the interactive display
+						returnedObj, _ := s.displayValue(s.programState, s.programState.Res, true)
+
+						// If a selection was made (not escaped), insert it into the current line
+						if returnedObj != nil {
+							// Convert the returned object to its string representation
+							//objStr := returnedObj.Print(*s.programState.Idx)
+
+							// Insert the selected value at the current cursor position
+							/* objRunes := []rune(objStr)
+							line = append(line[:pos], append(objRunes, line[pos:]...)...)
+							pos += len(objRunes)
+							s.needRefresh = true */
+							s.programState.Res = returnedObj
+							//fmt.Println(returnedObj.Inspect(*s.programState.Idx))
+							fmt.Println(&s.programState)
+							p := ""
+							if env.IsPointer(s.programState.Res) {
+								p = "Ref"
+							}
 							resultStr := s.programState.Res.Inspect(*s.programState.Idx)
-							s.sendBack("Last result: " + resultStr)
+							fmt.Print("\033[38;5;37m" + p + resultStr + "\x1b[0m")
+						} else {
+							fmt.Println("NIL RETURNED")
 						}
-						s.sendBack("\033[0m") // Reset color
-						s.sendBack("\n")      // Add another newline for separation
 
-						// Force refresh to redraw the prompt below the result
+						// Force refresh to redraw the prompt
 						s.needRefresh = true
 					} else {
 						s.doBeep() // No result to display
@@ -1517,7 +1529,9 @@ startOfHere:
 						// CurDown(1)
 						fmt.Println("")
 						ClearLine()
-						CurUp(1)
+						fmt.Println("")
+						ClearLine()
+						CurUp(2)
 					}
 
 					vs := []rune(next.Key)

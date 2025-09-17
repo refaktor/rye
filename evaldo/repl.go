@@ -361,6 +361,7 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 		MaybeDisplayFailureOrError(es, genv, "repl / eval Line")
 
 		if !es.ErrorFlag && es.Res != nil {
+			fmt.Println(&es)
 			r.prevResult = es.Res
 			p := ""
 			if env.IsPointer(es.Res) {
@@ -397,6 +398,10 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 		es.FailureFlag = false
 
 		r.ml.AppendHistory(code)
+
+		// Update both microliner's and REPL's program state references to ensure they're always current
+		r.ml.SetProgramState(es)
+		r.ps = es
 
 		r.fullCode = ""
 		r.ml.AppendHistory(code)
@@ -520,9 +525,6 @@ func isCursorAtBottom() bool { // TODO --- doesn't seem to work and probably don
 func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here because of some odd options we were experimentally adding
 	// Configure log to not include date/time prefix for cleaner output
 	log.SetFlags(0)
-
-	// Print a welcome message with a newline to ensure proper spacing
-	fmt.Println("\nRye REPL started. Terminal output will be properly spaced.")
 
 	// Improved error handling for keyboard initialization
 	err := keyboard.Open()
