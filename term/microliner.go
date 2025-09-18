@@ -835,38 +835,168 @@ func (s *MLState) refreshSingleLine_WITH_WRAP_HALFMADE(prompt []rune, buf []rune
 	return nil
 }
 
+// refreshSingleLineWithWrap updates the display for input that may wrap across multiple terminal lines.
+// It properly detects line wrapping, clears all affected lines, and redraws content with correct cursor positioning.
+func (s *MLState) refreshSingleLineWithWrap(prompt []rune, buf []rune, pos int) error {
+	if s.columns <= 6 {
+		return fmt.Errorf("terminal width too small: %d columns", s.columns)
+	}
+
+	pLen := countGlyphs(prompt)
+	bLen := countGlyphs(buf)
+	text := string(buf)
+
+	// Calculate how many terminal lines the content will occupy
+	totalWidth := pLen + bLen
+	linesNeeded := (totalWidth + s.columns - 1) / s.columns // Ceiling division
+	if linesNeeded < 1 {
+		linesNeeded = 1
+	}
+
+	// Hide cursor before redrawing to prevent blinking
+	s.sendBack("\033[?25l")
+
+	// Move cursor to beginning of current line
+	s.sendBack("\r")
+
+	// Clear current line and any additional lines from previous wrapped content
+	s.sendBack("\033[K") // Clear current line
+
+	// Clear additional lines if content was previously wrapped
+	// We need to clear MORE lines than we think we need, because the previous
+	// content might have used more lines than the current content will use
+	linesToClear := s.prevLines
+	if linesToClear < linesNeeded {
+		linesToClear = linesNeeded
+	}
+
+	// Clear down to eliminate any residual wrapped lines
+	for i := 1; i < linesToClear; i++ {
+		s.sendBack("\033[B") // Move down one line
+		s.sendBack("\033[K") // Clear line
+	}
+
+	// Move back up to the original line position
+	if linesToClear > 1 {
+		s.sendBack(fmt.Sprintf("\033[%dA", linesToClear-1))
+	}
+
+	// Position cursor at start of line
+	s.sendBack("\r")
+
+	// Write prompt
+	s.sendBack(string(prompt))
+
+	// Apply syntax highlighting and write buffer
+	tt2, inString := RyeHighlight(text, s.lastLineString, s.columns)
+	s.sendBack(tt2)
+	s.inString = inString
+
+	// Calculate cursor position accounting for line wrapping
+	cursorTotalPos := pLen + pos
+	cursorLine := cursorTotalPos / s.columns
+	cursorCol := cursorTotalPos % s.columns
+
+	// Move cursor to correct position
+	if cursorLine > 0 {
+		// Move down to the correct line
+		s.sendBack(fmt.Sprintf("\033[%dB", cursorLine))
+	}
+
+	// Move to correct column
+	s.sendBack("\r")
+	if cursorCol > 0 {
+		s.sendBack(fmt.Sprintf("\033[%dC", cursorCol))
+	}
+
+	// Update state for next refresh
+	s.prevLines = linesNeeded
+
+	// Show cursor after redrawing is complete
+	s.sendBack("\033[?25h")
+
+	return nil
+}
+
 // refreshSingleLine_NO_WRAP updates the display for a single line input.
-// It handles cursor positioning and syntax highlighting.
+// It handles cursor positioning and syntax highlighting, with proper line wrap handling.
 func (s *MLState) refreshSingleLine_NO_WRAP(prompt []rune, buf []rune, pos int) error {
 	if s.columns <= 6 {
 		return fmt.Errorf("terminal width too small: %d columns", s.columns)
 	}
 
 	pLen := countGlyphs(prompt)
+	bLen := countGlyphs(buf)
 	text := string(buf)
-	cols := s.columns - 6
+
+	// Calculate how many terminal lines the content will occupy
+	totalWidth := pLen + bLen
+	linesNeeded := (totalWidth + s.columns - 1) / s.columns // Ceiling division
+	if linesNeeded < 1 {
+		linesNeeded = 1
+	}
 
 	// Hide cursor before redrawing to prevent blinking
 	s.sendBack("\033[?25l")
 
-	// Position cursor at start of line and clear it
-	s.cursorPos(0)
-	s.sendBack("\033[K") // delete line
+	// Move cursor to beginning of current line
+	s.sendBack("\r")
+
+	// Always clear enough lines to handle any previous wrapped content
+	// This is the key fix - we clear MORE lines than we might need to ensure
+	// we don't leave any residual content from previous redraws
+	maxLinesToClear := s.prevLines
+	if maxLinesToClear < linesNeeded {
+		maxLinesToClear = linesNeeded
+	}
+	if maxLinesToClear < 3 {
+		maxLinesToClear = 3 // Always clear at least 3 lines to be safe
+	}
+
+	// Clear current line first
+	s.sendBack("\033[K")
+
+	// Clear additional lines by moving down and clearing each one
+	for i := 1; i < maxLinesToClear; i++ {
+		s.sendBack("\033[B") // Move down one line
+		s.sendBack("\033[K") // Clear line
+	}
+
+	// Move back up to the original line position
+	if maxLinesToClear > 1 {
+		s.sendBack(fmt.Sprintf("\033[%dA", maxLinesToClear-1))
+	}
+
+	// Position cursor at start of line
+	s.sendBack("\r")
 
 	// Write prompt
 	s.sendBack(string(prompt))
 
 	// Apply syntax highlighting and write buffer
-	tt2, inString := RyeHighlight(text, s.lastLineString, cols)
+	tt2, inString := RyeHighlight(text, s.lastLineString, s.columns)
 	s.sendBack(tt2)
 	s.inString = inString
 
-	// Position cursor correctly
-	curLeft := pLen + pos
-	if curLeft < 0 {
-		curLeft = 0
+	// Calculate cursor position accounting for line wrapping
+	cursorTotalPos := pLen + pos
+	cursorLine := cursorTotalPos / s.columns
+	cursorCol := cursorTotalPos % s.columns
+
+	// Move cursor to correct position
+	if cursorLine > 0 {
+		// Move down to the correct line
+		s.sendBack(fmt.Sprintf("\033[%dB", cursorLine))
 	}
-	s.cursorPos2(curLeft, 0)
+
+	// Move to correct column
+	s.sendBack("\r")
+	if cursorCol > 0 {
+		s.sendBack(fmt.Sprintf("\033[%dC", cursorCol))
+	}
+
+	// Update state for next refresh
+	s.prevLines = linesNeeded
 
 	// Show cursor after redrawing is complete
 	s.sendBack("\033[?25h")
@@ -1094,7 +1224,13 @@ startOfHere:
 				return "", fmt.Errorf("event channel is nil")
 			}
 
-			log.Println("Received key event:", next)
+			log.Printf("Received key event: Key='%s', Code=%d, Ctrl=%t, Alt=%t, Shift=%t", next.Key, next.Code, next.Ctrl, next.Alt, next.Shift)
+
+			// Debug: Check for Ctrl+Z specifically
+			if next.Ctrl && (strings.ToLower(next.Key) == "z" || next.Code == 26) {
+				log.Println("Detected Ctrl+Z!")
+			}
+
 			// s.sendBack(next)
 			// err := nil
 			// LBL haveNext:
@@ -1236,6 +1372,13 @@ startOfHere:
 					} else {
 						s.doBeep() // No result to display
 					}
+				case "z": // suspend process (Ctrl+Z)
+					if err := SuspendProcess(); err != nil {
+						return "", err
+					}
+					// If we reach here, the process was resumed
+					fmt.Println("Process is resumed")
+					s.needRefresh = true
 					// Add new case for Ctrl+Backspace
 				case "backspace": // or check `next.Code == 8` if needed
 					if pos <= 0 {
@@ -1356,6 +1499,18 @@ startOfHere:
 					}
 				}
 			} else {
+				// Check for Ctrl+Z by ASCII code (26) regardless of other flags
+				if next.Code == 26 {
+					log.Println("Detected Ctrl+Z by ASCII code 26!")
+					fmt.Println("*****")
+					if err := SuspendProcess(); err != nil {
+						return "", err
+					}
+					// If we reach here, the process was resumed
+					s.needRefresh = true
+					continue
+				}
+
 				switch next.Code {
 				case 13: // Enter Newline
 					// Check if we should continue in multiline mode
