@@ -361,7 +361,7 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 		MaybeDisplayFailureOrError(es, genv, "repl / eval Line")
 
 		if !es.ErrorFlag && es.Res != nil {
-			fmt.Println(&es)
+			// fmt.Println(&es)
 			r.prevResult = es.Res
 			p := ""
 			if env.IsPointer(es.Res) {
@@ -473,6 +473,9 @@ func constructKeyEvent(r rune, k keyboard.Key) term.KeyEvent {
 	case keyboard.KeyCtrlX:
 		ch = "x"
 		ctrl = true
+	case keyboard.KeyCtrlZ:
+		ch = "z"
+		ctrl = true
 
 	case keyboard.KeyEnter:
 		code = 13
@@ -532,9 +535,30 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 		log.Printf("Failed to initialize keyboard: %v", err)
 		return
 	}
+
+	// Register terminal restoration function for suspend/resume
+	term.SetTerminalRestoreFunc(func() error {
+		// Close the keyboard to reset its state
+		if err := keyboard.Close(); err != nil {
+			log.Printf("Error closing keyboard during restoration: %v", err)
+		}
+
+		// Small delay to allow terminal to settle
+		// time.Sleep(50 * time.Millisecond)
+
+		// Reopen the keyboard in raw mode
+		if err := keyboard.Open(); err != nil {
+			return fmt.Errorf("failed to reinitialize keyboard: %w", err)
+		}
+
+		return nil
+	})
+
 	// Ensure keyboard is closed when function exits
 	defer func() {
 		fmt.Println("Closing keyboard...")
+		// Clear the restoration function
+		term.SetTerminalRestoreFunc(nil)
 		if err := keyboard.Close(); err != nil {
 			log.Printf("Error closing keyboard: %v", err)
 		}
