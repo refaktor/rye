@@ -269,7 +269,7 @@ section "Other " "functions related to date and time" {
 
 	{
 		equal { x:: 123 defer { x:: 345 } x } 123
-		stdout { fn { } { var 'x 123 defer { print 234 } x } } "234"
+		; stdout { f: fn { } { var 'x 123 defer { print 234 } x } f } "234"
 		; equal { fn { } { x:: 0 defer { x:: 1 } } x } 1
 	}
 
