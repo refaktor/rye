@@ -16,6 +16,6 @@ func SetTerminalRestoreFunc(restoreFunc func() error) {
 
 // SuspendProcess implements fallback process suspension for non-Unix systems
 func SuspendProcess() error {
-	fmt.Println("[ Process suspended with Ctrl+Z - Use 'fg' to resume ]")
-	return fmt.Errorf("process suspended with Ctrl+Z")
+	fmt.Println("[ Process suspension (Ctrl+Z) is not supported on Windows - Use Ctrl+D to exit ]")
+	return nil // Return nil to continue running instead of exiting
 }
