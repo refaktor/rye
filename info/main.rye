@@ -42,8 +42,9 @@ test-framework: context {
 		either is-zero failed
 		{ term/bold term/green print "\nALL PASSED" term/reset }
 		{ term/red print "\nFailed tests: " ++ failed  term/reset }
-
-		if failed > 0 { exit 1 }
+		;if failed > 0 { exit 1 }
+		; exit 0
+		failed
 	}
 }
 
@@ -135,17 +136,18 @@ test {
 		var 'errors 0
 		for sections {
 			.to-string .pass { term/bold , prns "\n#" , .to-upper .prns , print "#\n" }
-			| ++ ".info.rye" |to-file |load |^check { "Group does not exist!!!!" } |do\in* test-framework | ++ errors ::errors }
+			| ++ ".info.rye" |to-file |load |^check { "Group does not exist!!!!" } |do\in* test-framework |+ errors ::errors }
 		print ""
 	
-		if ( length? sections ) > 1 { 
+		; if ( length? sections ) > 1 {
 			term/yellow
 			term/bold
 			print "TOTAL FAILED TESTS: " ++ errors
 			print ""
 			term/reset
-		}
+		; }
 		print ""
+		either errors > 0 { exit 1 } { exit 0 }
 	}
 }
 doc  {
