@@ -804,6 +804,12 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 		fmt.Printf("Welcome to Rye %s console. We're still W-I-P. Visit \033[38;5;14mryelang.org\033[0m for more info.\n", Version)
 		fmt.Println("- \033[38;5;246mtype in lcp (list context parent) too see functions, or lc to see your context\033[0m")
 		//fmt.Println("--------------------------------------------------------------------------------")
+
+		// Ensure cursor is at the beginning of a new line and flush any buffered output
+		fmt.Print("\r\n")
+		// Clear any potential terminal state issues and ensure clean cursor positioning
+		fmt.Print("\033[0m") // Reset all terminal attributes
+		os.Stdout.Sync()     // Force flush to ensure all output is written before REPL starts
 	}
 
 	// Uncomment and fix the profile loading code if needed
