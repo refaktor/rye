@@ -549,8 +549,8 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 	logFile, err := os.OpenFile(getDebugLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: Could not open debug log file: %v\n", err)
-		// Continue without debug logging to file, just use stderr
-		log.SetOutput(os.Stderr)
+		// Continue without debug logging - discard all log output to avoid cluttering REPL
+		log.SetOutput(io.Discard)
 	} else {
 		defer logFile.Close()
 		log.SetOutput(logFile)
@@ -787,8 +787,8 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 	logFile, err := os.OpenFile(getDebugLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: Could not open debug log file: %v\n", err)
-		// Continue without debug logging to file, just use stderr
-		log.SetOutput(os.Stderr)
+		// Continue without debug logging - discard all log output to avoid cluttering REPL
+		log.SetOutput(io.Discard)
 	} else {
 		defer logFile.Close()
 		log.SetOutput(logFile)
