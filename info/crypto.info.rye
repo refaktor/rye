@@ -1,5 +1,5 @@
 section "Default" "" {
-	group "decode\hex" 
+	group "decode\\hex" 
 	"Decodes a hexadecimal string to a bytes native value."
 	{
 		arg `hex-string: hexadecimal encoded string to decode`
@@ -12,7 +12,7 @@ section "Default" "" {
 		equal { cc crypto "invalid" |decode\hex |disarm |type? } 'error
 	}
 
-	group "encode-to\hex" 
+	group "encode-to\\hex" 
 	"Encodes a bytes native value to a hexadecimal string."
 	{
 		arg `bytes: native bytes object to encode`
@@ -24,7 +24,7 @@ section "Default" "" {
 		equal { cc crypto "Hello world" |sha512 |decode\hex |encode-to\hex |type? } 'string
 	}
 
-	group "Ed25519-pub-key//to-string" 
+	group "Ed25519-pub-key//To-string" 
 	"Converts an Ed25519 public key to its hexadecimal string representation."
 	{
 		arg `key: Ed25519 public key as a native value`
@@ -35,7 +35,7 @@ section "Default" "" {
 		equal { cc crypto ed25519-generate-keys |first |to-string |type? } 'string
 	}
 
-	group "Ed25519-priv-key//to-string" 
+	group "Ed25519-priv-key//To-string" 
 	"Converts an Ed25519 private key to its hexadecimal string representation."
 	{
 		arg `key: Ed25519 private key as a native value`
@@ -88,7 +88,7 @@ section "Default" "" {
 		equal { cc crypto "invalid" |ed25519-public-key |disarm |type? } 'error
 	}
 
-	group "Ed25519-priv-key//sign" 
+	group "Ed25519-priv-key//Sign" 
 	"Signs a string message with an Ed25519 private key and returns the signature as bytes."
 	{
 		arg `key: Ed25519 private key as a native value`
@@ -165,9 +165,9 @@ section "Age " "Age encryption/decryption and key generation" {
 	{
 		equal { cc crypto
 		age-generate-keys |set! { identity recipient }
-		"SUPER SECRET" |reader |age-encrypt recipient |age-decrypt identity |read\string
+		"SUPER SECRET" |reader |age-encrypt recipient |age-decrypt identity |Read\string
 		} "SUPER SECRET"
-		equal { cc crypto "SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |read\string } "SUPER SECRET"
+		equal { cc crypto "SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |Read\string } "SUPER SECRET"
 	}
 
 	group "age-decrypt" 
@@ -181,9 +181,9 @@ section "Age " "Age encryption/decryption and key generation" {
 	{
 		equal { cc crypto
 		age-generate-keys |set! { identity recipient }
-		"SUPER SECRET" |reader |age-encrypt recipient |age-decrypt identity |read\string
+		"SUPER SECRET" |reader |age-encrypt recipient |age-decrypt identity |Read\string
 		} "SUPER SECRET"
-		equal { cc crypto "SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |read\string } "SUPER SECRET"
+		equal { cc crypto "SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |Read\string } "SUPER SECRET"
 	}
 
 	group "pkcs12-to-pem" 
@@ -201,23 +201,23 @@ section "Age " "Age encryption/decryption and key generation" {
 	}
 
 	group "pkcs12-decode" 
-	"Decodes a PKCS#12 (.p12) file bytes into certificate and private key using the provided password. Returns a block with [private-key, certificate]."
+	"Decodes a PKCS#12 (.p12) file bytes into private key and certificates using the provided password. Returns a block with [private-key, certificates, ca-certificates]."
 	{
 		arg `p12-data: PKCS#12 file content as bytes native value`
 		arg `password: string password for the PKCS#12 file`
-		returns `block containing [private-key, x509-certificate] as native values`
+		returns `block containing [private-key, certificates-block, ca-certificates-block] as native values`
 	}
 
 	{
 		; equal { cc crypto "cert.p12" read-file "password" pkcs12-decode |type? } 'block
-		; equal { cc crypto "cert.p12" read-file "password" pkcs12-decode |length? } 2
+		; equal { cc crypto "cert.p12" read-file "password" pkcs12-decode |length? } 3
 		; equal { cc crypto "cert.p12" read-file "password" pkcs12-decode |first |type? } 'native
 		; equal { cc crypto "cert.p12" read-file "password" pkcs12-decode |first |kind? } 'private-key
-		; equal { cc crypto "cert.p12" read-file "password" pkcs12-decode |second |type? } 'native
-		; equal { cc crypto "cert.p12" read-file "password" pkcs12-decode |second |kind? } 'x509-certificate
+		; equal { cc crypto "cert.p12" read-file "password" pkcs12-decode |second |type? } 'block
+		; equal { cc crypto "cert.p12" read-file "password" pkcs12-decode |third |type? } 'block
 	}
 
-	group "pem-block//block-type?" 
+	group "pem-block//Block-type?" 
 	"Returns the type of a PEM block as a string (e.g., 'CERTIFICATE', 'RSA PRIVATE KEY')."
 	{
 		arg `pem-block: PEM block as a native value`
@@ -228,7 +228,7 @@ section "Age " "Age encryption/decryption and key generation" {
 		; equal { cc crypto "cert.pem" read-file |pem-decode |block-type? } "CERTIFICATE"
 	}
 
-	group "pem-block//headers?" 
+	group "pem-block//Headers?" 
 	"Returns the headers of a PEM block as a dictionary."
 	{
 		arg `pem-block: PEM block as a native value`
@@ -251,7 +251,7 @@ section "Age " "Age encryption/decryption and key generation" {
 		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |kind? } 'x509-certificate
 	}
 
-	group "x509-certificate//not-after?" 
+	group "x509-certificate//Not-after?" 
 	"Returns the expiration date (NotAfter) of an X.509 certificate as a time value."
 	{
 		arg `certificate: X.509 certificate as a native value`
@@ -262,7 +262,7 @@ section "Age " "Age encryption/decryption and key generation" {
 		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |not-after? |type? } 'time
 	}
 
-	group "x509-certificate//not-before?" 
+	group "x509-certificate//Not-before?" 
 	"Returns the start date (NotBefore) of an X.509 certificate as a time value."
 	{
 		arg `certificate: X.509 certificate as a native value`
@@ -273,7 +273,7 @@ section "Age " "Age encryption/decryption and key generation" {
 		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |not-before? |type? } 'time
 	}
 
-	group "x509-certificate//is-expired" 
+	group "x509-certificate//Is-expired" 
 	"Checks if an X.509 certificate has expired. Returns 1 if expired, 0 otherwise."
 	{
 		arg `certificate: X.509 certificate as a native value`
@@ -333,6 +333,150 @@ section "Age " "Age encryption/decryption and key generation" {
 	{
 		; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key } cert key "password" encode-to-p12 |type? } 'native
 		; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key } cert key "password" encode-to-p12 |kind? } 'Go-bytes
+	}
+
+	group "x509-certificate//Subject?" 
+	"Returns the subject Distinguished Name (DN) of an X.509 certificate as a string."
+	{
+		arg `certificate: X.509 certificate as a native value`
+		returns `string containing the certificate's subject DN`
+	}
+
+	{
+		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |subject? |type? } 'string
+	}
+
+	group "x509-certificate//Issuer?" 
+	"Returns the issuer Distinguished Name (DN) of an X.509 certificate as a string."
+	{
+		arg `certificate: X.509 certificate as a native value`
+		returns `string containing the certificate's issuer DN`
+	}
+
+	{
+		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |issuer? |type? } 'string
+	}
+
+	group "x509-certificate//Serial-number?" 
+	"Returns the serial number of an X.509 certificate as a string."
+	{
+		arg `certificate: X.509 certificate as a native value`
+		returns `string containing the certificate's serial number`
+	}
+
+	{
+		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |serial-number? |type? } 'string
+	}
+
+	group "x509-certificate//Signature-algorithm?" 
+	"Returns the signature algorithm of an X.509 certificate as a string."
+	{
+		arg `certificate: X.509 certificate as a native value`
+		returns `string containing the certificate's signature algorithm`
+	}
+
+	{
+		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |signature-algorithm? |type? } 'string
+	}
+
+	group "x509-certificate//Public-key-algorithm?" 
+	"Returns the public key algorithm of an X.509 certificate as a string."
+	{
+		arg `certificate: X.509 certificate as a native value`
+		returns `string containing the certificate's public key algorithm`
+	}
+
+	{
+		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |public-key-algorithm? |type? } 'string
+	}
+
+	group "x509-certificate//Key-usage?" 
+	"Returns the key usage flags of an X.509 certificate as a block of strings."
+	{
+		arg `certificate: X.509 certificate as a native value`
+		returns `block containing strings of key usage flags`
+	}
+
+	{
+		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |key-usage? |type? } 'block
+	}
+
+	group "x509-certificate//Extended-key-usage?" 
+	"Returns the extended key usage flags of an X.509 certificate as a block of strings."
+	{
+		arg `certificate: X.509 certificate as a native value`
+		returns `block containing strings of extended key usage flags`
+	}
+
+	{
+		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |extended-key-usage? |type? } 'block
+	}
+
+	group "x509-certificate//Dns-names?" 
+	"Returns the DNS names from Subject Alternative Names of an X.509 certificate as a block of strings."
+	{
+		arg `certificate: X.509 certificate as a native value`
+		returns `block containing DNS names from Subject Alternative Names`
+	}
+
+	{
+		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |dns-names? |type? } 'block
+	}
+
+	group "x509-certificate//Ip-addresses?" 
+	"Returns the IP addresses from Subject Alternative Names of an X.509 certificate as a block of strings."
+	{
+		arg `certificate: X.509 certificate as a native value`
+		returns `block containing IP addresses from Subject Alternative Names`
+	}
+
+	{
+		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |ip-addresses? |type? } 'block
+	}
+
+	group "x509-certificate//Email-addresses?" 
+	"Returns the email addresses from Subject Alternative Names of an X.509 certificate as a block of strings."
+	{
+		arg `certificate: X.509 certificate as a native value`
+		returns `block containing email addresses from Subject Alternative Names`
+	}
+
+	{
+		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |email-addresses? |type? } 'block
+	}
+
+	group "x509-certificate//To-pem" 
+	"Converts an X.509 certificate to PEM-encoded string format."
+	{
+		arg `certificate: X.509 certificate as a native value`
+		returns `string containing the PEM-encoded certificate`
+	}
+
+	{
+		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |to-pem |type? } 'string
+	}
+
+	group "private-key//Type?" 
+	"Returns the type of a private key as a string."
+	{
+		arg `private-key: private key as a native value`
+		returns `string containing the type of the private key (e.g., "*rsa.PrivateKey", "*ecdsa.PrivateKey")`
+	}
+
+	{
+		; equal { cc crypto "key.pem" read-file |pem-decode |private-key-type? |type? } 'string
+	}
+
+	group "x509-certificate//To-dict" 
+	"Converts an X.509 certificate to a dictionary containing all certificate information for easy display and manipulation."
+	{
+		arg `certificate: X.509 certificate as a native value`
+		returns `dictionary containing all certificate information`
+	}
+
+	{
+		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |to-dict |type? } 'dict
+		; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |to-dict |get "Subject" |type? } 'string
 	}
 
 }

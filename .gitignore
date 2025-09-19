@@ -60,3 +60,13 @@ cmd/cato/cato
 *.bak
 *.log
 *.old.*
+*.zip
+*.nocommit.*
+cmd/loop_benchmark/rye_*
+*.BAK*
+*.TEMP*
+*.BK*
+*_ORIG*
+*.ORIGINAL*
+*.DEACTIVATE*
+*_BK*

@@ -140,6 +140,11 @@ Pre-compiled binaries for **Linux**, **macOS**, **Windows**, and **WASM** are av
   brew install ryelang
   ```
 
+- **ArchLinux User Repository** (Arch Linux):
+  ```bash
+  yay -S ryelang
+  ```
+
 ### Docker Images
 
 - **Binary image** (includes Rye and Emacs-nox):

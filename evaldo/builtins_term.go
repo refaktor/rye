@@ -643,21 +643,6 @@ var Builtins_term = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// stdout { red bold print "Red bold" reset\all print " normal" } "Red bold normal"
-	// Args:
-	// * none
-	// Returns:
-	// * integer 1 (success indicator)
-	"reset\\all": { // TODO -- remove
-		Argsn: 0,
-		Doc:   "Resets all terminal text styles and colors.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			term.CloseProps()
-			return env.NewInteger(1)
-		},
-	},
-
-	// Tests:
 	// stdout { red bold print "Red bold" reset print " normal" } "Red bold normal"
 	// Args:
 	// * none

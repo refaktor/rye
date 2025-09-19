@@ -1,0 +1,228 @@
+; test_codesig_comprehensive.rye
+; Comprehensive test for code signing verification
+
+print "=== Code Signing Comprehensive Test ==="
+
+; Import error handling utilities
+import %builtins:error-handling
+
+; Function to test code signing verification with expected result
+test-verification: fn { name script-content signature expected-result } {
+    print "Testing " name " (expected: " expected-result ")"
+    
+    ; Create a temporary script file with the given content and signature
+    script-path: "codesig_test_script.rye"
+    
+    ; Write the script content
+    file-write script-path script-content
+    
+    ; Append the signature if provided
+    if signature != _ {
+        file-append script-path "\n;ryesig " signature
+    }
+    
+    ; Try to verify the script and capture the result
+    result: try-all {
+        ; In a real implementation, you would use something like:
+        ; verify-script script-path
+        ; But we'll simulate the verification process
+        simulate-verification script-path
+    }
+    
+    success: result |first
+    value: result |second
+    
+    ; Check if the result matches the expected result
+    case expected-result {
+        'success {
+            if success {
+                print "✅ PASSED: Verification succeeded as expected"
+                true
+            } else {
+                print "❌ FAILED: Verification should succeed but failed with error: " value |message?
+                print "  Error details: " value
+                false
+            }
+        }
+        'failure {
+            if success {
+                print "❌ FAILED: Verification should fail but succeeded"
+                false
+            } else {
+                print "✅ PASSED: Verification failed as expected with error: " value |message?
+                true
+            }
+        }
+        _ {
+            print "❌ FAILED: Unknown expected result: " expected-result
+            false
+        }
+    }
+    
+    ; Clean up the temporary script file
+    try {
+        file-delete script-path
+    }
+}
+
+; Simulate script verification
+; This is a placeholder for the actual verification logic
+simulate-verification: fn { script-path } {
+    ; Read the script content
+    content: file-read script-path
+    
+    ; Check if the script has a signature
+    has-signature: content |contains ";ryesig"
+    
+    if not has-signature {
+        fail "Script is not signed"
+    }
+    
+    ; Extract the signature
+    lines: content |split "\n"
+    signature-line: _
+    
+    ; Find the signature line
+    for line in lines {
+        if line |starts-with ";ryesig" {
+            signature-line: line
+            break
+        }
+    }
+    
+    if signature-line = _ {
+        fail "Invalid signature format"
+    }
+    
+    ; Extract the signature value
+    signature: signature-line |substring 8 (signature-line |length)
+    
+    ; Simulate signature verification
+    ; In a real implementation, you would verify the signature against the script content
+    ; using the Ed25519 algorithm and the trusted public keys
+    
+    ; For this test, we'll use some predefined valid and invalid signatures
+    valid-signatures: [
+        "827ba5f0904227678bf33446abbca8bf6a3a5333815920741eb475582a4c31dd",
+        "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2"
+    ]
+    
+    ; Check if the signature is valid
+    is-valid: false
+    for valid-sig in valid-signatures {
+        if signature = valid-sig {
+            is-valid: true
+            break
+        }
+    }
+    
+    if not is-valid {
+        fail "Invalid signature"
+    }
+    
+    ; Return success
+    "Signature verified successfully"
+}
+
+; Create test files and directories
+setup-test-environment: fn { } {
+    print "\nSetting up test environment..."
+    
+    ; Create a temporary directory for testing
+    try {
+        file-delete-recursive "codesig_test"
+    }
+    
+    file-make-dir "codesig_test"
+    
+    ; Create a sample .codepks file with trusted public keys
+    codepks-content: "# Trusted public keys for Rye scripts\n"
+    codepks-content: codepks-content + "# Developer 1's key\n"
+    codepks-content: codepks-content + "827ba5f0904227678bf33446abbca8bf6a3a5333815920741eb475582a4c31dd\n"
+    codepks-content: codepks-content + "# Developer 2's key\n"
+    codepks-content: codepks-content + "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2\n"
+    
+    file-write "codesig_test/.codepks" codepks-content
+    
+    print "Test environment setup complete"
+}
+
+; Clean up test environment
+cleanup-test-environment: fn { } {
+    print "\nCleaning up test environment..."
+    try {
+        file-delete-recursive "codesig_test"
+        print "Test environment cleanup complete"
+    }
+}
+
+; Test valid signatures
+test-valid-signatures: fn { } {
+    print "\n=== Testing valid signatures ==="
+    
+    ; Test a script with a valid signature from Developer 1
+    test-verification "Valid signature (Developer 1)" 
+        "print \"Hello, world!\""
+        "827ba5f0904227678bf33446abbca8bf6a3a5333815920741eb475582a4c31dd"
+        'success
+    
+    ; Test a script with a valid signature from Developer 2
+    test-verification "Valid signature (Developer 2)"
+        "print \"Hello, world!\""
+        "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2"
+        'success
+}
+
+; Test invalid signatures
+test-invalid-signatures: fn { } {
+    print "\n=== Testing invalid signatures ==="
+    
+    ; Test a script with an invalid signature
+    test-verification "Invalid signature"
+        "print \"Hello, world!\""
+        "0000000000000000000000000000000000000000000000000000000000000000"
+        'failure
+    
+    ; Test a script with a malformed signature
+    test-verification "Malformed signature"
+        "print \"Hello, world!\""
+        "not-a-valid-hex-signature"
+        'failure
+    
+    ; Test a script with no signature
+    test-verification "No signature"
+        "print \"Hello, world!\""
+        _
+        'failure
+}
+
+; Test tampered scripts
+test-tampered-scripts: fn { } {
+    print "\n=== Testing tampered scripts ==="
+    
+    ; Test a script where the content has been modified after signing
+    ; The signature is valid for a different content
+    test-verification "Tampered script content"
+        "print \"This content has been tampered with!\""
+        "827ba5f0904227678bf33446abbca8bf6a3a5333815920741eb475582a4c31dd"
+        'failure
+}
+
+; Main test function
+main: fn { } {
+    ; Setup test environment
+    setup-test-environment
+    
+    ; Run all tests
+    test-valid-signatures
+    test-invalid-signatures
+    test-tampered-scripts
+    
+    ; Cleanup test environment
+    cleanup-test-environment
+    
+    print "\nCode signing tests completed"
+}
+
+; Run the main function
+main

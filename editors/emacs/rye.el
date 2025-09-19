@@ -7,6 +7,7 @@
 ;;   Modified-by: Jeff Kreis <jeff@rebol.com> 1999
 ;;   Updated-by: Sterling Newton <sterling@rebol.com> 2001
 ;;   Addapted-by: Janko Metelko <janko.itm@gmail.com> 2021 (to Rye)
+;;   Enhanced-by: Claude AI <claude@anthropic.com> 2025 (improved Rye syntax)
 ;;
 ;;   Archive (Rebol): http://www.rebol.com/tools/rye.el
 ;;   Keywords: languages, rye, rebol, lisp
@@ -346,10 +347,14 @@ of the start of the containing expression."
 
 (provide 'rye)
 
+;; Updated Rye syntax highlighting based on loader.go grammar
 
 (defconst rye-natives (regexp-opt '("fn" "fn1" "fnc" "does" "print" "needs" "private" "private\\" "enter-console" "fix" "dict" "list" "alias" "all" "any" "arccosine" "arcsine" "arctangent" "bind" "break" "browse" "caret-to-offset" "catch" "checksum" "close" "comment" "compose" "compress" "connected?" "cosine" "debase" "decompress" "dehex" "detab" "difference" "disarm" "do" "either" "else" "enbase" "entab" "exclude" "exit" "exp" "foreach" "form" "free" "get" "halt" "hide" "if" "in" "input?" "intersect" "launch" "load" "log-10" "log-2" "log-e" "loop" "lowercase" "mold" "not" "now" "offset-to-caret" "open" "parse" "prin" "print" "protect" "query" "quit" "read" "read-io" "recycle" "reduce" "repeat" "return" "reverse" "save" "script?" "secure" "set" "show" "sine" "size-text" "square-root" "tangent" "textinfo" "throw" "to-hex" "trace" "try" "type?" "union" "unprotect" "unset" "until" "update" "uppercase" "use" "value?" "wait" "while" "write" "write-io")))
 
 (defconst rye-functions (regexp-opt '("abort-launch" "about" "alter" "append" "array" "ask" "build-tag" "center-face" "change-dir" "charset" "choose" "clean-path" "clear-fields" "confine" "confirm" "context" "cvs-date" "cvs-version" "decode-cgi" "deflag-face" "delete" "demo" "dir?" "dirize" "dispatch" "do-boot" "do-events" "do-face" "do-face-alt" "dump-face" "dump-pane" "echo" "edit-text" "exists-via?" "exists?" "feedback" "find-key-face" "find-window" "flag-face" "flag-face?" "focus" "for" "forall" "forever" "form-local-file" "forskip" "found?" "func" "function" "get-net-info" "get-style" "help" "hide-popup" "import-email" "info?" "inform" "input" "insert-event-func" "join" "launch-safe" "layout" "license" "list-dir" "load-image" "load-thru" "make-dir" "make-face" "modified?" "net-error" "offset?" "parse-email-addrs" "parse-header" "parse-header-date" "parse-xml" "probe" "protect-system" "read-net" "read-thru" "read-via" "reform" "rejoin" "remold" "remove-event-func" "rename" "repend" "replace" "request" "request-color" "request-date" "request-download" "request-file" "request-list" "request-pass" "resend" "save-user" "screen-offset?" "scroll-para" "send" "send-text" "set-font" "set-net" "set-para" "set-style" "set-user-name" "show-popup" "size?" "source" "span?" "split-path" "start-view" "styliz" "stylize" "switch" "throw-on-error" "unfocus" "unique" "unview" "upgrade" "Usage" "view" "what" "what-dir" "win-offset?" "within?" "write-user")))
+
+;; Add Rye-specific functions
+(defconst rye-specific-functions (regexp-opt '("map\\pos" "filter" "seek" "purge" "reduce" "fold" "partition" "group" "produce" "sum-up" "rest\\from" "mold\\nowrap" "mold\\unwrap" "doc\\of?" "load\\csv" "table\\columns" "add-col!" "add-indexes!" "left-join" "inner-join" "group-by" "order-by!" "where-equal" "where-contains" "where-match" "where-greater" "where-lesser" "where-between" "vals" "dict" "list" "table" "type?" "length?" "is-integer" "is-string" "multiple-of" "even" "odd" "join" "sort!" "indexes?" "header?" "concat*" "to-integer" "to-string" "args\\raw" "read-all" "join\\with" "switch" "either" "fix\\either" "end" "newline" "print-header" "print-help" "build-ryel" "build-fyne" "install-ryel" "current-ctx" "parent" "isolate" "raw-context" "private" "extends" "bind!" "unbind!" "capture-stdout" "dump" "autotype" "to-table" "add-column" "add-indexes!")))
 
 (defconst rye-ops (regexp-opt '("and" "or" "xor")))
 
@@ -361,16 +366,37 @@ of the start of the containing expression."
 
 (defconst rye-refinement-end "\\)\\(/[0-9a-zA-Z]+\\)*\\)[^-_/0-9a-zA-Z]")
 
+;; Rye-specific operators and syntax
+(defconst rye-operators "\\(->\\|<-\\|,\\|++\\|\\.\\.\\|>>\\|<<\\|~>\\|<~\\|>=\\|<=\\|//\\)")
+(defconst rye-pipe-operator "\\(|\\)")
+(defconst rye-dot-method "\\.\\([a-zA-Z][a-zA-Z0-9-?=.\\!_+]*\\)")
+(defconst rye-backslash-refinement "\\\\\\([a-zA-Z][a-zA-Z0-9-?=.\\!_+]*\\)")
+(defconst rye-question-mark "?\\([a-zA-Z][a-zA-Z0-9-?=.\\!_+]*\\)")
+(defconst rye-section-title "^section\\s-+\".*\"$")
+(defconst rye-group-title "^group\\s-+\".*\"$")
+
 (defvar rye-font-lock-keywords
   (list
+   ;; Rye-specific syntax
+   (list rye-section-title 0 'font-lock-doc-string-face)
+   (list rye-group-title 0 'font-lock-doc-string-face)
+   (list rye-dot-method 1 'font-lock-function-name-face)
+   (list rye-backslash-refinement 1 'font-lock-function-name-face)
+   (list rye-question-mark 1 'font-lock-function-name-face)
+   (list rye-pipe-operator 0 'font-lock-keyword-face)
+   (list rye-operators 0 'font-lock-keyword-face)
+   
+   ;; Standard Rye/Rebol syntax
    (list (concat "[^-_/]\\<\\(\\(" rye-natives rye-refinement-end) '1 'font-lock-keyword-face) ; native
    (list (concat "[^-_/]\\<\\(\\(" rye-functions rye-refinement-end) '1 'font-lock-keyword-face) ; function
+   (list (concat "[^-_/]\\<\\(\\(" rye-specific-functions rye-refinement-end) '1 'font-lock-keyword-face) ; rye-specific function
    (list (concat "[^-_/]\\<\\(\\(" rye-ops rye-refinement-end) '1 'font-lock-doc-string-face) ; op
    (list (concat "[^-_/]\\<\\(\\(" rye-actions rye-refinement-end) '1 'font-lock-type-face) ; action
    (list (concat "\\<\\(to-\\(" rye-types1 "\\)\\)") '1 'font-lock-keyword-face) ; to-type
    (list (concat "\\(\\(" rye-types1 "\\|" rye-types2 "\\)\\(!\\|\\?\\)\\)") '1 'font-lock-type-face) ; type? or type! 
    '("\\([^][ \t\r\n{}()]+\\):"  1 font-lock-function-name-face) ; define variable
-   '("\\([^][ \t\r\n{}()]+\\):[ ]*\\(does\\|func\\(tion\\)?\\)" (1 'underline prepend) (2 font-lock-keyword-face)) ; define function
+   '("\\([^][ \t\r\n{}()]+\\)::" 1 font-lock-function-name-face) ; define module variable
+   '("\\([^][ \t\r\n{}()]+\\):[ ]*\\(does\\|func\\(tion\\)?\\|fn\\)" (1 'underline prepend) (2 font-lock-keyword-face)) ; define function
    '("\\(:\\|?\\|'\\)\\([^][ \t\r\n{}()]+\\)"  2 font-lock-variable-name-face) ; value or quoted
    '("\\(:?[0-9---]+:[:.,0-9]+\\)" 1 font-lock-preprocessor-face t) ; time
    '("\\([0-9]+\\(-\\|/\\)[0-9a-zA-Z]+\\2[0-9]+\\)" 1 font-lock-preprocessor-face t) ; date
@@ -380,114 +406,4 @@ of the start of the containing expression."
    '("\\(http\\|ftp\\|mailto\\|file\\):[^ \n\r]+" 1 font-lock-preprocessor-face t) ; URL
    '("\\(%[^ \n\r]+\\)" 1 font-lock-preprocessor-face) ; file name
    '("\\(#\\([0-9a-zA-Z]+\\-\\)*[0-9a-zA-Z]+\\)" 1 font-lock-preprocessor-face t) ; issue
-
-   ;; comment out these two (long string, binary) if you think it runs too slow
-   ;;; '("[^#]\\({[^{}]*}\\)" 1 font-lock-string-face t) ; long string
    '("\\(\\(2\\|64\\)?#{[0-9a-zA-Z]+}\\)" 1 font-lock-preprocessor-face t) ; binary
-   )
-  "Additional expressions to highlight in RYE mode.")
-
-
-(defvar rye-mode-syntax-table nil 
-  "Syntax table for RYE buffers.")
-
-(if (not rye-mode-syntax-table)
-    (let ((i 0))
-      (setq rye-mode-syntax-table (make-syntax-table))
-      (set-syntax-table rye-mode-syntax-table)
-
-      ;; Default is `word' constituent.
-      (while (< i 256)
-        (modify-syntax-entry i "_   ")
-        (setq i (1+ i)))
-
-      ;; Digits are word components.
-      (setq i ?0)
-      (while (<= i ?9)
-        (modify-syntax-entry i "w   ")
-        (setq i (1+ i)))
-
-      ;; As are upper and lower case.
-      (setq i ?A)
-      (while (<= i ?Z)
-        (modify-syntax-entry i "w   ")
-        (setq i (1+ i)))
-      (setq i ?a)
-      (while (<= i ?z)
-        (modify-syntax-entry i "w   ")
-        (setq i (1+ i)))
-
-      ;; Whitespace
-      (modify-syntax-entry ?\t "    ")
-      (modify-syntax-entry ?\n ">   ")
-      (modify-syntax-entry ?\f "    ")
-      (modify-syntax-entry ?\r "    ")
-      (modify-syntax-entry ?  "    ")
-
-      ;; Delimiters
-      (modify-syntax-entry ?[ "(]  ")
-      (modify-syntax-entry ?] ")[  ")
-      (modify-syntax-entry ?{ "(}  ")
-      (modify-syntax-entry ?} "){  ")
-      (modify-syntax-entry ?\( "()  ")
-      (modify-syntax-entry ?\) ")(  ")
-
-      ;; comments
-      (modify-syntax-entry ?\; "<   ")
-      (modify-syntax-entry ?\" "\"    ")
-      ;(modify-syntax-entry ?{ "|}")
-      ;(modify-syntax-entry ?} "|{")
-      (modify-syntax-entry ?' "  p")
-      (modify-syntax-entry ?` "  p")
-
-      (modify-syntax-entry ?^ "\\   ")))
-
-(defvar rye-mode-abbrev-table nil 
-  "*Abbrev table for rye-mode buffers")
-
-(define-abbrev-table 'rye-mode-abbrev-table ())
-
-(defun rye-mode-variables ()
-  (set-syntax-table rye-mode-syntax-table)
-  (setq local-abbrev-table rye-mode-abbrev-table)
-
-  (make-local-variable 'paragraph-start)
-  (setq paragraph-start (concat "$\\|" page-delimiter))
-  (make-local-variable 'paragraph-separate)
-  (setq paragraph-separate paragraph-start)
-  (make-local-variable 'paragraph-ignore-fill-prefix)
-  (setq paragraph-ignore-fill-prefix t)
-  (make-local-variable 'indent-line-function)
-  (setq indent-line-function 'rye-indent-line)
-  (make-local-variable 'parse-expr-ignore-comments)
-  (setq parse-expr-ignore-comments t)
-  (make-local-variable 'comment-start)
-  (setq comment-start ";")
-  (make-local-variable 'comment-start-skip)
-  ;; Look within the line for a ; following an even number of backslashes
-  ;; after either a non-backslash or the line beginning.
-  (setq comment-start-skip "\\(\\(^\\|[^\\\\\n]\\)\\(\\\\\\\\\\)*\\);+[ \t]*")
-  (make-local-variable 'comment-column)
-  (setq comment-column 40)
-  (make-local-variable 'comment-indent-function)
-  (setq comment-indent-function 'rye-comment-indent)
-  (make-local-variable 'parse-expr-ignore-comments)
-  (setq parse-expr-ignore-comments t)
-  (make-local-variable 'font-lock-defaults)
-  (setq font-lock-defaults '(rye-font-lock-keywords nil nil))
-  (make-local-variable 'mode-line-process)
-  (setq mode-line-process '("" rye-mode-line-process)))
-
-(defvar rye-mode-line-process "")
-
-(defun rye-mode-commands (map)
-  (define-key map "\e\C-a" 'beginning-of-rye-definition)
-  (define-key map "\t" 'rye-indent-line)
-  (define-key map "\e\C-q" 'rye-indent-expr))
-
-(defvar rye-mode-map nil)
-(if (not rye-mode-map)
-    (progn
-      (setq rye-mode-map (make-sparse-keymap))
-      (rye-mode-commands rye-mode-map)))
-

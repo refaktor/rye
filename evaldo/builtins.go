@@ -48,7 +48,12 @@ func MakeArgErrorMessage(N int, allowedTypes []env.Type, fn string) string {
 		if i > 0 {
 			types += ", "
 		}
-		types += env.NativeTypes[tt-1]
+		// Check if in bounds before accessing env.NativeTypes
+		if tt > 0 && int(tt-1) < len(env.NativeTypes) {
+			types += env.NativeTypes[tt-1]
+		} else {
+			types += "UNKNOWN_TYPE"
+		}
 	}
 	return "builtin `" + fn + "` requires argument " + strconv.Itoa(N) + " to be: " + types + "."
 }
@@ -324,8 +329,9 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 		case env.String:
 			index := 0
 			// find the column index
-			for i := 0; i < len(s1.Uplink.Cols); i++ {
-				if s1.Uplink.Cols[i] == s2.Value {
+			columnNames := s1.Uplink.GetColumnNames()
+			for i := 0; i < len(columnNames); i++ {
+				if columnNames[i] == s2.Value {
 					index = i
 				}
 			}
@@ -406,13 +412,10 @@ func (s RyeBlockCustomSort) Swap(i, j int) {
 	s.data[i], s.data[j] = s.data[j], s.data[i]
 }
 func (s RyeBlockCustomSort) Less(i, j int) bool {
-	fmt.Println("'''''")
-	fmt.Println(s)
-	fmt.Println(s.fn)
-	fmt.Println(s.ps)
-	fmt.Println(s.data)
 
 	CallFunctionArgs2(s.fn, s.ps, s.data[i], s.data[j], nil)
+	// TODO -- probably we should throw error if not boolean result #strictness
+	// fmt.Println(s.ps.Res.Inspect(*s.ps.Idx))
 	return util.IsTruthy(s.ps.Res)
 }
 
@@ -495,7 +498,7 @@ func EvaluateLoadedValue(ps *env.ProgramState, block_ env.Object, script_ string
 		ps.ErrorFlag = true
 		return MakeBuiltinError(ps, block.Message, "import")
 	default:
-		fmt.Println(block)
+		// fmt.Println(block)
 		panic("Not block and not error in import builtin.") // TODO -- Think how best to handle this
 		// return env.Void{}
 	}
@@ -504,10 +507,7 @@ func EvaluateLoadedValue(ps *env.ProgramState, block_ env.Object, script_ string
 var ShowResults bool
 
 var builtins = map[string]*env.Builtin{
-	// Tests:
-	// equal  { compile-fast { 123 + 123 } } 'block
-	// equal  { compile-fast/debug { 123 + 123 } } 'block
-	"compile-fast": {
+	/* "compile-fast": {
 		Argsn: 1,
 		Doc:   "Takes a block of code and compiles it to function pointers for the fast evaluator.",
 		Pure:  true,
@@ -642,7 +642,7 @@ var builtins = map[string]*env.Builtin{
 				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "do-fast")
 			}
 		},
-	},
+	}, */
 
 	// There is require with arity 2 below which makes more sense
 	// error { 1 = 0 |require |type? }
@@ -803,7 +803,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal   { person: kind 'person { name: "" age: 0 } person << dict { "name" "John" "age" 30 } |type? } 'ctx
+	// ; TODO equal   { person: kind 'person { name: "" age: 0 } person << dict { "name" "John" "age" 30 } |type? } 'ctx
 	// Args:
 	// * kind: Kind to convert the value to
 	// * value: Dict or context to convert
@@ -957,13 +957,14 @@ var builtins = map[string]*env.Builtin{
 			case env.RyeCtx:
 				return *env.NewString(d.Doc)
 			default:
-				return MakeArgError(env1, 1, []env.Type{env.FunctionType, env.CtxType}, "doc\\of?")
+				env1.ErrorFlag = true
+				return MakeArgError(env1, 1, []env.Type{env.CtxType, env.PersistentCtxType}, "doc\\of?")
 			}
 
 		},
 	},
 	// Tests:
-	// equal   { is-ref ref { 1 2 3 } } 1
+	// equal   { is-ref ref { 1 2 3 } } true
 	// Args:
 	// * value: Value to make mutable
 	// Returns:
@@ -998,7 +999,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal   { is-ref deref ref { 1 2 3 } } 0
+	// equal   { is-ref deref ref { 1 2 3 } } false
 	// Args:
 	// * value: Mutable reference to make immutable
 	// Returns:
@@ -1045,9 +1046,9 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// fmt.Println(arg0.Inspect(*ps.Idx))
 			if env.IsPointer(arg0) {
-				return env.NewInteger(1)
+				return env.NewBoolean(true)
 			} else {
-				return env.NewInteger(0)
+				return env.NewBoolean(false)
 			}
 		},
 	},
@@ -1231,7 +1232,7 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
-				block, _ := loader.LoadString(s1.Value, false)
+				block, _ := loader.LoadStringNoPEG(s1.Value, false)
 				//ps = env.AddToProgramState(ps, block.Series, genv)
 				return block
 			case env.Uri:
@@ -1265,7 +1266,7 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
-				block, _ := loader.LoadString(s1.Value, false)
+				block, _ := loader.LoadStringNoPEG(s1.Value, false)
 				//ps = env.AddToProgramState(ps, block.Series, genv)
 				return block
 			case env.Uri:
@@ -1300,7 +1301,7 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
-				block, _ := loader.LoadString(s1.Value, true)
+				block, _ := loader.LoadStringNoPEG(s1.Value, true)
 				//ps = env.AddToProgramState(ps, block.Series, genv)
 				return block
 			default:
@@ -1393,7 +1394,7 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal  { c: context { x: 100 } do\in c { x * 9.99 } } 999.0
-	// equal  { c: context { x: 100 } do\in c { inc! 'x } } 101
+	// equal  { c: context { x:: 100 } do\in c { inc! 'x } } 101
 	// equal  { c: context { var 'x 100 } do\in c { x:: 200 } c/x } 200
 	// equal  { c: context { x:: 100 } do\in c { x:: 200 , x } } 200
 	"do\\in": { // **
@@ -1413,9 +1414,22 @@ var builtins = map[string]*env.Builtin{
 					ps.ErrorFlag = true
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "do\\in")
 				}
+			case PersistentCtx:
+				switch bloc := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = bloc.Series
+					// Use a special evaluation function for PersistentCtx
+					EvalBlockInPersistentCtx(ps, &ctx)
+					ps.Ser = ser
+					return ps.Res
+				default:
+					ps.ErrorFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "do\\in")
+				}
 			default:
 				ps.ErrorFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "do\\in")
+				return MakeArgError(ps, 1, []env.Type{env.CtxType, env.PersistentCtxType}, "do\\in")
 			}
 
 		},
@@ -1423,7 +1437,7 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal  { c: context { x: 100 } do\par c { x * 9.99 } } 999.0
-	// equal  { c: context { x: 100 } do\par c { inc! 'x } } 101
+	// equal  { c: context { x:: 100 } do\par c { inc! 'x } } 101
 	// equal  { c: context { x: 100 } do\par c { x:: 200 , x } } 200
 	// equal  { c: context { x: 100 } do\par c { x:: 200 } c/x } 100
 	"do\\par": { // **
@@ -1570,7 +1584,9 @@ var builtins = map[string]*env.Builtin{
 				fmt.Println(ps.Gen.PreviewMethods(*ps.Idx, s1.Index, ""))
 				return env.Void{}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "ls\\")
+				kindIdx := arg0.GetKind()
+				fmt.Println(ps.Gen.PreviewMethods(*ps.Idx, kindIdx, ""))
+				return arg0
 			}
 		},
 	},
@@ -1836,8 +1852,8 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { x:: 0 defer { x:: 1 } x } 0
-	// equal { fn { } { var 'x 0 defer { x:: 1 } x } } 0
+	// equal { x:: 123 defer { x:: 345 } x } 123
+	// stdout { fn { } { var 'x 123 defer { print 234 } x } } "234"
 	// ; equal { fn { } { x:: 0 defer { x:: 1 } } x } 1
 	"defer": {
 		Argsn: 1,
@@ -1877,6 +1893,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(builtins, ps, "base")
 	RegisterBuiltins2(builtins_boolean, ps, "base")
 	RegisterBuiltins2(builtins_numbers, ps, "base")
+	RegisterBuiltins2(builtins_complex, ps, "base")
 	RegisterBuiltins2(builtins_time, ps, "base")
 	RegisterBuiltins2(builtins_string, ps, "base")
 	RegisterBuiltins2(builtins_collection, ps, "base")
@@ -1886,6 +1903,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(builtins_types, ps, "base")
 	RegisterBuiltins2(builtins_iteration, ps, "base")
 	RegisterBuiltins2(builtins_contexts, ps, "base")
+	RegisterBuiltins2(builtins_persistent_contexts, ps, "base")
 	RegisterBuiltins2(builtins_functions, ps, "base")
 	RegisterBuiltins2(builtins_apply, ps, "base")
 	RegisterBuiltins2(Builtins_error_creation, ps, "error-creation")
@@ -1908,6 +1926,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_eyr, ps, "eyr")
 	RegisterBuiltins2(Builtins_goroutines, ps, "goroutines")
 	RegisterBuiltins2(Builtins_http, ps, "http")
+	RegisterBuiltinsInContext(Builtins_gin, ps, "gin")
 	RegisterBuiltins2(Builtins_sqlite, ps, "sqlite")
 	RegisterBuiltins2(Builtins_psql, ps, "psql")
 	RegisterBuiltins2(Builtins_mysql, ps, "mysql")
@@ -1925,8 +1944,10 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltinsInContext(Builtins_term, ps, "term")
 	RegisterBuiltinsInContext(Builtins_telegrambot, ps, "telegram")
 	RegisterBuiltins2(Builtins_peg, ps, "peg")
-	RegisterBuiltins2(Builtins_mcp, ps, "mcp")
+	RegisterBuiltinsInContext(Builtins_mcp, ps, "mcp")
 	RegisterBuiltins2(builtins_trees, ps, "trees")
+	RegisterBuiltinsInContext(Builtins_git, ps, "git")
+	RegisterBuiltinsInContext(Builtins_prometheus, ps, "prometheus")
 	RegisterErrorUtilsBuiltins(ps) // Register additional error handling utilities
 	// ## Archived modules
 	// RegisterBuiltins2(Builtins_gtk, ps, "gtk")

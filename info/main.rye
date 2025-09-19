@@ -9,28 +9,28 @@ t: ?term
 
 test-framework: context {
 
-	cnt: 0
-	failed: 0
+	var 'cnt 0
+	var 'failed 0
 	
-	section: fn { name descr code } { term/magenta term/bold print name term/reset\all print " " ++ descr , do code print "" }
+	section: fn { name descr code } { term/magenta term/bold print name term/reset print " " ++ descr , do code print "" }
 	
-	group: fn { name descr args code } { print "" , inc! 'cnt t/yellow prns " " ++ name t/reset\all , do  code }
+	group: fn { name descr args code } { print "" , inc! 'cnt t/yellow prns " " ++ name t/reset , do  code }
 	
 	error: fn { test } {
 		; try { do\in root-ctx test }
-		try test :got |type? |= 'error |either { t/br-green prns join { "✓" } } { inc! 'failed , t/red prns " ✗ Failed:" t/reset\all   prns join { "expected error but got: " t/str\br-black inspect got t/str\reset } }
+		try test :got |type? |= 'error |either { t/br-green prns join { "✓" } } { inc! 'failed , t/red prns " ✗ Failed:" t/reset   prns join { "expected error but got: " t/str\br-black inspect got t/str\reset } }
 	}
 
 	equal: fn { test res } {
 		cc: extends root-ctx { }
 		do\in cc test :got = res
-		|either { t/green prns "✓" t/reset\all } { inc! 'failed , t/red prns " ✗ Failed:" t/reset\all prns join { "expected " t/str\br-black inspect res t/str\reset ", got " t/str\br-black inspect got t/str\reset } }
+		|either { t/green prns "✓" t/reset } { inc! 'failed , t/red prns " ✗ Failed:" t/reset prns join { "expected " t/str\br-black inspect res t/str\reset ", got " t/str\br-black inspect got t/str\reset } }
 	}
 	
 	stdout: fn { test res } {
 		cc: extends root-ctx { }
 		capture-stdout { do\in cc test } :got = res
-		|either { term/green prns "✓" term/reset\all } { inc! 'failed , term/red prns " ✗ Failed:" term/reset\all  prns join { "expected " t/str\br-black inspect res t/str\reset ", got " t/str\br-black inspect got t/str\reset } }
+		|either { term/green prns "✓" term/reset } { inc! 'failed , term/red prns " ✗ Failed:" term/reset  prns join { "expected " t/str\br-black inspect res t/str\reset ", got " t/str\br-black inspect got t/str\reset } }
 	}
 
 	comment: fn { str } {
@@ -40,10 +40,11 @@ test-framework: context {
 	end: fn { } { ;prns "Tests:" term/bold prn cnt term/reset\bold , print "FAILED: " + failed , if failed > 0 { exit 1 } }
 		prns "\nGroups:" term/bold prn cnt term/reset\bold
 		either is-zero failed
-		{ term/bold term/green print "\nALL PASSED" term/reset\all }
-		{ term/red print "\nFailed tests: " ++ failed  term/reset\all }
-
-		if failed > 0 { exit 1 }
+		{ term/bold term/green print "\nALL PASSED" term/reset }
+		{ term/red print "\nFailed tests: " ++ failed  term/reset }
+		;if failed > 0 { exit 1 }
+		; exit 0
+		failed
 	}
 }
 
@@ -97,10 +98,10 @@ generate-menu: fn { menu } {
 
 generate-doc-file: fn { filename menu } {
 	join {
-		%tpl/header.html .read .replace "{{title}}" capitalize filename |replace "{{menu}}" generate-menu menu
+		%tpl/header.html .Read .replace "{{title}}" capitalize filename |replace "{{menu}}" generate-menu menu
 		capture-stdout { do\in docs-framework load to-file filename ++ ".info.rye" }
-		read %tpl/footer.html
-	} |write* to-file filename ++ ".html"
+		Read %tpl/footer.html
+	} |Write* to-file filename ++ ".html"
 }
 
 menu: { "base" "table" "formats" "io" "crypto" }
@@ -122,7 +123,7 @@ first args |^fix { print-help } |switch {
 test {
 	var 'sections { }
 	either args .length? > 1 {
-		either ( second args ) = 'ls {
+		either probe ( ( second args ) = 'ls ) {
 			print "Test sections available:"
 			menu .for { .concat* " * " |print }
 		} {
@@ -135,17 +136,18 @@ test {
 		var 'errors 0
 		for sections {
 			.to-string .pass { term/bold , prns "\n#" , .to-upper .prns , print "#\n" }
-			| ++ ".info.rye" |to-file |load |^check { "group does not exist!" } |do\in* test-framework | ++ errors ::errors }
+			| ++ ".info.rye" |to-file |load |^check { "Group does not exist!!!!" } |do\in* test-framework |+ errors ::errors }
 		print ""
 	
-		if ( length? sections ) > 1 { 
+		; if ( length? sections ) > 1 {
 			term/yellow
 			term/bold
 			print "TOTAL FAILED TESTS: " ++ errors
 			print ""
-			term/reset\all
-		}
+			term/reset
+		; }
 		print ""
+		either errors > 0 { exit 1 } { exit 0 }
 	}
 }
 doc  {
@@ -153,7 +155,7 @@ doc  {
 	print "docs generated" 
 }
 _ { print-help }
-}
+} |probe
 
 ;   maybe we need this at some point 
 ;	true: fn { test } {

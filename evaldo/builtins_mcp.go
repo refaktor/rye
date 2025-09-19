@@ -16,7 +16,7 @@ var (
 
 var Builtins_mcp = map[string]*env.Builtin{
 	// Server functions
-	"mcp-server//create": {
+	"mcp-server//Create": {
 		Argsn: 2,
 		Doc:   "Creates a new MCP server with the given name and version.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -49,7 +49,7 @@ var Builtins_mcp = map[string]*env.Builtin{
 		},
 	},
 
-	"mcp//create-resource": {
+	"mcp//Create-resource": {
 		Argsn: 3,
 		Doc:   "Creates a new MCP resource with the given URI, name, and MIME type.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -87,7 +87,7 @@ var Builtins_mcp = map[string]*env.Builtin{
 		},
 	},
 
-	"mcp//create-tool": {
+	"mcp//Create-tool": {
 		Argsn: 2,
 		Doc:   "Creates a new MCP tool with the given name and description.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -117,7 +117,7 @@ var Builtins_mcp = map[string]*env.Builtin{
 		},
 	},
 
-	"mcp//create-prompt": {
+	"mcp//Create-prompt": {
 		Argsn: 2,
 		Doc:   "Creates a new MCP prompt with the given name and description.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -147,7 +147,7 @@ var Builtins_mcp = map[string]*env.Builtin{
 		},
 	},
 
-	"mcp//protocol-version": {
+	"mcp//Protocol-version": {
 		Argsn: 0,
 		Doc:   "Returns the latest MCP protocol version.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -156,7 +156,7 @@ var Builtins_mcp = map[string]*env.Builtin{
 	},
 
 	// Server methods
-	"Rye-mcp-server//get-name": {
+	"Rye-mcp-server//Get-name": {
 		Argsn: 1,
 		Doc:   "Gets the name of the MCP server.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -184,7 +184,7 @@ var Builtins_mcp = map[string]*env.Builtin{
 		},
 	},
 
-	"Rye-mcp-server//get-version": {
+	"Rye-mcp-server//Get-version": {
 		Argsn: 1,
 		Doc:   "Gets the version of the MCP server.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -213,7 +213,7 @@ var Builtins_mcp = map[string]*env.Builtin{
 	},
 
 	// Resource methods
-	"Rye-mcp-resource//get-uri": {
+	"Rye-mcp-resource//Get-uri": {
 		Argsn: 1,
 		Doc:   "Gets the URI of the MCP resource.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -242,7 +242,7 @@ var Builtins_mcp = map[string]*env.Builtin{
 		},
 	},
 
-	"Rye-mcp-resource//get-name": {
+	"Rye-mcp-resource//Get-name": {
 		Argsn: 1,
 		Doc:   "Gets the name of the MCP resource.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -271,7 +271,7 @@ var Builtins_mcp = map[string]*env.Builtin{
 		},
 	},
 
-	"Rye-mcp-resource//get-mime-type": {
+	"Rye-mcp-resource//Get-mime-type": {
 		Argsn: 1,
 		Doc:   "Gets the MIME type of the MCP resource.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -301,7 +301,7 @@ var Builtins_mcp = map[string]*env.Builtin{
 	},
 
 	// Tool methods
-	"Rye-mcp-tool//get-name": {
+	"Rye-mcp-tool//Get-name": {
 		Argsn: 1,
 		Doc:   "Gets the name of the MCP tool.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -329,7 +329,7 @@ var Builtins_mcp = map[string]*env.Builtin{
 		},
 	},
 
-	"Rye-mcp-tool//get-description": {
+	"Rye-mcp-tool//Get-description": {
 		Argsn: 1,
 		Doc:   "Gets the description of the MCP tool.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -358,7 +358,7 @@ var Builtins_mcp = map[string]*env.Builtin{
 	},
 
 	// Prompt methods
-	"Rye-mcp-prompt//get-name": {
+	"Rye-mcp-prompt//Get-name": {
 		Argsn: 1,
 		Doc:   "Gets the name of the MCP prompt.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -386,7 +386,7 @@ var Builtins_mcp = map[string]*env.Builtin{
 		},
 	},
 
-	"Rye-mcp-prompt//get-description": {
+	"Rye-mcp-prompt//Get-description": {
 		Argsn: 1,
 		Doc:   "Gets the description of the MCP prompt.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

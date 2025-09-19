@@ -1,0 +1,2 @@
+tinygo build -gc=leaking -no-debug -o picorye.uf2 -target=pico-w -tags "no_cgi,no_sqlite,no_psql,no_mysql,no_prometheus,no_email,no_http,b_no_io,no_telegram,no_smtpd,no_pipes,no_validation,no_git,b_tiny,tinygo,pico_loader" main_picorye.go
+

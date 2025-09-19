@@ -37,26 +37,12 @@
       <main class="content">
         
 <h2>Default</h2><p></p><div class='section'>
-<h3>pass</h3><p>Accepts a value and a block. It does the block, with value injected, and returns (passes on) the initial value.</p>
+<h3>change!</h3><p>Searches for a word and changes it's value in-place. Only works on variables declared with var. If value changes returns true otherwise false</p>
+<p class='arg'><b>value</b> New value to assign to the word</p>
+<p class='arg'><b>word</b> Word whose value should be changed</p>
+<p class='returns'><b>returns</b> Integer 1 if the value changed, 0 if the new value is the same as the old value</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>101 .pass { 202 }
-; returns 101</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>101 .pass { 202 + 303 }
-; returns 101</code></pre>
-</div>
-<h3>wrap</h3><p>Accepts a value and a block. It does the block, with value injected, and returns (passes on) the initial value.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>wrap { prn "*" } { prn "x" }
-; prints "*x*"</code></pre>
-</div>
-<h3>keep</h3><p>Do the first block, then the second one but return the result of the first one.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>20 .keep { + 202 } { + 101 }
-; returns 222</code></pre>
-</div>
-<h3>change!</h3><p>Searches for a word and changes it's value in-place. If value changes returns true otherwise false</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>x: 123 , change! 234 'x , x
+<pre class='prettyprint lang-rye'><code language='lang-rye'>var 'x 123 , change! 234 'x , x
 ; returns 234</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>a:: 123 change! 333 'a a
 ; returns 333</code></pre>
@@ -65,337 +51,112 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>a:: 123 change! 123 'a
 ; returns 0</code></pre>
 </div>
-<h3>set!</h3><p>Set word to value or words by deconstructing a block</p>
+<h3>set!</h3><p>Set word to value or words by deconstructing a block. Only works on variables declared with var.</p>
+<p class='arg'><b>values</b> Value or block of values to assign to the word(s)</p>
+<p class='arg'><b>words</b> Word or block of words to be set</p>
+<p class='returns'><b>returns</b> The value or block of values that was assigned</p>
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>set! { 123 234 } { a b } b
 ; returns 234</code></pre>
 </div>
 <h3>unset!</h3><p>Unset a word in current context, only meant to be used in console</p>
+<p class='arg'><b>word</b> Word to be unset from the current context</p>
+<p class='returns'><b>returns</b> Void value</p>
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>x: 1 unset! 'x x: 2
 ; returns 2</code></pre>
 </div>
-</div>
-<h2>Values and Types </h2><p></p><div class='section'>
-<h3>to-word</h3><p>Tries to change a Rye value to a word with same name.</p>
+<h3>val</h3><p>Returns value of the word in context</p>
+<p class='arg'><b>word</b> Word whose value should be retrieved</p>
+<p class='returns'><b>returns</b> The value associated with the word in the current context</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>to-word "test"
-; returns test</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>to-word 123
-; correctly causes error:
-; builtin `to-word` requires argument 1 to be: String, Word. </code></pre>
-</div>
-<h3>to-integer</h3><p>Tries to change a Rye value (like string) to integer.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>to-integer "123"
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: 123 val 'x
 ; returns 123</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>to-integer "abc"
-; correctly causes error:
-; strconv.Atoi: parsing "abc": invalid syntax in builtin to-integer. </code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: 123 y: 'x val y
+; returns 123</code></pre>
 </div>
-<h3>to-decimal</h3><p>Tries to change a Rye value (like string) to decimal.</p>
+<h3>_<<</h3><p>Converts a value to specific kind (R to L)</p>
+<p class='arg'><b>kind</b> Kind to convert the value to</p>
+<p class='arg'><b>value</b> Dict or context to convert</p>
+<p class='returns'><b>returns</b> A new context of the specified kind</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>to-decimal "123.4"
-; returns 123.4</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>to-decimal "abc"
-; correctly causes error:
-; strconv.ParseFloat: parsing "abc": invalid syntax in builtin to-decimal. </code></pre>
 </div>
-<h3>to-string</h3><p>Tries to turn a Rye value to string.</p>
+<h3>save\current</h3><p>Saves current state of the program to a file.</p>
+<p class='arg'>None</p>
+<p class='returns'><b>returns</b> Integer 1 on success</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>to-string 'test
-; returns "test"</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>to-string 123
-; returns "123"</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>to-string 123.4
-; returns "123.400000"</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>to-string "test"
-; returns "test"</code></pre>
+State current context to [1mconsole_250914_135649.rye[0m.
+<pre class='prettyprint lang-rye'><code language='lang-rye'>save\current |type?
+; returns integer</code></pre>
 </div>
-<h3>to-char</h3><p>Tries to turn a Rye value (like integer) to ascii character.</p>
+<h3>save\current\secure</h3><p>Saves current state of the program to a file with password protection.</p>
+<p class='arg'>None</p>
+<p class='returns'><b>returns</b> Integer 1 on success</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>to-char 42
-; returns "*"</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>to-char "*"
-; correctly causes error:
-; builtin `to-char` requires argument 1 to be: Integer. </code></pre>
-</div>
-<h3>to-block</h3><p>Turns a List to a Block</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>list [ 1 2 3 ] |to-block |type?
-; returns block</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>list [ 1 2 3 ] |to-block |first
-; returns 1</code></pre>
-</div>
-<h3>to-context</h3><p>Takes a Dict and returns a Context with same names and values.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>dict [ "a" 1 "b" 2 "c" 3 ] |to-context |type?
-; returns ctx</code></pre>
-</div>
-<h3>is-string</h3><p>Returns true if value is a string.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>is-string "test"
-; returns 1</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>is-string 'test
-; returns 0</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>is-string 123
-; returns 0</code></pre>
-</div>
-<h3>is-integer</h3><p>Returns true if value is an integer.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>is-integer 123
-; returns 1</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>is-integer 123.4
-; returns 0</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>is-integer "123"
-; returns 0</code></pre>
-</div>
-<h3>is-decimal</h3><p>Returns true if value is a decimal.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>is-decimal 123
-; returns 1</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>is-decimal 123
-; returns 0</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>is-decimal "123.4"
-; returns 0</code></pre>
-</div>
-<h3>is-number</h3><p>Returns true if value is a number (integer or decimal).</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>is-number 123
-; returns 1</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>is-number 123.4
-; returns 1</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>is-number "123"
-; returns 0</code></pre>
-</div>
-<h3>to-uri</h3><p>Tries to change Rye value to an URI.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>to-uri "https://example.com"
-; returns https://example.com</code></pre>
-</div>
-<h3>to-file</h3><p>Tries to change Rye value to a file.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>to-file "example.txt"
-; returns %example.txt</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>to-file 123
-; returns %123</code></pre>
-</div>
-<h3>type?</h3><p>Returns the type of Rye value as a word.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>type? "test"
-; returns string</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>type? 123.4
-; returns decimal</code></pre>
-</div>
-<h3>kind?</h3><p>Returns the type of Rye value as a word.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>kind? %file
-; returns file-schema</code></pre>
-</div>
-<h3>types?</h3><p>Returns the types of Rye values in a block or table row as a block of words.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>types? { "test" 123 }
-; returns { string integer }</code></pre>
-</div>
-<h3>dump</h3><p>Returns (dumps) Rye code representing the object.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>dump 123
-; returns "123"</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>dump "string"
-; returns ""string""</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>does { 1 } |dump
-; returns "fn { } { 1 }"</code></pre>
-</div>
-<h3>mold</h3><p>Turn value to it's string representation.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>mold 123
-; returns "123"</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>mold { 123 }
-; returns "{ 123 }"</code></pre>
-</div>
-<h3>mold
-owrap</h3><p>Turn value to it's string representation. Doesn't wrap the blocks</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>mold\nowrap 123
-; returns "123"</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>mold\nowrap { 123 }
-; returns "123"</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>mold\nowrap { 123 234 }
-; returns "123 234"</code></pre>
 </div>
 <h3>doc!</h3><p>Sets docstring of the current context.</p>
+<p class='arg'><b>doc</b> String to set as the docstring for the current context</p>
+<p class='returns'><b>returns</b> Integer 1 on success</p>
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>x: private { doc! "some doc" doc? }
 ; returns "some doc"</code></pre>
 </div>
 <h3>doc?</h3><p>Gets docstring of the current context.</p>
+<p class='arg'>None</p>
+<p class='returns'><b>returns</b> String containing the docstring of the current context</p>
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>x: private { doc! "some doc" doc? }
 ; returns "some doc"</code></pre>
 </div>
 <h3>doc\of?</h3><p>Get docstring of the passed context.</p>
+<p class='arg'><b>value</b> Function, builtin, or context to get the docstring from</p>
+<p class='returns'><b>returns</b> String containing the docstring of the provided value</p>
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>x: context { doc! "some doc" } doc\of? x
 ; returns "some doc"</code></pre>
 </div>
 <h3>ref</h3><p>Makes a value mutable instead of immutable</p>
+<p class='arg'><b>value</b> Value to make mutable</p>
+<p class='returns'><b>returns</b> A mutable reference to the value</p>
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>is-ref ref { 1 2 3 }
-; returns 1</code></pre>
+; returns true</code></pre>
 </div>
 <h3>deref</h3><p>Makes a value again immutable</p>
+<p class='arg'><b>value</b> Mutable reference to make immutable</p>
+<p class='returns'><b>returns</b> An immutable copy of the value</p>
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>is-ref deref ref { 1 2 3 }
-; returns 0</code></pre>
+; returns false</code></pre>
 </div>
-<h3>is-ref</h3><p>Prints information about a value.</p>
+<h3>is-ref</h3><p>Checks if a value is a mutable reference.</p>
+<p class='arg'><b>value</b> Any value to check if it's a reference</p>
+<p class='returns'><b>returns</b> Integer 1 if the value is a reference, 0 otherwise</p>
 <div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>ref { } |is-ref
+; returns true</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>{ } |is-ref
+; returns false</code></pre>
 </div>
 <h3>dict</h3><p>Constructs a Dict from the Block of key and value pairs.</p>
+<p class='arg'><b>block</b> Block containing alternating keys and values</p>
+<p class='returns'><b>returns</b> A new Dict with the specified keys and values</p>
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 123 } |-&gt; "a"
 ; returns 123</code></pre>
 </div>
 <h3>list</h3><p>Constructs a List from the Block of values.</p>
+<p class='arg'><b>block</b> Block containing values to put in the list</p>
+<p class='returns'><b>returns</b> A new List with the values from the block</p>
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>list { "a" 123 } |-&gt; 0
 ; returns "a"</code></pre>
-</div>
-</div>
-<h2>Printing </h2><p></p><div class='section'>
-<h3>prns</h3><p>Prints a value and adds a space.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>prns "xy"
-; prints "xy "</code></pre>
-</div>
-<h3>prn</h3><p>Prints a value without newline.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>prn "xy"
-; prints "xy"</code></pre>
-</div>
-<h3>print</h3><p>Prints a value and adds a newline.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>print "xy"
-; prints "xy
-; "</code></pre>
-</div>
-<h3>format</h3><p>Formats a value according to Go-s sprintf format</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>format 123 "num: %d"
-; returns "num: 123"</code></pre>
-</div>
-<h3>prnf</h3><p>Formats a value according to Go-s sprintf format and prn-s it</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>prnf 123 "num: %d"
-; prints "num: 123"</code></pre>
-</div>
-<h3>embed</h3><p>Embeds a value into a string with {} placeholder.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>embed 101 "val {}"
-; returns "val 101"</code></pre>
-</div>
-<h3>prnv</h3><p>Prints a value.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>prnv 101 "val {}"
-; prints "val 101"</code></pre>
-</div>
-<h3>printv</h3><p>Prints a value and adds a newline.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>printv 101 "val {}"
-; prints "val 101
-; "</code></pre>
-</div>
-<h3>print\ssv</h3><p>Prints a value and adds a newline.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>print\ssv { 101 "asd" }
-; prints "101 asd
-; "</code></pre>
-</div>
-<h3>print\csv</h3><p>Prints a value and adds a newline.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>print\csv { 101 "asd" }
-; prints "101,asd
-; "</code></pre>
-</div>
-<h3>probe</h3><p>Prints information about a value.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>probe 101
-; prints "[Integer: 101]
-; "</code></pre>
-</div>
-<h3>inspect</h3><p>Returs information about a value.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>inspect 101
-; returns "[Integer: 101]"</code></pre>
-</div>
-<h3>esc</h3><p>Creates an escape sequence \033{}</p>
-<div class='group'>
-</div>
-<h3>esc-val</h3><p>Escapes a value and adds a newline.</p>
-<div class='group'>
 </div>
 <h3>load</h3><p>Loads a string into Rye values.</p>
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>load " 1 2 3 " |third
 ; returns 3</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>load "{ 1 2 3 }" |first |third
-; returns 3</code></pre>
-</div>
-</div>
-<h2>Flow control </h2><p></p><div class='section'>
-<h3>if</h3><p>Basic conditional. Takes a boolean condition and a block of code.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>if true { 222 }
-; returns 222</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>if false { 333 }
-; returns false</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>if 1 { 222 }
-; correctly causes error:
-; builtin `if` requires argument 1 to be: Boolean. </code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>if 0 { 333 }
-; correctly causes error:
-; builtin `if` requires argument 1 to be: Boolean. </code></pre>
-</div>
-<h3>^if</h3><p>Basic conditional with a Returning mechanism when true. Takes a condition and a block of code.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>x: does { ^if 1 { 222 } 555 } x
-; returns 222</code></pre>
-</div>
-<h3>either</h3><p>The if/else conditional. Takes a boolean condition and true and false blocks of code.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>either true { 222 } { 333 }
-; returns 222</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>either false { 222 } { 333 }
-; returns 333</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>either 1 { 222 } { 333 }
-; correctly causes error:
-; builtin `either` requires argument 1 to be: Boolean. </code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>either 0 { 222 } { 333 }
-; correctly causes error:
-; builtin `either` requires argument 1 to be: Boolean. </code></pre>
-</div>
-<h3>switch</h3><p>Classic switch function. Takes a word and multiple possible values and block of code to do.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>switch 101 { 101 { 111 } 202 { 222 } }
-; returns 111</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>switch 202 { 101 { 111 } 202 { 222 } }
-; returns 222</code></pre>
-</div>
-<h3>cases</h3><p>Similar to Case function, but checks all the cases, even after a match. It combines the outputs.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>cases 0 { { 1 &gt; 0 } { + 100 } { 2 &gt; 1 } { + 1000 } }
-; returns 1100</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>cases 0 { { 1 &gt; 0 } { + 100 } { 2 &lt; 1 } { + 1000 } }
-; returns 100</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>cases 0 { { 1 &lt; 0 } { + 100 } { 2 &gt; 1 } { + 1000 } }
-; returns 1000</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>cases 0 { { 1 &lt; 0 } { + 100 } { 2 &lt; 1 } { + 1000 } }
-; returns 0</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>cases 1 { { 1 &gt; 0 } { + 100 } { 2 &lt; 1 } { + 1000 } _ { * 3 } }
-; returns 101</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>cases 1 { { 1 &lt; 0 } { + 100 } { 2 &gt; 1 } { + 1000 } _ { * 3 } }
-; returns 1001</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>cases 1 { { 1 &lt; 0 } { + 100 } { 2 &lt; 1 } { + 1000 } _ { * 3 } }
 ; returns 3</code></pre>
 </div>
 <h3>do</h3><p>Takes a block of code and does (runs) it.</p>
@@ -418,15 +179,6 @@ owrap</h3><p>Turn value to it's string representation. Doesn't wrap the blocks</
 <pre class='prettyprint lang-rye'><code language='lang-rye'>do { 12 * 23 :a a + 34 }
 ; returns 310</code></pre>
 </div>
-<h3>try</h3><p>Takes a block of code and does (runs) it.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>try { 123 + 123 }
-; returns 246</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>try { 123 + "asd" } |type?
-; returns error</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>try { 123 + } |type?
-; returns error</code></pre>
-</div>
 <h3>with</h3><p>Takes a value and a block of code. It does the code with the value injected.</p>
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>with 100 { + 11 }
@@ -438,331 +190,23 @@ owrap</h3><p>Turn value to it's string representation. Doesn't wrap the blocks</
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } do\in c { x * 9.99 }
 ; returns 999</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } do\in c { inc! 'x }
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x:: 100 } do\in c { inc! 'x }
 ; returns 101</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } do\in c { x:: 200 } c/x
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { var 'x 100 } do\in c { x:: 200 } c/x
 ; returns 200</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } do\in c { x:: 200 , x }
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x:: 100 } do\in c { x:: 200 , x }
 ; returns 200</code></pre>
-</div>
-<h3>try\in</h3><p>Takes a Context and a Block. It Does a block inside a given Context.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } try\in c { x * 9.99 }
-; returns 999</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } try\in c { inc! 'x }
-; returns 101</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } try\in c { x:: 200 , x }
-; returns 200</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } try\in c { x:: 200 } c/x
-; returns 200</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } try\in c { inc! 'y } |type?
-; returns error</code></pre>
 </div>
 <h3>do\par</h3><p>Takes a Context and a Block. It Does a block in current context but with parent a given Context.</p>
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } do\par c { x * 9.99 }
 ; returns 999</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } do\par c { inc! 'x }
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x:: 100 } do\par c { inc! 'x }
 ; returns 101</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } do\par c { x:: 200 , x }
 ; returns 200</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } do\par c { x:: 200 } c/x
 ; returns 100</code></pre>
-</div>
-<h3>capture-stdout</h3><p>Takes a block of code and does (runs) it.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>capture-stdout { print "hello" }
-; returns "hello
-; "</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>capture-stdout { loop 3 { prns "x" } }
-; returns "x x x "</code></pre>
-</div>
-<h3>time-it</h3><p>Accepts a block, does it and times it's execution time.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>time-it { sleep 100 }
-; returns 100</code></pre>
-</div>
-<h3>vals</h3><p>Takes a block of Rye values and evaluates each value or expression.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>x: 1 y: 2 vals { x y }
-; returns { 1 2 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>x: 1 y: 2 vals { 1 y }
-; returns { 1 2 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>x: 1 y: 2 try { vals { z y } } |type?
-; returns error</code></pre>
-</div>
-<h3>vals\with</h3><p>Evaluate a block with injecting the first argument.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>x: 1 y: 2 vals\with 10 { + x , * y }
-; returns { 11 20 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>x: 1 y: 2 vals\with 100 { + 10 , * 8.9 }
-; returns { 110 890 }</code></pre>
-</div>
-<h3>current</h3><p>Returns current context.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 9999 , incr: fn\in { } current { x:: inc x } } c/incr c/x
-; returns 10000</code></pre>
-</div>
-<h3>parent</h3><p>Returns parent context of the current context.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>y: 99 c: context { incr: fn\in { } parent { y:: inc y } } c/incr y
-; returns 100</code></pre>
-</div>
-<h3>parent\of</h3><p>Returns parent context of the current context.</p>
-<div class='group'>
-</div>
-</div>
-<h2>Iteration </h2><p>Iteration over collections</p><div class='section'>
-<h3>loop</h3><p>Accepts a number and a block of code. Does the block of code number times, injecting the number.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>3 .loop { prns "x" }
-; prints "x x x "</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>3 .loop { + 1 }
-; returns 4</code></pre>
-</div>
-<h3>produce</h3><p>Accepts a number, initial value and a block of code. Does the block of code number of times, injecting the initial value or last result.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>produce 5 0 { + 3 }
-; returns 15</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>produce 3 "&gt;" { + "x&gt;" }
-; returns "&gt;x&gt;x&gt;x&gt;"</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>produce 3 { } { .concat "x" }
-; returns { "x" "x" "x" }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>produce 3 { } { :x .concat length? x }
-; returns { 0 1 2 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>produce 5 { 2 } { :acc .last :x * x |concat* acc }
-; returns { 2 4 16 256 65536 4294967296 }</code></pre>
-</div>
-<h3>produce\while</h3><p>Accepts a while condition, initial value and a block of code. Does the block of code number times, injecting the number first and then result of block.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>x: 0 produce\while { x &lt; 100 } 1 { * 2 :x }
-; returns 64</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>x: 0 produce\while { x &lt; 100 } 1 { * 2 :x .prns }
-; prints "2 4 8 16 32 64 128 "</code></pre>
-</div>
-<h3>produce\</h3><p> TODO </p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>produce\ 5 1 'acc { * acc , + 1 }
-; returns 1</code></pre>
-</div>
-<h3>forever</h3><p>Accepts a block and does it forever.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>forever { "once" .prn .return }
-; prints "once"</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>forever { "once" .return }
-; returns "once"</code></pre>
-</div>
-<h3>forever\with</h3><p></p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>forever\with 1 { .prn .return }
-; prints "1"</code></pre>
-</div>
-<h3>for___</h3><p>Accepts a block of values and a block of code, does the code for each of the values, injecting them.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>for { 1 2 3 } { prns "x" }
-; prints "x x x "</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>{ "a" "b" "c" } .for { .prns }
-; prints "a b c "</code></pre>
-</div>
-<h3>for</h3><p>Accepts a block of values and a block of code, does the code for each of the values, injecting them.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>for { 1 2 3 } { prns "x" }
-; prints "x x x "</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>{ "a" "b" "c" } .for { .prns }
-; prints "a b c "</code></pre>
-</div>
-<h3>walk</h3><p>Accepts a block of values and a block of code, does the code for each of the values, injecting them.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>walk { 1 2 3 } { .prns .rest }
-; prints "1 2 3  2 3  3  "</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>x: 0 walk { 1 2 3 } { :b .first + x :x , b .rest } x
-; returns 6</code></pre>
-</div>
-<h3>purge</h3><p>Purges values from a series based on return of a injected code block.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>purge { 1 3 3 } { .is-even }
-; returns { 1 3 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>purge { } { .is-even }
-; returns { }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>purge list { 1 2 3 } { .is-even }
-; returns list { 1 3 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>purge list { } { .is-even }
-; returns list { }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>purge "1234" { .to-integer .is-even }
-; returns { "1" "3" }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>purge "" { .to-integer .is-even }
-; returns { }</code></pre>
-</div>
-<h3>purge!</h3><p>Purges values from a series based on return of a injected code block.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>{ 1 3 3 } :x purge! { .is-even } 'x , x
-; returns { 1 3 }</code></pre>
-</div>
-<h3>map___</h3><p>Maps values of a block to a new block by evaluating a block of code.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map { 1 2 3 } { + 1 }
-; returns { 2 3 4 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map { } { + 1 }
-; returns { }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map { "aaa" "bb" "c" } { .length? }
-; returns { 3 2 1 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map list { "aaa" "bb" "c" } { .length? }
-; returns list { 3 2 1 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map list { 3 4 5 6 } { .is-multiple-of 3 }
-; returns list { true false false true }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map list { } { + 1 }
-; returns list { }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map "123" { .to-integer }
-; returns { 1 2 3 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map "123" ?to-integer
-; returns { 1 2 3 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map "" { + "-" }
-; returns { }</code></pre>
-</div>
-<h3>map</h3><p>Maps values of a block to a new block by evaluating a block of code.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map { 1 2 3 } { + 1 }
-; returns { 2 3 4 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map { } { + 1 }
-; returns { }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map { "aaa" "bb" "c" } { .length? }
-; returns { 3 2 1 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map list { "aaa" "bb" "c" } { .length? }
-; returns list { 3 2 1 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map list { 3 4 5 6 } { .is-multiple-of 3 }
-; returns list { true false false true }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map list { } { + 1 }
-; returns list { }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map "123" { .to-integer }
-; returns { 1 2 3 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map "123" ?to-integer
-; returns { 1 2 3 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map "" { + "-" }
-; returns { }</code></pre>
-</div>
-<h3>map\pos</h3><p>Maps values of a block to a new block by evaluating a block of code.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map\pos { 1 2 3 } 'i { + i }
-; returns { 2 4 6 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map\pos { } 'i { + i }
-; returns { }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map\pos list { 1 2 3 } 'i { + i }
-; returns list { 2 4 6 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map\pos list { } 'i { + i }
-; returns list { }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map\pos "abc" 'i { + i }
-; returns { "a1" "b2" "c3" }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map\pos "" 'i { + i }
-; returns { }</code></pre>
-</div>
-<h3>map\idx</h3><p>Maps values of a block to a new block by evaluating a block of code.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map\idx { 1 2 3 } 'i { + i }
-; returns { 1 3 5 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map\idx { } 'i { + i }
-; returns { }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map\idx list { 1 2 3 } 'i { + i }
-; returns list { 1 3 5 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map\idx list { } 'i { + i }
-; returns list { }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map\idx "abc" 'i { + i }
-; returns { "a0" "b1" "c2" }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map\idx "" 'i { + i }
-; returns { }</code></pre>
-</div>
-<h3>reduce</h3><p>Reduces values of a block to a new block by evaluating a block of code ...</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>reduce { 1 2 3 } 'acc { + acc }
-; returns 6</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>reduce list { 1 2 3 } 'acc { + acc }
-; returns 6</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>reduce "abc" 'acc { + acc }
-; returns "cba"</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>try { reduce { } 'acc { + acc } } |type?
-; returns error</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>try { reduce list { } 'acc { + acc } } |type?
-; returns error</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>try { reduce "" 'acc { + acc } } |type?
-; returns error</code></pre>
-</div>
-<h3>fold</h3><p>Reduces values of a block to a new block by evaluating a block of code ...</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>fold { 1 2 3 } 'acc 1 { + acc }
-; returns 7</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>fold { } 'acc 1 { + acc }
-; returns 1</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>fold list { 1 2 3 } 'acc 1 { + acc }
-; returns 7</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>fold list { } 'acc 1 { + acc }
-; returns 1</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>fold "abc" 'acc "123" { + acc }
-; returns "cba123"</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>fold "" 'acc "123" { + acc }
-; returns "123"</code></pre>
-</div>
-<h3>partition</h3><p>Partitions a series by evaluating a block of code.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>partition { 1 2 3 4 } { &gt; 2 }
-; returns { { 1 2 } { 3 4 } }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>partition { "a" "b" 1 "c" "d" } { .is-integer }
-; returns { { "a" "b" } { 1 } { "c" "d" } }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>partition { "a" "b" 1 "c" "d" } ?is-integer
-; returns { { "a" "b" } { 1 } { "c" "d" } }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>partition { } { &gt; 2 }
-; returns { { } }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>partition list { 1 2 3 4 } { &gt; 2 }
-; returns list { list { 1 2 } list { 3 4 } }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>partition list { "a" "b" 1 "c" "d" } ?is-integer
-; returns list { list { "a" "b" } list { 1 } list { "c" "d" } }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>partition list { } { &gt; 2 }
-; returns list { list { } }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>partition "aaabbccc" { , }
-; returns list { "aaa" "bb" "ccc" }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>partition "" { , }
-; returns list { "" }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>partition "aaabbccc" ?is-string
-; returns list { "aaabbccc" }</code></pre>
-</div>
-<h3>group</h3><p>Groups a block or list of values given condition.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>{ } .list .group { .first }
-; returns dict { }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>try { { 1 2 3 4 } .group { .is-even } } |type?
-; returns error</code></pre>
-</div>
-<h3>filter</h3><p>Filters values from a seris based on return of a injected code block.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>filter { 1 2 3 4 } { .is-even }
-; returns { 2 4 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>filter { 1 2 3 4 } ?is-even
-; returns { 2 4 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>filter { } { .is-even }
-; returns { }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>filter list { 1 2 3 4 } { .is-even }
-; returns list { 2 4 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>filter list { 1 2 3 4 } ?is-even
-; returns list { 2 4 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>filter list { } { .is-even }
-; returns list { }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>filter "1234" { .to-integer .is-even }
-; returns { "2" "4" }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>filter "" { .to-integer .is-even }
-; returns { }</code></pre>
-</div>
-<h3>seek</h3><p>Seek over a series until a Block of code returns True and return the value.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>seek { 1 2 3 4 } { .is-even }
-; returns 2</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>seek list { 1 2 3 4 } { .is-even }
-; returns 2</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>seek "1234" { .to-integer .is-even }
-; returns "2"</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>try { seek { 1 2 3 4 } { &gt; 5 } } |type?
-; returns error</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>try { seek list { 1 2 3 4 } { &gt; 5 } } |type?
-; returns error</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>try { seek "1234" { .to-integer &gt; 5 } } |type?
-; returns error</code></pre>
 </div>
 </div>
 <h2>Other </h2><p>functions related to date and time</p><div class='section'>
@@ -781,6 +225,11 @@ hello
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>rye .type?
 ; returns native</code></pre>
+</div>
+<h3>defer</h3><p>Registers a block of code to be executed when the current function exits or the program terminates.</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x:: 123 defer { x:: 345 } x
+; returns 123</code></pre>
 </div>
 </div>
 <h2>Boolean logic </h2><p>Functions that work with true and false values.</p><div class='section'>
@@ -806,6 +255,14 @@ hello
 <p class='arg'><b>value</b> Any value to be negated</p>
 <p class='returns'><b>returns</b> the original value (used in pipeline operations)</p>
 <div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>3 * 5 + 4
+; returns 27</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>_* 3 5 + 4
+; returns 27</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>3 * 5 || + 4
+; returns 19</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>_* 3 5 || + 4
+; returns 19</code></pre>
 </div>
 <h3>not</h3><p>Performs logical negation on boolean values only.</p>
 <p class='arg'><b>value</b> Boolean value to be negated</p>
@@ -876,6 +333,12 @@ hello
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>all { 1 2 3 }
 ; returns 3</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>all { 1 0 3 }
+; returns 3</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>all { 1 false 3 }
+; returns false</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>all { true true true }
+; returns true</code></pre>
 </div>
 <h3>any</h3><p>Evaluates expressions in a block until a truthy value is found and returns it, or returns the last value if none are truthy.</p>
 <p class='arg'><b>block</b> Block of expressions to evaluate</p>
@@ -883,8 +346,12 @@ hello
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>any { 1 2 3 }
 ; returns 1</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>any { 0 0 0 }
+<pre class='prettyprint lang-rye'><code language='lang-rye'>any { 0 1 3 }
 ; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>any { false false 3 }
+; returns 3</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>any { false false false }
+; returns false</code></pre>
 </div>
 <h3>any\with</h3><p>Applies each expression in the block to the provided value until a truthy result is found and returns it.</p>
 <p class='arg'><b>value</b> Value to be used in the expressions</p>
@@ -893,6 +360,22 @@ hello
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>any\with 10 { + 10 , * 10 }
 ; returns 20</code></pre>
+</div>
+</div>
+<h2>Default</h2><p></p><div class='section'>
+<h3>addnums</h3><p>Optimized version of + that adds two numbers, working with both integers and decimals.</p>
+<p class='arg'><b>value1</b> First number (integer or decimal)</p>
+<p class='arg'><b>value2</b> Second number to add</p>
+<p class='returns'><b>returns</b> sum of the two numbers</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>1 .addnums 1
+; returns 2</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>3 .addnums 4
+; returns 7</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>5.6 .addnums 7.8
+; returns 13.399999999999999</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>5 .addnums 2.5
+; returns 7.5</code></pre>
 </div>
 </div>
 <h2>Numbers </h2><p>Working with numbers, integers and decimals.</p><div class='section'>
@@ -1012,6 +495,21 @@ hello
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>random\integer 2 |type?
 ; returns integer</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>random\integer 1 |&lt; 2
+; returns true</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>random\integer 100 || &gt;= 0
+; returns true</code></pre>
+</div>
+<h3>random\decimal</h3><p>Generates a cryptographically secure random decimal between 0.0 (inclusive) and the specified maximum (exclusive).</p>
+<p class='arg'><b>max</b> Upper bound (exclusive) for the random number</p>
+<p class='returns'><b>returns</b> random decimal in the range [0.0, max)</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>random\decimal 2 |type?
+; returns decimal</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>random\decimal 1 |&lt; 1
+; returns true</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>random\decimal 100 || &gt;= 0
+; returns true</code></pre>
 </div>
 <h3>inc!</h3><p>Increments an integer value stored in a variable (word) by 1 and updates the variable in-place.</p>
 <p class='arg'><b>word</b> Word referring to an integer value to increment</p>
@@ -1025,15 +523,15 @@ hello
 ; correctly causes error:
 ; builtin `inc!` requires argument 1 to be: Word. </code></pre>
 </div>
-<h3>dec!</h3><p>Decrements an integer value stored in a variable (word) by 1 and updates the variable in-place.</p>
+<h3>decr!</h3><p>Decrements an integer value stored in a variable (word) by 1 and updates the variable in-place.</p>
 <p class='arg'><b>word</b> Word referring to an integer value to decrement</p>
 <p class='returns'><b>returns</b> the new decremented integer value</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>a:: 123 dec! 'a a
+<pre class='prettyprint lang-rye'><code language='lang-rye'>a:: 123 decr! 'a a
 ; returns 122</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>counter:: 1 dec! 'counter counter
+<pre class='prettyprint lang-rye'><code language='lang-rye'>counter:: 1 decr! 'counter counter
 ; returns 0</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>dec! 123
+<pre class='prettyprint lang-rye'><code language='lang-rye'>decr! 123
 ; correctly causes error:
 ; builtin `dec!` requires argument 1 to be: Word. </code></pre>
 </div>
@@ -1058,17 +556,22 @@ hello
 <pre class='prettyprint lang-rye'><code language='lang-rye'>5.6 + 7.8
 ; returns 13.399999999999999</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>"A" + "b"
-; returns "Ab"</code></pre>
+; correctly causes error:
+; builtin `_+` requires argument 1 to be: Integer, Decimal, Complex, Time. </code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>"A" + 1
-; returns "A1"</code></pre>
+; correctly causes error:
+; builtin `_+` requires argument 1 to be: Integer, Decimal, Complex, Time. </code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>{ 1 2 } + { 3 4 }
-; returns { 1 2 3 4 }</code></pre>
+; correctly causes error:
+; builtin `_+` requires argument 1 to be: Integer, Decimal, Complex, Time. </code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 } |+ { "b" 2 }
-; returns dict { a 1 b 2 }</code></pre>
+; correctly causes error:
+; builtin `_+` requires argument 1 to be: Integer, Decimal, Complex, Time. </code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 } |+ dict { "b" 2 }
-; returns dict { a 1 b 2 }</code></pre>
+; correctly causes error:
+; builtin `_+` requires argument 1 to be: Integer, Decimal, Complex, Time. </code></pre>
 </div>
-<h3>_-</h3><p>Subtracts the second number from the first, working with both integers and decimals.</p>
+<h3>_-</h3><p>Subtracts the second number from the first, working with integers, decimals, and complex numbers.</p>
 <p class='arg'><b>value1</b> First number (integer or decimal)</p>
 <p class='arg'><b>value2</b> Second number to subtract from the first</p>
 <p class='returns'><b>returns</b> result of subtracting value2 from value1</p>
@@ -1082,7 +585,7 @@ hello
 <pre class='prettyprint lang-rye'><code language='lang-rye'>5 - 2.5
 ; returns 2.5</code></pre>
 </div>
-<h3>_*</h3><p>Multiplies two numbers, working with both integers and decimals.</p>
+<h3>_*</h3><p>Multiplies two numbers, working with integers, decimals, and complex numbers.</p>
 <p class='arg'><b>value1</b> First number (integer or decimal)</p>
 <p class='arg'><b>value2</b> Second number to multiply by</p>
 <p class='returns'><b>returns</b> product of the two numbers</p>
@@ -1096,7 +599,7 @@ hello
 <pre class='prettyprint lang-rye'><code language='lang-rye'>1.5 * 2.5
 ; returns 3.75</code></pre>
 </div>
-<h3>_/</h3><p>Divides the first number by the second and returns a decimal result, with error checking for division by zero.</p>
+<h3>_/</h3><p>Divides the first number by the second and returns a result, with error checking for division by zero.</p>
 <p class='arg'><b>value1</b> Dividend (integer or decimal)</p>
 <p class='arg'><b>value2</b> Divisor (integer or decimal, must not be zero)</p>
 <p class='returns'><b>returns</b> decimal result of dividing value1 by value2</p>
@@ -1256,7 +759,7 @@ ASDF
 <pre class='prettyprint lang-rye'><code language='lang-rye'>trim\ "##Hello##" "#"
 ; returns "Hello"</code></pre>
 </div>
-<h3>trimight</h3><p>Removes all trailing occurrences of the specified characters from a string.</p>
+<h3>trim\ight</h3><p>Removes all trailing occurrences of the specified characters from a string.</p>
 <p class='arg'><b>string</b> String to trim</p>
 <p class='arg'><b>cutset</b> String containing the characters to trim</p>
 <p class='returns'><b>returns</b> a new string with specified characters removed from the right end</p>
@@ -1312,15 +815,15 @@ ASDF
 <p class='returns'><b>returns</b> integer 1 if the collection contains the value, 0 otherwise</p>
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>contains "...xoxo..." "xo"
-; returns 1</code></pre>
+; returns true</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>contains "...xoxo..." "lol"
-; returns 0</code></pre>
+; returns false</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>contains { ".." "xoxo" ".." } "xoxo"
-; returns 1</code></pre>
+; returns true</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>contains { ".." "xoxo" ".." } "lol"
-; returns 0</code></pre>
+; returns false</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>contains list { 1 2 3 } 2
-; returns 1</code></pre>
+; returns true</code></pre>
 </div>
 <h3>has-suffix</h3><p>Checks if a string ends with a specific suffix, returning 1 if true or 0 if false.</p>
 <p class='arg'><b>string</b> String to check</p>
@@ -1374,20 +877,20 @@ ASDF
 <pre class='prettyprint lang-rye'><code language='lang-rye'>position? { ".." "xo" ".." } "xo"
 ; returns 2</code></pre>
 </div>
-<h3>encode\base64</h3><p>Encodes a string or binary data as a base64 string.</p>
+<h3>encode-to\base64</h3><p>Encodes a string or binary data as a base64 string.</p>
 <p class='arg'><b>data</b> String or native bytes/pem-block to encode</p>
 <p class='returns'><b>returns</b> base64-encoded string</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>encode\base64 "abcd"
+<pre class='prettyprint lang-rye'><code language='lang-rye'>encode-to\base64 "abcd"
 ; returns "YWJjZA=="</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>encode\base64 "hello world"
+<pre class='prettyprint lang-rye'><code language='lang-rye'>encode-to\base64 "hello world"
 ; returns "aGVsbG8gd29ybGQ="</code></pre>
 </div>
 <h3>decode\base64</h3><p>Decodes a base64-encoded string back to its original form.</p>
 <p class='arg'><b>string</b> Base64-encoded string to decode</p>
 <p class='returns'><b>returns</b> decoded string</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>decode\base64 encode\base64 "abcd"
+<pre class='prettyprint lang-rye'><code language='lang-rye'>decode\base64 encode-to\base64 "abcd"
 ; returns "abcd"</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>decode\base64 "aGVsbG8gd29ybGQ="
 ; returns "hello world"</code></pre>
@@ -1526,7 +1029,7 @@ ASDF
 <pre class='prettyprint lang-rye'><code language='lang-rye'>random { 1 2 3 } |type?
 ; returns integer</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>random { 1 2 3 } |contains* { 1 2 3 }
-; returns 1</code></pre>
+; returns true</code></pre>
 </div>
 <h3>unpack</h3><p>Flattens a block of blocks or list of lists by one level, combining all inner collections into a single collection.</p>
 <p class='arg'><b>collection</b> Block or list of blocks/lists to unpack</p>
@@ -1744,7 +1247,7 @@ ASDF
 <p class='returns'><b>returns</b> list containing all values from the dictionary</p>
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 "b" 2 "c" 3 } |values
-; returns list { 3 1 2 }</code></pre>
+; returns list { 1 2 3 }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "x" 10 "y" 20 } |values |length?
 ; returns 2</code></pre>
 </div>
@@ -1830,6 +1333,8 @@ ASDF
 ; builtin `reverse!` requires argument 1 to be: Block, String, List. </code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>reverse! ref { 3 2 1 3 }
 ; returns { 3 2 1 3 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: ref list { 1 2 3 } , reverse! x , x
+; returns list { 3 2 1 }</code></pre>
 </div>
 <h3>concat</h3><p>Joins two series values together.</p>
 <p class='arg'><b>value1</b> First value (string, integer, block) to concatenate</p>
@@ -1842,6 +1347,22 @@ ASDF
 ; returns { 1 2 3 4 2 4 5 }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>123 .concat "abc"
 ; returns "123abc"</code></pre>
+</div>
+<h3>_++</h3><p>Joins two values together, with behavior depending on types: concatenates strings, joins blocks, merges dictionaries, etc.</p>
+<p class='arg'><b>value1</b> First value (string, block, dict, etc.)</p>
+<p class='arg'><b>value2</b> Second value to join</p>
+<p class='returns'><b>returns</b> result of joining the values, type depends on input types</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>"A" ++ "b"
+; returns "Ab"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>"A" ++ 1
+; returns "A1"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>{ 1 2 } ++ { 3 4 }
+; returns { 1 2 3 4 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 } || ++ { "b" 2 }
+; returns dict { a 1 b 2 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 } || ++ dict { "b" 2 }
+; returns dict { a 1 b 2 }</code></pre>
 </div>
 <h3>union</h3><p>Combines two collections, removing any duplicate values to create a union of all unique values.</p>
 <p class='arg'><b>collection1</b> First block or list</p>
@@ -1887,6 +1408,16 @@ ASDF
 <p class='arg'><b>collection</b> String, block, dict, list, table, context or vector to check</p>
 <p class='returns'><b>returns</b> integer 1 if the collection is empty, 0 otherwise</p>
 <div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>{ } .is-empty
+; returns true</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>dict { } |is-empty
+; returns true</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a 'b } { } |is-empty
+; returns true</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>"abc" .is-empty
+; returns false</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>{ 1 2 3 } .is-empty
+; returns false</code></pre>
 </div>
 <h3>length?</h3><p>Returns the number of elements in a collection.</p>
 <p class='arg'><b>collection</b> String, block, dict, list, table, context or vector to measure</p>
@@ -1943,6 +1474,8 @@ ASDF
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>2 &lt;~ { 23 34 45 }
 ; returns 34</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>1 &lt;~ { "a" "b" "c" }
+; returns "a"</code></pre>
 </div>
 <h3>_~></h3><p>Accesses a value in a collection by index (0-based indexing).</p>
 <p class='arg'><b>collection</b> Block, list or other indexable collection</p>
@@ -1990,6 +1523,16 @@ ASDF
 <p class='arg'><b>comparator</b> Function that takes two arguments and returns a truthy value if they should be considered matching</p>
 <p class='returns'><b>returns</b> a new collection containing values from the first collection that match with values from the second collection according to the comparator</p>
 <div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>intersection\by "foobar" "fbx" fn { a b } { a .contains b }
+; returns "fb"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>intersection\by "fooBar" "Fbx" fn { a b } { a .to-lower .contains to-lower b }
+; returns "fB"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>intersection\by { "foo" 33 } { 33 33 } fn { a b } { a .contains b }
+; returns { 33 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>intersection\by { "foo" "bar" 33 } { 42 } fn { a b } { map a { .type? } |contains b .type? }
+; returns { 33 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>intersection\by { { "foo" x } { "bar" y } } { { "bar" z } } fn { a b } { map a { .first } |contains first b }
+; returns { { "bar" y } }</code></pre>
 </div>
 <h3>difference</h3><p>Creates a new collection containing elements from the first collection that are not present in the second collection.</p>
 <p class='arg'><b>collection1</b> First string, block or list</p>
@@ -2040,9 +1583,9 @@ ASDF
 <p class='arg'><b>word</b> Word referring to a block to modify</p>
 <p class='returns'><b>returns</b> the modified block with the last element removed</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>x: ref { 1 2 3 4 } remove-last! 'x x
+<pre class='prettyprint lang-rye'><code language='lang-rye'>var 'x ref { 1 2 3 4 } remove-last! 'x x
 ; returns { 1 2 3 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>x: ref { 1 2 3 4 } remove-last! 'x
+<pre class='prettyprint lang-rye'><code language='lang-rye'>var 'x ref { 1 2 3 4 } remove-last! 'x
 ; returns { 1 2 3 }</code></pre>
 </div>
 <h3>append!</h3><p>Appends a value to a block, list or string in-place and returns the modified collection.</p>
@@ -2050,12 +1593,12 @@ ASDF
 <p class='arg'><b>word</b> Word referring to a block, list or string to modify</p>
 <p class='returns'><b>returns</b> the modified collection with the value appended</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>x: ref { 1 2 3 } append! 4 'x , x
+<pre class='prettyprint lang-rye'><code language='lang-rye'>var 'x ref { 1 2 3 } append! 4 'x , x
 ; returns { 1 2 3 4 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>s: "hello" append! " world" 's , s
+<pre class='prettyprint lang-rye'><code language='lang-rye'>var 's "hello" append! " world" 's , s
 ; returns "hello world"</code></pre>
 </div>
-<h3>change
+<h3>change\
 th!</h3><p>Changes the value at a specific position in a block or list in-place and returns the modified collection.</p>
 <p class='arg'><b>collection</b> Reference to a block or list to modify</p>
 <p class='arg'><b>position</b> Position of the element to change (1-based)</p>
@@ -2087,11 +1630,31 @@ th!</h3><p>Changes the value at a specific position in a block or list in-place 
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>x: { 1 2 3 } pos x
 ; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: { 1 2 3 } pos next x
+; returns 1</code></pre>
 </div>
 <h3>next</h3><p>Advances the cursor position in a block and returns the block.</p>
 <p class='arg'><b>block</b> Block to advance cursor in</p>
 <p class='returns'><b>returns</b> the block with its cursor advanced to the next position</p>
 <div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: { 11 22 33 } peek next next x
+; returns 33</code></pre>
+</div>
+<h3>vals</h3><p>Takes a block of Rye values and evaluates each value or expression.</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: 1 y: 2 vals { x y }
+; returns { 1 2 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: 1 y: 2 vals { 1 y }
+; returns { 1 2 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: 1 y: 2 try { vals { z y } } |type?
+; returns error</code></pre>
+</div>
+<h3>vals\with</h3><p>Evaluate a block with injecting the first argument.</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: 1 y: 2 vals\with 10 { + x , * y }
+; returns { 11 20 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: 1 y: 2 vals\with 100 { + 10 , * 8.9 }
+; returns { 110 890 }</code></pre>
 </div>
 </div>
 <h2>Contexts </h2><p>Context related functions</p><div class='section'>
@@ -2182,8 +1745,52 @@ th!</h3><p>Changes the value at a specific position in a block or list in-place 
 ; correctly causes error:
 ; word not found: y </code></pre>
 </div>
+<h3>current</h3><p>Returns current context.</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { var 'x 9999 , incr: fn\in { } current { x:: inc x } } c/incr c/x
+; returns 10000</code></pre>
 </div>
-<h2>Functions </h2><p>functions that create functions</p><div class='section'>
+<h3>parent</h3><p>Returns parent context of the current context.</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>var 'y 99 c: context { incr: fn\in { } parent { y:: inc y } } c/incr y
+; returns 100</code></pre>
+</div>
+<h3>parent\of</h3><p>Returns parent context of the current context.</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>ct: context { p: 123 } parent\of ct |= current
+; returns true</code></pre>
+</div>
+<h3>clone</h3><p>Creates a copy of a context with the same state and parent relationship.</p>
+<p class='arg'><b>ctx</b> Context object to clone</p>
+<p class='returns'><b>returns</b> a new context object that is a copy of the original context</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 123 y: 456 } cc: clone c cc/x
+; returns 123</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 123 y: 456 } cc: clone c cc/y
+; returns 456</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x:: 123 } cc: clone c do\in cc { x:: 999 } c/x
+; returns 123</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x:: 123 } cc: clone c do\in cc { x:: 999 } cc/x
+; returns 999</code></pre>
+</div>
+<h3>clone\</h3><p>Creates a copy of a context and evaluates a block of code inside the clone.</p>
+<p class='arg'><b>ctx</b> Context object to clone</p>
+<p class='arg'><b>block</b> Block of expressions to evaluate in the cloned context</p>
+<p class='returns'><b>returns</b> the cloned context with the block evaluated inside it</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 123 } cc: clone\ c { y: x + 100 } cc/y
+; returns 223</code></pre>
+</div>
+</div>
+<h2>Default</h2><p></p><div class='section'>
+<h3>var</h3><p>Declares a word as a variable with the given value, allowing it to be modified. Can only be used once per word in a context.</p>
+<p class='arg'><b>word</b> Tagword representing the variable name</p>
+<p class='arg'><b>value</b> Initial value for the variable</p>
+<p class='returns'><b>returns</b> The initial value</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>var 'x 10 x:: 20 x
+; returns 20</code></pre>
+</div>
 <h3>does</h3><p>Creates a function with no arguments that executes the given block when called.</p>
 <p class='arg'><b>body</b> Block containing the function body code</p>
 <p class='returns'><b>returns</b> function object with no parameters</p>
@@ -2231,9 +1838,6 @@ th!</h3><p>Changes the value at a specific position in a block or list in-place 
 ; returns function</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>x: pfn { x } { + 123 } , x 123
 ; returns 246</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>x: pfn { x } { .print } , x 123
-; correctly causes error:
-; word not found: print </code></pre>
 </div>
 <h3>fn\cc</h3><p>Creates a function that captures the current context, allowing access to variables from the enclosing scope.</p>
 <p class='arg'><b>spec</b> Block containing parameter specifications</p>
@@ -2270,6 +1874,18 @@ th!</h3><p>Changes the value at a specific position in a block or list in-place 
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>y: 5 , f: closure { x } { x + y } , f 3
 ; returns 8</code></pre>
+</div>
+<h3>partial</h3><p>Creates a partially applied function with specified arguments, using _ (void) for arguments to be filled later.</p>
+<p class='arg'><b>func</b> Function or builtin to partially apply</p>
+<p class='arg'><b>args</b> Block of arguments, with _ (void) for arguments to be filled later</p>
+<p class='returns'><b>returns</b> CurriedCaller object that can be called with the remaining arguments</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>prepend-star: partial ?concat [ "* " _ ] , prepend-star "hello"
+; returns "* hello"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>add-5: partial ?_+ [ _ 5 ] , add-5 10
+; returns 15</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>fn-add: fn { x y } { x + y } , add-5: partial ?fn-add [ _ 5 ] , add-5 10
+; returns 15</code></pre>
 </div>
 </div>
 </main>

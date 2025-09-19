@@ -1,0 +1,217 @@
+; test_landlock_comprehensive.rye
+; Comprehensive test for Landlock filesystem access control
+
+print "=== Landlock Comprehensive Test ==="
+
+; Import error handling utilities
+import %builtins:error-handling
+
+; Function to test file access with expected result
+test-file-access: fn { path operation expected-result } {
+    print "Testing " operation " on " path " (expected: " expected-result ")"
+    
+    ; Try the operation and capture the result
+    result: try {
+        case operation {
+            'read {
+                ; Try to read the file
+                file-read path
+                "success"
+            }
+            'write {
+                ; Try to write to the file
+                file-write path "test content"
+                "success"
+            }
+            'create {
+                ; Try to create a new file
+                file-write path "new file content"
+                "success"
+            }
+            'delete {
+                ; Try to delete the file
+                file-delete path
+                "success"
+            }
+            'execute {
+                ; Try to execute the file (simplified simulation)
+                print "Note: Execution test is simulated"
+                "success"
+            }
+            _ {
+                fail "Unknown operation: " operation
+            }
+        }
+    }
+    
+    ; Check if the result matches the expected result
+    is-error: is-error result
+    
+    case expected-result {
+        'success {
+            if is-error {
+                print "❌ FAILED: Operation should succeed but failed with error: " result |message?
+                print "Error details: " result
+                false
+            } else {
+                print "✅ PASSED: Operation succeeded as expected"
+                true
+            }
+        }
+        'failure {
+            if is-error {
+                print "✅ PASSED: Operation failed as expected with error: " result |message?
+                true
+            } else {
+                print "❌ FAILED: Operation should fail but succeeded"
+                false
+            }
+        }
+        _ {
+            print "❌ FAILED: Unknown expected result: " expected-result
+            false
+        }
+    }
+}
+
+; Create test files and directories
+setup-test-environment: fn { } {
+    print "\nSetting up test environment..."
+    
+    ; Create a temporary directory for testing
+    try {
+        file-delete-recursive "landlock_test"
+    }
+    
+    file-make-dir "landlock_test"
+    file-make-dir "landlock_test/readable"
+    file-make-dir "landlock_test/writable"
+    file-make-dir "landlock_test/executable"
+    
+    ; Create test files
+    file-write "landlock_test/readable/test.txt" "This is a readable file"
+    file-write "landlock_test/writable/test.txt" "This is a writable file"
+    file-write "landlock_test/executable/test.sh" "#!/bin/sh\necho 'This is an executable file'"
+    
+    print "Test environment setup complete"
+}
+
+; Clean up test environment
+cleanup-test-environment: fn { } {
+    print "\nCleaning up test environment..."
+    try {
+        file-delete-recursive "landlock_test"
+        print "Test environment cleanup complete"
+    }
+}
+
+; Run tests for readonly profile
+test-readonly-profile: fn { } {
+    print "\n=== Testing readonly profile ==="
+    print "Note: This test assumes Rye is running with -landlock -landlock-profile=readonly"
+    
+    ; Test read access (should succeed)
+    test-file-access "landlock_test/readable/test.txt" 'read 'success
+    
+    ; Test write access (should fail)
+    test-file-access "landlock_test/writable/test.txt" 'write 'failure
+    
+    ; Test file creation (should fail)
+    test-file-access "landlock_test/writable/new.txt" 'create 'failure
+    
+    ; Test file deletion (should fail)
+    test-file-access "landlock_test/writable/test.txt" 'delete 'failure
+    
+    ; Test execution (should fail)
+    test-file-access "landlock_test/executable/test.sh" 'execute 'failure
+}
+
+; Run tests for readexec profile
+test-readexec-profile: fn { } {
+    print "\n=== Testing readexec profile ==="
+    print "Note: This test assumes Rye is running with -landlock -landlock-profile=readexec"
+    
+    ; Test read access (should succeed)
+    test-file-access "landlock_test/readable/test.txt" 'read 'success
+    
+    ; Test write access (should fail)
+    test-file-access "landlock_test/writable/test.txt" 'write 'failure
+    
+    ; Test file creation (should fail)
+    test-file-access "landlock_test/writable/new.txt" 'create 'failure
+    
+    ; Test file deletion (should fail)
+    test-file-access "landlock_test/writable/test.txt" 'delete 'failure
+    
+    ; Test execution (should succeed)
+    test-file-access "landlock_test/executable/test.sh" 'execute 'success
+}
+
+; Run tests for custom profile
+test-custom-profile: fn { } {
+    print "\n=== Testing custom profile ==="
+    print "Note: This test assumes Rye is running with -landlock -landlock-profile=custom -landlock-paths=landlock_test/readable:r,landlock_test/writable:rw"
+    
+    ; Test read access to readable directory (should succeed)
+    test-file-access "landlock_test/readable/test.txt" 'read 'success
+    
+    ; Test read access to writable directory (should succeed)
+    test-file-access "landlock_test/writable/test.txt" 'read 'success
+    
+    ; Test write access to readable directory (should fail)
+    test-file-access "landlock_test/readable/test.txt" 'write 'failure
+    
+    ; Test write access to writable directory (should succeed)
+    test-file-access "landlock_test/writable/test.txt" 'write 'success
+    
+    ; Test file creation in writable directory (should succeed)
+    test-file-access "landlock_test/writable/new.txt" 'create 'success
+    
+    ; Test file deletion in writable directory (should succeed)
+    test-file-access "landlock_test/writable/test.txt" 'delete 'success
+    
+    ; Test execution (should fail)
+    test-file-access "landlock_test/executable/test.sh" 'execute 'failure
+}
+
+; Main test function
+main: fn { } {
+    ; Setup test environment
+    setup-test-environment
+    
+    ; Get the current landlock profile from command line arguments
+    args: command-line-args
+    profile: 'none
+    
+    ; Parse command line arguments to determine which profile to test
+    if args |length > 1 {
+        profile: args |at 1
+    }
+    
+    ; Run tests based on the profile
+    case profile {
+        'readonly {
+            test-readonly-profile
+        }
+        'readexec {
+            test-readexec-profile
+        }
+        'custom {
+            test-custom-profile
+        }
+        _ {
+            print "\nUsage: rye test_landlock_comprehensive.rye [profile]"
+            print "  profile: readonly, readexec, or custom"
+            print "\nExample:"
+            print "  rye -landlock -landlock-profile=readonly test_landlock_comprehensive.rye readonly"
+            print "  rye -landlock -landlock-profile=readexec test_landlock_comprehensive.rye readexec"
+            print "  rye -landlock -landlock-profile=custom -landlock-paths=landlock_test/readable:r,landlock_test/writable:rw test_landlock_comprehensive.rye custom"
+        }
+    }
+    
+    ; Cleanup test environment
+    cleanup-test-environment
+}
+
+; Run the main function
+main

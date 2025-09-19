@@ -1,2 +1,0 @@
-load-csv: does { load\csv %friends.csv }
-print "Hello"

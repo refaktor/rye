@@ -107,7 +107,7 @@ var Builtins_goroutines = map[string]*env.Builtin{
 			}
 		},
 	},
-	"Rye-channel//read": {
+	"Rye-channel//Read": {
 		Argsn: 1,
 		Doc:   "TODODOC.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -121,11 +121,11 @@ var Builtins_goroutines = map[string]*env.Builtin{
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-channel//read")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-channel//Read")
 			}
 		},
 	},
-	"Rye-channel//send": {
+	"Rye-channel//Send": {
 		Argsn: 2,
 		Doc:   "TODODOC.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -135,12 +135,12 @@ var Builtins_goroutines = map[string]*env.Builtin{
 				return arg0
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-channel//send")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-channel//Send")
 			}
 		},
 	},
 
-	"Rye-channel//close": {
+	"Rye-channel//Close": {
 		Argsn: 1,
 		Doc:   "TODODOC.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -150,7 +150,7 @@ var Builtins_goroutines = map[string]*env.Builtin{
 				return arg0
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-channel//close")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-channel//Close")
 			}
 		},
 	},
@@ -164,7 +164,7 @@ var Builtins_goroutines = map[string]*env.Builtin{
 		},
 	},
 
-	"Rye-waitgroup//add": {
+	"Rye-waitgroup//Add": {
 		Argsn: 2,
 		Doc:   "TODODOC.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -176,16 +176,16 @@ var Builtins_goroutines = map[string]*env.Builtin{
 					return arg0
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "Rye-waitgroup//add")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "Rye-waitgroup//Add")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-waitgroup//add")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-waitgroup//Add")
 			}
 		},
 	},
 
-	"Rye-waitgroup//done": {
+	"Rye-waitgroup//Done": {
 		Argsn: 1,
 		Doc:   "TODODOC.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -195,12 +195,12 @@ var Builtins_goroutines = map[string]*env.Builtin{
 				return arg0
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-waitgroup//done")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-waitgroup//Done")
 			}
 		},
 	},
 
-	"Rye-waitgroup//wait": {
+	"Rye-waitgroup//Wait": {
 		Argsn: 1,
 		Doc:   "Wait on a waitgroup.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -210,7 +210,7 @@ var Builtins_goroutines = map[string]*env.Builtin{
 				return arg0
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-waitgroup//wait")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-waitgroup//Wait")
 			}
 		},
 	},

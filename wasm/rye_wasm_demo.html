@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Rye WebAssembly Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .examples {
+            margin-top: 20px;
+        }
+        .example {
+            cursor: pointer;
+            color: #0066cc;
+            text-decoration: underline;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Rye WebAssembly Demo</h1>
+    <p>This demo runs Rye language in your browser using WebAssembly compiled with TinyGo.</p>
+    
+    <div class="container">
+        <textarea id="codeInput" rows="10">1 + 2</textarea>
+        <button id="runButton">Run</button>
+        <pre id="output">Result will appear here</pre>
+    </div>
+    
+    <div class="examples">
+        <h3>Examples:</h3>
+        <span class="example" onclick="loadExample('1 + 2')">Simple Addition</span>
+        <span class="example" onclick="loadExample('range 1 10')">Range</span>
+        <span class="example" onclick="loadExample('map [1 2 3 4 5] func [x] [x * 2]')">Map Function</span>
+        <span class="example" onclick="loadExample('filter [1 2 3 4 5] func [x] [x > 2]')">Filter</span>
+        <span class="example" onclick="loadExample('reduce [1 2 3 4 5] 0 func [acc x] [acc + x]')">Reduce</span>
+    </div>
+
+    <script>
+        // Function to load example code
+        function loadExample(code) {
+            document.getElementById("codeInput").value = code;
+        }
+
+        // Wait for the wasm_exec.js script to load
+        document.addEventListener("DOMContentLoaded", function() {
+            // Check if Go is defined (from wasm_exec.js)
+            if (typeof Go === 'undefined') {
+                document.getElementById("output").textContent = "Error: wasm_exec.js not loaded. Make sure you have the TinyGo wasm_exec.js file in the same directory.";
+                return;
+            }
+
+            // Load the WebAssembly module
+            const go = new Go();
+            WebAssembly.instantiateStreaming(fetch("rye_tiny.wasm"), go.importObject).then((result) => {
+                go.run(result.instance);
+                
+                // Initialize Rye
+                InitRyeShell();
+                
+                // Execute Rye code
+                document.getElementById("runButton").addEventListener("click", function() {
+                    const code = document.getElementById("codeInput").value;
+                    try {
+                        const result = RyeEvalString(code);
+                        document.getElementById("output").textContent = result;
+                    } catch (error) {
+                        document.getElementById("output").textContent = "Error: " + error.message;
+                    }
+                });
+
+                document.getElementById("output").textContent = "Rye WebAssembly runtime loaded successfully!";
+            }).catch(error => {
+                document.getElementById("output").textContent = "Error loading WebAssembly: " + error.message;
+            });
+        });
+    </script>
+    
+    <!-- Load the TinyGo wasm_exec.js file -->
+    <script src="wasm_exec.js"></script>
+</body>
+</html>

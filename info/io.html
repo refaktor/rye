@@ -44,31 +44,31 @@
 </div>
 </div>
 <h2>IO </h2><p>IO related functions</p><div class='section'>
-<h3>file-schema//open</h3><p>Opens a file for reading.</p>
+<h3>file-schema//Open</h3><p>Opens a file for reading.</p>
 <p class='arg'><b>path</b> uri representing the file to open</p>
 <p class='returns'><b>returns</b> native file object</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>open %data/file.txt |type?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>Open %data/file.txt |type?
 ; returns native</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>open %data/file.txt |kind?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>Open %data/file.txt |kind?
 ; returns file</code></pre>
 </div>
-<h3>file-schema//open\append</h3><p>Opens a file for appending.</p>
+<h3>file-schema//Open\append</h3><p>Opens a file for appending.</p>
 <p class='arg'><b>path</b> uri representing the file to open for appending</p>
 <p class='returns'><b>returns</b> native writer object</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>open\append %data/file.txt |type?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>Open\append %data/file.txt |type?
 ; returns native</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>open\append %data/file.txt |kind?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>Open\append %data/file.txt |kind?
 ; returns writer</code></pre>
 </div>
-<h3>file-schema//create</h3><p>Creates a new file.</p>
+<h3>file-schema//Create</h3><p>Creates a new file.</p>
 <p class='arg'><b>path</b> uri representing the file to create</p>
 <p class='returns'><b>returns</b> native file object</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>create %data/created.txt |type?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>Create %data/created.txt |type?
 ; returns native</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>create %data/created.txt |kind?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>Create %data/created.txt |kind?
 ; returns file</code></pre>
 </div>
 <h3>file-ext?</h3><p>Gets the extension of a file.</p>
@@ -88,7 +88,7 @@
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>reader %data/file.txt |kind?
 ; returns reader</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>reader open %data/file.txt |kind?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>reader Open %data/file.txt |kind?
 ; returns reader</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>reader "some string" |kind?
 ; returns reader</code></pre>
@@ -103,89 +103,89 @@
 <p class='returns'><b>returns</b> native writer object connected to standard output</p>
 <div class='group'>
 </div>
-<h3>reader//read\string</h3><p>Reads all content from a reader as a string.</p>
+<h3>reader//Read\string</h3><p>Reads all content from a reader as a string.</p>
 <p class='arg'><b>reader</b> native reader object</p>
 <p class='returns'><b>returns</b> string containing all content from the reader</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>reader "some string" |read\string
+<pre class='prettyprint lang-rye'><code language='lang-rye'>reader "some string" |Read\string
 ; returns "some string"</code></pre>
 </div>
-<h3>reader//copy</h3><p>Copies all content from a reader to a writer.</p>
+<h3>reader//Copy</h3><p>Copies all content from a reader to a writer.</p>
 <p class='arg'><b>reader</b> native reader object</p>
 <p class='arg'><b>writer</b> native writer object</p>
 <p class='returns'><b>returns</b> the reader object if successful</p>
 <div class='group'>
 </div>
-<h3>file//copy</h3><p>Copies content from a file to a writer.</p>
+<h3>file//Copy</h3><p>Copies content from a file to a writer.</p>
 <p class='arg'><b>file</b> native file object</p>
 <p class='arg'><b>writer</b> native writer object</p>
 <p class='returns'><b>returns</b> the file object if successful</p>
 <div class='group'>
 </div>
-<h3>file//stat</h3><p>Gets file information (stat) for a file.</p>
+<h3>file//Stat</h3><p>Gets file information (stat) for a file.</p>
 <p class='arg'><b>file</b> native file object</p>
 <p class='returns'><b>returns</b> native file-info object</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>stat open %data/file.txt |kind?
+<pre class='prettyprint lang-rye'><code language='lang-rye'>Stat Open %data/file.txt |kind?
 ; returns file-info</code></pre>
 </div>
-<h3>file-info//size?</h3><p>Gets the size of a file in bytes.</p>
+<h3>file-info//Size?</h3><p>Gets the size of a file in bytes.</p>
 <p class='arg'><b>file-info</b> native file-info object</p>
 <p class='returns'><b>returns</b> integer representing the file size in bytes</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>size? stat open %data/file.txt
+<pre class='prettyprint lang-rye'><code language='lang-rye'>Size? Stat Open %data/file.txt
 ; returns 16</code></pre>
 </div>
-<h3>file//read-all</h3><p>Reads the entire content of a file as a string.</p>
+<h3>file//Read-all</h3><p>Reads the entire content of a file as a string.</p>
 <p class='arg'><b>file</b> native file object</p>
 <p class='returns'><b>returns</b> string containing the entire file content</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>read-all open %data/file.txt
+<pre class='prettyprint lang-rye'><code language='lang-rye'>Read-all Open %data/file.txt
 ; returns "hello text file
 ; "</code></pre>
 </div>
-<h3>file//seek\end</h3><p>Seeks to the end of a file.</p>
+<h3>file//Seek\end</h3><p>Seeks to the end of a file.</p>
 <p class='arg'><b>file</b> native file object</p>
 <p class='returns'><b>returns</b> the same file object with position set to end of file</p>
 <div class='group'>
 </div>
-<h3>file//close</h3><p>Closes an open file.</p>
+<h3>file//Close</h3><p>Closes an open file.</p>
 <p class='arg'><b>file</b> native file object</p>
 <p class='returns'><b>returns</b> empty string if successful</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>close open %data/file.txt
+<pre class='prettyprint lang-rye'><code language='lang-rye'>Close Open %data/file.txt
 ; returns ""</code></pre>
 </div>
-<h3>file-schema//read</h3><p>Reads the entire content of a file as a string.</p>
+<h3>file-schema//Read</h3><p>Reads the entire content of a file as a string.</p>
 <p class='arg'><b>path</b> uri representing the file to read</p>
 <p class='returns'><b>returns</b> string containing the entire file content</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>read %data/file.txt
+<pre class='prettyprint lang-rye'><code language='lang-rye'>Read %data/file.txt
 ; returns "hello text file
 ; "</code></pre>
 </div>
-<h3>file-schema//read\bytes</h3><p>Reads the entire content of a file as bytes.</p>
+<h3>file-schema//Read\bytes</h3><p>Reads the entire content of a file as bytes.</p>
 <p class='arg'><b>path</b> uri representing the file to read</p>
 <p class='returns'><b>returns</b> native bytes object containing the file content</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>read %data/file.txt
+<pre class='prettyprint lang-rye'><code language='lang-rye'>Read %data/file.txt
 ; returns "hello text file
 ; "</code></pre>
 </div>
-<h3>file-schema//read\lines</h3><p>Reads a file and returns its content as a block of lines.</p>
+<h3>file-schema//Read\lines</h3><p>Reads a file and returns its content as a block of lines.</p>
 <p class='arg'><b>path</b> uri representing the file to read</p>
 <p class='returns'><b>returns</b> block of strings, each representing a line from the file</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>read %data/file.txt
+<pre class='prettyprint lang-rye'><code language='lang-rye'>Read %data/file.txt
 ; returns "hello text file
 ; "</code></pre>
 </div>
-<h3>file-schema//write</h3><p>Writes content to a file.</p>
+<h3>file-schema//Write</h3><p>Writes content to a file.</p>
 <p class='arg'><b>path</b> uri representing the file to write to</p>
 <p class='arg'><b>content</b> string or bytes to write to the file</p>
 <p class='returns'><b>returns</b> the content that was written</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>write %data/write.txt "written
+<pre class='prettyprint lang-rye'><code language='lang-rye'>Write %data/write.txt "written
 "
 ; returns "written
 ; "</code></pre>
@@ -202,94 +202,111 @@
 <p class='returns'><b>returns</b> combined bytes as a native bytes object</p>
 <div class='group'>
 </div>
-<h3>writer//write\string</h3><p>Writes a string to a writer.</p>
+<h3>writer//Write\string</h3><p>Writes a string to a writer.</p>
 <p class='arg'><b>writer</b> native writer object</p>
 <p class='arg'><b>content</b> string to write</p>
 <p class='returns'><b>returns</b> the writer object if successful</p>
 <div class='group'>
 </div>
-<h3>https-schema//open</h3><p>Opens a HTTPS GET request and returns a reader for the response body.</p>
+<h3>https-schema//Open</h3><p>Opens a HTTPS GET request and returns a reader for the response body.</p>
 <p class='arg'><b>url</b> uri representing the HTTPS URL to request</p>
 <p class='returns'><b>returns</b> native reader object for the response body</p>
 <div class='group'>
 </div>
-<h3>https-schema//get</h3><p>Makes a HTTPS GET request and returns the response body as a string.</p>
+<h3>https-schema//Get</h3><p>Makes a HTTPS GET request and returns the response body as a string.</p>
 <p class='arg'><b>url</b> uri representing the HTTPS URL to request</p>
 <p class='returns'><b>returns</b> string containing the response body</p>
 <div class='group'>
 </div>
-<h3>https-schema//post</h3><p>Makes a HTTPS POST request and returns the response body as a string.</p>
+<h3>https-schema//Post</h3><p>Makes a HTTPS POST request and returns the response body as a string.</p>
 <p class='arg'><b>url</b> uri representing the HTTPS URL to request</p>
 <p class='arg'><b>data</b> string containing the request body</p>
 <p class='arg'><b>content-type</b> word specifying the content type (e.g., 'json', 'text')</p>
 <p class='returns'><b>returns</b> string containing the response body</p>
 <div class='group'>
 </div>
-<h3>http-schema//get</h3><p>Makes a HTTP GET request and returns the response body as a string.</p>
+<h3>http-schema//Get</h3><p>Makes a HTTP GET request and returns the response body as a string.</p>
 <p class='arg'><b>url</b> uri representing the HTTP URL to request</p>
 <p class='returns'><b>returns</b> string containing the response body</p>
 <div class='group'>
 </div>
-<h3>http-schema//post</h3><p>Makes a HTTP POST request and returns the response body as a string.</p>
+<h3>http-schema//Post</h3><p>Makes a HTTP POST request and returns the response body as a string.</p>
 <p class='arg'><b>url</b> uri representing the HTTP URL to request</p>
 <p class='arg'><b>data</b> string containing the request body</p>
 <p class='arg'><b>content-type</b> word specifying the content type (e.g., 'json', 'text')</p>
 <p class='returns'><b>returns</b> string containing the response body</p>
 <div class='group'>
 </div>
-<h3>https-schema//new-request</h3><p>Creates a new HTTPS request object.</p>
+<h3>https-schema//New-request</h3><p>Creates a new HTTPS request object.</p>
 <p class='arg'><b>url</b> uri representing the HTTPS URL to request</p>
 <p class='arg'><b>method</b> word specifying the HTTP method (e.g., 'GET', 'POST')</p>
 <p class='arg'><b>data</b> string containing the request body</p>
 <p class='returns'><b>returns</b> native https-request object</p>
 <div class='group'>
 </div>
-<h3>https-request//set-header</h3><p>Sets a header on a HTTPS request.</p>
+<h3>https-request//Set-header</h3><p>Sets a header on a HTTPS request.</p>
 <p class='arg'><b>request</b> native https-request object</p>
 <p class='arg'><b>name</b> word representing the header name</p>
 <p class='arg'><b>value</b> string containing the header value</p>
 <p class='returns'><b>returns</b> the request object if successful</p>
 <div class='group'>
 </div>
-<h3>https-request//set-basic-auth</h3><p>Sets Basic Authentication on a HTTPS request.</p>
+<h3>https-request//Set-basic-auth</h3><p>Sets Basic Authentication on a HTTPS request.</p>
 <p class='arg'><b>request</b> native https-request object</p>
 <p class='arg'><b>username</b> string containing the username</p>
 <p class='arg'><b>password</b> string containing the password</p>
 <p class='returns'><b>returns</b> the request object if successful</p>
 <div class='group'>
 </div>
-<h3>https-request//call</h3><p>Executes a HTTPS request and returns the response.</p>
+<h3>https-request//Call</h3><p>Executes a HTTPS request and returns the response.</p>
 <p class='arg'><b>request</b> native https-request object</p>
 <p class='returns'><b>returns</b> native https-response object</p>
 <div class='group'>
 </div>
-<h3>https-response//read-body</h3><p>Reads the body of a HTTPS response as a string.</p>
+<h3>https-response//Read-body</h3><p>Reads the body of a HTTPS response as a string.</p>
 <p class='arg'><b>response</b> native https-response object</p>
 <p class='returns'><b>returns</b> string containing the response body</p>
 <div class='group'>
 </div>
-<h3>email//send</h3><p>Sends an email to the specified address.</p>
+<h3>email//Send</h3><p>Sends an email to the specified address.</p>
 <p class='arg'><b>to</b> email address to send to</p>
 <p class='arg'><b>message</b> string containing the email message</p>
 <p class='returns'><b>returns</b> integer 1 if successful</p>
 <div class='group'>
 </div>
-<h3>ftp-schema//open</h3><p>Opens a connection to an FTP server.</p>
+<h3>ftp-schema//Open</h3><p>Opens a connection to an FTP server.</p>
 <p class='arg'><b>server</b> uri representing the FTP server to connect to</p>
 <p class='returns'><b>returns</b> native ftp-connection object</p>
 <div class='group'>
 </div>
-<h3>ftp-connection//login</h3><p>Logs in to an FTP server connection.</p>
+<h3>ftp-connection//Login</h3><p>Logs in to an FTP server connection.</p>
 <p class='arg'><b>connection</b> native ftp-connection object</p>
 <p class='arg'><b>username</b> string containing the username</p>
 <p class='arg'><b>password</b> string containing the password</p>
 <p class='returns'><b>returns</b> the connection object if successful</p>
 <div class='group'>
 </div>
-<h3>ftp-connection//retrieve</h3><p>Retrieves a file from an FTP server.</p>
+<h3>ftp-connection//Retrieve</h3><p>Retrieves a file from an FTP server.</p>
 <p class='arg'><b>connection</b> native ftp-connection object</p>
 <p class='arg'><b>path</b> string containing the path of the file to retrieve</p>
 <p class='returns'><b>returns</b> native reader object for the retrieved file</p>
+<div class='group'>
+</div>
+<h3>tail-file</h3><p>Tails a file, following it for new content. Used for monitoring log files.</p>
+<p class='arg'><b>path</b> uri or string representing the file to tail</p>
+<p class='arg'><b>follow</b> boolean indicating whether to follow the file for new content</p>
+<p class='arg'><b>reopen</b> boolean indicating whether to reopen the file if it's rotated</p>
+<p class='returns'><b>returns</b> native tail-file object that can be used to read lines as they are added</p>
+<div class='group'>
+</div>
+<h3>tail-file//Read-line</h3><p>Reads the next line from a tailed file. Blocks until a line is available.</p>
+<p class='arg'><b>tail</b> native tail-file object</p>
+<p class='returns'><b>returns</b> string containing the next line from the file, or nil if no more lines</p>
+<div class='group'>
+</div>
+<h3>tail-file//Close</h3><p>Closes a tailed file, stopping the monitoring.</p>
+<p class='arg'><b>tail</b> native tail-file object</p>
+<p class='returns'><b>returns</b> empty string if successful</p>
 <div class='group'>
 </div>
 </div>

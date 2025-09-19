@@ -35,14 +35,14 @@ var Builtins_regexp = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	//  equal { regexp "[0-9]" |is-match "5" } 1
-	//  equal { regexp "[0-9]" |is-match "a" } 0
+	//  equal { regexp "[0-9]" |Is-match "5" } 1
+	//  equal { regexp "[0-9]" |Is-match "a" } 0
 	// Args:
 	// * regexp: Native regexp object
 	// * input: String to test against the pattern
 	// Returns:
 	// * integer 1 if the string matches the pattern, 0 otherwise
-	"regexp//is-match": {
+	"regexp//Is-match": {
 		Argsn: 2,
 		Doc:   "Tests if a string matches the regular expression pattern.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -57,22 +57,22 @@ var Builtins_regexp = map[string]*env.Builtin{
 						return *env.NewInteger(0)
 					}
 				default:
-					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "regexp//is-match")
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "regexp//Is-match")
 				}
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.StringType}, "regexp//is-match")
+				return MakeArgError(ps, 2, []env.Type{env.StringType}, "regexp//Is-match")
 			}
 		},
 	},
 
 	// Tests:
-	//  equal { regexp "x([0-9]+)y" |submatch? "x123y" } "123"
+	//  equal { regexp "x([0-9]+)y" |Submatch? "x123y" } "123"
 	// Args:
 	// * regexp: Regular expression with capturing groups
 	// * input: String to search in
 	// Returns:
 	// * string containing the first captured group or error if no submatch found
-	"regexp//submatch?": {
+	"regexp//Submatch?": {
 		Argsn: 2,
 		Doc:   "Extracts the first captured group from a string using the regular expression.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -84,25 +84,25 @@ var Builtins_regexp = map[string]*env.Builtin{
 					if len(res) > 1 {
 						return *env.NewString(res[1])
 					} else {
-						return MakeBuiltinError(ps, "No submatch.", "regexp//submatch?")
+						return MakeBuiltinError(ps, "No submatch.", "regexp//Submatch?")
 					}
 				default:
-					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "regexp//submatch?")
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "regexp//Submatch?")
 				}
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.StringType}, "regexp//submatch?")
+				return MakeArgError(ps, 2, []env.Type{env.StringType}, "regexp//Submatch?")
 			}
 		},
 	},
 
 	// Tests:
-	//  equal { regexp "x([0-9]+)y" |submatches? "x123y x234y" } { "123" }
+	//  equal { regexp "x([0-9]+)y" |Submatches? "x123y x234y" } { "123" }
 	// Args:
 	// * regexp: Regular expression with capturing groups
 	// * input: String to search in
 	// Returns:
 	// * block containing all captured groups from the first match or error if no match found
-	"regexp//submatches?": {
+	"regexp//Submatches?": {
 		Argsn: 2,
 		Doc:   "Extracts all captured groups from the first match as a block of strings.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -120,7 +120,7 @@ var Builtins_regexp = map[string]*env.Builtin{
 						}
 						return *env.NewBlock(*env.NewTSeries(col1))
 					}
-					return MakeBuiltinError(env1, "No results", "submatches?")
+					return MakeBuiltinError(env1, "No results", "Submatches?")
 				default:
 					return MakeError(env1, "Arg2 not Native")
 				}
@@ -131,13 +131,13 @@ var Builtins_regexp = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	//  equal { regexp "x([0-9]+)(y+)?" |submatches\all? "x11yy x22" } { { "11" "yy" } { "22" "" } }
+	//  equal { regexp "x([0-9]+)(y+)?" |Submatches\all? "x11yy x22" } { { "11" "yy" } { "22" "" } }
 	// Args:
 	// * regexp: Regular expression with capturing groups
 	// * input: String to search in
 	// Returns:
 	// * block of blocks, each inner block containing the captured groups from one match
-	"regexp//submatches\\all?": {
+	"regexp//Submatches\\all?": {
 		Argsn: 2,
 		Doc:   "Extracts all captured groups from all matches as a nested block structure.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -159,7 +159,7 @@ var Builtins_regexp = map[string]*env.Builtin{
 						}
 						return *env.NewBlock(*env.NewTSeries(blks))
 					}
-					return MakeBuiltinError(env1, "No results", "submatches?")
+					return MakeBuiltinError(env1, "No results", "Submatches?")
 				default:
 					return MakeError(env1, "Arg2 not Native")
 				}
@@ -170,13 +170,13 @@ var Builtins_regexp = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	//  equal { regexp "[0-9]+" |find-all "x123y x234y" } { "123" "234" }
+	//  equal { regexp "[0-9]+" |Find-all "x123y x234y" } { "123" "234" }
 	// Args:
 	// * regexp: Regular expression pattern
 	// * input: String to search in
 	// Returns:
 	// * block containing all matching substrings or error if no matches found
-	"regexp//find-all": {
+	"regexp//Find-all": {
 		Argsn: 2,
 		Doc:   "Finds all substrings matching the regular expression and returns them as a block.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -192,7 +192,7 @@ var Builtins_regexp = map[string]*env.Builtin{
 						}
 						return *env.NewBlock(*env.NewTSeries(col1))
 					}
-					return MakeBuiltinError(env1, "No results", "submatches?")
+					return MakeBuiltinError(env1, "No results", "Find-all")
 				default:
 					return MakeError(env1, "Arg2 not Native")
 				}
@@ -203,13 +203,13 @@ var Builtins_regexp = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	//	equal { regexp "[0-9]+c+" |match? "aa33bb55cc" } "55cc"
+	//	equal { regexp "[0-9]+c+" |Match? "aa33bb55cc" } "55cc"
 	// Args:
 	// * regexp: Regular expression pattern
 	// * input: String to search in
 	// Returns:
 	// * string containing the first match or empty string if no match found
-	"regexp//match?": {
+	"regexp//Match?": {
 		Argsn: 2,
 		Doc:   "Finds the first substring matching the regular expression.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -221,25 +221,25 @@ var Builtins_regexp = map[string]*env.Builtin{
 					if len(res) > 0 {
 						return *env.NewString(res)
 					}
-					return MakeBuiltinError(ps, "No result", "match?")
+					return MakeBuiltinError(ps, "No result", "Match?")
 				default:
-					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "regexp//match?")
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "regexp//Match?")
 				}
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.StringType}, "regexp//match?")
+				return MakeArgError(ps, 2, []env.Type{env.StringType}, "regexp//Match?")
 			}
 		},
 	},
 
 	// Tests:
-	//  equal { regexp "[0-9]+" |replace-all "x123y x234y" "XXX" } "xXXXy xXXXy"
+	//  equal { regexp "[0-9]+" |Replace-all "x123y x234y" "XXX" } "xXXXy xXXXy"
 	// Args:
 	// * regexp: Regular expression pattern
 	// * input: String to modify
 	// * replacement: String to replace matches with
 	// Returns:
 	// * string with all matches replaced by the replacement string
-	"regexp//replace-all": {
+	"regexp//Replace-all": {
 		Argsn: 3,
 		Doc:   "Replaces all occurrences of the regular expression pattern with the specified replacement string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -252,13 +252,13 @@ var Builtins_regexp = map[string]*env.Builtin{
 						res := re.Value.(*regexp.Regexp).ReplaceAllString(val.Value, replac.Value)
 						return *env.NewString(res)
 					default:
-						return MakeArgError(ps, 3, []env.Type{env.StringType}, "regexp//replace-all")
+						return MakeArgError(ps, 3, []env.Type{env.StringType}, "regexp//Replace-all")
 					}
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.StringType}, "regexp//replace-all")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "regexp//Replace-all")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "regexp//replace-all")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "regexp//Replace-all")
 			}
 		},
 	},

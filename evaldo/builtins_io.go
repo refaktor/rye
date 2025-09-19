@@ -1,5 +1,5 @@
-//go:build !b_no_io
-// +build !b_no_io
+//go:build !no_io
+// +build !no_io
 
 package evaldo
 
@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hpcloud/tail"
 	"github.com/refaktor/rye/env"
 
 	"net/http"
@@ -422,13 +423,13 @@ var Builtins_io = map[string]*env.Builtin{
 	// ##### IO ##### "IO related functions"
 	//
 	// Tests:
-	// equal { open %data/file.txt |type? } 'native
-	// equal { open %data/file.txt |kind? } 'file
+	// equal { Open %data/file.txt |type? } 'native
+	// equal { Open %data/file.txt |kind? } 'file
 	// Args:
 	// * path: uri representing the file to open
 	// Returns:
 	// * native file object
-	"file-schema//open": {
+	"file-schema//Open": {
 		Argsn: 1,
 		Doc:   "Opens a file for reading.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -440,19 +441,19 @@ var Builtins_io = map[string]*env.Builtin{
 				}
 				return *env.NewNative(ps.Idx, file, "file")
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-schema//open")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-schema//Open")
 			}
 		},
 	},
 
 	// Tests:
-	// equal { open\append %data/file.txt |type? } 'native
-	// equal { open\append %data/file.txt |kind? } 'writer
+	// equal { Open\append %data/file.txt |type? } 'native
+	// equal { Open\append %data/file.txt |kind? } 'writer
 	// Args:
 	// * path: uri representing the file to open for appending
 	// Returns:
 	// * native writer object
-	"file-schema//open\\append": {
+	"file-schema//Open\\append": {
 		Argsn: 1,
 		Doc:   "Opens a file for appending.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -460,7 +461,7 @@ var Builtins_io = map[string]*env.Builtin{
 			profile, exists := os.LookupEnv("RYE_SECCOMP_PROFILE")
 			if exists && profile == "readonly" {
 				ps.FailureFlag = true
-				return MakeBuiltinError(ps, "file append operation blocked by readonly seccomp profile", "file-schema//open\\append")
+				return MakeBuiltinError(ps, "file append operation blocked by readonly seccomp profile", "file-schema//Open\\append")
 			}
 
 			switch s := arg0.(type) {
@@ -477,13 +478,13 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { create %data/created.txt |type? } 'native
-	// equal { create %data/created.txt |kind? } 'file
+	// equal { Create %data/created.txt |type? } 'native
+	// equal { Create %data/created.txt |kind? } 'file
 	// Args:
 	// * path: uri representing the file to create
 	// Returns:
 	// * native file object
-	"file-schema//create": {
+	"file-schema//Create": {
 		Argsn: 1,
 		Doc:   "Creates a new file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -491,7 +492,7 @@ var Builtins_io = map[string]*env.Builtin{
 			profile, exists := os.LookupEnv("RYE_SECCOMP_PROFILE")
 			if exists && profile == "readonly" {
 				ps.FailureFlag = true
-				return MakeBuiltinError(ps, "file creation blocked by readonly seccomp profile", "file-schema//create")
+				return MakeBuiltinError(ps, "file creation blocked by readonly seccomp profile", "file-schema//Create")
 			}
 
 			switch s := arg0.(type) {
@@ -540,7 +541,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// should this be generic method or not?
 	// Tests:
 	// equal { reader %data/file.txt |kind? } 'reader
-	// equal { reader open %data/file.txt |kind? } 'reader
+	// equal { reader Open %data/file.txt |kind? } 'reader
 	// equal { reader "some string" |kind? } 'reader
 	// Args:
 	// * source: uri, file object, or string to read from
@@ -603,12 +604,12 @@ var Builtins_io = map[string]*env.Builtin{
 	// TODO: add scanner ScanString method ... look at: https://stackoverflow.com/questions/47479564/go-bufio-readstring-in-loop-is-infinite
 
 	// Tests:
-	// equal { reader "some string" |read\string } "some string"
+	// equal { reader "some string" |Read\string } "some string"
 	// Args:
 	// * reader: native reader object
 	// Returns:
 	// * string containing all content from the reader
-	"reader//read\\string": {
+	"reader//Read\\string": {
 		Argsn: 1,
 		Doc:   "Reads all content from a reader as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -639,7 +640,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * writer: native writer object
 	// Returns:
 	// * the reader object if successful
-	"reader//copy": {
+	"reader//Copy": {
 		Argsn: 2,
 		Doc:   "Copies all content from a reader to a writer.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -673,7 +674,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * writer: native writer object
 	// Returns:
 	// * the file object if successful
-	"file//copy": {
+	"file//Copy": {
 		Argsn: 2,
 		Doc:   "Copies content from a file to a writer.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -701,12 +702,12 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { stat open %data/file.txt |kind? } 'file-info
+	// equal { Stat Open %data/file.txt |kind? } 'file-info
 	// Args:
 	// * file: native file object
 	// Returns:
 	// * native file-info object
-	"file//stat": {
+	"file//Stat": {
 		Argsn: 1,
 		Doc:   "Gets file information (stat) for a file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -715,12 +716,12 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { size? stat open %data/file.txt } 16
+	// equal { Size? Stat Open %data/file.txt } 16
 	// Args:
 	// * file-info: native file-info object
 	// Returns:
 	// * integer representing the file size in bytes
-	"file-info//size?": {
+	"file-info//Size?": {
 		Argsn: 1,
 		Doc:   "Gets the size of a file in bytes.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -729,18 +730,18 @@ var Builtins_io = map[string]*env.Builtin{
 				size := s.Value.(os.FileInfo).Size()
 				return *env.NewInteger(size)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "file-info//size?")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "file-info//Size?")
 			}
 		},
 	},
 
 	// Tests:
-	// equal { read-all open %data/file.txt } "hello text file\n"
+	// equal { Read-all Open %data/file.txt } "hello text file\n"
 	// Args:
 	// * file: native file object
 	// Returns:
 	// * string containing the entire file content
-	"file//read-all": {
+	"file//Read-all": {
 		Argsn: 1,
 		Doc:   "Reads the entire content of a file as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -763,7 +764,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * file: native file object
 	// Returns:
 	// * the same file object with position set to end of file
-	"file//seek\\end": {
+	"file//Seek\\end": {
 		Argsn: 1,
 		Doc:   "Seeks to the end of a file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -771,24 +772,24 @@ var Builtins_io = map[string]*env.Builtin{
 			case env.Native:
 				reader, ok := s.Value.(*os.File)
 				if !ok {
-					return MakeBuiltinError(ps, "Native not io.Reader", "file//seek\\end")
+					return MakeBuiltinError(ps, "Native not io.Reader", "file//Seek\\end")
 				}
 				reader.Seek(0, os.SEEK_END)
 				return arg0
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "file//seek\\end")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "file//Seek\\end")
 			}
 		},
 	},
 
 	// Tests:
-	// equal { close open %data/file.txt } ""
+	// equal { Close Open %data/file.txt } ""
 	// Args:
 	// * file: native file object
 	// Returns:
 	// * empty string if successful
-	"file//close": {
+	"file//Close": {
 		Argsn: 1,
 		Doc:   "Closes an open file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -809,12 +810,12 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { read %data/file.txt } "hello text file\n"
+	// equal { Read %data/file.txt } "hello text file\n"
 	// Args:
 	// * path: uri representing the file to read
 	// Returns:
 	// * string containing the entire file content
-	"file-schema//read": {
+	"file-schema//Read": {
 		Argsn: 1,
 		Doc:   "Reads the entire content of a file as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -823,12 +824,12 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { read %data/file.txt } "hello text file\n"
+	// equal { Read %data/file.txt } "hello text file\n"
 	// Args:
 	// * path: uri representing the file to read
 	// Returns:
 	// * native bytes object containing the file content
-	"file-schema//read\\bytes": {
+	"file-schema//Read\\bytes": {
 		Argsn: 1,
 		Doc:   "Reads the entire content of a file as bytes.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -846,12 +847,12 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { read %data/file.txt } "hello text file\n"
+	// equal { Read %data/file.txt } "hello text file\n"
 	// Args:
 	// * path: uri representing the file to read
 	// Returns:
 	// * block of strings, each representing a line from the file
-	"file-schema//read\\lines": {
+	"file-schema//Read\\lines": {
 		Argsn: 1,
 		Doc:   "Reads a file and returns its content as a block of lines.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -860,13 +861,13 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { write %data/write.txt "written\n" } "written\n"
+	// equal { Write %data/write.txt "written\n" } "written\n"
 	// Args:
 	// * path: uri representing the file to write to
 	// * content: string or bytes to write to the file
 	// Returns:
 	// * the content that was written
-	"file-schema//write": {
+	"file-schema//Write": {
 		Argsn: 2,
 		Doc:   "Writes content to a file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -874,7 +875,7 @@ var Builtins_io = map[string]*env.Builtin{
 			profile, exists := os.LookupEnv("RYE_SECCOMP_PROFILE")
 			if exists && profile == "readonly" {
 				ps.FailureFlag = true
-				return MakeBuiltinError(ps, "write operation blocked by readonly seccomp profile", "file-schema//write")
+				return MakeBuiltinError(ps, "write operation blocked by readonly seccomp profile", "file-schema//Write")
 			}
 
 			// If not in readonly mode, proceed with the original function
@@ -979,7 +980,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * content: string to write
 	// Returns:
 	// * the writer object if successful
-	"writer//write\\string": {
+	"writer//Write\\string": {
 		Argsn: 2,
 		Doc:   "Writes a string to a writer.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -991,13 +992,13 @@ var Builtins_io = map[string]*env.Builtin{
 				case env.Native:
 					writer, ok := ww.Value.(*os.File)
 					if !ok {
-						return MakeBuiltinError(ps, "Native not io.File", "writer//write\\string")
+						return MakeBuiltinError(ps, "Native not io.File", "writer//Write\\string")
 					}
 
 					// Check if the writer is stdout or stderr
 					if writer != os.Stdout && writer != os.Stderr {
 						ps.FailureFlag = true
-						return MakeBuiltinError(ps, "write operation blocked by readonly seccomp profile", "writer//write\\string")
+						return MakeBuiltinError(ps, "write operation blocked by readonly seccomp profile", "writer//Write\\string")
 					}
 				}
 			}
@@ -1008,26 +1009,26 @@ var Builtins_io = map[string]*env.Builtin{
 				case env.Native:
 					writer, ok := ww.Value.(*os.File)
 					if !ok {
-						return MakeBuiltinError(ps, "Native not io.File", "writer//write\\string")
+						return MakeBuiltinError(ps, "Native not io.File", "writer//Write\\string")
 					}
 					_, err := writer.WriteString(s.Value)
 					if err != nil {
-						return MakeBuiltinError(ps, "Error at write: "+err.Error(), "writer//write\\string")
+						return MakeBuiltinError(ps, "Error at write: "+err.Error(), "writer//Write\\string")
 					}
 					return arg0
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "writer//write\\string")
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "writer//Write\\string")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "writer//write\\string")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "writer//Write\\string")
 			}
 		},
 	},
 
 	/*
-		"file-schema//open": {
+		"file-schema//Open": {
 			Argsn: 1,
 			Doc:   "Open a file, get a reader",
 			Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1051,7 +1052,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * url: uri representing the HTTPS URL to request
 	// Returns:
 	// * native reader object for the response body
-	"https-schema//open": {
+	"https-schema//Open": {
 		Argsn: 1,
 		Doc:   "Opens a HTTPS GET request and returns a reader for the response body.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1081,11 +1082,11 @@ var Builtins_io = map[string]*env.Builtin{
 				} else {
 					ps.FailureFlag = true
 					errMsg := fmt.Sprintf("Status Code: %v", resp.StatusCode)
-					return MakeBuiltinError(ps, errMsg, "https-schema://open")
+					return MakeBuiltinError(ps, errMsg, "https-schema://Open")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "https-schema://open")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "https-schema://Open")
 			}
 		},
 	},
@@ -1094,7 +1095,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * url: uri representing the HTTPS URL to request
 	// Returns:
 	// * string containing the response body
-	"https-schema//get": {
+	"https-schema//Get": {
 		Argsn: 1,
 		Doc:   "Makes a HTTPS GET request and returns the response body as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1108,7 +1109,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * content-type: word specifying the content type (e.g., 'json', 'text')
 	// Returns:
 	// * string containing the response body
-	"https-schema//post": {
+	"https-schema//Post": {
 		Argsn: 3,
 		Doc:   "Makes a HTTPS POST request and returns the response body as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1120,7 +1121,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * url: uri representing the HTTP URL to request
 	// Returns:
 	// * string containing the response body
-	"http-schema//get": {
+	"http-schema//Get": {
 		Argsn: 1,
 		Doc:   "Makes a HTTP GET request and returns the response body as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1134,7 +1135,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * content-type: word specifying the content type (e.g., 'json', 'text')
 	// Returns:
 	// * string containing the response body
-	"http-schema//post": {
+	"http-schema//Post": {
 		Argsn: 3,
 		Doc:   "Makes a HTTP POST request and returns the response body as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1148,7 +1149,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * data: string containing the request body
 	// Returns:
 	// * native https-request object
-	"https-schema//new-request": {
+	"https-schema//New-request": {
 		Argsn: 3,
 		Doc:   "Creates a new HTTPS request object.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1162,7 +1163,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * value: string containing the header value
 	// Returns:
 	// * the request object if successful
-	"https-request//set-header": {
+	"https-request//Set-header": {
 		Argsn: 3,
 		Doc:   "Sets a header on a HTTPS request.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1176,7 +1177,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * password: string containing the password
 	// Returns:
 	// * the request object if successful
-	"https-request//set-basic-auth": {
+	"https-request//Set-basic-auth": {
 		Argsn: 3,
 		Doc:   "Sets Basic Authentication on a HTTPS request.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1188,7 +1189,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * request: native https-request object
 	// Returns:
 	// * native https-response object
-	"https-request//call": {
+	"https-request//Call": {
 		Argsn: 1,
 		Doc:   "Executes a HTTPS request and returns the response.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1200,7 +1201,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * response: native https-response object
 	// Returns:
 	// * string containing the response body
-	"https-response//read-body": {
+	"https-response//Read-body": {
 		Argsn: 1,
 		Doc:   "Reads the body of a HTTPS response as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1213,7 +1214,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * message: string containing the email message
 	// Returns:
 	// * integer 1 if successful
-	"email//send": {
+	"email//Send": {
 		Argsn: 2,
 		Doc:   "Sends an email to the specified address.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1225,7 +1226,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * server: uri representing the FTP server to connect to
 	// Returns:
 	// * native ftp-connection object
-	"ftp-schema//open": {
+	"ftp-schema//Open": {
 		Argsn: 1,
 		Doc:   "Opens a connection to an FTP server.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1235,17 +1236,17 @@ var Builtins_io = map[string]*env.Builtin{
 				conn, err := ftp.Dial(s.Path)
 				if err != nil {
 					fmt.Println("Error connecting to FTP server:", err)
-					return MakeBuiltinError(ps, "Error connecting to FTP server: "+err.Error(), "ftp-schema//open")
+					return MakeBuiltinError(ps, "Error connecting to FTP server: "+err.Error(), "ftp-schema//Open")
 				}
 				//trace3(path)
 				if err != nil {
 					ps.FailureFlag = true
-					return MakeBuiltinError(ps, "Error opening file.", "ftp-schema//open")
+					return MakeBuiltinError(ps, "Error opening file.", "ftp-schema//Open")
 				}
 				return *env.NewNative(ps.Idx, conn, "ftp-connection")
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.UriType, env.StringType}, "ftp-schema//open")
+				return MakeArgError(ps, 1, []env.Type{env.UriType, env.StringType}, "ftp-schema//Open")
 			}
 		},
 	},
@@ -1256,7 +1257,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * password: string containing the password
 	// Returns:
 	// * the connection object if successful
-	"ftp-connection//login": {
+	"ftp-connection//Login": {
 		Argsn: 3,
 		Doc:   "Logs in to an FTP server connection.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1282,7 +1283,7 @@ var Builtins_io = map[string]*env.Builtin{
 				return s
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.UriType, env.StringType}, "ftp-connection//login")
+				return MakeArgError(ps, 1, []env.Type{env.UriType, env.StringType}, "ftp-connection//Login")
 			}
 		},
 	},
@@ -1292,7 +1293,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * path: string containing the path of the file to retrieve
 	// Returns:
 	// * native reader object for the retrieved file
-	"ftp-connection//retrieve": {
+	"ftp-connection//Retrieve": {
 		Argsn: 2,
 		Doc:   "Retrieves a file from an FTP server.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1311,7 +1312,130 @@ var Builtins_io = map[string]*env.Builtin{
 				return *env.NewNative(ps.Idx, resp, "reader")
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.UriType, env.StringType}, "ftp-connection//login")
+				return MakeArgError(ps, 1, []env.Type{env.UriType, env.StringType}, "ftp-connection//Retrieve")
+			}
+		},
+	},
+
+	// Args:
+	// * path: uri or string representing the file to tail
+	// * follow: boolean indicating whether to follow the file for new content
+	// * reopen: boolean indicating whether to reopen the file if it's rotated
+	// Returns:
+	// * native tail-file object that can be used to read lines as they are added
+	"tail-file": {
+		Argsn: 3,
+		Doc:   "Tails a file, following it for new content. Used for monitoring log files.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var filePath string
+
+			// Get the file path from either a Uri or String
+			switch path := arg0.(type) {
+			case env.Uri:
+				filePath = path.GetPath()
+			case env.String:
+				filePath = path.Value
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.UriType, env.StringType}, "tail-file")
+			}
+
+			// Get follow option
+			follow := true // Default to true
+			if arg1 != nil {
+				switch f := arg1.(type) {
+				case env.Boolean:
+					follow = f.Value
+				default:
+					ps.FailureFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.BooleanType}, "tail-file")
+				}
+			}
+
+			// Get reopen option
+			reopen := true // Default to true
+			if arg2 != nil {
+				switch r := arg2.(type) {
+				case env.Boolean:
+					reopen = r.Value
+				default:
+					ps.FailureFlag = true
+					return MakeArgError(ps, 3, []env.Type{env.BooleanType}, "tail-file")
+				}
+			}
+
+			// Create tail configuration
+			config := tail.Config{
+				Follow: follow,
+				ReOpen: reopen,
+			}
+
+			// Tail the file
+			t, err := tail.TailFile(filePath, config)
+			if err != nil {
+				ps.FailureFlag = true
+				return MakeBuiltinError(ps, err.Error(), "tail-file")
+			}
+
+			return *env.NewNative(ps.Idx, t, "tail-file")
+		},
+	},
+
+	// Args:
+	// * tail: native tail-file object
+	// Returns:
+	// * string containing the next line from the file, or nil if no more lines
+	"tail-file//Read-line": {
+		Argsn: 1,
+		Doc:   "Reads the next line from a tailed file. Blocks until a line is available.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch t := arg0.(type) {
+			case env.Native:
+				if ps.Idx.GetWord(t.GetKind()) != "tail-file" {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Expected tail-file object", "tail-file//Read-line")
+				}
+
+				// Get the next line from the tail
+				line, ok := <-t.Value.(*tail.Tail).Lines
+				if !ok {
+					// Channel is closed, no more lines
+					return *env.NewVoid()
+				}
+
+				return *env.NewString(line.Text)
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "tail-file//Read-line")
+			}
+		},
+	},
+
+	// Args:
+	// * tail: native tail-file object
+	// Returns:
+	// * empty string if successful
+	"tail-file//Close": {
+		Argsn: 1,
+		Doc:   "Closes a tailed file, stopping the monitoring.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch t := arg0.(type) {
+			case env.Native:
+				if ps.Idx.GetWord(t.GetKind()) != "tail-file" {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Expected tail-file object", "tail-file//Close")
+				}
+
+				err := t.Value.(*tail.Tail).Stop()
+				if err != nil {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, err.Error(), "tail-file//Close")
+				}
+
+				return *env.NewString("")
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "tail-file//Close")
 			}
 		},
 	},

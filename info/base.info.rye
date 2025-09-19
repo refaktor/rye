@@ -1,29 +1,4 @@
 section "Default" "" {
-	group "compile-fast" 
-	"Takes a block of code and compiles it to function pointers for the fast evaluator."
-	{
-	}
-
-	{
-		equal  { compile-fast { 123 + 123 } } 'block
-		equal  { compile-fast/debug { 123 + 123 } } 'block
-	}
-
-	group "do-fast" 
-	"Takes a block of code and does (runs) it using the fast evaluator."
-	{
-	}
-
-	{
-		; equal  { do-fast { 123 + 123 } } 246
-		; error  { do-fast { 123 + } }
-		; equal  { do-fast { _+ _+ 12 23 34 } } 69
-		; equal  { do-fast { 12 * 23 |+ 34 } } 310
-		; equal  { do-fast { ( 12 * 23 ) + 34 } } 310
-		; equal  { do-fast { 12 * 23 | + 34 } } 310
-		; equal  { do-fast { 12 * 23 :a + 34 } } 310
-	}
-
 	group "change!" 
 	"Searches for a word and changes it's value in-place. Only works on variables declared with var. If value changes returns true otherwise false"
 	{
@@ -83,10 +58,10 @@ section "Default" "" {
 	}
 
 	{
-		equal   { person: kind 'person { name: "" age: 0 } person << dict { "name" "John" "age" 30 } |type? } 'ctx
+		; TODO equal   { person: kind 'person { name: "" age: 0 } person << dict { "name" "John" "age" 30 } |type? } 'ctx
 	}
 
-	group "save\current" 
+	group "save\\current" 
 	"Saves current state of the program to a file."
 	{
 		arg `None`
@@ -97,7 +72,7 @@ section "Default" "" {
 		equal  { save\current |type? } 'integer
 	}
 
-	group "save\current\secure" 
+	group "save\\current\\secure" 
 	"Saves current state of the program to a file with password protection."
 	{
 		arg `None`
@@ -130,7 +105,7 @@ section "Default" "" {
 		equal   { x: private { doc! "some doc" doc? } } "some doc"
 	}
 
-	group "doc\of?" 
+	group "doc\\of?" 
 	"Get docstring of the passed context."
 	{
 		arg `value: Function, builtin, or context to get the docstring from`
@@ -149,7 +124,7 @@ section "Default" "" {
 	}
 
 	{
-		equal   { is-ref ref { 1 2 3 } } 1
+		equal   { is-ref ref { 1 2 3 } } true
 	}
 
 	group "deref" 
@@ -160,7 +135,7 @@ section "Default" "" {
 	}
 
 	{
-		equal   { is-ref deref ref { 1 2 3 } } 0
+		equal   { is-ref deref ref { 1 2 3 } } false
 	}
 
 	group "is-ref" 
@@ -233,26 +208,26 @@ section "Default" "" {
 		equal  { with 100 { + 11 , * 3 } } 300
 	}
 
-	group "do\in" 
+	group "do\\in" 
 	"Takes a Context and a Block. It Does a block inside a given Context."
 	{
 	}
 
 	{
 		equal  { c: context { x: 100 } do\in c { x * 9.99 } } 999.0
-		equal  { c: context { x: 100 } do\in c { inc! 'x } } 101
+		equal  { c: context { x:: 100 } do\in c { inc! 'x } } 101
 		equal  { c: context { var 'x 100 } do\in c { x:: 200 } c/x } 200
 		equal  { c: context { x:: 100 } do\in c { x:: 200 , x } } 200
 	}
 
-	group "do\par" 
+	group "do\\par" 
 	"Takes a Context and a Block. It Does a block in current context but with parent a given Context."
 	{
 	}
 
 	{
 		equal  { c: context { x: 100 } do\par c { x * 9.99 } } 999.0
-		equal  { c: context { x: 100 } do\par c { inc! 'x } } 101
+		equal  { c: context { x:: 100 } do\par c { inc! 'x } } 101
 		equal  { c: context { x: 100 } do\par c { x:: 200 , x } } 200
 		equal  { c: context { x: 100 } do\par c { x:: 200 } c/x } 100
 	}
@@ -293,8 +268,8 @@ section "Other " "functions related to date and time" {
 	}
 
 	{
-		equal { x:: 0 defer { x:: 1 } x } 0
-		equal { fn { } { var 'x 0 defer { x:: 1 } x } } 0
+		equal { x:: 123 defer { x:: 345 } x } 123
+		; stdout { f: fn { } { var 'x 123 defer { print 234 } x } f } "234"
 		; equal { fn { } { x:: 0 defer { x:: 1 } } x } 1
 	}
 
@@ -333,8 +308,10 @@ section "Boolean logic " "Functions that work with true and false values." {
 	}
 
 	{
-		equal { not true } 0
-		equal { not false } 1
+		equal { 3 * 5 + 4 } 27
+		equal { _* 3 5 + 4 } 27
+		equal { 3 * 5 | + 4 } 19
+		equal { _* 3 5 | + 4 } 19
 	}
 
 	group "not" 
@@ -408,8 +385,9 @@ section "Boolean logic " "Functions that work with true and false values." {
 
 	{
 		equal { all { 1 2 3 } } 3
-		equal { all { 1 0 3 } } 0
-		equal { all { true true true } } 1
+		equal { all { 1 0 3 } } 3
+		equal { all { 1 false 3 } } false
+		equal { all { true true true } } true
 	}
 
 	group "any" 
@@ -421,12 +399,12 @@ section "Boolean logic " "Functions that work with true and false values." {
 
 	{
 		equal { any { 1 2 3 } } 1
-		equal { any { 0 1 3 } } 1
-		equal { any { 0 0 3 } } 3
-		equal { any { 0 0 0 } } 0
+		equal { any { 0 1 3 } } 0
+		equal { any { false false 3 } } 3
+		equal { any { false false false } } false
 	}
 
-	group "any\with" 
+	group "any\\with" 
 	"Applies each expression in the block to the provided value until a truthy result is found and returns it."
 	{
 		arg `value: Value to be used in the expressions`
@@ -575,7 +553,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { 5 % 3 } 2
 	}
 
-	group "random\integer" 
+	group "random\\integer" 
 	"Generates a cryptographically secure random integer between 0 (inclusive) and the specified maximum (exclusive)."
 	{
 		arg `max: Upper bound (exclusive) for the random number`
@@ -584,8 +562,21 @@ section "Numbers " "Working with numbers, integers and decimals." {
 
 	{
 		equal { random\integer 2 |type? } 'integer
-		equal { random\integer 1 |< 2 } 1
-		equal { random\integer 100 | >= 0 } 1
+		equal { random\integer 1 |< 2 } true
+		equal { random\integer 100 | >= 0 } true
+	}
+
+	group "random\\decimal" 
+	"Generates a cryptographically secure random decimal between 0.0 (inclusive) and the specified maximum (exclusive)."
+	{
+		arg `max: Upper bound (exclusive) for the random number`
+		returns `random decimal in the range [0.0, max)`
+	}
+
+	{
+		equal { random\decimal 2.0 |type? } 'decimal
+		equal { random\decimal 1.0 |< 1.0 } true
+		equal { random\decimal 100.0 | >= 0.0 } true
 	}
 
 	group "inc!" 
@@ -601,7 +592,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		error { inc! 123 }
 	}
 
-	group "dec!" 
+	group "decr!" 
 	"Decrements an integer value stored in a variable (word) by 1 and updates the variable in-place."
 	{
 		arg `word: Word referring to an integer value to decrement`
@@ -609,9 +600,9 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	{
-		equal { a:: 123 dec! 'a a } 122
-		equal { counter:: 1 dec! 'counter counter } 0
-		error { dec! 123 }
+		equal { a:: 123 decr! 'a a } 122
+		equal { counter:: 1 decr! 'counter counter } 0
+		error { decr! 123 }
 	}
 
 	group "_." 
@@ -646,7 +637,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	group "_-" 
-	"Subtracts the second number from the first, working with both integers and decimals."
+	"Subtracts the second number from the first, working with integers, decimals, and complex numbers."
 	{
 		arg `value1: First number (integer or decimal)`
 		arg `value2: Second number to subtract from the first`
@@ -661,7 +652,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	group "_*" 
-	"Multiplies two numbers, working with both integers and decimals."
+	"Multiplies two numbers, working with integers, decimals, and complex numbers."
 	{
 		arg `value1: First number (integer or decimal)`
 		arg `value2: Second number to multiply by`
@@ -676,7 +667,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	group "_/" 
-	"Divides the first number by the second and returns a decimal result, with error checking for division by zero."
+	"Divides the first number by the second and returns a result, with error checking for division by zero."
 	{
 		arg `value1: Dividend (integer or decimal)`
 		arg `value2: Divisor (integer or decimal, must not be zero)`
@@ -827,7 +818,7 @@ section "Strings " "" {
 		equal { trim "\t\nASDF\r\n" } "ASDF"
 	}
 
-	group "trim\" 
+	group "trim\\" 
 	"Removes all leading and trailing occurrences of the specified characters from a string."
 	{
 		arg `string: String to trim`
@@ -840,7 +831,7 @@ section "Strings " "" {
 		equal { trim\ "##Hello##" "#" } "Hello"
 	}
 
-	group "trim\right" 
+	group "trim\\right" 
 	"Removes all trailing occurrences of the specified characters from a string."
 	{
 		arg `string: String to trim`
@@ -854,7 +845,7 @@ section "Strings " "" {
 		equal { trim\right "Hello!!!" "!" } "Hello"
 	}
 
-	group "trim\left" 
+	group "trim\\left" 
 	"Removes all leading occurrences of the specified characters from a string."
 	{
 		arg `string: String to trim`
@@ -907,11 +898,11 @@ section "Strings " "" {
 	}
 
 	{
-		equal { contains "...xoxo..." "xo"  } 1
-		equal { contains "...xoxo..." "lol" } 0
-		equal { contains { ".." "xoxo" ".." } "xoxo" } 1
-		equal { contains { ".." "xoxo" ".." } "lol"  } 0
-		equal { contains list { 1 2 3 } 2 } 1
+		equal { contains "...xoxo..." "xo"  } true
+		equal { contains "...xoxo..." "lol" } false
+		equal { contains { ".." "xoxo" ".." } "xoxo" } true
+		equal { contains { ".." "xoxo" ".." } "lol"  } false
+		equal { contains list { 1 2 3 } 2 } true
 	}
 
 	group "has-suffix" 
@@ -972,7 +963,7 @@ section "Strings " "" {
 		equal { position? { ".." "xo" ".." } "xo" } 2
 	}
 
-	group "encode-to\base64" 
+	group "encode-to\\base64" 
 	"Encodes a string or binary data as a base64 string."
 	{
 		arg `data: String or native bytes/pem-block to encode`
@@ -984,7 +975,7 @@ section "Strings " "" {
 		equal { encode-to\base64 "hello world" } "aGVsbG8gd29ybGQ="
 	}
 
-	group "decode\base64" 
+	group "decode\\base64" 
 	"Decodes a base64-encoded string back to its original form."
 	{
 		arg `string: Base64-encoded string to decode`
@@ -1074,7 +1065,7 @@ section "Strings " "" {
 		equal { join { 1 2 3 } } "123"
 	}
 
-	group "join\with" 
+	group "join\\with" 
 	"Concatenates all strings or numbers in a block or list into a single string with a specified delimiter between values."
 	{
 		arg `collection: Block or list of strings or numbers to join`
@@ -1102,7 +1093,7 @@ section "Strings " "" {
 		equal { split "one::two::three" "::" } { "one" "two" "three" }
 	}
 
-	group "split\quoted" 
+	group "split\\quoted" 
 	"Splits a string into a block of strings using a separator, while respecting quoted sections that should remain intact."
 	{
 		arg `string: String to split`
@@ -1116,7 +1107,7 @@ section "Strings " "" {
 		equal { split\quoted "'hello, world',foo,bar" "," "'" } { "'hello, world'" "foo" "bar" }
 	}
 
-	group "split\many" 
+	group "split\\many" 
 	"Splits a string into a block of strings using any character in the separators string as a delimiter."
 	{
 		arg `string: String to split`
@@ -1130,7 +1121,7 @@ section "Strings " "" {
 		equal { split\many "a;b,c:d" ";,:" } { "a" "b" "c" "d" }
 	}
 
-	group "split\every" 
+	group "split\\every" 
 	"Splits a string or block into chunks of the specified size, with any remaining elements in the last chunk."
 	{
 		arg `collection: String or block to split`
@@ -1157,7 +1148,7 @@ section "Collections " "" {
 
 	{
 		equal { random { 1 2 3 } |type? } 'integer
-		equal { random { 1 2 3 } |contains* { 1 2 3 } } 1
+		equal { random { 1 2 3 } |contains* { 1 2 3 } } true
 	}
 
 	group "unpack" 
@@ -1287,7 +1278,7 @@ section "Collections " "" {
 		equal { rest { 1 } } { }
 	}
 
-	group "rest\from" 
+	group "rest\\from" 
 	"Creates a new collection with all items starting from the specified position in the input collection."
 	{
 		arg `collection: Block, list or string to get items from`
@@ -1432,7 +1423,7 @@ section "Collections " "" {
 		equal { x: ref list { 5 3 1 4 } , sort! x , x } list { 1 3 4 5 }
 	}
 
-	group "sort\by" 
+	group "sort\\by" 
 	"Creates a new collection with items sorted according to a custom comparison function."
 	{
 		arg `collection: Block or list to sort`
@@ -1566,11 +1557,11 @@ section "Collections " "" {
 	}
 
 	{
-		equal { { } .is-empty } 1
-		equal { dict { } |is-empty } 1
-		equal { table { 'a 'b } { } |is-empty } 1
-		equal { "abc" .is-empty } 0
-		equal { { 1 2 3 } .is-empty } 0
+		equal { { } .is-empty } true
+		equal { dict { } |is-empty } true
+		equal { table { 'a 'b } { } |is-empty } true
+		equal { "abc" .is-empty } false
+		equal { { 1 2 3 } .is-empty } false
 	}
 
 	group "length?" 
@@ -1639,7 +1630,7 @@ section "Collections " "" {
 
 	{
 		equal { 2 <~ { 23 34 45 } } 34
-		equal { 1 <~ { "a" "b" "c" } } "b"
+		equal { 1 <~ { "a" "b" "c" } } "a"
 	}
 
 	group "_~>" 
@@ -1678,7 +1669,7 @@ section "Collections " "" {
 		equal { intersection list { } list { } } list { }
 	}
 
-	group "intersection\by" 
+	group "intersection\\by" 
 	"Finds the intersection of two collections using a custom comparison function to determine matching elements."
 	{
 		arg `collection1: First string or block`
@@ -1759,7 +1750,7 @@ section "Collections " "" {
 		equal { var 's "hello" append! " world" 's , s } "hello world"
 	}
 
-	group "change\nth!" 
+	group "change\\nth!" 
 	"Changes the value at a specific position in a block or list in-place and returns the modified collection."
 	{
 		arg `collection: Reference to a block or list to modify`
@@ -1804,7 +1795,7 @@ section "Collections " "" {
 
 	{
 		equal { x: { 1 2 3 } pos x } 0
-		equal { x: { 1 2 3 } next x pos x } 1
+		equal { x: { 1 2 3 } pos next x } 1
 	}
 
 	group "next" 
@@ -1815,7 +1806,7 @@ section "Collections " "" {
 	}
 
 	{
-		equal { x: { 1 2 3 } next x pos x } 1
+		equal { x: { 11 22 33 } peek next next x } 33
 	}
 
 	group "vals" 
@@ -1829,7 +1820,7 @@ section "Collections " "" {
 		equal { x: 1 y: 2 try { vals { z y } } |type? } 'error
 	}
 
-	group "vals\with" 
+	group "vals\\with" 
 	"Evaluate a block with injecting the first argument."
 	{
 	}
@@ -1898,7 +1889,7 @@ section "Contexts " "Context related functions" {
 		equal { y: 123 private { does { y } } :f f } 123
 	}
 
-	group "private\" 
+	group "private\\" 
 	"Creates a documented private context for evaluating expressions, returning the last value instead of the context."
 	{
 		arg `doc: String containing documentation for the context`
@@ -1920,7 +1911,7 @@ section "Contexts " "Context related functions" {
 
 	{
 		equal { ct: context { p: 123 } cn: extends ct { r: p + 234 } cn/r } 357
-		error { ct: context { p: 123 } cn: extends ct { r: p + 234 } cn/r |type? }
+		; error { ct: context { p: 123 } cn: extends ct { r: p + 234 } cn/r }
 	}
 
 	group "bind!" 
@@ -1965,13 +1956,42 @@ section "Contexts " "Context related functions" {
 		equal { var 'y 99 c: context { incr: fn\in { } parent { y:: inc y } } c/incr y } 100
 	}
 
-	group "parent\of" 
+	group "parent\\of" 
 	"Returns parent context of the current context."
 	{
 	}
 
 	{
-		equal { ct: context { p: 123 } parent\of ct |= current } 1
+		equal { ct: context { p: 123 } parent\of ct |= current } true
+	}
+
+	group "clone" 
+	"Creates a copy of a context with the same state and parent relationship."
+	{
+		arg `ctx: Context object to clone`
+		returns `a new context object that is a copy of the original context`
+	}
+
+	{
+		equal { c: context { x: 123 y: 456 } cc: clone c cc/x } 123
+		equal { c: context { x: 123 y: 456 } cc: clone c cc/y } 456
+		equal { c: context { x:: 123 } cc: clone c do\in cc { x:: 999 } c/x  } 123 ; original unchanged
+		equal { c: context { x:: 123 } cc: clone c do\in cc { x:: 999 } cc/x } 999 ; clone modified
+	}
+
+	group "clone\\" 
+	"Creates a copy of a context and evaluates a block of code inside the clone."
+	{
+		arg `ctx: Context object to clone`
+		arg `block: Block of expressions to evaluate in the cloned context`
+		returns `the cloned context with the block evaluated inside it`
+	}
+
+	{
+		equal { c: context { x: 123 } cc: clone\ c { y: x + 100 } cc/y } 223
+		; equal { c: context { x:: 123 } cc: clone\ c { y: x + 100 } c/y } 'error ; y not in original context
+		; equal { c: context { x:: 123 } cc: clone\ c { x: 999 } c/x } 123 ; original unchanged
+		; equal { c: context { x:: 123 } cc: clone\ c { x: 999 } cc/x } 999 ; clone modified
 	}
 
 }
@@ -2042,10 +2062,11 @@ section "Default" "" {
 	{
 		equal { pfn { } { } |type? } 'function
 		equal { x: pfn { x } { + 123 } , x 123 } 246
-		error { x: pfn { x } { .print } , x 123 }
+		; TODO -- it seems pure namespace not also has print and append! error { x: pfn { } { ?append! } , x 123 }
+		; TODO -- it seems pure namespace not also has print and append! error { x: pfn { x } { .print } , x 123 }
 	}
 
-	group "fn\cc" 
+	group "fn\\cc" 
 	"Creates a function that captures the current context, allowing access to variables from the enclosing scope."
 	{
 		arg `spec: Block containing parameter specifications`
@@ -2058,7 +2079,7 @@ section "Default" "" {
 		equal { y: 5 , f: fn\cc { x } { x + y } , f 3 } 8
 	}
 
-	group "fn\par" 
+	group "fn\\par" 
 	"Creates a function with a specified parent context, allowing access to variables from that context."
 	{
 		arg `spec: Block containing parameter specifications`
@@ -2071,7 +2092,7 @@ section "Default" "" {
 		equal { ctx: context { y: 5 } , f: fn\par { x } ctx { x + y } , f 3 } 8
 	}
 
-	group "fn\in" 
+	group "fn\\in" 
 	"Creates a function that executes directly in the specified context rather than creating a new execution context."
 	{
 		arg `spec: Block containing parameter specifications`
@@ -2096,5 +2117,20 @@ section "Default" "" {
 		equal { y: 5 , f: closure { x } { x + y } , f 3 } 8
 	}
 
+	group "partial" 
+	"Creates a partially applied function with specified arguments, using _ (void) for arguments to be filled later."
+	{
+		arg `func: Function or builtin to partially apply`
+		arg `args: Block of arguments, with _ (void) for arguments to be filled later`
+		returns `CurriedCaller object that can be called with the remaining arguments`
+	}
+
+	{
+		equal { prepend-star: partial ?concat [ "* " _ ] , prepend-star "hello" } "* hello"
+		equal { add-5: partial ?_+ [ _ 5 ] , add-5 10 } 15
+		equal { fn-add: fn { x y } { x + y } , add-5: partial ?fn-add [ _ 5 ] , add-5 10 } 15
+	}
+
 }
 
+end

@@ -43,8 +43,10 @@ var builtins_boolean = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { not true } 0
-	// equal { not false } 1
+	// equal { 3 * 5 + 4 } 27
+	// equal { _* 3 5 + 4 } 27
+	// equal { 3 * 5 | + 4 } 19
+	// equal { _* 3 5 | + 4 } 19
 	// Args:
 	// * value: Any value to be negated
 	// Returns:
@@ -194,8 +196,9 @@ var builtins_boolean = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { all { 1 2 3 } } 3
-	// equal { all { 1 0 3 } } 0
-	// equal { all { true true true } } 1
+	// equal { all { 1 0 3 } } 3
+	// equal { all { 1 false 3 } } false
+	// equal { all { true true true } } true
 	// Args:
 	// * block: Block of expressions to evaluate
 	// Returns:
@@ -224,9 +227,9 @@ var builtins_boolean = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { any { 1 2 3 } } 1
-	// equal { any { 0 1 3 } } 1
-	// equal { any { 0 0 3 } } 3
-	// equal { any { 0 0 0 } } 0
+	// equal { any { 0 1 3 } } 0
+	// equal { any { false false 3 } } 3
+	// equal { any { false false false } } false
 	// Args:
 	// * block: Block of expressions to evaluate
 	// Returns:

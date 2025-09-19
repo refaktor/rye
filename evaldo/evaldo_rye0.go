@@ -218,7 +218,10 @@ func Rye0_findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Objec
 
 	// If not found in the parent context, use the regular Get2 method to search up the context chain
 	object, found, foundCtx := ps.Ctx.Get2(index)
-	return found, object, foundCtx
+	if ryeCtx, ok := foundCtx.(*env.RyeCtx); ok {
+		return found, object, ryeCtx
+	}
+	return found, object, nil
 }
 
 // Pre-allocated string for Dict case in Rye0_findCPathValue to avoid allocation
@@ -335,7 +338,19 @@ func Rye0_EvalGetword(ps *env.ProgramState, word env.Getword, leftVal env.Object
 // Rye0_EvalObject evaluates a Rye object.
 func Rye0_EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toLeft bool, ctx *env.RyeCtx, pipeSecond bool, firstVal env.Object) *env.ProgramState {
 	switch object.Type() {
-	case env.FunctionType, env.CPathType: // Handle both function types the same way
+	case env.FunctionType:
+		fn := object.(env.Function)
+		return Rye0_CallFunction_Optimized(fn, ps, leftVal, toLeft, ctx)
+	case env.CPathType:
+		// Check if this is a getcpath (mode 3) - behave like get-word
+		if cpath, ok := object.(env.CPath); ok && cpath.Mode == 3 {
+			// For getcpath, just return the object without calling it (like get-word behavior)
+			if !ps.SkipFlag {
+				ps.Res = object
+			}
+			return ps
+		}
+		// For other CPath modes (opcpath, pipecpath), treat as function
 		fn := object.(env.Function)
 		return Rye0_CallFunction_Optimized(fn, ps, leftVal, toLeft, ctx)
 	case env.BuiltinType:
