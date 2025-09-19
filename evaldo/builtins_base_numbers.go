@@ -99,6 +99,20 @@ var builtins_numbers = map[string]*env.Builtin{
 		},
 	},
 
+	"decr": { // ***
+		Argsn: 1,
+		Doc:   "Decrements an integer value by 1.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg := arg0.(type) {
+			case env.Integer:
+				return *env.NewInteger(arg.Value - 1)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "inc")
+			}
+		},
+	},
+
 	// Tests:
 	// equal { is-positive 123 } true
 	// equal { is-positive -123 } false
@@ -309,8 +323,8 @@ var builtins_numbers = map[string]*env.Builtin{
 	},
 	// Tests:
 	// equal { random\integer 2 |type? } 'integer
-	// equal { random\integer 1 |< 2 } 1
-	// equal { random\integer 100 | >= 0 } 1
+	// equal { random\integer 1 |< 2 } true
+	// equal { random\integer 100 | >= 0 } true
 	// Args:
 	// * max: Upper bound (exclusive) for the random number
 	// Returns:
@@ -334,6 +348,46 @@ var builtins_numbers = map[string]*env.Builtin{
 	},
 
 	// Tests:
+	// equal { random\decimal 2.0 |type? } 'decimal
+	// equal { random\decimal 1.0 |< 1.0 } true
+	// equal { random\decimal 100.0 | >= 0.0 } true
+	// Args:
+	// * max: Upper bound (exclusive) for the random number
+	// Returns:
+	// * random decimal in the range [0.0, max)
+	"random\\decimal": {
+		Argsn: 1,
+		Doc:   "Generates a cryptographically secure random decimal between 0.0 (inclusive) and the specified maximum (exclusive).",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg := arg0.(type) {
+			case env.Decimal:
+				// Generate a random integer in a large range to get good precision
+				maxInt := int64(1000000000000) // 10^12 for good precision
+				val, err := rand.Int(rand.Reader, big.NewInt(maxInt))
+				if err != nil {
+					return MakeBuiltinError(ps, err.Error(), "random-decimal")
+				}
+				// Convert to float64 in range [0, 1) and scale by max
+				randomFloat := float64(val.Int64()) / float64(maxInt)
+				return *env.NewDecimal(randomFloat * arg.Value)
+			case env.Integer:
+				// Allow integer input, convert to decimal
+				maxInt := int64(1000000000000) // 10^12 for good precision
+				val, err := rand.Int(rand.Reader, big.NewInt(maxInt))
+				if err != nil {
+					return MakeBuiltinError(ps, err.Error(), "random-decimal")
+				}
+				// Convert to float64 in range [0, 1) and scale by max
+				randomFloat := float64(val.Int64()) / float64(maxInt)
+				return *env.NewDecimal(randomFloat * float64(arg.Value))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.DecimalType, env.IntegerType}, "random-decimal")
+			}
+		},
+	},
+
+	// Tests:
 	// equal { a:: 123 inc! 'a a } 124
 	// equal { counter:: 0 inc! 'counter counter } 1
 	// error { inc! 123 }
@@ -352,8 +406,17 @@ var builtins_numbers = map[string]*env.Builtin{
 				if found {
 					switch iintval := intval.(type) {
 					case env.Integer:
-						ctx.Mod(arg.Index, *env.NewInteger(1 + iintval.Value))
-						return *env.NewInteger(1 + iintval.Value)
+
+						// Attempt to modify the word
+						ret := *env.NewInteger(1 + iintval.Value)
+
+						if ok := ctx.Mod(arg.Index, ret); !ok {
+							ps.FailureFlag = true
+							return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(arg.Index) + "', use 'var' to declare it as a variable")
+						}
+
+						return ret
+
 					default:
 						return MakeBuiltinError(ps, "Value in word is not integer.", "inc!")
 					}
@@ -367,14 +430,14 @@ var builtins_numbers = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { a:: 123 dec! 'a a } 122
-	// equal { counter:: 1 dec! 'counter counter } 0
-	// error { dec! 123 }
+	// equal { a:: 123 decr! 'a a } 122
+	// equal { counter:: 1 decr! 'counter counter } 0
+	// error { decr! 123 }
 	// Args:
 	// * word: Word referring to an integer value to decrement
 	// Returns:
 	// * the new decremented integer value
-	"dec!": { // ***
+	"decr!": { // ***
 		Argsn: 1,
 		Doc:   "Decrements an integer value stored in a variable (word) by 1 and updates the variable in-place.",
 		Pure:  false,
@@ -441,8 +504,10 @@ var builtins_numbers = map[string]*env.Builtin{
 					return *env.NewInteger(s1.Value + s2.Value)
 				case env.Decimal:
 					return *env.NewDecimal(float64(s1.Value) + s2.Value)
+				case env.Complex:
+					return *env.NewComplex(complex(float64(s1.Value), 0) + s2.Value)
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "_+")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "_+")
 				}
 			case env.Decimal:
 				switch s2 := arg1.(type) {
@@ -450,8 +515,21 @@ var builtins_numbers = map[string]*env.Builtin{
 					return *env.NewDecimal(s1.Value + float64(s2.Value))
 				case env.Decimal:
 					return *env.NewDecimal(s1.Value + s2.Value)
+				case env.Complex:
+					return *env.NewComplex(complex(s1.Value, 0) + s2.Value)
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "_+")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "_+")
+				}
+			case env.Complex:
+				switch s2 := arg1.(type) {
+				case env.Integer:
+					return *env.NewComplex(s1.Value + complex(float64(s2.Value), 0))
+				case env.Decimal:
+					return *env.NewComplex(s1.Value + complex(s2.Value, 0))
+				case env.Complex:
+					return *env.NewComplex(s1.Value + s2.Value)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "_+")
 				}
 			case env.Time:
 				switch b2 := arg1.(type) {
@@ -462,7 +540,7 @@ var builtins_numbers = map[string]*env.Builtin{
 					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "_+")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType, env.TimeType}, "_+")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType, env.TimeType}, "_+")
 			}
 		},
 	},
@@ -479,7 +557,7 @@ var builtins_numbers = map[string]*env.Builtin{
 	// * result of subtracting value2 from value1
 	"_-": { // **
 		Argsn: 2,
-		Doc:   "Subtracts the second number from the first, working with both integers and decimals.",
+		Doc:   "Subtracts the second number from the first, working with integers, decimals, and complex numbers.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch a := arg0.(type) {
@@ -489,8 +567,10 @@ var builtins_numbers = map[string]*env.Builtin{
 					return *env.NewInteger(a.Value - b.Value)
 				case env.Decimal:
 					return *env.NewDecimal(float64(a.Value) - b.Value)
+				case env.Complex:
+					return *env.NewComplex(complex(float64(a.Value), 0) - b.Value)
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "_-")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "_-")
 				}
 			case env.Decimal:
 				switch b := arg1.(type) {
@@ -498,8 +578,21 @@ var builtins_numbers = map[string]*env.Builtin{
 					return *env.NewDecimal(a.Value - float64(b.Value))
 				case env.Decimal:
 					return *env.NewDecimal(a.Value - b.Value)
+				case env.Complex:
+					return *env.NewComplex(complex(a.Value, 0) - b.Value)
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "_-")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "_-")
+				}
+			case env.Complex:
+				switch b := arg1.(type) {
+				case env.Integer:
+					return *env.NewComplex(a.Value - complex(float64(b.Value), 0))
+				case env.Decimal:
+					return *env.NewComplex(a.Value - complex(b.Value, 0))
+				case env.Complex:
+					return *env.NewComplex(a.Value - b.Value)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "_-")
 				}
 			case env.Time:
 				switch b2 := arg1.(type) {
@@ -510,11 +603,10 @@ var builtins_numbers = map[string]*env.Builtin{
 					v1 := a.Value.Sub(b2.Value)
 					return *env.NewInteger(int64(v1))
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "_+")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.TimeType}, "_-")
 				}
-
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "_-")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType, env.TimeType}, "_-")
 			}
 		},
 	},
@@ -531,7 +623,7 @@ var builtins_numbers = map[string]*env.Builtin{
 	// * product of the two numbers
 	"_*": { // **
 		Argsn: 2,
-		Doc:   "Multiplies two numbers, working with both integers and decimals.",
+		Doc:   "Multiplies two numbers, working with integers, decimals, and complex numbers.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch a := arg0.(type) {
@@ -541,8 +633,10 @@ var builtins_numbers = map[string]*env.Builtin{
 					return *env.NewInteger(a.Value * b.Value)
 				case env.Decimal:
 					return *env.NewDecimal(float64(a.Value) * b.Value)
+				case env.Complex:
+					return *env.NewComplex(complex(float64(a.Value), 0) * b.Value)
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "_*")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "_*")
 				}
 			case env.Decimal:
 				switch b := arg1.(type) {
@@ -550,11 +644,24 @@ var builtins_numbers = map[string]*env.Builtin{
 					return *env.NewDecimal(a.Value * float64(b.Value))
 				case env.Decimal:
 					return *env.NewDecimal(a.Value * b.Value)
+				case env.Complex:
+					return *env.NewComplex(complex(a.Value, 0) * b.Value)
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "_*")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "_*")
+				}
+			case env.Complex:
+				switch b := arg1.(type) {
+				case env.Integer:
+					return *env.NewComplex(a.Value * complex(float64(b.Value), 0))
+				case env.Decimal:
+					return *env.NewComplex(a.Value * complex(b.Value, 0))
+				case env.Complex:
+					return *env.NewComplex(a.Value * b.Value)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "_*")
 				}
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "_*")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "_*")
 			}
 		},
 	},
@@ -571,7 +678,7 @@ var builtins_numbers = map[string]*env.Builtin{
 	// * decimal result of dividing value1 by value2
 	"_/": { // **
 		Argsn: 2,
-		Doc:   "Divides the first number by the second and returns a decimal result, with error checking for division by zero.",
+		Doc:   "Divides the first number by the second and returns a result, with error checking for division by zero.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch a := arg0.(type) {
@@ -589,8 +696,14 @@ var builtins_numbers = map[string]*env.Builtin{
 						return MakeBuiltinError(ps, "Can't divide by Zero.", "_/")
 					}
 					return *env.NewDecimal(float64(a.Value) / b.Value)
+				case env.Complex:
+					if b.Value == complex(0, 0) {
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, "Can't divide by Zero complex number.", "_/")
+					}
+					return *env.NewComplex(complex(float64(a.Value), 0) / b.Value)
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "_/")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "_/")
 				}
 			case env.Decimal:
 				switch b := arg1.(type) {
@@ -606,11 +719,40 @@ var builtins_numbers = map[string]*env.Builtin{
 						return MakeBuiltinError(ps, "Can't divide by Zero.", "_/")
 					}
 					return *env.NewDecimal(a.Value / b.Value)
+				case env.Complex:
+					if b.Value == complex(0, 0) {
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, "Can't divide by Zero complex number.", "_/")
+					}
+					return *env.NewComplex(complex(a.Value, 0) / b.Value)
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "_/")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "_/")
+				}
+			case env.Complex:
+				switch b := arg1.(type) {
+				case env.Integer:
+					if b.Value == 0 {
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, "Can't divide by Zero.", "_/")
+					}
+					return *env.NewComplex(a.Value / complex(float64(b.Value), 0))
+				case env.Decimal:
+					if b.Value == 0.0 {
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, "Can't divide by Zero.", "_/")
+					}
+					return *env.NewComplex(a.Value / complex(b.Value, 0))
+				case env.Complex:
+					if b.Value == complex(0, 0) {
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, "Can't divide by Zero complex number.", "_/")
+					}
+					return *env.NewComplex(a.Value / b.Value)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "_/")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "_/")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "_/")
 			}
 		},
 	},

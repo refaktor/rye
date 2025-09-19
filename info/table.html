@@ -55,7 +55,7 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>table\columns { "a" "b" } { { 1 2 3 } { 4 5 6 } } |length?
 ; returns 3</code></pre>
 </div>
-<h3>tableows</h3><p>Creates a table by accepting a block or list of rows</p>
+<h3>table\ows</h3><p>Creates a table by accepting a block or list of rows</p>
 <p class='arg'>columns - names of the columns</p>
 <p class='arg'>data - block or list of rows (each row is a block or list)</p>
 <div class='group'>
@@ -83,6 +83,15 @@
 <p class='arg'><b>Tags</b> #filter #tables</p>
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a } { 1 2 3 2 } |where-equal "a" 2 |length?
+; returns 2</code></pre>
+</div>
+<h3>where-not-equal</h3><p>Returns table of rows where specific colum is not equal to given value.</p>
+<p class='arg'>sheet</p>
+<p class='arg'>column</p>
+<p class='arg'>value</p>
+<p class='arg'><b>Tags</b> #filter #tables</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'a } { 1 2 3 2 } |where-not-equal "a" 2 |length?
 ; returns 2</code></pre>
 </div>
 <h3>where-void</h3><p>Returns table of rows where specific colum is equal to given value.</p>
@@ -207,7 +216,7 @@
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>spr1: ref table { "a" "b" } { 1 10 2 20 } spr1 .update-row! 1 dict [ "a" 111 ] spr1 .deref .A1
 ; returns 111</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>spr1: ref table { "a" "b" } { 1 10 2 20 } incrA: fn { row } { row + [ "a" ( "a" &lt;- row ) + 9 ] } update-row! spr1 1 ?incrA spr1 |deref |A1
+<pre class='prettyprint lang-rye'><code language='lang-rye'>spr1: ref table { "a" "b" } { 1 10 2 20 } incrA: fn { row } { row ++ [ "a" ( "a" &lt;- row ) + 9 ] } update-row! spr1 1 ?incrA spr1 |deref |A1
 ; returns 10</code></pre>
 </div>
 <h3>remove-row!</h3><p>Remove a row from a table by index</p>
@@ -269,6 +278,8 @@
 </div>
 <h3>indexes?</h3><p>Returns the columns that are indexed in a table.</p>
 <div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 } |add-indexes! { name age } |indexes?
+; returns { "name" "age" }</code></pre>
 </div>
 <h3>autotype</h3><p>Takes a table and tries to determine and change the types of columns.</p>
 <div class='group'>
@@ -324,13 +335,13 @@
 <p class='arg'>file-uri - location of csv file to load</p>
 <p class='arg'><b>Tags</b> #table #loading #csv</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>cc os f:: mktmp + "/test.csv" spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" } spr1 .save\csv f spr2:: load\csv f |autotype 1 spr1 = spr2
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc os f:: mktmp ++ "/test.csv" spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" } spr1 .save\csv f spr2:: load\csv f |autotype 1 spr1 = spr2
 ; returns true</code></pre>
 </div>
-<h3>load	sv</h3><p>Loads a .csv file to a table datatype.</p>
+<h3>load\	sv</h3><p>Loads a .csv file to a table datatype.</p>
 <p class='arg'>file-uri - location of csv file to load</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>cc os f:: mktmp + "/test.tsv" spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" } spr1 .save\tsv f spr2:: load\tsv f |autotype 1 spr1 = spr2
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc os f:: mktmp ++ "/test.tsv" spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" } spr1 .save\tsv f spr2:: load\tsv f |autotype 1 spr1 = spr2
 ; returns true</code></pre>
 </div>
 <h3>save\csv</h3><p>Saves a table to a .csv file.</p>
@@ -338,22 +349,22 @@
 <p class='arg'>file-url - where to save the sheet as a .csv file</p>
 <p class='arg'><b>Tags</b> #table #saving #csv</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>cc os f:: mktmp + "/test.csv" spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" } spr1 .save\csv f spr2:: load\csv f |autotype 1 spr1 = spr2
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc os f:: mktmp ++ "/test.csv" spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" } spr1 .save\csv f spr2:: load\csv f |autotype 1 spr1 = spr2
 ; returns true</code></pre>
 </div>
-<h3>save	sv</h3><p>Saves a table to a .csv file.</p>
+<h3>save\	sv</h3><p>Saves a table to a .csv file.</p>
 <p class='arg'>sheet    - the table to save</p>
 <p class='arg'>file-url - where to save the sheet as a .csv file</p>
 <p class='arg'><b>Tags</b> #table #saving #csv</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>cc os f:: mktmp + "/test.csv" spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" } spr1 .save\tsv f spr2:: load\tsv f |autotype 1 spr1 = spr2
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc os f:: mktmp ++ "/test.csv" spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" } spr1 .save\tsv f spr2:: load\tsv f |autotype 1 spr1 = spr2
 ; returns true</code></pre>
 </div>
 <h3>load\xlsx</h3><p>Loads the first sheet in an .xlsx file to a Table.</p>
 <p class='arg'>file-uri - location of xlsx file to load</p>
 <p class='arg'><b>Tags</b> #table #loading #xlsx</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>cc os f:: mktmp + "/test.xlsx" spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" } spr1 .save\xlsx f spr2:: load\xlsx f |autotype 1 spr1 = spr2
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc os f:: mktmp ++ "/test.xlsx" spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" } spr1 .save\xlsx f spr2:: load\xlsx f |autotype 1 spr1 = spr2
 ; returns true</code></pre>
 </div>
 <h3>save\xlsx</h3><p>Saves a Table to a .xlsx file.</p>
@@ -361,8 +372,18 @@
 <p class='arg'>file-url 		- where to save the table as a .xlsx file</p>
 <p class='arg'><b>Tags</b> #table #saving #xlsx</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>cc os f:: mktmp + "/test.xlsx" spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" } spr1 .save\xlsx f spr2:: load\xlsx f |autotype 1 spr1 = spr2
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc os f:: mktmp ++ "/test.xlsx" spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" } spr1 .save\xlsx f spr2:: load\xlsx f |autotype 1 spr1 = spr2
 ; returns true</code></pre>
+</div>
+<h3>persistent-table</h3><p>Creates a persistent table using BadgerDB for storage</p>
+<p class='arg'>columns - block of column names</p>
+<p class='arg'>db-path - path to BadgerDB database</p>
+<p class='arg'>table-name - name of the table</p>
+<div class='group'>
+</div>
+<h3>close-persistent-table!</h3><p>Closes the BadgerDB connection for a persistent table</p>
+<p class='arg'>persistent-table - the persistent table to close</p>
+<div class='group'>
 </div>
 </div>
 </main>

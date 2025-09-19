@@ -41,15 +41,18 @@ func IndexOfSlice(ps *env.ProgramState, slice []env.Object, value env.Object) in
 // so we don't get to problems where numbers pass but certain number doesn't
 // and if we want to break we have to be specific in expression all { not is-zero? x  not is-empty? s }
 func IsTruthy(o env.Object) bool {
+	// fmt.Println(o)
 	switch oo := o.(type) {
 	case env.Boolean:
+		// fmt.Println("XX", oo.Value)
 		return oo.Value
 	case env.Integer:
 		return true
 	case env.String:
 		return true
 	default:
-		return false
+		// fmt.Println("*****")
+		return true
 	}
 }
 

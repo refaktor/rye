@@ -56,7 +56,7 @@ var Builtins_http = map[string]*env.Builtin{
 		},
 	},
 
-	"Go-server//serve": {
+	"Go-server//Serve": {
 		Argsn: 1,
 		Doc:   "Listen and serve new server.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -69,7 +69,7 @@ var Builtins_http = map[string]*env.Builtin{
 				return arg0
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server//serve")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server//Serve")
 			}
 
 		},
@@ -94,7 +94,7 @@ var Builtins_http = map[string]*env.Builtin{
 		},
 	}, */
 
-	"Go-server//handle": {
+	"Go-server//Handle": {
 		Argsn: 3,
 		Doc:   "HTTP handle function for server.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -125,16 +125,16 @@ var Builtins_http = map[string]*env.Builtin{
 					return arg0
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 3, []env.Type{env.StringType, env.FunctionType, env.NativeType}, "Go-server//handle")
+					return MakeArgError(ps, 3, []env.Type{env.StringType, env.FunctionType, env.NativeType}, "Go-server//Handle")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 2, []env.Type{env.StringType}, "Go-server//handle")
+				return MakeArgError(ps, 2, []env.Type{env.StringType}, "Go-server//Handle")
 			}
 		},
 	},
 
-	"Go-server-response-writer//write": {
+	"Go-server-response-writer//Write": {
 		Argsn: 2,
 		Doc:   "Http response writer write function.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -146,16 +146,16 @@ var Builtins_http = map[string]*env.Builtin{
 					return arg0
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.StringType}, "Go-server-response-writer//write")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "Go-server-response-writer//Write")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-response-writer//write")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-response-writer//Write")
 			}
 		},
 	},
 
-	"Go-server-response-writer//set-content-type": {
+	"Go-server-response-writer//Set-content-type": {
 		Argsn: 2,
 		Doc:   "Set http content type.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -167,16 +167,16 @@ var Builtins_http = map[string]*env.Builtin{
 					return arg0
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.StringType}, "Go-server-response-writer//set-content-type")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "Go-server-response-writer//Set-content-type")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-response-writer//set-content-type")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-response-writer//Set-content-type")
 			}
 		},
 	},
 
-	"Go-server-response-writer//set-header": {
+	"Go-server-response-writer//Set-header": {
 		Argsn: 3,
 		Doc:   "Set header for http server.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -191,20 +191,20 @@ var Builtins_http = map[string]*env.Builtin{
 						return arg0
 					default:
 						ps.FailureFlag = true
-						return MakeArgError(ps, 3, []env.Type{env.StringType}, "Go-server-response-writer//set-header")
+						return MakeArgError(ps, 3, []env.Type{env.StringType}, "Go-server-response-writer//Set-header")
 					}
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.WordType}, "Go-server-response-writer//set-header")
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "Go-server-response-writer//Set-header")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-response-writer//set-header")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-response-writer//Set-header")
 			}
 		},
 	},
 
-	"Go-server-response-writer//write-header": {
+	"Go-server-response-writer//Write-header": {
 		Argsn: 2,
 		Doc:   "Write header for http server.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -216,16 +216,16 @@ var Builtins_http = map[string]*env.Builtin{
 					return arg0
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "Go-server-response-writer//write-header")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "Go-server-response-writer//Write-header")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-response-writer//write-header")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-response-writer//Write-header")
 			}
 		},
 	},
 
-	"Go-server//handle-ws": {
+	"Go-server//Handle-ws": {
 		Argsn: 3,
 		Doc:   "Define handler for websockets",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -239,7 +239,7 @@ var Builtins_http = map[string]*env.Builtin{
 							fmt.Println("< upgrade http error >")
 							// handle error
 							//TODO-FIXME
-							//return MakeBuiltinError(ps, "Unable to upgrade HTTP.", "Go-server//handle-ws"), nil
+							//return MakeBuiltinError(ps, "Unable to upgrade HTTP.", "Go-server//Handle-ws"), nil
 						}
 						go func() {
 							defer conn.Close()
@@ -270,16 +270,16 @@ var Builtins_http = map[string]*env.Builtin{
 					return arg0
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 1, []env.Type{env.FunctionType}, "Go-server//handle-ws")
+					return MakeArgError(ps, 1, []env.Type{env.FunctionType}, "Go-server//Handle-ws")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "Go-server//handle-ws")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "Go-server//Handle-ws")
 			}
 		},
 	},
 
-	"Go-server-websocket//read": {
+	"Go-server-websocket//Read": {
 		Argsn: 1,
 		Doc:   "Reading websocket.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -296,18 +296,18 @@ var Builtins_http = map[string]*env.Builtin{
 					ps.ReturnFlag = true
 					ps.FailureFlag = true
 					ps.ErrorFlag = true
-					return MakeBuiltinError(ps, "Error in reading client data.", "Go-server-websocket//read")
+					return MakeBuiltinError(ps, "Error in reading client data.", "Go-server-websocket//Read")
 				}
 				// fmt.Fprintf(path.Value.(http.ResponseWriter), handler.Value)
 				return env.NewString(string(msg))
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-websocket//read")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-websocket//Read")
 			}
 		},
 	},
 
-	"Go-server-websocket//write": {
+	"Go-server-websocket//Write": {
 		Argsn: 2,
 		Doc:   "Writing websocket.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -322,16 +322,16 @@ var Builtins_http = map[string]*env.Builtin{
 					if err != nil {
 						fmt.Println("YYOOYOYOYOYOYOYYOYOYOOY")
 						ps.FailureFlag = true
-						return MakeBuiltinError(ps, "Failed to write server message.", "Go-server-websocket//write")
+						return MakeBuiltinError(ps, "Failed to write server message.", "Go-server-websocket//Write")
 					}
 					return arg1
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.NativeType}, "Go-server-websocket//write")
+					return MakeArgError(ps, 2, []env.Type{env.NativeType}, "Go-server-websocket//Write")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-websocket//write")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-websocket//Write")
 			}
 		},
 	},
@@ -353,7 +353,7 @@ var Builtins_http = map[string]*env.Builtin{
 		},
 	},*/
 
-	"Go-server-request//query?": {
+	"Go-server-request//Query?": {
 		Argsn: 2,
 		Doc:   "Get query parameter from HTTP request.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -383,7 +383,7 @@ var Builtins_http = map[string]*env.Builtin{
 		},
 	},
 
-	"Go-server-request//url?": {
+	"Go-server-request//Url?": {
 		Argsn: 1,
 		Doc:   "Get URL from HTTP request.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -398,7 +398,7 @@ var Builtins_http = map[string]*env.Builtin{
 		},
 	},
 
-	"Go-server-url//path?": {
+	"Go-server-url//Path?": {
 		Argsn: 1,
 		Doc:   "Get path from server url.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -413,7 +413,7 @@ var Builtins_http = map[string]*env.Builtin{
 		},
 	},
 
-	"Go-server-request//cookie-val?": {
+	"Go-server-request//Cookie-val?": {
 		Argsn: 2,
 		Doc:   "Get cookie value from server request.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -438,7 +438,7 @@ var Builtins_http = map[string]*env.Builtin{
 		},
 	},
 
-	"Go-server-request//form?": {
+	"Go-server-request//Form?": {
 		Argsn: 2,
 		Doc:   "Get form field from server request.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -468,7 +468,7 @@ var Builtins_http = map[string]*env.Builtin{
 		},
 	},
 
-	"Go-server-request//full-form?": {
+	"Go-server-request//Full-form?": {
 		Argsn: 1,
 		Doc:   "Get full form data as Dict from server request.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -491,7 +491,7 @@ var Builtins_http = map[string]*env.Builtin{
 		},
 	},
 
-	"Go-server-request//parse-multipart-form!": {
+	"Go-server-request//Parse-multipart-form!": {
 		Argsn: 1,
 		Doc:   "Parse multipart form from server request.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -514,7 +514,7 @@ var Builtins_http = map[string]*env.Builtin{
 	// file-handler: r.form-file "image"
 	// dst: create file-handler
 
-	"Go-server-request//form-file?": {
+	"Go-server-request//Form-file?": {
 		Argsn: 2,
 		Doc:   "Get form file from server request as block with reader and multipart header.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -543,7 +543,7 @@ var Builtins_http = map[string]*env.Builtin{
 		},
 	},
 
-	"rye-multipart-header//filename?": {
+	"rye-multipart-header//Filename?": {
 		Argsn: 1,
 		Doc:   "Get filename from multipart header.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -572,7 +572,7 @@ var Builtins_http = map[string]*env.Builtin{
 		},
 	},
 
-	"Http-cookie-store//get": {
+	"Http-cookie-store//Get": {
 		Argsn: 3,
 		Doc:   "Get http cookie store.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -612,7 +612,7 @@ var Builtins_http = map[string]*env.Builtin{
 		},
 	},
 
-	"Http-session//set": {
+	"Http-session//Set": {
 		Argsn: 3,
 		Doc:   "Set http session.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -644,7 +644,7 @@ var Builtins_http = map[string]*env.Builtin{
 		},
 	},
 
-	"Http-session//get": {
+	"Http-session//Get": {
 		Argsn: 2,
 		Doc:   "Get http session.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -679,7 +679,7 @@ var Builtins_http = map[string]*env.Builtin{
 		},
 	},
 
-	"Http-session//save": {
+	"Http-session//Save": {
 		Argsn: 3,
 		Doc:   "Save http session.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -842,7 +842,7 @@ var Builtins_http = map[string]*env.Builtin{
 
 		},
 	},
-	"Http-handler//strip-prefix": {
+	"Http-handler//Strip-prefix": {
 		Argsn: 2,
 		Doc:   "TODODOC.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

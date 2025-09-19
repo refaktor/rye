@@ -24,7 +24,7 @@ var builtins_collection = map[string]*env.Builtin{
 	//
 	// Tests:
 	// equal { random { 1 2 3 } |type? } 'integer
-	// equal { random { 1 2 3 } |contains* { 1 2 3 } } 1
+	// equal { random { 1 2 3 } |contains* { 1 2 3 } } true
 	// Args:
 	// * block: Block of values to select from
 	// Returns:
@@ -259,8 +259,8 @@ var builtins_collection = map[string]*env.Builtin{
 							isMinInt = true
 						}
 					default:
-						fmt.Println(data.Data[i])
-						fmt.Printf("t1: %T\n", data.Data[i])
+						// fmt.Println(data.Data[i])
+						// fmt.Printf("t1: %T\n", data.Data[i])
 						return MakeBuiltinError(ps, "List type should be Integer or Decimal.", "min")
 					}
 				}
@@ -813,6 +813,17 @@ var builtins_collection = map[string]*env.Builtin{
 					}
 					return *env.NewString(string(str[0:numVal]))
 				case env.Table:
+					if len(s1.Rows) == 0 {
+						nspr := env.NewTable(s1.Cols)
+						nspr.Rows = []env.TableRow{}
+						return *nspr
+					}
+					if len(s1.Rows) < numVal {
+						numVal = len(s1.Rows)
+					}
+					if numVal < 0 {
+						numVal = len(s1.Rows) + numVal // warn: numVal is negative so we must add
+					}
 					nspr := env.NewTable(s1.Cols)
 					nspr.Rows = s1.Rows[0:numVal]
 					return *nspr
@@ -989,9 +1000,9 @@ var builtins_collection = map[string]*env.Builtin{
 				case env.Function:
 					copied := make([]env.Object, len(block.Series.S))
 					copy(copied, block.Series.S)
-					fmt.Println(fn)
+					// fmt.Println(fn)
 					sorter := RyeBlockCustomSort{copied, fn, ps}
-					fmt.Println(sorter)
+					// fmt.Println(sorter)
 					sort.Sort(sorter)
 					return *env.NewBlock(*env.NewTSeries(copied))
 				default:
@@ -1149,20 +1160,12 @@ var builtins_collection = map[string]*env.Builtin{
 				return *env.NewBlock(*env.NewTSeries(a))
 			case *env.List:
 				// Create slice of env.Object
-				dataSlice := make([]env.Object, 0)
-				for _, v := range block.Data {
-					dataSlice = append(dataSlice, env.ToRyeValue(v))
-				}
+				dataSlice := block.Data
 				// Reverse slice data
 				for left, right := 0, len(dataSlice)-1; left < right; left, right = left+1, right-1 {
 					dataSlice[left], dataSlice[right] = dataSlice[right], dataSlice[left]
 				}
-				// Create list frol slice data
-				reverseList := make([]any, 0, len(dataSlice))
-				for _, value := range dataSlice {
-					reverseList = append(reverseList, value)
-				}
-				return *env.NewList(reverseList)
+				return *env.NewList(dataSlice)
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.StringType, env.ListType}, "reverse!")
 			}
@@ -1490,11 +1493,11 @@ var builtins_collection = map[string]*env.Builtin{
 		},
 	},
 	// Tests:
-	// equal { { } .is-empty } 1
-	// equal { dict { } |is-empty } 1
-	// equal { table { 'a 'b } { } |is-empty } 1
-	// equal { "abc" .is-empty } 0
-	// equal { { 1 2 3 } .is-empty } 0
+	// equal { { } .is-empty } true
+	// equal { dict { } |is-empty } true
+	// equal { table { 'a 'b } { } |is-empty } true
+	// equal { "abc" .is-empty } false
+	// equal { { 1 2 3 } .is-empty } false
 	// Args:
 	// * collection: String, block, dict, list, table, context or vector to check
 	// Returns:
@@ -1516,13 +1519,15 @@ var builtins_collection = map[string]*env.Builtin{
 				return *env.NewBoolean(len(s1.Rows) == 0)
 			case *env.Table:
 				return *env.NewBoolean(len(s1.Rows) == 0)
+			case *env.PersistentTable:
+				return *env.NewBoolean(s1.Length() == 0)
 			case env.RyeCtx:
 				return *env.NewBoolean(s1.GetWords(*ps.Idx).Series.Len() == 0)
 			case env.Vector:
 				return *env.NewBoolean(s1.Value.Len() == 0)
 			default:
-				fmt.Println(s1)
-				return MakeArgError(ps, 2, []env.Type{env.StringType, env.DictType, env.ListType, env.BlockType, env.TableType, env.VectorType}, "length?")
+				// fmt.Println(s1)
+				return MakeArgError(ps, 2, []env.Type{env.StringType, env.DictType, env.ListType, env.BlockType, env.TableType, env.PersistentTableType, env.VectorType}, "is-empty")
 			}
 		},
 	},
@@ -1553,13 +1558,15 @@ var builtins_collection = map[string]*env.Builtin{
 				return *env.NewInteger(int64(len(s1.Rows)))
 			case *env.Table:
 				return *env.NewInteger(int64(len(s1.Rows)))
+			case *env.PersistentTable:
+				return *env.NewInteger(int64(s1.Length()))
 			case env.RyeCtx:
 				return *env.NewInteger(int64(s1.GetWords(*ps.Idx).Series.Len()))
 			case env.Vector:
 				return *env.NewInteger(int64(s1.Value.Len()))
 			default:
-				fmt.Println(s1)
-				return MakeArgError(ps, 2, []env.Type{env.StringType, env.DictType, env.ListType, env.BlockType, env.TableType, env.VectorType}, "length?")
+				// fmt.Println(s1)
+				return MakeArgError(ps, 2, []env.Type{env.StringType, env.DictType, env.ListType, env.BlockType, env.TableType, env.PersistentTableType, env.VectorType}, "length?")
 			}
 		},
 	},
@@ -1653,7 +1660,7 @@ var builtins_collection = map[string]*env.Builtin{
 	},*/
 	// Tests:
 	// equal { 2 <~ { 23 34 45 } } 34
-	// equal { 1 <~ { "a" "b" "c" } } "b"
+	// equal { 1 <~ { "a" "b" "c" } } "a"
 	// Args:
 	// * index: Index to access (1-based)
 	// * collection: Block, list or other indexable collection
@@ -2133,7 +2140,7 @@ var builtins_collection = map[string]*env.Builtin{
 	},
 	// Tests:
 	// equal { x: { 1 2 3 } pos x } 0
-	// equal { x: { 1 2 3 } next x pos x } 1
+	// equal { x: { 1 2 3 } pos next x } 1
 	// Args:
 	// * block: Block to get position from
 	// Returns:
@@ -2154,7 +2161,7 @@ var builtins_collection = map[string]*env.Builtin{
 	// Question: Should blocks really have cursor, like in Rebol? We don't really use them in that stateful way, except maybe when they
 	// represent code? Look at it.
 	// Tests:
-	// equal { x: { 1 2 3 } next x pos x } 1
+	// equal { x: { 11 22 33 } peek next next x } 33
 	// Args:
 	// * block: Block to advance cursor in
 	// Returns:

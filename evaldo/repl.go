@@ -182,17 +182,16 @@ func (r *Repl) recieveLine(line string) string {
 	// and don't interfere with terminal output
 	log.Println("RECV LINE: " + line)
 	res := r.evalLine(r.ps, line)
+
 	if r.showResults && len(res) > 0 {
-		fmt.Println(res)
+		fmt.Print(res)
+		fmt.Println() // Add newline after result
 	}
 	return res
 }
 
 func (r *Repl) evalLine(es *env.ProgramState, code string) string {
-	// Ensure we print a newline before processing to prevent overwriting previous output
-	if r.fullCode == "" {
-		fmt.Println()
-	}
+	// No extra newline needed here - proper spacing handled by recieveLine
 
 	if es.LiveObj != nil {
 		es.LiveObj.PsMutex.Lock()
@@ -205,26 +204,34 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 		es.LiveObj.PsMutex.Unlock()
 	}
 
+	// Process comments and extract the real line first
+	comment := regexp.MustCompile(`\s*;`)
+	line := comment.Split(code, 2) //--- just very temporary solution for some comments in repl. Later should probably be part of loader ... maybe?
+	lineReal := strings.Trim(line[0], "\t")
+
 	// More robust multiline input detection
 	// Check for explicit multiline indicators or incomplete syntax
 	multiline := false
 
 	// 1. Check for explicit continuation character at the end (backslash)
-	if len(code) > 0 && strings.HasSuffix(strings.TrimSpace(code), "\\") {
+	if len(lineReal) > 0 && strings.HasSuffix(strings.TrimSpace(lineReal), "\\") {
 		multiline = true
 		// Remove the continuation character for processing
-		code = strings.TrimSuffix(strings.TrimSpace(code), "\\")
+		lineReal = strings.TrimSuffix(strings.TrimSpace(lineReal), "\\")
 	}
 
 	// 2. Check for unbalanced brackets/braces/parentheses
 	if !multiline {
+		// Check the accumulated code (existing + current line) for balanced delimiters
+		accumulatedCode := r.fullCode + lineReal
+
 		openBraces := 0
 		openBrackets := 0
 		openParens := 0
 		inString := false
 		stringChar := ' '
 
-		for _, char := range code {
+		for _, char := range accumulatedCode {
 			// Handle string literals to avoid counting brackets inside strings
 			if (char == '"' || char == '`') && (stringChar == ' ' || stringChar == char) {
 				if !inString {
@@ -260,13 +267,9 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 	}
 
 	// 3. Check for incomplete block definitions that end with a colon
-	if !multiline && strings.HasSuffix(strings.TrimSpace(code), ":") {
+	if !multiline && strings.HasSuffix(strings.TrimSpace(lineReal), ":") {
 		multiline = true
 	}
-
-	comment := regexp.MustCompile(`\s*;`)
-	line := comment.Split(code, 2) //--- just very temporary solution for some comments in repl. Later should probably be part of loader ... maybe?
-	lineReal := strings.Trim(line[0], "\t")
 
 	output := ""
 	if multiline {
@@ -274,7 +277,7 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 	} else {
 		r.fullCode += lineReal
 
-		block, genv := loader.LoadString(r.fullCode, false)
+		block, genv := loader.LoadStringNoPEG(r.fullCode, false)
 
 		// Check if the result is an error
 		if err, isError := block.(env.Error); isError {
@@ -358,6 +361,7 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 		MaybeDisplayFailureOrError(es, genv, "repl / eval Line")
 
 		if !es.ErrorFlag && es.Res != nil {
+			// fmt.Println(&es)
 			r.prevResult = es.Res
 			p := ""
 			if env.IsPointer(es.Res) {
@@ -394,6 +398,10 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 		es.FailureFlag = false
 
 		r.ml.AppendHistory(code)
+
+		// Update both microliner's and REPL's program state references to ensure they're always current
+		r.ml.SetProgramState(es)
+		r.ps = es
 
 		r.fullCode = ""
 		r.ml.AppendHistory(code)
@@ -465,6 +473,9 @@ func constructKeyEvent(r rune, k keyboard.Key) term.KeyEvent {
 	case keyboard.KeyCtrlX:
 		ch = "x"
 		ctrl = true
+	case keyboard.KeyCtrlZ:
+		ch = "z"
+		ctrl = true
 
 	case keyboard.KeyEnter:
 		code = 13
@@ -518,18 +529,36 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 	// Configure log to not include date/time prefix for cleaner output
 	log.SetFlags(0)
 
-	// Print a welcome message with a newline to ensure proper spacing
-	fmt.Println("\nRye REPL started. Terminal output will be properly spaced.")
-
 	// Improved error handling for keyboard initialization
 	err := keyboard.Open()
 	if err != nil {
 		log.Printf("Failed to initialize keyboard: %v", err)
 		return
 	}
+
+	// Register terminal restoration function for suspend/resume
+	term.SetTerminalRestoreFunc(func() error {
+		// Close the keyboard to reset its state
+		if err := keyboard.Close(); err != nil {
+			log.Printf("Error closing keyboard during restoration: %v", err)
+		}
+
+		// Small delay to allow terminal to settle
+		// time.Sleep(50 * time.Millisecond)
+
+		// Reopen the keyboard in raw mode
+		if err := keyboard.Open(); err != nil {
+			return fmt.Errorf("failed to reinitialize keyboard: %w", err)
+		}
+
+		return nil
+	})
+
 	// Ensure keyboard is closed when function exits
 	defer func() {
 		fmt.Println("Closing keyboard...")
+		// Clear the restoration function
+		term.SetTerminalRestoreFunc(nil)
 		if err := keyboard.Close(); err != nil {
 			log.Printf("Error closing keyboard: %v", err)
 		}
@@ -545,6 +574,8 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 	}
 	ml := term.NewMicroLiner(c, r.recieveMessage, r.recieveLine)
 	r.ml = ml
+	ml.SetProgramState(es)
+	ml.SetDisplayValueFunc(displayRyeValue)
 
 	// Improved error handling for history file operations
 	f, err := os.Open(history_fn)
@@ -568,6 +599,8 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 
 		// # TRICK: we don't have the cursor position, but the caller code handles that already so we can suggest in the 	middle
 		suggestions := make([]string, 0)
+		suggestions2 := make([]string, 0)
+		fileSuggestions := make([]string, 0)
 		var wordpart string
 		spacePos := strings.LastIndex(line, " ")
 		var prefix string
@@ -590,22 +623,85 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 		fmt.Print("=[")
 		fmt.Print(wordpart)
 		fmt.Print("]=")
-		switch mode {
-		case 0:
-			for i := 0; i < es.Idx.GetWordCount(); i++ {
-				// fmt.Print(es.Idx.GetWord(i))
-				if strings.HasPrefix(es.Idx.GetWord(i), strings.ToLower(wordpart)) {
-					c = append(c, prefix+es.Idx.GetWord(i))
-					suggestions = append(suggestions, es.Idx.GetWord(i))
-				} else if strings.HasPrefix("."+es.Idx.GetWord(i), strings.ToLower(wordpart)) {
-					c = append(c, prefix+"."+es.Idx.GetWord(i))
-					suggestions = append(suggestions, es.Idx.GetWord(i))
-				} else if strings.HasPrefix("|"+es.Idx.GetWord(i), strings.ToLower(wordpart)) {
-					c = append(c, prefix+"|"+es.Idx.GetWord(i))
-					suggestions = append(suggestions, es.Idx.GetWord(i))
+
+		// Check if wordpart starts with % for file path completion
+		if strings.HasPrefix(wordpart, "%") {
+			// Extract the path part after %
+			pathPart := wordpart[1:] // Remove the % prefix
+
+			// Determine the directory to search in
+			var searchDir string
+			var filePrefix string
+
+			if pathPart == "" {
+				// Just "%" - list current directory
+				searchDir = "."
+				filePrefix = ""
+			} else if strings.Contains(pathPart, "/") {
+				// Contains path separator - extract directory and filename prefix
+				lastSlash := strings.LastIndex(pathPart, "/")
+				searchDir = pathPart[:lastSlash]
+				if searchDir == "" {
+					searchDir = "/"
+				}
+				filePrefix = pathPart[lastSlash+1:]
+			} else {
+				// No path separator - search current directory with filename prefix
+				searchDir = "."
+				filePrefix = pathPart
+			}
+
+			// Read directory contents
+			if files, err := os.ReadDir(searchDir); err == nil {
+				for _, file := range files {
+					fileName := file.Name()
+
+					// Skip hidden files unless explicitly requested
+					if strings.HasPrefix(fileName, ".") && !strings.HasPrefix(filePrefix, ".") {
+						continue
+					}
+
+					// Check if filename matches the prefix
+					if filePrefix == "" || strings.HasPrefix(strings.ToLower(fileName), strings.ToLower(filePrefix)) {
+						var suggestion string
+						if searchDir == "." {
+							suggestion = prefix + "%" + fileName
+						} else if searchDir == "/" {
+							suggestion = prefix + "%" + "/" + fileName
+						} else {
+							suggestion = prefix + "%" + searchDir + "/" + fileName
+						}
+
+						// Add trailing slash for directories
+						if file.IsDir() {
+							suggestion += "/"
+						}
+
+						c = append(c, suggestion)
+						fileSuggestions = append(fileSuggestions, fileName)
+					}
 				}
 			}
-		case 1:
+		} else {
+			// Original word completion logic
+			// switch mode {
+			// case 0:
+			if wordpart != "" {
+				for i := 0; i < es.Idx.GetWordCount(); i++ {
+					// fmt.Print(es.Idx.GetWord(i))
+					if strings.HasPrefix(es.Idx.GetWord(i), strings.ToLower(wordpart)) {
+						c = append(c, prefix+es.Idx.GetWord(i))
+						suggestions2 = append(suggestions2, es.Idx.GetWord(i))
+					} else if strings.HasPrefix("."+es.Idx.GetWord(i), strings.ToLower(wordpart)) {
+						c = append(c, prefix+"."+es.Idx.GetWord(i))
+						suggestions2 = append(suggestions2, es.Idx.GetWord(i))
+					} else if strings.HasPrefix("|"+es.Idx.GetWord(i), strings.ToLower(wordpart)) {
+						c = append(c, prefix+"|"+es.Idx.GetWord(i))
+						suggestions2 = append(suggestions2, es.Idx.GetWord(i))
+					}
+				}
+			}
+			// case 1:
 			for key := range es.Ctx.GetState() {
 				// fmt.Print(es.Idx.GetWord(i))
 				if strings.HasPrefix(es.Idx.GetWord(key), strings.ToLower(wordpart)) {
@@ -619,27 +715,39 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 					suggestions = append(suggestions, es.Idx.GetWord(key))
 				}
 			}
+			// }
 		}
 
-		// TODO -- make this sremlines and use local term functions
-		if isCursorAtBottom() {
-			// If at the bottom, print a new line to create a space
-			fmt.Println()
+		// Save cursor position before displaying suggestions
+		fmt.Print("\033[s") // Save cursor position
+
+		// Move cursor down and display suggestions
+		fmt.Print("\n")
+		term.ClearLine()
+
+		// Display suggestions based on what type we have
+		if len(fileSuggestions) > 0 {
+			// File path suggestions
+			term.ColorGreen()
+			fmt.Print("files and folders: ")
+			term.CloseProps()
+			fmt.Print(strings.Join(fileSuggestions, " "))
+		} else {
+			// Original word suggestions
+			term.ColorMagenta()
+			fmt.Print("current context: ")
+			fmt.Print(suggestions)
+			if len(suggestions2) > 0 {
+				fmt.Print(" | ")
+				term.ColorBlue()
+				fmt.Print("all words: ")
+				fmt.Print(suggestions2)
+			}
+			term.CloseProps()
 		}
 
-		// Move the cursor one line down
-		// term.CurDown(1) //"\033[B")
-
-		// Delete the line
-		term.ClearLine() //"\033[2K")
-
-		// Print something
-		term.ColorMagenta()
-		fmt.Print(suggestions)
-		term.CloseProps() //	fmt.Print("This is the new line.")
-
-		// Move the cursor back to the previous line
-		term.CurUp(1) //"\033[A")
+		// Restore cursor position to the input line
+		fmt.Print("\033[u") // Restore cursor position
 
 		return
 	})

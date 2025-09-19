@@ -1,0 +1,16 @@
+; This script tests spacing detection for various token types
+
+; Test with proper spacing (should work)
+x: 10
+y: "hello"
+z: :value
+tag: 'tag
+get: ?word
+pipe: |word
+op: .add
+
+; Test without proper spacing (should fail)
+a: 10"hello"  ; Number followed by string without space
+b: "hello"'tag  ; String followed by tag without space
+c: :value?word  ; LSetWord followed by GetWord without space
+d: |word.add  ; PipeWord followed by OpWord without space

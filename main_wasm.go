@@ -360,7 +360,7 @@ func RyeEvalString(this js.Value, args []js.Value) any {
 	//util.PrintHeader()
 	//defer profile.Start(profile.CPUProfile).Stop()
 
-	block, genv := loader.LoadString(code, sig)
+	block, genv := loader.LoadStringNoPEG(code, sig)
 	switch val := block.(type) {
 	case env.Block:
 		es := env.NewProgramState(val.Series, genv)

@@ -4,10 +4,48 @@ import (
 	"fmt"
 	"sort"
 	"strings"
-	"sync"
-
-	"github.com/fsnotify/fsnotify"
 )
+
+// Context represents a unified interface for all context types (RyeCtx, PersistentCtx, etc.)
+type Context interface {
+	Object // Embed the existing Object interface
+
+	// Core context operations
+	Get(word int) (Object, bool)
+	Get2(word int) (Object, bool, Context)
+	Set(word int, val Object) Object
+	Mod(word int, val Object) bool
+	Unset(word int, idxs *Idxs) Object
+	SetNew(word int, val Object, idxs *Idxs) bool
+
+	// Variable tracking
+	MarkAsVariable(word int)
+	IsVariable(word int) bool
+
+	// Context hierarchy
+	GetParent() Context
+	SetParent(parent Context)
+
+	// Context management
+	Copy() Context
+	Clear()
+	GetState() map[int]Object
+
+	// Utility methods
+	GetWords(idxs Idxs) Block
+	GetWordsAsStrings(idxs Idxs) Block
+	Preview(idxs Idxs, filter string) string
+	DumpBare(e Idxs) string
+
+	// Context-specific fields (for compatibility)
+	GetDoc() string
+	SetDoc(doc string)
+	GetKindWord() Word
+	SetKindWord(kind Word)
+
+	// Conversion methods for backward compatibility
+	AsRyeCtx() *RyeCtx
+}
 
 /* type Envi interface {
 	Get(word int) (Object, bool)
@@ -49,11 +87,53 @@ func NewEnv2(par *RyeCtx, doc string) *RyeCtx {
 	return &e
 }
 
-func (e RyeCtx) Copy() *RyeCtx {
+func (e *RyeCtx) isContextOrParent(ctx *RyeCtx) bool {
+	if ctx == nil {
+		return false
+	}
+	// Check if ctx is the same as e or if ctx is a child of e
+	// This means we check if e is in the parent chain of ctx
+	current := ctx
+	for current != nil {
+		if current == e {
+			return true
+		}
+		current = current.Parent
+	}
+	return false
+}
+
+func (e *RyeCtx) Copy() Context {
 	nc := NewEnv(e.Parent)
 	cp := make(map[int]Object)
 	for k, v := range e.state {
-		cp[k] = v
+		// move contexts of functions (closures) to this new context
+		if fn, ok := v.(Function); ok {
+			// fmt.Printf("**** Function found, fn.Ctx=%p, e=%p\n", fn.Ctx, e)
+			// fmt.Printf("**** fn.Ctx.Parent=%p, e.Parent=%p\n", fn.Ctx.Parent, e.Parent)
+			// Check if the function's context should be updated to the new context
+			// This handles cases where the function was created with 'current' or similar
+			// We should update the function's context if:
+			// 1. It's exactly the same context (fn.Ctx == e)
+			// 2. The function's context is the same as the context being copied (they have the same parent)
+			// 3. The function's context is a child of the context being copied
+			if fn.Ctx == e ||
+				e.isContextOrParent(fn.Ctx) ||
+				(fn.Ctx != nil &&
+					fn.Ctx.Parent != nil &&
+					e.Parent != nil &&
+					fn.Ctx.Parent == e.Parent &&
+					fn.Ctx != e.Parent) {
+				//					fmt.Println("CTX IS THE SAME OR RELATED ... COPY")
+				fn.Ctx = nc
+				cp[k] = fn // store the modified function
+			} else {
+				// fmt.Println("CTX IS DIFFERENT - NOT COPYING")
+				cp[k] = v // store the original function
+			}
+		} else {
+			cp[k] = v
+		}
 	}
 	cpVarFlags := make(map[int]bool)
 	for k, v := range e.varFlags {
@@ -266,7 +346,7 @@ func (e *RyeCtx) Get(word int) (Object, bool) {
 	return obj, exists
 }
 
-func (e *RyeCtx) Get2(word int) (Object, bool, *RyeCtx) {
+func (e *RyeCtx) Get2(word int) (Object, bool, Context) {
 	obj, exists := e.state[word]
 	// recursively look at outer Environments ...
 	// only specific functions should do this and ounly for function values ... but there is only global env maybe
@@ -278,7 +358,7 @@ func (e *RyeCtx) Get2(word int) (Object, bool, *RyeCtx) {
 		if exists1 {
 			obj = obj1
 			exists = exists1
-			e = ctx
+			return obj, exists, ctx
 		}
 	}
 	return obj, exists, e
@@ -341,6 +421,51 @@ func (e *RyeCtx) Mod(word int, val Object) bool {
 	return true
 }
 
+// GetParent returns the parent context
+func (e *RyeCtx) GetParent() Context {
+	if e.Parent == nil {
+		return nil
+	}
+	return e.Parent
+}
+
+// SetParent sets the parent context
+func (e *RyeCtx) SetParent(parent Context) {
+	if parent == nil {
+		e.Parent = nil
+	} else {
+		// Type assert to *RyeCtx since that's what we're currently using
+		if ryeCtx, ok := parent.(*RyeCtx); ok {
+			e.Parent = ryeCtx
+		}
+	}
+}
+
+// GetDoc returns the documentation string
+func (e *RyeCtx) GetDoc() string {
+	return e.Doc
+}
+
+// SetDoc sets the documentation string
+func (e *RyeCtx) SetDoc(doc string) {
+	e.Doc = doc
+}
+
+// GetKindWord returns the Kind as a Word
+func (e *RyeCtx) GetKindWord() Word {
+	return e.Kind
+}
+
+// SetKindWord sets the Kind
+func (e *RyeCtx) SetKindWord(kind Word) {
+	e.Kind = kind
+}
+
+// AsRyeCtx returns the context as a *RyeCtx for backward compatibility
+func (e *RyeCtx) AsRyeCtx() *RyeCtx {
+	return e
+}
+
 type ProgramState struct {
 	Ser          TSeries // current block of code
 	Res          Object  // result of expression
@@ -365,6 +490,7 @@ type ProgramState struct {
 	Stack        *EyrStack
 	Embedded     bool
 	DeferBlocks  []Block // blocks to be executed when function exits or program terminates
+	// LastFailedCPathInfo map[string]interface{} // stores information about the last failed context path
 }
 
 type DoDialect int
@@ -461,59 +587,6 @@ func SetValue(ps *ProgramState, word string, val Object) {
 			}
 		}
 	}
-}
-
-// LiveEnv -- a experiment in live realoading
-
-type LiveEnv struct {
-	Active  bool
-	Watcher *fsnotify.Watcher
-	PsMutex sync.Mutex
-	Updates []string
-}
-
-func NewLiveEnv() *LiveEnv {
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		// TODO -- temporary removed for WASM and we don't use this at the moment ... solve at build time with flags
-		// fmt.Println("Error creating watcher:", err) // TODO -- if this fails show error in red, but make it so that rye runs anyway (check if null at repl for starters)
-		return nil
-	}
-
-	// defer watcher.Close()
-
-	// Watch current directory for changes in any Go source file (*.go)
-
-	liveEnv := &LiveEnv{true, watcher, sync.Mutex{}, make([]string, 0)}
-
-	go func() {
-		for {
-			select {
-			case event := <-watcher.Events:
-				if event.Op&fsnotify.Write == fsnotify.Write {
-					// fmt.Println("LiveEnv file changed:", event.Name)
-					liveEnv.PsMutex.Lock()
-					liveEnv.Updates = append(liveEnv.Updates, event.Name)
-					liveEnv.PsMutex.Unlock()
-				}
-			case err := <-watcher.Errors:
-				fmt.Println("LiveEnv error watching files:", err)
-			}
-		}
-	}()
-
-	return liveEnv
-}
-
-func (le *LiveEnv) Add(file string) {
-	err := le.Watcher.Add(".")
-	if err != nil {
-		fmt.Println("LiveEnv: Error adding directory to watch:", err)
-	}
-}
-
-func (le *LiveEnv) ClearUpdates() {
-	le.Updates = make([]string, 0)
 }
 
 const STACK_SIZE int = 1000

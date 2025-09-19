@@ -36,6 +36,15 @@ var builtins_string = map[string]*env.Builtin{
 		},
 	},
 
+	"tab": {
+		Argsn: 0,
+		Doc:   "Returns a string containing a single newline character.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return *env.NewString("\t")
+		},
+	},
+
 	// Tests:
 	// equal { "123" .ln } "123\n"
 	// equal { "hello" .ln } "hello\n"
@@ -228,11 +237,11 @@ var builtins_string = map[string]*env.Builtin{
 		},
 	},
 	// Tests:
-	// equal { contains "...xoxo..." "xo"  } 1
-	// equal { contains "...xoxo..." "lol" } 0
-	// equal { contains { ".." "xoxo" ".." } "xoxo" } 1
-	// equal { contains { ".." "xoxo" ".." } "lol"  } 0
-	// equal { contains list { 1 2 3 } 2 } 1
+	// equal { contains "...xoxo..." "xo"  } true
+	// equal { contains "...xoxo..." "lol" } false
+	// equal { contains { ".." "xoxo" ".." } "xoxo" } true
+	// equal { contains { ".." "xoxo" ".." } "lol"  } false
+	// equal { contains list { 1 2 3 } 2 } true
 	// Args:
 	// * collection: String, block or list to search in
 	// * value: Value to search for
@@ -249,9 +258,9 @@ var builtins_string = map[string]*env.Builtin{
 				switch s2 := arg1.(type) {
 				case env.String:
 					if strings.Contains(s1.Value, s2.Value) {
-						return *env.NewInteger(1)
+						return *env.NewBoolean(true)
 					} else {
-						return *env.NewInteger(0)
+						return *env.NewBoolean(false)
 					}
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.StringType}, "contains")
@@ -261,9 +270,9 @@ var builtins_string = map[string]*env.Builtin{
 				switch value := arg1.(type) {
 				case env.Object:
 					if util.ContainsVal(ps, s1.Series.S, value) {
-						return *env.NewInteger(1)
+						return *env.NewBoolean(true)
 					} else {
-						return *env.NewInteger(0)
+						return *env.NewBoolean(false)
 					}
 				default:
 					return MakeArgError(ps, 2, []env.Type{}, "contains")
@@ -280,9 +289,9 @@ var builtins_string = map[string]*env.Builtin{
 						}
 					}
 					if isListContains {
-						return *env.NewInteger(1)
+						return *env.NewBoolean(true)
 					} else {
-						return *env.NewInteger(0)
+						return *env.NewBoolean(false)
 					}
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "contains")

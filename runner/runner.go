@@ -66,18 +66,41 @@ func GetScriptDirectory() string {
 	return CurrentScriptDirectory
 }
 
+// getDebugLogPath returns the path for the debug log file in the temporary directory
+func getDebugLogPath() string {
+	tmpDir := os.Getenv("TMPDIR")
+	if tmpDir == "" {
+		tmpDir = "/tmp"
+	}
+	return filepath.Join(tmpDir, "rye_debug.log")
+}
+
 // Error handling utilities
 var (
-	errorLogFile *os.File
-	errorLogger  *log.Logger
-	logErrors    bool = true
+	errorLogFile      *os.File
+	errorLogger       *log.Logger
+	logErrors         bool = true
+	loggerInitialized bool = false
 )
 
-// initErrorLogging initializes the error logging system
+// getErrorLogPath returns the path for the error log file in the temporary directory
+func getErrorLogPath() string {
+	tmpDir := os.Getenv("TMPDIR")
+	if tmpDir == "" {
+		tmpDir = "/tmp"
+	}
+	return filepath.Join(tmpDir, "rye_errors.log")
+}
+
+// initErrorLogging initializes the error logging system (lazy initialization)
 func initErrorLogging() {
-	// Try to open error log file
+	if loggerInitialized {
+		return
+	}
+
+	// Try to open error log file in temp directory
 	var err error
-	errorLogFile, err = os.OpenFile("rye_errors.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	errorLogFile, err = os.OpenFile(getErrorLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: Could not open error log file: %v\n", err)
 		errorLogger = log.New(os.Stderr, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
@@ -86,11 +109,14 @@ func initErrorLogging() {
 		multiWriter := io.MultiWriter(os.Stderr, errorLogFile)
 		errorLogger = log.New(multiWriter, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
 	}
+	loggerInitialized = true
 }
 
 // logError logs an error with context if logging is enabled
 func logError(err error, context string) {
 	if logErrors && err != nil {
+		// Initialize logging only when an actual error occurs
+		initErrorLogging()
 		errorLogger.Printf("%s: %v", context, err)
 	}
 }
@@ -111,8 +137,7 @@ func handleError(err error, context string, fatal bool) {
 }
 
 func DoMain(regfn func(*env.ProgramState) error) {
-	// Initialize error logging
-	initErrorLogging()
+	// Error logging is now initialized lazily only when needed
 	defer func() {
 		if errorLogFile != nil {
 			errorLogFile.Close()
@@ -358,7 +383,7 @@ func main_ryk() {
 		}
 	}
 
-	block, genv := loader.LoadString(input, false)
+	block, genv := loader.LoadStringNoPEG(input, false)
 	//block, genv := loader.LoadString("{ }", false)
 	es := env.NewProgramState(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
@@ -389,7 +414,7 @@ func main_ryk() {
 
 	if len(os.Args) >= 5 {
 		if os.Args[argIdx] == "--begin" {
-			block, genv := loader.LoadString(os.Args[argIdx+1], false)
+			block, genv := loader.LoadStringNoPEG(os.Args[argIdx+1], false)
 			es = env.AddToProgramState(es, block.(env.Block).Series, genv)
 			evaldo.EvalBlockInj(es, es.ForcedResult, true)
 			evaldo.MaybeDisplayFailureOrError(es, es.Idx, "rwk begin")
@@ -402,7 +427,7 @@ func main_ryk() {
 				// MustCompilePOSIX panics on error, so no error handling needed
 				filter = regexp.MustCompilePOSIX(code[1 : len(code)-1])
 			} else {
-				filterBlock1, genv1 := loader.LoadString(code, false)
+				filterBlock1, genv1 := loader.LoadStringNoPEG(code, false)
 				es = env.AddToProgramState(es, filterBlock1.(env.Block).Series, genv1)
 				filterBlock = &filterBlock1
 			}
@@ -412,7 +437,7 @@ func main_ryk() {
 
 	code := os.Args[argIdx]
 
-	block1, genv1 := loader.LoadString(code, false)
+	block1, genv1 := loader.LoadStringNoPEG(code, false)
 	es = env.AddToProgramState(es, block1.(env.Block).Series, genv1)
 	// make code composable, updatable ... so you can load by appending to existing program/state or initial block?
 	// basically we need to have multiple toplevel blocks that can be evaluated by the same state
@@ -478,7 +503,7 @@ func main_ryk() {
 
 	if len(os.Args) >= argIdx+2 {
 		if os.Args[argIdx] == "--end" {
-			block, genv := loader.LoadString(os.Args[argIdx+1], false)
+			block, genv := loader.LoadStringNoPEG(os.Args[argIdx+1], false)
 			es = env.AddToProgramState(es, block.(env.Block).Series, genv)
 			evaldo.EvalBlockInj(es, es.ForcedResult, true)
 			evaldo.MaybeDisplayFailureOrError(es, es.Idx, "rwk end")
@@ -521,12 +546,15 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 	//	}
 	//}()
 
-	logFile, err := os.OpenFile("debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	logFile, err := os.OpenFile(getDebugLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		panic(err)
+		fmt.Fprintf(os.Stderr, "Warning: Could not open debug log file: %v\n", err)
+		// Continue without debug logging - discard all log output to avoid cluttering REPL
+		log.SetOutput(io.Discard)
+	} else {
+		defer logFile.Close()
+		log.SetOutput(logFile)
 	}
-	defer logFile.Close()
-	log.SetOutput(logFile)
 
 	// Override sig parameter with CodeSigEn flag if it's set
 	if *CodeSigEnforced {
@@ -645,7 +673,7 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 				block1 := block.(env.Block)
 				ps = env.AddToProgramState(ps, block1.Series, ps.Idx)
 				evaldo.EvalBlockInjMultiDialect(ps, nil, false)
-				evaldo.MaybeDisplayFailureOrError(ps, ps.Idx, "main rye file")
+				evaldo.MaybeDisplayFailureOrError_2_NEW(ps, ps.Idx, "main rye file", true)
 			}
 		} else {
 			fmt.Println("There was no `here` file.")
@@ -682,7 +710,8 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 		}
 
 		evaldo.EvalBlockInjMultiDialect(ps, stValue, true)
-		evaldo.MaybeDisplayFailureOrError(ps, ps.Idx, "main rye file #2")
+		evaldo.MaybeDisplayFailureOrError_2_NEW(ps, ps.Idx, "main rye file", true)
+		//		evaldo.MaybeDisplayFailureOrError(ps, ps.Idx, "main rye file #2")
 
 		if interactive {
 			evaldo.DoRyeRepl(ps, "rye", evaldo.ShowResults)
@@ -711,7 +740,7 @@ func main_cgi_file(file string, sig bool) {
 		//defer profile.Start(profile.CPUProfile).Stop()
 
 		input := " 123 " //" whoami: \"Rye cgi 0.001 alpha\" ctx: 0 result: \"\" session: 0 w: 0 r: 0"
-		block, genv := loader.LoadString(input, false)
+		block, genv := loader.LoadStringNoPEG(input, false)
 		es := env.NewProgramState(block.(env.Block).Series, genv)
 		evaldo.RegisterBuiltins(es)
 		contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
@@ -729,7 +758,7 @@ func main_cgi_file(file string, sig bool) {
 
 		content := string(bcontent)
 
-		block, genv = loader.LoadString(content, sig)
+		block, genv = loader.LoadStringNoPEG(content, sig)
 		switch val := block.(type) {
 		case env.Block:
 			es = env.AddToProgramState(es, block.(env.Block).Series, genv)
@@ -755,12 +784,15 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 	//	}
 	//}()
 
-	logFile, err := os.OpenFile("debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	logFile, err := os.OpenFile(getDebugLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		panic(err)
+		fmt.Fprintf(os.Stderr, "Warning: Could not open debug log file: %v\n", err)
+		// Continue without debug logging - discard all log output to avoid cluttering REPL
+		log.SetOutput(io.Discard)
+	} else {
+		defer logFile.Close()
+		log.SetOutput(logFile)
 	}
-	defer logFile.Close()
-	log.SetOutput(logFile)
 
 	// fmt.Println("RYE REPL")
 	input := code // "name: \"Rye\" version: \"0.011 alpha\""
@@ -772,6 +804,12 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 		fmt.Printf("Welcome to Rye %s console. We're still W-I-P. Visit \033[38;5;14mryelang.org\033[0m for more info.\n", Version)
 		fmt.Println("- \033[38;5;246mtype in lcp (list context parent) too see functions, or lc to see your context\033[0m")
 		//fmt.Println("--------------------------------------------------------------------------------")
+
+		// Ensure cursor is at the beginning of a new line and flush any buffered output
+		fmt.Print("\r\n")
+		// Clear any potential terminal state issues and ensure clean cursor positioning
+		fmt.Print("\033[0m") // Reset all terminal attributes
+		os.Stdout.Sync()     // Force flush to ensure all output is written before REPL starts
 	}
 
 	// Uncomment and fix the profile loading code if needed
@@ -786,7 +824,7 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 	//	fmt.Println("There was no profile.")
 	//}
 
-	block, genv := loader.LoadString(input, false)
+	block, genv := loader.LoadStringNoPEG(input, false)
 	es := env.NewProgramState(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
 	evaldo.RegisterVarBuiltins(es)
@@ -814,7 +852,7 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 				fmt.Println("Could not read .rye-here file")
 			} else {
 				inputH := string(content)
-				block, genv := loader.LoadString(inputH, false)
+				block, genv := loader.LoadStringNoPEG(inputH, false)
 				if blockErr, ok := block.(env.Error); ok {
 					handleError(fmt.Errorf("%s", blockErr.Message), "parsing .rye-here file", false)
 				} else {

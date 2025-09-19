@@ -1,0 +1,25 @@
+; # Example of using Git from rye
+
+rye .needs { git }
+
+do\par git {
+
+	; open the repository
+	repo: git-open "../picorye"
+	
+	; get untracked files, newest first
+	files: repo .untracked-files
+	
+	either is-empty files {
+		term/red
+		print "No untracked files found."
+	} {
+		term/yellow
+		print "Untracked files:"
+		
+		for files { ::file
+			term/blue , prn "path" <- file , prn tab , term/reset
+			file -> "mtime" |replace "T" tab |print
+		}
+	}
+}
