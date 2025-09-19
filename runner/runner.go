@@ -66,18 +66,41 @@ func GetScriptDirectory() string {
 	return CurrentScriptDirectory
 }
 
+// getDebugLogPath returns the path for the debug log file in the temporary directory
+func getDebugLogPath() string {
+	tmpDir := os.Getenv("TMPDIR")
+	if tmpDir == "" {
+		tmpDir = "/tmp"
+	}
+	return filepath.Join(tmpDir, "rye_debug.log")
+}
+
 // Error handling utilities
 var (
-	errorLogFile *os.File
-	errorLogger  *log.Logger
-	logErrors    bool = true
+	errorLogFile      *os.File
+	errorLogger       *log.Logger
+	logErrors         bool = true
+	loggerInitialized bool = false
 )
 
-// initErrorLogging initializes the error logging system
+// getErrorLogPath returns the path for the error log file in the temporary directory
+func getErrorLogPath() string {
+	tmpDir := os.Getenv("TMPDIR")
+	if tmpDir == "" {
+		tmpDir = "/tmp"
+	}
+	return filepath.Join(tmpDir, "rye_errors.log")
+}
+
+// initErrorLogging initializes the error logging system (lazy initialization)
 func initErrorLogging() {
-	// Try to open error log file
+	if loggerInitialized {
+		return
+	}
+
+	// Try to open error log file in temp directory
 	var err error
-	errorLogFile, err = os.OpenFile("rye_errors.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	errorLogFile, err = os.OpenFile(getErrorLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: Could not open error log file: %v\n", err)
 		errorLogger = log.New(os.Stderr, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
@@ -86,11 +109,14 @@ func initErrorLogging() {
 		multiWriter := io.MultiWriter(os.Stderr, errorLogFile)
 		errorLogger = log.New(multiWriter, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
 	}
+	loggerInitialized = true
 }
 
 // logError logs an error with context if logging is enabled
 func logError(err error, context string) {
 	if logErrors && err != nil {
+		// Initialize logging only when an actual error occurs
+		initErrorLogging()
 		errorLogger.Printf("%s: %v", context, err)
 	}
 }
@@ -111,8 +137,7 @@ func handleError(err error, context string, fatal bool) {
 }
 
 func DoMain(regfn func(*env.ProgramState) error) {
-	// Initialize error logging
-	initErrorLogging()
+	// Error logging is now initialized lazily only when needed
 	defer func() {
 		if errorLogFile != nil {
 			errorLogFile.Close()
@@ -521,12 +546,15 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 	//	}
 	//}()
 
-	logFile, err := os.OpenFile("debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	logFile, err := os.OpenFile(getDebugLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		panic(err)
+		fmt.Fprintf(os.Stderr, "Warning: Could not open debug log file: %v\n", err)
+		// Continue without debug logging to file, just use stderr
+		log.SetOutput(os.Stderr)
+	} else {
+		defer logFile.Close()
+		log.SetOutput(logFile)
 	}
-	defer logFile.Close()
-	log.SetOutput(logFile)
 
 	// Override sig parameter with CodeSigEn flag if it's set
 	if *CodeSigEnforced {
@@ -756,12 +784,15 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 	//	}
 	//}()
 
-	logFile, err := os.OpenFile("debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	logFile, err := os.OpenFile(getDebugLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		panic(err)
+		fmt.Fprintf(os.Stderr, "Warning: Could not open debug log file: %v\n", err)
+		// Continue without debug logging to file, just use stderr
+		log.SetOutput(os.Stderr)
+	} else {
+		defer logFile.Close()
+		log.SetOutput(logFile)
 	}
-	defer logFile.Close()
-	log.SetOutput(logFile)
 
 	// fmt.Println("RYE REPL")
 	input := code // "name: \"Rye\" version: \"0.011 alpha\""
@@ -773,6 +804,12 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 		fmt.Printf("Welcome to Rye %s console. We're still W-I-P. Visit \033[38;5;14mryelang.org\033[0m for more info.\n", Version)
 		fmt.Println("- \033[38;5;246mtype in lcp (list context parent) too see functions, or lc to see your context\033[0m")
 		//fmt.Println("--------------------------------------------------------------------------------")
+
+		// Ensure cursor is at the beginning of a new line and flush any buffered output
+		fmt.Print("\r\n")
+		// Clear any potential terminal state issues and ensure clean cursor positioning
+		fmt.Print("\033[0m") // Reset all terminal attributes
+		os.Stdout.Sync()     // Force flush to ensure all output is written before REPL starts
 	}
 
 	// Uncomment and fix the profile loading code if needed

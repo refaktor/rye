@@ -303,6 +303,13 @@ func (s *MLState) tabComplete(p []rune, line []rune, pos int, mode int) ([]rune,
 		return line, pos, KeyEvent{Code: 27}, nil
 	}
 
+	// Set flag to indicate we're in tab completion mode
+	s.inTabCompletion = true
+	defer func() {
+		// Always clear the flag when exiting tab completion
+		s.inTabCompletion = false
+	}()
+
 	// Run the completer
 	head, list, tail := s.completer(string(line), pos, mode)
 	if len(list) <= 0 {
@@ -463,23 +470,24 @@ func (s *MLState) emitNewLine() {
 
 // State represents an open terminal
 type MLState struct {
-	needRefresh    bool
-	next           <-chan KeyEvent
-	sendBack       func(msg string)
-	enterLine      func(line string) string
-	history        []string
-	historyMutex   sync.RWMutex
-	columns        int
-	inString       bool
-	inBlock        bool
-	lastLineString bool
-	prevLines      int
-	prevCursorLine int
-	completer      WordCompleter
-	lines          []string                                                       // added for the multiline behaviour
-	currline       int                                                            // same
-	programState   *env.ProgramState                                              // added for environment access
-	displayValue   func(*env.ProgramState, env.Object, bool) (env.Object, string) // callback for displaying values
+	needRefresh     bool
+	next            <-chan KeyEvent
+	sendBack        func(msg string)
+	enterLine       func(line string) string
+	history         []string
+	historyMutex    sync.RWMutex
+	columns         int
+	inString        bool
+	inBlock         bool
+	lastLineString  bool
+	prevLines       int
+	prevCursorLine  int
+	completer       WordCompleter
+	lines           []string                                                       // added for the multiline behaviour
+	currline        int                                                            // same
+	programState    *env.ProgramState                                              // added for environment access
+	displayValue    func(*env.ProgramState, env.Object, bool) (env.Object, string) // callback for displaying values
+	inTabCompletion bool                                                           // flag to track if we're in tab completion mode
 	// pending     []rune
 	// killRing *ring.Ring
 }
@@ -942,29 +950,43 @@ func (s *MLState) refreshSingleLine_NO_WRAP(prompt []rune, buf []rune, pos int) 
 	// Move cursor to beginning of current line
 	s.sendBack("\r")
 
-	// Always clear enough lines to handle any previous wrapped content
-	// This is the key fix - we clear MORE lines than we might need to ensure
-	// we don't leave any residual content from previous redraws
+	// Clear current line first
+	s.sendBack("\033[K")
+
+	// Handle clearing previous content based on context
 	maxLinesToClear := s.prevLines
 	if maxLinesToClear < linesNeeded {
 		maxLinesToClear = linesNeeded
 	}
-	if maxLinesToClear < 3 {
-		maxLinesToClear = 3 // Always clear at least 3 lines to be safe
-	}
 
-	// Clear current line first
-	s.sendBack("\033[K")
+	if s.inTabCompletion {
+		// During tab completion: Use the old method that prevents scrolling
+		// This preserves the existing behavior for tab completion
+		if maxLinesToClear < 3 {
+			maxLinesToClear = 3 // Always clear at least 3 lines to be safe
+		}
 
-	// Clear additional lines by moving down and clearing each one
-	for i := 1; i < maxLinesToClear; i++ {
-		s.sendBack("\033[B") // Move down one line
-		s.sendBack("\033[K") // Clear line
-	}
+		// Clear additional lines by moving down and clearing each one
+		for i := 1; i < maxLinesToClear; i++ {
+			s.sendBack("\033[B") // Move down one line
+			s.sendBack("\033[K") // Clear line
+		}
 
-	// Move back up to the original line position
-	if maxLinesToClear > 1 {
-		s.sendBack(fmt.Sprintf("\033[%dA", maxLinesToClear-1))
+		// Move back up to the original line position
+		if maxLinesToClear > 1 {
+			s.sendBack(fmt.Sprintf("\033[%dA", maxLinesToClear-1))
+		}
+	} else {
+		// During normal console operation: Use scrolling-friendly approach
+		// Create newlines to ensure proper scrolling, then move back up
+		if maxLinesToClear > 1 {
+			// Create enough newlines to ensure we have space to work with
+			for i := 1; i < maxLinesToClear; i++ {
+				s.sendBack("\n\033[K") // Newline and clear the new line
+			}
+			// Move back up to our starting position
+			s.sendBack(fmt.Sprintf("\033[%dA", maxLinesToClear-1))
+		}
 	}
 
 	// Position cursor at start of line
