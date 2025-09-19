@@ -396,6 +396,194 @@ func markdown_to_html(ps *env.ProgramState, source string) (string, error) {
 	return buf.String(), nil
 }
 
+// Helper function to extract headings from markdown text
+func extractHeadings(source string) []*env.String {
+	md := goldmark.New(
+		goldmark.WithExtensions(
+			extension.GFM,
+			extension.Table,
+			extension.Strikethrough,
+			extension.TaskList,
+		),
+	)
+
+	doc := md.Parser().Parse(text.NewReader([]byte(source)))
+	var headings []*env.String
+
+	ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+		if entering {
+			if heading, ok := n.(*ast.Heading); ok {
+				headingText := string(heading.Text([]byte(source)))
+				headings = append(headings, env.NewString(headingText))
+			}
+		}
+		return ast.WalkContinue, nil
+	})
+
+	return headings
+}
+
+// Helper function to extract paragraphs from markdown text
+func extractParagraphs(source string) []*env.String {
+	md := goldmark.New(
+		goldmark.WithExtensions(
+			extension.GFM,
+			extension.Table,
+			extension.Strikethrough,
+			extension.TaskList,
+		),
+	)
+
+	doc := md.Parser().Parse(text.NewReader([]byte(source)))
+	var paragraphs []*env.String
+
+	ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+		if entering {
+			if para, ok := n.(*ast.Paragraph); ok {
+				var buf bytes.Buffer
+				for c := para.FirstChild(); c != nil; c = c.NextSibling() {
+					if textNode, ok := c.(*ast.Text); ok {
+						buf.Write(textNode.Text([]byte(source)))
+					} else {
+						buf.WriteString(" ")
+					}
+				}
+				if buf.Len() > 0 {
+					paragraphs = append(paragraphs, env.NewString(strings.TrimSpace(buf.String())))
+				}
+			}
+		}
+		return ast.WalkContinue, nil
+	})
+
+	return paragraphs
+}
+
+// Helper function to extract links from markdown text
+func extractLinks(source string) []map[string]*env.String {
+	md := goldmark.New(
+		goldmark.WithExtensions(
+			extension.GFM,
+			extension.Table,
+			extension.Strikethrough,
+			extension.TaskList,
+		),
+	)
+
+	doc := md.Parser().Parse(text.NewReader([]byte(source)))
+	var links []map[string]*env.String
+
+	ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+		if entering {
+			if link, ok := n.(*ast.Link); ok {
+				destination := string(link.Destination)
+				var text string
+				for c := link.FirstChild(); c != nil; c = c.NextSibling() {
+					if textNode, ok := c.(*ast.Text); ok {
+						text = string(textNode.Text([]byte(source)))
+						break
+					}
+				}
+
+				linkMap := make(map[string]*env.String)
+				linkMap["text"] = env.NewString(text)
+				linkMap["url"] = env.NewString(destination)
+				links = append(links, linkMap)
+			}
+		}
+		return ast.WalkContinue, nil
+	})
+
+	return links
+}
+
+// Helper function to extract code blocks from markdown text
+func extractCodeBlocks(source string) []map[string]*env.String {
+	md := goldmark.New(
+		goldmark.WithExtensions(
+			extension.GFM,
+			extension.Table,
+			extension.Strikethrough,
+			extension.TaskList,
+		),
+	)
+
+	doc := md.Parser().Parse(text.NewReader([]byte(source)))
+	var codeBlocks []map[string]*env.String
+
+	ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+		if entering {
+			var lang string
+			var content string
+
+			if fenced, ok := n.(*ast.FencedCodeBlock); ok {
+				lang = string(fenced.Language([]byte(source)))
+				var buf bytes.Buffer
+				for i := 0; i < fenced.Lines().Len(); i++ {
+					line := fenced.Lines().At(i)
+					buf.Write(line.Value([]byte(source)))
+				}
+				content = buf.String()
+			} else if codeBlock, ok := n.(*ast.CodeBlock); ok {
+				var buf bytes.Buffer
+				for i := 0; i < codeBlock.Lines().Len(); i++ {
+					line := codeBlock.Lines().At(i)
+					buf.Write(line.Value([]byte(source)))
+				}
+				content = buf.String()
+			}
+
+			if content != "" {
+				codeMap := make(map[string]*env.String)
+				codeMap["content"] = env.NewString(content)
+				codeMap["language"] = env.NewString(lang)
+				codeBlocks = append(codeBlocks, codeMap)
+			}
+		}
+		return ast.WalkContinue, nil
+	})
+
+	return codeBlocks
+}
+
+// Helper function to extract images from markdown text
+func extractImages(source string) []map[string]*env.String {
+	md := goldmark.New(
+		goldmark.WithExtensions(
+			extension.GFM,
+			extension.Table,
+			extension.Strikethrough,
+			extension.TaskList,
+		),
+	)
+
+	doc := md.Parser().Parse(text.NewReader([]byte(source)))
+	var images []map[string]*env.String
+
+	ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+		if entering {
+			if img, ok := n.(*ast.Image); ok {
+				destination := string(img.Destination)
+				var alt string
+				for c := img.FirstChild(); c != nil; c = c.NextSibling() {
+					if textNode, ok := c.(*ast.Text); ok {
+						alt = string(textNode.Text([]byte(source)))
+						break
+					}
+				}
+
+				imgMap := make(map[string]*env.String)
+				imgMap["alt"] = env.NewString(alt)
+				imgMap["src"] = env.NewString(destination)
+				images = append(images, imgMap)
+			}
+		}
+		return ast.WalkContinue, nil
+	})
+
+	return images
+}
+
 var Builtins_markdown = map[string]*env.Builtin{
 	// Main markdown processing function
 	"reader//do-markdown": {
@@ -427,6 +615,127 @@ var Builtins_markdown = map[string]*env.Builtin{
 			}
 
 			return *env.NewString(html)
+		},
+	},
+
+	// Create a new Markdown value from string
+	"markdown": {
+		Argsn: 1,
+		Doc:   "Creates a Markdown value from a string.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch text := arg0.(type) {
+			case env.String:
+				return *env.NewMarkdown(text.Value)
+			case env.Markdown:
+				return text
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.MarkdownType}, "markdown")
+			}
+		},
+	},
+
+	// Get raw markdown text from Markdown value
+	"markdown//text": {
+		Argsn: 1,
+		Doc:   "Gets the raw markdown text from a Markdown value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			md, ok := arg0.(env.Markdown)
+			if !ok {
+				return MakeArgError(ps, 1, []env.Type{env.MarkdownType}, "markdown//text")
+			}
+			return *env.NewString(md.Value)
+		},
+	},
+
+	// Get length of markdown text
+	"markdown//length": {
+		Argsn: 1,
+		Doc:   "Gets the length of the markdown text in characters.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			md, ok := arg0.(env.Markdown)
+			if !ok {
+				return MakeArgError(ps, 1, []env.Type{env.MarkdownType}, "markdown//length")
+			}
+			return *env.NewInteger(int64(len(md.Value)))
+		},
+	},
+
+	// Convert Markdown value to HTML
+	"markdown//to-html": {
+		Argsn: 1,
+		Doc:   "Converts a Markdown value to HTML.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			md, ok := arg0.(env.Markdown)
+			if !ok {
+				return MakeArgError(ps, 1, []env.Type{env.MarkdownType}, "markdown//to-html")
+			}
+
+			html, err := markdown_to_html(ps, md.Value)
+			if err != nil {
+				return MakeBuiltinError(ps, err.Error(), "markdown//to-html")
+			}
+
+			return *env.NewString(html)
+		},
+	},
+
+	// Extract headings from markdown text
+	"markdown//headings": {
+		Argsn: 1,
+		Doc:   "Extracts all headings from markdown text as a list of strings.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			md, ok := arg0.(env.Markdown)
+			if !ok {
+				return MakeArgError(ps, 1, []env.Type{env.MarkdownType}, "markdown//headings")
+			}
+
+			headings := extractHeadings(md.Value)
+			result := make([]any, len(headings))
+			for i, heading := range headings {
+				result[i] = heading
+			}
+			return *env.NewList(result)
+		},
+	},
+
+	// Extract paragraphs from markdown text
+	"markdown//paragraphs": {
+		Argsn: 1,
+		Doc:   "Extracts all paragraphs from markdown text as a list of strings.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			md, ok := arg0.(env.Markdown)
+			if !ok {
+				return MakeArgError(ps, 1, []env.Type{env.MarkdownType}, "markdown//paragraphs")
+			}
+
+			paragraphs := extractParagraphs(md.Value)
+			result := make([]any, len(paragraphs))
+			for i, paragraph := range paragraphs {
+				result[i] = paragraph
+			}
+			return *env.NewList(result)
+		},
+	},
+
+	// Extract links from markdown text
+	"markdown//links": {
+		Argsn: 1,
+		Doc:   "Extracts all links from markdown text as a list of dictionaries with 'text' and 'url' keys.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			md, ok := arg0.(env.Markdown)
+			if !ok {
+				return MakeArgError(ps, 1, []env.Type{env.MarkdownType}, "markdown//links")
+			}
+
+			links := extractLinks(md.Value)
+			result := make([]any, len(links))
+			for i, link := range links {
+				linkDict := make(map[string]any)
+				linkDict["text"] = link["text"]
+				linkDict["url"] = link["url"]
+				result[i] = linkDict
+			}
+			return *env.NewList(result)
 		},
 	},
 }

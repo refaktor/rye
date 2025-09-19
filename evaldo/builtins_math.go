@@ -1317,4 +1317,50 @@ var Builtins_math = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Tests:
+	// equal { gcd 48 18 } 6
+	// equal { gcd 17 13 } 1
+	// equal { gcd 100 25 } 25
+	// equal { gcd 0 5 } 5
+	// equal { gcd 7 0 } 7
+	// Args:
+	// * a: integer value
+	// * b: integer value
+	// Returns:
+	// * integer greatest common divisor of a and b
+	"gcd": {
+		Argsn: 2,
+		Doc:   "Returns the greatest common divisor of two integers using Euclidean algorithm.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val1 := arg0.(type) {
+			case env.Integer:
+				switch val2 := arg1.(type) {
+				case env.Integer:
+					a := val1.Value
+					b := val2.Value
+
+					// Handle negative numbers by taking absolute values
+					if a < 0 {
+						a = -a
+					}
+					if b < 0 {
+						b = -b
+					}
+
+					// Euclidean algorithm
+					for b != 0 {
+						temp := b
+						b = a % b
+						a = temp
+					}
+
+					return *env.NewInteger(a)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "gcd")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "gcd")
+			}
+		},
+	},
 }

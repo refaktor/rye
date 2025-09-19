@@ -114,7 +114,10 @@ func Rye00_findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Obje
 
 	// Try to get the value from parent contexts
 	object, found, foundCtx := ps.Ctx.Get2(index)
-	return found, object, foundCtx
+	if ryeCtx, ok := foundCtx.(*env.RyeCtx); ok {
+		return found, object, ryeCtx
+	}
+	return found, object, nil
 }
 
 // Rye00_EvalWord evaluates a word in the current context.

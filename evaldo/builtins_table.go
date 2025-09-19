@@ -282,6 +282,42 @@ var Builtins_table = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Tests:
+	//  equal { table { 'a } { 1 2 3 2 } |where-not-equal "a" 2 |length? } 2
+	// Args:
+	// * sheet
+	// * column
+	// * value
+	// Tags: #filter #tables
+	"where-not-equal": {
+		Argsn: 3,
+		Doc:   "Returns table of rows where specific colum is not equal to given value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch spr := arg0.(type) {
+			case *env.Table:
+				switch col := arg1.(type) {
+				case env.Word:
+					return WhereNotEquals(ps, *spr, ps.Idx.GetWord(col.Index), arg2)
+				case env.String:
+					return WhereNotEquals(ps, *spr, col.Value, arg2)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-not-equal")
+				}
+			case env.Table:
+				switch col := arg1.(type) {
+				case env.Word:
+					return WhereNotEquals(ps, spr, ps.Idx.GetWord(col.Index), arg2)
+				case env.String:
+					return WhereNotEquals(ps, spr, col.Value, arg2)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-not-equal")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-not-equal")
+			}
+		},
+	},
+
 	// Notes:
 	// Void is not a value that any function can accept or return so far in Rye. But there can be missing data
 	// in tables ... for example from SQL query with left-join or plain null values in databases
@@ -1014,12 +1050,14 @@ var Builtins_table = map[string]*env.Builtin{
 			switch spr := arg0.(type) {
 			case env.Table:
 				switch rmCol := arg1.(type) {
+				case env.Word:
+					return DropColumn(ps, spr, *env.NewString(ps.Idx.GetWord(rmCol.Index)))
 				case env.String:
 					return DropColumn(ps, spr, rmCol)
 				case env.Block:
 					return DropColumnBlock(ps, spr, rmCol)
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType, env.BlockType}, "drop-column")
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType, env.BlockType}, "drop-column")
 				}
 			}
 			return MakeArgError(ps, 1, []env.Type{env.TableType}, "drop-column")
@@ -1405,7 +1443,7 @@ var Builtins_table = map[string]*env.Builtin{
 	//   } { 6.0 8.0 }
 	"group-by": {
 		Argsn: 3,
-		Doc:   "Groups a table by the given column and (optional) aggregations.",
+		Doc:   "Groups a table by the given column(s) and (optional) aggregations.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			switch spr := arg0.(type) {
 			case env.Table:
@@ -1435,11 +1473,26 @@ var Builtins_table = map[string]*env.Builtin{
 					}
 					switch col := arg1.(type) {
 					case env.Word:
-						return GroupBy(ps, spr, ps.Idx.GetWord(col.Index), aggregations)
+						return GroupBy(ps, spr, []string{ps.Idx.GetWord(col.Index)}, aggregations)
 					case env.String:
-						return GroupBy(ps, spr, col.Value, aggregations)
+						return GroupBy(ps, spr, []string{col.Value}, aggregations)
+					case env.Block:
+						cols := make([]string, col.Series.Len())
+						for c := range col.Series.S {
+							switch ww := col.Series.S[c].(type) {
+							case env.String:
+								cols[c] = ww.Value
+							case env.Tagword:
+								cols[c] = ps.Idx.GetWord(ww.Index)
+							case env.Word:
+								cols[c] = ps.Idx.GetWord(ww.Index)
+							default:
+								return MakeBuiltinError(ps, "Block must contain only strings or words for column names", "group-by")
+							}
+						}
+						return GroupBy(ps, spr, cols, aggregations)
 					default:
-						return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "group-by")
+						return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType, env.BlockType}, "group-by")
 					}
 				default:
 					return MakeArgError(ps, 3, []env.Type{env.BlockType}, "group-by")
@@ -2031,7 +2084,7 @@ var Builtins_table = map[string]*env.Builtin{
 	//
 
 	// Tests:
-	//  equal { persistent-table { "a" "b" } "/tmp/test_db" "test_table" |type? } 'persistent-table
+	//  ; equal { persistent-table { "a" "b" } "/tmp/test_db" "test_table" |type? } 'persistent-table
 	// Args:
 	//  * columns - block of column names
 	//  * db-path - path to BadgerDB database
@@ -2064,8 +2117,8 @@ var Builtins_table = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	//  equal { pt: persistent-table { "a" "b" } "/tmp/test_db" "test_table"
-	//          pt .close-persistent-table! |type? } 'persistent-table
+	//  ; equal { pt: persistent-table { "a" "b" } "/tmp/test_db" "test_table"
+	//  ;        pt .close-persistent-table! |type? } 'persistent-table
 	// Args:
 	//  * persistent-table - the persistent table to close
 	"close-persistent-table!": {
@@ -2499,6 +2552,23 @@ func WhereEquals(ps *env.ProgramState, s env.Table, name string, val env.Object)
 	}
 }
 
+func WhereNotEquals(ps *env.ProgramState, s env.Table, name string, val env.Object) env.Object {
+	idx := slices.Index(s.Cols, name)
+	nspr := env.NewTable(s.Cols)
+	if idx > -1 {
+		for _, row := range s.Rows {
+			if len(row.Values) > idx {
+				if !val.Equal(env.ToRyeValue(row.Values[idx])) {
+					nspr.AddRow(row)
+				}
+			}
+		}
+		return *nspr
+	} else {
+		return MakeBuiltinError(ps, "Column not found.", "WhereNotEquals")
+	}
+}
+
 func WhereMatch(ps *env.ProgramState, s *env.Table, name string, r *regexp.Regexp) env.Object {
 	idx := slices.Index(s.Cols, name)
 	nspr := env.NewTable(s.Cols)
@@ -2802,43 +2872,61 @@ func LeftJoin(ps *env.ProgramState, s1 env.Table, s2 env.Table, col1 string, col
 	return *nspr
 }
 
-func GroupBy(ps *env.ProgramState, s env.Table, col string, aggregations map[string][]string) env.Object {
-	if !slices.Contains(s.Cols, col) {
-		return MakeBuiltinError(ps, "Column not found.", "group-by")
+func GroupBy(ps *env.ProgramState, s env.Table, cols []string, aggregations map[string][]string) env.Object {
+	// Validate that all grouping columns exist
+	for _, col := range cols {
+		if !slices.Contains(s.Cols, col) {
+			return MakeBuiltinError(ps, fmt.Sprintf("Column '%s' not found.", col), "group-by")
+		}
 	}
 
 	aggregatesByGroup := make(map[string]map[string]float64)
 	countByGroup := make(map[string]int)
 	for i, row := range s.Rows {
-		groupingVal, err := s.GetRowValue(col, row)
-		if err != nil {
-			return MakeError(ps, fmt.Sprintf("Couldn't retrieve value at row %d (%s)", i, err))
+		// Create composite key for multi-column grouping
+		groupKeyParts := make([]string, len(cols))
+		for j, col := range cols {
+			groupingVal, err := s.GetRowValue(col, row)
+			if err != nil {
+				return MakeError(ps, fmt.Sprintf("Couldn't retrieve value at row %d (%s)", i, err))
+			}
+			var groupValStr string
+			switch val := groupingVal.(type) {
+			case env.String:
+				groupValStr = val.Value
+			case string:
+				groupValStr = val
+			case env.Integer:
+				groupValStr = strconv.Itoa(int(val.Value))
+			case int:
+				groupValStr = strconv.Itoa(val)
+			default:
+				return MakeBuiltinError(ps, "Grouping column value must be a string or number", "group-by")
+			}
+			groupKeyParts[j] = groupValStr
 		}
-		var groupValStr string
-		switch val := groupingVal.(type) {
-		case env.String:
-			groupValStr = val.Value
-		case string:
-			groupValStr = val
-		case env.Integer:
-			groupValStr = strconv.Itoa(int(val.Value))
-		case int:
-			groupValStr = strconv.Itoa(val)
-		default:
-			return MakeBuiltinError(ps, "Grouping column value must be a string", "group-by")
-		}
+		// Join with "|" separator to create unique composite key
+		groupKey := strings.Join(groupKeyParts, "|")
 
-		if _, ok := aggregatesByGroup[groupValStr]; !ok {
-			aggregatesByGroup[groupValStr] = make(map[string]float64)
+		if _, ok := aggregatesByGroup[groupKey]; !ok {
+			aggregatesByGroup[groupKey] = make(map[string]float64)
 		}
-		groupAggregates := aggregatesByGroup[groupValStr]
+		groupAggregates := aggregatesByGroup[groupKey]
 
 		for aggCol, funs := range aggregations {
 			for _, fun := range funs {
 				colAgg := aggCol + "_" + fun
 				if fun == "count" {
-					if aggCol != col {
-						return MakeBuiltinError(ps, "Count aggregation can only be applied on the grouping column", "group-by")
+					// Count aggregation can be applied on any of the grouping columns
+					isGroupingCol := false
+					for _, gcol := range cols {
+						if aggCol == gcol {
+							isGroupingCol = true
+							break
+						}
+					}
+					if !isGroupingCol {
+						return MakeBuiltinError(ps, "Count aggregation can only be applied on the grouping columns", "group-by")
 					}
 					groupAggregates[colAgg]++
 					continue
@@ -2861,7 +2949,7 @@ func GroupBy(ps *env.ProgramState, s env.Table, col string, aggregations map[str
 					groupAggregates[colAgg] += val
 				case "avg":
 					groupAggregates[colAgg] += val
-					countByGroup[groupValStr]++
+					countByGroup[groupKey]++
 				case "min":
 					if min, ok := groupAggregates[colAgg]; !ok || val < min {
 						groupAggregates[colAgg] = val
@@ -2876,23 +2964,33 @@ func GroupBy(ps *env.ProgramState, s env.Table, col string, aggregations map[str
 			}
 		}
 	}
-	newCols := []string{col}
+
+	// Create result columns: grouping columns + aggregation columns
+	newCols := make([]string, len(cols))
+	copy(newCols, cols)
 	for aggCol, funs := range aggregations {
 		for _, fun := range funs {
 			newCols = append(newCols, aggCol+"_"+fun)
 		}
 	}
 	newS := env.NewTable(newCols)
-	for groupVal, groupAggregates := range aggregatesByGroup {
+
+	for groupKey, groupAggregates := range aggregatesByGroup {
 		newRow := make([]any, len(newCols))
-		newRow[0] = *env.NewString(groupVal)
-		for i, col := range newCols[1:] {
-			if strings.HasSuffix(col, "_count") {
-				newRow[i+1] = *env.NewInteger(int64(groupAggregates[col]))
-			} else if strings.HasSuffix(col, "_avg") {
-				newRow[i+1] = *env.NewDecimal(groupAggregates[col] / float64(countByGroup[groupVal]))
+		// Split the composite key back into individual column values
+		groupKeyParts := strings.Split(groupKey, "|")
+		for i, part := range groupKeyParts {
+			newRow[i] = *env.NewString(part)
+		}
+
+		// Add aggregation results
+		for i, colName := range newCols[len(cols):] {
+			if strings.HasSuffix(colName, "_count") {
+				newRow[len(cols)+i] = *env.NewInteger(int64(groupAggregates[colName]))
+			} else if strings.HasSuffix(colName, "_avg") {
+				newRow[len(cols)+i] = *env.NewDecimal(groupAggregates[colName] / float64(countByGroup[groupKey]))
 			} else {
-				newRow[i+1] = *env.NewDecimal(groupAggregates[col])
+				newRow[len(cols)+i] = *env.NewDecimal(groupAggregates[colName])
 			}
 		}
 		newS.AddRow(*env.NewTableRow(newRow, newS))

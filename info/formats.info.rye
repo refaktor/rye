@@ -10,7 +10,7 @@ section "Regexp " "Go like Regular expressions" {
 		equal { regexp "[0-9]" |type? } 'native
 	}
 
-	group "regexp//is-match" 
+	group "regexp//Is-match" 
 	"Tests if a string matches the regular expression pattern."
 	{
 		arg `regexp: Native regexp object`
@@ -19,11 +19,11 @@ section "Regexp " "Go like Regular expressions" {
 	}
 
 	{
-		equal { regexp "[0-9]" |is-match "5" } 1
-		equal { regexp "[0-9]" |is-match "a" } 0
+		equal { regexp "[0-9]" |Is-match "5" } 1
+		equal { regexp "[0-9]" |Is-match "a" } 0
 	}
 
-	group "regexp//submatch?" 
+	group "regexp//Submatch?" 
 	"Extracts the first captured group from a string using the regular expression."
 	{
 		arg `regexp: Regular expression with capturing groups`
@@ -32,10 +32,10 @@ section "Regexp " "Go like Regular expressions" {
 	}
 
 	{
-		equal { regexp "x([0-9]+)y" |submatch? "x123y" } "123"
+		equal { regexp "x([0-9]+)y" |Submatch? "x123y" } "123"
 	}
 
-	group "regexp//submatches?" 
+	group "regexp//Submatches?" 
 	"Extracts all captured groups from the first match as a block of strings."
 	{
 		arg `regexp: Regular expression with capturing groups`
@@ -44,10 +44,10 @@ section "Regexp " "Go like Regular expressions" {
 	}
 
 	{
-		equal { regexp "x([0-9]+)y" |submatches? "x123y x234y" } { "123" }
+		equal { regexp "x([0-9]+)y" |Submatches? "x123y x234y" } { "123" }
 	}
 
-	group "regexp//submatches\all?" 
+	group "regexp//Submatches\\all?" 
 	"Extracts all captured groups from all matches as a nested block structure."
 	{
 		arg `regexp: Regular expression with capturing groups`
@@ -56,10 +56,10 @@ section "Regexp " "Go like Regular expressions" {
 	}
 
 	{
-		equal { regexp "x([0-9]+)(y+)?" |submatches\all? "x11yy x22" } { { "11" "yy" } { "22" "" } }
+		equal { regexp "x([0-9]+)(y+)?" |Submatches\all? "x11yy x22" } { { "11" "yy" } { "22" "" } }
 	}
 
-	group "regexp//find-all" 
+	group "regexp//Find-all" 
 	"Finds all substrings matching the regular expression and returns them as a block."
 	{
 		arg `regexp: Regular expression pattern`
@@ -68,10 +68,10 @@ section "Regexp " "Go like Regular expressions" {
 	}
 
 	{
-		equal { regexp "[0-9]+" |find-all "x123y x234y" } { "123" "234" }
+		equal { regexp "[0-9]+" |Find-all "x123y x234y" } { "123" "234" }
 	}
 
-	group "regexp//match?" 
+	group "regexp//Match?" 
 	"Finds the first substring matching the regular expression."
 	{
 		arg `regexp: Regular expression pattern`
@@ -80,10 +80,10 @@ section "Regexp " "Go like Regular expressions" {
 	}
 
 	{
-		equal { regexp "[0-9]+c+" |match? "aa33bb55cc" } "55cc"
+		equal { regexp "[0-9]+c+" |Match? "aa33bb55cc" } "55cc"
 	}
 
-	group "regexp//replace-all" 
+	group "regexp//Replace-all" 
 	"Replaces all occurrences of the regular expression pattern with the specified replacement string."
 	{
 		arg `regexp: Regular expression pattern`
@@ -93,7 +93,7 @@ section "Regexp " "Go like Regular expressions" {
 	}
 
 	{
-		equal { regexp "[0-9]+" |replace-all "x123y x234y" "XXX" } "xXXXy xXXXy"
+		equal { regexp "[0-9]+" |Replace-all "x123y x234y" "XXX" } "xXXXy xXXXy"
 	}
 
 }
@@ -173,7 +173,7 @@ section "JSON " "Parsing and generating JSON" {
 		equal { dict { a: 1 b: 2 c: 3 } |to-json } `{"a": 1, "b": 2, "c": 3} `
 	}
 
-	group "to-json\lines" 
+	group "to-json\\lines" 
 	"Converts a table to JSON with each row on a separate line."
 	{
 		arg `table: table value to encode`
@@ -274,7 +274,7 @@ section "SXML " "Streaming, SAX-like XML processing" {
 }
 
 section "HTML " "HTML processing functions" {
-	group "unescape\html" 
+	group "unescape\\html" 
 	"Converts HTML entities to their character equivalents."
 	{
 		arg `text: HTML-escaped string`
@@ -285,7 +285,7 @@ section "HTML " "HTML processing functions" {
 		equal { unescape\html "&gt;hello&lt;" } ">hello<"
 	}
 
-	group "escape\html" 
+	group "escape\\html" 
 	"Converts special characters to HTML entities."
 	{
 		arg `text: String containing HTML special characters`

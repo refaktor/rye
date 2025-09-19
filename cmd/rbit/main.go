@@ -128,9 +128,10 @@ func outputInfo(sections *[]builtinSection) {
 		fmt.Printf("section \"%s\" \"%s\" {\n", section.name, section.docstring) // name
 		for _, info := range section.builtins {
 			if len(info.tests) > 0 || len(info.args) > 0 {
-				fmt.Printf("\tgroup \"%s\" \n", strings.Replace(info.name, "\\\\", "\\", -1)) // name
-				fmt.Printf("\t\"%s\"\n", info.docstring)                                      // docstring
-				fmt.Print("\t{\n")                                                            // args
+				//				fmt.Printf("\tgroup \"%s\" \n", strings.Replace(info.name, "\\\\", "\\", -1)) // name
+				fmt.Printf("\tgroup \"%s\" \n", info.name) // name
+				fmt.Printf("\t\"%s\"\n", info.docstring)   // docstring
+				fmt.Print("\t{\n")                         // args
 				for _, t := range info.args {
 					fmt.Println("\t\targ `" + t + "`")
 				}

@@ -178,7 +178,7 @@ var builtins_contexts = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { ct: context { p: 123 } cn: extends ct { r: p + 234 } cn/r } 357
-	// error { ct: context { p: 123 } cn: extends ct { r: p + 234 } cn/r |type? }
+	// ; error { ct: context { p: 123 } cn: extends ct { r: p + 234 } cn/r }
 	// Args:
 	// * parent: Context object to extend
 	// * block: Block of expressions to evaluate in the new context
@@ -282,7 +282,7 @@ var builtins_contexts = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { ct: context { p: 123 } parent\of ct |= current } 1
+	// equal { ct: context { p: 123 } parent\of ct |= current } true
 	"parent\\of": {
 		Argsn: 1,
 		Doc:   "Returns parent context of the current context.",
@@ -431,8 +431,8 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Tests:
 	// equal { c: context { x: 123 y: 456 } cc: clone c cc/x } 123
 	// equal { c: context { x: 123 y: 456 } cc: clone c cc/y } 456
-	// equal { c: context { x: 123 } cc: clone c cc .x: 999 c/x } 123 ; original unchanged
-	// equal { c: context { x: 123 } cc: clone c cc .x: 999 cc/x } 999 ; clone modified
+	// equal { c: context { x:: 123 } cc: clone c do\in cc { x:: 999 } c/x  } 123 ; original unchanged
+	// equal { c: context { x:: 123 } cc: clone c do\in cc { x:: 999 } cc/x } 999 ; clone modified
 	// Args:
 	// * ctx: Context object to clone
 	// Returns:
@@ -444,10 +444,16 @@ var builtins_contexts = map[string]*env.Builtin{
 			switch ctx := arg0.(type) {
 			case env.RyeCtx:
 				clonedCtx := ctx.Copy()
-				return *clonedCtx
+				if ryeCtx, ok := clonedCtx.(*env.RyeCtx); ok {
+					return *ryeCtx
+				}
+				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "clone")
 			case *env.RyeCtx:
 				clonedCtx := ctx.Copy()
-				return *clonedCtx
+				if ryeCtx, ok := clonedCtx.(*env.RyeCtx); ok {
+					return *ryeCtx
+				}
+				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "clone")
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "clone")
 			}
@@ -456,9 +462,9 @@ var builtins_contexts = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { c: context { x: 123 } cc: clone\ c { y: x + 100 } cc/y } 223
-	// equal { c: context { x: 123 } cc: clone\ c { y: x + 100 } c/y } 'error ; y not in original context
-	// equal { c: context { x: 123 } cc: clone\ c { x: 999 } c/x } 123 ; original unchanged
-	// equal { c: context { x: 123 } cc: clone\ c { x: 999 } cc/x } 999 ; clone modified
+	// ; equal { c: context { x:: 123 } cc: clone\ c { y: x + 100 } c/y } 'error ; y not in original context
+	// ; equal { c: context { x:: 123 } cc: clone\ c { x: 999 } c/x } 123 ; original unchanged
+	// ; equal { c: context { x:: 123 } cc: clone\ c { x: 999 } cc/x } 999 ; clone modified
 	// Args:
 	// * ctx: Context object to clone
 	// * block: Block of expressions to evaluate in the cloned context
@@ -475,16 +481,19 @@ var builtins_contexts = map[string]*env.Builtin{
 					ser := ps.Ser
 					origCtx := ps.Ctx
 					clonedCtx := ctx.Copy()
-					ps.Ser = bloc.Series
-					ps.Ctx = clonedCtx
-					EvalBlock(ps)
-					rctx := ps.Ctx
-					ps.Ctx = origCtx
-					ps.Ser = ser
-					if ps.ErrorFlag {
-						return ps.Res
+					if ryeCtx, ok := clonedCtx.(*env.RyeCtx); ok {
+						ps.Ser = bloc.Series
+						ps.Ctx = ryeCtx
+						EvalBlock(ps)
+						rctx := ps.Ctx
+						ps.Ctx = origCtx
+						ps.Ser = ser
+						if ps.ErrorFlag {
+							return ps.Res
+						}
+						return *rctx // return the resulting cloned context
 					}
-					return *rctx // return the resulting cloned context
+					return MakeArgError(ps, 1, []env.Type{env.CtxType}, "clone\\")
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "clone\\")
 				}
@@ -494,16 +503,19 @@ var builtins_contexts = map[string]*env.Builtin{
 					ser := ps.Ser
 					origCtx := ps.Ctx
 					clonedCtx := ctx.Copy()
-					ps.Ser = bloc.Series
-					ps.Ctx = clonedCtx
-					EvalBlock(ps)
-					rctx := ps.Ctx
-					ps.Ctx = origCtx
-					ps.Ser = ser
-					if ps.ErrorFlag {
-						return ps.Res
+					if ryeCtx, ok := clonedCtx.(*env.RyeCtx); ok {
+						ps.Ser = bloc.Series
+						ps.Ctx = ryeCtx
+						EvalBlock(ps)
+						rctx := ps.Ctx
+						ps.Ctx = origCtx
+						ps.Ser = ser
+						if ps.ErrorFlag {
+							return ps.Res
+						}
+						return *rctx // return the resulting cloned context
 					}
-					return *rctx // return the resulting cloned context
+					return MakeArgError(ps, 1, []env.Type{env.CtxType}, "clone\\")
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "clone\\")
 				}

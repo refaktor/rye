@@ -117,6 +117,8 @@ func LoadStringNEW(input string, sig bool, ps *env.ProgramState) env.Object {
 		}
 	}
 
+	input = removeBangLine(input)
+
 	return LoadStringNEWNoPEG(input, sig, ps)
 }
 

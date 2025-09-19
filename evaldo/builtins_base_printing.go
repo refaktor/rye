@@ -16,6 +16,121 @@ import (
 	"github.com/refaktor/rye/util"
 )
 
+// displayRyeValue handles the display of Rye values, supporting both interactive and non-interactive modes
+func displayRyeValue(ps *env.ProgramState, arg0 env.Object, interactive bool) (env.Object, string) {
+	if interactive {
+		// Full interactive mode - use terminal display functions for navigation
+		term.SaveCurPos()
+		switch bloc := arg0.(type) {
+		case env.Block:
+			obj, esc := term.DisplayBlock(bloc, ps.Idx)
+			if !esc {
+				return obj, ""
+			}
+		case *env.Block:
+			obj, esc := term.DisplayBlock(*bloc, ps.Idx)
+			if !esc {
+				return obj, ""
+			}
+		case env.Dict:
+			obj, esc := term.DisplayDict(bloc, ps.Idx)
+			if !esc {
+				return obj, ""
+			}
+		case *env.Dict:
+			obj, esc := term.DisplayDict(*bloc, ps.Idx)
+			if !esc {
+				return obj, ""
+			}
+		case env.Table:
+			obj, esc := term.DisplayTable(bloc, ps.Idx)
+			if !esc {
+				return obj, ""
+			}
+		case *env.Table:
+			obj, esc := term.DisplayTable(*bloc, ps.Idx)
+			if !esc {
+				return obj, ""
+			}
+		case env.TableRow:
+			obj, esc := term.DisplayTableRow(bloc, ps.Idx)
+			if !esc {
+				return obj, ""
+			}
+		case *env.TableRow:
+			obj, esc := term.DisplayTableRow(*bloc, ps.Idx)
+			if !esc {
+				return obj, ""
+			}
+		}
+	}
+
+	// Non-interactive mode or fallback - return formatted string representation
+	// Use enhanced formatting for supported types
+	p := ""
+	if env.IsPointer(arg0) {
+		p = "Ref"
+	}
+
+	switch obj := arg0.(type) {
+	case env.Block:
+		// For blocks, show a more readable format
+		if len(obj.Series.GetAll()) <= 5 {
+			// Short blocks - show inline
+			return arg0, p + obj.Inspect(*ps.Idx)
+		} else {
+			// Long blocks - show with count
+			return arg0, p + fmt.Sprintf("[Block with %d items: %s ... ]", len(obj.Series.GetAll()), obj.Series.GetAll()[0].Inspect(*ps.Idx))
+		}
+	case *env.Block:
+		// For block pointers
+		if len(obj.Series.GetAll()) <= 5 {
+			return arg0, p + obj.Inspect(*ps.Idx)
+		} else {
+			return arg0, p + fmt.Sprintf("[Block with %d items: %s ... ]", len(obj.Series.GetAll()), obj.Series.GetAll()[0].Inspect(*ps.Idx))
+		}
+	case env.Table:
+		// For tables, show dimensions and sample
+		rows := len(obj.Rows)
+		cols := len(obj.Cols)
+		return arg0, p + fmt.Sprintf("[Table %dx%d: %v]", rows, cols, obj.Cols)
+	case *env.Table:
+		rows := len(obj.Rows)
+		cols := len(obj.Cols)
+		return arg0, p + fmt.Sprintf("[Table %dx%d: %v]", rows, cols, obj.Cols)
+	case env.Dict:
+		// For dicts, show key count and sample keys
+		keys := make([]string, 0)
+		for k := range obj.Data {
+			keys = append(keys, k)
+			if len(keys) >= 3 {
+				break
+			}
+		}
+		if len(obj.Data) <= 3 {
+			return arg0, p + fmt.Sprintf("[Dict with keys: %v]", keys)
+		} else {
+			return arg0, p + fmt.Sprintf("[Dict with %d keys: %v ...]", len(obj.Data), keys)
+		}
+	case *env.Dict:
+		keys := make([]string, 0)
+		for k := range obj.Data {
+			keys = append(keys, k)
+			if len(keys) >= 3 {
+				break
+			}
+		}
+		if len(obj.Data) <= 3 {
+			return arg0, p + fmt.Sprintf("[Dict with keys: %v]", keys)
+		} else {
+			return arg0, p + fmt.Sprintf("[Dict with %d keys: %v ...]", len(obj.Data), keys)
+		}
+	default:
+		// For other types, use standard inspect
+		return arg0, p + obj.Inspect(*ps.Idx)
+	}
+}
+
 var builtins_printing = map[string]*env.Builtin{
 
 	//
@@ -369,52 +484,8 @@ var builtins_printing = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "Interactively displays a value (Block, Dict, Table, or TableRow) in the terminal with navigation capabilities.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			// This is temporary implementation for experimenting what it would work like at all
-			// later it should belong to the object (and the medium of display, terminal, html ..., it's part of the frontend)
-			term.SaveCurPos()
-			switch bloc := arg0.(type) {
-			case env.Block:
-				obj, esc := term.DisplayBlock(bloc, ps.Idx)
-				if !esc {
-					return obj
-				}
-			case *env.Block:
-				obj, esc := term.DisplayBlock(*bloc, ps.Idx)
-				if !esc {
-					return obj
-				}
-			case env.Dict:
-				obj, esc := term.DisplayDict(bloc, ps.Idx)
-				if !esc {
-					return obj
-				}
-			case *env.Dict:
-				obj, esc := term.DisplayDict(*bloc, ps.Idx)
-				if !esc {
-					return obj
-				}
-			case env.Table:
-				obj, esc := term.DisplayTable(bloc, ps.Idx)
-				if !esc {
-					return obj
-				}
-			case *env.Table:
-				obj, esc := term.DisplayTable(*bloc, ps.Idx)
-				if !esc {
-					return obj
-				}
-			case env.TableRow:
-				obj, esc := term.DisplayTableRow(bloc, ps.Idx)
-				if !esc {
-					return obj
-				}
-			case *env.TableRow:
-				obj, esc := term.DisplayTableRow(*bloc, ps.Idx)
-				if !esc {
-					return obj
-				}
-			}
-			return arg0
+			result, _ := displayRyeValue(ps, arg0, true)
+			return result
 		},
 	},
 	// Tests:

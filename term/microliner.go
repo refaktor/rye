@@ -13,6 +13,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/mattn/go-runewidth"
+	"github.com/refaktor/rye/env"
 	// "github.com/refaktor/rye/term"
 )
 
@@ -176,9 +177,9 @@ func (s *MLState) WriteHistory(w io.Writer) (num int, err error) {
 
 // TAB COMPLETER
 
-func (s *MLState) circularTabs(items []string) func(direction int) (string, error) {
+func (s *MLState) circularTabs(items []string) func(direction int) (string, int, error) {
 	item := -1
-	return func(direction int) (string, error) {
+	return func(direction int) (string, int, error) {
 		if direction == 1 {
 			if item < len(items)-1 {
 				item++
@@ -186,7 +187,111 @@ func (s *MLState) circularTabs(items []string) func(direction int) (string, erro
 				item = 0
 			}
 		}
-		return items[item], nil
+		return items[item], item, nil
+	}
+}
+
+// displayTabSuggestions shows the tab completion suggestions with the current selection highlighted
+func (s *MLState) displayTabSuggestions(items []string, currentIndex int) {
+	if len(items) == 0 {
+		return
+	}
+
+	// Save cursor position
+	s.sendBack("\033[s")
+
+	// Disable line wrapping to prevent suggestions from wrapping
+	s.sendBack("\033[?7l")
+
+	// Move cursor down to display suggestions
+	s.sendBack("\n")
+	s.sendBack("\033[K") // Clear line
+
+	// Display suggestions with highlighting
+	s.sendBack("\033[34m") // Magenta color
+	s.sendBack("current: ")
+	s.sendBack("\033[0m") // Reset color
+
+	for i, item := range items {
+		if i == currentIndex {
+			// Highlight current selection with magenta background and black text
+			s.sendBack("\033[45;30m") // Magenta background, black text
+			s.sendBack(" ")
+			s.sendBack(item)
+			s.sendBack(" ")
+			s.sendBack("\033[0m") // Reset formatting
+		} else {
+			// Non-selected items with magenta text
+			s.sendBack("\033[36m") // Magenta text
+			s.sendBack(" ")
+			s.sendBack(item)
+			s.sendBack(" ")
+			s.sendBack("\033[0m") // Reset formatting
+		}
+
+		if i < len(items)-1 {
+			s.sendBack("  ")
+		}
+	}
+
+	// Display probe/preview of the currently selected item
+	if currentIndex >= 0 && currentIndex < len(items) {
+		s.sendBack("\n")
+		s.sendBack("\033[K") // Clear line
+		// Get a preview/description of the selected item
+		probe := s.getItemProbe(items[currentIndex])
+		s.sendBack("\033[38;5;247m")
+		s.sendBack(probe)
+		s.sendBack("\033[0m") // Reset color
+	}
+
+	// Re-enable line wrapping and restore cursor position
+	s.sendBack("\033[?7h")
+	s.sendBack("\033[u")
+}
+
+// getItemProbe returns a preview/description of the given item by looking it up in the environment
+func (s *MLState) getItemProbe(item string) string {
+	// If we don't have access to the program state, fall back to simple categorization
+	if s.programState == nil {
+		return "xxx"
+	}
+
+	// Look up the word in the index
+	wordIndex, found := s.programState.Idx.GetIndex(item)
+	if !found {
+		return fmt.Sprintf("undefined word: %s", item)
+	}
+
+	// Try to get the object from the context
+	obj, exists := s.programState.Ctx.Get(wordIndex)
+	if !exists {
+		return fmt.Sprintf("unbound word: %s", item)
+	}
+
+	// Call the Inspect method on the object to get detailed information
+	return obj.Inspect(*s.programState.Idx)
+}
+
+// getItemProbeSimple provides fallback categorization when program state is not available
+func (s *MLState) getItemProbeSimple(item string) string {
+	switch {
+	case strings.HasSuffix(item, "?"):
+		return "predicate function"
+	case strings.Contains(item, "print"):
+		return "output function"
+	case strings.Contains(item, "get"):
+		return "accessor function"
+	case strings.Contains(item, "set"):
+		return "mutator function"
+	case strings.Contains(item, "new"):
+		return "constructor function"
+	case strings.Contains(item, "load"):
+		return "loader function"
+	case strings.Contains(item, "save"):
+		return "persistence function"
+	default:
+		return fmt.Sprintf("word: %s", item)
 	}
 }
 
@@ -197,6 +302,13 @@ func (s *MLState) tabComplete(p []rune, line []rune, pos int, mode int) ([]rune,
 	if s.completer == nil {
 		return line, pos, KeyEvent{Code: 27}, nil
 	}
+
+	// Set flag to indicate we're in tab completion mode
+	s.inTabCompletion = true
+	defer func() {
+		// Always clear the flag when exiting tab completion
+		s.inTabCompletion = false
+	}()
 
 	// Run the completer
 	head, list, tail := s.completer(string(line), pos, mode)
@@ -220,7 +332,7 @@ func (s *MLState) tabComplete(p []rune, line []rune, pos int, mode int) ([]rune,
 	direction := 1
 	tabPrinter := s.circularTabs(list)
 	for {
-		pick, err := tabPrinter(direction)
+		pick, currentIndex, err := tabPrinter(direction)
 		if err != nil {
 			return line, pos, KeyEvent{Code: 27}, fmt.Errorf("tab completion error: %w", err)
 		}
@@ -231,6 +343,9 @@ func (s *MLState) tabComplete(p []rune, line []rune, pos int, mode int) ([]rune,
 		if err != nil {
 			return line, pos, KeyEvent{Code: 27}, fmt.Errorf("failed to refresh display: %w", err)
 		}
+
+		// Display suggestions with current selection highlighted
+		s.displayTabSuggestions(list, currentIndex)
 
 		// Wait for next key input
 		next := <-s.next
@@ -355,20 +470,24 @@ func (s *MLState) emitNewLine() {
 
 // State represents an open terminal
 type MLState struct {
-	needRefresh    bool
-	next           <-chan KeyEvent
-	sendBack       func(msg string)
-	enterLine      func(line string) string
-	history        []string
-	historyMutex   sync.RWMutex
-	columns        int
-	inString       bool
-	lastLineString bool
-	prevLines      int
-	prevCursorLine int
-	completer      WordCompleter
-	lines          []string // added for the multiline behaviour
-	currline       int      // same
+	needRefresh     bool
+	next            <-chan KeyEvent
+	sendBack        func(msg string)
+	enterLine       func(line string) string
+	history         []string
+	historyMutex    sync.RWMutex
+	columns         int
+	inString        bool
+	inBlock         bool
+	lastLineString  bool
+	prevLines       int
+	prevCursorLine  int
+	completer       WordCompleter
+	lines           []string                                                       // added for the multiline behaviour
+	currline        int                                                            // same
+	programState    *env.ProgramState                                              // added for environment access
+	displayValue    func(*env.ProgramState, env.Object, bool) (env.Object, string) // callback for displaying values
+	inTabCompletion bool                                                           // flag to track if we're in tab completion mode
 	// pending     []rune
 	// killRing *ring.Ring
 }
@@ -393,6 +512,16 @@ func NewMicroLiner(ch chan KeyEvent, sb func(msg string), el func(line string) s
 	s.columns = 80 // Default value, will be updated by getColumns()
 
 	return &s
+}
+
+// SetProgramState sets the program state for environment access during tab completion
+func (s *MLState) SetProgramState(ps *env.ProgramState) {
+	s.programState = ps
+}
+
+// SetDisplayValueFunc sets the callback function used to display values
+func (s *MLState) SetDisplayValueFunc(fn func(*env.ProgramState, env.Object, bool) (env.Object, string)) {
+	s.displayValue = fn
 }
 
 func (s *MLState) getColumns() bool {
@@ -714,38 +843,182 @@ func (s *MLState) refreshSingleLine_WITH_WRAP_HALFMADE(prompt []rune, buf []rune
 	return nil
 }
 
+// refreshSingleLineWithWrap updates the display for input that may wrap across multiple terminal lines.
+// It properly detects line wrapping, clears all affected lines, and redraws content with correct cursor positioning.
+func (s *MLState) refreshSingleLineWithWrap(prompt []rune, buf []rune, pos int) error {
+	if s.columns <= 6 {
+		return fmt.Errorf("terminal width too small: %d columns", s.columns)
+	}
+
+	pLen := countGlyphs(prompt)
+	bLen := countGlyphs(buf)
+	text := string(buf)
+
+	// Calculate how many terminal lines the content will occupy
+	totalWidth := pLen + bLen
+	linesNeeded := (totalWidth + s.columns - 1) / s.columns // Ceiling division
+	if linesNeeded < 1 {
+		linesNeeded = 1
+	}
+
+	// Hide cursor before redrawing to prevent blinking
+	s.sendBack("\033[?25l")
+
+	// Move cursor to beginning of current line
+	s.sendBack("\r")
+
+	// Clear current line and any additional lines from previous wrapped content
+	s.sendBack("\033[K") // Clear current line
+
+	// Clear additional lines if content was previously wrapped
+	// We need to clear MORE lines than we think we need, because the previous
+	// content might have used more lines than the current content will use
+	linesToClear := s.prevLines
+	if linesToClear < linesNeeded {
+		linesToClear = linesNeeded
+	}
+
+	// Clear down to eliminate any residual wrapped lines
+	for i := 1; i < linesToClear; i++ {
+		s.sendBack("\033[B") // Move down one line
+		s.sendBack("\033[K") // Clear line
+	}
+
+	// Move back up to the original line position
+	if linesToClear > 1 {
+		s.sendBack(fmt.Sprintf("\033[%dA", linesToClear-1))
+	}
+
+	// Position cursor at start of line
+	s.sendBack("\r")
+
+	// Write prompt
+	s.sendBack(string(prompt))
+
+	// Apply syntax highlighting and write buffer
+	tt2, inString := RyeHighlight(text, s.lastLineString, s.columns)
+	s.sendBack(tt2)
+	s.inString = inString
+
+	// Calculate cursor position accounting for line wrapping
+	cursorTotalPos := pLen + pos
+	cursorLine := cursorTotalPos / s.columns
+	cursorCol := cursorTotalPos % s.columns
+
+	// Move cursor to correct position
+	if cursorLine > 0 {
+		// Move down to the correct line
+		s.sendBack(fmt.Sprintf("\033[%dB", cursorLine))
+	}
+
+	// Move to correct column
+	s.sendBack("\r")
+	if cursorCol > 0 {
+		s.sendBack(fmt.Sprintf("\033[%dC", cursorCol))
+	}
+
+	// Update state for next refresh
+	s.prevLines = linesNeeded
+
+	// Show cursor after redrawing is complete
+	s.sendBack("\033[?25h")
+
+	return nil
+}
+
 // refreshSingleLine_NO_WRAP updates the display for a single line input.
-// It handles cursor positioning and syntax highlighting.
+// It handles cursor positioning and syntax highlighting, with proper line wrap handling.
 func (s *MLState) refreshSingleLine_NO_WRAP(prompt []rune, buf []rune, pos int) error {
 	if s.columns <= 6 {
 		return fmt.Errorf("terminal width too small: %d columns", s.columns)
 	}
 
 	pLen := countGlyphs(prompt)
+	bLen := countGlyphs(buf)
 	text := string(buf)
-	cols := s.columns - 6
+
+	// Calculate how many terminal lines the content will occupy
+	totalWidth := pLen + bLen
+	linesNeeded := (totalWidth + s.columns - 1) / s.columns // Ceiling division
+	if linesNeeded < 1 {
+		linesNeeded = 1
+	}
 
 	// Hide cursor before redrawing to prevent blinking
 	s.sendBack("\033[?25l")
 
-	// Position cursor at start of line and clear it
-	s.cursorPos(0)
-	s.sendBack("\033[K") // delete line
+	// Move cursor to beginning of current line
+	s.sendBack("\r")
+
+	// Clear current line first
+	s.sendBack("\033[K")
+
+	// Handle clearing previous content based on context
+	maxLinesToClear := s.prevLines
+	if maxLinesToClear < linesNeeded {
+		maxLinesToClear = linesNeeded
+	}
+
+	if s.inTabCompletion {
+		// During tab completion: Use the old method that prevents scrolling
+		// This preserves the existing behavior for tab completion
+		if maxLinesToClear < 3 {
+			maxLinesToClear = 3 // Always clear at least 3 lines to be safe
+		}
+
+		// Clear additional lines by moving down and clearing each one
+		for i := 1; i < maxLinesToClear; i++ {
+			s.sendBack("\033[B") // Move down one line
+			s.sendBack("\033[K") // Clear line
+		}
+
+		// Move back up to the original line position
+		if maxLinesToClear > 1 {
+			s.sendBack(fmt.Sprintf("\033[%dA", maxLinesToClear-1))
+		}
+	} else {
+		// During normal console operation: Use scrolling-friendly approach
+		// Create newlines to ensure proper scrolling, then move back up
+		if maxLinesToClear > 1 {
+			// Create enough newlines to ensure we have space to work with
+			for i := 1; i < maxLinesToClear; i++ {
+				s.sendBack("\n\033[K") // Newline and clear the new line
+			}
+			// Move back up to our starting position
+			s.sendBack(fmt.Sprintf("\033[%dA", maxLinesToClear-1))
+		}
+	}
+
+	// Position cursor at start of line
+	s.sendBack("\r")
 
 	// Write prompt
 	s.sendBack(string(prompt))
 
 	// Apply syntax highlighting and write buffer
-	tt2, inString := RyeHighlight(text, s.lastLineString, cols)
+	tt2, inString := RyeHighlight(text, s.lastLineString, s.columns)
 	s.sendBack(tt2)
 	s.inString = inString
 
-	// Position cursor correctly
-	curLeft := pLen + pos
-	if curLeft < 0 {
-		curLeft = 0
+	// Calculate cursor position accounting for line wrapping
+	cursorTotalPos := pLen + pos
+	cursorLine := cursorTotalPos / s.columns
+	cursorCol := cursorTotalPos % s.columns
+
+	// Move cursor to correct position
+	if cursorLine > 0 {
+		// Move down to the correct line
+		s.sendBack(fmt.Sprintf("\033[%dB", cursorLine))
 	}
-	s.cursorPos2(curLeft, 0)
+
+	// Move to correct column
+	s.sendBack("\r")
+	if cursorCol > 0 {
+		s.sendBack(fmt.Sprintf("\033[%dC", cursorCol))
+	}
+
+	// Update state for next refresh
+	s.prevLines = linesNeeded
 
 	// Show cursor after redrawing is complete
 	s.sendBack("\033[?25h")
@@ -763,6 +1036,92 @@ func getLengthOfLastLine(input string) (int, bool) {
 	return len(lastLine) - 3, true // for the prefix because currently string isn't padded on left line TODO unify this
 }
 
+// checkIncompleteBlock checks if the accumulated text has unbalanced braces/brackets/parens
+func (s *MLState) checkIncompleteBlock(text string) bool {
+	openBraces := 0
+	openBrackets := 0
+	openParens := 0
+	inString := false
+	stringChar := ' '
+
+	for _, char := range text {
+		// Handle string literals to avoid counting brackets inside strings
+		if (char == '"' || char == '`') && (stringChar == ' ' || stringChar == char) {
+			if !inString {
+				inString = true
+				stringChar = char
+			} else {
+				inString = false
+				stringChar = ' '
+			}
+			continue
+		}
+
+		if !inString {
+			switch char {
+			case '{':
+				openBraces++
+			case '}':
+				openBraces--
+			case '[':
+				openBrackets++
+			case ']':
+				openBrackets--
+			case '(':
+				openParens++
+			case ')':
+				openParens--
+			}
+		}
+	}
+
+	// If any delimiters are unbalanced, consider it an incomplete block
+	return openBraces > 0 || openBrackets > 0 || openParens > 0
+}
+
+// calculateIndentLevel calculates the indentation level based on open braces/brackets/parens
+func (s *MLState) calculateIndentLevel(text string) int {
+	openBraces := 0
+	openBrackets := 0
+	openParens := 0
+	inString := false
+	stringChar := ' '
+
+	for _, char := range text {
+		// Handle string literals to avoid counting brackets inside strings
+		if (char == '"' || char == '`') && (stringChar == ' ' || stringChar == char) {
+			if !inString {
+				inString = true
+				stringChar = char
+			} else {
+				inString = false
+				stringChar = ' '
+			}
+			continue
+		}
+
+		if !inString {
+			switch char {
+			case '{':
+				openBraces++
+			case '}':
+				openBraces--
+			case '[':
+				openBrackets++
+			case ']':
+				openBrackets--
+			case '(':
+				openParens++
+			case ')':
+				openParens--
+			}
+		}
+	}
+
+	// Return total nesting level (each level = 2 spaces)
+	return (openBraces + openBrackets + openParens) * 2
+}
+
 // MicroPrompt displays a prompt and handles user input with editing capabilities.
 // It returns the final input string or an error if the operation was canceled or failed.
 // The prompt is displayed with the given text and cursor position.
@@ -771,6 +1130,7 @@ func (s *MLState) MicroPrompt(prompt string, text string, pos int, ctx1 context.
 	if ctx1 == nil {
 		return "", fmt.Errorf("context cannot be nil")
 	}
+	lastIndentLevel := 0
 	// history related
 	refreshAllLines := false
 	historyEnd := ""
@@ -788,7 +1148,8 @@ startOfHere:
 	if s.currline == 0 {
 		p = []rune(prompt)
 	} else {
-		p = []rune(".. ")
+		indent := strings.Repeat(" ", lastIndentLevel)
+		p = []rune(indent + ".. ")
 	}
 
 	// defer s.stopPrompt()
@@ -885,7 +1246,13 @@ startOfHere:
 				return "", fmt.Errorf("event channel is nil")
 			}
 
-			log.Println("Received key event:", next)
+			log.Printf("Received key event: Key='%s', Code=%d, Ctrl=%t, Alt=%t, Shift=%t", next.Key, next.Code, next.Ctrl, next.Alt, next.Shift)
+
+			// Debug: Check for Ctrl+Z specifically
+			if next.Ctrl && (strings.ToLower(next.Key) == "z" || next.Code == 26) {
+				log.Println("Detected Ctrl+Z!")
+			}
+
 			// s.sendBack(next)
 			// err := nil
 			// LBL haveNext:
@@ -991,6 +1358,49 @@ startOfHere:
 					line, pos, next, _ = s.tabComplete(p, line, pos, 1)
 					tabCompletionWasActive = true
 					goto haveNext
+				case "x": // display last returned value interactively
+					if s.programState != nil && s.programState.Res != nil && s.displayValue != nil {
+						// Move to a new line
+						s.sendBack("\n")
+
+						// Call displayValue with interactive=true to show the interactive display
+						returnedObj, _ := s.displayValue(s.programState, s.programState.Res, true)
+
+						// If a selection was made (not escaped), insert it into the current line
+						if returnedObj != nil {
+							// Convert the returned object to its string representation
+							//objStr := returnedObj.Print(*s.programState.Idx)
+
+							// Insert the selected value at the current cursor position
+							/* objRunes := []rune(objStr)
+							line = append(line[:pos], append(objRunes, line[pos:]...)...)
+							pos += len(objRunes)
+							s.needRefresh = true */
+							s.programState.Res = returnedObj
+							//fmt.Println(returnedObj.Inspect(*s.programState.Idx))
+							fmt.Println(&s.programState)
+							p := ""
+							if env.IsPointer(s.programState.Res) {
+								p = "Ref"
+							}
+							resultStr := s.programState.Res.Inspect(*s.programState.Idx)
+							fmt.Print("\033[38;5;37m" + p + resultStr + "\x1b[0m")
+						} else {
+							fmt.Println("NIL RETURNED")
+						}
+
+						// Force refresh to redraw the prompt
+						s.needRefresh = true
+					} else {
+						s.doBeep() // No result to display
+					}
+				case "z": // suspend process (Ctrl+Z)
+					if err := SuspendProcess(); err != nil {
+						return "", err
+					}
+					// If we reach here, the process was resumed
+					fmt.Println("Process is resumed")
+					s.needRefresh = true
 					// Add new case for Ctrl+Backspace
 				case "backspace": // or check `next.Code == 8` if needed
 					if pos <= 0 {
@@ -1111,9 +1521,25 @@ startOfHere:
 					}
 				}
 			} else {
+				// Check for Ctrl+Z by ASCII code (26) regardless of other flags
+				if next.Code == 26 {
+					log.Println("Detected Ctrl+Z by ASCII code 26!")
+					fmt.Println("*****")
+					if err := SuspendProcess(); err != nil {
+						return "", err
+					}
+					// If we reach here, the process was resumed
+					s.needRefresh = true
+					continue
+				}
+
 				switch next.Code {
 				case 13: // Enter Newline
-					if s.inString {
+					// Check if we should continue in multiline mode
+					allText := strings.Join(s.lines, "\n") + string(line)
+					inIncompleteBlock := s.checkIncompleteBlock(allText)
+
+					if s.inString || inIncompleteBlock {
 						// This is copy from ctrl+x code above ... deduplicate and systemize TODO
 						historyStale = true
 						s.lastLineString = false
@@ -1280,7 +1706,9 @@ startOfHere:
 						// CurDown(1)
 						fmt.Println("")
 						ClearLine()
-						CurUp(1)
+						fmt.Println("")
+						ClearLine()
+						CurUp(2)
 					}
 
 					vs := []rune(next.Key)
@@ -1631,8 +2059,7 @@ startOfHere:
 						}
 						buf = append(buf, line[pos])
 						line = append(line[:pos], line[pos+1:]...)
-					}
-					// Save the result on the killRing
+					}					// Save the result on the killRing
 					if killAction > 0 {
 						s.addToKillRing(buf, 2) // Add in prepend mode
 					} else {
@@ -1669,8 +2096,19 @@ startOfHere:
 					} else {
 						//	s.sendBack(".. ")
 						fmt.Println("") // turn to sendback
-						p = []rune("=> ")
-						//// WWW multiline = false
+						// Check if we're in an incomplete block vs incomplete string
+						allText := strings.Join(s.lines[:i+1], "\n")
+						if s.checkIncompleteBlock(allText) {
+							// Use distinctive prompt for incomplete blocks with indentation
+							lastIndentLevel = s.calculateIndentLevel(allText)
+							indent := strings.Repeat(" ", lastIndentLevel)
+							p = []rune(indent + " > ")
+							s.inBlock = true
+						} else {
+							// Use regular multiline prompt for strings etc
+							p = []rune("-> ")
+							s.inBlock = false
+						}
 					}
 					err := s.refresh(p, []rune(line1), pos)
 					if err != nil {
@@ -1685,9 +2123,19 @@ startOfHere:
 					//	s.sendBack(prompt)
 					p = []rune(prompt)
 				} else {
-					//	s.sendBack(".. ")
-					p = []rune("-> ")
-					//// WWW multiline = false
+					// Check if we're in an incomplete block vs incomplete string
+					allText := strings.Join(s.lines, "\n") + string(line)
+					if s.checkIncompleteBlock(allText) {
+						// Use distinctive prompt for incomplete blocks with indentation
+						lastIndentLevel = s.calculateIndentLevel(allText)
+						indent := strings.Repeat(" ", lastIndentLevel)
+						p = []rune(indent + " > ")
+						s.inBlock = true
+					} else {
+						// Use regular multiline prompt for strings etc
+						p = []rune("-> ")
+						s.inBlock = false
+					}
 				}
 				err := s.refresh(p, line, pos)
 				if err != nil {

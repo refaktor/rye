@@ -57,14 +57,14 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto "Hello world" |sha512 |decode\hex |encode-to\hex |type?
 ; returns string</code></pre>
 </div>
-<h3>Ed25519-pub-key//to-string</h3><p>Converts an Ed25519 public key to its hexadecimal string representation.</p>
+<h3>Ed25519-pub-key//To-string</h3><p>Converts an Ed25519 public key to its hexadecimal string representation.</p>
 <p class='arg'><b>key</b> Ed25519 public key as a native value</p>
 <p class='returns'><b>returns</b> string containing the hexadecimal representation of the public key</p>
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto ed25519-generate-keys |first |to-string |type?
 ; returns string</code></pre>
 </div>
-<h3>Ed25519-priv-key//to-string</h3><p>Converts an Ed25519 private key to its hexadecimal string representation.</p>
+<h3>Ed25519-priv-key//To-string</h3><p>Converts an Ed25519 private key to its hexadecimal string representation.</p>
 <p class='arg'><b>key</b> Ed25519 private key as a native value</p>
 <p class='returns'><b>returns</b> string containing the hexadecimal representation of the private key</p>
 <div class='group'>
@@ -102,7 +102,7 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto "invalid" |ed25519-public-key |disarm |type?
 ; returns error</code></pre>
 </div>
-<h3>Ed25519-priv-key//sign</h3><p>Signs a string message with an Ed25519 private key and returns the signature as bytes.</p>
+<h3>Ed25519-priv-key//Sign</h3><p>Signs a string message with an Ed25519 private key and returns the signature as bytes.</p>
 <p class='arg'><b>key</b> Ed25519 private key as a native value</p>
 <p class='arg'><b>message</b> string to sign</p>
 <p class='returns'><b>returns</b> signature as a native bytes value</p>
@@ -152,9 +152,9 @@
 </div>
 <h3>age-encrypt</h3><p>Encrypts a reader with age for the provided age recipient or string password and returns a reader.</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto age-generate-keys |set! { identity recipient } "SUPER SECRET" |reader |age-encrypt recipient |age-decrypt identity |read\string
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto age-generate-keys |set! { identity recipient } "SUPER SECRET" |reader |age-encrypt recipient |age-decrypt identity |Read\string
 ; returns "SUPER SECRET"</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto "SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |read\string
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto "SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |Read\string
 ; returns "SUPER SECRET"</code></pre>
 </div>
 <h3>age-decrypt</h3><p>Decrypts a reader with age using the provided age identity or string password and returns a reader with the decrypted content.</p>
@@ -162,9 +162,9 @@
 <p class='arg'><b>identity-or-password</b> age identity native value or password string</p>
 <p class='returns'><b>returns</b> decrypted data as a reader native value</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto age-generate-keys |set! { identity recipient } "SUPER SECRET" |reader |age-encrypt recipient |age-decrypt identity |read\string
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto age-generate-keys |set! { identity recipient } "SUPER SECRET" |reader |age-encrypt recipient |age-decrypt identity |Read\string
 ; returns "SUPER SECRET"</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto "SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |read\string
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc crypto "SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |Read\string
 ; returns "SUPER SECRET"</code></pre>
 </div>
 <h3>pkcs12-to-pem</h3><p>Converts a PKCS#12 (.p12) file bytes to PEM blocks using the provided password. Returns a block of pem-block native values.</p>
@@ -173,18 +173,18 @@
 <p class='returns'><b>returns</b> block containing PEM blocks as native values</p>
 <div class='group'>
 </div>
-<h3>pkcs12-decode</h3><p>Decodes a PKCS#12 (.p12) file bytes into certificate and private key using the provided password. Returns a block with [private-key, certificate].</p>
+<h3>pkcs12-decode</h3><p>Decodes a PKCS#12 (.p12) file bytes into private key and certificates using the provided password. Returns a block with [private-key, certificates, ca-certificates].</p>
 <p class='arg'><b>p12-data</b> PKCS#12 file content as bytes native value</p>
 <p class='arg'><b>password</b> string password for the PKCS#12 file</p>
-<p class='returns'><b>returns</b> block containing [private-key, x509-certificate] as native values</p>
+<p class='returns'><b>returns</b> block containing [private-key, certificates-block, ca-certificates-block] as native values</p>
 <div class='group'>
 </div>
-<h3>pem-block//block-type?</h3><p>Returns the type of a PEM block as a string (e.g., 'CERTIFICATE', 'RSA PRIVATE KEY').</p>
+<h3>pem-block//Block-type?</h3><p>Returns the type of a PEM block as a string (e.g., 'CERTIFICATE', 'RSA PRIVATE KEY').</p>
 <p class='arg'><b>pem-block</b> PEM block as a native value</p>
 <p class='returns'><b>returns</b> string containing the block type (e.g., "CERTIFICATE", "RSA PRIVATE KEY")</p>
 <div class='group'>
 </div>
-<h3>pem-block//headers?</h3><p>Returns the headers of a PEM block as a dictionary.</p>
+<h3>pem-block//Headers?</h3><p>Returns the headers of a PEM block as a dictionary.</p>
 <p class='arg'><b>pem-block</b> PEM block as a native value</p>
 <p class='returns'><b>returns</b> dictionary containing the PEM block headers</p>
 <div class='group'>
@@ -194,17 +194,17 @@
 <p class='returns'><b>returns</b> X.509 certificate as a native value</p>
 <div class='group'>
 </div>
-<h3>x509-certificate//not-after?</h3><p>Returns the expiration date (NotAfter) of an X.509 certificate as a time value.</p>
+<h3>x509-certificate//Not-after?</h3><p>Returns the expiration date (NotAfter) of an X.509 certificate as a time value.</p>
 <p class='arg'><b>certificate</b> X.509 certificate as a native value</p>
 <p class='returns'><b>returns</b> time value representing the certificate's expiration date</p>
 <div class='group'>
 </div>
-<h3>x509-certificate//not-before?</h3><p>Returns the start date (NotBefore) of an X.509 certificate as a time value.</p>
+<h3>x509-certificate//Not-before?</h3><p>Returns the start date (NotBefore) of an X.509 certificate as a time value.</p>
 <p class='arg'><b>certificate</b> X.509 certificate as a native value</p>
 <p class='returns'><b>returns</b> time value representing the certificate's start date</p>
 <div class='group'>
 </div>
-<h3>x509-certificate//is-expired</h3><p>Checks if an X.509 certificate has expired. Returns 1 if expired, 0 otherwise.</p>
+<h3>x509-certificate//Is-expired</h3><p>Checks if an X.509 certificate has expired. Returns 1 if expired, 0 otherwise.</p>
 <p class='arg'><b>certificate</b> X.509 certificate as a native value</p>
 <p class='returns'><b>returns</b> integer 1 if the certificate has expired, 0 otherwise</p>
 <div class='group'>
@@ -226,6 +226,71 @@
 <p class='arg'><b>private-key</b> RSA private key as a native value</p>
 <p class='arg'><b>password</b> string password to protect the PKCS#12 file</p>
 <p class='returns'><b>returns</b> PKCS#12 encoded data as Go-bytes native value</p>
+<div class='group'>
+</div>
+<h3>x509-certificate//Subject?</h3><p>Returns the subject Distinguished Name (DN) of an X.509 certificate as a string.</p>
+<p class='arg'><b>certificate</b> X.509 certificate as a native value</p>
+<p class='returns'><b>returns</b> string containing the certificate's subject DN</p>
+<div class='group'>
+</div>
+<h3>x509-certificate//Issuer?</h3><p>Returns the issuer Distinguished Name (DN) of an X.509 certificate as a string.</p>
+<p class='arg'><b>certificate</b> X.509 certificate as a native value</p>
+<p class='returns'><b>returns</b> string containing the certificate's issuer DN</p>
+<div class='group'>
+</div>
+<h3>x509-certificate//Serial-number?</h3><p>Returns the serial number of an X.509 certificate as a string.</p>
+<p class='arg'><b>certificate</b> X.509 certificate as a native value</p>
+<p class='returns'><b>returns</b> string containing the certificate's serial number</p>
+<div class='group'>
+</div>
+<h3>x509-certificate//Signature-algorithm?</h3><p>Returns the signature algorithm of an X.509 certificate as a string.</p>
+<p class='arg'><b>certificate</b> X.509 certificate as a native value</p>
+<p class='returns'><b>returns</b> string containing the certificate's signature algorithm</p>
+<div class='group'>
+</div>
+<h3>x509-certificate//Public-key-algorithm?</h3><p>Returns the public key algorithm of an X.509 certificate as a string.</p>
+<p class='arg'><b>certificate</b> X.509 certificate as a native value</p>
+<p class='returns'><b>returns</b> string containing the certificate's public key algorithm</p>
+<div class='group'>
+</div>
+<h3>x509-certificate//Key-usage?</h3><p>Returns the key usage flags of an X.509 certificate as a block of strings.</p>
+<p class='arg'><b>certificate</b> X.509 certificate as a native value</p>
+<p class='returns'><b>returns</b> block containing strings of key usage flags</p>
+<div class='group'>
+</div>
+<h3>x509-certificate//Extended-key-usage?</h3><p>Returns the extended key usage flags of an X.509 certificate as a block of strings.</p>
+<p class='arg'><b>certificate</b> X.509 certificate as a native value</p>
+<p class='returns'><b>returns</b> block containing strings of extended key usage flags</p>
+<div class='group'>
+</div>
+<h3>x509-certificate//Dns-names?</h3><p>Returns the DNS names from Subject Alternative Names of an X.509 certificate as a block of strings.</p>
+<p class='arg'><b>certificate</b> X.509 certificate as a native value</p>
+<p class='returns'><b>returns</b> block containing DNS names from Subject Alternative Names</p>
+<div class='group'>
+</div>
+<h3>x509-certificate//Ip-addresses?</h3><p>Returns the IP addresses from Subject Alternative Names of an X.509 certificate as a block of strings.</p>
+<p class='arg'><b>certificate</b> X.509 certificate as a native value</p>
+<p class='returns'><b>returns</b> block containing IP addresses from Subject Alternative Names</p>
+<div class='group'>
+</div>
+<h3>x509-certificate//Email-addresses?</h3><p>Returns the email addresses from Subject Alternative Names of an X.509 certificate as a block of strings.</p>
+<p class='arg'><b>certificate</b> X.509 certificate as a native value</p>
+<p class='returns'><b>returns</b> block containing email addresses from Subject Alternative Names</p>
+<div class='group'>
+</div>
+<h3>x509-certificate//To-pem</h3><p>Converts an X.509 certificate to PEM-encoded string format.</p>
+<p class='arg'><b>certificate</b> X.509 certificate as a native value</p>
+<p class='returns'><b>returns</b> string containing the PEM-encoded certificate</p>
+<div class='group'>
+</div>
+<h3>private-key//Type?</h3><p>Returns the type of a private key as a string.</p>
+<p class='arg'><b>private-key</b> private key as a native value</p>
+<p class='returns'><b>returns</b> string containing the type of the private key (e.g., "*rsa.PrivateKey", "*ecdsa.PrivateKey")</p>
+<div class='group'>
+</div>
+<h3>x509-certificate//To-dict</h3><p>Converts an X.509 certificate to a dictionary containing all certificate information for easy display and manipulation.</p>
+<p class='arg'><b>certificate</b> X.509 certificate as a native value</p>
+<p class='returns'><b>returns</b> dictionary containing all certificate information</p>
 <div class='group'>
 </div>
 </div>

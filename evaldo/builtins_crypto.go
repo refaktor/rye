@@ -405,9 +405,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Tests:
 	// equal { cc crypto
 	//     age-generate-keys |set! { identity recipient }
-	//     "SUPER SECRET" |reader |age-encrypt recipient |age-decrypt identity |read\string
+	//     "SUPER SECRET" |reader |age-encrypt recipient |age-decrypt identity |Read\string
 	// } "SUPER SECRET"
-	// equal { cc crypto "SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |read\string } "SUPER SECRET"
+	// equal { cc crypto "SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |Read\string } "SUPER SECRET"
 	"age-encrypt": {
 		Argsn: 2,
 		Doc:   "Encrypts a reader with age for the provided age recipient or string password and returns a reader.",
@@ -467,9 +467,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 	// Tests:
 	// equal { cc crypto
 	//     age-generate-keys |set! { identity recipient }
-	//     "SUPER SECRET" |reader |age-encrypt recipient |age-decrypt identity |read\string
+	//     "SUPER SECRET" |reader |age-encrypt recipient |age-decrypt identity |Read\string
 	// } "SUPER SECRET"
-	// equal { cc crypto "SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |read\string } "SUPER SECRET"
+	// equal { cc crypto "SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |Read\string } "SUPER SECRET"
 	// Args:
 	// * reader: encrypted data as a reader native value
 	// * identity-or-password: age identity native value or password string

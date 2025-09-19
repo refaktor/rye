@@ -28,6 +28,10 @@ func ToRyeValue(val any) Object {
 		return *v
 	case *Block:
 		return *v
+	case *Markdown:
+		return *v
+	case Markdown:
+		return v
 	case *Object:
 		return *v
 	case Object:
@@ -65,6 +69,10 @@ func ToRyeValueAggressive(ps *ProgramState, val any) Object { // TODO -- find be
 		return List2Block(ps, *v)
 	case *Block:
 		return *v
+	case *Markdown:
+		return *v
+	case Markdown:
+		return v
 	case *Object:
 		return *v
 	case Object:

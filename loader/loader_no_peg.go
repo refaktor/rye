@@ -38,12 +38,16 @@ const (
 	NPEG_TOKEN_CPATH
 	NPEG_TOKEN_OPCPATH
 	NPEG_TOKEN_PIPECPATH
+	NPEG_TOKEN_GETCPATH
 	NPEG_TOKEN_BLOCK_START
 	NPEG_TOKEN_BLOCK_END
 	NPEG_TOKEN_BBLOCK_START
 	NPEG_TOKEN_BBLOCK_END
+	NPEG_TOKEN_OPBBLOCK_START
 	NPEG_TOKEN_GROUP_START
 	NPEG_TOKEN_GROUP_END
+	NPEG_TOKEN_OPGROUP_START
+	NPEG_TOKEN_OPBLOCK_START
 	NPEG_TOKEN_COMMA
 	NPEG_TOKEN_VOID
 	NPEG_TOKEN_COMMENT
@@ -202,7 +206,7 @@ func (l *Lexer) NextToken() NoPEGToken {
 	case ',':
 		return l.readOneCharToken(NPEG_TOKEN_COMMA, ERR_SPACING_OTHR)
 	case '_':
-		if isWhitespace(l.peekChar()) {
+		if isWhitespaceCh(l.peekChar()) {
 			l.readChar()
 			return l.makeToken(NPEG_TOKEN_VOID, "_")
 		}
@@ -218,7 +222,60 @@ func (l *Lexer) NextToken() NoPEGToken {
 		return l.readLSetWord()
 	case '?':
 		return l.readGetWord()
-	case '.', '+', '*', '/', '>': // taken for other tokens also - <
+	case '.', '+', '*', '/', '>', '=': // taken for other tokens also - <
+		// Special handling for ".[ ]" (OPBBLOCK) pattern
+		if l.ch == '.' && l.peekChar() == '[' {
+			l.readChar() // Skip '.'
+			l.readChar() // Skip '['
+			if isWhitespaceCh(l.ch) {
+				return l.makeToken(NPEG_TOKEN_OPBBLOCK_START, ".[")
+			}
+			// If not followed by whitespace, reset and treat as regular opword
+			l.pos -= 2
+			l.readPos -= 2
+			l.col -= 2
+			l.ch = '.'
+		}
+		// Special handling for ".( )" (OPGROUP) pattern
+		if l.ch == '.' && l.peekChar() == '(' {
+			l.readChar() // Skip '.'
+			l.readChar() // Skip '('
+			if isWhitespaceCh(l.ch) {
+				return l.makeToken(NPEG_TOKEN_OPGROUP_START, ".(")
+			}
+			// If not followed by whitespace, reset and treat as regular opword
+			l.pos -= 2
+			l.readPos -= 2
+			l.col -= 2
+			l.ch = '.'
+		}
+		// Special handling for ".{ }" (OPBLOCK) pattern
+		if l.ch == '.' && l.peekChar() == '{' {
+			l.readChar() // Skip '.'
+			l.readChar() // Skip '{'
+			if isWhitespaceCh(l.ch) {
+				return l.makeToken(NPEG_TOKEN_OPBLOCK_START, ".{")
+			}
+			// If not followed by whitespace, reset and treat as regular opword
+			l.pos -= 2
+			l.readPos -= 2
+			l.col -= 2
+			l.ch = '.'
+		}
+		// Special handling for "//" operator
+		if l.ch == '/' && l.peekChar() == '/' {
+			l.readChar() // Skip first '/'
+			l.readChar() // Skip second '/'
+			if isWhitespaceCh(l.ch) {
+				return l.makeToken(NPEG_TOKEN_OPWORD, "//")
+			}
+			// If not followed by whitespace, continue with normal opword parsing
+			// Reset position to handle as regular opword
+			l.pos -= 2
+			l.readPos -= 2
+			l.col -= 2
+			l.ch = '/'
+		}
 		return l.readOpWord()
 	case '|':
 		return l.readPipeWord()
@@ -231,9 +288,11 @@ func (l *Lexer) NextToken() NoPEGToken {
 		return l.readGenWord()
 	}*/
 	case '<':
-		if isWhitespace(l.peekChar()) {
-			l.readChar()
-			return l.makeToken(NPEG_TOKEN_OPWORD, "<")
+		pch := l.peekChar()
+		if isWhitespace(pch) || pch == '-' || pch == '~' || pch == '=' || pch == '<' || pch == '>' {
+			return l.readOpWord()
+			// l.readChar()
+			// return l.makeToken(NPEG_TOKEN_OPWORD, "<")
 		}
 		return l.readXWord()
 	case '%':
@@ -244,12 +303,37 @@ func (l *Lexer) NextToken() NoPEGToken {
 		return l.readFPath()
 	case ';':
 		return l.readComment()
+	case '~':
+		pch := l.peekChar()
+		// fmt.Println("***1")
+		if isWhitespace(pch) {
+			l.readChar()
+			// fmt.Println("***2")
+			return l.makeToken(NPEG_TOKEN_OPWORD, "~")
+		} else {
+			return l.readPipeWord()
+		}
+	//if l.peekChar() == '(' {
+	//	return l.readKindWord()
+	// } else {
+	// 	return l.readGenWord()
+	// }*/
 	case '-':
 		if isDigit(l.peekChar()) {
+			// fmt.Println("***0")
 			return l.readNumber()
 		} else {
-			l.readChar()
-			return l.makeToken(NPEG_TOKEN_OPWORD, "-")
+			pch := l.peekChar()
+			// fmt.Println("***1")
+			if isWhitespace(pch) {
+				l.readChar()
+				// fmt.Println("***2")
+				return l.makeToken(NPEG_TOKEN_OPWORD, "-")
+			} else {
+				// fmt.Println("***3")
+				// return l.readOpWord()
+				return l.readPipeWord()
+			}
 		}
 	default:
 		if isDigit(l.ch) {
@@ -331,7 +415,7 @@ func isDigit(ch byte) bool {
 // isWordCharacter checks if a character can be part of a word
 func isWordCharacter(ch byte) bool {
 	return isLetter(ch) || isDigit(ch) || ch == '-' || ch == '+' || ch == '.' ||
-		ch == '!' || ch == '*' || ch == '>' || ch == '\\' || ch == '?' || ch == '=' || ch == '_'
+		ch == '!' || ch == '*' || ch == '>' || ch == '<' || ch == '\\' || ch == '?' || ch == '=' || ch == '_'
 }
 
 // isWhitespaceCh checks if a character is whitespace
@@ -398,18 +482,24 @@ func (l *Lexer) readString() NoPEGToken {
 	l.readChar() // Skip opening quote
 
 	for l.ch != 0 && l.ch != delimiter {
-		// Handle escape sequences
-		if l.ch == '\\' && l.peekChar() == delimiter {
-			l.readChar() // Skip backslash
+		// Handle escape sequences properly
+		if l.ch == '\\' {
+			// Skip the backslash
+			l.readChar()
+			// Skip the escaped character (if any)
+			if l.ch != 0 {
+				l.readChar()
+			}
+		} else {
+			l.readChar()
 		}
-		l.readChar()
 	}
 
 	if l.ch == delimiter {
 		l.readChar() // Skip closing quote
 	}
 
-	// Ensure the number is followed by a token delimiter
+	// Ensure the string is followed by a token delimiter
 	if !isWhitespace(l.ch) {
 		// fmt.Println("--NOSPACING INVOKED*->")
 		// fmt.Println(l.pos)
@@ -526,9 +616,22 @@ func (l *Lexer) readLModWord() NoPEGToken {
 func (l *Lexer) readGetWord() NoPEGToken {
 	l.readChar() // Skip question mark
 
+	cpath := false
+	slashPos := -1
+
 	// Read the word part
-	for isWordCharacter(l.ch) {
+	for isWordCharacter(l.ch) || l.ch == '/' {
+		// Check if it's a context path (word/word)
+		if l.ch == '/' {
+			slashPos = l.pos
+		}
+
 		l.readChar()
+	}
+
+	// Only treat as context path if there's content after the slash
+	if slashPos >= 0 && slashPos < l.pos-1 {
+		cpath = true
 	}
 
 	// Ensure the token is followed by whitespace
@@ -536,16 +639,20 @@ func (l *Lexer) readGetWord() NoPEGToken {
 		return l.makeTokenErr(NPEG_TOKEN_ERROR, l.input[l.tokenStart:l.pos], determineLexerError(l.ch))
 	}
 
+	if cpath {
+		return l.makeToken(NPEG_TOKEN_GETCPATH, l.input[l.tokenStart:l.pos])
+	}
+
 	return l.makeToken(NPEG_TOKEN_GETWORD, l.input[l.tokenStart:l.pos])
 }
 
 func (l *Lexer) readOpWord() NoPEGToken {
-	l.readChar() // Skip dot
+	l.readChar() // Skip first character
 
 	cpath := false
 
 	// Read the word part
-	for isWordCharacter(l.ch) || l.ch == '/' {
+	for isWordCharacter(l.ch) || l.ch == '/' || l.ch == '<' || l.ch == '~' {
 		// Check if it's a context path (word/word)
 		if l.ch == '/' {
 			cpath = true
@@ -567,12 +674,13 @@ func (l *Lexer) readOpWord() NoPEGToken {
 }
 
 func (l *Lexer) readPipeWord() NoPEGToken {
+	ch := l.ch
 	l.readChar() // Skip backslash or pipe
 
 	cpath := false
 
 	// Read the word part
-	for isWordCharacter(l.ch) || l.ch == '/' {
+	for isWordCharacter(l.ch) || l.ch == '/' || l.ch == '<' {
 		if l.ch == '/' {
 			cpath = true
 		}
@@ -589,7 +697,12 @@ func (l *Lexer) readPipeWord() NoPEGToken {
 		return l.makeToken(NPEG_TOKEN_PIPECPATH, l.input[l.tokenStart:l.pos])
 	}
 
-	return l.makeToken(NPEG_TOKEN_PIPEWORD, l.input[l.tokenStart:l.pos])
+	if ch == '|' {
+		return l.makeToken(NPEG_TOKEN_PIPEWORD, l.input[l.tokenStart:l.pos])
+	} else {
+		return l.makeToken(NPEG_TOKEN_PIPEWORD, string(ch)+l.input[l.tokenStart:l.pos])
+	}
+
 }
 
 func (l *Lexer) readTagWord() NoPEGToken {
@@ -766,7 +879,10 @@ func (p *NoPEGParser) parseBlock(blockType int) (env.Object, error) {
 		// Check for end of block
 		if p.currentToken.Type == NPEG_TOKEN_BLOCK_END && blockType == 0 ||
 			p.currentToken.Type == NPEG_TOKEN_BBLOCK_END && blockType == 1 ||
-			p.currentToken.Type == NPEG_TOKEN_GROUP_END && blockType == 2 {
+			p.currentToken.Type == NPEG_TOKEN_GROUP_END && blockType == 2 ||
+			p.currentToken.Type == NPEG_TOKEN_BBLOCK_END && blockType == 3 ||
+			p.currentToken.Type == NPEG_TOKEN_GROUP_END && blockType == 4 ||
+			p.currentToken.Type == NPEG_TOKEN_BLOCK_END && blockType == 5 {
 			break
 		}
 
@@ -816,6 +932,12 @@ func (p *NoPEGParser) parseToken() (env.Object, error) {
 		return p.parseBlock(1)
 	case NPEG_TOKEN_GROUP_START:
 		return p.parseBlock(2)
+	case NPEG_TOKEN_OPBBLOCK_START:
+		return p.parseBlock(3)
+	case NPEG_TOKEN_OPGROUP_START:
+		return p.parseBlock(4)
+	case NPEG_TOKEN_OPBLOCK_START:
+		return p.parseBlock(5)
 	case NPEG_TOKEN_WORD:
 		idx := p.wordIndex.IndexWord(p.currentToken.Value)
 		return *env.NewWord(idx), nil
@@ -840,23 +962,43 @@ func (p *NoPEGParser) parseToken() (env.Object, error) {
 		idx := p.wordIndex.IndexWord(word[1:])
 		return *env.NewGetword(idx), nil
 	case NPEG_TOKEN_OPWORD:
-		word := p.currentToken.Value
+		var word string
+		if p.currentToken.Value[0] == '.' && len(p.currentToken.Value) > 1 {
+			word = p.currentToken.Value[1:]
+		} else {
+			word = p.currentToken.Value
+		}
 		var idx int
+		force := 0
 		if len(word) == 1 || word == "<<" || word == "<-" || word == "<~" || word == ">=" || word == "<=" || word == "//" || word == ".." || word == "++" || word == "." || word == "|" {
 			idx = p.wordIndex.IndexWord("_" + word)
 		} else {
-			idx = p.wordIndex.IndexWord(word[1:])
+			if word[len(word)-1:] == "*" {
+				force = 1
+				word = word[:len(word)-1]
+			}
+			idx = p.wordIndex.IndexWord(word)
 		}
-		return *env.NewOpword(idx, 0), nil
+		return *env.NewOpword(idx, force), nil
 	case NPEG_TOKEN_PIPEWORD:
-		word := p.currentToken.Value
+		var word string
+		if p.currentToken.Value != "|" {
+			word = p.currentToken.Value[1:]
+		} else {
+			word = p.currentToken.Value
+		}
 		var idx int
-		if word == ">>" || word == "->" || word == "~>" || word == "-->" || word == ".." || word == "|" {
+		force := 0
+		if len(word) == 1 || word == ">>" || word == "->" || word == "~>" || word == "-->" || word == ".." || word == "|" {
 			idx = p.wordIndex.IndexWord("_" + word)
 		} else {
-			idx = p.wordIndex.IndexWord(word[1:])
+			if word[len(word)-1:] == "*" {
+				force = 1
+				word = word[:len(word)-1]
+			}
+			idx = p.wordIndex.IndexWord(word)
 		}
-		return *env.NewPipeword(idx, 0), nil
+		return *env.NewPipeword(idx, force), nil
 	case NPEG_TOKEN_ONECHARPIPE:
 		word := p.currentToken.Value
 		idx := p.wordIndex.IndexWord("_" + word)
@@ -904,8 +1046,9 @@ func (p *NoPEGParser) parseToken() (env.Object, error) {
 		str = strings.Replace(str, "\\n", "\n", -1)
 		str = strings.Replace(str, "\\r", "\r", -1)
 		str = strings.Replace(str, "\\t", "\t", -1)
-		str = strings.Replace(str, "\\\"", "\"", -1)
 		str = strings.Replace(str, "\\\\", "\\", -1)
+		str = strings.Replace(str, "\\\"", "\"", -1)
+		// str = strings.Replace(str, "\\\\", "\\", -1)
 		return *env.NewString(str), nil
 	case NPEG_TOKEN_URI:
 		parts := strings.SplitN(p.currentToken.Value, "://", 2)
@@ -955,6 +1098,19 @@ func (p *NoPEGParser) parseToken() (env.Object, error) {
 			return *env.NewCPath3(2, *env.NewWord(idx1), *env.NewWord(idx2), *env.NewWord(idx3)), nil
 		}
 		return nil, fmt.Errorf("invalid pipe context path: %s", p.currentToken.Value)
+	case NPEG_TOKEN_GETCPATH:
+		parts := strings.Split(p.currentToken.Value[1:], "/")
+		if len(parts) == 2 {
+			idx1 := p.wordIndex.IndexWord(parts[0])
+			idx2 := p.wordIndex.IndexWord(parts[1])
+			return *env.NewCPath2(3, *env.NewWord(idx1), *env.NewWord(idx2)), nil
+		} else if len(parts) >= 3 {
+			idx1 := p.wordIndex.IndexWord(parts[0])
+			idx2 := p.wordIndex.IndexWord(parts[1])
+			idx3 := p.wordIndex.IndexWord(parts[2])
+			return *env.NewCPath3(3, *env.NewWord(idx1), *env.NewWord(idx2), *env.NewWord(idx3)), nil
+		}
+		return nil, fmt.Errorf("invalid get context path: %s", p.currentToken.Value)
 	case NPEG_TOKEN_COMMA:
 		return env.Comma{}, nil
 	case NPEG_TOKEN_VOID:

@@ -31,8 +31,13 @@ func GetIdxs() *env.Idxs {
 }
 
 func removeBangLine(content string) string {
-	if strings.Index(content, "#!") == 0 {
-		content = content[strings.Index(content, "\n")+1:]
+	if strings.Index(strings.TrimSpace(content), "#!") == 0 {
+		newlineIndex := strings.Index(content, "\n")
+		if newlineIndex == -1 {
+			// No newline found, return empty string
+			return ""
+		}
+		content = content[newlineIndex+1:]
 	}
 	return content
 }

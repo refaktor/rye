@@ -11,7 +11,7 @@ section "Constructors " "Functions that construct a table." {
 		equal { table { 'a  } { 1 2 } |type? } 'table
 	}
 
-	group "table\columns" 
+	group "table\\columns" 
 	"Creats a table by accepting a block of columns"
 	{
 		arg `columns - names of the columns`
@@ -25,7 +25,7 @@ section "Constructors " "Functions that construct a table." {
 		table\columns { 'a 'b } { { 1 2 } { "x" "y" } }
 	}
 
-	group "table\rows" 
+	group "table\\rows" 
 	"Creates a table by accepting a block or list of rows"
 	{
 		arg `columns - names of the columns`
@@ -63,6 +63,19 @@ section "Filtering " "Functions that construct a table." {
 
 	{
 		equal { table { 'a } { 1 2 3 2 } |where-equal "a" 2 |length? } 2
+	}
+
+	group "where-not-equal" 
+	"Returns table of rows where specific colum is not equal to given value."
+	{
+		arg `sheet`
+		arg `column`
+		arg `value`
+		arg `Tags: #filter #tables`
+	}
+
+	{
+		equal { table { 'a } { 1 2 3 2 } |where-not-equal "a" 2 |length? } 2
 	}
 
 	group "where-void" 
@@ -156,7 +169,7 @@ section "Filtering " "Functions that construct a table." {
 		equal { table { 'a } { 1 2 3 2 } |where-between 'a 1 3 |length? } 2
 	}
 
-	group "where-between\inclusive" 
+	group "where-between\\inclusive" 
 	"Returns table of rows where specific colum is between given values."
 	{
 		arg `sheet`
@@ -500,7 +513,7 @@ section "Miscelaneous " "" {
 }
 
 section "Loading and saving " "Functions that construct a table." {
-	group "load\csv" 
+	group "load\\csv" 
 	"Loads a .csv file to a table datatype."
 	{
 		arg `file-uri - location of csv file to load`
@@ -518,7 +531,7 @@ section "Loading and saving " "Functions that construct a table." {
 		} true
 	}
 
-	group "load\tsv" 
+	group "load\\tsv" 
 	"Loads a .csv file to a table datatype."
 	{
 		arg `file-uri - location of csv file to load`
@@ -535,7 +548,7 @@ section "Loading and saving " "Functions that construct a table." {
 		} true
 	}
 
-	group "save\csv" 
+	group "save\\csv" 
 	"Saves a table to a .csv file."
 	{
 		arg `sheet    - the sheet to save`
@@ -554,7 +567,7 @@ section "Loading and saving " "Functions that construct a table." {
 		} true
 	}
 
-	group "save\tsv" 
+	group "save\\tsv" 
 	"Saves a table to a .csv file."
 	{
 		arg `sheet    - the table to save`
@@ -573,7 +586,7 @@ section "Loading and saving " "Functions that construct a table." {
 		} true
 	}
 
-	group "load\xlsx" 
+	group "load\\xlsx" 
 	"Loads the first sheet in an .xlsx file to a Table."
 	{
 		arg `file-uri - location of xlsx file to load`
@@ -591,7 +604,7 @@ section "Loading and saving " "Functions that construct a table." {
 		} true
 	}
 
-	group "save\xlsx" 
+	group "save\\xlsx" 
 	"Saves a Table to a .xlsx file."
 	{
 		arg `table    - the table to save`
@@ -608,6 +621,29 @@ section "Loading and saving " "Functions that construct a table." {
 		spr2:: load\xlsx f |autotype 1.0
 		spr1 = spr2
 		} true
+	}
+
+	group "persistent-table" 
+	"Creates a persistent table using BadgerDB for storage"
+	{
+		arg `columns - block of column names`
+		arg `db-path - path to BadgerDB database`
+		arg `table-name - name of the table`
+	}
+
+	{
+		; equal { persistent-table { "a" "b" } "/tmp/test_db" "test_table" |type? } 'persistent-table
+	}
+
+	group "close-persistent-table!" 
+	"Closes the BadgerDB connection for a persistent table"
+	{
+		arg `persistent-table - the persistent table to close`
+	}
+
+	{
+		; equal { pt: persistent-table { "a" "b" } "/tmp/test_db" "test_table"
+		;        pt .close-persistent-table! |type? } 'persistent-table
 	}
 
 }
