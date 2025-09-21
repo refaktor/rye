@@ -225,6 +225,62 @@ var builtins_printing = map[string]*env.Builtin{
 	},
 
 	// Tests:
+	// stdout { prn2 "hello" "world" } "hello world"
+	// Args:
+	// * value1: First value to print
+	// * value2: Second value to print
+	// Returns:
+	// * the second input value
+	"prn2": { // **
+		Argsn: 2,
+		Doc:   "Prints two values separated by a space without adding a newline, returning the second value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg0 := arg0.(type) {
+			case env.String:
+				fmt.Print(arg0.Value)
+			default:
+				fmt.Print(arg0.Print(*ps.Idx))
+			}
+			fmt.Print(" ")
+			switch arg1 := arg1.(type) {
+			case env.String:
+				fmt.Print(arg1.Value)
+			default:
+				fmt.Print(arg1.Print(*ps.Idx))
+			}
+			return arg1
+		},
+	},
+
+	// Tests:
+	// stdout { prns2 "hello" "world" } "hello world "
+	// Args:
+	// * value1: First value to print
+	// * value2: Second value to print
+	// Returns:
+	// * the second input value
+	"prns2": { // **
+		Argsn: 2,
+		Doc:   "Prints two values separated by a space and followed by a space, returning the second value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg0 := arg0.(type) {
+			case env.String:
+				fmt.Print(arg0.Value)
+			default:
+				fmt.Print(arg0.Print(*ps.Idx))
+			}
+			fmt.Print(" ")
+			switch arg1 := arg1.(type) {
+			case env.String:
+				fmt.Print(arg1.Value + " ")
+			default:
+				fmt.Print(arg1.Print(*ps.Idx) + " ")
+			}
+			return arg1
+		},
+	},
+
+	// Tests:
 	// equal { format 123 "num: %d" } "num: 123"
 	// equal { format "hello" "%s world" } "hello world"
 	// Args:

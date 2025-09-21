@@ -1241,6 +1241,20 @@ var builtins_collection = map[string]*env.Builtin{
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
+			case env.Integer:
+				switch s2 := arg1.(type) {
+				case env.String:
+					return *env.NewString(strconv.Itoa(int(s1.Value)) + s2.Value)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType, env.IntegerType, env.DecimalType}, "_++")
+				}
+			case env.Decimal:
+				switch s2 := arg1.(type) {
+				case env.String:
+					return *env.NewString(strconv.FormatFloat(s1.Value, 'f', -1, 64) + s2.Value)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType, env.IntegerType, env.DecimalType}, "_++")
+				}
 			case env.String:
 				switch s2 := arg1.(type) {
 				case env.String:

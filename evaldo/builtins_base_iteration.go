@@ -34,7 +34,7 @@ var builtins_iteration = map[string]*env.Builtin{
 			}
 
 			// Pre-allocate a single Integer object to reuse
-			iterObj := env.Integer{Value: 1}
+			iterObj := env.Integer{Value: 0}
 
 			switch block := arg1.(type) {
 			case env.Block:
@@ -46,6 +46,9 @@ var builtins_iteration = map[string]*env.Builtin{
 				for i := int64(0); i < count.Value; i++ {
 					// Evaluate the block with the current iteration number
 					EvalBlockInjMultiDialect(ps, iterObj, true)
+					if ps.ErrorFlag {
+						return ps.Res
+					}
 
 					iterObj.Value++
 					// Reset series position for next iteration
@@ -420,6 +423,79 @@ var builtins_iteration = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	"for\\pos": { // *TODO -- deduplicate map\pos and map\idx
+		Argsn: 3,
+		Doc:   "Maps values of a block to a new block by evaluating a block of code.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch list := arg0.(type) {
+			case env.Collection:
+				switch accu := arg1.(type) {
+				case env.Word:
+					switch code := arg2.(type) {
+					case env.Block:
+						l := list.Length()
+						ser := ps.Ser
+						ps.Ser = code.Series
+						for i := 0; i < l; i++ {
+							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i + 1)))
+							EvalBlockInjMultiDialect(ps, list.Get(i), true)
+							if ps.ErrorFlag || ps.ReturnFlag {
+								return ps.Res
+							}
+							ps.Ser.Reset()
+						}
+						ps.Ser = ser
+						return ps.Res
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "map\\pos")
+					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "map\\pos")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "map\\pos")
+			}
+		},
+	},
+
+	"for\\idx": { // *TODO -- deduplicate map\pos and map\idx
+		Argsn: 3,
+		Doc:   "Maps values of a block to a new block by evaluating a block of code.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch list := arg0.(type) {
+			case env.Collection:
+				switch accu := arg1.(type) {
+				case env.Word:
+					switch code := arg2.(type) {
+					case env.Block:
+						l := list.Length()
+						ser := ps.Ser
+						ps.Ser = code.Series
+						for i := 0; i < l; i++ {
+							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i)))
+							EvalBlockInjMultiDialect(ps, list.Get(i), true)
+							if ps.ErrorFlag || ps.ReturnFlag {
+								return ps.Res
+							}
+							ps.Ser.Reset()
+						}
+						ps.Ser = ser
+						return ps.Res
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "map\\pos")
+					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "map\\pos")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "map\\pos")
+			}
+		},
+	},
+
 	// Tests:
 	//  stdout { walk { 1 2 3 } { .prns .rest } } "1 2 3  2 3  3  "
 	//  equal { x: 0 walk { 1 2 3 } { ::b .first + x ::x , b .rest } x } 6
