@@ -84,11 +84,6 @@ func EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) {
 		}
 		// if return flag was raised return ( errorflag I think would return in previous if anyway)
 		if ps.ReturnFlag || ps.ErrorFlag {
-			// Execute deferred blocks before returning
-			if len(ps.DeferBlocks) > 0 {
-				// fmt.Println("TEMP: EvalBlockInj DeferBlocks triggered")
-				ExecuteDeferredBlocks(ps)
-			}
 			return
 		}
 		injnow = MaybeAcceptComma(ps, inj, injnow)
@@ -388,10 +383,12 @@ func EvalExpressionConcrete(ps *env.ProgramState) {
 		ps.Res = env.NewError("Error Type in code block")
 		return
 	default:
-		fmt.Println(object.Inspect(*ps.Idx))
-		ps.ErrorFlag = true
-		ps.Res = env.NewError("Unknown rye value in block")
+		ps.Res = object
 		return
+		// fmt.Println(object.Inspect(*ps.Idx))
+		// ps.ErrorFlag = true
+		// ps.Res = env.NewError("Unknown rye value in block")
+		// return
 	}
 }
 
@@ -1431,7 +1428,42 @@ func tryHandleFailure(ps *env.ProgramState) bool {
 // ExecuteDeferredBlocks executes all deferred blocks in LIFO order (last in, first out)
 // and clears the deferred blocks list
 func ExecuteDeferredBlocks(ps *env.ProgramState) {
-	// TODO: Implement deferred block execution
+	if len(ps.DeferBlocks) == 0 {
+		return
+	}
+
+	// Save current state
+	originalSer := ps.Ser
+	originalFailureFlag := ps.FailureFlag
+	originalErrorFlag := ps.ErrorFlag
+
+	// Execute blocks in LIFO order (last in, first out)
+	for i := len(ps.DeferBlocks) - 1; i >= 0; i-- {
+		block := ps.DeferBlocks[i]
+
+		// Reset failure/error flags for each deferred block
+		ps.FailureFlag = false
+		ps.ErrorFlag = false
+
+		// Execute the deferred block
+		ps.Ser = block.Series
+		EvalBlock(ps)
+
+		// If there was an error in a deferred block, we should still continue
+		// executing other deferred blocks but preserve the error state
+		if ps.ErrorFlag {
+			// Log or handle deferred block errors if needed
+			// For now, continue with other deferred blocks
+		}
+	}
+
+	// Clear the deferred blocks list
+	ps.DeferBlocks = ps.DeferBlocks[:0]
+
+	// Restore original state
+	ps.Ser = originalSer
+	ps.FailureFlag = originalFailureFlag
+	ps.ErrorFlag = originalErrorFlag
 }
 
 // Remove unused debugging functions

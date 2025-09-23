@@ -1869,6 +1869,72 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	// equal { x:: 0 defer\with 42 { + 1 } x } 0
+	// stdout { fn { } { defer\with "hello" { print } "done" } } "hello"
+	// Args:
+	// * value: Value to inject into the deferred block
+	// * block: Block to execute with the injected value when function exits
+	// Returns:
+	// * Void value
+	"defer\\with": {
+		Argsn: 2,
+		Doc:   "Registers a block of code with an injected value to be executed when the current function exits or the program terminates. Works like 'with' but deferred.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch block := arg1.(type) {
+			case env.Block:
+				// Create a new block that contains "arg0 .with arg1" equivalent
+				// We need to create a block that will inject arg0 into block when executed
+
+				// Create the objects for the deferred operation:
+				// arg0 (the value) .with block
+				withIdx := ps.Idx.IndexWord("with")
+				withWord := *env.NewOpword(withIdx, 0) // .with as opword
+
+				// Create a new series with: value, .with, block
+				objects := make([]env.Object, 3)
+				objects[0] = arg0     // the value to inject
+				objects[1] = withWord // .with opword
+				objects[2] = block    // the block to execute
+
+				series := env.NewTSeries(objects)
+				deferredBlock := env.NewBlock(*series)
+
+				// Add the constructed block to the deferred blocks list
+				ps.DeferBlocks = append(ps.DeferBlocks, *deferredBlock)
+				return env.Void{}
+			case env.Word:
+				// Create a new block that contains "arg0 .with arg1" equivalent
+				// We need to create a block that will inject arg0 into block when executed
+
+				// Create the objects for the deferred operation:
+				// arg0 (the value) .with block
+				withIdx := ps.Idx.IndexWord("with")
+				withWord := *env.NewOpword(withIdx, 0) // .with as opword
+
+				block1 := make([]env.Object, 1)
+				block1[0] = *env.NewOpword(block.Index, 0) // the value to inject
+				series1 := env.NewTSeries(block1)
+				block1r := env.NewBlock(*series1)
+
+				// Create a new series with: value, .with, block
+				objects := make([]env.Object, 3)
+				objects[0] = arg0     // the value to inject
+				objects[1] = withWord // .with opword
+				objects[2] = *block1r // the block to execute
+
+				series := env.NewTSeries(objects)
+				deferredBlock := env.NewBlock(*series)
+
+				// Add the constructed block to the deferred blocks list
+				ps.DeferBlocks = append(ps.DeferBlocks, *deferredBlock)
+				return env.Void{}
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "defer\\with")
+			}
+		},
+	},
 }
 
 /* Terminal functions .. move to it's own later */

@@ -5,15 +5,11 @@ package evaldo
 
 import (
 	"bufio"
-	"bytes"
-	"context"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/hpcloud/tail"
 	"github.com/refaktor/rye/env"
@@ -23,387 +19,6 @@ import (
 
 	"github.com/jlaffaye/ftp"
 )
-
-func __input(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-	switch str := arg0.(type) {
-	case env.String:
-		fmt.Print("" + str.Value)
-		var input string
-		fmt.Scanln(&input)
-		fmt.Print(input)
-		/* reader := bufio.NewReader(os.Stdin)
-		fmt.Print(str)
-		inp, _ := reader.ReadString('\n')
-		fmt.Println(inp) */
-		return *env.NewString(input)
-	default:
-		ps.FailureFlag = true
-		return MakeArgError(ps, 1, []env.Type{env.StringType}, "__input")
-	}
-}
-
-func __create(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-	switch s := arg0.(type) {
-	case env.Uri:
-		// path := strings.Split(s.Path, "://")
-		file, err := os.Create(s.Path)
-		if err != nil {
-			ps.ReturnFlag = true
-			ps.FailureFlag = true
-			return MakeBuiltinError(ps, err.Error(), "__create")
-		}
-		return *env.NewNative(ps.Idx, file, "file")
-	default:
-		ps.ReturnFlag = true
-		ps.FailureFlag = true
-		return MakeArgError(ps, 1, []env.Type{env.UriType}, "__create")
-	}
-}
-
-func __fs_read(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-	switch f := arg0.(type) {
-	case env.Uri:
-		data, err := os.ReadFile(f.GetPath())
-		if err != nil {
-			return MakeBuiltinError(ps, err.Error(), "file-schema//read")
-		}
-		return *env.NewString(string(data))
-	default:
-		return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-schema//read")
-	}
-	// Read file to byte slice
-}
-
-func __fs_read_bytes(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-	switch f := arg0.(type) {
-	case env.Uri:
-		data, err := os.ReadFile(f.GetPath())
-		if err != nil {
-			return MakeBuiltinError(ps, err.Error(), "__fs_read_bytes")
-		}
-		return *env.NewNative(ps.Idx, data, "bytes")
-	default:
-		return MakeArgError(ps, 1, []env.Type{env.UriType}, "__fs_read_bytes")
-	}
-	// Read file to byte slice
-}
-
-func __fs_read_lines(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-	switch f := arg0.(type) {
-	case env.Uri:
-		file, err := os.OpenFile(f.GetPath(), os.O_RDONLY, os.ModePerm)
-		if err != nil {
-			// log.Fatalf("open file error: %v", err)
-			return MakeBuiltinError(ps, err.Error(), "__fs_read_lines")
-		}
-		defer file.Close()
-
-		// var lines []env.Object
-		lines := make([]env.Object, 0)
-		sc := bufio.NewScanner(file)
-		for sc.Scan() {
-			lines = append(lines, *env.NewString(sc.Text())) // GET the line string
-		}
-		if err := sc.Err(); err != nil {
-			log.Fatalf("scan file error: %v", err)
-			return MakeBuiltinError(ps, err.Error(), "__fs_read_lines")
-		}
-		return *env.NewBlock(*env.NewTSeries(lines))
-	default:
-		return MakeArgError(ps, 1, []env.Type{env.UriType}, "__fs_read_lines")
-	}
-	// Read file to byte slice
-}
-
-func __stat(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-	switch r := arg0.(type) {
-	case env.Native:
-		info, err := r.Value.(*os.File).Stat()
-		if err != nil {
-			ps.FailureFlag = true
-			return MakeBuiltinError(ps, err.Error(), "__stat")
-		}
-		return *env.NewNative(ps.Idx, info, "file-info")
-	default:
-		ps.FailureFlag = true
-		return MakeArgError(ps, 1, []env.Type{env.NativeType}, "__stat")
-	}
-}
-
-func __https_s_get(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-	switch f := arg0.(type) {
-	case env.Uri:
-		ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Second*10))
-		defer cancel()
-		proto := ps.Idx.GetWord(f.GetProtocol().Index)
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, proto+"://"+f.GetPath(), nil)
-		if err != nil {
-			ps.FailureFlag = true
-			return *env.NewError(err.Error())
-		}
-		resp, err := http.DefaultClient.Do(req)
-		if err != nil {
-			ps.FailureFlag = true
-			return *env.NewError(err.Error())
-		}
-		// Print the HTTP Status Code and Status Name
-		//mt.Println("HTTP Response Status:", resp.StatusCode, http.StatusText(resp.StatusCode))
-		defer resp.Body.Close()
-		body, _ := io.ReadAll(resp.Body)
-
-		if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
-			return *env.NewString(string(body))
-		} else {
-			ps.FailureFlag = true
-			errMsg := fmt.Sprintf("Status Code: %v", resp.StatusCode)
-			return MakeBuiltinError(ps, errMsg, "__https_s_get")
-		}
-		// log.Printf("Data read: %s\n", data)
-	default:
-		ps.FailureFlag = true
-		return MakeArgError(ps, 1, []env.Type{env.NativeType}, "__https_s_get")
-	}
-	// Read file to byte slice
-}
-
-func __http_s_post(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-	switch f := arg0.(type) {
-	case env.Uri:
-		switch t := arg2.(type) {
-		case env.Word:
-			switch d := arg1.(type) {
-			case env.String:
-				var tt string
-				tidx, terr := ps.Idx.GetIndex("json")
-				tidx2, terr2 := ps.Idx.GetIndex("text")
-				if terr && t.Index == tidx {
-					//if t.Value == "json" {
-					tt = "application/json"
-				} else if terr2 && t.Index == tidx2 {
-					tt = "text/plain"
-				} else {
-					ps.FailureFlag = true
-					return MakeBuiltinError(ps, "Wrong content type.", "__http_s_post")
-				}
-				// TODO -- add other cases
-				// fmt.Println("BEFORE")
-
-				ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Second*10))
-				defer cancel()
-				proto := ps.Idx.GetWord(f.GetProtocol().Index)
-				req, err := http.NewRequestWithContext(ctx, http.MethodPost, proto+"://"+f.GetPath(), bytes.NewBufferString(d.Value))
-				if err != nil {
-					ps.FailureFlag = true
-					return *env.NewError(err.Error())
-				}
-				req.Header.Set("Content-Type", tt)
-				resp, err := http.DefaultClient.Do(req)
-				if err != nil {
-					ps.FailureFlag = true
-					return *env.NewError(err.Error())
-				}
-				// Print the HTTP Status Code and Status Name
-				//mt.Println("HTTP Response Status:", resp.StatusCode, http.StatusText(resp.StatusCode))
-
-				// resp, err := http.Post(f.GetProtocol()+"://"+f.GetPath(), tt, bytes.NewBufferString(d.Value))
-
-				// Print the HTTP Status Code and Status Name
-				// fmt.Println("HTTP Response Status:", resp.StatusCode, http.StatusText(resp.StatusCode))
-				defer resp.Body.Close()
-				body, err := io.ReadAll(resp.Body)
-				if err != nil {
-					// fmt.Println("ERR")
-					ps.FailureFlag = true
-					return MakeBuiltinError(ps, err.Error(), "__http_s_post")
-				}
-
-				if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
-					return *env.NewString(string(body))
-				} else {
-					// fmt.Println("ERR33")
-					ps.FailureFlag = true
-					return env.NewError2(resp.StatusCode, string(body))
-				}
-			default:
-				ps.FailureFlag = true
-				return MakeArgError(ps, 2, []env.Type{env.StringType}, "__http_s_post")
-			}
-		default:
-			ps.FailureFlag = true
-			return MakeArgError(ps, 3, []env.Type{env.WordType}, "__http_s_post")
-		}
-	default:
-		ps.FailureFlag = true
-		return MakeArgError(ps, 1, []env.Type{env.UriType}, "__http_s_post")
-	}
-	// Read file to byte slice
-}
-
-func __email_send(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-	switch to_ := arg0.(type) {
-	case env.Email:
-		switch msg := arg1.(type) {
-		case env.String:
-			idx, _ := ps.Idx.GetIndex("user-profile")
-			uctx_, _ := ps.Ctx.Get(idx)
-			uctx := uctx_.(env.RyeCtx)
-			fmt.Println(to_)
-			fmt.Println(msg)
-			fmt.Println(uctx)
-			// TODO continue: uncomment and make it work
-			/*
-				from, _ := uctx.Get(ps.Idx.GetIndex("smtp-from"))
-				password, _ := uctx.Get(ps.Idx.GetIndex("smtp-password"))
-				server, _ := uctx.Get(ps.Idx.GetIndex("smtp-server"))
-				port, _ := uctx.Get(ps.Idx.GetIndex("smtp-port"))
-				// Receiver email address.
-				// to := []string{
-				//	to_.Value,
-				//}
-				// Message.
-				// message := []byte(msg.Value)
-				m := gomail.NewMessage()
-
-				// Set E-Mail sender
-				m.SetHeader("From", from)
-
-				// Set E-Mail receivers
-				m.SetHeader("To", to_.Address)
-
-				// Set E-Mail subject
-				m.SetHeader("Subject", msg.Value)
-
-				// Set E-Mail body. You can set plain text or html with text/html
-				m.SetBody("text/plain", msg.Value)
-
-				// Settings for SMTP server
-				d := gomail.NewDialer(server, port, from, password)
-
-				// This is only needed when SSL/TLS certificate is not valid on server.
-				// In production this should be set to false.
-				//			d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
-
-				// Now send E-Mail
-				if err := d.DialAndSend(m); err != nil {
-					ps.FailureFlag = true
-					return env.NewError(err.Error())
-				}
-			*/
-			return *env.NewInteger(1)
-		default:
-			ps.FailureFlag = true
-			return MakeArgError(ps, 2, []env.Type{env.StringType}, "__email_send")
-		}
-	default:
-		ps.FailureFlag = true
-		return MakeArgError(ps, 1, []env.Type{env.EmailType}, "__email_send")
-	}
-	// Read file to byte slice
-}
-
-func __https_s__new_request(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-	switch uri := arg0.(type) {
-	case env.Uri:
-		switch method := arg1.(type) {
-		case env.Word:
-			method1 := ps.Idx.GetWord(method.Index)
-			if !(method1 == "GET" || method1 == "POST") {
-				ps.FailureFlag = true
-				return MakeBuiltinError(ps, "Wrong method.", "__https_s__new_request")
-			}
-			switch data := arg2.(type) {
-			case env.String:
-				data1 := strings.NewReader(data.Value)
-				proto := ps.Idx.GetWord(uri.GetProtocol().Index)
-				req, err := http.NewRequest(method1, proto+"://"+uri.GetPath(), data1)
-				if err != nil {
-					ps.FailureFlag = true
-					return MakeBuiltinError(ps, err.Error(), "__https_s__new_request")
-				}
-				return *env.NewNative(ps.Idx, req, "https-request")
-			default:
-				ps.FailureFlag = true
-				return MakeArgError(ps, 3, []env.Type{env.StringType}, "__https_s__new_request")
-			}
-		default:
-			ps.FailureFlag = true
-			return MakeArgError(ps, 2, []env.Type{env.WordType}, "__https_s__new_request")
-		}
-	default:
-		ps.FailureFlag = true
-		return MakeArgError(ps, 1, []env.Type{env.UriType}, "__https_s__new_request")
-	}
-}
-
-func __https_request__set_header(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-	switch req := arg0.(type) {
-	case env.Native:
-		switch method := arg1.(type) {
-		case env.Word:
-			name := ps.Idx.GetWord(method.Index)
-			switch data := arg2.(type) {
-			case env.String:
-				req.Value.(*http.Request).Header.Set(name, data.Value)
-				return arg0
-			default:
-				return MakeArgError(ps, 3, []env.Type{env.StringType}, "__https_request__set_header")
-			}
-		default:
-			return MakeArgError(ps, 2, []env.Type{env.WordType}, "__https_request__set_header")
-		}
-	default:
-		return MakeArgError(ps, 1, []env.Type{env.NativeType}, "__https_request__set_header")
-	}
-}
-
-func __https_request__set_basic_auth(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-	switch req := arg0.(type) {
-	case env.Native:
-		switch username := arg1.(type) {
-		case env.String:
-			switch password := arg2.(type) {
-			case env.String:
-				req.Value.(*http.Request).SetBasicAuth(username.Value, password.Value)
-				return arg0
-			default:
-				return MakeArgError(ps, 3, []env.Type{env.StringType}, "__https_request__set_basic_auth")
-			}
-		default:
-			return MakeArgError(ps, 2, []env.Type{env.StringType}, "__https_request__set_basic_auth")
-		}
-	default:
-		return MakeArgError(ps, 1, []env.Type{env.NativeType}, "__https_request__set_basic_auth")
-	}
-}
-
-func __https_request__do(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-	switch req := arg0.(type) {
-	case env.Native:
-		client := &http.Client{}
-		resp, err := client.Do(req.Value.(*http.Request))
-		// defer resp.Body.Close() // TODO -- comment this and figure out goling bodyclose
-		if err != nil {
-			return MakeBuiltinError(ps, err.Error(), "__https_request__do")
-		}
-		return *env.NewNative(ps.Idx, resp, "https-response")
-	default:
-		return MakeArgError(ps, 1, []env.Type{env.NativeType}, "__https_request__do")
-	}
-}
-
-func __https_response__read_body(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-	switch resp := arg0.(type) {
-	case env.Native:
-		data, err := io.ReadAll(resp.Value.(*http.Response).Body)
-		if err != nil {
-			return MakeBuiltinError(ps, err.Error(), "__https_response__read_body")
-		}
-		return *env.NewString(string(data))
-	default:
-		ps.FailureFlag = true
-		return MakeArgError(ps, 1, []env.Type{env.NativeType}, "__https_response__read_body")
-	}
-}
 
 var Builtins_io = map[string]*env.Builtin{
 
@@ -415,7 +30,21 @@ var Builtins_io = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "Prompts for and reads user input from the console.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __input(ps, arg0, arg1, arg2, arg3, arg4)
+			switch str := arg0.(type) {
+			case env.String:
+				fmt.Print("" + str.Value)
+				var input string
+				fmt.Scanln(&input)
+				fmt.Print(input)
+				/* reader := bufio.NewReader(os.Stdin)
+				fmt.Print(str)
+				inp, _ := reader.ReadString('\n')
+				fmt.Println(inp) */
+				return *env.NewString(input)
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "input")
+			}
 		},
 	},
 
@@ -711,7 +340,18 @@ var Builtins_io = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "Gets file information (stat) for a file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __stat(ps, arg0, arg1, arg2, arg3, arg4)
+			switch r := arg0.(type) {
+			case env.Native:
+				info, err := r.Value.(*os.File).Stat()
+				if err != nil {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, err.Error(), "file//Stat")
+				}
+				return *env.NewNative(ps.Idx, info, "file-info")
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "file//Stat")
+			}
 		},
 	},
 
@@ -819,7 +459,16 @@ var Builtins_io = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "Reads the entire content of a file as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __fs_read(ps, arg0, arg1, arg2, arg3, arg4)
+			switch f := arg0.(type) {
+			case env.Uri:
+				data, err := os.ReadFile(f.GetPath())
+				if err != nil {
+					return MakeBuiltinError(ps, err.Error(), "file-schema//Read")
+				}
+				return *env.NewString(string(data))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-schema//Read")
+			}
 		},
 	},
 
@@ -856,7 +505,26 @@ var Builtins_io = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "Reads a file and returns its content as a block of lines.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __fs_read_lines(ps, arg0, arg1, arg2, arg3, arg4)
+			switch f := arg0.(type) {
+			case env.Uri:
+				file, err := os.OpenFile(f.GetPath(), os.O_RDONLY, os.ModePerm)
+				if err != nil {
+					return MakeBuiltinError(ps, err.Error(), "file-schema//Read\\lines")
+				}
+				defer file.Close()
+
+				lines := make([]env.Object, 0)
+				sc := bufio.NewScanner(file)
+				for sc.Scan() {
+					lines = append(lines, *env.NewString(sc.Text()))
+				}
+				if err := sc.Err(); err != nil {
+					return MakeBuiltinError(ps, err.Error(), "file-schema//Read\\lines")
+				}
+				return *env.NewBlock(*env.NewTSeries(lines))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-schema//Read\\lines")
+			}
 		},
 	},
 
@@ -1099,7 +767,33 @@ var Builtins_io = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "Makes a HTTPS GET request and returns the response body as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __https_s_get(ps, arg0, arg1, arg2, arg3, arg4)
+			switch f := arg0.(type) {
+			case env.Uri:
+				proto := ps.Idx.GetWord(f.GetProtocol().Index)
+				req, err := http.NewRequest(http.MethodGet, proto+"://"+f.GetPath(), nil)
+				if err != nil {
+					ps.FailureFlag = true
+					return *env.NewError(err.Error())
+				}
+				resp, err := http.DefaultClient.Do(req)
+				if err != nil {
+					ps.FailureFlag = true
+					return *env.NewError(err.Error())
+				}
+				defer resp.Body.Close()
+				body, _ := io.ReadAll(resp.Body)
+
+				if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
+					return *env.NewString(string(body))
+				} else {
+					ps.FailureFlag = true
+					errMsg := fmt.Sprintf("Status Code: %v", resp.StatusCode)
+					return MakeBuiltinError(ps, errMsg, "https-schema//Get")
+				}
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "https-schema//Get")
+			}
 		},
 	},
 
@@ -1113,7 +807,61 @@ var Builtins_io = map[string]*env.Builtin{
 		Argsn: 3,
 		Doc:   "Makes a HTTPS POST request and returns the response body as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __http_s_post(ps, arg0, arg1, arg2, arg3, arg4)
+			switch f := arg0.(type) {
+			case env.Uri:
+				switch t := arg2.(type) {
+				case env.Word:
+					switch d := arg1.(type) {
+					case env.String:
+						var tt string
+						tidx, terr := ps.Idx.GetIndex("json")
+						tidx2, terr2 := ps.Idx.GetIndex("text")
+						if terr && t.Index == tidx {
+							tt = "application/json"
+						} else if terr2 && t.Index == tidx2 {
+							tt = "text/plain"
+						} else {
+							ps.FailureFlag = true
+							return MakeBuiltinError(ps, "Wrong content type.", "https-schema//Post")
+						}
+
+						proto := ps.Idx.GetWord(f.GetProtocol().Index)
+						req, err := http.NewRequest(http.MethodPost, proto+"://"+f.GetPath(), strings.NewReader(d.Value))
+						if err != nil {
+							ps.FailureFlag = true
+							return *env.NewError(err.Error())
+						}
+						req.Header.Set("Content-Type", tt)
+						resp, err := http.DefaultClient.Do(req)
+						if err != nil {
+							ps.FailureFlag = true
+							return *env.NewError(err.Error())
+						}
+						defer resp.Body.Close()
+						body, err := io.ReadAll(resp.Body)
+						if err != nil {
+							ps.FailureFlag = true
+							return MakeBuiltinError(ps, err.Error(), "https-schema//Post")
+						}
+
+						if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
+							return *env.NewString(string(body))
+						} else {
+							ps.FailureFlag = true
+							return env.NewError2(resp.StatusCode, string(body))
+						}
+					default:
+						ps.FailureFlag = true
+						return MakeArgError(ps, 2, []env.Type{env.StringType}, "https-schema//Post")
+					}
+				default:
+					ps.FailureFlag = true
+					return MakeArgError(ps, 3, []env.Type{env.WordType}, "https-schema//Post")
+				}
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "https-schema//Post")
+			}
 		},
 	},
 
@@ -1125,7 +873,33 @@ var Builtins_io = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "Makes a HTTP GET request and returns the response body as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __https_s_get(ps, arg0, arg1, arg2, arg3, arg4)
+			switch f := arg0.(type) {
+			case env.Uri:
+				proto := ps.Idx.GetWord(f.GetProtocol().Index)
+				req, err := http.NewRequest(http.MethodGet, proto+"://"+f.GetPath(), nil)
+				if err != nil {
+					ps.FailureFlag = true
+					return *env.NewError(err.Error())
+				}
+				resp, err := http.DefaultClient.Do(req)
+				if err != nil {
+					ps.FailureFlag = true
+					return *env.NewError(err.Error())
+				}
+				defer resp.Body.Close()
+				body, _ := io.ReadAll(resp.Body)
+
+				if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
+					return *env.NewString(string(body))
+				} else {
+					ps.FailureFlag = true
+					errMsg := fmt.Sprintf("Status Code: %v", resp.StatusCode)
+					return MakeBuiltinError(ps, errMsg, "http-schema//Get")
+				}
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "http-schema//Get")
+			}
 		},
 	},
 
@@ -1139,7 +913,61 @@ var Builtins_io = map[string]*env.Builtin{
 		Argsn: 3,
 		Doc:   "Makes a HTTP POST request and returns the response body as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __http_s_post(ps, arg0, arg1, arg2, arg3, arg4)
+			switch f := arg0.(type) {
+			case env.Uri:
+				switch t := arg2.(type) {
+				case env.Word:
+					switch d := arg1.(type) {
+					case env.String:
+						var tt string
+						tidx, terr := ps.Idx.GetIndex("json")
+						tidx2, terr2 := ps.Idx.GetIndex("text")
+						if terr && t.Index == tidx {
+							tt = "application/json"
+						} else if terr2 && t.Index == tidx2 {
+							tt = "text/plain"
+						} else {
+							ps.FailureFlag = true
+							return MakeBuiltinError(ps, "Wrong content type.", "http-schema//Post")
+						}
+
+						proto := ps.Idx.GetWord(f.GetProtocol().Index)
+						req, err := http.NewRequest(http.MethodPost, proto+"://"+f.GetPath(), strings.NewReader(d.Value))
+						if err != nil {
+							ps.FailureFlag = true
+							return *env.NewError(err.Error())
+						}
+						req.Header.Set("Content-Type", tt)
+						resp, err := http.DefaultClient.Do(req)
+						if err != nil {
+							ps.FailureFlag = true
+							return *env.NewError(err.Error())
+						}
+						defer resp.Body.Close()
+						body, err := io.ReadAll(resp.Body)
+						if err != nil {
+							ps.FailureFlag = true
+							return MakeBuiltinError(ps, err.Error(), "http-schema//Post")
+						}
+
+						if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
+							return *env.NewString(string(body))
+						} else {
+							ps.FailureFlag = true
+							return env.NewError2(resp.StatusCode, string(body))
+						}
+					default:
+						ps.FailureFlag = true
+						return MakeArgError(ps, 2, []env.Type{env.StringType}, "http-schema//Post")
+					}
+				default:
+					ps.FailureFlag = true
+					return MakeArgError(ps, 3, []env.Type{env.WordType}, "http-schema//Post")
+				}
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "http-schema//Post")
+			}
 		},
 	},
 
@@ -1149,11 +977,41 @@ var Builtins_io = map[string]*env.Builtin{
 	// * data: string containing the request body
 	// Returns:
 	// * native https-request object
-	"https-schema//New-request": {
+	"https-schema//Request": {
 		Argsn: 3,
 		Doc:   "Creates a new HTTPS request object.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __https_s__new_request(ps, arg0, arg1, arg2, arg3, arg4)
+			switch uri := arg0.(type) {
+			case env.Uri:
+				switch method := arg1.(type) {
+				case env.Word:
+					method1 := ps.Idx.GetWord(method.Index)
+					if !(method1 == "GET" || method1 == "POST") {
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, "Wrong method.", "https-schema//Request")
+					}
+					switch data := arg2.(type) {
+					case env.String:
+						data1 := strings.NewReader(data.Value)
+						proto := ps.Idx.GetWord(uri.GetProtocol().Index)
+						req, err := http.NewRequest(method1, proto+"://"+uri.GetPath(), data1)
+						if err != nil {
+							ps.FailureFlag = true
+							return MakeBuiltinError(ps, err.Error(), "https-schema//Request")
+						}
+						return *env.NewNative(ps.Idx, req, "https-request")
+					default:
+						ps.FailureFlag = true
+						return MakeArgError(ps, 3, []env.Type{env.StringType}, "https-schema//Request")
+					}
+				default:
+					ps.FailureFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "https-schema//Request")
+				}
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "https-schema//Request")
+			}
 		},
 	},
 
@@ -1163,11 +1021,28 @@ var Builtins_io = map[string]*env.Builtin{
 	// * value: string containing the header value
 	// Returns:
 	// * the request object if successful
-	"https-request//Set-header": {
+	"https-request//Header!": {
 		Argsn: 3,
 		Doc:   "Sets a header on a HTTPS request.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __https_request__set_header(ps, arg0, arg1, arg2, arg3, arg4)
+			switch req := arg0.(type) {
+			case env.Native:
+				switch method := arg1.(type) {
+				case env.Word:
+					name := ps.Idx.GetWord(method.Index)
+					switch data := arg2.(type) {
+					case env.String:
+						req.Value.(*http.Request).Header.Set(name, data.Value)
+						return arg0
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.StringType}, "https-request//Header!")
+					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "https-request//Header!")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "https-request//Header!")
+			}
 		},
 	},
 
@@ -1177,11 +1052,27 @@ var Builtins_io = map[string]*env.Builtin{
 	// * password: string containing the password
 	// Returns:
 	// * the request object if successful
-	"https-request//Set-basic-auth": {
+	"https-request//Basic-auth!": {
 		Argsn: 3,
 		Doc:   "Sets Basic Authentication on a HTTPS request.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __https_request__set_basic_auth(ps, arg0, arg1, arg2, arg3, arg4)
+			switch req := arg0.(type) {
+			case env.Native:
+				switch username := arg1.(type) {
+				case env.String:
+					switch password := arg2.(type) {
+					case env.String:
+						req.Value.(*http.Request).SetBasicAuth(username.Value, password.Value)
+						return arg0
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.StringType}, "https-request//Basic-auth!")
+					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "https-request//Basic-auth!")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "https-request//Basic-auth!")
+			}
 		},
 	},
 
@@ -1193,7 +1084,37 @@ var Builtins_io = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "Executes a HTTPS request and returns the response.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __https_request__do(ps, arg0, arg1, arg2, arg3, arg4)
+			switch req := arg0.(type) {
+			case env.Native:
+				client := &http.Client{}
+				resp, err := client.Do(req.Value.(*http.Request))
+				// defer resp.Body.Close() // TODO -- comment this and figure out goling bodyclose
+				if err != nil {
+					return MakeBuiltinError(ps, err.Error(), "https-request//Call")
+				}
+				return *env.NewNative(ps.Idx, resp, "https-response")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "https-request//Call")
+			}
+		},
+	},
+
+	// Args:
+	// * response: native https-response object
+	// Returns:
+	// * native reader object for the response body
+	"https-response//Reader": {
+		Argsn: 1,
+		Doc:   "Gets a reader for the HTTPS response body that can be used with io.Copy.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch resp := arg0.(type) {
+			case env.Native:
+				// Return the Body field, which implements io.Reader, not the entire Response
+				return *env.NewNative(ps.Idx, resp.Value.(*http.Response).Body, "reader")
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "https-response//Reader")
+			}
 		},
 	},
 
@@ -1205,7 +1126,17 @@ var Builtins_io = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "Reads the body of a HTTPS response as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __https_response__read_body(ps, arg0, arg1, arg2, arg3, arg4)
+			switch resp := arg0.(type) {
+			case env.Native:
+				data, err := io.ReadAll(resp.Value.(*http.Response).Body)
+				if err != nil {
+					return MakeBuiltinError(ps, err.Error(), "https-response//Read-body")
+				}
+				return *env.NewString(string(data))
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "https-response//Read-body")
+			}
 		},
 	},
 
@@ -1218,7 +1149,64 @@ var Builtins_io = map[string]*env.Builtin{
 		Argsn: 2,
 		Doc:   "Sends an email to the specified address.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return __email_send(ps, arg0, arg1, arg2, arg3, arg4)
+			switch to_ := arg0.(type) {
+			case env.Email:
+				switch msg := arg1.(type) {
+				case env.String:
+					idx, _ := ps.Idx.GetIndex("user-profile")
+					uctx_, _ := ps.Ctx.Get(idx)
+					uctx := uctx_.(env.RyeCtx)
+					fmt.Println(to_)
+					fmt.Println(msg)
+					fmt.Println(uctx)
+					// TODO continue: uncomment and make it work
+					/*
+						from, _ := uctx.Get(ps.Idx.GetIndex("smtp-from"))
+						password, _ := uctx.Get(ps.Idx.GetIndex("smtp-password"))
+						server, _ := uctx.Get(ps.Idx.GetIndex("smtp-server"))
+						port, _ := uctx.Get(ps.Idx.GetIndex("smtp-port"))
+						// Receiver email address.
+						// to := []string{
+						//	to_.Value,
+						//}
+						// Message.
+						// message := []byte(msg.Value)
+						m := gomail.NewMessage()
+
+						// Set E-Mail sender
+						m.SetHeader("From", from)
+
+						// Set E-Mail receivers
+						m.SetHeader("To", to_.Address)
+
+						// Set E-Mail subject
+						m.SetHeader("Subject", msg.Value)
+
+						// Set E-Mail body. You can set plain text or html with text/html
+						m.SetBody("text/plain", msg.Value)
+
+						// Settings for SMTP server
+						d := gomail.NewDialer(server, port, from, password)
+
+						// This is only needed when SSL/TLS certificate is not valid on server.
+						// In production this should be set to false.
+						//			d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+
+						// Now send E-Mail
+						if err := d.DialAndSend(m); err != nil {
+							ps.FailureFlag = true
+							return env.NewError(err.Error())
+						}
+					*/
+					return *env.NewInteger(1)
+				default:
+					ps.FailureFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "email//Send")
+				}
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.EmailType}, "email//Send")
+			}
 		},
 	},
 

@@ -56,6 +56,56 @@ func Validation_EvalBlock(es *env.ProgramState, vals env.Dict) (env.Dict, map[st
 	return *env.NewDict(res), notes
 }
 
+func Validation_EvalBlock_Context(es *env.ProgramState, vals env.RyeCtx) (env.RyeCtx, map[string]env.Object) {
+	notes := make(map[string]env.Object, 0) // TODO ... what is this 2 here ... just for temp
+
+	var name string
+	var val any
+	resultCtx := env.NewEnv(vals.Parent)
+
+	for es.Ser.Pos() < es.Ser.Len() {
+		object := es.Ser.Pop()
+		var verr env.Object
+		switch obj := object.(type) {
+		case env.Setword:
+			if name != "" {
+				// sets the previous value
+				if val != nil {
+					wordIdx := es.Idx.IndexWord(name)
+					resultCtx.Set(wordIdx, env.ToRyeValue(val))
+				}
+			}
+			name = es.Idx.GetWord(obj.Index)
+			// Get value from context
+			if contextVal, exists := vals.Get(obj.Index); exists {
+				val = contextVal
+			} else {
+				val = nil
+			}
+		case env.Word:
+			if name != "" {
+				val, verr = evalWord(obj, es, val)
+				if verr != nil {
+					notes[name] = verr
+				} else {
+					// Set the validated value in result context
+					wordIdx := es.Idx.IndexWord(name)
+					resultCtx.Set(wordIdx, env.ToRyeValue(val))
+				}
+			}
+		default:
+			fmt.Println("Type is not matching - Validation_EvalBlock_Context.")
+			//TODO-FIXME
+		}
+	}
+	//set the last value too
+	if name != "" && val != nil {
+		wordIdx := es.Idx.IndexWord(name)
+		resultCtx.Set(wordIdx, env.ToRyeValue(val))
+	}
+	return *resultCtx, notes
+}
+
 func Validation_EvalBlock_List(es *env.ProgramState, vals env.List) (env.Object, []env.Object) {
 	notes := make([]env.Object, 0) // TODO ... what is this 2 here ... just for temp
 
@@ -78,6 +128,82 @@ func Validation_EvalBlock_List(es *env.ProgramState, vals env.List) (env.Object,
 
 	//set the last value too
 	return res, notes
+}
+
+func Validation_EvalBlock_Value(es *env.ProgramState, val env.Object) (env.Object, env.Object) {
+	var result env.Object = val
+
+	for es.Ser.Pos() < es.Ser.Len() {
+		object := es.Ser.Pop()
+		switch obj := object.(type) {
+		case env.Word:
+			// Use the existing evalWord function but adapt it for individual values
+			wordName := es.Idx.GetWord(obj.Index)
+			switch wordName {
+			case "integer":
+				resVal, verr := evalInteger(result)
+				if verr != nil {
+					return result, verr
+				}
+				result = env.ToRyeValue(resVal)
+			case "decimal":
+				resVal, verr := evalDecimal(result)
+				if verr != nil {
+					return result, verr
+				}
+				result = env.ToRyeValue(resVal)
+			case "string":
+				resVal, verr := evalString(result)
+				if verr != nil {
+					return result, verr
+				}
+				result = env.ToRyeValue(resVal)
+			case "email":
+				resVal, verr := evalEmail(result)
+				if verr != nil {
+					return result, verr
+				}
+				result = env.ToRyeValue(resVal)
+			case "date":
+				resVal, verr := evalDate(result)
+				if verr != nil {
+					return result, verr
+				}
+				result = env.ToRyeValue(resVal)
+			case "boolean":
+				resVal, verr := evalBoolean(result)
+				if verr != nil {
+					return result, verr
+				}
+				result = env.ToRyeValue(resVal)
+			case "block":
+				resVal, verr := evalBlock(result)
+				if verr != nil {
+					return result, verr
+				}
+				result = env.ToRyeValue(resVal)
+			case "uri":
+				resVal, verr := evalUri(result)
+				if verr != nil {
+					return result, verr
+				}
+				result = env.ToRyeValue(resVal)
+			case "word":
+				resVal, verr := evalWord_Individual(result)
+				if verr != nil {
+					return result, verr
+				}
+				result = env.ToRyeValue(resVal)
+			default:
+				// Unknown validation word, return error
+				return result, *env.NewString("unknown validation word: " + wordName)
+			}
+		default:
+			return result, *env.NewString("unexpected object in validation block")
+		}
+	}
+
+	return result, nil
 }
 
 func newVE(n string) *ValidationError {
@@ -162,8 +288,66 @@ func evalWord_List(word env.Word, es *env.ProgramState, vals env.List) (env.List
 		default:
 			return *env.NewList(res), nil // TODO ... make error
 		}
+	case "any":
+		switch blk := es.Ser.Pop().(type) {
+		case env.Block:
+			validCount := 0
+			for _, v := range vals.Data {
+				// Save current state
+				originalFailureFlag := es.FailureFlag
+				es.FailureFlag = false
+
+				_ = BuiValidate(es, env.ToRyeValue(v), blk)
+
+				// Check if validation succeeded
+				if !es.FailureFlag {
+					validCount++
+				}
+
+				// Restore state for next iteration
+				es.FailureFlag = originalFailureFlag
+			}
+
+			if validCount > 0 {
+				return vals, nil // Return original list if at least one item is valid
+			} else {
+				return vals, *env.NewString("no items passed validation")
+			}
+		default:
+			return vals, *env.NewString("validation block required for 'any'")
+		}
+	case "one":
+		switch blk := es.Ser.Pop().(type) {
+		case env.Block:
+			validCount := 0
+			for _, v := range vals.Data {
+				// Save current state
+				originalFailureFlag := es.FailureFlag
+				es.FailureFlag = false
+
+				_ = BuiValidate(es, env.ToRyeValue(v), blk)
+
+				// Check if validation succeeded
+				if !es.FailureFlag {
+					validCount++
+				}
+
+				// Restore state for next iteration
+				es.FailureFlag = originalFailureFlag
+			}
+
+			if validCount == 1 {
+				return vals, nil // Return original list if exactly one item is valid
+			} else if validCount == 0 {
+				return vals, *env.NewString("no items passed validation")
+			} else {
+				return vals, *env.NewString("more than one item passed validation")
+			}
+		default:
+			return vals, *env.NewString("validation block required for 'one'")
+		}
 	default:
-		return vals, *env.NewString("unknown word in list validation") // TODO --- this is not a validation error exactly, but more like error in validation code .. think about
+		return vals, *env.NewString("unknown word in list validation: " + es.Idx.GetWord(word.Index))
 	}
 }
 
@@ -283,7 +467,97 @@ func evalDate(val any) (any, env.Object) {
 	}
 }
 
+func evalBoolean(val any) (any, env.Object) {
+	switch val1 := val.(type) {
+	case bool:
+		return *env.NewBoolean(val1), nil
+	case env.Boolean:
+		return val1, nil
+	case string:
+		v := strings.ToLower(val1)
+		if v == "true" || v == "1" || v == "yes" {
+			return *env.NewBoolean(true), nil
+		} else if v == "false" || v == "0" || v == "no" {
+			return *env.NewBoolean(false), nil
+		} else {
+			return val, *env.NewString("not boolean")
+		}
+	case env.String:
+		v := strings.ToLower(val1.Value)
+		if v == "true" || v == "1" || v == "yes" {
+			return *env.NewBoolean(true), nil
+		} else if v == "false" || v == "0" || v == "no" {
+			return *env.NewBoolean(false), nil
+		} else {
+			return val, *env.NewString("not boolean")
+		}
+	case env.Integer:
+		return *env.NewBoolean(val1.Value != 0), nil
+	case int64:
+		return *env.NewBoolean(val1 != 0), nil
+	default:
+		return val, *env.NewString("not boolean")
+	}
+}
+
+func evalBlock(val any) (any, env.Object) {
+	switch val1 := val.(type) {
+	case env.Block:
+		return val1, nil
+	default:
+		return val, *env.NewString("not block")
+	}
+}
+
+func evalUri(val any) (any, env.Object) {
+	switch val1 := val.(type) {
+	case env.Uri:
+		return val1, nil
+	case string:
+		// Try to parse as URI - this is a simple implementation
+		if strings.Contains(val1, "://") || strings.HasPrefix(val1, "%") {
+			// For now, just return it as-is if it looks like a URI
+			// In a full implementation, you'd want to parse and validate it properly
+			return val, nil
+		} else {
+			return val, *env.NewString("not uri")
+		}
+	case env.String:
+		if strings.Contains(val1.Value, "://") || strings.HasPrefix(val1.Value, "%") {
+			return val, nil
+		} else {
+			return val, *env.NewString("not uri")
+		}
+	default:
+		return val, *env.NewString("not uri")
+	}
+}
+
+func evalWord_Individual(val any) (any, env.Object) {
+	switch val1 := val.(type) {
+	case env.Word:
+		return val1, nil
+	case env.Tagword:
+		return val1, nil
+	case env.Setword:
+		return val1, nil
+	case env.Opword:
+		return val1, nil
+	case env.Pipeword:
+		return val1, nil
+	case env.Getword:
+		return val1, nil
+	case env.Genword:
+		return val1, nil
+	case env.Kindword:
+		return val1, nil
+	default:
+		return val, *env.NewString("not word")
+	}
+}
+
 func BuiValidate(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object) env.Object {
+	fmt.Println(arg0)
 	switch blk := arg1.(type) {
 	case env.Block:
 		switch rmap := arg0.(type) {
@@ -297,6 +571,22 @@ func BuiValidate(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object) env.O
 				return env.NewError4(403, "validation error", nil, verrs)
 			}
 			return val
+		case env.RyeCtx:
+			ser1 := env1.Ser
+			env1.Ser = blk.Series
+			val, verrs := Validation_EvalBlock_Context(env1, rmap)
+			env1.Ser = ser1
+			if len(verrs) > 0 {
+				env1.FailureFlag = true
+				return env.NewError4(403, "validation error", nil, verrs)
+			}
+			return val
+		case *env.List:
+			ser1 := env1.Ser
+			env1.Ser = blk.Series
+			val, _ := Validation_EvalBlock_List(env1, *rmap)
+			env1.Ser = ser1
+			return val
 		case env.List:
 			ser1 := env1.Ser
 			env1.Ser = blk.Series
@@ -304,10 +594,19 @@ func BuiValidate(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object) env.O
 			env1.Ser = ser1
 			return val
 		default:
-			return *env.NewError("arg 1 should be Dict or List")
+			// Handle individual values (integers, strings, etc.)
+			ser1 := env1.Ser
+			env1.Ser = blk.Series
+			val, verr := Validation_EvalBlock_Value(env1, arg0)
+			env1.Ser = ser1
+			if verr != nil {
+				env1.FailureFlag = true
+				return verr
+			}
+			return val
 		}
 	default:
-		return *env.NewError("arg 2 should be block")
+		return MakeArgError(env1, 2, []env.Type{env.BlockType}, "validate")
 	}
 }
 
@@ -320,7 +619,7 @@ var Builtins_validation = map[string]*env.Builtin{
 	//
 	// ##### Validation ##### "validation dialect for Rye values"
 	//
-	// Tests:
+	// Dictionary validation tests:
 	// equal { validate dict { a: 1 } { a: required } } dict { a: 1 }
 	// equal { validate dict { a: 1 } { b: optional 2 } } dict { b: 2 }
 	// equal { validate dict { a: 1 } { a: optional 0 b: optional 2 } } dict { a: 1 b: 2 }
@@ -344,11 +643,49 @@ var Builtins_validation = map[string]*env.Builtin{
 	// equal { validate dict { b: "2x0" } { b: required decimal } |disarm |status? } 403   ;  ("The server understood the request, but is refusing to fulfill it"). Contrary to popular opinion, RFC2616 doesn't say "403 is only intended for failed authentication", but "403: I know what you want, but I won't do that". That condition may or may not be due to authentication.
 	// equal { validate dict { b: "not-mail" } { b: required email } |disarm |message? } "validation error"
 	// equal { validate dict { b: "2023-1-1" } { b: required date } |disarm |details? } dict { b: "not date" }
+	//
+	// Context validation tests:
+	// equal { ctx: context { a: 1 } validate ctx { a: required } |type? } 'context
+	// equal { ctx: context { a: "123" } validate ctx { a: required integer } -> 'a } 123
+	// equal { ctx: context { a: "123" } validate ctx { a: required integer } -> 'a |type? } 'integer
+	// equal { ctx: context { x: 5 } validate ctx { x: optional 0 y: optional "default" } -> 'y } "default"
+	//
+	// List validation tests:
+	// equal { validate [ 1 2 3 ] { some { integer } } } [ 1 2 3 ]
+	// equal { validate [ "1" "2" "3" ] { some { integer } } } [ 1 2 3 ]
+	// equal { validate [ "test@example.com" "user@domain.org" ] { some { email } } } [ "test@example.com" "user@domain.org" ]
+	// equal { validate [ "1" 2 "3.14" ] { some { decimal } } } [ 1.0 2.0 3.14 ]
+	// equal { validate [ dict { a: 1 } dict { a: "2" } ] { some { a: required integer } } } [ dict { a: 1 } dict { a: 2 } ]
+	// equal { validate [ 1 "not-number" 3 ] { any { integer } } } [ 1 "not-number" 3 ]
+	// equal { validate [ 1 2 ] { one { integer } } } [ 1 2 ]
+	// error { validate [ "not-number" "also-not" ] { any { integer } } }
+	// error { validate [ 1 2 3 ] { one { integer } } }
+	//
+	// Individual value validation tests:
+	// equal { 123 .validate { integer } } 123
+	// equal { "123" .validate { integer } } 123
+	// equal { "123" .validate { integer } |type? } 'integer
+	// equal { 123.45 .validate { decimal } } 123.45
+	// equal { "123.45" .validate { decimal } } 123.45
+	// equal { "hello" .validate { string } } "hello"
+	// equal { 123 .validate { string } } "123"
+	// equal { "true" .validate { boolean } } true
+	// equal { 1 .validate { boolean } } true
+	// equal { 0 .validate { boolean } } false
+	// equal { "false" .validate { boolean } } false
+	// equal { { 1 2 3 } .validate { block } } { 1 2 3 }
+	// equal { "user@example.com" .validate { email } } "user@example.com"
+	// equal { "2023-12-31" .validate { date } } date "2023-12-31"
+	// equal { "30.12.2023" .validate { date } } date "2023-12-30"
+	// error { "not-a-number" .validate { integer } }
+	// error { "not-boolean" .validate { boolean } }
+	// error { 123 .validate { block } }
+	//
 	// Args:
-	// * data: Dictionary or List to validate
+	// * data: Dictionary, Context, or List to validate
 	// * rules: Block containing validation rules
 	// Returns:
-	// * validated Dictionary with converted values or error if validation fails
+	// * validated Dictionary/Context/List with converted values or error if validation fails
 	"validate": {
 		Argsn: 2,
 		Doc:   "Validates and transforms data according to specified rules, returning a dictionary with converted values or an error.",
@@ -370,6 +707,9 @@ var Builtins_validation = map[string]*env.Builtin{
 		Doc:   "Validates and transforms data according to specified rules, returning a context object for easy field access.",
 		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			obj := BuiValidate(env1, arg0, arg1)
+			if env1.FailureFlag {
+				return obj
+			}
 			switch obj1 := obj.(type) {
 			case env.Dict:
 				return util.Dict2Context(env1, obj1)
