@@ -3,7 +3,6 @@ package evaldo
 import (
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/util"
-	// JM 20230825	"github.com/refaktor/rye/term"
 )
 
 var builtins_boolean = map[string]*env.Builtin{
@@ -43,14 +42,14 @@ var builtins_boolean = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { 3 * 5 + 4 } 27
-	// equal { _* 3 5 + 4 } 27
-	// equal { 3 * 5 | + 4 } 19
-	// equal { _* 3 5 | + 4 } 19
+	// equal { 5 _| } 5
+	// equal { "hello" _| } "hello"
+	// equal { true _| } true
+	// equal { { 1 2 3 } _| } { 1 2 3 }
 	// Args:
-	// * value: Any value to be negated
+	// * value: Any value to be passed through unchanged
 	// Returns:
-	// * the original value (used in pipeline operations)
+	// * the original value (used in pipeline operations for explicit pass-through)
 	"_|": {
 		Argsn: 1,
 		Doc:   "Pipeline operator that passes the value through unchanged (used with 'not' and other operations).",
@@ -89,6 +88,9 @@ var builtins_boolean = map[string]*env.Builtin{
 	// equal { true .and false } false
 	// equal { false .and false } false
 	// equal { 3 .and 5 } 1  ; bitwise 011 AND 101 = 001
+	// error { true .and 5 }
+	// error { 5 .and true }
+	// error { "string" .and true }
 	// Args:
 	// * value1: First value (boolean or integer)
 	// * value2: Second value (boolean or integer)
@@ -126,6 +128,9 @@ var builtins_boolean = map[string]*env.Builtin{
 	// equal { true .or false } true
 	// equal { false .or false } false
 	// equal { 3 .or 5 } 7  ; bitwise 011 OR 101 = 111
+	// error { true .or 5 }
+	// error { 5 .or true }
+	// error { "string" .or true }
 	// Args:
 	// * value1: First value (boolean or integer)
 	// * value2: Second value (boolean or integer)
@@ -163,6 +168,9 @@ var builtins_boolean = map[string]*env.Builtin{
 	// equal { true .xor false } true
 	// equal { false .xor false } false
 	// equal { 3 .xor 5 } 6  ; bitwise 011 XOR 101 = 110
+	// error { true .xor 5 }
+	// error { 5 .xor true }
+	// error { "string" .xor true }
 	// Args:
 	// * value1: First value (boolean or integer)
 	// * value2: Second value (boolean or integer)
@@ -177,7 +185,7 @@ var builtins_boolean = map[string]*env.Builtin{
 			case env.Boolean:
 				switch s2 := arg1.(type) {
 				case env.Boolean:
-					return *env.NewBoolean((s1.Value || s2.Value) && !(s1.Value && s2.Value))
+					return *env.NewBoolean(s1.Value != s2.Value)
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.BooleanType}, "xor")
 				}
@@ -196,9 +204,11 @@ var builtins_boolean = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { all { 1 2 3 } } 3
-	// equal { all { 1 0 3 } } 3
+	// equal { all { 1 0 3 } } 0
 	// equal { all { 1 false 3 } } false
 	// equal { all { true true true } } true
+	// equal { all { } } ? ; empty block behavior
+	// error { all "not-a-block" }
 	// Args:
 	// * block: Block of expressions to evaluate
 	// Returns:
@@ -230,6 +240,8 @@ var builtins_boolean = map[string]*env.Builtin{
 	// equal { any { 0 1 3 } } 0
 	// equal { any { false false 3 } } 3
 	// equal { any { false false false } } false
+	// equal { any { } } ? ; empty block behavior
+	// error { any "not-a-block" }
 	// Args:
 	// * block: Block of expressions to evaluate
 	// Returns:
@@ -258,13 +270,16 @@ var builtins_boolean = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { any\with 10 { + 10 , * 10 } } 20
-	// ; equal { any\with -10 { + 10 , * 10 } } -100  ; TODO -- fix halting issue
+	// equal { any\with 0 { + 10 , * 10 } } 10
+	// equal { any\with 5 { - 10 , + 10 } } 15
+	// equal { any\with false { not , to-string } } true
+	// error { any\with 5 "not-a-block" }
 	// Args:
-	// * value: Value to be used in the expressions
-	// * block: Block of expressions to evaluate with the provided value
+	// * value: Value to be used as input to each expression in the block
+	// * block: Block of expressions to evaluate with the provided value injected
 	// Returns:
 	// * the first truthy result of applying an expression to the value, or the last result if none are truthy
-	"any\\with": { // TODO-FIXME error handling, halts on multiple expressions
+	"any\\with": {
 		Argsn: 2,
 		Doc:   "Applies each expression in the block to the provided value until a truthy result is found and returns it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -274,7 +289,6 @@ var builtins_boolean = map[string]*env.Builtin{
 				ps.Ser = bloc.Series
 				for ps.Ser.Pos() < ps.Ser.Len() {
 					EvalExpressionInjLimited(ps, arg0, true)
-					//					EvalExpression2(ps, false)
 					if util.IsTruthy(ps.Res) {
 						break
 					}

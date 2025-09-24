@@ -1125,6 +1125,12 @@ var builtins = map[string]*env.Builtin{
 		},
 		}, */
 
+	// Tests:
+	// ; import file://test.rye  ; imports and executes test.rye
+	// Args:
+	// * uri: URI of the file to import and execute
+	// Returns:
+	// * result of executing the imported file
 	"import": { // **
 		Argsn: 1,
 		Doc:   "Imports a file, loads and does it from script local path.",
@@ -1171,6 +1177,12 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// ; import\live file://test.rye  ; imports, executes, and watches test.rye for changes
+	// Args:
+	// * uri: URI of the file to import, execute, and watch for changes
+	// Returns:
+	// * result of executing the imported file
 	"import\\live": { // **
 		Argsn: 1,
 		Doc:   "Imports a file, loads and does it from script local path.",
@@ -1192,6 +1204,10 @@ var builtins = map[string]*env.Builtin{
 	// Tests:
 	// equal  { load " 1 2 3 " |third } 3
 	// equal  { load "{ 1 2 3 }" |first |third } 3
+	// Args:
+	// * source: String containing Rye code or URI of file to load
+	// Returns:
+	// * Block containing the parsed Rye values
 	"load": { // **
 		Argsn: 1,
 		Doc:   "Loads a string into Rye values.",
@@ -1226,6 +1242,12 @@ var builtins = map[string]*env.Builtin{
 
 	// TODO -- refactor load variants so they use common function LoadString and LoadFile
 
+	// Tests:
+	// ; load\mod file://modifiable.rye  ; loads file with word modification allowed
+	// Args:
+	// * source: String containing Rye code or URI of file to load with modification allowed
+	// Returns:
+	// * Block containing the parsed Rye values
 	"load\\mod": { // **
 		Argsn: 1,
 		Doc:   "Loads a string into Rye values. During load it allows modification of words.",
@@ -1260,6 +1282,12 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// ; load\live file://watched.rye  ; loads and watches file for changes
+	// Args:
+	// * source: String containing Rye code or URI of file to load with modification allowed and file watching
+	// Returns:
+	// * Block containing the parsed Rye values
 	"load\\live": { // **
 		Argsn: 1,
 		Doc:   "Loads a string into Rye values. During load it allows modification of words.",
@@ -1295,6 +1323,12 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// ; load\sig "signed-code"  ; loads only if signature is valid
+	// Args:
+	// * source: String containing signed Rye code to verify and load
+	// Returns:
+	// * Block containing the parsed Rye values if signature is valid
 	"load\\sig": {
 		Argsn: 1,
 		Doc:   "Checks the signature, if OK then loads a string into Rye values.",
@@ -1353,6 +1387,10 @@ var builtins = map[string]*env.Builtin{
 	// equal  { do { 12 * 23 | + 34 } } 310
 	// equal  { do { 12 * 23 :a + 34 } } 310
 	// equal  { do { 12 * 23 :a a + 34 } } 310
+	// Args:
+	// * block: Block of code to execute
+	// Returns:
+	// * result of executing the block
 	"do": {
 		Argsn: 1,
 		Doc:   "Takes a block of code and does (runs) it.",
@@ -1374,6 +1412,11 @@ var builtins = map[string]*env.Builtin{
 	// Tests:
 	// equal  { with 100 { + 11 } } 111
 	// equal  { with 100 { + 11 , * 3 } } 300
+	// Args:
+	// * value: Value to inject into the block's execution context
+	// * block: Block of code to execute with the injected value
+	// Returns:
+	// * result of executing the block with the injected value
 	"with": { // **
 		AcceptFailure: true,
 		Doc:           "Takes a value and a block of code. It does the code with the value injected.",
@@ -1397,6 +1440,11 @@ var builtins = map[string]*env.Builtin{
 	// equal  { c: context { x:: 100 } do\in c { inc! 'x } } 101
 	// equal  { c: context { var 'x 100 } do\in c { x:: 200 } c/x } 200
 	// equal  { c: context { x:: 100 } do\in c { x:: 200 , x } } 200
+	// Args:
+	// * context: Context in which to execute the block
+	// * block: Block of code to execute within the specified context
+	// Returns:
+	// * result of executing the block within the given context
 	"do\\in": { // **
 		Argsn: 2,
 		Doc:   "Takes a Context and a Block. It Does a block inside a given Context.",
@@ -1440,6 +1488,11 @@ var builtins = map[string]*env.Builtin{
 	// equal  { c: context { x:: 100 } do\par c { inc! 'x } } 101
 	// equal  { c: context { x: 100 } do\par c { x:: 200 , x } } 200
 	// equal  { c: context { x: 100 } do\par c { x:: 200 } c/x } 100
+	// Args:
+	// * context: Context to use as parent context during execution
+	// * block: Block of code to execute in current context with the specified parent context
+	// Returns:
+	// * result of executing the block with the modified parent context
 	"do\\par": { // **
 		Argsn: 2,
 		Doc:   "Takes a Context and a Block. It Does a block in current context but with parent a given Context.",
@@ -1871,14 +1924,14 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { x:: 0 defer\with 42 { + 1 } x } 0
-	// stdout { fn { } { defer\with "hello" { print } "done" } } "hello"
+	// equal { x:: 0 defer\ 42 { + 1 } x } 0
+	// stdout { fn { } { defer\ "hello" { print } "done" } } "hello"
 	// Args:
 	// * value: Value to inject into the deferred block
 	// * block: Block to execute with the injected value when function exits
 	// Returns:
 	// * Void value
-	"defer\\with": {
+	"defer\\": {
 		Argsn: 2,
 		Doc:   "Registers a block of code with an injected value to be executed when the current function exits or the program terminates. Works like 'with' but deferred.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
