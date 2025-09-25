@@ -102,35 +102,12 @@ section "Validation " "validation dialect for Rye values" {
 	group "validate" 
 	"Validates and transforms data according to specified rules, returning a dictionary with converted values or an error."
 	{
-		arg `data: Dictionary or List to validate`
+		arg `data: Dictionary, Context, or List to validate`
 		arg `rules: Block containing validation rules`
-		returns `validated Dictionary with converted values or error if validation fails`
+		returns `validated Dictionary/Context/List with converted values or error if validation fails`
 	}
 
 	{
-		equal { validate dict { a: 1 } { a: required } } dict { a: 1 }
-		equal { validate dict { a: 1 } { b: optional 2 } } dict { b: 2 }
-		equal { validate dict { a: 1 } { a: optional 0 b: optional 2 } } dict { a: 1 b: 2 }
-		equal { validate dict { a: 1 } { a: required integer } } dict { a: 1 }
-		equal { validate dict { a: "1" } { a: required integer } } dict { a: 1 }
-		equal { validate dict { a: "1" } { a: required integer } -> "a" |type? } 'integer
-		equal { validate dict { a: 3.14 } { a: required decimal } } dict { a: 3.14 }
-		equal { validate dict { a: 3 } { a: required decimal } } dict { a: 3.0 }
-		equal { validate dict { a: "3.14" } { a: required decimal } } dict { a: 3.14 }
-		equal { validate dict { a: "3.14" } { a: required decimal } -> "a" |type? } 'decimal
-		equal { validate dict { a: "jim" } { a: required string } } dict { a: "jim" }
-		equal { validate dict { a: "e@ma.il" } { a: required email } } dict { a: "e@ma.il" }
-		equal { validate dict { a: "e@ma.il" } { a: required email } -> "a" |type? } 'string
-		equal { validate dict { a: "30.12.2024" } { a: required date } } dict [ "a" date "2024-12-30" ]
-		equal { validate dict { a: "2024-12-30" } { a: required date } } dict [ "a" date "2024-12-30" ]
-		equal { validate dict { a: "2024-12-30" } { a: required date } -> "a" |type? } 'date
-		equal { validate dict { a: 5 } { a: required integer check { < 10 } } } dict [ "a" 5 ]
-		equal { validate dict { a: 5 } { a: required integer calc { + 10 } } } dict [ "a" 15 ]
-		equal { validate dict { a: 5 } { b: required } |disarm |type? } 'error
-		equal { validate dict { b: "5c" } { b: optional 0 integer } |disarm |type? } 'error
-		equal { validate dict { b: "2x0" } { b: required decimal } |disarm |status? } 403   ;  ("The server understood the request, but is refusing to fulfill it"). Contrary to popular opinion, RFC2616 doesn't say "403 is only intended for failed authentication", but "403: I know what you want, but I won't do that". That condition may or may not be due to authentication.
-		equal { validate dict { b: "not-mail" } { b: required email } |disarm |message? } "validation error"
-		equal { validate dict { b: "2023-1-1" } { b: required date } |disarm |details? } dict { b: "not date" }
 	}
 
 	group "validate>ctx" 

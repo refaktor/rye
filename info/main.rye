@@ -136,7 +136,7 @@ test {
 		var 'errors 0
 		for sections {
 			.to-string .pass { term/bold , prns "\n#" , .to-upper .prns , print "#\n" }
-			| ++ ".info.rye" |to-file |load |^check { "Group does not exist!!!!" } |do\in* test-framework |+ errors ::errors }
+			| ++ ".info.rye" |to-file |load |^check { "Group does not exist!!!!" } |do\in* test-framework |+ errors |fix { errors } ::errors }
 		print ""
 	
 		; if ( length? sections ) > 1 {

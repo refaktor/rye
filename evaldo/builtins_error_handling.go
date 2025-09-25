@@ -402,8 +402,13 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 						er = nil
 					}
 					return MakeRyeError(ps, arg1, er)
+				case env.Error: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+					// if er.Status == 0 && er.Message == "" {
+					// er = nil
+					// }
+					return MakeRyeError(ps, arg1, &er)
 				}
-				return env.NewError("error 1")
+				return env.NewError("error 12221")
 			}
 			return arg0
 		},

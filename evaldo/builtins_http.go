@@ -860,4 +860,26 @@ var Builtins_http = map[string]*env.Builtin{
 
 		},
 	},
+
+	"https-response//Header?": {
+		Argsn: 2,
+		Doc:   "Get header value from HTTP response.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch resp := arg0.(type) {
+			case env.Native:
+				switch headerName := arg1.(type) {
+				case env.String:
+					response := resp.Value.(*http.Response)
+					headerValue := response.Header.Get(headerName.Value)
+					return *env.NewString(headerValue)
+				default:
+					ps.FailureFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "https-response//Get-header")
+				}
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "https-response//Get-header")
+			}
+		},
+	},
 }

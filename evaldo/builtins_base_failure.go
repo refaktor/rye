@@ -306,7 +306,7 @@ var Builtins_failure = map[string]*env.Builtin{
 					}
 					return MakeRyeError(ps, arg1, er)
 				}
-				return env.NewError("error 1")
+				return env.NewError("error 10223")
 			}
 			return arg0
 		},

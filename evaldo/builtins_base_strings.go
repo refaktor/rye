@@ -36,9 +36,15 @@ var builtins_string = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { tab } "\t"
+	// Args:
+	// * none
+	// Returns:
+	// * a string containing a single tab character
 	"tab": {
 		Argsn: 0,
-		Doc:   "Returns a string containing a single newline character.",
+		Doc:   "Returns a string containing a single tab character.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString("\t")
@@ -61,7 +67,7 @@ var builtins_string = map[string]*env.Builtin{
 			case env.String:
 				return *env.NewString(s1.Value + "\n")
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "nl")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "ln")
 			}
 		},
 	},
@@ -83,7 +89,7 @@ var builtins_string = map[string]*env.Builtin{
 			case env.String:
 				return *env.NewString(strings.TrimSpace(s1.Value))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "trim\\space")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "trim")
 			}
 		},
 	},
@@ -499,7 +505,7 @@ var builtins_string = map[string]*env.Builtin{
 				}
 				return *env.NewString(string(ata))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "base64-encode")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "decode\\base64")
 			}
 		},
 	},
