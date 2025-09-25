@@ -204,10 +204,10 @@ var builtins_boolean = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { all { 1 2 3 } } 3
-	// equal { all { 1 0 3 } } 0
+	// equal { all { 1 0 3 } } 3
 	// equal { all { 1 false 3 } } false
 	// equal { all { true true true } } true
-	// equal { all { } } ? ; empty block behavior
+	// ; equal { all { } } ? ; empty block behavior
 	// error { all "not-a-block" }
 	// Args:
 	// * block: Block of expressions to evaluate
@@ -240,7 +240,7 @@ var builtins_boolean = map[string]*env.Builtin{
 	// equal { any { 0 1 3 } } 0
 	// equal { any { false false 3 } } 3
 	// equal { any { false false false } } false
-	// equal { any { } } ? ; empty block behavior
+	// ; equal { any { } } ? ; empty block behavior
 	// error { any "not-a-block" }
 	// Args:
 	// * block: Block of expressions to evaluate
@@ -271,8 +271,9 @@ var builtins_boolean = map[string]*env.Builtin{
 	// Tests:
 	// equal { any\with 10 { + 10 , * 10 } } 20
 	// equal { any\with 0 { + 10 , * 10 } } 10
-	// equal { any\with 5 { - 10 , + 10 } } 15
-	// equal { any\with false { not , to-string } } true
+	// equal { any\with 5 { - 10 , + 10 } } -5
+	// equal { any\with false { .not , .to-string } } true
+	// ; equal { any\with true { .not , .to-string } } "true"
 	// error { any\with 5 "not-a-block" }
 	// Args:
 	// * value: Value to be used as input to each expression in the block
@@ -287,14 +288,34 @@ var builtins_boolean = map[string]*env.Builtin{
 			case env.Block:
 				ser := ps.Ser
 				ps.Ser = bloc.Series
+				var lastResult env.Object
 				for ps.Ser.Pos() < ps.Ser.Len() {
+					oldPos := ps.Ser.Pos()
 					EvalExpressionInjLimited(ps, arg0, true)
+
+					// Check for failures or errors and return immediately
+					if ps.ErrorFlag || ps.FailureFlag {
+						ps.Ser = ser
+						return ps.Res
+					}
+
+					lastResult = ps.Res
+
+					// Ensure we advance position to prevent infinite loops
+					if ps.Ser.Pos() == oldPos {
+						ps.Ser.SetPos(oldPos + 1)
+					}
+
 					if util.IsTruthy(ps.Res) {
 						break
 					}
 				}
 				ps.Ser = ser
-				return ps.Res
+				// Return the last result if we have one, otherwise return the input value
+				if lastResult != nil {
+					return lastResult
+				}
+				return arg0
 			default:
 				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "any\\with")
 			}

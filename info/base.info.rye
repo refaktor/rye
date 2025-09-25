@@ -1,280 +1,3 @@
-section "Default" "" {
-	group "change!" 
-	"Searches for a word and changes it's value in-place. Only works on variables declared with var. If value changes returns true otherwise false"
-	{
-		arg `value: New value to assign to the word`
-		arg `word: Word whose value should be changed`
-		returns `Integer 1 if the value changed, 0 if the new value is the same as the old value`
-	}
-
-	{
-		equal   { var 'x 123 , change! 234 'x , x } 234
-		equal   { a:: 123 change! 333 'a a } 333
-		equal   { a:: 123 change! 124 'a } 1
-		equal   { a:: 123 change! 123 'a } 0
-	}
-
-	group "set!" 
-	"Set word to value or words by deconstructing a block. Only works on variables declared with var."
-	{
-		arg `values: Value or block of values to assign to the word(s)`
-		arg `words: Word or block of words to be set`
-		returns `The value or block of values that was assigned`
-	}
-
-	{
-		equal   { set! { 123 234 } { a b }  b } 234
-	}
-
-	group "unset!" 
-	"Unset a word in current context, only meant to be used in console"
-	{
-		arg `word: Word to be unset from the current context`
-		returns `Void value`
-	}
-
-	{
-		equal   { x: 1 unset! 'x x: 2 } 2 ; otherwise would produce an error
-	}
-
-	group "val" 
-	"Returns value of the word in context"
-	{
-		arg `word: Word whose value should be retrieved`
-		returns `The value associated with the word in the current context`
-	}
-
-	{
-		equal   { x: 123 val 'x } 123
-		equal   { x: 123 y: 'x val y } 123
-	}
-
-	group "_<<" 
-	"Converts a value to specific kind (R to L)"
-	{
-		arg `kind: Kind to convert the value to`
-		arg `value: Dict or context to convert`
-		returns `A new context of the specified kind`
-	}
-
-	{
-		; TODO equal   { person: kind 'person { name: "" age: 0 } person << dict { "name" "John" "age" 30 } |type? } 'ctx
-	}
-
-	group "save\\current" 
-	"Saves current state of the program to a file."
-	{
-		arg `None`
-		returns `Integer 1 on success`
-	}
-
-	{
-		equal  { save\current |type? } 'integer
-	}
-
-	group "save\\current\\secure" 
-	"Saves current state of the program to a file with password protection."
-	{
-		arg `None`
-		returns `Integer 1 on success`
-	}
-
-	{
-		; equal  { save\current\secure |type? } 'integer
-	}
-
-	group "doc!" 
-	"Sets docstring of the current context."
-	{
-		arg `doc: String to set as the docstring for the current context`
-		returns `Integer 1 on success`
-	}
-
-	{
-		equal   { x: private { doc! "some doc" doc? } } "some doc"
-	}
-
-	group "doc?" 
-	"Gets docstring of the current context."
-	{
-		arg `None`
-		returns `String containing the docstring of the current context`
-	}
-
-	{
-		equal   { x: private { doc! "some doc" doc? } } "some doc"
-	}
-
-	group "doc\\of?" 
-	"Get docstring of the passed context."
-	{
-		arg `value: Function, builtin, or context to get the docstring from`
-		returns `String containing the docstring of the provided value`
-	}
-
-	{
-		equal   { x: context { doc! "some doc" } doc\of? x } "some doc"
-	}
-
-	group "ref" 
-	"Makes a value mutable instead of immutable"
-	{
-		arg `value: Value to make mutable`
-		returns `A mutable reference to the value`
-	}
-
-	{
-		equal   { is-ref ref { 1 2 3 } } true
-	}
-
-	group "deref" 
-	"Makes a value again immutable"
-	{
-		arg `value: Mutable reference to make immutable`
-		returns `An immutable copy of the value`
-	}
-
-	{
-		equal   { is-ref deref ref { 1 2 3 } } false
-	}
-
-	group "is-ref" 
-	"Checks if a value is a mutable reference."
-	{
-		arg `value: Any value to check if it's a reference`
-		returns `Integer 1 if the value is a reference, 0 otherwise`
-	}
-
-	{
-		equal  { ref { } |is-ref } true
-		equal  { { } |is-ref } false
-	}
-
-	group "dict" 
-	"Constructs a Dict from the Block of key and value pairs."
-	{
-		arg `block: Block containing alternating keys and values`
-		returns `A new Dict with the specified keys and values`
-	}
-
-	{
-		equal { dict { "a" 123 } -> "a" } 123
-	}
-
-	group "list" 
-	"Constructs a List from the Block of values."
-	{
-		arg `block: Block containing values to put in the list`
-		returns `A new List with the values from the block`
-	}
-
-	{
-		equal { list { "a" 123 } -> 0 } "a"
-	}
-
-	group "load" 
-	"Loads a string into Rye values."
-	{
-	}
-
-	{
-		equal  { load " 1 2 3 " |third } 3
-		equal  { load "{ 1 2 3 }" |first |third } 3
-	}
-
-	group "do" 
-	"Takes a block of code and does (runs) it."
-	{
-	}
-
-	{
-		equal  { do { 123 + 123 } } 246
-		error  { do { 123 + } }
-		equal  { do { _+ _+ 12 23 34 } } 69
-		equal  { do { 12 * 23 |+ 34 } } 310
-		equal  { do { ( 12 * 23 ) + 34 } } 310
-		equal  { do { 12 * 23 | + 34 } } 310
-		equal  { do { 12 * 23 :a + 34 } } 310
-		equal  { do { 12 * 23 :a a + 34 } } 310
-	}
-
-	group "with" 
-	"Takes a value and a block of code. It does the code with the value injected."
-	{
-	}
-
-	{
-		equal  { with 100 { + 11 } } 111
-		equal  { with 100 { + 11 , * 3 } } 300
-	}
-
-	group "do\\in" 
-	"Takes a Context and a Block. It Does a block inside a given Context."
-	{
-	}
-
-	{
-		equal  { c: context { x: 100 } do\in c { x * 9.99 } } 999.0
-		equal  { c: context { x:: 100 } do\in c { inc! 'x } } 101
-		equal  { c: context { var 'x 100 } do\in c { x:: 200 } c/x } 200
-		equal  { c: context { x:: 100 } do\in c { x:: 200 , x } } 200
-	}
-
-	group "do\\par" 
-	"Takes a Context and a Block. It Does a block in current context but with parent a given Context."
-	{
-	}
-
-	{
-		equal  { c: context { x: 100 } do\par c { x * 9.99 } } 999.0
-		equal  { c: context { x:: 100 } do\par c { inc! 'x } } 101
-		equal  { c: context { x: 100 } do\par c { x:: 200 , x } } 200
-		equal  { c: context { x: 100 } do\par c { x:: 200 } c/x } 100
-	}
-
-}
-
-section "Other " "functions related to date and time" {
-	group "return" 
-	"Accepts one value and returns it."
-	{
-	}
-
-	{
-		equal { x: fn { } { return 101 202 } x } 101
-	}
-
-	group "cmd" 
-	"Execute a shell command."
-	{
-	}
-
-	{
-		equal { cmd `echo "hello"` } 1
-	}
-
-	group "rye" 
-	""
-	{
-	}
-
-	{
-		equal { rye .type? } 'native
-	}
-
-	group "defer" 
-	"Registers a block of code to be executed when the current function exits or the program terminates."
-	{
-	}
-
-	{
-		equal { x:: 123 defer { x:: 345 } x } 123
-		; stdout { f: fn { } { var 'x 123 defer { print 234 } x } f } "234"
-		; equal { fn { } { x:: 0 defer { x:: 1 } } x } 1
-	}
-
-}
-
 section "Boolean logic " "Functions that work with true and false values." {
 	group "true" 
 	"Returns a boolean true value."
@@ -303,15 +26,15 @@ section "Boolean logic " "Functions that work with true and false values." {
 	group "_|" 
 	"Pipeline operator that passes the value through unchanged (used with 'not' and other operations)."
 	{
-		arg `value: Any value to be negated`
-		returns `the original value (used in pipeline operations)`
+		arg `value: Any value to be passed through unchanged`
+		returns `the original value (used in pipeline operations for explicit pass-through)`
 	}
 
 	{
-		equal { 3 * 5 + 4 } 27
-		equal { _* 3 5 + 4 } 27
-		equal { 3 * 5 | + 4 } 19
-		equal { _* 3 5 | + 4 } 19
+		equal { 5 _| } 5
+		equal { "hello" _| } "hello"
+		equal { true _| } true
+		equal { { 1 2 3 } _| } { 1 2 3 }
 	}
 
 	group "not" 
@@ -342,6 +65,9 @@ section "Boolean logic " "Functions that work with true and false values." {
 		equal { true .and false } false
 		equal { false .and false } false
 		equal { 3 .and 5 } 1  ; bitwise 011 AND 101 = 001
+		error { true .and 5 }
+		error { 5 .and true }
+		error { "string" .and true }
 	}
 
 	group "or" 
@@ -358,6 +84,9 @@ section "Boolean logic " "Functions that work with true and false values." {
 		equal { true .or false } true
 		equal { false .or false } false
 		equal { 3 .or 5 } 7  ; bitwise 011 OR 101 = 111
+		error { true .or 5 }
+		error { 5 .or true }
+		error { "string" .or true }
 	}
 
 	group "xor" 
@@ -374,6 +103,9 @@ section "Boolean logic " "Functions that work with true and false values." {
 		equal { true .xor false } true
 		equal { false .xor false } false
 		equal { 3 .xor 5 } 6  ; bitwise 011 XOR 101 = 110
+		error { true .xor 5 }
+		error { 5 .xor true }
+		error { "string" .xor true }
 	}
 
 	group "all" 
@@ -388,6 +120,8 @@ section "Boolean logic " "Functions that work with true and false values." {
 		equal { all { 1 0 3 } } 3
 		equal { all { 1 false 3 } } false
 		equal { all { true true true } } true
+		; equal { all { } } ? ; empty block behavior
+		error { all "not-a-block" }
 	}
 
 	group "any" 
@@ -402,19 +136,25 @@ section "Boolean logic " "Functions that work with true and false values." {
 		equal { any { 0 1 3 } } 0
 		equal { any { false false 3 } } 3
 		equal { any { false false false } } false
+		; equal { any { } } ? ; empty block behavior
+		error { any "not-a-block" }
 	}
 
 	group "any\\with" 
 	"Applies each expression in the block to the provided value until a truthy result is found and returns it."
 	{
-		arg `value: Value to be used in the expressions`
-		arg `block: Block of expressions to evaluate with the provided value`
+		arg `value: Value to be used as input to each expression in the block`
+		arg `block: Block of expressions to evaluate with the provided value injected`
 		returns `the first truthy result of applying an expression to the value, or the last result if none are truthy`
 	}
 
 	{
 		equal { any\with 10 { + 10 , * 10 } } 20
-		; equal { any\with -10 { + 10 , * 10 } } -100  ; TODO -- fix halting issue
+		equal { any\with 0 { + 10 , * 10 } } 10
+		equal { any\with 5 { - 10 , + 10 } } -5
+		equal { any\with false { .not , .to-string } } true
+		; equal { any\with true { .not , .to-string } } "true"
+		error { any\with 5 "not-a-block" }
 	}
 
 }
@@ -450,6 +190,20 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { inc 0 } 1
 		equal { inc -5 } -4
 		error { inc "123" }
+	}
+
+	group "decr" 
+	"Decrements an integer value by 1."
+	{
+		arg `value: Integer to decrement`
+		returns `integer value decremented by 1`
+	}
+
+	{
+		equal { decr 124 } 123
+		equal { decr 1 } 0
+		equal { decr -4 } -5
+		error { decr "123" }
 	}
 
 	group "is-positive" 
@@ -779,6 +533,52 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { "a" <= "a" } true
 	}
 
+	group "recur-if" 
+	"Internal recursion control function. Resets function execution if condition > 0, otherwise returns result."
+	{
+		arg `condition: Integer value, if > 0 triggers recursion reset`
+		returns `nil if recursion continues, ps.Res if recursion ends`
+	}
+
+	{
+	}
+
+	group "recur-if\\1" 
+	"Internal recursion control function for single-argument functions. Updates first argument and resets if condition > 0."
+	{
+		arg `condition: Integer value, if > 0 triggers recursion with updated argument`
+		arg `arg1: New value for the first function argument during recursion`
+		returns `nil if recursion continues, ps.Res if recursion ends`
+	}
+
+	{
+	}
+
+	group "recur-if\\2" 
+	"Internal recursion control function for two-argument functions. Updates both arguments and resets if condition > 0."
+	{
+		arg `condition: Integer value, if > 0 triggers recursion with updated arguments`
+		arg `arg1: New value for the first function argument during recursion`
+		arg `arg2: New value for the second function argument during recursion`
+		returns `ps.Res (function result) regardless of condition`
+	}
+
+	{
+	}
+
+	group "recur-if\\3" 
+	"Internal recursion control function for three-argument functions. Updates all three arguments and resets if condition > 0."
+	{
+		arg `condition: Integer value, if > 0 triggers recursion with updated arguments`
+		arg `arg1: New value for the first function argument during recursion`
+		arg `arg2: New value for the second function argument during recursion`
+		arg `arg3: New value for the third function argument during recursion`
+		returns `ps.Res (function result) regardless of condition, nil if recursion continues`
+	}
+
+	{
+	}
+
 }
 
 section "Strings " "" {
@@ -791,6 +591,17 @@ section "Strings " "" {
 
 	{
 		equal { newline } "\n"
+	}
+
+	group "tab" 
+	"Returns a string containing a single tab character."
+	{
+		arg `none`
+		returns `a string containing a single tab character`
+	}
+
+	{
+		equal { tab } "\t"
 	}
 
 	group "ln" 
@@ -2133,4 +1944,361 @@ section "Default" "" {
 
 }
 
-end
+section "Default" "" {
+	group "change!" 
+	"Searches for a word and changes it's value in-place. Only works on variables declared with var. If value changes returns true otherwise false"
+	{
+		arg `value: New value to assign to the word`
+		arg `word: Word whose value should be changed`
+		returns `Integer 1 if the value changed, 0 if the new value is the same as the old value`
+	}
+
+	{
+		equal   { var 'x 123 , change! 234 'x , x } 234
+		equal   { a:: 123 change! 333 'a a } 333
+		equal   { a:: 123 change! 124 'a } 1
+		equal   { a:: 123 change! 123 'a } 0
+	}
+
+	group "set!" 
+	"Set word to value or words by deconstructing a block. Only works on variables declared with var."
+	{
+		arg `values: Value or block of values to assign to the word(s)`
+		arg `words: Word or block of words to be set`
+		returns `The value or block of values that was assigned`
+	}
+
+	{
+		equal   { set! { 123 234 } { a b }  b } 234
+	}
+
+	group "unset!" 
+	"Unset a word in current context, only meant to be used in console"
+	{
+		arg `word: Word to be unset from the current context`
+		returns `Void value`
+	}
+
+	{
+		equal   { x: 1 unset! 'x x: 2 } 2 ; otherwise would produce an error
+	}
+
+	group "val" 
+	"Returns value of the word in context"
+	{
+		arg `word: Word whose value should be retrieved`
+		returns `The value associated with the word in the current context`
+	}
+
+	{
+		equal   { x: 123 val 'x } 123
+		equal   { x: 123 y: 'x val y } 123
+	}
+
+	group "_<<" 
+	"Converts a value to specific kind (R to L)"
+	{
+		arg `kind: Kind to convert the value to`
+		arg `value: Dict or context to convert`
+		returns `A new context of the specified kind`
+	}
+
+	{
+		; TODO equal   { person: kind 'person { name: "" age: 0 } person << dict { "name" "John" "age" 30 } |type? } 'ctx
+	}
+
+	group "save\\current" 
+	"Saves current state of the program to a file."
+	{
+		arg `None`
+		returns `Integer 1 on success`
+	}
+
+	{
+		equal  { save\current |type? } 'integer
+	}
+
+	group "save\\current\\secure" 
+	"Saves current state of the program to a file with password protection."
+	{
+		arg `None`
+		returns `Integer 1 on success`
+	}
+
+	{
+		; equal  { save\current\secure |type? } 'integer
+	}
+
+	group "doc!" 
+	"Sets docstring of the current context."
+	{
+		arg `doc: String to set as the docstring for the current context`
+		returns `Integer 1 on success`
+	}
+
+	{
+		equal   { x: private { doc! "some doc" doc? } } "some doc"
+	}
+
+	group "doc?" 
+	"Gets docstring of the current context."
+	{
+		arg `None`
+		returns `String containing the docstring of the current context`
+	}
+
+	{
+		equal   { x: private { doc! "some doc" doc? } } "some doc"
+	}
+
+	group "doc\\of?" 
+	"Get docstring of the passed context."
+	{
+		arg `value: Function, builtin, or context to get the docstring from`
+		returns `String containing the docstring of the provided value`
+	}
+
+	{
+		equal   { x: context { doc! "some doc" } doc\of? x } "some doc"
+	}
+
+	group "ref" 
+	"Makes a value mutable instead of immutable"
+	{
+		arg `value: Value to make mutable`
+		returns `A mutable reference to the value`
+	}
+
+	{
+		equal   { is-ref ref { 1 2 3 } } true
+	}
+
+	group "deref" 
+	"Makes a value again immutable"
+	{
+		arg `value: Mutable reference to make immutable`
+		returns `An immutable copy of the value`
+	}
+
+	{
+		equal   { is-ref deref ref { 1 2 3 } } false
+	}
+
+	group "is-ref" 
+	"Checks if a value is a mutable reference."
+	{
+		arg `value: Any value to check if it's a reference`
+		returns `Integer 1 if the value is a reference, 0 otherwise`
+	}
+
+	{
+		equal  { ref { } |is-ref } true
+		equal  { { } |is-ref } false
+	}
+
+	group "dict" 
+	"Constructs a Dict from the Block of key and value pairs."
+	{
+		arg `block: Block containing alternating keys and values`
+		returns `A new Dict with the specified keys and values`
+	}
+
+	{
+		equal { dict { "a" 123 } -> "a" } 123
+	}
+
+	group "list" 
+	"Constructs a List from the Block of values."
+	{
+		arg `block: Block containing values to put in the list`
+		returns `A new List with the values from the block`
+	}
+
+	{
+		equal { list { "a" 123 } -> 0 } "a"
+	}
+
+	group "import" 
+	"Imports a file, loads and does it from script local path."
+	{
+		arg `uri: URI of the file to import and execute`
+		returns `result of executing the imported file`
+	}
+
+	{
+		; import file://test.rye  ; imports and executes test.rye
+	}
+
+	group "import\\live" 
+	"Imports a file, loads and does it from script local path."
+	{
+		arg `uri: URI of the file to import, execute, and watch for changes`
+		returns `result of executing the imported file`
+	}
+
+	{
+		; import\live file://test.rye  ; imports, executes, and watches test.rye for changes
+	}
+
+	group "load" 
+	"Loads a string into Rye values."
+	{
+		arg `source: String containing Rye code or URI of file to load`
+		returns `Block containing the parsed Rye values`
+	}
+
+	{
+		equal  { load " 1 2 3 " |third } 3
+		equal  { load "{ 1 2 3 }" |first |third } 3
+	}
+
+	group "load\\mod" 
+	"Loads a string into Rye values. During load it allows modification of words."
+	{
+		arg `source: String containing Rye code or URI of file to load with modification allowed`
+		returns `Block containing the parsed Rye values`
+	}
+
+	{
+		; load\mod file://modifiable.rye  ; loads file with word modification allowed
+	}
+
+	group "load\\live" 
+	"Loads a string into Rye values. During load it allows modification of words."
+	{
+		arg `source: String containing Rye code or URI of file to load with modification allowed and file watching`
+		returns `Block containing the parsed Rye values`
+	}
+
+	{
+		; load\live file://watched.rye  ; loads and watches file for changes
+	}
+
+	group "load\\sig" 
+	"Checks the signature, if OK then loads a string into Rye values."
+	{
+		arg `source: String containing signed Rye code to verify and load`
+		returns `Block containing the parsed Rye values if signature is valid`
+	}
+
+	{
+		; load\sig "signed-code"  ; loads only if signature is valid
+	}
+
+	group "do" 
+	"Takes a block of code and does (runs) it."
+	{
+		arg `block: Block of code to execute`
+		returns `result of executing the block`
+	}
+
+	{
+		equal  { do { 123 + 123 } } 246
+		error  { do { 123 + } }
+		equal  { do { _+ _+ 12 23 34 } } 69
+		equal  { do { 12 * 23 |+ 34 } } 310
+		equal  { do { ( 12 * 23 ) + 34 } } 310
+		equal  { do { 12 * 23 | + 34 } } 310
+		equal  { do { 12 * 23 :a + 34 } } 310
+		equal  { do { 12 * 23 :a a + 34 } } 310
+	}
+
+	group "with" 
+	"Takes a value and a block of code. It does the code with the value injected."
+	{
+		arg `value: Value to inject into the block's execution context`
+		arg `block: Block of code to execute with the injected value`
+		returns `result of executing the block with the injected value`
+	}
+
+	{
+		equal  { with 100 { + 11 } } 111
+		equal  { with 100 { + 11 , * 3 } } 300
+	}
+
+	group "do\\in" 
+	"Takes a Context and a Block. It Does a block inside a given Context."
+	{
+		arg `context: Context in which to execute the block`
+		arg `block: Block of code to execute within the specified context`
+		returns `result of executing the block within the given context`
+	}
+
+	{
+		equal  { c: context { x: 100 } do\in c { x * 9.99 } } 999.0
+		equal  { c: context { x:: 100 } do\in c { inc! 'x } } 101
+		equal  { c: context { var 'x 100 } do\in c { x:: 200 } c/x } 200
+		equal  { c: context { x:: 100 } do\in c { x:: 200 , x } } 200
+	}
+
+	group "do\\par" 
+	"Takes a Context and a Block. It Does a block in current context but with parent a given Context."
+	{
+		arg `context: Context to use as parent context during execution`
+		arg `block: Block of code to execute in current context with the specified parent context`
+		returns `result of executing the block with the modified parent context`
+	}
+
+	{
+		equal  { c: context { x: 100 } do\par c { x * 9.99 } } 999.0
+		equal  { c: context { x:: 100 } do\par c { inc! 'x } } 101
+		equal  { c: context { x: 100 } do\par c { x:: 200 , x } } 200
+		equal  { c: context { x: 100 } do\par c { x:: 200 } c/x } 100
+	}
+
+}
+
+section "Other " "functions related to date and time" {
+	group "return" 
+	"Accepts one value and returns it."
+	{
+	}
+
+	{
+		equal { x: fn { } { return 101 202 } x } 101
+	}
+
+	group "cmd" 
+	"Execute a shell command."
+	{
+	}
+
+	{
+		equal { cmd `echo "hello"` } 1
+	}
+
+	group "rye" 
+	""
+	{
+	}
+
+	{
+		equal { rye .type? } 'native
+	}
+
+	group "defer" 
+	"Registers a block of code to be executed when the current function exits or the program terminates."
+	{
+	}
+
+	{
+		equal { x:: 123 defer { x:: 345 } x } 123
+		stdout { ff:: fn { } { var 'x 123 defer { print 234 } x } , ff } "234\n"
+		equal { ff:: fn { } { x:: 123 defer { x:: 234 } x + 111 } , ff } 234 ; the result of defer expression is returned TODO, change this
+	}
+
+	group "defer\\" 
+	"Registers a block of code with an injected value to be executed when the current function exits or the program terminates. Works like 'with' but deferred."
+	{
+		arg `value: Value to inject into the deferred block`
+		arg `block: Block to execute with the injected value when function exits`
+		returns `Void value`
+	}
+
+	{
+		equal { x:: 0 defer\ 42 { + 1 } x } 0
+		stdout { ff:: fn { } { defer\ "hello" { .print } "done" } , ff } "hello\n"
+	}
+
+}
+

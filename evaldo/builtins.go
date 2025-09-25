@@ -1906,8 +1906,8 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { x:: 123 defer { x:: 345 } x } 123
-	// stdout { fn { } { var 'x 123 defer { print 234 } x } } "234"
-	// ; equal { fn { } { x:: 0 defer { x:: 1 } } x } 1
+	// stdout { ff:: fn { } { var 'x 123 defer { print 234 } x } , ff } "234\n"
+	// equal { ff:: fn { } { x:: 123 defer { x:: 234 } x + 111 } , ff } 234 ; the result of defer expression is returned TODO, change this
 	"defer": {
 		Argsn: 1,
 		Doc:   "Registers a block of code to be executed when the current function exits or the program terminates.",
@@ -1925,7 +1925,7 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { x:: 0 defer\ 42 { + 1 } x } 0
-	// stdout { fn { } { defer\ "hello" { print } "done" } } "hello"
+	// stdout { ff:: fn { } { defer\ "hello" { .print } "done" } , ff } "hello\n"
 	// Args:
 	// * value: Value to inject into the deferred block
 	// * block: Block to execute with the injected value when function exits

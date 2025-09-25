@@ -99,6 +99,15 @@ var builtins_numbers = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { decr 124 } 123
+	// equal { decr 1 } 0
+	// equal { decr -4 } -5
+	// error { decr "123" }
+	// Args:
+	// * value: Integer to decrement
+	// Returns:
+	// * integer value decremented by 1
 	"decr": { // ***
 		Argsn: 1,
 		Doc:   "Decrements an integer value by 1.",
@@ -108,7 +117,7 @@ var builtins_numbers = map[string]*env.Builtin{
 			case env.Integer:
 				return *env.NewInteger(arg.Value - 1)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "inc")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "decr")
 			}
 		},
 	},
@@ -448,16 +457,23 @@ var builtins_numbers = map[string]*env.Builtin{
 				if found {
 					switch iintval := intval.(type) {
 					case env.Integer:
-						ctx.Mod(arg.Index, *env.NewInteger(iintval.Value - 1))
-						return *env.NewInteger(1 + iintval.Value)
+						// Attempt to modify the word
+						ret := *env.NewInteger(iintval.Value - 1)
+
+						if ok := ctx.Mod(arg.Index, ret); !ok {
+							ps.FailureFlag = true
+							return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(arg.Index) + "', use 'var' to declare it as a variable")
+						}
+
+						return ret
 					default:
-						return MakeBuiltinError(ps, "Value in word is not integer.", "dec!")
+						return MakeBuiltinError(ps, "Value in word is not integer.", "decr!")
 					}
 				}
-				return MakeBuiltinError(ps, "Word not found in context.", "dec!")
+				return MakeBuiltinError(ps, "Word not found in context.", "decr!")
 
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.WordType}, "dec!")
+				return MakeArgError(ps, 1, []env.Type{env.WordType}, "decr!")
 			}
 		},
 	},
@@ -936,8 +952,15 @@ var builtins_numbers = map[string]*env.Builtin{
 		},
 	},
 
-	"recur-if": { //recur1-if
+	// Tests:
+	// Args:
+	// * condition: Integer value, if > 0 triggers recursion reset
+	// Returns:
+	// * nil if recursion continues, ps.Res if recursion ends
+	"recur-if": {
 		Argsn: 2,
+		Doc:   "Internal recursion control function. Resets function execution if condition > 0, otherwise returns result.",
+		Pure:  false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cond := arg0.(type) {
 			case env.Integer:
@@ -952,10 +975,17 @@ var builtins_numbers = map[string]*env.Builtin{
 			}
 		},
 	},
-	//test if we can do recur similar to clojure one. Since functions in rejy are of fixed arity we would need recur1 recur2 recur3 and recur [ ] which is less optimal
-	//otherwise word recur could somehow be bound to correct version or args depending on number of args of func. Try this at first.
-	"recur-if\\1": { //recur1-if
+
+	// Tests:
+	// Args:
+	// * condition: Integer value, if > 0 triggers recursion with updated argument
+	// * arg1: New value for the first function argument during recursion
+	// Returns:
+	// * nil if recursion continues, ps.Res if recursion ends
+	"recur-if\\1": {
 		Argsn: 2,
+		Doc:   "Internal recursion control function for single-argument functions. Updates first argument and resets if condition > 0.",
+		Pure:  false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cond := arg0.(type) {
 			case env.Integer:
@@ -977,12 +1007,18 @@ var builtins_numbers = map[string]*env.Builtin{
 		},
 	},
 
-	"recur-if\\2": { //recur1-if
+	// Tests:
+	// Args:
+	// * condition: Integer value, if > 0 triggers recursion with updated arguments
+	// * arg1: New value for the first function argument during recursion
+	// * arg2: New value for the second function argument during recursion
+	// Returns:
+	// * ps.Res (function result) regardless of condition
+	"recur-if\\2": {
 		Argsn: 3,
+		Doc:   "Internal recursion control function for two-argument functions. Updates both arguments and resets if condition > 0.",
+		Pure:  false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			//arg0.Trace("a0")
-			//arg1.Trace("a1")
-			//arg2.Trace("a2")
 			switch cond := arg0.(type) {
 			case env.Integer:
 				if cond.Value > 0 {
@@ -1009,12 +1045,19 @@ var builtins_numbers = map[string]*env.Builtin{
 		},
 	},
 
-	"recur-if\\3": { //recur1-if
+	// Tests:
+	// Args:
+	// * condition: Integer value, if > 0 triggers recursion with updated arguments
+	// * arg1: New value for the first function argument during recursion
+	// * arg2: New value for the second function argument during recursion
+	// * arg3: New value for the third function argument during recursion
+	// Returns:
+	// * ps.Res (function result) regardless of condition, nil if recursion continues
+	"recur-if\\3": {
 		Argsn: 4,
+		Doc:   "Internal recursion control function for three-argument functions. Updates all three arguments and resets if condition > 0.",
+		Pure:  false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			//arg0.Trace("a0")
-			//arg1.Trace("a1")
-			//arg2.Trace("a2")
 			switch cond := arg0.(type) {
 			case env.Integer:
 				if cond.Value > 0 {
@@ -1029,6 +1072,8 @@ var builtins_numbers = map[string]*env.Builtin{
 								ps.Ctx.Set(ps.Args[2], argi3)
 								ps.Ser.Reset()
 								return ps.Res
+							default:
+								return MakeArgError(ps, 4, []env.Type{env.IntegerType}, "recur-if\\3")
 							}
 						default:
 							return MakeArgError(ps, 3, []env.Type{env.IntegerType}, "recur-if\\3")
@@ -1042,7 +1087,6 @@ var builtins_numbers = map[string]*env.Builtin{
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "recur-if\\3")
 			}
-			return nil
 		},
 	},
 }

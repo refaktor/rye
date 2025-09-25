@@ -313,7 +313,7 @@ section "IO " "IO related functions" {
 	{
 	}
 
-	group "https-schema//New-request" 
+	group "https-schema//Request" 
 	"Creates a new HTTPS request object."
 	{
 		arg `url: uri representing the HTTPS URL to request`
@@ -325,7 +325,7 @@ section "IO " "IO related functions" {
 	{
 	}
 
-	group "https-request//Set-header" 
+	group "https-request//Header!" 
 	"Sets a header on a HTTPS request."
 	{
 		arg `request: native https-request object`
@@ -337,7 +337,7 @@ section "IO " "IO related functions" {
 	{
 	}
 
-	group "https-request//Set-basic-auth" 
+	group "https-request//Basic-auth!" 
 	"Sets Basic Authentication on a HTTPS request."
 	{
 		arg `request: native https-request object`
@@ -354,6 +354,16 @@ section "IO " "IO related functions" {
 	{
 		arg `request: native https-request object`
 		returns `native https-response object`
+	}
+
+	{
+	}
+
+	group "https-response//Reader" 
+	"Gets a reader for the HTTPS response body that can be used with io.Copy."
+	{
+		arg `response: native https-response object`
+		returns `native reader object for the response body`
 	}
 
 	{
@@ -447,4 +457,3 @@ section "IO " "IO related functions" {
 
 }
 
-end

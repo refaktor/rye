@@ -455,7 +455,7 @@ section "Miscelaneous " "" {
 	}
 
 	group "group-by" 
-	"Groups a table by the given column and (optional) aggregations."
+	"Groups a table by the given column(s) and (optional) aggregations."
 	{
 	}
 
