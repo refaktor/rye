@@ -478,9 +478,10 @@ type MLState struct {
 	historyMutex     sync.RWMutex
 	columns          int
 	inString         bool
+	inString2        bool
 	inBlock          bool
-	lastLineString   bool // tracks double quote strings
-	lastLineBacktick bool // tracks backtick strings
+	lastLineString   bool
+	lastLineBacktick bool
 	prevLines        int
 	prevCursorLine   int
 	completer        WordCompleter
@@ -813,11 +814,10 @@ func (s *MLState) refreshSingleLine_WITH_WRAP_HALFMADE(prompt []rune, buf []rune
 			s.sendBack("\nx  ")
 		}
 		// tt2, inString := tt, false // RyeHighlight(tt, s.lastLineString, 6)
-		tt2, inString1, inString2 := RyeHighlight(tt, s.lastLineString, s.lastLineBacktick, cols)
+		tt2, inString, inString2 := RyeHighlight(tt, s.lastLineString, s.lastLineBacktick, cols)
 		s.sendBack(tt2)
-		s.inString = inString1 || inString2
-		s.lastLineString = inString1
-		s.lastLineBacktick = inString2
+		s.inString = inString
+		s.inString2 = inString2
 	}
 
 	s.prevLines = len(texts)
@@ -899,11 +899,10 @@ func (s *MLState) refreshSingleLineWithWrap(prompt []rune, buf []rune, pos int) 
 	s.sendBack(string(prompt))
 
 	// Apply syntax highlighting and write buffer
-	tt2, inString1, inString2 := RyeHighlight(text, s.lastLineString, s.lastLineBacktick, s.columns)
+	tt2, inString, inString2 := RyeHighlight(text, s.lastLineString, s.lastLineBacktick, s.columns)
 	s.sendBack(tt2)
-	s.inString = inString1 || inString2
-	s.lastLineString = inString1
-	s.lastLineBacktick = inString2
+	s.inString = inString
+	s.inString2 = inString2
 
 	// Calculate cursor position accounting for line wrapping
 	cursorTotalPos := pLen + pos
@@ -1001,11 +1000,10 @@ func (s *MLState) refreshSingleLine_NO_WRAP(prompt []rune, buf []rune, pos int) 
 	s.sendBack(string(prompt))
 
 	// Apply syntax highlighting and write buffer
-	tt2, inString1, inString2 := RyeHighlight(text, s.lastLineString, s.lastLineBacktick, s.columns)
+	tt2, inString, inString2 := RyeHighlight(text, s.lastLineString, s.lastLineBacktick, s.columns)
 	s.sendBack(tt2)
-	s.inString = inString1 || inString2
-	s.lastLineString = inString1
-	s.lastLineBacktick = inString2
+	s.inString = inString
+	s.inString2 = inString2
 
 	// Calculate cursor position accounting for line wrapping
 	cursorTotalPos := pLen + pos
@@ -1199,6 +1197,7 @@ startOfHere:
 				line = []rune(s.lines[len(s.lines)-1])
 				refreshAllLines = true
 				s.inString = false
+				s.inString2 = false
 			}
 			s.needRefresh = true
 		} else {
@@ -1282,19 +1281,22 @@ startOfHere:
 			if next.Ctrl {
 				switch strings.ToLower(next.Key) {
 				// next line0,
-				case "n":
-					historyStale = true
-					s.sendBack(fmt.Sprintf("%s\n%s", color_emph, reset)) // ⏎
-					// String state should persist across lines - don't reset it here
-					// DONT SEND LINE BACK BUT STORE IT
-					// s.enterLine(string(line) + " ")
-					s.currline += 1
-					s.lines = append(s.lines, string(line))
-					pos = 0
-					multiline = true
-					line = make([]rune, 0)
-					trace(line)
-					goto startOfHere
+				/* ctrl+n for newline ... we don't need this also case "n":
+				historyStale = true
+				s.lastLineString = false
+				s.sendBack(fmt.Sprintf("%s\n%s", color_emph, reset)) // ⏎
+				if s.inString {
+					s.lastLineString = true
+				}
+				// DONT SEND LINE BACK BUT STORE IT
+				// s.enterLine(string(line) + " ")
+				s.currline += 1
+				s.lines = append(s.lines, string(line))
+				pos = 0
+				multiline = true
+				line = make([]rune, 0)
+				trace(line)
+				goto startOfHere */
 				case "c":
 					/* return "", ErrPromptAborted
 					line = line[:0]
@@ -1543,11 +1545,18 @@ startOfHere:
 					allText := strings.Join(s.lines, "\n") + string(line)
 					inIncompleteBlock := s.checkIncompleteBlock(allText)
 
-					if s.inString || inIncompleteBlock {
+					if s.inString || s.inString2 || inIncompleteBlock {
 						// This is copy from ctrl+x code above ... deduplicate and systemize TODO
 						historyStale = true
+						s.lastLineString = false
+						s.lastLineBacktick = false
 						s.sendBack(fmt.Sprintf("%s\n%s", color_emph, reset)) //
-						// String state should persist across lines - don't reset it here
+						if s.inString {
+							s.lastLineString = true
+						}
+						if s.inString2 {
+							s.lastLineBacktick = true
+						}
 						// DONT SEND LINE BACK BUT STORE IT
 						// s.enterLine(string(line) + " ")
 						s.lines = append(s.lines, string(line))
@@ -1565,6 +1574,8 @@ startOfHere:
 						CurUp(1)
 					}
 					historyStale = true
+					s.lastLineString = false
+					s.lastLineBacktick = false
 					s.sendBack("\n")
 					xx := ""
 					if multiline {
