@@ -300,7 +300,7 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } , houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } , names .inner-join houses 'id 'id |column? "name"
 ; returns { "Paul" "Vladimir" }</code></pre>
 </div>
-<h3>group-by</h3><p>Groups a table by the given column and (optional) aggregations.</p>
+<h3>group-by</h3><p>Groups a table by the given column(s) and (optional) aggregations.</p>
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>table { "name" "val" } { "a" 1 "b" 6 "a" 5 "b" 10 "a" 7 } |group-by 'name { 'name count 'val sum } |column? "val_sum" |sort
 ; returns { 13 16 }</code></pre>

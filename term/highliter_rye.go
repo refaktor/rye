@@ -50,10 +50,17 @@ func (h *HighlightedStringBuilder) getColor(inStr bool) string {
 	if len(s) == 0 {
 		return ""
 	}
+
+	// If we're explicitly told we're in a string, always color as string
+	if inStr {
+		return color_string2
+	}
+
+	// Not in a string context, check token content
 	if strings.HasPrefix(s, ";") {
 		return color_comment
 	}
-	if inStr || hasPrefixMultiple(s, "\"", "`") {
+	if hasPrefixMultiple(s, "\"", "`") {
 		return color_string2
 	}
 	if strings.HasPrefix(s, "%") && len(s) != 1 {
@@ -106,12 +113,13 @@ func hasPrefixMultiple(s string, prefixes ...string) bool {
 	return false
 }
 
-func RyeHighlight(s string, inStrX bool, columns int) (string, bool) {
+func RyeHighlight(s string, inStr1X bool, inStr2X bool, columns int) (string, bool, bool) {
 	var fullB strings.Builder
 	var hb HighlightedStringBuilder
 
 	var inComment, inStr1, inStr2 bool
-	inStr1 = inStrX
+	inStr1 = inStr1X
+	inStr2 = inStr2X
 
 	for _, c := range s {
 		//if (i+2)%columns == 0 {
@@ -124,26 +132,39 @@ func RyeHighlight(s string, inStrX bool, columns int) (string, bool) {
 			inComment = true
 			hb.WriteRune(c)
 		} else if c == '"' {
-			hb.WriteRune(c)
 			if inStr1 {
-				// trace2(".")
-				fullB.WriteString(hb.ColoredString(inStr1))
+				// Closing quote - add quote and finish the string
+				hb.WriteRune(c)
+				fullB.WriteString(hb.ColoredString(inStr1 || inStr2))
 				inStr1 = false
 				hb.Reset()
 			} else {
+				// Opening quote - finish any current token first, then start string
+				if hb.b.Len() > 0 {
+					fullB.WriteString(hb.ColoredString(inStr1 || inStr2))
+					hb.Reset()
+				}
+				hb.WriteRune(c)
 				inStr1 = true
 			}
 		} else if c == '`' {
-			hb.WriteRune(c)
 			if inStr2 {
+				// Closing quote - add quote and finish the string
+				hb.WriteRune(c)
+				fullB.WriteString(hb.ColoredString(inStr1 || inStr2))
 				inStr2 = false
-				fullB.WriteString(hb.ColoredString(inStr1))
 				hb.Reset()
 			} else {
+				// Opening quote - finish any current token first, then start string
+				if hb.b.Len() > 0 {
+					fullB.WriteString(hb.ColoredString(inStr1 || inStr2))
+					hb.Reset()
+				}
+				hb.WriteRune(c)
 				inStr2 = true
 			}
 		} else if unicode.IsSpace(c) && !inComment && !inStr1 && !inStr2 {
-			fullB.WriteString(hb.ColoredString(inStr1))
+			fullB.WriteString(hb.ColoredString(inStr1 || inStr2))
 			hb.Reset()
 
 			fullB.WriteRune(c)
@@ -151,7 +172,7 @@ func RyeHighlight(s string, inStrX bool, columns int) (string, bool) {
 			hb.WriteRune(c)
 		}
 	}
-	fullB.WriteString(hb.ColoredString(inStr1))
+	fullB.WriteString(hb.ColoredString(inStr1 || inStr2))
 	hb.Reset()
-	return fullB.String(), inStr1
+	return fullB.String(), inStr1, inStr2
 }

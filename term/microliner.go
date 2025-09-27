@@ -470,24 +470,25 @@ func (s *MLState) emitNewLine() {
 
 // State represents an open terminal
 type MLState struct {
-	needRefresh     bool
-	next            <-chan KeyEvent
-	sendBack        func(msg string)
-	enterLine       func(line string) string
-	history         []string
-	historyMutex    sync.RWMutex
-	columns         int
-	inString        bool
-	inBlock         bool
-	lastLineString  bool
-	prevLines       int
-	prevCursorLine  int
-	completer       WordCompleter
-	lines           []string                                                       // added for the multiline behaviour
-	currline        int                                                            // same
-	programState    *env.ProgramState                                              // added for environment access
-	displayValue    func(*env.ProgramState, env.Object, bool) (env.Object, string) // callback for displaying values
-	inTabCompletion bool                                                           // flag to track if we're in tab completion mode
+	needRefresh      bool
+	next             <-chan KeyEvent
+	sendBack         func(msg string)
+	enterLine        func(line string) string
+	history          []string
+	historyMutex     sync.RWMutex
+	columns          int
+	inString         bool
+	inBlock          bool
+	lastLineString   bool // tracks double quote strings
+	lastLineBacktick bool // tracks backtick strings
+	prevLines        int
+	prevCursorLine   int
+	completer        WordCompleter
+	lines            []string                                                       // added for the multiline behaviour
+	currline         int                                                            // same
+	programState     *env.ProgramState                                              // added for environment access
+	displayValue     func(*env.ProgramState, env.Object, bool) (env.Object, string) // callback for displaying values
+	inTabCompletion  bool                                                           // flag to track if we're in tab completion mode
 	// pending     []rune
 	// killRing *ring.Ring
 }
@@ -812,9 +813,11 @@ func (s *MLState) refreshSingleLine_WITH_WRAP_HALFMADE(prompt []rune, buf []rune
 			s.sendBack("\nx  ")
 		}
 		// tt2, inString := tt, false // RyeHighlight(tt, s.lastLineString, 6)
-		tt2, inString := RyeHighlight(tt, s.lastLineString, cols)
+		tt2, inString1, inString2 := RyeHighlight(tt, s.lastLineString, s.lastLineBacktick, cols)
 		s.sendBack(tt2)
-		s.inString = inString
+		s.inString = inString1 || inString2
+		s.lastLineString = inString1
+		s.lastLineBacktick = inString2
 	}
 
 	s.prevLines = len(texts)
@@ -896,9 +899,11 @@ func (s *MLState) refreshSingleLineWithWrap(prompt []rune, buf []rune, pos int) 
 	s.sendBack(string(prompt))
 
 	// Apply syntax highlighting and write buffer
-	tt2, inString := RyeHighlight(text, s.lastLineString, s.columns)
+	tt2, inString1, inString2 := RyeHighlight(text, s.lastLineString, s.lastLineBacktick, s.columns)
 	s.sendBack(tt2)
-	s.inString = inString
+	s.inString = inString1 || inString2
+	s.lastLineString = inString1
+	s.lastLineBacktick = inString2
 
 	// Calculate cursor position accounting for line wrapping
 	cursorTotalPos := pLen + pos
@@ -996,9 +1001,11 @@ func (s *MLState) refreshSingleLine_NO_WRAP(prompt []rune, buf []rune, pos int) 
 	s.sendBack(string(prompt))
 
 	// Apply syntax highlighting and write buffer
-	tt2, inString := RyeHighlight(text, s.lastLineString, s.columns)
+	tt2, inString1, inString2 := RyeHighlight(text, s.lastLineString, s.lastLineBacktick, s.columns)
 	s.sendBack(tt2)
-	s.inString = inString
+	s.inString = inString1 || inString2
+	s.lastLineString = inString1
+	s.lastLineBacktick = inString2
 
 	// Calculate cursor position accounting for line wrapping
 	cursorTotalPos := pLen + pos
@@ -1277,11 +1284,8 @@ startOfHere:
 				// next line0,
 				case "n":
 					historyStale = true
-					s.lastLineString = false
 					s.sendBack(fmt.Sprintf("%s\n%s", color_emph, reset)) // ⏎
-					if s.inString {
-						s.lastLineString = true
-					}
+					// String state should persist across lines - don't reset it here
 					// DONT SEND LINE BACK BUT STORE IT
 					// s.enterLine(string(line) + " ")
 					s.currline += 1
@@ -1542,11 +1546,8 @@ startOfHere:
 					if s.inString || inIncompleteBlock {
 						// This is copy from ctrl+x code above ... deduplicate and systemize TODO
 						historyStale = true
-						s.lastLineString = false
 						s.sendBack(fmt.Sprintf("%s\n%s", color_emph, reset)) //
-						if s.inString {
-							s.lastLineString = true
-						}
+						// String state should persist across lines - don't reset it here
 						// DONT SEND LINE BACK BUT STORE IT
 						// s.enterLine(string(line) + " ")
 						s.lines = append(s.lines, string(line))
@@ -1564,7 +1565,6 @@ startOfHere:
 						CurUp(1)
 					}
 					historyStale = true
-					s.lastLineString = false
 					s.sendBack("\n")
 					xx := ""
 					if multiline {

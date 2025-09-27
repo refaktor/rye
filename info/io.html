@@ -237,21 +237,21 @@
 <p class='returns'><b>returns</b> string containing the response body</p>
 <div class='group'>
 </div>
-<h3>https-schema//New-request</h3><p>Creates a new HTTPS request object.</p>
+<h3>https-schema//Request</h3><p>Creates a new HTTPS request object.</p>
 <p class='arg'><b>url</b> uri representing the HTTPS URL to request</p>
 <p class='arg'><b>method</b> word specifying the HTTP method (e.g., 'GET', 'POST')</p>
 <p class='arg'><b>data</b> string containing the request body</p>
 <p class='returns'><b>returns</b> native https-request object</p>
 <div class='group'>
 </div>
-<h3>https-request//Set-header</h3><p>Sets a header on a HTTPS request.</p>
+<h3>https-request//Header!</h3><p>Sets a header on a HTTPS request.</p>
 <p class='arg'><b>request</b> native https-request object</p>
 <p class='arg'><b>name</b> word representing the header name</p>
 <p class='arg'><b>value</b> string containing the header value</p>
 <p class='returns'><b>returns</b> the request object if successful</p>
 <div class='group'>
 </div>
-<h3>https-request//Set-basic-auth</h3><p>Sets Basic Authentication on a HTTPS request.</p>
+<h3>https-request//Basic-auth!</h3><p>Sets Basic Authentication on a HTTPS request.</p>
 <p class='arg'><b>request</b> native https-request object</p>
 <p class='arg'><b>username</b> string containing the username</p>
 <p class='arg'><b>password</b> string containing the password</p>
@@ -261,6 +261,11 @@
 <h3>https-request//Call</h3><p>Executes a HTTPS request and returns the response.</p>
 <p class='arg'><b>request</b> native https-request object</p>
 <p class='returns'><b>returns</b> native https-response object</p>
+<div class='group'>
+</div>
+<h3>https-response//Reader</h3><p>Gets a reader for the HTTPS response body that can be used with io.Copy.</p>
+<p class='arg'><b>response</b> native https-response object</p>
+<p class='returns'><b>returns</b> native reader object for the response body</p>
 <div class='group'>
 </div>
 <h3>https-response//Read-body</h3><p>Reads the body of a HTTPS response as a string.</p>

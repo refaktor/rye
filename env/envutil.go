@@ -10,15 +10,34 @@ func ToRyeValue(val any) Object {
 	switch v := val.(type) {
 	case float64:
 		return *NewDecimal(v)
+	case float32:
+		return *NewDecimal(float64(v))
 	case int:
+		return *NewInteger(int64(v))
+	case int8:
+		return *NewInteger(int64(v))
+	case int16:
+		return *NewInteger(int64(v))
+	case int32:
 		return *NewInteger(int64(v))
 	case int64:
 		return *NewInteger(v)
+	case uint:
+		return *NewInteger(int64(v))
+	case uint8:
+		return *NewInteger(int64(v))
+	case uint16:
+		return *NewInteger(int64(v))
+	case uint32:
+		return *NewInteger(int64(v))
+	case uint64:
+		return *NewInteger(int64(v))
 	case bool:
 		return *NewBoolean(v)
 	case string:
 		return *NewString(v)
-	case rune:
+	case []byte:
+		// PostgreSQL sometimes returns numeric values as byte slices
 		return *NewString(string(v))
 	case map[string]any:
 		return *NewDict(v)
@@ -41,7 +60,7 @@ func ToRyeValue(val any) Object {
 	case time.Time:
 		return *NewString(v.Format(time.RFC3339))
 	default:
-		fmt.Println(val)
+		fmt.Printf("ToRyeValue: unhandled type %T with value %v\n", val, val)
 		// TODO-FIXME
 		return Void{}
 	}
@@ -51,15 +70,34 @@ func ToRyeValueAggressive(ps *ProgramState, val any) Object { // TODO -- find be
 	switch v := val.(type) {
 	case float64:
 		return *NewDecimal(v)
+	case float32:
+		return *NewDecimal(float64(v))
 	case int:
+		return *NewInteger(int64(v))
+	case int8:
+		return *NewInteger(int64(v))
+	case int16:
+		return *NewInteger(int64(v))
+	case int32:
 		return *NewInteger(int64(v))
 	case int64:
 		return *NewInteger(v)
+	case uint:
+		return *NewInteger(int64(v))
+	case uint8:
+		return *NewInteger(int64(v))
+	case uint16:
+		return *NewInteger(int64(v))
+	case uint32:
+		return *NewInteger(int64(v))
+	case uint64:
+		return *NewInteger(int64(v))
 	case bool:
 		return *NewBoolean(v)
 	case string:
 		return *NewString(v)
-	case rune:
+	case []byte:
+		// PostgreSQL sometimes returns numeric values as byte slices
 		return *NewString(string(v))
 	case map[string]any:
 		return *NewDict(v)
@@ -82,7 +120,7 @@ func ToRyeValueAggressive(ps *ProgramState, val any) Object { // TODO -- find be
 	case time.Time:
 		return *NewString(v.Format(time.RFC3339))
 	default:
-		fmt.Println(val)
+		fmt.Printf("ToRyeValueAggressive: unhandled type %T with value %v\n", val, val)
 		// TODO-FIXME
 		return Void{}
 	}
