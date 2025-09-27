@@ -65,7 +65,13 @@ func SQL_EvalExpression(es *env.ProgramState, vals []any, mode int) (*env.Progra
 		// trace(vals1)
 		es.Ser = ser
 		//vals2 := append(vals, vals1)
-		return es1, "( " + es.Res.(env.String).Value + " )", vals1
+		if obj.Mode == 2 {
+			return es1, "( " + es.Res.(env.String).Value + " )", vals1
+		} else if obj.Mode == 1 {
+			return es1, "[ " + es.Res.(env.String).Value + " ]", vals1
+		} else {
+			return es1, "{ " + es.Res.(env.String).Value + " }", vals1
+		}
 	/*case env.GenwordType:
 		return EvalGenword(es, object.(env.Genword), nil, false)
 	case env.SetwordType:
