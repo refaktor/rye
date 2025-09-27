@@ -822,11 +822,12 @@ func (s *MLState) refreshSingleLine_NO_WRAP(prompt []rune, buf []rune, pos int) 
 	bLen := countGlyphs(buf)
 	text := string(buf)
 
-	// Calculate how many terminal lines the content will occupy
+	// Calculate how many terminal lines the content will actually occupy
+	// This accounts for terminal line wrapping behavior
 	totalWidth := pLen + bLen
-	linesNeeded := (totalWidth + s.columns - 1) / s.columns // Ceiling division
-	if linesNeeded < 1 {
-		linesNeeded = 1
+	linesNeeded := 1
+	if totalWidth > s.columns {
+		linesNeeded = (totalWidth + s.columns - 1) / s.columns // Ceiling division
 	}
 
 	// Hide cursor before redrawing to prevent blinking
@@ -835,42 +836,46 @@ func (s *MLState) refreshSingleLine_NO_WRAP(prompt []rune, buf []rune, pos int) 
 	// Move cursor to beginning of current line
 	s.sendBack("\r")
 
-	// Clear current line first
-	s.sendBack("\033[K")
-
-	// Handle clearing previous content based on context
+	// Calculate the actual number of terminal rows to clear
+	// Use the maximum of previous lines and current lines needed, but be more conservative
 	maxLinesToClear := s.prevLines
-	if maxLinesToClear < linesNeeded {
+	if linesNeeded > maxLinesToClear {
 		maxLinesToClear = linesNeeded
 	}
 
-	if s.inTabCompletion {
-		// During tab completion: Use the old method that prevents scrolling
-		// This preserves the existing behavior for tab completion
-		if maxLinesToClear < 3 {
-			maxLinesToClear = 3 // Always clear at least 3 lines to be safe
-		}
+	// Clear current line and all lines that might contain old content
+	s.sendBack("\033[K") // Clear current line
 
-		// Clear additional lines by moving down and clearing each one
-		for i := 1; i < maxLinesToClear; i++ {
-			s.sendBack("\033[B") // Move down one line
-			s.sendBack("\033[K") // Clear line
-		}
-
-		// Move back up to the original line position
-		if maxLinesToClear > 1 {
-			s.sendBack(fmt.Sprintf("\033[%dA", maxLinesToClear-1))
-		}
-	} else {
-		// During normal console operation: Use scrolling-friendly approach
-		// Create newlines to ensure proper scrolling, then move back up
-		if maxLinesToClear > 1 {
-			// Create enough newlines to ensure we have space to work with
-			for i := 1; i < maxLinesToClear; i++ {
-				s.sendBack("\n\033[K") // Newline and clear the new line
+	if maxLinesToClear > 1 {
+		if s.inTabCompletion {
+			// During tab completion: Use the old method that prevents scrolling
+			// This preserves the existing behavior for tab completion
+			if maxLinesToClear < 3 {
+				maxLinesToClear = 3 // Always clear at least 3 lines to be safe
 			}
-			// Move back up to our starting position
+
+			// Clear additional lines by moving down and clearing each one
+			for i := 1; i < maxLinesToClear; i++ {
+				s.sendBack("\033[B") // Move down one line
+				s.sendBack("\033[K") // Clear line
+			}
+
+			// Move back up to the original line position
 			s.sendBack(fmt.Sprintf("\033[%dA", maxLinesToClear-1))
+		} else {
+			// During normal console operation: Use a more robust clearing approach
+			// First, try to clear downward without creating new lines
+			currentPos := 0
+			for i := 1; i < maxLinesToClear && currentPos < 10; i++ { // Limit to prevent infinite scrolling
+				s.sendBack("\033[B") // Move down one line
+				s.sendBack("\033[K") // Clear line
+				currentPos++
+			}
+
+			// Move back up to our starting position
+			if currentPos > 0 {
+				s.sendBack(fmt.Sprintf("\033[%dA", currentPos))
+			}
 		}
 	}
 
@@ -888,8 +893,13 @@ func (s *MLState) refreshSingleLine_NO_WRAP(prompt []rune, buf []rune, pos int) 
 
 	// Calculate cursor position accounting for line wrapping
 	cursorTotalPos := pLen + pos
-	cursorLine := cursorTotalPos / s.columns
-	cursorCol := cursorTotalPos % s.columns
+	cursorLine := 0
+	cursorCol := cursorTotalPos
+
+	if s.columns > 0 && cursorTotalPos >= s.columns {
+		cursorLine = cursorTotalPos / s.columns
+		cursorCol = cursorTotalPos % s.columns
+	}
 
 	// Move cursor to correct position
 	if cursorLine > 0 {
@@ -903,7 +913,7 @@ func (s *MLState) refreshSingleLine_NO_WRAP(prompt []rune, buf []rune, pos int) 
 		s.sendBack(fmt.Sprintf("\033[%dC", cursorCol))
 	}
 
-	// Update state for next refresh
+	// Update state for next refresh - be more conservative about tracking lines
 	s.prevLines = linesNeeded
 
 	// Show cursor after redrawing is complete
