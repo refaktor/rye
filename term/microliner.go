@@ -14,13 +14,24 @@ import (
 
 	"github.com/mattn/go-runewidth"
 	"github.com/refaktor/rye/env"
-	// "github.com/refaktor/rye/term"
 )
+
+// Constants for key codes and terminal behavior
+const (
+	// Default terminal dimensions
+	DefaultColumns = 80
+	DefaultRows    = 24
+
+	// Minimum terminal width for proper operation
+	MinTerminalWidth = 6
+)
+
+// HistoryLimit is the maximum number of entries saved in the scrollback history.
+const HistoryLimit = 1000
 
 // These character classes are mostly zero width (when combined).
 // A few might not be, depending on the user's font. Fixing this
-// is non-trivial, given that some terminals don't support
-// ANSI DSR/CPR
+// is non-trivial, given that some terminals don't support ANSI DSR/CPR
 var zeroWidth = []*unicode.RangeTable{
 	unicode.Mn,
 	unicode.Me,
@@ -360,42 +371,6 @@ func (s *MLState) tabComplete(p []rune, line []rune, pos int, mode int) ([]rune,
 		return completedLine, newPos, next, nil
 	}
 
-	/*
-		direction := tabForward
-
-		if s.tabStyle == TabPrints {
-			tabPrinter = s.printedTabs(list)
-		}
-
-		for {
-			pick, err := tabPrinter(direction)
-			if err != nil {
-				return line, pos, rune(27), err
-			}
-			err = s.refresh(p, []rune(head+pick+tail), hl+utf8.RuneCountInString(pick))
-			if err != nil {
-				return line, pos, rune(27), err
-			}
-
-			next, err := s.readNext()
-			if err != nil {
-				return line, pos, rune(27), err
-			}
-			if key, ok := next.(rune); ok {
-				if key == 9 {
-					direction = tabForward
-					continue
-				}
-				if key == 27 {
-					return line, pos, rune(27), nil
-				}
-			}
-			if a, ok := next.(action); ok && a == shiftTab {
-				direction = tabReverse
-				continue
-			}
-			return []rune(head + pick + tail), hl + utf8.RuneCountInString(pick), next, nil
-		} */
 }
 
 // Completer takes the currently edited line content at the left of the cursor
@@ -439,25 +414,19 @@ func (s *MLState) SetCompleter(f Completer) {
 // END COMPLETER
 
 func (s *MLState) eraseLine() {
-	//str := fmt.Sprintf("\x1b[0K")
-	// s.sendBack("\x1b[0K")
 	s.sendBack("\x1b[2Kr")
 }
 
 func (s *MLState) doBeep() {
-	//str := fmt.Sprintf("\x1b[0K")
-	// s.sendBack("\x1b[0K")
 	s.sendBack("\a")
 }
 
 func (s *MLState) eraseScreen() {
-	str := "\x1b[H\x1b[2J"
-	s.sendBack(str)
+	s.sendBack("\x1b[H\x1b[2J")
 }
 
 func (s *MLState) moveUp(lines int) {
-	str := fmt.Sprintf("\x1b[%dA", lines)
-	s.sendBack(str)
+	s.sendBack(fmt.Sprintf("\x1b[%dA", lines))
 }
 
 func (s *MLState) moveDown(lines int) {
@@ -468,7 +437,7 @@ func (s *MLState) emitNewLine() {
 	s.sendBack("\n")
 }
 
-// State represents an open terminal
+// MLState represents the state of a microliner terminal session
 type MLState struct {
 	needRefresh      bool
 	next             <-chan KeyEvent
@@ -485,13 +454,11 @@ type MLState struct {
 	prevLines        int
 	prevCursorLine   int
 	completer        WordCompleter
-	lines            []string                                                       // added for the multiline behaviour
-	currline         int                                                            // same
-	programState     *env.ProgramState                                              // added for environment access
-	displayValue     func(*env.ProgramState, env.Object, bool) (env.Object, string) // callback for displaying values
-	inTabCompletion  bool                                                           // flag to track if we're in tab completion mode
-	// pending     []rune
-	// killRing *ring.Ring
+	lines            []string                                                       // For multiline behavior
+	currline         int                                                            // Current line in multiline mode
+	programState     *env.ProgramState                                              // For environment access during tab completion
+	displayValue     func(*env.ProgramState, env.Object, bool) (env.Object, string) // Callback for displaying values
+	inTabCompletion  bool                                                           // Flag to track if we're in tab completion mode
 }
 
 // NewMicroLiner initializes a new *MLState with the provided event channel,
@@ -528,8 +495,6 @@ func (s *MLState) SetDisplayValueFunc(fn func(*env.ProgramState, env.Object, boo
 
 func (s *MLState) getColumns() bool {
 	s.columns = GetTerminalColumns()
-	// fmt.Print("*getColumns* : ")
-	// fmt.Println(s.columns)
 	return true
 }
 
@@ -539,8 +504,6 @@ func (s *MLState) GetKeyChan() <-chan KeyEvent {
 
 func (s *MLState) SetColumns(cols int) bool {
 	s.columns = cols
-	//	fmt.Print("*setColumns* : ")
-	//	fmt.Println(s.columns)
 	return true
 }
 
@@ -572,9 +535,6 @@ func (s *MLState) refresh(prompt []rune, buf []rune, pos int) error {
 }
 
 // HISTORY
-
-// HistoryLimit is the maximum number of entries saved in the scrollback history.
-const HistoryLimit = 1000
 
 // AppendHistory appends an entry to the scrollback history. AppendHistory
 // should be called iff Prompt returns a valid command.
@@ -624,85 +584,6 @@ func (s *MLState) getHistoryByPattern(pattern string) (ph []string, pos []int) {
 }
 
 // END HISTORY
-
-/*
-// addToKillRing adds some text to the kill ring. If mode is 0 it adds it to a
-// new node in the end of the kill ring, and move the current pointer to the new
-// node. If mode is 1 or 2 it appends or prepends the text to the current entry
-// of the killRing.
-func (s *MLState) addToKillRing(text []rune, mode int) {
-	// Don't use the same underlying array as text
-	killLine := make([]rune, len(text))
-	copy(killLine, text)
-
-	// Point killRing to a newNode, procedure depends on the killring state and
-	// append mode.
-	if mode == 0 { // Add new node to killRing
-		if s.killRing == nil { // if killring is empty, create a new one
-			s.killRing = ring.New(1)
-		} else if s.killRing.Len() >= KillRingMax { // if killring is "full"
-			s.killRing = s.killRing.Next()
-		} else { // Normal case
-			s.killRing.Link(ring.New(1))
-			s.killRing = s.killRing.Next()
-		}
-	} else {
-		if s.killRing == nil { // if killring is empty, create a new one
-			s.killRing = ring.New(1)
-			s.killRing.Value = []rune{}
-		}
-		if mode == 1 { // Append to last entry
-			killLine = append(s.killRing.Value.([]rune), killLine...)
-		} else if mode == 2 { // Prepend to last entry
-			killLine = append(killLine, s.killRing.Value.([]rune)...)
-		}
-	}
-
-	// Save text in the current killring node
-	s.killRing.Value = killLine
-}
-
-func (s *MLState) yank(p []rune, text []rune, pos int) ([]rune, int, interface{}, error) {
-	if s.killRing == nil {
-		return text, pos, rune(esc), nil
-	}
-
-	lineStart := text[:pos]
-	lineEnd := text[pos:]
-	var line []rune
-
-	for {
-		value := s.killRing.Value.([]rune)
-		line = make([]rune, 0)
-		line = append(line, lineStart...)
-		line = append(line, value...)
-		line = append(line, lineEnd...)
-
-		pos = len(lineStart) + len(value)
-		err := s.refresh(p, line, pos)
-		if err != nil {
-			return line, pos, 0, err
-		}
-
-		next, err := s.readNext()
-		if err != nil {
-			return line, pos, next, err
-		}
-
-		switch v := next.(type) {
-		case rune:
-			return line, pos, next, nil
-		case action:
-			switch v {
-			case altY:
-				s.killRing = s.killRing.Prev()
-			default:
-				return line, pos, next, nil
-			}
-		}
-	}
-}
-*/
 
 func traceTop(t any, n int) {
 	if false {
@@ -1550,7 +1431,7 @@ startOfHere:
 						historyStale = true
 						s.lastLineString = false
 						s.lastLineBacktick = false
-						s.sendBack(fmt.Sprintf("%s\n%s", color_emph, reset)) //
+						s.sendBack("\n") // Just send newline without color formatting
 						if s.inString {
 							s.lastLineString = true
 						}
@@ -1738,374 +1619,14 @@ startOfHere:
 				}
 			}
 
-			/* } else {
-				line = append(line[:pos], append([]rune{v}, line[pos:]...)...)
-				pos++
-				s.needRefresh = true
-			} */
-
-			/* case rune:
-				switch v {
-				case cr, lf:
-					if s.needRefresh {
-				err := s.refresh(p, line, pos)
-				if err != nil {
-					fmt.Println("Exiting due to error at refreshAllLines")
-					return "", fmt.Errorf("refresh error: %w", err)
-				}
-					if s.multiLineMode {
-						s.resetMultiLine(p, line, pos)
-					}
-					trace()
-					break mainLoop
-				case ctrlA: // Start of line
-					pos = 0
-					s.needRefresh = true
-				case ctrlE: // End of line
-					pos = len(line)
-					s.needRefresh = true
-				case ctrlB: // left
-					if pos > 0 {
-						pos -= len(getSuffixGlyphs(line[:pos], 1))
-						s.needRefresh = true
-					} else {
-						s.doBeep()
-					}
-				case ctrlF: // right
-					if pos < len(line) {
-						pos += len(getPrefixGlyphs(line[pos:], 1))
-						s.needRefresh = true
-					} else {
-						s.doBeep()
-					}
-				case ctrlD: // del
-					if pos == 0 && len(line) == 0 {
-						// exit
-						return "", io.EOF
-					}
-
-					// ctrlD is a potential EOF, so the rune reader shuts down.
-					// Therefore, if it isn't actually an EOF, we must re-startPrompt.
-					s.restartPrompt()
-
-					if pos >= len(line) {
-						s.doBeep()
-					} else {
-						n := len(getPrefixGlyphs(line[pos:], 1))
-						line = append(line[:pos], line[pos+n:]...)
-						s.needRefresh = true
-					}
-				case ctrlK: // delete remainder of line
-					if pos >= len(line) {
-						s.doBeep()
-					} else {
-						if killAction > 0 {
-							s.addToKillRing(line[pos:], 1) // Add in apend mode
-						} else {
-							s.addToKillRing(line[pos:], 0) // Add in normal mode
-						}
-
-						killAction = 2 // Mark that there was a kill action
-						line = line[:pos]
-						s.needRefresh = true
-					}
-				case ctrlP: // up
-					historyAction = true
-					if historyStale {
-						historyPrefix = s.getHistoryByPrefix(string(line))
-						historyPos = len(historyPrefix)
-						historyStale = false
-					}
-					if historyPos > 0 {
-						if historyPos == len(historyPrefix) {
-							historyEnd = string(line)
-						}
-						historyPos--
-						line = []rune(historyPrefix[historyPos])
-						pos = len(line)
-						s.needRefresh = true
-					} else {
-						s.doBeep()
-					}
-				case ctrlN: // down
-					historyAction = true
-					if historyStale {
-						historyPrefix = s.getHistoryByPrefix(string(line))
-						historyPos = len(historyPrefix)
-						historyStale = false
-					}
-					if historyPos < len(historyPrefix) {
-						historyPos++
-						if historyPos == len(historyPrefix) {
-							line = []rune(historyEnd)
-						} else {
-							line = []rune(historyPrefix[historyPos])
-						}
-						pos = len(line)
-						s.needRefresh = true
-					} else {
-						s.doBeep()
-					}
-				case ctrlT: // transpose prev glyph with glyph under cursor
-					if len(line) < 2 || pos < 1 {
-						s.doBeep()
-					} else {
-						if pos == len(line) {
-							pos -= len(getSuffixGlyphs(line, 1))
-						}
-						prev := getSuffixGlyphs(line[:pos], 1)
-						next := getPrefixGlyphs(line[pos:], 1)
-						scratch := make([]rune, len(prev))
-						copy(scratch, prev)
-						copy(line[pos-len(prev):], next)
-						copy(line[pos-len(prev)+len(next):], scratch)
-						pos += len(next)
-						s.needRefresh = true
-					}
-				case ctrlL: // clear screen
-					s.eraseScreen()
-					s.needRefresh = true
-				case ctrlC: // reset
-					trace("^C")
-					if s.multiLineMode {
-						s.resetMultiLine(p, line, pos)
-					}
-					if s.ctrlCAborts {
-						return "", ErrPromptAborted
-					}
-					line = line[:0]
-					pos = 0
-					fmt.Print(prompt)
-					s.restartPrompt()
-				case ctrlH, bs: // Backspace
-					if pos <= 0 {
-						s.doBeep()
-					} else {
-						n := len(getSuffixGlyphs(line[:pos], 1))
-						line = append(line[:pos-n], line[pos:]...)
-						pos -= n
-						s.needRefresh = true
-					}
-				case ctrlU: // Erase line before cursor
-					if killAction > 0 {
-						s.addToKillRing(line[:pos], 2) // Add in prepend mode
-					} else {
-						s.addToKillRing(line[:pos], 0) // Add in normal mode
-					}
-
-					killAction = 2 // Mark that there was some killing
-					line = line[pos:]
-					pos = 0
-					s.needRefresh = true
-				case ctrlW: // Erase word
-					pos, line, killAction = s.eraseWord(pos, line, killAction)
-				case ctrlY: // Paste from Yank buffer
-					line, pos, next, err = s.yank(p, line, pos)
-					goto haveNext
-				case ctrlR: // Reverse Search
-					line, pos, next, err = s.reverseISearch(line, pos)
-					s.needRefresh = true
-					goto haveNext
-				case tab: // Tab completion
-					line, pos, next, err = s.tabComplete(p, line, pos)
-					goto haveNext
-				// Catch keys that do nothing, but you don't want them to beep
-				case esc:
-					// DO NOTHING
-				// Unused keys
-				case ctrlG:
-					// JM experimenting 20200108
-					//for _, l := range codelines {
-					//		MoveCursorDown(2)
-					//		fmt.Print(l)
-					//	}
-					//MoveCursorDown(len(codelines))
-					return "", ErrJMCodeUp
-					//line = []rune(codelines[len(codelines)-1])
-					//pos = len(line)
-					s.needRefresh = true
-				case ctrlS, ctrlO, ctrlQ, ctrlV, ctrlX, ctrlZ:
-					fallthrough
-				// Catch unhandled control codes (anything <= 31)
-				case 0, 28, 29, 30, 31:
-					s.doBeep()
-				default:
-					if pos == len(line) && !s.multiLineMode &&
-						len(p)+len(line) < s.columns*4 && // Avoid countGlyphs on large lines
-						countGlyphs(p)+countGlyphs(line) < s.columns-1 {
-						line = append(line, v)
-						fmt.Printf("%c", v)
-						s.needRefresh = true // JM ---
-						pos++
-
-					} else {
-						line = append(line[:pos], append([]rune{v}, line[pos:]...)...)
-						pos++
-						s.needRefresh = true
-					}
-					if s_instr == 2 && string(v) == "\"" {
-						s_instr = 0
-					}
-				}
-			case action:
-				switch v {
-				case del:
-					if pos >= len(line) {
-						s.doBeep()
-					} else {
-						n := len(getPrefixGlyphs(line[pos:], 1))
-						line = append(line[:pos], line[pos+n:]...)
-					}
-				case left:
-					if pos > 0 {
-						pos -= len(getSuffixGlyphs(line[:pos], 1))
-					} else {
-						s.doBeep()
-					}
-				case wordLeft, altB:
-					if pos > 0 {
-						var spaceHere, spaceLeft, leftKnown bool
-						for {
-							pos--
-							if pos == 0 {
-								break
-							}
-							if leftKnown {
-								spaceHere = spaceLeft
-							} else {
-								spaceHere = unicode.IsSpace(line[pos])
-							}
-							spaceLeft, leftKnown = unicode.IsSpace(line[pos-1]), true
-							if !spaceHere && spaceLeft {
-								break
-							}
-						}
-					} else {
-						s.doBeep()
-					}
-				case right:
-					if pos < len(line) {
-						pos += len(getPrefixGlyphs(line[pos:], 1))
-					} else {
-						s.doBeep()
-					}
-				case wordRight, altF:
-					if pos < len(line) {
-						var spaceHere, spaceLeft, hereKnown bool
-						for {
-							pos++
-							if pos == len(line) {
-								break
-							}
-							if hereKnown {
-								spaceLeft = spaceHere
-							} else {
-								spaceLeft = unicode.IsSpace(line[pos-1])
-							}
-							spaceHere, hereKnown = unicode.IsSpace(line[pos]), true
-							if spaceHere && !spaceLeft {
-								break
-							}
-						}
-					} else {
-						s.doBeep()
-					}
-				case up:
-					historyAction = true
-					if historyStale {
-						historyPrefix = s.getHistoryByPrefix(string(line))
-						historyPos = len(historyPrefix)
-						historyStale = false
-					}
-					if historyPos > 0 {
-						if historyPos == len(historyPrefix) {
-							historyEnd = string(line)
-						}
-						historyPos--
-						line = []rune(historyPrefix[historyPos])
-						pos = len(line)
-					} else {
-						s.doBeep()
-					}
-				case down:
-					historyAction = true
-					if historyStale {
-						historyPrefix = s.getHistoryByPrefix(string(line))
-						historyPos = len(historyPrefix)
-						historyStale = false
-					}
-					if historyPos < len(historyPrefix) {
-						historyPos++
-						if historyPos == len(historyPrefix) {
-							line = []rune(historyEnd)
-						} else {
-							line = []rune(historyPrefix[historyPos])
-						}
-						pos = len(line)
-					} else {
-						s.doBeep()
-					}
-				case home: // Start of line
-					pos = 0
-				case end: // End of line
-					pos = len(line)
-				case altD: // Delete next word
-					if pos == len(line) {
-						s.doBeep()
-						break
-					}
-					// Remove whitespace to the right
-					var buf []rune // Store the deleted chars in a buffer
-					for {
-						if pos == len(line) || !unicode.IsSpace(line[pos]) {
-							break
-						}
-						buf = append(buf, line[pos])
-						line = append(line[:pos], line[pos+1:]...)
-					}
-					// Remove non-whitespace to the right
-					for {
-						if pos == len(line) || unicode.IsSpace(line[pos]) {
-							break
-						}
-						buf = append(buf, line[pos])
-						line = append(line[:pos], line[pos+1:]...)
-					}					// Save the result on the killRing
-					if killAction > 0 {
-						s.addToKillRing(buf, 2) // Add in prepend mode
-					} else {
-						s.addToKillRing(buf, 0) // Add in normal mode
-					}
-					killAction = 2 // Mark that there was some killing
-				case altBs: // Erase word
-					pos, line, killAction = s.eraseWord(pos, line, killAction)
-				case winch: // Window change
-					if s.multiLineMode {
-						if s.maxRows-s.cursorRows > 0 {
-							s.moveDown(s.maxRows - s.cursorRows)
-						}
-						for i := 0; i < s.maxRows-1; i++ {
-							s.cursorPos(0)
-							s.eraseLine()
-							s.moveUp(1)
-						}
-						s.maxRows = 1
-						s.cursorRows = 1
-					}
-				}
-				s.needRefresh = true
-			} */
-			//if true || s.needRefresh { //&& !s.inputWaiting() {
-			// ALWAYS REFRESH SO WE HAVE JUST ONE TRUTH
+			// Always refresh to keep display up to date
 			log.Println("MICROPROMPT 2")
 			if refreshAllLines {
-				log.Println("REFRESH LLL ")
+				log.Println("REFRESH ALL LINES")
 				for i, line1 := range s.lines {
 					if i == 0 {
-						//	s.sendBack(prompt)
 						p = []rune(prompt)
 					} else {
-						//	s.sendBack(".. ")
 						fmt.Println("") // turn to sendback
 						// Check if we're in an incomplete block vs incomplete string
 						allText := strings.Join(s.lines[:i+1], "\n")
@@ -2129,9 +1650,8 @@ startOfHere:
 				}
 				refreshAllLines = false
 			} else {
-				log.Println("ELSE REFRESH LLL ")
+				log.Println("SINGLE LINE REFRESH")
 				if s.currline == 0 {
-					//	s.sendBack(prompt)
 					p = []rune(prompt)
 				} else {
 					// Check if we're in an incomplete block vs incomplete string
@@ -2154,15 +1674,6 @@ startOfHere:
 					return "", fmt.Errorf("refresh error: %w", err)
 				}
 			}
-			// } else {
-			///// s.cursorPos(pLen + pos)
-			// }
-			/*if !historyAction {
-				historyStale = true
-			}
-			if killAction > 0 {
-				killAction--
-			}*/
 		}
 	}
 	// return string(line), nil
