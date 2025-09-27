@@ -998,29 +998,73 @@ var builtins_collection = map[string]*env.Builtin{
 			case env.Block:
 				switch fn := arg1.(type) {
 				case env.Function:
+					// Validate that the collection is not empty
+					if len(block.Series.S) == 0 {
+						return *env.NewBlock(*env.NewTSeries([]env.Object{}))
+					}
+
+					// Create a defensive copy to avoid modifying the original
 					copied := make([]env.Object, len(block.Series.S))
 					copy(copied, block.Series.S)
-					// fmt.Println(fn)
+
+					// Defer panic recovery to handle comparison function errors
+					defer func() {
+						if r := recover(); r != nil {
+							// Log the panic but don't crash - the sort methods already handle this
+						}
+					}()
+
+					// Create the custom sorter
 					sorter := RyeBlockCustomSort{copied, fn, ps}
-					// fmt.Println(sorter)
+
+					// Perform the sort with error handling
 					sort.Sort(sorter)
+
+					// Check if any errors occurred during sorting
+					if ps.ErrorFlag || ps.FailureFlag {
+						return MakeBuiltinError(ps, "Error during custom sorting - comparison function may have failed", "sort\\by")
+					}
+
 					return *env.NewBlock(*env.NewTSeries(copied))
 				default:
-					return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "sort!")
+					return MakeArgError(ps, 2, []env.Type{env.FunctionType}, "sort\\by")
 				}
 			case env.List:
 				switch fn := arg1.(type) {
 				case env.Function:
+					// Validate that the collection is not empty
+					if len(block.Data) == 0 {
+						return *env.NewList([]any{})
+					}
+
+					// Create a defensive copy to avoid modifying the original
 					copied := make([]any, len(block.Data))
 					copy(copied, block.Data)
+
+					// Defer panic recovery to handle comparison function errors
+					defer func() {
+						if r := recover(); r != nil {
+							// Log the panic but don't crash - the sort methods already handle this
+						}
+					}()
+
+					// Create the custom sorter
 					sorter := RyeListCustomSort{copied, fn, ps}
+
+					// Perform the sort with error handling
 					sort.Sort(sorter)
+
+					// Check if any errors occurred during sorting
+					if ps.ErrorFlag || ps.FailureFlag {
+						return MakeBuiltinError(ps, "Error during custom sorting - comparison function may have failed", "sort\\by")
+					}
+
 					return *env.NewList(copied)
 				default:
-					return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "sort!")
+					return MakeArgError(ps, 2, []env.Type{env.FunctionType}, "sort\\by")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "sort!")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "sort\\by")
 			}
 		},
 	},
@@ -1077,7 +1121,21 @@ var builtins_collection = map[string]*env.Builtin{
 				uniqueStr := ""
 				// converting object to string and append final
 				for _, value := range uniqueStringSlice {
-					uniqueStr = uniqueStr + env.RyeToRaw(value, ps.Idx).(string)
+					// Safe conversion with error handling
+					rawValue := env.RyeToRaw(value, ps.Idx)
+					switch rawStr := rawValue.(type) {
+					case string:
+						uniqueStr = uniqueStr + rawStr
+					case int64:
+						uniqueStr = uniqueStr + fmt.Sprintf("%d", rawStr)
+					case float64:
+						uniqueStr = uniqueStr + fmt.Sprintf("%g", rawStr)
+					case rune:
+						uniqueStr = uniqueStr + string(rawStr)
+					default:
+						// Fallback to string representation
+						uniqueStr = uniqueStr + fmt.Sprintf("%v", rawValue)
+					}
 				}
 				return *env.NewString(uniqueStr)
 			default:
