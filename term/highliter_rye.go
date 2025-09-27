@@ -106,12 +106,13 @@ func hasPrefixMultiple(s string, prefixes ...string) bool {
 	return false
 }
 
-func RyeHighlight(s string, inStrX bool, columns int) (string, bool) {
+func RyeHighlight(s string, inStrX bool, inStrX2 bool, columns int) (string, bool, bool) {
 	var fullB strings.Builder
 	var hb HighlightedStringBuilder
 
 	var inComment, inStr1, inStr2 bool
 	inStr1 = inStrX
+	inStr2 = inStrX2
 
 	for _, c := range s {
 		//if (i+2)%columns == 0 {
@@ -126,9 +127,8 @@ func RyeHighlight(s string, inStrX bool, columns int) (string, bool) {
 		} else if c == '"' {
 			hb.WriteRune(c)
 			if inStr1 {
-				// trace2(".")
-				fullB.WriteString(hb.ColoredString(inStr1))
 				inStr1 = false
+				fullB.WriteString(hb.ColoredString(inStr1))
 				hb.Reset()
 			} else {
 				inStr1 = true
@@ -137,13 +137,13 @@ func RyeHighlight(s string, inStrX bool, columns int) (string, bool) {
 			hb.WriteRune(c)
 			if inStr2 {
 				inStr2 = false
-				fullB.WriteString(hb.ColoredString(inStr1))
+				fullB.WriteString(hb.ColoredString(inStr2))
 				hb.Reset()
 			} else {
 				inStr2 = true
 			}
 		} else if unicode.IsSpace(c) && !inComment && !inStr1 && !inStr2 {
-			fullB.WriteString(hb.ColoredString(inStr1))
+			fullB.WriteString(hb.ColoredString(inStr1 || inStr2))
 			hb.Reset()
 
 			fullB.WriteRune(c)
@@ -151,7 +151,7 @@ func RyeHighlight(s string, inStrX bool, columns int) (string, bool) {
 			hb.WriteRune(c)
 		}
 	}
-	fullB.WriteString(hb.ColoredString(inStr1))
+	fullB.WriteString(hb.ColoredString(inStr1 || inStr2))
 	hb.Reset()
-	return fullB.String(), inStr1
+	return fullB.String(), inStr1, inStr2
 }

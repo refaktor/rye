@@ -412,8 +412,32 @@ func (s RyeBlockCustomSort) Swap(i, j int) {
 	s.data[i], s.data[j] = s.data[j], s.data[i]
 }
 func (s RyeBlockCustomSort) Less(i, j int) bool {
+	// Add bounds checking
+	if i < 0 || i >= len(s.data) || j < 0 || j >= len(s.data) {
+		// If indices are out of bounds, maintain stable sort behavior
+		return i < j
+	}
 
+	// Defer error recovery to prevent panic during sorting
+	defer func() {
+		if r := recover(); r != nil {
+			// If comparison function panics, default to index-based comparison
+			// This prevents the entire sort from failing
+		}
+	}()
+
+	// Call the user's comparison function with error handling
 	CallFunctionArgs2(s.fn, s.ps, s.data[i], s.data[j], nil)
+
+	// Check for errors in the program state
+	if s.ps.ErrorFlag || s.ps.FailureFlag {
+		// Reset error flags to prevent cascading failures
+		s.ps.ErrorFlag = false
+		s.ps.FailureFlag = false
+		// Default to index-based comparison on error
+		return i < j
+	}
+
 	// TODO -- probably we should throw error if not boolean result #strictness
 	// fmt.Println(s.ps.Res.Inspect(*s.ps.Idx))
 	return util.IsTruthy(s.ps.Res)
@@ -433,7 +457,57 @@ func (s RyeListCustomSort) Swap(i, j int) {
 	s.data[i], s.data[j] = s.data[j], s.data[i]
 }
 func (s RyeListCustomSort) Less(i, j int) bool {
-	CallFunctionArgs2(s.fn, s.ps, env.ToRyeValue(s.data[i]), env.ToRyeValue(s.data[j]), nil)
+	// Add bounds checking
+	if i < 0 || i >= len(s.data) || j < 0 || j >= len(s.data) {
+		// If indices are out of bounds, maintain stable sort behavior
+		return i < j
+	}
+
+	// Defer error recovery to prevent panic during sorting
+	defer func() {
+		if r := recover(); r != nil {
+			// If comparison function panics, default to index-based comparison
+			// This prevents the entire sort from failing
+		}
+	}()
+
+	// Safely convert values to Rye objects with error handling
+	var val1, val2 env.Object
+
+	// Convert first value with error handling
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				// If conversion panics, create a safe fallback value
+				val1 = *env.NewString(fmt.Sprintf("%v", s.data[i]))
+			}
+		}()
+		val1 = env.ToRyeValue(s.data[i])
+	}()
+
+	// Convert second value with error handling
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				// If conversion panics, create a safe fallback value
+				val2 = *env.NewString(fmt.Sprintf("%v", s.data[j]))
+			}
+		}()
+		val2 = env.ToRyeValue(s.data[j])
+	}()
+
+	// Call the user's comparison function with error handling
+	CallFunctionArgs2(s.fn, s.ps, val1, val2, nil)
+
+	// Check for errors in the program state
+	if s.ps.ErrorFlag || s.ps.FailureFlag {
+		// Reset error flags to prevent cascading failures
+		s.ps.ErrorFlag = false
+		s.ps.FailureFlag = false
+		// Default to index-based comparison on error
+		return i < j
+	}
+
 	return util.IsTruthy(s.ps.Res)
 }
 

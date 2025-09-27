@@ -106,60 +106,20 @@
 </div>
 <h2>Validation </h2><p>validation dialect for Rye values</p><div class='section'>
 <h3>validate</h3><p>Validates and transforms data according to specified rules, returning a dictionary with converted values or an error.</p>
-<p class='arg'><b>data</b> Dictionary or List to validate</p>
+<p class='arg'><b>data</b> Dictionary, Context, or List to validate</p>
 <p class='arg'><b>rules</b> Block containing validation rules</p>
-<p class='returns'><b>returns</b> validated Dictionary with converted values or error if validation fails</p>
+<p class='returns'><b>returns</b> validated Dictionary/Context/List with converted values or error if validation fails</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: 1 } { a: required }
-; returns dict { a 1 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: 1 } { b: optional 2 }
-; returns dict { b 2 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: 1 } { a: optional 0 b: optional 2 }
-; returns dict { a 1 b 2 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: 1 } { a: required integer }
-; returns dict { a 1 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: "1" } { a: required integer }
-; returns dict { a 1 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: "1" } { a: required integer } |-&gt; "a" |type?
-; returns integer</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: 3.14 } { a: required decimal }
-; returns dict { a 3.14 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: 3 } { a: required decimal }
-; returns dict { a 3 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: "3.14" } { a: required decimal }
-; returns dict { a 3.14 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: "3.14" } { a: required decimal } |-&gt; "a" |type?
-; returns decimal</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: "jim" } { a: required string }
-; returns dict { a "jim" }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: "e@ma.il" } { a: required email }
-; returns dict { a "e@ma.il" }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: "e@ma.il" } { a: required email } |-&gt; "a" |type?
-; returns string</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: "2024-12-30" } { a: required date } |-&gt; "a" |type?
-; returns date</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: 5 } { a: required integer check { &lt; 10 } }
-; returns dict { a 5 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: 5 } { a: required integer calc { + 10 } }
-; returns dict { a 15 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { a: 5 } { b: required } |disarm |type?
-; returns error</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { b: "5c" } { b: optional 0 integer } |disarm |type?
-; returns error</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { b: "2x0" } { b: required decimal } |disarm |status?
-; returns 403</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { b: "not-mail" } { b: required email } |disarm |message?
-; returns "validation error"</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>validate dict { b: "2023-1-1" } { b: required date } |disarm |details?
-; returns dict { b "not date" }</code></pre>
 </div>
 <h3>validate>ctx</h3><p>Validates and transforms data according to specified rules, returning a context object for easy field access.</p>
 <p class='arg'><b>data</b> Dictionary to validate</p>
 <p class='arg'><b>rules</b> Block containing validation rules</p>
 <p class='returns'><b>returns</b> validated Context with converted values or error if validation fails</p>
 <div class='group'>
+{map[a:{1}] {0}}
 <pre class='prettyprint lang-rye'><code language='lang-rye'>validate&gt;ctx dict { a: 1 } { a: required } |type?
 ; returns ctx</code></pre>
+{map[a:{1}] {0}}
 <pre class='prettyprint lang-rye'><code language='lang-rye'>validate&gt;ctx dict { a: 1 } { a: optional 0 } |-&gt; 'a
 ; returns 1</code></pre>
 </div>

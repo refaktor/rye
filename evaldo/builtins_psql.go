@@ -29,7 +29,7 @@ var Builtins_psql = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.Uri:
-				db, err := sql.Open("postgres", str.Path) // TODO -- we need to make path parser in URI then this will be path
+				db, err := sql.Open("postgres", "postgresql://"+str.Path) // TODO -- we need to make path parser in URI then this will be path
 				if err != nil {
 					// TODO --
 					//fmt.Println("Error1")
@@ -157,17 +157,25 @@ var Builtins_psql = map[string]*env.Builtin{
 							}
 
 							// Scan the result into the column pointers...
-							// if err := rows.Scan(columnPointers...); err != nil {
-							//return err
-							// }
+							if err := rows.Scan(columnPointers...); err != nil {
+								ps.FailureFlag = true
+								return MakeBuiltinError(ps, "Error scanning row: "+err.Error(), "Rye-psql//Query")
+							}
 
 							// Create our map, and retrieve the value for each column from the pointers slice,
 							// storing it in the map with the name of the column as the key.
 							m := make(map[string]any)
 							for i, colName := range cols {
 								val := columnPointers[i].(*any)
-								m[colName] = *val
-								sr.Values = append(sr.Values, *val)
+								// Convert nil (SQL NULL) values to Void{} for proper Rye handling
+								var ryeVal env.Object
+								if *val == nil {
+									ryeVal = env.Void{}
+								} else {
+									ryeVal = env.ToRyeValue(*val)
+								}
+								m[colName] = ryeVal
+								sr.Values = append(sr.Values, ryeVal)
 							}
 							spr.AddRow(sr)
 							// result = append(result, m)
@@ -190,6 +198,57 @@ var Builtins_psql = map[string]*env.Builtin{
 
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-psql//Query")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { db: postgres-schema//Open %"postgres://user:pass@localhost:5432/dbname" , db |Rye-psql//Show-SQL "SELECT * FROM test WHERE id = ?id" |type? } 'string
+	// Args:
+	// * db: PostgreSQL database connection
+	// * sql: SQL query as string or block
+	// Returns:
+	// * string containing the generated SQL with parameters
+	"Rye-psql//Show-SQL": {
+		Argsn: 2,
+		Doc:   "Generates and returns the SQL string without executing it.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var sqlstr string
+			var vals []any
+			switch arg0.(type) {
+			case env.Native:
+				switch str := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = str.Series
+					values := make([]any, 0, 2)
+					_, vals = SQL_EvalBlock(ps, MODE_PSQL, values)
+					sqlstr = ps.Res.(env.String).Value
+					ps.Ser = ser
+				case env.String:
+					sqlstr = str.Value
+				default:
+					ps.ErrorFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.StringType}, "Rye-psql//Show-SQL")
+				}
+				if sqlstr != "" {
+					// If there are parameters, show them as comments
+					if len(vals) > 0 {
+						result := sqlstr + "\n-- Parameters: "
+						for i, val := range vals {
+							if i > 0 {
+								result += ", "
+							}
+							result += fmt.Sprintf("$%d = %v", i+1, val)
+						}
+						return *env.NewString(result)
+					}
+					return *env.NewString(sqlstr)
+				} else {
+					return MakeBuiltinError(ps, "Empty SQL.", "Rye-psql//Show-SQL")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-psql//Show-SQL")
 			}
 		},
 	},

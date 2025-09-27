@@ -41,6 +41,8 @@ func SQL_EvalExpression(es *env.ProgramState, vals []any, mode int) (*env.Progra
 	switch obj := object.(type) {
 	case env.Integer:
 		return es, strconv.FormatInt(obj.Value, 10), vals
+	case env.Decimal:
+		return es, strconv.FormatFloat(obj.Value, 'f', 6, 64), vals
 	case env.String:
 		return es, "'" + obj.Value + "'", vals
 	/*case env.VoidType:
@@ -241,9 +243,15 @@ var Builtins_sqlite = map[string]*env.Builtin{
 							m := make(map[string]any)
 							for i, colName := range cols {
 								val := columnPointers[i].(*any)
-								// fmt.Println(val)
-								m[colName] = *val
-								sr.Values = append(sr.Values, *val)
+								// Convert nil (SQL NULL) values to Void{} for proper Rye handling
+								var ryeVal env.Object
+								if *val == nil {
+									ryeVal = env.Void{}
+								} else {
+									ryeVal = env.ToRyeValue(*val)
+								}
+								m[colName] = ryeVal
+								sr.Values = append(sr.Values, ryeVal)
 							}
 							spr.AddRow(sr)
 							// result = append(result, m)
@@ -261,6 +269,56 @@ var Builtins_sqlite = map[string]*env.Builtin{
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-sqlite//Query")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { db: sqlite-schema//Open %"test.db" , db |Rye-sqlite//Show-SQL "SELECT * FROM test WHERE id = ?id" |type? } 'string
+	// Args:
+	// * db: SQLite database connection
+	// * sql: SQL query as string or block
+	// Returns:
+	// * string containing the generated SQL with parameters
+	"Rye-sqlite//Show-SQL": {
+		Argsn: 2,
+		Doc:   "Generates and returns the SQL string without executing it.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var sqlstr string
+			var vals []any
+			switch arg0.(type) {
+			case env.Native:
+				switch str := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = str.Series
+					values := make([]any, 0)
+					_, vals = SQL_EvalBlock(ps, MODE_SQLITE, values)
+					sqlstr = ps.Res.(env.String).Value
+					ps.Ser = ser
+				case env.String:
+					sqlstr = str.Value
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.StringType}, "Rye-sqlite//Show-SQL")
+				}
+				if sqlstr != "" {
+					// If there are parameters, show them as comments
+					if len(vals) > 0 {
+						result := sqlstr + "\n-- Parameters: "
+						for i, val := range vals {
+							if i > 0 {
+								result += ", "
+							}
+							result += fmt.Sprintf("? = %v", val)
+						}
+						return *env.NewString(result)
+					}
+					return *env.NewString(sqlstr)
+				} else {
+					return MakeBuiltinError(ps, "Empty SQL.", "Rye-sqlite//Show-SQL")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-sqlite//Show-SQL")
 			}
 		},
 	},
