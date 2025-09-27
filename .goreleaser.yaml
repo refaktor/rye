@@ -34,12 +34,8 @@ builds:
     ignore: # List of combinations of GOOS + GOARCH + GOARM to ignore.
       - goos: windows
         goarch: arm
-      - goos: windows
-        goarch: arm64
       - goos: linux
         goarch: arm
-      - goos: linux
-        goarch: arm64
 
     flags:
     # - -tags=b_tiny
@@ -80,7 +76,7 @@ kos:  # See https://goreleaser.com/customization/ko/
     preserve_import_paths: false
     platforms:
     - linux/amd64
-    # - linux/arm64
+    - linux/arm64
 
 snapshot:
   version_template: "{{ incpatch .Version }}-next"
