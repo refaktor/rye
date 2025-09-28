@@ -15,14 +15,26 @@ import (
 var Builtins_psql = map[string]*env.Builtin{
 
 	//
-	// ##### PostgreSQL ##### "PostgreSQL database functions"
+	// ##### PostgreSQL Database Functions #####
+	//
+	// This module provides comprehensive PostgreSQL database connectivity and operations.
+	// Functions support both parameterized queries and prepared statements for secure
+	// database interactions. All functions handle proper connection management and
+	// provide detailed error reporting.
+	//
+	// Security Note: Always use parameterized queries (blocks) instead of string
+	// concatenation to prevent SQL injection attacks.
+	//
+	// Connection Management: Connections should be properly closed when no longer needed.
+	// Consider connection pooling for high-throughput applications.
 	//
 	// Tests:
 	// equal { postgres-schema//Open %"postgres://user:pass@localhost:5432/dbname" |type? } 'native
 	// Args:
-	// * uri: PostgreSQL connection string URI
+	// * uri: PostgreSQL connection string URI (format: postgres://username:password@host:port/database)
 	// Returns:
-	// * native PostgreSQL database connection
+	// * native PostgreSQL database connection (type: "Rye-psql")
+	// * error if connection fails
 	"postgres-schema//Open": {
 		Argsn: 1,
 		Doc:   "Opens a connection to a PostgreSQL database.",
@@ -51,10 +63,11 @@ var Builtins_psql = map[string]*env.Builtin{
 	// Tests:
 	// equal { db: postgres-schema//Open %"postgres://user:pass@localhost:5432/dbname" , db |Rye-psql//Exec "INSERT INTO test VALUES (1, 'test')" |type? } 'integer
 	// Args:
-	// * db: PostgreSQL database connection
-	// * sql: SQL statement as string or block
+	// * db: PostgreSQL database connection (type: "Rye-psql")
+	// * sql: SQL statement as string or block (for data modification: INSERT, UPDATE, DELETE)
 	// Returns:
-	// * integer 1 if rows were affected, error otherwise
+	// * integer number of rows affected
+	// * error if execution fails
 	"Rye-psql//Exec": {
 		Argsn: 2,
 		Doc:   "Executes a SQL statement that modifies data (INSERT, UPDATE, DELETE).",
@@ -87,12 +100,12 @@ var Builtins_psql = map[string]*env.Builtin{
 						return env.NewError("Error" + err.Error())
 					} else {
 						num, _ := res.RowsAffected()
-						if num > 0 {
-							return env.NewInteger(1)
-						} else {
-							ps.FailureFlag = true
-							return MakeBuiltinError(ps, "No rows affected.", "Rye-psql//Exec")
-						}
+						return *env.NewInteger(num)
+						// if num > 0 {
+						// } else {
+						//	ps.FailureFlag = true
+						//	return MakeBuiltinError(ps, "No rows affected.", "Rye-psql//Exec")
+						// }
 
 					}
 				} else {
@@ -107,10 +120,11 @@ var Builtins_psql = map[string]*env.Builtin{
 	// Tests:
 	// equal { db: postgres-schema//Open %"postgres://user:pass@localhost:5432/dbname" , db |Rye-psql//Query "SELECT * FROM test" |type? } 'table
 	// Args:
-	// * db: PostgreSQL database connection
-	// * sql: SQL query as string or block
+	// * db: PostgreSQL database connection (type: "Rye-psql")
+	// * sql: SQL query as string or block (SELECT statements)
 	// Returns:
-	// * table containing query results
+	// * table containing query results (SQL NULL values converted to Void{})
+	// * error if query fails or returns no data
 	"Rye-psql//Query": {
 		Argsn: 2,
 		Doc:   "Executes a SQL query and returns results as a table.",
@@ -205,10 +219,11 @@ var Builtins_psql = map[string]*env.Builtin{
 	// Tests:
 	// equal { db: postgres-schema//Open %"postgres://user:pass@localhost:5432/dbname" , db |Rye-psql//Show-SQL "SELECT * FROM test WHERE id = ?id" |type? } 'string
 	// Args:
-	// * db: PostgreSQL database connection
-	// * sql: SQL query as string or block
+	// * db: PostgreSQL database connection (type: "Rye-psql")
+	// * sql: SQL query as string or block (for debugging/inspection)
 	// Returns:
-	// * string containing the generated SQL with parameters
+	// * string containing the generated SQL with parameters (includes parameter comments if present)
+	// * error if SQL is empty
 	"Rye-psql//Show-SQL": {
 		Argsn: 2,
 		Doc:   "Generates and returns the SQL string without executing it.",
