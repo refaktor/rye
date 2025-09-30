@@ -56,6 +56,9 @@ func countGlyphs(s []rune) int {
 }
 
 func getPrefixGlyphs(s []rune, num int) []rune {
+	if len(s) == 0 {
+		return s
+	}
 	p := 0
 	for n := 0; n < num && p < len(s); p++ {
 		// speed up the common case
@@ -70,10 +73,17 @@ func getPrefixGlyphs(s []rune, num int) []rune {
 	for p < len(s) && unicode.IsOneOf(zeroWidth, s[p]) {
 		p++
 	}
+	// Ensure p doesn't exceed slice bounds
+	if p > len(s) {
+		p = len(s)
+	}
 	return s[:p]
 }
 
 func getSuffixGlyphs(s []rune, num int) []rune {
+	if len(s) == 0 {
+		return s
+	}
 	p := len(s)
 	for n := 0; n < num && p > 0; p-- {
 		// speed up the common case
@@ -84,6 +94,10 @@ func getSuffixGlyphs(s []rune, num int) []rune {
 		if !unicode.IsOneOf(zeroWidth, s[p-1]) {
 			n++
 		}
+	}
+	// Ensure p doesn't go negative
+	if p < 0 {
+		p = 0
 	}
 	return s[p:]
 }
@@ -929,7 +943,13 @@ func getLengthOfLastLine(input string) (int, bool) {
 
 	lines := strings.Split(input, "\n")
 	lastLine := lines[len(lines)-1]
-	return len(lastLine) - 3, true // for the prefix because currently string isn't padded on left line TODO unify this
+
+	// Ensure we never return a negative value to prevent slice bounds errors
+	length := len(lastLine) - 3
+	if length < 0 {
+		length = 0
+	}
+	return length, true // for the prefix because currently string isn't padded on left line TODO unify this
 }
 
 // checkIncompleteBlock checks if the accumulated text has unbalanced braces/brackets/parens
@@ -1504,18 +1524,24 @@ startOfHere:
 					} else {
 						// pos += 1
 						n := len(getSuffixGlyphs(line[:pos], 1))
+
+						// Ensure we don't go negative with the slice bounds
+						startPos := pos - n
+						if startPos < 0 {
+							startPos = 0
+						}
+
 						trace("<---line--->")
-						trace(line[:pos-n])
+						trace(line[:startPos])
 						trace(line[pos:])
 						trace(n)
 						trace(pos)
 						trace(line)
-						// line = append(line[:pos-n], ' ')
-						line = append(line[:pos-n], line[pos:]...)
-						//						line = line[:pos-1]
+
+						// Safely perform the slice operation
+						line = append(line[:startPos], line[pos:]...)
 						trace(line)
-						// line = append(line[:pos-n], line[pos:]...)
-						pos -= n
+						pos = startPos
 						s.needRefresh = true
 					}
 				case 127: // Alt+Backspace (Delete word)

@@ -1,186 +1,111 @@
-# Rye language 🌾
+# HN Surf OpenAI - Python Version
 
-[![Build and Test](https://github.com/refaktor/rye/actions/workflows/build.yml/badge.svg)](https://github.com/refaktor/rye/actions/workflows/build.yml)
-[![golangci-lint](https://github.com/refaktor/rye/actions/workflows/golangci-lint.yml/badge.svg)](https://github.com/refaktor/rye/actions/workflows/golangci-lint.yml)
-[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/refaktor/rye/badge)](https://securityscorecards.dev/viewer/?uri=github.com/refaktor/rye)
-[![Go Reference](https://pkg.go.dev/badge/github.com/refaktor/rye.svg)](https://pkg.go.dev/github.com/refaktor/rye)
-[![Go Report Card](https://goreportcard.com/badge/github.com/refaktor/rye)](https://goreportcard.com/report/github.com/refaktor/rye)
-[![GitHub Release](https://img.shields.io/github/release/refaktor/rye.svg?style=flat)](https://github.com/refaktor/rye/releases/latest)
-[![Homebrew](https://img.shields.io/homebrew/v/ryelang.svg?style=flat)](https://formulae.brew.sh/formula/ryelang)
+Python equivalent of the `hn_surf_openai.rye` script. This script fetches news from Hacker News and Lobsters, then uses OpenAI to summarize the top 3 articles that match your interests.
 
-**For comprehensive documentation, tutorials, and examples, visit [ryelang.org](https://ryelang.org/)**
+## Features
 
-## What is Rye?
+- Fetches content from Hacker News and Lobsters
+- Uses OpenAI API to analyze articles based on your interests
+- Provides streaming output for real-time responses
+- Colored terminal output for better readability
+- Configurable interests and news sites
 
-Rye is a high-level, dynamic programming language inspired by Rebol, Factor, Linux shells, and Go. It features a Go-based interpreter and interactive console, making it an excellent scripting companion for Go programs. Rye can also be embedded into Go applications as a scripting or configuration language.
+## Requirements
 
-Key characteristics:
-- **Homoiconic**: Code is data, data is code
-- **Function-oriented**: No keywords, everything is a function call
-- **Expression-based**: Everything returns a value
-- **First-class functions**: Functions and code blocks are values
-- **Multiple dialects**: Specialized interpreters for different tasks
-- **Safety-focused**: Explicit state changes, pure/impure function separation, validation dialect
+- Python 3.7+
+- OpenAI API key
+- Internet connection
 
-**Status**: Alpha - Core language design is stable, focus is on improving runtime, documentation, and usability.
+## Installation
 
-## Quick Examples
-
-```red
-print "Hello World"
-
-"Hello World" .replace "World" "Mars" |print
-; prints: Hello Mars
-
-"12 8 12 16 8 6" .load .unique .sum
-; returns: 42
-
-{ "Anne" "Joan" "Adam" } |filter { .first = "A" } |for { .print } 
-; prints:
-; Anne
-; Adam
-
-fac: fn { x } { either x = 1 { 1 } { x * fac x - 1 } }
-; function that calculates factorial
-range 1 10 |map { .fac } |print\csv
-; prints: 1,2,6,24,120,720,5040,40320,362880,3628800
-
-kind: "admin"
-open sqlite://data.db |query { select * from user where kind = ?kind }
-; returns: Table of admins
-
-read %name.txt |fix { "Anonymous" } |post* https://example.com/postname 'text
-; makes HTTP post of the name read from a file, or "Anonymous" if file failed to be read
-```
-
-For more examples and interactive demos, visit [ryelang.org/meet_rye/](https://ryelang.org/meet_rye/)
-
-## Building Rye from Source
-
-### Prerequisites
-
-1. Install Go 1.21.5 or later:
-   ```bash
-   # Example for Linux
-   wget https://go.dev/dl/go1.21.5.linux-amd64.tar.gz
-   rm -rf /usr/local/go && tar -C /usr/local -xzf go1.21.5.linux-amd64.tar.gz
-   export PATH=$PATH:/usr/local/go/bin
-   go version
-   ```
-
-### Clone and Build
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/refaktor/rye.git
-   cd rye
-   ```
-
-2. Build options:
-
-   - **Minimal build** (fewer modules, smaller binary):
-     ```bash
-     go build -tags "b_tiny" -o bin/rye
-     ```
-
-   - **Standard build** (most modules included):
-     ```bash
-     go build -o bin/rye
-     # or simply
-     ./build
-     ```
-
-   - **Custom build** (select specific modules):
-     ```bash
-     go build -tags "b_tiny,b_sqlite,b_http,b_json" -o bin/rye
-     ```
-
-3. Run Rye:
-   ```bash
-   # Run the REPL
-   bin/rye
-   
-   # Run a script
-   bin/rye script.rye
-   ```
-
-### Building WASM Version
-
-Rye can run in browsers and other WASM environments:
-
+1. Install the required dependencies:
 ```bash
-GOOS=js GOARCH=wasm go build -tags "b_tiny" -o wasm/rye.wasm main_wasm.go
-# or use the helper script
-./buildwasm
-# Then visit http://localhost:8085/ryeshell/
+pip install -r requirements.txt
 ```
 
-### Running Tests
-
+2. Create a `.oai-token` file in the same directory with your OpenAI API key:
 ```bash
-cd info
-../bin/rye . test
-
-# Generate function reference
-../bin/rye . doc
+echo "your-openai-api-key-here" > .oai-token
 ```
 
-## Getting Rye (Pre-built)
+## Usage
 
-If you prefer not to build from source, you have several options:
+Simply run the script:
+```bash
+python hn_surf_openai.py
+```
 
-### Binaries
+Or make it executable and run directly:
+```bash
+chmod +x hn_surf_openai.py
+./hn_surf_openai.py
+```
 
-Pre-compiled binaries for **Linux**, **macOS**, **Windows**, and **WASM** are available under [Releases](https://github.com/refaktor/rye/releases).
+## Configuration
 
-### Package Managers
+You can customize the script by modifying the configuration variables at the top:
 
-- **Homebrew** (macOS/Linux):
-  ```bash
-  brew install ryelang
-  ```
+```python
+MY_INTERESTS = ["programming languages", "user interfaces"]
+MY_SITES = ["https://news.ycombinator.com/", "https://lobste.rs/"]
+```
 
-- **ArchLinux User Repository** (Arch Linux):
-  ```bash
-  yay -S ryelang
-  ```
+## How it Works
 
-### Docker Images
+1. **Content Fetching**: The script visits each configured news site and extracts the text content from the page body
+2. **AI Analysis**: It sends the content to OpenAI along with your interests
+3. **Streaming Output**: OpenAI's response is streamed in real-time to provide immediate feedback
+4. **Formatted Display**: Results are displayed with colored headers to distinguish between different sites
 
-- **Binary image** (includes Rye and Emacs-nox):
-  ```bash
-  docker run -ti ghcr.io/refaktor/rye
-  ```
+## Example Output
 
-- **Development image** (build from repository):
-  ```bash
-  docker build -t refaktor/rye -f .docker/Dockerfile .
-  docker run -ti refaktor/rye
-  ```
+```
+SITE https://news.ycombinator.com/
+Based on your interests in programming languages and user interfaces, here are the top 3 articles that might interest you:
 
-## Resources
+1. **New Rust Framework for UI Development** - A discussion about a new framework...
+2. **Python Type Annotations Update** - Latest improvements to Python's type system...
+3. **Modern CSS Techniques for Better UX** - Advanced CSS methods for improved user interfaces...
 
-- **[ryelang.org](https://ryelang.org/)** - Official documentation, tutorials, and examples
-- **[Blog](https://ryelang.org/blog/)** - Latest updates and development news
-- **[Examples folder](./examples/)** - Code examples and demos
-- **[Asciinema demos](https://asciinema.org/a/647708)** - Interactive terminal demos
+----
 
-## Extensions and Related Projects
+SITE https://lobste.rs/
+Based on your interests in programming languages and user interfaces, here are the top 3 articles that might interest you:
 
-- **[Rye-fyne](https://github.com/refaktor/rye-fyne)** - GUI toolkit binding
-- **[Rye-gio](https://github.com/refaktor/rye-gio)** - Gioui toolkit binding (WIP)
-- **[Rye-ebitengine](https://github.com/refaktor/rye-ebitengine)** - 2D game engine binding (WIP)
-- **[ryegen](https://github.com/refaktor/ryegen)** - Binding generation toolkit (WIP)
+1. **Functional Programming in Modern JavaScript** - Exploring functional concepts...
+2. **Design System Implementation** - Best practices for building design systems...
+3. **WebAssembly Performance Comparison** - Benchmarking different language compilations...
 
-## Editor Support
+----
+```
 
-- **VS Code**: Search for "ryelang" in the Extension marketplace
-- **Emacs**: Syntax highlighting available soon
+## Dependencies
 
-## Community and Contact
+- `requests`: For HTTP requests to fetch web content
+- `beautifulsoup4`: For parsing HTML and extracting text
+- `openai`: Official OpenAI Python client
+- `colorama`: Cross-platform colored terminal output
 
-- **[GitHub Discussions](https://github.com/refaktor/rye/discussions)**
-- **[Reddit](https://reddit.com/r/ryelang/)**
-- **[Issues](https://github.com/refaktor/rye/issues)**
-- **Email**: janko.itm+rye[at]gmail.com
-- **Twitter**: [@refaktor](https://twitter.com/refaktor)
+## Error Handling
+
+The script includes error handling for:
+- Missing or invalid OpenAI API key
+- Network connectivity issues
+- Invalid responses from news sites
+- OpenAI API errors
+
+## Comparison to Original Rye Script
+
+This Python version replicates the functionality of the original `hn_surf_openai.rye` script:
+
+| Feature | Rye Version | Python Version |
+|---------|-------------|----------------|
+| Content fetching | `surf` module | `requests` + `BeautifulSoup` |
+| OpenAI integration | `openai` builtin | `openai` Python client |
+| Streaming output | Built-in streaming | OpenAI streaming API |
+| Terminal colors | `term/` builtins | `colorama` |
+| Token management | `Read %.oai-token` | File reading with error handling |
+
+## License
+
+This script maintains the same functionality as the original Rye version while being implemented in standard Python with popular libraries.
