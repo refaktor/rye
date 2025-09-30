@@ -2124,6 +2124,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_psql, ps, "psql")
 	RegisterBuiltins2(Builtins_mysql, ps, "mysql")
 	RegisterBuiltins2(Builtins_email, ps, "email")
+	RegisterBuiltins2(Builtins_imap, ps, "imap")
 	RegisterBuiltins2(Builtins_structures, ps, "structs")
 	RegisterBuiltins2(Builtins_smtpd, ps, "smtpd")
 	RegisterBuiltins2(Builtins_mail, ps, "mail")

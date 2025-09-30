@@ -378,7 +378,10 @@ func DisplayInputField(right int, mlen int) (env.Object, bool) {
 			// ShowCur()
 			return nil, true
 		} else if (ascii == 127) || err != nil {
-			text = text[0 : len(text)-1]
+			// Ensure we don't cause a slice bounds error on empty text
+			if len(text) > 0 {
+				text = text[0 : len(text)-1]
+			}
 			RestoreCurPos()
 			termPrint("                  ")
 			RestoreCurPos()

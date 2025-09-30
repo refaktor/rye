@@ -2,7 +2,7 @@
 // +build b_contrib
 
 // NOTE: when compiling contrib modules, also add b_contrib
-// for example: go build -tags "b_sqlite,b_telegram,b_contrib,b_ebitengine"
+// for example: go build -tags "b_sqlite,b_telegram,b_contrib,b_ebitengine,b_surf"
 
 package contrib
 
@@ -43,12 +43,20 @@ var Builtins_contrib = map[string]*env.Builtin{
 	},
 }
 
+// Variable to hold conditional registration functions
+var surfRegistrationFuncs []func(*env.ProgramState, *map[string]int)
+
 func RegisterBuiltins(ps *env.ProgramState, builtinNames *map[string]int) {
 	RegisterBuiltins2(Builtins_contrib, ps, "contrib", builtinNames)
 	RegisterBuiltins2(aws.Builtins_aws, ps, "aws", builtinNames)
 	RegisterBuiltins2(bleve.Builtins_bleve, ps, "bleve", builtinNames)
 	RegisterBuiltins2(postmark.Builtins_postmark, ps, "postmark", builtinNames)
 	RegisterBuiltins2(ryeopenai.Builtins_openai, ps, "openai", builtinNames)
+
+	// Register surf if build tag is present
+	for _, regFunc := range surfRegistrationFuncs {
+		regFunc(ps, builtinNames)
+	}
 }
 
 // var builtinNames map[string]int
