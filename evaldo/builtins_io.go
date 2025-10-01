@@ -22,6 +22,9 @@ import (
 
 var Builtins_io = map[string]*env.Builtin{
 
+	//
+	// ##### Console IO ##### "Console input and output functions"
+	//
 	// Args:
 	// * prompt: string to display as a prompt
 	// Returns:
@@ -49,7 +52,7 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 
 	//
-	// ##### IO ##### "IO related functions"
+	// ##### File Operations ##### "File system operations and file manipulation"
 	//
 	// Tests:
 	// equal { Open %data/file.txt |type? } 'native
@@ -716,6 +719,11 @@ var Builtins_io = map[string]*env.Builtin{
 			},
 		}, */
 
+	// ---
+
+	//
+	// ##### HTTPs Operations ##### "Web requests and HTTP protocol functions"
+	//
 	// Args:
 	// * url: uri representing the HTTPS URL to request
 	// Returns:
@@ -1140,6 +1148,9 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
+	//
+	// ##### Email Operations ##### "Email sending and SMTP communication"
+	//
 	// Args:
 	// * to: email address to send to
 	// * message: string containing the email message
@@ -1210,6 +1221,9 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
+	//
+	// ##### FTP Operations ##### "File Transfer Protocol operations and connections"
+	//
 	// Args:
 	// * server: uri representing the FTP server to connect to
 	// Returns:
@@ -1305,6 +1319,9 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
+	//
+	// ##### File Monitoring ##### "File watching and tailing operations"
+	//
 	// Args:
 	// * path: uri or string representing the file to tail
 	// * follow: boolean indicating whether to follow the file for new content

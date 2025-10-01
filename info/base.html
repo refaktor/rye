@@ -36,7 +36,7 @@
       </aside>
       <main class="content">
         
-<h2>Boolean logic </h2><p>Functions that work with true and false values.</p><div class='section'>
+<h2>Boolean </h2><p>Functions that work with true and false values.</p><div class='section'>
 <h3>true</h3><p>Returns a boolean true value.</p>
 <p class='arg'>none</p>
 <p class='returns'><b>returns</b> boolean true value</p>
@@ -54,19 +54,6 @@
 ; returns false</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>false |type?
 ; returns boolean</code></pre>
-</div>
-<h3>_|</h3><p>Pipeline operator that passes the value through unchanged (used with 'not' and other operations).</p>
-<p class='arg'><b>value</b> Any value to be passed through unchanged</p>
-<p class='returns'><b>returns</b> the original value (used in pipeline operations for explicit pass-through)</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>5
-; returns 5</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>"hello"
-; returns "hello"</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>true
-; returns true</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>{ 1 2 3 }
-; returns { 1 2 3 }</code></pre>
 </div>
 <h3>not</h3><p>Performs logical negation on boolean values only.</p>
 <p class='arg'><b>value</b> Boolean value to be negated</p>
@@ -206,22 +193,6 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>any\with 5 "not-a-block"
 ; correctly causes error:
 ; builtin `any\with` requires argument 2 to be: Block. </code></pre>
-</div>
-</div>
-<h2>Default</h2><p></p><div class='section'>
-<h3>addnums</h3><p>Optimized version of + that adds two numbers, working with both integers and decimals.</p>
-<p class='arg'><b>value1</b> First number (integer or decimal)</p>
-<p class='arg'><b>value2</b> Second number to add</p>
-<p class='returns'><b>returns</b> sum of the two numbers</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>1 .addnums 1
-; returns 2</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>3 .addnums 4
-; returns 7</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>5.6 .addnums 7.8
-; returns 13.399999999999999</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>5 .addnums 2.5
-; returns 7.5</code></pre>
 </div>
 </div>
 <h2>Numbers </h2><p>Working with numbers, integers and decimals.</p><div class='section'>
@@ -1140,7 +1111,7 @@ ASDF
 <p class='returns'><b>returns</b> list containing all values from the dictionary</p>
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 "b" 2 "c" 3 } |values
-; returns list { 3 1 2 }</code></pre>
+; returns list { 1 2 3 }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "x" 10 "y" 20 } |values |length?
 ; returns 2</code></pre>
 </div>
@@ -1199,10 +1170,6 @@ ASDF
 ; returns { 1 2 3 }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>unique { 1 1 2 2 } |sort
 ; returns { 1 2 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>unique "aabbc" |length?
-; returns 3</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>unique "ab" |length?
-; returns 2</code></pre>
 </div>
 <h3>reverse</h3><p>Creates a new collection with items in reverse order from the input collection.</p>
 <p class='arg'><b>collection</b> Block, list or string to reverse</p>
@@ -1674,7 +1641,7 @@ th!</h3><p>Changes the value at a specific position in a block or list in-place 
 ; returns 223</code></pre>
 </div>
 </div>
-<h2>Default</h2><p></p><div class='section'>
+<h2>Functions </h2><p>functions that create functions</p><div class='section'>
 <h3>var</h3><p>Declares a word as a variable with the given value, allowing it to be modified. Can only be used once per word in a context.</p>
 <p class='arg'><b>word</b> Tagword representing the variable name</p>
 <p class='arg'><b>value</b> Initial value for the variable</p>
@@ -1780,7 +1747,7 @@ th!</h3><p>Changes the value at a specific position in a block or list in-place 
 ; returns 15</code></pre>
 </div>
 </div>
-<h2>Default</h2><p></p><div class='section'>
+<h2>Other </h2><p>...</p><div class='section'>
 <h3>change!</h3><p>Searches for a word and changes it's value in-place. Only works on variables declared with var. If value changes returns true otherwise false</p>
 <p class='arg'><b>value</b> New value to assign to the word</p>
 <p class='arg'><b>word</b> Word whose value should be changed</p>
@@ -1825,11 +1792,24 @@ th!</h3><p>Changes the value at a specific position in a block or list in-place 
 <p class='returns'><b>returns</b> A new context of the specified kind</p>
 <div class='group'>
 </div>
+<h3>_|</h3><p>Pipeline operator that passes the value through unchanged (used with 'not' and other operations).</p>
+<p class='arg'><b>value</b> Any value to be passed through unchanged</p>
+<p class='returns'><b>returns</b> the original value (used in pipeline operations for explicit pass-through)</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>5
+; returns 5</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>"hello"
+; returns "hello"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>true
+; returns true</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>{ 1 2 3 }
+; returns { 1 2 3 }</code></pre>
+</div>
 <h3>save\current</h3><p>Saves current state of the program to a file.</p>
 <p class='arg'>None</p>
 <p class='returns'><b>returns</b> Integer 1 on success</p>
 <div class='group'>
-State current context to [1mconsole_250925_123958.rye[0m.
+State current context to [1mconsole_251001_082635.rye[0m.
 <pre class='prettyprint lang-rye'><code language='lang-rye'>save\current |type?
 ; returns integer</code></pre>
 </div>
@@ -1990,8 +1970,6 @@ State current context to [1mconsole_250925_123958.rye[0m.
 <pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } do\par c { x:: 200 } c/x
 ; returns 100</code></pre>
 </div>
-</div>
-<h2>Other </h2><p>functions related to date and time</p><div class='section'>
 <h3>return</h3><p>Accepts one value and returns it.</p>
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>x: fn { } { return 101 202 } x

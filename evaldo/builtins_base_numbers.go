@@ -11,16 +11,9 @@ import (
 
 var builtins_numbers = map[string]*env.Builtin{
 
-	// Tests:
-	// equal { 1 .addnums 1 } 2
-	// equal { 3 .addnums 4 } 7
-	// equal { 5.6 .addnums 7.8 } 13.400000
-	// equal { 5 .addnums 2.5 } 7.5
-	// Args:
-	// * value1: First number (integer or decimal)
-	// * value2: Second number to add
-	// Returns:
-	// * sum of the two numbers
+	//
+	// ##### Numbers ##### "Working with numbers, integers and decimals."
+	//
 	"addnums": {
 		Argsn: 2,
 		Doc:   "Optimized version of + that adds two numbers, working with both integers and decimals.",
@@ -73,9 +66,6 @@ var builtins_numbers = map[string]*env.Builtin{
 		},
 	},
 
-	//
-	// ##### Numbers ##### "Working with numbers, integers and decimals."
-	//
 	// Tests:
 	// equal { inc 123 } 124
 	// equal { inc 0 } 1

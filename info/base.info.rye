@@ -1,4 +1,4 @@
-section "Boolean logic " "Functions that work with true and false values." {
+section "Boolean " "Functions that work with true and false values." {
 	group "true" 
 	"Returns a boolean true value."
 	{
@@ -21,20 +21,6 @@ section "Boolean logic " "Functions that work with true and false values." {
 	{
 		equal { false } false
 		equal { false |type? } 'boolean
-	}
-
-	group "_|" 
-	"Pipeline operator that passes the value through unchanged (used with 'not' and other operations)."
-	{
-		arg `value: Any value to be passed through unchanged`
-		returns `the original value (used in pipeline operations for explicit pass-through)`
-	}
-
-	{
-		equal { 5 _| } 5
-		equal { "hello" _| } "hello"
-		equal { true _| } true
-		equal { { 1 2 3 } _| } { 1 2 3 }
 	}
 
 	group "not" 
@@ -155,24 +141,6 @@ section "Boolean logic " "Functions that work with true and false values." {
 		equal { any\with false { .not , .to-string } } true
 		; equal { any\with true { .not , .to-string } } "true"
 		error { any\with 5 "not-a-block" }
-	}
-
-}
-
-section "Default" "" {
-	group "addnums" 
-	"Optimized version of + that adds two numbers, working with both integers and decimals."
-	{
-		arg `value1: First number (integer or decimal)`
-		arg `value2: Second number to add`
-		returns `sum of the two numbers`
-	}
-
-	{
-		equal { 1 .addnums 1 } 2
-		equal { 3 .addnums 4 } 7
-		equal { 5.6 .addnums 7.8 } 13.400000
-		equal { 5 .addnums 2.5 } 7.5
 	}
 
 }
@@ -1807,7 +1775,7 @@ section "Contexts " "Context related functions" {
 
 }
 
-section "Default" "" {
+section "Functions " "functions that create functions" {
 	group "var" 
 	"Declares a word as a variable with the given value, allowing it to be modified. Can only be used once per word in a context."
 	{
@@ -1944,7 +1912,7 @@ section "Default" "" {
 
 }
 
-section "Default" "" {
+section "Other " "..." {
 	group "change!" 
 	"Searches for a word and changes it's value in-place. Only works on variables declared with var. If value changes returns true otherwise false"
 	{
@@ -2005,6 +1973,20 @@ section "Default" "" {
 
 	{
 		; TODO equal   { person: kind 'person { name: "" age: 0 } person << dict { "name" "John" "age" 30 } |type? } 'ctx
+	}
+
+	group "_|" 
+	"Pipeline operator that passes the value through unchanged (used with 'not' and other operations)."
+	{
+		arg `value: Any value to be passed through unchanged`
+		returns `the original value (used in pipeline operations for explicit pass-through)`
+	}
+
+	{
+		equal { 5 _| } 5
+		equal { "hello" _| } "hello"
+		equal { true _| } true
+		equal { { 1 2 3 } _| } { 1 2 3 }
 	}
 
 	group "save\\current" 
@@ -2246,9 +2228,6 @@ section "Default" "" {
 		equal  { c: context { x: 100 } do\par c { x:: 200 } c/x } 100
 	}
 
-}
-
-section "Other " "functions related to date and time" {
 	group "return" 
 	"Accepts one value and returns it."
 	{

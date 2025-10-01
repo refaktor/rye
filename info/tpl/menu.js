@@ -35,10 +35,10 @@ function generateMenuFromHeadings(node, hh) {
         link.setAttribute('href', `#${h2Id}`);
         link.textContent = h2.textContent;
         menuItem.appendChild(link);
-
+	
 	var div = _dom.seekFwd(h2, "DIV");
 
-	if (div.className == "section") {
+	if (div != null && div.className == "section") {
 	    var submenu = generateMenuFromHeadings(div, "h3");
 	    if (submenu) {
 		menuItem.appendChild(submenu);

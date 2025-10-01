@@ -733,6 +733,9 @@ var builtins = map[string]*env.Builtin{
 		},
 	}, */
 
+	//
+	// ##### Other ##### "..."
+	//
 	// Tests:
 	// equal   { var 'x 123 , change! 234 'x , x } 234
 	// equal   { a:: 123 change! 333 'a a } 333
@@ -918,6 +921,24 @@ var builtins = map[string]*env.Builtin{
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.KindType}, "_<<")
 			}
+		},
+	},
+
+	// Tests:
+	// equal { 5 _| } 5
+	// equal { "hello" _| } "hello"
+	// equal { true _| } true
+	// equal { { 1 2 3 } _| } { 1 2 3 }
+	// Args:
+	// * value: Any value to be passed through unchanged
+	// Returns:
+	// * the original value (used in pipeline operations for explicit pass-through)
+	"_|": {
+		Argsn: 1,
+		Doc:   "Pipeline operator that passes the value through unchanged (used with 'not' and other operations).",
+		Pure:  true,
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return arg0
 		},
 	},
 
@@ -1718,9 +1739,6 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	//
-	// ##### Other ##### "functions related to date and time"
-	//
 	// return , error , failure functions
 	// Tests:
 	// equal { x: fn { } { return 101 202 } x } 101
