@@ -30,7 +30,7 @@ jobs:
           fetch-tags: true
           persist-credentials: false
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version: 'stable'
 
