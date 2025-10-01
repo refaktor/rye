@@ -11,7 +11,7 @@ retract v0.0.11 // Published accidentally with a bug
 require (
 	filippo.io/age v1.2.1
 	github.com/BrianLeishman/go-imap v0.1.18
-	github.com/JohannesKaufmann/html-to-markdown/v2 v2.3.3
+	github.com/JohannesKaufmann/html-to-markdown/v2 v2.4.0
 	github.com/PuerkitoBio/goquery v1.10.3
 	github.com/atotto/clipboard v0.1.4
 	github.com/aws/aws-sdk-go-v2 v1.39.2
