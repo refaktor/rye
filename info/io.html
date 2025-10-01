@@ -36,14 +36,14 @@
       </aside>
       <main class="content">
         
-<h2>Default</h2><p></p><div class='section'>
+<h2>Console IO </h2><p>Console input and output functions</p><div class='section'>
 <h3>input</h3><p>Prompts for and reads user input from the console.</p>
 <p class='arg'><b>prompt</b> string to display as a prompt</p>
 <p class='returns'><b>returns</b> string containing the user's input</p>
 <div class='group'>
 </div>
 </div>
-<h2>IO </h2><p>IO related functions</p><div class='section'>
+<h2>File Operations </h2><p>File system operations and file manipulation</p><div class='section'>
 <h3>file-schema//Open</h3><p>Opens a file for reading.</p>
 <p class='arg'><b>path</b> uri representing the file to open</p>
 <p class='returns'><b>returns</b> native file object</p>
@@ -208,6 +208,8 @@
 <p class='returns'><b>returns</b> the writer object if successful</p>
 <div class='group'>
 </div>
+</div>
+<h2>HTTPs Operations </h2><p>Web requests and HTTP protocol functions</p><div class='section'>
 <h3>https-schema//Open</h3><p>Opens a HTTPS GET request and returns a reader for the response body.</p>
 <p class='arg'><b>url</b> uri representing the HTTPS URL to request</p>
 <p class='returns'><b>returns</b> native reader object for the response body</p>
@@ -273,12 +275,16 @@
 <p class='returns'><b>returns</b> string containing the response body</p>
 <div class='group'>
 </div>
+</div>
+<h2>Email Operations </h2><p>Email sending and SMTP communication</p><div class='section'>
 <h3>email//Send</h3><p>Sends an email to the specified address.</p>
 <p class='arg'><b>to</b> email address to send to</p>
 <p class='arg'><b>message</b> string containing the email message</p>
 <p class='returns'><b>returns</b> integer 1 if successful</p>
 <div class='group'>
 </div>
+</div>
+<h2>FTP Operations </h2><p>File Transfer Protocol operations and connections</p><div class='section'>
 <h3>ftp-schema//Open</h3><p>Opens a connection to an FTP server.</p>
 <p class='arg'><b>server</b> uri representing the FTP server to connect to</p>
 <p class='returns'><b>returns</b> native ftp-connection object</p>
@@ -297,6 +303,8 @@
 <p class='returns'><b>returns</b> native reader object for the retrieved file</p>
 <div class='group'>
 </div>
+</div>
+<h2>File Monitoring </h2><p>File watching and tailing operations</p><div class='section'>
 <h3>tail-file</h3><p>Tails a file, following it for new content. Used for monitoring log files.</p>
 <p class='arg'><b>path</b> uri or string representing the file to tail</p>
 <p class='arg'><b>follow</b> boolean indicating whether to follow the file for new content</p>

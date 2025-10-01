@@ -11,7 +11,6 @@ var builtins_functions = map[string]*env.Builtin{
 	//
 	// ##### Functions ##### "functions that create functions"
 	//
-
 	// Tests:
 	// equal { var 'x 10 x:: 20 x } 20
 	// Args:

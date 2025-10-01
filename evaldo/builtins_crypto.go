@@ -67,6 +67,9 @@ verify buffer pubk sigb
 
 var Builtins_crypto = map[string]*env.Builtin{
 
+	//
+	// ##### Basic Cryptographic Operations ##### "Hashing, encoding, and basic cryptographic functions"
+	//
 	// Tests:
 	//  equal { cc crypto "48656c6c6f20776f726c64" |decode\hex |type? } 'native
 	//  equal { cc crypto "48656c6c6f20776f726c64" |decode\hex |kind? } 'bytes
@@ -518,8 +521,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 		},
 	},
 
-	// pkcs12
-
+	//
+	// ##### PKCS#12 Operations ##### "PKCS#12 file format encoding and decoding"
+	//
 	// Tests:
 	// ; equal { cc crypto "cert.p12" read-file "password" pkcs12-to-pem |type? } 'block
 	// ; equal { cc crypto "cert.p12" read-file "password" pkcs12-to-pem |first |type? } 'native
@@ -668,6 +672,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 		},
 	},
 
+	//
+	// ##### PEM Operations ##### "PEM format encoding and decoding operations"
+	//
 	// Tests:
 	// ; equal { cc crypto "cert.pem" read-file |pem-decode |block-type? } "CERTIFICATE"
 	// Args:
@@ -765,6 +772,9 @@ var Builtins_crypto = map[string]*env.Builtin{
 		},
 	},
 
+	//
+	// ##### X.509 Certificate Operations ##### "X.509 certificate analysis and manipulation"
+	//
 	// Tests:
 	// ; equal { cc crypto "cert.pem" read-file |pem-decode |x509-parse-certificate |not-after? |type? } 'time
 	// Args:

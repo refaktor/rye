@@ -1,4 +1,4 @@
-section "Default" "" {
+section "Console IO " "Console input and output functions" {
 	group "input" 
 	"Prompts for and reads user input from the console."
 	{
@@ -11,7 +11,7 @@ section "Default" "" {
 
 }
 
-section "IO " "IO related functions" {
+section "File Operations " "File system operations and file manipulation" {
 	group "file-schema//Open" 
 	"Opens a file for reading."
 	{
@@ -259,6 +259,9 @@ section "IO " "IO related functions" {
 	{
 	}
 
+}
+
+section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	group "https-schema//Open" 
 	"Opens a HTTPS GET request and returns a reader for the response body."
 	{
@@ -379,6 +382,9 @@ section "IO " "IO related functions" {
 	{
 	}
 
+}
+
+section "Email Operations " "Email sending and SMTP communication" {
 	group "email//Send" 
 	"Sends an email to the specified address."
 	{
@@ -390,6 +396,9 @@ section "IO " "IO related functions" {
 	{
 	}
 
+}
+
+section "FTP Operations " "File Transfer Protocol operations and connections" {
 	group "ftp-schema//Open" 
 	"Opens a connection to an FTP server."
 	{
@@ -423,6 +432,9 @@ section "IO " "IO related functions" {
 	{
 	}
 
+}
+
+section "File Monitoring " "File watching and tailing operations" {
 	group "tail-file" 
 	"Tails a file, following it for new content. Used for monitoring log files."
 	{

@@ -36,7 +36,7 @@
       </aside>
       <main class="content">
         
-<h2>Default</h2><p></p><div class='section'>
+<h2>Basic Cryptographic Operations </h2><p>Hashing, encoding, and basic cryptographic functions</p><div class='section'>
 <h3>decode\hex</h3><p>Decodes a hexadecimal string to a bytes native value.</p>
 <p class='arg'><b>hex-string</b> hexadecimal encoded string to decode</p>
 <p class='returns'><b>returns</b> native bytes object containing the decoded data</p>
@@ -179,6 +179,8 @@
 <p class='returns'><b>returns</b> block containing [private-key, certificates-block, ca-certificates-block] as native values</p>
 <div class='group'>
 </div>
+</div>
+<h2>PEM Operations </h2><p>PEM format encoding and decoding operations</p><div class='section'>
 <h3>pem-block//Block-type?</h3><p>Returns the type of a PEM block as a string (e.g., 'CERTIFICATE', 'RSA PRIVATE KEY').</p>
 <p class='arg'><b>pem-block</b> PEM block as a native value</p>
 <p class='returns'><b>returns</b> string containing the block type (e.g., "CERTIFICATE", "RSA PRIVATE KEY")</p>
