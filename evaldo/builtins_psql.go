@@ -17,17 +17,6 @@ var Builtins_psql = map[string]*env.Builtin{
 	//
 	// ##### PostgreSQL Database Functions #####
 	//
-	// This module provides comprehensive PostgreSQL database connectivity and operations.
-	// Functions support both parameterized queries and prepared statements for secure
-	// database interactions. All functions handle proper connection management and
-	// provide detailed error reporting.
-	//
-	// Security Note: Always use parameterized queries (blocks) instead of string
-	// concatenation to prevent SQL injection attacks.
-	//
-	// Connection Management: Connections should be properly closed when no longer needed.
-	// Consider connection pooling for high-throughput applications.
-	//
 	// Tests:
 	// equal { postgres-schema//Open %"postgres://user:pass@localhost:5432/dbname" |type? } 'native
 	// Args:
