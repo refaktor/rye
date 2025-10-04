@@ -163,7 +163,7 @@ Pre-compiled binaries for **Linux**, **macOS**, **Windows**, and **WASM** are av
 - **[ryelang.org](https://ryelang.org/)** - Official documentation, tutorials, and examples
 - **[Blog](https://ryelang.org/blog/)** - Latest updates and development news
 - **[Examples folder](./examples/)** - Code examples and demos
-- **[Asciinema demos](https://asciinema.org/a/647708)** - Interactive terminal demos
+- **[Asciinema demos](https://asciinema.org/~refaktor)** - Interactive terminal demos
 
 ## Extensions and Related Projects
 
@@ -174,8 +174,9 @@ Pre-compiled binaries for **Linux**, **macOS**, **Windows**, and **WASM** are av
 
 ## Editor Support
 
-- **VS Code**: Search for "ryelang" in the Extension marketplace
-- **Emacs**: Syntax highlighting available soon
+- **VS Code**: Search for "ryelang" in the Extension marketplace [repository](https://github.com/refaktor/rye-vscode)
+- **Emacs**: [syntax highlighting](https://github.com/refaktor/rye/tree/main/editors/emacs)
+- **NeoVIM**: [syntax highlighting](https://github.com/refaktor/rye/tree/main/editors/nvim)
 
 ## Community and Contact
 
@@ -183,4 +184,3 @@ Pre-compiled binaries for **Linux**, **macOS**, **Windows**, and **WASM** are av
 - **[Reddit](https://reddit.com/r/ryelang/)**
 - **[Issues](https://github.com/refaktor/rye/issues)**
 - **Email**: janko.itm+rye[at]gmail.com
-- **Twitter**: [@refaktor](https://twitter.com/refaktor)
