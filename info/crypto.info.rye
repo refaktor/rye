@@ -1,4 +1,4 @@
-section "Default" "" {
+section "Basic Cryptographic Operations " "Hashing, encoding, and basic cryptographic functions" {
 	group "decode\\hex" 
 	"Decodes a hexadecimal string to a bytes native value."
 	{
@@ -217,6 +217,9 @@ section "Age " "Age encryption/decryption and key generation" {
 		; equal { cc crypto "cert.p12" read-file "password" pkcs12-decode |third |type? } 'block
 	}
 
+}
+
+section "PEM Operations " "PEM format encoding and decoding operations" {
 	group "pem-block//Block-type?" 
 	"Returns the type of a PEM block as a string (e.g., 'CERTIFICATE', 'RSA PRIVATE KEY')."
 	{

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <script src="wasm_exec.js"></script>
+    <script src="jsGoo.js"></script>
+    <link rel="stylesheet" href="xterm.css" />
+    <script src="xterm.js"></script>
+    
+    <style>
+      body {
+        font-family: 'Roboto', Arial, sans-serif;
+        background-color: #222;
+        padding: 5px;
+        margin: 0;
+        font-size: 12px;
+        width: 600px;
+        height: 500px;
+        overflow: hidden;
+      }
+      
+      h3 {
+        font-family: mono;
+        font-weight: normal;
+        font-size: 12px;
+        color: #999;
+        padding: 5px;
+        margin: 0 0 5px 0;
+        text-align: center;
+      }
+      
+      #terminal {
+        width: 590px;
+        height: 460px;
+        padding: 5px;
+        border: 1px solid #555;
+        background-color: #111;
+        margin: 0 auto;
+      }
+      
+      .controls {
+        position: absolute;
+        top: 5px;
+        right: 10px;
+        z-index: 1000;
+      }
+      
+      .controls button {
+        background: #333;
+        color: #ccc;
+        border: 1px solid #555;
+        padding: 2px 6px;
+        font-size: 10px;
+        cursor: pointer;
+        border-radius: 3px;
+        margin-left: 3px;
+      }
+      
+      .controls button:hover {
+        background: #444;
+      }
+    </style>	
+  </head>
+
+  <body>
+    <div class="controls">
+      <button id="clearBtn" title="Clear terminal">Clear</button>
+      <button id="floatBtn" title="Open in floating window">Float</button>
+    </div>
+    
+    <h3>Rye Console</h3>
+    <div id="terminal"></div>
+    
+    <script>
+      let term;
+      
+      // WASM initialization
+      if (WebAssembly) {
+        // WebAssembly.instantiateStreaming is not currently available in Safari
+        if (WebAssembly && !WebAssembly.instantiateStreaming) { // polyfill
+          WebAssembly.instantiateStreaming = async (resp, importObject) => {
+            const source = await (await resp).arrayBuffer();
+            return await WebAssembly.instantiate(source, importObject);
+          };
+        }  
+        
+        const go = new Go();
+        WebAssembly.instantiateStreaming(fetch('main.wasm'), go.importObject).then(function(dat) {
+          go.run(dat.instance);
+          InitRyeShell();
+          console.log("INIT RYE SHELL");
+          initializeTerminal();
+        });
+      } else {
+        console.log("WebAssembly is not supported in your browser")
+      }
+      
+      // Global functions that WASM expects
+      function receiveMessageFromGo(ret) {
+        console.log("Message received from Go:", ret);
+        if (term) term.write(ret);
+      }
+      
+      function receiveLineFromGo(line) {
+        return evaluateShellLine(line, term);
+      }
+
+      function onWasmStdout(out) {
+        if (term) term.write(out+"\n\r");
+      }
+      
+      function evaluateShellLine(code, term) {
+        var ret = RyeEvalShellLine(code);
+        console.log("EVAL SHELL LINE:");
+        console.log(ret);
+        return ret;
+      }
+      
+      // Terminal setup
+      function initializeTerminal() {
+        let theme = {
+          foreground: '#F8F8F8',
+          background: '#111314',
+          selection: '#5DA5D533',
+          black: '#1E1E1D',
+          brightBlack: '#262625',
+          red: '#CE5C5C',
+          brightRed: '#FF7272',
+          green: '#5BCC5B',
+          brightGreen: '#72FF72',
+          yellow: '#CCCC5B',
+          brightYellow: '#FFFF72',
+          blue: '#5D5DD3',
+          brightBlue: '#7279FF',
+          magenta: '#BC5ED1',
+          brightMagenta: '#E572FF',
+          cyan: '#5DA5D5',
+          brightCyan: '#72F0FF',
+          white: '#F8F8F8',
+          brightWhite: '#FFFFFF'
+        };
+        
+        term = new Terminal({
+          windowsMode: ['Windows', 'Win16', 'Win32', 'WinCE'].indexOf(navigator.platform) >= 0,
+          fontFamily: '"Cascadia Code", Menlo, monospace',
+          fontSize: 12,
+          convertEol: true,
+          rows: 28,
+          cols: 80
+        });
+        
+        term.options.theme = theme;
+        term.options.cursorBlink = true;
+        
+        term.attachCustomKeyEventHandler((arg) => {
+          if (arg.ctrlKey && arg.code === "KeyV" && arg.type === "keydown") {
+            navigator.clipboard.readText()
+              .then(text => {
+                term.write(text);
+              });
+          }
+          return true;
+        });  
+        
+        term.open(document.getElementById('terminal'));
+        term.focus();
+        term.writeln("Welcome to Rye web console. It's a work in progress. Visit \x1b[38;5;14mryelang.org\x1b[0m for more.");
+        term.writeln("- \x1b[38;5;246mtype in lsp (list parent context) too see some functions, or ls to see yours \x1b[0m-");
+        term.writeln("--------------------------------------------------------------------------------");
+        
+        term.onKey((ev) => {
+          window.SendKeypress(ev.domEvent.key, ev.domEvent.keyCode, ev.domEvent.ctrlKey, ev.domEvent.altKey, ev.domEvent.shiftKey);
+        });
+        
+        // Setup controls
+        document.getElementById('clearBtn').addEventListener('click', function() {
+          if (term) {
+            term.clear();
+          }
+        });
+        
+        document.getElementById('floatBtn').addEventListener('click', function() {
+          // For future: open in new window
+          console.log('Float functionality not yet implemented');
+        });
+      }
+    </script>
+  </body>
+</html>

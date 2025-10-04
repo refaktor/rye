@@ -1,9 +1,468 @@
-section "MySQL " "MySQL database functions" {
-	group "mysql-schema//Open" 
-	"Opens a connection to a MySQL database."
+section "Console IO " "Console input and output functions" {
+	group "input" 
+	"Prompts for and reads user input from the console."
 	{
-		arg `uri: MySQL connection string URI`
-		returns `native MySQL database connection`
+		arg `prompt: string to display as a prompt`
+		returns `string containing the user's input`
+	}
+
+	{
+	}
+
+}
+
+section "File Operations " "File system operations and file manipulation" {
+	group "file-schema//Open" 
+	"Opens a file for reading."
+	{
+		arg `path: uri representing the file to open`
+		returns `native file object`
+	}
+
+	{
+		equal { Open %data/file.txt |type? } 'native
+		equal { Open %data/file.txt |kind? } 'file
+	}
+
+	group "file-schema//Open\\append" 
+	"Opens a file for appending."
+	{
+		arg `path: uri representing the file to open for appending`
+		returns `native writer object`
+	}
+
+	{
+		equal { Open\append %data/file.txt |type? } 'native
+		equal { Open\append %data/file.txt |kind? } 'writer
+	}
+
+	group "file-schema//Create" 
+	"Creates a new file."
+	{
+		arg `path: uri representing the file to create`
+		returns `native file object`
+	}
+
+	{
+		equal { Create %data/created.txt |type? } 'native
+		equal { Create %data/created.txt |kind? } 'file
+	}
+
+	group "file-ext?" 
+	"Gets the extension of a file."
+	{
+		arg `path: uri or string representing a file path`
+		returns `string containing the file extension (including the dot)`
+	}
+
+	{
+		equal { file-ext? %data/file.txt } ".txt"
+		equal { file-ext? %data/file.temp.png } ".png"
+		equal { file-ext? "data/file.temp.png" } ".png"
+	}
+
+	group "reader" 
+	"Creates a new reader from a file path, file object, or string."
+	{
+		arg `source: uri, file object, or string to read from`
+		returns `native reader object`
+	}
+
+	{
+		equal { reader %data/file.txt |kind? } 'reader
+		equal { reader Open %data/file.txt |kind? } 'reader
+		equal { reader "some string" |kind? } 'reader
+	}
+
+	group "stdin" 
+	"Gets a reader for standard input."
+	{
+		arg `none`
+		returns `native reader object connected to standard input`
+	}
+
+	{
+	}
+
+	group "stdout" 
+	"Gets a writer for standard output."
+	{
+		arg `none`
+		returns `native writer object connected to standard output`
+	}
+
+	{
+	}
+
+	group "reader//Read\\string" 
+	"Reads all content from a reader as a string."
+	{
+		arg `reader: native reader object`
+		returns `string containing all content from the reader`
+	}
+
+	{
+		equal { reader "some string" |Read\string } "some string"
+	}
+
+	group "reader//Copy" 
+	"Copies all content from a reader to a writer."
+	{
+		arg `reader: native reader object`
+		arg `writer: native writer object`
+		returns `the reader object if successful`
+	}
+
+	{
+	}
+
+	group "file//Copy" 
+	"Copies content from a file to a writer."
+	{
+		arg `file: native file object`
+		arg `writer: native writer object`
+		returns `the file object if successful`
+	}
+
+	{
+	}
+
+	group "file//Stat" 
+	"Gets file information (stat) for a file."
+	{
+		arg `file: native file object`
+		returns `native file-info object`
+	}
+
+	{
+		equal { Stat Open %data/file.txt |kind? } 'file-info
+	}
+
+	group "file-info//Size?" 
+	"Gets the size of a file in bytes."
+	{
+		arg `file-info: native file-info object`
+		returns `integer representing the file size in bytes`
+	}
+
+	{
+		equal { Size? Stat Open %data/file.txt } 16
+	}
+
+	group "file//Read-all" 
+	"Reads the entire content of a file as a string."
+	{
+		arg `file: native file object`
+		returns `string containing the entire file content`
+	}
+
+	{
+		equal { Read-all Open %data/file.txt } "hello text file\n"
+	}
+
+	group "file//Seek\\end" 
+	"Seeks to the end of a file."
+	{
+		arg `file: native file object`
+		returns `the same file object with position set to end of file`
+	}
+
+	{
+	}
+
+	group "file//Close" 
+	"Closes an open file."
+	{
+		arg `file: native file object`
+		returns `empty string if successful`
+	}
+
+	{
+		equal { Close Open %data/file.txt } ""
+	}
+
+	group "file-schema//Read" 
+	"Reads the entire content of a file as a string."
+	{
+		arg `path: uri representing the file to read`
+		returns `string containing the entire file content`
+	}
+
+	{
+		equal { Read %data/file.txt } "hello text file\n"
+	}
+
+	group "file-schema//Read\\bytes" 
+	"Reads the entire content of a file as bytes."
+	{
+		arg `path: uri representing the file to read`
+		returns `native bytes object containing the file content`
+	}
+
+	{
+		equal { Read %data/file.txt } "hello text file\n"
+	}
+
+	group "file-schema//Read\\lines" 
+	"Reads a file and returns its content as a block of lines."
+	{
+		arg `path: uri representing the file to read`
+		returns `block of strings, each representing a line from the file`
+	}
+
+	{
+		equal { Read %data/file.txt } "hello text file\n"
+	}
+
+	group "file-schema//Write" 
+	"Writes content to a file."
+	{
+		arg `path: uri representing the file to write to`
+		arg `content: string or bytes to write to the file`
+		returns `the content that was written`
+	}
+
+	{
+		equal { Write %data/write.txt "written\n" } "written\n"
+	}
+
+	group "write\\bytes" 
+	"Writes bytes to a file."
+	{
+		arg `bytes: Go-bytes native value to write`
+		arg `path: string path to the file to write`
+		returns `integer 1 if successful`
+	}
+
+	{
+	}
+
+	group "append\\bytes" 
+	"Appends two byte arrays into one."
+	{
+		arg `bytes1: first Go-bytes native value`
+		arg `bytes2: second Go-bytes native value`
+		returns `combined bytes as a native bytes object`
+	}
+
+	{
+	}
+
+	group "writer//Write\\string" 
+	"Writes a string to a writer."
+	{
+		arg `writer: native writer object`
+		arg `content: string to write`
+		returns `the writer object if successful`
+	}
+
+	{
+	}
+
+}
+
+section "HTTPs Operations " "Web requests and HTTP protocol functions" {
+	group "https-schema//Open" 
+	"Opens a HTTPS GET request and returns a reader for the response body."
+	{
+		arg `url: uri representing the HTTPS URL to request`
+		returns `native reader object for the response body`
+	}
+
+	{
+	}
+
+	group "https-schema//Get" 
+	"Makes a HTTPS GET request and returns the response body as a string."
+	{
+		arg `url: uri representing the HTTPS URL to request`
+		returns `string containing the response body`
+	}
+
+	{
+	}
+
+	group "https-schema//Post" 
+	"Makes a HTTPS POST request and returns the response body as a string."
+	{
+		arg `url: uri representing the HTTPS URL to request`
+		arg `data: string containing the request body`
+		arg `content-type: word specifying the content type (e.g., 'json', 'text')`
+		returns `string containing the response body`
+	}
+
+	{
+	}
+
+	group "http-schema//Get" 
+	"Makes a HTTP GET request and returns the response body as a string."
+	{
+		arg `url: uri representing the HTTP URL to request`
+		returns `string containing the response body`
+	}
+
+	{
+	}
+
+	group "http-schema//Post" 
+	"Makes a HTTP POST request and returns the response body as a string."
+	{
+		arg `url: uri representing the HTTP URL to request`
+		arg `data: string containing the request body`
+		arg `content-type: word specifying the content type (e.g., 'json', 'text')`
+		returns `string containing the response body`
+	}
+
+	{
+	}
+
+	group "https-schema//Request" 
+	"Creates a new HTTPS request object."
+	{
+		arg `url: uri representing the HTTPS URL to request`
+		arg `method: word specifying the HTTP method (e.g., 'GET', 'POST')`
+		arg `data: string containing the request body`
+		returns `native https-request object`
+	}
+
+	{
+	}
+
+	group "https-request//Header!" 
+	"Sets a header on a HTTPS request."
+	{
+		arg `request: native https-request object`
+		arg `name: word representing the header name`
+		arg `value: string containing the header value`
+		returns `the request object if successful`
+	}
+
+	{
+	}
+
+	group "https-request//Basic-auth!" 
+	"Sets Basic Authentication on a HTTPS request."
+	{
+		arg `request: native https-request object`
+		arg `username: string containing the username`
+		arg `password: string containing the password`
+		returns `the request object if successful`
+	}
+
+	{
+	}
+
+	group "https-request//Call" 
+	"Executes a HTTPS request and returns the response."
+	{
+		arg `request: native https-request object`
+		returns `native https-response object`
+	}
+
+	{
+	}
+
+	group "https-response//Reader" 
+	"Gets a reader for the HTTPS response body that can be used with io.Copy."
+	{
+		arg `response: native https-response object`
+		returns `native reader object for the response body`
+	}
+
+	{
+	}
+
+	group "https-response//Read-body" 
+	"Reads the body of a HTTPS response as a string."
+	{
+		arg `response: native https-response object`
+		returns `string containing the response body`
+	}
+
+	{
+	}
+
+}
+
+section "Email Operations " "Email sending and SMTP communication" {
+	group "email//Send" 
+	"Sends an email to the specified address."
+	{
+		arg `to: email address to send to`
+		arg `message: string containing the email message`
+		returns `integer 1 if successful`
+	}
+
+	{
+	}
+
+}
+
+section "FTP Operations " "File Transfer Protocol operations and connections" {
+	group "ftp-schema//Open" 
+	"Opens a connection to an FTP server."
+	{
+		arg `server: uri representing the FTP server to connect to`
+		returns `native ftp-connection object`
+	}
+
+	{
+	}
+
+	group "ftp-connection//Login" 
+	"Logs in to an FTP server connection."
+	{
+		arg `connection: native ftp-connection object`
+		arg `username: string containing the username`
+		arg `password: string containing the password`
+		returns `the connection object if successful`
+	}
+
+	{
+	}
+
+	group "ftp-connection//Retrieve" 
+	"Retrieves a file from an FTP server."
+	{
+		arg `connection: native ftp-connection object`
+		arg `path: string containing the path of the file to retrieve`
+		returns `native reader object for the retrieved file`
+	}
+
+	{
+	}
+
+}
+
+section "File Monitoring " "File watching and tailing operations" {
+	group "tail-file" 
+	"Tails a file, following it for new content. Used for monitoring log files."
+	{
+		arg `path: uri or string representing the file to tail`
+		arg `follow: boolean indicating whether to follow the file for new content`
+		arg `reopen: boolean indicating whether to reopen the file if it's rotated`
+		returns `native tail-file object that can be used to read lines as they are added`
+	}
+
+	{
+	}
+
+	group "tail-file//Read-line" 
+	"Reads the next line from a tailed file. Blocks until a line is available."
+	{
+		arg `tail: native tail-file object`
+		returns `string containing the next line from the file, or nil if no more lines`
+	}
+
+	{
+	}
+
+	group "tail-file//Close" 
+	"Closes a tailed file, stopping the monitoring."
+	{
+		arg `tail: native tail-file object`
+		returns `empty string if successful`
+>>>>>>> 15fe12d3eff6de582f54fd500e2bd724cd33e3fa
 	}
 
 	{

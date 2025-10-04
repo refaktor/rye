@@ -826,6 +826,7 @@ func CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, toLeft
 	} else {
 		EvalBlock(ps)
 	}
+	MaybeDisplayFailureOrError(ps, ps.Idx, "Call func X")
 	//	}
 	// MaybeDisplayFailureOrError(result, result.Idx, "call function")
 	if ps.ForcedResult != nil {

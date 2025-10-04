@@ -20,9 +20,9 @@ var builtins_apply = map[string]*env.Builtin{
 		Doc:   "Applies a function or builtin to a block of arguments.",
 		Pure:  false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch fn := arg1.(type) {
+			switch fn := arg0.(type) {
 			case env.Function:
-				switch args := arg2.(type) {
+				switch args := arg1.(type) {
 				case env.Block:
 					// Check if we have enough arguments
 					if args.Series.Len() < fn.Argsn {
@@ -85,7 +85,7 @@ var builtins_apply = map[string]*env.Builtin{
 				}
 
 			case env.Builtin:
-				switch args := arg0.(type) {
+				switch args := arg1.(type) {
 				case env.Block:
 					// Check if we have enough arguments
 					if args.Series.Len() < fn.Argsn {
