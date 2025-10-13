@@ -11,6 +11,10 @@ import (
 
 // Error Creation Functions
 var ErrorCreationBuiltins = map[string]*env.Builtin{
+	//
+	// ##### Failure ###### "Handling failures"
+	//
+
 	// Tests:
 	// equal { try { fail "error message" } |type? } 'error
 	// equal { try { fail "error message" } |message? } "error message"
@@ -993,6 +997,54 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "retry")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { persist { 10 + 1 } } 11
+	// equal { counter:: 0 persist { counter:: counter + 1 , if counter > 3 { counter } { fail "not ready" } } } 4
+	// error { persist { fail "always fails" } }
+	// Args:
+	// * block: Block of code to execute repeatedly until it succeeds
+	// Returns:
+	// * result of the block when it finally succeeds (no failure), or error if 1000 attempts exceeded
+	"persist": {
+		Argsn:         1,
+		Doc:           "Executes a block repeatedly until it succeeds (no failure), then returns the successful result. Gives up after 1000 attempts.",
+		AcceptFailure: true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg0.(type) {
+			case env.Block:
+				// Store current series
+				ser := ps.Ser
+
+				// Keep trying up to 1000 attempts
+				for attempt := 1; attempt <= 1000; attempt++ {
+					// Reset the series and flags for each attempt
+					ps.Ser = bloc.Series
+					ps.Ser.Reset()
+					ps.FailureFlag = false
+					ps.ErrorFlag = false
+
+					// Execute the block
+					EvalBlock(ps)
+
+					// If it succeeded (no failure flag), return the result
+					if !ps.FailureFlag {
+						ps.Ser = ser
+						return ps.Res
+					}
+
+					// If it failed, continue to next attempt (unless we've reached the limit)
+				}
+
+				// If we reach here, we've exceeded 1000 attempts
+				ps.Ser = ser
+				ps.FailureFlag = true
+				return MakeRyeError(ps, *env.NewString("Persist failed: Block did not succeed after 1000 attempts"), nil)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "persist")
 			}
 		},
 	},

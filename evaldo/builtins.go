@@ -739,13 +739,13 @@ var builtins = map[string]*env.Builtin{
 	// Tests:
 	// equal   { var 'x 123 , change! 234 'x , x } 234
 	// equal   { a:: 123 change! 333 'a a } 333
-	// equal   { a:: 123 change! 124 'a } 1
-	// equal   { a:: 123 change! 123 'a } 0
+	// equal   { a:: 123 change! 124 'a } true
+	// equal   { a:: 123 change! 123 'a } false
 	// Args:
 	// * value: New value to assign to the word
 	// * word: Word whose value should be changed
 	// Returns:
-	// * Integer 1 if the value changed, 0 if the new value is the same as the old value
+	// * Boolean true if the value changed, false if the new value is the same as the old value
 	"change!": { // ***
 		Argsn: 2,
 		Doc:   "Searches for a word and changes it's value in-place. Only works on variables declared with var. If value changes returns true otherwise false",
@@ -761,13 +761,11 @@ var builtins = map[string]*env.Builtin{
 						return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(arg.Index) + "', use 'var' to declare it as a variable")
 					}
 
-					var res int64
 					if arg0.GetKind() == val.GetKind() && arg0.Inspect(*ps.Idx) == val.Inspect(*ps.Idx) {
-						res = 0
+						return *env.NewBoolean(false)
 					} else {
-						res = 1
+						return *env.NewBoolean(true)
 					}
-					return *env.NewInteger(res)
 				}
 				return MakeBuiltinError(ps, "Word not found in context.", "change!")
 			default:

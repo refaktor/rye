@@ -28,7 +28,7 @@ var builtins_functions = map[string]*env.Builtin{
 				// Convert tagword to index
 				idx := word.Index
 				// Check if word already exists in context
-				if _, exists := ps.Ctx.Get(idx); exists {
+				if _, exists := ps.Ctx.GetCurrent(idx); exists {
 					ps.FailureFlag = true
 					return env.NewError("Cannot redefine existing word '" + ps.Idx.GetWord(idx) + "' with var")
 				}
@@ -41,7 +41,7 @@ var builtins_functions = map[string]*env.Builtin{
 				// Use word index directly
 				idx := word.Index
 				// Check if word already exists in context
-				if _, exists := ps.Ctx.Get(idx); exists {
+				if _, exists := ps.Ctx.GetCurrent(idx); exists {
 					ps.FailureFlag = true
 					return env.NewError("Cannot redefine existing word '" + ps.Idx.GetWord(idx) + "' with var")
 				}

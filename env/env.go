@@ -329,6 +329,11 @@ func (i RyeCtx) DumpBare(e Idxs) string {
 	return &obj, exists
 }*/
 
+func (e *RyeCtx) GetCurrent(word int) (Object, bool) {
+	obj, exists := e.state[word]
+	return obj, exists
+}
+
 func (e *RyeCtx) Get(word int) (Object, bool) {
 	obj, exists := e.state[word]
 	// recursively look at outer Environments ...

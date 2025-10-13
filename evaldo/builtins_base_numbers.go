@@ -113,6 +113,77 @@ var builtins_numbers = map[string]*env.Builtin{
 	},
 
 	// Tests:
+	// equal { negate 123 } -123
+	// equal { negate -123 } 123
+	// equal { negate 0 } 0
+	// equal { negate 5.5 } -5.5
+	// equal { negate -2.3 } 2.3
+	// error { negate "123" }
+	// Args:
+	// * value: Number (integer, decimal, or complex) to negate
+	// Returns:
+	// * negated number of the same type
+	"negate": { // ***
+		Argsn: 1,
+		Doc:   "Negates a number by multiplying it by -1, works with integers, decimals, and complex numbers.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg := arg0.(type) {
+			case env.Integer:
+				return *env.NewInteger(-arg.Value)
+			case env.Decimal:
+				return *env.NewDecimal(-arg.Value)
+			case env.Complex:
+				return *env.NewComplex(-arg.Value)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "negate")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { invert 2 } 0.5
+	// equal { invert 4 } 0.25
+	// equal { invert 0.5 } 2.0
+	// equal { invert -2 } -0.5
+	// equal { invert 1 } 1.0
+	// error { invert 0 }
+	// error { invert "123" }
+	// Args:
+	// * value: Number (integer, decimal, or complex) to invert (must not be zero)
+	// Returns:
+	// * reciprocal (1/value) as decimal or complex number
+	"invert": { // ***
+		Argsn: 1,
+		Doc:   "Calculates the reciprocal (1/x) of a number, works with integers, decimals, and complex numbers.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg := arg0.(type) {
+			case env.Integer:
+				if arg.Value == 0 {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Can't invert zero.", "invert")
+				}
+				return *env.NewDecimal(1.0 / float64(arg.Value))
+			case env.Decimal:
+				if arg.Value == 0.0 {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Can't invert zero.", "invert")
+				}
+				return *env.NewDecimal(1.0 / arg.Value)
+			case env.Complex:
+				if arg.Value == complex(0, 0) {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Can't invert zero complex number.", "invert")
+				}
+				return *env.NewComplex(complex(1.0, 0.0) / arg.Value)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "invert")
+			}
+		},
+	},
+
+	// Tests:
 	// equal { is-positive 123 } true
 	// equal { is-positive -123 } false
 	// equal { is-positive 0 } false

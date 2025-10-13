@@ -1655,4 +1655,52 @@ var builtins_iteration = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	// equal { x: 5 until { x = 0 } { x:: x - 1 } x } 0
+	// equal { x: 10 y: 0 until { x = 5 } { x:: x - 1 y:: y + x } y } 35
+	// equal { x: 3 until { x < 1 } { x:: x - 1 } x } 0
+	// equal { x: 0 until { x > 0 } { x:: x + 1 } x } 1
+	"do\\until": {
+		Argsn: 2,
+		Doc:   "Executes a block of code repeatedly until a condition becomes true. Executes the body at least once before checking condition (do-until loop).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch cond := arg1.(type) {
+			case env.Block:
+				switch bloc := arg0.(type) {
+				case env.Block:
+					ser := ps.Ser
+					for {
+						// Execute the body block first (do-until behavior)
+						ps.Ser = bloc.Series
+						ps.Ser.Reset()
+						EvalBlock(ps)
+						if ps.ErrorFlag || ps.ReturnFlag {
+							ps.Ser = ser
+							return ps.Res
+						}
+
+						// Then evaluate the condition block
+						ps.Ser = cond.Series
+						ps.Ser.Reset()
+						EvalBlock(ps)
+						if ps.ErrorFlag {
+							return ps.Res
+						}
+
+						// Check if the condition is true - if so, exit
+						if util.IsTruthy(ps.Res) {
+							break
+						}
+					}
+					ps.Ser = ser
+					return ps.Res
+				default:
+					return MakeArgError(ps, 1, []env.Type{env.BlockType}, "until")
+				}
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "until")
+			}
+		},
+	},
 }
