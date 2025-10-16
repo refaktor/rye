@@ -48,6 +48,7 @@ var surfRegistrationFuncs []func(*env.ProgramState, *map[string]int)
 
 func RegisterBuiltins(ps *env.ProgramState, builtinNames *map[string]int) {
 	RegisterBuiltins2(Builtins_contrib, ps, "contrib", builtinNames)
+	// RegisterBuiltins2(arkecs.Builtins_arkecs, ps, "arkecs", builtinNames)
 	RegisterBuiltins2(aws.Builtins_aws, ps, "aws", builtinNames)
 	RegisterBuiltins2(bleve.Builtins_bleve, ps, "bleve", builtinNames)
 	RegisterBuiltins2(postmark.Builtins_postmark, ps, "postmark", builtinNames)

@@ -1,0 +1,188 @@
+; error_handling_demo.rye
+; Demonstrates the use of error handling builtins in Rye
+
+; ===== Basic Error Creation and Handling =====
+
+print "===== Basic Error Creation and Handling ====="
+
+; Create a simple error
+err: failure "Something went wrong"
+print ["Simple error:" err]
+print ["Error message:" err |message?]
+
+; Create an error with a status code
+http-err: failure 404
+print ["HTTP error status:" http-err |status?]
+
+; Create an error with multiple properties
+detailed-err: failure { 'validation-error 422 "Invalid input" "field" "email" "reason" "format" }
+print ["Detailed error:" detailed-err]
+print ["Error kind:" detailed-err |error-kind?]
+print ["Error status:" detailed-err |status?]
+print ["Error message:" detailed-err |message?]
+print ["Error details:" detailed-err |details?]
+print ["Field with issue:" detailed-err |details? .field]
+print ["Reason for error:" detailed-err |details? .reason]
+
+; ===== Error Chaining =====
+
+print "\n===== Error Chaining ====="
+
+; Create a chain of errors
+db-err: failure "Database connection failed"
+app-err: failure\wrap "Application error" db-err
+api-err: failure\wrap "API request failed" app-err
+
+print ["Top level error:" api-err |message?]
+print ["Root cause:" api-err |cause? |message?]
+
+; ===== Error Handling Patterns =====
+
+print "\n===== Error Handling Patterns ====="
+
+; Pattern 1: Try-Fix - Handle errors with a recovery block
+print "\n-- Pattern 1: Try-Fix --"
+
+divide-safely: fn { x y } {
+    if y = 0 {
+        fail "Division by zero"
+    } else {
+        x / y
+    }
+}
+
+result1: try { divide-safely 10 2 }
+print ["Success result:" result1]
+
+result2: try { divide-safely 10 0 |fix { "Used default value instead" } }
+print ["Fixed result:" result2]
+
+; Pattern 2: Check-Continue - Add context to errors and continue processing
+print "\n-- Pattern 2: Check-Continue --"
+
+process-user: fn { user-id } {
+    ; Simulate a database lookup
+    if user-id < 1000 {
+        fail { 'not-found 404 "User not found" "id" user-id }
+    }
+    
+    ; Return user data
+    { "id" user-id "name" "John Doe" "email" "john@example.com" }
+}
+
+handle-request: fn { user-id } {
+    process-user user-id
+        |check "Error processing user request"
+        |continue { user ->
+            print ["Processing user:" user.name]
+            user
+        }
+}
+
+print "Successful request:"
+handle-request 1001
+
+print "\nFailed request:"
+try {
+    handle-request 999
+} |fix { err ->
+    print ["Request failed:" err |message?]
+    print ["Original error:" err |cause? |message?]
+    print ["Status code:" err |cause? |status?]
+}
+
+; Pattern 3: Ensure - Validate conditions
+print "\n-- Pattern 3: Ensure --"
+
+validate-age: fn { age } {
+    age > 0 |ensure "Age must be positive"
+    age >= 18 |ensure "Must be at least 18 years old"
+    "Age is valid"
+}
+
+print "Valid age:"
+try { validate-age 21 } |fix\either { err -> ["Validation failed:" err |message?] } { "Valid!" }
+
+print "Invalid age:"
+try { validate-age 15 } |fix\either { err -> ["Validation failed:" err |message?] } { "Valid!" }
+
+; Pattern 4: Error matching
+print "\n-- Pattern 4: Error Matching --"
+
+handle-http-error: fn { status } {
+    ^fix\match failure status {
+        404 { "Not Found - The requested resource does not exist" }
+        500 { "Server Error - Something went wrong on our end" }
+        429 { "Too Many Requests - Please slow down" }
+        _ { "Unknown error occurred" }
+    }
+}
+
+print ["404 error:" handle-http-error 404]
+print ["500 error:" handle-http-error 500]
+print ["Unknown error:" handle-http-error 403]
+
+; ===== Advanced Error Handling =====
+
+print "\n===== Advanced Error Handling ====="
+
+; Retry pattern
+print "\n-- Retry Pattern --"
+
+flaky-operation: fn { } {
+    ; Simulate an operation that sometimes fails
+    static 'attempts 0
+    attempts:: attempts + 1
+    
+    if attempts < 3 {
+        print ["Attempt" attempts "failed"]
+        fail "Temporary failure"
+    }
+    
+    print ["Attempt" attempts "succeeded"]
+    "Operation completed successfully"
+}
+
+print "Retrying flaky operation:"
+result: retry 5 { flaky-operation }
+print ["Final result:" result]
+
+; Timeout pattern
+print "\n-- Timeout Pattern --"
+
+slow-operation: fn { } {
+    print "Starting slow operation..."
+    sleep 2000
+    "Slow operation completed"
+}
+
+print "With sufficient timeout:"
+result1: timeout 5000 { slow-operation }
+print ["Result:" result1]
+
+print "\nWith insufficient timeout:"
+try {
+    timeout 1000 { slow-operation }
+} |fix { err ->
+    print ["Error:" err |message?]
+}
+
+; Finally pattern for cleanup
+print "\n-- Finally Pattern for Cleanup --"
+
+resource: "open"
+
+operation-with-cleanup: fn { } {
+    finally {
+        print "Performing operation..."
+        ; Simulate an error
+        fail "Operation failed"
+    } {
+        ; This cleanup code always runs
+        print "Cleaning up resources..."
+        resource:: "closed"
+    }
+}
+
+try { operation-with-cleanup }
+print ["Resource state after error:" resource]

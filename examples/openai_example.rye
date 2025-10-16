@@ -1,0 +1,106 @@
+#!/usr/bin/env rye
+
+; OpenAI API Examples using the official OpenAI Go client
+; Make sure to set your OPENAI_API_KEY environment variable before running
+
+; Create an OpenAI client
+api-key: get-env "OPENAI_API_KEY"
+client: new-openai-client api-key
+
+; Example 1: Simple chat completion
+print "Example 1: Simple chat completion"
+response1: client chat-complete "What is the capital of France?"
+print response1
+print ""
+
+; Example 2: Chat completion with conversation history
+print "Example 2: Chat completion with conversation"
+conversation: [
+    { "role" "system" "content" "You are a helpful assistant that speaks like a pirate." }
+    { "role" "user" "content" "Hello, how are you?" }
+]
+response2: client chat-complete conversation
+print response2
+print ""
+
+; Example 3: Chat completion with options
+print "Example 3: Chat completion with options"
+options: {
+    "model" "gpt-4o-mini"
+    "temperature" 0.7
+    "max-tokens" 100
+}
+response3: client chat-complete-with-options "Write a short poem about programming" options
+print response3
+print ""
+
+; Example 4: Create embeddings for a single text
+print "Example 4: Create embeddings"
+embeddings: client create-embeddings "Hello, world!"
+print "Embedding dimensions:" embeddings length
+print ""
+
+; Example 5: Generate an image
+print "Example 5: Generate an image"
+image-url: client generate-image "A cute cat sitting on a laptop keyboard"
+print "Generated image URL:" image-url
+print ""
+
+; Example 6: Generate image with options
+print "Example 6: Generate image with options"
+image-options: {
+    "size" "1024x1024"
+    "quality" "hd"
+    "model" "dall-e-3"
+}
+image-url2: client generate-image-with-options "A futuristic cityscape at sunset" image-options
+print "Generated HD image URL:" image-url2
+print ""
+
+; Example 7: List available models
+print "Example 7: List available models"
+models: client list-models
+print "Available models:"
+models each { model |
+    print "- " model/id " (owned by " model/owned-by ")"
+}
+print ""
+
+; Example 8: Get structured JSON response
+print "Example 8: Get structured JSON response"
+json-prompt: "Generate a JSON object with information about a fictional character including name, age, occupation, and hobbies array"
+json-response: client get-response-json json-prompt
+print "Character info:"
+print "Name:" json-response/name
+print "Age:" json-response/age
+print "Occupation:" json-response/occupation
+print "Hobbies:" json-response/hobbies
+print ""
+
+; Example 9: Streaming chat completion
+print "Example 9: Streaming chat completion"
+print "Streaming response:"
+full-response: client chat-complete-stream "Tell me a short story about a robot" { chunk |
+    ; This block is called for each chunk of the response
+    print-nonl chunk  ; print without newline to show streaming effect
+}
+print ""
+print "Full response received:" full-response
+print ""
+
+; Example 10: Streaming with options
+print "Example 10: Streaming with options"
+stream-options: {
+    "model" "gpt-4o-mini"
+    "temperature" 0.8
+    "max-tokens" 50
+}
+print "Streaming creative response:"
+creative-response: client chat-complete-stream-with-options "Write a haiku about code" stream-options { chunk |
+    print-nonl chunk
+}
+print ""
+print "Complete haiku:" creative-response
+print ""
+
+print "All examples completed!"

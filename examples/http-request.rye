@@ -1,0 +1,266 @@
+; Example -
+;  * make a HTTP GET request with Basic Auth
+;  * extract filename from headers
+;  * save to local file
+
+Rye .args? .validate { 'strict one { integer } } |check "script argument id" |first :id
+
+load %temp.cfg.rye |dict |validate>ctx { token: required string } |check "loading setup" :setup
+
+re: regexp "filename\*?=[f']?(.*?)[']?(?:;?$)"
+
+embed id "https://www.example.com/API-pdf?id={}&res=inv"
+|to-uri .Request 'GET "" 
+|Basic-auth! setup/token "x"
+|Call :resp 
+|Header? "Content-Disposition" |Submatch?* re
+|to-file .Create .defer\ 'Close
+|Copy* resp .Reader .defer\ 'Close
+
+; embed id "https://www.cebelca.biz/API-pdf?id={}&res=invoice-sent&lang=si&format=pdf&doctitle=Račun%20št."
+
+
+; ----
+
+; BLOGPOST IDEA ... 
+; Title: Reducing assumptions and exploding our nice minimal scripts
+; Assumptions are the __ for all fu**ups, but what does this say about our elegant scripts	
+; First we make minimal examples in Rye and Py
+; Then we load config and get api
+; Then we validate inputs
+; Then we add all error handling
+
+
+; ## Step 1
+; We assume that script always gets one integer argumen
+; We assume that the cfg file is always with correct content
+; We assume request never fails
+; We assume the Content disposition filename is always in response
+; We assume we ca create a new file
+; We don't close the Reader and the File
+
+Rye .args? .load .first :id
+load %temp.cfg.rye |dict |to-context :setup
+
+re: regexp "filename\*?=[f']?(.*?)[']?(?:;?$)"
+
+embed id "https://www.example.com/API-pdf?id={}&res=inv"
+|to-uri .Request 'GET "" 
+|Basic-auth! setup/token "x"
+|Call :resp 
+|Header? "Content-Disposition" |Submatch?* re
+|to-file .Create
+|Copy* Reader resp
+
+; ## Step 2
+; We not check the arguments for type and that there is only one
+; We validate the config file content, check if field token
+; We explicitly close the file we Create and the Reader
+
+Rye .args? .validate { 'strict one { integer } } 
+|check "script argument id" |first :id
+
+load %temp.cfg.rye |dict |validate>ctx { token: required string } 
+|check "loading setup" :setup
+
+re: regexp "filename\*?=[f']?(.*?)[']?(?:;?$)"
+
+embed id "https://www.example.com/API-pdf?id={}&res=inv"
+|to-uri .Request 'GET "" 
+|Basic-auth! setup/token "x"
+|Call :resp 
+|Header? "Content-Disposition" |Submatch?* re
+|to-file .Create .defer\ 'Close
+|Copy* resp .Reader .defer\ 'Close
+
+; ## Step 3
+; We check and report on failure to open cfg file
+; We check and report on failire to make a Http call
+; We fix and set default value if content-disposition file is not given
+; We check if we could Create the file
+
+Rye .args? .validate { 'strict one { integer } }
+|^check "script argument id" |first :id
+
+load %temp.cfg.rye |check "couldn't open config" |dict
+|validate>ctx { token: required string } |^check "loading setup" :setup
+
+re: regexp "filename\*?=[f']?(.*?)[']?(?:;?$)"
+
+embed id "https://www.example.com/API-pdf?id={}&res=inv"
+|to-uri .Request 'GET "" 
+|Basic-auth! setup/token "x"
+|Call |^check "Http request failed" :resp 
+|Header? "Content-Disposition"
+|Submatch?* re |fix { "default.pdf" }
+|to-file .Create |^check "couldn't create local pdf" |defer\ 'Close
+|Copy* resp .Reader .defer\ 'Close |^check "couldn't save contents"
+
+; ----
+
+; ## Python equivalents
+
+; ## Python Step 1
+; Same assumptions as Rye version:
+; - Assumes script always gets one integer argument
+; - Assumes cfg file is always with correct content  
+; - Assumes request never fails
+; - Assumes Content-Disposition filename is always in response
+; - Assumes we can create a new file
+; - Doesn't close files properly
+
+#!/usr/bin/env python3
+import sys
+import json
+import requests
+import re
+from requests.auth import HTTPBasicAuth
+
+id = int(sys.argv[1])
+
+with open('temp.cfg.json') as f:
+    setup = json.load(f)
+
+pattern = re.compile(r"filename\*?=[f']?(.*?)[']?(?:;?$)")
+
+url = f"https://www.example.com/API-pdf?id={id}&res=inv"
+resp = requests.get(url, auth=HTTPBasicAuth(setup['token'], 'x'))
+
+content_disp = resp.headers['Content-Disposition']
+filename = pattern.search(content_disp).group(1)
+
+with open(filename, 'wb') as f:
+    f.write(resp.content)
+
+; ## Python Step 2  
+; Basic validation and cleanup:
+; - Check arguments for type and that there is only one
+; - Validate config file content, check if token field exists
+; - Explicitly close files properly
+
+#!/usr/bin/env python3
+import sys
+import json
+import requests
+import re
+from requests.auth import HTTPBasicAuth
+
+# Validate arguments
+if len(sys.argv) != 2:
+    raise ValueError("script argument id - expected exactly one integer")
+try:
+    id = int(sys.argv[1])
+except ValueError:
+    raise ValueError("script argument id - must be an integer")
+
+# Load and validate config
+with open('temp.cfg.json') as f:
+    setup = json.load(f)
+
+if 'token' not in setup or not isinstance(setup['token'], str):
+    raise ValueError("loading setup - token field required as string")
+
+pattern = re.compile(r"filename\*?=[f']?(.*?)[']?(?:;?$)")
+
+url = f"https://www.example.com/API-pdf?id={id}&res=inv"
+resp = requests.get(url, auth=HTTPBasicAuth(setup['token'], 'x'))
+
+content_disp = resp.headers['Content-Disposition'] 
+match = pattern.search(content_disp)
+filename = match.group(1)
+
+with open(filename, 'wb') as f:
+    f.write(resp.content)
+"""
+
+; ## Python Step 3
+; Full error handling:
+; - Check and report on failure to open cfg file
+; - Check and report on failure to make HTTP call
+; - Fix and set default value if content-disposition file is not given  
+; - Check if we could create the file
+; - Add error checking throughout
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+"""
+#!/usr/bin/env python3
+import sys
+import json
+import requests
+import re
+from requests.auth import HTTPBasicAuth
+
+# Validate arguments
+if len(sys.argv) != 2:
+    print("Error: script argument id - expected exactly one integer", file=sys.stderr)
+    sys.exit(1)
+try:
+    id = int(sys.argv[1])
+except ValueError:
+    print("Error: script argument id - must be an integer", file=sys.stderr)
+    sys.exit(1)
+
+# Load and validate config
+try:
+    with open('temp.cfg.json') as f:
+        setup = json.load(f)
+except (FileNotFoundError, json.JSONDecodeError) as e:
+    print(f"Error: couldn't open config - {e}", file=sys.stderr)
+    sys.exit(1)
+
+if 'token' not in setup or not isinstance(setup['token'], str):
+    print("Error: loading setup - token field required as string", file=sys.stderr)
+    sys.exit(1)
+
+pattern = re.compile(r"filename\*?=[f']?(.*?)[']?(?:;?$)")
+
+url = f"https://www.example.com/API-pdf?id={id}&res=inv"
+
+try:
+    resp = requests.get(url, auth=HTTPBasicAuth(setup['token'], 'x'))
+    resp.raise_for_status()  # Raises HTTPError for bad responses
+except requests.RequestException as e:
+    print(f"Error: Http request failed - {e}", file=sys.stderr)
+    sys.exit(1)
+
+# Extract filename with default fallback
+content_disp = resp.headers.get('Content-Disposition', '')
+match = pattern.search(content_disp) if content_disp else None
+filename = match.group(1) if match else "default.pdf"
+
+try:
+    with open(filename, 'wb') as f:
+        f.write(resp.content)
+except IOError as e:
+    print(f"Error: couldn't create local pdf - {e}", file=sys.stderr)
+    sys.exit(1)
+except Exception as e:
+    print(f"Error: couldn't save contents - {e}", file=sys.stderr)
+    sys.exit(1)
+"""
+
+
+
+... best suggestion:
+
+https://x.com/i/grok?conversation=1970546243849121933
+
+also:
+
+https://gemini.google.com/app/1f32c133563e4e68
+
+https://chatgpt.com/c/68d2dcf7-92ac-832f-9a1c-e54e76e49a9b
