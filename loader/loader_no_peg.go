@@ -1153,14 +1153,14 @@ func (p *NoPEGParser) Parse() (env.Object, error) {
 func formatErrorLocationNoPEG(line string, col int) string {
 	var bu strings.Builder
 
-	// Add the line with error
-	bu.WriteString(line + "\n")
+	// Add the line with error in bright white
+	bu.WriteString("\x1b[1;37m" + line + "\x1b[0m\n")
 
 	// Add pointer to error position with better visibility
 	if col > 0 && col <= len(line)+1 {
-		// Create a more visible error pointer
-		bu.WriteString(strings.Repeat(" ", col-1) + "^\n")
-		bu.WriteString(strings.Repeat(" ", col-1) + "|\n")
+		// Create a more visible error pointer in bold red
+		bu.WriteString("\x1b[1;31m" + strings.Repeat(" ", col-1) + "^\n")
+		bu.WriteString(strings.Repeat(" ", col-1) + "|\x1b[0m\n")
 	}
 
 	return bu.String()
@@ -1359,11 +1359,15 @@ func enhanceErrorMessageNoPEG(tok NoPEGToken, err error, input string, filePath 
 	// Build enhanced error message
 	var bu strings.Builder
 
-	// Add error location
+	// Add error location with colors
 	if filePath != "" {
-		bu.WriteString(fmt.Sprintf("Syntax error in %s at line %d, column %d\n", filePath, lineNum, colNum))
+		bu.WriteString("\x1b[1;31mSyntax error\x1b[0m in \x1b[1;34m" + filePath +
+			"\x1b[0m at line \x1b[1;33m" + fmt.Sprintf("%d", lineNum) +
+			"\x1b[0m, column \x1b[1;33m" + fmt.Sprintf("%d", colNum) + "\x1b[0m\n")
 	} else {
-		bu.WriteString(fmt.Sprintf("Syntax error at line %d, column %d\n", lineNum, colNum))
+		bu.WriteString("\x1b[1;31mSyntax error\x1b[0m at line \x1b[1;33m" +
+			fmt.Sprintf("%d", lineNum) + "\x1b[0m, column \x1b[1;33m" +
+			fmt.Sprintf("%d", colNum) + "\x1b[0m\n")
 	}
 
 	// Add the error location visualization
@@ -1372,7 +1376,7 @@ func enhanceErrorMessageNoPEG(tok NoPEGToken, err error, input string, filePath 
 	// Add context about what might be wrong
 	errorContext := inferErrorContextNoPEG(tok, err, line, colNum, input, lineNum)
 	if errorContext != "" {
-		bu.WriteString(errorContext + "\n")
+		bu.WriteString("\x1b[33m" + errorContext + "\x1b[0m\n")
 	}
 
 	// Add suggestions for fixing the error
@@ -1380,6 +1384,9 @@ func enhanceErrorMessageNoPEG(tok NoPEGToken, err error, input string, filePath 
 	// if suggestion != "" {
 	//	bu.WriteString("Suggestion: " + suggestion + "\n")
 	// }
+
+	// Add a red separator line after error for better visibility
+	bu.WriteString("\x1b[1;31m" + strings.Repeat("─", 50) + "\x1b[0m\n")
 
 	return bu.String()
 }
@@ -1425,6 +1432,7 @@ func LoadStringNoPEG(input string, sig bool) (env.Object, *env.Idxs) {
 }
 
 // LoadStringNEWNoPEG loads a string using the non-PEG parser with a program state
+// This version injects LocationNodes at newlines for better error reporting
 func LoadStringNEWNoPEG(input string, sig bool, ps *env.ProgramState) env.Object {
 	if sig {
 		signed := checkCodeSignature(input)
@@ -1437,30 +1445,60 @@ func LoadStringNEWNoPEG(input string, sig bool, ps *env.ProgramState) env.Object
 
 	input = removeBangLine(input)
 
-	// Check if input needs to be wrapped in a block
-	input = "{ " + input + " }"
+	// Split input into lines to inject LocationNodes
+	lines := strings.Split(input, "\n")
+
+	// Parse line by line and inject LocationNodes
+	var allObjects []env.Object
 
 	wordIndexMutex.Lock()
 	wordIndex = ps.Idx
-	parser := NewParserNoPEG(input, wordIndex)
-	if parser == nil {
-		wordIndexMutex.Unlock()
-		return *env.NewError("Failed to create parser")
+
+	for lineNum, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue // Skip empty lines
+		}
+
+		// Inject LocationNode at the beginning of each line
+		locationNode := env.NewLocationNode(ps.ScriptPath, lineNum+1, 1, line)
+		allObjects = append(allObjects, *locationNode)
+
+		// Parse the line content
+		lineInput := "{ " + line + " }"
+		parser := NewParserNoPEG(lineInput, wordIndex)
+		if parser == nil {
+			wordIndexMutex.Unlock()
+			return *env.NewError("Failed to create parser")
+		}
+
+		val, err := parser.Parse()
+		if err != nil {
+			wordIndexMutex.Unlock()
+			var bu strings.Builder
+			bu.WriteString("In file " + util.TermBold(ps.ScriptPath) + " at line " + strconv.Itoa(lineNum+1) + "\n")
+			errStr := enhanceErrorMessageNoPEG(parser.peekToken, err, lineInput, ps.ScriptPath, parser)
+			bu.WriteString(errStr)
+
+			ps.FailureFlag = true
+			return *env.NewError(bu.String())
+		}
+
+		// Extract objects from the parsed block and add them
+		if block, ok := val.(env.Block); ok {
+			for i := 0; i < block.Series.Len(); i++ {
+				obj := block.Series.Get(i)
+				if obj != nil {
+					allObjects = append(allObjects, obj)
+				}
+			}
+		}
 	}
 
-	val, err := parser.Parse()
 	ps.Idx = wordIndex
 	wordIndexMutex.Unlock()
 
-	if err != nil {
-		var bu strings.Builder
-		bu.WriteString("In file " + util.TermBold(ps.ScriptPath) + "\n")
-		errStr := enhanceErrorMessageNoPEG(parser.peekToken, err, input, ps.ScriptPath, parser)
-		bu.WriteString(errStr)
-
-		ps.FailureFlag = true
-		return *env.NewError(bu.String())
-	}
-
-	return val.(env.Block)
+	// Create final block with all objects including LocationNodes
+	ser := env.NewTSeries(allObjects)
+	return *env.NewBlock(*ser)
 }

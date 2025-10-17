@@ -405,14 +405,14 @@ func parseComment(v *Values, d Any) (Any, error) {
 func formatErrorLocation(line string, col int) string {
 	var bu strings.Builder
 
-	// Add the line with error
-	bu.WriteString(line + "\n")
+	// Add the line with error in bright white
+	bu.WriteString("\x1b[1;37m" + line + "\x1b[0m\n")
 
 	// Add pointer to error position with better visibility
 	if col > 0 && col <= len(line)+1 {
-		// Create a more visible error pointer
-		bu.WriteString(strings.Repeat(" ", col-1) + "^\n")
-		bu.WriteString(strings.Repeat(" ", col-1) + "|\n")
+		// Create a more visible error pointer in bold red
+		bu.WriteString("\x1b[1;31m" + strings.Repeat(" ", col-1) + "^\n")
+		bu.WriteString(strings.Repeat(" ", col-1) + "|\x1b[0m\n")
 	}
 
 	return bu.String()
@@ -439,11 +439,15 @@ func enhanceErrorMessage(err error, input string, filePath string) string {
 		// Build enhanced error message
 		var bu strings.Builder
 
-		// Add error location
+		// Add error location with colors
 		if filePath != "" {
-			bu.WriteString(fmt.Sprintf("Syntax error in %s at line %d, column %d\n", filePath, lineNum, colNum))
+			bu.WriteString("\x1b[1;31mSyntax error\x1b[0m in \x1b[1;34m" + filePath +
+				"\x1b[0m at line \x1b[1;33m" + fmt.Sprintf("%d", lineNum) +
+				"\x1b[0m, column \x1b[1;33m" + fmt.Sprintf("%d", colNum) + "\x1b[0m\n")
 		} else {
-			bu.WriteString(fmt.Sprintf("Syntax error at line %d, column %d\n", lineNum, colNum))
+			bu.WriteString("\x1b[1;31mSyntax error\x1b[0m at line \x1b[1;33m" +
+				fmt.Sprintf("%d", lineNum) + "\x1b[0m, column \x1b[1;33m" +
+				fmt.Sprintf("%d", colNum) + "\x1b[0m\n")
 		}
 
 		// Add the error location visualization
@@ -452,14 +456,17 @@ func enhanceErrorMessage(err error, input string, filePath string) string {
 		// Add context about what might be wrong
 		errorContext := inferErrorContext(line, colNum, input, lineNum)
 		if errorContext != "" {
-			bu.WriteString(errorContext + "\n")
+			bu.WriteString("\x1b[33m" + errorContext + "\x1b[0m\n")
 		}
 
 		// Add suggestions for fixing the error
 		suggestion := suggestFix(line, colNum, input, lineNum)
 		if suggestion != "" {
-			bu.WriteString("Suggestion: " + suggestion + "\n")
+			bu.WriteString("\x1b[36mSuggestion: " + suggestion + "\x1b[0m\n")
 		}
+
+		// Add a red separator line after error for better visibility
+		bu.WriteString("\x1b[1;31m" + strings.Repeat("─", 50) + "\x1b[0m\n")
 
 		return bu.String()
 	}

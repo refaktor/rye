@@ -1,0 +1,208 @@
+; error_handling_test.rye
+; Tests for the error handling builtins
+
+; Import the testing framework
+import %../info/main.rye
+
+; ===== Error Creation Tests =====
+
+test-group "Error Creation"
+
+test "fail creates an error and sets failure flag" {
+    equal { try { fail "error message" } |type? } 'error
+    equal { try { fail "error message" } |message? } "error message"
+    equal { try { fail 404 } |status? } 404
+}
+
+test "^fail creates an error and sets both failure and return flags" {
+    equal { fn { } { ^fail "error message" } |call |type? } 'error
+    equal { fn { } { ^fail "error message" } |call |message? } "error message"
+    equal { fn { } { ^fail 404 } |call |status? } 404
+    equal { fn { } { ^fail 'user-error } |call |error-kind? } 'user-error
+}
+
+test "refail re-raises an error with additional context" {
+    inner-err: failure "inner error"
+    equal { try { refail inner-err "outer error" } |message? } "outer error"
+    equal { try { refail inner-err "outer error" } |type? } 'error
+    equal { try { refail inner-err "outer error" |cause? } |message? } "inner error"
+}
+
+test "failure creates an error without setting flags" {
+    equal { failure "error message" |type? } 'error
+    equal { failure "error message" |message? } "error message"
+    equal { failure 404 |status? } 404
+}
+
+test "failure\\wrap creates a new error that wraps an existing error" {
+    equal { failure\wrap "outer error" failure "inner error" |message? } "outer error"
+    equal { failure\wrap "outer error" failure "inner error" |type? } 'error
+    equal { failure\wrap "outer error" failure "inner error" |cause? |message? } "inner error"
+}
+
+; ===== Error Inspection Tests =====
+
+test-group "Error Inspection"
+
+test "is-error checks if a value is an error" {
+    equal { is-error failure "test" } true
+    equal { is-error 123 } false
+}
+
+test "error-kind? returns the kind of an error" {
+    equal { error-kind? failure { 'syntax-error 404 "Syntax error" } } 'syntax-error
+    equal { error-kind? 123 } _
+}
+
+test "is-error-of-kind checks if an error is of a specific kind" {
+    equal { is-error-of-kind failure { 'syntax-error 404 "Syntax error" } 'syntax-error } true
+    equal { is-error-of-kind failure { 'syntax-error 404 "Syntax error" } 'runtime-error } false
+}
+
+test "cause? extracts the root cause from an error chain" {
+    equal { cause? failure\wrap "outer error" failure "inner error" |message? } "inner error"
+    equal { cause? failure "single error" |message? } "single error"
+}
+
+test "status? extracts the status code from an error" {
+    equal { failure 404 |status? } 404
+    equal { failure "message" |status? } 0
+}
+
+test "message? extracts the message from an error" {
+    equal { failure "error message" |message? } "error message"
+    equal { failure 404 |message? } ""
+}
+
+test "details? extracts additional details from an error" {
+    equal { failure { "code" 404 "info" "Not Found" } |details? |type? } 'dict
+    equal { failure { "code" 404 "info" "Not Found" } |details? .code } 404
+}
+
+test "is-failed tests if a value is an error" {
+    equal { is-failed failure "error" } true
+    equal { is-failed "not an error" } false
+    equal { is-failed 123 } false
+    equal { is-failed try { fail "error" } } true
+}
+
+; ===== Error Handling Tests =====
+
+test-group "Error Handling"
+
+test "disarm clears the failure flag while preserving the error object" {
+    equal { try { fail "error" |disarm } |type? } 'error
+    equal { try { fail "error" |disarm |message? } } "error"
+    equal { try { fail "error" } |is-failed } true
+    equal { try { fail "error" |disarm } |is-failed } false
+}
+
+test "check wraps an error with a new error if in failure state" {
+    equal { 5 |check "Value must be positive" } 5
+    equal { try { fail "Original error" |check "Wrapped error" } |message? } "Wrapped error"
+    equal { try { fail "Original error" |check "Wrapped error" } |cause? |message? } "Original error"
+}
+
+test "^check wraps an error and immediately returns from function" {
+    equal { fn { x } { x |^check "Error in function" } |call 5 } 5
+    equal { fn { x } { fail "Original" |^check "Wrapped" } |call 5 |message? } "Wrapped"
+}
+
+test "^ensure checks if a value is truthy and returns it or creates an error" {
+    equal { fn { x } { x > 0 |^ensure "Must be positive" } |call 5 } true
+    equal { fn { x } { x > 0 |^ensure "Must be positive" } |call -1 |message? } "Must be positive"
+}
+
+test "ensure checks if a value is truthy and returns it or creates an error" {
+    equal { 5 > 0 |ensure "Must be positive" } true
+    equal { try { -1 > 0 |ensure "Must be positive" } |message? } "Must be positive"
+}
+
+test "fix handles errors by executing a block if in failure state" {
+    equal { 5 |fix { + 10 } } 5
+    equal { try { fail "error" |fix { "fixed" } } } "fixed"
+    equal { try { fail "error" |fix { fail "new error" } } |message? } "new error"
+}
+
+test "^fix handles errors and immediately returns from function" {
+    equal { fn { x } { x |^fix { "fixed" } } |call 5 } 5
+    equal { fn { x } { fail "error" |^fix { "fixed" } } |call 5 } "fixed"
+}
+
+test "fix\\either executes one of two blocks depending on failure state" {
+    equal { fix\either failure "error" { "fixed" } { "not fixed" } } "fixed"
+    equal { fix\either 5 { "fixed" } { "not fixed" } } "not fixed"
+}
+
+test "fix\\else executes a block if value is not in failure state" {
+    equal { 5 |fix\else { "not fixed" } } "not fixed"
+    equal { try { fail "error" |fix\else { "not fixed" } } |message? } "error"
+}
+
+test "fix\\continue executes one of two blocks depending on failure state" {
+    equal { 5 |fix\continue { "error handler" } { "success handler" } } "success handler"
+    equal { try { fail "error" |fix\continue { "error handler" } { "success handler" } } } "error handler"
+}
+
+test "continue executes a block only if value is not in failure state" {
+    equal { 5 |continue { + 10 } } 15
+    equal { try { fail "error" |continue { + 10 } } |message? } "error"
+}
+
+test "^fix\\match matches error codes with handler blocks" {
+    equal { ^fix\match failure 404 { 404 { "Not Found" } 500 { "Server Error" } } } "Not Found"
+    equal { ^fix\match failure 500 { 404 { "Not Found" } 500 { "Server Error" } } } "Server Error"
+    equal { ^fix\match failure 403 { 404 { "Not Found" } 500 { "Server Error" } _ { "Unknown Error" } } } "Unknown Error"
+}
+
+test "try executes a block and clears any failure flags" {
+    equal { try { 123 + 123 } } 246
+    equal { try { 123 + "asd" } |type? } 'error
+    equal { try { 123 + } |type? } 'error
+}
+
+test "try-all executes a block and returns a result tuple" {
+    equal { try-all { 1 + 2 } |first } true
+    equal { try-all { 1 + 2 } |second } 3
+    equal { try-all { fail "error" } |first } false
+}
+
+test "try\\in executes a block in a given context" {
+    equal { c: context { x: 100 } try\in c { x * 9.99 } } 999.0
+    equal { c: context { x: 100 } try\in c { inc! 'x } } 101
+    equal { c: context { x: 100 } try\in c { x:: 200 , x } } 200
+    equal { c: context { x: 100 } try\in c { x:: 200 } c/x } 200
+    equal { c: context { x: 100 } try\in c { inc! 'y } |type? } 'error
+}
+
+test "finally ensures a block is executed regardless of errors" {
+    result: ""
+    equal { finally { 1 + 2 } { result:: "cleanup" } } 3
+    equal { result } "cleanup"
+    
+    result:: ""
+    equal { try { finally { fail "error" } { result:: "cleanup" } } |type? } 'error
+    equal { result } "cleanup"
+}
+
+test "retry executes a block and retries it up to N times if it fails" {
+    counter:: 0
+    equal { retry 3 { counter:: counter + 1 10 + 1 } } 11
+    equal { counter } 1
+    
+    counter:: 0
+    equal { retry 3 { counter:: counter + 1 if counter < 3 { fail 101 } 42 } } 42
+    equal { counter } 3
+    
+    counter:: 0
+    equal { retry 3 { counter:: counter + 1 fail 101 } |type? } 'error
+    equal { counter } 3
+}
+
+test "timeout executes a block with a timeout" {
+    equal { timeout 5000 { "ok" } } "ok"
+    equal { try { timeout 100 { sleep 1000 , "ok" } } |message? |contains "timeout" } 1
+}
+
+; Run all tests
+run-tests

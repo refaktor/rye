@@ -59,6 +59,7 @@ const (
 	ComplexType         Type = 43
 	MarkdownType        Type = 44
 	PersistentCtxType   Type = 45
+	LocationNodeType    Type = 46
 	PersistentTableType Type = 1001
 )
 

@@ -471,6 +471,56 @@ func (e *RyeCtx) AsRyeCtx() *RyeCtx {
 	return e
 }
 
+// LocationNode represents a source location marker in the code
+// These nodes are inserted during parsing and ignored during evaluation
+// They're only used for error reporting to find the nearest source location
+type LocationNode struct {
+	Filename string
+	Line     int
+	Column   int
+	SourceLine string // The actual line of source code for better error display
+}
+
+// Implement Object interface for LocationNode
+func (ln LocationNode) Type() Type { return LocationNodeType }
+func (ln LocationNode) Inspect(idxs Idxs) string {
+	return fmt.Sprintf("LocationNode{%s:%d:%d}", ln.Filename, ln.Line, ln.Column)
+}
+func (ln LocationNode) Print(idxs Idxs) string {
+	return ln.Inspect(idxs)
+}
+func (ln LocationNode) Trace(msg string) {
+	fmt.Printf("%s LocationNode: %s:%d:%d\n", msg, ln.Filename, ln.Line, ln.Column)
+}
+func (ln LocationNode) GetKind() int { return 0 }
+func (ln LocationNode) Equal(o Object) bool {
+	if other, ok := o.(LocationNode); ok {
+		return ln.Filename == other.Filename && ln.Line == other.Line && ln.Column == other.Column
+	}
+	return false
+}
+func (ln LocationNode) Dump(idxs Idxs) string {
+	return ln.Inspect(idxs)
+}
+
+// String returns a formatted representation of the location
+func (ln LocationNode) String() string {
+	if ln.Filename == "" {
+		return fmt.Sprintf("line %d, column %d", ln.Line, ln.Column)
+	}
+	return fmt.Sprintf("%s:%d:%d", ln.Filename, ln.Line, ln.Column)
+}
+
+// NewLocationNode creates a new LocationNode
+func NewLocationNode(filename string, line, column int, sourceLine string) *LocationNode {
+	return &LocationNode{
+		Filename:   filename,
+		Line:       line,
+		Column:     column,
+		SourceLine: sourceLine,
+	}
+}
+
 type ProgramState struct {
 	Ser          TSeries // current block of code
 	Res          Object  // result of expression
@@ -509,58 +559,58 @@ const (
 
 func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
 	ps := ProgramState{
-		ser,
-		nil,
-		NewEnv(nil),
-		NewEnv(nil),
-		idx,
-		make([]int, 6),
-		NewGen(), //make(map[int]map[int]Object),
-		nil,
-		false,
-		false,
-		false,
-		false,
-		nil,
-		false,
-		false,
-		"",
-		"",
-		false,
-		nil, // NewLiveEnv(),
-		Rye2Dialect,
-		NewEyrStack(),
-		false,
-		make([]Block, 0), // Initialize empty slice for deferred blocks
+		Ser:          ser,
+		Res:          nil,
+		Ctx:          NewEnv(nil),
+		PCtx:         NewEnv(nil),
+		Idx:          idx,
+		Args:         make([]int, 6),
+		Gen:          NewGen(),
+		Inj:          nil,
+		Injnow:       false,
+		ReturnFlag:   false,
+		ErrorFlag:    false,
+		FailureFlag:  false,
+		ForcedResult: nil,
+		SkipFlag:     false,
+		InErrHandler: false,
+		ScriptPath:   "",
+		WorkingPath:  "",
+		AllowMod:     false,
+		LiveObj:      nil,
+		Dialect:      Rye2Dialect,
+		Stack:        NewEyrStack(),
+		Embedded:     false,
+		DeferBlocks:  make([]Block, 0),
 	}
 	return &ps
 }
 
 func NewProgramStateNEW() *ProgramState {
 	ps := ProgramState{
-		*NewTSeries(make([]Object, 0)),
-		nil,
-		NewEnv(nil),
-		NewEnv(nil),
-		NewIdxs(),
-		make([]int, 6),
-		NewGen(), //make(map[int]map[int]Object),
-		nil,
-		false,
-		false,
-		false,
-		false,
-		nil,
-		false,
-		false,
-		"",
-		"",
-		false,
-		NewLiveEnv(),
-		Rye2Dialect,
-		NewEyrStack(),
-		false,
-		make([]Block, 0), // Initialize empty slice for deferred blocks
+		Ser:          *NewTSeries(make([]Object, 0)),
+		Res:          nil,
+		Ctx:          NewEnv(nil),
+		PCtx:         NewEnv(nil),
+		Idx:          NewIdxs(),
+		Args:         make([]int, 6),
+		Gen:          NewGen(),
+		Inj:          nil,
+		Injnow:       false,
+		ReturnFlag:   false,
+		ErrorFlag:    false,
+		FailureFlag:  false,
+		ForcedResult: nil,
+		SkipFlag:     false,
+		InErrHandler: false,
+		ScriptPath:   "",
+		WorkingPath:  "",
+		AllowMod:     false,
+		LiveObj:      NewLiveEnv(),
+		Dialect:      Rye2Dialect,
+		Stack:        NewEyrStack(),
+		Embedded:     false,
+		DeferBlocks:  make([]Block, 0),
 	}
 	return &ps
 }
