@@ -1451,6 +1451,9 @@ func calculateErrorPosition(ps *env.ProgramState, locationNode *env.LocationNode
 
 // DisplayEnhancedError shows enhanced error information including source location from LocationNodes
 func DisplayEnhancedError(es *env.ProgramState, genv *env.Idxs, tag string, topLevel bool) {
+	// Red background banner for runtime errors
+	fmt.Print("\x1b[41m\x1b[30m RUNTIME ERROR \x1b[0m\n") // Red background, black text
+
 	// Bold red for error message
 	fmt.Print("\x1b[1;31m") // Bold red
 	fmt.Println(es.Res.Print(*genv))
@@ -1540,7 +1543,7 @@ func displayLocationFromSeries(es *env.ProgramState, genv *env.Idxs) {
 func MaybeDisplayFailureOrError(es *env.ProgramState, genv *env.Idxs, tag string) {
 	topLevel := false
 	if es.FailureFlag {
-		fmt.Println("\x1b[33m" + "Failure" + "\x1b[0m")
+		fmt.Print("\x1b[43m\x1b[33m FAILURE \x1b[0m\n") // Red background, black text
 		// DEBUG: fmt.Println(tag)
 	}
 	if es.ErrorFlag || (es.FailureFlag && topLevel) {
@@ -1552,7 +1555,7 @@ func MaybeDisplayFailureOrError(es *env.ProgramState, genv *env.Idxs, tag string
 
 func MaybeDisplayFailureOrError_2_NEW(es *env.ProgramState, genv *env.Idxs, tag string, topLevel bool) {
 	if es.FailureFlag {
-		fmt.Println("\x1b[33m" + "Failure" + "\x1b[0m")
+		fmt.Print("\x1b[43m\x1b[33m FAILURE \x1b[0m\n") // Red background, black text
 		// DEBUG: fmt.Println(tag)
 	}
 	if es.ErrorFlag || (es.FailureFlag && topLevel) {
@@ -1564,7 +1567,7 @@ func MaybeDisplayFailureOrError_2_NEW(es *env.ProgramState, genv *env.Idxs, tag 
 
 func MaybeDisplayFailureOrErrorWASM(es *env.ProgramState, genv *env.Idxs, printfn func(string), tag string) {
 	if es.FailureFlag {
-		printfn("\x1b[33m" + "Failure" + "\x1b[0m")
+		fmt.Print("\x1b[43m\x1b[33m FAILURE \x1b[0m\n") // Red background, black text
 		printfn(tag)
 	}
 	if es.ErrorFlag {

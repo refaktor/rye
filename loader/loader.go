@@ -439,6 +439,9 @@ func enhanceErrorMessage(err error, input string, filePath string) string {
 		// Build enhanced error message
 		var bu strings.Builder
 
+		// Red background banner for syntax errors
+		bu.WriteString("\x1b[41m\x1b[30m SYNTAX ERROR \x1b[0m\n") // Red background, black text
+
 		// Add error location with colors
 		if filePath != "" {
 			bu.WriteString("\x1b[1;31mSyntax error\x1b[0m in \x1b[1;34m" + filePath +
