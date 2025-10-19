@@ -17,9 +17,6 @@ embed id "https://www.example.com/API-pdf?id={}&res=inv"
 |to-file .Create .defer\ 'Close
 |Copy* resp .Reader .defer\ 'Close
 
-; embed id "https://www.cebelca.biz/API-pdf?id={}&res=invoice-sent&lang=si&format=pdf&doctitle=Račun%20št."
-
-
 ; ----
 
 ; BLOGPOST IDEA ... 
