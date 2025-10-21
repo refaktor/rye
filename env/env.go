@@ -475,9 +475,9 @@ func (e *RyeCtx) AsRyeCtx() *RyeCtx {
 // These nodes are inserted during parsing and ignored during evaluation
 // They're only used for error reporting to find the nearest source location
 type LocationNode struct {
-	Filename string
-	Line     int
-	Column   int
+	Filename   string
+	Line       int
+	Column     int
 	SourceLine string // The actual line of source code for better error display
 }
 
@@ -546,6 +546,8 @@ type ProgramState struct {
 	Embedded     bool
 	DeferBlocks  []Block // blocks to be executed when function exits or program terminates
 	// LastFailedCPathInfo map[string]interface{} // stores information about the last failed context path
+	BlockFile string
+	BlockLine int
 }
 
 type DoDialect int
@@ -582,6 +584,8 @@ func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
 		Stack:        NewEyrStack(),
 		Embedded:     false,
 		DeferBlocks:  make([]Block, 0),
+		BlockFile:    "",
+		BlockLine:    -1,
 	}
 	return &ps
 }
@@ -611,6 +615,8 @@ func NewProgramStateNEW() *ProgramState {
 		Stack:        NewEyrStack(),
 		Embedded:     false,
 		DeferBlocks:  make([]Block, 0),
+		BlockFile:    "",
+		BlockLine:    -1,
 	}
 	return &ps
 }
@@ -627,6 +633,16 @@ func AddToProgramState(ps *ProgramState, ser TSeries, idx *Idxs) *ProgramState {
 	ps.Ser = ser
 	ps.Res = nil
 	ps.Idx = idx
+	//ps.Env
+	return ps
+}
+
+func AddToProgramStateNEWWithLocation(ps *ProgramState, block Block, idx *Idxs) *ProgramState {
+	ps.Ser = block.Series
+	ps.Res = nil
+	ps.Idx = idx
+	ps.BlockFile = block.FileName
+	ps.BlockLine = block.Line
 	//ps.Env
 	return ps
 }

@@ -52,6 +52,7 @@ const (
 	NPEG_TOKEN_VOID
 	NPEG_TOKEN_COMMENT
 	NPEG_TOKEN_SPACE
+	NPEG_TOKEN_LOCATION_NODE
 	NPEG_TOKEN_EOF
 	NPEG_TOKEN_ERROR
 )
@@ -84,6 +85,11 @@ type Lexer struct {
 	startLine  int
 	startCol   int
 	tokenStart int
+	// For LocationNode injection
+	injectLocationNodes bool
+	scriptPath          string
+	lastNewlinePos      int
+	pendingLocationNode *NoPEGToken
 }
 
 // NewLexer creates a new lexer
@@ -92,6 +98,24 @@ func NewLexer(input string) *Lexer {
 		input: input,
 		line:  1,
 		col:   0,
+	}
+	// Initialize by reading the first character
+	if len(input) > 0 {
+		l.ch = input[0]
+		l.readPos = 1
+	}
+	return l
+}
+
+// NewLexerWithLocationNodes creates a new lexer that injects LocationNodes at newlines
+func NewLexerWithLocationNodes(input string, scriptPath string) *Lexer {
+	l := &Lexer{
+		input:               input,
+		line:                1,
+		col:                 0,
+		injectLocationNodes: true,
+		scriptPath:          scriptPath,
+		lastNewlinePos:      0,
 	}
 	// Initialize by reading the first character
 	if len(input) > 0 {
@@ -145,6 +169,18 @@ func (l *Lexer) peekCharOffs(offs int) byte {
 // skipWhitespace skips whitespace characters
 func (l *Lexer) skipWhitespace() {
 	for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' {
+		// If we're injecting location nodes and we hit a newline, prepare a location node
+		if l.injectLocationNodes && l.ch == '\n' && l.pendingLocationNode == nil {
+			// Extract the source line that just ended
+			sourceLine := l.extractSourceLine(l.lastNewlinePos, l.pos)
+			l.pendingLocationNode = &NoPEGToken{
+				Type:  NPEG_TOKEN_LOCATION_NODE,
+				Value: sourceLine,
+				Line:  l.line,
+				Col:   1, // Location nodes are placed at the beginning of lines
+			}
+			l.lastNewlinePos = l.pos + 1 // Update position for next line
+		}
 		l.readChar()
 	}
 }
@@ -176,15 +212,49 @@ func (l *Lexer) startToken() {
 	l.tokenStart = l.pos
 }
 
+// extractSourceLine extracts the source line between two positions
+func (l *Lexer) extractSourceLine(start, end int) string {
+	if start < 0 {
+		start = 0
+	}
+	if end > len(l.input) {
+		end = len(l.input)
+	}
+	if start >= end {
+		return ""
+	}
+	line := l.input[start:end]
+	// Remove the newline character if present
+	if len(line) > 0 && (line[len(line)-1] == '\n' || line[len(line)-1] == '\r') {
+		line = line[:len(line)-1]
+	}
+	return line
+}
+
 // NextToken returns the next token from the input
 func (l *Lexer) NextToken() NoPEGToken {
 
 	// fmt.Println("NEXT TOKEN ENTER -->")
 	// fmt.Println(l.pos)
 
+	// Check if we have a pending LocationNode to return
+	if l.pendingLocationNode != nil {
+		token := *l.pendingLocationNode
+		l.pendingLocationNode = nil
+		return token
+	}
+
 	l.skipWhitespace()
 
 	if l.ch == 0 {
+		// Before EOF, check if we need to inject a final LocationNode for the last line
+		if l.injectLocationNodes && l.lastNewlinePos < len(l.input) {
+			sourceLine := l.extractSourceLine(l.lastNewlinePos, len(l.input))
+			if sourceLine != "" {
+				l.lastNewlinePos = len(l.input) // Prevent duplicate
+				return l.makeToken(NPEG_TOKEN_LOCATION_NODE, sourceLine)
+			}
+		}
 		return l.makeToken(NPEG_TOKEN_EOF, "")
 	}
 
@@ -849,6 +919,16 @@ func NewParserNoPEG(input string, wordIndex *env.Idxs) *NoPEGParser {
 	return p
 }
 
+// NewParserNoPEGWithLocationNodes creates a new parser that injects LocationNodes
+func NewParserNoPEGWithLocationNodes(input string, wordIndex *env.Idxs, scriptPath string) *NoPEGParser {
+	l := NewLexerWithLocationNodes(input, scriptPath)
+	p := &NoPEGParser{
+		l:         l,
+		wordIndex: wordIndex,
+	}
+	return p
+}
+
 // nextToken advances to the next token
 func (p *NoPEGParser) nextToken() {
 	p.currentToken = p.peekToken
@@ -863,6 +943,10 @@ func (p *NoPEGParser) initTokens() {
 
 // parseBlock parses a block of tokens
 func (p *NoPEGParser) parseBlock(blockType int) (env.Object, error) {
+	// Capture location information before skipping the opening token
+	blockLine := p.currentToken.Line
+	blockCol := p.currentToken.Col
+
 	// Skip the opening token
 	if p.peekToken.Type == NPEG_TOKEN_ERROR {
 		return nil, fmt.Errorf("%s", p.currentToken.Value)
@@ -906,7 +990,7 @@ func (p *NoPEGParser) parseBlock(blockType int) (env.Object, error) {
 			return nil, err
 		}
 
-		// Skip comments
+		// Skip comments and location nodes (we no longer add them to blocks)
 		if obj != nil {
 			objects = append(objects, obj)
 		}
@@ -917,15 +1001,18 @@ func (p *NoPEGParser) parseBlock(blockType int) (env.Object, error) {
 
 	}
 
-	// Create the block
+	// Create the block with location information
 	ser := env.NewTSeries(objects)
-	return *env.NewBlock2(*ser, blockType), nil
+	return *env.NewBlockWithLocation(*ser, blockType, p.l.scriptPath, blockLine, blockCol), nil
 }
 
 // parseToken parses a single token and returns the corresponding Rye object
 func (p *NoPEGParser) parseToken() (env.Object, error) {
 	// fmt.Println("PARSE TOKEN ENTER (((()))))")
 	switch p.currentToken.Type {
+	case NPEG_TOKEN_LOCATION_NODE:
+		// Location nodes are no longer used - skip them
+		return nil, nil
 	case NPEG_TOKEN_BLOCK_START:
 		return p.parseBlock(0)
 	case NPEG_TOKEN_BBLOCK_START:
@@ -1435,7 +1522,7 @@ func LoadStringNoPEG(input string, sig bool) (env.Object, *env.Idxs) {
 }
 
 // LoadStringNEWNoPEG loads a string using the non-PEG parser with a program state
-// This version injects LocationNodes at newlines for better error reporting
+// This version injects LocationNodes during parsing for better error reporting
 func LoadStringNEWNoPEG(input string, sig bool, ps *env.ProgramState) env.Object {
 	if sig {
 		signed := checkCodeSignature(input)
@@ -1447,61 +1534,31 @@ func LoadStringNEWNoPEG(input string, sig bool, ps *env.ProgramState) env.Object
 	}
 
 	input = removeBangLine(input)
-
-	// Split input into lines to inject LocationNodes
-	lines := strings.Split(input, "\n")
-
-	// Parse line by line and inject LocationNodes
-	var allObjects []env.Object
+	input = "{ " + input + " }"
 
 	wordIndexMutex.Lock()
 	wordIndex = ps.Idx
 
-	for lineNum, line := range lines {
-		line = strings.TrimSpace(line)
-		if line == "" {
-			continue // Skip empty lines
-		}
+	parser := NewParserNoPEGWithLocationNodes(input, wordIndex, ps.ScriptPath)
+	if parser == nil {
+		wordIndexMutex.Unlock()
+		return *env.NewError("Failed to create parser")
+	}
 
-		// Inject LocationNode at the beginning of each line
-		locationNode := env.NewLocationNode(ps.ScriptPath, lineNum+1, 1, line)
-		allObjects = append(allObjects, *locationNode)
+	val, err := parser.Parse()
+	if err != nil {
+		wordIndexMutex.Unlock()
+		var bu strings.Builder
+		bu.WriteString("In file " + util.TermBold(ps.ScriptPath) + " at line " + strconv.Itoa(parser.l.line) + "\n")
+		errStr := enhanceErrorMessageNoPEG(parser.peekToken, err, input, ps.ScriptPath, parser)
+		bu.WriteString(errStr)
 
-		// Parse the line content
-		lineInput := "{ " + line + " }"
-		parser := NewParserNoPEG(lineInput, wordIndex)
-		if parser == nil {
-			wordIndexMutex.Unlock()
-			return *env.NewError("Failed to create parser")
-		}
-
-		val, err := parser.Parse()
-		if err != nil {
-			wordIndexMutex.Unlock()
-			var bu strings.Builder
-			bu.WriteString("In file " + util.TermBold(ps.ScriptPath) + " at line " + strconv.Itoa(lineNum+1) + "\n")
-			errStr := enhanceErrorMessageNoPEG(parser.peekToken, err, lineInput, ps.ScriptPath, parser)
-			bu.WriteString(errStr)
-
-			ps.FailureFlag = true
-			return *env.NewError(bu.String())
-		}
-
-		// Extract objects from the parsed block and add them
-		if block, ok := val.(env.Block); ok {
-			for i := 0; i < block.Series.Len(); i++ {
-				obj := block.Series.Get(i)
-				if obj != nil {
-					allObjects = append(allObjects, obj)
-				}
-			}
-		}
+		ps.FailureFlag = true
+		return *env.NewError(bu.String())
 	}
 
 	ps.Idx = wordIndex
 	wordIndexMutex.Unlock()
 
-	// Create final block with all objects including LocationNodes
-	ser := env.NewTSeries(allObjects)
-	return *env.NewBlock(*ser)
+	return val.(env.Block)
 }

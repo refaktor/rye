@@ -671,7 +671,7 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 				inputH := string(content)
 				block := loader.LoadStringNEW(inputH, security.CurrentCodeSigEnabled, ps)
 				block1 := block.(env.Block)
-				ps = env.AddToProgramState(ps, block1.Series, ps.Idx)
+				ps = env.AddToProgramStateNEWWithLocation(ps, block1, ps.Idx)
 				evaldo.EvalBlockInjMultiDialect(ps, nil, false)
 				evaldo.MaybeDisplayFailureOrError_2_NEW(ps, ps.Idx, "main rye file", true)
 			}
@@ -697,7 +697,7 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 		//evaldo.RegisterBuiltins(es)
 		// contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
 
-		ps = env.AddToProgramState(ps, val.Series, ps.Idx)
+		ps = env.AddToProgramStateNEWWithLocation(ps, val, ps.Idx)
 
 		if subc {
 			ctx := ps.Ctx
@@ -761,7 +761,7 @@ func main_cgi_file(file string, sig bool) {
 		block, genv = loader.LoadStringNoPEG(content, sig)
 		switch val := block.(type) {
 		case env.Block:
-			es = env.AddToProgramState(es, block.(env.Block).Series, genv)
+			es = env.AddToProgramStateNEWWithLocation(es, block.(env.Block), genv)
 			evaldo.RegisterBuiltins(es)
 			contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
 

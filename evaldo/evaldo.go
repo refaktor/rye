@@ -76,6 +76,11 @@ func MaybeAcceptComma(ps *env.ProgramState, inj env.Object, injnow bool) bool {
 }
 
 func EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) {
+	fmt.Println("--------------------BLOCK------------------->")
+	fmt.Println(ps.Ser)
+	fmt.Println(ps.BlockFile)
+	fmt.Println(ps.BlockLine)
+	fmt.Println("---------------------------------------------")
 	// repeats until at the end of the block
 	for ps.Ser.Pos() < ps.Ser.Len() {
 		injnow = EvalExpressionInj(ps, inj, injnow)
@@ -273,9 +278,10 @@ func MaybeEvalOpwordOnRight(nextObj env.Object, ps *env.ProgramState, limited bo
 // switches over all rye values and acts on them
 func EvalExpressionConcrete(ps *env.ProgramState) {
 	object := ps.Ser.Pop()
+	fmt.Println(object)
 	if object == nil {
 		ps.ErrorFlag = true
-		ps.Res = env.NewError("expected rye value but got to the end of the block")
+		ps.Res = env.NewError("Expected rye value but got to the end of the block!")
 		return
 	}
 
@@ -284,7 +290,9 @@ func EvalExpressionConcrete(ps *env.ProgramState) {
 	// Skip LocationNodes - they're only used for error reporting
 	if objType == env.LocationNodeType {
 		// Skip this node and try the next one
-		EvalExpressionConcrete(ps)
+		if !ps.Ser.AtLast() {
+			EvalExpressionConcrete(ps)
+		}
 		return
 	}
 
@@ -1449,7 +1457,7 @@ func calculateErrorPosition(ps *env.ProgramState, locationNode *env.LocationNode
 	return charCount
 }
 
-// DisplayEnhancedError shows enhanced error information including source location from LocationNodes
+// DisplayEnhancedError shows enhanced error information including source location from block data
 func DisplayEnhancedError(es *env.ProgramState, genv *env.Idxs, tag string, topLevel bool) {
 	// Red background banner for runtime errors
 	fmt.Print("\x1b[41m\x1b[30m RUNTIME ERROR \x1b[0m\n") // Red background, black text
@@ -1459,42 +1467,121 @@ func DisplayEnhancedError(es *env.ProgramState, genv *env.Idxs, tag string, topL
 	fmt.Println(es.Res.Print(*genv))
 	fmt.Print("\x1b[0m") // Reset
 
-	// Find the nearest LocationNode for error reporting
-	locationNode := findNearestLocationNode(es)
+	// Get location information from the current block
+	displayBlockWithErrorPosition(es, genv)
+}
 
-	if locationNode != nil {
-		// Bold cyan for location information
-		fmt.Print("\x1b[1;36mAt \x1b[1;34m") // Bold cyan "At", bold blue for location
-		fmt.Print(locationNode.String())
-		fmt.Print("\x1b[0m\n") // Reset
+// displayBlockWithErrorPosition shows the whole current block with <here> marker at error position
+func displayBlockWithErrorPosition(es *env.ProgramState, genv *env.Idxs) {
 
-		// Display the source line with error context if available
-		if locationNode.SourceLine != "" {
-			// Gray for "Source:" label
-			fmt.Print("\x1b[37mSource:\x1b[0m\n")
-
-			// White/bright for source line
-			fmt.Print("\x1b[1;37m  ")
-			fmt.Print(locationNode.SourceLine)
-			fmt.Print("\x1b[0m\n") // Reset
-
-			// Calculate the accurate error position using series position methodology
-			errorCol := calculateErrorPosition(es, locationNode)
-			if errorCol >= 0 {
-				fmt.Print("\x1b[1;31m  ") // Bold red
-				pointer := strings.Repeat(" ", errorCol) + "^"
-				fmt.Print(pointer)
-				fmt.Print("\x1b[0m\n") // Reset
-			}
-		}
+	// Bold cyan for location information
+	fmt.Print("\x1b[1;36mCode block starting at	\x1b[1;34m") // Bold cyan "At", bold blue for location
+	if es.BlockFile != "" {
+		fmt.Printf("%s:%d", es.BlockFile, es.BlockLine)
 	} else {
-		// Bold cyan for fallback location info
-		fmt.Print("\x1b[1;36mAt location: \x1b[0m")
-		displayLocationFromSeries(es, genv)
+		fmt.Printf("line %d", es.BlockLine)
+	}
+	fmt.Print("\x1b[0m\n") // Reset
+
+	// Show the current block content with <here> marker
+	fmt.Print("\x1b[37mBlock:\x1b[0m\n")
+	fmt.Print("\x1b[1;37m  ")
+
+	// Get current position in the block
+	errorPos := es.Ser.Pos() - 1
+	if errorPos < 0 {
+		errorPos = 0
 	}
 
-	// Add a red separator line after error for better visibility
-	fmt.Println("\x1b[1;31m" + strings.Repeat("─", 50) + "\x1b[0m")
+	// Build the block representation with <here> marker
+	blockStr := buildBlockStringWithMarker(es.Ser.S, errorPos, genv)
+	fmt.Print(blockStr)
+	fmt.Print("\x1b[0m\n") // Reset
+}
+
+// getCurrentBlock gets the current block being evaluated (if available)
+func DELETE_ME_getCurrentBlock(es *env.ProgramState) *env.Block {
+	// First, check if we have block location information from the program state
+	// This would be the case when we're executing inside a block with location data
+
+	// Try to find the current executing block by looking for any block with location information in the series
+	for i := 0; i < es.Ser.Len(); i++ {
+		obj := es.Ser.Get(i)
+		if obj != nil && obj.Type() == env.BlockType {
+			if block, ok := obj.(env.Block); ok {
+				// Return the first block that has location information
+				if block.FileName != "" || block.Line > 0 {
+					return &block
+				}
+			}
+		}
+	}
+
+	// If no block found in series, create a synthetic block with available location info
+	// This handles cases where we're in the root execution context
+	if es.ScriptPath != "" {
+		// Create a block representing the current execution context
+		syntheticBlock := &env.Block{
+			Series:   es.Ser,
+			Mode:     0,
+			FileName: es.ScriptPath,
+			Line:     1, // Default to line 1 if we don't have more specific info
+			Column:   1, // Default to column 1
+		}
+		return syntheticBlock
+	}
+
+	return nil
+}
+
+// buildBlockStringWithMarker creates a string representation of the block with <here> at the error position
+// Shows only 8 nodes before and 8 nodes after the error position
+func buildBlockStringWithMarker(currSer []env.Object, errorPos int, genv *env.Idxs) string {
+	var result strings.Builder
+	result.WriteString("{ ")
+
+	// Calculate the range to display: 8 nodes before and 8 nodes after
+	startPos := errorPos - 8
+	endPos := errorPos + 8
+
+	// Adjust boundaries to stay within the block
+	if startPos < 0 {
+		startPos = 0
+	}
+	if endPos >= len(currSer) {
+		endPos = len(currSer) - 1
+	}
+
+	// Show ellipsis if we're not starting from the beginning
+	if startPos > 0 {
+		result.WriteString("... ")
+	}
+
+	// Display the selected range
+	for i := startPos; i <= endPos && i < len(currSer); i++ {
+		if i == errorPos {
+			result.WriteString("\x1b[1;31m<here>\x1b[0m ")
+		}
+
+		obj := currSer[i]
+		if obj != nil {
+			result.WriteString(obj.Dump(*genv))
+			result.WriteString(" ")
+		}
+	}
+
+	// If error position is at the end and within our display range
+	if errorPos >= len(currSer) && errorPos <= endPos {
+		result.WriteString("\x1b[1;31m<here>\x1b[0m ")
+	}
+
+	// Show ellipsis if we're not ending at the end of the block
+	if endPos < len(currSer)-1 {
+		result.WriteString("... ")
+	}
+
+	result.WriteString("}")
+	return result.String()
 }
 
 // displayLocationFromSeries extracts and displays location information from the series
@@ -1541,16 +1628,7 @@ func displayLocationFromSeries(es *env.ProgramState, genv *env.Idxs) {
 }
 
 func MaybeDisplayFailureOrError(es *env.ProgramState, genv *env.Idxs, tag string) {
-	topLevel := false
-	if es.FailureFlag {
-		fmt.Print("\x1b[43m\x1b[33m FAILURE \x1b[0m\n") // Red background, black text
-		// DEBUG: fmt.Println(tag)
-	}
-	if es.ErrorFlag || (es.FailureFlag && topLevel) {
-		// Enhanced error reporting with source location
-		DisplayEnhancedError(es, genv, tag, topLevel)
-	}
-	// cebelca2659- vklopi kontne skupine
+	MaybeDisplayFailureOrError_2_NEW(es, genv, tag, false)
 }
 
 func MaybeDisplayFailureOrError_2_NEW(es *env.ProgramState, genv *env.Idxs, tag string, topLevel bool) {
@@ -1562,7 +1640,6 @@ func MaybeDisplayFailureOrError_2_NEW(es *env.ProgramState, genv *env.Idxs, tag 
 		// Use the enhanced error reporting with source location
 		DisplayEnhancedError(es, genv, tag, topLevel)
 	}
-	// cebelca2659- vklopi kontne skupine
 }
 
 func MaybeDisplayFailureOrErrorWASM(es *env.ProgramState, genv *env.Idxs, printfn func(string), tag string) {
