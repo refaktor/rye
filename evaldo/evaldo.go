@@ -1639,6 +1639,11 @@ func MaybeDisplayFailureOrError_2_NEW(es *env.ProgramState, genv *env.Idxs, tag 
 	if es.ErrorFlag || (es.FailureFlag && topLevel) {
 		// Use the enhanced error reporting with source location
 		DisplayEnhancedError(es, genv, tag, topLevel)
+
+		// Offer debugging options to the user
+		if topLevel {
+			OfferDebuggingOptions(es, genv, tag)
+		}
 	}
 }
 
