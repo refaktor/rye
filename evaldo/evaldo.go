@@ -76,21 +76,19 @@ func MaybeAcceptComma(ps *env.ProgramState, inj env.Object, injnow bool) bool {
 }
 
 func EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) {
-	fmt.Println("--------------------BLOCK------------------->")
-	fmt.Println(ps.Ser)
-	fmt.Println(ps.BlockFile)
-	fmt.Println(ps.BlockLine)
-	fmt.Println("---------------------------------------------")
-	// repeats until at the end of the block
+	//fmt.Println("--------------------BLOCK------------------->")
+	// fmt.Println(ps.Ser)
+	// fmt.Println(ps.BlockFile)
+	// fmt.Println(ps.BlockLine)
+	// fmt.Println("---------------------------------------------")
+	// // repeats until at the end of the block
 	for ps.Ser.Pos() < ps.Ser.Len() {
 		injnow = EvalExpressionInj(ps, inj, injnow)
 		// Check for both failure and error flags immediately after expression evaluation
 		if ps.ErrorFlag || ps.FailureFlag || ps.ReturnFlag {
-			fmt.Println("EVAL BLOCK INJ *** ERR")
 			return
 		}
 		if tryHandleFailure(ps) {
-			fmt.Println("EVAL BLOCK INJ *** TRY HANDLE")
 			return
 		}
 		injnow = MaybeAcceptComma(ps, inj, injnow)
@@ -135,7 +133,6 @@ func EvalExpression(ps *env.ProgramState, inj env.Object, injnow bool, limited b
 	if inj == nil || !injnow {
 		EvalExpressionConcrete(ps)
 		if ps.ReturnFlag || ps.ErrorFlag {
-			fmt.Println("EVAL EXPRESSION AFTER CONCRETE 111")
 			return injnow
 		}
 	} else {
@@ -151,19 +148,16 @@ func EvalExpression(ps *env.ProgramState, inj env.Object, injnow bool, limited b
 
 // Replace EvalExpression2 with a call to EvalExpression
 func EvalExpression2(ps *env.ProgramState, limited bool) {
-	fmt.Println("EXPR 2")
 	EvalExpression(ps, nil, false, limited)
 }
 
 // Replace EvalExpressionInj with a call to EvalExpression
 func EvalExpressionInj(ps *env.ProgramState, inj env.Object, injnow bool) bool {
-	fmt.Println("EXPR INJ")
 	return EvalExpression(ps, inj, injnow, false)
 }
 
 // Replace EvalExpressionInjLimited with a call to EvalExpression
 func EvalExpressionInjLimited(ps *env.ProgramState, inj env.Object, injnow bool) bool {
-	fmt.Println("EXPR LIM")
 	return EvalExpression(ps, inj, injnow, true)
 }
 
@@ -278,7 +272,6 @@ func MaybeEvalOpwordOnRight(nextObj env.Object, ps *env.ProgramState, limited bo
 // switches over all rye values and acts on them
 func EvalExpressionConcrete(ps *env.ProgramState) {
 	object := ps.Ser.Pop()
-	fmt.Println(object)
 	if object == nil {
 		ps.ErrorFlag = true
 		ps.Res = env.NewError("Expected rye value but got to the end of the block!")
@@ -316,7 +309,6 @@ func EvalExpressionConcrete(ps *env.ProgramState) {
 			ps.Ser = block.Series
 			res := make([]env.Object, 0)
 			for ps.Ser.Pos() < ps.Ser.Len() {
-				fmt.Println("---> EVAL EXPR CONCRETE ---< EVAL EXPR 2")
 				EvalExpression2(ps, false)
 				if ps.ReturnFlag || ps.ErrorFlag {
 					return
@@ -370,15 +362,12 @@ func EvalExpressionConcrete(ps *env.ProgramState) {
 		ps.Res = *env.NewWord(object.(env.Tagword).Index)
 		return
 	case env.WordType:
-		fmt.Println(">>>>")
 		EvalWord(ps, object.(env.Word), nil, false, false)
-		fmt.Println("<<<<<")
 		return
 	case env.CPathType:
 		EvalWord(ps, object, nil, false, false)
 		return
 	case env.BuiltinType:
-		fmt.Println("case env builtintype")
 		CallBuiltin(object.(env.Builtin), ps, nil, false, false, nil)
 		return
 	case env.VarBuiltinType:
@@ -586,7 +575,6 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 		}
 	}
 	if found {
-		fmt.Println("Eval Object *1")
 		EvalObject(ps, object, leftVal, toLeft, session, pipeSecond, firstVal) //ww0128a *
 		return
 	} else {
@@ -845,6 +833,11 @@ func CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, toLeft
 	}
 	ser0 := ps.Ser // only after we process the arguments and get new position
 	ps.Ser = fn.Body.Series
+	blockFile := ps.BlockFile
+	blockLine := ps.BlockLine
+
+	ps.BlockFile = fn.Body.FileName
+	ps.BlockLine = fn.Body.Line
 
 	// *******
 	env0 = ps.Ctx // store reference to current env in local
@@ -867,6 +860,8 @@ func CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, toLeft
 	}
 	ps.Ctx = env0
 	ps.Ser = ser0
+	ps.BlockFile = blockFile
+	ps.BlockLine = blockLine
 	ps.ReturnFlag = false
 	envPool.Put(fnCtx)
 
@@ -1223,7 +1218,7 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 	evalExprFn := EvalExpression2
 	curry := false
 
-	fmt.Println("*** BUILTIN ***")
+	//fmt.Println("*** BUILTIN ***")
 
 	if arg0_ != nil && !pipeSecond {
 		//fmt.Println("ARG0 = LEFT")
@@ -1238,22 +1233,17 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 		//fmt.Println(" ARG 1 ")
 		//fmt.Println(ps.Ser.GetPos())
 		evalExprFn(ps, true)
-		fmt.Println("XX *")
 		if checkForFailureWithBuiltin(bi, ps, 0) {
-			fmt.Println("XX **")
 			return
 		}
 		if ps.ErrorFlag {
-			fmt.Println("XX ***")
 			// ps.Res = env.NewError4(0, "argument 1 of "+strconv.Itoa(bi.Argsn)+" missing of builtin: '"+bi.Doc+"'", ps.Res.(*env.Error), nil)
 			return
 		}
 		if ps.ReturnFlag {
-			fmt.Println("XX RET***")
 			return
 		}
 		// The CallCurriedCaller is now created explicitly with partial builtin function
-		fmt.Println("XX ****")
 		arg0 = ps.Res
 	}
 
@@ -1460,15 +1450,17 @@ func calculateErrorPosition(ps *env.ProgramState, locationNode *env.LocationNode
 // DisplayEnhancedError shows enhanced error information including source location from block data
 func DisplayEnhancedError(es *env.ProgramState, genv *env.Idxs, tag string, topLevel bool) {
 	// Red background banner for runtime errors
-	fmt.Print("\x1b[41m\x1b[30m RUNTIME ERROR \x1b[0m\n") // Red background, black text
+	if !es.SkipFlag {
+		fmt.Print("\x1b[41m\x1b[30m RUNTIME ERROR \x1b[0m\n") // Red background, black text
 
-	// Bold red for error message
-	fmt.Print("\x1b[1;31m") // Bold red
-	fmt.Println(es.Res.Print(*genv))
-	fmt.Print("\x1b[0m") // Reset
-
+		// Bold red for error message
+		fmt.Print("\x1b[1;31m") // Bold red
+		fmt.Println(es.Res.Print(*genv))
+		fmt.Print("\x1b[0m") // Reset
+	}
 	// Get location information from the current block
 	displayBlockWithErrorPosition(es, genv)
+	es.SkipFlag = true
 }
 
 // displayBlockWithErrorPosition shows the whole current block with <here> marker at error position
@@ -1632,10 +1624,10 @@ func MaybeDisplayFailureOrError(es *env.ProgramState, genv *env.Idxs, tag string
 }
 
 func MaybeDisplayFailureOrError_2_NEW(es *env.ProgramState, genv *env.Idxs, tag string, topLevel bool) {
-	if es.FailureFlag {
+	/* if es.FailureFlag {
 		fmt.Print("\x1b[43m\x1b[33m FAILURE \x1b[0m\n") // Red background, black text
 		// DEBUG: fmt.Println(tag)
-	}
+	} */
 	if es.ErrorFlag || (es.FailureFlag && topLevel) {
 		// Use the enhanced error reporting with source location
 		DisplayEnhancedError(es, genv, tag, topLevel)
