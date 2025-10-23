@@ -14,6 +14,11 @@ func Rye0_EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) *env.P
 	for ps.Ser.Pos() < ps.Ser.Len() {
 		ps, injnow = Rye0_EvalExpressionInj(ps, inj, injnow)
 
+		// Check for both error and failure flags immediately after expression evaluation
+		if ps.ErrorFlag || ps.ReturnFlag {
+			return ps
+		}
+		
 		if Rye0_checkFlagsAfterExpression(ps) {
 			return ps
 		}

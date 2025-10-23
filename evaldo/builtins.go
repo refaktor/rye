@@ -1493,7 +1493,12 @@ var builtins = map[string]*env.Builtin{
 			case env.Block:
 				ser := ps.Ser
 				ps.Ser = bloc.Series
+				ps.BlockFile = bloc.FileName
+				ps.BlockLine = bloc.Line
 				EvalBlock(ps)
+				if ps.ErrorFlag {
+					return ps.Res
+				}
 				ps.Ser = ser
 				return ps.Res
 			default:

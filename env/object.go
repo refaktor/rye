@@ -59,6 +59,7 @@ const (
 	ComplexType         Type = 43
 	MarkdownType        Type = 44
 	PersistentCtxType   Type = 45
+	LocationNodeType    Type = 46
 	PersistentTableType Type = 1001
 )
 
@@ -634,17 +635,25 @@ func (i Email) Dump(e Idxs) string {
 //
 
 type Block struct {
-	Series TSeries `bson:"series"`
-	Mode   int     `bson:"mode"`
+	Series   TSeries `bson:"series"`
+	Mode     int     `bson:"mode"`
+	FileName string  `bson:"filename"`
+	Line     int     `bson:"line"`
+	Column   int     `bson:"column"`
 }
 
 func NewBlock(series TSeries) *Block {
-	o := Block{series, 0}
+	o := Block{series, 0, "", 0, 0}
 	return &o
 }
 
 func NewBlock2(series TSeries, m int) *Block {
-	o := Block{series, m}
+	o := Block{series, m, "", 0, 0}
+	return &o
+}
+
+func NewBlockWithLocation(series TSeries, m int, filename string, line int, column int) *Block {
+	o := Block{series, m, filename, line, column}
 	return &o
 }
 

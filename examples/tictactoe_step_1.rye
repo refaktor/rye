@@ -9,7 +9,11 @@ board: {
 display-board-1: fn { } {
     print "   0 1 2"
     loop 3 { ::row
-        print  row ++ ": " ++ ( board -> row -> 0 ) ++ " " ++ ( board -> row -> 1 ) ++ " " ++ ( board -> row -> 2 )
+		132
+        print  ( row .to-string ) ++ ": "
+		| ++ ( board -> row -> 0 |probe ) ++ " "
+		| ++ ( board -> row -> 1 |probe ) ++ " "
+		| ++ ( board -> row -> 2 |probe )
     }
 }
 

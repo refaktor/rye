@@ -1,0 +1,8 @@
+print "hello"
+zz: fn { b } { print "placeholder" }
+xx: fn { a } { print nonexistent_word }
+print 123
+
+xx "aa"
+
+print 234

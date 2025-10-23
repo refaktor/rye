@@ -76,14 +76,19 @@ func MaybeAcceptComma(ps *env.ProgramState, inj env.Object, injnow bool) bool {
 }
 
 func EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) {
-	// repeats until at the end of the block
+	//fmt.Println("--------------------BLOCK------------------->")
+	// fmt.Println(ps.Ser)
+	// fmt.Println(ps.BlockFile)
+	// fmt.Println(ps.BlockLine)
+	// fmt.Println("---------------------------------------------")
+	// // repeats until at the end of the block
 	for ps.Ser.Pos() < ps.Ser.Len() {
 		injnow = EvalExpressionInj(ps, inj, injnow)
-		if tryHandleFailure(ps) {
+		// Check for both failure and error flags immediately after expression evaluation
+		if ps.ErrorFlag || ps.FailureFlag || ps.ReturnFlag {
 			return
 		}
-		// if return flag was raised return ( errorflag I think would return in previous if anyway)
-		if ps.ReturnFlag || ps.ErrorFlag {
+		if tryHandleFailure(ps) {
 			return
 		}
 		injnow = MaybeAcceptComma(ps, inj, injnow)
@@ -127,7 +132,7 @@ func EvalBlockInCtxInj(ps *env.ProgramState, ctx *env.RyeCtx, inj env.Object, in
 func EvalExpression(ps *env.ProgramState, inj env.Object, injnow bool, limited bool) bool {
 	if inj == nil || !injnow {
 		EvalExpressionConcrete(ps)
-		if ps.ReturnFlag {
+		if ps.ReturnFlag || ps.ErrorFlag {
 			return injnow
 		}
 	} else {
@@ -269,10 +274,21 @@ func EvalExpressionConcrete(ps *env.ProgramState) {
 	object := ps.Ser.Pop()
 	if object == nil {
 		ps.ErrorFlag = true
-		ps.Res = env.NewError("expected rye value but got to the end of the block")
+		ps.Res = env.NewError("Expected rye value but got to the end of the block!")
 		return
 	}
+
 	objType := object.Type()
+
+	// Skip LocationNodes - they're only used for error reporting
+	if objType == env.LocationNodeType {
+		// Skip this node and try the next one
+		if !ps.Ser.AtLast() {
+			EvalExpressionConcrete(ps)
+		}
+		return
+	}
+
 	if objType == env.StringType ||
 		objType == env.IntegerType ||
 		objType == env.DecimalType ||
@@ -516,7 +532,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 			return
 		} else {
 			ps.ErrorFlag = true
-			ps.Res = env.NewError2(5, "word not found: "+failureInfo)
+			ps.Res = env.NewError2(5, "* word not found: "+failureInfo)
 			return
 		}
 	}
@@ -534,7 +550,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 		if leftVal == nil && !pipeSecond {
 			if !ps.Ser.AtLast() {
 				EvalExpressionConcrete(ps)
-				if ps.ReturnFlag {
+				if ps.ReturnFlag || ps.ErrorFlag {
 					return
 				}
 				leftVal = ps.Res
@@ -544,7 +560,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 		if pipeSecond {
 			if !ps.Ser.AtLast() {
 				EvalExpressionConcrete(ps)
-				if ps.ReturnFlag {
+				if ps.ReturnFlag || ps.ErrorFlag {
 					return
 				}
 				firstVal = ps.Res
@@ -565,7 +581,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 		ps.ErrorFlag = true
 		if !ps.FailureFlag {
 			ps.Ser.SetPos(pos)
-			ps.Res = env.NewError2(5, "word not found: "+failureInfo)
+			ps.Res = env.NewError2(5, "** word not found: "+failureInfo)
 		}
 		return
 	}
@@ -575,6 +591,10 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 // then if explicitly treats it as generic word
 func EvalGenword(ps *env.ProgramState, word env.Genword, leftVal env.Object, toLeft bool) {
 	EvalExpressionConcrete(ps)
+
+	if ps.ReturnFlag || ps.ErrorFlag {
+		return
+	}
 
 	var arg0 = ps.Res
 	object, found := ps.Gen.Get(arg0.GetKind(), word.Index)
@@ -596,7 +616,7 @@ func EvalGetword(ps *env.ProgramState, word env.Getword, leftVal env.Object, toL
 		return
 	} else {
 		ps.ErrorFlag = true
-		ps.Res = env.NewError("word not found: " + word.Print(*ps.Idx))
+		ps.Res = env.NewError("*** word not found: " + word.Print(*ps.Idx))
 		return
 	}
 }
@@ -813,6 +833,11 @@ func CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, toLeft
 	}
 	ser0 := ps.Ser // only after we process the arguments and get new position
 	ps.Ser = fn.Body.Series
+	blockFile := ps.BlockFile
+	blockLine := ps.BlockLine
+
+	ps.BlockFile = fn.Body.FileName
+	ps.BlockLine = fn.Body.Line
 
 	// *******
 	env0 = ps.Ctx // store reference to current env in local
@@ -835,6 +860,8 @@ func CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, toLeft
 	}
 	ps.Ctx = env0
 	ps.Ser = ser0
+	ps.BlockFile = blockFile
+	ps.BlockLine = blockLine
 	ps.ReturnFlag = false
 	envPool.Put(fnCtx)
 
@@ -1191,7 +1218,7 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 	evalExprFn := EvalExpression2
 	curry := false
 
-	trace("*** BUILTIN ***")
+	//fmt.Println("*** BUILTIN ***")
 
 	if arg0_ != nil && !pipeSecond {
 		//fmt.Println("ARG0 = LEFT")
@@ -1206,12 +1233,14 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 		//fmt.Println(" ARG 1 ")
 		//fmt.Println(ps.Ser.GetPos())
 		evalExprFn(ps, true)
-
 		if checkForFailureWithBuiltin(bi, ps, 0) {
 			return
 		}
-		if ps.ReturnFlag || ps.ErrorFlag {
-			ps.Res = env.NewError4(0, "argument 1 of "+strconv.Itoa(bi.Argsn)+" missing of builtin: '"+bi.Doc+"'", ps.Res.(*env.Error), nil)
+		if ps.ErrorFlag {
+			// ps.Res = env.NewError4(0, "argument 1 of "+strconv.Itoa(bi.Argsn)+" missing of builtin: '"+bi.Doc+"'", ps.Res.(*env.Error), nil)
+			return
+		}
+		if ps.ReturnFlag {
 			return
 		}
 		// The CallCurriedCaller is now created explicitly with partial builtin function
@@ -1287,6 +1316,10 @@ func CallVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, arg0_ env.Object, t
 			ii++
 		} else if bi.Argsn > 0 {
 			EvalExpression2(ps, true)
+			if ps.ReturnFlag || ps.ErrorFlag {
+				return
+			}
+
 			args[ii] = ps.Res
 			ii++
 		}
@@ -1296,12 +1329,20 @@ func CallVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, arg0_ env.Object, t
 			ii++
 		} else if bi.Argsn > 1 {
 			EvalExpression2(ps, true)
+			if ps.ReturnFlag || ps.ErrorFlag {
+				return
+			}
+
 			args[ii] = ps.Res
 			ii++
 		}
 		//variadic version
 		for i := 2; i < bi.Argsn; i += 1 {
 			EvalExpression2(ps, true)
+			if ps.ReturnFlag || ps.ErrorFlag {
+				return
+			}
+
 			args[ii] = ps.Res
 			ii++
 
@@ -1321,60 +1362,286 @@ func DirectlyCallBuiltin(ps *env.ProgramState, bi env.Builtin, a0 env.Object, a1
 
 // DISPLAYING FAILURE OR ERRROR
 
-func MaybeDisplayFailureOrError(es *env.ProgramState, genv *env.Idxs, tag string) {
-	topLevel := false
-	if es.FailureFlag {
-		fmt.Println("\x1b[33m" + "Failure" + "\x1b[0m")
-		// DEBUG: fmt.Println(tag)
-	}
-	if es.ErrorFlag || (es.FailureFlag && topLevel) {
-		fmt.Println("\x1b[31m" + es.Res.Print(*genv))
-		switch es.Res.(type) {
-		case env.Error:
-			fmt.Println(es.Ser.PositionAndSurroundingElements(*genv))
-			fmt.Println("Error not pointer so bug. #temp")
-		case *env.Error:
-			fmt.Println("At location::")
-			fmt.Print(es.Ser.PositionAndSurroundingElements(*genv))
+// findNearestLocationNode searches backwards in the series from current position to find the nearest LocationNode
+func findNearestLocationNode(ps *env.ProgramState) *env.LocationNode {
+	pos := ps.Ser.GetPos()
+
+	// Search backwards from current position
+	for i := pos - 1; i >= 0; i-- {
+		obj := ps.Ser.Get(i)
+		if obj != nil && obj.Type() == env.LocationNodeType {
+			if locNode, ok := obj.(env.LocationNode); ok {
+				return &locNode
+			}
 		}
-		fmt.Println("\x1b[0m")
-		// fmt.Println(tag)
-		// ENTER CONSOLE ON ERROR
-		// es.ErrorFlag = false
-		// es.FailureFlag = false
-		// DoRyeRepl(es, "do", true)
 	}
-	// cebelca2659- vklopi kontne skupine
+
+	// Search forward if nothing found backwards
+	for i := pos; i < ps.Ser.Len(); i++ {
+		obj := ps.Ser.Get(i)
+		if obj != nil && obj.Type() == env.LocationNodeType {
+			if locNode, ok := obj.(env.LocationNode); ok {
+				return &locNode
+			}
+		}
+	}
+
+	return nil
+}
+
+// TODO -- check this and make it better , more accurate
+// calculateErrorPosition determines the accurate error position in the source line
+// using the series position methodology similar to PositionAndSurroundingElements
+func calculateErrorPosition(ps *env.ProgramState, locationNode *env.LocationNode) int {
+	// Get the current series position (similar to how PositionAndSurroundingElements works)
+	errorPos := ps.Ser.Pos() - 1 // The error is typically at pos-1 like in the original (here) logic
+
+	if errorPos < 0 {
+		return 0
+	}
+
+	// Count characters from the beginning of the line to find the error position
+	charCount := 0
+	foundLocationNode := false
+
+	// Go through the series and count characters from the LocationNode for this line
+	for i := 0; i < ps.Ser.Len(); i++ {
+		obj := ps.Ser.Get(i)
+		if obj == nil {
+			continue
+		}
+
+		// Check if this is a LocationNode for the current line
+		if obj.Type() == env.LocationNodeType {
+			if locNode, ok := obj.(env.LocationNode); ok && locNode.Line == locationNode.Line {
+				foundLocationNode = true
+				charCount = 0 // Reset count from this LocationNode
+				continue
+			} else if foundLocationNode {
+				// We've moved to a different line, stop counting
+				break
+			}
+			continue
+		}
+
+		// Only start counting after we've found the LocationNode for this line
+		if !foundLocationNode {
+			continue
+		}
+
+		// If this is the error position, return current character count
+		if i == errorPos {
+			return charCount
+		}
+
+		// Add the length of this object's string representation plus space
+		objStr := obj.Print(*ps.Idx)
+		charCount += len(objStr)
+
+		// Add space separator (except for the last token before error)
+		if i < errorPos {
+			charCount += 1
+		}
+	}
+
+	return charCount
+}
+
+// DisplayEnhancedError shows enhanced error information including source location from block data
+func DisplayEnhancedError(es *env.ProgramState, genv *env.Idxs, tag string, topLevel bool) {
+	// Red background banner for runtime errors
+	if !es.SkipFlag {
+		fmt.Print("\x1b[41m\x1b[30m RUNTIME ERROR \x1b[0m\n") // Red background, black text
+
+		// Bold red for error message
+		fmt.Print("\x1b[1;31m") // Bold red
+		fmt.Println(es.Res.Print(*genv))
+		fmt.Print("\x1b[0m") // Reset
+	}
+	// Get location information from the current block
+	displayBlockWithErrorPosition(es, genv)
+	es.SkipFlag = true
+}
+
+// displayBlockWithErrorPosition shows the whole current block with <here> marker at error position
+func displayBlockWithErrorPosition(es *env.ProgramState, genv *env.Idxs) {
+
+	// Bold cyan for location information
+	fmt.Print("\x1b[1;36mCode block starting at	\x1b[1;34m") // Bold cyan "At", bold blue for location
+	if es.BlockFile != "" {
+		fmt.Printf("%s:%d", es.BlockFile, es.BlockLine)
+	} else {
+		fmt.Printf("line %d", es.BlockLine)
+	}
+	fmt.Print("\x1b[0m\n") // Reset
+
+	// Show the current block content with <here> marker
+	fmt.Print("\x1b[37mBlock:\x1b[0m\n")
+	fmt.Print("\x1b[1;37m  ")
+
+	// Get current position in the block
+	errorPos := es.Ser.Pos() - 1
+	if errorPos < 0 {
+		errorPos = 0
+	}
+
+	// Build the block representation with <here> marker
+	blockStr := buildBlockStringWithMarker(es.Ser.S, errorPos, genv)
+	fmt.Print(blockStr)
+	fmt.Print("\x1b[0m\n") // Reset
+}
+
+// getCurrentBlock gets the current block being evaluated (if available)
+func DELETE_ME_getCurrentBlock(es *env.ProgramState) *env.Block {
+	// First, check if we have block location information from the program state
+	// This would be the case when we're executing inside a block with location data
+
+	// Try to find the current executing block by looking for any block with location information in the series
+	for i := 0; i < es.Ser.Len(); i++ {
+		obj := es.Ser.Get(i)
+		if obj != nil && obj.Type() == env.BlockType {
+			if block, ok := obj.(env.Block); ok {
+				// Return the first block that has location information
+				if block.FileName != "" || block.Line > 0 {
+					return &block
+				}
+			}
+		}
+	}
+
+	// If no block found in series, create a synthetic block with available location info
+	// This handles cases where we're in the root execution context
+	if es.ScriptPath != "" {
+		// Create a block representing the current execution context
+		syntheticBlock := &env.Block{
+			Series:   es.Ser,
+			Mode:     0,
+			FileName: es.ScriptPath,
+			Line:     1, // Default to line 1 if we don't have more specific info
+			Column:   1, // Default to column 1
+		}
+		return syntheticBlock
+	}
+
+	return nil
+}
+
+// buildBlockStringWithMarker creates a string representation of the block with <here> at the error position
+// Shows only 8 nodes before and 8 nodes after the error position
+func buildBlockStringWithMarker(currSer []env.Object, errorPos int, genv *env.Idxs) string {
+	var result strings.Builder
+	result.WriteString("{ ")
+
+	// Calculate the range to display: 8 nodes before and 8 nodes after
+	startPos := errorPos - 8
+	endPos := errorPos + 8
+
+	// Adjust boundaries to stay within the block
+	if startPos < 0 {
+		startPos = 0
+	}
+	if endPos >= len(currSer) {
+		endPos = len(currSer) - 1
+	}
+
+	// Show ellipsis if we're not starting from the beginning
+	if startPos > 0 {
+		result.WriteString("... ")
+	}
+
+	// Display the selected range
+	for i := startPos; i <= endPos && i < len(currSer); i++ {
+		if i == errorPos {
+			result.WriteString("\x1b[1;31m<here>\x1b[0m ")
+		}
+
+		obj := currSer[i]
+		if obj != nil {
+			result.WriteString(obj.Dump(*genv))
+			result.WriteString(" ")
+		}
+	}
+
+	// If error position is at the end and within our display range
+	if errorPos >= len(currSer) && errorPos <= endPos {
+		result.WriteString("\x1b[1;31m<here>\x1b[0m ")
+	}
+
+	// Show ellipsis if we're not ending at the end of the block
+	if endPos < len(currSer)-1 {
+		result.WriteString("... ")
+	}
+
+	result.WriteString("}")
+	return result.String()
+}
+
+// displayLocationFromSeries extracts and displays location information from the series
+func displayLocationFromSeries(es *env.ProgramState, genv *env.Idxs) {
+	// First try to find LocationNodes in the series and display them nicely
+	foundLocation := false
+
+	// Look through the series for LocationNodes
+	for i := 0; i < es.Ser.Len(); i++ {
+		obj := es.Ser.Get(i)
+		if obj != nil && obj.Type() == env.LocationNodeType {
+			if locNode, ok := obj.(env.LocationNode); ok {
+				if foundLocation {
+					fmt.Print(" -> ")
+				}
+				fmt.Print(locNode.String())
+				foundLocation = true
+			}
+		}
+	}
+
+	if foundLocation {
+		fmt.Println()
+
+		// Try to show the first LocationNode's source line for context
+		for i := 0; i < es.Ser.Len(); i++ {
+			obj := es.Ser.Get(i)
+			if obj != nil && obj.Type() == env.LocationNodeType {
+				if locNode, ok := obj.(env.LocationNode); ok && locNode.SourceLine != "" {
+					fmt.Println("Source:")
+					fmt.Printf("  %s\n", locNode.SourceLine)
+					if locNode.Column > 0 {
+						pointer := strings.Repeat(" ", locNode.Column+1) + "^"
+						fmt.Printf("  %s\n", pointer)
+					}
+					break
+				}
+			}
+		}
+	} else {
+		// Fallback to the original position reporting
+		fmt.Print(es.Ser.PositionAndSurroundingElements(*genv))
+	}
+}
+
+func MaybeDisplayFailureOrError(es *env.ProgramState, genv *env.Idxs, tag string) {
+	MaybeDisplayFailureOrError_2_NEW(es, genv, tag, false)
 }
 
 func MaybeDisplayFailureOrError_2_NEW(es *env.ProgramState, genv *env.Idxs, tag string, topLevel bool) {
-	if es.FailureFlag {
-		fmt.Println("\x1b[33m" + "Failure" + "\x1b[0m")
+	/* if es.FailureFlag {
+		fmt.Print("\x1b[43m\x1b[33m FAILURE \x1b[0m\n") // Red background, black text
 		// DEBUG: fmt.Println(tag)
-	}
+	} */
 	if es.ErrorFlag || (es.FailureFlag && topLevel) {
-		fmt.Println("\x1b[31m" + es.Res.Print(*genv))
-		switch es.Res.(type) {
-		case env.Error:
-			fmt.Println(es.Ser.PositionAndSurroundingElements(*genv))
-			fmt.Println("Error not pointer so bug. #temp")
-		case *env.Error:
-			fmt.Println("At location::")
-			fmt.Print(es.Ser.PositionAndSurroundingElements(*genv))
+		// Use the enhanced error reporting with source location
+		DisplayEnhancedError(es, genv, tag, topLevel)
+
+		// Offer debugging options to the user
+		if topLevel {
+			OfferDebuggingOptions(es, genv, tag)
 		}
-		fmt.Println("\x1b[0m")
-		// fmt.Println(tag)
-		// ENTER CONSOLE ON ERROR
-		// es.ErrorFlag = false
-		// es.FailureFlag = false
-		// DoRyeRepl(es, "do", true)
 	}
-	// cebelca2659- vklopi kontne skupine
 }
 
 func MaybeDisplayFailureOrErrorWASM(es *env.ProgramState, genv *env.Idxs, printfn func(string), tag string) {
 	if es.FailureFlag {
-		printfn("\x1b[33m" + "Failure" + "\x1b[0m")
+		fmt.Print("\x1b[43m\x1b[33m FAILURE \x1b[0m\n") // Red background, black text
 		printfn(tag)
 	}
 	if es.ErrorFlag {

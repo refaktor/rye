@@ -1,0 +1,3 @@
+print "hello"
+xx: fn { a } { print nonexistent_word }
+xx "arg"

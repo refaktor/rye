@@ -1,0 +1,8 @@
+
+xx: fn { } { yy }
+
+yy: fn { } { zz }
+
+zz: fn { } { print 1 / 0 }
+
+print xx

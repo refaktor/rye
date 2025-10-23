@@ -1,0 +1,9 @@
+do {
+	print 123
+}
+
+do {
+	print 345
+	print unknown-word 
+  print "SHOULDN'T PRINT"
+}

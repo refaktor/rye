@@ -289,8 +289,7 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 		}
 
 		block1 := block.(env.Block)
-		es = env.AddToProgramState(es, block1.Series, genv)
-
+		es = env.AddToProgramStateNEWWithLocation(es, block1, genv)
 		// STDIO CAPTURE START
 
 		// Define variables outside if statement
