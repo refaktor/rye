@@ -63,10 +63,14 @@ func RyeToJSON(res any) string {
 		return strconv.FormatFloat(v.Value, 'f', -1, 64)
 	case env.List:
 		return ListToJSON(v)
+	case []any:
+		return ListToJSON(*env.NewList(v))
 	case env.Vector:
 		return VectorToJSON(v)
 	case env.Dict:
 		return DictToJSON(v)
+	case map[string]any:
+		return DictToJSON(*env.NewDict(v))
 	case *env.Table:
 		return TableToJSON(*v)
 	case env.Table:
