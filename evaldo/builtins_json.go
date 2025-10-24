@@ -63,10 +63,14 @@ func RyeToJSON(res any) string {
 		return strconv.FormatFloat(v.Value, 'f', -1, 64)
 	case env.List:
 		return ListToJSON(v)
+	case []any:
+		return ListToJSON(*env.NewList(v))
 	case env.Vector:
 		return VectorToJSON(v)
 	case env.Dict:
 		return DictToJSON(v)
+	case map[string]any:
+		return DictToJSON(*env.NewDict(v))
 	case *env.Table:
 		return TableToJSON(*v)
 	case env.Table:
@@ -258,6 +262,35 @@ var Builtins_json = map[string]*env.Builtin{
 				return env.ToRyeValue(m)
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "_parse_json")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { `{"a": 2, "b": "x"} \n{"a": 3, "b": "y"} \n` |parse-json\lines |to-table } table { "a" "b" } { 2 "x" 3 "y" }
+	// Args:
+	// * json: string containing consecutive JSON values
+	// Returns:
+	// * list of parsed Rye values
+	"parse-json\\lines": {
+		Argsn: 1,
+		Doc:   "Parses JSON string into Rye values.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch input := arg0.(type) {
+			case env.String:
+				var vals []any
+				decoder := json.NewDecoder(strings.NewReader(input.Value))
+				for decoder.More() {
+					var m any
+					err := decoder.Decode(&m)
+					if err != nil {
+						return MakeBuiltinError(ps, "Failed to Unmarshal.", "_parse_json\\lines")
+					}
+					vals = append(vals, env.ToRyeValue(m))
+				}
+				return *env.NewList(vals)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "_parse_json\\lines")
 			}
 		},
 	},
