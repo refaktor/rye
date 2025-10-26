@@ -462,47 +462,9 @@ section "File Monitoring " "File watching and tailing operations" {
 	{
 		arg `tail: native tail-file object`
 		returns `empty string if successful`
->>>>>>> 15fe12d3eff6de582f54fd500e2bd724cd33e3fa
 	}
 
 	{
-		equal { mysql-schema//Open %"user:pass@tcp(localhost:3306)/dbname" |type? } 'native
-	}
-
-	group "mysql-schema//Open\\pwd" 
-	"Opens a connection to a MySQL database with separate password parameter."
-	{
-		arg `uri: MySQL connection string URI without password`
-		arg `password: Password for the database connection`
-		returns `native MySQL database connection`
-	}
-
-	{
-		equal { mysql-schema//Open\pwd %"user@tcp(localhost:3306)/dbname" "password" |type? } 'native
-	}
-
-	group "Rye-mysql//Exec" 
-	"Executes a SQL statement that modifies data (INSERT, UPDATE, DELETE)."
-	{
-		arg `db: MySQL database connection`
-		arg `sql: SQL statement as string or block`
-		returns `integer 1 if rows were affected, error otherwise`
-	}
-
-	{
-		equal { db: mysql-schema//Open %"user:pass@tcp(localhost:3306)/dbname" , db |Rye-mysql//Exec "INSERT INTO test VALUES (1, 'test')" |type? } 'integer
-	}
-
-	group "Rye-mysql//Query" 
-	"Executes a SQL query and returns results as a table."
-	{
-		arg `db: MySQL database connection`
-		arg `sql: SQL query as string or block`
-		returns `table containing query results`
-	}
-
-	{
-		equal { db: mysql-schema//Open %"user:pass@tcp(localhost:3306)/dbname" , db |Rye-mysql//Query "SELECT * FROM test" |type? } 'table
 	}
 
 }

@@ -304,16 +304,10 @@ func (s Table) Equal(o Object) bool {
 	for i, row := range s.Rows {
 		for j, v := range row.Values {
 			o := oSpr.Rows[i].Values[columnMapping[j]]
-			if vObj, ok := v.(Object); ok {
-				if oObj, ok := o.(Object); ok {
-					if !vObj.Equal(oObj) {
-						return false
-					}
-				}
-			} else {
-				if v != o {
-					return false
-				}
+			vObj := ToRyeValue(v)
+			oObj := ToRyeValue(o)
+			if !vObj.Equal(oObj) {
+				return false
 			}
 		}
 	}
@@ -376,16 +370,10 @@ func (s TableRow) Equal(o Object) bool {
 		return false
 	}
 	for i, v := range s.Values {
-		if vObj, ok := v.(Object); ok {
-			if oObj, ok := oSprRow.Values[i].(Object); ok {
-				if !vObj.Equal(oObj) {
-					return false
-				}
-			}
-		} else {
-			if v != oSprRow.Values[i] {
-				return false
-			}
+		vObj := ToRyeValue(v)
+		oObj := ToRyeValue(oSprRow.Values[i])
+		if !vObj.Equal(oObj) {
+			return false
 		}
 	}
 
