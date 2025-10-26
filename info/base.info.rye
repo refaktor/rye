@@ -174,6 +174,39 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		error { decr "123" }
 	}
 
+	group "negate" 
+	"Negates a number by multiplying it by -1, works with integers, decimals, and complex numbers."
+	{
+		arg `value: Number (integer, decimal, or complex) to negate`
+		returns `negated number of the same type`
+	}
+
+	{
+		equal { negate 123 } -123
+		equal { negate -123 } 123
+		equal { negate 0 } 0
+		equal { negate 5.5 } -5.5
+		equal { negate -2.3 } 2.3
+		error { negate "123" }
+	}
+
+	group "invert" 
+	"Calculates the reciprocal (1/x) of a number, works with integers, decimals, and complex numbers."
+	{
+		arg `value: Number (integer, decimal, or complex) to invert (must not be zero)`
+		returns `reciprocal (1/value) as decimal or complex number`
+	}
+
+	{
+		equal { invert 2 } 0.5
+		equal { invert 4 } 0.25
+		equal { invert 0.5 } 2.0
+		equal { invert -2 } -0.5
+		equal { invert 1 } 1.0
+		error { invert 0 }
+		error { invert "123" }
+	}
+
 	group "is-positive" 
 	"Checks if a number is positive (greater than zero)."
 	{
@@ -1918,14 +1951,14 @@ section "Other " "..." {
 	{
 		arg `value: New value to assign to the word`
 		arg `word: Word whose value should be changed`
-		returns `Integer 1 if the value changed, 0 if the new value is the same as the old value`
+		returns `Boolean true if the value changed, false if the new value is the same as the old value`
 	}
 
 	{
 		equal   { var 'x 123 , change! 234 'x , x } 234
 		equal   { a:: 123 change! 333 'a a } 333
-		equal   { a:: 123 change! 124 'a } 1
-		equal   { a:: 123 change! 123 'a } 0
+		equal   { a:: 123 change! 124 'a } true
+		equal   { a:: 123 change! 123 'a } false
 	}
 
 	group "set!" 

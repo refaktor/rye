@@ -138,6 +138,17 @@ section "JSON " "Parsing and generating JSON" {
 		equal { "[ 1, 2, 3 ]" |parse-json |type? } 'list
 	}
 
+	group "parse-json\\lines" 
+	"Parses JSON string into Rye values."
+	{
+		arg `json: string containing consecutive JSON values`
+		returns `list of parsed Rye values`
+	}
+
+	{
+		equal { `{"a": 2, "b": "x"} \n{"a": 3, "b": "y"} \n` |parse-json\lines |to-table } table { "a" "b" } { 2.0 "x" 3.0 "y" }
+	}
+
 	group "to-json" 
 	"Converts a Rye value to a JSON string."
 	{
