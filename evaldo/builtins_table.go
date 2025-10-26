@@ -219,7 +219,7 @@ var Builtins_table = map[string]*env.Builtin{
 							if !ok {
 								data = env.Void{}
 							}
-							row[i] = data
+							row[i] = env.ToRyeValue(data)
 						}
 						spr.AddRow(*env.NewTableRow(row, spr))
 					case env.Dict:
@@ -229,7 +229,7 @@ var Builtins_table = map[string]*env.Builtin{
 							if !ok {
 								data = env.Void{}
 							}
-							row[i] = data
+							row[i] = env.ToRyeValue(data)
 						}
 						spr.AddRow(*env.NewTableRow(row, spr))
 					}
