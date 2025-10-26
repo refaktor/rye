@@ -267,7 +267,7 @@ var Builtins_json = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { `{"a": 2, "b": "x"} \n{"a": 3, "b": "y"} \n` |parse-json\lines |to-table } table { "a" "b" } { 2 "x" 3 "y" }
+	// equal { `{"a": 2, "b": "x"} \n{"a": 3, "b": "y"} \n` |parse-json\lines |to-table } table { "a" "b" } { 2.0 "x" 3.0 "y" }
 	// Args:
 	// * json: string containing consecutive JSON values
 	// Returns:
