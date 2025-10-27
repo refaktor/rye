@@ -295,7 +295,7 @@ section "HTML " "HTML processing functions" {
 		equal { html->markdown "<h1>title</h1><p>para</p>" } "# title\n\npara"
 	}
 
-	group "reader//parse-html" 
+	group "reader//Parse-html" 
 	"Parses HTML using a streaming approach with tag handlers."
 	{
 		arg `reader: HTML reader object`
@@ -305,11 +305,11 @@ section "HTML " "HTML processing functions" {
 
 	{
 		stdout { "<html><body><div class='menu'><a href='/'>home</a><a href='/about/'>about</a>" |reader
-		.parse-html { <a> [ .attr? 'href |prns ] }
+		.Parse-html { <a> [ .attr? 'href |prns ] }
 		} "/ /about/ "
 	}
 
-	group "rye-html-start//attr?" 
+	group "rye-html-start//Attr?" 
 	"Retrieves an attribute value by name or index from an HTML element."
 	{
 		arg `element: HTML token element`
@@ -322,7 +322,7 @@ section "HTML " "HTML processing functions" {
 		stdout { "<div class='menu' id='nav'></div>" |reader .parse-html { <div> [ .attr? 'id |prn ] } } "nav"
 	}
 
-	group "rye-html-start//name?" 
+	group "rye-html-start//Name?" 
 	"Returns the name of an HTML element."
 	{
 		arg `element: HTML token element`

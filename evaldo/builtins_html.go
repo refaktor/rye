@@ -461,14 +461,14 @@ var Builtins_html = map[string]*env.Builtin{
 
 	// Tests:
 	// stdout { "<html><body><div class='menu'><a href='/'>home</a><a href='/about/'>about</a>" |reader
-	//   .parse-html { <a> [ .attr? 'href |prns ] }
+	//   .Parse-html { <a> [ .attr? 'href |prns ] }
 	// } "/ /about/ "
 	// Args:
 	// * reader: HTML reader object
 	// * block: HTML processing block with tag handlers
 	// Returns:
 	// * result of processing the HTML
-	"reader//parse-html": {
+	"reader//Parse-html": {
 		Argsn: 2,
 		Doc:   "Parses HTML using a streaming approach with tag handlers.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -491,7 +491,7 @@ var Builtins_html = map[string]*env.Builtin{
 	// * name-or-index: Attribute name (as word) or index (as integer)
 	// Returns:
 	// * string value of the attribute or void if not found
-	"rye-html-start//attr?": {
+	"rye-html-start//Attr?": {
 		Argsn: 2,
 		Doc:   "Retrieves an attribute value by name or index from an HTML element.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -531,7 +531,7 @@ var Builtins_html = map[string]*env.Builtin{
 	// * element: HTML token element
 	// Returns:
 	// * string name of the HTML element
-	"rye-html-start//name?": {
+	"rye-html-start//Name?": {
 		Argsn: 1,
 		Doc:   "Returns the name of an HTML element.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

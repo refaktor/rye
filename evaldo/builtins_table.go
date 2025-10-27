@@ -1591,7 +1591,7 @@ var Builtins_table = map[string]*env.Builtin{
 	// Args:
 	// * file-uri - location of csv file to load
 	// Tags: #table #loading #csv
-	"load\\csv": {
+	"file-schema//load\\csv": {
 		// TODO 2 -- this could move to a go function so it could be called by general load that uses extension to define the loader
 		Argsn: 1,
 		Doc:   "Loads a .csv file to a table datatype.",
@@ -1867,7 +1867,7 @@ var Builtins_table = map[string]*env.Builtin{
 	// Args:
 	// * file-uri - location of xlsx file to load
 	// Tags: #table #loading #xlsx
-	"load\\xlsx": {
+	"file-schema//Load\\xlsx": {
 		Argsn: 1,
 		Doc:   "Loads the first sheet in an .xlsx file to a Table.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

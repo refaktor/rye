@@ -1620,20 +1620,21 @@ func displayLocationFromSeries(es *env.ProgramState, genv *env.Idxs) {
 }
 
 func MaybeDisplayFailureOrError(es *env.ProgramState, genv *env.Idxs, tag string) {
-	MaybeDisplayFailureOrError_2_NEW(es, genv, tag, false)
+	MaybeDisplayFailureOrError2(es, genv, tag, false, false)
 }
 
-func MaybeDisplayFailureOrError_2_NEW(es *env.ProgramState, genv *env.Idxs, tag string, topLevel bool) {
+func MaybeDisplayFailureOrError2(es *env.ProgramState, genv *env.Idxs, tag string, topLevel bool, fileMode bool) {
 	/* if es.FailureFlag {
 		fmt.Print("\x1b[43m\x1b[33m FAILURE \x1b[0m\n") // Red background, black text
 		// DEBUG: fmt.Println(tag)
-	} */
+	}
+	fmt.Println("***** ***** *****") */
 	if es.ErrorFlag || (es.FailureFlag && topLevel) {
 		// Use the enhanced error reporting with source location
 		DisplayEnhancedError(es, genv, tag, topLevel)
 
 		// Offer debugging options to the user
-		if topLevel {
+		if fileMode {
 			OfferDebuggingOptions(es, genv, tag)
 		}
 	}

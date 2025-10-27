@@ -181,7 +181,7 @@ section "File Operations " "File system operations and file manipulation" {
 		equal { Close Open %data/file.txt } ""
 	}
 
-	group "file-schema//Read" 
+	group "file-schema//read" 
 	"Reads the entire content of a file as a string."
 	{
 		arg `path: uri representing the file to read`
@@ -192,7 +192,7 @@ section "File Operations " "File system operations and file manipulation" {
 		equal { Read %data/file.txt } "hello text file\n"
 	}
 
-	group "file-schema//Read\\bytes" 
+	group "file-schema//read\\bytes" 
 	"Reads the entire content of a file as bytes."
 	{
 		arg `path: uri representing the file to read`
