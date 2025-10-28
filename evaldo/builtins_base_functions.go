@@ -340,6 +340,7 @@ var builtins_functions = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { y: 5 , f: closure { x } { x + y } , f 3 } 8
+	// equal { mk-cntr: does { var 'c 0 , closure { } { inc! 'c } } cnt: mk-cntr , cnt + cnt + cnt } 6
 	// Args:
 	// * spec: Block containing parameter specifications
 	// * body: Block containing the function body code
@@ -354,7 +355,11 @@ var builtins_functions = map[string]*env.Builtin{
 		Doc:   "Creates a closure that captures the current context at creation time, preserving access to variables in that scope.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			ctx := *ps.Ctx
+			// Create a proper deep copy of the context to preserve the entire context state
+			ctxCopy := ps.Ctx.Copy()
+			ctx := ctxCopy.(*env.RyeCtx)
+			ctx.IsClosure = true // Mark this context as a closure context to prevent pooling
+
 			switch args := arg0.(type) {
 			case env.Block:
 				ok, doc := util.ProcessFunctionSpec(args)
@@ -363,7 +368,7 @@ var builtins_functions = map[string]*env.Builtin{
 				}
 				switch body := arg1.(type) {
 				case env.Block:
-					return *env.NewFunctionC(args, body, &ctx, false, false, doc)
+					return *env.NewFunctionC(args, body, ctx, false, false, doc)
 				default:
 					ps.ErrorFlag = true
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "closure")

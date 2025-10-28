@@ -20,8 +20,8 @@ normalize-url: fn { link page } {
 
 crawl-page: fn { page } {
 	.pass { prn "LOADING:" , .prn }
-	|get |^fix { print "[Failed]" } |reader
-	|parse-html { <a> [ .attr? 'href |normalize-url page |append! 'sites ] }
+	|Get |^fix { print "[Failed]" } |reader
+	|Parse-html { <a> [ .Attr? 'href |normalize-url page |append! 'sites ] }
 	print length? sites
 }
 

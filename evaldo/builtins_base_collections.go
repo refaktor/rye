@@ -1111,33 +1111,8 @@ var builtins_collection = map[string]*env.Builtin{
 				uniqueList := util.RemoveDuplicate(ps, block.Series.S)
 				return *env.NewBlock(*env.NewTSeries(uniqueList))
 			case env.String:
-				strSlice := make([]env.Object, 0)
-				// create string to object slice
-				for _, value := range block.Value {
-					// if want to block  space then we can add here condition
-					strSlice = append(strSlice, env.ToRyeValue(value))
-				}
-				uniqueStringSlice := util.RemoveDuplicate(ps, strSlice)
-				uniqueStr := ""
-				// converting object to string and append final
-				for _, value := range uniqueStringSlice {
-					// Safe conversion with error handling
-					rawValue := env.RyeToRaw(value, ps.Idx)
-					switch rawStr := rawValue.(type) {
-					case string:
-						uniqueStr = uniqueStr + rawStr
-					case int64:
-						uniqueStr = uniqueStr + fmt.Sprintf("%d", rawStr)
-					case float64:
-						uniqueStr = uniqueStr + fmt.Sprintf("%g", rawStr)
-					case rune:
-						uniqueStr = uniqueStr + string(rawStr)
-					default:
-						// Fallback to string representation
-						uniqueStr = uniqueStr + fmt.Sprintf("%v", rawValue)
-					}
-				}
-				return *env.NewString(uniqueStr)
+				unique := util.RemoveDuplicatesString(block.Value)
+				return *env.NewString(unique)
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.ListType, env.BlockType, env.StringType}, "unique")
 			}

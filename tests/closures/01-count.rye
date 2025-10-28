@@ -1,0 +1,10 @@
+make-counter: does { var 'cnt 0 , closure { } { inc! 'cnt } }
+
+cc: make-counter
+cc2: make-counter
+
+loop 10 { print cc , sleep 10 }
+
+loop 10 { print cc2 , sleep 10 }
+
+loop 10 { print cc , sleep 10 }

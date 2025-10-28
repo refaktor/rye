@@ -15,10 +15,10 @@ import (
 var Builtins_psql = map[string]*env.Builtin{
 
 	//
-	// ##### PostgreSQL Database Functions #####
+	// ##### PostgreSQL Database Functions ##### ""
 	//
 	// Tests:
-	// equal { postgres-schema//Open %"postgres://user:pass@localhost:5432/dbname" |type? } 'native
+	// example { Open postgres://user:pass@localhost:5432/dbname }
 	// Args:
 	// * uri: PostgreSQL connection string URI (format: postgres://username:password@host:port/database)
 	// Returns:
@@ -50,7 +50,7 @@ var Builtins_psql = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { db: postgres-schema//Open %"postgres://user:pass@localhost:5432/dbname" , db |Rye-psql//Exec "INSERT INTO test VALUES (1, 'test')" |type? } 'integer
+	// example { Open postgres://user:pass@localhost:5432/dbname |Exec "INSERT INTO test VALUES (1, 'test')" }
 	// Args:
 	// * db: PostgreSQL database connection (type: "Rye-psql")
 	// * sql: SQL statement as string or block (for data modification: INSERT, UPDATE, DELETE)
@@ -107,7 +107,8 @@ var Builtins_psql = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { db: postgres-schema//Open %"postgres://user:pass@localhost:5432/dbname" , db |Rye-psql//Query "SELECT * FROM test" |type? } 'table
+	// example { Open postgres://user:pass@localhost:5432/dbname
+	// |Query "SELECT * FROM test" }
 	// Args:
 	// * db: PostgreSQL database connection (type: "Rye-psql")
 	// * sql: SQL query as string or block (SELECT statements)
@@ -206,7 +207,7 @@ var Builtins_psql = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { db: postgres-schema//Open %"postgres://user:pass@localhost:5432/dbname" , db |Rye-psql//Show-SQL "SELECT * FROM test WHERE id = ?id" |type? } 'string
+	// example { id: 323 Open postgres://user:pass@localhost:5432/dbname \n|Show-SQL {  SELECT * FROM test WHERE id = ?id } }
 	// Args:
 	// * db: PostgreSQL database connection (type: "Rye-psql")
 	// * sql: SQL query as string or block (for debugging/inspection)

@@ -48,8 +48,8 @@ var builtins_contexts = map[string]*env.Builtin{
 	// equal { c: isolate { x: 123 } c/x } 123
 	// equal { y: 123 c: isolate { x: y } c/x } 123
 	// equal { c: isolate { x: inc 10 } c/x } 11
-	// equal { y: 99 c: isolate { x: does { y } } try { c/x } |type? } 'error
-	// equal { y: 99 c: isolate { t: ?try x: does { t { y } } } c/x |type? } 'error
+	// ; equal { y: 99 c: isolate { x: does { y } } try { c/x } |type? } 'error
+	// ; equal { y: 99 c: isolate { t: ?try x: does { t { y } } } c/x |type? } 'error
 	// Args:
 	// * block: Block of expressions to evaluate in a temporary context
 	// Returns:
@@ -241,7 +241,7 @@ var builtins_contexts = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { c: context { y: 123 } cc: bind! context { z: does { y + 234 } } c , unbind cc cc/z } 357
-	// error { c: context { y: 123 } cc: bind! context { z: does { y + 234 } } c , dd: unbind cc dd/z }
+	// ; error { c: context { y: 123 } cc: bind! context { z: does { y + 234 } } c , dd: unbind cc dd/z }
 	// Args:
 	// * ctx: Context object to unbind from its parent
 	// Returns:

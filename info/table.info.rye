@@ -198,6 +198,21 @@ section "Filtering " "Functions that construct a table." {
 		} { 30 25 }
 	}
 
+	group "where-not-in" 
+	"Returns table of rows where specific colum value if found in block of values."
+	{
+		arg `sheet`
+		arg `column`
+		arg `values-filtered-for`
+		arg `Tags: #filter #table`
+	}
+
+	{
+		equal { table { "name" "age" } { "Enno" 30 "Enya" 25 "Bob" 19 }
+		|where-not-in 'name { "Enno" "Enya" "Roger" } |column? "age"
+		} { 19 }
+	}
+
 }
 
 section "Row level functions " "Functions that construct a table." {
@@ -599,7 +614,7 @@ section "Loading and saving " "Functions that construct a table." {
 		f:: mktmp ++ "/test.xlsx"
 		spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
 		spr1 .save\xlsx f
-		spr2:: load\xlsx f |autotype 1.0
+		spr2:: Load\xlsx f |autotype 1.0
 		spr1 = spr2
 		} true
 	}
@@ -618,7 +633,7 @@ section "Loading and saving " "Functions that construct a table." {
 		f:: mktmp ++ "/test.xlsx"
 		spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
 		spr1 .save\xlsx f
-		spr2:: load\xlsx f |autotype 1.0
+		spr2:: Load\xlsx f |autotype 1.0
 		spr1 = spr2
 		} true
 	}

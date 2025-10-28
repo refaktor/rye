@@ -305,7 +305,7 @@ section "HTML " "HTML processing functions" {
 
 	{
 		stdout { "<html><body><div class='menu'><a href='/'>home</a><a href='/about/'>about</a>" |reader
-		.Parse-html { <a> [ .attr? 'href |prns ] }
+		.Parse-html { <a> [ .Attr? 'href |prns ] }
 		} "/ /about/ "
 	}
 
@@ -318,8 +318,8 @@ section "HTML " "HTML processing functions" {
 	}
 
 	{
-		stdout { "<div class='menu' id='nav'></div>" |reader .parse-html { <div> [ .attr? 'class |prn ] } } "menu"
-		stdout { "<div class='menu' id='nav'></div>" |reader .parse-html { <div> [ .attr? 'id |prn ] } } "nav"
+		stdout { "<div class='menu' id='nav'></div>" |reader .Parse-html { <div> [ .Attr? 'class |prn ] } } "menu"
+		stdout { "<div class='menu' id='nav'></div>" |reader .Parse-html { <div> [ .Attr? 'id |prn ] } } "nav"
 	}
 
 	group "rye-html-start//Name?" 
@@ -330,7 +330,7 @@ section "HTML " "HTML processing functions" {
 	}
 
 	{
-		stdout { "<div></div>" |reader .parse-html { <div> [ .name? |print ] } } "div"
+		stdout { "<div></div>" |reader .Parse-html { <div> [ .Name? |print ] } } "div\n"
 	}
 
 }

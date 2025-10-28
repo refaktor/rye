@@ -1,0 +1,37 @@
+print "=== Closure Context Preservation Test ==="
+
+; Test 1: Basic closure
+print "Test 1: Basic closure"
+mk1: fn { } { a: 101 closure { } { print a } }
+xx1: mk1
+xx1 xx1 xx1
+
+; Test 2: Nested closures
+print "Test 2: Nested closures"  
+mk2: fn { } { 
+    a: 200 
+    inner: closure { } { 
+        b: 300
+        closure { } { print [ a "+" b "=" a + b ] }
+    }
+    inner
+}
+xx2: mk2
+yy2: xx2
+yy2 yy2
+
+; Test 3: Multiple closures from same context
+print "Test 3: Multiple closures from same context"
+mk3: fn { } {
+    shared: 400
+    [ 
+        closure { } { print2 "First:" shared }
+        closure { } { print2 "Second:" shared }
+    ]
+}
+closures: mk3
+first:  0 <- closures
+second: 1 <- closures
+first second first second
+
+print "=== All tests passed! ==="

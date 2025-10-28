@@ -347,6 +347,21 @@ func RemoveDuplicate(ps *env.ProgramState, slice []env.Object) []env.Object {
 	return list
 }
 
+func RemoveDuplicatesString(input string) string {
+	seen := make(map[rune]bool)
+
+	var resultBuilder strings.Builder
+
+	for _, char := range input {
+		if !seen[char] {
+			seen[char] = true
+
+			resultBuilder.WriteRune(char)
+		}
+	}
+	return resultBuilder.String()
+}
+
 func TruncateString(s string, maxLen int) string {
 	s = strings.ReplaceAll(s, "\n", "\\-")
 	runes := []rune(s)

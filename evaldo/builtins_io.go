@@ -458,7 +458,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * path: uri representing the file to read
 	// Returns:
 	// * string containing the entire file content
-	"file-schema//read": {
+	"file-schema//Read": {
 		Argsn: 1,
 		Doc:   "Reads the entire content of a file as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -481,7 +481,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * path: uri representing the file to read
 	// Returns:
 	// * native bytes object containing the file content
-	"file-schema//read\\bytes": {
+	"file-schema//Read\\bytes": {
 		Argsn: 1,
 		Doc:   "Reads the entire content of a file as bytes.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

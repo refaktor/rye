@@ -224,6 +224,45 @@
 ; correctly causes error:
 ; builtin `decr` requires argument 1 to be: Integer. </code></pre>
 </div>
+<h3>negate</h3><p>Negates a number by multiplying it by -1, works with integers, decimals, and complex numbers.</p>
+<p class='arg'><b>value</b> Number (integer, decimal, or complex) to negate</p>
+<p class='returns'><b>returns</b> negated number of the same type</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>negate 123
+; returns -123</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>negate -123
+; returns 123</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>negate 0
+; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>negate 5.5
+; returns -5.5</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>negate -2.3
+; returns 2.3</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>negate "123"
+; correctly causes error:
+; builtin `negate` requires argument 1 to be: Integer, Decimal, Complex. </code></pre>
+</div>
+<h3>invert</h3><p>Calculates the reciprocal (1/x) of a number, works with integers, decimals, and complex numbers.</p>
+<p class='arg'><b>value</b> Number (integer, decimal, or complex) to invert (must not be zero)</p>
+<p class='returns'><b>returns</b> reciprocal (1/value) as decimal or complex number</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>invert 2
+; returns 0.5</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>invert 4
+; returns 0.25</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>invert 0.5
+; returns 2</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>invert -2
+; returns -0.5</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>invert 1
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>invert 0
+; correctly causes error:
+; Can't invert zero. in builtin invert. </code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>invert "123"
+; correctly causes error:
+; builtin `invert` requires argument 1 to be: Integer, Decimal, Complex. </code></pre>
+</div>
 <h3>is-positive</h3><p>Checks if a number is positive (greater than zero).</p>
 <p class='arg'><b>value</b> Integer or decimal to check</p>
 <p class='returns'><b>returns</b> boolean true if the value is positive, false otherwise</p>
@@ -1111,7 +1150,7 @@ ASDF
 <p class='returns'><b>returns</b> list containing all values from the dictionary</p>
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 "b" 2 "c" 3 } |values
-; returns list { 2 3 1 }</code></pre>
+; returns list { 1 2 3 }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "x" 10 "y" 20 } |values |length?
 ; returns 2</code></pre>
 </div>
@@ -1170,6 +1209,10 @@ ASDF
 ; returns { 1 2 3 }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>unique { 1 1 2 2 } |sort
 ; returns { 1 2 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>unique "aabbc" |length?
+; returns 3</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>unique "ab" |length?
+; returns 2</code></pre>
 </div>
 <h3>reverse</h3><p>Creates a new collection with items in reverse order from the input collection.</p>
 <p class='arg'><b>collection</b> Block, list or string to reverse</p>
@@ -1220,7 +1263,7 @@ ASDF
 <pre class='prettyprint lang-rye'><code language='lang-rye'>{ 1 2 } ++ { 3 4 }
 ; returns { 1 2 3 4 }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 } || ++ { "b" 2 }
-; returns dict { b 2 a 1 }</code></pre>
+; returns dict { a 1 b 2 }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 } || ++ dict { "b" 2 }
 ; returns dict { a 1 b 2 }</code></pre>
 </div>
@@ -1539,10 +1582,6 @@ th!</h3><p>Changes the value at a specific position in a block or list in-place 
 ; returns 123</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>c: isolate { x: inc 10 } c/x
 ; returns 11</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>y: 99 c: isolate { x: does { y } } try { c/x } |type?
-; returns error</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>y: 99 c: isolate { t: ?try x: does { t { y } } } c/x |type?
-; returns error</code></pre>
 </div>
 <h3>context</h3><p>Creates a new context that maintains access to its parent context.</p>
 <p class='arg'><b>block</b> Block of expressions to evaluate in a new context</p>
@@ -1600,9 +1639,6 @@ th!</h3><p>Changes the value at a specific position in a block or list in-place 
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { y: 123 } cc: bind! context { z: does { y + 234 } } c , unbind cc cc/z
 ; returns 357</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { y: 123 } cc: bind! context { z: does { y + 234 } } c , dd: unbind cc dd/z
-; correctly causes error:
-; word not found: y </code></pre>
 </div>
 <h3>current</h3><p>Returns current context.</p>
 <div class='group'>
@@ -1733,6 +1769,8 @@ th!</h3><p>Changes the value at a specific position in a block or list in-place 
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>y: 5 , f: closure { x } { x + y } , f 3
 ; returns 8</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>mk-cntr: does { var 'c 0 , closure { } { inc! 'c } } cnt: mk-cntr , cnt + cnt + cnt
+; returns 6</code></pre>
 </div>
 <h3>partial</h3><p>Creates a partially applied function with specified arguments, using _ (void) for arguments to be filled later.</p>
 <p class='arg'><b>func</b> Function or builtin to partially apply</p>
@@ -1751,16 +1789,16 @@ th!</h3><p>Changes the value at a specific position in a block or list in-place 
 <h3>change!</h3><p>Searches for a word and changes it's value in-place. Only works on variables declared with var. If value changes returns true otherwise false</p>
 <p class='arg'><b>value</b> New value to assign to the word</p>
 <p class='arg'><b>word</b> Word whose value should be changed</p>
-<p class='returns'><b>returns</b> Integer 1 if the value changed, 0 if the new value is the same as the old value</p>
+<p class='returns'><b>returns</b> Boolean true if the value changed, false if the new value is the same as the old value</p>
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>var 'x 123 , change! 234 'x , x
 ; returns 234</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>a:: 123 change! 333 'a a
 ; returns 333</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>a:: 123 change! 124 'a
-; returns 1</code></pre>
+; returns true</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>a:: 123 change! 123 'a
-; returns 0</code></pre>
+; returns false</code></pre>
 </div>
 <h3>set!</h3><p>Set word to value or words by deconstructing a block. Only works on variables declared with var.</p>
 <p class='arg'><b>values</b> Value or block of values to assign to the word(s)</p>
@@ -1809,7 +1847,7 @@ th!</h3><p>Changes the value at a specific position in a block or list in-place 
 <p class='arg'>None</p>
 <p class='returns'><b>returns</b> Integer 1 on success</p>
 <div class='group'>
-State current context to [1mconsole_251003_161056.rye[0m.
+State current context to [1mconsole_251028_003833.rye[0m.
 <pre class='prettyprint lang-rye'><code language='lang-rye'>save\current |type?
 ; returns integer</code></pre>
 </div>

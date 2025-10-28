@@ -863,7 +863,11 @@ func CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, toLeft
 	ps.BlockFile = blockFile
 	ps.BlockLine = blockLine
 	ps.ReturnFlag = false
-	envPool.Put(fnCtx)
+
+	// Don't return closure contexts to the pool to prevent context reuse issues
+	if !fnCtx.IsClosure {
+		envPool.Put(fnCtx)
+	}
 
 	/*         for (var i=0;i<h.length;i+=1) {
 	    var e = this.evalExpr(block,pos,state,depth+1);
@@ -1450,7 +1454,7 @@ func calculateErrorPosition(ps *env.ProgramState, locationNode *env.LocationNode
 // DisplayEnhancedError shows enhanced error information including source location from block data
 func DisplayEnhancedError(es *env.ProgramState, genv *env.Idxs, tag string, topLevel bool) {
 	// Red background banner for runtime errors
-	if !es.SkipFlag {
+	if !es.SkipFlag || true {
 		fmt.Print("\x1b[41m\x1b[30m RUNTIME ERROR \x1b[0m\n") // Red background, black text
 
 		// Bold red for error message
@@ -1461,6 +1465,9 @@ func DisplayEnhancedError(es *env.ProgramState, genv *env.Idxs, tag string, topL
 	// Get location information from the current block
 	displayBlockWithErrorPosition(es, genv)
 	es.SkipFlag = true
+	if topLevel {
+		es.SkipFlag = false
+	}
 }
 
 // displayBlockWithErrorPosition shows the whole current block with <here> marker at error position

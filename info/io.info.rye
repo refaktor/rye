@@ -181,7 +181,7 @@ section "File Operations " "File system operations and file manipulation" {
 		equal { Close Open %data/file.txt } ""
 	}
 
-	group "file-schema//read" 
+	group "file-schema//Read" 
 	"Reads the entire content of a file as a string."
 	{
 		arg `path: uri representing the file to read`
@@ -192,7 +192,7 @@ section "File Operations " "File system operations and file manipulation" {
 		equal { Read %data/file.txt } "hello text file\n"
 	}
 
-	group "file-schema//read\\bytes" 
+	group "file-schema//Read\\bytes" 
 	"Reads the entire content of a file as bytes."
 	{
 		arg `path: uri representing the file to read`
@@ -465,6 +465,118 @@ section "File Monitoring " "File watching and tailing operations" {
 	}
 
 	{
+	}
+
+}
+
+section "SQLite " "SQLite database functions" {
+	group "sqlite-schema//Open" 
+	"Opens a connection to a SQLite database file."
+	{
+		arg `uri: path to SQLite database file`
+		returns `native SQLite database connection`
+	}
+
+	{
+		equal { Open sqlite://test.db |type? } 'native
+	}
+
+	group "htmlize" 
+	"Converts a table to HTML format."
+	{
+		arg `table: table to convert to HTML`
+		returns `string containing HTML representation of the table`
+	}
+
+	{
+		equal { table { "name" "age" } { "Bob" 25 "Alice" 30 } |htmlize |type? } 'string
+	}
+
+	group "Rye-sqlite//Exec" 
+	"Executes a SQL statement that doesn't return rows."
+	{
+		arg `db: SQLite database connection`
+		arg `sql: SQL statement as string or block`
+		returns `database connection`
+	}
+
+	{
+		equal { Open sqlite://test.db |Exec "CREATE TABLE IF NOT EXISTS test (id INTEGER, name TEXT)" |type? } 'native
+	}
+
+	group "Rye-sqlite//Query" 
+	"Executes a SQL query and returns results as a table."
+	{
+		arg `db: SQLite database connection`
+		arg `sql: SQL query as string or block`
+		returns `table containing query results`
+	}
+
+	{
+		equal { Open sqlite://test.db |Query "SELECT * FROM test" |type? } 'table
+	}
+
+	group "Rye-sqlite//Show-SQL" 
+	"Generates and returns the SQL string without executing it."
+	{
+		arg `db: SQLite database connection`
+		arg `sql: SQL query as string or block`
+		returns `string containing the generated SQL with parameters`
+	}
+
+	{
+		equal { id: 123 Open sqlite://test.db |Show-SQL { SELECT * FROM test WHERE id = ?id } |type? } 'string
+	}
+
+}
+
+section "PostgreSQL Database Functions " "" {
+	group "postgres-schema//Open" 
+	"Opens a connection to a PostgreSQL database."
+	{
+		arg `uri: PostgreSQL connection string URI (format: postgres://username:password@host:port/database)`
+		returns `native PostgreSQL database connection (type: "Rye-psql")error if connection fails`
+	}
+
+	{
+		example { Open postgres://user:pass@localhost:5432/dbname }
+	}
+
+	group "Rye-psql//Exec" 
+	"Executes a SQL statement that modifies data (INSERT, UPDATE, DELETE)."
+	{
+		arg `db: PostgreSQL database connection (type: "Rye-psql")`
+		arg `sql: SQL statement as string or block (for data modification: INSERT, UPDATE, DELETE)`
+		returns `integer number of rows affectederror if execution fails`
+	}
+
+	{
+		example { Open postgres://user:pass@localhost:5432/dbname |Exec "INSERT INTO test VALUES (1, 'test')" }
+	}
+
+	group "Rye-psql//Query" 
+	"Executes a SQL query and returns results as a table."
+	{
+		arg `db: PostgreSQL database connection (type: "Rye-psql")`
+		arg `sql: SQL query as string or block (SELECT statements)`
+		returns `table containing query results (SQL NULL values converted to Void{})error if query fails or returns no data`
+	}
+
+	{
+		example { Open postgres://user:pass@localhost:5432/dbname
+		|Query "SELECT * FROM test" }
+	}
+
+	group "Rye-psql//Show-SQL" 
+	"Generates and returns the SQL string without executing it."
+	{
+		arg `db: PostgreSQL database connection (type: "Rye-psql")`
+		arg `sql: SQL query as string or block (for debugging/inspection)`
+		returns `string containing the generated SQL with parameters (includes parameter comments if present)error if SQL is empty`
+	}
+
+	{
+		example { id: 323 Open postgres://user:pass@localhost:5432/dbname \n|Show-SQL {  SELECT * FROM test WHERE id = ?id } }
 	}
 
 }
