@@ -323,6 +323,79 @@
 <div class='group'>
 </div>
 </div>
+<h2>SQLite </h2><p>SQLite database functions</p><div class='section'>
+<h3>sqlite-schema//Open</h3><p>Opens a connection to a SQLite database file.</p>
+<p class='arg'><b>uri</b> path to SQLite database file</p>
+<p class='returns'><b>returns</b> native SQLite database connection</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>Open sqlite://test.db |type?
+; returns native</code></pre>
+</div>
+<h3>htmlize</h3><p>Converts a table to HTML format.</p>
+<p class='arg'><b>table</b> table to convert to HTML</p>
+<p class='returns'><b>returns</b> string containing HTML representation of the table</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { "name" "age" } { "Bob" 25 "Alice" 30 } |htmlize |type?
+; returns string</code></pre>
+</div>
+<h3>Rye-sqlite//Exec</h3><p>Executes a SQL statement that doesn't return rows.</p>
+<p class='arg'><b>db</b> SQLite database connection</p>
+<p class='arg'><b>sql</b> SQL statement as string or block</p>
+<p class='returns'><b>returns</b> database connection</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>Open sqlite://test.db |Exec "CREATE TABLE IF NOT EXISTS test (id INTEGER, name TEXT)" |type?
+; returns native</code></pre>
+</div>
+<h3>Rye-sqlite//Query</h3><p>Executes a SQL query and returns results as a table.</p>
+<p class='arg'><b>db</b> SQLite database connection</p>
+<p class='arg'><b>sql</b> SQL query as string or block</p>
+<p class='returns'><b>returns</b> table containing query results</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>Open sqlite://test.db |Query "SELECT * FROM test" |type?
+; returns table</code></pre>
+</div>
+<h3>Rye-sqlite//Show-SQL</h3><p>Generates and returns the SQL string without executing it.</p>
+<p class='arg'><b>db</b> SQLite database connection</p>
+<p class='arg'><b>sql</b> SQL query as string or block</p>
+<p class='returns'><b>returns</b> string containing the generated SQL with parameters</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>id: 123 Open sqlite://test.db |Show-SQL { SELECT * FROM test WHERE id = ?id } |type?
+; returns string</code></pre>
+</div>
+</div>
+<h2>PostgreSQL Database Functions </h2><p></p><div class='section'>
+<h3>postgres-schema//Open</h3><p>Opens a connection to a PostgreSQL database.</p>
+<p class='arg'><b>uri</b> PostgreSQL connection string URI (format</p>
+<p class='returns'><b>returns</b> native PostgreSQL database connection (type: "Rye-psql")error if connection fails</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>Open postgres://user:pass@localhost:5432/dbname
+</code></pre>
+</div>
+<h3>Rye-psql//Exec</h3><p>Executes a SQL statement that modifies data (INSERT, UPDATE, DELETE).</p>
+<p class='arg'><b>db</b> PostgreSQL database connection (type</p>
+<p class='arg'><b>sql</b> SQL statement as string or block (for data modification</p>
+<p class='returns'><b>returns</b> integer number of rows affectederror if execution fails</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>Open postgres://user:pass@localhost:5432/dbname |Exec "INSERT INTO test VALUES (1, 'test')"
+</code></pre>
+</div>
+<h3>Rye-psql//Query</h3><p>Executes a SQL query and returns results as a table.</p>
+<p class='arg'><b>db</b> PostgreSQL database connection (type</p>
+<p class='arg'><b>sql</b> SQL query as string or block (SELECT statements)</p>
+<p class='returns'><b>returns</b> table containing query results (SQL NULL values converted to Void{})error if query fails or returns no data</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>Open postgres://user:pass@localhost:5432/dbname |Query "SELECT * FROM test"
+</code></pre>
+</div>
+<h3>Rye-psql//Show-SQL</h3><p>Generates and returns the SQL string without executing it.</p>
+<p class='arg'><b>db</b> PostgreSQL database connection (type</p>
+<p class='arg'><b>sql</b> SQL query as string or block (for debugging/inspection)</p>
+<p class='returns'><b>returns</b> string containing the generated SQL with parameters (includes parameter comments if present)error if SQL is empty</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>id: 323 Open postgres://user:pass@localhost:5432/dbname { SELECT * FROM test WHERE id = ?id }
+</code></pre>
+</div>
+</div>
 </main>
 </div>
 <script type="text/javascript">

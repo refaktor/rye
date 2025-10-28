@@ -26,7 +26,7 @@ import (
 // { <div> .menu <a> , .footer { .content .print } }
 // { <div> .menu <a> [ .content .print ] <footer> { <a> .external [ .to-upper print ] }
 
-// { <div> .menu <a> when [ [.attr? "href" |includes "www.google.com" ] { <b> [ .content? .collect ] } }
+// { <div> .menu <a> when [ [.Attr? "href" |includes "www.google.com" ] { <b> [ .content? .collect ] } }
 
 // when we have accessor words
 // { <div> .menu <a> when [ [href] .includes "www.google.com" ] { <b> [ [content] .collect ] } }
@@ -461,14 +461,14 @@ var Builtins_html = map[string]*env.Builtin{
 
 	// Tests:
 	// stdout { "<html><body><div class='menu'><a href='/'>home</a><a href='/about/'>about</a>" |reader
-	//   .parse-html { <a> [ .attr? 'href |prns ] }
+	//   .Parse-html { <a> [ .Attr? 'href |prns ] }
 	// } "/ /about/ "
 	// Args:
 	// * reader: HTML reader object
 	// * block: HTML processing block with tag handlers
 	// Returns:
 	// * result of processing the HTML
-	"reader//parse-html": {
+	"reader//Parse-html": {
 		Argsn: 2,
 		Doc:   "Parses HTML using a streaming approach with tag handlers.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -484,14 +484,14 @@ var Builtins_html = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// stdout { "<div class='menu' id='nav'></div>" |reader .parse-html { <div> [ .attr? 'class |prn ] } } "menu"
-	// stdout { "<div class='menu' id='nav'></div>" |reader .parse-html { <div> [ .attr? 'id |prn ] } } "nav"
+	// stdout { "<div class='menu' id='nav'></div>" |reader .Parse-html { <div> [ .Attr? 'class |prn ] } } "menu"
+	// stdout { "<div class='menu' id='nav'></div>" |reader .Parse-html { <div> [ .Attr? 'id |prn ] } } "nav"
 	// Args:
 	// * element: HTML token element
 	// * name-or-index: Attribute name (as word) or index (as integer)
 	// Returns:
 	// * string value of the attribute or void if not found
-	"rye-html-start//attr?": {
+	"rye-html-start//Attr?": {
 		Argsn: 2,
 		Doc:   "Retrieves an attribute value by name or index from an HTML element.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -514,24 +514,24 @@ var Builtins_html = map[string]*env.Builtin{
 						}
 						return env.Void{}
 					default:
-						return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "rye-html-start//attr?")
+						return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "rye-html-start//Attr?")
 					}
 				default:
-					return MakeBuiltinError(ps, "Token value is not matching.", "rye-html-start//attr?")
+					return MakeBuiltinError(ps, "Token value is not matching.", "rye-html-start//Attr?")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "rye-html-start//attr?")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "rye-html-start//Attr?")
 			}
 		},
 	},
 
 	// Tests:
-	// stdout { "<div></div>" |reader .parse-html { <div> [ .name? |print ] } } "div"
+	// stdout { "<div></div>" |reader .Parse-html { <div> [ .Name? |print ] } } "div\n"
 	// Args:
 	// * element: HTML token element
 	// Returns:
 	// * string name of the HTML element
-	"rye-html-start//name?": {
+	"rye-html-start//Name?": {
 		Argsn: 1,
 		Doc:   "Returns the name of an HTML element.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -541,10 +541,10 @@ var Builtins_html = map[string]*env.Builtin{
 				case html.Token:
 					return *env.NewString(tok.Data)
 				default:
-					return MakeBuiltinError(ps, "Not xml-start element.", "rye-html-start//name?")
+					return MakeBuiltinError(ps, "Not xml-start element.", "rye-html-start//Name?")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "rye-html-start//name?")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "rye-html-start//Name?")
 			}
 		},
 	},

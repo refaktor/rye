@@ -357,7 +357,9 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 			fmt.Println("Unknown dialect: " + r.dialect)
 		}
 
-		MaybeDisplayFailureOrError(es, genv, "repl / eval Line")
+		MaybeDisplayFailureOrError2(es, genv, "Rye console line", true, false)
+
+		es.SkipFlag = false // So that erors will again display in full
 
 		if !es.ErrorFlag && es.Res != nil {
 			// fmt.Println(&es)

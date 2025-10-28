@@ -863,7 +863,11 @@ func CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, toLeft
 	ps.BlockFile = blockFile
 	ps.BlockLine = blockLine
 	ps.ReturnFlag = false
-	envPool.Put(fnCtx)
+
+	// Don't return closure contexts to the pool to prevent context reuse issues
+	if !fnCtx.IsClosure {
+		envPool.Put(fnCtx)
+	}
 
 	/*         for (var i=0;i<h.length;i+=1) {
 	    var e = this.evalExpr(block,pos,state,depth+1);
@@ -1450,7 +1454,7 @@ func calculateErrorPosition(ps *env.ProgramState, locationNode *env.LocationNode
 // DisplayEnhancedError shows enhanced error information including source location from block data
 func DisplayEnhancedError(es *env.ProgramState, genv *env.Idxs, tag string, topLevel bool) {
 	// Red background banner for runtime errors
-	if !es.SkipFlag {
+	if !es.SkipFlag || true {
 		fmt.Print("\x1b[41m\x1b[30m RUNTIME ERROR \x1b[0m\n") // Red background, black text
 
 		// Bold red for error message
@@ -1461,6 +1465,9 @@ func DisplayEnhancedError(es *env.ProgramState, genv *env.Idxs, tag string, topL
 	// Get location information from the current block
 	displayBlockWithErrorPosition(es, genv)
 	es.SkipFlag = true
+	if topLevel {
+		es.SkipFlag = false
+	}
 }
 
 // displayBlockWithErrorPosition shows the whole current block with <here> marker at error position
@@ -1620,20 +1627,21 @@ func displayLocationFromSeries(es *env.ProgramState, genv *env.Idxs) {
 }
 
 func MaybeDisplayFailureOrError(es *env.ProgramState, genv *env.Idxs, tag string) {
-	MaybeDisplayFailureOrError_2_NEW(es, genv, tag, false)
+	MaybeDisplayFailureOrError2(es, genv, tag, false, false)
 }
 
-func MaybeDisplayFailureOrError_2_NEW(es *env.ProgramState, genv *env.Idxs, tag string, topLevel bool) {
+func MaybeDisplayFailureOrError2(es *env.ProgramState, genv *env.Idxs, tag string, topLevel bool, fileMode bool) {
 	/* if es.FailureFlag {
 		fmt.Print("\x1b[43m\x1b[33m FAILURE \x1b[0m\n") // Red background, black text
 		// DEBUG: fmt.Println(tag)
-	} */
+	}
+	fmt.Println("***** ***** *****") */
 	if es.ErrorFlag || (es.FailureFlag && topLevel) {
 		// Use the enhanced error reporting with source location
 		DisplayEnhancedError(es, genv, tag, topLevel)
 
 		// Offer debugging options to the user
-		if topLevel {
+		if fileMode {
 			OfferDebuggingOptions(es, genv, tag)
 		}
 	}

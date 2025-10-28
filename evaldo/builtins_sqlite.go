@@ -102,7 +102,7 @@ var Builtins_sqlite = map[string]*env.Builtin{
 	// ##### SQLite ##### "SQLite database functions"
 	//
 	// Tests:
-	// equal { sqlite-schema//Open %"test.db" |type? } 'native
+	// equal { Open sqlite://test.db |type? } 'native
 	// Args:
 	// * uri: path to SQLite database file
 	// Returns:
@@ -145,7 +145,7 @@ var Builtins_sqlite = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { db: sqlite-schema//Open %"test.db" , db |Rye-sqlite//Exec "CREATE TABLE IF NOT EXISTS test (id INTEGER, name TEXT)" |type? } 'native
+	// equal { Open sqlite://test.db |Exec "CREATE TABLE IF NOT EXISTS test (id INTEGER, name TEXT)" |type? } 'native
 	// Args:
 	// * db: SQLite database connection
 	// * sql: SQL statement as string or block
@@ -191,7 +191,7 @@ var Builtins_sqlite = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { db: sqlite-schema//Open %"test.db" , db |Rye-sqlite//Query "SELECT * FROM test" |type? } 'table
+	// equal { Open sqlite://test.db |Query "SELECT * FROM test" |type? } 'table
 	// Args:
 	// * db: SQLite database connection
 	// * sql: SQL query as string or block
@@ -280,7 +280,7 @@ var Builtins_sqlite = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { db: sqlite-schema//Open %"test.db" , db |Rye-sqlite//Show-SQL "SELECT * FROM test WHERE id = ?id" |type? } 'string
+	// equal { id: 123 Open sqlite://test.db |Show-SQL { SELECT * FROM test WHERE id = ?id } |type? } 'string
 	// Args:
 	// * db: SQLite database connection
 	// * sql: SQL query as string or block

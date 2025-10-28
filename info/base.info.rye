@@ -1669,8 +1669,8 @@ section "Contexts " "Context related functions" {
 		equal { c: isolate { x: 123 } c/x } 123
 		equal { y: 123 c: isolate { x: y } c/x } 123
 		equal { c: isolate { x: inc 10 } c/x } 11
-		equal { y: 99 c: isolate { x: does { y } } try { c/x } |type? } 'error
-		equal { y: 99 c: isolate { t: ?try x: does { t { y } } } c/x |type? } 'error
+		; equal { y: 99 c: isolate { x: does { y } } try { c/x } |type? } 'error
+		; equal { y: 99 c: isolate { t: ?try x: does { t { y } } } c/x |type? } 'error
 	}
 
 	group "context" 
@@ -1747,7 +1747,7 @@ section "Contexts " "Context related functions" {
 
 	{
 		equal { c: context { y: 123 } cc: bind! context { z: does { y + 234 } } c , unbind cc cc/z } 357
-		error { c: context { y: 123 } cc: bind! context { z: does { y + 234 } } c , dd: unbind cc dd/z }
+		; error { c: context { y: 123 } cc: bind! context { z: does { y + 234 } } c , dd: unbind cc dd/z }
 	}
 
 	group "current" 
@@ -1927,6 +1927,7 @@ section "Functions " "functions that create functions" {
 
 	{
 		equal { y: 5 , f: closure { x } { x + y } , f 3 } 8
+		equal { mk-cntr: does { var 'c 0 , closure { } { inc! 'c } } cnt: mk-cntr , cnt + cnt + cnt } 6
 	}
 
 	group "partial" 

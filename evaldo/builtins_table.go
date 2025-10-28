@@ -651,6 +651,43 @@ var Builtins_table = map[string]*env.Builtin{
 		},
 	},
 
+	// Example: filtering for folks named "Enno" or "Enya"
+	//  sheet: table { "name" "age" } { "Enno" 30 "Enya" 25 "Enid" 40 "Bob" 19 "Bill" 45 "Benn" 29 }
+	//  sheet .where-not-in 'name { "Enno" "Enya" }
+	// Tests:
+	//  equal { table { "name" "age" } { "Enno" 30 "Enya" 25 "Bob" 19 }
+	//          |where-not-in 'name { "Enno" "Enya" "Roger" } |column? "age"
+	//  } { 19 }
+	// Args:
+	// * sheet
+	// * column
+	// * values-filtered-for
+	// Tags: #filter #table
+	"where-not-in": {
+		Argsn: 3,
+		Doc:   "Returns table of rows where specific colum value if found in block of values.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
+			switch spr := arg0.(type) {
+			case env.Table:
+				switch s := arg2.(type) {
+				case env.Block:
+					switch col := arg1.(type) {
+					case env.Word:
+						return WhereNotIn(ps, spr, ps.Idx.GetWord(col.Index), s.Series.S)
+					case env.String:
+						return WhereNotIn(ps, spr, col.Value, s.Series.S)
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-in")
+					}
+				default:
+					return MakeArgError(ps, 3, []env.Type{env.StringType}, "where-in")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-in")
+			}
+		},
+	},
+
 	//
 	// ##### Row level functions #####  "Functions that construct a table."
 	//
@@ -1591,7 +1628,7 @@ var Builtins_table = map[string]*env.Builtin{
 	// Args:
 	// * file-uri - location of csv file to load
 	// Tags: #table #loading #csv
-	"load\\csv": {
+	"file-schema//load\\csv": {
 		// TODO 2 -- this could move to a go function so it could be called by general load that uses extension to define the loader
 		Argsn: 1,
 		Doc:   "Loads a .csv file to a table datatype.",
@@ -1861,13 +1898,13 @@ var Builtins_table = map[string]*env.Builtin{
 	//   f:: mktmp ++ "/test.xlsx"
 	//   spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
 	//   spr1 .save\xlsx f
-	//   spr2:: load\xlsx f |autotype 1.0
+	//   spr2:: Load\xlsx f |autotype 1.0
 	//   spr1 = spr2
 	//  } true
 	// Args:
 	// * file-uri - location of xlsx file to load
 	// Tags: #table #loading #xlsx
-	"load\\xlsx": {
+	"file-schema//Load\\xlsx": {
 		Argsn: 1,
 		Doc:   "Loads the first sheet in an .xlsx file to a Table.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1926,7 +1963,7 @@ var Builtins_table = map[string]*env.Builtin{
 	//   f:: mktmp ++ "/test.xlsx"
 	//   spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
 	//   spr1 .save\xlsx f
-	//   spr2:: load\xlsx f |autotype 1.0
+	//   spr2:: Load\xlsx f |autotype 1.0
 	//   spr1 = spr2
 	//  } true
 	// Args:
@@ -2624,6 +2661,26 @@ func WhereIn(ps *env.ProgramState, s env.Table, name string, b []env.Object) env
 				rv := row.Values[idx]
 				if rvObj, ok := rv.(env.Object); ok {
 					if util.ContainsVal(ps, b, rvObj) {
+						nspr.AddRow(row)
+					}
+				}
+			}
+		}
+		return *nspr
+	} else {
+		return MakeBuiltinError(ps, "Column not found.", "WhereIn")
+	}
+}
+
+func WhereNotIn(ps *env.ProgramState, s env.Table, name string, b []env.Object) env.Object {
+	idx := slices.Index(s.Cols, name)
+	nspr := env.NewTable(s.Cols)
+	if idx > -1 {
+		for _, row := range s.Rows {
+			if len(row.Values) > idx {
+				rv := row.Values[idx]
+				if rvObj, ok := rv.(env.Object); ok {
+					if !util.ContainsVal(ps, b, rvObj) {
 						nspr.AddRow(row)
 					}
 				}

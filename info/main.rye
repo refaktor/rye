@@ -33,9 +33,9 @@ test-framework: context {
 		|either { term/green prns "✓" term/reset } { inc! 'failed , term/red prns " ✗ Failed:" term/reset  prns join { "expected " t/str\br-black inspect res t/str\reset ", got " t/str\br-black inspect got t/str\reset } }
 	}
 
-	comment: fn { str } {
-		
-	}
+	comment: fn { str } { }
+
+	example: fn { str } { }
 
 	end: fn { } { ;prns "Tests:" term/bold prn cnt term/reset\bold , print "FAILED: " + failed , if failed > 0 { exit 1 } }
 		prns "\nGroups:" term/bold prn cnt term/reset\bold
@@ -52,9 +52,9 @@ escape-html: fn { x } { x |replace "&" "&amp;" |replace "<" "&lt;" |replace ">" 
 
 docs-framework: context {
 
-	section: fn { name descr code } { print join { "<h2>" name "</h2><p>" descr "</p><div class='section'>" } , do code , print "</div>" }
+	section: fn { name descr code } { print join [ "<h2>" name "</h2><p>" descr "</p><div class='section'>" ] , do code , print "</div>" }
 	
-	group: fn { name descr args code }   { print join { "<h3>" name "</h3><p>" descr "</p>" } , do args , print "<div class='group'>" , do code , print "</div>" }
+	group: fn { name descr args code }   { print join [ "<h3>" name "</h3><p>" descr "</p>" ] , do args , print "<div class='group'>" , do code , print "</div>" }
 
 	equal: fn { test res } {
 		cc: extends root-ctx { }
@@ -75,7 +75,11 @@ docs-framework: context {
 	}
 
 	comment: fn { str } {
-		print join [ "<p class='comment'>" str "</p>" ]
+		print join [ "<p class='comment'>" to-string str "</p>" ]
+	}
+
+	example: fn { test } {
+		print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" escape-html mold\nowrap test newline "</code></pre>" ]
 	}
 
 	arg: fn { str } {
@@ -98,10 +102,11 @@ generate-menu: fn { menu } {
 
 generate-doc-file: fn { filename menu } {
 	join {
-		%tpl/header.html .Read .replace "{{title}}" capitalize filename |replace "{{menu}}" generate-menu menu
+		%tpl/header.html .Read .replace "{{title}}" capitalize filename 
+		|replace "{{menu}}" generate-menu menu
 		capture-stdout { do\in docs-framework load to-file filename ++ ".info.rye" }
 		Read %tpl/footer.html
-	} |Write* to-file filename ++ ".html"
+	 } |Write* to-file filename ++ ".html"
 }
 
 menu: { "base" "table" "formats" "io" "crypto" }

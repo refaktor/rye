@@ -62,12 +62,13 @@ type EnvR2 struct {
 }
 
 type RyeCtx struct {
-	state    map[int]Object
-	varFlags map[int]bool // Tracks which words are variables
-	Parent   *RyeCtx
-	Kind     Word
-	Doc      string
-	locked   bool
+	state     map[int]Object
+	varFlags  map[int]bool // Tracks which words are variables
+	Parent    *RyeCtx
+	Kind      Word
+	Doc       string
+	locked    bool
+	IsClosure bool // Marks contexts captured by closures - should not be pooled
 }
 
 func NewEnv(par *RyeCtx) *RyeCtx {
@@ -143,6 +144,7 @@ func (e *RyeCtx) Copy() Context {
 	nc.varFlags = cpVarFlags
 	nc.Kind = e.Kind
 	nc.locked = e.locked
+	nc.IsClosure = e.IsClosure
 	return nc
 }
 

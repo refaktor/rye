@@ -673,7 +673,7 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 				block1 := block.(env.Block)
 				ps = env.AddToProgramStateNEWWithLocation(ps, block1, ps.Idx)
 				evaldo.EvalBlockInjMultiDialect(ps, nil, false)
-				evaldo.MaybeDisplayFailureOrError_2_NEW(ps, ps.Idx, "main rye file", true)
+				evaldo.MaybeDisplayFailureOrError2(ps, ps.Idx, "main rye file", true, true)
 			}
 		} else {
 			fmt.Println("There was no `here` file.")
@@ -710,7 +710,7 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 		}
 
 		evaldo.EvalBlockInjMultiDialect(ps, stValue, true)
-		evaldo.MaybeDisplayFailureOrError_2_NEW(ps, ps.Idx, "main rye file", true)
+		evaldo.MaybeDisplayFailureOrError2(ps, ps.Idx, "main rye file", true, true)
 		//		evaldo.MaybeDisplayFailureOrError(ps, ps.Idx, "main rye file #2")
 
 		if interactive {
