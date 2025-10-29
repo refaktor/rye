@@ -817,54 +817,66 @@ var Builtins_io = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch f := arg0.(type) {
 			case env.Uri:
-				switch t := arg2.(type) {
-				case env.Word:
-					switch d := arg1.(type) {
-					case env.String:
-						var tt string
+				switch d := arg1.(type) {
+				case env.String:
+					var tt string
+
+					// Handle third argument - content-type
+					switch t := arg2.(type) {
+					case env.Word:
+						// Existing behavior: map word to content-type
 						tidx, terr := ps.Idx.GetIndex("json")
 						tidx2, terr2 := ps.Idx.GetIndex("text")
+						tidx3, terr3 := ps.Idx.GetIndex("urlencoded")
+						tidx4, terr4 := ps.Idx.GetIndex("multipart")
 						if terr && t.Index == tidx {
 							tt = "application/json"
 						} else if terr2 && t.Index == tidx2 {
 							tt = "text/plain"
+						} else if terr3 && t.Index == tidx3 {
+							tt = "application/x-www-form-urlencoded"
+						} else if terr4 && t.Index == tidx4 {
+							tt = "multipart/form-data"
 						} else {
 							ps.FailureFlag = true
 							return MakeBuiltinError(ps, "Wrong content type.", "https-schema//Post")
 						}
-
-						proto := ps.Idx.GetWord(f.GetProtocol().Index)
-						req, err := http.NewRequest(http.MethodPost, proto+"://"+f.GetPath(), strings.NewReader(d.Value))
-						if err != nil {
-							ps.FailureFlag = true
-							return *env.NewError(err.Error())
-						}
-						req.Header.Set("Content-Type", tt)
-						resp, err := http.DefaultClient.Do(req)
-						if err != nil {
-							ps.FailureFlag = true
-							return *env.NewError(err.Error())
-						}
-						defer resp.Body.Close()
-						body, err := io.ReadAll(resp.Body)
-						if err != nil {
-							ps.FailureFlag = true
-							return MakeBuiltinError(ps, err.Error(), "https-schema//Post")
-						}
-
-						if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
-							return *env.NewString(string(body))
-						} else {
-							ps.FailureFlag = true
-							return env.NewError2(resp.StatusCode, string(body))
-						}
+					case env.String:
+						// New behavior: use string directly as content-type
+						tt = t.Value
 					default:
 						ps.FailureFlag = true
-						return MakeArgError(ps, 2, []env.Type{env.StringType}, "https-schema//Post")
+						return MakeArgError(ps, 3, []env.Type{env.WordType, env.StringType}, "https-schema//Post")
+					}
+
+					proto := ps.Idx.GetWord(f.GetProtocol().Index)
+					req, err := http.NewRequest(http.MethodPost, proto+"://"+f.GetPath(), strings.NewReader(d.Value))
+					if err != nil {
+						ps.FailureFlag = true
+						return *env.NewError(err.Error())
+					}
+					req.Header.Set("Content-Type", tt)
+					resp, err := http.DefaultClient.Do(req)
+					if err != nil {
+						ps.FailureFlag = true
+						return *env.NewError(err.Error())
+					}
+					defer resp.Body.Close()
+					body, err := io.ReadAll(resp.Body)
+					if err != nil {
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, err.Error(), "https-schema//Post")
+					}
+
+					if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
+						return *env.NewString(string(body))
+					} else {
+						ps.FailureFlag = true
+						return env.NewError2(resp.StatusCode, string(body))
 					}
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 3, []env.Type{env.WordType}, "https-schema//Post")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "https-schema//Post")
 				}
 			default:
 				ps.FailureFlag = true

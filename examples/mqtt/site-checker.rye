@@ -1,0 +1,4 @@
+
+map range 3 {
+	time-it { Get https://www.cebelca.biz }
+}

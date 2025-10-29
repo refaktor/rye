@@ -210,6 +210,8 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 			switch v1 := v.(type) {
 			case int, int64, float64, string, []any, map[string]any:
 				return env.ToRyeValue(v1)
+			case env.Boolean:
+				return v1
 			case env.Integer:
 				return v1
 			case env.Decimal:
@@ -230,10 +232,10 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 				return v1
 			case nil:
 				ps.FailureFlag = true
-				return env.NewError("missing key")
+				return env.NewError("Key is missing in dict")
 			default:
 				ps.FailureFlag = true
-				return env.NewError("Value of type: " + reflect.TypeOf(v1).String())
+				return env.NewError("Unhandeled value, type: " + reflect.TypeOf(v1).String())
 			}
 		}
 	case env.RyeCtx:
@@ -2160,6 +2162,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltinsInContext(Builtins_telegrambot, ps, "telegram")
 	RegisterBuiltins2(Builtins_peg, ps, "peg")
 	RegisterBuiltinsInContext(Builtins_mcp, ps, "mcp")
+	RegisterBuiltins2(Builtins_mqtt, ps, "mqtt")
 	RegisterBuiltins2(builtins_trees, ps, "trees")
 	RegisterBuiltinsInContext(Builtins_git, ps, "git")
 	RegisterBuiltinsInContext(Builtins_prometheus, ps, "prometheus")

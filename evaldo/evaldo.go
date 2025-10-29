@@ -439,7 +439,7 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 				i += 1
 				goto gogo1
 			case env.Dict:
-				return found, *env.NewString("asdsad"), currCtx
+				return found, *env.NewString("No word value!!"), currCtx
 			}
 		}
 		return found, object, currCtx
@@ -506,7 +506,7 @@ func findWordValueWithFailureInfo(ps *env.ProgramState, word1 env.Object) (bool,
 				i += 1
 				goto gogo1
 			case env.Dict:
-				return found, *env.NewString("asdsad"), currCtx, ""
+				return found, *env.NewString("Now word value 2!!"), currCtx, ""
 			}
 		}
 		return found, object, currCtx, ""
