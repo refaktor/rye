@@ -1,0 +1,33 @@
+#!/usr/bin/env rye
+
+client: Open mqtt://test.mosquitto.org:1883/rye-test
+|^check "couldn't connect to MQTT"
+
+^ensure is-positive client .Is-connected "Not really connected"
+
+handler: fn { txt msg } {
+    print "\n-NEW-MESSAGE----" ,
+	print txt 
+	print ""
+    print "Topic: " ++ "topic" <- msg
+    print "QoS:" ++ "qos" <- msg
+    print "Retained:" ++ "retained" <- msg
+}
+
+topic: "rye/test"
+
+client .Subscribe topic 1 ?handler
+
+print "listening ..."
+
+select { }
+
+; client .Unsubscribe topic
+; client .Disconnect
+
+; opts: mqtt-options
+; opts |Set-broker "tcp://localhost:1883" |Set-client-id "rye-advanced-client" |Set-keep-alive 30
+
+; For authentication (uncomment if your broker requires auth):
+; opts |Set-username "username" |Set-password "password"
+

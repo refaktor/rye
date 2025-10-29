@@ -1296,6 +1296,12 @@ var builtins_collection = map[string]*env.Builtin{
 					return *env.NewString(s1.Value + strconv.Itoa(int(s2.Value)))
 				case env.Decimal:
 					return *env.NewString(s1.Value + strconv.FormatFloat(s2.Value, 'f', -1, 64))
+				case env.Boolean:
+					bVal := "false"
+					if s2.Value {
+						bVal = "true"
+					}
+					return *env.NewString(s1.Value + bVal)
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.StringType, env.IntegerType, env.DecimalType}, "_++")
 				}
