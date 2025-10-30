@@ -59,6 +59,7 @@ var builtins_trees = map[string]*env.Builtin{
 								EvalBlock(ps)
 								if ps.ErrorFlag {
 									fmt.Println("***1")
+									ps.Ser = ser
 									return ps.Res
 								}
 								ps.Ser = ser
@@ -72,6 +73,7 @@ var builtins_trees = map[string]*env.Builtin{
 									EvalBlock(ps)
 									if ps.ErrorFlag || ps.ReturnFlag {
 										fmt.Println("***2")
+										ps.Ser = ser
 										return ps.Res
 									}
 									ps.Ser = ser

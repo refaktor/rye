@@ -54,6 +54,10 @@ func matchBlock(ps *env.ProgramState, block env.Block, pattern env.Block) env.Ob
 				ps.Ser = word.Series
 				// Evaluate the block with the block value injected
 				EvalBlockInjMultiDialect(ps, blockValue, true)
+				if ps.ErrorFlag {
+					ps.Ser = ser
+					return ps.Res
+				}
 				// Restore series
 				ps.Ser = ser
 				// Continue with the next pattern item
@@ -187,6 +191,10 @@ var Builtins_match = map[string]*env.Builtin{
 								ps.Ser = word.Series
 								// Evaluate the block with the block value injected
 								EvalBlockInjMultiDialect(ps, blockValue, true)
+								if ps.ErrorFlag {
+									ps.Ser = ser
+									return ps.Res
+								}
 								// Restore series
 								ps.Ser = ser
 								// Continue with the next pattern item

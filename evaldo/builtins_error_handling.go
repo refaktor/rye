@@ -493,6 +493,10 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = bloc.Series
 					EvalBlockInjMultiDialect(ps, arg0, true)
+					if ps.ErrorFlag {
+						ps.Ser = ser
+						return ps.Res
+					}
 					ps.Ser = ser
 					return ps.Res
 				default:

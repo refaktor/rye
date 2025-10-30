@@ -133,6 +133,11 @@ var builtins_contexts = map[string]*env.Builtin{
 				ps.Ser = bloc.Series
 				ps.Ctx = env.NewEnv(ps.Ctx) // make new context with no parent
 				EvalBlock(ps)
+				if ps.ErrorFlag {
+					ps.Ctx = ctx
+					ps.Ser = ser
+					return ps.Res
+				}
 				// rctx := ps.Ctx
 				ps.Ctx = ctx
 				ps.Ser = ser
@@ -163,6 +168,11 @@ var builtins_contexts = map[string]*env.Builtin{
 					ps.Ser = bloc.Series
 					ps.Ctx = env.NewEnv2(ps.Ctx, doc.Value) // make new context with no parent
 					EvalBlock(ps)
+					if ps.ErrorFlag {
+						ps.Ctx = ctx
+						ps.Ser = ser
+						return ps.Res
+					}
 					// rctx := ps.Ctx
 					ps.Ctx = ctx
 					ps.Ser = ser
@@ -199,6 +209,11 @@ var builtins_contexts = map[string]*env.Builtin{
 					// ps.Ctx = ctx0.Copy() // make new context with no parent
 					ps.Ctx = env.NewEnv(&ctx0) // make new context with no parent
 					EvalBlock(ps)
+					if ps.ErrorFlag {
+						ps.Ctx = ctx
+						ps.Ser = ser
+						return ps.Res
+					}
 					rctx := ps.Ctx
 					ps.Ctx = ctx
 					ps.Ser = ser

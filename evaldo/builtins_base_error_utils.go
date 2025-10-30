@@ -158,6 +158,10 @@ var Builtins_error_utils = map[string]*env.Builtin{
 					// Execute the main block
 					ps.Ser = mainBlock.Series
 					EvalBlock(ps)
+					if ps.ErrorFlag {
+						ps.Ser = oldSer
+						return ps.Res
+					}
 
 					// Save result and flags
 					result := ps.Res
@@ -169,6 +173,10 @@ var Builtins_error_utils = map[string]*env.Builtin{
 					ps.FailureFlag = false
 					ps.ErrorFlag = false
 					EvalBlock(ps)
+					if ps.ErrorFlag {
+						ps.Ser = oldSer
+						return ps.Res
+					}
 
 					// Restore original result and flags
 					ps.Res = result

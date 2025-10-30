@@ -74,6 +74,11 @@ func createParserAction(ps *env.ProgramState, actionBlock env.Block) func(v *Val
 		ps.Ctx = ctx
 		ps.Ser = actionBlock.Series
 		EvalBlock(ps)
+		if ps.ErrorFlag {
+			ps.Ctx = oldCtx
+			ps.Ser = oldSer
+			return nil, fmt.Errorf("error in action block")
+		}
 		result := ps.Res
 		ps.Ctx = oldCtx
 		ps.Ser = oldSer
