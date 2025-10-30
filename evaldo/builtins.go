@@ -2053,7 +2053,7 @@ var builtins = map[string]*env.Builtin{
 
 				// Add the constructed block to the deferred blocks list
 				ps.DeferBlocks = append(ps.DeferBlocks, *deferredBlock)
-				return env.Void{}
+				return arg0
 			case env.Word:
 				// Create a new block that contains "arg0 .with arg1" equivalent
 				// We need to create a block that will inject arg0 into block when executed
@@ -2079,7 +2079,7 @@ var builtins = map[string]*env.Builtin{
 
 				// Add the constructed block to the deferred blocks list
 				ps.DeferBlocks = append(ps.DeferBlocks, *deferredBlock)
-				return env.Void{}
+				return arg0
 			default:
 				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "defer\\with")
 			}

@@ -940,7 +940,7 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 	/// ps.Ctx = fnCtx
 	defer func() {
 		if len(psX.DeferBlocks) > 0 {
-			ExecuteDeferredBlocks(ps)
+			ExecuteDeferredBlocks(psX)
 		}
 	}()
 
@@ -1013,7 +1013,7 @@ func CallFunctionArgs4(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 	psX.Ser.SetPos(0)
 	defer func() {
 		if len(psX.DeferBlocks) > 0 {
-			ExecuteDeferredBlocks(ps)
+			ExecuteDeferredBlocks(psX)
 		}
 	}()
 
@@ -1055,7 +1055,7 @@ func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, a
 	psX.Ser.SetPos(0)
 	defer func() {
 		if len(psX.DeferBlocks) > 0 {
-			ExecuteDeferredBlocks(ps)
+			ExecuteDeferredBlocks(psX)
 		}
 	}()
 
@@ -1727,7 +1727,9 @@ func ExecuteDeferredBlocks(ps *env.ProgramState) {
 
 		// If there was an error in a deferred block, we should still continue
 		// executing other deferred blocks but preserve the error state
-		if ps.ErrorFlag {
+		if ps.ErrorFlag || ps.FailureFlag {
+			fmt.Println("Error or failure in deferrer block")
+			fmt.Println(ps.Res.Inspect(*ps.Idx))
 			// Log or handle deferred block errors if needed
 			// For now, continue with other deferred blocks
 		}

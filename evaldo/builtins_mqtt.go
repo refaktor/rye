@@ -265,6 +265,10 @@ var Builtins_mqtt = map[string]*env.Builtin{
 									*env.NewString(string(msg.Payload())),
 									*env.NewDict(msgDict),
 									nil)
+								if psCallback.FailureFlag || psCallback.ErrorFlag {
+									fmt.Println("********* CALLBACK ERROR MQTT")
+								}
+								MaybeDisplayFailureOrError(&psCallback, psCallback.Idx, "on-mqtt-message")
 							}
 
 							token := mqttClient.Subscribe(topic.Value, byte(qos.Value), callback)

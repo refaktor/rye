@@ -1302,6 +1302,8 @@ var builtins_collection = map[string]*env.Builtin{
 						bVal = "true"
 					}
 					return *env.NewString(s1.Value + bVal)
+				case env.Uri:
+					return *env.NewString(s1.Value + s2.GetFullUri(*ps.Idx))
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.StringType, env.IntegerType, env.DecimalType}, "_++")
 				}
