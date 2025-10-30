@@ -227,6 +227,33 @@ func (s Table) Columns(ps *ProgramState, names []string) Object {
 	return *nspr
 }
 
+func (s Table) ColumnsRenamed(ps *ProgramState, originalNames []string, newNames []string) Object {
+	if len(originalNames) != len(newNames) {
+		return makeError(ps, "Original and new column names must have same length")
+	}
+
+	idxs := make([]int, len(originalNames))
+	for i, name := range originalNames {
+		idx := slices.Index[[]string](s.Cols, name)
+		if idx == -1 {
+			return makeError(ps, "Col not found: "+name)
+		}
+		idxs[i] = idx
+	}
+	nspr := NewTable(newNames)
+
+	for _, row := range s.Rows {
+		row2 := make([]any, len(originalNames))
+		for col := range idxs {
+			if len(row.Values) > idxs[col] {
+				row2[col] = row.Values[idxs[col]]
+			}
+		}
+		nspr.AddRow(TableRow{row2, nspr})
+	}
+	return *nspr
+}
+
 func (s Table) GetRow(ps *ProgramState, index int) TableRow {
 	row := s.Rows[index]
 	row.Uplink = &s

@@ -1,4 +1,12 @@
 
-map range 3 {
-	time-it { Get https://www.cebelca.biz }
+monitor-resp-time: does { 
+    map range 1 3 { time-it { Get https://google.com } } 
+   |avg |publish-time 
 }
+
+publish-time: fn { time } { 
+    Open mqtt://test.mosquitto.org:1883/rye-site-checker
+    |Publish-simple "rye/test" to-string time 
+}
+
+monitor-resp-time

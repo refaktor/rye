@@ -975,27 +975,42 @@ var Builtins_table = map[string]*env.Builtin{
 	//   |columns? { 'name 'age } |header? } list { "name" "age" }
 	"columns?": {
 		Argsn: 2,
-		Doc:   "Returns table with just given columns.",
+		Doc:   "Returns table with just given columns. Use lsetwords (:newName) to rename the previous column.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch spr := arg0.(type) {
 			case env.Table:
 				switch col := arg1.(type) {
 				case env.Block:
-					cols := make([]string, col.Series.Len())
-					for c := range col.Series.S {
-						switch ww := col.Series.S[c].(type) {
+					cols := make([]string, 0)
+					colNames := make([]string, 0)
+
+					for _, obj := range col.Series.S {
+						switch ww := obj.(type) {
 						case env.String:
-							cols[c] = ww.Value
+							cols = append(cols, ww.Value)
+							colNames = append(colNames, ww.Value)
 						case env.Tagword:
-							cols[c] = ps.Idx.GetWord(ww.Index)
+							colName := ps.Idx.GetWord(ww.Index)
+							cols = append(cols, colName)
+							colNames = append(colNames, colName)
+						case env.LSetword:
+							// Rename the previous column
+							if len(colNames) == 0 {
+								return MakeBuiltinError(ps, "LSetword :"+ps.Idx.GetWord(ww.Index)+" found but no previous column to rename", "columns?")
+							}
+							// Replace the last column name with the new name from lsetword
+							newName := ps.Idx.GetWord(ww.Index)
+							colNames[len(colNames)-1] = newName
+						default:
+							return MakeBuiltinError(ps, "Expected string, tagword, or lsetword in columns specification", "columns?")
 						}
 					}
-					return spr.Columns(ps, cols)
+					return spr.ColumnsRenamed(ps, cols, colNames)
 				default:
-					return MakeArgError(ps, 1, []env.Type{env.BlockType}, "columns")
+					return MakeArgError(ps, 1, []env.Type{env.BlockType}, "columns?")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType}, "columns")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "columns?")
 			}
 		},
 	},

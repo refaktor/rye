@@ -155,12 +155,51 @@ var Builtins_goroutines = map[string]*env.Builtin{
 		},
 	},
 
+	"mutex": {
+		Argsn: 0,
+		Doc:   "Create a mutex.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var mtx sync.Mutex
+			return *env.NewNative(ps.Idx, &mtx, "Rye-mutex")
+		},
+	},
+
 	"waitgroup": {
 		Argsn: 0,
 		Doc:   "Create a waitgroup.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var wg sync.WaitGroup
 			return *env.NewNative(ps.Idx, &wg, "Rye-waitgroup")
+		},
+	},
+
+	"Rye-mutex//Lock": {
+		Argsn: 1,
+		Doc:   "Lock a mutex.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch mtx := arg0.(type) {
+			case env.Native:
+				mtx.Value.(*sync.Mutex).Lock()
+				return arg0
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-mutex//Lock")
+			}
+		},
+	},
+
+	"Rye-mutex//Unlock": {
+		Argsn: 1,
+		Doc:   "Unlock a mutex.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch mtx := arg0.(type) {
+			case env.Native:
+				mtx.Value.(*sync.Mutex).Unlock()
+				return arg0
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-mutex/Unlock")
+			}
 		},
 	},
 
