@@ -1,7 +1,7 @@
 package evaldo
 
 import (
-	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"strconv"
@@ -11,11 +11,42 @@ import (
 
 type command struct {
 	cmd *exec.Cmd
+	// pipe holds any commands that pipe into cmd.
+	pipe []*exec.Cmd
 	// files holds files that must be closed after the command finishes.
 	files []*os.File
 }
 
+func (c *command) StartPipe() error {
+	var err error
+	var stdout io.ReadCloser
+	for i, cmd := range c.pipe {
+		if i > 0 {
+			cmd.Stdin = stdout
+		}
+		stdout, err = cmd.StdoutPipe()
+		if err != nil {
+			return err
+		}
+		err = cmd.Start()
+		if err != nil {
+			return err
+		}
+	}
+	if stdout != nil {
+		c.cmd.Stdin = stdout
+	}
+	return nil
+}
+
 func (c *command) Close() error {
+	// TODO: should probably not return on first error
+	for _, cmd := range c.pipe {
+		err := cmd.Wait()
+		if err != nil {
+			return err
+		}
+	}
 	for _, f := range c.files {
 		err := f.Close()
 		if err != nil {
@@ -28,7 +59,6 @@ func (c *command) Close() error {
 func listToShArgs(ps *env.ProgramState, input ...any) ([]string, *env.Error) {
 	var args []string
 	for _, c := range input {
-		fmt.Printf("arg %v type %T\n", c, c)
 		switch it := c.(type) {
 		case string:
 			args = append(args, it)
@@ -66,6 +96,7 @@ var Builtins_sh = map[string]*env.Builtin{
 		Doc:   "Creates a shell command",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var args []string
+			var pipe []*exec.Cmd
 			switch input := arg0.(type) {
 			case env.List:
 				newArgs, err := listToShArgs(ps, input.Data...)
@@ -79,7 +110,17 @@ var Builtins_sh = map[string]*env.Builtin{
 					case env.Word:
 						args = append(args, it.Print(*ps.Idx))
 					case env.Pipeword:
-						args = append(args, it.ToWord().Print(*ps.Idx))
+						word := it.ToWord().Print(*ps.Idx)
+						if word[0] == '-' {
+							// not sure why - makes a pipeword
+							args = append(args, word)
+						} else {
+							pipecmd := exec.Command(args[0], args[1:]...)
+							pipecmd.Stdin = os.Stdin
+							pipecmd.Stderr = os.Stderr
+							pipe = append(pipe, pipecmd)
+							args = []string{word}
+						}
 					case env.Block:
 						ser := ps.Ser
 						ps.Ser = it.Series
@@ -113,7 +154,7 @@ var Builtins_sh = map[string]*env.Builtin{
 			cmd.Stdin = os.Stdin
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
-			return *env.NewNative(ps.Idx, &command{cmd: cmd}, "command")
+			return *env.NewNative(ps.Idx, &command{cmd: cmd, pipe: pipe}, "command")
 		},
 	},
 	"command//Dir!": {
@@ -175,7 +216,12 @@ var Builtins_sh = map[string]*env.Builtin{
 			case env.Native:
 				c := r.Value.(*command)
 				defer c.Close()
-				err := c.cmd.Run()
+				err := c.StartPipe()
+				if err != nil {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, err.Error(), "Run")
+				}
+				err = c.cmd.Run()
 				if err != nil {
 					ps.FailureFlag = true
 					return MakeBuiltinError(ps, err.Error(), "Run")
@@ -194,6 +240,11 @@ var Builtins_sh = map[string]*env.Builtin{
 			case env.Native:
 				c := r.Value.(*command)
 				defer c.Close()
+				err := c.StartPipe()
+				if err != nil {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, err.Error(), "Output")
+				}
 				c.cmd.Stdout = nil
 				out, err := c.cmd.Output()
 				if err != nil {
@@ -214,6 +265,11 @@ var Builtins_sh = map[string]*env.Builtin{
 			case env.Native:
 				c := r.Value.(*command)
 				defer c.Close()
+				err := c.StartPipe()
+				if err != nil {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, err.Error(), "CombinedOutput")
+				}
 				c.cmd.Stdout = nil
 				c.cmd.Stderr = nil
 				out, err := c.cmd.CombinedOutput()
