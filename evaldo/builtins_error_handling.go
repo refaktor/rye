@@ -879,7 +879,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 				}
 			default:
 				ps.ErrorFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "try\\in")
+				return MakeArgError(ps, 1, []env.Type{env.ContextType}, "try\\in")
 			}
 		},
 	},

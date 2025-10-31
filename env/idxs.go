@@ -31,7 +31,7 @@ var NativeTypes = [...]string{ // Todo change to BuiltinTypes
 	"Native",
 	"Uri",
 	"LSetword",
-	"Ctx",
+	"Context",
 	"Dict",
 	"List",
 	"Date",

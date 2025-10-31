@@ -10,7 +10,7 @@ import (
 )
 
 func (pc PersistentCtx) Type() env.Type {
-	return env.PersistentCtxType
+	return env.PersistentContextType
 }
 
 // PersistentCtx wraps a RyeCtx with a BadgerDB backend for persistence.

@@ -158,15 +158,36 @@ func (e RyeCtx) GetState() map[int]Object {
 
 func (e RyeCtx) Print(idxs Idxs) string {
 	var bu strings.Builder
-	bu.WriteString("[Context (" + e.Kind.Print(idxs) + ") \"" + e.Doc + "\": ")
-	for k, v := range e.state {
-		bu.WriteString(idxs.GetWord(k) + ": ")
-		ctx, ok := v.(RyeCtx)
-		if ok || &ctx == &e {
-			bu.WriteString(" [self reference] ")
-		} else {
-			bu.WriteString(v.Inspect(idxs) + " ")
+	totalWords := len(e.state)
+	bu.WriteString(fmt.Sprintf("[Context (%s) \"%s\": %d words - ", e.Kind.Print(idxs), e.Doc, totalWords))
+
+	// Collect keys and sort them for consistent output
+	keys := make([]int, 0, len(e.state))
+	for k := range e.state {
+		keys = append(keys, k)
+	}
+	sort.Ints(keys)
+
+	// Print only first 7 words
+	count := 0
+	maxWords := 14
+	for _, k := range keys {
+		if count >= maxWords {
+			break
 		}
+		// v := e.state[k]
+		bu.WriteString(idxs.GetWord(k) + ", ")
+		//ctx, ok := v.(RyeCtx)
+		// if ok || &ctx == &e {
+		//	bu.WriteString(" [self reference] ")
+		// } else {
+		//	bu.WriteString(v.Inspect(idxs) + " ")
+		// }
+		count++
+	}
+
+	if totalWords > maxWords {
+		bu.WriteString("...")
 	}
 	bu.WriteString("]")
 	return bu.String()
@@ -197,7 +218,7 @@ func (e RyeCtx) Preview(idxs Idxs, filter string) string {
 		str1 := idxs.GetWord(k)
 		if strings.Contains(str1, filter) {
 			var color string
-			switch idxs.GetWord(v.GetKind()) {
+			switch idxs.GetWord(int(v.Type())) {
 			case "builtin":
 				color = color_word2
 			case "context":
@@ -209,7 +230,7 @@ func (e RyeCtx) Preview(idxs Idxs, filter string) string {
 			}
 			var strVal string
 			ctx, ok := v.(RyeCtx)
-			if ok || &ctx == &e {
+			if ok && &ctx == &e {
 				strVal = " [self reference]"
 			} else {
 				strVal = v.Inspect(idxs)
@@ -228,9 +249,56 @@ func (e RyeCtx) Preview(idxs Idxs, filter string) string {
 	return bu.String()
 }
 
+func (e RyeCtx) PreviewByType(idxs Idxs, typeFilter string) string {
+	var bu strings.Builder
+	var ks string
+	if e.GetKind() > 0 {
+		ks = " (" + e.Kind.Print(idxs) + ") "
+	}
+	bu.WriteString("Context" + ks + " (filtered by type: " + typeFilter + "):")
+	if e.Doc > "" {
+		bu.WriteString("\n\r\"" + e.Doc + "\"")
+	}
+	arr := make([]string, 0)
+	i := 0
+	for k, v := range e.state {
+		objectType := idxs.GetWord(int(v.Type()))
+		if objectType == typeFilter {
+			str1 := idxs.GetWord(k)
+			var color string
+			switch objectType {
+			case "builtin":
+				color = color_word2
+			case "context":
+				color = color_num2
+			case "function":
+				color = color_word
+			default:
+				color = color_string2
+			}
+			var strVal string
+			ctx, ok := v.(RyeCtx)
+			if ok && &ctx == &e {
+				strVal = " [self reference]"
+			} else {
+				strVal = v.Inspect(idxs)
+			}
+			arr = append(arr, str1+" "+reset+color_comment+strVal+reset+"|||"+color)
+			i += 1
+		}
+	}
+	sort.Strings(arr)
+	for aa := range arr {
+		line := arr[aa]
+		pars := strings.Split(line, "|||")
+		bu.WriteString("\n\r " + pars[1] + pars[0])
+	}
+	return bu.String()
+}
+
 // Type returns the type of the Integer.
 func (i RyeCtx) Type() Type {
-	return CtxType
+	return ContextType
 }
 
 // Inspect returns a string representation of the Integer.
@@ -546,7 +614,8 @@ type ProgramState struct {
 	Dialect      DoDialect
 	Stack        *EyrStack
 	Embedded     bool
-	DeferBlocks  []Block // blocks to be executed when function exits or program terminates
+	DeferBlocks  []Block   // blocks to be executed when function exits or program terminates
+	ContextStack []*RyeCtx // stack of previous contexts for ccb navigation
 	// LastFailedCPathInfo map[string]interface{} // stores information about the last failed context path
 	BlockFile string
 	BlockLine int
@@ -586,6 +655,7 @@ func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
 		Stack:        NewEyrStack(),
 		Embedded:     false,
 		DeferBlocks:  make([]Block, 0),
+		ContextStack: make([]*RyeCtx, 0),
 		BlockFile:    "",
 		BlockLine:    -1,
 	}
@@ -617,6 +687,7 @@ func NewProgramStateNEW() *ProgramState {
 		Stack:        NewEyrStack(),
 		Embedded:     false,
 		DeferBlocks:  make([]Block, 0),
+		ContextStack: make([]*RyeCtx, 0),
 		BlockFile:    "",
 		BlockLine:    -1,
 	}
@@ -629,6 +700,28 @@ func (ps *ProgramState) Dump() string {
 
 func (ps *ProgramState) ResetStack() {
 	ps.Stack = NewEyrStack()
+}
+
+// PushContext adds current context to the context stack
+func (ps *ProgramState) PushContext(ctx *RyeCtx) {
+	ps.ContextStack = append(ps.ContextStack, ctx)
+}
+
+// PopContext removes and returns the most recent context from the stack
+func (ps *ProgramState) PopContext() (*RyeCtx, bool) {
+	if len(ps.ContextStack) == 0 {
+		return nil, false
+	}
+	// Pop from end (LIFO - Last In, First Out)
+	idx := len(ps.ContextStack) - 1
+	ctx := ps.ContextStack[idx]
+	ps.ContextStack = ps.ContextStack[:idx]
+	return ctx, true
+}
+
+// ContextStackSize returns the number of contexts in the stack
+func (ps *ProgramState) ContextStackSize() int {
+	return len(ps.ContextStack)
 }
 
 func AddToProgramState(ps *ProgramState, ser TSeries, idx *Idxs) *ProgramState {
