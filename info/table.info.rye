@@ -317,7 +317,7 @@ section "Row level functions " "Functions that construct a table." {
 
 section "Column level functions " "Functions that construct a table." {
 	group "columns?" 
-	"Returns table with just given columns."
+	"Returns table with just given columns. Use lsetwords (:newName) to rename the previous column."
 	{
 	}
 

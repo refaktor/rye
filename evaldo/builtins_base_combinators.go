@@ -58,12 +58,20 @@ var builtins_combinators = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = wrap.Series
 					EvalBlockInjMultiDialect(ps, arg0, true)
+					if ps.ErrorFlag {
+						ps.Ser = ser
+						return ps.Res
+					}
 					if ps.ReturnFlag {
 						return ps.Res
 					}
 
 					ps.Ser = bloc.Series
 					EvalBlockInjMultiDialect(ps, arg0, true)
+					if ps.ErrorFlag {
+						ps.Ser = ser
+						return ps.Res
+					}
 					if ps.ReturnFlag {
 						return ps.Res
 					}
@@ -71,6 +79,10 @@ var builtins_combinators = map[string]*env.Builtin{
 
 					ps.Ser = wrap.Series
 					EvalBlockInjMultiDialect(ps, arg0, true)
+					if ps.ErrorFlag {
+						ps.Ser = ser
+						return ps.Res
+					}
 					ps.Ser = ser
 					if ps.ReturnFlag {
 						return ps.Res
@@ -110,6 +122,10 @@ var builtins_combinators = map[string]*env.Builtin{
 					res := ps.Res
 					ps.Ser = b2.Series
 					EvalBlockInjMultiDialect(ps, arg0, true)
+					if ps.ErrorFlag {
+						ps.Ser = ser
+						return ps.Res
+					}
 					ps.Ser = ser
 					return res
 				default:

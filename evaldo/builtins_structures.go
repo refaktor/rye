@@ -106,6 +106,10 @@ func do_structures(ps *env.ProgramState, data env.Dict, rmap env.Dict) env.Objec
 				ser := ps.Ser // TODO -- make helper function that "does" a block
 				ps.Ser = obj.Series
 				EvalBlockInj(ps, env.ToRyeValue(val), true)
+				if ps.ErrorFlag {
+					ps.Ser = ser
+					return ps.Res
+				}
 				ps.Ser = ser
 			}
 		}
@@ -123,6 +127,10 @@ func do_structures(ps *env.ProgramState, data env.Dict, rmap env.Dict) env.Objec
 				ser := ps.Ser // TODO -- make helper function that "does" a block
 				ps.Ser = obj.Series
 				EvalBlockInj(ps, env.ToRyeValue(val), true)
+				if ps.ErrorFlag {
+					ps.Ser = ser
+					return ps.Res
+				}
 				ps.Ser = ser
 			}
 		}

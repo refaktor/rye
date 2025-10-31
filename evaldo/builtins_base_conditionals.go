@@ -42,6 +42,10 @@ var builtins_conditionals = map[string]*env.Builtin{
 						// we eval the block (current context / scope stays the same as it was in parent block)
 						// Inj means we inject the condition value into the block, because it costs us very little. we could do "if name { .print }"
 						EvalBlockInjMultiDialect(ps, arg0, true)
+						if ps.ErrorFlag {
+							ps.Ser = ser
+							return ps.Res
+						}
 						// we set temporary series back to current program state
 						ps.Ser = ser
 						// we return the last return value (the return value of executing the block)
@@ -89,12 +93,20 @@ var builtins_conditionals = map[string]*env.Builtin{
 					// Set series to condition block and evaluate it with the value injected
 					ps.Ser = condBlock.Series
 					EvalBlockInjMultiDialect(ps, arg0, true)
+					if ps.ErrorFlag {
+						ps.Ser = ser
+						return ps.Res
+					}
 
 					// Check if the result is truthy
 					if util.IsTruthy(ps.Res) {
 						// Set series to action block and evaluate it with the value injected
 						ps.Ser = actionBlock.Series
 						EvalBlockInjMultiDialect(ps, arg0, true)
+						if ps.ErrorFlag {
+							ps.Ser = ser
+							return ps.Res
+						}
 					} else {
 						ps.Res = arg0
 					}
@@ -137,6 +149,10 @@ var builtins_conditionals = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = bloc.Series
 					EvalBlockInj(ps, arg0, true)
+					if ps.ErrorFlag {
+						ps.Ser = ser
+						return ps.Res
+					}
 					ps.Ser = ser
 					ps.ReturnFlag = true
 					return ps.Res
@@ -326,6 +342,10 @@ var builtins_conditionals = map[string]*env.Builtin{
 						// we eval the block (current context / scope stays the same as it was in parent block)
 						// Inj means we inject the condition value into the block, because it costs us very little. we could do "if name { .print }"
 						EvalBlock(ps)
+						if ps.ErrorFlag {
+							ps.Ser = ser
+							return ps.Res
+						}
 						// we set temporary series back to current program state
 						if util.IsTruthy(ps.Res) {
 							doblk = true
@@ -344,6 +364,10 @@ var builtins_conditionals = map[string]*env.Builtin{
 						// we eval the block (current context / scope stays the same as it was in parent block)
 						// Inj means we inject the condition value into the block, because it costs us very little. we could do "if name { .print }"
 						EvalBlockInjMultiDialect(ps, cumul, true)
+						if ps.ErrorFlag {
+							ps.Ser = ser
+							return ps.Res
+						}
 						cumul = ps.Res
 					}
 					if bloc.Series.AtLast() {

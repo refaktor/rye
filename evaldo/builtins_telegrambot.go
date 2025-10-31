@@ -96,6 +96,7 @@ var Builtins_telegrambot = map[string]*env.Builtin{
 						dict := TelegramUpdateToRyeDict(update)
 						EvalBlockInj(ps, dict, true)
 						if ps.ErrorFlag {
+							ps.Ser = ser
 							return ps.Res
 						}
 						ps.Ser.Reset()

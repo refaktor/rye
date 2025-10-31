@@ -73,6 +73,11 @@ var builtins_apply = map[string]*env.Builtin{
 					// Execute function body
 					ps.Ser = fn.Body.Series
 					EvalBlock(ps)
+					if ps.ErrorFlag {
+						ps.Ctx = oldCtx
+						ps.Ser = ser
+						return ps.Res
+					}
 
 					// Restore original context and series
 					ps.Ctx = oldCtx

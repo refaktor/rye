@@ -229,6 +229,10 @@ func evalWord(word env.Word, es *env.ProgramState, val any) (any, env.Object) {
 			ser := es.Ser
 			es.Ser = blk.Series
 			EvalBlockInj(es, val.(env.Object), true)
+			if es.ErrorFlag {
+				es.Ser = ser
+				return val, es.Res
+			}
 			es.Ser = ser
 			if es.Res.(env.Integer).Value > 0 {
 				return val, nil
@@ -244,6 +248,10 @@ func evalWord(word env.Word, es *env.ProgramState, val any) (any, env.Object) {
 			ser := es.Ser
 			es.Ser = blk.Series
 			EvalBlockInj(es, val.(env.Object), true)
+			if es.ErrorFlag {
+				es.Ser = ser
+				return val, es.Res
+			}
 			es.Ser = ser
 			return es.Res, nil
 		default:

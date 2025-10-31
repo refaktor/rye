@@ -119,6 +119,10 @@ func conversion_evalWord(word env.Word, ps *env.ProgramState, vals env.Object) (
 			ser := ps.Ser
 			ps.Ser = blk.Series
 			EvalBlockInj(ps, vals, true)
+			if ps.ErrorFlag {
+				ps.Ser = ser
+				return ps.Res, nil
+			}
 			ps.Ser = ser
 			return ps.Res, nil
 		default:
