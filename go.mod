@@ -23,6 +23,7 @@ require (
 	github.com/blevesearch/bleve_index_api v1.2.10
 	github.com/dgraph-io/badger/v4 v4.8.0
 	github.com/drewlanenga/govector v0.0.0-20220726163947-b958ac08bc93
+	github.com/eclipse/paho.mqtt.golang v1.5.1
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/fxtlabs/primes v0.0.0-20150821004651-dad82d10a449
 	github.com/gdamore/tcell/v2 v2.9.0
@@ -56,7 +57,7 @@ require (
 	github.com/thomasberger/parsemail v1.2.7
 	github.com/xuri/excelize/v2 v2.9.1
 	github.com/yuin/goldmark v1.7.13
-	go.mongodb.org/mongo-driver v1.17.4
+	go.mongodb.org/mongo-driver v1.17.6
 	golang.org/x/crypto v0.42.0
 	golang.org/x/net v0.44.0
 	golang.org/x/sync v0.17.0
@@ -84,7 +85,6 @@ require (
 	github.com/cyphar/filepath-securejoin v0.4.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgraph-io/ristretto/v2 v2.2.0 // indirect
-	github.com/eclipse/paho.mqtt.golang v1.5.1 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/frankban/quicktest v1.14.6 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.8 // indirect
@@ -110,7 +110,6 @@ require (
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
-	github.com/mlange-42/ark v0.6.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
