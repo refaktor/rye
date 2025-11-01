@@ -198,7 +198,7 @@ var builtins_functions = map[string]*env.Builtin{
 						}
 					default:
 						ps.ErrorFlag = true
-						return MakeArgError(ps, 2, []env.Type{env.CtxType}, "fnc")
+						return MakeArgError(ps, 2, []env.Type{env.ContextType}, "fnc")
 					}
 				default:
 					ps.ErrorFlag = true
@@ -278,7 +278,7 @@ var builtins_functions = map[string]*env.Builtin{
 					}
 				default:
 					ps.ErrorFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.CtxType}, "fn\\par")
+					return MakeArgError(ps, 2, []env.Type{env.ContextType}, "fn\\par")
 				}
 			default:
 				ps.ErrorFlag = true
@@ -329,7 +329,7 @@ var builtins_functions = map[string]*env.Builtin{
 					}
 				default:
 					ps.ErrorFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.CtxType}, "fn\\in")
+					return MakeArgError(ps, 2, []env.Type{env.ContextType}, "fn\\in")
 				}
 			default:
 				ps.ErrorFlag = true

@@ -152,7 +152,7 @@ func BuiConvert(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) env.Obje
 		case env.Dict:
 			vals = Conversion_EvalBlockDict(ps, rmap)
 		default:
-			return MakeArgError(ps, 1, []env.Type{env.DictType, env.CtxType}, "BuiConvert")
+			return MakeArgError(ps, 1, []env.Type{env.DictType, env.ContextType}, "BuiConvert")
 		}
 		ps.Ser = ser1
 		return vals

@@ -223,7 +223,7 @@ var builtins_contexts = map[string]*env.Builtin{
 				}
 			default:
 				ps.ErrorFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "extends")
+				return MakeArgError(ps, 1, []env.Type{env.ContextType}, "extends")
 			}
 		},
 	},
@@ -246,10 +246,10 @@ var builtins_contexts = map[string]*env.Builtin{
 					swCtx1.Parent = &swCtx2
 					return swCtx1
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.CtxType}, "bind!")
+					return MakeArgError(ps, 2, []env.Type{env.ContextType}, "bind!")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "bind!")
+				return MakeArgError(ps, 1, []env.Type{env.ContextType}, "bind!")
 			}
 		},
 	},
@@ -270,7 +270,7 @@ var builtins_contexts = map[string]*env.Builtin{
 				swCtx1.Parent = nil
 				return swCtx1
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "unbind!")
+				return MakeArgError(ps, 1, []env.Type{env.ContextType}, "unbind!")
 			}
 		},
 	},
@@ -308,7 +308,7 @@ var builtins_contexts = map[string]*env.Builtin{
 			case *env.RyeCtx:
 				return *c.Parent
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "parent?")
+				return MakeArgError(ps, 1, []env.Type{env.ContextType}, "parent?")
 			}
 		},
 	},
@@ -318,7 +318,7 @@ var builtins_contexts = map[string]*env.Builtin{
 		Doc:   "Lists words in current context",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			fmt.Println(ps.Ctx.Preview(*ps.Idx, ""))
-			return env.Void{}
+			return ps.Ctx
 		},
 	},
 
@@ -340,7 +340,7 @@ var builtins_contexts = map[string]*env.Builtin{
 			case *env.RyeCtx:
 				return c.GetWords(*ps.Idx)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "parent?")
+				return MakeArgError(ps, 1, []env.Type{env.ContextType}, "parent?")
 			}
 		},
 	},
@@ -354,23 +354,32 @@ var builtins_contexts = map[string]*env.Builtin{
 			} else {
 				fmt.Println("No parent")
 			}
-			return env.Void{}
+			return ps.Ctx
 		},
 	},
 
 	"lc\\": {
 		Argsn: 1,
-		Doc:   "Lists words in current context with string filter",
+		Doc:   "Lists words in current context with string filter or by type (word: 'function, 'builtin, 'context)",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
 				fmt.Println(ps.Ctx.Preview(*ps.Idx, s1.Value))
-				return env.Void{}
+				return ps.Ctx
 			case env.RyeCtx:
 				fmt.Println(s1.Preview(*ps.Idx, ""))
-				return env.Void{}
+				return ps.Ctx
+			case env.Word:
+				// Handle type-based filtering
+				typeName := ps.Idx.GetWord(s1.Index)
+				if typeName == "function" || typeName == "builtin" || typeName == "context" {
+					fmt.Println(ps.Ctx.PreviewByType(*ps.Idx, typeName))
+					return ps.Ctx
+				} else {
+					return MakeBuiltinError(ps, fmt.Sprintf("Invalid type filter '%s'. Use 'function, 'builtin, or 'context", typeName), "lc\\")
+				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "ls\\")
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.WordType}, "lc\\")
 			}
 		},
 	},
@@ -386,7 +395,7 @@ var builtins_contexts = map[string]*env.Builtin{
 				} else {
 					fmt.Println("No parent")
 				}
-				return env.Void{}
+				return ps.Ctx
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "lsp\\")
 			}
@@ -395,36 +404,55 @@ var builtins_contexts = map[string]*env.Builtin{
 
 	"cc": {
 		Argsn: 1,
-		Doc:   "Change to context",
+		Doc:   "Change to context (pushes current context to stack for ccb)",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.RyeCtx:
-				// s1.Parent = ps.Ctx // TODO ... this is temporary so ccp works, but some other method must be figured out as changing the parent is not OK
+				// Push current context to stack before changing
+				ps.PushContext(ps.Ctx)
 				ps.Ctx = &s1
-				return s1
+				return ps.Ctx
 			case *env.RyeCtx:
-				// s1.Parent = ps.Ctx // TODO ... this is temporary so ccp works, but some other method must be figured out as changing the parent is not OK
+				// Push current context to stack before changing
+				ps.PushContext(ps.Ctx)
 				ps.Ctx = s1
-				return s1
+				return ps.Ctx
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "cc")
+				return MakeArgError(ps, 1, []env.Type{env.ContextType}, "cc")
 			}
 		},
 	},
 
 	"ccp": {
 		Argsn: 0,
-		Doc:   "Change to context",
+		Doc:   "Change to parent context (pushes current context to stack for ccb)",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			cc := ps.Ctx
+			if ps.Ctx.Parent == nil {
+				return MakeBuiltinError(ps, "No parent context available.", "ccp")
+			}
+			// Push current context to stack before changing to parent
+			ps.PushContext(ps.Ctx)
 			ps.Ctx = ps.Ctx.Parent
-			return *cc
+			return ps.Ctx
+		},
+	},
+
+	"ccb": {
+		Argsn: 0,
+		Doc:   "Change context back (pops from context stack)",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			prevCtx, ok := ps.PopContext()
+			if !ok {
+				return MakeBuiltinError(ps, "No previous context in stack to return to.", "ccb")
+			}
+			ps.Ctx = prevCtx
+			return *ps.Ctx
 		},
 	},
 
 	"mkcc": {
 		Argsn: 1,
-		Doc:   "Make context with current as parent and change to it.",
+		Doc:   "Make context with current as parent and change to it (pushes current context to stack for ccb).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch word := arg0.(type) {
 			case env.Word:
@@ -434,12 +462,31 @@ var builtins_contexts = map[string]*env.Builtin{
 				if ok {
 					return s
 				}
-				ctx := ps.Ctx
+				// Push current context to stack before changing to new context
+				ps.PushContext(ps.Ctx)
 				ps.Ctx = newctx // make new context with current par
-				return *ctx
+				return ps.Ctx
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.WordType}, "mkcc")
 			}
+		},
+	},
+
+	"cc-stack-size": {
+		Argsn: 0,
+		Doc:   "Returns the current size of the context navigation stack.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return *env.NewInteger(int64(ps.ContextStackSize()))
+		},
+	},
+
+	"cc-clear-stack": {
+		Argsn: 0,
+		Doc:   "Clears the context navigation stack (removes all stored previous contexts).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			oldSize := ps.ContextStackSize()
+			ps.ContextStack = make([]*env.RyeCtx, 0)
+			return *env.NewInteger(int64(oldSize))
 		},
 	},
 
@@ -462,15 +509,15 @@ var builtins_contexts = map[string]*env.Builtin{
 				if ryeCtx, ok := clonedCtx.(*env.RyeCtx); ok {
 					return *ryeCtx
 				}
-				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "clone")
+				return MakeArgError(ps, 1, []env.Type{env.ContextType}, "clone")
 			case *env.RyeCtx:
 				clonedCtx := ctx.Copy()
 				if ryeCtx, ok := clonedCtx.(*env.RyeCtx); ok {
 					return *ryeCtx
 				}
-				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "clone")
+				return MakeArgError(ps, 1, []env.Type{env.ContextType}, "clone")
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "clone")
+				return MakeArgError(ps, 1, []env.Type{env.ContextType}, "clone")
 			}
 		},
 	},
@@ -508,7 +555,7 @@ var builtins_contexts = map[string]*env.Builtin{
 						}
 						return *rctx // return the resulting cloned context
 					}
-					return MakeArgError(ps, 1, []env.Type{env.CtxType}, "clone\\")
+					return MakeArgError(ps, 1, []env.Type{env.ContextType}, "clone\\")
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "clone\\")
 				}
@@ -530,12 +577,12 @@ var builtins_contexts = map[string]*env.Builtin{
 						}
 						return *rctx // return the resulting cloned context
 					}
-					return MakeArgError(ps, 1, []env.Type{env.CtxType}, "clone\\")
+					return MakeArgError(ps, 1, []env.Type{env.ContextType}, "clone\\")
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "clone\\")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "clone\\")
+				return MakeArgError(ps, 1, []env.Type{env.ContextType}, "clone\\")
 			}
 		},
 	},

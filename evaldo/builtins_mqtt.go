@@ -25,7 +25,7 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	// Args:
 	// * uri: MQTT broker URI (format: mqtt://[user:pass@]host:port/client-id)
 	// Returns:
-	// * native MQTT client connection (type: "Rye-mqtt-client")
+	// * native MQTT client connection (type: "mqtt-client")
 	// * error if connection fails
 	"mqtt-schema//Open": {
 		Argsn: 1,
@@ -51,7 +51,7 @@ var Builtins_mqtt = map[string]*env.Builtin{
 
 				// Extract client ID from path (after the host:port)
 				// For now, use a default client ID if not provided in path
-				clientID := "rye-mqtt-client"
+				clientID := "mqtt-client"
 				if len(uri.Path) > 0 {
 					// If there's a slash in the path after host:port, use that as client ID
 					parts := strings.Split(uri.Path, "/")
@@ -78,7 +78,7 @@ var Builtins_mqtt = map[string]*env.Builtin{
 					return MakeBuiltinError(ps, fmt.Sprintf("Failed to connect to MQTT broker: %v", token.Error()), "mqtt-schema//Open")
 				}
 
-				return *env.NewNative(ps.Idx, client, "Rye-mqtt-client")
+				return *env.NewNative(ps.Idx, client, "mqtt-client")
 			default:
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.UriType}, "mqtt-schema//Open")
@@ -89,11 +89,11 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	// Tests:
 	// example { client |Disconnect }
 	// Args:
-	// * client: MQTT client connection (type: "Rye-mqtt-client")
+	// * client: MQTT client connection (type: "mqtt-client")
 	// Returns:
 	// * integer 1 for success
 	// * error if disconnection fails
-	"Rye-mqtt-client//Disconnect": {
+	"mqtt-client//Disconnect": {
 		Argsn: 1,
 		Doc:   "Disconnects from the MQTT broker.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -104,7 +104,7 @@ var Builtins_mqtt = map[string]*env.Builtin{
 				return *env.NewInteger(1)
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-mqtt-client//Disconnect")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "mqtt-client//Disconnect")
 			}
 		},
 	},
@@ -112,7 +112,7 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	// Tests:
 	// example { client |Publish "sensors/temperature" "23.5" 0 false }
 	// Args:
-	// * client: MQTT client connection (type: "Rye-mqtt-client")
+	// * client: MQTT client connection (type: "mqtt-client")
 	// * topic: Topic to publish to (string)
 	// * payload: Message payload (string)
 	// * qos: Quality of Service level (integer 0, 1, or 2)
@@ -120,7 +120,7 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	// Returns:
 	// * integer 1 for success
 	// * error if publish fails
-	"Rye-mqtt-client//Publish": {
+	"mqtt-client//Publish": {
 		Argsn: 5,
 		Doc:   "Publishes a message to an MQTT topic with specified QoS and retain flag.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -139,35 +139,35 @@ var Builtins_mqtt = map[string]*env.Builtin{
 
 								if qos.Value < 0 || qos.Value > 2 {
 									ps.FailureFlag = true
-									return MakeBuiltinError(ps, "QoS must be 0, 1, or 2", "Rye-mqtt-client//Publish")
+									return MakeBuiltinError(ps, "QoS must be 0, 1, or 2", "mqtt-client//Publish")
 								}
 
 								token := mqttClient.Publish(topic.Value, byte(qos.Value), retainBool, payload.Value)
 								if token.Wait() && token.Error() != nil {
 									ps.FailureFlag = true
-									return MakeBuiltinError(ps, fmt.Sprintf("Failed to publish message: %v", token.Error()), "Rye-mqtt-client//Publish")
+									return MakeBuiltinError(ps, fmt.Sprintf("Failed to publish message: %v", token.Error()), "mqtt-client//Publish")
 								}
 
 								return *env.NewInteger(1)
 							default:
 								ps.FailureFlag = true
-								return MakeArgError(ps, 5, []env.Type{env.IntegerType}, "Rye-mqtt-client//Publish")
+								return MakeArgError(ps, 5, []env.Type{env.IntegerType}, "mqtt-client//Publish")
 							}
 						default:
 							ps.FailureFlag = true
-							return MakeArgError(ps, 4, []env.Type{env.IntegerType}, "Rye-mqtt-client//Publish")
+							return MakeArgError(ps, 4, []env.Type{env.IntegerType}, "mqtt-client//Publish")
 						}
 					default:
 						ps.FailureFlag = true
-						return MakeArgError(ps, 3, []env.Type{env.StringType}, "Rye-mqtt-client//Publish")
+						return MakeArgError(ps, 3, []env.Type{env.StringType}, "mqtt-client//Publish")
 					}
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.StringType}, "Rye-mqtt-client//Publish")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "mqtt-client//Publish")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-mqtt-client//Publish")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "mqtt-client//Publish")
 			}
 		},
 	},
@@ -175,13 +175,13 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	// Tests:
 	// example { client |Publish-simple "sensors/temperature" "23.5" }
 	// Args:
-	// * client: MQTT client connection (type: "Rye-mqtt-client")
+	// * client: MQTT client connection (type: "mqtt-client")
 	// * topic: Topic to publish to (string)
 	// * payload: Message payload (string)
 	// Returns:
 	// * integer 1 for success (uses QoS 0, no retain)
 	// * error if publish fails
-	"Rye-mqtt-client//Publish-simple": {
+	"mqtt-client//Publish-simple": {
 		Argsn: 3,
 		Doc:   "Publishes a message to an MQTT topic with default settings (QoS 0, no retain).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -196,21 +196,21 @@ var Builtins_mqtt = map[string]*env.Builtin{
 						token := mqttClient.Publish(topic.Value, 0, false, payload.Value)
 						if token.Wait() && token.Error() != nil {
 							ps.FailureFlag = true
-							return MakeBuiltinError(ps, fmt.Sprintf("Failed to publish message: %v", token.Error()), "Rye-mqtt-client//Publish-simple")
+							return MakeBuiltinError(ps, fmt.Sprintf("Failed to publish message: %v", token.Error()), "mqtt-client//Publish-simple")
 						}
 
 						return *env.NewInteger(1)
 					default:
 						ps.FailureFlag = true
-						return MakeArgError(ps, 3, []env.Type{env.StringType}, "Rye-mqtt-client//Publish-simple")
+						return MakeArgError(ps, 3, []env.Type{env.StringType}, "mqtt-client//Publish-simple")
 					}
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.StringType}, "Rye-mqtt-client//Publish-simple")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "mqtt-client//Publish-simple")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-mqtt-client//Publish-simple")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "mqtt-client//Publish-simple")
 			}
 		},
 	},
@@ -218,14 +218,14 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	// Tests:
 	// example { client |Subscribe "sensors/+" 1 fn { msg } { print "Received: " + msg } }
 	// Args:
-	// * client: MQTT client connection (type: "Rye-mqtt-client")
+	// * client: MQTT client connection (type: "mqtt-client")
 	// * topic: Topic pattern to subscribe to (string, can include wildcards)
 	// * qos: Quality of Service level (integer 0, 1, or 2)
 	// * handler: Callback function to handle received messages
 	// Returns:
 	// * integer 1 for success
 	// * error if subscription fails
-	"Rye-mqtt-client//Subscribe": {
+	"mqtt-client//Subscribe": {
 		Argsn: 4,
 		Doc:   "Subscribes to an MQTT topic with a message handler function.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -241,7 +241,7 @@ var Builtins_mqtt = map[string]*env.Builtin{
 
 							if qos.Value < 0 || qos.Value > 2 {
 								ps.FailureFlag = true
-								return MakeBuiltinError(ps, "QoS must be 0, 1, or 2", "Rye-mqtt-client//Subscribe")
+								return MakeBuiltinError(ps, "QoS must be 0, 1, or 2", "mqtt-client//Subscribe")
 							}
 
 							callback := func(client mqtt.Client, msg mqtt.Message) {
@@ -274,26 +274,26 @@ var Builtins_mqtt = map[string]*env.Builtin{
 							token := mqttClient.Subscribe(topic.Value, byte(qos.Value), callback)
 							if token.Wait() && token.Error() != nil {
 								ps.FailureFlag = true
-								return MakeBuiltinError(ps, fmt.Sprintf("Failed to subscribe: %v", token.Error()), "Rye-mqtt-client//Subscribe")
+								return MakeBuiltinError(ps, fmt.Sprintf("Failed to subscribe: %v", token.Error()), "mqtt-client//Subscribe")
 							}
 
 							return *env.NewInteger(1)
 						default:
 							fmt.Println(arg3.Inspect(*ps.Idx))
 							ps.FailureFlag = true
-							return MakeArgError(ps, 4, []env.Type{env.FunctionType}, "Rye-mqtt-client//Subscribe")
+							return MakeArgError(ps, 4, []env.Type{env.FunctionType}, "mqtt-client//Subscribe")
 						}
 					default:
 						ps.FailureFlag = true
-						return MakeArgError(ps, 3, []env.Type{env.IntegerType}, "Rye-mqtt-client//Subscribe")
+						return MakeArgError(ps, 3, []env.Type{env.IntegerType}, "mqtt-client//Subscribe")
 					}
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.StringType}, "Rye-mqtt-client//Subscribe")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "mqtt-client//Subscribe")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-mqtt-client//Subscribe")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "mqtt-client//Subscribe")
 			}
 		},
 	},
@@ -301,13 +301,13 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	// Tests:
 	// example { client |Subscribe-simple "sensors/temperature" fn { msg } { print msg.payload } }
 	// Args:
-	// * client: MQTT client connection (type: "Rye-mqtt-client")
+	// * client: MQTT client connection (type: "mqtt-client")
 	// * topic: Topic pattern to subscribe to (string)
 	// * handler: Callback function to handle received messages
 	// Returns:
 	// * integer 1 for success (uses QoS 0)
 	// * error if subscription fails
-	"Rye-mqtt-client//Subscribe-simple": {
+	"mqtt-client//Subscribe-simple": {
 		Argsn: 3,
 		Doc:   "Subscribes to an MQTT topic with default QoS 0 and a message handler function.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -338,21 +338,21 @@ var Builtins_mqtt = map[string]*env.Builtin{
 						token := mqttClient.Subscribe(topic.Value, 0, callback)
 						if token.Wait() && token.Error() != nil {
 							ps.FailureFlag = true
-							return MakeBuiltinError(ps, fmt.Sprintf("Failed to subscribe: %v", token.Error()), "Rye-mqtt-client//Subscribe-simple")
+							return MakeBuiltinError(ps, fmt.Sprintf("Failed to subscribe: %v", token.Error()), "mqtt-client//Subscribe-simple")
 						}
 
 						return *env.NewInteger(1)
 					default:
 						ps.FailureFlag = true
-						return MakeArgError(ps, 3, []env.Type{env.FunctionType}, "Rye-mqtt-client//Subscribe-simple")
+						return MakeArgError(ps, 3, []env.Type{env.FunctionType}, "mqtt-client//Subscribe-simple")
 					}
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.StringType}, "Rye-mqtt-client//Subscribe-simple")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "mqtt-client//Subscribe-simple")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-mqtt-client//Subscribe-simple")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "mqtt-client//Subscribe-simple")
 			}
 		},
 	},
@@ -360,12 +360,12 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	// Tests:
 	// example { client |Unsubscribe "sensors/temperature" }
 	// Args:
-	// * client: MQTT client connection (type: "Rye-mqtt-client")
+	// * client: MQTT client connection (type: "mqtt-client")
 	// * topic: Topic to unsubscribe from (string)
 	// Returns:
 	// * integer 1 for success
 	// * error if unsubscription fails
-	"Rye-mqtt-client//Unsubscribe": {
+	"mqtt-client//Unsubscribe": {
 		Argsn: 2,
 		Doc:   "Unsubscribes from an MQTT topic.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -378,17 +378,17 @@ var Builtins_mqtt = map[string]*env.Builtin{
 					token := mqttClient.Unsubscribe(topic.Value)
 					if token.Wait() && token.Error() != nil {
 						ps.FailureFlag = true
-						return MakeBuiltinError(ps, fmt.Sprintf("Failed to unsubscribe: %v", token.Error()), "Rye-mqtt-client//Unsubscribe")
+						return MakeBuiltinError(ps, fmt.Sprintf("Failed to unsubscribe: %v", token.Error()), "mqtt-client//Unsubscribe")
 					}
 
 					return *env.NewInteger(1)
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.StringType}, "Rye-mqtt-client//Unsubscribe")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "mqtt-client//Unsubscribe")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-mqtt-client//Unsubscribe")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "mqtt-client//Unsubscribe")
 			}
 		},
 	},
@@ -396,10 +396,10 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	// Tests:
 	// example { client |Connected? }
 	// Args:
-	// * client: MQTT client connection (type: "Rye-mqtt-client")
+	// * client: MQTT client connection (type: "mqtt-client")
 	// Returns:
 	// * integer 1 if connected, 0 if not connected
-	"Rye-mqtt-client//Is-connected": {
+	"mqtt-client//Is-connected": {
 		Argsn: 1,
 		Doc:   "Checks if the MQTT client is currently connected to the broker.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -413,7 +413,7 @@ var Builtins_mqtt = map[string]*env.Builtin{
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-mqtt-client//Connected?")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "mqtt-client//Connected?")
 			}
 		},
 	},
@@ -421,24 +421,24 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	// Tests:
 	// example { mqtt-options |Set-clean-session 1 |Set-keep-alive 60 |Set-timeout 30 }
 	// Returns:
-	// * new MQTT client options object (type: "Rye-mqtt-options")
+	// * new MQTT client options object (type: "mqtt-options")
 	"mqtt-options": {
 		Argsn: 0,
 		Doc:   "Creates a new MQTT client options object for advanced configuration.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			opts := mqtt.NewClientOptions()
-			return *env.NewNative(ps.Idx, opts, "Rye-mqtt-options")
+			return *env.NewNative(ps.Idx, opts, "mqtt-options")
 		},
 	},
 
 	// Tests:
 	// example { opts |Set-broker "tcp://localhost:1883" }
 	// Args:
-	// * options: MQTT options object (type: "Rye-mqtt-options")
+	// * options: MQTT options object (type: "mqtt-options")
 	// * broker: Broker URI string
 	// Returns:
 	// * the same options object (for method chaining)
-	"Rye-mqtt-options//Set-broker": {
+	"mqtt-options//Set-broker": {
 		Argsn: 2,
 		Doc:   "Sets the MQTT broker address in the options.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -451,11 +451,11 @@ var Builtins_mqtt = map[string]*env.Builtin{
 					return arg0
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.StringType}, "Rye-mqtt-options//Set-broker")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "mqtt-options//Set-broker")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-mqtt-options//Set-broker")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "mqtt-options//Set-broker")
 			}
 		},
 	},
@@ -463,11 +463,11 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	// Tests:
 	// example { opts |Set-client-id "my-unique-client" }
 	// Args:
-	// * options: MQTT options object (type: "Rye-mqtt-options")
+	// * options: MQTT options object (type: "mqtt-options")
 	// * client-id: Client identifier string
 	// Returns:
 	// * the same options object (for method chaining)
-	"Rye-mqtt-options//Set-client-id": {
+	"mqtt-options//Set-client-id": {
 		Argsn: 2,
 		Doc:   "Sets the client ID in the MQTT options.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -480,11 +480,11 @@ var Builtins_mqtt = map[string]*env.Builtin{
 					return arg0
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.StringType}, "Rye-mqtt-options//Set-client-id")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "mqtt-options//Set-client-id")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-mqtt-options//Set-client-id")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "mqtt-options//Set-client-id")
 			}
 		},
 	},
@@ -492,11 +492,11 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	// Tests:
 	// example { opts |Set-keep-alive 60 }
 	// Args:
-	// * options: MQTT options object (type: "Rye-mqtt-options")
+	// * options: MQTT options object (type: "mqtt-options")
 	// * seconds: Keep alive interval in seconds (integer)
 	// Returns:
 	// * the same options object (for method chaining)
-	"Rye-mqtt-options//Set-keep-alive": {
+	"mqtt-options//Set-keep-alive": {
 		Argsn: 2,
 		Doc:   "Sets the keep alive interval in seconds.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -509,11 +509,125 @@ var Builtins_mqtt = map[string]*env.Builtin{
 					return arg0
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "Rye-mqtt-options//Set-keep-alive")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "mqtt-options//Set-keep-alive")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-mqtt-options//Set-keep-alive")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "mqtt-options//Set-keep-alive")
+			}
+		},
+	},
+
+	// Tests:
+	// example { opts |Set-username "myuser" }
+	// Args:
+	// * options: MQTT options object (type: "mqtt-options")
+	// * username: Username string for MQTT authentication
+	// Returns:
+	// * the same options object (for method chaining)
+	"mqtt-options//Set-username": {
+		Argsn: 2,
+		Doc:   "Sets the username for MQTT authentication.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch opts := arg0.(type) {
+			case env.Native:
+				switch username := arg1.(type) {
+				case env.String:
+					options := opts.Value.(*mqtt.ClientOptions)
+					options.SetUsername(username.Value)
+					return arg0
+				default:
+					ps.FailureFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "mqtt-options//Set-username")
+				}
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "mqtt-options//Set-username")
+			}
+		},
+	},
+
+	// Tests:
+	// example { opts |Set-password "mypassword" }
+	// Args:
+	// * options: MQTT options object (type: "mqtt-options")
+	// * password: Password string for MQTT authentication
+	// Returns:
+	// * the same options object (for method chaining)
+	"mqtt-options//Set-password": {
+		Argsn: 2,
+		Doc:   "Sets the password for MQTT authentication.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch opts := arg0.(type) {
+			case env.Native:
+				switch password := arg1.(type) {
+				case env.String:
+					options := opts.Value.(*mqtt.ClientOptions)
+					options.SetPassword(password.Value)
+					return arg0
+				default:
+					ps.FailureFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "mqtt-options//Set-password")
+				}
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "mqtt-options//Set-password")
+			}
+		},
+	},
+
+	// Tests:
+	// example { opts |Set-will "client/status" "offline" 1 1 }
+	// Args:
+	// * options: MQTT options object (type: "mqtt-options")
+	// * topic: Will topic string
+	// * payload: Will message payload string
+	// * qos: Quality of Service level for will message (integer 0, 1, or 2)
+	// * retain: Whether will message should be retained (integer 0 = false, 1 = true)
+	// Returns:
+	// * the same options object (for method chaining)
+	"mqtt-options//Set-will": {
+		Argsn: 5,
+		Doc:   "Sets the Last Will and Testament message with QoS and retain flag.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch opts := arg0.(type) {
+			case env.Native:
+				switch topic := arg1.(type) {
+				case env.String:
+					switch payload := arg2.(type) {
+					case env.String:
+						switch qos := arg3.(type) {
+						case env.Integer:
+							switch retain := arg4.(type) {
+							case env.Integer:
+								if qos.Value < 0 || qos.Value > 2 {
+									ps.FailureFlag = true
+									return MakeBuiltinError(ps, "QoS must be 0, 1, or 2", "mqtt-options//Set-will")
+								}
+
+								options := opts.Value.(*mqtt.ClientOptions)
+								retainBool := retain.Value != 0
+								options.SetWill(topic.Value, payload.Value, byte(qos.Value), retainBool)
+								return arg0
+							default:
+								ps.FailureFlag = true
+								return MakeArgError(ps, 5, []env.Type{env.IntegerType}, "mqtt-options//Set-will")
+							}
+						default:
+							ps.FailureFlag = true
+							return MakeArgError(ps, 4, []env.Type{env.IntegerType}, "mqtt-options//Set-will")
+						}
+					default:
+						ps.FailureFlag = true
+						return MakeArgError(ps, 3, []env.Type{env.StringType}, "mqtt-options//Set-will")
+					}
+				default:
+					ps.FailureFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "mqtt-options//Set-will")
+				}
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "mqtt-options//Set-will")
 			}
 		},
 	},
@@ -521,11 +635,11 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	// Tests:
 	// example { opts |Connect-with-options }
 	// Args:
-	// * options: MQTT options object (type: "Rye-mqtt-options")
+	// * options: MQTT options object (type: "mqtt-options")
 	// Returns:
-	// * native MQTT client connection (type: "Rye-mqtt-client")
+	// * native MQTT client connection (type: "mqtt-client")
 	// * error if connection fails
-	"Rye-mqtt-options//Connect-with-options": {
+	"mqtt-options//Connect-with-options": {
 		Argsn: 1,
 		Doc:   "Creates and connects an MQTT client using the configured options.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -536,13 +650,13 @@ var Builtins_mqtt = map[string]*env.Builtin{
 
 				if token := client.Connect(); token.Wait() && token.Error() != nil {
 					ps.FailureFlag = true
-					return MakeBuiltinError(ps, fmt.Sprintf("Failed to connect to MQTT broker: %v", token.Error()), "Rye-mqtt-options//Connect-with-options")
+					return MakeBuiltinError(ps, fmt.Sprintf("Failed to connect to MQTT broker: %v", token.Error()), "mqtt-options//Connect-with-options")
 				}
 
-				return *env.NewNative(ps.Idx, client, "Rye-mqtt-client")
+				return *env.NewNative(ps.Idx, client, "mqtt-client")
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Rye-mqtt-options//Connect-with-options")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "mqtt-options//Connect-with-options")
 			}
 		},
 	},

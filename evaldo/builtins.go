@@ -916,7 +916,7 @@ var builtins = map[string]*env.Builtin{
 					}
 					return MakeBuiltinError(ps, "Conversion value isn't Dict.", "_<<")
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.DictType, env.CtxType}, "_<<")
+					return MakeArgError(ps, 2, []env.Type{env.DictType, env.ContextType}, "_<<")
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.KindType}, "_<<")
@@ -1053,7 +1053,7 @@ var builtins = map[string]*env.Builtin{
 				return *env.NewString(d.Doc)
 			default:
 				env1.ErrorFlag = true
-				return MakeArgError(env1, 1, []env.Type{env.CtxType, env.PersistentCtxType}, "doc\\of?")
+				return MakeArgError(env1, 1, []env.Type{env.ContextType, env.PersistentContextType}, "doc\\of?")
 			}
 
 		},
@@ -1088,7 +1088,7 @@ var builtins = map[string]*env.Builtin{
 				sp.Value = env.ReferenceAny(sp.Value)
 				return &sp
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType, env.DictType, env.ListType, env.BlockType, env.StringType, env.NativeType, env.CtxType}, "deref")
+				return MakeArgError(ps, 1, []env.Type{env.TableType, env.DictType, env.ListType, env.BlockType, env.StringType, env.NativeType, env.ContextType}, "deref")
 			}
 		},
 	},
@@ -1123,7 +1123,7 @@ var builtins = map[string]*env.Builtin{
 				sp.Value = env.DereferenceAny(sp.Value)
 				return *sp
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType, env.DictType, env.ListType, env.BlockType, env.StringType, env.NativeType, env.CtxType}, "deref")
+				return MakeArgError(ps, 1, []env.Type{env.TableType, env.DictType, env.ListType, env.BlockType, env.StringType, env.NativeType, env.ContextType}, "deref")
 			}
 		},
 	},
@@ -1577,7 +1577,7 @@ var builtins = map[string]*env.Builtin{
 				}
 			default:
 				ps.ErrorFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.CtxType, env.PersistentCtxType}, "do\\in")
+				return MakeArgError(ps, 1, []env.Type{env.ContextType, env.PersistentContextType}, "do\\in")
 			}
 
 		},
@@ -1638,7 +1638,7 @@ var builtins = map[string]*env.Builtin{
 				}
 			default:
 				ps.ErrorFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.CtxType}, "do\\par")
+				return MakeArgError(ps, 1, []env.Type{env.ContextType}, "do\\par")
 			}
 
 		},
@@ -1728,6 +1728,20 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
+	"lk\\": {
+		Argsn: 1,
+		Doc:   "Lists available kinds with string filter",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				fmt.Println(ps.Gen.PreviewKinds(*ps.Idx, s1.Value))
+				return env.Void{}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "lk\\")
+			}
+		},
+	},
+
 	"lg": {
 		Argsn: 1,
 		Doc:   "Lists generic words related to specific kind",
@@ -1740,6 +1754,27 @@ var builtins = map[string]*env.Builtin{
 				kindIdx := arg0.GetKind()
 				fmt.Println(ps.Gen.PreviewMethods(*ps.Idx, kindIdx, ""))
 				return arg0
+			}
+		},
+	},
+
+	"lg\\": {
+		Argsn: 2,
+		Doc:   "Lists generic words related to specific kind with string filter",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch filter := arg1.(type) {
+			case env.String:
+				switch s1 := arg0.(type) {
+				case env.Word:
+					fmt.Println(ps.Gen.PreviewMethods(*ps.Idx, s1.Index, filter.Value))
+					return env.Void{}
+				default:
+					kindIdx := arg0.GetKind()
+					fmt.Println(ps.Gen.PreviewMethods(*ps.Idx, kindIdx, filter.Value))
+					return env.Void{}
+				}
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.StringType}, "lg\\")
 			}
 		},
 	},

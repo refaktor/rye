@@ -117,8 +117,6 @@
 <p class='returns'><b>returns</b> validated Context with converted values or error if validation fails</p>
 <div class='group'>
 {map[a:{1}] {0}}
-<pre class='prettyprint lang-rye'><code language='lang-rye'>validate&gt;ctx dict { a: 1 } { a: required } |type?
-; returns ctx</code></pre>
 {map[a:{1}] {0}}
 <pre class='prettyprint lang-rye'><code language='lang-rye'>validate&gt;ctx dict { a: 1 } { a: optional 0 } |-&gt; 'a
 ; returns 1</code></pre>
@@ -149,8 +147,6 @@
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>list { 1 2 3 } |to-json
 ; returns "[1, 2, 3] "</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>dict { a: 1 b: 2 c: 3 } |to-json
-; returns "{"a": 1, "b": 2, "c": 3} "</code></pre>
 </div>
 <h3>to-json\lines</h3><p>Converts a table to JSON with each row on a separate line.</p>
 <p class='arg'><b>table</b> table value to encode</p>

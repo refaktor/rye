@@ -35,25 +35,29 @@ var Builtins_goroutines = map[string]*env.Builtin{
 			case env.Object:
 				switch handler := arg1.(type) {
 				case env.Function:
-					errC := make(chan error)
+					// Create a copy of the program state for the goroutine
+					psTemp := env.ProgramState{}
+					err := copier.Copy(&psTemp, &ps)
+					if err != nil {
+						return MakeBuiltinError(ps, fmt.Sprintf("failed to copy program state: %s", err), "go-with")
+					}
+
+					// Reset flags for the goroutine state
+					psTemp.FailureFlag = false
+					psTemp.ErrorFlag = false
+					psTemp.ReturnFlag = false
+
+					// Launch goroutine with panic recovery
 					go func() {
-						ps.FailureFlag = false
-						ps.ErrorFlag = false
-						ps.ReturnFlag = false
-						psTemp := env.ProgramState{}
-						err := copier.Copy(&psTemp, &ps)
-						if err != nil {
-							ps.FailureFlag = true
-							ps.ErrorFlag = true
-							ps.ReturnFlag = true
-							errC <- fmt.Errorf("failed to copy ps: %w", err)
-						}
-						close(errC)
+						defer func() {
+							if r := recover(); r != nil {
+								// Log panic but don't crash the main program
+								fmt.Printf("Goroutine panic in go-with: %v\n", r)
+							}
+						}()
 						CallFunction(handler, &psTemp, arg, false, nil)
 					}()
-					if err := <-errC; err != nil {
-						return MakeBuiltinError(ps, err.Error(), "go-with")
-					}
+
 					return arg0
 				default:
 					ps.FailureFlag = true
@@ -79,26 +83,29 @@ var Builtins_goroutines = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch handler := arg0.(type) {
 			case env.Function:
-				errC := make(chan error)
-				go func() {
-					ps.FailureFlag = false
-					ps.ErrorFlag = false
-					ps.ReturnFlag = false
-					psTemp := env.ProgramState{}
-					err := copier.Copy(&psTemp, &ps)
-					if err != nil {
-						ps.FailureFlag = true
-						ps.ErrorFlag = true
-						ps.ReturnFlag = true
-						errC <- fmt.Errorf("failed to copy ps: %w", err)
-					}
-					close(errC)
-					CallFunction(handler, &psTemp, nil, false, nil)
-					// CallFunctionArgs2(handler, &psTemp, arg, *env.NewNative(psTemp.Idx, "asd", "Go-server-context"), nil)
-				}()
-				if err := <-errC; err != nil {
-					return MakeBuiltinError(ps, err.Error(), "go")
+				// Create a copy of the program state for the goroutine
+				psTemp := env.ProgramState{}
+				err := copier.Copy(&psTemp, &ps)
+				if err != nil {
+					return MakeBuiltinError(ps, fmt.Sprintf("failed to copy program state: %s", err), "go")
 				}
+
+				// Reset flags for the goroutine state
+				psTemp.FailureFlag = false
+				psTemp.ErrorFlag = false
+				psTemp.ReturnFlag = false
+
+				// Launch goroutine with panic recovery
+				go func() {
+					defer func() {
+						if r := recover(); r != nil {
+							// Log panic but don't crash the main program
+							fmt.Printf("Goroutine panic in go: %v\n", r)
+						}
+					}()
+					CallFunction(handler, &psTemp, nil, false, nil)
+				}()
+
 				return arg0
 			default:
 				ps.FailureFlag = true
@@ -144,7 +151,14 @@ var Builtins_goroutines = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch chn := arg0.(type) {
 			case env.Native:
-				msg, ok := <-chn.Value.(chan *env.Object)
+				// Type assertion with proper error handling
+				ch, ok := chn.Value.(chan *env.Object)
+				if !ok {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Invalid channel type", "Rye-channel//Read")
+				}
+
+				msg, ok := <-ch
 				if ok {
 					return *msg
 				} else {
