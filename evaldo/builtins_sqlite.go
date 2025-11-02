@@ -107,7 +107,7 @@ var Builtins_sqlite = map[string]*env.Builtin{
 	// * uri: path to SQLite database file
 	// Returns:
 	// * native SQLite database connection
-	"sqlite-schema//Open": {
+	"sqlite-uri//Open": {
 		Argsn: 1,
 		Doc:   "Opens a connection to a SQLite database file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -118,7 +118,7 @@ var Builtins_sqlite = map[string]*env.Builtin{
 				db, _ := sql.Open("sqlite", str.GetPath()) // TODO -- we need to make path parser in URI then this will be path
 				return *env.NewNative(ps.Idx, db, "Rye-sqlite")
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "sqlite-schema//Open")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "sqlite-uri//Open")
 			}
 
 		},

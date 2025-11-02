@@ -287,8 +287,8 @@ var builtins_contexts = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { var 'y 99 c: context { incr: fn\in { } parent { y:: inc y } } c/incr y } 100
-	"parent": { // **
+	// equal { var 'y 99 c: context { incr: fn\in { } parent? { y:: inc y } } c/incr y } 100
+	"parent?": { // **
 		Argsn: 0,
 		Doc:   "Returns parent context of the current context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -360,7 +360,7 @@ var builtins_contexts = map[string]*env.Builtin{
 
 	"lc\\": {
 		Argsn: 1,
-		Doc:   "Lists words in current context with string filter or by type (word: 'function, 'builtin, 'context)",
+		Doc:   "Lists words in current context with string filter, by type (word: 'function, 'builtin, 'context), or regex filter (native of kind 'regexp)",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -378,8 +378,22 @@ var builtins_contexts = map[string]*env.Builtin{
 				} else {
 					return MakeBuiltinError(ps, fmt.Sprintf("Invalid type filter '%s'. Use 'function, 'builtin, or 'context", typeName), "lc\\")
 				}
+			case env.Native:
+				// Handle regex filtering for Native of kind regexp
+				kindName := ps.Idx.GetWord(s1.Kind.Index)
+				if kindName == "regexp" {
+					// Cast the Native value to regex and use it for filtering
+					if regexVal, ok := s1.Value.(interface{ MatchString(string) bool }); ok {
+						fmt.Println(ps.Ctx.PreviewByRegex(*ps.Idx, regexVal))
+						return ps.Ctx
+					} else {
+						return MakeBuiltinError(ps, "Native regexp does not support MatchString method", "lc\\")
+					}
+				} else {
+					return MakeBuiltinError(ps, fmt.Sprintf("Native filter only supports 'regexp kind, got '%s'", kindName), "lc\\")
+				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType, env.WordType}, "lc\\")
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.WordType, env.NativeType}, "lc\\")
 			}
 		},
 	},

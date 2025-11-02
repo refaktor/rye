@@ -34,6 +34,24 @@ var Builtins_regexp = map[string]*env.Builtin{
 		},
 	},
 
+	// short regexp constructor, mostly for console use like ls\ re "pr.?n.*"
+	"re": {
+		Argsn: 1,
+		Doc:   "Creates a compiled regular expression object from a pattern string.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s := arg0.(type) {
+			case env.String:
+				val, err := regexp.Compile(s.Value)
+				if err != nil {
+					return MakeError(ps, err.Error())
+				}
+				return *env.NewNative(ps.Idx, val, "regexp")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "regexp")
+			}
+		},
+	},
+
 	// Tests:
 	//  equal { regexp "[0-9]" |Is-match "5" } 1
 	//  equal { regexp "[0-9]" |Is-match "a" } 0

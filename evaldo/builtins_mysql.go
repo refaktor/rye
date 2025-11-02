@@ -19,12 +19,12 @@ var Builtins_mysql = map[string]*env.Builtin{
 	// ##### MySQL ##### "MySQL database functions"
 	//
 	// Tests:
-	// equal { mysql-schema//Open %"user:pass@tcp(localhost:3306)/dbname" |type? } 'native
+	// equal { mysql-uri//Open %"user:pass@tcp(localhost:3306)/dbname" |type? } 'native
 	// Args:
 	// * uri: MySQL connection string URI
 	// Returns:
 	// * native MySQL database connection
-	"mysql-schema//Open": {
+	"mysql-uri//Open": {
 		Argsn: 1,
 		Doc:   "Opens a connection to a MySQL database.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -36,27 +36,27 @@ var Builtins_mysql = map[string]*env.Builtin{
 					//fmt.Println("Error1")
 					ps.FailureFlag = true
 					errMsg := fmt.Sprintf("Error opening SQL: %v", err.Error())
-					return MakeBuiltinError(ps, errMsg, "mysql-schema//Open")
+					return MakeBuiltinError(ps, errMsg, "mysql-uri//Open")
 				} else {
 					//fmt.Println("Error2")
 					return *env.NewNative(ps.Idx, db, "Rye-mysql")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "mysql-schema//Open")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "mysql-uri//Open")
 			}
 
 		},
 	},
 
 	// Tests:
-	// equal { mysql-schema//Open\pwd %"user@tcp(localhost:3306)/dbname" "password" |type? } 'native
+	// equal { mysql-uri//Open\pwd %"user@tcp(localhost:3306)/dbname" "password" |type? } 'native
 	// Args:
 	// * uri: MySQL connection string URI without password
 	// * password: Password for the database connection
 	// Returns:
 	// * native MySQL database connection
-	"mysql-schema//Open\\pwd": {
+	"mysql-uri//Open\\pwd": {
 		Argsn: 2,
 		Doc:   "Opens a connection to a MySQL database with separate password parameter.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -72,24 +72,24 @@ var Builtins_mysql = map[string]*env.Builtin{
 						//fmt.Println("Error1")
 						ps.FailureFlag = true
 						errMsg := fmt.Sprintf("Error opening SQL: %v", err.Error())
-						return MakeBuiltinError(ps, errMsg, "mysql-schema//Open\\pwd")
+						return MakeBuiltinError(ps, errMsg, "mysql-uri//Open\\pwd")
 					} else {
 						//fmt.Println("Error2")
 						return *env.NewNative(ps.Idx, db, "Rye-mysql")
 					}
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.StringType}, "mysql-schema//Open\\pwd")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "mysql-uri//Open\\pwd")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "mysql-schema//Open\\pwd")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "mysql-uri//Open\\pwd")
 			}
 		},
 	},
 
 	// Tests:
-	// equal { db: mysql-schema//Open %"user:pass@tcp(localhost:3306)/dbname" , db |Rye-mysql//Exec "INSERT INTO test VALUES (1, 'test')" |type? } 'integer
+	// equal { db: mysql-uri//Open %"user:pass@tcp(localhost:3306)/dbname" , db |Rye-mysql//Exec "INSERT INTO test VALUES (1, 'test')" |type? } 'integer
 	// Args:
 	// * db: MySQL database connection
 	// * sql: SQL statement as string or block
@@ -144,7 +144,7 @@ var Builtins_mysql = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { db: mysql-schema//Open %"user:pass@tcp(localhost:3306)/dbname" , db |Rye-mysql//Query "SELECT * FROM test" |type? } 'table
+	// equal { db: mysql-uri//Open %"user:pass@tcp(localhost:3306)/dbname" , db |Rye-mysql//Query "SELECT * FROM test" |type? } 'table
 	// Args:
 	// * db: MySQL database connection
 	// * sql: SQL query as string or block

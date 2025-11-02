@@ -168,9 +168,9 @@ func (e RyeCtx) Print(idxs Idxs) string {
 	}
 	sort.Ints(keys)
 
-	// Print only first 7 words
+	// Print only first 8 words
 	count := 0
-	maxWords := 14
+	maxWords := 8
 	for _, k := range keys {
 		if count >= maxWords {
 			break
@@ -249,6 +249,7 @@ func (e RyeCtx) Preview(idxs Idxs, filter string) string {
 	return bu.String()
 }
 
+// TODO -- unify these previews
 func (e RyeCtx) PreviewByType(idxs Idxs, typeFilter string) string {
 	var bu strings.Builder
 	var ks string
@@ -267,6 +268,52 @@ func (e RyeCtx) PreviewByType(idxs Idxs, typeFilter string) string {
 			str1 := idxs.GetWord(k)
 			var color string
 			switch objectType {
+			case "builtin":
+				color = color_word2
+			case "context":
+				color = color_num2
+			case "function":
+				color = color_word
+			default:
+				color = color_string2
+			}
+			var strVal string
+			ctx, ok := v.(RyeCtx)
+			if ok && &ctx == &e {
+				strVal = " [self reference]"
+			} else {
+				strVal = v.Inspect(idxs)
+			}
+			arr = append(arr, str1+" "+reset+color_comment+strVal+reset+"|||"+color)
+			i += 1
+		}
+	}
+	sort.Strings(arr)
+	for aa := range arr {
+		line := arr[aa]
+		pars := strings.Split(line, "|||")
+		bu.WriteString("\n\r " + pars[1] + pars[0])
+	}
+	return bu.String()
+}
+
+func (e RyeCtx) PreviewByRegex(idxs Idxs, regexFilter interface{ MatchString(string) bool }) string {
+	var bu strings.Builder
+	var ks string
+	if e.GetKind() > 0 {
+		ks = " (" + e.Kind.Print(idxs) + ") "
+	}
+	bu.WriteString("Context" + ks + " (filtered by regex):")
+	if e.Doc > "" {
+		bu.WriteString("\n\r\"" + e.Doc + "\"")
+	}
+	arr := make([]string, 0)
+	i := 0
+	for k, v := range e.state {
+		str1 := idxs.GetWord(k)
+		if regexFilter.MatchString(str1) {
+			var color string
+			switch idxs.GetWord(int(v.Type())) {
 			case "builtin":
 				color = color_word2
 			case "context":

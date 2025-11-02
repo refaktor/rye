@@ -1644,6 +1644,291 @@ section "Collections " "" {
 
 }
 
+section "Types and Kinds " "" {
+	group "to-integer" 
+	"Tries to change a Rye value (like string) to integer."
+	{
+		arg `value: String or decimal value to convert to an integer`
+		returns `An integer value`
+	}
+
+	{
+		equal { to-integer "1234" } 1234
+		; equal { to-integer "123.4" } 123
+		; equal { to-integer "123.6" } 123
+		; equal { to-integer "123.4" } 123
+		error { to-integer "abc" }
+	}
+
+	group "to-decimal" 
+	"Tries to change a Rye value (like string) to decimal."
+	{
+		arg `value: String value to convert to a decimal`
+		returns `A decimal value`
+	}
+
+	{
+		equal { to-decimal "123.4" } 123.4
+		error { to-decimal "abc" }
+	}
+
+	group "to-string" 
+	"Tries to turn a Rye value to string."
+	{
+		arg `value: Any Rye value to convert to a string`
+		returns `A string representation of the value`
+	}
+
+	{
+		equal { to-string 'test } "test"
+		equal { to-string 123 } "123"
+		equal { to-string 123.4 } "123.400000"
+		equal { to-string "test" } "test"
+	}
+
+	group "to-char" 
+	"Tries to turn a Rye value (like integer) to ascii character."
+	{
+		arg `value: Integer representing an ASCII code point`
+		returns `A string containing the character corresponding to the ASCII code`
+	}
+
+	{
+		equal { to-char 42 } "*"
+		error { to-char "*" }
+	}
+
+	group "to-block" 
+	"Turns a List to a Block"
+	{
+		arg `list: List value to convert to a block`
+		returns `A block containing the same elements as the input list`
+	}
+
+	{
+		equal { list [ 1 2 3 ] |to-block |type? } 'block
+		equal  { list [ 1 2 3 ] |to-block |first } 1
+	}
+
+	group "to-context" 
+	"Takes a Dict and returns a Context with same names and values."
+	{
+		arg `dict: Dict value to convert to a context`
+		returns `A context with the same keys and values as the input dict`
+	}
+
+	{
+		equal   { dict [ "a" 1 "b" 2 "c" 3 ] |to-context |type? } 'ctx   ; TODO - rename ctx to context in Rye
+		; equal   { dict [ "a" 1 ] |to-context do\in { a } } '1
+	}
+
+	group "is-string" 
+	"Returns true if value is a string."
+	{
+		arg `value: Any Rye value to test`
+		returns `Integer 1 if the value is a string, 0 otherwise`
+	}
+
+	{
+		equal   { is-string "test" } 1
+		equal   { is-string 'test } 0
+		equal   { is-string 123 } 0
+	}
+
+	group "to-word" 
+	"Tries to change a Rye value to a word with same name."
+	{
+		arg `value: String or word-like value to convert to a word`
+		returns `A word with the same name as the input value`
+	}
+
+	{
+		equal { to-word "test" } 'test
+		error { to-word 123 }
+	}
+
+	group "is-integer" 
+	"Returns true if value is an integer."
+	{
+		arg `value: Any Rye value to test`
+		returns `Integer 1 if the value is an integer, 0 otherwise`
+	}
+
+	{
+		equal   { is-integer 123 } 1
+		equal   { is-integer 123.4 } 0
+		equal   { is-integer "123" } 0
+	}
+
+	group "is-decimal" 
+	"Returns true if value is a decimal."
+	{
+		arg `value: Any Rye value to test`
+		returns `Integer 1 if the value is a decimal, 0 otherwise`
+	}
+
+	{
+		equal   { is-decimal 123.0 } 1
+		equal   { is-decimal 123 } 0
+		equal   { is-decimal "123.4" } 0
+	}
+
+	group "is-number" 
+	"Returns true if value is a number (integer or decimal)."
+	{
+		arg `value: Any Rye value to test`
+		returns `Integer 1 if the value is a number (integer or decimal), 0 otherwise`
+	}
+
+	{
+		equal   { is-number 123 } 1
+		equal   { is-number 123.4 } 1
+		equal   { is-number "123" } 0
+	}
+
+	group "to-uri" 
+	"Tries to change Rye value to an URI."
+	{
+	}
+
+	{
+		equal   { to-uri "https://example.com" } https://example.com
+		; error { to-uri "not-uri" }
+	}
+
+	group "to-file" 
+	"Tries to change Rye value to a file."
+	{
+	}
+
+	{
+		equal   { to-file "example.txt" } %example.txt
+		equal { to-file 123 } %123
+	}
+
+	group "type?" 
+	"Returns the type of Rye value as a word."
+	{
+		arg `value: Any Rye value to check the type of`
+		returns `A word representing the type of the value`
+	}
+
+	{
+		equal   { type? "test" } 'string
+		equal   { type? 123.4 } 'decimal
+	}
+
+	group "kind?" 
+	"Returns the kind of Rye value as a word."
+	{
+		arg `value: Any Rye value to check the kind of`
+		returns `A word representing the kind of the value`
+	}
+
+	{
+		equal   { kind? %file } 'file-uri
+	}
+
+	group "types?" 
+	"Returns the types of Rye values in a block or table row as a block of words."
+	{
+		arg `collection: A block, table, or table row containing values to check types of`
+		returns `A block of words representing the types of each value in the collection`
+	}
+
+	{
+		equal   { types? { "test" 123 } } { string integer }
+	}
+
+	group "dump" 
+	"Returns (dumps) Rye code representing the object."
+	{
+		arg `value: Any Rye value to dump as code`
+		returns `A string containing the Rye code representation of the value`
+	}
+
+	{
+		equal { dump 123 } "123"
+		equal { dump "string" } `"string"`
+		equal { does { 1 } |dump } "fn { } { 1 }"
+	}
+
+	group "mold" 
+	"Turn value to it's string representation."
+	{
+		arg `value: Any Rye value to convert to a string representation`
+		returns `A string containing the representation of the value`
+	}
+
+	{
+		equal  { mold 123 } "123"
+		equal  { mold { 123 } } "{ 123 }"
+	}
+
+	group "mold\\nowrap" 
+	"Turn value to it's string representation. Doesn't wrap the blocks"
+	{
+		arg `value: Any Rye value to convert to a string representation`
+		returns `A string containing the representation of the value without block wrapping`
+	}
+
+	{
+		equal  { mold\nowrap 123 } "123"
+		equal  { mold\nowrap { 123 } } "123"
+		equal  { mold\nowrap { 123 234 } } "123 234"
+	}
+
+	group "assure-kind" 
+	"Assuring kind."
+	{
+		arg `value: Dict to convert to a specific kind`
+		arg `kind: Kind to convert the value to`
+		returns `A new context of the specified kind`
+	}
+
+	{
+		equal   { person: kind 'person { name: "" age: 0 } assure-kind dict { "name" "John" "age" 30 } person |type? } 'ctx
+	}
+
+	group "generic" 
+	"Registers a generic function."
+	{
+		arg `kind: Word representing the kind for which to register the function`
+		arg `method: Word representing the method name`
+		arg `function: Function to register for the kind and method`
+		returns `The registered functiongeneric <integer> <add> fn [ a b ] [ a + b ] // tagwords are temporary here`
+	}
+
+	{
+		equal   { generic 'integer 'add fn { a b } { a + b } |type? } 'function
+	}
+
+	group "kind" 
+	"Creates new kind."
+	{
+		arg `name: Word that will be the name of the kind`
+		arg `spec: Block containing the specification for the kind`
+		returns `A new kind object`
+	}
+
+	{
+		equal   { kind 'person { name: "" age: 0 } |type? } 'kind
+	}
+
+	group "_>>" 
+	"Converts first argument to a specific kind."
+	{
+		arg `value: Dict or context to convert`
+		arg `kind: Kind to convert the value to`
+		returns `A new context of the specified kind`
+	}
+
+	{
+		; equal   { person: kind 'person { name: "" age: 0 } , { "name" "John" "age" 30 } .dict >> person |type? } 'ctx
+	}
+
+}
+
 section "Contexts " "Context related functions" {
 	group "raw-context" 
 	"Creates a completely isolated context with no parent, where only built-in functions are available."
@@ -1759,13 +2044,13 @@ section "Contexts " "Context related functions" {
 		equal { c: context { var 'x 9999 , incr: fn\in { } current { x:: inc x } } c/incr c/x } 10000
 	}
 
-	group "parent" 
+	group "parent?" 
 	"Returns parent context of the current context."
 	{
 	}
 
 	{
-		equal { var 'y 99 c: context { incr: fn\in { } parent { y:: inc y } } c/incr y } 100
+		equal { var 'y 99 c: context { incr: fn\in { } parent? { y:: inc y } } c/incr y } 100
 	}
 
 	group "parent\\of" 
@@ -2271,13 +2556,24 @@ section "Other " "..." {
 		equal { x: fn { } { return 101 202 } x } 101
 	}
 
-	group "cmd" 
-	"Execute a shell command."
+	group "scmd" 
+	"Execute a shell command and return its exit status code."
 	{
 	}
 
 	{
-		equal { cmd `echo "hello"` } 1
+		equal { scmd `echo "hello"` } 0
+		equal { scmd `exit 1` } 1
+		equal { scmd `exit 42` } 42
+	}
+
+	group "scmd\\capture" 
+	"Execute a shell command and capture the output, return it as string"
+	{
+	}
+
+	{
+		equal { scmd `echo "hello"` } "hello"
 	}
 
 	group "rye" 

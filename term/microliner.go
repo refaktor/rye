@@ -216,63 +216,116 @@ func (s *MLState) circularTabs(items []string) func(direction int) (string, int,
 	}
 }
 
-// displayTabSuggestions shows the tab completion suggestions with the current selection highlighted
+// reserveSuggestionSpace allocates space at the bottom of the terminal for suggestions
+// This prevents dynamic line creation that causes scrolling issues
+func (s *MLState) reserveSuggestionSpace(lines int) {
+	if s.suggestionSpace == 0 && lines > 0 {
+		// Reserve space by moving everything up
+		for i := 0; i < lines; i++ {
+			s.sendBack("\n")
+		}
+		// Move cursor back up to the original input position
+		s.sendBack(fmt.Sprintf("\033[%dA", lines))
+		s.suggestionSpace = lines
+	}
+}
+
+// clearSuggestionSpace cleans up the reserved suggestion space
+func (s *MLState) clearSuggestionSpace() {
+	if s.suggestionSpace > 0 {
+		// Save cursor position
+		s.sendBack("\033[s")
+
+		// Move down to the suggestion area and clear it completely
+		s.sendBack(fmt.Sprintf("\033[%dB", s.suggestionSpace))
+		for i := 0; i < s.suggestionSpace; i++ {
+			s.sendBack("\r")     // Move to beginning of line
+			s.sendBack("\033[K") // Clear entire line
+			if i < s.suggestionSpace-1 {
+				s.sendBack("\033[A") // Move up one line
+			}
+		}
+
+		// Restore cursor position
+		s.sendBack("\033[u")
+
+		s.suggestionSpace = 0
+	}
+}
+
+// updateSuggestionContent updates the content in the reserved suggestion space
+func (s *MLState) updateSuggestionContent(content []string) {
+	if s.suggestionSpace > 0 {
+		// Save cursor position
+		s.sendBack("\033[s")
+
+		// Move to the first suggestion line
+		s.sendBack(fmt.Sprintf("\033[%dB", s.suggestionSpace))
+
+		// Update each line of content
+		for i := 0; i < s.suggestionSpace && i < len(content); i++ {
+			if i == 0 {
+				// We're already on the first suggestion line
+			} else {
+				s.sendBack("\033[A") // Move up one line
+			}
+			s.sendBack("\r")     // Move to beginning of line
+			s.sendBack("\033[K") // Clear entire line
+			if i < len(content) {
+				s.sendBack(content[i])
+			}
+		}
+
+		// Restore cursor position
+		s.sendBack("\033[u")
+	}
+}
+
+// displayTabSuggestions shows the tab completion suggestions using reserved space
 func (s *MLState) displayTabSuggestions(items []string, currentIndex int) {
 	if len(items) == 0 {
 		return
 	}
 
-	// Save cursor position
-	s.sendBack("\033[s")
+	// Reserve space if not already reserved (2 lines: suggestions + probe)
+	if s.suggestionSpace == 0 {
+		s.reserveSuggestionSpace(2)
+	}
 
-	// Disable line wrapping to prevent suggestions from wrapping
-	s.sendBack("\033[?7l")
-
-	// Move cursor down to display suggestions
-	s.sendBack("\n")
-	s.sendBack("\033[K") // Clear line
-
-	// Display suggestions with highlighting
-	s.sendBack("\033[34m") // Magenta color
-	s.sendBack("current: ")
-	s.sendBack("\033[0m") // Reset color
+	// Build suggestion line
+	var suggestionLine strings.Builder
+	suggestionLine.WriteString("\033[34mcurrent: \033[0m") // Blue "current: " prompt
 
 	for i, item := range items {
 		if i == currentIndex {
 			// Highlight current selection with magenta background and black text
-			s.sendBack("\033[45;30m") // Magenta background, black text
-			s.sendBack(" ")
-			s.sendBack(item)
-			s.sendBack(" ")
-			s.sendBack("\033[0m") // Reset formatting
+			suggestionLine.WriteString("\033[45;30m ")
+			suggestionLine.WriteString(item)
+			suggestionLine.WriteString(" \033[0m")
 		} else {
-			// Non-selected items with magenta text
-			s.sendBack("\033[36m") // Magenta text
-			s.sendBack(" ")
-			s.sendBack(item)
-			s.sendBack(" ")
-			s.sendBack("\033[0m") // Reset formatting
+			// Non-selected items with cyan text
+			suggestionLine.WriteString("\033[36m ")
+			suggestionLine.WriteString(item)
+			suggestionLine.WriteString(" \033[0m")
 		}
 
 		if i < len(items)-1 {
-			s.sendBack("  ")
+			suggestionLine.WriteString("  ")
 		}
 	}
 
-	// Display probe/preview of the currently selected item
+	// Build probe line - show details about current selection
+	var probeLine strings.Builder
 	if currentIndex >= 0 && currentIndex < len(items) {
-		s.sendBack("\n")
-		s.sendBack("\033[K") // Clear line
-		// Get a preview/description of the selected item
 		probe := s.getItemProbe(items[currentIndex])
-		s.sendBack("\033[38;5;247m")
-		s.sendBack(probe)
-		s.sendBack("\033[0m") // Reset color
+		probeLine.WriteString("\033[38;5;247m")
+		probeLine.WriteString(probe)
+		probeLine.WriteString("\033[0m")
 	}
 
-	// Re-enable line wrapping and restore cursor position
-	s.sendBack("\033[?7h")
-	s.sendBack("\033[u")
+	// Update the reserved space with the new content
+	content := []string{suggestionLine.String(), probeLine.String()}
+	s.updateSuggestionContent(content)
 }
 
 // getItemProbe returns a preview/description of the given item by looking it up in the environment
@@ -291,7 +344,7 @@ func (s *MLState) getItemProbe(item string) string {
 	// Try to get the object from the context
 	obj, exists := s.programState.Ctx.Get(wordIndex)
 	if !exists {
-		return fmt.Sprintf("unbound word: %s", item)
+		return fmt.Sprintf("unbound in current context chain: %s", item)
 	}
 
 	// Call the Inspect method on the object to get detailed information
@@ -331,8 +384,9 @@ func (s *MLState) tabComplete(p []rune, line []rune, pos int, mode int) ([]rune,
 	// Set flag to indicate we're in tab completion mode
 	s.inTabCompletion = true
 	defer func() {
-		// Always clear the flag when exiting tab completion
+		// Always clear the flag and suggestion space when exiting tab completion
 		s.inTabCompletion = false
+		s.clearSuggestionSpace()
 	}()
 
 	// Run the completer
@@ -341,17 +395,18 @@ func (s *MLState) tabComplete(p []rune, line []rune, pos int, mode int) ([]rune,
 		return line, pos, KeyEvent{Code: 27}, nil
 	}
 
-	// If there is one result, use it immediately
 	hl := utf8.RuneCountInString(head)
-	if len(list) == 1 {
-		completedLine := []rune(head + list[0] + tail)
-		newPos := hl + utf8.RuneCountInString(list[0])
-		err := s.refresh(p, completedLine, newPos)
-		if err != nil {
-			return line, pos, KeyEvent{Code: 27}, fmt.Errorf("failed to refresh display: %w", err)
-		}
-		return completedLine, newPos, KeyEvent{Code: 27}, nil
-	}
+	// If there is one result, use it immediately
+	/*
+		if len(list) == 11231 {
+			completedLine := []rune(head + list[0] + tail)
+			newPos := hl + utf8.RuneCountInString(list[0])
+			err := s.refresh(p, completedLine, newPos)
+			if err != nil {
+				return line, pos, KeyEvent{Code: 27}, fmt.Errorf("failed to refresh display: %w", err)
+			}
+			return completedLine, newPos, KeyEvent{Code: 27}, nil
+		}*/
 
 	// Handle multiple completion options
 	direction := 1
@@ -473,6 +528,7 @@ type MLState struct {
 	programState     *env.ProgramState                                              // For environment access during tab completion
 	displayValue     func(*env.ProgramState, env.Object, bool) (env.Object, string) // Callback for displaying values
 	inTabCompletion  bool                                                           // Flag to track if we're in tab completion mode
+	suggestionSpace  int                                                            // Number of lines reserved for suggestions (0 = none reserved)
 }
 
 // NewMicroLiner initializes a new *MLState with the provided event channel,
@@ -1143,8 +1199,6 @@ startOfHere:
 	// JM
 	//	s_instr := 0
 
-	tabCompletionWasActive := false
-
 	log.Println("MicroPrompt started")
 
 	// mainLoop:
@@ -1273,7 +1327,6 @@ startOfHere:
 				case "s": // seek in context #experimental
 					fmt.Print("*")
 					line, pos, next, _ = s.tabComplete(p, line, pos, 1)
-					tabCompletionWasActive = true
 					goto haveNext
 				case "x": // display last returned value interactively
 					if s.programState != nil && s.programState.Res != nil && s.displayValue != nil {
@@ -1478,12 +1531,7 @@ startOfHere:
 						trace(line)
 						goto startOfHere
 					}
-					if tabCompletionWasActive {
-						// TODO --- make it into a function - deduplicate
-						fmt.Println("")
-						ClearLine()
-						CurUp(1)
-					}
+					// Tab completion cleanup is handled automatically in defer
 					historyStale = true
 					s.lastLineString = false
 					s.lastLineBacktick = false
@@ -1565,7 +1613,6 @@ startOfHere:
 					}
 				case 9: // Tab completion
 					line, pos, next, _ = s.tabComplete(p, line, pos, 0)
-					tabCompletionWasActive = true
 					goto haveNext
 				case 46: // Del
 					if pos >= len(line) {
@@ -1629,15 +1676,7 @@ startOfHere:
 				case 27: // Escape
 
 				default:
-					if (next.Key == " ") && tabCompletionWasActive {
-						// TODO --- make it into a function - deduplicate
-						// CurDown(1)
-						fmt.Println("")
-						ClearLine()
-						fmt.Println("")
-						ClearLine()
-						CurUp(2)
-					}
+					// Tab completion cleanup is handled automatically in tabComplete defer
 
 					vs := []rune(next.Key)
 					v := vs[0]

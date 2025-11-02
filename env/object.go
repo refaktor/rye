@@ -497,29 +497,29 @@ func NewUri1(index *Idxs, path string) *Uri {
 		// Handle case where "://" is not in the path
 		scheme := "file" // Default to file scheme
 		idxSch := index.IndexWord(scheme)
-		kind := scheme + "-schema"
+		kind := scheme + "-uri"
 		idxKind := index.IndexWord(kind)
 		return &Uri{Word{idxSch}, path, Word{idxKind}}
 	}
 
 	scheme := scheme2[0]
 	idxSch := index.IndexWord(scheme)
-	kind := scheme + "-schema"
+	kind := scheme + "-uri"
 	idxKind := index.IndexWord(kind)
 	return &Uri{Word{idxSch}, scheme2[1], Word{idxKind}}
 }
 
 func NewFileUri(index *Idxs, path string) *Uri {
-	scheme := "file" // + "-schema" // TODO -- this is just temporary .. so we test it further, make proper once at that level
+	scheme := "file" // + "-uri" // TODO -- this is just temporary .. so we test it further, make proper once at that level
 	idxSch := index.IndexWord(scheme)
-	kind := scheme + "-schema"
+	kind := scheme + "-uri"
 	idxKind := index.IndexWord(kind)
 	nat := Uri{Word{idxSch}, path, Word{idxKind}}
 	return &nat
 }
 
 func NewUri(index *Idxs, scheme Word, path string) *Uri {
-	kindstr := index.GetWord(scheme.Index) + "-schema"
+	kindstr := index.GetWord(scheme.Index) + "-uri"
 	idx := index.IndexWord(kindstr)
 
 	// Check if path contains "://" and extract the actual path part if it does

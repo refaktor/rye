@@ -1150,7 +1150,7 @@ ASDF
 <p class='returns'><b>returns</b> list containing all values from the dictionary</p>
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 "b" 2 "c" 3 } |values
-; returns list { 3 1 2 }</code></pre>
+; returns list { 1 2 3 }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "x" 10 "y" 20 } |values |length?
 ; returns 2</code></pre>
 </div>
@@ -1265,7 +1265,7 @@ ASDF
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 } || ++ { "b" 2 }
 ; returns dict { a 1 b 2 }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 } || ++ dict { "b" 2 }
-; returns dict { a 1 b 2 }</code></pre>
+; returns dict { b 2 a 1 }</code></pre>
 </div>
 <h3>union</h3><p>Combines two collections, removing any duplicate values to create a union of all unique values.</p>
 <p class='arg'><b>collection1</b> First block or list</p>
@@ -1560,6 +1560,221 @@ th!</h3><p>Changes the value at a specific position in a block or list in-place 
 ; returns { 110 890 }</code></pre>
 </div>
 </div>
+<h2>Types and Kinds </h2><p></p><div class='section'>
+<h3>to-integer</h3><p>Tries to change a Rye value (like string) to integer.</p>
+<p class='arg'><b>value</b> String or decimal value to convert to an integer</p>
+<p class='returns'><b>returns</b> An integer value</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-integer "1234"
+; returns 1234</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-integer "abc"
+; correctly causes error:
+; strconv.Atoi: parsing "abc": invalid syntax in builtin to-integer. </code></pre>
+</div>
+<h3>to-decimal</h3><p>Tries to change a Rye value (like string) to decimal.</p>
+<p class='arg'><b>value</b> String value to convert to a decimal</p>
+<p class='returns'><b>returns</b> A decimal value</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-decimal "123.4"
+; returns 123.4</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-decimal "abc"
+; correctly causes error:
+; strconv.ParseFloat: parsing "abc": invalid syntax in builtin to-decimal. </code></pre>
+</div>
+<h3>to-string</h3><p>Tries to turn a Rye value to string.</p>
+<p class='arg'><b>value</b> Any Rye value to convert to a string</p>
+<p class='returns'><b>returns</b> A string representation of the value</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-string 'test
+; returns "test"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-string 123
+; returns "123"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-string 123.4
+; returns "123.400000"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-string "test"
+; returns "test"</code></pre>
+</div>
+<h3>to-char</h3><p>Tries to turn a Rye value (like integer) to ascii character.</p>
+<p class='arg'><b>value</b> Integer representing an ASCII code point</p>
+<p class='returns'><b>returns</b> A string containing the character corresponding to the ASCII code</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-char 42
+; returns "*"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-char "*"
+; correctly causes error:
+; builtin `to-char` requires argument 1 to be: Integer. </code></pre>
+</div>
+<h3>to-block</h3><p>Turns a List to a Block</p>
+<p class='arg'><b>list</b> List value to convert to a block</p>
+<p class='returns'><b>returns</b> A block containing the same elements as the input list</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>list [ 1 2 3 ] |to-block |type?
+; returns block</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>list [ 1 2 3 ] |to-block |first
+; returns 1</code></pre>
+</div>
+<h3>to-context</h3><p>Takes a Dict and returns a Context with same names and values.</p>
+<p class='arg'><b>dict</b> Dict value to convert to a context</p>
+<p class='returns'><b>returns</b> A context with the same keys and values as the input dict</p>
+<div class='group'>
+</div>
+<h3>is-string</h3><p>Returns true if value is a string.</p>
+<p class='arg'><b>value</b> Any Rye value to test</p>
+<p class='returns'><b>returns</b> Integer 1 if the value is a string, 0 otherwise</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-string "test"
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-string 'test
+; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-string 123
+; returns 0</code></pre>
+</div>
+<h3>to-word</h3><p>Tries to change a Rye value to a word with same name.</p>
+<p class='arg'><b>value</b> String or word-like value to convert to a word</p>
+<p class='returns'><b>returns</b> A word with the same name as the input value</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-word "test"
+; returns test</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-word 123
+; correctly causes error:
+; builtin `to-word` requires argument 1 to be: String, Word, Opword, Pipeword, Xword, EXword. </code></pre>
+</div>
+<h3>is-integer</h3><p>Returns true if value is an integer.</p>
+<p class='arg'><b>value</b> Any Rye value to test</p>
+<p class='returns'><b>returns</b> Integer 1 if the value is an integer, 0 otherwise</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-integer 123
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-integer 123.4
+; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-integer "123"
+; returns 0</code></pre>
+</div>
+<h3>is-decimal</h3><p>Returns true if value is a decimal.</p>
+<p class='arg'><b>value</b> Any Rye value to test</p>
+<p class='returns'><b>returns</b> Integer 1 if the value is a decimal, 0 otherwise</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-decimal 123
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-decimal 123
+; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-decimal "123.4"
+; returns 0</code></pre>
+</div>
+<h3>is-number</h3><p>Returns true if value is a number (integer or decimal).</p>
+<p class='arg'><b>value</b> Any Rye value to test</p>
+<p class='returns'><b>returns</b> Integer 1 if the value is a number (integer or decimal), 0 otherwise</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-number 123
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-number 123.4
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-number "123"
+; returns 0</code></pre>
+</div>
+<h3>to-uri</h3><p>Tries to change Rye value to an URI.</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-uri "https://example.com"
+; returns https://example.com</code></pre>
+</div>
+<h3>to-file</h3><p>Tries to change Rye value to a file.</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-file "example.txt"
+; returns %example.txt</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-file 123
+; returns %123</code></pre>
+</div>
+<h3>type?</h3><p>Returns the type of Rye value as a word.</p>
+<p class='arg'><b>value</b> Any Rye value to check the type of</p>
+<p class='returns'><b>returns</b> A word representing the type of the value</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>type? "test"
+; returns string</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>type? 123.4
+; returns decimal</code></pre>
+</div>
+<h3>kind?</h3><p>Returns the kind of Rye value as a word.</p>
+<p class='arg'><b>value</b> Any Rye value to check the kind of</p>
+<p class='returns'><b>returns</b> A word representing the kind of the value</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>kind? %file
+; returns file-uri</code></pre>
+</div>
+<h3>types?</h3><p>Returns the types of Rye values in a block or table row as a block of words.</p>
+<p class='arg'><b>collection</b> A block, table, or table row containing values to check types of</p>
+<p class='returns'><b>returns</b> A block of words representing the types of each value in the collection</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>types? { "test" 123 }
+; returns { string integer }</code></pre>
+</div>
+<h3>dump</h3><p>Returns (dumps) Rye code representing the object.</p>
+<p class='arg'><b>value</b> Any Rye value to dump as code</p>
+<p class='returns'><b>returns</b> A string containing the Rye code representation of the value</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>dump 123
+; returns "123"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>dump "string"
+; returns ""string""</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>does { 1 } |dump
+; returns "fn { } { 1 }"</code></pre>
+</div>
+<h3>mold</h3><p>Turn value to it's string representation.</p>
+<p class='arg'><b>value</b> Any Rye value to convert to a string representation</p>
+<p class='returns'><b>returns</b> A string containing the representation of the value</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>mold 123
+; returns "123"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>mold { 123 }
+; returns "{ 123 }"</code></pre>
+</div>
+<h3>mold\
+owrap</h3><p>Turn value to it's string representation. Doesn't wrap the blocks</p>
+<p class='arg'><b>value</b> Any Rye value to convert to a string representation</p>
+<p class='returns'><b>returns</b> A string containing the representation of the value without block wrapping</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>mold\nowrap 123
+; returns "123"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>mold\nowrap { 123 }
+; returns "123"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>mold\nowrap { 123 234 }
+; returns "123 234"</code></pre>
+</div>
+<h3>assure-kind</h3><p>Assuring kind.</p>
+<p class='arg'><b>value</b> Dict to convert to a specific kind</p>
+<p class='arg'><b>kind</b> Kind to convert the value to</p>
+<p class='returns'><b>returns</b> A new context of the specified kind</p>
+<div class='group'>
+{map[age:{30} name:{John}] {0}}
+Type is not matching - Validation_EvalBlock.
+Type is not matching - Validation_EvalBlock.
+</div>
+<h3>generic</h3><p>Registers a generic function.</p>
+<p class='arg'><b>kind</b> Word representing the kind for which to register the function</p>
+<p class='arg'><b>method</b> Word representing the method name</p>
+<p class='arg'><b>function</b> Function to register for the kind and method</p>
+<p class='returns'><b>returns</b> The registered functiongeneric <integer> <add> fn [ a b ] [ a + b ] // tagwords are temporary here</p>
+<div class='group'>
+2
+1022
+Generic
+<pre class='prettyprint lang-rye'><code language='lang-rye'>generic 'integer 'add fn { a b } { a + b } |type?
+; returns function</code></pre>
+</div>
+<h3>kind</h3><p>Creates new kind.</p>
+<p class='arg'><b>name</b> Word that will be the name of the kind</p>
+<p class='arg'><b>spec</b> Block containing the specification for the kind</p>
+<p class='returns'><b>returns</b> A new kind object</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>kind 'person { name: "" age: 0 } |type?
+; returns kind</code></pre>
+</div>
+<h3>_>></h3><p>Converts first argument to a specific kind.</p>
+<p class='arg'><b>value</b> Dict or context to convert</p>
+<p class='arg'><b>kind</b> Kind to convert the value to</p>
+<p class='returns'><b>returns</b> A new context of the specified kind</p>
+<div class='group'>
+</div>
+</div>
 <h2>Contexts </h2><p>Context related functions</p><div class='section'>
 <h3>raw-context</h3><p>Creates a completely isolated context with no parent, where only built-in functions are available.</p>
 <p class='arg'><b>block</b> Block of expressions to evaluate in a new isolated context</p>
@@ -1645,9 +1860,9 @@ th!</h3><p>Changes the value at a specific position in a block or list in-place 
 <pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { var 'x 9999 , incr: fn\in { } current { x:: inc x } } c/incr c/x
 ; returns 10000</code></pre>
 </div>
-<h3>parent</h3><p>Returns parent context of the current context.</p>
+<h3>parent?</h3><p>Returns parent context of the current context.</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>var 'y 99 c: context { incr: fn\in { } parent { y:: inc y } } c/incr y
+<pre class='prettyprint lang-rye'><code language='lang-rye'>var 'y 99 c: context { incr: fn\in { } parent? { y:: inc y } } c/incr y
 ; returns 100</code></pre>
 </div>
 <h3>parent\of</h3><p>Returns parent context of the current context.</p>
@@ -1847,7 +2062,7 @@ th!</h3><p>Changes the value at a specific position in a block or list in-place 
 <p class='arg'>None</p>
 <p class='returns'><b>returns</b> Integer 1 on success</p>
 <div class='group'>
-State current context to [1mconsole_251101_001045.rye[0m.
+State current context to [1mconsole_251102_111438.rye[0m.
 <pre class='prettyprint lang-rye'><code language='lang-rye'>save\current |type?
 ; returns integer</code></pre>
 </div>

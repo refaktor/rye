@@ -1830,10 +1830,12 @@ var builtins = map[string]*env.Builtin{
 	/* Terminal functions .. move to it's own later */
 
 	// Tests:
-	// equal { cmd `echo "hello"` } 1
-	"cmd": {
+	// equal { scmd `echo "hello"` } 0
+	// equal { scmd `exit 1` } 1
+	// equal { scmd `exit 42` } 42
+	"scmd": {
 		Argsn: 1,
-		Doc:   "Execute a shell command.",
+		Doc:   "Execute a shell command and return its exit status code.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s0 := arg0.(type) {
 			case env.String:
@@ -1845,50 +1847,56 @@ var builtins = map[string]*env.Builtin{
 
 				err := r.Run()
 				if err != nil {
+					// Check if this is an exit error with a status code
+					if exitError, ok := err.(*exec.ExitError); ok {
+						// Return the actual exit code
+						return *env.NewInteger(int64(exitError.ExitCode()))
+					}
+					// For other errors (like command not found), print error and return -1
 					fmt.Println(err)
+					return *env.NewInteger(-1)
 				}
+				// Command succeeded, return 0
+				return *env.NewInteger(0)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "cmd\\capture")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "scmd")
 			}
-			return env.NewInteger(1)
 		},
 	},
 
-	"cmd\\capture": {
+	// Tests:
+	// equal { scmd `echo "hello"` } "hello"
+	"scmd\\capture": {
 		Argsn: 1,
 		Doc:   "Execute a shell command and capture the output, return it as string",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s0 := arg0.(type) {
 			case env.String:
-				/*				cmd := exec.Command("date")
-								err := cmd.Run()
-								if err != nil {
-									log.Fatal(err)
-								}
-								fmt.Println("out:", outb.String(), "err:", errb.String()) */
-
 				r := exec.Command("/bin/bash", "-c", s0.Value) //nolint: gosec
-				// stdout, stderr := r.Output()
 				var outb, errb bytes.Buffer
 				r.Stdout = &outb
 				r.Stderr = &errb
 
 				err := r.Run()
 				if err != nil {
-					fmt.Println("ERROR")
-					fmt.Println(err)
+					// If command fails, return the error output as part of the result
+					if errb.Len() > 0 {
+						ps.FailureFlag = true
+						return env.NewError("Command failed: " + errb.String())
+					}
+					// For exit errors, still return stdout if available
+					if _, ok := err.(*exec.ExitError); ok && outb.Len() > 0 {
+						return *env.NewString(outb.String())
+					}
+					ps.FailureFlag = true
+					return env.NewError("Command failed: " + err.Error())
 				}
-				fmt.Println("out:", outb.String(), "err:", errb.String())
 
-				/*				if stderr != nil {
-									fmt.Println(stderr.Error())
-								}
-								return env.ToRyeValue(" "-----------" + string(stdout)) */
-				//				return env.ToRyeValue(string(stdout))
+				// Return the captured stdout as string
+				return *env.NewString(outb.String())
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "cmd\\capture")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "scmd\\capture")
 			}
-			return nil
 		},
 	},
 
