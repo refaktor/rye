@@ -12,7 +12,7 @@ section "Console IO " "Console input and output functions" {
 }
 
 section "File Operations " "File system operations and file manipulation" {
-	group "file-schema//Open" 
+	group "file-uri//Open" 
 	"Opens a file for reading."
 	{
 		arg `path: uri representing the file to open`
@@ -24,7 +24,7 @@ section "File Operations " "File system operations and file manipulation" {
 		equal { Open %data/file.txt |kind? } 'file
 	}
 
-	group "file-schema//Open\\append" 
+	group "file-uri//Open\\append" 
 	"Opens a file for appending."
 	{
 		arg `path: uri representing the file to open for appending`
@@ -36,7 +36,7 @@ section "File Operations " "File system operations and file manipulation" {
 		equal { Open\append %data/file.txt |kind? } 'writer
 	}
 
-	group "file-schema//Create" 
+	group "file-uri//Create" 
 	"Creates a new file."
 	{
 		arg `path: uri representing the file to create`
@@ -181,7 +181,7 @@ section "File Operations " "File system operations and file manipulation" {
 		equal { Close Open %data/file.txt } ""
 	}
 
-	group "file-schema//Read" 
+	group "file-uri//Read" 
 	"Reads the entire content of a file as a string."
 	{
 		arg `path: uri representing the file to read`
@@ -192,7 +192,7 @@ section "File Operations " "File system operations and file manipulation" {
 		equal { Read %data/file.txt } "hello text file\n"
 	}
 
-	group "file-schema//Read\\bytes" 
+	group "file-uri//Read\\bytes" 
 	"Reads the entire content of a file as bytes."
 	{
 		arg `path: uri representing the file to read`
@@ -203,7 +203,7 @@ section "File Operations " "File system operations and file manipulation" {
 		equal { Read %data/file.txt } "hello text file\n"
 	}
 
-	group "file-schema//Read\\lines" 
+	group "file-uri//Read\\lines" 
 	"Reads a file and returns its content as a block of lines."
 	{
 		arg `path: uri representing the file to read`
@@ -214,7 +214,7 @@ section "File Operations " "File system operations and file manipulation" {
 		equal { Read %data/file.txt } "hello text file\n"
 	}
 
-	group "file-schema//Write" 
+	group "file-uri//Write" 
 	"Writes content to a file."
 	{
 		arg `path: uri representing the file to write to`
@@ -262,7 +262,7 @@ section "File Operations " "File system operations and file manipulation" {
 }
 
 section "HTTPs Operations " "Web requests and HTTP protocol functions" {
-	group "https-schema//Open" 
+	group "https-uri//Open" 
 	"Opens a HTTPS GET request and returns a reader for the response body."
 	{
 		arg `url: uri representing the HTTPS URL to request`
@@ -272,7 +272,7 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	{
 	}
 
-	group "https-schema//Get" 
+	group "https-uri//Get" 
 	"Makes a HTTPS GET request and returns the response body as a string."
 	{
 		arg `url: uri representing the HTTPS URL to request`
@@ -282,7 +282,7 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	{
 	}
 
-	group "https-schema//Post" 
+	group "https-uri//Post" 
 	"Makes a HTTPS POST request and returns the response body as a string."
 	{
 		arg `url: uri representing the HTTPS URL to request`
@@ -294,7 +294,7 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	{
 	}
 
-	group "http-schema//Get" 
+	group "http-uri//Get" 
 	"Makes a HTTP GET request and returns the response body as a string."
 	{
 		arg `url: uri representing the HTTP URL to request`
@@ -304,7 +304,7 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	{
 	}
 
-	group "http-schema//Post" 
+	group "http-uri//Post" 
 	"Makes a HTTP POST request and returns the response body as a string."
 	{
 		arg `url: uri representing the HTTP URL to request`
@@ -316,7 +316,7 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	{
 	}
 
-	group "https-schema//Request" 
+	group "https-uri//Request" 
 	"Creates a new HTTPS request object."
 	{
 		arg `url: uri representing the HTTPS URL to request`
@@ -399,7 +399,7 @@ section "Email Operations " "Email sending and SMTP communication" {
 }
 
 section "FTP Operations " "File Transfer Protocol operations and connections" {
-	group "ftp-schema//Open" 
+	group "ftp-uri//Open" 
 	"Opens a connection to an FTP server."
 	{
 		arg `server: uri representing the FTP server to connect to`
@@ -470,7 +470,7 @@ section "File Monitoring " "File watching and tailing operations" {
 }
 
 section "SQLite " "SQLite database functions" {
-	group "sqlite-schema//Open" 
+	group "sqlite-uri//Open" 
 	"Opens a connection to a SQLite database file."
 	{
 		arg `uri: path to SQLite database file`
@@ -531,7 +531,7 @@ section "SQLite " "SQLite database functions" {
 }
 
 section "PostgreSQL Database Functions " "" {
-	group "postgres-schema//Open" 
+	group "postgres-uri//Open" 
 	"Opens a connection to a PostgreSQL database."
 	{
 		arg `uri: PostgreSQL connection string URI (format: postgres://username:password@host:port/database)`

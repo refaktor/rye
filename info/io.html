@@ -44,7 +44,7 @@
 </div>
 </div>
 <h2>File Operations </h2><p>File system operations and file manipulation</p><div class='section'>
-<h3>file-schema//Open</h3><p>Opens a file for reading.</p>
+<h3>file-uri//Open</h3><p>Opens a file for reading.</p>
 <p class='arg'><b>path</b> uri representing the file to open</p>
 <p class='returns'><b>returns</b> native file object</p>
 <div class='group'>
@@ -53,7 +53,7 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>Open %data/file.txt |kind?
 ; returns file</code></pre>
 </div>
-<h3>file-schema//Open\append</h3><p>Opens a file for appending.</p>
+<h3>file-uri//Open\append</h3><p>Opens a file for appending.</p>
 <p class='arg'><b>path</b> uri representing the file to open for appending</p>
 <p class='returns'><b>returns</b> native writer object</p>
 <div class='group'>
@@ -62,7 +62,7 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>Open\append %data/file.txt |kind?
 ; returns writer</code></pre>
 </div>
-<h3>file-schema//Create</h3><p>Creates a new file.</p>
+<h3>file-uri//Create</h3><p>Creates a new file.</p>
 <p class='arg'><b>path</b> uri representing the file to create</p>
 <p class='returns'><b>returns</b> native file object</p>
 <div class='group'>
@@ -156,7 +156,7 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>Close Open %data/file.txt
 ; returns ""</code></pre>
 </div>
-<h3>file-schema//Read</h3><p>Reads the entire content of a file as a string.</p>
+<h3>file-uri//Read</h3><p>Reads the entire content of a file as a string.</p>
 <p class='arg'><b>path</b> uri representing the file to read</p>
 <p class='returns'><b>returns</b> string containing the entire file content</p>
 <div class='group'>
@@ -164,7 +164,7 @@
 ; returns "hello text file
 ; "</code></pre>
 </div>
-<h3>file-schema//Read\bytes</h3><p>Reads the entire content of a file as bytes.</p>
+<h3>file-uri//Read\bytes</h3><p>Reads the entire content of a file as bytes.</p>
 <p class='arg'><b>path</b> uri representing the file to read</p>
 <p class='returns'><b>returns</b> native bytes object containing the file content</p>
 <div class='group'>
@@ -172,7 +172,7 @@
 ; returns "hello text file
 ; "</code></pre>
 </div>
-<h3>file-schema//Read\lines</h3><p>Reads a file and returns its content as a block of lines.</p>
+<h3>file-uri//Read\lines</h3><p>Reads a file and returns its content as a block of lines.</p>
 <p class='arg'><b>path</b> uri representing the file to read</p>
 <p class='returns'><b>returns</b> block of strings, each representing a line from the file</p>
 <div class='group'>
@@ -180,7 +180,7 @@
 ; returns "hello text file
 ; "</code></pre>
 </div>
-<h3>file-schema//Write</h3><p>Writes content to a file.</p>
+<h3>file-uri//Write</h3><p>Writes content to a file.</p>
 <p class='arg'><b>path</b> uri representing the file to write to</p>
 <p class='arg'><b>content</b> string or bytes to write to the file</p>
 <p class='returns'><b>returns</b> the content that was written</p>
@@ -210,36 +210,36 @@
 </div>
 </div>
 <h2>HTTPs Operations </h2><p>Web requests and HTTP protocol functions</p><div class='section'>
-<h3>https-schema//Open</h3><p>Opens a HTTPS GET request and returns a reader for the response body.</p>
+<h3>https-uri//Open</h3><p>Opens a HTTPS GET request and returns a reader for the response body.</p>
 <p class='arg'><b>url</b> uri representing the HTTPS URL to request</p>
 <p class='returns'><b>returns</b> native reader object for the response body</p>
 <div class='group'>
 </div>
-<h3>https-schema//Get</h3><p>Makes a HTTPS GET request and returns the response body as a string.</p>
+<h3>https-uri//Get</h3><p>Makes a HTTPS GET request and returns the response body as a string.</p>
 <p class='arg'><b>url</b> uri representing the HTTPS URL to request</p>
 <p class='returns'><b>returns</b> string containing the response body</p>
 <div class='group'>
 </div>
-<h3>https-schema//Post</h3><p>Makes a HTTPS POST request and returns the response body as a string.</p>
+<h3>https-uri//Post</h3><p>Makes a HTTPS POST request and returns the response body as a string.</p>
 <p class='arg'><b>url</b> uri representing the HTTPS URL to request</p>
 <p class='arg'><b>data</b> string containing the request body</p>
 <p class='arg'><b>content-type</b> word specifying the content type (e.g., 'json', 'text')</p>
 <p class='returns'><b>returns</b> string containing the response body</p>
 <div class='group'>
 </div>
-<h3>http-schema//Get</h3><p>Makes a HTTP GET request and returns the response body as a string.</p>
+<h3>http-uri//Get</h3><p>Makes a HTTP GET request and returns the response body as a string.</p>
 <p class='arg'><b>url</b> uri representing the HTTP URL to request</p>
 <p class='returns'><b>returns</b> string containing the response body</p>
 <div class='group'>
 </div>
-<h3>http-schema//Post</h3><p>Makes a HTTP POST request and returns the response body as a string.</p>
+<h3>http-uri//Post</h3><p>Makes a HTTP POST request and returns the response body as a string.</p>
 <p class='arg'><b>url</b> uri representing the HTTP URL to request</p>
 <p class='arg'><b>data</b> string containing the request body</p>
 <p class='arg'><b>content-type</b> word specifying the content type (e.g., 'json', 'text')</p>
 <p class='returns'><b>returns</b> string containing the response body</p>
 <div class='group'>
 </div>
-<h3>https-schema//Request</h3><p>Creates a new HTTPS request object.</p>
+<h3>https-uri//Request</h3><p>Creates a new HTTPS request object.</p>
 <p class='arg'><b>url</b> uri representing the HTTPS URL to request</p>
 <p class='arg'><b>method</b> word specifying the HTTP method (e.g., 'GET', 'POST')</p>
 <p class='arg'><b>data</b> string containing the request body</p>
@@ -285,7 +285,7 @@
 </div>
 </div>
 <h2>FTP Operations </h2><p>File Transfer Protocol operations and connections</p><div class='section'>
-<h3>ftp-schema//Open</h3><p>Opens a connection to an FTP server.</p>
+<h3>ftp-uri//Open</h3><p>Opens a connection to an FTP server.</p>
 <p class='arg'><b>server</b> uri representing the FTP server to connect to</p>
 <p class='returns'><b>returns</b> native ftp-connection object</p>
 <div class='group'>
@@ -324,7 +324,7 @@
 </div>
 </div>
 <h2>SQLite </h2><p>SQLite database functions</p><div class='section'>
-<h3>sqlite-schema//Open</h3><p>Opens a connection to a SQLite database file.</p>
+<h3>sqlite-uri//Open</h3><p>Opens a connection to a SQLite database file.</p>
 <p class='arg'><b>uri</b> path to SQLite database file</p>
 <p class='returns'><b>returns</b> native SQLite database connection</p>
 <div class='group'>
@@ -364,7 +364,7 @@
 </div>
 </div>
 <h2>PostgreSQL Database Functions </h2><p></p><div class='section'>
-<h3>postgres-schema//Open</h3><p>Opens a connection to a PostgreSQL database.</p>
+<h3>postgres-uri//Open</h3><p>Opens a connection to a PostgreSQL database.</p>
 <p class='arg'><b>uri</b> PostgreSQL connection string URI (format</p>
 <p class='returns'><b>returns</b> native PostgreSQL database connection (type: "Rye-psql")error if connection fails</p>
 <div class='group'>

@@ -61,7 +61,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * path: uri representing the file to open
 	// Returns:
 	// * native file object
-	"file-schema//Open": {
+	"file-uri//Open": {
 		Argsn: 1,
 		Doc:   "Opens a file for reading.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -73,7 +73,7 @@ var Builtins_io = map[string]*env.Builtin{
 				}
 				return *env.NewNative(ps.Idx, file, "file")
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-schema//Open")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-uri//Open")
 			}
 		},
 	},
@@ -85,7 +85,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * path: uri representing the file to open for appending
 	// Returns:
 	// * native writer object
-	"file-schema//Open\\append": {
+	"file-uri//Open\\append": {
 		Argsn: 1,
 		Doc:   "Opens a file for appending.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -93,7 +93,7 @@ var Builtins_io = map[string]*env.Builtin{
 			profile, exists := os.LookupEnv("RYE_SECCOMP_PROFILE")
 			if exists && profile == "readonly" {
 				ps.FailureFlag = true
-				return MakeBuiltinError(ps, "file append operation blocked by readonly seccomp profile", "file-schema//Open\\append")
+				return MakeBuiltinError(ps, "file append operation blocked by readonly seccomp profile", "file-uri//Open\\append")
 			}
 
 			switch s := arg0.(type) {
@@ -116,7 +116,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * path: uri representing the file to create
 	// Returns:
 	// * native file object
-	"file-schema//Create": {
+	"file-uri//Create": {
 		Argsn: 1,
 		Doc:   "Creates a new file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -124,7 +124,7 @@ var Builtins_io = map[string]*env.Builtin{
 			profile, exists := os.LookupEnv("RYE_SECCOMP_PROFILE")
 			if exists && profile == "readonly" {
 				ps.FailureFlag = true
-				return MakeBuiltinError(ps, "file creation blocked by readonly seccomp profile", "file-schema//Create")
+				return MakeBuiltinError(ps, "file creation blocked by readonly seccomp profile", "file-uri//Create")
 			}
 
 			switch s := arg0.(type) {
@@ -458,7 +458,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * path: uri representing the file to read
 	// Returns:
 	// * string containing the entire file content
-	"file-schema//Read": {
+	"file-uri//Read": {
 		Argsn: 1,
 		Doc:   "Reads the entire content of a file as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -466,11 +466,11 @@ var Builtins_io = map[string]*env.Builtin{
 			case env.Uri:
 				data, err := os.ReadFile(f.GetPath())
 				if err != nil {
-					return MakeBuiltinError(ps, err.Error(), "file-schema//Read")
+					return MakeBuiltinError(ps, err.Error(), "file-uri//Read")
 				}
 				return *env.NewString(string(data))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-schema//Read")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-uri//Read")
 			}
 		},
 	},
@@ -481,7 +481,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * path: uri representing the file to read
 	// Returns:
 	// * native bytes object containing the file content
-	"file-schema//Read\\bytes": {
+	"file-uri//Read\\bytes": {
 		Argsn: 1,
 		Doc:   "Reads the entire content of a file as bytes.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -504,7 +504,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * path: uri representing the file to read
 	// Returns:
 	// * block of strings, each representing a line from the file
-	"file-schema//Read\\lines": {
+	"file-uri//Read\\lines": {
 		Argsn: 1,
 		Doc:   "Reads a file and returns its content as a block of lines.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -512,7 +512,7 @@ var Builtins_io = map[string]*env.Builtin{
 			case env.Uri:
 				file, err := os.OpenFile(f.GetPath(), os.O_RDONLY, os.ModePerm)
 				if err != nil {
-					return MakeBuiltinError(ps, err.Error(), "file-schema//Read\\lines")
+					return MakeBuiltinError(ps, err.Error(), "file-uri//Read\\lines")
 				}
 				defer file.Close()
 
@@ -522,11 +522,11 @@ var Builtins_io = map[string]*env.Builtin{
 					lines = append(lines, *env.NewString(sc.Text()))
 				}
 				if err := sc.Err(); err != nil {
-					return MakeBuiltinError(ps, err.Error(), "file-schema//Read\\lines")
+					return MakeBuiltinError(ps, err.Error(), "file-uri//Read\\lines")
 				}
 				return *env.NewBlock(*env.NewTSeries(lines))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-schema//Read\\lines")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-uri//Read\\lines")
 			}
 		},
 	},
@@ -538,7 +538,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * content: string or bytes to write to the file
 	// Returns:
 	// * the content that was written
-	"file-schema//Write": {
+	"file-uri//Write": {
 		Argsn: 2,
 		Doc:   "Writes content to a file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -546,7 +546,7 @@ var Builtins_io = map[string]*env.Builtin{
 			profile, exists := os.LookupEnv("RYE_SECCOMP_PROFILE")
 			if exists && profile == "readonly" {
 				ps.FailureFlag = true
-				return MakeBuiltinError(ps, "write operation blocked by readonly seccomp profile", "file-schema//Write")
+				return MakeBuiltinError(ps, "write operation blocked by readonly seccomp profile", "file-uri//Write")
 			}
 
 			// If not in readonly mode, proceed with the original function
@@ -699,7 +699,7 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 
 	/*
-		"file-schema//Open": {
+		"file-uri//Open": {
 			Argsn: 1,
 			Doc:   "Open a file, get a reader",
 			Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -709,12 +709,12 @@ var Builtins_io = map[string]*env.Builtin{
 					//trace3(path)
 					if err != nil {
 						ps.FailureFlag = true
-						return MakeBuiltinError(ps, "Error opening file.", "file-schema//open")
+						return MakeBuiltinError(ps, "Error opening file.", "file-uri//open")
 					}
-					return *env.NewNative(ps.Idx, bufio.NewReader(file), "file-schema//open")
+					return *env.NewNative(ps.Idx, bufio.NewReader(file), "file-uri//open")
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "file-schema//open")
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "file-uri//open")
 				}
 			},
 		}, */
@@ -728,7 +728,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * url: uri representing the HTTPS URL to request
 	// Returns:
 	// * native reader object for the response body
-	"https-schema//Open": {
+	"https-uri//Open": {
 		Argsn: 1,
 		Doc:   "Opens a HTTPS GET request and returns a reader for the response body.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -754,15 +754,15 @@ var Builtins_io = map[string]*env.Builtin{
 				// body, _ := io.ReadAll(resp.Body)
 
 				if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
-					return *env.NewNative(ps.Idx, resp.Body, "https-schema://open")
+					return *env.NewNative(ps.Idx, resp.Body, "https-uri://open")
 				} else {
 					ps.FailureFlag = true
 					errMsg := fmt.Sprintf("Status Code: %v", resp.StatusCode)
-					return MakeBuiltinError(ps, errMsg, "https-schema://Open")
+					return MakeBuiltinError(ps, errMsg, "https-uri://Open")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "https-schema://Open")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "https-uri://Open")
 			}
 		},
 	},
@@ -771,7 +771,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * url: uri representing the HTTPS URL to request
 	// Returns:
 	// * string containing the response body
-	"https-schema//Get": {
+	"https-uri//Get": {
 		Argsn: 1,
 		Doc:   "Makes a HTTPS GET request and returns the response body as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -796,11 +796,11 @@ var Builtins_io = map[string]*env.Builtin{
 				} else {
 					ps.FailureFlag = true
 					errMsg := fmt.Sprintf("Status Code: %v", resp.StatusCode)
-					return MakeBuiltinError(ps, errMsg, "https-schema//Get")
+					return MakeBuiltinError(ps, errMsg, "https-uri//Get")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "https-schema//Get")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "https-uri//Get")
 			}
 		},
 	},
@@ -811,7 +811,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * content-type: word specifying the content type (e.g., 'json', 'text')
 	// Returns:
 	// * string containing the response body
-	"https-schema//Post": {
+	"https-uri//Post": {
 		Argsn: 3,
 		Doc:   "Makes a HTTPS POST request and returns the response body as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -839,14 +839,14 @@ var Builtins_io = map[string]*env.Builtin{
 							tt = "multipart/form-data"
 						} else {
 							ps.FailureFlag = true
-							return MakeBuiltinError(ps, "Wrong content type.", "https-schema//Post")
+							return MakeBuiltinError(ps, "Wrong content type.", "https-uri//Post")
 						}
 					case env.String:
 						// New behavior: use string directly as content-type
 						tt = t.Value
 					default:
 						ps.FailureFlag = true
-						return MakeArgError(ps, 3, []env.Type{env.WordType, env.StringType}, "https-schema//Post")
+						return MakeArgError(ps, 3, []env.Type{env.WordType, env.StringType}, "https-uri//Post")
 					}
 
 					proto := ps.Idx.GetWord(f.GetProtocol().Index)
@@ -865,7 +865,7 @@ var Builtins_io = map[string]*env.Builtin{
 					body, err := io.ReadAll(resp.Body)
 					if err != nil {
 						ps.FailureFlag = true
-						return MakeBuiltinError(ps, err.Error(), "https-schema//Post")
+						return MakeBuiltinError(ps, err.Error(), "https-uri//Post")
 					}
 
 					if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
@@ -876,11 +876,11 @@ var Builtins_io = map[string]*env.Builtin{
 					}
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.StringType}, "https-schema//Post")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "https-uri//Post")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "https-schema//Post")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "https-uri//Post")
 			}
 		},
 	},
@@ -889,7 +889,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * url: uri representing the HTTP URL to request
 	// Returns:
 	// * string containing the response body
-	"http-schema//Get": {
+	"http-uri//Get": {
 		Argsn: 1,
 		Doc:   "Makes a HTTP GET request and returns the response body as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -914,11 +914,11 @@ var Builtins_io = map[string]*env.Builtin{
 				} else {
 					ps.FailureFlag = true
 					errMsg := fmt.Sprintf("Status Code: %v", resp.StatusCode)
-					return MakeBuiltinError(ps, errMsg, "http-schema//Get")
+					return MakeBuiltinError(ps, errMsg, "http-uri//Get")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "http-schema//Get")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "http-uri//Get")
 			}
 		},
 	},
@@ -929,7 +929,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * content-type: word specifying the content type (e.g., 'json', 'text')
 	// Returns:
 	// * string containing the response body
-	"http-schema//Post": {
+	"http-uri//Post": {
 		Argsn: 3,
 		Doc:   "Makes a HTTP POST request and returns the response body as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -948,7 +948,7 @@ var Builtins_io = map[string]*env.Builtin{
 							tt = "text/plain"
 						} else {
 							ps.FailureFlag = true
-							return MakeBuiltinError(ps, "Wrong content type.", "http-schema//Post")
+							return MakeBuiltinError(ps, "Wrong content type.", "http-uri//Post")
 						}
 
 						proto := ps.Idx.GetWord(f.GetProtocol().Index)
@@ -967,7 +967,7 @@ var Builtins_io = map[string]*env.Builtin{
 						body, err := io.ReadAll(resp.Body)
 						if err != nil {
 							ps.FailureFlag = true
-							return MakeBuiltinError(ps, err.Error(), "http-schema//Post")
+							return MakeBuiltinError(ps, err.Error(), "http-uri//Post")
 						}
 
 						if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
@@ -978,15 +978,15 @@ var Builtins_io = map[string]*env.Builtin{
 						}
 					default:
 						ps.FailureFlag = true
-						return MakeArgError(ps, 2, []env.Type{env.StringType}, "http-schema//Post")
+						return MakeArgError(ps, 2, []env.Type{env.StringType}, "http-uri//Post")
 					}
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 3, []env.Type{env.WordType}, "http-schema//Post")
+					return MakeArgError(ps, 3, []env.Type{env.WordType}, "http-uri//Post")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "http-schema//Post")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "http-uri//Post")
 			}
 		},
 	},
@@ -997,7 +997,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * data: string containing the request body
 	// Returns:
 	// * native https-request object
-	"https-schema//Request": {
+	"https-uri//Request": {
 		Argsn: 3,
 		Doc:   "Creates a new HTTPS request object.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1008,7 +1008,7 @@ var Builtins_io = map[string]*env.Builtin{
 					method1 := ps.Idx.GetWord(method.Index)
 					if !(method1 == "GET" || method1 == "POST") {
 						ps.FailureFlag = true
-						return MakeBuiltinError(ps, "Wrong method.", "https-schema//Request")
+						return MakeBuiltinError(ps, "Wrong method.", "https-uri//Request")
 					}
 					switch data := arg2.(type) {
 					case env.String:
@@ -1017,20 +1017,20 @@ var Builtins_io = map[string]*env.Builtin{
 						req, err := http.NewRequest(method1, proto+"://"+uri.GetPath(), data1)
 						if err != nil {
 							ps.FailureFlag = true
-							return MakeBuiltinError(ps, err.Error(), "https-schema//Request")
+							return MakeBuiltinError(ps, err.Error(), "https-uri//Request")
 						}
 						return *env.NewNative(ps.Idx, req, "https-request")
 					default:
 						ps.FailureFlag = true
-						return MakeArgError(ps, 3, []env.Type{env.StringType}, "https-schema//Request")
+						return MakeArgError(ps, 3, []env.Type{env.StringType}, "https-uri//Request")
 					}
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.WordType}, "https-schema//Request")
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "https-uri//Request")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "https-schema//Request")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "https-uri//Request")
 			}
 		},
 	},
@@ -1240,7 +1240,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * server: uri representing the FTP server to connect to
 	// Returns:
 	// * native ftp-connection object
-	"ftp-schema//Open": {
+	"ftp-uri//Open": {
 		Argsn: 1,
 		Doc:   "Opens a connection to an FTP server.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1250,17 +1250,17 @@ var Builtins_io = map[string]*env.Builtin{
 				conn, err := ftp.Dial(s.Path)
 				if err != nil {
 					fmt.Println("Error connecting to FTP server:", err)
-					return MakeBuiltinError(ps, "Error connecting to FTP server: "+err.Error(), "ftp-schema//Open")
+					return MakeBuiltinError(ps, "Error connecting to FTP server: "+err.Error(), "ftp-uri//Open")
 				}
 				//trace3(path)
 				if err != nil {
 					ps.FailureFlag = true
-					return MakeBuiltinError(ps, "Error opening file.", "ftp-schema//Open")
+					return MakeBuiltinError(ps, "Error opening file.", "ftp-uri//Open")
 				}
 				return *env.NewNative(ps.Idx, conn, "ftp-connection")
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.UriType, env.StringType}, "ftp-schema//Open")
+				return MakeArgError(ps, 1, []env.Type{env.UriType, env.StringType}, "ftp-uri//Open")
 			}
 		},
 	},

@@ -17,7 +17,7 @@ func strimp() { fmt.Println("") }
 
 var Builtins_nats = map[string]*env.Builtin{
 
-	"nats-schema//open": {
+	"nats-uri//open": {
 		Argsn: 1,
 		Doc:   "TODODOC",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -27,7 +27,7 @@ var Builtins_nats = map[string]*env.Builtin{
 				nc, _ := nats.Connect("demo.nats.io")
 				return *env.NewNative(ps.Idx, nc, "Rye-nats")
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "nats-schema//open")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "nats-uri//open")
 			}
 
 		},
@@ -86,7 +86,7 @@ var Builtins_nats = map[string]*env.Builtin{
 		},
 	},
 
-	"nats-schema//chan": {
+	"nats-uri//chan": {
 		Argsn: 1,
 		Doc:   "TODODOC",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -96,7 +96,7 @@ var Builtins_nats = map[string]*env.Builtin{
 				ch := make(chan *nats.Msg, 64)
 				return *env.NewNative(ps.Idx, ch, "Rye-nats-chan")
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "nats-schema//chan")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "nats-uri//chan")
 			}
 
 		},

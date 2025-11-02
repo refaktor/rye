@@ -12,8 +12,11 @@ import (
 
 var builtins_types = map[string]*env.Builtin{
 
+	//
+	// ##### Types and Kinds ##### ""
+	//
 	// Tests:
-	// equal { to-integer "123" } 123
+	// equal { to-integer "1234" } 1234
 	// ; equal { to-integer "123.4" } 123
 	// ; equal { to-integer "123.6" } 123
 	// ; equal { to-integer "123.4" } 123
@@ -171,9 +174,6 @@ var builtins_types = map[string]*env.Builtin{
 		},
 	},
 
-	//
-	// ##### Values and Types ##### ""
-	//
 	// Tests:
 	// equal { to-word "test" } 'test
 	// error { to-word 123 }
@@ -331,7 +331,7 @@ var builtins_types = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal   { kind? %file } 'file-schema
+	// equal   { kind? %file } 'file-uri
 	// Args:
 	// * value: Any Rye value to check the kind of
 	// Returns:

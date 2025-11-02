@@ -77,7 +77,7 @@ if sock, err = rep.NewSocket(); err != nil {
 
 var Builtins_nng = map[string]*env.Builtin{
 
-	"nng-schema//open": {
+	"nng-uri//open": {
 		Argsn: 1,
 		Doc:   "TODODOC",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -90,20 +90,20 @@ var Builtins_nng = map[string]*env.Builtin{
 				case "rep":
 					if sock, err = rep.NewSocket(); err != nil {
 						ps.FailureFlag = true
-						return MakeBuiltinError(ps, err.Error(), "nng-schema//open")
+						return MakeBuiltinError(ps, err.Error(), "nng-uri//open")
 					}
 				case "req":
 					if sock, err = req.NewSocket(); err != nil {
 						ps.FailureFlag = true
-						return MakeBuiltinError(ps, err.Error(), "nng-schema//open")
+						return MakeBuiltinError(ps, err.Error(), "nng-uri//open")
 					}
 				default:
-					return MakeBuiltinError(ps, "No matching path found.", "nng-schema//open")
+					return MakeBuiltinError(ps, "No matching path found.", "nng-uri//open")
 				}
 				return *env.NewNative(ps.Idx, sock, "Nng-socket")
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "nng-schema//open")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "nng-uri//open")
 			}
 		},
 	},

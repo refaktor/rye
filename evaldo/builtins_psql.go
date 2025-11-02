@@ -24,7 +24,7 @@ var Builtins_psql = map[string]*env.Builtin{
 	// Returns:
 	// * native PostgreSQL database connection (type: "Rye-psql")
 	// * error if connection fails
-	"postgres-schema//Open": {
+	"postgres-uri//Open": {
 		Argsn: 1,
 		Doc:   "Opens a connection to a PostgreSQL database.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -36,14 +36,14 @@ var Builtins_psql = map[string]*env.Builtin{
 					//fmt.Println("Error1")
 					ps.FailureFlag = true
 					errMsg := fmt.Sprintf("Error opening SQL: %v" + err.Error())
-					return MakeBuiltinError(ps, errMsg, "postgres-schema//Open")
+					return MakeBuiltinError(ps, errMsg, "postgres-uri//Open")
 				} else {
 					//fmt.Println("Error2")
 					return *env.NewNative(ps.Idx, db, "Rye-psql")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "postgres-schema//Open")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "postgres-uri//Open")
 			}
 
 		},

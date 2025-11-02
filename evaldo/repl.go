@@ -621,9 +621,9 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 			}
 		}
 
-		fmt.Print("=[")
-		fmt.Print(wordpart)
-		fmt.Print("]=")
+		// fmt.Print("=[")
+		// fmt.Print(wordpart)
+		// fmt.Print("]=")
 
 		// Check if wordpart starts with % for file path completion
 		if strings.HasPrefix(wordpart, "%") {

@@ -16,7 +16,7 @@ import (
 var Builtins_mqtt = map[string]*env.Builtin{
 
 	//
-	// ##### MQTT Client Functions #####
+	// ##### MQTT Client Functions ##### ""
 	//
 
 	// Tests:
@@ -27,7 +27,7 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	// Returns:
 	// * native MQTT client connection (type: "mqtt-client")
 	// * error if connection fails
-	"mqtt-schema//Open": {
+	"mqtt-uri//Open": {
 		Argsn: 1,
 		Doc:   "Opens a connection to an MQTT broker.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -38,7 +38,7 @@ var Builtins_mqtt = map[string]*env.Builtin{
 				scheme := ps.Idx.GetWord(uri.Scheme.Index)
 				if scheme != "mqtt" && scheme != "mqtts" {
 					ps.FailureFlag = true
-					return MakeBuiltinError(ps, "URI scheme must be 'mqtt' or 'mqtts'", "mqtt-schema//Open")
+					return MakeBuiltinError(ps, "URI scheme must be 'mqtt' or 'mqtts'", "mqtt-uri//Open")
 				}
 
 				// Construct broker URL
@@ -75,13 +75,13 @@ var Builtins_mqtt = map[string]*env.Builtin{
 				client := mqtt.NewClient(opts)
 				if token := client.Connect(); token.Wait() && token.Error() != nil {
 					ps.FailureFlag = true
-					return MakeBuiltinError(ps, fmt.Sprintf("Failed to connect to MQTT broker: %v", token.Error()), "mqtt-schema//Open")
+					return MakeBuiltinError(ps, fmt.Sprintf("Failed to connect to MQTT broker: %v", token.Error()), "mqtt-uri//Open")
 				}
 
 				return *env.NewNative(ps.Idx, client, "mqtt-client")
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "mqtt-schema//Open")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "mqtt-uri//Open")
 			}
 		},
 	},
