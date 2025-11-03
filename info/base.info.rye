@@ -534,52 +534,6 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { "a" <= "a" } true
 	}
 
-	group "recur-if" 
-	"Internal recursion control function. Resets function execution if condition > 0, otherwise returns result."
-	{
-		arg `condition: Integer value, if > 0 triggers recursion reset`
-		returns `nil if recursion continues, ps.Res if recursion ends`
-	}
-
-	{
-	}
-
-	group "recur-if\\1" 
-	"Internal recursion control function for single-argument functions. Updates first argument and resets if condition > 0."
-	{
-		arg `condition: Integer value, if > 0 triggers recursion with updated argument`
-		arg `arg1: New value for the first function argument during recursion`
-		returns `nil if recursion continues, ps.Res if recursion ends`
-	}
-
-	{
-	}
-
-	group "recur-if\\2" 
-	"Internal recursion control function for two-argument functions. Updates both arguments and resets if condition > 0."
-	{
-		arg `condition: Integer value, if > 0 triggers recursion with updated arguments`
-		arg `arg1: New value for the first function argument during recursion`
-		arg `arg2: New value for the second function argument during recursion`
-		returns `ps.Res (function result) regardless of condition`
-	}
-
-	{
-	}
-
-	group "recur-if\\3" 
-	"Internal recursion control function for three-argument functions. Updates all three arguments and resets if condition > 0."
-	{
-		arg `condition: Integer value, if > 0 triggers recursion with updated arguments`
-		arg `arg1: New value for the first function argument during recursion`
-		arg `arg2: New value for the second function argument during recursion`
-		arg `arg3: New value for the third function argument during recursion`
-		returns `ps.Res (function result) regardless of condition, nil if recursion continues`
-	}
-
-	{
-	}
-
 }
 
 section "Strings " "" {
@@ -1686,6 +1640,26 @@ section "Types and Kinds " "" {
 		equal { to-string "test" } "test"
 	}
 
+	group "to-uri" 
+	"Tries to change Rye value to an URI."
+	{
+	}
+
+	{
+		equal   { to-uri "https://example.com" } https://example.com
+		; error { to-uri "not-uri" }
+	}
+
+	group "to-file" 
+	"Tries to change Rye value to a file."
+	{
+	}
+
+	{
+		equal   { to-file "example.txt" } %example.txt
+		equal { to-file 123 } %123
+	}
+
 	group "to-char" 
 	"Tries to turn a Rye value (like integer) to ascii character."
 	{
@@ -1722,6 +1696,18 @@ section "Types and Kinds " "" {
 		; equal   { dict [ "a" 1 ] |to-context do\in { a } } '1
 	}
 
+	group "to-word" 
+	"Tries to change a Rye value to a word with same name."
+	{
+		arg `value: String or word-like value to convert to a word`
+		returns `A word with the same name as the input value`
+	}
+
+	{
+		equal { to-word "test" } 'test
+		error { to-word 123 }
+	}
+
 	group "is-string" 
 	"Returns true if value is a string."
 	{
@@ -1733,18 +1719,6 @@ section "Types and Kinds " "" {
 		equal   { is-string "test" } 1
 		equal   { is-string 'test } 0
 		equal   { is-string 123 } 0
-	}
-
-	group "to-word" 
-	"Tries to change a Rye value to a word with same name."
-	{
-		arg `value: String or word-like value to convert to a word`
-		returns `A word with the same name as the input value`
-	}
-
-	{
-		equal { to-word "test" } 'test
-		error { to-word 123 }
 	}
 
 	group "is-integer" 
@@ -1784,26 +1758,6 @@ section "Types and Kinds " "" {
 		equal   { is-number 123 } 1
 		equal   { is-number 123.4 } 1
 		equal   { is-number "123" } 0
-	}
-
-	group "to-uri" 
-	"Tries to change Rye value to an URI."
-	{
-	}
-
-	{
-		equal   { to-uri "https://example.com" } https://example.com
-		; error { to-uri "not-uri" }
-	}
-
-	group "to-file" 
-	"Tries to change Rye value to a file."
-	{
-	}
-
-	{
-		equal   { to-file "example.txt" } %example.txt
-		equal { to-file 123 } %123
 	}
 
 	group "type?" 
@@ -2093,6 +2047,402 @@ section "Contexts " "Context related functions" {
 
 }
 
+section "Flow control " "Functions for conditional execution and branching logic" {
+	group "if" 
+	"Executes a block of code only if the condition is true, returning the result of the block or false."
+	{
+		arg `condition: Boolean value determining whether to execute the block`
+		arg `block: Block of code to execute if condition is true`
+		returns `result of the block if condition is true, false otherwise`
+	}
+
+	{
+		equal  { if true { 222 } } 222
+		equal  { if false { 333 } } false
+		error  { if 1 { 222 } }
+		error  { if 0 { 333 } }
+	}
+
+	group "when" 
+	"Conditionally executes an action block if a condition block evaluates to true, injecting the same value into both blocks and returning the original value."
+	{
+		arg `value: Value to inject into both condition and action blocks`
+		arg `condition: Block that evaluates to a truthy/falsy value with the injected value`
+		arg `action: Block to execute if condition is truthy, with the injected value`
+		returns `the original injected value (for chaining)`
+	}
+
+	{
+		equal  { 10 .when { > 5 } { .print } } 10
+		equal  { 10 .when { < 5 } { .print } } 10
+	}
+
+	group "^if" 
+	"Conditional that sets the return flag when true, allowing early return from a function when the condition is a boolean."
+	{
+		arg `condition: Value to evaluate for truthiness`
+		arg `block: Block of code to execute and return from if condition is truthy`
+		returns `result of the block if condition is truthy (with return flag set), 0 otherwise`
+	}
+
+	{
+		equal  { x: does { ^if true { 222 } 555 } x } 222
+		equal  { x: does { ^if false { 333 } 444 } x } 333
+	}
+
+	group "either" 
+	"Executes one of two blocks based on a boolean condition, similar to if/else in other languages."
+	{
+		arg `condition: Boolean value determining which block to execute`
+		arg `true_block: Block or value to return if condition is true`
+		arg `false_block: Block or value to return if condition is false`
+		returns `result of executing the true_block if condition is true, otherwise result of false_block`
+	}
+
+	{
+		equal  { either true { 222 } { 333 } } 222
+		equal  { either false { 222 } { 333 } } 333
+		error  { either 1 { 222 } { 333 } }
+		error  { either 0 { 222 } { 333 } }
+	}
+
+	group "switch" 
+	"Pattern matching construct that executes a block of code corresponding to the first matching case value."
+	{
+		arg `value: Value to match against case values`
+		arg `cases: Block containing case values and corresponding handler blocks`
+		returns `result of executing the matching handler block, or the original value if no match`
+	}
+
+	{
+		equal  { switch 101 { 101 { 111 } 202 { 222 } } } 111
+		equal  { switch 202 { 101 { 111 } 202 { 222 } } } 222
+	}
+
+	group "cases" 
+	"Evaluates multiple condition-action pairs and applies all matching actions cumulatively to the initial value."
+	{
+		arg `initial: Initial value to be transformed by matching case blocks`
+		arg `cases: Block containing condition blocks and corresponding transformation blocks`
+		returns `cumulative result after applying all matching transformation blocks to the initial value`
+	}
+
+	{
+		equal  { cases 0 { { 1 > 0 } { + 100 } { 2 > 1 } { + 1000 } } } 1100
+		equal  { cases 0 { { 1 > 0 } { + 100 } { 2 < 1 } { + 1000 } } } 100
+		equal  { cases 0 { { 1 < 0 } { + 100 } { 2 > 1 } { + 1000 } } } 1000
+		equal  { cases 0 { { 1 < 0 } { + 100 } { 2 < 1 } { + 1000 } } } 0
+		equal  { cases 1 { { 1 > 0 } { + 100 } { 2 < 1 } { + 1000 } _ { * 3 } } } 101
+		equal  { cases 1 { { 1 < 0 } { + 100 } { 2 > 1 } { + 1000 } _ { * 3 } } } 1001
+		equal  { cases 1 { { 1 < 0 } { + 100 } { 2 < 1 } { + 1000 } _ { * 3 } } } 3
+	}
+
+}
+
+section "Iteration " "Functions for iterating over collections and executing code repeatedly" {
+	group "loop" 
+	"Executes a block of code, builtin, or function a specified number of times, injecting the current iteration number (starting from 1)."
+	{
+		arg `count: Integer number of iterations to perform`
+		arg `block: Block of code to execute on each iteration`
+		returns `result of the last block execution`
+	}
+
+	{
+		stdout { 3 .loop { prns "x" } } "x x x "
+		equal  { 3 .loop { + 1 } } 4
+		; equal  { 3 .loop { } } 3  ; TODO should pass the value
+	}
+
+	group "produce" 
+	"Executes a block of code a specified number of times, passing the result of each execution to the next iteration."
+	{
+		arg `count: Integer number of iterations to perform`
+		arg `initial: Initial value to inject into the first block execution`
+		arg `block: Block of code to execute on each iteration`
+		returns `result of the last block execution`
+	}
+
+	{
+		equal { produce 5 0 { + 3 } } 15
+		equal { produce 3 ">" { ++ "x>" } } ">x>x>x>"
+		equal { produce 3 { } { .concat "x" } } { "x" "x" "x" }
+		equal { produce 3 { } { ::x .concat length? x } } { 0 1 2 }
+		equal { produce 5 { 2 } { ::acc .last ::x * x |concat* acc } } { 2 4 16 256 65536 4294967296 }
+	}
+
+	group "produce\\while" 
+	"Executes a block of code repeatedly while a condition is true, passing the result of each execution to the next iteration."
+	{
+		arg `condition: Block that evaluates to a boolean to determine when to stop iterating`
+		arg `initial: Initial value to inject into the first block execution`
+		arg `block: Block of code to execute on each iteration`
+		returns `result of the last block execution before the condition became false`
+	}
+
+	{
+		equal { var 'x 0 , produce\while { x < 100 } 1 { * 2 ::x } } 64
+		stdout { var 'x 0 , produce\while { x < 100 } 1 { * 2 ::x .prns } } "2 4 8 16 32 64 128 "
+	}
+
+	group "produce\\" 
+	" TODO "
+	{
+	}
+
+	{
+		equal { produce\ 5 1 'acc { * acc , + 1 } } 1  ; Look at what we were trying to do here
+	}
+
+	group "forever" 
+	"Executes a block of code repeatedly until .return is called within the block."
+	{
+		arg `block: Block of code to execute repeatedly`
+		returns `result of the block when .return is called`
+	}
+
+	{
+		stdout { forever { "once" .prn .return } } "once"
+		equal { forever { "once" .return } } "once"
+	}
+
+	group "forever\\with" 
+	"Accepts a value and a block, and executes the block repeatedly with the value until .return is called."
+	{
+		arg `value: Value to inject into the block on each iteration`
+		arg `block: Block of code to execute repeatedly`
+		returns `result of the block when .return is called`
+	}
+
+	{
+		stdout { forever\with 1 { .prn .return } } "1"
+		equal { var 'x 0 , forever\with 1 { + 5 ::x , if x > 5 { return x } } } 6
+	}
+
+	group "for" 
+	"Accepts a block of values and a block of code, builtin, or function, does the code for each of the values, injecting them."
+	{
+	}
+
+	{
+		stdout { for { 1 2 3 } { prns "x" } } "x x x "
+		stdout { { "a" "b" "c" } .for { .prns } } "a b c "
+	}
+
+	group "walk" 
+	"Accepts a block of values and a block of code, does the code for each of the values, injecting them."
+	{
+	}
+
+	{
+		stdout { walk { 1 2 3 } { .prns .rest } } "1 2 3  2 3  3  "
+		equal { var 'x 0 , walk { 1 2 3 } { ::b .first + x ::x , b .rest } x } 6
+	}
+
+	group "purge" 
+	"Purges values from a series based on return of a injected code block."
+	{
+	}
+
+	{
+		equal { purge { 1 2 3 } { .is-even } } { 1 3 }
+		equal { purge { } { .is-even } } { }
+		equal { purge list { 1 2 3 } { .is-even } } list { 1 3 }
+		equal { purge list { } { .is-even } } list { }
+		equal { purge "1234" { .probe .to-integer .is-even } } { "1" "3" }
+		equal { purge "" { .to-integer .is-even } } { }
+	}
+
+	group "purge!" 
+	"Purges values from a series based on return of a injected code block."
+	{
+	}
+
+	{
+		equal { { 1 2 3 } :x purge! { .is-even } 'x , x } { 1 3 }
+	}
+
+	group "map___" 
+	"Maps values of a block to a new block by evaluating a block of code."
+	{
+	}
+
+	{
+		equal { map { 1 2 3 } { + 1 } } { 2 3 4 }
+		equal { map { } { + 1 } } { }
+		equal { map { "aaa" "bb" "c" } { .length? } } { 3 2 1 }
+		equal { map list { "aaa" "bb" "c" } { .length? } } list { 3 2 1 }
+		equal { map list { 3 4 5 6 } { .is-multiple-of 3 } } list { 1 0 0 1 }
+		equal { map list { } { + 1 } } list { }
+		; equal { map "abc" { + "-" } .join } "a-b-c-" ; TODO doesn't work, fix join
+		equal { map "123" { .to-integer } } { 1 2 3 }
+		equal { map "123" ?to-integer } { 1 2 3 }
+		equal { map "" { + "-" } } { }
+	}
+
+	group "map" 
+	"Maps values of a block to a new block by evaluating a block of code or function."
+	{
+	}
+
+	{
+		equal { map { 1 2 3 } { + 1 } } { 2 3 4 }
+		equal { map { } { + 1 } } { }
+		equal { map { "aaa" "bb" "c" } { .length? } } { 3 2 1 }
+		equal { map list { "aaa" "bb" "c" } { .length? } } list { 3 2 1 }
+		equal { map list { 3 4 5 6 } { .is-multiple-of 3 } } list { 1 0 0 1 }
+		equal { map list { } { + 1 } } list { }
+		; equal { map "abc" { + "-" } .join } "a-b-c-" ; TODO doesn't work, fix join
+		equal { map "123" { .to-integer } } { 1 2 3 }
+		equal { map "123" ?to-integer } { 1 2 3 }
+		equal { map "" { + "-" } } { }
+	}
+
+	group "map\\pos" 
+	"Maps values of a block to a new block by evaluating a block of code."
+	{
+	}
+
+	{
+		equal { map\pos { 1 2 3 } 'i { + i } } { 2 4 6 }
+		equal { map\pos { } 'i { + i } } { }
+		equal { map\pos list { 1 2 3 } 'i { + i } } list { 2 4 6 }
+		equal { map\pos list { } 'i { + i } } list { }
+		equal { map\pos "abc" 'i { ++ i } } { "a1" "b2" "c3" }
+		equal { map\pos "" 'i { + i } } { }
+	}
+
+	group "map\\idx" 
+	"Maps values of a block to a new block by evaluating a block of code."
+	{
+	}
+
+	{
+		equal { map\idx { 1 2 3 } 'i { + i } } { 1 3 5 }
+		equal { map\idx { } 'i { + i } } { }
+		equal { map\idx list { 1 2 3 } 'i { + i } } list { 1 3 5 }
+		equal { map\idx list { } 'i { + i } } list { }
+		equal { map\idx "abc" 'i { ++ i } } { "a0" "b1" "c2" }
+		equal { map\idx "" 'i { + i } } { }
+	}
+
+	group "reduce" 
+	"Reduces values of a block to a new block by evaluating a block of code ..."
+	{
+	}
+
+	{
+		equal { reduce { 1 2 3 } 'acc { + acc } } 6
+		equal { reduce list { 1 2 3 } 'acc { + acc } } 6
+		equal { reduce "abc" 'acc { ++ acc } } "cba"
+		equal { try { reduce { } 'acc { + acc } } |type? } 'error
+		equal { try { reduce list { } 'acc { + acc } } |type? } 'error
+		equal { try { reduce "" 'acc { + acc } } |type? } 'error
+	}
+
+	group "fold" 
+	"Reduces values of a block to a new block by evaluating a block of code ..."
+	{
+	}
+
+	{
+		equal { fold { 1 2 3 } 'acc 1 { + acc } } 7
+		equal { fold { } 'acc 1 { + acc } } 1
+		equal { fold list { 1 2 3 } 'acc 1 { + acc } } 7
+		equal { fold list { } 'acc 1 { + acc } } 1
+		equal { fold "abc" 'acc "123" { ++ acc } } "cba123"
+		equal { fold "" 'acc "123" { + acc } } "123"
+	}
+
+	group "partition" 
+	"Partitions a series by evaluating a block of code."
+	{
+	}
+
+	{
+		equal { partition { 1 2 3 4 } { > 2 } } { { 1 2 } { 3 4 } }
+		equal { partition { "a" "b" 1 "c" "d" } { .is-integer } } { { "a" "b" } { 1 } { "c" "d" } }
+		equal { partition { "a" "b" 1 "c" "d" } ?is-integer } { { "a" "b" } { 1 } { "c" "d" } }
+		equal { partition { } { > 2 } } { { } }
+		equal { partition list { 1 2 3 4 } { > 2 } } list vals { list { 1 2 } list { 3 4 } }
+		equal { partition list { "a" "b" 1 "c" "d" } ?is-integer } list vals { list { "a" "b" } list { 1 } list { "c" "d" } }
+		equal { partition list { } { > 2 } } list vals { list { } }
+		equal { partition "aaabbccc" { , } } list { "aaa" "bb" "ccc" }
+		equal { partition "" { , } } list { "" }
+		equal { partition "aaabbccc" ?is-string } list { "aaabbccc" }
+	}
+
+	group "group" 
+	"Groups a block or list of values given condition."
+	{
+	}
+
+	{
+		; Equality for dicts doesn't yet work consistently
+		;equal { { "Anne" "Mitch" "Anya" } .group { .first } } dict vals { "A" list { "Anne" "Anya" } "M" list { "Mitch" } }
+		;equal { { "Anne" "Mitch" "Anya" } .group ?first } dict vals { "A" list { "Anne" "Anya" } "M" list { "Mitch" } }
+		;equal { { } .group { .first } } dict vals { }
+		;equal { { "Anne" "Mitch" "Anya" } .list .group { .first } } dict vals { "A" list { "Anne" "Anya" } "M" list { "Mitch" } }
+		;equal { { "Anne" "Mitch" "Anya" } .list .group ?first } dict vals { "A" list { "Anne" "Anya" } "M" list { "Mitch" } }
+		equal { { } .list .group { .first } } dict vals { }
+		equal { try { { 1 2 3 4 } .group { .is-even } } |type? } 'error ; TODO keys can only be string currently
+	}
+
+	group "filter" 
+	"Filters values from a seris based on return of a injected code block."
+	{
+	}
+
+	{
+		equal { filter { 1 2 3 4 } { .is-even } } { 2 4 }
+		equal { filter { 1 2 3 4 } ?is-even } { 2 4 }
+		equal { filter { } { .is-even } } { }
+		equal { filter list { 1 2 3 4 } { .is-even } } list { 2 4 }
+		equal { filter list { 1 2 3 4 } ?is-even } list { 2 4 }
+		; equal { filter list { } { .is-even } } list { }
+		; equal { filter "1234" { .to-integer .is-even } } { "2" "4" }
+		; equal { filter "01234" ?to-integer } { "1" "2" "3" "4" }
+		; equal { filter "" { .to-integer .is-even } } { }
+	}
+
+	group "seek" 
+	"Seek over a series until a Block of code returns True and return the value."
+	{
+	}
+
+	{
+		equal { seek { 1 2 3 4 } { .is-even } } 2
+		equal { seek list { 1 2 3 4 } { .is-even } } 2
+		equal { seek "1234" { .to-integer .is-even } } "2"
+		equal { try { seek { 1 2 3 4 } { > 5 } } |type? } 'error
+		equal { try { seek list { 1 2 3 4 } { > 5 } } |type? } 'error
+		equal { try { seek "1234" { .to-integer > 5 } } |type? } 'error
+	}
+
+	group "while" 
+	"Executes a block of code repeatedly while a condition is true."
+	{
+	}
+
+	{
+		equal { var 'x 0 while { x < 5 } { x:: x + 1 } x } 5
+		equal { var 'x 0 var 'y 0 while { x < 5 } { x:: x + 1 y:: y + x } y } 15
+	}
+
+	group "until" 
+	"Executes a block of code repeatedly until a condition becomes true. Executes the body at least once before checking condition (do-until loop)."
+	{
+	}
+
+	{
+		equal { var 'x 5 until { x = 0 } { x:: x - 1 } x } 0
+		equal { var 'x 10 var 'y 0 until { x = 5 } { x:: x - 1 y:: y + x } y } 35
+		equal { var 'x 3 until { x < 1 } { x:: x - 1 } x } 0
+		equal { var 'x 0 until { x > 0 } { x:: x + 1 } x } 1
+	}
+
+}
+
 section "Functions " "functions that create functions" {
 	group "var" 
 	"Declares a word as a variable with the given value, allowing it to be modified. Can only be used once per word in a context."
@@ -2227,6 +2577,20 @@ section "Functions " "functions that create functions" {
 		equal { prepend-star: partial ?concat [ "* " _ ] , prepend-star "hello" } "* hello"
 		equal { add-5: partial ?_+ [ _ 5 ] , add-5 10 } 15
 		equal { fn-add: fn { x y } { x + y } , add-5: partial ?fn-add [ _ 5 ] , add-5 10 } 15
+	}
+
+	group "apply" 
+	"Applies a function or builtin to a block of arguments."
+	{
+		arg `function: Function or builtin to apply`
+		arg `args: Block of arguments to pass to the function`
+		returns `The result of applying the function to the arguments`
+	}
+
+	{
+		equal { apply ?_+ { 12 23 } } 35
+		equal { apply fn { x y } { x + y } { 5 10 } } 15
+		equal { f: fn { x y } { x * y } , apply ?f { 7 6 } } 42
 	}
 
 }
@@ -2607,6 +2971,52 @@ section "Other " "..." {
 	{
 		equal { x:: 0 defer\ 42 { + 1 } x } 0
 		stdout { ff:: fn { } { defer\ "hello" { .print } "done" } , ff } "hello\n"
+	}
+
+	group "recur-if" 
+	"Internal recursion control function. Resets function execution if condition > 0, otherwise returns result."
+	{
+		arg `condition: Integer value, if > 0 triggers recursion reset`
+		returns `nil if recursion continues, ps.Res if recursion ends`
+	}
+
+	{
+	}
+
+	group "recur-if\\1" 
+	"Internal recursion control function for single-argument functions. Updates first argument and resets if condition > 0."
+	{
+		arg `condition: Integer value, if > 0 triggers recursion with updated argument`
+		arg `arg1: New value for the first function argument during recursion`
+		returns `nil if recursion continues, ps.Res if recursion ends`
+	}
+
+	{
+	}
+
+	group "recur-if\\2" 
+	"Internal recursion control function for two-argument functions. Updates both arguments and resets if condition > 0."
+	{
+		arg `condition: Integer value, if > 0 triggers recursion with updated arguments`
+		arg `arg1: New value for the first function argument during recursion`
+		arg `arg2: New value for the second function argument during recursion`
+		returns `ps.Res (function result) regardless of condition`
+	}
+
+	{
+	}
+
+	group "recur-if\\3" 
+	"Internal recursion control function for three-argument functions. Updates all three arguments and resets if condition > 0."
+	{
+		arg `condition: Integer value, if > 0 triggers recursion with updated arguments`
+		arg `arg1: New value for the first function argument during recursion`
+		arg `arg2: New value for the second function argument during recursion`
+		arg `arg3: New value for the third function argument during recursion`
+		returns `ps.Res (function result) regardless of condition, nil if recursion continues`
+	}
+
+	{
 	}
 
 }
