@@ -585,32 +585,6 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>"a" &lt;= "a"
 ; returns true</code></pre>
 </div>
-<h3>recur-if</h3><p>Internal recursion control function. Resets function execution if condition > 0, otherwise returns result.</p>
-<p class='arg'><b>condition</b> Integer value, if > 0 triggers recursion reset</p>
-<p class='returns'><b>returns</b> nil if recursion continues, ps.Res if recursion ends</p>
-<div class='group'>
-</div>
-<h3>recur-if\1</h3><p>Internal recursion control function for single-argument functions. Updates first argument and resets if condition > 0.</p>
-<p class='arg'><b>condition</b> Integer value, if > 0 triggers recursion with updated argument</p>
-<p class='arg'><b>arg1</b> New value for the first function argument during recursion</p>
-<p class='returns'><b>returns</b> nil if recursion continues, ps.Res if recursion ends</p>
-<div class='group'>
-</div>
-<h3>recur-if\2</h3><p>Internal recursion control function for two-argument functions. Updates both arguments and resets if condition > 0.</p>
-<p class='arg'><b>condition</b> Integer value, if > 0 triggers recursion with updated arguments</p>
-<p class='arg'><b>arg1</b> New value for the first function argument during recursion</p>
-<p class='arg'><b>arg2</b> New value for the second function argument during recursion</p>
-<p class='returns'><b>returns</b> ps.Res (function result) regardless of condition</p>
-<div class='group'>
-</div>
-<h3>recur-if\3</h3><p>Internal recursion control function for three-argument functions. Updates all three arguments and resets if condition > 0.</p>
-<p class='arg'><b>condition</b> Integer value, if > 0 triggers recursion with updated arguments</p>
-<p class='arg'><b>arg1</b> New value for the first function argument during recursion</p>
-<p class='arg'><b>arg2</b> New value for the second function argument during recursion</p>
-<p class='arg'><b>arg3</b> New value for the third function argument during recursion</p>
-<p class='returns'><b>returns</b> ps.Res (function result) regardless of condition, nil if recursion continues</p>
-<div class='group'>
-</div>
 </div>
 <h2>Strings </h2><p></p><div class='section'>
 <h3>newline</h3><p>Returns a string containing a single newline character.</p>
@@ -1594,6 +1568,18 @@ th!</h3><p>Changes the value at a specific position in a block or list in-place 
 <pre class='prettyprint lang-rye'><code language='lang-rye'>to-string "test"
 ; returns "test"</code></pre>
 </div>
+<h3>to-uri</h3><p>Tries to change Rye value to an URI.</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-uri "https://example.com"
+; returns https://example.com</code></pre>
+</div>
+<h3>to-file</h3><p>Tries to change Rye value to a file.</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-file "example.txt"
+; returns %example.txt</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-file 123
+; returns %123</code></pre>
+</div>
 <h3>to-char</h3><p>Tries to turn a Rye value (like integer) to ascii character.</p>
 <p class='arg'><b>value</b> Integer representing an ASCII code point</p>
 <p class='returns'><b>returns</b> A string containing the character corresponding to the ASCII code</p>
@@ -1618,6 +1604,16 @@ th!</h3><p>Changes the value at a specific position in a block or list in-place 
 <p class='returns'><b>returns</b> A context with the same keys and values as the input dict</p>
 <div class='group'>
 </div>
+<h3>to-word</h3><p>Tries to change a Rye value to a word with same name.</p>
+<p class='arg'><b>value</b> String or word-like value to convert to a word</p>
+<p class='returns'><b>returns</b> A word with the same name as the input value</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-word "test"
+; returns test</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-word 123
+; correctly causes error:
+; builtin `to-word` requires argument 1 to be: String, Word, Opword, Pipeword, Xword, EXword. </code></pre>
+</div>
 <h3>is-string</h3><p>Returns true if value is a string.</p>
 <p class='arg'><b>value</b> Any Rye value to test</p>
 <p class='returns'><b>returns</b> Integer 1 if the value is a string, 0 otherwise</p>
@@ -1628,16 +1624,6 @@ th!</h3><p>Changes the value at a specific position in a block or list in-place 
 ; returns 0</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>is-string 123
 ; returns 0</code></pre>
-</div>
-<h3>to-word</h3><p>Tries to change a Rye value to a word with same name.</p>
-<p class='arg'><b>value</b> String or word-like value to convert to a word</p>
-<p class='returns'><b>returns</b> A word with the same name as the input value</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>to-word "test"
-; returns test</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>to-word 123
-; correctly causes error:
-; builtin `to-word` requires argument 1 to be: String, Word, Opword, Pipeword, Xword, EXword. </code></pre>
 </div>
 <h3>is-integer</h3><p>Returns true if value is an integer.</p>
 <p class='arg'><b>value</b> Any Rye value to test</p>
@@ -1671,18 +1657,6 @@ th!</h3><p>Changes the value at a specific position in a block or list in-place 
 ; returns 1</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>is-number "123"
 ; returns 0</code></pre>
-</div>
-<h3>to-uri</h3><p>Tries to change Rye value to an URI.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>to-uri "https://example.com"
-; returns https://example.com</code></pre>
-</div>
-<h3>to-file</h3><p>Tries to change Rye value to a file.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>to-file "example.txt"
-; returns %example.txt</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>to-file 123
-; returns %123</code></pre>
 </div>
 <h3>type?</h3><p>Returns the type of Rye value as a word.</p>
 <p class='arg'><b>value</b> Any Rye value to check the type of</p>
@@ -1892,6 +1866,361 @@ Generic
 ; returns 223</code></pre>
 </div>
 </div>
+<h2>Flow control </h2><p>Functions for conditional execution and branching logic</p><div class='section'>
+<h3>if</h3><p>Executes a block of code only if the condition is true, returning the result of the block or false.</p>
+<p class='arg'><b>condition</b> Boolean value determining whether to execute the block</p>
+<p class='arg'><b>block</b> Block of code to execute if condition is true</p>
+<p class='returns'><b>returns</b> result of the block if condition is true, false otherwise</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>if true { 222 }
+; returns 222</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>if false { 333 }
+; returns false</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>if 1 { 222 }
+; correctly causes error:
+; builtin `if` requires argument 1 to be: Boolean. </code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>if 0 { 333 }
+; correctly causes error:
+; builtin `if` requires argument 1 to be: Boolean. </code></pre>
+</div>
+<h3>when</h3><p>Conditionally executes an action block if a condition block evaluates to true, injecting the same value into both blocks and returning the original value.</p>
+<p class='arg'><b>value</b> Value to inject into both condition and action blocks</p>
+<p class='arg'><b>condition</b> Block that evaluates to a truthy/falsy value with the injected value</p>
+<p class='arg'><b>action</b> Block to execute if condition is truthy, with the injected value</p>
+<p class='returns'><b>returns</b> the original injected value (for chaining)</p>
+<div class='group'>
+10
+<pre class='prettyprint lang-rye'><code language='lang-rye'>10 .when { &gt; 5 } { .print }
+; returns 10</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>10 .when { &lt; 5 } { .print }
+; returns 10</code></pre>
+</div>
+<h3>^if</h3><p>Conditional that sets the return flag when true, allowing early return from a function when the condition is a boolean.</p>
+<p class='arg'><b>condition</b> Value to evaluate for truthiness</p>
+<p class='arg'><b>block</b> Block of code to execute and return from if condition is truthy</p>
+<p class='returns'><b>returns</b> result of the block if condition is truthy (with return flag set), 0 otherwise</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: does { ^if true { 222 } 555 } x
+; returns 222</code></pre>
+</div>
+<h3>either</h3><p>Executes one of two blocks based on a boolean condition, similar to if/else in other languages.</p>
+<p class='arg'><b>condition</b> Boolean value determining which block to execute</p>
+<p class='arg'><b>true_block</b> Block or value to return if condition is true</p>
+<p class='arg'><b>false_block</b> Block or value to return if condition is false</p>
+<p class='returns'><b>returns</b> result of executing the true_block if condition is true, otherwise result of false_block</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>either true { 222 } { 333 }
+; returns 222</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>either false { 222 } { 333 }
+; returns 333</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>either 1 { 222 } { 333 }
+; correctly causes error:
+; builtin `either` requires argument 1 to be: Boolean. </code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>either 0 { 222 } { 333 }
+; correctly causes error:
+; builtin `either` requires argument 1 to be: Boolean. </code></pre>
+</div>
+<h3>switch</h3><p>Pattern matching construct that executes a block of code corresponding to the first matching case value.</p>
+<p class='arg'><b>value</b> Value to match against case values</p>
+<p class='arg'><b>cases</b> Block containing case values and corresponding handler blocks</p>
+<p class='returns'><b>returns</b> result of executing the matching handler block, or the original value if no match</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>switch 101 { 101 { 111 } 202 { 222 } }
+; returns 111</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>switch 202 { 101 { 111 } 202 { 222 } }
+; returns 222</code></pre>
+</div>
+<h3>cases</h3><p>Evaluates multiple condition-action pairs and applies all matching actions cumulatively to the initial value.</p>
+<p class='arg'><b>initial</b> Initial value to be transformed by matching case blocks</p>
+<p class='arg'><b>cases</b> Block containing condition blocks and corresponding transformation blocks</p>
+<p class='returns'><b>returns</b> cumulative result after applying all matching transformation blocks to the initial value</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cases 0 { { 1 &gt; 0 } { + 100 } { 2 &gt; 1 } { + 1000 } }
+; returns 1100</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cases 0 { { 1 &gt; 0 } { + 100 } { 2 &lt; 1 } { + 1000 } }
+; returns 100</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cases 0 { { 1 &lt; 0 } { + 100 } { 2 &gt; 1 } { + 1000 } }
+; returns 1000</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cases 0 { { 1 &lt; 0 } { + 100 } { 2 &lt; 1 } { + 1000 } }
+; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cases 1 { { 1 &gt; 0 } { + 100 } { 2 &lt; 1 } { + 1000 } _ { * 3 } }
+; returns 101</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cases 1 { { 1 &lt; 0 } { + 100 } { 2 &gt; 1 } { + 1000 } _ { * 3 } }
+; returns 1001</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cases 1 { { 1 &lt; 0 } { + 100 } { 2 &lt; 1 } { + 1000 } _ { * 3 } }
+; returns 3</code></pre>
+</div>
+</div>
+<h2>Iteration </h2><p>Functions for iterating over collections and executing code repeatedly</p><div class='section'>
+<h3>loop</h3><p>Executes a block of code, builtin, or function a specified number of times, injecting the current iteration number (starting from 1).</p>
+<p class='arg'><b>count</b> Integer number of iterations to perform</p>
+<p class='arg'><b>block</b> Block of code to execute on each iteration</p>
+<p class='returns'><b>returns</b> result of the last block execution</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>3 .loop { prns "x" }
+; prints "x x x "</code></pre>
+</div>
+<h3>produce</h3><p>Executes a block of code a specified number of times, passing the result of each execution to the next iteration.</p>
+<p class='arg'><b>count</b> Integer number of iterations to perform</p>
+<p class='arg'><b>initial</b> Initial value to inject into the first block execution</p>
+<p class='arg'><b>block</b> Block of code to execute on each iteration</p>
+<p class='returns'><b>returns</b> result of the last block execution</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>produce 5 0 { + 3 }
+; returns 15</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>produce 3 "&gt;" { ++ "x&gt;" }
+; returns "&gt;x&gt;x&gt;x&gt;"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>produce 3 { } { .concat "x" }
+; returns { "x" "x" "x" }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>produce 3 { } { :x .concat length? x }
+; returns { 0 1 2 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>produce 5 { 2 } { :acc .last :x * x |concat* acc }
+; returns { 2 4 16 256 65536 4294967296 }</code></pre>
+</div>
+<h3>produce\while</h3><p>Executes a block of code repeatedly while a condition is true, passing the result of each execution to the next iteration.</p>
+<p class='arg'><b>condition</b> Block that evaluates to a boolean to determine when to stop iterating</p>
+<p class='arg'><b>initial</b> Initial value to inject into the first block execution</p>
+<p class='arg'><b>block</b> Block of code to execute on each iteration</p>
+<p class='returns'><b>returns</b> result of the last block execution before the condition became false</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>var 'x 0 , produce\while { x &lt; 100 } 1 { * 2 :x }
+; returns 64</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>var 'x 0 , produce\while { x &lt; 100 } 1 { * 2 :x .prns }
+; prints "2 4 8 16 32 64 128 "</code></pre>
+</div>
+<h3>produce\</h3><p> TODO </p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>produce\ 5 1 'acc { * acc , + 1 }
+; returns 1</code></pre>
+</div>
+<h3>forever</h3><p>Executes a block of code repeatedly until .return is called within the block.</p>
+<p class='arg'><b>block</b> Block of code to execute repeatedly</p>
+<p class='returns'><b>returns</b> result of the block when .return is called</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>forever { "once" .prn .return }
+; prints "once"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>forever { "once" .return }
+; returns "once"</code></pre>
+</div>
+<h3>forever\with</h3><p>Accepts a value and a block, and executes the block repeatedly with the value until .return is called.</p>
+<p class='arg'><b>value</b> Value to inject into the block on each iteration</p>
+<p class='arg'><b>block</b> Block of code to execute repeatedly</p>
+<p class='returns'><b>returns</b> result of the block when .return is called</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>forever\with 1 { .prn .return }
+; prints "1"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>var 'x 0 , forever\with 1 { + 5 :x , if x &gt; 5 { return x } }
+; returns 6</code></pre>
+</div>
+<h3>for</h3><p>Accepts a block of values and a block of code, builtin, or function, does the code for each of the values, injecting them.</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>for { 1 2 3 } { prns "x" }
+; prints "x x x "</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>{ "a" "b" "c" } .for { .prns }
+; prints "a b c "</code></pre>
+</div>
+<h3>walk</h3><p>Accepts a block of values and a block of code, does the code for each of the values, injecting them.</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>walk { 1 2 3 } { .prns .rest }
+; prints "1 2 3  2 3  3  "</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>var 'x 0 , walk { 1 2 3 } { :b .first + x :x , b .rest } x
+; returns 6</code></pre>
+</div>
+<h3>purge</h3><p>Purges values from a series based on return of a injected code block.</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>purge { 1 3 3 } { .is-even }
+; returns { 1 3 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>purge { } { .is-even }
+; returns { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>purge list { 1 2 3 } { .is-even }
+; returns list { 1 3 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>purge list { } { .is-even }
+; returns list { }</code></pre>
+[String: 1]
+[String: 2]
+[String: 3]
+[String: 4]
+<pre class='prettyprint lang-rye'><code language='lang-rye'>purge "1234" { .probe .to-integer .is-even }
+; returns { "1" "3" }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>purge "" { .to-integer .is-even }
+; returns { }</code></pre>
+</div>
+<h3>purge!</h3><p>Purges values from a series based on return of a injected code block.</p>
+<div class='group'>
+</div>
+<h3>map___</h3><p>Maps values of a block to a new block by evaluating a block of code.</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map { 1 2 3 } { + 1 }
+; returns { 2 3 4 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map { } { + 1 }
+; returns { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map { "aaa" "bb" "c" } { .length? }
+; returns { 3 2 1 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map list { "aaa" "bb" "c" } { .length? }
+; returns list { 3 2 1 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map list { 3 4 5 6 } { .is-multiple-of 3 }
+; returns list { true false false true }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map list { } { + 1 }
+; returns list { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map "123" { .to-integer }
+; returns { 1 2 3 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map "123" ?to-integer
+; returns { 1 2 3 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map "" { + "-" }
+; returns { }</code></pre>
+</div>
+<h3>map</h3><p>Maps values of a block to a new block by evaluating a block of code or function.</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map { 1 2 3 } { + 1 }
+; returns { 2 3 4 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map { } { + 1 }
+; returns { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map { "aaa" "bb" "c" } { .length? }
+; returns { 3 2 1 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map list { "aaa" "bb" "c" } { .length? }
+; returns list { 3 2 1 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map list { 3 4 5 6 } { .is-multiple-of 3 }
+; returns list { true false false true }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map list { } { + 1 }
+; returns list { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map "123" { .to-integer }
+; returns { 1 2 3 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map "123" ?to-integer
+; returns { 1 2 3 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map "" { + "-" }
+; returns { }</code></pre>
+</div>
+<h3>map\pos</h3><p>Maps values of a block to a new block by evaluating a block of code.</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map\pos { 1 2 3 } 'i { + i }
+; returns { 2 4 6 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map\pos { } 'i { + i }
+; returns { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map\pos list { 1 2 3 } 'i { + i }
+; returns list { 2 4 6 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map\pos list { } 'i { + i }
+; returns list { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map\pos "abc" 'i { ++ i }
+; returns { "a1" "b2" "c3" }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map\pos "" 'i { + i }
+; returns { }</code></pre>
+</div>
+<h3>map\idx</h3><p>Maps values of a block to a new block by evaluating a block of code.</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map\idx { 1 2 3 } 'i { + i }
+; returns { 1 3 5 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map\idx { } 'i { + i }
+; returns { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map\idx list { 1 2 3 } 'i { + i }
+; returns list { 1 3 5 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map\idx list { } 'i { + i }
+; returns list { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map\idx "abc" 'i { ++ i }
+; returns { "a0" "b1" "c2" }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>map\idx "" 'i { + i }
+; returns { }</code></pre>
+</div>
+<h3>reduce</h3><p>Reduces values of a block to a new block by evaluating a block of code ...</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>reduce { 1 2 3 } 'acc { + acc }
+; returns 6</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>reduce list { 1 2 3 } 'acc { + acc }
+; returns 6</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>reduce "abc" 'acc { ++ acc }
+; returns "cba"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { reduce { } 'acc { + acc } } |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { reduce list { } 'acc { + acc } } |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { reduce "" 'acc { + acc } } |type?
+; returns error</code></pre>
+</div>
+<h3>fold</h3><p>Reduces values of a block to a new block by evaluating a block of code ...</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>fold { 1 2 3 } 'acc 1 { + acc }
+; returns 7</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>fold { } 'acc 1 { + acc }
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>fold list { 1 2 3 } 'acc 1 { + acc }
+; returns 7</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>fold list { } 'acc 1 { + acc }
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>fold "abc" 'acc "123" { ++ acc }
+; returns "cba123"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>fold "" 'acc "123" { + acc }
+; returns "123"</code></pre>
+</div>
+<h3>partition</h3><p>Partitions a series by evaluating a block of code.</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>partition { 1 2 3 4 } { &gt; 2 }
+; returns { { 1 2 } { 3 4 } }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>partition { "a" "b" 1 "c" "d" } { .is-integer }
+; returns { { "a" "b" } { 1 } { "c" "d" } }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>partition { "a" "b" 1 "c" "d" } ?is-integer
+; returns { { "a" "b" } { 1 } { "c" "d" } }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>partition { } { &gt; 2 }
+; returns { { } }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>partition list { 1 2 3 4 } { &gt; 2 }
+; returns list { list { 1 2 } list { 3 4 } }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>partition list { "a" "b" 1 "c" "d" } ?is-integer
+; returns list { list { "a" "b" } list { 1 } list { "c" "d" } }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>partition list { } { &gt; 2 }
+; returns list { list { } }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>partition "aaabbccc" { , }
+; returns list { "aaa" "bb" "ccc" }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>partition "" { , }
+; returns list { "" }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>partition "aaabbccc" ?is-string
+; returns list { "aaabbccc" }</code></pre>
+</div>
+<h3>group</h3><p>Groups a block or list of values given condition.</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>{ } .list .group { .first }
+; returns dict { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { { 1 2 3 4 } .group { .is-even } } |type?
+; returns error</code></pre>
+</div>
+<h3>filter</h3><p>Filters values from a seris based on return of a injected code block.</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>filter { 1 2 3 4 } { .is-even }
+; returns { 2 4 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>filter { 1 2 3 4 } ?is-even
+; returns { 2 4 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>filter { } { .is-even }
+; returns { }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>filter list { 1 2 3 4 } { .is-even }
+; returns list { 2 4 }</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>filter list { 1 2 3 4 } ?is-even
+; returns list { 2 4 }</code></pre>
+</div>
+<h3>seek</h3><p>Seek over a series until a Block of code returns True and return the value.</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>seek { 1 2 3 4 } { .is-even }
+; returns 2</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>seek list { 1 2 3 4 } { .is-even }
+; returns 2</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>seek "1234" { .to-integer .is-even }
+; returns "2"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { seek { 1 2 3 4 } { &gt; 5 } } |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { seek list { 1 2 3 4 } { &gt; 5 } } |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try { seek "1234" { .to-integer &gt; 5 } } |type?
+; returns error</code></pre>
+</div>
+<h3>while</h3><p>Executes a block of code repeatedly while a condition is true.</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>var 'x 0 while { x &lt; 5 } { x:: x + 1 } x
+; returns 5</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>var 'x 0 var 'y 0 while { x &lt; 5 } { x:: x + 1 y:: y + x } y
+; returns 15</code></pre>
+</div>
+<h3>until</h3><p>Executes a block of code repeatedly until a condition becomes true. Executes the body at least once before checking condition (do-until loop).</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>var 'x 0 until { x &gt; 0 } { x:: x + 1 } x
+; returns 1</code></pre>
+</div>
+</div>
 <h2>Functions </h2><p>functions that create functions</p><div class='section'>
 <h3>var</h3><p>Declares a word as a variable with the given value, allowing it to be modified. Can only be used once per word in a context.</p>
 <p class='arg'><b>word</b> Tagword representing the variable name</p>
@@ -1999,6 +2328,18 @@ Generic
 <pre class='prettyprint lang-rye'><code language='lang-rye'>fn-add: fn { x y } { x + y } , add-5: partial ?fn-add [ _ 5 ] , add-5 10
 ; returns 15</code></pre>
 </div>
+<h3>apply</h3><p>Applies a function or builtin to a block of arguments.</p>
+<p class='arg'><b>function</b> Function or builtin to apply</p>
+<p class='arg'><b>args</b> Block of arguments to pass to the function</p>
+<p class='returns'><b>returns</b> The result of applying the function to the arguments</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>apply ?_+ { 12 23 }
+; returns 35</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>apply fn { x y } { x + y } { 5 10 }
+; returns 15</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>f: fn { x y } { x * y } , apply ?f { 7 6 }
+; returns 42</code></pre>
+</div>
 </div>
 <h2>Other </h2><p>...</p><div class='section'>
 <h3>change!</h3><p>Searches for a word and changes it's value in-place. Only works on variables declared with var. If value changes returns true otherwise false</p>
@@ -2062,7 +2403,7 @@ Generic
 <p class='arg'>None</p>
 <p class='returns'><b>returns</b> Integer 1 on success</p>
 <div class='group'>
-State current context to [1mconsole_251102_111438.rye[0m.
+State current context to [1mconsole_251104_001500.rye[0m.
 <pre class='prettyprint lang-rye'><code language='lang-rye'>save\current |type?
 ; returns integer</code></pre>
 </div>
@@ -2228,11 +2569,19 @@ State current context to [1mconsole_251102_111438.rye[0m.
 <pre class='prettyprint lang-rye'><code language='lang-rye'>x: fn { } { return 101 202 } x
 ; returns 101</code></pre>
 </div>
-<h3>cmd</h3><p>Execute a shell command.</p>
+<h3>scmd</h3><p>Execute a shell command and return its exit status code.</p>
 <div class='group'>
 hello
-<pre class='prettyprint lang-rye'><code language='lang-rye'>cmd "echo "hello""
+<pre class='prettyprint lang-rye'><code language='lang-rye'>scmd "echo "hello""
+; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>scmd "exit 1"
 ; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>scmd "exit 42"
+; returns 42</code></pre>
+</div>
+<h3>scmd\capture</h3><p>Execute a shell command and capture the output, return it as string</p>
+<div class='group'>
+hello
 </div>
 <h3>rye</h3><p></p>
 <div class='group'>
@@ -2259,6 +2608,32 @@ hello
 <pre class='prettyprint lang-rye'><code language='lang-rye'>ff:: fn { } { defer\ "hello" { .print } "done" } , ff
 ; prints "hello
 ; "</code></pre>
+</div>
+<h3>recur-if</h3><p>Internal recursion control function. Resets function execution if condition > 0, otherwise returns result.</p>
+<p class='arg'><b>condition</b> Integer value, if > 0 triggers recursion reset</p>
+<p class='returns'><b>returns</b> nil if recursion continues, ps.Res if recursion ends</p>
+<div class='group'>
+</div>
+<h3>recur-if\1</h3><p>Internal recursion control function for single-argument functions. Updates first argument and resets if condition > 0.</p>
+<p class='arg'><b>condition</b> Integer value, if > 0 triggers recursion with updated argument</p>
+<p class='arg'><b>arg1</b> New value for the first function argument during recursion</p>
+<p class='returns'><b>returns</b> nil if recursion continues, ps.Res if recursion ends</p>
+<div class='group'>
+</div>
+<h3>recur-if\2</h3><p>Internal recursion control function for two-argument functions. Updates both arguments and resets if condition > 0.</p>
+<p class='arg'><b>condition</b> Integer value, if > 0 triggers recursion with updated arguments</p>
+<p class='arg'><b>arg1</b> New value for the first function argument during recursion</p>
+<p class='arg'><b>arg2</b> New value for the second function argument during recursion</p>
+<p class='returns'><b>returns</b> ps.Res (function result) regardless of condition</p>
+<div class='group'>
+</div>
+<h3>recur-if\3</h3><p>Internal recursion control function for three-argument functions. Updates all three arguments and resets if condition > 0.</p>
+<p class='arg'><b>condition</b> Integer value, if > 0 triggers recursion with updated arguments</p>
+<p class='arg'><b>arg1</b> New value for the first function argument during recursion</p>
+<p class='arg'><b>arg2</b> New value for the second function argument during recursion</p>
+<p class='arg'><b>arg3</b> New value for the third function argument during recursion</p>
+<p class='returns'><b>returns</b> ps.Res (function result) regardless of condition, nil if recursion continues</p>
+<div class='group'>
 </div>
 </div>
 </main>

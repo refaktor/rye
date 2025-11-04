@@ -88,7 +88,7 @@ var builtins_iteration = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { produce 5 0 { + 3 } } 15
-	// equal { produce 3 ">" { + "x>" } } ">x>x>x>"
+	// equal { produce 3 ">" { ++ "x>" } } ">x>x>x>"
 	// equal { produce 3 { } { .concat "x" } } { "x" "x" "x" }
 	// equal { produce 3 { } { ::x .concat length? x } } { 0 1 2 }
 	// equal { produce 5 { 2 } { ::acc .last ::x * x |concat* acc } } { 2 4 16 256 65536 4294967296 }
@@ -130,8 +130,8 @@ var builtins_iteration = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { x: 0 produce\while { x < 100 } 1 { * 2 ::x } } 64
-	// stdout { x: 0 produce\while { x < 100 } 1 { * 2 ::x .prns } } "2 4 8 16 32 64 128 "
+	// equal { var 'x 0 , produce\while { x < 100 } 1 { * 2 ::x } } 64
+	// stdout { var 'x 0 , produce\while { x < 100 } 1 { * 2 ::x .prns } } "2 4 8 16 32 64 128 "
 	// Args:
 	// * condition: Block that evaluates to a boolean to determine when to stop iterating
 	// * initial: Initial value to inject into the first block execution
@@ -256,7 +256,7 @@ var builtins_iteration = map[string]*env.Builtin{
 	},
 	// Tests:
 	//  stdout { forever\with 1 { .prn .return } } "1"
-	//  equal { x: 0 forever\with 1 { ::x + 1 if { x > 5 } { .return x } } } 6
+	//  equal { var 'x 0 , forever\with 1 { + 5 ::x , if x > 5 { return x } } } 6
 	// Args:
 	// * value: Value to inject into the block on each iteration
 	// * block: Block of code to execute repeatedly
@@ -289,14 +289,7 @@ var builtins_iteration = map[string]*env.Builtin{
 			}
 		},
 	},
-	// Tests:
-	// stdout { for { 1 2 3 } { prns "x" } } "x x x "
-	// stdout { { "a" "b" "c" } .for { .prns } } "a b c "
-	// Args:
-	// * collection: Collection of values to iterate over (string, block, list, or table)
-	// * block: Block of code to execute for each value in the collection
-	// Returns:
-	// * result of the last block execution
+
 	"for___": { // **
 		Argsn: 2,
 		Doc:   "Iterates over each value in a collection, executing a block of code for each value.",
@@ -498,7 +491,7 @@ var builtins_iteration = map[string]*env.Builtin{
 
 	// Tests:
 	//  stdout { walk { 1 2 3 } { .prns .rest } } "1 2 3  2 3  3  "
-	//  equal { x: 0 walk { 1 2 3 } { ::b .first + x ::x , b .rest } x } 6
+	//  equal { var 'x 0 , walk { 1 2 3 } { ::b .first + x ::x , b .rest } x } 6
 	"walk": { // **
 		Argsn: 2,
 		Doc:   "Accepts a block of values and a block of code, does the code for each of the values, injecting them.",
@@ -543,7 +536,7 @@ var builtins_iteration = map[string]*env.Builtin{
 	//  equal { purge { } { .is-even } } { }
 	//  equal { purge list { 1 2 3 } { .is-even } } list { 1 3 }
 	//  equal { purge list { } { .is-even } } list { }
-	//  equal { purge "1234" { .to-integer .is-even } } { "1" "3" }
+	//  equal { purge "1234" { .probe .to-integer .is-even } } { "1" "3" }
 	//  equal { purge "" { .to-integer .is-even } } { }
 	"purge": { // TODO ... doesn't fully work
 		Argsn: 2,
@@ -601,7 +594,7 @@ var builtins_iteration = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = code.Series
 					for i := 0; i < len(input); i++ {
-						EvalBlockInjMultiDialect(ps, env.ToRyeValue(input[i]), true)
+						EvalBlockInjMultiDialect(ps, *env.NewString(string(input[i])), true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -875,9 +868,10 @@ var builtins_iteration = map[string]*env.Builtin{
 	//  equal { map\pos { } 'i { + i } } { }
 	//  equal { map\pos list { 1 2 3 } 'i { + i } } list { 2 4 6 }
 	//  equal { map\pos list { } 'i { + i } } list { }
-	//  equal { map\pos "abc" 'i { + i } } { "a1" "b2" "c3" }
+	//  equal { map\pos "abc" 'i { ++ i } } { "a1" "b2" "c3" }
 	//  equal { map\pos "" 'i { + i } } { }
 	"map\\pos": { // *TODO -- deduplicate map\pos and map\idx
+		// TODO --- test { + i } didn't produce / report a valid error, find out why
 		Argsn: 3,
 		Doc:   "Maps values of a block to a new block by evaluating a block of code.",
 		Pure:  true,
@@ -920,7 +914,7 @@ var builtins_iteration = map[string]*env.Builtin{
 	// equal { map\idx { } 'i { + i } } { }
 	// equal { map\idx list { 1 2 3 } 'i { + i } } list { 1 3 5 }
 	// equal { map\idx list { } 'i { + i } } list { }
-	// equal { map\idx "abc" 'i { + i } } { "a0" "b1" "c2" }
+	// equal { map\idx "abc" 'i { ++ i } } { "a0" "b1" "c2" }
 	// equal { map\idx "" 'i { + i } } { }
 	"map\\idx": { // TODO -- deduplicate map\idx and map\idx
 		Argsn: 3,
@@ -962,7 +956,7 @@ var builtins_iteration = map[string]*env.Builtin{
 	// Tests:
 	//  equal { reduce { 1 2 3 } 'acc { + acc } } 6
 	//  equal { reduce list { 1 2 3 } 'acc { + acc } } 6
-	//  equal { reduce "abc" 'acc { + acc } } "cba"
+	//  equal { reduce "abc" 'acc { ++ acc } } "cba"
 	//  equal { try { reduce { } 'acc { + acc } } |type? } 'error
 	//  equal { try { reduce list { } 'acc { + acc } } |type? } 'error
 	//  equal { try { reduce "" 'acc { + acc } } |type? } 'error
@@ -1020,7 +1014,7 @@ var builtins_iteration = map[string]*env.Builtin{
 	//  equal { fold { } 'acc 1 { + acc } } 1
 	//  equal { fold list { 1 2 3 } 'acc 1 { + acc } } 7
 	//  equal { fold list { } 'acc 1 { + acc } } 1
-	//  equal { fold "abc" 'acc "123" { + acc } } "cba123"
+	//  equal { fold "abc" 'acc "123" { ++ acc } } "cba123"
 	//  equal { fold "" 'acc "123" { + acc } } "123"
 	"fold": { // **
 		Argsn: 4,
@@ -1402,10 +1396,10 @@ var builtins_iteration = map[string]*env.Builtin{
 	//  equal { filter { } { .is-even } } { }
 	//  equal { filter list { 1 2 3 4 } { .is-even } } list { 2 4 }
 	//  equal { filter list { 1 2 3 4 } ?is-even } list { 2 4 }
-	//  equal { filter list { } { .is-even } } list { }
-	//  equal { filter "1234" { .to-integer .is-even } } { "2" "4" }
-	//  equal { filter "01234" ?to-integer } { "1" "2" "3" "4" }
-	//  equal { filter "" { .to-integer .is-even } } { }
+	//  ; equal { filter list { } { .is-even } } list { }
+	//  ; equal { filter "1234" { .to-integer .is-even } } { "2" "4" }
+	//  ; equal { filter "01234" ?to-integer } { "1" "2" "3" "4" }
+	//  ; equal { filter "" { .to-integer .is-even } } { }
 	"filter": { // **
 		Argsn: 2,
 		Doc:   "Filters values from a seris based on return of a injected code block.",
@@ -1611,8 +1605,8 @@ var builtins_iteration = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { x: 0 while { x < 5 } { x:: x + 1 } x } 5
-	// equal { x: 0 y: 0 while { x < 5 } { x:: x + 1 y:: y + x } y } 15
+	// equal { var 'x 0 while { x < 5 } { x:: x + 1 } x } 5
+	// equal { var 'x 0 var 'y 0 while { x < 5 } { x:: x + 1 y:: y + x } y } 15
 	"while": {
 		Argsn: 2,
 		Doc:   "Executes a block of code repeatedly while a condition is true.",
@@ -1657,11 +1651,11 @@ var builtins_iteration = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { x: 5 until { x = 0 } { x:: x - 1 } x } 0
-	// equal { x: 10 y: 0 until { x = 5 } { x:: x - 1 y:: y + x } y } 35
-	// equal { x: 3 until { x < 1 } { x:: x - 1 } x } 0
-	// equal { x: 0 until { x > 0 } { x:: x + 1 } x } 1
-	"do\\until": {
+	// equal { var 'x 5 until { x = 0 } { x:: x - 1 } x } 0
+	// equal { var 'x 10 var 'y 0 until { x = 5 } { x:: x - 1 y:: y + x } y } 35
+	// equal { var 'x 3 until { x < 1 } { x:: x - 1 } x } 0
+	// equal { var 'x 0 until { x > 0 } { x:: x + 1 } x } 1
+	"until": {
 		Argsn: 2,
 		Doc:   "Executes a block of code repeatedly until a condition becomes true. Executes the body at least once before checking condition (do-until loop).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

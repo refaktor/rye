@@ -2128,6 +2128,144 @@ var builtins = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	// Args:
+	// * condition: Integer value, if > 0 triggers recursion reset
+	// Returns:
+	// * nil if recursion continues, ps.Res if recursion ends
+	"recur-if": {
+		Argsn: 2,
+		Doc:   "Internal recursion control function. Resets function execution if condition > 0, otherwise returns result.",
+		Pure:  false,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch cond := arg0.(type) {
+			case env.Integer:
+				if cond.Value > 0 {
+					ps.Ser.Reset()
+					return nil
+				} else {
+					return ps.Res
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "recur-if")
+			}
+		},
+	},
+
+	// Tests:
+	// Args:
+	// * condition: Integer value, if > 0 triggers recursion with updated argument
+	// * arg1: New value for the first function argument during recursion
+	// Returns:
+	// * nil if recursion continues, ps.Res if recursion ends
+	"recur-if\\1": {
+		Argsn: 2,
+		Doc:   "Internal recursion control function for single-argument functions. Updates first argument and resets if condition > 0.",
+		Pure:  false,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch cond := arg0.(type) {
+			case env.Integer:
+				if cond.Value > 0 {
+					switch arg := arg1.(type) {
+					case env.Integer:
+						ps.Ctx.Mod(ps.Args[0], arg)
+						ps.Ser.Reset()
+						return nil
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "recur-if\\1")
+					}
+				} else {
+					return ps.Res
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "recur-if\\1")
+			}
+		},
+	},
+
+	// Tests:
+	// Args:
+	// * condition: Integer value, if > 0 triggers recursion with updated arguments
+	// * arg1: New value for the first function argument during recursion
+	// * arg2: New value for the second function argument during recursion
+	// Returns:
+	// * ps.Res (function result) regardless of condition
+	"recur-if\\2": {
+		Argsn: 3,
+		Doc:   "Internal recursion control function for two-argument functions. Updates both arguments and resets if condition > 0.",
+		Pure:  false,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch cond := arg0.(type) {
+			case env.Integer:
+				if cond.Value > 0 {
+					switch argi1 := arg1.(type) {
+					case env.Integer:
+						switch argi2 := arg2.(type) {
+						case env.Integer:
+							ps.Ctx.Set(ps.Args[0], argi1)
+							ps.Ctx.Set(ps.Args[1], argi2)
+							ps.Ser.Reset()
+							return ps.Res
+						default:
+							return MakeArgError(ps, 3, []env.Type{env.IntegerType}, "recur-if\\2")
+						}
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "recur-if\\2")
+					}
+				} else {
+					return ps.Res
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "recur-if\\2")
+			}
+		},
+	},
+
+	// Tests:
+	// Args:
+	// * condition: Integer value, if > 0 triggers recursion with updated arguments
+	// * arg1: New value for the first function argument during recursion
+	// * arg2: New value for the second function argument during recursion
+	// * arg3: New value for the third function argument during recursion
+	// Returns:
+	// * ps.Res (function result) regardless of condition, nil if recursion continues
+	"recur-if\\3": {
+		Argsn: 4,
+		Doc:   "Internal recursion control function for three-argument functions. Updates all three arguments and resets if condition > 0.",
+		Pure:  false,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch cond := arg0.(type) {
+			case env.Integer:
+				if cond.Value > 0 {
+					switch argi1 := arg1.(type) {
+					case env.Integer:
+						switch argi2 := arg2.(type) {
+						case env.Integer:
+							switch argi3 := arg3.(type) {
+							case env.Integer:
+								ps.Ctx.Set(ps.Args[0], argi1)
+								ps.Ctx.Set(ps.Args[1], argi2)
+								ps.Ctx.Set(ps.Args[2], argi3)
+								ps.Ser.Reset()
+								return ps.Res
+							default:
+								return MakeArgError(ps, 4, []env.Type{env.IntegerType}, "recur-if\\3")
+							}
+						default:
+							return MakeArgError(ps, 3, []env.Type{env.IntegerType}, "recur-if\\3")
+						}
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "recur-if\\3")
+					}
+				} else {
+					return ps.Res
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "recur-if\\3")
+			}
+		},
+	},
 }
 
 /* Terminal functions .. move to it's own later */

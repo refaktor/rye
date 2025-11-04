@@ -89,6 +89,43 @@ var builtins_types = map[string]*env.Builtin{
 	},
 
 	// Tests:
+	// equal   { to-uri "https://example.com" } https://example.com
+	// ; error { to-uri "not-uri" }
+	"to-uri": { // ** TODO-FIXME: return possible failures
+		Argsn: 1,
+		Doc:   "Tries to change Rye value to an URI.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.String:
+				return *env.NewUri1(ps.Idx, val.Value) // TODO turn to switch
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "to-uri")
+			}
+
+		},
+	},
+
+	// Tests:
+	// equal   { to-file "example.txt" } %example.txt
+	// equal { to-file 123 } %123
+	"to-file": { // **  TODO-FIXME: return possible failures
+		Argsn: 1,
+		Doc:   "Tries to change Rye value to a file.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch val := arg0.(type) {
+			case env.Integer:
+				return *env.NewFileUri(ps.Idx, strconv.Itoa(int(val.Value))) // TODO turn to switch
+			case env.String:
+				return *env.NewFileUri(ps.Idx, val.Value) // TODO turn to switch
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "to-file")
+			}
+		},
+	},
+
+	// Tests:
 	// equal { to-char 42 } "*"
 	// error { to-char "*" }
 	// Args:
@@ -154,27 +191,6 @@ var builtins_types = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal   { is-string "test" } 1
-	// equal   { is-string 'test } 0
-	// equal   { is-string 123 } 0
-	// Args:
-	// * value: Any Rye value to test
-	// Returns:
-	// * Integer 1 if the value is a string, 0 otherwise
-	"is-string": { // ***
-		Argsn: 1,
-		Doc:   "Returns true if value is a string.",
-		Pure:  true,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			if arg0.Type() == env.StringType {
-				return *env.NewInteger(1)
-			} else {
-				return *env.NewInteger(0)
-			}
-		},
-	},
-
-	// Tests:
 	// equal { to-word "test" } 'test
 	// error { to-word 123 }
 	// Args:
@@ -210,6 +226,27 @@ var builtins_types = map[string]*env.Builtin{
 				return *env.NewWord(str.Index)
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType, env.WordType, env.OpwordType, env.PipewordType, env.XwordType, env.EXwordType}, "to-word")
+			}
+		},
+	},
+
+	// Tests:
+	// equal   { is-string "test" } 1
+	// equal   { is-string 'test } 0
+	// equal   { is-string 123 } 0
+	// Args:
+	// * value: Any Rye value to test
+	// Returns:
+	// * Integer 1 if the value is a string, 0 otherwise
+	"is-string": { // ***
+		Argsn: 1,
+		Doc:   "Returns true if value is a string.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			if arg0.Type() == env.StringType {
+				return *env.NewInteger(1)
+			} else {
+				return *env.NewInteger(0)
 			}
 		},
 	},
@@ -273,43 +310,6 @@ var builtins_types = map[string]*env.Builtin{
 				return *env.NewInteger(1)
 			} else {
 				return *env.NewInteger(0)
-			}
-		},
-	},
-
-	// Tests:
-	// equal   { to-uri "https://example.com" } https://example.com
-	// ; error { to-uri "not-uri" }
-	"to-uri": { // ** TODO-FIXME: return possible failures
-		Argsn: 1,
-		Doc:   "Tries to change Rye value to an URI.",
-		Pure:  true,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch val := arg0.(type) {
-			case env.String:
-				return *env.NewUri1(ps.Idx, val.Value) // TODO turn to switch
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "to-uri")
-			}
-
-		},
-	},
-
-	// Tests:
-	// equal   { to-file "example.txt" } %example.txt
-	// equal { to-file 123 } %123
-	"to-file": { // **  TODO-FIXME: return possible failures
-		Argsn: 1,
-		Doc:   "Tries to change Rye value to a file.",
-		Pure:  true,
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch val := arg0.(type) {
-			case env.Integer:
-				return *env.NewFileUri(ps.Idx, strconv.Itoa(int(val.Value))) // TODO turn to switch
-			case env.String:
-				return *env.NewFileUri(ps.Idx, val.Value) // TODO turn to switch
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "to-file")
 			}
 		},
 	},

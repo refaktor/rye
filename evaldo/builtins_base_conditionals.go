@@ -130,8 +130,8 @@ var builtins_conditionals = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal  { x: does { ^if 1 { 222 } 555 } x } 222
-	// equal  { x: does { ^if 0 { 333 } 444 } x } 444
+	// equal  { x: does { ^if true { 222 } 555 } x } 222
+	// equal  { x: does { ^if false { 333 } 444 } x } 333
 	// Args:
 	// * condition: Value to evaluate for truthiness
 	// * block: Block of code to execute and return from if condition is truthy
@@ -139,30 +139,34 @@ var builtins_conditionals = map[string]*env.Builtin{
 	// * result of the block if condition is truthy (with return flag set), 0 otherwise
 	"^if": { // **
 		Argsn: 2,
-		Doc:   "Conditional that sets the return flag when true, allowing early return from a function when the condition is truthy.",
+		Doc:   "Conditional that sets the return flag when true, allowing early return from a function when the condition is a boolean.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch bloc := arg1.(type) {
-			case env.Block:
-				cond1 := util.IsTruthy(arg0)
-				if cond1 {
-					ser := ps.Ser
-					ps.Ser = bloc.Series
-					EvalBlockInj(ps, arg0, true)
-					if ps.ErrorFlag {
+			// Check if the first argument is a boolean
+			switch cond := arg0.(type) {
+			case env.Boolean:
+				switch bloc := arg1.(type) {
+				case env.Block:
+					if cond.Value {
+						ser := ps.Ser
+						ps.Ser = bloc.Series
+						EvalBlockInj(ps, arg0, true)
+						if ps.ErrorFlag {
+							ps.Ser = ser
+							return ps.Res
+						}
 						ps.Ser = ser
+						ps.ReturnFlag = true
 						return ps.Res
 					}
-					ps.Ser = ser
-					ps.ReturnFlag = true
-					return ps.Res
+					return *env.NewInteger(0)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "^if")
 				}
-				return *env.NewInteger(0)
-				// else {
-				//	return MakeBuiltinError(ps, "Truthiness condition is not correct.", "^if")
-				// }
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "^if")
+				// if it's not a boolean we return error
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.BooleanType}, "^if")
 			}
 		},
 	},
