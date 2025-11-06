@@ -114,6 +114,38 @@ var builtins_contexts = map[string]*env.Builtin{
 	},
 
 	// Tests:
+	// equal { c: context\pure { x: 123 } c/x } 123
+	// ; error { y: 123 c: context\pure { x: y } } ; y not accessible in pure context
+	// equal { c: context\pure { x: add 10 5 } c/x } 15
+	// Args:
+	// * block: Block of expressions to evaluate in a new pure context
+	// Returns:
+	// * context object with the values defined in the block, using Pure Context as parent
+	"context\\pure": {
+		Argsn: 1,
+		Doc:   "Creates a new context using Pure Context (PCtx) as parent, preventing access to regular context changes.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg0.(type) {
+			case env.Block:
+				ser := ps.Ser
+				ctx := ps.Ctx
+				ps.Ser = bloc.Series
+				ps.Ctx = env.NewEnv(ps.PCtx) // make new context with PCtx as parent instead of regular Ctx
+				EvalBlock(ps)
+				rctx := ps.Ctx
+				ps.Ctx = ctx
+				ps.Ser = ser
+				if ps.ErrorFlag {
+					return ps.Res
+				}
+				return *rctx // return the resulting context
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "context\\pure")
+			}
+		},
+	},
+
+	// Tests:
 	// equal { private { x: 123 } } 123
 	// equal { y: 123 private { x: y } } 123
 	// equal { private { x: inc 10 } } 11
@@ -315,6 +347,7 @@ var builtins_contexts = map[string]*env.Builtin{
 
 	"lc": {
 		Argsn: 0,
+		Pure:  true,
 		Doc:   "Lists words in current context",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			fmt.Println(ps.Ctx.Preview(*ps.Idx, ""))

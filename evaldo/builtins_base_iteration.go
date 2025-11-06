@@ -683,21 +683,6 @@ var builtins_iteration = map[string]*env.Builtin{
 		},
 	},
 
-	// map should at the end map over block, raw-map, etc ...
-	// it should accept a block of code, a function and a builtin
-	// it should use injected block so it doesn't need a variable defined like map [ 1 2 3 ] x [ add a 100 ]
-	// map [ 1 2 3 ] { .add 3 }
-	// Tests:
-	//  equal { map { 1 2 3 } { + 1 } } { 2 3 4 }
-	//  equal { map { } { + 1 } } { }
-	//  equal { map { "aaa" "bb" "c" } { .length? } } { 3 2 1 }
-	//  equal { map list { "aaa" "bb" "c" } { .length? } } list { 3 2 1 }
-	//  equal { map list { 3 4 5 6 } { .is-multiple-of 3 } } list { 1 0 0 1 }
-	//  equal { map list { } { + 1 } } list { }
-	//  ; equal { map "abc" { + "-" } .join } "a-b-c-" ; TODO doesn't work, fix join
-	//  equal { map "123" { .to-integer } } { 1 2 3 }
-	//  equal { map "123" ?to-integer } { 1 2 3 }
-	//  equal { map "" { + "-" } } { }
 	"map___": { // **
 		Argsn: 2,
 		Doc:   "Maps values of a block to a new block by evaluating a block of code.",

@@ -8,8 +8,9 @@ import (
 
 var builtins_time = map[string]*env.Builtin{
 
-	// Unix time functions
-
+	//
+	// ##### Date and Time ##### ""
+	//
 	// Tests:
 	// equal { now |unix-micro? |type? } 'integer
 	// Args:

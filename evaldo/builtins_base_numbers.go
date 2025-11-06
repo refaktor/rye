@@ -678,7 +678,7 @@ var builtins_numbers = map[string]*env.Builtin{
 					return *env.NewTime(v)
 				case env.Time:
 					v1 := a.Value.Sub(b2.Value)
-					return *env.NewInteger(int64(v1))
+					return *env.NewInteger(int64(v1) / 1000000)
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.TimeType}, "_-")
 				}

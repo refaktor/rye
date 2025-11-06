@@ -972,7 +972,29 @@ func (p *NoPEGParser) parseBlock(blockType int) (env.Object, error) {
 
 		// Check for unexpected end of input
 		if p.currentToken.Type == NPEG_TOKEN_EOF {
-			return nil, fmt.Errorf("unexpected end of input while parsing block")
+			blockTypeName := "block"
+			closingDelimiter := "}"
+			switch blockType {
+			case 0:
+				blockTypeName = "block"
+				closingDelimiter = "}"
+			case 1:
+				blockTypeName = "bblock"
+				closingDelimiter = "]"
+			case 2:
+				blockTypeName = "group"
+				closingDelimiter = ")"
+			case 3:
+				blockTypeName = "opbblock"
+				closingDelimiter = "]"
+			case 4:
+				blockTypeName = "opgroup"
+				closingDelimiter = ")"
+			case 5:
+				blockTypeName = "opblock"
+				closingDelimiter = "}"
+			}
+			return nil, fmt.Errorf("unexpected end of input while parsing %s. Missing closing delimiter '%s'", blockTypeName, closingDelimiter)
 		}
 
 		// fmt.Println("BEFORE CALLING PARSE TOKEN ON PARSER")
@@ -1118,13 +1140,13 @@ func (p *NoPEGParser) parseToken() (env.Object, error) {
 	case NPEG_TOKEN_NUMBER:
 		val, err := strconv.ParseInt(p.currentToken.Value, 10, 64)
 		if err != nil {
-			return nil, fmt.Errorf("invalid number format: %s", err.Error())
+			return nil, fmt.Errorf("invalid number format '%s': %s. Numbers must be integers like 42, -123, or 0", p.currentToken.Value, err.Error())
 		}
 		return *env.NewInteger(val), nil
 	case NPEG_TOKEN_DECIMAL:
 		val, err := strconv.ParseFloat(p.currentToken.Value, 64)
 		if err != nil {
-			return nil, fmt.Errorf("invalid decimal format: %s", err.Error())
+			return nil, fmt.Errorf("invalid decimal format '%s': %s. Decimals must be numbers with decimal points like 3.14, -0.5, or 123.0", p.currentToken.Value, err.Error())
 		}
 		return *env.NewDecimal(val), nil
 	case NPEG_TOKEN_STRING:
@@ -1257,13 +1279,68 @@ func formatErrorLocationNoPEG(line string, col int) string {
 func inferErrorContextNoPEG(tok NoPEGToken, err error, line string, col int, fullInput string, lineNum int) string {
 	switch tok.Err {
 	case ERR_SPACING_BLK:
-		return "You need spacing between values and block tokens"
+		if col > 0 && col <= len(line) {
+			prevChar := "?"
+			nextChar := "?"
+			if col-1 < len(line) {
+				prevChar = string(line[col-1])
+			}
+			if col < len(line) {
+				nextChar = string(line[col])
+			}
+			return fmt.Sprintf("Missing space between '%s' and block delimiter '%s'. Block delimiters ({ } [ ] ( )) must be separated from adjacent tokens by spaces.", prevChar, nextChar)
+		}
+		return "Missing space around block delimiters. Block delimiters ({ } [ ] ( )) must be separated from adjacent tokens by spaces."
 	case ERR_SPACING_OP:
-		return "You need spacing between a value and a op-word (operator)"
+		if col > 0 && col <= len(line) {
+			prevChar := "?"
+			nextChar := "?"
+			if col-1 < len(line) {
+				prevChar = string(line[col-1])
+			}
+			if col < len(line) {
+				nextChar = string(line[col])
+			}
+			return fmt.Sprintf("Missing space between value '%s' and operator '%s'. Operators must be separated from values by spaces.", prevChar, nextChar)
+		}
+		return "Missing space around operator. Operators must be separated from values by spaces."
 	case ERR_SPACING_OTHR:
-		return "You need spacing between all tokens"
+		if col > 0 && col <= len(line) {
+			prevChar := "?"
+			nextChar := "?"
+			if col-1 < len(line) {
+				prevChar = string(line[col-1])
+			}
+			if col < len(line) {
+				nextChar = string(line[col])
+			}
+			return fmt.Sprintf("Missing space between tokens '%s' and '%s'. All tokens must be separated by whitespace.", prevChar, nextChar)
+		}
+		return "Missing space between tokens. All tokens must be separated by whitespace."
 	}
-	return "Unknown syntax error"
+
+	// Provide more specific error messages based on the error string
+	errMsg := err.Error()
+	if strings.Contains(errMsg, "unexpected end of input") {
+		return "Unexpected end of input. Check for missing closing delimiters like }, ], or )."
+	}
+	if strings.Contains(errMsg, "expected block start") {
+		return "Expected opening block delimiter '{' at the beginning of the input."
+	}
+	if strings.Contains(errMsg, "invalid number format") {
+		return fmt.Sprintf("Invalid number format in token '%s'. Check for malformed numbers.", tok.Value)
+	}
+	if strings.Contains(errMsg, "invalid decimal format") {
+		return fmt.Sprintf("Invalid decimal format in token '%s'. Check for malformed decimal numbers.", tok.Value)
+	}
+	if strings.Contains(errMsg, "invalid context path") {
+		return fmt.Sprintf("Invalid context path '%s'. Context paths must follow the pattern 'word/word' or 'word/word/word'.", tok.Value)
+	}
+	if strings.Contains(errMsg, "unknown token type") {
+		return fmt.Sprintf("Unrecognized token type at position. Check for invalid characters or malformed syntax.")
+	}
+
+	return fmt.Sprintf("Syntax error with token '%s'. %s", tok.Value, errMsg)
 }
 
 /* func inferErrorContextNoPEG_TOREMOVE(line string, col int, fullInput string, lineNum int) string {

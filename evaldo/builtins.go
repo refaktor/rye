@@ -148,6 +148,13 @@ func greaterThanNew(arg0 env.Object, arg1 env.Object) bool {
 		default:
 			return false
 		}
+	case env.Time:
+		switch vB := arg1.(type) {
+		case env.Time:
+			return vA.Value.After(vB.Value)
+		default:
+			return false
+		}
 	}
 	switch vB := arg1.(type) {
 	case env.Integer:
@@ -166,6 +173,20 @@ func lesserThan(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) bool {
 		valA = float64(vA.Value)
 	case env.Decimal:
 		valA = vA.Value
+	case env.String:
+		switch vB := arg1.(type) {
+		case env.String:
+			return vA.Value < vB.Value
+		default:
+			return false
+		}
+	case env.Time:
+		switch vB := arg1.(type) {
+		case env.Time:
+			return vA.Value.Before(vB.Value)
+		default:
+			return false
+		}
 	}
 	switch vB := arg1.(type) {
 	case env.Integer:
@@ -188,6 +209,13 @@ func lesserThanNew(arg0 env.Object, arg1 env.Object) bool {
 		switch vB := arg1.(type) {
 		case env.String:
 			return vA.Value < vB.Value
+		default:
+			return false
+		}
+	case env.Time:
+		switch vB := arg1.(type) {
+		case env.Time:
+			return vA.Value.Before(vB.Value)
 		default:
 			return false
 		}
@@ -1156,6 +1184,7 @@ var builtins = map[string]*env.Builtin{
 	// * A new Dict with the specified keys and values
 	"dict": {
 		Argsn: 1,
+		Pure:  true,
 		Doc:   "Constructs a Dict from the Block of key and value pairs.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
@@ -1174,6 +1203,7 @@ var builtins = map[string]*env.Builtin{
 	// * A new List with the values from the block
 	"list": {
 		Argsn: 1,
+		Pure:  true,
 		Doc:   "Constructs a List from the Block of values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {

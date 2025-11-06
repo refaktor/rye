@@ -1071,13 +1071,13 @@ var Builtins_crypto = map[string]*env.Builtin{
 			case env.Native:
 				if ps.Idx.GetWord(cert.GetKind()) != "x509-certificate" {
 					ps.FailureFlag = true
-					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "x509-certificate//subject?")
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "x509-certificate//Subject?")
 				}
 				c := cert.Value.(*x509.Certificate)
 				return *env.NewString(c.Subject.String())
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "x509-certificate//subject?")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "x509-certificate//Subject?")
 			}
 		},
 	},
