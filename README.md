@@ -46,10 +46,10 @@ range 1 10 |map { .fac } |print\csv
 ; prints: 1,2,6,24,120,720,5040,40320,362880,3628800
 
 kind: "admin"
-open sqlite://data.db |query { select * from user where kind = ?kind }
+Open sqlite://data.db |Query { select * from user where kind = ?kind }
 ; returns: Table of admins
 
-read %name.txt |fix { "Anonymous" } |post* https://example.com/postname 'text
+Read %name.txt |fix { "Anonymous" } |Post* https://example.com/postname 'text
 ; makes HTTP post of the name read from a file, or "Anonymous" if file failed to be read
 ```
 
