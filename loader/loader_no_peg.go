@@ -53,6 +53,7 @@ const (
 	NPEG_TOKEN_COMMENT
 	NPEG_TOKEN_SPACE
 	NPEG_TOKEN_LOCATION_NODE
+	NPEG_TOKEN_FLAGWORD
 	NPEG_TOKEN_EOF
 	NPEG_TOKEN_ERROR
 )
@@ -395,7 +396,13 @@ func (l *Lexer) NextToken() NoPEGToken {
 		} else {
 			pch := l.peekChar()
 			// fmt.Println("***1")
-			if isWhitespace(pch) {
+			if pch == '-' {
+				// Could be a long flag (--verbose)
+				return l.readFlagword()
+			} else if isLetter(pch) {
+				// Could be a short flag (-v)
+				return l.readFlagword()
+			} else if isWhitespace(pch) {
 				l.readChar()
 				// fmt.Println("***2")
 				return l.makeToken(NPEG_TOKEN_OPWORD, "-")
@@ -909,6 +916,56 @@ func (l *Lexer) readOnePipeWord() NoPEGToken {
 	return l.makeToken(NPEG_TOKEN_ONECHARPIPE, word)
 }
 
+// readFlagword reads a flag token (-v, --verbose, or -v|verbose)
+func (l *Lexer) readFlagword() NoPEGToken {
+	// possible inputs:
+	// -v
+	// --verbose
+	// -v|verbose
+
+	l.readChar() // Skip the first '-'
+
+	shortForm := true
+
+	// if second charater is also '-'
+	if l.ch == '-' {
+		shortForm = false
+		// This is a long flag (--word)
+		l.readChar() // Skip the second '-'
+	}
+
+	// Read the flag name
+	if !isLetter(l.ch) {
+		// Invalid flag - should start with a letter
+		return l.makeTokenErr(NPEG_TOKEN_ERROR, l.input[l.tokenStart:l.pos], ERR_SPACING_OTHR)
+	}
+
+	// Read the single letter
+	l.readChar()
+
+	// Check if there's a pipe for combined short|long format (and it started with one -)
+	if shortForm && l.ch == '|' {
+		shortForm = false
+		l.readChar() // Skip the '|'
+	}
+
+	if !shortForm {
+
+		// Read the rest of long form part
+		for isWordCharacter(l.ch) {
+			l.readChar()
+		}
+
+	}
+
+	// Ensure the token is followed by whitespace
+	if !isWhitespace(l.ch) {
+		return l.makeTokenErr(NPEG_TOKEN_ERROR, l.input[l.tokenStart:l.pos], determineLexerError(l.ch))
+	}
+
+	return l.makeToken(NPEG_TOKEN_FLAGWORD, l.input[l.tokenStart:l.pos])
+}
+
 // NewParserNoPEG creates a new parser
 func NewParserNoPEG(input string, wordIndex *env.Idxs) *NoPEGParser {
 	l := NewLexer(input)
@@ -1137,6 +1194,34 @@ func (p *NoPEGParser) parseToken() (env.Object, error) {
 		word := p.currentToken.Value
 		idx := p.wordIndex.IndexWord(strings.ToLower(word))
 		return *env.NewGenword(idx), nil
+	case NPEG_TOKEN_FLAGWORD:
+		word := p.currentToken.Value
+		if strings.HasPrefix(word, "--") {
+			// Long flag (--verbose)
+			flagName := word[2:] // Remove "--"
+			idx := p.wordIndex.IndexWord(flagName)
+			return *env.NewFlagword(-1, idx), nil
+		} else if strings.HasPrefix(word, "-") {
+			// Short flag (-v) or combined flag (-v|verbose)
+			flagPart := word[1:] // Remove "-"
+
+			// Check for combined format (short|long)
+			if strings.Contains(flagPart, "|") {
+				parts := strings.SplitN(flagPart, "|", 2)
+				shortName := parts[0]
+				longName := parts[1]
+				shortIdx := p.wordIndex.IndexWord(shortName)
+				longIdx := p.wordIndex.IndexWord(longName)
+				return *env.NewFlagword(shortIdx, longIdx), nil
+			} else {
+				// Regular short flag
+				idx := p.wordIndex.IndexWord(flagPart)
+				return *env.NewFlagword(idx, -1), nil
+			}
+		}
+		// This shouldn't happen due to lexer validation, but handle gracefully
+		idx := p.wordIndex.IndexWord(word)
+		return *env.NewFlagword(-1, idx), nil
 	case NPEG_TOKEN_NUMBER:
 		val, err := strconv.ParseInt(p.currentToken.Value, 10, 64)
 		if err != nil {
