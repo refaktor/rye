@@ -1919,7 +1919,7 @@ var Builtins_table = map[string]*env.Builtin{
 	// Args:
 	// * file-uri - location of xlsx file to load
 	// Tags: #table #loading #xlsx
-	"file-uri//Load\\xlsx": {
+	"load\\xlsx": {
 		Argsn: 1,
 		Doc:   "Loads the first sheet in an .xlsx file to a Table.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

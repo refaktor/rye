@@ -1,6 +1,6 @@
 module github.com/refaktor/rye
 
-go 1.25
+go 1.25.0
 
 retract v0.0.11 // Published accidentally with a bug
 
@@ -46,7 +46,8 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/mattn/go-runewidth v0.0.19
 	github.com/mhale/smtpd v0.8.3
-	github.com/mrz1836/postmark v1.8.2
+	github.com/mlange-42/ark v0.6.0
+	github.com/mrz1836/postmark v1.8.1
 	github.com/muesli/reflow v0.3.0
 	github.com/openai/openai-go v1.12.0
 	github.com/pkg/term v1.2.0-beta.2.0.20211217091447-1a4a3b719465

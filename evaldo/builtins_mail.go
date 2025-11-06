@@ -53,7 +53,7 @@ var Builtins_mail = map[string]*env.Builtin{
 			case env.Native:
 				return *env.NewString(email.Value.(parsemail.Email).Subject)
 			default:
-				return *MakeArgError(ps, 1, []env.Type{env.NativeType}, "parsed-email//subject?")
+				return *MakeArgError(ps, 1, []env.Type{env.NativeType}, "parsed-email//Subject?")
 			}
 		},
 	},

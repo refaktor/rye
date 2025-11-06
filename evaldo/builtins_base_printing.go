@@ -537,6 +537,7 @@ var builtins_printing = map[string]*env.Builtin{
 	// Returns:
 	// * the input value or selected item from interactive display
 	"display": {
+		Pure:  true,
 		Argsn: 1,
 		Doc:   "Interactively displays a value (Block, Dict, Table, or TableRow) in the terminal with navigation capabilities.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

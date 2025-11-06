@@ -898,6 +898,187 @@ ASDF
 ; returns { { 1 2 } { 3 4 } { 5 } }</code></pre>
 </div>
 </div>
+<h2>Date and Time </h2><p></p><div class='section'>
+<h3>unix-micro?</h3><p>Converts a time object to Unix time in microseconds (microseconds since January 1, 1970 UTC).</p>
+<p class='arg'><b>time</b> Time object to convert</p>
+<p class='returns'><b>returns</b> integer representing Unix time in microseconds</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>now |unix-micro? |type?
+; returns integer</code></pre>
+</div>
+<h3>unix-milli?</h3><p>Converts a time object to Unix time in milliseconds (milliseconds since January 1, 1970 UTC).</p>
+<p class='arg'><b>time</b> Time object to convert</p>
+<p class='returns'><b>returns</b> integer representing Unix time in milliseconds</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>now |unix-milli? |type?
+; returns integer</code></pre>
+</div>
+<h3>weekday?</h3><p>Extracts the day of the week from a time object as an integer (0=Sunday through 6=Saturday).</p>
+<p class='arg'><b>time</b> Time object to extract weekday from</p>
+<p class='returns'><b>returns</b> integer representing day of week (0=Sunday, 1=Monday, ..., 6=Saturday)</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>date "2023-01-01" |weekday?
+; returns 0</code></pre>
+</div>
+<h3>date</h3><p>Creates a time object from a date string in YYYY-MM-DD format.</p>
+<p class='arg'><b>datestr</b> String in "YYYY-MM-DD" format</p>
+<p class='returns'><b>returns</b> time object representing the specified date</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>date "2023-01-15" |type?
+; returns time</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>date "2023-01-15" |day?
+; returns 15</code></pre>
+</div>
+<h3>datetime</h3><p>Creates a time object from a datetime string in YYYY-MM-DDThh:mm:ss format.</p>
+<p class='arg'><b>datetimestr</b> String in "YYYY-MM-DDThh</p>
+<p class='returns'><b>returns</b> time object representing the specified date and time</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>datetime "2023-01-15T14:30:45" |type?
+; returns time</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>datetime "2023-01-15T14:30:45" |hour?
+; returns 14</code></pre>
+</div>
+<h3>now</h3><p>Creates a time object representing the current local time.</p>
+<p class='arg'>none</p>
+<p class='returns'><b>returns</b> time object representing the current time</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>now |type?
+; returns time</code></pre>
+</div>
+<h3>yearday?</h3><p>Extracts the day of year from a time object as an integer (1-366).</p>
+<p class='arg'><b>time</b> Time object to extract day of year from</p>
+<p class='returns'><b>returns</b> integer representing day of year (1-366)</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>date "2023-01-15" |yearday?
+; returns 15</code></pre>
+</div>
+<h3>year?</h3><p>Extracts the year from a time object as an integer.</p>
+<p class='arg'><b>time</b> Time object to extract year from</p>
+<p class='returns'><b>returns</b> integer representing the year</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>date "2023-01-15" |year?
+; returns 2023</code></pre>
+</div>
+<h3>month?</h3><p>Extracts the month from a time object as an integer (1-12).</p>
+<p class='arg'><b>time</b> Time object to extract month from</p>
+<p class='returns'><b>returns</b> integer representing the month (1-12)</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>date "2023-01-15" |month?
+; returns 1</code></pre>
+</div>
+<h3>days-in-month?</h3><p>Calculates the number of days in the month of the given time object.</p>
+<p class='arg'><b>time</b> Time object to calculate days in month for</p>
+<p class='returns'><b>returns</b> integer representing the number of days in the month</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>date "2023-01-15" |days-in-month?
+; returns 31</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>date "2023-02-15" |days-in-month?
+; returns 28</code></pre>
+</div>
+<h3>time?</h3><p>Extracts the time part from a time object as a formatted string (hh:mm:ss).</p>
+<p class='arg'><b>time</b> Time object to extract time from</p>
+<p class='returns'><b>returns</b> string representing the time in "hh:mm:ss" format</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>datetime "2023-01-15T14:30:45" |time?
+; returns "14:30:45"</code></pre>
+</div>
+<h3>date?</h3><p>Extracts the date part from a time object as a formatted string (YYYY-MM-DD).</p>
+<p class='arg'><b>time</b> Time object to extract date from</p>
+<p class='returns'><b>returns</b> string representing the date in "YYYY-MM-DD" format</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>datetime "2023-01-15T14:30:45" |date?
+; returns "2023-01-15"</code></pre>
+</div>
+<h3>day?</h3><p>Extracts the day of month from a time object as an integer (1-31).</p>
+<p class='arg'><b>time</b> Time object to extract day from</p>
+<p class='returns'><b>returns</b> integer representing the day of month (1-31)</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>date "2023-01-15" |day?
+; returns 15</code></pre>
+</div>
+<h3>hour?</h3><p>Extracts the hour from a time object as an integer (0-23).</p>
+<p class='arg'><b>time</b> Time object to extract hour from</p>
+<p class='returns'><b>returns</b> integer representing the hour (0-23)</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>datetime "2023-01-15T14:30:45" |hour?
+; returns 14</code></pre>
+</div>
+<h3>minute?</h3><p>Extracts the minute from a time object as an integer (0-59).</p>
+<p class='arg'><b>time</b> Time object to extract minute from</p>
+<p class='returns'><b>returns</b> integer representing the minute (0-59)</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>datetime "2023-01-15T14:30:45" |minute?
+; returns 30</code></pre>
+</div>
+<h3>second?</h3><p>Extracts the second from a time object as an integer (0-59).</p>
+<p class='arg'><b>time</b> Time object to extract second from</p>
+<p class='returns'><b>returns</b> integer representing the second (0-59)</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>datetime "2023-01-15T14:30:45" |second?
+; returns 45</code></pre>
+</div>
+<h3>sleep</h3><p>Pauses execution for the specified number of milliseconds.</p>
+<p class='arg'><b>milliseconds</b> Integer number of milliseconds to sleep</p>
+<p class='returns'><b>returns</b> the original milliseconds value</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>time-it { sleep 10 }
+; returns 10</code></pre>
+</div>
+<h3>thousands</h3><p>Converts seconds to milliseconds (multiplies by 1000).</p>
+<p class='arg'><b>n</b> Integer number of seconds</p>
+<p class='returns'><b>returns</b> integer representing the equivalent number of milliseconds</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>5 .seconds
+; returns 5000</code></pre>
+</div>
+<h3>millions</h3><p>Converts seconds to milliseconds (multiplies by 1000).</p>
+<p class='arg'><b>n</b> Integer number of seconds</p>
+<p class='returns'><b>returns</b> integer representing the equivalent number of milliseconds</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>5 .seconds
+; returns 5000</code></pre>
+</div>
+<h3>seconds</h3><p>Converts seconds to milliseconds (multiplies by 1000).</p>
+<p class='arg'><b>n</b> Integer number of seconds</p>
+<p class='returns'><b>returns</b> integer representing the equivalent number of milliseconds</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>5 .seconds
+; returns 5000</code></pre>
+</div>
+<h3>minutes</h3><p>Converts minutes to milliseconds (multiplies by 60000).</p>
+<p class='arg'><b>n</b> Integer number of minutes</p>
+<p class='returns'><b>returns</b> integer representing the equivalent number of milliseconds</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>5 .minutes
+; returns 300000</code></pre>
+</div>
+<h3>hours</h3><p>Converts hours to milliseconds (multiplies by 3600000).</p>
+<p class='arg'><b>n</b> Integer number of hours</p>
+<p class='returns'><b>returns</b> integer representing the equivalent number of milliseconds</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>5 .hours
+; returns 18000000</code></pre>
+</div>
+<h3>days</h3><p>Converts days to milliseconds (multiplies by 86400000).</p>
+<p class='arg'><b>n</b> Integer number of days</p>
+<p class='returns'><b>returns</b> integer representing the equivalent number of milliseconds</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>5 .days
+; returns 432000000</code></pre>
+</div>
+<h3>weeks</h3><p>Converts weeks to milliseconds (multiplies by 604800000).</p>
+<p class='arg'><b>n</b> Integer number of weeks</p>
+<p class='returns'><b>returns</b> integer representing the equivalent number of milliseconds</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>5 .weeks
+; returns 3024000000</code></pre>
+</div>
+<h3>time-it</h3><p>Accepts a block, does it and times it's execution time.</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>time-it { sleep 100 }
+; returns 100</code></pre>
+</div>
+</div>
 <h2>Collections </h2><p></p><div class='section'>
 <h3>random</h3><p>Selects a random value from a block of values.</p>
 <p class='arg'><b>block</b> Block of values to select from</p>
@@ -1239,7 +1420,7 @@ ASDF
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 } || ++ { "b" 2 }
 ; returns dict { a 1 b 2 }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 } || ++ dict { "b" 2 }
-; returns dict { b 2 a 1 }</code></pre>
+; returns dict { a 1 b 2 }</code></pre>
 </div>
 <h3>union</h3><p>Combines two collections, removing any duplicate values to create a union of all unique values.</p>
 <p class='arg'><b>collection1</b> First block or list</p>
@@ -2048,27 +2229,6 @@ Generic
 <h3>purge!</h3><p>Purges values from a series based on return of a injected code block.</p>
 <div class='group'>
 </div>
-<h3>map___</h3><p>Maps values of a block to a new block by evaluating a block of code.</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map { 1 2 3 } { + 1 }
-; returns { 2 3 4 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map { } { + 1 }
-; returns { }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map { "aaa" "bb" "c" } { .length? }
-; returns { 3 2 1 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map list { "aaa" "bb" "c" } { .length? }
-; returns list { 3 2 1 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map list { 3 4 5 6 } { .is-multiple-of 3 }
-; returns list { true false false true }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map list { } { + 1 }
-; returns list { }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map "123" { .to-integer }
-; returns { 1 2 3 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map "123" ?to-integer
-; returns { 1 2 3 }</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>map "" { + "-" }
-; returns { }</code></pre>
-</div>
 <h3>map</h3><p>Maps values of a block to a new block by evaluating a block of code or function.</p>
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>map { 1 2 3 } { + 1 }
@@ -2403,7 +2563,7 @@ Generic
 <p class='arg'>None</p>
 <p class='returns'><b>returns</b> Integer 1 on success</p>
 <div class='group'>
-State current context to [1mconsole_251104_001500.rye[0m.
+State current context to [1mconsole_251105_100602.rye[0m.
 <pre class='prettyprint lang-rye'><code language='lang-rye'>save\current |type?
 ; returns integer</code></pre>
 </div>

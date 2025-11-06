@@ -42,12 +42,12 @@ build: fn { tags } {
 	print-header
 	print "\nBuilding local Rye interpreter with modules:"
 	
-	open %ryel.mod
+	Open %ryel.mod
 	|fix\either
 	{ print "Error: ryel.mod file not found." 
 	  print `Please create ryel.mod file and list modules in the format: { "tiny" "http" "bleve" }`
 	  " nil " }
-	{ .read-all }
+	{ .Read-all }
 	|load
 	|map { .to-string .concat* "b_" }
 	|join\with " " :modules |print
@@ -57,7 +57,7 @@ build: fn { tags } {
 	var 'command join { cp-embed ` a=%PWD ; cd %RYE_HOME-fyne ; go build -tags "` ++ modules ++ " " ++ tags `" -o "%a/ryel" ; cd "%a"` } ; ` delimiter for string is just temporary ... ' conflicts with lit-words and Rebols { } with blocks so this question is open so far
 	command .replace "%" "$" ::command
 	; print "Build command: " ++ command
-	cmd command
+	scmd command
 	
 	print "\nBuild completed. You can now use ./ryel to run your Rye scripts."
 }
@@ -66,47 +66,51 @@ build\fyne: fn { tags } {
 	print-header
 	print "\nBuilding Fyne package for Android with modules:"
 	
-	open %ryel.mod
+	Open %ryel.mod
 	|fix\either
 	{ print "Error: ryel.mod file not found." 
 	  print `Please create ryel.mod file and list modules in the format: { \"tiny\" \"http\" \"bleve\" }`
 	  " nil " }
-	{ .read-all }
+	{ .Read-all }
 	|load
 	|map { .to-string .concat* "b_" }
 	|join\with " " :modules |print
 
 	cp-embed: either tags = "embed_main" { "cp main.rye %RYE_HOME/runner/buildtemp/. ; " } { "" }
-	
-	var 'command join { cp-embed ` a=%PWD ; cd %RYE_HOME-fyne ; fyne release -icon Icon.png -appVersion 0.0.1  -tags "` ++ modules ++ " " ++ tags `"; cd "%a"` } ; ` delimiter for string is just temporary ... ' conflicts with lit-words and Rebols { } with blocks so this question is open so far
+		cp-embed
+		probe modules
+		
+		;	var 'command probe join { cp-embed ` a=%PWD ; cd %RYE_HOME-fyne ; fyne release -icon Icon.png -appVersion 0.0.1  -tags "` ++ modules ++ " " ++ tags `"; cd "%a"` } ; ` delimiter for string is just temporary ... ' conflicts with lit-words and Rebols { } with blocks so this question is open so far
+			var 'command probe join { cp-embed ` a=%PWD ; cd %RYE_HOME-fyne ; fyne release -icon Icon.png -appVersion 0.0.1 -tags "embed_main" ; cd "%a"` } ; ` delimiter for string is just temporary ... ' conflicts with lit-words and Rebols { } with blocks so this question is open so far
 	command .replace "%" "$" ::command
 	; print "Build command: " ++ command
-	cmd command
+	scmd command
 	
 	print "\nFyne package build completed for Android."
 }
 
 
-build\fyne\fyne: fn { tags } {
+build\fyne\apk: fn { tags } {
 	print-header
 	print "\nBuilding Fyne package for Android with modules:"
 	
-	open %ryel.mod
+	Open %ryel.mod
 	|fix\either
 	{ print "Error: ryel.mod file not found." 
 	  print `Please create ryel.mod file and list modules in the format: { \"tiny\" \"http\" \"bleve\" }`
 	  " nil " }
-	{ .read-all }
+	{ .Read-all }
 	|load
 	|map { .to-string .concat* "b_" }
 	|join\with " " :modules |print
 
 	cp-embed: either tags = "embed_main" { "cp main.rye %RYE_HOME/runner/buildtemp/. ; " } { "" }
 	
-	var 'command join { cp-embed ` a=%PWD ; cd %RYE_HOME-fyne ; fyne package -os android -appID com.refaktorlabs.fynetest1 -icon Icon.png -appVersion 0.0.1  -tags "` ++ modules ++ " " ++ tags `"; cd "%a"` } ; ` delimiter for string is just temporary ... ' conflicts with lit-words and Rebols { } with blocks so this question is open so far
+			;	var 'command join { cp-embed ` a=%PWD ; cd %RYE_HOME-fyne ; fyne package -os android -appid com.refaktorlabs.fynetest1 -icon Icon.png -appVersion 0.0.1  -tags "` ++ modules ++ " " ++ tags `"; cd "%a"` } ; ` delimiter for string is just temporary ... ' conflicts with lit-words and Rebols { } with blocks so this question is open so far
+				var 'command join { cp-embed ` a=%PWD ; cd %RYE_HOME-fyne ; fyne package -os android -appID com.refaktorlabs.ryefynehello -icon Icon.png -appVersion 0.0.1  -tags "` ++ modules ++ " " ++ tags `"; cd "%a"` } ; ` delimiter for string is just temporary ... ' conflicts with lit-words and Rebols { } with blocks so this question is open so far
 	command .replace "%" "$" ::command
 	; print "Build command: " ++ command
-	cmd command
+	scmd command
 	
 	print "\nFyne package build completed for Android."
 }
