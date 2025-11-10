@@ -1626,6 +1626,44 @@ var builtins_collection = map[string]*env.Builtin{
 		},
 	},
 	// Tests:
+	// equal { { 1 2 3 } .max-idx? } 2
+	// equal { max-idx? "abcd" } 3
+	// equal { table { 'val } { 1 2 3 4 } |max-idx? } 3
+	// equal { vector { 10 20 30 } |max-idx? } 2
+	// Args:
+	// * collection: String, block, dict, list, table, context or vector to measure
+	// Returns:
+	// * integer index of last element in a collection
+	"max-idx?": { // **
+		Argsn: 1,
+		Doc:   "Returns the number of elements in a collection.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.String:
+				return *env.NewInteger(int64(len(s1.Value) - 1))
+			case env.Dict:
+				return *env.NewInteger(int64(len(s1.Data) - 1))
+			case env.List:
+				return *env.NewInteger(int64(len(s1.Data) - 1))
+			case env.Block:
+				return *env.NewInteger(int64(s1.Series.Len() - 1))
+			case env.Table:
+				return *env.NewInteger(int64(len(s1.Rows) - 1))
+			case *env.Table:
+				return *env.NewInteger(int64(len(s1.Rows) - 1))
+			case *env.PersistentTable:
+				return *env.NewInteger(int64(s1.Length() - 1))
+			case env.RyeCtx:
+				return *env.NewInteger(int64(s1.GetWords(*ps.Idx).Series.Len() - 1))
+			case env.Vector:
+				return *env.NewInteger(int64(s1.Value.Len() - 1))
+			default:
+				// fmt.Println(s1)
+				return MakeArgError(ps, 2, []env.Type{env.StringType, env.DictType, env.ListType, env.BlockType, env.TableType, env.PersistentTableType, env.VectorType}, "length?")
+			}
+		},
+	},
+	// Tests:
 	// equal { dict { "a" 1 "b" 2 "c" 3 } |keys |length? } 3
 	// equal { table { "a" "b" "c" } { 1 2 3 } |keys |length? } 3
 	// ; TODO -- doesn't work yet, .header? also has the same problem -- equal { table { 'a 'b 'c } { 1 2 3 } |keys } { 'a 'b 'c }

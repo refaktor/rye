@@ -639,30 +639,31 @@ func NewLocationNode(filename string, line, column int, sourceLine string) *Loca
 }
 
 type ProgramState struct {
-	Ser          TSeries // current block of code
-	Res          Object  // result of expression
-	Ctx          *RyeCtx // Env object ()
-	PCtx         *RyeCtx // Env object () -- pure countext
-	Idx          *Idxs   // Idx object (index of words)
-	Args         []int   // names of current arguments (indexes of names)
-	Gen          *Gen    // map[int]map[int]Object  // list of Generic kinds / code
-	Inj          Object  // Injected first value in a block evaluation
-	Injnow       bool
-	ReturnFlag   bool
-	ErrorFlag    bool
-	FailureFlag  bool
-	ForcedResult Object
-	SkipFlag     bool
-	InErrHandler bool
-	ScriptPath   string // holds the path to the script that is being imported (doed) currently
-	WorkingPath  string // holds the path to CWD (can be changed in program with specific functions)
-	AllowMod     bool
-	LiveObj      *LiveEnv
-	Dialect      DoDialect
-	Stack        *EyrStack
-	Embedded     bool
-	DeferBlocks  []Block   // blocks to be executed when function exits or program terminates
-	ContextStack []*RyeCtx // stack of previous contexts for ccb navigation
+	Ser           TSeries // current block of code
+	Res           Object  // result of expression
+	Ctx           *RyeCtx // Env object ()
+	PCtx          *RyeCtx // Env object () -- pure countext
+	Idx           *Idxs   // Idx object (index of words)
+	Args          []int   // names of current arguments (indexes of names)
+	Gen           *Gen    // map[int]map[int]Object  // list of Generic kinds / code
+	Inj           Object  // Injected first value in a block evaluation
+	Injnow        bool
+	ReturnFlag    bool
+	ErrorFlag     bool
+	FailureFlag   bool
+	InterruptFlag bool // Flag set when signal interruption is requested (Ctrl+C, Ctrl+Z)
+	ForcedResult  Object
+	SkipFlag      bool
+	InErrHandler  bool
+	ScriptPath    string // holds the path to the script that is being imported (doed) currently
+	WorkingPath   string // holds the path to CWD (can be changed in program with specific functions)
+	AllowMod      bool
+	LiveObj       *LiveEnv
+	Dialect       DoDialect
+	Stack         *EyrStack
+	Embedded      bool
+	DeferBlocks   []Block   // blocks to be executed when function exits or program terminates
+	ContextStack  []*RyeCtx // stack of previous contexts for ccb navigation
 	// LastFailedCPathInfo map[string]interface{} // stores information about the last failed context path
 	BlockFile string
 	BlockLine int
@@ -679,64 +680,66 @@ const (
 
 func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
 	ps := ProgramState{
-		Ser:          ser,
-		Res:          nil,
-		Ctx:          NewEnv(nil),
-		PCtx:         NewEnv(nil),
-		Idx:          idx,
-		Args:         make([]int, 6),
-		Gen:          NewGen(),
-		Inj:          nil,
-		Injnow:       false,
-		ReturnFlag:   false,
-		ErrorFlag:    false,
-		FailureFlag:  false,
-		ForcedResult: nil,
-		SkipFlag:     false,
-		InErrHandler: false,
-		ScriptPath:   "",
-		WorkingPath:  "",
-		AllowMod:     false,
-		LiveObj:      nil,
-		Dialect:      Rye2Dialect,
-		Stack:        NewEyrStack(),
-		Embedded:     false,
-		DeferBlocks:  make([]Block, 0),
-		ContextStack: make([]*RyeCtx, 0),
-		BlockFile:    "",
-		BlockLine:    -1,
+		Ser:           ser,
+		Res:           nil,
+		Ctx:           NewEnv(nil),
+		PCtx:          NewEnv(nil),
+		Idx:           idx,
+		Args:          make([]int, 6),
+		Gen:           NewGen(),
+		Inj:           nil,
+		Injnow:        false,
+		ReturnFlag:    false,
+		ErrorFlag:     false,
+		FailureFlag:   false,
+		InterruptFlag: false,
+		ForcedResult:  nil,
+		SkipFlag:      false,
+		InErrHandler:  false,
+		ScriptPath:    "",
+		WorkingPath:   "",
+		AllowMod:      false,
+		LiveObj:       nil,
+		Dialect:       Rye2Dialect,
+		Stack:         NewEyrStack(),
+		Embedded:      false,
+		DeferBlocks:   make([]Block, 0),
+		ContextStack:  make([]*RyeCtx, 0),
+		BlockFile:     "",
+		BlockLine:     -1,
 	}
 	return &ps
 }
 
 func NewProgramStateNEW() *ProgramState {
 	ps := ProgramState{
-		Ser:          *NewTSeries(make([]Object, 0)),
-		Res:          nil,
-		Ctx:          NewEnv(nil),
-		PCtx:         NewEnv(nil),
-		Idx:          NewIdxs(),
-		Args:         make([]int, 6),
-		Gen:          NewGen(),
-		Inj:          nil,
-		Injnow:       false,
-		ReturnFlag:   false,
-		ErrorFlag:    false,
-		FailureFlag:  false,
-		ForcedResult: nil,
-		SkipFlag:     false,
-		InErrHandler: false,
-		ScriptPath:   "",
-		WorkingPath:  "",
-		AllowMod:     false,
-		LiveObj:      NewLiveEnv(),
-		Dialect:      Rye2Dialect,
-		Stack:        NewEyrStack(),
-		Embedded:     false,
-		DeferBlocks:  make([]Block, 0),
-		ContextStack: make([]*RyeCtx, 0),
-		BlockFile:    "",
-		BlockLine:    -1,
+		Ser:           *NewTSeries(make([]Object, 0)),
+		Res:           nil,
+		Ctx:           NewEnv(nil),
+		PCtx:          NewEnv(nil),
+		Idx:           NewIdxs(),
+		Args:          make([]int, 6),
+		Gen:           NewGen(),
+		Inj:           nil,
+		Injnow:        false,
+		ReturnFlag:    false,
+		ErrorFlag:     false,
+		FailureFlag:   false,
+		InterruptFlag: false,
+		ForcedResult:  nil,
+		SkipFlag:      false,
+		InErrHandler:  false,
+		ScriptPath:    "",
+		WorkingPath:   "",
+		AllowMod:      false,
+		LiveObj:       NewLiveEnv(),
+		Dialect:       Rye2Dialect,
+		Stack:         NewEyrStack(),
+		Embedded:      false,
+		DeferBlocks:   make([]Block, 0),
+		ContextStack:  make([]*RyeCtx, 0),
+		BlockFile:     "",
+		BlockLine:     -1,
 	}
 	return &ps
 }

@@ -355,9 +355,10 @@ var builtins_functions = map[string]*env.Builtin{
 		Doc:   "Creates a closure that captures the current context at creation time, preserving access to variables in that scope.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			// Create a proper deep copy of the context to preserve the entire context state
-			ctxCopy := ps.Ctx.Copy()
-			ctx := ctxCopy.(*env.RyeCtx)
+			// Reference the current context directly - no copying
+			// This allows closures created in the same execution context to share state
+			// while different function calls naturally get different contexts
+			ctx := ps.Ctx
 			ctx.IsClosure = true // Mark this context as a closure context to prevent pooling
 
 			switch args := arg0.(type) {

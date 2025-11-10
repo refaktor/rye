@@ -236,6 +236,13 @@ var builtins_iteration = map[string]*env.Builtin{
 				ser := ps.Ser
 				ps.Ser = bloc.Series
 				for i := 0; i == i; i++ {
+					// Check for interrupt signal (Ctrl+C, Ctrl+Z)
+					if ps.InterruptFlag {
+						ps.InterruptFlag = false // Reset the flag
+						ps.Ser = ser
+						return *env.NewError("Operation interrupted by user")
+					}
+
 					EvalBlockInjMultiDialect(ps, env.NewInteger(int64(i)), true)
 					if ps.ErrorFlag {
 						return ps.Res
@@ -271,6 +278,13 @@ var builtins_iteration = map[string]*env.Builtin{
 				ser := ps.Ser
 				ps.Ser = bloc.Series
 				for {
+					// Check for interrupt signal (Ctrl+C, Ctrl+Z)
+					if ps.InterruptFlag {
+						ps.InterruptFlag = false // Reset the flag
+						ps.Ser = ser
+						return *env.NewError("Operation interrupted by user")
+					}
+
 					EvalBlockInjMultiDialect(ps, arg0, true)
 					if ps.ErrorFlag {
 						return ps.Res
@@ -1602,6 +1616,13 @@ var builtins_iteration = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					for {
+						// Check for interrupt signal (Ctrl+C, Ctrl+Z)
+						if ps.InterruptFlag {
+							ps.InterruptFlag = false // Reset the flag
+							ps.Ser = ser
+							return *env.NewError("Operation interrupted by user")
+						}
+
 						// Evaluate the condition block
 						ps.Ser = cond.Series
 						ps.Ser.Reset()
