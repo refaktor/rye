@@ -1,0 +1,41 @@
+#!/usr/bin/env rye
+{
+	; Create a mutex for thread-safe file writing
+	file-mutex: mutex
+	
+	client: Open mqtt://test.mosquitto.org:1883/rye-test
+	|^check "couldn't connect to MQTT"
+	
+	; File for saving messages
+	messages-file: %mqtt-messages.txt
+
+	; Handler function that saves messages to file with mutex protection
+	handler: fn { txt msg } {
+		print "\n-NEW-MESSAGE----" ,
+		print txt 
+		print ""
+		print "Topic: " ++ "topic" <- msg
+		
+		; Lock the mutex before writing to file,
+		; use inline defer to ensure Unlock
+		file-mutex .Lock |defer\ 'Unlock
+		
+		; Prepare message data for writing
+		timestamp: now .to-string
+		topic: "topic" <- msg
+		message-line: join [ timestamp " | Topic: " topic " | Message: " txt "\n" ]
+		
+		; Write to file (append mode)
+		Open\append messages-file |defer\ 'Close |Write\string message-line
+	}
+
+	topic: "rye/test"
+
+	client .Subscribe topic 1 ?handler
+
+	select { }
+}
+
+; Cleanup (although this might not be reached due to infinite select)
+; client .Unsubscribe topic
+; client .Disconnect

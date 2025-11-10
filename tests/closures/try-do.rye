@@ -1,0 +1,9 @@
+t: ?term
+
+equal: fn { test res } {
+	cc: extends current { }
+	do\in cc test :got = res
+	|either { t/green prns "✓" t/reset } { inc! 'failed , t/red prns " ✗ Failed:" t/reset prns join { "expected " t/str\br-black inspect res t/str\reset ", got " t/str\br-black inspect got t/str\reset } }
+}
+
+equal { y: 99 c: isolate { tt: ?try dd: ?do x: does { tt { y } } } c/x |type? } 'error

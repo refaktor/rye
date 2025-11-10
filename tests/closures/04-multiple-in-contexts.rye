@@ -1,0 +1,17 @@
+
+cc: context {
+	var 'i 0
+	aa: closure { } { inc! 'i , print i }
+	bb: closure { } { inc! 'i inc! 'i , print i }
+}
+
+aa
+;prints 1
+bb
+;prints 2
+bb
+;prints 4
+aa
+;prints 2
+
+enter-console ""
