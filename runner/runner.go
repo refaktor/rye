@@ -12,14 +12,12 @@ import (
 	"net/http"
 	"net/http/cgi"
 	"os"
-	"os/signal"
 	"path/filepath"
 	"regexp"
 	"runtime/debug"
 	"sort"
 	"strings"
 	"sync"
-	"syscall"
 
 	"golang.org/x/term"
 
@@ -86,23 +84,6 @@ func ClearCurrentProgramState() {
 	programStateMutex.Lock()
 	defer programStateMutex.Unlock()
 	currentPs = nil
-}
-
-// setupGlobalSignalHandler sets up global signal handling for interrupting Rye programs
-func setupGlobalSignalHandler() {
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM, syscall.SIGTSTP)
-
-	go func() {
-		for sig := range c {
-			programStateMutex.RLock()
-			if currentPs != nil {
-				currentPs.InterruptFlag = true
-				fmt.Fprintf(os.Stderr, "\nReceived signal %v - interrupting operation...\n", sig)
-			}
-			programStateMutex.RUnlock()
-		}
-	}()
 }
 
 // CurrentScriptDirectory stores the directory of the currently executing script
