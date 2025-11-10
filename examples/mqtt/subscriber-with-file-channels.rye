@@ -1,0 +1,75 @@
+#!/usr/bin/env rye
+
+; Channel-based approach for thread-safe file writing
+; Instead of using mutex, we use a channel and a writer goroutine
+
+; Channel for sending write requests
+write-chan: channel 100
+
+; File path for saving messages  
+messages-file: %mqtt-messages.txt
+
+; Dedicated file writer goroutine - this is the ONLY goroutine that writes to the file
+; This eliminates race conditions by having a single writer
+file-writer-func: fn { } {
+    ; Open file once for the writer goroutine
+    file-writer: Open\append messages-file
+    
+    ; Keep reading write requests from channel
+    forever {
+        ; Read write request from channel
+        request:: write-chan .Read
+        
+        ; Check if we got a shutdown signal (empty string means shutdown)
+        if request = "" {
+            print "File writer shutting down..."
+            ; file-writer .Close
+            break
+        }
+        
+        ; Write the request to file
+        file-writer .Write\string request
+        print "Message written to file by dedicated writer goroutine"
+    }
+}
+
+
+
+; Start the dedicated file writer goroutine
+go ?file-writer-func
+
+; MQTT client setup
+client: Open mqtt://test.mosquitto.org:1883/rye-test
+|^check "couldn't connect to MQTT"
+
+^ensure is-positive client .Is-connected "Not really connected"
+
+; Handler function that sends write requests to the channel instead of writing directly
+handler: fn { txt msg } {
+    print "\n-NEW-MESSAGE----" ,
+    print txt 
+    print ""
+    
+    ; Prepare message data for writing
+    timestamp: now .to-string
+    topic: "topic" <- msg
+    message-line: timestamp ++ " | Topic: " ++ topic ++ " | Message: " ++ txt ++ "\n"
+    
+    write-chan .Send message-line
+    
+    print "Write request sent to channel for file: " ++ messages-file
+}
+
+print "***"
+
+topic: "rye/test"
+
+client .Subscribe topic 1 ?handler
+
+select { }
+
+; Cleanup - send shutdown signal to writer goroutine
+; write-chan .Send ""
+; write-chan .Close
+; client .Unsubscribe topic  
+; client .Disconnect

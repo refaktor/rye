@@ -2,7 +2,6 @@ package evaldo
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/dgraph-io/badger/v4"
 	"github.com/refaktor/rye/env"
@@ -14,131 +13,103 @@ func (pc PersistentCtx) Type() env.Type {
 }
 
 // PersistentCtx wraps a RyeCtx with a BadgerDB backend for persistence.
+// It operates in database-first mode for ACID compliance.
 type PersistentCtx struct {
-	env.RyeCtx
-	db   *badger.DB
-	Idxs *env.Idxs
+	env.RyeCtx // Minimal in-memory context for interface compatibility only
+	db         *badger.DB
+	Idxs       *env.Idxs
 }
 
 // NewPersistentCtx creates a new persistent context or loads an existing one.
 func NewPersistentCtx(dbPath string, ps *env.ProgramState) (*PersistentCtx, error) {
 	opts := badger.DefaultOptions(dbPath)
+	opts.Logger = nil // Disable logging for cleaner output
 	db, err := badger.Open(opts)
 	if err != nil {
 		return nil, err
 	}
 
 	ctx := &PersistentCtx{
-		RyeCtx: *env.NewEnv(ps.Ctx),
+		RyeCtx: *env.NewEnv(nil), // Empty in-memory context - database is source of truth
 		db:     db,
 		Idxs:   ps.Idx,
 	}
 
-	err = ctx.load(ps)
-	if err != nil {
-		return nil, err
-	}
-
+	// No loading to memory - database-first approach for ACID compliance
 	return ctx, nil
 }
 
-// load reads all key-value pairs from the database and populates the in-memory context.
-func (pc *PersistentCtx) load(ps *env.ProgramState) error {
-	return pc.db.View(func(txn *badger.Txn) error {
-		opts := badger.DefaultIteratorOptions
-		it := txn.NewIterator(opts)
-		defer it.Close()
+// Set overrides the embedded Set method to add ACID persistence.
+func (pc *PersistentCtx) Set(word int, val env.Object) env.Object {
+	// Database-first approach: check existence and set atomically within transaction
+	var result env.Object
 
-		fmt.Println("LOADING**")
+	err := pc.db.Update(func(txn *badger.Txn) error {
+		key := []byte(pc.Idxs.GetWord(word))
 
-		for it.Rewind(); it.Valid(); it.Next() {
-			item := it.Item()
-			key := item.Key()
-			val, err := item.ValueCopy(nil)
+		// Check if key already exists (ACID consistency)
+		_, err := txn.Get(key)
+		if err == nil {
+			// Key exists - return error
+			result = *env.NewError("Can't set already set word, try using modword!")
+			return fmt.Errorf("word already exists")
+		}
+		if err != badger.ErrKeyNotFound {
+			// Real error occurred
+			result = *env.NewError("Database error: " + err.Error())
+			return err
+		}
+
+		// Key doesn't exist - safe to set
+		value := []byte(val.Dump(*pc.Idxs))
+		err = txn.Set(key, value)
+		if err != nil {
+			result = *env.NewError("Failed to persist value: " + err.Error())
+			return err
+		}
+
+		result = val
+		return nil
+	})
+
+	// If transaction failed but we haven't set result yet
+	if err != nil && result == nil {
+		result = *env.NewError("Transaction failed: " + err.Error())
+	}
+
+	return result
+}
+
+// Mod overrides the embedded Mod method to add ACID persistence.
+func (pc *PersistentCtx) Mod(word int, val env.Object) bool {
+	// Database-first approach: modify directly in database atomically
+	err := pc.db.Update(func(txn *badger.Txn) error {
+		key := []byte(pc.Idxs.GetWord(word))
+		varKey := []byte("__var__" + pc.Idxs.GetWord(word))
+
+		// Check if key exists
+		_, err := txn.Get(key)
+		if err == badger.ErrKeyNotFound {
+			// Word doesn't exist, create it as a variable
+			err = txn.Set(varKey, []byte("true"))
 			if err != nil {
 				return err
 			}
-
-			// Parse the key to extract the word name
-			keyParts := string(key)
-			if keyParts == "" {
-				continue
+		} else {
+			// Key exists - check if it's a variable
+			_, err := txn.Get(varKey)
+			if err == badger.ErrKeyNotFound {
+				// Not a variable - cannot modify constant
+				return fmt.Errorf("cannot modify constant")
 			}
-
-			// The key format should be "wordname:index" or just the word name
-			var wordName string
-			if idx := string(key); len(idx) > 0 {
-				// Try to convert to integer first (old format)
-				if oldWordIndex, err := strconv.Atoi(idx); err == nil {
-					// Check if this word index is valid in current session
-					if oldWordIndex >= 0 && oldWordIndex < ps.Idx.GetWordCount() {
-						wordName = ps.Idx.GetWord(oldWordIndex)
-					} else {
-						continue // Skip invalid indices
-					}
-				} else {
-					// Assume it's a word name directly
-					wordName = idx
-				}
-			}
-
-			if wordName == "" {
-				continue
-			}
-
-			// Get or create the word index in the current session
-			wordIndex := ps.Idx.IndexWord(wordName)
-
-			// Use the loader to deserialize the value.
-			loadedVal := loader.LoadStringNEW(string(val), false, ps)
-			pc.RyeCtx.Set(wordIndex, loadedVal)
 		}
-		return nil
-	})
-}
 
-// Set overrides the embedded Set method to add persistence.
-func (pc *PersistentCtx) Set(word int, val env.Object) env.Object {
-	// Set the value in the in-memory context first.
-	res := pc.RyeCtx.Set(word, val)
-
-	// Then, persist the change to the database.
-	err := pc.db.Update(func(txn *badger.Txn) error {
-		key := []byte(pc.Idxs.GetWord(word)) // Use word name instead of index
+		// Set/update the value
 		value := []byte(val.Dump(*pc.Idxs))
 		return txn.Set(key, value)
 	})
 
-	if err != nil {
-		// Handle the error appropriately.
-		fmt.Println("Error persisting value:", err)
-	}
-
-	return res
-}
-
-// Mod overrides the embedded Mod method to add persistence.
-func (pc *PersistentCtx) Mod(word int, val env.Object) bool {
-	// First try to modify in the in-memory context
-	ok := pc.RyeCtx.Mod(word, val)
-	if !ok {
-		return false
-	}
-
-	// Then, persist the change to the database.
-	err := pc.db.Update(func(txn *badger.Txn) error {
-		key := []byte(pc.Idxs.GetWord(word)) // Use word name instead of index
-		value := []byte(val.Dump(*pc.Idxs))
-		return txn.Set(key, value)
-	})
-
-	if err != nil {
-		// Handle the error appropriately.
-		fmt.Println("Error persisting value:", err)
-		return false
-	}
-
-	return true
+	return err == nil
 }
 
 // Copy creates a copy of the persistent context (note: copy won't be persistent)
@@ -162,50 +133,64 @@ func (pc *PersistentCtx) SetParent(parent env.Context) {
 	pc.RyeCtx.SetParent(parent)
 }
 
-// Unset overrides the embedded Unset method to add persistence.
+// Unset overrides the embedded Unset method to add ACID persistence.
 func (pc *PersistentCtx) Unset(word int, idxs *env.Idxs) env.Object {
-	// First unset in the in-memory context
-	res := pc.RyeCtx.Unset(word, idxs)
-	if res.Type() == env.ErrorType {
-		return res
-	}
+	var result env.Object
 
-	// Then, remove from the database.
 	err := pc.db.Update(func(txn *badger.Txn) error {
-		key := []byte(pc.Idxs.GetWord(word)) // Use word name instead of index
-		return txn.Delete(key)
+		key := []byte(pc.Idxs.GetWord(word))
+		varKey := []byte("__var__" + pc.Idxs.GetWord(word))
+
+		// Check if key exists
+		_, err := txn.Get(key)
+		if err == badger.ErrKeyNotFound {
+			result = *env.NewError("Can't unset non-existing word " + idxs.GetWord(word) + " in this context")
+			return fmt.Errorf("word not found")
+		}
+
+		// Delete both the value and variable flag
+		err = txn.Delete(key)
+		if err != nil {
+			result = *env.NewError("Failed to delete value: " + err.Error())
+			return err
+		}
+
+		// Also delete variable flag if it exists (ignore errors)
+		txn.Delete(varKey)
+
+		result = *env.NewInteger(1)
+		return nil
 	})
 
-	if err != nil {
-		// Handle the error appropriately.
-		fmt.Println("Error removing persisted value:", err)
+	if err != nil && result == nil {
+		result = *env.NewError("Transaction failed: " + err.Error())
 	}
 
-	return res
+	return result
 }
 
-// SetNew overrides the embedded SetNew method to add persistence.
+// SetNew overrides the embedded SetNew method to add ACID persistence.
 func (pc *PersistentCtx) SetNew(word int, val env.Object, idxs *env.Idxs) bool {
-	// First set in the in-memory context
-	ok := pc.RyeCtx.SetNew(word, val, idxs)
-	if !ok {
-		return false
-	}
-
-	// Then, persist the change to the database.
 	err := pc.db.Update(func(txn *badger.Txn) error {
-		key := []byte(pc.Idxs.GetWord(word)) // Use word name instead of index
+		key := []byte(pc.Idxs.GetWord(word))
+
+		// Check if key already exists
+		_, err := txn.Get(key)
+		if err == nil {
+			// Key exists - cannot set new
+			return fmt.Errorf("word already exists")
+		}
+		if err != badger.ErrKeyNotFound {
+			// Real error occurred
+			return err
+		}
+
+		// Key doesn't exist - safe to set
 		value := []byte(val.Dump(*pc.Idxs))
 		return txn.Set(key, value)
 	})
 
-	if err != nil {
-		// Handle the error appropriately.
-		fmt.Println("Error persisting new value:", err)
-		return false
-	}
-
-	return true
+	return err == nil
 }
 
 // GetDoc returns the documentation string
@@ -226,6 +211,60 @@ func (pc *PersistentCtx) GetKindWord() env.Word {
 // SetKindWord sets the Kind
 func (pc *PersistentCtx) SetKindWord(kind env.Word) {
 	pc.RyeCtx.SetKindWord(kind)
+}
+
+// Get overrides the embedded Get method to read from database.
+func (pc *PersistentCtx) Get(word int) (env.Object, bool) {
+	var result env.Object
+	var found bool
+
+	pc.db.View(func(txn *badger.Txn) error {
+		key := []byte(pc.Idxs.GetWord(word))
+		item, err := txn.Get(key)
+		if err != nil {
+			found = false
+			return nil
+		}
+
+		val, err := item.ValueCopy(nil)
+		if err != nil {
+			found = false
+			return nil
+		}
+
+		// Create a minimal program state for deserialization
+		ps := &env.ProgramState{Idx: pc.Idxs}
+		result = loader.LoadStringNEW(string(val), false, ps)
+		found = true
+		return nil
+	})
+
+	// Check parent if not found locally and parent exists
+	if !found && pc.RyeCtx.Parent != nil {
+		return pc.RyeCtx.Parent.Get(word)
+	}
+
+	return result, found
+}
+
+// MarkAsVariable marks a word as a variable in the database
+func (pc *PersistentCtx) MarkAsVariable(word int) {
+	pc.db.Update(func(txn *badger.Txn) error {
+		varKey := []byte("__var__" + pc.Idxs.GetWord(word))
+		return txn.Set(varKey, []byte("true"))
+	})
+}
+
+// IsVariable checks if a word is a variable by reading from database
+func (pc *PersistentCtx) IsVariable(word int) bool {
+	var isVar bool
+	pc.db.View(func(txn *badger.Txn) error {
+		varKey := []byte("__var__" + pc.Idxs.GetWord(word))
+		_, err := txn.Get(varKey)
+		isVar = (err == nil)
+		return nil
+	})
+	return isVar
 }
 
 // AsRyeCtx returns the underlying RyeCtx for backward compatibility

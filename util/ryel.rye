@@ -107,7 +107,8 @@ build\fyne\apk: fn { tags } {
 	cp-embed: either tags = "embed_main" { "cp main.rye %RYE_HOME/runner/buildtemp/. ; " } { "" }
 	
 			;	var 'command join { cp-embed ` a=%PWD ; cd %RYE_HOME-fyne ; fyne package -os android -appid com.refaktorlabs.fynetest1 -icon Icon.png -appVersion 0.0.1  -tags "` ++ modules ++ " " ++ tags `"; cd "%a"` } ; ` delimiter for string is just temporary ... ' conflicts with lit-words and Rebols { } with blocks so this question is open so far
-				var 'command join { cp-embed ` a=%PWD ; cd %RYE_HOME-fyne ; fyne package -os android -appID com.refaktorlabs.ryefynehello -icon Icon.png -appVersion 0.0.1  -tags "` ++ modules ++ " " ++ tags `"; cd "%a"` } ; ` delimiter for string is just temporary ... ' conflicts with lit-words and Rebols { } with blocks so this question is open so far
+			; 	var 'command join { cp-embed ` a=%PWD ; cd %RYE_HOME-fyne ; fyne package -os android -appID com.refaktorlabs.ryefynehello -icon Icon.png -appVersion 0.0.1  -tags "` ++ modules ++ " " ++ tags `"; cd "%a"` } ; ` delimiter for string is just temporary ... ' conflicts with lit-words and Rebols { } with blocks so this question is open so far
+				var 'command join { cp-embed ` a=%PWD ; cd %RYE_HOME-fyne ; fyne package -os android/arm64 -appID com.refaktorlabs.ryefynehello -icon Icon.png -appVersion 0.0.1 -tags "embed_main" ; cd "%a"` } ; ` delimiter for string is just temporary ... ' conflicts with lit-words and Rebols { } with blocks so this question is open so far
 	command .replace "%" "$" ::command
 	; print "Build command: " ++ command
 	scmd command

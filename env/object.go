@@ -60,6 +60,7 @@ const (
 	MarkdownType          Type = 44
 	PersistentContextType Type = 45
 	LocationNodeType      Type = 46
+	FlagwordType          Type = 47
 	PersistentTableType   Type = 1001
 )
 
@@ -2710,4 +2711,136 @@ func (i VarBuiltin) Equal(o Object) bool {
 func (i VarBuiltin) Dump(e Idxs) string {
 	// Serializing builtins is not supported
 	return ""
+}
+
+//
+// FLAGWORD
+//
+
+type Flagword struct {
+	ShortIndex int // Index for short flag name (e.g., "v" for -v), -1 if none
+	LongIndex  int // Index for long flag name (e.g., "verbose" for --verbose), -1 if none
+}
+
+func NewFlagword(shortIndex, longIndex int) *Flagword {
+	nat := Flagword{shortIndex, longIndex}
+	return &nat
+}
+
+func NewFlagwordShort(shortIndex int) *Flagword {
+	nat := Flagword{shortIndex, -1}
+	return &nat
+}
+
+func NewFlagwordLong(longIndex int) *Flagword {
+	nat := Flagword{-1, longIndex}
+	return &nat
+}
+
+func (i Flagword) Type() Type {
+	return FlagwordType
+}
+
+func (i Flagword) Inspect(e Idxs) string {
+	var shortName, longName string
+	if i.ShortIndex >= 0 {
+		shortName = e.GetWord(i.ShortIndex)
+	}
+	if i.LongIndex >= 0 {
+		longName = e.GetWord(i.LongIndex)
+	}
+
+	if i.ShortIndex >= 0 && i.LongIndex >= 0 {
+		return "[Flagword: -" + shortName + "/--" + longName + "]"
+	} else if i.ShortIndex >= 0 {
+		return "[Flagword: -" + shortName + "]"
+	} else if i.LongIndex >= 0 {
+		return "[Flagword: --" + longName + "]"
+	}
+	return "[Flagword: invalid]"
+}
+
+func (i Flagword) Print(e Idxs) string {
+	var shortName, longName string
+	if i.ShortIndex >= 0 {
+		shortName = e.GetWord(i.ShortIndex)
+	}
+	if i.LongIndex >= 0 {
+		longName = e.GetWord(i.LongIndex)
+	}
+
+	if i.ShortIndex >= 0 && i.LongIndex >= 0 {
+		return "-" + shortName + "/--" + longName
+	} else if i.ShortIndex >= 0 {
+		return "-" + shortName
+	} else if i.LongIndex >= 0 {
+		return "--" + longName
+	}
+	return "invalid-flag"
+}
+
+func (i Flagword) Trace(msg string) {
+	fmt.Print(msg + " (flagword): ")
+	fmt.Printf("short=%d, long=%d\n", i.ShortIndex, i.LongIndex)
+}
+
+func (i Flagword) GetKind() int {
+	return int(FlagwordType)
+}
+
+func (i Flagword) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	fw := o.(Flagword)
+
+	// Flags are equal if:
+	// 1. They have matching short names OR
+	// 2. They have matching long names
+
+	shortMatch := (i.ShortIndex >= 0 && fw.ShortIndex >= 0 && i.ShortIndex == fw.ShortIndex)
+	longMatch := (i.LongIndex >= 0 && fw.LongIndex >= 0 && i.LongIndex == fw.LongIndex)
+
+	return shortMatch || longMatch
+}
+
+func (i Flagword) Dump(e Idxs) string {
+	var shortName, longName string
+	if i.ShortIndex >= 0 {
+		shortName = e.GetWord(i.ShortIndex)
+	}
+	if i.LongIndex >= 0 {
+		longName = e.GetWord(i.LongIndex)
+	}
+
+	if i.ShortIndex >= 0 && i.LongIndex >= 0 {
+		return "-" + shortName + "/--" + longName
+	} else if i.ShortIndex >= 0 {
+		return "-" + shortName
+	} else if i.LongIndex >= 0 {
+		return "--" + longName
+	}
+	return "invalid-flag"
+}
+
+func (i Flagword) GetShortName(e Idxs) string {
+	if i.ShortIndex >= 0 {
+		return e.GetWord(i.ShortIndex)
+	}
+	return ""
+}
+
+func (i Flagword) GetLongName(e Idxs) string {
+	if i.LongIndex >= 0 {
+		return e.GetWord(i.LongIndex)
+	}
+	return ""
+}
+
+func (i Flagword) HasShort() bool {
+	return i.ShortIndex >= 0
+}
+
+func (i Flagword) HasLong() bool {
+	return i.LongIndex >= 0
 }

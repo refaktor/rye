@@ -12,13 +12,12 @@ import (
 	"net/http"
 	"net/http/cgi"
 	"os"
-	"os/signal"
 	"path/filepath"
 	"regexp"
 	"runtime/debug"
 	"sort"
 	"strings"
-	"syscall"
+	"sync"
 
 	"golang.org/x/term"
 
@@ -57,6 +56,35 @@ var (
 	// Code signing options
 	CodeSigEnforced = flag.Bool("codesig", false, "Enforce code signature verification")
 )
+
+// TODO 20251107: This is temporary experiment, to make builtins like forever respond to ctrl+d, ctrl+z, ...
+// Now they don't because in a tight look signals don't get checked.
+//
+// We will at some point have to split programstate to
+// values that are per runtime, are really global (and can only change by the system) and values that need to get copied
+// and can be changed by evaluator / builtins (in case of multiple goroutines for example)
+// The "live" state. I don't have a good conceptual separation yet, but this one belongs to the first.
+// The live state could link to runtime really global state so we don't pass both around.
+
+// Global signal handling for program state interruption
+var (
+	programStateMutex sync.RWMutex
+	currentPs         *env.ProgramState
+)
+
+// SetCurrentProgramState registers the currently executing program state for signal handling
+func SetCurrentProgramState(ps *env.ProgramState) {
+	programStateMutex.Lock()
+	defer programStateMutex.Unlock()
+	currentPs = ps
+}
+
+// ClearCurrentProgramState unregisters the program state
+func ClearCurrentProgramState() {
+	programStateMutex.Lock()
+	defer programStateMutex.Unlock()
+	currentPs = nil
+}
 
 // CurrentScriptDirectory stores the directory of the currently executing script
 var CurrentScriptDirectory string
@@ -661,6 +689,9 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 		return
 	}
 
+	// Setup signal handling for interrupting operations
+	setupGlobalSignalHandler()
+
 	if here {
 		if _, err := os.Stat(".rye-here"); err == nil {
 			content, err := os.ReadFile(".rye-here")
@@ -708,6 +739,10 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 			// fmt.Println("****")
 			ps.Dialect = env.EyrDialect
 		}
+
+		// Register program state for signal handling
+		SetCurrentProgramState(ps)
+		defer ClearCurrentProgramState()
 
 		evaldo.EvalBlockInjMultiDialect(ps, stValue, true)
 		evaldo.MaybeDisplayFailureOrError2(ps, ps.Idx, "main rye file", true, true)
@@ -834,6 +869,9 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 		return
 	}
 
+	// Setup signal handling for interrupting operations
+	setupGlobalSignalHandler()
+
 	if lang == "eyr" {
 		es.Dialect = env.EyrDialect
 	}
@@ -866,18 +904,9 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 		}
 	}
 
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-	defer signal.Stop(c) // Ensure signal resources are released
-
-	go func() {
-		sig := <-c
-		fmt.Println()
-		fmt.Println("Captured signal:", sig)
-		// Perform cleanup or other actions here
-		// os.Exit(0)
-	}()
-	//fmt.Println("Waiting for signal")
+	// Register program state for signal handling during REPL execution
+	SetCurrentProgramState(es)
+	defer ClearCurrentProgramState()
 
 	if *dual {
 		// Create a second program state for the right panel

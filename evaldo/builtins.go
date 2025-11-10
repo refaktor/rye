@@ -346,9 +346,8 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 			if idx < 0 {
 				return makeError(ps, "Index too low")
 			}
-			v := s1.Rows[idx]
-			ok := true
-			if ok {
+			if idx < int64(len(s1.Rows)) {
+				v := s1.Rows[idx]
 				return v
 			} else {
 				return makeError(ps, "Index larger than length")
@@ -369,19 +368,18 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 			if true {
 				return env.ToRyeValue(v)
 			} else {
-				return makeError(ps, "Index larger than length")
+				return makeError(ps, "Index larger than table row length")
 			}
 		case env.Integer:
 			idx := s2.Value
 			if posMode {
 				idx--
 			}
-			v := s1.Values[idx]
-			ok := true
-			if ok {
+			if idx < int64(len(s1.Values)) {
+				v := s1.Values[idx]
 				return env.ToRyeValue(v)
 			} else {
-				return makeError(ps, "Index larger than length")
+				return makeError(ps, "Index larger than table row length")
 			}
 		}
 	}
