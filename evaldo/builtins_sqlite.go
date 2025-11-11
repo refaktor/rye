@@ -258,6 +258,7 @@ var Builtins_sqlite = map[string]*env.Builtin{
 								}
 								m[colName] = ryeVal
 								sr.Values = append(sr.Values, ryeVal)
+								sr.Uplink = spr
 							}
 							spr.AddRow(sr)
 							// result = append(result, m)

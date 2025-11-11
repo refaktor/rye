@@ -1012,4 +1012,153 @@ var builtins_numbers = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	// equal { clamp 5 0 10 } 5
+	// equal { clamp -5 0 10 } 0
+	// equal { clamp 15 0 10 } 10
+	// equal { clamp 5.5 0.0 10.0 } 5.5
+	// equal { clamp -2.3 0 10 } 0.0
+	// equal { clamp 12.7 0 10 } 10.0
+	// error { clamp "5" 0 10 }
+	// Args:
+	// * value: Number (integer or decimal) to clamp
+	// * min: Minimum value (integer or decimal)
+	// * max: Maximum value (integer or decimal)
+	// Returns:
+	// * clamped number, ensuring value is between min and max (inclusive)
+	"clamp": { // ***
+		Argsn: 3,
+		Doc:   "Clamps a number between a minimum and maximum value, ensuring the result stays within the specified bounds.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			// Handle different combinations of Integer and Decimal for all three arguments
+			switch val := arg0.(type) {
+			case env.Integer:
+				switch minVal := arg1.(type) {
+				case env.Integer:
+					switch maxVal := arg2.(type) {
+					case env.Integer:
+						// All integers
+						result := val.Value
+						if result < minVal.Value {
+							result = minVal.Value
+						}
+						if result > maxVal.Value {
+							result = maxVal.Value
+						}
+						return *env.NewInteger(result)
+					case env.Decimal:
+						// Integer, Integer, Decimal -> Decimal result
+						result := float64(val.Value)
+						minFloat := float64(minVal.Value)
+						maxFloat := maxVal.Value
+						if result < minFloat {
+							result = minFloat
+						}
+						if result > maxFloat {
+							result = maxFloat
+						}
+						return *env.NewDecimal(result)
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.IntegerType, env.DecimalType}, "clamp")
+					}
+				case env.Decimal:
+					switch maxVal := arg2.(type) {
+					case env.Integer:
+						// Integer, Decimal, Integer -> Decimal result
+						result := float64(val.Value)
+						minFloat := minVal.Value
+						maxFloat := float64(maxVal.Value)
+						if result < minFloat {
+							result = minFloat
+						}
+						if result > maxFloat {
+							result = maxFloat
+						}
+						return *env.NewDecimal(result)
+					case env.Decimal:
+						// Integer, Decimal, Decimal -> Decimal result
+						result := float64(val.Value)
+						minFloat := minVal.Value
+						maxFloat := maxVal.Value
+						if result < minFloat {
+							result = minFloat
+						}
+						if result > maxFloat {
+							result = maxFloat
+						}
+						return *env.NewDecimal(result)
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.IntegerType, env.DecimalType}, "clamp")
+					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "clamp")
+				}
+			case env.Decimal:
+				switch minVal := arg1.(type) {
+				case env.Integer:
+					switch maxVal := arg2.(type) {
+					case env.Integer:
+						// Decimal, Integer, Integer -> Decimal result
+						result := val.Value
+						minFloat := float64(minVal.Value)
+						maxFloat := float64(maxVal.Value)
+						if result < minFloat {
+							result = minFloat
+						}
+						if result > maxFloat {
+							result = maxFloat
+						}
+						return *env.NewDecimal(result)
+					case env.Decimal:
+						// Decimal, Integer, Decimal -> Decimal result
+						result := val.Value
+						minFloat := float64(minVal.Value)
+						maxFloat := maxVal.Value
+						if result < minFloat {
+							result = minFloat
+						}
+						if result > maxFloat {
+							result = maxFloat
+						}
+						return *env.NewDecimal(result)
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.IntegerType, env.DecimalType}, "clamp")
+					}
+				case env.Decimal:
+					switch maxVal := arg2.(type) {
+					case env.Integer:
+						// Decimal, Decimal, Integer -> Decimal result
+						result := val.Value
+						minFloat := minVal.Value
+						maxFloat := float64(maxVal.Value)
+						if result < minFloat {
+							result = minFloat
+						}
+						if result > maxFloat {
+							result = maxFloat
+						}
+						return *env.NewDecimal(result)
+					case env.Decimal:
+						// All decimals
+						result := val.Value
+						if result < minVal.Value {
+							result = minVal.Value
+						}
+						if result > maxVal.Value {
+							result = maxVal.Value
+						}
+						return *env.NewDecimal(result)
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.IntegerType, env.DecimalType}, "clamp")
+					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType}, "clamp")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "clamp")
+			}
+		},
+	},
 }

@@ -1913,7 +1913,7 @@ var Builtins_table = map[string]*env.Builtin{
 	//   f:: mktmp ++ "/test.xlsx"
 	//   spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
 	//   spr1 .save\xlsx f
-	//   spr2:: Load\xlsx f |autotype 1.0
+	//   spr2:: load\xlsx f |autotype 1.0
 	//   spr1 = spr2
 	//  } true
 	// Args:
@@ -1978,7 +1978,7 @@ var Builtins_table = map[string]*env.Builtin{
 	//   f:: mktmp ++ "/test.xlsx"
 	//   spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
 	//   spr1 .save\xlsx f
-	//   spr2:: Load\xlsx f |autotype 1.0
+	//   spr2:: load\xlsx f |autotype 1.0
 	//   spr1 = spr2
 	//  } true
 	// Args:

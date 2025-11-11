@@ -534,6 +534,25 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { "a" <= "a" } true
 	}
 
+	group "clamp" 
+	"Clamps a number between a minimum and maximum value, ensuring the result stays within the specified bounds."
+	{
+		arg `value: Number (integer or decimal) to clamp`
+		arg `min: Minimum value (integer or decimal)`
+		arg `max: Maximum value (integer or decimal)`
+		returns `clamped number, ensuring value is between min and max (inclusive)`
+	}
+
+	{
+		equal { clamp 5 0 10 } 5
+		equal { clamp -5 0 10 } 0
+		equal { clamp 15 0 10 } 10
+		equal { clamp 5.5 0.0 10.0 } 5.5
+		equal { clamp -2.3 0 10 } 0.0
+		equal { clamp 12.7 0 10 } 10.0
+		error { clamp "5" 0 10 }
+	}
+
 }
 
 section "Strings " "" {
@@ -1624,6 +1643,20 @@ section "Collections " "" {
 		equal { dict { "a" 1 "b" 2 } |length? } 2
 	}
 
+	group "max-idx?" 
+	"Returns the number of elements in a collection."
+	{
+		arg `collection: String, block, dict, list, table, context or vector to measure`
+		returns `integer index of last element in a collection`
+	}
+
+	{
+		equal { { 1 2 3 } .max-idx? } 2
+		equal { max-idx? "abcd" } 3
+		equal { table { 'val } { 1 2 3 4 } |max-idx? } 3
+		equal { vector { 10 20 30 } |max-idx? } 2
+	}
+
 	group "keys" 
 	"Extracts the keys from a dictionary or column names from a table as a block."
 	{
@@ -2205,6 +2238,19 @@ section "Contexts " "Context related functions" {
 		equal { y: 123 c: context { x: does { y } } c/x } 123
 	}
 
+	group "context\\pure" 
+	"Creates a new context using Pure Context (PCtx) as parent, preventing access to regular context changes."
+	{
+		arg `block: Block of expressions to evaluate in a new pure context`
+		returns `context object with the values defined in the block, using Pure Context as parent`
+	}
+
+	{
+		equal { c: context\pure { x: 123 } c/x } 123
+		; error { y: 123 c: context\pure { x: y } } ; y not accessible in pure context
+		equal { c: context\pure { x: add 10 5 } c/x } 15
+	}
+
 	group "private" 
 	"Creates a temporary private context for evaluating expressions, returning the last value instead of the context."
 	{
@@ -2706,7 +2752,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 
 section "Functions " "functions that create functions" {
 	group "var" 
-	"Declares a word as a variable with the given value, allowing it to be modified. Can only be used once per word in a context."
+	"Declares a word as a variable with the given value, allowing it to be modified. Returns the word for use with on-change."
 	{
 		arg `word: Tagword representing the variable name`
 		arg `value: Initial value for the variable`
@@ -2854,6 +2900,18 @@ section "Functions " "functions that create functions" {
 		equal { f: fn { x y } { x * y } , apply ?f { 7 6 } } 42
 	}
 
+	group "on-change" 
+	"Registers an observer block to be executed when a variable changes. Use with 'var' result."
+	{
+		arg `word: Word representing the variable to observe`
+		arg `observer: Block containing code to execute when variable changes`
+		returns `The observer block`
+	}
+
+	{
+		equal { x: var 'counter 0 , on-change x { print "changed" } , counter:: 5 } 5
+	}
+
 }
 
 section "Other " "..." {
@@ -2870,6 +2928,21 @@ section "Other " "..." {
 		equal   { a:: 123 change! 333 'a a } 333
 		equal   { a:: 123 change! 124 'a } true
 		equal   { a:: 123 change! 123 'a } false
+	}
+
+	group "modify!" 
+	"Searches for a word and modifies	 it's value in-place. Only works on variables declared with var. If value changes returns true otherwise false"
+	{
+		arg `value: New value to assign to the word`
+		arg `word: Word whose value should be changed`
+		returns `Boolean true if the value changed, false if the new value is the same as the old value, will replace change!`
+	}
+
+	{
+		equal   { var 'x 123 , modify! 234 'x , x } 234
+		equal   { a:: 123 modify! 333 'a a } 333
+		equal   { a:: 123 modify! 124 'a } true
+		equal   { a:: 123 modify! 123 'a } false
 	}
 
 	group "set!" 
@@ -3142,7 +3215,7 @@ section "Other " "..." {
 		equal  { with 100 { + 11 , * 3 } } 300
 	}
 
-	group "do\\in" 
+	group "do\\inside" 
 	"Takes a Context and a Block. It Does a block inside a given Context."
 	{
 		arg `context: Context in which to execute the block`
@@ -3151,13 +3224,13 @@ section "Other " "..." {
 	}
 
 	{
-		equal  { c: context { x: 100 } do\in c { x * 9.99 } } 999.0
-		equal  { c: context { x:: 100 } do\in c { inc! 'x } } 101
-		equal  { c: context { var 'x 100 } do\in c { x:: 200 } c/x } 200
-		equal  { c: context { x:: 100 } do\in c { x:: 200 , x } } 200
+		equal  { c: context { x: 100 } do\inside c { x * 9.99 } } 999.0
+		equal  { c: context { x:: 100 } do\inside c { inc! 'x } } 101
+		equal  { c: context { var 'x 100 } do\inside c { x:: 200 } c/x } 200
+		equal  { c: context { x:: 100 } do\inside c { x:: 200 , x } } 200
 	}
 
-	group "do\\par" 
+	group "do\\in" 
 	"Takes a Context and a Block. It Does a block in current context but with parent a given Context."
 	{
 		arg `context: Context to use as parent context during execution`
@@ -3166,10 +3239,10 @@ section "Other " "..." {
 	}
 
 	{
-		equal  { c: context { x: 100 } do\par c { x * 9.99 } } 999.0
-		equal  { c: context { x:: 100 } do\par c { inc! 'x } } 101
-		equal  { c: context { x: 100 } do\par c { x:: 200 , x } } 200
-		equal  { c: context { x: 100 } do\par c { x:: 200 } c/x } 100
+		equal  { c: context { x: 100 } do\in c { x * 9.99 } } 999.0
+		equal  { c: context { x:: 100 } do\in c { inc! 'x } } 101
+		equal  { c: context { x: 100 } do\in c { x:: 200 , x } } 200
+		equal  { c: context { x: 100 } do\in c { x:: 200 } c/x } 100
 	}
 
 	group "return" 

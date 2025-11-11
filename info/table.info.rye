@@ -601,7 +601,7 @@ section "Loading and saving " "Functions that construct a table." {
 		} true
 	}
 
-	group "file-uri//Load\\xlsx" 
+	group "load\\xlsx" 
 	"Loads the first sheet in an .xlsx file to a Table."
 	{
 		arg `file-uri - location of xlsx file to load`
@@ -614,7 +614,7 @@ section "Loading and saving " "Functions that construct a table." {
 		f:: mktmp ++ "/test.xlsx"
 		spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
 		spr1 .save\xlsx f
-		spr2:: Load\xlsx f |autotype 1.0
+		spr2:: load\xlsx f |autotype 1.0
 		spr1 = spr2
 		} true
 	}
@@ -633,7 +633,7 @@ section "Loading and saving " "Functions that construct a table." {
 		f:: mktmp ++ "/test.xlsx"
 		spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
 		spr1 .save\xlsx f
-		spr2:: Load\xlsx f |autotype 1.0
+		spr2:: load\xlsx f |autotype 1.0
 		spr1 = spr2
 		} true
 	}
