@@ -63,7 +63,8 @@ type EnvR2 struct {
 
 type RyeCtx struct {
 	state     map[int]Object
-	varFlags  map[int]bool // Tracks which words are variables
+	varFlags  map[int]bool    // Tracks which words are variables
+	observers map[int][]Block // Observers for variable changes: word index -> observer blocks
 	Parent    *RyeCtx
 	Kind      Word
 	Doc       string
@@ -75,6 +76,7 @@ func NewEnv(par *RyeCtx) *RyeCtx {
 	var e RyeCtx
 	e.state = make(map[int]Object)
 	e.varFlags = make(map[int]bool)
+	e.observers = make(map[int][]Block)
 	e.Parent = par
 	return &e
 }
@@ -83,6 +85,7 @@ func NewEnv2(par *RyeCtx, doc string) *RyeCtx {
 	var e RyeCtx
 	e.state = make(map[int]Object)
 	e.varFlags = make(map[int]bool)
+	e.observers = make(map[int][]Block)
 	e.Parent = par
 	e.Doc = doc
 	return &e
@@ -140,8 +143,16 @@ func (e *RyeCtx) Copy() Context {
 	for k, v := range e.varFlags {
 		cpVarFlags[k] = v
 	}
+	cpObservers := make(map[int][]Block)
+	for k, v := range e.observers {
+		// Make a copy of the observer slice
+		observersCopy := make([]Block, len(v))
+		copy(observersCopy, v)
+		cpObservers[k] = observersCopy
+	}
 	nc.state = cp
 	nc.varFlags = cpVarFlags
+	nc.observers = cpObservers
 	nc.Kind = e.Kind
 	nc.locked = e.locked
 	nc.IsClosure = e.IsClosure
@@ -586,6 +597,54 @@ func (e *RyeCtx) SetKindWord(kind Word) {
 // AsRyeCtx returns the context as a *RyeCtx for backward compatibility
 func (e *RyeCtx) AsRyeCtx() *RyeCtx {
 	return e
+}
+
+// Observer management methods for context-level observers
+
+// AddObserver registers an observer block for a specific word in this context
+func (e *RyeCtx) AddObserver(wordIndex int, observerBlock Block) {
+	e.observers[wordIndex] = append(e.observers[wordIndex], observerBlock)
+}
+
+// HasObservers checks if there are any observers for a word in this context
+func (e *RyeCtx) HasObservers(wordIndex int) bool {
+	observers, exists := e.observers[wordIndex]
+	return exists && len(observers) > 0
+}
+
+// GetObservers returns a copy of observers for a word in this context
+func (e *RyeCtx) GetObservers(wordIndex int) []Block {
+	observers, exists := e.observers[wordIndex]
+	if !exists || len(observers) == 0 {
+		return nil
+	}
+	// Return a copy to avoid race conditions
+	result := make([]Block, len(observers))
+	copy(result, observers)
+	return result
+}
+
+// RemoveObserver removes a specific observer from this context (for potential future use)
+func (e *RyeCtx) RemoveObserver(wordIndex int, observerBlock Block) {
+	observers, exists := e.observers[wordIndex]
+	if !exists {
+		return
+	}
+
+	// Remove the observer from the list
+	for i, obs := range observers {
+		if obs.Equal(observerBlock) {
+			// Remove by swapping with last element and truncating
+			observers[i] = observers[len(observers)-1]
+			e.observers[wordIndex] = observers[:len(observers)-1]
+			break
+		}
+	}
+
+	// Clean up empty slices
+	if len(e.observers[wordIndex]) == 0 {
+		delete(e.observers, wordIndex)
+	}
 }
 
 // LocationNode represents a source location marker in the code

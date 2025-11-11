@@ -792,6 +792,58 @@ var builtins = map[string]*env.Builtin{
 					if arg0.GetKind() == val.GetKind() && arg0.Inspect(*ps.Idx) == val.Inspect(*ps.Idx) {
 						return *env.NewBoolean(false)
 					} else {
+						// Trigger observers if the variable was successfully modified and the value actually changed
+						// Use the correct context (ctx) where the variable was actually found and modified
+						if ctx.IsVariable(arg.Index) {
+							if ryeCtx, ok := ctx.(*env.RyeCtx); ok {
+								TriggerObservers(ps, ryeCtx, arg.Index, val, arg0)
+							}
+						}
+						return *env.NewBoolean(true)
+					}
+				}
+				return MakeBuiltinError(ps, "Word not found in context.", "change!")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.WordType}, "change!")
+			}
+		},
+	},
+
+	// Tests:
+	// equal   { var 'x 123 , modify! 234 'x , x } 234
+	// equal   { a:: 123 modify! 333 'a a } 333
+	// equal   { a:: 123 modify! 124 'a } true
+	// equal   { a:: 123 modify! 123 'a } false
+	// Args:
+	// * value: New value to assign to the word
+	// * word: Word whose value should be changed
+	// Returns:
+	// * Boolean true if the value changed, false if the new value is the same as the old value, will replace change!
+	"modify!": { // ***
+		Argsn: 2,
+		Doc:   "Searches for a word and modifies	 it's value in-place. Only works on variables declared with var. If value changes returns true otherwise false",
+		Pure:  false,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg := arg1.(type) {
+			case env.Word:
+				val, found, ctx := ps.Ctx.Get2(arg.Index)
+				if found {
+					// Attempt to modify the word
+					if ok := ctx.Mod(arg.Index, arg0); !ok {
+						ps.FailureFlag = true
+						return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(arg.Index) + "', use 'var' to declare it as a variable")
+					}
+
+					if arg0.GetKind() == val.GetKind() && arg0.Inspect(*ps.Idx) == val.Inspect(*ps.Idx) {
+						return *env.NewBoolean(false)
+					} else {
+						// Trigger observers if the variable was successfully modified and the value actually changed
+						// Use the correct context (ctx) where the variable was actually found and modified
+						if ctx.IsVariable(arg.Index) {
+							if ryeCtx, ok := ctx.(*env.RyeCtx); ok {
+								TriggerObservers(ps, ryeCtx, arg.Index, val, arg0)
+							}
+						}
 						return *env.NewBoolean(true)
 					}
 				}
@@ -826,10 +878,22 @@ var builtins = map[string]*env.Builtin{
 								return MakeBuiltinError(ps, "More words than values.", "set!")
 							}
 							val := vals.Series.S[i]
+
+							// Get old value for observer notification
+							oldValue, exists := ps.Ctx.GetCurrent(word.Index)
+
 							// if it exists then we set it to word from words
 							if ok := ps.Ctx.Mod(word.Index, val); !ok {
 								ps.FailureFlag = true
 								return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(word.Index) + "', use 'var' to declare it as a variable")
+							} else {
+								// Trigger observers if the variable was successfully modified
+								if exists && ps.Ctx.IsVariable(word.Index) {
+									// Only trigger if the value actually changed
+									if oldValue == nil || !oldValue.Equal(val) {
+										TriggerObservers(ps, ps.Ctx, word.Index, oldValue, val)
+									}
+								}
 							}
 						default:
 							fmt.Println(word)
@@ -841,9 +905,23 @@ var builtins = map[string]*env.Builtin{
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "set!")
 				}
 			case env.Word:
-				if ok := ps.Ctx.Mod(words.Index, arg0); !ok {
+				// Get old value and context for observer notification
+				oldValue, found, ctx := ps.Ctx.Get2(words.Index)
+
+				if ok := ctx.Mod(words.Index, arg0); !ok {
 					ps.FailureFlag = true
 					return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(words.Index) + "', use 'var' to declare it as a variable")
+				} else {
+					// Trigger observers if the variable was successfully modified
+					// Use the correct context (ctx) where the variable was actually found and modified
+					if found && ctx.IsVariable(words.Index) {
+						// Only trigger if the value actually changed
+						if oldValue == nil || !oldValue.Equal(arg0) {
+							if ryeCtx, ok := ctx.(*env.RyeCtx); ok {
+								TriggerObservers(ps, ryeCtx, words.Index, oldValue, arg0)
+							}
+						}
+					}
 				}
 				return arg0
 			default:
@@ -1564,16 +1642,16 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal  { c: context { x: 100 } do\in c { x * 9.99 } } 999.0
-	// equal  { c: context { x:: 100 } do\in c { inc! 'x } } 101
-	// equal  { c: context { var 'x 100 } do\in c { x:: 200 } c/x } 200
-	// equal  { c: context { x:: 100 } do\in c { x:: 200 , x } } 200
+	// equal  { c: context { x: 100 } do\inside c { x * 9.99 } } 999.0
+	// equal  { c: context { x:: 100 } do\inside c { inc! 'x } } 101
+	// equal  { c: context { var 'x 100 } do\inside c { x:: 200 } c/x } 200
+	// equal  { c: context { x:: 100 } do\inside c { x:: 200 , x } } 200
 	// Args:
 	// * context: Context in which to execute the block
 	// * block: Block of code to execute within the specified context
 	// Returns:
 	// * result of executing the block within the given context
-	"do\\in": { // **
+	"do\\inside": { // **
 		Argsn: 2,
 		Doc:   "Takes a Context and a Block. It Does a block inside a given Context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1588,7 +1666,7 @@ var builtins = map[string]*env.Builtin{
 					return ps.Res
 				default:
 					ps.ErrorFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "do\\in")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "do\\inside")
 				}
 			case PersistentCtx:
 				switch bloc := arg1.(type) {
@@ -1601,27 +1679,27 @@ var builtins = map[string]*env.Builtin{
 					return ps.Res
 				default:
 					ps.ErrorFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "do\\in")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "do\\inside")
 				}
 			default:
 				ps.ErrorFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.ContextType, env.PersistentContextType}, "do\\in")
+				return MakeArgError(ps, 1, []env.Type{env.ContextType, env.PersistentContextType}, "do\\inside")
 			}
 
 		},
 	},
 
 	// Tests:
-	// equal  { c: context { x: 100 } do\par c { x * 9.99 } } 999.0
-	// equal  { c: context { x:: 100 } do\par c { inc! 'x } } 101
-	// equal  { c: context { x: 100 } do\par c { x:: 200 , x } } 200
-	// equal  { c: context { x: 100 } do\par c { x:: 200 } c/x } 100
+	// equal  { c: context { x: 100 } do\in c { x * 9.99 } } 999.0
+	// equal  { c: context { x:: 100 } do\in c { inc! 'x } } 101
+	// equal  { c: context { x: 100 } do\in c { x:: 200 , x } } 200
+	// equal  { c: context { x: 100 } do\in c { x:: 200 } c/x } 100
 	// Args:
 	// * context: Context to use as parent context during execution
 	// * block: Block of code to execute in current context with the specified parent context
 	// Returns:
 	// * result of executing the block with the modified parent context
-	"do\\par": { // **
+	"do\\in": { // **
 		Argsn: 2,
 		Doc:   "Takes a Context and a Block. It Does a block in current context but with parent a given Context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1662,11 +1740,11 @@ var builtins = map[string]*env.Builtin{
 					return ps.Res
 				default:
 					ps.ErrorFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "do\\par")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "do\\in")
 				}
 			default:
 				ps.ErrorFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.ContextType}, "do\\par")
+				return MakeArgError(ps, 1, []env.Type{env.ContextType}, "do\\in")
 			}
 
 		},

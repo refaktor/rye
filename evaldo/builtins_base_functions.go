@@ -20,7 +20,7 @@ var builtins_functions = map[string]*env.Builtin{
 	// * The initial value
 	"var": {
 		Argsn: 2,
-		Doc:   "Declares a word as a variable with the given value, allowing it to be modified. Can only be used once per word in a context.",
+		Doc:   "Declares a word as a variable with the given value, allowing it to be modified. Returns the word for use with on-change.",
 		Pure:  false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch word := arg0.(type) {
@@ -36,7 +36,8 @@ var builtins_functions = map[string]*env.Builtin{
 				ps.Ctx.SetNew(idx, arg1, ps.Idx)
 				// Mark as variable
 				ps.Ctx.MarkAsVariable(idx)
-				return arg1
+				// Return the word instead of the value for use with on-change
+				return *env.NewWord(idx)
 			case env.Word:
 				// Use word index directly
 				idx := word.Index
@@ -47,7 +48,8 @@ var builtins_functions = map[string]*env.Builtin{
 				}
 				ps.Ctx.SetNew(idx, arg1, ps.Idx)
 				ps.Ctx.MarkAsVariable(idx)
-				return arg1
+				// Return the word instead of the value for use with on-change
+				return word
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.TagwordType, env.WordType}, "var")
 			}
@@ -629,6 +631,45 @@ var builtins_functions = map[string]*env.Builtin{
 
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.FunctionType, env.BuiltinType, env.VarBuiltinType}, "apply")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { x: var 'counter 0 , on-change x { print "changed" } , counter:: 5 } 5
+	// Args:
+	// * word: Word representing the variable to observe
+	// * observer: Block containing code to execute when variable changes
+	// Returns:
+	// * The observer block
+	"on-change": {
+		Argsn: 2,
+		Doc:   "Registers an observer block to be executed when a variable changes. Use with 'var' result.",
+		Pure:  false,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch word := arg0.(type) {
+			case env.Word:
+				switch observerBlock := arg1.(type) {
+				case env.Block:
+					// Check if the word is actually a variable in the current context
+					if _, exists := ps.Ctx.GetCurrent(word.Index); !exists {
+						ps.FailureFlag = true
+						return env.NewError("Word '" + ps.Idx.GetWord(word.Index) + "' not found in current context")
+					}
+
+					if !ps.Ctx.IsVariable(word.Index) {
+						ps.FailureFlag = true
+						return env.NewError("Word '" + ps.Idx.GetWord(word.Index) + "' is not a variable. Use 'var' to declare it as variable first.")
+					}
+
+					// Register the observer in the current context
+					ps.Ctx.AddObserver(word.Index, observerBlock)
+					return observerBlock
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "on-change")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.WordType}, "on-change")
 			}
 		},
 	},

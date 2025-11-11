@@ -9,6 +9,11 @@ import (
 	"github.com/refaktor/rye/env"
 )
 
+// Initialize the observer executor callback to avoid circular imports
+func init() {
+	env.ObserverExecutor = EvalBlockInj
+}
+
 // Flag to control whether to use the fast evaluator
 var useFastEvaluator = false
 
@@ -235,12 +240,24 @@ func MaybeEvalOpwordOnRight(nextObj env.Object, ps *env.ProgramState, limited bo
 			return
 		}
 		idx := opword.Index
+
+		// Get old value for observer notification
+		oldValue, exists := ps.Ctx.GetCurrent(idx)
+
 		ok := ps.Ctx.Mod(idx, ps.Res)
 		if !ok {
 			ps.Res = env.NewError("Cannot modify constant " + ps.Idx.GetWord(idx) + ", use 'var' to declare it as a variable")
 			ps.FailureFlag = true
 			ps.ErrorFlag = true
 			return
+		} else {
+			// Trigger observers if the variable was successfully modified
+			if exists && ps.Ctx.IsVariable(idx) {
+				// Only trigger if the value actually changed
+				if oldValue == nil || !oldValue.Equal(ps.Res) {
+					TriggerObservers(ps, ps.Ctx, idx, oldValue, ps.Res)
+				}
+			}
 		}
 		ps.Ser.Next()
 		MaybeEvalOpwordOnRight(ps.Ser.Peek(), ps, limited)
@@ -689,11 +706,23 @@ func EvalModword(ps *env.ProgramState, word env.Modword) {
 	// es1 := EvalExpression(es)
 	EvalExpressionInj(ps, nil, false)
 	idx := word.Index
+
+	// Get old value for observer notification
+	oldValue, exists := ps.Ctx.GetCurrent(idx)
+
 	ok := ps.Ctx.Mod(idx, ps.Res)
 	if !ok {
 		ps.Res = env.NewError("Cannot modify constant " + ps.Idx.GetWord(idx) + ", use 'var' to declare it as a variable")
 		ps.FailureFlag = true
 		ps.ErrorFlag = true
+	} else {
+		// Trigger observers if the variable was successfully modified
+		if exists && ps.Ctx.IsVariable(idx) {
+			// Only trigger if the value actually changed
+			if oldValue == nil || !oldValue.Equal(ps.Res) {
+				TriggerObservers(ps, ps.Ctx, idx, oldValue, ps.Res)
+			}
+		}
 	}
 }
 
@@ -866,6 +895,7 @@ func CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, toLeft
 
 	// Don't return closure contexts to the pool to prevent context reuse issues
 	if !fnCtx.IsClosure {
+		// Observers are now automatically cleaned up with the context
 		envPool.Put(fnCtx)
 	}
 
@@ -1699,6 +1729,12 @@ func tryHandleFailure(ps *env.ProgramState) bool {
 		return true // Unhandled failure
 	}
 	return false // No failure
+}
+
+// TriggerObservers executes observers for a variable change using the context-level observer system
+func TriggerObservers(ps *env.ProgramState, ctx *env.RyeCtx, wordIndex int, oldValue, newValue env.Object) {
+	// Use the new context-level observer system
+	env.TriggerObserversInChain(ps, ctx, wordIndex, oldValue, newValue)
 }
 
 // ExecuteDeferredBlocks executes all deferred blocks in LIFO order (last in, first out)
