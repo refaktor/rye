@@ -232,6 +232,18 @@ var Builtins_io = map[string]*env.Builtin{
 			return *env.NewNative(env1.Idx, os.Stdout, "writer")
 		},
 	},
+	//
+	// Args:
+	// * none
+	// Returns:
+	// * native writer object connected to standard error
+	"stderr": {
+		Argsn: 0,
+		Doc:   "Gets a writer for standard error.",
+		Fn: func(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return *env.NewNative(env1.Idx, os.Stderr, "writer")
+		},
+	},
 
 	// TODO: add scanner ScanString method ... look at: https://stackoverflow.com/questions/47479564/go-bufio-readstring-in-loop-is-infinite
 

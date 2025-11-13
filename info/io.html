@@ -103,6 +103,11 @@
 <p class='returns'><b>returns</b> native writer object connected to standard output</p>
 <div class='group'>
 </div>
+<h3>stderr</h3><p>Gets a writer for standard error.</p>
+<p class='arg'>none</p>
+<p class='returns'><b>returns</b> native writer object connected to standard error</p>
+<div class='group'>
+</div>
 <h3>reader//Read\string</h3><p>Reads all content from a reader as a string.</p>
 <p class='arg'><b>reader</b> native reader object</p>
 <p class='returns'><b>returns</b> string containing all content from the reader</p>
@@ -320,6 +325,83 @@
 <h3>tail-file//Close</h3><p>Closes a tailed file, stopping the monitoring.</p>
 <p class='arg'><b>tail</b> native tail-file object</p>
 <p class='returns'><b>returns</b> empty string if successful</p>
+<div class='group'>
+</div>
+</div>
+<h2>Command Operations </h2><p>Running other programs</p><div class='section'>
+<h3>cmd</h3><p>Create a command.</p>
+<p class='arg'><b>command</b> block or list containing a command arguments</p>
+<p class='returns'><b>returns</b> native command object</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cmd { echo -n Hello World } |Output
+; returns "Hello World"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cmd { echo -n Hello World |tr A-Z a-z |sed "s/hello/goodbye/" } |Output
+; returns "goodbye world"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cmd { echo -n "1 + 1 =" { 1 + 1 } } |Output
+; returns "1 + 1 = 2"</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>args: list { "two" "arguments" } cmd { printf "'%s' " ?args } |Output
+; returns "'two' 'arguments' "</code></pre>
+</div>
+<h3>command//Dir!</h3><p>Change the working directory of a command.</p>
+<p class='arg'><b>command</b> native command object</p>
+<p class='arg'><b>dir</b> path to the working directory</p>
+<p class='returns'><b>returns</b> the original command object</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cmd { pwd } |Dir! %/ |Output |trim
+; returns "/"</code></pre>
+</div>
+<h3>command//Stdin!</h3><p>Change the standard input of a command.</p>
+<p class='arg'><b>command</b> native command object</p>
+<p class='arg'><b>input</b> path to an input file, a native file object, or a reader</p>
+<p class='returns'><b>returns</b> the original command object</p>
+<div class='group'>
+</div>
+<h3>command//Stdout!</h3><p>Change the standard output of a command.</p>
+<p class='arg'><b>command</b> native command object</p>
+<p class='arg'><b>output</b> path to an output file, a native file object, or a writer</p>
+<p class='returns'><b>returns</b> the original command object</p>
+<div class='group'>
+</div>
+<h3>command//Stderr!</h3><p>Change the standard error of a command.</p>
+<p class='arg'><b>command</b> native command object</p>
+<p class='arg'><b>output</b> path to an output file, a native file object, or a writer</p>
+<p class='returns'><b>returns</b> the original command object</p>
+<div class='group'>
+</div>
+<h3>command//Pipe</h3><p>Pipe the output of the first command to the input of the second command.</p>
+<p class='arg'><b>c1</b> first command writing to the pipe</p>
+<p class='arg'><b>c2</b> second command reading from the pipe</p>
+<p class='returns'><b>returns</b> new native command object</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cmd { echo -n Hello World } |Pipe cmd { tr a-z A-Z } |Output
+; returns "HELLO WORLD"</code></pre>
+</div>
+<h3>command//Run</h3><p>Start a command and wait for it to finish.</p>
+<p class='arg'><b>command</b> native command object</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cmd { false } |Run
+; correctly causes error:
+; exit status 1 in builtin Run. </code></pre>
+</div>
+<h3>command//Status</h3><p>Start a command, wait for it to finish, and return its exit status.</p>
+<p class='arg'><b>command</b> native command object</p>
+<p class='returns'><b>returns</b> for simple command: exit status integerfor pipeline: list of exit status integers</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cmd { true } |Status
+; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cmd { false } |Status
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cmd { false |true } |Status
+; returns list { 1 0 }</code></pre>
+</div>
+<h3>command//Output</h3><p>Start a command, wait for it to finish, and return its standard output</p>
+<p class='arg'><b>command</b> native command object</p>
+<p class='returns'><b>returns</b> string containing data written to the command's standard output</p>
+<div class='group'>
+</div>
+<h3>command//CombinedOutput</h3><p>Start a command, wait for it to finish, and return its combined standard output and error</p>
+<p class='arg'><b>command</b> native command object</p>
+<p class='returns'><b>returns</b> string containing data written to the command's standard output and error</p>
 <div class='group'>
 </div>
 </div>
