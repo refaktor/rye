@@ -353,7 +353,11 @@ func Eyr_EvalBlock(ps *env.ProgramState, full bool) *env.ProgramState {
 	if full {
 		ps.Res = stackToBlock(ps.Stack, false)
 	} else {
-		ps.Res = ps.Stack.Peek(ps, 0)
+		if ps.Stack.IsEmpty() {
+			ps.Res = env.NewVoid()
+		} else {
+			ps.Res = ps.Stack.Peek(ps, 0)
+		}
 	}
 	// fmt.Println("** EVAL BLOCK PS RES")
 	// fmt.Println(ps.Res)
@@ -385,6 +389,12 @@ var Builtins_eyr = map[string]*env.Builtin{
 				ps.Ser = bloc.Series
 				dialect := ps.Dialect
 				ps.Dialect = env.EyrDialect
+				// Initialize/reset the stack for eyr evaluation
+				if ps.Stack == nil {
+					ps.Stack = env.NewEyrStack()
+				} else {
+					ps.ResetStack()
+				}
 				Eyr_EvalBlock(ps, false)
 				ps.Dialect = dialect
 				ps.Ser = ser

@@ -369,11 +369,11 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>cc os f:: mktmp ++ "/test.csv" spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" } spr1 .save\tsv f spr2:: load\tsv f |autotype 1 spr1 = spr2
 ; returns true</code></pre>
 </div>
-<h3>file-uri//Load\xlsx</h3><p>Loads the first sheet in an .xlsx file to a Table.</p>
+<h3>load\xlsx</h3><p>Loads the first sheet in an .xlsx file to a Table.</p>
 <p class='arg'>file-uri - location of xlsx file to load</p>
 <p class='arg'><b>Tags</b> #table #loading #xlsx</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>cc os f:: mktmp ++ "/test.xlsx" spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" } spr1 .save\xlsx f spr2:: Load\xlsx f |autotype 1 spr1 = spr2
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc os f:: mktmp ++ "/test.xlsx" spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" } spr1 .save\xlsx f spr2:: load\xlsx f |autotype 1 spr1 = spr2
 ; returns true</code></pre>
 </div>
 <h3>save\xlsx</h3><p>Saves a Table to a .xlsx file.</p>
@@ -381,7 +381,7 @@
 <p class='arg'>file-url 		- where to save the table as a .xlsx file</p>
 <p class='arg'><b>Tags</b> #table #saving #xlsx</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>cc os f:: mktmp ++ "/test.xlsx" spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" } spr1 .save\xlsx f spr2:: Load\xlsx f |autotype 1 spr1 = spr2
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc os f:: mktmp ++ "/test.xlsx" spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" } spr1 .save\xlsx f spr2:: load\xlsx f |autotype 1 spr1 = spr2
 ; returns true</code></pre>
 </div>
 <h3>persistent-table</h3><p>Creates a persistent table using BadgerDB for storage</p>

@@ -585,6 +585,28 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>"a" &lt;= "a"
 ; returns true</code></pre>
 </div>
+<h3>clamp</h3><p>Clamps a number between a minimum and maximum value, ensuring the result stays within the specified bounds.</p>
+<p class='arg'><b>value</b> Number (integer or decimal) to clamp</p>
+<p class='arg'><b>min</b> Minimum value (integer or decimal)</p>
+<p class='arg'><b>max</b> Maximum value (integer or decimal)</p>
+<p class='returns'><b>returns</b> clamped number, ensuring value is between min and max (inclusive)</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>clamp 5 0 10
+; returns 5</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>clamp -5 0 10
+; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>clamp 15 0 10
+; returns 10</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>clamp 5.5 0 10
+; returns 5.5</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>clamp -2.3 0 10
+; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>clamp 12.7 0 10
+; returns 10</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>clamp "5" 0 10
+; correctly causes error:
+; builtin `clamp` requires argument 1 to be: Integer, Decimal. </code></pre>
+</div>
 </div>
 <h2>Strings </h2><p></p><div class='section'>
 <h3>newline</h3><p>Returns a string containing a single newline character.</p>
@@ -1305,7 +1327,7 @@ ASDF
 <p class='returns'><b>returns</b> list containing all values from the dictionary</p>
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 "b" 2 "c" 3 } |values
-; returns list { 1 2 3 }</code></pre>
+; returns list { 2 3 1 }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "x" 10 "y" 20 } |values |length?
 ; returns 2</code></pre>
 </div>
@@ -1420,7 +1442,7 @@ ASDF
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 } || ++ { "b" 2 }
 ; returns dict { a 1 b 2 }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 } || ++ dict { "b" 2 }
-; returns dict { a 1 b 2 }</code></pre>
+; returns dict { b 2 a 1 }</code></pre>
 </div>
 <h3>union</h3><p>Combines two collections, removing any duplicate values to create a union of all unique values.</p>
 <p class='arg'><b>collection1</b> First block or list</p>
@@ -1490,6 +1512,19 @@ ASDF
 <pre class='prettyprint lang-rye'><code language='lang-rye'>vector { 10 20 30 } |length?
 ; returns 3</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 "b" 2 } |length?
+; returns 2</code></pre>
+</div>
+<h3>max-idx?</h3><p>Returns the number of elements in a collection.</p>
+<p class='arg'><b>collection</b> String, block, dict, list, table, context or vector to measure</p>
+<p class='returns'><b>returns</b> integer index of last element in a collection</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>{ 1 2 3 } .max-idx?
+; returns 2</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>max-idx? "abcd"
+; returns 3</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>table { 'val } { 1 2 3 4 } |max-idx?
+; returns 3</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>vector { 10 20 30 } |max-idx?
 ; returns 2</code></pre>
 </div>
 <h3>keys</h3><p>Extracts the keys from a dictionary or column names from a table as a block.</p>
@@ -1910,7 +1945,7 @@ Type is not matching - Validation_EvalBlock.
 <p class='returns'><b>returns</b> The registered functiongeneric <integer> <add> fn [ a b ] [ a + b ] // tagwords are temporary here</p>
 <div class='group'>
 2
-1022
+1029
 Generic
 <pre class='prettyprint lang-rye'><code language='lang-rye'>generic 'integer 'add fn { a b } { a + b } |type?
 ; returns function</code></pre>
@@ -1965,6 +2000,15 @@ Generic
 ; returns 11</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>y: 123 c: context { x: does { y } } c/x
 ; returns 123</code></pre>
+</div>
+<h3>context\pure</h3><p>Creates a new context using Pure Context (PCtx) as parent, preventing access to regular context changes.</p>
+<p class='arg'><b>block</b> Block of expressions to evaluate in a new pure context</p>
+<p class='returns'><b>returns</b> context object with the values defined in the block, using Pure Context as parent</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context\pure { x: 123 } c/x
+; returns 123</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context\pure { x: add 10 5 } c/x
+; returns 15</code></pre>
 </div>
 <h3>private</h3><p>Creates a temporary private context for evaluating expressions, returning the last value instead of the context.</p>
 <p class='arg'><b>block</b> Block of expressions to evaluate in a private context</p>
@@ -2035,8 +2079,6 @@ Generic
 ; returns 456</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x:: 123 } cc: clone c do\in cc { x:: 999 } c/x
 ; returns 123</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x:: 123 } cc: clone c do\in cc { x:: 999 } cc/x
-; returns 999</code></pre>
 </div>
 <h3>clone\</h3><p>Creates a copy of a context and evaluates a block of code inside the clone.</p>
 <p class='arg'><b>ctx</b> Context object to clone</p>
@@ -2382,7 +2424,7 @@ Generic
 </div>
 </div>
 <h2>Functions </h2><p>functions that create functions</p><div class='section'>
-<h3>var</h3><p>Declares a word as a variable with the given value, allowing it to be modified. Can only be used once per word in a context.</p>
+<h3>var</h3><p>Declares a word as a variable with the given value, allowing it to be modified. Returns the word for use with on-change.</p>
 <p class='arg'><b>word</b> Tagword representing the variable name</p>
 <p class='arg'><b>value</b> Initial value for the variable</p>
 <p class='returns'><b>returns</b> The initial value</p>
@@ -2500,6 +2542,15 @@ Generic
 <pre class='prettyprint lang-rye'><code language='lang-rye'>f: fn { x y } { x * y } , apply ?f { 7 6 }
 ; returns 42</code></pre>
 </div>
+<h3>on-change</h3><p>Registers an observer block to be executed when a variable changes. Use with 'var' result.</p>
+<p class='arg'><b>word</b> Word representing the variable to observe</p>
+<p class='arg'><b>observer</b> Block containing code to execute when variable changes</p>
+<p class='returns'><b>returns</b> The observer block</p>
+<div class='group'>
+changed
+<pre class='prettyprint lang-rye'><code language='lang-rye'>x: var 'counter 0 , on-change x { print "changed" } , counter:: 5
+; returns 5</code></pre>
+</div>
 </div>
 <h2>Other </h2><p>...</p><div class='section'>
 <h3>change!</h3><p>Searches for a word and changes it's value in-place. Only works on variables declared with var. If value changes returns true otherwise false</p>
@@ -2514,6 +2565,20 @@ Generic
 <pre class='prettyprint lang-rye'><code language='lang-rye'>a:: 123 change! 124 'a
 ; returns true</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>a:: 123 change! 123 'a
+; returns false</code></pre>
+</div>
+<h3>modify!</h3><p>Searches for a word and modifies	 it's value in-place. Only works on variables declared with var. If value changes returns true otherwise false</p>
+<p class='arg'><b>value</b> New value to assign to the word</p>
+<p class='arg'><b>word</b> Word whose value should be changed</p>
+<p class='returns'><b>returns</b> Boolean true if the value changed, false if the new value is the same as the old value, will replace change!</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>var 'x 123 , modify! 234 'x , x
+; returns 234</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>a:: 123 modify! 333 'a a
+; returns 333</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>a:: 123 modify! 124 'a
+; returns true</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>a:: 123 modify! 123 'a
 ; returns false</code></pre>
 </div>
 <h3>set!</h3><p>Set word to value or words by deconstructing a block. Only works on variables declared with var.</p>
@@ -2563,7 +2628,7 @@ Generic
 <p class='arg'>None</p>
 <p class='returns'><b>returns</b> Integer 1 on success</p>
 <div class='group'>
-State current context to [1mconsole_251105_100602.rye[0m.
+State current context to [1mconsole_251111_100422.rye[0m.
 <pre class='prettyprint lang-rye'><code language='lang-rye'>save\current |type?
 ; returns integer</code></pre>
 </div>
@@ -2696,32 +2761,32 @@ State current context to [1mconsole_251105_100602.rye[0m.
 <pre class='prettyprint lang-rye'><code language='lang-rye'>with 100 { + 11 , * 3 }
 ; returns 300</code></pre>
 </div>
-<h3>do\in</h3><p>Takes a Context and a Block. It Does a block inside a given Context.</p>
+<h3>do\inside</h3><p>Takes a Context and a Block. It Does a block inside a given Context.</p>
 <p class='arg'><b>context</b> Context in which to execute the block</p>
 <p class='arg'><b>block</b> Block of code to execute within the specified context</p>
 <p class='returns'><b>returns</b> result of executing the block within the given context</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } do\inside c { x * 9.99 }
+; returns 999</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x:: 100 } do\inside c { inc! 'x }
+; returns 101</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { var 'x 100 } do\inside c { x:: 200 } c/x
+; returns 200</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x:: 100 } do\inside c { x:: 200 , x }
+; returns 200</code></pre>
+</div>
+<h3>do\in</h3><p>Takes a Context and a Block. It Does a block in current context but with parent a given Context.</p>
+<p class='arg'><b>context</b> Context to use as parent context during execution</p>
+<p class='arg'><b>block</b> Block of code to execute in current context with the specified parent context</p>
+<p class='returns'><b>returns</b> result of executing the block with the modified parent context</p>
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } do\in c { x * 9.99 }
 ; returns 999</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x:: 100 } do\in c { inc! 'x }
 ; returns 101</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { var 'x 100 } do\in c { x:: 200 } c/x
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } do\in c { x:: 200 , x }
 ; returns 200</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x:: 100 } do\in c { x:: 200 , x }
-; returns 200</code></pre>
-</div>
-<h3>do\par</h3><p>Takes a Context and a Block. It Does a block in current context but with parent a given Context.</p>
-<p class='arg'><b>context</b> Context to use as parent context during execution</p>
-<p class='arg'><b>block</b> Block of code to execute in current context with the specified parent context</p>
-<p class='returns'><b>returns</b> result of executing the block with the modified parent context</p>
-<div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } do\par c { x * 9.99 }
-; returns 999</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x:: 100 } do\par c { inc! 'x }
-; returns 101</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } do\par c { x:: 200 , x }
-; returns 200</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } do\par c { x:: 200 } c/x
+<pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } do\in c { x:: 200 } c/x
 ; returns 100</code></pre>
 </div>
 <h3>return</h3><p>Accepts one value and returns it.</p>
