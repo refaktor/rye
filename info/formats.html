@@ -25,7 +25,7 @@
       <aside class="sidebar" id="menu-holder">
         <nav>
           <ul>
-            <li><a href="https://ryelang.org">← Home</a>  &middot; <a class='menu-item' id='maintab-base' href='base.html'>base</a> &middot; <a class='menu-item' id='maintab-table' href='table.html'>table</a> &middot; <a class='menu-item' id='maintab-formats' href='formats.html'>formats</a> &middot; <a class='menu-item' id='maintab-io' href='io.html'>io</a> &middot; <a class='menu-item' id='maintab-crypto' href='crypto.html'>crypto</a></li>
+            <li><a href="https://ryelang.org">← Home</a>  &middot; <a class='menu-item' id='maintab-base' href='base.html'>base</a> &middot; <a class='menu-item' id='maintab-table' href='table.html'>table</a> &middot; <a class='menu-item' id='maintab-formats' href='formats.html'>formats</a> &middot; <a class='menu-item' id='maintab-io' href='io.html'>io</a> &middot; <a class='menu-item' id='maintab-crypto' href='crypto.html'>crypto</a> &middot; <a class='menu-item' id='maintab-dialects' href='dialects.html'>dialects</a></li>
             <!-- More menu items here -->
           </ul>
         </nav>
@@ -139,7 +139,7 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>"{"a": 2, "b": "x"} 
 {"a": 3, "b": "y"} 
 " |parse-json\lines |to-table
-; returns table { "b" "a" } [ "x" 2 "y" 3 ]</code></pre>
+; returns table { "a" "b" } [ 2 "x" 3 "y" ]</code></pre>
 </div>
 <h3>to-json</h3><p>Converts a Rye value to a JSON string.</p>
 <p class='arg'><b>value</b> any Rye value to encode (list, dict, string, integer, etc.)</p>

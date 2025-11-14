@@ -25,7 +25,7 @@
       <aside class="sidebar" id="menu-holder">
         <nav>
           <ul>
-            <li><a href="https://ryelang.org">← Home</a>  &middot; <a class='menu-item' id='maintab-base' href='base.html'>base</a> &middot; <a class='menu-item' id='maintab-table' href='table.html'>table</a> &middot; <a class='menu-item' id='maintab-formats' href='formats.html'>formats</a> &middot; <a class='menu-item' id='maintab-io' href='io.html'>io</a> &middot; <a class='menu-item' id='maintab-crypto' href='crypto.html'>crypto</a></li>
+            <li><a href="https://ryelang.org">← Home</a>  &middot; <a class='menu-item' id='maintab-base' href='base.html'>base</a> &middot; <a class='menu-item' id='maintab-table' href='table.html'>table</a> &middot; <a class='menu-item' id='maintab-formats' href='formats.html'>formats</a> &middot; <a class='menu-item' id='maintab-io' href='io.html'>io</a> &middot; <a class='menu-item' id='maintab-crypto' href='crypto.html'>crypto</a> &middot; <a class='menu-item' id='maintab-dialects' href='dialects.html'>dialects</a></li>
             <!-- More menu items here -->
           </ul>
         </nav>
@@ -1327,7 +1327,7 @@ ASDF
 <p class='returns'><b>returns</b> list containing all values from the dictionary</p>
 <div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 "b" 2 "c" 3 } |values
-; returns list { 2 3 1 }</code></pre>
+; returns list { 1 2 3 }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "x" 10 "y" 20 } |values |length?
 ; returns 2</code></pre>
 </div>
@@ -1442,7 +1442,7 @@ ASDF
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 } || ++ { "b" 2 }
 ; returns dict { a 1 b 2 }</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>dict { "a" 1 } || ++ dict { "b" 2 }
-; returns dict { b 2 a 1 }</code></pre>
+; returns dict { a 1 b 2 }</code></pre>
 </div>
 <h3>union</h3><p>Combines two collections, removing any duplicate values to create a union of all unique values.</p>
 <p class='arg'><b>collection1</b> First block or list</p>
@@ -2628,7 +2628,7 @@ changed
 <p class='arg'>None</p>
 <p class='returns'><b>returns</b> Integer 1 on success</p>
 <div class='group'>
-State current context to [1mconsole_251111_100422.rye[0m.
+State current context to [1mconsole_251114_093258.rye[0m.
 <pre class='prettyprint lang-rye'><code language='lang-rye'>save\current |type?
 ; returns integer</code></pre>
 </div>

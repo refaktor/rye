@@ -1,3 +1,4 @@
+
 ../cmd/rbit/rbit ../evaldo/builtins_base_boolean.go > base.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_base_numbers.go >> base.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_base_strings.go >> base.info.rye
@@ -22,3 +23,5 @@
 # ../cmd/rbit/rbit ../evaldo/builtins_mysql.go >> io.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_crypto.go > crypto.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_bcrypt.go >> crypto.info.rye
+../cmd/rbit/rbit ../evaldo/builtins_math.go > dialects.info.rye
+../cmd/rbit/rbit ../evaldo/builtins_eyr.go >> dialects.info.rye

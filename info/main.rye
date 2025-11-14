@@ -3,7 +3,7 @@
 ; Generate documentation: ../rye main.rye doc > builtins.html
 
 rye .args\raw |load :args
-root-ctx: current
+root-ctx:: current
 
 t: ?term
 
@@ -22,8 +22,8 @@ test-framework: context {
 	}
 
 	equal: fn { test res } {
-		cc: extends root-ctx { }
-		do\inside cc test :got = res
+		ctx: extends root-ctx { }
+		do\inside ctx test :got = res
 		|either { t/green prns "✓" t/reset } { inc! 'failed , t/red prns " ✗ Failed:" t/reset prns join { "expected " t/str\br-black inspect res t/str\reset ", got " t/str\br-black inspect got t/str\reset } }
 	}
 	
@@ -109,7 +109,7 @@ generate-doc-file: fn { filename menu } {
 	 } |Write* to-file filename ++ ".html"
 }
 
-menu: { "base" "table" "formats" "io" "crypto" }
+menu: { "base" "table" "formats" "io" "crypto" "dialects" }
 
 print-help: does {
 	print `# Rye's simple testing tool

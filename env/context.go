@@ -920,6 +920,6 @@ func (s *EyrStack) Peek(es *ProgramState, offset int) Object {
 		es.Res = NewError("stack underflow (offset)")
 		return es.Res
 	}
-	x := s.D[s.I-offset]
+	x := s.D[s.I-1-offset]
 	return x
 }
