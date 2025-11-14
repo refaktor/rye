@@ -2564,6 +2564,12 @@ func SortByColumn(ps *env.ProgramState, s *env.Table, name string) {
 	idx := slices.Index[[]string](s.Cols, name)
 
 	compareCol := func(i, j int) bool {
+		if s.Rows[i].Values[idx] == nil {
+			return true
+		}
+		if s.Rows[j].Values[idx] == nil {
+			return false
+		}
 		return greaterThanNew(s.Rows[j].Values[idx].(env.Object), s.Rows[i].Values[idx].(env.Object))
 	}
 
@@ -2574,6 +2580,12 @@ func SortByColumnDesc(ps *env.ProgramState, s *env.Table, name string) {
 	idx := slices.Index[[]string](s.Cols, name)
 
 	compareCol := func(i, j int) bool {
+		if s.Rows[j].Values[idx] == nil {
+			return true
+		}
+		if s.Rows[i].Values[idx] == nil {
+			return false
+		}
 		return greaterThanNew(s.Rows[i].Values[idx].(env.Object), s.Rows[j].Values[idx].(env.Object))
 	}
 
