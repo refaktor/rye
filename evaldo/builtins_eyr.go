@@ -43,17 +43,21 @@ func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toL
 	var arg1 env.Object
 	var arg2 env.Object
 
+	// fmt.Println("** EYR CALL BI")
 	if bi.Argsn == 0 {
+		// fmt.Println("*** ARGSN = 0")
+
 		if checkForFailureWithBuiltin(bi, ps, 0) {
 			return ps
 		}
 		if ps.ErrorFlag || ps.ReturnFlag {
 			return ps
 		}
-		// fmt.Println("** CALL BI")
 		ps.Res = bi.Fn(ps, nil, nil, nil, nil, nil)
 		// stack.Push(ps.Res)
 	} else if bi.Argsn > 0 {
+		// fmt.Println("*** ARGSN > 0")
+
 		if checkForFailureWithBuiltin(bi, ps, 0) {
 			return ps
 		}
@@ -69,6 +73,7 @@ func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toL
 			ps.Res = bi.Fn(ps, arg0, nil, nil, nil, nil)
 			// stack.Push(ps.Res)
 		} else if bi.Argsn > 1 {
+			// fmt.Println("*** ARGSN > 1")
 			if checkForFailureWithBuiltin(bi, ps, 1) {
 				return ps
 			}
@@ -81,7 +86,11 @@ func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toL
 				return ps
 			}
 			if bi.Argsn == 2 {
+				// fmt.Println("*** ARGSN 2")
+				// fmt.Println(ps.Stack)
+				// fmt.Println(ps.Stack.I)
 				ps.Res = bi.Fn(ps, arg1, arg0, nil, nil, nil)
+				// fmt.Println(ps.Res)
 				// stack.Push(ps.Res)
 			} else if bi.Argsn > 2 {
 				if checkForFailureWithBuiltin(bi, ps, 0) {
@@ -165,7 +174,7 @@ func Eyr_CallFunction(fn env.Function, es *env.ProgramState, leftVal env.Object,
 }
 
 func Eyr_EvalObject(es *env.ProgramState, object env.Object, leftVal env.Object, pipeWord bool, session *env.RyeCtx, bakein bool) *env.ProgramState {
-	//fmt.Print("EVAL OBJECT")
+	// fmt.Print("EVAL OBJECT")
 	switch object.Type() {
 	case env.BuiltinType:
 		bu := object.(env.Builtin)
@@ -173,15 +182,21 @@ func Eyr_EvalObject(es *env.ProgramState, object env.Object, leftVal env.Object,
 			es.Ser.Put(bu)
 		} //es.Ser.SetPos(es.Ser.Pos() - 1)
 		if checkForFailureWithBuiltin(bu, es, 333) {
+			// fmt.Println("CHECK FOR FAILURE WITH BUI")
 			return es
 		}
+		// fmt.Println("EYR EVAL OBJ")
 		if pipeWord {
 			es = Eyr_CallBuiltinPipe(bu, es, leftVal)
 		} else {
 			es = Eyr_CallBuiltin(bu, es, leftVal, false)
 		}
 		if es.Res != nil && es.Res.Type() != env.VoidType {
+			// fmt.Println("*** PUSHINGAAAA ")
+			// fmt.Println(es.Stack)
+			// fmt.Println(es.Res)
 			es.Stack.Push(es, es.Res)
+			// fmt.Println(es.Stack)
 		}
 		return es
 	case env.FunctionType:
@@ -215,7 +230,8 @@ func Eyr_EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, pip
 	found, object, ctx := findWordValue(ps, word)
 	if !found { // look at Generic words, but first check type
 		first, ok := findLastStart(ps.Stack) // get the value on stack before the comma (expression guard)
-		if ok {
+		// fmt.Println(first)
+		if ok && first != nil { //
 			kind := first.GetKind()
 			//fmt.Println(kind)
 			rword, ok := word.(env.Word)
@@ -232,7 +248,12 @@ func Eyr_EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, pip
 	} else {
 		ps.ErrorFlag = true
 		if !ps.FailureFlag {
-			ps.Res = env.NewError2(5, "Word not found: "+word.Inspect(*ps.Idx))
+			if ps.Idx != nil {
+				ps.Res = env.NewError2(5, "Word not found: "+word.Inspect(*ps.Idx))
+			} else {
+				// Fallback when ps.Idx is nil - use a generic error message
+				ps.Res = env.NewError2(5, "Word not found: <unknown word>")
+			}
 		}
 		return ps
 	}
@@ -353,7 +374,13 @@ func Eyr_EvalBlock(ps *env.ProgramState, full bool) *env.ProgramState {
 	if full {
 		ps.Res = stackToBlock(ps.Stack, false)
 	} else {
-		ps.Res = ps.Stack.Peek(ps, 0)
+		if ps.Stack.IsEmpty() {
+			// fmt.Println("** STACK EMPTY")
+			ps.Res = env.NewVoid()
+		} else {
+			// fmt.Println("** STACK EMPTY")
+			ps.Res = ps.Stack.Peek(ps, 0)
+		}
 	}
 	// fmt.Println("** EVAL BLOCK PS RES")
 	// fmt.Println(ps.Res)
@@ -375,6 +402,20 @@ func stackToBlock(stack *env.EyrStack, reverse bool) env.Block {
 
 var Builtins_eyr = map[string]*env.Builtin{
 
+	//
+	// ##### EYR Dialect ##### "Stack based evaluator / dialect"
+	//
+	// Tests:
+	// equal { eyr { 1 2 + } } 3
+	// equal { eyr { 5 3 - } } 2
+	// equal { eyr { 4 2 * } } 8
+	// equal { eyr { 6 2 / } } 3.0
+	// equal { eyr { 10 3 mod } } 1
+	// equal { eyr { 1 2 3 } } 3
+	// Args:
+	// * block: Block of code to evaluate in EYR (postfix) mode
+	// Returns:
+	// * result of evaluating the block as postfix stack-based code
 	"eyr": {
 		Argsn: 1,
 		Doc:   "Evaluates Rye block as Eyr (postfix) stack based code.",
@@ -385,6 +426,12 @@ var Builtins_eyr = map[string]*env.Builtin{
 				ps.Ser = bloc.Series
 				dialect := ps.Dialect
 				ps.Dialect = env.EyrDialect
+				// Initialize/reset the stack for eyr evaluation
+				if ps.Stack == nil {
+					ps.Stack = env.NewEyrStack()
+				} else {
+					ps.ResetStack()
+				}
 				Eyr_EvalBlock(ps, false)
 				ps.Dialect = dialect
 				ps.Ser = ser
@@ -395,6 +442,14 @@ var Builtins_eyr = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// ; equal { rye0 { 1 + 2 } } 3
+	// ; equal { rye0 { 5 - 3 } } 2
+	// ; equal { rye0 { print "hello" } } "hello"
+	// Args:
+	// * block: Block of code to evaluate in RYE0 dialect
+	// Returns:
+	// * result of evaluating the block in RYE0 dialect
 	"rye0": {
 		Argsn: 1,
 		Doc:   "Evaluates Rye block as Rye0 dialect.",
@@ -415,6 +470,14 @@ var Builtins_eyr = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// ; equal { rye00 { 1 + 2 } } 3
+	// ; equal { rye00 { 5 * 3 } } 15
+	// ; equal { rye00 { inc 5 } } 6
+	// Args:
+	// * block: Block of code to evaluate in RYE00 dialect (builtins and integers only)
+	// Returns:
+	// * result of evaluating the block in RYE00 dialect (minimal feature set)
 	"rye00": {
 		Argsn: 1,
 		Doc:   "Evaluates Rye block as Rye00 dialect (builtins and integers only).",
@@ -435,6 +498,14 @@ var Builtins_eyr = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { eyr\full { 1 2 3 } |length? } 3
+	// equal { eyr\full { 1 2 + 3 4 + } |length? } 2
+	// equal { eyr\full { 10 5 - } |first } 5
+	// Args:
+	// * block: Block of code to evaluate in EYR mode returning full stack as block
+	// Returns:
+	// * block containing all values from the EYR evaluation stack
 	"eyr\\full": {
 		Argsn: 1,
 		Doc:   "Evaluates Rye block as Eyr (postfix) stack based code.",
@@ -455,6 +526,15 @@ var Builtins_eyr = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// ; equal { 3 .eyr\loop { 1 + } 0 } 3
+	// ; equal { 5 .eyr\loop { 2 * } 1 } 32
+	// ; equal { 2 .eyr\loop { dup + } 2 } 8
+	// Args:
+	// * count: Integer number of times to loop
+	// * block: Block of EYR code to execute in each iteration
+	// Returns:
+	// * result of the final EYR evaluation
 	"eyr\\loop": {
 		Argsn: 2,
 		Doc:   "Evaluates Rye block in loop as Eyr code (postfix stack based) N times.",
@@ -480,6 +560,13 @@ var Builtins_eyr = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Tests:
+	// equal { to-eyr { 1 + 2 } |type? } 'block
+	// equal { to-eyr { 5 * 3 } |length? |> 0 } true
+	// Args:
+	// * block: Rye block to compile/convert to EYR format
+	// Returns:
+	// * block containing the EYR-compiled version of the input block
 	"to-eyr": {
 		Argsn: 1,
 		Doc:   "Evaluates Rye block as Eyr (postfix) stack based code.",

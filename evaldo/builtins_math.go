@@ -106,10 +106,12 @@ func assureFloats(aa env.Object, bb env.Object) (float64, float64, int) {
 var Builtins_math = map[string]*env.Builtin{
 
 	//
-	// ##### Math ##### "Mathematical functions"
+	// ##### Math context and dialect ##### "Mathematical context and dialect (calc)"
 	//
 	// Tests:
-	// equal { mod 10 3 } 1.0
+	// math .change! 'root-ctx   ; temporary way to change context ... will systemize it #TODO, rename root-ctx to curr-ctx and leave root-ctx for returning to it
+	// equal { cc math |type? } 'context
+	// equal { mod 10 3 } 1
 	// Args:
 	// * x: integer or decimal value
 	// * y: integer or decimal value
@@ -127,6 +129,7 @@ var Builtins_math = map[string]*env.Builtin{
 		},
 	},
 	// Tests:
+	// equal { cc math |type? } 'context
 	// equal { pow 2 3 } 8.0
 	// equal { pow complex 2 0 complex 3 0 |print } "8.000000+0.000000i"
 	// equal { pow complex 0 1 complex 2 0 |print } "-1.000000+0.000000i"
@@ -1294,10 +1297,20 @@ var Builtins_math = map[string]*env.Builtin{
 	},
 	// Tests:
 	// equal { calc { 1 + 2 * 3 } } 7
+	// equal { calc { 2 + 3 * 4 } } 14
+	// equal { calc { 10 - 6 / 2 } } 7.0
+	// equal { calc { 2 * 3 + 4 } } 10
+	// equal { calc { 8 / 2 - 1 } } 3.0
+	// equal { calc { ( 1 + 2 ) * 3 } } 9
+	// equal { calc { 2 * ( 3 + 4 ) } } 14
+	// equal { calc { ( 10 - 6 ) / 2 } } 2.0
+	// equal { calc { ( 2 + 3 ) * ( 4 - 1 ) } } 15
+	// equal { calc { 2 + ( 3 * ( 4 + 1 ) ) } } 17
+	// equal { calc { ( ( 2 + 3 ) * 4 ) - 1 } } 19
 	// Args:
-	// * block: block containing math expressions
+	// * block: block containing math expressions with proper operator precedence and parentheses support
 	// Returns:
-	// * result of evaluating the math expressions
+	// * result of evaluating the math expressions following standard mathematical order of operations
 	"calc": {
 		Argsn: 1,
 		Doc:   "Evaluates expressions in math dialect.",
