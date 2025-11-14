@@ -94,6 +94,16 @@ section "File Operations " "File system operations and file manipulation" {
 	{
 	}
 
+	group "stderr" 
+	"Gets a writer for standard error."
+	{
+		arg `none`
+		returns `native writer object connected to standard error`
+	}
+
+	{
+	}
+
 	group "reader//Read\\string" 
 	"Reads all content from a reader as a string."
 	{
@@ -462,6 +472,123 @@ section "File Monitoring " "File watching and tailing operations" {
 	{
 		arg `tail: native tail-file object`
 		returns `empty string if successful`
+	}
+
+	{
+	}
+
+}
+
+section "Command Operations " "Running other programs" {
+	group "cmd" 
+	"Create a command."
+	{
+		arg `command: block or list containing a command arguments`
+		returns `native command object`
+	}
+
+	{
+		equal { cmd { echo -n Hello World } |Output } "Hello World"
+		equal { cmd { echo -n Hello World |tr A-Z a-z |sed "s/hello/goodbye/" } |Output } "goodbye world"
+		equal { cmd { echo -n "1 + 1 =" { 1 + 1 } } |Output } "1 + 1 = 2"
+		equal { args: list { "two" "arguments" } cmd { printf "'%s' " ?args } |Output } "'two' 'arguments' "
+	}
+
+	group "command//Dir!" 
+	"Change the working directory of a command."
+	{
+		arg `command: native command object`
+		arg `dir: path to the working directory`
+		returns `the original command object`
+	}
+
+	{
+		equal { cmd { pwd } |Dir! %/ |Output |trim } "/"
+	}
+
+	group "command//Stdin!" 
+	"Change the standard input of a command."
+	{
+		arg `command: native command object`
+		arg `input: path to an input file, a native file object, or a reader`
+		returns `the original command object`
+	}
+
+	{
+	}
+
+	group "command//Stdout!" 
+	"Change the standard output of a command."
+	{
+		arg `command: native command object`
+		arg `output: path to an output file, a native file object, or a writer`
+		returns `the original command object`
+	}
+
+	{
+	}
+
+	group "command//Stderr!" 
+	"Change the standard error of a command."
+	{
+		arg `command: native command object`
+		arg `output: path to an output file, a native file object, or a writer`
+		returns `the original command object`
+	}
+
+	{
+	}
+
+	group "command//Pipe" 
+	"Pipe the output of the first command to the input of the second command."
+	{
+		arg `c1: first command writing to the pipe`
+		arg `c2: second command reading from the pipe`
+		returns `new native command object`
+	}
+
+	{
+		equal { cmd { echo -n Hello World } |Pipe cmd { tr a-z A-Z } |Output } "HELLO WORLD"
+	}
+
+	group "command//Run" 
+	"Start a command and wait for it to finish."
+	{
+		arg `command: native command object`
+	}
+
+	{
+		error { cmd { false } |Run }
+	}
+
+	group "command//Status" 
+	"Start a command, wait for it to finish, and return its exit status."
+	{
+		arg `command: native command object`
+		returns `for simple command: exit status integerfor pipeline: list of exit status integers`
+	}
+
+	{
+		equal { cmd { true } |Status } 0
+		equal { cmd { false } |Status } 1
+		equal { cmd { false |true } |Status } list [ 1 0 ]
+	}
+
+	group "command//Output" 
+	"Start a command, wait for it to finish, and return its standard output"
+	{
+		arg `command: native command object`
+		returns `string containing data written to the command's standard output`
+	}
+
+	{
+	}
+
+	group "command//CombinedOutput" 
+	"Start a command, wait for it to finish, and return its combined standard output and error"
+	{
+		arg `command: native command object`
+		returns `string containing data written to the command's standard output and error`
 	}
 
 	{

@@ -17,6 +17,7 @@
 ../cmd/rbit/rbit ../evaldo/builtins_sxml.go >> formats.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_html.go >> formats.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_io.go > io.info.rye
+../cmd/rbit/rbit ../evaldo/builtins_cmd.go >> io.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_sqlite.go >> io.info.rye
  ../cmd/rbit/rbit ../evaldo/builtins_psql.go >> io.info.rye
 # ../cmd/rbit/rbit ../evaldo/builtins_mysql.go >> io.info.rye
