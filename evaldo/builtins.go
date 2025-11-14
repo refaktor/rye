@@ -2416,6 +2416,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_table, ps, "table")
 	RegisterBuiltins2(Builtins_vector, ps, "vector")
 	RegisterBuiltins2(Builtins_io, ps, "io")
+	RegisterBuiltins2(Builtins_cmd, ps, "cmd")
 	RegisterBuiltins2(Builtins_regexp, ps, "regexp")
 	RegisterBuiltins2(Builtins_validation, ps, "validation")
 	RegisterBuiltins2(Builtins_conversion, ps, "conversion")
