@@ -1332,7 +1332,7 @@ var builtins = map[string]*env.Builtin{
 	// * uri: URI of the file to import and execute
 	// Returns:
 	// * result of executing the imported file
-	"import": { // **
+	"file-uri//Import": { // **
 		Argsn: 1,
 		Doc:   "Imports a file, loads and does it from script local path.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1384,7 +1384,7 @@ var builtins = map[string]*env.Builtin{
 	// * uri: URI of the file to import, execute, and watch for changes
 	// Returns:
 	// * result of executing the imported file
-	"import\\live": { // **
+	"file-uri//Import\\live": { // **
 		Argsn: 1,
 		Doc:   "Imports a file, loads and does it from script local path.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1418,6 +1418,42 @@ var builtins = map[string]*env.Builtin{
 				block := loader.LoadStringNEW(s1.Value, false, ps)
 				//ps = env.AddToProgramState(ps, block.Series, genv)
 				return block
+			// Deprecated ... should only load strings, like reader / Reader functions
+			case env.Uri:
+				var str string
+				fileIdx, _ := ps.Idx.GetIndex("file")
+				if s1.Scheme.Index == fileIdx {
+					b, err := os.ReadFile(s1.GetPath())
+					if err != nil {
+						return makeError(ps, err.Error())
+					}
+					str = string(b) // convert content to a 'string'
+				}
+				scrip := ps.ScriptPath
+				ps.ScriptPath = s1.GetPath()
+				block := loader.LoadStringNEW(str, false, ps)
+				ps.ScriptPath = scrip
+				//ps = env.AddToProgramState(ps, block.Series, genv)
+				return block
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.UriType}, "import\\live")
+			}
+		},
+	},
+
+	// Tests:
+	// ; equal  { load " 1 2 3 " |third } 3
+	// ; equal  { load "{ 1 2 3 }" |first |third } 3
+	// Args:
+	// * source: String containing Rye code or URI of file to load
+	// Returns:
+	// * Block containing the parsed Rye values
+	"file-uri//Load": { // **
+		Argsn: 1,
+		Doc:   "Loads a string into Rye values.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
 			case env.Uri:
 				var str string
 				fileIdx, _ := ps.Idx.GetIndex("file")

@@ -25,7 +25,7 @@
       <aside class="sidebar" id="menu-holder">
         <nav>
           <ul>
-            <li><a href="https://ryelang.org">← Home</a>  &middot; <a class='menu-item' id='maintab-base' href='base.html'>base</a> &middot; <a class='menu-item' id='maintab-table' href='table.html'>table</a> &middot; <a class='menu-item' id='maintab-formats' href='formats.html'>formats</a> &middot; <a class='menu-item' id='maintab-io' href='io.html'>io</a> &middot; <a class='menu-item' id='maintab-crypto' href='crypto.html'>crypto</a> &middot; <a class='menu-item' id='maintab-dialects' href='dialects.html'>dialects</a></li>
+            <li><a href="https://ryelang.org">← Home</a>  &middot; <a class='menu-item' id='maintab-base' href='base.html'>base</a> &middot; <a class='menu-item' id='maintab-table' href='table.html'>table</a> &middot; <a class='menu-item' id='maintab-formats' href='formats.html'>formats</a> &middot; <a class='menu-item' id='maintab-io' href='io.html'>io</a> &middot; <a class='menu-item' id='maintab-crypto' href='crypto.html'>crypto</a> &middot; <a class='menu-item' id='maintab-dialects' href='dialects.html'>dialects</a> &middot; <a class='menu-item' id='maintab-http' href='http.html'>http</a> &middot; <a class='menu-item' id='maintab-email' href='email.html'>email</a></li>
             <!-- More menu items here -->
           </ul>
         </nav>
@@ -40,8 +40,6 @@
 <h3>input</h3><p>Prompts for and reads user input from the console.</p>
 <p class='arg'><b>prompt</b> string to display as a prompt</p>
 <p class='returns'><b>returns</b> string containing the user's input</p>
-<div class='group'>
-</div>
 </div>
 <h2>File Operations </h2><p>File system operations and file manipulation</p><div class='section'>
 <h3>file-uri//Open</h3><p>Opens a file for reading.</p>
@@ -71,43 +69,47 @@
 <pre class='prettyprint lang-rye'><code language='lang-rye'>Create %data/created.txt |kind?
 ; returns file</code></pre>
 </div>
-<h3>file-ext?</h3><p>Gets the extension of a file.</p>
+<h3>file-uri//File-ext?</h3><p>Gets the extension of a file.</p>
 <p class='arg'><b>path</b> uri or string representing a file path</p>
 <p class='returns'><b>returns</b> string containing the file extension (including the dot)</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>file-ext? %data/file.txt
+<pre class='prettyprint lang-rye'><code language='lang-rye'>File-ext? %data/file.txt
 ; returns ".txt"</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>file-ext? %data/file.temp.png
+<pre class='prettyprint lang-rye'><code language='lang-rye'>File-ext? %data/file.temp.png
 ; returns ".png"</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>file-ext? "data/file.temp.png"
+<pre class='prettyprint lang-rye'><code language='lang-rye'>File-ext? to-file "data/file.temp.png"
 ; returns ".png"</code></pre>
 </div>
-<h3>reader</h3><p>Creates a new reader from a file path, file object, or string.</p>
-<p class='arg'><b>source</b> uri, file object, or string to read from</p>
+<h3>file//Reader</h3><p>Creates a new reader from file object.</p>
+<p class='arg'><b>source</b> file object to read from</p>
 <p class='returns'><b>returns</b> native reader object</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>reader %data/file.txt |kind?
+[Uri: %data/file.txt]
+[Native of kind file]
+</div>
+<h3>file-uri//Reader</h3><p>Creates a new reader from a file uri/path.</p>
+<p class='arg'><b>source</b> file uri to read from</p>
+<p class='returns'><b>returns</b> native reader object</p>
+<div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>Reader %data/file.txt |kind?
 ; returns reader</code></pre>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>reader Open %data/file.txt |kind?
-; returns reader</code></pre>
+</div>
+<h3>reader</h3><p>Creates a new reader from a string.</p>
+<p class='arg'><b>source</b> string to read from</p>
+<p class='returns'><b>returns</b> native reader object</p>
+<div class='group'>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>reader "some string" |kind?
 ; returns reader</code></pre>
 </div>
 <h3>stdin</h3><p>Gets a reader for standard input.</p>
 <p class='arg'>none</p>
 <p class='returns'><b>returns</b> native reader object connected to standard input</p>
-<div class='group'>
-</div>
 <h3>stdout</h3><p>Gets a writer for standard output.</p>
 <p class='arg'>none</p>
 <p class='returns'><b>returns</b> native writer object connected to standard output</p>
-<div class='group'>
-</div>
 <h3>stderr</h3><p>Gets a writer for standard error.</p>
 <p class='arg'>none</p>
 <p class='returns'><b>returns</b> native writer object connected to standard error</p>
-<div class='group'>
-</div>
 <h3>reader//Read\string</h3><p>Reads all content from a reader as a string.</p>
 <p class='arg'><b>reader</b> native reader object</p>
 <p class='returns'><b>returns</b> string containing all content from the reader</p>
@@ -119,14 +121,10 @@
 <p class='arg'><b>reader</b> native reader object</p>
 <p class='arg'><b>writer</b> native writer object</p>
 <p class='returns'><b>returns</b> the reader object if successful</p>
-<div class='group'>
-</div>
 <h3>file//Copy</h3><p>Copies content from a file to a writer.</p>
 <p class='arg'><b>file</b> native file object</p>
 <p class='arg'><b>writer</b> native writer object</p>
 <p class='returns'><b>returns</b> the file object if successful</p>
-<div class='group'>
-</div>
 <h3>file//Stat</h3><p>Gets file information (stat) for a file.</p>
 <p class='arg'><b>file</b> native file object</p>
 <p class='returns'><b>returns</b> native file-info object</p>
@@ -152,8 +150,6 @@
 <h3>file//Seek\end</h3><p>Seeks to the end of a file.</p>
 <p class='arg'><b>file</b> native file object</p>
 <p class='returns'><b>returns</b> the same file object with position set to end of file</p>
-<div class='group'>
-</div>
 <h3>file//Close</h3><p>Closes an open file.</p>
 <p class='arg'><b>file</b> native file object</p>
 <p class='returns'><b>returns</b> empty string if successful</p>
@@ -199,115 +195,79 @@
 <p class='arg'><b>bytes</b> Go-bytes native value to write</p>
 <p class='arg'><b>path</b> string path to the file to write</p>
 <p class='returns'><b>returns</b> integer 1 if successful</p>
-<div class='group'>
-</div>
 <h3>append\bytes</h3><p>Appends two byte arrays into one.</p>
 <p class='arg'><b>bytes1</b> first Go-bytes native value</p>
 <p class='arg'><b>bytes2</b> second Go-bytes native value</p>
 <p class='returns'><b>returns</b> combined bytes as a native bytes object</p>
-<div class='group'>
-</div>
 <h3>writer//Write\string</h3><p>Writes a string to a writer.</p>
 <p class='arg'><b>writer</b> native writer object</p>
 <p class='arg'><b>content</b> string to write</p>
 <p class='returns'><b>returns</b> the writer object if successful</p>
-<div class='group'>
-</div>
 </div>
 <h2>HTTPs Operations </h2><p>Web requests and HTTP protocol functions</p><div class='section'>
 <h3>https-uri//Open</h3><p>Opens a HTTPS GET request and returns a reader for the response body.</p>
 <p class='arg'><b>url</b> uri representing the HTTPS URL to request</p>
 <p class='returns'><b>returns</b> native reader object for the response body</p>
-<div class='group'>
-</div>
 <h3>https-uri//Get</h3><p>Makes a HTTPS GET request and returns the response body as a string.</p>
 <p class='arg'><b>url</b> uri representing the HTTPS URL to request</p>
 <p class='returns'><b>returns</b> string containing the response body</p>
-<div class='group'>
-</div>
 <h3>https-uri//Post</h3><p>Makes a HTTPS POST request and returns the response body as a string.</p>
 <p class='arg'><b>url</b> uri representing the HTTPS URL to request</p>
 <p class='arg'><b>data</b> string containing the request body</p>
 <p class='arg'><b>content-type</b> word specifying the content type (e.g., 'json', 'text')</p>
 <p class='returns'><b>returns</b> string containing the response body</p>
-<div class='group'>
-</div>
 <h3>http-uri//Get</h3><p>Makes a HTTP GET request and returns the response body as a string.</p>
 <p class='arg'><b>url</b> uri representing the HTTP URL to request</p>
 <p class='returns'><b>returns</b> string containing the response body</p>
-<div class='group'>
-</div>
 <h3>http-uri//Post</h3><p>Makes a HTTP POST request and returns the response body as a string.</p>
 <p class='arg'><b>url</b> uri representing the HTTP URL to request</p>
 <p class='arg'><b>data</b> string containing the request body</p>
 <p class='arg'><b>content-type</b> word specifying the content type (e.g., 'json', 'text')</p>
 <p class='returns'><b>returns</b> string containing the response body</p>
-<div class='group'>
-</div>
 <h3>https-uri//Request</h3><p>Creates a new HTTPS request object.</p>
 <p class='arg'><b>url</b> uri representing the HTTPS URL to request</p>
 <p class='arg'><b>method</b> word specifying the HTTP method (e.g., 'GET', 'POST')</p>
 <p class='arg'><b>data</b> string containing the request body</p>
 <p class='returns'><b>returns</b> native https-request object</p>
-<div class='group'>
-</div>
 <h3>https-request//Header!</h3><p>Sets a header on a HTTPS request.</p>
 <p class='arg'><b>request</b> native https-request object</p>
 <p class='arg'><b>name</b> word representing the header name</p>
 <p class='arg'><b>value</b> string containing the header value</p>
 <p class='returns'><b>returns</b> the request object if successful</p>
-<div class='group'>
-</div>
 <h3>https-request//Basic-auth!</h3><p>Sets Basic Authentication on a HTTPS request.</p>
 <p class='arg'><b>request</b> native https-request object</p>
 <p class='arg'><b>username</b> string containing the username</p>
 <p class='arg'><b>password</b> string containing the password</p>
 <p class='returns'><b>returns</b> the request object if successful</p>
-<div class='group'>
-</div>
 <h3>https-request//Call</h3><p>Executes a HTTPS request and returns the response.</p>
 <p class='arg'><b>request</b> native https-request object</p>
 <p class='returns'><b>returns</b> native https-response object</p>
-<div class='group'>
-</div>
 <h3>https-response//Reader</h3><p>Gets a reader for the HTTPS response body that can be used with io.Copy.</p>
 <p class='arg'><b>response</b> native https-response object</p>
 <p class='returns'><b>returns</b> native reader object for the response body</p>
-<div class='group'>
-</div>
 <h3>https-response//Read-body</h3><p>Reads the body of a HTTPS response as a string.</p>
 <p class='arg'><b>response</b> native https-response object</p>
 <p class='returns'><b>returns</b> string containing the response body</p>
-<div class='group'>
-</div>
 </div>
 <h2>Email Operations </h2><p>Email sending and SMTP communication</p><div class='section'>
 <h3>email//Send</h3><p>Sends an email to the specified address.</p>
 <p class='arg'><b>to</b> email address to send to</p>
 <p class='arg'><b>message</b> string containing the email message</p>
 <p class='returns'><b>returns</b> integer 1 if successful</p>
-<div class='group'>
-</div>
 </div>
 <h2>FTP Operations </h2><p>File Transfer Protocol operations and connections</p><div class='section'>
 <h3>ftp-uri//Open</h3><p>Opens a connection to an FTP server.</p>
 <p class='arg'><b>server</b> uri representing the FTP server to connect to</p>
 <p class='returns'><b>returns</b> native ftp-connection object</p>
-<div class='group'>
-</div>
 <h3>ftp-connection//Login</h3><p>Logs in to an FTP server connection.</p>
 <p class='arg'><b>connection</b> native ftp-connection object</p>
 <p class='arg'><b>username</b> string containing the username</p>
 <p class='arg'><b>password</b> string containing the password</p>
 <p class='returns'><b>returns</b> the connection object if successful</p>
-<div class='group'>
-</div>
 <h3>ftp-connection//Retrieve</h3><p>Retrieves a file from an FTP server.</p>
 <p class='arg'><b>connection</b> native ftp-connection object</p>
 <p class='arg'><b>path</b> string containing the path of the file to retrieve</p>
 <p class='returns'><b>returns</b> native reader object for the retrieved file</p>
-<div class='group'>
-</div>
 </div>
 <h2>File Monitoring </h2><p>File watching and tailing operations</p><div class='section'>
 <h3>tail-file</h3><p>Tails a file, following it for new content. Used for monitoring log files.</p>
@@ -315,18 +275,12 @@
 <p class='arg'><b>follow</b> boolean indicating whether to follow the file for new content</p>
 <p class='arg'><b>reopen</b> boolean indicating whether to reopen the file if it's rotated</p>
 <p class='returns'><b>returns</b> native tail-file object that can be used to read lines as they are added</p>
-<div class='group'>
-</div>
 <h3>tail-file//Read-line</h3><p>Reads the next line from a tailed file. Blocks until a line is available.</p>
 <p class='arg'><b>tail</b> native tail-file object</p>
 <p class='returns'><b>returns</b> string containing the next line from the file, or nil if no more lines</p>
-<div class='group'>
-</div>
 <h3>tail-file//Close</h3><p>Closes a tailed file, stopping the monitoring.</p>
 <p class='arg'><b>tail</b> native tail-file object</p>
 <p class='returns'><b>returns</b> empty string if successful</p>
-<div class='group'>
-</div>
 </div>
 <h2>Command Operations </h2><p>Running other programs</p><div class='section'>
 <h3>cmd</h3><p>Create a command.</p>
@@ -354,20 +308,14 @@
 <p class='arg'><b>command</b> native command object</p>
 <p class='arg'><b>input</b> path to an input file, a native file object, or a reader</p>
 <p class='returns'><b>returns</b> the original command object</p>
-<div class='group'>
-</div>
 <h3>command//Stdout!</h3><p>Change the standard output of a command.</p>
 <p class='arg'><b>command</b> native command object</p>
 <p class='arg'><b>output</b> path to an output file, a native file object, or a writer</p>
 <p class='returns'><b>returns</b> the original command object</p>
-<div class='group'>
-</div>
 <h3>command//Stderr!</h3><p>Change the standard error of a command.</p>
 <p class='arg'><b>command</b> native command object</p>
 <p class='arg'><b>output</b> path to an output file, a native file object, or a writer</p>
 <p class='returns'><b>returns</b> the original command object</p>
-<div class='group'>
-</div>
 <h3>command//Pipe</h3><p>Pipe the output of the first command to the input of the second command.</p>
 <p class='arg'><b>c1</b> first command writing to the pipe</p>
 <p class='arg'><b>c2</b> second command reading from the pipe</p>
@@ -397,13 +345,9 @@
 <h3>command//Output</h3><p>Start a command, wait for it to finish, and return its standard output</p>
 <p class='arg'><b>command</b> native command object</p>
 <p class='returns'><b>returns</b> string containing data written to the command's standard output</p>
-<div class='group'>
-</div>
 <h3>command//CombinedOutput</h3><p>Start a command, wait for it to finish, and return its combined standard output and error</p>
 <p class='arg'><b>command</b> native command object</p>
 <p class='returns'><b>returns</b> string containing data written to the command's standard output and error</p>
-<div class='group'>
-</div>
 </div>
 <h2>SQLite </h2><p>SQLite database functions</p><div class='section'>
 <h3>sqlite-uri//Open</h3><p>Opens a connection to a SQLite database file.</p>
@@ -450,32 +394,24 @@
 <p class='arg'><b>uri</b> PostgreSQL connection string URI (format</p>
 <p class='returns'><b>returns</b> native PostgreSQL database connection (type: "Rye-psql")error if connection fails</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>Open postgres://user:pass@localhost:5432/dbname
-</code></pre>
 </div>
 <h3>Rye-psql//Exec</h3><p>Executes a SQL statement that modifies data (INSERT, UPDATE, DELETE).</p>
 <p class='arg'><b>db</b> PostgreSQL database connection (type</p>
 <p class='arg'><b>sql</b> SQL statement as string or block (for data modification</p>
 <p class='returns'><b>returns</b> integer number of rows affectederror if execution fails</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>Open postgres://user:pass@localhost:5432/dbname |Exec "INSERT INTO test VALUES (1, 'test')"
-</code></pre>
 </div>
 <h3>Rye-psql//Query</h3><p>Executes a SQL query and returns results as a table.</p>
 <p class='arg'><b>db</b> PostgreSQL database connection (type</p>
 <p class='arg'><b>sql</b> SQL query as string or block (SELECT statements)</p>
 <p class='returns'><b>returns</b> table containing query results (SQL NULL values converted to Void{})error if query fails or returns no data</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>Open postgres://user:pass@localhost:5432/dbname |Query "SELECT * FROM test"
-</code></pre>
 </div>
 <h3>Rye-psql//Show-SQL</h3><p>Generates and returns the SQL string without executing it.</p>
 <p class='arg'><b>db</b> PostgreSQL database connection (type</p>
 <p class='arg'><b>sql</b> SQL query as string or block (for debugging/inspection)</p>
 <p class='returns'><b>returns</b> string containing the generated SQL with parameters (includes parameter comments if present)error if SQL is empty</p>
 <div class='group'>
-<pre class='prettyprint lang-rye'><code language='lang-rye'>id: 323 Open postgres://user:pass@localhost:5432/dbname { SELECT * FROM test WHERE id = ?id }
-</code></pre>
 </div>
 </div>
 </main>

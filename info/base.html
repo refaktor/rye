@@ -25,7 +25,7 @@
       <aside class="sidebar" id="menu-holder">
         <nav>
           <ul>
-            <li><a href="https://ryelang.org">← Home</a>  &middot; <a class='menu-item' id='maintab-base' href='base.html'>base</a> &middot; <a class='menu-item' id='maintab-table' href='table.html'>table</a> &middot; <a class='menu-item' id='maintab-formats' href='formats.html'>formats</a> &middot; <a class='menu-item' id='maintab-io' href='io.html'>io</a> &middot; <a class='menu-item' id='maintab-crypto' href='crypto.html'>crypto</a> &middot; <a class='menu-item' id='maintab-dialects' href='dialects.html'>dialects</a></li>
+            <li><a href="https://ryelang.org">← Home</a>  &middot; <a class='menu-item' id='maintab-base' href='base.html'>base</a> &middot; <a class='menu-item' id='maintab-table' href='table.html'>table</a> &middot; <a class='menu-item' id='maintab-formats' href='formats.html'>formats</a> &middot; <a class='menu-item' id='maintab-io' href='io.html'>io</a> &middot; <a class='menu-item' id='maintab-crypto' href='crypto.html'>crypto</a> &middot; <a class='menu-item' id='maintab-dialects' href='dialects.html'>dialects</a> &middot; <a class='menu-item' id='maintab-http' href='http.html'>http</a> &middot; <a class='menu-item' id='maintab-email' href='email.html'>email</a></li>
             <!-- More menu items here -->
           </ul>
         </nav>
@@ -1945,7 +1945,7 @@ Type is not matching - Validation_EvalBlock.
 <p class='returns'><b>returns</b> The registered functiongeneric <integer> <add> fn [ a b ] [ a + b ] // tagwords are temporary here</p>
 <div class='group'>
 2
-1029
+1040
 Generic
 <pre class='prettyprint lang-rye'><code language='lang-rye'>generic 'integer 'add fn { a b } { a + b } |type?
 ; returns function</code></pre>
@@ -1962,8 +1962,6 @@ Generic
 <p class='arg'><b>value</b> Dict or context to convert</p>
 <p class='arg'><b>kind</b> Kind to convert the value to</p>
 <p class='returns'><b>returns</b> A new context of the specified kind</p>
-<div class='group'>
-</div>
 </div>
 <h2>Contexts </h2><p>Context related functions</p><div class='section'>
 <h3>raw-context</h3><p>Creates a completely isolated context with no parent, where only built-in functions are available.</p>
@@ -2609,8 +2607,6 @@ changed
 <p class='arg'><b>kind</b> Kind to convert the value to</p>
 <p class='arg'><b>value</b> Dict or context to convert</p>
 <p class='returns'><b>returns</b> A new context of the specified kind</p>
-<div class='group'>
-</div>
 <h3>_|</h3><p>Pipeline operator that passes the value through unchanged (used with 'not' and other operations).</p>
 <p class='arg'><b>value</b> Any value to be passed through unchanged</p>
 <p class='returns'><b>returns</b> the original value (used in pipeline operations for explicit pass-through)</p>
@@ -2628,15 +2624,13 @@ changed
 <p class='arg'>None</p>
 <p class='returns'><b>returns</b> Integer 1 on success</p>
 <div class='group'>
-State current context to [1mconsole_251114_093258.rye[0m.
+State current context to [1mconsole_251117_231220.rye[0m.
 <pre class='prettyprint lang-rye'><code language='lang-rye'>save\current |type?
 ; returns integer</code></pre>
 </div>
 <h3>save\current\secure</h3><p>Saves current state of the program to a file with password protection.</p>
 <p class='arg'>None</p>
 <p class='returns'><b>returns</b> Integer 1 on success</p>
-<div class='group'>
-</div>
 <h3>doc!</h3><p>Sets docstring of the current context.</p>
 <p class='arg'><b>doc</b> String to set as the docstring for the current context</p>
 <p class='returns'><b>returns</b> Integer 1 on success</p>
@@ -2695,16 +2689,12 @@ State current context to [1mconsole_251114_093258.rye[0m.
 <pre class='prettyprint lang-rye'><code language='lang-rye'>list { "a" 123 } |-&gt; 0
 ; returns "a"</code></pre>
 </div>
-<h3>import</h3><p>Imports a file, loads and does it from script local path.</p>
+<h3>file-uri//Import</h3><p>Imports a file, loads and does it from script local path.</p>
 <p class='arg'><b>uri</b> URI of the file to import and execute</p>
 <p class='returns'><b>returns</b> result of executing the imported file</p>
-<div class='group'>
-</div>
-<h3>import\live</h3><p>Imports a file, loads and does it from script local path.</p>
+<h3>file-uri//Import\live</h3><p>Imports a file, loads and does it from script local path.</p>
 <p class='arg'><b>uri</b> URI of the file to import, execute, and watch for changes</p>
 <p class='returns'><b>returns</b> result of executing the imported file</p>
-<div class='group'>
-</div>
 <h3>load</h3><p>Loads a string into Rye values.</p>
 <p class='arg'><b>source</b> String containing Rye code or URI of file to load</p>
 <p class='returns'><b>returns</b> Block containing the parsed Rye values</p>
@@ -2714,21 +2704,18 @@ State current context to [1mconsole_251114_093258.rye[0m.
 <pre class='prettyprint lang-rye'><code language='lang-rye'>load "{ 1 2 3 }" |first |third
 ; returns 3</code></pre>
 </div>
+<h3>file-uri//Load</h3><p>Loads a string into Rye values.</p>
+<p class='arg'><b>source</b> String containing Rye code or URI of file to load</p>
+<p class='returns'><b>returns</b> Block containing the parsed Rye values</p>
 <h3>load\mod</h3><p>Loads a string into Rye values. During load it allows modification of words.</p>
 <p class='arg'><b>source</b> String containing Rye code or URI of file to load with modification allowed</p>
 <p class='returns'><b>returns</b> Block containing the parsed Rye values</p>
-<div class='group'>
-</div>
 <h3>load\live</h3><p>Loads a string into Rye values. During load it allows modification of words.</p>
 <p class='arg'><b>source</b> String containing Rye code or URI of file to load with modification allowed and file watching</p>
 <p class='returns'><b>returns</b> Block containing the parsed Rye values</p>
-<div class='group'>
-</div>
 <h3>load\sig</h3><p>Checks the signature, if OK then loads a string into Rye values.</p>
 <p class='arg'><b>source</b> String containing signed Rye code to verify and load</p>
 <p class='returns'><b>returns</b> Block containing the parsed Rye values if signature is valid</p>
-<div class='group'>
-</div>
 <h3>do</h3><p>Takes a block of code and does (runs) it.</p>
 <p class='arg'><b>block</b> Block of code to execute</p>
 <p class='returns'><b>returns</b> result of executing the block</p>
@@ -2837,29 +2824,21 @@ hello
 <h3>recur-if</h3><p>Internal recursion control function. Resets function execution if condition > 0, otherwise returns result.</p>
 <p class='arg'><b>condition</b> Integer value, if > 0 triggers recursion reset</p>
 <p class='returns'><b>returns</b> nil if recursion continues, ps.Res if recursion ends</p>
-<div class='group'>
-</div>
 <h3>recur-if\1</h3><p>Internal recursion control function for single-argument functions. Updates first argument and resets if condition > 0.</p>
 <p class='arg'><b>condition</b> Integer value, if > 0 triggers recursion with updated argument</p>
 <p class='arg'><b>arg1</b> New value for the first function argument during recursion</p>
 <p class='returns'><b>returns</b> nil if recursion continues, ps.Res if recursion ends</p>
-<div class='group'>
-</div>
 <h3>recur-if\2</h3><p>Internal recursion control function for two-argument functions. Updates both arguments and resets if condition > 0.</p>
 <p class='arg'><b>condition</b> Integer value, if > 0 triggers recursion with updated arguments</p>
 <p class='arg'><b>arg1</b> New value for the first function argument during recursion</p>
 <p class='arg'><b>arg2</b> New value for the second function argument during recursion</p>
 <p class='returns'><b>returns</b> ps.Res (function result) regardless of condition</p>
-<div class='group'>
-</div>
 <h3>recur-if\3</h3><p>Internal recursion control function for three-argument functions. Updates all three arguments and resets if condition > 0.</p>
 <p class='arg'><b>condition</b> Integer value, if > 0 triggers recursion with updated arguments</p>
 <p class='arg'><b>arg1</b> New value for the first function argument during recursion</p>
 <p class='arg'><b>arg2</b> New value for the second function argument during recursion</p>
 <p class='arg'><b>arg3</b> New value for the third function argument during recursion</p>
 <p class='returns'><b>returns</b> ps.Res (function result) regardless of condition, nil if recursion continues</p>
-<div class='group'>
-</div>
 </div>
 </main>
 </div>

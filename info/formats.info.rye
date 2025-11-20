@@ -10,6 +10,9 @@ section "Regexp " "Go like Regular expressions" {
 		equal { regexp "[0-9]" |type? } 'native
 	}
 
+	{
+``	}
+
 	group "regexp//Is-match" 
 	"Tests if a string matches the regular expression pattern."
 	{
@@ -23,6 +26,9 @@ section "Regexp " "Go like Regular expressions" {
 		equal { regexp "[0-9]" |Is-match "a" } 0
 	}
 
+	{
+``	}
+
 	group "regexp//Submatch?" 
 	"Extracts the first captured group from a string using the regular expression."
 	{
@@ -34,6 +40,9 @@ section "Regexp " "Go like Regular expressions" {
 	{
 		equal { regexp "x([0-9]+)y" |Submatch? "x123y" } "123"
 	}
+
+	{
+``	}
 
 	group "regexp//Submatches?" 
 	"Extracts all captured groups from the first match as a block of strings."
@@ -47,6 +56,9 @@ section "Regexp " "Go like Regular expressions" {
 		equal { regexp "x([0-9]+)y" |Submatches? "x123y x234y" } { "123" }
 	}
 
+	{
+``	}
+
 	group "regexp//Submatches\\all?" 
 	"Extracts all captured groups from all matches as a nested block structure."
 	{
@@ -58,6 +70,9 @@ section "Regexp " "Go like Regular expressions" {
 	{
 		equal { regexp "x([0-9]+)(y+)?" |Submatches\all? "x11yy x22" } { { "11" "yy" } { "22" "" } }
 	}
+
+	{
+``	}
 
 	group "regexp//Find-all" 
 	"Finds all substrings matching the regular expression and returns them as a block."
@@ -71,6 +86,9 @@ section "Regexp " "Go like Regular expressions" {
 		equal { regexp "[0-9]+" |Find-all "x123y x234y" } { "123" "234" }
 	}
 
+	{
+``	}
+
 	group "regexp//Match?" 
 	"Finds the first substring matching the regular expression."
 	{
@@ -82,6 +100,9 @@ section "Regexp " "Go like Regular expressions" {
 	{
 		equal { regexp "[0-9]+c+" |Match? "aa33bb55cc" } "55cc"
 	}
+
+	{
+``	}
 
 	group "regexp//Replace-all" 
 	"Replaces all occurrences of the regular expression pattern with the specified replacement string."
@@ -95,6 +116,9 @@ section "Regexp " "Go like Regular expressions" {
 	{
 		equal { regexp "[0-9]+" |Replace-all "x123y x234y" "XXX" } "xXXXy xXXXy"
 	}
+
+	{
+``	}
 
 }
 
@@ -110,6 +134,9 @@ section "Validation " "validation dialect for Rye values" {
 	{
 	}
 
+	{
+``	}
+
 	group "validate>ctx" 
 	"Validates and transforms data according to specified rules, returning a context object for easy field access."
 	{
@@ -122,6 +149,9 @@ section "Validation " "validation dialect for Rye values" {
 		equal { validate>ctx dict { a: 1 } { a: required } |type? } 'ctx    ; TODO rename to context
 		equal { validate>ctx dict { a: 1 } { a: optional 0 } -> 'a } 1
 	}
+
+	{
+``	}
 
 }
 
@@ -138,6 +168,9 @@ section "JSON " "Parsing and generating JSON" {
 		equal { "[ 1, 2, 3 ]" |parse-json |type? } 'list
 	}
 
+	{
+``	}
+
 	group "parse-json\\lines" 
 	"Parses JSON string into Rye values."
 	{
@@ -148,6 +181,9 @@ section "JSON " "Parsing and generating JSON" {
 	{
 		equal { `{"a": 2, "b": "x"} \n{"a": 3, "b": "y"} \n` |parse-json\lines |to-table } table { "a" "b" } { 2.0 "x" 3.0 "y" }
 	}
+
+	{
+``	}
 
 	group "to-json" 
 	"Converts a Rye value to a JSON string."
@@ -161,6 +197,9 @@ section "JSON " "Parsing and generating JSON" {
 		equal { dict { a: 1 b: 2 c: 3 } |to-json } `{"a": 1, "b": 2, "c": 3} `
 	}
 
+	{
+``	}
+
 	group "to-json\\lines" 
 	"Converts a table to JSON with each row on a separate line."
 	{
@@ -171,6 +210,9 @@ section "JSON " "Parsing and generating JSON" {
 	{
 		equal { table { "a" "b" } { 2 "x" 3 "y" } |to-json\lines } `{"a": 2, "b": "x"} \n{"a": 3, "b": "y"} \n`
 	}
+
+	{
+``	}
 
 }
 
@@ -188,6 +230,9 @@ section "BSON " "BSON encoding and decoding" {
 		equal { { 123 "asd" } |to-bson |from-bson } { 123 "asd" }
 	}
 
+	{
+``	}
+
 	group "to-bson" 
 	"Encodes a Rye value into BSON format."
 	{
@@ -199,6 +244,9 @@ section "BSON " "BSON encoding and decoding" {
 		equal { "abc" |to-bson |type? } 'native
 		equal { "abc" |to-bson |kind? } 'bytes
 	}
+
+	{
+``	}
 
 }
 
@@ -230,6 +278,9 @@ section "SXML " "Streaming, SAX-like XML processing" {
 		} "Luke "
 	}
 
+	{
+``	}
+
 	group "rye-sxml-start//attr?" 
 	"Retrieves an attribute value by index from an XML start element."
 	{
@@ -249,6 +300,9 @@ section "SXML " "Streaming, SAX-like XML processing" {
 		} "25 55 "
 	}
 
+	{
+``	}
+
 	group "rye-sxml-start//name?" 
 	"Returns the name of an XML start element."
 	{
@@ -258,6 +312,9 @@ section "SXML " "Streaming, SAX-like XML processing" {
 
 	{
 	}
+
+	{
+``	}
 
 }
 
@@ -273,6 +330,9 @@ section "HTML " "HTML processing functions" {
 		equal { unescape\html "&gt;hello&lt;" } ">hello<"
 	}
 
+	{
+``	}
+
 	group "escape\\html" 
 	"Converts special characters to HTML entities."
 	{
@@ -284,6 +344,9 @@ section "HTML " "HTML processing functions" {
 		equal { escape\html "<hello>" } "&lt;hello&gt;"
 	}
 
+	{
+``	}
+
 	group "html->markdown" 
 	"Converts HTML text to markdown format."
 	{
@@ -294,6 +357,9 @@ section "HTML " "HTML processing functions" {
 	{
 		equal { html->markdown "<h1>title</h1><p>para</p>" } "# title\n\npara"
 	}
+
+	{
+``	}
 
 	group "reader//Parse-html" 
 	"Parses HTML using a streaming approach with tag handlers."
@@ -309,6 +375,9 @@ section "HTML " "HTML processing functions" {
 		} "/ /about/ "
 	}
 
+	{
+``	}
+
 	group "rye-html-start//Attr?" 
 	"Retrieves an attribute value by name or index from an HTML element."
 	{
@@ -322,6 +391,9 @@ section "HTML " "HTML processing functions" {
 		stdout { "<div class='menu' id='nav'></div>" |reader .Parse-html { <div> [ .Attr? 'id |prn ] } } "nav"
 	}
 
+	{
+``	}
+
 	group "rye-html-start//Name?" 
 	"Returns the name of an HTML element."
 	{
@@ -332,6 +404,9 @@ section "HTML " "HTML processing functions" {
 	{
 		stdout { "<div></div>" |reader .Parse-html { <div> [ .Name? |print ] } } "div\n"
 	}
+
+	{
+``	}
 
 }
 

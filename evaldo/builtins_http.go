@@ -40,28 +40,47 @@ TODO -- integrate gowabs into this and implement their example first just as han
 
 var Builtins_http = map[string]*env.Builtin{
 
+	//
+	// ##### HTTP Server Functions ##### "Working with HTTP servers and requests."
+	//
+
+	// Tests:
+	// equal { http-server ":8080" |type? } 'native
+	// error { http-server 8080 }
+	// Args:
+	// * addr: String containing the server address (e.g., ":8080", "localhost:9000")
+	// Returns:
+	// * native Go-server object that can handle HTTP requests
 	"http-server": {
 		Argsn: 1,
-		Doc:   "Create new http server.",
+		Doc:   "Creates a new HTTP server that listens on the specified address with a 10-second read header timeout.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch addr := arg0.(type) {
 			case env.String:
+				// Create HTTP server with 10-second read header timeout for security
 				server := &http.Server{Addr: addr.Value, ReadHeaderTimeout: 10 * time.Second}
 				return *env.NewNative(ps.Idx, server, "Go-server")
 			default:
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "http-server")
 			}
-
 		},
 	},
 
+	// Example:
+	// srv: http-server ":8080"
+	// srv .Serve
+	// Args:
+	// * server: Native Go-server object created by http-server
+	// Returns:
+	// * the server object after starting listening, or error if unable to serve
 	"Go-server//Serve": {
 		Argsn: 1,
-		Doc:   "Listen and serve new server.",
+		Doc:   "Starts the HTTP server listening and serving requests on the configured address (blocking call).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch server := arg0.(type) {
 			case env.Native:
+				// ListenAndServe blocks until the server stops or encounters an error
 				err := server.Value.(*http.Server).ListenAndServe()
 				if err != nil {
 					return makeError(ps, err.Error())
@@ -71,7 +90,6 @@ var Builtins_http = map[string]*env.Builtin{
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server//Serve")
 			}
-
 		},
 	},
 
@@ -94,33 +112,49 @@ var Builtins_http = map[string]*env.Builtin{
 		},
 	}, */
 
+	// Example:
+	// srv: http-server ":8080"
+	// srv .Handle "/" "Hello World!"
+	// srv .Handle "/api" fn { w req } { w .Write "API response" }
+	// Args:
+	// * server: Native Go-server object
+	// * path: String URL path to handle (e.g., "/", "/api", "/static")
+	// * handler: String (simple response), Function (w req -> response), or Native HTTP handler
+	// Returns:
+	// * the server object to allow method chaining
 	"Go-server//Handle": {
 		Argsn: 3,
-		Doc:   "HTTP handle function for server.",
+		Doc:   "Registers an HTTP handler for a specific path pattern on the server, accepting string responses, Rye functions, or native Go handlers.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg1.(type) {
 			case env.String:
 				switch handler := arg2.(type) {
 				case env.String:
+					// Simple string handler - just write the string as response
 					http.HandleFunc(path.Value, func(w http.ResponseWriter, r *http.Request) {
 						fmt.Fprintf(w, handler.Value)
 					})
 					return arg0
 				case env.Function:
+					// Rye function handler - call with response writer and request
 					http.HandleFunc(path.Value, func(w http.ResponseWriter, r *http.Request) {
+						// Reset program state flags for clean handler execution
 						ps.FailureFlag = false
 						ps.ErrorFlag = false
 						ps.ReturnFlag = false
+						// Create temporary program state to avoid conflicts
 						psTemp := env.ProgramState{}
 						err := copier.Copy(&psTemp, &ps)
 						if err != nil {
 							fmt.Println(err.Error())
 							// TODO return makeError(ps, err.Error())
 						}
+						// Call Rye function with response writer and request objects
 						CallFunctionArgs2(handler, ps, *env.NewNative(ps.Idx, w, "Go-server-response-writer"), *env.NewNative(ps.Idx, r, "Go-server-request"), nil)
 					})
 					return arg0
 				case env.Native:
+					// Native Go HTTP handler - use directly
 					http.Handle(path.Value, handler.Value.(http.Handler))
 					return arg0
 				default:
@@ -134,14 +168,28 @@ var Builtins_http = map[string]*env.Builtin{
 		},
 	},
 
+	//
+	// ##### HTTP Response Writer Functions ##### "Writing HTTP responses and setting headers."
+	//
+
+	// Example:
+	// ; Inside a handler function { w req }:
+	// ; write w "Hello World!"
+	// ; w .Write "Response content"
+	// Args:
+	// * writer: Native Go-server-response-writer object from HTTP handler
+	// * content: String content to write to the HTTP response body
+	// Returns:
+	// * the response writer object for method chaining
 	"Go-server-response-writer//Write": {
 		Argsn: 2,
-		Doc:   "Http response writer write function.",
+		Doc:   "Writes string content to the HTTP response body, used within HTTP request handlers to send response data to clients.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg0.(type) {
 			case env.Native:
 				switch handler := arg1.(type) {
 				case env.String:
+					// Write the string content to the HTTP response
 					fmt.Fprintf(path.Value.(http.ResponseWriter), handler.Value)
 					return arg0
 				default:
@@ -155,14 +203,23 @@ var Builtins_http = map[string]*env.Builtin{
 		},
 	},
 
+	// Example:
+	// ; Inside a handler: w .Set-content-type "application/json"
+	// ; Inside a handler: w .Set-content-type "text/html"
+	// Args:
+	// * writer: Native Go-server-response-writer object from HTTP handler
+	// * contentType: String MIME type (e.g., "text/html", "application/json", "image/png")
+	// Returns:
+	// * the response writer object for method chaining
 	"Go-server-response-writer//Set-content-type": {
 		Argsn: 2,
-		Doc:   "Set http content type.",
+		Doc:   "Sets the Content-Type header for the HTTP response, determining how the browser interprets the response data.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg0.(type) {
 			case env.Native:
 				switch handler := arg1.(type) {
 				case env.String:
+					// Set the Content-Type header in the HTTP response
 					path.Value.(http.ResponseWriter).Header().Set("Content-Type", handler.Value)
 					return arg0
 				default:
@@ -176,17 +233,28 @@ var Builtins_http = map[string]*env.Builtin{
 		},
 	},
 
+	// Example:
+	// ; Inside a handler: w .Set-header 'cache-control "no-cache"
+	// ; Inside a handler: w .Set-header 'x-custom-header "custom-value"
+	// Args:
+	// * writer: Native Go-server-response-writer object from HTTP handler
+	// * name: Word representing the header name (e.g., 'cache-control, 'x-custom-header)
+	// * value: String value to set for the header
+	// Returns:
+	// * the response writer object for method chaining
 	"Go-server-response-writer//Set-header": {
 		Argsn: 3,
-		Doc:   "Set header for http server.",
+		Doc:   "Sets a custom HTTP header in the response, allowing control over caching, security, and other HTTP behaviors.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch writer := arg0.(type) {
 			case env.Native:
 				switch name := arg1.(type) {
 				case env.Word:
+					// Convert word to string for header name
 					name_ := ps.Idx.GetWord(name.Index)
 					switch value := arg2.(type) {
 					case env.String:
+						// Set the specified header with the given value
 						writer.Value.(http.ResponseWriter).Header().Set(name_, value.Value)
 						return arg0
 					default:
@@ -204,14 +272,24 @@ var Builtins_http = map[string]*env.Builtin{
 		},
 	},
 
+	// Example:
+	// ; Inside a handler: w .Write-header 404
+	// ; Inside a handler: w .Write-header 200
+	// ; Inside a handler: w .Write-header 500
+	// Args:
+	// * writer: Native Go-server-response-writer object from HTTP handler
+	// * code: Integer HTTP status code (200=OK, 404=Not Found, 500=Internal Server Error, etc.)
+	// Returns:
+	// * the response writer object for method chaining
 	"Go-server-response-writer//Write-header": {
 		Argsn: 2,
-		Doc:   "Write header for http server.",
+		Doc:   "Sets the HTTP status code for the response (must be called before writing response body).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch w := arg0.(type) {
 			case env.Native:
 				switch code := arg1.(type) {
 				case env.Integer:
+					// Set the HTTP status code (must be done before writing body)
 					w.Value.(http.ResponseWriter).WriteHeader(int(code.Value))
 					return arg0
 				default:
@@ -353,24 +431,36 @@ var Builtins_http = map[string]*env.Builtin{
 		},
 	},*/
 
+	//
+	// ##### HTTP Request Functions ##### "Extracting data from HTTP requests."
+	//
+
+	// Example:
+	// ; Inside a handler with request URL "/api?name=john&age=25":
+	// ; equal { req .Query? "name" } "john"
+	// ; equal { req .Query? "age" } "25"
+	// ; error { req .Query? "missing" }
+	// Args:
+	// * request: Native Go-server-request object from HTTP handler
+	// * key: String name of the query parameter to retrieve
+	// Returns:
+	// * string value of the query parameter, or error if key is missing
 	"Go-server-request//Query?": {
 		Argsn: 2,
-		Doc:   "Get query parameter from HTTP request.",
+		Doc:   "Retrieves a query parameter value from the HTTP request URL (e.g., from ?name=value&other=data).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			//fmt.Println("YOYOYOYOYOYO ------------- - - -  --")
-			//return env.String{"QUERY - VAL"}
 			switch req := arg0.(type) {
 			case env.Native:
 				switch key := arg1.(type) {
 				case env.String:
-
+					// Extract query parameters from the request URL
 					vals, ok := req.Value.(*http.Request).URL.Query()[key.Value]
-
+					// Check if the parameter exists and has a value
 					if !ok || len(vals[0]) < 1 {
 						ps.FailureFlag = true
 						return MakeBuiltinError(ps, "Key is missing.", "Go-server-request//query?")
 					}
-					//return env.NewError("XOSADOSADOA SDAS DO" + key.Value)
+					// Return the first value for this parameter
 					return *env.NewString(vals[0])
 				default:
 					ps.FailureFlag = true
@@ -383,12 +473,21 @@ var Builtins_http = map[string]*env.Builtin{
 		},
 	},
 
+	// Example:
+	// ; Inside a handler: url: req .Url?
+	// ; equal { url .type? } 'native
+	// ; error { "not-request" .Url? }
+	// Args:
+	// * request: Native Go-server-request object from HTTP handler
+	// Returns:
+	// * native Go-server-url object containing the parsed request URL
 	"Go-server-request//Url?": {
 		Argsn: 1,
-		Doc:   "Get URL from HTTP request.",
+		Doc:   "Extracts the URL object from an HTTP request, providing access to path, query parameters, and other URL components.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch req := arg0.(type) {
 			case env.Native:
+				// Extract the URL from the HTTP request
 				vals := req.Value.(*http.Request).URL
 				return *env.NewNative(ps.Idx, vals, "Go-server-url")
 			default:
@@ -398,12 +497,22 @@ var Builtins_http = map[string]*env.Builtin{
 		},
 	},
 
+	// Example:
+	// ; Inside a handler with request to "/api/users/123":
+	// ; url: req .Url?
+	// ; equal { url .Path? } "/api/users/123"
+	// ; error { "not-url" .Path? }
+	// Args:
+	// * url: Native Go-server-url object from request URL
+	// Returns:
+	// * string containing the path portion of the URL (without query parameters)
 	"Go-server-url//Path?": {
 		Argsn: 1,
-		Doc:   "Get path from server url.",
+		Doc:   "Extracts the path component from a URL object (the part after the domain and before query parameters).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch req := arg0.(type) {
 			case env.Native:
+				// Extract path from URL object
 				val := req.Value.(*url.URL).Path
 				return *env.NewString(val)
 			default:
@@ -558,7 +667,7 @@ var Builtins_http = map[string]*env.Builtin{
 		},
 	},
 
-	"new-cookie-store": {
+	"cookie-store": {
 		Argsn: 1,
 		Doc:   "Create new cookie store.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -817,7 +926,7 @@ var Builtins_http = map[string]*env.Builtin{
 
 	// Serving static files
 
-	"new-http-dir": {
+	"http-dir": {
 		Argsn: 1,
 		Doc:   "Create new http directory.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -825,7 +934,7 @@ var Builtins_http = map[string]*env.Builtin{
 			case env.Uri:
 				return *env.NewNative(ps.Idx, http.Dir(addr.Path), "Go-http-dir")
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "new-http-dir")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "http-dir")
 			}
 		},
 	},
@@ -874,11 +983,49 @@ var Builtins_http = map[string]*env.Builtin{
 					return *env.NewString(headerValue)
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.StringType}, "https-response//Get-header")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "https-response//Header?")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "https-response//Get-header")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "https-response//Header?")
+			}
+		},
+	},
+
+	// Args:
+	// * response: native https-response object
+	// Returns:
+	// * integer containing the HTTP status code (200, 404, 500, etc.)
+	"https-response//Status?": {
+		Argsn: 1,
+		Doc:   "Gets the HTTP status code from a response object.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch resp := arg0.(type) {
+			case env.Native:
+				response := resp.Value.(*http.Response)
+				return *env.NewInteger(int64(response.StatusCode))
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "https-response//Status?")
+			}
+		},
+	},
+
+	// Args:
+	// * response: native https-response object
+	// Returns:
+	// * string containing the HTTP status text (OK, Not Found, Internal Server Error, etc.)
+	"https-response//Status-text?": {
+		Argsn: 1,
+		Doc:   "Gets the HTTP status text from a response object.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch resp := arg0.(type) {
+			case env.Native:
+				response := resp.Value.(*http.Response)
+				return *env.NewString(response.Status)
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "https-response//Status-text?")
 			}
 		},
 	},

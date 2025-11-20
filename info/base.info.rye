@@ -11,6 +11,9 @@ section "Boolean " "Functions that work with true and false values." {
 		equal { true |type? } 'boolean
 	}
 
+	{
+``	}
+
 	group "false" 
 	"Returns a boolean false value."
 	{
@@ -22,6 +25,9 @@ section "Boolean " "Functions that work with true and false values." {
 		equal { false } false
 		equal { false |type? } 'boolean
 	}
+
+	{
+``	}
 
 	group "not" 
 	"Performs logical negation on boolean values only."
@@ -36,6 +42,9 @@ section "Boolean " "Functions that work with true and false values." {
 		error { not 0 }
 		error { not 5 }
 	}
+
+	{
+``	}
 
 	group "and" 
 	"Performs a logical AND operation between two boolean values, or a bitwise AND operation between two integer values."
@@ -56,6 +65,9 @@ section "Boolean " "Functions that work with true and false values." {
 		error { "string" .and true }
 	}
 
+	{
+``	}
+
 	group "or" 
 	"Performs a logical OR operation between two boolean values, or a bitwise OR operation between two integer values."
 	{
@@ -74,6 +86,9 @@ section "Boolean " "Functions that work with true and false values." {
 		error { 5 .or true }
 		error { "string" .or true }
 	}
+
+	{
+``	}
 
 	group "xor" 
 	"Performs a logical XOR (exclusive OR) operation between two boolean values, or a bitwise XOR operation between two integer values."
@@ -94,6 +109,9 @@ section "Boolean " "Functions that work with true and false values." {
 		error { "string" .xor true }
 	}
 
+	{
+``	}
+
 	group "all" 
 	"Evaluates all expressions in a block and returns the last value if all are truthy, or the first falsy value encountered."
 	{
@@ -110,6 +128,9 @@ section "Boolean " "Functions that work with true and false values." {
 		error { all "not-a-block" }
 	}
 
+	{
+``	}
+
 	group "any" 
 	"Evaluates expressions in a block until a truthy value is found and returns it, or returns the last value if none are truthy."
 	{
@@ -125,6 +146,9 @@ section "Boolean " "Functions that work with true and false values." {
 		; equal { any { } } ? ; empty block behavior
 		error { any "not-a-block" }
 	}
+
+	{
+``	}
 
 	group "any\\with" 
 	"Applies each expression in the block to the provided value until a truthy result is found and returns it."
@@ -143,6 +167,9 @@ section "Boolean " "Functions that work with true and false values." {
 		error { any\with 5 "not-a-block" }
 	}
 
+	{
+``	}
+
 }
 
 section "Numbers " "Working with numbers, integers and decimals." {
@@ -160,6 +187,9 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		error { inc "123" }
 	}
 
+	{
+``	}
+
 	group "decr" 
 	"Decrements an integer value by 1."
 	{
@@ -173,6 +203,9 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { decr -4 } -5
 		error { decr "123" }
 	}
+
+	{
+``	}
 
 	group "negate" 
 	"Negates a number by multiplying it by -1, works with integers, decimals, and complex numbers."
@@ -189,6 +222,9 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { negate -2.3 } 2.3
 		error { negate "123" }
 	}
+
+	{
+``	}
 
 	group "invert" 
 	"Calculates the reciprocal (1/x) of a number, works with integers, decimals, and complex numbers."
@@ -207,6 +243,9 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		error { invert "123" }
 	}
 
+	{
+``	}
+
 	group "is-positive" 
 	"Checks if a number is positive (greater than zero)."
 	{
@@ -222,6 +261,9 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		error { is-positive "123" }
 	}
 
+	{
+``	}
+
 	group "is-zero" 
 	"Checks if a number is exactly zero."
 	{
@@ -235,6 +277,9 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { is-zero 0.0 } true
 		error { is-zero "123" }
 	}
+
+	{
+``	}
 
 	group "is-multiple-of" 
 	"Checks if the first integer is evenly divisible by the second integer."
@@ -251,6 +296,9 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { 0 .is-multiple-of 5 } true
 	}
 
+	{
+``	}
+
 	group "is-odd" 
 	"Checks if an integer is odd (not divisible by 2)."
 	{
@@ -265,6 +313,9 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { -5 .is-odd } true
 	}
 
+	{
+``	}
+
 	group "is-even" 
 	"Checks if an integer is even (divisible by 2)."
 	{
@@ -278,6 +329,9 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { 0 .is-even } true
 		equal { -4 .is-even } true
 	}
+
+	{
+``	}
 
 	group "mod" 
 	"Calculates the modulo (remainder) when dividing the first integer by the second."
@@ -294,6 +348,9 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { -5 .mod 3 } -2
 	}
 
+	{
+``	}
+
 	group "_%" 
 	"Alias for mod - calculates the modulo (remainder) when dividing the first integer by the second."
 	{
@@ -308,6 +365,9 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { 5 % 3 } 2
 	}
 
+	{
+``	}
+
 	group "random\\integer" 
 	"Generates a cryptographically secure random integer between 0 (inclusive) and the specified maximum (exclusive)."
 	{
@@ -320,6 +380,9 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { random\integer 1 |< 2 } true
 		equal { random\integer 100 | >= 0 } true
 	}
+
+	{
+``	}
 
 	group "random\\decimal" 
 	"Generates a cryptographically secure random decimal between 0.0 (inclusive) and the specified maximum (exclusive)."
@@ -334,6 +397,9 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { random\decimal 100.0 | >= 0.0 } true
 	}
 
+	{
+``	}
+
 	group "inc!" 
 	"Increments an integer value stored in a variable (word) by 1 and updates the variable in-place."
 	{
@@ -346,6 +412,9 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { counter:: 0 inc! 'counter counter } 1
 		error { inc! 123 }
 	}
+
+	{
+``	}
 
 	group "decr!" 
 	"Decrements an integer value stored in a variable (word) by 1 and updates the variable in-place."
@@ -360,6 +429,9 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		error { decr! 123 }
 	}
 
+	{
+``	}
+
 	group "_." 
 	"Discards the input value and returns a void value, useful for ignoring unwanted results in a pipeline."
 	{
@@ -371,6 +443,9 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { 4 . .type? } 'void
 		equal { "hello" . .type? } 'void
 	}
+
+	{
+``	}
 
 	group "_+" 
 	"Adds or joins two values together, with behavior depending on types: adds numbers, concatenates strings/blocks, merges dictionaries, etc."
@@ -391,6 +466,9 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		error { dict { "a" 1 } |+ dict { "b" 2 } }
 	}
 
+	{
+``	}
+
 	group "_-" 
 	"Subtracts the second number from the first, working with integers, decimals, and complex numbers."
 	{
@@ -405,6 +483,9 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { 5.5 - 2.2 } 3.3
 		equal { 5 - 2.5 } 2.5
 	}
+
+	{
+``	}
 
 	group "_*" 
 	"Multiplies two numbers, working with integers, decimals, and complex numbers."
@@ -421,6 +502,9 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { 1.5 * 2.5 } 3.75
 	}
 
+	{
+``	}
+
 	group "_/" 
 	"Divides the first number by the second and returns a result, with error checking for division by zero."
 	{
@@ -435,6 +519,9 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { 5 / 2 } 2.5
 		error { 5 / 0 }
 	}
+
+	{
+``	}
 
 	group "_//" 
 	"Performs integer division, dividing the first number by the second and truncating to an integer result."
@@ -452,6 +539,9 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		error { 5 // 0 }
 	}
 
+	{
+``	}
+
 	group "_=" 
 	"Compares two values for equality, returning 1 if equal or 0 if not equal."
 	{
@@ -468,6 +558,9 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { { 1 2 } = { 2 1 } } false
 	}
 
+	{
+``	}
+
 	group "_>" 
 	"Compares if the first value is greater than the second value."
 	{
@@ -483,6 +576,9 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { 5.5 > 5 } true
 		equal { "b" > "a" } true
 	}
+
+	{
+``	}
 
 	group "_>=" 
 	"Compares if the first value is greater than or equal to the second value."
@@ -501,6 +597,9 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { "a" >= "a" } true
 	}
 
+	{
+``	}
+
 	group "_<" 
 	"Compares if the first value is less than the second value."
 	{
@@ -516,6 +615,9 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { 4.5 < 5 } true
 		equal { "a" < "b" } true
 	}
+
+	{
+``	}
 
 	group "_<=" 
 	"Compares if the first value is less than or equal to the second value."
@@ -533,6 +635,9 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { "a" <= "b" } true
 		equal { "a" <= "a" } true
 	}
+
+	{
+``	}
 
 	group "clamp" 
 	"Clamps a number between a minimum and maximum value, ensuring the result stays within the specified bounds."
@@ -553,6 +658,9 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		error { clamp "5" 0 10 }
 	}
 
+	{
+``	}
+
 }
 
 section "Strings " "" {
@@ -567,6 +675,9 @@ section "Strings " "" {
 		equal { newline } "\n"
 	}
 
+	{
+``	}
+
 	group "tab" 
 	"Returns a string containing a single tab character."
 	{
@@ -577,6 +688,9 @@ section "Strings " "" {
 	{
 		equal { tab } "\t"
 	}
+
+	{
+``	}
 
 	group "ln" 
 	"Appends a newline character to the end of a string."
@@ -589,6 +703,9 @@ section "Strings " "" {
 		equal { "123" .ln } "123\n"
 		equal { "hello" .ln } "hello\n"
 	}
+
+	{
+``	}
 
 	group "trim" 
 	"Removes all leading and trailing whitespace characters from a string."
@@ -603,6 +720,9 @@ section "Strings " "" {
 		equal { trim "\t\nASDF\r\n" } "ASDF"
 	}
 
+	{
+``	}
+
 	group "trim\\" 
 	"Removes all leading and trailing occurrences of the specified characters from a string."
 	{
@@ -615,6 +735,9 @@ section "Strings " "" {
 		equal { trim\ "__ASDF__" "_" } "ASDF"
 		equal { trim\ "##Hello##" "#" } "Hello"
 	}
+
+	{
+``	}
 
 	group "trim\\right" 
 	"Removes all trailing occurrences of the specified characters from a string."
@@ -630,6 +753,9 @@ section "Strings " "" {
 		equal { trim\right "Hello!!!" "!" } "Hello"
 	}
 
+	{
+``	}
+
 	group "trim\\left" 
 	"Removes all leading occurrences of the specified characters from a string."
 	{
@@ -643,6 +769,9 @@ section "Strings " "" {
 		equal { trim\left "  ASDF  " " " } "ASDF  "
 		equal { trim\left "###Hello" "#" } "Hello"
 	}
+
+	{
+``	}
 
 	group "replace" 
 	"Replaces all occurrences of a substring with another string."
@@ -659,6 +788,9 @@ section "Strings " "" {
 		equal { replace "hello world" "world" "everyone" } "hello everyone"
 	}
 
+	{
+``	}
+
 	group "substring" 
 	"Extracts a portion of a string between the specified start and end positions."
 	{
@@ -673,6 +805,9 @@ section "Strings " "" {
 		equal { substring "...xoxo..." 3 7 } "xoxo"
 		equal { substring "hello world" 6 11 } "world"
 	}
+
+	{
+``	}
 
 	group "contains" 
 	"Checks if a string, block or list contains a specific value, returning 1 if found or 0 if not found."
@@ -690,6 +825,9 @@ section "Strings " "" {
 		equal { contains list { 1 2 3 } 2 } true
 	}
 
+	{
+``	}
+
 	group "has-suffix" 
 	"Checks if a string ends with a specific suffix, returning 1 if true or 0 if false."
 	{
@@ -704,6 +842,9 @@ section "Strings " "" {
 		equal { has-suffix "hello.txt" ".txt" } 1
 	}
 
+	{
+``	}
+
 	group "has-prefix" 
 	"Checks if a string starts with a specific prefix, returning 1 if true or 0 if false."
 	{
@@ -717,6 +858,9 @@ section "Strings " "" {
 		equal { has-prefix "...xoxo" "xoxo" } 0
 		equal { has-prefix "http://example.com" "http://" } 1
 	}
+
+	{
+``	}
 
 	group "index?" 
 	"Finds the 0-based index of the first occurrence of a value in a string or block."
@@ -733,6 +877,9 @@ section "Strings " "" {
 		equal { index? { ".." "xo" ".." } "xo" } 1
 	}
 
+	{
+``	}
+
 	group "position?" 
 	"Finds the 1-based position of the first occurrence of a value in a string or block."
 	{
@@ -748,6 +895,9 @@ section "Strings " "" {
 		equal { position? { ".." "xo" ".." } "xo" } 2
 	}
 
+	{
+``	}
+
 	group "encode-to\\base64" 
 	"Encodes a string or binary data as a base64 string."
 	{
@@ -759,6 +909,9 @@ section "Strings " "" {
 		equal { encode-to\base64 "abcd" } "YWJjZA=="
 		equal { encode-to\base64 "hello world" } "aGVsbG8gd29ybGQ="
 	}
+
+	{
+``	}
 
 	group "decode\\base64" 
 	"Decodes a base64-encoded string back to its original form."
@@ -772,6 +925,9 @@ section "Strings " "" {
 		equal { decode\base64 "aGVsbG8gd29ybGQ=" } "hello world"
 	}
 
+	{
+``	}
+
 	group "space" 
 	"Appends a space character to the end of a string."
 	{
@@ -783,6 +939,9 @@ section "Strings " "" {
 		equal { "abcd" .space } "abcd "
 		equal { "" .space } " "
 	}
+
+	{
+``	}
 
 	group "capitalize" 
 	"Converts the first character of a string to uppercase, leaving the rest unchanged."
@@ -797,6 +956,9 @@ section "Strings " "" {
 		equal { capitalize "HELLO" } "Hello"
 	}
 
+	{
+``	}
+
 	group "to-lower" 
 	"Converts all characters in a string to lowercase."
 	{
@@ -810,6 +972,9 @@ section "Strings " "" {
 		equal { to-lower "123ABC" } "123abc"
 	}
 
+	{
+``	}
+
 	group "to-upper" 
 	"Converts all characters in a string to uppercase."
 	{
@@ -822,6 +987,9 @@ section "Strings " "" {
 		equal { to-upper "Hello World" } "HELLO WORLD"
 		equal { to-upper "123abc" } "123ABC"
 	}
+
+	{
+``	}
 
 	group "concat3" 
 	"Concatenates three strings together into a single string."
@@ -837,6 +1005,9 @@ section "Strings " "" {
 		equal { concat3 "hello" " " "world" } "hello world"
 	}
 
+	{
+``	}
+
 	group "join" 
 	"Concatenates all strings or numbers in a block or list into a single string with no separator."
 	{
@@ -849,6 +1020,9 @@ section "Strings " "" {
 		equal { join { "Spot" "Fido" "Rex" } } "SpotFidoRex"
 		equal { join { 1 2 3 } } "123"
 	}
+
+	{
+``	}
 
 	group "join\\with" 
 	"Concatenates all strings or numbers in a block or list into a single string with a specified delimiter between values."
@@ -864,6 +1038,9 @@ section "Strings " "" {
 		equal { join\with { 1 2 3 } "-" } "1-2-3"
 	}
 
+	{
+``	}
+
 	group "split" 
 	"Splits a string into a block of strings using a separator string."
 	{
@@ -877,6 +1054,9 @@ section "Strings " "" {
 		equal { split "hello world" " " } { "hello" "world" }
 		equal { split "one::two::three" "::" } { "one" "two" "three" }
 	}
+
+	{
+``	}
 
 	group "split\\quoted" 
 	"Splits a string into a block of strings using a separator, while respecting quoted sections that should remain intact."
@@ -892,6 +1072,9 @@ section "Strings " "" {
 		equal { split\quoted "'hello, world',foo,bar" "," "'" } { "'hello, world'" "foo" "bar" }
 	}
 
+	{
+``	}
+
 	group "split\\many" 
 	"Splits a string into a block of strings using any character in the separators string as a delimiter."
 	{
@@ -905,6 +1088,9 @@ section "Strings " "" {
 		equal { split\many "abcd..e.q|bar" ".|" } { "abcd" "e" "q" "bar" }
 		equal { split\many "a;b,c:d" ";,:" } { "a" "b" "c" "d" }
 	}
+
+	{
+``	}
 
 	group "split\\every" 
 	"Splits a string or block into chunks of the specified size, with any remaining elements in the last chunk."
@@ -921,6 +1107,9 @@ section "Strings " "" {
 		equal { split\every { 1 2 3 4 5 } 2 } { { 1 2 } { 3 4 } { 5 } }
 	}
 
+	{
+``	}
+
 }
 
 section "Date and Time " "" {
@@ -935,6 +1124,9 @@ section "Date and Time " "" {
 		equal { now |unix-micro? |type? } 'integer
 	}
 
+	{
+``	}
+
 	group "unix-milli?" 
 	"Converts a time object to Unix time in milliseconds (milliseconds since January 1, 1970 UTC)."
 	{
@@ -946,6 +1138,9 @@ section "Date and Time " "" {
 		equal { now |unix-milli? |type? } 'integer
 	}
 
+	{
+``	}
+
 	group "weekday?" 
 	"Extracts the day of the week from a time object as an integer (0=Sunday through 6=Saturday)."
 	{
@@ -956,6 +1151,9 @@ section "Date and Time " "" {
 	{
 		equal { date "2023-01-01" |weekday? } 0  ; Sunday is 0
 	}
+
+	{
+``	}
 
 	group "date" 
 	"Creates a time object from a date string in YYYY-MM-DD format."
@@ -969,6 +1167,9 @@ section "Date and Time " "" {
 		equal { date "2023-01-15" |day? } 15
 	}
 
+	{
+``	}
+
 	group "datetime" 
 	"Creates a time object from a datetime string in YYYY-MM-DDThh:mm:ss format."
 	{
@@ -981,6 +1182,9 @@ section "Date and Time " "" {
 		equal { datetime "2023-01-15T14:30:45" |hour? } 14
 	}
 
+	{
+``	}
+
 	group "now" 
 	"Creates a time object representing the current local time."
 	{
@@ -991,6 +1195,9 @@ section "Date and Time " "" {
 	{
 		equal { now |type? } 'time
 	}
+
+	{
+``	}
 
 	group "yearday?" 
 	"Extracts the day of year from a time object as an integer (1-366)."
@@ -1003,6 +1210,9 @@ section "Date and Time " "" {
 		equal { date "2023-01-15" |yearday? } 15  ; January 15 is the 15th day of the year
 	}
 
+	{
+``	}
+
 	group "year?" 
 	"Extracts the year from a time object as an integer."
 	{
@@ -1014,6 +1224,9 @@ section "Date and Time " "" {
 		equal { date "2023-01-15" |year? } 2023
 	}
 
+	{
+``	}
+
 	group "month?" 
 	"Extracts the month from a time object as an integer (1-12)."
 	{
@@ -1024,6 +1237,9 @@ section "Date and Time " "" {
 	{
 		equal { date "2023-01-15" |month? } 1
 	}
+
+	{
+``	}
 
 	group "days-in-month?" 
 	"Calculates the number of days in the month of the given time object."
@@ -1037,6 +1253,9 @@ section "Date and Time " "" {
 		equal { date "2023-02-15" |days-in-month? } 28
 	}
 
+	{
+``	}
+
 	group "time?" 
 	"Extracts the time part from a time object as a formatted string (hh:mm:ss)."
 	{
@@ -1047,6 +1266,9 @@ section "Date and Time " "" {
 	{
 		equal { datetime "2023-01-15T14:30:45" |time? } "14:30:45"
 	}
+
+	{
+``	}
 
 	group "date?" 
 	"Extracts the date part from a time object as a formatted string (YYYY-MM-DD)."
@@ -1059,6 +1281,9 @@ section "Date and Time " "" {
 		equal { datetime "2023-01-15T14:30:45" |date? } "2023-01-15"
 	}
 
+	{
+``	}
+
 	group "day?" 
 	"Extracts the day of month from a time object as an integer (1-31)."
 	{
@@ -1069,6 +1294,9 @@ section "Date and Time " "" {
 	{
 		equal { date "2023-01-15" |day? } 15
 	}
+
+	{
+``	}
 
 	group "hour?" 
 	"Extracts the hour from a time object as an integer (0-23)."
@@ -1081,6 +1309,9 @@ section "Date and Time " "" {
 		equal { datetime "2023-01-15T14:30:45" |hour? } 14
 	}
 
+	{
+``	}
+
 	group "minute?" 
 	"Extracts the minute from a time object as an integer (0-59)."
 	{
@@ -1091,6 +1322,9 @@ section "Date and Time " "" {
 	{
 		equal { datetime "2023-01-15T14:30:45" |minute? } 30
 	}
+
+	{
+``	}
 
 	group "second?" 
 	"Extracts the second from a time object as an integer (0-59)."
@@ -1103,6 +1337,9 @@ section "Date and Time " "" {
 		equal { datetime "2023-01-15T14:30:45" |second? } 45
 	}
 
+	{
+``	}
+
 	group "sleep" 
 	"Pauses execution for the specified number of milliseconds."
 	{
@@ -1113,6 +1350,9 @@ section "Date and Time " "" {
 	{
 		equal { time-it { sleep 10 } } 10
 	}
+
+	{
+``	}
 
 	group "thousands" 
 	"Converts seconds to milliseconds (multiplies by 1000)."
@@ -1125,6 +1365,9 @@ section "Date and Time " "" {
 		equal { 5 .seconds } 5000
 	}
 
+	{
+``	}
+
 	group "millions" 
 	"Converts seconds to milliseconds (multiplies by 1000)."
 	{
@@ -1135,6 +1378,9 @@ section "Date and Time " "" {
 	{
 		equal { 5 .seconds } 5000
 	}
+
+	{
+``	}
 
 	group "seconds" 
 	"Converts seconds to milliseconds (multiplies by 1000)."
@@ -1147,6 +1393,9 @@ section "Date and Time " "" {
 		equal { 5 .seconds } 5000
 	}
 
+	{
+``	}
+
 	group "minutes" 
 	"Converts minutes to milliseconds (multiplies by 60000)."
 	{
@@ -1157,6 +1406,9 @@ section "Date and Time " "" {
 	{
 		equal { 5 .minutes } 300000  ; 5000 * 60
 	}
+
+	{
+``	}
 
 	group "hours" 
 	"Converts hours to milliseconds (multiplies by 3600000)."
@@ -1169,6 +1421,9 @@ section "Date and Time " "" {
 		equal { 5 .hours } 18000000  ; 5000 * 60 * 60
 	}
 
+	{
+``	}
+
 	group "days" 
 	"Converts days to milliseconds (multiplies by 86400000)."
 	{
@@ -1179,6 +1434,9 @@ section "Date and Time " "" {
 	{
 		equal { 5 .days } 432000000  ; 5000 * 60 * 60 * 24
 	}
+
+	{
+``	}
 
 	group "weeks" 
 	"Converts weeks to milliseconds (multiplies by 604800000)."
@@ -1191,6 +1449,9 @@ section "Date and Time " "" {
 		equal { 5 .weeks } 3024000000  ; 5000 * 60 * 60 * 24 * 7
 	}
 
+	{
+``	}
+
 	group "time-it" 
 	"Accepts a block, does it and times it's execution time."
 	{
@@ -1199,6 +1460,9 @@ section "Date and Time " "" {
 	{
 		equal { time-it { sleep 100 } } 100
 	}
+
+	{
+``	}
 
 }
 
@@ -1215,6 +1479,9 @@ section "Collections " "" {
 		equal { random { 1 2 3 } |contains* { 1 2 3 } } true
 	}
 
+	{
+``	}
+
 	group "unpack" 
 	"Flattens a block of blocks or list of lists by one level, combining all inner collections into a single collection."
 	{
@@ -1227,6 +1494,9 @@ section "Collections " "" {
 		equal { unpack { { { 123 } } { 234 } } } { { 123 } 234 }
 		; equal { unpack list { list { 1 2 } list { 3 4 } } } list { 1 2 3 4 }
 	}
+
+	{
+``	}
 
 	group "sample" 
 	"Randomly selects a specified number of elements from a collection without replacement."
@@ -1242,6 +1512,9 @@ section "Collections " "" {
 		; equal { sample list { 1 2 3 4 5 } 3 |length? } 3
 	}
 
+	{
+``	}
+
 	group "max" 
 	"Finds the maximum value in a block or list of comparable values."
 	{
@@ -1255,6 +1528,9 @@ section "Collections " "" {
 		equal { try { max { } } |type? } 'error
 		equal { try { max list { } } |type? } 'error
 	}
+
+	{
+``	}
 
 	group "min" 
 	"Finds the minimum value in a block or list of comparable values."
@@ -1270,6 +1546,9 @@ section "Collections " "" {
 		equal { try { min list { } } |type? } 'error
 	}
 
+	{
+``	}
+
 	group "avg" 
 	"Calculates the arithmetic mean (average) of numeric values in a collection."
 	{
@@ -1284,6 +1563,9 @@ section "Collections " "" {
 		equal { try { avg { } } |type? } 'error
 		equal { try { avg list { } } |type? } 'error
 	}
+
+	{
+``	}
 
 	group "sum" 
 	"Calculates the sum of all numeric values in a collection."
@@ -1301,6 +1583,9 @@ section "Collections " "" {
 		equal { sum list { } } 0
 	}
 
+	{
+``	}
+
 	group "mul" 
 	"Calculates the product of all numeric values in a collection."
 	{
@@ -1313,6 +1598,9 @@ section "Collections " "" {
 		equal { mul { 1 2.0 3.3 4 5 } } 132.0
 		equal { mul { 2 3 4 } } 24
 	}
+
+	{
+``	}
 
 	group "first" 
 	"Retrieves the first item from a collection (block, list, string, or table)."
@@ -1328,6 +1616,9 @@ section "Collections " "" {
 		; equal { first table { 'a 'b } { 1 2 } { 3 4 } } table-row { 'a 1 'b 2 }
 	}
 
+	{
+``	}
+
 	group "rest" 
 	"Creates a new collection with all items except the first one from the input collection."
 	{
@@ -1341,6 +1632,9 @@ section "Collections " "" {
 		equal { rest list { 1 2 3 } } list { 2 3 }
 		equal { rest { 1 } } { }
 	}
+
+	{
+``	}
 
 	group "rest\\from" 
 	"Creates a new collection with all items starting from the specified position in the input collection."
@@ -1357,6 +1651,9 @@ section "Collections " "" {
 		equal { rest\from { 1 2 3 } 0 } { 1 2 3 }
 	}
 
+	{
+``	}
+
 	group "tail" 
 	"Creates a new collection with the last n items from the input collection."
 	{
@@ -1372,6 +1669,9 @@ section "Collections " "" {
 		equal { tail { 1 2 } 5 } { 1 2 }
 	}
 
+	{
+``	}
+
 	group "second" 
 	"Retrieves the second item from a collection (block, list, or string)."
 	{
@@ -1384,6 +1684,9 @@ section "Collections " "" {
 		equal { second "abc" } "b"
 		equal { second list { 10 20 30 } } 20
 	}
+
+	{
+``	}
 
 	group "third" 
 	"Retrieves the third item from a collection (block, list, or string)."
@@ -1398,6 +1701,9 @@ section "Collections " "" {
 		equal { third list { 10 20 30 40 } } 30
 	}
 
+	{
+``	}
+
 	group "last" 
 	"Retrieves the last item from a collection (block, list, or string)."
 	{
@@ -1411,6 +1717,9 @@ section "Collections " "" {
 		equal { last list { 4 5 6 } } 6
 		equal { try { last { } } |type? } 'error
 	}
+
+	{
+``	}
 
 	group "head" 
 	"Creates a new collection with the first n items from the input collection, or all but the last |n| items if n is negative."
@@ -1431,6 +1740,9 @@ section "Collections " "" {
 		equal { head list { 10 20 30 40 } -1 } list { 10 20 30 }
 	}
 
+	{
+``	}
+
 	group "nth" 
 	"Retrieves the item at the specified position (1-based indexing) from a collection."
 	{
@@ -1447,6 +1759,9 @@ section "Collections " "" {
 		; equal { nth table { 'a 'b } { 1 2 } { 3 4 } 2 } table-row { 'a 3 'b 4 }
 	}
 
+	{
+``	}
+
 	group "values" 
 	"Extracts all values from a dictionary and returns them as a list."
 	{
@@ -1458,6 +1773,9 @@ section "Collections " "" {
 		equal { dict { "a" 1 "b" 2 "c" 3 } |values } list { 1 2 3 }
 		equal { dict { "x" 10 "y" 20 } |values |length? } 2
 	}
+
+	{
+``	}
 
 	group "sort" 
 	"Creates a new collection with items sorted in ascending order."
@@ -1474,6 +1792,9 @@ section "Collections " "" {
 		equal { sort "cba" } "abc"
 	}
 
+	{
+``	}
+
 	group "sort!" 
 	"Sorts a block or list in-place in ascending order and returns the modified collection."
 	{
@@ -1486,6 +1807,9 @@ section "Collections " "" {
 		equal { x: ref { 6 12 1 } , sort! x , x } { 1 6 12 }
 		equal { x: ref list { 5 3 1 4 } , sort! x , x } list { 1 3 4 5 }
 	}
+
+	{
+``	}
 
 	group "sort\\by" 
 	"Creates a new collection with items sorted according to a custom comparison function."
@@ -1501,6 +1825,9 @@ section "Collections " "" {
 		equal { sort\by { { x 6 } { x 12 } { x 1 } } fn { a b } { second a |< second b } } { { x 1 } { x 6 } { x 12 } }
 		equal { sort\by list { 5 3 1 4 } fn { a b } { a > b } } list { 5 4 3 1 }
 	}
+
+	{
+``	}
 
 	group "unique" 
 	"Creates a new collection with duplicate values removed, keeping only the first occurrence of each value."
@@ -1519,6 +1846,9 @@ section "Collections " "" {
 		equal { unique "ab" |length? } 2
 	}
 
+	{
+``	}
+
 	group "reverse" 
 	"Creates a new collection with items in reverse order from the input collection."
 	{
@@ -1533,6 +1863,9 @@ section "Collections " "" {
 		equal { reverse { } } { }
 	}
 
+	{
+``	}
+
 	group "reverse!" 
 	"Reverses a block or list in-place and returns the modified collection."
 	{
@@ -1545,6 +1878,9 @@ section "Collections " "" {
 		equal { reverse! ref { 3 1 2 3 } } { 3 2 1 3 }
 		equal { x: ref list { 1 2 3 } , reverse! x , x } list { 3 2 1 }
 	}
+
+	{
+``	}
 
 	group "concat" 
 	"Joins two series values together."
@@ -1559,6 +1895,9 @@ section "Collections " "" {
 		equal { concat { 1 2 3 4 } { 2 4 5 } } { 1 2 3 4 2 4 5 }
 		equal { 123 .concat "abc" } "123abc"
 	}
+
+	{
+``	}
 
 	group "_++" 
 	"Joins two values together, with behavior depending on types: concatenates strings, joins blocks, merges dictionaries, etc."
@@ -1575,6 +1914,9 @@ section "Collections " "" {
 		equal { dict { "a" 1 } | ++ { "b" 2 } } dict { "a" 1 "b" 2 }
 		equal { dict { "a" 1 } | ++ dict { "b" 2 } } dict { "a" 1 "b" 2 }
 	}
+
+	{
+``	}
 
 	group "union" 
 	"Combines two collections, removing any duplicate values to create a union of all unique values."
@@ -1599,6 +1941,9 @@ section "Collections " "" {
 		equal { union list { } list { } } list { }
 	}
 
+	{
+``	}
+
 	group "range" 
 	"Creates a block containing all integers from the start value to the end value, inclusive."
 	{
@@ -1612,6 +1957,9 @@ section "Collections " "" {
 		equal { range 5 10 } { 5 6 7 8 9 10 }
 		equal { range -2 2 } { -2 -1 0 1 2 }
 	}
+
+	{
+``	}
 
 	group "is-empty" 
 	"Checks if a collection is empty, returning 1 for empty collections and 0 otherwise."
@@ -1628,6 +1976,9 @@ section "Collections " "" {
 		equal { { 1 2 3 } .is-empty } false
 	}
 
+	{
+``	}
+
 	group "length?" 
 	"Returns the number of elements in a collection."
 	{
@@ -1643,6 +1994,9 @@ section "Collections " "" {
 		equal { dict { "a" 1 "b" 2 } |length? } 2
 	}
 
+	{
+``	}
+
 	group "max-idx?" 
 	"Returns the number of elements in a collection."
 	{
@@ -1657,6 +2011,9 @@ section "Collections " "" {
 		equal { vector { 10 20 30 } |max-idx? } 2
 	}
 
+	{
+``	}
+
 	group "keys" 
 	"Extracts the keys from a dictionary or column names from a table as a block."
 	{
@@ -1669,6 +2026,9 @@ section "Collections " "" {
 		equal { table { "a" "b" "c" } { 1 2 3 } |keys |length? } 3
 		; TODO -- doesn't work yet, .header? also has the same problem -- equal { table { 'a 'b 'c } { 1 2 3 } |keys } { 'a 'b 'c }
 	}
+
+	{
+``	}
 
 	group "_->" 
 	"Accesses a value in a collection by index or key (1-based indexing for blocks and lists)."
@@ -1684,6 +2044,9 @@ section "Collections " "" {
 		equal { dict { "a" 1 "b" 2 } -> "b" } 2
 	}
 
+	{
+``	}
+
 	group "_<-" 
 	"Accesses a value in a collection by index or key, with reversed argument order (0-based indexing for blocks and lists)."
 	{
@@ -1698,6 +2061,9 @@ section "Collections " "" {
 		equal { "a" <- dict { "a" 1 "b" 2 } } 1
 	}
 
+	{
+``	}
+
 	group "_<~" 
 	"Accesses a value in a collection by index with reversed argument order (1-based indexing)."
 	{
@@ -1711,6 +2077,9 @@ section "Collections " "" {
 		equal { 1 <~ { "a" "b" "c" } } "a"
 	}
 
+	{
+``	}
+
 	group "_~>" 
 	"Accesses a value in a collection by index (0-based indexing)."
 	{
@@ -1723,6 +2092,9 @@ section "Collections " "" {
 		equal { { 23 34 45 } ~> 1 } 23
 		equal { { "a" "b" "c" } ~> 1 } "a"
 	}
+
+	{
+``	}
 
 	group "intersection" 
 	"Finds the common elements between two collections, returning only values that appear in both."
@@ -1747,6 +2119,9 @@ section "Collections " "" {
 		equal { intersection list { } list { } } list { }
 	}
 
+	{
+``	}
+
 	group "intersection\\by" 
 	"Finds the intersection of two collections using a custom comparison function to determine matching elements."
 	{
@@ -1763,6 +2138,9 @@ section "Collections " "" {
 		equal { intersection\by { "foo" "bar" 33 } { 42 } fn { a b } { map a { .type? } |contains b .type? } } { 33 }
 		equal { intersection\by { { "foo" x } { "bar" y } } { { "bar" z } } fn { a b } { map a { .first } |contains first b } } { { "bar" y } }
 	}
+
+	{
+``	}
 
 	group "difference" 
 	"Creates a new collection containing elements from the first collection that are not present in the second collection."
@@ -1790,6 +2168,9 @@ section "Collections " "" {
 		equal { difference list { } list { } } list { }
 	}
 
+	{
+``	}
+
 	group "transpose" 
 	"Transposes a matrix (block of blocks), converting rows to columns and columns to rows."
 	{
@@ -1802,6 +2183,9 @@ section "Collections " "" {
 		equal { { { 1 4 } { 2 5 } { 3 6 } } .transpose } { { 1 2 3 } { 4 5 6 } }
 	}
 
+	{
+``	}
+
 	group "remove-last!" 
 	"Removes the last element from a block in-place and returns the modified block."
 	{
@@ -1813,6 +2197,9 @@ section "Collections " "" {
 		equal { var 'x ref { 1 2 3 4 } remove-last! 'x x } { 1 2 3 }
 		equal { var 'x ref { 1 2 3 4 } remove-last! 'x } { 1 2 3 }
 	}
+
+	{
+``	}
 
 	group "append!" 
 	"Appends a value to a block, list or string in-place and returns the modified collection."
@@ -1828,6 +2215,9 @@ section "Collections " "" {
 		equal { var 's "hello" append! " world" 's , s } "hello world"
 	}
 
+	{
+``	}
+
 	group "change\\nth!" 
 	"Changes the value at a specific position in a block or list in-place and returns the modified collection."
 	{
@@ -1842,6 +2232,9 @@ section "Collections " "" {
 		equal { x: ref list { "a" "b" "c" } change\nth! x 1 "X" , x } list { "X" "b" "c" }
 	}
 
+	{
+``	}
+
 	group "peek" 
 	"Returns the current value at a block's cursor position without advancing the cursor."
 	{
@@ -1853,6 +2246,9 @@ section "Collections " "" {
 		equal { x: { 1 2 3 } peek x } 1
 	}
 
+	{
+``	}
+
 	group "pop" 
 	"Returns the current value at a block's cursor position and advances the cursor."
 	{
@@ -1863,6 +2259,9 @@ section "Collections " "" {
 	{
 		equal { x: { 1 2 3 } pop x } 1
 	}
+
+	{
+``	}
 
 	group "pos" 
 	"Returns the current cursor position in a block."
@@ -1876,6 +2275,9 @@ section "Collections " "" {
 		equal { x: { 1 2 3 } pos next x } 1
 	}
 
+	{
+``	}
+
 	group "next" 
 	"Advances the cursor position in a block and returns the block."
 	{
@@ -1886,6 +2288,9 @@ section "Collections " "" {
 	{
 		equal { x: { 11 22 33 } peek next next x } 33
 	}
+
+	{
+``	}
 
 	group "vals" 
 	"Takes a block of Rye values and evaluates each value or expression."
@@ -1898,6 +2303,9 @@ section "Collections " "" {
 		equal { x: 1 y: 2 try { vals { z y } } |type? } 'error
 	}
 
+	{
+``	}
+
 	group "vals\\with" 
 	"Evaluate a block with injecting the first argument."
 	{
@@ -1907,6 +2315,9 @@ section "Collections " "" {
 		equal { x: 1 y: 2 vals\with 10 { + x , * y } } { 11 20 }
 		equal { x: 1 y: 2 vals\with 100 { + 10 , * 8.9 } } { 110 890.0 }
 	}
+
+	{
+``	}
 
 }
 
@@ -1926,6 +2337,9 @@ section "Types and Kinds " "" {
 		error { to-integer "abc" }
 	}
 
+	{
+``	}
+
 	group "to-decimal" 
 	"Tries to change a Rye value (like string) to decimal."
 	{
@@ -1937,6 +2351,9 @@ section "Types and Kinds " "" {
 		equal { to-decimal "123.4" } 123.4
 		error { to-decimal "abc" }
 	}
+
+	{
+``	}
 
 	group "to-string" 
 	"Tries to turn a Rye value to string."
@@ -1952,6 +2369,9 @@ section "Types and Kinds " "" {
 		equal { to-string "test" } "test"
 	}
 
+	{
+``	}
+
 	group "to-uri" 
 	"Tries to change Rye value to an URI."
 	{
@@ -1962,6 +2382,9 @@ section "Types and Kinds " "" {
 		; error { to-uri "not-uri" }
 	}
 
+	{
+``	}
+
 	group "to-file" 
 	"Tries to change Rye value to a file."
 	{
@@ -1971,6 +2394,9 @@ section "Types and Kinds " "" {
 		equal   { to-file "example.txt" } %example.txt
 		equal { to-file 123 } %123
 	}
+
+	{
+``	}
 
 	group "to-char" 
 	"Tries to turn a Rye value (like integer) to ascii character."
@@ -1984,6 +2410,9 @@ section "Types and Kinds " "" {
 		error { to-char "*" }
 	}
 
+	{
+``	}
+
 	group "to-block" 
 	"Turns a List to a Block"
 	{
@@ -1995,6 +2424,9 @@ section "Types and Kinds " "" {
 		equal { list [ 1 2 3 ] |to-block |type? } 'block
 		equal  { list [ 1 2 3 ] |to-block |first } 1
 	}
+
+	{
+``	}
 
 	group "to-context" 
 	"Takes a Dict and returns a Context with same names and values."
@@ -2008,6 +2440,9 @@ section "Types and Kinds " "" {
 		; equal   { dict [ "a" 1 ] |to-context do\in { a } } '1
 	}
 
+	{
+``	}
+
 	group "to-word" 
 	"Tries to change a Rye value to a word with same name."
 	{
@@ -2019,6 +2454,9 @@ section "Types and Kinds " "" {
 		equal { to-word "test" } 'test
 		error { to-word 123 }
 	}
+
+	{
+``	}
 
 	group "is-string" 
 	"Returns true if value is a string."
@@ -2033,6 +2471,9 @@ section "Types and Kinds " "" {
 		equal   { is-string 123 } 0
 	}
 
+	{
+``	}
+
 	group "is-integer" 
 	"Returns true if value is an integer."
 	{
@@ -2045,6 +2486,9 @@ section "Types and Kinds " "" {
 		equal   { is-integer 123.4 } 0
 		equal   { is-integer "123" } 0
 	}
+
+	{
+``	}
 
 	group "is-decimal" 
 	"Returns true if value is a decimal."
@@ -2059,6 +2503,9 @@ section "Types and Kinds " "" {
 		equal   { is-decimal "123.4" } 0
 	}
 
+	{
+``	}
+
 	group "is-number" 
 	"Returns true if value is a number (integer or decimal)."
 	{
@@ -2072,6 +2519,9 @@ section "Types and Kinds " "" {
 		equal   { is-number "123" } 0
 	}
 
+	{
+``	}
+
 	group "type?" 
 	"Returns the type of Rye value as a word."
 	{
@@ -2084,6 +2534,9 @@ section "Types and Kinds " "" {
 		equal   { type? 123.4 } 'decimal
 	}
 
+	{
+``	}
+
 	group "kind?" 
 	"Returns the kind of Rye value as a word."
 	{
@@ -2095,6 +2548,9 @@ section "Types and Kinds " "" {
 		equal   { kind? %file } 'file-uri
 	}
 
+	{
+``	}
+
 	group "types?" 
 	"Returns the types of Rye values in a block or table row as a block of words."
 	{
@@ -2105,6 +2561,9 @@ section "Types and Kinds " "" {
 	{
 		equal   { types? { "test" 123 } } { string integer }
 	}
+
+	{
+``	}
 
 	group "dump" 
 	"Returns (dumps) Rye code representing the object."
@@ -2119,6 +2578,9 @@ section "Types and Kinds " "" {
 		equal { does { 1 } |dump } "fn { } { 1 }"
 	}
 
+	{
+``	}
+
 	group "mold" 
 	"Turn value to it's string representation."
 	{
@@ -2130,6 +2592,9 @@ section "Types and Kinds " "" {
 		equal  { mold 123 } "123"
 		equal  { mold { 123 } } "{ 123 }"
 	}
+
+	{
+``	}
 
 	group "mold\\nowrap" 
 	"Turn value to it's string representation. Doesn't wrap the blocks"
@@ -2144,6 +2609,9 @@ section "Types and Kinds " "" {
 		equal  { mold\nowrap { 123 234 } } "123 234"
 	}
 
+	{
+``	}
+
 	group "assure-kind" 
 	"Assuring kind."
 	{
@@ -2155,6 +2623,9 @@ section "Types and Kinds " "" {
 	{
 		equal   { person: kind 'person { name: "" age: 0 } assure-kind dict { "name" "John" "age" 30 } person |type? } 'ctx
 	}
+
+	{
+``	}
 
 	group "generic" 
 	"Registers a generic function."
@@ -2169,6 +2640,9 @@ section "Types and Kinds " "" {
 		equal   { generic 'integer 'add fn { a b } { a + b } |type? } 'function
 	}
 
+	{
+``	}
+
 	group "kind" 
 	"Creates new kind."
 	{
@@ -2181,6 +2655,9 @@ section "Types and Kinds " "" {
 		equal   { kind 'person { name: "" age: 0 } |type? } 'kind
 	}
 
+	{
+``	}
+
 	group "_>>" 
 	"Converts first argument to a specific kind."
 	{
@@ -2192,6 +2669,9 @@ section "Types and Kinds " "" {
 	{
 		; equal   { person: kind 'person { name: "" age: 0 } , { "name" "John" "age" 30 } .dict >> person |type? } 'ctx
 	}
+
+	{
+``	}
 
 }
 
@@ -2209,6 +2689,9 @@ section "Contexts " "Context related functions" {
 		equal { try { c: raw-context { x: inc 10 } } |type? } 'error ; word not found inc
 	}
 
+	{
+``	}
+
 	group "isolate" 
 	"Creates a context that can access the parent context during creation, but becomes isolated afterward."
 	{
@@ -2224,6 +2707,9 @@ section "Contexts " "Context related functions" {
 		; equal { y: 99 c: isolate { t: ?try x: does { t { y } } } c/x |type? } 'error
 	}
 
+	{
+``	}
+
 	group "context" 
 	"Creates a new context that maintains access to its parent context."
 	{
@@ -2238,6 +2724,9 @@ section "Contexts " "Context related functions" {
 		equal { y: 123 c: context { x: does { y } } c/x } 123
 	}
 
+	{
+``	}
+
 	group "context\\pure" 
 	"Creates a new context using Pure Context (PCtx) as parent, preventing access to regular context changes."
 	{
@@ -2250,6 +2739,9 @@ section "Contexts " "Context related functions" {
 		; error { y: 123 c: context\pure { x: y } } ; y not accessible in pure context
 		equal { c: context\pure { x: add 10 5 } c/x } 15
 	}
+
+	{
+``	}
 
 	group "private" 
 	"Creates a temporary private context for evaluating expressions, returning the last value instead of the context."
@@ -2265,6 +2757,9 @@ section "Contexts " "Context related functions" {
 		equal { y: 123 private { does { y } } :f f } 123
 	}
 
+	{
+``	}
+
 	group "private\\" 
 	"Creates a documented private context for evaluating expressions, returning the last value instead of the context."
 	{
@@ -2276,6 +2771,9 @@ section "Contexts " "Context related functions" {
 	{
 		equal { private\ "what are we doing here" { x: 234 1000 + x } } 1234
 	}
+
+	{
+``	}
 
 	group "extends" 
 	"Creates a new context that inherits from a specified parent context."
@@ -2290,6 +2788,9 @@ section "Contexts " "Context related functions" {
 		; error { ct: context { p: 123 } cn: extends ct { r: p + 234 } cn/r }
 	}
 
+	{
+``	}
+
 	group "bind!" 
 	"Binds a context to a parent context, allowing it to access the parent's values."
 	{
@@ -2301,6 +2802,9 @@ section "Contexts " "Context related functions" {
 	{
 		equal { c: context { y: 123 } cc: bind! context { z: does { y + 234 } } c , cc/z } 357
 	}
+
+	{
+``	}
 
 	group "unbind" 
 	"Removes the parent relationship from a context, making it a standalone context."
@@ -2314,6 +2818,9 @@ section "Contexts " "Context related functions" {
 		; error { c: context { y: 123 } cc: bind! context { z: does { y + 234 } } c , dd: unbind cc dd/z }
 	}
 
+	{
+``	}
+
 	group "current" 
 	"Returns current context."
 	{
@@ -2322,6 +2829,9 @@ section "Contexts " "Context related functions" {
 	{
 		equal { c: context { var 'x 9999 , incr: fn\in { } current { x:: inc x } } c/incr c/x } 10000
 	}
+
+	{
+``	}
 
 	group "parent?" 
 	"Returns parent context of the current context."
@@ -2332,6 +2842,9 @@ section "Contexts " "Context related functions" {
 		equal { var 'y 99 c: context { incr: fn\in { } parent? { y:: inc y } } c/incr y } 100
 	}
 
+	{
+``	}
+
 	group "parent\\of" 
 	"Returns parent context of the current context."
 	{
@@ -2340,6 +2853,9 @@ section "Contexts " "Context related functions" {
 	{
 		equal { ct: context { p: 123 } parent\of ct |= current } true
 	}
+
+	{
+``	}
 
 	group "clone" 
 	"Creates a copy of a context with the same state and parent relationship."
@@ -2355,6 +2871,9 @@ section "Contexts " "Context related functions" {
 		equal { c: context { x:: 123 } cc: clone c do\in cc { x:: 999 } cc/x } 999 ; clone modified
 	}
 
+	{
+``	}
+
 	group "clone\\" 
 	"Creates a copy of a context and evaluates a block of code inside the clone."
 	{
@@ -2369,6 +2888,9 @@ section "Contexts " "Context related functions" {
 		; equal { c: context { x:: 123 } cc: clone\ c { x: 999 } c/x } 123 ; original unchanged
 		; equal { c: context { x:: 123 } cc: clone\ c { x: 999 } cc/x } 999 ; clone modified
 	}
+
+	{
+``	}
 
 }
 
@@ -2388,6 +2910,9 @@ section "Flow control " "Functions for conditional execution and branching logic
 		error  { if 0 { 333 } }
 	}
 
+	{
+``	}
+
 	group "when" 
 	"Conditionally executes an action block if a condition block evaluates to true, injecting the same value into both blocks and returning the original value."
 	{
@@ -2402,6 +2927,9 @@ section "Flow control " "Functions for conditional execution and branching logic
 		equal  { 10 .when { < 5 } { .print } } 10
 	}
 
+	{
+``	}
+
 	group "^if" 
 	"Conditional that sets the return flag when true, allowing early return from a function when the condition is a boolean."
 	{
@@ -2414,6 +2942,9 @@ section "Flow control " "Functions for conditional execution and branching logic
 		equal  { x: does { ^if true { 222 } 555 } x } 222
 		equal  { x: does { ^if false { 333 } 444 } x } 333
 	}
+
+	{
+``	}
 
 	group "either" 
 	"Executes one of two blocks based on a boolean condition, similar to if/else in other languages."
@@ -2431,6 +2962,9 @@ section "Flow control " "Functions for conditional execution and branching logic
 		error  { either 0 { 222 } { 333 } }
 	}
 
+	{
+``	}
+
 	group "switch" 
 	"Pattern matching construct that executes a block of code corresponding to the first matching case value."
 	{
@@ -2443,6 +2977,9 @@ section "Flow control " "Functions for conditional execution and branching logic
 		equal  { switch 101 { 101 { 111 } 202 { 222 } } } 111
 		equal  { switch 202 { 101 { 111 } 202 { 222 } } } 222
 	}
+
+	{
+``	}
 
 	group "cases" 
 	"Evaluates multiple condition-action pairs and applies all matching actions cumulatively to the initial value."
@@ -2462,6 +2999,9 @@ section "Flow control " "Functions for conditional execution and branching logic
 		equal  { cases 1 { { 1 < 0 } { + 100 } { 2 < 1 } { + 1000 } _ { * 3 } } } 3
 	}
 
+	{
+``	}
+
 }
 
 section "Iteration " "Functions for iterating over collections and executing code repeatedly" {
@@ -2478,6 +3018,9 @@ section "Iteration " "Functions for iterating over collections and executing cod
 		equal  { 3 .loop { + 1 } } 4
 		; equal  { 3 .loop { } } 3  ; TODO should pass the value
 	}
+
+	{
+``	}
 
 	group "produce" 
 	"Executes a block of code a specified number of times, passing the result of each execution to the next iteration."
@@ -2496,6 +3039,9 @@ section "Iteration " "Functions for iterating over collections and executing cod
 		equal { produce 5 { 2 } { ::acc .last ::x * x |concat* acc } } { 2 4 16 256 65536 4294967296 }
 	}
 
+	{
+``	}
+
 	group "produce\\while" 
 	"Executes a block of code repeatedly while a condition is true, passing the result of each execution to the next iteration."
 	{
@@ -2510,6 +3056,9 @@ section "Iteration " "Functions for iterating over collections and executing cod
 		stdout { var 'x 0 , produce\while { x < 100 } 1 { * 2 ::x .prns } } "2 4 8 16 32 64 128 "
 	}
 
+	{
+``	}
+
 	group "produce\\" 
 	" TODO "
 	{
@@ -2518,6 +3067,9 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 		equal { produce\ 5 1 'acc { * acc , + 1 } } 1  ; Look at what we were trying to do here
 	}
+
+	{
+``	}
 
 	group "forever" 
 	"Executes a block of code repeatedly until .return is called within the block."
@@ -2530,6 +3082,9 @@ section "Iteration " "Functions for iterating over collections and executing cod
 		stdout { forever { "once" .prn .return } } "once"
 		equal { forever { "once" .return } } "once"
 	}
+
+	{
+``	}
 
 	group "forever\\with" 
 	"Accepts a value and a block, and executes the block repeatedly with the value until .return is called."
@@ -2544,6 +3099,9 @@ section "Iteration " "Functions for iterating over collections and executing cod
 		equal { var 'x 0 , forever\with 1 { + 5 ::x , if x > 5 { return x } } } 6
 	}
 
+	{
+``	}
+
 	group "for" 
 	"Accepts a block of values and a block of code, builtin, or function, does the code for each of the values, injecting them."
 	{
@@ -2554,6 +3112,9 @@ section "Iteration " "Functions for iterating over collections and executing cod
 		stdout { { "a" "b" "c" } .for { .prns } } "a b c "
 	}
 
+	{
+``	}
+
 	group "walk" 
 	"Accepts a block of values and a block of code, does the code for each of the values, injecting them."
 	{
@@ -2563,6 +3124,9 @@ section "Iteration " "Functions for iterating over collections and executing cod
 		stdout { walk { 1 2 3 } { .prns .rest } } "1 2 3  2 3  3  "
 		equal { var 'x 0 , walk { 1 2 3 } { ::b .first + x ::x , b .rest } x } 6
 	}
+
+	{
+``	}
 
 	group "purge" 
 	"Purges values from a series based on return of a injected code block."
@@ -2578,6 +3142,9 @@ section "Iteration " "Functions for iterating over collections and executing cod
 		equal { purge "" { .to-integer .is-even } } { }
 	}
 
+	{
+``	}
+
 	group "purge!" 
 	"Purges values from a series based on return of a injected code block."
 	{
@@ -2586,6 +3153,9 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 		equal { { 1 2 3 } :x purge! { .is-even } 'x , x } { 1 3 }
 	}
+
+	{
+``	}
 
 	group "map" 
 	"Maps values of a block to a new block by evaluating a block of code or function."
@@ -2605,6 +3175,9 @@ section "Iteration " "Functions for iterating over collections and executing cod
 		equal { map "" { + "-" } } { }
 	}
 
+	{
+``	}
+
 	group "map\\pos" 
 	"Maps values of a block to a new block by evaluating a block of code."
 	{
@@ -2618,6 +3191,9 @@ section "Iteration " "Functions for iterating over collections and executing cod
 		equal { map\pos "abc" 'i { ++ i } } { "a1" "b2" "c3" }
 		equal { map\pos "" 'i { + i } } { }
 	}
+
+	{
+``	}
 
 	group "map\\idx" 
 	"Maps values of a block to a new block by evaluating a block of code."
@@ -2633,6 +3209,9 @@ section "Iteration " "Functions for iterating over collections and executing cod
 		equal { map\idx "" 'i { + i } } { }
 	}
 
+	{
+``	}
+
 	group "reduce" 
 	"Reduces values of a block to a new block by evaluating a block of code ..."
 	{
@@ -2647,6 +3226,9 @@ section "Iteration " "Functions for iterating over collections and executing cod
 		equal { try { reduce "" 'acc { + acc } } |type? } 'error
 	}
 
+	{
+``	}
+
 	group "fold" 
 	"Reduces values of a block to a new block by evaluating a block of code ..."
 	{
@@ -2660,6 +3242,9 @@ section "Iteration " "Functions for iterating over collections and executing cod
 		equal { fold "abc" 'acc "123" { ++ acc } } "cba123"
 		equal { fold "" 'acc "123" { + acc } } "123"
 	}
+
+	{
+``	}
 
 	group "partition" 
 	"Partitions a series by evaluating a block of code."
@@ -2679,6 +3264,9 @@ section "Iteration " "Functions for iterating over collections and executing cod
 		equal { partition "aaabbccc" ?is-string } list { "aaabbccc" }
 	}
 
+	{
+``	}
+
 	group "group" 
 	"Groups a block or list of values given condition."
 	{
@@ -2694,6 +3282,9 @@ section "Iteration " "Functions for iterating over collections and executing cod
 		equal { { } .list .group { .first } } dict vals { }
 		equal { try { { 1 2 3 4 } .group { .is-even } } |type? } 'error ; TODO keys can only be string currently
 	}
+
+	{
+``	}
 
 	group "filter" 
 	"Filters values from a seris based on return of a injected code block."
@@ -2712,6 +3303,9 @@ section "Iteration " "Functions for iterating over collections and executing cod
 		; equal { filter "" { .to-integer .is-even } } { }
 	}
 
+	{
+``	}
+
 	group "seek" 
 	"Seek over a series until a Block of code returns True and return the value."
 	{
@@ -2726,6 +3320,9 @@ section "Iteration " "Functions for iterating over collections and executing cod
 		equal { try { seek "1234" { .to-integer > 5 } } |type? } 'error
 	}
 
+	{
+``	}
+
 	group "while" 
 	"Executes a block of code repeatedly while a condition is true."
 	{
@@ -2735,6 +3332,9 @@ section "Iteration " "Functions for iterating over collections and executing cod
 		equal { var 'x 0 while { x < 5 } { x:: x + 1 } x } 5
 		equal { var 'x 0 var 'y 0 while { x < 5 } { x:: x + 1 y:: y + x } y } 15
 	}
+
+	{
+``	}
 
 	group "until" 
 	"Executes a block of code repeatedly until a condition becomes true. Executes the body at least once before checking condition (do-until loop)."
@@ -2747,6 +3347,9 @@ section "Iteration " "Functions for iterating over collections and executing cod
 		equal { var 'x 3 until { x < 1 } { x:: x - 1 } x } 0
 		equal { var 'x 0 until { x > 0 } { x:: x + 1 } x } 1
 	}
+
+	{
+``	}
 
 }
 
@@ -2763,6 +3366,9 @@ section "Functions " "functions that create functions" {
 		equal { var 'x 10 x:: 20 x } 20
 	}
 
+	{
+``	}
+
 	group "does" 
 	"Creates a function with no arguments that executes the given block when called."
 	{
@@ -2775,6 +3381,9 @@ section "Functions " "functions that create functions" {
 		equal { x: does { 123 } x } 123
 		equal { x: does { 1 + 2 } x } 3
 	}
+
+	{
+``	}
 
 	group "fn1" 
 	"Creates a function that accepts one anonymous argument and executes the given block with that argument."
@@ -2789,6 +3398,9 @@ section "Functions " "functions that create functions" {
 		equal { x: fn1 { .pass { } } , x 123 } 123
 		equal { x: fn1 { + 1 } , x 123 } 124
 	}
+
+	{
+``	}
 
 	group "fn" 
 	"Creates a function with named parameters specified in the first block and code in the second block."
@@ -2805,6 +3417,9 @@ section "Functions " "functions that create functions" {
 		equal { x: fn { x } { + 123 } , x 123 } 246
 	}
 
+	{
+``	}
+
 	group "pfn" 
 	"Creates a pure function (no side effects allowed) with named parameters and code body."
 	{
@@ -2820,6 +3435,9 @@ section "Functions " "functions that create functions" {
 		; TODO -- it seems pure namespace not also has print and append! error { x: pfn { x } { .print } , x 123 }
 	}
 
+	{
+``	}
+
 	group "fn\\cc" 
 	"Creates a function that captures the current context, allowing access to variables from the enclosing scope."
 	{
@@ -2832,6 +3450,9 @@ section "Functions " "functions that create functions" {
 		equal { fn\cc { x } { x + y } |type? } 'function
 		equal { y: 5 , f: fn\cc { x } { x + y } , f 3 } 8
 	}
+
+	{
+``	}
 
 	group "fn\\par" 
 	"Creates a function with a specified parent context, allowing access to variables from that context."
@@ -2846,6 +3467,9 @@ section "Functions " "functions that create functions" {
 		equal { ctx: context { y: 5 } , f: fn\par { x } ctx { x + y } , f 3 } 8
 	}
 
+	{
+``	}
+
 	group "fn\\in" 
 	"Creates a function that executes directly in the specified context rather than creating a new execution context."
 	{
@@ -2859,6 +3483,9 @@ section "Functions " "functions that create functions" {
 		equal { ctx: context { y: 5 } , f: fn\in { x } ctx { x + y } , f 3 } 8
 	}
 
+	{
+``	}
+
 	group "closure" 
 	"Creates a closure that captures the current context at creation time, preserving access to variables in that scope."
 	{
@@ -2871,6 +3498,9 @@ section "Functions " "functions that create functions" {
 		equal { y: 5 , f: closure { x } { x + y } , f 3 } 8
 		equal { mk-cntr: does { var 'c 0 , closure { } { inc! 'c } } cnt: mk-cntr , cnt + cnt + cnt } 6
 	}
+
+	{
+``	}
 
 	group "partial" 
 	"Creates a partially applied function with specified arguments, using _ (void) for arguments to be filled later."
@@ -2886,6 +3516,9 @@ section "Functions " "functions that create functions" {
 		equal { fn-add: fn { x y } { x + y } , add-5: partial ?fn-add [ _ 5 ] , add-5 10 } 15
 	}
 
+	{
+``	}
+
 	group "apply" 
 	"Applies a function or builtin to a block of arguments."
 	{
@@ -2900,6 +3533,9 @@ section "Functions " "functions that create functions" {
 		equal { f: fn { x y } { x * y } , apply ?f { 7 6 } } 42
 	}
 
+	{
+``	}
+
 	group "on-change" 
 	"Registers an observer block to be executed when a variable changes. Use with 'var' result."
 	{
@@ -2911,6 +3547,9 @@ section "Functions " "functions that create functions" {
 	{
 		equal { x: var 'counter 0 , on-change x { print "changed" } , counter:: 5 } 5
 	}
+
+	{
+``	}
 
 }
 
@@ -2930,6 +3569,9 @@ section "Other " "..." {
 		equal   { a:: 123 change! 123 'a } false
 	}
 
+	{
+``	}
+
 	group "modify!" 
 	"Searches for a word and modifies	 it's value in-place. Only works on variables declared with var. If value changes returns true otherwise false"
 	{
@@ -2945,6 +3587,9 @@ section "Other " "..." {
 		equal   { a:: 123 modify! 123 'a } false
 	}
 
+	{
+``	}
+
 	group "set!" 
 	"Set word to value or words by deconstructing a block. Only works on variables declared with var."
 	{
@@ -2957,6 +3602,9 @@ section "Other " "..." {
 		equal   { set! { 123 234 } { a b }  b } 234
 	}
 
+	{
+``	}
+
 	group "unset!" 
 	"Unset a word in current context, only meant to be used in console"
 	{
@@ -2967,6 +3615,9 @@ section "Other " "..." {
 	{
 		equal   { x: 1 unset! 'x x: 2 } 2 ; otherwise would produce an error
 	}
+
+	{
+``	}
 
 	group "val" 
 	"Returns value of the word in context"
@@ -2980,6 +3631,9 @@ section "Other " "..." {
 		equal   { x: 123 y: 'x val y } 123
 	}
 
+	{
+``	}
+
 	group "_<<" 
 	"Converts a value to specific kind (R to L)"
 	{
@@ -2991,6 +3645,9 @@ section "Other " "..." {
 	{
 		; TODO equal   { person: kind 'person { name: "" age: 0 } person << dict { "name" "John" "age" 30 } |type? } 'ctx
 	}
+
+	{
+``	}
 
 	group "_|" 
 	"Pipeline operator that passes the value through unchanged (used with 'not' and other operations)."
@@ -3006,6 +3663,9 @@ section "Other " "..." {
 		equal { { 1 2 3 } _| } { 1 2 3 }
 	}
 
+	{
+``	}
+
 	group "save\\current" 
 	"Saves current state of the program to a file."
 	{
@@ -3016,6 +3676,9 @@ section "Other " "..." {
 	{
 		equal  { save\current |type? } 'integer
 	}
+
+	{
+``	}
 
 	group "save\\current\\secure" 
 	"Saves current state of the program to a file with password protection."
@@ -3028,6 +3691,9 @@ section "Other " "..." {
 		; equal  { save\current\secure |type? } 'integer
 	}
 
+	{
+``	}
+
 	group "doc!" 
 	"Sets docstring of the current context."
 	{
@@ -3038,6 +3704,9 @@ section "Other " "..." {
 	{
 		equal   { x: private { doc! "some doc" doc? } } "some doc"
 	}
+
+	{
+``	}
 
 	group "doc?" 
 	"Gets docstring of the current context."
@@ -3050,6 +3719,9 @@ section "Other " "..." {
 		equal   { x: private { doc! "some doc" doc? } } "some doc"
 	}
 
+	{
+``	}
+
 	group "doc\\of?" 
 	"Get docstring of the passed context."
 	{
@@ -3060,6 +3732,9 @@ section "Other " "..." {
 	{
 		equal   { x: context { doc! "some doc" } doc\of? x } "some doc"
 	}
+
+	{
+``	}
 
 	group "ref" 
 	"Makes a value mutable instead of immutable"
@@ -3072,6 +3747,9 @@ section "Other " "..." {
 		equal   { is-ref ref { 1 2 3 } } true
 	}
 
+	{
+``	}
+
 	group "deref" 
 	"Makes a value again immutable"
 	{
@@ -3082,6 +3760,9 @@ section "Other " "..." {
 	{
 		equal   { is-ref deref ref { 1 2 3 } } false
 	}
+
+	{
+``	}
 
 	group "is-ref" 
 	"Checks if a value is a mutable reference."
@@ -3095,6 +3776,9 @@ section "Other " "..." {
 		equal  { { } |is-ref } false
 	}
 
+	{
+``	}
+
 	group "dict" 
 	"Constructs a Dict from the Block of key and value pairs."
 	{
@@ -3105,6 +3789,9 @@ section "Other " "..." {
 	{
 		equal { dict { "a" 123 } -> "a" } 123
 	}
+
+	{
+``	}
 
 	group "list" 
 	"Constructs a List from the Block of values."
@@ -3117,7 +3804,10 @@ section "Other " "..." {
 		equal { list { "a" 123 } -> 0 } "a"
 	}
 
-	group "import" 
+	{
+``	}
+
+	group "file-uri//Import" 
 	"Imports a file, loads and does it from script local path."
 	{
 		arg `uri: URI of the file to import and execute`
@@ -3128,7 +3818,10 @@ section "Other " "..." {
 		; import file://test.rye  ; imports and executes test.rye
 	}
 
-	group "import\\live" 
+	{
+``	}
+
+	group "file-uri//Import\\live" 
 	"Imports a file, loads and does it from script local path."
 	{
 		arg `uri: URI of the file to import, execute, and watch for changes`
@@ -3138,6 +3831,9 @@ section "Other " "..." {
 	{
 		; import\live file://test.rye  ; imports, executes, and watches test.rye for changes
 	}
+
+	{
+``	}
 
 	group "load" 
 	"Loads a string into Rye values."
@@ -3151,6 +3847,24 @@ section "Other " "..." {
 		equal  { load "{ 1 2 3 }" |first |third } 3
 	}
 
+	{
+``	}
+
+	group "file-uri//Load" 
+	"Loads a string into Rye values."
+	{
+		arg `source: String containing Rye code or URI of file to load`
+		returns `Block containing the parsed Rye values`
+	}
+
+	{
+		; equal  { load " 1 2 3 " |third } 3
+		; equal  { load "{ 1 2 3 }" |first |third } 3
+	}
+
+	{
+``	}
+
 	group "load\\mod" 
 	"Loads a string into Rye values. During load it allows modification of words."
 	{
@@ -3161,6 +3875,9 @@ section "Other " "..." {
 	{
 		; load\mod file://modifiable.rye  ; loads file with word modification allowed
 	}
+
+	{
+``	}
 
 	group "load\\live" 
 	"Loads a string into Rye values. During load it allows modification of words."
@@ -3173,6 +3890,9 @@ section "Other " "..." {
 		; load\live file://watched.rye  ; loads and watches file for changes
 	}
 
+	{
+``	}
+
 	group "load\\sig" 
 	"Checks the signature, if OK then loads a string into Rye values."
 	{
@@ -3183,6 +3903,9 @@ section "Other " "..." {
 	{
 		; load\sig "signed-code"  ; loads only if signature is valid
 	}
+
+	{
+``	}
 
 	group "do" 
 	"Takes a block of code and does (runs) it."
@@ -3202,6 +3925,9 @@ section "Other " "..." {
 		equal  { do { 12 * 23 :a a + 34 } } 310
 	}
 
+	{
+``	}
+
 	group "with" 
 	"Takes a value and a block of code. It does the code with the value injected."
 	{
@@ -3214,6 +3940,9 @@ section "Other " "..." {
 		equal  { with 100 { + 11 } } 111
 		equal  { with 100 { + 11 , * 3 } } 300
 	}
+
+	{
+``	}
 
 	group "do\\inside" 
 	"Takes a Context and a Block. It Does a block inside a given Context."
@@ -3230,6 +3959,9 @@ section "Other " "..." {
 		equal  { c: context { x:: 100 } do\inside c { x:: 200 , x } } 200
 	}
 
+	{
+``	}
+
 	group "do\\in" 
 	"Takes a Context and a Block. It Does a block in current context but with parent a given Context."
 	{
@@ -3245,6 +3977,9 @@ section "Other " "..." {
 		equal  { c: context { x: 100 } do\in c { x:: 200 } c/x } 100
 	}
 
+	{
+``	}
+
 	group "return" 
 	"Accepts one value and returns it."
 	{
@@ -3253,6 +3988,9 @@ section "Other " "..." {
 	{
 		equal { x: fn { } { return 101 202 } x } 101
 	}
+
+	{
+``	}
 
 	group "scmd" 
 	"Execute a shell command and return its exit status code."
@@ -3265,6 +4003,9 @@ section "Other " "..." {
 		equal { scmd `exit 42` } 42
 	}
 
+	{
+``	}
+
 	group "scmd\\capture" 
 	"Execute a shell command and capture the output, return it as string"
 	{
@@ -3274,6 +4015,9 @@ section "Other " "..." {
 		equal { scmd `echo "hello"` } "hello"
 	}
 
+	{
+``	}
+
 	group "rye" 
 	""
 	{
@@ -3282,6 +4026,9 @@ section "Other " "..." {
 	{
 		equal { rye .type? } 'native
 	}
+
+	{
+``	}
 
 	group "defer" 
 	"Registers a block of code to be executed when the current function exits or the program terminates."
@@ -3293,6 +4040,9 @@ section "Other " "..." {
 		stdout { ff:: fn { } { var 'x 123 defer { print 234 } x } , ff } "234\n"
 		equal { ff:: fn { } { x:: 123 defer { x:: 234 } x + 111 } , ff } 234 ; the result of defer expression is returned TODO, change this
 	}
+
+	{
+``	}
 
 	group "defer\\" 
 	"Registers a block of code with an injected value to be executed when the current function exits or the program terminates. Works like 'with' but deferred."
@@ -3307,6 +4057,9 @@ section "Other " "..." {
 		stdout { ff:: fn { } { defer\ "hello" { .print } "done" } , ff } "hello\n"
 	}
 
+	{
+``	}
+
 	group "recur-if" 
 	"Internal recursion control function. Resets function execution if condition > 0, otherwise returns result."
 	{
@@ -3316,6 +4069,9 @@ section "Other " "..." {
 
 	{
 	}
+
+	{
+``	}
 
 	group "recur-if\\1" 
 	"Internal recursion control function for single-argument functions. Updates first argument and resets if condition > 0."
@@ -3327,6 +4083,9 @@ section "Other " "..." {
 
 	{
 	}
+
+	{
+``	}
 
 	group "recur-if\\2" 
 	"Internal recursion control function for two-argument functions. Updates both arguments and resets if condition > 0."
@@ -3340,6 +4099,9 @@ section "Other " "..." {
 	{
 	}
 
+	{
+``	}
+
 	group "recur-if\\3" 
 	"Internal recursion control function for three-argument functions. Updates all three arguments and resets if condition > 0."
 	{
@@ -3352,6 +4114,9 @@ section "Other " "..." {
 
 	{
 	}
+
+	{
+``	}
 
 }
 
