@@ -269,20 +269,20 @@ var Builtins_sxml = map[string]*env.Builtin{
 	// Tests:
 	// stdout {
 	//   `<scene><ship type="xwing"><person age="25">Luke</person></ship><ship type="destroyer"><person age="55">Vader</person></ship></scene>` |reader
-	//   .do-sxml { <ship> [ .attr? 0 |prns	 ] }
+	//   .do-sxml { <ship> [ .attr? 0 |last |prns	 ] }
 	// } "xwing destroyer "
 	// stdout {
 	//   `<scene><ship type="xwing"><person age="25">Luke</person></ship><ship type="destroyer"><person age="55">Vader</person></ship></scene>` |reader
-	//   .do-sxml { <person> [ .attr? 0 |prns	 ] }
+	//   .do-sxml { <person> [ .attr? 0 |last |prns	 ] }
 	// } "25 55 "
 	// Args:
 	// * element: XML start element
 	// * index: Integer index of the attribute to retrieve
 	// Returns:
-	// * string value of the attribute or void if not found
+	// * list [ namespace tag value ] of the attribute or void if not found
 	"rye-sxml-start//attr?": {
 		Argsn: 2,
-		Doc:   "Retrieves an attribute value by index from an XML start element.",
+		Doc:   "Retrieves an attribute by index from an XML start element.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch obj := arg0.(type) {
 			case env.Native:
@@ -291,7 +291,12 @@ var Builtins_sxml = map[string]*env.Builtin{
 					switch n := arg1.(type) {
 					case env.Integer:
 						if int(n.Value) < len(obj1.Attr) {
-							return *env.NewString(obj1.Attr[int(n.Value)].Value)
+							attr := obj1.Attr[int(n.Value)]
+							return *env.NewList([]any{
+								*env.NewString(attr.Name.Space),
+								*env.NewString(attr.Name.Local),
+								*env.NewString(attr.Value),
+							})
 						} else {
 							return env.Void{}
 						}
