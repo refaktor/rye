@@ -169,6 +169,112 @@ var Builtins_io = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Args:
+	// * path: uri representing a file path
+	// Returns:
+	// * string containing the filename with extension
+	"file-uri//Filename?": {
+		Argsn: 1,
+		Doc:   "Gets the filename with extension from a file path.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s := arg0.(type) {
+			case env.Uri:
+				filename := filepath.Base(s.Path)
+				return *env.NewString(filename)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-uri//Filename?")
+			}
+		},
+	},
+
+	// Args:
+	// * path: uri representing a file path
+	// Returns:
+	// * string containing the filename without extension
+	"file-uri//Stem?": {
+		Argsn: 1,
+		Doc:   "Gets the filename without extension from a file path.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s := arg0.(type) {
+			case env.Uri:
+				base := filepath.Base(s.Path)
+				stem := strings.TrimSuffix(base, filepath.Ext(base))
+				return *env.NewString(stem)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-uri//Stem?")
+			}
+		},
+	},
+
+	// Args:
+	// * path: uri representing a file path
+	// Returns:
+	// * string containing the directory path
+	"file-uri//Dir?": {
+		Argsn: 1,
+		Doc:   "Gets the directory path from a file path.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s := arg0.(type) {
+			case env.Uri:
+				dir := filepath.Dir(s.Path)
+				return *env.NewString(dir)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-uri//Dir?")
+			}
+		},
+	},
+
+	// Args:
+	// * path: uri representing a file path
+	// Returns:
+	// * block of strings containing path components
+	"file-uri//Split": {
+		Argsn: 1,
+		Doc:   "Splits a file path into its components.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s := arg0.(type) {
+			case env.Uri:
+				pathStr := s.Path
+				var components []env.Object
+
+				// Split path and filter out empty components
+				parts := strings.Split(pathStr, string(filepath.Separator))
+				for _, part := range parts {
+					if part != "" {
+						components = append(components, *env.NewString(part))
+					}
+				}
+
+				// Handle absolute paths - add root separator as first component
+				if filepath.IsAbs(pathStr) && len(components) > 0 {
+					components = append([]env.Object{*env.NewString(string(filepath.Separator))}, components...)
+				}
+
+				return *env.NewBlock(*env.NewTSeries(components))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-uri//Split")
+			}
+		},
+	},
+
+	// Args:
+	// * path: uri representing a file path
+	// Returns:
+	// * boolean indicating whether the path is absolute
+	"file-uri//Is-absolute": {
+		Argsn: 1,
+		Doc:   "Checks if a file path is absolute.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s := arg0.(type) {
+			case env.Uri:
+				isAbs := filepath.IsAbs(s.Path)
+				return *env.NewBoolean(isAbs)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-uri//Is-absolute")
+			}
+		},
+	},
 	// Tests:
 	// equal { Reader probe Open probe %data/file.txt |kind? } 'reader
 	// Args:
