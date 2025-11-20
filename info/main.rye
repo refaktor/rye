@@ -14,7 +14,7 @@ test-framework: context {
 	
 	section: fn { name descr code } { term/magenta term/bold print name term/reset print " " ++ descr , do code print "" }
 	
-	group: fn { name descr args code } { print "" , inc! 'cnt t/yellow prns " " ++ name t/reset , do  code }
+	group: fn { name descr args code example } { print "" , inc! 'cnt t/yellow prns " " ++ name t/reset , do  code }
 	
 	error: fn { test } {
 		; try { do\in root-ctx test }
@@ -54,7 +54,20 @@ docs-framework: context {
 
 	section: fn { name descr code } { print join [ "<h2>" name "</h2><p>" descr "</p><div class='section'>" ] , do code , print "</div>" }
 	
-	group: fn { name descr args code }   { print join [ "<h3>" name "</h3><p>" descr "</p>" ] , do args , print "<div class='group'>" , do code , print "</div>" }
+	group: fn { name descr args code example }   {
+		print join [ "<h3>" name "</h3><p>" descr "</p>" ] ,
+		do args ,
+		if code .length? > 0 {
+			print "<div class='group'>" , do code , print "</div>"
+		}
+		if all { example .length? > 0 example -> 0 |length? > 0 } {
+			prn "<div class='group'>" , 
+			prn "<pre class='prettyprint lang-rye'><code language='lang-rye'>"
+			print escape-html first example
+			print "</code></pre>"
+			print "</div>"
+		}
+	}
 
 	equal: fn { test res } {
 		cc: extends root-ctx { }
@@ -109,7 +122,7 @@ generate-doc-file: fn { filename menu } {
 	 } |Write* to-file filename ++ ".html"
 }
 
-menu: { "base" "table" "formats" "io" "crypto" "dialects" }
+menu: { "base" "table" "formats" "io" "crypto" "dialects" "http" "email" }
 
 print-help: does {
 	print `# Rye's simple testing tool

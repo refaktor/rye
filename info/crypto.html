@@ -25,7 +25,7 @@
       <aside class="sidebar" id="menu-holder">
         <nav>
           <ul>
-            <li><a href="https://ryelang.org">← Home</a>  &middot; <a class='menu-item' id='maintab-base' href='base.html'>base</a> &middot; <a class='menu-item' id='maintab-table' href='table.html'>table</a> &middot; <a class='menu-item' id='maintab-formats' href='formats.html'>formats</a> &middot; <a class='menu-item' id='maintab-io' href='io.html'>io</a> &middot; <a class='menu-item' id='maintab-crypto' href='crypto.html'>crypto</a> &middot; <a class='menu-item' id='maintab-dialects' href='dialects.html'>dialects</a></li>
+            <li><a href="https://ryelang.org">← Home</a>  &middot; <a class='menu-item' id='maintab-base' href='base.html'>base</a> &middot; <a class='menu-item' id='maintab-table' href='table.html'>table</a> &middot; <a class='menu-item' id='maintab-formats' href='formats.html'>formats</a> &middot; <a class='menu-item' id='maintab-io' href='io.html'>io</a> &middot; <a class='menu-item' id='maintab-crypto' href='crypto.html'>crypto</a> &middot; <a class='menu-item' id='maintab-dialects' href='dialects.html'>dialects</a> &middot; <a class='menu-item' id='maintab-http' href='http.html'>http</a> &middot; <a class='menu-item' id='maintab-email' href='email.html'>email</a></li>
             <!-- More menu items here -->
           </ul>
         </nav>
@@ -106,8 +106,6 @@
 <p class='arg'><b>key</b> Ed25519 private key as a native value</p>
 <p class='arg'><b>message</b> string to sign</p>
 <p class='returns'><b>returns</b> signature as a native bytes value</p>
-<div class='group'>
-</div>
 <h3>sha512</h3><p>Calculates the SHA-512 hash of a string and returns the result as a hexadecimal string.</p>
 <p class='arg'><b>input</b> string to hash</p>
 <p class='returns'><b>returns</b> string containing the hexadecimal representation of the SHA-512 hash</p>
@@ -171,130 +169,82 @@
 <p class='arg'><b>p12-data</b> PKCS#12 file content as bytes native value</p>
 <p class='arg'><b>password</b> string password for the PKCS#12 file</p>
 <p class='returns'><b>returns</b> block containing PEM blocks as native values</p>
-<div class='group'>
-</div>
 <h3>pkcs12-decode</h3><p>Decodes a PKCS#12 (.p12) file bytes into private key and certificates using the provided password. Returns a block with [private-key, certificates, ca-certificates].</p>
 <p class='arg'><b>p12-data</b> PKCS#12 file content as bytes native value</p>
 <p class='arg'><b>password</b> string password for the PKCS#12 file</p>
 <p class='returns'><b>returns</b> block containing [private-key, certificates-block, ca-certificates-block] as native values</p>
-<div class='group'>
-</div>
 </div>
 <h2>PEM Operations </h2><p>PEM format encoding and decoding operations</p><div class='section'>
 <h3>pem-block//Block-type?</h3><p>Returns the type of a PEM block as a string (e.g., 'CERTIFICATE', 'RSA PRIVATE KEY').</p>
 <p class='arg'><b>pem-block</b> PEM block as a native value</p>
 <p class='returns'><b>returns</b> string containing the block type (e.g., "CERTIFICATE", "RSA PRIVATE KEY")</p>
-<div class='group'>
-</div>
 <h3>pem-block//Headers?</h3><p>Returns the headers of a PEM block as a dictionary.</p>
 <p class='arg'><b>pem-block</b> PEM block as a native value</p>
 <p class='returns'><b>returns</b> dictionary containing the PEM block headers</p>
-<div class='group'>
-</div>
 <h3>x509-parse-certificate</h3><p>Parses a PEM block into an X.509 certificate native value.</p>
 <p class='arg'><b>pem-block</b> PEM block as a native value containing a certificate</p>
 <p class='returns'><b>returns</b> X.509 certificate as a native value</p>
-<div class='group'>
-</div>
 <h3>x509-certificate//Not-after?</h3><p>Returns the expiration date (NotAfter) of an X.509 certificate as a time value.</p>
 <p class='arg'><b>certificate</b> X.509 certificate as a native value</p>
 <p class='returns'><b>returns</b> time value representing the certificate's expiration date</p>
-<div class='group'>
-</div>
 <h3>x509-certificate//Not-before?</h3><p>Returns the start date (NotBefore) of an X.509 certificate as a time value.</p>
 <p class='arg'><b>certificate</b> X.509 certificate as a native value</p>
 <p class='returns'><b>returns</b> time value representing the certificate's start date</p>
-<div class='group'>
-</div>
 <h3>x509-certificate//Is-expired</h3><p>Checks if an X.509 certificate has expired. Returns 1 if expired, 0 otherwise.</p>
 <p class='arg'><b>certificate</b> X.509 certificate as a native value</p>
 <p class='returns'><b>returns</b> integer 1 if the certificate has expired, 0 otherwise</p>
-<div class='group'>
-</div>
 <h3>generate-self-signed-certificate</h3><p>Generates a self-signed X.509 certificate with a new RSA key pair.</p>
 <p class='arg'><b>key-size</b> integer, must be at least 2048 bits</p>
 <p class='arg'><b>subject</b> dictionary with fields like "CommonName" and "Organization"</p>
 <p class='returns'><b>returns</b> block containing [certificate, private-key] as native values</p>
-<div class='group'>
-</div>
 <h3>encode-to-pem</h3><p>Encodes a certificate and private key as PEM-formatted data.</p>
 <p class='arg'><b>certificate</b> X.509 certificate as a native value</p>
 <p class='arg'><b>private-key</b> RSA private key as a native value</p>
 <p class='returns'><b>returns</b> block with [cert-bytes, key-bytes] as Go-bytes native values</p>
-<div class='group'>
-</div>
 <h3>encode-to-p12</h3><p>Encodes a certificate and private key into a PKCS#12 (.p12) file with password protection.</p>
 <p class='arg'><b>certificate</b> X.509 certificate as a native value</p>
 <p class='arg'><b>private-key</b> RSA private key as a native value</p>
 <p class='arg'><b>password</b> string password to protect the PKCS#12 file</p>
 <p class='returns'><b>returns</b> PKCS#12 encoded data as Go-bytes native value</p>
-<div class='group'>
-</div>
 <h3>x509-certificate//Subject?</h3><p>Returns the subject Distinguished Name (DN) of an X.509 certificate as a string.</p>
 <p class='arg'><b>certificate</b> X.509 certificate as a native value</p>
 <p class='returns'><b>returns</b> string containing the certificate's subject DN</p>
-<div class='group'>
-</div>
 <h3>x509-certificate//Issuer?</h3><p>Returns the issuer Distinguished Name (DN) of an X.509 certificate as a string.</p>
 <p class='arg'><b>certificate</b> X.509 certificate as a native value</p>
 <p class='returns'><b>returns</b> string containing the certificate's issuer DN</p>
-<div class='group'>
-</div>
 <h3>x509-certificate//Serial-number?</h3><p>Returns the serial number of an X.509 certificate as a string.</p>
 <p class='arg'><b>certificate</b> X.509 certificate as a native value</p>
 <p class='returns'><b>returns</b> string containing the certificate's serial number</p>
-<div class='group'>
-</div>
 <h3>x509-certificate//Signature-algorithm?</h3><p>Returns the signature algorithm of an X.509 certificate as a string.</p>
 <p class='arg'><b>certificate</b> X.509 certificate as a native value</p>
 <p class='returns'><b>returns</b> string containing the certificate's signature algorithm</p>
-<div class='group'>
-</div>
 <h3>x509-certificate//Public-key-algorithm?</h3><p>Returns the public key algorithm of an X.509 certificate as a string.</p>
 <p class='arg'><b>certificate</b> X.509 certificate as a native value</p>
 <p class='returns'><b>returns</b> string containing the certificate's public key algorithm</p>
-<div class='group'>
-</div>
 <h3>x509-certificate//Key-usage?</h3><p>Returns the key usage flags of an X.509 certificate as a block of strings.</p>
 <p class='arg'><b>certificate</b> X.509 certificate as a native value</p>
 <p class='returns'><b>returns</b> block containing strings of key usage flags</p>
-<div class='group'>
-</div>
 <h3>x509-certificate//Extended-key-usage?</h3><p>Returns the extended key usage flags of an X.509 certificate as a block of strings.</p>
 <p class='arg'><b>certificate</b> X.509 certificate as a native value</p>
 <p class='returns'><b>returns</b> block containing strings of extended key usage flags</p>
-<div class='group'>
-</div>
 <h3>x509-certificate//Dns-names?</h3><p>Returns the DNS names from Subject Alternative Names of an X.509 certificate as a block of strings.</p>
 <p class='arg'><b>certificate</b> X.509 certificate as a native value</p>
 <p class='returns'><b>returns</b> block containing DNS names from Subject Alternative Names</p>
-<div class='group'>
-</div>
 <h3>x509-certificate//Ip-addresses?</h3><p>Returns the IP addresses from Subject Alternative Names of an X.509 certificate as a block of strings.</p>
 <p class='arg'><b>certificate</b> X.509 certificate as a native value</p>
 <p class='returns'><b>returns</b> block containing IP addresses from Subject Alternative Names</p>
-<div class='group'>
-</div>
 <h3>x509-certificate//Email-addresses?</h3><p>Returns the email addresses from Subject Alternative Names of an X.509 certificate as a block of strings.</p>
 <p class='arg'><b>certificate</b> X.509 certificate as a native value</p>
 <p class='returns'><b>returns</b> block containing email addresses from Subject Alternative Names</p>
-<div class='group'>
-</div>
 <h3>x509-certificate//To-pem</h3><p>Converts an X.509 certificate to PEM-encoded string format.</p>
 <p class='arg'><b>certificate</b> X.509 certificate as a native value</p>
 <p class='returns'><b>returns</b> string containing the PEM-encoded certificate</p>
-<div class='group'>
-</div>
 <h3>private-key//Type?</h3><p>Returns the type of a private key as a string.</p>
 <p class='arg'><b>private-key</b> private key as a native value</p>
 <p class='returns'><b>returns</b> string containing the type of the private key (e.g., "*rsa.PrivateKey", "*ecdsa.PrivateKey")</p>
-<div class='group'>
-</div>
 <h3>x509-certificate//To-dict</h3><p>Converts an X.509 certificate to a dictionary containing all certificate information for easy display and manipulation.</p>
 <p class='arg'><b>certificate</b> X.509 certificate as a native value</p>
 <p class='returns'><b>returns</b> dictionary containing all certificate information</p>
-<div class='group'>
-</div>
 </div>
 <h2>Default</h2><p></p><div class='section'>
 </div>

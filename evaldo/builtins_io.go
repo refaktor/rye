@@ -146,14 +146,14 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { file-ext? %data/file.txt } ".txt"
-	// equal { file-ext? %data/file.temp.png } ".png"
-	// equal { file-ext? "data/file.temp.png" } ".png"
+	// equal { File-ext? %data/file.txt } ".txt"
+	// equal { File-ext? %data/file.temp.png } ".png"
+	// equal { File-ext? to-file "data/file.temp.png" } ".png"
 	// Args:
 	// * path: uri or string representing a file path
 	// Returns:
 	// * string containing the file extension (including the dot)
-	"file-ext?": {
+	"file-uri//File-ext?": {
 		Argsn: 1,
 		Doc:   "Gets the extension of a file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -161,27 +161,154 @@ var Builtins_io = map[string]*env.Builtin{
 			case env.Uri:
 				ext := filepath.Ext(s.Path)
 				return *env.NewString(ext)
-			case env.String:
-				ext := filepath.Ext(s.Value)
-				return *env.NewString(ext)
+			/* case env.String:
+			ext := filepath.Ext(s.Value)
+			return *env.NewString(ext) */
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.UriType, env.StringType}, "file-ext?")
 			}
 		},
 	},
 
-	// should this be generic method or not?
-	// Tests:
-	// equal { reader %data/file.txt |kind? } 'reader
-	// equal { reader Open %data/file.txt |kind? } 'reader
-	// equal { reader "some string" |kind? } 'reader
 	// Args:
-	// * source: uri, file object, or string to read from
+	// * path: uri representing a file path
+	// Returns:
+	// * string containing the filename with extension
+	"file-uri//Filename?": {
+		Argsn: 1,
+		Doc:   "Gets the filename with extension from a file path.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s := arg0.(type) {
+			case env.Uri:
+				filename := filepath.Base(s.Path)
+				return *env.NewString(filename)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-uri//Filename?")
+			}
+		},
+	},
+
+	// Args:
+	// * path: uri representing a file path
+	// Returns:
+	// * string containing the filename without extension
+	"file-uri//Stem?": {
+		Argsn: 1,
+		Doc:   "Gets the filename without extension from a file path.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s := arg0.(type) {
+			case env.Uri:
+				base := filepath.Base(s.Path)
+				stem := strings.TrimSuffix(base, filepath.Ext(base))
+				return *env.NewString(stem)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-uri//Stem?")
+			}
+		},
+	},
+
+	// Args:
+	// * path: uri representing a file path
+	// Returns:
+	// * string containing the directory path
+	"file-uri//Dir?": {
+		Argsn: 1,
+		Doc:   "Gets the directory path from a file path.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s := arg0.(type) {
+			case env.Uri:
+				dir := filepath.Dir(s.Path)
+				return *env.NewString(dir)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-uri//Dir?")
+			}
+		},
+	},
+
+	// Args:
+	// * path: uri representing a file path
+	// Returns:
+	// * block of strings containing path components
+	"file-uri//Split": {
+		Argsn: 1,
+		Doc:   "Splits a file path into its components.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s := arg0.(type) {
+			case env.Uri:
+				pathStr := s.Path
+				var components []env.Object
+
+				// Split path and filter out empty components
+				parts := strings.Split(pathStr, string(filepath.Separator))
+				for _, part := range parts {
+					if part != "" {
+						components = append(components, *env.NewString(part))
+					}
+				}
+
+				// Handle absolute paths - add root separator as first component
+				if filepath.IsAbs(pathStr) && len(components) > 0 {
+					components = append([]env.Object{*env.NewString(string(filepath.Separator))}, components...)
+				}
+
+				return *env.NewBlock(*env.NewTSeries(components))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-uri//Split")
+			}
+		},
+	},
+
+	// Args:
+	// * path: uri representing a file path
+	// Returns:
+	// * boolean indicating whether the path is absolute
+	"file-uri//Is-absolute": {
+		Argsn: 1,
+		Doc:   "Checks if a file path is absolute.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s := arg0.(type) {
+			case env.Uri:
+				isAbs := filepath.IsAbs(s.Path)
+				return *env.NewBoolean(isAbs)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-uri//Is-absolute")
+			}
+		},
+	},
+	// Tests:
+	// equal { Reader probe Open probe %data/file.txt |kind? } 'reader
+	// Args:
+	// * source: file object to read from
 	// Returns:
 	// * native reader object
-	"reader": {
+	"file//Reader": {
 		Argsn: 1,
-		Doc:   "Creates a new reader from a file path, file object, or string.",
+		Doc:   "Creates a new reader from file object.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+
+			switch s := arg0.(type) {
+			case env.Native:
+				file, ok := s.Value.(*os.File)
+				if !ok {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Error opening file.", "file//Reader")
+				}
+				return *env.NewNative(ps.Idx, bufio.NewReader(file), "file//Reader")
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "file//Reader")
+			}
+		},
+	},
+	// Tests:
+	// equal { Reader %data/file.txt |kind? } 'reader
+	// Args:
+	// * source: file uri to read from
+	// Returns:
+	// * native reader object
+	"file-uri//Reader": {
+		Argsn: 1,
+		Doc:   "Creates a new reader from a file uri/path.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s := arg0.(type) {
 			case env.Uri:
@@ -189,23 +316,32 @@ var Builtins_io = map[string]*env.Builtin{
 				//trace3(path)
 				if err != nil {
 					ps.FailureFlag = true
-					return MakeBuiltinError(ps, "Error opening file.", "__open_reader")
+					return MakeBuiltinError(ps, "Error opening file.", "file-uri//Reader")
 				}
 				return *env.NewNative(ps.Idx, bufio.NewReader(file), "reader")
-			case env.Native:
-				file, ok := s.Value.(*os.File)
-				if !ok {
-					ps.FailureFlag = true
-					return MakeBuiltinError(ps, "Error opening file.", "__open_reader")
-				}
-				return *env.NewNative(ps.Idx, bufio.NewReader(file), "reader")
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-uri//Read")
+			}
+		},
+	},
+	// Tests:
+	// equal { reader "some string" |kind? } 'reader
+	// Args:
+	// * source: string to read from
+	// Returns:
+	// * native reader object
+	"reader": {
+		Argsn: 1,
+		Doc:   "Creates a new reader from a string.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s := arg0.(type) {
 			case env.String:
 				return *env.NewNative(ps.Idx, bufio.NewReader(strings.NewReader(s.Value)), "reader")
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.UriType, env.StringType}, "__open_reader")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "reader")
 			}
-
 		},
 	},
 
@@ -1111,10 +1247,10 @@ var Builtins_io = map[string]*env.Builtin{
 	// Args:
 	// * request: native https-request object
 	// Returns:
-	// * native https-response object
+	// * native https-response object (always returns response regardless of status code)
 	"https-request//Call": {
 		Argsn: 1,
-		Doc:   "Executes a HTTPS request and returns the response.",
+		Doc:   "Executes a HTTPS request and returns the response object. Always returns the response regardless of status code (200, 404, 500, etc.) - use Status? to check the code.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch req := arg0.(type) {
 			case env.Native:
@@ -1124,6 +1260,8 @@ var Builtins_io = map[string]*env.Builtin{
 				if err != nil {
 					return MakeBuiltinError(ps, err.Error(), "https-request//Call")
 				}
+				// Always return the response object regardless of status code
+				// Users can check the status code using https-response//Status?
 				return *env.NewNative(ps.Idx, resp, "https-response")
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "https-request//Call")

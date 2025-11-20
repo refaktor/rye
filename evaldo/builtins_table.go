@@ -1637,13 +1637,13 @@ var Builtins_table = map[string]*env.Builtin{
 	//   f:: mktmp ++ "/test.csv"
 	//   spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
 	//   spr1 .save\csv f
-	//   spr2:: load\csv f |autotype 1.0
+	//   spr2:: Load\csv f |autotype 1.0
 	//   spr1 = spr2
 	//  } true
 	// Args:
 	// * file-uri - location of csv file to load
 	// Tags: #table #loading #csv
-	"file-uri//load\\csv": {
+	"file-uri//Load\\csv": {
 		// TODO 2 -- this could move to a go function so it could be called by general load that uses extension to define the loader
 		Argsn: 1,
 		Doc:   "Loads a .csv file to a table datatype.",
@@ -1654,7 +1654,7 @@ var Builtins_table = map[string]*env.Builtin{
 				f, err := os.Open(file.GetPath())
 				if err != nil {
 					// log.Fatal("Unable to read input file "+filePath, err)
-					return MakeBuiltinError(ps, "Unable to read input file:"+err.Error(), "load\\csv")
+					return MakeBuiltinError(ps, "Unable to read input file:"+err.Error(), "Load\\csv")
 				}
 				defer f.Close()
 
@@ -1662,10 +1662,10 @@ var Builtins_table = map[string]*env.Builtin{
 				rows, err := csvReader.ReadAll()
 				if err != nil {
 					// log.Fatal("Unable to parse file as CSV for "+filePath, err)
-					return MakeBuiltinError(ps, "Unable to parse file as CSV: "+err.Error(), "load\\csv")
+					return MakeBuiltinError(ps, "Unable to parse file as CSV: "+err.Error(), "Load\\csv")
 				}
 				if len(rows) == 0 {
-					return MakeBuiltinError(ps, "File is empty", "load\\csv")
+					return MakeBuiltinError(ps, "File is empty", "Load\\csv")
 				}
 				spr := env.NewTable(rows[0])
 				//				for i, row := range rows {
@@ -1684,7 +1684,7 @@ var Builtins_table = map[string]*env.Builtin{
 				}
 				return *spr
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "load\\csv")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "Load\\csv")
 			}
 		},
 	},
@@ -1697,12 +1697,12 @@ var Builtins_table = map[string]*env.Builtin{
 	//   f:: mktmp ++ "/test.tsv"
 	//   spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
 	//   spr1 .save\tsv f
-	//   spr2:: load\tsv f |autotype 1.0
+	//   spr2:: Load\tsv f |autotype 1.0
 	//   spr1 = spr2
 	//  } true
 	// Args:
 	// * file-uri - location of csv file to load
-	"load\\tsv": {
+	"file-uri//Load\\tsv": {
 		// TODO 2 -- this could move to a go function so it could be called by general load that uses extension to define the loader
 		Argsn: 1,
 		Doc:   "Loads a .csv file to a table datatype.",
@@ -1713,7 +1713,7 @@ var Builtins_table = map[string]*env.Builtin{
 				f, err := os.Open(file.GetPath())
 				if err != nil {
 					// log.Fatal("Unable to read input file "+filePath, err)
-					return MakeBuiltinError(ps, "Unable to read input file:"+err.Error(), "load\\csv")
+					return MakeBuiltinError(ps, "Unable to read input file:"+err.Error(), "Load\\csv")
 				}
 				defer f.Close()
 
@@ -1722,10 +1722,10 @@ var Builtins_table = map[string]*env.Builtin{
 				rows, err := csvReader.ReadAll()
 				if err != nil {
 					// log.Fatal("Unable to parse file as CSV for "+filePath, err)
-					return MakeBuiltinError(ps, "Unable to parse file as CSV: "+err.Error(), "load\\csv")
+					return MakeBuiltinError(ps, "Unable to parse file as CSV: "+err.Error(), "Load\\csv")
 				}
 				if len(rows) == 0 {
-					return MakeBuiltinError(ps, "File is empty", "load\\csv")
+					return MakeBuiltinError(ps, "File is empty", "Load\\csv")
 				}
 				spr := env.NewTable(rows[0])
 				//				for i, row := range rows {
@@ -1744,7 +1744,7 @@ var Builtins_table = map[string]*env.Builtin{
 				}
 				return *spr
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "load\\csv")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "Load\\csv")
 			}
 		},
 	},
@@ -1755,7 +1755,7 @@ var Builtins_table = map[string]*env.Builtin{
 	//   f:: mktmp ++ "/test.csv"
 	//   spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
 	//   spr1 .save\csv f
-	//   spr2:: load\csv f |autotype 1.0
+	//   spr2:: Load\csv f |autotype 1.0
 	//   spr1 = spr2
 	//  } true
 	// Args:
@@ -1835,7 +1835,7 @@ var Builtins_table = map[string]*env.Builtin{
 	//   f:: mktmp ++ "/test.csv"
 	//   spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
 	//   spr1 .save\tsv f
-	//   spr2:: load\tsv f |autotype 1.0
+	//   spr2:: Load\tsv f |autotype 1.0
 	//   spr1 = spr2
 	//  } true
 	// Args:
@@ -1913,13 +1913,13 @@ var Builtins_table = map[string]*env.Builtin{
 	//   f:: mktmp ++ "/test.xlsx"
 	//   spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
 	//   spr1 .save\xlsx f
-	//   spr2:: load\xlsx f |autotype 1.0
+	//   spr2:: Load\xlsx f |autotype 1.0
 	//   spr1 = spr2
 	//  } true
 	// Args:
 	// * file-uri - location of xlsx file to load
 	// Tags: #table #loading #xlsx
-	"load\\xlsx": {
+	"file-uri//Load\\xlsx": {
 		Argsn: 1,
 		Doc:   "Loads the first sheet in an .xlsx file to a Table.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1967,7 +1967,7 @@ var Builtins_table = map[string]*env.Builtin{
 				}
 				return *spr
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "load\\xlsx")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "Load\\xlsx")
 			}
 		},
 	},
@@ -1978,7 +1978,7 @@ var Builtins_table = map[string]*env.Builtin{
 	//   f:: mktmp ++ "/test.xlsx"
 	//   spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
 	//   spr1 .save\xlsx f
-	//   spr2:: load\xlsx f |autotype 1.0
+	//   spr2:: Load\xlsx f |autotype 1.0
 	//   spr1 = spr2
 	//  } true
 	// Args:

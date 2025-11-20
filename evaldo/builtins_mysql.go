@@ -30,6 +30,9 @@ var Builtins_mysql = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.Uri:
+				fmt.Println(str.Path)
+				fmt.Println(str.GetPath())
+				fmt.Println(str.GetFullUri(*ps.Idx))
 				db, err := sql.Open("mysql", str.Path) // TODO -- we need to make path parser in URI then this will be path
 				if err != nil {
 					// TODO --
@@ -196,9 +199,10 @@ var Builtins_mysql = map[string]*env.Builtin{
 							}
 
 							// Scan the result into the column pointers...
-							// if err := rows.Scan(columnPointers...); err != nil {
-							//return err
-							// }
+							if err := rows.Scan(columnPointers...); err != nil {
+								ps.FailureFlag = true
+								return MakeBuiltinError(ps, err.Error(), "Rye-mysql//Query")
+							}
 
 							// Create our map, and retrieve the value for each column from the pointers slice,
 							// storing it in the map with the name of the column as the key.

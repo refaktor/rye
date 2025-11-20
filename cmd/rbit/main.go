@@ -93,7 +93,7 @@ func parseCommentsAboveKey(input string, info *builtinInfo) (builtinInfo, *built
 		case "Tests:":
 			position = inTests
 			continue
-		case "Examples:":
+		case "Example:":
 			position = inExamples
 			continue
 		case "Args:":
@@ -127,7 +127,7 @@ func outputInfo(sections *[]builtinSection) {
 	for _, section := range *sections {
 		fmt.Printf("section \"%s\" \"%s\" {\n", section.name, section.docstring) // name
 		for _, info := range section.builtins {
-			if len(info.tests) > 0 || len(info.args) > 0 {
+			if len(info.tests) > 0 || len(info.args) > 0 || len(info.examples) > 0 {
 				//				fmt.Printf("\tgroup \"%s\" \n", strings.Replace(info.name, "\\\\", "\\", -1)) // name
 				fmt.Printf("\tgroup \"%s\" \n", info.name) // name
 				fmt.Printf("\t\"%s\"\n", info.docstring)   // docstring
@@ -144,6 +144,11 @@ func outputInfo(sections *[]builtinSection) {
 					fmt.Println("\t\t" + t)
 				}
 				fmt.Println("\t}\n")
+				fmt.Print("\t{\n`")
+				for _, t := range info.examples {
+					fmt.Println(t)
+				}
+				fmt.Println("`\t}\n")
 			}
 		}
 		fmt.Println("}\n")

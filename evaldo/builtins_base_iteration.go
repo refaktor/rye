@@ -1703,4 +1703,67 @@ var builtins_iteration = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	// equal { dict vals { "a" 1 "b" 2 } .for\kw 'k 'v { k prns v prn } } ""  ; Expected output: "a 1 b 2 "
+	// equal { { 10 20 30 } .for\kw 'i 'v { i prns v prn } } ""  ; Expected output: "0 10 1 20 2 30 "
+	"for\\kv": {
+		Argsn: 4,
+		Doc:   "Iterates over a collection with separate key and value words. For dicts, uses actual keys and values. For other collections, uses indices as keys.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch keyWord := arg1.(type) {
+			case env.Word:
+				switch valueWord := arg2.(type) {
+				case env.Word:
+					switch block := arg3.(type) {
+					case env.Block:
+						ser := ps.Ser
+						ps.Ser = block.Series
+
+						switch collection := arg0.(type) {
+						case env.Dict:
+							// Iterate over dictionary key-value pairs
+							for key, value := range collection.Data {
+								ps.Ctx.Mod(keyWord.Index, *env.NewString(key))
+								val := env.ToRyeValue(value)
+								ps.Ctx.Mod(valueWord.Index, val)
+								EvalBlockInjMultiDialect(ps, val, true)
+								if ps.ErrorFlag || ps.ReturnFlag {
+									ps.Ser = ser
+									return ps.Res
+								}
+								ps.Ser.Reset()
+							}
+						case env.Collection:
+							// For other collections, use index as key and item as value
+							length := collection.Length()
+							for i := 0; i < length; i++ {
+								ps.Ctx.Mod(keyWord.Index, *env.NewInteger(int64(i)))
+								val := collection.Get(i)
+								ps.Ctx.Mod(valueWord.Index, val)
+								EvalBlockInjMultiDialect(ps, val, true)
+								if ps.ErrorFlag || ps.ReturnFlag {
+									ps.Ser = ser
+									return ps.Res
+								}
+								ps.Ser.Reset()
+							}
+						default:
+							ps.Ser = ser
+							return MakeArgError(ps, 1, []env.Type{env.DictType, env.BlockType, env.ListType, env.StringType}, "for\\kw")
+						}
+
+						ps.Ser = ser
+						return ps.Res
+					default:
+						return MakeArgError(ps, 4, []env.Type{env.BlockType}, "for\\kw")
+					}
+				default:
+					return MakeArgError(ps, 3, []env.Type{env.WordType}, "for\\kw")
+				}
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.WordType}, "for\\kw")
+			}
+		},
+	},
 }

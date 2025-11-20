@@ -5,6 +5,7 @@ package evaldo
 
 import (
 	"encoding/xml"
+	"strings"
 
 	"github.com/refaktor/rye/env"
 
@@ -269,20 +270,20 @@ var Builtins_sxml = map[string]*env.Builtin{
 	// Tests:
 	// stdout {
 	//   `<scene><ship type="xwing"><person age="25">Luke</person></ship><ship type="destroyer"><person age="55">Vader</person></ship></scene>` |reader
-	//   .do-sxml { <ship> [ .attr? 0 |last |prns	 ] }
+	//   .do-sxml { <ship> [ .Attr? 0 |last |prns	 ] }
 	// } "xwing destroyer "
 	// stdout {
 	//   `<scene><ship type="xwing"><person age="25">Luke</person></ship><ship type="destroyer"><person age="55">Vader</person></ship></scene>` |reader
-	//   .do-sxml { <person> [ .attr? 0 |last |prns	 ] }
+	//   .do-sxml { <person> [ .Attr? 0 |last |prns	 ] }
 	// } "25 55 "
 	// Args:
 	// * element: XML start element
-	// * index: Integer index of the attribute to retrieve
+	// * index: Integer index of the Attribute to retrieve
 	// Returns:
 	// * list [ namespace tag value ] of the attribute or void if not found
-	"rye-sxml-start//attr?": {
+	"rye-sxml-start//Attr?": {
 		Argsn: 2,
-		Doc:   "Retrieves an attribute by index from an XML start element.",
+		Doc:   "Retrieves an attribute by index or name from an XML start element.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch obj := arg0.(type) {
 			case env.Native:
@@ -298,29 +299,95 @@ var Builtins_sxml = map[string]*env.Builtin{
 								*env.NewString(attr.Value),
 							})
 						} else {
-							return env.Void{}
+							return MakeBuiltinError(ps, "Attribute index out of bounds.", "rye-sxml-start//Attr?")
 						}
+					case env.Word:
+						attrName := ps.Idx.GetWord(n.Index)
+						for _, attr := range obj1.Attr {
+							if attr.Name.Local == attrName {
+								// If you provide the argument name or the "namespace:arg"
+								// I think it makes more sense to just return value, simpler code
+								// to use the value forward?
+								return *env.NewString(attr.Value)
+							}
+						}
+						return MakeBuiltinError(ps, "Attribute '"+attrName+"' not found.", "rye-sxml-start//Attr?")
+					case env.String:
+						attrName := n.Value
+						// Check if string contains namespace (format: "namespace:attrname")
+						namespaceAndName := strings.Split(attrName, ":")
+						if len(namespaceAndName) == 2 {
+							// Has namespace, match both namespace and local name
+							targetNS := namespaceAndName[0]
+							targetLocal := namespaceAndName[1]
+							for _, attr := range obj1.Attr {
+								if attr.Name.Space == targetNS && attr.Name.Local == targetLocal {
+									return *env.NewString(attr.Value)
+								}
+							}
+						} else {
+							// No namespace, match only local name
+							for _, attr := range obj1.Attr {
+								if attr.Name.Local == attrName {
+									return *env.NewString(attr.Value)
+								}
+							}
+						}
+						return MakeBuiltinError(ps, "Attribute '"+attrName+"' not found.", "rye-sxml-start//Attr?")
 					default:
-						return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "rye-sxml-start//get-attr")
+						return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.WordType, env.StringType}, "rye-sxml-start//Attr?")
 					}
 				default:
-					return MakeBuiltinError(ps, "Not xml-start element.", "rye-sxml-start//get-attr")
+					return MakeBuiltinError(ps, "Not xml-start element.", "rye-sxml-start//Attr?")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "rye-sxml-start//get-attr")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "rye-sxml-start//Attr?")
 			}
 		},
 	},
+
+	// Args:
+	// * element: XML start element
+	// Returns:
+	// * dict with all attributes where keys are "attrname" or "namespace:attrname"
+	"rye-sxml-start//Attrs?": {
+		Argsn: 1,
+		Doc:   "Returns a dict of all attributes from an XML start element.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch obj := arg0.(type) {
+			case env.Native:
+				switch obj1 := obj.Value.(type) {
+				case xml.StartElement:
+					data := make(map[string]any)
+					for _, attr := range obj1.Attr {
+						var key string
+						if attr.Name.Space != "" {
+							key = attr.Name.Space + ":" + attr.Name.Local
+						} else {
+							key = attr.Name.Local
+						}
+						data[key] = *env.NewString(attr.Value)
+					}
+					return *env.NewDict(data)
+				default:
+					return MakeBuiltinError(ps, "Not xml-start element.", "rye-sxml-start//Attrs?")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "rye-sxml-start//Attrs?")
+			}
+		},
+	},
+
 	// TODO:
 	// stdout {
 	//   "<scene><xwing><bot>R2D2</bot><person><name>Luke</name></person></xwing><destroyer><person>Vader</person></destroyer></scene>" |reader
-	//   .do-sxml { <xwing> { 'start [ prns "YYY" ] <bot> [ print "***" ] 'any [ .name? .probe ] 'end [ print "xx" ] } }
+	//   .do-sxml { <xwing> { 'start [ prns "YYY" ] <bot> [ print "***" ] 'any [ .Name? .probe ] 'end [ print "xx" ] } }
 	// } "bot R2D2 \nperson name Luke \n"
 	// Args:
 	// * element: XML start element
 	// Returns:
 	// * string name of the XML element
-	"rye-sxml-start//name?": {
+	"rye-sxml-start//Name?": {
 		Argsn: 1,
 		Doc:   "Returns the name of an XML start element.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -330,10 +397,10 @@ var Builtins_sxml = map[string]*env.Builtin{
 				case xml.StartElement:
 					return *env.NewString(obj1.Name.Local)
 				default:
-					return MakeBuiltinError(ps, "Not xml-start element.", "rye-sxml-start//name?")
+					return MakeBuiltinError(ps, "Not xml-start element.", "rye-sxml-start//Name?")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "rye-sxml-start//name?")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "rye-sxml-start//Name?")
 			}
 		},
 	},

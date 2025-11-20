@@ -15,7 +15,7 @@ var Builtins_mail = map[string]*env.Builtin{
 	//
 	// ##### Mail ##### "Email parsing functions"
 	//
-	// Tests:
+	// Example:
 	// equal { reader %email.eml |parse-email |type? } 'native
 	// equal { reader %email.eml |parse-email |kind? } 'parsed-email
 	// Args:
@@ -39,7 +39,7 @@ var Builtins_mail = map[string]*env.Builtin{
 		},
 	},
 
-	// Tests:
+	// Example:
 	// equal { reader %email.eml |parse-email |subject? |type? } 'string
 	// Args:
 	// * email: native parsed-email object
@@ -95,7 +95,7 @@ var Builtins_mail = map[string]*env.Builtin{
 
 	*/
 
-	// Tests:
+	// Example:
 	// equal { reader %email.eml |parse-email |message-id? |type? } 'string
 	// Args:
 	// * email: native parsed-email object
@@ -114,7 +114,7 @@ var Builtins_mail = map[string]*env.Builtin{
 		},
 	},
 
-	// Tests:
+	// Example:
 	// equal { reader %email.eml |parse-email |html-body? |type? } 'string
 	// Args:
 	// * email: native parsed-email object
@@ -133,8 +133,8 @@ var Builtins_mail = map[string]*env.Builtin{
 		},
 	},
 
-	// Tests:
-	// equal { reader %email.eml |parse-email |text-body? |type? } 'string
+	// Example:
+	// equal { Reader %email.eml |parse-email |text-body? |type? } 'string
 	// Args:
 	// * email: native parsed-email object
 	// Returns:

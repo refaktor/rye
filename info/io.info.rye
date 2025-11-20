@@ -9,6 +9,9 @@ section "Console IO " "Console input and output functions" {
 	{
 	}
 
+	{
+``	}
+
 }
 
 section "File Operations " "File system operations and file manipulation" {
@@ -24,6 +27,9 @@ section "File Operations " "File system operations and file manipulation" {
 		equal { Open %data/file.txt |kind? } 'file
 	}
 
+	{
+``	}
+
 	group "file-uri//Open\\append" 
 	"Opens a file for appending."
 	{
@@ -35,6 +41,9 @@ section "File Operations " "File system operations and file manipulation" {
 		equal { Open\append %data/file.txt |type? } 'native
 		equal { Open\append %data/file.txt |kind? } 'writer
 	}
+
+	{
+``	}
 
 	group "file-uri//Create" 
 	"Creates a new file."
@@ -48,7 +57,10 @@ section "File Operations " "File system operations and file manipulation" {
 		equal { Create %data/created.txt |kind? } 'file
 	}
 
-	group "file-ext?" 
+	{
+``	}
+
+	group "file-uri//File-ext?" 
 	"Gets the extension of a file."
 	{
 		arg `path: uri or string representing a file path`
@@ -56,23 +68,55 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-		equal { file-ext? %data/file.txt } ".txt"
-		equal { file-ext? %data/file.temp.png } ".png"
-		equal { file-ext? "data/file.temp.png" } ".png"
+		equal { File-ext? %data/file.txt } ".txt"
+		equal { File-ext? %data/file.temp.png } ".png"
+		equal { File-ext? to-file "data/file.temp.png" } ".png"
 	}
 
-	group "reader" 
-	"Creates a new reader from a file path, file object, or string."
 	{
-		arg `source: uri, file object, or string to read from`
+``	}
+
+	group "file//Reader" 
+	"Creates a new reader from file object."
+	{
+		arg `source: file object to read from`
 		returns `native reader object`
 	}
 
 	{
-		equal { reader %data/file.txt |kind? } 'reader
-		equal { reader Open %data/file.txt |kind? } 'reader
+		equal { Reader probe Open probe %data/file.txt |kind? } 'reader
+	}
+
+	{
+``	}
+
+	group "file-uri//Reader" 
+	"Creates a new reader from a file uri/path."
+	{
+		arg `source: file uri to read from`
+		returns `native reader object`
+	}
+
+	{
+		equal { Reader %data/file.txt |kind? } 'reader
+	}
+
+	{
+``	}
+
+	group "reader" 
+	"Creates a new reader from a string."
+	{
+		arg `source: string to read from`
+		returns `native reader object`
+	}
+
+	{
 		equal { reader "some string" |kind? } 'reader
 	}
+
+	{
+``	}
 
 	group "stdin" 
 	"Gets a reader for standard input."
@@ -84,6 +128,9 @@ section "File Operations " "File system operations and file manipulation" {
 	{
 	}
 
+	{
+``	}
+
 	group "stdout" 
 	"Gets a writer for standard output."
 	{
@@ -94,6 +141,9 @@ section "File Operations " "File system operations and file manipulation" {
 	{
 	}
 
+	{
+``	}
+
 	group "stderr" 
 	"Gets a writer for standard error."
 	{
@@ -103,6 +153,9 @@ section "File Operations " "File system operations and file manipulation" {
 
 	{
 	}
+
+	{
+``	}
 
 	group "reader//Read\\string" 
 	"Reads all content from a reader as a string."
@@ -115,6 +168,9 @@ section "File Operations " "File system operations and file manipulation" {
 		equal { reader "some string" |Read\string } "some string"
 	}
 
+	{
+``	}
+
 	group "reader//Copy" 
 	"Copies all content from a reader to a writer."
 	{
@@ -125,6 +181,9 @@ section "File Operations " "File system operations and file manipulation" {
 
 	{
 	}
+
+	{
+``	}
 
 	group "file//Copy" 
 	"Copies content from a file to a writer."
@@ -137,6 +196,9 @@ section "File Operations " "File system operations and file manipulation" {
 	{
 	}
 
+	{
+``	}
+
 	group "file//Stat" 
 	"Gets file information (stat) for a file."
 	{
@@ -147,6 +209,9 @@ section "File Operations " "File system operations and file manipulation" {
 	{
 		equal { Stat Open %data/file.txt |kind? } 'file-info
 	}
+
+	{
+``	}
 
 	group "file-info//Size?" 
 	"Gets the size of a file in bytes."
@@ -159,6 +224,9 @@ section "File Operations " "File system operations and file manipulation" {
 		equal { Size? Stat Open %data/file.txt } 16
 	}
 
+	{
+``	}
+
 	group "file//Read-all" 
 	"Reads the entire content of a file as a string."
 	{
@@ -170,6 +238,9 @@ section "File Operations " "File system operations and file manipulation" {
 		equal { Read-all Open %data/file.txt } "hello text file\n"
 	}
 
+	{
+``	}
+
 	group "file//Seek\\end" 
 	"Seeks to the end of a file."
 	{
@@ -179,6 +250,9 @@ section "File Operations " "File system operations and file manipulation" {
 
 	{
 	}
+
+	{
+``	}
 
 	group "file//Close" 
 	"Closes an open file."
@@ -191,6 +265,9 @@ section "File Operations " "File system operations and file manipulation" {
 		equal { Close Open %data/file.txt } ""
 	}
 
+	{
+``	}
+
 	group "file-uri//Read" 
 	"Reads the entire content of a file as a string."
 	{
@@ -201,6 +278,9 @@ section "File Operations " "File system operations and file manipulation" {
 	{
 		equal { Read %data/file.txt } "hello text file\n"
 	}
+
+	{
+``	}
 
 	group "file-uri//Read\\bytes" 
 	"Reads the entire content of a file as bytes."
@@ -213,6 +293,9 @@ section "File Operations " "File system operations and file manipulation" {
 		equal { Read %data/file.txt } "hello text file\n"
 	}
 
+	{
+``	}
+
 	group "file-uri//Read\\lines" 
 	"Reads a file and returns its content as a block of lines."
 	{
@@ -223,6 +306,9 @@ section "File Operations " "File system operations and file manipulation" {
 	{
 		equal { Read %data/file.txt } "hello text file\n"
 	}
+
+	{
+``	}
 
 	group "file-uri//Write" 
 	"Writes content to a file."
@@ -236,6 +322,9 @@ section "File Operations " "File system operations and file manipulation" {
 		equal { Write %data/write.txt "written\n" } "written\n"
 	}
 
+	{
+``	}
+
 	group "write\\bytes" 
 	"Writes bytes to a file."
 	{
@@ -246,6 +335,9 @@ section "File Operations " "File system operations and file manipulation" {
 
 	{
 	}
+
+	{
+``	}
 
 	group "append\\bytes" 
 	"Appends two byte arrays into one."
@@ -258,6 +350,9 @@ section "File Operations " "File system operations and file manipulation" {
 	{
 	}
 
+	{
+``	}
+
 	group "writer//Write\\string" 
 	"Writes a string to a writer."
 	{
@@ -268,6 +363,9 @@ section "File Operations " "File system operations and file manipulation" {
 
 	{
 	}
+
+	{
+``	}
 
 }
 
@@ -282,6 +380,9 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	{
 	}
 
+	{
+``	}
+
 	group "https-uri//Get" 
 	"Makes a HTTPS GET request and returns the response body as a string."
 	{
@@ -291,6 +392,9 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 
 	{
 	}
+
+	{
+``	}
 
 	group "https-uri//Post" 
 	"Makes a HTTPS POST request and returns the response body as a string."
@@ -304,6 +408,9 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	{
 	}
 
+	{
+``	}
+
 	group "http-uri//Get" 
 	"Makes a HTTP GET request and returns the response body as a string."
 	{
@@ -313,6 +420,9 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 
 	{
 	}
+
+	{
+``	}
 
 	group "http-uri//Post" 
 	"Makes a HTTP POST request and returns the response body as a string."
@@ -326,6 +436,9 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	{
 	}
 
+	{
+``	}
+
 	group "https-uri//Request" 
 	"Creates a new HTTPS request object."
 	{
@@ -337,6 +450,9 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 
 	{
 	}
+
+	{
+``	}
 
 	group "https-request//Header!" 
 	"Sets a header on a HTTPS request."
@@ -350,6 +466,9 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	{
 	}
 
+	{
+``	}
+
 	group "https-request//Basic-auth!" 
 	"Sets Basic Authentication on a HTTPS request."
 	{
@@ -362,6 +481,9 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	{
 	}
 
+	{
+``	}
+
 	group "https-request//Call" 
 	"Executes a HTTPS request and returns the response."
 	{
@@ -371,6 +493,9 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 
 	{
 	}
+
+	{
+``	}
 
 	group "https-response//Reader" 
 	"Gets a reader for the HTTPS response body that can be used with io.Copy."
@@ -382,6 +507,9 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	{
 	}
 
+	{
+``	}
+
 	group "https-response//Read-body" 
 	"Reads the body of a HTTPS response as a string."
 	{
@@ -391,6 +519,9 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 
 	{
 	}
+
+	{
+``	}
 
 }
 
@@ -406,6 +537,9 @@ section "Email Operations " "Email sending and SMTP communication" {
 	{
 	}
 
+	{
+``	}
+
 }
 
 section "FTP Operations " "File Transfer Protocol operations and connections" {
@@ -419,6 +553,9 @@ section "FTP Operations " "File Transfer Protocol operations and connections" {
 	{
 	}
 
+	{
+``	}
+
 	group "ftp-connection//Login" 
 	"Logs in to an FTP server connection."
 	{
@@ -431,6 +568,9 @@ section "FTP Operations " "File Transfer Protocol operations and connections" {
 	{
 	}
 
+	{
+``	}
+
 	group "ftp-connection//Retrieve" 
 	"Retrieves a file from an FTP server."
 	{
@@ -441,6 +581,9 @@ section "FTP Operations " "File Transfer Protocol operations and connections" {
 
 	{
 	}
+
+	{
+``	}
 
 }
 
@@ -457,6 +600,9 @@ section "File Monitoring " "File watching and tailing operations" {
 	{
 	}
 
+	{
+``	}
+
 	group "tail-file//Read-line" 
 	"Reads the next line from a tailed file. Blocks until a line is available."
 	{
@@ -467,6 +613,9 @@ section "File Monitoring " "File watching and tailing operations" {
 	{
 	}
 
+	{
+``	}
+
 	group "tail-file//Close" 
 	"Closes a tailed file, stopping the monitoring."
 	{
@@ -476,6 +625,9 @@ section "File Monitoring " "File watching and tailing operations" {
 
 	{
 	}
+
+	{
+``	}
 
 }
 
@@ -494,6 +646,9 @@ section "Command Operations " "Running other programs" {
 		equal { args: list { "two" "arguments" } cmd { printf "'%s' " ?args } |Output } "'two' 'arguments' "
 	}
 
+	{
+``	}
+
 	group "command//Dir!" 
 	"Change the working directory of a command."
 	{
@@ -506,6 +661,9 @@ section "Command Operations " "Running other programs" {
 		equal { cmd { pwd } |Dir! %/ |Output |trim } "/"
 	}
 
+	{
+``	}
+
 	group "command//Stdin!" 
 	"Change the standard input of a command."
 	{
@@ -516,6 +674,9 @@ section "Command Operations " "Running other programs" {
 
 	{
 	}
+
+	{
+``	}
 
 	group "command//Stdout!" 
 	"Change the standard output of a command."
@@ -528,6 +689,9 @@ section "Command Operations " "Running other programs" {
 	{
 	}
 
+	{
+``	}
+
 	group "command//Stderr!" 
 	"Change the standard error of a command."
 	{
@@ -538,6 +702,9 @@ section "Command Operations " "Running other programs" {
 
 	{
 	}
+
+	{
+``	}
 
 	group "command//Pipe" 
 	"Pipe the output of the first command to the input of the second command."
@@ -551,6 +718,9 @@ section "Command Operations " "Running other programs" {
 		equal { cmd { echo -n Hello World } |Pipe cmd { tr a-z A-Z } |Output } "HELLO WORLD"
 	}
 
+	{
+``	}
+
 	group "command//Run" 
 	"Start a command and wait for it to finish."
 	{
@@ -560,6 +730,9 @@ section "Command Operations " "Running other programs" {
 	{
 		error { cmd { false } |Run }
 	}
+
+	{
+``	}
 
 	group "command//Status" 
 	"Start a command, wait for it to finish, and return its exit status."
@@ -574,6 +747,9 @@ section "Command Operations " "Running other programs" {
 		equal { cmd { false |true } |Status } list [ 1 0 ]
 	}
 
+	{
+``	}
+
 	group "command//Output" 
 	"Start a command, wait for it to finish, and return its standard output"
 	{
@@ -584,6 +760,9 @@ section "Command Operations " "Running other programs" {
 	{
 	}
 
+	{
+``	}
+
 	group "command//CombinedOutput" 
 	"Start a command, wait for it to finish, and return its combined standard output and error"
 	{
@@ -593,6 +772,9 @@ section "Command Operations " "Running other programs" {
 
 	{
 	}
+
+	{
+``	}
 
 }
 
@@ -608,6 +790,9 @@ section "SQLite " "SQLite database functions" {
 		equal { Open sqlite://test.db |type? } 'native
 	}
 
+	{
+``	}
+
 	group "htmlize" 
 	"Converts a table to HTML format."
 	{
@@ -618,6 +803,9 @@ section "SQLite " "SQLite database functions" {
 	{
 		equal { table { "name" "age" } { "Bob" 25 "Alice" 30 } |htmlize |type? } 'string
 	}
+
+	{
+``	}
 
 	group "Rye-sqlite//Exec" 
 	"Executes a SQL statement that doesn't return rows."
@@ -631,6 +819,9 @@ section "SQLite " "SQLite database functions" {
 		equal { Open sqlite://test.db |Exec "CREATE TABLE IF NOT EXISTS test (id INTEGER, name TEXT)" |type? } 'native
 	}
 
+	{
+``	}
+
 	group "Rye-sqlite//Query" 
 	"Executes a SQL query and returns results as a table."
 	{
@@ -643,6 +834,9 @@ section "SQLite " "SQLite database functions" {
 		equal { Open sqlite://test.db |Query "SELECT * FROM test" |type? } 'table
 	}
 
+	{
+``	}
+
 	group "Rye-sqlite//Show-SQL" 
 	"Generates and returns the SQL string without executing it."
 	{
@@ -654,6 +848,9 @@ section "SQLite " "SQLite database functions" {
 	{
 		equal { id: 123 Open sqlite://test.db |Show-SQL { SELECT * FROM test WHERE id = ?id } |type? } 'string
 	}
+
+	{
+``	}
 
 }
 
@@ -669,6 +866,9 @@ section "PostgreSQL Database Functions " "" {
 		example { Open postgres://user:pass@localhost:5432/dbname }
 	}
 
+	{
+``	}
+
 	group "Rye-psql//Exec" 
 	"Executes a SQL statement that modifies data (INSERT, UPDATE, DELETE)."
 	{
@@ -680,6 +880,9 @@ section "PostgreSQL Database Functions " "" {
 	{
 		example { Open postgres://user:pass@localhost:5432/dbname |Exec "INSERT INTO test VALUES (1, 'test')" }
 	}
+
+	{
+``	}
 
 	group "Rye-psql//Query" 
 	"Executes a SQL query and returns results as a table."
@@ -694,6 +897,9 @@ section "PostgreSQL Database Functions " "" {
 		|Query "SELECT * FROM test" }
 	}
 
+	{
+``	}
+
 	group "Rye-psql//Show-SQL" 
 	"Generates and returns the SQL string without executing it."
 	{
@@ -705,6 +911,9 @@ section "PostgreSQL Database Functions " "" {
 	{
 		example { id: 323 Open postgres://user:pass@localhost:5432/dbname \n|Show-SQL {  SELECT * FROM test WHERE id = ?id } }
 	}
+
+	{
+``	}
 
 }
 

@@ -165,7 +165,7 @@ var builtins_collection = map[string]*env.Builtin{
 					return MakeBuiltinError(ps, "Block is empty.", "max")
 				}
 				for i := 0; i < l; i++ {
-					if max == nil || greaterThan(ps, data.Series.Get(i), max) {
+					if max == nil || greaterThanNew(data.Series.Get(i), max) {
 						max = data.Series.Get(i)
 					}
 				}
@@ -224,7 +224,7 @@ var builtins_collection = map[string]*env.Builtin{
 					return MakeBuiltinError(ps, "Block is empty.", "min")
 				}
 				for i := 0; i < l; i++ {
-					if min == nil || greaterThan(ps, min, data.Series.Get(i)) {
+					if min == nil || greaterThanNew(min, data.Series.Get(i)) {
 						min = data.Series.Get(i)
 					}
 				}

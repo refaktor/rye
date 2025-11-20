@@ -557,7 +557,14 @@ func (i Uri) Inspect(e Idxs) string {
 
 func (i Uri) Print(e Idxs) string {
 	if i.Scheme.Print(e) == "file" {
-		return "%" + i.GetPath()
+		// it probably makes more sense
+		// to not add % , but there is a schema
+		// otherwise ... should there be two methods
+		// one for representation of value also in rye, another for
+		// end-user to-string / print? Most conflicting with
+		// strings "some str" vs. some str and block [ 1 2 ] vs 1 2
+		// return "%" + i.GetPath()
+		return i.GetPath()
 	}
 	return i.Scheme.Print(e) + "://" + i.GetPath()
 }

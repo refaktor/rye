@@ -488,7 +488,7 @@ var Builtins_html = map[string]*env.Builtin{
 	// stdout { "<div class='menu' id='nav'></div>" |reader .Parse-html { <div> [ .Attr? 'id |prn ] } } "nav"
 	// Args:
 	// * element: HTML token element
-	// * name-or-index: Attribute name (as word) or index (as integer)
+	// * name-or-index: Attribute name (as word or string) or index (as integer)
 	// Returns:
 	// * string value of the attribute or void if not found
 	"rye-html-start//Attr?": {
@@ -504,23 +504,58 @@ var Builtins_html = map[string]*env.Builtin{
 						if int(n.Value) < len(tok.Attr) {
 							return *env.NewString(tok.Attr[int(n.Value)].Val)
 						} else {
-							return env.Void{}
+							return MakeBuiltinError(ps, "Attribute index out of bounds.", "rye-html-start//Attr?")
 						}
 					case env.Word:
+						attrName := ps.Idx.GetWord(n.Index)
 						for _, a := range tok.Attr {
-							if a.Key == ps.Idx.GetWord(n.Index) {
+							if a.Key == attrName {
 								return *env.NewString(a.Val)
 							}
 						}
-						return env.Void{}
+						return MakeBuiltinError(ps, "Attribute '"+attrName+"' not found.", "rye-html-start//Attr?")
+					case env.String:
+						attrName := n.Value
+						for _, a := range tok.Attr {
+							if a.Key == attrName {
+								return *env.NewString(a.Val)
+							}
+						}
+						return MakeBuiltinError(ps, "Attribute '"+attrName+"' not found.", "rye-html-start//Attr?")
 					default:
-						return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "rye-html-start//Attr?")
+						return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.WordType, env.StringType}, "rye-html-start//Attr?")
 					}
 				default:
 					return MakeBuiltinError(ps, "Token value is not matching.", "rye-html-start//Attr?")
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "rye-html-start//Attr?")
+			}
+		},
+	},
+
+	// Args:
+	// * element: HTML token element
+	// Returns:
+	// * dict with all attributes where keys are attribute names
+	"rye-html-start//Attrs?": {
+		Argsn: 1,
+		Doc:   "Returns a dict of all attributes from an HTML element.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch tok1 := arg0.(type) {
+			case env.Native:
+				switch tok := tok1.Value.(type) {
+				case html.Token:
+					data := make(map[string]any)
+					for _, attr := range tok.Attr {
+						data[attr.Key] = *env.NewString(attr.Val)
+					}
+					return *env.NewDict(data)
+				default:
+					return MakeBuiltinError(ps, "Token value is not matching.", "rye-html-start//Attrs?")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "rye-html-start//Attrs?")
 			}
 		},
 	},
