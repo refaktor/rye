@@ -690,7 +690,7 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 	}
 
 	// Setup signal handling for interrupting operations
-	setupGlobalSignalHandler()
+	//setupGlobalSignalHandler()
 
 	if here {
 		if _, err := os.Stat(".rye-here"); err == nil {
@@ -870,7 +870,7 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 	}
 
 	// Setup signal handling for interrupting operations
-	setupGlobalSignalHandler()
+	//setupGlobalSignalHandler()
 
 	if lang == "eyr" {
 		es.Dialect = env.EyrDialect

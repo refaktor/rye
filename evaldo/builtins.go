@@ -1745,22 +1745,79 @@ var builtins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
+					// we take ARG CTX
 					tempCtx := &ctx
 					for {
 						// fmt.Println("UP ->")
 						// do we change parents globally (and we have to fix them back) or just in local copy of a value? check
+						// If it's parent is the same as current context is
+						// we set it's parent to our parent, skip our context
 						if tempCtx.Parent == ps.Ctx {
-							// fmt.Println("ISTI PARENT")
+							fmt.Println("ISTI PARENT")
 							// temp = ctx.Parent
 							tempCtx.Parent = ps.Ctx.Parent
 							break
 						}
 						if tempCtx.Parent != nil {
+							fmt.Println("še en parent")
 							tempCtx = tempCtx.Parent
 						} else {
 							break
 						}
 					}
+					//var temp *env.RyeCtx
+					// set argument's parent context to current parent context
+					// }
+					// set argument context as parent
+					temp := ps.Ctx.Parent
+					ps.Ctx.Parent = &ctx
+					EvalBlock(ps)
+					// if temp != nil {
+					ps.Ctx.Parent = temp
+					// ctx.Parent = temp
+					// }
+					ps.Ser = ser
+					return ps.Res
+				default:
+					ps.ErrorFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "do\\in")
+				}
+			default:
+				ps.ErrorFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.ContextType}, "do\\in")
+			}
+
+		},
+	},
+
+	// Tests:
+	// equal  { c: context { x: 100 } do\in c { x * 9.99 } } 999.0
+	// equal  { c: context { x:: 100 } do\in c { inc! 'x } } 101
+	// equal  { c: context { x: 100 } do\in c { x:: 200 , x } } 200
+	// equal  { c: context { x: 100 } do\in c { x:: 200 } c/x } 100
+	// Args:
+	// * context: Context to use as parent context during execution
+	// * block: Block of code to execute in current context with the specified parent context
+	// Returns:
+	// * result of executing the block with the modified parent context
+	"do\\inx": { // **
+		Argsn: 2,
+		Doc:   "Takes a Context and a Block. It Does a block in current context but with parent a given Context.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch ctx := arg0.(type) {
+			case env.RyeCtx:
+				switch bloc := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = bloc.Series
+					// we take ARG CTX
+					// tempCtx := &ctx
+					// fmt.Println("UP ->")
+					// do we change parents globally (and we have to fix them back) or just in local copy of a value? check
+					// If it's parent is the same as current context is
+					// we set it's parent to our parent, skip our context
+					ctx.Parent = ps.Ctx.Parent
+
 					//var temp *env.RyeCtx
 					// set argument's parent context to current parent context
 					// }
@@ -2498,6 +2555,52 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	// RegisterBuiltins2(Builtins_nng, ps, "nng")
 	// RegisterBuiltins2(Builtins_raylib, ps, "raylib")
 	// RegisterBuiltins2(Builtins_cayley, ps, "cayley")
+
+	// Execute initialization code after everything is loaded but before any custom code is evaluated
+	executeInitializationCode(ps)
+}
+
+// executeInitializationCode runs the injected initialization code after builtins are loaded
+// but before any custom user code is evaluated. This works for both REPL and file execution modes.
+func executeInitializationCode(ps *env.ProgramState) {
+	// The initialization code to inject: "?display , print `Hello`"
+	initCode := " collector: context { var 'collected ref { } , collect!: fn { v } { .append! 'collected } , collected?: does { deref collected } } " +
+		" use: fn { c b } { .clone\\deep .do\\inx b } "
+
+	// Save current state
+	/* origSer := ps.Ser
+	origRes := ps.Res
+	origErrorFlag := ps.ErrorFlag
+	origFailureFlag := ps.FailureFlag
+	origReturnFlag := ps.ReturnFlag*/
+
+	// Load and parse the initialization code
+	block := loader.LoadStringNEW(initCode, false, ps)
+
+	// Check if loading was successful
+	switch loadedBlock := block.(type) {
+	case env.Block:
+		// Set the series to the loaded initialization code
+		ps.Ser = loadedBlock.Series
+
+		// Execute the initialization code
+		EvalBlock(ps)
+		fmt.Println(ps.Res)
+
+		// If there were errors, we silently ignore them for initialization
+		// This prevents initialization issues from breaking the main program
+
+	case env.Error:
+		// Silently ignore loading errors for initialization code
+		// This prevents malformed init code from breaking the interpreter
+	}
+
+	// Restore original state (except for any side effects the init code may have had)
+	/* ps.Ser = origSer
+	ps.Res = origRes
+	ps.ErrorFlag = origErrorFlag
+	ps.FailureFlag = origFailureFlag
+	ps.ReturnFlag = origReturnFlag*/
 }
 
 func RegisterVarBuiltins(ps *env.ProgramState) {

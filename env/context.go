@@ -159,6 +159,36 @@ func (e *RyeCtx) Copy() Context {
 	return nc
 }
 
+// DeepCopy creates a deep copy of the RyeCtx using deep copying for all objects
+func (e *RyeCtx) DeepCopy() Context {
+	nc := NewEnv(e.Parent)
+	cp := make(map[int]Object)
+	for k, v := range e.state {
+		// Use deep copying for all objects
+		cp[k] = DeepCopyObject(v)
+	}
+	cpVarFlags := make(map[int]bool)
+	for k, v := range e.varFlags {
+		cpVarFlags[k] = v
+	}
+	cpObservers := make(map[int][]Block)
+	for k, v := range e.observers {
+		// Make a copy of the observer slice with deep copied blocks
+		observersCopy := make([]Block, len(v))
+		for i, block := range v {
+			observersCopy[i] = DeepCopyObject(block).(Block)
+		}
+		cpObservers[k] = observersCopy
+	}
+	nc.state = cp
+	nc.varFlags = cpVarFlags
+	nc.observers = cpObservers
+	nc.Kind = e.Kind
+	nc.locked = e.locked
+	nc.IsClosure = e.IsClosure
+	return nc
+}
+
 func (e *RyeCtx) Clear() {
 	clear(e.state)
 }
