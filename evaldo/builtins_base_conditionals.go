@@ -66,17 +66,17 @@ var builtins_conditionals = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal  { 10 .when { > 5 } { .print } } 10
-	// equal  { 10 .when { < 5 } { .print } } 10
+	// equal  { 10 .when { > 5 } { + 3 } } 13
+	// equal  { 10 .when { < 5 } { + 3 } } 10
 	// Args:
 	// * value: Value to inject into both condition and action blocks
 	// * condition: Block that evaluates to a truthy/falsy value with the injected value
 	// * action: Block to execute if condition is truthy, with the injected value
 	// Returns:
-	// * the original injected value (for chaining)
+	// * the value of the evaluated action block if condition is truthy or the original injected value if condition is falsy
 	"when": { // **
 		Argsn: 3,
-		Doc:   "Conditionally executes an action block if a condition block evaluates to true, injecting the same value into both blocks and returning the original value.",
+		Doc:   "Conditionally executes an action block if a condition block evaluates to true, injecting the same value into both blocks and returning the value of the action block if the condition is truthy or the original value otherwise.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// function accepts 3 args: arg0 is the value to inject, arg1 is the condition block, arg2 is the action block
