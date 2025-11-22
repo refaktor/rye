@@ -360,14 +360,14 @@ func (l *Lexer) NextToken() NoPEGToken {
 	}*/
 	case '<':
 		pch := l.peekChar()
-		if isWhitespace(pch) || pch == '-' || pch == '~' || pch == '=' || pch == '<' || pch == '>' {
+		if isWhitespaceOrEOF(pch) || pch == '-' || pch == '~' || pch == '=' || pch == '<' || pch == '>' {
 			return l.readOpWord()
 			// l.readChar()
 			// return l.makeToken(NPEG_TOKEN_OPWORD, "<")
 		}
 		return l.readXWord()
 	case '%':
-		if isWhitespace(l.peekChar()) {
+		if isWhitespaceOrEOF(l.peekChar()) {
 			l.readChar()
 			return l.makeToken(NPEG_TOKEN_OPWORD, "%")
 		}
@@ -377,7 +377,7 @@ func (l *Lexer) NextToken() NoPEGToken {
 	case '~':
 		pch := l.peekChar()
 		// fmt.Println("***1")
-		if isWhitespace(pch) {
+		if isWhitespaceOrEOF(pch) {
 			l.readChar()
 			// fmt.Println("***2")
 			return l.makeToken(NPEG_TOKEN_OPWORD, "~")
@@ -422,13 +422,13 @@ func (l *Lexer) NextToken() NoPEGToken {
 			// Check if it's a set-word (word:)
 			if l.ch == ':' {
 				if l.peekChar() == ':' { // word::
-					if isWhitespace(l.peekCharOffs(1)) {
+					if isWhitespaceOrEOF(l.peekCharOffs(1)) {
 						l.readChar()
 						l.readChar()
 						return l.makeToken(NPEG_TOKEN_MODWORD, l.input[l.tokenStart:l.pos])
 					}
 				}
-				if isWhitespace(l.peekChar()) {
+				if isWhitespaceOrEOF(l.peekChar()) {
 					l.readChar()
 					return l.makeToken(NPEG_TOKEN_SETWORD, l.input[l.tokenStart:l.pos])
 				}
@@ -500,6 +500,12 @@ func isWhitespaceCh(ch byte) bool {
 	return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r'
 }
 
+// isWhitespaceOrEOF checks if a character is whitespace or end of input
+// This is a local helper to avoid conflicts with the isWhitespace function in loader.go
+func isWhitespaceOrEOF(ch byte) bool {
+	return isWhitespaceCh(ch) || ch == 0
+}
+
 // isTokenDelimiter checks if a character is a token delimiter (whitespace or end of input)
 func isTokenDelimiter(ch byte) bool {
 	return isWhitespaceCh(ch) || ch == 0
@@ -514,22 +520,45 @@ func isSpecialChar(ch byte) bool {
 }
 
 func (l *Lexer) readOneCharToken(tokenType int, errType int) NoPEGToken {
+	delimiter := l.ch
 	l.readChar()
-	// fmt.Println("**")
 	c := l.ch
-	// fmt.Println(c)
 	if c != 0 && !isWhitespaceCh(c) {
+		// Build descriptive error message with the delimiter and what followed
+		var delimiterName string
+		switch delimiter {
+		case '{':
+			delimiterName = "block start '{'"
+		case '}':
+			delimiterName = "block end '}'"
+		case '[':
+			delimiterName = "bblock start '['"
+		case ']':
+			delimiterName = "bblock end ']'"
+		case '(':
+			delimiterName = "group start '('"
+		case ')':
+			delimiterName = "group end ')'"
+		case ',':
+			delimiterName = "comma ','"
+		default:
+			delimiterName = fmt.Sprintf("'%c'", delimiter)
+		}
+		errMsg := fmt.Sprintf("Missing space after %s. Found '%c' immediately after. Block delimiters must be followed by whitespace.", delimiterName, c)
 		l.readChar()
-		return l.makeTokenErr(NPEG_TOKEN_ERROR, "501", errType)
+		return l.makeTokenErr(NPEG_TOKEN_ERROR, errMsg, errType)
 	}
 	return l.makeToken(tokenType, "")
 }
 
 func (l *Lexer) readOneCharToken2(tokenType int, errType int) NoPEGToken {
+	delimiter := l.ch
 	l.readChar()
-	if !isWhitespace(l.peekChar()) {
+	if !isWhitespaceOrEOF(l.peekChar()) {
+		nextChar := l.peekChar()
+		errMsg := fmt.Sprintf("Missing space after delimiter '%c'. Found '%c' immediately after. Delimiters must be followed by whitespace.", delimiter, nextChar)
 		l.readChar()
-		return l.makeTokenErr(NPEG_TOKEN_ERROR, "", errType)
+		return l.makeTokenErr(NPEG_TOKEN_ERROR, errMsg, errType)
 	}
 	return l.makeToken(tokenType, "{}")
 }
@@ -577,11 +606,10 @@ func (l *Lexer) readString() NoPEGToken {
 	}
 
 	// Ensure the string is followed by a token delimiter
-	if !isWhitespace(l.ch) {
-		// fmt.Println("--NOSPACING INVOKED*->")
-		// fmt.Println(l.pos)
-		// fmt.Println(l.input[l.tokenStart:l.pos])
-		return l.makeTokenErr(NPEG_TOKEN_ERROR, l.input[l.tokenStart:l.pos], determineLexerError(l.ch))
+	if !isWhitespaceOrEOF(l.ch) {
+		invalidChar := l.ch
+		errMsg := fmt.Sprintf("Missing space after string. Found '%c' immediately after the closing quote. Strings must be followed by whitespace.", invalidChar)
+		return l.makeTokenErr(NPEG_TOKEN_ERROR, errMsg, determineLexerError(l.ch))
 	}
 
 	return l.makeToken(NPEG_TOKEN_STRING, l.input[l.tokenStart:l.pos])
@@ -612,23 +640,22 @@ func (l *Lexer) readNumber() NoPEGToken {
 		}
 
 		// Ensure the decimal is followed by a token delimiter
-		if !isWhitespace(l.ch) {
-			// Check if there should be spacing between tokens
-			// fmt.Println("--->")
-			// fmt.Println(l.pos)
-			// fmt.Println(l.input[l.tokenStart:l.pos])
-			return l.makeTokenErr(NPEG_TOKEN_ERROR, l.input[l.tokenStart:l.pos], determineLexerError(l.ch))
+		if !isWhitespaceOrEOF(l.ch) {
+			invalidChar := l.ch
+			decimalValue := l.input[l.tokenStart:l.pos]
+			errMsg := fmt.Sprintf("Missing space after decimal number '%s'. Found '%c' immediately after. Numbers must be followed by whitespace.", decimalValue, invalidChar)
+			return l.makeTokenErr(NPEG_TOKEN_ERROR, errMsg, determineLexerError(l.ch))
 		}
 
 		return l.makeToken(NPEG_TOKEN_DECIMAL, l.input[l.tokenStart:l.pos])
 	}
 
 	// Ensure the number is followed by a token delimiter
-	if !isWhitespace(l.ch) {
-		// fmt.Println("--NOSPACING INVOKED*->")
-		// fmt.Println(l.pos)
-		// fmt.Println(l.input[l.tokenStart:l.pos])
-		return l.makeTokenErr(NPEG_TOKEN_ERROR, l.input[l.tokenStart:l.pos], determineLexerError(l.ch))
+	if !isWhitespaceOrEOF(l.ch) {
+		invalidChar := l.ch
+		numberValue := l.input[l.tokenStart:l.pos]
+		errMsg := fmt.Sprintf("Missing space after number '%s'. Found '%c' immediately after. Numbers must be followed by whitespace.", numberValue, invalidChar)
+		return l.makeTokenErr(NPEG_TOKEN_ERROR, errMsg, determineLexerError(l.ch))
 	}
 
 	return l.makeToken(NPEG_TOKEN_NUMBER, l.input[l.tokenStart:l.pos])
@@ -666,8 +693,11 @@ func (l *Lexer) readLSetWord() NoPEGToken {
 	}
 
 	// Ensure the token is followed by whitespace
-	if !isWhitespace(l.ch) {
-		return l.makeTokenErr(NPEG_TOKEN_ERROR, l.input[l.tokenStart:l.pos], determineLexerError(l.ch))
+	if !isWhitespaceOrEOF(l.ch) {
+		invalidChar := l.ch
+		tokenValue := l.input[l.tokenStart:l.pos]
+		errMsg := fmt.Sprintf("Missing space after lset-word '%s'. Found '%c' immediately after. Lset-words (starting with ':') must be followed by whitespace.", tokenValue, invalidChar)
+		return l.makeTokenErr(NPEG_TOKEN_ERROR, errMsg, determineLexerError(l.ch))
 	}
 
 	return l.makeToken(NPEG_TOKEN_LSETWORD, l.input[l.tokenStart:l.pos])
@@ -683,8 +713,11 @@ func (l *Lexer) readLModWord() NoPEGToken {
 	}
 
 	// Ensure the token is followed by whitespace
-	if !isWhitespace(l.ch) {
-		return l.makeTokenErr(NPEG_TOKEN_ERROR, l.input[l.tokenStart:l.pos], determineLexerError(l.ch))
+	if !isWhitespaceOrEOF(l.ch) {
+		invalidChar := l.ch
+		tokenValue := l.input[l.tokenStart:l.pos]
+		errMsg := fmt.Sprintf("Missing space after lmod-word '%s'. Found '%c' immediately after. Lmod-words (starting with '::') must be followed by whitespace.", tokenValue, invalidChar)
+		return l.makeTokenErr(NPEG_TOKEN_ERROR, errMsg, determineLexerError(l.ch))
 	}
 
 	return l.makeToken(NPEG_TOKEN_LMODWORD, l.input[l.tokenStart:l.pos])
@@ -712,8 +745,11 @@ func (l *Lexer) readGetWord() NoPEGToken {
 	}
 
 	// Ensure the token is followed by whitespace
-	if !isWhitespace(l.ch) {
-		return l.makeTokenErr(NPEG_TOKEN_ERROR, l.input[l.tokenStart:l.pos], determineLexerError(l.ch))
+	if !isWhitespaceOrEOF(l.ch) {
+		invalidChar := l.ch
+		tokenValue := l.input[l.tokenStart:l.pos]
+		errMsg := fmt.Sprintf("Missing space after get-word '%s'. Found '%c' immediately after. Get-words (starting with '?') must be followed by whitespace.", tokenValue, invalidChar)
+		return l.makeTokenErr(NPEG_TOKEN_ERROR, errMsg, determineLexerError(l.ch))
 	}
 
 	if cpath {
@@ -739,8 +775,11 @@ func (l *Lexer) readOpWord() NoPEGToken {
 	}
 
 	// Ensure the token is followed by whitespace
-	if !isWhitespace(l.ch) {
-		return l.makeTokenErr(NPEG_TOKEN_ERROR, l.input[l.tokenStart:l.pos], determineLexerError(l.ch))
+	if !isWhitespaceOrEOF(l.ch) {
+		invalidChar := l.ch
+		tokenValue := l.input[l.tokenStart:l.pos]
+		errMsg := fmt.Sprintf("Missing space after op-word '%s'. Found '%c' immediately after. Op-words (operators) must be followed by whitespace.", tokenValue, invalidChar)
+		return l.makeTokenErr(NPEG_TOKEN_ERROR, errMsg, determineLexerError(l.ch))
 	}
 
 	if cpath {
@@ -766,8 +805,11 @@ func (l *Lexer) readPipeWord() NoPEGToken {
 	}
 
 	// Ensure the token is followed by whitespace
-	if !isWhitespace(l.ch) {
-		return l.makeTokenErr(NPEG_TOKEN_ERROR, l.input[l.tokenStart:l.pos], determineLexerError(l.ch))
+	if !isWhitespaceOrEOF(l.ch) {
+		invalidChar := l.ch
+		tokenValue := l.input[l.tokenStart:l.pos]
+		errMsg := fmt.Sprintf("Missing space after pipe-word '%s'. Found '%c' immediately after. Pipe-words (starting with '|' or '~') must be followed by whitespace.", tokenValue, invalidChar)
+		return l.makeTokenErr(NPEG_TOKEN_ERROR, errMsg, determineLexerError(l.ch))
 	}
 
 	if cpath {
@@ -791,8 +833,11 @@ func (l *Lexer) readTagWord() NoPEGToken {
 	}
 
 	// Ensure the token is followed by whitespace
-	if !isWhitespace(l.ch) {
-		return l.makeTokenErr(NPEG_TOKEN_ERROR, l.input[l.tokenStart:l.pos], determineLexerError(l.ch))
+	if !isWhitespaceOrEOF(l.ch) {
+		invalidChar := l.ch
+		tokenValue := l.input[l.tokenStart:l.pos]
+		errMsg := fmt.Sprintf("Missing space after tag-word '%s'. Found '%c' immediately after. Tag-words (starting with ''') must be followed by whitespace.", tokenValue, invalidChar)
+		return l.makeTokenErr(NPEG_TOKEN_ERROR, errMsg, determineLexerError(l.ch))
 	}
 
 	return l.makeToken(NPEG_TOKEN_TAGWORD, l.input[l.tokenStart:l.pos])
@@ -807,8 +852,11 @@ func (l *Lexer) readGenWord() NoPEGToken {
 	}
 
 	// Ensure the token is followed by whitespace
-	if !isWhitespace(l.ch) {
-		return l.makeTokenErr(NPEG_TOKEN_ERROR, l.input[l.tokenStart:l.pos], determineLexerError(l.ch))
+	if !isWhitespaceOrEOF(l.ch) {
+		invalidChar := l.ch
+		tokenValue := l.input[l.tokenStart:l.pos]
+		errMsg := fmt.Sprintf("Missing space after gen-word '%s'. Found '%c' immediately after. Gen-words (starting with '~') must be followed by whitespace.", tokenValue, invalidChar)
+		return l.makeTokenErr(NPEG_TOKEN_ERROR, errMsg, determineLexerError(l.ch))
 	}
 
 	return l.makeToken(NPEG_TOKEN_GENWORD, l.input[l.tokenStart:l.pos])
@@ -833,8 +881,11 @@ func (l *Lexer) readKindWord() NoPEGToken {
 	}
 
 	// Ensure the token is followed by whitespace
-	if !isWhitespace(l.ch) {
-		return l.makeTokenErr(NPEG_TOKEN_ERROR, l.input[l.tokenStart:l.pos], determineLexerError(l.ch))
+	if !isWhitespaceOrEOF(l.ch) {
+		invalidChar := l.ch
+		tokenValue := l.input[l.tokenStart:l.pos]
+		errMsg := fmt.Sprintf("Missing space after kind-word '%s'. Found '%c' immediately after. Kind-words (starting with '~(') must be followed by whitespace.", tokenValue, invalidChar)
+		return l.makeTokenErr(NPEG_TOKEN_ERROR, errMsg, determineLexerError(l.ch))
 	}
 
 	return l.makeToken(NPEG_TOKEN_KINDWORD, l.input[l.tokenStart:l.pos])
@@ -857,8 +908,11 @@ func (l *Lexer) readXWord() NoPEGToken {
 		}
 
 		// Ensure the token is followed by whitespace
-		if !isWhitespace(l.ch) {
-			return l.makeTokenErr(NPEG_TOKEN_ERROR, l.input[l.tokenStart:l.pos], determineLexerError(l.ch))
+		if !isWhitespaceOrEOF(l.ch) {
+			invalidChar := l.ch
+			tokenValue := l.input[l.tokenStart:l.pos]
+			errMsg := fmt.Sprintf("Missing space after ex-word '%s'. Found '%c' immediately after. Ex-words (starting with '</') must be followed by whitespace.", tokenValue, invalidChar)
+			return l.makeTokenErr(NPEG_TOKEN_ERROR, errMsg, determineLexerError(l.ch))
 		}
 
 		return l.makeToken(NPEG_TOKEN_EXWORD, l.input[l.tokenStart:l.pos])
@@ -875,8 +929,11 @@ func (l *Lexer) readXWord() NoPEGToken {
 	}
 
 	// Ensure the token is followed by whitespace
-	if !isWhitespace(l.ch) {
-		return l.makeTokenErr(NPEG_TOKEN_ERROR, l.input[l.tokenStart:l.pos], determineLexerError(l.ch))
+	if !isWhitespaceOrEOF(l.ch) {
+		invalidChar := l.ch
+		tokenValue := l.input[l.tokenStart:l.pos]
+		errMsg := fmt.Sprintf("Missing space after x-word '%s'. Found '%c' immediately after. X-words (starting with '<') must be followed by whitespace.", tokenValue, invalidChar)
+		return l.makeTokenErr(NPEG_TOKEN_ERROR, errMsg, determineLexerError(l.ch))
 	}
 
 	return l.makeToken(NPEG_TOKEN_XWORD, l.input[l.tokenStart:l.pos])
@@ -891,8 +948,11 @@ func (l *Lexer) readFPath() NoPEGToken {
 	}
 
 	// Ensure the token is followed by whitespace
-	if !isWhitespace(l.ch) {
-		return l.makeTokenErr(NPEG_TOKEN_ERROR, l.input[l.tokenStart:l.pos], determineLexerError(l.ch))
+	if !isWhitespaceOrEOF(l.ch) {
+		invalidChar := l.ch
+		tokenValue := l.input[l.tokenStart:l.pos]
+		errMsg := fmt.Sprintf("Missing space after file-path '%s'. Found '%c' immediately after. File-paths (starting with '%%') must be followed by whitespace.", tokenValue, invalidChar)
+		return l.makeTokenErr(NPEG_TOKEN_ERROR, errMsg, determineLexerError(l.ch))
 	}
 
 	return l.makeToken(NPEG_TOKEN_FPATH, l.input[l.tokenStart:l.pos])
@@ -907,8 +967,11 @@ func (l *Lexer) readOnePipeWord() NoPEGToken {
 	}
 
 	// Ensure the token is followed by whitespace
-	if !isWhitespace(l.ch) {
-		return l.makeTokenErr(NPEG_TOKEN_ERROR, l.input[l.tokenStart:l.pos], determineLexerError(l.ch))
+	if !isWhitespaceOrEOF(l.ch) {
+		invalidChar := l.ch
+		tokenValue := l.input[l.tokenStart:l.pos]
+		errMsg := fmt.Sprintf("Missing space after one-char-pipe '%s'. Found '%c' immediately after. One-char-pipe words must be followed by whitespace.", tokenValue, invalidChar)
+		return l.makeTokenErr(NPEG_TOKEN_ERROR, errMsg, determineLexerError(l.ch))
 	}
 
 	// Extract the word part (without the pipe character)
@@ -937,7 +1000,9 @@ func (l *Lexer) readFlagword() NoPEGToken {
 	// Read the flag name
 	if !isLetter(l.ch) {
 		// Invalid flag - should start with a letter
-		return l.makeTokenErr(NPEG_TOKEN_ERROR, l.input[l.tokenStart:l.pos], ERR_SPACING_OTHR)
+		invalidChar := l.ch
+		errMsg := fmt.Sprintf("Invalid flag format. Flags must start with a letter after '-', but found '%c'. Valid formats: -v, --verbose, or -v|verbose", invalidChar)
+		return l.makeTokenErr(NPEG_TOKEN_ERROR, errMsg, ERR_SPACING_OTHR)
 	}
 
 	// Read the single letter
@@ -959,8 +1024,11 @@ func (l *Lexer) readFlagword() NoPEGToken {
 	}
 
 	// Ensure the token is followed by whitespace
-	if !isWhitespace(l.ch) {
-		return l.makeTokenErr(NPEG_TOKEN_ERROR, l.input[l.tokenStart:l.pos], determineLexerError(l.ch))
+	if !isWhitespaceOrEOF(l.ch) {
+		invalidChar := l.ch
+		tokenValue := l.input[l.tokenStart:l.pos]
+		errMsg := fmt.Sprintf("Missing space after flag-word '%s'. Found '%c' immediately after. Flag-words (starting with '-') must be followed by whitespace.", tokenValue, invalidChar)
+		return l.makeTokenErr(NPEG_TOKEN_ERROR, errMsg, determineLexerError(l.ch))
 	}
 
 	return l.makeToken(NPEG_TOKEN_FLAGWORD, l.input[l.tokenStart:l.pos])
@@ -1006,11 +1074,19 @@ func (p *NoPEGParser) parseBlock(blockType int) (env.Object, error) {
 
 	// Skip the opening token
 	if p.peekToken.Type == NPEG_TOKEN_ERROR {
-		return nil, fmt.Errorf("%s", p.currentToken.Value)
+		errMsg := p.peekToken.Value
+		if errMsg == "" {
+			errMsg = "Syntax error detected while parsing block"
+		}
+		return nil, fmt.Errorf("%s", errMsg)
 	}
 	p.nextToken()
 	if p.peekToken.Type == NPEG_TOKEN_ERROR {
-		return nil, fmt.Errorf("%s", p.currentToken.Value)
+		errMsg := p.peekToken.Value
+		if errMsg == "" {
+			errMsg = "Syntax error detected while parsing block"
+		}
+		return nil, fmt.Errorf("%s", errMsg)
 	}
 
 	// Collect all tokens until the closing token
@@ -1029,36 +1105,47 @@ func (p *NoPEGParser) parseBlock(blockType int) (env.Object, error) {
 
 		// Check for unexpected end of input
 		if p.currentToken.Type == NPEG_TOKEN_EOF {
-			blockTypeName := "block"
-			closingDelimiter := "}"
+			var blockTypeName string
+			var openingDelimiter string
+			var closingDelimiter string
 			switch blockType {
 			case 0:
 				blockTypeName = "block"
+				openingDelimiter = "{"
 				closingDelimiter = "}"
 			case 1:
 				blockTypeName = "bblock"
+				openingDelimiter = "["
 				closingDelimiter = "]"
 			case 2:
 				blockTypeName = "group"
+				openingDelimiter = "("
 				closingDelimiter = ")"
 			case 3:
 				blockTypeName = "opbblock"
+				openingDelimiter = ".["
 				closingDelimiter = "]"
 			case 4:
 				blockTypeName = "opgroup"
+				openingDelimiter = ".("
 				closingDelimiter = ")"
 			case 5:
 				blockTypeName = "opblock"
+				openingDelimiter = ".{"
 				closingDelimiter = "}"
 			}
-			return nil, fmt.Errorf("unexpected end of input while parsing %s. Missing closing delimiter '%s'", blockTypeName, closingDelimiter)
+			return nil, fmt.Errorf("unexpected end of input while parsing %s (opened with '%s' at line %d, column %d). Missing closing delimiter '%s'", blockTypeName, openingDelimiter, blockLine, blockCol, closingDelimiter)
 		}
 
 		// fmt.Println("BEFORE CALLING PARSE TOKEN ON PARSER")
 		if p.peekToken.Type == NPEG_TOKEN_ERROR {
 			// fmt.Println("= PARSE BLOCK ERROR DETECTED IN LOOP====>")
 			// fmt.Println(p.l.pos)
-			return nil, fmt.Errorf("%s", p.currentToken.Value)
+			errMsg := p.peekToken.Value
+			if errMsg == "" {
+				errMsg = "Syntax error detected while parsing block content"
+			}
+			return nil, fmt.Errorf("%s", errMsg)
 		}
 
 		// Parse the current token
@@ -1225,12 +1312,20 @@ func (p *NoPEGParser) parseToken() (env.Object, error) {
 	case NPEG_TOKEN_NUMBER:
 		val, err := strconv.ParseInt(p.currentToken.Value, 10, 64)
 		if err != nil {
+			// Provide more specific error based on the parse error
+			if strings.Contains(err.Error(), "value out of range") {
+				return nil, fmt.Errorf("number '%s' is out of range. Integer values must be between -9223372036854775808 and 9223372036854775807", p.currentToken.Value)
+			}
 			return nil, fmt.Errorf("invalid number format '%s': %s. Numbers must be integers like 42, -123, or 0", p.currentToken.Value, err.Error())
 		}
 		return *env.NewInteger(val), nil
 	case NPEG_TOKEN_DECIMAL:
 		val, err := strconv.ParseFloat(p.currentToken.Value, 64)
 		if err != nil {
+			// Provide more specific error based on the parse error
+			if strings.Contains(err.Error(), "value out of range") {
+				return nil, fmt.Errorf("decimal '%s' is out of range. Decimal values must be within the valid float64 range", p.currentToken.Value)
+			}
 			return nil, fmt.Errorf("invalid decimal format '%s': %s. Decimals must be numbers with decimal points like 3.14, -0.5, or 123.0", p.currentToken.Value, err.Error())
 		}
 		return *env.NewDecimal(val), nil
@@ -1265,7 +1360,7 @@ func (p *NoPEGParser) parseToken() (env.Object, error) {
 			idx3 := p.wordIndex.IndexWord(parts[2])
 			return *env.NewCPath3(0, *env.NewWord(idx1), *env.NewWord(idx2), *env.NewWord(idx3)), nil
 		}
-		return nil, fmt.Errorf("invalid context path: %s", p.currentToken.Value)
+		return nil, fmt.Errorf("invalid context path '%s'. Context paths must have exactly 2 or 3 parts separated by '/', like 'word/word' or 'word/word/word'. Found %d part(s)", p.currentToken.Value, len(parts))
 	case NPEG_TOKEN_OPCPATH:
 		parts := strings.Split(p.currentToken.Value[1:], "/")
 		if len(parts) == 2 {
@@ -1278,7 +1373,7 @@ func (p *NoPEGParser) parseToken() (env.Object, error) {
 			idx3 := p.wordIndex.IndexWord(parts[2])
 			return *env.NewCPath3(1, *env.NewWord(idx1), *env.NewWord(idx2), *env.NewWord(idx3)), nil
 		}
-		return nil, fmt.Errorf("invalid op context path: %s", p.currentToken.Value)
+		return nil, fmt.Errorf("invalid op context path '%s'. Op context paths must have exactly 2 or 3 parts separated by '/', like '+word/word' or '+word/word/word'. Found %d part(s)", p.currentToken.Value, len(parts))
 	case NPEG_TOKEN_PIPECPATH:
 		parts := strings.Split(p.currentToken.Value[1:], "/")
 		if len(parts) == 2 {
@@ -1291,7 +1386,7 @@ func (p *NoPEGParser) parseToken() (env.Object, error) {
 			idx3 := p.wordIndex.IndexWord(parts[2])
 			return *env.NewCPath3(2, *env.NewWord(idx1), *env.NewWord(idx2), *env.NewWord(idx3)), nil
 		}
-		return nil, fmt.Errorf("invalid pipe context path: %s", p.currentToken.Value)
+		return nil, fmt.Errorf("invalid pipe context path '%s'. Pipe context paths must have exactly 2 or 3 parts separated by '/', like '|word/word' or '|word/word/word'. Found %d part(s)", p.currentToken.Value, len(parts))
 	case NPEG_TOKEN_GETCPATH:
 		parts := strings.Split(p.currentToken.Value[1:], "/")
 		if len(parts) == 2 {
@@ -1304,7 +1399,7 @@ func (p *NoPEGParser) parseToken() (env.Object, error) {
 			idx3 := p.wordIndex.IndexWord(parts[2])
 			return *env.NewCPath3(3, *env.NewWord(idx1), *env.NewWord(idx2), *env.NewWord(idx3)), nil
 		}
-		return nil, fmt.Errorf("invalid get context path: %s", p.currentToken.Value)
+		return nil, fmt.Errorf("invalid get context path '%s'. Get context paths must have exactly 2 or 3 parts separated by '/', like '?word/word' or '?word/word/word'. Found %d part(s)", p.currentToken.Value, len(parts))
 	case NPEG_TOKEN_COMMA:
 		return env.Comma{}, nil
 	case NPEG_TOKEN_VOID:
@@ -1319,9 +1414,12 @@ func (p *NoPEGParser) parseToken() (env.Object, error) {
 		// Skip other unknown tokens
 		return nil, nil
 	case NPEG_TOKEN_ERROR:
-		// fmt.Println("parseToken NOSPACING CASE-->")
-		// fmt.Println(p.l.pos)
-		return nil, fmt.Errorf("%s", p.currentToken.Value)
+		// Use the descriptive error message from the token, or provide a default
+		errMsg := p.currentToken.Value
+		if errMsg == "" {
+			errMsg = "Syntax error: missing spacing between tokens"
+		}
+		return nil, fmt.Errorf("%s", errMsg)
 	default:
 		return nil, fmt.Errorf("unknown token type: %d", p.currentToken.Type)
 	}
@@ -1336,7 +1434,20 @@ func (p *NoPEGParser) Parse() (env.Object, error) {
 
 	// Expect a block start
 	if p.currentToken.Type != NPEG_TOKEN_BLOCK_START {
-		return nil, fmt.Errorf("expected block start, got %s", p.currentToken.Value)
+		var gotType string
+		switch p.currentToken.Type {
+		case NPEG_TOKEN_WORD:
+			gotType = fmt.Sprintf("word '%s'", p.currentToken.Value)
+		case NPEG_TOKEN_NUMBER:
+			gotType = fmt.Sprintf("number '%s'", p.currentToken.Value)
+		case NPEG_TOKEN_STRING:
+			gotType = fmt.Sprintf("string '%s'", p.currentToken.Value)
+		case NPEG_TOKEN_EOF:
+			gotType = "end of input"
+		default:
+			gotType = fmt.Sprintf("token type %d", p.currentToken.Type)
+		}
+		return nil, fmt.Errorf("expected block start '{' at the beginning of input, but got %s", gotType)
 	}
 
 	// Parse the block
@@ -1362,6 +1473,15 @@ func formatErrorLocationNoPEG(line string, col int) string {
 
 // inferErrorContextNoPEG tries to provide helpful context about what might be wrong
 func inferErrorContextNoPEG(tok NoPEGToken, err error, line string, col int, fullInput string, lineNum int) string {
+	// If the token value already contains a descriptive error message, use it
+	if tok.Value != "" && (strings.HasPrefix(tok.Value, "Missing space") || 
+		strings.HasPrefix(tok.Value, "Invalid") ||
+		strings.Contains(tok.Value, "must be followed by whitespace") ||
+		strings.Contains(tok.Value, "must start with")) {
+		return tok.Value
+	}
+
+	// Otherwise, provide context based on error type
 	switch tok.Err {
 	case ERR_SPACING_BLK:
 		if col > 0 && col <= len(line) {
@@ -1413,19 +1533,24 @@ func inferErrorContextNoPEG(tok NoPEGToken, err error, line string, col int, ful
 		return "Expected opening block delimiter '{' at the beginning of the input."
 	}
 	if strings.Contains(errMsg, "invalid number format") {
-		return fmt.Sprintf("Invalid number format in token '%s'. Check for malformed numbers.", tok.Value)
+		return fmt.Sprintf("Invalid number format in token '%s'. Numbers must be integers like 42, -123, or 0.", tok.Value)
 	}
 	if strings.Contains(errMsg, "invalid decimal format") {
-		return fmt.Sprintf("Invalid decimal format in token '%s'. Check for malformed decimal numbers.", tok.Value)
+		return fmt.Sprintf("Invalid decimal format in token '%s'. Decimals must be numbers with decimal points like 3.14, -0.5, or 123.0.", tok.Value)
 	}
 	if strings.Contains(errMsg, "invalid context path") {
 		return fmt.Sprintf("Invalid context path '%s'. Context paths must follow the pattern 'word/word' or 'word/word/word'.", tok.Value)
 	}
 	if strings.Contains(errMsg, "unknown token type") {
-		return fmt.Sprintf("Unrecognized token type at position. Check for invalid characters or malformed syntax.")
+		return "Unrecognized token type at position. Check for invalid characters or malformed syntax."
 	}
 
-	return fmt.Sprintf("Syntax error with token '%s'. %s", tok.Value, errMsg)
+	// If we have a token value, include it in the error message
+	if tok.Value != "" {
+		return fmt.Sprintf("Syntax error with token '%s'. %s", tok.Value, errMsg)
+	}
+
+	return errMsg
 }
 
 /* func inferErrorContextNoPEG_TOREMOVE(line string, col int, fullInput string, lineNum int) string {

@@ -472,6 +472,120 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	},
 
 	// Tests:
+	// equal { "a" |requires-one-of { "a" "b" "c" } } "a"
+	// equal { "b" |requires-one-of { "a" "b" "c" } } "b"
+	// equal { try { "x" |requires-one-of { "a" "b" "c" } } |message? |contains "must be one of" } 1
+	// equal { try { "x" |requires-one-of { "a" "b" "c" } } |message? |contains "\"x\"" } 1
+	// equal { try { 5 |requires-one-of { 1 2 3 } } |message? |contains "5" } 1
+	// Args:
+	// * value: Value to check against valid options
+	// * options: Block containing valid values
+	// Returns:
+	// * original value if it matches one of the options, or creates an error with failure flag set
+	"requires-one-of": {
+		AcceptFailure: true,
+		Argsn:         2,
+		Doc:           "Validates that a value matches one of the provided options, failing with a descriptive error if not.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch optionsBlock := arg1.(type) {
+			case env.Block:
+				// Check if value matches any option
+				options := optionsBlock.Series.GetAll()
+				for _, option := range options {
+					// Compare both kind and inspect output for equality
+					if arg0.GetKind() == option.GetKind() && arg0.Inspect(*ps.Idx) == option.Inspect(*ps.Idx) {
+						return arg0
+					}
+				}
+
+				// Value doesn't match any option - create descriptive error
+				ps.FailureFlag = true
+
+				// Format the value for display
+				valueStr := arg0.Inspect(*ps.Idx)
+
+				// Build error message with options
+				var errorMsg string
+				if len(options) > 0 {
+					optionsStr := "{ "
+					for i, opt := range options {
+						if i > 0 {
+							optionsStr += " "
+						}
+						optionsStr += opt.Inspect(*ps.Idx)
+					}
+					optionsStr += " }"
+					errorMsg = fmt.Sprintf("Value %s must be one of %s", valueStr, optionsStr)
+				} else {
+					errorMsg = fmt.Sprintf("Value %s does not match any valid option", valueStr)
+				}
+
+				return MakeRyeError(ps, *env.NewString(errorMsg), nil)
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "requires-one-of")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { "a" |requires-one-of { "a" "b" "c" } } "a"
+	// equal { "b" |requires-one-of { "a" "b" "c" } } "b"
+	// equal { try { "x" |requires-one-of { "a" "b" "c" } } |message? |contains "must be one of" } 1
+	// equal { try { "x" |requires-one-of { "a" "b" "c" } } |message? |contains "\"x\"" } 1
+	// equal { try { 5 |requires-one-of { 1 2 3 } } |message? |contains "5" } 1
+	// Args:
+	// * value: Value to check against valid options
+	// * options: Block containing valid values
+	// Returns:
+	// * original value if it matches one of the options, or creates an error with failure flag set
+	"^requires-one-of": {
+		AcceptFailure: true,
+		Argsn:         2,
+		Doc:           "Validates that a value matches one of the provided options, failing with a descriptive error if not.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch optionsBlock := arg1.(type) {
+			case env.Block:
+				// Check if value matches any option
+				options := optionsBlock.Series.GetAll()
+				for _, option := range options {
+					// Compare both kind and inspect output for equality
+					if arg0.GetKind() == option.GetKind() && arg0.Inspect(*ps.Idx) == option.Inspect(*ps.Idx) {
+						return arg0
+					}
+				}
+
+				// Value doesn't match any option - create descriptive error
+				ps.FailureFlag = true
+
+				// Format the value for display
+				valueStr := arg0.Inspect(*ps.Idx)
+
+				// Build error message with options
+				var errorMsg string
+				if len(options) > 0 {
+					optionsStr := "{ "
+					for i, opt := range options {
+						if i > 0 {
+							optionsStr += " "
+						}
+						optionsStr += opt.Inspect(*ps.Idx)
+					}
+					optionsStr += " }"
+					errorMsg = fmt.Sprintf("Value %s must be one of %s", valueStr, optionsStr)
+				} else {
+					errorMsg = fmt.Sprintf("Value %s does not match any valid option", valueStr)
+				}
+				ps.ReturnFlag = true
+				return MakeRyeError(ps, *env.NewString(errorMsg), nil)
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "requires-one-of")
+			}
+		},
+	},
+
+	// Tests:
 	// equal { 5 |fix { + 10 } } 5
 	// equal { try { fail "error" |fix { "fixed" } } } "fixed"
 	// equal { try { fail "error" |fix { fail "new error" } } |message? } "new error"
