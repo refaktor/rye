@@ -183,9 +183,16 @@ var builtins_iteration = map[string]*env.Builtin{
 
 	// Tests:
 	//  equal { produce\ 5 1 'acc { * acc , + 1 } } 1  ; Look at what we were trying to do here
+	// Args:
+	// * count: Integer number of iterations to perform
+	// * initial: Initial value for the accumulator
+	// * accumulator: Word to store the accumulator value
+	// * block: Block of code to execute on each iteration
+	// Returns:
+	// * final value of the accumulator word after all iterations
 	"produce\\": {
 		Argsn: 4,
-		Doc:   " TODO ",
+		Doc:   "Executes a block of code a specified number of times, updating an accumulator word with each iteration result.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch cond := arg0.(type) {
 			case env.Integer:
@@ -304,6 +311,14 @@ var builtins_iteration = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// stdout { "abc" .for { .prns } } "a b c "
+	// equal { { 1 2 3 } .for { + 1 } } 4
+	// Args:
+	// * collection: String, Block, List, or Table to iterate over
+	// * code: Block of code to execute for each value
+	// Returns:
+	// * result of the last block execution
 	"for___": { // **
 		Argsn: 2,
 		Doc:   "Iterates over each value in a collection, executing a block of code for each value.",
@@ -387,6 +402,11 @@ var builtins_iteration = map[string]*env.Builtin{
 	// Tests:
 	// stdout { for { 1 2 3 } { prns "x" } } "x x x "
 	// stdout { { "a" "b" "c" } .for { .prns } } "a b c "
+	// Args:
+	// * collection: Collection (Block, List, String, or Table) to iterate over
+	// * code: Block, Builtin, or Function to execute for each value, injecting the value
+	// Returns:
+	// * result of the last code execution
 	"for": { // **
 		Argsn: 2,
 		Doc:   "Accepts a block of values and a block of code, builtin, or function, does the code for each of the values, injecting them.",
@@ -431,9 +451,17 @@ var builtins_iteration = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// stdout { { "a" "b" "c" } .for\pos 'i { i prns . prns } } "1 a 2 b 3 c "
+	// Args:
+	// * collection: Collection to iterate over
+	// * word: Word to store the current position (1-based index)
+	// * code: Block of code to execute for each value
+	// Returns:
+	// * result of the last block execution
 	"for\\pos": { // *TODO -- deduplicate map\pos and map\idx
 		Argsn: 3,
-		Doc:   "Maps values of a block to a new block by evaluating a block of code.",
+		Doc:   "Iterates over a collection with position tracking (1-based), setting a word to the current position and injecting each value.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch list := arg0.(type) {
@@ -467,9 +495,17 @@ var builtins_iteration = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// stdout { { "a" "b" "c" } .for\idx 'i { i prns . prns } } "0 a 1 b 2 c "
+	// Args:
+	// * collection: Collection to iterate over
+	// * word: Word to store the current index (0-based)
+	// * code: Block of code to execute for each value
+	// Returns:
+	// * result of the last block execution
 	"for\\idx": { // *TODO -- deduplicate map\pos and map\idx
 		Argsn: 3,
-		Doc:   "Maps values of a block to a new block by evaluating a block of code.",
+		Doc:   "Iterates over a collection with index tracking (0-based), setting a word to the current index and injecting each value.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch list := arg0.(type) {
@@ -506,9 +542,14 @@ var builtins_iteration = map[string]*env.Builtin{
 	// Tests:
 	//  stdout { walk { 1 2 3 } { .prns .rest } } "1 2 3  2 3  3  "
 	//  equal { var 'x 0 , walk { 1 2 3 } { ::b .first + x ::x , b .rest } x } 6
+	// Args:
+	// * block: Block to walk through
+	// * code: Block of code to execute, which should return a modified block
+	// Returns:
+	// * result of the last block execution
 	"walk": { // **
 		Argsn: 2,
-		Doc:   "Accepts a block of values and a block of code, does the code for each of the values, injecting them.",
+		Doc:   "Walks through a block, executing code that can modify the block on each iteration (useful for custom iteration patterns).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch block := arg0.(type) {
 			case env.Block:
@@ -552,6 +593,11 @@ var builtins_iteration = map[string]*env.Builtin{
 	//  equal { purge list { } { .is-even } } list { }
 	//  equal { purge "1234" { .probe .to-integer .is-even } } { "1" "3" }
 	//  equal { purge "" { .to-integer .is-even } } { }
+	// Args:
+	// * series: Block, List, String, or Table to purge from
+	// * code: Block of code that returns true for values to remove
+	// Returns:
+	// * modified series with matching values removed
 	"purge": { // TODO ... doesn't fully work
 		Argsn: 2,
 		Doc:   "Purges values from a series based on return of a injected code block.",
@@ -651,9 +697,14 @@ var builtins_iteration = map[string]*env.Builtin{
 
 	// Tests:
 	//  equal { { 1 2 3 } :x purge! { .is-even } 'x , x } { 1 3 }
+	// Args:
+	// * code: Block of code that returns true for values to remove
+	// * word: Word referring to a Block to purge from (modified in-place)
+	// Returns:
+	// * Block containing the purged values
 	"purge!": { // TODO ... doesn't fully work
 		Argsn: 2,
-		Doc:   "Purges values from a series based on return of a injected code block.",
+		Doc:   "Purges values from a block stored in a word (modifying it in-place), returning the purged values.",
 		Pure:  false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch wrd := arg1.(type) {
@@ -697,6 +748,14 @@ var builtins_iteration = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	//  equal { map { 1 2 3 } { + 1 } } { 2 3 4 }
+	//  equal { map "abc" { .upper-case } } { "A" "B" "C" }
+	// Args:
+	// * series: Block, List, or String to map over
+	// * code: Block or Builtin to execute for each value
+	// Returns:
+	// * new series with transformed values
 	"map___": { // **
 		Argsn: 2,
 		Doc:   "Maps values of a block to a new block by evaluating a block of code.",
@@ -959,9 +1018,15 @@ var builtins_iteration = map[string]*env.Builtin{
 	//  equal { try { reduce { } 'acc { + acc } } |type? } 'error
 	//  equal { try { reduce list { } 'acc { + acc } } |type? } 'error
 	//  equal { try { reduce "" 'acc { + acc } } |type? } 'error
+	// Args:
+	// * collection: Collection to reduce (must not be empty)
+	// * accumulator: Word to store the accumulator value
+	// * code: Block of code to execute for each value, receiving accumulator as context
+	// Returns:
+	// * final accumulated value
 	"reduce": { // **
 		Argsn: 3,
-		Doc:   "Reduces values of a block to a new block by evaluating a block of code ...",
+		Doc:   "Reduces values of a block to a single value by evaluating a block of code, using the first element as the initial accumulator.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch list := arg0.(type) {
@@ -1168,9 +1233,14 @@ var builtins_iteration = map[string]*env.Builtin{
 	//  equal { partition "aaabbccc" { , } } list { "aaa" "bb" "ccc" }
 	//  equal { partition "" { , } } list { "" }
 	//  equal { partition "aaabbccc" ?is-string } list { "aaabbccc" }
+	// Args:
+	// * series: String, Block, or List to partition
+	// * code: Block or Builtin that returns a value for grouping consecutive elements
+	// Returns:
+	// * collection of partitions (each partition contains consecutive elements with the same result)
 	"partition": { // **
 		Argsn: 2,
-		Doc:   "Partitions a series by evaluating a block of code.",
+		Doc:   "Partitions a series by evaluating a block of code, grouping consecutive elements that return the same result.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch list := arg0.(type) {
@@ -1285,9 +1355,14 @@ var builtins_iteration = map[string]*env.Builtin{
 	//  ;equal { { "Anne" "Mitch" "Anya" } .list .group ?first } dict vals { "A" list { "Anne" "Anya" } "M" list { "Mitch" } }
 	//  equal { { } .list .group { .first } } dict vals { }
 	//  equal { try { { 1 2 3 4 } .group { .is-even } } |type? } 'error ; TODO keys can only be string currently
+	// Args:
+	// * series: Block or List to group
+	// * code: Block or Builtin that returns a string key for grouping
+	// Returns:
+	// * Dict with string keys and List values containing grouped elements
 	"group": { // **
 		Argsn: 2,
-		Doc:   "Groups a block or list of values given condition.",
+		Doc:   "Groups a block or list of values by a key generated from a code block (keys must be strings).",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			var ll []any
@@ -1524,6 +1599,11 @@ var builtins_iteration = map[string]*env.Builtin{
 	//  equal { try { seek { 1 2 3 4 } { > 5 } } |type? } 'error
 	//  equal { try { seek list { 1 2 3 4 } { > 5 } } |type? } 'error
 	//  equal { try { seek "1234" { .to-integer > 5 } } |type? } 'error
+	// Args:
+	// * series: Block, List, or String to search through
+	// * code: Block or Builtin that returns true when the desired value is found
+	// Returns:
+	// * first value for which the code returns true, error if none found
 	"seek": { // **
 		Argsn: 2,
 		Doc:   "Seek over a series until a Block of code returns True and return the value.",
@@ -1606,6 +1686,11 @@ var builtins_iteration = map[string]*env.Builtin{
 	// Tests:
 	// equal { var 'x 0 while { x < 5 } { x:: x + 1 } x } 5
 	// equal { var 'x 0 var 'y 0 while { x < 5 } { x:: x + 1 y:: y + x } y } 15
+	// Args:
+	// * condition: Block that evaluates to a boolean to determine whether to continue
+	// * body: Block of code to execute repeatedly
+	// Returns:
+	// * result of the last body execution
 	"while": {
 		Argsn: 2,
 		Doc:   "Executes a block of code repeatedly while a condition is true.",
@@ -1661,6 +1746,11 @@ var builtins_iteration = map[string]*env.Builtin{
 	// equal { var 'x 10 var 'y 0 until { x = 5 } { x:: x - 1 y:: y + x } y } 35
 	// equal { var 'x 3 until { x < 1 } { x:: x - 1 } x } 0
 	// equal { var 'x 0 until { x > 0 } { x:: x + 1 } x } 1
+	// Args:
+	// * body: Block of code to execute repeatedly (executed at least once)
+	// * condition: Block that evaluates to a boolean to determine when to stop
+	// Returns:
+	// * result of the last body execution
 	"until": {
 		Argsn: 2,
 		Doc:   "Executes a block of code repeatedly until a condition becomes true. Executes the body at least once before checking condition (do-until loop).",
@@ -1705,8 +1795,78 @@ var builtins_iteration = map[string]*env.Builtin{
 	},
 
 	// Tests:
+	// equal { { 1 2 3 } .for\ 'x { x prn } } ""  ; Expected output: "1 2 3 "
+	// equal { list { 10 20 30 } .for\ 'val { val prn } } ""  ; Expected output: "10 20 30 "
+	// equal { "abc" .for\ 'ch { ch prn } } ""  ; Expected output: "a b c "
+	// Args:
+	// * collection: String, Block, List, or other Collection to iterate over
+	// * word: Word to store each value during iteration
+	// * block: Block of code to execute for each value
+	// Returns:
+	// * result of the last block execution
+	"for\\": {
+		Argsn: 3,
+		Doc:   "Iterates over a collection, setting a word to each value. Works with lists, blocks, and strings.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch valueWord := arg1.(type) {
+			case env.Word:
+				switch block := arg2.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = block.Series
+
+					switch collection := arg0.(type) {
+					case env.String:
+						// Iterate over string characters
+						for _, ch := range collection.Value {
+							val := *env.NewString(string(ch))
+							ps.Ctx.Mod(valueWord.Index, val)
+							EvalBlock(ps)
+							if ps.ErrorFlag || ps.ReturnFlag {
+								ps.Ser = ser
+								return ps.Res
+							}
+							ps.Ser.Reset()
+						}
+					case env.Collection:
+						// Iterate over collection items (Block, List, etc.)
+						length := collection.Length()
+						for i := 0; i < length; i++ {
+							val := collection.Get(i)
+							ps.Ctx.Mod(valueWord.Index, val)
+							EvalBlock(ps)
+							if ps.ErrorFlag || ps.ReturnFlag {
+								ps.Ser = ser
+								return ps.Res
+							}
+							ps.Ser.Reset()
+						}
+					default:
+						ps.Ser = ser
+						return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "for\\")
+					}
+
+					ps.Ser = ser
+					return ps.Res
+				default:
+					return MakeArgError(ps, 3, []env.Type{env.BlockType}, "for\\")
+				}
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.WordType}, "for\\")
+			}
+		},
+	},
+
+	// Tests:
 	// equal { dict vals { "a" 1 "b" 2 } .for\kw 'k 'v { k prns v prn } } ""  ; Expected output: "a 1 b 2 "
 	// equal { { 10 20 30 } .for\kw 'i 'v { i prns v prn } } ""  ; Expected output: "0 10 1 20 2 30 "
+	// Args:
+	// * collection: Dict, Block, List, or other Collection to iterate over
+	// * keyWord: Word to store the key (or index for non-dict collections)
+	// * valueWord: Word to store the value
+	// * block: Block of code to execute for each key-value pair
+	// Returns:
+	// * result of the last block execution
 	"for\\kv": {
 		Argsn: 4,
 		Doc:   "Iterates over a collection with separate key and value words. For dicts, uses actual keys and values. For other collections, uses indices as keys.",
@@ -1728,8 +1888,9 @@ var builtins_iteration = map[string]*env.Builtin{
 								val := env.ToRyeValue(value)
 								ps.Ctx.Mod(valueWord.Index, val)
 								EvalBlockInjMultiDialect(ps, val, true)
+								MaybeDisplayFailureOrError(ps, ps.Idx, "for\\kv")
 								if ps.ErrorFlag || ps.ReturnFlag {
-									ps.Ser = ser
+									// ps.Ser = ser
 									return ps.Res
 								}
 								ps.Ser.Reset()
@@ -1742,8 +1903,14 @@ var builtins_iteration = map[string]*env.Builtin{
 								val := collection.Get(i)
 								ps.Ctx.Mod(valueWord.Index, val)
 								EvalBlockInjMultiDialect(ps, val, true)
+								// ERRORING . if we don't display here, nothing of meaning is displayed
+								// just runtime error
+								MaybeDisplayFailureOrError(ps, ps.Idx, "for\\kv")
 								if ps.ErrorFlag || ps.ReturnFlag {
-									ps.Ser = ser
+									fmt.Println("IS ERROR 1")
+									// ERRORING . if we return the ser then error location moves to outside of for\kv
+									// so we don't want to
+									// ps.Ser = ser
 									return ps.Res
 								}
 								ps.Ser.Reset()

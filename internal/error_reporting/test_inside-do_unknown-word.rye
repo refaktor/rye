@@ -1,0 +1,3 @@
+print 123
+do {  some-unknown-word  }
+print `dont-print`

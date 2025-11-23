@@ -1,0 +1,5 @@
+"hello" .print
+print "hello" ++ "yello"
+print length? Get https://google.com
+print 1 / 0
+print 101

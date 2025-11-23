@@ -293,7 +293,32 @@ var Builtins_io = map[string]*env.Builtin{
 					ps.FailureFlag = true
 					return MakeBuiltinError(ps, "Error opening file.", "file//Reader")
 				}
-				return *env.NewNative(ps.Idx, bufio.NewReader(file), "file//Reader")
+				return *env.NewNative(ps.Idx, bufio.NewReader(file), "reader")
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "file//Reader")
+			}
+		},
+	},
+	// Tests:
+	// equal { Reader probe Open probe %data/file.txt |kind? } 'reader
+	// Args:
+	// * source: file object to read from
+	// Returns:
+	// * native reader object
+	"file//Writer": {
+		Argsn: 1,
+		Doc:   "Creates a new reader from file object.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+
+			switch s := arg0.(type) {
+			case env.Native:
+				file, ok := s.Value.(*os.File)
+				if !ok {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Error opening file.", "file//Reader")
+				}
+				return *env.NewNative(ps.Idx, bufio.NewWriter(file), "writer")
 			default:
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "file//Reader")
@@ -574,6 +599,48 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
+	// Args:
+	// * file: native file object
+	// * content: string to write to the file
+	// Returns:
+	// * the file object if successful (allows chaining)
+	"file//Write": {
+		Argsn: 2,
+		Doc:   "Writes a string directly to a file object.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			// Check if we're in readonly mode
+			profile, exists := os.LookupEnv("RYE_SECCOMP_PROFILE")
+			if exists && profile == "readonly" {
+				ps.FailureFlag = true
+				return MakeBuiltinError(ps, "write operation blocked by readonly seccomp profile", "file//Write")
+			}
+
+			switch s := arg0.(type) {
+			case env.Native:
+				file, ok := s.Value.(*os.File)
+				if !ok {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Native not os.File", "file//Write")
+				}
+				switch content := arg1.(type) {
+				case env.String:
+					_, err := file.WriteString(content.Value)
+					if err != nil {
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, err.Error(), "file//Write")
+					}
+					return arg0 // Return the file object for chaining
+				default:
+					ps.FailureFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "file//Write")
+				}
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "file//Write")
+			}
+		},
+	},
+
 	// Tests:
 	// equal { Close Open %data/file.txt } ""
 	// Args:
@@ -799,7 +866,7 @@ var Builtins_io = map[string]*env.Builtin{
 	// * content: string to write
 	// Returns:
 	// * the writer object if successful
-	"writer//Write\\string": {
+	"writer//Write": {
 		Argsn: 2,
 		Doc:   "Writes a string to a writer.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -809,16 +876,16 @@ var Builtins_io = map[string]*env.Builtin{
 				// Allow writing to stdout/stderr but block writing to files
 				switch ww := arg0.(type) {
 				case env.Native:
-					writer, ok := ww.Value.(*os.File)
+					_, ok := ww.Value.(*bufio.Writer)
 					if !ok {
 						return MakeBuiltinError(ps, "Native not io.File", "writer//Write\\string")
 					}
 
 					// Check if the writer is stdout or stderr
-					if writer != os.Stdout && writer != os.Stderr {
-						ps.FailureFlag = true
-						return MakeBuiltinError(ps, "write operation blocked by readonly seccomp profile", "writer//Write\\string")
-					}
+					// if writer != os.Stdout && writer != os.Stderr {
+					// 	ps.FailureFlag = true
+					// 	return MakeBuiltinError(ps, "write operation blocked by readonly seccomp profile", "writer//Write\\string")
+					// }
 				}
 			}
 
@@ -826,7 +893,7 @@ var Builtins_io = map[string]*env.Builtin{
 			case env.String:
 				switch ww := arg0.(type) {
 				case env.Native:
-					writer, ok := ww.Value.(*os.File)
+					writer, ok := ww.Value.(*bufio.Writer)
 					if !ok {
 						return MakeBuiltinError(ps, "Native not io.File", "writer//Write\\string")
 					}

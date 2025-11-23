@@ -1,0 +1,142 @@
+<html>
+  <head>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,700|Roboto:300,400,700&subset=latin-ext' rel='stylesheet' type='text/css'>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Londrina+Solid:wght@300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="tpl/main.2.css?a001" />
+    <script src="tpl/menu.js?a001"></script>
+    <script src="tpl/jsGoo.js"></script>
+    <!-- syntax highlighting -->
+    <link rel="stylesheet" type="text/css" href="tpl/desert.css" />
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/prettify/r298/run_prettify.js"></script>
+    <script type="text/javascript" src="./tpl/lang-rye.js"></script>
+    <!-- syntax highlightinh end -->
+  </head>
+<body onload="generateMenu()">
+<div id="menu-holder">
+</div>
+<p></p>
+<div class="menumenu">
+  <a href="/">← main page</a>
+  <br/>
+  <br/>
+  <b>Rye core:</b>
+  <a href='basics.html'>Basics and code flow</a> &middot;
+  <a href='structures.html'>Rye structures</a> &middot;
+  <!--a href='spreadsheet.html'>Table datatype</a> &middot ;-->
+  <a href='validation.html'>Validation and Regexps</a> &middot;
+  <a href='misc.html'>Miscellaneous</a>
+  <!--a href='spreadsheets.html'>Validation dialect</a><br/-->
+  <!--b>Modules:</b> <a href='basics.html'>HTTP</a> &middot; <a href='structures.html'>SMPT</a> &middot; <a href='spreadsheets.html'>JSON</a> &middot;-->
+</div>
+<h1>Rye reference: Validation</h1>
+<h2>Validation dialect</h2><p>Functions that convert between Rye value types.</p><div class='section'>
+<h3>validate (required/optional)</h3><p>Pure BFunction(1): Tries to change a Rye value to a word with same name. (core) (to-word)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>a 1  .dict .validate a: required
+; returns [
+;  a: 1
+; ]</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>a 1  .dict .validate a: required integer
+; returns [
+;  a: 1
+; ]</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>a 1  .dict .validate b: required  |disarm |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>a 1  .dict .validate b: optional B
+; returns [
+;  b: B
+; ]</code></pre>
+</div>
+<h3>validate (types)</h3><p>Pure BFunction(1): Tries to change a Rye value to a word with same name. (core) (to-word)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>a 1  .dict .validate a: required
+; returns [
+;  a: 1
+; ]</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>a 1  .dict .validate a: required string
+; returns [
+;  a: 1
+; ]</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>a 1  .dict .validate a: required integer
+; returns [
+;  a: 1
+; ]</code></pre>
+1
+1
+<pre class='prettyprint lang-rye'><code language='lang-rye'>a 1.0  .dict .validate a: required decimal
+; returns [
+;  a: 1.000000
+; ]</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>e rye@ryelang.org  .dict .validate e: required email
+; returns [
+;  e: rye@ryelang.org
+; ]</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>.dict .validate b: optional 1 integer
+; returns [
+;  b: 1
+; ]</code></pre>
+2
+2
+<pre class='prettyprint lang-rye'><code language='lang-rye'>.dict .validate b: optional 2 decimal
+; returns [
+;  b: 2.000000
+; ]</code></pre>
+</div>
+<h3>validate (calc/check)</h3><p>Pure BFunction(1): Tries to change a Rye value to a word with same name. (core) (to-word)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>a AAA  .dict .validate a: required integer calc + 1   |disarm |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>a 100  .dict .validate a: required integer calc + 1
+; returns [
+;  a: 101
+; ]</code></pre>
+</div>
+</div>
+<h2>Regular expressions</h2><p>Functions for handling and working with Context.</p><div class='section'>
+<h3>regexp</h3><p>BFunction(1): Creates a Regular expression object. (regexp) (regexp)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>regexp [0-9] |type?
+; returns native</code></pre>
+</div>
+<h3>is-match</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>regexp [0-9] |is-match 5
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>regexp [0-9] |is-match a
+; returns 0</code></pre>
+</div>
+<h3>match?</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>regexp [0-9]+c+ |match? aa33bb55cc
+; returns 55cc</code></pre>
+</div>
+<h3>submatch?</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>regexp ([0-9]+) |submatch? aa33bb44cc
+; returns 33</code></pre>
+</div>
+<h3>submatches?</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>regexp ([0-9]+).*?(c+) |submatches? aa33bb55cc
+; returns 33 cc </code></pre>
+</div>
+<h3>find-all</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>regexp ([0-9]+) |find-all aa33bb55cc
+; returns 33 55 </code></pre>
+</div>
+<h3>replace-all</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>regexp ([0-9]+) |replace-all aa33bb55cc XX
+; returns aaXXbbXXcc</code></pre>
+</div>
+</div>
+  
+<script type="text/javascript">
+var sc_project=12932344; 
+var sc_invisible=1; 
+var sc_security="6e399927"; 
+</script>
+<script type="text/javascript"
+src="https://www.statcounter.com/counter/counter.js"
+async></script>
+<noscript><div class="statcounter"><a title="Web Analytics"
+href="https://statcounter.com/" target="_blank"><img
+class="statcounter"
+src="https://c.statcounter.com/12932344/0/6e399927/1/"
+alt="Web Analytics"
+referrerPolicy="no-referrer-when-downgrade"></a></div></noscript>
+</body>
+</html>

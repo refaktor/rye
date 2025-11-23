@@ -1,0 +1,68 @@
+<html>
+  <head>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,700|Roboto:300,400,700&subset=latin-ext' rel='stylesheet' type='text/css'>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Londrina+Solid:wght@300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="tpl/main.2.css?a001" />
+    <script src="tpl/menu.js?a001"></script>
+    <script src="tpl/jsGoo.js"></script>
+    <!-- syntax highlighting -->
+    <link rel="stylesheet" type="text/css" href="tpl/desert.css" />
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/prettify/r298/run_prettify.js"></script>
+    <script type="text/javascript" src="./tpl/lang-rye.js"></script>
+    <!-- syntax highlightinh end -->
+  </head>
+<body onload="generateMenu()">
+<div id="menu-holder">
+</div>
+<p></p>
+<div class="menumenu">
+  <a href="/">← main page</a>
+  <br/>
+  <br/>
+  <b>Rye core:</b>
+  <a href='basics.html'>Basics and code flow</a> &middot;
+  <a href='structures.html'>Rye structures</a> &middot;
+  <!--a href='spreadsheet.html'>Table datatype</a> &middot ;-->
+  <a href='validation.html'>Validation and Regexps</a> &middot;
+  <a href='misc.html'>Miscellaneous</a>
+  <!--a href='spreadsheets.html'>Validation dialect</a><br/-->
+  <!--b>Modules:</b> <a href='basics.html'>HTTP</a> &middot; <a href='structures.html'>SMPT</a> &middot; <a href='spreadsheets.html'>JSON</a> &middot;-->
+</div>
+<h1>Rye reference: Table_mutations</h1>
+<h2>spreadsheet mutations</h2><p>Functions that mutate thawed spreadsheets</p><div class='section'>
+<h3>add-row!</h3><p>add-row!</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>spreadsheet title isbn price quantity  Do Androids Dream of Electric Sheep? 9781608866403 12.990000 4 Animal Farm 9780151002177 2.490000 10 An Oxford Anthology of Shakespeare 9780198129356 19.990000 10 And Then There Were None 9780062073488 3.990000 10  |thaw ::cart cart |nth 1 |-> title
+; returns Do Androids Dream of Electric Sheep?</code></pre>
+19.99
+19.99
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cart |nth 3 |-> price
+; returns 19.990000</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cart .remove-row! 1 cart .nth 1 |-> title
+; returns Animal Farm</code></pre>
+[Dict (): title: [String: Windowlight] isbn: [String: 0000000000000] price: [Decimal: 0.990000] quantity: [Integer: 1] ]
+dict
+<pre class='prettyprint lang-rye'><code language='lang-rye'>rowdict: dict title Windowlight isbn 0000000000000 price 0.990000 quantity 1  probe rowdict print rowdict .type? cart .update-row! 1 rowdict cart .nth 1 |-> isbn
+; returns 0000000000000</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>updatefn: fn row  dict title I see the moon isbn 0123456789012 price 0.990000 quantity 1   cart .update-row! 3 updatefn cart .nth 3 |-> isbn
+; returns 0123456789012</code></pre>
+</div>
+</div>
+  
+<script type="text/javascript">
+var sc_project=12932344; 
+var sc_invisible=1; 
+var sc_security="6e399927"; 
+</script>
+<script type="text/javascript"
+src="https://www.statcounter.com/counter/counter.js"
+async></script>
+<noscript><div class="statcounter"><a title="Web Analytics"
+href="https://statcounter.com/" target="_blank"><img
+class="statcounter"
+src="https://c.statcounter.com/12932344/0/6e399927/1/"
+alt="Web Analytics"
+referrerPolicy="no-referrer-when-downgrade"></a></div></noscript>
+</body>
+</html>

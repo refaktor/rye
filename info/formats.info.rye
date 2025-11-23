@@ -281,29 +281,42 @@ section "SXML " "Streaming, SAX-like XML processing" {
 	{
 ``	}
 
-	group "rye-sxml-start//attr?" 
-	"Retrieves an attribute value by index from an XML start element."
+	group "rye-sxml-start//Attr?" 
+	"Retrieves an attribute by index or name from an XML start element."
 	{
 		arg `element: XML start element`
-		arg `index: Integer index of the attribute to retrieve`
-		returns `string value of the attribute or void if not found`
+		arg `index: Integer index of the Attribute to retrieve`
+		returns `list [ namespace tag value ] of the attribute or void if not found`
 	}
 
 	{
 		stdout {
 		`<scene><ship type="xwing"><person age="25">Luke</person></ship><ship type="destroyer"><person age="55">Vader</person></ship></scene>` |reader
-		.do-sxml { <ship> [ .attr? 0 |prns	 ] }
+		.do-sxml { <ship> [ .Attr? 0 |last |prns	 ] }
 		} "xwing destroyer "
 		stdout {
 		`<scene><ship type="xwing"><person age="25">Luke</person></ship><ship type="destroyer"><person age="55">Vader</person></ship></scene>` |reader
-		.do-sxml { <person> [ .attr? 0 |prns	 ] }
+		.do-sxml { <person> [ .Attr? 0 |last |prns	 ] }
 		} "25 55 "
 	}
 
 	{
 ``	}
 
-	group "rye-sxml-start//name?" 
+	group "rye-sxml-start//Attrs?" 
+	"Returns a dict of all attributes from an XML start element."
+	{
+		arg `element: XML start element`
+		returns `dict with all attributes where keys are "attrname" or "namespace:attrname"`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "rye-sxml-start//Name?" 
 	"Returns the name of an XML start element."
 	{
 		arg `element: XML start element`
@@ -382,13 +395,26 @@ section "HTML " "HTML processing functions" {
 	"Retrieves an attribute value by name or index from an HTML element."
 	{
 		arg `element: HTML token element`
-		arg `name-or-index: Attribute name (as word) or index (as integer)`
+		arg `name-or-index: Attribute name (as word or string) or index (as integer)`
 		returns `string value of the attribute or void if not found`
 	}
 
 	{
 		stdout { "<div class='menu' id='nav'></div>" |reader .Parse-html { <div> [ .Attr? 'class |prn ] } } "menu"
 		stdout { "<div class='menu' id='nav'></div>" |reader .Parse-html { <div> [ .Attr? 'id |prn ] } } "nav"
+	}
+
+	{
+``	}
+
+	group "rye-html-start//Attrs?" 
+	"Returns a dict of all attributes from an HTML element."
+	{
+		arg `element: HTML token element`
+		returns `dict with all attributes where keys are attribute names`
+	}
+
+	{
 	}
 
 	{

@@ -1945,7 +1945,7 @@ Type is not matching - Validation_EvalBlock.
 <p class='returns'><b>returns</b> The registered functiongeneric <integer> <add> fn [ a b ] [ a + b ] // tagwords are temporary here</p>
 <div class='group'>
 2
-1040
+1056
 Generic
 <pre class='prettyprint lang-rye'><code language='lang-rye'>generic 'integer 'add fn { a b } { a + b } |type?
 ; returns function</code></pre>
@@ -2075,8 +2075,10 @@ Generic
 ; returns 123</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 123 y: 456 } cc: clone c cc/y
 ; returns 456</code></pre>
+ISTI PARENT
 <pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x:: 123 } cc: clone c do\in cc { x:: 999 } c/x
 ; returns 123</code></pre>
+ISTI PARENT
 </div>
 <h3>clone\</h3><p>Creates a copy of a context and evaluates a block of code inside the clone.</p>
 <p class='arg'><b>ctx</b> Context object to clone</p>
@@ -2624,7 +2626,7 @@ changed
 <p class='arg'>None</p>
 <p class='returns'><b>returns</b> Integer 1 on success</p>
 <div class='group'>
-State current context to [1mconsole_251117_231220.rye[0m.
+State current context to [1mconsole_251122_014048.rye[0m.
 <pre class='prettyprint lang-rye'><code language='lang-rye'>save\current |type?
 ; returns integer</code></pre>
 </div>
@@ -2724,7 +2726,7 @@ State current context to [1mconsole_251117_231220.rye[0m.
 ; returns 246</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>do { 123 + }
 ; correctly causes error:
-; argument 2 of 2 missing of builtin: 'Adds or joins two values together, with behavior depending on types: adds numbers, concatenates strings/blocks, merges dictionaries, etc. (base) (_+)' </code></pre>
+; Argument 2 of 2 missing for builtin 'Adds or joins two values together, with behavior depending on types: adds numbers, concatenates strings/blocks, merges dictionaries, etc. (base) (_+)'. Check that all required arguments are provided. </code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>do { _+ _+ 12 23 34 }
 ; returns 69</code></pre>
 <pre class='prettyprint lang-rye'><code language='lang-rye'>do { 12 * 23 |+ 34 }
@@ -2767,12 +2769,16 @@ State current context to [1mconsole_251117_231220.rye[0m.
 <p class='arg'><b>block</b> Block of code to execute in current context with the specified parent context</p>
 <p class='returns'><b>returns</b> result of executing the block with the modified parent context</p>
 <div class='group'>
+ISTI PARENT
 <pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } do\in c { x * 9.99 }
 ; returns 999</code></pre>
+ISTI PARENT
 <pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x:: 100 } do\in c { inc! 'x }
 ; returns 101</code></pre>
+ISTI PARENT
 <pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } do\in c { x:: 200 , x }
 ; returns 200</code></pre>
+ISTI PARENT
 <pre class='prettyprint lang-rye'><code language='lang-rye'>c: context { x: 100 } do\in c { x:: 200 } c/x
 ; returns 100</code></pre>
 </div>

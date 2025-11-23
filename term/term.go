@@ -1113,6 +1113,27 @@ func StrColorWhite() string {
 func StrColorBrBlack() string {
 	return "\x1b[30;1m"
 }
+func StrColorBrRed() string {
+	return "\x1b[31;1m"
+}
+func StrColorBrGreen() string {
+	return "\x1b[32;1m"
+}
+func StrColorBrYellow() string {
+	return "\x1b[33;1m"
+}
+func StrColorBrBlue() string {
+	return "\x1b[34;1m"
+}
+func StrColorBrMagenta() string {
+	return "\x1b[35;1m"
+}
+func StrColorBrCyan() string {
+	return "\x1b[36;1m"
+}
+func StrColorBrWhite() string {
+	return "\x1b[37;1m"
+}
 
 // Bright colors
 func ColorBrBlack() {
@@ -1140,6 +1161,32 @@ func ColorBrWhite() {
 	termPrint("\x1b[37;1m")
 }
 
+// Background string functions
+func StrColorBgBlack() string {
+	return "\x1b[40m"
+}
+func StrColorBgRed() string {
+	return "\x1b[41m"
+}
+func StrColorBgGreen() string {
+	return "\x1b[42m"
+}
+func StrColorBgYellow() string {
+	return "\x1b[43m"
+}
+func StrColorBgBlue() string {
+	return "\x1b[44m"
+}
+func StrColorBgMagenta() string {
+	return "\x1b[45m"
+}
+func StrColorBgCyan() string {
+	return "\x1b[46m"
+}
+func StrColorBgWhite() string {
+	return "\x1b[47m"
+}
+
 // Background
 func ColorBgBlack() {
 	termPrint("\x1b[40m")
@@ -1164,6 +1211,17 @@ func ColorBgCyan() {
 }
 func ColorBgWhite() {
 	termPrint("\x1b[47m")
+}
+
+// Font style string functions
+func StrBold() string {
+	return "\x1b[1m"
+}
+func StrUnderline() string {
+	return "\x1b[4m"
+}
+func StrResetBold() string {
+	return "\x1b[22m"
 }
 
 // Font style

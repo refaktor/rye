@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta name="generator" content="Hugo 0.152.2">
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>Rye Language</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&family=Open+Sans:wght@500&display=swap" rel="stylesheet"><meta name="description" content="Rye is a work in progress dynamic language with some new ideas" />
+<meta property="og:title" content="Rye language" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://ryelang.org" />
+<meta property="og:image" content="" />
+<meta property="og:description" content="" />
+<meta name="twitter:card" content="" />
+<meta name="twitter:site" content="" />
+<meta name="twitter:creator" content="" />
+
+  <link rel="icon" href="https://ryelang.org/favicon.png">
+
+  
+  
+  <link rel="stylesheet" href="/css/style.min.6f47cd3f44734bce3615cb245c32c7d38565eeb1dd4247d0fbe17d548589dfcc.css">
+  
+
+  
+
+</head>
+
+<body class='page page-home'>
+  <div id="main-menu-mobile" class="main-menu-mobile">
+  <ul>
+    
+    
+    <li class="menu-item-meet rye">
+      <a href="/meet_rye/">
+        <span>Meet Rye</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-cookbook">
+      <a href="/cookbook/">
+        <span>Cookbook</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-reference">
+      <a href="/info/base.html">
+        <span>Reference</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-blog">
+      <a href="/blog/">
+        <span>Blog</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-github">
+      <a href="https://github.com/refaktor/rye">
+        <span>Github</span>
+      </a>
+    </li>
+    
+  </ul>
+</div>
+  <div class="wrapper">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/stackoverflow-light.min.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/clojure.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/lisp.min.js"></script>
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<script>
+
+  hljs.highlightAll();
+  setTimeout(wrapCodeLinesInDivs, 500)
+
+  function showConsole() {
+      var shell = document.getElementById("shell-frame");
+      if (shell.style.display != "block") {
+	  shell.style.display = "block";
+	  shell.src = "/wasm/ryeshell/index2.html";
+
+	  var btn = document.getElementById("shell-close-btn");
+	  btn.style.display = "inline";
+      }
+  }
+
+  function hideConsole() {
+      var shell = document.getElementById("shell-frame");  
+      shell.style.display = "none";
+      shell.src = "";
+
+      var btn = document.getElementById("shell-close-btn");
+      btn.style.display = "none";
+  }
+
+  function sendToRyeShell(code, newline) {
+      var iframe = document.getElementById("shell-frame");
+      if (iframe) {
+	  if (iframe.contentWindow.sendToTerminal) {
+	      var justCode = code.split(";")[0];
+	      justCode = justCode.replace("\n", "");
+	      var term = iframe.contentWindow.document.getElementById("terminal");
+	      iframe.contentWindow.sendToTerminal(justCode, term);
+	  } else {
+	      alert("First open the Rye console in top-right corner.");
+	  }
+      } else {
+	  alert("Open Rye console");
+      }
+  }
+
+  function playInRyeShell(code) {
+      var iframe = document.getElementById("shell-frame");
+      if (iframe) {
+	  if (iframe.contentWindow.sendToTerminal) {
+	      var term = iframe.contentWindow.document.getElementById("terminal");
+	      iframe.contentWindow.sendLinesToTerminal(code, 400, term).start();
+	  } else {
+	      alert("First open the Rye console in top-right corner.");
+	  }
+      } else {
+	  alert("Open Rye console");
+      }
+  }
+
+  function removeCommentsAndEmptyLines(text) {
+      
+      text = text.replace("Play in Rye console", "");
+      
+      const lines = text.split('\n');
+
+      
+      const filteredLines = lines.filter(line => {
+	  
+	  const trimmedLine = line.trim();
+	  
+	  
+	  return trimmedLine && !trimmedLine.startsWith(';');
+      });
+
+      
+      return filteredLines.join('\n');
+  }
+  
+  function wrapCodeLinesInDivs() {
+      
+      const codeElements = document.querySelectorAll('pre > code'); 
+
+      codeElements.forEach(codeElement => {
+	  console.log(codeElement.className);
+	  if (codeElement.className.indexOf("language-DISABLEDNOW-clojure") >= 0) {
+	  	  console.log(codeElement.className.indexOf("language-clojure"));
+	  const codeLines = codeElement.innerHTML.split('\n'); 
+	  const codeLines2 = codeElement.innerText.split('\n'); 
+
+	  codeElement.innerHTML = ''; 
+
+	  const regex = /^\s*(;.*|.*in console.*|\s*)$/;
+
+	  var i = 0;
+	  codeLines2.forEach(line => {
+	      const codeLineDiv = document.createElement('div');
+	      codeLineDiv.innerHTML = codeLines[i]+"\n";
+
+	      console.log()
+	      if (!regex.test(line)) {
+		  codeLineDiv.className = "codeline"
+	      } else {
+		  codeLineDiv.className = "nocode"
+	      }
+	      
+		  codeElement.appendChild(codeLineDiv); 
+	      
+	 
+	      i ++;
+	  });
+	  
+	  const button = document.createElement("button"); 
+	  button.textContent = "Play in Rye console";
+	  
+	  
+	  button.addEventListener("click", () => {
+	      
+
+	      var codeAll = codeElement.textContent;
+	      var code = removeCommentsAndEmptyLines(codeAll);
+	      console.log(code);
+	      playInRyeShell(code);
+	  });
+	  
+	  
+	      codeElement.appendChild(button);
+	  }
+
+      });
+
+      document.addEventListener('click', event => {
+	  const clickedElement = event.target;
+	  const closestDiv = clickedElement.closest('.codeline');
+	  if (!closestDiv) return; 
+	  
+	  sendToRyeShell(closestDiv.innerText); 
+      });
+  }
+
+</script>
+<style>
+  body .content pre {
+      _background-color: #f6f6f6;
+      _background-color: #333;
+      background-color: #f2f2f0;
+      border-radius: 5px;
+      margin-bottom: 1rem;
+      font-size: 12px;
+      max-width: 665px;
+  }
+  a.shell-button {
+      font-family: monospace;
+      font-size: 13px;
+      border-top: 1px solid #666;
+      border-left: 1px solid #666;
+      border-right: 1px solid #444;
+      border-bottom: none;
+      color: #ccc;
+      padding: 4px 6px;
+      background-color: #222;
+      text-decoration: none;
+      border-radius: 4px;
+      margin-right: 2px;
+      z-index: 900;
+  }
+  pre > code > div.codeline:hover {
+      background-color: #77777744;
+  }
+
+   
+  pre > code > div.codeline {
+      position: relative;  
+      __padding: 10px;
+      font-size: 13px;
+
+  }
+
+   
+  pre > code > div.codeline::after {
+      content: "Try in console";  
+      display: block;
+      position: absolute;
+      top: 0;
+      right: 0;
+      padding: 2px 4px 1px 4px;
+      background-color: #555;
+      cursor: pointer;
+      opacity: 0;  
+      _transition: opacity 0.2s ease-in-out;
+      font-size: smaller;
+      color: #ccc;
+  }
+
+   
+  pre > code > div.codeline:hover::after {
+      opacity: 1;  
+  }
+  pre {
+      position: relative;
+  }
+  pre > code > button {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      padding: 2px 4px;
+      background-color: #555;
+      cursor: pointer;
+      _transition: opacity 0.2s ease-in-out;
+      font-size: smaller;
+      border: none;
+      color: #ccc;
+  }
+
+  div.content > h2 {
+      margin-top: 3rem;
+      margin-bottom: 1.6rem;
+  }
+</style>
+<div class='header'>
+  <div class="container">
+    <div class="logo">
+      <a href="https://ryelang.org/"><img alt="Logo" src="/images/logo.png" /></a>
+    </div>
+    <div class="logo-mobile">
+      <a href="https://ryelang.org/"><img alt="Logo" src="/images/logo.png" /></a>
+    </div>
+    
+    <div id="main-menu" class="main-menu">
+  <ul>
+    
+    
+    <li class="menu-item-meet rye">
+      <a href="/meet_rye/">
+        <span>Meet Rye</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-cookbook">
+      <a href="/cookbook/">
+        <span>Cookbook</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-reference">
+      <a href="/info/base.html">
+        <span>Reference</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-blog">
+      <a href="/blog/">
+        <span>Blog</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-github">
+      <a href="https://github.com/refaktor/rye">
+        <span>Github</span>
+      </a>
+    </li>
+    
+    <li class="menu-item-try-rye">
+      
+      <a href="/wasm/tryrye/" class="try-rye-button" target="_blank">
+      <i class="fa fa-terminal"></i> <span>Try Rye</span>
+      </a>
+    </li>
+  </ul>
+</div>
+
+    <button id="toggle-main-menu-mobile" class="hamburger hamburger--slider" type="button">
+  <span class="hamburger-box">
+    <span class="hamburger-inner"></span>
+  </span>
+</button>
+  </div>
+  <div class="container2" style="position: fixed; top: 90px; right: 10px; width: 640px; z-index: 1000; opacity: 0.9;" >
+    <div class="buttons" style="float: right; text-align: right; margin-bottom: 5px;">
+      <a style="display: none;" id="shell-close-btn" class="shell-button" href="javascript:void(0)" onclick="hideConsole()">
+        <i class="fa fa-times"></i> Close Console
+      </a>
+    </div>
+    <iframe id="shell-frame" src="" style="display: none; width: 655px; height: 400px;">
+    </iframe>
+  </div>
+</div>
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+    
+
+<link rel="stylesheet" type="text/css" href="/images/asciinema-player.css" />
+<link rel="stylesheet" type="text/css" href="https://ryelang.org/tpl/desert.css" />
+<style>
+  pre > code {
+      __width: 440px;
+      border-radius: 5px;
+      __padding: 16px;
+      __background-color: #3e3e3e;
+      font-size: 13px;
+  }
+
+  ul.ryelist li {   
+      font-family: "Roboto", Arial, sans-serif, -apple-system;
+      line-height: 1.4;
+      font-size: 1.2rem;
+      font-weight: 300;
+      list-style-type: circle;
+      margin-left: 20px;
+  }
+
+  div.concepts-list h3 {
+      font-weight: normal;
+      font-size: 23px;
+      margin-bottom: 10px;
+  }
+  div.concepts-list h4 {
+      font-weight: normal;
+      font-size: 18px;
+      margin-bottom: 10px;
+  }
+  div.concepts-list h5 {
+
+  }
+  div.concepts-list p {
+      margin-bottom: 10px;
+
+  }
+
+</style>
+
+<div class="container pt-4 pb-1">
+  <div class="row">
+    <div class="col-12">
+      
+      <h1 class="title pb-3 pt-2" style="color: #436269; font-weight: 500; font-family: Nunito, sans-serif; font-size: 100px;">Rye</h1>
+      <div class="content pb-1">
+        
+        <p><strong>What&rsquo;s Rye?</strong> A flexible, high-level programming language designed for predictible state management</p>
+<p><strong>How it&rsquo;s different?</strong> Code-as-data, keyword-less, function centric, 41 datatypes, multiple DSL-s, strict state handling</p>
+
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container pt-0 pb-4">
+  <div class="row justify-content-center">
+    <div class="col-12">
+      <div class="terminal_"><center style="background-color: whitesmoke; padding-bottom: 20px; padding: 10px 130px;">
+	  <p style="padding-top: 16px; padding-bottom: 0px; margin-bottom: 10px;"><b>Rye console demos</b><br/>
+	    <a href="javascript:void(0)" onclick="showCinema('spreadsheet_demo_3')">Tables</a> &bullet;
+	    <a href="javascript:void(0)" onclick="showCinema('rye-json-filter.qf2')">Exploring JSON</a> &bullet;
+	    <a href="javascript:void(0)" onclick="showCinema('hn_somafm')">HN / Somafm in console</a> &bullet;
+	    <a href="javascript:void(0)" onclick="showCinema('fast')">Testing&nbsp;vectors</a> &bullet;
+	    <a href="javascript:void(0)" onclick="showCinema('')">TODO&nbsp;in&nbsp;a&nbsp;REPL</a> &bullet;
+	    <a href="javascript:void(0)" onclick="showCinema('builds')">Per&nbsp;projectPer&nbsp;builds</a> &bullet;
+	    <a href="javascript:void(0)" onclick="showCinema('eyr_dialect')">Eyr&nbsp;dialect</a></p>
+	  <div id="player" style="max-width: 780px"></div>
+	</center>
+      </div>
+    </div>
+  </div>
+  
+  <script src="/images/asciinema-player.min.js"></script>
+  <script>
+    function showCinema(file) {
+	document.getElementById('player').innerHTML = '';
+	AsciinemaPlayer.create(
+	    
+	    '/images/'+file+'.cast',
+	    document.getElementById('player'),
+	    { cols: 110, rows: 25, autoPlay: true, loop: true, speed: 0.9 }
+	);
+    }
+    showCinema('spreadsheet_demo_3')
+  </script>
+</div>
+
+<div class="container pt-1 pb-1" style="_background-color: whitesmoke; padding-bottom: 20px; text-align: left">
+  
+  <div class="row">
+    <div class="col-md-12 p-3 pt-0 justify-content-start">
+      <h2 style="margin-top: 10px;">About Rye</h2>
+
+      <p class="mb-2">Rye takes ideas from <b>Rebol</b>, and adds few from <b>Factor</b>, <b>Linux shell</b>, and <b>Go</b>. It's in active development, but our goal is to make it practical and powerful ASAP.</p>
+      
+      <p class="mb-2">Written in Go, Rye doubles as a scripting companion for Go programs. Go's libraries integrate seamlessly, and Rye can be embedded as a scripting or config language for Go programs.
+
+      <p class="mb-2">As a high-level language, Rye explores bridging coding and user interfaces. Its <b>interactive console</b> features syntax highlighting, history, tab completion, and tools to explore the language and environment you’re crafting.</p>
+
+    </div>
+  </div>
+</div>
+
+
+<div class="container pt-0 pb-1">
+  
+  <div class="row pt-1 justify-content-start">
+    <div class="col-12">
+      <p style="text-align: left; margin-bottom: 5px;">Short Rye examples</p>
+    </div>
+  </div>
+  
+  <div class="row justify-content-start">
+    <div class="col-md-6 pl-2 justify-content-start border-top">
+      <div class="d-flex pb-1 pt-1 bd-highlight">Change Hello World to Hello Mars and print it.</div>
+      <pre class='language-clojure' style='text-align: left;'><code language='lang-rye'>"Hello World" .replace "World" "Mars" |print
+; prints "Hello Mars"</code></pre>
+    </div>
+    <div class="col-md-6 pl-2 justify-content-start border-top">
+      <div class="d-flex pb-1 pt-1 bd-highlight">Find the Sum of unique numbers in a string.</div>
+      <pre class='language-clojure' style='text-align: left;'><code language='lang-rye'>"12 8 12 16 8 6" .load .unique .sum
+; returns 42</code></pre>
+    </div>
+  </div>
+
+  <div class="row">
+
+    <div class="col-md-6 pl-2 justify-content-start">
+      <div class="d-flex pb-1 pt-1 bd-highlight">Use switch function to get the sound of the animal.</div>
+      <pre class='language-clojure' style='text-align: left;'><code language='lang-rye'>switch 'cow { dog { "woof" } cow { "mooo" } cat { "meow" } }
+; returns mooo</code></pre>
+    </div>
+    
+    <div class="col-md-6 pl-2 justify-content-start">
+      <div class="d-flex pb-1 pt-1 bd-highlight">Extract combination of one number and one letter from string.</div>
+      <pre class='language-clojure' style='text-align: left;'><code language='lang-rye'>regexp "([0-9][a-z])" |submatch? "-7--x3--0k-r--"
+; returns 0k</code></pre>
+    </div>
+
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 pl-2 justify-content-start">
+      <div class="d-flex pb-1 pt-1 bd-highlight">Print out names starting with A.</div>
+      <pre class='language-clojure' style='text-align: left;'><code language='lang-rye'>{ "Anne" "Joan" "Adam" } |filter { .first = "A" }
+|for { .print } </code></pre>
+    </div>
+  </div>
+
+
+
+  <div class="row pt-2">
+    <div class="col-12  border-bottom">
+      <p style="text-align: left; margin-bottom: 5px;">IO, Spreadsheet, HTTP client</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 pl-2">
+      <div class="d-flex pb-1 pt-1 bd-highlight">Read a file, print the number of lines and the last 5 lines.</div>
+      <pre class='language-lisp' style='text-align: left;'><code language='lang-rye'>read\lines %data.txt |with
+{ .length? .print , .tail 5 |print }</code></pre>
+    </div>
+    
+    <div class="col-md-6 pl-2 justify-content-start">
+      <div class="d-flex pb-1 pt-1 bd-highlight">Load a CSV, get average score of all players of level 7.</div>
+      <pre class='language-lisp' style='text-align: left;'><code language='lang-rye'>load\csv %ryebots.csv |where-equal 'level 7
+|column? 'score |avg</code></pre>
+    </div>
+  </div>
+  <div class="row justify-content-start" >
+    <div class="col-md-6 pl-2 justify-content-start">
+      <div class="d-flex pb-1 pt-1 bd-highlight">Load a webpage, save it to a file, print out all the links.</div>
+      <pre class='language-lisp' style='text-align: left;'><code language='lang-rye'>get https://ryelang.org |write* %page.html
+|reader |parse-html { &lt;a&gt; [ .attr? 'href |print ] }</code></pre>
+    </div>
+    
+    <div class="col-md-6 pl-2 justify-content-start">
+      <div class="d-flex pb-1 pt-1 bd-highlight">Load JSON over HTTP nad extract information, in a Goroutine</div>
+      <pre class='language-lisp' style='text-align: left;'><code language='lang-rye'>go does { get https://httpbin.org/get |parse-json
+  -> "headers" -> "User-Agent" |print } print "Loading ..."</code></pre>
+    </div>
+</div>
+
+    <div class="row pt-2 justify-content-start">
+    <div class="col-12  border-bottom">
+      <p style="text-align: left; margin-bottom: 5px;">HTTP, SMTP server</p>
+    </div>
+  </div>
+  
+  <div class="row justify-content-start">
+    <div class="col-md-6 pl-2 justify-content-start">
+      <div class="d-flex pb-1 pt-1 bd-highlight">Serve folder over HTTP</div>
+      <pre class='language-lisp' style='text-align: left;'><code language='lang-rye'>http-server ":8082"
+|handle "/" new-static-handler %public_html
+|serve</code></pre>
+    </div>
+    <div class="col-md-6 pl-2 justify-content-start">
+      <div class="d-flex pb-1 pt-1 bd-highlight">Web server that responds with current time.</div>
+      <pre class='language-lisp' style='text-align: left;'><code language='lang-rye'>http-server ":8081"
+|handle "/time" fn { w r } { .write to-string now }
+|serve</code></pre>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 pl-2 justify-content-start">
+      <div class="d-flex pb-1 pt-1 bd-highlight">Start smtp server and print notification on new email.</div>
+      <pre class='language-lisp' style='text-align: left;'><code language='lang-rye'>handler: fn { mail from to origin } {
+printv from "new mail from {}" }
+smtp-server ":25" |serve ?handler "demo"
+      </code></pre>
+    </div>
+  </div>
+
+
+  <div class="row pt-2">
+    <div class="col-12 border-bottom">
+      <p style="text-align: left; margin-bottom: 5px;">Dialects</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 pl-2">
+      <div class="d-flex pb-1 pt-1 bd-highlight">Validation dialect</div>
+      <pre class='language-lisp' style='text-align: left;'><code language='lang-rye'>dict { name: "anakin" } |validate { 
+   name: required calc { .capitalize } 
+   score: optional 0 integer }
+; returns { name: "Anakin" score: 0 }	  
+</code></pre>
+    </div>
+
+    <div class="col-md-6 pl-2 justify-content-start">
+      <div class="d-flex pb-1 pt-1 bd-highlight">Math dialect.</div>
+      <pre class='language-lisp' style='text-align: left;'><code language='lang-rye'>; Rye like Rebol or Lisp has no operator precedence.
+; But it has Math dialect which has it and more.
+math { 2 + 2 * sqrt ( 12 + ( 24 / 3 ) ) }
+; returns 42</code></pre>
+    </div>
+  </div>
+  <div class="row justify-content-start" >
+    <div class="col-md-6 pl-2 justify-content-start">
+      <div class="d-flex pb-1 pt-1 bd-highlight">SQL dialect.</div>
+      <pre class='language-lisp' style='text-align: left;'><code language='lang-rye'>rye .args .first :id
+open sqlite://data.db
+|query { select * from operator where id = ?id }</code></pre>
+    </div>
+  </div>
+
+  <div class="row pt-2">
+    <div class="col-12 border-bottom">
+      <p style="text-align: left; margin-bottom: 5px;">GUI </p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 pl-2">
+      <div class="d-flex pb-1 pt-1 bd-highlight">See the Cookbook for many more&nbsp;<a href="https://ryelang.org/cookbook/rye-fyne/examples/">GUI Examples</a>.</div>
+      <pre class='language-lisp' style='text-align: left;'><code language='lang-rye'>do\in fyne {
+	  
+	lab: label "I'm Waiting ..."
+	btn: button "Click here" does { lab .set-text "Finally ..." }
+	box: v-box [ lab layout-spacer btn ]
+	
+	with app .window "Button" {
+		.resize size 200.0 100.0 ,
+		.set-content box ,
+		.show-and-run
+	}
+}</code></pre>
+    </div>
+    <div class="col-md-6 pl-2">
+      <div class="d-flex pb-1 pt-1 bd-highlight">See the Cookbook for many more&nbsp;<a href="https://ryelang.org/cookbook/rye-fyne/examples/">GUI Examples</a>.</div>
+      <div class="d-flex pb-1 pt-1 bd-highlight">
+	<img src="https://ryelang.org/cookbook/rye-fyne/button.png" />
+      </div>
+      
+    </div>
+    
+  </div>
+
+    <div class="row">
+    <div class="col-md-6 pl-2">
+      <div class="d-flex pb-1 pt-1 bd-highlight">&nbsp;</div>
+      <pre class='language-lisp' style='text-align: left;'><code language='lang-rye'>do\in fyne {
+  app .window "Percentage Clock" :win
+  
+  cont: v-box [
+    label "This Year [days]" :ly
+    progress-bar :py
+    label "This month [days]"
+    progress-bar :pM
+    label "Today [hours]"
+    progress-bar :ph
+    label "This hour [minutes]"
+    progress-bar :pm
+    label "This minute [seconds]"
+    progress-bar :ps
+  ]
+  
+  m-of: ?multiple-of
+  is-leap-year: fn { y } { all { y .m-of 4  not y .m-of 100  not y .m-of 400 } }
+  days-in: fn { y } { .is-leap-year .either { 366 } { 365 } }
+
+  go fn\par { } current {
+    forever {
+      with n:: now {
+        .year? ::y |concat* "Year " |set-text* ly ,
+        .year-day? / days-in y  |set-value* py ,
+        .day? / days-in-month? n |set-value* pM ,
+        .hour?     / 24 |set-value* ph ,
+        .minute?   / 60 |set-value* pm ,
+        .second?   / 60 |set-value* ps
+        sleep 500
+      }
+    }
+  }
+  win |resize size 300.0 200.0 |set-content cont |show-and-run
+}</code></pre>
+    </div>
+    <div class="col-md-6 pl-2">
+      <div class="d-flex pb-1 pt-1 bd-highlight">&nbsp;</div>
+      <div class="d-flex pb-1 pt-1 bd-highlight">
+	<img src="/images/perc_clock_narrow.gif" />
+      </div>
+      
+    </div>
+    
+  </div>
+
+<div class="container pt-1 pb-1" style="background-color: whitesmoke; padding-bottom: 20px; text-align: left">
+  
+  <div class="row">
+    <div class="col-md-12 p-3 pt-0 justify-content-start">
+
+      <h2>Delve deeper</h2>
+
+      <p class="mb-1">If examples above made you interested, you can delve deeper into the Rye language and Rye runtime. You have few sources for that, both are still work-in-progress, so check back later for more and better content:
+
+      <table class="downloads" style="padding-top: 0">
+	<tr><td><a href="/meet_rye"><b>Meet Rye</b></a></td><td>Focuses on Rye language, it's basics, concepts and components</td></tr>
+	<tr><td><a href="/cookbook"><b>Rye Cookbook</b></a></td><td>Focuses on practical uses and specific technologies</td></tr>
+	<tr><td><a href="/info/base.html"><b>Function reference</b></a></td><td>Basic documentation and simple examples for many core functions</td></tr>
+      </table>
+      </p>
+
+      <h2>Get Rye</h2>
+
+      <p class="mb-2">Rye is primarily developed on <b>Linux</b>, but can also run on <b>Mac OS</b> and <b>Windows</b>. Rye also runs in <b>web-browsers</b> (Wasm) and <b>Docker</b>.
+      Rye was compiled for mobile (Android and iOS).</p>
+      
+      
+
+      
+	
+      <style>
+	table.downloads th { background-color: #e3e3e3; padding: 10px; }
+	table.downloads td { padding: 10px 15px; }
+	a.exbtn { padding: 2px 5px; border: 1px solid silver; border-radius: 2px; }
+	span.extag { padding: 1px 2px; border: 1px solid silver; border-radius: 2px; font-size: 90%; background-color: #fff; }
+	span.smtag { padding: 0px 3px; border: 1px solid #b2d0d9; border-radius: 3px; font-size: 90%; background-color: #fff; }
+	code.cmd { padding: 2px 5px; border: 1px solid silver; border-radius: 2px; background-color: #fff; font-size: 13px; }
+      </style>
+      <p><table class="downloads">
+	<tr><td></td><th>x86 64</th><th>arm 64</th><th>wasm</th></tr>
+	<tr><th>Linux</th><td><a href="https://github.com/refaktor/rye/releases/download/v0.0.84/rye_Linux_x86_64.tar.gz">v0.0.84</a></td>
+	  <td></td>
+	  </tr>
+	<tr><th>Windows</th><td><a href="https://github.com/refaktor/rye/releases/download/v0.0.84/rye_Windows_x86_64.zip">v0.0.84</a></td>
+	  <td></td></tr>
+	<tr><th>Mac OS</th><td><a href="https://github.com/refaktor/rye/releases/download/v0.0.84/rye_Darwin_x86_64.tar.gz">v0.0.84</a></td>
+	  <td><a href="https://github.com/refaktor/rye/releases/download/v0.0.84/rye_Darwin_arm64.tar.gz">v0.0.84</a></td></tr>
+	<tr><th>/</th><td></td><td></td><td><a href="https://github.com/refaktor/rye/releases/download/v0.0.84/rye_Js_wasm.tar.gz">v0.0.84</a></td></tr>
+      </table>
+      
+      <table class="downloads">
+	  <tr><td></td></tr>
+	  <tr><td>Homebrew</td><td><code class="cmd">brew install ryelang</code></td></tr>
+	  <tr><td>ArchLinux user repository</td><td><code class="cmd">yay -S ryelang</code></td></tr>
+	  <tr><td>Docker</td><td><code class="cmd">docker pull ghcr.io/refaktor/rye:latest</code></td></tr>
+      </table></p> 
+	
+      <h2>Follow development</h2>
+
+      
+
+<p class="mb-1">Rye lives on <b>GitHub</b>.</p>
+
+<p>Visit, star, report issues, or contribute! <b>Building from source</b> is easy with Go. Dee the <a href="https://github.com/refaktor/rye#building-rye"><b>README</b></a> for instructions..</p>
+
+      
+
+      <h2>Bateries included</h2>
+      
+      
+      <p class="mb-1">Rye's main binary comes with core language functions and also a lot of bindings already included. Below are some examples of what's already included:
+
+      <p>
+	<span class="extag">AWS</span>
+	<span class="extag">Bcrypt</span>
+	<span class="extag">BSON</span>
+	<span class="extag">Crypto</span>
+	<span class="extag">FT search</span>
+	<span class="extag">Goroutines</span>
+	<span class="extag">HTML parser</span>
+	<span class="extag">HTTP servers</span>
+	<span class="extag">JSON</span>
+	<span class="extag">MySQL</span>
+	<span class="extag">Psql</span>
+	<span class="extag">Postmark</span>
+	<span class="extag">Regexp</span>
+	<span class="extag">SMTP&nbsp;server</span>
+	<span class="extag">SXML</span>
+	<span class="extag">SQLite</span>
+      </p>
+
+
+      <h2>Extensions</h2>
+
+<p style="margin-bottom: 10px;">Rye can be extended internally or externally. External extension are developed in their own repositories:
+  <table class="downloads" style="padding-top: 0">
+    <tr><td>Fyne GUI framework</td><td><a href="https://github.com/refaktor/rye-fyne"><b>Rye-fyne repository</b></a></td>
+      <td>Download: <a class="exbtn" href="https://github.com/refaktor/rye-fyne/releases/">Linux</a> <a class="exbtn" href="https://github.com/refaktor/rye-fyne/releases/">MacOS</a>
+    <a class="exbtn" href="https://github.com/refaktor/rye-fyne/releases/">Windows</a></td></tr>
+    <tr><td>Gio UI framework</td><td><a href="https://github.com/refaktor/rye-gio"><b>Rye-gio repository</b></a></td></tr>
+    <tr><td>Ebitengine game engine</td><td><a href="https://github.com/refaktor/rye-ebitengine"><b>Rye-ebitengine repository</b></a></td></tr>
+    <tr><td>Ryegen</td><td><a href="https://github.com/refaktor/ryegen"><b>Ryegen repository</b></a></td></tr>
+  </table>
+<p></p>
+  <h2>Related sites</h2>
+<p></p>
+<p>
+  <a href="https://github.com/refaktor/rye" class="exbtn"><b>Github</b></a>
+  <a href="/blog" class="exbtn"><b>Blog</b></a>
+  <a href="https://reddit.com/r/ryelang" class="exbtn"><b>Reddit</b></a>
+  <a href="https://ryelang.blogspot.com/" class="exbtn">Old blog</a>
+  <a href="https://asciinema.org/~refaktor" class="exbtn">Asciinema</a>
+  
+</p>
+
+<a name="rye-principles"></a>
+<h2>Rye principles <a href="#rye-principles">#</a></h2>
+
+<p>Rye is designed around a few core principles that should make it expressive, but predictable. While we are still refining details, these ideas shape how Rye behaves and why it feels different from other languages.</p>
+
+<p>These principles are not the features of Rye, look at <a href="https://ryelang.org/meet_rye/">Meet Rye</a> and the <a href="https://ryelang.org/cookbook/">Cookbook</a> for that, but they do dictate the features and design decisions.</p>
+
+<div class="concepts-list">
+<h3>Rye is flexible about the language</h3>
+
+<h4>Everything is an Expression</h4>
+
+
+
+<p>All constructs in Rye return a value - including control flow, I/O and assignment - allowing more composable code and less intermediate state.</p>
+
+<pre class='language-lisp' style='text-align: left;'><code language='lang-rye'>; you can print (or probe) inline, probe is better for debugging
+apples: print 12
+; prints 12 and assigns 12 to word apples
+    
+; and assign inline 
+fruits: apples + oranges: 21
+; assigns 21 to oranges and 33 to fruits
+
+; either is a conditional function like if/else
+name: "Bob"
+print either name = "Bob" { "Hello Bob" } { "Locked" }
+; prints Hello Bob
+
+; expressions compose nicely and linearly
+range 1 10                                                    ; returns numbers from 1 to 10
+range 1 10 |filter { .math/is-prime }                         ; returns prime numbers from 1 to 10    
+range 1 10 |filter { .math/is-prime } |map fn { n } { 1 / n } ; returns reciprocals of primes
+range 1 10 |filter { .math/is-prime } |map fn { n } { 1 / n } |sum |probe
+; prints sum of reciprocals of primes:
+;  [Decimal: 1.176190]
+</code></pre>
+
+<h4>Code is Data</h4>
+
+<p>Rye code consists of Rye values (e.g., blocks, words, literal values, ...). There is no difference between Rye
+code and Rye data. This brings internal consistency and options for code introspection, but we don't want to abuse it.</p>
+
+<pre class='language-lisp' style='text-align: left;'><code language='lang-rye'>thats-true: { capitalize "that's true" }    ; a word with colon on the right or left is a s set-word
+
+do thats-true
+; returns "That's true"
+        
+print-thats-true: { print } ++ thats-true
+    
+if 1 > 0 print-thats-true
+; prints That's true    
+
+; a simple rule engine for a water tank
+rules: [
+    context { condition: { temp > 0 |and level &lt; 70 } action: { print "OPEN" } }
+    context { condition: { temp &lt; 0 |or level > 99 } action: { print "CLOSE" } }
+]
+
+temp: 23 , level: 45
+
+for rules { ::rule
+    if do rule/condition rule/action
+}
+; prints OPEN
+</code></pre>
+
+<h4>First-Class Everything</h4>
+
+<p>Words, functions, blocks of code, scopes (contexts), and literals are all values that can be created, passed, returned, or assigned.
+Every value of Rye Runtime is also accessible to the language itself.</p>
+
+<pre class='language-lisp' style='text-align: left;'><code language='lang-rye'>some-word: 'this-word
+some-func: fn { x } { x + 1 }
+
+inspect-fn: fn { f } {
+  print2 "Code: " dump ?f
+  print2 "Result f(100): " f 100
+}
+
+inspect-fn ?some-func
+; prints:
+; Code: fn { x } { x + 1 }
+; Result f(100): 101
+
+; we will define tank-1 as a context (scope) to make previous example cleaner
+rules: [
+    context { condition: { temp > 0 |and level &lt; 70 } action: { open } }
+    context { condition: { temp &lt; 0 |or level > 99 } action: { close } }
+]
+
+tank-1: context { temp: 31 level: 100 open: does { print "OPENING" } close: does { print "CLOSING" } }
+
+for rules { ::rule
+    do\par tank-1 {  ; do\par sets context tank-1 as a parent context while evaluating (doing) the code
+        if do rule/condition rule/action
+    }
+}
+; prints CLOSING
+</code></pre>
+
+<h4>Functions are all you need</h4>
+
+<p>Rye has no keywords and no special forms. For example <span class="smtag">if</span>, <span class="smtag">loop</span>, <span class="smtag">fn</span>, <span class="smtag">try</span>, <span class="smtag">return</span> are all built-in functions and every active component of the language is just a built-in or an ordinary function call. This makes language very symmetrical, consistent and editable. If special forms are just functions you can always make your own.</p>
+
+<pre class='language-lisp' style='text-align: left;'><code language='lang-rye'>probe ?if
+; Prints:
+; [Pure Builtin(2): Executes a block of code if the condition is true, returning the result of the block or false.]
+
+probe ?fn
+; Prints:
+; [Pure Builtin(2): Creates a function with named parameters specified in the first block and code in the second block.]
+
+; our custom if
+if-joe: fn { n code } { if n = "Joe" { do code } }
+if-joe "Joe" { print "Hey" }
+; prints Hey
+    
+flip-flop-loop: fn { n a b } { .loop { .is-odd .either { a } { b } |do } }
+flip-flop-loop 5 { prns "Tik" } { prns "Tok" }
+; Prints:
+; Tik Tok Tik Tok Tik
+</code></pre>
+
+<br/>
+<h3>Rye is strict about state handling</h3>
+    
+<h4>Constants by default</h4>
+
+<p>Words you define with <b>set-words</b> (single colon) are constants and can't be redefined in given context. This being the default gives you
+  certainty that most things can't change under your feet. This reduces the amount of code you need to look at, to be certain about the effects of the code
+  you are working with or looking at.</p>
+
+<pre class='language-lisp' style='text-align: left;'><code language='lang-rye'>name: "Tango"
+
+name: "Cash"
+; produces error, you can't use a set-word (one colon) to set an already set word
+
+name:: "Cash"        ; word with two colons is a mod-word
+; also produces error, use of mod-word is correct, but name is a constant in given context
+
+; you need to use var, or mod-word directly to define a variable word
+var 'current-month "January"
+current-month:: "February"
+
+current-year:: 2024  ; mod-word also creates a variable word if not yet created
+current-year:: 2025
+
+; functions being constants by default is what we usually want
+cant-redefine: fn { } { "me" }
+
+; context and function created using set-words are constants
+person: context {
+    say-hi: does { print "Hi!" }
+}
+</code></pre>
+
+<h4>Explicit about modifying words</h4>
+
+<p>As we've demonstrated above, <b>set-words</b> can only set words once. Even if word is a variable, you need a <b>mod-word</b> (double colon),
+which is visually explicit and visually costly, so you only use it when you have a concrete reason.</p>
+
+<pre class='language-lisp' style='text-align: left;'><code language='lang-rye'>{ "jim" "jane" "oto" } .for { :name , print capitalize name }
+; produces Error, set-word 'name' can't set an already set word
+
+    
+; sometimes you need a mod-word
+{ "jim" "jane" "oto" } .for { ::name , print capitalize name }
+; prints:
+; Jim
+; Jane
+; Oto
+
+; but a lot of those cases can be solved more directly and with no assignment
+{ "jim" "jane" "oto" } .for { .capitalize .print }
+; prints:
+; Jim
+; Jane
+; Oto
+</code></pre>
+
+<h4>Constrained in-place modification</h4>
+
+<p>Rye encourages <b>immutable operations</b>. Almost all functions return new values rather than modify data. However, for specific cases, in-place modification is possible but again <b>visually explicit</b>.
+  Functions that mutate values must end with <b>!</b> (e.g., append! change! inc!)</p>
+
+<pre class='language-lisp' style='text-align: left;'><code language='lang-rye'>; many cases where you would use append! have much better solutions
+names: { "jane" "anne" "john" }
+
+; you don't want to do this
+jay-s: { }
+for names {
+    ::n
+    if first n = "j" { append! jay-s n }
+}
+
+; if you can do it in more declarative and intent expressive way
+filter names { .first = "j" }
+</code></pre>
+
+<h4>No direct changes outside of current scope</h4>
+
+<p>Rye enforces strict scope isolation, meaning you can't directly modify variables in outer or nested scopes using assignment words (set or mod-words). Restriction prevents unexpected side effects and makes code easier and again more local to reason about.  Instead, Rye encourages explicit and controlled ways to interact with other scopes. In case of modification these means calling functions, again ending with <b>!</b>.</p>
+
+<pre class='language-lisp' style='text-align: left;'><code language='lang-rye'>var 'name "EU"
+
+country: context {
+    var 'name "Slovenia"
+
+    change-name!: fn { n } { .change! 'name }
+}     
+
+print name
+; prints EU
+
+print country/name
+; prints Slovenia
+
+name:: "BRICS"
+
+country/name:: "Brasil"
+; Error - this syntax doesn't even exist
+
+country/change-name! "China"
+</code></pre>
+
+<br/>
+<h3>Rye has no Null, but a very rich Failure value</h3>
+
+<h4>Null lacks specificity</h3>
+
+<p>Null "a billion dollar mistake" has two main problems. It holds <b>no information</b>, so meaning is only assumed. Null can also be passed forward silently, causing unexpected <b>problems later</b>, than it was unknowingly created.</p>
+
+<p>Unlike Python/Java, Rye forces you to handle missing data explicitly via Failures. Rye functions either return a desired value or they return a Failure (also a type of Rye value).</p>
+
+<pre class='language-lisp' style='text-align: left;'><code language='lang-rye'>person: dict { name: "Anne" }
+print "name" &lt;- person
+; prints Anne
+
+; returns None in Python (or Java)
+print "surname" &lt;- person
+; Produces an Error "missing key", not none
+
+match? regexp "[0-9]*" "abc"
+; returns Failure "no result", not none
+</code></pre>
+
+<h4>Failure is information<h4>
+
+<p>Contrary to Null, Rye Failure can be rich with information. A failure can have a message (string), a type (word), even Failure code (integer). It can also hold details of exact failure. And it can
+reference a parent failure, so lower level failures can translate to higher level ones as they move up the stack.</p>
+
+<pre class='language-lisp' style='text-align: left;'><code language='lang-rye'>failure 404           ; Constructs a failure with status code 404
+fail "user not found" ; Fails with a failure with specific message
+fail { 403 wrong-signin-data } ; Fails with failure w/ specific code and type
+
+read %user.txt |check { "Couldn't read user file" }
+; If user.txt is missing it returns a nested Failure
+; Failure: Couldn't read user file
+;  └ Failure: user.txt: no such file or directory in builtin file-uri//read
+
+validate dict { score: "10A" } { score: required integer }
+; returns a Failure with status 403, type 'validation-failure 
+; and details: { score: "not integer" } 
+</code></pre>
+
+<h4>Failure enforces resolution</h4>
+
+<p>Unlike Null, which can be silently passed around, Rye forces you to address Failures immediately.</p>
+
+<p>You can use functions like <b>fix</b> (to provide default values), <b>check</b> (to check for failure and add context to it if it happens),
+  or <b>disarm</b> (to deactivate the Failure and access it's data) to handle Failures gracefully.
+
+<p>If failure is not handeled it elevates into an Error, our program enters an unpredicted state and
+  generally needs to be stopped and Error fixed in code.</p>
+
+<pre class='language-lisp' style='text-align: left;'><code language='lang-rye'>person -> "surname" |print
+; produces a Failure and because it's not handeled and Error happens
+
+; Fix returns an original value, or result of a block in case of a failure
+person -> "name" |fix { "John" } |print
+; prints Anne
+
+person -> "surname" |fix { "Doe" } |print
+; print Doe
+
+; We've already seen check in the previous section
+; check returns an original value or wraps failure in a higher level failure
+; ^check is a returning variant of check, look at Meet Rye for specifics		
+get-user-data: fn { uid } {
+      read to-file uid ++ ".json"
+      |^check "Couldn't read user data." 
+      |parse-json 
+      |^check "Couldn't parse user data."
+}
+
+get-user-data "u101"   ; in case file is there but it's not proper JSON
+; We get a higher (current function) level failure, an in it a lower level failure
+; Failure: Couldn't parse user data 
+;  └ Failure: Failed to Unmarshal. in builtin parse-json.
+
+validate dict { score: "10A" } { score: required integer } |disarm |to-json
+; returns a JSON:
+; { "status": 403, "type": "validation-failure", "data": {  "score": "not integer", } } 
+</code></pre>
+
+<br/>
+<h3>Higher level languages need higher level value types</h3>
+
+<p>If a language tries to be more high-level, closer to humans, it need value types closer to humans.</p>
+
+<h4>Table value type<h4>
+
+<p>People use tabular format to work with a lot of data, so one of Rye value types is a Table. Visit <a href="">The Cookbook</a> to learn much more about Tables. This is just a quick example.</p>
+
+<pre class='language-lisp' style='text-align: left;'><code language='lang-rye'>spr: load\xlsx %adversaries.xlsx
+spr .where-contains 'Species "AI" 
+|order-by 'Year 'asc 
+|head 3 
+|columns? { 'Name 'Keywords } 
+|order-by 'Name 'asc 
+|display
+; 
+; | Name     | Keywords                            |
+; +------------------------------------------------+
+; | HAL 9000 | Calculating, Logical, Fatal         |
+; | Ultron   | Ambitious, Intelligent, Destructive |
+; | VIKI     | Logical, Overbearing, Ruthless      |
+</code></pre>
+
+<p>If this got you interested, <a href="/meet_rye"><b>Meet Rye</b></a> is a good next step!</p>
+
+
+
+</div>
+
+  
+  
+
+
+
+<p></p>
+
+
+<p></p>
+<h2>Join</h2>
+
+<p class="mb-1">If this sparked your interest, join or star us on <a href="https://github.com/refaktor/rye">GitHub</a>, join our <a href="https://reddit.com/r/ryelang">Reddit group</a> or just <a href="mailto:janko.itm gmail">send me an email</a>.</p>
+
+
+</div>
+</div>
+</div>
+
+
+  
+
+
+
+  
+
+
+    
+  </div>
+
+  <div class="sub-footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <div class="sub-footer-inner">
+          <ul>
+            <li class="zerostatic"><a href="https://reddit.com/r/ryelang">Reddit</a></li>
+	    <li class="zerostatic"><a href="https://github.com/refaktor/rye">Github</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+var sc_project=12932344; 
+var sc_invisible=1; 
+var sc_security="6e399927"; 
+</script>
+<script type="text/javascript"
+src="https://www.statcounter.com/counter/counter.js"
+async></script>
+<noscript><div class="statcounter"><a title="Web Analytics"
+href="https://statcounter.com/" target="_blank"><img
+class="statcounter"
+src="https://c.statcounter.com/12932344/0/6e399927/1/"
+alt="Web Analytics"
+referrerPolicy="no-referrer-when-downgrade"></a></div></noscript>
+
+
+  
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/scripts.min.ec19db7e4836c12e2c5e3697d926bc3e4c22005167d9826aab54feca08f0c093.js"></script>
+  
+
+  
+  
+  
+    
+  
+
+
+
+</body>
+
+</html>

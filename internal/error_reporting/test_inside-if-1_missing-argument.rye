@@ -1,0 +1,3 @@
+print 123
+if true {  _+ 1204  }
+print `dont-print`

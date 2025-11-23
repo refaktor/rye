@@ -674,6 +674,30 @@ section "Loading and saving " "Functions that construct a table." {
 	{
 ``	}
 
+}
+
+section "Loading and saving " "Functions that construct a table." {
+	group "file-uri//Load\\csv\\" 
+	"Loads a .csv file to a table datatype."
+	{
+		arg `file-uri - location of csv file to load`
+		arg `Tags: #table #loading #csv`
+	}
+
+	{
+		equal {
+		cc os
+		f:: mktmp ++ "/test.csv"
+		spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+		spr1 .save\csv f
+		spr2:: Load\csv f |autotype 1.0
+		spr1 = spr2
+		} true
+	}
+
+	{
+``	}
+
 	group "file-uri//Load\\tsv" 
 	"Loads a .csv file to a table datatype."
 	{

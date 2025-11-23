@@ -2235,6 +2235,24 @@ section "Collections " "" {
 	{
 ``	}
 
+	group "append\\many!" 
+	"Appends all values from a block to a collection (block, list or string) in-place and returns the modified collection."
+	{
+		arg `values: Block of values to append`
+		arg `word: Word referring to a block, list or string to modify`
+		returns `the modified collection with all values from the block appended`
+	}
+
+	{
+		equal { var 'x ref { 1 2 3 } append\many { 4 5 6 } 'x , x } { 1 2 3 4 5 6 }
+		equal { var 'x ref { 1 2 } append\many { 3 4 5 6 } 'x , x } { 1 2 3 4 5 6 }
+		equal { var 's "hello" append\many { " " "world" "!" } 's , s } "hello world!"
+		equal { var 'l ref list { 10 20 } append\many { 30 40 } 'l , l } list { 10 20 30 40 }
+	}
+
+	{
+``	}
+
 	group "peek" 
 	"Returns the current value at a block's cursor position without advancing the cursor."
 	{
@@ -2892,6 +2910,22 @@ section "Contexts " "Context related functions" {
 	{
 ``	}
 
+	group "clone\\deep" 
+	"Creates a deep copy of a context with the same state and parent relationship, recursively copying all nested objects."
+	{
+		arg `ctx: Context object to deep clone`
+		returns `a new context object that is a deep copy of the original context (including nested objects)`
+	}
+
+	{
+		equal { c: context { x: [ 1 2 3 ] } cc: clone\deep c cc/x } [ 1 2 3 ]
+		equal { c: context { x: [ 1 2 3 ] } cc: clone\deep c do\in cc { x/0: 999 } c/x/0 } 1 ; original unchanged
+		equal { c: context { x: [ 1 2 3 ] } cc: clone\deep c do\in cc { x/0: 999 } cc/x/0 } 999 ; deep clone modified
+	}
+
+	{
+``	}
+
 }
 
 section "Flow control " "Functions for conditional execution and branching logic" {
@@ -3346,6 +3380,19 @@ section "Iteration " "Functions for iterating over collections and executing cod
 		equal { var 'x 10 var 'y 0 until { x = 5 } { x:: x - 1 y:: y + x } y } 35
 		equal { var 'x 3 until { x < 1 } { x:: x - 1 } x } 0
 		equal { var 'x 0 until { x > 0 } { x:: x + 1 } x } 1
+	}
+
+	{
+``	}
+
+	group "for\\kv" 
+	"Iterates over a collection with separate key and value words. For dicts, uses actual keys and values. For other collections, uses indices as keys."
+	{
+	}
+
+	{
+		equal { dict vals { "a" 1 "b" 2 } .for\kw 'k 'v { k prns v prn } } ""  ; Expected output: "a 1 b 2 "
+		equal { { 10 20 30 } .for\kw 'i 'v { i prns v prn } } ""  ; Expected output: "0 10 1 20 2 30 "
 	}
 
 	{
@@ -3963,6 +4010,24 @@ section "Other " "..." {
 ``	}
 
 	group "do\\in" 
+	"Takes a Context and a Block. It Does a block in current context but with parent a given Context."
+	{
+		arg `context: Context to use as parent context during execution`
+		arg `block: Block of code to execute in current context with the specified parent context`
+		returns `result of executing the block with the modified parent context`
+	}
+
+	{
+		equal  { c: context { x: 100 } do\in c { x * 9.99 } } 999.0
+		equal  { c: context { x:: 100 } do\in c { inc! 'x } } 101
+		equal  { c: context { x: 100 } do\in c { x:: 200 , x } } 200
+		equal  { c: context { x: 100 } do\in c { x:: 200 } c/x } 100
+	}
+
+	{
+``	}
+
+	group "do\\inx" 
 	"Takes a Context and a Block. It Does a block in current context but with parent a given Context."
 	{
 		arg `context: Context to use as parent context during execution`

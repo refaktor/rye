@@ -1943,9 +1943,13 @@ var builtins = map[string]*env.Builtin{
 
 	"lg": {
 		Argsn: 1,
-		Doc:   "Lists generic words related to specific kind",
+		Doc:   "Lists generic words related to specific kind, or lists all matching methods across all kinds if given a string filter",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
+			case env.String:
+				// If argument is a string, show all matching methods across all kinds
+				fmt.Println(ps.Gen.PreviewAllMatchingMethods(*ps.Idx, s1.Value))
+				return env.Void{}
 			case env.Word:
 				fmt.Println(ps.Gen.PreviewMethods(*ps.Idx, s1.Index, ""))
 				return env.Void{}
@@ -2540,6 +2544,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltinsInContext(Builtins_os, ps, "os")
 	RegisterBuiltinsInContext(Builtins_pipes, ps, "pipes")
 	RegisterBuiltinsInContext(Builtins_term, ps, "term")
+	RegisterBuiltinsInContext(Builtins_termstr, ps, "termstr")
 	RegisterBuiltinsInContext(Builtins_telegrambot, ps, "telegram")
 	RegisterBuiltins2(Builtins_peg, ps, "peg")
 	RegisterBuiltinsInContext(Builtins_mcp, ps, "mcp")
@@ -2563,9 +2568,10 @@ func RegisterBuiltins(ps *env.ProgramState) {
 // executeInitializationCode runs the injected initialization code after builtins are loaded
 // but before any custom user code is evaluated. This works for both REPL and file execution modes.
 func executeInitializationCode(ps *env.ProgramState) {
-	// The initialization code to inject: "?display , print `Hello`"
+	// These are defined in the parent context of the actual script context. Which is what we want
 	initCode := " collector: context { var 'collected ref { } , collect!: fn { v } { .append! 'collected } , collected?: does { deref collected } } " +
-		" use: fn { c b } { .clone\\deep .do\\inx b } "
+		" use: fn { c b } { .clone\\deep .do\\inx b }\n" +
+		" cmdo: fn { b } { cmd b |Output } "
 
 	// Save current state
 	/* origSer := ps.Ser
@@ -2585,7 +2591,6 @@ func executeInitializationCode(ps *env.ProgramState) {
 
 		// Execute the initialization code
 		EvalBlock(ps)
-		fmt.Println(ps.Res)
 
 		// If there were errors, we silently ignore them for initialization
 		// This prevents initialization issues from breaking the main program

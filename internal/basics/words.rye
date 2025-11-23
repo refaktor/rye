@@ -1,0 +1,4 @@
+print "hello"
+print "yello"
+if 1 < 2 { print "wello" }
+loop 2 { print "zello" }

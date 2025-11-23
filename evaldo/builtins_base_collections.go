@@ -7,7 +7,6 @@ import (
 	"math/big"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/refaktor/rye/env"
 
@@ -1373,14 +1372,6 @@ var builtins_collection = map[string]*env.Builtin{
 					return env.AddTableRowAndBlock(s1, b2.Series, ps.Idx)
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.DictType, env.BlockType}, "_++")
-				}
-			case env.Time:
-				switch b2 := arg1.(type) {
-				case env.Integer:
-					v := s1.Value.Add(time.Duration(b2.Value * 1000000))
-					return *env.NewTime(v)
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "_++")
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType, env.DictType, env.TableRowType, env.TimeType, env.UriType}, "_++")

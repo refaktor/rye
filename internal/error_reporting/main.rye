@@ -1,0 +1,36 @@
+
+runtime: context {
+
+	t: ?termstr
+	
+	error-patterns: dict {
+		div-zero: " 1 / 0 "
+		unknown-word: " some-unknown-word "
+		missing-argument: " _+ 1204 "
+	}
+
+	positions: dict {
+		nothing-else: "{}"
+		end-of-line: "print 123 {}"
+		end-of-lines: "print 123\nprint234\n{}\nprint `dont-print`"		
+		middle-of-lines: "print 123\nprint234\n{}\nprint `dont-print`"
+		inside-do: "print 123\ndo { {} }\nprint `dont-print`"
+		inside-if-1: "print 123\nif true { {} }\nprint `dont-print`"
+		inside-for-1: "print 123\nfor range 3 { {} }\nprint `dont-print`"
+		inside-ctx-1: "print 123\ncontext { {} }\nprint `dont-print`"
+	}
+
+	generate-files!: does {
+		Create %tests-runtime.bash |probe :bsh
+		probe for\kv positions 'posk 'posv {
+			for\kv error-patterns 'patk 'patv {
+				join [ "test_" posk "_" patk ".rye" ] ::rf
+				|to-file .Write patv .embed posv
+				bsh .Write embed join [ t/bg-yellow t/black rf t/reset ] "echo {}\n" 
+				bsh .Write embed rf "rye {}\n" 
+			}
+		}
+	}
+}
+
+runtime/generate-files!

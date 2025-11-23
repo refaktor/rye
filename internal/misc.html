@@ -1,0 +1,485 @@
+<html>
+  <head>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,700|Roboto:300,400,700&subset=latin-ext' rel='stylesheet' type='text/css'>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Londrina+Solid:wght@300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="tpl/main.2.css?a001" />
+    <script src="tpl/menu.js?a001"></script>
+    <script src="tpl/jsGoo.js"></script>
+    <!-- syntax highlighting -->
+    <link rel="stylesheet" type="text/css" href="tpl/desert.css" />
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/prettify/r298/run_prettify.js"></script>
+    <script type="text/javascript" src="./tpl/lang-rye.js"></script>
+    <!-- syntax highlightinh end -->
+  </head>
+<body onload="generateMenu()">
+<div id="menu-holder">
+</div>
+<p></p>
+<div class="menumenu">
+  <a href="/">← main page</a>
+  <br/>
+  <br/>
+  <b>Rye core:</b>
+  <a href='basics.html'>Basics and code flow</a> &middot;
+  <a href='structures.html'>Rye structures</a> &middot;
+  <!--a href='spreadsheet.html'>Table datatype</a> &middot ;-->
+  <a href='validation.html'>Validation and Regexps</a> &middot;
+  <a href='misc.html'>Miscellaneous</a>
+  <!--a href='spreadsheets.html'>Validation dialect</a><br/-->
+  <!--b>Modules:</b> <a href='basics.html'>HTTP</a> &middot; <a href='structures.html'>SMPT</a> &middot; <a href='spreadsheets.html'>JSON</a> &middot;-->
+</div>
+<h1>Rye reference: Misc</h1>
+<h2>Type conversion and checking</h2><p>Functions that convert between Rye value types.</p><div class='section'>
+<h3>to-word</h3><p>Pure BFunction(1): Tries to change a Rye value to a word with same name. (core) (to-word)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-word test
+; returns test</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-word 'test
+; returns test</code></pre>
+</div>
+<h3>to-integer</h3><p>BFunction(1): Tries to change a Rye value (like string) to integer. (core) (to-integer)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-integer 123
+; returns 123</code></pre>
+</div>
+<h3>to-string</h3><p>Pure BFunction(1): Tries to turn a Rye value to string. (core) (to-string)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-string 123
+; returns 123</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-string 'word
+; returns word</code></pre>
+</div>
+<h3>to-uri</h3><p>Pure BFunction(1): Tries to change Rye value to an URI. (core) (to-uri)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-uri https://example.com
+; returns https://example.com</code></pre>
+</div>
+<h3>to-file</h3><p>Pure BFunction(1): Tries to change Rye value to a file. (core) (to-file)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>to-file file.txt
+; returns file://file.txt</code></pre>
+</div>
+<h3>to-context</h3><p>BFunction(1): Takes a Dict and returns a Context with same names and values. (core) (to-context)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>cc:: to-context dict name Jim  , cc
+; returns Jim</code></pre>
+</div>
+<h3>is-integer</h3><p>Pure BFunction(1): Returns true if value is an integer. (core) (is-integer)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-integer 123
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-integer ABC
+; returns 0</code></pre>
+</div>
+<h3>is-decimal</h3><p>Pure BFunction(1): Returns true if value is a decimal. (core) (is-decimal)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-decimal 123.456000
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-decimal 123
+; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-decimal ABC
+; returns 0</code></pre>
+</div>
+<h3>is-number</h3><p>Pure BFunction(1): Returns true if value is a number (integer or decimal). (core) (is-number)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-number 123
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-number 123.456000
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-number ABC
+; returns 0</code></pre>
+</div>
+<h3>is-string</h3><p>Pure BFunction(1): Returns true if value is a string. (core) (is-string)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-string ABC
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-string 123
+; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-string file://file.txt
+; returns 0</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>is-string test@gmail.com
+; returns 0</code></pre>
+</div>
+<h3>type?</h3><p>Pure BFunction(1): Returns the type of Rye value as a word. (core) (type?)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>type? ABC
+; returns string</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>type? 123
+; returns integer</code></pre>
+</div>
+</div>
+<h2>Failure handling functions</h2><p>Functions for handling and working with Context.</p><div class='section'>
+<h3>fail</h3><p>BFunction(1): Constructs and Fails with an Error object. Accepts String as message, Integer as code, or block for multiple parameters. (core) (fail)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>fail 404 |disarm |code?
+; returns 404</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>fail message |disarm |mold
+; returns Error: message </code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>fail 501 auth error  |disarm |mold
+; returns Error(501): auth error </code></pre>
+</div>
+<h3>failure</h3><p>BFunction(1): Constructs and Error object. Accepts String as message, Integer as code, or block for multiple parameters. (core) (failure)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>failure 403 |type?
+; returns error</code></pre>
+</div>
+<h3>code?</h3><p>BFunction(1): Returns the status code of the Error. (core) (code?)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>failure 403 |code?
+; returns 403</code></pre>
+</div>
+<h3>disarm</h3><p>BFunction(1): Disarms the Error. (core) (disarm)</p><div class='group'>
+</div>
+<h3>failed?</h3><p>BFunction(1): Constructs and Fails with an Error object. Accepts String as message, Integer as code, or block for multiple parameters. (core) (fail)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>fail 403 |failed?
+; returns 1</code></pre>
+</div>
+<h3>check</h3><p>BFunction(1): Constructs and Fails with an Error object. Accepts String as message, Integer as code, or block for multiple parameters. (core) (fail)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>1 / 0 |check 501 |code?
+; returns 501</code></pre>
+</div>
+<h3>fix</h3><p>BFunction(1): Constructs and Fails with an Error object. Accepts String as message, Integer as code, or block for multiple parameters. (core) (fail)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>100 / 0 |fix 99  |+ 1
+; returns 100</code></pre>
+101
+101
+<pre class='prettyprint lang-rye'><code language='lang-rye'>100 / 1 |fix 99  |+ 1
+; returns 101.000000</code></pre>
+</div>
+<h3>assert-equal</h3><p>Pure BFunction(2): Test if two values are equal. Fail if not. (core) (assert-equal)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>assert-equal 10 10
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>assert-equal 10 20 |disarm |type?
+; returns error</code></pre>
+</div>
+</div>
+<h2>Code flow combinators</h2><p>Program flow control functions</p><div class='section'>
+<h3>pass</h3><p>BFunction(2): Accepts a value and a block. It does the block, with value injected, and returns (passes on) the initial value. (core) (pass)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>xxx .pass + yyy :xy
+; returns xxx</code></pre>
+</div>
+<h3>keep</h3><p>BFunction(3): Do the first block, then the second one but return the result of the first one. (core) (keep)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>10 .keep + 1  * 10
+; returns 11</code></pre>
+</div>
+<h3>wrap</h3><p>BFunction(2): Accepts a value and a block. It does the block, with value injected, and returns (passes on) the initial value. (core) (wrap)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>wrap 1 + 1  10 + 20
+; returns 30</code></pre>
+</div>
+</div>
+<h2>Functions that change values in-place</h2><p></p><div class='section'>
+<h3>inc!</h3><p>BFunction(1): Searches for a word and increments it's integer value in-place. (core) (inc!)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>a:: 100 , inc! 'a
+; returns 101</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>a:: 100 , inc! 'a , a
+; returns 101</code></pre>
+</div>
+<h3>change!</h3><p>BFunction(2): Searches for a word and changes it's value in-place. If value changes returns true otherwise false (core) (change!)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>a:: 1 change! 2 'a
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>a:: 2 change! 2 'a
+; returns 0</code></pre>
+</div>
+<p class='comment'>Functions that change values in-place are used more rarely in Rye and have ! at the end.</p>
+<h3>remove-last!</h3><p>BFunction(1): Accepts Block and returns the next value and removes it from the Block. (core) (remove-last!)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>b:: 1 2 3  , remove-last! 'b , b
+; returns 1 2 </code></pre>
+</div>
+<h3>append!</h3><p>BFunction(2): Accepts Rye value and Tagword with a Block or String. Appends Rye value to Block/String in place, also returns it	. (core) (append!)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>b:: 1 2 3  , append! 4 'b , b
+; returns 1 2 3 4 </code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>b:: 1 2 3  , append! 4 5  'b , b
+; returns 1 2 3 4 5  </code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>b:: list 3 4  , append! list 1 2  'b , b
+; returns L[ 3  4  1  2 ]</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>append! ab cd
+; returns cdab</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>append! 3 4  1 2
+; returns 1 2 3 4 </code></pre>
+</div>
+<h3>change\ nth!</h3><p>BFunction(3): Accepts a Block or List, Integer n and a value. Changes the n-th value in the Block in place. Also returns the new series. (core) (change\nth!)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>b:: 1 4 3  , change\nth! b 2 4
+; returns 1 4 3 </code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>b:: 1 4 5  3  , change\nth! b 2 4 5
+; returns 1 4 5  3 </code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>b:: list 1 2 3  , change\nth! b 2 4
+; returns L[ 1  4  3 ]</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>b:: list 1 2 3  , change\nth! b 2 list 4 5
+; returns L[ 1  L[ 4  5 ]  3 ]</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try b:: 1 2 3  , change\nth! b 4 0  |type?
+; returns error</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try b:: list 1 2 3  , change\nth! b 4 0  |type?
+; returns error</code></pre>
+</div>
+<h3>sort!</h3><p>BFunction(2): Accepts Rye value and Tagword with a Block or String. Appends Rye value to Block/String in place, also returns it	. (core) (append!)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>b:: 1 2 4 7  , sort! b , b
+; returns 1 2 4 7 </code></pre>
+</div>
+<h3>reverse!</h3><p>BFunction(2): Accepts Rye value and Tagword with a Block or String. Appends Rye value to Block/String in place, also returns it	. (core) (append!)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>b:: 2 7 1 4  , reverse! b , b
+; returns 2 7 1 4 </code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>reverse! list 1 2 3
+; returns L[ 3  2  1 ]</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>reverse! list 1
+; returns L[ 1 ]</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>reverse! list
+; returns L[]</code></pre>
+</div>
+</div>
+<h2>Date and time functions</h2><p></p><div class='section'>
+<h3>date</h3><p>BFunction(1): Accepts a String and returns a Date object. (core) (date)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>date 2023-01-01 |type?
+; returns date</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try date not-date  |type?
+; returns error</code></pre>
+</div>
+<h3>datetime</h3><p>BFunction(1): Accepts a String and returns a Date object. (core) (datetime)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>datetime 2023-01-01T12:00:00 |type?
+; returns time</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>try datetime not-time  |type?
+; returns error</code></pre>
+</div>
+<h3>now</h3><p>BFunction(0): Returns current Time. (core) (now)</p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>now |type?
+; returns time</code></pre>
+</div>
+</div>
+<h2>Math functions</h2><p></p><div class='section'>
+<h3>mod</h3><p></p><div class='group'>
+1
+1
+<pre class='prettyprint lang-rye'><code language='lang-rye'>math 10 3
+; returns 1.000000</code></pre>
+4
+4
+<pre class='prettyprint lang-rye'><code language='lang-rye'>math 14 5
+; returns 4.000000</code></pre>
+</div>
+<h3>log2</h3><p></p><div class='group'>
+2
+2
+<pre class='prettyprint lang-rye'><code language='lang-rye'>math 4
+; returns 2.000000</code></pre>
+5
+5
+<pre class='prettyprint lang-rye'><code language='lang-rye'>math 32
+; returns 5.000000</code></pre>
+</div>
+<h3>sin</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math sin pi |near-zero
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math sin pi / 2 |is-near 1.000000
+; returns 1</code></pre>
+</div>
+<h3>cos</h3><p></p><div class='group'>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math cos pi |is-near -1.000000
+; returns 1</code></pre>
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math cos pi / 2 |near-zero
+; returns 1</code></pre>
+</div>
+<h3>sqrt</h3><p></p><div class='group'>
+12
+12
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math sqrt 144
+; returns 12.000000</code></pre>
+3
+3
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math sqrt 9.000000
+; returns 3.000000</code></pre>
+</div>
+<h3>abs</h3><p></p><div class='group'>
+100
+100
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math abs -100
+; returns 100.000000</code></pre>
+99
+99
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math abs 99.000000
+; returns 99.000000</code></pre>
+</div>
+<h3>acos</h3><p></p><div class='group'>
+3.141592653589793
+3.141592653589793
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math acos -1
+; returns 3.141593</code></pre>
+1.0471975511965976
+1.0471975511965976
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math acos 0.500000
+; returns 1.047198</code></pre>
+0
+0
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math acos 1
+; returns 0.000000</code></pre>
+</div>
+<h3>acosh</h3><p></p><div class='group'>
+0
+0
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math acosh 1
+; returns 0.000000</code></pre>
+1.3169578969248166
+1.3169578969248166
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math acosh 2
+; returns 1.316958</code></pre>
+</div>
+<h3>asin</h3><p></p><div class='group'>
+-1.5707963267948966
+-1.5707963267948966
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math asin -1
+; returns -1.570796</code></pre>
+0
+0
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math asin 0
+; returns 0.000000</code></pre>
+1.5707963267948966
+1.5707963267948966
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math asin 1
+; returns 1.570796</code></pre>
+</div>
+<h3>asinh</h3><p></p><div class='group'>
+-0.8813735870195428
+-0.8813735870195428
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math asinh -1
+; returns -0.881374</code></pre>
+0
+0
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math asinh 0
+; returns 0.000000</code></pre>
+0.8813735870195429
+0.8813735870195429
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math asinh 1
+; returns 0.881374</code></pre>
+</div>
+<h3>atan</h3><p></p><div class='group'>
+-0.7853981633974483
+-0.7853981633974483
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math atan -1
+; returns -0.785398</code></pre>
+0
+0
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math atan 0
+; returns 0.000000</code></pre>
+0.7853981633974483
+0.7853981633974483
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math atan 1
+; returns 0.785398</code></pre>
+</div>
+<h3>atan2</h3><p></p><div class='group'>
+</div>
+<h3>atanh</h3><p></p><div class='group'>
+</div>
+<h3>ceil</h3><p></p><div class='group'>
+6
+6
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math ceil 5.700000
+; returns 6.000000</code></pre>
+5
+5
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math ceil 4.900000
+; returns 5.000000</code></pre>
+</div>
+<h3>cbrt</h3><p></p><div class='group'>
+3
+3
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math cbrt 27
+; returns 3.000000</code></pre>
+</div>
+<h3>copysign</h3><p></p><div class='group'>
+-4.9
+-4.9
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math copysign 4.900000 -1
+; returns -4.900000</code></pre>
+4.9
+4.9
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math copysign 4.900000 1
+; returns 4.900000</code></pre>
+</div>
+<h3>dim</h3><p></p><div class='group'>
+5
+5
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math dim 2 -3
+; returns 5.000000</code></pre>
+9
+9
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math dim 8 -1
+; returns 9.000000</code></pre>
+0
+0
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math dim -4 -2
+; returns 0.000000</code></pre>
+</div>
+<h3>erf</h3><p></p><div class='group'>
+</div>
+<h3>erfc</h3><p></p><div class='group'>
+</div>
+<h3>erfcinv</h3><p></p><div class='group'>
+</div>
+<h3>erfinv</h3><p></p><div class='group'>
+</div>
+<h3>exp</h3><p></p><div class='group'>
+</div>
+<h3>exp2</h3><p></p><div class='group'>
+32
+32
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math exp2 5
+; returns 32.000000</code></pre>
+</div>
+<h3>expm1</h3><p></p><div class='group'>
+</div>
+<h3>fma</h3><p></p><div class='group'>
+14
+14
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math fma 2.000000 4.000000 6.000000
+; returns 14.000000</code></pre>
+</div>
+<h3>j0</h3><p></p><div class='group'>
+</div>
+<h3>j1</h3><p></p><div class='group'>
+</div>
+<h3>y0</h3><p></p><div class='group'>
+</div>
+<h3>y1</h3><p></p><div class='group'>
+</div>
+<h3>jn</h3><p></p><div class='group'>
+</div>
+<h3>yn</h3><p></p><div class='group'>
+</div>
+<h3>trunc</h3><p></p><div class='group'>
+1
+1
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math trunc 1.234567
+; returns 1.000000</code></pre>
+</div>
+<h3>log10</h3><p></p><div class='group'>
+2
+2
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math log10 100
+; returns 2.000000</code></pre>
+</div>
+<h3>log1</h3><p></p><div class='group'>
+2.449279472144849
+2.449279472144849
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math log1p 10.580000
+; returns 2.449279</code></pre>
+</div>
+<h3>logb</h3><p></p><div class='group'>
+6
+6
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math logb 123.450000
+; returns 6.000000</code></pre>
+</div>
+<h3>roundtoeven</h3><p></p><div class='group'>
+12
+12
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math roundtoeven 11.500000
+; returns 12.000000</code></pre>
+12
+12
+<pre class='prettyprint lang-rye'><code language='lang-rye'>do\in math roundtoeven 12.500000
+; returns 12.000000</code></pre>
+</div>
+</div>
+  
+<script type="text/javascript">
+var sc_project=12932344; 
+var sc_invisible=1; 
+var sc_security="6e399927"; 
+</script>
+<script type="text/javascript"
+src="https://www.statcounter.com/counter/counter.js"
+async></script>
+<noscript><div class="statcounter"><a title="Web Analytics"
+href="https://statcounter.com/" target="_blank"><img
+class="statcounter"
+src="https://c.statcounter.com/12932344/0/6e399927/1/"
+alt="Web Analytics"
+referrerPolicy="no-referrer-when-downgrade"></a></div></noscript>
+</body>
+</html>

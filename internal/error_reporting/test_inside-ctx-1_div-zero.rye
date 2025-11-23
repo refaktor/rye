@@ -1,0 +1,3 @@
+print 123
+context {  1 / 0  }
+print `dont-print`

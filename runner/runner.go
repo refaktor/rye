@@ -55,6 +55,9 @@ var (
 
 	// Code signing options
 	CodeSigEnforced = flag.Bool("codesig", false, "Enforce code signature verification")
+
+	// Inspect/debugging options
+	NoInspect = flag.Bool("noinspect", false, "Exit immediately on error without showing debugging options")
 )
 
 // TODO 20251107: This is temporary experiment, to make builtins like forever respond to ctrl+d, ctrl+z, ...
@@ -688,6 +691,9 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 		fmt.Println(err.Error())
 		return
 	}
+
+	// Set the NoInspect mode from the flag
+	evaldo.NoInspectMode = *NoInspect
 
 	// Setup signal handling for interrupting operations
 	//setupGlobalSignalHandler()

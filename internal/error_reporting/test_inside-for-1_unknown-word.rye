@@ -1,0 +1,3 @@
+print 123
+for range 1 3 {  some-unknown-word  }
+print `dont-print`

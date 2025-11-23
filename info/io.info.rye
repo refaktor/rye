@@ -76,6 +76,71 @@ section "File Operations " "File system operations and file manipulation" {
 	{
 ``	}
 
+	group "file-uri//Filename?" 
+	"Gets the filename with extension from a file path."
+	{
+		arg `path: uri representing a file path`
+		returns `string containing the filename with extension`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "file-uri//Stem?" 
+	"Gets the filename without extension from a file path."
+	{
+		arg `path: uri representing a file path`
+		returns `string containing the filename without extension`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "file-uri//Dir?" 
+	"Gets the directory path from a file path."
+	{
+		arg `path: uri representing a file path`
+		returns `string containing the directory path`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "file-uri//Split" 
+	"Splits a file path into its components."
+	{
+		arg `path: uri representing a file path`
+		returns `block of strings containing path components`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "file-uri//Is-absolute" 
+	"Checks if a file path is absolute."
+	{
+		arg `path: uri representing a file path`
+		returns `boolean indicating whether the path is absolute`
+	}
+
+	{
+	}
+
+	{
+``	}
+
 	group "file//Reader" 
 	"Creates a new reader from file object."
 	{
@@ -485,10 +550,10 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 ``	}
 
 	group "https-request//Call" 
-	"Executes a HTTPS request and returns the response."
+	"Executes a HTTPS request and returns the response object. Always returns the response regardless of status code (200, 404, 500, etc.) - use Status? to check the code."
 	{
 		arg `request: native https-request object`
-		returns `native https-response object`
+		returns `native https-response object (always returns response regardless of status code)`
 	}
 
 	{
