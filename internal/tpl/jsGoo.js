@@ -1049,9 +1049,9 @@ function HTMLDecode(s) {
     s = s.replace(/&#39;/g,"'");
     s = s.replace(/&#47;/g,"/");
     s = s.replace(/&quot;/g,'"');
-    s = s.replace(/&amp;/g,"&");
     s = s.replace(/&lt;/g,"<");
-    return s.replace(/&gt;/g,">");
+    s = s.replace(/&gt;/g,">");
+    return s.replace(/&amp;/g,"&");
 }
 
 //utils-shortcuts -- remove if you need to 
