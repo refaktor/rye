@@ -1,0 +1,695 @@
+section "Default" "" {
+}
+
+section "Math context " "Mathematical context and dialect (calc)" {
+	group "mod" 
+	"Returns the remainder of dividing x by y."
+	{
+		arg `x: integer or decimal value`
+		arg `y: integer or decimal value`
+		returns `decimal remainder of x/y`
+	}
+
+	{
+		math .change! 'root-ctx   ; temporary way to change context ... will systemize it #TODO, rename root-ctx to curr-ctx and leave root-ctx for returning to it
+		equal { cc math |type? } 'context
+		equal { mod 10 3 } 1
+	}
+
+	group "pow" 
+	"Returns base raised to the power of exponent."
+	{
+		arg `base: integer, decimal, or complex value`
+		arg `exponent: integer, decimal, or complex value`
+		returns `decimal result of base raised to the power of exponent for integer/decimal inputs, complex result for complex inputs`
+	}
+
+	{
+		equal { cc math |type? } 'context
+		equal { pow 2 3 } 8.0
+		equal { pow complex 2 0 complex 3 0 |print } "8.000000+0.000000i"
+		equal { pow complex 0 1 complex 2 0 |print } "-1.000000+0.000000i"
+	}
+
+	group "log2" 
+	"Returns the binary logarithm (base-2) of x."
+	{
+		arg `x: integer or decimal value`
+		returns `decimal binary logarithm of x`
+	}
+
+	{
+		equal { log2 8 } 3.0
+	}
+
+	group "log10" 
+	"Returns the decimal logarithm (base-10) of x."
+	{
+		arg `x: integer or decimal value`
+		returns `decimal base-10 logarithm of x`
+	}
+
+	{
+		equal { log10 100 } 2.0
+	}
+
+	group "log" 
+	"Returns the natural logarithm of x."
+	{
+		arg `x: integer, decimal, or complex value (must not be zero)`
+		returns `decimal natural logarithm of x for integer/decimal input, complex logarithm for complex input`
+	}
+
+	{
+		equal { log 1 } 0.0
+		equal { log 2.718281828459045 } 1.0
+		equal { log complex 1 0 |print } "0.000000+0.000000i"
+		equal { log complex 2.718281828459045 0 |print } "1.000000+0.000000i"
+		error { log 0 }
+		error { log complex 0 0 }
+	}
+
+	group "log1p" 
+	"Returns the natural logarithm of 1 plus its argument x."
+	{
+		arg `x: integer or decimal value`
+		returns `decimal natural logarithm of (1 + x)`
+	}
+
+	{
+		equal { log1p 0 } 0.0
+	}
+
+	group "logb" 
+	"Returns the binary exponent of x."
+	{
+		arg `x: integer or decimal value`
+		returns `decimal binary exponent of x`
+	}
+
+	{
+		equal { logb 8 } 3.0
+	}
+
+	group "sq" 
+	"Returns the square of x."
+	{
+		arg `x: integer or decimal value`
+		returns `decimal square of x`
+	}
+
+	{
+		equal { sq 4 } 16.0
+	}
+
+	group "sin" 
+	"Returns the sine of the radian argument."
+	{
+		arg `x: integer, decimal, or complex value in radians`
+		returns `decimal sine of x for integer/decimal input, complex sine for complex input`
+	}
+
+	{
+		equal { sin 0 } 0.0
+		equal { round\to sin pi 10 } 0.0
+		equal { sin complex 0 0 |print } "0.000000+0.000000i"
+		equal { sin complex 1.570796326794897 0 |print } "1.000000+0.000000i"
+	}
+
+	group "cos" 
+	"Returns the cosine of the radian argument."
+	{
+		arg `x: integer, decimal, or complex value in radians`
+		returns `decimal cosine of x for integer/decimal input, complex cosine for complex input`
+	}
+
+	{
+		equal { cos 0 } 1.0
+		equal { cos complex 0 0 |print } "1.000000+0.000000i"
+		equal { cos complex 3.141592653589793 0 |print } "-1.000000+0.000000i"
+	}
+
+	group "tan" 
+	"Returns the tangent of the radian argument."
+	{
+		arg `x: integer, decimal, or complex value in radians`
+		returns `decimal tangent of x for integer/decimal input, complex tangent for complex input`
+	}
+
+	{
+		equal { tan 0 } 0.0
+		equal { tan complex 0 0 |print } "0.000000+0.000000i"
+		equal { tan complex 0.7853981633974483 0 |print } "1.000000+0.000000i"
+	}
+
+	group "sqrt" 
+	"Returns the square root of x."
+	{
+		arg `x: integer, decimal, or complex value`
+		returns `decimal square root of x for integer/decimal input, complex square root for complex input`
+	}
+
+	{
+		equal { sqrt 9 } 3.0
+		equal { sqrt complex -1 0 |print } "0.000000+1.000000i"
+	}
+
+	group "abs" 
+	"Returns the absolute value of a number."
+	{
+		arg `x: integer, decimal, or complex value`
+		returns `absolute value of x (same type as input for integer/decimal, decimal for complex)`
+	}
+
+	{
+		equal { abs -5 } 5
+		equal { abs 5 } 5
+		equal { abs complex 3 4 } 5.0
+	}
+
+	group "acos" 
+	"Returns the arccosine (inverse cosine) in radians."
+	{
+		arg `x: integer or decimal value between -1 and 1`
+		returns `decimal arccosine of x in radians`
+	}
+
+	{
+		equal { acos 1 } 0.0
+	}
+
+	group "acosh" 
+	"Returns the inverse hyperbolic cosine."
+	{
+		arg `x: integer or decimal value >= 1`
+		returns `decimal inverse hyperbolic cosine of x`
+	}
+
+	{
+		equal { acosh 1 } 0.0
+	}
+
+	group "asin" 
+	"Returns the arcsine (inverse sine) in radians."
+	{
+		arg `x: integer or decimal value between -1 and 1`
+		returns `decimal arcsine of x in radians`
+	}
+
+	{
+		equal { asin 0 } 0.0
+	}
+
+	group "asinh" 
+	"Returns the inverse hyperbolic sine."
+	{
+		arg `x: integer or decimal value`
+		returns `decimal inverse hyperbolic sine of x`
+	}
+
+	{
+		equal { asinh 0 } 0.0
+	}
+
+	group "atan" 
+	"Returns the arctangent (inverse tangent) in radians."
+	{
+		arg `x: integer or decimal value`
+		returns `decimal arctangent of x in radians`
+	}
+
+	{
+		equal { atan 0 } 0.0
+	}
+
+	group "atan2" 
+	"Returns the arc tangent of y/x, using the signs of the two to determine the quadrant of the return value."
+	{
+		arg `y: integer or decimal value`
+		arg `x: integer or decimal value`
+		returns `decimal arctangent of y/x in radians, using signs to determine quadrant`
+	}
+
+	{
+		equal { atan2 0 1 } 0.0
+	}
+
+	group "atanh" 
+	"Returns the inverse hyperbolic tangent."
+	{
+		arg `x: integer or decimal value between -1 and 1`
+		returns `decimal inverse hyperbolic tangent of x`
+	}
+
+	{
+		equal { atanh 0 } 0.0
+	}
+
+	group "ceil" 
+	"Returns the least integer value greater than or equal to x."
+	{
+		arg `x: integer or decimal value`
+		returns `decimal ceiling of x (smallest integer >= x)`
+	}
+
+	{
+		equal { ceil 3.1 } 4.0
+	}
+
+	group "cbrt" 
+	"Returns the cube root of x."
+	{
+		arg `x: integer or decimal value`
+		returns `decimal cube root of x`
+	}
+
+	{
+		equal { cbrt 8 } 2.0
+	}
+
+	group "copysign" 
+	"Returns a value with the magnitude of x and the sign of y."
+	{
+		arg `x: integer or decimal value`
+		arg `y: integer or decimal value`
+		returns `decimal with magnitude of x and sign of y`
+	}
+
+	{
+		equal { copysign 1.0 -2.0 } -1.0
+	}
+
+	group "dim" 
+	"Returns the maximum of x-y or 0."
+	{
+		arg `x: integer or decimal value`
+		arg `y: integer or decimal value`
+		returns `decimal max(x-y, 0)`
+	}
+
+	{
+		equal { dim 5 3 } 2.0
+		equal { dim 3 5 } 0.0
+	}
+
+	group "round\\to" 
+	"Rounds a decimal to the specified number of decimal places."
+	{
+		arg `x: decimal value to round`
+		arg `digits: integer number of decimal places to round to`
+		returns `decimal rounded to specified number of decimal places`
+	}
+
+	{
+		equal { round\to 3.14159 2 } 3.14
+	}
+
+	group "round" 
+	"Rounds a decimal to the nearest integer."
+	{
+		arg `x: decimal value`
+		returns `decimal rounded to nearest integer`
+	}
+
+	{
+		equal { round 3.7 } 4.0
+		equal { round 3.2 } 3.0
+	}
+
+	group "roundtoeven" 
+	"Returns the nearest integer, rounding ties to even."
+	{
+		arg `x: integer or decimal value`
+		returns `decimal rounded to nearest integer, with ties rounded to even`
+	}
+
+	{
+		equal { roundtoeven 3.5 } 4.0
+		equal { roundtoeven 2.5 } 2.0
+	}
+
+	group "erf" 
+	"Returns the error function of value."
+	{
+		arg `x: integer or decimal value`
+		returns `decimal error function value of x`
+	}
+
+	{
+		equal { erf 0 } 0.0
+	}
+
+	group "erfc" 
+	"Returns the complementary error function of value."
+	{
+		arg `x: integer or decimal value`
+		returns `decimal complementary error function value of x`
+	}
+
+	{
+		equal { erfc 0 } 1.0
+	}
+
+	group "erfcinv" 
+	"Returns the inverse of erfc(x) function."
+	{
+		arg `x: integer or decimal value between 0 and 2`
+		returns `decimal inverse complementary error function value of x`
+	}
+
+	{
+		equal { erfcinv 1.0 } 0.0
+	}
+
+	group "erfinv" 
+	"Returns the inverse error function of value."
+	{
+		arg `x: integer or decimal value between -1 and 1`
+		returns `decimal inverse error function value of x`
+	}
+
+	{
+		equal { erfinv 0 } 0.0
+	}
+
+	group "exp" 
+	"Returns e**x, the base-e exponential of x."
+	{
+		arg `x: integer, decimal, or complex value`
+		returns `decimal e^x for integer/decimal input, complex e^z for complex input`
+	}
+
+	{
+		equal { exp 0 } 1.0
+		equal { exp 1 } 2.718281828459045
+		equal { exp complex 0 0 |print } "1.000000+0.000000i"
+		equal { exp complex 0 3.141592653589793 |print } "-1.000000+0.000000i"
+	}
+
+	group "exp2" 
+	"Returns 2**x, the base-2 exponential of x."
+	{
+		arg `x: integer or decimal value`
+		returns `decimal 2^x`
+	}
+
+	{
+		equal { exp2 3 } 8.0
+	}
+
+	group "expm1" 
+	"Returns e**x - 1, the base-e exponential of x minus 1. It is more accurate than exp(x) - 1 when x is near zero."
+	{
+		arg `x: integer or decimal value`
+		returns `decimal e^x - 1`
+	}
+
+	{
+		equal { expm1 0 } 0.0
+	}
+
+	group "fma" 
+	"Returns x * y + z, computed with only one rounding. (That is, FMA returns the fused multiply-add of x, y, and z.)"
+	{
+		arg `x: integer or decimal value`
+		arg `y: integer or decimal value`
+		arg `z: integer or decimal value`
+		returns `decimal (x * y) + z computed with only one rounding`
+	}
+
+	{
+		equal { fma 2 3 4 } 10.0
+	}
+
+	group "j0" 
+	"Returns the order-zero Bessel function of the first kind."
+	{
+		arg `x: integer or decimal value`
+		returns `decimal order-zero Bessel function of the first kind`
+	}
+
+	{
+		equal { j0 0 } 1.0
+	}
+
+	group "j1" 
+	"Returns the order-one Bessel function of the first kind."
+	{
+		arg `x: integer or decimal value`
+		returns `decimal order-one Bessel function of the first kind`
+	}
+
+	{
+		equal { j1 0 } 0.0
+	}
+
+	group "y0" 
+	"Returns the order-zero Bessel function of the second kind."
+	{
+		arg `x: integer or decimal value`
+		returns `decimal order-zero Bessel function of the second kind`
+	}
+
+	{
+		equal { y0 1 } 0.08825696421567698
+	}
+
+	group "y1" 
+	"Returns the order-one Bessel function of the second kind."
+	{
+		arg `x: integer or decimal value`
+		returns `decimal order-one Bessel function of the second kind`
+	}
+
+	{
+		equal { y1 1 } -0.7812128213002887
+	}
+
+	group "yn" 
+	"Returns the order-n Bessel function of the second kind."
+	{
+		arg `n: integer order`
+		arg `x: integer or decimal value`
+		returns `decimal order-n Bessel function of the second kind`
+	}
+
+	{
+		equal { yn 2 1 } -1.6506826068162546
+	}
+
+	group "jn" 
+	"Returns the order-n Bessel function of the first kind."
+	{
+		arg `n: integer order`
+		arg `x: integer or decimal value`
+		returns `decimal order-n Bessel function of the first kind`
+	}
+
+	{
+		equal { jn 2 1 } 0.1149034849319005
+	}
+
+	group "trunc" 
+	"Returns the integer value of input."
+	{
+		arg `x: integer or decimal value`
+		returns `decimal integer value of x (truncated toward zero)`
+	}
+
+	{
+		equal { trunc 3.7 } 3.0
+	}
+
+	group "pi" 
+	"Returns the mathematical constant π (pi)."
+	{
+		arg `none`
+		returns `decimal value of π (pi)`
+	}
+
+	{
+		equal { round\to pi 5 } 3.14159
+	}
+
+	group "deg->rad" 
+	"Converts degrees to radians."
+	{
+		arg `degrees: integer or decimal value in degrees`
+		returns `decimal value in radians`
+	}
+
+	{
+		equal { deg->rad 180 } 3.141592653589793
+	}
+
+	group "is-near" 
+	"Returns true if two decimals are close."
+	{
+		arg `x: integer or decimal value`
+		arg `y: integer or decimal value`
+		returns `integer 1 if values are very close, 0 otherwise`
+	}
+
+	{
+		equal { is-near 0.0000000000001 0 } 1
+		equal { is-near 0.1 0 } 0
+	}
+
+	group "near-zero" 
+	"Returns true if a decimal is close to zero."
+	{
+		arg `x: integer or decimal value`
+		returns `integer 1 if value is very close to zero, 0 otherwise`
+	}
+
+	{
+		equal { near-zero 0.0000000000001 } 1
+		equal { near-zero 0.1 } 0
+	}
+
+	group "is-prime" 
+	"Returns true if the integer is a prime number."
+	{
+		arg `n: integer value to check`
+		returns `integer 1 if n is prime, 0 otherwise`
+	}
+
+	{
+		equal { is-prime 7 } 1
+		equal { is-prime 10 } 0
+	}
+
+	group "to-eyr" 
+	"Converts math dialect to Eyr dialect."
+	{
+		arg `block: block containing math expressions`
+		returns `block converted to Eyr dialect`
+	}
+
+	{
+		equal { to-eyr { 1 + 2 * 3 } |type? } 'block
+	}
+
+	group "calc" 
+	"Evaluates expressions in math dialect."
+	{
+		arg `block: block containing math expressions with proper operator precedence and parentheses support`
+		returns `result of evaluating the math expressions following standard mathematical order of operations`
+	}
+
+	{
+		equal { calc { 1 + 2 * 3 } } 7
+		equal { calc { 2 + 3 * 4 } } 14
+		equal { calc { 10 - 6 / 2 } } 7.0
+		equal { calc { 2 * 3 + 4 } } 10
+		equal { calc { 8 / 2 - 1 } } 3.0
+		equal { calc { ( 1 + 2 ) * 3 } } 9
+		equal { calc { 2 * ( 3 + 4 ) } } 14
+		equal { calc { ( 10 - 6 ) / 2 } } 2.0
+		equal { calc { ( 2 + 3 ) * ( 4 - 1 ) } } 15
+		equal { calc { 2 + ( 3 * ( 4 + 1 ) ) } } 17
+		equal { calc { ( ( 2 + 3 ) * 4 ) - 1 } } 19
+	}
+
+	group "gcd" 
+	"Returns the greatest common divisor of two integers using Euclidean algorithm."
+	{
+		arg `a: integer value`
+		arg `b: integer value`
+		returns `integer greatest common divisor of a and b`
+	}
+
+	{
+		equal { gcd 48 18 } 6
+		equal { gcd 17 13 } 1
+		equal { gcd 100 25 } 25
+		equal { gcd 0 5 } 5
+		equal { gcd 7 0 } 7
+	}
+
+}
+
+section "Default" "" {
+	group "eyr" 
+	"Evaluates Rye block as Eyr (postfix) stack based code."
+	{
+		arg `block: Block of code to evaluate in EYR (postfix) mode`
+		returns `result of evaluating the block as postfix stack-based code`
+	}
+
+	{
+		equal { eyr { 1 2 + } } 3
+		equal { eyr { 5 3 - } } 2
+		equal { eyr { 4 2 * } } 8
+		equal { eyr { 6 2 / } } 3.0
+		equal { eyr { 10 3 mod } } 1
+		equal { eyr { 1 2 3 } } 3
+	}
+
+	group "rye0" 
+	"Evaluates Rye block as Rye0 dialect."
+	{
+		arg `block: Block of code to evaluate in RYE0 dialect`
+		returns `result of evaluating the block in RYE0 dialect`
+	}
+
+	{
+		; equal { rye0 { 1 + 2 } } 3
+		; equal { rye0 { 5 - 3 } } 2
+		; equal { rye0 { print "hello" } } "hello"
+	}
+
+	group "rye00" 
+	"Evaluates Rye block as Rye00 dialect (builtins and integers only)."
+	{
+		arg `block: Block of code to evaluate in RYE00 dialect (builtins and integers only)`
+		returns `result of evaluating the block in RYE00 dialect (minimal feature set)`
+	}
+
+	{
+		; equal { rye00 { 1 + 2 } } 3
+		; equal { rye00 { 5 * 3 } } 15
+		; equal { rye00 { inc 5 } } 6
+	}
+
+	group "eyr\\full" 
+	"Evaluates Rye block as Eyr (postfix) stack based code."
+	{
+		arg `block: Block of code to evaluate in EYR mode returning full stack as block`
+		returns `block containing all values from the EYR evaluation stack`
+	}
+
+	{
+		equal { eyr\full { 1 2 3 } |length? } 3
+		equal { eyr\full { 1 2 + 3 4 + } |length? } 2
+		equal { eyr\full { 10 5 - } |first } 5
+	}
+
+	group "eyr\\loop" 
+	"Evaluates Rye block in loop as Eyr code (postfix stack based) N times."
+	{
+		arg `count: Integer number of times to loop`
+		arg `block: Block of EYR code to execute in each iteration`
+		returns `result of the final EYR evaluation`
+	}
+
+	{
+		; equal { 3 .eyr\loop { 1 + } 0 } 3
+		; equal { 5 .eyr\loop { 2 * } 1 } 32
+		; equal { 2 .eyr\loop { dup + } 2 } 8
+	}
+
+	group "to-eyr" 
+	"Evaluates Rye block as Eyr (postfix) stack based code."
+	{
+		arg `block: Rye block to compile/convert to EYR format`
+		returns `block containing the EYR-compiled version of the input block`
+	}
+
+	{
+		equal { to-eyr { 1 + 2 } |type? } 'block
+		equal { to-eyr { 5 * 3 } |length? |> 0 } true
+	}
+
+}
+
