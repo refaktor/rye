@@ -78,7 +78,7 @@ jobs:
         go version -m bin/rye
 
     - name: Run Rye Tests
-      run: cd info ; ../bin/rye main.rye test base
+      run: cd tests ; ../bin/rye main.rye test base
       timeout-minutes: 1
 
     - name: Build WASM
