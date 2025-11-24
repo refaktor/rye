@@ -155,6 +155,20 @@ section "File Operations " "File system operations and file manipulation" {
 	{
 ``	}
 
+	group "file//Writer" 
+	"Creates a new reader from file object."
+	{
+		arg `source: file object to read from`
+		returns `native reader object`
+	}
+
+	{
+		equal { Reader probe Open probe %data/file.txt |kind? } 'reader
+	}
+
+	{
+``	}
+
 	group "file-uri//Reader" 
 	"Creates a new reader from a file uri/path."
 	{
@@ -319,6 +333,20 @@ section "File Operations " "File system operations and file manipulation" {
 	{
 ``	}
 
+	group "file//Write" 
+	"Writes a string directly to a file object."
+	{
+		arg `file: native file object`
+		arg `content: string to write to the file`
+		returns `the file object if successful (allows chaining)`
+	}
+
+	{
+	}
+
+	{
+``	}
+
 	group "file//Close" 
 	"Closes an open file."
 	{
@@ -418,7 +446,7 @@ section "File Operations " "File system operations and file manipulation" {
 	{
 ``	}
 
-	group "writer//Write\\string" 
+	group "writer//Write" 
 	"Writes a string to a writer."
 	{
 		arg `writer: native writer object`
@@ -919,7 +947,7 @@ section "SQLite " "SQLite database functions" {
 
 }
 
-section "PostgreSQL Database Functions " "" {
+section "PostgreSQL " "" {
 	group "postgres-uri//Open" 
 	"Opens a connection to a PostgreSQL database."
 	{
@@ -943,11 +971,13 @@ section "PostgreSQL Database Functions " "" {
 	}
 
 	{
-		example { Open postgres://user:pass@localhost:5432/dbname |Exec "INSERT INTO test VALUES (1, 'test')" }
 	}
 
 	{
-``	}
+`Open postgres://user:pass@localhost:5432/dbname
+|Exec { INSERT INTO test VALUES ( 1 , "test" ) }
+; mind the mandatory spacing in SQL dialect
+`	}
 
 	group "Rye-psql//Query" 
 	"Executes a SQL query and returns results as a table."
@@ -958,12 +988,12 @@ section "PostgreSQL Database Functions " "" {
 	}
 
 	{
-		example { Open postgres://user:pass@localhost:5432/dbname
-		|Query "SELECT * FROM test" }
 	}
 
 	{
-``	}
+`db: Open postgres://user:pass@localhost:5432/dbname
+db .Query "SELECT * FROM test"
+`	}
 
 	group "Rye-psql//Show-SQL" 
 	"Generates and returns the SQL string without executing it."
@@ -974,11 +1004,78 @@ section "PostgreSQL Database Functions " "" {
 	}
 
 	{
-		example { id: 323 Open postgres://user:pass@localhost:5432/dbname \n|Show-SQL {  SELECT * FROM test WHERE id = ?id } }
 	}
 
 	{
-``	}
+`name: "Bob"
+Open postgres://user:pass@localhost:5432/dbname
+|Show-SQL {  SELECT * FROM users WHERE first_name = ?name}
+`	}
+
+}
+
+section "MySQL " "MySQL database functions" {
+	group "mysql-uri//Open" 
+	"Opens a connection to a MySQL database."
+	{
+		arg `uri: MySQL connection string URI`
+		returns `native MySQL database connection`
+	}
+
+	{
+	}
+
+	{
+`Open mysql://user:pass@tcp(localhost)/dbname
+`	}
+
+	group "mysql-uri//Open\\pwd" 
+	"Opens a connection to a MySQL database with separate password parameter."
+	{
+		arg `uri: MySQL connection string URI without password`
+		arg `password: Password for the database connection`
+		returns `native MySQL database connection`
+	}
+
+	{
+	}
+
+	{
+`equal { Open\pwd mysql://user@tcp(localhost:3306)/dbname" "password"
+`	}
+
+	group "Rye-mysql//Exec" 
+	"Executes a SQL statement that modifies data (INSERT, UPDATE, DELETE)."
+	{
+		arg `db: MySQL database connection`
+		arg `sql: SQL statement as string or block`
+		returns `integer 1 if rows were affected, error otherwise`
+	}
+
+	{
+	}
+
+	{
+`Open mysql://user:pass@tcp(localhost:3306)/dbname" ,
+|Exec { INSERT INTO test VALUES ( 1 , "test" ) }
+`	}
+
+	group "Rye-mysql//Query" 
+	"Executes a SQL query and returns results as a table."
+	{
+		arg `db: MySQL database connection`
+		arg `sql: SQL query as string or block`
+		returns `table containing query results`
+	}
+
+	{
+	}
+
+	{
+`id: 101
+db: Open mysql://user:pass@tcp(localhost:3306)/dbname
+db .Query { SELECT * FROM test where id = ?id }
+`	}
 
 }
 

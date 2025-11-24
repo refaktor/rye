@@ -759,6 +759,39 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 
 }
 
+section "Validation " "validation dialect for Rye values" {
+	group "validate" 
+	"Validates and transforms data according to specified rules, returning a dictionary with converted values or an error."
+	{
+		arg `data: Dictionary, Context, or List to validate`
+		arg `rules: Block containing validation rules`
+		returns `validated Dictionary/Context/List with converted values or error if validation fails`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "validate>ctx" 
+	"Validates and transforms data according to specified rules, returning a context object for easy field access."
+	{
+		arg `data: Dictionary to validate`
+		arg `rules: Block containing validation rules`
+		returns `validated Context with converted values or error if validation fails`
+	}
+
+	{
+		equal { validate>ctx dict { a: 1 } { a: required } |type? } 'ctx    ; TODO rename to context
+		equal { validate>ctx dict { a: 1 } { a: optional 0 } -> 'a } 1
+	}
+
+	{
+``	}
+
+}
+
 section "EYR Dialect " "Stack based evaluator / dialect" {
 	group "eyr" 
 	"Evaluates Rye block as Eyr (postfix) stack based code."

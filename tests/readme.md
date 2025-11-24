@@ -1,21 +1,37 @@
-# Generated reference
+# Tests
 
-This is next, w-i-p folder for tests and builtin reference. Both are generated from evaldo/builtins*.go files.
+Tests are generated from the Go comments above builtin definitions. Docs above definitions produce x.info.rye files (structures) that get evaluated by main.rye in tests (current) folder.
 
-For more about this read: https://ryelang.org/cookbook/improving-rye/one-source/
+To find out more about the comment docs and format read this: https://ryelang.org/cookbook/improving-rye/one-source/
 
-## Use
+# Generating .info. files
 
-to generate do in cmd/parse_bultins folder:
+To generate the info files out of builtins call `./regen`. The script uses /cmd/rbit/rbit tool (Go binary) that parses the Go code and creates the x.info.rye structures.
 
-    ./parse_builtins ../../evaldo/builtins.go > ../../tests2/base.tests.rye
-    ./parse_builtins ../../evaldo/builtins_table.go > ../../tests2/table.tests.rye
+# Running tests
 
+Once you use `regen` you can use the main.rye in this folder. To run it use the dot shortcut: `rye .`, this will show you help information.
 
-To run tests do in this folder:
+```
+# To list all tests groups
+rye . ls
 
-    rye . test base
-    rye . test table
+# Run all the table group tests
+rye . test base
+rye . test table
+rye . test io
 
-The generator, testing framework and tests and additional info is being improved right now. This is a very temporary state.
+# Runs all the tests
+rye . test
+```
 
+# Generating function reference
+
+The same tool tests/main.rye also produces the reference docs from .info. files. You can see the docs online:
+
+https://ryelang.org/info
+
+```
+# To generate html docs
+rye . doc
+```

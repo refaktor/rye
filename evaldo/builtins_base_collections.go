@@ -2181,10 +2181,10 @@ var builtins_collection = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { var 'x ref { 1 2 3 } append\many { 4 5 6 } 'x , x } { 1 2 3 4 5 6 }
-	// equal { var 'x ref { 1 2 } append\many { 3 4 5 6 } 'x , x } { 1 2 3 4 5 6 }
-	// equal { var 's "hello" append\many { " " "world" "!" } 's , s } "hello world!"
-	// equal { var 'l ref list { 10 20 } append\many { 30 40 } 'l , l } list { 10 20 30 40 }
+	// equal { var 'x ref { 1 2 3 } append\many! { 4 5 6 } 'x , x } { 1 2 3 4 5 6 }
+	// equal { var 'x ref { 1 2 } append\many! { 3 4 5 6 } 'x , x } { 1 2 3 4 5 6 }
+	// equal { var 's "hello" append\many! { " " "world" "!" } 's , s } "hello world!"
+	// equal { var 'l ref list { 10 20 } append\many! { 30 40 } 'l , l } list { 10 20 30 40 }
 	// Args:
 	// * values: Block of values to append
 	// * word: Word referring to a block, list or string to modify

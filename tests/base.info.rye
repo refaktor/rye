@@ -433,7 +433,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 ``	}
 
 	group "_." 
-	"Discards the input value and returns a void value, useful for ignoring unwanted results in a pipeline."
+	"Discards the input value and returns a void value, useful only for Eyr (stack based dialect)."
 	{
 		arg `value: Any value to discard`
 		returns `void value (used to discard values)`
@@ -448,22 +448,17 @@ section "Numbers " "Working with numbers, integers and decimals." {
 ``	}
 
 	group "_+" 
-	"Adds or joins two values together, with behavior depending on types: adds numbers, concatenates strings/blocks, merges dictionaries, etc."
+	"Adds two numerical values. Accepts Integer, Decimal, Complex and Time."
 	{
-		arg `value1: First value (number, string, block, dict, etc.)`
-		arg `value2: Second value to add or join`
-		returns `result of adding or joining the values, type depends on input types`
+		arg `value1: First value (integer, decimal, complex, time)`
+		arg `value2: Second value to add (integer, decimal, complex, duration)`
+		returns `result of adding values, type depends on input types`
 	}
 
 	{
 		equal { 1 + 1 } 2
 		equal { 3 + 4 } 7
 		equal { 5.6 + 7.8 } 13.400000
-		error { "A" + "b" }
-		error { "A" + 1 }
-		error { { 1 2 } + { 3 4 } } { 1 2 3 4 }
-		error { dict { "a" 1 } |+ { "b" 2 } }
-		error { dict { "a" 1 } |+ dict { "b" 2 } }
 	}
 
 	{
@@ -2244,10 +2239,10 @@ section "Collections " "" {
 	}
 
 	{
-		equal { var 'x ref { 1 2 3 } append\many { 4 5 6 } 'x , x } { 1 2 3 4 5 6 }
-		equal { var 'x ref { 1 2 } append\many { 3 4 5 6 } 'x , x } { 1 2 3 4 5 6 }
-		equal { var 's "hello" append\many { " " "world" "!" } 's , s } "hello world!"
-		equal { var 'l ref list { 10 20 } append\many { 30 40 } 'l , l } list { 10 20 30 40 }
+		equal { var 'x ref { 1 2 3 } append\many! { 4 5 6 } 'x , x } { 1 2 3 4 5 6 }
+		equal { var 'x ref { 1 2 } append\many! { 3 4 5 6 } 'x , x } { 1 2 3 4 5 6 }
+		equal { var 's "hello" append\many! { " " "world" "!" } 's , s } "hello world!"
+		equal { var 'l ref list { 10 20 } append\many! { 30 40 } 'l , l } list { 10 20 30 40 }
 	}
 
 	{
@@ -2919,8 +2914,8 @@ section "Contexts " "Context related functions" {
 
 	{
 		equal { c: context { x: [ 1 2 3 ] } cc: clone\deep c cc/x } [ 1 2 3 ]
-		equal { c: context { x: [ 1 2 3 ] } cc: clone\deep c do\in cc { x/0: 999 } c/x/0 } 1 ; original unchanged
-		equal { c: context { x: [ 1 2 3 ] } cc: clone\deep c do\in cc { x/0: 999 } cc/x/0 } 999 ; deep clone modified
+		equal { c: context { x: [ 1 2 3 ] } cc: clone\deep c do\in cc { x/0: 999 } c/x -> 0 } 1 ; original unchanged
+		equal { c: context { x: [ 1 2 3 ] } cc: clone\deep c do\in cc { x/0: 999 } cc/x -> 0 } 999 ; deep clone modified
 	}
 
 	{
@@ -3094,8 +3089,13 @@ section "Iteration " "Functions for iterating over collections and executing cod
 ``	}
 
 	group "produce\\" 
-	" TODO "
+	"Executes a block of code a specified number of times, updating an accumulator word with each iteration result."
 	{
+		arg `count: Integer number of iterations to perform`
+		arg `initial: Initial value for the accumulator`
+		arg `accumulator: Word to store the accumulator value`
+		arg `block: Block of code to execute on each iteration`
+		returns `final value of the accumulator word after all iterations`
 	}
 
 	{
@@ -3136,9 +3136,28 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 ``	}
 
+	group "for___" 
+	"Iterates over each value in a collection, executing a block of code for each value."
+	{
+		arg `collection: String, Block, List, or Table to iterate over`
+		arg `code: Block of code to execute for each value`
+		returns `result of the last block execution`
+	}
+
+	{
+		stdout { "abc" .for { .prns } } "a b c "
+		equal { { 1 2 3 } .for { + 1 } } 4
+	}
+
+	{
+``	}
+
 	group "for" 
 	"Accepts a block of values and a block of code, builtin, or function, does the code for each of the values, injecting them."
 	{
+		arg `collection: Collection (Block, List, String, or Table) to iterate over`
+		arg `code: Block, Builtin, or Function to execute for each value, injecting the value`
+		returns `result of the last code execution`
 	}
 
 	{
@@ -3149,9 +3168,44 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 ``	}
 
-	group "walk" 
-	"Accepts a block of values and a block of code, does the code for each of the values, injecting them."
+	group "for\\pos" 
+	"Iterates over a collection with position tracking (1-based), setting a word to the current position and injecting each value."
 	{
+		arg `collection: Collection to iterate over`
+		arg `word: Word to store the current position (1-based index)`
+		arg `code: Block of code to execute for each value`
+		returns `result of the last block execution`
+	}
+
+	{
+		stdout { { "a" "b" "c" } .for\pos 'i { i .prns , .prns } } "1 a 2 b 3 c "
+	}
+
+	{
+``	}
+
+	group "for\\idx" 
+	"Iterates over a collection with index tracking (0-based), setting a word to the current index and injecting each value."
+	{
+		arg `collection: Collection to iterate over`
+		arg `word: Word to store the current index (0-based)`
+		arg `code: Block of code to execute for each value`
+		returns `result of the last block execution`
+	}
+
+	{
+		stdout { { "a" "b" "c" } .for\idx 'i { i .prns , .prns } } "0 a 1 b 2 c "
+	}
+
+	{
+``	}
+
+	group "walk" 
+	"Walks through a block, executing code that can modify the block on each iteration (useful for custom iteration patterns)."
+	{
+		arg `block: Block to walk through`
+		arg `code: Block of code to execute, which should return a modified block`
+		returns `result of the last block execution`
 	}
 
 	{
@@ -3165,6 +3219,9 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	group "purge" 
 	"Purges values from a series based on return of a injected code block."
 	{
+		arg `series: Block, List, String, or Table to purge from`
+		arg `code: Block of code that returns true for values to remove`
+		returns `modified series with matching values removed`
 	}
 
 	{
@@ -3180,12 +3237,31 @@ section "Iteration " "Functions for iterating over collections and executing cod
 ``	}
 
 	group "purge!" 
-	"Purges values from a series based on return of a injected code block."
+	"Purges values from a block stored in a word (modifying it in-place), returning the purged values."
 	{
+		arg `code: Block of code that returns true for values to remove`
+		arg `word: Word referring to a Block to purge from (modified in-place)`
+		returns `Block containing the purged values`
 	}
 
 	{
 		equal { { 1 2 3 } :x purge! { .is-even } 'x , x } { 1 3 }
+	}
+
+	{
+``	}
+
+	group "map___" 
+	"Maps values of a block to a new block by evaluating a block of code."
+	{
+		arg `series: Block, List, or String to map over`
+		arg `code: Block or Builtin to execute for each value`
+		returns `new series with transformed values`
+	}
+
+	{
+		equal { map { 1 2 3 } { + 1 } } { 2 3 4 }
+		equal { map "abc" { .to-upper } } { "A" "B" "C" }
 	}
 
 	{
@@ -3247,8 +3323,12 @@ section "Iteration " "Functions for iterating over collections and executing cod
 ``	}
 
 	group "reduce" 
-	"Reduces values of a block to a new block by evaluating a block of code ..."
+	"Reduces values of a block to a single value by evaluating a block of code, using the first element as the initial accumulator."
 	{
+		arg `collection: Collection to reduce (must not be empty)`
+		arg `accumulator: Word to store the accumulator value`
+		arg `code: Block of code to execute for each value, receiving accumulator as context`
+		returns `final accumulated value`
 	}
 
 	{
@@ -3281,8 +3361,11 @@ section "Iteration " "Functions for iterating over collections and executing cod
 ``	}
 
 	group "partition" 
-	"Partitions a series by evaluating a block of code."
+	"Partitions a series by evaluating a block of code, grouping consecutive elements that return the same result."
 	{
+		arg `series: String, Block, or List to partition`
+		arg `code: Block or Builtin that returns a value for grouping consecutive elements`
+		returns `collection of partitions (each partition contains consecutive elements with the same result)`
 	}
 
 	{
@@ -3302,8 +3385,11 @@ section "Iteration " "Functions for iterating over collections and executing cod
 ``	}
 
 	group "group" 
-	"Groups a block or list of values given condition."
+	"Groups a block or list of values by a key generated from a code block (keys must be strings)."
 	{
+		arg `series: Block or List to group`
+		arg `code: Block or Builtin that returns a string key for grouping`
+		returns `Dict with string keys and List values containing grouped elements`
 	}
 
 	{
@@ -3343,6 +3429,9 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	group "seek" 
 	"Seek over a series until a Block of code returns True and return the value."
 	{
+		arg `series: Block, List, or String to search through`
+		arg `code: Block or Builtin that returns true when the desired value is found`
+		returns `first value for which the code returns true, error if none found`
 	}
 
 	{
@@ -3360,6 +3449,9 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	group "while" 
 	"Executes a block of code repeatedly while a condition is true."
 	{
+		arg `condition: Block that evaluates to a boolean to determine whether to continue`
+		arg `body: Block of code to execute repeatedly`
+		returns `result of the last body execution`
 	}
 
 	{
@@ -3373,6 +3465,9 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	group "until" 
 	"Executes a block of code repeatedly until a condition becomes true. Executes the body at least once before checking condition (do-until loop)."
 	{
+		arg `body: Block of code to execute repeatedly (executed at least once)`
+		arg `condition: Block that evaluates to a boolean to determine when to stop`
+		returns `result of the last body execution`
 	}
 
 	{
@@ -3385,14 +3480,37 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 ``	}
 
-	group "for\\kv" 
-	"Iterates over a collection with separate key and value words. For dicts, uses actual keys and values. For other collections, uses indices as keys."
+	group "for\\" 
+	"Iterates over a collection, setting a word to each value. Works with lists, blocks, and strings."
 	{
+		arg `collection: String, Block, List, or other Collection to iterate over`
+		arg `word: Word to store each value during iteration`
+		arg `block: Block of code to execute for each value`
+		returns `result of the last block execution`
 	}
 
 	{
-		equal { dict vals { "a" 1 "b" 2 } .for\kw 'k 'v { k prns v prn } } ""  ; Expected output: "a 1 b 2 "
-		equal { { 10 20 30 } .for\kw 'i 'v { i prns v prn } } ""  ; Expected output: "0 10 1 20 2 30 "
+		equal { { 1 2 3 } .for\ 'x { x .prns } } ""  ; Expected output: "1 2 3 "
+		equal { list { 10 20 30 } .for\ 'val { val .prns } } ""  ; Expected output: "10 20 30 "
+		equal { "abc" .for\ 'ch { ch .prns } } ""  ; Expected output: "a b c "
+	}
+
+	{
+``	}
+
+	group "for\\kv" 
+	"Iterates over a collection with separate key and value words. For dicts, uses actual keys and values. For other collections, uses indices as keys."
+	{
+		arg `collection: Dict, Block, List, or other Collection to iterate over`
+		arg `keyWord: Word to store the key (or index for non-dict collections)`
+		arg `valueWord: Word to store the value`
+		arg `block: Block of code to execute for each key-value pair`
+		returns `result of the last block execution`
+	}
+
+	{
+		equal { dict { "a" 1 "b" 2 } .for\kv 'k 'v { k .prns v .prns } } ""  ; Expected output: "a 1 b 2 "
+		equal { { 10 20 30 } .for\kv 'i 'v { i .prns v .prns } } ""  ; Expected output: "0 10 1 20 2 30 "
 	}
 
 	{

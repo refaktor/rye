@@ -115,7 +115,7 @@ generate-menu: fn { menu } {
 
 generate-doc-file: fn { filename menu } {
 	join {
-		%tpl/header.html .Read .replace "{{title}}" capitalize filename 
+		%tpl/header.html .Read .replace "{{title}}" capitalize join [ "Rye function reference: " filename " ( updated: " to-string date? now " )" ]
 		|replace "{{menu}}" generate-menu menu
 		capture-stdout { do\inside docs-framework load to-file filename ++ ".info.rye" }
 		Read %tpl/footer.html

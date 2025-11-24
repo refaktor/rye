@@ -636,8 +636,8 @@ var builtins_contexts = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { c: context { x: [ 1 2 3 ] } cc: clone\deep c cc/x } [ 1 2 3 ]
-	// equal { c: context { x: [ 1 2 3 ] } cc: clone\deep c do\in cc { x/0: 999 } c/x/0 } 1 ; original unchanged
-	// equal { c: context { x: [ 1 2 3 ] } cc: clone\deep c do\in cc { x/0: 999 } cc/x/0 } 999 ; deep clone modified
+	// equal { c: context { x: [ 1 2 3 ] } cc: clone\deep c do\in cc { x/0: 999 } c/x -> 0 } 1 ; original unchanged
+	// equal { c: context { x: [ 1 2 3 ] } cc: clone\deep c do\in cc { x/0: 999 } cc/x -> 0 } 999 ; deep clone modified
 	// Args:
 	// * ctx: Context object to deep clone
 	// Returns:

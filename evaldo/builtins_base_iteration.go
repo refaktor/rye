@@ -452,7 +452,7 @@ var builtins_iteration = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// stdout { { "a" "b" "c" } .for\pos 'i { i prns . prns } } "1 a 2 b 3 c "
+	// stdout { { "a" "b" "c" } .for\pos 'i { i .prns , .prns } } "1 a 2 b 3 c "
 	// Args:
 	// * collection: Collection to iterate over
 	// * word: Word to store the current position (1-based index)
@@ -496,7 +496,7 @@ var builtins_iteration = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// stdout { { "a" "b" "c" } .for\idx 'i { i prns . prns } } "0 a 1 b 2 c "
+	// stdout { { "a" "b" "c" } .for\idx 'i { i .prns , .prns } } "0 a 1 b 2 c "
 	// Args:
 	// * collection: Collection to iterate over
 	// * word: Word to store the current index (0-based)
@@ -750,7 +750,7 @@ var builtins_iteration = map[string]*env.Builtin{
 
 	// Tests:
 	//  equal { map { 1 2 3 } { + 1 } } { 2 3 4 }
-	//  equal { map "abc" { .upper-case } } { "A" "B" "C" }
+	//  equal { map "abc" { .to-upper } } { "A" "B" "C" }
 	// Args:
 	// * series: Block, List, or String to map over
 	// * code: Block or Builtin to execute for each value
@@ -1795,9 +1795,9 @@ var builtins_iteration = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { { 1 2 3 } .for\ 'x { x prn } } ""  ; Expected output: "1 2 3 "
-	// equal { list { 10 20 30 } .for\ 'val { val prn } } ""  ; Expected output: "10 20 30 "
-	// equal { "abc" .for\ 'ch { ch prn } } ""  ; Expected output: "a b c "
+	// equal { { 1 2 3 } .for\ 'x { x .prns } } ""  ; Expected output: "1 2 3 "
+	// equal { list { 10 20 30 } .for\ 'val { val .prns } } ""  ; Expected output: "10 20 30 "
+	// equal { "abc" .for\ 'ch { ch .prns } } ""  ; Expected output: "a b c "
 	// Args:
 	// * collection: String, Block, List, or other Collection to iterate over
 	// * word: Word to store each value during iteration
@@ -1858,8 +1858,8 @@ var builtins_iteration = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { dict vals { "a" 1 "b" 2 } .for\kw 'k 'v { k prns v prn } } ""  ; Expected output: "a 1 b 2 "
-	// equal { { 10 20 30 } .for\kw 'i 'v { i prns v prn } } ""  ; Expected output: "0 10 1 20 2 30 "
+	// equal { dict { "a" 1 "b" 2 } .for\kv 'k 'v { k .prns v .prns } } ""  ; Expected output: "a 1 b 2 "
+	// equal { { 10 20 30 } .for\kv 'i 'v { i .prns v .prns } } ""  ; Expected output: "0 10 1 20 2 30 "
 	// Args:
 	// * collection: Dict, Block, List, or other Collection to iterate over
 	// * keyWord: Word to store the key (or index for non-dict collections)
