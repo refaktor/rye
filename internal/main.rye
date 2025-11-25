@@ -1,0 +1,150 @@
+; Testing and Documenting frameworks that do test and generate html reference docs
+; Run test cases: ../rye main.rye test
+; Generate documentation: ../rye main.rye doc > builtins.html
+
+rye .args\raw |load :args
+root-ctx: current-ctx
+
+test-framework: context {
+
+	cnt: 0
+	failed: 0
+	
+	section: fn { name descr code } { term/magenta term/bold print name term/reset\all print " " + descr , do code print "" }
+	
+	group: fn { name descr args code } { inc! 'cnt  term/blue prns " " + name term/reset\all , do code }
+	
+	error-: fn { test } {
+		; try { do\in root-ctx test }
+		probe test |try |probe
+	}
+	error: fn { test } {
+		; try { do\in root-ctx test }
+		try test :got |type? |= 'error |either { prns join { "✓" mold got } } { inc! 'failed , term/red prns " ✗ Failed:" term/reset\all   print join { newline "expected error but got: " mold got } }
+	}
+
+	equal: fn { test res } {
+		do\in root-ctx test :got = res
+		|either { term/green prns "✓" term/reset\all } { inc! 'failed , term/red prns " ✗ Failed:" term/reset\all print join { "expected " mold res ", got " mold got } }
+	}
+	
+	equal\todo: fn { test res } {
+	}
+
+	stdout: fn { test res } {
+		capture-stdout { do\in root-ctx test } :got = res
+		|either { term/green prns "✓" term/reset\all } { inc! 'failed , term/red prns " ✗ Failed:" term/reset\all  print join { "expected " mold res ", got " mold got } }
+	}
+
+	comment: fn { str } {
+		
+	}
+
+	end: fn { } { ;prns "Tests:" term/bold prn cnt term/reset\bold , print "FAILED: " + failed , if failed > 0 { exit 1 } }
+		prns "\nTests:" term/bold prn cnt term/reset\bold
+		either is-zero failed
+		{ term/bold term/green print "\nALL PASSED" term/reset\all }
+		{ term/red print "\nFAILED: " + failed  term/reset\all }
+
+		if failed > 0 { exit 1 }
+	}
+
+
+}
+
+docs-framework: context {
+	
+	section: fn { name descr code } { print join { "<h2>" name "</h2><p>" descr "</p><div class='section'>" } , do code , print "</div>" }
+	
+	group: fn { name descr args code }   { print join { "<h3>" name "</h3><p>" descr "</p><div class='group'>" } , do code , print "</div>" }
+
+	equal: fn { test res } {
+		do\in root-ctx test :got = res
+		|if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" mold\nowrap test newline "; returns "  replace mold got newline newline + "; "  "</code></pre>" ] }
+	}
+
+	equal\todo: fn { test res } {
+	}
+
+	stdout: fn { test res } {
+		capture-stdout { do\in root-ctx test } :got = res
+		1 |if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" mold\nowrap test newline "; prints " replace mold\nowrap got newline newline + "; " "</code></pre>" ] }
+	}
+
+	comment: fn { str } {
+		print join [ "<p class='comment'>" str "</p>" ]
+	}
+
+	end: fn { } { }
+
+}
+
+generate-menu: fn { menu } {
+	.fold 'acc "" { :x acc .concat " &middot; <a href='{{}}.html'>{{}}</a>" .replace "{{}}" x }
+}
+
+generate-doc-file: fn { filename menu } {
+	join {
+		%tpl/header.html .read .replace "{{title}}" capitalize filename ; |replace "{{menu}}" generate-menu menu
+		capture-stdout { do\in docs-framework load to-file filename + ".rye" }
+		read %tpl/footer.html
+	} |write* to-file filename + ".html"
+}
+
+menu: { "basics" "structures" "validation" "misc" "table" "table_ref" }
+
+print-help: does {
+	print `# Rye's simple testing tool
+	
+ use test or doc command
+
+Examples: 
+ rye . test           # runs all tests
+ rye . doc            # generates the docs out of tests
+ rye . test ls        # lists the test sections available
+ rye . test basics    # runs a specific test section
+`
+}
+
+first args |^fix { print-help } |switch {
+test {
+	sections: { }
+	either args .length? > 1 {
+		either ( second args ) = 'ls {
+			print "Test sections available:"
+			menu .for { .concat* " * " |print }
+		} {
+			sections:: [ second args ]
+		}
+	} {
+		sections:: menu
+	}
+	if sections .length? > 0 {  ; todo add is-empty builtin
+		errors: 0
+		for sections {
+			.to-string .pass { term/bold , prns "\n#" , .to-upper .prns , print "#\n" }
+			|+ ".rye" |to-file |load |^check { "group does not exist!" } |do\in* test-framework |+ errors ::errors }
+		print ""
+	
+		if ( length? sections ) > 1 { 
+			term/orange
+			term/bold
+			print "TOTAL FAILED TESTS: " + errors
+			print ""
+			term/reset\all
+		}
+		print ""
+	}
+}
+doc  {
+	for menu { .generate-doc-file menu }
+	print "docs generated" 
+}
+_ { print-help }
+}
+
+;   maybe we need this at some point 
+;	true: fn { test } {
+;		do-in root-ctx test
+;		|either { print "  - OK" } { print "  - Error: not True" }
+;	}

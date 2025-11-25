@@ -548,7 +548,7 @@ var builtins_numbers = map[string]*env.Builtin{
 	// * void value (used to discard values)
 	"_.": { // ***
 		Argsn: 1,
-		Doc:   "Discards the input value and returns a void value, useful for ignoring unwanted results in a pipeline.",
+		Doc:   "Discards the input value and returns a void value, useful only for Eyr (stack based dialect).",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewVoid()
@@ -559,19 +559,14 @@ var builtins_numbers = map[string]*env.Builtin{
 	// equal { 1 + 1 } 2
 	// equal { 3 + 4 } 7
 	// equal { 5.6 + 7.8 } 13.400000
-	// error { "A" + "b" }
-	// error { "A" + 1 }
-	// error { { 1 2 } + { 3 4 } } { 1 2 3 4 }
-	// error { dict { "a" 1 } |+ { "b" 2 } }
-	// error { dict { "a" 1 } |+ dict { "b" 2 } }
 	// Args:
-	// * value1: First value (number, string, block, dict, etc.)
-	// * value2: Second value to add or join
+	// * value1: First value (integer, decimal, complex, time)
+	// * value2: Second value to add (integer, decimal, complex, duration)
 	// Returns:
-	// * result of adding or joining the values, type depends on input types
+	// * result of adding values, type depends on input types
 	"_+": { // **
 		Argsn: 2,
-		Doc:   "Adds or joins two values together, with behavior depending on types: adds numbers, concatenates strings/blocks, merges dictionaries, etc.",
+		Doc:   "Adds two numerical values. Accepts Integer, Decimal, Complex and Time.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {

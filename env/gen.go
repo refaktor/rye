@@ -120,3 +120,66 @@ func (e Gen) PreviewMethods(idxs Idxs, kind int, filter string) string {
 	}
 	return bu.String()
 }
+
+// PreviewAllMatchingMethods shows all generic methods across all kinds that match the filter string
+func (e Gen) PreviewAllMatchingMethods(idxs Idxs, filter string) string {
+	var bu strings.Builder
+	bu.WriteString("All matching methods for filter \"" + filter + "\":")
+
+	// Create a map to group methods by kind
+	type kindMethods struct {
+		kindName string
+		methods  []string
+	}
+	kindMethodsMap := make(map[int]*kindMethods)
+
+	// Iterate through all kinds
+	for kindIdx, kindMap := range e.dict {
+		for methodIdx, methodObj := range kindMap {
+			methodName := idxs.GetWord(methodIdx)
+			// Check if method name contains the filter
+			if strings.Contains(methodName, filter) {
+				// Get or create the kindMethods entry
+				if _, exists := kindMethodsMap[kindIdx]; !exists {
+					kindMethodsMap[kindIdx] = &kindMethods{
+						kindName: idxs.GetWord(kindIdx),
+						methods:  make([]string, 0),
+					}
+				}
+
+				color := color_word2
+				methodStr := color + methodName + " " + reset + color_comment + methodObj.Inspect(idxs) + reset
+				kindMethodsMap[kindIdx].methods = append(kindMethodsMap[kindIdx].methods, methodStr)
+			}
+		}
+	}
+
+	// Sort kinds by name for consistent output
+	kindNames := make([]string, 0, len(kindMethodsMap))
+	kindNameToIdx := make(map[string]int)
+	for kindIdx, km := range kindMethodsMap {
+		kindNames = append(kindNames, km.kindName)
+		kindNameToIdx[km.kindName] = kindIdx
+	}
+	sort.Strings(kindNames)
+
+	// Output each kind with its matching methods
+	for _, kindName := range kindNames {
+		kindIdx := kindNameToIdx[kindName]
+		km := kindMethodsMap[kindIdx]
+
+		bu.WriteString("\n\r\n\r" + color_word2 + "Kind: " + kindName + reset)
+
+		// Sort methods within each kind
+		sort.Strings(km.methods)
+		for _, methodStr := range km.methods {
+			bu.WriteString("\n\r  " + methodStr)
+		}
+	}
+
+	if len(kindMethodsMap) == 0 {
+		bu.WriteString("\n\r  (no matching methods found)")
+	}
+
+	return bu.String()
+}

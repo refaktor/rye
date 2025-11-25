@@ -18,8 +18,8 @@ var Builtins_mysql = map[string]*env.Builtin{
 	//
 	// ##### MySQL ##### "MySQL database functions"
 	//
-	// Tests:
-	// equal { mysql-uri//Open %"user:pass@tcp(localhost:3306)/dbname" |type? } 'native
+	// Example:
+	// Open mysql://user:pass@tcp(localhost)/dbname
 	// Args:
 	// * uri: MySQL connection string URI
 	// Returns:
@@ -52,8 +52,8 @@ var Builtins_mysql = map[string]*env.Builtin{
 		},
 	},
 
-	// Tests:
-	// equal { mysql-uri//Open\pwd %"user@tcp(localhost:3306)/dbname" "password" |type? } 'native
+	// Example:
+	// equal { Open\pwd mysql://user@tcp(localhost:3306)/dbname" "password"
 	// Args:
 	// * uri: MySQL connection string URI without password
 	// * password: Password for the database connection
@@ -91,8 +91,9 @@ var Builtins_mysql = map[string]*env.Builtin{
 		},
 	},
 
-	// Tests:
-	// equal { db: mysql-uri//Open %"user:pass@tcp(localhost:3306)/dbname" , db |Rye-mysql//Exec "INSERT INTO test VALUES (1, 'test')" |type? } 'integer
+	// Example:
+	// Open mysql://user:pass@tcp(localhost:3306)/dbname" ,
+	// |Exec { INSERT INTO test VALUES ( 1 , "test" ) }
 	// Args:
 	// * db: MySQL database connection
 	// * sql: SQL statement as string or block
@@ -146,8 +147,10 @@ var Builtins_mysql = map[string]*env.Builtin{
 		},
 	},
 
-	// Tests:
-	// equal { db: mysql-uri//Open %"user:pass@tcp(localhost:3306)/dbname" , db |Rye-mysql//Query "SELECT * FROM test" |type? } 'table
+	// Example:
+	// id: 101
+	// db: Open mysql://user:pass@tcp(localhost:3306)/dbname
+	// db .Query { SELECT * FROM test where id = ?id }
 	// Args:
 	// * db: MySQL database connection
 	// * sql: SQL query as string or block

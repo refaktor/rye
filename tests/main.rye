@@ -3,95 +3,126 @@
 ; Generate documentation: ../rye main.rye doc > builtins.html
 
 rye .args\raw |load :args
-root-ctx: current-ctx
+root-ctx:: current
+
+t: ?term
 
 test-framework: context {
 
-	cnt: 0
-	failed: 0
+	var 'cnt 0
+	var 'failed 0
 	
-	section: fn { name descr code } { term/magenta term/bold print name term/reset\all print " " + descr , do code print "" }
+	section: fn { name descr code } { term/magenta term/bold print name term/reset print " " ++ descr , do code print "" }
 	
-	group: fn { name descr args code } { inc! 'cnt  term/blue prns " " + name term/reset\all , do code }
+	group: fn { name descr args code example } { print "" , inc! 'cnt t/yellow prns " " ++ name t/reset , do  code }
 	
-	error-: fn { test } {
-		; try { do\in root-ctx test }
-		probe test |try |probe
-	}
 	error: fn { test } {
 		; try { do\in root-ctx test }
-		try test :got |type? |= 'error |either { prns join { "✓" mold got } } { inc! 'failed , term/red prns " ✗ Failed:" term/reset\all   print join { newline "expected error but got: " mold got } }
+		try test :got |type? |= 'error |either { t/br-green prns join { "✓" } } { inc! 'failed , t/red prns " ✗ Failed:" t/reset   prns join { "expected error but got: " t/str\br-black inspect got t/str\reset } }
 	}
 
 	equal: fn { test res } {
-		do\in root-ctx test :got = res
-		|either { term/green prns "✓" term/reset\all } { inc! 'failed , term/red prns " ✗ Failed:" term/reset\all print join { "expected " mold res ", got " mold got } }
+		ctx: extends root-ctx { }
+		do\inside ctx test :got = res
+		|either { t/green prns "✓" t/reset } { inc! 'failed , t/red prns " ✗ Failed:" t/reset prns join { "expected " t/str\br-black inspect res t/str\reset ", got " t/str\br-black inspect got t/str\reset } }
 	}
 	
-	equal\todo: fn { test res } {
-	}
-
 	stdout: fn { test res } {
-		capture-stdout { do\in root-ctx test } :got = res
-		|either { term/green prns "✓" term/reset\all } { inc! 'failed , term/red prns " ✗ Failed:" term/reset\all  print join { "expected " mold res ", got " mold got } }
+		cc: extends root-ctx { }
+		capture-stdout { do\inside cc test } :got = res
+		|either { term/green prns "✓" term/reset } { inc! 'failed , term/red prns " ✗ Failed:" term/reset  prns join { "expected " t/str\br-black inspect res t/str\reset ", got " t/str\br-black inspect got t/str\reset } }
 	}
 
-	comment: fn { str } {
-		
-	}
+	comment: fn { str } { }
+
+	example: fn { str } { }
 
 	end: fn { } { ;prns "Tests:" term/bold prn cnt term/reset\bold , print "FAILED: " + failed , if failed > 0 { exit 1 } }
-		prns "\nTests:" term/bold prn cnt term/reset\bold
+		prns "\nGroups:" term/bold prn cnt term/reset\bold
 		either is-zero failed
-		{ term/bold term/green print "\nALL PASSED" term/reset\all }
-		{ term/red print "\nFAILED: " + failed  term/reset\all }
-
-		if failed > 0 { exit 1 }
+		{ term/bold term/green print "\nALL PASSED" term/reset }
+		{ term/red print "\nFailed tests: " ++ failed  term/reset }
+		;if failed > 0 { exit 1 }
+		; exit 0
+		failed
 	}
-
-
 }
 
-docs-framework: context {
-	
-	section: fn { name descr code } { print join { "<h2>" name "</h2><p>" descr "</p><div class='section'>" } , do code , print "</div>" }
-	
-	group: fn { name descr args code }   { print join { "<h3>" name "</h3><p>" descr "</p><div class='group'>" } , do code , print "</div>" }
+escape-html: fn { x } { x |replace "&" "&amp;" |replace "<" "&lt;" |replace ">" "&gt;" }
 
-	equal: fn { test res } {
-		do\in root-ctx test :got = res
-		|if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" mold\nowrap test newline "; returns "  replace mold got newline newline + "; "  "</code></pre>" ] }
+docs-framework: context {
+
+	section: fn { name descr code } { print join [ "<h2>" name "</h2><p>" descr "</p><div class='section'>" ] , do code , print "</div>" }
+	
+	group: fn { name descr args code example }   {
+		print join [ "<h3>" name "</h3><p>" descr "</p>" ] ,
+		do args ,
+		if code .length? > 0 {
+			print "<div class='group'>" , do code , print "</div>"
+		}
+		if all { example .length? > 0 example -> 0 |length? > 0 } {
+			prn "<div class='group'>" , 
+			prn "<pre class='prettyprint lang-rye'><code language='lang-rye'>"
+			print escape-html first example
+			print "</code></pre>"
+			print "</div>"
+		}
 	}
 
-	equal\todo: fn { test res } {
+	equal: fn { test res } {
+		cc: extends root-ctx { }
+		do\inside cc test :got = res
+		|if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" escape-html mold\nowrap test newline "; returns "  replace escape-html mold got newline newline ++ "; "  "</code></pre>" ] }
+	}
+
+	error: fn { test } {
+		; try { do\inside root-ctx test }
+		test |try :got |type? |= 'error
+		|if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" escape-html mold\nowrap test newline "; correctly causes error:\n; " message? got " </code></pre>" ] }
 	}
 
 	stdout: fn { test res } {
-		capture-stdout { do\in root-ctx test } :got = res
-		1 |if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" mold\nowrap test newline "; prints " replace mold\nowrap got newline newline + "; " "</code></pre>" ] }
+		cc: extends root-ctx { }
+		capture-stdout { do\inside cc test } :got = res
+		|if { print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" escape-html mold\nowrap test newline "; prints " replace escape-html mold\nowrap got newline newline ++ "; " "</code></pre>" ] }
 	}
 
 	comment: fn { str } {
-		print join [ "<p class='comment'>" str "</p>" ]
+		print join [ "<p class='comment'>" to-string str "</p>" ]
 	}
 
+	example: fn { test } {
+		print join [ "<pre class='prettyprint lang-rye'><code language='lang-rye'>" escape-html mold\nowrap test newline "</code></pre>" ]
+	}
+
+	arg: fn { str } {
+		print join [ "<p class='arg'>" join prep-arg str "</p>" ]
+	}
+	
+	returns: fn { str } {
+		print join [ "<p class='returns'><b>returns</b> " str "</p>" ]
+	}
+	
 	end: fn { } { }
+
+	prep-arg: fn { s } { .split ":" :x |length? > 1 |either { [ "<b>" first x "</b>" second x ] } { [ first x ] } }
 
 }
 
 generate-menu: fn { menu } {
-	.fold 'acc "" { :x acc .concat " &middot; <a href='{{}}.html'>{{}}</a>" .replace "{{}}" x }
+	.fold 'acc "" { ::x acc .concat " &middot; <a class='menu-item' id='maintab-{{}}' href='{{}}.html'>{{}}</a>" .replace "{{}}" x }
 }
 
 generate-doc-file: fn { filename menu } {
 	join {
-		%tpl/header.html .read .replace "{{title}}" capitalize filename ; |replace "{{menu}}" generate-menu menu
-		capture-stdout { do\in docs-framework load to-file filename + ".rye" }
-		read %tpl/footer.html
-	} |write* to-file filename + ".html"
+		%tpl/header.html .Read .replace "{{title}}" capitalize join [ "Rye function reference: " filename " ( updated: " to-string date? now " )" ]
+		|replace "{{menu}}" generate-menu menu
+		capture-stdout { do\inside docs-framework load to-file filename ++ ".info.rye" }
+		Read %tpl/footer.html
+	 } |Write* to-file filename ++ ".html"
 }
 
-menu: { "basics" "structures" "validation" "misc" "table" "table_ref" }
+menu: { "base" "table" "formats" "io" "crypto" "dialects" "http" "email" }
 
 print-help: does {
 	print `# Rye's simple testing tool
@@ -108,9 +139,9 @@ Examples:
 
 first args |^fix { print-help } |switch {
 test {
-	sections: { }
+	var 'sections { }
 	either args .length? > 1 {
-		either ( second args ) = 'ls {
+		either probe ( ( second args ) = 'ls ) {
 			print "Test sections available:"
 			menu .for { .concat* " * " |print }
 		} {
@@ -120,20 +151,21 @@ test {
 		sections:: menu
 	}
 	if sections .length? > 0 {  ; todo add is-empty builtin
-		errors: 0
+		var 'errors 0
 		for sections {
 			.to-string .pass { term/bold , prns "\n#" , .to-upper .prns , print "#\n" }
-			|+ ".rye" |to-file |load |^check { "group does not exist!" } |do\in* test-framework |+ errors ::errors }
+			| ++ ".info.rye" |to-file |load |^check { "Group does not exist!!!!" } |do\inside* test-framework |+ errors |fix { errors } ::errors }
 		print ""
 	
-		if ( length? sections ) > 1 { 
-			term/orange
+		; if ( length? sections ) > 1 {
+			term/yellow
 			term/bold
-			print "TOTAL FAILED TESTS: " + errors
+			print "TOTAL FAILED TESTS: " ++ errors
 			print ""
-			term/reset\all
-		}
+			term/reset
+		; }
 		print ""
+		either errors > 0 { exit 1 } { exit 0 }
 	}
 }
 doc  {
@@ -141,7 +173,7 @@ doc  {
 	print "docs generated" 
 }
 _ { print-help }
-}
+} |probe
 
 ;   maybe we need this at some point 
 ;	true: fn { test } {

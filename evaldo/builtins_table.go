@@ -1688,6 +1688,75 @@ var Builtins_table = map[string]*env.Builtin{
 			}
 		},
 	},
+	//
+	// ##### Loading and saving #####  "Functions that construct a table."
+	//
+	// Tests:
+	//  equal {
+	//	 cc os
+	//   f:: mktmp ++ "/test.csv"
+	//   spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+	//   spr1 .save\csv f
+	//   spr2:: Load\csv f |autotype 1.0
+	//   spr1 = spr2
+	//  } true
+	// Args:
+	// * file-uri - location of csv file to load
+	// Tags: #table #loading #csv
+	"file-uri//Load\\csv\\": {
+		// TODO 2 -- this could move to a go function so it could be called by general load that uses extension to define the loader
+		Argsn: 2,
+		Doc:   "Loads a .csv file to a table datatype.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch file := arg0.(type) {
+			case env.Uri:
+				switch separator := arg1.(type) {
+				case env.String:
+					// rows, err := db1.Value.(*sql.DB).Query(sqlstr, vals...)
+					f, err := os.Open(file.GetPath())
+					if err != nil {
+						// log.Fatal("Unable to read input file "+filePath, err)
+						return MakeBuiltinError(ps, "Unable to read input file:"+err.Error(), "Load\\csv")
+					}
+					defer f.Close()
+
+					csvReader := csv.NewReader(f)
+					if len(separator.Value) != 1 {
+						return MakeBuiltinError(ps, "Separator must be exactly 1 character long", "Load\\csv\\")
+					}
+					csvReader.Comma = rune(separator.Value[0])
+					rows, err := csvReader.ReadAll()
+					if err != nil {
+						// log.Fatal("Unable to parse file as CSV for "+filePath, err)
+						return MakeBuiltinError(ps, "Unable to parse file as CSV: "+err.Error(), "Load\\csv")
+					}
+					if len(rows) == 0 {
+						return MakeBuiltinError(ps, "File is empty", "Load\\csv")
+					}
+					spr := env.NewTable(rows[0])
+					//				for i, row := range rows {
+					//	if i > 0 {
+					//		anyRow := make([]any, len(row))
+					//		for i, v := range row {
+					//			anyRow[i] = v
+					if len(rows) > 1 {
+						for _, row := range rows[1:] {
+							anyRow := make([]any, len(row))
+							for i, v := range row {
+								anyRow[i] = *env.NewString(v)
+							}
+							spr.AddRow(*env.NewTableRow(anyRow, spr))
+						}
+					}
+					return *spr
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "Load\\csv\\")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "Load\\csv\\")
+			}
+		},
+	},
 
 	// TODO -- deduplicate with above
 
@@ -1927,33 +1996,33 @@ var Builtins_table = map[string]*env.Builtin{
 			case env.Uri:
 				f, err := excelize.OpenFile(file.GetPath())
 				if err != nil {
-					return MakeBuiltinError(ps, fmt.Sprintf("Unable to open file: %s", err), "load\\xlsx")
+					return MakeBuiltinError(ps, fmt.Sprintf("Unable to open file: %s", err), "Load\\xlsx")
 				}
 				defer f.Close()
 
 				sheetMap := f.GetSheetMap()
 				if len(sheetMap) == 0 {
-					return MakeBuiltinError(ps, "No sheets found in file", "load\\xlsx")
+					return MakeBuiltinError(ps, "No sheets found in file", "Load\\xlsx")
 				}
 				// sheets map index is 1-based
 				sheetName := sheetMap[1]
 				rows, err := f.Rows(sheetName)
 				if err != nil {
-					return MakeBuiltinError(ps, fmt.Sprintf("Unable to get rows from sheet: %s", err), "load\\xlsx")
+					return MakeBuiltinError(ps, fmt.Sprintf("Unable to get rows from sheet: %s", err), "Load\\xlsx")
 				}
 				rows.Next()
 				header, err := rows.Columns()
 				if err != nil {
-					return MakeBuiltinError(ps, fmt.Sprintf("Unable to get columns from sheet: %s", err), "load\\xlsx")
+					return MakeBuiltinError(ps, fmt.Sprintf("Unable to get columns from sheet: %s", err), "Load\\xlsx")
 				}
 				if len(header) == 0 {
-					return MakeBuiltinError(ps, "Header row is empty", "load\\xlsx")
+					return MakeBuiltinError(ps, "Header row is empty", "Load\\xlsx")
 				}
 				spr := env.NewTable(header)
 				for rows.Next() {
 					row, err := rows.Columns()
 					if err != nil {
-						return MakeBuiltinError(ps, fmt.Sprintf("Unable to get row: %s", err), "load\\xlsx")
+						return MakeBuiltinError(ps, fmt.Sprintf("Unable to get row: %s", err), "Load\\xlsx")
 					}
 					anyRow := make([]any, len(row))
 					for i, v := range row {

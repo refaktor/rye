@@ -1,0 +1,3 @@
+print 123
+for range 1 3 {  _+ 1204  }
+print `dont-print`

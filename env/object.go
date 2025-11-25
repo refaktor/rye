@@ -96,6 +96,61 @@ type Mapping interface {
 	// TODO: some way to Iterate or to generalize all iterations? something we could use for all Coolection types for for / map / reduce / ....
 }
 
+// DeepCopier interface for objects that support deep copying
+type DeepCopier interface {
+	DeepCopy() Object
+}
+
+// DeepCopyObject utility function that attempts deep copy if available, falls back to shallow copy
+// Preserves pointer types when they exist
+func DeepCopyObject(obj Object) Object {
+	if deepCopier, ok := obj.(DeepCopier); ok {
+		copied := deepCopier.DeepCopy()
+		// If the original was a pointer type, ensure the copy is also returned as a pointer
+		// This preserves the pointer semantics that the original context had
+		return ensureSamePointerType(obj, copied)
+	}
+	return obj // fallback to shallow copy for simple types
+}
+
+// ensureSamePointerType ensures that the copied object maintains the same pointer semantics as the original
+func ensureSamePointerType(original, copied Object) Object {
+	// Check if original was a pointer type by examining the concrete type
+	switch original.(type) {
+	case *Block:
+		if blockCopy, ok := copied.(Block); ok {
+			return &blockCopy
+		}
+	case *Boolean:
+		if boolCopy, ok := copied.(Boolean); ok {
+			return &boolCopy
+		}
+	case *Integer:
+		if intCopy, ok := copied.(Integer); ok {
+			return &intCopy
+		}
+	case *String:
+		if stringCopy, ok := copied.(String); ok {
+			return &stringCopy
+		}
+	case *Decimal:
+		if decCopy, ok := copied.(Decimal); ok {
+			return &decCopy
+		}
+	case *Dict:
+		if dictCopy, ok := copied.(Dict); ok {
+			return &dictCopy
+		}
+	case *List:
+		if listCopy, ok := copied.(List); ok {
+			return &listCopy
+		}
+		// Add other pointer types as needed
+	}
+	// For non-pointer types or unhandled cases, return as-is
+	return copied
+}
+
 // CONCRETE TYPES
 
 func NewBoolean(val bool) *Boolean {
@@ -770,6 +825,20 @@ func (o Block) Get(i int) Object {
 
 func (o Block) MakeNew(data []Object) Object {
 	return *NewBlock(*NewTSeries(data))
+}
+
+// DeepCopy creates a deep copy of the Block
+func (b Block) DeepCopy() Object {
+	// Deep copy the series data
+	newObjects := make([]Object, b.Series.Len())
+	for i := 0; i < b.Series.Len(); i++ {
+		obj := b.Series.Get(i)
+		if obj != nil {
+			newObjects[i] = DeepCopyObject(obj)
+		}
+	}
+	newSeries := *NewTSeries(newObjects)
+	return *NewBlockWithLocation(newSeries, b.Mode, b.FileName, b.Line, b.Column)
 }
 
 //
@@ -2176,6 +2245,36 @@ func (i Dict) Dump(e Idxs) string {
 	return bu.String()
 }
 
+// DeepCopy creates a deep copy of the Dict
+func (d Dict) DeepCopy() Object {
+	newData := make(map[string]any)
+	for k, v := range d.Data {
+		if obj, ok := v.(Object); ok {
+			// Deep copy Object values
+			newData[k] = DeepCopyObject(obj)
+		} else {
+			// For non-Object values, we still need to handle references
+			// This is a simplified approach - in a full implementation,
+			// you'd need to handle all possible reference types
+			switch val := v.(type) {
+			case map[string]any:
+				// Deep copy nested maps
+				nestedDict := NewDict(val)
+				newData[k] = nestedDict.DeepCopy().(Dict).Data
+			case []any:
+				// Deep copy slices
+				newSlice := make([]any, len(val))
+				copy(newSlice, val)
+				newData[k] = newSlice
+			default:
+				// For primitive types, direct assignment is fine
+				newData[k] = v
+			}
+		}
+	}
+	return Dict{newData, d.Kind}
+}
+
 //
 // LIST
 //
@@ -2365,6 +2464,33 @@ func (o List) MakeNew(data []Object) Object {
 		data2[i] = obj // Implicit conversion to interface{}
 	}
 	return *NewList(data2)
+}
+
+// DeepCopy creates a deep copy of the List
+func (l List) DeepCopy() Object {
+	newData := make([]any, len(l.Data))
+	for i, v := range l.Data {
+		if obj, ok := v.(Object); ok {
+			// Deep copy Object values
+			newData[i] = DeepCopyObject(obj)
+		} else {
+			// For non-Object values, handle references
+			switch val := v.(type) {
+			case map[string]any:
+				// Deep copy nested maps
+				nestedDict := NewDict(val)
+				newData[i] = nestedDict.DeepCopy().(Dict).Data
+			case []any:
+				// Deep copy nested slices by recursively creating a List
+				nestedList := NewList(val)
+				newData[i] = nestedList.DeepCopy().(List).Data
+			default:
+				// For primitive types, direct assignment is fine
+				newData[i] = v
+			}
+		}
+	}
+	return *NewList(newData)
 }
 
 //

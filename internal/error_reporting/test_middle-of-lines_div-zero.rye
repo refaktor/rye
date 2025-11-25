@@ -1,0 +1,4 @@
+print 123
+print234
+ 1 / 0 
+print `dont-print`

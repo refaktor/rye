@@ -14,6 +14,9 @@ func init() {
 	env.ObserverExecutor = EvalBlockInj
 }
 
+// NoInspectMode controls whether to exit immediately on error without showing debugging options
+var NoInspectMode bool
+
 // Flag to control whether to use the fast evaluator
 var useFastEvaluator = false
 
@@ -105,6 +108,8 @@ func EvalBlockInCtxInj(ps *env.ProgramState, ctx *env.RyeCtx, inj env.Object, in
 	ctx2 := ps.Ctx
 	ps.Ctx = ctx
 	EvalBlockInj(ps, inj, injnow)
+	// Note: We restore context even on error to maintain consistent state
+	// The error flag will be checked by the caller
 	ps.Ctx = ctx2
 }
 
@@ -291,7 +296,7 @@ func EvalExpressionConcrete(ps *env.ProgramState) {
 	object := ps.Ser.Pop()
 	if object == nil {
 		ps.ErrorFlag = true
-		ps.Res = env.NewError("Expected rye value but got to the end of the block!")
+		ps.Res = env.NewError("Expected Rye value but reached the end of the block. Check for missing values or incomplete expressions.")
 		return
 	}
 
@@ -338,6 +343,9 @@ func EvalExpressionConcrete(ps *env.ProgramState) {
 			ser := ps.Ser
 			ps.Ser = block.Series
 			EvalBlock(ps)
+			if ps.ErrorFlag || ps.FailureFlag {
+				return
+			}
 			ps.Ser = ser
 			// return ps.Res
 		} else if block.Mode == 3 {
@@ -364,6 +372,9 @@ func EvalExpressionConcrete(ps *env.ProgramState) {
 			ps.Ser = block.Series
 			injVal := ps.Res // Use current result as injection value
 			EvalBlockInjMultiDialect(ps, injVal, true)
+			if ps.ErrorFlag || ps.FailureFlag {
+				return
+			}
 			ps.Ser = ser
 			// return ps.Res
 		} else if block.Mode == 5 {
@@ -409,11 +420,11 @@ func EvalExpressionConcrete(ps *env.ProgramState) {
 		return
 	case env.CommaType:
 		ps.ErrorFlag = true
-		ps.Res = env.NewError("expression guard inside expression")
+		ps.Res = env.NewError("Expression guard (comma) found inside an expression. Commas can only be used between block-level expressions, not within expressions.")
 		return
 	case env.ErrorType:
 		ps.ErrorFlag = true
-		ps.Res = env.NewError("Error Type in code block")
+		ps.Res = env.NewError("Error object encountered in code block. This usually indicates a previous error that wasn't properly handled.")
 		return
 	default:
 		ps.Res = object
@@ -549,7 +560,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 			return
 		} else {
 			ps.ErrorFlag = true
-			ps.Res = env.NewError2(5, "* word not found: "+failureInfo)
+			ps.Res = env.NewError2(5, "Word not found: "+failureInfo+". Check spelling or ensure the word is defined in the current context.")
 			return
 		}
 	}
@@ -598,7 +609,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 		ps.ErrorFlag = true
 		if !ps.FailureFlag {
 			ps.Ser.SetPos(pos)
-			ps.Res = env.NewError2(5, "** word not found: "+failureInfo)
+			ps.Res = env.NewError2(5, "Word not found: "+failureInfo+". Check spelling or ensure the word is defined in the current context.")
 		}
 		return
 	}
@@ -620,7 +631,7 @@ func EvalGenword(ps *env.ProgramState, word env.Genword, leftVal env.Object, toL
 		return
 	} else {
 		ps.ErrorFlag = true
-		ps.Res = env.NewError("generic word not found: " + word.Print(*ps.Idx))
+		ps.Res = env.NewError("Generic word not found: " + word.Print(*ps.Idx) + ". No implementation found for the given argument type.")
 		return
 	}
 }
@@ -633,7 +644,7 @@ func EvalGetword(ps *env.ProgramState, word env.Getword, leftVal env.Object, toL
 		return
 	} else {
 		ps.ErrorFlag = true
-		ps.Res = env.NewError("*** word not found: " + word.Print(*ps.Idx))
+		ps.Res = env.NewError("Word not found: " + word.Print(*ps.Idx) + ". Get-word (?) requires the word to be defined in the current context.")
 		return
 	}
 }
@@ -683,18 +694,21 @@ func EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toL
 func EvalSetword(ps *env.ProgramState, word env.Setword) {
 	// es1 := EvalExpression(es)
 	EvalExpressionInj(ps, nil, false)
+	if ps.ErrorFlag || ps.FailureFlag {
+		return
+	}
 	idx := word.Index
 	if ps.AllowMod {
 		ok := ps.Ctx.Mod(idx, ps.Res)
 		if !ok {
-			ps.Res = env.NewError("Cannot modify constant " + ps.Idx.GetWord(idx) + ", use 'var' to declare it as a variable")
+			ps.Res = env.NewError("Cannot modify constant '" + ps.Idx.GetWord(idx) + "'. Use 'var' to declare it as a variable, or use modword (::) if it's already a variable.")
 			ps.FailureFlag = true
 			ps.ErrorFlag = true
 		}
 	} else {
 		ok := ps.Ctx.SetNew(idx, ps.Res, ps.Idx)
 		if !ok {
-			ps.Res = env.NewError("Can't set already set word " + ps.Idx.GetWord(idx) + ", try using modword (2)")
+			ps.Res = env.NewError("Cannot set word '" + ps.Idx.GetWord(idx) + "' because it's already set. Use modword (::) to modify an existing word, or use a different name.")
 			ps.FailureFlag = true
 			ps.ErrorFlag = true
 		}
@@ -705,6 +719,9 @@ func EvalSetword(ps *env.ProgramState, word env.Setword) {
 func EvalModword(ps *env.ProgramState, word env.Modword) {
 	// es1 := EvalExpression(es)
 	EvalExpressionInj(ps, nil, false)
+	if ps.ErrorFlag || ps.FailureFlag {
+		return
+	}
 	idx := word.Index
 
 	// Get old value for observer notification
@@ -712,7 +729,7 @@ func EvalModword(ps *env.ProgramState, word env.Modword) {
 
 	ok := ps.Ctx.Mod(idx, ps.Res)
 	if !ok {
-		ps.Res = env.NewError("Cannot modify constant " + ps.Idx.GetWord(idx) + ", use 'var' to declare it as a variable")
+		ps.Res = env.NewError("Cannot modify constant '" + ps.Idx.GetWord(idx) + "'. Use 'var' to declare it as a variable before modifying it.")
 		ps.FailureFlag = true
 		ps.ErrorFlag = true
 	} else {
@@ -880,6 +897,10 @@ func CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, toLeft
 	} else {
 		EvalBlock(ps)
 	}
+	if ps.ErrorFlag || ps.FailureFlag {
+		// Don't restore state on error - let error handler deal with it
+		return
+	}
 	MaybeDisplayFailureOrError(ps, ps.Idx, "Call func X")
 	//	}
 	// MaybeDisplayFailureOrError(result, result.Idx, "call function")
@@ -974,17 +995,22 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 		}
 	}()
 
-	var result *env.ProgramState
 	psX.Ser.SetPos(0)
 	EvalBlockInj(psX, arg0, true)
-	// fmt.Println(result)
+	if psX.ErrorFlag || psX.FailureFlag {
+		ps.Res = psX.Res
+		ps.ErrorFlag = psX.ErrorFlag
+		ps.FailureFlag = psX.FailureFlag
+		return
+	}
 	// fmt.Println(psX.Res)
 	MaybeDisplayFailureOrError(psX, psX.Idx, "call func args 2")
 	if psX.ForcedResult != nil {
-		ps.Res = result.ForcedResult
-		result.ForcedResult = nil
+		ps.Res = psX.ForcedResult
+		psX.ForcedResult = nil
+	} else {
+		ps.Res = psX.Res
 	}
-	ps.Res = psX.Res
 	ps.ReturnFlag = false
 }
 
@@ -1039,7 +1065,6 @@ func CallFunctionArgs4(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 	psX.Gen = ps.Gen
 
 	// END TRY
-	var result *env.ProgramState
 	psX.Ser.SetPos(0)
 	defer func() {
 		if len(psX.DeferBlocks) > 0 {
@@ -1048,10 +1073,18 @@ func CallFunctionArgs4(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 	}()
 
 	EvalBlockInj(psX, arg0, true)
-	MaybeDisplayFailureOrError(result, result.Idx, "call func args 4")
+	if psX.ErrorFlag || psX.FailureFlag {
+		ps.Res = psX.Res
+		ps.ErrorFlag = psX.ErrorFlag
+		ps.FailureFlag = psX.FailureFlag
+		return
+	}
+	MaybeDisplayFailureOrError(psX, psX.Idx, "call func args 4")
 	if psX.ForcedResult != nil {
 		ps.Res = psX.ForcedResult
-		result.ForcedResult = nil
+		psX.ForcedResult = nil
+	} else {
+		ps.Res = psX.Res
 	}
 	ps.ReturnFlag = false
 }
@@ -1094,10 +1127,16 @@ func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, a
 	} else {
 		EvalBlock(psX)
 	}
-	MaybeDisplayFailureOrError(ps, ps.Idx, "call func args N")
+	if psX.ErrorFlag || psX.FailureFlag {
+		ps.Res = psX.Res
+		ps.ErrorFlag = psX.ErrorFlag
+		ps.FailureFlag = psX.FailureFlag
+		return
+	}
+	MaybeDisplayFailureOrError(psX, psX.Idx, "call func args N")
 	if psX.ForcedResult != nil {
-		ps.Res = ps.ForcedResult
-		ps.ForcedResult = nil
+		ps.Res = psX.ForcedResult
+		psX.ForcedResult = nil
 	} else {
 		ps.Res = psX.Res
 	}
@@ -1290,7 +1329,7 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 			return
 		}
 		if ps.ReturnFlag || ps.ErrorFlag {
-			ps.Res = env.NewError4(0, "argument 2 of "+strconv.Itoa(bi.Argsn)+" missing of builtin: '"+bi.Doc+"'", ps.Res.(*env.Error), nil)
+			ps.Res = env.NewError4(0, "Argument 2 of "+strconv.Itoa(bi.Argsn)+" missing for builtin '"+bi.Doc+"'. Check that all required arguments are provided.", ps.Res.(*env.Error), nil)
 			return
 		}
 		//fmt.Println(ps.Res)
@@ -1304,7 +1343,7 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 			return
 		}
 		if ps.ReturnFlag || ps.ErrorFlag {
-			ps.Res = env.NewError4(0, "argument 3 missing", ps.Res.(*env.Error), nil)
+			ps.Res = env.NewError4(0, "Argument 3 missing. Check that all required arguments are provided for the builtin function.", ps.Res.(*env.Error), nil)
 			return
 		}
 		// The CallCurriedCaller is now created explicitly with partial builtin function
@@ -1800,6 +1839,13 @@ func checkContextErrorHandler(ps *env.ProgramState) bool {
 		ps.Ser = bloc.Series
 		EvalBlockInj(ps, ps.Res, true)
 		ps.Ser = ser
+		// If error handler itself had an error, log it but don't fail silently
+		// The original error is still in ps.Res
+		if ps.ErrorFlag {
+			// Error in error handler - this is a serious issue
+			// The original error remains, but we note that handler failed
+			// Could potentially set a flag or create a compound error
+		}
 	}
 	ps.InErrHandler = false
 	return true

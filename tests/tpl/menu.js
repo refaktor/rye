@@ -1,3 +1,14 @@
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+}
+
 function generateMenuFromHeadings(node, hh) {
     // Select all H2 elements
     const h2Elements = node.querySelectorAll(hh);
@@ -14,7 +25,7 @@ function generateMenuFromHeadings(node, hh) {
         // menuItem.textContent = h2.textContent;
 
         // Optionally, set an id on the H2 for navigation
-	var index = h2.textContent;
+	var index = escapeHtml(h2.textContent);
 	
         const h2Id = `heading-${index}`;
         h2.setAttribute('id', h2Id);
@@ -24,10 +35,10 @@ function generateMenuFromHeadings(node, hh) {
         link.setAttribute('href', `#${h2Id}`);
         link.textContent = h2.textContent;
         menuItem.appendChild(link);
-
+	
 	var div = _dom.seekFwd(h2, "DIV");
 
-	if (div.className == "section") {
+	if (div != null && div.className == "section") {
 	    var submenu = generateMenuFromHeadings(div, "h3");
 	    if (submenu) {
 		menuItem.appendChild(submenu);
@@ -79,4 +90,12 @@ function generateMenuFromH2_original(div) {
 
     // Append the menu to the document, for example, to the body or a specific div
     document.getElementById("menu-holder").appendChild(menu);
+}
+
+
+//
+
+function styleCurrentTab() {
+    var cur = document.location.pathname.match(/\/([a-z]+).html$/)[1];
+    document.getElementById("maintab-"+cur).className += " current";
 }

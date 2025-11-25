@@ -17,6 +17,10 @@ import (
 // OfferDebuggingOptions presents debugging options to the user when an error occurs
 // Loops to offer options repeatedly until user chooses to continue or times out
 func OfferDebuggingOptions(es *env.ProgramState, genv *env.Idxs, tag string) {
+	// If NoInspectMode is enabled, exit immediately without showing options
+	if NoInspectMode {
+		os.Exit(1)
+	}
 	// Cache file information outside the loop
 	var showVSCodeOption bool
 	var fileName string

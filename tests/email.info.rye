@@ -1,0 +1,385 @@
+section "Default" "" {
+	group "email-message" 
+	"Creates a new empty email message object that can be configured with headers, body, and attachments."
+	{
+		arg `(none)`
+		returns `native gomail-message object for building email content`
+	}
+
+	{
+	}
+
+	{
+`msg: email-message
+equal { msg |type? } 'native
+`	}
+
+	group "gomail-message//Set-header" 
+	"Sets a standard email header field such as Subject, To, From, Cc, or Bcc with the specified value."
+	{
+		arg `message: Native gomail-message object`
+		arg `field: String or Tagword representing header name (e.g., "Subject", 'to, 'from)`
+		arg `value: String or Email containing the header value`
+		returns `the message object for method chaining`
+	}
+
+	{
+	}
+
+	{
+`msg: email-message
+msg .Set-header "Subject" "Test Email"
+msg .Set-header 'to "user@example.com"
+error { msg .Set-header "Subject" 123 }
+`	}
+
+	group "gomail-message//Set-address-header" 
+	"Sets an email address header with both email address and display name, commonly used for From, To, Cc, and Bcc fields."
+	{
+		arg `message: Native gomail-message object`
+		arg `field: String header field name (e.g., "From", "To", "Cc", "Bcc")`
+		arg `address: String email address`
+		arg `name: String display name for the email address`
+		returns `the message object for method chaining`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "gomail-message//Set-body" 
+	"Sets the main body content of the email with the specified MIME content type, supporting plain text and HTML formats."
+	{
+		arg `message: Native gomail-message object`
+		arg `contentType: String MIME content type (e.g., "text/plain", "text/html")`
+		arg `content: String containing the email body content`
+		returns `the message object for method chaining`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "gomail-message//Attach" 
+	"Attaches a file to the email message using a file URI, making the file available as an email attachment."
+	{
+		arg `message: Native gomail-message object`
+		arg `file: Uri pointing to the file to attach (must use file:// scheme)`
+		returns `the message object for method chaining`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "gomail-message//Add-alternative" 
+	"Adds alternative content to the email (e.g., HTML version alongside plain text), allowing email clients to choose their preferred format."
+	{
+		arg `message: Native gomail-message object`
+		arg `contentType: String MIME content type for the alternative content`
+		arg `content: String containing the alternative body content`
+		returns `the message object for method chaining`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "new-email-dialer" 
+	"Creates a new SMTP dialer configured with server details and authentication credentials for sending emails."
+	{
+		arg `server: String SMTP server hostname (e.g., "smtp.gmail.com", "mail.example.com")`
+		arg `port: Integer SMTP port number (commonly 25, 465, 587, or 2525)`
+		arg `username: String username for SMTP authentication`
+		arg `password: String password for SMTP authentication`
+		returns `native gomail-dialer object configured for sending emails`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "gomail-dialer//Dial-and-send" 
+	"Connects to the SMTP server and sends the specified email message, handling authentication and delivery."
+	{
+		arg `dialer: Native gomail-dialer object configured with SMTP settings`
+		arg `message: Native gomail-message object containing the email to send`
+		returns `the dialer object on success, or error object if sending fails`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+}
+
+section "Mail " "Email parsing functions" {
+	group "reader//Parse-email" 
+	"Parses email data from a reader."
+	{
+		arg `reader: native reader object containing email data`
+		returns `native parsed-email object`
+	}
+
+	{
+	}
+
+	{
+`equal { reader %email.eml |parse-email |type? } 'native
+equal { reader %email.eml |parse-email |kind? } 'parsed-email
+`	}
+
+	group "parsed-email//Subject?" 
+	"Gets the subject from a parsed email."
+	{
+		arg `email: native parsed-email object`
+		returns `string containing the email subject`
+	}
+
+	{
+	}
+
+	{
+`equal { reader %email.eml |parse-email |subject? |type? } 'string
+`	}
+
+	group "parsed-email//Message-id?" 
+	"Gets the message ID from a parsed email."
+	{
+		arg `email: native parsed-email object`
+		returns `string containing the email message ID`
+	}
+
+	{
+	}
+
+	{
+`equal { reader %email.eml |parse-email |message-id? |type? } 'string
+`	}
+
+	group "parsed-email//Html-body?" 
+	"Gets the HTML body from a parsed email."
+	{
+		arg `email: native parsed-email object`
+		returns `string containing the HTML body of the email`
+	}
+
+	{
+	}
+
+	{
+`equal { reader %email.eml |parse-email |html-body? |type? } 'string
+`	}
+
+	group "parsed-email//Text-body?" 
+	"Gets the plain text body from a parsed email."
+	{
+		arg `email: native parsed-email object`
+		returns `string containing the plain text body of the email`
+	}
+
+	{
+	}
+
+	{
+`equal { Reader %email.eml |parse-email |text-body? |type? } 'string
+`	}
+
+	group "parsed-email//Attachments?" 
+	"Gets the attachments from a parsed email."
+	{
+		arg `email: native parsed-email object`
+		returns `native object containing email attachments`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "parsed-email//Embedded-files?" 
+	"Gets the embedded files from a parsed email."
+	{
+		arg `email: native parsed-email object`
+		returns `native object containing embedded files from the email`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+}
+
+section "Default" "" {
+	group "imap-client" 
+	"Create new IMAP client connection with username, password, server, and port."
+	{
+		arg `username: String - IMAP username`
+		arg `password: String - IMAP password`
+		arg `server: String - IMAP server hostname (e.g., "imap.gmail.com")`
+		arg `port: Integer - IMAP server port (usually 993 for SSL, 143 for plain)`
+		returns `Native imap-client object on successError on connection failure`
+	}
+
+	{
+		; client: new-imap-client "user@gmail.com" "password" "imap.gmail.com" 993
+		; equal { client .type? } 'native
+	}
+
+	{
+``	}
+
+	group "imap-client\\oauth2" 
+	"Create new IMAP client connection with OAuth2 authentication (email, access_token, server, port)."
+	{
+		arg `email: String - Email address for OAuth2 authentication`
+		arg `access_token: String - OAuth2 access token`
+		arg `server: String - IMAP server hostname (e.g., "imap.gmail.com")`
+		arg `port: Integer - IMAP server port (usually 993 for SSL)`
+		returns `Native imap-client object on successError on connection failure`
+	}
+
+	{
+		; oauth-client: new-imap-client-oauth2 "user@gmail.com" "ya29.access_token" "imap.gmail.com" 993
+		; equal { oauth-client .type? } 'native
+	}
+
+	{
+``	}
+
+	group "imap-client//Select-folder" 
+	"Select a folder for operations (e.g., 'INBOX')."
+	{
+		arg `client: Native imap-client object`
+		arg `folder: String - Folder name (e.g., "INBOX", "Sent", "Drafts")`
+		returns `Native imap-client object (for method chaining)Error if folder selection fails`
+	}
+
+	{
+		; client .Select-folder "INBOX"
+		; client .Select-folder "Sent Items"
+	}
+
+	{
+``	}
+
+	group "imap-client//Get-folders" 
+	"Get list of available folders."
+	{
+		arg `client: Native imap-client object`
+		returns `Block of strings containing folder names (e.g., ["INBOX", "Sent", "Drafts"])Error if retrieval fails`
+	}
+
+	{
+		; folders: client .Get-folders
+		; equal { folders .length } 3
+	}
+
+	{
+``	}
+
+	group "imap-client//Search-emails" 
+	"Search for emails using IMAP search criteria (e.g., 'UNSEEN', 'FROM \"user@domain.com\"', 'SUBJECT \"test\"')."
+	{
+		arg `client: Native imap-client object`
+		arg `search_criteria: String - IMAP search criteria (e.g., "UNSEEN", "FROM \"user@domain.com\"", "SUBJECT \"test\"", "SINCE \"01-Jan-2023\"")`
+		returns `Block of integers containing matching email UIDsError if search fails`
+	}
+
+	{
+		; unseen_uids: client .Search-emails "UNSEEN"
+		; from_uids: client .Search-emails "FROM \"sender@example.com\""
+		; subject_uids: client .Search-emails "SUBJECT \"Important\""
+	}
+
+	{
+``	}
+
+	group "imap-client//Get-overviews" 
+	"Get email overviews (headers only, fast) for given UIDs block."
+	{
+		arg `client: Native imap-client object`
+		arg `uids: Block of integers containing email UIDs to fetch overviews for`
+		returns `Block of dictionaries with email overview information (uid, subject, from, to, date, size, flags)Error if retrieval fails`
+	}
+
+	{
+		; overviews: client .Get-overviews { 123 124 125 }
+		; equal { overviews .length } 3
+		; equal { overviews -> 0 -> "subject" } "Test Email"
+	}
+
+	{
+``	}
+
+	group "imap-client//Get-emails" 
+	"Get full emails with bodies and attachments (slower) for given UIDs block."
+	{
+		arg `client: Native imap-client object`
+		arg `uids: Block of integers containing email UIDs to fetch full content for`
+		returns `Block of dictionaries with complete email information (uid, subject, from, to, cc, bcc, date, received, message-id, size, text, html, flags, attachments)Error if retrieval fails`
+	}
+
+	{
+		; full_emails: client .Get-emails { 123 124 }
+		; equal { full_emails -> 0 -> "text" .length > 0 } true
+		; equal { full_emails -> 0 -> "attachments" .length } 2
+	}
+
+	{
+``	}
+
+}
+
+section "Default" "" {
+	group "smtp-server" 
+	"Creates a new SMTP server that can receive incoming email messages on the specified address."
+	{
+		arg `address: String containing the server address (e.g., ":2525", "localhost:587")`
+		returns `native smtpd object configured to listen on the specified address`
+	}
+
+	{
+		equal { smtp-server |type? } 'native
+		error { smtp-server 2525 }
+	}
+
+	{
+``	}
+
+	group "smtpd//Serve" 
+	"Starts the SMTP server listening for incoming emails and calls the handler function for each received message."
+	{
+		arg `server: Native smtpd object created by smtp-server`
+		arg `handler: Function that processes incoming emails (reader from to origin -> ...)`
+		arg `appname: String name for the SMTP server application`
+		arg `password: String password for SMTP authentication (empty string for no auth)`
+		returns `the server object after starting to listen, or error if unable to serve`
+	}
+
+	{
+	}
+
+	{
+`handler: fn { reader from to origin } { print "Got email from:" from }
+smtp-server ":2525"
+|Serve handler "TestSMTP" ""
+`	}
+
+}
+

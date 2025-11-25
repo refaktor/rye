@@ -10,7 +10,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"time"
 
@@ -204,10 +203,9 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 		es.LiveObj.PsMutex.Unlock()
 	}
 
-	// Process comments and extract the real line first
-	comment := regexp.MustCompile(`\s*;`)
-	line := comment.Split(code, 2) //--- just very temporary solution for some comments in repl. Later should probably be part of loader ... maybe?
-	lineReal := strings.Trim(line[0], "\t")
+	// No need to strip comments here - the loader handles them properly
+	// and respects string boundaries (semicolons in strings are not comments)
+	lineReal := strings.Trim(code, "\t")
 
 	// More robust multiline input detection
 	// Check for explicit multiline indicators or incomplete syntax

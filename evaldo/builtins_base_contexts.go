@@ -633,4 +633,35 @@ var builtins_contexts = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	// equal { c: context { x: [ 1 2 3 ] } cc: clone\deep c cc/x } [ 1 2 3 ]
+	// equal { c: context { x: [ 1 2 3 ] } cc: clone\deep c do\in cc { x/0: 999 } c/x -> 0 } 1 ; original unchanged
+	// equal { c: context { x: [ 1 2 3 ] } cc: clone\deep c do\in cc { x/0: 999 } cc/x -> 0 } 999 ; deep clone modified
+	// Args:
+	// * ctx: Context object to deep clone
+	// Returns:
+	// * a new context object that is a deep copy of the original context (including nested objects)
+	"clone\\deep": {
+		Argsn: 1,
+		Doc:   "Creates a deep copy of a context with the same state and parent relationship, recursively copying all nested objects.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch ctx := arg0.(type) {
+			case env.RyeCtx:
+				clonedCtx := ctx.DeepCopy()
+				if ryeCtx, ok := clonedCtx.(*env.RyeCtx); ok {
+					return *ryeCtx
+				}
+				return MakeArgError(ps, 1, []env.Type{env.ContextType}, "clone\\deep")
+			case *env.RyeCtx:
+				clonedCtx := ctx.DeepCopy()
+				if ryeCtx, ok := clonedCtx.(*env.RyeCtx); ok {
+					return *ryeCtx
+				}
+				return MakeArgError(ps, 1, []env.Type{env.ContextType}, "clone\\deep")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.ContextType}, "clone\\deep")
+			}
+		},
+	},
 }

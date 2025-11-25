@@ -1,0 +1,3 @@
+print 123
+context {  _+ 1204  }
+print `dont-print`

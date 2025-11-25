@@ -1,0 +1,838 @@
+section "Constructors " "Functions that construct a table." {
+	group "table" 
+	"Creates a table by accepting block of column names and flat block of values"
+	{
+		arg `columns`
+		arg `data`
+	}
+
+	{
+		equal { table { "a" } { 1 2 } |type? } 'table
+		equal { table { 'a  } { 1 2 } |type? } 'table
+	}
+
+	{
+``	}
+
+	group "table\\columns" 
+	"Creats a table by accepting a block of columns"
+	{
+		arg `columns - names of the columns`
+		arg `data - block or list of columns (each column is a block or list)`
+	}
+
+	{
+		equal { table\columns { "a" } { { 1 2 3 } } |type? } 'table
+		equal { table\columns { "a" "b" } { { 1 2 3 } { 4 5 6 } } |length? } 3
+	}
+
+	{
+`table\columns { 'a 'b } { { 1 2 } { "x" "y" } }
+`	}
+
+	group "table\\rows" 
+	"Creates a table by accepting a block or list of rows"
+	{
+		arg `columns - names of the columns`
+		arg `data - block or list of rows (each row is a block or list)`
+	}
+
+	{
+		equal { table\rows { 'a 'b } { { 1 2 } { 3 4 } } } table { 'a 'b } { 1 2 3 4 }
+		equal { table\rows { 'a 'b } list [ list [ 1 2 ] list [ 3 4 ] ] |type? } 'table
+	}
+
+	{
+``	}
+
+	group "to-table" 
+	"Creates a table by accepting block or list of dicts"
+	{
+		arg `data`
+	}
+
+	{
+		equal { to-table list [ dict { "a" 1 } dict { "a" 2 } ] |type? } 'table
+		equal { to-table list [ dict { "a" 1 "b" "Jim" } dict { "a" 2 "b" "Bob" } ] |header? |sort } list { "a" "b" }
+		equal { to-table list [ dict { "a" 1 "b" "Jim" } dict { "a" 2 "b" "Bob" } ] |column? "b" |first } "Jim"
+	}
+
+	{
+``	}
+
+}
+
+section "Filtering " "Functions that construct a table." {
+	group "where-equal" 
+	"Returns table of rows where specific colum is equal to given value."
+	{
+		arg `sheet`
+		arg `column`
+		arg `value`
+		arg `Tags: #filter #tables`
+	}
+
+	{
+		equal { table { 'a } { 1 2 3 2 } |where-equal "a" 2 |length? } 2
+	}
+
+	{
+``	}
+
+	group "where-not-equal" 
+	"Returns table of rows where specific colum is not equal to given value."
+	{
+		arg `sheet`
+		arg `column`
+		arg `value`
+		arg `Tags: #filter #tables`
+	}
+
+	{
+		equal { table { 'a } { 1 2 3 2 } |where-not-equal "a" 2 |length? } 2
+	}
+
+	{
+``	}
+
+	group "where-void" 
+	"Returns table of rows where specific colum is equal to given value."
+	{
+		arg `sheet`
+		arg `column`
+		arg `Tags: #filter #tables`
+	}
+
+	{
+		equal { table { 'a } { 1 _ 3 _ } |where-void "a" |length? } 2
+	}
+
+	{
+``	}
+
+	group "where-match" 
+	"Returns table of rows where a specific colum matches a regex."
+	{
+		arg `sheet`
+		arg `column`
+		arg `regexp`
+		arg `Tags: #filter #tables`
+	}
+
+	{
+		equal { table { 'a } { "1" "2" "a3" "2b" } |where-match 'a regexp "^[0-9]$" |length? } 2
+	}
+
+	{
+``	}
+
+	group "where-contains" 
+	"Returns table of rows where specific colum contains a given string value."
+	{
+		arg `sheet`
+		arg `column`
+		arg `substring`
+		arg `Tags: #filter #tables`
+	}
+
+	{
+		equal { table { 'a } { "1" "2" "a3" "2b" } |where-contains 'a "2" |length? } 2
+	}
+
+	{
+`sheet: table { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" "Benn" }
+sheet .where-contains 'name "nn"
+`	}
+
+	group "where-not-contains" 
+	"Returns table of rows where specific colum contains a given string value."
+	{
+		arg `sheet`
+		arg `column`
+		arg `substring`
+		arg `Tags: #filter #tables`
+	}
+
+	{
+		equal { table { 'a } { "1" "2" "a3" "2b" } |where-not-contains 'a "3" |length? } 3
+	}
+
+	{
+`sheet: table { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" "Benn" }
+sheet .where-contains 'name "nn"
+`	}
+
+	group "where-greater" 
+	"Returns table of rows where specific colum is greater than given value."
+	{
+		arg `sheet`
+		arg `column`
+		arg `value`
+		arg `Tags: #filter #table`
+	}
+
+	{
+		equal { table { 'a } { 1 2 3 2 } |where-greater 'a 1 |length? } 3
+	}
+
+	{
+`sheet: table { "name" "age" } { "Enno" 30 "Enya" 25 "Enid" 40 "Bob" 19 "Bill" 45 "Benn" 29 }
+sheet .where-greater 'age 29
+`	}
+
+	group "where-lesser" 
+	"Returns table of rows where specific colum is lesser than given value."
+	{
+		arg `sheet`
+		arg `column`
+		arg `value`
+		arg `Tags: #filter #table`
+	}
+
+	{
+		equal { table { 'a } { 1 2 3 2 } |where-lesser 'a 3 |length? } 3
+	}
+
+	{
+``	}
+
+	group "where-between" 
+	"Returns table of rows where specific colum is between given values."
+	{
+		arg `sheet`
+		arg `column`
+		arg `lower-limit`
+		arg `upper-limit`
+		arg `Tags: #filter #table`
+	}
+
+	{
+		equal { table { 'a } { 1 2 3 2 } |where-between 'a 1 3 |length? } 2
+	}
+
+	{
+``	}
+
+	group "where-between\\inclusive" 
+	"Returns table of rows where specific colum is between given values."
+	{
+		arg `sheet`
+		arg `column`
+		arg `lower-limit`
+		arg `upper-limit`
+		arg `Tags: #filter #table`
+	}
+
+	{
+		equal { table { 'a } { 1 2 3 2 5 } |where-between\inclusive 'a 2 3 |length? } 3
+	}
+
+	{
+``	}
+
+	group "where-in" 
+	"Returns table of rows where specific colum value if found in block of values."
+	{
+		arg `sheet`
+		arg `column`
+		arg `values-filtered-for`
+		arg `Tags: #filter #table`
+	}
+
+	{
+		equal { table { "name" "age" } { "Enno" 30 "Enya" 25 "Bob" 19 }
+		|where-in 'name { "Enno" "Enya" "Roger" } |column? "age"
+		} { 30 25 }
+	}
+
+	{
+``	}
+
+	group "where-not-in" 
+	"Returns table of rows where specific colum value if found in block of values."
+	{
+		arg `sheet`
+		arg `column`
+		arg `values-filtered-for`
+		arg `Tags: #filter #table`
+	}
+
+	{
+		equal { table { "name" "age" } { "Enno" 30 "Enya" 25 "Bob" 19 }
+		|where-not-in 'name { "Enno" "Enya" "Roger" } |column? "age"
+		} { 19 }
+	}
+
+	{
+``	}
+
+}
+
+section "Row level functions " "Functions that construct a table." {
+	group "add-row" 
+	"Returns a table with new-row added to it"
+	{
+		arg `sheet`
+		arg `new-row`
+	}
+
+	{
+		equal {
+		table { "a" "b" } { 6 60 7 70 } |add-row { 8 80 } -> 2 -> "b"
+		} 80
+	}
+
+	{
+``	}
+
+	group "get-rows" 
+	"Get rows as a native. This value can be used in `add-rows` and `add-rows!`"
+	{
+		arg `sheet`
+	}
+
+	{
+		equal {
+		table { "a" "b" } { 6 60 7 70 } |get-rows |type?
+		} 'native
+	}
+
+	{
+``	}
+
+	group "add-rows" 
+	"Add one or more rows to a table"
+	{
+		arg `sheet - the sheet that is getting rows added to it`
+		arg `rows - a block containing one or more rows worth of values, or a TableRow Native value`
+	}
+
+	{
+		equal {
+		ref table { "a" "b" } { 6 60 7 70 } :sheet
+		sheet .deref |add-rows [ 3 30 ] |length?
+		} 3
+		equal {
+		ref table { "a" "b" } { 1 80 2 90 } :sheet
+		sheet .deref |add-rows { 3 30 } |length?
+		} 3
+	}
+
+	{
+``	}
+
+	group "add-rows!" 
+	"Add one or more rows to a table ref"
+	{
+		arg `sheet - the reference to the sheet that is getting rows added to it`
+		arg `rows - a block containing one or more rows worth of values, or a TableRow Native value`
+		arg `Tags: #spreasheet #mutation`
+	}
+
+	{
+		equal {
+		ref table { "a" "b"  } { 1 10 2 20 } :sheet
+		sheet .add-rows! [ 3 30 ] sheet .deref .length?
+		} 3
+	}
+
+	{
+``	}
+
+	group "update-row!" 
+	"Update the row at the given index."
+	{
+		arg `sheet-ref - A ref to a table`
+		arg `idx - the index of the row to update, 1-based`
+		arg `updater - One of either a function, a dict, or a Table Row`
+		arg `Tags: #table #mutation`
+	}
+
+	{
+		equal {
+		spr1: ref table { "a" "b" } { 1 10 2 20 }
+		spr1 .update-row! 1 dict [ "a" 111 ]
+		spr1 .deref .A1
+		} 111
+		equal {
+		spr1: ref table { "a" "b" } { 1 10 2 20 }
+		incrA: fn { row } { row ++ [ "a" ( "a" <- row ) + 9 ] }
+		update-row! spr1 1 ?incrA
+		spr1 |deref |A1
+		} 10
+	}
+
+	{
+``	}
+
+	group "remove-row!" 
+	"Remove a row from a table by index"
+	{
+		arg `sheet-ref`
+		arg `row-idx - Index of row to remove, 1-based`
+		arg `Tags: #table #mutation`
+	}
+
+	{
+		equal {
+		spr1: ref table { "a" "b" } { 1 10 2 20 }
+		spr1 .remove-row! 1
+		spr1 .deref .A1
+		} 2
+	}
+
+	{
+``	}
+
+}
+
+section "Column level functions " "Functions that construct a table." {
+	group "columns?" 
+	"Returns table with just given columns. Use lsetwords (:newName) to rename the previous column."
+	{
+	}
+
+	{
+		equal { table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 }
+		|columns? { 'name 'age } |header? } list { "name" "age" }
+	}
+
+	{
+``	}
+
+	group "header?" 
+	"Gets the column names (header) as block."
+	{
+	}
+
+	{
+		equal { table { "age" "name" } { 123 "Jim" 29 "Anne" }
+		|header? } list { "age" "name" }
+	}
+
+	{
+``	}
+
+	group "column?" 
+	"Gets all values of a column as a block."
+	{
+	}
+
+	{
+		equal { table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Teacher" }
+		|column? 'name }  { "Bob" "Alice" }
+	}
+
+	{
+``	}
+
+	group "drop-column" 
+	"Remove a column from a table. Returns new table"
+	{
+	}
+
+	{
+		equal { table { "name" "age" "job_title" } { "Bob" 25 "Janitor" "Alice" 29 "Librarian" }
+		|drop-column "name" |header? } list { "age" "job_title" }
+	}
+
+	{
+``	}
+
+	group "rename-column!" 
+	"Remove a column from a table. Returns new table"
+	{
+	}
+
+	{
+		equal { tab: ref table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
+		tab .rename-column! "name" "first_name" , tab .header? } list { "first_name" "age" }
+	}
+
+	{
+``	}
+
+	group "add-column" 
+	"Adds a new column to table. Changes in-place and returns the new table."
+	{
+	}
+
+	{
+		equal { table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
+		|add-column 'job { } { "Cook" } |column? "job" } { "Cook" "Cook" "Cook" }
+	}
+
+	{
+``	}
+
+}
+
+section "Miscelaneous " "" {
+	group "order-by!" 
+	"Sorts row by given column, changes table in place."
+	{
+	}
+
+	{
+		equal { tab: table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19  }
+		tab .order-by! 'age 'asc |column? "age" } { 19 25 29 }
+	}
+
+	{
+``	}
+
+	group "order-by" 
+	"Sorts row by given column, changes table in place."
+	{
+	}
+
+	{
+		equal { tab: table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19  }
+		|order-by 'age 'desc |column? "age" } { 29 25 19 }
+	}
+
+	{
+``	}
+
+	group "add-indexes!" 
+	"Creates an index for all values in the provided columns. Changes in-place and returns the new table."
+	{
+	}
+
+	{
+		equal { table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
+		|add-indexes! { name } |indexes? } { "name" }
+	}
+
+	{
+``	}
+
+	group "indexes?" 
+	"Returns the columns that are indexed in a table."
+	{
+	}
+
+	{
+		equal { table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
+		|add-indexes! { name age } |indexes? } { "name" "age" }
+	}
+
+	{
+``	}
+
+	group "autotype" 
+	"Takes a table and tries to determine and change the types of columns."
+	{
+	}
+
+	{
+		equal { table { "age" } { 123 29 19 }
+		|autotype 1.0 |types? } { integer }
+	}
+
+	{
+``	}
+
+	group "left-join" 
+	"Left joins two tables on the given columns."
+	{
+	}
+
+	{
+		equal {
+		names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
+		houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
+		
+		names .inner-join houses 'id 'id |header?
+		} list { "id" "name" "id_2" "house" }
+		equal {
+		names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
+		houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
+		
+		names .left-join houses 'id 'id |column? "name"
+		} { "Paul" "Chani" "Vladimir" }
+	}
+
+	{
+``	}
+
+	group "inner-join" 
+	"Inner joins two tables on the given columns."
+	{
+	}
+
+	{
+		equal {
+		names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
+		houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
+		
+		names .inner-join houses 'id 'id |header?
+		} list { "id" "name" "id_2" "house" }
+		equal {
+		names: table { "id" "name" } { 1 "Paul" 2 "Chani" 3 "Vladimir" } ,
+		houses: table { "id" "house" } { 1 "Atreides" 3 "Harkonnen" } ,
+		
+		names .inner-join houses 'id 'id |column? "name"
+		} {  "Paul" "Vladimir" }
+	}
+
+	{
+``	}
+
+	group "group-by" 
+	"Groups a table by the given column(s) and (optional) aggregations."
+	{
+	}
+
+	{
+		equal {
+		table { "name" "val" } { "a" 1 "b" 6 "a" 5 "b" 10 "a" 7 }
+		|group-by 'name { 'name count 'val sum } |column? "val_sum" |sort
+		} { 13.0 16.0 }
+		equal {
+		table { "name" "val" } { "a" 1 "b" 6 "a" 5 "b" 10 "a" 7 }
+		|group-by 'name { 'name count 'val min } |column? "val_min" |sort
+		} { 1.0 6.0 }
+		equal {
+		table { "name" "val" } { "a" 1 "b" 6 "a" 5 "b" 10 "a" 12 }
+		|group-by 'name { 'name count 'val avg } |column? "val_avg" |sort
+		} { 6.0 8.0 }
+	}
+
+	{
+``	}
+
+	group "A1" 
+	"Accepts a Table and returns the first row first column cell."
+	{
+	}
+
+	{
+		equal { table { 'a } { 123 234 345 } |A1 } 123
+	}
+
+	{
+``	}
+
+	group "B1" 
+	"Accepts a Table and returns the first row second column cell."
+	{
+	}
+
+	{
+		equal { table { 'a 'b } { 123 234 345 456 } |B1 } 234
+	}
+
+	{
+``	}
+
+	group "A2" 
+	"Accepts a Table and returns the first row first column cell."
+	{
+	}
+
+	{
+		equal { table { 'a 'b } { 123 234 345 456 } |A2 } 345
+	}
+
+	{
+``	}
+
+	group "B2" 
+	"Accepts a Table and returns the first row second column cell."
+	{
+	}
+
+	{
+		equal { table { 'a 'b } { 123 234 345 456 } |B2 } 456
+	}
+
+	{
+``	}
+
+}
+
+section "Loading and saving " "Functions that construct a table." {
+	group "file-uri//Load\\csv" 
+	"Loads a .csv file to a table datatype."
+	{
+		arg `file-uri - location of csv file to load`
+		arg `Tags: #table #loading #csv`
+	}
+
+	{
+		equal {
+		cc os
+		f:: mktmp ++ "/test.csv"
+		spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+		spr1 .save\csv f
+		spr2:: Load\csv f |autotype 1.0
+		spr1 = spr2
+		} true
+	}
+
+	{
+``	}
+
+}
+
+section "Loading and saving " "Functions that construct a table." {
+	group "file-uri//Load\\csv\\" 
+	"Loads a .csv file to a table datatype."
+	{
+		arg `file-uri - location of csv file to load`
+		arg `Tags: #table #loading #csv`
+	}
+
+	{
+		equal {
+		cc os
+		f:: mktmp ++ "/test.csv"
+		spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+		spr1 .save\csv f
+		spr2:: Load\csv f |autotype 1.0
+		spr1 = spr2
+		} true
+	}
+
+	{
+``	}
+
+	group "file-uri//Load\\tsv" 
+	"Loads a .csv file to a table datatype."
+	{
+		arg `file-uri - location of csv file to load`
+	}
+
+	{
+		equal {
+		cc os
+		f:: mktmp ++ "/test.tsv"
+		spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+		spr1 .save\tsv f
+		spr2:: Load\tsv f |autotype 1.0
+		spr1 = spr2
+		} true
+	}
+
+	{
+``	}
+
+	group "save\\csv" 
+	"Saves a table to a .csv file."
+	{
+		arg `sheet    - the sheet to save`
+		arg `file-url - where to save the sheet as a .csv file`
+		arg `Tags: #table #saving #csv`
+	}
+
+	{
+		equal {
+		cc os
+		f:: mktmp ++ "/test.csv"
+		spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+		spr1 .save\csv f
+		spr2:: Load\csv f |autotype 1.0
+		spr1 = spr2
+		} true
+	}
+
+	{
+``	}
+
+	group "save\\tsv" 
+	"Saves a table to a .csv file."
+	{
+		arg `sheet    - the table to save`
+		arg `file-url - where to save the sheet as a .csv file`
+		arg `Tags: #table #saving #csv`
+	}
+
+	{
+		equal {
+		cc os
+		f:: mktmp ++ "/test.csv"
+		spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+		spr1 .save\tsv f
+		spr2:: Load\tsv f |autotype 1.0
+		spr1 = spr2
+		} true
+	}
+
+	{
+``	}
+
+	group "file-uri//Load\\xlsx" 
+	"Loads the first sheet in an .xlsx file to a Table."
+	{
+		arg `file-uri - location of xlsx file to load`
+		arg `Tags: #table #loading #xlsx`
+	}
+
+	{
+		equal {
+		cc os
+		f:: mktmp ++ "/test.xlsx"
+		spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+		spr1 .save\xlsx f
+		spr2:: Load\xlsx f |autotype 1.0
+		spr1 = spr2
+		} true
+	}
+
+	{
+``	}
+
+	group "save\\xlsx" 
+	"Saves a Table to a .xlsx file."
+	{
+		arg `table    - the table to save`
+		arg `file-url 		- where to save the table as a .xlsx file`
+		arg `Tags: #table #saving #xlsx`
+	}
+
+	{
+		equal {
+		cc os
+		f:: mktmp ++ "/test.xlsx"
+		spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+		spr1 .save\xlsx f
+		spr2:: Load\xlsx f |autotype 1.0
+		spr1 = spr2
+		} true
+	}
+
+	{
+``	}
+
+	group "persistent-table" 
+	"Creates a persistent table using BadgerDB for storage"
+	{
+		arg `columns - block of column names`
+		arg `db-path - path to BadgerDB database`
+		arg `table-name - name of the table`
+	}
+
+	{
+		; equal { persistent-table { "a" "b" } "/tmp/test_db" "test_table" |type? } 'persistent-table
+	}
+
+	{
+``	}
+
+	group "close-persistent-table!" 
+	"Closes the BadgerDB connection for a persistent table"
+	{
+		arg `persistent-table - the persistent table to close`
+	}
+
+	{
+		; equal { pt: persistent-table { "a" "b" } "/tmp/test_db" "test_table"
+		;        pt .close-persistent-table! |type? } 'persistent-table
+	}
+
+	{
+``	}
+
+}
+

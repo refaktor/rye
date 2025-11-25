@@ -1,0 +1,3 @@
+print 123
+if true {  some-unknown-word  }
+print `dont-print`

@@ -1,0 +1,405 @@
+section "Regexp " "Go like Regular expressions" {
+	group "regexp" 
+	"Creates a compiled regular expression object from a pattern string."
+	{
+		arg `pattern: String containing a regular expression pattern`
+		returns `native regexp object or error if pattern is invalid`
+	}
+
+	{
+		equal { regexp "[0-9]" |type? } 'native
+	}
+
+	{
+``	}
+
+	group "regexp//Is-match" 
+	"Tests if a string matches the regular expression pattern."
+	{
+		arg `regexp: Native regexp object`
+		arg `input: String to test against the pattern`
+		returns `integer 1 if the string matches the pattern, 0 otherwise`
+	}
+
+	{
+		equal { regexp "[0-9]" |Is-match "5" } 1
+		equal { regexp "[0-9]" |Is-match "a" } 0
+	}
+
+	{
+``	}
+
+	group "regexp//Submatch?" 
+	"Extracts the first captured group from a string using the regular expression."
+	{
+		arg `regexp: Regular expression with capturing groups`
+		arg `input: String to search in`
+		returns `string containing the first captured group or error if no submatch found`
+	}
+
+	{
+		equal { regexp "x([0-9]+)y" |Submatch? "x123y" } "123"
+	}
+
+	{
+``	}
+
+	group "regexp//Submatches?" 
+	"Extracts all captured groups from the first match as a block of strings."
+	{
+		arg `regexp: Regular expression with capturing groups`
+		arg `input: String to search in`
+		returns `block containing all captured groups from the first match or error if no match found`
+	}
+
+	{
+		equal { regexp "x([0-9]+)y" |Submatches? "x123y x234y" } { "123" }
+	}
+
+	{
+``	}
+
+	group "regexp//Submatches\\all?" 
+	"Extracts all captured groups from all matches as a nested block structure."
+	{
+		arg `regexp: Regular expression with capturing groups`
+		arg `input: String to search in`
+		returns `block of blocks, each inner block containing the captured groups from one match`
+	}
+
+	{
+		equal { regexp "x([0-9]+)(y+)?" |Submatches\all? "x11yy x22" } { { "11" "yy" } { "22" "" } }
+	}
+
+	{
+``	}
+
+	group "regexp//Find-all" 
+	"Finds all substrings matching the regular expression and returns them as a block."
+	{
+		arg `regexp: Regular expression pattern`
+		arg `input: String to search in`
+		returns `block containing all matching substrings or error if no matches found`
+	}
+
+	{
+		equal { regexp "[0-9]+" |Find-all "x123y x234y" } { "123" "234" }
+	}
+
+	{
+``	}
+
+	group "regexp//Match?" 
+	"Finds the first substring matching the regular expression."
+	{
+		arg `regexp: Regular expression pattern`
+		arg `input: String to search in`
+		returns `string containing the first match or empty string if no match found`
+	}
+
+	{
+		equal { regexp "[0-9]+c+" |Match? "aa33bb55cc" } "55cc"
+	}
+
+	{
+``	}
+
+	group "regexp//Replace-all" 
+	"Replaces all occurrences of the regular expression pattern with the specified replacement string."
+	{
+		arg `regexp: Regular expression pattern`
+		arg `input: String to modify`
+		arg `replacement: String to replace matches with`
+		returns `string with all matches replaced by the replacement string`
+	}
+
+	{
+		equal { regexp "[0-9]+" |Replace-all "x123y x234y" "XXX" } "xXXXy xXXXy"
+	}
+
+	{
+``	}
+
+}
+
+section "JSON " "Parsing and generating JSON" {
+	group "parse-json" 
+	"Parses JSON string into Rye values."
+	{
+		arg `json: string containing JSON data`
+		returns `parsed Rye value (list, dict, string, integer, etc.)`
+	}
+
+	{
+		equal { "[ 1, 2, 3 ]" |parse-json |length? } 3
+		equal { "[ 1, 2, 3 ]" |parse-json |type? } 'list
+	}
+
+	{
+``	}
+
+	group "parse-json\\lines" 
+	"Parses JSON string into Rye values."
+	{
+		arg `json: string containing consecutive JSON values`
+		returns `list of parsed Rye values`
+	}
+
+	{
+		equal { `{"a": 2, "b": "x"} \n{"a": 3, "b": "y"} \n` |parse-json\lines |to-table } table { "a" "b" } { 2.0 "x" 3.0 "y" }
+	}
+
+	{
+``	}
+
+	group "to-json" 
+	"Converts a Rye value to a JSON string."
+	{
+		arg `value: any Rye value to encode (list, dict, string, integer, etc.)`
+		returns `string containing the JSON representation`
+	}
+
+	{
+		equal { list { 1 2 3 } |to-json } "[1, 2, 3] "
+		equal { dict { a: 1 b: 2 c: 3 } |to-json } `{"a": 1, "b": 2, "c": 3} `
+	}
+
+	{
+``	}
+
+	group "to-json\\lines" 
+	"Converts a table to JSON with each row on a separate line."
+	{
+		arg `table: table value to encode`
+		returns `string containing the JSON representation with each row on a new line`
+	}
+
+	{
+		equal { table { "a" "b" } { 2 "x" 3 "y" } |to-json\lines } `{"a": 2, "b": "x"} \n{"a": 3, "b": "y"} \n`
+	}
+
+	{
+``	}
+
+}
+
+section "BSON " "BSON encoding and decoding" {
+	group "from-bson" 
+	"Decodes BSON data into Rye values."
+	{
+		arg `bytes: native bytes object containing BSON data`
+		returns `decoded Rye value (string, integer, decimal, block, etc.)`
+	}
+
+	{
+		equal { "abc" |to-bson |from-bson } "abc"
+		equal { 123 |to-bson |from-bson } 123
+		equal { { 123 "asd" } |to-bson |from-bson } { 123 "asd" }
+	}
+
+	{
+``	}
+
+	group "to-bson" 
+	"Encodes a Rye value into BSON format."
+	{
+		arg `value: any Rye value to encode (string, integer, decimal, block, etc.)`
+		returns `native bytes object containing the BSON-encoded data`
+	}
+
+	{
+		equal { "abc" |to-bson |type? } 'native
+		equal { "abc" |to-bson |kind? } 'bytes
+	}
+
+	{
+``	}
+
+}
+
+section "SXML " "Streaming, SAX-like XML processing" {
+	group "reader//do-sxml" 
+	"Processes XML using a streaming SAX-like approach with tag handlers."
+	{
+		arg `reader: XML reader object`
+		arg `block: SXML processing block with tag handlers`
+		returns `result of processing the XML`
+	}
+
+	{
+		stdout {
+		"<scene><bot>C3PO</bot><bot>R2D2</bot><jedi>Luke</jedi></scene>" |reader
+		.do-sxml { _ [ .prns ] }
+		} "C3PO R2D2 Luke "
+		stdout {
+		"<scene><bot>C3PO</bot><bot>R2D2</bot><jedi>Luke</jedi></scene>" |reader
+		.do-sxml { <bot> { _ [ .prns ] } }
+		} "C3PO R2D2 "
+		stdout {
+		"<scene><ship>XWing</ship><bot>R2D2</bot><jedi>Luke</jedi></scene>" |reader
+		.do-sxml { <bot> <jedi> { _ [ .prns ] } }
+		} "R2D2 Luke "
+		stdout {
+		"<scene><xwing><bot>R2D2</bot><person>Luke</person></xwing><destroyer><person>Vader</person></destroyer></scene>" |reader
+		.do-sxml { <xwing> { <person> { _ [ .prns ] } } }
+		} "Luke "
+	}
+
+	{
+``	}
+
+	group "rye-sxml-start//Attr?" 
+	"Retrieves an attribute by index or name from an XML start element."
+	{
+		arg `element: XML start element`
+		arg `index: Integer index of the Attribute to retrieve`
+		returns `list [ namespace tag value ] of the attribute or void if not found`
+	}
+
+	{
+		stdout {
+		`<scene><ship type="xwing"><person age="25">Luke</person></ship><ship type="destroyer"><person age="55">Vader</person></ship></scene>` |reader
+		.do-sxml { <ship> [ .Attr? 0 |last |prns	 ] }
+		} "xwing destroyer "
+		stdout {
+		`<scene><ship type="xwing"><person age="25">Luke</person></ship><ship type="destroyer"><person age="55">Vader</person></ship></scene>` |reader
+		.do-sxml { <person> [ .Attr? 0 |last |prns	 ] }
+		} "25 55 "
+	}
+
+	{
+``	}
+
+	group "rye-sxml-start//Attrs?" 
+	"Returns a dict of all attributes from an XML start element."
+	{
+		arg `element: XML start element`
+		returns `dict with all attributes where keys are "attrname" or "namespace:attrname"`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "rye-sxml-start//Name?" 
+	"Returns the name of an XML start element."
+	{
+		arg `element: XML start element`
+		returns `string name of the XML element`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+}
+
+section "HTML " "HTML processing functions" {
+	group "unescape\\html" 
+	"Converts HTML entities to their character equivalents."
+	{
+		arg `text: HTML-escaped string`
+		returns `string with HTML entities converted to their character equivalents`
+	}
+
+	{
+		equal { unescape\html "&gt;hello&lt;" } ">hello<"
+	}
+
+	{
+``	}
+
+	group "escape\\html" 
+	"Converts special characters to HTML entities."
+	{
+		arg `text: String containing HTML special characters`
+		returns `string with special characters converted to HTML entities`
+	}
+
+	{
+		equal { escape\html "<hello>" } "&lt;hello&gt;"
+	}
+
+	{
+``	}
+
+	group "html->markdown" 
+	"Converts HTML text to markdown format."
+	{
+		arg `html: HTML string to convert`
+		returns `string containing markdown equivalent of the HTML`
+	}
+
+	{
+		equal { html->markdown "<h1>title</h1><p>para</p>" } "# title\n\npara"
+	}
+
+	{
+``	}
+
+	group "reader//Parse-html" 
+	"Parses HTML using a streaming approach with tag handlers."
+	{
+		arg `reader: HTML reader object`
+		arg `block: HTML processing block with tag handlers`
+		returns `result of processing the HTML`
+	}
+
+	{
+		stdout { "<html><body><div class='menu'><a href='/'>home</a><a href='/about/'>about</a>" |reader
+		.Parse-html { <a> [ .Attr? 'href |prns ] }
+		} "/ /about/ "
+	}
+
+	{
+``	}
+
+	group "rye-html-start//Attr?" 
+	"Retrieves an attribute value by name or index from an HTML element."
+	{
+		arg `element: HTML token element`
+		arg `name-or-index: Attribute name (as word or string) or index (as integer)`
+		returns `string value of the attribute or void if not found`
+	}
+
+	{
+		stdout { "<div class='menu' id='nav'></div>" |reader .Parse-html { <div> [ .Attr? 'class |prn ] } } "menu"
+		stdout { "<div class='menu' id='nav'></div>" |reader .Parse-html { <div> [ .Attr? 'id |prn ] } } "nav"
+	}
+
+	{
+``	}
+
+	group "rye-html-start//Attrs?" 
+	"Returns a dict of all attributes from an HTML element."
+	{
+		arg `element: HTML token element`
+		returns `dict with all attributes where keys are attribute names`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "rye-html-start//Name?" 
+	"Returns the name of an HTML element."
+	{
+		arg `element: HTML token element`
+		returns `string name of the HTML element`
+	}
+
+	{
+		stdout { "<div></div>" |reader .Parse-html { <div> [ .Name? |print ] } } "div\n"
+	}
+
+	{
+``	}
+
+}
+

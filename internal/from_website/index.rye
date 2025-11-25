@@ -1,0 +1,103 @@
+
+"Hello World" .replace "World" "Mars" |print
+; prints "Hello Mars"
+
+"12 8 12 16 8 6" .load .unique .sum
+; returns 42
+
+switch 'cow { dog { "woof" } cow { "mooo" } cat { "meow" } }
+; returns mooo
+
+regexp "([0-9][a-z])" |Submatch? "-7--x3--0k-r--"
+; returns 0k
+
+{ "Anne" "Joan" "Adam" } |filter { .first = "A" }
+|for { .print } 
+
+read\lines %data.txt |with
+{ .length? .print , .tail 5 |print }
+
+load\csv %ryebots.csv |where-equal 'level 7
+|column? 'score |avg
+
+get https://ryelang.org |write* %page.html
+|reader |parse-html { <a> [ .attr? 'href |print ] }
+
+go does { get https://httpbin.org/get |parse-json
+  -> "headers" -> "User-Agent" |print } print "Loading ..."
+
+http-server ":8082"
+|handle "/" new-static-handler %public_html
+|serve
+
+http-server ":8081"
+|handle "/time" fn { w r } { .write to-string now }
+|serve
+
+handler: fn { mail from to origin } {
+printv from "new mail from {}" }
+smtp-server ":25" |serve ?handler "demo"
+
+dict { name: "anakin" } |validate { 
+   name: required calc { .capitalize } 
+   score: optional 0 integer }
+; returns { name: "Anakin" score: 0 }	
+
+; Rye like Rebol or Lisp has no operator precedence.
+; But it has Math dialect which has it and more.
+math { 2 + 2 * sqrt ( 12 + ( 24 / 3 ) ) }
+; returns 42
+
+rye .args .first :id
+open sqlite://data.db
+|query { select * from operator where id = ?id }
+
+do\in fyne {
+	  
+	lab: label "I'm Waiting ..."
+	btn: button "Click here" does { lab .set-text "Finally ..." }
+	box: v-box [ lab layout-spacer btn ]
+	
+	with app .window "Button" {
+		.resize size 200.0 100.0 ,
+		.set-content box ,
+		.show-and-run
+	}
+}
+
+do\in fyne {
+  app .window "Percentage Clock" :win
+  
+  cont: v-box [
+    label "This Year [days]" :ly
+    progress-bar :py
+    label "This month [days]"
+    progress-bar :pM
+    label "Today [hours]"
+    progress-bar :ph
+    label "This hour [minutes]"
+    progress-bar :pm
+    label "This minute [seconds]"
+    progress-bar :ps
+  ]
+  
+  m-of: ?multiple-of
+  is-leap-year: fn { y } { all { y .m-of 4  not y .m-of 100  not y .m-of 400 } }
+  days-in: fn { y } { .is-leap-year .either { 366 } { 365 } }
+
+  go fn\par { } current {
+    forever {
+      with n:: now {
+        .year? ::y |concat* "Year " |set-text* ly ,
+        .year-day? / days-in y  |set-value* py ,
+        .day? / days-in-month? n |set-value* pM ,
+        .hour?     / 24 |set-value* ph ,
+        .minute?   / 60 |set-value* pm ,
+        .second?   / 60 |set-value* ps
+        sleep 500
+      }
+    }
+  }
+  win |resize size 300.0 200.0 |set-content cont |show-and-run
+}
+

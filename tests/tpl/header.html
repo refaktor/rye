@@ -4,31 +4,36 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Londrina+Solid:wght@300&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="tpl/main.2.css?a001" />
+    <link rel="stylesheet" href="tpl/main.3.css?a001" />
+    <link rel="stylesheet" href="tpl/styles.css?a001" />
     <script src="tpl/menu.js?a001"></script>
     <script src="tpl/jsGoo.js"></script>
     <!-- syntax highlighting -->
     <link rel="stylesheet" type="text/css" href="tpl/desert.css" />
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/prettify/r298/run_prettify.js"></script>
+    <script type="text/javascript" src="./tpl/run_prettify.js"></script>
     <script type="text/javascript" src="./tpl/lang-rye.js"></script>
     <!-- syntax highlightinh end -->
+    <title>{{title}}</title>
   </head>
-<body onload="generateMenu()">
-<div id="menu-holder">
-</div>
-<p></p>
-<div class="menumenu">
-  <a href="/">← main page</a>
-  <br/>
-  <br/>
-  <b>Rye core:</b>
-  <a href='basics.html'>Basics and code flow</a> &middot;
-  <a href='structures.html'>Rye structures</a> &middot;
-  <!--a href='spreadsheet.html'>Table datatype</a> &middot ;-->
-  <a href='validation.html'>Validation and Regexps</a> &middot;
-  <a href='misc.html'>Miscellaneous</a>
-  <a href='spreadsheets.html'>Tables</a>
-  <a href='spreadsheets_ref.html'>Refed spreadsheets</a>
-  <!--b>Modules:</b> <a href='basics.html'>HTTP</a> &middot; <a href='structures.html'>SMPT</a> &middot; <a href='spreadsheets.html'>JSON</a> &middot;-->
-</div>
-<h1>Rye reference: {{title}}</h1>
+  <body onload="generateMenu(); styleCurrentTab();">
+    <!--div id="menu-holder">
+	</div-->
+    <!--p>
+      <a href="/">main page</a>
+    </p>
+    <h1>Rye reference: {{title}}</h1-->
+    <div class="container">
+      <aside class="sidebar" id="menu-holder">
+        <nav>
+          <ul>
+            <li><a href="https://ryelang.org">← Home</a> {{menu}}</li>
+            <!-- More menu items here -->
+          </ul>
+        </nav>
+	<p>
+	  This is Rye function reference generated from unit tests in info/ folder. Examples can be little dry, but they are short and correct.
+	</p>
+	<h3>Functions</h3>
+      </aside>
+      <main class="content">
+        

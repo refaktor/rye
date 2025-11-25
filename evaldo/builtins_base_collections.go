@@ -7,7 +7,6 @@ import (
 	"math/big"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/refaktor/rye/env"
 
@@ -1374,14 +1373,6 @@ var builtins_collection = map[string]*env.Builtin{
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.DictType, env.BlockType}, "_++")
 				}
-			case env.Time:
-				switch b2 := arg1.(type) {
-				case env.Integer:
-					v := s1.Value.Add(time.Duration(b2.Value * 1000000))
-					return *env.NewTime(v)
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "_++")
-				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType, env.DictType, env.TableRowType, env.TimeType, env.UriType}, "_++")
 			}
@@ -2082,6 +2073,8 @@ var builtins_collection = map[string]*env.Builtin{
 							return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(wrd.Index) + "', use 'var' to declare it as a variable")
 						}
 						return newval
+					case env.Block: // TODO
+						return MakeBuiltinError(ps, "Value of word is not a ref of a Block", "append!")
 					case *env.Block: // TODO
 						// 	fmt.Println(123)
 						s := &oldval.Series
@@ -2091,6 +2084,8 @@ var builtins_collection = map[string]*env.Builtin{
 							return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(wrd.Index) + "', use 'var' to declare it as a variable")
 						}
 						return oldval
+					case env.List: // TODO
+						return MakeBuiltinError(ps, "Value of word is not a ref of a List", "append!")
 					case *env.List:
 						dataSlice := make([]any, 0)
 						switch listData := arg0.(type) {
@@ -2181,6 +2176,112 @@ var builtins_collection = map[string]*env.Builtin{
 				}
 			default:
 				return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "change\\nth!")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { var 'x ref { 1 2 3 } append\many! { 4 5 6 } 'x , x } { 1 2 3 4 5 6 }
+	// equal { var 'x ref { 1 2 } append\many! { 3 4 5 6 } 'x , x } { 1 2 3 4 5 6 }
+	// equal { var 's "hello" append\many! { " " "world" "!" } 's , s } "hello world!"
+	// equal { var 'l ref list { 10 20 } append\many! { 30 40 } 'l , l } list { 10 20 30 40 }
+	// Args:
+	// * values: Block of values to append
+	// * word: Word referring to a block, list or string to modify
+	// Returns:
+	// * the modified collection with all values from the block appended
+	"append\\many!": { // **
+		Argsn: 2,
+		Doc:   "Appends all values from a block to a collection (block, list or string) in-place and returns the modified collection.",
+		Pure:  false,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			// Validate that first argument is a block
+			valuesBlock, ok := arg0.(env.Block)
+			if !ok {
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "append\\many")
+			}
+
+			switch wrd := arg1.(type) {
+			case env.Word:
+				val, found, ctx := ps.Ctx.Get2(wrd.Index)
+				if found {
+					switch oldval := val.(type) {
+					case env.String:
+						var newval env.String
+						var result strings.Builder
+						result.WriteString(oldval.Value)
+
+						// Append each value from the block
+						for i := 0; i < valuesBlock.Series.Len(); i++ {
+							switch elem := valuesBlock.Series.Get(i).(type) {
+							case env.String:
+								result.WriteString(elem.Value)
+							case env.Integer:
+								result.WriteString(strconv.Itoa(int(elem.Value)))
+							case env.Decimal:
+								result.WriteString(strconv.FormatFloat(elem.Value, 'f', -1, 64))
+							default:
+								return MakeBuiltinError(ps, "Block element must be String, Integer or Decimal for string append", "append\\many")
+							}
+						}
+
+						newval = *env.NewString(result.String())
+						if ok := ctx.Mod(wrd.Index, newval); !ok {
+							ps.FailureFlag = true
+							return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(wrd.Index) + "', use 'var' to declare it as a variable")
+						}
+						return newval
+					case env.Block: // TODO
+						return MakeBuiltinError(ps, "Value of word is not a ref of a Block", "append\\many")
+					case *env.Block:
+						s := &oldval.Series
+						oldval.Series = *s.AppendMul(valuesBlock.Series.GetAll())
+						if ok := ctx.Mod(wrd.Index, oldval); !ok {
+							ps.FailureFlag = true
+							return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(wrd.Index) + "', use 'var' to declare it as a variable")
+						}
+						return oldval
+					case env.List: // TODO
+						return MakeBuiltinError(ps, "Value of word is not a ref of a List", "append\\many")
+					case *env.List:
+						dataSlice := make([]any, 0)
+						// Add existing data
+						for _, v1 := range oldval.Data {
+							dataSlice = append(dataSlice, v1)
+						}
+						// Add new values from block
+						for i := 0; i < valuesBlock.Series.Len(); i++ {
+							dataSlice = append(dataSlice, env.RyeToRaw(valuesBlock.Series.Get(i), ps.Idx))
+						}
+
+						combineList := make([]any, 0, len(dataSlice))
+						for _, v := range dataSlice {
+							combineList = append(combineList, v)
+						}
+						finalList := *env.NewList(combineList)
+						if ok := ctx.Mod(wrd.Index, finalList); !ok {
+							ps.FailureFlag = true
+							return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(wrd.Index) + "', use 'var' to declare it as a variable")
+						}
+						return finalList
+					default:
+						return MakeBuiltinError(ps, "Type of word value is not String, Block or List", "append\\many")
+					}
+				}
+				return MakeBuiltinError(ps, "Word not found.", "append\\many")
+			case *env.Block:
+				dataSlice := make([]env.Object, 0)
+				// Add existing values
+				for _, v1 := range wrd.Series.S {
+					dataSlice = append(dataSlice, env.ToRyeValue(v1))
+				}
+				// Add new values from the valuesBlock
+				for i := 0; i < valuesBlock.Series.Len(); i++ {
+					dataSlice = append(dataSlice, valuesBlock.Series.Get(i))
+				}
+				return *env.NewBlock(*env.NewTSeries(dataSlice))
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.WordType, env.BlockType}, "append\\many")
 			}
 		},
 	},

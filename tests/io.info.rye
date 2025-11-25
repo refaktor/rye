@@ -1,0 +1,1081 @@
+section "Console IO " "Console input and output functions" {
+	group "input" 
+	"Prompts for and reads user input from the console."
+	{
+		arg `prompt: string to display as a prompt`
+		returns `string containing the user's input`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+}
+
+section "File Operations " "File system operations and file manipulation" {
+	group "file-uri//Open" 
+	"Opens a file for reading."
+	{
+		arg `path: uri representing the file to open`
+		returns `native file object`
+	}
+
+	{
+		equal { Open %data/file.txt |type? } 'native
+		equal { Open %data/file.txt |kind? } 'file
+	}
+
+	{
+``	}
+
+	group "file-uri//Open\\append" 
+	"Opens a file for appending."
+	{
+		arg `path: uri representing the file to open for appending`
+		returns `native writer object`
+	}
+
+	{
+		equal { Open\append %data/file.txt |type? } 'native
+		equal { Open\append %data/file.txt |kind? } 'writer
+	}
+
+	{
+``	}
+
+	group "file-uri//Create" 
+	"Creates a new file."
+	{
+		arg `path: uri representing the file to create`
+		returns `native file object`
+	}
+
+	{
+		equal { Create %data/created.txt |type? } 'native
+		equal { Create %data/created.txt |kind? } 'file
+	}
+
+	{
+``	}
+
+	group "file-uri//File-ext?" 
+	"Gets the extension of a file."
+	{
+		arg `path: uri or string representing a file path`
+		returns `string containing the file extension (including the dot)`
+	}
+
+	{
+		equal { File-ext? %data/file.txt } ".txt"
+		equal { File-ext? %data/file.temp.png } ".png"
+		equal { File-ext? to-file "data/file.temp.png" } ".png"
+	}
+
+	{
+``	}
+
+	group "file-uri//Filename?" 
+	"Gets the filename with extension from a file path."
+	{
+		arg `path: uri representing a file path`
+		returns `string containing the filename with extension`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "file-uri//Stem?" 
+	"Gets the filename without extension from a file path."
+	{
+		arg `path: uri representing a file path`
+		returns `string containing the filename without extension`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "file-uri//Dir?" 
+	"Gets the directory path from a file path."
+	{
+		arg `path: uri representing a file path`
+		returns `string containing the directory path`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "file-uri//Split" 
+	"Splits a file path into its components."
+	{
+		arg `path: uri representing a file path`
+		returns `block of strings containing path components`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "file-uri//Is-absolute" 
+	"Checks if a file path is absolute."
+	{
+		arg `path: uri representing a file path`
+		returns `boolean indicating whether the path is absolute`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "file//Reader" 
+	"Creates a new reader from file object."
+	{
+		arg `source: file object to read from`
+		returns `native reader object`
+	}
+
+	{
+		equal { Reader probe Open probe %data/file.txt |kind? } 'reader
+	}
+
+	{
+``	}
+
+	group "file//Writer" 
+	"Creates a new reader from file object."
+	{
+		arg `source: file object to read from`
+		returns `native reader object`
+	}
+
+	{
+		equal { Reader probe Open probe %data/file.txt |kind? } 'reader
+	}
+
+	{
+``	}
+
+	group "file-uri//Reader" 
+	"Creates a new reader from a file uri/path."
+	{
+		arg `source: file uri to read from`
+		returns `native reader object`
+	}
+
+	{
+		equal { Reader %data/file.txt |kind? } 'reader
+	}
+
+	{
+``	}
+
+	group "reader" 
+	"Creates a new reader from a string."
+	{
+		arg `source: string to read from`
+		returns `native reader object`
+	}
+
+	{
+		equal { reader "some string" |kind? } 'reader
+	}
+
+	{
+``	}
+
+	group "stdin" 
+	"Gets a reader for standard input."
+	{
+		arg `none`
+		returns `native reader object connected to standard input`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "stdout" 
+	"Gets a writer for standard output."
+	{
+		arg `none`
+		returns `native writer object connected to standard output`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "stderr" 
+	"Gets a writer for standard error."
+	{
+		arg `none`
+		returns `native writer object connected to standard error`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "reader//Read\\string" 
+	"Reads all content from a reader as a string."
+	{
+		arg `reader: native reader object`
+		returns `string containing all content from the reader`
+	}
+
+	{
+		equal { reader "some string" |Read\string } "some string"
+	}
+
+	{
+``	}
+
+	group "reader//Copy" 
+	"Copies all content from a reader to a writer."
+	{
+		arg `reader: native reader object`
+		arg `writer: native writer object`
+		returns `the reader object if successful`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "file//Copy" 
+	"Copies content from a file to a writer."
+	{
+		arg `file: native file object`
+		arg `writer: native writer object`
+		returns `the file object if successful`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "file//Stat" 
+	"Gets file information (stat) for a file."
+	{
+		arg `file: native file object`
+		returns `native file-info object`
+	}
+
+	{
+		equal { Stat Open %data/file.txt |kind? } 'file-info
+	}
+
+	{
+``	}
+
+	group "file-info//Size?" 
+	"Gets the size of a file in bytes."
+	{
+		arg `file-info: native file-info object`
+		returns `integer representing the file size in bytes`
+	}
+
+	{
+		equal { Size? Stat Open %data/file.txt } 16
+	}
+
+	{
+``	}
+
+	group "file//Read-all" 
+	"Reads the entire content of a file as a string."
+	{
+		arg `file: native file object`
+		returns `string containing the entire file content`
+	}
+
+	{
+		equal { Read-all Open %data/file.txt } "hello text file\n"
+	}
+
+	{
+``	}
+
+	group "file//Seek\\end" 
+	"Seeks to the end of a file."
+	{
+		arg `file: native file object`
+		returns `the same file object with position set to end of file`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "file//Write" 
+	"Writes a string directly to a file object."
+	{
+		arg `file: native file object`
+		arg `content: string to write to the file`
+		returns `the file object if successful (allows chaining)`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "file//Close" 
+	"Closes an open file."
+	{
+		arg `file: native file object`
+		returns `empty string if successful`
+	}
+
+	{
+		equal { Close Open %data/file.txt } ""
+	}
+
+	{
+``	}
+
+	group "file-uri//Read" 
+	"Reads the entire content of a file as a string."
+	{
+		arg `path: uri representing the file to read`
+		returns `string containing the entire file content`
+	}
+
+	{
+		equal { Read %data/file.txt } "hello text file\n"
+	}
+
+	{
+``	}
+
+	group "file-uri//Read\\bytes" 
+	"Reads the entire content of a file as bytes."
+	{
+		arg `path: uri representing the file to read`
+		returns `native bytes object containing the file content`
+	}
+
+	{
+		equal { Read %data/file.txt } "hello text file\n"
+	}
+
+	{
+``	}
+
+	group "file-uri//Read\\lines" 
+	"Reads a file and returns its content as a block of lines."
+	{
+		arg `path: uri representing the file to read`
+		returns `block of strings, each representing a line from the file`
+	}
+
+	{
+		equal { Read %data/file.txt } "hello text file\n"
+	}
+
+	{
+``	}
+
+	group "file-uri//Write" 
+	"Writes content to a file."
+	{
+		arg `path: uri representing the file to write to`
+		arg `content: string or bytes to write to the file`
+		returns `the content that was written`
+	}
+
+	{
+		equal { Write %data/write.txt "written\n" } "written\n"
+	}
+
+	{
+``	}
+
+	group "write\\bytes" 
+	"Writes bytes to a file."
+	{
+		arg `bytes: Go-bytes native value to write`
+		arg `path: string path to the file to write`
+		returns `integer 1 if successful`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "append\\bytes" 
+	"Appends two byte arrays into one."
+	{
+		arg `bytes1: first Go-bytes native value`
+		arg `bytes2: second Go-bytes native value`
+		returns `combined bytes as a native bytes object`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "writer//Write" 
+	"Writes a string to a writer."
+	{
+		arg `writer: native writer object`
+		arg `content: string to write`
+		returns `the writer object if successful`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+}
+
+section "HTTPs Operations " "Web requests and HTTP protocol functions" {
+	group "https-uri//Open" 
+	"Opens a HTTPS GET request and returns a reader for the response body."
+	{
+		arg `url: uri representing the HTTPS URL to request`
+		returns `native reader object for the response body`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "https-uri//Get" 
+	"Makes a HTTPS GET request and returns the response body as a string."
+	{
+		arg `url: uri representing the HTTPS URL to request`
+		returns `string containing the response body`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "https-uri//Post" 
+	"Makes a HTTPS POST request and returns the response body as a string."
+	{
+		arg `url: uri representing the HTTPS URL to request`
+		arg `data: string containing the request body`
+		arg `content-type: word specifying the content type (e.g., 'json', 'text')`
+		returns `string containing the response body`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "http-uri//Get" 
+	"Makes a HTTP GET request and returns the response body as a string."
+	{
+		arg `url: uri representing the HTTP URL to request`
+		returns `string containing the response body`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "http-uri//Post" 
+	"Makes a HTTP POST request and returns the response body as a string."
+	{
+		arg `url: uri representing the HTTP URL to request`
+		arg `data: string containing the request body`
+		arg `content-type: word specifying the content type (e.g., 'json', 'text')`
+		returns `string containing the response body`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "https-uri//Request" 
+	"Creates a new HTTPS request object."
+	{
+		arg `url: uri representing the HTTPS URL to request`
+		arg `method: word specifying the HTTP method (e.g., 'GET', 'POST')`
+		arg `data: string containing the request body`
+		returns `native https-request object`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "https-request//Header!" 
+	"Sets a header on a HTTPS request."
+	{
+		arg `request: native https-request object`
+		arg `name: word representing the header name`
+		arg `value: string containing the header value`
+		returns `the request object if successful`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "https-request//Basic-auth!" 
+	"Sets Basic Authentication on a HTTPS request."
+	{
+		arg `request: native https-request object`
+		arg `username: string containing the username`
+		arg `password: string containing the password`
+		returns `the request object if successful`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "https-request//Call" 
+	"Executes a HTTPS request and returns the response object. Always returns the response regardless of status code (200, 404, 500, etc.) - use Status? to check the code."
+	{
+		arg `request: native https-request object`
+		returns `native https-response object (always returns response regardless of status code)`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "https-response//Reader" 
+	"Gets a reader for the HTTPS response body that can be used with io.Copy."
+	{
+		arg `response: native https-response object`
+		returns `native reader object for the response body`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "https-response//Read-body" 
+	"Reads the body of a HTTPS response as a string."
+	{
+		arg `response: native https-response object`
+		returns `string containing the response body`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+}
+
+section "Email Operations " "Email sending and SMTP communication" {
+	group "email//Send" 
+	"Sends an email to the specified address."
+	{
+		arg `to: email address to send to`
+		arg `message: string containing the email message`
+		returns `integer 1 if successful`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+}
+
+section "FTP Operations " "File Transfer Protocol operations and connections" {
+	group "ftp-uri//Open" 
+	"Opens a connection to an FTP server."
+	{
+		arg `server: uri representing the FTP server to connect to`
+		returns `native ftp-connection object`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "ftp-connection//Login" 
+	"Logs in to an FTP server connection."
+	{
+		arg `connection: native ftp-connection object`
+		arg `username: string containing the username`
+		arg `password: string containing the password`
+		returns `the connection object if successful`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "ftp-connection//Retrieve" 
+	"Retrieves a file from an FTP server."
+	{
+		arg `connection: native ftp-connection object`
+		arg `path: string containing the path of the file to retrieve`
+		returns `native reader object for the retrieved file`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+}
+
+section "File Monitoring " "File watching and tailing operations" {
+	group "tail-file" 
+	"Tails a file, following it for new content. Used for monitoring log files."
+	{
+		arg `path: uri or string representing the file to tail`
+		arg `follow: boolean indicating whether to follow the file for new content`
+		arg `reopen: boolean indicating whether to reopen the file if it's rotated`
+		returns `native tail-file object that can be used to read lines as they are added`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "tail-file//Read-line" 
+	"Reads the next line from a tailed file. Blocks until a line is available."
+	{
+		arg `tail: native tail-file object`
+		returns `string containing the next line from the file, or nil if no more lines`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "tail-file//Close" 
+	"Closes a tailed file, stopping the monitoring."
+	{
+		arg `tail: native tail-file object`
+		returns `empty string if successful`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+}
+
+section "Command Operations " "Running other programs" {
+	group "cmd" 
+	"Create a command."
+	{
+		arg `command: block or list containing a command arguments`
+		returns `native command object`
+	}
+
+	{
+		equal { cmd { echo -n Hello World } |Output } "Hello World"
+		equal { cmd { echo -n Hello World |tr A-Z a-z |sed "s/hello/goodbye/" } |Output } "goodbye world"
+		equal { cmd { echo -n "1 + 1 =" { 1 + 1 } } |Output } "1 + 1 = 2"
+		equal { args: list { "two" "arguments" } cmd { printf "'%s' " ?args } |Output } "'two' 'arguments' "
+	}
+
+	{
+``	}
+
+	group "command//Dir!" 
+	"Change the working directory of a command."
+	{
+		arg `command: native command object`
+		arg `dir: path to the working directory`
+		returns `the original command object`
+	}
+
+	{
+		equal { cmd { pwd } |Dir! %/ |Output |trim } "/"
+	}
+
+	{
+``	}
+
+	group "command//Stdin!" 
+	"Change the standard input of a command."
+	{
+		arg `command: native command object`
+		arg `input: path to an input file, a native file object, or a reader`
+		returns `the original command object`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "command//Stdout!" 
+	"Change the standard output of a command."
+	{
+		arg `command: native command object`
+		arg `output: path to an output file, a native file object, or a writer`
+		returns `the original command object`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "command//Stderr!" 
+	"Change the standard error of a command."
+	{
+		arg `command: native command object`
+		arg `output: path to an output file, a native file object, or a writer`
+		returns `the original command object`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "command//Pipe" 
+	"Pipe the output of the first command to the input of the second command."
+	{
+		arg `c1: first command writing to the pipe`
+		arg `c2: second command reading from the pipe`
+		returns `new native command object`
+	}
+
+	{
+		equal { cmd { echo -n Hello World } |Pipe cmd { tr a-z A-Z } |Output } "HELLO WORLD"
+	}
+
+	{
+``	}
+
+	group "command//Run" 
+	"Start a command and wait for it to finish."
+	{
+		arg `command: native command object`
+	}
+
+	{
+		error { cmd { false } |Run }
+	}
+
+	{
+``	}
+
+	group "command//Status" 
+	"Start a command, wait for it to finish, and return its exit status."
+	{
+		arg `command: native command object`
+		returns `for simple command: exit status integerfor pipeline: list of exit status integers`
+	}
+
+	{
+		equal { cmd { true } |Status } 0
+		equal { cmd { false } |Status } 1
+		equal { cmd { false |true } |Status } list [ 1 0 ]
+	}
+
+	{
+``	}
+
+	group "command//Output" 
+	"Start a command, wait for it to finish, and return its standard output"
+	{
+		arg `command: native command object`
+		returns `string containing data written to the command's standard output`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "command//CombinedOutput" 
+	"Start a command, wait for it to finish, and return its combined standard output and error"
+	{
+		arg `command: native command object`
+		returns `string containing data written to the command's standard output and error`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+}
+
+section "SQLite " "SQLite database functions" {
+	group "sqlite-uri//Open" 
+	"Opens a connection to a SQLite database file."
+	{
+		arg `uri: path to SQLite database file`
+		returns `native SQLite database connection`
+	}
+
+	{
+		equal { Open sqlite://test.db |type? } 'native
+	}
+
+	{
+``	}
+
+	group "htmlize" 
+	"Converts a table to HTML format."
+	{
+		arg `table: table to convert to HTML`
+		returns `string containing HTML representation of the table`
+	}
+
+	{
+		equal { table { "name" "age" } { "Bob" 25 "Alice" 30 } |htmlize |type? } 'string
+	}
+
+	{
+``	}
+
+	group "Rye-sqlite//Exec" 
+	"Executes a SQL statement that doesn't return rows."
+	{
+		arg `db: SQLite database connection`
+		arg `sql: SQL statement as string or block`
+		returns `database connection`
+	}
+
+	{
+		equal { Open sqlite://test.db |Exec "CREATE TABLE IF NOT EXISTS test (id INTEGER, name TEXT)" |type? } 'native
+	}
+
+	{
+``	}
+
+	group "Rye-sqlite//Query" 
+	"Executes a SQL query and returns results as a table."
+	{
+		arg `db: SQLite database connection`
+		arg `sql: SQL query as string or block`
+		returns `table containing query results`
+	}
+
+	{
+		equal { Open sqlite://test.db |Query "SELECT * FROM test" |type? } 'table
+	}
+
+	{
+``	}
+
+	group "Rye-sqlite//Show-SQL" 
+	"Generates and returns the SQL string without executing it."
+	{
+		arg `db: SQLite database connection`
+		arg `sql: SQL query as string or block`
+		returns `string containing the generated SQL with parameters`
+	}
+
+	{
+		equal { id: 123 Open sqlite://test.db |Show-SQL { SELECT * FROM test WHERE id = ?id } |type? } 'string
+	}
+
+	{
+``	}
+
+}
+
+section "PostgreSQL " "" {
+	group "postgres-uri//Open" 
+	"Opens a connection to a PostgreSQL database."
+	{
+		arg `uri: PostgreSQL connection string URI (format: postgres://username:password@host:port/database)`
+		returns `native PostgreSQL database connection (type: "Rye-psql")error if connection fails`
+	}
+
+	{
+		example { Open postgres://user:pass@localhost:5432/dbname }
+	}
+
+	{
+``	}
+
+	group "Rye-psql//Exec" 
+	"Executes a SQL statement that modifies data (INSERT, UPDATE, DELETE)."
+	{
+		arg `db: PostgreSQL database connection (type: "Rye-psql")`
+		arg `sql: SQL statement as string or block (for data modification: INSERT, UPDATE, DELETE)`
+		returns `integer number of rows affectederror if execution fails`
+	}
+
+	{
+	}
+
+	{
+`Open postgres://user:pass@localhost:5432/dbname
+|Exec { INSERT INTO test VALUES ( 1 , "test" ) }
+; mind the mandatory spacing in SQL dialect
+`	}
+
+	group "Rye-psql//Query" 
+	"Executes a SQL query and returns results as a table."
+	{
+		arg `db: PostgreSQL database connection (type: "Rye-psql")`
+		arg `sql: SQL query as string or block (SELECT statements)`
+		returns `table containing query results (SQL NULL values converted to Void{})error if query fails or returns no data`
+	}
+
+	{
+	}
+
+	{
+`db: Open postgres://user:pass@localhost:5432/dbname
+db .Query "SELECT * FROM test"
+`	}
+
+	group "Rye-psql//Show-SQL" 
+	"Generates and returns the SQL string without executing it."
+	{
+		arg `db: PostgreSQL database connection (type: "Rye-psql")`
+		arg `sql: SQL query as string or block (for debugging/inspection)`
+		returns `string containing the generated SQL with parameters (includes parameter comments if present)error if SQL is empty`
+	}
+
+	{
+	}
+
+	{
+`name: "Bob"
+Open postgres://user:pass@localhost:5432/dbname
+|Show-SQL {  SELECT * FROM users WHERE first_name = ?name}
+`	}
+
+}
+
+section "MySQL " "MySQL database functions" {
+	group "mysql-uri//Open" 
+	"Opens a connection to a MySQL database."
+	{
+		arg `uri: MySQL connection string URI`
+		returns `native MySQL database connection`
+	}
+
+	{
+	}
+
+	{
+`Open mysql://user:pass@tcp(localhost)/dbname
+`	}
+
+	group "mysql-uri//Open\\pwd" 
+	"Opens a connection to a MySQL database with separate password parameter."
+	{
+		arg `uri: MySQL connection string URI without password`
+		arg `password: Password for the database connection`
+		returns `native MySQL database connection`
+	}
+
+	{
+	}
+
+	{
+`equal { Open\pwd mysql://user@tcp(localhost:3306)/dbname" "password"
+`	}
+
+	group "Rye-mysql//Exec" 
+	"Executes a SQL statement that modifies data (INSERT, UPDATE, DELETE)."
+	{
+		arg `db: MySQL database connection`
+		arg `sql: SQL statement as string or block`
+		returns `integer 1 if rows were affected, error otherwise`
+	}
+
+	{
+	}
+
+	{
+`Open mysql://user:pass@tcp(localhost:3306)/dbname" ,
+|Exec { INSERT INTO test VALUES ( 1 , "test" ) }
+`	}
+
+	group "Rye-mysql//Query" 
+	"Executes a SQL query and returns results as a table."
+	{
+		arg `db: MySQL database connection`
+		arg `sql: SQL query as string or block`
+		returns `table containing query results`
+	}
+
+	{
+	}
+
+	{
+`id: 101
+db: Open mysql://user:pass@tcp(localhost:3306)/dbname
+db .Query { SELECT * FROM test where id = ?id }
+`	}
+
+}
+
