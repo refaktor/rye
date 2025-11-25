@@ -1,5 +1,0 @@
-1 "Johnnie Walker" Diadego 14490
-2 "Ballantine's" "Pernod Ricard" 5757
-3 "Grant's" "Wm Grants" 4046
-4 Chivas "Pernod Ricard" 3526
-5 "J & B" Diadego 3160
