@@ -1,5 +1,0 @@
-rye .needs { http }
-
-http-server ":8086"
-|Handle "/" fn { w r } { do\in os { load-avg? |to-json |Write* w } }
-|Serve
