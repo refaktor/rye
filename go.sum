@@ -77,8 +77,8 @@ github.com/bits-and-blooms/bitset v1.22.0 h1:Tquv9S8+SGaS3EhyA+up3FXzmkhxPGjQQCk
 github.com/bits-and-blooms/bitset v1.22.0/go.mod h1:7hO7Gc7Pp1vODcmWvKMRA9BNmbv6a/7QIWpPxHddWR8=
 github.com/blevesearch/bleve/v2 v2.5.4 h1:1iur8e+PHsxtncV2xIVuqlQme/V8guEDO2uV6Wll3lQ=
 github.com/blevesearch/bleve/v2 v2.5.4/go.mod h1:yB4PnV4N2q5rTEpB2ndG8N2ISexBQEFIYgwx4ztfvoo=
-github.com/blevesearch/bleve_index_api v1.2.10 h1:FMFmZCmTX6PdoLLvwUnKF2RsmILFFwO3h0WPevXY9fE=
-github.com/blevesearch/bleve_index_api v1.2.10/go.mod h1:rKQDl4u51uwafZxFrPD1R7xFOwKnzZW7s/LSeK4lgo0=
+github.com/blevesearch/bleve_index_api v1.2.11 h1:bXQ54kVuwP8hdrXUSOnvTQfgK0KI1+f9A0ITJT8tX1s=
+github.com/blevesearch/bleve_index_api v1.2.11/go.mod h1:rKQDl4u51uwafZxFrPD1R7xFOwKnzZW7s/LSeK4lgo0=
 github.com/blevesearch/geo v0.2.4 h1:ECIGQhw+QALCZaDcogRTNSJYQXRtC8/m8IKiA706cqk=
 github.com/blevesearch/geo v0.2.4/go.mod h1:K56Q33AzXt2YExVHGObtmRSFYZKYGv0JEN5mdacJJR8=
 github.com/blevesearch/go-faiss v1.0.25 h1:lel1rkOUGbT1CJ0YgzKwC7k+XH0XVBHnCVWahdCXk4U=
@@ -317,8 +317,8 @@ github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd h1:TRLaZ9cD/w
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
 github.com/modern-go/reflect2 v1.0.2 h1:xBagoLtFs94CBntxluKeaWgTMpvLxC4ur3nMaC9Gz0M=
 github.com/modern-go/reflect2 v1.0.2/go.mod h1:yWuevngMOJpCy52FWWMvUC8ws7m/LJsjYzDa0/r8luk=
-github.com/mrz1836/postmark v1.8.2 h1:tlBx8Dyqxpc0HrgrPhHDdSc66cxrkCRBnlPZlqpwAuA=
-github.com/mrz1836/postmark v1.8.2/go.mod h1:0/7m4WMaKl72nWb55H7AIPtuCuvkdEIAjV1jAGCBFIQ=
+github.com/mrz1836/postmark v1.8.1 h1:Mdb5VtM6TZ2pr2a0pbpgu9KEFtHGa1nYpcdDjziyXQU=
+github.com/mrz1836/postmark v1.8.1/go.mod h1:0/7m4WMaKl72nWb55H7AIPtuCuvkdEIAjV1jAGCBFIQ=
 github.com/mschoch/smat v0.2.0 h1:8imxQsjDm8yFEAVBe7azKmKSgzSkZXDuKkSq9374khM=
 github.com/mschoch/smat v0.2.0/go.mod h1:kc9mz7DoBKqDyiRL7VZN8KvXQMWeTaVnttLRXOlotKw=
 github.com/muesli/reflow v0.3.0 h1:IFsN6K9NfGtjeggFP+68I4chLZV2yIKsXJFNZ+eWh6s=
