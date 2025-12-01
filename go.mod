@@ -46,7 +46,6 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/mattn/go-runewidth v0.0.19
 	github.com/mhale/smtpd v0.8.3
-	github.com/mlange-42/ark v0.6.0
 	github.com/mrz1836/postmark v1.8.1
 	github.com/muesli/reflow v0.3.0
 	github.com/openai/openai-go v1.12.0
@@ -61,7 +60,7 @@ require (
 	go.mongodb.org/mongo-driver v1.17.6
 	golang.org/x/crypto v0.43.0
 	golang.org/x/net v0.46.0
-	golang.org/x/sync v0.17.0
+	golang.org/x/sync v0.18.0
 	golang.org/x/term v0.36.0
 	golang.org/x/text v0.30.0
 	gopkg.in/headzoo/surf.v1 v1.0.1
