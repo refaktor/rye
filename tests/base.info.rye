@@ -3013,6 +3013,26 @@ section "Flow control " "Functions for conditional execution and branching logic
 	{
 ``	}
 
+	group "choose" 
+	"Returns the first or second value from a block of two values based on a boolean condition."
+	{
+		arg `condition: Boolean value determining which value to return`
+		arg `values: Block containing exactly two values`
+		returns `first value if condition is true, second value if condition is false`
+	}
+
+	{
+		equal  { choose true [ 1 -1 ] } 1
+		equal  { choose false [ 1 -1 ] } -1
+		equal  { choose 10 > 5 [ "yes" "no" ] } "yes"
+		equal  { choose 3 < 2 [ "yes" "no" ] } "no"
+		error  { choose 1 [ 1 -1 ] }
+		error  { choose true [ 1 ] }
+	}
+
+	{
+``	}
+
 	group "switch" 
 	"Pattern matching construct that executes a block of code corresponding to the first matching case value."
 	{
