@@ -891,7 +891,7 @@ var Builtins_table = map[string]*env.Builtin{
 					}
 					switch updater := arg2.(type) {
 					case env.Function:
-						CallFunction(updater, ps, spr.Rows[idx.Value-1], false, ps.Ctx)
+						CallFunction_CollectArgs(updater, ps, spr.Rows[idx.Value-1], false, ps.Ctx)
 						ret := ps.Res
 						if ok, err, row := RyeValueToTableRow(spr, ret); ok {
 							spr.Rows[idx.Value-1] = *row

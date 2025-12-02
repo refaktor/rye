@@ -50,7 +50,7 @@ var Builtins_gin = map[string]*env.Builtin{
 							c.String(http.StatusInternalServerError, "Middleware error")
 							return
 						}
-						CallFunction(middleware, &psTemp, *env.NewNative(ps.Idx, c, "Gin-context"), false, nil)
+						CallFunction_CollectArgs(middleware, &psTemp, *env.NewNative(ps.Idx, c, "Gin-context"), false, nil)
 						if psTemp.FailureFlag || psTemp.ErrorFlag {
 							c.Abort()
 							return
@@ -86,7 +86,7 @@ var Builtins_gin = map[string]*env.Builtin{
 							c.String(http.StatusInternalServerError, "Middleware error")
 							return
 						}
-						CallFunction(middleware, &psTemp, *env.NewNative(ps.Idx, c, "Gin-context"), false, nil)
+						CallFunction_CollectArgs(middleware, &psTemp, *env.NewNative(ps.Idx, c, "Gin-context"), false, nil)
 						if psTemp.FailureFlag || psTemp.ErrorFlag {
 							c.Abort()
 							return
@@ -228,7 +228,7 @@ var Builtins_gin = map[string]*env.Builtin{
 								c.String(http.StatusInternalServerError, "Internal error")
 								return
 							}
-							CallFunction(handler, &psTemp, *env.NewNative(ps.Idx, c, "Gin-context"), false, nil)
+							CallFunction_CollectArgs(handler, &psTemp, *env.NewNative(ps.Idx, c, "Gin-context"), false, nil)
 							// TODO: don't display if not in debug mode
 							if psTemp.FailureFlag {
 								c.String(http.StatusInternalServerError, psTemp.Res.Inspect(*ps.Idx))
@@ -275,7 +275,7 @@ var Builtins_gin = map[string]*env.Builtin{
 								c.String(http.StatusInternalServerError, "Internal error")
 								return
 							}
-							CallFunction(handler, &psTemp, *env.NewNative(ps.Idx, c, "Gin-context"), false, nil)
+							CallFunction_CollectArgs(handler, &psTemp, *env.NewNative(ps.Idx, c, "Gin-context"), false, nil)
 						})
 						return arg0
 					default:
@@ -313,7 +313,7 @@ var Builtins_gin = map[string]*env.Builtin{
 								c.String(http.StatusInternalServerError, "Internal error")
 								return
 							}
-							CallFunction(handler, &psTemp, *env.NewNative(ps.Idx, c, "Gin-context"), false, nil)
+							CallFunction_CollectArgs(handler, &psTemp, *env.NewNative(ps.Idx, c, "Gin-context"), false, nil)
 						})
 						return arg0
 					default:
@@ -351,7 +351,7 @@ var Builtins_gin = map[string]*env.Builtin{
 								c.String(http.StatusInternalServerError, "Internal error")
 								return
 							}
-							CallFunction(handler, &psTemp, *env.NewNative(ps.Idx, c, "Gin-context"), false, nil)
+							CallFunction_CollectArgs(handler, &psTemp, *env.NewNative(ps.Idx, c, "Gin-context"), false, nil)
 						})
 						return arg0
 					default:
@@ -458,7 +458,7 @@ var Builtins_gin = map[string]*env.Builtin{
 								c.String(http.StatusInternalServerError, "Internal error")
 								return
 							}
-							CallFunction(handler, &psTemp, *env.NewNative(ps.Idx, c, "Gin-context"), false, nil)
+							CallFunction_CollectArgs(handler, &psTemp, *env.NewNative(ps.Idx, c, "Gin-context"), false, nil)
 						})
 						return arg0
 					default:
@@ -496,7 +496,7 @@ var Builtins_gin = map[string]*env.Builtin{
 								c.String(http.StatusInternalServerError, "Internal error")
 								return
 							}
-							CallFunction(handler, &psTemp, *env.NewNative(ps.Idx, c, "Gin-context"), false, nil)
+							CallFunction_CollectArgs(handler, &psTemp, *env.NewNative(ps.Idx, c, "Gin-context"), false, nil)
 						})
 						return arg0
 					default:

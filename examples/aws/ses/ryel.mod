@@ -1,3 +1,0 @@
-tiny
-aws
-email

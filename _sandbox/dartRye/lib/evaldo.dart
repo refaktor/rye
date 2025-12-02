@@ -72,7 +72,7 @@ bool evalExpression(ProgramState ps, RyeObject? inj, bool injnow, bool limited) 
   RyeObject? originalRes = ps.res; // Store result before potential opword evaluation
 
   if (inj == null || !injnow) {
-    evalExpressionConcrete(ps, limited: limited); // Pass limited flag
+    EvalExpression_DispatchType(ps, limited: limited); // Pass limited flag
     if (ps.returnFlag || ps.errorFlag) { // Check flags *after* concrete evaluation
       return false; // Injection not used for the next expression if error/return
     }
@@ -104,8 +104,8 @@ bool evalExpression(ProgramState ps, RyeObject? inj, bool injnow, bool limited) 
 }
 
 
-// Evaluates a concrete Rye object (mirrors Go's EvalExpressionConcrete)
-void evalExpressionConcrete(ProgramState ps, {bool limited = false}) { // Added limited, though might not be used directly here
+// Evaluates a concrete Rye object (mirrors Go's EvalExpression_DispatchType)
+void EvalExpression_DispatchType(ProgramState ps, {bool limited = false}) { // Added limited, though might not be used directly here
   RyeObject? object = ps.ser.pop();
   if (object == null) {
     ps.setError00("Expected Rye value but got to the end of the block"); // Use ps.setError00
@@ -341,7 +341,7 @@ void evalGetword(ProgramState ps, Getword word) {
 }
 
 // Evaluates a Setword (e.g., name:) (mirrors Go's EvalSetword)
-// Note: Also handled specially in evalExpressionConcrete
+// Note: Also handled specially in EvalExpression_DispatchType
 void evalSetword(ProgramState ps, Setword word) {
   // Evaluate the expression to the right
   evalExpression(ps, null, false, false); // Not limited
@@ -839,7 +839,7 @@ void maybeEvalOpwordOnRight(ProgramState ps, {bool limited = false}) {
          maybeEvalOpwordOnRight(ps, limited: limited);
       }
     }
-    // Mode 0 CPaths are handled by evalExpressionConcrete calling evalWord
+    // Mode 0 CPaths are handled by EvalExpression_DispatchType calling evalWord
   }
 }
 

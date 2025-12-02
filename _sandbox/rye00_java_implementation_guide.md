@@ -1282,7 +1282,7 @@ public class Rye00Evaluator {
     }
     
     // Evaluates a concrete expression
-    public static void evalExpressionConcrete(ProgramState ps) {
+    public static void EvalExpression_DispatchType(ProgramState ps) {
         RyeObject object = ps.getSer().pop();
         
         if (object == null) {
@@ -1324,7 +1324,7 @@ public class Rye00Evaluator {
         // Handle Setword objects
         if (word instanceof Setword) {
             // Get the next value
-            evalExpressionConcrete(ps);
+            EvalExpression_DispatchType(ps);
             
             if (ps.isErrorFlag() || ps.isFailureFlag()) {
                 return;
@@ -1380,7 +1380,7 @@ public class Rye00Evaluator {
         // Process first argument if needed
         if (bi.getArgsn() > 0 && bi.getCur0() == null) {
             // Direct call to avoid function pointer indirection
-            evalExpressionConcrete(ps);
+            EvalExpression_DispatchType(ps);
             
             // Inline error checking for speed
             if (ps.isFailureFlag()) {
@@ -1400,7 +1400,7 @@ public class Rye00Evaluator {
         
         // Process second argument if needed
         if (bi.getArgsn() > 1 && bi.getCur1() == null) {
-            evalExpressionConcrete(ps);
+            EvalExpression_DispatchType(ps);
             
             // Inline error checking for speed
             if (ps.isFailureFlag()) {
@@ -1420,7 +1420,7 @@ public class Rye00Evaluator {
         
         // Process third argument if needed
         if (bi.getArgsn() > 2 && bi.getCur2() == null) {
-            evalExpressionConcrete(ps);
+            EvalExpression_DispatchType(ps);
             
             // Inline error checking for speed
             if (ps.isFailureFlag()) {
@@ -1440,12 +1440,12 @@ public class Rye00Evaluator {
         
         // Process remaining arguments with minimal error checking
         if (bi.getArgsn() > 3 && bi.getCur3() == null) {
-            evalExpressionConcrete(ps);
+            EvalExpression_DispatchType(ps);
             arg3 = ps.getRes();
         }
         
         if (bi.getArgsn() > 4 && bi.getCur4() == null) {
-            evalExpressionConcrete(ps);
+            EvalExpression_DispatchType(ps);
             arg4 = ps.getRes();
         }
         
@@ -1478,7 +1478,7 @@ public class Rye00Evaluator {
     // Evaluates a block with an optional injected value
     public static ProgramState evalBlockInj(ProgramState ps, RyeObject inj, boolean injnow) {
         while (ps.getSer().getPos() < ps.getSer().len()) {
-            evalExpressionConcrete(ps);
+            EvalExpression_DispatchType(ps);
             
             if (checkFlagsAfterExpression(ps)) {
                 return ps;

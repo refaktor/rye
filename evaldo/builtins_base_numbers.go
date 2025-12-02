@@ -90,15 +90,15 @@ var builtins_numbers = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { decr 124 } 123
-	// equal { decr 1 } 0
-	// equal { decr -4 } -5
-	// error { decr "123" }
+	// equal { dec 124 } 123
+	// equal { dec 1 } 0
+	// equal { dec -4 } -5
+	// error { dec "123" }
 	// Args:
 	// * value: Integer to decrement
 	// Returns:
 	// * integer value decremented by 1
-	"decr": { // ***
+	"dec": { // ***
 		Argsn: 1,
 		Doc:   "Decrements an integer value by 1.",
 		Pure:  true,
@@ -107,7 +107,7 @@ var builtins_numbers = map[string]*env.Builtin{
 			case env.Integer:
 				return *env.NewInteger(arg.Value - 1)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "decr")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "dec")
 			}
 		},
 	},
@@ -213,6 +213,45 @@ var builtins_numbers = map[string]*env.Builtin{
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "is-positive")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { sign 123 } 1
+	// equal { sign -123 } -1
+	// equal { sign 0 } 0
+	// equal { sign 5.5 } 1
+	// equal { sign -0.5 } -1
+	// error { sign "123" }
+	// Args:
+	// * value: Integer or decimal to check
+	// Returns:
+	// * boolean true if the value is positive, false otherwise
+	"sign": { // ***
+		Argsn: 1,
+		Doc:   "Checks if a number is positive (greater than zero).",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg := arg0.(type) {
+			case env.Integer:
+				if arg.Value > 0 {
+					return *env.NewInteger(1)
+				} else if arg.Value == 0 {
+					return *env.NewInteger(0)
+				} else {
+					return *env.NewInteger(-1)
+				}
+			case env.Decimal:
+				if arg.Value > 0 {
+					return *env.NewInteger(1)
+				} else if arg.Value == 0.0 {
+					return *env.NewInteger(0)
+				} else {
+					return *env.NewInteger(-1)
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType}, "sign")
 			}
 		},
 	},

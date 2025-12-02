@@ -1,5 +1,0 @@
-
-read %calories.txt 
-|split "\n\n" 
-|map { .load .sum } 
-|max

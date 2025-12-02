@@ -2526,6 +2526,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_stackless, ps, "stackless")
 	RegisterBuiltins2(Builtins_eyr, ps, "eyr")
 	RegisterBuiltins2(Builtins_goroutines, ps, "goroutines")
+	RegisterBuiltins2(Builtins_msgdispatcher, ps, "msgdispatcher")
 	RegisterBuiltins2(Builtins_http, ps, "http")
 	RegisterBuiltinsInContext(Builtins_gin, ps, "gin")
 	RegisterBuiltins2(Builtins_sqlite, ps, "sqlite")

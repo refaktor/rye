@@ -354,7 +354,7 @@ func (pce *PersistentCtxEvaluator) EvalBlock() {
 		default:
 			// For all other operations, put the object back and use normal evaluation
 			pce.ps.Ser.SetPos(pce.ps.Ser.Pos() - 1) // Put object back
-			EvalExpressionConcrete(pce.ps)
+			EvalExpression_DispatchType(pce.ps)
 		}
 
 		if pce.ps.SkipFlag {
@@ -367,7 +367,7 @@ func (pce *PersistentCtxEvaluator) EvalBlock() {
 // handleSetword processes setwords to ensure persistence
 func (pce *PersistentCtxEvaluator) handleSetword(sw env.Setword) {
 	// First evaluate the next expression to get the value to set
-	EvalExpressionConcrete(pce.ps)
+	EvalExpression_DispatchType(pce.ps)
 	if pce.ps.ErrorFlag || pce.ps.FailureFlag {
 		return
 	}

@@ -110,7 +110,7 @@ docs-framework: context {
 }
 
 generate-menu: fn { menu } {
-	.fold 'acc "" { ::x acc .concat " &middot; <a class='menu-item' id='maintab-{{}}' href='{{}}.html'>{{}}</a>" .replace "{{}}" x }
+	.fold\do 'acc "" { ::x acc .concat " &middot; <a class='menu-item' id='maintab-{{}}' href='{{}}.html'>{{}}</a>" .replace "{{}}" x }
 }
 
 generate-doc-file: fn { filename menu } {

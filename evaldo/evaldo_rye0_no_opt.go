@@ -61,7 +61,7 @@ func Rye0_EvalWord_NoOpt(ps *env.ProgramState, word env.Object, leftVal env.Obje
 		// Evaluate next expression if needed
 		if (leftVal == nil && !pipeSecond) || pipeSecond {
 			if !ps.Ser.AtLast() {
-				Rye0_EvalExpressionConcrete_NoOpt(ps)
+				Rye0_EvalExpression_DispatchType_NoOpt(ps)
 				if ps.ReturnFlag {
 					return ps
 				}
@@ -95,8 +95,8 @@ func Rye0_EvalWord_NoOpt(ps *env.ProgramState, word env.Object, leftVal env.Obje
 	}
 }
 
-// Rye0_EvalExpressionConcrete_NoOpt evaluates a concrete expression without the word replacement optimization.
-func Rye0_EvalExpressionConcrete_NoOpt(ps *env.ProgramState) *env.ProgramState {
+// Rye0_EvalExpression_DispatchType_NoOpt evaluates a concrete expression without the word replacement optimization.
+func Rye0_EvalExpression_DispatchType_NoOpt(ps *env.ProgramState) *env.ProgramState {
 	object := ps.Ser.Pop()
 
 	if object == nil {
@@ -165,7 +165,7 @@ func Rye0_EvaluateBlock_NoOpt(ps *env.ProgramState, block env.Block) *env.Progra
 		res := make([]env.Object, 0, estimatedSize)
 
 		for ps.Ser.Pos() < ps.Ser.Len() {
-			Rye0_EvalExpression2_NoOpt(ps, false)
+			Rye0_EvalExpression_CollectArg_NoOpt(ps, false)
 			if Rye0_checkErrorReturnFlag(ps) {
 				ps.Ser = ser // Restore original series
 				return ps
@@ -187,16 +187,16 @@ func Rye0_EvaluateBlock_NoOpt(ps *env.ProgramState, block env.Block) *env.Progra
 	return ps
 }
 
-// Rye0_EvalExpression2_NoOpt evaluates an expression with optional limitations without the word replacement optimization.
-func Rye0_EvalExpression2_NoOpt(ps *env.ProgramState, limited bool) *env.ProgramState {
-	Rye0_EvalExpressionConcrete_NoOpt(ps)
+// Rye0_EvalExpression_CollectArg_NoOpt evaluates an expression with optional limitations without the word replacement optimization.
+func Rye0_EvalExpression_CollectArg_NoOpt(ps *env.ProgramState, limited bool) *env.ProgramState {
+	Rye0_EvalExpression_DispatchType_NoOpt(ps)
 	return ps
 }
 
 // EvalBlock_NoOpt evaluates a block without the word replacement optimization.
 func EvalBlock_NoOpt(ps *env.ProgramState) *env.ProgramState {
 	for ps.Ser.Pos() < ps.Ser.Len() {
-		Rye0_EvalExpression2_NoOpt(ps, false)
+		Rye0_EvalExpression_CollectArg_NoOpt(ps, false)
 		if Rye0_checkFlagsAfterBlock(ps, 101) || Rye0_checkErrorReturnFlag(ps) {
 			return ps
 		}
