@@ -4,7 +4,9 @@
 package evaldo
 
 import (
+	"fmt"
 	"os"
+	"time"
 
 	"github.com/muesli/reflow/indent"
 	"github.com/muesli/reflow/wordwrap"
@@ -668,6 +670,62 @@ var Builtins_term = map[string]*env.Builtin{
 		Doc:   "Returns ANSI escape code string to reset all terminal text styles and colors.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return *env.NewString(term.StrCloseProps())
+		},
+	},
+
+	// like time-it - maybe change name
+	"spin-it": {
+		Argsn: 2,
+		Doc:   "Takes a block of code and a message string, shows a spinner with the message while evaluating",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg1.(type) {
+			case env.Block:
+				switch msg := arg0.(type) {
+				case env.String:
+
+					done := make(chan bool)
+					spinnerDone := make(chan bool)
+
+					go func() {
+						ser := ps.Ser
+						ps.Ser = bloc.Series
+						ps.BlockFile = bloc.FileName
+						ps.BlockLine = bloc.Line
+						EvalBlock(ps)
+						ps.Ser = ser
+						done <- true
+					}()
+
+					// Spinner characters
+					spinner := []rune{'|', '/', '-', '\\'}
+					i := 0
+
+					// Show spinner until process completes
+					go func() {
+						for {
+							select {
+							case <-done:
+								fmt.Printf("\r")
+								spinnerDone <- true
+								return
+							default:
+								fmt.Printf("\r%s %c", msg.Value, spinner[i%len(spinner)])
+								i++
+								time.Sleep(120 * time.Millisecond)
+							}
+						}
+					}()
+
+					// Wait for the spinner to finish
+					<-spinnerDone
+					return ps.Res
+				default:
+					return MakeArgError(ps, 1, []env.Type{env.StringType}, "spin-it")
+				}
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "spin-it")
+			}
 		},
 	},
 }

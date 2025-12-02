@@ -14,7 +14,7 @@ import (
 // 									če je builtin potem pusha trenuten frame na stack in kreira novega
 
 func Stck_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft bool) *env.ProgramState {
-	evalExprFn := EvalExpression2
+	evalExprFn := EvalExpression_CollectArg
 	var arg0 env.Object
 	var arg1 env.Object
 

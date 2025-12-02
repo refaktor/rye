@@ -141,7 +141,7 @@ func EvalBlockInCtxInj(ps *env.ProgramState, ctx *env.RyeCtx, inj env.Object, in
 // Consolidated evaluation function that handles both regular and injected evaluation
 func EvalExpression(ps *env.ProgramState, inj env.Object, injnow bool, limited bool) bool {
 	if inj == nil || !injnow {
-		EvalExpressionConcrete(ps)
+		EvalExpression_DispatchType(ps)
 		if ps.ReturnFlag || ps.ErrorFlag {
 			return injnow
 		}
@@ -152,12 +152,12 @@ func EvalExpression(ps *env.ProgramState, inj env.Object, injnow bool, limited b
 			return injnow
 		}
 	}
-	MaybeEvalOpwordOnRight(ps.Ser.Peek(), ps, limited)
+	OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited)
 	return injnow
 }
 
-// Replace EvalExpression2 with a call to EvalExpression
-func EvalExpression2(ps *env.ProgramState, limited bool) {
+// Replace EvalExpression_CollectArg with a call to EvalExpression
+func EvalExpression_CollectArg(ps *env.ProgramState, limited bool) {
 	EvalExpression(ps, nil, false, limited)
 }
 
@@ -171,21 +171,37 @@ func EvalExpressionInjLimited(ps *env.ProgramState, inj env.Object, injnow bool)
 	return EvalExpression(ps, inj, injnow, true)
 }
 
-// this function get's the next object (unevaluated), progra state, limited bool (op or pipe)
-// first if there is return flag it returns (not sure if this is necesarry here) TODO -- figure out
-// if next object is opword it steps to next and evaluates the word then recurse  to maybe again
-// if next object is pipeword
+// OptionallyEvalExpressionRight implements operator chaining by checking if there's an operator or special word
+// immediately to the right of the current expression and evaluating it if found.
 //
-//	on limited return (what is limited exactly ? TODO)
-//	step to next word and evaluate it
-//	again check for return flag
-//	check for failure flag and cwitch to error ... doesn't one of checkFlags do this or similar? .TODO
-//	recurse again
+// This is the mechanism that enables infix notation and left-to-right evaluation chains like:
+//   - Arithmetic: "1 + 2 + 3" → evaluates left-to-right as (1 + 2) + 3
+//   - Pipes: "x |> func1 |> func2" → chains function calls
+//   - Assignment chains: "result: calculate x y" → assigns result of calculation
 //
-// if next is lsetword
+// The function works recursively:
+//  1. Peeks at the next object in the series (nextObj)
+//  2. If it's an operator/special word, consumes it and evaluates with current result (ps.Res) as left argument
+//  3. Recursively calls itself to check for more operators to the right
+//  4. Stops when it reaches a regular value or when 'limited' flag restricts chaining
 //
-//	set the value to word and recurse
-func MaybeEvalOpwordOnRight(nextObj env.Object, ps *env.ProgramState, limited bool) {
+// Handles these special word types:
+//   - Opword (+, -, *, etc.): Binary operators that use previous result as first argument
+//   - Pipeword (|>): Pipes result to next function (respects 'limited' flag)
+//   - LSetword (:): Assigns current result to a word
+//   - LModword (::): Modifies existing word with current result
+//   - CPath: Context path operations (different modes for opcpath vs pipecpath)
+//
+// Parameters:
+//   - nextObj: The next object to potentially evaluate (from ps.Ser.Peek())
+//   - ps: Program state holding current result, series position, context, etc.
+//   - limited: If true, stops at pipe operators (used when collecting function arguments)
+//
+// Early returns happen when:
+//   - nextObj is nil, or error/return flags are set
+//   - nextObj is a regular value type (String, Integer, Block, Word)
+//   - 'limited' is true and a Pipeword or similar is encountered
+func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, limited bool) {
 	if nextObj == nil || ps.ReturnFlag || ps.ErrorFlag {
 		return
 	}
@@ -202,7 +218,7 @@ func MaybeEvalOpwordOnRight(nextObj env.Object, ps *env.ProgramState, limited bo
 		// val := ps.Ser.Pop()
 		ps.Ser.Next()
 		EvalWord(ps, opword.ToWord(), ps.Res, false, opword.Force > 0)
-		MaybeEvalOpwordOnRight(ps.Ser.Peek(), ps, limited)
+		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited)
 		return
 	case env.Pipeword:
 		if limited {
@@ -213,7 +229,7 @@ func MaybeEvalOpwordOnRight(nextObj env.Object, ps *env.ProgramState, limited bo
 		if ps.ReturnFlag {
 			return //... not sure if we need this
 		}
-		MaybeEvalOpwordOnRight(ps.Ser.Peek(), ps, limited)
+		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited)
 		return
 	case env.LSetword:
 		if limited {
@@ -238,7 +254,7 @@ func MaybeEvalOpwordOnRight(nextObj env.Object, ps *env.ProgramState, limited bo
 			}
 		}
 		ps.Ser.Next()
-		MaybeEvalOpwordOnRight(ps.Ser.Peek(), ps, limited)
+		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited)
 		return
 	case env.LModword:
 		if limited {
@@ -265,14 +281,14 @@ func MaybeEvalOpwordOnRight(nextObj env.Object, ps *env.ProgramState, limited bo
 			}
 		}
 		ps.Ser.Next()
-		MaybeEvalOpwordOnRight(ps.Ser.Peek(), ps, limited)
+		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited)
 		return
 	case env.CPath:
 		if opword.Mode == 1 {
 			ps.Ser.Next()
 			EvalWord(ps, opword, ps.Res, false, false)
 			// when calling cpath
-			MaybeEvalOpwordOnRight(ps.Ser.Peek(), ps, limited)
+			OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited)
 			return
 		} else if opword.Mode == 2 {
 			if limited {
@@ -283,7 +299,7 @@ func MaybeEvalOpwordOnRight(nextObj env.Object, ps *env.ProgramState, limited bo
 			if ps.ReturnFlag {
 				return //... not sure if we need this
 			}
-			MaybeEvalOpwordOnRight(ps.Ser.Peek(), ps, limited)
+			OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited)
 			return
 		}
 	}
@@ -292,7 +308,7 @@ func MaybeEvalOpwordOnRight(nextObj env.Object, ps *env.ProgramState, limited bo
 
 // the main part of evaluator, if it were a polish only we would need almost only this
 // switches over all rye values and acts on them
-func EvalExpressionConcrete(ps *env.ProgramState) {
+func EvalExpression_DispatchType(ps *env.ProgramState) {
 	object := ps.Ser.Pop()
 	if object == nil {
 		ps.ErrorFlag = true
@@ -306,7 +322,7 @@ func EvalExpressionConcrete(ps *env.ProgramState) {
 	if objType == env.LocationNodeType {
 		// Skip this node and try the next one
 		if !ps.Ser.AtLast() {
-			EvalExpressionConcrete(ps)
+			EvalExpression_DispatchType(ps)
 		}
 		return
 	}
@@ -331,7 +347,7 @@ func EvalExpressionConcrete(ps *env.ProgramState) {
 			ps.Ser = block.Series
 			res := make([]env.Object, 0)
 			for ps.Ser.Pos() < ps.Ser.Len() {
-				EvalExpression2(ps, false)
+				EvalExpression_CollectArg(ps, false)
 				if ps.ReturnFlag || ps.ErrorFlag {
 					return
 				}
@@ -396,7 +412,7 @@ func EvalExpressionConcrete(ps *env.ProgramState) {
 		EvalWord(ps, object, nil, false, false)
 		return
 	case env.BuiltinType:
-		CallBuiltin(object.(env.Builtin), ps, nil, false, false, nil)
+		CallBuiltin_CollectArgs(object.(env.Builtin), ps, nil, false, false, nil)
 		return
 	case env.VarBuiltinType:
 		CallVarBuiltin(object.(env.VarBuiltin), ps, nil, false, false, nil)
@@ -577,7 +593,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 		}
 		if leftVal == nil && !pipeSecond {
 			if !ps.Ser.AtLast() {
-				EvalExpressionConcrete(ps)
+				EvalExpression_DispatchType(ps)
 				if ps.ReturnFlag || ps.ErrorFlag {
 					return
 				}
@@ -587,7 +603,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 		}
 		if pipeSecond {
 			if !ps.Ser.AtLast() {
-				EvalExpressionConcrete(ps)
+				EvalExpression_DispatchType(ps)
 				if ps.ReturnFlag || ps.ErrorFlag {
 					return
 				}
@@ -618,7 +634,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 // if word is defined to be generic ... I am not sure we will keep this ... we will decide with more use
 // then if explicitly treats it as generic word
 func EvalGenword(ps *env.ProgramState, word env.Genword, leftVal env.Object, toLeft bool) {
-	EvalExpressionConcrete(ps)
+	EvalExpression_DispatchType(ps)
 
 	if ps.ReturnFlag || ps.ErrorFlag {
 		return
@@ -657,11 +673,11 @@ func EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toL
 		if checkForFailureWithBuiltin(bu, ps, 333) {
 			return
 		}
-		CallBuiltin(bu, ps, leftVal, toLeft, pipeSecond, firstVal)
+		CallBuiltin_CollectArgs(bu, ps, leftVal, toLeft, pipeSecond, firstVal)
 		return
 	case env.FunctionType:
 		fn := object.(env.Function)
-		CallFunction(fn, ps, leftVal, toLeft, ctx)
+		CallFunction_CollectArgs(fn, ps, leftVal, toLeft, ctx)
 		return
 	case env.CPathType: // RMME
 		// Check if this is a getcpath (mode 3) - behave like get-word
@@ -672,7 +688,7 @@ func EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toL
 		}
 		// For other CPath modes (opcpath, pipecpath), treat as function
 		fn := object.(env.Function)
-		CallFunction(fn, ps, leftVal, toLeft, ctx)
+		CallFunction_CollectArgs(fn, ps, leftVal, toLeft, ctx)
 		return
 	case env.VarBuiltinType:
 		bu := object.(env.VarBuiltin)
@@ -756,10 +772,10 @@ func CallFunctionWithArgs(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx
 
 	switch len(args) {
 	case 0:
-		CallFunction(fn, ps, nil, false, ctx)
+		CallFunction_CollectArgs(fn, ps, nil, false, ctx)
 		return
 	case 1:
-		CallFunction(fn, ps, args[0], false, ctx)
+		CallFunction_CollectArgs(fn, ps, args[0], false, ctx)
 		return
 	case 2:
 		CallFunctionArgs2(fn, ps, args[0], args[1], ctx)
@@ -781,7 +797,7 @@ var envPool = sync.Pool{
 }
 
 // This method is used in the evaluator and takes arguments from code if needed
-func CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, toLeft bool, ctx *env.RyeCtx) {
+func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0 env.Object, toLeft bool, ctx *env.RyeCtx) {
 	// fmt.Println(1)
 
 	env0 := ps.Ctx // store reference to current env in local
@@ -843,7 +859,7 @@ func CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, toLeft
 
 	ii := 0
 	// evalExprFn := EvalExpression // 2020-01-12 .. changed to ion2
-	evalExprFn := EvalExpression2
+	evalExprFn := EvalExpression_CollectArg
 	if arg0 != nil {
 		if fn.Spec.Series.Len() > 0 {
 			index := fn.Spec.Series.Get(ii).(env.Word).Index
@@ -852,7 +868,7 @@ func CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, toLeft
 			ii = 1
 			if !toLeft {
 				//evalExprFn = EvalExpression_ // 2020-01-12 .. changed to ion2
-				evalExprFn = EvalExpression2
+				evalExprFn = EvalExpression_CollectArg
 			}
 		}
 	}
@@ -1204,7 +1220,7 @@ func CallCurriedCaller(cc env.CurriedCaller, ps *env.ProgramState, arg0_ env.Obj
 		argsn = cc.Function.Argsn
 	}
 
-	evalExprFn := EvalExpression2
+	evalExprFn := EvalExpression_CollectArg
 
 	// Handle arg0 - override with provided arg if available
 	if arg0_ != nil && !pipeSecond {
@@ -1269,7 +1285,7 @@ func CallCurriedCaller(cc env.CurriedCaller, ps *env.ProgramState, arg0_ env.Obj
 
 // CALLING BUILTINS
 
-func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft bool, pipeSecond bool, firstVal env.Object) {
+func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft bool, pipeSecond bool, firstVal env.Object) {
 	////args := make([]env.Object, bi.Argsn)
 	/*pospos := ps.Ser.GetPos()
 	for i := 0; i < bi.Argsn; i += 1 {
@@ -1288,7 +1304,7 @@ func CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft 
 	// Removed experiment with currying since Cur fields were removed from Builtin type
 	// end of experiment
 
-	evalExprFn := EvalExpression2
+	evalExprFn := EvalExpression_CollectArg
 	curry := false
 
 	//fmt.Println("*** BUILTIN ***")
@@ -1388,7 +1404,7 @@ func CallVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, arg0_ env.Object, t
 			args[ii] = firstVal
 			ii++
 		} else if bi.Argsn > 0 {
-			EvalExpression2(ps, true)
+			EvalExpression_CollectArg(ps, true)
 			if ps.ReturnFlag || ps.ErrorFlag {
 				return
 			}
@@ -1401,7 +1417,7 @@ func CallVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, arg0_ env.Object, t
 			args[ii] = arg0_
 			ii++
 		} else if bi.Argsn > 1 {
-			EvalExpression2(ps, true)
+			EvalExpression_CollectArg(ps, true)
 			if ps.ReturnFlag || ps.ErrorFlag {
 				return
 			}
@@ -1411,7 +1427,7 @@ func CallVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, arg0_ env.Object, t
 		}
 		//variadic version
 		for i := 2; i < bi.Argsn; i += 1 {
-			EvalExpression2(ps, true)
+			EvalExpression_CollectArg(ps, true)
 			if ps.ReturnFlag || ps.ErrorFlag {
 				return
 			}

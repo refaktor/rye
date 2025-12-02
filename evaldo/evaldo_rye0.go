@@ -18,7 +18,7 @@ func Rye0_EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) *env.P
 		if ps.ErrorFlag || ps.ReturnFlag {
 			return ps
 		}
-		
+
 		if Rye0_checkFlagsAfterExpression(ps) {
 			return ps
 		}
@@ -26,9 +26,9 @@ func Rye0_EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) *env.P
 	return ps
 }
 
-// Rye0_EvalExpression2 evaluates an expression with optional limitations.
-func Rye0_EvalExpression2(ps *env.ProgramState, limited bool) *env.ProgramState {
-	Rye0_EvalExpressionConcrete(ps)
+// Rye0_EvalExpression_CollectArg evaluates an expression with optional limitations.
+func Rye0_EvalExpression_CollectArg(ps *env.ProgramState, limited bool) *env.ProgramState {
+	Rye0_EvalExpression_DispatchType(ps)
 	return ps
 }
 
@@ -36,7 +36,7 @@ func Rye0_EvalExpression2(ps *env.ProgramState, limited bool) *env.ProgramState 
 func Rye0_EvalExpressionInj(ps *env.ProgramState, inj env.Object, injnow bool) (*env.ProgramState, bool) {
 	if inj == nil || !injnow {
 		// If there is no injected value just eval the concrete expression
-		Rye0_EvalExpressionConcrete(ps)
+		Rye0_EvalExpression_DispatchType(ps)
 		if ps.ReturnFlag {
 			return ps, injnow
 		}
@@ -48,9 +48,9 @@ func Rye0_EvalExpressionInj(ps *env.ProgramState, inj env.Object, injnow bool) (
 	return ps, injnow
 }
 
-// Rye0_EvalExpressionConcrete evaluates a concrete expression.
+// Rye0_EvalExpression_DispatchType evaluates a concrete expression.
 // This is the main part of the evaluator that handles all Rye value types.
-func Rye0_EvalExpressionConcrete(ps *env.ProgramState) *env.ProgramState {
+func Rye0_EvalExpression_DispatchType(ps *env.ProgramState) *env.ProgramState {
 	object := ps.Ser.Pop()
 
 	if object == nil {
@@ -152,7 +152,7 @@ func Rye0_EvaluateBlock(ps *env.ProgramState, block env.Block) *env.ProgramState
 		res := make([]env.Object, 0, estimatedSize)
 
 		for ps.Ser.Pos() < ps.Ser.Len() {
-			Rye0_EvalExpression2(ps, false)
+			Rye0_EvalExpression_CollectArg(ps, false)
 			if Rye0_checkErrorFlag(ps) {
 				ps.Ser = ser // Restore original series
 				return ps
@@ -280,7 +280,7 @@ func Rye0_EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, to
 		// Evaluate next expression if needed
 		if (leftVal == nil && !pipeSecond) || pipeSecond {
 			if !ps.Ser.AtLast() {
-				Rye0_EvalExpressionConcrete(ps)
+				Rye0_EvalExpression_DispatchType(ps)
 				if ps.ReturnFlag {
 					return ps
 				}
@@ -316,7 +316,7 @@ func Rye0_EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, to
 
 // Rye0_EvalGenword evaluates a generic word.
 func Rye0_EvalGenword(ps *env.ProgramState, word env.Genword, leftVal env.Object, toLeft bool) *env.ProgramState {
-	Rye0_EvalExpressionConcrete(ps)
+	Rye0_EvalExpression_DispatchType(ps)
 
 	var arg0 = ps.Res
 	object, found := ps.Gen.Get(arg0.GetKind(), word.Index)
@@ -475,7 +475,7 @@ func Rye0_CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, t
 
 	// Set up arguments
 	ii := 0
-	evalExprFn := Rye0_EvalExpression2
+	evalExprFn := Rye0_EvalExpression_CollectArg
 
 	if arg0 != nil && fn.Spec.Series.Len() > 0 {
 		index := fn.Spec.Series.Get(ii).(env.Word).Index
@@ -600,7 +600,7 @@ func Rye0_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, to
 	// Process arguments based on the builtin's requirements
 	if bi.Argsn > 0 {
 		// Direct call to avoid function pointer indirection
-		Rye0_EvalExpression2(ps, true)
+		Rye0_EvalExpression_CollectArg(ps, true)
 
 		// Inline error checking for speed
 		if ps.FailureFlag {
@@ -621,7 +621,7 @@ func Rye0_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, to
 
 	// Process second argument if needed
 	if bi.Argsn > 1 {
-		Rye0_EvalExpression2(ps, true)
+		Rye0_EvalExpression_CollectArg(ps, true)
 
 		// Inline error checking for speed
 		if ps.FailureFlag {
@@ -642,7 +642,7 @@ func Rye0_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, to
 
 	// Process third argument if needed
 	if bi.Argsn > 2 {
-		Rye0_EvalExpression2(ps, true)
+		Rye0_EvalExpression_CollectArg(ps, true)
 
 		// Inline error checking for speed
 		if ps.FailureFlag {
@@ -663,12 +663,12 @@ func Rye0_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, to
 
 	// Process remaining arguments with minimal error checking
 	if bi.Argsn > 3 {
-		Rye0_EvalExpression2(ps, true)
+		Rye0_EvalExpression_CollectArg(ps, true)
 		arg3 = ps.Res
 	}
 
 	if bi.Argsn > 4 {
-		Rye0_EvalExpression2(ps, true)
+		Rye0_EvalExpression_CollectArg(ps, true)
 		arg4 = ps.Res
 	}
 

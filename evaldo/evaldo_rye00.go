@@ -13,7 +13,7 @@ import (
 func Rye00_EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) *env.ProgramState {
 	for ps.Ser.Pos() < ps.Ser.Len() {
 
-		Rye00_EvalExpressionConcrete(ps)
+		Rye00_EvalExpression_DispatchType(ps)
 
 		if Rye00_checkFlagsAfterExpression(ps) {
 			return ps
@@ -22,9 +22,9 @@ func Rye00_EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) *env.
 	return ps
 }
 
-// Rye00_EvalExpressionConcrete evaluates a concrete expression.
+// Rye00_EvalExpression_DispatchType evaluates a concrete expression.
 // This is the main part of the evaluator that handles only integers and builtins.
-func Rye00_EvalExpressionConcrete(ps *env.ProgramState) {
+func Rye00_EvalExpression_DispatchType(ps *env.ProgramState) {
 	object := ps.Ser.Pop()
 
 	if object == nil {
@@ -159,7 +159,7 @@ func Rye00_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, t
 	// Process arguments based on the builtin's requirements
 	if bi.Argsn > 0 {
 		// Direct call to avoid function pointer indirection
-		Rye00_EvalExpressionConcrete(ps)
+		Rye00_EvalExpression_DispatchType(ps)
 
 		// Inline error checking for speed
 		if ps.FailureFlag {
@@ -180,7 +180,7 @@ func Rye00_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, t
 
 	// Process second argument if needed
 	if bi.Argsn > 1 {
-		Rye00_EvalExpressionConcrete(ps)
+		Rye00_EvalExpression_DispatchType(ps)
 
 		// Inline error checking for speed
 		if ps.FailureFlag {
@@ -201,7 +201,7 @@ func Rye00_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, t
 
 	// Process third argument if needed
 	if bi.Argsn > 2 {
-		Rye00_EvalExpressionConcrete(ps)
+		Rye00_EvalExpression_DispatchType(ps)
 
 		// Inline error checking for speed
 		if ps.FailureFlag {
@@ -222,12 +222,12 @@ func Rye00_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, t
 
 	// Process remaining arguments with minimal error checking
 	if bi.Argsn > 3 {
-		Rye00_EvalExpressionConcrete(ps)
+		Rye00_EvalExpression_DispatchType(ps)
 		arg3 = ps.Res
 	}
 
 	if bi.Argsn > 4 {
-		Rye00_EvalExpressionConcrete(ps)
+		Rye00_EvalExpression_DispatchType(ps)
 		arg4 = ps.Res
 	}
 

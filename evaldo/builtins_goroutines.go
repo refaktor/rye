@@ -55,7 +55,7 @@ var Builtins_goroutines = map[string]*env.Builtin{
 								fmt.Printf("Goroutine panic in go-with: %v\n", r)
 							}
 						}()
-						CallFunction(handler, &psTemp, arg, false, nil)
+						CallFunction_CollectArgs(handler, &psTemp, arg, false, nil)
 					}()
 
 					return arg0
@@ -103,7 +103,7 @@ var Builtins_goroutines = map[string]*env.Builtin{
 							fmt.Printf("Goroutine panic in go: %v\n", r)
 						}
 					}()
-					CallFunction(handler, &psTemp, nil, false, nil)
+					CallFunction_CollectArgs(handler, &psTemp, nil, false, nil)
 				}()
 
 				return arg0
@@ -386,7 +386,7 @@ var Builtins_goroutines = map[string]*env.Builtin{
 				var cases []reflect.SelectCase
 				var funcs []env.Function
 				for ps.Ser.Pos() < ps.Ser.Len() {
-					EvalExpression2(ps, false)
+					EvalExpression_CollectArg(ps, false)
 					defaultFn, ok := ps.Res.(env.Function)
 					// handle default case
 					if ok {
@@ -421,7 +421,7 @@ var Builtins_goroutines = map[string]*env.Builtin{
 					}
 					cases = append(cases, reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(ch)})
 
-					EvalExpression2(ps, false)
+					EvalExpression_CollectArg(ps, false)
 					fn, ok := ps.Res.(env.Function)
 					if !ok {
 						ps.FailureFlag = true
@@ -456,7 +456,7 @@ var Builtins_goroutines = map[string]*env.Builtin{
 				if fn.Argsn == 0 {
 					arg = nil
 				}
-				CallFunction(fn, &psTemp, arg, false, nil)
+				CallFunction_CollectArgs(fn, &psTemp, arg, false, nil)
 
 			default:
 				ps.FailureFlag = true
@@ -486,7 +486,7 @@ var Builtins_goroutines = map[string]*env.Builtin{
 				var cases []reflect.SelectCase
 				var funcs []env.Block
 				for ps.Ser.Pos() < ps.Ser.Len() {
-					EvalExpression2(ps, false)
+					EvalExpression_CollectArg(ps, false)
 					// handle default case
 					switch maybeChan := ps.Res.(type) {
 					case env.Native:
@@ -497,7 +497,7 @@ var Builtins_goroutines = map[string]*env.Builtin{
 						}
 						cases = append(cases, reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(ch)})
 
-						EvalExpression2(ps, false)
+						EvalExpression_CollectArg(ps, false)
 						fn, ok := ps.Res.(env.Block)
 						if !ok {
 							ps.FailureFlag = true
@@ -524,7 +524,7 @@ var Builtins_goroutines = map[string]*env.Builtin{
 							Dir:  reflect.SelectRecv,
 							Chan: reflect.ValueOf(defaultCase),
 						})
-						EvalExpression2(ps, false)
+						EvalExpression_CollectArg(ps, false)
 						fn, ok := ps.Res.(env.Block)
 						if !ok {
 							ps.FailureFlag = true
