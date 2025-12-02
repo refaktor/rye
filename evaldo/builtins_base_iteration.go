@@ -1108,13 +1108,13 @@ var builtins_iteration = map[string]*env.Builtin{
 						ps.Ser = ser
 						return acc
 					default:
-						return MakeArgError(ps, 4, []env.Type{env.BlockType}, "fold")
+						return MakeArgError(ps, 4, []env.Type{env.BlockType}, "fold\\do")
 					}
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType}, "fold")
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "fold\\do")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "fold")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "fold\\do")
 			}
 		},
 	},
@@ -1148,7 +1148,7 @@ var builtins_iteration = map[string]*env.Builtin{
 					}
 					return acc
 				default:
-					return MakeArgError(ps, 4, []env.Type{env.BlockType}, "fold")
+					return MakeArgError(ps, 4, []env.Type{env.FunctionType}, "fold")
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "fold")
