@@ -230,6 +230,51 @@ var builtins_conditionals = map[string]*env.Builtin{
 		},
 	},
 	// Tests:
+	// equal  { choose true [ 1 -1 ] } 1
+	// equal  { choose false [ 1 -1 ] } -1
+	// equal  { choose 10 > 5 [ "yes" "no" ] } "yes"
+	// equal  { choose 3 < 2 [ "yes" "no" ] } "no"
+	// error  { choose 1 [ 1 -1 ] }
+	// error  { choose true [ 1 ] }
+	// Args:
+	// * condition: Boolean value determining which value to return
+	// * values: Block containing exactly two values
+	// Returns:
+	// * first value if condition is true, second value if condition is false
+	"choose": { // **
+		Argsn: 2,
+		Doc:   "Returns the first or second value from a block of two values based on a boolean condition.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			// Check if the first argument is a boolean
+			switch cond := arg0.(type) {
+			case env.Boolean:
+				// Check if the second argument is a block
+				switch bloc := arg1.(type) {
+				case env.Block:
+					// Check if the block has exactly 2 values
+					if bloc.Series.Len() != 2 {
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, "Block must contain exactly 2 values.", "choose")
+					}
+					// Return first value if true, second if false
+					if cond.Value {
+						return bloc.Series.Get(0)
+					}
+					return bloc.Series.Get(1)
+				default:
+					ps.FailureFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "choose")
+				}
+			default:
+				// If it's not a boolean, return an error
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.BooleanType}, "choose")
+			}
+		},
+	},
+
+	// Tests:
 	// equal  { switch 101 { 101 { 111 } 202 { 222 } } } 111
 	// equal  { switch 202 { 101 { 111 } 202 { 222 } } } 222
 	// Args:
