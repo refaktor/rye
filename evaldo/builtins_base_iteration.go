@@ -1074,13 +1074,13 @@ var builtins_iteration = map[string]*env.Builtin{
 	// it should use injected block so it doesn't need a variable defined like map [ 1 2 3 ] x [ add a 100 ]
 	// reduce [ 1 2 3 ] 'acc { + acc }
 	// Tests:
-	//  equal { fold { 1 2 3 } 'acc 1 { + acc } } 7
-	//  equal { fold { } 'acc 1 { + acc } } 1
-	//  equal { fold list { 1 2 3 } 'acc 1 { + acc } } 7
-	//  equal { fold list { } 'acc 1 { + acc } } 1
-	//  equal { fold "abc" 'acc "123" { ++ acc } } "cba123"
-	//  equal { fold "" 'acc "123" { + acc } } "123"
-	"fold": { // **
+	//  equal { fold\do { 1 2 3 } 'acc 1 { + acc } } 7
+	//  equal { fold\do { } 'acc 1 { + acc } } 1
+	//  equal { fold\do list { 1 2 3 } 'acc 1 { + acc } } 7
+	//  equal { fold\do list { } 'acc 1 { + acc } } 1
+	//  equal { fold\do "abc" 'acc "123" { ++ acc } } "cba123"
+	//  equal { fold\do "" 'acc "123" { + acc } } "123"
+	"fold\\do": { // **
 		Argsn: 4,
 		Doc:   "Reduces values of a block to a new block by evaluating a block of code ...",
 		Pure:  true,
@@ -1107,25 +1107,48 @@ var builtins_iteration = map[string]*env.Builtin{
 						}
 						ps.Ser = ser
 						return acc
-					case env.Function:
-						l := list.Length()
-						acc := arg2
-						for i := 0; i < l; i++ {
-							var item any
-							item = list.Get(i)
-							ps.Ctx.Mod(accu.Index, acc)
-							CallFunctionArgsN(block, ps, ps.Ctx, env.ToRyeValue(item)) // , env.NewInteger(int64(i)))
-							if ps.ErrorFlag {
-								return ps.Res
-							}
-							acc = ps.Res
-						}
-						return acc
 					default:
 						return MakeArgError(ps, 4, []env.Type{env.BlockType}, "fold")
 					}
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.WordType}, "fold")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "fold")
+			}
+		},
+	},
+	// map should at the end map over block, raw-map, etc ...
+	// it should accept a block of code, a function and a builtin
+	// it should use injected block so it doesn't need a variable defined like map [ 1 2 3 ] x [ add a 100 ]
+	// reduce [ 1 2 3 ] 'acc { + acc }
+	// Tests:
+	//  equal { fold { 1 2 3 } 1 fn { v acc } { + acc } } 7
+	//  equal { fold { } 1 fn { v acc } { + acc } } 1
+	//  equal { fold list { 1 2 3 } 1 fn { v acc } { v + acc } } 7
+	"fold": { // **
+		Argsn: 3,
+		Doc:   "Reduces values of a block to a new block by evaluating a block of code ...",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch list := arg0.(type) {
+			case env.Collection:
+				switch block := arg2.(type) {
+				case env.Function:
+					l := list.Length()
+					acc := arg1
+					for i := 0; i < l; i++ {
+						var item any
+						item = list.Get(i)
+						CallFunctionArgsN(block, ps, ps.Ctx, env.ToRyeValue(item), acc) // , env.NewInteger(int64(i)))
+						if ps.ErrorFlag {
+							return ps.Res
+						}
+						acc = ps.Res
+					}
+					return acc
+				default:
+					return MakeArgError(ps, 4, []env.Type{env.BlockType}, "fold")
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "fold")

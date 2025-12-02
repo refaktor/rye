@@ -190,7 +190,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 ``	}
 
-	group "decr" 
+	group "dec" 
 	"Decrements an integer value by 1."
 	{
 		arg `value: Integer to decrement`
@@ -198,10 +198,10 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	{
-		equal { decr 124 } 123
-		equal { decr 1 } 0
-		equal { decr -4 } -5
-		error { decr "123" }
+		equal { dec 124 } 123
+		equal { dec 1 } 0
+		equal { dec -4 } -5
+		error { dec "123" }
 	}
 
 	{
@@ -259,6 +259,25 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { is-positive 0 } false
 		equal { is-positive 5.5 } true
 		error { is-positive "123" }
+	}
+
+	{
+``	}
+
+	group "sign" 
+	"Checks if a number is positive (greater than zero)."
+	{
+		arg `value: Integer or decimal to check`
+		returns `boolean true if the value is positive, false otherwise`
+	}
+
+	{
+		equal { sign 123 } 1
+		equal { sign -123 } -1
+		equal { sign 0 } 0
+		equal { sign 5.5 } 1
+		equal { sign -0.5 } -1
+		error { sign "123" }
 	}
 
 	{
@@ -3343,18 +3362,32 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 ``	}
 
+	group "fold\\do" 
+	"Reduces values of a block to a new block by evaluating a block of code ..."
+	{
+	}
+
+	{
+		equal { fold\do { 1 2 3 } 'acc 1 { + acc } } 7
+		equal { fold\do { } 'acc 1 { + acc } } 1
+		equal { fold\do list { 1 2 3 } 'acc 1 { + acc } } 7
+		equal { fold\do list { } 'acc 1 { + acc } } 1
+		equal { fold\do "abc" 'acc "123" { ++ acc } } "cba123"
+		equal { fold\do "" 'acc "123" { + acc } } "123"
+	}
+
+	{
+``	}
+
 	group "fold" 
 	"Reduces values of a block to a new block by evaluating a block of code ..."
 	{
 	}
 
 	{
-		equal { fold { 1 2 3 } 'acc 1 { + acc } } 7
-		equal { fold { } 'acc 1 { + acc } } 1
-		equal { fold list { 1 2 3 } 'acc 1 { + acc } } 7
-		equal { fold list { } 'acc 1 { + acc } } 1
-		equal { fold "abc" 'acc "123" { ++ acc } } "cba123"
-		equal { fold "" 'acc "123" { + acc } } "123"
+		equal { fold { 1 2 3 } 1 fn { v acc } { + acc } } 7
+		equal { fold { } 1 fn { v acc } { + acc } } 1
+		equal { fold list { 1 2 3 } 1 fn { v acc } { v + acc } } 7
 	}
 
 	{
