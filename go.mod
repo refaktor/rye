@@ -58,10 +58,10 @@ require (
 	github.com/xuri/excelize/v2 v2.10.0
 	github.com/yuin/goldmark v1.7.13
 	go.mongodb.org/mongo-driver v1.17.6
-	golang.org/x/crypto v0.43.0
-	golang.org/x/net v0.46.0
+	golang.org/x/crypto v0.44.0
+	golang.org/x/net v0.47.0
 	golang.org/x/sync v0.18.0
-	golang.org/x/term v0.36.0
+	golang.org/x/term v0.37.0
 	golang.org/x/text v0.31.0
 	gopkg.in/headzoo/surf.v1 v1.0.1
 	software.sslmate.com/src/go-pkcs12 v0.6.0
@@ -225,7 +225,7 @@ require (
 	github.com/yhirose/go-peg v0.0.0-20210804202551-de25d6753cf1 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	go.etcd.io/bbolt v1.4.0 // indirect
-	golang.org/x/sys v0.37.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
 	google.golang.org/protobuf v1.36.9 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df // indirect
