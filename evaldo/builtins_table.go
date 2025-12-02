@@ -1597,7 +1597,7 @@ var Builtins_table = map[string]*env.Builtin{
 	// equal { table { 'a 'b } { 123 234 345 456 } |A2 } 345
 	"A2": {
 		Argsn: 1,
-		Doc:   "Accepts a Table and returns the first row first column cell.",
+		Doc:   "Accepts a Table and returns the second row first column cell.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s0 := arg0.(type) {
 			case env.Table:
@@ -1614,7 +1614,7 @@ var Builtins_table = map[string]*env.Builtin{
 	// equal { table { 'a 'b } { 123 234 345 456 } |B2 } 456
 	"B2": {
 		Argsn: 1,
-		Doc:   "Accepts a Table and returns the first row second column cell.",
+		Doc:   "Accepts a Table and returns the second row second column cell.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s0 := arg0.(type) {
 			case env.Table:
