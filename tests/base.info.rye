@@ -435,7 +435,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 ``	}
 
-	group "decr!" 
+	group "dec!" 
 	"Decrements an integer value stored in a variable (word) by 1 and updates the variable in-place."
 	{
 		arg `word: Word referring to an integer value to decrement`
@@ -443,9 +443,9 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	{
-		equal { a:: 123 decr! 'a a } 122
-		equal { counter:: 1 decr! 'counter counter } 0
-		error { decr! 123 }
+		equal { a:: 123 dec! 'a a } 122
+		equal { counter:: 1 dec! 'counter counter } 0
+		error { dec! 123 }
 	}
 
 	{
@@ -2962,17 +2962,17 @@ section "Flow control " "Functions for conditional execution and branching logic
 ``	}
 
 	group "when" 
-	"Conditionally executes an action block if a condition block evaluates to true, injecting the same value into both blocks and returning the original value."
+	"Conditionally executes an action block if a condition block evaluates to true, injecting the same value into both blocks and returning the value of the action block if the condition is truthy or the original value otherwise."
 	{
 		arg `value: Value to inject into both condition and action blocks`
 		arg `condition: Block that evaluates to a truthy/falsy value with the injected value`
 		arg `action: Block to execute if condition is truthy, with the injected value`
-		returns `the original injected value (for chaining)`
+		returns `the value of the evaluated action block if condition is truthy or the original injected value if condition is falsy`
 	}
 
 	{
-		equal  { 10 .when { > 5 } { .print } } 10
-		equal  { 10 .when { < 5 } { .print } } 10
+		equal  { 10 .when { > 5 } { + 3 } } 13
+		equal  { 10 .when { < 5 } { + 3 } } 10
 	}
 
 	{
@@ -3175,22 +3175,6 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 ``	}
 
-	group "for___" 
-	"Iterates over each value in a collection, executing a block of code for each value."
-	{
-		arg `collection: String, Block, List, or Table to iterate over`
-		arg `code: Block of code to execute for each value`
-		returns `result of the last block execution`
-	}
-
-	{
-		stdout { "abc" .for { .prns } } "a b c "
-		equal { { 1 2 3 } .for { + 1 } } 4
-	}
-
-	{
-``	}
-
 	group "for" 
 	"Accepts a block of values and a block of code, builtin, or function, does the code for each of the values, injecting them."
 	{
@@ -3285,22 +3269,6 @@ section "Iteration " "Functions for iterating over collections and executing cod
 
 	{
 		equal { { 1 2 3 } :x purge! { .is-even } 'x , x } { 1 3 }
-	}
-
-	{
-``	}
-
-	group "map___" 
-	"Maps values of a block to a new block by evaluating a block of code."
-	{
-		arg `series: Block, List, or String to map over`
-		arg `code: Block or Builtin to execute for each value`
-		returns `new series with transformed values`
-	}
-
-	{
-		equal { map { 1 2 3 } { + 1 } } { 2 3 4 }
-		equal { map "abc" { .to-upper } } { "A" "B" "C" }
 	}
 
 	{

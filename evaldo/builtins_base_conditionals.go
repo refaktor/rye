@@ -42,10 +42,18 @@ var builtins_conditionals = map[string]*env.Builtin{
 						// we eval the block (current context / scope stays the same as it was in parent block)
 						// Inj means we inject the condition value into the block, because it costs us very little. we could do "if name { .print }"
 						EvalBlockInjMultiDialect(ps, arg0, true)
-						if ps.ErrorFlag {
+						// If failure or error happened show it here
+						MaybeDisplayFailureOrError(ps, ps.Idx, "if")
+						// If error hapened or return flag was initiated set ps.Ser back to parent and return
+						if ps.ErrorFlag || ps.ReturnFlag {
 							ps.Ser = ser
 							return ps.Res
 						}
+
+						// if ps.ErrorFlag {
+						// 	ps.Ser = ser
+						//	return ps.Res
+						// }
 						// we set temporary series back to current program state
 						ps.Ser = ser
 						// we return the last return value (the return value of executing the block)
@@ -93,6 +101,7 @@ var builtins_conditionals = map[string]*env.Builtin{
 					// Set series to condition block and evaluate it with the value injected
 					ps.Ser = condBlock.Series
 					EvalBlockInjMultiDialect(ps, arg0, true)
+					MaybeDisplayFailureOrError(ps, ps.Idx, "when")
 					if ps.ErrorFlag {
 						ps.Ser = ser
 						return ps.Res
@@ -103,6 +112,7 @@ var builtins_conditionals = map[string]*env.Builtin{
 						// Set series to action block and evaluate it with the value injected
 						ps.Ser = actionBlock.Series
 						EvalBlockInjMultiDialect(ps, arg0, true)
+						MaybeDisplayFailureOrError(ps, ps.Idx, "when")
 						if ps.ErrorFlag {
 							ps.Ser = ser
 							return ps.Res
@@ -151,6 +161,7 @@ var builtins_conditionals = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = bloc.Series
 						EvalBlockInj(ps, arg0, true)
+						MaybeDisplayFailureOrError(ps, ps.Idx, "^if")
 						if ps.ErrorFlag {
 							ps.Ser = ser
 							return ps.Res
@@ -203,6 +214,7 @@ var builtins_conditionals = map[string]*env.Builtin{
 							ps.Ser.Reset()
 						}
 						EvalBlockInjMultiDialect(ps, arg0, true)
+						MaybeDisplayFailureOrError(ps, ps.Idx, "either")
 						ps.Ser = ser
 						return ps.Res
 					default:
@@ -322,6 +334,7 @@ var builtins_conditionals = map[string]*env.Builtin{
 						// we eval the block (current context / scope stays the same as it was in parent block)
 						// Inj means we inject the condition value into the block, because it costs us very little. we could do "if name { .print }"
 						EvalBlockInjMultiDialect(ps, arg0, true)
+						MaybeDisplayFailureOrError(ps, ps.Idx, "switch")
 						// we set temporary series back to current program state
 						ps.Ser = ser
 						// we return the last return value (the return value of executing the block) "a: if 1 { 100 }" a becomes 100,
@@ -391,6 +404,7 @@ var builtins_conditionals = map[string]*env.Builtin{
 						// we eval the block (current context / scope stays the same as it was in parent block)
 						// Inj means we inject the condition value into the block, because it costs us very little. we could do "if name { .print }"
 						EvalBlock(ps)
+						MaybeDisplayFailureOrError(ps, ps.Idx, "cases")
 						if ps.ErrorFlag {
 							ps.Ser = ser
 							return ps.Res
@@ -413,6 +427,7 @@ var builtins_conditionals = map[string]*env.Builtin{
 						// we eval the block (current context / scope stays the same as it was in parent block)
 						// Inj means we inject the condition value into the block, because it costs us very little. we could do "if name { .print }"
 						EvalBlockInjMultiDialect(ps, cumul, true)
+						MaybeDisplayFailureOrError(ps, ps.Idx, "cases")
 						if ps.ErrorFlag {
 							ps.Ser = ser
 							return ps.Res

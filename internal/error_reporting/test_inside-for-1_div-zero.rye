@@ -1,3 +1,3 @@
 print 123
-for range 1 3 {  1 / 0  }
+for range 1 3 {  print "hello1" 1 / 0  print "hello2" }
 print `dont-print`

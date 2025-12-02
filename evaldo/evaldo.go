@@ -9,7 +9,9 @@ import (
 	"github.com/refaktor/rye/env"
 )
 
-// Initialize the observer executor callback to avoid circular imports
+// init initializes the evaldo package by setting up the observer executor callback.
+// Called: Automatically by Go runtime during package initialization
+// Purpose: Registers EvalBlockInj as the callback for executing observer blocks, avoiding circular import issues
 func init() {
 	env.ObserverExecutor = EvalBlockInj
 }
@@ -20,19 +22,24 @@ var NoInspectMode bool
 // Flag to control whether to use the fast evaluator
 var useFastEvaluator = false
 
-// EnableFastEvaluator enables the fast evaluator for Rye0 dialect
+// EnableFastEvaluator enables the fast evaluator for Rye0 dialect.
+// Called from: Command-line flags or configuration code
+// Purpose: Switches to optimized evaluation mode for Rye0 dialect code
 func EnableFastEvaluator() {
 	useFastEvaluator = true
 }
 
-// DisableFastEvaluator disables the fast evaluator for Rye0 dialect
+// DisableFastEvaluator disables the fast evaluator for Rye0 dialect.
+// Called from: Command-line flags or configuration code
+// Purpose: Switches back to standard evaluation mode for Rye0 dialect code
 func DisableFastEvaluator() {
 	useFastEvaluator = false
 }
 
-// EVALUATE BLOCK
-// HOTCODE
-// DESCR: the most general EvalBlock
+// EvalBlock is the main entry point for evaluating a block of code.
+// Called from: Throughout the codebase - main evaluation loops, builtins, function calls
+// Purpose: Dispatches to the appropriate dialect-specific evaluator (Rye2, Eyr, Rye0, Rye00)
+// HOTCODE: Performance-critical function called frequently during execution
 func EvalBlock(ps *env.ProgramState) {
 	switch ps.Dialect {
 	case env.Rye2Dialect:
@@ -52,7 +59,9 @@ func EvalBlock(ps *env.ProgramState) {
 	}
 }
 
-// This is the evaluator we use for general code, because it can be multidialect
+// EvalBlockInjMultiDialect evaluates a block with value injection support across multiple dialects.
+// Called from: EvalExpression_DispatchType (for OPGROUP/OPBLOCK modes), observer execution
+// Purpose: Provides multi-dialect block evaluation with the ability to inject values into the first expression
 func EvalBlockInjMultiDialect(ps *env.ProgramState, inj env.Object, injnow bool) { // TODO temp name -- refactor
 	switch ps.Dialect {
 	case env.Rye2Dialect:
@@ -69,9 +78,10 @@ func EvalBlockInjMultiDialect(ps *env.ProgramState, inj env.Object, injnow bool)
 	}
 }
 
-// HOTPATH
-// comma (expression guard) can be present between block-level expressions, in case of injected block they
-// reinject the value
+// MaybeAcceptComma handles comma expression guards between block-level expressions.
+// Called from: EvalBlockInj, EvalExpression_DispatchType (OPBBLOCK mode)
+// Purpose: Checks for and consumes comma separators; re-enables injection if comma found
+// HOTPATH: Called frequently during block evaluation
 func MaybeAcceptComma(ps *env.ProgramState, inj env.Object, injnow bool) bool {
 	obj := ps.Ser.Peek()
 	if _, ok := obj.(env.Comma); ok {
@@ -83,6 +93,9 @@ func MaybeAcceptComma(ps *env.ProgramState, inj env.Object, injnow bool) bool {
 	return injnow
 }
 
+// EvalBlockInj evaluates a block of code with optional value injection for Rye2 dialect.
+// Called from: EvalBlock, CallFunction_CollectArgs, ExecuteDeferredBlocks, observer execution, init()
+// Purpose: Core Rye2 evaluator - loops through expressions, handling injection, commas, and error/failure flags
 func EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) {
 	//fmt.Println("--------------------BLOCK------------------->")
 	// fmt.Println(ps.Ser)
@@ -93,7 +106,7 @@ func EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) {
 	for ps.Ser.Pos() < ps.Ser.Len() {
 		injnow = EvalExpressionInj(ps, inj, injnow)
 		// Check for both failure and error flags immediately after expression evaluation
-		if ps.ErrorFlag || ps.FailureFlag || ps.ReturnFlag {
+		if ps.ErrorFlag || ps.ReturnFlag {
 			return
 		}
 		if tryHandleFailure(ps) {
@@ -103,7 +116,9 @@ func EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) {
 	}
 }
 
-// Eval block in specific context and inject a value
+// EvalBlockInCtxInj evaluates a block in a specific context with value injection.
+// Called from: Builtins that need to evaluate code in a different context
+// Purpose: Temporarily switches to specified context, evaluates block, then restores original context
 func EvalBlockInCtxInj(ps *env.ProgramState, ctx *env.RyeCtx, inj env.Object, injnow bool) {
 	ctx2 := ps.Ctx
 	ps.Ctx = ctx
@@ -138,7 +153,9 @@ func EvalBlockInCtxInj(ps *env.ProgramState, ctx *env.RyeCtx, inj env.Object, in
 
 // EVAL EXPRESSION
 
-// Consolidated evaluation function that handles both regular and injected evaluation
+// EvalExpression is the consolidated expression evaluator handling both regular and injected evaluation.
+// Called from: EvalExpressionInj, EvalExpression_CollectArg, EvalExpressionInjLimited (wrapper functions)
+// Purpose: Evaluates left side via DispatchType, then optionally evaluates right side (opwords/pipewords)
 func EvalExpression(ps *env.ProgramState, inj env.Object, injnow bool, limited bool) bool {
 	if inj == nil || !injnow {
 		EvalExpression_DispatchType(ps)
@@ -156,51 +173,30 @@ func EvalExpression(ps *env.ProgramState, inj env.Object, injnow bool, limited b
 	return injnow
 }
 
-// Replace EvalExpression_CollectArg with a call to EvalExpression
+// EvalExpression_CollectArg evaluates an expression without injection (for collecting function arguments).
+// Called from: CallFunction_CollectArgs, CallBuiltin_CollectArgs, CallVarBuiltin, EvalWord
+// Purpose: Wrapper for EvalExpression used when collecting arguments from code
 func EvalExpression_CollectArg(ps *env.ProgramState, limited bool) {
 	EvalExpression(ps, nil, false, limited)
 }
 
-// Replace EvalExpressionInj with a call to EvalExpression
+// EvalExpressionInj evaluates an expression with optional value injection.
+// Called from: EvalBlockInj, EvalExpression_DispatchType (OPBBLOCK mode), EvalSetword, EvalModword
+// Purpose: Wrapper for EvalExpression that allows injecting a value into the expression
 func EvalExpressionInj(ps *env.ProgramState, inj env.Object, injnow bool) bool {
 	return EvalExpression(ps, inj, injnow, false)
 }
 
-// Replace EvalExpressionInjLimited with a call to EvalExpression
+// EvalExpressionInjLimited evaluates an expression with injection in limited mode (stops at setwords/pipewords).
+// Called from: Various places where expression evaluation should not consume setwords or pipewords
+// Purpose: Limited expression evaluation that prevents consuming certain right-side constructs
 func EvalExpressionInjLimited(ps *env.ProgramState, inj env.Object, injnow bool) bool {
 	return EvalExpression(ps, inj, injnow, true)
 }
 
-// OptionallyEvalExpressionRight implements operator chaining by checking if there's an operator or special word
-// immediately to the right of the current expression and evaluating it if found.
-//
-// This is the mechanism that enables infix notation and left-to-right evaluation chains like:
-//   - Arithmetic: "1 + 2 + 3" → evaluates left-to-right as (1 + 2) + 3
-//   - Pipes: "x |> func1 |> func2" → chains function calls
-//   - Assignment chains: "result: calculate x y" → assigns result of calculation
-//
-// The function works recursively:
-//  1. Peeks at the next object in the series (nextObj)
-//  2. If it's an operator/special word, consumes it and evaluates with current result (ps.Res) as left argument
-//  3. Recursively calls itself to check for more operators to the right
-//  4. Stops when it reaches a regular value or when 'limited' flag restricts chaining
-//
-// Handles these special word types:
-//   - Opword (+, -, *, etc.): Binary operators that use previous result as first argument
-//   - Pipeword (|>): Pipes result to next function (respects 'limited' flag)
-//   - LSetword (:): Assigns current result to a word
-//   - LModword (::): Modifies existing word with current result
-//   - CPath: Context path operations (different modes for opcpath vs pipecpath)
-//
-// Parameters:
-//   - nextObj: The next object to potentially evaluate (from ps.Ser.Peek())
-//   - ps: Program state holding current result, series position, context, etc.
-//   - limited: If true, stops at pipe operators (used when collecting function arguments)
-//
-// Early returns happen when:
-//   - nextObj is nil, or error/return flags are set
-//   - nextObj is a regular value type (String, Integer, Block, Word)
-//   - 'limited' is true and a Pipeword or similar is encountered
+// OptionallyEvalExpressionRight evaluates right-side constructs like opwords, pipewords, and setwords.
+// Called from: EvalExpression, recursively from itself
+// Purpose: Handles operator precedence by evaluating opwords/pipewords/setwords/modwords to the right
 func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, limited bool) {
 	if nextObj == nil || ps.ReturnFlag || ps.ErrorFlag {
 		return
@@ -306,8 +302,10 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 	return
 }
 
-// the main part of evaluator, if it were a polish only we would need almost only this
-// switches over all rye values and acts on them
+// EvalExpression_DispatchType is the core type dispatcher that evaluates individual Rye values.
+// Called from: EvalExpression, EvalWord, EvalGenword
+// Purpose: Main type switch - handles all Rye value types and dispatches to appropriate handlers
+// Note: This is the heart of the evaluator - if Rye were fully Polish notation, this would be most of it
 func EvalExpression_DispatchType(ps *env.ProgramState) {
 	object := ps.Ser.Pop()
 	if object == nil {
@@ -452,8 +450,9 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 	}
 }
 
-// this basicalls returns a rye value behind a word or cpath (context path)
-// for words it just looks in to current context and with it to parent contexts
+// findWordValue retrieves the value associated with a word or context path.
+// Called from: EvalWord internally (now replaced by findWordValueWithFailureInfo in most places)
+// Purpose: Looks up words in context hierarchy or traverses context paths to find values
 func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *env.RyeCtx) {
 	switch word := word1.(type) {
 	case env.Word:
@@ -492,7 +491,9 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 	}
 }
 
-// Extended version that also returns information about which word failed in a path
+// findWordValueWithFailureInfo is an extended version of findWordValue that includes failure diagnostics.
+// Called from: EvalWord
+// Purpose: Like findWordValue but returns detailed info about which word failed in a context path
 func findWordValueWithFailureInfo(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *env.RyeCtx, string) {
 	switch word := word1.(type) {
 	case env.Word:
@@ -561,11 +562,9 @@ func findWordValueWithFailureInfo(ps *env.ProgramState, word1 env.Object) (bool,
 
 // EVALUATOR FUNCTIONS FOR SPECIFIC VALUE TYPES
 
-// Evaluates a word
-// first tries to find a value in normal context. If there were no generic words this would be mostly it
-// if word is not found then it tries to get the value of next expression
-// and find a generic word based
-// on that, it here is leftval already present it can dispatc on it otherwise
+// EvalWord evaluates a word by looking up its value and potentially dispatching to generic words.
+// Called from: EvalExpression_DispatchType, OptionallyEvalExpressionRight, EvalObject
+// Purpose: Main word evaluator - looks up in context, tries generic words if not found, handles getcpath mode
 func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft bool, pipeSecond bool) {
 	// Special handling for getcpath (mode 3) - behave like get-word
 	if cpath, ok := word.(env.CPath); ok && cpath.Mode == 3 {
@@ -631,8 +630,9 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 	}
 }
 
-// if word is defined to be generic ... I am not sure we will keep this ... we will decide with more use
-// then if explicitly treats it as generic word
+// EvalGenword evaluates a generic word (explicitly declared generic).
+// Called from: EvalExpression_DispatchType
+// Purpose: Handles words explicitly marked as generic - evaluates next expression and dispatches on its type
 func EvalGenword(ps *env.ProgramState, word env.Genword, leftVal env.Object, toLeft bool) {
 	EvalExpression_DispatchType(ps)
 
@@ -652,7 +652,9 @@ func EvalGenword(ps *env.ProgramState, word env.Genword, leftVal env.Object, toL
 	}
 }
 
-// evaluates a get-word . it retrieves rye value behid it w/o evaluation
+// EvalGetword evaluates a get-word (prefixed with ?) which retrieves a value without calling it.
+// Called from: EvalExpression_DispatchType
+// Purpose: Returns the raw value associated with a word without evaluating it (like quoting)
 func EvalGetword(ps *env.ProgramState, word env.Getword, leftVal env.Object, toLeft bool) {
 	object, found := ps.Ctx.Get(word.Index)
 	if found {
@@ -665,7 +667,9 @@ func EvalGetword(ps *env.ProgramState, word env.Getword, leftVal env.Object, toL
 	}
 }
 
-// evaluates a rye value, most of them just get returned, except builtins, functions and context paths
+// EvalObject evaluates a Rye object, particularly handling callable types (builtins, functions).
+// Called from: EvalWord, EvalGenword
+// Purpose: Evaluates found objects - dispatches builtins/functions/cpaths to their callers, returns other types
 func EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toLeft bool, ctx *env.RyeCtx, pipeSecond bool, firstVal env.Object) {
 	switch object.Type() {
 	case env.BuiltinType:
@@ -706,7 +710,9 @@ func EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toL
 	}
 }
 
-// evaluates expression to the right and sets the result of it to a word in current context
+// EvalSetword evaluates a set-word (word:) which sets a new word in the context.
+// Called from: EvalExpression_DispatchType
+// Purpose: Evaluates the expression to the right and binds the result to a word (creating new binding)
 func EvalSetword(ps *env.ProgramState, word env.Setword) {
 	// es1 := EvalExpression(es)
 	EvalExpressionInj(ps, nil, false)
@@ -731,7 +737,9 @@ func EvalSetword(ps *env.ProgramState, word env.Setword) {
 	}
 }
 
-// evaluates expression to the right and sets the result of it to a word in current context
+// EvalModword evaluates a mod-word (word::) which modifies an existing word in the context.
+// Called from: EvalExpression_DispatchType
+// Purpose: Evaluates the expression to the right and modifies an existing word's value, triggers observers
 func EvalModword(ps *env.ProgramState, word env.Modword) {
 	// es1 := EvalExpression(es)
 	EvalExpressionInj(ps, nil, false)
@@ -763,7 +771,9 @@ func EvalModword(ps *env.ProgramState, word env.Modword) {
 // CALLING FUNCTIONS
 //
 
-// Consolidated function calling
+// CallFunctionWithArgs is a consolidated function caller that dispatches based on argument count.
+// Called from: Various builtins that need to call user functions
+// Purpose: Dispatcher that routes to specialized function callers based on number of arguments (0,1,2,4,N)
 func CallFunctionWithArgs(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, args ...env.Object) {
 	ctx = DetermineContext(fn, ps, ctx)
 	if ctx == nil {
@@ -796,7 +806,9 @@ var envPool = sync.Pool{
 	},
 }
 
-// This method is used in the evaluator and takes arguments from code if needed
+// CallFunction_CollectArgs calls a function by collecting arguments from the code stream.
+// Called from: EvalObject, CallFunctionWithArgs (0 or 1 arg case)
+// Purpose: Main function caller in evaluator - collects args from code, sets up context, executes function body
 func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0 env.Object, toLeft bool, ctx *env.RyeCtx) {
 	// fmt.Println(1)
 
@@ -949,7 +961,9 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0 env.Ob
 	*/
 }
 
-// This is used in builtins and works specifically for functions with two arguments
+// CallFunctionArgs2 calls a function with exactly 2 arguments provided.
+// Called from: CallFunctionWithArgs, builtins needing to call 2-arg functions
+// Purpose: Optimized path for 2-argument function calls from builtins
 func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, arg1 env.Object, ctx *env.RyeCtx) {
 	// fmt.Println(2)
 	var fnCtx *env.RyeCtx
@@ -1030,7 +1044,9 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 	ps.ReturnFlag = false
 }
 
-// This one is called from builtins and calls functions with 4 arguments
+// CallFunctionArgs4 calls a function with exactly 4 arguments provided.
+// Called from: CallFunctionWithArgs, builtins needing to call 4-arg functions
+// Purpose: Optimized path for 4-argument function calls from builtins
 func CallFunctionArgs4(fn env.Function, ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, ctx *env.RyeCtx) {
 	fmt.Println(3)
 	var fnCtx *env.RyeCtx
@@ -1105,7 +1121,9 @@ func CallFunctionArgs4(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 	ps.ReturnFlag = false
 }
 
-// Used in builtins ... for variable number of arguments
+// CallFunctionArgsN calls a function with a variable number of arguments (N arguments).
+// Called from: CallFunctionWithArgs, CallCurriedCaller, builtins with variable args
+// Purpose: Generic function caller for any number of arguments provided as a slice
 func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, args ...env.Object) {
 	// fmt.Println(6)
 	// ctx = nil
@@ -1159,7 +1177,9 @@ func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, a
 	ps.ReturnFlag = false
 }
 
-// Determine the context for CallFunctionArgsVar
+// DetermineContext determines the appropriate context for a function call.
+// Called from: CallFunctionWithArgs, CallFunctionArgsN
+// Purpose: Sets up function execution context based on pure/impure, defined context, and parent context
 func DetermineContext(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx) *env.RyeCtx {
 	// fmt.Println(55)
 	var fnCtx *env.RyeCtx
@@ -1203,7 +1223,9 @@ func DetermineContext(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx) *e
 	return fnCtx
 }
 
-// CallCurriedCaller handles calling a curried caller
+// CallCurriedCaller handles calling a curried caller (partially applied function or builtin).
+// Called from: EvalExpression_DispatchType, EvalObject
+// Purpose: Executes curried callers by filling in remaining arguments and calling the underlying builtin/function
 func CallCurriedCaller(cc env.CurriedCaller, ps *env.ProgramState, arg0_ env.Object, toLeft bool, pipeSecond bool, firstVal env.Object) {
 	// Initialize arguments with curried values if available
 	var arg0 env.Object = cc.Cur0
@@ -1285,6 +1307,9 @@ func CallCurriedCaller(cc env.CurriedCaller, ps *env.ProgramState, arg0_ env.Obj
 
 // CALLING BUILTINS
 
+// CallBuiltin_CollectArgs calls a builtin by collecting up to 5 arguments from the code stream.
+// Called from: EvalExpression_DispatchType, EvalObject
+// Purpose: Main builtin caller - collects arguments, handles failure flags, calls builtin function
 func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft bool, pipeSecond bool, firstVal env.Object) {
 	////args := make([]env.Object, bi.Argsn)
 	/*pospos := ps.Ser.GetPos()
@@ -1391,6 +1416,9 @@ func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Obj
 	}
 }
 
+// CallVarBuiltin calls a variadic builtin by collecting all required arguments into a slice.
+// Called from: EvalExpression_DispatchType, EvalObject
+// Purpose: Handles builtins with variable number of arguments, collecting them into a slice
 func CallVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, arg0_ env.Object, toLeft bool, pipeSecond bool, firstVal env.Object) {
 
 	args := make([]env.Object, bi.Argsn)
@@ -1441,6 +1469,9 @@ func CallVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, arg0_ env.Object, t
 	ps.Res = bi.Fn(ps, args...)
 }
 
+// DirectlyCallBuiltin directly calls a builtin with provided arguments (no collection from code).
+// Called from: Builtins that need to call other builtins directly
+// Purpose: Direct builtin invocation helper for inter-builtin calls
 func DirectlyCallBuiltin(ps *env.ProgramState, bi env.Builtin, a0 env.Object, a1 env.Object) env.Object {
 	// Since Cur fields were removed from Builtin type, we just use the provided arguments
 	var arg2 env.Object
@@ -1451,7 +1482,9 @@ func DirectlyCallBuiltin(ps *env.ProgramState, bi env.Builtin, a0 env.Object, a1
 
 // DISPLAYING FAILURE OR ERRROR
 
-// findNearestLocationNode searches backwards in the series from current position to find the nearest LocationNode
+// findNearestLocationNode searches for the nearest LocationNode for error reporting.
+// Called from: Error display functions
+// Purpose: Finds source location information by searching backward then forward from error position
 func findNearestLocationNode(ps *env.ProgramState) *env.LocationNode {
 	pos := ps.Ser.GetPos()
 
@@ -1478,9 +1511,9 @@ func findNearestLocationNode(ps *env.ProgramState) *env.LocationNode {
 	return nil
 }
 
-// TODO -- check this and make it better , more accurate
-// calculateErrorPosition determines the accurate error position in the source line
-// using the series position methodology similar to PositionAndSurroundingElements
+// calculateErrorPosition calculates the character position of an error in a source line.
+// Called from: Error display functions (currently unused but available)
+// Purpose: Determines exact column position of error by counting characters from LocationNode
 func calculateErrorPosition(ps *env.ProgramState, locationNode *env.LocationNode) int {
 	// Get the current series position (similar to how PositionAndSurroundingElements works)
 	errorPos := ps.Ser.Pos() - 1 // The error is typically at pos-1 like in the original (here) logic
@@ -1536,10 +1569,12 @@ func calculateErrorPosition(ps *env.ProgramState, locationNode *env.LocationNode
 	return charCount
 }
 
-// DisplayEnhancedError shows enhanced error information including source location from block data
+// DisplayEnhancedError displays a formatted error with source location and block context.
+// Called from: MaybeDisplayFailureOrError2
+// Purpose: Main error display - shows red banner, error message, block location, and <here> marker
 func DisplayEnhancedError(es *env.ProgramState, genv *env.Idxs, tag string, topLevel bool) {
 	// Red background banner for runtime errors
-	if !es.SkipFlag || true {
+	if !es.SkipFlag {
 		fmt.Print("\x1b[41m\x1b[30m RUNTIME ERROR \x1b[0m\n") // Red background, black text
 
 		// Bold red for error message
@@ -1549,13 +1584,14 @@ func DisplayEnhancedError(es *env.ProgramState, genv *env.Idxs, tag string, topL
 	}
 	// Get location information from the current block
 	displayBlockWithErrorPosition(es, genv)
-	es.SkipFlag = true
 	if topLevel {
 		es.SkipFlag = false
 	}
 }
 
-// displayBlockWithErrorPosition shows the whole current block with <here> marker at error position
+// displayBlockWithErrorPosition shows the current block with a <here> marker at the error position.
+// Called from: DisplayEnhancedError
+// Purpose: Displays block content with visual indicator showing exactly where the error occurred
 func displayBlockWithErrorPosition(es *env.ProgramState, genv *env.Idxs) {
 
 	// Bold cyan for location information
@@ -1583,7 +1619,9 @@ func displayBlockWithErrorPosition(es *env.ProgramState, genv *env.Idxs) {
 	fmt.Print("\x1b[0m\n") // Reset
 }
 
-// getCurrentBlock gets the current block being evaluated (if available)
+// DELETE_ME_getCurrentBlock is deprecated and marked for deletion.
+// Called from: Nowhere (deprecated)
+// Purpose: Was used to get current executing block, now replaced by better location tracking
 func DELETE_ME_getCurrentBlock(es *env.ProgramState) *env.Block {
 	// First, check if we have block location information from the program state
 	// This would be the case when we're executing inside a block with location data
@@ -1618,8 +1656,9 @@ func DELETE_ME_getCurrentBlock(es *env.ProgramState) *env.Block {
 	return nil
 }
 
-// buildBlockStringWithMarker creates a string representation of the block with <here> at the error position
-// Shows only 8 nodes before and 8 nodes after the error position
+// buildBlockStringWithMarker creates a string representation of a block with <here> marker at error position.
+// Called from: displayBlockWithErrorPosition
+// Purpose: Builds block display string showing 8 nodes before/after error with <here> marker and ellipses
 func buildBlockStringWithMarker(currSer []env.Object, errorPos int, genv *env.Idxs) string {
 	var result strings.Builder
 	result.WriteString("{ ")
@@ -1668,7 +1707,9 @@ func buildBlockStringWithMarker(currSer []env.Object, errorPos int, genv *env.Id
 	return result.String()
 }
 
-// displayLocationFromSeries extracts and displays location information from the series
+// displayLocationFromSeries extracts and displays location information from LocationNodes in the series.
+// Called from: Potentially error display code (legacy)
+// Purpose: Displays source location by finding LocationNodes and showing source lines with position markers
 func displayLocationFromSeries(es *env.ProgramState, genv *env.Idxs) {
 	// First try to find LocationNodes in the series and display them nicely
 	foundLocation := false
@@ -1711,16 +1752,17 @@ func displayLocationFromSeries(es *env.ProgramState, genv *env.Idxs) {
 	}
 }
 
+// MaybeDisplayFailureOrError displays errors/failures if error flag is set (wrapper).
+// Called from: Throughout the codebase after evaluation operations
+// Purpose: Wrapper that calls MaybeDisplayFailureOrError2 with default parameters
 func MaybeDisplayFailureOrError(es *env.ProgramState, genv *env.Idxs, tag string) {
 	MaybeDisplayFailureOrError2(es, genv, tag, false, false)
 }
 
+// MaybeDisplayFailureOrError2 displays errors/failures and optionally offers debugging options.
+// Called from: MaybeDisplayFailureOrError, main REPL/file execution code
+// Purpose: Main error display coordinator - shows enhanced errors and offers debugging in file mode
 func MaybeDisplayFailureOrError2(es *env.ProgramState, genv *env.Idxs, tag string, topLevel bool, fileMode bool) {
-	/* if es.FailureFlag {
-		fmt.Print("\x1b[43m\x1b[33m FAILURE \x1b[0m\n") // Red background, black text
-		// DEBUG: fmt.Println(tag)
-	}
-	fmt.Println("***** ***** *****") */
 	if es.ErrorFlag || (es.FailureFlag && topLevel) {
 		// Use the enhanced error reporting with source location
 		DisplayEnhancedError(es, genv, tag, topLevel)
@@ -1729,9 +1771,14 @@ func MaybeDisplayFailureOrError2(es *env.ProgramState, genv *env.Idxs, tag strin
 		if fileMode {
 			OfferDebuggingOptions(es, genv, tag)
 		}
+
+		es.SkipFlag = true
 	}
 }
 
+// MaybeDisplayFailureOrErrorWASM displays errors/failures in WASM environment using custom print function.
+// Called from: WASM build code (main_wasm.go)
+// Purpose: WASM-specific error display that uses provided print function instead of fmt.Println
 func MaybeDisplayFailureOrErrorWASM(es *env.ProgramState, genv *env.Idxs, printfn func(string), tag string) {
 	if es.FailureFlag {
 		fmt.Print("\x1b[43m\x1b[33m FAILURE \x1b[0m\n") // Red background, black text
@@ -1755,6 +1802,9 @@ func MaybeDisplayFailureOrErrorWASM(es *env.ProgramState, genv *env.Idxs, printf
 //  CHECKING VARIOUS FLAGS
 
 // Replace individual flag checking functions with calls to checkFlags
+// checkForFailureWithBuiltin checks if a failure should stop builtin execution.
+// Called from: CallBuiltin_CollectArgs (between argument collection)
+// Purpose: Converts failure to error if builtin doesn't accept failures
 func checkForFailureWithBuiltin(bi env.Builtin, ps *env.ProgramState, n int) bool {
 	if ps.FailureFlag && !bi.AcceptFailure {
 		ps.ErrorFlag = true
@@ -1763,6 +1813,9 @@ func checkForFailureWithBuiltin(bi env.Builtin, ps *env.ProgramState, n int) boo
 	return false
 }
 
+// checkForFailureWithVarBuiltin checks if a failure should stop variadic builtin execution.
+// Called from: CallVarBuiltin, EvalObject
+// Purpose: Converts failure to error if variadic builtin doesn't accept failures
 func checkForFailureWithVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, n int) bool {
 	if ps.FailureFlag && !bi.AcceptFailure {
 		ps.ErrorFlag = true
@@ -1771,29 +1824,40 @@ func checkForFailureWithVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, n in
 	return false
 }
 
+// trace is an empty trace function placeholder.
+// Called from: Nowhere currently (can be used for debugging)
+// Purpose: Placeholder for debug tracing - currently unused
 func trace(s string) {
 
 }
 
+// tryHandleFailure attempts to handle a failure by calling context error handlers.
+// Called from: EvalBlockInj
+// Purpose: Checks for failure flag and tries to invoke error-handler word from context
 func tryHandleFailure(ps *env.ProgramState) bool {
 	if ps.FailureFlag && !ps.ReturnFlag && !ps.InErrHandler {
 		if checkContextErrorHandler(ps) {
 			return false // Successfully handled
 		}
+		// notify user that there was first state of failure, so it can be handeled
+		fmt.Print("\x1b[43m\x1b[31m FAILURE \x1b[0m\n")
 		ps.ErrorFlag = true
 		return true // Unhandled failure
 	}
 	return false // No failure
 }
 
-// TriggerObservers executes observers for a variable change using the context-level observer system
+// TriggerObservers triggers all observers watching a variable that has changed.
+// Called from: EvalModword, OptionallyEvalExpressionRight (LModword case)
+// Purpose: Notifies observers when a variable's value changes, executing their observer blocks
 func TriggerObservers(ps *env.ProgramState, ctx *env.RyeCtx, wordIndex int, oldValue, newValue env.Object) {
 	// Use the new context-level observer system
 	env.TriggerObserversInChain(ps, ctx, wordIndex, oldValue, newValue)
 }
 
-// ExecuteDeferredBlocks executes all deferred blocks in LIFO order (last in, first out)
-// and clears the deferred blocks list
+// ExecuteDeferredBlocks executes all deferred blocks in LIFO order (last in, first out).
+// Called from: CallFunction_CollectArgs, CallFunctionArgs2, CallFunctionArgs4, CallFunctionArgsN (via defer)
+// Purpose: Executes cleanup blocks registered with defer, similar to Go's defer statement
 func ExecuteDeferredBlocks(ps *env.ProgramState) {
 	if len(ps.DeferBlocks) == 0 {
 		return
@@ -1835,7 +1899,9 @@ func ExecuteDeferredBlocks(ps *env.ProgramState) {
 	ps.ErrorFlag = originalErrorFlag
 }
 
-// Remove unused debugging functions
+// checkContextErrorHandler checks for and executes an error-handler word in the context.
+// Called from: tryHandleFailure
+// Purpose: Looks up and executes error-handler block from context to handle failures
 func checkContextErrorHandler(ps *env.ProgramState) bool {
 	// check if there is error-handler word defined in context (or parent).
 	erh, w_exists := ps.Idx.GetIndex("error-handler")

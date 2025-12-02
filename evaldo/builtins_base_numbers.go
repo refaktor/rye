@@ -539,14 +539,14 @@ var builtins_numbers = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { a:: 123 decr! 'a a } 122
-	// equal { counter:: 1 decr! 'counter counter } 0
-	// error { decr! 123 }
+	// equal { a:: 123 dec! 'a a } 122
+	// equal { counter:: 1 dec! 'counter counter } 0
+	// error { dec! 123 }
 	// Args:
 	// * word: Word referring to an integer value to decrement
 	// Returns:
 	// * the new decremented integer value
-	"decr!": { // ***
+	"dec!": { // ***
 		Argsn: 1,
 		Doc:   "Decrements an integer value stored in a variable (word) by 1 and updates the variable in-place.",
 		Pure:  false,
@@ -787,7 +787,7 @@ var builtins_numbers = map[string]*env.Builtin{
 	// * value2: Divisor (integer or decimal, must not be zero)
 	// Returns:
 	// * decimal result of dividing value1 by value2
-	"_/": { // **
+	"_/": {
 		Argsn: 2,
 		Doc:   "Divides the first number by the second and returns a result, with error checking for division by zero.",
 		Pure:  true,
