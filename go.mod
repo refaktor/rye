@@ -12,7 +12,7 @@ require (
 	filippo.io/age v1.2.1
 	github.com/BrianLeishman/go-imap v0.1.19
 	github.com/JohannesKaufmann/html-to-markdown/v2 v2.5.0
-	github.com/PuerkitoBio/goquery v1.10.3
+	github.com/PuerkitoBio/goquery v1.11.0
 	github.com/atotto/clipboard v0.1.4
 	github.com/aws/aws-sdk-go-v2 v1.40.1
 	github.com/aws/aws-sdk-go-v2/config v1.32.2
