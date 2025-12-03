@@ -627,7 +627,7 @@ section "Miscelaneous " "" {
 ``	}
 
 	group "A2" 
-	"Accepts a Table and returns the first row first column cell."
+	"Accepts a Table and returns the second row first column cell."
 	{
 	}
 
@@ -639,7 +639,7 @@ section "Miscelaneous " "" {
 ``	}
 
 	group "B2" 
-	"Accepts a Table and returns the first row second column cell."
+	"Accepts a Table and returns the second row second column cell."
 	{
 	}
 

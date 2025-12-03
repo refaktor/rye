@@ -32,7 +32,7 @@ func MakeError(env1 *env.ProgramState, msg string) *env.Error {
 
 func MakeBuiltinError(env1 *env.ProgramState, msg string, fn string) *env.Error {
 	env1.FailureFlag = true
-	return env.NewError(msg + " in builtin " + fn + ".")
+	return env.NewError(msg + " in builtin `" + fn + "`")
 }
 
 func NameOfRyeType(t env.Type) string {
@@ -1640,9 +1640,7 @@ var builtins = map[string]*env.Builtin{
 				ps.BlockFile = bloc.FileName
 				ps.BlockLine = bloc.Line
 				EvalBlock(ps)
-				if ps.ErrorFlag {
-					return ps.Res
-				}
+				MaybeDisplayFailureOrError(ps, ps.Idx, "for\\kv")
 				ps.Ser = ser
 				return ps.Res
 			default:
@@ -1669,6 +1667,7 @@ var builtins = map[string]*env.Builtin{
 				ser := ps.Ser
 				ps.Ser = bloc.Series
 				EvalBlockInjMultiDialect(ps, arg0, true)
+				MaybeDisplayFailureOrError(ps, ps.Idx, "with")
 				ps.Ser = ser
 				return ps.Res
 			default:
@@ -1698,6 +1697,7 @@ var builtins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = bloc.Series
 					EvalBlockInCtxInj(ps, &ctx, nil, false)
+					MaybeDisplayFailureOrError(ps, ps.Idx, "do\\inside")
 					ps.Ser = ser
 					return ps.Res
 				default:
@@ -1711,6 +1711,7 @@ var builtins = map[string]*env.Builtin{
 					ps.Ser = bloc.Series
 					// Use a special evaluation function for PersistentCtx
 					EvalBlockInPersistentCtx(ps, &ctx)
+					MaybeDisplayFailureOrError(ps, ps.Idx, "do\\inside")
 					ps.Ser = ser
 					return ps.Res
 				default:
@@ -1772,6 +1773,7 @@ var builtins = map[string]*env.Builtin{
 					temp := ps.Ctx.Parent
 					ps.Ctx.Parent = &ctx
 					EvalBlock(ps)
+					MaybeDisplayFailureOrError(ps, ps.Idx, "do\\in")
 					// if temp != nil {
 					ps.Ctx.Parent = temp
 					// ctx.Parent = temp
@@ -1825,6 +1827,7 @@ var builtins = map[string]*env.Builtin{
 					temp := ps.Ctx.Parent
 					ps.Ctx.Parent = &ctx
 					EvalBlock(ps)
+					MaybeDisplayFailureOrError(ps, ps.Idx, "for\\kv")
 					// if temp != nil {
 					ps.Ctx.Parent = temp
 					// ctx.Parent = temp
