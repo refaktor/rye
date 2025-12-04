@@ -203,6 +203,104 @@ var builtins_collection = map[string]*env.Builtin{
 		},
 	},
 	// Tests:
+	// equal { { 1 3 2 } |max\by { * -10 } } 1
+	// equal { { "a" "abc" "ab" } |max\by { .length? } } "abc"
+	// equal { { 5 -3 2 -8 } |max\by { abs } } -8
+	// equal { list { 1 3 2 } |max\by { * -10 } } 1
+	// Args:
+	// * collection: Block or list of values
+	// * code: Block of code to transform each value for comparison
+	// Returns:
+	// * the original value that produces the maximum result when transformed by the code block
+	"max\\by": {
+		Argsn: 2,
+		Doc:   "Finds the value in a collection that produces the maximum result when transformed by a code block. Returns the original value, not the transformed result.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch data := arg0.(type) {
+			case env.Block:
+				codeBlock, ok := arg1.(env.Block)
+				if !ok {
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "max\\by")
+				}
+
+				l := data.Series.Len()
+				if l == 0 {
+					return MakeBuiltinError(ps, "Block is empty.", "max\\by")
+				}
+
+				var maxValue env.Object
+				var maxResult env.Object
+				ser := ps.Ser
+
+				for i := 0; i < l; i++ {
+					currentValue := data.Series.Get(i)
+
+					// Evaluate the code block with the current value injected
+					ps.Ser = codeBlock.Series
+					ps.Ser.SetPos(0)
+					EvalBlockInjMultiDialect(ps, currentValue, true)
+
+					if ps.ErrorFlag || ps.FailureFlag {
+						ps.Ser = ser
+						return MakeBuiltinError(ps, "Error during evaluation of code block", "max\\by")
+					}
+
+					currentResult := ps.Res
+
+					// Track the value that produces the maximum result
+					if maxResult == nil || greaterThanNew(currentResult, maxResult) {
+						maxResult = currentResult
+						maxValue = currentValue
+					}
+				}
+
+				ps.Ser = ser
+				return maxValue
+			case env.List:
+				codeBlock, ok := arg1.(env.Block)
+				if !ok {
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "max\\by")
+				}
+
+				l := len(data.Data)
+				if l == 0 {
+					return MakeBuiltinError(ps, "List is empty.", "max\\by")
+				}
+
+				var maxValue env.Object
+				var maxResult env.Object
+				ser := ps.Ser
+
+				for i := 0; i < l; i++ {
+					currentValue := env.ToRyeValue(data.Data[i])
+
+					// Evaluate the code block with the current value injected
+					ps.Ser = codeBlock.Series
+					ps.Ser.SetPos(0)
+					EvalBlockInjMultiDialect(ps, currentValue, true)
+
+					if ps.ErrorFlag || ps.FailureFlag {
+						ps.Ser = ser
+						return MakeBuiltinError(ps, "Error during evaluation of code block", "max\\by")
+					}
+
+					currentResult := ps.Res
+
+					// Track the value that produces the maximum result
+					if maxResult == nil || greaterThanNew(currentResult, maxResult) {
+						maxResult = currentResult
+						maxValue = currentValue
+					}
+				}
+
+				ps.Ser = ser
+				return maxValue
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "max\\by")
+			}
+		},
+	},
+	// Tests:
 	// equal { min { 8 2 10 6 } } 2
 	// equal { min list { 8 2 10 6 } } 2
 	// equal { try { min { } } |type? } 'error
@@ -270,6 +368,105 @@ var builtins_collection = map[string]*env.Builtin{
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "min")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { { 3 1 2 } |min\by { * -10 } } 3
+	// equal { { "a" "abc" "ab" } |min\by { .length? } } "a"
+	// equal { { 5 -3 2 -8 } |min\by { abs } } 2
+	// equal { list { 3 1 2 } |min\by { * -10 } } 3
+	// Args:
+	// * collection: Block or list of values
+	// * code: Block of code to transform each value for comparison
+	// Returns:
+	// * the original value that produces the minimum result when transformed by the code block
+	"min\\by": {
+		Argsn: 2,
+		Doc:   "Finds the value in a collection that produces the minimum result when transformed by a code block. Returns the original value, not the transformed result.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch data := arg0.(type) {
+			case env.Block:
+				codeBlock, ok := arg1.(env.Block)
+				if !ok {
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "min\\by")
+				}
+
+				l := data.Series.Len()
+				if l == 0 {
+					return MakeBuiltinError(ps, "Block is empty.", "min\\by")
+				}
+
+				var minValue env.Object
+				var minResult env.Object
+				ser := ps.Ser
+
+				for i := 0; i < l; i++ {
+					currentValue := data.Series.Get(i)
+
+					// Evaluate the code block with the current value injected
+					ps.Ser = codeBlock.Series
+					ps.Ser.SetPos(0)
+					EvalBlockInjMultiDialect(ps, currentValue, true)
+
+					if ps.ErrorFlag || ps.FailureFlag {
+						ps.Ser = ser
+						return MakeBuiltinError(ps, "Error during evaluation of code block", "min\\by")
+					}
+
+					currentResult := ps.Res
+
+					// Track the value that produces the minimum result
+					if minResult == nil || greaterThanNew(minResult, currentResult) {
+						minResult = currentResult
+						minValue = currentValue
+					}
+				}
+
+				ps.Ser = ser
+				return minValue
+			case env.List:
+				codeBlock, ok := arg1.(env.Block)
+				if !ok {
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "min\\by")
+				}
+
+				l := len(data.Data)
+				if l == 0 {
+					return MakeBuiltinError(ps, "List is empty.", "min\\by")
+				}
+
+				var minValue env.Object
+				var minResult env.Object
+				ser := ps.Ser
+
+				for i := 0; i < l; i++ {
+					currentValue := env.ToRyeValue(data.Data[i])
+
+					// Evaluate the code block with the current value injected
+					ps.Ser = codeBlock.Series
+					ps.Ser.SetPos(0)
+					EvalBlockInjMultiDialect(ps, currentValue, true)
+
+					if ps.ErrorFlag || ps.FailureFlag {
+						ps.Ser = ser
+						return MakeBuiltinError(ps, "Error during evaluation of code block", "min\\by")
+					}
+
+					currentResult := ps.Res
+
+					// Track the value that produces the minimum result
+					if minResult == nil || greaterThanNew(minResult, currentResult) {
+						minResult = currentResult
+						minValue = currentValue
+					}
+				}
+
+				ps.Ser = ser
+				return minValue
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "min\\by")
 			}
 		},
 	},
