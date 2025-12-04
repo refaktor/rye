@@ -695,6 +695,7 @@ var builtins_printing = map[string]*env.Builtin{
 				ser := ps.Ser
 				ps.Ser = bloc.Series
 				EvalBlock(ps)
+				MaybeDisplayFailureOrError(ps, ps.Idx, "capture-stdout")
 				ps.Ser = ser
 
 				// back to normal state

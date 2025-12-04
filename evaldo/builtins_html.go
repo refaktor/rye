@@ -170,6 +170,8 @@ func do_html(es *env.ProgramState, reader io.Reader, dmap env.Dict) env.Object {
 			ser := es.Ser // TODO -- make helper function that "does" a block
 			es.Ser = obj.Series
 			EvalBlockInj(es, *env.NewNative(es.Idx, "", "rye-html-start"), true)
+			MaybeDisplayFailureOrError(es, es.Idx, "do_html")
+
 			if es.ErrorFlag {
 				return es.Res
 			}
@@ -221,6 +223,8 @@ myloop:
 							ser := es.Ser // TODO -- make helper function that "does" a block
 							es.Ser = node.Code.Series
 							EvalBlockInj(es, *env.NewNative(es.Idx, token, "rye-html-start"), true)
+							MaybeDisplayFailureOrError(es, es.Idx, "do_html\\code")
+
 							if es.ErrorFlag {
 								return es.Res
 							}
@@ -241,6 +245,7 @@ myloop:
 									ser := es.Ser // TODO -- make helper function that "does" a block
 									es.Ser = code.Series
 									EvalBlockInj(es, *env.NewNative(es.Idx, token, "rye-html-start"), true)
+									MaybeDisplayFailureOrError(es, es.Idx, "do_html\\subnode")
 									if es.ErrorFlag {
 										return es.Res
 									}
@@ -314,6 +319,7 @@ myloop:
 					ser := es.Ser // TODO -- make helper function that "does" a block
 					es.Ser = node.Code.Series
 					EvalBlockInj(es, *env.NewString(tok.Data), true)
+					MaybeDisplayFailureOrError(es, es.Idx, "do_html\\text-token")
 					if es.ErrorFlag {
 						return es.Res
 					}
@@ -337,6 +343,8 @@ myloop:
 						ser := es.Ser // TODO -- make helper function that "does" a block
 						es.Ser = obj.Series
 						EvalBlockInj(es, *env.NewNative(es.Idx, tok, "rye-html-start"), true)
+						MaybeDisplayFailureOrError(es, es.Idx, "do_html\\end-tag-token")
+
 						if es.ErrorFlag {
 							return es.Res
 						}
@@ -373,6 +381,8 @@ myloop:
 			ser := es.Ser // TODO -- make helper function that "does" a block
 			es.Ser = obj.Code.Series
 			EvalBlockInj(es, *env.NewNative(es.Idx, "", "rye-html-start"), true)
+			MaybeDisplayFailureOrError(es, es.Idx, "do_html\\return")
+
 			if es.ErrorFlag {
 				return es.Res
 			}

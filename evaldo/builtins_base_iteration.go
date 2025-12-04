@@ -156,7 +156,9 @@ var builtins_iteration = map[string]*env.Builtin{
 					for {
 						ps.Ser = cond.Series
 						EvalBlockInjMultiDialect(ps, acc, true)
+						MaybeDisplayFailureOrError(ps, ps.Idx, "produce\\while")
 						if ps.ErrorFlag {
+							ps.Ser = ser
 							return ps.Res
 						}
 						if !util.IsTruthy(ps.Res) {
@@ -320,87 +322,89 @@ var builtins_iteration = map[string]*env.Builtin{
 			}
 		},
 	},
-
-	"for___": { // **
-		Argsn: 2,
-		Doc:   "Iterates over each value in a collection, executing a block of code for each value.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch block := arg0.(type) {
-			case env.String:
-				switch code := arg1.(type) {
-				case env.Block:
-					ser := ps.Ser
-					ps.Ser = code.Series
-					for _, ch := range block.Value {
-						EvalBlockInjMultiDialect(ps, *env.NewString(string(ch)), true)
-						if ps.ErrorFlag || ps.ReturnFlag {
-							return ps.Res
+	/*
+		"for___": { // **
+			Argsn: 2,
+			Doc:   "Iterates over each value in a collection, executing a block of code for each value.",
+			Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+				switch block := arg0.(type) {
+				case env.String:
+					switch code := arg1.(type) {
+					case env.Block:
+						ser := ps.Ser
+						ps.Ser = code.Series
+						for _, ch := range block.Value {
+							EvalBlockInjMultiDialect(ps, *env.NewString(string(ch)), true)
+						MaybeDisplayFailureOrError(ps, ps.Idx, "forever\\with")
+							if ps.ErrorFlag || ps.ReturnFlag {
+								return ps.Res
+							}
+							ps.Ser.Reset()
 						}
-						ps.Ser.Reset()
+						ps.Ser = ser
+						return ps.Res
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.BlockType}, "for")
 					}
-					ps.Ser = ser
-					return ps.Res
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "for")
-				}
-			case env.Block:
-				switch code := arg1.(type) {
 				case env.Block:
-					ser := ps.Ser
-					ps.Ser = code.Series
-					for i := 0; i < block.Series.Len(); i++ {
-						EvalBlockInjMultiDialect(ps, block.Series.Get(i), true)
-						if ps.ErrorFlag || ps.ReturnFlag {
-							return ps.Res
+					switch code := arg1.(type) {
+					case env.Block:
+						ser := ps.Ser
+						ps.Ser = code.Series
+						for i := 0; i < block.Series.Len(); i++ {
+							EvalBlockInjMultiDialect(ps, block.Series.Get(i), true)
+							if ps.ErrorFlag || ps.ReturnFlag {
+								return ps.Res
+							}
+							ps.Ser.Reset()
 						}
-						ps.Ser.Reset()
+						ps.Ser = ser
+						return ps.Res
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.BlockType}, "for")
 					}
-					ps.Ser = ser
-					return ps.Res
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "for")
-				}
-			case env.List:
-				switch code := arg1.(type) {
-				case env.Block:
-					ser := ps.Ser
-					ps.Ser = code.Series
-					for i := 0; i < len(block.Data); i++ {
-						EvalBlockInjMultiDialect(ps, env.ToRyeValue(block.Data[i]), true)
-						if ps.ErrorFlag || ps.ReturnFlag {
-							return ps.Res
+				case env.List:
+					switch code := arg1.(type) {
+					case env.Block:
+						ser := ps.Ser
+						ps.Ser = code.Series
+						for i := 0; i < len(block.Data); i++ {
+							EvalBlockInjMultiDialect(ps, env.ToRyeValue(block.Data[i]), true)
+							if ps.ErrorFlag || ps.ReturnFlag {
+								return ps.Res
+							}
+							ps.Ser.Reset()
 						}
-						ps.Ser.Reset()
+						ps.Ser = ser
+						return ps.Res
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.BlockType}, "for")
 					}
-					ps.Ser = ser
-					return ps.Res
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "for")
-				}
-			case env.Table:
-				switch code := arg1.(type) {
-				case env.Block:
-					ser := ps.Ser
-					ps.Ser = code.Series
-					for i := 0; i < len(block.Rows); i++ {
-						row := block.Rows[i]
-						row.Uplink = &block
-						EvalBlockInjMultiDialect(ps, row, true)
-						if ps.ErrorFlag || ps.ReturnFlag {
-							return ps.Res
+				case env.Table:
+					switch code := arg1.(type) {
+					case env.Block:
+						ser := ps.Ser
+						ps.Ser = code.Series
+						for i := 0; i < len(block.Rows); i++ {
+							row := block.Rows[i]
+							row.Uplink = &block
+							EvalBlockInjMultiDialect(ps, row, true)
+							if ps.ErrorFlag || ps.ReturnFlag {
+								return ps.Res
+							}
+							ps.Ser.Reset()
 						}
-						ps.Ser.Reset()
+						ps.Ser = ser
+						return ps.Res
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.BlockType}, "for")
 					}
-					ps.Ser = ser
-					return ps.Res
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "for")
+					return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType, env.TableType}, "for")
 				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType, env.BlockType, env.TableType}, "for")
-			}
+			},
 		},
-	},
+	*/
 	// Tests:
 	// stdout { for { 1 2 3 } { prns "x" } } "x x x "
 	// stdout { { "a" "b" "c" } .for { .prns } } "a b c "

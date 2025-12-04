@@ -2508,7 +2508,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(builtins_contexts, ps, "base")
 	RegisterBuiltins2(builtins_persistent_contexts, ps, "base")
 	RegisterBuiltins2(builtins_functions, ps, "base")
-	RegisterBuiltins2(builtins_apply, ps, "base")
+	// already in base_functions RegisterBuiltins2(builtins_apply, ps, "base")
 	RegisterBuiltins2(Builtins_error_creation, ps, "error-creation")
 	RegisterBuiltins2(Builtins_error_inspection, ps, "error-inspection")
 	RegisterBuiltins2(Builtins_error_handling, ps, "error-handling")

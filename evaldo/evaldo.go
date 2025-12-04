@@ -925,11 +925,14 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0 env.Ob
 	} else {
 		EvalBlock(ps)
 	}
+	MaybeDisplayFailureOrError(ps, ps.Idx, "Call func collect args")
 	if ps.ErrorFlag || ps.FailureFlag {
+		ps.Ctx = env0
+		ps.Ser = ser0
 		// Don't restore state on error - let error handler deal with it
 		return
 	}
-	MaybeDisplayFailureOrError(ps, ps.Idx, "Call func X")
+
 	//	}
 	// MaybeDisplayFailureOrError(result, result.Idx, "call function")
 	if ps.ForcedResult != nil {
