@@ -223,7 +223,9 @@ var Builtins_cmd = map[string]*env.Builtin{
 						ps.BlockFile = it.FileName
 						ps.BlockLine = it.Line
 						EvalBlock(ps)
+						MaybeDisplayFailureOrError(ps, ps.Idx, "cmd")
 						if ps.ErrorFlag {
+							ps.Ser = ser
 							return ps.Res
 						}
 						ps.Ser = ser

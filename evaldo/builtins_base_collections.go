@@ -239,7 +239,7 @@ var builtins_collection = map[string]*env.Builtin{
 					ps.Ser = codeBlock.Series
 					ps.Ser.SetPos(0)
 					EvalBlockInjMultiDialect(ps, currentValue, true)
-
+					MaybeDisplayFailureOrError(ps, ps.Idx, "max\\by")
 					if ps.ErrorFlag || ps.FailureFlag {
 						ps.Ser = ser
 						return MakeBuiltinError(ps, "Error during evaluation of code block", "max\\by")
@@ -278,7 +278,7 @@ var builtins_collection = map[string]*env.Builtin{
 					ps.Ser = codeBlock.Series
 					ps.Ser.SetPos(0)
 					EvalBlockInjMultiDialect(ps, currentValue, true)
-
+					MaybeDisplayFailureOrError(ps, ps.Idx, "max\\by")
 					if ps.ErrorFlag || ps.FailureFlag {
 						ps.Ser = ser
 						return MakeBuiltinError(ps, "Error during evaluation of code block", "max\\by")
@@ -409,7 +409,7 @@ var builtins_collection = map[string]*env.Builtin{
 					ps.Ser = codeBlock.Series
 					ps.Ser.SetPos(0)
 					EvalBlockInjMultiDialect(ps, currentValue, true)
-
+					MaybeDisplayFailureOrError(ps, ps.Idx, "min\\by")
 					if ps.ErrorFlag || ps.FailureFlag {
 						ps.Ser = ser
 						return MakeBuiltinError(ps, "Error during evaluation of code block", "min\\by")
@@ -448,7 +448,7 @@ var builtins_collection = map[string]*env.Builtin{
 					ps.Ser = codeBlock.Series
 					ps.Ser.SetPos(0)
 					EvalBlockInjMultiDialect(ps, currentValue, true)
-
+					MaybeDisplayFailureOrError(ps, ps.Idx, "min\\by")
 					if ps.ErrorFlag || ps.FailureFlag {
 						ps.Ser = ser
 						return MakeBuiltinError(ps, "Error during evaluation of code block", "min\\by")

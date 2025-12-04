@@ -544,6 +544,7 @@ var builtins_functions = map[string]*env.Builtin{
 					// Execute function body
 					ps.Ser = fn.Body.Series
 					EvalBlock(ps)
+					MaybeDisplayFailureOrError(ps, ps.Idx, "apply")
 					if ps.ErrorFlag {
 						ps.Ctx = oldCtx
 						ps.Ser = ser

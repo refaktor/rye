@@ -559,6 +559,9 @@ var Builtins_goroutines = map[string]*env.Builtin{
 				}*/
 				psTemp.Ser = fn.Series
 				EvalBlockInj(&psTemp, arg, true)
+				MaybeDisplayFailureOrError(ps, ps.Idx, "select")
+
+				// TODO -- do we need to do something with ps.Ser
 				if psTemp.ErrorFlag {
 					return psTemp.Res
 				}

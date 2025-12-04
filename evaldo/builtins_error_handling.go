@@ -607,6 +607,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = bloc.Series
 					EvalBlockInjMultiDialect(ps, arg0, true)
+					MaybeDisplayFailureOrError(ps, ps.Idx, "fix")
 					if ps.ErrorFlag {
 						ps.Ser = ser
 						return ps.Res
@@ -644,6 +645,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = bloc.Series
 					EvalBlockInjMultiDialect(ps, arg0, true)
+					MaybeDisplayFailureOrError(ps, ps.Idx, "^fix")
 					ps.Ser = ser
 					ps.ReturnFlag = true
 					return ps.Res
@@ -679,6 +681,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = bloc.Series
 					EvalBlockInjMultiDialect(ps, arg0, true)
+					MaybeDisplayFailureOrError(ps, ps.Idx, "fix\\either")
 					ps.Ser = ser
 					return ps.Res
 				default:
@@ -691,6 +694,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = bloc.Series
 					EvalBlockInjMultiDialect(ps, arg0, true)
+					MaybeDisplayFailureOrError(ps, ps.Idx, "fix\\either")
 					ps.Ser = ser
 					return ps.Res
 				default:
@@ -722,6 +726,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = bloc.Series
 					EvalBlockInjMultiDialect(ps, arg0, true)
+					MaybeDisplayFailureOrError(ps, ps.Idx, "fix\\else")
 					ps.Ser = ser
 					return ps.Res
 				default:
@@ -799,6 +804,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = bloc.Series
 					EvalBlockInjMultiDialect(ps, arg0, true)
+					MaybeDisplayFailureOrError(ps, ps.Idx, "continue")
 					ps.Ser = ser
 					return ps.Res
 				default:
@@ -872,6 +878,8 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 						// we eval the block (current context / scope stays the same as it was in parent block)
 						EvalBlockInjMultiDialect(ps, arg0, true)
 						// we set temporary series back to current program state
+						MaybeDisplayFailureOrError(ps, ps.Idx, "fix\\match")
+
 						ps.Ser = ser
 						// we return the last return value (the return value of executing the block)
 						ps.ReturnFlag = true
@@ -906,7 +914,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 				ser := ps.Ser
 				ps.Ser = bloc.Series
 				EvalBlock(ps)
-
+				MaybeDisplayFailureOrError(ps, ps.Idx, "try")
 				ps.ReturnFlag = false
 				ps.ErrorFlag = false
 				ps.FailureFlag = false
@@ -941,6 +949,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 				// Execute the block
 				ps.Ser = bloc.Series
 				EvalBlock(ps)
+				MaybeDisplayFailureOrError(ps, ps.Idx, "try-all")
 
 				// Create result tuple
 				result := ps.Res
@@ -980,6 +989,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = bloc.Series
 					EvalBlockInCtxInj(ps, &ctx, nil, false)
+					MaybeDisplayFailureOrError(ps, ps.Idx, "try\\in")
 
 					ps.ReturnFlag = false
 					ps.ErrorFlag = false
@@ -1020,6 +1030,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 					// Execute the main block
 					ps.Ser = mainBlock.Series
 					EvalBlock(ps)
+					MaybeDisplayFailureOrError(ps, ps.Idx, "finally")
 
 					// Save result and flags
 					result := ps.Res
@@ -1031,6 +1042,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 					ps.FailureFlag = false
 					ps.ErrorFlag = false
 					EvalBlock(ps)
+					MaybeDisplayFailureOrError(ps, ps.Idx, "finally")
 
 					// Restore original result and flags
 					ps.Res = result
@@ -1076,6 +1088,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 					// Try the block initially
 					ps.Ser = bloc.Series
 					EvalBlock(ps)
+					MaybeDisplayFailureOrError(ps, ps.Idx, "retry")
 
 					// If it succeeded (no failure flag), return the result immediately
 					if !ps.FailureFlag {
@@ -1095,6 +1108,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 
 						// Execute the block again
 						EvalBlock(ps)
+						MaybeDisplayFailureOrError(ps, ps.Idx, "retry")
 
 						// If it succeeded, return the result
 						if !ps.FailureFlag {
@@ -1147,6 +1161,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 
 					// Execute the block
 					EvalBlock(ps)
+					MaybeDisplayFailureOrError(ps, ps.Idx, "persist")
 
 					// If it succeeded (no failure flag), return the result
 					if !ps.FailureFlag {
@@ -1200,6 +1215,8 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 					// Execute the block in a goroutine
 					go func() {
 						EvalBlock(psCopy)
+						MaybeDisplayFailureOrError(ps, ps.Idx, "timeout")
+
 						resultChan <- psCopy.Res
 						doneChan <- psCopy.FailureFlag
 					}()

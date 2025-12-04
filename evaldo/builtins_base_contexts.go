@@ -31,6 +31,7 @@ var builtins_contexts = map[string]*env.Builtin{
 				ps.Ser = bloc.Series
 				ps.Ctx = env.NewEnv(nil) // make new context with no parent
 				EvalBlock(ps)
+				MaybeDisplayFailureOrError(ps, ps.Idx, "raw-context")
 				rctx := ps.Ctx
 				ps.Ctx = ctx
 				ps.Ser = ser
@@ -65,6 +66,7 @@ var builtins_contexts = map[string]*env.Builtin{
 				ps.Ser = bloc.Series
 				ps.Ctx = env.NewEnv(ps.Ctx) // make new context with no parent
 				EvalBlock(ps)
+				MaybeDisplayFailureOrError(ps, ps.Idx, "isolate")
 				rctx := ps.Ctx
 				rctx.Parent = nil
 				rctx.Kind = *env.NewWord(-1)
@@ -100,6 +102,7 @@ var builtins_contexts = map[string]*env.Builtin{
 				ps.Ser = bloc.Series
 				ps.Ctx = env.NewEnv(ps.Ctx) // make new context with no parent
 				EvalBlock(ps)
+				MaybeDisplayFailureOrError(ps, ps.Idx, "context")
 				rctx := ps.Ctx
 				ps.Ctx = ctx
 				ps.Ser = ser
@@ -132,6 +135,7 @@ var builtins_contexts = map[string]*env.Builtin{
 				ps.Ser = bloc.Series
 				ps.Ctx = env.NewEnv(ps.PCtx) // make new context with PCtx as parent instead of regular Ctx
 				EvalBlock(ps)
+				MaybeDisplayFailureOrError(ps, ps.Idx, "context\\pure")
 				rctx := ps.Ctx
 				ps.Ctx = ctx
 				ps.Ser = ser
@@ -165,6 +169,7 @@ var builtins_contexts = map[string]*env.Builtin{
 				ps.Ser = bloc.Series
 				ps.Ctx = env.NewEnv(ps.Ctx) // make new context with no parent
 				EvalBlock(ps)
+				MaybeDisplayFailureOrError(ps, ps.Idx, "private")
 				if ps.ErrorFlag {
 					ps.Ctx = ctx
 					ps.Ser = ser
@@ -200,6 +205,7 @@ var builtins_contexts = map[string]*env.Builtin{
 					ps.Ser = bloc.Series
 					ps.Ctx = env.NewEnv2(ps.Ctx, doc.Value) // make new context with no parent
 					EvalBlock(ps)
+					MaybeDisplayFailureOrError(ps, ps.Idx, "private\\")
 					if ps.ErrorFlag {
 						ps.Ctx = ctx
 						ps.Ser = ser
@@ -241,6 +247,7 @@ var builtins_contexts = map[string]*env.Builtin{
 					// ps.Ctx = ctx0.Copy() // make new context with no parent
 					ps.Ctx = env.NewEnv(&ctx0) // make new context with no parent
 					EvalBlock(ps)
+					MaybeDisplayFailureOrError(ps, ps.Idx, "extends")
 					if ps.ErrorFlag {
 						ps.Ctx = ctx
 						ps.Ser = ser
@@ -594,6 +601,7 @@ var builtins_contexts = map[string]*env.Builtin{
 						ps.Ser = bloc.Series
 						ps.Ctx = ryeCtx
 						EvalBlock(ps)
+						MaybeDisplayFailureOrError(ps, ps.Idx, "clone\\")
 						rctx := ps.Ctx
 						ps.Ctx = origCtx
 						ps.Ser = ser
@@ -616,6 +624,7 @@ var builtins_contexts = map[string]*env.Builtin{
 						ps.Ser = bloc.Series
 						ps.Ctx = ryeCtx
 						EvalBlock(ps)
+						MaybeDisplayFailureOrError(ps, ps.Idx, "clone\\")
 						rctx := ps.Ctx
 						ps.Ctx = origCtx
 						ps.Ser = ser

@@ -26,7 +26,9 @@ var builtins_combinators = map[string]*env.Builtin{
 				ser := ps.Ser
 				ps.Ser = bloc.Series
 				EvalBlockInjMultiDialect(ps, arg0, true)
+				MaybeDisplayFailureOrError(ps, ps.Idx, "pass")
 				if ps.ErrorFlag {
+					ps.Ser = ser
 					return ps.Res
 				}
 				ps.Ser = ser
@@ -58,6 +60,7 @@ var builtins_combinators = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = wrap.Series
 					EvalBlockInjMultiDialect(ps, arg0, true)
+					MaybeDisplayFailureOrError(ps, ps.Idx, "wrap")
 					if ps.ErrorFlag {
 						ps.Ser = ser
 						return ps.Res
@@ -68,6 +71,7 @@ var builtins_combinators = map[string]*env.Builtin{
 
 					ps.Ser = bloc.Series
 					EvalBlockInjMultiDialect(ps, arg0, true)
+					MaybeDisplayFailureOrError(ps, ps.Idx, "wrap")
 					if ps.ErrorFlag {
 						ps.Ser = ser
 						return ps.Res
@@ -79,6 +83,7 @@ var builtins_combinators = map[string]*env.Builtin{
 
 					ps.Ser = wrap.Series
 					EvalBlockInjMultiDialect(ps, arg0, true)
+					MaybeDisplayFailureOrError(ps, ps.Idx, "wrap")
 					if ps.ErrorFlag {
 						ps.Ser = ser
 						return ps.Res
@@ -116,12 +121,14 @@ var builtins_combinators = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = b1.Series
 					EvalBlockInjMultiDialect(ps, arg0, true)
+					MaybeDisplayFailureOrError(ps, ps.Idx, "keep")
 					if ps.ErrorFlag {
 						return ps.Res
 					}
 					res := ps.Res
 					ps.Ser = b2.Series
 					EvalBlockInjMultiDialect(ps, arg0, true)
+					MaybeDisplayFailureOrError(ps, ps.Idx, "keep")
 					if ps.ErrorFlag {
 						ps.Ser = ser
 						return ps.Res
