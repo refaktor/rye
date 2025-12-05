@@ -440,6 +440,9 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 		ps.ErrorFlag = true
 		ps.Res = env.NewError("Error object encountered in code block. This usually indicates a previous error that wasn't properly handled.")
 		return
+		ps.ErrorFlag = true
+		ps.Res = env.NewError("Error object encountered in code block. This usually indicates a previous error that wasn't properly handled.")
+		return
 	default:
 		ps.Res = object
 		return
@@ -1417,6 +1420,10 @@ func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Obj
 	} else {
 		ps.Res = bi.Fn(ps, arg0, arg1, arg2, arg3, arg4)
 	}
+	if ps.Res == nil {
+		ps.Res = env.NewError4(0, "Builtin returned a invalid value (nil)", nil, nil)
+		ps.ErrorFlag = true
+	}
 }
 
 // CallVarBuiltin calls a variadic builtin by collecting all required arguments into a slice.
@@ -1470,6 +1477,11 @@ func CallVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, arg0_ env.Object, t
 	}
 
 	ps.Res = bi.Fn(ps, args...)
+	if ps.Res == nil {
+		ps.Res = env.NewError4(0, "Builtin returned a invalid value (nil)", nil, nil)
+		ps.ErrorFlag = true
+	}
+
 }
 
 // DirectlyCallBuiltin directly calls a builtin with provided arguments (no collection from code).
@@ -1480,7 +1492,12 @@ func DirectlyCallBuiltin(ps *env.ProgramState, bi env.Builtin, a0 env.Object, a1
 	var arg2 env.Object
 	var arg3 env.Object
 	var arg4 env.Object
-	return bi.Fn(ps, a0, a1, arg2, arg3, arg4)
+	res := bi.Fn(ps, a0, a1, arg2, arg3, arg4)
+	if res == nil {
+		ps.ErrorFlag = true
+		return env.NewError4(0, "Builtin returned a invalid value (nil)", nil, nil)
+	}
+	return res
 }
 
 // DISPLAYING FAILURE OR ERRROR
