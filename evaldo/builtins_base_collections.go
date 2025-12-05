@@ -205,7 +205,7 @@ var builtins_collection = map[string]*env.Builtin{
 	// Tests:
 	// equal { { 1 3 2 } |max\by { * -10 } } 1
 	// equal { { "a" "abc" "ab" } |max\by { .length? } } "abc"
-	// equal { { 5 -3 2 -8 } |max\by { abs } } -8
+	// equal { { 5 -3 2 -8 } |max\by { .math/abs } } -8
 	// equal { list { 1 3 2 } |max\by { * -10 } } 1
 	// Args:
 	// * collection: Block or list of values
@@ -375,7 +375,7 @@ var builtins_collection = map[string]*env.Builtin{
 	// Tests:
 	// equal { { 3 1 2 } |min\by { * -10 } } 3
 	// equal { { "a" "abc" "ab" } |min\by { .length? } } "a"
-	// equal { { 5 -3 2 -8 } |min\by { abs } } 2
+	// equal { { 5 -3 2 -8 } |min\by { .math/abs } } 2
 	// equal { list { 3 1 2 } |min\by { * -10 } } 3
 	// Args:
 	// * collection: Block or list of values
@@ -529,6 +529,112 @@ var builtins_collection = map[string]*env.Builtin{
 		},
 	},
 	// Tests:
+	// equal { { 1 2 3 } |avg\by { * 2 } } 4.0
+	// equal { { "a" "abc" "ab" } |avg\by { .length? } } 2.0
+	// equal { { 10 20 30 } |avg\by { / 10 } } 2.0
+	// equal { list { 2 4 6 } |avg\by { + 1 } } 5.0
+	// Args:
+	// * collection: Block or list of values
+	// * code: Block of code to transform each value before averaging
+	// Returns:
+	// * the average of all transformed results as a decimal
+	"avg\\by": {
+		Argsn: 2,
+		Doc:   "Calculates the average of the results of transforming each value in a collection by a code block. Returns the average of all transformed results.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch data := arg0.(type) {
+			case env.Block:
+				codeBlock, ok := arg1.(env.Block)
+				if !ok {
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "avg\\by")
+				}
+
+				l := data.Series.Len()
+				if l == 0 {
+					return MakeBuiltinError(ps, "Block is empty.", "avg\\by")
+				}
+
+				var sum float64
+				ser := ps.Ser
+
+				for i := 0; i < l; i++ {
+					currentValue := data.Series.Get(i)
+
+					// Evaluate the code block with the current value injected
+					ps.Ser = codeBlock.Series
+					ps.Ser.SetPos(0)
+					EvalBlockInjMultiDialect(ps, currentValue, true)
+					MaybeDisplayFailureOrError(ps, ps.Idx, "avg\\by")
+					if ps.ErrorFlag || ps.FailureFlag {
+						ps.Ser = ser
+						return MakeBuiltinError(ps, "Error during evaluation of code block", "avg\\by")
+					}
+
+					currentResult := ps.Res
+
+					// Add the result to the sum
+					switch val := currentResult.(type) {
+					case env.Integer:
+						sum += float64(val.Value)
+					case env.Decimal:
+						sum += val.Value
+					default:
+						ps.Ser = ser
+						return MakeBuiltinError(ps, "Block should return integer or decimal", "avg\\by")
+					}
+				}
+
+				ps.Ser = ser
+				return *env.NewDecimal(sum / float64(l))
+			case env.List:
+				codeBlock, ok := arg1.(env.Block)
+				if !ok {
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "avg\\by")
+				}
+
+				l := len(data.Data)
+				if l == 0 {
+					return MakeBuiltinError(ps, "List is empty.", "avg\\by")
+				}
+
+				var sum float64
+				ser := ps.Ser
+
+				for i := 0; i < l; i++ {
+					currentValue := env.ToRyeValue(data.Data[i])
+
+					// Evaluate the code block with the current value injected
+					ps.Ser = codeBlock.Series
+					ps.Ser.SetPos(0)
+					EvalBlockInjMultiDialect(ps, currentValue, true)
+					MaybeDisplayFailureOrError(ps, ps.Idx, "avg\\by")
+					if ps.ErrorFlag || ps.FailureFlag {
+						ps.Ser = ser
+						return MakeBuiltinError(ps, "Error during evaluation of code block", "avg\\by")
+					}
+
+					currentResult := ps.Res
+
+					// Add the result to the sum
+					switch val := currentResult.(type) {
+					case env.Integer:
+						sum += float64(val.Value)
+					case env.Decimal:
+						sum += val.Value
+					default:
+						ps.Ser = ser
+						return MakeBuiltinError(ps, "Block should return integer or decimal", "avg\\by")
+					}
+				}
+
+				ps.Ser = ser
+				return *env.NewDecimal(sum / float64(l))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "avg\\by")
+			}
+		},
+	},
+	// Tests:
 	// equal { sum { 8 2 10 6 } } 26
 	// equal { sum { 8 2 10 6.5 } } 26.5
 	// equal { sum { } } 0
@@ -590,6 +696,124 @@ var builtins_collection = map[string]*env.Builtin{
 				return *env.NewDecimal(block.Value.Sum())
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.VectorType}, "sum")
+			}
+		},
+	},
+	// Tests:
+	// equal { { 1 2 3 } |sum\by { * 2 } } 12
+	// equal { { "a" "abc" "ab" } |sum\by { .length? } } 6
+	// equal { { 1.5 2.5 3.5 } |sum\by { * 2 } } 15.0
+	// equal { list { 1 2 3 4 } |sum\by { + 10 } } 54
+	// Args:
+	// * collection: Block or list of values
+	// * code: Block of code to transform each value before summing
+	// Returns:
+	// * the sum of all transformed results (integer if all results are integers, decimal otherwise)
+	"sum\\by": {
+		Argsn: 2,
+		Doc:   "Sums the results of transforming each value in a collection by a code block. Returns the sum of all transformed results.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch data := arg0.(type) {
+			case env.Block:
+				codeBlock, ok := arg1.(env.Block)
+				if !ok {
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "sum\\by")
+				}
+
+				l := data.Series.Len()
+				if l == 0 {
+					return *env.NewInteger(0)
+				}
+
+				var sum float64
+				onlyInts := true
+				ser := ps.Ser
+
+				for i := 0; i < l; i++ {
+					currentValue := data.Series.Get(i)
+
+					// Evaluate the code block with the current value injected
+					ps.Ser = codeBlock.Series
+					ps.Ser.SetPos(0)
+					EvalBlockInjMultiDialect(ps, currentValue, true)
+					MaybeDisplayFailureOrError(ps, ps.Idx, "sum\\by")
+					if ps.ErrorFlag || ps.FailureFlag {
+						ps.Ser = ser
+						return MakeBuiltinError(ps, "Error during evaluation of code block", "sum\\by")
+					}
+
+					currentResult := ps.Res
+
+					// Add the result to the sum
+					switch val := currentResult.(type) {
+					case env.Integer:
+						sum += float64(val.Value)
+					case env.Decimal:
+						sum += val.Value
+						onlyInts = false
+					default:
+						ps.Ser = ser
+						return MakeBuiltinError(ps, "Block should return integer or decimal", "sum\\by")
+					}
+				}
+
+				ps.Ser = ser
+				if onlyInts {
+					return *env.NewInteger(int64(sum))
+				} else {
+					return *env.NewDecimal(sum)
+				}
+			case env.List:
+				codeBlock, ok := arg1.(env.Block)
+				if !ok {
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "sum\\by")
+				}
+
+				l := len(data.Data)
+				if l == 0 {
+					return *env.NewInteger(0)
+				}
+
+				var sum float64
+				onlyInts := true
+				ser := ps.Ser
+
+				for i := 0; i < l; i++ {
+					currentValue := env.ToRyeValue(data.Data[i])
+
+					// Evaluate the code block with the current value injected
+					ps.Ser = codeBlock.Series
+					ps.Ser.SetPos(0)
+					EvalBlockInjMultiDialect(ps, currentValue, true)
+					MaybeDisplayFailureOrError(ps, ps.Idx, "sum\\by")
+					if ps.ErrorFlag || ps.FailureFlag {
+						ps.Ser = ser
+						return MakeBuiltinError(ps, "Error during evaluation of code block", "sum\\by")
+					}
+
+					currentResult := ps.Res
+
+					// Add the result to the sum
+					switch val := currentResult.(type) {
+					case env.Integer:
+						sum += float64(val.Value)
+					case env.Decimal:
+						sum += val.Value
+						onlyInts = false
+					default:
+						ps.Ser = ser
+						return MakeBuiltinError(ps, "Block should return integer or decimal", "sum\\by")
+					}
+				}
+
+				ps.Ser = ser
+				if onlyInts {
+					return *env.NewInteger(int64(sum))
+				} else {
+					return *env.NewDecimal(sum)
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "sum\\by")
 			}
 		},
 	},
