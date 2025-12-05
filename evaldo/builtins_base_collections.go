@@ -1261,6 +1261,7 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { nth { "a" "b" "c" "d" "e" } 2 } "b"
 	// equal { nth "abcde" 3 } "c"
 	// equal { nth list { 10 20 30 40 } 2 } 20
+	// error { nth list { 10 20 30 40 } 0 }
 	// ; equal { nth table { 'a 'b } { 1 2 } { 3 4 } 2 } table-row { 'a 3 'b 4 }
 	// Args:
 	// * collection: Block, list, string or table to get an item from
@@ -1271,7 +1272,8 @@ var builtins_collection = map[string]*env.Builtin{
 		Argsn: 2,
 		Doc:   "Retrieves the item at the specified position (1-based indexing) from a collection.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch num := arg1.(type) {
+			return getFrom(ps, arg0, arg1, true)
+			/* switch num := arg1.(type) {
 			case env.Integer:
 				switch s1 := arg0.(type) {
 				case env.Block:
@@ -1309,7 +1311,7 @@ var builtins_collection = map[string]*env.Builtin{
 				}
 			default:
 				return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "nth")
-			}
+			}*/
 		},
 	},
 
