@@ -1546,6 +1546,24 @@ section "Collections " "" {
 	{
 ``	}
 
+	group "max\\by" 
+	"Finds the value in a collection that produces the maximum result when transformed by a code block. Returns the original value, not the transformed result."
+	{
+		arg `collection: Block or list of values`
+		arg `code: Block of code to transform each value for comparison`
+		returns `the original value that produces the maximum result when transformed by the code block`
+	}
+
+	{
+		equal { { 1 3 2 } |max\by { * -10 } } 1
+		equal { { "a" "abc" "ab" } |max\by { .length? } } "abc"
+		equal { { 5 -3 2 -8 } |max\by { .math/abs } } -8
+		equal { list { 1 3 2 } |max\by { * -10 } } 1
+	}
+
+	{
+``	}
+
 	group "min" 
 	"Finds the minimum value in a block or list of comparable values."
 	{
@@ -1558,6 +1576,24 @@ section "Collections " "" {
 		equal { min list { 8 2 10 6 } } 2
 		equal { try { min { } } |type? } 'error
 		equal { try { min list { } } |type? } 'error
+	}
+
+	{
+``	}
+
+	group "min\\by" 
+	"Finds the value in a collection that produces the minimum result when transformed by a code block. Returns the original value, not the transformed result."
+	{
+		arg `collection: Block or list of values`
+		arg `code: Block of code to transform each value for comparison`
+		returns `the original value that produces the minimum result when transformed by the code block`
+	}
+
+	{
+		equal { { 3 1 2 } |min\by { * -10 } } 3
+		equal { { "a" "abc" "ab" } |min\by { .length? } } "a"
+		equal { { 5 -3 2 -8 } |min\by { .math/abs } } 2
+		equal { list { 3 1 2 } |min\by { * -10 } } 3
 	}
 
 	{
@@ -1581,6 +1617,24 @@ section "Collections " "" {
 	{
 ``	}
 
+	group "avg\\by" 
+	"Calculates the average of the results of transforming each value in a collection by a code block. Returns the average of all transformed results."
+	{
+		arg `collection: Block or list of values`
+		arg `code: Block of code to transform each value before averaging`
+		returns `the average of all transformed results as a decimal`
+	}
+
+	{
+		equal { { 1 2 3 } |avg\by { * 2 } } 4.0
+		equal { { "a" "abc" "ab" } |avg\by { .length? } } 2.0
+		equal { { 10 20 30 } |avg\by { / 10 } } 2.0
+		equal { list { 2 4 6 } |avg\by { + 1 } } 5.0
+	}
+
+	{
+``	}
+
 	group "sum" 
 	"Calculates the sum of all numeric values in a collection."
 	{
@@ -1595,6 +1649,24 @@ section "Collections " "" {
 		equal { sum list { 8 2 10 6 } } 26
 		equal { sum list { 8 2 10 6.5 } } 26.5
 		equal { sum list { } } 0
+	}
+
+	{
+``	}
+
+	group "sum\\by" 
+	"Sums the results of transforming each value in a collection by a code block. Returns the sum of all transformed results."
+	{
+		arg `collection: Block or list of values`
+		arg `code: Block of code to transform each value before summing`
+		returns `the sum of all transformed results (integer if all results are integers, decimal otherwise)`
+	}
+
+	{
+		equal { { 1 2 3 } |sum\by { * 2 } } 12
+		equal { { "a" "abc" "ab" } |sum\by { .length? } } 6
+		equal { { 1.5 2.5 3.5 } |sum\by { * 2 } } 15.0
+		equal { list { 1 2 3 4 } |sum\by { + 10 } } 54
 	}
 
 	{
