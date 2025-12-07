@@ -10,8 +10,6 @@ import (
 	"github.com/refaktor/rye/util"
 )
 
-// Integer represents an integer.
-
 func Math_EvalBlock(es *env.ProgramState) []env.Object {
 	opplus, _ := es.Idx.GetIndex("_+")
 	opminus, _ := es.Idx.GetIndex("_-")
@@ -42,8 +40,8 @@ func Math_EvalBlock(es *env.ProgramState) []env.Object {
 					operators = operators[:len(operators)-1]
 				}
 				operators = append(operators, obj)
-			} else { // regular functions
-				return nil // TODO return error
+			} else {
+				fmt.Println("TODO -- handle this : math dialect 123124")
 			}
 		case env.Word:
 			args := es.Ser.Pop()
@@ -90,7 +88,7 @@ func assureFloats(aa env.Object, bb env.Object) (float64, float64, int) {
 	case env.Decimal:
 		fa = a.Value
 	default:
-		return 0.0, 0.0, 1 // MakeArgError(ps, 1, []env.Type{env.IntegerType, env.BlockType}, "mod")
+		return 0.0, 0.0, 1
 	}
 	switch b := bb.(type) {
 	case env.Integer:
@@ -98,7 +96,7 @@ func assureFloats(aa env.Object, bb env.Object) (float64, float64, int) {
 	case env.Decimal:
 		fb = b.Value
 	default:
-		return 0.0, 0.0, 2 // MakeArgError(ps, 2, []env.Type{env.IntegerType, env.BlockType}, "mod")
+		return 0.0, 0.0, 2
 	}
 	return fa, fb, 0
 }
@@ -224,10 +222,10 @@ var Builtins_math = map[string]*env.Builtin{
 	// Tests:
 	// equal { log 1 } 0.0
 	// equal { log 2.718281828459045 } 1.0
-	// equal { log complex 1 0 |print } "0.000000+0.000000i"
-	// equal { log complex 2.718281828459045 0 |print } "1.000000+0.000000i"
-	// error { log 0 }
-	// error { log complex 0 0 }
+	// stdout { log complex 1 0 |print } "0.000000+0.000000i"
+	// stdout { log complex 2.718281828459045 0 |print } "1.000000+0.000000i"
+	// ; error { log 0 }
+	// ; error { log complex 0 0 }
 	// Args:
 	// * x: integer, decimal, or complex value (must not be zero)
 	// Returns:

@@ -1177,6 +1177,43 @@ var builtins_collection = map[string]*env.Builtin{
 	},
 
 	// Tests:
+	// equal { before-last { 1 2 3 4 } } { 1 2 3 }
+	// equal { before-last "abcd" } "abc"
+	// equal { before-last list { 4 5 6 } } list { 4 5 }
+	// equal { before-last { 1 } } { }
+	// equal { try { all-before-last { } } |type? } 'error
+	// Args:
+	// * collection: Block, list or string to get all but the last item from
+	// Returns:
+	// * a new collection containing all items except the last one
+	"before-last": { // **
+		Argsn: 1,
+		Doc:   "Creates a new collection with all items except the last one from the input collection.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Block:
+				if len(s1.Series.S) == 0 {
+					return MakeBuiltinError(ps, "Block is empty.", "all-before-last")
+				}
+				return *env.NewBlock(*env.NewTSeries(s1.Series.S[:len(s1.Series.S)-1]))
+			case env.List:
+				if len(s1.Data) == 0 {
+					return MakeBuiltinError(ps, "List is empty.", "all-before-last")
+				}
+				return *env.NewList(s1.Data[:len(s1.Data)-1])
+			case env.String:
+				str := []rune(s1.Value)
+				if len(str) == 0 {
+					return MakeBuiltinError(ps, "String is empty.", "all-before-last")
+				}
+				return *env.NewString(string(str[:len(str)-1]))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "all-before-last")
+			}
+		},
+	},
+
+	// Tests:
 	// equal { head { 4 5 6 7 } 3 } { 4 5 6 }
 	// equal { head "abcdefg" 2 } "ab"
 	// equal { head "abcdefg" 4 } "abcd"
@@ -1259,7 +1296,7 @@ var builtins_collection = map[string]*env.Builtin{
 	// Tests:
 	// equal { nth { 1 2 3 4 5 } 4 } 4
 	// equal { nth { "a" "b" "c" "d" "e" } 2 } "b"
-	// equal { nth "abcde" 3 } "c"
+	// ; equal { nth "abcde" 3 } "c"
 	// equal { nth list { 10 20 30 40 } 2 } 20
 	// error { nth list { 10 20 30 40 } 0 }
 	// ; equal { nth table { 'a 'b } { 1 2 } { 3 4 } 2 } table-row { 'a 3 'b 4 }
@@ -2424,6 +2461,80 @@ var builtins_collection = map[string]*env.Builtin{
 
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "next")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { zip { 1 2 3 } { "a" "b" "c" } } { { 1 "a" } { 2 "b" } { 3 "c" } }
+	// equal { zip { 1 2 } { 10 20 } } { { 1 10 } { 2 20 } }
+	// equal { zip list { 1 2 3 } list { "a" "b" "c" } } { { 1 "a" } { 2 "b" } { 3 "c" } }
+	// equal { try { zip { 1 2 3 } { "a" "b" } } |type? } 'error
+	// equal { try { zip { } { } } |type? } 'error
+	// Args:
+	// * collection1: First block or list
+	// * collection2: Second block or list (must be same length as first)
+	// Returns:
+	// * a block of blocks, where each inner block contains paired elements from both collections
+	"zip": { // **
+		Argsn: 2,
+		Doc:   "Combines two same-size collections into a block of pairs, where each pair contains corresponding elements from both collections.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch col1 := arg0.(type) {
+			case env.Block:
+				switch col2 := arg1.(type) {
+				case env.Block:
+					len1 := col1.Series.Len()
+					len2 := col2.Series.Len()
+
+					if len1 != len2 {
+						return MakeBuiltinError(ps, fmt.Sprintf("Collections must be same length: first has %d elements, second has %d elements", len1, len2), "zip")
+					}
+
+					if len1 == 0 {
+						return MakeBuiltinError(ps, "Collections are empty", "zip")
+					}
+
+					pairs := make([]env.Object, len1)
+					for i := 0; i < len1; i++ {
+						pair := make([]env.Object, 2)
+						pair[0] = col1.Series.Get(i)
+						pair[1] = col2.Series.Get(i)
+						pairs[i] = *env.NewBlock(*env.NewTSeries(pair))
+					}
+
+					return *env.NewBlock(*env.NewTSeries(pairs))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "zip")
+				}
+			case env.List:
+				switch col2 := arg1.(type) {
+				case env.List:
+					len1 := len(col1.Data)
+					len2 := len(col2.Data)
+
+					if len1 != len2 {
+						return MakeBuiltinError(ps, fmt.Sprintf("Collections must be same length: first has %d elements, second has %d elements", len1, len2), "zip")
+					}
+
+					if len1 == 0 {
+						return MakeBuiltinError(ps, "Collections are empty", "zip")
+					}
+
+					pairs := make([]env.Object, len1)
+					for i := 0; i < len1; i++ {
+						pair := make([]env.Object, 2)
+						pair[0] = env.ToRyeValue(col1.Data[i])
+						pair[1] = env.ToRyeValue(col2.Data[i])
+						pairs[i] = *env.NewBlock(*env.NewTSeries(pair))
+					}
+
+					return *env.NewBlock(*env.NewTSeries(pairs))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.ListType}, "zip")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "zip")
 			}
 		},
 	},

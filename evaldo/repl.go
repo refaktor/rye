@@ -359,7 +359,7 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 
 		es.SkipFlag = false // So that erors will again display in full
 
-		if !es.ErrorFlag && es.Res != nil {
+		if !es.ErrorFlag && es.Res != nil && es.Res.Type() != env.VoidType {
 			// fmt.Println(&es)
 			r.prevResult = es.Res
 			p := ""

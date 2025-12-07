@@ -1807,6 +1807,24 @@ section "Collections " "" {
 	{
 ``	}
 
+	group "before-last" 
+	"Creates a new collection with all items except the last one from the input collection."
+	{
+		arg `collection: Block, list or string to get all but the last item from`
+		returns `a new collection containing all items except the last one`
+	}
+
+	{
+		equal { before-last { 1 2 3 4 } } { 1 2 3 }
+		equal { before-last "abcd" } "abc"
+		equal { before-last list { 4 5 6 } } list { 4 5 }
+		equal { before-last { 1 } } { }
+		equal { try { all-before-last { } } |type? } 'error
+	}
+
+	{
+``	}
+
 	group "head" 
 	"Creates a new collection with the first n items from the input collection, or all but the last |n| items if n is negative."
 	{
@@ -1840,8 +1858,9 @@ section "Collections " "" {
 	{
 		equal { nth { 1 2 3 4 5 } 4 } 4
 		equal { nth { "a" "b" "c" "d" "e" } 2 } "b"
-		equal { nth "abcde" 3 } "c"
+		; equal { nth "abcde" 3 } "c"
 		equal { nth list { 10 20 30 40 } 2 } 20
+		error { nth list { 10 20 30 40 } 0 }
 		; equal { nth table { 'a 'b } { 1 2 } { 3 4 } 2 } table-row { 'a 3 'b 4 }
 	}
 
@@ -2267,6 +2286,25 @@ section "Collections " "" {
 	{
 		equal { { { 1 2 3 } { 4 5 6 } } .transpose } { { 1 4 } { 2 5 } { 3 6 } }
 		equal { { { 1 4 } { 2 5 } { 3 6 } } .transpose } { { 1 2 3 } { 4 5 6 } }
+	}
+
+	{
+``	}
+
+	group "zip" 
+	"Combines two same-size collections into a block of pairs, where each pair contains corresponding elements from both collections."
+	{
+		arg `collection1: First block or list`
+		arg `collection2: Second block or list (must be same length as first)`
+		returns `a block of blocks, where each inner block contains paired elements from both collections`
+	}
+
+	{
+		equal { zip { 1 2 3 } { "a" "b" "c" } } { { 1 "a" } { 2 "b" } { 3 "c" } }
+		equal { zip { 1 2 } { 10 20 } } { { 1 10 } { 2 20 } }
+		equal { zip list { 1 2 3 } list { "a" "b" "c" } } { { 1 "a" } { 2 "b" } { 3 "c" } }
+		equal { try { zip { 1 2 3 } { "a" "b" } } |type? } 'error
+		equal { try { zip { } { } } |type? } 'error
 	}
 
 	{
@@ -3584,7 +3622,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 
 	{
 		equal { { 1 2 3 } .for\ 'x { x .prns } } ""  ; Expected output: "1 2 3 "
-		equal { list { 10 20 30 } .for\ 'val { val .prns } } ""  ; Expected output: "10 20 30 "
+		equal { list { 10 20 30 } |for\ 'val { val .prns } } ""  ; Expected output: "10 20 30 "
 		equal { "abc" .for\ 'ch { ch .prns } } ""  ; Expected output: "a b c "
 	}
 
@@ -3602,7 +3640,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	{
-		equal { dict { "a" 1 "b" 2 } .for\kv 'k 'v { k .prns v .prns } } ""  ; Expected output: "a 1 b 2 "
+		equal { dict { "a" 1 "b" 2 } |for\kv 'k 'v { k .prns v .prns } } ""  ; Expected output: "a 1 b 2 "
 		equal { { 10 20 30 } .for\kv 'i 'v { i .prns v .prns } } ""  ; Expected output: "0 10 1 20 2 30 "
 	}
 

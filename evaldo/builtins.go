@@ -1265,6 +1265,20 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
+				// Validate that all keys are strings, tagwords, words, or setwords
+				for i := 0; i < bloc.Series.Len(); i += 2 {
+					if i >= bloc.Series.Len() {
+						break
+					}
+					key := bloc.Series.Get(i)
+					switch key.(type) {
+					case env.String, env.Tagword, env.Word, env.Setword:
+						// Valid key types
+					default:
+						// Invalid key type - return failure
+						return MakeBuiltinError(ps, fmt.Sprintf("Dict keys must be strings, tagwords, words, or setwords, but got %s at position %d", key.Inspect(*ps.Idx), i), "dict")
+					}
+				}
 				return env.NewDictFromSeries(bloc.Series, ps.Idx)
 			}
 			return nil
@@ -2005,7 +2019,7 @@ var builtins = map[string]*env.Builtin{
 			//fmt.Println("RETURN")
 			if util.IsTruthy(arg0) {
 				// ps.ReturnFlag = true
-				ps.SkipFlag = true
+				ps.SkipFlag = false // TODO --- make true
 			}
 			ps.Res = arg0
 			return arg0

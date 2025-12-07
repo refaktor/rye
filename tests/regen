@@ -25,6 +25,7 @@
 ../cmd/rbit/rbit ../evaldo/builtins_bcrypt.go >> crypto.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_math.go > dialects.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_validation.go >> dialects.info.rye
+../cmd/rbit/rbit ../evaldo/builtins_match.go >> dialects.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_eyr.go >> dialects.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_http.go > http.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_email.go > email.info.rye

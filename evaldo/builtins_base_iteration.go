@@ -1760,7 +1760,7 @@ var builtins_iteration = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { { 1 2 3 } .for\ 'x { x .prns } } ""  ; Expected output: "1 2 3 "
-	// equal { list { 10 20 30 } .for\ 'val { val .prns } } ""  ; Expected output: "10 20 30 "
+	// equal { list { 10 20 30 } |for\ 'val { val .prns } } ""  ; Expected output: "10 20 30 "
 	// equal { "abc" .for\ 'ch { ch .prns } } ""  ; Expected output: "a b c "
 	// Args:
 	// * collection: String, Block, List, or other Collection to iterate over
@@ -1823,7 +1823,7 @@ var builtins_iteration = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { dict { "a" 1 "b" 2 } .for\kv 'k 'v { k .prns v .prns } } ""  ; Expected output: "a 1 b 2 "
+	// equal { dict { "a" 1 "b" 2 } |for\kv 'k 'v { k .prns v .prns } } ""  ; Expected output: "a 1 b 2 "
 	// equal { { 10 20 30 } .for\kv 'i 'v { i .prns v .prns } } ""  ; Expected output: "0 10 1 20 2 30 "
 	// Args:
 	// * collection: Dict, Block, List, or other Collection to iterate over

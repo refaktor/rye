@@ -1,6 +1,3 @@
-section "Default" "" {
-}
-
 section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	group "mod" 
 	"Returns the remainder of dividing x by y."
@@ -75,10 +72,10 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	{
 		equal { log 1 } 0.0
 		equal { log 2.718281828459045 } 1.0
-		equal { log complex 1 0 |print } "0.000000+0.000000i"
-		equal { log complex 2.718281828459045 0 |print } "1.000000+0.000000i"
-		error { log 0 }
-		error { log complex 0 0 }
+		stdout { log complex 1 0 |print } "0.000000+0.000000i"
+		stdout { log complex 2.718281828459045 0 |print } "1.000000+0.000000i"
+		; error { log 0 }
+		; error { log complex 0 0 }
 	}
 
 	{
@@ -785,6 +782,124 @@ section "Validation " "validation dialect for Rye values" {
 	{
 		equal { validate>ctx dict { a: 1 } { a: required } |type? } 'ctx    ; TODO rename to context
 		equal { validate>ctx dict { a: 1 } { a: optional 0 } -> 'a } 1
+	}
+
+	{
+``	}
+
+}
+
+section "Match dialect " "pattern matching and deconstruction" {
+	group "match-block" 
+	"Tries to match and deconstruct a value into multiple values, with support for literal values, type checking, get-words, code evaluation, and nested blocks. First argument can be any value. If it doesn't match, returns failure."
+	{
+		arg `block: Block to match and deconstruct`
+		arg `pattern: Block containing:`
+		arg `- Words to bind values to`
+		arg `- Literal values to match`
+		arg `- Xwords to check value types (e.g., <integer>, <string>)`
+		arg `- Get-words to match against values in the current context (e.g., ?x)`
+		arg `- Square brackets [ ] to evaluate code with the value injected`
+		arg `- Nested blocks for recursive matching`
+		returns `Integer 1 if successful, or failure if the match fails`
+	}
+
+	{
+		; Basic matching with words:
+		equal { match-block { 1 2 3 } { a b c } a } 1
+		equal { match-block { 1 2 3 } { a b c } b } 2
+		equal { match-block { 1 2 3 } { a b c } c } 3
+		; error { match-block { 1 2 } { a b c } }
+		; error { match-block { 1 2 3 4 } { a b c } }
+		
+		; Matching with literal values:
+		equal { match-block { 1 "test" 3 } { a "test" b } a } 1
+		equal { match-block { 1 "test" 3 } { a "test" b } b } 3
+		; equal { try { match-block { 1 "hi" 3 } { a "bye" b } } |failed? } 1
+		
+		; Matching with nested blocks:
+		equal { match-block { 123 { "hi" 44 } 789 } { a { b c } d } a } 123
+		equal { match-block { 123 { "hi" 44 } 789 } { a { b c } d } b } "hi"
+		equal { match-block { 123 { "hi" 44 } 789 } { a { b c } d } c } 44
+		equal { match-block { 123 { "hi" 44 } 789 } { a { b c } d } d } 789
+		equal { match-block { 1 { 2 { 3 4 } 5 } 6 } { x { y { z w } v } u } z } 3
+		equal { match-block { 1 { 2 { 3 4 } 5 } 6 } { x { y { z w } v } u } w } 4
+		; equal { try { match-block { 1 { 2 3 } 4 } { a { b "wrong" } c } } |failed? } 1
+		
+		; Type checking with xwords:
+		equal { match-block { 123 } { <integer> } } true
+		equal { match-block { "hello" } { <string> } } true
+		equal { match-block { { 1 2 3 } } { <block> } } true
+		equal { match-block { 123.45 } { <decimal> } } true
+		; equal { try { match-block { "not an integer" } { <integer> } } |failed? } true
+		; equal { try { match-block { 123 } { <string> } } |failed? } true
+		
+		;Matching with get-words (match against values in the current context):
+		equal { x: 234 match-block { 123 234 } { 123 ?x } } true
+		; equal { x: 234 try { match-block { 123 456 } { 123 ?x } } |failed? } true
+		
+		; Evaluating blocks with the value injected:
+		; x: 0 , match-block { 1000 } { [ x:: . ] } , equal x 1000
+		; a: 0 , b: 0 , match-block { 100 200 300 } { [ a:: . ] [ b:: . ] c } , equal a 100 , equal b 200 , equal c 300
+	}
+
+	{
+``	}
+
+	group "match" 
+	"Matches a value against a series of pattern/action pairs. Pattern can be a single element or block. Returns the result of the first matching action, or failure if none match."
+	{
+		arg `value: Any value to match against patterns (can be a block or any other value)`
+		arg `patterns: Block containing pairs:`
+		arg `- First element: pattern (can be a single element like <integer> or a block like { a b })`
+		arg `- Second element: code block to evaluate if pattern matches`
+		returns `The result of evaluating the code block of the first matching pattern, or failure if no pattern matches`
+	}
+
+	{
+		; Basic type matching with single values:
+		equal { match 5 { <integer> { "got integer" } <string> { "got string" } } } "got integer"
+		equal { match "hello" { <integer> { "got integer" } <string> { "got string" } } } "got string"
+		equal { match 3.14 { <integer> { "int" } <decimal> { "decimal" } <string> { "string" } } } "decimal"
+		
+		; Block deconstruction (simple):
+		equal { match { 1 2 } { { a b } { a + b } { x } { x * 2 } } } 3
+		equal { match { 101 202 } { { } { 0 } { a b } { a + b } } } 303
+		equal { match { 10 20 30 } { { x y z } { x + y + z } } } 60
+		
+		; Literal value matching:
+		equal { match 100 { 50 { "fifty" } 100 { "hundred" } 200 { "two hundred" } } } "hundred"
+		equal { match { 100 } { { 50 } { "fifty" } { 100 } { "hundred" } { 200 } { "two hundred" } } } "hundred"
+		
+		; Partial pattern matching:
+		equal { match { 10 20 } { { a 20 } { a * 2 } { 10 b } { b + 5 } } } 20
+		equal { match { 10 20 } { { 10 b } { b + 5 } { a 20 } { a * 2 } } } 25
+		
+		; Rule blocks with arity and type patterns:
+		equal { match { } { { } { 'no-data } { a b } { 'has-data } } } 'no-data
+		equal { match { "Jim" "30" } { { <string> <string> } { 'bad-format } { <string> <integer> } { 'good-format } } } 'bad-format
+		equal { match { "Jim" 30 } { { <string> <string> } { 'bad-format } { <string> <integer> } { 'good-format } } } 'good-format
+		
+		; Complex nested block patterns:
+		equal { match { 200 { "OK" 30 } } { { code { "OK" result } } { result } { code { "ERR" } } { 0 } } } 30
+		equal { match { 404 { "ERR" } } { { code { "OK" result } } { result } { code { "ERR" } } { code } } } 404
+		equal { match { "user" { "John" "Doe" 30 } } { { "user" { first last age } } { first } } } "John"
+		
+		; First :: rest pattern (head and tail matching):
+		equal { match { 11 22 33 } { { a :: bb } { a } } } 11
+		equal { match { 11 22 33 } { { a :: bb } { bb } } } { 22 33 }
+		equal { match { 11 22 33 } { { a b :: cc } { a + b } } } 33
+		equal { match { 11 22 33 44 } { { a b :: cc } { cc } } } { 33 44 }
+		equal { match { { 12 23 } { 23 34 } { 34 45 } } { { { a b } :: more } { a + b } } } 35
+		
+		; Mixed type patterns:
+		equal { match { 1 2 3 } { { <integer> <integer> <integer> } { 'three-ints } { <string> <string> } { 'two-strings } } } 'three-ints
+		equal { match { "hello" "world" } { { <integer> <integer> <integer> } { 'three-ints } { <string> <string> } { 'two-strings } } } 'two-strings
+		
+		; Error handling:
+		; equal { try { match 5.5 { <integer> { "got integer" } <string> { "got string" } } } |failed? } true
+		; equal { try { match { 1 2 3 } { { a b } { a + b } } } |failed? } true
+		
 	}
 
 	{

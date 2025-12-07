@@ -1474,7 +1474,7 @@ func formatErrorLocationNoPEG(line string, col int) string {
 // inferErrorContextNoPEG tries to provide helpful context about what might be wrong
 func inferErrorContextNoPEG(tok NoPEGToken, err error, line string, col int, fullInput string, lineNum int) string {
 	// If the token value already contains a descriptive error message, use it
-	if tok.Value != "" && (strings.HasPrefix(tok.Value, "Missing space") || 
+	if tok.Value != "" && (strings.HasPrefix(tok.Value, "Missing space") ||
 		strings.HasPrefix(tok.Value, "Invalid") ||
 		strings.Contains(tok.Value, "must be followed by whitespace") ||
 		strings.Contains(tok.Value, "must start with")) {
@@ -1785,7 +1785,7 @@ func LoadStringNoPEG(input string, sig bool) (env.Object, *env.Idxs) {
 
 	input = removeBangLine(input)
 
-	input = "{ " + input + " } "
+	input = "{ " + input + "\n} " // This newline removes the line comments problem ; ---
 
 	//fmt.Println(input)
 

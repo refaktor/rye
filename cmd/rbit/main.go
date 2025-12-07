@@ -256,7 +256,31 @@ func doParsing(args []string) {
 		switch x := n.(type) {
 		case *ast.CompositeLit:
 			// Check if the literal is a map type
-			if _, ok := x.Type.(*ast.MapType); ok {
+			if mapType, ok := x.Type.(*ast.MapType); ok {
+				// Check if it's map[string]*env.Builtin or named Builtins_*
+				isBuiltinMap := false
+
+				// Check the map type: map[string]*env.Builtin
+				if keyIdent, ok := mapType.Key.(*ast.Ident); ok {
+					if keyIdent.Name == "string" {
+						// Check if value is *env.Builtin
+						if starExpr, ok := mapType.Value.(*ast.StarExpr); ok {
+							if selExpr, ok := starExpr.X.(*ast.SelectorExpr); ok {
+								if xIdent, ok := selExpr.X.(*ast.Ident); ok {
+									if xIdent.Name == "env" && selExpr.Sel.Name == "Builtin" {
+										isBuiltinMap = true
+									}
+								}
+							}
+						}
+					}
+				}
+
+				// If not a builtin map by type, skip processing
+				if !isBuiltinMap {
+					return true
+				}
+
 				// Process each key-value pair in the map
 				for _, elt := range x.Elts {
 					info := builtinInfo{}

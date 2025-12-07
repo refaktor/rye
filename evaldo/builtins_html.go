@@ -392,7 +392,7 @@ myloop:
 			// TODO Err
 		}
 	}
-	return nil
+	return env.NewBoolean(true)
 }
 
 func trace4(s string) {

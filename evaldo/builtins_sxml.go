@@ -109,6 +109,7 @@ func do_sxml(ps *env.ProgramState, reader io.Reader, rmap env.Dict) env.Object {
 							ser := ps.Ser // TODO -- make helper function that "does" a block
 							ps.Ser = obj.Series
 							EvalBlockInj(ps, *env.NewNative(ps.Idx, se, "rye-sxml-start"), true)
+							MaybeDisplayFailureOrError(ps, ps.Idx, "do-sxml 1")
 							if ps.ErrorFlag {
 								ps.Ser = ser
 								return ps.Res
@@ -123,6 +124,7 @@ func do_sxml(ps *env.ProgramState, reader io.Reader, rmap env.Dict) env.Object {
 					ser := ps.Ser // TODO -- make helper function that "does" a block
 					ps.Ser = obj.Series
 					EvalBlockInj(ps, *env.NewNative(ps.Idx, se, "rye-sxml-start"), true)
+					MaybeDisplayFailureOrError(ps, ps.Idx, "do-sxml 2")
 					if ps.ErrorFlag {
 						ps.Ser = ser
 						return ps.Res
@@ -143,6 +145,7 @@ func do_sxml(ps *env.ProgramState, reader io.Reader, rmap env.Dict) env.Object {
 							ser := ps.Ser // TODO -- make helper function that "does" a block
 							ps.Ser = obj.Series
 							EvalBlockInj(ps, *env.NewNative(ps.Idx, se, "rye-sxml-start"), true)
+							MaybeDisplayFailureOrError(ps, ps.Idx, "do-sxml 3")
 							if ps.ErrorFlag {
 								ps.Ser = ser
 								return ps.Res
@@ -172,6 +175,7 @@ func do_sxml(ps *env.ProgramState, reader io.Reader, rmap env.Dict) env.Object {
 					ser := ps.Ser // TODO -- make helper function that "does" a block
 					ps.Ser = obj.Series
 					EvalBlockInj(ps, *env.NewString(string(se.Copy())), true)
+					MaybeDisplayFailureOrError(ps, ps.Idx, "do-sxml 5")
 					if ps.ErrorFlag {
 						ps.Ser = ser
 						return ps.Res
@@ -193,6 +197,7 @@ func do_sxml(ps *env.ProgramState, reader io.Reader, rmap env.Dict) env.Object {
 						ser := ps.Ser // TODO -- make helper function that "does" a block
 						ps.Ser = obj.Series
 						EvalBlockInj(ps, *env.NewNative(ps.Idx, se, "rye-sxml-start"), true)
+						MaybeDisplayFailureOrError(ps, ps.Idx, "do-sxml 6")
 						if ps.ErrorFlag {
 							ps.Ser = ser
 							return ps.Res
@@ -216,7 +221,7 @@ func do_sxml(ps *env.ProgramState, reader io.Reader, rmap env.Dict) env.Object {
 		default:
 		}
 	}
-	return nil
+	return env.NewBoolean(true)
 }
 
 func trace5(s string) {
