@@ -26,6 +26,13 @@ func Math_EvalBlock(es *env.ProgramState) []env.Object {
 			output = append(output, obj)
 		case env.Decimal:
 			output = append(output, obj)
+		case env.Getword:
+			val, ok := es.Ctx.Get(obj.Index)
+			if ok {
+				output = append(output, val)
+			} else {
+				fmt.Println("TODO -- Word does not exist")
+			}
 		case env.Block:
 			ser1 := es.Ser
 			es.Ser = obj.Series
@@ -41,7 +48,7 @@ func Math_EvalBlock(es *env.ProgramState) []env.Object {
 				}
 				operators = append(operators, obj)
 			} else {
-				fmt.Println("TODO -- handle this : math dialect 123124")
+				fmt.Println("TODO -- handle this : math dialect 13091")
 			}
 		case env.Word:
 			args := es.Ser.Pop()
