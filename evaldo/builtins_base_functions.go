@@ -247,14 +247,14 @@ var builtins_functions = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { ctx: context { y: 5 } , f: fn\par { x } ctx { x + y } , f 3 } 8
+	// equal { ctx: context { y: 5 } , f: fn\in { x } ctx { x + y } , f 3 } 8
 	// Args:
 	// * spec: Block containing parameter specifications
 	// * context: Context object to use as parent context
 	// * body: Block containing the function body code
 	// Returns:
 	// * function object with the specified parent context
-	"fn\\par": {
+	"fn\\in": {
 		// a function with context	 bb: 10 add10 [ a ] context [ b: bb ] [ add a b ]
 		// 							add10 [ a ] this [ add a b ]
 		// later maybe			   add10 [ a ] [ b: b ] [ add a b ]
@@ -276,28 +276,28 @@ var builtins_functions = map[string]*env.Builtin{
 						return *env.NewFunctionC(args, body, &ctx, false, false, doc)
 					default:
 						ps.ErrorFlag = true
-						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "fnc")
+						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "fn\\in")
 					}
 				default:
 					ps.ErrorFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.ContextType}, "fn\\par")
+					return MakeArgError(ps, 2, []env.Type{env.ContextType}, "fn\\in")
 				}
 			default:
 				ps.ErrorFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "fn\\par")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "fn\\in")
 			}
 		},
 	},
 
 	// Tests:
-	// equal { ctx: context { y: 5 } , f: fn\in { x } ctx { x + y } , f 3 } 8
+	// equal { ctx: context { y: 5 } , f: fn\inside { x } ctx { x + y } , f 3 } 8
 	// Args:
 	// * spec: Block containing parameter specifications
 	// * context: Context object to execute the function in
 	// * body: Block containing the function body code
 	// Returns:
 	// * function object that executes directly in the specified context
-	"fn\\in": {
+	"fn\\inside": {
 		// a function with context	 bb: 10 add10 [ a ] context [ b: bb ] [ add a b ]
 		// 							add10 [ a ] this [ add a b ]
 		// later maybe			   add10 [ a ] [ b: b ] [ add a b ]
@@ -310,7 +310,7 @@ var builtins_functions = map[string]*env.Builtin{
 			case env.Block:
 				ok, doc := util.ProcessFunctionSpec(args)
 				if !ok {
-					return MakeBuiltinError(ps, doc, "fn\\in")
+					return MakeBuiltinError(ps, doc, "fn\\inside")
 				}
 				switch ctx := arg1.(type) {
 				case *env.RyeCtx:
@@ -319,7 +319,7 @@ var builtins_functions = map[string]*env.Builtin{
 						return *env.NewFunctionC(args, body, ctx, false, true, doc)
 					default:
 						ps.ErrorFlag = true
-						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "fn\\in")
+						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "fn\\inside")
 					}
 				case env.RyeCtx:
 					switch body := arg2.(type) {
@@ -327,15 +327,15 @@ var builtins_functions = map[string]*env.Builtin{
 						return *env.NewFunctionC(args, body, &ctx, false, true, doc)
 					default:
 						ps.ErrorFlag = true
-						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "fn\\in")
+						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "fn\\inside")
 					}
 				default:
 					ps.ErrorFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.ContextType}, "fn\\in")
+					return MakeArgError(ps, 2, []env.Type{env.ContextType}, "fn\\inside")
 				}
 			default:
 				ps.ErrorFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "fn\\in")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "fn\\inside")
 			}
 		},
 	},
@@ -506,18 +506,12 @@ var builtins_functions = map[string]*env.Builtin{
 					// Save current series position
 					ser := ps.Ser
 
-					// Create a new context for function execution
-					var ctx *env.RyeCtx
-					if fn.Ctx != nil {
-						// Use function's captured context if available
-						if fn.InCtx {
-							ctx = fn.Ctx
-						} else {
-							ctx = env.NewEnv(fn.Ctx)
-						}
-					} else {
-						// Otherwise create a new context with current context as parent
-						ctx = env.NewEnv(ps.Ctx)
+					// Use DetermineContext to properly set up the context
+					// This handles fn.InCtx (fn\in) and fn.Ctx (fn\par) correctly
+					ctx := DetermineContext(fn, ps, nil)
+					if ctx == nil {
+						ps.Ser = ser
+						return ps.Res
 					}
 
 					// Bind arguments to parameters
@@ -530,8 +524,9 @@ var builtins_functions = map[string]*env.Builtin{
 								return env.NewError("Invalid parameter specification in function")
 							}
 
+							// TODO --- check if it exists in context .. should return error and be set? in/into dillema
 							// Bind argument to parameter
-							ctx.Set(paramWord.Index, args.Series.Get(i))
+							ctx.Mod(paramWord.Index, args.Series.Get(i))
 						}
 					}
 

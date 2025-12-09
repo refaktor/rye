@@ -3807,7 +3807,7 @@ section "Functions " "functions that create functions" {
 	{
 ``	}
 
-	group "fn\\par" 
+	group "fn\\in" 
 	"Creates a function with a specified parent context, allowing access to variables from that context."
 	{
 		arg `spec: Block containing parameter specifications`
@@ -3817,13 +3817,13 @@ section "Functions " "functions that create functions" {
 	}
 
 	{
-		equal { ctx: context { y: 5 } , f: fn\par { x } ctx { x + y } , f 3 } 8
+		equal { ctx: context { y: 5 } , f: fn\in { x } ctx { x + y } , f 3 } 8
 	}
 
 	{
 ``	}
 
-	group "fn\\in" 
+	group "fn\\inside" 
 	"Creates a function that executes directly in the specified context rather than creating a new execution context."
 	{
 		arg `spec: Block containing parameter specifications`
@@ -3833,7 +3833,7 @@ section "Functions " "functions that create functions" {
 	}
 
 	{
-		equal { ctx: context { y: 5 } , f: fn\in { x } ctx { x + y } , f 3 } 8
+		equal { ctx: context { y: 5 } , f: fn\inside { x } ctx { x + y } , f 3 } 8
 	}
 
 	{
