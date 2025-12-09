@@ -1,4 +1,4 @@
-section "Default" "" {
+section "HTTP Server Functions " "Working with HTTP servers and requests." {
 	group "http-server" 
 	"Creates a new HTTP server that listens on the specified address with a 10-second read header timeout."
 	{

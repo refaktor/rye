@@ -625,7 +625,7 @@ func something() {
 var Builtins_validation = map[string]*env.Builtin{
 
 	//
-	// ##### Validation ##### "validation dialect for Rye values"
+	// ##### Validation dialect ##### "validation dialect for Rye values"
 	//
 	// Dictionary validation tests:
 	// equal { validate dict { a: 1 } { a: required } } dict { a: 1 }

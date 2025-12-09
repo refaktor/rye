@@ -1783,7 +1783,7 @@ func MaybeDisplayFailureOrError(es *env.ProgramState, genv *env.Idxs, tag string
 // Called from: MaybeDisplayFailureOrError, main REPL/file execution code
 // Purpose: Main error display coordinator - shows enhanced errors and offers debugging in file mode
 func MaybeDisplayFailureOrError2(es *env.ProgramState, genv *env.Idxs, tag string, topLevel bool, fileMode bool) {
-	if es.ErrorFlag || (es.FailureFlag && topLevel) {
+	if !es.InErrHandler && (es.ErrorFlag || (es.FailureFlag && topLevel)) {
 		// Use the enhanced error reporting with source location
 		DisplayEnhancedError(es, genv, tag, topLevel)
 
@@ -1792,7 +1792,7 @@ func MaybeDisplayFailureOrError2(es *env.ProgramState, genv *env.Idxs, tag strin
 			OfferDebuggingOptions(es, genv, tag)
 		}
 
-		es.SkipFlag = true
+		es.SkipFlag = false
 	}
 }
 
@@ -1800,10 +1800,10 @@ func MaybeDisplayFailureOrError2(es *env.ProgramState, genv *env.Idxs, tag strin
 // Called from: WASM build code (main_wasm.go)
 // Purpose: WASM-specific error display that uses provided print function instead of fmt.Println
 func MaybeDisplayFailureOrErrorWASM(es *env.ProgramState, genv *env.Idxs, printfn func(string), tag string) {
-	if es.FailureFlag {
-		fmt.Print("\x1b[43m\x1b[33m FAILURE \x1b[0m\n") // Red background, black text
-		printfn(tag)
-	}
+	// if es.FailureFlag {
+	// 	fmt.Print("\x1b[43m\x1b[33m FAILURE \x1b[0m\n") // Red background, black text
+	//	printfn(tag)
+	// }
 	if es.ErrorFlag {
 		printfn("\x1b[31;3m" + es.Res.Print(*genv))
 		switch es.Res.(type) {

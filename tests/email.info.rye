@@ -1,4 +1,4 @@
-section "Default" "" {
+section "Email Message " "Creating and configuring email messages" {
 	group "email-message" 
 	"Creates a new empty email message object that can be configured with headers, body, and attachments."
 	{
@@ -225,7 +225,7 @@ equal { reader %email.eml |parse-email |kind? } 'parsed-email
 
 }
 
-section "Default" "" {
+section "Imap client " "" {
 	group "imap-client" 
 	"Create new IMAP client connection with username, password, server, and port."
 	{

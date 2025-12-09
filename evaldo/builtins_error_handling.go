@@ -913,8 +913,11 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 			case env.Block:
 				ser := ps.Ser
 				ps.Ser = bloc.Series
+				ps.InErrHandler = true
 				EvalBlock(ps)
-				MaybeDisplayFailureOrError(ps, ps.Idx, "try")
+				// We don't display it in try function, that is the point
+				// MaybeDisplayFailureOrError(ps, ps.Idx, "try")
+				ps.InErrHandler = false
 				ps.ReturnFlag = false
 				ps.ErrorFlag = false
 				ps.FailureFlag = false
