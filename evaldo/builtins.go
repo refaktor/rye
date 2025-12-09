@@ -875,7 +875,7 @@ var builtins = map[string]*env.Builtin{
 						case env.Word:
 							// get nth value from values
 							if len(vals.Series.S) < i {
-								return MakeBuiltinError(ps, "More words than values.", "set!")
+								return MakeBuiltinError(ps, "More words than values.", "set")
 							}
 							val := vals.Series.S[i]
 
@@ -897,12 +897,12 @@ var builtins = map[string]*env.Builtin{
 							}
 						default:
 							fmt.Println(word)
-							return MakeBuiltinError(ps, "Only words in words block", "set!")
+							return MakeBuiltinError(ps, "Only words in words block", "set")
 						}
 					}
 					return arg0
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "set!")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "set")
 				}
 			case env.Word:
 				// Get old value and context for observer notification
@@ -925,7 +925,7 @@ var builtins = map[string]*env.Builtin{
 				}
 				return arg0
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "set!")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "set")
 			}
 		},
 	},
