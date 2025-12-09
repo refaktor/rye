@@ -862,6 +862,11 @@ var builtins_collection = map[string]*env.Builtin{
 					case float64:
 						sum *= val1
 						onlyInts = false
+					case env.Integer:
+						sum *= float64(val1.Value)
+					case env.Decimal:
+						sum *= val1.Value
+						onlyInts = false
 					default:
 						return MakeBuiltinError(ps, "List type should be Integer or Decimal.", "mul")
 					}
@@ -1524,6 +1529,146 @@ var builtins_collection = map[string]*env.Builtin{
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "sort\\by")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { sort\by\key { 6 12 1 } { * -1 } } { 12 6 1 }
+	// equal { sort\by\key { 6 12 1 } { + 0 } } { 1 6 12 }
+	// equal { sort\by\key { { x 6 } { x 12 } { x 1 } } { second } } { { x 1 } { x 6 } { x 12 } }
+	// equal { sort\by\key { "abc" "a" "ab" } { .length? } } { "a" "ab" "abc" }
+	// equal { sort\by\key list { 5 3 1 4 } { * -1 } } list { 5 4 3 1 }
+	// Args:
+	// * collection: Block or list to sort
+	// * key-fn: Block of code that transforms each value to a sortable key (evaluated once per element)
+	// Returns:
+	// * a new collection with items sorted according to the computed keys
+	"sort\\by\\key": {
+		Argsn: 2,
+		Doc:   "Efficiently sorts a collection by pre-computing a sort key for each element using a key function. Much faster than sort\\by for large datasets (Schwartzian Transform).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch block := arg0.(type) {
+			case env.Block:
+				switch keyBlock := arg1.(type) {
+				case env.Block:
+					// Validate that the collection is not empty
+					if len(block.Series.S) == 0 {
+						return *env.NewBlock(*env.NewTSeries([]env.Object{}))
+					}
+
+					// Create a defensive copy
+					copied := make([]env.Object, len(block.Series.S))
+					copy(copied, block.Series.S)
+
+					// Phase 1: Transform - compute keys for all elements (O(n))
+					type indexedItem struct {
+						value env.Object
+						key   env.Object
+						index int // for stable sort
+					}
+
+					items := make([]indexedItem, len(copied))
+					ser := ps.Ser
+
+					for i, val := range copied {
+						// Evaluate the key function with the current value
+						ps.Ser = keyBlock.Series
+						ps.Ser.SetPos(0)
+						EvalBlockInjMultiDialect(ps, val, true)
+
+						if ps.ErrorFlag || ps.FailureFlag {
+							ps.Ser = ser
+							return MakeBuiltinError(ps, "Error during key evaluation", "sort\\by\\key")
+						}
+
+						items[i] = indexedItem{
+							value: val,
+							key:   ps.Res,
+							index: i,
+						}
+					}
+
+					ps.Ser = ser
+
+					// Phase 2: Sort using native comparison on cached keys (O(n log n))
+					sort.SliceStable(items, func(i, j int) bool {
+						// Use native comparison on the pre-computed keys
+						return lesserThanNew(items[i].key, items[j].key)
+					})
+
+					// Phase 3: Untransform - extract sorted values (O(n))
+					result := make([]env.Object, len(items))
+					for i, item := range items {
+						result[i] = item.value
+					}
+
+					return *env.NewBlock(*env.NewTSeries(result))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "sort\\by\\key")
+				}
+			case env.List:
+				switch keyBlock := arg1.(type) {
+				case env.Block:
+					// Validate that the collection is not empty
+					if len(block.Data) == 0 {
+						return *env.NewList([]any{})
+					}
+
+					// Create a defensive copy
+					copied := make([]any, len(block.Data))
+					copy(copied, block.Data)
+
+					// Phase 1: Transform - compute keys for all elements (O(n))
+					type indexedItem struct {
+						value any
+						key   env.Object
+						index int
+					}
+
+					items := make([]indexedItem, len(copied))
+					ser := ps.Ser
+
+					for i, val := range copied {
+						ryeVal := env.ToRyeValue(val)
+
+						// Evaluate the key function with the current value
+						ps.Ser = keyBlock.Series
+						ps.Ser.SetPos(0)
+						EvalBlockInjMultiDialect(ps, ryeVal, true)
+
+						if ps.ErrorFlag || ps.FailureFlag {
+							ps.Ser = ser
+							return MakeBuiltinError(ps, "Error during key evaluation", "sort\\by\\key")
+						}
+
+						items[i] = indexedItem{
+							value: val,
+							key:   ps.Res,
+							index: i,
+						}
+					}
+
+					ps.Ser = ser
+
+					// Phase 2: Sort using native comparison on cached keys (O(n log n))
+					sort.SliceStable(items, func(i, j int) bool {
+						// Use native comparison on the pre-computed keys
+						return lesserThanNew(items[i].key, items[j].key)
+					})
+
+					// Phase 3: Untransform - extract sorted values (O(n))
+					result := make([]any, len(items))
+					for i, item := range items {
+						result[i] = item.value
+					}
+
+					return *env.NewList(result)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "sort\\by\\key")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "sort\\by\\key")
 			}
 		},
 	},
@@ -2589,9 +2734,9 @@ var builtins_collection = map[string]*env.Builtin{
 		Doc:   "Appends a value to a block, list or string in-place and returns the modified collection.",
 		Pure:  false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch wrd := arg1.(type) {
+			switch val1 := arg1.(type) {
 			case env.Word:
-				val, found, ctx := ps.Ctx.Get2(wrd.Index)
+				val, found, ctx := ps.Ctx.Get2(val1.Index)
 				if found {
 					switch oldval := val.(type) {
 					case env.String:
@@ -2602,9 +2747,9 @@ var builtins_collection = map[string]*env.Builtin{
 						case env.Integer:
 							newval = *env.NewString(oldval.Value + strconv.Itoa(int(s3.Value)))
 						}
-						if ok := ctx.Mod(wrd.Index, newval); !ok {
+						if ok := ctx.Mod(val1.Index, newval); !ok {
 							ps.FailureFlag = true
-							return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(wrd.Index) + "', use 'var' to declare it as a variable")
+							return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(val1.Index) + "', use 'var' to declare it as a variable")
 						}
 						return newval
 					case env.Block: // TODO
@@ -2613,9 +2758,9 @@ var builtins_collection = map[string]*env.Builtin{
 						// 	fmt.Println(123)
 						s := &oldval.Series
 						oldval.Series = *s.Append(arg0)
-						if ok := ctx.Mod(wrd.Index, oldval); !ok {
+						if ok := ctx.Mod(val1.Index, oldval); !ok {
 							ps.FailureFlag = true
-							return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(wrd.Index) + "', use 'var' to declare it as a variable")
+							return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(val1.Index) + "', use 'var' to declare it as a variable")
 						}
 						return oldval
 					case env.List: // TODO
@@ -2638,9 +2783,9 @@ var builtins_collection = map[string]*env.Builtin{
 							combineList = append(combineList, env.ToRyeValue(v))
 						}
 						finalList := *env.NewList(combineList)
-						if ok := ctx.Mod(wrd.Index, finalList); !ok {
+						if ok := ctx.Mod(val1.Index, finalList); !ok {
 							ps.FailureFlag = true
-							return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(wrd.Index) + "', use 'var' to declare it as a variable")
+							return env.NewError("Cannot modify constant '" + ps.Idx.GetWord(val1.Index) + "', use 'var' to declare it as a variable")
 						}
 						return finalList
 					default:
@@ -2648,68 +2793,205 @@ var builtins_collection = map[string]*env.Builtin{
 					}
 				}
 				return makeError(ps, "Tagword not found.")
-			case *env.Block:
-				dataSlice := make([]env.Object, 0)
-				switch blockData := arg0.(type) {
-				case env.Block:
-					for _, v1 := range wrd.Series.S {
+			case env.Block: // TODO
+				return MakeBuiltinError(ps, "Value of word is not a ref of a Block", "append!")
+			case *env.Block: // TODO
+				// 	fmt.Println(123)
+				s := &val1.Series
+				val1.Series = *s.Append(arg0)
+				return val1
+			case env.List: // TODO
+				return MakeBuiltinError(ps, "Value of word is not a ref of a List", "append!")
+			case *env.List:
+				dataSlice := make([]any, 0)
+				switch listData := arg0.(type) {
+				case env.List:
+					for _, v1 := range val1.Data {
 						dataSlice = append(dataSlice, env.ToRyeValue(v1))
 					}
-					for _, v2 := range blockData.Series.S {
+					for _, v2 := range listData.Data {
 						dataSlice = append(dataSlice, env.ToRyeValue(v2))
 					}
 				default:
-					return makeError(ps, "Need to pass block of data")
+					return makeError(ps, "Need to pass List of data")
 				}
-				return *env.NewBlock(*env.NewTSeries(dataSlice))
-			/* case env.String:
-			finalStr := ""
-			switch str := arg0.(type) {
-			case env.String:
-				finalStr = wrd.Value + str.Value
-			case env.Integer:
-				finalStr = wrd.Value + strconv.Itoa(int(str.Value))
-			}
-			return *env.NewString(finalStr)*/
+				combineList := make([]any, 0, len(dataSlice))
+				for _, v := range dataSlice {
+					combineList = append(combineList, env.ToRyeValue(v))
+				}
+				finalList := *env.NewList(combineList)
+				return finalList
 			default:
-				return makeError(ps, "Value not tagword")
+				return MakeArgError(ps, 2, []env.Type{env.StringType, env.BlockType, env.ListType}, "append! (ref)")
 			}
 		},
 	},
+
 	// Tests:
-	// equal { x: ref { 1 2 3 } change\nth! x 2 222 , x } { 1 222 3 }
-	// equal { x: ref list { "a" "b" "c" } change\nth! x 1 "X" , x } list { "X" "b" "c" }
+	// equal { x: ref { 1 2 3 } update! x 1 222 , x } { 1 222 3 }
+	// equal { x: ref list { "a" "b" "c" } update! x 0 "X" , x } list { "X" "b" "c" }
+	// equal { x: ref { 10 20 30 } update! x 2 99 , x } { 10 20 99 }
 	// Args:
 	// * collection: Reference to a block or list to modify
-	// * position: Position of the element to change (1-based)
-	// * value: New value to set at the specified position
+	// * index: Index of the element to change (0-based)
+	// * value: New value to set at the specified index
 	// Returns:
-	// * the modified collection with the value changed at the specified position
-	"change\\nth!": { // **
+	// * the modified collection with the value changed at the specified index
+	"update!": { // **
 		Argsn: 3,
-		Doc:   "Changes the value at a specific position in a block or list in-place and returns the modified collection.",
+		Doc:   "Updates the value at a specific index in a block or list in-place and returns the modified collection (0-based indexing).",
 		Pure:  false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch num := arg1.(type) {
 			case env.Integer:
 				switch s1 := arg0.(type) {
 				case *env.Block:
+					if num.Value < 0 || num.Value >= int64(s1.Series.Len()) {
+						return MakeBuiltinError(ps, fmt.Sprintf("Index %d is out of bounds for block with %d elements.", num.Value, s1.Series.Len()), "update!")
+					}
+					s1.Series.S[num.Value] = arg2
+					return s1
+				case *env.List:
+					if num.Value < 0 || num.Value >= int64(len(s1.Data)) {
+						return MakeBuiltinError(ps, fmt.Sprintf("Index %d is out of bounds for list with %d elements.", num.Value, len(s1.Data)), "update!")
+					}
+					s1.Data[num.Value] = env.RyeToRaw(arg2, ps.Idx)
+					return s1
+				default:
+					return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "update!")
+				}
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "update!")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { x: ref { 10 20 30 } update\with! x 1 { * 2 } , x } { 10 40 30 }
+	// equal { x: ref { 1 2 3 } update\with! x 0 { + 100 } , x } { 101 2 3 }
+	// equal { x: ref list { 5 10 15 } update\with! x 2 { / 3 } , x } list { 5 10 5 }
+	// equal { x: ref { "a" "b" "c" } update\with! x 1 { .concat "!" } , x } { "a" "b!" "c" }
+	// Args:
+	// * collection: Reference to a block or list to modify
+	// * index: Index of the element to transform (0-based)
+	// * transform: Block of code that receives the current value and returns the new value
+	// Returns:
+	// * the modified collection with the value at the index transformed by the code block
+	"update\\with!": { // **
+		Argsn: 3,
+		Doc:   "Updates the value at a specific index by evaluating a code block with the current value injected and storing the result (0-based indexing).",
+		Pure:  false,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch num := arg1.(type) {
+			case env.Integer:
+				switch s1 := arg0.(type) {
+				case *env.Block:
+					if num.Value < 0 || num.Value >= int64(s1.Series.Len()) {
+						return MakeBuiltinError(ps, fmt.Sprintf("Index %d is out of bounds for block with %d elements.", num.Value, s1.Series.Len()), "update\\with!")
+					}
+
+					// Get the transform block
+					transformBlock, ok := arg2.(env.Block)
+					if !ok {
+						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "update\\with!")
+					}
+
+					// Get the current value at the index
+					currentValue := s1.Series.S[num.Value]
+
+					// Evaluate the transform block with the current value injected
+					ser := ps.Ser
+					ps.Ser = transformBlock.Series
+					ps.Ser.SetPos(0)
+					EvalBlockInjMultiDialect(ps, currentValue, true)
+
+					if ps.ErrorFlag || ps.FailureFlag {
+						ps.Ser = ser
+						return MakeBuiltinError(ps, "Error during transformation evaluation", "update\\with!")
+					}
+
+					// Update the value with the result
+					s1.Series.S[num.Value] = ps.Res
+					ps.Ser = ser
+
+					return s1
+				case *env.List:
+					if num.Value < 0 || num.Value >= int64(len(s1.Data)) {
+						return MakeBuiltinError(ps, fmt.Sprintf("Index %d is out of bounds for list with %d elements.", num.Value, len(s1.Data)), "update\\with!")
+					}
+
+					// Get the transform block
+					transformBlock, ok := arg2.(env.Block)
+					if !ok {
+						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "update\\with!")
+					}
+
+					// Get the current value at the index and convert to Rye value
+					currentValue := env.ToRyeValue(s1.Data[num.Value])
+
+					// Evaluate the transform block with the current value injected
+					ser := ps.Ser
+					ps.Ser = transformBlock.Series
+					ps.Ser.SetPos(0)
+					EvalBlockInjMultiDialect(ps, currentValue, true)
+
+					if ps.ErrorFlag || ps.FailureFlag {
+						ps.Ser = ser
+						return MakeBuiltinError(ps, "Error during transformation evaluation", "update\\with!")
+					}
+
+					// Update the value with the result
+					s1.Data[num.Value] = env.RyeToRaw(ps.Res, ps.Idx)
+					ps.Ser = ser
+
+					return s1
+				default:
+					return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "update\\with!")
+				}
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "update\\with!")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { x: ref { 1 2 3 } update\pos! x 2 222 , x } { 1 222 3 }
+	// equal { x: ref list { "a" "b" "c" } update\pos! x 1 "X" , x } list { "X" "b" "c" }
+	// equal { x: ref { 10 20 30 } update\pos! x 3 99 , x } { 10 20 99 }
+	// Args:
+	// * collection: Reference to a block or list to modify
+	// * position: Position of the element to change (1-based)
+	// * value: New value to set at the specified position
+	// Returns:
+	// * the modified collection with the value changed at the specified position
+	"update\\pos!": { // **
+		Argsn: 3,
+		Doc:   "Updates the value at a specific position in a block or list in-place and returns the modified collection (1-based indexing).",
+		Pure:  false,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch num := arg1.(type) {
+			case env.Integer:
+				if num.Value < 1 {
+					return MakeBuiltinError(ps, "Position must be >= 1 for 1-based indexing", "update\\pos!")
+				}
+				switch s1 := arg0.(type) {
+				case *env.Block:
 					if num.Value > int64(s1.Series.Len()) {
-						return MakeBuiltinError(ps, fmt.Sprintf("Block has less than %d elements.", num.Value), "change\\nth!")
+						return MakeBuiltinError(ps, fmt.Sprintf("Position %d is out of bounds for block with %d elements.", num.Value, s1.Series.Len()), "update\\pos!")
 					}
 					s1.Series.S[num.Value-1] = arg2
 					return s1
 				case *env.List:
 					if num.Value > int64(len(s1.Data)) {
-						return MakeBuiltinError(ps, fmt.Sprintf("List has less than %d elements.", num.Value), "change\\nth!")
+						return MakeBuiltinError(ps, fmt.Sprintf("Position %d is out of bounds for list with %d elements.", num.Value, len(s1.Data)), "update\\pos!")
 					}
 					s1.Data[num.Value-1] = env.RyeToRaw(arg2, ps.Idx)
 					return s1
 				default:
-					return MakeArgError(ps, 1, []env.Type{env.BlockType}, "change\\nth!")
+					return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "update\\pos!")
 				}
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "change\\nth!")
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "update\\pos!")
 			}
 		},
 	},

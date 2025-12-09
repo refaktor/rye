@@ -855,13 +855,13 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal   { set! { 123 234 } { a b }  b } 234
+	// equal   { set { 123 234 } { a b }  b } 234
 	// Args:
 	// * values: Value or block of values to assign to the word(s)
 	// * words: Word or block of words to be set
 	// Returns:
 	// * The value or block of values that was assigned
-	"set!": { // ***
+	"set": { // ***
 		Argsn: 2,
 		Doc:   "Set word to value or words by deconstructing a block. Only works on variables declared with var.",
 		Pure:  false,
