@@ -201,9 +201,8 @@ func __dialAndSend(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 
 var Builtins_email = map[string]*env.Builtin{
 
 	//
-	// ##### Email Message Functions ##### "Creating and configuring email messages."
+	// ##### Email Message ##### "Creating and configuring email messages"
 	//
-
 	// Example:
 	// msg: email-message
 	// equal { msg |type? } 'native

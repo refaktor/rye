@@ -15,6 +15,9 @@ import (
 
 var Builtins_imap = map[string]*env.Builtin{
 
+	//
+	// ##### Imap client ##### ""
+	//
 	// Creates a new IMAP client connection using username/password authentication
 	// Args:
 	// * username: String - IMAP username

@@ -756,7 +756,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 
 }
 
-section "Validation " "validation dialect for Rye values" {
+section "Validation dialect " "validation dialect for Rye values" {
 	group "validate" 
 	"Validates and transforms data according to specified rules, returning a dictionary with converted values or an error."
 	{

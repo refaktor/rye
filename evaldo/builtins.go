@@ -32,7 +32,7 @@ func MakeError(env1 *env.ProgramState, msg string) *env.Error {
 
 func MakeBuiltinError(env1 *env.ProgramState, msg string, fn string) *env.Error {
 	env1.FailureFlag = true
-	return env.NewError(msg + " in builtin `" + fn + "`")
+	return env.NewError(msg + " In builtin `" + fn + "`")
 }
 
 func NameOfRyeType(t env.Type) string {
@@ -1768,13 +1768,13 @@ var builtins = map[string]*env.Builtin{
 						// If it's parent is the same as current context is
 						// we set it's parent to our parent, skip our context
 						if tempCtx.Parent == ps.Ctx {
-							fmt.Println("ISTI PARENT")
+							// fmt.Println("ISTI PARENT")
 							// temp = ctx.Parent
 							tempCtx.Parent = ps.Ctx.Parent
 							break
 						}
 						if tempCtx.Parent != nil {
-							fmt.Println("še en parent")
+							// fmt.Println("še en parent")
 							tempCtx = tempCtx.Parent
 						} else {
 							break
