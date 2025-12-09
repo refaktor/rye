@@ -1934,6 +1934,25 @@ section "Collections " "" {
 	{
 ``	}
 
+	group "sort\\by\\key" 
+	"Efficiently sorts a collection by pre-computing a sort key for each element using a key function. Much faster than sort\\by for large datasets (Schwartzian Transform)."
+	{
+		arg `collection: Block or list to sort`
+		arg `key-fn: Block of code that transforms each value to a sortable key (evaluated once per element)`
+		returns `a new collection with items sorted according to the computed keys`
+	}
+
+	{
+		equal { sort\by\key { 6 12 1 } { * -1 } } { 12 6 1 }
+		equal { sort\by\key { 6 12 1 } { + 0 } } { 1 6 12 }
+		equal { sort\by\key { { x 6 } { x 12 } { x 1 } } { .second } } { { x 1 } { x 6 } { x 12 } }
+		equal { sort\by\key { "abc" "a" "ab" } { .length? } } { "a" "ab" "abc" }
+		equal { sort\by\key list { 5 3 1 4 } { * -1 } } list { 5 4 3 1 }
+	}
+
+	{
+``	}
+
 	group "unique" 
 	"Creates a new collection with duplicate values removed, keeping only the first occurrence of each value."
 	{
@@ -2342,8 +2361,45 @@ section "Collections " "" {
 	{
 ``	}
 
-	group "change\\nth!" 
-	"Changes the value at a specific position in a block or list in-place and returns the modified collection."
+	group "update!" 
+	"Updates the value at a specific index in a block or list in-place and returns the modified collection (0-based indexing)."
+	{
+		arg `collection: Reference to a block or list to modify`
+		arg `index: Index of the element to change (0-based)`
+		arg `value: New value to set at the specified index`
+		returns `the modified collection with the value changed at the specified index`
+	}
+
+	{
+		equal { x: ref { 1 2 3 } update! x 1 222 , x } { 1 222 3 }
+		equal { x: ref list { "a" "b" "c" } update! x 0 "X" , x } list { "X" "b" "c" }
+		equal { x: ref { 10 20 30 } update! x 2 99 , x } { 10 20 99 }
+	}
+
+	{
+``	}
+
+	group "update\\with!" 
+	"Updates the value at a specific index by evaluating a code block with the current value injected and storing the result (0-based indexing)."
+	{
+		arg `collection: Reference to a block or list to modify`
+		arg `index: Index of the element to transform (0-based)`
+		arg `transform: Block of code that receives the current value and returns the new value`
+		returns `the modified collection with the value at the index transformed by the code block`
+	}
+
+	{
+		equal { x: ref { 10 20 30 } update\with! x 1 { * 2 } , x } { 10 40 30 }
+		equal { x: ref { 1 2 3 } update\with! x 0 { + 100 } , x } { 101 2 3 }
+		equal { x: ref list { 5 10 15 } update\with! x 2 { / 3 } , x } list { 5 10 5 }
+		equal { x: ref { "a" "b" "c" } update\with! x 1 { .concat "!" } , x } { "a" "b!" "c" }
+	}
+
+	{
+``	}
+
+	group "update\\pos!" 
+	"Updates the value at a specific position in a block or list in-place and returns the modified collection (1-based indexing)."
 	{
 		arg `collection: Reference to a block or list to modify`
 		arg `position: Position of the element to change (1-based)`
@@ -2352,8 +2408,9 @@ section "Collections " "" {
 	}
 
 	{
-		equal { x: ref { 1 2 3 } change\nth! x 2 222 , x } { 1 222 3 }
-		equal { x: ref list { "a" "b" "c" } change\nth! x 1 "X" , x } list { "X" "b" "c" }
+		equal { x: ref { 1 2 3 } update\pos! x 2 222 , x } { 1 222 3 }
+		equal { x: ref list { "a" "b" "c" } update\pos! x 1 "X" , x } list { "X" "b" "c" }
+		equal { x: ref { 10 20 30 } update\pos! x 3 99 , x } { 10 20 99 }
 	}
 
 	{
@@ -3886,7 +3943,7 @@ section "Other " "..." {
 	{
 ``	}
 
-	group "set!" 
+	group "set" 
 	"Set word to value or words by deconstructing a block. Only works on variables declared with var."
 	{
 		arg `values: Value or block of values to assign to the word(s)`
@@ -3895,7 +3952,7 @@ section "Other " "..." {
 	}
 
 	{
-		equal   { set! { 123 234 } { a b }  b } 234
+		equal   { set { 123 234 } { a b }  b } 234
 	}
 
 	{

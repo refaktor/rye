@@ -252,11 +252,11 @@ var Builtins_crypto = map[string]*env.Builtin{
 
 	// Tests:
 	//  ; equal { cc crypto
-	//  ;   ed25519-generate-keys |set! { pub priv }
+	//  ;   ed25519-generate-keys |set { pub priv }
 	//  ;   "Hello world" priv |sign |type?
 	//  ; } 'native
 	//  ; equal { cc crypto
-	//  ;   ed25519-generate-keys |set! { pub priv }
+	//  ;   ed25519-generate-keys |set { pub priv }
 	//  ;  "Hello world" priv |sign |kind?
 	//  ; } 'bytes
 	// Args:
@@ -407,7 +407,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { cc crypto
-	//     age-generate-keys |set! { identity recipient }
+	//     age-generate-keys |set { identity recipient }
 	//     "SUPER SECRET" |reader |age-encrypt recipient |age-decrypt identity |Read\string
 	// } "SUPER SECRET"
 	// equal { cc crypto "SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |Read\string } "SUPER SECRET"
@@ -469,7 +469,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { cc crypto
-	//     age-generate-keys |set! { identity recipient }
+	//     age-generate-keys |set { identity recipient }
 	//     "SUPER SECRET" |reader |age-encrypt recipient |age-decrypt identity |Read\string
 	// } "SUPER SECRET"
 	// equal { cc crypto "SUPER SECRET" |reader |age-encrypt "password" |age-decrypt "password" |Read\string } "SUPER SECRET"
@@ -939,13 +939,13 @@ var Builtins_crypto = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// ; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key } cert key encode-to-pem |type? } 'block
-	// ; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key }   cert key encode-to-pem |length? } 2
-	// ; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key }   cert key encode-to-pem |at 0 |type? } 'native
-	// ; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key }   cert key encode-to-pem |at 0 |kind? } 'Go-bytes
-	// ; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key }   cert key encode-to-pem |at 1 |type? } 'native
-	// ; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key }   cert key encode-to-pem |at 1 |kind? } 'Go-bytes
-	// ; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key }   cert key encode-to-pem |at 0 "data/cert.pem" write-file "data/cert.pem" read-file |x509-parse-certificate |is-expired } 0
+	// ; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set { cert key } cert key encode-to-pem |type? } 'block
+	// ; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set { cert key }   cert key encode-to-pem |length? } 2
+	// ; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set { cert key }   cert key encode-to-pem |at 0 |type? } 'native
+	// ; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set { cert key }   cert key encode-to-pem |at 0 |kind? } 'Go-bytes
+	// ; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set { cert key }   cert key encode-to-pem |at 1 |type? } 'native
+	// ; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set { cert key }   cert key encode-to-pem |at 1 |kind? } 'Go-bytes
+	// ; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set { cert key }   cert key encode-to-pem |at 0 "data/cert.pem" write-file "data/cert.pem" read-file |x509-parse-certificate |is-expired } 0
 	// Args:
 	// * certificate: X.509 certificate as a native value
 	// * private-key: RSA private key as a native value
@@ -1008,8 +1008,8 @@ var Builtins_crypto = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// ; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key } cert key "password" encode-to-p12 |type? } 'native
-	// ; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set! { cert key } cert key "password" encode-to-p12 |kind? } 'Go-bytes
+	// ; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set { cert key } cert key "password" encode-to-p12 |type? } 'native
+	// ; equal { cc crypto generate-self-signed-certificate 2048 { "CommonName" "test.com" } |set { cert key } cert key "password" encode-to-p12 |kind? } 'Go-bytes
 	// Args:
 	// * certificate: X.509 certificate as a native value
 	// * private-key: RSA private key as a native value

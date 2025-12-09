@@ -1536,7 +1536,7 @@ var builtins_collection = map[string]*env.Builtin{
 	// Tests:
 	// equal { sort\by\key { 6 12 1 } { * -1 } } { 12 6 1 }
 	// equal { sort\by\key { 6 12 1 } { + 0 } } { 1 6 12 }
-	// equal { sort\by\key { { x 6 } { x 12 } { x 1 } } { second } } { { x 1 } { x 6 } { x 12 } }
+	// equal { sort\by\key { { x 6 } { x 12 } { x 1 } } { .second } } { { x 1 } { x 6 } { x 12 } }
 	// equal { sort\by\key { "abc" "a" "ab" } { .length? } } { "a" "ab" "abc" }
 	// equal { sort\by\key list { 5 3 1 4 } { * -1 } } list { 5 4 3 1 }
 	// Args:
@@ -2965,6 +2965,39 @@ var builtins_collection = map[string]*env.Builtin{
 	// Returns:
 	// * the modified collection with the value changed at the specified position
 	"update\\pos!": { // **
+		Argsn: 3,
+		Doc:   "Updates the value at a specific position in a block or list in-place and returns the modified collection (1-based indexing).",
+		Pure:  false,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch num := arg1.(type) {
+			case env.Integer:
+				if num.Value < 1 {
+					return MakeBuiltinError(ps, "Position must be >= 1 for 1-based indexing", "update\\pos!")
+				}
+				switch s1 := arg0.(type) {
+				case *env.Block:
+					if num.Value > int64(s1.Series.Len()) {
+						return MakeBuiltinError(ps, fmt.Sprintf("Position %d is out of bounds for block with %d elements.", num.Value, s1.Series.Len()), "update\\pos!")
+					}
+					s1.Series.S[num.Value-1] = arg2
+					return s1
+				case *env.List:
+					if num.Value > int64(len(s1.Data)) {
+						return MakeBuiltinError(ps, fmt.Sprintf("Position %d is out of bounds for list with %d elements.", num.Value, len(s1.Data)), "update\\pos!")
+					}
+					s1.Data[num.Value-1] = env.RyeToRaw(arg2, ps.Idx)
+					return s1
+				default:
+					return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "update\\pos!")
+				}
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "update\\pos!")
+			}
+		},
+	},
+
+	// Deprecated: renamed do update\pos!
+	"change\\nth!": { // **
 		Argsn: 3,
 		Doc:   "Updates the value at a specific position in a block or list in-place and returns the modified collection (1-based indexing).",
 		Pure:  false,
