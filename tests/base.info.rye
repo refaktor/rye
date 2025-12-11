@@ -2661,13 +2661,13 @@ section "Types and Kinds " "" {
 	"Returns true if value is a string."
 	{
 		arg `value: Any Rye value to test`
-		returns `Integer 1 if the value is a string, 0 otherwise`
+		returns `Boolean true if the value is a string, false otherwise`
 	}
 
 	{
-		equal   { is-string "test" } 1
-		equal   { is-string 'test } 0
-		equal   { is-string 123 } 0
+		equal   { is-string "test" } true
+		equal   { is-string 'test } false
+		equal   { is-string 123 } false
 	}
 
 	{
@@ -2677,13 +2677,13 @@ section "Types and Kinds " "" {
 	"Returns true if value is an integer."
 	{
 		arg `value: Any Rye value to test`
-		returns `Integer 1 if the value is an integer, 0 otherwise`
+		returns `Boolean true if the value is an integer, false otherwise`
 	}
 
 	{
-		equal   { is-integer 123 } 1
-		equal   { is-integer 123.4 } 0
-		equal   { is-integer "123" } 0
+		equal   { is-integer 123 } true
+		equal   { is-integer 123.4 } false
+		equal   { is-integer "123" } false
 	}
 
 	{
@@ -2693,13 +2693,13 @@ section "Types and Kinds " "" {
 	"Returns true if value is a decimal."
 	{
 		arg `value: Any Rye value to test`
-		returns `Integer 1 if the value is a decimal, 0 otherwise`
+		returns `Boolean true if the value is a decimal, false otherwise`
 	}
 
 	{
-		equal   { is-decimal 123.0 } 1
-		equal   { is-decimal 123 } 0
-		equal   { is-decimal "123.4" } 0
+		equal   { is-decimal 123.0 } true
+		equal   { is-decimal 123 } false
+		equal   { is-decimal "123.4" } false
 	}
 
 	{
@@ -2709,13 +2709,13 @@ section "Types and Kinds " "" {
 	"Returns true if value is a number (integer or decimal)."
 	{
 		arg `value: Any Rye value to test`
-		returns `Integer 1 if the value is a number (integer or decimal), 0 otherwise`
+		returns `Boolean true if the value is a number (integer or decimal), false otherwise`
 	}
 
 	{
-		equal   { is-number 123 } 1
-		equal   { is-number 123.4 } 1
-		equal   { is-number "123" } 0
+		equal   { is-number 123 } true
+		equal   { is-number 123.4 } true
+		equal   { is-number "123" } false
 	}
 
 	{

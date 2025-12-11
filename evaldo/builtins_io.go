@@ -442,6 +442,35 @@ var Builtins_io = map[string]*env.Builtin{
 
 	// Args:
 	// * reader: native reader object
+	// Returns:
+	// * empty string if successful
+	"reader//Close": {
+		Argsn: 1,
+		Doc:   "Closes a reader if it implements io.Closer.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch r := arg0.(type) {
+			case env.Native:
+				// Check if the reader implements io.Closer
+				if closer, ok := r.Value.(io.Closer); ok {
+					err := closer.Close()
+					if err != nil {
+						ps.FailureFlag = true
+						return MakeBuiltinError(ps, err.Error(), "reader//Close")
+					}
+					return *env.NewString("")
+				}
+				// If the reader doesn't implement io.Closer, just return success
+				// (e.g., readers from strings don't need closing)
+				return *env.NewString("")
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "reader//Close")
+			}
+		},
+	},
+
+	// Args:
+	// * reader: native reader object
 	// * writer: native writer object
 	// Returns:
 	// * the reader object if successful

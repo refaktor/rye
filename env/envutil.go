@@ -9,8 +9,16 @@ import (
 func ToRyeValue(val any) Object {
 	switch v := val.(type) {
 	case float64:
+		// Check if the float is actually an integer value (no fractional part)
+		if v == float64(int64(v)) {
+			return *NewInteger(int64(v))
+		}
 		return *NewDecimal(v)
 	case float32:
+		// Check if the float is actually an integer value (no fractional part)
+		if v == float32(int32(v)) {
+			return *NewInteger(int64(v))
+		}
 		return *NewDecimal(float64(v))
 	case int:
 		return *NewInteger(int64(v))

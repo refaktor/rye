@@ -53,13 +53,13 @@ var Builtins_regexp = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	//  equal { regexp "[0-9]" |Is-match "5" } 1
-	//  equal { regexp "[0-9]" |Is-match "a" } 0
+	//  equal { regexp "[0-9]" |Is-match "5" } true
+	//  equal { regexp "[0-9]" |Is-match "a" } false
 	// Args:
 	// * regexp: Native regexp object
 	// * input: String to test against the pattern
 	// Returns:
-	// * integer 1 if the string matches the pattern, 0 otherwise
+	// * boolean true if the string matches the pattern, false otherwise
 	"regexp//Is-match": {
 		Argsn: 2,
 		Doc:   "Tests if a string matches the regular expression pattern.",
@@ -70,9 +70,9 @@ var Builtins_regexp = map[string]*env.Builtin{
 				case env.Native:
 					res := s.Value.(*regexp.Regexp).MatchString(val.Value)
 					if res {
-						return *env.NewInteger(1)
+						return *env.NewBoolean(true)
 					} else {
-						return *env.NewInteger(0)
+						return *env.NewBoolean(false)
 					}
 				default:
 					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "regexp//Is-match")

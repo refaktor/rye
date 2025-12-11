@@ -261,24 +261,39 @@ func DisplaySelection(bloc env.Block, idx *env.Idxs, right int) (env.Object, boo
 	curr := 0
 	moveUp := 0
 	mode := 0 // 0 - human, 1 - dev
+
+	// Check if first element is a string - if so, duplicate strings to create string-string pairs
+	if bloc.Series.Len() > 0 {
+		if _, ok := bloc.Series.Get(0).(env.String); ok {
+			// Create a new block with duplicated strings (string-string pairs)
+			newSeries := make([]env.Object, bloc.Series.Len()*2)
+			for i := 0; i < bloc.Series.Len(); i++ {
+				str := bloc.Series.Get(i)
+				newSeries[i*2] = str   // First copy
+				newSeries[i*2+1] = str // Second copy (for display)
+			}
+			bloc.Series = *env.NewTSeries(newSeries)
+		}
+	}
+
 	len := bloc.Series.Len() / 2
 DODO1:
 	if moveUp > 0 {
 		CurUp(moveUp)
 	}
 	SaveCurPos()
-	idents := make([]int, (bloc.Series.Len()/2)+3)
+	idents := make([]env.Object, (bloc.Series.Len()/2)+3)
 	//fmt.Println("---")
 	//fmt.Println(bloc.Series.Len())
 	for i := 0; i < bloc.Series.Len(); i += 2 {
 		//fmt.Println(i)
-		// todo check if it's word
-		idents[i/2] = bloc.Series.Get(i).(env.Word).Index
+		// Store the identifier (could be Word, String, or Integer)
+		idents[i/2] = bloc.Series.Get(i)
 		label := bloc.Series.Get(i + 1)
 		// ClearLine()
 		CurRight(right)
 		if i/2 == curr {
-			ColorMagenta()
+			ColorGreen()
 			Bold()
 			termPrint("\u00bb ")
 		} else {
@@ -314,7 +329,7 @@ DODO1:
 
 		if ascii == 13 {
 			termPrintln("")
-			return *env.NewWord(idents[curr]), false
+			return idents[curr], false
 		}
 
 		if ascii == 77 || ascii == 109 {
@@ -402,6 +417,196 @@ func DisplayInputField(right int, mlen int) (env.Object, bool) {
 		// }
 		// else if keyCode == 38 {
 		// }
+	}
+}
+
+// DisplayDateInput displays an interactive date input in format YYYY-MM-DD
+// Allows arrow keys to navigate between fields and increment/decrement values
+// Returns a string in format "YYYY-MM-DD"
+func DisplayDateInput(initialDate string, right int) (env.Object, bool) {
+	// Parse initial date or use current date
+	year, month, day := 0, 0, 0
+	if initialDate != "" {
+		parsed := strings.Split(initialDate, "-")
+		if len(parsed) == 3 {
+			year, _ = strconv.Atoi(parsed[0])
+			month, _ = strconv.Atoi(parsed[1])
+			day, _ = strconv.Atoi(parsed[2])
+		}
+	}
+
+	// If parsing failed, use current date
+	if year == 0 || month == 0 || day == 0 {
+		// Use a default date as fallback
+		year, month, day = 2025, 1, 1
+	}
+
+	field := 0 // 0=year, 1=month, 2=day
+
+	// Helper function to get days in month
+	daysInMonth := func(y, m int) int {
+		switch m {
+		case 2:
+			if (y%4 == 0 && y%100 != 0) || (y%400 == 0) {
+				return 29
+			}
+			return 28
+		case 4, 6, 9, 11:
+			return 30
+		default:
+			return 31
+		}
+	}
+
+	// Helper to format date string
+	formatDate := func() string {
+		return fmt.Sprintf("%04d-%02d-%02d", year, month, day)
+	}
+
+	// Helper to display with highlighting
+	display := func() {
+		RestoreCurPos()
+		dateStr := formatDate()
+		parts := strings.Split(dateStr, "-")
+
+		for i, part := range parts {
+			if i > 0 {
+				termPrint("-")
+			}
+			if i == field {
+				ColorBrGreen()
+				Bold()
+				termPrint(part)
+				CloseProps()
+			} else {
+				termPrint(part)
+			}
+		}
+	}
+
+	CurRight(right)
+	SaveCurPos()
+	display()
+
+	defer func() {
+		ShowCur()
+	}()
+
+	for {
+		ascii, keyCode, err := GetChar()
+
+		if (ascii == 3 || ascii == 27) || err != nil {
+			termPrintln("")
+			return nil, true
+		}
+
+		if ascii == 13 {
+			termPrintln("")
+			return *env.NewString(formatDate()), false
+		}
+
+		// Left/Right arrows to switch fields
+		if keyCode == 37 { // Left arrow
+			field--
+			if field < 0 {
+				field = 2
+			}
+			display()
+		} else if keyCode == 39 { // Right arrow
+			field++
+			if field > 2 {
+				field = 0
+			}
+			display()
+		} else if keyCode == 38 { // Up arrow - increment
+			switch field {
+			case 0: // Year
+				year++
+				if year > 9999 {
+					year = 1
+				}
+			case 1: // Month
+				month++
+				if month > 12 {
+					month = 1
+				}
+				// Adjust day if necessary
+				maxDays := daysInMonth(year, month)
+				if day > maxDays {
+					day = maxDays
+				}
+			case 2: // Day
+				day++
+				maxDays := daysInMonth(year, month)
+				if day > maxDays {
+					day = 1
+				}
+			}
+			display()
+		} else if keyCode == 40 { // Down arrow - decrement
+			switch field {
+			case 0: // Year
+				year--
+				if year < 1 {
+					year = 9999
+				}
+			case 1: // Month
+				month--
+				if month < 1 {
+					month = 12
+				}
+				// Adjust day if necessary
+				maxDays := daysInMonth(year, month)
+				if day > maxDays {
+					day = maxDays
+				}
+			case 2: // Day
+				day--
+				if day < 1 {
+					day = daysInMonth(year, month)
+				}
+			}
+			display()
+		} else if ascii >= 48 && ascii <= 57 { // Digit keys 0-9
+			digit := int(ascii - 48)
+			switch field {
+			case 0: // Year - allow typing
+				yearStr := fmt.Sprintf("%04d", year)
+				yearStr = yearStr[1:] + strconv.Itoa(digit)
+				year, _ = strconv.Atoi(yearStr)
+			case 1: // Month
+				if digit >= 0 && digit <= 1 {
+					month = month%10 + digit*10
+					if month > 12 {
+						month = digit
+					}
+					if month == 0 {
+						month = 10
+					}
+				} else if month < 10 {
+					month = digit
+					if month == 0 {
+						month = 1
+					}
+				}
+				// Adjust day if necessary
+				maxDays := daysInMonth(year, month)
+				if day > maxDays {
+					day = maxDays
+				}
+			case 2: // Day
+				maxDays := daysInMonth(year, month)
+				newDay := day%10 + digit*10
+				if newDay > maxDays || newDay == 0 {
+					newDay = digit
+					if newDay == 0 {
+						newDay = 1
+					}
+				}
+				day = newDay
+			}
+			display()
+		}
 	}
 }
 
