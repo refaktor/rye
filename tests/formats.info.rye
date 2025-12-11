@@ -18,12 +18,12 @@ section "Regexp " "Go like Regular expressions" {
 	{
 		arg `regexp: Native regexp object`
 		arg `input: String to test against the pattern`
-		returns `integer 1 if the string matches the pattern, 0 otherwise`
+		returns `boolean true if the string matches the pattern, false otherwise`
 	}
 
 	{
-		equal { regexp "[0-9]" |Is-match "5" } 1
-		equal { regexp "[0-9]" |Is-match "a" } 0
+		equal { regexp "[0-9]" |Is-match "5" } true
+		equal { regexp "[0-9]" |Is-match "a" } false
 	}
 
 	{
@@ -146,7 +146,7 @@ section "JSON " "Parsing and generating JSON" {
 	}
 
 	{
-		equal { `{"a": 2, "b": "x"} \n{"a": 3, "b": "y"} \n` |parse-json\lines |to-table } table { "a" "b" } { 2.0 "x" 3.0 "y" }
+		equal { `{"a": 2, "b": "x"} \n{"a": 3, "b": "y"} \n` |parse-json\lines |to-table } table { "a" "b" } { 2 "x" 3 "y" }
 	}
 
 	{

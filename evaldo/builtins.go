@@ -9,6 +9,7 @@ import (
 	"reflect"
 
 	"github.com/refaktor/rye/env"
+	"github.com/refaktor/rye/term"
 
 	"github.com/refaktor/rye/loader"
 	// JM 20230825	"github.com/refaktor/rye/term"
@@ -1304,8 +1305,8 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	/* JM 20230825
-	"tui\\selection": {
+	/* JM 20230825 */
+	"display-selection": {
 		Argsn: 2,
 		Doc:   "Work in progress Interactively displays a value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1322,7 +1323,7 @@ var builtins = map[string]*env.Builtin{
 			return nil
 		},
 	},
-	"tui\\input": {
+	"display-input": {
 		Argsn: 2,
 		Doc:   "Work in progress Interactively displays a value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1338,7 +1339,22 @@ var builtins = map[string]*env.Builtin{
 			}
 			return nil
 		},
-		}, */
+	},
+	"display-date-input": {
+		Argsn: 2,
+		Doc:   "Interactive date input in format YYYY-MM-DD. Use arrow keys to navigate between year/month/day fields and increment/decrement values, or type digits. Returns date string.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			term.SaveCurPos()
+			switch initialDate := arg0.(type) {
+			case env.String:
+				obj, esc := term.DisplayDateInput(initialDate.Value, int(arg1.(env.Integer).Value))
+				if !esc {
+					return obj
+				}
+			}
+			return nil
+		},
+	}, /* */
 
 	// Tests:
 	// ; import file://test.rye  ; imports and executes test.rye

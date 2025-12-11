@@ -656,12 +656,12 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	{
 		arg `x: integer or decimal value`
 		arg `y: integer or decimal value`
-		returns `integer 1 if values are very close, 0 otherwise`
+		returns `boolean true if values are very close, false otherwise`
 	}
 
 	{
-		equal { is-near 0.0000000000001 0 } 1
-		equal { is-near 0.1 0 } 0
+		equal { is-near 0.0000000000001 0 } true
+		equal { is-near 0.1 0 } false
 	}
 
 	{
@@ -671,12 +671,12 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	"Returns true if a decimal is close to zero."
 	{
 		arg `x: integer or decimal value`
-		returns `integer 1 if value is very close to zero, 0 otherwise`
+		returns `boolean true if value is very close to zero, false otherwise`
 	}
 
 	{
-		equal { near-zero 0.0000000000001 } 1
-		equal { near-zero 0.1 } 0
+		equal { near-zero 0.0000000000001 } true
+		equal { near-zero 0.1 } false
 	}
 
 	{

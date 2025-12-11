@@ -354,6 +354,8 @@ var Builtins_cmd = map[string]*env.Builtin{
 	},
 	// Args:
 	// * command: native command object
+	// Returns:
+	// * boolean true if the command executed successfully
 	// Tests:
 	// error { cmd { false } |Run }
 	"command//Run": {
@@ -371,7 +373,7 @@ var Builtins_cmd = map[string]*env.Builtin{
 				ps.FailureFlag = true
 				return MakeBuiltinError(ps, err.Error(), "Run")
 			}
-			return nil
+			return *env.NewBoolean(true)
 		}),
 	},
 	// Args:

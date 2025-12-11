@@ -250,6 +250,19 @@ section "File Operations " "File system operations and file manipulation" {
 	{
 ``	}
 
+	group "reader//Close" 
+	"Closes a reader if it implements io.Closer."
+	{
+		arg `reader: native reader object`
+		returns `empty string if successful`
+	}
+
+	{
+	}
+
+	{
+``	}
+
 	group "reader//Copy" 
 	"Copies all content from a reader to a writer."
 	{
@@ -818,6 +831,7 @@ section "Command Operations " "Running other programs" {
 	"Start a command and wait for it to finish."
 	{
 		arg `command: native command object`
+		returns `boolean true if the command executed successfully`
 	}
 
 	{

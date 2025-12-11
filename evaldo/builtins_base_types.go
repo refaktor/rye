@@ -231,85 +231,85 @@ var builtins_types = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal   { is-string "test" } 1
-	// equal   { is-string 'test } 0
-	// equal   { is-string 123 } 0
+	// equal   { is-string "test" } true
+	// equal   { is-string 'test } false
+	// equal   { is-string 123 } false
 	// Args:
 	// * value: Any Rye value to test
 	// Returns:
-	// * Integer 1 if the value is a string, 0 otherwise
+	// * Boolean true if the value is a string, false otherwise
 	"is-string": { // ***
 		Argsn: 1,
 		Doc:   "Returns true if value is a string.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if arg0.Type() == env.StringType {
-				return *env.NewInteger(1)
+				return *env.NewBoolean(true)
 			} else {
-				return *env.NewInteger(0)
+				return *env.NewBoolean(false)
 			}
 		},
 	},
 
 	// Tests:
-	// equal   { is-integer 123 } 1
-	// equal   { is-integer 123.4 } 0
-	// equal   { is-integer "123" } 0
+	// equal   { is-integer 123 } true
+	// equal   { is-integer 123.4 } false
+	// equal   { is-integer "123" } false
 	// Args:
 	// * value: Any Rye value to test
 	// Returns:
-	// * Integer 1 if the value is an integer, 0 otherwise
+	// * Boolean true if the value is an integer, false otherwise
 	"is-integer": { // ***
 		Argsn: 1,
 		Doc:   "Returns true if value is an integer.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if arg0.Type() == env.IntegerType {
-				return *env.NewInteger(1)
+				return *env.NewBoolean(true)
 			} else {
-				return *env.NewInteger(0)
+				return *env.NewBoolean(false)
 			}
 		},
 	},
 
 	// Tests:
-	// equal   { is-decimal 123.0 } 1
-	// equal   { is-decimal 123 } 0
-	// equal   { is-decimal "123.4" } 0
+	// equal   { is-decimal 123.0 } true
+	// equal   { is-decimal 123 } false
+	// equal   { is-decimal "123.4" } false
 	// Args:
 	// * value: Any Rye value to test
 	// Returns:
-	// * Integer 1 if the value is a decimal, 0 otherwise
+	// * Boolean true if the value is a decimal, false otherwise
 	"is-decimal": { // ***
 		Argsn: 1,
 		Doc:   "Returns true if value is a decimal.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if arg0.Type() == env.DecimalType {
-				return *env.NewInteger(1)
+				return *env.NewBoolean(true)
 			} else {
-				return *env.NewInteger(0)
+				return *env.NewBoolean(false)
 			}
 		},
 	},
 
 	// Tests:
-	// equal   { is-number 123 } 1
-	// equal   { is-number 123.4 } 1
-	// equal   { is-number "123" } 0
+	// equal   { is-number 123 } true
+	// equal   { is-number 123.4 } true
+	// equal   { is-number "123" } false
 	// Args:
 	// * value: Any Rye value to test
 	// Returns:
-	// * Integer 1 if the value is a number (integer or decimal), 0 otherwise
+	// * Boolean true if the value is a number (integer or decimal), false otherwise
 	"is-number": { // ***
 		Argsn: 1,
 		Doc:   "Returns true if value is a number (integer or decimal).",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if arg0.Type() == env.IntegerType || arg0.Type() == env.DecimalType {
-				return *env.NewInteger(1)
+				return *env.NewBoolean(true)
 			} else {
-				return *env.NewInteger(0)
+				return *env.NewBoolean(false)
 			}
 		},
 	},

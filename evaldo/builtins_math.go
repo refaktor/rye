@@ -1209,13 +1209,13 @@ var Builtins_math = map[string]*env.Builtin{
 		},
 	},
 	// Tests:
-	// equal { is-near 0.0000000000001 0 } 1
-	// equal { is-near 0.1 0 } 0
+	// equal { is-near 0.0000000000001 0 } true
+	// equal { is-near 0.1 0 } false
 	// Args:
 	// * x: integer or decimal value
 	// * y: integer or decimal value
 	// Returns:
-	// * integer 1 if values are very close, 0 otherwise
+	// * boolean true if values are very close, false otherwise
 	"is-near": {
 		Argsn: 2,
 		Doc:   "Returns true if two decimals are close.",
@@ -1226,19 +1226,19 @@ var Builtins_math = map[string]*env.Builtin{
 			}
 			const epsilon = 0.0000000000001 // math.SmallestNonzeroFloat64
 			if math.Abs(fa-fb) <= (epsilon) {
-				return env.NewInteger(1)
+				return env.NewBoolean(true)
 			} else {
-				return env.NewInteger(0)
+				return env.NewBoolean(false)
 			}
 		},
 	},
 	// Tests:
-	// equal { near-zero 0.0000000000001 } 1
-	// equal { near-zero 0.1 } 0
+	// equal { near-zero 0.0000000000001 } true
+	// equal { near-zero 0.1 } false
 	// Args:
 	// * x: integer or decimal value
 	// Returns:
-	// * integer 1 if value is very close to zero, 0 otherwise
+	// * boolean true if value is very close to zero, false otherwise
 	"near-zero": {
 		Argsn: 1,
 		Doc:   "Returns true if a decimal is close to zero.",
@@ -1255,9 +1255,9 @@ var Builtins_math = map[string]*env.Builtin{
 			// const epsilon = math.SmallestNonzeroFloat64
 			const epsilon = 0.0000000000001 // math.SmallestNonzeroFloat64
 			if math.Abs(fa) <= epsilon {
-				return env.NewInteger(1)
+				return env.NewBoolean(true)
 			} else {
-				return env.NewInteger(0)
+				return env.NewBoolean(false)
 			}
 		},
 	},
