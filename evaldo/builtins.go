@@ -2586,6 +2586,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(builtins_trees, ps, "trees")
 	RegisterBuiltinsInContext(Builtins_git, ps, "git")
 	RegisterBuiltinsInContext(Builtins_prometheus, ps, "prometheus")
+	RegisterBuiltinsInContext(Builtins_echarts, ps, "echarts")
 	RegisterErrorUtilsBuiltins(ps) // Register additional error handling utilities
 	// ## Archived modules
 	// RegisterBuiltins2(Builtins_gtk, ps, "gtk")

@@ -477,17 +477,17 @@ var builtins_types = map[string]*env.Builtin{
 
 	// FUNCTIONALITY AROUND GENERIC METHODS
 	// Tests:
-	// equal   { generic 'integer 'add fn { a b } { a + b } |type? } 'function
+	// equal   { method 'integer 'add fn { a b } { a + b } |type? } 'function
 	// Args:
 	// * kind: Word representing the kind for which to register the function
 	// * method: Word representing the method name
 	// * function: Function to register for the kind and method
 	// Returns:
 	// * The registered function
-	// generic <integer> <add> fn [ a b ] [ a + b ] // tagwords are temporary here
-	"generic": {
+	// method <integer> <add> fn [ a b ] [ a + b ] // tagwords are temporary here
+	"method": {
 		Argsn: 3,
-		Doc:   "Registers a generic function.",
+		Doc:   "Registers a method (generic function).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Word:
