@@ -477,6 +477,31 @@ var builtins_printing = map[string]*env.Builtin{
 	},
 
 	// Tests:
+	// stdout { probe\ 101 "value:" } "value: [Integer: 101]\n"
+	// Args:
+	// * value: Any value to inspect
+	// * prefix: String to print before the probed value
+	// Returns:
+	// * the input value (for chaining)
+	"probe\\": { // **
+		Argsn: 2,
+		Doc:   "Prints a prefix string followed by detailed type and value information about a value, followed by a newline, returning the input value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch prefix := arg1.(type) {
+			case env.String:
+				p := ""
+				if env.IsPointer(arg0) {
+					p = "REF"
+				}
+				fmt.Println(prefix.Value + " " + p + arg0.Inspect(*ps.Idx))
+				return arg0
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.StringType}, "probe\\")
+			}
+		},
+	},
+
+	// Tests:
 	// equal { inspect 101 } "[Integer: 101]"
 	// Args:
 	// * value: Any value to inspect

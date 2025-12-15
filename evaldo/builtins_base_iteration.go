@@ -1,7 +1,6 @@
 package evaldo
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/refaktor/rye/env"
@@ -581,7 +580,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						if ok {
 							block = block1
 						} else {
-							fmt.Println("ERROR 1231241")
+							return MakeBuiltinError(ps, "Code block didn't return a block.", "walk")
 						}
 						ps.Ser.Reset()
 					}

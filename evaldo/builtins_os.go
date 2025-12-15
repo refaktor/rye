@@ -141,7 +141,12 @@ var Builtins_os = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg0.(type) {
 			case env.Uri:
-				newDir := filepath.Join(filepath.Dir(ps.WorkingPath), path.GetPath())
+				newDir := filepath.Join(ps.WorkingPath, path.GetPath())
+				/*fmt.Println("-----------------------------")
+				fmt.Println(filepath.Dir(ps.WorkingPath))
+				fmt.Println(ps.WorkingPath)
+				fmt.Println(path.GetPath())
+				fmt.Println(newDir)*/
 				err := os.Mkdir(newDir, 0755) // Create directory with permissions 0755
 				if err != nil {
 					return MakeBuiltinError(ps, "Error creating directory: "+err.Error(), "mkdir")
@@ -183,8 +188,8 @@ var Builtins_os = map[string]*env.Builtin{
 			case env.Uri:
 				switch path2 := arg1.(type) {
 				case env.Uri:
-					old := filepath.Join(filepath.Dir(ps.WorkingPath), path.GetPath())
-					new := filepath.Join(filepath.Dir(ps.WorkingPath), path2.GetPath())
+					old := filepath.Join(ps.WorkingPath, path.GetPath())
+					new := filepath.Join(ps.WorkingPath, path2.GetPath())
 					err := os.Rename(old, new)
 					if err != nil {
 						fmt.Println("Error renaming file:", err)
