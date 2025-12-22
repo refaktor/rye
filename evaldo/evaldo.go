@@ -684,7 +684,7 @@ func EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toL
 		return
 	case env.FunctionType:
 		fn := object.(env.Function)
-		CallFunction_CollectArgs(fn, ps, leftVal, toLeft, ctx)
+		CallFunction_CollectArgs(fn, ps, leftVal, toLeft, ctx, pipeSecond, firstVal)
 		return
 	case env.CPathType: // RMME
 		// Check if this is a getcpath (mode 3) - behave like get-word
@@ -812,8 +812,38 @@ var envPool = sync.Pool{
 // CallFunction_CollectArgs calls a function by collecting arguments from the code stream.
 // Called from: EvalObject, CallFunctionWithArgs (0 or 1 arg case)
 // Purpose: Main function caller in evaluator - collects args from code, sets up context, executes function body
-func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0 env.Object, toLeft bool, ctx *env.RyeCtx) {
+func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.Object, toLeft bool, ctx *env.RyeCtx, pipeSecond ...interface{}) {
 	// fmt.Println(1)
+
+	// Handle optional pipeSecond and firstVal parameters
+	var pipeSecondFlag bool
+	var firstVal env.Object
+	if len(pipeSecond) >= 1 {
+		if ps, ok := pipeSecond[0].(bool); ok {
+			pipeSecondFlag = ps
+		}
+	}
+	if len(pipeSecond) >= 2 {
+		if fv, ok := pipeSecond[1].(env.Object); ok {
+			firstVal = fv
+		}
+	}
+
+	// Determine arg0 based on pipeSecond flag (same logic as CallBuiltin_CollectArgs)
+	var arg0 env.Object
+	if arg0_ != nil && !pipeSecondFlag {
+		arg0 = arg0_
+	} else if firstVal != nil && pipeSecondFlag {
+		arg0 = firstVal
+	} else if pipeSecondFlag && fn.Argsn > 0 {
+		// When pipeSecond is true but firstVal is nil (non-generic word),
+		// evaluate the next expression to get arg0
+		EvalExpression_CollectArg(ps, true)
+		if ps.ReturnFlag || ps.ErrorFlag {
+			return
+		}
+		arg0 = ps.Res
+	}
 
 	env0 := ps.Ctx // store reference to current env in local
 	var fnCtx *env.RyeCtx
@@ -885,6 +915,17 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0 env.Ob
 				//evalExprFn = EvalExpression_ // 2020-01-12 .. changed to ion2
 				evalExprFn = EvalExpression_CollectArg
 			}
+		}
+	}
+
+	// Handle arg1 when pipeSecond is true (same logic as CallBuiltin_CollectArgs)
+	// When pipeSecond is true and arg0_ is provided, arg0_ should become arg1 (the second argument)
+	if arg0_ != nil && pipeSecondFlag && fn.Argsn > 1 && ii == 1 {
+		if fn.Spec.Series.Len() > 1 {
+			index := fn.Spec.Series.Get(1).(env.Word).Index
+			fnCtx.Set(index, arg0_)
+			ps.Args[1] = index
+			ii = 2 // Skip collecting the second argument from code stream
 		}
 	}
 
