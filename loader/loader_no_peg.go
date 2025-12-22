@@ -293,7 +293,7 @@ func (l *Lexer) NextToken() NoPEGToken {
 		return l.readLSetWord()
 	case '?':
 		return l.readGetWord()
-	case '.', '+', '*', '/', '>', '=': // taken for other tokens also - <
+	case '.', '+', '*', '/': // taken for other tokens also - <
 		// Special handling for ".[ ]" (OPBBLOCK) pattern
 		if l.ch == '.' && l.peekChar() == '[' {
 			l.readChar() // Skip '.'
@@ -376,11 +376,24 @@ func (l *Lexer) NextToken() NoPEGToken {
 		return l.readComment()
 	case '~':
 		pch := l.peekChar()
-		// fmt.Println("***1")
 		if isWhitespaceOrEOF(pch) {
 			l.readChar()
-			// fmt.Println("***2")
 			return l.makeToken(NPEG_TOKEN_OPWORD, "~")
+		} else {
+			return l.readPipeWord()
+		}
+	case '=':
+		pch := l.peekChar()
+		if isWhitespaceOrEOF(pch) {
+			l.readChar()
+			return l.makeToken(NPEG_TOKEN_OPWORD, "=")
+		} else {
+			return l.readPipeWord()
+		}
+	case '>':
+		pch := l.peekChar()
+		if isWhitespaceOrEOF(pch) || pch == '=' || pch == '>' {
+			return l.readOpWord()
 		} else {
 			return l.readPipeWord()
 		}
@@ -402,7 +415,7 @@ func (l *Lexer) NextToken() NoPEGToken {
 			} else if isLetter(pch) {
 				// Could be a short flag (-v)
 				return l.readFlagword()
-			} else if isWhitespace(pch) {
+			} else if isWhitespaceCh(pch) {
 				l.readChar()
 				// fmt.Println("***2")
 				return l.makeToken(NPEG_TOKEN_OPWORD, "-")
@@ -458,12 +471,12 @@ func (l *Lexer) NextToken() NoPEGToken {
 
 			}
 
-			// Check if it's a context path (word/word)
+			// Check if it's a context path (word/word or word/word/word...)
 			if l.ch == '/' {
 				l.readChar()
 
-				// Read the rest of the path
-				for isWordCharacter(l.ch) {
+				// Read the rest of the path (can have multiple parts like one/two/three)
+				for isWordCharacter(l.ch) || l.ch == '/' {
 					l.readChar()
 				}
 
@@ -492,7 +505,7 @@ func isDigit(ch byte) bool {
 // isWordCharacter checks if a character can be part of a word
 func isWordCharacter(ch byte) bool {
 	return isLetter(ch) || isDigit(ch) || ch == '-' || ch == '+' || ch == '.' ||
-		ch == '!' || ch == '*' || ch == '>' || ch == '<' || ch == '\\' || ch == '?' || ch == '=' || ch == '_'
+		ch == '!' || ch == '*' || ch == '%' || ch == '>' || ch == '<' || ch == '\\' || ch == '?' || ch == '=' || ch == '_'
 }
 
 // isWhitespaceCh checks if a character is whitespace
@@ -1223,7 +1236,7 @@ func (p *NoPEGParser) parseToken() (env.Object, error) {
 		}
 		var idx int
 		force := 0
-		if len(word) == 1 || word == "<<" || word == "<-" || word == "<~" || word == ">=" || word == "<=" || word == "//" || word == ".." || word == "++" || word == "." || word == "|" {
+		if len(word) == 1 || word == "<<" || word == ">>" || word == "<-" || word == "=>" || word == "<~" || word == ">=" || word == "<=" || word == "//" || word == ".." || word == "++" || word == "." || word == "|" {
 			idx = p.wordIndex.IndexWord("_" + word)
 		} else {
 			if word[len(word)-1:] == "*" {
@@ -1242,7 +1255,7 @@ func (p *NoPEGParser) parseToken() (env.Object, error) {
 		}
 		var idx int
 		force := 0
-		if len(word) == 1 || word == ">>" || word == "->" || word == "~>" || word == "-->" || word == ".." || word == "|" {
+		if len(word) == 1 || word == ">>" || word == "->" || word == "~>" || word == "-->" || word == ".." || word == "++" || word == "=>" || word == "|" || word == "%" {
 			idx = p.wordIndex.IndexWord("_" + word)
 		} else {
 			if word[len(word)-1:] == "*" {
@@ -1766,6 +1779,22 @@ func enhanceErrorMessageNoPEG(tok NoPEGToken, err error, input string, filePath 
 	bu.WriteString("\x1b[1;31m" + strings.Repeat("─", 50) + "\x1b[0m\n")
 
 	return bu.String()
+}
+
+// LoadStringNEW loads a string using the non-PEG parser with a program state
+func LoadStringNEW(input string, sig bool, ps *env.ProgramState) env.Object {
+	if sig {
+		signed := checkCodeSignature(input)
+		if signed == -1 {
+			return *env.NewError("Signature not found")
+		} else if signed == -2 {
+			return *env.NewError("Invalid signature")
+		}
+	}
+
+	input = removeBangLine(input)
+
+	return LoadStringNEWNoPEG(input, sig, ps)
 }
 
 // LoadStringNoPEG loads a string using the non-PEG parser

@@ -249,6 +249,52 @@ var builtins_time = map[string]*env.Builtin{
 	},
 
 	// Tests:
+	// equal { date "2023-01-15" |form-imap-date } "15-Jan-2023"
+	// Args:
+	// * time: Time object to format
+	// Returns:
+	// * string representing the date in IMAP search format (DD-Mon-YYYY)
+	"format-imap-date": {
+		Argsn: 1,
+		Doc:   "Formats a time object as an IMAP search date string (DD-Mon-YYYY).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Time:
+				return *env.NewString(s1.Value.Format("02-Jan-2006"))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TimeType}, "form-imap-date")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { date "2023-01-15" |format-date "2006-01-02" } "2023-01-15"
+	// equal { date "2023-01-15" |format-date "02/01/2006" } "15/01/2023"
+	// equal { datetime "2023-01-15T14:30:45" |format-date "Mon Jan 2 15:04:05 2006" } "Sun Jan 15 14:30:45 2023"
+	// Args:
+	// * time: Time object to format
+	// * layout: String - Go time format layout (reference time: Mon Jan 2 15:04:05 MST 2006)
+	// Returns:
+	// * string representing the formatted date/time
+	"format-date": {
+		Argsn: 2,
+		Doc:   "Formats a time object using a Go time format layout string. Reference time: Mon Jan 2 15:04:05 MST 2006",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch t := arg0.(type) {
+			case env.Time:
+				switch layout := arg1.(type) {
+				case env.String:
+					return *env.NewString(t.Value.Format(layout.Value))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "format-date")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TimeType}, "format-date")
+			}
+		},
+	},
+
+	// Tests:
 	// equal { date "2023-01-15" |day? } 15
 	// Args:
 	// * time: Time object to extract day from

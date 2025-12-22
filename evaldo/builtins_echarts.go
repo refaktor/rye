@@ -136,12 +136,12 @@ var Builtins_echarts = map[string]*env.Builtin{
 	//
 	// ##### ECharts — Chart Creation #####
 	//
-	// new-bar creates a new bar chart instance.
+	// bar-chart creates a new bar chart instance.
 	// Tests:
-	// equal { new-bar |type? } 'native
+	// equal { bar-chart |type? } 'native
 	// Args: none
 	// Returns: native echarts-bar
-	"new-bar": {
+	"bar-chart": {
 		Argsn: 0,
 		Doc:   "Creates a new ECharts bar chart instance.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -224,24 +224,24 @@ var Builtins_echarts = map[string]*env.Builtin{
 		},
 	},
 
-	// echarts-bar//Set-global-options sets global options on a bar chart.
+	// echarts-bar//Global-options! sets global options on a bar chart.
 	// Tests:
-	// equal { new-bar |Set-global-options title-opts "T" "S" |with-title-opts |type? } 'native
+	// equal { bar-chart |Global-options! title-opts "T" "S" |with-title-opts |type? } 'native
 	// Args:
 	// * bar: native echarts-bar
 	// * opts: one or more native echarts-global-opts (variadic via block)
 	// Returns: native echarts-bar (same instance for chaining)
-	"echarts-bar//Set-global-options": {
+	"echarts-bar//Global-options!": {
 		Argsn: 2,
 		Doc:   "Sets global options on an ECharts bar chart. Accepts a single option or a block of options.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			barNat, ok := arg0.(env.Native)
 			if !ok {
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "echarts-bar//Set-global-options")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "echarts-bar//Global-options!")
 			}
 			bar, ok := barNat.Value.(*charts.Bar)
 			if !ok {
-				return MakeNativeArgError(ps, 1, []string{"echarts-bar"}, "echarts-bar//Set-global-options")
+				return MakeNativeArgError(ps, 1, []string{"echarts-bar"}, "echarts-bar//Global-options!")
 			}
 
 			// Collect options
@@ -250,7 +250,7 @@ var Builtins_echarts = map[string]*env.Builtin{
 			case env.Native:
 				gopt, ok := opt.Value.(charts.GlobalOpts)
 				if !ok {
-					return MakeNativeArgError(ps, 2, []string{"echarts-global-opts"}, "echarts-bar//Set-global-options")
+					return MakeNativeArgError(ps, 2, []string{"echarts-global-opts"}, "echarts-bar//Global-options!")
 				}
 				gopts = append(gopts, gopt)
 			case env.Block:
@@ -258,16 +258,16 @@ var Builtins_echarts = map[string]*env.Builtin{
 					obj := opt.Series.Get(i)
 					nat, ok := obj.(env.Native)
 					if !ok {
-						return MakeBuiltinError(ps, "block must contain native echarts-global-opts", "echarts-bar//Set-global-options")
+						return MakeBuiltinError(ps, "block must contain native echarts-global-opts", "echarts-bar//Global-options!")
 					}
 					gopt, ok := nat.Value.(charts.GlobalOpts)
 					if !ok {
-						return MakeBuiltinError(ps, "block must contain echarts-global-opts natives", "echarts-bar//Set-global-options")
+						return MakeBuiltinError(ps, "block must contain echarts-global-opts natives", "echarts-bar//Global-options!")
 					}
 					gopts = append(gopts, gopt)
 				}
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.NativeType, env.BlockType}, "echarts-bar//Set-global-options")
+				return MakeArgError(ps, 2, []env.Type{env.NativeType, env.BlockType}, "echarts-bar//Global-options!")
 			}
 
 			bar.SetGlobalOptions(gopts...)
@@ -275,24 +275,24 @@ var Builtins_echarts = map[string]*env.Builtin{
 		},
 	},
 
-	// echarts-bar//Set-x-axis sets the x-axis labels on a bar chart.
+	// echarts-bar//X-axis! sets the x-axis labels on a bar chart.
 	// Tests:
-	// equal { new-bar |Set-x-axis { "Mon" "Tue" } |type? } 'native
+	// equal { bar-chart |X-axis! { "Mon" "Tue" } |type? } 'native
 	// Args:
 	// * bar: native echarts-bar
 	// * labels: Block of strings
 	// Returns: native echarts-bar (same instance for chaining)
-	"echarts-bar//Set-x-axis": {
+	"echarts-bar//X-axis!": {
 		Argsn: 2,
 		Doc:   "Sets the x-axis labels on an ECharts bar chart.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			barNat, ok := arg0.(env.Native)
 			if !ok {
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "echarts-bar//Set-x-axis")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "echarts-bar//X-axis!")
 			}
 			bar, ok := barNat.Value.(*charts.Bar)
 			if !ok {
-				return MakeNativeArgError(ps, 1, []string{"echarts-bar"}, "echarts-bar//Set-x-axis")
+				return MakeNativeArgError(ps, 1, []string{"echarts-bar"}, "echarts-bar//X-axis!")
 			}
 			switch blk := arg1.(type) {
 			case env.Block:
@@ -303,14 +303,14 @@ var Builtins_echarts = map[string]*env.Builtin{
 				bar.SetXAxis(labels)
 				return barNat
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "echarts-bar//Set-x-axis")
+				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "echarts-bar//X-axis!")
 			}
 		},
 	},
 
 	// echarts-bar//Add-series adds a data series to a bar chart.
 	// Tests:
-	// equal { new-bar |Add-series "Cat A" bar-data { 10 20 30 } |type? } 'native
+	// equal { bar-chart |Add-series "Cat A" bar-data { 10 20 30 } |type? } 'native
 	// Args:
 	// * bar: native echarts-bar
 	// * name: String - series name
@@ -384,7 +384,7 @@ var Builtins_echarts = map[string]*env.Builtin{
 	// ##### ECharts — Line Chart #####
 	//
 
-	"new-line": {
+	"line-chart": {
 		Argsn: 0,
 		Doc:   "Creates a new ECharts line chart instance.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -410,17 +410,17 @@ var Builtins_echarts = map[string]*env.Builtin{
 		},
 	},
 
-	"echarts-line//set-global-options": {
+	"echarts-line//Global-options!": {
 		Argsn: 2,
 		Doc:   "Sets global options on an ECharts line chart.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			lineNat, ok := arg0.(env.Native)
 			if !ok {
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "echarts-line//set-global-options")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "echarts-line//Global-options!")
 			}
 			line, ok := lineNat.Value.(*charts.Line)
 			if !ok {
-				return MakeNativeArgError(ps, 1, []string{"echarts-line"}, "echarts-line//set-global-options")
+				return MakeNativeArgError(ps, 1, []string{"echarts-line"}, "echarts-line//Global-options!")
 			}
 
 			var gopts []charts.GlobalOpts
@@ -428,7 +428,7 @@ var Builtins_echarts = map[string]*env.Builtin{
 			case env.Native:
 				gopt, ok := opt.Value.(charts.GlobalOpts)
 				if !ok {
-					return MakeNativeArgError(ps, 2, []string{"echarts-global-opts"}, "echarts-line//set-global-options")
+					return MakeNativeArgError(ps, 2, []string{"echarts-global-opts"}, "echarts-line//Global-options!")
 				}
 				gopts = append(gopts, gopt)
 			case env.Block:
@@ -436,16 +436,16 @@ var Builtins_echarts = map[string]*env.Builtin{
 					obj := opt.Series.Get(i)
 					nat, ok := obj.(env.Native)
 					if !ok {
-						return MakeBuiltinError(ps, "block must contain native echarts-global-opts", "echarts-line//set-global-options")
+						return MakeBuiltinError(ps, "block must contain native echarts-global-opts", "echarts-line//Global-options!")
 					}
 					gopt, ok := nat.Value.(charts.GlobalOpts)
 					if !ok {
-						return MakeBuiltinError(ps, "block must contain echarts-global-opts natives", "echarts-line//set-global-options")
+						return MakeBuiltinError(ps, "block must contain echarts-global-opts natives", "echarts-line//Global-options!")
 					}
 					gopts = append(gopts, gopt)
 				}
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.NativeType, env.BlockType}, "echarts-line//set-global-options")
+				return MakeArgError(ps, 2, []env.Type{env.NativeType, env.BlockType}, "echarts-line//Global-options!")
 			}
 
 			line.SetGlobalOptions(gopts...)
@@ -453,17 +453,17 @@ var Builtins_echarts = map[string]*env.Builtin{
 		},
 	},
 
-	"echarts-line//set-x-axis": {
+	"echarts-line//X-axis!": {
 		Argsn: 2,
 		Doc:   "Sets the x-axis labels on an ECharts line chart.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			lineNat, ok := arg0.(env.Native)
 			if !ok {
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "echarts-line//set-x-axis")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "echarts-line//X-axis!")
 			}
 			line, ok := lineNat.Value.(*charts.Line)
 			if !ok {
-				return MakeNativeArgError(ps, 1, []string{"echarts-line"}, "echarts-line//set-x-axis")
+				return MakeNativeArgError(ps, 1, []string{"echarts-line"}, "echarts-line//X-axis!")
 			}
 			switch blk := arg1.(type) {
 			case env.Block:
@@ -474,63 +474,63 @@ var Builtins_echarts = map[string]*env.Builtin{
 				line.SetXAxis(labels)
 				return lineNat
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "echarts-line//set-x-axis")
+				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "echarts-line//X-axis!")
 			}
 		},
 	},
 
-	"echarts-line//add-series": {
+	"echarts-line//Add-series": {
 		Argsn: 3,
 		Doc:   "Adds a data series to an ECharts line chart.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			lineNat, ok := arg0.(env.Native)
 			if !ok {
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "echarts-line//add-series")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "echarts-line//Add-series")
 			}
 			line, ok := lineNat.Value.(*charts.Line)
 			if !ok {
-				return MakeNativeArgError(ps, 1, []string{"echarts-line"}, "echarts-line//add-series")
+				return MakeNativeArgError(ps, 1, []string{"echarts-line"}, "echarts-line//Add-series")
 			}
 			name, ok := arg1.(env.String)
 			if !ok {
-				return MakeArgError(ps, 2, []env.Type{env.StringType}, "echarts-line//add-series")
+				return MakeArgError(ps, 2, []env.Type{env.StringType}, "echarts-line//Add-series")
 			}
 			dataNat, ok := arg2.(env.Native)
 			if !ok {
-				return MakeArgError(ps, 3, []env.Type{env.NativeType}, "echarts-line//add-series")
+				return MakeArgError(ps, 3, []env.Type{env.NativeType}, "echarts-line//Add-series")
 			}
 			data, ok := dataNat.Value.([]opts.LineData)
 			if !ok {
-				return MakeNativeArgError(ps, 3, []string{"echarts-line-data"}, "echarts-line//add-series")
+				return MakeNativeArgError(ps, 3, []string{"echarts-line-data"}, "echarts-line//Add-series")
 			}
 			line.AddSeries(name.Value, data)
 			return lineNat
 		},
 	},
 
-	"echarts-line//render": {
+	"echarts-line//Render": {
 		Argsn: 2,
 		Doc:   "Renders an ECharts line chart to a writer (file, etc.).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			lineNat, ok := arg0.(env.Native)
 			if !ok {
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "echarts-line//render")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "echarts-line//Render")
 			}
 			line, ok := lineNat.Value.(*charts.Line)
 			if !ok {
-				return MakeNativeArgError(ps, 1, []string{"echarts-line"}, "echarts-line//render")
+				return MakeNativeArgError(ps, 1, []string{"echarts-line"}, "echarts-line//Render")
 			}
 			writerNat, ok := arg1.(env.Native)
 			if !ok {
-				return MakeArgError(ps, 2, []env.Type{env.NativeType}, "echarts-line//render")
+				return MakeArgError(ps, 2, []env.Type{env.NativeType}, "echarts-line//Render")
 			}
 			writer, ok := writerNat.Value.(io.Writer)
 			if !ok {
-				return MakeNativeArgError(ps, 2, []string{"io.Writer"}, "echarts-line//render")
+				return MakeNativeArgError(ps, 2, []string{"io.Writer"}, "echarts-line//Render")
 			}
 			err := line.Render(writer)
 			if err != nil {
-				return MakeBuiltinError(ps, err.Error(), "echarts-line//render")
+				return MakeBuiltinError(ps, err.Error(), "echarts-line//Render")
 			}
 			return lineNat
 		},
@@ -540,7 +540,7 @@ var Builtins_echarts = map[string]*env.Builtin{
 	// ##### ECharts — Pie Chart #####
 	//
 
-	"new-pie": {
+	"pie-chart": {
 		Argsn: 0,
 		Doc:   "Creates a new ECharts pie chart instance.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -566,17 +566,17 @@ var Builtins_echarts = map[string]*env.Builtin{
 		},
 	},
 
-	"echarts-pie//set-global-options": {
+	"echarts-pie//Global-options!": {
 		Argsn: 2,
 		Doc:   "Sets global options on an ECharts pie chart.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			pieNat, ok := arg0.(env.Native)
 			if !ok {
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "echarts-pie//set-global-options")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "echarts-pie//Global-options!")
 			}
 			pie, ok := pieNat.Value.(*charts.Pie)
 			if !ok {
-				return MakeNativeArgError(ps, 1, []string{"echarts-pie"}, "echarts-pie//set-global-options")
+				return MakeNativeArgError(ps, 1, []string{"echarts-pie"}, "echarts-pie//Global-options!")
 			}
 
 			var gopts []charts.GlobalOpts
@@ -584,7 +584,7 @@ var Builtins_echarts = map[string]*env.Builtin{
 			case env.Native:
 				gopt, ok := opt.Value.(charts.GlobalOpts)
 				if !ok {
-					return MakeNativeArgError(ps, 2, []string{"echarts-global-opts"}, "echarts-pie//set-global-options")
+					return MakeNativeArgError(ps, 2, []string{"echarts-global-opts"}, "echarts-pie//Global-options!")
 				}
 				gopts = append(gopts, gopt)
 			case env.Block:
@@ -592,16 +592,16 @@ var Builtins_echarts = map[string]*env.Builtin{
 					obj := opt.Series.Get(i)
 					nat, ok := obj.(env.Native)
 					if !ok {
-						return MakeBuiltinError(ps, "block must contain native echarts-global-opts", "echarts-pie//set-global-options")
+						return MakeBuiltinError(ps, "block must contain native echarts-global-opts", "echarts-pie//Global-options!")
 					}
 					gopt, ok := nat.Value.(charts.GlobalOpts)
 					if !ok {
-						return MakeBuiltinError(ps, "block must contain echarts-global-opts natives", "echarts-pie//set-global-options")
+						return MakeBuiltinError(ps, "block must contain echarts-global-opts natives", "echarts-pie//Global-options!")
 					}
 					gopts = append(gopts, gopt)
 				}
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.NativeType, env.BlockType}, "echarts-pie//set-global-options")
+				return MakeArgError(ps, 2, []env.Type{env.NativeType, env.BlockType}, "echarts-pie//Global-options!")
 			}
 
 			pie.SetGlobalOptions(gopts...)
@@ -609,54 +609,54 @@ var Builtins_echarts = map[string]*env.Builtin{
 		},
 	},
 
-	"echarts-pie//add-series": {
+	"echarts-pie//Add-series": {
 		Argsn: 2,
 		Doc:   "Adds a data series to an ECharts pie chart.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			pieNat, ok := arg0.(env.Native)
 			if !ok {
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "echarts-pie//add-series")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "echarts-pie//Add-series")
 			}
 			pie, ok := pieNat.Value.(*charts.Pie)
 			if !ok {
-				return MakeNativeArgError(ps, 1, []string{"echarts-pie"}, "echarts-pie//add-series")
+				return MakeNativeArgError(ps, 1, []string{"echarts-pie"}, "echarts-pie//Add-series")
 			}
 			dataNat, ok := arg1.(env.Native)
 			if !ok {
-				return MakeArgError(ps, 2, []env.Type{env.NativeType}, "echarts-pie//add-series")
+				return MakeArgError(ps, 2, []env.Type{env.NativeType}, "echarts-pie//Add-series")
 			}
 			data, ok := dataNat.Value.([]opts.PieData)
 			if !ok {
-				return MakeNativeArgError(ps, 2, []string{"echarts-pie-data"}, "echarts-pie//add-series")
+				return MakeNativeArgError(ps, 2, []string{"echarts-pie-data"}, "echarts-pie//Add-series")
 			}
 			pie.AddSeries("pie", data)
 			return pieNat
 		},
 	},
 
-	"echarts-pie//render": {
+	"echarts-pie//Render": {
 		Argsn: 2,
 		Doc:   "Renders an ECharts pie chart to a writer (file, etc.).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			pieNat, ok := arg0.(env.Native)
 			if !ok {
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "echarts-pie//render")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "echarts-pie//Render")
 			}
 			pie, ok := pieNat.Value.(*charts.Pie)
 			if !ok {
-				return MakeNativeArgError(ps, 1, []string{"echarts-pie"}, "echarts-pie//render")
+				return MakeNativeArgError(ps, 1, []string{"echarts-pie"}, "echarts-pie//Render")
 			}
 			writerNat, ok := arg1.(env.Native)
 			if !ok {
-				return MakeArgError(ps, 2, []env.Type{env.NativeType}, "echarts-pie//render")
+				return MakeArgError(ps, 2, []env.Type{env.NativeType}, "echarts-pie//Render")
 			}
 			writer, ok := writerNat.Value.(io.Writer)
 			if !ok {
-				return MakeNativeArgError(ps, 2, []string{"io.Writer"}, "echarts-pie//render")
+				return MakeNativeArgError(ps, 2, []string{"io.Writer"}, "echarts-pie//Render")
 			}
 			err := pie.Render(writer)
 			if err != nil {
-				return MakeBuiltinError(ps, err.Error(), "echarts-pie//render")
+				return MakeBuiltinError(ps, err.Error(), "echarts-pie//Render")
 			}
 			return pieNat
 		},
@@ -666,7 +666,7 @@ var Builtins_echarts = map[string]*env.Builtin{
 	// ##### ECharts — Scatter Chart #####
 	//
 
-	"new-scatter": {
+	"scatter-chart": {
 		Argsn: 0,
 		Doc:   "Creates a new ECharts scatter chart instance.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -692,17 +692,17 @@ var Builtins_echarts = map[string]*env.Builtin{
 		},
 	},
 
-	"echarts-scatter//set-global-options": {
+	"echarts-scatter//Global-options!": {
 		Argsn: 2,
 		Doc:   "Sets global options on an ECharts scatter chart.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			scatterNat, ok := arg0.(env.Native)
 			if !ok {
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "echarts-scatter//set-global-options")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "echarts-scatter//Global-options!")
 			}
 			scatter, ok := scatterNat.Value.(*charts.Scatter)
 			if !ok {
-				return MakeNativeArgError(ps, 1, []string{"echarts-scatter"}, "echarts-scatter//set-global-options")
+				return MakeNativeArgError(ps, 1, []string{"echarts-scatter"}, "echarts-scatter//Global-options!")
 			}
 
 			var gopts []charts.GlobalOpts
@@ -710,7 +710,7 @@ var Builtins_echarts = map[string]*env.Builtin{
 			case env.Native:
 				gopt, ok := opt.Value.(charts.GlobalOpts)
 				if !ok {
-					return MakeNativeArgError(ps, 2, []string{"echarts-global-opts"}, "echarts-scatter//set-global-options")
+					return MakeNativeArgError(ps, 2, []string{"echarts-global-opts"}, "echarts-scatter//Global-options!")
 				}
 				gopts = append(gopts, gopt)
 			case env.Block:
@@ -718,16 +718,16 @@ var Builtins_echarts = map[string]*env.Builtin{
 					obj := opt.Series.Get(i)
 					nat, ok := obj.(env.Native)
 					if !ok {
-						return MakeBuiltinError(ps, "block must contain native echarts-global-opts", "echarts-scatter//set-global-options")
+						return MakeBuiltinError(ps, "block must contain native echarts-global-opts", "echarts-scatter//Global-options!")
 					}
 					gopt, ok := nat.Value.(charts.GlobalOpts)
 					if !ok {
-						return MakeBuiltinError(ps, "block must contain echarts-global-opts natives", "echarts-scatter//set-global-options")
+						return MakeBuiltinError(ps, "block must contain echarts-global-opts natives", "echarts-scatter//Global-options!")
 					}
 					gopts = append(gopts, gopt)
 				}
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.NativeType, env.BlockType}, "echarts-scatter//set-global-options")
+				return MakeArgError(ps, 2, []env.Type{env.NativeType, env.BlockType}, "echarts-scatter//Global-options!")
 			}
 
 			scatter.SetGlobalOptions(gopts...)
@@ -735,17 +735,17 @@ var Builtins_echarts = map[string]*env.Builtin{
 		},
 	},
 
-	"echarts-scatter//set-x-axis": {
+	"echarts-scatter//X-axis!": {
 		Argsn: 2,
 		Doc:   "Sets the x-axis labels on an ECharts scatter chart.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			scatterNat, ok := arg0.(env.Native)
 			if !ok {
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "echarts-scatter//set-x-axis")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "echarts-scatter//X-axis!")
 			}
 			scatter, ok := scatterNat.Value.(*charts.Scatter)
 			if !ok {
-				return MakeNativeArgError(ps, 1, []string{"echarts-scatter"}, "echarts-scatter//set-x-axis")
+				return MakeNativeArgError(ps, 1, []string{"echarts-scatter"}, "echarts-scatter//X-axis!")
 			}
 			switch blk := arg1.(type) {
 			case env.Block:
@@ -756,63 +756,63 @@ var Builtins_echarts = map[string]*env.Builtin{
 				scatter.SetXAxis(labels)
 				return scatterNat
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "echarts-scatter//set-x-axis")
+				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "echarts-scatter//X-axis!")
 			}
 		},
 	},
 
-	"echarts-scatter//add-series": {
+	"echarts-scatter//Add-series": {
 		Argsn: 3,
 		Doc:   "Adds a data series to an ECharts scatter chart.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			scatterNat, ok := arg0.(env.Native)
 			if !ok {
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "echarts-scatter//add-series")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "echarts-scatter//Add-series")
 			}
 			scatter, ok := scatterNat.Value.(*charts.Scatter)
 			if !ok {
-				return MakeNativeArgError(ps, 1, []string{"echarts-scatter"}, "echarts-scatter//add-series")
+				return MakeNativeArgError(ps, 1, []string{"echarts-scatter"}, "echarts-scatter//Add-series")
 			}
 			name, ok := arg1.(env.String)
 			if !ok {
-				return MakeArgError(ps, 2, []env.Type{env.StringType}, "echarts-scatter//add-series")
+				return MakeArgError(ps, 2, []env.Type{env.StringType}, "echarts-scatter//Add-series")
 			}
 			dataNat, ok := arg2.(env.Native)
 			if !ok {
-				return MakeArgError(ps, 3, []env.Type{env.NativeType}, "echarts-scatter//add-series")
+				return MakeArgError(ps, 3, []env.Type{env.NativeType}, "echarts-scatter//Add-series")
 			}
 			data, ok := dataNat.Value.([]opts.ScatterData)
 			if !ok {
-				return MakeNativeArgError(ps, 3, []string{"echarts-scatter-data"}, "echarts-scatter//add-series")
+				return MakeNativeArgError(ps, 3, []string{"echarts-scatter-data"}, "echarts-scatter//Add-series")
 			}
 			scatter.AddSeries(name.Value, data)
 			return scatterNat
 		},
 	},
 
-	"echarts-scatter//render": {
+	"echarts-scatter//Render": {
 		Argsn: 2,
 		Doc:   "Renders an ECharts scatter chart to a writer (file, etc.).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			scatterNat, ok := arg0.(env.Native)
 			if !ok {
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "echarts-scatter//render")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "echarts-scatter//Render")
 			}
 			scatter, ok := scatterNat.Value.(*charts.Scatter)
 			if !ok {
-				return MakeNativeArgError(ps, 1, []string{"echarts-scatter"}, "echarts-scatter//render")
+				return MakeNativeArgError(ps, 1, []string{"echarts-scatter"}, "echarts-scatter//Render")
 			}
 			writerNat, ok := arg1.(env.Native)
 			if !ok {
-				return MakeArgError(ps, 2, []env.Type{env.NativeType}, "echarts-scatter//render")
+				return MakeArgError(ps, 2, []env.Type{env.NativeType}, "echarts-scatter//Render")
 			}
 			writer, ok := writerNat.Value.(io.Writer)
 			if !ok {
-				return MakeNativeArgError(ps, 2, []string{"io.Writer"}, "echarts-scatter//render")
+				return MakeNativeArgError(ps, 2, []string{"io.Writer"}, "echarts-scatter//Render")
 			}
 			err := scatter.Render(writer)
 			if err != nil {
-				return MakeBuiltinError(ps, err.Error(), "echarts-scatter//render")
+				return MakeBuiltinError(ps, err.Error(), "echarts-scatter//Render")
 			}
 			return scatterNat
 		},
