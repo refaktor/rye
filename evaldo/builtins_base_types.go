@@ -273,7 +273,7 @@ var builtins_types = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal   { is-decimal 123.0 } true
+	// equal   { is-decimal 123.4 } true
 	// equal   { is-decimal 123 } false
 	// equal   { is-decimal "123.4" } false
 	// Args:

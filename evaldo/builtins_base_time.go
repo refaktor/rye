@@ -249,7 +249,7 @@ var builtins_time = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { date "2023-01-15" |form-imap-date } "15-Jan-2023"
+	// equal { date "2023-01-15" |format-imap-date } "15-Jan-2023"
 	// Args:
 	// * time: Time object to format
 	// Returns:

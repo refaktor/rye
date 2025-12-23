@@ -1,0 +1,36 @@
+rye .needs { openai imap }
+
+config: context {
+	imap: context {
+		Read %.imap-user |^check "Add the file with imap username" |trim :user
+		Read %.imap-pwd |^check "Add the file with imap password" |trim :pwd
+		Read %.imap-uri |^check "Add the file with imap URI" |trim :uri
+	}
+	openai: context {
+		Read %.oai-token |^check "Add the file with openai token" |trim :token
+	}
+}
+
+border: "\n\n----\n\n"
+
+do\in term {
+	blue
+	print "\nScript will load emails from certain date and ask a LLM model to summarize the most important ones.\n"
+	reset
+	from-date: display-date-input now .date? 2
+	print ""
+}
+
+
+term/spin-it "loading messages" {
+	imap-client config/imap/user config/imap/pwd config/imap/uri 993 :cli
+	|Select-folder "INBOX"
+	|Search-emails from-date .date .format-imap-date .embed "UNSEEN SINCE {}"
+	|Get-emails* cli
+	|map { -> "text" }
+	|join\with border
+	|++ border ++ "Summarize the most important emails above and report them to me. Then separately report the most URGENT ones. Add email addresses and dates." :cmd
+}
+
+oai: openai config/openai/token
+oai .Chat\stream cmd { .prn }

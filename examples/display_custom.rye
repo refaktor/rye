@@ -1,0 +1,11 @@
+
+table { "a" "b" } { "jim" "my name" "anne" "my wife" } ::t
+
+t .display\custom fn { x curr } {
+	term/reset ,
+	either is-positive curr { ">" } { " " } |prns ,
+	term/bold term/red ,
+	-> "a" |prns ,
+	term/reset  term/magenta ,
+	-> "b" |print
+}
