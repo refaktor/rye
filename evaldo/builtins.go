@@ -2580,7 +2580,6 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltinsInContext(Builtins_term, ps, "term")
 	RegisterBuiltinsInContext(Builtins_termstr, ps, "termstr")
 	RegisterBuiltinsInContext(Builtins_telegrambot, ps, "telegram")
-	RegisterBuiltins2(Builtins_peg, ps, "peg")
 	RegisterBuiltinsInContext(Builtins_mcp, ps, "mcp")
 	RegisterBuiltins2(Builtins_mqtt, ps, "mqtt")
 	RegisterBuiltins2(builtins_trees, ps, "trees")

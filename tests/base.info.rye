@@ -1298,6 +1298,37 @@ section "Date and Time " "" {
 	{
 ``	}
 
+	group "format-imap-date" 
+	"Formats a time object as an IMAP search date string (DD-Mon-YYYY)."
+	{
+		arg `time: Time object to format`
+		returns `string representing the date in IMAP search format (DD-Mon-YYYY)`
+	}
+
+	{
+		equal { date "2023-01-15" |format-imap-date } "15-Jan-2023"
+	}
+
+	{
+``	}
+
+	group "format-date" 
+	"Formats a time object using a Go time format layout string. Reference time: Mon Jan 2 15:04:05 MST 2006"
+	{
+		arg `time: Time object to format`
+		arg `layout: String - Go time format layout (reference time: Mon Jan 2 15:04:05 MST 2006)`
+		returns `string representing the formatted date/time`
+	}
+
+	{
+		equal { date "2023-01-15" |format-date "2006-01-02" } "2023-01-15"
+		equal { date "2023-01-15" |format-date "02/01/2006" } "15/01/2023"
+		equal { datetime "2023-01-15T14:30:45" |format-date "Mon Jan 2 15:04:05 2006" } "Sun Jan 15 14:30:45 2023"
+	}
+
+	{
+``	}
+
 	group "day?" 
 	"Extracts the day of month from a time object as an integer (1-31)."
 	{
@@ -2697,7 +2728,7 @@ section "Types and Kinds " "" {
 	}
 
 	{
-		equal   { is-decimal 123.0 } true
+		equal   { is-decimal 123.4 } true
 		equal   { is-decimal 123 } false
 		equal   { is-decimal "123.4" } false
 	}
@@ -2826,17 +2857,17 @@ section "Types and Kinds " "" {
 	{
 ``	}
 
-	group "generic" 
-	"Registers a generic function."
+	group "method" 
+	"Registers a method (generic function)."
 	{
 		arg `kind: Word representing the kind for which to register the function`
 		arg `method: Word representing the method name`
 		arg `function: Function to register for the kind and method`
-		returns `The registered functiongeneric <integer> <add> fn [ a b ] [ a + b ] // tagwords are temporary here`
+		returns `The registered functionmethod <integer> <add> fn [ a b ] [ a + b ] // tagwords are temporary here`
 	}
 
 	{
-		equal   { generic 'integer 'add fn { a b } { a + b } |type? } 'function
+		equal   { method 'integer 'add fn { a b } { a + b } |type? } 'function
 	}
 
 	{

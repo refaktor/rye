@@ -28,7 +28,7 @@ var ErrorCreationBuiltins = map[string]*env.Builtin{
 		Doc:   "Creates an error and sets the failure flag, but continues execution (unlike ^fail).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			ps.FailureFlag = true
-			return *MakeRyeError(ps, arg0, nil)
+			return MakeRyeError(ps, arg0, nil)
 		},
 	},
 
@@ -47,7 +47,7 @@ var ErrorCreationBuiltins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			ps.FailureFlag = true
 			ps.ReturnFlag = true
-			return *MakeRyeError(ps, arg0, nil)
+			return MakeRyeError(ps, arg0, nil)
 		},
 	},
 
@@ -66,7 +66,7 @@ var ErrorCreationBuiltins = map[string]*env.Builtin{
 			switch er := arg0.(type) {
 			case *env.Error:
 				ps.FailureFlag = true
-				return *MakeRyeError(ps, arg1, er)
+				return MakeRyeError(ps, arg1, er)
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.ErrorType}, "reraise")
 			}
@@ -85,7 +85,7 @@ var ErrorCreationBuiltins = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "Creates an error object without setting any flags (unlike fail and ^fail).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return *MakeRyeError(ps, arg0, nil)
+			return MakeRyeError(ps, arg0, nil)
 		},
 	},
 
@@ -103,7 +103,7 @@ var ErrorCreationBuiltins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch er := arg1.(type) {
 			case *env.Error:
-				return *MakeRyeError(ps, arg0, er)
+				return MakeRyeError(ps, arg0, er)
 			default:
 				return MakeArgError(ps, 2, []env.Type{env.ErrorType}, "wrap\\failure")
 			}

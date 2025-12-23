@@ -1,0 +1,7 @@
+rye .needs { http }
+
+print "visit http://localhost" ++ port: ":8086"
+
+http-server port
+|Handle "/" fn { w r } { do\in os { load-avg? |to-json |Write* w } }
+|Serve
