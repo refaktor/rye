@@ -1,0 +1,118 @@
+; Example of using the markdown parser in Rye
+
+; First, let's create a sample markdown file to parse
+`# Sample Markdown Document
+
+This is a paragraph with **bold** and *italic* text.
+
+## Lists
+
+- Item 1
+- Item 2
+- Item 3
+
+### Task List
+
+- [ ] Unchecked task
+- [x] Checked task
+
+## Code Example
+
+    func main() {
+        fmt.Println("Hello, World!")
+    }
+
+
+## Links and Images
+
+[Link to Rye](https://github.com/refaktor/rye)
+
+![Image Alt Text](https://example.com/image.jpg)
+
+## Table Example
+
+| Header 1 | Header 2 |
+|----------|----------|
+| Cell 1   | Cell 2   |
+| Cell 3   | Cell 4   |
+
+> This is a blockquote.
+
+---
+
+` |Write* %sample.md
+
+; Example 1: Convert markdown to HTML
+print "Example 1: Convert markdown to HTML\n"
+print "--------------------------------\n"
+
+%sample.md |Read |markdown->html |print
+
+print "\n\n"
+
+; Example 2: Process markdown with custom handlers
+print "Example 2: Process markdown with custom handlers\n"
+print "----------------------------------------\n"
+
+%sample.md |Reader .do-markdown {
+    ; Handle headings
+    h1 [ "Heading 1: " |print ]
+    h2 [ "Heading 2: " |print ]
+    h3 [ "Heading 3: " |print ]
+    
+    ; Handle paragraphs
+    paragraph [ "Paragraph: " |print ]
+    
+    ; Handle code blocks
+    code [ 
+        "Code Block:" |print ,
+        "Language: " |print ,
+        .concat* "Content:" |print
+        |print
+    ]
+    
+    ; Handle list items
+    line-item [ "List Item: "  |print ]
+    
+    ; Handle links
+    link [
+        "Link:" |print
+        "Text: "  |print
+        "URL: "  |print
+    ]
+    
+    ; Handle images
+    image [
+        "Image:" |print
+        "Alt Text: "  |print
+        "URL: "  |print
+    ]
+    
+    ; Handle blockquotes
+    blockquote [ "Blockquote: "  |print ]
+    
+    ; Handle horizontal rules
+    hr [ "Horizontal Rule" |print ]
+    
+    ; Handle tables
+    table [
+        "Table Content:" |print
+        |print
+        "Row Count: " |print
+    ]
+    
+    ; Handle task list items
+    task [
+        "Task: " 
+        if [ "✓ Checked" ] [ "☐ Unchecked" ] |print
+    ]
+    
+    ; Handle bold text
+    bold [ "Bold Text: "  |print ]
+    
+    ; Handle italic text
+    italic [ "Italic Text: "  |print ]
+}
+
+; Clean up
+; %sample.md |Does-exist if { "sample.md" |delete-file }

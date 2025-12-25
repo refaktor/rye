@@ -32,12 +32,14 @@ var builtins_contexts = map[string]*env.Builtin{
 				ps.Ctx = env.NewEnv(nil) // make new context with no parent
 				EvalBlock(ps)
 				MaybeDisplayFailureOrError(ps, ps.Idx, "raw-context")
+				if ps.ReturnFlag || ps.ErrorFlag {
+					ps.Ctx = ctx
+					ps.Ser = ser
+					return ps.Res
+				}
 				rctx := ps.Ctx
 				ps.Ctx = ctx
 				ps.Ser = ser
-				if ps.ErrorFlag {
-					return ps.Res
-				}
 				return *rctx // return the resulting context
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "raw-context")
@@ -67,14 +69,16 @@ var builtins_contexts = map[string]*env.Builtin{
 				ps.Ctx = env.NewEnv(ps.Ctx) // make new context with no parent
 				EvalBlock(ps)
 				MaybeDisplayFailureOrError(ps, ps.Idx, "isolate")
+				if ps.ReturnFlag || ps.ErrorFlag {
+					ps.Ctx = ctx
+					ps.Ser = ser
+					return ps.Res
+				}
 				rctx := ps.Ctx
 				rctx.Parent = nil
 				rctx.Kind = *env.NewWord(-1)
 				ps.Ctx = ctx
 				ps.Ser = ser
-				if ps.ErrorFlag {
-					return ps.Res
-				}
 				return *rctx // return the resulting context
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "isolate")
@@ -103,12 +107,14 @@ var builtins_contexts = map[string]*env.Builtin{
 				ps.Ctx = env.NewEnv(ps.Ctx) // make new context with no parent
 				EvalBlock(ps)
 				MaybeDisplayFailureOrError(ps, ps.Idx, "context")
+				if ps.ReturnFlag || ps.ErrorFlag {
+					ps.Ctx = ctx
+					ps.Ser = ser
+					return ps.Res
+				}
 				rctx := ps.Ctx
 				ps.Ctx = ctx
 				ps.Ser = ser
-				if ps.ErrorFlag {
-					return ps.Res
-				}
 				return *rctx // return the resulting context
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "context")
@@ -136,12 +142,14 @@ var builtins_contexts = map[string]*env.Builtin{
 				ps.Ctx = env.NewEnv(ps.PCtx) // make new context with PCtx as parent instead of regular Ctx
 				EvalBlock(ps)
 				MaybeDisplayFailureOrError(ps, ps.Idx, "context\\pure")
+				if ps.ReturnFlag || ps.ErrorFlag {
+					ps.Ctx = ctx
+					ps.Ser = ser
+					return ps.Res
+				}
 				rctx := ps.Ctx
 				ps.Ctx = ctx
 				ps.Ser = ser
-				if ps.ErrorFlag {
-					return ps.Res
-				}
 				return *rctx // return the resulting context
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "context\\pure")
@@ -170,7 +178,7 @@ var builtins_contexts = map[string]*env.Builtin{
 				ps.Ctx = env.NewEnv(ps.Ctx) // make new context with no parent
 				EvalBlock(ps)
 				MaybeDisplayFailureOrError(ps, ps.Idx, "private")
-				if ps.ErrorFlag {
+				if ps.ReturnFlag || ps.ErrorFlag {
 					ps.Ctx = ctx
 					ps.Ser = ser
 					return ps.Res
@@ -206,7 +214,7 @@ var builtins_contexts = map[string]*env.Builtin{
 					ps.Ctx = env.NewEnv2(ps.Ctx, doc.Value) // make new context with no parent
 					EvalBlock(ps)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "private\\")
-					if ps.ErrorFlag {
+					if ps.ReturnFlag || ps.ErrorFlag {
 						ps.Ctx = ctx
 						ps.Ser = ser
 						return ps.Res
@@ -248,7 +256,7 @@ var builtins_contexts = map[string]*env.Builtin{
 					ps.Ctx = env.NewEnv(&ctx0) // make new context with no parent
 					EvalBlock(ps)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "extends")
-					if ps.ErrorFlag {
+					if ps.ReturnFlag || ps.ErrorFlag {
 						ps.Ctx = ctx
 						ps.Ser = ser
 						return ps.Res
@@ -602,12 +610,14 @@ var builtins_contexts = map[string]*env.Builtin{
 						ps.Ctx = ryeCtx
 						EvalBlock(ps)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "clone\\")
+						if ps.ReturnFlag || ps.ErrorFlag {
+							ps.Ctx = origCtx
+							ps.Ser = ser
+							return ps.Res
+						}
 						rctx := ps.Ctx
 						ps.Ctx = origCtx
 						ps.Ser = ser
-						if ps.ErrorFlag {
-							return ps.Res
-						}
 						return *rctx // return the resulting cloned context
 					}
 					return MakeArgError(ps, 1, []env.Type{env.ContextType}, "clone\\")
@@ -625,12 +635,14 @@ var builtins_contexts = map[string]*env.Builtin{
 						ps.Ctx = ryeCtx
 						EvalBlock(ps)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "clone\\")
+						if ps.ReturnFlag || ps.ErrorFlag {
+							ps.Ctx = origCtx
+							ps.Ser = ser
+							return ps.Res
+						}
 						rctx := ps.Ctx
 						ps.Ctx = origCtx
 						ps.Ser = ser
-						if ps.ErrorFlag {
-							return ps.Res
-						}
 						return *rctx // return the resulting cloned context
 					}
 					return MakeArgError(ps, 1, []env.Type{env.ContextType}, "clone\\")

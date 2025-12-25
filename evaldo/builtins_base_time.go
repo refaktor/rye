@@ -535,7 +535,7 @@ var builtins_time = map[string]*env.Builtin{
 				start := time.Now()
 				EvalBlock(ps)
 				MaybeDisplayFailureOrError(ps, ps.Idx, "time-it")
-				if ps.ErrorFlag {
+				if ps.ErrorFlag || ps.ReturnFlag {
 					ps.Ser = ser
 					return ps.Res
 				}

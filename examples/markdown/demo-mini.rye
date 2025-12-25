@@ -1,0 +1,58 @@
+; Example of using the markdown parser in Rye
+
+; First, let's create a sample markdown file to parse
+`# Sample Markdown Document
+
+This is a paragraph with **bold** text.
+
+## Lists
+
+- Item 1
+- Item 2
+
+## Code Example
+
+    func main() {
+        fmt.Println("Hello, World!")
+    }
+
+## Links
+
+[Link to Rye](https://github.com/refaktor/rye)
+
+` :md
+
+; Example 1: Convert markdown to HTML
+print "Example 1: Convert markdown to HTML"
+print "--------------------------------"
+
+md .markdown->html |print
+
+print "\n\n"
+
+; Example 2: Process markdown with custom handlers
+print "Example 2: Process markdown with custom handlers"
+print "----------------------------------------"
+
+md .reader .do-markdown {
+    ; Handle headings
+    h1 [ .concat* "Heading 1: " |print ]
+    
+    ; Handle paragraphs
+    paragraph [ .concat* "Paragraph: " |print ]
+    
+    ; Handle code blocks
+    code [ .concat* "Content:" |print ]
+    
+    ; Handle list items
+    line-item [ .concat* "List Item: " |print ]
+    
+    ; Handle links
+    link [ .concat* "Link:" |print ]
+    ; Handle bold text
+    bold [ .concat* "Bold Text: "  |print ]
+    
+}
+
+; Clean up
+; "sample-micro.md" |file-exists? if { "sample.md-micro" |delete-file }

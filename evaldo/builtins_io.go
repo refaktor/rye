@@ -275,6 +275,63 @@ var Builtins_io = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	// equal { Does-exist %data/file.txt } true
+	// equal { Does-exist %data/nonexistent.txt } false
+	// Args:
+	// * path: uri representing a file path
+	// Returns:
+	// * boolean indicating whether the file exists
+	"file-uri//Does-exist": {
+		Argsn: 1,
+		Doc:   "Checks if a file exists.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s := arg0.(type) {
+			case env.Uri:
+				_, err := os.Stat(s.Path)
+				if err == nil {
+					return *env.NewBoolean(true)
+				}
+				if os.IsNotExist(err) {
+					return *env.NewBoolean(false)
+				}
+				// For other errors (e.g., permission denied), return false
+				return *env.NewBoolean(false)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-uri//Does-exist")
+			}
+		},
+	},
+
+	// Args:
+	// * path: uri representing a file path to delete
+	// Returns:
+	// * true if the file was successfully deleted
+	"file-uri//Delete": {
+		Argsn: 1,
+		Doc:   "Deletes a file.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			// Check if we're in readonly mode
+			profile, exists := os.LookupEnv("RYE_SECCOMP_PROFILE")
+			if exists && profile == "readonly" {
+				ps.FailureFlag = true
+				return MakeBuiltinError(ps, "delete operation blocked by readonly seccomp profile", "file-uri//Delete")
+			}
+
+			switch s := arg0.(type) {
+			case env.Uri:
+				err := os.Remove(s.Path)
+				if err != nil {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, err.Error(), "file-uri//Delete")
+				}
+				return *env.NewBoolean(true)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-uri//Delete")
+			}
+		},
+	},
 	// Tests:
 	// equal { Reader probe Open probe %data/file.txt |kind? } 'reader
 	// Args:
