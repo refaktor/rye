@@ -102,7 +102,7 @@ var builtins_conditionals = map[string]*env.Builtin{
 					ps.Ser = condBlock.Series
 					EvalBlockInjMultiDialect(ps, arg0, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "when")
-					if ps.ErrorFlag {
+					if ps.ErrorFlag || ps.ReturnFlag {
 						ps.Ser = ser
 						return ps.Res
 					}
@@ -113,7 +113,7 @@ var builtins_conditionals = map[string]*env.Builtin{
 						ps.Ser = actionBlock.Series
 						EvalBlockInjMultiDialect(ps, arg0, true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "when")
-						if ps.ErrorFlag {
+						if ps.ErrorFlag || ps.ReturnFlag {
 							ps.Ser = ser
 							return ps.Res
 						}
@@ -162,7 +162,7 @@ var builtins_conditionals = map[string]*env.Builtin{
 						ps.Ser = bloc.Series
 						EvalBlockInj(ps, arg0, true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "^if")
-						if ps.ErrorFlag {
+						if ps.ErrorFlag || ps.ReturnFlag {
 							ps.Ser = ser
 							return ps.Res
 						}
@@ -215,6 +215,10 @@ var builtins_conditionals = map[string]*env.Builtin{
 						}
 						EvalBlockInjMultiDialect(ps, arg0, true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "either")
+						if ps.ErrorFlag || ps.ReturnFlag {
+							ps.Ser = ser
+							return ps.Res
+						}
 						ps.Ser = ser
 						return ps.Res
 					default:
@@ -335,6 +339,10 @@ var builtins_conditionals = map[string]*env.Builtin{
 						// Inj means we inject the condition value into the block, because it costs us very little. we could do "if name { .print }"
 						EvalBlockInjMultiDialect(ps, arg0, true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "switch")
+						if ps.ErrorFlag || ps.ReturnFlag {
+							ps.Ser = ser
+							return ps.Res
+						}
 						// we set temporary series back to current program state
 						ps.Ser = ser
 						// we return the last return value (the return value of executing the block) "a: if 1 { 100 }" a becomes 100,
@@ -405,7 +413,7 @@ var builtins_conditionals = map[string]*env.Builtin{
 						// Inj means we inject the condition value into the block, because it costs us very little. we could do "if name { .print }"
 						EvalBlock(ps)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "cases")
-						if ps.ErrorFlag {
+						if ps.ErrorFlag || ps.ReturnFlag {
 							ps.Ser = ser
 							return ps.Res
 						}
@@ -428,7 +436,7 @@ var builtins_conditionals = map[string]*env.Builtin{
 						// Inj means we inject the condition value into the block, because it costs us very little. we could do "if name { .print }"
 						EvalBlockInjMultiDialect(ps, cumul, true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "cases")
-						if ps.ErrorFlag {
+						if ps.ErrorFlag || ps.ReturnFlag {
 							ps.Ser = ser
 							return ps.Res
 						}

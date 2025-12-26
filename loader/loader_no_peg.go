@@ -271,6 +271,40 @@ func (l *Lexer) NextToken() NoPEGToken {
 	case ']':
 		return l.readOneCharToken(NPEG_TOKEN_BBLOCK_END, ERR_SPACING_BLK)
 	case '(':
+		// Check if this is a paren-word like (word) or just a group delimiter
+		if isLetter(l.peekChar()) {
+			// This is the start of a paren-word like (word)
+			word := l.readWord()
+
+			// Check if it's a set-word (word:)
+			if l.ch == ':' {
+				if l.peekChar() == ':' { // word::
+					if isWhitespaceOrEOF(l.peekCharOffs(1)) {
+						l.readChar()
+						l.readChar()
+						return l.makeToken(NPEG_TOKEN_MODWORD, l.input[l.tokenStart:l.pos])
+					}
+				}
+				if isWhitespaceOrEOF(l.peekChar()) {
+					l.readChar()
+					return l.makeToken(NPEG_TOKEN_SETWORD, l.input[l.tokenStart:l.pos])
+				}
+			}
+
+			// Check if it's a context path (word/word or word/word/word...)
+			if l.ch == '/' {
+				l.readChar()
+
+				// Read the rest of the path (can have multiple parts like one/two/three)
+				for isWordCharacter(l.ch) || l.ch == '/' {
+					l.readChar()
+				}
+
+				return l.makeToken(NPEG_TOKEN_CPATH, l.input[l.tokenStart:l.pos])
+			}
+
+			return word
+		}
 		return l.readOneCharToken(NPEG_TOKEN_GROUP_START, ERR_SPACING_BLK)
 	case ')':
 		return l.readOneCharToken(NPEG_TOKEN_GROUP_END, ERR_SPACING_BLK)
@@ -505,7 +539,8 @@ func isDigit(ch byte) bool {
 // isWordCharacter checks if a character can be part of a word
 func isWordCharacter(ch byte) bool {
 	return isLetter(ch) || isDigit(ch) || ch == '-' || ch == '+' || ch == '.' ||
-		ch == '!' || ch == '*' || ch == '%' || ch == '>' || ch == '<' || ch == '\\' || ch == '?' || ch == '=' || ch == '_'
+		ch == '!' || ch == '*' || ch == '%' || ch == '>' || ch == '<' || ch == '\\' || ch == '?' || ch == '=' || ch == '_' ||
+		ch == '(' || ch == ')'
 }
 
 // isWhitespaceCh checks if a character is whitespace
