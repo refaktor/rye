@@ -1770,7 +1770,7 @@ var builtins_collection = map[string]*env.Builtin{
 				}
 				return *env.NewList(reverseList)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.StringType, env.ListType}, "reverse!")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.StringType, env.ListType}, "reverse")
 			}
 		},
 	},

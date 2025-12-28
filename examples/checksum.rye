@@ -1,0 +1,43 @@
+; # Luhn's checksum algorithm
+
+term/blue print "Luhn's checksum algorithm is used in finance masivelly" term/reset
+; more: https://medium.com/@thealonemusk/luhn-algorithm-the-70-year-old-algorithm-protecting-6-trillion-in-online-payments-a7a702dc8361
+
+luhn-checksum: context {
+
+	calc-luhn-sum: fn { val } {
+		.reverse |map\idx 'i {
+			.to-integer ::x ,
+			either i .is-even {
+				either ( y:: x * 2 ) > 9
+				{ y % 10 |+ y // 10 } { y }
+			} { x }
+		} |sum
+	}
+	
+	stamp: fn { val } {
+		.calc-luhn-sum .mod 10 :z
+		( 10 - z ) % 10 |concat* val
+	}
+
+	check: fn { val } {
+		.tail 1 |to-integer :chk ,
+		.head -1 |calc-luhn-sum + chk |% 10 |= 0
+	}
+}
+
+; usage
+
+do\in luhn-checksum {
+
+	print stamp "123456789"
+	print stamp data: "987654321"
+	
+	assert\display "check should pass" {
+		check stamp data
+	} true
+	
+	assert\display "check should return false" {
+		check ( stamp data ) ++ "1"
+	} true ; just how failure to assert looks, should change to false
+}
