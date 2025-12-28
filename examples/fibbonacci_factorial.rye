@@ -1,0 +1,25 @@
+
+doc! "demonstrates 6 ways to calculate a factorial and one fibbonaci"
+
+fib1: fn { n "recursive" } { either n < 2 { n } { fib1 n - 1 |+ fib1 n - 2 } }
+
+fac1: fn { n "recursive" } { either n > 1 { n * fac1 n - 1 } { 1 } }
+
+fac2: fn1 { var 'i 0 , .produce 1 { i:: inc i , * i } }
+
+fac3: fn { x "loop" } { acc:: 1 , loop x { .inc * acc ::acc } }
+
+fac4: fn1 { .range* 1 |fold 1 fn { x acc } { * acc } }
+
+fac5: fn1 { .range* 1 |mul }
+
+
+
+assert\display "recursive fibbonaci" { fib1 10 } 55
+assert\display "recursive fibbonaci" { fib1 20 } 6765
+
+assert\display "recursive factorial" { fac1 10 } 3628800
+assert\display "factorial using produce" { fac2 10 } 3628800
+assert\display "factorial using loop" { fac3 10 } 3628800
+assert\display "factorial using fold" { fac4 10 } 3628800
+assert\display "factorial using mul" { fac5 10 } 3628800
