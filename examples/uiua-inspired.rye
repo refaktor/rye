@@ -1,0 +1,39 @@
+; Uiua is a cool concatenative array language. These are translations of
+; some of examples from their front page: https://www.uiua.org/
+
+; [1 5 8 2]
+; ⟜/+ # Sum
+; ⧻   # Length
+; ÷   # Divide
+
+assert\display "avg using constant" {
+	{ 1 5 8 2 } :b
+	b .sum / length? b
+} 4.0
+
+assert\display "avg using apply" {
+	{ 1 5 8 2 }
+	| .[ .sum , .length? ]
+	|apply* ?_/
+} 4.0
+
+; "Unabashedly I utilize arrays"
+; ⊸≠@  # Mask of non-spaces
+; ⊜⊢   # All first letters
+
+assert\display "join first letters" {
+	"Unabashedly I utilize arrays"
+	|split " "
+	|map { .first }
+	|join
+} "UIua"
+
+; ⇡₂40  # Range 2 to 40
+; ♭⊸˙⊞× # List of products
+; ▽¬⊸∊  # Keep not in list
+
+assert\display "get prime numbers below 40" {
+	range 2 40 :x
+	math/outer-product x x |unpack :p
+	x .purge { .contains* p }
+} { 2 3 5 7 11 13 17 19 23 29 31 37 }

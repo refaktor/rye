@@ -1381,4 +1381,85 @@ var Builtins_math = map[string]*env.Builtin{
 			}
 		},
 	},
+	// Tests:
+	// equal { outer-product { 1 2 3 } { 10 20 } } { { 10 20 } { 20 40 } { 30 60 } }
+	// equal { outer-product { 1 2 } { 1 2 3 } } { { 1 2 3 } { 2 4 6 } }
+	// equal { outer-product { 2.0 3.0 } { 4.0 5.0 } } { { 8.0 10.0 } { 12.0 15.0 } }
+	// equal { outer-product { } { 1 2 } } { }
+	// Args:
+	// * a: block of integers or decimals (first vector)
+	// * b: block of integers or decimals (second vector)
+	// Returns:
+	// * block of blocks (matrix) where element [i,j] = a[i] * b[j], similar to numpy.outer()
+	"outer-product": {
+		Argsn: 2,
+		Doc:   "Computes the outer product of two vectors (blocks), returning a matrix (block of blocks) where each element [i,j] = a[i] * b[j]. Similar to numpy.outer().",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch vec1 := arg0.(type) {
+			case env.Block:
+				switch vec2 := arg1.(type) {
+				case env.Block:
+					// Create result matrix (block of blocks)
+					result := make([]env.Object, vec1.Series.Len())
+
+					for i := 0; i < vec1.Series.Len(); i++ {
+						// Get value from first vector
+						val1 := vec1.Series.Get(i)
+						var f1 float64
+						var isDecimal1 bool
+
+						switch v1 := val1.(type) {
+						case env.Integer:
+							f1 = float64(v1.Value)
+							isDecimal1 = false
+						case env.Decimal:
+							f1 = v1.Value
+							isDecimal1 = true
+						default:
+							return MakeBuiltinError(ps, fmt.Sprintf("Element at position %d in first block must be integer or decimal", i), "outer-product")
+						}
+
+						// Create row for this element
+						row := make([]env.Object, vec2.Series.Len())
+
+						for j := 0; j < vec2.Series.Len(); j++ {
+							// Get value from second vector
+							val2 := vec2.Series.Get(j)
+							var f2 float64
+							var isDecimal2 bool
+
+							switch v2 := val2.(type) {
+							case env.Integer:
+								f2 = float64(v2.Value)
+								isDecimal2 = false
+							case env.Decimal:
+								f2 = v2.Value
+								isDecimal2 = true
+							default:
+								return MakeBuiltinError(ps, fmt.Sprintf("Element at position %d in second block must be integer or decimal", j), "outer-product")
+							}
+
+							// Compute product
+							product := f1 * f2
+
+							// Return as decimal if either operand was decimal, otherwise as integer
+							if isDecimal1 || isDecimal2 {
+								row[j] = *env.NewDecimal(product)
+							} else {
+								row[j] = *env.NewInteger(int64(product))
+							}
+						}
+
+						result[i] = *env.NewBlock(*env.NewTSeries(row))
+					}
+
+					return *env.NewBlock(*env.NewTSeries(result))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "outer-product")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "outer-product")
+			}
+		},
+	},
 }
