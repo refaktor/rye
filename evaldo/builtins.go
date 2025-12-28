@@ -2366,6 +2366,121 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
+	// equal  { assert { 1 + 2 } 3 } 3
+	// equal  { assert { "hello" } "hello" } "hello"
+	// error  { assert { 1 + 2 } 5 }
+	// Args:
+	// * block: Block of code to evaluate
+	// * expected: Expected result value
+	// Returns:
+	// * The result value if assertion passes, error if it fails
+	"assert": {
+		Argsn: 2,
+		Doc:   "Evaluates a block of code and asserts that its result equals the expected value. Returns the result if assertion passes, fails with error message if not.",
+		Pure:  false,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg0.(type) {
+			case env.Block:
+				ser := ps.Ser
+				ps.Ser = bloc.Series
+				EvalBlock(ps)
+				ps.Ser = ser
+
+				// Check if evaluation produced an error
+				if ps.ErrorFlag {
+					return ps.Res
+				}
+				if ps.FailureFlag {
+					return ps.Res
+				}
+
+				result := ps.Res
+				expected := arg1
+
+				// Compare result with expected value
+				if result.Equal(expected) {
+					return result
+				}
+
+				// Assertion failed - create error message
+				resultStr := result.Inspect(*ps.Idx)
+				expectedStr := expected.Inspect(*ps.Idx)
+
+				ps.FailureFlag = true
+				return env.NewError("Assertion failed: expected `" + expectedStr + "` but got `" + resultStr + "`")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "assert")
+			}
+		},
+	},
+
+	// Tests:
+	// stdout { assert\display "check addition" { 1 + 2 } 3 } "\033[35mcheck addition\033[0m: \033[32mOK\033[0m\n"
+	// equal  { assert\display "check addition" { 1 + 2 } 5 } 3
+	// Args:
+	// * explanation: String describing the test being performed
+	// * block: Block of code to evaluate
+	// * expected: Expected result value
+	// Returns:
+	// * The result value (displays status but continues evaluation even on failure)
+	"assert\\display": {
+		Argsn: 3,
+		Doc:   "Evaluates a block of code and displays the result. Prints the explanation in magenta followed by OK in green on success, or error message in red on failure. Does not fail - continues evaluation.",
+		Pure:  false,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch explanation := arg0.(type) {
+			case env.String:
+				switch bloc := arg1.(type) {
+				case env.Block:
+					ser := ps.Ser
+					ps.Ser = bloc.Series
+					EvalBlock(ps)
+					ps.Ser = ser
+
+					// ANSI color codes
+					magenta := "\033[35m"
+					green := "\033[32m"
+					red := "\033[31m"
+					reset := "\033[0m"
+
+					// Check if evaluation produced an error - display but clear flags and continue
+					if ps.ErrorFlag {
+						fmt.Println(magenta + explanation.Value + reset + ": " + red + "FAILED: " + ps.Res.Inspect(*ps.Idx) + reset)
+						ps.ErrorFlag = false
+						ps.FailureFlag = false
+						return ps.Res
+					}
+					if ps.FailureFlag {
+						fmt.Println(magenta + explanation.Value + reset + ": " + red + "FAILED: " + ps.Res.Inspect(*ps.Idx) + reset)
+						ps.FailureFlag = false
+						return ps.Res
+					}
+
+					result := ps.Res
+					expected := arg2
+
+					// Compare result with expected value
+					if result.Equal(expected) {
+						fmt.Println(magenta + explanation.Value + reset + ": " + green + "OK" + reset)
+						return result
+					}
+
+					// Assertion failed - display but continue (don't set failure flag)
+					resultStr := result.Inspect(*ps.Idx)
+					expectedStr := expected.Inspect(*ps.Idx)
+
+					fmt.Println(magenta + explanation.Value + reset + ": " + red + "FAILED: expected `" + expectedStr + "` but got `" + resultStr + "`" + reset)
+					return result
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "assert\\display")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "assert\\display")
+			}
+		},
+	},
+
+	// Tests:
 	// Args:
 	// * condition: Integer value, if > 0 triggers recursion reset
 	// Returns:
