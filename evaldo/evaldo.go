@@ -1417,7 +1417,7 @@ func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Obj
 			return
 		}
 		if ps.ReturnFlag || ps.ErrorFlag {
-			ps.Res = env.NewError4(0, "Argument 2 of "+strconv.Itoa(bi.Argsn)+" missing for builtin '"+bi.Doc+"'. Check that all required arguments are provided.", ps.Res.(*env.Error), nil)
+			ps.Res = env.NewError4(0, "Argument 2 of "+strconv.Itoa(bi.Argsn)+" missing for builtin "+FormatBuiltinReference(bi.Doc)+". Check that all required arguments are provided.", ps.Res.(*env.Error), nil)
 			return
 		}
 		//fmt.Println(ps.Res)
