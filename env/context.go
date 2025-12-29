@@ -12,6 +12,7 @@ type Context interface {
 
 	// Core context operations
 	Get(word int) (Object, bool)
+	GetCurrent(word int) (Object, bool) // Gets only from current context, not parent chain
 	Get2(word int) (Object, bool, Context)
 	Set(word int, val Object) Object
 	Mod(word int, val Object) bool

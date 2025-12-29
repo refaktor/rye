@@ -591,37 +591,27 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 	}
 
 	ml.SetCompleter(func(line string, mode int) (c []string) {
-		// #IMPROV #IDEA words defined in current context should be bold
-		// #IMPROV #Q how would we cycle just through words in current context?
-		// #TODO don't display more than N words
-		// #TODO make current word bold
+		// Tab completion modes:
+		// mode=0 (Tab): Show context matches first, then all word index matches
+		// mode=1 (Ctrl+S): Show only context matches (seek in context)
 
-		// # TRICK: we don't have the cursor position, but the caller code handles that already so we can suggest in the 	middle
-		suggestions := make([]string, 0)
-		suggestions2 := make([]string, 0)
-		fileSuggestions := make([]string, 0)
+		suggestions := make([]string, 0)     // suggestions from current context
+		suggestions2 := make([]string, 0)    // suggestions from word index
+		fileSuggestions := make([]string, 0) // file path suggestions
 		var wordpart string
 		spacePos := strings.LastIndex(line, " ")
 		var prefix string
+
 		if spacePos < 0 {
-			// fmt.Println("*")
+			// No space in line - use whole line as wordpart
 			wordpart = line
 			prefix = ""
 		} else {
+			// Extract word after last space
 			wordpart = strings.TrimSpace(line[spacePos:])
-			fmt.Print("=(")
-			fmt.Print(wordpart)
-			fmt.Print(")=")
 			prefix = line[0:spacePos] + " "
-			if wordpart == "" { // we are probably 1 space after last word
-				fmt.Println("+")
-				return
-			}
+			// Note: if wordpart is empty (cursor after space), we'll show context words
 		}
-
-		// fmt.Print("=[")
-		// fmt.Print(wordpart)
-		// fmt.Print("]=")
 
 		// Check if wordpart starts with % for file path completion
 		if strings.HasPrefix(wordpart, "%") {
@@ -682,72 +672,62 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 				}
 			}
 		} else {
-			// Original word completion logic
-			// switch mode {
-			// case 0:
-			if wordpart != "" {
+			// Word completion logic with mode support
+			// mode=0 (Tab): Show context matches first, then word index matches
+			// mode=1 (Ctrl+S): Show only context matches (seek in context)
+
+			// Always search current context first
+			for key := range es.Ctx.GetState() {
+				word := es.Idx.GetWord(key)
+				// When wordpart is empty, show all context words
+				// When wordpart has value, filter by prefix
+				if wordpart == "" || strings.HasPrefix(word, strings.ToLower(wordpart)) {
+					c = append(c, prefix+word)
+					suggestions = append(suggestions, word)
+				} else if strings.HasPrefix("."+word, strings.ToLower(wordpart)) {
+					c = append(c, prefix+"."+word)
+					suggestions = append(suggestions, "."+word)
+				} else if strings.HasPrefix("|"+word, strings.ToLower(wordpart)) {
+					c = append(c, prefix+"|"+word)
+					suggestions = append(suggestions, "|"+word)
+				}
+			}
+
+			// For mode=0 (Tab), also search word index for additional matches
+			// For mode=1 (Ctrl+S), skip word index - only show context
+			if mode == 0 && wordpart != "" {
+				// Create a set of already suggested words to avoid duplicates
+				alreadySuggested := make(map[string]bool)
+				for _, s := range suggestions {
+					alreadySuggested[s] = true
+				}
+
 				for i := 0; i < es.Idx.GetWordCount(); i++ {
-					// fmt.Print(es.Idx.GetWord(i))
-					if strings.HasPrefix(es.Idx.GetWord(i), strings.ToLower(wordpart)) {
-						c = append(c, prefix+es.Idx.GetWord(i))
-						suggestions2 = append(suggestions2, es.Idx.GetWord(i))
-					} else if strings.HasPrefix("."+es.Idx.GetWord(i), strings.ToLower(wordpart)) {
-						c = append(c, prefix+"."+es.Idx.GetWord(i))
-						suggestions2 = append(suggestions2, es.Idx.GetWord(i))
-					} else if strings.HasPrefix("|"+es.Idx.GetWord(i), strings.ToLower(wordpart)) {
-						c = append(c, prefix+"|"+es.Idx.GetWord(i))
-						suggestions2 = append(suggestions2, es.Idx.GetWord(i))
+					word := es.Idx.GetWord(i)
+					// Skip if already in context suggestions
+					if alreadySuggested[word] {
+						continue
+					}
+					if strings.HasPrefix(word, strings.ToLower(wordpart)) {
+						c = append(c, prefix+word)
+						suggestions2 = append(suggestions2, word)
+					} else if strings.HasPrefix("."+word, strings.ToLower(wordpart)) {
+						if !alreadySuggested["."+word] {
+							c = append(c, prefix+"."+word)
+							suggestions2 = append(suggestions2, "."+word)
+						}
+					} else if strings.HasPrefix("|"+word, strings.ToLower(wordpart)) {
+						if !alreadySuggested["|"+word] {
+							c = append(c, prefix+"|"+word)
+							suggestions2 = append(suggestions2, "|"+word)
+						}
 					}
 				}
 			}
-			// case 1:
-			for key := range es.Ctx.GetState() {
-				// fmt.Print(es.Idx.GetWord(i))
-				if strings.HasPrefix(es.Idx.GetWord(key), strings.ToLower(wordpart)) {
-					c = append(c, prefix+es.Idx.GetWord(key))
-					suggestions = append(suggestions, es.Idx.GetWord(key))
-				} else if strings.HasPrefix("."+es.Idx.GetWord(key), strings.ToLower(wordpart)) {
-					c = append(c, prefix+"."+es.Idx.GetWord(key))
-					suggestions = append(suggestions, es.Idx.GetWord(key))
-				} else if strings.HasPrefix("|"+es.Idx.GetWord(key), strings.ToLower(wordpart)) {
-					c = append(c, prefix+"|"+es.Idx.GetWord(key))
-					suggestions = append(suggestions, es.Idx.GetWord(key))
-				}
-			}
-			// }
 		}
 
-		// Save cursor position before displaying suggestions
-		fmt.Print("\033[s") // Save cursor position
-
-		// Move cursor down and display suggestions
-		fmt.Print("\n")
-		term.ClearLine()
-
-		// Display suggestions based on what type we have
-		if len(fileSuggestions) > 0 {
-			// File path suggestions
-			term.ColorGreen()
-			fmt.Print("files and folders: ")
-			term.CloseProps()
-			fmt.Print(strings.Join(fileSuggestions, " "))
-		} else {
-			// Original word suggestions
-			term.ColorMagenta()
-			fmt.Print("current context: ")
-			fmt.Print(suggestions)
-			if len(suggestions2) > 0 {
-				fmt.Print(" | ")
-				term.ColorBlue()
-				fmt.Print("all words: ")
-				fmt.Print(suggestions2)
-			}
-			term.CloseProps()
-		}
-
-		// Restore cursor position to the input line
-		fmt.Print("\033[u") // Restore cursor position
-
+		// The display is handled by microliner's displayTabSuggestions
+		// We just return the completion list - context words come first, then global words
 		return
 	})
 

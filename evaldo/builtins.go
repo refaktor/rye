@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"reflect"
+	"regexp"
 
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/term"
@@ -36,6 +37,31 @@ func MakeBuiltinError(env1 *env.ProgramState, msg string, fn string) *env.Error 
 	return env.NewError(msg + " In builtin `" + fn + "`")
 }
 
+// docNameRegex matches a simple name in parentheses at the end of a docstring
+// Supports Rye function names with: letters, digits, underscore, backslash, dash, plus, asterisk, question mark, exclamation
+var docNameRegex = regexp.MustCompile(`\(([a-zA-Z0-9_\\/?!*+<>=.-]+)\)\s*$`)
+
+// ExtractFunctionName extracts the function name from a docstring that ends with "(name)"
+// If the pattern is found, returns the name; otherwise returns the full docstring
+func ExtractFunctionName(doc string) (name string, found bool) {
+	matches := docNameRegex.FindStringSubmatch(doc)
+	if len(matches) >= 2 {
+		return matches[1], true
+	}
+	return doc, false
+}
+
+// FormatBuiltinReference formats a builtin reference for error display
+// If a name can be extracted from the docstring, it returns the emphasized name
+// Otherwise returns the full docstring
+func FormatBuiltinReference(doc string) string {
+	name, found := ExtractFunctionName(doc)
+	if found {
+		return "\x1b[41m\x1b[30m " + name + " \x1b[0m\x1b[1;31m" // Red background, black text, then reset and restore bold red
+	}
+	return doc
+}
+
 func NameOfRyeType(t env.Type) string {
 	if t < 0 || int(t) >= len(env.NativeTypes) {
 		return "INVALID TYPE (" + strconv.FormatInt(int64(t), 10) + ")"
@@ -56,7 +82,9 @@ func MakeArgErrorMessage(N int, allowedTypes []env.Type, fn string) string {
 			types += "UNKNOWN_TYPE"
 		}
 	}
-	return "builtin `" + fn + "` requires argument " + strconv.Itoa(N) + " to be: " + types + "."
+	// Format function name with red badge style
+	formattedFn := "\x1b[41m\x1b[30m " + fn + " \x1b[0m"
+	return "builtin " + formattedFn + " requires argument " + strconv.Itoa(N) + " to be: " + types + "."
 }
 
 func MakeArgError(env1 *env.ProgramState, N int, typ []env.Type, fn string) *env.Error {

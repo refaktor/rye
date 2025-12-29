@@ -287,43 +287,89 @@ func (s *MLState) displayTabSuggestions(items []string, currentIndex int) {
 		return
 	}
 
-	// Reserve space if not already reserved (2 lines: suggestions + probe)
+	// Always use 2 lines: probe on top, suggestions below (truncated to fit)
 	if s.suggestionSpace == 0 {
 		s.reserveSuggestionSpace(2)
 	}
 
-	// Build suggestion line
+	// Build suggestion line - words we tab over (truncated to terminal width)
+	maxWidth := s.columns - 3
+	if maxWidth < 20 {
+		maxWidth = 20
+	}
+
 	var suggestionLine strings.Builder
-	suggestionLine.WriteString("\033[34mcurrent: \033[0m") // Blue "current: " prompt
+	currentWidth := 0
+	truncated := false
 
 	for i, item := range items {
+		// Calculate visible width for this item: space + item + space + separator
+		itemWidth := len(item) + 2
+		if i < len(items)-1 {
+			itemWidth++ // separator space
+		}
+
+		// Check if adding this item would exceed max width
+		if currentWidth+itemWidth > maxWidth && i > 0 {
+			truncated = true
+			break
+		}
+
+		// Check if this item is in the CURRENT context only (not parent contexts)
+		// This distinguishes user-defined words from builtins
+		isInContext := false
+		if s.programState != nil {
+			wordIndex, found := s.programState.Idx.GetIndex(item)
+			if found {
+				_, isInContext = s.programState.Ctx.GetCurrent(wordIndex)
+			}
+		}
+
 		if i == currentIndex {
 			// Highlight current selection with magenta background and black text
 			suggestionLine.WriteString("\033[45;30m ")
 			suggestionLine.WriteString(item)
 			suggestionLine.WriteString(" \033[0m")
+		} else if isInContext {
+			// Context items in bold cyan
+			suggestionLine.WriteString("\033[1;36m ")
+			suggestionLine.WriteString(item)
+			suggestionLine.WriteString(" \033[0m")
 		} else {
-			// Non-selected items with cyan text
+			// Non-context items in regular cyan (dimmer)
 			suggestionLine.WriteString("\033[36m ")
 			suggestionLine.WriteString(item)
 			suggestionLine.WriteString(" \033[0m")
 		}
 
-		if i < len(items)-1 {
-			suggestionLine.WriteString("  ")
+		currentWidth += itemWidth
+
+		if i < len(items)-1 && !truncated {
+			suggestionLine.WriteString(" ")
 		}
 	}
 
-	// Build probe line - show details about current selection
+	// Show indicator if there are more items
+	if truncated {
+		suggestionLine.WriteString("\033[90m...\033[0m")
+	}
+
+	// Build probe line - show docstring/value for current selection (shown at top)
+	// Truncate to terminal width to prevent wrapping
 	var probeLine strings.Builder
 	if currentIndex >= 0 && currentIndex < len(items) {
 		probe := s.getItemProbe(items[currentIndex])
+		probeRunes := []rune(probe)
+		if len(probeRunes) > maxWidth {
+			probe = string(probeRunes[:maxWidth-3]) + "..."
+		}
 		probeLine.WriteString("\033[38;5;247m")
 		probeLine.WriteString(probe)
 		probeLine.WriteString("\033[0m")
 	}
 
 	// Update the reserved space with the new content
+	// Order: suggestionLine first (goes to bottom), probeLine second (goes to top)
 	content := []string{suggestionLine.String(), probeLine.String()}
 	s.updateSuggestionContent(content)
 }
@@ -408,6 +454,10 @@ func (s *MLState) tabComplete(p []rune, line []rune, pos int, mode int) ([]rune,
 			return completedLine, newPos, KeyEvent{Code: 27}, nil
 		}*/
 
+	// Save original line and position so we can restore on backspace
+	originalLine := line
+	originalPos := pos
+
 	// Handle multiple completion options
 	direction := 1
 	tabPrinter := s.circularTabs(list)
@@ -435,7 +485,19 @@ func (s *MLState) tabComplete(p []rune, line []rune, pos int, mode int) ([]rune,
 			continue
 		}
 		if next.Code == 27 {
-			return line, pos, KeyEvent{Code: 27}, nil
+			// Escape: return original line
+			return originalLine, originalPos, KeyEvent{Code: 27}, nil
+		}
+		if next.Code == 8 {
+			// Backspace: exit tab completion, return to original input
+			// Refresh display with original line
+			err = s.refresh(p, originalLine, originalPos)
+			if err != nil {
+				return originalLine, originalPos, KeyEvent{Code: 27}, fmt.Errorf("failed to refresh display: %w", err)
+			}
+			// Return original line, but pass the backspace key for potential further processing
+			// Actually, just return to edit mode with original line intact
+			return originalLine, originalPos, KeyEvent{Code: 27}, nil
 		}
 		return completedLine, newPos, next, nil
 	}
