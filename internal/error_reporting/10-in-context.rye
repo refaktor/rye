@@ -1,0 +1,6 @@
+
+a: context {
+
+Read %.imap-uri |^check "Add the file with imap URI" |trim :uri 
+
+}

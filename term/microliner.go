@@ -499,6 +499,15 @@ func (s *MLState) tabComplete(p []rune, line []rune, pos int, mode int) ([]rune,
 			// Actually, just return to edit mode with original line intact
 			return originalLine, originalPos, KeyEvent{Code: 27}, nil
 		}
+		// Check for Ctrl+S to cycle modes - return original line and pass the key event
+		if next.Ctrl && strings.ToLower(next.Key) == "s" {
+			// Exit tab completion with original line, pass Ctrl+S event to cycle mode
+			err = s.refresh(p, originalLine, originalPos)
+			if err != nil {
+				return originalLine, originalPos, next, fmt.Errorf("failed to refresh display: %w", err)
+			}
+			return originalLine, originalPos, next, nil
+		}
 		return completedLine, newPos, next, nil
 	}
 
@@ -589,8 +598,10 @@ type MLState struct {
 	currline         int                                                            // Current line in multiline mode
 	programState     *env.ProgramState                                              // For environment access during tab completion
 	displayValue     func(*env.ProgramState, env.Object, bool) (env.Object, string) // Callback for displaying values
+	onValueSelected  func(env.Object)                                               // Callback when user selects a value via Ctrl+x
 	inTabCompletion  bool                                                           // Flag to track if we're in tab completion mode
 	suggestionSpace  int                                                            // Number of lines reserved for suggestions (0 = none reserved)
+	ctrlSMode        int                                                            // Ctrl+S cycles through modes: 1=context, 2=generics (0 is Tab-only)
 }
 
 // NewMicroLiner initializes a new *MLState with the provided event channel,
@@ -623,6 +634,11 @@ func (s *MLState) SetProgramState(ps *env.ProgramState) {
 // SetDisplayValueFunc sets the callback function used to display values
 func (s *MLState) SetDisplayValueFunc(fn func(*env.ProgramState, env.Object, bool) (env.Object, string)) {
 	s.displayValue = fn
+}
+
+// SetOnValueSelectedFunc sets the callback function called when user selects a value via Ctrl+x
+func (s *MLState) SetOnValueSelectedFunc(fn func(env.Object)) {
+	s.onValueSelected = fn
 }
 
 func (s *MLState) getColumns() bool {
@@ -1386,9 +1402,22 @@ startOfHere:
 				//	histNext()
 				// case "p":
 				//	histPrev()
-				case "s": // seek in context #experimental
-					fmt.Print("*")
-					line, pos, next, _ = s.tabComplete(p, line, pos, 1)
+				case "s": // seek - cycles through modes: 0=context, 1=word index, 2=generics by Res kind
+					// Cycle through modes: 0 → 1 → 2 → 0
+					s.ctrlSMode++
+					if s.ctrlSMode > 2 {
+						s.ctrlSMode = 0
+					}
+					// Show mode indicator
+					switch s.ctrlSMode {
+					case 0:
+						fmt.Print("[ctx]")
+					case 1:
+						fmt.Print("[all]")
+					case 2:
+						fmt.Print("[gen]")
+					}
+					line, pos, next, _ = s.tabComplete(p, line, pos, s.ctrlSMode)
 					goto haveNext
 				case "x": // display last returned value interactively
 					if s.programState != nil && s.programState.Res != nil && s.displayValue != nil {
@@ -1398,19 +1427,13 @@ startOfHere:
 						// Call displayValue with interactive=true to show the interactive display
 						returnedObj, _ := s.displayValue(s.programState, s.programState.Res, true)
 
-						// If a selection was made (not escaped), insert it into the current line
+						// If a selection was made (not escaped), update the result
 						if returnedObj != nil {
-							// Convert the returned object to its string representation
-							//objStr := returnedObj.Print(*s.programState.Idx)
-
-							// Insert the selected value at the current cursor position
-							/* objRunes := []rune(objStr)
-							line = append(line[:pos], append(objRunes, line[pos:]...)...)
-							pos += len(objRunes)
-							s.needRefresh = true */
 							s.programState.Res = returnedObj
-							//fmt.Println(returnedObj.Inspect(*s.programState.Idx))
-							fmt.Println(&s.programState)
+							// Notify the REPL about the selection so it can update prevResult
+							if s.onValueSelected != nil {
+								s.onValueSelected(returnedObj)
+							}
 							p := ""
 							if env.IsPointer(s.programState.Res) {
 								p = "Ref"
@@ -1674,7 +1697,13 @@ startOfHere:
 						s.needRefresh = true
 					}
 				case 9: // Tab completion
-					line, pos, next, _ = s.tabComplete(p, line, pos, 0)
+					// If line is empty, start in mode 0 (context only - local words)
+					// If line has text, start in mode 1 (global index - all words)
+					tabMode := 1
+					if len(line) == 0 {
+						tabMode = 0
+					}
+					line, pos, next, _ = s.tabComplete(p, line, pos, tabMode)
 					goto haveNext
 				case 46: // Del
 					if pos >= len(line) {

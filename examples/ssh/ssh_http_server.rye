@@ -1,0 +1,14 @@
+; # Minimal HTTP and SSH servers in one script
+
+rye .needs { http ssh }
+
+ssh-server ":2222" 
+ |Handle fn { s } { Write s "I c you\n" } 
+ |Password-auth fn { p } { = "1234" } :ssh
+
+http-server ":8080" 
+ |Handle "/" fn { w r } { .Write "I srv u" .jjk } :http
+
+go does { Serve ssh } , go does { Serve http }
+
+select { }

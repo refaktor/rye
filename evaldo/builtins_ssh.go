@@ -59,7 +59,11 @@ var Builtins_ssh = map[string]*env.Builtin{
 						ps.ReturnFlag = false
 						psTemp := env.ProgramState{}
 						copier.Copy(&psTemp, &ps)
-						CallFunction(handler, ps, *env.NewNative(ps.Idx, s, "ssh-session"), false, nil)
+						CallFunctionWithArgs(handler, ps, nil, *env.NewNative(ps.Idx, s, "ssh-session"))
+						// Check for errors after calling handler and print to server console
+						if ps.FailureFlag || ps.ErrorFlag {
+							println("Error in SSH handler: " + ps.Res.Inspect(*ps.Idx))
+						}
 					})
 					return arg0
 				default:
@@ -94,8 +98,8 @@ var Builtins_ssh = map[string]*env.Builtin{
 						ps.ReturnFlag = false
 						psTemp := env.ProgramState{}
 						copier.Copy(&psTemp, &ps)
-						newPs := CallFunction(handler, ps, *env.NewString(pass), false, nil)
-						return util.IsTruthy(newPs.Res)
+						CallFunctionWithArgs(handler, ps, nil, *env.NewString(pass))
+						return util.IsTruthy(ps.Res)
 					})
 					server.Value.(*ssh.Server).SetOption(pwda)
 					return arg0
@@ -115,14 +119,17 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// Args:
 	// * server: SSH server object
 	// Returns:
-	// * the SSH server object
+	// * the SSH server object, or error if unable to serve
 	"ssh-server//Serve": {
 		Argsn: 1,
 		Doc:   "Starts the SSH server, listening for connections.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch server := arg0.(type) {
 			case env.Native:
-				server.Value.(*ssh.Server).ListenAndServe()
+				err := server.Value.(*ssh.Server).ListenAndServe()
+				if err != nil {
+					return makeError(ps, err.Error())
+				}
 				return arg0
 			default:
 				ps.FailureFlag = true

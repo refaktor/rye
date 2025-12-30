@@ -54,10 +54,11 @@ func ExtractFunctionName(doc string) (name string, found bool) {
 // FormatBuiltinReference formats a builtin reference for error display
 // If a name can be extracted from the docstring, it returns the emphasized name
 // Otherwise returns the full docstring
+// Uses backticks to quote the name - the display function will highlight them
 func FormatBuiltinReference(doc string) string {
 	name, found := ExtractFunctionName(doc)
 	if found {
-		return "\x1b[41m\x1b[30m " + name + " \x1b[0m\x1b[1;31m" // Red background, black text, then reset and restore bold red
+		return "`" + name + "`"
 	}
 	return doc
 }
@@ -83,7 +84,7 @@ func MakeArgErrorMessage(N int, allowedTypes []env.Type, fn string) string {
 		}
 	}
 	// Format function name with red badge style
-	formattedFn := "\x1b[41m\x1b[30m " + fn + " \x1b[0m"
+	formattedFn := "`" + fn + "`"
 	return "builtin " + formattedFn + " requires argument " + strconv.Itoa(N) + " to be: " + types + "."
 }
 
@@ -1193,6 +1194,11 @@ var builtins = map[string]*env.Builtin{
 	},
 	// Tests:
 	// equal   { is-ref ref { 1 2 3 } } true
+	// equal   { ref { 1 2 3 } |type? } 'block
+	// equal   { ref dict { "a" 1 } |type? } 'dict
+	// equal   { ref list { 1 2 3 } |type? } 'list
+	// equal   { ref "hello" |type? } 'string
+	// equal   { b: ref { 1 2 3 } , append! b 4 , deref b |length? } 4 ; mutable in-place append
 	// Args:
 	// * value: Value to make mutable
 	// Returns:
@@ -1228,6 +1234,10 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal   { is-ref deref ref { 1 2 3 } } false
+	// equal   { deref ref { 1 2 3 } } { 1 2 3 }
+	// equal   { deref ref "hello" } "hello"
+	// equal   { deref ref list { 1 2 3 } |length? } 3
+	// equal   { ref dict { "a" 1 } |deref |type? } 'dict
 	// Args:
 	// * value: Mutable reference to make immutable
 	// Returns:
@@ -1264,6 +1274,10 @@ var builtins = map[string]*env.Builtin{
 	// Tests:
 	// equal  { ref { } |is-ref } true
 	// equal  { { } |is-ref } false
+	// equal  { ref "hello" |is-ref } true
+	// equal  { "hello" |is-ref } false
+	// equal  { ref list { 1 2 3 } |is-ref } true
+	// equal  { 123 |is-ref } false
 	// Args:
 	// * value: Any value to check if it's a reference
 	// Returns:
@@ -1283,6 +1297,12 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { dict { "a" 123 } -> "a" } 123
+	// equal { dict { "name" "John" "age" 30 } -> "name" } "John"
+	// equal { dict { } |type? } 'dict
+	// equal { dict { "x" 1 "y" 2 "z" 3 } |length? } 3
+	// error { dict { 123 "value" } } ; integer keys should fail
+	// error { dict { { } "value" } } ; block keys should fail
+	// equal { dict { 'key "value" } -> "key" } "value" ; tagwords as keys
 	// Args:
 	// * block: Block containing alternating keys and values
 	// Returns:
@@ -1316,6 +1336,12 @@ var builtins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { list { "a" 123 } -> 0 } "a"
+	// equal { list { 1 2 3 } |length? } 3
+	// equal { list { } |length? } 0
+	// equal { list { "hello" "world" } -> 1 } "world"
+	// equal { list { 1 2 3 } |type? } 'list
+	// equal { list { 1 2 3 } |first } 1
+	// equal { list { 1 2 3 } |last } 3
 	// Args:
 	// * block: Block containing values to put in the list
 	// Returns:

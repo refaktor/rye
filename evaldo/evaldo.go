@@ -578,7 +578,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 			return
 		} else {
 			ps.ErrorFlag = true
-			ps.Res = env.NewError2(5, "Word not found: "+failureInfo+". Check spelling or ensure the word is defined in the current context.")
+			ps.Res = env.NewError2(5, "Word not found: `"+failureInfo+"`. Check spelling or ensure the word is defined in the current context.")
 			return
 		}
 	}
@@ -627,7 +627,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 		ps.ErrorFlag = true
 		if !ps.FailureFlag {
 			ps.Ser.SetPos(pos)
-			ps.Res = env.NewError2(5, "Word not found: "+failureInfo+". Check spelling or ensure the word is defined in the current context.")
+			ps.Res = env.NewError2(5, "Word not found: `"+failureInfo+"`. Check spelling or ensure the word is defined in the current context.")
 		}
 		return
 	}
@@ -1630,6 +1630,33 @@ func calculateErrorPosition(ps *env.ProgramState, locationNode *env.LocationNode
 	return charCount
 }
 
+// FormatBacktickQuotes processes an error message and highlights text within backticks
+// with a special background color for terminal display.
+// Called from: DisplayEnhancedError
+// Purpose: Converts `word` to highlighted word for better error readability
+func FormatBacktickQuotes(message string) string {
+	// Red background, black text for quoted words: \x1b[41m\x1b[30m word \x1b[0m\x1b[1;31m
+	// This matches the style used for function names in other errors
+	result := strings.Builder{}
+	inQuote := false
+	for i := 0; i < len(message); i++ {
+		if message[i] == '`' {
+			if inQuote {
+				// Closing backtick - add reset and restore bold red
+				result.WriteString(" \x1b[0m\x1b[1;31m")
+				inQuote = false
+			} else {
+				// Opening backtick - add red background, black text
+				result.WriteString("\x1b[41m\x1b[30m ")
+				inQuote = true
+			}
+		} else {
+			result.WriteByte(message[i])
+		}
+	}
+	return result.String()
+}
+
 // DisplayEnhancedError displays a formatted error with source location and block context.
 // Called from: MaybeDisplayFailureOrError2
 // Purpose: Main error display - shows red banner, error message, block location, and <here> marker
@@ -1638,9 +1665,10 @@ func DisplayEnhancedError(es *env.ProgramState, genv *env.Idxs, tag string, topL
 	if !es.SkipFlag {
 		fmt.Print("\x1b[41m\x1b[30m RUNTIME ERROR \x1b[0m\n") // Red background, black text
 
-		// Bold red for error message
+		// Bold red for error message, with backtick-quoted text highlighted
 		fmt.Print("\x1b[1;31m") // Bold red
-		fmt.Println(es.Res.Print(*genv))
+		errorMsg := es.Res.Print(*genv)
+		fmt.Println(FormatBacktickQuotes(errorMsg))
 		fmt.Print("\x1b[0m") // Reset
 	}
 	// Get location information from the current block
