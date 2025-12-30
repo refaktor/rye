@@ -150,6 +150,10 @@ var Builtins_http = map[string]*env.Builtin{
 						}
 						// Call Rye function with response writer and request objects
 						CallFunctionArgs2(handler, ps, *env.NewNative(ps.Idx, w, "Go-server-response-writer"), *env.NewNative(ps.Idx, r, "Go-server-request"), nil)
+						// Check for errors after calling handler and print to server console
+						if ps.FailureFlag || ps.ErrorFlag {
+							fmt.Println("Error in HTTP handler: " + ps.Res.Inspect(*ps.Idx))
+						}
 					})
 					return arg0
 				case env.Native:

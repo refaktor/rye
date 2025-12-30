@@ -7,7 +7,7 @@ ssh-server ":2222"
  |Password-auth fn { p } { = "1234" } :ssh
 
 http-server ":8080" 
- |Handle "/" fn { w r } { .Write "I srv u" } :http
+ |Handle "/" fn { w r } { .Write "I srv u" .jjk } :http
 
 go does { Serve ssh } , go does { Serve http }
 
