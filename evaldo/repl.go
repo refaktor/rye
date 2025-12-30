@@ -591,9 +591,10 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 	}
 
 	ml.SetCompleter(func(line string, mode int) (c []string) {
-		// Tab completion modes:
-		// mode=0 (Tab): Show context matches first, then all word index matches
-		// mode=1 (Ctrl+S): Show only context matches (seek in context)
+		// Tab completion modes (Ctrl+S cycles through these):
+		// mode=0: Context only (local words)
+		// mode=1: Word index (all words from global index)
+		// mode=2: Generic methods for ps.Res kind
 
 		suggestions := make([]string, 0)     // suggestions from current context
 		suggestions2 := make([]string, 0)    // suggestions from word index
@@ -671,16 +672,10 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 					}
 				}
 			}
-		} else {
-			// Word completion logic with mode support
-			// mode=0 (Tab): Show context matches first, then word index matches
-			// mode=1 (Ctrl+S): Show only context matches (seek in context)
-
-			// Always search current context first
+		} else if mode == 0 {
+			// Mode 0: Context only (local words)
 			for key := range es.Ctx.GetState() {
 				word := es.Idx.GetWord(key)
-				// When wordpart is empty, show all context words
-				// When wordpart has value, filter by prefix
 				if wordpart == "" || strings.HasPrefix(word, strings.ToLower(wordpart)) {
 					c = append(c, prefix+word)
 					suggestions = append(suggestions, word)
@@ -692,42 +687,39 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 					suggestions = append(suggestions, "|"+word)
 				}
 			}
-
-			// For mode=0 (Tab), also search word index for additional matches
-			// For mode=1 (Ctrl+S), skip word index - only show context
-			if mode == 0 && wordpart != "" {
-				// Create a set of already suggested words to avoid duplicates
-				alreadySuggested := make(map[string]bool)
-				for _, s := range suggestions {
-					alreadySuggested[s] = true
+		} else if mode == 1 {
+			// Mode 1: Word index (all words from global index)
+			for i := 0; i < es.Idx.GetWordCount(); i++ {
+				word := es.Idx.GetWord(i)
+				if wordpart == "" || strings.HasPrefix(word, strings.ToLower(wordpart)) {
+					c = append(c, prefix+word)
+					suggestions2 = append(suggestions2, word)
+				} else if strings.HasPrefix("."+word, strings.ToLower(wordpart)) {
+					c = append(c, prefix+"."+word)
+					suggestions2 = append(suggestions2, "."+word)
+				} else if strings.HasPrefix("|"+word, strings.ToLower(wordpart)) {
+					c = append(c, prefix+"|"+word)
+					suggestions2 = append(suggestions2, "|"+word)
 				}
-
-				for i := 0; i < es.Idx.GetWordCount(); i++ {
-					word := es.Idx.GetWord(i)
-					// Skip if already in context suggestions
-					if alreadySuggested[word] {
-						continue
-					}
-					if strings.HasPrefix(word, strings.ToLower(wordpart)) {
+			}
+		} else if mode == 2 {
+			// Mode 2: Generic methods for ps.Res kind
+			if es.Res != nil {
+				kindIdx := es.Res.GetKind()
+				methods := es.Gen.GetMethods(kindIdx)
+				for _, methodIdx := range methods {
+					word := es.Idx.GetWord(methodIdx)
+					// Filter by wordpart if provided
+					if wordpart == "" || strings.HasPrefix(word, strings.ToLower(wordpart)) {
 						c = append(c, prefix+word)
-						suggestions2 = append(suggestions2, word)
-					} else if strings.HasPrefix("."+word, strings.ToLower(wordpart)) {
-						if !alreadySuggested["."+word] {
-							c = append(c, prefix+"."+word)
-							suggestions2 = append(suggestions2, "."+word)
-						}
-					} else if strings.HasPrefix("|"+word, strings.ToLower(wordpart)) {
-						if !alreadySuggested["|"+word] {
-							c = append(c, prefix+"|"+word)
-							suggestions2 = append(suggestions2, "|"+word)
-						}
+						suggestions = append(suggestions, word)
 					}
 				}
 			}
 		}
 
 		// The display is handled by microliner's displayTabSuggestions
-		// We just return the completion list - context words come first, then global words
+		// We just return the completion list
 		return
 	})
 

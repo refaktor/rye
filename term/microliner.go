@@ -499,6 +499,15 @@ func (s *MLState) tabComplete(p []rune, line []rune, pos int, mode int) ([]rune,
 			// Actually, just return to edit mode with original line intact
 			return originalLine, originalPos, KeyEvent{Code: 27}, nil
 		}
+		// Check for Ctrl+S to cycle modes - return original line and pass the key event
+		if next.Ctrl && strings.ToLower(next.Key) == "s" {
+			// Exit tab completion with original line, pass Ctrl+S event to cycle mode
+			err = s.refresh(p, originalLine, originalPos)
+			if err != nil {
+				return originalLine, originalPos, next, fmt.Errorf("failed to refresh display: %w", err)
+			}
+			return originalLine, originalPos, next, nil
+		}
 		return completedLine, newPos, next, nil
 	}
 
@@ -591,6 +600,7 @@ type MLState struct {
 	displayValue     func(*env.ProgramState, env.Object, bool) (env.Object, string) // Callback for displaying values
 	inTabCompletion  bool                                                           // Flag to track if we're in tab completion mode
 	suggestionSpace  int                                                            // Number of lines reserved for suggestions (0 = none reserved)
+	ctrlSMode        int                                                            // Ctrl+S cycles through modes: 1=context, 2=generics (0 is Tab-only)
 }
 
 // NewMicroLiner initializes a new *MLState with the provided event channel,
@@ -1386,9 +1396,22 @@ startOfHere:
 				//	histNext()
 				// case "p":
 				//	histPrev()
-				case "s": // seek in context #experimental
-					fmt.Print("*")
-					line, pos, next, _ = s.tabComplete(p, line, pos, 1)
+				case "s": // seek - cycles through modes: 0=context, 1=word index, 2=generics by Res kind
+					// Cycle through modes: 0 → 1 → 2 → 0
+					s.ctrlSMode++
+					if s.ctrlSMode > 2 {
+						s.ctrlSMode = 0
+					}
+					// Show mode indicator
+					switch s.ctrlSMode {
+					case 0:
+						fmt.Print("[ctx]")
+					case 1:
+						fmt.Print("[all]")
+					case 2:
+						fmt.Print("[gen]")
+					}
+					line, pos, next, _ = s.tabComplete(p, line, pos, s.ctrlSMode)
 					goto haveNext
 				case "x": // display last returned value interactively
 					if s.programState != nil && s.programState.Res != nil && s.displayValue != nil {
