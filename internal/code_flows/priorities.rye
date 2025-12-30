@@ -1,0 +1,111 @@
+; # testing evaluation priorities
+
+assert\display "words" {
+	_+ 1 _* 2 3
+}
+( 1 + ( 2 * 3 ) )
+
+assert\display "opwords" {
+	1 + 2 * 3
+}
+( 1 + ( 2 * 3 ) )
+
+assert\display "pipewords" {
+	1 |+ 2 |* 3
+}
+( ( 1 + 2 ) * 3 )
+
+assert\display "parens" {
+	( 1 + 2 ) * 3
+}
+( ( 1 + 2 ) * 3 )
+
+assert\display "op and pipewords" {
+	1 + 2 |* 3
+}
+( ( 1 + 2 ) * 3 )
+
+assert\display "op and words" {
+	1 + _* 2 3
+}
+( 1 + ( 2 * 3 ) )
+
+assert\display "words and pipe-words" {
+	_+ 1 2 |* 3
+}
+( ( 1 + 2 ) * 3 )
+
+assert\display "setwords" {
+	1 + 2 |* 3
+}
+( ( 1 + 2 ) * 3 )
+
+assert\display "Mod/Set-words: pipewords" {
+	101 |+ 1 |+ 2 |* 3
+}
+312
+
+
+print "## Mod/Setwords"
+
+assert\display "Mod/Set-words: words" {
+	x:: _+ 1 _* 2 3 , x
+}
+( x:: ( 1 + ( 2 * 3 ) ) )
+
+assert\display "Mod/Set-words: opwords" {
+	x:: 1 + 2 * 3 , x
+}
+( x:: ( 1 + ( 2 * 3 ) ) )
+
+assert\display "Mod/Set-words: pipewords" {
+	x:: 1 |+ 2 |* 3 , x
+}
+( x:: ( ( 1 + 2 ) * 3 ) )
+
+assert\display "Mod/Set-words: pipewords" {
+	x:: 101 + y:: 1 |+ 2 |* 3 , [ x y ]
+}
+{ 110 9 }
+
+assert\display "Mod/Set-words: pipewords" {
+	x:: 101 |+ y:: 1 |+ 2 |* 3 , [ x y ]
+}
+{ 110 9 }
+
+print "## Left Mod/Setwords"
+
+assert\display "Mod/Set-words: words" {
+	_+ 1 _* 2 3 ::x , x
+}
+( x:: ( 1 + ( 2 * 3 ) ) )
+
+assert\display "Mod/Set-words: opwords" {
+	1 + 2 * 3 ::x , x
+}
+( x:: ( 1 + ( 2 * 3 ) ) )
+
+assert\display "Mod/Set-words: pipewords" {
+	1 |+ 2 |* 3 ::x , x
+}
+( x:: ( ( 1 + 2 ) * 3 ) )
+
+assert\display "Mod/Set-words: pipewords" {
+	101 ::x + 1 |+ 2 |* 3 ::y , [ x y ]
+}
+; { 101 312 }
+( ( ( 101 ::x ) + 1 |+ 2 |* 3 ::y ) , [ x y ] )
+
+print "## Mixed Mod/Setwords"
+
+assert\display "Mod/Set-words: pipewords" {
+	101 ::x + y:: 1 |+ 2 |* 3 ::z , [ x y z ]
+}
+; { 101 9 9 }
+( ( 101 ::x ) + ( y:: 1 |+ 2 |* 3 ::z ) , [ x y z ] )
+
+assert\display "Mod/Set-words: pipewords" {
+	x:: 101 ::y |+ z:: 1 |+ 2 ::v |* 3 ::q , [ x y z v q ]
+}
+; { 110 101 9 3 9 }
+( ( x:: ( 101 ::y ) |+ ( z:: ( 1 |+ 2 ::v ) |* 3 ::q ) ) , [ x y z v q ] )

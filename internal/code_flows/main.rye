@@ -1,0 +1,96 @@
+; FOUND BUGS
+; * fn\inside didnt bind new words (had to use do\inside root)
+; * [ "" v ] where v is a word seems to want to evaluate word that is value of v 
+; * >> op/pipe word doesn't work ... parser error probably
+; * assert { pp .Is-same-name* pp2 |probe |to-string } "false" 
+;
+; mudball test of as many flows of code as possible
+root: current
+assert: fn { c v } { do\inside root c :rv |= v |ensure join [ "Failed: expected `" v "` but got `" rv "`" ] .map ?to-string } 
+print "Basics"
+var 'a 100
+assert { x:: _+ 1 2 } 3
+assert { x:: _+ 1 2 , inc x } 4
+assert { x:: _+ 1 2 , _* x x } 9
+
+print "Op-words"
+'b .var 200
+assert { x:: 1 + 2 } 3
+assert { x:: 1 + 2 , inc x } 4
+assert { x:: 1 + 2 , x * x } 9
+
+print "Pipe-words"
+'c |var 200
+assert { x:: 1 |+ 2 } 3
+assert { x:: 1 |+ 2 , x |inc } 4
+assert { x:: 1 |+ 2 , x |* x } 9
+
+print "Stars"
+assert { "aaa" .concat "bbb" } "aaabbb"
+assert { "aaa" .concat* "bbb" } "bbbaaa"
+assert { "aaa" |concat* "bbb" } "bbbaaa"
+
+print "Mixes"
+assert {  1 * 3 |+ 2 * 4  } 11
+assert {  1 * 3 |+ 2 * 4 .inc  } 13
+assert {  1 * 3 |+ 2 * 4 |inc  } 12
+
+
+print "Kinds"
+k: kind 'person { name: required }
+assert { _>> dict { name "Jim" } k :pp |kind? |to-string } "person"
+; enter-console ""
+method 'person 'Hi fn1 { -> 'name |concat* "Hi " }
+assert { pp .Hi } "Hi Jim"
+assert { Hi pp } "Hi Jim"
+assert { pp |Hi } "Hi Jim"
+
+print "Kinds and methods"
+method 'person 'Is-same-name fn { a b } { ( a -> 'name ) = 'name <- probe probe b }
+; parser BUG dict { name "Jon" } |>> k :pp2
+_>> dict { name "Jon" } k :pp2
+_>> dict { name "Jim" } k :pp3
+assert { pp .Is-same-name pp2 |probe |to-string } "false"
+assert { pp .Is-same-name pp3 |probe |to-string } "true"
+print "_____>>>"
+; BUG
+assert { pp .Is-same-name* pp2 |probe |to-string } "false" ; bug returns probe as second arg
+; BUG
+assert { pp .Is-same-name* pp3 |probe |to-string } "true"  ; bug returns probe as second arg
+
+print "Returning words"
+ff: fn { a } { ^if a = 2 { 5 } }
+assert { ff 3 } 0
+assert { ff 2 } 5
+assert { apply ?ff { 2 } } 5
+
+ff0: fn { a } { 3 + 2 :x ^if a { x + 1 } x }
+assert { ff0 true } 6
+
+assert { ff0 false } 5
+
+print "Failure handling"
+assert { 1 / 0 |check { 101 } |status? } 101
+assert { 1 / 2 |check { 101 } } 0.5
+assert { 1 / 0 |fix { 101 } } 101
+assert { 1 / 2 |fix { 101 } } 0.5
+ff2: fn { a } { a / 0 }    ; OPEN QUESTION: should function be able to return an active failure?
+;   at first look it seems it should be able. Think of concrete cases
+;   but receiver should need to hadle it, not use it
+assert { try { ff2 10 } |type? } 'error
+
+ff3: fn { a } { 100 / a |^check "Input can't be zero" }    ; OPEN QUESTION: should function be able to return an active failure?
+assert { ff3 5 } 20.0
+; assert { ff3 0 |fix { 123 } } ""                         ; TODO -- function should be able to return and reraile a failure
+; assert { ff3 0 |disarm |message? } ""                    ; this probably also answers open question above
+
+ff4: fn { a } { if true { 100 / a |^check "Input can't be zero" :x } x }    ; OPEN QUESTION: should function be able to return an active failure?
+assert { ff4 4 } 25.0
+; assert { ff4 0 } 24                                      ; TODO -- same as above
+
+
+print ""
+
+
+
+print "OK"
