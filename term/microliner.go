@@ -598,6 +598,7 @@ type MLState struct {
 	currline         int                                                            // Current line in multiline mode
 	programState     *env.ProgramState                                              // For environment access during tab completion
 	displayValue     func(*env.ProgramState, env.Object, bool) (env.Object, string) // Callback for displaying values
+	onValueSelected  func(env.Object)                                               // Callback when user selects a value via Ctrl+x
 	inTabCompletion  bool                                                           // Flag to track if we're in tab completion mode
 	suggestionSpace  int                                                            // Number of lines reserved for suggestions (0 = none reserved)
 	ctrlSMode        int                                                            // Ctrl+S cycles through modes: 1=context, 2=generics (0 is Tab-only)
@@ -633,6 +634,11 @@ func (s *MLState) SetProgramState(ps *env.ProgramState) {
 // SetDisplayValueFunc sets the callback function used to display values
 func (s *MLState) SetDisplayValueFunc(fn func(*env.ProgramState, env.Object, bool) (env.Object, string)) {
 	s.displayValue = fn
+}
+
+// SetOnValueSelectedFunc sets the callback function called when user selects a value via Ctrl+x
+func (s *MLState) SetOnValueSelectedFunc(fn func(env.Object)) {
+	s.onValueSelected = fn
 }
 
 func (s *MLState) getColumns() bool {
@@ -1421,19 +1427,13 @@ startOfHere:
 						// Call displayValue with interactive=true to show the interactive display
 						returnedObj, _ := s.displayValue(s.programState, s.programState.Res, true)
 
-						// If a selection was made (not escaped), insert it into the current line
+						// If a selection was made (not escaped), update the result
 						if returnedObj != nil {
-							// Convert the returned object to its string representation
-							//objStr := returnedObj.Print(*s.programState.Idx)
-
-							// Insert the selected value at the current cursor position
-							/* objRunes := []rune(objStr)
-							line = append(line[:pos], append(objRunes, line[pos:]...)...)
-							pos += len(objRunes)
-							s.needRefresh = true */
 							s.programState.Res = returnedObj
-							//fmt.Println(returnedObj.Inspect(*s.programState.Idx))
-							fmt.Println(&s.programState)
+							// Notify the REPL about the selection so it can update prevResult
+							if s.onValueSelected != nil {
+								s.onValueSelected(returnedObj)
+							}
 							p := ""
 							if env.IsPointer(s.programState.Res) {
 								p = "Ref"
@@ -1697,7 +1697,13 @@ startOfHere:
 						s.needRefresh = true
 					}
 				case 9: // Tab completion
-					line, pos, next, _ = s.tabComplete(p, line, pos, 0)
+					// If line is empty, start in mode 0 (context only - local words)
+					// If line has text, start in mode 1 (global index - all words)
+					tabMode := 1
+					if len(line) == 0 {
+						tabMode = 0
+					}
+					line, pos, next, _ = s.tabComplete(p, line, pos, tabMode)
 					goto haveNext
 				case 46: // Del
 					if pos >= len(line) {

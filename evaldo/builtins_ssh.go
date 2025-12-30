@@ -59,7 +59,7 @@ var Builtins_ssh = map[string]*env.Builtin{
 						ps.ReturnFlag = false
 						psTemp := env.ProgramState{}
 						copier.Copy(&psTemp, &ps)
-						CallFunction(handler, ps, *env.NewNative(ps.Idx, s, "ssh-session"), false, nil)
+						CallFunctionWithArgs(handler, ps, nil, *env.NewNative(ps.Idx, s, "ssh-session"))
 					})
 					return arg0
 				default:
@@ -94,8 +94,8 @@ var Builtins_ssh = map[string]*env.Builtin{
 						ps.ReturnFlag = false
 						psTemp := env.ProgramState{}
 						copier.Copy(&psTemp, &ps)
-						newPs := CallFunction(handler, ps, *env.NewString(pass), false, nil)
-						return util.IsTruthy(newPs.Res)
+						CallFunctionWithArgs(handler, ps, nil, *env.NewString(pass))
+						return util.IsTruthy(ps.Res)
 					})
 					server.Value.(*ssh.Server).SetOption(pwda)
 					return arg0

@@ -575,6 +575,9 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 	r.ml = ml
 	ml.SetProgramState(es)
 	ml.SetDisplayValueFunc(displayRyeValue)
+	ml.SetOnValueSelectedFunc(func(obj env.Object) {
+		r.prevResult = obj // Update prevResult when user selects a value via Ctrl+x
+	})
 
 	// Improved error handling for history file operations
 	f, err := os.Open(history_fn)

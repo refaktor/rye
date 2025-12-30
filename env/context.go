@@ -866,7 +866,7 @@ func (ps *ProgramState) ContextStackSize() int {
 
 func AddToProgramState(ps *ProgramState, ser TSeries, idx *Idxs) *ProgramState {
 	ps.Ser = ser
-	ps.Res = nil
+	// ps.Res = nil
 	ps.Idx = idx
 	//ps.Env
 	return ps
@@ -874,7 +874,7 @@ func AddToProgramState(ps *ProgramState, ser TSeries, idx *Idxs) *ProgramState {
 
 func AddToProgramStateNEWWithLocation(ps *ProgramState, block Block, idx *Idxs) *ProgramState {
 	ps.Ser = block.Series
-	ps.Res = nil
+	// ps.Res = nil
 	ps.Idx = idx
 	ps.BlockFile = block.FileName
 	ps.BlockLine = block.Line
