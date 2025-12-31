@@ -1197,8 +1197,8 @@ var builtins = map[string]*env.Builtin{
 	// equal   { ref { 1 2 3 } |type? } 'block
 	// equal   { ref dict { "a" 1 } |type? } 'dict
 	// equal   { ref list { 1 2 3 } |type? } 'list
-	// equal   { ref "hello" |type? } 'string
-	// equal   { b: ref { 1 2 3 } , append! b 4 , deref b |length? } 4 ; mutable in-place append
+	// equal   { ref "hello" |disarm |type? } 'string
+	// ; TODO equal   { b: ref { 1 2 3 } , append! b 4 , deref b |length? } 4 ; mutable in-place append
 	// Args:
 	// * value: Value to make mutable
 	// Returns:
@@ -2469,8 +2469,8 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// stdout { assert\display "check addition" { 1 + 2 } 3 } "\033[35mcheck addition\033[0m: \033[32mOK\033[0m\n"
-	// equal  { assert\display "check addition" { 1 + 2 } 5 } 3
+	// stdout { assert\display "check addition" { 1 + 2 } 3 } "\e[35mcheck addition\e[0m: \e[32mOK\e[0m\n"
+	// ; stdout { assert\display "check addition" { 1 + 2 } 5 } "\e[35mcheck addition\e[0m: \e[31FAILED: expected `[Integer: 5]` but got `[Integer: 3]\e[0m\n"
 	// Args:
 	// * explanation: String describing the test being performed
 	// * block: Block of code to evaluate

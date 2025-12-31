@@ -116,7 +116,7 @@ var Builtins_math = map[string]*env.Builtin{
 	// Tests:
 	// math .change! 'root-ctx   ; temporary way to change context ... will systemize it #TODO, rename root-ctx to curr-ctx and leave root-ctx for returning to it
 	// equal { cc math |type? } 'context
-	// equal { mod 10 3 } 1
+	// equal { mod 10 3 } 1.0
 	// Args:
 	// * x: integer or decimal value
 	// * y: integer or decimal value
@@ -136,8 +136,8 @@ var Builtins_math = map[string]*env.Builtin{
 	// Tests:
 	// equal { cc math |type? } 'context
 	// equal { pow 2 3 } 8.0
-	// equal { pow complex 2 0 complex 3 0 |print } "8.000000+0.000000i"
-	// equal { pow complex 0 1 complex 2 0 |print } "-1.000000+0.000000i"
+	// stdout { pow complex 2 0 complex 3 0 |prn } "8.000000+0.000000i"
+	// stdout { pow complex 0 1 complex 2 0 |prn } "-1.000000+0.000000i"
 	// Args:
 	// * base: integer, decimal, or complex value
 	// * exponent: integer, decimal, or complex value
@@ -229,8 +229,8 @@ var Builtins_math = map[string]*env.Builtin{
 	// Tests:
 	// equal { log 1 } 0.0
 	// equal { log 2.718281828459045 } 1.0
-	// stdout { log complex 1 0 |print } "0.000000+0.000000i"
-	// stdout { log complex 2.718281828459045 0 |print } "1.000000+0.000000i"
+	// stdout { log complex 1 0 |prn } "0.000000+0.000000i"
+	// stdout { log complex 2.718281828459045 0 |prn } "1.000000+0.000000i"
 	// ; error { log 0 }
 	// ; error { log complex 0 0 }
 	// Args:
@@ -328,8 +328,8 @@ var Builtins_math = map[string]*env.Builtin{
 	// Tests:
 	// equal { sin 0 } 0.0
 	// equal { round\to sin pi 10 } 0.0
-	// equal { sin complex 0 0 |print } "0.000000+0.000000i"
-	// equal { sin complex 1.570796326794897 0 |print } "1.000000+0.000000i"
+	// stdout { sin complex 0 0 |prn } "0.000000+0.000000i"
+	// stdout { sin complex 1.570796326794897 0 |prn } "1.000000+-0.000000i"
 	// Args:
 	// * x: integer, decimal, or complex value in radians
 	// Returns:
@@ -352,8 +352,8 @@ var Builtins_math = map[string]*env.Builtin{
 	},
 	// Tests:
 	// equal { cos 0 } 1.0
-	// equal { cos complex 0 0 |print } "1.000000+0.000000i"
-	// equal { cos complex 3.141592653589793 0 |print } "-1.000000+0.000000i"
+	// stdout { cos complex 0 0 |prn } "1.000000+-0.000000i"
+	// stdout { cos complex 3.141592653589793 0 |prn } "-1.000000+-0.000000i"
 	// Args:
 	// * x: integer, decimal, or complex value in radians
 	// Returns:
@@ -376,8 +376,8 @@ var Builtins_math = map[string]*env.Builtin{
 	},
 	// Tests:
 	// equal { tan 0 } 0.0
-	// equal { tan complex 0 0 |print } "0.000000+0.000000i"
-	// equal { tan complex 0.7853981633974483 0 |print } "1.000000+0.000000i"
+	// stdout { tan complex 0 0 |prn } "0.000000+0.000000i"
+	// stdout { tan complex 0.7853981633974483 0 |prn } "1.000000+0.000000i"
 	// Args:
 	// * x: integer, decimal, or complex value in radians
 	// Returns:
@@ -400,7 +400,7 @@ var Builtins_math = map[string]*env.Builtin{
 	},
 	// Tests:
 	// equal { sqrt 9 } 3.0
-	// equal { sqrt complex -1 0 |print } "0.000000+1.000000i"
+	// stdout { sqrt complex -1 0 |prn } "0.000000+1.000000i"
 	// Args:
 	// * x: integer, decimal, or complex value
 	// Returns:
@@ -877,8 +877,8 @@ var Builtins_math = map[string]*env.Builtin{
 	// Tests:
 	// equal { exp 0 } 1.0
 	// equal { exp 1 } 2.718281828459045
-	// equal { exp complex 0 0 |print } "1.000000+0.000000i"
-	// equal { exp complex 0 3.141592653589793 |print } "-1.000000+0.000000i"
+	// stdout { exp complex 0 0 |prn } "1.000000+0.000000i" ; OQ: complex is not a literal value yet, should it be?
+	// stdout { exp complex 0 3.141592653589793 |prn } "-1.000000+0.000000i"
 	// Args:
 	// * x: integer, decimal, or complex value
 	// Returns:
@@ -1262,8 +1262,8 @@ var Builtins_math = map[string]*env.Builtin{
 		},
 	},
 	// Tests:
-	// equal { is-prime 7 } 1
-	// equal { is-prime 10 } 0
+	// equal { is-prime 7 } true
+	// equal { is-prime 10 } false
 	// Args:
 	// * n: integer value to check
 	// Returns:

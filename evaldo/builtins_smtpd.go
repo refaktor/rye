@@ -21,8 +21,8 @@ var Builtins_smtpd = map[string]*env.Builtin{
 	//
 
 	// Tests:
-	// equal { smtp-server |type? } 'native
-	// error { smtp-server 2525 }
+	// equal { smtp-server 2525 |type? } 'native
+	// equal { smtp-server ":2525" |kind? } 'smtpd
 	// Args:
 	// * address: String containing the server address (e.g., ":2525", "localhost:587")
 	// Returns:

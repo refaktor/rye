@@ -355,8 +355,8 @@ section "Default" "" {
 	}
 
 	{
-		equal { smtp-server |type? } 'native
-		error { smtp-server 2525 }
+		equal { smtp-server 2525 |type? } 'native
+		equal { smtp-server ":2525" |kind? } 'smtpd
 	}
 
 	{

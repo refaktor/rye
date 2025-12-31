@@ -141,6 +141,34 @@ section "File Operations " "File system operations and file manipulation" {
 	{
 ``	}
 
+	group "file-uri//Does-exist" 
+	"Checks if a file exists."
+	{
+		arg `path: uri representing a file path`
+		returns `boolean indicating whether the file exists`
+	}
+
+	{
+		equal { Does-exist %data/file.txt } true
+		equal { Does-exist %data/nonexistent.txt } false
+	}
+
+	{
+``	}
+
+	group "file-uri//Delete" 
+	"Deletes a file."
+	{
+		arg `path: uri representing a file path to delete`
+		returns `true if the file was successfully deleted`
+	}
+
+	{
+	}
+
+	{
+``	}
+
 	group "file//Reader" 
 	"Creates a new reader from file object."
 	{

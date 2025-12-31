@@ -1383,6 +1383,7 @@ func (p *NoPEGParser) parseToken() (env.Object, error) {
 		str = strings.Replace(str, "\\n", "\n", -1)
 		str = strings.Replace(str, "\\r", "\r", -1)
 		str = strings.Replace(str, "\\t", "\t", -1)
+		str = strings.Replace(str, "\\e", "\x1b", -1)
 		str = strings.Replace(str, "\\\\", "\\", -1)
 		str = strings.Replace(str, "\\\"", "\"", -1)
 		// str = strings.Replace(str, "\\\\", "\\", -1)
