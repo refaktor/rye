@@ -703,7 +703,7 @@ var Builtins_validation = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { validate>ctx dict { a: 1 } { a: required } |type? } 'ctx    ; TODO rename to context
+	// equal { validate>ctx dict { a: 1 } { a: required } |type? } 'context
 	// equal { validate>ctx dict { a: 1 } { a: optional 0 } -> 'a } 1
 	// Args:
 	// * data: Dictionary to validate

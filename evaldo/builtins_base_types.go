@@ -168,7 +168,7 @@ var builtins_types = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal   { dict [ "a" 1 "b" 2 "c" 3 ] |to-context |type? } 'ctx   ; TODO - rename ctx to context in Rye
+	// equal   { dict [ "a" 1 "b" 2 "c" 3 ] |to-context |type? } 'context
 	// ; equal   { dict [ "a" 1 ] |to-context do\in { a } } '1
 	// Args:
 	// * dict: Dict value to convert to a context
@@ -443,7 +443,7 @@ var builtins_types = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal   { person: kind 'person { name: "" age: 0 } assure-kind dict { "name" "John" "age" 30 } person |type? } 'ctx
+	// equal   { person: kind 'person { name: "" age: 0 } assure-kind dict { "name" "John" "age" 30 } person |type? } 'context
 	// Args:
 	// * value: Dict to convert to a specific kind
 	// * kind: Kind to convert the value to

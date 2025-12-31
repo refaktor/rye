@@ -52,7 +52,7 @@ func matchValue(ps *env.ProgramState, value env.Object, pattern env.Object, mmod
 		}
 
 		if j == valueBlock.Series.Len() || mmode.tailMode == 1 {
-			return *env.NewInteger(1), mmode
+			return *env.NewBoolean(true), mmode
 		} else {
 			return makeError(ps, "Pattern too short for data"), mmode
 		}
@@ -118,7 +118,7 @@ func matchValue(ps *env.ProgramState, value env.Object, pattern env.Object, mmod
 	}
 
 	// Return success
-	return *env.NewInteger(1), mmode
+	return *env.NewBoolean(true), mmode
 }
 
 // matchBlock is a helper function that matches a block against a pattern

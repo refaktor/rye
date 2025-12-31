@@ -1697,7 +1697,7 @@ section "Collections " "" {
 		equal { { 1 2 3 } |sum\by { * 2 } } 12
 		equal { { "a" "abc" "ab" } |sum\by { .length? } } 6
 		equal { { 1.5 2.5 3.5 } |sum\by { * 2 } } 15.0
-		equal { list { 1 2 3 4 } |sum\by { + 10 } } 54
+		equal { list { 1 2 3 4 } |sum\by { + 10 } } 50
 	}
 
 	{
@@ -2666,7 +2666,7 @@ section "Types and Kinds " "" {
 	}
 
 	{
-		equal   { dict [ "a" 1 "b" 2 "c" 3 ] |to-context |type? } 'ctx   ; TODO - rename ctx to context in Rye
+		equal   { dict [ "a" 1 "b" 2 "c" 3 ] |to-context |type? } 'context
 		; equal   { dict [ "a" 1 ] |to-context do\in { a } } '1
 	}
 
@@ -2851,7 +2851,7 @@ section "Types and Kinds " "" {
 	}
 
 	{
-		equal   { person: kind 'person { name: "" age: 0 } assure-kind dict { "name" "John" "age" 30 } person |type? } 'ctx
+		equal   { person: kind 'person { name: "" age: 0 } assure-kind dict { "name" "John" "age" 30 } person |type? } 'context
 	}
 
 	{
@@ -3186,7 +3186,7 @@ section "Flow control " "Functions for conditional execution and branching logic
 
 	{
 		equal  { x: does { ^if true { 222 } 555 } x } 222
-		equal  { x: does { ^if false { 333 } 444 } x } 333
+		equal  { x: does { ^if false { 333 } 444 } x } 444
 	}
 
 	{
@@ -4129,6 +4129,11 @@ section "Other " "..." {
 
 	{
 		equal   { is-ref ref { 1 2 3 } } true
+		equal   { ref { 1 2 3 } |type? } 'block
+		equal   { ref dict { "a" 1 } |type? } 'dict
+		equal   { ref list { 1 2 3 } |type? } 'list
+		equal   { ref "hello" |disarm |type? } 'string
+		; TODO equal   { b: ref { 1 2 3 } , append! b 4 , deref b |length? } 4 ; mutable in-place append
 	}
 
 	{
@@ -4143,6 +4148,10 @@ section "Other " "..." {
 
 	{
 		equal   { is-ref deref ref { 1 2 3 } } false
+		equal   { deref ref { 1 2 3 } } { 1 2 3 }
+		equal   { deref ref "hello" } "hello"
+		equal   { deref ref list { 1 2 3 } |length? } 3
+		equal   { ref dict { "a" 1 } |deref |type? } 'dict
 	}
 
 	{
@@ -4158,6 +4167,10 @@ section "Other " "..." {
 	{
 		equal  { ref { } |is-ref } true
 		equal  { { } |is-ref } false
+		equal  { ref "hello" |is-ref } true
+		equal  { "hello" |is-ref } false
+		equal  { ref list { 1 2 3 } |is-ref } true
+		equal  { 123 |is-ref } false
 	}
 
 	{
@@ -4172,6 +4185,12 @@ section "Other " "..." {
 
 	{
 		equal { dict { "a" 123 } -> "a" } 123
+		equal { dict { "name" "John" "age" 30 } -> "name" } "John"
+		equal { dict { } |type? } 'dict
+		equal { dict { "x" 1 "y" 2 "z" 3 } |length? } 3
+		error { dict { 123 "value" } } ; integer keys should fail
+		error { dict { { } "value" } } ; block keys should fail
+		equal { dict { 'key "value" } -> "key" } "value" ; tagwords as keys
 	}
 
 	{
@@ -4186,6 +4205,12 @@ section "Other " "..." {
 
 	{
 		equal { list { "a" 123 } -> 0 } "a"
+		equal { list { 1 2 3 } |length? } 3
+		equal { list { } |length? } 0
+		equal { list { "hello" "world" } -> 1 } "world"
+		equal { list { 1 2 3 } |type? } 'list
+		equal { list { 1 2 3 } |first } 1
+		equal { list { 1 2 3 } |last } 3
 	}
 
 	{
@@ -4457,6 +4482,40 @@ section "Other " "..." {
 	{
 		equal { x:: 0 defer\ 42 { + 1 } x } 0
 		stdout { ff:: fn { } { defer\ "hello" { .print } "done" } , ff } "hello\n"
+	}
+
+	{
+``	}
+
+	group "assert" 
+	"Evaluates a block of code and asserts that its result equals the expected value. Returns the result if assertion passes, fails with error message if not."
+	{
+		arg `block: Block of code to evaluate`
+		arg `expected: Expected result value`
+		returns `The result value if assertion passes, error if it fails`
+	}
+
+	{
+		equal  { assert { 1 + 2 } 3 } 3
+		equal  { assert { "hello" } "hello" } "hello"
+		error  { assert { 1 + 2 } 5 }
+	}
+
+	{
+``	}
+
+	group "assert\\display" 
+	"Evaluates a block of code and displays the result. Prints the explanation in magenta followed by OK in green on success, or error message in red on failure. Does not fail - continues evaluation."
+	{
+		arg `explanation: String describing the test being performed`
+		arg `block: Block of code to evaluate`
+		arg `expected: Expected result value`
+		returns `The result value (displays status but continues evaluation even on failure)`
+	}
+
+	{
+		stdout { assert\display "check addition" { 1 + 2 } 3 } "\e[35mcheck addition\e[0m: \e[32mOK\e[0m\n"
+		; stdout { assert\display "check addition" { 1 + 2 } 5 } "\e[35mcheck addition\e[0m: \e[31FAILED: expected `[Integer: 5]` but got `[Integer: 3]\e[0m\n"
 	}
 
 	{

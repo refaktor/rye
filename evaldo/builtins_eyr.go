@@ -410,7 +410,7 @@ var Builtins_eyr = map[string]*env.Builtin{
 	// equal { eyr { 5 3 - } } 2
 	// equal { eyr { 4 2 * } } 8
 	// equal { eyr { 6 2 / } } 3.0
-	// equal { eyr { 10 3 mod } } 1
+	// equal { eyr { 10 3 mod } } 1.0
 	// equal { eyr { 1 2 3 } } 3
 	// Args:
 	// * block: Block of code to evaluate in EYR (postfix) mode
@@ -499,9 +499,25 @@ var Builtins_eyr = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { eyr\full { 1 2 3 } |length? } 3
-	// equal { eyr\full { 1 2 + 3 4 + } |length? } 2
-	// equal { eyr\full { 10 5 - } |first } 5
+	// equal { eyr { 1 2 3 eyr\clear } } false
+	// equal { eyr { 1 2 eyr\clear 3 } } 3
+	// Args:
+	// * none
+	// Returns:
+	// * void
+	"eyr\\clear": {
+		Argsn: 0,
+		Doc:   "Clears the EYR stack.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			ps.ResetStack()
+			return env.NewBoolean(false)
+		},
+	},
+
+	// Tests:
+	// equal { eyr\clear eyr\full { 1 2 3 } |length? } 3
+	// equal { eyr\clear eyr\full { 1 2 + 3 4 + } |length? } 2
+	// equal { eyr\clear eyr\full { 10 5 - } |first } 5
 	// Args:
 	// * block: Block of code to evaluate in EYR mode returning full stack as block
 	// Returns:

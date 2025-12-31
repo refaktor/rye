@@ -141,7 +141,7 @@ var builtins_conditionals = map[string]*env.Builtin{
 
 	// Tests:
 	// equal  { x: does { ^if true { 222 } 555 } x } 222
-	// equal  { x: does { ^if false { 333 } 444 } x } 333
+	// equal  { x: does { ^if false { 333 } 444 } x } 444
 	// Args:
 	// * condition: Value to evaluate for truthiness
 	// * block: Block of code to execute and return from if condition is truthy

@@ -10,7 +10,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	{
 		math .change! 'root-ctx   ; temporary way to change context ... will systemize it #TODO, rename root-ctx to curr-ctx and leave root-ctx for returning to it
 		equal { cc math |type? } 'context
-		equal { mod 10 3 } 1
+		equal { mod 10 3 } 1.0
 	}
 
 	{
@@ -27,8 +27,8 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	{
 		equal { cc math |type? } 'context
 		equal { pow 2 3 } 8.0
-		equal { pow complex 2 0 complex 3 0 |print } "8.000000+0.000000i"
-		equal { pow complex 0 1 complex 2 0 |print } "-1.000000+0.000000i"
+		stdout { pow complex 2 0 complex 3 0 |prn } "8.000000+0.000000i"
+		stdout { pow complex 0 1 complex 2 0 |prn } "-1.000000+0.000000i"
 	}
 
 	{
@@ -72,8 +72,8 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	{
 		equal { log 1 } 0.0
 		equal { log 2.718281828459045 } 1.0
-		stdout { log complex 1 0 |print } "0.000000+0.000000i"
-		stdout { log complex 2.718281828459045 0 |print } "1.000000+0.000000i"
+		stdout { log complex 1 0 |prn } "0.000000+0.000000i"
+		stdout { log complex 2.718281828459045 0 |prn } "1.000000+0.000000i"
 		; error { log 0 }
 		; error { log complex 0 0 }
 	}
@@ -133,8 +133,8 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	{
 		equal { sin 0 } 0.0
 		equal { round\to sin pi 10 } 0.0
-		equal { sin complex 0 0 |print } "0.000000+0.000000i"
-		equal { sin complex 1.570796326794897 0 |print } "1.000000+0.000000i"
+		stdout { sin complex 0 0 |prn } "0.000000+0.000000i"
+		stdout { sin complex 1.570796326794897 0 |prn } "1.000000+-0.000000i"
 	}
 
 	{
@@ -149,8 +149,8 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 
 	{
 		equal { cos 0 } 1.0
-		equal { cos complex 0 0 |print } "1.000000+0.000000i"
-		equal { cos complex 3.141592653589793 0 |print } "-1.000000+0.000000i"
+		stdout { cos complex 0 0 |prn } "1.000000+-0.000000i"
+		stdout { cos complex 3.141592653589793 0 |prn } "-1.000000+-0.000000i"
 	}
 
 	{
@@ -165,8 +165,8 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 
 	{
 		equal { tan 0 } 0.0
-		equal { tan complex 0 0 |print } "0.000000+0.000000i"
-		equal { tan complex 0.7853981633974483 0 |print } "1.000000+0.000000i"
+		stdout { tan complex 0 0 |prn } "0.000000+0.000000i"
+		stdout { tan complex 0.7853981633974483 0 |prn } "1.000000+0.000000i"
 	}
 
 	{
@@ -181,7 +181,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 
 	{
 		equal { sqrt 9 } 3.0
-		equal { sqrt complex -1 0 |print } "0.000000+1.000000i"
+		stdout { sqrt complex -1 0 |prn } "0.000000+1.000000i"
 	}
 
 	{
@@ -472,8 +472,8 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	{
 		equal { exp 0 } 1.0
 		equal { exp 1 } 2.718281828459045
-		equal { exp complex 0 0 |print } "1.000000+0.000000i"
-		equal { exp complex 0 3.141592653589793 |print } "-1.000000+0.000000i"
+		stdout { exp complex 0 0 |prn } "1.000000+0.000000i" ; OQ: complex is not a literal value yet, should it be?
+		stdout { exp complex 0 3.141592653589793 |prn } "-1.000000+0.000000i"
 	}
 
 	{
@@ -690,8 +690,8 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-		equal { is-prime 7 } 1
-		equal { is-prime 10 } 0
+		equal { is-prime 7 } true
+		equal { is-prime 10 } false
 	}
 
 	{
@@ -754,6 +754,24 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	{
 ``	}
 
+	group "outer-product" 
+	"Computes the outer product of two vectors (blocks), returning a matrix (block of blocks) where each element [i,j] = a[i] * b[j]. Similar to numpy.outer()."
+	{
+		arg `a: block of integers or decimals (first vector)`
+		arg `b: block of integers or decimals (second vector)`
+		returns `block of blocks (matrix) where element [i,j] = a[i] * b[j], similar to numpy.outer()`
+	}
+
+	{
+		equal { outer-product { 1 2 3 } { 10 20 } } { { 10 20 } { 20 40 } { 30 60 } }
+		equal { outer-product { 1 2 } { 1 2 3 } } { { 1 2 3 } { 2 4 6 } }
+		equal { outer-product { 2.0 3.0 } { 4.0 5.0 } } { { 8.0 10.0 } { 12.0 15.0 } }
+		equal { outer-product { } { 1 2 } } { }
+	}
+
+	{
+``	}
+
 }
 
 section "Validation dialect " "validation dialect for Rye values" {
@@ -780,7 +798,7 @@ section "Validation dialect " "validation dialect for Rye values" {
 	}
 
 	{
-		equal { validate>ctx dict { a: 1 } { a: required } |type? } 'ctx    ; TODO rename to context
+		equal { validate>ctx dict { a: 1 } { a: required } |type? } 'context
 		equal { validate>ctx dict { a: 1 } { a: optional 0 } -> 'a } 1
 	}
 
@@ -920,7 +938,7 @@ section "EYR Dialect " "Stack based evaluator / dialect" {
 		equal { eyr { 5 3 - } } 2
 		equal { eyr { 4 2 * } } 8
 		equal { eyr { 6 2 / } } 3.0
-		equal { eyr { 10 3 mod } } 1
+		equal { eyr { 10 3 mod } } 1.0
 		equal { eyr { 1 2 3 } } 3
 	}
 
@@ -959,6 +977,21 @@ section "EYR Dialect " "Stack based evaluator / dialect" {
 	{
 ``	}
 
+	group "eyr\\clear" 
+	"Clears the EYR stack."
+	{
+		arg `none`
+		returns `void`
+	}
+
+	{
+		equal { eyr { 1 2 3 eyr\clear } } false
+		equal { eyr { 1 2 eyr\clear 3 } } 3
+	}
+
+	{
+``	}
+
 	group "eyr\\full" 
 	"Evaluates Rye block as Eyr (postfix) stack based code."
 	{
@@ -967,9 +1000,9 @@ section "EYR Dialect " "Stack based evaluator / dialect" {
 	}
 
 	{
-		equal { eyr\full { 1 2 3 } |length? } 3
-		equal { eyr\full { 1 2 + 3 4 + } |length? } 2
-		equal { eyr\full { 10 5 - } |first } 5
+		equal { eyr\clear eyr\full { 1 2 3 } |length? } 3
+		equal { eyr\clear eyr\full { 1 2 + 3 4 + } |length? } 2
+		equal { eyr\clear eyr\full { 10 5 - } |first } 5
 	}
 
 	{

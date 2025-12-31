@@ -703,7 +703,7 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { { 1 2 3 } |sum\by { * 2 } } 12
 	// equal { { "a" "abc" "ab" } |sum\by { .length? } } 6
 	// equal { { 1.5 2.5 3.5 } |sum\by { * 2 } } 15.0
-	// equal { list { 1 2 3 4 } |sum\by { + 10 } } 54
+	// equal { list { 1 2 3 4 } |sum\by { + 10 } } 50
 	// Args:
 	// * collection: Block or list of values
 	// * code: Block of code to transform each value before summing
