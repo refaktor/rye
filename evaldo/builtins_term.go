@@ -720,6 +720,7 @@ var Builtins_term = map[string]*env.Builtin{
 
 					// Wait for the spinner to finish
 					<-spinnerDone
+					fmt.Println("")
 					return ps.Res
 				default:
 					return MakeArgError(ps, 1, []env.Type{env.StringType}, "spin-it")
