@@ -7,7 +7,7 @@ retract v0.0.11 // Published accidentally with a bug
 // replace github.com/refaktor/keyboard => ../keyboard
 
 require (
-	filippo.io/age v1.2.1
+	filippo.io/age v1.3.1
 	github.com/BrianLeishman/go-imap v0.1.20
 	github.com/JohannesKaufmann/html-to-markdown/v2 v2.5.0
 	github.com/PuerkitoBio/goquery v1.11.0
@@ -67,6 +67,7 @@ require (
 
 require (
 	dario.cat/mergo v1.0.1 // indirect
+	filippo.io/hpke v0.4.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/ProtonMail/go-crypto v1.3.0 // indirect
 	github.com/RoaringBitmap/roaring/v2 v2.4.5 // indirect
@@ -147,7 +148,6 @@ require (
 )
 
 require (
-	c2sp.org/CCTV/age v0.0.0-20250126162742-ac53b9fb362b // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/JohannesKaufmann/dom v0.2.0 // indirect
 	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
