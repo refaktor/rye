@@ -17,7 +17,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.95.0
 	github.com/aws/aws-sdk-go-v2/service/ses v1.34.17
 	github.com/bitfield/script v0.24.1
-	github.com/blevesearch/bleve/v2 v2.5.6
+	github.com/blevesearch/bleve/v2 v2.5.7
 	github.com/blevesearch/bleve_index_api v1.2.11
 	github.com/dgraph-io/badger/v4 v4.9.0
 	github.com/drewlanenga/govector v0.0.0-20220726163947-b958ac08bc93
@@ -182,7 +182,7 @@ require (
 	github.com/blevesearch/zapx/v13 v13.4.2 // indirect
 	github.com/blevesearch/zapx/v14 v14.4.2 // indirect
 	github.com/blevesearch/zapx/v15 v15.4.2 // indirect
-	github.com/blevesearch/zapx/v16 v16.2.7 // indirect
+	github.com/blevesearch/zapx/v16 v16.2.8 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/elastic/go-seccomp-bpf v1.6.0
