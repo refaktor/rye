@@ -24,7 +24,7 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.5.1
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/fxtlabs/primes v0.0.0-20150821004651-dad82d10a449
-	github.com/gdamore/tcell/v2 v2.13.1
+	github.com/gdamore/tcell/v2 v2.13.5
 	github.com/gin-gonic/gin v1.11.0
 	github.com/glebarez/sqlite v1.11.0
 	github.com/gliderlabs/ssh v0.3.8
