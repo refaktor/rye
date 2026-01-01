@@ -1,0 +1,26 @@
+; # Script that merges all dependabot PR-s
+
+tok: trim Read %.apitoken
+bot: "dependabot[bot]"
+repo: "refaktor/rye"
+url: https://api.github.com/repos/
+
+set-headers: fn { req } {
+	.Header! 'Authorization join [ "Bearer " tok ]
+	|Header! 'Accept "application/vnd.github+json"
+}
+
+do-merge: fn { num } {
+	Request ( url ++ repo ++ "/pulls/" ++ num ++ "/merge" ) 'PUT `{ "merge_method": "squash" }`
+	|set-headers |Call |Reader
+}
+
+Request ( url ++ repo ++ "/pulls?state=open" ) 'GET ""
+|set-headers
+|Call .Reader .Read\string .parse-json
+|filter { -> "user" -> "login" |= bot }
+|pass { .length? .embed "{} pull requests found" |print }
+|for { -> "number" ::num ,
+	term/spin-it "Merging " ++ num { do-merge num } 
+	term/spin-it "Sleeping for rebases to happen" { sleep 1 .minutes }
+}

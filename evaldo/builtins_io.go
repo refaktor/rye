@@ -1294,7 +1294,7 @@ var Builtins_io = map[string]*env.Builtin{
 
 	// Args:
 	// * url: uri representing the HTTPS URL to request
-	// * method: word specifying the HTTP method (e.g., 'GET', 'POST')
+	// * method: word specifying the HTTP method (e.g., 'GET', 'POST', 'PUT', 'DELETE')
 	// * data: string containing the request body
 	// Returns:
 	// * native https-request object
@@ -1307,7 +1307,7 @@ var Builtins_io = map[string]*env.Builtin{
 				switch method := arg1.(type) {
 				case env.Word:
 					method1 := ps.Idx.GetWord(method.Index)
-					if !(method1 == "GET" || method1 == "POST") {
+					if !(method1 == "GET" || method1 == "POST" || method1 == "PUT" || method1 == "DELETE") {
 						ps.FailureFlag = true
 						return MakeBuiltinError(ps, "Wrong method.", "https-uri//Request")
 					}

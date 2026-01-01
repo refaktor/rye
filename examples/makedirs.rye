@@ -1,0 +1,5 @@
+
+
+a:: split "one/two/three" "/"
+path:: ""
+walk a { ::b ( "/" ++ first b ) .append! 'path , os/mkdir to-uri path , b .rest }
