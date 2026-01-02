@@ -1,0 +1,46 @@
+; # Some basic table functions
+
+table { "name" "score" } { "Jim" 120  "Anne" 230 "Bob" 140 } :spr
+|display
+; | name   | score |
+; +----------------+
+; | "Jim"  | 120   |
+; | "Anne" | 230   |
+; | "Bob"  | 140   |
+
+spr .column? 'score |sum
+; [Integer: 490]
+
+spr .column? 'score |avg
+; [Decimal: 163.333333]
+
+spr .add-row { "Tia" 540 } :spr1 .display
+; | name   | score |
+; +----------------+
+; | "Jim"  | 120   |
+; | "Anne" | 230   |
+; | "Bob"  | 140   |
+; | "Tia"  | 540   |
+
+spr1 .gen-column 'level { score } { > 150 |either "Master" "Noob" } :spr2
+|display
+; | name   | score | level    |
+; +---------------------------+
+; | "Jim"  | 120   | "Noob"   |
+; | "Anne" | 230   | "Master" |
+; | "Bob"  | 140   | "Noob"   |
+; | "Tia"  | 540   | "Master" |
+
+spr2 .where-equal 'level "Noob" :spr3
+|display
+; | name | score | level |
+; +----------------------+
+; | "Jim"| 120   | "Noob"|
+; | "Bob"| 140   | "Noob"|
+
+spr3 .add-column 'world { "Mars" "Saturn" } :spr4
+|display
+; | name   | score | level    | world     |
+; +---------------------------------------+
+; | "Jim"  | 120   | "Noob"   | "Mars"    |
+; | "Bob"  | 140   | "Noob"   | "Saturn"  |
