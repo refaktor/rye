@@ -1,0 +1,33 @@
+; This script was used to generate and save a
+; table to gamers.bson
+
+; create a table with two rows
+
+gamers: table { "name" "gender" "scores" } 
+[ "Jim" "M" vector { 120 190  56 } 
+	"Ane" "F" vector { 140 165 154 } ]
+
+gamers .display
+
+; add a row
+
+with-scores: gamers .add-row [ "Bob" "M" vector { 86 110 } ]
+|gen-column 'avg-score { scores } { .avg }
+
+with-scores .display
+
+with-scores .to-json |Write* %gamers.json
+with-scores .to-bson |Write* %gamers.bson
+
+without-scores: drop-column with-scores { scores avg-score }
+|display
+
+without-scores .to-json |Write* %gamers-no-scores.json
+without-scores .to-bson |Write* %gamers-no-scores.bson
+
+without-avg-score: drop-column with-scores "avg-score"
+
+without-avg-score .display
+
+without-avg-score .to-json |Write* %gamers-no-avg-score.json
+without-avg-score .to-bson |Write* %gamers-no-avg-score.bson

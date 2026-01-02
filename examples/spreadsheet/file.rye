@@ -1,0 +1,32 @@
+var 'spr Load\csv file://data.csv
+
+spr:: spr .add-indexes! { Name }
+
+spr .where-equal 'Department "Marketing" |display
+
+; | ID | Name             | Department | Years at Company | DOB        |
+; +--------------------------------------------------------------------+
+; | 1  | John Doe         | Marketing  | 2                | 1985-01-01 |
+; | 6  | Mary Williams    | Marketing  | 4                | 1986-03-22 |
+; | 10 | Elizabeth Taylor | Marketing  | 3                | 1988-04-01 |
+
+; two examples of how to add add a new column based on a regular expression replace of an existing column
+; the first uses the more general .add-col! functionality,
+; the second uses the specific replace functionality and is faster
+r: regexp "(\d{4})-(\d{2})-(\d{2})"
+spr:: spr .gen-column 'DOB-SLO { DOB } { r .Replace-all DOB "$3.$2.$1" }
+spr:: spr .gen-column 'DOB-US 'DOB [ r "$2/$3/$1" ]
+spr .display
+
+; | ID | Name             | Department      | Years at Company | DOB        | DOB-SLO    | DOB-US     |
+; +---------------------------------------------------------------------------------------------------+
+; | 1  | John Doe         | Marketing       | 2                | 1985-01-01 | 01.01.1985 | 01/01/1985 |
+; | 2  | Jane Smith       | Engineering     | 5                | 1988-12-31 | 31.12.1988 | 12/31/1988 |
+; | 3  | Robert Johnson   | Human Resources | 1                | 1990-05-15 | 15.05.1990 | 05/15/1990 |
+; | 4  | Julia Davis      | Sales           | 3                | 1987-07-04 | 04.07.1987 | 07/04/1987 |
+; | 5  | James Brown      | Engineering     | 2                | 1989-11-11 | 11.11.1989 | 11/11/1989 |
+; | 6  | Mary Williams    | Marketing       | 4                | 1986-03-22 | 22.03.1986 | 03/22/1986 |
+; | 7  | Michael Miller   | Human Resources | 3                | 1987-09-30 | 30.09.1987 | 09/30/1987 |
+; | 8  | Linda Wilson     | Sales           | 1                | 1991-02-28 | 28.02.1991 | 02/28/1991 |
+; | 9  | William Moore    | Engineering     | 2                | 1989-10-10 | 10.10.1989 | 10/10/1989 |
+; | 10 | Elizabeth Taylor | Marketing       | 3                | 1988-04-01 | 01.04.1988 | 04/01/1988 |

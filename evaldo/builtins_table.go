@@ -712,10 +712,19 @@ var Builtins_table = map[string]*env.Builtin{
 					}
 					table.AddRow(*env.NewTableRow(vals, &table))
 					return table
+				case env.List:
+					vals := make([]any, len(bloc.Data))
+					for i, v := range bloc.Data {
+						vals[i] = env.ToRyeValue(v)
+					}
+					table.AddRow(*env.NewTableRow(vals, &table))
+					return table
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType, env.ListType}, "add-row")
 				}
-				return nil
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "add-row")
 			}
-			return nil
 		},
 	},
 
@@ -1139,14 +1148,14 @@ var Builtins_table = map[string]*env.Builtin{
 			return MakeArgError(ps, 1, []env.Type{env.TableType}, "rename-column")
 		},
 	},
-	// TODO: also create add-column\i 'name { +100 }   ( or  \idx \pos)
+	// TODO: also create gen-column\i 'name { +100 }   ( or  \idx \pos)
 	// Example: Add a column to a sheet
 	//  sheet: table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
-	//  sheet .add-column 'job_title { "Jantior" "Librarian" "Line Cook" } ;
+	//  sheet .gen-column 'job_title { "Jantior" "Librarian" "Line Cook" } ;
 	// Tests:
 	//  equal { table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
-	//  |add-column 'job { } { "Cook" } |column? "job" } { "Cook" "Cook" "Cook" }
-	"add-column": {
+	//  |gen-column 'job { } { "Cook" } |column? "job" } { "Cook" "Cook" "Cook" }
+	"gen-column": {
 		Argsn: 4,
 		Doc:   "Adds a new column to table. Changes in-place and returns the new table.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1160,25 +1169,25 @@ var Builtins_table = map[string]*env.Builtin{
 						case env.Block:
 							return GenerateColumn(ps, spr, newCol, fromCols, code)
 						default:
-							return MakeArgError(ps, 4, []env.Type{env.BlockType}, "add-column")
+							return MakeArgError(ps, 4, []env.Type{env.BlockType}, "gen-column")
 						}
 					case env.Word:
 						switch replaceBlock := arg3.(type) {
 						case env.Block:
 							if replaceBlock.Series.Len() != 2 {
-								return MakeBuiltinError(ps, "Replacement block must contain a regex object and replacement string.", "add-column")
+								return MakeBuiltinError(ps, "Replacement block must contain a regex object and replacement string.", "genadd-umn")
 							}
 							regexNative, ok := replaceBlock.Series.S[0].(env.Native)
 							if !ok {
-								return MakeBuiltinError(ps, "First element of replacement block must be a regex object.", "add-column")
+								return MakeBuiltinError(ps, "First element of replacement block must be a regex object.", "genaddumn")
 							}
 							regex, ok := regexNative.Value.(*regexp.Regexp)
 							if !ok {
-								return MakeBuiltinError(ps, "First element of replacement block must be a regex object.", "add-column")
+								return MakeBuiltinError(ps, "First element of replacement block must be a regex object.", "gen-column")
 							}
 							replaceStr, ok := replaceBlock.Series.S[1].(env.String)
 							if !ok {
-								return MakeBuiltinError(ps, "Second element of replacement block must be a string.", "add-column")
+								return MakeBuiltinError(ps, "Second element of replacement block must be a string.", "gen-column")
 							}
 							err := GenerateColumnRegexReplace(ps, &spr, newCol, fromCols, regex, replaceStr.Value)
 							if err != nil {
@@ -1186,13 +1195,73 @@ var Builtins_table = map[string]*env.Builtin{
 							}
 							return spr
 						default:
-							return MakeArgError(ps, 3, []env.Type{env.BlockType}, "add-column")
+							return MakeArgError(ps, 3, []env.Type{env.BlockType}, "gen-column")
 						}
 					default:
-						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "add-column")
+						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "gen-column")
 					}
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType}, "add-column")
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "gen-column")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "gen-column")
+			}
+		},
+	},
+
+	// Tests:
+	//  equal { table { "a" "b" } { 1 10 2 20 3 30 } |add-column 'c { 100 200 300 } |column? "c" } { 100 200 300 }
+	//  equal { table { "a" } { 1 2 3 } |add-column 'b list [ "x" "y" "z" ] |column? "b" } { "x" "y" "z" }
+	// Args:
+	// * table - the table to add a column to
+	// * column-name - name of the new column (word or string)
+	// * data - block or list containing values for the new column (must match number of rows)
+	// Tags: #table #column
+	"add-column": {
+		Argsn: 3,
+		Doc:   "Adds a new column to table with the given data. Returns the modified table.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch spr := arg0.(type) {
+			case env.Table:
+				var colName string
+				switch col := arg1.(type) {
+				case env.Word:
+					colName = ps.Idx.GetWord(col.Index)
+				case env.String:
+					colName = col.Value
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "add-column")
+				}
+
+				numRows := len(spr.Rows)
+
+				switch data := arg2.(type) {
+				case env.Block:
+					if data.Series.Len() != numRows {
+						return MakeBuiltinError(ps, fmt.Sprintf("Column data has %d values but table has %d rows", data.Series.Len(), numRows), "add-mn")
+					}
+					// Add column name
+					spr.Cols = append(spr.Cols, colName)
+					// Add values to each row
+					for i, row := range spr.Rows {
+						row.Values = append(row.Values, data.Series.S[i])
+						spr.Rows[i] = row
+					}
+					return spr
+				case env.List:
+					if len(data.Data) != numRows {
+						return MakeBuiltinError(ps, fmt.Sprintf("Column data has %d values but table has %d rows", len(data.Data), numRows), "add-column")
+					}
+					// Add column name
+					spr.Cols = append(spr.Cols, colName)
+					// Add values to each row
+					for i, row := range spr.Rows {
+						row.Values = append(row.Values, env.ToRyeValue(data.Data[i]))
+						spr.Rows[i] = row
+					}
+					return spr
+				default:
+					return MakeArgError(ps, 3, []env.Type{env.BlockType, env.ListType}, "add-column")
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.TableType}, "add-column")
@@ -2550,7 +2619,7 @@ func GenerateColumn(ps *env.ProgramState, s env.Table, name env.Word, extractCol
 				}
 				// fmt.Println(val)
 				if er != nil {
-					return MakeBuiltinError(ps, er.Error(), "add-column!")
+					return MakeBuiltinError(ps, er.Error(), "gen-column")
 				}
 				if firstVal == nil {
 					var ok bool

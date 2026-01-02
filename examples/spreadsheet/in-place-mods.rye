@@ -1,0 +1,19 @@
+; Create a table
+
+deliveries: ref table { "street" "city" "zip" "contents" } 
+[
+	"Maple" "Onowa" "55555" "A bottle of Maple Syrup"
+	"Oak" "Springfield" "11111" "A donut-shaped stuffed animal"
+	"Acorn" "Springfield" "11112" "A handheld fan"
+	"Birch" "Springfield" "11112" "A laptop"
+]
+
+deliveries .to-json |print
+
+deliveries |add-rows! [ "Vega" "Bayton" "12345" "A Nova" ]
+
+deliveries .to-json |print
+
+deliveries |remove-row! 1
+
+deliveries .to-json |print
