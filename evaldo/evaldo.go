@@ -969,11 +969,20 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 	} else {
 		EvalBlock(ps)
 	}
+	// Handle failure based on ReturnFlag:
+	// - If ReturnFlag is set (via ^fail or return), propagate failure to caller
+	// - If ReturnFlag is NOT set, failure happened but wasn't explicitly returned, convert to error
+	if ps.FailureFlag && !ps.ReturnFlag && !ps.ErrorFlag {
+		// Failure without explicit return - convert to error
+		ps.ErrorFlag = true
+	}
 	MaybeDisplayFailureOrError(ps, ps.Idx, "Call func collect args")
 	if ps.ErrorFlag || ps.FailureFlag {
 		ps.Ctx = env0
 		ps.Ser = ser0
-		// Don't restore state on error - let error handler deal with it
+		ps.BlockFile = blockFile
+		ps.BlockLine = blockLine
+		ps.ReturnFlag = false // Clear ReturnFlag so caller can handle failure with fix, check, etc.
 		return
 	}
 
@@ -1922,16 +1931,16 @@ func trace(s string) {
 
 // tryHandleFailure attempts to handle a failure by calling context error handlers.
 // Called from: EvalBlockInj
-// Purpose: Checks for failure flag and tries to invoke error-handler word from context
+// Purpose: Checks for failure flag and tries to invoke error-handler word from context.
+// Does NOT convert failure to error here - that decision is made in CallFunction*
+// based on whether ReturnFlag is set (explicit return) or not.
 func tryHandleFailure(ps *env.ProgramState) bool {
 	if ps.FailureFlag && !ps.ReturnFlag && !ps.InErrHandler {
 		if checkContextErrorHandler(ps) {
 			return false // Successfully handled
 		}
-		// notify user that there was first state of failure, so it can be handeled
-		fmt.Print("\x1b[43m\x1b[31m FAILURE \x1b[0m\n")
-		ps.ErrorFlag = true
-		return true // Unhandled failure
+		// Don't convert to error here - let CallFunction* decide based on ReturnFlag
+		return true // Unhandled failure - exit block, let caller decide
 	}
 	return false // No failure
 }

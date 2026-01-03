@@ -38,7 +38,7 @@ var Builtins_io = map[string]*env.Builtin{
 				fmt.Print("" + str.Value)
 				var input string
 				fmt.Scanln(&input)
-				fmt.Print(input)
+				// fmt.Print(input)
 				/* reader := bufio.NewReader(os.Stdin)
 				fmt.Print(str)
 				inp, _ := reader.ReadString('\n')
