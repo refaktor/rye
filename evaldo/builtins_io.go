@@ -38,7 +38,7 @@ var Builtins_io = map[string]*env.Builtin{
 				fmt.Print("" + str.Value)
 				var input string
 				fmt.Scanln(&input)
-				fmt.Print(input)
+				// fmt.Print(input)
 				/* reader := bufio.NewReader(os.Stdin)
 				fmt.Print(str)
 				inp, _ := reader.ReadString('\n')
@@ -102,7 +102,7 @@ var Builtins_io = map[string]*env.Builtin{
 				if err != nil {
 					return MakeBuiltinError(ps, err.Error(), "__openFile")
 				}
-				return *env.NewNative(ps.Idx, file, "writer")
+				return *env.NewNative(ps.Idx, file, "file")
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.UriType}, "__openFile")
 			}
