@@ -324,7 +324,7 @@ var builtins_contexts = map[string]*env.Builtin{
 
 	// TODOC
 	// Tests:
-	// equal { c: context { var 'x 9999 , incr: fn\in { } current { x:: inc x } } c/incr c/x } 10000
+	// equal { c: context { var 'x 9999 , incr: fn\inside { } current { x:: inc x } } c/incr c/x } 10000
 	"current": { // **
 		Argsn: 0,
 		Doc:   "Returns current context.",
@@ -334,7 +334,7 @@ var builtins_contexts = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { var 'y 99 c: context { incr: fn\in { } parent? { y:: inc y } } c/incr y } 100
+	// equal { var 'y 99 c: context { incr: fn\inside { } parent? { y:: inc y } } c/incr y } 100
 	"parent?": { // **
 		Argsn: 0,
 		Doc:   "Returns parent context of the current context.",
@@ -555,8 +555,8 @@ var builtins_contexts = map[string]*env.Builtin{
 	// Tests:
 	// equal { c: context { x: 123 y: 456 } cc: clone c cc/x } 123
 	// equal { c: context { x: 123 y: 456 } cc: clone c cc/y } 456
-	// equal { c: context { x:: 123 } cc: clone c do\in cc { x:: 999 } c/x  } 123 ; original unchanged
-	// equal { c: context { x:: 123 } cc: clone c do\in cc { x:: 999 } cc/x } 999 ; clone modified
+	// equal { c: context { x:: 123 } cc: clone c do\inside cc { x:: 999 } c/x  } 123 ; original unchanged
+	// equal { c: context { x:: 123 } cc: clone c do\inside cc { x:: 999 } cc/x } 999 ; clone modified
 	// Args:
 	// * ctx: Context object to clone
 	// Returns:
@@ -586,9 +586,9 @@ var builtins_contexts = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { c: context { x: 123 } cc: clone\ c { y: x + 100 } cc/y } 223
-	// ; equal { c: context { x:: 123 } cc: clone\ c { y: x + 100 } c/y } 'error ; y not in original context
-	// ; equal { c: context { x:: 123 } cc: clone\ c { x: 999 } c/x } 123 ; original unchanged
-	// ; equal { c: context { x:: 123 } cc: clone\ c { x: 999 } cc/x } 999 ; clone modified
+	// ; error { c: context { x:: 123 } cc: clone\ c { y:: x + 100 } c/y } 'error ; y not in original context
+	// equal { c: context { x:: 123 } cc: clone\ c { x:: 999 } c/x } 123 ; original unchanged
+	// equal { c: context { x:: 123 } cc: clone\ c { x:: 999 } cc/x } 999 ; clone modified
 	// Args:
 	// * ctx: Context object to clone
 	// * block: Block of expressions to evaluate in the cloned context
@@ -657,8 +657,8 @@ var builtins_contexts = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { c: context { x: [ 1 2 3 ] } cc: clone\deep c cc/x } [ 1 2 3 ]
-	// equal { c: context { x: [ 1 2 3 ] } cc: clone\deep c do\in cc { x/0: 999 } c/x -> 0 } 1 ; original unchanged
-	// equal { c: context { x: [ 1 2 3 ] } cc: clone\deep c do\in cc { x/0: 999 } cc/x -> 0 } 999 ; deep clone modified
+	// equal { c: context { x: [ 1 2 3 ] } cc: clone\deep c do\in cc { change\nth! ref x 1 999 } c/x -> 0 } 1 ; original unchanged
+	// equal { c: context { x: [ 1 2 3 ] } cc: clone\deep c do\in cc { change\nth! ref x 1 999 } cc/x -> 0 } 999 ; deep clone modified
 	// Args:
 	// * ctx: Context object to deep clone
 	// Returns:

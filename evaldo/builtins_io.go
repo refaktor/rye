@@ -80,7 +80,7 @@ var Builtins_io = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { Open\append %data/file.txt |type? } 'native
-	// equal { Open\append %data/file.txt |kind? } 'writer
+	// equal { Open\append %data/file.txt |kind? } 'file
 	// Args:
 	// * path: uri representing the file to open for appending
 	// Returns:
@@ -333,7 +333,7 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 	// Tests:
-	// equal { Reader probe Open probe %data/file.txt |kind? } 'reader
+	// equal { Reader Open %data/file.txt |kind? } 'reader
 	// Args:
 	// * source: file object to read from
 	// Returns:
@@ -358,7 +358,7 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 	// Tests:
-	// equal { Reader probe Open probe %data/file.txt |kind? } 'reader
+	// equal { Writer Open %data/file.txt |kind? } 'writer
 	// Args:
 	// * source: file object to read from
 	// Returns:

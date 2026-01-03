@@ -15,7 +15,7 @@ var builtins_iteration = map[string]*env.Builtin{
 	//
 	// Tests:
 	// stdout { 3 .loop { prns "x" } } "x x x "
-	// equal  { 3 .loop { + 1 } } 4
+	// equal  { 3 .loop { + 1 } } 3
 	// ; equal  { 3 .loop { } } 3  ; TODO should pass the value
 	// Args:
 	// * count: Integer number of iterations to perform
@@ -714,7 +714,7 @@ var builtins_iteration = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	//  equal { { 1 2 3 } :x purge! { .is-even } 'x , x } { 1 3 }
+	//  equal { { 1 2 3 } ::x purge! { .is-even } 'x , x } { 1 3 }
 	// Args:
 	// * code: Block of code that returns true for values to remove
 	// * word: Word referring to a Block to purge from (modified in-place)
@@ -1715,9 +1715,9 @@ var builtins_iteration = map[string]*env.Builtin{
 		Argsn: 2,
 		Doc:   "Executes a block of code repeatedly until a condition becomes true. Executes the body at least once before checking condition (do-until loop).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch cond := arg1.(type) {
+			switch cond := arg0.(type) {
 			case env.Block:
-				switch bloc := arg0.(type) {
+				switch bloc := arg1.(type) {
 				case env.Block:
 					ser := ps.Ser
 					for {
@@ -1741,10 +1741,16 @@ var builtins_iteration = map[string]*env.Builtin{
 							return ps.Res
 						}
 
-						// Check if the condition is true - if so, exit
-						if util.IsTruthy(ps.Res) {
+						// Check if the condition is true
+						res, ok := ps.Res.(env.Boolean)
+						if !ok {
+							ps.Ser = ser
+							return MakeBuiltinError(ps, "Result of condition block should be a Boolean value", "while")
+						}
+						if res.Value == true {
 							break
 						}
+
 					}
 					ps.Ser = ser
 					return ps.Res
@@ -1758,9 +1764,9 @@ var builtins_iteration = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { { 1 2 3 } .for\ 'x { x .prns } } ""  ; Expected output: "1 2 3 "
-	// equal { list { 10 20 30 } |for\ 'val { val .prns } } ""  ; Expected output: "10 20 30 "
-	// equal { "abc" .for\ 'ch { ch .prns } } ""  ; Expected output: "a b c "
+	// stdout { { 1 2 3 } .for\ 'x { x .prns } } "1 2 3 "
+	// stdout { list { 10 20 30 } |for\ 'val { val .prns } } "10 20 30 "
+	// stdout { "abc" .for\ 'ch { ch .prns } } "a b c "
 	// Args:
 	// * collection: String, Block, List, or other Collection to iterate over
 	// * word: Word to store each value during iteration
@@ -1822,8 +1828,8 @@ var builtins_iteration = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { dict { "a" 1 "b" 2 } |for\kv 'k 'v { k .prns v .prns } } ""  ; Expected output: "a 1 b 2 "
-	// equal { { 10 20 30 } .for\kv 'i 'v { i .prns v .prns } } ""  ; Expected output: "0 10 1 20 2 30 "
+	// stdout { dict { "a" 1 "b" 2 } |for\kv 'k 'v { k .prns v .prns } } "a 1 b 2 "
+	// stdout { { 10 20 30 } .for\kv 'i 'v { i .prns v .prns } } "0 10 1 20 2 30 "
 	// Args:
 	// * collection: Dict, Block, List, or other Collection to iterate over
 	// * keyWord: Word to store the key (or index for non-dict collections)

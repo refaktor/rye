@@ -452,14 +452,31 @@ section "Column level functions " "Functions that construct a table." {
 	{
 ``	}
 
-	group "add-column" 
+	group "gen-column" 
 	"Adds a new column to table. Changes in-place and returns the new table."
 	{
 	}
 
 	{
 		equal { table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
-		|add-column 'job { } { "Cook" } |column? "job" } { "Cook" "Cook" "Cook" }
+		|gen-column 'job { } { "Cook" } |column? "job" } { "Cook" "Cook" "Cook" }
+	}
+
+	{
+``	}
+
+	group "add-column" 
+	"Adds a new column to table with the given data. Returns the modified table."
+	{
+		arg `table - the table to add a column to`
+		arg `column-name - name of the new column (word or string)`
+		arg `data - block or list containing values for the new column (must match number of rows)`
+		arg `Tags: #table #column`
+	}
+
+	{
+		equal { table { "a" "b" } { 1 10 2 20 3 30 } |add-column 'c { 100 200 300 } |column? "c" } { 100 200 300 }
+		equal { table { "a" } { 1 2 3 } |add-column 'b list [ "x" "y" "z" ] |column? "b" } { "x" "y" "z" }
 	}
 
 	{

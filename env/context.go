@@ -570,19 +570,39 @@ func (e *RyeCtx) IsVariable(word int) bool {
 	return false
 }
 
+// ModResult represents the result of a Mod operation
+type ModResult int
+
+const (
+	ModOK              ModResult = 0 // Modification succeeded
+	ModErrConstant     ModResult = 1 // Word is a constant, cannot be modified
+	ModErrTypeMismatch ModResult = 2 // Type mismatch between existing and new value
+)
+
 func (e *RyeCtx) Mod(word int, val Object) bool {
-	if _, exists := e.state[word]; exists {
+	result, _ := e.ModWithInfo(word, val)
+	return result == ModOK
+}
+
+// ModWithInfo modifies a word and returns detailed information about the result
+// Returns (ModResult, existingType) where existingType is the type of the existing value if there's a mismatch
+func (e *RyeCtx) ModWithInfo(word int, val Object) (ModResult, Type) {
+	if existingVal, exists := e.state[word]; exists {
 		// Word exists, check if it's a variable
 		if !e.IsVariable(word) {
 			// Cannot modify constants
-			return false
+			return ModErrConstant, 0
+		}
+		// Type check - compare Object.Type()
+		if existingVal.Type() != val.Type() {
+			return ModErrTypeMismatch, existingVal.Type()
 		}
 	} else {
 		// Word doesn't exist, create it as a variable
 		e.MarkAsVariable(word)
 	}
 	e.state[word] = val
-	return true
+	return ModOK, 0
 }
 
 // GetParent returns the parent context

@@ -401,9 +401,16 @@ func Rye0_EvalSetword(ps *env.ProgramState, word env.Setword) *env.ProgramState 
 func Rye0_EvalModword(ps *env.ProgramState, word env.Modword) *env.ProgramState {
 	ps1, _ := Rye0_EvalExpressionInj(ps, nil, false)
 	idx := word.Index
-	ok := ps1.Ctx.Mod(idx, ps1.Res)
-	if !ok {
-		ps1.Res = env.NewError("Cannot modify constant " + ps1.Idx.GetWord(idx) + ", use 'var' to declare it as a variable")
+	result, existingType := ps1.Ctx.ModWithInfo(idx, ps1.Res)
+	switch result {
+	case env.ModOK:
+		// Success, nothing to do
+	case env.ModErrConstant:
+		ps1.Res = env.NewError("Cannot modify constant '" + ps1.Idx.GetWord(idx) + "'. Use 'var' to declare it as a variable.")
+		ps1.FailureFlag = true
+		ps1.ErrorFlag = true
+	case env.ModErrTypeMismatch:
+		ps1.Res = env.NewError("Cannot change type of variable '" + ps1.Idx.GetWord(idx) + "' from " + ps1.Idx.GetWord(int(existingType)) + " to " + ps1.Idx.GetWord(int(ps1.Res.Type())) + ".")
 		ps1.FailureFlag = true
 		ps1.ErrorFlag = true
 	}

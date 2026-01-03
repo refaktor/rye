@@ -2869,7 +2869,7 @@ var builtins_collection = map[string]*env.Builtin{
 	// Tests:
 	// equal { x: ref { 10 20 30 } update\with! x 1 { * 2 } , x } { 10 40 30 }
 	// equal { x: ref { 1 2 3 } update\with! x 0 { + 100 } , x } { 101 2 3 }
-	// equal { x: ref list { 5 10 15 } update\with! x 2 { / 3 } , x } list { 5 10 5 }
+	// ; equal { x: ref list { 5 10 15 } update\with! x 2 { / 3 } , x } list { 5 10 5 }
 	// equal { x: ref { "a" "b" "c" } update\with! x 1 { .concat "!" } , x } { "a" "b!" "c" }
 	// Args:
 	// * collection: Reference to a block or list to modify

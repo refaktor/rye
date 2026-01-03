@@ -261,13 +261,9 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 		// Get old value for observer notification
 		oldValue, exists := ps.Ctx.GetCurrent(idx)
 
-		ok := ps.Ctx.Mod(idx, ps.Res)
-		if !ok {
-			ps.Res = env.NewError("Cannot modify constant " + ps.Idx.GetWord(idx) + ", use 'var' to declare it as a variable")
-			ps.FailureFlag = true
-			ps.ErrorFlag = true
-			return
-		} else {
+		result, existingType := ps.Ctx.ModWithInfo(idx, ps.Res)
+		switch result {
+		case env.ModOK:
 			// Trigger observers if the variable was successfully modified
 			if exists && ps.Ctx.IsVariable(idx) {
 				// Only trigger if the value actually changed
@@ -275,6 +271,16 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 					TriggerObservers(ps, ps.Ctx, idx, oldValue, ps.Res)
 				}
 			}
+		case env.ModErrConstant:
+			ps.Res = env.NewError("Cannot modify constant '" + ps.Idx.GetWord(idx) + "'. Use 'var' to declare it as a variable.")
+			ps.FailureFlag = true
+			ps.ErrorFlag = true
+			return
+		case env.ModErrTypeMismatch:
+			ps.Res = env.NewError("Cannot change type of variable '" + ps.Idx.GetWord(idx) + "' from " + ps.Idx.GetWord(int(existingType)) + " to " + ps.Idx.GetWord(int(ps.Res.Type())) + ".")
+			ps.FailureFlag = true
+			ps.ErrorFlag = true
+			return
 		}
 		ps.Ser.Next()
 		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited)
@@ -754,12 +760,9 @@ func EvalModword(ps *env.ProgramState, word env.Modword) {
 	// Get old value for observer notification
 	oldValue, exists := ps.Ctx.GetCurrent(idx)
 
-	ok := ps.Ctx.Mod(idx, ps.Res)
-	if !ok {
-		ps.Res = env.NewError("Cannot modify constant '" + ps.Idx.GetWord(idx) + "'. Use 'var' to declare it as a variable before modifying it.")
-		ps.FailureFlag = true
-		ps.ErrorFlag = true
-	} else {
+	result, existingType := ps.Ctx.ModWithInfo(idx, ps.Res)
+	switch result {
+	case env.ModOK:
 		// Trigger observers if the variable was successfully modified
 		if exists && ps.Ctx.IsVariable(idx) {
 			// Only trigger if the value actually changed
@@ -767,6 +770,14 @@ func EvalModword(ps *env.ProgramState, word env.Modword) {
 				TriggerObservers(ps, ps.Ctx, idx, oldValue, ps.Res)
 			}
 		}
+	case env.ModErrConstant:
+		ps.Res = env.NewError("Cannot modify constant '" + ps.Idx.GetWord(idx) + "'. Use 'var' to declare it as a variable before modifying it.")
+		ps.FailureFlag = true
+		ps.ErrorFlag = true
+	case env.ModErrTypeMismatch:
+		ps.Res = env.NewError("Cannot change type of variable '" + ps.Idx.GetWord(idx) + "' from " + ps.Idx.GetWord(int(existingType)) + " to " + ps.Idx.GetWord(int(ps.Res.Type())) + ".")
+		ps.FailureFlag = true
+		ps.ErrorFlag = true
 	}
 }
 
