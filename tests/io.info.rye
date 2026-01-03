@@ -39,7 +39,7 @@ section "File Operations " "File system operations and file manipulation" {
 
 	{
 		equal { Open\append %data/file.txt |type? } 'native
-		equal { Open\append %data/file.txt |kind? } 'writer
+		equal { Open\append %data/file.txt |kind? } 'file
 	}
 
 	{
@@ -177,7 +177,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-		equal { Reader probe Open probe %data/file.txt |kind? } 'reader
+		equal { Reader Open %data/file.txt |kind? } 'reader
 	}
 
 	{
@@ -191,7 +191,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-		equal { Reader probe Open probe %data/file.txt |kind? } 'reader
+		equal { Writer Open %data/file.txt |kind? } 'writer
 	}
 
 	{
@@ -577,7 +577,7 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	"Creates a new HTTPS request object."
 	{
 		arg `url: uri representing the HTTPS URL to request`
-		arg `method: word specifying the HTTP method (e.g., 'GET', 'POST')`
+		arg `method: word specifying the HTTP method (e.g., 'GET', 'POST', 'PUT', 'DELETE')`
 		arg `data: string containing the request body`
 		returns `native https-request object`
 	}

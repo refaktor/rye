@@ -1237,8 +1237,9 @@ var Builtins_table = map[string]*env.Builtin{
 
 				switch data := arg2.(type) {
 				case env.Block:
+
 					if data.Series.Len() != numRows {
-						return MakeBuiltinError(ps, fmt.Sprintf("Column data has %d values but table has %d rows", data.Series.Len(), numRows), "add-mn")
+						return MakeBuiltinError(ps, fmt.Sprintf("Column data has %d values but table has %d rows", data.Series.Len(), numRows), "add-column")
 					}
 					// Add column name
 					spr.Cols = append(spr.Cols, colName)

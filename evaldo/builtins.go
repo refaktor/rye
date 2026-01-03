@@ -2155,7 +2155,7 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { scmd `echo "hello"` } "hello"
+	// equal { scmd\capture `echo "hello"` } "hello\n"
 	"scmd\\capture": {
 		Argsn: 1,
 		Doc:   "Execute a shell command and capture the output, return it as string",
