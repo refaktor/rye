@@ -313,15 +313,15 @@ var ErrorInspectionBuiltins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { is-failed failure "error" } true
-	// equal { is-failed "not an error" } false
-	// equal { is-failed 123 } false
-	// equal { is-failed try { fail "error" } } true
+	// equal { has-failed failure "error" } true
+	// equal { has-failed "not an error" } false
+	// equal { has-failed 123 } false
+	// equal { has-failed try { fail "error" } } true
 	// Args:
 	// * value: Any value to check
 	// Returns:
 	// * boolean true if the value is an error, false otherwise
-	"is-failed": {
+	"has-failed": {
 		AcceptFailure: true,
 		Argsn:         1,
 		Doc:           "Tests if a value is an error object, returning true for errors and false for non-errors.",
@@ -334,6 +334,49 @@ var ErrorInspectionBuiltins = map[string]*env.Builtin{
 			return *env.NewBoolean(false)
 		},
 	},
+
+	// Tests:
+	// equal { try { fail "error" } |disarm |is-failure } true
+	// equal { failure "error" |is-failure } true
+	// equal { 123 |is-failure } false
+	// equal { "hello" |is-failure } false
+	// Args:
+	// * value: Any value to check (must already be disarmed if it was a failure)
+	// Returns:
+	// * boolean true if the value is an error type, false otherwise
+	"is-failure": {
+		Argsn: 1,
+		Doc:   "Checks if a value is a failure/error type. Unlike has-failed, this doesn't accept failures - the value must already be disarmed.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg0.(type) {
+			case env.Error, *env.Error:
+				return *env.NewBoolean(true)
+			}
+			return *env.NewBoolean(false)
+		},
+	},
+
+	// Tests:
+	// equal { 123 |is-success } true
+	// equal { "hello" |is-success } true
+	// equal { { 1 2 3 } |is-success } true
+	// equal { failure "error" |is-success } false
+	// equal { try { fail "error" } |disarm |is-success } false
+	// Args:
+	// * value: Any value to check (must already be disarmed if it was a failure)
+	// Returns:
+	// * boolean true if the value is not an error type, false if it is an error
+	"is-success": {
+		Argsn: 1,
+		Doc:   "Returns true for any value that is not a failure/error type. The opposite of is-failure.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg0.(type) {
+			case env.Error, *env.Error:
+				return *env.NewBoolean(false)
+			}
+			return *env.NewBoolean(true)
+		},
+	},
 }
 
 // Error Handling Functions
@@ -341,8 +384,8 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	// Tests:
 	// equal { try { fail "error" |disarm } |type? } 'error
 	// equal { try { fail "error" |disarm |message? } } "error"
-	// equal { try { fail "error" } |is-failed } true
-	// equal { try { fail "error" |disarm } |is-failed } false
+	// equal { try { fail "error" } |has-failed } true
+	// equal { try { fail "error" |disarm } |has-failed } false
 	// Args:
 	// * error: Error object to disarm
 	// Returns:

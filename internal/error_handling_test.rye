@@ -79,11 +79,11 @@ test "details? extracts additional details from an error" {
     equal { failure { "code" 404 "info" "Not Found" } |details? .code } 404
 }
 
-test "is-failed tests if a value is an error" {
-    equal { is-failed failure "error" } true
-    equal { is-failed "not an error" } false
-    equal { is-failed 123 } false
-    equal { is-failed try { fail "error" } } true
+test "has-failed tests if a value is an error" {
+    equal { has-failed failure "error" } true
+    equal { has-failed "not an error" } false
+    equal { has-failed 123 } false
+    equal { has-failed try { fail "error" } } true
 }
 
 ; ===== Error Handling Tests =====
@@ -93,8 +93,8 @@ test-group "Error Handling"
 test "disarm clears the failure flag while preserving the error object" {
     equal { try { fail "error" |disarm } |type? } 'error
     equal { try { fail "error" |disarm |message? } } "error"
-    equal { try { fail "error" } |is-failed } true
-    equal { try { fail "error" |disarm } |is-failed } false
+    equal { try { fail "error" } |has-failed } true
+    equal { try { fail "error" |disarm } |has-failed } false
 }
 
 test "check wraps an error with a new error if in failure state" {
