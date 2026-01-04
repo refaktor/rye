@@ -2718,6 +2718,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_cmd, ps, "cmd")
 	RegisterBuiltins2(Builtins_regexp, ps, "regexp")
 	RegisterBuiltins2(Builtins_validation, ps, "validation")
+	RegisterBuiltins2(Builtins_cli, ps, "cli")
 	RegisterBuiltins2(Builtins_conversion, ps, "conversion")
 	RegisterBuiltins2(Builtins_web, ps, "web")
 	RegisterBuiltins2(Builtins_markdown, ps, "markdown")
