@@ -22,16 +22,16 @@ print-help: does {
 	print "\nCommands:"
 	print "  build [tags]      - Build a local Rye interpreter with modules from ryel.mod"
 	print "                      Optional tags parameter for additional build tags"
-	print "  build\\fyne [tags]  - Build a Fyne package with modules from ryel.mod"
+	print "  build-fyne [tags]  - Build a Fyne package with modules from ryel.mod"
 	print "                      Optional tags parameter for additional build tags"
-	print "  build\\fyne\\apk [tags] - Build a Fyne package for Android with modules from ryel.mod"
+	print "  build-fyne-apk [tags] - Build a Fyne package for Android with modules from ryel.mod"
 	print "                      Optional tags parameter for additional build tags"
 	print "  install           - Install the local Rye interpreter (not yet implemented)"
 	print "  help              - Display this help information"
 	print "\nExamples:"
 	print "  rye . build           # Build with modules from ryel.mod"
-	print "  rye . build\\fyne embed_main # Build with embed_main tag"
-	print "  rye . build\\fyne\\apk embed_main  # Build Fyne package for Android"
+	print "  rye . build-fyne embed_main # Build with embed_main tag"
+	print "  rye . build-fyne-apk embed_main  # Build Fyne package for Android"
 	print "\nModule Configuration:"
 	print "  Create a ryel.mod file in your project directory with a list of modules"
 	print "  Each module will be prefixed with 'b_' automatically"
@@ -133,8 +133,8 @@ print "---"
 ; Process commands
 switch mode {
 	build     		{ build tags }
-	build\fyne     	{ build\fyne tags }
-	build\fyne\apk 	{ build\fyne\apk tags }
+	build-fyne     	{ build\fyne tags }
+	build-fyne-apk 	{ build\fyne\apk tags }
 	install   		{ install-ryel }
 	help      		{ print-help }
 	_           	{ print-help }  ; Default to help if no command or unknown command

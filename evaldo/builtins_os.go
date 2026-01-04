@@ -61,6 +61,45 @@ var Builtins_os = map[string]*env.Builtin{
 	},
 
 	// Tests:
+	// equal { does-exist %go.mod } 1
+	// Args:
+	// * path: uri representing the file or directory to check
+	// Returns:
+	// * integer: 1 if exists, 0 if not exists
+	"does-exist": {
+		Argsn: 1,
+		Doc:   "Checks if a file or directory exists.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch path := arg0.(type) {
+			case env.Uri:
+				filePath := filepath.Join(ps.WorkingPath, path.GetPath())
+				res := FileExists(filePath)
+				if res == -1 {
+					return MakeBuiltinError(ps, "Error checking if path exists", "exists?")
+				}
+				if res == 1 {
+					return *env.NewBoolean(true)
+				} else {
+					return *env.NewBoolean(false)
+				}
+			case env.String:
+				filePath := filepath.Join(ps.WorkingPath, path.Value)
+				res := FileExists(filePath)
+				if res == -1 {
+					return MakeBuiltinError(ps, "Error checking if path exists", "exists?")
+				}
+				if res == 1 {
+					return *env.NewBoolean(true)
+				} else {
+					return *env.NewBoolean(false)
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType, env.StringType}, "exists?")
+			}
+		},
+	},
+
+	// Tests:
 	// equal { cd %/tmp cwd? } %/tmp
 	// Args:
 	// * path: uri representing the directory to change to
@@ -99,7 +138,7 @@ var Builtins_os = map[string]*env.Builtin{
 				if !ok {
 					return MakeBuiltinError(ps, "Variable couldn't be read", "env?")
 				}
-				return env.NewString(val)
+				return *env.NewString(val)
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "env?")
 			}
