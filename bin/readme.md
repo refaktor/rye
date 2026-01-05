@@ -20,14 +20,14 @@ RYE_HOME       - Path to the Rye source directory
 
 Instructions on how to setup this
 
-`l.rye setup`
+`./l.rye setup`
 
 
 ### Building local (project specific) rye
 
 add build tags to the lrye.mod (space separated or one per line). Run `$RYE_HOME/l.rye build`.
 
-Builds a local lrye with modules (build tags) that you specified. This means you can include certain modules or add additional for specific project.
+Builds a local lrye with modules (build tags) that you specified. This means you can exclude certain modules or add additional for specific project.
 
 You can invoke ./lrye like any local executable, or with less typing just by calling `lrye` (requires $RYE_HOME/bin in PATH) script.
 
@@ -68,4 +68,4 @@ If you setup PATH to this `bin` folder you get many benefits. For example in you
 export PATH=$PATH:$HOME/Work/rye/bin
 ```
 
-Then you can run l.rye directly from anywhere. And you also get access to lrye script which runs your local ./lrye without the need to specify "./" part.
+Then you can run `l.rye` directly from anywhere. And you also get access to `lrye` script which runs your local ./lrye without the need to specify "./" part.
