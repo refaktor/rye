@@ -21,6 +21,22 @@ var Builtins_term = map[string]*env.Builtin{
 	//
 	// ##### Terminal ##### "Terminal formatting and styling functions"
 	//
+
+	// Tests:
+	// ; clear-line  ; clears current line
+	// Args:
+	// * none
+	// Returns:
+	// * Integer 1
+	"clear-line": {
+		Argsn: 0,
+		Doc:   "Clears the current terminal line.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			term.ClearLine()
+			return *env.NewInteger(1)
+		},
+	},
+
 	// Tests:
 	// equal { "Hello World" |wrap 5 } "Hello\nWorld"
 	// Args:
