@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env sh
 
 # This is a first **proof of concept** only, the naming, the functionality might change. Please propose changes if you see any faults,
 # especially security implications.

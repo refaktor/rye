@@ -1,3 +1,2 @@
-#!/bin/bash
+#!/usr/bin/env sh
 ./rye ryk "$@"
-

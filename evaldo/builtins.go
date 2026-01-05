@@ -2130,7 +2130,7 @@ var builtins = map[string]*env.Builtin{
 			switch s0 := arg0.(type) {
 			case env.String:
 
-				r := exec.Command("/bin/bash", "-c", s0.Value) //nolint: gosec
+				r := exec.Command("sh", "-c", s0.Value) //nolint: gosec
 				// stdout, stderr := r.Output()
 				r.Stdout = os.Stdout
 				r.Stderr = os.Stderr
@@ -2162,7 +2162,7 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s0 := arg0.(type) {
 			case env.String:
-				r := exec.Command("/bin/bash", "-c", s0.Value) //nolint: gosec
+				r := exec.Command("sh", "-c", s0.Value) //nolint: gosec
 				var outb, errb bytes.Buffer
 				r.Stdout = &outb
 				r.Stderr = &errb
