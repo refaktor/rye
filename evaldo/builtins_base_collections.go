@@ -963,6 +963,12 @@ var builtins_collection = map[string]*env.Builtin{
 					return MakeBuiltinError(ps, "String has only one element.", "rest")
 				}
 				return *env.NewString(string(str[1:]))
+			case env.Secret:
+				str := []rune(s1.Value)
+				if len(str) < 1 {
+					return MakeBuiltinError(ps, "Secret has only one element.", "rest")
+				}
+				return *env.NewSecret(string(str[1:]))
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.StringType, env.ListType}, "rest")
 			}
@@ -1011,6 +1017,15 @@ var builtins_collection = map[string]*env.Builtin{
 						return MakeBuiltinError(ps, fmt.Sprintf("String has less than %d elements.", num.Value+1), "rest\\from")
 					}
 					return *env.NewString(string(str[int(num.Value):]))
+				case env.Secret:
+					str := []rune(s1.Value)
+					if len(str) == 0 {
+						return MakeBuiltinError(ps, "Secret is empty.", "rest\\from")
+					}
+					if len(str) <= int(num.Value) {
+						return MakeBuiltinError(ps, fmt.Sprintf("Secret has less than %d elements.", num.Value+1), "rest\\from")
+					}
+					return *env.NewSecret(string(str[int(num.Value):]))
 				default:
 					return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "rest\\from")
 				}
@@ -1063,6 +1078,15 @@ var builtins_collection = map[string]*env.Builtin{
 						numVal = len(str)
 					}
 					return *env.NewString(string(str[len(str)-numVal:]))
+				case env.Secret:
+					str := []rune(s1.Value)
+					if len(str) == 0 {
+						return *env.NewSecret("")
+					}
+					if len(str) < numVal {
+						numVal = len(str)
+					}
+					return *env.NewSecret(string(str[len(str)-numVal:]))
 				case env.Table:
 					nspr := env.NewTable(s1.Cols)
 					nspr.Rows = s1.Rows[len(s1.Rows)-numVal:]
@@ -1274,6 +1298,18 @@ var builtins_collection = map[string]*env.Builtin{
 						numVal = len(str) + numVal // warn: numVal is negative so we must add
 					}
 					return *env.NewString(string(str[0:numVal]))
+				case env.Secret:
+					str := []rune(s1.Value)
+					if len(str) == 0 {
+						return *env.NewSecret("")
+					}
+					if len(str) < numVal {
+						numVal = len(str)
+					}
+					if numVal < 0 {
+						numVal = len(str) + numVal // warn: numVal is negative so we must add
+					}
+					return *env.NewSecret(string(str[0:numVal]))
 				case env.Table:
 					if len(s1.Rows) == 0 {
 						nspr := env.NewTable(s1.Cols)
@@ -1911,6 +1947,13 @@ var builtins_collection = map[string]*env.Builtin{
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.StringType, env.IntegerType, env.DecimalType}, "_++")
 				}
+			case env.Secret:
+				switch s2 := arg1.(type) {
+				case env.Secret:
+					return *env.NewSecret(s1.Value + s2.Value)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.SecretType}, "_++")
+				}
 			case env.Uri:
 				switch s2 := arg1.(type) {
 				case env.String:
@@ -2198,7 +2241,7 @@ var builtins_collection = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
-				return *env.NewInteger(int64(len(s1.Value)))
+				return *env.NewInteger(int64(len([]rune(s1.Value))))
 			case env.Dict:
 				return *env.NewInteger(int64(len(s1.Data)))
 			case env.List:
