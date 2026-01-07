@@ -281,7 +281,7 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 		if err, isError := block.(env.Error); isError {
 			fmt.Println("\033[31mParsing error: " + err.Message + "\033[0m")
 			// Add the line to history even when there's a syntax error
-			r.ml.AppendHistory(code)
+			r.ml.AppendHistory(";Error; " + code)
 			r.fullCode = ""
 			return ""
 		}
@@ -392,18 +392,21 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 			// STDOUT CAPTURE END
 			output = capturedOutput + output
 		}
+		if es.ErrorFlag {
+			r.ml.AppendHistory(";Error; " + code)
+		} else {
+			r.ml.AppendHistory(code)
+		}
+
 		es.ReturnFlag = false
 		es.ErrorFlag = false
 		es.FailureFlag = false
-
-		r.ml.AppendHistory(code)
 
 		// Update both microliner's and REPL's program state references to ensure they're always current
 		r.ml.SetProgramState(es)
 		r.ps = es
 
 		r.fullCode = ""
-		r.ml.AppendHistory(code)
 		return output
 	}
 
@@ -524,7 +527,7 @@ func isCursorAtBottom() bool { // TODO --- doesn't seem to work and probably don
 	return true || os.Getenv("TERM_LINES") != "" && os.Getenv("TERM_LINES") == os.Getenv("TERM_ROW")
 }
 
-func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here because of some odd options we were experimentally adding
+func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool, localHist bool) { // here because of some odd options we were experimentally adding
 	// Configure log to not include date/time prefix for cleaner output
 	log.SetFlags(0)
 
@@ -580,9 +583,16 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 	})
 
 	// Improved error handling for history file operations
-	f, err := os.Open(history_fn)
+	histFn := history_fn
+	if localHist {
+		histFn = "local_rye_history"
+	}
+
+	f, err := os.Open(histFn)
 	if err != nil {
-		log.Printf("Could not open history file: %v", err)
+		if !localHist || !os.IsNotExist(err) {
+			log.Printf("Could not open history file: %v", err)
+		}
 	} else {
 		defer f.Close() // Ensure file is closed even if ReadHistory panics
 
@@ -591,6 +601,13 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 		} else {
 			fmt.Printf("Read %d history entries\n", count)
 		}
+	}
+
+	// Add timestamp and CWD comment to history start
+	if wd, err := os.Getwd(); err == nil {
+		ml.AppendHistory(fmt.Sprintf(";# Started: %s in %s", time.Now().Format("2006-01-02 15:04:05"), wd))
+	} else {
+		ml.AppendHistory(fmt.Sprintf(";# Started: %s", time.Now().Format("2006-01-02 15:04:05")))
 	}
 
 	ml.SetCompleter(func(line string, mode int) (c []string) {
@@ -772,7 +789,7 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool) { // here
 
 	// Improved error handling for saving history
 	defer func() {
-		f, err := os.Create(history_fn)
+		f, err := os.Create(histFn)
 		if err != nil {
 			log.Printf("Error creating history file: %v", err)
 			return

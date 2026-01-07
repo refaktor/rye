@@ -44,6 +44,8 @@ var (
 	help     = flag.Bool("help", false, "Displays this help message.")
 	version  = flag.Bool("version", false, "Displays the version of Rye.")
 
+	localhist = flag.Bool("localhist", false, "Store console history to local file local_rye_history")
+
 	// Seccomp options (Linux only) - using pure Go library
 	SeccompProfile = flag.String("seccomp-profile", "", "Seccomp profile to use: strict, readonly")
 	SeccompAction  = flag.String("seccomp-action", "errno", "Action on restricted syscalls: errno, kill, trap, log")
@@ -225,6 +227,7 @@ func DoMain(regfn func(*env.ProgramState) error) {
 		fmt.Println("\033[33m  rye -landlock-profile=readonly       \033[36m# use the readonly profile (default)")
 		fmt.Println("\033[33m  rye -landlock-profile=readexec       \033[36m# use the readexec profile (allows execution)")
 		fmt.Println("\033[33m  rye -landlock-paths=/path1,/path2    \033[36m# specify paths to allow access to")
+		fmt.Println("\033[33m  rye -localhist                       \033[36m# append console history to local file local_rye_history")
 		fmt.Println("\033[0m\n Thank you for trying out \033[1mRye\033[22m ...")
 		fmt.Println("")
 	}
@@ -755,7 +758,7 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 		//		evaldo.MaybeDisplayFailureOrError(ps, ps.Idx, "main rye file #2")
 
 		if interactive {
-			evaldo.DoRyeRepl(ps, "rye", evaldo.ShowResults)
+			evaldo.DoRyeRepl(ps, "rye", evaldo.ShowResults, *localhist)
 		} else {
 			if file == "" && evaldo.ShowResults { // TODO -- move this to some instance ... to ProgramState? or is more of a ReplState?
 				fmt.Println(ps.Res.Print(*ps.Idx))
@@ -937,7 +940,7 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 		// Start dual REPL
 		evaldo.DoRyeDualRepl(es, rightEs, lang, evaldo.ShowResults)
 	} else {
-		evaldo.DoRyeRepl(es, lang, evaldo.ShowResults)
+		evaldo.DoRyeRepl(es, lang, evaldo.ShowResults, *localhist)
 	}
 }
 
