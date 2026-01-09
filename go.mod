@@ -45,12 +45,14 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/mattn/go-runewidth v0.0.19
 	github.com/mhale/smtpd v0.8.3
+	github.com/mlange-42/ark v0.7.0
 	github.com/mrz1836/postmark v1.8.2
 	github.com/muesli/reflow v0.3.0
 	github.com/openai/openai-go v1.12.0
 	github.com/pkg/term v1.2.0-beta.2.0.20211217091447-1a4a3b719465
 	github.com/prometheus/client_golang v1.23.2
 	github.com/refaktor/keyboard v0.0.0-20250327232248-edb0b31909c4
+	github.com/sairash/chitosocket v1.0.1
 	github.com/shirou/gopsutil/v3 v3.24.5
 	github.com/thomasberger/parsemail v1.2.7
 	github.com/xuri/excelize/v2 v2.10.0
@@ -122,7 +124,6 @@ require (
 	github.com/quic-go/quic-go v0.54.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rs/xid v1.6.0 // indirect
-	github.com/sairash/chitosocket v1.0.1 // indirect
 	github.com/sergi/go-diff v1.4.0 // indirect
 	github.com/sqs/go-xoauth2 v0.0.0-20120917012134-0911dad68e56 // indirect
 	github.com/ssor/bom v0.0.0-20170718123548-6386211fdfcf // indirect
