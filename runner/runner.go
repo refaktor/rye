@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"net/http/cgi"
 	"os"
@@ -54,6 +55,9 @@ var (
 	LandlockEnabled = flag.Bool("landlock", false, "Enable landlock filesystem access control")
 	LandlockProfile = flag.String("landlock-profile", "readonly", "Landlock profile: readonly, readexec, custom")
 	LandlockPaths   = flag.String("landlock-paths", "", "Comma-separated list of paths to allow access to (for custom profile)")
+
+	// HTTP options
+	HttpPort = flag.String("http", "", "Start Rye in HTTP REPL mode on specified port (localhost only)")
 
 	// Code signing options
 	CodeSigEnforced = flag.Bool("codesig", false, "Enforce code signature verification")
@@ -309,7 +313,11 @@ func DoMain(regfn func(*env.ProgramState) error) {
 				if *do != "" || *sdo != "" {
 					main_rye_file("", false, true, false, *console, code, *lang, regfn, *stin)
 				} else {
-					main_rye_repl(os.Stdin, os.Stdout, true, false, *lang, code, regfn)
+					if *HttpPort != "" {
+						main_rye_http_repl(*HttpPort, code, *lang, regfn)
+					} else {
+						main_rye_repl(os.Stdin, os.Stdout, true, false, *lang, code, regfn)
+					}
 				}
 			}
 		}
@@ -567,6 +575,135 @@ func main_ryeco() {
 
 	// ryeco.Loop(env.Integer{10000000}, func() env.Object { return ryeco.Inc(env.Integer{1}) })
 
+}
+
+func main_rye_http_repl(port string, code string, lang string, regfn func(*env.ProgramState) error) {
+	// Initialize ProgramState
+	block, genv := loader.LoadStringNoPEG(code, false)
+	es := env.NewProgramState(block.(env.Block).Series, genv)
+	evaldo.RegisterBuiltins(es)
+	evaldo.RegisterVarBuiltins(es)
+	contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
+	if err := regfn(es); err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	// Register program state for signal handling
+	SetCurrentProgramState(es)
+	defer ClearCurrentProgramState()
+
+	if lang == "eyr" {
+		es.Dialect = env.EyrDialect
+	}
+
+	// Eval initial code
+	evaldo.EvalBlockInjMultiDialect(es, nil, false)
+
+	ctx := es.Ctx
+	es.Ctx = env.NewEnv(ctx)
+
+	var psMutex sync.Mutex
+	var prevResult env.Object
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		// Security check: Localhost only
+		host, _, err := net.SplitHostPort(r.RemoteAddr)
+		if err != nil {
+			// If split fails, fallback to checking prefix
+			if !strings.HasPrefix(r.RemoteAddr, "127.0.0.1") && !strings.HasPrefix(r.RemoteAddr, "[::1]") {
+				http.Error(w, "Forbidden", http.StatusForbidden)
+				return
+			}
+		} else {
+			if host != "127.0.0.1" && host != "::1" {
+				http.Error(w, "Forbidden", http.StatusForbidden)
+				return
+			}
+		}
+
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "Failed to read body", http.StatusInternalServerError)
+			return
+		}
+		input := string(body)
+
+		psMutex.Lock()
+		defer psMutex.Unlock()
+
+		// Capture stdout
+		r1, w1, err := os.Pipe()
+		if err != nil {
+			http.Error(w, "Failed to create pipe", http.StatusInternalServerError)
+			return
+		}
+		oldStdout := os.Stdout
+		os.Stdout = w1
+
+		outC := make(chan string)
+		go func() {
+			var buf bytes.Buffer
+			io.Copy(&buf, r1)
+			outC <- buf.String()
+		}()
+
+		// Execute
+		block, genv := loader.LoadStringNoPEG(input, false)
+		var resStr string
+
+		if errObj, ok := block.(env.Error); ok {
+			resStr = "Error: " + errObj.Message
+		} else {
+			block1 := block.(env.Block)
+			es = env.AddToProgramStateNEWWithLocation(es, block1, genv)
+
+			// Eval
+			if lang == "eyr" {
+				es.Dialect = env.EyrDialect
+				evaldo.EvalBlockInjMultiDialect(es, nil, true)
+			} else {
+				evaldo.EvalBlockInj(es, prevResult, true)
+			}
+
+			// Check result
+			if es.ErrorFlag {
+				// resStr = "Error" // TODO: proper error formatting
+				// maybe inspect the error if available in Res?
+				// usually ErrorFlag means Res might be an Error object or similar
+				if es.Res != nil {
+					resStr = es.Res.Inspect(*genv)
+				} else {
+					resStr = "Error"
+				}
+			} else if es.Res != nil && es.Res.Type() != env.VoidType {
+				prevResult = es.Res
+				resStr = es.Res.Inspect(*genv)
+			}
+
+			es.ReturnFlag = false
+			es.ErrorFlag = false
+			es.FailureFlag = false
+		}
+
+		// Close pipe and get stdout
+		w1.Close()
+		os.Stdout = oldStdout
+		captured := <-outC
+		r1.Close()
+
+		// Write output
+		fmt.Fprint(w, captured)
+		if resStr != "" {
+			fmt.Fprintln(w, resStr)
+		}
+	})
+
+	addr := "127.0.0.1:" + port
+	fmt.Println("Rye HTTP Console started on " + addr)
+	if err := http.ListenAndServe(addr, nil); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool, code string, lang string, regfn func(*env.ProgramState) error, stin string) {

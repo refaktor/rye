@@ -280,8 +280,6 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 		// Check if the result is an error
 		if err, isError := block.(env.Error); isError {
 			fmt.Println("\033[31mParsing error: " + err.Message + "\033[0m")
-			// Add the line to history even when there's a syntax error
-			r.ml.AppendHistory(";Error; " + code)
 			r.fullCode = ""
 			return ""
 		}
@@ -392,11 +390,7 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 			// STDOUT CAPTURE END
 			output = capturedOutput + output
 		}
-		if es.ErrorFlag {
-			r.ml.AppendHistory(";Error; " + code)
-		} else {
-			r.ml.AppendHistory(code)
-		}
+		r.ml.AppendHistory(code)
 
 		es.ReturnFlag = false
 		es.ErrorFlag = false

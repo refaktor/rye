@@ -143,66 +143,105 @@ var Builtins_openai = map[string]*env.Builtin{
 	// Tests:
 	// options: { "model" "gpt-4" "temperature" 0.7 "max-tokens" 150 }
 	// response: client .chat\opts "Hello!" options
+	// conversation: [ { "role" "system" "content" "You are helpful" } { "role" "user" "content" "Hello!" } ]
+	// response2: client .chat\opts conversation options
 	// Args:
 	// * client: OpenAI client instance
-	// * prompt: String - Text prompt for completion
+	// * prompt: String (simple prompt) or Block (conversation format with role/content dicts)
 	// * options: Dict - Configuration options (model, temperature, max-tokens)
 	// Returns:
 	// * string - The AI's response text
 	"openai-client//Chat\\opts": {
 		Argsn: 3,
-		Doc:   "Generate chat completion with custom options like model, temperature, and max-tokens.",
+		Doc:   "Generate chat completion with custom options like model, temperature, and max-tokens. Accepts either a simple string prompt or a conversation format with message history.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch client := arg0.(type) {
 			case env.Native:
-				switch prompt := arg1.(type) {
-				case env.String:
-					switch options := arg2.(type) {
-					case env.Dict:
-						openaiClient := client.Value.(openai.Client)
+				switch options := arg2.(type) {
+				case env.Dict:
+					openaiClient := client.Value.(openai.Client)
 
-						params := openai.ChatCompletionNewParams{
-							Messages: []openai.ChatCompletionMessageParamUnion{
-								openai.UserMessage(prompt.Value),
-							},
-							Model: openai.ChatModelGPT4oMini,
-						}
-
-						// Process options
-						if model, exists := options.Data["model"]; exists {
-							if modelStr, ok := model.(env.String); ok {
-								params.Model = openai.ChatModel(modelStr.Value)
-							}
-						}
-
-						if temp, exists := options.Data["temperature"]; exists {
-							if tempFloat, ok := temp.(env.Decimal); ok {
-								params.Temperature = openai.Float(tempFloat.Value)
-							}
-						}
-
-						if maxTokens, exists := options.Data["max-tokens"]; exists {
-							if maxTokensInt, ok := maxTokens.(env.Integer); ok {
-								params.MaxTokens = openai.Int(int64(maxTokensInt.Value))
-							}
-						}
-
-						response, err := openaiClient.Chat.Completions.New(context.Background(), params)
-
-						if err != nil {
-							return evaldo.MakeError(ps, err.Error())
-						}
-
-						if len(response.Choices) == 0 {
-							return evaldo.MakeError(ps, "No response choices returned from OpenAI")
-						}
-
-						return *env.NewString(response.Choices[0].Message.Content)
-					default:
-						return evaldo.MakeError(ps, "Arg 3 must be a dictionary (options).")
+					params := openai.ChatCompletionNewParams{
+						Model: openai.ChatModelGPT4oMini,
 					}
+
+					// Process options
+					if model, exists := options.Data["model"]; exists {
+						if modelStr, ok := model.(env.String); ok {
+							params.Model = openai.ChatModel(modelStr.Value)
+						}
+					}
+
+					if temp, exists := options.Data["temperature"]; exists {
+						if tempFloat, ok := temp.(env.Decimal); ok {
+							params.Temperature = openai.Float(tempFloat.Value)
+						}
+					}
+
+					if maxTokens, exists := options.Data["max-tokens"]; exists {
+						if maxTokensInt, ok := maxTokens.(env.Integer); ok {
+							params.MaxTokens = openai.Int(int64(maxTokensInt.Value))
+						}
+					}
+
+					// Handle prompt - either String or Block
+					switch prompt := arg1.(type) {
+					case env.String:
+						params.Messages = []openai.ChatCompletionMessageParamUnion{
+							openai.UserMessage(prompt.Value),
+						}
+					case env.Block:
+						// Handle conversation format: [ { "role" "user" "content" "Hello" } { "role" "assistant" "content" "Hi!" } ]
+						var messages []openai.ChatCompletionMessageParamUnion
+
+						for i, item := range prompt.Series.S {
+							if dict, ok := item.(env.Dict); ok {
+								role, roleExists := dict.Data["role"]
+								content, contentExists := dict.Data["content"]
+
+								if !roleExists || !contentExists {
+									return evaldo.MakeError(ps, fmt.Sprintf("Message at index %d must have 'role' and 'content' fields", i))
+								}
+
+								roleStr, ok1 := role.(env.String)
+								contentStr, ok2 := content.(env.String)
+
+								if !ok1 || !ok2 {
+									return evaldo.MakeError(ps, fmt.Sprintf("Message at index %d: 'role' and 'content' must be strings", i))
+								}
+
+								switch roleStr.Value {
+								case "user":
+									messages = append(messages, openai.UserMessage(contentStr.Value))
+								case "assistant":
+									messages = append(messages, openai.AssistantMessage(contentStr.Value))
+								case "system":
+									messages = append(messages, openai.SystemMessage(contentStr.Value))
+								default:
+									return evaldo.MakeError(ps, fmt.Sprintf("Invalid role '%s' at index %d. Must be 'user', 'assistant', or 'system'", roleStr.Value, i))
+								}
+							} else {
+								return evaldo.MakeError(ps, fmt.Sprintf("Message at index %d must be a dictionary", i))
+							}
+						}
+						params.Messages = messages
+					default:
+						return evaldo.MakeError(ps, "Arg 2 must be a string (prompt) or block (conversation).")
+					}
+
+					response, err := openaiClient.Chat.Completions.New(context.Background(), params)
+
+					if err != nil {
+						return evaldo.MakeError(ps, err.Error())
+					}
+
+					if len(response.Choices) == 0 {
+						return evaldo.MakeError(ps, "No response choices returned from OpenAI")
+					}
+
+					return *env.NewString(response.Choices[0].Message.Content)
 				default:
-					return evaldo.MakeError(ps, "Arg 2 must be a string (prompt).")
+					return evaldo.MakeError(ps, "Arg 3 must be a dictionary (options).")
 				}
 			default:
 				return evaldo.MakeError(ps, "Arg 1 must be an OpenAI client.")
