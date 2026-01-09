@@ -302,9 +302,24 @@ var builtins_printing = map[string]*env.Builtin{
 					res = fmt.Sprintf(arg.Value, val.Value)
 				case env.Decimal:
 					res = fmt.Sprintf(arg.Value, val.Value)
-					// TODO make option with multiple values and block as second arg
+				case env.Block:
+					series := val.Series
+					vals := make([]interface{}, series.Len())
+					for i, obj := range series.GetAll() {
+						switch v := obj.(type) {
+						case env.Integer:
+							vals[i] = v.Value
+						case env.String:
+							vals[i] = v.Value
+						case env.Decimal:
+							vals[i] = v.Value
+						default:
+							vals[i] = v.Print(*ps.Idx)
+						}
+					}
+					res = fmt.Sprintf(arg.Value, vals...)
 				default:
-					return MakeArgError(ps, 1, []env.Type{env.StringType, env.DecimalType, env.IntegerType}, "format")
+					return MakeArgError(ps, 1, []env.Type{env.StringType, env.DecimalType, env.IntegerType, env.BlockType}, "format")
 				}
 				return *env.NewString(res)
 			default:

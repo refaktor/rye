@@ -21,6 +21,126 @@ var Builtins_term = map[string]*env.Builtin{
 	//
 	// ##### Terminal ##### "Terminal formatting and styling functions"
 	//
+
+	// Tests:
+	// ; clear-line  ; clears current line
+	// Args:
+	// * none
+	// Returns:
+	// * Integer 1
+	"clear-line": {
+		Argsn: 0,
+		Doc:   "Clears the current terminal line.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			term.ClearLine()
+			return *env.NewInteger(1)
+		},
+	},
+
+	// Tests:
+	// ; cursor-up 3  ; moves cursor up 3 lines
+	// Args:
+	// * lines: Integer number of lines to move up
+	// Returns:
+	// * Integer 1
+	"cursor-up": {
+		Argsn: 1,
+		Doc:   "Moves the cursor up by the specified number of lines.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch lines := arg0.(type) {
+			case env.Integer:
+				if lines.Value > 0 {
+					fmt.Printf("\033[%dA", lines.Value)
+				}
+				return *env.NewInteger(1)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "cursor-up")
+			}
+		},
+	},
+
+	// Tests:
+	// ; cursor-down 3  ; moves cursor down 3 lines
+	// Args:
+	// * lines: Integer number of lines to move down
+	// Returns:
+	// * Integer 1
+	"cursor-down": {
+		Argsn: 1,
+		Doc:   "Moves the cursor down by the specified number of lines.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch lines := arg0.(type) {
+			case env.Integer:
+				if lines.Value > 0 {
+					fmt.Printf("\033[%dB", lines.Value)
+				}
+				return *env.NewInteger(1)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "cursor-down")
+			}
+		},
+	},
+
+	// Tests:
+	// ; clear-down  ; clears from cursor to bottom of screen
+	// Args:
+	// * none
+	// Returns:
+	// * Integer 1
+	"clear-down": {
+		Argsn: 0,
+		Doc:   "Clears from the cursor position to the bottom of the screen.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			fmt.Print("\033[J")
+			return *env.NewInteger(1)
+		},
+	},
+
+	// Tests:
+	// ; clear-screen  ; clears entire screen
+	// Args:
+	// * none
+	// Returns:
+	// * Integer 1
+	"clear-screen": {
+		Argsn: 0,
+		Doc:   "Clears the entire screen.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			fmt.Print("\033[2J\033[H")
+			return *env.NewInteger(1)
+		},
+	},
+
+	// Tests:
+	// ; hide-cursor  ; hides the cursor
+	// Args:
+	// * none
+	// Returns:
+	// * Integer 1
+	"hide-cursor": {
+		Argsn: 0,
+		Doc:   "Hides the terminal cursor.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			fmt.Print("\033[?25l")
+			return *env.NewInteger(1)
+		},
+	},
+
+	// Tests:
+	// ; show-cursor  ; shows the cursor
+	// Args:
+	// * none
+	// Returns:
+	// * Integer 1
+	"show-cursor": {
+		Argsn: 0,
+		Doc:   "Shows the terminal cursor.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			fmt.Print("\033[?25h")
+			return *env.NewInteger(1)
+		},
+	},
+
 	// Tests:
 	// equal { "Hello World" |wrap 5 } "Hello\nWorld"
 	// Args:

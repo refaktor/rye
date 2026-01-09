@@ -125,7 +125,7 @@ func HandleEnterConsoleOption(es *env.ProgramState, genv *env.Idxs) {
 	es.ErrorFlag = false
 
 	// Use the existing REPL system
-	DoRyeRepl(es, "rye", true)
+	DoRyeRepl(es, "rye", true, false)
 }
 
 // HandleListContextOption lists the current context

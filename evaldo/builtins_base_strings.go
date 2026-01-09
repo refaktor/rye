@@ -88,6 +88,8 @@ var builtins_string = map[string]*env.Builtin{
 			switch s1 := arg0.(type) {
 			case env.String:
 				return *env.NewString(strings.TrimSpace(s1.Value))
+			case env.Secret:
+				return *env.NewSecret(strings.TrimSpace(s1.Value))
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "trim")
 			}
@@ -112,6 +114,13 @@ var builtins_string = map[string]*env.Builtin{
 				switch s2 := arg1.(type) {
 				case env.String:
 					return *env.NewString(strings.Trim(s1.Value, s2.Value))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "trim")
+				}
+			case env.Secret:
+				switch s2 := arg1.(type) {
+				case env.String:
+					return *env.NewSecret(strings.Trim(s1.Value, s2.Value))
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.StringType}, "trim")
 				}
@@ -143,6 +152,13 @@ var builtins_string = map[string]*env.Builtin{
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.StringType}, "trim\\right")
 				}
+			case env.Secret:
+				switch s2 := arg1.(type) {
+				case env.String:
+					return *env.NewSecret(strings.TrimRight(s1.Value, s2.Value))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "trim\\right")
+				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "trim\\right")
 			}
@@ -167,6 +183,13 @@ var builtins_string = map[string]*env.Builtin{
 				switch s2 := arg1.(type) {
 				case env.String:
 					return *env.NewString(strings.TrimLeft(s1.Value, s2.Value))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "trim\\left")
+				}
+			case env.Secret:
+				switch s2 := arg1.(type) {
+				case env.String:
+					return *env.NewSecret(strings.TrimLeft(s1.Value, s2.Value))
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.StringType}, "trim\\left")
 				}
@@ -231,6 +254,18 @@ var builtins_string = map[string]*env.Builtin{
 					switch s3 := arg2.(type) {
 					case env.Integer:
 						return *env.NewString(s1.Value[s2.Value:s3.Value])
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.IntegerType}, "substring")
+					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "substring")
+				}
+			case env.Secret:
+				switch s2 := arg1.(type) {
+				case env.Integer:
+					switch s3 := arg2.(type) {
+					case env.Integer:
+						return *env.NewSecret(s1.Value[s2.Value:s3.Value])
 					default:
 						return MakeArgError(ps, 3, []env.Type{env.IntegerType}, "substring")
 					}
@@ -546,9 +581,11 @@ var builtins_string = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
-
 				english := cases.Title(language.English)
 				return *env.NewString(english.String(s1.Value))
+			case env.Secret:
+				english := cases.Title(language.English)
+				return *env.NewSecret(english.String(s1.Value))
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "capitalize")
 			}
@@ -571,6 +608,8 @@ var builtins_string = map[string]*env.Builtin{
 			switch s1 := arg0.(type) {
 			case env.String:
 				return *env.NewString(strings.ToLower(s1.Value))
+			case env.Secret:
+				return *env.NewSecret(strings.ToLower(s1.Value))
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "to-lower")
 			}
@@ -595,6 +634,8 @@ var builtins_string = map[string]*env.Builtin{
 				return *env.NewString(strings.ToUpper(s1.Value))
 			case env.String:
 				return *env.NewString(strings.ToUpper(s1.Value))
+			case env.Secret:
+				return *env.NewSecret(strings.ToUpper(s1.Value))
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "to-upper")
 			}

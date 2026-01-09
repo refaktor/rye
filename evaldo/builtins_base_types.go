@@ -534,6 +534,34 @@ var builtins_types = map[string]*env.Builtin{
 		},
 	},
 
+	"secret": {
+		Argsn: 1,
+		Doc:   "Creates a secret from a string.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch str := arg0.(type) {
+			case env.String:
+				return *env.NewSecret(str.Value)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "secret")
+			}
+		},
+	},
+
+	"reveal": {
+		Argsn: 1,
+		Doc:   "Reveals the secret value.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s := arg0.(type) {
+			case env.Secret:
+				return *env.NewString(s.Value)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.SecretType}, "reveal")
+			}
+		},
+	},
+
 	// Tests:
 	// ; equal   { person: kind 'person { name: "" age: 0 } , { "name" "John" "age" 30 } .dict >> person |type? } 'ctx
 	// Args:

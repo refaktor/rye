@@ -14,54 +14,202 @@ import (
 type Type int
 
 const (
-	BlockType             Type = 1
-	IntegerType           Type = 2
-	WordType              Type = 3
-	SetwordType           Type = 4
-	OpwordType            Type = 5
-	PipewordType          Type = 6
-	BuiltinType           Type = 7
-	FunctionType          Type = 8
-	ErrorType             Type = 9
-	CommaType             Type = 10
-	VoidType              Type = 11
-	StringType            Type = 12
-	TagwordType           Type = 13
-	GenwordType           Type = 14
-	GetwordType           Type = 15
-	ArgwordType           Type = 16
-	NativeType            Type = 17
-	UriType               Type = 18
-	LSetwordType          Type = 19
-	ContextType           Type = 20
-	DictType              Type = 21
-	ListType              Type = 22
-	DateType              Type = 23
-	CPathType             Type = 24
-	XwordType             Type = 25
-	EXwordType            Type = 26
-	TableType             Type = 27
-	EmailType             Type = 28
-	KindType              Type = 29
-	KindwordType          Type = 30
-	ConverterType         Type = 31
-	TimeType              Type = 32
-	TableRowType          Type = 33
-	DecimalType           Type = 34
-	VectorType            Type = 35
-	OpCPathType           Type = 36
-	PipeCPathType         Type = 37
-	ModwordType           Type = 38
-	LModwordType          Type = 39
-	BooleanType           Type = 40
-	VarBuiltinType        Type = 41
-	CurriedCallerType     Type = 42
-	ComplexType           Type = 43
-	MarkdownType          Type = 44
+	// Block is a syntax type
+	// { ... } or [ ... ]
+	// It groups code or data.
+	BlockType Type = 1
+	// Integer is a syntax type
+	// 123
+	// It represents a whole number.
+	IntegerType Type = 2
+	// Word is a syntax type
+	// word
+	// It represents a symbol or variable.
+	WordType Type = 3
+	// Setword is a syntax type
+	// word:
+	// It assigns a value to the word.
+	SetwordType Type = 4
+	// Opword is a syntax type
+	// .word
+	// It acts as an infix operator.
+	OpwordType Type = 5
+	// Pipeword is a syntax type
+	// |word
+	// It acts as a pipe operator (takes previous result).
+	PipewordType Type = 6
+	// Builtin is a constructed type
+	// print (the function value)
+	// It represents a built-in function.
+	BuiltinType Type = 7
+	// Function is a constructed type
+	// fn { x } { x + 1 }
+	// It represents a user function.
+	FunctionType Type = 8
+	// Error is a constructed type
+	// failure "error"
+	// It represents an error.
+	ErrorType Type = 9
+	// Comma is a syntax type
+	// ,
+	// It is a separator.
+	CommaType Type = 10
+	// Void is a syntax type
+	// _
+	// It can never be consumed or returned by a function. It's only used for dialects.
+	VoidType Type = 11
+	// String is a syntax type
+	// "string"
+	// It represents text.
+	StringType Type = 12
+	// Tagword is a syntax type
+	// 'word
+	// It represents a tag or lit-word.
+	TagwordType Type = 13
+	// Genword is a syntax type
+	// ~word
+	// It represents a generic word.
+	GenwordType Type = 14
+	// Getword is a syntax type
+	// ?word
+	// It retrieves a value.
+	GetwordType Type = 15
+	// Argword is a constructed type
+	// (internal)
+	// It represents a function argument.
+	ArgwordType Type = 16
+	// Native is a constructed type
+	// (internal)
+	// It represents a wrapped Go object.
+	NativeType Type = 17
+	// Uri is a syntax type
+	// https://example.com or %file.txt
+	// It represents a URI.
+	UriType Type = 18
+	// LSetword is a syntax type
+	// :word
+	// It sets the word from the left.
+	LSetwordType Type = 19
+	// Context is a constructed type
+	// context { x: 1 }
+	// It represents an environment.
+	ContextType Type = 20
+	// Dict is a constructed type
+	// dict { "key" 1 }
+	// It represents a dictionary.
+	DictType Type = 21
+	// List is a constructed type
+	// list { 1 2 3 }
+	// It represents a list.
+	ListType Type = 22
+	// Date is a syntax type
+	// 2024-01-01
+	// It represents a date.
+	DateType Type = 23
+	// CPath is a syntax type
+	// word/path
+	// It represents a context path.
+	CPathType Type = 24
+	// Xword is a syntax type
+	// <word>
+	// It represents an XML/HTML-style tag.
+	XwordType Type = 25
+	// EXword is a syntax type
+	// </word>
+	// It represents a closing XML/HTML-style tag.
+	EXwordType Type = 26
+	// Table is a constructed type
+	// table { "col" } { 1 }
+	// It represents a data table. It is implemented via Table struct in spreadsheet.go.
+	TableType Type = 27
+	// Email is a syntax type
+	// user@host.com
+	// It represents an email.
+	EmailType Type = 28
+	// Kind is a constructed type
+	// kind 'person { ... }
+	// It represents a type definition.
+	KindType Type = 29
+	// Kindword is a syntax type
+	// ~(Kind)
+	// It represents a kind word.
+	KindwordType Type = 30
+	// Converter is a constructed type
+	// converter string integer { ... }
+	// It represents a type converter.
+	ConverterType Type = 31
+	// Time is a constructed type
+	// now (result)
+	// It represents a time value.
+	TimeType Type = 32
+	// TableRow is a constructed type
+	// (iteration result)
+	// It represents a row in a table. It is implemented via TableRow struct in spreadsheet.go.
+	TableRowType Type = 33
+	// Decimal is a syntax type
+	// 3.14
+	// It represents a decimal number.
+	DecimalType Type = 34
+	// Vector is a constructed type
+	// vector { 1.0 2.0 }
+	// It represents a numeric vector.
+	VectorType Type = 35
+	// OpCPath is a syntax type
+	// .word/path
+	// It represents an infix context path. It is implemented via CPath struct.
+	OpCPathType Type = 36
+	// PipeCPath is a syntax type
+	// |word/path
+	// It represents a pipe context path. It is implemented via CPath struct.
+	PipeCPathType Type = 37
+	// Modword is a syntax type
+	// word::
+	// It represents a module word.
+	ModwordType Type = 38
+	// LModword is a syntax type
+	// ::word
+	// It represents a left module word.
+	LModwordType Type = 39
+	// Boolean is a constructed type
+	// true or false
+	// It represents a boolean value.
+	BooleanType Type = 40
+	// VarBuiltin is a constructed type
+	// (internal)
+	// It represents a variadic built-in function.
+	VarBuiltinType Type = 41
+	// CurriedCaller is a constructed type
+	// (internal)
+	// It represents a curried function call.
+	CurriedCallerType Type = 42
+	// Complex is a constructed type
+	// (complex 1 2)
+	// It represents a complex number.
+	ComplexType Type = 43
+	// Markdown is a constructed type
+	// md "text"
+	// It represents a markdown string.
+	MarkdownType Type = 44
+	// PersistentContext is a constructed type
+	// (internal)
+	// It represents a persistent context.
 	PersistentContextType Type = 45
-	LocationNodeType      Type = 46
-	FlagwordType          Type = 47
-	PersistentTableType   Type = 1001
+	// LocationNode is a constructed type
+	// (internal)
+	// It represents a location node.
+	LocationNodeType Type = 46
+	// Flagword is a syntax type
+	// -f or --flag
+	// It represents a CLI flag.
+	FlagwordType Type = 47
+	// Secret is a constructed type
+	// secret "password"
+	// It represents a secret value.
+	SecretType Type = 48
+	// PersistentTable is a constructed type
+	// (internal)
+	// It represents a persistent table.
+	PersistentTableType Type = 1001
 )
 
 // after adding new type here, also add string to idxs.go
@@ -2976,4 +3124,49 @@ func (i Flagword) HasShort() bool {
 
 func (i Flagword) HasLong() bool {
 	return i.LongIndex >= 0
+}
+
+//
+// SECRET
+//
+
+type Secret struct {
+	Value string `bson:"value"`
+}
+
+func NewSecret(val string) *Secret {
+	nat := Secret{val}
+	return &nat
+}
+
+func (i Secret) Type() Type {
+	return SecretType
+}
+
+func (i Secret) Inspect(e Idxs) string {
+	return "[Secret: ********]"
+}
+
+func (i Secret) Print(e Idxs) string {
+	return "********"
+}
+
+func (i Secret) Trace(msg string) {
+	fmt.Print(msg + "(secret): ")
+	fmt.Println("********")
+}
+
+func (i Secret) GetKind() int {
+	return int(SecretType)
+}
+
+func (i Secret) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	return i.Value == o.(Secret).Value
+}
+
+func (i Secret) Dump(e Idxs) string {
+	return "secret \"********\""
 }
