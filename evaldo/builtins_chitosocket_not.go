@@ -1,5 +1,5 @@
-//go:build no_chitosocket
-// +build no_chitosocket
+//go:build !linux || no_chitosocket
+// +build !linux no_chitosocket
 
 package evaldo
 
