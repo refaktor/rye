@@ -777,6 +777,7 @@ type ProgramState struct {
 	// LastFailedCPathInfo map[string]interface{} // stores information about the last failed context path
 	BlockFile string
 	BlockLine int
+	CallDepth int // 0 = top-level script, incremented on each function call
 }
 
 type DoDialect int

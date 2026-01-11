@@ -4196,6 +4196,24 @@ section "Other " "..." {
 	{
 ``	}
 
+	group "change" 
+	"Returns a new Dict with the specified key changed to the new value. Original dict is unchanged."
+	{
+		arg `dict: Dict to update`
+		arg `key: String key to change`
+		arg `value: New value for the key`
+		returns `A new Dict with the key updated (original dict unchanged)`
+	}
+
+	{
+		equal { dict { "a" 1 "b" 2 } |change "a" 99 -> "a" } 99
+		equal { dict { "a" 1 "b" 2 } |change "c" 3 -> "c" } 3
+		equal { d: dict { "x" 10 } , change d "x" 20 -> "x" } 20
+	}
+
+	{
+``	}
+
 	group "list" 
 	"Constructs a List from the Block of values."
 	{

@@ -415,7 +415,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 		Doc:           "Checks if a value is in failure state and wraps it with a new error if so, otherwise returns the original value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if ps.FailureFlag || arg0.Type() == env.ErrorType {
-				ps.FailureFlag = false
+				// ps.FailureFlag = false
 				switch er := arg0.(type) {
 				case *env.Error: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
 					if er.Status == 0 && er.Message == "" {

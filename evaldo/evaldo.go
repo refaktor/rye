@@ -106,10 +106,15 @@ func EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) {
 	for ps.Ser.Pos() < ps.Ser.Len() {
 		injnow = EvalExpressionInj(ps, inj, injnow)
 		// Check for both failure and error flags immediately after expression evaluation
-		if ps.ErrorFlag || ps.ReturnFlag {
+		if ps.ErrorFlag || (ps.ReturnFlag && ps.CallDepth > 0) {
+			// fmt.Println("EVAL BLOCK INJ")
+			// fmt.Println(ps.ErrorFlag, ps.ReturnFlag, ps.CallDepth)
 			return
 		}
 		if tryHandleFailure(ps) {
+			ps.ErrorFlag = true
+			// MaybeDisplayFailureOrError(ps, ps.Idx, "evalblockinj")
+			// fmt.Println("EVALBLOCKINJ RETURNING")
 			return
 		}
 		injnow = MaybeAcceptComma(ps, inj, injnow)
@@ -825,6 +830,10 @@ var envPool = sync.Pool{
 // Purpose: Main function caller in evaluator - collects args from code, sets up context, executes function body
 func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.Object, toLeft bool, ctx *env.RyeCtx, pipeSecond ...interface{}) {
 	// fmt.Println(1)
+
+	// Track call depth for top-level vs function detection
+	ps.CallDepth++
+	defer func() { ps.CallDepth-- }()
 
 	// Handle optional pipeSecond and firstVal parameters
 	var pipeSecondFlag bool
@@ -1683,7 +1692,7 @@ func FormatBacktickQuotes(message string) string {
 func DisplayEnhancedError(es *env.ProgramState, genv *env.Idxs, tag string, topLevel bool) {
 	// Red background banner for runtime errors
 	if !es.SkipFlag {
-		fmt.Print("\x1b[41m\x1b[30m RUNTIME ERROR \x1b[0m\n") // Red background, black text
+		fmt.Print("\x1b[41m\x1b[30m RUNTIME ERROR: " + tag + " \x1b[0m\n") // Red background, black text
 
 		// Bold red for error message, with backtick-quoted text highlighted
 		fmt.Print("\x1b[1;31m") // Bold red
@@ -1693,9 +1702,6 @@ func DisplayEnhancedError(es *env.ProgramState, genv *env.Idxs, tag string, topL
 	}
 	// Get location information from the current block
 	displayBlockWithErrorPosition(es, genv)
-	if topLevel {
-		es.SkipFlag = false
-	}
 }
 
 // displayBlockWithErrorPosition shows the current block with a <here> marker at the error position.
@@ -1704,7 +1710,7 @@ func DisplayEnhancedError(es *env.ProgramState, genv *env.Idxs, tag string, topL
 func displayBlockWithErrorPosition(es *env.ProgramState, genv *env.Idxs) {
 
 	// Bold cyan for location information
-	fmt.Print("\x1b[1;36mCode block starting at	\x1b[1;34m") // Bold cyan "At", bold blue for location
+	fmt.Print("\x1b[1;36mBlock starting at \x1b[1;34m") // Bold cyan "At", bold blue for location
 	if es.BlockFile != "" {
 		fmt.Printf("%s:%d", es.BlockFile, es.BlockLine)
 	} else {
@@ -1713,7 +1719,7 @@ func displayBlockWithErrorPosition(es *env.ProgramState, genv *env.Idxs) {
 	fmt.Print("\x1b[0m\n") // Reset
 
 	// Show the current block content with <here> marker
-	fmt.Print("\x1b[37mBlock:\x1b[0m\n")
+	// fmt.Print("\x1b[37mBlock:\x1b[0m\n")
 	fmt.Print("\x1b[1;37m  ")
 
 	// Get current position in the block
@@ -1868,21 +1874,45 @@ func MaybeDisplayFailureOrError(es *env.ProgramState, genv *env.Idxs, tag string
 	MaybeDisplayFailureOrError2(es, genv, tag, false, false)
 }
 
+// FULL FAILURE ERROR BEHAVIOUR v3
+// - 1 / 0 starts as a failure
+// - if evaluator is to continue, use this value, or otherwise: elevate to Erorr (show and stop eval)
+// - if evaluator is at the end of script. elevation to Err also (show and stop)
+// - if inside a function and the failure is to be retuned - return, but on accept must be handeled or Err
+// - if failure at the end of the line of console, show failure, but give chance to handle it in next line
+
+// Whenre does evaluation happen
+// - checkForFailureWithBuiltin
+// - checkForFailireWithVarBuiltin
+// - CallFunction_CollectArgs
+// - tryHandlFailure
+// Q: Which one happens in our do { do { 1 / 0 } }?
+
+// WOWOWO
+
 // MaybeDisplayFailureOrError2 displays errors/failures and optionally offers debugging options.
 // Called from: MaybeDisplayFailureOrError, main REPL/file execution code
 // Purpose: Main error display coordinator - shows enhanced errors and offers debugging in file mode
 func MaybeDisplayFailureOrError2(es *env.ProgramState, genv *env.Idxs, tag string, topLevel bool, fileMode bool) {
-	if !es.InErrHandler && (es.ErrorFlag || (es.FailureFlag && topLevel)) {
+	// fmt.Println(es.InErrHandler, es.ErrorFlag, es.FailureFlag, topLevel)
+	// WOWOWOWO
+	if !es.InErrHandler && es.ErrorFlag {
 		// Use the enhanced error reporting with source location
 		DisplayEnhancedError(es, genv, tag, topLevel)
+
+		es.SkipFlag = true
 
 		// Offer debugging options to the user
 		if fileMode {
 			OfferDebuggingOptions(es, genv, tag)
 		}
 
+		// es.SkipFlag = false
+	}
+	if topLevel {
 		es.SkipFlag = false
 	}
+
 }
 
 // MaybeDisplayFailureOrErrorWASM displays errors/failures in WASM environment using custom print function.
@@ -1916,6 +1946,7 @@ func MaybeDisplayFailureOrErrorWASM(es *env.ProgramState, genv *env.Idxs, printf
 // Purpose: Converts failure to error if builtin doesn't accept failures
 func checkForFailureWithBuiltin(bi env.Builtin, ps *env.ProgramState, n int) bool {
 	if ps.FailureFlag && !bi.AcceptFailure {
+		fmt.Println("**Err Elevate BUI**")
 		ps.ErrorFlag = true
 		return true
 	}
@@ -1927,6 +1958,7 @@ func checkForFailureWithBuiltin(bi env.Builtin, ps *env.ProgramState, n int) boo
 // Purpose: Converts failure to error if variadic builtin doesn't accept failures
 func checkForFailureWithVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, n int) bool {
 	if ps.FailureFlag && !bi.AcceptFailure {
+		fmt.Println("**Err Elevate VarBUI**")
 		ps.ErrorFlag = true
 		return true
 	}
@@ -1943,15 +1975,33 @@ func trace(s string) {
 // tryHandleFailure attempts to handle a failure by calling context error handlers.
 // Called from: EvalBlockInj
 // Purpose: Checks for failure flag and tries to invoke error-handler word from context.
-// Does NOT convert failure to error here - that decision is made in CallFunction*
-// based on whether ReturnFlag is set (explicit return) or not.
+// At top-level (CallDepth == 0), an unhandled failure (including returned ones) becomes an error.
+// Inside functions, returned failures propagate up; non-returned failures become errors.
 func tryHandleFailure(ps *env.ProgramState) bool {
-	if ps.FailureFlag && !ps.ReturnFlag && !ps.InErrHandler {
-		if checkContextErrorHandler(ps) {
+	if ps.FailureFlag && !ps.InErrHandler {
+		/* We don't have context level error handler right now
+		 if checkContextErrorHandler(ps) {
+			fmt.Println("**Err tryHandleFailure: F**")
 			return false // Successfully handled
+		}*/
+
+		// At top-level (CallDepth == 0), any unhandled failure becomes an error
+		// This includes failures that were explicitly returned via ^fail
+		if ps.CallDepth == 0 {
+			// fmt.Println("**Err tryHandleFailure at top-level: T**")
+			return true // Convert to error at top level
 		}
-		// Don't convert to error here - let CallFunction* decide based on ReturnFlag
-		return true // Unhandled failure - exit block, let caller decide
+
+		// Inside a function: only convert non-returned failures to error
+		// Returned failures (ReturnFlag set) should propagate up
+		if !ps.ReturnFlag {
+			// fmt.Println("**Err tryHandleFailure inside func (no return): T**")
+			return true // Non-returned failure - convert to error
+		}
+
+		// ReturnFlag is set - let the failure propagate up to caller
+		// fmt.Println("**Err tryHandleFailure inside func (with return): F - propagating**")
+		return false
 	}
 	return false // No failure
 }

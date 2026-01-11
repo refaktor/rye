@@ -39,5 +39,5 @@ do\in luhn-checksum {
 	
 	assert\display "check should return false" {
 		check ( stamp data ) ++ "1"
-	} true ; just how failure to assert looks, should change to false
+	} false
 }

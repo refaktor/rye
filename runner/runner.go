@@ -891,6 +891,7 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 		defer ClearCurrentProgramState()
 
 		evaldo.EvalBlockInjMultiDialect(ps, stValue, true)
+		// fmt.Println("MAIN RYE FILE: Maybe display Error")
 		evaldo.MaybeDisplayFailureOrError2(ps, ps.Idx, "main rye file", true, true)
 		//		evaldo.MaybeDisplayFailureOrError(ps, ps.Idx, "main rye file #2")
 
