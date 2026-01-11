@@ -48,7 +48,7 @@ builds:
     - goarch: wasm
       goos: js
       flags:
-      - -tags=b_tiny,b_wasm,no_sqlite,no_psql,no_mysql,no_io,no_git
+      - -tags=b_tiny,b_wasm,no_sqlite,no_psql,no_mysql,no_io,no_git,no_chitosocket,no_termui
       - -trimpath
       
 archives:
