@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"net/http/cgi"
 	"os"
@@ -44,6 +45,8 @@ var (
 	help     = flag.Bool("help", false, "Displays this help message.")
 	version  = flag.Bool("version", false, "Displays the version of Rye.")
 
+	localhist = flag.Bool("localhist", false, "Store console history to local file local_rye_history")
+
 	// Seccomp options (Linux only) - using pure Go library
 	SeccompProfile = flag.String("seccomp-profile", "", "Seccomp profile to use: strict, readonly")
 	SeccompAction  = flag.String("seccomp-action", "errno", "Action on restricted syscalls: errno, kill, trap, log")
@@ -52,6 +55,9 @@ var (
 	LandlockEnabled = flag.Bool("landlock", false, "Enable landlock filesystem access control")
 	LandlockProfile = flag.String("landlock-profile", "readonly", "Landlock profile: readonly, readexec, custom")
 	LandlockPaths   = flag.String("landlock-paths", "", "Comma-separated list of paths to allow access to (for custom profile)")
+
+	// HTTP options
+	HttpPort = flag.String("http", "", "Start Rye in HTTP REPL mode on specified port (localhost only)")
 
 	// Code signing options
 	CodeSigEnforced = flag.Bool("codesig", false, "Enforce code signature verification")
@@ -225,6 +231,7 @@ func DoMain(regfn func(*env.ProgramState) error) {
 		fmt.Println("\033[33m  rye -landlock-profile=readonly       \033[36m# use the readonly profile (default)")
 		fmt.Println("\033[33m  rye -landlock-profile=readexec       \033[36m# use the readexec profile (allows execution)")
 		fmt.Println("\033[33m  rye -landlock-paths=/path1,/path2    \033[36m# specify paths to allow access to")
+		fmt.Println("\033[33m  rye -localhist                       \033[36m# append console history to local file local_rye_history")
 		fmt.Println("\033[0m\n Thank you for trying out \033[1mRye\033[22m ...")
 		fmt.Println("")
 	}
@@ -306,7 +313,11 @@ func DoMain(regfn func(*env.ProgramState) error) {
 				if *do != "" || *sdo != "" {
 					main_rye_file("", false, true, false, *console, code, *lang, regfn, *stin)
 				} else {
-					main_rye_repl(os.Stdin, os.Stdout, true, false, *lang, code, regfn)
+					if *HttpPort != "" {
+						main_rye_http_repl(*HttpPort, code, *lang, regfn)
+					} else {
+						main_rye_repl(os.Stdin, os.Stdout, true, false, *lang, code, regfn)
+					}
 				}
 			}
 		}
@@ -566,6 +577,135 @@ func main_ryeco() {
 
 }
 
+func main_rye_http_repl(port string, code string, lang string, regfn func(*env.ProgramState) error) {
+	// Initialize ProgramState
+	block, genv := loader.LoadStringNoPEG(code, false)
+	es := env.NewProgramState(block.(env.Block).Series, genv)
+	evaldo.RegisterBuiltins(es)
+	evaldo.RegisterVarBuiltins(es)
+	contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
+	if err := regfn(es); err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	// Register program state for signal handling
+	SetCurrentProgramState(es)
+	defer ClearCurrentProgramState()
+
+	if lang == "eyr" {
+		es.Dialect = env.EyrDialect
+	}
+
+	// Eval initial code
+	evaldo.EvalBlockInjMultiDialect(es, nil, false)
+
+	ctx := es.Ctx
+	es.Ctx = env.NewEnv(ctx)
+
+	var psMutex sync.Mutex
+	var prevResult env.Object
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		// Security check: Localhost only
+		host, _, err := net.SplitHostPort(r.RemoteAddr)
+		if err != nil {
+			// If split fails, fallback to checking prefix
+			if !strings.HasPrefix(r.RemoteAddr, "127.0.0.1") && !strings.HasPrefix(r.RemoteAddr, "[::1]") {
+				http.Error(w, "Forbidden", http.StatusForbidden)
+				return
+			}
+		} else {
+			if host != "127.0.0.1" && host != "::1" {
+				http.Error(w, "Forbidden", http.StatusForbidden)
+				return
+			}
+		}
+
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "Failed to read body", http.StatusInternalServerError)
+			return
+		}
+		input := string(body)
+
+		psMutex.Lock()
+		defer psMutex.Unlock()
+
+		// Capture stdout
+		r1, w1, err := os.Pipe()
+		if err != nil {
+			http.Error(w, "Failed to create pipe", http.StatusInternalServerError)
+			return
+		}
+		oldStdout := os.Stdout
+		os.Stdout = w1
+
+		outC := make(chan string)
+		go func() {
+			var buf bytes.Buffer
+			io.Copy(&buf, r1)
+			outC <- buf.String()
+		}()
+
+		// Execute
+		block, genv := loader.LoadStringNoPEG(input, false)
+		var resStr string
+
+		if errObj, ok := block.(env.Error); ok {
+			resStr = "Error: " + errObj.Message
+		} else {
+			block1 := block.(env.Block)
+			es = env.AddToProgramStateNEWWithLocation(es, block1, genv)
+
+			// Eval
+			if lang == "eyr" {
+				es.Dialect = env.EyrDialect
+				evaldo.EvalBlockInjMultiDialect(es, nil, true)
+			} else {
+				evaldo.EvalBlockInj(es, prevResult, true)
+			}
+
+			// Check result
+			if es.ErrorFlag {
+				// resStr = "Error" // TODO: proper error formatting
+				// maybe inspect the error if available in Res?
+				// usually ErrorFlag means Res might be an Error object or similar
+				if es.Res != nil {
+					resStr = es.Res.Inspect(*genv)
+				} else {
+					resStr = "Error"
+				}
+			} else if es.Res != nil && es.Res.Type() != env.VoidType {
+				prevResult = es.Res
+				resStr = es.Res.Inspect(*genv)
+			}
+
+			es.ReturnFlag = false
+			es.ErrorFlag = false
+			es.FailureFlag = false
+		}
+
+		// Close pipe and get stdout
+		w1.Close()
+		os.Stdout = oldStdout
+		captured := <-outC
+		r1.Close()
+
+		// Write output
+		fmt.Fprint(w, captured)
+		if resStr != "" {
+			fmt.Fprintln(w, resStr)
+		}
+	})
+
+	addr := "127.0.0.1:" + port
+	fmt.Println("Rye HTTP Console started on " + addr)
+	if err := http.ListenAndServe(addr, nil); err != nil {
+		log.Fatal(err)
+	}
+}
+
 func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool, code string, lang string, regfn func(*env.ProgramState) error, stin string) {
 	// Add defer to recover from panics
 	// Not sure if this makes anything better, just confuses the error message on real panic
@@ -751,11 +891,12 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 		defer ClearCurrentProgramState()
 
 		evaldo.EvalBlockInjMultiDialect(ps, stValue, true)
+		// fmt.Println("MAIN RYE FILE: Maybe display Error")
 		evaldo.MaybeDisplayFailureOrError2(ps, ps.Idx, "main rye file", true, true)
 		//		evaldo.MaybeDisplayFailureOrError(ps, ps.Idx, "main rye file #2")
 
 		if interactive {
-			evaldo.DoRyeRepl(ps, "rye", evaldo.ShowResults)
+			evaldo.DoRyeRepl(ps, "rye", evaldo.ShowResults, *localhist)
 		} else {
 			if file == "" && evaldo.ShowResults { // TODO -- move this to some instance ... to ProgramState? or is more of a ReplState?
 				fmt.Println(ps.Res.Print(*ps.Idx))
@@ -937,7 +1078,7 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 		// Start dual REPL
 		evaldo.DoRyeDualRepl(es, rightEs, lang, evaldo.ShowResults)
 	} else {
-		evaldo.DoRyeRepl(es, lang, evaldo.ShowResults)
+		evaldo.DoRyeRepl(es, lang, evaldo.ShowResults, *localhist)
 	}
 }
 

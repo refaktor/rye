@@ -46,7 +46,7 @@ var Builtins_console = map[string]*env.Builtin{
 						}
 					}*/
 
-				DoRyeRepl(ps, "rye", ShowResults)
+				DoRyeRepl(ps, "rye", ShowResults, false)
 				fmt.Println("-------------------------------------------------------------")
 				ps.Ser = ser
 				return ps.Res

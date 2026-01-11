@@ -1335,6 +1335,48 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
+	// equal { dict { "a" 1 "b" 2 } |change "a" 99 -> "a" } 99
+	// equal { dict { "a" 1 "b" 2 } |change "c" 3 -> "c" } 3
+	// equal { d: dict { "x" 10 } , change d "x" 20 -> "x" } 20
+	// Args:
+	// * dict: Dict to update
+	// * key: String key to change
+	// * value: New value for the key
+	// Returns:
+	// * A new Dict with the key updated (original dict unchanged)
+	"change": {
+		Argsn: 3,
+		Pure:  true,
+		Doc:   "Returns a new Dict with the specified key changed to the new value. Original dict is unchanged.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch d := arg0.(type) {
+			case env.Dict:
+				var keyStr string
+				switch k := arg1.(type) {
+				case env.String:
+					keyStr = k.Value
+				case env.Word:
+					keyStr = ps.Idx.GetWord(k.Index)
+				case env.Tagword:
+					keyStr = ps.Idx.GetWord(k.Index)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType, env.WordType}, "change")
+				}
+				// Create a copy of the dict's data
+				newData := make(map[string]any, len(d.Data)+1)
+				for k, v := range d.Data {
+					newData[k] = v
+				}
+				// Update the key
+				newData[keyStr] = arg2
+				return *env.NewDict(newData)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.DictType}, "change")
+			}
+		},
+	},
+
+	// Tests:
 	// equal { list { "a" 123 } -> 0 } "a"
 	// equal { list { 1 2 3 } |length? } 3
 	// equal { list { } |length? } 0
@@ -2718,6 +2760,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_cmd, ps, "cmd")
 	RegisterBuiltins2(Builtins_regexp, ps, "regexp")
 	RegisterBuiltins2(Builtins_validation, ps, "validation")
+	RegisterBuiltins2(Builtins_cli, ps, "cli")
 	RegisterBuiltins2(Builtins_conversion, ps, "conversion")
 	RegisterBuiltins2(Builtins_web, ps, "web")
 	RegisterBuiltins2(Builtins_markdown, ps, "markdown")
@@ -2748,9 +2791,11 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltinsInContext(Builtins_pipes, ps, "pipes")
 	RegisterBuiltinsInContext(Builtins_term, ps, "term")
 	RegisterBuiltinsInContext(Builtins_termstr, ps, "termstr")
+	RegisterBuiltins2(Builtins_termui, ps, "termui")
 	RegisterBuiltinsInContext(Builtins_telegrambot, ps, "telegram")
 	RegisterBuiltinsInContext(Builtins_mcp, ps, "mcp")
 	RegisterBuiltins2(Builtins_mqtt, ps, "mqtt")
+	RegisterBuiltins2(Builtins_chitosocket, ps, "chitosocket")
 	RegisterBuiltins2(builtins_trees, ps, "trees")
 	RegisterBuiltinsInContext(Builtins_git, ps, "git")
 	RegisterBuiltinsInContext(Builtins_prometheus, ps, "prometheus")
