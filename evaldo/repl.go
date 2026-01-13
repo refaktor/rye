@@ -525,11 +525,35 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool, localHist
 	// Configure log to not include date/time prefix for cleaner output
 	log.SetFlags(0)
 
-	// Improved error handling for keyboard initialization
+	// Improved error handling for keyboard initialization with terminal fallback
 	err := keyboard.Open()
 	if err != nil {
-		log.Printf("Failed to initialize keyboard: %v", err)
-		return
+		// Check if this is a terminfo/termbox unsupported terminal error
+		if strings.Contains(err.Error(), "terminfo") || strings.Contains(err.Error(), "unsupported terminal") {
+			// Try falling back to a known-supported terminal type
+			originalTerm := os.Getenv("TERM")
+			fallbackTerms := []string{"xterm-256color", "xterm", "ansi"}
+
+			var fallbackErr error
+			for _, fallbackTerm := range fallbackTerms {
+				os.Setenv("TERM", fallbackTerm)
+				fallbackErr = keyboard.Open()
+				if fallbackErr == nil {
+					log.Printf("Warning: TERM=%s not supported by termbox, using %s fallback", originalTerm, fallbackTerm)
+					break
+				}
+			}
+
+			if fallbackErr != nil {
+				// Restore original TERM and fail
+				os.Setenv("TERM", originalTerm)
+				log.Printf("Failed to initialize keyboard: %v (also tried fallback terminals)", err)
+				return
+			}
+		} else {
+			log.Printf("Failed to initialize keyboard: %v", err)
+			return
+		}
 	}
 
 	// Register terminal restoration function for suspend/resume
