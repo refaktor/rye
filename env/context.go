@@ -775,9 +775,10 @@ type ProgramState struct {
 	DeferBlocks   []Block   // blocks to be executed when function exits or program terminates
 	ContextStack  []*RyeCtx // stack of previous contexts for ccb navigation
 	// LastFailedCPathInfo map[string]interface{} // stores information about the last failed context path
-	BlockFile string
-	BlockLine int
-	CallDepth int // 0 = top-level script, incremented on each function call
+	BlockFile      string
+	BlockLine      int
+	CallDepth      int                  // 0 = top-level script, incremented on each function call
+	GetHistoryLast func(n int) []string // function to get last N history lines from REPL
 }
 
 type DoDialect int

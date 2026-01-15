@@ -1461,6 +1461,185 @@ func CurLeft(n int) {
 	termPrintf("\x1b[%dD", n)
 }
 
+// DisplayTextArea displays an interactive multiline text input
+// width is max characters per line, height is number of lines
+// Returns the text as a string with newlines between lines
+func DisplayTextArea(width, height int) (env.Object, bool) {
+	// Initialize lines as empty strings
+	lines := make([]string, height)
+	for i := range lines {
+		lines[i] = ""
+	}
+
+	curRow := 0 // Current row (0 to height-1)
+	curCol := 0 // Current column position
+
+	// Helper to display all lines with cursor
+	display := func() {
+		RestoreCurPos()
+		for i := 0; i < height; i++ {
+			ClearLine()
+			line := lines[i]
+			// Pad line to width for visual consistency
+			if len(line) < width {
+				line = line + strings.Repeat(" ", width-len(line))
+			}
+			// Display line with cursor highlight
+			if i == curRow {
+				// Show cursor position with underscore or highlight
+				pre := ""
+				if curCol > 0 && curCol <= len(lines[i]) {
+					pre = lines[i][:curCol]
+				} else if curCol > len(lines[i]) {
+					pre = lines[i] + strings.Repeat(" ", curCol-len(lines[i]))
+				}
+				post := ""
+				if curCol < len(lines[i]) {
+					post = lines[i][curCol:]
+				}
+				cursorChar := " "
+				if curCol < len(lines[i]) {
+					cursorChar = string(lines[i][curCol])
+				}
+				termPrint(pre)
+				ColorBgWhite()
+				ColorBlack()
+				termPrint(cursorChar)
+				CloseProps()
+				if len(post) > 1 {
+					termPrint(post[1:])
+				}
+				// Pad rest
+				remaining := width - len(lines[i])
+				if remaining > 0 {
+					termPrint(strings.Repeat(" ", remaining))
+				}
+			} else {
+				termPrint(line)
+			}
+			termPrintln("")
+		}
+	}
+
+	SaveCurPos()
+	display()
+
+	defer func() {
+		ShowCur()
+	}()
+
+	for {
+		letter, ascii, keyCode, err := GetChar2()
+
+		if (ascii == 3 || ascii == 27) || err != nil {
+			termPrintln("")
+			return nil, true
+		}
+
+		// Regular Enter - move to next line
+		if ascii == 13 {
+			if curRow < height-1 {
+				curRow++
+				curCol = 0
+			}
+			display()
+			continue
+		}
+
+		// Ctrl+D to submit (standard Unix "end of input")
+		if ascii == 4 {
+			// Join lines with newlines and return
+			result := strings.Join(lines, "\n")
+			// Trim trailing empty lines
+			result = strings.TrimRight(result, "\n ")
+			termPrintln("")
+			return *env.NewString(result), false
+		}
+
+		// Backspace
+		if ascii == 127 {
+			if curCol > 0 {
+				// Delete character before cursor
+				line := lines[curRow]
+				if curCol <= len(line) {
+					lines[curRow] = line[:curCol-1] + line[curCol:]
+				}
+				curCol--
+			} else if curRow > 0 {
+				// At start of line, merge with previous line
+				prevLen := len(lines[curRow-1])
+				lines[curRow-1] = lines[curRow-1] + lines[curRow]
+				// Shift remaining lines up
+				for i := curRow; i < height-1; i++ {
+					lines[i] = lines[i+1]
+				}
+				lines[height-1] = ""
+				curRow--
+				curCol = prevLen
+			}
+			display()
+			continue
+		}
+
+		// Arrow keys
+		if keyCode == 37 { // Left
+			if curCol > 0 {
+				curCol--
+			} else if curRow > 0 {
+				curRow--
+				curCol = len(lines[curRow])
+			}
+			display()
+			continue
+		}
+		if keyCode == 39 { // Right
+			if curCol < len(lines[curRow]) {
+				curCol++
+			} else if curRow < height-1 {
+				curRow++
+				curCol = 0
+			}
+			display()
+			continue
+		}
+		if keyCode == 38 { // Up
+			if curRow > 0 {
+				curRow--
+				if curCol > len(lines[curRow]) {
+					curCol = len(lines[curRow])
+				}
+			}
+			display()
+			continue
+		}
+		if keyCode == 40 { // Down
+			if curRow < height-1 {
+				curRow++
+				if curCol > len(lines[curRow]) {
+					curCol = len(lines[curRow])
+				}
+			}
+			display()
+			continue
+		}
+
+		// Regular character input
+		if ascii >= 32 && ascii < 127 {
+			line := lines[curRow]
+			if len(line) < width {
+				// Insert character at cursor position
+				if curCol >= len(line) {
+					lines[curRow] = line + letter
+				} else {
+					lines[curRow] = line[:curCol] + letter + line[curCol:]
+				}
+				curCol++
+			}
+			display()
+		}
+	}
+}
+
 // GetChar and GetChar2 functions are implemented in platform-specific files:
 // - term_unix.go for Unix/Linux systems
 // - term_windows.go for Windows systems

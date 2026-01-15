@@ -282,8 +282,23 @@ func (s *MLState) updateSuggestionContent(content []string) {
 }
 
 // displayTabSuggestions shows the tab completion suggestions using reserved space
-func (s *MLState) displayTabSuggestions(items []string, currentIndex int) {
+func (s *MLState) displayTabSuggestions(items []string, currentIndex int, mode int) {
 	if len(items) == 0 {
+		// Show mode indicator even with no items
+		if s.suggestionSpace == 0 {
+			s.reserveSuggestionSpace(2)
+		}
+		var modeIndicator string
+		switch mode {
+		case 0:
+			modeIndicator = "\033[33m[local]\033[0m "
+		case 1:
+			modeIndicator = "\033[36m[index]\033[0m "
+		case 2:
+			modeIndicator = "\033[35m[methods]\033[0m "
+		}
+		content := []string{modeIndicator + "\033[90m-\033[0m", ""}
+		s.updateSuggestionContent(content)
 		return
 	}
 
@@ -298,8 +313,20 @@ func (s *MLState) displayTabSuggestions(items []string, currentIndex int) {
 		maxWidth = 20
 	}
 
+	// Add mode indicator at the beginning
+	var modeIndicator string
+	switch mode {
+	case 0:
+		modeIndicator = "\033[33m[local]\033[0m "
+	case 1:
+		modeIndicator = "\033[36m[index]\033[0m "
+	case 2:
+		modeIndicator = "\033[35m[methods]\033[0m "
+	}
+
 	var suggestionLine strings.Builder
-	currentWidth := 0
+	suggestionLine.WriteString(modeIndicator)
+	currentWidth := len("[local] ") // Account for mode indicator width (approximate)
 	truncated := false
 
 	for i, item := range items {
@@ -475,7 +502,7 @@ func (s *MLState) tabComplete(p []rune, line []rune, pos int, mode int) ([]rune,
 		}
 
 		// Display suggestions with current selection highlighted
-		s.displayTabSuggestions(list, currentIndex)
+		s.displayTabSuggestions(list, currentIndex, mode)
 
 		// Wait for next key input
 		next := <-s.next
@@ -715,6 +742,21 @@ func (s *MLState) getHistoryByPrefix(prefix string) (ph []string) {
 		}
 	}
 	return
+}
+
+// Returns the last N history lines
+func (s *MLState) GetHistoryLast(n int) []string {
+	s.historyMutex.RLock()
+	defer s.historyMutex.RUnlock()
+
+	if n <= 0 {
+		return []string{}
+	}
+	if n > len(s.history) {
+		n = len(s.history)
+	}
+	// Return last n entries
+	return s.history[len(s.history)-n:]
 }
 
 // Returns the history lines matching the intelligent search
@@ -1403,8 +1445,21 @@ startOfHere:
 				// case "p":
 				//	histPrev()
 				case "s": // seek - cycles through modes: 0=context, 1=word index, 2=generics by Res kind
+					// Determine if there's meaningful input (ignoring "." and "|")
+					hasMeaningfulInput := false
+					for _, r := range line {
+						if r != '.' && r != '|' && r != ' ' {
+							hasMeaningfulInput = true
+							break
+						}
+					}
+
 					// Cycle through modes: 0 → 1 → 2 → 0
+					// Skip mode 1 (index) if no meaningful input
 					s.ctrlSMode++
+					if s.ctrlSMode == 1 && !hasMeaningfulInput {
+						s.ctrlSMode++ // Skip index mode
+					}
 					if s.ctrlSMode > 2 {
 						s.ctrlSMode = 0
 					}

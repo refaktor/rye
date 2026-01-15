@@ -1209,6 +1209,59 @@ var Builtins_table = map[string]*env.Builtin{
 		},
 	},
 
+	// Example: update column "a" by adding 1 to each cell
+	//  table { "a" "b" } { 123 234 334 556 } :tab
+	//  tab .update-column! "a" fn { cell row } { cell + 1 }
+	//  ; column "a" now contains { 124 335 }
+	// Tests:
+	//  equal { ref table { "a" "b" } { 1 10 2 20 } :tab , tab .update-column! "a" fn { c r } { c + 100 } , tab .deref .column? "a" } { 101 102 }
+	//  equal { ref table { "a" "b" } { 1 10 2 20 } :tab , tab .update-column! "a" fn { c r } { r -> "b" } , tab .deref .column? "a" } { 10 20 }
+	// Args:
+	// * table-ref - a reference to the table to update
+	// * column-name - name of the column to update (word or string)
+	// * fn - function that accepts (cell, row) and returns the new cell value
+	// Tags: #table #column #mutation
+	"update-column!": {
+		Argsn: 3,
+		Doc:   "Updates all cells in a column by applying a function that receives the cell value and the row.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch spr := arg0.(type) {
+			case *env.Table:
+				var colName string
+				switch col := arg1.(type) {
+				case env.Word:
+					colName = ps.Idx.GetWord(col.Index)
+				case env.String:
+					colName = col.Value
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "update-column!")
+				}
+
+				colIdx := slices.Index(spr.Cols, colName)
+				if colIdx < 0 {
+					return MakeBuiltinError(ps, fmt.Sprintf("Column '%s' not found", colName), "update-column!")
+				}
+
+				switch updater := arg2.(type) {
+				case env.Function:
+					for i := range spr.Rows {
+						cell := env.ToRyeValue(spr.Rows[i].Values[colIdx])
+						CallFunctionArgs2(updater, ps, cell, spr.Rows[i], ps.Ctx)
+						if ps.ErrorFlag {
+							return ps.Res
+						}
+						spr.Rows[i].Values[colIdx] = ps.Res
+					}
+					return spr
+				default:
+					return MakeArgError(ps, 3, []env.Type{env.FunctionType}, "update-column!")
+				}
+			default:
+				return MakeNeedsThawedArgError(ps, "update-column!")
+			}
+		},
+	},
+
 	// Tests:
 	//  equal { table { "a" "b" } { 1 10 2 20 3 30 } |add-column 'c { 100 200 300 } |column? "c" } { 100 200 300 }
 	//  equal { table { "a" } { 1 2 3 } |add-column 'b list [ "x" "y" "z" ] |column? "b" } { "x" "y" "z" }

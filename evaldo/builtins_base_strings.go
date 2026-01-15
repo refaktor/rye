@@ -287,10 +287,10 @@ var builtins_string = map[string]*env.Builtin{
 	// * collection: String, block or list to search in
 	// * value: Value to search for
 	// Returns:
-	// * integer 1 if the collection contains the value, 0 otherwise
+	// * true if the collection contains the value, false otherwise
 	"contains": {
 		Argsn: 2,
-		Doc:   "Checks if a string, block or list contains a specific value, returning 1 if found or 0 if not found.",
+		Doc:   "Checks if a string, block or list contains a specific value, returning true if found or false if not found.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
@@ -343,17 +343,17 @@ var builtins_string = map[string]*env.Builtin{
 		},
 	},
 	// Tests:
-	// equal { has-suffix "xoxo..." "xoxo" } 0
-	// equal { has-suffix "...xoxo" "xoxo" } 1
-	// equal { has-suffix "hello.txt" ".txt" } 1
+	// equal { has-suffix "xoxo..." "xoxo" } false
+	// equal { has-suffix "...xoxo" "xoxo" } true
+	// equal { has-suffix "hello.txt" ".txt" } true
 	// Args:
 	// * string: String to check
 	// * suffix: Suffix to look for
 	// Returns:
-	// * integer 1 if the string ends with the suffix, 0 otherwise
+	// * true if the string ends with the suffix, false otherwise
 	"has-suffix": {
 		Argsn: 2,
-		Doc:   "Checks if a string ends with a specific suffix, returning 1 if true or 0 if false.",
+		Doc:   "Checks if a string ends with a specific suffix, returning true if it does or false if it doesn't.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
@@ -361,9 +361,9 @@ var builtins_string = map[string]*env.Builtin{
 				switch s2 := arg1.(type) {
 				case env.String:
 					if strings.HasSuffix(s1.Value, s2.Value) {
-						return *env.NewInteger(1)
+						return *env.NewBoolean(true)
 					} else {
-						return *env.NewInteger(0)
+						return *env.NewBoolean(false)
 					}
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.StringType}, "has-suffix")
@@ -374,17 +374,17 @@ var builtins_string = map[string]*env.Builtin{
 		},
 	},
 	// Tests:
-	// equal { has-prefix "xoxo..." "xoxo" } 1
-	// equal { has-prefix "...xoxo" "xoxo" } 0
-	// equal { has-prefix "http://example.com" "http://" } 1
+	// equal { has-prefix "xoxo..." "xoxo" } true
+	// equal { has-prefix "...xoxo" "xoxo" } false
+	// equal { has-prefix "http://example.com" "http://" } true
 	// Args:
 	// * string: String to check
 	// * prefix: Prefix to look for
 	// Returns:
-	// * integer 1 if the string starts with the prefix, 0 otherwise
+	// * true if the string starts with the prefix, false otherwise
 	"has-prefix": {
 		Argsn: 2,
-		Doc:   "Checks if a string starts with a specific prefix, returning 1 if true or 0 if false.",
+		Doc:   "Checks if a string starts with a specific prefix, returning true if it does or false if it doesn't.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
@@ -392,9 +392,9 @@ var builtins_string = map[string]*env.Builtin{
 				switch s2 := arg1.(type) {
 				case env.String:
 					if strings.HasPrefix(s1.Value, s2.Value) {
-						return *env.NewInteger(1)
+						return *env.NewBoolean(true)
 					} else {
-						return *env.NewInteger(0)
+						return *env.NewBoolean(false)
 					}
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.StringType}, "has-prefix")
