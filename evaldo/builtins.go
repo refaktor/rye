@@ -2223,7 +2223,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"Rye-itself//needs": {
+	"Rye-itself//Needs": {
 		Argsn: 2,
 		Doc:   "",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2261,7 +2261,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"Rye-itself//includes?": {
+	"Rye-itself//Includes?": {
 		Argsn: 1,
 		Doc:   "",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2275,7 +2275,7 @@ var builtins = map[string]*env.Builtin{
 			return *env.NewBlock(*env.NewTSeries(blts))
 		},
 	},
-	"Rye-itself//can-include": {
+	"Rye-itself//Can-include": {
 		Argsn: 1,
 		Doc:   "",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2289,6 +2289,7 @@ var builtins = map[string]*env.Builtin{
 			return *env.NewBlock(*env.NewTSeries(blts))
 		},
 	},
+	// Deprecated
 	"Rye-itself//args?": {
 		Argsn: 1,
 		Doc:   "",
@@ -2304,7 +2305,22 @@ var builtins = map[string]*env.Builtin{
 			// return block
 		},
 	},
-	"Rye-itself//args\\raw?": {
+	"Rye-itself//Args?": {
+		Argsn: 1,
+		Doc:   "",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var firstArg int
+			if ps.Embedded {
+				firstArg = 1
+			} else {
+				firstArg = 2
+			}
+			return util.StringToFieldsWithQuoted(strings.Join(os.Args[firstArg:], " "), " ", "\"")
+			// block, _ := loader.LoadString(os.Args[0], false)
+			// return block
+		},
+	},
+	"Rye-itself//Args\\raw?": {
 		Argsn: 1,
 		Doc:   "",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2329,7 +2345,7 @@ var builtins = map[string]*env.Builtin{
 	// * n: Integer specifying how many history lines to return
 	// Returns:
 	// * Block of strings containing the last N lines of REPL history
-	"Rye-itself//history?": {
+	"Rye-itself//History?": {
 		Argsn: 2,
 		Doc:   "Returns a block of the last N lines from REPL history.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

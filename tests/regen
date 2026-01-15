@@ -11,6 +11,7 @@
 ../cmd/rbit/rbit ../evaldo/builtins_base_functions.go >> base.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins.go >> base.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_table.go > table.info.rye
+../cmd/rbit/rbit ../evaldo/builtins_vector.go >> table.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_regexp.go > formats.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_json.go >> formats.info.rye 
 ../cmd/rbit/rbit ../evaldo/builtins_bson.go >> formats.info.rye

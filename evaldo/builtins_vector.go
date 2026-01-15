@@ -76,12 +76,12 @@ var Builtins_vector = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { vector [ 1 2 3 4 5 ] |std-deviation? |round 2 } 1.58
+	// equal { vector [ 1 2 3 4 5 ] |std-deviation |math/round 2 } 1.58
 	// Args:
 	// * vector: vector object
 	// Returns:
 	// * decimal representing the standard deviation of the vector elements
-	"std-deviation?": {
+	"std-deviation": {
 		Argsn: 1,
 		Doc:   "Calculates the standard deviation of a vector's elements.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -95,14 +95,14 @@ var Builtins_vector = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { cosine-similarity? vector [ 1 0 ] vector [ 0 1 ] } 0.0
-	// equal { cosine-similarity? vector [ 1 1 ] vector [ 1 1 ] } 1.0
+	// equal { cosine-similarity vector [ 1 0 ] vector [ 0 1 ] } 0.0
+	// equal { cosine-similarity vector [ 1 1 ] vector [ 1 1 ] } 1.0
 	// Args:
 	// * vector1: first vector object
 	// * vector2: second vector object
 	// Returns:
 	// * decimal representing the cosine similarity between the two vectors
-	"cosine-similarity?": {
+	"cosine-similarity": {
 		Argsn: 2,
 		Doc:   "Calculates the cosine similarity between two vectors.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -221,110 +221,8 @@ var Builtins_vector = map[string]*env.Builtin{
 		},
 	},
 
-	//
-	// ##### Element-wise Arithmetic #####
-	//
-
 	// Tests:
-	// equal { vector [ 1 2 3 ] .add vector [ 4 5 6 ] |to-block } { 5.0 7.0 9.0 }
-	// Args:
-	// * vector1: first vector object
-	// * vector2: second vector object to add
-	// Returns:
-	// * new vector with element-wise sum
-	"Vector//add": {
-		Argsn: 2,
-		Doc:   "Adds two vectors element-wise. Returns a new vector.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch v1 := arg0.(type) {
-			case env.Vector:
-				switch v2 := arg1.(type) {
-				case env.Vector:
-					if len(v1.Value) != len(v2.Value) {
-						return MakeBuiltinError(ps, "Vectors must have the same length", "Vector//add")
-					}
-					result := make(govector.Vector, len(v1.Value))
-					for i := 0; i < len(v1.Value); i++ {
-						result[i] = v1.Value[i] + v2.Value[i]
-					}
-					return *env.NewVector(result)
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.VectorType}, "Vector//add")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.VectorType}, "Vector//add")
-			}
-		},
-	},
-
-	// Tests:
-	// equal { vector [ 5 7 9 ] .sub vector [ 4 5 6 ] |to-block } { 1.0 2.0 3.0 }
-	// Args:
-	// * vector1: first vector object
-	// * vector2: second vector object to subtract
-	// Returns:
-	// * new vector with element-wise difference
-	"Vector//sub": {
-		Argsn: 2,
-		Doc:   "Subtracts two vectors element-wise. Returns a new vector.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch v1 := arg0.(type) {
-			case env.Vector:
-				switch v2 := arg1.(type) {
-				case env.Vector:
-					if len(v1.Value) != len(v2.Value) {
-						return MakeBuiltinError(ps, "Vectors must have the same length", "Vector//sub")
-					}
-					result := make(govector.Vector, len(v1.Value))
-					for i := 0; i < len(v1.Value); i++ {
-						result[i] = v1.Value[i] - v2.Value[i]
-					}
-					return *env.NewVector(result)
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.VectorType}, "Vector//sub")
-				}
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.VectorType}, "Vector//sub")
-			}
-		},
-	},
-
-	// Tests:
-	// equal { vector [ 1 2 3 ] .scale 2.0 |to-block } { 2.0 4.0 6.0 }
-	// equal { vector [ 10 20 ] .scale 0.5 |to-block } { 5.0 10.0 }
-	// Args:
-	// * vector: vector object
-	// * scalar: decimal or integer to multiply by
-	// Returns:
-	// * new vector with each element multiplied by the scalar
-	"Vector//scale": {
-		Argsn: 2,
-		Doc:   "Multiplies a vector by a scalar. Returns a new vector.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch v := arg0.(type) {
-			case env.Vector:
-				var scalar float64
-				switch s := arg1.(type) {
-				case env.Decimal:
-					scalar = s.Value
-				case env.Integer:
-					scalar = float64(s.Value)
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.DecimalType, env.IntegerType}, "Vector//scale")
-				}
-				result := make(govector.Vector, len(v.Value))
-				for i := 0; i < len(v.Value); i++ {
-					result[i] = v.Value[i] * scalar
-				}
-				return *env.NewVector(result)
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.VectorType}, "Vector//scale")
-			}
-		},
-	},
-
-	// Tests:
-	// equal { mean-vectors { vector [ 1 2 ] vector [ 3 4 ] } |to-block } { 2.0 3.0 }
+	// equal { mean-vectors [ vector [ 1 2 ] vector [ 3 4 ] ] |to-block } { 2.0 3.0 }
 	// Args:
 	// * block: block of vectors to average
 	// Returns:
@@ -377,12 +275,12 @@ var Builtins_vector = map[string]*env.Builtin{
 	//
 
 	// Tests:
-	// equal { vector [ 3 4 ] .unit |normalize } 1.0
+	// equal { vector [ 3 4 ] |unit-vector |normalize } 1.0
 	// Args:
 	// * vector: vector object to normalize
 	// Returns:
 	// * new vector with length 1 (unit vector)
-	"Vector//unit": {
+	"unit-vector": {
 		Argsn: 1,
 		Doc:   "Returns a new normalized vector (length = 1). Essential for consistent dot products and overlays.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -404,13 +302,13 @@ var Builtins_vector = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { vector [ 3 4 ] .project vector [ 1 0 ] |to-block } { 3.0 0.0 }
+	// equal { vector [ 3 4 ] |project-vector vector [ 1 0 ] |to-block } { 3.0 0.0 }
 	// Args:
 	// * vector1: vector to project
 	// * vector2: vector to project onto
 	// Returns:
 	// * new vector representing the projection of vector1 onto vector2
-	"Vector//project": {
+	"project-vector": {
 		Argsn: 2,
 		Doc:   "Projects vector onto another vector. Answers: 'How much of this vector is in the direction of another?'",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -449,13 +347,13 @@ var Builtins_vector = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { vector [ 3 4 ] .reject vector [ 1 0 ] |to-block } { 0.0 4.0 }
+	// equal { vector [ 3 4 ] |reject-vector vector [ 1 0 ] |to-block } { 0.0 4.0 }
 	// Args:
 	// * vector1: vector to reject from
 	// * vector2: vector representing the direction to remove
 	// Returns:
 	// * new vector with the projection onto vector2 removed
-	"Vector//reject": {
+	"reject-vector": {
 		Argsn: 2,
 		Doc:   "Removes projection from vector. Use this to 'subtract' a concept direction from a vector.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -491,29 +389,6 @@ var Builtins_vector = map[string]*env.Builtin{
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.VectorType}, "Vector//reject")
-			}
-		},
-	},
-
-	// Tests:
-	// equal { vector [ 1 2 3 ] .to-block } { 1.0 2.0 3.0 }
-	// Args:
-	// * vector: vector object
-	// Returns:
-	// * block containing the vector elements as decimals
-	"Vector//to-block": {
-		Argsn: 1,
-		Doc:   "Converts a vector to a block of decimals.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch v := arg0.(type) {
-			case env.Vector:
-				items := make([]env.Object, len(v.Value))
-				for i, val := range v.Value {
-					items[i] = *env.NewDecimal(val)
-				}
-				return *env.NewBlock(*env.NewTSeries(items))
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.VectorType}, "Vector//to-block")
 			}
 		},
 	},
