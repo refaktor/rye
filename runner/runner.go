@@ -232,6 +232,8 @@ func DoMain(regfn func(*env.ProgramState) error) {
 		fmt.Println("\033[33m  rye -landlock-profile=readexec       \033[36m# use the readexec profile (allows execution)")
 		fmt.Println("\033[33m  rye -landlock-paths=/path1,/path2    \033[36m# specify paths to allow access to")
 		fmt.Println("\033[33m  rye -localhist                       \033[36m# append console history to local file local_rye_history")
+		fmt.Println("\033[33m  rye -http 8080                       \033[36m# start HTTP REPL mode on port 8080 (localhost only)")
+		fmt.Println("\033[33m  rye -http 8080 main.rye              \033[36m# load main.rye and expose via HTTP console on port 8080")
 		fmt.Println("\033[0m\n Thank you for trying out \033[1mRye\033[22m ...")
 		fmt.Println("")
 	}
@@ -305,6 +307,10 @@ func DoMain(regfn func(*env.ProgramState) error) {
 					}
 				} else if *template {
 					processTemplate(args[0], regfn)
+				} else if *HttpPort != "" {
+					// HTTP mode with a file: load file first then start HTTP REPL
+					ryeFile := dotsToMainRye(args[0])
+					main_rye_http_repl(*HttpPort, ryeFile, code, *lang, regfn)
 				} else {
 					ryeFile := dotsToMainRye(args[0])
 					main_rye_file(ryeFile, false, true, false, *console, code, *lang, regfn, *stin)
@@ -314,7 +320,7 @@ func DoMain(regfn func(*env.ProgramState) error) {
 					main_rye_file("", false, true, false, *console, code, *lang, regfn, *stin)
 				} else {
 					if *HttpPort != "" {
-						main_rye_http_repl(*HttpPort, code, *lang, regfn)
+						main_rye_http_repl(*HttpPort, "", code, *lang, regfn)
 					} else {
 						main_rye_repl(os.Stdin, os.Stdout, true, false, *lang, code, regfn)
 					}
@@ -577,34 +583,180 @@ func main_ryeco() {
 
 }
 
-func main_rye_http_repl(port string, code string, lang string, regfn func(*env.ProgramState) error) {
+func main_rye_http_repl(port string, file string, code string, lang string, regfn func(*env.ProgramState) error) {
 	// Initialize ProgramState
-	block, genv := loader.LoadStringNoPEG(code, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
-	evaldo.RegisterBuiltins(es)
-	evaldo.RegisterVarBuiltins(es)
-	contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
-	if err := regfn(es); err != nil {
-		fmt.Println(err.Error())
-		return
+	var es *env.ProgramState
+
+	if file != "" {
+		// Load and evaluate the file first (similar to main_rye_file)
+		bcontent, err := os.ReadFile(file)
+		if err != nil {
+			fmt.Printf("Error reading file %s: %v\n", file, err)
+			return
+		}
+		content := string(bcontent)
+
+		// Store the script directory for code signing auto-enforcement
+		scriptDir := filepath.Dir(file)
+		if scriptDir == "." {
+			if absPath, err := filepath.Abs(scriptDir); err == nil {
+				scriptDir = absPath
+			}
+		}
+		CurrentScriptDirectory = scriptDir
+
+		ps := env.NewProgramStateNEW()
+		ps.Embedded = Option_Embed_Main
+		ps.ScriptPath = file
+
+		workingPath, err := os.Getwd()
+		if err != nil {
+			workingPath = "."
+		}
+		ps.WorkingPath = workingPath
+
+		evaldo.RegisterBuiltins(ps)
+		evaldo.RegisterVarBuiltins(ps)
+		contrib.RegisterBuiltins(ps, &evaldo.BuiltinNames)
+		if err := regfn(ps); err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+
+		// Load the file content plus any additional code
+		block := loader.LoadStringNEW(" "+content+"\n"+code, security.CurrentCodeSigEnabled, ps)
+		switch val := block.(type) {
+		case env.Block:
+			ps = env.AddToProgramStateNEWWithLocation(ps, val, ps.Idx)
+
+			// Create subcontext
+			ctx := ps.Ctx
+			ps.Ctx = env.NewEnv(ctx)
+
+			if lang == "eyr" {
+				ps.Dialect = env.EyrDialect
+			}
+
+			// Evaluate the file
+			evaldo.EvalBlockInjMultiDialect(ps, nil, true)
+			evaldo.MaybeDisplayFailureOrError2(ps, ps.Idx, "http repl file load", true, true)
+
+			es = ps
+		case env.Error:
+			fmt.Println(util.TermError(val.Message))
+			return
+		}
+	} else {
+		// No file, just initialize with code (original behavior)
+		block, genv := loader.LoadStringNoPEG(code, false)
+		es = env.NewProgramState(block.(env.Block).Series, genv)
+		evaldo.RegisterBuiltins(es)
+		evaldo.RegisterVarBuiltins(es)
+		contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
+		if err := regfn(es); err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+
+		if lang == "eyr" {
+			es.Dialect = env.EyrDialect
+		}
+
+		// Eval initial code
+		evaldo.EvalBlockInjMultiDialect(es, nil, false)
+
+		ctx := es.Ctx
+		es.Ctx = env.NewEnv(ctx)
 	}
 
 	// Register program state for signal handling
 	SetCurrentProgramState(es)
 	defer ClearCurrentProgramState()
 
-	if lang == "eyr" {
-		es.Dialect = env.EyrDialect
-	}
-
-	// Eval initial code
-	evaldo.EvalBlockInjMultiDialect(es, nil, false)
-
-	ctx := es.Ctx
-	es.Ctx = env.NewEnv(ctx)
-
 	var psMutex sync.Mutex
 	var prevResult env.Object
+
+	// Route to list all words: local, generic, and matching
+	http.HandleFunc("/words", func(w http.ResponseWriter, r *http.Request) {
+		// Security check: Localhost only
+		host, _, err := net.SplitHostPort(r.RemoteAddr)
+		if err != nil {
+			if !strings.HasPrefix(r.RemoteAddr, "127.0.0.1") && !strings.HasPrefix(r.RemoteAddr, "[::1]") {
+				http.Error(w, "Forbidden", http.StatusForbidden)
+				return
+			}
+		} else {
+			if host != "127.0.0.1" && host != "::1" {
+				http.Error(w, "Forbidden", http.StatusForbidden)
+				return
+			}
+		}
+
+		psMutex.Lock()
+		defer psMutex.Unlock()
+
+		// Get optional filter from query parameter
+		filter := r.URL.Query().Get("filter")
+
+		// 1. Local words (from current context)
+		localWords := make([]string, 0)
+		for key := range es.Ctx.GetState() {
+			word := es.Idx.GetWord(key)
+			if filter == "" || strings.Contains(word, filter) {
+				localWords = append(localWords, word)
+			}
+		}
+		sort.Strings(localWords)
+
+		// 2. Generic words based on Ps (methods for the current result's kind)
+		genericWords := make([]string, 0)
+		if es.Res != nil {
+			kindIdx := es.Res.GetKind()
+			methods := es.Gen.GetMethods(kindIdx)
+			for _, methodIdx := range methods {
+				word := es.Idx.GetWord(methodIdx)
+				if filter == "" || strings.Contains(word, filter) {
+					genericWords = append(genericWords, word)
+				}
+			}
+		}
+		sort.Strings(genericWords)
+
+		// 3. All matching words (from word index)
+		matchingWords := make([]string, 0)
+		for i := 0; i < es.Idx.GetWordCount(); i++ {
+			word := es.Idx.GetWord(i)
+			if filter == "" || strings.Contains(word, filter) {
+				matchingWords = append(matchingWords, word)
+			}
+		}
+		sort.Strings(matchingWords)
+
+		// Build response
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(w, `{"local":[`)
+		for i, word := range localWords {
+			if i > 0 {
+				fmt.Fprintf(w, ",")
+			}
+			fmt.Fprintf(w, `"%s"`, word)
+		}
+		fmt.Fprintf(w, `],"generic":[`)
+		for i, word := range genericWords {
+			if i > 0 {
+				fmt.Fprintf(w, ",")
+			}
+			fmt.Fprintf(w, `"%s"`, word)
+		}
+		fmt.Fprintf(w, `],"matching":[`)
+		for i, word := range matchingWords {
+			if i > 0 {
+				fmt.Fprintf(w, ",")
+			}
+			fmt.Fprintf(w, `"%s"`, word)
+		}
+		fmt.Fprintf(w, `]}`)
+	})
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		// Security check: Localhost only

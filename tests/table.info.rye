@@ -465,6 +465,23 @@ section "Column level functions " "Functions that construct a table." {
 	{
 ``	}
 
+	group "update-column!" 
+	"Updates all cells in a column by applying a function that receives the cell value and the row."
+	{
+		arg `table-ref - a reference to the table to update`
+		arg `column-name - name of the column to update (word or string)`
+		arg `fn - function that accepts (cell, row) and returns the new cell value`
+		arg `Tags: #table #column #mutation`
+	}
+
+	{
+		equal { ref table { "a" "b" } { 1 10 2 20 } :tab , tab .update-column! "a" fn { c r } { c + 100 } , tab .deref .column? "a" } { 101 102 }
+		equal { ref table { "a" "b" } { 1 10 2 20 } :tab , tab .update-column! "a" fn { c r } { r -> "b" } , tab .deref .column? "a" } { 10 20 }
+	}
+
+	{
+``	}
+
 	group "add-column" 
 	"Adds a new column to table with the given data. Returns the modified table."
 	{
@@ -682,7 +699,7 @@ section "Loading and saving " "Functions that construct a table." {
 		cc os
 		f:: mktmp ++ "/test.csv"
 		spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
-		spr1 .save\csv f
+		spr1 .Save\csv* f
 		spr2:: Load\csv f |autotype 1.0
 		spr1 = spr2
 		} true
@@ -706,7 +723,7 @@ section "Loading and saving " "Functions that construct a table." {
 		cc os
 		f:: mktmp ++ "/test.csv"
 		spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
-		spr1 .save\csv f
+		spr1 .Save\csv* f
 		spr2:: Load\csv f |autotype 1.0
 		spr1 = spr2
 		} true
@@ -726,7 +743,7 @@ section "Loading and saving " "Functions that construct a table." {
 		cc os
 		f:: mktmp ++ "/test.tsv"
 		spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
-		spr1 .save\tsv f
+		spr1 .Save\tsv* f
 		spr2:: Load\tsv f |autotype 1.0
 		spr1 = spr2
 		} true
@@ -735,11 +752,11 @@ section "Loading and saving " "Functions that construct a table." {
 	{
 ``	}
 
-	group "save\\csv" 
+	group "file-uri//Save\\csv" 
 	"Saves a table to a .csv file."
 	{
-		arg `sheet    - the sheet to save`
-		arg `file-url - where to save the sheet as a .csv file`
+		arg `file-uri - where to save the sheet as a .csv file`
+		arg `table    - the table to save`
 		arg `Tags: #table #saving #csv`
 	}
 
@@ -748,7 +765,7 @@ section "Loading and saving " "Functions that construct a table." {
 		cc os
 		f:: mktmp ++ "/test.csv"
 		spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
-		spr1 .save\csv f
+		f .Save\csv spr1
 		spr2:: Load\csv f |autotype 1.0
 		spr1 = spr2
 		} true
@@ -757,20 +774,20 @@ section "Loading and saving " "Functions that construct a table." {
 	{
 ``	}
 
-	group "save\\tsv" 
-	"Saves a table to a .csv file."
+	group "file-uri//Save\\tsv" 
+	"Saves a table to a .tsv file."
 	{
-		arg `sheet    - the table to save`
-		arg `file-url - where to save the sheet as a .csv file`
-		arg `Tags: #table #saving #csv`
+		arg `file-uri - where to save the sheet as a .tsv file`
+		arg `table    - the table to save`
+		arg `Tags: #table #saving #tsv`
 	}
 
 	{
 		equal {
 		cc os
-		f:: mktmp ++ "/test.csv"
+		f:: mktmp ++ "/test.tsv"
 		spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
-		spr1 .save\tsv f
+		f .Save\tsv spr1
 		spr2:: Load\tsv f |autotype 1.0
 		spr1 = spr2
 		} true
@@ -791,7 +808,7 @@ section "Loading and saving " "Functions that construct a table." {
 		cc os
 		f:: mktmp ++ "/test.xlsx"
 		spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
-		spr1 .save\xlsx f
+		spr1 .Save\xlsx* f
 		spr2:: Load\xlsx f |autotype 1.0
 		spr1 = spr2
 		} true
@@ -800,11 +817,11 @@ section "Loading and saving " "Functions that construct a table." {
 	{
 ``	}
 
-	group "save\\xlsx" 
+	group "file-uri//Save\\xlsx" 
 	"Saves a Table to a .xlsx file."
 	{
+		arg `file-uri - where to save the table as a .xlsx file`
 		arg `table    - the table to save`
-		arg `file-url 		- where to save the table as a .xlsx file`
 		arg `Tags: #table #saving #xlsx`
 	}
 
@@ -813,7 +830,7 @@ section "Loading and saving " "Functions that construct a table." {
 		cc os
 		f:: mktmp ++ "/test.xlsx"
 		spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
-		spr1 .save\xlsx f
+		f .Save\xlsx spr1
 		spr2:: Load\xlsx f |autotype 1.0
 		spr1 = spr2
 		} true
@@ -846,6 +863,172 @@ section "Loading and saving " "Functions that construct a table." {
 	{
 		; equal { pt: persistent-table { "a" "b" } "/tmp/test_db" "test_table"
 		;        pt .close-persistent-table! |type? } 'persistent-table
+	}
+
+	{
+``	}
+
+}
+
+section "Vector " "Vector operations" {
+	group "vector" 
+	"Creates a vector from a block of numbers."
+	{
+		arg `block: block of numbers to convert to a vector`
+		returns `vector object`
+	}
+
+	{
+		equal { vector [ 1 2 3 ] |type? } 'vector
+	}
+
+	{
+``	}
+
+	group "normalize" 
+	"Calculates the L2 norm (Euclidean length) of a vector."
+	{
+		arg `vector: vector object to normalize`
+		returns `decimal representing the L2 norm (Euclidean length) of the vector`
+	}
+
+	{
+		equal { vector [ 3 4 ] |normalize } 5.0
+	}
+
+	{
+``	}
+
+	group "std-deviation" 
+	"Calculates the standard deviation of a vector's elements."
+	{
+		arg `vector: vector object`
+		returns `decimal representing the standard deviation of the vector elements`
+	}
+
+	{
+		equal { vector [ 1 2 3 4 5 ] |std-deviation |math/round 2 } 1.58
+	}
+
+	{
+``	}
+
+	group "cosine-similarity" 
+	"Calculates the cosine similarity between two vectors."
+	{
+		arg `vector1: first vector object`
+		arg `vector2: second vector object`
+		returns `decimal representing the cosine similarity between the two vectors`
+	}
+
+	{
+		equal { cosine-similarity vector [ 1 0 ] vector [ 0 1 ] } 0.0
+		equal { cosine-similarity vector [ 1 1 ] vector [ 1 1 ] } 1.0
+	}
+
+	{
+``	}
+
+	group "correlation" 
+	"Calculates the correlation coefficient between two vectors."
+	{
+		arg `vector1: first vector object`
+		arg `vector2: second vector object`
+		returns `decimal representing the correlation coefficient between the two vectors`
+	}
+
+	{
+		equal { correlation vector [ 1 2 3 4 5 ] vector [ 1 2 3 4 5 ] } 1.0
+		equal { correlation vector [ 1 2 3 4 5 ] vector [ 5 4 3 2 1 ] } -1.0
+	}
+
+	{
+``	}
+
+	group "dot-product" 
+	"Calculates the dot product between two vectors."
+	{
+		arg `vector1: first vector object`
+		arg `vector2: second vector object`
+		returns `decimal representing the dot product of the two vectors`
+	}
+
+	{
+		equal { dot-product vector [ 1 2 3 ] vector [ 4 5 6 ] } 32.0
+	}
+
+	{
+``	}
+
+	group "euclidean-distance" 
+	"Calculates the Euclidean distance between two vectors. Useful for K-Means clustering."
+	{
+		arg `vector1: first vector object`
+		arg `vector2: second vector object`
+		returns `decimal representing the Euclidean distance between the two vectors`
+	}
+
+	{
+		equal { euclidean-distance vector [ 0 0 ] vector [ 3 4 ] } 5.0
+		equal { euclidean-distance vector [ 1 2 3 ] vector [ 1 2 3 ] } 0.0
+	}
+
+	{
+``	}
+
+	group "mean-vectors" 
+	"Calculates the element-wise mean of multiple vectors. Useful for creating 'Master Anchors'."
+	{
+		arg `block: block of vectors to average`
+		returns `new vector representing the element-wise mean of all input vectors`
+	}
+
+	{
+		equal { mean-vectors [ vector [ 1 2 ] vector [ 3 4 ] ] |to-block } { 2.0 3.0 }
+	}
+
+	{
+``	}
+
+	group "unit-vector" 
+	"Returns a new normalized vector (length = 1). Essential for consistent dot products and overlays."
+	{
+		arg `vector: vector object to normalize`
+		returns `new vector with length 1 (unit vector)`
+	}
+
+	{
+		equal { vector [ 3 4 ] |unit-vector |normalize } 1.0
+	}
+
+	{
+``	}
+
+	group "project-vector" 
+	"Projects vector onto another vector. Answers: 'How much of this vector is in the direction of another?'"
+	{
+		arg `vector1: vector to project`
+		arg `vector2: vector to project onto`
+		returns `new vector representing the projection of vector1 onto vector2`
+	}
+
+	{
+		equal { vector [ 3 4 ] |project-vector vector [ 1 0 ] |to-block } { 3.0 0.0 }
+	}
+
+	{
+``	}
+
+	group "reject-vector" 
+	"Removes projection from vector. Use this to 'subtract' a concept direction from a vector."
+	{
+		arg `vector1: vector to reject from`
+		arg `vector2: vector representing the direction to remove`
+		returns `new vector with the projection onto vector2 removed`
+	}
+
+	{
+		equal { vector [ 3 4 ] |reject-vector vector [ 1 0 ] |to-block } { 0.0 4.0 }
 	}
 
 	{

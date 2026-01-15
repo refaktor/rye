@@ -598,14 +598,15 @@ var builtins_numbers = map[string]*env.Builtin{
 	// equal { 1 + 1 } 2
 	// equal { 3 + 4 } 7
 	// equal { 5.6 + 7.8 } 13.400000
+	// equal { vector [ 1 2 3 ] |+ vector [ 4 5 6 ] |to-block } { 5.0 7.0 9.0 }
 	// Args:
-	// * value1: First value (integer, decimal, complex, time)
-	// * value2: Second value to add (integer, decimal, complex, duration)
+	// * value1: First value (integer, decimal, complex, time, vector)
+	// * value2: Second value to add (integer, decimal, complex, duration, vector)
 	// Returns:
 	// * result of adding values, type depends on input types
 	"_+": { // **
 		Argsn: 2,
-		Doc:   "Adds two numerical values. Accepts Integer, Decimal, Complex and Time.",
+		Doc:   "Adds two numerical values. Accepts Integer, Decimal, Complex, Time and Vector.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
@@ -650,8 +651,22 @@ var builtins_numbers = map[string]*env.Builtin{
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "_+")
 				}
+			case env.Vector:
+				switch v2 := arg1.(type) {
+				case env.Vector:
+					if len(s1.Value) != len(v2.Value) {
+						return MakeBuiltinError(ps, "Vectors must have the same length", "_+")
+					}
+					result := make([]float64, len(s1.Value))
+					for i := 0; i < len(s1.Value); i++ {
+						result[i] = s1.Value[i] + v2.Value[i]
+					}
+					return *env.NewVector(result)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.VectorType}, "_+")
+				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType, env.TimeType}, "_+")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType, env.TimeType, env.VectorType}, "_+")
 			}
 		},
 	},
@@ -661,14 +676,15 @@ var builtins_numbers = map[string]*env.Builtin{
 	// equal { 5 - 6 } -1
 	// equal { 5.5 - 2.2 } 3.3
 	// equal { 5 - 2.5 } 2.5
+	// equal { vector [ 5 7 9 ] |- vector [ 4 5 6 ] |to-block } { 1.0 2.0 3.0 }
 	// Args:
-	// * value1: First number (integer or decimal)
+	// * value1: First number (integer, decimal, or vector)
 	// * value2: Second number to subtract from the first
 	// Returns:
 	// * result of subtracting value2 from value1
 	"_-": { // **
 		Argsn: 2,
-		Doc:   "Subtracts the second number from the first, working with integers, decimals, and complex numbers.",
+		Doc:   "Subtracts the second number from the first, working with integers, decimals, complex numbers, and vectors.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch a := arg0.(type) {
@@ -716,8 +732,22 @@ var builtins_numbers = map[string]*env.Builtin{
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.TimeType}, "_-")
 				}
+			case env.Vector:
+				switch v2 := arg1.(type) {
+				case env.Vector:
+					if len(a.Value) != len(v2.Value) {
+						return MakeBuiltinError(ps, "Vectors must have the same length", "_-")
+					}
+					result := make([]float64, len(a.Value))
+					for i := 0; i < len(a.Value); i++ {
+						result[i] = a.Value[i] - v2.Value[i]
+					}
+					return *env.NewVector(result)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.VectorType}, "_-")
+				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType, env.TimeType}, "_-")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType, env.TimeType, env.VectorType}, "_-")
 			}
 		},
 	},
@@ -727,14 +757,16 @@ var builtins_numbers = map[string]*env.Builtin{
 	// equal { 2.5 * -2 } -5.0
 	// equal { 0 * 5 } 0
 	// equal { 1.5 * 2.5 } 3.75
+	// equal { vector [ 1 2 3 ] |* 2.0 |to-block } { 2.0 4.0 6.0 }
+	// equal { vector [ 10 20 ] |* 0.5 |to-block } { 5.0 10.0 }
 	// Args:
-	// * value1: First number (integer or decimal)
-	// * value2: Second number to multiply by
+	// * value1: First number (integer, decimal, or vector)
+	// * value2: Second number to multiply by (scalar for vectors)
 	// Returns:
-	// * product of the two numbers
+	// * product of the two numbers, or scaled vector
 	"_*": { // **
 		Argsn: 2,
-		Doc:   "Multiplies two numbers, working with integers, decimals, and complex numbers.",
+		Doc:   "Multiplies two numbers, working with integers, decimals, complex numbers, and vectors (scalar multiplication).",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch a := arg0.(type) {
@@ -746,8 +778,16 @@ var builtins_numbers = map[string]*env.Builtin{
 					return *env.NewDecimal(float64(a.Value) * b.Value)
 				case env.Complex:
 					return *env.NewComplex(complex(float64(a.Value), 0) * b.Value)
+				case env.Vector:
+					// Integer * Vector = scaled vector
+					result := make([]float64, len(b.Value))
+					scalar := float64(a.Value)
+					for i := 0; i < len(b.Value); i++ {
+						result[i] = b.Value[i] * scalar
+					}
+					return *env.NewVector(result)
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "_*")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType, env.VectorType}, "_*")
 				}
 			case env.Decimal:
 				switch b := arg1.(type) {
@@ -757,8 +797,15 @@ var builtins_numbers = map[string]*env.Builtin{
 					return *env.NewDecimal(a.Value * b.Value)
 				case env.Complex:
 					return *env.NewComplex(complex(a.Value, 0) * b.Value)
+				case env.Vector:
+					// Decimal * Vector = scaled vector
+					result := make([]float64, len(b.Value))
+					for i := 0; i < len(b.Value); i++ {
+						result[i] = b.Value[i] * a.Value
+					}
+					return *env.NewVector(result)
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "_*")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType, env.VectorType}, "_*")
 				}
 			case env.Complex:
 				switch b := arg1.(type) {
@@ -771,8 +818,23 @@ var builtins_numbers = map[string]*env.Builtin{
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "_*")
 				}
+			case env.Vector:
+				var scalar float64
+				switch s := arg1.(type) {
+				case env.Decimal:
+					scalar = s.Value
+				case env.Integer:
+					scalar = float64(s.Value)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.DecimalType, env.IntegerType}, "_*")
+				}
+				result := make([]float64, len(a.Value))
+				for i := 0; i < len(a.Value); i++ {
+					result[i] = a.Value[i] * scalar
+				}
+				return *env.NewVector(result)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "_*")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType, env.VectorType}, "_*")
 			}
 		},
 	},

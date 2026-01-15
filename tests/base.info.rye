@@ -467,10 +467,10 @@ section "Numbers " "Working with numbers, integers and decimals." {
 ``	}
 
 	group "_+" 
-	"Adds two numerical values. Accepts Integer, Decimal, Complex and Time."
+	"Adds two numerical values. Accepts Integer, Decimal, Complex, Time and Vector."
 	{
-		arg `value1: First value (integer, decimal, complex, time)`
-		arg `value2: Second value to add (integer, decimal, complex, duration)`
+		arg `value1: First value (integer, decimal, complex, time, vector)`
+		arg `value2: Second value to add (integer, decimal, complex, duration, vector)`
 		returns `result of adding values, type depends on input types`
 	}
 
@@ -478,15 +478,16 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { 1 + 1 } 2
 		equal { 3 + 4 } 7
 		equal { 5.6 + 7.8 } 13.400000
+		equal { vector [ 1 2 3 ] |+ vector [ 4 5 6 ] |to-block } { 5.0 7.0 9.0 }
 	}
 
 	{
 ``	}
 
 	group "_-" 
-	"Subtracts the second number from the first, working with integers, decimals, and complex numbers."
+	"Subtracts the second number from the first, working with integers, decimals, complex numbers, and vectors."
 	{
-		arg `value1: First number (integer or decimal)`
+		arg `value1: First number (integer, decimal, or vector)`
 		arg `value2: Second number to subtract from the first`
 		returns `result of subtracting value2 from value1`
 	}
@@ -496,17 +497,18 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { 5 - 6 } -1
 		equal { 5.5 - 2.2 } 3.3
 		equal { 5 - 2.5 } 2.5
+		equal { vector [ 5 7 9 ] |- vector [ 4 5 6 ] |to-block } { 1.0 2.0 3.0 }
 	}
 
 	{
 ``	}
 
 	group "_*" 
-	"Multiplies two numbers, working with integers, decimals, and complex numbers."
+	"Multiplies two numbers, working with integers, decimals, complex numbers, and vectors (scalar multiplication)."
 	{
-		arg `value1: First number (integer or decimal)`
-		arg `value2: Second number to multiply by`
-		returns `product of the two numbers`
+		arg `value1: First number (integer, decimal, or vector)`
+		arg `value2: Second number to multiply by (scalar for vectors)`
+		returns `product of the two numbers, or scaled vector`
 	}
 
 	{
@@ -514,6 +516,8 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { 2.5 * -2 } -5.0
 		equal { 0 * 5 } 0
 		equal { 1.5 * 2.5 } 3.75
+		equal { vector [ 1 2 3 ] |* 2.0 |to-block } { 2.0 4.0 6.0 }
+		equal { vector [ 10 20 ] |* 0.5 |to-block } { 5.0 10.0 }
 	}
 
 	{
@@ -824,11 +828,11 @@ section "Strings " "" {
 ``	}
 
 	group "contains" 
-	"Checks if a string, block or list contains a specific value, returning 1 if found or 0 if not found."
+	"Checks if a string, block or list contains a specific value, returning true if found or false if not found."
 	{
 		arg `collection: String, block or list to search in`
 		arg `value: Value to search for`
-		returns `integer 1 if the collection contains the value, 0 otherwise`
+		returns `true if the collection contains the value, false otherwise`
 	}
 
 	{
@@ -843,34 +847,34 @@ section "Strings " "" {
 ``	}
 
 	group "has-suffix" 
-	"Checks if a string ends with a specific suffix, returning 1 if true or 0 if false."
+	"Checks if a string ends with a specific suffix, returning true if it does or false if it doesn't."
 	{
 		arg `string: String to check`
 		arg `suffix: Suffix to look for`
-		returns `integer 1 if the string ends with the suffix, 0 otherwise`
+		returns `true if the string ends with the suffix, false otherwise`
 	}
 
 	{
-		equal { has-suffix "xoxo..." "xoxo" } 0
-		equal { has-suffix "...xoxo" "xoxo" } 1
-		equal { has-suffix "hello.txt" ".txt" } 1
+		equal { has-suffix "xoxo..." "xoxo" } false
+		equal { has-suffix "...xoxo" "xoxo" } true
+		equal { has-suffix "hello.txt" ".txt" } true
 	}
 
 	{
 ``	}
 
 	group "has-prefix" 
-	"Checks if a string starts with a specific prefix, returning 1 if true or 0 if false."
+	"Checks if a string starts with a specific prefix, returning true if it does or false if it doesn't."
 	{
 		arg `string: String to check`
 		arg `prefix: Prefix to look for`
-		returns `integer 1 if the string starts with the prefix, 0 otherwise`
+		returns `true if the string starts with the prefix, false otherwise`
 	}
 
 	{
-		equal { has-prefix "xoxo..." "xoxo" } 1
-		equal { has-prefix "...xoxo" "xoxo" } 0
-		equal { has-prefix "http://example.com" "http://" } 1
+		equal { has-prefix "xoxo..." "xoxo" } true
+		equal { has-prefix "...xoxo" "xoxo" } false
+		equal { has-prefix "http://example.com" "http://" } true
 	}
 
 	{
@@ -2644,15 +2648,16 @@ section "Types and Kinds " "" {
 ``	}
 
 	group "to-block" 
-	"Turns a List to a Block"
+	"Turns a List or Vector to a Block"
 	{
-		arg `list: List value to convert to a block`
-		returns `A block containing the same elements as the input list`
+		arg `value: List or Vector to convert to a block`
+		returns `A block containing the same elements as the input`
 	}
 
 	{
 		equal { list [ 1 2 3 ] |to-block |type? } 'block
 		equal  { list [ 1 2 3 ] |to-block |first } 1
+		equal { vector [ 1 2 3 ] |to-block } { 1.0 2.0 3.0 }
 	}
 
 	{
@@ -4470,6 +4475,20 @@ section "Other " "..." {
 
 	{
 		equal { rye .type? } 'native
+	}
+
+	{
+``	}
+
+	group "Rye-itself//History?" 
+	"Returns a block of the last N lines from REPL history."
+	{
+		arg `n: Integer specifying how many history lines to return`
+		returns `Block of strings containing the last N lines of REPL history`
+	}
+
+	{
+		; equal { rye .history 5 |length? } 5
 	}
 
 	{

@@ -149,20 +149,27 @@ var builtins_types = map[string]*env.Builtin{
 	// Tests:
 	// equal { list [ 1 2 3 ] |to-block |type? } 'block
 	// equal  { list [ 1 2 3 ] |to-block |first } 1
+	// equal { vector [ 1 2 3 ] |to-block } { 1.0 2.0 3.0 }
 	// Args:
-	// * list: List value to convert to a block
+	// * value: List or Vector to convert to a block
 	// Returns:
-	// * A block containing the same elements as the input list
+	// * A block containing the same elements as the input
 	"to-block": { // ***
 		Argsn: 1,
-		Doc:   "Turns a List to a Block",
+		Doc:   "Turns a List or Vector to a Block",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch list := arg0.(type) {
+			switch val := arg0.(type) {
 			case env.List:
-				return env.List2Block(ps, list)
+				return env.List2Block(ps, val)
+			case env.Vector:
+				items := make([]env.Object, len(val.Value))
+				for i, v := range val.Value {
+					items[i] = *env.NewDecimal(v)
+				}
+				return *env.NewBlock(*env.NewTSeries(items))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.DictType}, "to-context")
+				return MakeArgError(ps, 1, []env.Type{env.ListType, env.VectorType}, "to-block")
 			}
 		},
 	},
@@ -185,7 +192,7 @@ var builtins_types = map[string]*env.Builtin{
 				// make new context with no parent
 
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.DictType}, "to-context")
+				return MakeArgError(ps, 1, []env.Type{env.DictType}, "to-contextXX")
 			}
 		},
 	},

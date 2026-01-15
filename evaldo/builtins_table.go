@@ -1209,6 +1209,59 @@ var Builtins_table = map[string]*env.Builtin{
 		},
 	},
 
+	// Example: update column "a" by adding 1 to each cell
+	//  table { "a" "b" } { 123 234 334 556 } :tab
+	//  tab .update-column! "a" fn { cell row } { cell + 1 }
+	//  ; column "a" now contains { 124 335 }
+	// Tests:
+	//  equal { ref table { "a" "b" } { 1 10 2 20 } :tab , tab .update-column! "a" fn { c r } { c + 100 } , tab .deref .column? "a" } { 101 102 }
+	//  equal { ref table { "a" "b" } { 1 10 2 20 } :tab , tab .update-column! "a" fn { c r } { r -> "b" } , tab .deref .column? "a" } { 10 20 }
+	// Args:
+	// * table-ref - a reference to the table to update
+	// * column-name - name of the column to update (word or string)
+	// * fn - function that accepts (cell, row) and returns the new cell value
+	// Tags: #table #column #mutation
+	"update-column!": {
+		Argsn: 3,
+		Doc:   "Updates all cells in a column by applying a function that receives the cell value and the row.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch spr := arg0.(type) {
+			case *env.Table:
+				var colName string
+				switch col := arg1.(type) {
+				case env.Word:
+					colName = ps.Idx.GetWord(col.Index)
+				case env.String:
+					colName = col.Value
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "update-column!")
+				}
+
+				colIdx := slices.Index(spr.Cols, colName)
+				if colIdx < 0 {
+					return MakeBuiltinError(ps, fmt.Sprintf("Column '%s' not found", colName), "update-column!")
+				}
+
+				switch updater := arg2.(type) {
+				case env.Function:
+					for i := range spr.Rows {
+						cell := env.ToRyeValue(spr.Rows[i].Values[colIdx])
+						CallFunctionArgs2(updater, ps, cell, spr.Rows[i], ps.Ctx)
+						if ps.ErrorFlag {
+							return ps.Res
+						}
+						spr.Rows[i].Values[colIdx] = ps.Res
+					}
+					return spr
+				default:
+					return MakeArgError(ps, 3, []env.Type{env.FunctionType}, "update-column!")
+				}
+			default:
+				return MakeNeedsThawedArgError(ps, "update-column!")
+			}
+		},
+	},
+
 	// Tests:
 	//  equal { table { "a" "b" } { 1 10 2 20 3 30 } |add-column 'c { 100 200 300 } |column? "c" } { 100 200 300 }
 	//  equal { table { "a" } { 1 2 3 } |add-column 'b list [ "x" "y" "z" ] |column? "b" } { "x" "y" "z" }
@@ -1706,7 +1759,7 @@ var Builtins_table = map[string]*env.Builtin{
 	//	 cc os
 	//   f:: mktmp ++ "/test.csv"
 	//   spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
-	//   spr1 .save\csv f
+	//   spr1 .Save\csv* f
 	//   spr2:: Load\csv f |autotype 1.0
 	//   spr1 = spr2
 	//  } true
@@ -1766,7 +1819,7 @@ var Builtins_table = map[string]*env.Builtin{
 	//	 cc os
 	//   f:: mktmp ++ "/test.csv"
 	//   spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
-	//   spr1 .save\csv f
+	//   spr1 .Save\csv* f
 	//   spr2:: Load\csv f |autotype 1.0
 	//   spr1 = spr2
 	//  } true
@@ -1835,7 +1888,7 @@ var Builtins_table = map[string]*env.Builtin{
 	//	 cc os
 	//   f:: mktmp ++ "/test.tsv"
 	//   spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
-	//   spr1 .save\tsv f
+	//   spr1 .Save\tsv* f
 	//   spr2:: Load\tsv f |autotype 1.0
 	//   spr1 = spr2
 	//  } true
@@ -1893,27 +1946,27 @@ var Builtins_table = map[string]*env.Builtin{
 	//	 cc os
 	//   f:: mktmp ++ "/test.csv"
 	//   spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
-	//   spr1 .save\csv f
+	//   f .Save\csv spr1
 	//   spr2:: Load\csv f |autotype 1.0
 	//   spr1 = spr2
 	//  } true
 	// Args:
-	// * sheet    - the sheet to save
-	// * file-url - where to save the sheet as a .csv file
+	// * file-uri - where to save the sheet as a .csv file
+	// * table    - the table to save
 	// Tags: #table #saving #csv
-	"save\\csv": {
+	"file-uri//Save\\csv": {
 		Argsn: 2,
 		Doc:   "Saves a table to a .csv file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch spr := arg0.(type) {
-			case env.Table:
-				switch file := arg1.(type) {
-				case env.Uri:
+			switch file := arg0.(type) {
+			case env.Uri:
+				switch spr := arg1.(type) {
+				case env.Table:
 					// rows, err := db1.Value.(*sql.DB).Query(sqlstr, vals...)
 					f, err := os.Create(file.GetPath())
 					if err != nil {
 						// log.Fatal("Unable to read input file "+filePath, err)
-						return MakeBuiltinError(ps, "Unable to create input file.", "save\\csv")
+						return MakeBuiltinError(ps, "Unable to create input file.", "file-uri//Save\\csv")
 					}
 					defer f.Close()
 
@@ -1923,7 +1976,7 @@ var Builtins_table = map[string]*env.Builtin{
 
 					err1 := csvWriter.Write(spr.Cols)
 					if err1 != nil {
-						return MakeBuiltinError(ps, "Unable to create write header.", "save\\csv")
+						return MakeBuiltinError(ps, "Unable to create write header.", "file-uri//Save\\csv")
 					}
 
 					for ir, row := range spr.Rows {
@@ -1951,17 +2004,17 @@ var Builtins_table = map[string]*env.Builtin{
 						}
 						err := csvWriter.Write(strVals)
 						if err != nil {
-							return MakeBuiltinError(ps, "Unable to write line: "+strconv.Itoa(ir), "save\\csv")
+							return MakeBuiltinError(ps, "Unable to write line: "+strconv.Itoa(ir), "file-uri//Save\\csv")
 						}
 					}
 					csvWriter.Flush()
 					f.Close()
 					return spr
 				default:
-					return MakeArgError(ps, 1, []env.Type{env.UriType}, "save\\csv")
+					return MakeArgError(ps, 2, []env.Type{env.TableType}, "file-uri//Save\\csv")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "save\\csv")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-uri//Save\\csv")
 			}
 		},
 	},
@@ -1971,29 +2024,29 @@ var Builtins_table = map[string]*env.Builtin{
 	// Tests:
 	//  equal {
 	//	 cc os
-	//   f:: mktmp ++ "/test.csv"
+	//   f:: mktmp ++ "/test.tsv"
 	//   spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
-	//   spr1 .save\tsv f
+	//   f .Save\tsv spr1
 	//   spr2:: Load\tsv f |autotype 1.0
 	//   spr1 = spr2
 	//  } true
 	// Args:
-	// * sheet    - the table to save
-	// * file-url - where to save the sheet as a .csv file
-	// Tags: #table #saving #csv
-	"save\\tsv": {
+	// * file-uri - where to save the sheet as a .tsv file
+	// * table    - the table to save
+	// Tags: #table #saving #tsv
+	"file-uri//Save\\tsv": {
 		Argsn: 2,
-		Doc:   "Saves a table to a .csv file.",
+		Doc:   "Saves a table to a .tsv file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch spr := arg0.(type) {
-			case env.Table:
-				switch file := arg1.(type) {
-				case env.Uri:
+			switch file := arg0.(type) {
+			case env.Uri:
+				switch spr := arg1.(type) {
+				case env.Table:
 					// rows, err := db1.Value.(*sql.DB).Query(sqlstr, vals...)
 					f, err := os.Create(file.GetPath())
 					if err != nil {
 						// log.Fatal("Unable to read input file "+filePath, err)
-						return MakeBuiltinError(ps, "Unable to create input file.", "save\\csv")
+						return MakeBuiltinError(ps, "Unable to create input file.", "file-uri//Save\\tsv")
 					}
 					defer f.Close()
 
@@ -2003,7 +2056,7 @@ var Builtins_table = map[string]*env.Builtin{
 					csvWriter.Comma = '\t'
 					err1 := csvWriter.Write(spr.Cols)
 					if err1 != nil {
-						return MakeBuiltinError(ps, "Unable to create write header.", "save\\csv")
+						return MakeBuiltinError(ps, "Unable to create write header.", "file-uri//Save\\tsv")
 					}
 
 					for ir, row := range spr.Rows {
@@ -2031,17 +2084,17 @@ var Builtins_table = map[string]*env.Builtin{
 						}
 						err := csvWriter.Write(strVals)
 						if err != nil {
-							return MakeBuiltinError(ps, "Unable to write line: "+strconv.Itoa(ir), "save\\csv")
+							return MakeBuiltinError(ps, "Unable to write line: "+strconv.Itoa(ir), "file-uri//Save\\tsv")
 						}
 					}
 					csvWriter.Flush()
 					f.Close()
 					return spr
 				default:
-					return MakeArgError(ps, 1, []env.Type{env.UriType}, "save\\csv")
+					return MakeArgError(ps, 2, []env.Type{env.TableType}, "file-uri//Save\\tsv")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "save\\csv")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-uri//Save\\tsv")
 			}
 		},
 	},
@@ -2051,7 +2104,7 @@ var Builtins_table = map[string]*env.Builtin{
 	//	 cc os
 	//   f:: mktmp ++ "/test.xlsx"
 	//   spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
-	//   spr1 .save\xlsx f
+	//   spr1 .Save\xlsx* f
 	//   spr2:: Load\xlsx f |autotype 1.0
 	//   spr1 = spr2
 	//  } true
@@ -2116,31 +2169,31 @@ var Builtins_table = map[string]*env.Builtin{
 	//	 cc os
 	//   f:: mktmp ++ "/test.xlsx"
 	//   spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
-	//   spr1 .save\xlsx f
+	//   f .Save\xlsx spr1
 	//   spr2:: Load\xlsx f |autotype 1.0
 	//   spr1 = spr2
 	//  } true
 	// Args:
+	// * file-uri - where to save the table as a .xlsx file
 	// * table    - the table to save
-	// * file-url 		- where to save the table as a .xlsx file
 	// Tags: #table #saving #xlsx
-	"save\\xlsx": {
+	"file-uri//Save\\xlsx": {
 		Argsn: 2,
 		Doc:   "Saves a Table to a .xlsx file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch spr := arg0.(type) {
-			case env.Table:
-				switch file := arg1.(type) {
-				case env.Uri:
+			switch file := arg0.(type) {
+			case env.Uri:
+				switch spr := arg1.(type) {
+				case env.Table:
 					sheetName := "Sheet1"
 					f := excelize.NewFile()
 					index, err := f.NewSheet(sheetName)
 					if err != nil {
-						return MakeBuiltinError(ps, fmt.Sprintf("Unable to create new sheet: %s", err), "save\\xlsx")
+						return MakeBuiltinError(ps, fmt.Sprintf("Unable to create new sheet: %s", err), "file-uri//Save\\xlsx")
 					}
 					err = f.SetSheetRow(sheetName, "A1", &spr.Cols)
 					if err != nil {
-						return MakeBuiltinError(ps, fmt.Sprintf("Unable to set header row: %s", err), "save\\xlsx")
+						return MakeBuiltinError(ps, fmt.Sprintf("Unable to set header row: %s", err), "file-uri//Save\\xlsx")
 					}
 					for i, row := range spr.Rows {
 						// 1-based and skip header row
@@ -2161,25 +2214,25 @@ var Builtins_table = map[string]*env.Builtin{
 							case float64:
 								vals[j] = val
 							default:
-								return MakeBuiltinError(ps, fmt.Sprintf("Unable to save table: unsupported type %T", val), "save\\xlsx")
+								return MakeBuiltinError(ps, fmt.Sprintf("Unable to save table: unsupported type %T", val), "file-uri//Save\\xlsx")
 							}
 						}
 						err = f.SetSheetRow(sheetName, fmt.Sprintf("A%d", rowIndex), &vals)
 						if err != nil {
-							return MakeBuiltinError(ps, fmt.Sprintf("Unable to set row %d: %s", rowIndex, err), "save\\xlsx")
+							return MakeBuiltinError(ps, fmt.Sprintf("Unable to set row %d: %s", rowIndex, err), "file-uri//Save\\xlsx")
 						}
 					}
 					f.SetActiveSheet(index)
 					err = f.SaveAs(file.GetPath())
 					if err != nil {
-						return MakeBuiltinError(ps, fmt.Sprintf("Unable to save table: %s", err), "save\\xlsx")
+						return MakeBuiltinError(ps, fmt.Sprintf("Unable to save table: %s", err), "file-uri//Save\\xlsx")
 					}
 					return spr
 				default:
-					return MakeArgError(ps, 1, []env.Type{env.UriType}, "save\\xlsx")
+					return MakeArgError(ps, 2, []env.Type{env.TableType}, "file-uri//Save\\xlsx")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType}, "save\\xlsx")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-uri//Save\\xlsx")
 			}
 		},
 	},

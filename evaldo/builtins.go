@@ -10,7 +10,6 @@ import (
 	"regexp"
 
 	"github.com/refaktor/rye/env"
-	"github.com/refaktor/rye/term"
 
 	"github.com/refaktor/rye/loader"
 	// JM 20230825	"github.com/refaktor/rye/term"
@@ -1401,57 +1400,6 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	/* JM 20230825 */
-	"display-selection": {
-		Argsn: 2,
-		Doc:   "Work in progress Interactively displays a value.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			// This is temporary implementation for experimenting what it would work like at all
-			// later it should belong to the object (and the medium of display, terminal, html ..., it's part of the frontend)
-			term.SaveCurPos()
-			switch bloc := arg0.(type) {
-			case env.Block:
-				obj, esc := term.DisplaySelection(bloc, ps.Idx, int(arg1.(env.Integer).Value))
-				if !esc {
-					return obj
-				}
-			}
-			return nil
-		},
-	},
-	"display-input": {
-		Argsn: 2,
-		Doc:   "Work in progress Interactively displays a value.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			// This is temporary implementation for experimenting what it would work like at all
-			// later it should belong to the object (and the medium of display, terminal, html ..., it's part of the frontend)
-			term.SaveCurPos()
-			switch bloc := arg0.(type) {
-			case env.Integer:
-				obj, esc := term.DisplayInputField(int(bloc.Value), int(arg1.(env.Integer).Value))
-				if !esc {
-					return obj
-				}
-			}
-			return nil
-		},
-	},
-	"display-date-input": {
-		Argsn: 2,
-		Doc:   "Interactive date input in format YYYY-MM-DD. Use arrow keys to navigate between year/month/day fields and increment/decrement values, or type digits. Returns date string.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			term.SaveCurPos()
-			switch initialDate := arg0.(type) {
-			case env.String:
-				obj, esc := term.DisplayDateInput(initialDate.Value, int(arg1.(env.Integer).Value))
-				if !esc {
-					return obj
-				}
-			}
-			return nil
-		},
-	}, /* */
-
 	// Tests:
 	// ; import file://test.rye  ; imports and executes test.rye
 	// Args:
@@ -2275,7 +2223,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"Rye-itself//needs": {
+	"Rye-itself//Needs": {
 		Argsn: 2,
 		Doc:   "",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2313,7 +2261,7 @@ var builtins = map[string]*env.Builtin{
 		},
 	},
 
-	"Rye-itself//includes?": {
+	"Rye-itself//Includes?": {
 		Argsn: 1,
 		Doc:   "",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2327,7 +2275,7 @@ var builtins = map[string]*env.Builtin{
 			return *env.NewBlock(*env.NewTSeries(blts))
 		},
 	},
-	"Rye-itself//can-include?": {
+	"Rye-itself//Can-include": {
 		Argsn: 1,
 		Doc:   "",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2341,7 +2289,8 @@ var builtins = map[string]*env.Builtin{
 			return *env.NewBlock(*env.NewTSeries(blts))
 		},
 	},
-	"Rye-itself//args": {
+	// Deprecated
+	"Rye-itself//args?": {
 		Argsn: 1,
 		Doc:   "",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2356,7 +2305,22 @@ var builtins = map[string]*env.Builtin{
 			// return block
 		},
 	},
-	"Rye-itself//args\\raw": {
+	"Rye-itself//Args?": {
+		Argsn: 1,
+		Doc:   "",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var firstArg int
+			if ps.Embedded {
+				firstArg = 1
+			} else {
+				firstArg = 2
+			}
+			return util.StringToFieldsWithQuoted(strings.Join(os.Args[firstArg:], " "), " ", "\"")
+			// block, _ := loader.LoadString(os.Args[0], false)
+			// return block
+		},
+	},
+	"Rye-itself//Args\\raw?": {
 		Argsn: 1,
 		Doc:   "",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -2373,6 +2337,32 @@ var builtins = map[string]*env.Builtin{
 			}
 			// block, _ := loader.LoadString(os.Args[0], false)
 			// return block
+		},
+	},
+	// Tests:
+	// ; equal { rye .history 5 |length? } 5
+	// Args:
+	// * n: Integer specifying how many history lines to return
+	// Returns:
+	// * Block of strings containing the last N lines of REPL history
+	"Rye-itself//History?": {
+		Argsn: 2,
+		Doc:   "Returns a block of the last N lines from REPL history.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch n := arg1.(type) {
+			case env.Integer:
+				if ps.GetHistoryLast == nil {
+					return MakeBuiltinError(ps, "History not available (not running in REPL)", "Rye-itself//history")
+				}
+				lines := ps.GetHistoryLast(int(n.Value))
+				objs := make([]env.Object, len(lines))
+				for i, line := range lines {
+					objs[i] = *env.NewString(line)
+				}
+				return *env.NewBlock(*env.NewTSeries(objs))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "Rye-itself//history")
+			}
 		},
 	},
 
@@ -2773,7 +2763,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_goroutines, ps, "goroutines")
 	RegisterBuiltins2(Builtins_msgdispatcher, ps, "msgdispatcher")
 	RegisterBuiltins2(Builtins_http, ps, "http")
-	RegisterBuiltinsInContext(Builtins_gin, ps, "gin")
+	// RegisterBuiltinsInContext(Builtins_gin, ps, "gin")
 	RegisterBuiltins2(Builtins_sqlite, ps, "sqlite")
 	RegisterBuiltins2(Builtins_psql, ps, "psql")
 	RegisterBuiltins2(Builtins_mysql, ps, "mysql")
@@ -2800,6 +2790,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltinsInContext(Builtins_git, ps, "git")
 	RegisterBuiltinsInContext(Builtins_prometheus, ps, "prometheus")
 	RegisterBuiltinsInContext(Builtins_echarts, ps, "echarts")
+	RegisterBuiltinsInContext(Builtins_flui, ps, "flui")
 	RegisterErrorUtilsBuiltins(ps) // Register additional error handling utilities
 	// ## Archived modules
 	// RegisterBuiltins2(Builtins_gtk, ps, "gtk")

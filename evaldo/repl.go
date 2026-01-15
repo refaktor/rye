@@ -600,6 +600,9 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool, localHist
 		r.prevResult = obj // Update prevResult when user selects a value via Ctrl+x
 	})
 
+	// Set the history getter function on ProgramState so builtins can access history
+	es.GetHistoryLast = ml.GetHistoryLast
+
 	// Improved error handling for history file operations
 	histFn := history_fn
 	if localHist {
@@ -650,6 +653,18 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool, localHist
 			wordpart = strings.TrimSpace(line[spacePos:])
 			prefix = line[0:spacePos] + " "
 			// Note: if wordpart is empty (cursor after space), we'll show context words
+		}
+
+		// Check if input starts with "." or "|" - these are op-words that need special handling
+		hasDotPrefix := strings.HasPrefix(wordpart, ".")
+		hasPipePrefix := strings.HasPrefix(wordpart, "|")
+
+		// For filtering purposes, strip the leading "." or "|"
+		filterPart := wordpart
+		if hasDotPrefix && len(wordpart) > 0 {
+			filterPart = wordpart[1:] // Strip the "." for filtering
+		} else if hasPipePrefix && len(wordpart) > 0 {
+			filterPart = wordpart[1:] // Strip the "|" for filtering
 		}
 
 		// Check if wordpart starts with % for file path completion
@@ -714,30 +729,56 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool, localHist
 			// Mode 0: Context only (local words)
 			for key := range es.Ctx.GetState() {
 				word := es.Idx.GetWord(key)
-				if wordpart == "" || strings.HasPrefix(word, strings.ToLower(wordpart)) {
-					c = append(c, prefix+word)
-					suggestions = append(suggestions, word)
-				} else if strings.HasPrefix("."+word, strings.ToLower(wordpart)) {
-					c = append(c, prefix+"."+word)
-					suggestions = append(suggestions, "."+word)
-				} else if strings.HasPrefix("|"+word, strings.ToLower(wordpart)) {
-					c = append(c, prefix+"|"+word)
-					suggestions = append(suggestions, "|"+word)
+				// If user typed ".", prepend "." to all suggestions
+				if hasDotPrefix {
+					if filterPart == "" || strings.HasPrefix(word, strings.ToLower(filterPart)) {
+						c = append(c, prefix+"."+word)
+						suggestions = append(suggestions, "."+word)
+					}
+				} else if hasPipePrefix {
+					if filterPart == "" || strings.HasPrefix(word, strings.ToLower(filterPart)) {
+						c = append(c, prefix+"|"+word)
+						suggestions = append(suggestions, "|"+word)
+					}
+				} else {
+					if wordpart == "" || strings.HasPrefix(word, strings.ToLower(wordpart)) {
+						c = append(c, prefix+word)
+						suggestions = append(suggestions, word)
+					} else if strings.HasPrefix("."+word, strings.ToLower(wordpart)) {
+						c = append(c, prefix+"."+word)
+						suggestions = append(suggestions, "."+word)
+					} else if strings.HasPrefix("|"+word, strings.ToLower(wordpart)) {
+						c = append(c, prefix+"|"+word)
+						suggestions = append(suggestions, "|"+word)
+					}
 				}
 			}
 		} else if mode == 1 {
 			// Mode 1: Word index (all words from global index)
 			for i := 0; i < es.Idx.GetWordCount(); i++ {
 				word := es.Idx.GetWord(i)
-				if wordpart == "" || strings.HasPrefix(word, strings.ToLower(wordpart)) {
-					c = append(c, prefix+word)
-					suggestions2 = append(suggestions2, word)
-				} else if strings.HasPrefix("."+word, strings.ToLower(wordpart)) {
-					c = append(c, prefix+"."+word)
-					suggestions2 = append(suggestions2, "."+word)
-				} else if strings.HasPrefix("|"+word, strings.ToLower(wordpart)) {
-					c = append(c, prefix+"|"+word)
-					suggestions2 = append(suggestions2, "|"+word)
+				// If user typed ".", prepend "." to all suggestions
+				if hasDotPrefix {
+					if filterPart == "" || strings.HasPrefix(word, strings.ToLower(filterPart)) {
+						c = append(c, prefix+"."+word)
+						suggestions2 = append(suggestions2, "."+word)
+					}
+				} else if hasPipePrefix {
+					if filterPart == "" || strings.HasPrefix(word, strings.ToLower(filterPart)) {
+						c = append(c, prefix+"|"+word)
+						suggestions2 = append(suggestions2, "|"+word)
+					}
+				} else {
+					if wordpart == "" || strings.HasPrefix(word, strings.ToLower(wordpart)) {
+						c = append(c, prefix+word)
+						suggestions2 = append(suggestions2, word)
+					} else if strings.HasPrefix("."+word, strings.ToLower(wordpart)) {
+						c = append(c, prefix+"."+word)
+						suggestions2 = append(suggestions2, "."+word)
+					} else if strings.HasPrefix("|"+word, strings.ToLower(wordpart)) {
+						c = append(c, prefix+"|"+word)
+						suggestions2 = append(suggestions2, "|"+word)
+					}
 				}
 			}
 		} else if mode == 2 {
@@ -747,10 +788,23 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool, localHist
 				methods := es.Gen.GetMethods(kindIdx)
 				for _, methodIdx := range methods {
 					word := es.Idx.GetWord(methodIdx)
-					// Filter by wordpart if provided
-					if wordpart == "" || strings.HasPrefix(word, strings.ToLower(wordpart)) {
-						c = append(c, prefix+word)
-						suggestions = append(suggestions, word)
+					// If user typed ".", prepend "." to all suggestions
+					if hasDotPrefix {
+						if filterPart == "" || strings.HasPrefix(word, strings.ToLower(filterPart)) {
+							c = append(c, prefix+"."+word)
+							suggestions = append(suggestions, "."+word)
+						}
+					} else if hasPipePrefix {
+						if filterPart == "" || strings.HasPrefix(word, strings.ToLower(filterPart)) {
+							c = append(c, prefix+"|"+word)
+							suggestions = append(suggestions, "|"+word)
+						}
+					} else {
+						// Filter by filterPart if provided
+						if filterPart == "" || strings.HasPrefix(word, strings.ToLower(filterPart)) {
+							c = append(c, prefix+word)
+							suggestions = append(suggestions, word)
+						}
 					}
 				}
 			}
