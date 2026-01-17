@@ -1180,7 +1180,7 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 	evaldo.MaybeDisplayFailureOrError(es, es.Idx, "preload")
 	// fmt.Println(es.Res.Inspect(*es.Idx))
 
-	if false && subc {
+	if subc {
 		ctx := es.Ctx
 		es.Ctx = env.NewEnv(ctx) // make new context with no parent
 	}
