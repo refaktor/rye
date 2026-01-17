@@ -1128,7 +1128,7 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 		log.SetOutput(logFile)
 	}
 
-	// fmt.Println("RYE REPL")
+	fmt.Println(code)
 	input := code // "name: \"Rye\" version: \"0.011 alpha\""
 	// userHomeDir, _ := os.UserHomeDir()
 	// profile_path := filepath.Join(userHomeDir, ".rye-profile")
@@ -1158,7 +1158,7 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 	//	fmt.Println("There was no profile.")
 	//}
 
-	block, genv := loader.LoadStringNoPEG(input, false)
+	block, genv := loader.LoadStringNoPEG("", false)
 	es := env.NewProgramState(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
 	evaldo.RegisterVarBuiltins(es)
@@ -1174,11 +1174,25 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 	if lang == "eyr" {
 		es.Dialect = env.EyrDialect
 	}
-	evaldo.EvalBlockInjMultiDialect(es, nil, false)
 
-	if subc {
+	// fmt.Println(env.NewBlock(es.Ser).Inspect(*es.Idx))
+	evaldo.EvalBlockInjMultiDialect(es, nil, false)
+	evaldo.MaybeDisplayFailureOrError(es, es.Idx, "preload")
+	// fmt.Println(es.Res.Inspect(*es.Idx))
+
+	if false && subc {
 		ctx := es.Ctx
 		es.Ctx = env.NewEnv(ctx) // make new context with no parent
+	}
+
+	startBlock, genv := loader.LoadStringNoPEG(input, false)
+	if blockErr, ok := startBlock.(env.Error); ok {
+		handleError(fmt.Errorf("%s", blockErr.Message), "parsing starup code", false)
+	} else {
+		blockS := startBlock.(env.Block)
+		es = env.AddToProgramState(es, blockS.Series, genv)
+		evaldo.EvalBlock(es)
+		evaldo.MaybeDisplayFailureOrError(es, es.Idx, "preload")
 	}
 
 	if here {
@@ -1196,6 +1210,7 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 					block1 := block.(env.Block)
 					es = env.AddToProgramState(es, block1.Series, genv)
 					evaldo.EvalBlock(es)
+					evaldo.MaybeDisplayFailureOrError(es, es.Idx, "preload")
 				}
 			}
 		} else {

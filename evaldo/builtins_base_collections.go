@@ -3268,10 +3268,10 @@ var builtins_collection = map[string]*env.Builtin{
 
 	// TODOC
 	// Tests:
-	// equal { x: 1 y: 2 vals { x y } } { 1 2 }
-	// equal { x: 1 y: 2 vals { 1 y } } { 1 2 }
-	// equal { x: 1 y: 2 try { vals { z y } } |type? } 'error
-	"vals": { // **
+	// equal { x: 1 y: 2 evals { x y } } { 1 2 }
+	// equal { x: 1 y: 2 evals { 1 y } } { 1 2 }
+	// equal { x: 1 y: 2 try { evals { z y } } |type? } 'error
+	"evals": { // **
 		Argsn: 1,
 		Doc:   "Takes a block of Rye values and evaluates each value or expression.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

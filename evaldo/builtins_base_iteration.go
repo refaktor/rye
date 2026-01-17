@@ -1168,9 +1168,9 @@ var builtins_iteration = map[string]*env.Builtin{
 	//  equal { partition { "a" "b" 1 "c" "d" } { .is-integer } } { { "a" "b" } { 1 } { "c" "d" } }
 	//  equal { partition { "a" "b" 1 "c" "d" } ?is-integer } { { "a" "b" } { 1 } { "c" "d" } }
 	//  equal { partition { } { > 2 } } { { } }
-	//  equal { partition list { 1 2 3 4 } { > 2 } } list vals { list { 1 2 } list { 3 4 } }
-	//  equal { partition list { "a" "b" 1 "c" "d" } ?is-integer } list vals { list { "a" "b" } list { 1 } list { "c" "d" } }
-	//  equal { partition list { } { > 2 } } list vals { list { } }
+	//  equal { partition list { 1 2 3 4 } { > 2 } } list evals { list { 1 2 } list { 3 4 } }
+	//  equal { partition list { "a" "b" 1 "c" "d" } ?is-integer } list evals { list { "a" "b" } list { 1 } list { "c" "d" } }
+	//  equal { partition list { } { > 2 } } list evals { list { } }
 	//  equal { partition "aaabbccc" { , } } list { "aaa" "bb" "ccc" }
 	//  equal { partition "" { , } } list { "" }
 	//  equal { partition "aaabbccc" ?is-string } list { "aaabbccc" }
@@ -1293,12 +1293,12 @@ var builtins_iteration = map[string]*env.Builtin{
 
 	// Tests:
 	//  ; Equality for dicts doesn't yet work consistently
-	//  ;equal { { "Anne" "Mitch" "Anya" } .group { .first } } dict vals { "A" list { "Anne" "Anya" } "M" list { "Mitch" } }
-	//  ;equal { { "Anne" "Mitch" "Anya" } .group ?first } dict vals { "A" list { "Anne" "Anya" } "M" list { "Mitch" } }
-	//  ;equal { { } .group { .first } } dict vals { }
-	//  ;equal { { "Anne" "Mitch" "Anya" } .list .group { .first } } dict vals { "A" list { "Anne" "Anya" } "M" list { "Mitch" } }
-	//  ;equal { { "Anne" "Mitch" "Anya" } .list .group ?first } dict vals { "A" list { "Anne" "Anya" } "M" list { "Mitch" } }
-	//  equal { { } .list .group { .first } } dict vals { }
+	//  ;equal { { "Anne" "Mitch" "Anya" } .group { .first } } dict evals { "A" list { "Anne" "Anya" } "M" list { "Mitch" } }
+	//  ;equal { { "Anne" "Mitch" "Anya" } .group ?first } dict evals { "A" list { "Anne" "Anya" } "M" list { "Mitch" } }
+	//  ;equal { { } .group { .first } } dict evals { }
+	//  ;equal { { "Anne" "Mitch" "Anya" } .list .group { .first } } dict evals { "A" list { "Anne" "Anya" } "M" list { "Mitch" } }
+	//  ;equal { { "Anne" "Mitch" "Anya" } .list .group ?first } dict evals { "A" list { "Anne" "Anya" } "M" list { "Mitch" } }
+	//  equal { { } .list .group { .first } } dict evals { }
 	//  equal { try { { 1 2 3 4 } .group { .is-even } } |type? } 'error ; TODO keys can only be string currently
 	// Args:
 	// * series: Block or List to group

@@ -103,7 +103,7 @@ var Builtins_flui = map[string]*env.Builtin{
 			case env.Integer:
 				switch height := arg1.(type) {
 				case env.Integer:
-					obj, esc := term.DisplayTextArea(int(width.Value), int(height.Value))
+					obj, esc := term.DisplayTextArea(int(width.Value), int(height.Value), "")
 					if esc {
 						ps.FailureFlag = true
 						return env.NewError("canceled by user")
@@ -114,6 +114,34 @@ var Builtins_flui = map[string]*env.Builtin{
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "textarea")
+			}
+		},
+	},
+	"textarea\\": {
+		Argsn: 3,
+		Doc:   "Interactive multiline text input with initial text. Takes width, height (number of lines), and initial text string. Use arrow keys to navigate, Enter for new line, Ctrl+D to submit. Returns string with newlines. Ctrl+C cancels.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			term.SaveCurPos()
+			switch width := arg1.(type) {
+			case env.Integer:
+				switch height := arg2.(type) {
+				case env.Integer:
+					switch text := arg0.(type) {
+					case env.String:
+						obj, esc := term.DisplayTextArea(int(width.Value), int(height.Value), text.Value)
+						if esc {
+							ps.FailureFlag = true
+							return env.NewError("canceled by user")
+						}
+						return obj
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.StringType}, "textarea\\")
+					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "textarea\\")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "textarea\\")
 			}
 		},
 	},
