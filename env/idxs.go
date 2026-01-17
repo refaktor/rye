@@ -4,11 +4,16 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 )
 
+// Idxs is a bidirectional mapping between words (strings) and their integer indices.
+// This structure is thread-safe and can be shared across multiple ProgramState instances
+// for multi-session scenarios (e.g., HTTP REPL with sessions).
 type Idxs struct {
 	words1 []string
 	words2 map[string]int
+	mu     sync.RWMutex // Protects concurrent access for multi-session use
 }
 
 var NativeTypes = [...]string{ // Todo change to BuiltinTypes
@@ -63,18 +68,37 @@ var NativeTypes = [...]string{ // Todo change to BuiltinTypes
 	"PersistentTable",
 }
 
+// IndexWord returns the index of a word, creating a new index if it doesn't exist.
+// This method is thread-safe for concurrent use across multiple sessions.
 func (e *Idxs) IndexWord(w string) int {
+	// First try with read lock (fast path for existing words)
+	e.mu.RLock()
 	idx, ok := e.words2[w]
+	e.mu.RUnlock()
 	if ok {
 		return idx
-	} else {
-		e.words1 = append(e.words1, w)
-		e.words2[w] = len(e.words1) - 1
-		return len(e.words1) - 1
 	}
+
+	// Word not found, need write lock to add it
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	// Double-check after acquiring write lock (another goroutine might have added it)
+	idx, ok = e.words2[w]
+	if ok {
+		return idx
+	}
+
+	e.words1 = append(e.words1, w)
+	e.words2[w] = len(e.words1) - 1
+	return len(e.words1) - 1
 }
 
+// GetIndex returns the index of a word if it exists.
+// This method is thread-safe for concurrent use across multiple sessions.
 func (e *Idxs) GetIndex(w string) (int, bool) {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
 	idx, ok := e.words2[w]
 	if ok {
 		return idx, true
@@ -82,14 +106,21 @@ func (e *Idxs) GetIndex(w string) (int, bool) {
 	return 0, false
 }
 
-func (e Idxs) GetWord(i int) string {
+// GetWord returns the word at the given index.
+// This method is thread-safe for concurrent use across multiple sessions.
+func (e *Idxs) GetWord(i int) string {
 	if i < 0 {
 		return "isolate!" // TODO -- behaviour aroung isolates ... so that it prevents generic function lookup
 	}
+	e.mu.RLock()
+	defer e.mu.RUnlock()
 	return e.words1[i]
 }
 
-func (e Idxs) Print() {
+// Print outputs all words in the index.
+func (e *Idxs) Print() {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
 	fmt.Print("<IDXS: ")
 	for i := range e.words1 {
 		fmt.Print(strconv.FormatInt(int64(i), 10) + ": " + e.words1[i] + " ")
@@ -97,7 +128,11 @@ func (e Idxs) Print() {
 	fmt.Println(">")
 }
 
-func (e Idxs) GetWordCount() int {
+// GetWordCount returns the number of words in the index.
+// This method is thread-safe for concurrent use across multiple sessions.
+func (e *Idxs) GetWordCount() int {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
 	return len(e.words1)
 }
 

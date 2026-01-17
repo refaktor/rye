@@ -19,7 +19,6 @@ var Builtins_smtpd = map[string]*env.Builtin{
 	//
 	// ##### SMTP Server Functions ##### "Creating and running SMTP mail servers."
 	//
-
 	// Tests:
 	// equal { smtp-server 2525 |type? } 'native
 	// equal { smtp-server ":2525" |kind? } 'smtpd

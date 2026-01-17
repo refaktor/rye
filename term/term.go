@@ -1463,12 +1463,28 @@ func CurLeft(n int) {
 
 // DisplayTextArea displays an interactive multiline text input
 // width is max characters per line, height is number of lines
+// text is optional initial text that will be split into lines
 // Returns the text as a string with newlines between lines
-func DisplayTextArea(width, height int) (env.Object, bool) {
+func DisplayTextArea(width, height int, text string) (env.Object, bool) {
+	HideCur()
 	// Initialize lines as empty strings
 	lines := make([]string, height)
 	for i := range lines {
 		lines[i] = ""
+	}
+
+	// If text is provided, split it into lines and fill the lines variable
+	if text != "" {
+		inputLines := strings.Split(text, "\n")
+		// Copy input lines to lines, truncating if more lines than height
+		for i := 0; i < len(inputLines) && i < height; i++ {
+			// Also truncate line width if needed
+			if len(inputLines[i]) > width {
+				lines[i] = inputLines[i][:width]
+			} else {
+				lines[i] = inputLines[i]
+			}
+		}
 	}
 
 	curRow := 0 // Current row (0 to height-1)
@@ -1502,7 +1518,7 @@ func DisplayTextArea(width, height int) (env.Object, bool) {
 					cursorChar = string(lines[i][curCol])
 				}
 				termPrint(pre)
-				ColorBgWhite()
+				ColorBgGreen()
 				ColorBlack()
 				termPrint(cursorChar)
 				CloseProps()
@@ -1519,6 +1535,13 @@ func DisplayTextArea(width, height int) (env.Object, bool) {
 			}
 			termPrintln("")
 		}
+		// Display border below textarea with corner on right (dim color)
+		ClearLine()
+		ColorMagenta()
+		termPrint("─" + strings.Repeat(" ", width-1) + "┘\n")
+		termPrint("ctrl+d to submit, ctrl+c to cancel")
+		CloseProps()
+		termPrintln("")
 	}
 
 	SaveCurPos()

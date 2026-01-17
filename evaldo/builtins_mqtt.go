@@ -18,7 +18,6 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	//
 	// ##### MQTT Client Functions ##### ""
 	//
-
 	// Tests:
 	// example { Open mqtt://localhost:1883/my-client-id }
 	// example { Open mqtt://user:pass@localhost:1883/my-client-id }
