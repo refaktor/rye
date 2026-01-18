@@ -4,6 +4,7 @@ package env
 import (
 	"fmt"
 	"math"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -2230,7 +2231,9 @@ func (i Native) Equal(o Object) bool {
 			return iValObj.Equal(oValObj)
 		}
 	}
-	return i.Value == oNative.Value
+	// Use reflect.DeepEqual to safely compare values that may not be directly comparable
+	// (e.g., slices like []TableRow)
+	return reflect.DeepEqual(i.Value, oNative.Value)
 }
 
 func (i Native) Dump(e Idxs) string {

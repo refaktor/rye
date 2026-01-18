@@ -771,6 +771,7 @@ func EvalModword(ps *env.ProgramState, word env.Modword) {
 		// Trigger observers if the variable was successfully modified
 		if exists && ps.Ctx.IsVariable(idx) {
 			// Only trigger if the value actually changed
+			// TODO ... only do comparissons if there are observables because most of the time there arent
 			if oldValue == nil || !oldValue.Equal(ps.Res) {
 				TriggerObservers(ps, ps.Ctx, idx, oldValue, ps.Res)
 			}
