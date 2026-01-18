@@ -62,6 +62,26 @@ func displayRyeValue(ps *env.ProgramState, arg0 env.Object, interactive bool) (e
 			if !esc {
 				return obj, ""
 			}
+		case env.Markdown:
+			items := markdownDisplayItems(bloc.Value)
+			if len(items) == 0 {
+				return bloc, ""
+			}
+			mdBlock := env.NewBlock(*env.NewTSeries(items))
+			obj, esc := term.DisplayBlock(*mdBlock, ps.Idx)
+			if !esc {
+				return obj, ""
+			}
+		case *env.Markdown:
+			items := markdownDisplayItems(bloc.Value)
+			if len(items) == 0 {
+				return bloc, ""
+			}
+			mdBlock := env.NewBlock(*env.NewTSeries(items))
+			obj, esc := term.DisplayBlock(*mdBlock, ps.Idx)
+			if !esc {
+				return obj, ""
+			}
 		}
 	}
 
@@ -573,13 +593,13 @@ var builtins_printing = map[string]*env.Builtin{
 	// Tests:
 	// ; display { 1 2 3 }  ; interactive display, can't test in automated tests
 	// Args:
-	// * value: Block, Dict, Table, or TableRow to display interactively
+	// * value: Block, Dict, Table, TableRow, or Markdown to display interactively
 	// Returns:
 	// * the input value or selected item from interactive display
 	"display": {
 		Pure:  true,
 		Argsn: 1,
-		Doc:   "Interactively displays a value (Block, Dict, Table, or TableRow) in the terminal with navigation capabilities.",
+		Doc:   "Interactively displays a value (Block, Dict, Table, TableRow, or Markdown) in the terminal with navigation capabilities.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			result, _ := displayRyeValue(ps, arg0, true)
 			return result

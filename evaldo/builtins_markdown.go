@@ -5,11 +5,14 @@ package evaldo
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
+	"strconv"
 	"strings"
 
 	"github.com/refaktor/rye/env"
+	"github.com/refaktor/rye/term"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/extension"
@@ -582,6 +585,98 @@ func extractImages(source string) []map[string]*env.String {
 	})
 
 	return images
+}
+
+func markdownNodeText(n ast.Node, source []byte) string {
+	var buf bytes.Buffer
+	extractText(n, source, &buf)
+	return buf.String()
+}
+
+func markdownParagraphText(node *ast.Paragraph, source []byte) string {
+	var buf bytes.Buffer
+	for c := node.FirstChild(); c != nil; c = c.NextSibling() {
+		switch child := c.(type) {
+		case *ast.Text:
+			text := child.Text(source)
+			buf.Write(text)
+			raw := string(child.Segment.Value(source))
+			if child.HardLineBreak() || strings.HasSuffix(raw, "\n") {
+				buf.WriteByte('\n')
+			}
+		case *ast.Link:
+			linkText := markdownNodeText(child, source)
+			if linkText != "" {
+				buf.WriteString(linkText)
+			}
+		case *ast.Emphasis:
+			emphText := markdownNodeText(child, source)
+			if emphText != "" {
+				buf.WriteString(emphText)
+			}
+		case *ast.CodeSpan:
+			codeText := string(child.Text(source))
+			if codeText != "" {
+				buf.WriteString(codeText)
+			}
+		}
+	}
+
+	return buf.String()
+}
+
+func markdownDisplayItems(source string) []env.Object {
+	sourceBytes := []byte(source)
+	md := goldmark.New(
+		goldmark.WithExtensions(
+			extension.GFM,
+			extension.Table,
+			extension.Strikethrough,
+			extension.TaskList,
+		),
+	)
+
+	doc := md.Parser().Parse(text.NewReader(sourceBytes))
+	items := make([]env.Object, 0)
+
+	ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+		if !entering {
+			return ast.WalkContinue, nil
+		}
+
+		switch node := n.(type) {
+		case *ast.Heading:
+			headingText := strings.TrimSpace(string(node.Text(sourceBytes)))
+			if headingText != "" {
+				label := term.StrBold() + "H" + strconv.Itoa(node.Level) + ": " + headingText + term.StrCloseProps() + "\n"
+				items = append(items, *env.NewString(label))
+			}
+		case *ast.Paragraph:
+			child := node.FirstChild()
+			if child != nil && child.NextSibling() == nil {
+				if link, ok := child.(*ast.Link); ok {
+					linkText := markdownNodeText(link, sourceBytes)
+					destination := string(link.Destination)
+					if linkText == "" {
+						linkText = destination
+					}
+					items = append(items, *env.NewString(fmt.Sprintf("Link: %s -> %s\n", linkText, destination)))
+					return ast.WalkSkipChildren, nil
+				}
+			}
+
+			paragraph := markdownParagraphText(node, sourceBytes)
+			if paragraph == "" {
+				items = append(items, *env.NewString("\n"))
+				return ast.WalkContinue, nil
+			}
+			items = append(items, *env.NewString(paragraph + "\n"))
+		}
+
+		return ast.WalkContinue, nil
+	})
+
+	return items
 }
 
 var Builtins_markdown = map[string]*env.Builtin{
