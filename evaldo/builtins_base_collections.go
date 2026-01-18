@@ -3311,7 +3311,7 @@ var builtins_collection = map[string]*env.Builtin{
 	// Tests:
 	// equal { x: 1 y: 2 vals\with 10 { + x , * y } } { 11 20 }
 	// equal { x: 1 y: 2 vals\with 100 { + 10 , * 8.9 } } { 110 890.0 }
-	"vals\\with": {
+	"evals\\with": {
 		Argsn: 2,
 		Doc:   "Evaluate a block with injecting the first argument.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {

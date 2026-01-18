@@ -1947,7 +1947,7 @@ func MaybeDisplayFailureOrErrorWASM(es *env.ProgramState, genv *env.Idxs, printf
 // Purpose: Converts failure to error if builtin doesn't accept failures
 func checkForFailureWithBuiltin(bi env.Builtin, ps *env.ProgramState, n int) bool {
 	if ps.FailureFlag && !bi.AcceptFailure {
-		fmt.Println("**Err Elevate BUI**")
+		// fmt.Println("**Err Elevate BUI**")
 		ps.ErrorFlag = true
 		return true
 	}
@@ -1959,7 +1959,7 @@ func checkForFailureWithBuiltin(bi env.Builtin, ps *env.ProgramState, n int) boo
 // Purpose: Converts failure to error if variadic builtin doesn't accept failures
 func checkForFailureWithVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, n int) bool {
 	if ps.FailureFlag && !bi.AcceptFailure {
-		fmt.Println("**Err Elevate VarBUI**")
+		// fmt.Println("**Err Elevate VarBUI**")
 		ps.ErrorFlag = true
 		return true
 	}
