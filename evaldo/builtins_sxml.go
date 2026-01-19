@@ -72,6 +72,8 @@ func load_saxml_Dict(ps *env.ProgramState, block env.Block) (env.Dict, *env.Erro
 func do_sxml(ps *env.ProgramState, reader io.Reader, rmap env.Dict) env.Object {
 	var stack []env.Dict
 	var tags []string
+	var handlerDepth []int
+	var elementStack []string
 	var curtag string
 	decoder := xml.NewDecoder(reader)
 	//total := 0
@@ -86,6 +88,7 @@ func do_sxml(ps *env.ProgramState, reader io.Reader, rmap env.Dict) env.Object {
 		case xml.StartElement:
 			trace5("START")
 			tag := se.Name.Local
+			elementStack = append(elementStack, tag)
 			ob, ok := rmap.Data[tag]
 			// if !ok {
 			//	ob, ok = rmap.Data["-any-"]
@@ -93,6 +96,7 @@ func do_sxml(ps *env.ProgramState, reader io.Reader, rmap env.Dict) env.Object {
 			if ok {
 				trace5("START2")
 				tags = append(tags, curtag)
+				handlerDepth = append(handlerDepth, len(elementStack))
 				switch obj := ob.(type) {
 				case env.Dict:
 					trace5("START3")
@@ -121,6 +125,7 @@ func do_sxml(ps *env.ProgramState, reader io.Reader, rmap env.Dict) env.Object {
 					}
 				case env.Block:
 					stack = append(stack, rmap)
+					curtag = tag
 					ser := ps.Ser // TODO -- make helper function that "does" a block
 					ps.Ser = obj.Series
 					EvalBlockInj(ps, *env.NewNative(ps.Idx, se, "rye-sxml-start"), true)
@@ -135,13 +140,17 @@ func do_sxml(ps *env.ProgramState, reader io.Reader, rmap env.Dict) env.Object {
 				inElement := se.Name.Local
 				trace5("END")
 				//fmt.Println(curtag)
-				if true || inElement == curtag { // TODO -- solve the case of same named elements inside <person><person></person></person>
+				if true || inElement == curtag {
 					trace5("END2")
 					//fmt.Println(rmap)
 					b, ok := rmap.Data["-any-"]
 					if ok {
 						switch obj := b.(type) {
 						case env.Block:
+							tags = append(tags, curtag)
+							handlerDepth = append(handlerDepth, len(elementStack))
+							stack = append(stack, rmap)
+							curtag = inElement
 							ser := ps.Ser // TODO -- make helper function that "does" a block
 							ps.Ser = obj.Series
 							EvalBlockInj(ps, *env.NewNative(ps.Idx, se, "rye-sxml-start"), true)
@@ -155,16 +164,6 @@ func do_sxml(ps *env.ProgramState, reader io.Reader, rmap env.Dict) env.Object {
 							// TODO Err
 						}
 					}
-
-					//fmt.Println(stack)
-					//fmt.Println(tags)
-					// n := len(stack) - 1 // Top element
-					// rmap = stack[n]
-					// stack = stack[:n] // Pop
-
-					// m := len(tags) - 1 // Top element
-					// curtag = tags[m]
-					// tags = tags[:m] // Pop
 				}
 			}
 		case xml.CharData:
@@ -184,39 +183,47 @@ func do_sxml(ps *env.ProgramState, reader io.Reader, rmap env.Dict) env.Object {
 				}
 			}
 		case xml.EndElement:
-			inElement := se.Name.Local
 			trace5("END")
-			//fmt.Println(curtag)
-			if inElement == curtag { // TODO -- solve the case of same named elements inside <person><person></person></person>
-				trace5("END2")
-				//fmt.Println(rmap)
-				b, ok := rmap.Data["-end-"]
-				if ok {
-					switch obj := b.(type) {
-					case env.Block:
-						ser := ps.Ser // TODO -- make helper function that "does" a block
-						ps.Ser = obj.Series
-						EvalBlockInj(ps, *env.NewNative(ps.Idx, se, "rye-sxml-start"), true)
-						MaybeDisplayFailureOrError(ps, ps.Idx, "do-sxml 6")
-						if ps.ErrorFlag {
+			if len(elementStack) == 0 {
+				continue
+			}
+			inElement := se.Name.Local
+			depth := len(elementStack)
+			if inElement == elementStack[depth-1] {
+				if len(handlerDepth) > 0 && handlerDepth[len(handlerDepth)-1] == depth {
+					trace5("END2")
+					//fmt.Println(rmap)
+					b, ok := rmap.Data["-end-"]
+					if ok {
+						switch obj := b.(type) {
+						case env.Block:
+							ser := ps.Ser // TODO -- make helper function that "does" a block
+							ps.Ser = obj.Series
+							EvalBlockInj(ps, *env.NewNative(ps.Idx, se, "rye-sxml-start"), true)
+							MaybeDisplayFailureOrError(ps, ps.Idx, "do-sxml 6")
+							if ps.ErrorFlag {
+								ps.Ser = ser
+								return ps.Res
+							}
 							ps.Ser = ser
-							return ps.Res
+						default:
+							// TODO Err
 						}
-						ps.Ser = ser
-					default:
-						// TODO Err
 					}
+
+					//fmt.Println(stack)
+					//fmt.Println(tags)
+					n := len(stack) - 1 // Top element
+					rmap = stack[n]
+					stack = stack[:n] // Pop
+
+					m := len(tags) - 1 // Top element
+					curtag = tags[m]
+					tags = tags[:m] // Pop
+
+					handlerDepth = handlerDepth[:len(handlerDepth)-1]
 				}
-
-				//fmt.Println(stack)
-				//fmt.Println(tags)
-				n := len(stack) - 1 // Top element
-				rmap = stack[n]
-				stack = stack[:n] // Pop
-
-				m := len(tags) - 1 // Top element
-				curtag = tags[m]
-				tags = tags[:m] // Pop
+				elementStack = elementStack[:depth-1]
 			}
 		default:
 		}
@@ -383,11 +390,15 @@ var Builtins_sxml = map[string]*env.Builtin{
 		},
 	},
 
-	// TODO:
+	// Tests:
 	// stdout {
 	//   "<scene><xwing><bot>R2D2</bot><person><name>Luke</name></person></xwing><destroyer><person>Vader</person></destroyer></scene>" |reader
 	//   .do-sxml { <xwing> { 'start [ prns "YYY" ] <bot> [ print "***" ] 'any [ .Name? .probe ] 'end [ print "xx" ] } }
 	// } "bot R2D2 \nperson name Luke \n"
+	// stdout {
+	//   "<root><a>1</a><b>2</b></root>" |reader
+	//   .do-sxml { 'any [ .Name? .prn ":" ] 'end [ print "---" ] }
+	// } "root:\na:\n---\nb:\n---\n---\n"
 	// Args:
 	// * element: XML start element
 	// Returns:

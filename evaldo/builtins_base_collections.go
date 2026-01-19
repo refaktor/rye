@@ -3309,8 +3309,8 @@ var builtins_collection = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { x: 1 y: 2 vals\with 10 { + x , * y } } { 11 20 }
-	// equal { x: 1 y: 2 vals\with 100 { + 10 , * 8.9 } } { 110 890.0 }
+	// equal { x: 1 y: 2 evals\with 10 { + x , * y } } { 11 20 }
+	// equal { x: 1 y: 2 evals\with 100 { + 10 , * 8.9 } } { 110 890.0 }
 	"evals\\with": {
 		Argsn: 2,
 		Doc:   "Evaluate a block with injecting the first argument.",
