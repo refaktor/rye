@@ -1,0 +1,9 @@
+private {
+	pad: fn { n } { .produce "" { ++ " " } }
+	var 'depth 0
+	Reader %temp.xml .do-sxml {
+		'any [ .Name? ::m , depth .pad ++ m ++ ":" |prns , inc! 'depth ]
+		_    [ .when { .trim .is-empty .not } { .prn } ]
+		'end [ dec! 'depth print "" ]
+	}
+}

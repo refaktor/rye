@@ -2540,14 +2540,14 @@ section "Collections " "" {
 	{
 ``	}
 
-	group "vals\\with" 
+	group "evals\\with" 
 	"Evaluate a block with injecting the first argument."
 	{
 	}
 
 	{
-		equal { x: 1 y: 2 vals\with 10 { + x , * y } } { 11 20 }
-		equal { x: 1 y: 2 vals\with 100 { + 10 , * 8.9 } } { 110 890.0 }
+		equal { x: 1 y: 2 evals\with 10 { + x , * y } } { 11 20 }
+		equal { x: 1 y: 2 evals\with 100 { + 10 , * 8.9 } } { 110 890.0 }
 	}
 
 	{

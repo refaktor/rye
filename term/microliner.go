@@ -1328,15 +1328,16 @@ startOfHere:
 			log.Println("Context canceled")
 			fmt.Println("Exiting due to cancelation")
 			return "", fmt.Errorf("operation canceled by context")
-		default:
-			trace("POS: ")
-			trace(pos)
-			// receive next character from channel
-			next := <-s.next
+		case next, ok := <-s.next:
+			if !ok {
+				return "", fmt.Errorf("event channel closed")
+			}
 			if s.next == nil {
 				return "", fmt.Errorf("event channel is nil")
 			}
 
+			trace("POS: ")
+			trace(pos)
 			log.Printf("Received key event: Key='%s', Code=%d, Ctrl=%t, Alt=%t, Shift=%t", next.Key, next.Code, next.Ctrl, next.Alt, next.Shift)
 
 			// Debug: Check for Ctrl+Z specifically

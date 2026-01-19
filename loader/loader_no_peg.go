@@ -1886,7 +1886,7 @@ func LoadStringNEWNoPEG(input string, sig bool, ps *env.ProgramState) env.Object
 	}
 
 	input = removeBangLine(input)
-	input = "{ " + input + " }"
+	input = "{ " + input + "\n}"
 
 	wordIndexMutex.Lock()
 	wordIndex = ps.Idx

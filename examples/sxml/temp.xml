@@ -1,0 +1,33 @@
+<Dokument>
+<Knjizba>
+  <Vrsta_knjizbe>Ne_gre_v_knjigo</Vrsta_knjizbe>
+  <Datum_zapadlosti>2025-01-27</Datum_zapadlosti>
+  <Vrsta_dokumenta>IR</Vrsta_dokumenta>
+  <Konto>120000</Konto>
+  <Partner>    
+    <Sifra>52</Sifra>
+  </Partner>
+  <Stroskovno_mesto>0001</Stroskovno_mesto>
+  <Analitika6>0001</Analitika6>
+  <Debet>85.0</Debet>
+  <Sifra_valute>978</Sifra_valute>
+  <Valuta_debet>85.0</Valuta_debet>
+  <Otvoritev>0</Otvoritev>
+ </Knjizba>
+
+<Knjizba>
+  <Vrsta_knjizbe>Ne_gre_v_knjigo</Vrsta_knjizbe>
+  <Datum_zapadlosti>2025-01-27</Datum_zapadlosti>
+  <Vrsta_dokumenta>IR</Vrsta_dokumenta>
+  <Konto>7600</Konto>
+  <Partner>
+    <Sifra>52</Sifra>
+  </Partner>
+  <Stroskovno_mesto>0001</Stroskovno_mesto>
+  <Analitika6>0001</Analitika6>
+  <Kredit>85.0</Kredit>
+  <Sifra_valute>978</Sifra_valute>
+  <Valuta_kredit>85.0</Valuta_kredit>
+  <Otvoritev>0</Otvoritev>
+ </Knjizba>
+</Dokument>
