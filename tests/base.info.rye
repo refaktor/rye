@@ -173,6 +173,23 @@ section "Boolean " "Functions that work with true and false values." {
 }
 
 section "Numbers " "Working with numbers, integers and decimals." {
+	group "addnums" 
+	"Optimized version of + that adds two numbers, working with both integers and decimals."
+	{
+		arg `value1: Integer, decimal, or time value`
+		arg `value2: Integer or decimal value (or integer for time addition)`
+		returns `sum of the two numbers or time shifted by the integer offset`
+	}
+
+	{
+		equal { addnums 2 3 } 5
+		equal { addnums 2.5 3.5 } 6.0
+		equal { addnums 2 3.5 } 5.5
+	}
+
+	{
+``	}
+
 	group "inc" 
 	"Increments an integer value by 1."
 	{
@@ -265,10 +282,10 @@ section "Numbers " "Working with numbers, integers and decimals." {
 ``	}
 
 	group "sign" 
-	"Checks if a number is positive (greater than zero)."
+	"Returns the sign of a number as -1, 0, or 1."
 	{
 		arg `value: Integer or decimal to check`
-		returns `boolean true if the value is positive, false otherwise`
+		returns `integer sign of the value (-1 for negative, 0 for zero, 1 for positive)`
 	}
 
 	{
@@ -2121,10 +2138,10 @@ section "Collections " "" {
 ``	}
 
 	group "is-empty" 
-	"Checks if a collection is empty, returning 1 for empty collections and 0 otherwise."
+	"Checks if a collection is empty, returning true if empty and false otherwise."
 	{
 		arg `collection: String, block, dict, list, table, context or vector to check`
-		returns `integer 1 if the collection is empty, 0 otherwise`
+		returns `boolean true if the collection is empty, false otherwise`
 	}
 
 	{
@@ -2157,10 +2174,10 @@ section "Collections " "" {
 ``	}
 
 	group "max-idx?" 
-	"Returns the number of elements in a collection."
+	"Returns the maximum valid index in a collection (length - 1)."
 	{
 		arg `collection: String, block, dict, list, table, context or vector to measure`
-		returns `integer index of last element in a collection`
+		returns `integer index of the last element in the collection`
 	}
 
 	{
@@ -2190,7 +2207,7 @@ section "Collections " "" {
 ``	}
 
 	group "_->" 
-	"Accesses a value in a collection by index or key (1-based indexing for blocks and lists)."
+	"Accesses a value in a collection by index or key (0-based indexing for blocks and lists)."
 	{
 		arg `collection: Block, list, dict or other indexable collection`
 		arg `index: Index or key to access`
@@ -2240,7 +2257,7 @@ section "Collections " "" {
 ``	}
 
 	group "_~>" 
-	"Accesses a value in a collection by index (0-based indexing)."
+	"Accesses a value in a collection by index (1-based indexing)."
 	{
 		arg `collection: Block, list or other indexable collection`
 		arg `index: Index to access (0-based)`
@@ -2529,6 +2546,8 @@ section "Collections " "" {
 	group "evals" 
 	"Takes a block of Rye values and evaluates each value or expression."
 	{
+		arg `block-or-word: Block of expressions to evaluate, or a word to resolve`
+		returns `block of evaluated results (for a block input) or the resolved word value`
 	}
 
 	{
@@ -2543,6 +2562,9 @@ section "Collections " "" {
 	group "evals\\with" 
 	"Evaluate a block with injecting the first argument."
 	{
+		arg `value: Value injected into each expression`
+		arg `block: Block of expressions to evaluate`
+		returns `block of evaluated results`
 	}
 
 	{

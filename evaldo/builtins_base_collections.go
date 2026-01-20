@@ -2195,10 +2195,10 @@ var builtins_collection = map[string]*env.Builtin{
 	// Args:
 	// * collection: String, block, dict, list, table, context or vector to check
 	// Returns:
-	// * integer 1 if the collection is empty, 0 otherwise
+	// * boolean true if the collection is empty, false otherwise
 	"is-empty": { // **
 		Argsn: 1,
-		Doc:   "Checks if a collection is empty, returning 1 for empty collections and 0 otherwise.",
+		Doc:   "Checks if a collection is empty, returning true if empty and false otherwise.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -2272,10 +2272,10 @@ var builtins_collection = map[string]*env.Builtin{
 	// Args:
 	// * collection: String, block, dict, list, table, context or vector to measure
 	// Returns:
-	// * integer index of last element in a collection
+	// * integer index of the last element in the collection
 	"max-idx?": { // **
 		Argsn: 1,
-		Doc:   "Returns the number of elements in a collection.",
+		Doc:   "Returns the maximum valid index in a collection (length - 1).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -2343,7 +2343,7 @@ var builtins_collection = map[string]*env.Builtin{
 	// * value at the specified index or key
 	"_->": {
 		Argsn: 2,
-		Doc:   "Accesses a value in a collection by index or key (1-based indexing for blocks and lists).",
+		Doc:   "Accesses a value in a collection by index or key (0-based indexing for blocks and lists).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return getFrom(ps, arg0, arg1, false)
 		},
@@ -2415,7 +2415,7 @@ var builtins_collection = map[string]*env.Builtin{
 	// * value at the specified index
 	"_~>": {
 		Argsn: 2,
-		Doc:   "Accesses a value in a collection by index (0-based indexing).",
+		Doc:   "Accesses a value in a collection by index (1-based indexing).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return getFrom(ps, arg0, arg1, true)
 		},
@@ -3271,6 +3271,10 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { x: 1 y: 2 evals { x y } } { 1 2 }
 	// equal { x: 1 y: 2 evals { 1 y } } { 1 2 }
 	// equal { x: 1 y: 2 try { evals { z y } } |type? } 'error
+	// Args:
+	// * block-or-word: Block of expressions to evaluate, or a word to resolve
+	// Returns:
+	// * block of evaluated results (for a block input) or the resolved word value
 	"evals": { // **
 		Argsn: 1,
 		Doc:   "Takes a block of Rye values and evaluates each value or expression.",
@@ -3311,6 +3315,11 @@ var builtins_collection = map[string]*env.Builtin{
 	// Tests:
 	// equal { x: 1 y: 2 evals\with 10 { + x , * y } } { 11 20 }
 	// equal { x: 1 y: 2 evals\with 100 { + 10 , * 8.9 } } { 110 890.0 }
+	// Args:
+	// * value: Value injected into each expression
+	// * block: Block of expressions to evaluate
+	// Returns:
+	// * block of evaluated results
 	"evals\\with": {
 		Argsn: 2,
 		Doc:   "Evaluate a block with injecting the first argument.",
