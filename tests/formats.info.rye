@@ -291,6 +291,14 @@ section "SXML " "Streaming, SAX-like XML processing" {
 	}
 
 	{
+		stdout {
+		"<scene><xwing><bot>R2D2</bot><person><name>Luke</name></person></xwing><destroyer><person>Vader</person></destroyer></scene>" |reader
+		.do-sxml { <xwing> { 'start [ prns "YYY" ] <bot> [ print "***" ] 'any [ .Name? .probe ] 'end [ print "xx" ] } }
+		} "bot R2D2 \nperson name Luke \n"
+		stdout {
+		"<root><a>1</a><b>2</b></root>" |reader
+		.do-sxml { 'any [ .Name? .prn ":" ] 'end [ print "---" ] }
+		} "root:\na:\n---\nb:\n---\n---\n"
 	}
 
 	{

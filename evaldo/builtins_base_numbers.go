@@ -14,6 +14,15 @@ var builtins_numbers = map[string]*env.Builtin{
 	//
 	// ##### Numbers ##### "Working with numbers, integers and decimals."
 	//
+	// Tests:
+	// equal { addnums 2 3 } 5
+	// equal { addnums 2.5 3.5 } 6.0
+	// equal { addnums 2 3.5 } 5.5
+	// Args:
+	// * value1: Integer, decimal, or time value
+	// * value2: Integer or decimal value (or integer for time addition)
+	// Returns:
+	// * sum of the two numbers or time shifted by the integer offset
 	"addnums": {
 		Argsn: 2,
 		Doc:   "Optimized version of + that adds two numbers, working with both integers and decimals.",
@@ -227,10 +236,10 @@ var builtins_numbers = map[string]*env.Builtin{
 	// Args:
 	// * value: Integer or decimal to check
 	// Returns:
-	// * boolean true if the value is positive, false otherwise
+	// * integer sign of the value (-1 for negative, 0 for zero, 1 for positive)
 	"sign": { // ***
 		Argsn: 1,
-		Doc:   "Checks if a number is positive (greater than zero).",
+		Doc:   "Returns the sign of a number as -1, 0, or 1.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
