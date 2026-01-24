@@ -649,7 +649,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlockInjMultiDialect(ps, arg0, true)
+					EvalBlockInj(ps, arg0, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "fix")
 					if ps.ErrorFlag {
 						ps.Ser = ser
@@ -687,7 +687,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlockInjMultiDialect(ps, arg0, true)
+					EvalBlockInj(ps, arg0, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "^fix")
 					ps.Ser = ser
 					ps.ReturnFlag = true
@@ -723,7 +723,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlockInjMultiDialect(ps, arg0, true)
+					EvalBlockInj(ps, arg0, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "fix\\either")
 					ps.Ser = ser
 					return ps.Res
@@ -736,7 +736,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlockInjMultiDialect(ps, arg0, true)
+					EvalBlockInj(ps, arg0, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "fix\\either")
 					ps.Ser = ser
 					return ps.Res
@@ -768,7 +768,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlockInjMultiDialect(ps, arg0, true)
+					EvalBlockInj(ps, arg0, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "fix\\else")
 					ps.Ser = ser
 					return ps.Res
@@ -803,7 +803,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlockInjMultiDialect(ps, arg0, true)
+					EvalBlockInj(ps, arg0, true)
 					ps.Ser = ser
 					return ps.Res
 				default:
@@ -815,7 +815,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlockInjMultiDialect(ps, arg0, true)
+					EvalBlockInj(ps, arg0, true)
 					ps.Ser = ser
 					return ps.Res
 				default:
@@ -846,7 +846,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlockInjMultiDialect(ps, arg0, true)
+					EvalBlockInj(ps, arg0, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "continue")
 					ps.Ser = ser
 					return ps.Res
@@ -919,7 +919,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 						// we set ProgramStates series to series ob the block
 						ps.Ser = cc.Series
 						// we eval the block (current context / scope stays the same as it was in parent block)
-						EvalBlockInjMultiDialect(ps, arg0, true)
+						EvalBlockInj(ps, arg0, true)
 						// we set temporary series back to current program state
 						MaybeDisplayFailureOrError(ps, ps.Idx, "fix\\match")
 

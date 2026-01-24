@@ -96,7 +96,7 @@ func matchValue(ps *env.ProgramState, value env.Object, pattern env.Object, mmod
 			// Set series to the block
 			ps.Ser = word.Series
 			// Evaluate the block with the value injected
-			EvalBlockInjMultiDialect(ps, value, true)
+			EvalBlockInj(ps, value, true)
 			if ps.ErrorFlag {
 				ps.Ser = ser
 				return ps.Res, mmode

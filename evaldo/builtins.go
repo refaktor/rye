@@ -1740,7 +1740,7 @@ var builtins = map[string]*env.Builtin{
 			case env.Block:
 				ser := ps.Ser
 				ps.Ser = bloc.Series
-				EvalBlockInjMultiDialect(ps, arg0, true)
+				EvalBlockInj(ps, arg0, true)
 				MaybeDisplayFailureOrError(ps, ps.Idx, "with")
 				ps.Ser = ser
 				return ps.Res

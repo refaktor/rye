@@ -127,7 +127,7 @@ func main() {
 			ps.Ser.SetPos(0)
 
 			// Evaluate the block
-			evaldo.EvalBlockInjMultiDialect(ps, nil, true)
+			evaldo.EvalBlockInj(ps, nil, true)
 			//evaldo.Rye0_EvalBlockInj(ps, nil, false)
 		}
 

@@ -238,7 +238,7 @@ var builtins_collection = map[string]*env.Builtin{
 					// Evaluate the code block with the current value injected
 					ps.Ser = codeBlock.Series
 					ps.Ser.SetPos(0)
-					EvalBlockInjMultiDialect(ps, currentValue, true)
+					EvalBlockInj(ps, currentValue, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "max\\by")
 					if ps.ErrorFlag || ps.FailureFlag {
 						ps.Ser = ser
@@ -277,7 +277,7 @@ var builtins_collection = map[string]*env.Builtin{
 					// Evaluate the code block with the current value injected
 					ps.Ser = codeBlock.Series
 					ps.Ser.SetPos(0)
-					EvalBlockInjMultiDialect(ps, currentValue, true)
+					EvalBlockInj(ps, currentValue, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "max\\by")
 					if ps.ErrorFlag || ps.FailureFlag {
 						ps.Ser = ser
@@ -408,7 +408,7 @@ var builtins_collection = map[string]*env.Builtin{
 					// Evaluate the code block with the current value injected
 					ps.Ser = codeBlock.Series
 					ps.Ser.SetPos(0)
-					EvalBlockInjMultiDialect(ps, currentValue, true)
+					EvalBlockInj(ps, currentValue, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "min\\by")
 					if ps.ErrorFlag || ps.FailureFlag {
 						ps.Ser = ser
@@ -447,7 +447,7 @@ var builtins_collection = map[string]*env.Builtin{
 					// Evaluate the code block with the current value injected
 					ps.Ser = codeBlock.Series
 					ps.Ser.SetPos(0)
-					EvalBlockInjMultiDialect(ps, currentValue, true)
+					EvalBlockInj(ps, currentValue, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "min\\by")
 					if ps.ErrorFlag || ps.FailureFlag {
 						ps.Ser = ser
@@ -563,7 +563,7 @@ var builtins_collection = map[string]*env.Builtin{
 					// Evaluate the code block with the current value injected
 					ps.Ser = codeBlock.Series
 					ps.Ser.SetPos(0)
-					EvalBlockInjMultiDialect(ps, currentValue, true)
+					EvalBlockInj(ps, currentValue, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "avg\\by")
 					if ps.ErrorFlag || ps.FailureFlag {
 						ps.Ser = ser
@@ -606,7 +606,7 @@ var builtins_collection = map[string]*env.Builtin{
 					// Evaluate the code block with the current value injected
 					ps.Ser = codeBlock.Series
 					ps.Ser.SetPos(0)
-					EvalBlockInjMultiDialect(ps, currentValue, true)
+					EvalBlockInj(ps, currentValue, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "avg\\by")
 					if ps.ErrorFlag || ps.FailureFlag {
 						ps.Ser = ser
@@ -735,7 +735,7 @@ var builtins_collection = map[string]*env.Builtin{
 					// Evaluate the code block with the current value injected
 					ps.Ser = codeBlock.Series
 					ps.Ser.SetPos(0)
-					EvalBlockInjMultiDialect(ps, currentValue, true)
+					EvalBlockInj(ps, currentValue, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "sum\\by")
 					if ps.ErrorFlag || ps.FailureFlag {
 						ps.Ser = ser
@@ -784,7 +784,7 @@ var builtins_collection = map[string]*env.Builtin{
 					// Evaluate the code block with the current value injected
 					ps.Ser = codeBlock.Series
 					ps.Ser.SetPos(0)
-					EvalBlockInjMultiDialect(ps, currentValue, true)
+					EvalBlockInj(ps, currentValue, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "sum\\by")
 					if ps.ErrorFlag || ps.FailureFlag {
 						ps.Ser = ser
@@ -1611,7 +1611,7 @@ var builtins_collection = map[string]*env.Builtin{
 						// Evaluate the key function with the current value
 						ps.Ser = keyBlock.Series
 						ps.Ser.SetPos(0)
-						EvalBlockInjMultiDialect(ps, val, true)
+						EvalBlockInj(ps, val, true)
 
 						if ps.ErrorFlag || ps.FailureFlag {
 							ps.Ser = ser
@@ -1671,7 +1671,7 @@ var builtins_collection = map[string]*env.Builtin{
 						// Evaluate the key function with the current value
 						ps.Ser = keyBlock.Series
 						ps.Ser.SetPos(0)
-						EvalBlockInjMultiDialect(ps, ryeVal, true)
+						EvalBlockInj(ps, ryeVal, true)
 
 						if ps.ErrorFlag || ps.FailureFlag {
 							ps.Ser = ser
@@ -2946,7 +2946,7 @@ var builtins_collection = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = transformBlock.Series
 					ps.Ser.SetPos(0)
-					EvalBlockInjMultiDialect(ps, currentValue, true)
+					EvalBlockInj(ps, currentValue, true)
 
 					if ps.ErrorFlag || ps.FailureFlag {
 						ps.Ser = ser
@@ -2976,7 +2976,7 @@ var builtins_collection = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = transformBlock.Series
 					ps.Ser.SetPos(0)
-					EvalBlockInjMultiDialect(ps, currentValue, true)
+					EvalBlockInj(ps, currentValue, true)
 
 					if ps.ErrorFlag || ps.FailureFlag {
 						ps.Ser = ser

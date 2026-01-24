@@ -41,40 +41,29 @@ func DisableFastEvaluator() {
 // Purpose: Dispatches to the appropriate dialect-specific evaluator (Rye2, Eyr, Rye0, Rye00)
 // HOTCODE: Performance-critical function called frequently during execution
 func EvalBlock(ps *env.ProgramState) {
-	switch ps.Dialect {
-	case env.Rye2Dialect:
-		EvalBlockInj(ps, nil, false)
-	case env.EyrDialect:
-		Eyr_EvalBlockInside(ps, nil, false) // TODO ps.Stack is already in ps ... refactor
-	case env.Rye0Dialect:
-		// Check if we should use the fast evaluator
-		if useFastEvaluator {
-			Rye0_FastEvalBlock(ps)
-		}
-		Rye0_EvalBlockInj(ps, nil, false) // TODO ps.Stack is already in ps ... refactor
-	case env.Rye00Dialect:
-		Rye00_EvalBlockInj(ps, nil, false) // Simplified dialect for builtins and integers
-	default:
-		// TODO fail
-	}
+	EvalBlockInj(ps, nil, false)
 }
 
-// EvalBlockInjMultiDialect evaluates a block with value injection support across multiple dialects.
-// Called from: EvalExpression_DispatchType (for OPGROUP/OPBLOCK modes), observer execution
-// Purpose: Provides multi-dialect block evaluation with the ability to inject values into the first expression
-func EvalBlockInjMultiDialect(ps *env.ProgramState, inj env.Object, injnow bool) { // TODO temp name -- refactor
+// EvalBlockInj evaluates a block with value injection support across multiple dialects.
+// Called from: EvalBlock, EvalExpression_DispatchType (for OPGROUP/OPBLOCK modes), observer execution, builtins
+// Purpose: Main multi-dialect block evaluator with optional value injection into the first expression
+// HOTCODE: Performance-critical function called frequently during execution
+func EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) {
 	switch ps.Dialect {
 	case env.Rye2Dialect:
-		EvalBlockInj(ps, inj, injnow)
+		EvalBlockInj_Rye2(ps, inj, injnow)
 	case env.EyrDialect:
 		Eyr_EvalBlockInside(ps, inj, injnow) // TODO ps.Stack is already in ps ... refactor
 	case env.Rye0Dialect:
+		// Check if we should use the fast evaluator
+		if useFastEvaluator && inj == nil {
+			Rye0_FastEvalBlock(ps)
+		}
 		Rye0_EvalBlockInj(ps, inj, injnow) // TODO ps.Stack is already in ps ... refactor
-		// return Rye0_EvaluateBlock(ps) // TODO ps.Stack is already in ps ... refactor
 	case env.Rye00Dialect:
 		Rye00_EvalBlockInj(ps, inj, injnow) // Simplified dialect for builtins and integers
 	default:
-		//
+		// TODO fail
 	}
 }
 
@@ -93,10 +82,10 @@ func MaybeAcceptComma(ps *env.ProgramState, inj env.Object, injnow bool) bool {
 	return injnow
 }
 
-// EvalBlockInj evaluates a block of code with optional value injection for Rye2 dialect.
-// Called from: EvalBlock, CallFunction_CollectArgs, ExecuteDeferredBlocks, observer execution, init()
+// EvalBlockInj_Rye2 evaluates a block of code with optional value injection for Rye2 dialect.
+// Called from: EvalBlockInj (multi-dialect dispatcher), CallFunction_CollectArgs, ExecuteDeferredBlocks
 // Purpose: Core Rye2 evaluator - loops through expressions, handling injection, commas, and error/failure flags
-func EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) {
+func EvalBlockInj_Rye2(ps *env.ProgramState, inj env.Object, injnow bool) {
 	//fmt.Println("--------------------BLOCK------------------->")
 	// fmt.Println(ps.Ser)
 	// fmt.Println(ps.BlockFile)
@@ -396,7 +385,7 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 			ser := ps.Ser
 			ps.Ser = block.Series
 			injVal := ps.Res // Use current result as injection value
-			EvalBlockInjMultiDialect(ps, injVal, true)
+			EvalBlockInj(ps, injVal, true)
 			if ps.ErrorFlag || ps.FailureFlag {
 				return
 			}

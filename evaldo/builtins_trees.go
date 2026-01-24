@@ -208,7 +208,7 @@ var builtins_trees = map[string]*env.Builtin{
 								case env.Block:
 									ps.Ser = transformer.Series
 									ps.Ser.Reset()
-									EvalBlockInjMultiDialect(ps, env.ToRyeValue(v), true)
+									EvalBlockInj(ps, env.ToRyeValue(v), true)
 									if ps.ErrorFlag {
 										return node // Return original on error
 									}
@@ -275,7 +275,7 @@ var builtins_trees = map[string]*env.Builtin{
 								ps.Ctx.Mod(accumWord.Index, acc)
 								ps.Ser = folder.Series
 								ps.Ser.Reset()
-								EvalBlockInjMultiDialect(ps, env.ToRyeValue(nodeValue), true)
+								EvalBlockInj(ps, env.ToRyeValue(nodeValue), true)
 								if ps.ErrorFlag {
 									return ps.Res
 								}

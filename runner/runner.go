@@ -638,7 +638,7 @@ func main_rye_http_repl(port string, file string, code string, lang string, regf
 			}
 
 			// Evaluate the file
-			evaldo.EvalBlockInjMultiDialect(ps, nil, true)
+			evaldo.EvalBlockInj(ps, nil, true)
 			evaldo.MaybeDisplayFailureOrError2(ps, ps.Idx, "http repl file load", true, true)
 
 			es = ps
@@ -663,7 +663,7 @@ func main_rye_http_repl(port string, file string, code string, lang string, regf
 		}
 
 		// Eval initial code
-		evaldo.EvalBlockInjMultiDialect(es, nil, false)
+		evaldo.EvalBlockInj(es, nil, false)
 
 		ctx := es.Ctx
 		es.Ctx = env.NewEnv(ctx)
@@ -813,7 +813,7 @@ func main_rye_http_repl(port string, file string, code string, lang string, regf
 			// Eval
 			if lang == "eyr" {
 				es.Dialect = env.EyrDialect
-				evaldo.EvalBlockInjMultiDialect(es, nil, true)
+				evaldo.EvalBlockInj(es, nil, true)
 			} else {
 				evaldo.EvalBlockInj(es, prevResult, true)
 			}
@@ -1001,7 +1001,7 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 				block := loader.LoadStringNEW(inputH, security.CurrentCodeSigEnabled, ps)
 				block1 := block.(env.Block)
 				ps = env.AddToProgramStateNEWWithLocation(ps, block1, ps.Idx)
-				evaldo.EvalBlockInjMultiDialect(ps, nil, false)
+				evaldo.EvalBlockInj(ps, nil, false)
 				evaldo.MaybeDisplayFailureOrError2(ps, ps.Idx, "main rye file", true, true)
 			}
 		} else {
@@ -1042,7 +1042,7 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 		SetCurrentProgramState(ps)
 		defer ClearCurrentProgramState()
 
-		evaldo.EvalBlockInjMultiDialect(ps, stValue, true)
+		evaldo.EvalBlockInj(ps, stValue, true)
 		// fmt.Println("MAIN RYE FILE: Maybe display Error")
 		evaldo.MaybeDisplayFailureOrError2(ps, ps.Idx, "main rye file", true, true)
 		//		evaldo.MaybeDisplayFailureOrError(ps, ps.Idx, "main rye file #2")
@@ -1176,7 +1176,7 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 	}
 
 	// fmt.Println(env.NewBlock(es.Ser).Inspect(*es.Idx))
-	evaldo.EvalBlockInjMultiDialect(es, nil, false)
+	evaldo.EvalBlockInj(es, nil, false)
 	evaldo.MaybeDisplayFailureOrError(es, es.Idx, "preload")
 	// fmt.Println(es.Res.Inspect(*es.Idx))
 
@@ -1235,7 +1235,7 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 		if lang == "eyr" {
 			rightEs.Dialect = env.EyrDialect
 		}
-		evaldo.EvalBlockInjMultiDialect(rightEs, nil, false)
+		evaldo.EvalBlockInj(rightEs, nil, false)
 
 		if subc {
 			ctx := rightEs.Ctx
