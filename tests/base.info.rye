@@ -994,7 +994,7 @@ section "Strings " "" {
 	{
 ``	}
 
-	group "to-lower" 
+	group "lower" 
 	"Converts all characters in a string to lowercase."
 	{
 		arg `string: String to convert`
@@ -1002,15 +1002,15 @@ section "Strings " "" {
 	}
 
 	{
-		equal { to-lower "ABCDE" } "abcde"
-		equal { to-lower "Hello World" } "hello world"
-		equal { to-lower "123ABC" } "123abc"
+		equal { lower "ABCDE" } "abcde"
+		equal { lower "Hello World" } "hello world"
+		equal { lower "123ABC" } "123abc"
 	}
 
 	{
 ``	}
 
-	group "to-upper" 
+	group "upper" 
 	"Converts all characters in a string to uppercase."
 	{
 		arg `string: String to convert`
@@ -1018,9 +1018,9 @@ section "Strings " "" {
 	}
 
 	{
-		equal { to-upper "abcde" } "ABCDE"
-		equal { to-upper "Hello World" } "HELLO WORLD"
-		equal { to-upper "123abc" } "123ABC"
+		equal { upper "abcde" } "ABCDE"
+		equal { upper "Hello World" } "HELLO WORLD"
+		equal { upper "123abc" } "123ABC"
 	}
 
 	{
@@ -3278,6 +3278,38 @@ section "Contexts " "Context related functions" {
 	{
 ``	}
 
+	group "whereis" 
+	"Searches for a word in current context and its parents, returns block with [ depth context ] where word was found."
+	{
+		arg `word: Word to look up in current or parent contexts`
+		returns `block with [ depth context ] where depth is the number of parent hops (0 = current context) and context is where the word was found`
+	}
+
+	{
+		equal { x: 123 whereis 'x |first } 0
+		equal { x: 123 c: context { y: 456 } do\in c { whereis 'x } |first } 1
+		equal { x: 123 c: context { y: 456 } do\in c { whereis 'y } |first } 0
+	}
+
+	{
+``	}
+
+	group "get" 
+	"Gets the value of a word from current or parent contexts without calling it (similar to get-word ?word)."
+	{
+		arg `word: Word to look up in current or parent contexts`
+		returns `the value bound to the word (including functions without calling them)`
+	}
+
+	{
+		equal { x: 123 get 'x } 123
+		equal { f: does { 101 } get 'f |type? } 'function
+		equal { c: context { y: 456 } do\in c { get 'y } } 456
+	}
+
+	{
+``	}
+
 	group "current" 
 	"Returns current context."
 	{
@@ -3688,6 +3720,40 @@ section "Iteration " "Functions for iterating over collections and executing cod
 		equal { produce 3 { } { .concat "x" } } { "x" "x" "x" }
 		equal { produce 3 { } { ::x .concat length? x } } { 0 1 2 }
 		equal { produce 5 { 2 } { ::acc .last ::x * x |concat* acc } } { 2 4 16 256 65536 4294967296 }
+	}
+
+	{
+``	}
+
+	group "replicate" 
+	"Executes a block of code a specified number of times and collects all results into a block."
+	{
+		arg `count: Integer number of times to execute the block`
+		arg `block: Block of code to execute on each iteration`
+		returns `Block containing the results of each execution`
+	}
+
+	{
+		equal { replicate 5 { 10 } } { 10 10 10 10 10 }
+		equal { replicate 3 { 1 + 2 } } { 3 3 3 }
+		equal { replicate 0 { 10 } } { }
+	}
+
+	{
+``	}
+
+	group "replicate\\idx" 
+	"Executes a block of code a specified number of times, injecting the current index (0-based), and collects all results into a block."
+	{
+		arg `count: Integer number of times to execute the block`
+		arg `block: Block of code to execute on each iteration, with index (0-based) injected`
+		returns `Block containing the results of each execution`
+	}
+
+	{
+		equal { replicate\idx 5 { } } { 0 1 2 3 4 }
+		equal { replicate\idx 3 { * 10 } } { 0 10 20 }
+		equal { replicate\idx 0 { 10 } } { }
 	}
 
 	{

@@ -153,7 +153,7 @@ test {
 	if sections .length? > 0 {  ; todo add is-empty builtin
 		var 'errors 0
 		for sections {
-			.to-string .pass { term/bold , prns "\n#" , .to-upper .prns , print "#\n" }
+			.to-string .pass { term/bold , prns "\n#" , .upper .prns , print "#\n" }
 			| ++ ".info.rye" |to-file |load |^check { "Group does not exist!!!!" } |do\inside* test-framework |+ errors |fix { errors } ::errors }
 		print ""
 	

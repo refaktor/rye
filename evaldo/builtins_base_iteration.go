@@ -133,6 +133,88 @@ var builtins_iteration = map[string]*env.Builtin{
 	},
 
 	// Tests:
+	// equal { replicate 5 { 10 } } { 10 10 10 10 10 }
+	// equal { replicate 3 { 1 + 2 } } { 3 3 3 }
+	// equal { replicate 0 { 10 } } { }
+	// Args:
+	// * count: Integer number of times to execute the block
+	// * block: Block of code to execute on each iteration
+	// Returns:
+	// * Block containing the results of each execution
+	"replicate": {
+		Argsn: 2,
+		Doc:   "Executes a block of code a specified number of times and collects all results into a block.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch cond := arg0.(type) {
+			case env.Integer:
+				switch bloc := arg1.(type) {
+				case env.Block:
+					results := make([]env.Object, 0, cond.Value)
+					ser := ps.Ser
+					ps.Ser = bloc.Series
+					for i := int64(0); i < cond.Value; i++ {
+						EvalBlock(ps)
+						MaybeDisplayFailureOrError(ps, ps.Idx, "replicate")
+						if ps.ErrorFlag || ps.ReturnFlag {
+							ps.Ser = ser
+							return ps.Res
+						}
+						results = append(results, ps.Res)
+						ps.Ser.Reset()
+					}
+					ps.Ser = ser
+					return *env.NewBlock(*env.NewTSeries(results))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "replicate")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "replicate")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { replicate\idx 5 { } } { 0 1 2 3 4 }
+	// equal { replicate\idx 3 { * 10 } } { 0 10 20 }
+	// equal { replicate\idx 0 { 10 } } { }
+	// Args:
+	// * count: Integer number of times to execute the block
+	// * block: Block of code to execute on each iteration, with index (0-based) injected
+	// Returns:
+	// * Block containing the results of each execution
+	"replicate\\idx": {
+		Argsn: 2,
+		Doc:   "Executes a block of code a specified number of times, injecting the current index (0-based), and collects all results into a block.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch cond := arg0.(type) {
+			case env.Integer:
+				switch bloc := arg1.(type) {
+				case env.Block:
+					results := make([]env.Object, 0, cond.Value)
+					ser := ps.Ser
+					ps.Ser = bloc.Series
+					for i := int64(0); i < cond.Value; i++ {
+						EvalBlockInjMultiDialect(ps, *env.NewInteger(i), true)
+						MaybeDisplayFailureOrError(ps, ps.Idx, "replicate\\idx")
+						if ps.ErrorFlag || ps.ReturnFlag {
+							ps.Ser = ser
+							return ps.Res
+						}
+						results = append(results, ps.Res)
+						ps.Ser.Reset()
+					}
+					ps.Ser = ser
+					return *env.NewBlock(*env.NewTSeries(results))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "replicate\\idx")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "replicate\\idx")
+			}
+		},
+	},
+
+	// Tests:
 	// equal { var 'x 0 , produce\while { x < 100 } 1 { * 2 ::x } } 64
 	// stdout { var 'x 0 , produce\while { x < 100 } 1 { * 2 ::x .prns } } "2 4 8 16 32 64 128 "
 	// Args:

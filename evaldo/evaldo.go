@@ -488,6 +488,21 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 		i := 1
 	gogo1:
 		currWord := word.GetWordNumber(i)
+		// Check if word is "_@" (parent context navigation)
+		wordStr := ps.Idx.GetWord(currWord.Index)
+		if wordStr == "_@" {
+			// Go to parent context
+			if currCtx.Parent != nil {
+				currCtx = currCtx.Parent
+				i += 1
+				if word.Cnt > i-1 {
+					goto gogo1
+				}
+				// If no more path parts, return the parent context itself
+				return true, *currCtx, currCtx
+			}
+			return false, nil, currCtx
+		}
 		object, found := currCtx.Get(currWord.Index)
 		if found && word.Cnt > i {
 			switch swObj := object.(type) {
@@ -539,6 +554,21 @@ func findWordValueWithFailureInfo(ps *env.ProgramState, word1 env.Object) (bool,
 			contextPath.WriteString(wordName)
 		} else {
 			contextPath.WriteString("/" + wordName)
+		}
+
+		// Check if word is "_@" (parent context navigation)
+		if wordName == "_@" {
+			// Go to parent context
+			if currCtx.Parent != nil {
+				currCtx = currCtx.Parent
+				i += 1
+				if word.Cnt > i-1 {
+					goto gogo1
+				}
+				// If no more path parts, return the parent context itself
+				return true, *currCtx, currCtx, ""
+			}
+			return false, nil, currCtx, "@ (no parent context)"
 		}
 
 		object, found := currCtx.Get(currWord.Index)

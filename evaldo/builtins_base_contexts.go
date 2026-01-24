@@ -322,6 +322,69 @@ var builtins_contexts = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { x: 123 whereis 'x |first } 0
+	// equal { x: 123 c: context { y: 456 } do\in c { whereis 'x } |first } 1
+	// equal { x: 123 c: context { y: 456 } do\in c { whereis 'y } |first } 0
+	// Args:
+	// * word: Word to look up in current or parent contexts
+	// Returns:
+	// * block with [ depth context ] where depth is the number of parent hops (0 = current context) and context is where the word was found
+	"whereis": {
+		Argsn: 1,
+		Doc:   "Searches for a word in current context and its parents, returns block with [ depth context ] where word was found.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch word := arg0.(type) {
+			case env.Word:
+				// Search through context hierarchy
+				depth := 0
+				ctx := ps.Ctx
+				for ctx != nil {
+					// Check if word exists in current context (not parent chain)
+					if _, exists := ctx.GetCurrent(word.Index); exists {
+						// Found it - return block with depth and context
+						objs := make([]env.Object, 2)
+						objs[0] = *env.NewInteger(int64(depth))
+						objs[1] = *ctx
+						return *env.NewBlock(*env.NewTSeries(objs))
+					}
+					// Move to parent
+					ctx = ctx.Parent
+					depth++
+				}
+				// Word not found
+				return MakeBuiltinError(ps, fmt.Sprintf("Word '%s' not found in context or any parent", ps.Idx.GetWord(word.Index)), "whereis")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.WordType}, "whereis")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { x: 123 get 'x } 123
+	// equal { f: does { 101 } get 'f |type? } 'function
+	// equal { c: context { y: 456 } do\in c { get 'y } } 456
+	// Args:
+	// * word: Word to look up in current or parent contexts
+	// Returns:
+	// * the value bound to the word (including functions without calling them)
+	"get": {
+		Argsn: 1,
+		Doc:   "Gets the value of a word from current or parent contexts without calling it (similar to get-word ?word).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch word := arg0.(type) {
+			case env.Word:
+				object, found := ps.Ctx.Get(word.Index)
+				if found {
+					return object
+				}
+				return MakeBuiltinError(ps, fmt.Sprintf("Word '%s' not found in context", ps.Idx.GetWord(word.Index)), "get")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.WordType}, "get")
+			}
+		},
+	},
+
 	// TODOC
 	// Tests:
 	// equal { c: context { var 'x 9999 , incr: fn\inside { } current { x:: inc x } } c/incr c/x } 10000

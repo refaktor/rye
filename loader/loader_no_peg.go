@@ -431,6 +431,36 @@ func (l *Lexer) NextToken() NoPEGToken {
 		} else {
 			return l.readPipeWord()
 		}
+	case '@':
+		// Check if it's a cpath (@/word or @/@/word)
+		if l.peekChar() == '/' {
+			l.readChar() // Skip '@'
+			l.readChar() // Skip '/'
+
+			// Read the rest of the path (can have multiple parts like @/one/two or @/@/word)
+			for isWordCharacter(l.ch) || l.ch == '/' || l.ch == '@' {
+				l.readChar()
+			}
+
+			// Ensure the token is followed by whitespace
+			if !isWhitespaceOrEOF(l.ch) {
+				invalidChar := l.ch
+				tokenValue := l.input[l.tokenStart:l.pos]
+				errMsg := fmt.Sprintf("Missing space after cpath '%s'. Found '%c' immediately after. Cpaths must be followed by whitespace.", tokenValue, invalidChar)
+				return l.makeTokenErr(NPEG_TOKEN_ERROR, errMsg, determineLexerError(l.ch))
+			}
+
+			return l.makeToken(NPEG_TOKEN_CPATH, l.input[l.tokenStart:l.pos])
+		}
+		// Just '@' by itself is an opword
+		l.readChar()
+		if isWhitespaceOrEOF(l.ch) {
+			return l.makeToken(NPEG_TOKEN_OPWORD, "@")
+		}
+		// If followed by other characters without whitespace, it's an error
+		invalidChar := l.ch
+		errMsg := fmt.Sprintf("Missing space after '@'. Found '%c' immediately after. '@' must be followed by whitespace or '/'.", invalidChar)
+		return l.makeTokenErr(NPEG_TOKEN_ERROR, errMsg, determineLexerError(l.ch))
 	//if l.peekChar() == '(' {
 	//	return l.readKindWord()
 	// } else {
@@ -1399,6 +1429,12 @@ func (p *NoPEGParser) parseToken() (env.Object, error) {
 		return *env.NewUri(p.wordIndex, *env.NewWord(idx), "file://"+p.currentToken.Value[1:]), nil
 	case NPEG_TOKEN_CPATH:
 		parts := strings.Split(p.currentToken.Value, "/")
+		// Convert all '@' parts to '_@' for parent context navigation
+		for i, part := range parts {
+			if part == "@" {
+				parts[i] = "_@"
+			}
+		}
 		if len(parts) == 2 {
 			idx1 := p.wordIndex.IndexWord(parts[0])
 			idx2 := p.wordIndex.IndexWord(parts[1])
