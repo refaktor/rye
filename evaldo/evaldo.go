@@ -1802,6 +1802,78 @@ func DELETE_ME_getCurrentBlock(es *env.ProgramState) *env.Block {
 	return nil
 }
 
+// truncatedDump returns a truncated string representation of an object.
+// For blocks, it shows the first few and last few tokens with ... in between.
+// For other objects, it returns the normal dump but truncated if too long.
+// Called from: buildBlockStringWithMarker
+// Purpose: Prevents large nested blocks from flooding the error display
+func truncatedDump(obj env.Object, genv *env.Idxs, maxLen int) string {
+	if obj == nil {
+		return ""
+	}
+
+	// Handle blocks specially - show beginning and end
+	if block, ok := obj.(env.Block); ok {
+		series := block.Series.S
+		if len(series) <= 6 {
+			// Small block, show it all
+			return obj.Dump(*genv)
+		}
+
+		// Large block - show first 2 and last 2 tokens
+		var bu strings.Builder
+		// Determine block opener based on mode
+		switch block.Mode {
+		case 1:
+			bu.WriteString("( ")
+		case 2:
+			bu.WriteString("< ")
+		default:
+			bu.WriteString("{ ")
+		}
+
+		// First 2 tokens
+		for i := 0; i < 2 && i < len(series); i++ {
+			if series[i] != nil {
+				bu.WriteString(truncatedDump(series[i], genv, 30))
+				bu.WriteString(" ")
+			}
+		}
+
+		bu.WriteString("... ")
+
+		// Last 2 tokens (most important for error context)
+		start := len(series) - 2
+		if start < 2 {
+			start = 2
+		}
+		for i := start; i < len(series); i++ {
+			if series[i] != nil {
+				bu.WriteString(truncatedDump(series[i], genv, 30))
+				bu.WriteString(" ")
+			}
+		}
+
+		// Close bracket
+		switch block.Mode {
+		case 1:
+			bu.WriteString(")")
+		case 2:
+			bu.WriteString(">")
+		default:
+			bu.WriteString("}")
+		}
+		return bu.String()
+	}
+
+	// For non-block objects, get the dump and truncate if needed
+	dump := obj.Dump(*genv)
+	if len(dump) > maxLen {
+		return dump[:maxLen-3] + "..."
+	}
+	return dump
+}
+
 // buildBlockStringWithMarker creates a string representation of a block with <here> marker at error position.
 // Called from: displayBlockWithErrorPosition
 // Purpose: Builds block display string showing 8 nodes before/after error with <here> marker and ellipses
@@ -1834,7 +1906,8 @@ func buildBlockStringWithMarker(currSer []env.Object, errorPos int, genv *env.Id
 
 		obj := currSer[i]
 		if obj != nil {
-			result.WriteString(obj.Dump(*genv))
+			// Use truncatedDump to limit the size of nested blocks
+			result.WriteString(truncatedDump(obj, genv, 50))
 			result.WriteString(" ")
 		}
 	}
