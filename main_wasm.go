@@ -105,6 +105,7 @@ func main() {
 	c := make(chan term.KeyEvent)
 
 	ml = term.NewMicroLiner(c, sendMessageToJS, sendLineToJS)
+	ml.SetWasmMode(true) // Enable WASM mode to avoid xterm.js scrolling issues
 
 	// Initialize the key event channel in the term package
 	// term.SetSB(sendMessageToJSNL)

@@ -541,6 +541,14 @@ var builtins_types = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { secret "password" |type? } 'secret
+	// equal { secret "password" |reveal } "password"
+	// error { secret 123 }
+	// Args:
+	// * value: String value to convert to a secret
+	// Returns:
+	// * A secret value that hides the string from casual inspection
 	"secret": {
 		Argsn: 1,
 		Doc:   "Creates a secret from a string.",
@@ -555,6 +563,14 @@ var builtins_types = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { secret "password" |reveal } "password"
+	// equal { secret "test123" |reveal } "test123"
+	// error { reveal "not-a-secret" }
+	// Args:
+	// * secret: Secret value to reveal
+	// Returns:
+	// * The string value contained in the secret
 	"reveal": {
 		Argsn: 1,
 		Doc:   "Reveals the secret value.",

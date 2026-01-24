@@ -629,6 +629,7 @@ type MLState struct {
 	inTabCompletion  bool                                                           // Flag to track if we're in tab completion mode
 	suggestionSpace  int                                                            // Number of lines reserved for suggestions (0 = none reserved)
 	ctrlSMode        int                                                            // Ctrl+S cycles through modes: 1=context, 2=generics (0 is Tab-only)
+	isWasmMode       bool                                                           // Flag to track if we're in WASM mode (xterm.js)
 }
 
 // NewMicroLiner initializes a new *MLState with the provided event channel,
@@ -680,6 +681,11 @@ func (s *MLState) GetKeyChan() <-chan KeyEvent {
 func (s *MLState) SetColumns(cols int) bool {
 	s.columns = cols
 	return true
+}
+
+// SetWasmMode enables WASM mode which avoids terminal operations that cause issues in xterm.js
+func (s *MLState) SetWasmMode(enabled bool) {
+	s.isWasmMode = enabled
 }
 
 // Redrawing input
@@ -1036,7 +1042,9 @@ func (s *MLState) refreshSingleLine_NO_WRAP(prompt []rune, buf []rune, pos int) 
 	// Clear current line and all lines that might contain old content
 	s.sendBack("\033[K") // Clear current line
 
-	if maxLinesToClear > 1 {
+	// In WASM mode (xterm.js), skip multi-line clearing as it causes scrolling issues
+	// when the cursor is at the bottom of the terminal buffer
+	if maxLinesToClear > 1 && !s.isWasmMode {
 		if s.inTabCompletion {
 			// During tab completion: Use the old method that prevents scrolling
 			// This preserves the existing behavior for tab completion

@@ -360,6 +360,11 @@ var builtins_contexts = map[string]*env.Builtin{
 		},
 	},
 
+	// Example: lc
+	// Args:
+	// * none
+	// Returns:
+	// * current context after printing the list of words to stdout
 	"lc": {
 		Argsn: 0,
 		Pure:  true,
@@ -370,17 +375,29 @@ var builtins_contexts = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { x: 123 lc\data |type? } 'block
+	// Args:
+	// * none
+	// Returns:
+	// * block of words defined in the current context
 	"lc\\data": {
 		Argsn: 0,
-		Doc:   "Lists words in current context",
+		Doc:   "Returns words in current context as a block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return ps.Ctx.GetWords(*ps.Idx)
 		},
 	},
 
+	// Tests:
+	// equal { c: context { x: 123 } lc\data\ c |type? } 'block
+	// Args:
+	// * ctx: Context to list words from
+	// Returns:
+	// * block of words defined in the specified context
 	"lc\\data\\": {
 		Argsn: 1,
-		Doc:   "Lists words in current context",
+		Doc:   "Returns words in specified context as a block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch c := arg0.(type) {
 			case env.RyeCtx:
@@ -393,9 +410,14 @@ var builtins_contexts = map[string]*env.Builtin{
 		},
 	},
 
+	// Example: lcp
+	// Args:
+	// * none
+	// Returns:
+	// * current context after printing the parent context's words to stdout
 	"lcp": {
 		Argsn: 0,
-		Doc:   "Lists words in current context",
+		Doc:   "Lists words in parent context",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			if ps.Ctx.Parent != nil {
 				fmt.Println(ps.Ctx.Parent.Preview(*ps.Idx, ""))
@@ -406,6 +428,12 @@ var builtins_contexts = map[string]*env.Builtin{
 		},
 	},
 
+	// Example: lc\ "print"
+	// Example: lc\ 'function
+	// Args:
+	// * filter: String to filter by name, Word ('function, 'builtin, 'context) to filter by type, or regexp Native
+	// Returns:
+	// * current context after printing filtered words to stdout
 	"lc\\": {
 		Argsn: 1,
 		Doc:   "Lists words in current context with string filter, by type (word: 'function, 'builtin, 'context), or regex filter (native of kind 'regexp)",
@@ -446,9 +474,14 @@ var builtins_contexts = map[string]*env.Builtin{
 		},
 	},
 
+	// Example: lcp\ "print"
+	// Args:
+	// * filter: String to filter word names
+	// Returns:
+	// * current context after printing filtered parent context words to stdout
 	"lcp\\": {
 		Argsn: 1,
-		Doc:   "Lists words in current context with string filter",
+		Doc:   "Lists words in parent context with string filter",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
@@ -464,6 +497,11 @@ var builtins_contexts = map[string]*env.Builtin{
 		},
 	},
 
+	// Example: cc my-context
+	// Args:
+	// * ctx: Context to change to
+	// Returns:
+	// * the new current context
 	"cc": {
 		Argsn: 1,
 		Doc:   "Change to context (pushes current context to stack for ccb)",
@@ -485,6 +523,11 @@ var builtins_contexts = map[string]*env.Builtin{
 		},
 	},
 
+	// Example: ccp
+	// Args:
+	// * none
+	// Returns:
+	// * the parent context (now current)
 	"ccp": {
 		Argsn: 0,
 		Doc:   "Change to parent context (pushes current context to stack for ccb)",
@@ -499,6 +542,11 @@ var builtins_contexts = map[string]*env.Builtin{
 		},
 	},
 
+	// Example: ccb
+	// Args:
+	// * none
+	// Returns:
+	// * the previous context (now current)
 	"ccb": {
 		Argsn: 0,
 		Doc:   "Change context back (pops from context stack)",
@@ -512,6 +560,11 @@ var builtins_contexts = map[string]*env.Builtin{
 		},
 	},
 
+	// Example: mkcc 'my-sub-context
+	// Args:
+	// * word: Word to name the new context
+	// Returns:
+	// * the new context (now current)
 	"mkcc": {
 		Argsn: 1,
 		Doc:   "Make context with current as parent and change to it (pushes current context to stack for ccb).",
@@ -534,6 +587,11 @@ var builtins_contexts = map[string]*env.Builtin{
 		},
 	},
 
+	// Example: cc-stack-size
+	// Args:
+	// * none
+	// Returns:
+	// * Integer with the current size of the context navigation stack
 	"cc-stack-size": {
 		Argsn: 0,
 		Doc:   "Returns the current size of the context navigation stack.",
@@ -542,6 +600,11 @@ var builtins_contexts = map[string]*env.Builtin{
 		},
 	},
 
+	// Example: cc-clear-stack
+	// Args:
+	// * none
+	// Returns:
+	// * Integer with the previous size of the stack before clearing
 	"cc-clear-stack": {
 		Argsn: 0,
 		Doc:   "Clears the context navigation stack (removes all stored previous contexts).",

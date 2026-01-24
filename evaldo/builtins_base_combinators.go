@@ -6,8 +6,9 @@ import (
 
 var builtins_combinators = map[string]*env.Builtin{
 
-	// COMBINATORS
-
+	//
+	// ##### Combinators ##### "Functions that combine other functions or control execution flow"
+	//
 	// Tests:
 	// equal  { 101 .pass { 202 } } 101
 	// equal  { 101 .pass { 202 + 303 } } 101

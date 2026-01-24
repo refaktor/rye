@@ -141,6 +141,48 @@ var builtins_functions = map[string]*env.Builtin{
 	},
 
 	// Tests:
+	// equal { f: fn { x y } { x + y } , f .fn\spec? } { x y }
+	// equal { does { 1 } .fn\spec? } { }
+	// Args:
+	// * function: Function to get the argument spec from
+	// Returns:
+	// * Block containing the function's parameter specification
+	"fn\\spec?": {
+		Argsn: 1,
+		Doc:   "Returns the argument specification block of a function.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch fn := arg0.(type) {
+			case env.Function:
+				return fn.Spec
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.FunctionType}, "fn\\spec?")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { f: fn { x y } { x + y } , f .fn\body? } { x + y }
+	// equal { does { 123 } .fn\body? } { 123 }
+	// Args:
+	// * function: Function to get the body from
+	// Returns:
+	// * Block containing the function's body code
+	"fn\\body?": {
+		Argsn: 1,
+		Doc:   "Returns the body block of a function.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch fn := arg0.(type) {
+			case env.Function:
+				return fn.Body
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.FunctionType}, "fn\\body?")
+			}
+		},
+	},
+
+	// Tests:
 	// equal { pfn { } { } |type? } 'function
 	// equal { x: pfn { x } { + 123 } , x 123 } 246
 	// ; TODO -- it seems pure namespace not also has print and append! error { x: pfn { } { ?append! } , x 123 }

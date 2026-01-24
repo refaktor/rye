@@ -8,6 +8,10 @@ import (
 // Additional error handling utilities to complement the existing ones in builtins_base_failure.go. Will get merged once tested and decided which ones should stay.
 
 var Builtins_error_utils = map[string]*env.Builtin{
+
+	//
+	// ##### Error Utils ##### "Additional error handling utilities"
+	//
 	// Tests:
 	// equal { error? failure "test" } true
 	// equal { error? 123 } false

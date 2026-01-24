@@ -8,6 +8,9 @@ import (
 
 var builtins_complex = map[string]*env.Builtin{
 
+	//
+	// ##### Complex numbers ##### "Functions for working with complex numbers"
+	//
 	// Tests:
 	// equal { complex 3 4 |type? } 'complex
 	// equal { complex 3 4 |print } "3.000000+4.000000i"

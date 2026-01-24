@@ -598,6 +598,46 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 
 }
 
-section "Default" "" {
+section "Bcrypt " "Functions for bcrypt password hashing and token generation" {
+	group "bcrypt-hash" 
+	"Generates a bcrypt hash from a password string."
+	{
+		arg `password: String to hash`
+		returns `string containing the bcrypt hash of the password`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "bcrypt-check" 
+	"Compares a bcrypt hash with a plain text password."
+	{
+		arg `hash: String containing the bcrypt hash`
+		arg `password: Plain text password to compare`
+		returns `integer 1 if the password matches the hash, 0 otherwise`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "generate-token" 
+	"Generates a cryptographically secure random token of the specified length in bytes."
+	{
+		arg `length: Integer number of random bytes to generate`
+		returns `string containing the hex-encoded random token`
+	}
+
+	{
+	}
+
+	{
+``	}
+
 }
 

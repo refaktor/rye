@@ -1421,28 +1421,28 @@ section "Date and Time " "" {
 ``	}
 
 	group "thousands" 
-	"Converts seconds to milliseconds (multiplies by 1000)."
+	"Multiplies the input by 1000 (useful for unit conversion)."
 	{
-		arg `n: Integer number of seconds`
-		returns `integer representing the equivalent number of milliseconds`
+		arg `n: Integer`
+		returns `integer multiplied by 1000`
 	}
 
 	{
-		equal { 5 .seconds } 5000
+		equal { 5 .thousands } 5000
 	}
 
 	{
 ``	}
 
 	group "millions" 
-	"Converts seconds to milliseconds (multiplies by 1000)."
+	"Multiplies the input by 1000000 (useful for unit conversion)."
 	{
-		arg `n: Integer number of seconds`
-		returns `integer representing the equivalent number of milliseconds`
+		arg `n: Integer`
+		returns `integer multiplied by 1000000`
 	}
 
 	{
-		equal { 5 .seconds } 5000
+		equal { 5 .millions } 5000000
 	}
 
 	{
@@ -1521,6 +1521,8 @@ section "Date and Time " "" {
 	group "time-it" 
 	"Accepts a block, does it and times it's execution time."
 	{
+		arg `block: Block of code to execute and time`
+		returns `integer representing execution time in milliseconds`
 	}
 
 	{
@@ -3081,6 +3083,38 @@ section "Types and Kinds " "" {
 	{
 ``	}
 
+	group "secret" 
+	"Creates a secret from a string."
+	{
+		arg `value: String value to convert to a secret`
+		returns `A secret value that hides the string from casual inspection`
+	}
+
+	{
+		equal { secret "password" |type? } 'secret
+		equal { secret "password" |reveal } "password"
+		error { secret 123 }
+	}
+
+	{
+``	}
+
+	group "reveal" 
+	"Reveals the secret value."
+	{
+		arg `secret: Secret value to reveal`
+		returns `The string value contained in the secret`
+	}
+
+	{
+		equal { secret "password" |reveal } "password"
+		equal { secret "test123" |reveal } "test123"
+		error { reveal "not-a-secret" }
+	}
+
+	{
+``	}
+
 	group "_>>" 
 	"Converts first argument to a specific kind."
 	{
@@ -3275,6 +3309,164 @@ section "Contexts " "Context related functions" {
 
 	{
 		equal { ct: context { p: 123 } parent\of ct |= current } true
+	}
+
+	{
+``	}
+
+	group "lc" 
+	"Lists words in current context"
+	{
+		arg `none`
+		returns `current context after printing the list of words to stdout`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "lc\\data" 
+	"Returns words in current context as a block."
+	{
+		arg `none`
+		returns `block of words defined in the current context`
+	}
+
+	{
+		equal { x: 123 lc\data |type? } 'block
+	}
+
+	{
+``	}
+
+	group "lc\\data\\" 
+	"Returns words in specified context as a block."
+	{
+		arg `ctx: Context to list words from`
+		returns `block of words defined in the specified context`
+	}
+
+	{
+		equal { c: context { x: 123 } lc\data\ c |type? } 'block
+	}
+
+	{
+``	}
+
+	group "lcp" 
+	"Lists words in parent context"
+	{
+		arg `none`
+		returns `current context after printing the parent context's words to stdout`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "lc\\" 
+	"Lists words in current context with string filter, by type (word: 'function, 'builtin, 'context), or regex filter (native of kind 'regexp)"
+	{
+		arg `filter: String to filter by name, Word ('function, 'builtin, 'context) to filter by type, or regexp Native`
+		returns `current context after printing filtered words to stdout`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "lcp\\" 
+	"Lists words in parent context with string filter"
+	{
+		arg `filter: String to filter word names`
+		returns `current context after printing filtered parent context words to stdout`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "cc" 
+	"Change to context (pushes current context to stack for ccb)"
+	{
+		arg `ctx: Context to change to`
+		returns `the new current context`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "ccp" 
+	"Change to parent context (pushes current context to stack for ccb)"
+	{
+		arg `none`
+		returns `the parent context (now current)`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "ccb" 
+	"Change context back (pops from context stack)"
+	{
+		arg `none`
+		returns `the previous context (now current)`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "mkcc" 
+	"Make context with current as parent and change to it (pushes current context to stack for ccb)."
+	{
+		arg `word: Word to name the new context`
+		returns `the new context (now current)`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "cc-stack-size" 
+	"Returns the current size of the context navigation stack."
+	{
+		arg `none`
+		returns `Integer with the current size of the context navigation stack`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "cc-clear-stack" 
+	"Clears the context navigation stack (removes all stored previous contexts)."
+	{
+		arg `none`
+		returns `Integer with the previous size of the stack before clearing`
+	}
+
+	{
 	}
 
 	{
@@ -3992,6 +4184,36 @@ section "Functions " "functions that create functions" {
 		equal { x: fn { } { 234 } , x } 234
 		equal { x: fn { x } { x } , x 123 } 123
 		equal { x: fn { x } { + 123 } , x 123 } 246
+	}
+
+	{
+``	}
+
+	group "fn\\spec?" 
+	"Returns the argument specification block of a function."
+	{
+		arg `function: Function to get the argument spec from`
+		returns `Block containing the function's parameter specification`
+	}
+
+	{
+		equal { f: fn { x y } { x + y } , f .fn\spec? } { x y }
+		equal { does { 1 } .fn\spec? } { }
+	}
+
+	{
+``	}
+
+	group "fn\\body?" 
+	"Returns the body block of a function."
+	{
+		arg `function: Function to get the body from`
+		returns `Block containing the function's body code`
+	}
+
+	{
+		equal { f: fn { x y } { x + y } , f .fn\body? } { x + y }
+		equal { does { 123 } .fn\body? } { 123 }
 	}
 
 	{

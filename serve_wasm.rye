@@ -1,9 +1,9 @@
-; # Simple HTTP server for wasm build
+; # Simple HTTP server for wasm build http://localhost:8085
 ; Serve all static files from wasm folder
 ; This is meant to test the wasm Rye version that works in a browser and needs http server
 ; to load properly
 
-rye .needs { http }
+rye .Needs { http }
 
 http-server ":8085"
 |Handle "/" new-static-handler %wasm

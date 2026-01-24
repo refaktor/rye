@@ -1920,23 +1920,44 @@ func MaybeDisplayFailureOrError2(es *env.ProgramState, genv *env.Idxs, tag strin
 // Called from: WASM build code (main_wasm.go)
 // Purpose: WASM-specific error display that uses provided print function instead of fmt.Println
 func MaybeDisplayFailureOrErrorWASM(es *env.ProgramState, genv *env.Idxs, printfn func(string), tag string) {
-	// if es.FailureFlag {
-	// 	fmt.Print("\x1b[43m\x1b[33m FAILURE \x1b[0m\n") // Red background, black text
-	//	printfn(tag)
-	// }
-	if es.ErrorFlag {
-		printfn("\x1b[31;3m" + es.Res.Print(*genv))
-		switch es.Res.(type) {
-		case env.Error:
-			printfn(es.Ser.PositionAndSurroundingElements(*genv))
-			printfn("Error not pointer so bug. #temp")
-		case *env.Error:
-			printfn("At location:")
-			printfn(es.Ser.PositionAndSurroundingElements(*genv))
+	if !es.InErrHandler && es.ErrorFlag {
+		// Red background banner for runtime errors (same as native)
+		if !es.SkipFlag {
+			printfn("\x1b[41m\x1b[30m RUNTIME ERROR: " + tag + " \x1b[0m")
+
+			// Bold red for error message, with backtick-quoted text highlighted
+			errorMsg := es.Res.Print(*genv)
+			printfn("\x1b[1;31m" + FormatBacktickQuotes(errorMsg) + "\x1b[0m")
+
+			// Display block location info (same as native)
+			displayBlockWithErrorPositionWASM(es, genv, printfn)
 		}
-		printfn("\x1b[0m")
-		printfn(tag)
+		es.SkipFlag = true
 	}
+}
+
+// displayBlockWithErrorPositionWASM shows the current block with a <here> marker at the error position for WASM.
+// Called from: MaybeDisplayFailureOrErrorWASM
+// Purpose: WASM version of displayBlockWithErrorPosition using printfn instead of fmt.Print
+func displayBlockWithErrorPositionWASM(es *env.ProgramState, genv *env.Idxs, printfn func(string)) {
+	// Bold cyan for location information
+	var locationStr string
+	if es.BlockFile != "" {
+		locationStr = fmt.Sprintf("\x1b[1;36mBlock starting at \x1b[1;34m%s:%d\x1b[0m", es.BlockFile, es.BlockLine)
+	} else {
+		locationStr = fmt.Sprintf("\x1b[1;36mBlock starting at \x1b[1;34mline %d\x1b[0m", es.BlockLine)
+	}
+	printfn(locationStr)
+
+	// Get current position in the block
+	errorPos := es.Ser.Pos() - 1
+	if errorPos < 0 {
+		errorPos = 0
+	}
+
+	// Build the block representation with <here> marker
+	blockStr := buildBlockStringWithMarker(es.Ser.S, errorPos, genv)
+	printfn("\x1b[1;37m  " + blockStr + "\x1b[0m")
 }
 
 //  CHECKING VARIOUS FLAGS

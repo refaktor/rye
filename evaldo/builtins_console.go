@@ -9,9 +9,18 @@ import (
 )
 
 var Builtins_console = map[string]*env.Builtin{
+
+	//
+	// ##### Console ##### "Interactive debugging console functions"
+	//
+	// Example: enter-console "debug"
+	// Args:
+	// * name: String name for the console session
+	// Returns:
+	// * the last result from the console session
 	"enter-console": {
 		Argsn: 1,
-		Doc:   "Stops execution and gives you a Rye console, to test the code inside environment.",
+		Doc:   "Stops execution and gives you an interactive Rye console to test code in the current environment.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch name := arg0.(type) {
 			case env.String:
@@ -44,8 +53,8 @@ var Builtins_console = map[string]*env.Builtin{
 							EvalBlock(ps)
 							fmt.Println(ps.Res.Inspect(*ps.Idx))
 						}
-					}*/
-
+					}
+				*/
 				DoRyeRepl(ps, "rye", ShowResults, false)
 				fmt.Println("-------------------------------------------------------------")
 				ps.Ser = ser
