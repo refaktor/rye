@@ -122,7 +122,7 @@ generate-doc-file: fn { filename menu } {
 	 } |Write* to-file filename ++ ".html"
 }
 
-menu: { "base" "table" "formats" "io" "crypto" "dialects" "protocols" }
+menu: { "base" "table" "formats" "io" "crypto" "dialects" "protocols" "system" }
 
 print-help: does {
 	print `# Rye's simple testing tool

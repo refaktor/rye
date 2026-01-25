@@ -51,17 +51,9 @@ var ErrorCreationBuiltins = map[string]*env.Builtin{
 		},
 	},
 
-	// Tests:
-	// equal { refail (failure "inner error") "outer error" |message? } "outer error"
-	// equal { refail (failure "inner error") "outer error" |type? } 'error
-	// Args:
-	// * error: Original error object
-	// * error_info: New error information to wrap the original error
-	// Returns:
-	// * new error object that wraps the original error and sets the failure flag
 	"refail": {
 		Argsn: 2,
-		Doc:   "Re-raises an existing error with additional context.",
+		Doc:   "Re-raises an existing error with additional context. TODO -- duplicate of check",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch er := arg0.(type) {
 			case *env.Error:
@@ -974,7 +966,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { try-all { 1 + 2 } } [true 3]
+	// equal { try-all { 1 + 2 } } [ true 3 ]
 	// equal { try-all { fail "error" } |first } false
 	// Args:
 	// * block: Block of code to execute
