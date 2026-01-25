@@ -215,6 +215,10 @@ var builtins_trees = map[string]*env.Builtin{
 									newData[k] = ps.Res
 								case env.Builtin:
 									result := DirectlyCallBuiltin(ps, transformer, env.ToRyeValue(v), nil)
+									MaybeDisplayFailureOrError(ps, ps.Idx, "tree-transform")
+									if ps.ErrorFlag || ps.ReturnFlag {
+										return node // Return original on error
+									}
 									newData[k] = result
 								}
 							}

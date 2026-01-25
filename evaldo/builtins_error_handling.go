@@ -217,7 +217,7 @@ var ErrorInspectionBuiltins = map[string]*env.Builtin{
 				return *current
 			default:
 				ps.FailureFlag = true
-				return env.NewError("arg 0 not error")
+				return MakeArgError(ps, 1, []env.Type{env.ErrorType}, "cause?")
 			}
 		},
 	},
@@ -242,7 +242,7 @@ var ErrorInspectionBuiltins = map[string]*env.Builtin{
 				return *env.NewInteger(int64(er.Status))
 			default:
 				ps.FailureFlag = true
-				return env.NewError("arg 0 not error")
+				return MakeArgError(ps, 1, []env.Type{env.ErrorType}, "status?")
 			}
 		},
 	},
@@ -267,7 +267,7 @@ var ErrorInspectionBuiltins = map[string]*env.Builtin{
 				return *env.NewString(er.Message)
 			default:
 				ps.FailureFlag = true
-				return env.NewError("arg 0 not error")
+				return MakeArgError(ps, 1, []env.Type{env.ErrorType}, "message?")
 			}
 		},
 	},
@@ -293,7 +293,7 @@ var ErrorInspectionBuiltins = map[string]*env.Builtin{
 				originalMap = er.Values
 			default:
 				ps.FailureFlag = true
-				return env.NewError("arg 0 not error")
+				return MakeArgError(ps, 1, []env.Type{env.ErrorType}, "details?")
 			}
 
 			convertedMap := make(map[string]any)
@@ -651,7 +651,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 					return ps.Res
 				default:
 					ps.FailureFlag = true
-					return env.NewError("expecting block")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "fix")
 				}
 			} else {
 				return arg0
@@ -686,7 +686,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 					return ps.Res
 				default:
 					ps.FailureFlag = true
-					return env.NewError("expecting block")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "^fix")
 				}
 			} else {
 				return arg0
@@ -721,7 +721,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 					return ps.Res
 				default:
 					ps.FailureFlag = true
-					return env.NewError("expecting block")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "fix\\either")
 				}
 			} else {
 				switch bloc := arg2.(type) {
@@ -734,7 +734,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 					return ps.Res
 				default:
 					ps.FailureFlag = true
-					return env.NewError("expecting block")
+					return MakeArgError(ps, 3, []env.Type{env.BlockType}, "fix\\either")
 				}
 			}
 		},
@@ -766,7 +766,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 					return ps.Res
 				default:
 					ps.FailureFlag = true
-					return env.NewError("expecting block")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "fix\\else")
 				}
 			} else {
 				return arg0
@@ -800,7 +800,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 					return ps.Res
 				default:
 					ps.FailureFlag = true
-					return env.NewError("expecting block")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "fix\\continue")
 				}
 			} else {
 				switch bloc := arg2.(type) {
@@ -812,7 +812,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 					return ps.Res
 				default:
 					ps.FailureFlag = true
-					return env.NewError("expecting block")
+					return MakeArgError(ps, 3, []env.Type{env.BlockType}, "fix\\continue")
 				}
 			}
 		},
@@ -844,7 +844,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 					return ps.Res
 				default:
 					ps.FailureFlag = true
-					return env.NewError("expecting block")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "continue")
 				}
 			} else {
 				ps.FailureFlag = false

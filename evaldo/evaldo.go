@@ -1123,6 +1123,7 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 
 	psX.Ser.SetPos(0)
 	EvalBlockInj(psX, arg0, true)
+	MaybeDisplayFailureOrError(psX, psX.Idx, "call func args 2")
 	if psX.ErrorFlag || psX.FailureFlag {
 		ps.Res = psX.Res
 		ps.ErrorFlag = psX.ErrorFlag
@@ -1130,7 +1131,6 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 		return
 	}
 	// fmt.Println(psX.Res)
-	MaybeDisplayFailureOrError(psX, psX.Idx, "call func args 2")
 	if psX.ForcedResult != nil {
 		ps.Res = psX.ForcedResult
 		psX.ForcedResult = nil
@@ -1684,8 +1684,7 @@ func calculateErrorPosition(ps *env.ProgramState, locationNode *env.LocationNode
 // Called from: DisplayEnhancedError
 // Purpose: Converts `word` to highlighted word for better error readability
 func FormatBacktickQuotes(message string) string {
-	// Red background, black text for quoted words: \x1b[41m\x1b[30m word \x1b[0m\x1b[1;31m
-	// This matches the style used for function names in other errors
+	// Magenta background, white text for quoted words
 	result := strings.Builder{}
 	inQuote := false
 	for i := 0; i < len(message); i++ {
@@ -1695,8 +1694,8 @@ func FormatBacktickQuotes(message string) string {
 				result.WriteString(" \x1b[0m\x1b[1;31m")
 				inQuote = false
 			} else {
-				// Opening backtick - add red background, black text
-				result.WriteString("\x1b[41m\x1b[30m ")
+				// Opening backtick - add magenta background, white text
+				result.WriteString("\x1b[40m\x1b[31m ")
 				inQuote = true
 			}
 		} else {
@@ -1712,7 +1711,7 @@ func FormatBacktickQuotes(message string) string {
 func DisplayEnhancedError(es *env.ProgramState, genv *env.Idxs, tag string, topLevel bool) {
 	// Red background banner for runtime errors
 	if !es.SkipFlag {
-		fmt.Print("\x1b[41m\x1b[30m RUNTIME ERROR: " + tag + " \x1b[0m\n") // Red background, black text
+		fmt.Print("\x1b[41m\x1b[30m RUNTIME ERROR:\x1b[0m " + tag + "\n") // Magenta background, black text
 
 		// Bold red for error message, with backtick-quoted text highlighted
 		fmt.Print("\x1b[1;31m") // Bold red
@@ -1730,7 +1729,7 @@ func DisplayEnhancedError(es *env.ProgramState, genv *env.Idxs, tag string, topL
 func displayBlockWithErrorPosition(es *env.ProgramState, genv *env.Idxs) {
 
 	// Bold cyan for location information
-	fmt.Print("\x1b[1;36mBlock starting at \x1b[1;34m") // Bold cyan "At", bold blue for location
+	fmt.Print("\x1b[36mBlock starting at \x1b[34m") // Bold cyan "At", bold blue for location
 	if es.BlockFile != "" {
 		fmt.Printf("%s:%d", es.BlockFile, es.BlockLine)
 	} else {
@@ -1740,7 +1739,7 @@ func displayBlockWithErrorPosition(es *env.ProgramState, genv *env.Idxs) {
 
 	// Show the current block content with <here> marker
 	// fmt.Print("\x1b[37mBlock:\x1b[0m\n")
-	fmt.Print("\x1b[1;37m  ")
+	fmt.Print("\x1b[37m  ")
 
 	// Get current position in the block
 	errorPos := es.Ser.Pos() - 1
@@ -1804,12 +1803,12 @@ func truncatedDump(obj env.Object, genv *env.Idxs, maxLen int) string {
 	// Handle blocks specially - show beginning and end
 	if block, ok := obj.(env.Block); ok {
 		series := block.Series.S
-		if len(series) <= 6 {
-			// Small block, show it all
+		if len(series) <= 3 {
+			// Very small block, show it all
 			return obj.Dump(*genv)
 		}
 
-		// Large block - show first 2 and last 2 tokens
+		// Block with more items - show first token and gray ellipsis
 		var bu strings.Builder
 		// Determine block opener based on mode
 		switch block.Mode {
@@ -1821,27 +1820,14 @@ func truncatedDump(obj env.Object, genv *env.Idxs, maxLen int) string {
 			bu.WriteString("{ ")
 		}
 
-		// First 2 tokens
-		for i := 0; i < 2 && i < len(series); i++ {
-			if series[i] != nil {
-				bu.WriteString(truncatedDump(series[i], genv, 30))
-				bu.WriteString(" ")
-			}
+		// First token only
+		if len(series) > 0 && series[0] != nil {
+			bu.WriteString(truncatedDump(series[0], genv, 20))
+			bu.WriteString(" ")
 		}
 
-		bu.WriteString("... ")
-
-		// Last 2 tokens (most important for error context)
-		start := len(series) - 2
-		if start < 2 {
-			start = 2
-		}
-		for i := start; i < len(series); i++ {
-			if series[i] != nil {
-				bu.WriteString(truncatedDump(series[i], genv, 30))
-				bu.WriteString(" ")
-			}
-		}
+		// Gray ellipsis
+		bu.WriteString("\x1b[90m...\x1b[0m\x1b[37m ")
 
 		// Close bracket
 		switch block.Mode {
@@ -1858,7 +1844,7 @@ func truncatedDump(obj env.Object, genv *env.Idxs, maxLen int) string {
 	// For non-block objects, get the dump and truncate if needed
 	dump := obj.Dump(*genv)
 	if len(dump) > maxLen {
-		return dump[:maxLen-3] + "..."
+		return dump[:maxLen-3] + "\x1b[90m...\x1b[0m\x1b[37m"
 	}
 	return dump
 }
@@ -1870,9 +1856,9 @@ func buildBlockStringWithMarker(currSer []env.Object, errorPos int, genv *env.Id
 	var result strings.Builder
 	result.WriteString("{ ")
 
-	// Calculate the range to display: 8 nodes before and 8 nodes after
-	startPos := errorPos - 8
-	endPos := errorPos + 8
+	// Calculate the range to display: 3 nodes before and 3 nodes after
+	startPos := errorPos - 3
+	endPos := errorPos + 3
 
 	// Adjust boundaries to stay within the block
 	if startPos < 0 {
@@ -1890,7 +1876,7 @@ func buildBlockStringWithMarker(currSer []env.Object, errorPos int, genv *env.Id
 	// Display the selected range
 	for i := startPos; i <= endPos && i < len(currSer); i++ {
 		if i == errorPos {
-			result.WriteString("\x1b[1;31m<here>\x1b[0m ")
+			result.WriteString("\x1b[1;31m<here>\x1b[0m\x1b[37m ")
 		}
 
 		obj := currSer[i]
@@ -2049,7 +2035,7 @@ func displayBlockWithErrorPositionWASM(es *env.ProgramState, genv *env.Idxs, pri
 
 	// Build the block representation with <here> marker
 	blockStr := buildBlockStringWithMarker(es.Ser.S, errorPos, genv)
-	printfn("\x1b[1;37m  " + blockStr + "\x1b[0m")
+	printfn("\x1b[37m  " + blockStr + "\x1b[0m")
 }
 
 //  CHECKING VARIOUS FLAGS

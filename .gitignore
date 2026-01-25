@@ -70,3 +70,4 @@ cmd/loop_benchmark/rye_*
 *.ORIGINAL*
 *.DEACTIVATE*
 *_BK*
+analyses/

@@ -130,6 +130,10 @@ func (md *MessageDispatcher) runLoop(ps *env.ProgramState, updateCallback env.Fu
 				md.mu.RUnlock()
 
 				CallFunctionArgs2(updateCallback, ps, nil, state, nil)
+				MaybeDisplayFailureOrError(ps, ps.Idx, "msgdispatcher-update")
+				if ps.ErrorFlag || ps.ReturnFlag {
+					continue // Skip update on error
+				}
 				if newState, ok := ps.Res.(env.Dict); ok {
 					md.SetState(newState)
 				}
@@ -174,6 +178,11 @@ func (md *MessageDispatcher) processMessage(ps *env.ProgramState, msg env.Object
 
 	// Call handler with message and state
 	CallFunctionArgs2(handler, ps, msg, currentState, nil)
+	MaybeDisplayFailureOrError(ps, ps.Idx, "msgdispatcher-handler")
+	if ps.ErrorFlag || ps.ReturnFlag {
+		fmt.Printf("Warning: Handler error for message type '%s'\n", msgType)
+		return
+	}
 
 	// Update state if handler returned a Dict
 	if newState, ok := ps.Res.(env.Dict); ok {

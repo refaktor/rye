@@ -894,6 +894,10 @@ var builtins_iteration = map[string]*env.Builtin{
 					case env.Builtin:
 						for i := 0; i < l; i++ {
 							newl[i] = DirectlyCallBuiltin(ps, block, list.Get(i), nil)
+							MaybeDisplayFailureOrError(ps, ps.Idx, "map")
+							if ps.ErrorFlag || ps.ReturnFlag {
+								return ps.Res
+							}
 						}
 					case env.Function:
 						for i := 0; i < l; i++ {
@@ -1220,6 +1224,10 @@ var builtins_iteration = map[string]*env.Builtin{
 							item = lo[i]
 						}
 						res := DirectlyCallBuiltin(ps, block, env.ToRyeValue(item), nil)
+						MaybeDisplayFailureOrError(ps, ps.Idx, "reduce")
+						if ps.ErrorFlag || ps.ReturnFlag {
+							return ps.Res
+						}
 						switch res := res.(type) {
 						case env.Integer:
 							acc.Value += float64(res.Value)
@@ -1299,6 +1307,10 @@ var builtins_iteration = map[string]*env.Builtin{
 					case env.Builtin:
 						for _, curval := range list.Value {
 							res := DirectlyCallBuiltin(ps, block, env.ToRyeValue(curval), nil)
+							MaybeDisplayFailureOrError(ps, ps.Idx, "partition-by")
+							if ps.ErrorFlag || ps.ReturnFlag {
+								return ps.Res
+							}
 							if prevres == nil || res.Equal(prevres) {
 								subl.WriteRune(curval)
 							} else {
@@ -1349,6 +1361,10 @@ var builtins_iteration = map[string]*env.Builtin{
 						for i := 0; i < l; i++ {
 							curval := list.Get(i)
 							res := DirectlyCallBuiltin(ps, block, curval, nil)
+							MaybeDisplayFailureOrError(ps, ps.Idx, "partition-by")
+							if ps.ErrorFlag || ps.ReturnFlag {
+								return ps.Res
+							}
 							if prevres == nil || res.Equal(prevres) {
 								subl = append(subl, curval)
 							} else {
@@ -1461,6 +1477,10 @@ var builtins_iteration = map[string]*env.Builtin{
 							curval = lo[i]
 						}
 						res := DirectlyCallBuiltin(ps, block, curval, nil)
+						MaybeDisplayFailureOrError(ps, ps.Idx, "group")
+						if ps.ErrorFlag || ps.ReturnFlag {
+							return ps.Res
+						}
 						// TODO !!! -- currently only works if results are strings
 						newkeyStr, ok := res.(env.String)
 						if !ok {
@@ -1597,6 +1617,10 @@ var builtins_iteration = map[string]*env.Builtin{
 							item = env.ToRyeValue(ls[i])
 						}
 						res := DirectlyCallBuiltin(ps, block, env.ToRyeValue(item), nil)
+						MaybeDisplayFailureOrError(ps, ps.Idx, "filter")
+						if ps.ErrorFlag || ps.ReturnFlag {
+							return ps.Res
+						}
 						if util.IsTruthy(res) { // todo -- move these to util or something
 							if modeObj == 1 {
 								newll = append(newll, ll[i])
@@ -1700,6 +1724,10 @@ var builtins_iteration = map[string]*env.Builtin{
 							item = *env.NewString(string(ls[i]))
 						}
 						res := DirectlyCallBuiltin(ps, block, env.ToRyeValue(item), nil)
+						MaybeDisplayFailureOrError(ps, ps.Idx, "seek")
+						if ps.ErrorFlag || ps.ReturnFlag {
+							return ps.Res
+						}
 						if util.IsTruthy(res) { // todo -- move these to util or something
 							return env.ToRyeValue(item)
 						}

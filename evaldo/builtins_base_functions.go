@@ -141,8 +141,8 @@ var builtins_functions = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { f: fn { x y } { x + y } , f .fn\spec? } { x y }
-	// equal { does { 1 } .fn\spec? } { }
+	// equal { f: fn { x y } { x + y } , ?f .fn\spec? } { x y }
+	// equal { does { 1 } |fn\spec? } { }
 	// Args:
 	// * function: Function to get the argument spec from
 	// Returns:
@@ -162,8 +162,8 @@ var builtins_functions = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { f: fn { x y } { x + y } , f .fn\body? } { x + y }
-	// equal { does { 123 } .fn\body? } { 123 }
+	// equal { f: fn { x y } { x + y } , ?f .fn\body? } { x + y }
+	// equal { does { 123 } |fn\body? } { 123 }
 	// Args:
 	// * function: Function to get the body from
 	// Returns:
