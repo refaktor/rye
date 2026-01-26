@@ -2816,6 +2816,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 func executeInitializationCode(ps *env.ProgramState) {
 	// These are defined in the parent context of the actual script context. Which is what we want
 	initCode := " collector: context { var 'collected ref { } , collect!: fn { v } { .append! 'collected } , collected?: does { deref collected } } " +
+		" counter: context { var 'counter 0 , count!: does { inc! 'counter } , count?: does { get 'counter } } " +
 		" use: fn { c b } { .clone\\deep .do\\inx b }\n" +
 		" cmdo: fn { b } { cmd b |Output } "
 

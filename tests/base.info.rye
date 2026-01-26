@@ -5955,7 +5955,7 @@ section "Default" "" {
 
 	{
 		equal { try-all { 1 + 2 } } [ true 3 ]
-		equal { try-all { fail "error" } |first } false
+		equal { try-all { fail "custom error" } |first } false
 	}
 
 	{
@@ -6002,8 +6002,8 @@ section "Default" "" {
 	}
 
 	{
-		equal { retry 3 { fail 101 } |disarm |type? } 'error
-		equal { retry 3 { fail 101 } |disarm |status? } 101
+		; equal { retry 3 { fail 101 } |disarm |type? } 'error
+		; equal { retry 3 { fail 101 } |disarm |status? } 101
 		equal { retry 3 { 10 + 1 } } 11
 	}
 

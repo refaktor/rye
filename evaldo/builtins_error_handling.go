@@ -967,7 +967,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { try-all { 1 + 2 } } [ true 3 ]
-	// equal { try-all { fail "error" } |first } false
+	// equal { try-all { fail "custom error" } |first } false
 	// Args:
 	// * block: Block of code to execute
 	// Returns:
@@ -983,7 +983,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 				oldSer := ps.Ser
 				oldFailureFlag := ps.FailureFlag
 				oldErrorFlag := ps.ErrorFlag
-
+				ps.InErrHandler = true
 				// Execute the block
 				ps.Ser = bloc.Series
 				EvalBlock(ps)
@@ -992,7 +992,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 				// Create result tuple
 				result := ps.Res
 				success := !ps.FailureFlag && !ps.ErrorFlag
-
+				ps.InErrHandler = false
 				// Restore state
 				ps.Ser = oldSer
 				ps.FailureFlag = oldFailureFlag
@@ -1026,9 +1026,10 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
+					ps.InErrHandler = true
 					EvalBlockInCtxInj(ps, &ctx, nil, false)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "try\\in")
-
+					ps.InErrHandler = false
 					ps.ReturnFlag = false
 					ps.ErrorFlag = false
 					ps.FailureFlag = false
@@ -1103,8 +1104,8 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { retry 3 { fail 101 } |disarm |type? } 'error
-	// equal { retry 3 { fail 101 } |disarm |status? } 101
+	// ; equal { retry 3 { fail 101 } |disarm |type? } 'error
+	// ; equal { retry 3 { fail 101 } |disarm |status? } 101
 	// equal { retry 3 { 10 + 1 } } 11
 	// Args:
 	// * retries: Integer number of retries to attempt

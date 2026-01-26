@@ -1042,3 +1042,104 @@ section "EYR Dialect " "Stack based evaluator / dialect" {
 
 }
 
+section "Complex numbers " "Functions for working with complex numbers" {
+	group "complex" 
+	"Creates a complex number from real and imaginary parts."
+	{
+		arg `real: Real part of the complex number (integer or decimal)`
+		arg `imag: Imaginary part of the complex number (integer or decimal)`
+		returns `a new complex number with the given real and imaginary parts`
+	}
+
+	{
+		equal { complex 3 4 |type? } 'complex
+		equal { complex 3 4 |print } "3.000000+4.000000i"
+		equal { complex 0 0 |print } "0.000000+0.000000i"
+		equal { complex -1 -2 |print } "-1.000000-2.000000i"
+	}
+
+	{
+``	}
+
+	group "complex?" 
+	"Checks if a value is a complex number."
+	{
+		arg `value: Value to check`
+		returns `boolean true if the value is a complex number, false otherwise`
+	}
+
+	{
+		equal { complex? complex 3 4 } true
+		equal { complex? 5 } false
+		equal { complex? "hello" } false
+	}
+
+	{
+``	}
+
+	group "real" 
+	"Returns the real part of a complex number."
+	{
+		arg `value: Complex number`
+		returns `decimal value representing the real part of the complex number`
+	}
+
+	{
+		equal { real complex 3 4 } 3.0
+		equal { real complex -1.5 2.5 } -1.5
+		error { real 5 }
+	}
+
+	{
+``	}
+
+	group "imag" 
+	"Returns the imaginary part of a complex number."
+	{
+		arg `value: Complex number`
+		returns `decimal value representing the imaginary part of the complex number`
+	}
+
+	{
+		equal { imag complex 3 4 } 4.0
+		equal { imag complex -1.5 2.5 } 2.5
+		error { imag 5 }
+	}
+
+	{
+``	}
+
+	group "complex-conj" 
+	"Returns the complex conjugate of a complex number."
+	{
+		arg `z: Complex number`
+		returns `complex number representing the complex conjugate of z`
+	}
+
+	{
+		equal { complex-conj complex 3 4 |print } "3.000000-4.000000i"
+		equal { complex-conj complex 3 -4 |print } "3.000000+4.000000i"
+		error { complex-conj 5 }
+	}
+
+	{
+``	}
+
+	group "complex-phase" 
+	"Returns the phase (argument) of a complex number."
+	{
+		arg `z: Complex number`
+		returns `decimal value representing the phase (argument) of the complex number`
+	}
+
+	{
+		equal { complex-phase complex 1 1 } 0.7853981633974483
+		equal { complex-phase complex -1 0 } 3.141592653589793
+		error { complex-phase 5 }
+	}
+
+	{
+``	}
+
+}
+

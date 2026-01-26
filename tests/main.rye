@@ -23,7 +23,7 @@ test-framework: context {
 
 	equal: fn { test res } {
 		ctx: extends root-ctx { }
-		do\inside ctx test :got = res
+		do\inside ctx test |^check "error at equal" :got = res
 		|either { t/green prns "✓" t/reset } { inc! 'failed , t/red prns " ✗ Failed:" t/reset prns join { "expected " t/str\br-black inspect res t/str\reset ", got " t/str\br-black inspect got t/str\reset } }
 	}
 	
@@ -114,12 +114,13 @@ generate-menu: fn { menu } {
 }
 
 generate-doc-file: fn { filename menu } {
-	join {
+	join [
 		%tpl/header.html .Read .replace "{{title}}" capitalize join [ "Rye function reference: " filename " ( updated: " to-string date? now " )" ]
 		|replace "{{menu}}" generate-menu menu
 		capture-stdout { do\inside docs-framework load to-file filename ++ ".info.rye" }
 		Read %tpl/footer.html
-	 } |Write* to-file filename ++ ".html"
+	 ] ; .map { .type? } |probe ; 
+	 |Write* to-file filename ++ ".html"
 }
 
 menu: { "base" "table" "formats" "io" "crypto" "dialects" "protocols" "system" }
@@ -154,7 +155,7 @@ test {
 		var 'errors 0
 		for sections {
 			.to-string .pass { term/bold , prns "\n#" , .upper .prns , print "#\n" }
-			| ++ ".info.rye" |to-file |load |^check { "Group does not exist!!!!" } |do\inside* test-framework |+ errors |fix { errors } ::errors }
+			| ++ ".info.rye" |to-file |load |^check { "Group does not exist!" } |do\inside* test-framework |+ errors |fix { errors } ::errors }
 		print ""
 	
 		; if ( length? sections ) > 1 {

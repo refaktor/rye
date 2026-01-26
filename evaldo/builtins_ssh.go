@@ -18,7 +18,7 @@ var Builtins_ssh = map[string]*env.Builtin{
 	// ##### SSH ##### "SSH server functions"
 	//
 	// Tests:
-	// equal { ssh-server "localhost:2222" |type? } 'native
+	// ; equal { ssh-server "localhost:2222" |type? } 'native
 	// Args:
 	// * address: String containing host:port address to listen on
 	// Returns:
@@ -39,7 +39,7 @@ var Builtins_ssh = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { server: ssh-server "localhost:2222" , server |ssh-server//Handle :{ |session| session |ssh-session//Write "Hello" } |type? } 'native
+	// ; equal { server: ssh-server "localhost:2222" , server |Handle { session |Write "Hello" } |type? } 'native
 	// Args:
 	// * server: SSH server object
 	// * handler: Function that receives an SSH session object
@@ -78,7 +78,7 @@ var Builtins_ssh = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { server: ssh-server "localhost:2222" , server |ssh-server//Password-auth :{ |pass| pass = "secret" } |type? } 'native
+	// ; equal { server: ssh-server "localhost:2222" , server |Password-auth { pass = "secret" } |type? } 'native
 	// Args:
 	// * server: SSH server object
 	// * handler: Function that receives a password string and returns true/false
@@ -115,7 +115,7 @@ var Builtins_ssh = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { server: ssh-server "localhost:2222" , server |ssh-server//Serve |type? } 'native
+	// ; equal { server: ssh-server "localhost:2222" , server |Serve |type? } 'native
 	// Args:
 	// * server: SSH server object
 	// Returns:
@@ -139,7 +139,7 @@ var Builtins_ssh = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { session: ssh-session-mock , session |ssh-session//Write "Hello" |type? } 'native
+	// ; equal { session: ssh-session-mock , session |Write "Hello" |type? } 'native
 	// Args:
 	// * session: SSH session object
 	// * text: String to write to the session

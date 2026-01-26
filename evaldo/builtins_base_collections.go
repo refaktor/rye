@@ -3272,6 +3272,39 @@ var builtins_collection = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { { 1 2 3 4 5 } .at 0 |peek } 1
+	// equal { { 1 2 3 4 5 } .at 2 |peek } 3
+	// equal { { 1 2 3 4 5 } .at 4 |peek } 5
+	// equal { x: { 10 20 30 } at x 1 |pos } 1
+	// equal { { "a" "b" "c" } .at 0 |pop } "a"
+	// Args:
+	// * block: Block to set cursor position in
+	// * position: Integer position to set the cursor to (0-based)
+	// Returns:
+	// * the block with its cursor set to the specified position
+	"at": {
+		Argsn: 2,
+		Doc:   "Sets the cursor position in a block to the specified index and returns the block.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s1 := arg0.(type) {
+			case env.Block:
+				switch pos := arg1.(type) {
+				case env.Integer:
+					if pos.Value < 0 || pos.Value > int64(s1.Series.Len()) {
+						return MakeBuiltinError(ps, fmt.Sprintf("Position %d is out of bounds for block with %d elements.", pos.Value, s1.Series.Len()), "at")
+					}
+					s1.Series.SetPos(int(pos.Value))
+					return s1
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "at")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "at")
+			}
+		},
+	},
+
 	// TODOC
 	// Tests:
 	// equal { x: 1 y: 2 evals { x y } } { 1 2 }
