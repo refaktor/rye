@@ -238,7 +238,7 @@ var builtins_collection = map[string]*env.Builtin{
 					// Evaluate the code block with the current value injected
 					ps.Ser = codeBlock.Series
 					ps.Ser.SetPos(0)
-					EvalBlockInjMultiDialect(ps, currentValue, true)
+					EvalBlockInj(ps, currentValue, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "max\\by")
 					if ps.ErrorFlag || ps.FailureFlag {
 						ps.Ser = ser
@@ -277,7 +277,7 @@ var builtins_collection = map[string]*env.Builtin{
 					// Evaluate the code block with the current value injected
 					ps.Ser = codeBlock.Series
 					ps.Ser.SetPos(0)
-					EvalBlockInjMultiDialect(ps, currentValue, true)
+					EvalBlockInj(ps, currentValue, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "max\\by")
 					if ps.ErrorFlag || ps.FailureFlag {
 						ps.Ser = ser
@@ -408,7 +408,7 @@ var builtins_collection = map[string]*env.Builtin{
 					// Evaluate the code block with the current value injected
 					ps.Ser = codeBlock.Series
 					ps.Ser.SetPos(0)
-					EvalBlockInjMultiDialect(ps, currentValue, true)
+					EvalBlockInj(ps, currentValue, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "min\\by")
 					if ps.ErrorFlag || ps.FailureFlag {
 						ps.Ser = ser
@@ -447,7 +447,7 @@ var builtins_collection = map[string]*env.Builtin{
 					// Evaluate the code block with the current value injected
 					ps.Ser = codeBlock.Series
 					ps.Ser.SetPos(0)
-					EvalBlockInjMultiDialect(ps, currentValue, true)
+					EvalBlockInj(ps, currentValue, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "min\\by")
 					if ps.ErrorFlag || ps.FailureFlag {
 						ps.Ser = ser
@@ -563,7 +563,7 @@ var builtins_collection = map[string]*env.Builtin{
 					// Evaluate the code block with the current value injected
 					ps.Ser = codeBlock.Series
 					ps.Ser.SetPos(0)
-					EvalBlockInjMultiDialect(ps, currentValue, true)
+					EvalBlockInj(ps, currentValue, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "avg\\by")
 					if ps.ErrorFlag || ps.FailureFlag {
 						ps.Ser = ser
@@ -606,7 +606,7 @@ var builtins_collection = map[string]*env.Builtin{
 					// Evaluate the code block with the current value injected
 					ps.Ser = codeBlock.Series
 					ps.Ser.SetPos(0)
-					EvalBlockInjMultiDialect(ps, currentValue, true)
+					EvalBlockInj(ps, currentValue, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "avg\\by")
 					if ps.ErrorFlag || ps.FailureFlag {
 						ps.Ser = ser
@@ -735,7 +735,7 @@ var builtins_collection = map[string]*env.Builtin{
 					// Evaluate the code block with the current value injected
 					ps.Ser = codeBlock.Series
 					ps.Ser.SetPos(0)
-					EvalBlockInjMultiDialect(ps, currentValue, true)
+					EvalBlockInj(ps, currentValue, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "sum\\by")
 					if ps.ErrorFlag || ps.FailureFlag {
 						ps.Ser = ser
@@ -784,7 +784,7 @@ var builtins_collection = map[string]*env.Builtin{
 					// Evaluate the code block with the current value injected
 					ps.Ser = codeBlock.Series
 					ps.Ser.SetPos(0)
-					EvalBlockInjMultiDialect(ps, currentValue, true)
+					EvalBlockInj(ps, currentValue, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "sum\\by")
 					if ps.ErrorFlag || ps.FailureFlag {
 						ps.Ser = ser
@@ -1611,7 +1611,7 @@ var builtins_collection = map[string]*env.Builtin{
 						// Evaluate the key function with the current value
 						ps.Ser = keyBlock.Series
 						ps.Ser.SetPos(0)
-						EvalBlockInjMultiDialect(ps, val, true)
+						EvalBlockInj(ps, val, true)
 
 						if ps.ErrorFlag || ps.FailureFlag {
 							ps.Ser = ser
@@ -1671,7 +1671,7 @@ var builtins_collection = map[string]*env.Builtin{
 						// Evaluate the key function with the current value
 						ps.Ser = keyBlock.Series
 						ps.Ser.SetPos(0)
-						EvalBlockInjMultiDialect(ps, ryeVal, true)
+						EvalBlockInj(ps, ryeVal, true)
 
 						if ps.ErrorFlag || ps.FailureFlag {
 							ps.Ser = ser
@@ -2477,7 +2477,7 @@ var builtins_collection = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { intersection\by "foobar" "fbx" fn { a b } { a .contains b } } "fb"
-	// equal { intersection\by "fooBar" "Fbx" fn { a b } { a .to-lower .contains to-lower b } } "fB"
+	// equal { intersection\by "fooBar" "Fbx" fn { a b } { a .lower .contains lower b } } "fB"
 	// equal { intersection\by { "foo" 33 } { 33 33 } fn { a b } { a .contains b } } { 33 }
 	// equal { intersection\by { "foo" "bar" 33 } { 42 } fn { a b } { map a { .type? } |contains b .type? } } { 33 }
 	// equal { intersection\by { { "foo" x } { "bar" y } } { { "bar" z } } fn { a b } { map a { .first } |contains first b } } { { "bar" y } }
@@ -2499,6 +2499,9 @@ var builtins_collection = map[string]*env.Builtin{
 					switch s3 := arg2.(type) {
 					case env.Function:
 						inter := IntersectStringsCustom(s1, s2, ps, s3)
+						if ps.ErrorFlag || ps.ReturnFlag {
+							return ps.Res
+						}
 						return *env.NewString(inter)
 					default:
 						return MakeArgError(ps, 2, []env.Type{env.FunctionType}, "intersection\\by")
@@ -2512,6 +2515,9 @@ var builtins_collection = map[string]*env.Builtin{
 					switch s3 := arg2.(type) {
 					case env.Function:
 						inter := IntersectBlocksCustom(s1, b2, ps, s3)
+						if ps.ErrorFlag || ps.ReturnFlag {
+							return ps.Res
+						}
 						return *env.NewBlock(*env.NewTSeries(inter))
 					default:
 						return MakeArgError(ps, 3, []env.Type{env.FunctionType}, "intersection\\by")
@@ -2946,7 +2952,7 @@ var builtins_collection = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = transformBlock.Series
 					ps.Ser.SetPos(0)
-					EvalBlockInjMultiDialect(ps, currentValue, true)
+					EvalBlockInj(ps, currentValue, true)
 
 					if ps.ErrorFlag || ps.FailureFlag {
 						ps.Ser = ser
@@ -2976,7 +2982,7 @@ var builtins_collection = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = transformBlock.Series
 					ps.Ser.SetPos(0)
-					EvalBlockInjMultiDialect(ps, currentValue, true)
+					EvalBlockInj(ps, currentValue, true)
 
 					if ps.ErrorFlag || ps.FailureFlag {
 						ps.Ser = ser

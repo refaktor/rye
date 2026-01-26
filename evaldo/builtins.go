@@ -573,6 +573,10 @@ func IntersectStringsCustom(a env.String, b env.String, ps *env.ProgramState, fn
 	var bu strings.Builder
 	for _, ch := range a.Value {
 		CallFunctionArgs2(fn, ps, b, *env.NewString(string(ch)), nil)
+		MaybeDisplayFailureOrError(ps, ps.Idx, "intersection\\by")
+		if ps.ErrorFlag || ps.ReturnFlag {
+			return ""
+		}
 		res := util.IsTruthy(ps.Res)
 		if res && !set[ch] {
 			bu.WriteRune(ch)
@@ -587,6 +591,10 @@ func IntersectBlocksCustom(a env.Block, b env.Block, ps *env.ProgramState, fn en
 	res := make([]env.Object, 0)
 	for _, v := range a.Series.S {
 		CallFunctionArgs2(fn, ps, b, v, nil)
+		MaybeDisplayFailureOrError(ps, ps.Idx, "intersection\\by")
+		if ps.ErrorFlag || ps.ReturnFlag {
+			return res
+		}
 		r := util.IsTruthy(ps.Res)
 		strv := v.Inspect(*ps.Idx)
 		if r && !set[strv] {
@@ -1740,7 +1748,7 @@ var builtins = map[string]*env.Builtin{
 			case env.Block:
 				ser := ps.Ser
 				ps.Ser = bloc.Series
-				EvalBlockInjMultiDialect(ps, arg0, true)
+				EvalBlockInj(ps, arg0, true)
 				MaybeDisplayFailureOrError(ps, ps.Idx, "with")
 				ps.Ser = ser
 				return ps.Res
@@ -2791,7 +2799,6 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltinsInContext(Builtins_prometheus, ps, "prometheus")
 	RegisterBuiltinsInContext(Builtins_echarts, ps, "echarts")
 	RegisterBuiltinsInContext(Builtins_flui, ps, "flui")
-	RegisterErrorUtilsBuiltins(ps) // Register additional error handling utilities
 	// ## Archived modules
 	// RegisterBuiltins2(Builtins_gtk, ps, "gtk")
 	// RegisterBuiltins2(Builtins_nats, ps, "nats")

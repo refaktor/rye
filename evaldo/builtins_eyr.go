@@ -154,7 +154,7 @@ func Eyr_CallFunction(fn env.Function, es *env.ProgramState, leftVal env.Object,
 	// fmt.Println("***")
 	if fn.Argsn > 0 {
 		EvalBlock(es)
-		// EvalBlockInjMultiDialect(es, arg0, arg0 != nil)
+		// EvalBlockInj(es, arg0, arg0 != nil)
 	} else {
 		EvalBlock(es)
 	}

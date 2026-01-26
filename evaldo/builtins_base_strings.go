@@ -593,14 +593,14 @@ var builtins_string = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { to-lower "ABCDE" } "abcde"
-	// equal { to-lower "Hello World" } "hello world"
-	// equal { to-lower "123ABC" } "123abc"
+	// equal { lower "ABCDE" } "abcde"
+	// equal { lower "Hello World" } "hello world"
+	// equal { lower "123ABC" } "123abc"
 	// Args:
 	// * string: String to convert
 	// Returns:
 	// * a new string with all characters converted to lowercase
-	"to-lower": { // **
+	"lower": { // **
 		Argsn: 1,
 		Pure:  true,
 		Doc:   "Converts all characters in a string to lowercase.",
@@ -611,20 +611,20 @@ var builtins_string = map[string]*env.Builtin{
 			case env.Secret:
 				return *env.NewSecret(strings.ToLower(s1.Value))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "to-lower")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "lower")
 			}
 		},
 	},
 
 	// Tests:
-	// equal { to-upper "abcde" } "ABCDE"
-	// equal { to-upper "Hello World" } "HELLO WORLD"
-	// equal { to-upper "123abc" } "123ABC"
+	// equal { upper "abcde" } "ABCDE"
+	// equal { upper "Hello World" } "HELLO WORLD"
+	// equal { upper "123abc" } "123ABC"
 	// Args:
 	// * string: String to convert
 	// Returns:
 	// * a new string with all characters converted to uppercase
-	"to-upper": { // **
+	"upper": { // **
 		Argsn: 1,
 		Pure:  true,
 		Doc:   "Converts all characters in a string to uppercase.",
@@ -637,7 +637,7 @@ var builtins_string = map[string]*env.Builtin{
 			case env.Secret:
 				return *env.NewSecret(strings.ToUpper(s1.Value))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "to-upper")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "upper")
 			}
 		},
 	},

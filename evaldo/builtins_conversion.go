@@ -164,17 +164,33 @@ func BuiConvert(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) env.Obje
 
 var Builtins_conversion = map[string]*env.Builtin{
 
+	//
+	// ##### Conversion ##### "Functions for converting between different types and kinds"
+	//
+	// Example: convert my-dict { name: .first-name }
+	// Args:
+	// * value: Dict or RyeCtx to convert
+	// * spec: Block specifying the conversion rules
+	// Returns:
+	// * converted value based on the specification
 	"convert": {
 		Argsn: 2,
-		Doc:   "Converts value from one kind to another.",
+		Doc:   "Converts value from one kind to another based on a conversion specification block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			return BuiConvert(ps, arg0, arg1)
 		},
 	},
 
+	// Example: converter person-kind employee-kind { name: .full-name }
+	// Args:
+	// * source-kind: Kind to convert from
+	// * target-kind: Kind to convert to
+	// * spec: Block specifying conversion rules
+	// Returns:
+	// * the target kind with the converter registered
 	"converter": {
 		Argsn: 3,
-		Doc:   "Sets a converter between two kinds of objects.",
+		Doc:   "Registers a converter between two kinds of objects.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// obj := BuiValidate(ps, arg0, arg1)
 			switch obj1 := arg0.(type) {

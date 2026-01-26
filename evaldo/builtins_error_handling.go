@@ -33,10 +33,10 @@ var ErrorCreationBuiltins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { fn { } { ^fail "error message" } |type? } 'error
-	// equal { fn { } { ^fail "error message" } |message? } "error message"
-	// equal { fn { } { ^fail 404 } |status? } 404
-	// equal { fn { } { ^fail 'user-error } |kind? } 'user-error
+	// equal { ff:: fn { } { ^fail "error message" } ff |disarm |type? } 'error
+	// equal { ff:: fn { } { ^fail "error message" } ff |disarm |message? } "error message"
+	// equal { ff:: fn { } { ^fail 404 } ff |disarm |status? } 404
+	// equal { ff:: fn { } { ^fail 'user-error } ff |disarm  |kind? } 'user-error
 	// Args:
 	// * error_info: String message, Integer code, or block for multiple parameters
 	// Returns:
@@ -51,17 +51,9 @@ var ErrorCreationBuiltins = map[string]*env.Builtin{
 		},
 	},
 
-	// Tests:
-	// equal { refail (failure "inner error") "outer error" |message? } "outer error"
-	// equal { refail (failure "inner error") "outer error" |type? } 'error
-	// Args:
-	// * error: Original error object
-	// * error_info: New error information to wrap the original error
-	// Returns:
-	// * new error object that wraps the original error and sets the failure flag
 	"refail": {
 		Argsn: 2,
-		Doc:   "Re-raises an existing error with additional context.",
+		Doc:   "Re-raises an existing error with additional context. TODO -- duplicate of check",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch er := arg0.(type) {
 			case *env.Error:
@@ -225,7 +217,7 @@ var ErrorInspectionBuiltins = map[string]*env.Builtin{
 				return *current
 			default:
 				ps.FailureFlag = true
-				return env.NewError("arg 0 not error")
+				return MakeArgError(ps, 1, []env.Type{env.ErrorType}, "cause?")
 			}
 		},
 	},
@@ -250,7 +242,7 @@ var ErrorInspectionBuiltins = map[string]*env.Builtin{
 				return *env.NewInteger(int64(er.Status))
 			default:
 				ps.FailureFlag = true
-				return env.NewError("arg 0 not error")
+				return MakeArgError(ps, 1, []env.Type{env.ErrorType}, "status?")
 			}
 		},
 	},
@@ -275,14 +267,14 @@ var ErrorInspectionBuiltins = map[string]*env.Builtin{
 				return *env.NewString(er.Message)
 			default:
 				ps.FailureFlag = true
-				return env.NewError("arg 0 not error")
+				return MakeArgError(ps, 1, []env.Type{env.ErrorType}, "message?")
 			}
 		},
 	},
 
 	// Tests:
-	// equal { failure { "code" 404 "info" "Not Found" } |details? |type? } 'dict
-	// equal { failure { "code" 404 "info" "Not Found" } |details? .code } 404
+	// ; equal { failure { "code" 404 "info" "Not Found" } |details? |type? } 'dict
+	// ; equal { failure { "code" 404 "info" "Not Found" } |details? .code } 404
 	// error { "not an error" |details? }
 	// Args:
 	// * error: Error object to extract additional details from
@@ -301,7 +293,7 @@ var ErrorInspectionBuiltins = map[string]*env.Builtin{
 				originalMap = er.Values
 			default:
 				ps.FailureFlag = true
-				return env.NewError("arg 0 not error")
+				return MakeArgError(ps, 1, []env.Type{env.ErrorType}, "details?")
 			}
 
 			convertedMap := make(map[string]any)
@@ -429,8 +421,8 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { fn { x } { x |^check "Error in function" } |call 5 } 5
-	// equal { fn { x } { fail "Original" |^check "Wrapped" } |call 5 |message? } "Wrapped"
+	// equal { fn { x } { x |^check "Error in function" } |apply [ 5 ] } 5
+	// equal { ff: fn { x } { fail "Original" |^check "Wrapped" } ff 5 |disarm |message? } "Wrapped"
 	// Args:
 	// * value: Value to check for failure state
 	// * error_info: Error information to use if value is in failure state
@@ -462,8 +454,8 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { fn { x } { x > 0 |^ensure "Must be positive" } |call 5 } true
-	// equal { fn { x } { x > 0 |^ensure "Must be positive" } |call -1 |message? } "Must be positive"
+	// equal { fn { x } { x > 0 |^ensure "Must be positive" } |apply [ 5 ] } true
+	// equal { ff:: fn { x } { x > 0 |^ensure "Must be positive" } ff -1 |disarm |message? } "Must be positive"
 	// Args:
 	// * condition: Value to test for truthiness
 	// * error_info: Error information to use if condition is not truthy
@@ -649,7 +641,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlockInjMultiDialect(ps, arg0, true)
+					EvalBlockInj(ps, arg0, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "fix")
 					if ps.ErrorFlag {
 						ps.Ser = ser
@@ -659,7 +651,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 					return ps.Res
 				default:
 					ps.FailureFlag = true
-					return env.NewError("expecting block")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "fix")
 				}
 			} else {
 				return arg0
@@ -668,8 +660,8 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { fn { x } { x |^fix { "fixed" } } |call 5 } 5
-	// equal { fn { x } { fail "error" |^fix { "fixed" } } |call 5 } "fixed"
+	// equal { fn { x } { x |^fix { "fixed" } } |apply [ 5 ] } 5
+	// equal { ff:: fn { x } { fail "error" |^fix { "fixed" } } ff 5 } "fixed"
 	// Args:
 	// * value: Value to check for failure state
 	// * handler: Block to execute if value is in failure state
@@ -687,14 +679,14 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlockInjMultiDialect(ps, arg0, true)
+					EvalBlockInj(ps, arg0, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "^fix")
 					ps.Ser = ser
 					ps.ReturnFlag = true
 					return ps.Res
 				default:
 					ps.FailureFlag = true
-					return env.NewError("expecting block")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "^fix")
 				}
 			} else {
 				return arg0
@@ -723,26 +715,26 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlockInjMultiDialect(ps, arg0, true)
+					EvalBlockInj(ps, arg0, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "fix\\either")
 					ps.Ser = ser
 					return ps.Res
 				default:
 					ps.FailureFlag = true
-					return env.NewError("expecting block")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "fix\\either")
 				}
 			} else {
 				switch bloc := arg2.(type) {
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlockInjMultiDialect(ps, arg0, true)
+					EvalBlockInj(ps, arg0, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "fix\\either")
 					ps.Ser = ser
 					return ps.Res
 				default:
 					ps.FailureFlag = true
-					return env.NewError("expecting block")
+					return MakeArgError(ps, 3, []env.Type{env.BlockType}, "fix\\either")
 				}
 			}
 		},
@@ -768,13 +760,13 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlockInjMultiDialect(ps, arg0, true)
+					EvalBlockInj(ps, arg0, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "fix\\else")
 					ps.Ser = ser
 					return ps.Res
 				default:
 					ps.FailureFlag = true
-					return env.NewError("expecting block")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "fix\\else")
 				}
 			} else {
 				return arg0
@@ -803,24 +795,24 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlockInjMultiDialect(ps, arg0, true)
+					EvalBlockInj(ps, arg0, true)
 					ps.Ser = ser
 					return ps.Res
 				default:
 					ps.FailureFlag = true
-					return env.NewError("expecting block")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "fix\\continue")
 				}
 			} else {
 				switch bloc := arg2.(type) {
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlockInjMultiDialect(ps, arg0, true)
+					EvalBlockInj(ps, arg0, true)
 					ps.Ser = ser
 					return ps.Res
 				default:
 					ps.FailureFlag = true
-					return env.NewError("expecting block")
+					return MakeArgError(ps, 3, []env.Type{env.BlockType}, "fix\\continue")
 				}
 			}
 		},
@@ -846,13 +838,13 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlockInjMultiDialect(ps, arg0, true)
+					EvalBlockInj(ps, arg0, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "continue")
 					ps.Ser = ser
 					return ps.Res
 				default:
 					ps.FailureFlag = true
-					return env.NewError("expecting block")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "continue")
 				}
 			} else {
 				ps.FailureFlag = false
@@ -919,7 +911,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 						// we set ProgramStates series to series ob the block
 						ps.Ser = cc.Series
 						// we eval the block (current context / scope stays the same as it was in parent block)
-						EvalBlockInjMultiDialect(ps, arg0, true)
+						EvalBlockInj(ps, arg0, true)
 						// we set temporary series back to current program state
 						MaybeDisplayFailureOrError(ps, ps.Idx, "fix\\match")
 
@@ -945,8 +937,8 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal  { try { 123 + 123 } } 246
-	// equal  { try { 123 + "asd" } \type? } 'error
-	// equal  { try { 123 + } \type? } 'error
+	// equal  { try { 123 + "asd" } |type? } 'error
+	// equal  { try { 123 + } |type? } 'error
 	"try": {
 		Argsn: 1,
 		Doc:   "Takes a block of code and does (runs) it.",
@@ -974,7 +966,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { try-all { 1 + 2 } } [true 3]
+	// equal { try-all { 1 + 2 } } [ true 3 ]
 	// equal { try-all { fail "error" } |first } false
 	// Args:
 	// * block: Block of code to execute
@@ -1111,8 +1103,8 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { retry 3 { fail 101 } |type? } 'error
-	// equal { retry 3 { fail 101 } |status? } 101
+	// equal { retry 3 { fail 101 } |disarm |type? } 'error
+	// equal { retry 3 { fail 101 } |disarm |status? } 101
 	// equal { retry 3 { 10 + 1 } } 11
 	// Args:
 	// * retries: Integer number of retries to attempt

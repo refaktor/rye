@@ -411,3 +411,52 @@ section "HTML " "HTML processing functions" {
 
 }
 
+section "Markdown " "Functions for processing and converting Markdown documents" {
+	group "reader//do-markdown" 
+	"Processes Markdown using a streaming approach with section handlers."
+	{
+		arg `reader: File reader or similar object to read markdown from`
+		arg `handlers: Block containing section handlers (h1, h2, paragraph, code, etc.)`
+		returns `the result of processing the markdown document`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+}
+
+section "Conversion " "Functions for converting between different types and kinds" {
+	group "convert" 
+	"Converts value from one kind to another based on a conversion specification block."
+	{
+		arg `value: Dict or RyeCtx to convert`
+		arg `spec: Block specifying the conversion rules`
+		returns `converted value based on the specification`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "converter" 
+	"Registers a converter between two kinds of objects."
+	{
+		arg `source-kind: Kind to convert from`
+		arg `target-kind: Kind to convert to`
+		arg `spec: Block specifying conversion rules`
+		returns `the target kind with the converter registered`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+}
+

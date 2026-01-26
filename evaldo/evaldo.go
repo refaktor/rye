@@ -41,40 +41,29 @@ func DisableFastEvaluator() {
 // Purpose: Dispatches to the appropriate dialect-specific evaluator (Rye2, Eyr, Rye0, Rye00)
 // HOTCODE: Performance-critical function called frequently during execution
 func EvalBlock(ps *env.ProgramState) {
-	switch ps.Dialect {
-	case env.Rye2Dialect:
-		EvalBlockInj(ps, nil, false)
-	case env.EyrDialect:
-		Eyr_EvalBlockInside(ps, nil, false) // TODO ps.Stack is already in ps ... refactor
-	case env.Rye0Dialect:
-		// Check if we should use the fast evaluator
-		if useFastEvaluator {
-			Rye0_FastEvalBlock(ps)
-		}
-		Rye0_EvalBlockInj(ps, nil, false) // TODO ps.Stack is already in ps ... refactor
-	case env.Rye00Dialect:
-		Rye00_EvalBlockInj(ps, nil, false) // Simplified dialect for builtins and integers
-	default:
-		// TODO fail
-	}
+	EvalBlockInj(ps, nil, false)
 }
 
-// EvalBlockInjMultiDialect evaluates a block with value injection support across multiple dialects.
-// Called from: EvalExpression_DispatchType (for OPGROUP/OPBLOCK modes), observer execution
-// Purpose: Provides multi-dialect block evaluation with the ability to inject values into the first expression
-func EvalBlockInjMultiDialect(ps *env.ProgramState, inj env.Object, injnow bool) { // TODO temp name -- refactor
+// EvalBlockInj evaluates a block with value injection support across multiple dialects.
+// Called from: EvalBlock, EvalExpression_DispatchType (for OPGROUP/OPBLOCK modes), observer execution, builtins
+// Purpose: Main multi-dialect block evaluator with optional value injection into the first expression
+// HOTCODE: Performance-critical function called frequently during execution
+func EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) {
 	switch ps.Dialect {
 	case env.Rye2Dialect:
-		EvalBlockInj(ps, inj, injnow)
+		EvalBlockInj_Rye2(ps, inj, injnow)
 	case env.EyrDialect:
 		Eyr_EvalBlockInside(ps, inj, injnow) // TODO ps.Stack is already in ps ... refactor
 	case env.Rye0Dialect:
+		// Check if we should use the fast evaluator
+		if useFastEvaluator && inj == nil {
+			Rye0_FastEvalBlock(ps)
+		}
 		Rye0_EvalBlockInj(ps, inj, injnow) // TODO ps.Stack is already in ps ... refactor
-		// return Rye0_EvaluateBlock(ps) // TODO ps.Stack is already in ps ... refactor
 	case env.Rye00Dialect:
 		Rye00_EvalBlockInj(ps, inj, injnow) // Simplified dialect for builtins and integers
 	default:
-		//
+		// TODO fail
 	}
 }
 
@@ -93,10 +82,10 @@ func MaybeAcceptComma(ps *env.ProgramState, inj env.Object, injnow bool) bool {
 	return injnow
 }
 
-// EvalBlockInj evaluates a block of code with optional value injection for Rye2 dialect.
-// Called from: EvalBlock, CallFunction_CollectArgs, ExecuteDeferredBlocks, observer execution, init()
+// EvalBlockInj_Rye2 evaluates a block of code with optional value injection for Rye2 dialect.
+// Called from: EvalBlockInj (multi-dialect dispatcher), CallFunction_CollectArgs, ExecuteDeferredBlocks
 // Purpose: Core Rye2 evaluator - loops through expressions, handling injection, commas, and error/failure flags
-func EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) {
+func EvalBlockInj_Rye2(ps *env.ProgramState, inj env.Object, injnow bool) {
 	//fmt.Println("--------------------BLOCK------------------->")
 	// fmt.Println(ps.Ser)
 	// fmt.Println(ps.BlockFile)
@@ -396,7 +385,7 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 			ser := ps.Ser
 			ps.Ser = block.Series
 			injVal := ps.Res // Use current result as injection value
-			EvalBlockInjMultiDialect(ps, injVal, true)
+			EvalBlockInj(ps, injVal, true)
 			if ps.ErrorFlag || ps.FailureFlag {
 				return
 			}
@@ -488,6 +477,21 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 		i := 1
 	gogo1:
 		currWord := word.GetWordNumber(i)
+		// Check if word is "_@" (parent context navigation)
+		wordStr := ps.Idx.GetWord(currWord.Index)
+		if wordStr == "_@" {
+			// Go to parent context
+			if currCtx.Parent != nil {
+				currCtx = currCtx.Parent
+				i += 1
+				if word.Cnt > i-1 {
+					goto gogo1
+				}
+				// If no more path parts, return the parent context itself
+				return true, *currCtx, currCtx
+			}
+			return false, nil, currCtx
+		}
 		object, found := currCtx.Get(currWord.Index)
 		if found && word.Cnt > i {
 			switch swObj := object.(type) {
@@ -539,6 +543,21 @@ func findWordValueWithFailureInfo(ps *env.ProgramState, word1 env.Object) (bool,
 			contextPath.WriteString(wordName)
 		} else {
 			contextPath.WriteString("/" + wordName)
+		}
+
+		// Check if word is "_@" (parent context navigation)
+		if wordName == "_@" {
+			// Go to parent context
+			if currCtx.Parent != nil {
+				currCtx = currCtx.Parent
+				i += 1
+				if word.Cnt > i-1 {
+					goto gogo1
+				}
+				// If no more path parts, return the parent context itself
+				return true, *currCtx, currCtx, ""
+			}
+			return false, nil, currCtx, "@ (no parent context)"
 		}
 
 		object, found := currCtx.Get(currWord.Index)
@@ -1104,6 +1123,7 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 
 	psX.Ser.SetPos(0)
 	EvalBlockInj(psX, arg0, true)
+	MaybeDisplayFailureOrError(psX, psX.Idx, "call func args 2")
 	if psX.ErrorFlag || psX.FailureFlag {
 		ps.Res = psX.Res
 		ps.ErrorFlag = psX.ErrorFlag
@@ -1111,7 +1131,6 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 		return
 	}
 	// fmt.Println(psX.Res)
-	MaybeDisplayFailureOrError(psX, psX.Idx, "call func args 2")
 	if psX.ForcedResult != nil {
 		ps.Res = psX.ForcedResult
 		psX.ForcedResult = nil
@@ -1665,8 +1684,7 @@ func calculateErrorPosition(ps *env.ProgramState, locationNode *env.LocationNode
 // Called from: DisplayEnhancedError
 // Purpose: Converts `word` to highlighted word for better error readability
 func FormatBacktickQuotes(message string) string {
-	// Red background, black text for quoted words: \x1b[41m\x1b[30m word \x1b[0m\x1b[1;31m
-	// This matches the style used for function names in other errors
+	// Magenta background, white text for quoted words
 	result := strings.Builder{}
 	inQuote := false
 	for i := 0; i < len(message); i++ {
@@ -1676,8 +1694,8 @@ func FormatBacktickQuotes(message string) string {
 				result.WriteString(" \x1b[0m\x1b[1;31m")
 				inQuote = false
 			} else {
-				// Opening backtick - add red background, black text
-				result.WriteString("\x1b[41m\x1b[30m ")
+				// Opening backtick - add magenta background, white text
+				result.WriteString("\x1b[40m\x1b[31m ")
 				inQuote = true
 			}
 		} else {
@@ -1693,7 +1711,7 @@ func FormatBacktickQuotes(message string) string {
 func DisplayEnhancedError(es *env.ProgramState, genv *env.Idxs, tag string, topLevel bool) {
 	// Red background banner for runtime errors
 	if !es.SkipFlag {
-		fmt.Print("\x1b[41m\x1b[30m RUNTIME ERROR: " + tag + " \x1b[0m\n") // Red background, black text
+		fmt.Print("\x1b[41m\x1b[30m RUNTIME ERROR:\x1b[0m " + tag + "\n") // Magenta background, black text
 
 		// Bold red for error message, with backtick-quoted text highlighted
 		fmt.Print("\x1b[1;31m") // Bold red
@@ -1711,7 +1729,7 @@ func DisplayEnhancedError(es *env.ProgramState, genv *env.Idxs, tag string, topL
 func displayBlockWithErrorPosition(es *env.ProgramState, genv *env.Idxs) {
 
 	// Bold cyan for location information
-	fmt.Print("\x1b[1;36mBlock starting at \x1b[1;34m") // Bold cyan "At", bold blue for location
+	fmt.Print("\x1b[36mBlock starting at \x1b[34m") // Bold cyan "At", bold blue for location
 	if es.BlockFile != "" {
 		fmt.Printf("%s:%d", es.BlockFile, es.BlockLine)
 	} else {
@@ -1721,7 +1739,7 @@ func displayBlockWithErrorPosition(es *env.ProgramState, genv *env.Idxs) {
 
 	// Show the current block content with <here> marker
 	// fmt.Print("\x1b[37mBlock:\x1b[0m\n")
-	fmt.Print("\x1b[1;37m  ")
+	fmt.Print("\x1b[37m  ")
 
 	// Get current position in the block
 	errorPos := es.Ser.Pos() - 1
@@ -1772,6 +1790,65 @@ func DELETE_ME_getCurrentBlock(es *env.ProgramState) *env.Block {
 	return nil
 }
 
+// truncatedDump returns a truncated string representation of an object.
+// For blocks, it shows the first few and last few tokens with ... in between.
+// For other objects, it returns the normal dump but truncated if too long.
+// Called from: buildBlockStringWithMarker
+// Purpose: Prevents large nested blocks from flooding the error display
+func truncatedDump(obj env.Object, genv *env.Idxs, maxLen int) string {
+	if obj == nil {
+		return ""
+	}
+
+	// Handle blocks specially - show beginning and end
+	if block, ok := obj.(env.Block); ok {
+		series := block.Series.S
+		if len(series) <= 3 {
+			// Very small block, show it all
+			return obj.Dump(*genv)
+		}
+
+		// Block with more items - show first token and gray ellipsis
+		var bu strings.Builder
+		// Determine block opener based on mode
+		switch block.Mode {
+		case 1:
+			bu.WriteString("( ")
+		case 2:
+			bu.WriteString("< ")
+		default:
+			bu.WriteString("{ ")
+		}
+
+		// First token only
+		if len(series) > 0 && series[0] != nil {
+			bu.WriteString(truncatedDump(series[0], genv, 20))
+			bu.WriteString(" ")
+		}
+
+		// Gray ellipsis
+		bu.WriteString("\x1b[90m...\x1b[0m\x1b[37m ")
+
+		// Close bracket
+		switch block.Mode {
+		case 1:
+			bu.WriteString(")")
+		case 2:
+			bu.WriteString(">")
+		default:
+			bu.WriteString("}")
+		}
+		return bu.String()
+	}
+
+	// For non-block objects, get the dump and truncate if needed
+	dump := obj.Dump(*genv)
+	if len(dump) > maxLen {
+		return dump[:maxLen-3] + "\x1b[90m...\x1b[0m\x1b[37m"
+	}
+	return dump
+}
+
 // buildBlockStringWithMarker creates a string representation of a block with <here> marker at error position.
 // Called from: displayBlockWithErrorPosition
 // Purpose: Builds block display string showing 8 nodes before/after error with <here> marker and ellipses
@@ -1779,9 +1856,9 @@ func buildBlockStringWithMarker(currSer []env.Object, errorPos int, genv *env.Id
 	var result strings.Builder
 	result.WriteString("{ ")
 
-	// Calculate the range to display: 8 nodes before and 8 nodes after
-	startPos := errorPos - 8
-	endPos := errorPos + 8
+	// Calculate the range to display: 3 nodes before and 3 nodes after
+	startPos := errorPos - 3
+	endPos := errorPos + 3
 
 	// Adjust boundaries to stay within the block
 	if startPos < 0 {
@@ -1799,12 +1876,13 @@ func buildBlockStringWithMarker(currSer []env.Object, errorPos int, genv *env.Id
 	// Display the selected range
 	for i := startPos; i <= endPos && i < len(currSer); i++ {
 		if i == errorPos {
-			result.WriteString("\x1b[1;31m<here>\x1b[0m ")
+			result.WriteString("\x1b[1;31m<here>\x1b[0m\x1b[37m ")
 		}
 
 		obj := currSer[i]
 		if obj != nil {
-			result.WriteString(obj.Dump(*genv))
+			// Use truncatedDump to limit the size of nested blocks
+			result.WriteString(truncatedDump(obj, genv, 50))
 			result.WriteString(" ")
 		}
 	}
@@ -1920,23 +1998,44 @@ func MaybeDisplayFailureOrError2(es *env.ProgramState, genv *env.Idxs, tag strin
 // Called from: WASM build code (main_wasm.go)
 // Purpose: WASM-specific error display that uses provided print function instead of fmt.Println
 func MaybeDisplayFailureOrErrorWASM(es *env.ProgramState, genv *env.Idxs, printfn func(string), tag string) {
-	// if es.FailureFlag {
-	// 	fmt.Print("\x1b[43m\x1b[33m FAILURE \x1b[0m\n") // Red background, black text
-	//	printfn(tag)
-	// }
-	if es.ErrorFlag {
-		printfn("\x1b[31;3m" + es.Res.Print(*genv))
-		switch es.Res.(type) {
-		case env.Error:
-			printfn(es.Ser.PositionAndSurroundingElements(*genv))
-			printfn("Error not pointer so bug. #temp")
-		case *env.Error:
-			printfn("At location:")
-			printfn(es.Ser.PositionAndSurroundingElements(*genv))
+	if !es.InErrHandler && es.ErrorFlag {
+		// Red background banner for runtime errors (same as native)
+		if !es.SkipFlag {
+			printfn("\x1b[41m\x1b[30m RUNTIME ERROR: " + tag + " \x1b[0m")
+
+			// Bold red for error message, with backtick-quoted text highlighted
+			errorMsg := es.Res.Print(*genv)
+			printfn("\x1b[1;31m" + FormatBacktickQuotes(errorMsg) + "\x1b[0m")
+
+			// Display block location info (same as native)
+			displayBlockWithErrorPositionWASM(es, genv, printfn)
 		}
-		printfn("\x1b[0m")
-		printfn(tag)
+		es.SkipFlag = true
 	}
+}
+
+// displayBlockWithErrorPositionWASM shows the current block with a <here> marker at the error position for WASM.
+// Called from: MaybeDisplayFailureOrErrorWASM
+// Purpose: WASM version of displayBlockWithErrorPosition using printfn instead of fmt.Print
+func displayBlockWithErrorPositionWASM(es *env.ProgramState, genv *env.Idxs, printfn func(string)) {
+	// Bold cyan for location information
+	var locationStr string
+	if es.BlockFile != "" {
+		locationStr = fmt.Sprintf("\x1b[1;36mBlock starting at \x1b[1;34m%s:%d\x1b[0m", es.BlockFile, es.BlockLine)
+	} else {
+		locationStr = fmt.Sprintf("\x1b[1;36mBlock starting at \x1b[1;34mline %d\x1b[0m", es.BlockLine)
+	}
+	printfn(locationStr)
+
+	// Get current position in the block
+	errorPos := es.Ser.Pos() - 1
+	if errorPos < 0 {
+		errorPos = 0
+	}
+
+	// Build the block representation with <here> marker
+	blockStr := buildBlockStringWithMarker(es.Ser.S, errorPos, genv)
+	printfn("\x1b[37m  " + blockStr + "\x1b[0m")
 }
 
 //  CHECKING VARIOUS FLAGS

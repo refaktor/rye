@@ -6,8 +6,9 @@ import (
 
 var builtins_combinators = map[string]*env.Builtin{
 
-	// COMBINATORS
-
+	//
+	// ##### Combinators ##### "Functions that combine other functions or control execution flow"
+	//
 	// Tests:
 	// equal  { 101 .pass { 202 } } 101
 	// equal  { 101 .pass { 202 + 303 } } 101
@@ -25,7 +26,7 @@ var builtins_combinators = map[string]*env.Builtin{
 				res := arg0
 				ser := ps.Ser
 				ps.Ser = bloc.Series
-				EvalBlockInjMultiDialect(ps, arg0, true)
+				EvalBlockInj(ps, arg0, true)
 				MaybeDisplayFailureOrError(ps, ps.Idx, "pass")
 				if ps.ErrorFlag || ps.ReturnFlag {
 					ps.Ser = ser
@@ -56,7 +57,7 @@ var builtins_combinators = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = wrap.Series
-					EvalBlockInjMultiDialect(ps, arg0, true)
+					EvalBlockInj(ps, arg0, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "wrap")
 					if ps.ErrorFlag || ps.ReturnFlag {
 						ps.Ser = ser
@@ -64,7 +65,7 @@ var builtins_combinators = map[string]*env.Builtin{
 					}
 
 					ps.Ser = bloc.Series
-					EvalBlockInjMultiDialect(ps, arg0, true)
+					EvalBlockInj(ps, arg0, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "wrap")
 					if ps.ErrorFlag || ps.ReturnFlag {
 						ps.Ser = ser
@@ -73,7 +74,7 @@ var builtins_combinators = map[string]*env.Builtin{
 					res := ps.Res
 
 					ps.Ser = wrap.Series
-					EvalBlockInjMultiDialect(ps, arg0, true)
+					EvalBlockInj(ps, arg0, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "wrap")
 					if ps.ErrorFlag || ps.ReturnFlag {
 						ps.Ser = ser
@@ -108,7 +109,7 @@ var builtins_combinators = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = b1.Series
-					EvalBlockInjMultiDialect(ps, arg0, true)
+					EvalBlockInj(ps, arg0, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "keep")
 					if ps.ErrorFlag || ps.ReturnFlag {
 						ps.Ser = ser
@@ -116,7 +117,7 @@ var builtins_combinators = map[string]*env.Builtin{
 					}
 					res := ps.Res
 					ps.Ser = b2.Series
-					EvalBlockInjMultiDialect(ps, arg0, true)
+					EvalBlockInj(ps, arg0, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "keep")
 					if ps.ErrorFlag || ps.ReturnFlag {
 						ps.Ser = ser

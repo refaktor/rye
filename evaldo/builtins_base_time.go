@@ -393,32 +393,32 @@ var builtins_time = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { 5 .seconds } 5000
+	// equal { 5 .thousands } 5000
 	// Args:
-	// * n: Integer number of seconds
+	// * n: Integer
 	// Returns:
-	// * integer representing the equivalent number of milliseconds
+	// * integer multiplied by 1000
 	"thousands": {
 		Argsn: 1,
-		Doc:   "Converts seconds to milliseconds (multiplies by 1000).",
+		Doc:   "Multiplies the input by 1000 (useful for unit conversion).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Integer:
 				return *env.NewInteger(arg.Value * 1000)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "sleep")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "thousands")
 			}
 		},
 	},
 	// Tests:
-	// equal { 5 .seconds } 5000
+	// equal { 5 .millions } 5000000
 	// Args:
-	// * n: Integer number of seconds
+	// * n: Integer
 	// Returns:
-	// * integer representing the equivalent number of milliseconds
+	// * integer multiplied by 1000000
 	"millions": {
 		Argsn: 1,
-		Doc:   "Converts seconds to milliseconds (multiplies by 1000).",
+		Doc:   "Multiplies the input by 1000000 (useful for unit conversion).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch arg := arg0.(type) {
 			case env.Integer:
@@ -521,9 +521,12 @@ var builtins_time = map[string]*env.Builtin{
 		},
 	},
 
-	// TODOC
 	// Tests:
 	// equal { time-it { sleep 100 } } 100
+	// Args:
+	// * block: Block of code to execute and time
+	// Returns:
+	// * integer representing execution time in milliseconds
 	"time-it": { // **
 		Argsn: 1,
 		Doc:   "Accepts a block, does it and times it's execution time.",

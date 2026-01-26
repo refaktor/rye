@@ -680,7 +680,16 @@ func markdownDisplayItems(source string) []env.Object {
 }
 
 var Builtins_markdown = map[string]*env.Builtin{
-	// Main markdown processing function
+
+	//
+	// ##### Markdown ##### "Functions for processing and converting Markdown documents"
+	//
+	// Example: open "doc.md" |reader |do-markdown { h1 { .print } paragraph { .print } }
+	// Args:
+	// * reader: File reader or similar object to read markdown from
+	// * handlers: Block containing section handlers (h1, h2, paragraph, code, etc.)
+	// Returns:
+	// * the result of processing the markdown document
 	"reader//do-markdown": {
 		Argsn: 2,
 		Doc:   "Processes Markdown using a streaming approach with section handlers.",

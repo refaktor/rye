@@ -44,7 +44,7 @@ var builtins_iteration = map[string]*env.Builtin{
 				// Main loop
 				for i := int64(0); i < count.Value; i++ {
 					// Evaluate the block with the current iteration number
-					EvalBlockInjMultiDialect(ps, iterObj, true)
+					EvalBlockInj(ps, iterObj, true)
 					if ps.ErrorFlag {
 						MaybeDisplayFailureOrError(ps, ps.Idx, "loop")
 						ps.Ser = ser
@@ -112,7 +112,7 @@ var builtins_iteration = map[string]*env.Builtin{
 					ps.Ser = bloc.Series
 					ps.Res = arg1
 					for i := 0; int64(i) < cond.Value; i++ {
-						EvalBlockInjMultiDialect(ps, acc, true)
+						EvalBlockInj(ps, acc, true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "produce")
 						if ps.ErrorFlag || ps.ReturnFlag {
 							ps.Ser = ser
@@ -128,6 +128,88 @@ var builtins_iteration = map[string]*env.Builtin{
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "produce")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { replicate 5 { 10 } } { 10 10 10 10 10 }
+	// equal { replicate 3 { 1 + 2 } } { 3 3 3 }
+	// equal { replicate 0 { 10 } } { }
+	// Args:
+	// * count: Integer number of times to execute the block
+	// * block: Block of code to execute on each iteration
+	// Returns:
+	// * Block containing the results of each execution
+	"replicate": {
+		Argsn: 2,
+		Doc:   "Executes a block of code a specified number of times and collects all results into a block.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch cond := arg0.(type) {
+			case env.Integer:
+				switch bloc := arg1.(type) {
+				case env.Block:
+					results := make([]env.Object, 0, cond.Value)
+					ser := ps.Ser
+					ps.Ser = bloc.Series
+					for i := int64(0); i < cond.Value; i++ {
+						EvalBlock(ps)
+						MaybeDisplayFailureOrError(ps, ps.Idx, "replicate")
+						if ps.ErrorFlag || ps.ReturnFlag {
+							ps.Ser = ser
+							return ps.Res
+						}
+						results = append(results, ps.Res)
+						ps.Ser.Reset()
+					}
+					ps.Ser = ser
+					return *env.NewBlock(*env.NewTSeries(results))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "replicate")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "replicate")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { replicate\idx 5 { } } { 0 1 2 3 4 }
+	// equal { replicate\idx 3 { * 10 } } { 0 10 20 }
+	// equal { replicate\idx 0 { 10 } } { }
+	// Args:
+	// * count: Integer number of times to execute the block
+	// * block: Block of code to execute on each iteration, with index (0-based) injected
+	// Returns:
+	// * Block containing the results of each execution
+	"replicate\\idx": {
+		Argsn: 2,
+		Doc:   "Executes a block of code a specified number of times, injecting the current index (0-based), and collects all results into a block.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch cond := arg0.(type) {
+			case env.Integer:
+				switch bloc := arg1.(type) {
+				case env.Block:
+					results := make([]env.Object, 0, cond.Value)
+					ser := ps.Ser
+					ps.Ser = bloc.Series
+					for i := int64(0); i < cond.Value; i++ {
+						EvalBlockInj(ps, *env.NewInteger(i), true)
+						MaybeDisplayFailureOrError(ps, ps.Idx, "replicate\\idx")
+						if ps.ErrorFlag || ps.ReturnFlag {
+							ps.Ser = ser
+							return ps.Res
+						}
+						results = append(results, ps.Res)
+						ps.Ser.Reset()
+					}
+					ps.Ser = ser
+					return *env.NewBlock(*env.NewTSeries(results))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "replicate\\idx")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "replicate\\idx")
 			}
 		},
 	},
@@ -154,7 +236,7 @@ var builtins_iteration = map[string]*env.Builtin{
 					ser := ps.Ser
 					for {
 						ps.Ser = cond.Series
-						EvalBlockInjMultiDialect(ps, acc, true)
+						EvalBlockInj(ps, acc, true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "produce\\while")
 						if ps.ErrorFlag || ps.ReturnFlag {
 							ps.Ser = ser
@@ -169,7 +251,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						}
 						ps.Ser.Reset()
 						ps.Ser = bloc.Series
-						EvalBlockInjMultiDialect(ps, acc, true)
+						EvalBlockInj(ps, acc, true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "produce\\while")
 						if ps.ErrorFlag || ps.ReturnFlag {
 							ps.Ser = ser
@@ -212,7 +294,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = bloc.Series
 						for i := 0; int64(i) < cond.Value; i++ {
-							EvalBlockInjMultiDialect(ps, acc, true)
+							EvalBlockInj(ps, acc, true)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "produce\\")
 							if ps.ErrorFlag || ps.ReturnFlag {
 								ps.Ser = ser
@@ -258,7 +340,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						ps.Ser = ser
 						return *env.NewError("Operation interrupted by user")
 					}
-					EvalBlockInjMultiDialect(ps, env.NewInteger(int64(i)), true)
+					EvalBlockInj(ps, env.NewInteger(int64(i)), true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "forever")
 					if ps.ErrorFlag {
 						ps.Ser = ser
@@ -301,7 +383,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						ps.Ser = ser
 						return *env.NewError("Operation interrupted by user")
 					}
-					EvalBlockInjMultiDialect(ps, arg0, true)
+					EvalBlockInj(ps, arg0, true)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "forever\\with")
 					if ps.ErrorFlag {
 						ps.Ser = ser
@@ -333,7 +415,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = code.Series
 						for _, ch := range block.Value {
-							EvalBlockInjMultiDialect(ps, *env.NewString(string(ch)), true)
+							EvalBlockInj(ps, *env.NewString(string(ch)), true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "forever\\with")
 							if ps.ErrorFlag || ps.ReturnFlag {
 								return ps.Res
@@ -351,7 +433,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = code.Series
 						for i := 0; i < block.Series.Len(); i++ {
-							EvalBlockInjMultiDialect(ps, block.Series.Get(i), true)
+							EvalBlockInj(ps, block.Series.Get(i), true)
 							if ps.ErrorFlag || ps.ReturnFlag {
 								return ps.Res
 							}
@@ -368,7 +450,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = code.Series
 						for i := 0; i < len(block.Data); i++ {
-							EvalBlockInjMultiDialect(ps, env.ToRyeValue(block.Data[i]), true)
+							EvalBlockInj(ps, env.ToRyeValue(block.Data[i]), true)
 							if ps.ErrorFlag || ps.ReturnFlag {
 								return ps.Res
 							}
@@ -387,7 +469,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						for i := 0; i < len(block.Rows); i++ {
 							row := block.Rows[i]
 							row.Uplink = &block
-							EvalBlockInjMultiDialect(ps, row, true)
+							EvalBlockInj(ps, row, true)
 							if ps.ErrorFlag || ps.ReturnFlag {
 								return ps.Res
 							}
@@ -423,7 +505,7 @@ var builtins_iteration = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = code.Series
 					for i := 0; i < block.Length(); i++ {
-						EvalBlockInjMultiDialect(ps, block.Get(i), true)
+						EvalBlockInj(ps, block.Get(i), true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "for")
 						if ps.ErrorFlag || ps.ReturnFlag {
 							ps.Ser = ser
@@ -482,7 +564,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						ps.Ser = code.Series
 						for i := 0; i < l; i++ {
 							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i + 1)))
-							EvalBlockInjMultiDialect(ps, list.Get(i), true)
+							EvalBlockInj(ps, list.Get(i), true)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "for\\pos")
 							if ps.ErrorFlag || ps.ReturnFlag {
 								ps.Ser = ser
@@ -528,7 +610,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						ps.Ser = code.Series
 						for i := 0; i < l; i++ {
 							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i)))
-							EvalBlockInjMultiDialect(ps, list.Get(i), true)
+							EvalBlockInj(ps, list.Get(i), true)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "for\\idx")
 							if ps.ErrorFlag || ps.ReturnFlag {
 								ps.Ser = ser
@@ -570,7 +652,7 @@ var builtins_iteration = map[string]*env.Builtin{
 					ps.Ser = code.Series
 
 					for block.Series.GetPos() < block.Series.Len() {
-						EvalBlockInjMultiDialect(ps, block, true)
+						EvalBlockInj(ps, block, true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "walk")
 						if ps.ErrorFlag || ps.ReturnFlag {
 							ps.Ser = ser
@@ -620,7 +702,7 @@ var builtins_iteration = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = code.Series
 					for i := 0; i < block.Series.Len(); i++ {
-						EvalBlockInjMultiDialect(ps, block.Series.Get(i), true)
+						EvalBlockInj(ps, block.Series.Get(i), true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "purge")
 						if ps.ErrorFlag || ps.ReturnFlag {
 							ps.Ser = ser
@@ -643,7 +725,7 @@ var builtins_iteration = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = code.Series
 					for i := 0; i < len(block.Data); i++ {
-						EvalBlockInjMultiDialect(ps, env.ToRyeValue(block.Data[i]), true)
+						EvalBlockInj(ps, env.ToRyeValue(block.Data[i]), true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "purge")
 						if ps.ErrorFlag || ps.ReturnFlag {
 							ps.Ser = ser
@@ -668,7 +750,7 @@ var builtins_iteration = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = code.Series
 					for i := 0; i < len(input); i++ {
-						EvalBlockInjMultiDialect(ps, *env.NewString(string(input[i])), true)
+						EvalBlockInj(ps, *env.NewString(string(input[i])), true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "purge")
 						if ps.ErrorFlag || ps.ReturnFlag {
 							ps.Ser = ser
@@ -690,7 +772,7 @@ var builtins_iteration = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = code.Series
 					for i := 0; i < len(block.Rows); i++ {
-						EvalBlockInjMultiDialect(ps, block.Rows[i], true)
+						EvalBlockInj(ps, block.Rows[i], true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "purge")
 						if ps.ErrorFlag || ps.ReturnFlag {
 							ps.Ser = ser
@@ -737,7 +819,7 @@ var builtins_iteration = map[string]*env.Builtin{
 							ps.Ser = code.Series
 							purged := make([]env.Object, 0)
 							for i := 0; i < block.Series.Len(); i++ {
-								EvalBlockInjMultiDialect(ps, block.Series.Get(i), true)
+								EvalBlockInj(ps, block.Series.Get(i), true)
 								MaybeDisplayFailureOrError(ps, ps.Idx, "purge!")
 								if ps.ErrorFlag || ps.ReturnFlag {
 									ps.Ser = ser
@@ -799,7 +881,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
-							EvalBlockInjMultiDialect(ps, list.Get(i), true)
+							EvalBlockInj(ps, list.Get(i), true)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "map")
 							if ps.ErrorFlag || ps.ReturnFlag {
 								ps.Ser = ser
@@ -812,6 +894,10 @@ var builtins_iteration = map[string]*env.Builtin{
 					case env.Builtin:
 						for i := 0; i < l; i++ {
 							newl[i] = DirectlyCallBuiltin(ps, block, list.Get(i), nil)
+							MaybeDisplayFailureOrError(ps, ps.Idx, "map")
+							if ps.ErrorFlag || ps.ReturnFlag {
+								return ps.Res
+							}
 						}
 					case env.Function:
 						for i := 0; i < l; i++ {
@@ -859,7 +945,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
 							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i + 1)))
-							EvalBlockInjMultiDialect(ps, list.Get(i), true)
+							EvalBlockInj(ps, list.Get(i), true)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "map\\pos")
 							if ps.ErrorFlag || ps.ReturnFlag {
 								ps.Ser = ser
@@ -906,7 +992,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
 							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i)))
-							EvalBlockInjMultiDialect(ps, list.Get(i), true)
+							EvalBlockInj(ps, list.Get(i), true)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "map\\idx")
 							if ps.ErrorFlag || ps.ReturnFlag {
 								ps.Ser = ser
@@ -962,7 +1048,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						ps.Ser = block.Series
 						for i := 1; i < l; i++ {
 							ps.Ctx.Mod(accu.Index, acc)
-							EvalBlockInjMultiDialect(ps, list.Get(i), true)
+							EvalBlockInj(ps, list.Get(i), true)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "reduce")
 							if ps.ErrorFlag || ps.ReturnFlag {
 								ps.Ser = ser
@@ -1014,7 +1100,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
 							ps.Ctx.Mod(accu.Index, acc)
-							EvalBlockInjMultiDialect(ps, list.Get(i), true)
+							EvalBlockInj(ps, list.Get(i), true)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "fold\\do")
 							if ps.ErrorFlag || ps.ReturnFlag {
 								ps.Ser = ser
@@ -1113,7 +1199,7 @@ var builtins_iteration = map[string]*env.Builtin{
 							item = lo[i]
 						}
 						// ps.Ctx.Set(accu.Index, acc)
-						ps = EvalBlockInjMultiDialect(ps, env.ToRyeValue(item), true)
+						ps = EvalBlockInj(ps, env.ToRyeValue(item), true)
 						if ps.ErrorFlag {
 							return ps.Res
 						}
@@ -1138,6 +1224,10 @@ var builtins_iteration = map[string]*env.Builtin{
 							item = lo[i]
 						}
 						res := DirectlyCallBuiltin(ps, block, env.ToRyeValue(item), nil)
+						MaybeDisplayFailureOrError(ps, ps.Idx, "reduce")
+						if ps.ErrorFlag || ps.ReturnFlag {
+							return ps.Res
+						}
 						switch res := res.(type) {
 						case env.Integer:
 							acc.Value += float64(res.Value)
@@ -1196,7 +1286,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for _, curval := range list.Value {
-							EvalBlockInjMultiDialect(ps, *env.NewString(string(curval)), true)
+							EvalBlockInj(ps, *env.NewString(string(curval)), true)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "partition")
 							if ps.ErrorFlag || ps.ReturnFlag {
 								ps.Ser = ser
@@ -1217,6 +1307,10 @@ var builtins_iteration = map[string]*env.Builtin{
 					case env.Builtin:
 						for _, curval := range list.Value {
 							res := DirectlyCallBuiltin(ps, block, env.ToRyeValue(curval), nil)
+							MaybeDisplayFailureOrError(ps, ps.Idx, "partition-by")
+							if ps.ErrorFlag || ps.ReturnFlag {
+								return ps.Res
+							}
 							if prevres == nil || res.Equal(prevres) {
 								subl.WriteRune(curval)
 							} else {
@@ -1244,7 +1338,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
 							curval := list.Get(i)
-							EvalBlockInjMultiDialect(ps, curval, true)
+							EvalBlockInj(ps, curval, true)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "partition")
 							if ps.ErrorFlag || ps.ReturnFlag {
 								ps.Ser = ser
@@ -1267,6 +1361,10 @@ var builtins_iteration = map[string]*env.Builtin{
 						for i := 0; i < l; i++ {
 							curval := list.Get(i)
 							res := DirectlyCallBuiltin(ps, block, curval, nil)
+							MaybeDisplayFailureOrError(ps, ps.Idx, "partition-by")
+							if ps.ErrorFlag || ps.ReturnFlag {
+								return ps.Res
+							}
 							if prevres == nil || res.Equal(prevres) {
 								subl = append(subl, curval)
 							} else {
@@ -1341,7 +1439,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						} else {
 							curval = lo[i]
 						}
-						EvalBlockInjMultiDialect(ps, curval, true)
+						EvalBlockInj(ps, curval, true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "group")
 						if ps.ErrorFlag || ps.ReturnFlag {
 							ps.Ser = ser
@@ -1379,6 +1477,10 @@ var builtins_iteration = map[string]*env.Builtin{
 							curval = lo[i]
 						}
 						res := DirectlyCallBuiltin(ps, block, curval, nil)
+						MaybeDisplayFailureOrError(ps, ps.Idx, "group")
+						if ps.ErrorFlag || ps.ReturnFlag {
+							return ps.Res
+						}
 						// TODO !!! -- currently only works if results are strings
 						newkeyStr, ok := res.(env.String)
 						if !ok {
@@ -1465,7 +1567,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						} else {
 							item = env.ToRyeValue(ls[i])
 						}
-						EvalBlockInjMultiDialect(ps, env.ToRyeValue(item), true)
+						EvalBlockInj(ps, env.ToRyeValue(item), true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "filter")
 						if ps.ErrorFlag || ps.ReturnFlag {
 							ps.Ser = ser
@@ -1515,6 +1617,10 @@ var builtins_iteration = map[string]*env.Builtin{
 							item = env.ToRyeValue(ls[i])
 						}
 						res := DirectlyCallBuiltin(ps, block, env.ToRyeValue(item), nil)
+						MaybeDisplayFailureOrError(ps, ps.Idx, "filter")
+						if ps.ErrorFlag || ps.ReturnFlag {
+							return ps.Res
+						}
 						if util.IsTruthy(res) { // todo -- move these to util or something
 							if modeObj == 1 {
 								newll = append(newll, ll[i])
@@ -1594,7 +1700,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						} else {
 							item = *env.NewString(string(ls[i]))
 						}
-						EvalBlockInjMultiDialect(ps, env.ToRyeValue(item), true)
+						EvalBlockInj(ps, env.ToRyeValue(item), true)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "seek")
 						if ps.ErrorFlag || ps.ReturnFlag {
 							ps.Ser = ser
@@ -1618,6 +1724,10 @@ var builtins_iteration = map[string]*env.Builtin{
 							item = *env.NewString(string(ls[i]))
 						}
 						res := DirectlyCallBuiltin(ps, block, env.ToRyeValue(item), nil)
+						MaybeDisplayFailureOrError(ps, ps.Idx, "seek")
+						if ps.ErrorFlag || ps.ReturnFlag {
+							return ps.Res
+						}
 						if util.IsTruthy(res) { // todo -- move these to util or something
 							return env.ToRyeValue(item)
 						}
@@ -1857,7 +1967,7 @@ var builtins_iteration = map[string]*env.Builtin{
 								ps.Ctx.Mod(keyWord.Index, *env.NewString(key))
 								val := env.ToRyeValue(value)
 								ps.Ctx.Mod(valueWord.Index, val)
-								EvalBlockInjMultiDialect(ps, val, true)
+								EvalBlockInj(ps, val, true)
 								MaybeDisplayFailureOrError(ps, ps.Idx, "for\\kv")
 								if ps.ErrorFlag || ps.ReturnFlag {
 									ps.Ser = ser
@@ -1872,7 +1982,7 @@ var builtins_iteration = map[string]*env.Builtin{
 								ps.Ctx.Mod(keyWord.Index, *env.NewInteger(int64(i)))
 								val := collection.Get(i)
 								ps.Ctx.Mod(valueWord.Index, val)
-								EvalBlockInjMultiDialect(ps, val, true)
+								EvalBlockInj(ps, val, true)
 								// ERRORING . if we don't display here, nothing of meaning is displayed
 								// just runtime error
 								MaybeDisplayFailureOrError(ps, ps.Idx, "for\\kv")

@@ -994,7 +994,7 @@ section "Strings " "" {
 	{
 ``	}
 
-	group "to-lower" 
+	group "lower" 
 	"Converts all characters in a string to lowercase."
 	{
 		arg `string: String to convert`
@@ -1002,15 +1002,15 @@ section "Strings " "" {
 	}
 
 	{
-		equal { to-lower "ABCDE" } "abcde"
-		equal { to-lower "Hello World" } "hello world"
-		equal { to-lower "123ABC" } "123abc"
+		equal { lower "ABCDE" } "abcde"
+		equal { lower "Hello World" } "hello world"
+		equal { lower "123ABC" } "123abc"
 	}
 
 	{
 ``	}
 
-	group "to-upper" 
+	group "upper" 
 	"Converts all characters in a string to uppercase."
 	{
 		arg `string: String to convert`
@@ -1018,9 +1018,9 @@ section "Strings " "" {
 	}
 
 	{
-		equal { to-upper "abcde" } "ABCDE"
-		equal { to-upper "Hello World" } "HELLO WORLD"
-		equal { to-upper "123abc" } "123ABC"
+		equal { upper "abcde" } "ABCDE"
+		equal { upper "Hello World" } "HELLO WORLD"
+		equal { upper "123abc" } "123ABC"
 	}
 
 	{
@@ -1421,28 +1421,28 @@ section "Date and Time " "" {
 ``	}
 
 	group "thousands" 
-	"Converts seconds to milliseconds (multiplies by 1000)."
+	"Multiplies the input by 1000 (useful for unit conversion)."
 	{
-		arg `n: Integer number of seconds`
-		returns `integer representing the equivalent number of milliseconds`
+		arg `n: Integer`
+		returns `integer multiplied by 1000`
 	}
 
 	{
-		equal { 5 .seconds } 5000
+		equal { 5 .thousands } 5000
 	}
 
 	{
 ``	}
 
 	group "millions" 
-	"Converts seconds to milliseconds (multiplies by 1000)."
+	"Multiplies the input by 1000000 (useful for unit conversion)."
 	{
-		arg `n: Integer number of seconds`
-		returns `integer representing the equivalent number of milliseconds`
+		arg `n: Integer`
+		returns `integer multiplied by 1000000`
 	}
 
 	{
-		equal { 5 .seconds } 5000
+		equal { 5 .millions } 5000000
 	}
 
 	{
@@ -1521,6 +1521,8 @@ section "Date and Time " "" {
 	group "time-it" 
 	"Accepts a block, does it and times it's execution time."
 	{
+		arg `block: Block of code to execute and time`
+		returns `integer representing execution time in milliseconds`
 	}
 
 	{
@@ -2309,7 +2311,7 @@ section "Collections " "" {
 
 	{
 		equal { intersection\by "foobar" "fbx" fn { a b } { a .contains b } } "fb"
-		equal { intersection\by "fooBar" "Fbx" fn { a b } { a .to-lower .contains to-lower b } } "fB"
+		equal { intersection\by "fooBar" "Fbx" fn { a b } { a .lower .contains lower b } } "fB"
 		equal { intersection\by { "foo" 33 } { 33 33 } fn { a b } { a .contains b } } { 33 }
 		equal { intersection\by { "foo" "bar" 33 } { 42 } fn { a b } { map a { .type? } |contains b .type? } } { 33 }
 		equal { intersection\by { { "foo" x } { "bar" y } } { { "bar" z } } fn { a b } { map a { .first } |contains first b } } { { "bar" y } }
@@ -3081,6 +3083,38 @@ section "Types and Kinds " "" {
 	{
 ``	}
 
+	group "secret" 
+	"Creates a secret from a string."
+	{
+		arg `value: String value to convert to a secret`
+		returns `A secret value that hides the string from casual inspection`
+	}
+
+	{
+		equal { secret "password" |type? } 'secret
+		equal { secret "password" |reveal } "password"
+		error { secret 123 }
+	}
+
+	{
+``	}
+
+	group "reveal" 
+	"Reveals the secret value."
+	{
+		arg `secret: Secret value to reveal`
+		returns `The string value contained in the secret`
+	}
+
+	{
+		equal { secret "password" |reveal } "password"
+		equal { secret "test123" |reveal } "test123"
+		error { reveal "not-a-secret" }
+	}
+
+	{
+``	}
+
 	group "_>>" 
 	"Converts first argument to a specific kind."
 	{
@@ -3244,6 +3278,38 @@ section "Contexts " "Context related functions" {
 	{
 ``	}
 
+	group "whereis" 
+	"Searches for a word in current context and its parents, returns block with [ depth context ] where word was found."
+	{
+		arg `word: Word to look up in current or parent contexts`
+		returns `block with [ depth context ] where depth is the number of parent hops (0 = current context) and context is where the word was found`
+	}
+
+	{
+		equal { x: 123 whereis 'x |first } 0
+		equal { x: 123 c: context { y: 456 } do\in c { whereis 'x } |first } 1
+		equal { x: 123 c: context { y: 456 } do\in c { whereis 'y } |first } 0
+	}
+
+	{
+``	}
+
+	group "get" 
+	"Gets the value of a word from current or parent contexts without calling it (similar to get-word ?word)."
+	{
+		arg `word: Word to look up in current or parent contexts`
+		returns `the value bound to the word (including functions without calling them)`
+	}
+
+	{
+		equal { x: 123 get 'x } 123
+		equal { f: does { 101 } get 'f |type? } 'function
+		equal { c: context { y: 456 } do\in c { get 'y } } 456
+	}
+
+	{
+``	}
+
 	group "current" 
 	"Returns current context."
 	{
@@ -3275,6 +3341,164 @@ section "Contexts " "Context related functions" {
 
 	{
 		equal { ct: context { p: 123 } parent\of ct |= current } true
+	}
+
+	{
+``	}
+
+	group "lc" 
+	"Lists words in current context"
+	{
+		arg `none`
+		returns `current context after printing the list of words to stdout`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "lc\\data" 
+	"Returns words in current context as a block."
+	{
+		arg `none`
+		returns `block of words defined in the current context`
+	}
+
+	{
+		equal { x: 123 lc\data |type? } 'block
+	}
+
+	{
+``	}
+
+	group "lc\\data\\" 
+	"Returns words in specified context as a block."
+	{
+		arg `ctx: Context to list words from`
+		returns `block of words defined in the specified context`
+	}
+
+	{
+		equal { c: context { x: 123 } lc\data\ c |type? } 'block
+	}
+
+	{
+``	}
+
+	group "lcp" 
+	"Lists words in parent context"
+	{
+		arg `none`
+		returns `current context after printing the parent context's words to stdout`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "lc\\" 
+	"Lists words in current context with string filter, by type (word: 'function, 'builtin, 'context), or regex filter (native of kind 'regexp)"
+	{
+		arg `filter: String to filter by name, Word ('function, 'builtin, 'context) to filter by type, or regexp Native`
+		returns `current context after printing filtered words to stdout`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "lcp\\" 
+	"Lists words in parent context with string filter"
+	{
+		arg `filter: String to filter word names`
+		returns `current context after printing filtered parent context words to stdout`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "cc" 
+	"Change to context (pushes current context to stack for ccb)"
+	{
+		arg `ctx: Context to change to`
+		returns `the new current context`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "ccp" 
+	"Change to parent context (pushes current context to stack for ccb)"
+	{
+		arg `none`
+		returns `the parent context (now current)`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "ccb" 
+	"Change context back (pops from context stack)"
+	{
+		arg `none`
+		returns `the previous context (now current)`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "mkcc" 
+	"Make context with current as parent and change to it (pushes current context to stack for ccb)."
+	{
+		arg `word: Word to name the new context`
+		returns `the new context (now current)`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "cc-stack-size" 
+	"Returns the current size of the context navigation stack."
+	{
+		arg `none`
+		returns `Integer with the current size of the context navigation stack`
+	}
+
+	{
+	}
+
+	{
+``	}
+
+	group "cc-clear-stack" 
+	"Clears the context navigation stack (removes all stored previous contexts)."
+	{
+		arg `none`
+		returns `Integer with the previous size of the stack before clearing`
+	}
+
+	{
 	}
 
 	{
@@ -3496,6 +3720,40 @@ section "Iteration " "Functions for iterating over collections and executing cod
 		equal { produce 3 { } { .concat "x" } } { "x" "x" "x" }
 		equal { produce 3 { } { ::x .concat length? x } } { 0 1 2 }
 		equal { produce 5 { 2 } { ::acc .last ::x * x |concat* acc } } { 2 4 16 256 65536 4294967296 }
+	}
+
+	{
+``	}
+
+	group "replicate" 
+	"Executes a block of code a specified number of times and collects all results into a block."
+	{
+		arg `count: Integer number of times to execute the block`
+		arg `block: Block of code to execute on each iteration`
+		returns `Block containing the results of each execution`
+	}
+
+	{
+		equal { replicate 5 { 10 } } { 10 10 10 10 10 }
+		equal { replicate 3 { 1 + 2 } } { 3 3 3 }
+		equal { replicate 0 { 10 } } { }
+	}
+
+	{
+``	}
+
+	group "replicate\\idx" 
+	"Executes a block of code a specified number of times, injecting the current index (0-based), and collects all results into a block."
+	{
+		arg `count: Integer number of times to execute the block`
+		arg `block: Block of code to execute on each iteration, with index (0-based) injected`
+		returns `Block containing the results of each execution`
+	}
+
+	{
+		equal { replicate\idx 5 { } } { 0 1 2 3 4 }
+		equal { replicate\idx 3 { * 10 } } { 0 10 20 }
+		equal { replicate\idx 0 { 10 } } { }
 	}
 
 	{
@@ -3992,6 +4250,36 @@ section "Functions " "functions that create functions" {
 		equal { x: fn { } { 234 } , x } 234
 		equal { x: fn { x } { x } , x 123 } 123
 		equal { x: fn { x } { + 123 } , x 123 } 246
+	}
+
+	{
+``	}
+
+	group "fn\\spec?" 
+	"Returns the argument specification block of a function."
+	{
+		arg `function: Function to get the argument spec from`
+		returns `Block containing the function's parameter specification`
+	}
+
+	{
+		equal { f: fn { x y } { x + y } , ?f .fn\spec? } { x y }
+		equal { does { 1 } |fn\spec? } { }
+	}
+
+	{
+``	}
+
+	group "fn\\body?" 
+	"Returns the body block of a function."
+	{
+		arg `function: Function to get the body from`
+		returns `Block containing the function's body code`
+	}
+
+	{
+		equal { f: fn { x y } { x + y } , ?f .fn\body? } { x + y }
+		equal { does { 123 } |fn\body? } { 123 }
 	}
 
 	{
@@ -4799,6 +5087,956 @@ section "Other " "..." {
 	}
 
 	{
+	}
+
+	{
+``	}
+
+}
+
+section "Combinators " "Functions that combine other functions or control execution flow" {
+	group "pass" 
+	"Accepts a value and a block. It does the block, with value injected, and returns (passes on) the initial value."
+	{
+		arg `value: Any value that will be passed to the block and returned`
+		arg `block: Block of code to execute with the value injected`
+		returns `The original value, regardless of what the block returns`
+	}
+
+	{
+		equal  { 101 .pass { 202 } } 101
+		equal  { 101 .pass { 202 + 303 } } 101
+	}
+
+	{
+``	}
+
+	group "wrap" 
+	"Executes a wrapper block before and after executing a main block, returning the result of the main block."
+	{
+		arg `wrapper: Block of code to execute before and after the main block`
+		arg `block: Main block of code to execute between wrapper executions`
+		returns `The result of the main block execution`
+	}
+
+	{
+		stdout { wrap { prn "*" } { prn "x" } } "*x*"
+	}
+
+	{
+``	}
+
+	group "keep" 
+	"Do the first block, then the second one but return the result of the first one."
+	{
+		arg `value: Value to be injected into both blocks`
+		arg `block1: First block whose result will be returned`
+		arg `block2: Second block to execute after the first one`
+		returns `The result of the first block, ignoring the result of the second block`
+	}
+
+	{
+		equal  { 20 .keep { + 202 } { + 101 } } 222
+	}
+
+	{
+``	}
+
+}
+
+section "Printing " "Functions for displaying and formatting values" {
+	group "prns" 
+	"Prints a value followed by a space, returning the input value."
+	{
+		arg `value: Any value to print`
+		returns `the input value (for chaining)`
+	}
+
+	{
+		stdout { prns "xy" } "xy "
+	}
+
+	{
+``	}
+
+	group "prn" 
+	"Prints a value without adding a newline, returning the input value."
+	{
+		arg `value: Any value to print`
+		returns `the input value (for chaining)`
+	}
+
+	{
+		stdout { prn "xy" } "xy"
+	}
+
+	{
+``	}
+
+	group "print" 
+	"Prints a value followed by a newline, returning the input value."
+	{
+		arg `value: Any value to print`
+		returns `the input value (for chaining)`
+	}
+
+	{
+		stdout { print "xy" } "xy\n"
+	}
+
+	{
+``	}
+
+	group "print2" 
+	"Prints two values separated by a space and followed by a newline, returning the second value."
+	{
+		arg `value1: First value to print`
+		arg `value2: Second value to print`
+		returns `the second input value`
+	}
+
+	{
+		stdout { print2 "hello" "world" } "hello world\n"
+	}
+
+	{
+``	}
+
+	group "prn2" 
+	"Prints two values separated by a space without adding a newline, returning the second value."
+	{
+		arg `value1: First value to print`
+		arg `value2: Second value to print`
+		returns `the second input value`
+	}
+
+	{
+		stdout { prn2 "hello" "world" } "hello world"
+	}
+
+	{
+``	}
+
+	group "prns2" 
+	"Prints two values separated by a space and followed by a space, returning the second value."
+	{
+		arg `value1: First value to print`
+		arg `value2: Second value to print`
+		returns `the second input value`
+	}
+
+	{
+		stdout { prns2 "hello" "world" } "hello world "
+	}
+
+	{
+``	}
+
+	group "format" 
+	"Formats a value according to Go's sprintf format specifiers, returning the formatted string."
+	{
+		arg `value: Value to format (string, integer, or decimal)`
+		arg `format: String containing Go's sprintf format specifiers`
+		returns `formatted string`
+	}
+
+	{
+		equal { format 123 "num: %d" } "num: 123"
+		equal { format "hello" "%s world" } "hello world"
+	}
+
+	{
+``	}
+
+	group "prnf" 
+	"Formats a value according to Go's sprintf format specifiers and prints it without a newline, returning the input value."
+	{
+		arg `value: Value to format (string, integer, or decimal)`
+		arg `format: String containing Go's sprintf format specifiers`
+		returns `the input value (for chaining)`
+	}
+
+	{
+		stdout { prnf 123 "num: %d" } "num: 123"
+	}
+
+	{
+``	}
+
+	group "embed" 
+	"Embeds a value into a string or URI by replacing {} placeholder with the string representation of the value."
+	{
+		arg `value: Value to embed`
+		arg `template: String or URI containing {} as a placeholder`
+		returns `string or URI with the placeholder replaced by the value`
+	}
+
+	{
+		equal { embed 101 "val {}" } "val 101"
+		equal { embed "world" "hello {}" } "hello world"
+	}
+
+	{
+``	}
+
+	group "prnv" 
+	"Embeds a value into a string by replacing {} placeholder and prints it without a newline, returning the input value."
+	{
+		arg `value: Value to embed`
+		arg `template: String containing {} as a placeholder`
+		returns `the input value (for chaining)`
+	}
+
+	{
+		stdout { prnv 101 "val {}" } "val 101"
+	}
+
+	{
+``	}
+
+	group "printv" 
+	"Embeds a value into a string by replacing {} placeholder and prints it followed by a newline, returning the input value."
+	{
+		arg `value: Value to embed`
+		arg `template: String containing {} as a placeholder`
+		returns `the input value (for chaining)`
+	}
+
+	{
+		stdout { printv 101 "val {}" } "val 101\n"
+	}
+
+	{
+``	}
+
+	group "print\\ssv" 
+	"Prints a block of values as space-separated values followed by a newline, returning the input block."
+	{
+		arg `block: Block of values to format as space-separated values`
+		returns `the input block (for chaining)`
+	}
+
+	{
+		stdout { print\ssv { 101 "asd" } } "101 asd\n"
+	}
+
+	{
+``	}
+
+	group "print\\csv" 
+	"Prints a block of values as comma-separated values followed by a newline, returning the input block."
+	{
+		arg `block: Block of values to format as comma-separated values`
+		returns `the input block (for chaining)`
+	}
+
+	{
+		stdout { print\csv { 101 "asd" } } "101,asd\n"
+	}
+
+	{
+``	}
+
+	group "probe" 
+	"Prints detailed type and value information about a value, followed by a newline, returning the input value."
+	{
+		arg `value: Any value to inspect`
+		returns `the input value (for chaining)`
+	}
+
+	{
+		stdout { probe 101 } "[Integer: 101]\n"
+	}
+
+	{
+``	}
+
+	group "probe\\" 
+	"Prints a prefix string followed by detailed type and value information about a value, followed by a newline, returning the input value."
+	{
+		arg `value: Any value to inspect`
+		arg `prefix: String to print before the probed value`
+		returns `the input value (for chaining)`
+	}
+
+	{
+		stdout { probe\ 101 "value:" } "value: [Integer: 101]\n"
+	}
+
+	{
+``	}
+
+	group "inspect" 
+	"Returns a string containing detailed type and value information about a value."
+	{
+		arg `value: Any value to inspect`
+		returns `string containing detailed type and value information`
+	}
+
+	{
+		equal { inspect 101 } "[Integer: 101]"
+	}
+
+	{
+``	}
+
+	group "esc" 
+	"Creates an ANSI escape sequence by prepending the escape character (\\033) to the input string."
+	{
+		arg `sequence: String to append to the escape character`
+		returns `string with escape sequence`
+	}
+
+	{
+		; equal { esc "[33m" } "\033[33m"   ; we can't represent hex or octal in strings yet
+	}
+
+	{
+``	}
+
+	group "esc-val" 
+	"Creates an ANSI escape sequence with an embedded value by replacing {} placeholder and prepending the escape character (\\033)."
+	{
+		arg `value: Value to embed`
+		arg `template: String containing {} as a placeholder`
+		returns `string with escape sequence and embedded value`
+	}
+
+	{
+		; equal { esc-val "[33m" "Error" } "\033[33mError"  ; we can't represent hex or octal in strings yet
+	}
+
+	{
+``	}
+
+	group "display" 
+	"Interactively displays a value (Block, Dict, Table, TableRow, or Markdown) in the terminal with navigation capabilities."
+	{
+		arg `value: Block, Dict, Table, TableRow, or Markdown to display interactively`
+		returns `the input value or selected item from interactive display`
+	}
+
+	{
+		; display { 1 2 3 }  ; interactive display, can't test in automated tests
+	}
+
+	{
+``	}
+
+	group "_.." 
+	"Shorthand alias for 'display' - interactively displays a value in the terminal with navigation capabilities."
+	{
+		arg `value: Block, Dict, Table, or TableRow to display interactively`
+		returns `the input value or selected item from interactive display`
+	}
+
+	{
+		; _.. { 1 2 3 }  ; interactive display, can't test in automated tests
+	}
+
+	{
+``	}
+
+	group "display\\custom" 
+	"Interactively displays a Table in the terminal with a custom rendering function for each row."
+	{
+		arg `value: Table to display interactively`
+		arg `renderer: Function that takes a row and current position indicator`
+		returns `the input value or selected item from interactive display`
+	}
+
+	{
+		; display\custom my-table { |row curr| ... }  ; interactive display with custom renderer
+	}
+
+	{
+``	}
+
+	group "capture-stdout" 
+	"Executes a block of code while capturing all output to stdout, returning the captured output as a string."
+	{
+		arg `block: Block of code to execute with captured stdout`
+		returns `string containing all output captured during block execution`
+	}
+
+	{
+		equal { capture-stdout { print "hello" } } "hello\n"
+		equal { capture-stdout { loop 3 { prns "x" } } } "x x x "
+	}
+
+	{
+``	}
+
+}
+
+section "Default" "" {
+	group "fail" 
+	"Creates an error and sets the failure flag, but continues execution (unlike ^fail)."
+	{
+		arg `error_info: String message, Integer code, or block for multiple parameters`
+		returns `error object and sets the failure flag`
+	}
+
+	{
+		equal { try { fail "error message" } |type? } 'error
+		equal { try { fail "error message" } |message? } "error message"
+		equal { try { fail 404 } |status? } 404
+	}
+
+	{
+``	}
+
+	group "^fail" 
+	"Creates an error and immediately returns from the current function with failure state."
+	{
+		arg `error_info: String message, Integer code, or block for multiple parameters`
+		returns `error object and sets both failure and return flags`
+	}
+
+	{
+		equal { ff:: fn { } { ^fail "error message" } ff |disarm |type? } 'error
+		equal { ff:: fn { } { ^fail "error message" } ff |disarm |message? } "error message"
+		equal { ff:: fn { } { ^fail 404 } ff |disarm |status? } 404
+		equal { ff:: fn { } { ^fail 'user-error } ff |disarm  |kind? } 'user-error
+	}
+
+	{
+``	}
+
+	group "failure" 
+	"Creates an error object without setting any flags (unlike fail and ^fail)."
+	{
+		arg `error_info: String message, Integer code, or block for multiple parameters`
+		returns `error object without setting any flags`
+	}
+
+	{
+		equal { failure "error message" |type? } 'error
+		equal { failure "error message" |message? } "error message"
+		equal { failure 404 |status? } 404
+	}
+
+	{
+``	}
+
+	group "failure\\wrap" 
+	"Creates a new error that wraps an existing error, allowing for error chaining."
+	{
+		arg `error_info: String message, Integer code, or block for multiple parameters`
+		arg `error: Error object to wrap`
+		returns `new error object that wraps the provided error`
+	}
+
+	{
+		equal { failure\wrap "outer error" failure "inner error" |message? } "outer error"
+		equal { failure\wrap "outer error" failure "inner error" |type? } 'error
+	}
+
+	{
+``	}
+
+	group "is-error" 
+	"Returns true if the value is an error, false otherwise."
+	{
+		arg `value: Any value to check`
+		returns `boolean true if the value is an error, false otherwise`
+	}
+
+	{
+		equal { is-error failure "test" } true
+		equal { is-error 123 } false
+	}
+
+	{
+``	}
+
+	group "error-kind?" 
+	"Returns the kind of an error, or void if not an error."
+	{
+		arg `value: Any value to check`
+		returns `the kind of the error as a word, or void if not an error`
+	}
+
+	{
+		equal { error-kind? failure { 'syntax-error 404 "Syntax error" } } 'syntax-error
+		equal { error-kind? 123 } _
+	}
+
+	{
+``	}
+
+	group "is-error-of-kind" 
+	"Returns true if the value is an error of the specified kind, false otherwise."
+	{
+		arg `error: Error object to check`
+		arg `kind: Word or tagword representing the error kind to check against`
+		returns `boolean true if the error is of the specified kind, false otherwise`
+	}
+
+	{
+		equal { is-error-of-kind failure { 'syntax-error 404 "Syntax error" } 'syntax-error } true
+		equal { is-error-of-kind failure { 'syntax-error 404 "Syntax error" } 'runtime-error } false
+	}
+
+	{
+``	}
+
+	group "cause?" 
+	"Extracts the root cause from an error chain by traversing the Parent references."
+	{
+		arg `error: Error object to extract the root cause from`
+		returns `the root cause error from an error chain`
+	}
+
+	{
+		equal { cause? failure\wrap "outer error" failure "inner error" |message? } "inner error"
+		equal { cause? failure "single error" |message? } "single error"
+	}
+
+	{
+``	}
+
+	group "status?" 
+	"Extracts the numeric status code from an error object."
+	{
+		arg `error: Error object to extract status code from`
+		returns `integer status code of the error`
+	}
+
+	{
+		equal { failure 404 |status? } 404
+		equal { failure "message" |status? } 0
+		error { "not an error" |status? }
+	}
+
+	{
+``	}
+
+	group "message?" 
+	"Extracts the message string from an error object."
+	{
+		arg `error: Error object to extract message from`
+		returns `string message of the error`
+	}
+
+	{
+		equal { failure "error message" |message? } "error message"
+		equal { failure 404 |message? } ""
+		error { "not an error" |message? }
+	}
+
+	{
+``	}
+
+	group "details?" 
+	"Extracts additional details from an error object as a dictionary."
+	{
+		arg `error: Error object to extract additional details from`
+		returns `dictionary containing any additional values stored in the error`
+	}
+
+	{
+		; equal { failure { "code" 404 "info" "Not Found" } |details? |type? } 'dict
+		; equal { failure { "code" 404 "info" "Not Found" } |details? .code } 404
+		error { "not an error" |details? }
+	}
+
+	{
+``	}
+
+	group "has-failed" 
+	"Tests if a value is an error object, returning true for errors and false for non-errors."
+	{
+		arg `value: Any value to check`
+		returns `boolean true if the value is an error, false otherwise`
+	}
+
+	{
+		equal { has-failed failure "error" } true
+		equal { has-failed "not an error" } false
+		equal { has-failed 123 } false
+		equal { has-failed try { fail "error" } } true
+	}
+
+	{
+``	}
+
+	group "is-failure" 
+	"Checks if a value is a failure/error type. Unlike has-failed, this doesn't accept failures - the value must already be disarmed."
+	{
+		arg `value: Any value to check (must already be disarmed if it was a failure)`
+		returns `boolean true if the value is an error type, false otherwise`
+	}
+
+	{
+		equal { try { fail "error" } |disarm |is-failure } true
+		equal { failure "error" |is-failure } true
+		equal { 123 |is-failure } false
+		equal { "hello" |is-failure } false
+	}
+
+	{
+``	}
+
+	group "is-success" 
+	"Returns true for any value that is not a failure/error type. The opposite of is-failure."
+	{
+		arg `value: Any value to check (must already be disarmed if it was a failure)`
+		returns `boolean true if the value is not an error type, false if it is an error`
+	}
+
+	{
+		equal { 123 |is-success } true
+		equal { "hello" |is-success } true
+		equal { { 1 2 3 } |is-success } true
+		equal { failure "error" |is-success } false
+		equal { try { fail "error" } |disarm |is-success } false
+	}
+
+	{
+``	}
+
+	group "disarm" 
+	"Clears the failure flag while preserving the error object, allowing error inspection without propagation."
+	{
+		arg `error: Error object to disarm`
+		returns `the original error object, but clears the failure flag`
+	}
+
+	{
+		equal { try { fail "error" |disarm } |type? } 'error
+		equal { try { fail "error" |disarm |message? } } "error"
+		equal { try { fail "error" } |has-failed } true
+		equal { try { fail "error" |disarm } |has-failed } false
+	}
+
+	{
+``	}
+
+	group "check" 
+	"Checks if a value is in failure state and wraps it with a new error if so, otherwise returns the original value."
+	{
+		arg `value: Value to check for failure state`
+		arg `error_info: Error information to use if value is in failure state`
+		returns `original value if not in failure state, or a new error wrapping the original error`
+	}
+
+	{
+		equal { 5 |check "Value must be positive" } 5
+		equal { try { fail "Original error" |check "Wrapped error" } |message? } "Wrapped error"
+		equal { try { fail "Original error" |check "Wrapped error" } |details? |type? } 'dict
+	}
+
+	{
+``	}
+
+	group "^check" 
+	"Like 'check' but also sets the return flag to immediately exit the current function."
+	{
+		arg `value: Value to check for failure state`
+		arg `error_info: Error information to use if value is in failure state`
+		returns `original value if not in failure state, or immediately returns from function with a new error`
+	}
+
+	{
+		equal { fn { x } { x |^check "Error in function" } |apply [ 5 ] } 5
+		equal { ff: fn { x } { fail "Original" |^check "Wrapped" } ff 5 |disarm |message? } "Wrapped"
+	}
+
+	{
+``	}
+
+	group "^ensure" 
+	"Checks if a value is truthy and returns it if so, otherwise creates an error and immediately returns from the function."
+	{
+		arg `condition: Value to test for truthiness`
+		arg `error_info: Error information to use if condition is not truthy`
+		returns `condition value if truthy, or immediately returns from function with an error`
+	}
+
+	{
+		equal { fn { x } { x > 0 |^ensure "Must be positive" } |apply [ 5 ] } true
+		equal { ff:: fn { x } { x > 0 |^ensure "Must be positive" } ff -1 |disarm |message? } "Must be positive"
+	}
+
+	{
+``	}
+
+	group "ensure" 
+	"Checks if a value is truthy and returns it if so, otherwise creates an error with the failure flag set."
+	{
+		arg `condition: Value to test for truthiness`
+		arg `error_info: Error information to use if condition is not truthy`
+		returns `condition value if truthy, or creates an error with failure flag set`
+	}
+
+	{
+		equal { 5 > 0 |ensure "Must be positive" } true
+		equal { try { -1 > 0 |ensure "Must be positive" } |message? } "Must be positive"
+	}
+
+	{
+``	}
+
+	group "requires-one-of" 
+	"Validates that a value matches one of the provided options, failing with a descriptive error if not."
+	{
+		arg `value: Value to check against valid options`
+		arg `options: Block containing valid values`
+		returns `original value if it matches one of the options, or creates an error with failure flag set`
+	}
+
+	{
+		equal { "a" |requires-one-of { "a" "b" "c" } } "a"
+		equal { "b" |requires-one-of { "a" "b" "c" } } "b"
+		equal { try { "x" |requires-one-of { "a" "b" "c" } } |message? |contains "must be one of" } 1
+		equal { try { "x" |requires-one-of { "a" "b" "c" } } |message? |contains "\"x\"" } 1
+		equal { try { 5 |requires-one-of { 1 2 3 } } |message? |contains "5" } 1
+	}
+
+	{
+``	}
+
+	group "^requires-one-of" 
+	"Validates that a value matches one of the provided options, failing with a descriptive error if not."
+	{
+		arg `value: Value to check against valid options`
+		arg `options: Block containing valid values`
+		returns `original value if it matches one of the options, or creates an error with failure flag set`
+	}
+
+	{
+		equal { "a" |requires-one-of { "a" "b" "c" } } "a"
+		equal { "b" |requires-one-of { "a" "b" "c" } } "b"
+		equal { try { "x" |requires-one-of { "a" "b" "c" } } |message? |contains "must be one of" } 1
+		equal { try { "x" |requires-one-of { "a" "b" "c" } } |message? |contains "\"x\"" } 1
+		equal { try { 5 |requires-one-of { 1 2 3 } } |message? |contains "5" } 1
+	}
+
+	{
+``	}
+
+	group "fix" 
+	"Handles errors by executing a block if the value is in failure state, clearing the failure flag."
+	{
+		arg `value: Value to check for failure state`
+		arg `handler: Block to execute if value is in failure state`
+		returns `original value if not in failure state, or result of executing the handler block`
+	}
+
+	{
+		equal { 5 |fix { + 10 } } 5
+		equal { try { fail "error" |fix { "fixed" } } } "fixed"
+		equal { try { fail "error" |fix { fail "new error" } } |message? } "new error"
+	}
+
+	{
+``	}
+
+	group "^fix" 
+	"Like 'fix' but also sets the return flag to immediately exit the current function with the handler result."
+	{
+		arg `value: Value to check for failure state`
+		arg `handler: Block to execute if value is in failure state`
+		returns `original value if not in failure state, or immediately returns from function with handler result`
+	}
+
+	{
+		equal { fn { x } { x |^fix { "fixed" } } |apply [ 5 ] } 5
+		equal { ff:: fn { x } { fail "error" |^fix { "fixed" } } ff 5 } "fixed"
+	}
+
+	{
+``	}
+
+	group "fix\\either" 
+	"Executes one of two blocks depending on whether the value is in failure state."
+	{
+		arg `value: Value to check for failure state`
+		arg `error_handler: Block to execute if value is in failure state`
+		arg `success_handler: Block to execute if value is not in failure state`
+		returns `result of executing the appropriate handler block`
+	}
+
+	{
+		equal { fix\either failure "error" { "fixed" } { "not fixed" } } "fixed"
+		equal { fix\either 5 { "fixed" } { "not fixed" } } "not fixed"
+	}
+
+	{
+``	}
+
+	group "fix\\else" 
+	"Executes a block if the value is not in failure state, otherwise returns the original value."
+	{
+		arg `value: Value to check for failure state`
+		arg `success_handler: Block to execute if value is not in failure state`
+		returns `result of executing the success handler if value is not in failure state, or the original value`
+	}
+
+	{
+		equal { 5 |fix\else { "not fixed" } } "not fixed"
+		equal { try { fail "error" |fix\else { "not fixed" } } |message? } "error"
+	}
+
+	{
+``	}
+
+	group "fix\\continue" 
+	"Executes one of two blocks depending on whether the value is in failure state, like an error-handling if/else."
+	{
+		arg `value: Value to check for failure state`
+		arg `error_handler: Block to execute if value is in failure state`
+		arg `success_handler: Block to execute if value is not in failure state`
+		returns `result of executing the appropriate handler block`
+	}
+
+	{
+		equal { 5 |fix\continue { "error handler" } { "success handler" } } "success handler"
+		equal { try { fail "error" |fix\continue { "error handler" } { "success handler" } } } "error handler"
+	}
+
+	{
+``	}
+
+	group "continue" 
+	"Executes a block only if the value is not in failure state, opposite of 'fix'."
+	{
+		arg `value: Value to check for failure state`
+		arg `block: Block to execute if value is not in failure state`
+		returns `result of executing the block if value is not in failure state, or the original value`
+	}
+
+	{
+		equal { 5 |continue { + 10 } } 15
+		equal { try { fail "error" |continue { + 10 } } } failure "error"
+	}
+
+	{
+``	}
+
+	group "^fix\\match" 
+	"Error handling switch that matches error codes with handler blocks and sets the return flag."
+	{
+		arg `error: Error object to match against`
+		arg `cases: Block containing error codes and corresponding handler blocks`
+		returns `result of executing the matching handler block, or the original error if no match`
+	}
+
+	{
+		equal { ^fix\match failure 404 { 404 { "Not Found" } 500 { "Server Error" } } } "Not Found"
+		equal { ^fix\match failure 500 { 404 { "Not Found" } 500 { "Server Error" } } } "Server Error"
+		equal { ^fix\match failure 403 { 404 { "Not Found" } 500 { "Server Error" } _ { "Unknown Error" } } } "Unknown Error"
+	}
+
+	{
+``	}
+
+	group "try" 
+	"Takes a block of code and does (runs) it."
+	{
+	}
+
+	{
+		equal  { try { 123 + 123 } } 246
+		equal  { try { 123 + "asd" } |type? } 'error
+		equal  { try { 123 + } |type? } 'error
+	}
+
+	{
+``	}
+
+	group "try-all" 
+	"Executes a block and returns a result tuple [success, result], where success is true if no error occurred."
+	{
+		arg `block: Block of code to execute`
+		returns `a block containing [success, result], where success is true if no error occurred`
+	}
+
+	{
+		equal { try-all { 1 + 2 } } [ true 3 ]
+		equal { try-all { fail "error" } |first } false
+	}
+
+	{
+``	}
+
+	group "try\\in" 
+	"Takes a Context and a Block. It Does a block inside a given Context."
+	{
+	}
+
+	{
+		equal  { c: context { x: 100 } try\in c { x * 9.99 } } 999.0
+		equal  { c: context { x: 100 } try\in c { inc! 'x } } 101
+		equal  { c: context { x: 100 } try\in c { x:: 200 , x } } 200
+		equal  { c: context { x: 100 } try\in c { x:: 200 } c/x } 200
+		equal  { c: context { x: 100 } try\in c { inc! 'y } |type? } 'error
+	}
+
+	{
+``	}
+
+	group "finally" 
+	"Executes a block and ensures another block is executed afterward, regardless of errors."
+	{
+		arg `main-block: Block of code to execute`
+		arg `finally-block: Block to execute afterward, regardless of errors`
+		returns `result of the main block, preserving any failure state`
+	}
+
+	{
+		equal { finally { 1 + 2 } { print "cleanup" } } 3
+		equal { try { finally { fail "error" } { print "cleanup" } } |message? } "error"
+	}
+
+	{
+``	}
+
+	group "retry" 
+	"Executes a block and retries it up to N times if it results in a failure."
+	{
+		arg `retries: Integer number of retries to attempt`
+		arg `block: Block of code to execute and potentially retry`
+		returns `result of the block if successful, or the last failure if all retries fail`
+	}
+
+	{
+		equal { retry 3 { fail 101 } |disarm |type? } 'error
+		equal { retry 3 { fail 101 } |disarm |status? } 101
+		equal { retry 3 { 10 + 1 } } 11
+	}
+
+	{
+``	}
+
+	group "persist" 
+	"Executes a block repeatedly until it succeeds (no failure), then returns the successful result. Gives up after 1000 attempts."
+	{
+		arg `block: Block of code to execute repeatedly until it succeeds`
+		returns `result of the block when it finally succeeds (no failure), or error if 1000 attempts exceeded`
+	}
+
+	{
+		equal { persist { 10 + 1 } } 11
+		equal { counter:: 0 persist { counter:: counter + 1 , if counter > 3 { counter } { fail "not ready" } } } 4
+		error { persist { fail "always fails" } }
+	}
+
+	{
+``	}
+
+	group "timeout" 
+	"Executes a block of code with a timeout, failing if execution exceeds the specified duration in milliseconds."
+	{
+		arg `ms: Integer timeout duration in milliseconds`
+		arg `block: Block of code to execute with a timeout`
+		returns `result of the block if it completes within the timeout, or a timeout error`
+	}
+
+	{
+		equal { timeout 5000 { "ok" } } "ok"
+		equal { try { timeout 100 { sleep 1000 , "ok" } } |message? |contains "timeout" } 1
 	}
 
 	{

@@ -103,8 +103,8 @@ func OfferDebuggingOptions(es *env.ProgramState, genv *env.Idxs, tag string) {
 				fmt.Println("\x1b[36mExiting ...\x1b[0m")
 				return // Exit the function and continue program execution
 			default:
-				fmt.Printf("\x1b[31mInvalid option '%s'. Please try again.\x1b[0m\n", input)
-				// Continue the loop to offer options again
+				fmt.Printf("\x1b[31mInvalid option '%s'. Exiting.\x1b[0m\n", input)
+				return // Exit because most of the time we just want to exit
 			}
 
 		case <-timeoutCh:
