@@ -707,14 +707,12 @@ var Builtins_http = map[string]*env.Builtin{
 					default:
 						//fmt.Println("asdsad 2")
 						ps.FailureFlag = true
-						return *env.NewError("arg 0 should be String")
-						// return MakeArgError(ps, 3, []env.Type{env.StringType}, "Http-cookie-store//get")
+						return MakeArgError(ps, 3, []env.Type{env.StringType}, "Http-cookie-store//get")
 					}
 				default:
 					//fmt.Println("asdsad 3")
 					ps.FailureFlag = true
-					return *env.NewError("arg 0 should be String")
-					// return MakeArgError(ps, 2, []env.Type{env.NativeType}, "Http-cookie-store//get")
+					return MakeArgError(ps, 2, []env.Type{env.NativeType}, "Http-cookie-store//get")
 				}
 			default:
 				//fmt.Println("asdsad 4")

@@ -83,7 +83,7 @@ func DialectMath(env1 *env.ProgramState, arg0 env.Object) env.Object {
 		env1.Ser = ser1
 		return *env.NewBlock(*env.NewTSeries(val))
 	default:
-		return *env.NewError("arg 1 should be block")
+		return MakeArgError(env1, 1, []env.Type{env.BlockType}, "DialectMath")
 	}
 }
 
