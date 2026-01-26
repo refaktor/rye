@@ -33,10 +33,10 @@ var ErrorCreationBuiltins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { fn { } { ^fail "error message" } |type? } 'error
-	// equal { fn { } { ^fail "error message" } |message? } "error message"
-	// equal { fn { } { ^fail 404 } |status? } 404
-	// equal { fn { } { ^fail 'user-error } |kind? } 'user-error
+	// equal { ff:: fn { } { ^fail "error message" } ff |disarm |type? } 'error
+	// equal { ff:: fn { } { ^fail "error message" } ff |disarm |message? } "error message"
+	// equal { ff:: fn { } { ^fail 404 } ff |disarm |status? } 404
+	// equal { ff:: fn { } { ^fail 'user-error } ff |disarm  |kind? } 'user-error
 	// Args:
 	// * error_info: String message, Integer code, or block for multiple parameters
 	// Returns:
@@ -273,8 +273,8 @@ var ErrorInspectionBuiltins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { failure { "code" 404 "info" "Not Found" } |details? |type? } 'dict
-	// equal { failure { "code" 404 "info" "Not Found" } |details? .code } 404
+	// ; equal { failure { "code" 404 "info" "Not Found" } |details? |type? } 'dict
+	// ; equal { failure { "code" 404 "info" "Not Found" } |details? .code } 404
 	// error { "not an error" |details? }
 	// Args:
 	// * error: Error object to extract additional details from
@@ -421,8 +421,8 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { fn { x } { x |^check "Error in function" } |call 5 } 5
-	// equal { fn { x } { fail "Original" |^check "Wrapped" } |call 5 |message? } "Wrapped"
+	// equal { fn { x } { x |^check "Error in function" } |apply [ 5 ] } 5
+	// equal { ff: fn { x } { fail "Original" |^check "Wrapped" } ff 5 |disarm |message? } "Wrapped"
 	// Args:
 	// * value: Value to check for failure state
 	// * error_info: Error information to use if value is in failure state
@@ -454,8 +454,8 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { fn { x } { x > 0 |^ensure "Must be positive" } |call 5 } true
-	// equal { fn { x } { x > 0 |^ensure "Must be positive" } |call -1 |message? } "Must be positive"
+	// equal { fn { x } { x > 0 |^ensure "Must be positive" } |apply [ 5 ] } true
+	// equal { ff:: fn { x } { x > 0 |^ensure "Must be positive" } ff -1 |disarm |message? } "Must be positive"
 	// Args:
 	// * condition: Value to test for truthiness
 	// * error_info: Error information to use if condition is not truthy
@@ -660,8 +660,8 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { fn { x } { x |^fix { "fixed" } } |call 5 } 5
-	// equal { fn { x } { fail "error" |^fix { "fixed" } } |call 5 } "fixed"
+	// equal { fn { x } { x |^fix { "fixed" } } |apply [ 5 ] } 5
+	// equal { ff:: fn { x } { fail "error" |^fix { "fixed" } } ff 5 } "fixed"
 	// Args:
 	// * value: Value to check for failure state
 	// * handler: Block to execute if value is in failure state
@@ -937,8 +937,8 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal  { try { 123 + 123 } } 246
-	// equal  { try { 123 + "asd" } \type? } 'error
-	// equal  { try { 123 + } \type? } 'error
+	// equal  { try { 123 + "asd" } |type? } 'error
+	// equal  { try { 123 + } |type? } 'error
 	"try": {
 		Argsn: 1,
 		Doc:   "Takes a block of code and does (runs) it.",
@@ -1103,8 +1103,8 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { retry 3 { fail 101 } |type? } 'error
-	// equal { retry 3 { fail 101 } |status? } 101
+	// equal { retry 3 { fail 101 } |disarm |type? } 'error
+	// equal { retry 3 { fail 101 } |disarm |status? } 101
 	// equal { retry 3 { 10 + 1 } } 11
 	// Args:
 	// * retries: Integer number of retries to attempt

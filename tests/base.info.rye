@@ -5494,10 +5494,10 @@ section "Default" "" {
 	}
 
 	{
-		equal { fn { } { ^fail "error message" } |type? } 'error
-		equal { fn { } { ^fail "error message" } |message? } "error message"
-		equal { fn { } { ^fail 404 } |status? } 404
-		equal { fn { } { ^fail 'user-error } |kind? } 'user-error
+		equal { ff:: fn { } { ^fail "error message" } ff |disarm |type? } 'error
+		equal { ff:: fn { } { ^fail "error message" } ff |disarm |message? } "error message"
+		equal { ff:: fn { } { ^fail 404 } ff |disarm |status? } 404
+		equal { ff:: fn { } { ^fail 'user-error } ff |disarm  |kind? } 'user-error
 	}
 
 	{
@@ -5636,8 +5636,8 @@ section "Default" "" {
 	}
 
 	{
-		equal { failure { "code" 404 "info" "Not Found" } |details? |type? } 'dict
-		equal { failure { "code" 404 "info" "Not Found" } |details? .code } 404
+		; equal { failure { "code" 404 "info" "Not Found" } |details? |type? } 'dict
+		; equal { failure { "code" 404 "info" "Not Found" } |details? .code } 404
 		error { "not an error" |details? }
 	}
 
@@ -5739,8 +5739,8 @@ section "Default" "" {
 	}
 
 	{
-		equal { fn { x } { x |^check "Error in function" } |call 5 } 5
-		equal { fn { x } { fail "Original" |^check "Wrapped" } |call 5 |message? } "Wrapped"
+		equal { fn { x } { x |^check "Error in function" } |apply [ 5 ] } 5
+		equal { ff: fn { x } { fail "Original" |^check "Wrapped" } ff 5 |disarm |message? } "Wrapped"
 	}
 
 	{
@@ -5755,8 +5755,8 @@ section "Default" "" {
 	}
 
 	{
-		equal { fn { x } { x > 0 |^ensure "Must be positive" } |call 5 } true
-		equal { fn { x } { x > 0 |^ensure "Must be positive" } |call -1 |message? } "Must be positive"
+		equal { fn { x } { x > 0 |^ensure "Must be positive" } |apply [ 5 ] } true
+		equal { ff:: fn { x } { x > 0 |^ensure "Must be positive" } ff -1 |disarm |message? } "Must be positive"
 	}
 
 	{
@@ -5842,8 +5842,8 @@ section "Default" "" {
 	}
 
 	{
-		equal { fn { x } { x |^fix { "fixed" } } |call 5 } 5
-		equal { fn { x } { fail "error" |^fix { "fixed" } } |call 5 } "fixed"
+		equal { fn { x } { x |^fix { "fixed" } } |apply [ 5 ] } 5
+		equal { ff:: fn { x } { fail "error" |^fix { "fixed" } } ff 5 } "fixed"
 	}
 
 	{
@@ -5939,8 +5939,8 @@ section "Default" "" {
 
 	{
 		equal  { try { 123 + 123 } } 246
-		equal  { try { 123 + "asd" } \type? } 'error
-		equal  { try { 123 + } \type? } 'error
+		equal  { try { 123 + "asd" } |type? } 'error
+		equal  { try { 123 + } |type? } 'error
 	}
 
 	{
@@ -6002,8 +6002,8 @@ section "Default" "" {
 	}
 
 	{
-		equal { retry 3 { fail 101 } |type? } 'error
-		equal { retry 3 { fail 101 } |status? } 101
+		equal { retry 3 { fail 101 } |disarm |type? } 'error
+		equal { retry 3 { fail 101 } |disarm |status? } 101
 		equal { retry 3 { 10 + 1 } } 11
 	}
 
