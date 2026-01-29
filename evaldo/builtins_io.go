@@ -25,6 +25,23 @@ var Builtins_io = map[string]*env.Builtin{
 	//
 	// ##### Console IO ##### "Console input and output functions"
 	//
+	// Example:
+	//  ; File operations
+	//  file: Create %output.txt
+	//  file .Write "Hello, World!\n"
+	//  file .Close
+	//  Read %output.txt |print
+	//
+	//  ; Reader/Writer operations
+	//  reader: Reader %data.txt
+	//  content: reader .Read\string
+	//  reader .Close
+	//  print content
+	//
+	//  ; HTTP requests
+	//  Get https://api.example.com/data |print
+	//  Post https://api.example.com/data "{\"name\":\"test\"}" 'json |print
+	//
 	// Args:
 	// * prompt: string to display as a prompt
 	// Returns:

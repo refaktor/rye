@@ -42,6 +42,17 @@ var Builtins_os = map[string]*env.Builtin{
 	//
 	// ##### OS ##### "OS related functions"
 	//
+	// Example:
+	//  cc os
+	//  print cwd?
+	//  ls |for { .print }
+	//  ls\ 'files |for { .print }
+	//  host-info? -> "hostname" |print
+	//  load-avg? -> "1" |print
+	//  virtual-memory? -> "total" |print
+	//  disk-usage? |print
+	//  processes? |first |print
+	//
 	// Tests:
 	// ; equal { cc os cd %/tmp cwd? cd %.. } %/tmp
 	// Args:

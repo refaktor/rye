@@ -101,6 +101,14 @@ var Builtins_sqlite = map[string]*env.Builtin{
 	//
 	// ##### SQLite ##### "SQLite database functions"
 	//
+	// Example:
+	//  db: Open sqlite://mydata.db
+	//  db .Exec "CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, age INTEGER)"
+	//  db .Exec { INSERT INTO users ( name , age ) VALUES ( "Alice" , 30 ) }
+	//  db .Query { SELECT * FROM users WHERE age > 25 } |print
+	//  name: "Bob"
+	//  db .Exec { INSERT INTO users ( name , age ) VALUES ( ?name , 42 ) }
+	//
 	// Tests:
 	// equal { Open sqlite://test.db |type? } 'native
 	// Args:

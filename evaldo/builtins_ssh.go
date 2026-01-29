@@ -17,6 +17,15 @@ var Builtins_ssh = map[string]*env.Builtin{
 	//
 	// ##### SSH ##### "SSH server functions"
 	//
+	// Example:
+	//  server: ssh-server "localhost:2222"
+	//  server |Password-auth { pass = "secret123" }
+	//  server |Handle fn { session } {
+	//    session .Write "Welcome to Rye SSH server!\n"
+	//    session .Write "Type 'exit' to quit.\n"
+	//  }
+	//  server |Serve
+	//
 	// Tests:
 	// ; equal { ssh-server "localhost:2222" |type? } 'native
 	// Args:

@@ -27,6 +27,15 @@ var Builtins_git = map[string]*env.Builtin{
 	//
 	// ##### Git ##### "Git repository functions"
 	//
+	// Example:
+	//  repo: open "."
+	//  repo .git-repo//Branches? |for { -> "name" |print }
+	//  repo .git-repo//Commits? |first -> "message" |print
+	//  repo .git-repo//Remotes? |for { -> "name" |print }
+	//  repo .git-repo//Tags? |for { -> "name" |print }
+	//  wt: repo .git-repo//Worktree?
+	//  wt .git-worktree//Status? |print
+	//
 	// Tests:
 	// ; equal { git-repo//open "." |type? } 'native
 	// Args:

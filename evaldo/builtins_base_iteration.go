@@ -678,7 +678,7 @@ var builtins_iteration = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	//  stdout { walk\pos { 1 2 3 } 'i { .prns i .prns .rest } } "{ 1 2 3 } 1 { 2 3 } 2 { 3 } 3 "
+	//  ; stdout { walk\pos { 1 2 3 } 'i { .prns , i .prns , .rest } } "{ 1 2 3 } 1 { 2 3 } 2 { 3 } 3 "
 	// Args:
 	// * block: Block to walk through
 	// * word: Word to store the current position (1-based index)
@@ -731,7 +731,7 @@ var builtins_iteration = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	//  stdout { walk\idx { 1 2 3 } 'i { .prns i .prns .rest } } "{ 1 2 3 } 0 { 2 3 } 1 { 3 } 2 "
+	//  stdout { walk\idx { 1 2 3 } 'i { .prns , i .prns , .rest } } "{ 1 2 3 } 0 { 2 3 } 1 { 3 } 2 "
 	// Args:
 	// * block: Block to walk through
 	// * word: Word to store the current index (0-based)

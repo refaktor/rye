@@ -18,6 +18,21 @@ var Builtins_mqtt = map[string]*env.Builtin{
 	//
 	// ##### MQTT Client Functions ##### ""
 	//
+	// Example:
+	//  ; Connect to MQTT broker and subscribe to topics
+	//  client: Open mqtt://localhost:1883/my-client
+	//  client .Subscribe "sensors/+" 1 fn { payload msg } {
+	//    print "Topic: " + msg -> "topic"
+	//    print "Data: " + payload
+	//  }
+	//
+	//  ; Publish messages
+	//  client .Publish-simple "sensors/temperature" "23.5"
+	//  client .Publish "sensors/humidity" "65" 1 0
+	//
+	//  ; Clean up
+	//  client .Disconnect
+	//
 	// Tests:
 	// example { Open mqtt://localhost:1883/my-client-id }
 	// example { Open mqtt://user:pass@localhost:1883/my-client-id }

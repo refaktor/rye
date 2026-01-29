@@ -39,6 +39,27 @@ var Builtins_goroutines = map[string]*env.Builtin{
 	//
 	// ##### Goroutines & Concurrency ##### ""
 	//
+	// Example:
+	//  ; Simple goroutine with channel communication
+	//  ch: channel 1
+	//  go fn { } { ch .Send "Hello from goroutine" }
+	//  print ch .Read
+	//
+	//  ; Using waitgroup to coordinate multiple goroutines
+	//  wg: waitgroup
+	//  results: channel 10
+	//  loop 5 { i |
+	//    wg .Add 1
+	//    go-with i fn { n } { results .Send n * 2 , wg .Done }
+	//  }
+	//  wg .Wait
+	//  results .Close
+	//
+	//  ; Mutex for safe shared state
+	//  counter:: 0
+	//  mtx: mutex
+	//  go fn { } { mtx .Lock , change! counter + 1 'counter , mtx .Unlock }
+	//
 	// Tests:
 	// equal { x:: 0 , go-with 5 fn { v } { change! v 'x } , sleep 100 , x } 5
 	// equal { y:: 0 , go-with "test" fn { v } { change! length? v 'y } , sleep 100 , y } 4
