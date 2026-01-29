@@ -27,8 +27,17 @@ var Builtins_git = map[string]*env.Builtin{
 	//
 	// ##### Git ##### "Git repository functions"
 	//
+	// Example:
+	//  repo: open "."
+	//  repo .git-repo//Branches? |for { -> "name" |print }
+	//  repo .git-repo//Commits? |first -> "message" |print
+	//  repo .git-repo//Remotes? |for { -> "name" |print }
+	//  repo .git-repo//Tags? |for { -> "name" |print }
+	//  wt: repo .git-repo//Worktree?
+	//  wt .git-worktree//Status? |print
+	//
 	// Tests:
-	// equal { git-repo//open "." |type? } 'native
+	// ; equal { git-repo//open "." |type? } 'native
 	// Args:
 	// * path: path to Git repository
 	// Returns:
@@ -80,7 +89,7 @@ var Builtins_git = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { repo: git-repo//open "." , repo |git-repo//clone "https://github.com/example/repo.git" "target-dir" |type? } 'native
+	// ; equal { repo: git-repo//open "." , repo |git-repo//clone "https://github.com/example/repo.git" "target-dir" |type? } 'native
 	// Args:
 	// * url: URL of the Git repository to clone
 	// * path: path where to clone the repository
@@ -140,7 +149,7 @@ var Builtins_git = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { repo: git-repo//Open "." , repo |git-repo//Worktree |type? } 'native
+	// ; equal { repo: git-repo//Open "." , repo |git-repo//Worktree |type? } 'native
 	// Args:
 	// * repo: Git repository object
 	// Returns:
@@ -167,7 +176,7 @@ var Builtins_git = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { repo: git-repo//Open "." , wt: repo |git-repo//Worktree , wt |git-worktree//Status |type? } 'dict
+	// ; equal { repo: git-repo//Open "." , wt: repo |git-repo//Worktree , wt |git-worktree//Status |type? } 'dict
 	// Args:
 	// * worktree: Git worktree object
 	// Returns:
@@ -204,7 +213,7 @@ var Builtins_git = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { repo: git-repo//Open "." , repo |git-repo//Untracked-files |type? } 'block
+	// ; equal { repo: git-repo//Open "." , repo |git-repo//Untracked-files |type? } 'block
 	// Args:
 	// * repo: Git repository object
 	// Returns:
@@ -293,7 +302,7 @@ var Builtins_git = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { repo: git-repo//Open "." , repo |git-repo//Commits |type? } 'block
+	// ; equal { repo: git-repo//Open "." , repo |git-repo//Commits |type? } 'block
 	// Args:
 	// * repo: Git repository object
 	// Returns:
@@ -348,7 +357,7 @@ var Builtins_git = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { repo: git-repo//Open "." , repo |git-repo//Branches |type? } 'block
+	// ; equal { repo: git-repo//Open "." , repo |git-repo//Branches |type? } 'block
 	// Args:
 	// * repo: Git repository object
 	// Returns:
@@ -394,7 +403,7 @@ var Builtins_git = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { repo: git-repo//Open "." , repo |git-repo//Remotes |type? } 'block
+	// ; equal { repo: git-repo//Open "." , repo |git-repo//Remotes |type? } 'block
 	// Args:
 	// * repo: Git repository object
 	// Returns:
@@ -440,7 +449,7 @@ var Builtins_git = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { repo: git-repo//Open "." , repo |git-repo//Tags |type? } 'block
+	// ; equal { repo: git-repo//Open "." , repo |git-repo//Tags |type? } 'block
 	// Args:
 	// * repo: Git repository object
 	// Returns:
@@ -486,7 +495,7 @@ var Builtins_git = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { repo: git-repo//open "." , repo |git-repo//checkout "branch-name" |type? } 'native
+	// ; equal { repo: git-repo//open "." , repo |git-repo//checkout "branch-name" |type? } 'native
 	// Args:
 	// * repo: Git repository object
 	// * branch: Branch name to checkout
@@ -535,7 +544,7 @@ var Builtins_git = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { repo: git-repo//open "." , repo |git-repo//create-branch "new-branch" |type? } 'native
+	// ; equal { repo: git-repo//open "." , repo |git-repo//create-branch "new-branch" |type? } 'native
 	// Args:
 	// * repo: Git repository object
 	// * branch: Branch name to create
@@ -598,7 +607,7 @@ var Builtins_git = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { repo: git-repo//open "." , wt: repo |git-repo//worktree , wt |git-worktree//add "file.txt" |type? } 'native
+	// ; equal { repo: git-repo//open "." , wt: repo |git-repo//worktree , wt |git-worktree//add "file.txt" |type? } 'native
 	// Args:
 	// * worktree: Git worktree object
 	// * path: Path of the file to add
@@ -641,7 +650,7 @@ var Builtins_git = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { repo: git-repo//open "." , wt: repo |git-repo//worktree , wt |git-worktree//commit "Commit message" |type? } 'native
+	// ; equal { repo: git-repo//open "." , wt: repo |git-repo//worktree , wt |git-worktree//commit "Commit message" |type? } 'native
 	// Args:
 	// * worktree: Git worktree object
 	// * message: Commit message

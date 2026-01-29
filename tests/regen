@@ -25,7 +25,7 @@
 ../cmd/rbit/rbit ../evaldo/builtins_io.go > io.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_cmd.go >> io.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_sqlite.go >> io.info.rye
- ../cmd/rbit/rbit ../evaldo/builtins_psql.go >> io.info.rye
+../cmd/rbit/rbit ../evaldo/builtins_psql.go >> io.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_mysql.go >> io.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_crypto.go > crypto.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_bcrypt.go >> crypto.info.rye
@@ -42,3 +42,8 @@
 ../cmd/rbit/rbit ../evaldo/builtins_os.go > system.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_git.go >> system.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_ssh.go >> system.info.rye
+../cmd/rbit/rbit ../evaldo/builtins_goroutines.go >> system.info.rye
+../cmd/rbit/rbit ../evaldo/builtins_complex.go >> dialects.info.rye
+../cmd/rbit/rbit ../evaldo/builtins_pipes.go > pipes.info.rye
+# ../cmd/rbit/rbit ../evaldo/builtins_structures.go >> formats.info.rye
+../cmd/rbit/rbit ../evaldo/builtins_web.go > web.info.rye

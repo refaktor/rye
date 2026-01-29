@@ -677,6 +677,112 @@ var builtins_iteration = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	//  ; stdout { walk\pos { 1 2 3 } 'i { .prns , i .prns , .rest } } "{ 1 2 3 } 1 { 2 3 } 2 { 3 } 3 "
+	// Args:
+	// * block: Block to walk through
+	// * word: Word to store the current position (1-based index)
+	// * code: Block of code to execute, which should return a modified block
+	// Returns:
+	// * result of the last block execution
+	"walk\\pos": { // **
+		Argsn: 3,
+		Doc:   "Walks through a block with position tracking (1-based), setting a word to the current position and executing code that can modify the block.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch block := arg0.(type) {
+			case env.Block:
+				switch accu := arg1.(type) {
+				case env.Word:
+					switch code := arg2.(type) {
+					case env.Block:
+						ser := ps.Ser
+						ps.Ser = code.Series
+						i := 1
+
+						for block.Series.GetPos() < block.Series.Len() {
+							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i)))
+							EvalBlockInj(ps, block, true)
+							MaybeDisplayFailureOrError(ps, ps.Idx, "walk\\pos")
+							if ps.ErrorFlag || ps.ReturnFlag {
+								ps.Ser = ser
+								return ps.Res
+							}
+							block1, ok := ps.Res.(env.Block)
+							if ok {
+								block = block1
+							} else {
+								return MakeBuiltinError(ps, "Code block didn't return a block.", "walk\\pos")
+							}
+							ps.Ser.Reset()
+							i++
+						}
+						ps.Ser = ser
+						return ps.Res
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "walk\\pos")
+					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "walk\\pos")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "walk\\pos")
+			}
+		},
+	},
+
+	// Tests:
+	//  stdout { walk\idx { 1 2 3 } 'i { .prns , i .prns , .rest } } "{ 1 2 3 } 0 { 2 3 } 1 { 3 } 2 "
+	// Args:
+	// * block: Block to walk through
+	// * word: Word to store the current index (0-based)
+	// * code: Block of code to execute, which should return a modified block
+	// Returns:
+	// * result of the last block execution
+	"walk\\idx": { // **
+		Argsn: 3,
+		Doc:   "Walks through a block with index tracking (0-based), setting a word to the current index and executing code that can modify the block.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch block := arg0.(type) {
+			case env.Block:
+				switch accu := arg1.(type) {
+				case env.Word:
+					switch code := arg2.(type) {
+					case env.Block:
+						ser := ps.Ser
+						ps.Ser = code.Series
+						i := 0
+
+						for block.Series.GetPos() < block.Series.Len() {
+							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i)))
+							EvalBlockInj(ps, block, true)
+							MaybeDisplayFailureOrError(ps, ps.Idx, "walk\\idx")
+							if ps.ErrorFlag || ps.ReturnFlag {
+								ps.Ser = ser
+								return ps.Res
+							}
+							block1, ok := ps.Res.(env.Block)
+							if ok {
+								block = block1
+							} else {
+								return MakeBuiltinError(ps, "Code block didn't return a block.", "walk\\idx")
+							}
+							ps.Ser.Reset()
+							i++
+						}
+						ps.Ser = ser
+						return ps.Res
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "walk\\idx")
+					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "walk\\idx")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "walk\\idx")
+			}
+		},
+	},
+
 	// Higher order functions
 	// Tests:
 	//  equal { purge { 1 2 3 } { .is-even } } { 1 3 }

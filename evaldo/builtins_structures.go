@@ -661,6 +661,16 @@ func dictToNewStruct(ps *env.ProgramState, dict env.Dict, structName string) (an
 
 var Builtins_structures = map[string]*env.Builtin{
 
+	//
+	// ##### Structures ##### "Functions for converting between Rye and Go data structures"
+	//
+
+	// Example: dict [ "name" "John" "age" 30 ] |dict->struct my-struct-ptr
+	// Args:
+	// * dict: Rye Dict containing field names and values
+	// * struct-ptr: Native containing a pointer to a Go struct
+	// Returns:
+	// * native containing the populated struct
 	"dict->struct": {
 		Argsn: 2,
 		Doc:   "Converts a Rye Dict to a Go struct using reflection. Takes a Dict and a Native containing a pointer to a struct.",
@@ -682,6 +692,12 @@ var Builtins_structures = map[string]*env.Builtin{
 		},
 	},
 
+	// Example: dict [ "name" "John" "age" 30 ] |dict->new-struct "Person"
+	// Args:
+	// * dict: Rye Dict containing field names and values
+	// * name: String name for the new struct type
+	// Returns:
+	// * native containing the dynamically created struct
 	"dict->new-struct": {
 		Argsn: 2,
 		Doc:   "Creates a new Go struct type at runtime based on a Rye Dict and populates it with values. Takes a Dict and a string for the struct name.",
@@ -709,6 +725,11 @@ var Builtins_structures = map[string]*env.Builtin{
 		},
 	},
 
+	// Example: my-native-struct |struct->dict
+	// Args:
+	// * struct: Native containing a Go struct or pointer to struct
+	// Returns:
+	// * dict with struct field names as keys and field values as values
 	"struct->dict": {
 		Argsn: 1,
 		Doc:   "Converts a Go struct to a Rye Dict using reflection. Takes a Native containing a struct or pointer to a struct.",

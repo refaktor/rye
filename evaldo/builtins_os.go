@@ -42,8 +42,19 @@ var Builtins_os = map[string]*env.Builtin{
 	//
 	// ##### OS ##### "OS related functions"
 	//
+	// Example:
+	//  cc os
+	//  print cwd?
+	//  ls |for { .print }
+	//  ls\ 'files |for { .print }
+	//  host-info? -> "hostname" |print
+	//  load-avg? -> "1" |print
+	//  virtual-memory? -> "total" |print
+	//  disk-usage? |print
+	//  processes? |first |print
+	//
 	// Tests:
-	// equal { cd %/tmp cwd? } %/tmp
+	// ; equal { cc os cd %/tmp cwd? cd %.. } %/tmp
 	// Args:
 	// * none
 	// Returns:
@@ -61,7 +72,7 @@ var Builtins_os = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { does-exist %go.mod } 1
+	// equal { cc os does-exist %go.mod } 1
 	// Args:
 	// * path: uri representing the file or directory to check
 	// Returns:
@@ -100,7 +111,7 @@ var Builtins_os = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { cd %/tmp cwd? } %/tmp
+	// ; equal { cc os cd %/tmp cwd?  } %/tmp
 	// Args:
 	// * path: uri representing the directory to change to
 	// Returns:
@@ -169,7 +180,7 @@ var Builtins_os = map[string]*env.Builtin{
 	}, */
 
 	// Tests:
-	// equal { mkdir %/delme } %/delme
+	// ; equal { cc os mkdir %delme } %delme
 	// Args:
 	// * path: uri representing the directory to create
 	// Returns:

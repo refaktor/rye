@@ -18,6 +18,31 @@ var Builtins_imap = map[string]*env.Builtin{
 	//
 	// ##### Imap client ##### ""
 	//
+	// Example:
+	//  ; Connect to IMAP server and list folders
+	//  client: imap-client "user@gmail.com" "password" "imap.gmail.com" 993
+	//  folders: client .Get-folders
+	//  folders |for { .print }
+	//
+	//  ; Select inbox and search for unread emails
+	//  client .Select-folder "INBOX"
+	//  uids: client .Search-emails "UNSEEN"
+	//
+	//  ; Get email overviews (headers only - fast)
+	//  overviews: client .Get-overviews uids
+	//  overviews |for { -> "subject" |print }
+	//
+	//  ; Get full email content
+	//  emails: client .Get-emails uids
+	//  emails |for { email |
+	//    print email -> "subject"
+	//    print email -> "text"
+	//  }
+	//
+	//  ; Mark as read and close
+	//  uids |for { client .Mark-seen }
+	//  client .Close
+	//
 	// Creates a new IMAP client connection using username/password authentication
 	// Args:
 	// * username: String - IMAP username

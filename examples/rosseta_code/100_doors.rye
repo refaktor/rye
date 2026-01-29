@@ -1,0 +1,41 @@
+; # Roseta code: 100 doors
+;   https://rosettacode.org/wiki/100_doors
+
+replicate 100 { false }
+|walk\pos 'p {
+	.map\pos 'r { ::d ,
+		either r .is-multiple-of p { not d } { d } }
+	|at p }
+|map\pos 'p { .either { p } { false } }
+|filter { .is-integer }
+|for { .embed "Door {} is open." |print }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+; Prints:
+;
+;  Door 1 is open.
+;  Door 4 is open.
+;  Door 9 is open.
+;  Door 16 is open.
+;  Door 25 is open.
+;  Door 36 is open.
+;  Door 49 is open.
+;  Door 64 is open.
+;  Door 81 is open.
+;  Door 100 is open.

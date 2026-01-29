@@ -14,6 +14,15 @@ import (
 
 var Builtins_pipes = map[string]*env.Builtin{
 
+	//
+	// ##### Pipes ##### "Unix-like pipe operations for data processing"
+	//
+
+	// Example: cat %file.txt |into-string
+	// Args:
+	// * path: URI path to the file
+	// Returns:
+	// * script-pipe containing the file contents
 	"cat": {
 		Argsn: 1,
 		Doc:   "Creates a new pipe object from a file.",
@@ -28,6 +37,11 @@ var Builtins_pipes = map[string]*env.Builtin{
 		},
 	},
 
+	// Example: find %/home/user |match ".go" |wcl
+	// Args:
+	// * path: URI path to the directory
+	// Returns:
+	// * script-pipe containing file paths, one per line
 	"find": {
 		Argsn: 1,
 		Doc:   "Creates a pipe object listing all the files in the directory and its subdirectories recursively, one per line.",

@@ -7,21 +7,62 @@ import (
 	"fmt"
 	"reflect"
 	"sync"
+	"sync/atomic"
 
 	"github.com/refaktor/rye/env"
 
 	"github.com/jinzhu/copier"
 )
 
+// RyeMutex wraps sync.Mutex with state tracking to prevent fatal errors on unlocking unlocked mutex
+type RyeMutex struct {
+	mu     sync.Mutex
+	locked atomic.Bool
+}
+
+func (m *RyeMutex) Lock() {
+	m.mu.Lock()
+	m.locked.Store(true)
+}
+
+func (m *RyeMutex) Unlock() error {
+	if !m.locked.Load() {
+		return fmt.Errorf("unlock of unlocked mutex")
+	}
+	m.locked.Store(false)
+	m.mu.Unlock()
+	return nil
+}
+
 var Builtins_goroutines = map[string]*env.Builtin{
 
 	//
-	// ##### Goroutines & Concurrency #####
+	// ##### Goroutines & Concurrency ##### ""
 	//
-
+	// Example:
+	//  ; Simple goroutine with channel communication
+	//  ch: channel 1
+	//  go fn { } { ch .Send "Hello from goroutine" }
+	//  print ch .Read
+	//
+	//  ; Using waitgroup to coordinate multiple goroutines
+	//  wg: waitgroup
+	//  results: channel 10
+	//  loop 5 { i |
+	//    wg .Add 1
+	//    go-with i fn { n } { results .Send n * 2 , wg .Done }
+	//  }
+	//  wg .Wait
+	//  results .Close
+	//
+	//  ; Mutex for safe shared state
+	//  counter:: 0
+	//  mtx: mutex
+	//  go fn { } { mtx .Lock , change! counter + 1 'counter , mtx .Unlock }
+	//
 	// Tests:
-	// equal { x: 0 , go-with 5 fn { v } { set 'x v } , sleep 100 , x } 5
-	// equal { y: 0 , go-with "test" fn { v } { set 'y length? v } , sleep 100 , y } 4
+	// equal { x:: 0 , go-with 5 fn { v } { change! v 'x } , sleep 100 , x } 5
+	// equal { y:: 0 , go-with "test" fn { v } { change! length? v 'y } , sleep 100 , y } 4
 	// Args:
 	// * value: Object to pass to the goroutine function
 	// * function: Function to execute in a separate goroutine, receives the value as argument
@@ -71,8 +112,8 @@ var Builtins_goroutines = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { x: 0 , go fn { } { set 'x 42 } , sleep 100 , x } 42
-	// equal { y: "unchanged" , go fn { } { set 'y "changed" } , sleep 100 , y } "changed"
+	// equal { x:: 0 , go fn { } { change! 42 'x } , sleep 100 , x } 42
+	// equal { y:: "unchanged" , go fn { } { change! "changed" 'y } , sleep 100 , y } "changed"
 	// Args:
 	// * function: Function to execute in a separate goroutine (takes no arguments)
 	// Returns:
@@ -115,8 +156,8 @@ var Builtins_goroutines = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { ch: channel 0 , ch .send 42 , ch .read } 42
-	// equal { ch: channel 2 , ch .send 1 , ch .send 2 , ch .read } 1
+	// equal { ch: channel 1 , ch .Send 42 , ch .Read } 42
+	// equal { ch: channel 2 , ch .Send 1 , ch .Send 2 , ch .Read } 1
 	// equal { channel 5 |type? } 'native
 	// Args:
 	// * buffer-size: Integer specifying the channel buffer size (0 for unbuffered)
@@ -138,9 +179,9 @@ var Builtins_goroutines = map[string]*env.Builtin{
 		},
 	},
 	// Tests:
-	// equal { ch: channel 1 , ch .send 123 , ch .read } 123
-	// equal { ch: channel 0 , ch .send "test" , ch .read } "test"
-	// equal { ch: channel 1 , ch .close , try { ch .read } |type? } 'error
+	// equal { ch: channel 1 , ch .Send 123 , ch .Read } 123
+	// equal { ch: channel 1 , ch .Send "test" , ch .Read } "test"
+	// equal { ch: channel 1 , ch .Close , try { ch .Read } |type? } 'error
 	// Args:
 	// * channel: Channel to read from
 	// Returns:
@@ -171,9 +212,9 @@ var Builtins_goroutines = map[string]*env.Builtin{
 		},
 	},
 	// Tests:
-	// equal { ch: channel 1 , ch .send 42 , ch .read } 42
-	// equal { ch: channel 3 , ch .send "A" , ch .send "B" , ch .read } "A"
-	// equal { ch: channel 0 , ch .send 100 , ch } ch
+	// equal { ch: channel 1 , ch .Send 42 , ch .Read } 42
+	// equal { ch: channel 3 , ch .Send "A" , ch .Send "B" , ch .Read } "A"
+	// ; equal { ch: channel 1 , ch .Send 100 , ch } ch
 	// Args:
 	// * channel: Channel to send the value to
 	// * value: Value to send through the channel
@@ -182,7 +223,14 @@ var Builtins_goroutines = map[string]*env.Builtin{
 	"Rye-channel//Send": {
 		Argsn: 2,
 		Doc:   "Sends a value through a channel, blocking if the channel is unbuffered or full.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (result env.Object) {
+			// Recover from panic if channel is closed
+			defer func() {
+				if r := recover(); r != nil {
+					ps.FailureFlag = true
+					result = *env.NewError("send on closed channel")
+				}
+			}()
 			switch chn := arg0.(type) {
 			case env.Native:
 				chn.Value.(chan *env.Object) <- &arg1
@@ -195,9 +243,9 @@ var Builtins_goroutines = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { ch: channel 1 , ch .send 42 , ch .close , ch } ch
-	// equal { ch: channel 0 , ch .close , try { ch .send 123 } |type? } 'error
-	// equal { ch: channel 2 , ch .close , try { ch .read } |type? } 'error
+	// equal { ch: channel 1 , ch .Send 42 , ch .Close , ch |type? } 'native
+	// equal { ch: channel 1 , ch .Close , ch .Send 123 |disarm |type? } 'error
+	// equal { ch: channel 2 , ch .Close , ch .Read |disarm |type? } 'error
 	// Args:
 	// * channel: Channel to close
 	// Returns:
@@ -219,7 +267,7 @@ var Builtins_goroutines = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { mutex |type? } 'native
-	// equal { mtx: mutex , mtx .lock , mtx .unlock , mtx } mtx
+	// equal { mtx: mutex , mtx .Lock , mtx .Unlock , mtx |type? } 'native
 	// Args:
 	// * (none)
 	// Returns:
@@ -228,14 +276,14 @@ var Builtins_goroutines = map[string]*env.Builtin{
 		Argsn: 0,
 		Doc:   "Creates a new mutex for synchronizing access to shared resources between goroutines.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			var mtx sync.Mutex
-			return *env.NewNative(ps.Idx, &mtx, "Rye-mutex")
+			mtx := &RyeMutex{}
+			return *env.NewNative(ps.Idx, mtx, "Rye-mutex")
 		},
 	},
 
 	// Tests:
 	// equal { waitgroup |type? } 'native
-	// equal { wg: waitgroup , wg .add 1 , wg .done , wg .wait , wg } wg
+	// equal { wg: waitgroup , wg .Add 1 , wg .Done , wg .Wait , wg |type? } 'native
 	// Args:
 	// * (none)
 	// Returns:
@@ -250,8 +298,8 @@ var Builtins_goroutines = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { mtx: mutex , mtx .lock , mtx } mtx
-	// equal { mtx: mutex , mtx .lock , mtx .unlock , mtx .lock , mtx } mtx
+	// equal { mtx: mutex , mtx .Lock , mtx |type? } 'native
+	// equal { mtx: mutex , mtx .Lock , mtx .Unlock , mtx .Lock , mtx |type? } 'native
 	// Args:
 	// * mutex: Mutex to acquire the lock on
 	// Returns:
@@ -262,7 +310,7 @@ var Builtins_goroutines = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch mtx := arg0.(type) {
 			case env.Native:
-				mtx.Value.(*sync.Mutex).Lock()
+				mtx.Value.(*RyeMutex).Lock()
 				return arg0
 			default:
 				ps.FailureFlag = true
@@ -272,19 +320,23 @@ var Builtins_goroutines = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { mtx: mutex , mtx .lock , mtx .unlock , mtx } mtx
-	// equal { mtx: mutex , mtx .unlock , mtx } mtx
+	// equal { mtx: mutex , mtx .Lock , mtx .Unlock , mtx |type? } 'native
+	// equal { mtx: mutex , mtx .Unlock |disarm |type? } 'error
 	// Args:
 	// * mutex: Mutex to release the lock from
 	// Returns:
-	// * the mutex object
+	// * the mutex object, or error if unlocking an unlocked mutex
 	"Rye-mutex//Unlock": {
 		Argsn: 1,
 		Doc:   "Releases the lock on a mutex, allowing other goroutines to acquire it.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch mtx := arg0.(type) {
 			case env.Native:
-				mtx.Value.(*sync.Mutex).Unlock()
+				err := mtx.Value.(*RyeMutex).Unlock()
+				if err != nil {
+					ps.FailureFlag = true
+					return *env.NewError(err.Error())
+				}
 				return arg0
 			default:
 				ps.FailureFlag = true
@@ -294,8 +346,8 @@ var Builtins_goroutines = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { wg: waitgroup , wg .add 3 , wg } wg
-	// equal { wg: waitgroup , wg .add 1 , wg .add 2 , wg } wg
+	// equal { wg: waitgroup , wg .Add 3 , wg |type? } 'native
+	// equal { wg: waitgroup , wg .Add 1 , wg .Add 2 , wg |type? } 'native
 	// Args:
 	// * waitgroup: Waitgroup to add goroutines to
 	// * count: Number of goroutines to add to the wait counter
@@ -323,8 +375,8 @@ var Builtins_goroutines = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { wg: waitgroup , wg .add 1 , wg .done , wg } wg
-	// equal { wg: waitgroup , wg .add 2 , wg .done , wg .done , wg } wg
+	// equal { wg: waitgroup , wg .Add 1 , wg .Done , wg |type? } 'native
+	// equal { wg: waitgroup , wg .Add 2 , wg .Done , wg .Done , wg |type? } 'native
 	// Args:
 	// * waitgroup: Waitgroup to decrement the counter for
 	// Returns:
@@ -345,8 +397,8 @@ var Builtins_goroutines = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { wg: waitgroup , wg .add 1 , wg .done , wg .wait , wg } wg
-	// equal { wg: waitgroup , wg .wait , wg } wg
+	// equal { wg: waitgroup , wg .Add 1 , wg .Done , wg .Wait , wg |type? } 'native
+	// equal { wg: waitgroup , wg .Wait , wg |type? } 'native
 	// Args:
 	// * waitgroup: Waitgroup to wait on
 	// Returns:
@@ -367,8 +419,8 @@ var Builtins_goroutines = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { ch1: channel 0 , ch2: channel 0 , ch1 .send 42 , select\fn { ch1 fn { v } { v } ch2 fn { v } { v + 1 } } } 42
-	// equal { ch: channel 0 , select\fn { ch fn { v } { v * 2 } fn { } { 999 } } } 999
+	// equal { ch1: channel 1 , ch2: channel 1 , ch1 .Send 42 , select\fn { ch1 fn { v } { v } ch2 fn { v } { v + 1 } } } 42
+	// equal { ch: channel 1 , select\fn { ch fn { v } { v * 2 } fn { } { 999 } } } 999
 	// Args:
 	// * block: Block containing channel-function pairs and optional default function
 	// Returns:
