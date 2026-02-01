@@ -1340,30 +1340,39 @@ func CallCurriedCaller(cc env.CurriedCaller, ps *env.ProgramState, arg0_ env.Obj
 
 	evalExprFn := EvalExpression_CollectArg
 
+	// WWWW Here must be some bug
+	// if first two are provided by partial the op-pipe-star behavi
 	// Handle arg0 - override with provided arg if available
-	if arg0_ != nil && !pipeSecond {
-		arg0 = arg0_
-	} else if firstVal != nil && pipeSecond {
-		arg0 = firstVal
-	} else if arg0 == nil && argsn > 0 {
-		// Only evaluate if we don't have a curried value
-		evalExprFn(ps, true)
-		if ps.ReturnFlag || ps.ErrorFlag {
-			return
+	if arg0 == nil && argsn > 0 {
+		if arg0_ != nil && !pipeSecond {
+			fmt.Println("***1")
+			arg0 = arg0_
+		} else if firstVal != nil && pipeSecond {
+			fmt.Println("***2")
+			arg0 = firstVal
+		} else if arg0 == nil && argsn > 0 {
+			// Only evaluate if we don't have a curried value
+			fmt.Println("***3")
+			evalExprFn(ps, true)
+			if ps.ReturnFlag || ps.ErrorFlag {
+				return
+			}
+			arg0 = ps.Res
 		}
-		arg0 = ps.Res
 	}
 
 	// Handle arg1
-	if arg0_ != nil && pipeSecond {
-		arg1 = arg0_
-	} else if arg1 == nil && argsn > 1 {
-		// Only evaluate if we don't have a curried value
-		evalExprFn(ps, true)
-		if ps.ReturnFlag || ps.ErrorFlag {
-			return
+	if arg1 == nil && argsn > 1 {
+		if arg0_ != nil && pipeSecond {
+			arg1 = arg0_
+		} else if arg1 == nil && argsn > 1 {
+			// Only evaluate if we don't have a curried value
+			evalExprFn(ps, true)
+			if ps.ReturnFlag || ps.ErrorFlag {
+				return
+			}
+			arg1 = ps.Res
 		}
-		arg1 = ps.Res
 	}
 
 	// Handle remaining arguments - only evaluate if not curried
