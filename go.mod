@@ -18,7 +18,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ses v1.34.18
 	github.com/bitfield/script v0.24.1
 	github.com/blevesearch/bleve/v2 v2.5.7
-	github.com/blevesearch/bleve_index_api v1.2.11
+	github.com/blevesearch/bleve_index_api v1.3.1
 	github.com/dgraph-io/badger/v4 v4.9.0
 	github.com/drewlanenga/govector v0.0.0-20220726163947-b958ac08bc93
 	github.com/eclipse/paho.mqtt.golang v1.5.1
