@@ -369,6 +369,16 @@
       //		term.loadAddon(fitAddon)
       //		fitAddon.fit()
       
+      // Enable clipboard paste
+      term.attachCustomKeyEventHandler((arg) => {
+        if (arg.ctrlKey && arg.code === "KeyV" && arg.type === "keydown") {
+            navigator.clipboard.readText()
+              .then(text => {
+                sendToTerminal(text, term);
+              })
+        };
+        return true;
+      });
       
       //		term.open(document.getElementById('terminal-container'))
       

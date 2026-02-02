@@ -337,6 +337,7 @@ func RyeEvalShellLine(this js.Value, args []js.Value) any {
 		ps.ReturnFlag = false
 		ps.ErrorFlag = false
 		ps.FailureFlag = false
+		ps.SkipFlag = false
 
 		ml.AppendHistory(code)
 
@@ -421,6 +422,7 @@ func RyeEvalStringNoTerm(this js.Value, args []js.Value) any {
 		ps.ReturnFlag = false
 		ps.ErrorFlag = false
 		ps.FailureFlag = false
+		ps.SkipFlag = false
 
 		// ml.AppendHistory(code)
 

@@ -1729,7 +1729,7 @@ func FormatBacktickQuotes(message string) string {
 		if message[i] == '`' {
 			if inQuote {
 				// Closing backtick - add reset and restore bold red
-				result.WriteString(" \x1b[0m\x1b[1;31m")
+				result.WriteString(" \x1b[0m\x1b[31m")
 				inQuote = false
 			} else {
 				// Opening backtick - add magenta background, white text
@@ -2039,11 +2039,11 @@ func MaybeDisplayFailureOrErrorWASM(es *env.ProgramState, genv *env.Idxs, printf
 	if !es.InErrHandler && es.ErrorFlag {
 		// Red background banner for runtime errors (same as native)
 		if !es.SkipFlag {
-			printfn("\x1b[41m\x1b[30m RUNTIME ERROR: " + tag + " \x1b[0m")
+			printfn("\x1b[41m\x1b[30m RUNTIME ERROR:\x1b[0m " + tag)
 
 			// Bold red for error message, with backtick-quoted text highlighted
 			errorMsg := es.Res.Print(*genv)
-			printfn("\x1b[1;31m" + FormatBacktickQuotes(errorMsg) + "\x1b[0m")
+			printfn("\x1b[31m" + FormatBacktickQuotes(errorMsg) + "\x1b[0m")
 
 			// Display block location info (same as native)
 			displayBlockWithErrorPositionWASM(es, genv, printfn)
@@ -2056,12 +2056,12 @@ func MaybeDisplayFailureOrErrorWASM(es *env.ProgramState, genv *env.Idxs, printf
 // Called from: MaybeDisplayFailureOrErrorWASM
 // Purpose: WASM version of displayBlockWithErrorPosition using printfn instead of fmt.Print
 func displayBlockWithErrorPositionWASM(es *env.ProgramState, genv *env.Idxs, printfn func(string)) {
-	// Bold cyan for location information
+	// Cyan for location information (not bold, matching terminal version)
 	var locationStr string
 	if es.BlockFile != "" {
-		locationStr = fmt.Sprintf("\x1b[1;36mBlock starting at \x1b[1;34m%s:%d\x1b[0m", es.BlockFile, es.BlockLine)
+		locationStr = fmt.Sprintf("\x1b[36mBlock starting at \x1b[34m%s:%d\x1b[0m", es.BlockFile, es.BlockLine)
 	} else {
-		locationStr = fmt.Sprintf("\x1b[1;36mBlock starting at \x1b[1;34mline %d\x1b[0m", es.BlockLine)
+		locationStr = fmt.Sprintf("\x1b[36mBlock starting at \x1b[34mline %d\x1b[0m", es.BlockLine)
 	}
 	printfn(locationStr)
 

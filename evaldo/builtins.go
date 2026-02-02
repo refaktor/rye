@@ -2799,7 +2799,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltinsInContext(Builtins_prometheus, ps, "prometheus")
 	RegisterBuiltinsInContext(Builtins_echarts, ps, "echarts")
 	RegisterBuiltinsInContext(Builtins_flui, ps, "flui")
-	RegisterBuiltinsInContext(Builtins_flui_v2, ps, "flui2")
+	// RegisterBuiltinsInContext(Builtins_flui_v2, ps, "flui2")
 	// ## Archived modules
 	// RegisterBuiltins2(Builtins_gtk, ps, "gtk")
 	// RegisterBuiltins2(Builtins_nats, ps, "nats")
