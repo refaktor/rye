@@ -5,14 +5,923 @@ package evaldo
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/mattn/go-runewidth"
 	"github.com/refaktor/keyboard"
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/term"
 )
+
+// ansiRegex matches ANSI escape sequences
+var ansiRegex = regexp.MustCompile(`\x1b\[[0-9;]*[a-zA-Z]|\x1b\]8;;[^\x1b]*\x1b\\`)
+
+// VisibleWidth returns the display width of a string, ignoring ANSI escape codes
+func VisibleWidth(s string) int {
+	// Strip ANSI codes
+	stripped := ansiRegex.ReplaceAllString(s, "")
+	return runewidth.StringWidth(stripped)
+}
+
+// TruncateToWidth truncates a string to fit within the given width,
+// preserving ANSI escape codes and optionally adding an ellipsis
+func TruncateToWidth(s string, width int, ellipsis string) string {
+	if width <= 0 {
+		return ""
+	}
+
+	visWidth := VisibleWidth(s)
+	if visWidth <= width {
+		return s
+	}
+
+	ellipsisWidth := VisibleWidth(ellipsis)
+	targetWidth := width - ellipsisWidth
+	if targetWidth <= 0 {
+		return ellipsis[:width] // Edge case: ellipsis longer than width
+	}
+
+	var result strings.Builder
+	currentWidth := 0
+	inEscape := false
+	escapeStart := 0
+	hasAnsi := false // Track if we encountered any ANSI codes
+
+	runes := []rune(s)
+	for i := 0; i < len(runes); i++ {
+		r := runes[i]
+
+		// Detect start of ANSI escape
+		if r == '\x1b' {
+			inEscape = true
+			hasAnsi = true
+			escapeStart = i
+			result.WriteRune(r)
+			continue
+		}
+
+		if inEscape {
+			result.WriteRune(r)
+			// Check for end of escape sequence
+			if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') {
+				inEscape = false
+			}
+			// Also handle OSC sequences (end with ST or BEL)
+			if i > escapeStart && runes[escapeStart+1] == ']' {
+				if r == '\\' && i > 0 && runes[i-1] == '\x1b' {
+					inEscape = false
+				}
+			}
+			continue
+		}
+
+		// Regular character - check if it fits
+		charWidth := runewidth.RuneWidth(r)
+		if currentWidth+charWidth > targetWidth {
+			break
+		}
+		result.WriteRune(r)
+		currentWidth += charWidth
+	}
+
+	// Only add reset code if we had ANSI codes (to close any open formatting)
+	if hasAnsi {
+		result.WriteString("\x1b[0m")
+	}
+	result.WriteString(ellipsis)
+	return result.String()
+}
+
+// WrapText wraps text to the given width, preserving ANSI codes across lines
+func WrapText(s string, width int) []string {
+	if width <= 0 {
+		return []string{}
+	}
+
+	var lines []string
+	var currentLine strings.Builder
+	currentWidth := 0
+	var activeStyles strings.Builder // Track active ANSI styles
+
+	runes := []rune(s)
+	for i := 0; i < len(runes); i++ {
+		r := runes[i]
+
+		// Handle newlines
+		if r == '\n' {
+			lines = append(lines, currentLine.String())
+			currentLine.Reset()
+			// Reapply active styles to new line
+			currentLine.WriteString(activeStyles.String())
+			currentWidth = 0
+			continue
+		}
+
+		// Detect ANSI escape sequences
+		if r == '\x1b' && i+1 < len(runes) && runes[i+1] == '[' {
+			// Find end of escape sequence
+			escEnd := i + 2
+			for escEnd < len(runes) && !((runes[escEnd] >= 'a' && runes[escEnd] <= 'z') || (runes[escEnd] >= 'A' && runes[escEnd] <= 'Z')) {
+				escEnd++
+			}
+			if escEnd < len(runes) {
+				escEnd++ // Include the letter
+				escape := string(runes[i:escEnd])
+				currentLine.WriteString(escape)
+
+				// Track style changes
+				if escape == "\x1b[0m" {
+					activeStyles.Reset() // Reset clears all styles
+				} else {
+					activeStyles.WriteString(escape)
+				}
+				i = escEnd - 1
+				continue
+			}
+		}
+
+		// Regular character
+		charWidth := runewidth.RuneWidth(r)
+		if currentWidth+charWidth > width {
+			// Wrap to next line
+			lines = append(lines, currentLine.String())
+			currentLine.Reset()
+			// Reapply active styles to new line
+			currentLine.WriteString(activeStyles.String())
+			currentWidth = 0
+		}
+		currentLine.WriteRune(r)
+		currentWidth += charWidth
+	}
+
+	// Don't forget the last line
+	if currentLine.Len() > 0 {
+		lines = append(lines, currentLine.String())
+	}
+
+	return lines
+}
+
+// ============================================================================
+// Theming System
+// ============================================================================
+
+// Theme holds color/style definitions for TUI components
+type Theme struct {
+	colors map[string]string
+	mu     sync.RWMutex
+}
+
+// DefaultTheme returns a theme with sensible defaults
+func DefaultTheme() *Theme {
+	return &Theme{
+		colors: map[string]string{
+			// Basic colors
+			"text":     "",
+			"accent":   "\x1b[36m", // cyan
+			"muted":    "\x1b[90m", // gray
+			"dim":      "\x1b[2m",  // dim
+			"bold":     "\x1b[1m",
+			"italic":   "\x1b[3m",
+			"underline": "\x1b[4m",
+
+			// Status colors
+			"success": "\x1b[32m", // green
+			"error":   "\x1b[31m", // red
+			"warning": "\x1b[33m", // yellow
+			"info":    "\x1b[34m", // blue
+
+			// UI elements
+			"border":       "\x1b[90m", // gray
+			"borderAccent": "\x1b[36m", // cyan
+			"selected":     "\x1b[7m",  // inverse
+			"selectedBg":   "\x1b[44m", // blue bg
+			"cursor":       "\x1b[7m",  // inverse
+
+			// Component-specific
+			"title":       "\x1b[1;36m", // bold cyan
+			"placeholder": "\x1b[90m",   // gray
+			"scrollbar":   "\x1b[90m",   // gray
+		},
+	}
+}
+
+// NewTheme creates an empty theme
+func NewTheme() *Theme {
+	return &Theme{
+		colors: make(map[string]string),
+	}
+}
+
+// Set sets a color/style
+func (t *Theme) Set(name, value string) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.colors[name] = value
+}
+
+// Get returns a color/style, or empty string if not found
+func (t *Theme) Get(name string) string {
+	t.mu.RLock()
+	defer t.mu.RUnlock()
+	return t.colors[name]
+}
+
+// Apply applies a style to text and adds reset
+func (t *Theme) Apply(name, text string) string {
+	style := t.Get(name)
+	if style == "" {
+		return text
+	}
+	return style + text + "\x1b[0m"
+}
+
+// Reset returns the ANSI reset code
+func (t *Theme) Reset() string {
+	return "\x1b[0m"
+}
+
+// Global default theme
+var globalTheme = DefaultTheme()
+
+// GetGlobalTheme returns the global theme
+func GetGlobalTheme() *Theme {
+	return globalTheme
+}
+
+// SetGlobalTheme sets the global theme
+func SetGlobalTheme(t *Theme) {
+	globalTheme = t
+}
+
+// ============================================================================
+// Terminal Output Helpers
+// ============================================================================
+
+// tuiSyncStart begins synchronized output (prevents flicker)
+func tuiSyncStart() {
+	fmt.Print("\x1b[?2026h")
+}
+
+// tuiSyncEnd ends synchronized output
+func tuiSyncEnd() {
+	fmt.Print("\x1b[?2026l")
+}
+
+// tuiMoveCursor moves cursor to row, col (1-indexed)
+func tuiMoveCursor(row, col int) {
+	fmt.Printf("\x1b[%d;%dH", row, col)
+}
+
+// tuiMoveToColumn moves cursor to column (1-indexed)
+func tuiMoveToColumn(col int) {
+	fmt.Printf("\x1b[%dG", col)
+}
+
+// tuiSaveCursor saves cursor position
+func tuiSaveCursor() {
+	fmt.Print("\x1b[s")
+}
+
+// tuiRestoreCursor restores cursor position
+func tuiRestoreCursor() {
+	fmt.Print("\x1b[u")
+}
+
+// tuiHideCursor hides the cursor
+func tuiHideCursor() {
+	fmt.Print("\x1b[?25l")
+}
+
+// tuiShowCursor shows the cursor
+func tuiShowCursor() {
+	fmt.Print("\x1b[?25h")
+}
+
+// tuiClearScreen clears the entire screen
+func tuiClearScreen() {
+	fmt.Print("\x1b[2J")
+}
+
+// tuiClearToEnd clears from cursor to end of screen
+func tuiClearToEnd() {
+	fmt.Print("\x1b[J")
+}
+
+// tuiEnableAltScreen switches to alternate screen buffer
+func tuiEnableAltScreen() {
+	fmt.Print("\x1b[?1049h")
+}
+
+// tuiDisableAltScreen switches back to main screen buffer
+func tuiDisableAltScreen() {
+	fmt.Print("\x1b[?1049l")
+}
+
+// tuiEnableMouse enables mouse tracking
+func tuiEnableMouse() {
+	fmt.Print("\x1b[?1000h\x1b[?1006h")
+}
+
+// tuiDisableMouse disables mouse tracking
+func tuiDisableMouse() {
+	fmt.Print("\x1b[?1000l\x1b[?1006l")
+}
+
+// ============================================================================
+// Component System
+// ============================================================================
+
+// UIComponent is the interface for all TUI components
+type UIComponent interface {
+	Render(width int) []string
+	Invalidate()
+}
+
+// FocusableComponent is a component that can receive focus
+type FocusableComponent interface {
+	UIComponent
+	SetFocused(focused bool)
+	IsFocused() bool
+	HandleKey(key string) bool // Returns true if key was handled
+}
+
+// Container holds child components and renders them vertically
+type Container struct {
+	children    []UIComponent
+	cachedWidth int
+	cachedLines []string
+	mu          sync.Mutex
+}
+
+// NewContainer creates a new container
+func NewContainer() *Container {
+	return &Container{
+		children: make([]UIComponent, 0),
+	}
+}
+
+// AddChild adds a component to the container
+func (c *Container) AddChild(child UIComponent) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.children = append(c.children, child)
+	c.invalidate()
+}
+
+// RemoveChild removes a component from the container
+func (c *Container) RemoveChild(child UIComponent) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	for i, ch := range c.children {
+		if ch == child {
+			c.children = append(c.children[:i], c.children[i+1:]...)
+			break
+		}
+	}
+	c.invalidate()
+}
+
+// Clear removes all children
+func (c *Container) Clear() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.children = make([]UIComponent, 0)
+	c.invalidate()
+}
+
+// Children returns the list of children
+func (c *Container) Children() []UIComponent {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.children
+}
+
+// Render renders all children vertically
+func (c *Container) Render(width int) []string {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.cachedLines != nil && c.cachedWidth == width {
+		return c.cachedLines
+	}
+
+	var lines []string
+	for _, child := range c.children {
+		childLines := child.Render(width)
+		lines = append(lines, childLines...)
+	}
+
+	c.cachedWidth = width
+	c.cachedLines = lines
+	return lines
+}
+
+// Invalidate clears the cache and invalidates all children
+func (c *Container) Invalidate() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.invalidate()
+}
+
+func (c *Container) invalidate() {
+	c.cachedWidth = 0
+	c.cachedLines = nil
+	for _, child := range c.children {
+		child.Invalidate()
+	}
+}
+
+// TextComponent displays text with optional wrapping
+type TextComponent struct {
+	text        string
+	wrap        bool
+	paddingX    int
+	paddingY    int
+	style       string // ANSI style prefix
+	cachedWidth int
+	cachedLines []string
+	mu          sync.Mutex
+}
+
+// NewTextComponent creates a new text component
+func NewTextComponent(text string) *TextComponent {
+	return &TextComponent{
+		text: text,
+		wrap: true,
+	}
+}
+
+// SetText updates the text
+func (t *TextComponent) SetText(text string) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.text = text
+	t.invalidate()
+}
+
+// SetWrap enables/disables word wrapping
+func (t *TextComponent) SetWrap(wrap bool) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.wrap = wrap
+	t.invalidate()
+}
+
+// SetPadding sets horizontal and vertical padding
+func (t *TextComponent) SetPadding(x, y int) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.paddingX = x
+	t.paddingY = y
+	t.invalidate()
+}
+
+// SetStyle sets the ANSI style (e.g., "\x1b[1m" for bold)
+func (t *TextComponent) SetStyle(style string) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.style = style
+	t.invalidate()
+}
+
+// Render renders the text
+func (t *TextComponent) Render(width int) []string {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	if t.cachedLines != nil && t.cachedWidth == width {
+		return t.cachedLines
+	}
+
+	contentWidth := width - (t.paddingX * 2)
+	if contentWidth < 1 {
+		contentWidth = 1
+	}
+
+	var lines []string
+
+	// Top padding
+	for i := 0; i < t.paddingY; i++ {
+		lines = append(lines, "")
+	}
+
+	// Content
+	var contentLines []string
+	if t.wrap {
+		contentLines = WrapText(t.text, contentWidth)
+	} else {
+		contentLines = []string{TruncateToWidth(t.text, contentWidth, "...")}
+	}
+
+	padding := strings.Repeat(" ", t.paddingX)
+	for _, line := range contentLines {
+		styledLine := line
+		if t.style != "" {
+			styledLine = t.style + line + "\x1b[0m"
+		}
+		lines = append(lines, padding+styledLine)
+	}
+
+	// Bottom padding
+	for i := 0; i < t.paddingY; i++ {
+		lines = append(lines, "")
+	}
+
+	t.cachedWidth = width
+	t.cachedLines = lines
+	return lines
+}
+
+// Invalidate clears the cache
+func (t *TextComponent) Invalidate() {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.invalidate()
+}
+
+func (t *TextComponent) invalidate() {
+	t.cachedWidth = 0
+	t.cachedLines = nil
+}
+
+// SpacerComponent adds empty lines
+type SpacerComponent struct {
+	height int
+}
+
+// NewSpacerComponent creates a spacer with given height
+func NewSpacerComponent(height int) *SpacerComponent {
+	return &SpacerComponent{height: height}
+}
+
+// Render returns empty lines
+func (s *SpacerComponent) Render(width int) []string {
+	lines := make([]string, s.height)
+	for i := range lines {
+		lines[i] = ""
+	}
+	return lines
+}
+
+// Invalidate does nothing for spacer
+func (s *SpacerComponent) Invalidate() {}
+
+// BoxComponent wraps content with a border
+type BoxComponent struct {
+	child       UIComponent
+	title       string
+	borderStyle int // 0=single, 1=double, 2=rounded, 3=ascii
+	paddingX    int
+	paddingY    int
+	cachedWidth int
+	cachedLines []string
+	mu          sync.Mutex
+}
+
+// Border characters for different styles
+var borderChars = []struct {
+	tl, tr, bl, br, h, v string
+}{
+	{"┌", "┐", "└", "┘", "─", "│"}, // single
+	{"╔", "╗", "╚", "╝", "═", "║"}, // double
+	{"╭", "╮", "╰", "╯", "─", "│"}, // rounded
+	{"+", "+", "+", "+", "-", "|"}, // ascii
+}
+
+// NewBoxComponent creates a box around a child component
+func NewBoxComponent(child UIComponent) *BoxComponent {
+	return &BoxComponent{
+		child:       child,
+		borderStyle: 0,
+		paddingX:    1,
+		paddingY:    0,
+	}
+}
+
+// SetTitle sets the box title
+func (b *BoxComponent) SetTitle(title string) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	b.title = title
+	b.invalidate()
+}
+
+// SetBorderStyle sets the border style (0=single, 1=double, 2=rounded, 3=ascii)
+func (b *BoxComponent) SetBorderStyle(style int) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	if style >= 0 && style < len(borderChars) {
+		b.borderStyle = style
+	}
+	b.invalidate()
+}
+
+// SetPadding sets internal padding
+func (b *BoxComponent) SetPadding(x, y int) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	b.paddingX = x
+	b.paddingY = y
+	b.invalidate()
+}
+
+// SetChild sets the child component
+func (b *BoxComponent) SetChild(child UIComponent) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	b.child = child
+	b.invalidate()
+}
+
+// Render renders the box with border
+func (b *BoxComponent) Render(width int) []string {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	if b.cachedLines != nil && b.cachedWidth == width {
+		return b.cachedLines
+	}
+
+	bc := borderChars[b.borderStyle]
+	innerWidth := width - 2 - (b.paddingX * 2) // 2 for borders
+	if innerWidth < 1 {
+		innerWidth = 1
+	}
+
+	var lines []string
+	padding := strings.Repeat(" ", b.paddingX)
+
+	// Top border with optional title
+	topLine := bc.tl
+	if b.title != "" {
+		titlePart := " " + TruncateToWidth(b.title, width-4, "...") + " "
+		remaining := width - 2 - VisibleWidth(titlePart)
+		if remaining > 0 {
+			topLine += titlePart + strings.Repeat(bc.h, remaining)
+		} else {
+			topLine += strings.Repeat(bc.h, width-2)
+		}
+	} else {
+		topLine += strings.Repeat(bc.h, width-2)
+	}
+	topLine += bc.tr
+	lines = append(lines, topLine)
+
+	// Top padding
+	for i := 0; i < b.paddingY; i++ {
+		lines = append(lines, bc.v+strings.Repeat(" ", width-2)+bc.v)
+	}
+
+	// Content
+	if b.child != nil {
+		childLines := b.child.Render(innerWidth)
+		for _, cl := range childLines {
+			// Pad child line to inner width
+			visWidth := VisibleWidth(cl)
+			padRight := innerWidth - visWidth
+			if padRight < 0 {
+				padRight = 0
+			}
+			line := bc.v + padding + cl + strings.Repeat(" ", padRight) + padding + bc.v
+			lines = append(lines, line)
+		}
+	}
+
+	// Bottom padding
+	for i := 0; i < b.paddingY; i++ {
+		lines = append(lines, bc.v+strings.Repeat(" ", width-2)+bc.v)
+	}
+
+	// Bottom border
+	bottomLine := bc.bl + strings.Repeat(bc.h, width-2) + bc.br
+	lines = append(lines, bottomLine)
+
+	b.cachedWidth = width
+	b.cachedLines = lines
+	return lines
+}
+
+// Invalidate clears cache and child cache
+func (b *BoxComponent) Invalidate() {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	b.invalidate()
+}
+
+func (b *BoxComponent) invalidate() {
+	b.cachedWidth = 0
+	b.cachedLines = nil
+	if b.child != nil {
+		b.child.Invalidate()
+	}
+}
+
+// HorizontalLineComponent draws a horizontal line
+type HorizontalLineComponent struct {
+	char  string
+	style string
+}
+
+// NewHorizontalLineComponent creates a horizontal line
+func NewHorizontalLineComponent(char string) *HorizontalLineComponent {
+	if char == "" {
+		char = "─"
+	}
+	return &HorizontalLineComponent{char: char}
+}
+
+// SetStyle sets the ANSI style
+func (h *HorizontalLineComponent) SetStyle(style string) {
+	h.style = style
+}
+
+// Render renders the horizontal line
+func (h *HorizontalLineComponent) Render(width int) []string {
+	line := strings.Repeat(h.char, width)
+	if h.style != "" {
+		line = h.style + line + "\x1b[0m"
+	}
+	return []string{line}
+}
+
+// Invalidate does nothing for horizontal line
+func (h *HorizontalLineComponent) Invalidate() {}
+
+// SelectListComponent is an interactive selection list
+type SelectListComponent struct {
+	items        []string
+	selected     int
+	maxVisible   int
+	scrollOffset int
+	prefix       string
+	prefixNormal string
+	style        string // Style for selected item
+	cachedWidth  int
+	cachedLines  []string
+	mu           sync.Mutex
+}
+
+// NewSelectListComponent creates a new selection list
+func NewSelectListComponent(items []string, maxVisible int) *SelectListComponent {
+	if maxVisible <= 0 {
+		maxVisible = 10
+	}
+	return &SelectListComponent{
+		items:        items,
+		maxVisible:   maxVisible,
+		prefix:       "> ",
+		prefixNormal: "  ",
+	}
+}
+
+// SetItems updates the list items
+func (s *SelectListComponent) SetItems(items []string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.items = items
+	if s.selected >= len(items) {
+		s.selected = len(items) - 1
+	}
+	if s.selected < 0 {
+		s.selected = 0
+	}
+	s.invalidate()
+}
+
+// SetSelected sets the selected index
+func (s *SelectListComponent) SetSelected(index int) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if index >= 0 && index < len(s.items) {
+		s.selected = index
+		s.updateScroll()
+		s.invalidate()
+	}
+}
+
+// Selected returns the currently selected index
+func (s *SelectListComponent) Selected() int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.selected
+}
+
+// SelectedItem returns the currently selected item
+func (s *SelectListComponent) SelectedItem() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.selected >= 0 && s.selected < len(s.items) {
+		return s.items[s.selected]
+	}
+	return ""
+}
+
+// MoveUp moves selection up
+func (s *SelectListComponent) MoveUp() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.selected > 0 {
+		s.selected--
+		s.updateScroll()
+		s.invalidate()
+	}
+}
+
+// MoveDown moves selection down
+func (s *SelectListComponent) MoveDown() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.selected < len(s.items)-1 {
+		s.selected++
+		s.updateScroll()
+		s.invalidate()
+	}
+}
+
+// SetPrefix sets the selected/normal prefixes
+func (s *SelectListComponent) SetPrefix(selected, normal string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.prefix = selected
+	s.prefixNormal = normal
+	s.invalidate()
+}
+
+// SetStyle sets the style for selected item
+func (s *SelectListComponent) SetStyle(style string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.style = style
+	s.invalidate()
+}
+
+func (s *SelectListComponent) updateScroll() {
+	// Ensure selected item is visible
+	if s.selected < s.scrollOffset {
+		s.scrollOffset = s.selected
+	} else if s.selected >= s.scrollOffset+s.maxVisible {
+		s.scrollOffset = s.selected - s.maxVisible + 1
+	}
+}
+
+// Render renders the selection list
+func (s *SelectListComponent) Render(width int) []string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.cachedLines != nil && s.cachedWidth == width {
+		return s.cachedLines
+	}
+
+	var lines []string
+	endIdx := s.scrollOffset + s.maxVisible
+	if endIdx > len(s.items) {
+		endIdx = len(s.items)
+	}
+
+	for i := s.scrollOffset; i < endIdx; i++ {
+		var line string
+		if i == s.selected {
+			line = s.prefix + s.items[i]
+			if s.style != "" {
+				line = s.style + line + "\x1b[0m"
+			}
+		} else {
+			line = s.prefixNormal + s.items[i]
+		}
+		lines = append(lines, TruncateToWidth(line, width, "..."))
+	}
+
+	// Scroll indicator
+	if len(s.items) > s.maxVisible {
+		indicator := fmt.Sprintf(" [%d-%d of %d]", s.scrollOffset+1, endIdx, len(s.items))
+		lines = append(lines, indicator)
+	}
+
+	s.cachedWidth = width
+	s.cachedLines = lines
+	return lines
+}
+
+// Invalidate clears the cache
+func (s *SelectListComponent) Invalidate() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.invalidate()
+}
+
+func (s *SelectListComponent) invalidate() {
+	s.cachedWidth = 0
+	s.cachedLines = nil
+}
+
+// ============================================================================
+// End Component System
+// ============================================================================
 
 // InlineApp represents a reactive inline terminal UI component
 // It renders N lines in place, re-rendering when state changes
@@ -28,6 +937,8 @@ type InlineApp struct {
 	ps             *env.ProgramState     // Program state for Rye function calls
 	rendered       bool                  // Has rendered at least once
 	updateChan     chan env.Dict         // Channel for state updates
+	prevLines      []string              // Previous render output for diff rendering
+	startRow       int                   // Row where app starts (for cursor positioning)
 }
 
 // GoRenderFn is the signature for Go-native render functions
@@ -42,6 +953,7 @@ func NewInlineApp(height int) *InlineApp {
 		running:     false,
 		stopChan:    make(chan struct{}),
 		updateChan:  make(chan env.Dict, 100),
+		prevLines:   make([]string, height),
 	}
 }
 
@@ -73,6 +985,41 @@ func (app *InlineApp) SetKeyHandler(key string, handler env.Object) {
 	app.keyHandlers[key] = handler
 }
 
+// renderLines renders lines to the terminal with differential rendering
+func (app *InlineApp) renderLines(lines []string, height int) {
+	// Pad lines to height
+	for len(lines) < height {
+		lines = append(lines, "")
+	}
+
+	// Start synchronized output for flicker-free rendering
+	tuiSyncStart()
+	defer tuiSyncEnd()
+
+	// Differential rendering: only update changed lines
+	for i := 0; i < height; i++ {
+		newLine := ""
+		if i < len(lines) {
+			newLine = lines[i]
+		}
+
+		// Check if line changed
+		if i < len(app.prevLines) && app.prevLines[i] == newLine {
+			// Line unchanged, just move down
+			fmt.Println()
+			continue
+		}
+
+		// Line changed, clear and redraw
+		term.ClearLine()
+		fmt.Println(newLine)
+	}
+
+	// Update previous lines cache
+	app.prevLines = make([]string, len(lines))
+	copy(app.prevLines, lines)
+}
+
 // Render renders the app to the terminal
 func (app *InlineApp) Render() {
 	app.mu.Lock()
@@ -86,24 +1033,25 @@ func (app *InlineApp) Render() {
 		return
 	}
 
+	// Get actual terminal width
+	width := term.GetTerminalColumns()
+	if width < 20 {
+		width = 80 // Fallback
+	}
+
 	// If already rendered, move cursor up to re-render in place
 	if rendered {
 		term.CurUp(height)
 	}
 
-	// Capture the render output
-	var output string
-
 	switch fn := renderFn.(type) {
 	case env.Function:
 		if app.ps != nil {
-			// Call Rye render function with state
-			// Create a temporary program state for the call
+			// Call Rye render function with state and width
 			psTemp := *app.ps
 			psTemp.Res = nil
 
 			// Create a new context for the function call
-			// Use the program state's context as parent to access script-defined functions
 			fnCtx := env.NewEnv(psTemp.Ctx)
 
 			// Set the first argument (state)
@@ -111,6 +1059,14 @@ func (app *InlineApp) Render() {
 				argWord := fn.Spec.Series.Get(0)
 				if word, ok := argWord.(env.Word); ok {
 					fnCtx.Set(word.Index, state)
+				}
+			}
+
+			// Set the second argument (width) if function accepts it
+			if fn.Spec.Series.Len() > 1 {
+				argWord := fn.Spec.Series.Get(1)
+				if word, ok := argWord.(env.Word); ok {
+					fnCtx.Set(word.Index, *env.NewInteger(int64(width)))
 				}
 			}
 
@@ -127,33 +1083,50 @@ func (app *InlineApp) Render() {
 			// Check for errors
 			if psX.ErrorFlag {
 				fmt.Println("Render error:", psX.Res.Inspect(*psX.Idx))
+				app.mu.Lock()
+				app.rendered = true
+				app.mu.Unlock()
+				return
 			}
 			if psX.FailureFlag {
 				fmt.Println("Render failure:", psX.Res.Inspect(*psX.Idx))
+				app.mu.Lock()
+				app.rendered = true
+				app.mu.Unlock()
+				return
 			}
 
-			psTemp.Res = psX.Res
+			// Handle result: String, Block of strings, or assume direct printing
+			switch res := psX.Res.(type) {
+			case env.String:
+				// Single string - split into lines
+				lines := strings.Split(res.Value, "\n")
+				app.renderLines(lines, height)
+			case env.Block:
+				// Block of strings
+				lines := make([]string, 0, res.Series.Len())
+				for i := 0; i < res.Series.Len(); i++ {
+					item := res.Series.Get(i)
+					if s, ok := item.(env.String); ok {
+						lines = append(lines, s.Value)
+					} else {
+						// Convert non-string items to their string representation
+						lines = append(lines, item.Print(*psX.Idx))
+					}
+				}
+				app.renderLines(lines, height)
+			default:
+				// Function printed directly (legacy behavior)
+				// We assume it printed exactly `height` lines
+			}
 		}
 	case *env.Native:
 		// Check if it's a GoRenderFn
 		if goFn, ok := fn.Value.(GoRenderFn); ok {
-			output = goFn(state, 80, height) // TODO: get actual terminal width
+			output := goFn(state, width, height)
 			lines := strings.Split(output, "\n")
-			for i := 0; i < height; i++ {
-				term.ClearLine()
-				if i < len(lines) {
-					fmt.Println(lines[i])
-				} else {
-					fmt.Println()
-				}
-			}
+			app.renderLines(lines, height)
 		}
-	}
-
-	// If using Rye function that prints directly, ensure we have the right number of lines
-	if _, ok := renderFn.(env.Function); ok {
-		// The function handles its own printing
-		// We assume it prints exactly `height` lines
 	}
 
 	app.mu.Lock()
@@ -386,6 +1359,215 @@ func (app *InlineApp) WaitForStop() {
 	for app.IsRunning() {
 		time.Sleep(50 * time.Millisecond)
 	}
+}
+
+// ============================================================================
+// Input Component (Focusable)
+// ============================================================================
+
+// InputComponent is a single-line text input field (UIComponent)
+type InputComponent struct {
+	value       string
+	cursor      int
+	placeholder string
+	width       int
+	focused     bool
+	theme       *Theme
+	onChange    func(string)
+	onSubmit    func(string)
+	cachedWidth int
+	cachedLines []string
+	mu          sync.Mutex
+}
+
+// NewInputComponent creates a new input component
+func NewInputComponent(placeholder string, width int) *InputComponent {
+	return &InputComponent{
+		placeholder: placeholder,
+		width:       width,
+		theme:       globalTheme,
+	}
+}
+
+// SetValue sets the text value
+func (inp *InputComponent) SetValue(value string) {
+	inp.mu.Lock()
+	defer inp.mu.Unlock()
+	inp.value = value
+	if inp.cursor > len(inp.value) {
+		inp.cursor = len(inp.value)
+	}
+	inp.invalidate()
+}
+
+// GetValue returns the current value
+func (inp *InputComponent) GetValue() string {
+	inp.mu.Lock()
+	defer inp.mu.Unlock()
+	return inp.value
+}
+
+// SetPlaceholder sets the placeholder text
+func (inp *InputComponent) SetPlaceholder(placeholder string) {
+	inp.mu.Lock()
+	defer inp.mu.Unlock()
+	inp.placeholder = placeholder
+	inp.invalidate()
+}
+
+// SetTheme sets the theme
+func (inp *InputComponent) SetTheme(theme *Theme) {
+	inp.mu.Lock()
+	defer inp.mu.Unlock()
+	inp.theme = theme
+	inp.invalidate()
+}
+
+// SetOnChange sets the change callback
+func (inp *InputComponent) SetOnChange(fn func(string)) {
+	inp.mu.Lock()
+	defer inp.mu.Unlock()
+	inp.onChange = fn
+}
+
+// SetOnSubmit sets the submit callback
+func (inp *InputComponent) SetOnSubmit(fn func(string)) {
+	inp.mu.Lock()
+	defer inp.mu.Unlock()
+	inp.onSubmit = fn
+}
+
+// SetFocused sets the focus state (FocusableComponent)
+func (inp *InputComponent) SetFocused(focused bool) {
+	inp.mu.Lock()
+	defer inp.mu.Unlock()
+	inp.focused = focused
+	inp.invalidate()
+}
+
+// IsFocused returns whether the input is focused (FocusableComponent)
+func (inp *InputComponent) IsFocused() bool {
+	inp.mu.Lock()
+	defer inp.mu.Unlock()
+	return inp.focused
+}
+
+// HandleKey handles a key press (FocusableComponent)
+func (inp *InputComponent) HandleKey(key string) bool {
+	inp.mu.Lock()
+	defer inp.mu.Unlock()
+
+	if !inp.focused {
+		return false
+	}
+
+	changed := false
+
+	switch key {
+	case "backspace":
+		if inp.cursor > 0 {
+			inp.value = inp.value[:inp.cursor-1] + inp.value[inp.cursor:]
+			inp.cursor--
+			changed = true
+		}
+	case "delete":
+		if inp.cursor < len(inp.value) {
+			inp.value = inp.value[:inp.cursor] + inp.value[inp.cursor+1:]
+			changed = true
+		}
+	case "left":
+		if inp.cursor > 0 {
+			inp.cursor--
+		}
+	case "right":
+		if inp.cursor < len(inp.value) {
+			inp.cursor++
+		}
+	case "home":
+		inp.cursor = 0
+	case "end":
+		inp.cursor = len(inp.value)
+	case "enter":
+		if inp.onSubmit != nil {
+			inp.mu.Unlock()
+			inp.onSubmit(inp.value)
+			inp.mu.Lock()
+		}
+		return true
+	default:
+		// Regular character
+		if len(key) == 1 && key[0] >= 32 {
+			inp.value = inp.value[:inp.cursor] + key + inp.value[inp.cursor:]
+			inp.cursor++
+			changed = true
+		}
+	}
+
+	if changed {
+		inp.invalidate()
+		if inp.onChange != nil {
+			inp.mu.Unlock()
+			inp.onChange(inp.value)
+			inp.mu.Lock()
+		}
+	}
+
+	return true // Input handles all keys when focused
+}
+
+// Render renders the input (UIComponent)
+func (inp *InputComponent) Render(width int) []string {
+	inp.mu.Lock()
+	defer inp.mu.Unlock()
+
+	if inp.cachedLines != nil && inp.cachedWidth == width {
+		return inp.cachedLines
+	}
+
+	displayWidth := inp.width
+	if displayWidth <= 0 || displayWidth > width {
+		displayWidth = width
+	}
+
+	var display string
+
+	if inp.value == "" && inp.placeholder != "" && !inp.focused {
+		// Show placeholder
+		display = inp.theme.Apply("placeholder", inp.placeholder)
+	} else {
+		// Show value with cursor
+		if inp.focused {
+			if inp.cursor < len(inp.value) {
+				before := inp.value[:inp.cursor]
+				at := string(inp.value[inp.cursor])
+				after := inp.value[inp.cursor+1:]
+				display = before + inp.theme.Apply("cursor", at) + after
+			} else {
+				display = inp.value + inp.theme.Apply("cursor", " ")
+			}
+		} else {
+			display = inp.value
+		}
+	}
+
+	// Truncate to width
+	display = TruncateToWidth(display, displayWidth, "")
+
+	inp.cachedWidth = width
+	inp.cachedLines = []string{display}
+	return inp.cachedLines
+}
+
+// Invalidate clears the cache (UIComponent)
+func (inp *InputComponent) Invalidate() {
+	inp.mu.Lock()
+	defer inp.mu.Unlock()
+	inp.invalidate()
+}
+
+func (inp *InputComponent) invalidate() {
+	inp.cachedWidth = 0
+	inp.cachedLines = nil
 }
 
 // ============================================================================
@@ -749,15 +1931,21 @@ var Builtins_termui = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { app: inline-app 1 , app .render fn { s } { print "test" } |type? } 'native
+	// equal { app: inline-app 1 , app .render fn { s w } { "test" } |type? } 'native
 	// Args:
 	// * app: InlineApp native object
-	// * render-fn: Function that takes state Dict and renders output
+	// * render-fn: Function that takes (state Dict, width Integer) and returns String or Block of strings
 	// Returns:
 	// * the app object
+	// Example:
+	// ; Return a single string (will be split on newlines)
+	// app .render fn { state width } { "Line 1\nLine 2" }
+	// ; Or return a block of strings (one per line)
+	// app .render fn { state width } { { "Line 1" "Line 2" } }
+	// ; Legacy: functions that print directly still work
 	"inline-app//render": {
 		Argsn: 2,
-		Doc:   "Sets the render function for an inline app. The function receives the current state.",
+		Doc:   "Sets the render function for an inline app. Function receives (state, width) and should return String or Block of strings.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch native := arg0.(type) {
 			case env.Native:
@@ -1467,6 +2655,1287 @@ var Builtins_termui = map[string]*env.Builtin{
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "text-input//render-bordered")
 			}
+		},
+	},
+
+	// ##### Theming ##### "Color and style theming"
+
+	// Tests:
+	// equal { ui-theme |type? } 'native
+	// Returns:
+	// * a new Theme with default colors
+	"ui-theme": {
+		Argsn: 0,
+		Doc:   "Creates a new theme with default colors.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			theme := DefaultTheme()
+			return *env.NewNative(ps.Idx, theme, "ui-theme")
+		},
+	},
+
+	// Args:
+	// * theme: Theme native object
+	// * name: String color name
+	// * value: String ANSI escape code
+	// Returns:
+	// * the theme object
+	"ui-theme//set-color": {
+		Argsn: 3,
+		Doc:   "Sets a color/style in the theme.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				theme, ok := native.Value.(*Theme)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected Theme", "ui-theme//set-color")
+				}
+				switch name := arg1.(type) {
+				case env.String:
+					switch value := arg2.(type) {
+					case env.String:
+						theme.Set(name.Value, value.Value)
+						return arg0
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.StringType}, "ui-theme//set-color")
+					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "ui-theme//set-color")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-theme//set-color")
+			}
+		},
+	},
+
+	// Args:
+	// * theme: Theme native object
+	// * name: String color name
+	// Returns:
+	// * String ANSI escape code or empty string
+	"ui-theme//get-color": {
+		Argsn: 2,
+		Doc:   "Gets a color/style from the theme.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				theme, ok := native.Value.(*Theme)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected Theme", "ui-theme//get-color")
+				}
+				switch name := arg1.(type) {
+				case env.String:
+					return *env.NewString(theme.Get(name.Value))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "ui-theme//get-color")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-theme//get-color")
+			}
+		},
+	},
+
+	// Args:
+	// * theme: Theme native object
+	// * name: String color name
+	// * text: String text to style
+	// Returns:
+	// * String styled text with reset
+	"ui-theme//style": {
+		Argsn: 3,
+		Doc:   "Applies a style to text and adds reset code.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				theme, ok := native.Value.(*Theme)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected Theme", "ui-theme//style")
+				}
+				switch name := arg1.(type) {
+				case env.String:
+					switch text := arg2.(type) {
+					case env.String:
+						return *env.NewString(theme.Apply(name.Value, text.Value))
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.StringType}, "ui-theme//style")
+					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "ui-theme//style")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-theme//style")
+			}
+		},
+	},
+
+	// Returns:
+	// * the global default theme
+	"ui-global-theme": {
+		Argsn: 0,
+		Doc:   "Returns the global default theme.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return *env.NewNative(ps.Idx, GetGlobalTheme(), "ui-theme")
+		},
+	},
+
+	// Args:
+	// * theme: Theme native object
+	// Returns:
+	// * the theme (now set as global)
+	"ui-set-global-theme": {
+		Argsn: 1,
+		Doc:   "Sets the global default theme.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				theme, ok := native.Value.(*Theme)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected Theme", "ui-set-global-theme")
+				}
+				SetGlobalTheme(theme)
+				return arg0
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-set-global-theme")
+			}
+		},
+	},
+
+	// ##### Component System ##### "Composable UI components"
+
+	// Tests:
+	// equal { ui-container |type? } 'native
+	// Returns:
+	// * a new Container native object
+	"ui-container": {
+		Argsn: 0,
+		Doc:   "Creates a new container for composing UI components vertically.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			container := NewContainer()
+			return *env.NewNative(ps.Idx, container, "ui-container")
+		},
+	},
+
+	// Args:
+	// * container: Container native object
+	// * child: Component native object
+	// Returns:
+	// * the container object
+	"ui-container//add-child": {
+		Argsn: 2,
+		Doc:   "Adds a child component to the container.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				container, ok := native.Value.(*Container)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected Container", "ui-container//add-child")
+				}
+				switch childNative := arg1.(type) {
+				case env.Native:
+					if child, ok := childNative.Value.(UIComponent); ok {
+						container.AddChild(child)
+						return arg0
+					}
+					return MakeBuiltinError(ps, "Expected UIComponent", "ui-container//add-child")
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.NativeType}, "ui-container//add-child")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-container//add-child")
+			}
+		},
+	},
+
+	// Args:
+	// * container: Container native object
+	// * child: Component native object
+	// Returns:
+	// * the container object
+	"ui-container//remove-child": {
+		Argsn: 2,
+		Doc:   "Removes a child component from the container.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				container, ok := native.Value.(*Container)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected Container", "ui-container//remove-child")
+				}
+				switch childNative := arg1.(type) {
+				case env.Native:
+					if child, ok := childNative.Value.(UIComponent); ok {
+						container.RemoveChild(child)
+						return arg0
+					}
+					return MakeBuiltinError(ps, "Expected UIComponent", "ui-container//remove-child")
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.NativeType}, "ui-container//remove-child")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-container//remove-child")
+			}
+		},
+	},
+
+	// Args:
+	// * container: Container native object
+	// Returns:
+	// * the container object
+	"ui-container//clear": {
+		Argsn: 1,
+		Doc:   "Removes all children from the container.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				container, ok := native.Value.(*Container)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected Container", "ui-container//clear")
+				}
+				container.Clear()
+				return arg0
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-container//clear")
+			}
+		},
+	},
+
+	// Args:
+	// * container: Container native object
+	// * width: Integer width
+	// Returns:
+	// * Block of strings (rendered lines)
+	"ui-container//render": {
+		Argsn: 2,
+		Doc:   "Renders the container and all children to a block of strings.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				container, ok := native.Value.(*Container)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected Container", "ui-container//render")
+				}
+				switch w := arg1.(type) {
+				case env.Integer:
+					lines := container.Render(int(w.Value))
+					items := make([]env.Object, len(lines))
+					for i, line := range lines {
+						items[i] = *env.NewString(line)
+					}
+					return *env.NewBlock(*env.NewTSeries(items))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "ui-container//render")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-container//render")
+			}
+		},
+	},
+
+	// Args:
+	// * container: Container native object
+	// Returns:
+	// * the container object
+	"ui-container//invalidate": {
+		Argsn: 1,
+		Doc:   "Invalidates the container cache and all children.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				container, ok := native.Value.(*Container)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected Container", "ui-container//invalidate")
+				}
+				container.Invalidate()
+				return arg0
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-container//invalidate")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { ui-text "Hello" |type? } 'native
+	// Args:
+	// * text: String content
+	// Returns:
+	// * a new Text component
+	"ui-text": {
+		Argsn: 1,
+		Doc:   "Creates a text component with the given content.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s := arg0.(type) {
+			case env.String:
+				text := NewTextComponent(s.Value)
+				return *env.NewNative(ps.Idx, text, "ui-text")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "ui-text")
+			}
+		},
+	},
+
+	// Args:
+	// * text: Text component
+	// * content: String new content
+	// Returns:
+	// * the text component
+	"ui-text//set-text": {
+		Argsn: 2,
+		Doc:   "Updates the text content.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				text, ok := native.Value.(*TextComponent)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected TextComponent", "ui-text//set-text")
+				}
+				switch s := arg1.(type) {
+				case env.String:
+					text.SetText(s.Value)
+					return arg0
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "ui-text//set-text")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-text//set-text")
+			}
+		},
+	},
+
+	// Args:
+	// * text: Text component
+	// * paddingX: Integer horizontal padding
+	// * paddingY: Integer vertical padding
+	// Returns:
+	// * the text component
+	"ui-text//set-padding": {
+		Argsn: 3,
+		Doc:   "Sets the padding around the text.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				text, ok := native.Value.(*TextComponent)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected TextComponent", "ui-text//set-padding")
+				}
+				switch px := arg1.(type) {
+				case env.Integer:
+					switch py := arg2.(type) {
+					case env.Integer:
+						text.SetPadding(int(px.Value), int(py.Value))
+						return arg0
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.IntegerType}, "ui-text//set-padding")
+					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "ui-text//set-padding")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-text//set-padding")
+			}
+		},
+	},
+
+	// Args:
+	// * text: Text component
+	// * wrap: Integer 1 to enable wrapping, 0 to disable
+	// Returns:
+	// * the text component
+	"ui-text//set-wrap": {
+		Argsn: 2,
+		Doc:   "Enables or disables word wrapping.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				text, ok := native.Value.(*TextComponent)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected TextComponent", "ui-text//set-wrap")
+				}
+				switch w := arg1.(type) {
+				case env.Integer:
+					text.SetWrap(w.Value != 0)
+					return arg0
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "ui-text//set-wrap")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-text//set-wrap")
+			}
+		},
+	},
+
+	// Args:
+	// * text: Text component
+	// * width: Integer width
+	// Returns:
+	// * Block of strings
+	"ui-text//render": {
+		Argsn: 2,
+		Doc:   "Renders the text component.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				text, ok := native.Value.(*TextComponent)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected TextComponent", "ui-text//render")
+				}
+				switch w := arg1.(type) {
+				case env.Integer:
+					lines := text.Render(int(w.Value))
+					items := make([]env.Object, len(lines))
+					for i, line := range lines {
+						items[i] = *env.NewString(line)
+					}
+					return *env.NewBlock(*env.NewTSeries(items))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "ui-text//render")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-text//render")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { ui-spacer 2 |type? } 'native
+	// Args:
+	// * height: Integer number of empty lines
+	// Returns:
+	// * a new Spacer component
+	"ui-spacer": {
+		Argsn: 1,
+		Doc:   "Creates a spacer component with the given height.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch h := arg0.(type) {
+			case env.Integer:
+				spacer := NewSpacerComponent(int(h.Value))
+				return *env.NewNative(ps.Idx, spacer, "ui-spacer")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "ui-spacer")
+			}
+		},
+	},
+
+	// Args:
+	// * spacer: Spacer component
+	// * width: Integer width
+	// Returns:
+	// * Block of empty strings
+	"ui-spacer//render": {
+		Argsn: 2,
+		Doc:   "Renders the spacer component.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				spacer, ok := native.Value.(*SpacerComponent)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected SpacerComponent", "ui-spacer//render")
+				}
+				switch w := arg1.(type) {
+				case env.Integer:
+					lines := spacer.Render(int(w.Value))
+					items := make([]env.Object, len(lines))
+					for i, line := range lines {
+						items[i] = *env.NewString(line)
+					}
+					return *env.NewBlock(*env.NewTSeries(items))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "ui-spacer//render")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-spacer//render")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { ui-box ui-text "Hi" |type? } 'native
+	// Args:
+	// * child: Component to wrap in box
+	// Returns:
+	// * a new Box component
+	"ui-box": {
+		Argsn: 1,
+		Doc:   "Creates a box component that wraps a child with a border.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				if child, ok := native.Value.(UIComponent); ok {
+					box := NewBoxComponent(child)
+					return *env.NewNative(ps.Idx, box, "ui-box")
+				}
+				return MakeBuiltinError(ps, "Expected UIComponent", "ui-box")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-box")
+			}
+		},
+	},
+
+	// Args:
+	// * box: Box component
+	// * title: String title
+	// Returns:
+	// * the box component
+	"ui-box//set-title": {
+		Argsn: 2,
+		Doc:   "Sets the box title.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				box, ok := native.Value.(*BoxComponent)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected BoxComponent", "ui-box//set-title")
+				}
+				switch s := arg1.(type) {
+				case env.String:
+					box.SetTitle(s.Value)
+					return arg0
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "ui-box//set-title")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-box//set-title")
+			}
+		},
+	},
+
+	// Args:
+	// * box: Box component
+	// * style: Integer 0=single, 1=double, 2=rounded, 3=ascii
+	// Returns:
+	// * the box component
+	"ui-box//set-border-style": {
+		Argsn: 2,
+		Doc:   "Sets the border style: 0=single, 1=double, 2=rounded, 3=ascii.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				box, ok := native.Value.(*BoxComponent)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected BoxComponent", "ui-box//set-border-style")
+				}
+				switch s := arg1.(type) {
+				case env.Integer:
+					box.SetBorderStyle(int(s.Value))
+					return arg0
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "ui-box//set-border-style")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-box//set-border-style")
+			}
+		},
+	},
+
+	// Args:
+	// * box: Box component
+	// * paddingX: Integer horizontal padding
+	// * paddingY: Integer vertical padding
+	// Returns:
+	// * the box component
+	"ui-box//set-padding": {
+		Argsn: 3,
+		Doc:   "Sets internal padding of the box.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				box, ok := native.Value.(*BoxComponent)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected BoxComponent", "ui-box//set-padding")
+				}
+				switch px := arg1.(type) {
+				case env.Integer:
+					switch py := arg2.(type) {
+					case env.Integer:
+						box.SetPadding(int(px.Value), int(py.Value))
+						return arg0
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.IntegerType}, "ui-box//set-padding")
+					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "ui-box//set-padding")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-box//set-padding")
+			}
+		},
+	},
+
+	// Args:
+	// * box: Box component
+	// * width: Integer width
+	// Returns:
+	// * Block of strings
+	"ui-box//render": {
+		Argsn: 2,
+		Doc:   "Renders the box component.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				box, ok := native.Value.(*BoxComponent)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected BoxComponent", "ui-box//render")
+				}
+				switch w := arg1.(type) {
+				case env.Integer:
+					lines := box.Render(int(w.Value))
+					items := make([]env.Object, len(lines))
+					for i, line := range lines {
+						items[i] = *env.NewString(line)
+					}
+					return *env.NewBlock(*env.NewTSeries(items))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "ui-box//render")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-box//render")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { ui-hline |type? } 'native
+	// Returns:
+	// * a new HorizontalLine component
+	"ui-hline": {
+		Argsn: 0,
+		Doc:   "Creates a horizontal line component.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			hline := NewHorizontalLineComponent("─")
+			return *env.NewNative(ps.Idx, hline, "ui-hline")
+		},
+	},
+
+	// Args:
+	// * char: String character to use for the line
+	// Returns:
+	// * a new HorizontalLine component
+	"ui-hline\\char": {
+		Argsn: 1,
+		Doc:   "Creates a horizontal line component with custom character.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch c := arg0.(type) {
+			case env.String:
+				hline := NewHorizontalLineComponent(c.Value)
+				return *env.NewNative(ps.Idx, hline, "ui-hline")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "ui-hline\\char")
+			}
+		},
+	},
+
+	// Args:
+	// * hline: HorizontalLine component
+	// * width: Integer width
+	// Returns:
+	// * Block of strings (single line)
+	"ui-hline//render": {
+		Argsn: 2,
+		Doc:   "Renders the horizontal line.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				hline, ok := native.Value.(*HorizontalLineComponent)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected HorizontalLineComponent", "ui-hline//render")
+				}
+				switch w := arg1.(type) {
+				case env.Integer:
+					lines := hline.Render(int(w.Value))
+					items := make([]env.Object, len(lines))
+					for i, line := range lines {
+						items[i] = *env.NewString(line)
+					}
+					return *env.NewBlock(*env.NewTSeries(items))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "ui-hline//render")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-hline//render")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { ui-select-list { "a" "b" "c" } 5 |type? } 'native
+	// Args:
+	// * items: Block of strings
+	// * maxVisible: Integer max visible items
+	// Returns:
+	// * a new SelectList component
+	"ui-select-list": {
+		Argsn: 2,
+		Doc:   "Creates an interactive selection list.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch b := arg0.(type) {
+			case env.Block:
+				switch mv := arg1.(type) {
+				case env.Integer:
+					items := make([]string, b.Series.Len())
+					for i := 0; i < b.Series.Len(); i++ {
+						item := b.Series.Get(i)
+						if s, ok := item.(env.String); ok {
+							items[i] = s.Value
+						} else {
+							items[i] = item.Print(*ps.Idx)
+						}
+					}
+					sl := NewSelectListComponent(items, int(mv.Value))
+					return *env.NewNative(ps.Idx, sl, "ui-select-list")
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "ui-select-list")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "ui-select-list")
+			}
+		},
+	},
+
+	// Args:
+	// * list: SelectList component
+	// Returns:
+	// * the list component
+	"ui-select-list//move-up": {
+		Argsn: 1,
+		Doc:   "Moves the selection up.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				sl, ok := native.Value.(*SelectListComponent)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected SelectListComponent", "ui-select-list//move-up")
+				}
+				sl.MoveUp()
+				return arg0
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-select-list//move-up")
+			}
+		},
+	},
+
+	// Args:
+	// * list: SelectList component
+	// Returns:
+	// * the list component
+	"ui-select-list//move-down": {
+		Argsn: 1,
+		Doc:   "Moves the selection down.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				sl, ok := native.Value.(*SelectListComponent)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected SelectListComponent", "ui-select-list//move-down")
+				}
+				sl.MoveDown()
+				return arg0
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-select-list//move-down")
+			}
+		},
+	},
+
+	// Args:
+	// * list: SelectList component
+	// Returns:
+	// * Integer selected index
+	"ui-select-list//selected": {
+		Argsn: 1,
+		Doc:   "Returns the selected index.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				sl, ok := native.Value.(*SelectListComponent)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected SelectListComponent", "ui-select-list//selected")
+				}
+				return *env.NewInteger(int64(sl.Selected()))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-select-list//selected")
+			}
+		},
+	},
+
+	// Args:
+	// * list: SelectList component
+	// Returns:
+	// * String selected item
+	"ui-select-list//selected-item": {
+		Argsn: 1,
+		Doc:   "Returns the selected item.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				sl, ok := native.Value.(*SelectListComponent)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected SelectListComponent", "ui-select-list//selected-item")
+				}
+				return *env.NewString(sl.SelectedItem())
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-select-list//selected-item")
+			}
+		},
+	},
+
+	// Args:
+	// * list: SelectList component
+	// * index: Integer new selected index
+	// Returns:
+	// * the list component
+	"ui-select-list//set-selected": {
+		Argsn: 2,
+		Doc:   "Sets the selected index.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				sl, ok := native.Value.(*SelectListComponent)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected SelectListComponent", "ui-select-list//set-selected")
+				}
+				switch idx := arg1.(type) {
+				case env.Integer:
+					sl.SetSelected(int(idx.Value))
+					return arg0
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "ui-select-list//set-selected")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-select-list//set-selected")
+			}
+		},
+	},
+
+	// Args:
+	// * list: SelectList component
+	// * items: Block of strings
+	// Returns:
+	// * the list component
+	"ui-select-list//set-items": {
+		Argsn: 2,
+		Doc:   "Updates the list items.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				sl, ok := native.Value.(*SelectListComponent)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected SelectListComponent", "ui-select-list//set-items")
+				}
+				switch b := arg1.(type) {
+				case env.Block:
+					items := make([]string, b.Series.Len())
+					for i := 0; i < b.Series.Len(); i++ {
+						item := b.Series.Get(i)
+						if s, ok := item.(env.String); ok {
+							items[i] = s.Value
+						} else {
+							items[i] = item.Print(*ps.Idx)
+						}
+					}
+					sl.SetItems(items)
+					return arg0
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "ui-select-list//set-items")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-select-list//set-items")
+			}
+		},
+	},
+
+	// Args:
+	// * list: SelectList component
+	// * width: Integer width
+	// Returns:
+	// * Block of strings
+	"ui-select-list//render": {
+		Argsn: 2,
+		Doc:   "Renders the selection list.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				sl, ok := native.Value.(*SelectListComponent)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected SelectListComponent", "ui-select-list//render")
+				}
+				switch w := arg1.(type) {
+				case env.Integer:
+					lines := sl.Render(int(w.Value))
+					items := make([]env.Object, len(lines))
+					for i, line := range lines {
+						items[i] = *env.NewString(line)
+					}
+					return *env.NewBlock(*env.NewTSeries(items))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "ui-select-list//render")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-select-list//render")
+			}
+		},
+	},
+
+	// Args:
+	// * list: SelectList component
+	// Returns:
+	// * the list component
+	"ui-select-list//invalidate": {
+		Argsn: 1,
+		Doc:   "Invalidates the component cache.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				sl, ok := native.Value.(*SelectListComponent)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected SelectListComponent", "ui-select-list//invalidate")
+				}
+				sl.Invalidate()
+				return arg0
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-select-list//invalidate")
+			}
+		},
+	},
+
+	// ##### Input Component ##### "Focusable text input"
+
+	// Tests:
+	// equal { ui-input "Name" 20 |type? } 'native
+	// Args:
+	// * placeholder: String placeholder text
+	// * width: Integer display width
+	// Returns:
+	// * a new Input component
+	"ui-input": {
+		Argsn: 2,
+		Doc:   "Creates a focusable text input component.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch placeholder := arg0.(type) {
+			case env.String:
+				switch width := arg1.(type) {
+				case env.Integer:
+					input := NewInputComponent(placeholder.Value, int(width.Value))
+					return *env.NewNative(ps.Idx, input, "ui-input")
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "ui-input")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "ui-input")
+			}
+		},
+	},
+
+	// Args:
+	// * input: Input component
+	// * value: String new value
+	// Returns:
+	// * the input component
+	"ui-input//set-value": {
+		Argsn: 2,
+		Doc:   "Sets the input value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				input, ok := native.Value.(*InputComponent)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected InputComponent", "ui-input//set-value")
+				}
+				switch value := arg1.(type) {
+				case env.String:
+					input.SetValue(value.Value)
+					return arg0
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "ui-input//set-value")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-input//set-value")
+			}
+		},
+	},
+
+	// Args:
+	// * input: Input component
+	// Returns:
+	// * String current value
+	"ui-input//value": {
+		Argsn: 1,
+		Doc:   "Gets the input value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				input, ok := native.Value.(*InputComponent)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected InputComponent", "ui-input//value")
+				}
+				return *env.NewString(input.GetValue())
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-input//value")
+			}
+		},
+	},
+
+	// Args:
+	// * input: Input component
+	// Returns:
+	// * the input component
+	"ui-input//focus": {
+		Argsn: 1,
+		Doc:   "Focuses the input.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				input, ok := native.Value.(*InputComponent)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected InputComponent", "ui-input//focus")
+				}
+				input.SetFocused(true)
+				return arg0
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-input//focus")
+			}
+		},
+	},
+
+	// Args:
+	// * input: Input component
+	// Returns:
+	// * the input component
+	"ui-input//blur": {
+		Argsn: 1,
+		Doc:   "Unfocuses the input.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				input, ok := native.Value.(*InputComponent)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected InputComponent", "ui-input//blur")
+				}
+				input.SetFocused(false)
+				return arg0
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-input//blur")
+			}
+		},
+	},
+
+	// Args:
+	// * input: Input component
+	// Returns:
+	// * Integer 1 if focused, 0 otherwise
+	"ui-input//focused?": {
+		Argsn: 1,
+		Doc:   "Returns whether the input is focused.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				input, ok := native.Value.(*InputComponent)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected InputComponent", "ui-input//focused?")
+				}
+				return *env.NewInteger(boolToInt64(input.IsFocused()))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-input//focused?")
+			}
+		},
+	},
+
+	// Args:
+	// * input: Input component
+	// * key: String key name
+	// Returns:
+	// * Integer 1 if key was handled, 0 otherwise
+	"ui-input//handle-key": {
+		Argsn: 2,
+		Doc:   "Handles a key press. Returns 1 if handled.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				input, ok := native.Value.(*InputComponent)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected InputComponent", "ui-input//handle-key")
+				}
+				switch key := arg1.(type) {
+				case env.String:
+					handled := input.HandleKey(key.Value)
+					return *env.NewInteger(boolToInt64(handled))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "ui-input//handle-key")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-input//handle-key")
+			}
+		},
+	},
+
+	// Args:
+	// * input: Input component
+	// * width: Integer width
+	// Returns:
+	// * Block of strings (single line)
+	"ui-input//render": {
+		Argsn: 2,
+		Doc:   "Renders the input component.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				input, ok := native.Value.(*InputComponent)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected InputComponent", "ui-input//render")
+				}
+				switch w := arg1.(type) {
+				case env.Integer:
+					lines := input.Render(int(w.Value))
+					items := make([]env.Object, len(lines))
+					for i, line := range lines {
+						items[i] = *env.NewString(line)
+					}
+					return *env.NewBlock(*env.NewTSeries(items))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "ui-input//render")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-input//render")
+			}
+		},
+	},
+
+	// Args:
+	// * input: Input component
+	// Returns:
+	// * the input component
+	"ui-input//invalidate": {
+		Argsn: 1,
+		Doc:   "Invalidates the component cache.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch native := arg0.(type) {
+			case env.Native:
+				input, ok := native.Value.(*InputComponent)
+				if !ok {
+					return MakeBuiltinError(ps, "Expected InputComponent", "ui-input//invalidate")
+				}
+				input.Invalidate()
+				return arg0
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "ui-input//invalidate")
+			}
+		},
+	},
+
+	// ##### Text Utilities ##### "ANSI-aware text manipulation"
+
+	// Tests:
+	// equal { visible-width "Hello" } 5
+	// equal { visible-width "\x1b[31mHello\x1b[0m" } 5
+	// Args:
+	// * text: String to measure
+	// Returns:
+	// * Integer visible width (ignoring ANSI codes)
+	"visible-width": {
+		Argsn: 1,
+		Doc:   "Returns the visible display width of a string, ignoring ANSI escape codes.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s := arg0.(type) {
+			case env.String:
+				return *env.NewInteger(int64(VisibleWidth(s.Value)))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "visible-width")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { truncate-to-width "Hello World" 8 } "Hello..."
+	// equal { truncate-to-width "Hello" 10 } "Hello"
+	// Args:
+	// * text: String to truncate
+	// * width: Integer maximum visible width
+	// Returns:
+	// * String truncated to fit width with ellipsis if needed
+	"truncate-to-width": {
+		Argsn: 2,
+		Doc:   "Truncates a string to fit within the given visible width, adding '...' if truncated. Preserves ANSI codes.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s := arg0.(type) {
+			case env.String:
+				switch w := arg1.(type) {
+				case env.Integer:
+					return *env.NewString(TruncateToWidth(s.Value, int(w.Value), "..."))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "truncate-to-width")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "truncate-to-width")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { truncate-to-width\ellipsis "Hello World" 8 ".." } "Hello .."
+	// Args:
+	// * text: String to truncate
+	// * width: Integer maximum visible width
+	// * ellipsis: String to append when truncating
+	// Returns:
+	// * String truncated to fit width with custom ellipsis
+	"truncate-to-width\\ellipsis": {
+		Argsn: 3,
+		Doc:   "Truncates a string to fit within the given visible width with custom ellipsis. Preserves ANSI codes.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s := arg0.(type) {
+			case env.String:
+				switch w := arg1.(type) {
+				case env.Integer:
+					switch e := arg2.(type) {
+					case env.String:
+						return *env.NewString(TruncateToWidth(s.Value, int(w.Value), e.Value))
+					default:
+						return MakeArgError(ps, 3, []env.Type{env.StringType}, "truncate-to-width\\ellipsis")
+					}
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "truncate-to-width\\ellipsis")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "truncate-to-width\\ellipsis")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { wrap-text "Hello World" 6 |length? } 2
+	// Args:
+	// * text: String to wrap
+	// * width: Integer maximum width per line
+	// Returns:
+	// * Block of strings, one per line
+	"wrap-text": {
+		Argsn: 2,
+		Doc:   "Wraps text to fit within the given width, preserving ANSI codes across line breaks.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch s := arg0.(type) {
+			case env.String:
+				switch w := arg1.(type) {
+				case env.Integer:
+					lines := WrapText(s.Value, int(w.Value))
+					items := make([]env.Object, len(lines))
+					for i, line := range lines {
+						items[i] = *env.NewString(line)
+					}
+					return *env.NewBlock(*env.NewTSeries(items))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "wrap-text")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "wrap-text")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { terminal-width > 0 } 1
+	// Returns:
+	// * Integer current terminal width in columns
+	"terminal-width": {
+		Argsn: 0,
+		Doc:   "Returns the current terminal width in columns.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return *env.NewInteger(int64(term.GetTerminalColumns()))
 		},
 	},
 }

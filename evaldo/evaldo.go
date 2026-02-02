@@ -1330,74 +1330,103 @@ func CallCurriedCaller(cc env.CurriedCaller, ps *env.ProgramState, arg0_ env.Obj
 	var arg3 env.Object = cc.Cur3
 	var arg4 env.Object = cc.Cur4
 
-	// Determine the number of arguments needed
-	var argsn int
-	if cc.CallerType == 0 { // Builtin
-		argsn = cc.Builtin.Argsn
-	} else { // Function
-		argsn = cc.Function.Argsn
-	}
+	// Use cc.Argsn - the number of UNFILLED arguments that need to be collected
+	// NOT the total arguments from the underlying function/builtin
+	argsToCollect := cc.Argsn
 
 	evalExprFn := EvalExpression_CollectArg
 
-	// WWWW Here must be some bug
-	// if first two are provided by partial the op-pipe-star behavi
-	// Handle arg0 - override with provided arg if available
-	if arg0 == nil && argsn > 0 {
+	// Track how many arguments we've collected
+	collected := 0
+
+	// Handle the left value from op-word or pipe-word
+	// This should fill the FIRST unfilled (nil) slot
+	if argsToCollect > 0 {
 		if arg0_ != nil && !pipeSecond {
-			fmt.Println("***1")
-			arg0 = arg0_
+			// Op-word: left value fills first nil slot
+			if arg0 == nil {
+				arg0 = arg0_
+				collected++
+			} else if arg1 == nil {
+				arg1 = arg0_
+				collected++
+			} else if arg2 == nil {
+				arg2 = arg0_
+				collected++
+			} else if arg3 == nil {
+				arg3 = arg0_
+				collected++
+			} else if arg4 == nil {
+				arg4 = arg0_
+				collected++
+			}
 		} else if firstVal != nil && pipeSecond {
-			fmt.Println("***2")
-			arg0 = firstVal
-		} else if arg0 == nil && argsn > 0 {
-			// Only evaluate if we don't have a curried value
-			fmt.Println("***3")
-			evalExprFn(ps, true)
-			if ps.ReturnFlag || ps.ErrorFlag {
-				return
+			// Pipe-second: firstVal fills first nil slot
+			if arg0 == nil {
+				arg0 = firstVal
+				collected++
+			} else if arg1 == nil {
+				arg1 = firstVal
+				collected++
+			} else if arg2 == nil {
+				arg2 = firstVal
+				collected++
+			} else if arg3 == nil {
+				arg3 = firstVal
+				collected++
+			} else if arg4 == nil {
+				arg4 = firstVal
+				collected++
 			}
+		}
+
+		// Handle pipeSecond: arg0_ goes to second nil slot
+		if arg0_ != nil && pipeSecond && collected < argsToCollect {
+			if arg0 == nil {
+				arg0 = arg0_
+				collected++
+			} else if arg1 == nil {
+				arg1 = arg0_
+				collected++
+			} else if arg2 == nil {
+				arg2 = arg0_
+				collected++
+			} else if arg3 == nil {
+				arg3 = arg0_
+				collected++
+			} else if arg4 == nil {
+				arg4 = arg0_
+				collected++
+			}
+		}
+	}
+
+	// Collect remaining unfilled arguments from code stream
+	for collected < argsToCollect {
+		evalExprFn(ps, true)
+		if ps.ReturnFlag || ps.ErrorFlag {
+			return
+		}
+		// Fill the next nil slot
+		if arg0 == nil {
 			arg0 = ps.Res
-		}
-	}
-
-	// Handle arg1
-	if arg1 == nil && argsn > 1 {
-		if arg0_ != nil && pipeSecond {
-			arg1 = arg0_
-		} else if arg1 == nil && argsn > 1 {
-			// Only evaluate if we don't have a curried value
-			evalExprFn(ps, true)
-			if ps.ReturnFlag || ps.ErrorFlag {
-				return
-			}
+			collected++
+		} else if arg1 == nil {
 			arg1 = ps.Res
+			collected++
+		} else if arg2 == nil {
+			arg2 = ps.Res
+			collected++
+		} else if arg3 == nil {
+			arg3 = ps.Res
+			collected++
+		} else if arg4 == nil {
+			arg4 = ps.Res
+			collected++
+		} else {
+			// All slots filled, shouldn't happen
+			break
 		}
-	}
-
-	// Handle remaining arguments - only evaluate if not curried
-	if arg2 == nil && argsn > 2 {
-		evalExprFn(ps, true)
-		if ps.ReturnFlag || ps.ErrorFlag {
-			return
-		}
-		arg2 = ps.Res
-	}
-
-	if arg3 == nil && argsn > 3 {
-		evalExprFn(ps, true)
-		if ps.ReturnFlag || ps.ErrorFlag {
-			return
-		}
-		arg3 = ps.Res
-	}
-
-	if arg4 == nil && argsn > 4 {
-		evalExprFn(ps, true)
-		if ps.ReturnFlag || ps.ErrorFlag {
-			return
-		}
-		arg4 = ps.Res
 	}
 
 	// Call the appropriate function based on caller type
