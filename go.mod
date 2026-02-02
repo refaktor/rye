@@ -51,7 +51,7 @@ require (
 	github.com/pkg/term v1.2.0-beta.2.0.20211217091447-1a4a3b719465
 	github.com/prometheus/client_golang v1.23.2
 	github.com/refaktor/keyboard v0.0.0-20250327232248-edb0b31909c4
-	github.com/sairash/chitosocket v1.0.1
+	github.com/sairash/chitosocket v1.0.2
 	github.com/shirou/gopsutil/v3 v3.24.5
 	github.com/thomasberger/parsemail v1.2.7
 	github.com/xuri/excelize/v2 v2.10.0
