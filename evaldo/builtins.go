@@ -2790,6 +2790,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltinsInContext(Builtins_term, ps, "term")
 	RegisterBuiltinsInContext(Builtins_termstr, ps, "termstr")
 	RegisterBuiltins2(Builtins_termui, ps, "termui")
+	RegisterBuiltinsInContext(Builtins_tui, ps, "tui")
 	RegisterBuiltinsInContext(Builtins_telegrambot, ps, "telegram")
 	RegisterBuiltinsInContext(Builtins_mcp, ps, "mcp")
 	RegisterBuiltins2(Builtins_mqtt, ps, "mqtt")
