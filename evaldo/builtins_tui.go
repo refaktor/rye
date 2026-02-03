@@ -1,5 +1,5 @@
-//go:build !no_tui
-// +build !no_tui
+//go:build !no_tui && !wasm && !js
+// +build !no_tui,!wasm,!js
 
 package evaldo
 
