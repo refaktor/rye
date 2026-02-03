@@ -15,20 +15,15 @@ import (
 	"github.com/refaktor/rye/term"
 )
 
-// ============================================================================
 // TUI Library - Minimal declarative terminal UI
-//
 // Design principles (from ideas.md):
 // - Widget constructors return blocks of values (pure data), not native objects
 // - Structure: { 'widget-type { styles... } content }
 // - Themes are dicts of named styles
 // - Rendering is separate from construction
 // - Inline (scroll) mode is the primary mode
-// ============================================================================
 
-// ============================================================================
-// Style Helpers
-// ============================================================================
+// ## Style Helpers
 
 // tuiApplyStyle applies ANSI styles based on a style dict
 func tuiApplyStyle(ps *env.ProgramState, styleDict env.Dict, text string) string {
@@ -209,9 +204,7 @@ func tuiGetWidgetContent(widget env.Block) (env.Object, bool) {
 	return widget.Series.Get(2), true
 }
 
-// ============================================================================
-// Rendering Engine
-// ============================================================================
+// ## Rendering Engine
 
 // tuiRenderWidget renders a single widget to lines of text
 func tuiRenderWidget(ps *env.ProgramState, widget env.Block, width int, theme env.Dict) []string {
@@ -244,6 +237,15 @@ func tuiRenderWidget(ps *env.ProgramState, widget env.Block, width int, theme en
 		return tuiRenderTabs(ps, content, width, mergedStyles)
 	case "input":
 		return tuiRenderInput(ps, content, width, mergedStyles)
+	case "field":
+		// Unmanaged field - render using the same logic as input
+		return tuiRenderInput(ps, content, width, mergedStyles)
+	case "input-field":
+		// Managed input widget - content is a string with cursor rendering already done
+		if str, ok := content.(env.String); ok {
+			return []string{str.Value}
+		}
+		return []string{""}
 	default:
 		return []string{fmt.Sprintf("[unknown widget: %s]", widgetType)}
 	}
@@ -314,7 +316,7 @@ func tuiRenderText(ps *env.ProgramState, content env.Object, width int, styles e
 						// Get the widget's styles and content
 						widgetStyles, _ := tuiGetWidgetStyles(it)
 						widgetContent, _ := tuiGetWidgetContent(it)
-						
+
 						// Merge parent styles with widget styles (widget wins)
 						mergedStyles := env.NewDict(make(map[string]any))
 						for k, v := range styles.Data {
@@ -323,7 +325,7 @@ func tuiRenderText(ps *env.ProgramState, content env.Object, width int, styles e
 						for k, v := range widgetStyles.Data {
 							mergedStyles.Data[k] = v
 						}
-						
+
 						// Get the text content
 						var itemText string
 						if s, ok := widgetContent.(env.String); ok {
@@ -331,7 +333,7 @@ func tuiRenderText(ps *env.ProgramState, content env.Object, width int, styles e
 						} else if widgetContent != nil {
 							itemText = widgetContent.Print(*ps.Idx)
 						}
-						
+
 						// Apply merged styles
 						inlineText.WriteString(tuiApplyStyle(ps, *mergedStyles, itemText))
 					} else {
@@ -343,7 +345,7 @@ func tuiRenderText(ps *env.ProgramState, content env.Object, width int, styles e
 				}
 			}
 			text = inlineText.String()
-			
+
 			// For mixed content, wrapping and final styling is different
 			// The text already has ANSI codes embedded, so we wrap but don't re-style
 			var lines []string
@@ -352,7 +354,7 @@ func tuiRenderText(ps *env.ProgramState, content env.Object, width int, styles e
 			} else {
 				lines = strings.Split(text, "\n")
 			}
-			
+
 			var result []string
 			for _, line := range lines {
 				result = append(result, paddingStr+line)
@@ -704,22 +706,21 @@ func tuiRenderInput(ps *env.ProgramState, content env.Object, width int, styles 
 	return []string{display}
 }
 
-// ============================================================================
-// TUI App - Manages rendering and input
-// ============================================================================
+// ## TUI App - Manages rendering and input
 
 // TuiApp represents an inline terminal app
 type TuiApp struct {
-	theme          env.Dict           // Theme styles
-	state          env.Dict           // Current state
-	view           env.Object         // View block or function
+	theme          env.Dict   // Theme styles
+	state          env.Dict   // Current state
+	view           env.Object // View block or function
 	keyHandlers    map[string]env.Object
-	allKeysHandler env.Object         // Handler for all keys (set via on-keys)
+	allKeysHandler env.Object // Handler for all keys (set via on-keys)
 	running        bool
 	stopChan       chan struct{}
 	ps             *env.ProgramState
-	height         int      // Lines rendered
-	prevLines      []string // Previous output for diff rendering
+	height         int       // Lines rendered
+	prevLines      []string  // Previous output for diff rendering
+	focusedInput   *TuiInput // Currently focused input widget
 	mu             sync.Mutex
 }
 
@@ -940,11 +941,27 @@ func (app *TuiApp) eventLoop() {
 			case keyboard.KeyTab:
 				keyStr = "tab"
 			case keyboard.KeySpace:
-				keyStr = "space"
+				keyStr = " "
 			case keyboard.KeyCtrlC:
 				keyStr = "ctrl-c"
 				app.Stop()
 				return
+			case keyboard.KeyCtrlA:
+				keyStr = "ctrl-a"
+			case keyboard.KeyCtrlE:
+				keyStr = "ctrl-e"
+			case keyboard.KeyCtrlW:
+				keyStr = "ctrl-w"
+			case keyboard.KeyCtrlU:
+				keyStr = "ctrl-u"
+			case keyboard.KeyCtrlK:
+				keyStr = "ctrl-k"
+			case keyboard.KeyDelete:
+				keyStr = "delete"
+			case keyboard.KeyHome:
+				keyStr = "home"
+			case keyboard.KeyEnd:
+				keyStr = "end"
 			default:
 				if char != 0 {
 					keyStr = string(char)
@@ -961,13 +978,26 @@ func (app *TuiApp) eventLoop() {
 // handleKey handles a key press
 func (app *TuiApp) handleKey(key string) {
 	app.mu.Lock()
+	focusedInput := app.focusedInput
+	ps := app.ps
+	app.mu.Unlock()
+
+	// First, route to focused input if any
+	if focusedInput != nil && ps != nil {
+		handled := focusedInput.HandleKey(key, ps)
+		if handled {
+			app.Render()
+			return
+		}
+	}
+
+	app.mu.Lock()
 	handler, exists := app.keyHandlers[key]
 	// If no specific handler, use the all-keys handler
 	if !exists && app.allKeysHandler != nil {
 		handler = app.allKeysHandler
 		exists = true
 	}
-	ps := app.ps
 	app.mu.Unlock()
 
 	if !exists || ps == nil {
@@ -1040,16 +1070,303 @@ func (app *TuiApp) handleKey(key string) {
 	}
 }
 
-// ============================================================================
-// Builtins
-// ============================================================================
+// ## TUI Input - Managed text input widget with built-in key handling
+
+// TuiInput represents a text input field with cursor and selection
+type TuiInput struct {
+	value        []rune     // Current value as runes for proper unicode handling
+	cursor       int        // Cursor position (in runes)
+	placeholder  string     // Placeholder text
+	scrollOffset int        // Horizontal scroll offset for long text
+	width        int        // Display width
+	focused      bool       // Whether input is focused
+	onSubmit     env.Object // Callback when Enter is pressed
+	onChange     env.Object // Callback when value changes
+	ps           *env.ProgramState
+}
+
+// NewTuiInput creates a new input widget
+func NewTuiInput(placeholder string) *TuiInput {
+	return &TuiInput{
+		value:       []rune{},
+		cursor:      0,
+		placeholder: placeholder,
+		width:       40,
+		focused:     true,
+	}
+}
+
+// Type returns the type name for env.Native interface
+func (inp *TuiInput) Type() env.Type {
+	return env.NativeType
+}
+
+// Inspect returns a string representation
+func (inp *TuiInput) Inspect(idxs env.Idxs) string {
+	return fmt.Sprintf("[TuiInput: \"%s\" cursor:%d]", string(inp.value), inp.cursor)
+}
+
+// GetKind returns the kind string
+func (inp *TuiInput) GetKind() int {
+	return int(env.NativeType)
+}
+
+// Equal checks equality
+func (inp *TuiInput) Equal(other env.Object) bool {
+	if o, ok := other.(*TuiInput); ok {
+		return inp == o
+	}
+	return false
+}
+
+// Dump returns a printable representation
+func (inp *TuiInput) Dump(e env.Idxs) string {
+	return inp.Inspect(e)
+}
+
+// Trace returns a trace representation
+func (inp *TuiInput) Trace(msg string) {
+	fmt.Println(msg)
+}
+
+// Print returns printable string
+func (inp *TuiInput) Print(e env.Idxs) string {
+	return inp.Inspect(e)
+}
+
+// SetValue sets the input value
+func (inp *TuiInput) SetValue(val string) {
+	inp.value = []rune(val)
+	if inp.cursor > len(inp.value) {
+		inp.cursor = len(inp.value)
+	}
+}
+
+// GetValue returns the current value
+func (inp *TuiInput) GetValue() string {
+	return string(inp.value)
+}
+
+// HandleKey processes a key event, returns true if handled
+func (inp *TuiInput) HandleKey(key string, ps *env.ProgramState) bool {
+	inp.ps = ps
+	oldValue := string(inp.value)
+	handled := true
+
+	switch key {
+	// Submit
+	case "enter":
+		if inp.onSubmit != nil {
+			inp.callCallback(inp.onSubmit, string(inp.value))
+		}
+		return true
+
+	// Navigation
+	case "left":
+		if inp.cursor > 0 {
+			inp.cursor--
+		}
+	case "right":
+		if inp.cursor < len(inp.value) {
+			inp.cursor++
+		}
+	case "ctrl-a", "home":
+		inp.cursor = 0
+	case "ctrl-e", "end":
+		inp.cursor = len(inp.value)
+	case "ctrl-left", "alt-left":
+		inp.cursor = inp.findWordBoundaryLeft()
+	case "ctrl-right", "alt-right":
+		inp.cursor = inp.findWordBoundaryRight()
+
+	// Deletion
+	case "backspace":
+		if inp.cursor > 0 {
+			inp.value = append(inp.value[:inp.cursor-1], inp.value[inp.cursor:]...)
+			inp.cursor--
+		}
+	case "delete":
+		if inp.cursor < len(inp.value) {
+			inp.value = append(inp.value[:inp.cursor], inp.value[inp.cursor+1:]...)
+		}
+	case "ctrl-w", "alt-backspace":
+		// Delete word backwards
+		newPos := inp.findWordBoundaryLeft()
+		inp.value = append(inp.value[:newPos], inp.value[inp.cursor:]...)
+		inp.cursor = newPos
+	case "ctrl-u":
+		// Delete to start of line
+		inp.value = inp.value[inp.cursor:]
+		inp.cursor = 0
+	case "ctrl-k":
+		// Delete to end of line
+		inp.value = inp.value[:inp.cursor]
+
+	default:
+		// Check if it's a printable character (single rune)
+		runes := []rune(key)
+		if len(runes) == 1 && runes[0] >= ' ' && runes[0] <= '~' {
+			// Insert character at cursor
+			newValue := make([]rune, len(inp.value)+1)
+			copy(newValue, inp.value[:inp.cursor])
+			newValue[inp.cursor] = runes[0]
+			copy(newValue[inp.cursor+1:], inp.value[inp.cursor:])
+			inp.value = newValue
+			inp.cursor++
+		} else {
+			handled = false
+		}
+	}
+
+	// Call onChange if value changed
+	newValue := string(inp.value)
+	if newValue != oldValue && inp.onChange != nil {
+		inp.callCallback(inp.onChange, newValue)
+	}
+
+	return handled
+}
+
+// findWordBoundaryLeft finds the position of the previous word boundary
+func (inp *TuiInput) findWordBoundaryLeft() int {
+	if inp.cursor == 0 {
+		return 0
+	}
+	pos := inp.cursor - 1
+	// Skip any spaces
+	for pos > 0 && inp.value[pos] == ' ' {
+		pos--
+	}
+	// Skip word characters
+	for pos > 0 && inp.value[pos-1] != ' ' {
+		pos--
+	}
+	return pos
+}
+
+// findWordBoundaryRight finds the position of the next word boundary
+func (inp *TuiInput) findWordBoundaryRight() int {
+	if inp.cursor >= len(inp.value) {
+		return len(inp.value)
+	}
+	pos := inp.cursor
+	// Skip word characters
+	for pos < len(inp.value) && inp.value[pos] != ' ' {
+		pos++
+	}
+	// Skip spaces
+	for pos < len(inp.value) && inp.value[pos] == ' ' {
+		pos++
+	}
+	return pos
+}
+
+// callCallback calls a Rye function with a value
+func (inp *TuiInput) callCallback(callback env.Object, value string) {
+	if inp.ps == nil {
+		return
+	}
+
+	switch fn := callback.(type) {
+	case env.Function:
+		psTemp := *inp.ps
+		fnCtx := env.NewEnv(psTemp.Ctx)
+
+		// Set first argument (value)
+		if fn.Spec.Series.Len() > 0 {
+			argWord := fn.Spec.Series.Get(0)
+			if word, ok := argWord.(env.Word); ok {
+				fnCtx.Set(word.Index, *env.NewString(value))
+			}
+		}
+
+		psX := env.NewProgramState(fn.Body.Series, psTemp.Idx)
+		psX.Ctx = fnCtx
+		psX.PCtx = psTemp.PCtx
+		EvalBlock(psX)
+	}
+}
+
+// Render returns the widget block for this input
+func (inp *TuiInput) Render() env.Block {
+	// Build display string with cursor
+	displayWidth := inp.width
+	if displayWidth < 10 {
+		displayWidth = 40
+	}
+
+	var display string
+	if len(inp.value) == 0 && !inp.focused {
+		display = inp.placeholder
+	} else {
+		// Calculate scroll offset to keep cursor visible
+		if inp.cursor < inp.scrollOffset {
+			inp.scrollOffset = inp.cursor
+		} else if inp.cursor >= inp.scrollOffset+displayWidth-1 {
+			inp.scrollOffset = inp.cursor - displayWidth + 2
+		}
+
+		// Get visible portion
+		start := inp.scrollOffset
+		end := start + displayWidth
+		if end > len(inp.value) {
+			end = len(inp.value)
+		}
+
+		visibleValue := string(inp.value[start:end])
+
+		if inp.focused {
+			// Insert cursor character
+			cursorPos := inp.cursor - inp.scrollOffset
+			if cursorPos < 0 {
+				cursorPos = 0
+			}
+			if cursorPos > len([]rune(visibleValue)) {
+				cursorPos = len([]rune(visibleValue))
+			}
+
+			runes := []rune(visibleValue)
+			if cursorPos < len(runes) {
+				// Cursor on a character - show inverted
+				before := string(runes[:cursorPos])
+				cursorChar := string(runes[cursorPos])
+				after := string(runes[cursorPos+1:])
+				display = before + "\x1b[7m" + cursorChar + "\x1b[0m" + after
+			} else {
+				// Cursor at end - show block
+				display = visibleValue + "\x1b[7m \x1b[0m"
+			}
+		} else {
+			display = visibleValue
+		}
+	}
+
+	// Create widget block - just return the text with cursor, styles applied by renderer
+	content := *env.NewString(display)
+	styles := env.NewDict(map[string]any{})
+
+	// Use the ps.Idx for proper word indexing
+	if inp.ps != nil {
+		return tuiMakeWidgetWithIdx(inp.ps.Idx, "input-field", *styles, content)
+	}
+	// Fallback - shouldn't happen in normal use
+	return tuiMakeWidgetWithIdx(env.NewIdxs(), "input-field", *styles, content)
+}
+
+// tuiMakeWidgetWithIdx creates a widget block using the given Idxs
+func tuiMakeWidgetWithIdx(idxs *env.Idxs, widgetType string, styles env.Dict, content env.Object) env.Block {
+	typeWord := env.NewWord(idxs.IndexWord(widgetType))
+	stylesBlock := env.NewBlock(*env.NewTSeries([]env.Object{styles}))
+	return *env.NewBlock(*env.NewTSeries([]env.Object{*typeWord, *stylesBlock, content}))
+}
+
+// ## Builtins
 
 var Builtins_tui = map[string]*env.Builtin{
 
-	// ============================================================================
-	// Widget Constructors - Return pure data blocks
-	// ============================================================================
-
+	//
+	// ##### TUI library ##### ""
+	//
 	// text - inline text without wrapping
 	// Tests:
 	// equal { text "hello" |type? } 'block
@@ -1071,7 +1388,7 @@ var Builtins_tui = map[string]*env.Builtin{
 	// * content: String text content
 	// Returns:
 	// * block representing styled text widget
-	"text\\style": {
+	"text\\": {
 		Argsn: 2,
 		Doc:   "Creates a styled text widget. Returns { 'text { styles } content }",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1110,7 +1427,7 @@ var Builtins_tui = map[string]*env.Builtin{
 	// * content: String or block of strings
 	// Returns:
 	// * block representing styled block widget
-	"block\\style": {
+	"block\\": {
 		Argsn: 2,
 		Doc:   "Creates a styled text block widget. Returns { 'block { styles } content }",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1218,13 +1535,13 @@ var Builtins_tui = map[string]*env.Builtin{
 	// * children: Block of widget expressions (will be evaluated)
 	// Returns:
 	// * block representing styled vbox widget
-	"vbox\\style": {
+	"vbox\\": {
 		Argsn: 2,
 		Doc:   "Creates a styled vertical box container. Supports background, color, padding, bold.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			styles, ok := arg0.(env.Dict)
 			if !ok {
-				return MakeArgError(ps, 1, []env.Type{env.DictType}, "vbox\\style")
+				return MakeArgError(ps, 1, []env.Type{env.DictType}, "vbox\\")
 			}
 
 			switch block := arg1.(type) {
@@ -1251,7 +1568,7 @@ var Builtins_tui = map[string]*env.Builtin{
 				childrenBlock := *env.NewBlock(*env.NewTSeries(children))
 				return tuiMakeWidget(ps, "vbox", styles, childrenBlock)
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "vbox\\style")
+				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "vbox\\")
 			}
 		},
 	},
@@ -1326,35 +1643,230 @@ var Builtins_tui = map[string]*env.Builtin{
 		},
 	},
 
-	// input - text input field
-	// Tests:
-	// equal { tui-input "placeholder" |type? } 'block
+	// input - managed text input field with built-in key handling
 	// Args:
 	// * placeholder: String placeholder text
 	// Returns:
-	// * block representing input widget
+	// * Native TuiInput object
 	"input": {
 		Argsn: 1,
-		Doc:   "Creates a text input widget. Returns { 'input { } { value: '' placeholder: ... } }",
+		Doc:   "Creates a managed text input widget with built-in key handling. Returns native TuiInput.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			placeholder, ok := arg0.(env.String)
 			if !ok {
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "input")
 			}
+			inp := NewTuiInput(placeholder.Value)
+			inp.ps = ps
+			return *env.NewNative(ps.Idx, inp, "tui-input")
+		},
+	},
+
+	// field - unmanaged text field (pure data block, manual key handling)
+	// Args:
+	// * placeholder: String placeholder text
+	// Returns:
+	// * block representing field widget { 'field { } { value: "" placeholder: ... } }
+	"field": {
+		Argsn: 1,
+		Doc:   "Creates an unmanaged text field widget (pure data). Handle keys manually. Returns { 'field { } { value: '' placeholder: ... } }",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			placeholder, ok := arg0.(env.String)
+			if !ok {
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "field")
+			}
 			content := env.NewDict(map[string]any{
 				"value":       *env.NewString(""),
 				"placeholder": placeholder,
 				"cursor":      *env.NewInteger(0),
-				"focused":     *env.NewInteger(0),
 			})
-			return tuiMakeWidget(ps, "input", *env.NewDict(nil), *content)
+			return tuiMakeWidget(ps, "field", *env.NewDict(nil), *content)
 		},
 	},
 
-	// ============================================================================
-	// Rendering
-	// ============================================================================
+	// field\value - create field with initial value
+	"field\\value": {
+		Argsn: 2,
+		Doc:   "Creates an unmanaged text field with initial value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			value, ok := arg0.(env.String)
+			if !ok {
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "field\\value")
+			}
+			placeholder, ok := arg1.(env.String)
+			if !ok {
+				return MakeArgError(ps, 2, []env.Type{env.StringType}, "field\\value")
+			}
+			content := env.NewDict(map[string]any{
+				"value":       value,
+				"placeholder": placeholder,
+				"cursor":      *env.NewInteger(int64(len(value.Value))),
+			})
+			return tuiMakeWidget(ps, "field", *env.NewDict(nil), *content)
+		},
+	},
 
+	// input//On-submit - set submit callback
+	"tui-input//On-submit": {
+		Argsn: 2,
+		Doc:   "Sets the callback function called when Enter is pressed. Callback receives (value).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch inp := arg0.(type) {
+			case env.Native:
+				if tinp, ok := inp.Value.(*TuiInput); ok {
+					tinp.onSubmit = arg1
+					tinp.ps = ps
+					return arg0
+				}
+				return MakeBuiltinError(ps, "Expected TuiInput", "tui-input//On-submit")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "tui-input//On-submit")
+			}
+		},
+	},
+
+	// input//On-change - set change callback
+	"tui-input//On-change": {
+		Argsn: 2,
+		Doc:   "Sets the callback function called when value changes. Callback receives (value).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch inp := arg0.(type) {
+			case env.Native:
+				if tinp, ok := inp.Value.(*TuiInput); ok {
+					tinp.onChange = arg1
+					tinp.ps = ps
+					return arg0
+				}
+				return MakeBuiltinError(ps, "Expected TuiInput", "tui-input//On-change")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "tui-input//On-change")
+			}
+		},
+	},
+
+	// input//Value? - get current value
+	"tui-input//Value?": {
+		Argsn: 1,
+		Doc:   "Returns the current value of the input.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch inp := arg0.(type) {
+			case env.Native:
+				if tinp, ok := inp.Value.(*TuiInput); ok {
+					return *env.NewString(tinp.GetValue())
+				}
+				return MakeBuiltinError(ps, "Expected TuiInput", "tui-input//Value?")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "tui-input//Value?")
+			}
+		},
+	},
+
+	// input//Set-value - set value
+	"tui-input//Set-value": {
+		Argsn: 2,
+		Doc:   "Sets the value of the input.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch inp := arg0.(type) {
+			case env.Native:
+				if tinp, ok := inp.Value.(*TuiInput); ok {
+					if val, ok := arg1.(env.String); ok {
+						tinp.SetValue(val.Value)
+						return arg0
+					}
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "tui-input//Set-value")
+				}
+				return MakeBuiltinError(ps, "Expected TuiInput", "tui-input//Set-value")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "tui-input//Set-value")
+			}
+		},
+	},
+
+	// input//Focus - set focus state
+	"tui-input//Focus": {
+		Argsn: 2,
+		Doc:   "Sets the focus state of the input (1 = focused, 0 = not focused).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch inp := arg0.(type) {
+			case env.Native:
+				if tinp, ok := inp.Value.(*TuiInput); ok {
+					if val, ok := arg1.(env.Integer); ok {
+						tinp.focused = val.Value != 0
+						return arg0
+					}
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "tui-input//Focus")
+				}
+				return MakeBuiltinError(ps, "Expected TuiInput", "tui-input//Focus")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "tui-input//Focus")
+			}
+		},
+	},
+
+	// input//Width - set display width
+	"tui-input//Width": {
+		Argsn: 2,
+		Doc:   "Sets the display width of the input.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch inp := arg0.(type) {
+			case env.Native:
+				if tinp, ok := inp.Value.(*TuiInput); ok {
+					if val, ok := arg1.(env.Integer); ok {
+						tinp.width = int(val.Value)
+						return arg0
+					}
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "tui-input//Width")
+				}
+				return MakeBuiltinError(ps, "Expected TuiInput", "tui-input//Width")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "tui-input//Width")
+			}
+		},
+	},
+
+	// input//Handle-key - process a key event
+	"tui-input//Handle-key": {
+		Argsn: 2,
+		Doc:   "Processes a key event. Returns 1 if handled, 0 if not.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch inp := arg0.(type) {
+			case env.Native:
+				if tinp, ok := inp.Value.(*TuiInput); ok {
+					if key, ok := arg1.(env.String); ok {
+						handled := tinp.HandleKey(key.Value, ps)
+						if handled {
+							return *env.NewInteger(1)
+						}
+						return *env.NewInteger(0)
+					}
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "tui-input//Handle-key")
+				}
+				return MakeBuiltinError(ps, "Expected TuiInput", "tui-input//Handle-key")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "tui-input//Handle-key")
+			}
+		},
+	},
+
+	// input//Widget - get the widget block for rendering
+	"tui-input//Widget": {
+		Argsn: 1,
+		Doc:   "Returns the widget block for rendering this input.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch inp := arg0.(type) {
+			case env.Native:
+				if tinp, ok := inp.Value.(*TuiInput); ok {
+					tinp.ps = ps // Ensure ps is set for proper widget creation
+					return tinp.Render()
+				}
+				return MakeBuiltinError(ps, "Expected TuiInput", "tui-input//Widget")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "tui-input//Widget")
+			}
+		},
+	},
+
+	// ## Rendering
 	// tui-render - render a widget tree to the terminal
 	// Args:
 	// * widget: Block widget tree
@@ -1445,9 +1957,7 @@ var Builtins_tui = map[string]*env.Builtin{
 		},
 	},
 
-	// ============================================================================
-	// TUI App
-	// ============================================================================
+	// ## TUI App
 
 	// tui-app - create a TUI app
 	// Tests:
@@ -1465,254 +1975,299 @@ var Builtins_tui = map[string]*env.Builtin{
 				return MakeArgError(ps, 1, []env.Type{env.DictType}, "app")
 			}
 			app := NewTuiApp(theme)
-			return *env.NewNative(ps.Idx, app, "app")
+			return *env.NewNative(ps.Idx, app, "tui-app")
 		},
 	},
 
-	// tui-app//view - set the view
+	// tui-app//View - set the view
 	// Args:
 	// * app: TuiApp native
 	// * view: Block widget or Function returning widget
 	// Returns:
 	// * the app
-	"app//view": {
+	"tui-app//View": {
 		Argsn: 2,
 		Doc:   "Sets the view for the TUI app. Can be a widget block or a function that returns one.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			native, ok := arg0.(env.Native)
 			if !ok {
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "app//view")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "tui-app//View")
 			}
 			app, ok := native.Value.(*TuiApp)
 			if !ok {
-				return MakeBuiltinError(ps, "Expected TuiApp", "app//view")
+				return MakeBuiltinError(ps, "Expected TuiApp", "tui-app//View")
 			}
 			app.SetView(arg1)
 			return arg0
 		},
 	},
 
-	// tui-app//state - set the state
+	// tui-app//State - set the state
 	// Args:
 	// * app: TuiApp native
 	// * state: Dict state
 	// Returns:
 	// * the app
-	"app//state": {
+	"tui-app//State": {
 		Argsn: 2,
 		Doc:   "Sets the state for the TUI app.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			native, ok := arg0.(env.Native)
 			if !ok {
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "app//state")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "tui-app//State")
 			}
 			app, ok := native.Value.(*TuiApp)
 			if !ok {
-				return MakeBuiltinError(ps, "Expected TuiApp", "app//state")
+				return MakeBuiltinError(ps, "Expected TuiApp", "tui-app//State")
 			}
 			state, ok := arg1.(env.Dict)
 			if !ok {
-				return MakeArgError(ps, 2, []env.Type{env.DictType}, "app//state")
+				return MakeArgError(ps, 2, []env.Type{env.DictType}, "tui-app//State")
 			}
 			app.SetState(state)
 			return arg0
 		},
 	},
 
-	// tui-app//state? - get the state
+	// tui-app//State? - get the state
 	// Args:
 	// * app: TuiApp native
 	// Returns:
 	// * Dict current state
-	"app//state?": {
+	"tui-app//State?": {
 		Argsn: 1,
 		Doc:   "Gets the current state of the TUI app.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			native, ok := arg0.(env.Native)
 			if !ok {
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "app//state?")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "tui-app//State?")
 			}
 			app, ok := native.Value.(*TuiApp)
 			if !ok {
-				return MakeBuiltinError(ps, "Expected TuiApp", "app//state?")
+				return MakeBuiltinError(ps, "Expected TuiApp", "tui-app//State?")
 			}
 			return app.GetState()
 		},
 	},
 
-	// tui-app//update - update state and re-render
+	// tui-app//Update - update state and re-render
 	// Args:
 	// * app: TuiApp native
 	// * updates: Dict state updates
 	// Returns:
 	// * the app
-	"app//update": {
+	"tui-app//Update": {
 		Argsn: 2,
 		Doc:   "Updates the state and re-renders.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			native, ok := arg0.(env.Native)
 			if !ok {
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "app//update")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "tui-app//Update")
 			}
 			app, ok := native.Value.(*TuiApp)
 			if !ok {
-				return MakeBuiltinError(ps, "Expected TuiApp", "app//update")
+				return MakeBuiltinError(ps, "Expected TuiApp", "tui-app//Update")
 			}
 			updates, ok := arg1.(env.Dict)
 			if !ok {
-				return MakeArgError(ps, 2, []env.Type{env.DictType}, "app//update")
+				return MakeArgError(ps, 2, []env.Type{env.DictType}, "tui-app//Update")
 			}
 			app.Update(updates)
 			return arg0
 		},
 	},
 
-	// tui-app//on-key - register key handler
+	// tui-app//On-key - register key handler
 	// Args:
 	// * app: TuiApp native
 	// * key: String key name (or "*" for default)
 	// * handler: Function or Block
 	// Returns:
 	// * the app
-	"app//on-key": {
+	"tui-app//On-key": {
 		Argsn: 3,
 		Doc:   "Registers a handler for a specific key. Key can be 'up', 'down', 'enter', 'escape', 'q', etc.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			native, ok := arg0.(env.Native)
 			if !ok {
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "app//on-key")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "tui-app//On-key")
 			}
 			app, ok := native.Value.(*TuiApp)
 			if !ok {
-				return MakeBuiltinError(ps, "Expected TuiApp", "app//on-key")
+				return MakeBuiltinError(ps, "Expected TuiApp", "tui-app//On-key")
 			}
 			key, ok := arg1.(env.String)
 			if !ok {
-				return MakeArgError(ps, 2, []env.Type{env.StringType}, "app//on-key")
+				return MakeArgError(ps, 2, []env.Type{env.StringType}, "tui-app//On-key")
 			}
 			switch arg2.(type) {
 			case env.Function, env.Block:
 				app.OnKey(key.Value, arg2)
 				return arg0
 			default:
-				return MakeArgError(ps, 3, []env.Type{env.FunctionType, env.BlockType}, "app//on-key")
+				return MakeArgError(ps, 3, []env.Type{env.FunctionType, env.BlockType}, "tui-app//On-key")
 			}
 		},
 	},
 
-	// tui-app//on-keys - register a handler for all keys
+	// tui-app//On-keys - register a handler for all keys
 	// Args:
 	// * app: TuiApp native
 	// * handler: Function that takes (state, key)
 	// Returns:
 	// * the app
-	"app//on-keys": {
+	"tui-app//On-keys": {
 		Argsn: 2,
 		Doc:   "Registers a handler for ALL keys. Function receives (state, key). Use switch on key to handle different keys.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			native, ok := arg0.(env.Native)
 			if !ok {
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "app//on-keys")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "tui-app//On-keys")
 			}
 			app, ok := native.Value.(*TuiApp)
 			if !ok {
-				return MakeBuiltinError(ps, "Expected TuiApp", "app//on-keys")
+				return MakeBuiltinError(ps, "Expected TuiApp", "tui-app//On-keys")
 			}
 			switch arg1.(type) {
 			case env.Function, env.Block:
 				app.OnKeys(arg1)
 				return arg0
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.FunctionType, env.BlockType}, "app//on-keys")
+				return MakeArgError(ps, 2, []env.Type{env.FunctionType, env.BlockType}, "tui-app//On-keys")
 			}
 		},
 	},
 
-	// tui-app//start - start the app
+	// app//Focus - set focused input widget
+	// Args:
+	// * app: TuiApp native
+	// * input: TuiInput native (or 0 to clear focus)
+	// Returns:
+	// * the app
+	"tui-app//Focus": {
+		Argsn: 2,
+		Doc:   "Sets the focused input widget. Keys are routed to focused input first.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			native, ok := arg0.(env.Native)
+			if !ok {
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "tui-app//Focus")
+			}
+			app, ok := native.Value.(*TuiApp)
+			if !ok {
+				return MakeBuiltinError(ps, "Expected TuiApp", "tui-app//Focus")
+			}
+
+			// Allow clearing focus with 0 or none
+			if i, ok := arg1.(env.Integer); ok && i.Value == 0 {
+				app.mu.Lock()
+				app.focusedInput = nil
+				app.mu.Unlock()
+				return arg0
+			}
+
+			inputNative, ok := arg1.(env.Native)
+			if !ok {
+				return MakeArgError(ps, 2, []env.Type{env.NativeType}, "tui-app//Focus")
+			}
+			inp, ok := inputNative.Value.(*TuiInput)
+			if !ok {
+				return MakeBuiltinError(ps, "Expected TuiInput", "tui-app//Focus")
+			}
+
+			app.mu.Lock()
+			app.focusedInput = inp
+			inp.focused = true
+			inp.ps = ps
+			app.mu.Unlock()
+			return arg0
+		},
+	},
+
+	// tui-app//Start - start the app
 	// Args:
 	// * app: TuiApp native
 	// Returns:
 	// * the app
-	"app//start": {
+	"tui-app//Start": {
 		Argsn: 1,
 		Doc:   "Starts the TUI app, entering raw mode and beginning the event loop.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			native, ok := arg0.(env.Native)
 			if !ok {
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "app//start")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "tui-app//Start")
 			}
 			app, ok := native.Value.(*TuiApp)
 			if !ok {
-				return MakeBuiltinError(ps, "Expected TuiApp", "app//start")
+				return MakeBuiltinError(ps, "Expected TuiApp", "tui-app//Start")
 			}
 			err := app.Start(ps)
 			if err != nil {
-				return MakeBuiltinError(ps, err.Error(), "app//start")
+				return MakeBuiltinError(ps, err.Error(), "tui-app//Start")
 			}
 			return arg0
 		},
 	},
 
-	// tui-app//stop - stop the app
+	// tui-app//Stop - stop the app
 	// Args:
 	// * app: TuiApp native
 	// Returns:
 	// * the app
-	"app//stop": {
+	"tui-app//Stop": {
 		Argsn: 1,
 		Doc:   "Stops the TUI app.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			native, ok := arg0.(env.Native)
 			if !ok {
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "app//stop")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "tui-app//Stop")
 			}
 			app, ok := native.Value.(*TuiApp)
 			if !ok {
-				return MakeBuiltinError(ps, "Expected TuiApp", "app//stop")
+				return MakeBuiltinError(ps, "Expected TuiApp", "tui-app//Stop")
 			}
 			app.Stop()
 			return arg0
 		},
 	},
 
-	// tui-app//wait - wait for app to stop
+	// tui-app//Wait - wait for app to stop
 	// Args:
 	// * app: TuiApp native
 	// Returns:
 	// * the app
-	"app//wait": {
+	"tui-app//Wait": {
 		Argsn: 1,
 		Doc:   "Blocks until the TUI app stops.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			native, ok := arg0.(env.Native)
 			if !ok {
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "app//wait")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "tui-app//Wait")
 			}
 			app, ok := native.Value.(*TuiApp)
 			if !ok {
-				return MakeBuiltinError(ps, "Expected TuiApp", "app//wait")
+				return MakeBuiltinError(ps, "Expected TuiApp", "tui-app//Wait")
 			}
 			app.Wait()
 			return arg0
 		},
 	},
 
-	// tui-app//render - force a render
+	// tui-app//Render - force a render
 	// Args:
 	// * app: TuiApp native
 	// Returns:
 	// * the app
-	"app//redraw": {
+	"tui-app//Redraw": {
 		Argsn: 1,
 		Doc:   "Forces a re-render of the TUI app.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			native, ok := arg0.(env.Native)
 			if !ok {
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "app//redraw")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "tui-app//Redraw")
 			}
 			app, ok := native.Value.(*TuiApp)
 			if !ok {
-				return MakeBuiltinError(ps, "Expected TuiApp", "app//redraw")
+				return MakeBuiltinError(ps, "Expected TuiApp", "tui-app//Redraw")
 			}
 			// Ensure ps is set for rendering
 			app.mu.Lock()
@@ -1725,9 +2280,7 @@ var Builtins_tui = map[string]*env.Builtin{
 		},
 	},
 
-	// ============================================================================
-	// Helpers
-	// ============================================================================
+	// ## Helpers
 
 	// tui-style - create a style dict
 	// Args:
