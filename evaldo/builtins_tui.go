@@ -5,6 +5,7 @@ package evaldo
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -14,6 +15,155 @@ import (
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/term"
 )
+
+// ansiRegex matches ANSI escape sequences
+var ansiRegex = regexp.MustCompile(`\x1b\[[0-9;]*[a-zA-Z]|\x1b\]8;;[^\x1b]*\x1b\\`)
+
+// VisibleWidth returns the display width of a string, ignoring ANSI escape codes
+func VisibleWidth(s string) int {
+	// Strip ANSI codes
+	stripped := ansiRegex.ReplaceAllString(s, "")
+	return runewidth.StringWidth(stripped)
+}
+
+// TruncateToWidth truncates a string to fit within the given width,
+// preserving ANSI escape codes and optionally adding an ellipsis
+func TruncateToWidth(s string, width int, ellipsis string) string {
+	if width <= 0 {
+		return ""
+	}
+
+	visWidth := VisibleWidth(s)
+	if visWidth <= width {
+		return s
+	}
+
+	ellipsisWidth := VisibleWidth(ellipsis)
+	targetWidth := width - ellipsisWidth
+	if targetWidth <= 0 {
+		return ellipsis[:width] // Edge case: ellipsis longer than width
+	}
+
+	var result strings.Builder
+	currentWidth := 0
+	inEscape := false
+	escapeStart := 0
+	hasAnsi := false // Track if we encountered any ANSI codes
+
+	runes := []rune(s)
+	for i := 0; i < len(runes); i++ {
+		r := runes[i]
+
+		// Detect start of ANSI escape
+		if r == '\x1b' {
+			inEscape = true
+			hasAnsi = true
+			escapeStart = i
+			result.WriteRune(r)
+			continue
+		}
+
+		if inEscape {
+			result.WriteRune(r)
+			// Check for end of escape sequence
+			if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') {
+				inEscape = false
+			}
+			// Also handle OSC sequences (end with ST or BEL)
+			if i > escapeStart && runes[escapeStart+1] == ']' {
+				if r == '\\' && i > 0 && runes[i-1] == '\x1b' {
+					inEscape = false
+				}
+			}
+			continue
+		}
+
+		// Regular character - check if it fits
+		charWidth := runewidth.RuneWidth(r)
+		if currentWidth+charWidth > targetWidth {
+			break
+		}
+		result.WriteRune(r)
+		currentWidth += charWidth
+	}
+
+	// Only add reset code if we had ANSI codes (to close any open formatting)
+	if hasAnsi {
+		result.WriteString("\x1b[0m")
+	}
+	result.WriteString(ellipsis)
+	return result.String()
+}
+
+// WrapText wraps text to the given width, preserving ANSI codes across lines
+func WrapText(s string, width int) []string {
+	if width <= 0 {
+		return []string{}
+	}
+
+	var lines []string
+	var currentLine strings.Builder
+	currentWidth := 0
+	var activeStyles strings.Builder // Track active ANSI styles
+
+	runes := []rune(s)
+	for i := 0; i < len(runes); i++ {
+		r := runes[i]
+
+		// Handle newlines
+		if r == '\n' {
+			lines = append(lines, currentLine.String())
+			currentLine.Reset()
+			// Reapply active styles to new line
+			currentLine.WriteString(activeStyles.String())
+			currentWidth = 0
+			continue
+		}
+
+		// Detect ANSI escape sequences
+		if r == '\x1b' && i+1 < len(runes) && runes[i+1] == '[' {
+			// Find end of escape sequence
+			escEnd := i + 2
+			for escEnd < len(runes) && !((runes[escEnd] >= 'a' && runes[escEnd] <= 'z') || (runes[escEnd] >= 'A' && runes[escEnd] <= 'Z')) {
+				escEnd++
+			}
+			if escEnd < len(runes) {
+				escEnd++ // Include the letter
+				escape := string(runes[i:escEnd])
+				currentLine.WriteString(escape)
+
+				// Track style changes
+				if escape == "\x1b[0m" {
+					activeStyles.Reset() // Reset clears all styles
+				} else {
+					activeStyles.WriteString(escape)
+				}
+				i = escEnd - 1
+				continue
+			}
+		}
+
+		// Regular character
+		charWidth := runewidth.RuneWidth(r)
+		if currentWidth+charWidth > width {
+			// Wrap to next line
+			lines = append(lines, currentLine.String())
+			currentLine.Reset()
+			// Reapply active styles to new line
+			currentLine.WriteString(activeStyles.String())
+			currentWidth = 0
+		}
+		currentLine.WriteRune(r)
+		currentWidth += charWidth
+	}
+
+	// Don't forget the last line
+	if currentLine.Len() > 0 {
+		lines = append(lines, currentLine.String())
+	}
+
+	return lines
+}
 
 // TUI Library - Minimal declarative terminal UI
 // Design principles (from ideas.md):
