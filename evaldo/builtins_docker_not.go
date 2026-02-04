@@ -1,5 +1,5 @@
-//go:build no_docker
-// +build no_docker
+//go:build no_docker || wasm || js
+// +build no_docker wasm js
 
 package evaldo
 
