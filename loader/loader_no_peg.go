@@ -12,6 +12,26 @@ import (
 	"github.com/refaktor/rye/util"
 )
 
+// processHexEscapesNoPeg handles \xHH escape sequences in strings
+func processHexEscapesNoPeg(s string) string {
+	var result strings.Builder
+	i := 0
+	for i < len(s) {
+		if i+3 < len(s) && s[i] == '\\' && s[i+1] == 'x' {
+			// Try to parse two hex digits
+			hexStr := s[i+2 : i+4]
+			if val, err := strconv.ParseUint(hexStr, 16, 8); err == nil {
+				result.WriteByte(byte(val))
+				i += 4
+				continue
+			}
+		}
+		result.WriteByte(s[i])
+		i++
+	}
+	return result.String()
+}
+
 // Token types for the non-PEG parser
 const (
 	NPEG_TOKEN_NONE = iota
@@ -1414,9 +1434,9 @@ func (p *NoPEGParser) parseToken() (env.Object, error) {
 		str = strings.Replace(str, "\\r", "\r", -1)
 		str = strings.Replace(str, "\\t", "\t", -1)
 		str = strings.Replace(str, "\\e", "\x1b", -1)
+		str = processHexEscapesNoPeg(str) // Handle \xHH hex escapes
 		str = strings.Replace(str, "\\\\", "\\", -1)
 		str = strings.Replace(str, "\\\"", "\"", -1)
-		// str = strings.Replace(str, "\\\\", "\\", -1)
 		return *env.NewString(str), nil
 	case NPEG_TOKEN_URI:
 		parts := strings.SplitN(p.currentToken.Value, "://", 2)

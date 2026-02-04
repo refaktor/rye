@@ -441,12 +441,15 @@ var builtins_functions = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			// Check if first argument is a function or builtin
 			var callerType int
+			var originalArgsn int
 
-			switch arg0.(type) {
+			switch fn := arg0.(type) {
 			case env.Builtin:
 				callerType = 0
+				originalArgsn = fn.Argsn
 			case env.Function:
 				callerType = 1
+				originalArgsn = fn.Argsn
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.BuiltinType, env.FunctionType}, "partial")
 			}
@@ -464,45 +467,51 @@ var builtins_functions = map[string]*env.Builtin{
 				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "partial")
 			}
 
-			// Extract arguments from the block
+			// Extract arguments from the block and count nils (placeholders)
 			var cur0, cur1, cur2, cur3, cur4 env.Object
+			argsn := 0
 
-			// Set arguments based on the block contents
-			if len(args) > 0 {
+			// Set arguments based on the block contents, only count nils up to originalArgsn
+			if len(args) > 0 && originalArgsn > 0 {
 				if args[0].Type() == env.VoidType {
 					cur0 = nil
+					argsn++
 				} else {
 					cur0 = args[0]
 				}
 			}
 
-			if len(args) > 1 {
+			if len(args) > 1 && originalArgsn > 1 {
 				if args[1].Type() == env.VoidType {
 					cur1 = nil
+					argsn++
 				} else {
 					cur1 = args[1]
 				}
 			}
 
-			if len(args) > 2 {
+			if len(args) > 2 && originalArgsn > 2 {
 				if args[2].Type() == env.VoidType {
 					cur2 = nil
+					argsn++
 				} else {
 					cur2 = args[2]
 				}
 			}
 
-			if len(args) > 3 {
+			if len(args) > 3 && originalArgsn > 3 {
 				if args[3].Type() == env.VoidType {
 					cur3 = nil
+					argsn++
 				} else {
 					cur3 = args[3]
 				}
 			}
 
-			if len(args) > 4 {
+			if len(args) > 4 && originalArgsn > 4 {
 				if args[4].Type() == env.VoidType {
 					cur4 = nil
+					argsn++
 				} else {
 					cur4 = args[4]
 				}
@@ -511,10 +520,10 @@ var builtins_functions = map[string]*env.Builtin{
 			// Create the CurriedCaller based on the function type
 			if callerType == 0 {
 				// Builtin
-				return *env.NewCurriedCallerFromBuiltin(arg0.(env.Builtin), cur0, cur1, cur2, cur3, cur4)
+				return *env.NewCurriedCallerFromBuiltin(arg0.(env.Builtin), cur0, cur1, cur2, cur3, cur4, argsn)
 			} else {
 				// Function
-				return *env.NewCurriedCallerFromFunction(arg0.(env.Function), cur0, cur1, cur2, cur3, cur4)
+				return *env.NewCurriedCallerFromFunction(arg0.(env.Function), cur0, cur1, cur2, cur3, cur4, argsn)
 			}
 		},
 	},

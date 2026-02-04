@@ -273,11 +273,11 @@
         if (arg.ctrlKey && arg.code === "KeyV" && arg.type === "keydown") {
             navigator.clipboard.readText()
               .then(text => {
-                term.write(text);
+                sendToTerminal(text, term);
               })
         };
         return true;
-    });  
+      });  
       //		term.open(document.getElementById('terminal-container'))
       
       //     var term = new Terminal();

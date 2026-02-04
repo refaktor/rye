@@ -1330,65 +1330,103 @@ func CallCurriedCaller(cc env.CurriedCaller, ps *env.ProgramState, arg0_ env.Obj
 	var arg3 env.Object = cc.Cur3
 	var arg4 env.Object = cc.Cur4
 
-	// Determine the number of arguments needed
-	var argsn int
-	if cc.CallerType == 0 { // Builtin
-		argsn = cc.Builtin.Argsn
-	} else { // Function
-		argsn = cc.Function.Argsn
-	}
+	// Use cc.Argsn - the number of UNFILLED arguments that need to be collected
+	// NOT the total arguments from the underlying function/builtin
+	argsToCollect := cc.Argsn
 
 	evalExprFn := EvalExpression_CollectArg
 
-	// Handle arg0 - override with provided arg if available
-	if arg0_ != nil && !pipeSecond {
-		arg0 = arg0_
-	} else if firstVal != nil && pipeSecond {
-		arg0 = firstVal
-	} else if arg0 == nil && argsn > 0 {
-		// Only evaluate if we don't have a curried value
-		evalExprFn(ps, true)
-		if ps.ReturnFlag || ps.ErrorFlag {
-			return
+	// Track how many arguments we've collected
+	collected := 0
+
+	// Handle the left value from op-word or pipe-word
+	// This should fill the FIRST unfilled (nil) slot
+	if argsToCollect > 0 {
+		if arg0_ != nil && !pipeSecond {
+			// Op-word: left value fills first nil slot
+			if arg0 == nil {
+				arg0 = arg0_
+				collected++
+			} else if arg1 == nil {
+				arg1 = arg0_
+				collected++
+			} else if arg2 == nil {
+				arg2 = arg0_
+				collected++
+			} else if arg3 == nil {
+				arg3 = arg0_
+				collected++
+			} else if arg4 == nil {
+				arg4 = arg0_
+				collected++
+			}
+		} else if firstVal != nil && pipeSecond {
+			// Pipe-second: firstVal fills first nil slot
+			if arg0 == nil {
+				arg0 = firstVal
+				collected++
+			} else if arg1 == nil {
+				arg1 = firstVal
+				collected++
+			} else if arg2 == nil {
+				arg2 = firstVal
+				collected++
+			} else if arg3 == nil {
+				arg3 = firstVal
+				collected++
+			} else if arg4 == nil {
+				arg4 = firstVal
+				collected++
+			}
 		}
-		arg0 = ps.Res
+
+		// Handle pipeSecond: arg0_ goes to second nil slot
+		if arg0_ != nil && pipeSecond && collected < argsToCollect {
+			if arg0 == nil {
+				arg0 = arg0_
+				collected++
+			} else if arg1 == nil {
+				arg1 = arg0_
+				collected++
+			} else if arg2 == nil {
+				arg2 = arg0_
+				collected++
+			} else if arg3 == nil {
+				arg3 = arg0_
+				collected++
+			} else if arg4 == nil {
+				arg4 = arg0_
+				collected++
+			}
+		}
 	}
 
-	// Handle arg1
-	if arg0_ != nil && pipeSecond {
-		arg1 = arg0_
-	} else if arg1 == nil && argsn > 1 {
-		// Only evaluate if we don't have a curried value
+	// Collect remaining unfilled arguments from code stream
+	for collected < argsToCollect {
 		evalExprFn(ps, true)
 		if ps.ReturnFlag || ps.ErrorFlag {
 			return
 		}
-		arg1 = ps.Res
-	}
-
-	// Handle remaining arguments - only evaluate if not curried
-	if arg2 == nil && argsn > 2 {
-		evalExprFn(ps, true)
-		if ps.ReturnFlag || ps.ErrorFlag {
-			return
+		// Fill the next nil slot
+		if arg0 == nil {
+			arg0 = ps.Res
+			collected++
+		} else if arg1 == nil {
+			arg1 = ps.Res
+			collected++
+		} else if arg2 == nil {
+			arg2 = ps.Res
+			collected++
+		} else if arg3 == nil {
+			arg3 = ps.Res
+			collected++
+		} else if arg4 == nil {
+			arg4 = ps.Res
+			collected++
+		} else {
+			// All slots filled, shouldn't happen
+			break
 		}
-		arg2 = ps.Res
-	}
-
-	if arg3 == nil && argsn > 3 {
-		evalExprFn(ps, true)
-		if ps.ReturnFlag || ps.ErrorFlag {
-			return
-		}
-		arg3 = ps.Res
-	}
-
-	if arg4 == nil && argsn > 4 {
-		evalExprFn(ps, true)
-		if ps.ReturnFlag || ps.ErrorFlag {
-			return
-		}
-		arg4 = ps.Res
 	}
 
 	// Call the appropriate function based on caller type
@@ -1691,7 +1729,7 @@ func FormatBacktickQuotes(message string) string {
 		if message[i] == '`' {
 			if inQuote {
 				// Closing backtick - add reset and restore bold red
-				result.WriteString(" \x1b[0m\x1b[1;31m")
+				result.WriteString(" \x1b[0m\x1b[31m")
 				inQuote = false
 			} else {
 				// Opening backtick - add magenta background, white text
@@ -2001,11 +2039,11 @@ func MaybeDisplayFailureOrErrorWASM(es *env.ProgramState, genv *env.Idxs, printf
 	if !es.InErrHandler && es.ErrorFlag {
 		// Red background banner for runtime errors (same as native)
 		if !es.SkipFlag {
-			printfn("\x1b[41m\x1b[30m RUNTIME ERROR: " + tag + " \x1b[0m")
+			printfn("\x1b[41m\x1b[30m RUNTIME ERROR:\x1b[0m " + tag)
 
 			// Bold red for error message, with backtick-quoted text highlighted
 			errorMsg := es.Res.Print(*genv)
-			printfn("\x1b[1;31m" + FormatBacktickQuotes(errorMsg) + "\x1b[0m")
+			printfn("\x1b[31m" + FormatBacktickQuotes(errorMsg) + "\x1b[0m")
 
 			// Display block location info (same as native)
 			displayBlockWithErrorPositionWASM(es, genv, printfn)
@@ -2018,12 +2056,12 @@ func MaybeDisplayFailureOrErrorWASM(es *env.ProgramState, genv *env.Idxs, printf
 // Called from: MaybeDisplayFailureOrErrorWASM
 // Purpose: WASM version of displayBlockWithErrorPosition using printfn instead of fmt.Print
 func displayBlockWithErrorPositionWASM(es *env.ProgramState, genv *env.Idxs, printfn func(string)) {
-	// Bold cyan for location information
+	// Cyan for location information (not bold, matching terminal version)
 	var locationStr string
 	if es.BlockFile != "" {
-		locationStr = fmt.Sprintf("\x1b[1;36mBlock starting at \x1b[1;34m%s:%d\x1b[0m", es.BlockFile, es.BlockLine)
+		locationStr = fmt.Sprintf("\x1b[36mBlock starting at \x1b[34m%s:%d\x1b[0m", es.BlockFile, es.BlockLine)
 	} else {
-		locationStr = fmt.Sprintf("\x1b[1;36mBlock starting at \x1b[1;34mline %d\x1b[0m", es.BlockLine)
+		locationStr = fmt.Sprintf("\x1b[36mBlock starting at \x1b[34mline %d\x1b[0m", es.BlockLine)
 	}
 	printfn(locationStr)
 

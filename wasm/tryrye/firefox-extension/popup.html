@@ -156,7 +156,7 @@
           if (arg.ctrlKey && arg.code === "KeyV" && arg.type === "keydown") {
             navigator.clipboard.readText()
               .then(text => {
-                term.write(text);
+                sendToTerminal(text, term);
               });
           }
           return true;
@@ -172,7 +172,22 @@
           window.SendKeypress(ev.domEvent.key, ev.domEvent.keyCode, ev.domEvent.ctrlKey, ev.domEvent.altKey, ev.domEvent.shiftKey);
         });
         
-        // Setup controls
+        setupControls();
+      }
+      
+      function sendToTerminal(str, term) {
+        for (var i=0; i<str.length; i++) {
+          if (str[i] == "\n") {
+            window.SendKeypress('', 13, false, false, false);
+          } else {   
+            window.SendKeypress(str[i], 0, false, false, false);
+          }
+          term.focus();
+        }
+      }
+      
+      // Setup controls - called after terminal is initialized
+      function setupControls() {
         document.getElementById('clearBtn').addEventListener('click', function() {
           if (term) {
             term.clear();

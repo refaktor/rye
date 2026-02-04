@@ -22,7 +22,8 @@ type CurriedCaller struct {
 }
 
 // NewCurriedCallerFromBuiltin creates a new CurriedCaller from a Builtin
-func NewCurriedCallerFromBuiltin(bi Builtin, cur0, cur1, cur2, cur3, cur4 Object) *CurriedCaller {
+// argsn is the number of nil arguments (placeholders to be filled later)
+func NewCurriedCallerFromBuiltin(bi Builtin, cur0, cur1, cur2, cur3, cur4 Object, argsn int) *CurriedCaller {
 	return &CurriedCaller{
 		CallerType: 0,
 		Builtin:    &bi,
@@ -32,14 +33,15 @@ func NewCurriedCallerFromBuiltin(bi Builtin, cur0, cur1, cur2, cur3, cur4 Object
 		Cur2:       cur2,
 		Cur3:       cur3,
 		Cur4:       cur4,
-		Argsn:      bi.Argsn,
+		Argsn:      argsn,
 		Pure:       bi.Pure,
 		Doc:        bi.Doc,
 	}
 }
 
 // NewCurriedCallerFromFunction creates a new CurriedCaller from a Function
-func NewCurriedCallerFromFunction(fn Function, cur0, cur1, cur2, cur3, cur4 Object) *CurriedCaller {
+// argsn is the number of nil arguments (placeholders to be filled later)
+func NewCurriedCallerFromFunction(fn Function, cur0, cur1, cur2, cur3, cur4 Object, argsn int) *CurriedCaller {
 	return &CurriedCaller{
 		CallerType: 1,
 		Builtin:    nil,
@@ -49,7 +51,7 @@ func NewCurriedCallerFromFunction(fn Function, cur0, cur1, cur2, cur3, cur4 Obje
 		Cur2:       cur2,
 		Cur3:       cur3,
 		Cur4:       cur4,
-		Argsn:      fn.Argsn,
+		Argsn:      argsn,
 		Pure:       fn.Pure,
 		Doc:        fn.Doc,
 	}
