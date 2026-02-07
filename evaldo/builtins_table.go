@@ -258,27 +258,22 @@ var Builtins_table = map[string]*env.Builtin{
 		Argsn: 3,
 		Doc:   "Returns table of rows where specific colum is equal to given value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch spr := arg0.(type) {
+			var spr *env.Table
+			switch s := arg0.(type) {
 			case *env.Table:
-				switch col := arg1.(type) {
-				case env.Word:
-					return WhereEquals(ps, *spr, ps.Idx.GetWord(col.Index), arg2)
-				case env.String:
-					return WhereEquals(ps, *spr, col.Value, arg2)
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-equal")
-				}
+				spr = s
 			case env.Table:
-				switch col := arg1.(type) {
-				case env.Word:
-					return WhereEquals(ps, spr, ps.Idx.GetWord(col.Index), arg2)
-				case env.String:
-					return WhereEquals(ps, spr, col.Value, arg2)
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-equal")
-				}
+				spr = &s
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-equal")
+			}
+			switch col := arg1.(type) {
+			case env.Word:
+				return WhereEquals(ps, spr, ps.Idx.GetWord(col.Index), arg2)
+			case env.String:
+				return WhereEquals(ps, spr, col.Value, arg2)
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-equal")
 			}
 		},
 	},
@@ -293,27 +288,22 @@ var Builtins_table = map[string]*env.Builtin{
 		Argsn: 3,
 		Doc:   "Returns table of rows where specific colum is not equal to given value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch spr := arg0.(type) {
+			var spr *env.Table
+			switch s := arg0.(type) {
 			case *env.Table:
-				switch col := arg1.(type) {
-				case env.Word:
-					return WhereNotEquals(ps, *spr, ps.Idx.GetWord(col.Index), arg2)
-				case env.String:
-					return WhereNotEquals(ps, *spr, col.Value, arg2)
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-not-equal")
-				}
+				spr = s
 			case env.Table:
-				switch col := arg1.(type) {
-				case env.Word:
-					return WhereNotEquals(ps, spr, ps.Idx.GetWord(col.Index), arg2)
-				case env.String:
-					return WhereNotEquals(ps, spr, col.Value, arg2)
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-not-equal")
-				}
+				spr = &s
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-not-equal")
+			}
+			switch col := arg1.(type) {
+			case env.Word:
+				return WhereNotEquals(ps, spr, ps.Idx.GetWord(col.Index), arg2)
+			case env.String:
+				return WhereNotEquals(ps, spr, col.Value, arg2)
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-not-equal")
 			}
 		},
 	},
@@ -330,29 +320,24 @@ var Builtins_table = map[string]*env.Builtin{
 	// Tags: #filter #tables
 	"where-void": {
 		Argsn: 2,
-		Doc:   "Returns table of rows where specific colum is equal to given value.",
+		Doc:   "Returns table of rows where specific colum is void.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch spr := arg0.(type) {
+			var spr *env.Table
+			switch s := arg0.(type) {
 			case *env.Table:
-				switch col := arg1.(type) {
-				case env.Word:
-					return WhereEquals(ps, *spr, ps.Idx.GetWord(col.Index), env.NewVoid())
-				case env.String:
-					return WhereEquals(ps, *spr, col.Value, env.NewVoid())
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-equal")
-				}
+				spr = s
 			case env.Table:
-				switch col := arg1.(type) {
-				case env.Word:
-					return WhereEquals(ps, spr, ps.Idx.GetWord(col.Index), env.NewVoid())
-				case env.String:
-					return WhereEquals(ps, spr, col.Value, env.NewVoid())
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-equal")
-				}
+				spr = &s
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-equal")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-void")
+			}
+			switch col := arg1.(type) {
+			case env.Word:
+				return WhereEquals(ps, spr, ps.Idx.GetWord(col.Index), env.NewVoid())
+			case env.String:
+				return WhereEquals(ps, spr, col.Value, env.NewVoid())
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-void")
 			}
 		},
 	},
@@ -421,7 +406,7 @@ var Builtins_table = map[string]*env.Builtin{
 			case *env.Table:
 				spr = sheet
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-match")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-contains")
 			}
 			switch s := arg2.(type) {
 			case env.String:
@@ -441,7 +426,7 @@ var Builtins_table = map[string]*env.Builtin{
 
 	// Example:
 	//  sheet: table { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" "Benn" }
-	//  sheet .where-contains 'name "nn"
+	//  sheet .where-not-contains 'name "nn"
 	// Tests:
 	//  equal { table { 'a } { "1" "2" "a3" "2b" } |where-not-contains 'a "3" |length? } 3
 	// Args:
@@ -451,7 +436,7 @@ var Builtins_table = map[string]*env.Builtin{
 	// Tags: #filter #tables
 	"where-not-contains": {
 		Argsn: 3,
-		Doc:   "Returns table of rows where specific colum contains a given string value.",
+		Doc:   "Returns table of rows where specific colum does not contain a given string value.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			var spr *env.Table
 			switch sheet := arg0.(type) {
@@ -460,7 +445,7 @@ var Builtins_table = map[string]*env.Builtin{
 			case *env.Table:
 				spr = sheet
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-match")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-not-contains")
 			}
 			switch s := arg2.(type) {
 			case env.String:
@@ -498,7 +483,7 @@ var Builtins_table = map[string]*env.Builtin{
 			case *env.Table:
 				spr = sheet
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-match")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-greater")
 			}
 			switch col := arg1.(type) {
 			case env.Word:
@@ -531,7 +516,7 @@ var Builtins_table = map[string]*env.Builtin{
 			case *env.Table:
 				spr = sheet
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-match")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-lesser")
 			}
 			switch col := arg1.(type) {
 			case env.Word:
@@ -567,7 +552,7 @@ var Builtins_table = map[string]*env.Builtin{
 			case *env.Table:
 				spr = sheet
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-match")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-between")
 			}
 			switch col := arg1.(type) {
 			case env.Word:
@@ -581,7 +566,7 @@ var Builtins_table = map[string]*env.Builtin{
 	},
 
 	// Returns a spreadhsheet of rows where the given column is between the given
-	// values, non-inclusive.
+	// values, inclusive.
 	// Tests:
 	//  equal { table { 'a } { 1 2 3 2 5 } |where-between\inclusive 'a 2 3 |length? } 3
 	// Args:
@@ -592,7 +577,7 @@ var Builtins_table = map[string]*env.Builtin{
 	// Tags: #filter #table
 	"where-between\\inclusive": {
 		Argsn: 4,
-		Doc:   "Returns table of rows where specific colum is between given values.",
+		Doc:   "Returns table of rows where specific colum is between given values (inclusive).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
 			var spr *env.Table
 			switch sheet := arg0.(type) {
@@ -601,7 +586,7 @@ var Builtins_table = map[string]*env.Builtin{
 			case *env.Table:
 				spr = sheet
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-match")
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-between\\inclusive")
 			}
 			switch col := arg1.(type) {
 			case env.Word:
@@ -609,7 +594,7 @@ var Builtins_table = map[string]*env.Builtin{
 			case env.String:
 				return WhereBetween(ps, spr, col.Value, arg2, arg3, true)
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-between")
+				return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-between\\inclusive")
 			}
 		},
 	},
@@ -628,25 +613,29 @@ var Builtins_table = map[string]*env.Builtin{
 	// Tags: #filter #table
 	"where-in": {
 		Argsn: 3,
-		Doc:   "Returns table of rows where specific colum value if found in block of values.",
+		Doc:   "Returns table of rows where specific colum value is found in block of values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
-			switch spr := arg0.(type) {
+			var spr *env.Table
+			switch s := arg0.(type) {
 			case env.Table:
-				switch s := arg2.(type) {
-				case env.Block:
-					switch col := arg1.(type) {
-					case env.Word:
-						return WhereIn(ps, spr, ps.Idx.GetWord(col.Index), s.Series.S)
-					case env.String:
-						return WhereIn(ps, spr, col.Value, s.Series.S)
-					default:
-						return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-in")
-					}
-				default:
-					return MakeArgError(ps, 3, []env.Type{env.StringType}, "where-in")
-				}
+				spr = &s
+			case *env.Table:
+				spr = s
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-in")
+			}
+			switch vals := arg2.(type) {
+			case env.Block:
+				switch col := arg1.(type) {
+				case env.Word:
+					return WhereIn(ps, spr, ps.Idx.GetWord(col.Index), vals.Series.S)
+				case env.String:
+					return WhereIn(ps, spr, col.Value, vals.Series.S)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-in")
+				}
+			default:
+				return MakeArgError(ps, 3, []env.Type{env.BlockType}, "where-in")
 			}
 		},
 	},
@@ -665,25 +654,247 @@ var Builtins_table = map[string]*env.Builtin{
 	// Tags: #filter #table
 	"where-not-in": {
 		Argsn: 3,
-		Doc:   "Returns table of rows where specific colum value if found in block of values.",
+		Doc:   "Returns table of rows where specific colum value is not found in block of values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) (res env.Object) {
-			switch spr := arg0.(type) {
+			var spr *env.Table
+			switch s := arg0.(type) {
 			case env.Table:
-				switch s := arg2.(type) {
-				case env.Block:
-					switch col := arg1.(type) {
-					case env.Word:
-						return WhereNotIn(ps, spr, ps.Idx.GetWord(col.Index), s.Series.S)
-					case env.String:
-						return WhereNotIn(ps, spr, col.Value, s.Series.S)
-					default:
-						return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-in")
-					}
+				spr = &s
+			case *env.Table:
+				spr = s
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-not-in")
+			}
+			switch vals := arg2.(type) {
+			case env.Block:
+				switch col := arg1.(type) {
+				case env.Word:
+					return WhereNotIn(ps, spr, ps.Idx.GetWord(col.Index), vals.Series.S)
+				case env.String:
+					return WhereNotIn(ps, spr, col.Value, vals.Series.S)
 				default:
-					return MakeArgError(ps, 3, []env.Type{env.StringType}, "where-in")
+					return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "where-not-in")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where-in")
+				return MakeArgError(ps, 3, []env.Type{env.BlockType}, "where-not-in")
+			}
+		},
+	},
+
+	// Filters table rows using a code block that receives the column value.
+	// Example:
+	//  table { "name" "age" } { "Jim" 30 "Jane" 25 "Bob" 35 } |where 'age { > 26 }
+	//  table { "a" "b" } { 1 10 2 20 3 30 } |where { 'a 'b } { ( a + b ) > 25 }
+	// Tests:
+	//  equal { table { 'a } { 1 2 3 4 } |where 'a { > 2 } |length? } 2
+	//  equal { table { 'a } { 1 2 3 4 } |where 'a { .is-even } |length? } 2
+	//  equal { table { 'name 'age } { "Jim" 30 "Jane" 25 } |where 'age { > 26 } |column? 'name } { "Jim" }
+	//  equal { table { 'a 'b } { 1 10 2 20 3 30 } |where { 'a 'b } { ( a + b ) > 25 } |length? } 1
+	//  equal { table { 'a 'b } { 1 10 2 20 3 30 } |where { 'a 'b } { all { a > 1 b > 15 } } |length? } 2
+	// Args:
+	// * table
+	// * column - column name (word or string) or block of column names
+	// * code - block that receives column value (or has columns as words) and returns truthy/falsy
+	// Tags: #filter #tables
+	"where": {
+		Argsn: 3,
+		Doc:   "Returns table of rows where code block evaluates to true for the column value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var spr *env.Table
+			switch table := arg0.(type) {
+			case env.Table:
+				spr = &table
+			case *env.Table:
+				spr = table
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "where")
+			}
+
+			switch col := arg1.(type) {
+			case env.Word:
+				colName := ps.Idx.GetWord(col.Index)
+				switch block := arg2.(type) {
+				case env.Block:
+					return WhereBlock(ps, spr, colName, block)
+				case env.Builtin:
+					return WhereBuiltin(ps, spr, colName, block)
+				case env.Function:
+					return WhereFunction(ps, spr, colName, block)
+				default:
+					return MakeArgError(ps, 3, []env.Type{env.BlockType, env.BuiltinType, env.FunctionType}, "where")
+				}
+			case env.String:
+				colName := col.Value
+				switch block := arg2.(type) {
+				case env.Block:
+					return WhereBlock(ps, spr, colName, block)
+				case env.Builtin:
+					return WhereBuiltin(ps, spr, colName, block)
+				case env.Function:
+					return WhereFunction(ps, spr, colName, block)
+				default:
+					return MakeArgError(ps, 3, []env.Type{env.BlockType, env.BuiltinType, env.FunctionType}, "where")
+				}
+			case env.Block:
+				switch block := arg2.(type) {
+				case env.Block:
+					return WhereBlockMultiCol(ps, spr, col, block)
+				default:
+					return MakeArgError(ps, 3, []env.Type{env.BlockType}, "where")
+				}
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType, env.BlockType}, "where")
+			}
+		},
+	},
+
+	// Returns table with duplicate rows removed based on specified column(s).
+	// Example:
+	//  table { "name" "age" } { "Jim" 30 "Jane" 25 "Jim" 30 } |distinct 'name
+	//  table { "a" "b" } { 1 10 1 20 2 10 } |distinct { 'a 'b }
+	// Tests:
+	//  equal { table { 'a } { 1 2 1 3 2 } |distinct 'a |length? } 3
+	//  equal { table { 'a 'b } { 1 10 1 10 1 20 } |distinct { 'a 'b } |length? } 2
+	// Args:
+	// * table
+	// * column - column name (word or string) or block of column names
+	// Tags: #filter #tables
+	"distinct": {
+		Argsn: 2,
+		Doc:   "Returns table with duplicate rows removed based on specified column(s).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var spr *env.Table
+			switch s := arg0.(type) {
+			case env.Table:
+				spr = &s
+			case *env.Table:
+				spr = s
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "distinct")
+			}
+			switch col := arg1.(type) {
+			case env.Word:
+				return Distinct(ps, spr, []string{ps.Idx.GetWord(col.Index)})
+			case env.String:
+				return Distinct(ps, spr, []string{col.Value})
+			case env.Block:
+				var cols []string
+				for _, word := range col.Series.S {
+					switch w := word.(type) {
+					case env.Word:
+						cols = append(cols, ps.Idx.GetWord(w.Index))
+					case env.Tagword:
+						cols = append(cols, ps.Idx.GetWord(w.Index))
+					case env.String:
+						cols = append(cols, w.Value)
+					default:
+						return MakeBuiltinError(ps, "Column names block must contain only words or strings.", "distinct")
+					}
+				}
+				return Distinct(ps, spr, cols)
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType, env.BlockType}, "distinct")
+			}
+		},
+	},
+
+	// Replaces void values in a column with the specified value.
+	// Example:
+	//  table { "name" "age" } { "Jim" 30 "Jane" _ } |fill-void 'age 0
+	// Tests:
+	//  equal { table { 'a } { 1 _ 3 _ } |fill-void 'a 0 |column? 'a } { 1 0 3 0 }
+	//  equal { table { 'a } { 1 _ 3 _ } |fill-void 'a 99 |column? 'a |sum } 202
+	// Args:
+	// * table
+	// * column - column name (word or string)
+	// * value - value to replace void with
+	// Tags: #transform #tables
+	"fill-void": {
+		Argsn: 3,
+		Doc:   "Returns table with void values in specified column replaced with given value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var spr *env.Table
+			switch s := arg0.(type) {
+			case env.Table:
+				spr = &s
+			case *env.Table:
+				spr = s
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "fill-void")
+			}
+			var colName string
+			switch col := arg1.(type) {
+			case env.Word:
+				colName = ps.Idx.GetWord(col.Index)
+			case env.String:
+				colName = col.Value
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "fill-void")
+			}
+			return FillVoid(ps, spr, colName, arg2)
+		},
+	},
+
+	// Counts rows where the code block evaluates to true for the column value.
+	// Example:
+	//  table { "name" "age" } { "Jim" 30 "Jane" 25 "Bob" 35 } |count-where 'age { > 26 }
+	// Tests:
+	//  equal { table { 'a } { 1 2 3 4 } |count-where 'a { > 2 } } 2
+	//  equal { table { 'a } { 1 2 3 4 } |count-where 'a { .is-even } } 2
+	//  equal { table { 'a 'b } { 1 10 2 20 3 30 } |count-where { 'a 'b } { ( a + b ) > 25 } } 1
+	// Args:
+	// * table
+	// * column - column name (word or string) or block of column names
+	// * code - block that receives column value and returns truthy/falsy
+	// Tags: #filter #tables
+	"count-where": {
+		Argsn: 3,
+		Doc:   "Returns count of rows where code block evaluates to true for the column value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			var spr *env.Table
+			switch table := arg0.(type) {
+			case env.Table:
+				spr = &table
+			case *env.Table:
+				spr = table
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "count-where")
+			}
+
+			switch col := arg1.(type) {
+			case env.Word:
+				colName := ps.Idx.GetWord(col.Index)
+				switch block := arg2.(type) {
+				case env.Block:
+					return CountWhereBlock(ps, spr, colName, block)
+				case env.Builtin:
+					return CountWhereBuiltin(ps, spr, colName, block)
+				case env.Function:
+					return CountWhereFunction(ps, spr, colName, block)
+				default:
+					return MakeArgError(ps, 3, []env.Type{env.BlockType, env.BuiltinType, env.FunctionType}, "count-where")
+				}
+			case env.String:
+				colName := col.Value
+				switch block := arg2.(type) {
+				case env.Block:
+					return CountWhereBlock(ps, spr, colName, block)
+				case env.Builtin:
+					return CountWhereBuiltin(ps, spr, colName, block)
+				case env.Function:
+					return CountWhereFunction(ps, spr, colName, block)
+				default:
+					return MakeArgError(ps, 3, []env.Type{env.BlockType, env.BuiltinType, env.FunctionType}, "count-where")
+				}
+			case env.Block:
+				switch block := arg2.(type) {
+				case env.Block:
+					return CountWhereBlockMultiCol(ps, spr, col, block)
+				default:
+					return MakeArgError(ps, 3, []env.Type{env.BlockType}, "count-where")
+				}
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType, env.BlockType}, "count-where")
 			}
 		},
 	},
@@ -2784,189 +2995,466 @@ func SortByColumnDesc(ps *env.ProgramState, s *env.Table, name string) {
 	sort.Slice(s.Rows, compareCol)
 }
 
-func WhereEquals(ps *env.ProgramState, s env.Table, name string, val env.Object) env.Object {
+func WhereEquals(ps *env.ProgramState, s *env.Table, name string, val env.Object) env.Object {
 	idx := slices.Index(s.Cols, name)
-	nspr := env.NewTable(s.Cols)
-	if idx > -1 {
-		if index, ok := s.Indexes[name]; ok {
-			idxs := index[val]
-			for _, idx := range idxs {
-				nspr.AddRow(s.Rows[idx])
-			}
-		} else {
-			for _, row := range s.Rows {
-				if len(row.Values) > idx {
-					if val.Equal(env.ToRyeValue(row.Values[idx])) {
-						nspr.AddRow(row)
-					}
-				}
-			}
-		}
-		return *nspr
-	} else {
-		return MakeBuiltinError(ps, "Column not found.", "WhereEquals")
+	if idx < 0 {
+		return MakeBuiltinError(ps, "Column not found.", "where-equal")
 	}
-}
-
-func WhereNotEquals(ps *env.ProgramState, s env.Table, name string, val env.Object) env.Object {
-	idx := slices.Index(s.Cols, name)
 	nspr := env.NewTable(s.Cols)
-	if idx > -1 {
+	if index, ok := s.Indexes[name]; ok {
+		idxs := index[val]
+		for _, i := range idxs {
+			nspr.AddRow(s.Rows[i])
+		}
+	} else {
 		for _, row := range s.Rows {
 			if len(row.Values) > idx {
-				if !val.Equal(env.ToRyeValue(row.Values[idx])) {
+				if val.Equal(env.ToRyeValue(row.Values[idx])) {
 					nspr.AddRow(row)
 				}
 			}
 		}
-		return *nspr
-	} else {
-		return MakeBuiltinError(ps, "Column not found.", "WhereNotEquals")
 	}
+	return *nspr
+}
+
+func WhereNotEquals(ps *env.ProgramState, s *env.Table, name string, val env.Object) env.Object {
+	idx := slices.Index(s.Cols, name)
+	if idx < 0 {
+		return MakeBuiltinError(ps, "Column not found.", "where-not-equal")
+	}
+	nspr := env.NewTable(s.Cols)
+	for _, row := range s.Rows {
+		if len(row.Values) > idx {
+			if !val.Equal(env.ToRyeValue(row.Values[idx])) {
+				nspr.AddRow(row)
+			}
+		}
+	}
+	return *nspr
 }
 
 func WhereMatch(ps *env.ProgramState, s *env.Table, name string, r *regexp.Regexp) env.Object {
 	idx := slices.Index(s.Cols, name)
+	if idx < 0 {
+		return MakeBuiltinError(ps, "Column not found.", "where-match")
+	}
 	nspr := env.NewTable(s.Cols)
-	if idx > -1 {
-		for _, row := range s.Rows {
-			if len(row.Values) > idx {
-				rv := row.Values[idx]
-				if rvStr, ok := rv.(env.String); ok {
-					if r.MatchString(rvStr.Value) {
-						nspr.AddRow(row)
-					}
+	for _, row := range s.Rows {
+		if len(row.Values) > idx {
+			if rvStr, ok := row.Values[idx].(env.String); ok {
+				if r.MatchString(rvStr.Value) {
+					nspr.AddRow(row)
 				}
 			}
 		}
-		return *nspr
-	} else {
-		return MakeBuiltinError(ps, "Column not found.", "WhereMatch")
 	}
+	return *nspr
 }
 
 func WhereContains(ps *env.ProgramState, s *env.Table, name string, val string, not bool) env.Object {
 	idx := slices.Index(s.Cols, name)
+	if idx < 0 {
+		return MakeBuiltinError(ps, "Column not found.", "where-contains")
+	}
 	nspr := env.NewTable(s.Cols)
-	if idx > -1 {
-		for _, row := range s.Rows {
-			if len(row.Values) > idx {
-				rv := row.Values[idx]
-				if rvStr, ok := rv.(env.String); ok {
-					if !not {
-						if strings.Contains(rvStr.Value, val) {
-							nspr.AddRow(row)
-						}
-					} else {
-						if !strings.Contains(rvStr.Value, val) {
-							nspr.AddRow(row)
-						}
-					}
+	for _, row := range s.Rows {
+		if len(row.Values) > idx {
+			if rvStr, ok := row.Values[idx].(env.String); ok {
+				contains := strings.Contains(rvStr.Value, val)
+				if contains != not {
+					nspr.AddRow(row)
 				}
 			}
 		}
-		return *nspr
-	} else {
-		return MakeBuiltinError(ps, "Column not found.", "WhereMatch")
 	}
+	return *nspr
 }
 
-func WhereIn(ps *env.ProgramState, s env.Table, name string, b []env.Object) env.Object {
+func WhereIn(ps *env.ProgramState, s *env.Table, name string, b []env.Object) env.Object {
 	idx := slices.Index(s.Cols, name)
+	if idx < 0 {
+		return MakeBuiltinError(ps, "Column not found.", "where-in")
+	}
 	nspr := env.NewTable(s.Cols)
-	if idx > -1 {
-		for _, row := range s.Rows {
-			if len(row.Values) > idx {
-				rv := row.Values[idx]
-				if rvObj, ok := rv.(env.Object); ok {
-					if util.ContainsVal(ps, b, rvObj) {
-						nspr.AddRow(row)
-					}
-				}
+	for _, row := range s.Rows {
+		if len(row.Values) > idx {
+			rv := env.ToRyeValue(row.Values[idx])
+			if util.ContainsVal(ps, b, rv) {
+				nspr.AddRow(row)
 			}
 		}
-		return *nspr
-	} else {
-		return MakeBuiltinError(ps, "Column not found.", "WhereIn")
 	}
+	return *nspr
 }
 
-func WhereNotIn(ps *env.ProgramState, s env.Table, name string, b []env.Object) env.Object {
+func WhereNotIn(ps *env.ProgramState, s *env.Table, name string, b []env.Object) env.Object {
 	idx := slices.Index(s.Cols, name)
+	if idx < 0 {
+		return MakeBuiltinError(ps, "Column not found.", "where-not-in")
+	}
 	nspr := env.NewTable(s.Cols)
-	if idx > -1 {
-		for _, row := range s.Rows {
-			if len(row.Values) > idx {
-				rv := row.Values[idx]
-				if rvObj, ok := rv.(env.Object); ok {
-					if !util.ContainsVal(ps, b, rvObj) {
-						nspr.AddRow(row)
-					}
-				}
+	for _, row := range s.Rows {
+		if len(row.Values) > idx {
+			rv := env.ToRyeValue(row.Values[idx])
+			if !util.ContainsVal(ps, b, rv) {
+				nspr.AddRow(row)
 			}
 		}
-		return *nspr
-	} else {
-		return MakeBuiltinError(ps, "Column not found.", "WhereIn")
 	}
+	return *nspr
+}
+
+func WhereBlock(ps *env.ProgramState, s *env.Table, name string, block env.Block) env.Object {
+	idx := slices.Index(s.Cols, name)
+	if idx < 0 {
+		return MakeBuiltinError(ps, "Column not found.", "where")
+	}
+	nspr := env.NewTable(s.Cols)
+	ser := ps.Ser
+	for _, row := range s.Rows {
+		if len(row.Values) > idx {
+			val := env.ToRyeValue(row.Values[idx])
+			ps.Ser = block.Series
+			EvalBlockInj(ps, val, true)
+			if ps.ErrorFlag {
+				ps.Ser = ser
+				return ps.Res
+			}
+			if util.IsTruthy(ps.Res) {
+				nspr.AddRow(row)
+			}
+			ps.Ser.Reset()
+		}
+	}
+	ps.Ser = ser
+	return *nspr
+}
+
+func WhereBuiltin(ps *env.ProgramState, s *env.Table, name string, builtin env.Builtin) env.Object {
+	idx := slices.Index(s.Cols, name)
+	if idx < 0 {
+		return MakeBuiltinError(ps, "Column not found.", "where")
+	}
+	nspr := env.NewTable(s.Cols)
+	for _, row := range s.Rows {
+		if len(row.Values) > idx {
+			val := env.ToRyeValue(row.Values[idx])
+			res := DirectlyCallBuiltin(ps, builtin, val, nil)
+			if ps.ErrorFlag {
+				return ps.Res
+			}
+			if util.IsTruthy(res) {
+				nspr.AddRow(row)
+			}
+		}
+	}
+	return *nspr
+}
+
+func WhereFunction(ps *env.ProgramState, s *env.Table, name string, fn env.Function) env.Object {
+	idx := slices.Index(s.Cols, name)
+	if idx < 0 {
+		return MakeBuiltinError(ps, "Column not found.", "where")
+	}
+	nspr := env.NewTable(s.Cols)
+	for _, row := range s.Rows {
+		if len(row.Values) > idx {
+			val := env.ToRyeValue(row.Values[idx])
+			CallFunctionArgsN(fn, ps, ps.Ctx, val)
+			if ps.ErrorFlag {
+				return ps.Res
+			}
+			if util.IsTruthy(ps.Res) {
+				nspr.AddRow(row)
+			}
+		}
+	}
+	return *nspr
+}
+
+func WhereBlockMultiCol(ps *env.ProgramState, s *env.Table, cols env.Block, code env.Block) env.Object {
+	nspr := env.NewTable(s.Cols)
+	ser := ps.Ser
+	for _, row := range s.Rows {
+		// create a new context connected to current context
+		ctx := env.NewEnv(ps.Ctx)
+		// for each word in cols, get the value from current row and set it in context
+		var firstVal env.Object
+		for _, word := range cols.Series.S {
+			var wordIdx int
+			switch w := word.(type) {
+			case env.Word:
+				wordIdx = w.Index
+			case env.Tagword:
+				wordIdx = w.Index
+			default:
+				ps.Ser = ser
+				return MakeBuiltinError(ps, "Column names block must contain only words.", "where")
+			}
+			val, err := s.GetRowValue(ps.Idx.GetWord(wordIdx), row)
+			if err != nil {
+				ps.Ser = ser
+				return MakeBuiltinError(ps, err.Error(), "where")
+			}
+			if val == nil {
+				val = env.NewVoid()
+			}
+			val1 := env.ToRyeValue(val)
+			if firstVal == nil {
+				firstVal = val1
+			}
+			ctx.Set(wordIdx, val1)
+		}
+		// execute the block of code in context, injected with first value
+		ps.Ser = code.Series
+		EvalBlockInCtxInj(ps, ctx, firstVal, firstVal != nil)
+		if ps.ErrorFlag {
+			ps.Ser = ser
+			return ps.Res
+		}
+		if util.IsTruthy(ps.Res) {
+			nspr.AddRow(row)
+		}
+		ps.Ser.Reset()
+	}
+	ps.Ser = ser
+	return *nspr
+}
+
+func Distinct(ps *env.ProgramState, s *env.Table, colNames []string) env.Object {
+	// Get column indices
+	colIdxs := make([]int, len(colNames))
+	for i, name := range colNames {
+		idx := slices.Index(s.Cols, name)
+		if idx < 0 {
+			return MakeBuiltinError(ps, "Column not found: "+name, "distinct")
+		}
+		colIdxs[i] = idx
+	}
+
+	nspr := env.NewTable(s.Cols)
+	seen := make(map[string]bool)
+
+	for _, row := range s.Rows {
+		// Build key from column values
+		var keyParts []string
+		valid := true
+		for _, idx := range colIdxs {
+			if len(row.Values) <= idx {
+				valid = false
+				break
+			}
+			val := env.ToRyeValue(row.Values[idx])
+			keyParts = append(keyParts, val.Print(*ps.Idx))
+		}
+		if !valid {
+			continue
+		}
+		key := strings.Join(keyParts, "\x00")
+		if !seen[key] {
+			seen[key] = true
+			nspr.AddRow(row)
+		}
+	}
+	return *nspr
+}
+
+func FillVoid(ps *env.ProgramState, s *env.Table, colName string, fillValue env.Object) env.Object {
+	idx := slices.Index(s.Cols, colName)
+	if idx < 0 {
+		return MakeBuiltinError(ps, "Column not found.", "fill-void")
+	}
+
+	nspr := env.NewTable(s.Cols)
+	for _, row := range s.Rows {
+		newRow := make([]any, len(row.Values))
+		copy(newRow, row.Values)
+		if len(newRow) > idx {
+			val := newRow[idx]
+			if val == nil {
+				newRow[idx] = fillValue
+			} else if _, isVoid := val.(env.Void); isVoid {
+				newRow[idx] = fillValue
+			}
+		}
+		nspr.AddRow(*env.NewTableRow(newRow, nspr))
+	}
+	return *nspr
+}
+
+func CountWhereBlock(ps *env.ProgramState, s *env.Table, name string, block env.Block) env.Object {
+	idx := slices.Index(s.Cols, name)
+	if idx < 0 {
+		return MakeBuiltinError(ps, "Column not found.", "count-where")
+	}
+	count := 0
+	ser := ps.Ser
+	for _, row := range s.Rows {
+		if len(row.Values) > idx {
+			val := env.ToRyeValue(row.Values[idx])
+			ps.Ser = block.Series
+			EvalBlockInj(ps, val, true)
+			if ps.ErrorFlag {
+				ps.Ser = ser
+				return ps.Res
+			}
+			if util.IsTruthy(ps.Res) {
+				count++
+			}
+			ps.Ser.Reset()
+		}
+	}
+	ps.Ser = ser
+	return *env.NewInteger(int64(count))
+}
+
+func CountWhereBuiltin(ps *env.ProgramState, s *env.Table, name string, builtin env.Builtin) env.Object {
+	idx := slices.Index(s.Cols, name)
+	if idx < 0 {
+		return MakeBuiltinError(ps, "Column not found.", "count-where")
+	}
+	count := 0
+	for _, row := range s.Rows {
+		if len(row.Values) > idx {
+			val := env.ToRyeValue(row.Values[idx])
+			res := DirectlyCallBuiltin(ps, builtin, val, nil)
+			if ps.ErrorFlag {
+				return ps.Res
+			}
+			if util.IsTruthy(res) {
+				count++
+			}
+		}
+	}
+	return *env.NewInteger(int64(count))
+}
+
+func CountWhereFunction(ps *env.ProgramState, s *env.Table, name string, fn env.Function) env.Object {
+	idx := slices.Index(s.Cols, name)
+	if idx < 0 {
+		return MakeBuiltinError(ps, "Column not found.", "count-where")
+	}
+	count := 0
+	for _, row := range s.Rows {
+		if len(row.Values) > idx {
+			val := env.ToRyeValue(row.Values[idx])
+			CallFunctionArgsN(fn, ps, ps.Ctx, val)
+			if ps.ErrorFlag {
+				return ps.Res
+			}
+			if util.IsTruthy(ps.Res) {
+				count++
+			}
+		}
+	}
+	return *env.NewInteger(int64(count))
+}
+
+func CountWhereBlockMultiCol(ps *env.ProgramState, s *env.Table, cols env.Block, code env.Block) env.Object {
+	count := 0
+	ser := ps.Ser
+	for _, row := range s.Rows {
+		// create a new context connected to current context
+		ctx := env.NewEnv(ps.Ctx)
+		// for each word in cols, get the value from current row and set it in context
+		var firstVal env.Object
+		for _, word := range cols.Series.S {
+			var wordIdx int
+			switch w := word.(type) {
+			case env.Word:
+				wordIdx = w.Index
+			case env.Tagword:
+				wordIdx = w.Index
+			default:
+				ps.Ser = ser
+				return MakeBuiltinError(ps, "Column names block must contain only words.", "count-where")
+			}
+			val, err := s.GetRowValue(ps.Idx.GetWord(wordIdx), row)
+			if err != nil {
+				ps.Ser = ser
+				return MakeBuiltinError(ps, err.Error(), "count-where")
+			}
+			if val == nil {
+				val = env.NewVoid()
+			}
+			val1 := env.ToRyeValue(val)
+			if firstVal == nil {
+				firstVal = val1
+			}
+			ctx.Set(wordIdx, val1)
+		}
+		// execute the block of code in context, injected with first value
+		ps.Ser = code.Series
+		EvalBlockInCtxInj(ps, ctx, firstVal, firstVal != nil)
+		if ps.ErrorFlag {
+			ps.Ser = ser
+			return ps.Res
+		}
+		if util.IsTruthy(ps.Res) {
+			count++
+		}
+		ps.Ser.Reset()
+	}
+	ps.Ser = ser
+	return *env.NewInteger(int64(count))
 }
 
 func WhereGreater(ps *env.ProgramState, s *env.Table, name string, val env.Object) env.Object {
 	idx := slices.Index(s.Cols, name)
+	if idx < 0 {
+		return MakeBuiltinError(ps, "Column not found.", "where-greater")
+	}
 	nspr := env.NewTable(s.Cols)
-	if idx > -1 {
-		for _, row := range s.Rows {
-			if len(row.Values) > idx {
-				if greaterThanNew(row.Values[idx].(env.Object), val) {
-					nspr.AddRow(row)
-				}
+	for _, row := range s.Rows {
+		if len(row.Values) > idx {
+			rv := env.ToRyeValue(row.Values[idx])
+			if greaterThanNew(rv, val) {
+				nspr.AddRow(row)
 			}
 		}
-		return *nspr
-	} else {
-		return MakeBuiltinError(ps, "Column not found.", "WhereGreater")
 	}
+	return *nspr
 }
 
 func WhereLesser(ps *env.ProgramState, s *env.Table, name string, val env.Object) env.Object {
 	idx := slices.Index(s.Cols, name)
+	if idx < 0 {
+		return MakeBuiltinError(ps, "Column not found.", "where-lesser")
+	}
 	nspr := env.NewTable(s.Cols)
-	if idx > -1 {
-		for _, row := range s.Rows {
-			if len(row.Values) > idx {
-				if lesserThanNew(row.Values[idx].(env.Object), val) {
-					nspr.AddRow(row)
-				}
+	for _, row := range s.Rows {
+		if len(row.Values) > idx {
+			rv := env.ToRyeValue(row.Values[idx])
+			if lesserThanNew(rv, val) {
+				nspr.AddRow(row)
 			}
 		}
-		return *nspr
-	} else {
-		return MakeBuiltinError(ps, "Column not found.", "WhereGreater")
 	}
+	return *nspr
 }
 
 func WhereBetween(ps *env.ProgramState, s *env.Table, name string, val1 env.Object, val2 env.Object, inclusiveMode bool) env.Object {
 	idx := slices.Index(s.Cols, name)
+	if idx < 0 {
+		return MakeBuiltinError(ps, "Column not found.", "where-between")
+	}
 	nspr := env.NewTable(s.Cols)
-	if idx > -1 {
-		for _, row := range s.Rows {
-			if len(row.Values) > idx {
-				rv := row.Values[idx].(env.Object)
-				if inclusiveMode {
-					if !greaterThanNew(rv, val2) && !lesserThanNew(rv, val1) {
-						nspr.AddRow(row)
-					}
-				} else {
-					if greaterThanNew(rv, val1) && lesserThanNew(rv, val2) {
-						nspr.AddRow(row)
-					}
+	for _, row := range s.Rows {
+		if len(row.Values) > idx {
+			rv := env.ToRyeValue(row.Values[idx])
+			if inclusiveMode {
+				if !greaterThanNew(rv, val2) && !lesserThanNew(rv, val1) {
+					nspr.AddRow(row)
+				}
+			} else {
+				if greaterThanNew(rv, val1) && lesserThanNew(rv, val2) {
+					nspr.AddRow(row)
 				}
 			}
 		}
-		return *nspr
-	} else {
-		return MakeBuiltinError(ps, "Column not found.", "WhereBetween")
 	}
+	return *nspr
 }
 
 func AutoType(ps *env.ProgramState, s *env.Table, percent float64) env.Object {

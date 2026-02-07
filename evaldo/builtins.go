@@ -610,7 +610,23 @@ func LoadScriptLocalFile(ps *env.ProgramState, s1 env.Uri) (env.Object, string) 
 	fileIdx, _ := ps.Idx.GetIndex("file")
 	fullpath := filepath.Join(filepath.Dir(ps.ScriptPath), s1.GetPath())
 	if s1.Scheme.Index == fileIdx {
-		b, err := os.ReadFile(fullpath)
+		var b []byte
+		var err error
+		if ps.Embedded && ps.EmbeddedFS != nil {
+			// Try to read from embedded filesystem
+			// The embedded FS has files under "buildtemp/" prefix
+			embeddedPath := "buildtemp/" + s1.GetPath()
+			type embedReader interface {
+				ReadFile(name string) ([]byte, error)
+			}
+			if embFS, ok := (*ps.EmbeddedFS).(embedReader); ok {
+				b, err = embFS.ReadFile(embeddedPath)
+			} else {
+				err = fmt.Errorf("EmbeddedFS does not implement ReadFile")
+			}
+		} else {
+			b, err = os.ReadFile(fullpath)
+		}
 		if err != nil {
 			return MakeBuiltinError(ps, err.Error(), "import"), ps.ScriptPath
 		}
@@ -2786,6 +2802,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltinsInContext(Builtins_crypto, ps, "crypto")
 	RegisterBuiltinsInContext(Builtins_math, ps, "math")
 	RegisterBuiltinsInContext(Builtins_os, ps, "os")
+	RegisterBuiltinsInContext(Builtins_find, ps, "finder")
 	RegisterBuiltinsInContext(Builtins_pipes, ps, "pipes")
 	RegisterBuiltinsInContext(Builtins_term, ps, "term")
 	RegisterBuiltinsInContext(Builtins_termstr, ps, "termstr")

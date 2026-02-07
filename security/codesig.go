@@ -1,7 +1,10 @@
 //go:build !windows
 // +build !windows
 
-// codesig.go
+// codesig.go - Code signature verification for Rye scripts
+//
+// Code signing is configured through security policies (.ryesec, /etc/rye/*.yaml, or embedded).
+// Public keys can be specified inline in the policy or loaded from a separate file.
 package security
 
 import (
@@ -10,31 +13,20 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
-	"path/filepath"
 	"runtime"
 	"strings"
 	"syscall"
 )
 
-// CodeSigConfig holds configuration for code signature verification
-type CodeSigConfig struct {
-	Enforced     bool   // Whether code signature verification is enabled by flag
-	PubKeys      string // Path to the file containing trusted public keys
-	ScriptDir    string // Directory of the script being executed
-	AutoEnforced bool   // Whether code signing is auto-enforced due to .codepks in script dir
-}
-
-// TrustedPublicKeys stores the list of trusted public keys loaded from .codepks file
+// TrustedPublicKeys stores the list of trusted public keys
 var TrustedPublicKeys []ed25519.PublicKey
 
 // CurrentCodeSigEnabled indicates whether code signature verification is currently enabled
 var CurrentCodeSigEnabled bool
 
-// LoadTrustedPublicKeys loads trusted public keys from the specified file
-func LoadTrustedPublicKeys(filePath string) error {
-	// Clear any existing keys
-	TrustedPublicKeys = nil
-
+// LoadPublicKeysFromFile loads trusted public keys from a file
+// The file must be owned by root and not writable by group/others
+func LoadPublicKeysFromFile(filePath string) error {
 	// Check file ownership and permissions
 	fileInfo, err := os.Stat(filePath)
 	if err != nil {
@@ -49,14 +41,12 @@ func LoadTrustedPublicKeys(filePath string) error {
 		return fmt.Errorf("public keys file %s has insecure permissions: %s - should not be writable by group or others", filePath, mode.String())
 	}
 
-	// On Unix systems, check if the file is owned by root
+	// On Unix systems, check if owned by root
 	if runtime.GOOS != "windows" {
-		// Get file system info to check ownership
 		stat, ok := fileInfo.Sys().(*syscall.Stat_t)
 		if ok {
-			// Check if owner is root (uid 0)
 			if stat.Uid != 0 {
-				return fmt.Errorf("public keys file %s is not owned by root (uid: %d)", filePath, stat.Uid)
+				return fmt.Errorf("public keys file %s must be owned by root (current uid: %d)", filePath, stat.Uid)
 			}
 		}
 	}
@@ -69,89 +59,59 @@ func LoadTrustedPublicKeys(filePath string) error {
 	defer file.Close()
 
 	// Read the file line by line
+	var keys []string
 	scanner := bufio.NewScanner(file)
-	lineNum := 0
 	for scanner.Scan() {
-		lineNum++
 		line := strings.TrimSpace(scanner.Text())
-
 		// Skip empty lines and comments
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
 		}
-
-		// Decode the hex-encoded public key
-		pubKeyBytes, err := hex.DecodeString(line)
-		if err != nil {
-			return fmt.Errorf("invalid public key format at line %d: %w", lineNum, err)
-		}
-
-		// Validate key length (Ed25519 public keys are 32 bytes)
-		if len(pubKeyBytes) != ed25519.PublicKeySize {
-			return fmt.Errorf("invalid public key length at line %d: expected %d bytes, got %d",
-				lineNum, ed25519.PublicKeySize, len(pubKeyBytes))
-		}
-
-		// Add the key to the trusted keys list
-		TrustedPublicKeys = append(TrustedPublicKeys, ed25519.PublicKey(pubKeyBytes))
+		keys = append(keys, line)
 	}
 
 	if err := scanner.Err(); err != nil {
 		return fmt.Errorf("error reading public keys file: %w", err)
 	}
 
-	if len(TrustedPublicKeys) == 0 {
+	if len(keys) == 0 {
 		return fmt.Errorf("no valid public keys found in %s", filePath)
 	}
 
-	return nil
+	// Use the common function to parse the keys
+	return LoadPublicKeysFromStrings(keys)
 }
 
-// CheckForCodePksInDir checks if a .codepks file exists in the specified directory
-func CheckForCodePksInDir(dir string) (string, bool) {
+// LoadPublicKeysFromStrings loads trusted public keys from a slice of hex-encoded strings
+func LoadPublicKeysFromStrings(hexKeys []string) error {
+	// Clear any existing keys
+	TrustedPublicKeys = nil
 
-	if dir == "" {
-		return "", false
-	}
-
-	codePksPath := filepath.Join(dir, ".codepks")
-	if _, err := os.Stat(codePksPath); err == nil {
-		return codePksPath, true
-	}
-	return "", false
-}
-
-// InitCodeSig initializes code signature verification with the given configuration
-func InitCodeSig(config CodeSigConfig) error {
-	// Check for .codepks in script directory for auto-enforcement
-	codePksPath := ""
-	autoEnforced := false
-
-	if config.ScriptDir != "" {
-		var found bool
-		codePksPath, found = CheckForCodePksInDir(config.ScriptDir)
-		if found {
-			autoEnforced = true
-			fmt.Fprintf(os.Stderr, "Found .codepks in script directory, auto-enforcing code signing\n")
+	for i, hexKey := range hexKeys {
+		// Skip empty strings
+		if strings.TrimSpace(hexKey) == "" {
+			continue
 		}
+
+		// Decode the hex-encoded public key
+		pubKeyBytes, err := hex.DecodeString(hexKey)
+		if err != nil {
+			return fmt.Errorf("invalid public key format at index %d: %w", i, err)
+		}
+
+		// Validate key length (Ed25519 public keys are 32 bytes)
+		if len(pubKeyBytes) != ed25519.PublicKeySize {
+			return fmt.Errorf("invalid public key length at index %d: expected %d bytes, got %d",
+				i, ed25519.PublicKeySize, len(pubKeyBytes))
+		}
+
+		// Add the key to the trusted keys list
+		TrustedPublicKeys = append(TrustedPublicKeys, ed25519.PublicKey(pubKeyBytes))
 	}
 
-	// Determine if code signing should be enabled
-	CurrentCodeSigEnabled = config.Enforced || autoEnforced
-
-	if !CurrentCodeSigEnabled {
-		return nil
+	if len(TrustedPublicKeys) == 0 {
+		return fmt.Errorf("no valid public keys provided")
 	}
-
-	// Load trusted public keys
-	err := LoadTrustedPublicKeys(codePksPath)
-	if err != nil {
-		return fmt.Errorf("failed to load trusted public keys: %w", err)
-	}
-
-	// Set environment variable for builtins to check ---
-	// Warning: temporary approach ... builtins should check internal ProgramState probably, this can probably be manipulated also
-	os.Setenv("RYE_CODESIG_ENABLED", "1")
 
 	return nil
 }

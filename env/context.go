@@ -772,8 +772,9 @@ type ProgramState struct {
 	Dialect       DoDialect
 	Stack         *EyrStack
 	Embedded      bool
-	DeferBlocks   []Block   // blocks to be executed when function exits or program terminates
-	ContextStack  []*RyeCtx // stack of previous contexts for ccb navigation
+	EmbeddedFS    *interface{} // embed.FS for embedded script files (interface to avoid import cycle)
+	DeferBlocks   []Block      // blocks to be executed when function exits or program terminates
+	ContextStack  []*RyeCtx    // stack of previous contexts for ccb navigation
 	// LastFailedCPathInfo map[string]interface{} // stores information about the last failed context path
 	BlockFile      string
 	BlockLine      int

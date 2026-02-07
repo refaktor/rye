@@ -967,6 +967,10 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 
 	ps := env.NewProgramStateNEW()
 	ps.Embedded = Option_Embed_Main
+	if Option_Embed_Main {
+		var embFS interface{} = Rye_files
+		ps.EmbeddedFS = &embFS
+	}
 	ps.ScriptPath = file
 
 	workingPath, err := os.Getwd()

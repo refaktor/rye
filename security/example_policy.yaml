@@ -1,0 +1,50 @@
+# Example Rye Security Policy
+# This file defines the security constraints for an embedded Rye application
+#
+# To embed this policy into a Rye binary:
+#   go run cmd/ryesecgen/main.go -input security/example_policy.yaml
+#   go build -tags "embed_security,seccomp,landlock" -o myapp
+
+version: "1.0"
+description: "Example secure application policy"
+
+# Seccomp - System call filtering
+seccomp:
+  enabled: true
+  profile: strict    # Options: strict, readonly
+  action: kill       # Options: errno, kill, trap, log
+                     # kill = terminate on violation (most secure)
+                     # errno = return error (allows graceful handling)
+
+# Landlock - Filesystem access control
+landlock:
+  enabled: true
+  profile: custom    # Options: readonly, readexec, custom
+  paths:
+    # Format: "path:permissions" where permissions are r(ead), w(rite), x(execute)
+    - "/opt/myapp:r"           # App directory - read only
+    - "/var/lib/myapp:rw"      # Data directory - read/write
+    - "/tmp:rw"                # Temp directory - read/write
+    - "/etc/ssl/certs:r"       # SSL certs - read only (for HTTPS)
+
+# Code signing - Script integrity verification  
+codesig:
+  enforced: false  # Set to true and provide keys to enable
+  
+  # Option 1: Inline keys (good for embedded binaries)
+  public_keys: []
+    # Hex-encoded Ed25519 public keys (32 bytes = 64 hex chars)
+    # - "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+  
+  # Option 2: External key file (must be root-owned, mode 644)
+  # public_keys_file: "/etc/rye/trusted_keys"
+
+# Enforcement
+mandatory: true      # If true, CLI flags cannot relax these restrictions
+                     # They can only add MORE restrictions
+
+# Optional: Restrict which scripts can be executed
+# If empty, any script can run (useful for embedded single-script apps)
+allowed_script_paths: []
+  # - "/opt/myapp/scripts"
+  # - "/opt/myapp/main.rye"
