@@ -1,0 +1,5 @@
+rye .stdin         ; 
+|Read\string       ; "123 12"
+|load              ; [ 123 12 ]
+|apply* ?_+        ; 135
+|print           

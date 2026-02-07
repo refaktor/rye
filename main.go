@@ -46,77 +46,86 @@ func main() {
 
 	supportscolor.Stdout()
 	runner.DoMain(func(ps *env.ProgramState) error {
-		// Initialize seccomp with configuration from command-line flags
-		seccompConfig := security.SeccompConfig{
-			Enabled: *runner.SeccompProfile != "",
-			Profile: *runner.SeccompProfile,
-			Action:  *runner.SeccompAction,
-		}
-
-		// Initialize landlock with configuration from command-line flags
-		landlockConfig := security.LandlockConfig{
-			Enabled: *runner.LandlockEnabled,
-			Profile: *runner.LandlockProfile,
-			Paths:   strings.Split(*runner.LandlockPaths, ","),
-		}
-
-		// Get script directory from runner for code signing auto-enforcement
+		// Get script directory from runner
 		scriptDir := runner.GetScriptDirectory()
 
-		// Initialize code signing with configuration from command-line flags
-		codeSigConfig := security.CodeSigConfig{
-			Enforced: *runner.CodeSigEnforced,
-			// PubKeys:   *runner.CodeSigPubKeys,
-			ScriptDir: scriptDir,
+		// Build CLI-based policy (lowest priority)
+		cliPolicy := buildCLIPolicy()
+
+		// Load security policy with proper precedence:
+		// 1. Embedded policy (compiled into binary) - highest priority
+		// 2. System policy (/etc/rye/mandatory.yaml)
+		// 3. Local policy (.ryesec in script directory)
+		// 4. CLI flags - lowest priority
+		policy, err := security.LoadSecurityPolicy(scriptDir, cliPolicy)
+		if err != nil {
+			// Policy file exists but is insecure or malformed - this is FATAL
+			fmt.Fprintf(os.Stderr, "FATAL: Security policy error: %v\n", err)
+			os.Exit(1)
 		}
 
-		// Initialize seccomp if profile is set
-		if seccompConfig.Enabled {
-			// If using trap action, set up the trap handler
-			if seccompConfig.Action == "trap" {
-				security.SetupSeccompTrapHandler()
-			}
-
-			if err := security.InitSeccomp(seccompConfig); err != nil {
-				fmt.Fprintf(os.Stderr, "Warning: Failed to initialize seccomp: %v\n", err)
-				// Continue execution even if seccomp initialization fails
-				// This ensures the program can run without seccomp if needed
-			} else {
-				// DEBUG: fmt.Fprintf(os.Stderr, "Seccomp initialized with profile: %s\n", seccompConfig.Profile)
-			}
-		}
-
-		// Initialize landlock if enabled
-		if landlockConfig.Enabled {
-			// Clean up empty paths that might result from splitting an empty string
-			var cleanPaths []string
-			for _, path := range landlockConfig.Paths {
-				if path != "" {
-					cleanPaths = append(cleanPaths, path)
+		// If we have an embedded or system policy, validate the script path
+		if policy.Source == security.PolicySourceEmbedded || policy.Source == security.PolicySourceSystem {
+			if ps.ScriptPath != "" {
+				if err := policy.ValidateScriptPath(ps.ScriptPath); err != nil {
+					fmt.Fprintf(os.Stderr, "FATAL: %v\n", err)
+					os.Exit(1)
 				}
 			}
-			landlockConfig.Paths = cleanPaths
-
-			if err := security.InitLandlock(landlockConfig); err != nil {
-				fmt.Fprintf(os.Stderr, "Warning: Failed to initialize landlock: %v\n", err)
-				// Continue execution even if landlock initialization fails
-				// This ensures the program can run without landlock if needed
-			}
 		}
 
-		// Initialize code signing if enabled
-		// if codeSigConfig.Enabled {
-		if err := security.InitCodeSig(codeSigConfig); err != nil {
-			fmt.Fprintf(os.Stderr, "Warning: Failed to initialize code signing: %v\n", err)
-			// Continue execution even if code signing initialization fails
-			// This ensures the program can run without code signing if needed
-			return err
-		} // else {
-		//	fmt.Fprintf(os.Stderr, "Code signing enabled with public keys from: %s\n", codeSigConfig.PubKeys)
-		// }
-		// }
+		// Apply the security policy
+		if err := security.ApplySecurityPolicy(policy); err != nil {
+			// For embedded/mandatory policies, failure is fatal
+			if policy.Mandatory || policy.Source == security.PolicySourceEmbedded {
+				fmt.Fprintf(os.Stderr, "FATAL: Failed to apply mandatory security policy: %v\n", err)
+				os.Exit(1)
+			}
+			// For other policies, warn but continue
+			fmt.Fprintf(os.Stderr, "Warning: Failed to apply security policy: %v\n", err)
+		}
+
 		return nil
 	})
+}
+
+// buildCLIPolicy creates a security policy from command-line flags
+func buildCLIPolicy() *security.SecurityPolicy {
+	policy := &security.SecurityPolicy{
+		Mandatory: false, // CLI policies can always be overridden by file-based policies
+	}
+
+	// Seccomp from CLI flags
+	if *runner.SeccompProfile != "" {
+		policy.Seccomp.Enabled = true
+		policy.Seccomp.Profile = *runner.SeccompProfile
+		policy.Seccomp.Action = *runner.SeccompAction
+		if policy.Seccomp.Action == "" {
+			policy.Seccomp.Action = "errno"
+		}
+	}
+
+	// Landlock from CLI flags
+	if *runner.LandlockEnabled {
+		policy.Landlock.Enabled = true
+		policy.Landlock.Profile = *runner.LandlockProfile
+		if *runner.LandlockPaths != "" {
+			paths := strings.Split(*runner.LandlockPaths, ",")
+			// Clean up empty paths
+			for _, p := range paths {
+				if p != "" {
+					policy.Landlock.Paths = append(policy.Landlock.Paths, p)
+				}
+			}
+		}
+	}
+
+	// Code signing from CLI flags
+	if *runner.CodeSigEnforced {
+		policy.CodeSig.Enforced = true
+	}
+
+	return policy
 }
 
 // ErrNoPath is returned when 'cd' was called without a second argument.

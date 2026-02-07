@@ -105,6 +105,7 @@ require (
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/headzoo/surf v1.0.1 // indirect
 	github.com/headzoo/ut v0.0.0-20181013193318-a13b5a7a02ca // indirect
+	github.com/jaytaylor/go-find v0.0.0-20230626195527-2e304c986aaf // indirect
 	github.com/jaytaylor/html2text v0.0.0-20230321000545-74c2419ad056 // indirect
 	github.com/jhillyerd/enmime v1.3.0 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
@@ -124,6 +125,7 @@ require (
 	github.com/prometheus/procfs v0.16.1 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rs/xid v1.6.0 // indirect
+	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/sergi/go-diff v1.4.0 // indirect
 	github.com/sqs/go-xoauth2 v0.0.0-20120917012134-0911dad68e56 // indirect
 	github.com/ssor/bom v0.0.0-20170718123548-6386211fdfcf // indirect

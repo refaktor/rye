@@ -22,9 +22,9 @@
 ;
 ; Fyne and APK options did already work (not since rewrite)
 
-rye .args\raw |load :args
+rye .Args\raw? |load :args
 
-version: "0.5.0"
+version: "0.5.1"
 
 ; Helper functions
 check-env: fn { var-name } { .os/env? |is-success }
@@ -144,14 +144,26 @@ load-mod-file: fn { } {
 ; Also validates that main.rye exists when embed_main is requested
 get-embed-command: fn { tags } {
 	either tags = "embed_main" {
-		; Check if main.rye exists in current directory (exists? returns 1 if exists, 0 if not)
-		either %main.rye .os/does-exist {
-			"cp main.rye $RYE_HOME/runner/buildtemp/. ; "
-		} {
-			print "Error: main.rye not found in current directory."
-			print "The embed_main tag requires a main.rye file to embed."
-			exit 1
+		var 'command ""
+		Open %lrye.files
+		|fix\either
+		{ 
+			print "Error: lrye.files file not found." 
+			print "Please create lrye.mod file and list modules in the format: tiny http bleve"
+			{ %main.rye }
 		}
+		{ .Read-all }
+		|load :files-data
+		|for { ::f
+			enter-console "**"
+			; Check if main.rye exists in current directory (exists? returns 1 if exists, 0 if not)
+			f .os/does-exist |either {
+				command:: command ++ embed f "cp {} $RYE_HOME/runner/buildtemp/. ; "
+			} {
+				print embed f "Error: {} not found in current directory."
+				exit 1
+			}
+		} command
 	} { "" }
 }
 

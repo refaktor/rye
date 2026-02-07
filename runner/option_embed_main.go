@@ -9,5 +9,5 @@ import (
 
 const Option_Embed_Main bool = true
 
-//go:embed buildtemp/main.rye
+//go:embed buildtemp/*
 var Rye_files embed.FS

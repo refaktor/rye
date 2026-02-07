@@ -7,4 +7,4 @@ import (
 	"github.com/refaktor/rye/env"
 )
 
-var Builtins_os = map[string]*env.Builtin{}
+var Builtins_pipes = map[string]*env.Builtin{}
