@@ -373,8 +373,8 @@ github.com/prometheus/common v0.66.1 h1:h5E0h5/Y8niHc5DlaLlWLArTQI7tMrsfQjHV+d9Z
 github.com/prometheus/common v0.66.1/go.mod h1:gcaUsgf3KfRSwHY4dIMXLPV0K/Wg1oZ8+SbZk/HH/dA=
 github.com/prometheus/procfs v0.16.1 h1:hZ15bTNuirocR6u0JZ6BAHHmwS1p8B4P6MRqxtzMyRg=
 github.com/prometheus/procfs v0.16.1/go.mod h1:teAbpZRB1iIAJYREa1LsoWUXykVXA1KlTmWl8x/U+Is=
-github.com/refaktor/go-find v0.0.0-20260208115128-2bbe2574d57d h1:1vYKMp6aiGxD+mIzq1USaYKqyGDatN7TI5zwJubyHRo=
-github.com/refaktor/go-find v0.0.0-20260208115128-2bbe2574d57d/go.mod h1:ElSW1BUW7B3IAYRO1wj5EyJMMwZA82TEFdVJiIbUkXo=
+github.com/refaktor/go-find v0.0.0-20260208134259-020cb144f5ba h1:LelV4LFmtw35m1xEqWS1KokDlD8PvcmHFUnQgWBUi2E=
+github.com/refaktor/go-find v0.0.0-20260208134259-020cb144f5ba/go.mod h1:ElSW1BUW7B3IAYRO1wj5EyJMMwZA82TEFdVJiIbUkXo=
 github.com/refaktor/keyboard v0.0.0-20250327232248-edb0b31909c4 h1:hNN6Jy+4lzf4k4M9c/O4UygG9cooW520argkmsAs+Ho=
 github.com/refaktor/keyboard v0.0.0-20250327232248-edb0b31909c4/go.mod h1:GwFCpZSiID9sqQ9Zm0tCmw8eeI9hThLQ7pv1wcTp0I0=
 github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0/go.mod h1:qqbHyh8v60DhA7CoWK5oRCqLrMHRGoxYCSS9EjAz6Eo=

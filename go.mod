@@ -6,7 +6,7 @@ retract v0.0.11 // Published accidentally with a bug
 
 // replace github.com/refaktor/keyboard => ../keyboard
 
-replace github.com/jaytaylor/go-find => github.com/refaktor/go-find v0.0.0-20260208115128-2bbe2574d57d
+replace github.com/jaytaylor/go-find => github.com/refaktor/go-find v0.0.0-20260208134259-020cb144f5ba
 
 require (
 	filippo.io/age v1.3.1
