@@ -1,0 +1,25 @@
+; Simple ACID test
+
+print "=== Simple ACID Test ==="
+
+pctx: persistent-context "test_simple_acid_unique.db"
+
+print "\n1. Testing set and get:"
+do\in pctx {
+    unique-key: "Hello ACID World"  
+    print { "Set unique-key to:" unique-key }
+}
+
+print "\n2. Reopening context to test persistence:"
+pctx2: persistent-context "test_simple_acid_unique.db"
+
+do\in pctx2 {
+    print { "Retrieved unique-key:" unique-key }
+    if unique-key = "Hello ACID World" {
+        print "✓ ACID: Value persisted correctly" 
+    } {
+        print "✗ ACID: Value not persisted"
+    }
+}
+
+print "\n✓ ACID test complete!"

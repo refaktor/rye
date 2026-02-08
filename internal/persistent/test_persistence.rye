@@ -1,0 +1,21 @@
+; Test script for persistent contexts
+
+; Create a new persistent context
+pctx: persistent-context "test111.db"
+
+; Set some values
+do\in pctx {
+    x: 123
+    y: "hello"
+}
+
+; Close the context (by exiting the block)
+
+; Re-open the context
+pctx2: persistent-context "test111.db"
+
+; Check if the values are still there
+do\in pctx2 {
+    print x
+    print y
+}
