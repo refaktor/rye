@@ -20,7 +20,7 @@
 ; * Only embeds main.rye
 ; * Only tested on Linux
 ;
-; Fyne and APK options did already work (not since rewrite)
+; Fyne and APK options did already work (not since rewr ite)
 
 rye .Args\raw? |load :args
 
@@ -33,14 +33,14 @@ get-rye-home: does { os/env? "RYE_HOME" |fix { "" } }
 
 ; Validate environment variables and print helpful messages
 validate-env: fn { need-fyne } {
-	rye-home: get-rye-home |fix { "" } ; TODO --- improve this bad pattern (see bad-comms-better-comms blog idea for this case)
+	rye-home: get-rye-home
 	; rye-home-fyne: get-rye-home-fyne
 	
-	errors: 0
+	var 'errors 0
 	
-	get-rye-home = "" {
+	if rye-home = "" {
 		print "❌ RYE_HOME is not set"
-		errors: errors + 1
+		errors:: errors + 1
 	}
 	
 	; if all { need-fyne rye-home-fyne = "" } {
@@ -149,7 +149,7 @@ get-embed-command: fn { tags } {
 		|fix\either
 		{ 
 			print "Error: lrye.files file not found." 
-			print "Please create lrye.mod file and list modules in the format: tiny http bleve"
+			print "Please create lrye.files file and list files in the format: %main.rye %lib.rye"
 			{ %main.rye }
 		}
 		{ .Read-all }
@@ -157,6 +157,7 @@ get-embed-command: fn { tags } {
 		|for { ::f
 			; Check if main.rye exists in current directory (exists? returns 1 if exists, 0 if not)
 			.os/does-exist |either {
+				print "* Adding file: " ++ f
 				command:: command ++ embed f "cp {} $RYE_HOME/runner/buildtemp/. ; "
 			} {
 				print embed f "Error: {} not found in current directory."
@@ -181,17 +182,19 @@ build: fn { tags } {
 	modules |^check { return 0 }
 	print modules
 	
+	out: either tags = "embed_main" { "main" } { "lrye" }
+
 	cp-embed: get-embed-command tags
 	cp-embed |^check { return 0 }
 	
 	var 'command join { 
 		cp-embed 
-		` a=$PWD ; cd $RYE_HOME ; go build -tags "` ++ modules ++ " " ++ tags `" -o "$a/lrye" ; cd "$a"` 
+		join [ ` a=$PWD ; cd $RYE_HOME ; go build -tags "` ++ modules ++ " " ++ tags `" -o "$a/` out `" ; cd "$a"` ]
 	}
 	
 	run-build-command command
 	
-	print "\nBuild completed. You can now use ./lrye to run your Rye scripts."
+	print join [ "\nBuild completed. You can use binary ./" out " to run it." ]
 }
 
 build\fyne: fn { tags } {
