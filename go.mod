@@ -6,6 +6,8 @@ retract v0.0.11 // Published accidentally with a bug
 
 // replace github.com/refaktor/keyboard => ../keyboard
 
+replace github.com/jaytaylor/go-find => github.com/refaktor/go-find v0.0.0-20260208115128-2bbe2574d57d
+
 require (
 	filippo.io/age v1.3.1
 	github.com/BrianLeishman/go-imap v0.1.20
@@ -26,6 +28,7 @@ require (
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/fxtlabs/primes v0.0.0-20150821004651-dad82d10a449
 	github.com/gdamore/tcell/v2 v2.13.8
+	github.com/gen2brain/go-mpv v0.2.3
 	github.com/glebarez/sqlite v1.11.0
 	github.com/gliderlabs/ssh v0.3.8
 	github.com/go-echarts/go-echarts/v2 v2.6.7
@@ -36,6 +39,7 @@ require (
 	github.com/gobwas/ws v1.4.0
 	github.com/gorilla/sessions v1.4.0
 	github.com/hpcloud/tail v1.0.0
+	github.com/jaytaylor/go-find v0.0.0-20230626195527-2e304c986aaf
 	github.com/jinzhu/copier v0.4.0
 	github.com/jlaffaye/ftp v0.2.0
 	github.com/jwalton/go-supportscolor v1.2.0
@@ -65,6 +69,7 @@ require (
 	golang.org/x/term v0.39.0
 	golang.org/x/text v0.33.0
 	gopkg.in/headzoo/surf.v1 v1.0.1
+	gopkg.in/yaml.v3 v3.0.1
 	software.sslmate.com/src/go-pkcs12 v0.7.0
 )
 
@@ -95,7 +100,6 @@ require (
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/frankban/quicktest v1.14.6 // indirect
-	github.com/gen2brain/go-mpv v0.2.3 // indirect
 	github.com/go-git/gcfg/v2 v2.0.2 // indirect
 	github.com/go-git/go-billy/v6 v6.0.0-20250627091229-31e2a16eef30 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
@@ -107,7 +111,6 @@ require (
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/headzoo/surf v1.0.1 // indirect
 	github.com/headzoo/ut v0.0.0-20181013193318-a13b5a7a02ca // indirect
-	github.com/jaytaylor/go-find v0.0.0-20230626195527-2e304c986aaf // indirect
 	github.com/jaytaylor/html2text v0.0.0-20230321000545-74c2419ad056 // indirect
 	github.com/jhillyerd/enmime v1.3.0 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
@@ -148,7 +151,6 @@ require (
 	golang.org/x/time v0.14.0 // indirect
 	gopkg.in/fsnotify.v1 v1.4.7 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.5.2 // indirect
 	kernel.org/pub/linux/libs/security/libcap/psx v1.2.70 // indirect
 )
