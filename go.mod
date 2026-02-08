@@ -6,6 +6,8 @@ retract v0.0.11 // Published accidentally with a bug
 
 // replace github.com/refaktor/keyboard => ../keyboard
 
+replace github.com/jaytaylor/go-find => github.com/refaktor/go-find v0.0.0-20260208134259-020cb144f5ba
+
 require (
 	filippo.io/age v1.3.1
 	github.com/BrianLeishman/go-imap v0.1.20
@@ -26,6 +28,7 @@ require (
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/fxtlabs/primes v0.0.0-20150821004651-dad82d10a449
 	github.com/gdamore/tcell/v2 v2.13.8
+	github.com/gen2brain/go-mpv v0.2.3
 	github.com/glebarez/sqlite v1.11.0
 	github.com/gliderlabs/ssh v0.3.8
 	github.com/go-echarts/go-echarts/v2 v2.6.7
@@ -36,6 +39,7 @@ require (
 	github.com/gobwas/ws v1.4.0
 	github.com/gorilla/sessions v1.4.0
 	github.com/hpcloud/tail v1.0.0
+	github.com/jaytaylor/go-find v0.0.0-20230626195527-2e304c986aaf
 	github.com/jinzhu/copier v0.4.0
 	github.com/jlaffaye/ftp v0.2.0
 	github.com/jwalton/go-supportscolor v1.2.0
@@ -65,6 +69,7 @@ require (
 	golang.org/x/term v0.39.0
 	golang.org/x/text v0.33.0
 	gopkg.in/headzoo/surf.v1 v1.0.1
+	gopkg.in/yaml.v3 v3.0.1
 	software.sslmate.com/src/go-pkcs12 v0.7.0
 )
 
@@ -91,6 +96,7 @@ require (
 	github.com/distribution/reference v0.6.0 // indirect
 	github.com/docker/go-connections v0.6.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
+	github.com/ebitengine/purego v0.7.1 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/frankban/quicktest v1.14.6 // indirect
@@ -124,6 +130,7 @@ require (
 	github.com/prometheus/procfs v0.16.1 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rs/xid v1.6.0 // indirect
+	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/sergi/go-diff v1.4.0 // indirect
 	github.com/sqs/go-xoauth2 v0.0.0-20120917012134-0911dad68e56 // indirect
 	github.com/ssor/bom v0.0.0-20170718123548-6386211fdfcf // indirect
@@ -144,7 +151,6 @@ require (
 	golang.org/x/time v0.14.0 // indirect
 	gopkg.in/fsnotify.v1 v1.4.7 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.5.2 // indirect
 	kernel.org/pub/linux/libs/security/libcap/psx v1.2.70 // indirect
 )

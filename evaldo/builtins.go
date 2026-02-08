@@ -610,7 +610,23 @@ func LoadScriptLocalFile(ps *env.ProgramState, s1 env.Uri) (env.Object, string) 
 	fileIdx, _ := ps.Idx.GetIndex("file")
 	fullpath := filepath.Join(filepath.Dir(ps.ScriptPath), s1.GetPath())
 	if s1.Scheme.Index == fileIdx {
-		b, err := os.ReadFile(fullpath)
+		var b []byte
+		var err error
+		if ps.Embedded && ps.EmbeddedFS != nil {
+			// Try to read from embedded filesystem
+			// The embedded FS has files under "buildtemp/" prefix
+			embeddedPath := "buildtemp/" + s1.GetPath()
+			type embedReader interface {
+				ReadFile(name string) ([]byte, error)
+			}
+			if embFS, ok := (*ps.EmbeddedFS).(embedReader); ok {
+				b, err = embFS.ReadFile(embeddedPath)
+			} else {
+				err = fmt.Errorf("EmbeddedFS does not implement ReadFile")
+			}
+		} else {
+			b, err = os.ReadFile(fullpath)
+		}
 		if err != nil {
 			return MakeBuiltinError(ps, err.Error(), "import"), ps.ScriptPath
 		}
@@ -2771,7 +2787,6 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_goroutines, ps, "goroutines")
 	RegisterBuiltins2(Builtins_msgdispatcher, ps, "msgdispatcher")
 	RegisterBuiltins2(Builtins_http, ps, "http")
-	// RegisterBuiltinsInContext(Builtins_gin, ps, "gin")
 	RegisterBuiltins2(Builtins_sqlite, ps, "sqlite")
 	RegisterBuiltins2(Builtins_psql, ps, "psql")
 	RegisterBuiltins2(Builtins_mysql, ps, "mysql")
@@ -2789,7 +2804,6 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltinsInContext(Builtins_pipes, ps, "pipes")
 	RegisterBuiltinsInContext(Builtins_term, ps, "term")
 	RegisterBuiltinsInContext(Builtins_termstr, ps, "termstr")
-	// RegisterBuiltins2(Builtins_termui, ps, "termui")
 	RegisterBuiltinsInContext(Builtins_tui, ps, "tui")
 	RegisterBuiltinsInContext(Builtins_telegrambot, ps, "telegram")
 	RegisterBuiltinsInContext(Builtins_mcp, ps, "mcp")

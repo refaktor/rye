@@ -3,7 +3,11 @@
 package evaldo
 
 import (
+	"archive/tar"
+	"archive/zip"
+	"compress/gzip"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"path/filepath"
@@ -12,6 +16,7 @@ import (
 	"time"
 
 	"github.com/atotto/clipboard"
+	"github.com/jaytaylor/go-find"
 	"github.com/refaktor/rye/env"
 
 	"github.com/shirou/gopsutil/v3/disk"
@@ -65,18 +70,18 @@ var Builtins_os = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			path, err := os.Getwd()
 			if err != nil {
-				return MakeBuiltinError(ps, err.Error(), "cwd")
+				return MakeBuiltinError(ps, err.Error(), "cwd?")
 			}
 			return *env.NewUri1(ps.Idx, "file://"+path)
 		},
 	},
 
 	// Tests:
-	// equal { cc os does-exist %go.mod } 1
+	//  equal { cc os does-exist %go.mod } true
 	// Args:
 	// * path: uri representing the file or directory to check
 	// Returns:
-	// * integer: 1 if exists, 0 if not exists
+	// * boolean: true if exists, false if not
 	"does-exist": {
 		Argsn: 1,
 		Doc:   "Checks if a file or directory exists.",
@@ -86,26 +91,11 @@ var Builtins_os = map[string]*env.Builtin{
 				filePath := filepath.Join(ps.WorkingPath, path.GetPath())
 				res := FileExists(filePath)
 				if res == -1 {
-					return MakeBuiltinError(ps, "Error checking if path exists", "exists?")
+					return MakeBuiltinError(ps, "Error checking if path exists", "does-exists")
 				}
-				if res == 1 {
-					return *env.NewBoolean(true)
-				} else {
-					return *env.NewBoolean(false)
-				}
-			case env.String:
-				filePath := filepath.Join(ps.WorkingPath, path.Value)
-				res := FileExists(filePath)
-				if res == -1 {
-					return MakeBuiltinError(ps, "Error checking if path exists", "exists?")
-				}
-				if res == 1 {
-					return *env.NewBoolean(true)
-				} else {
-					return *env.NewBoolean(false)
-				}
+				return *env.NewBoolean(res == 1)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.UriType, env.StringType}, "exists?")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "does-exist")
 			}
 		},
 	},
@@ -156,29 +146,6 @@ var Builtins_os = map[string]*env.Builtin{
 		},
 	},
 
-	/*	"cd_": {
-		Argsn: 1,
-		Doc:   "Changes current directory.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch path := arg0.(type) {
-			case env.Uri:
-				new := filepath.Join(filepath.Dir(ps.WorkingPath), path.GetPath())
-				res := FileExists(new)
-				if res == 1 {
-					ps.WorkingPath = filepath.Join(filepath.Dir(ps.WorkingPath), path.GetPath())
-					return arg0
-				} else if res == 0 {
-					return MakeBuiltinError(ps, "Path doesn't exist", "cd")
-				} else {
-					return MakeBuiltinError(ps, "Error determining if path exists", "cd")
-				}
-				// TODO -- check if it exists
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "cd")
-			}
-		},
-	}, */
-
 	// Tests:
 	// ; equal { cc os mkdir %delme } %delme
 	// Args:
@@ -226,6 +193,235 @@ var Builtins_os = map[string]*env.Builtin{
 	},
 
 	// Args:
+	// * path: uri representing the file or empty directory to remove
+	// Returns:
+	// * the uri if successful
+	// Tags: #file #delete
+	"rm": {
+		Argsn: 1,
+		Doc:   "Removes a file or empty directory.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch path := arg0.(type) {
+			case env.Uri:
+				filePath := filepath.Join(ps.WorkingPath, path.GetPath())
+				err := os.Remove(filePath)
+				if err != nil {
+					return MakeBuiltinError(ps, "Error removing file: "+err.Error(), "rm")
+				}
+				return arg0
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "rm")
+			}
+		},
+	},
+
+	// Args:
+	// * path: uri representing the directory to remove (including contents)
+	// Returns:
+	// * the uri if successful
+	// Tags: #file #delete
+	"rmdir": {
+		Argsn: 1,
+		Doc:   "Removes a directory and all its contents recursively.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch path := arg0.(type) {
+			case env.Uri:
+				dirPath := filepath.Join(ps.WorkingPath, path.GetPath())
+				err := os.RemoveAll(dirPath)
+				if err != nil {
+					return MakeBuiltinError(ps, "Error removing directory: "+err.Error(), "rmdir")
+				}
+				return arg0
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "rmdir")
+			}
+		},
+	},
+
+	// Args:
+	// * source: uri representing the source file
+	// * destination: uri representing the destination file
+	// Returns:
+	// * destination uri if successful
+	// Tags: #file #copy
+	"cp": {
+		Argsn: 2,
+		Doc:   "Copies a file to a new location.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch src := arg0.(type) {
+			case env.Uri:
+				switch dst := arg1.(type) {
+				case env.Uri:
+					srcPath := filepath.Join(ps.WorkingPath, src.GetPath())
+					dstPath := filepath.Join(ps.WorkingPath, dst.GetPath())
+
+					// Read source file
+					data, err := os.ReadFile(srcPath)
+					if err != nil {
+						return MakeBuiltinError(ps, "Error reading source file: "+err.Error(), "cp")
+					}
+
+					// Get source file permissions
+					srcInfo, err := os.Stat(srcPath)
+					if err != nil {
+						return MakeBuiltinError(ps, "Error getting source file info: "+err.Error(), "cp")
+					}
+
+					// Write to destination with same permissions
+					err = os.WriteFile(dstPath, data, srcInfo.Mode())
+					if err != nil {
+						return MakeBuiltinError(ps, "Error writing destination file: "+err.Error(), "cp")
+					}
+					return arg1
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.UriType}, "cp")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "cp")
+			}
+		},
+	},
+
+	// Args:
+	// * path: uri representing the file or directory
+	// Returns:
+	// * dict with keys: name, size, mode, mod-time, is-dir
+	// Tags: #file #info
+	"file-info?": {
+		Argsn: 1,
+		Doc:   "Gets detailed information about a file or directory.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch path := arg0.(type) {
+			case env.Uri:
+				filePath := filepath.Join(ps.WorkingPath, path.GetPath())
+				info, err := os.Stat(filePath)
+				if err != nil {
+					return MakeBuiltinError(ps, "Error getting file info: "+err.Error(), "file-info?")
+				}
+				r := env.NewDict(make(map[string]any, 5))
+				r.Data["name"] = *env.NewString(info.Name())
+				r.Data["size"] = *env.NewInteger(info.Size())
+				r.Data["mode"] = *env.NewString(info.Mode().String())
+				r.Data["mod-time"] = *env.NewDate(info.ModTime())
+				r.Data["is-dir"] = *env.NewBoolean(info.IsDir())
+				return *r
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-info?")
+			}
+		},
+	},
+
+	// Args:
+	// * path: uri representing the path to check
+	// Returns:
+	// * boolean: true if path is a directory, false otherwise
+	// Tags: #file #check
+	"is-dir?": {
+		Argsn: 1,
+		Doc:   "Checks if a path is a directory.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch path := arg0.(type) {
+			case env.Uri:
+				filePath := filepath.Join(ps.WorkingPath, path.GetPath())
+				info, err := os.Stat(filePath)
+				if err != nil {
+					if os.IsNotExist(err) {
+						return *env.NewBoolean(false)
+					}
+					return MakeBuiltinError(ps, "Error checking path: "+err.Error(), "is-dir?")
+				}
+				return *env.NewBoolean(info.IsDir())
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "is-dir?")
+			}
+		},
+	},
+
+	// Args:
+	// * path: uri representing the path to check
+	// Returns:
+	// * boolean: true if path is a regular file, false otherwise
+	// Tags: #file #check
+	"is-file?": {
+		Argsn: 1,
+		Doc:   "Checks if a path is a regular file (not a directory).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch path := arg0.(type) {
+			case env.Uri:
+				filePath := filepath.Join(ps.WorkingPath, path.GetPath())
+				info, err := os.Stat(filePath)
+				if err != nil {
+					if os.IsNotExist(err) {
+						return *env.NewBoolean(false)
+					}
+					return MakeBuiltinError(ps, "Error checking path: "+err.Error(), "is-file?")
+				}
+				return *env.NewBoolean(info.Mode().IsRegular())
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "is-file?")
+			}
+		},
+	},
+
+	// Args:
+	// * none
+	// Returns:
+	// * uri representing the user's home directory
+	// Tags: #file #directory
+	"home-dir?": {
+		Argsn: 0,
+		Doc:   "Gets the current user's home directory.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			dir, err := os.UserHomeDir()
+			if err != nil {
+				return MakeBuiltinError(ps, "Error getting home directory: "+err.Error(), "home-dir?")
+			}
+			return *env.NewUri1(ps.Idx, "file://"+dir)
+		},
+	},
+
+	// Args:
+	// * none
+	// Returns:
+	// * uri representing the system's temporary directory
+	// Tags: #file #directory
+	"tmp-dir?": {
+		Argsn: 0,
+		Doc:   "Gets the system's default temporary directory.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			dir := os.TempDir()
+			return *env.NewUri1(ps.Idx, "file://"+dir)
+		},
+	},
+
+	// Args:
+	// * pattern: string containing a glob pattern (e.g., "*.txt", "data/*.csv")
+	// Returns:
+	// * block of uris matching the pattern
+	// Tags: #file #search
+	"glob": {
+		Argsn: 1,
+		Doc:   "Returns files matching a glob pattern.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch pattern := arg0.(type) {
+			case env.String:
+				patternPath := filepath.Join(ps.WorkingPath, pattern.Value)
+				matches, err := filepath.Glob(patternPath)
+				if err != nil {
+					return MakeBuiltinError(ps, "Error in glob pattern: "+err.Error(), "glob")
+				}
+				items := make([]env.Object, len(matches))
+				for i, match := range matches {
+					items[i] = *env.NewUri1(ps.Idx, "file://"+match)
+				}
+				return *env.NewBlock(*env.NewTSeries(items))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "glob")
+			}
+		},
+	},
+
+	// Args:
 	// * source: uri representing the source file or directory
 	// * destination: uri representing the destination file or directory
 	// Returns:
@@ -234,35 +430,25 @@ var Builtins_os = map[string]*env.Builtin{
 		Argsn: 2,
 		Doc:   "Moves or renames a file or directory.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch path := arg0.(type) {
+			switch src := arg0.(type) {
 			case env.Uri:
-				switch path2 := arg1.(type) {
+				switch dst := arg1.(type) {
 				case env.Uri:
-					old := filepath.Join(ps.WorkingPath, path.GetPath())
-					new := filepath.Join(ps.WorkingPath, path2.GetPath())
-					err := os.Rename(old, new)
+					oldPath := filepath.Join(ps.WorkingPath, src.GetPath())
+					newPath := filepath.Join(ps.WorkingPath, dst.GetPath())
+					err := os.Rename(oldPath, newPath)
 					if err != nil {
-						fmt.Println("Error renaming file:", err)
-						return MakeBuiltinError(ps, "Error renaming file: "+err.Error(), "mv")
-					} else {
-						return arg1
+						return MakeBuiltinError(ps, "Error moving file: "+err.Error(), "mv")
 					}
+					return arg1
 				default:
-					return MakeArgError(ps, 1, []env.Type{env.UriType}, "mv")
+					return MakeArgError(ps, 2, []env.Type{env.UriType}, "mv")
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.UriType}, "mv")
 			}
 		},
 	},
-
-	/*	"cwd_": {
-		Argsn: 0,
-		Doc:   "Returns current working directory.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return *env.NewUri1(ps.Idx, "file://"+ps.WorkingPath)
-		},
-	}, */
 
 	// Args:
 	// * none
@@ -392,7 +578,6 @@ var Builtins_os = map[string]*env.Builtin{
 			if err != nil {
 				return MakeBuiltinError(ps, err.Error(), "users?")
 			}
-			fmt.Println(users)
 			s := env.NewTable([]string{"User", "Terminal", "Host", "Started"})
 			for _, user := range users {
 				vals := []any{
@@ -552,17 +737,15 @@ var Builtins_os = map[string]*env.Builtin{
 			case env.String:
 				names, err := net.LookupAddr(ip.Value)
 				if err != nil {
-					return MakeBuiltinError(ps, err.Error(), "ip-lookup")
+					return MakeBuiltinError(ps, err.Error(), "lookup-address")
 				}
-
 				items := make([]env.Object, len(names))
-
 				for i, name := range names {
 					items[i] = *env.NewString(name)
 				}
 				return *env.NewBlock(*env.NewTSeries(items))
 			default:
-				return *MakeArgError(ps, 1, []env.Type{env.StringType}, "ip-lookup")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "lookup-address")
 			}
 		},
 	},
@@ -575,21 +758,19 @@ var Builtins_os = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "Performs a DNS lookup to get IP addresses for a hostname.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch ip := arg0.(type) {
+			switch hostname := arg0.(type) {
 			case env.String:
-				names, err := net.LookupIP(ip.Value)
+				ips, err := net.LookupIP(hostname.Value)
 				if err != nil {
-					return MakeBuiltinError(ps, err.Error(), "ip-lookup")
+					return MakeBuiltinError(ps, err.Error(), "lookup-ip")
 				}
-
-				items := make([]env.Object, len(names))
-
-				for i, name := range names {
-					items[i] = *env.NewString(name.String())
+				items := make([]env.Object, len(ips))
+				for i, ip := range ips {
+					items[i] = *env.NewString(ip.String())
 				}
 				return *env.NewBlock(*env.NewTSeries(items))
 			default:
-				return *MakeArgError(ps, 1, []env.Type{env.StringType}, "ip-lookup")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "lookup-ip")
 			}
 		},
 	},
@@ -630,6 +811,671 @@ var Builtins_os = map[string]*env.Builtin{
 			return *env.NewString(val)
 		},
 	},
+
+	//
+	// ##### Archive Functions ##### "Functions for creating and extracting archives"
+	//
+
+	// Creates a .tar.gz archive from a directory or file.
+	// Args:
+	// * source: uri representing the file or directory to archive
+	// * destination: uri representing the output .tar.gz file
+	// Returns:
+	// * destination uri if successful
+	// Tags: #archive #compress
+	"tgz": {
+		Argsn: 2,
+		Doc:   "Creates a .tar.gz archive from a file or directory.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch src := arg0.(type) {
+			case env.Uri:
+				switch dst := arg1.(type) {
+				case env.Uri:
+					srcPath := resolvePath(ps.WorkingPath, src.GetPath())
+					dstPath := resolvePath(ps.WorkingPath, dst.GetPath())
+					err := createTarGz(srcPath, dstPath)
+					if err != nil {
+						return MakeBuiltinError(ps, "Error creating tar.gz: "+err.Error(), "tgz")
+					}
+					return arg1
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.UriType}, "tgz")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "tgz")
+			}
+		},
+	},
+
+	// Extracts a .tar.gz archive to a directory.
+	// Args:
+	// * source: uri representing the .tar.gz file
+	// * destination: uri representing the output directory
+	// Returns:
+	// * destination uri if successful
+	// Tags: #archive #extract
+	"un-tgz": {
+		Argsn: 2,
+		Doc:   "Extracts a .tar.gz archive to a directory.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch src := arg0.(type) {
+			case env.Uri:
+				switch dst := arg1.(type) {
+				case env.Uri:
+					srcPath := resolvePath(ps.WorkingPath, src.GetPath())
+					dstPath := resolvePath(ps.WorkingPath, dst.GetPath())
+					err := extractTarGz(srcPath, dstPath)
+					if err != nil {
+						return MakeBuiltinError(ps, "Error extracting tar.gz: "+err.Error(), "un-tgz")
+					}
+					return arg1
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.UriType}, "un-tgz")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "un-tgz")
+			}
+		},
+	},
+
+	// Creates a .zip archive from a directory or file.
+	// Args:
+	// * source: uri representing the file or directory to archive
+	// * destination: uri representing the output .zip file
+	// Returns:
+	// * destination uri if successful
+	// Tags: #archive #compress
+	"zip": {
+		Argsn: 2,
+		Doc:   "Creates a .zip archive from a file or directory.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch src := arg0.(type) {
+			case env.Uri:
+				switch dst := arg1.(type) {
+				case env.Uri:
+					srcPath := resolvePath(ps.WorkingPath, src.GetPath())
+					dstPath := resolvePath(ps.WorkingPath, dst.GetPath())
+					err := createZip(srcPath, dstPath)
+					if err != nil {
+						return MakeBuiltinError(ps, "Error creating zip: "+err.Error(), "zip")
+					}
+					return arg1
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.UriType}, "zip")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "zip")
+			}
+		},
+	},
+
+	// Extracts a .zip archive to a directory.
+	// Args:
+	// * source: uri representing the .zip file
+	// * destination: uri representing the output directory
+	// Returns:
+	// * destination uri if successful
+	// Tags: #archive #extract
+	"unzip": {
+		Argsn: 2,
+		Doc:   "Extracts a .zip archive to a directory.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch src := arg0.(type) {
+			case env.Uri:
+				switch dst := arg1.(type) {
+				case env.Uri:
+					srcPath := resolvePath(ps.WorkingPath, src.GetPath())
+					dstPath := resolvePath(ps.WorkingPath, dst.GetPath())
+					err := extractZip(srcPath, dstPath)
+					if err != nil {
+						return MakeBuiltinError(ps, "Error extracting zip: "+err.Error(), "unzip")
+					}
+					return arg1
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.UriType}, "unzip")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "unzip")
+			}
+		},
+	},
+
+	//
+	// ##### Find ##### "File finding functions using go-find library"
+	//
+	// Example:
+	//  find %src |name "*.go" |type 'file |eval
+	//  find %. |max-depth 2 |name "*.txt" |eval
+	//  find %/home |min-depth 1 |max-depth 3 |regex regexp "test.*\.go$" |eval
+	//
+
+	// Creates a new finder starting from the given path(s).
+	// Args:
+	// * path: uri or block of uris representing starting paths
+	// Returns:
+	// * native finder object
+	// Tags: #find #files
+	"find": {
+		Argsn: 1,
+		Doc:   "Creates a new file finder starting from the given path(s).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch path := arg0.(type) {
+			case env.Uri:
+				finder := find.NewFind(path.GetPath())
+				return *env.NewNative(ps.Idx, finder, "finder")
+			case env.Block:
+				paths := make([]string, 0, path.Series.Len())
+				for i := 0; i < path.Series.Len(); i++ {
+					item := path.Series.Get(i)
+					switch p := item.(type) {
+					case env.Uri:
+						paths = append(paths, p.GetPath())
+					case env.String:
+						paths = append(paths, p.Value)
+					default:
+						return MakeBuiltinError(ps, "Block must contain only uris or strings", "find")
+					}
+				}
+				finder := find.NewFind(paths...)
+				return *env.NewNative(ps.Idx, finder, "finder")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType, env.BlockType}, "find")
+			}
+		},
+	},
+
+	// Sets the minimum depth for the finder.
+	// Args:
+	// * finder: native finder object
+	// * depth: integer minimum depth
+	// Returns:
+	// * native finder object (for chaining)
+	// Tags: #find #filter
+	"finder//min-depth": {
+		Argsn: 2,
+		Doc:   "Sets the minimum depth for file traversal.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch f := arg0.(type) {
+			case env.Native:
+				if finder, ok := f.Value.(*find.Find); ok {
+					switch depth := arg1.(type) {
+					case env.Integer:
+						finder.MinDepth(int(depth.Value))
+						return arg0
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "finder//min-depth")
+					}
+				}
+				return MakeBuiltinError(ps, "Expected finder object", "finder//min-depth")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//min-depth")
+			}
+		},
+	},
+
+	// Sets the maximum depth for the finder.
+	// Args:
+	// * finder: native finder object
+	// * depth: integer maximum depth
+	// Returns:
+	// * native finder object (for chaining)
+	// Tags: #find #filter
+	"finder//max-depth": {
+		Argsn: 2,
+		Doc:   "Sets the maximum depth for file traversal.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch f := arg0.(type) {
+			case env.Native:
+				if finder, ok := f.Value.(*find.Find); ok {
+					switch depth := arg1.(type) {
+					case env.Integer:
+						finder.MaxDepth(int(depth.Value))
+						return arg0
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "finder//max-depth")
+					}
+				}
+				return MakeBuiltinError(ps, "Expected finder object", "finder//max-depth")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//max-depth")
+			}
+		},
+	},
+
+	// Filters by file type.
+	// Args:
+	// * finder: native finder object
+	// * type: word 'file or 'dir (or string "f" or "d")
+	// Returns:
+	// * native finder object (for chaining)
+	// Tags: #find #filter
+	"finder//type": {
+		Argsn: 2,
+		Doc:   "Filters results by type: 'file (or \"f\") for files, 'dir (or \"d\") for directories.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch f := arg0.(type) {
+			case env.Native:
+				if finder, ok := f.Value.(*find.Find); ok {
+					var typeStr string
+					switch t := arg1.(type) {
+					case env.Word:
+						word := ps.Idx.GetWord(t.Index)
+						switch word {
+						case "file":
+							typeStr = "f"
+						case "dir":
+							typeStr = "d"
+						default:
+							return MakeBuiltinError(ps, "Type must be 'file or 'dir", "finder//type")
+						}
+					case env.String:
+						if t.Value != "f" && t.Value != "d" {
+							return MakeBuiltinError(ps, "Type must be \"f\" or \"d\"", "finder//type")
+						}
+						typeStr = t.Value
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "finder//type")
+					}
+					finder.Type(typeStr)
+					return arg0
+				}
+				return MakeBuiltinError(ps, "Expected finder object", "finder//type")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//type")
+			}
+		},
+	},
+
+	// Filters by file name using glob pattern.
+	// Args:
+	// * finder: native finder object
+	// * pattern: string glob pattern (e.g., "*.go", "test_*")
+	// Returns:
+	// * native finder object (for chaining)
+	// Tags: #find #filter
+	"finder//name": {
+		Argsn: 2,
+		Doc:   "Filters results by file name using a glob pattern.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch f := arg0.(type) {
+			case env.Native:
+				if finder, ok := f.Value.(*find.Find); ok {
+					switch pattern := arg1.(type) {
+					case env.String:
+						finder.Name(pattern.Value)
+						return arg0
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.StringType}, "finder//name")
+					}
+				}
+				return MakeBuiltinError(ps, "Expected finder object", "finder//name")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//name")
+			}
+		},
+	},
+
+	// Filters by full path using glob pattern.
+	// Args:
+	// * finder: native finder object
+	// * pattern: string glob pattern for the whole path
+	// Returns:
+	// * native finder object (for chaining)
+	// Tags: #find #filter
+	"finder//whole-name": {
+		Argsn: 2,
+		Doc:   "Filters results by full path using a glob pattern.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch f := arg0.(type) {
+			case env.Native:
+				if finder, ok := f.Value.(*find.Find); ok {
+					switch pattern := arg1.(type) {
+					case env.String:
+						finder.WholeName(pattern.Value)
+						return arg0
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.StringType}, "finder//whole-name")
+					}
+				}
+				return MakeBuiltinError(ps, "Expected finder object", "finder//whole-name")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//whole-name")
+			}
+		},
+	},
+
+	// Filters by regular expression on the full path.
+	// Args:
+	// * finder: native finder object
+	// * regex: native regexp object
+	// Returns:
+	// * native finder object (for chaining)
+	// Tags: #find #filter
+	"finder//regex": {
+		Argsn: 2,
+		Doc:   "Filters results by regular expression on the full path.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch f := arg0.(type) {
+			case env.Native:
+				if finder, ok := f.Value.(*find.Find); ok {
+					switch r := arg1.(type) {
+					case env.Native:
+						if regex, ok := r.Value.(*regexp.Regexp); ok {
+							finder.Regex(regex)
+							return arg0
+						}
+						return MakeBuiltinError(ps, "Expected regexp object", "finder//regex")
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.NativeType}, "finder//regex")
+					}
+				}
+				return MakeBuiltinError(ps, "Expected finder object", "finder//regex")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//regex")
+			}
+		},
+	},
+
+	// Filters for empty files or directories.
+	// Args:
+	// * finder: native finder object
+	// Returns:
+	// * native finder object (for chaining)
+	// Tags: #find #filter
+	"finder//empty": {
+		Argsn: 1,
+		Doc:   "Filters for empty files or directories.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch f := arg0.(type) {
+			case env.Native:
+				if finder, ok := f.Value.(*find.Find); ok {
+					finder.Empty()
+					return arg0
+				}
+				return MakeBuiltinError(ps, "Expected finder object", "finder//empty")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//empty")
+			}
+		},
+	},
+
+	// Executes the find operation and returns results.
+	// Args:
+	// * finder: native finder object
+	// Returns:
+	// * block of uris representing found files/directories
+	// Tags: #find #execute
+	"finder//eval": {
+		Argsn: 1,
+		Doc:   "Executes the find operation and returns matching paths as uris.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch f := arg0.(type) {
+			case env.Native:
+				if finder, ok := f.Value.(*find.Find); ok {
+					results, err := finder.Evaluate()
+					if err != nil {
+						return MakeBuiltinError(ps, "Error evaluating find: "+err.Error(), "finder//eval")
+					}
+					items := make([]env.Object, len(results))
+					for i, path := range results {
+						items[i] = *env.NewUri1(ps.Idx, "file://"+path)
+					}
+					return *env.NewBlock(*env.NewTSeries(items))
+				}
+				return MakeBuiltinError(ps, "Expected finder object", "finder//eval")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//eval")
+			}
+		},
+	},
+}
+
+// resolvePath resolves a path - if it's absolute, returns it as-is; if relative, joins with workingPath
+func resolvePath(workingPath, path string) string {
+	if filepath.IsAbs(path) {
+		return path
+	}
+	return filepath.Join(workingPath, path)
+}
+
+// createTarGz creates a .tar.gz archive from the source path
+func createTarGz(srcPath, dstPath string) error {
+	outFile, err := os.Create(dstPath)
+	if err != nil {
+		return err
+	}
+	defer outFile.Close()
+
+	gzWriter := gzip.NewWriter(outFile)
+	defer gzWriter.Close()
+
+	tarWriter := tar.NewWriter(gzWriter)
+	defer tarWriter.Close()
+
+	srcInfo, err := os.Stat(srcPath)
+	if err != nil {
+		return err
+	}
+
+	var baseDir string
+	if srcInfo.IsDir() {
+		baseDir = filepath.Base(srcPath)
+	}
+
+	return filepath.Walk(srcPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		header, err := tar.FileInfoHeader(info, info.Name())
+		if err != nil {
+			return err
+		}
+
+		if baseDir != "" {
+			relPath, err := filepath.Rel(srcPath, path)
+			if err != nil {
+				return err
+			}
+			header.Name = filepath.Join(baseDir, relPath)
+		} else {
+			header.Name = filepath.Base(path)
+		}
+
+		if err := tarWriter.WriteHeader(header); err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		file, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+
+		_, err = io.Copy(tarWriter, file)
+		return err
+	})
+}
+
+// extractTarGz extracts a .tar.gz archive to the destination path
+func extractTarGz(srcPath, dstPath string) error {
+	inFile, err := os.Open(srcPath)
+	if err != nil {
+		return err
+	}
+	defer inFile.Close()
+
+	gzReader, err := gzip.NewReader(inFile)
+	if err != nil {
+		return err
+	}
+	defer gzReader.Close()
+
+	tarReader := tar.NewReader(gzReader)
+
+	for {
+		header, err := tarReader.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		targetPath := filepath.Join(dstPath, header.Name)
+
+		// Security check: prevent path traversal
+		if !strings.HasPrefix(filepath.Clean(targetPath), filepath.Clean(dstPath)) {
+			return fmt.Errorf("invalid file path: %s", header.Name)
+		}
+
+		switch header.Typeflag {
+		case tar.TypeDir:
+			if err := os.MkdirAll(targetPath, os.FileMode(header.Mode)); err != nil {
+				return err
+			}
+		case tar.TypeReg:
+			if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
+				return err
+			}
+			outFile, err := os.Create(targetPath)
+			if err != nil {
+				return err
+			}
+			if _, err := io.Copy(outFile, tarReader); err != nil {
+				outFile.Close()
+				return err
+			}
+			outFile.Close()
+			if err := os.Chmod(targetPath, os.FileMode(header.Mode)); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// createZip creates a .zip archive from the source path
+func createZip(srcPath, dstPath string) error {
+	outFile, err := os.Create(dstPath)
+	if err != nil {
+		return err
+	}
+	defer outFile.Close()
+
+	zipWriter := zip.NewWriter(outFile)
+	defer zipWriter.Close()
+
+	srcInfo, err := os.Stat(srcPath)
+	if err != nil {
+		return err
+	}
+
+	var baseDir string
+	if srcInfo.IsDir() {
+		baseDir = filepath.Base(srcPath)
+	}
+
+	return filepath.Walk(srcPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		header, err := zip.FileInfoHeader(info)
+		if err != nil {
+			return err
+		}
+
+		if baseDir != "" {
+			relPath, err := filepath.Rel(srcPath, path)
+			if err != nil {
+				return err
+			}
+			header.Name = filepath.Join(baseDir, relPath)
+		} else {
+			header.Name = filepath.Base(path)
+		}
+
+		if info.IsDir() {
+			header.Name += "/"
+		} else {
+			header.Method = zip.Deflate
+		}
+
+		writer, err := zipWriter.CreateHeader(header)
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		file, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+
+		_, err = io.Copy(writer, file)
+		return err
+	})
+}
+
+// extractZip extracts a .zip archive to the destination path
+func extractZip(srcPath, dstPath string) error {
+	reader, err := zip.OpenReader(srcPath)
+	if err != nil {
+		return err
+	}
+	defer reader.Close()
+
+	for _, file := range reader.File {
+		targetPath := filepath.Join(dstPath, file.Name)
+
+		// Security check: prevent path traversal
+		if !strings.HasPrefix(filepath.Clean(targetPath), filepath.Clean(dstPath)) {
+			return fmt.Errorf("invalid file path: %s", file.Name)
+		}
+
+		if file.FileInfo().IsDir() {
+			if err := os.MkdirAll(targetPath, file.Mode()); err != nil {
+				return err
+			}
+			continue
+		}
+
+		if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
+			return err
+		}
+
+		outFile, err := os.Create(targetPath)
+		if err != nil {
+			return err
+		}
+
+		rc, err := file.Open()
+		if err != nil {
+			outFile.Close()
+			return err
+		}
+
+		_, err = io.Copy(outFile, rc)
+		rc.Close()
+		outFile.Close()
+		if err != nil {
+			return err
+		}
+
+		if err := os.Chmod(targetPath, file.Mode()); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func proccesTableBase() *env.Table {
