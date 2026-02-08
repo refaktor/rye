@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/atotto/clipboard"
+	"github.com/jaytaylor/go-find"
 	"github.com/refaktor/rye/env"
 
 	"github.com/shirou/gopsutil/v3/disk"
@@ -935,6 +936,295 @@ var Builtins_os = map[string]*env.Builtin{
 				}
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.UriType}, "unzip")
+			}
+		},
+	},
+
+	//
+	// ##### Find ##### "File finding functions using go-find library"
+	//
+	// Example:
+	//  find %src |name "*.go" |type 'file |eval
+	//  find %. |max-depth 2 |name "*.txt" |eval
+	//  find %/home |min-depth 1 |max-depth 3 |regex regexp "test.*\.go$" |eval
+	//
+
+	// Creates a new finder starting from the given path(s).
+	// Args:
+	// * path: uri or block of uris representing starting paths
+	// Returns:
+	// * native finder object
+	// Tags: #find #files
+	"find": {
+		Argsn: 1,
+		Doc:   "Creates a new file finder starting from the given path(s).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch path := arg0.(type) {
+			case env.Uri:
+				finder := find.NewFind(path.GetPath())
+				return *env.NewNative(ps.Idx, finder, "finder")
+			case env.Block:
+				paths := make([]string, 0, path.Series.Len())
+				for i := 0; i < path.Series.Len(); i++ {
+					item := path.Series.Get(i)
+					switch p := item.(type) {
+					case env.Uri:
+						paths = append(paths, p.GetPath())
+					case env.String:
+						paths = append(paths, p.Value)
+					default:
+						return MakeBuiltinError(ps, "Block must contain only uris or strings", "find")
+					}
+				}
+				finder := find.NewFind(paths...)
+				return *env.NewNative(ps.Idx, finder, "finder")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.UriType, env.BlockType}, "find")
+			}
+		},
+	},
+
+	// Sets the minimum depth for the finder.
+	// Args:
+	// * finder: native finder object
+	// * depth: integer minimum depth
+	// Returns:
+	// * native finder object (for chaining)
+	// Tags: #find #filter
+	"finder//min-depth": {
+		Argsn: 2,
+		Doc:   "Sets the minimum depth for file traversal.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch f := arg0.(type) {
+			case env.Native:
+				if finder, ok := f.Value.(*find.Find); ok {
+					switch depth := arg1.(type) {
+					case env.Integer:
+						finder.MinDepth(int(depth.Value))
+						return arg0
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "finder//min-depth")
+					}
+				}
+				return MakeBuiltinError(ps, "Expected finder object", "finder//min-depth")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//min-depth")
+			}
+		},
+	},
+
+	// Sets the maximum depth for the finder.
+	// Args:
+	// * finder: native finder object
+	// * depth: integer maximum depth
+	// Returns:
+	// * native finder object (for chaining)
+	// Tags: #find #filter
+	"finder//max-depth": {
+		Argsn: 2,
+		Doc:   "Sets the maximum depth for file traversal.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch f := arg0.(type) {
+			case env.Native:
+				if finder, ok := f.Value.(*find.Find); ok {
+					switch depth := arg1.(type) {
+					case env.Integer:
+						finder.MaxDepth(int(depth.Value))
+						return arg0
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "finder//max-depth")
+					}
+				}
+				return MakeBuiltinError(ps, "Expected finder object", "finder//max-depth")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//max-depth")
+			}
+		},
+	},
+
+	// Filters by file type.
+	// Args:
+	// * finder: native finder object
+	// * type: word 'file or 'dir (or string "f" or "d")
+	// Returns:
+	// * native finder object (for chaining)
+	// Tags: #find #filter
+	"finder//type": {
+		Argsn: 2,
+		Doc:   "Filters results by type: 'file (or \"f\") for files, 'dir (or \"d\") for directories.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch f := arg0.(type) {
+			case env.Native:
+				if finder, ok := f.Value.(*find.Find); ok {
+					var typeStr string
+					switch t := arg1.(type) {
+					case env.Word:
+						word := ps.Idx.GetWord(t.Index)
+						switch word {
+						case "file":
+							typeStr = "f"
+						case "dir":
+							typeStr = "d"
+						default:
+							return MakeBuiltinError(ps, "Type must be 'file or 'dir", "finder//type")
+						}
+					case env.String:
+						if t.Value != "f" && t.Value != "d" {
+							return MakeBuiltinError(ps, "Type must be \"f\" or \"d\"", "finder//type")
+						}
+						typeStr = t.Value
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.WordType, env.StringType}, "finder//type")
+					}
+					finder.Type(typeStr)
+					return arg0
+				}
+				return MakeBuiltinError(ps, "Expected finder object", "finder//type")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//type")
+			}
+		},
+	},
+
+	// Filters by file name using glob pattern.
+	// Args:
+	// * finder: native finder object
+	// * pattern: string glob pattern (e.g., "*.go", "test_*")
+	// Returns:
+	// * native finder object (for chaining)
+	// Tags: #find #filter
+	"finder//name": {
+		Argsn: 2,
+		Doc:   "Filters results by file name using a glob pattern.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch f := arg0.(type) {
+			case env.Native:
+				if finder, ok := f.Value.(*find.Find); ok {
+					switch pattern := arg1.(type) {
+					case env.String:
+						finder.Name(pattern.Value)
+						return arg0
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.StringType}, "finder//name")
+					}
+				}
+				return MakeBuiltinError(ps, "Expected finder object", "finder//name")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//name")
+			}
+		},
+	},
+
+	// Filters by full path using glob pattern.
+	// Args:
+	// * finder: native finder object
+	// * pattern: string glob pattern for the whole path
+	// Returns:
+	// * native finder object (for chaining)
+	// Tags: #find #filter
+	"finder//whole-name": {
+		Argsn: 2,
+		Doc:   "Filters results by full path using a glob pattern.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch f := arg0.(type) {
+			case env.Native:
+				if finder, ok := f.Value.(*find.Find); ok {
+					switch pattern := arg1.(type) {
+					case env.String:
+						finder.WholeName(pattern.Value)
+						return arg0
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.StringType}, "finder//whole-name")
+					}
+				}
+				return MakeBuiltinError(ps, "Expected finder object", "finder//whole-name")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//whole-name")
+			}
+		},
+	},
+
+	// Filters by regular expression on the full path.
+	// Args:
+	// * finder: native finder object
+	// * regex: native regexp object
+	// Returns:
+	// * native finder object (for chaining)
+	// Tags: #find #filter
+	"finder//regex": {
+		Argsn: 2,
+		Doc:   "Filters results by regular expression on the full path.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch f := arg0.(type) {
+			case env.Native:
+				if finder, ok := f.Value.(*find.Find); ok {
+					switch r := arg1.(type) {
+					case env.Native:
+						if regex, ok := r.Value.(*regexp.Regexp); ok {
+							finder.Regex(regex)
+							return arg0
+						}
+						return MakeBuiltinError(ps, "Expected regexp object", "finder//regex")
+					default:
+						return MakeArgError(ps, 2, []env.Type{env.NativeType}, "finder//regex")
+					}
+				}
+				return MakeBuiltinError(ps, "Expected finder object", "finder//regex")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//regex")
+			}
+		},
+	},
+
+	// Filters for empty files or directories.
+	// Args:
+	// * finder: native finder object
+	// Returns:
+	// * native finder object (for chaining)
+	// Tags: #find #filter
+	"finder//empty": {
+		Argsn: 1,
+		Doc:   "Filters for empty files or directories.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch f := arg0.(type) {
+			case env.Native:
+				if finder, ok := f.Value.(*find.Find); ok {
+					finder.Empty()
+					return arg0
+				}
+				return MakeBuiltinError(ps, "Expected finder object", "finder//empty")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//empty")
+			}
+		},
+	},
+
+	// Executes the find operation and returns results.
+	// Args:
+	// * finder: native finder object
+	// Returns:
+	// * block of uris representing found files/directories
+	// Tags: #find #execute
+	"finder//eval": {
+		Argsn: 1,
+		Doc:   "Executes the find operation and returns matching paths as uris.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch f := arg0.(type) {
+			case env.Native:
+				if finder, ok := f.Value.(*find.Find); ok {
+					results, err := finder.Evaluate()
+					if err != nil {
+						return MakeBuiltinError(ps, "Error evaluating find: "+err.Error(), "finder//eval")
+					}
+					items := make([]env.Object, len(results))
+					for i, path := range results {
+						items[i] = *env.NewUri1(ps.Idx, "file://"+path)
+					}
+					return *env.NewBlock(*env.NewTSeries(items))
+				}
+				return MakeBuiltinError(ps, "Expected finder object", "finder//eval")
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//eval")
 			}
 		},
 	},
