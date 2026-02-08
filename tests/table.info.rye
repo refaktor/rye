@@ -96,7 +96,7 @@ section "Filtering " "Functions that construct a table." {
 ``	}
 
 	group "where-void" 
-	"Returns table of rows where specific colum is equal to given value."
+	"Returns table of rows where specific colum is void."
 	{
 		arg `sheet`
 		arg `column`
@@ -145,7 +145,7 @@ sheet .where-contains 'name "nn"
 `	}
 
 	group "where-not-contains" 
-	"Returns table of rows where specific colum contains a given string value."
+	"Returns table of rows where specific colum does not contain a given string value."
 	{
 		arg `sheet`
 		arg `column`
@@ -159,7 +159,7 @@ sheet .where-contains 'name "nn"
 
 	{
 `sheet: table { "name" } { "Enno" "Enya" "Enid" "Bob" "Bill" "Benn" }
-sheet .where-contains 'name "nn"
+sheet .where-not-contains 'name "nn"
 `	}
 
 	group "where-greater" 
@@ -214,7 +214,7 @@ sheet .where-greater 'age 29
 ``	}
 
 	group "where-between\\inclusive" 
-	"Returns table of rows where specific colum is between given values."
+	"Returns table of rows where specific colum is between given values (inclusive)."
 	{
 		arg `sheet`
 		arg `column`
@@ -231,7 +231,7 @@ sheet .where-greater 'age 29
 ``	}
 
 	group "where-in" 
-	"Returns table of rows where specific colum value if found in block of values."
+	"Returns table of rows where specific colum value is found in block of values."
 	{
 		arg `sheet`
 		arg `column`
@@ -249,7 +249,7 @@ sheet .where-greater 'age 29
 ``	}
 
 	group "where-not-in" 
-	"Returns table of rows where specific colum value if found in block of values."
+	"Returns table of rows where specific colum value is not found in block of values."
 	{
 		arg `sheet`
 		arg `column`
@@ -265,6 +265,83 @@ sheet .where-greater 'age 29
 
 	{
 ``	}
+
+	group "where" 
+	"Returns table of rows where code block evaluates to true for the column value."
+	{
+		arg `table`
+		arg `column - column name (word or string) or block of column names`
+		arg `code - block that receives column value (or has columns as words) and returns truthy/falsy`
+		arg `Tags: #filter #tables`
+	}
+
+	{
+		equal { table { 'a } { 1 2 3 4 } |where 'a { > 2 } |length? } 2
+		equal { table { 'a } { 1 2 3 4 } |where 'a { .is-even } |length? } 2
+		equal { table { 'name 'age } { "Jim" 30 "Jane" 25 } |where 'age { > 26 } |column? 'name } { "Jim" }
+		equal { table { 'a 'b } { 1 10 2 20 3 30 } |where { 'a 'b } { ( a + b ) > 25 } |length? } 1
+		equal { table { 'a 'b } { 1 10 2 20 3 30 } |where { 'a 'b } { all { a > 1 b > 15 } } |length? } 2
+	}
+
+	{
+`table { "name" "age" } { "Jim" 30 "Jane" 25 "Bob" 35 } |where 'age { > 26 }
+table { "a" "b" } { 1 10 2 20 3 30 } |where { 'a 'b } { ( a + b ) > 25 }
+`	}
+
+	group "distinct" 
+	"Returns table with duplicate rows removed based on specified column(s)."
+	{
+		arg `table`
+		arg `column - column name (word or string) or block of column names`
+		arg `Tags: #filter #tables`
+	}
+
+	{
+		equal { table { 'a } { 1 2 1 3 2 } |distinct 'a |length? } 3
+		equal { table { 'a 'b } { 1 10 1 10 1 20 } |distinct { 'a 'b } |length? } 2
+	}
+
+	{
+`table { "name" "age" } { "Jim" 30 "Jane" 25 "Jim" 30 } |distinct 'name
+table { "a" "b" } { 1 10 1 20 2 10 } |distinct { 'a 'b }
+`	}
+
+	group "fill-void" 
+	"Returns table with void values in specified column replaced with given value."
+	{
+		arg `table`
+		arg `column - column name (word or string)`
+		arg `value - value to replace void with`
+		arg `Tags: #transform #tables`
+	}
+
+	{
+		equal { table { 'a } { 1 _ 3 _ } |fill-void 'a 0 |column? 'a } { 1 0 3 0 }
+		equal { table { 'a } { 1 _ 3 _ } |fill-void 'a 99 |column? 'a |sum } 202
+	}
+
+	{
+`table { "name" "age" } { "Jim" 30 "Jane" _ } |fill-void 'age 0
+`	}
+
+	group "count-where" 
+	"Returns count of rows where code block evaluates to true for the column value."
+	{
+		arg `table`
+		arg `column - column name (word or string) or block of column names`
+		arg `code - block that receives column value and returns truthy/falsy`
+		arg `Tags: #filter #tables`
+	}
+
+	{
+		equal { table { 'a } { 1 2 3 4 } |count-where 'a { > 2 } } 2
+		equal { table { 'a } { 1 2 3 4 } |count-where 'a { .is-even } } 2
+		equal { table { 'a 'b } { 1 10 2 20 3 30 } |count-where { 'a 'b } { ( a + b ) > 25 } } 1
+	}
+
+	{
+`table { "name" "age" } { "Jim" 30 "Jane" 25 "Bob" 35 } |count-where 'age { > 26 }
+`	}
 
 }
 

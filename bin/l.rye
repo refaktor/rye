@@ -155,9 +155,8 @@ get-embed-command: fn { tags } {
 		{ .Read-all }
 		|load :files-data
 		|for { ::f
-			enter-console "**"
 			; Check if main.rye exists in current directory (exists? returns 1 if exists, 0 if not)
-			f .os/does-exist |either {
+			.os/does-exist |either {
 				command:: command ++ embed f "cp {} $RYE_HOME/runner/buildtemp/. ; "
 			} {
 				print embed f "Error: {} not found in current directory."

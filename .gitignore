@@ -72,3 +72,5 @@ cmd/loop_benchmark/rye_*
 *_BK*
 analyses/
 security/policy_embedded_gen.go
+*.zip
+*.tgz

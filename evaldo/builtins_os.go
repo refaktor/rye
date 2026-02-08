@@ -76,12 +76,12 @@ var Builtins_os = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	//  equal { cc os exists? %go.mod } true
+	//  equal { cc os does-exist %go.mod } true
 	// Args:
 	// * path: uri representing the file or directory to check
 	// Returns:
 	// * boolean: true if exists, false if not
-	"exists?": {
+	"does-exist": {
 		Argsn: 1,
 		Doc:   "Checks if a file or directory exists.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -90,11 +90,11 @@ var Builtins_os = map[string]*env.Builtin{
 				filePath := filepath.Join(ps.WorkingPath, path.GetPath())
 				res := FileExists(filePath)
 				if res == -1 {
-					return MakeBuiltinError(ps, "Error checking if path exists", "exists?")
+					return MakeBuiltinError(ps, "Error checking if path exists", "does-exists")
 				}
 				return *env.NewBoolean(res == 1)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "exists?")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "does-exist")
 			}
 		},
 	},
