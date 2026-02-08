@@ -4,9 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
-	"syscall"
 
 	"gopkg.in/yaml.v3"
 )
@@ -45,9 +43,9 @@ type SecurityPolicy struct {
 
 	// Code signing configuration
 	CodeSig struct {
-		Enforced      bool     `yaml:"enforced"`
-		PublicKeys    []string `yaml:"public_keys,omitempty"`      // Inline hex-encoded keys
-		PublicKeysFile string  `yaml:"public_keys_file,omitempty"` // Path to file with keys (must be root-owned)
+		Enforced       bool     `yaml:"enforced"`
+		PublicKeys     []string `yaml:"public_keys,omitempty"`      // Inline hex-encoded keys
+		PublicKeysFile string   `yaml:"public_keys_file,omitempty"` // Path to file with keys (must be root-owned)
 	} `yaml:"codesig"`
 
 	// Policy enforcement
@@ -130,25 +128,6 @@ func loadPolicyFromFile(filePath string) (*SecurityPolicy, error) {
 	}
 
 	return &policy, nil
-}
-
-// verifyFileSecure checks that a file has secure ownership and permissions
-func verifyFileSecure(filePath string, info os.FileInfo) error {
-	// Check permissions: must not be writable by group or others
-	mode := info.Mode()
-	if mode&0022 != 0 {
-		return fmt.Errorf("file has insecure permissions %s (writable by group/others)", mode.String())
-	}
-
-	// On Unix systems, check if owned by root
-	if runtime.GOOS != "windows" {
-		stat, ok := info.Sys().(*syscall.Stat_t)
-		if ok && stat.Uid != 0 {
-			return fmt.Errorf("file must be owned by root (current uid: %d)", stat.Uid)
-		}
-	}
-
-	return nil
 }
 
 // ApplySecurityPolicy applies the given security policy
