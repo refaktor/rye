@@ -1,0 +1,34 @@
+#!/usr/bin/env rye
+
+print "Testing basic variable observers..."
+
+; Test 1: Basic observer functionality
+print "\n=== Basic Observer Test ==="
+x: var 'counter 0
+print "Initial counter value is:" counter
+
+; Register an observer
+on-change x { print "Observer triggered! Counter is now:" counter }
+
+; Modify the variable - this should trigger the observer
+print "Setting counter to 5..."
+counter:: 5
+print "Counter value after setting to 5:" counter
+
+; Modify it again
+print "Setting counter to 10..."
+counter:: 10
+print "Final counter value:" counter
+
+print "\n=== Multiple Observers Test ==="
+y: var 'temp 20
+print "Initial temperature:" temp
+
+on-change y { print "First observer - temp changed to:" temp }
+on-change y { print "Second observer - temp is now:" temp }
+
+print "Changing temperature to 25..."
+temp:: 25
+print "Temperature is now:" temp
+
+print "\nTest completed successfully!"

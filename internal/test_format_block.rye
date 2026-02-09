@@ -1,0 +1,1 @@
+print format { 123 "sasdasd" } "Int: %d, Str: %s"

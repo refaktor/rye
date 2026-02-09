@@ -1,0 +1,5 @@
+; #This tests the forever builtin interrupt functionality
+; Run this and then press Ctrl+C or Ctrl+Z to test interruption
+print "Starting forever loop. Press Ctrl+C or Ctrl+Z to interrupt..."
+forever { print 1 sleep 1 .seconds }
+print "This should not be reached unless interrupted"

@@ -1,0 +1,24 @@
+
+print 123
+print 234
+aa: does { 1 } bb: does { 2 }
+print 345
+ff: does {
+	do {
+		if true {
+			loop 3 {
+				for "ab" {
+					1 / 0
+				}
+				print ".."
+			}
+			print "xx"
+		}
+		print "yy"
+	}
+	print "zz"
+}
+print 567
+gg: does { aa ff bb }
+aa gg bb
+print "DON't PRINT"

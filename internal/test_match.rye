@@ -1,0 +1,31 @@
+; Test the new match builtin
+
+; Test 1: Basic type matching with integer
+test1: match 5 { { <integer> } { "got integer" } { <string> } { "got string" } }
+print [ "Test 1 (type match integer): " test1 ]
+
+; Test 2: Basic type matching with string
+test2: match "hello" { { <integer> } { "got integer" } { <string> } { "got string" } }
+print [ "Test 2 (type match string): " test2 ]
+
+; Test 3: Match block and destructure
+test3: match { 1 2 } { { { a b } } { a + b } { { x } } { x * 2 } }
+print [ "Test 3 (block destructure 1+2): " test3 ]
+
+; Test 4: Literal value matching
+test4: match 100 { { 50 } { "fifty" } { 100 } { "hundred" } { 200 } { "two hundred" } }
+print [ "Test 4 (literal match 100): " test4 ]
+
+; Test 5: Pattern matching with partial destructure
+test5: match { 10 20 } { { { a 20 } } { a * 2 } { { 10 b } } { b + 5 } }
+print [ "Test 5 (partial match a=10): " test5 ]
+
+; Test 6: Failure case - no match
+test6: try { match 5.5 { { <integer> } { "got integer" } { <string> } { "got string" } } } |failed?
+print [ "Test 6 (no match, should fail): " test6 ]
+
+; Test 7: More complex pattern
+test7: match { "foo" 42 } { { { s <integer> } } { "string and int" } { { s n } } { s + " and number" } }
+print [ "Test 7 (complex pattern): " test7 ]
+
+print "All tests completed!"

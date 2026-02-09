@@ -1,0 +1,21 @@
+; Debug test for persistent context
+
+print "=== Debug Test ==="
+
+print "\nCreating first persistent context..."
+pctx1: persistent-context "debug_test.db"
+print { "First context type:" ( pctx1 .type? ) }
+
+print "\nUsing first context..."
+do\in pctx1 {
+    test-value: "Hello World"
+    print { "Set test-value to:" test-value }
+}
+
+print "\nCreating second persistent context..."
+pctx2: persistent-context "debug_test.db"  
+print { "Second context type:" ( pctx2 .type? ) }
+
+print "\nAttempting to use second context..."
+; This is where it should fail if there's a type issue
+print "Debug complete."
