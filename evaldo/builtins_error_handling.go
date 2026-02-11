@@ -1065,7 +1065,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 				case env.Block:
 					// Save current state
 					oldSer := ps.Ser
-
+					ps.InErrHandler = true
 					// Execute the main block
 					ps.Ser = mainBlock.Series
 					EvalBlock(ps)
@@ -1080,6 +1080,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 					ps.Ser = finallyBlock.Series
 					ps.FailureFlag = false
 					ps.ErrorFlag = false
+					ps.InErrHandler = false
 					EvalBlock(ps)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "finally")
 
