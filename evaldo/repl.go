@@ -632,56 +632,62 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool, localHist
 	}
 
 	ml.SetCompleter(func(line string, mode int) (c []string) {
-		// Tab completion modes (Ctrl+S cycles through these):
+		// Tab completion modes:
 		// mode=0: Context only (local words)
 		// mode=1: Word index (all words from global index)
-		// mode=2: Generic methods for ps.Res kind
+		// mode=2: Generic methods for es.Res kind
 
-		suggestions := make([]string, 0)     // suggestions from current context
-		suggestions2 := make([]string, 0)    // suggestions from word index
-		fileSuggestions := make([]string, 0) // file path suggestions
-		var wordpart string
+		// Parse word context: extract prefix ("." or "|"), filter part, and line prefix
+		var wordpart, linePrefix, opPrefix, filterPart string
 		spacePos := strings.LastIndex(line, " ")
-		var prefix string
 
 		if spacePos < 0 {
-			// No space in line - use whole line as wordpart
 			wordpart = line
-			prefix = ""
+			linePrefix = ""
 		} else {
-			// Extract word after last space
 			wordpart = strings.TrimSpace(line[spacePos:])
-			prefix = line[0:spacePos] + " "
-			// Note: if wordpart is empty (cursor after space), we'll show context words
+			linePrefix = line[0:spacePos] + " "
 		}
 
-		// Check if input starts with "." or "|" - these are op-words that need special handling
-		hasDotPrefix := strings.HasPrefix(wordpart, ".")
-		hasPipePrefix := strings.HasPrefix(wordpart, "|")
+		// Detect and strip op-prefix ("." or "|")
+		if strings.HasPrefix(wordpart, ".") {
+			opPrefix = "."
+			filterPart = wordpart[1:]
+		} else if strings.HasPrefix(wordpart, "|") {
+			opPrefix = "|"
+			filterPart = wordpart[1:]
+		} else {
+			opPrefix = ""
+			filterPart = wordpart
+		}
 
-		// For filtering purposes, strip the leading "." or "|"
-		filterPart := wordpart
-		if hasDotPrefix && len(wordpart) > 0 {
-			filterPart = wordpart[1:] // Strip the "." for filtering
-		} else if hasPipePrefix && len(wordpart) > 0 {
-			filterPart = wordpart[1:] // Strip the "|" for filtering
+		// Helper to add a word with appropriate prefix handling
+		// Filtering is case-insensitive
+		filterLower := strings.ToLower(filterPart)
+		addWord := func(word string) {
+			wordLower := strings.ToLower(word)
+			if opPrefix != "" {
+				// User typed "." or "|" - add with that prefix
+				if filterPart == "" || strings.HasPrefix(wordLower, filterLower) {
+					c = append(c, linePrefix+opPrefix+word)
+				}
+			} else {
+				// No op-prefix - match word directly
+				if filterPart == "" || strings.HasPrefix(wordLower, filterLower) {
+					c = append(c, linePrefix+word)
+				}
+			}
 		}
 
 		// Check if wordpart starts with % for file path completion
 		if strings.HasPrefix(wordpart, "%") {
-			// Extract the path part after %
 			pathPart := wordpart[1:] // Remove the % prefix
 
-			// Determine the directory to search in
-			var searchDir string
-			var filePrefix string
-
+			var searchDir, filePrefix string
 			if pathPart == "" {
-				// Just "%" - list current directory
 				searchDir = "."
 				filePrefix = ""
 			} else if strings.Contains(pathPart, "/") {
-				// Contains path separator - extract directory and filename prefix
 				lastSlash := strings.LastIndex(pathPart, "/")
 				searchDir = pathPart[:lastSlash]
 				if searchDir == "" {
@@ -689,12 +695,10 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool, localHist
 				}
 				filePrefix = pathPart[lastSlash+1:]
 			} else {
-				// No path separator - search current directory with filename prefix
 				searchDir = "."
 				filePrefix = pathPart
 			}
 
-			// Read directory contents
 			if files, err := os.ReadDir(searchDir); err == nil {
 				for _, file := range files {
 					fileName := file.Name()
@@ -704,114 +708,51 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool, localHist
 						continue
 					}
 
-					// Check if filename matches the prefix
 					if filePrefix == "" || strings.HasPrefix(strings.ToLower(fileName), strings.ToLower(filePrefix)) {
 						var suggestion string
 						if searchDir == "." {
-							suggestion = prefix + "%" + fileName
+							suggestion = linePrefix + "%" + fileName
 						} else if searchDir == "/" {
-							suggestion = prefix + "%" + "/" + fileName
+							suggestion = linePrefix + "%" + "/" + fileName
 						} else {
-							suggestion = prefix + "%" + searchDir + "/" + fileName
+							suggestion = linePrefix + "%" + searchDir + "/" + fileName
 						}
 
-						// Add trailing slash for directories
 						if file.IsDir() {
 							suggestion += "/"
 						}
-
 						c = append(c, suggestion)
-						fileSuggestions = append(fileSuggestions, fileName)
 					}
 				}
 			}
-		} else if mode == 0 {
-			// Mode 0: Context only (local words)
+			return
+		}
+
+		// Word completion based on mode
+		switch mode {
+		case 0: // Context only (local words)
 			for key := range es.Ctx.GetState() {
-				word := es.Idx.GetWord(key)
-				// If user typed ".", prepend "." to all suggestions
-				if hasDotPrefix {
-					if filterPart == "" || strings.HasPrefix(word, strings.ToLower(filterPart)) {
-						c = append(c, prefix+"."+word)
-						suggestions = append(suggestions, "."+word)
-					}
-				} else if hasPipePrefix {
-					if filterPart == "" || strings.HasPrefix(word, strings.ToLower(filterPart)) {
-						c = append(c, prefix+"|"+word)
-						suggestions = append(suggestions, "|"+word)
-					}
-				} else {
-					if wordpart == "" || strings.HasPrefix(word, strings.ToLower(wordpart)) {
-						c = append(c, prefix+word)
-						suggestions = append(suggestions, word)
-					} else if strings.HasPrefix("."+word, strings.ToLower(wordpart)) {
-						c = append(c, prefix+"."+word)
-						suggestions = append(suggestions, "."+word)
-					} else if strings.HasPrefix("|"+word, strings.ToLower(wordpart)) {
-						c = append(c, prefix+"|"+word)
-						suggestions = append(suggestions, "|"+word)
-					}
+				addWord(es.Idx.GetWord(key))
+			}
+			// Fallback: if no matches and user typed something, try all words (mode 1)
+			if len(c) == 0 && filterPart != "" {
+				for i := 0; i < es.Idx.GetWordCount(); i++ {
+					addWord(es.Idx.GetWord(i))
 				}
 			}
-		} else if mode == 1 {
-			// Mode 1: Word index (all words from global index)
+		case 1: // Word index (all words)
 			for i := 0; i < es.Idx.GetWordCount(); i++ {
-				word := es.Idx.GetWord(i)
-				// If user typed ".", prepend "." to all suggestions
-				if hasDotPrefix {
-					if filterPart == "" || strings.HasPrefix(word, strings.ToLower(filterPart)) {
-						c = append(c, prefix+"."+word)
-						suggestions2 = append(suggestions2, "."+word)
-					}
-				} else if hasPipePrefix {
-					if filterPart == "" || strings.HasPrefix(word, strings.ToLower(filterPart)) {
-						c = append(c, prefix+"|"+word)
-						suggestions2 = append(suggestions2, "|"+word)
-					}
-				} else {
-					if wordpart == "" || strings.HasPrefix(word, strings.ToLower(wordpart)) {
-						c = append(c, prefix+word)
-						suggestions2 = append(suggestions2, word)
-					} else if strings.HasPrefix("."+word, strings.ToLower(wordpart)) {
-						c = append(c, prefix+"."+word)
-						suggestions2 = append(suggestions2, "."+word)
-					} else if strings.HasPrefix("|"+word, strings.ToLower(wordpart)) {
-						c = append(c, prefix+"|"+word)
-						suggestions2 = append(suggestions2, "|"+word)
-					}
-				}
+				addWord(es.Idx.GetWord(i))
 			}
-		} else if mode == 2 {
-			// Mode 2: Generic methods for ps.Res kind
+		case 2: // Generic methods for es.Res kind
 			if es.Res != nil {
 				kindIdx := es.Res.GetKind()
-				methods := es.Gen.GetMethods(kindIdx)
-				for _, methodIdx := range methods {
-					word := es.Idx.GetWord(methodIdx)
-					// If user typed ".", prepend "." to all suggestions
-					if hasDotPrefix {
-						if filterPart == "" || strings.HasPrefix(word, strings.ToLower(filterPart)) {
-							c = append(c, prefix+"."+word)
-							suggestions = append(suggestions, "."+word)
-						}
-					} else if hasPipePrefix {
-						if filterPart == "" || strings.HasPrefix(word, strings.ToLower(filterPart)) {
-							c = append(c, prefix+"|"+word)
-							suggestions = append(suggestions, "|"+word)
-						}
-					} else {
-						// Filter by filterPart if provided
-						if filterPart == "" || strings.HasPrefix(word, strings.ToLower(filterPart)) {
-							c = append(c, prefix+word)
-							suggestions = append(suggestions, word)
-						}
-					}
+				for _, methodIdx := range es.Gen.GetMethods(kindIdx) {
+					addWord(es.Idx.GetWord(methodIdx))
 				}
 			}
 		}
 
-		// The display is handled by microliner's displayTabSuggestions
-		// We just return the completion list
 		return
 	})
 
