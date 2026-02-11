@@ -669,6 +669,40 @@ func (s *MLState) SetOnValueSelectedFunc(fn func(env.Object)) {
 	s.onValueSelected = fn
 }
 
+// determineAutoMode intelligently selects the best completion mode based on context
+// Returns: 0=local context, 1=all words, 2=generic methods
+func (s *MLState) determineAutoMode(line []rune) int {
+	// Find the current word being typed
+	lineStr := string(line)
+	spacePos := strings.LastIndex(lineStr, " ")
+	var wordpart string
+	if spacePos < 0 {
+		wordpart = lineStr
+	} else {
+		wordpart = strings.TrimSpace(lineStr[spacePos:])
+	}
+
+	// Check if typing ".word" or "|word" - potential method call
+	hasOpPrefix := strings.HasPrefix(wordpart, ".") || strings.HasPrefix(wordpart, "|")
+
+	// If op-prefix and we have a result with methods, use mode 2 (generic methods)
+	if hasOpPrefix && s.programState != nil && s.programState.Res != nil {
+		kindIdx := s.programState.Res.GetKind()
+		methods := s.programState.Gen.GetMethods(kindIdx)
+		if len(methods) > 0 {
+			return 2 // generic methods mode
+		}
+	}
+
+	// If line is empty, show local context
+	if len(strings.TrimSpace(lineStr)) == 0 {
+		return 0 // local context
+	}
+
+	// Default to local context (more useful than all words in most cases)
+	return 0
+}
+
 func (s *MLState) getColumns() bool {
 	s.columns = GetTerminalColumns()
 	return true
@@ -1454,33 +1488,23 @@ startOfHere:
 				// case "p":
 				//	histPrev()
 				case "s": // seek - cycles through modes: 0=context, 1=word index, 2=generics by Res kind
-					// Determine if there's meaningful input (ignoring "." and "|")
-					hasMeaningfulInput := false
-					for _, r := range line {
-						if r != '.' && r != '|' && r != ' ' {
-							hasMeaningfulInput = true
-							break
-						}
+					// Check if generic methods mode is available (Res has kind with methods)
+					hasGenericMethods := false
+					if s.programState != nil && s.programState.Res != nil {
+						kindIdx := s.programState.Res.GetKind()
+						methods := s.programState.Gen.GetMethods(kindIdx)
+						hasGenericMethods = len(methods) > 0
 					}
 
-					// Cycle through modes: 0 → 1 → 2 → 0
-					// Skip mode 1 (index) if no meaningful input
+					// Cycle through available modes: 0 → 1 → (2 if available) → 0
 					s.ctrlSMode++
-					if s.ctrlSMode == 1 && !hasMeaningfulInput {
-						s.ctrlSMode++ // Skip index mode
+					if s.ctrlSMode == 2 && !hasGenericMethods {
+						s.ctrlSMode = 0 // Skip methods mode if no methods available
 					}
 					if s.ctrlSMode > 2 {
 						s.ctrlSMode = 0
 					}
-					// Show mode indicator
-					switch s.ctrlSMode {
-					case 0:
-						fmt.Print("[ctx]")
-					case 1:
-						fmt.Print("[all]")
-					case 2:
-						fmt.Print("[gen]")
-					}
+					// Mode indicator is shown in displayTabSuggestions, not here
 					line, pos, next, _ = s.tabComplete(p, line, pos, s.ctrlSMode)
 					goto haveNext
 				case "x": // display last returned value interactively
@@ -1761,12 +1785,11 @@ startOfHere:
 						s.needRefresh = true
 					}
 				case 9: // Tab completion
-					// If line is empty, start in mode 0 (context only - local words)
-					// If line has text, start in mode 1 (global index - all words)
-					tabMode := 1
-					if len(line) == 0 {
-						tabMode = 0
-					}
+					// Auto-detect best mode based on context:
+					// - If typing ".word" or "|word" with Res that has methods → mode 2
+					// - Otherwise → mode 0 (local context)
+					tabMode := s.determineAutoMode(line)
+					s.ctrlSMode = tabMode // Sync so Ctrl+S cycles from here
 					line, pos, next, _ = s.tabComplete(p, line, pos, tabMode)
 					goto haveNext
 				case 46: // Del
