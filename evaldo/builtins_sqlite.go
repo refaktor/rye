@@ -119,11 +119,16 @@ var Builtins_sqlite = map[string]*env.Builtin{
 		Argsn: 1,
 		Doc:   "Opens a connection to a SQLite database file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			// arg0.Trace("SQLITE OPEN TODO :::::::::")
 			switch str := arg0.(type) {
 			case env.Uri:
-				// fmt.Println(str.Path)
-				db, _ := sql.Open("sqlite", str.GetPath()) // TODO -- we need to make path parser in URI then this will be path
+				db, err := sql.Open("sqlite", str.GetPath()) // TODO -- we need to make path parser in URI then this will be path
+				if err != nil {
+					return MakeBuiltinError(ps, fmt.Sprintf("Error opening SQLite: %v", err.Error()), "sqlite-uri//Open")
+				}
+				// sql.Open doesn't actually connect, we need to ping to verify the connection
+				if err := db.Ping(); err != nil {
+					return MakeBuiltinError(ps, fmt.Sprintf("Error connecting to SQLite: %v", err.Error()), "sqlite-uri//Open")
+				}
 				return *env.NewNative(ps.Idx, db, "Rye-sqlite")
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.UriType}, "sqlite-uri//Open")

@@ -1319,6 +1319,37 @@ func DetermineContext(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx) *e
 	return fnCtx
 }
 
+// CallCurriedCallerArgsN calls a curried caller with N provided arguments (not collected from code stream).
+// Called from: builtins that need to call curried callers with specific arguments (e.g., HTTP handlers)
+// Purpose: Fills curried caller's nil slots with provided arguments and executes the underlying function/builtin
+func CallCurriedCallerArgsN(cc env.CurriedCaller, ps *env.ProgramState, args ...env.Object) {
+	// Initialize arguments with curried values if available
+	argSlots := []env.Object{cc.Cur0, cc.Cur1, cc.Cur2, cc.Cur3, cc.Cur4}
+
+	// Fill nil slots with provided arguments
+	argIdx := 0
+	for i := 0; i < 5 && argIdx < len(args); i++ {
+		if argSlots[i] == nil {
+			argSlots[i] = args[argIdx]
+			argIdx++
+		}
+	}
+
+	// Call the appropriate function based on caller type
+	if cc.CallerType == 0 { // Builtin
+		bi := *cc.Builtin
+		ps.Res = bi.Fn(ps, argSlots[0], argSlots[1], argSlots[2], argSlots[3], argSlots[4])
+	} else { // Function
+		fn := *cc.Function
+		// Collect only non-nil arguments for the function call
+		fnArgs := make([]env.Object, 0, fn.Argsn)
+		for i := 0; i < fn.Argsn && i < 5; i++ {
+			fnArgs = append(fnArgs, argSlots[i])
+		}
+		CallFunctionArgsN(fn, ps, nil, fnArgs...)
+	}
+}
+
 // CallCurriedCaller handles calling a curried caller (partially applied function or builtin).
 // Called from: EvalExpression_DispatchType, EvalObject
 // Purpose: Executes curried callers by filling in remaining arguments and calling the underlying builtin/function

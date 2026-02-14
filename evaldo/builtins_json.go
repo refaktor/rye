@@ -38,6 +38,10 @@ func resultToJS(res env.Object) any {
 }
 
 func RyeToJSON(res any) string {
+	return RyeToJSONWithIdxs(res, nil)
+}
+
+func RyeToJSONWithIdxs(res any, idxs *env.Idxs) string {
 	// fmt.Printf("Type: %T", res)
 	switch v := res.(type) {
 	case nil:
@@ -61,43 +65,53 @@ func RyeToJSON(res any) string {
 		return strconv.Itoa(int(v.Value))
 	case env.Decimal:
 		return strconv.FormatFloat(v.Value, 'f', -1, 64)
+	case env.Block:
+		return BlockToJSONWithIdxs(v, idxs)
 	case env.List:
-		return ListToJSON(v)
+		return ListToJSONWithIdxs(v, idxs)
 	case []any:
-		return ListToJSON(*env.NewList(v))
+		return ListToJSONWithIdxs(*env.NewList(v), idxs)
 	case env.Vector:
-		return VectorToJSON(v)
+		return VectorToJSONWithIdxs(v, idxs)
 	case env.Dict:
-		return DictToJSON(v)
+		return DictToJSONWithIdxs(v, idxs)
 	case map[string]any:
-		return DictToJSON(*env.NewDict(v))
+		return DictToJSONWithIdxs(*env.NewDict(v), idxs)
 	case *env.Table:
-		return TableToJSON(*v)
+		return TableToJSONWithIdxs(*v, idxs)
 	case env.Table:
-		return TableToJSON(v)
+		return TableToJSONWithIdxs(v, idxs)
 	case env.TableRow:
-		return TableRowToJSON(v)
+		return TableRowToJSONWithIdxs(v, idxs)
 	case *env.Error:
 		status := ""
 		if v.Status != 0 {
-			status = "\"status\": " + RyeToJSON(v.Status)
+			status = "\"status\": " + RyeToJSONWithIdxs(v.Status, idxs)
 		}
 		var b strings.Builder
-		b.WriteString("{ " + status + ", \"message\": " + RyeToJSON(v.Message))
+		b.WriteString("{ " + status + ", \"message\": " + RyeToJSONWithIdxs(v.Message, idxs))
 		if v.Parent != nil {
-			b.WriteString(", \"parent\": " + RyeToJSON(v.Parent))
+			b.WriteString(", \"parent\": " + RyeToJSONWithIdxs(v.Parent, idxs))
 		}
 		b.WriteString(", \"data\": { ")
 		for k, v := range v.Values {
 			switch ob := v.(type) {
 			case env.Object:
-				b.WriteString(" " + RyeToJSON(k) + ": " + RyeToJSON(ob) + ", ")
+				b.WriteString(" " + RyeToJSONWithIdxs(k, idxs) + ": " + RyeToJSONWithIdxs(ob, idxs) + ", ")
 			}
 		}
 		b.WriteString("} }")
 		return b.String()
+	case *env.RyeCtx:
+		if idxs != nil {
+			return ContextToJSON(*v, idxs)
+		}
+		return "{ \"error\": \"context requires idxs for JSON conversion\" }"
 	case env.RyeCtx:
-		return "{ 'state': 'todo' }"
+		if idxs != nil {
+			return ContextToJSON(v, idxs)
+		}
+		return "{ \"error\": \"context requires idxs for JSON conversion\" }"
 	default:
 		return fmt.Sprintf("\"type %T not handeled\"", v)
 		// TODO-FIXME
@@ -142,34 +156,67 @@ func EscapeJson(val string) string {
 }
 
 func VectorToJSON(vector env.Vector) string {
+	return VectorToJSONWithIdxs(vector, nil)
+}
+
+func VectorToJSONWithIdxs(vector env.Vector, idxs *env.Idxs) string {
 	var bu strings.Builder
 	bu.WriteString("[")
 	for i, val := range vector.Value {
 		if i > 0 {
 			bu.WriteString(", ")
 		}
-		bu.WriteString(RyeToJSON(val))
+		bu.WriteString(RyeToJSONWithIdxs(val, idxs))
 	}
 	bu.WriteString("]")
 	return bu.String()
 }
 
-// Inspect returns a string representation of the Integer.
+// BlockToJSON converts a Block to JSON array format.
+func BlockToJSON(block env.Block) string {
+	return BlockToJSONWithIdxs(block, nil)
+}
+
+// BlockToJSONWithIdxs converts a Block to JSON array format with Idxs for context support.
+func BlockToJSONWithIdxs(block env.Block, idxs *env.Idxs) string {
+	var bu strings.Builder
+	bu.WriteString("[")
+	for i, val := range block.Series.S {
+		if i > 0 {
+			bu.WriteString(", ")
+		}
+		bu.WriteString(RyeToJSONWithIdxs(val, idxs))
+	}
+	bu.WriteString("] ")
+	return bu.String()
+}
+
+// ListToJSON converts a List to JSON array format.
 func ListToJSON(list env.List) string {
+	return ListToJSONWithIdxs(list, nil)
+}
+
+// ListToJSONWithIdxs converts a List to JSON array format with Idxs for context support.
+func ListToJSONWithIdxs(list env.List, idxs *env.Idxs) string {
 	var bu strings.Builder
 	bu.WriteString("[")
 	for i, val := range list.Data {
 		if i > 0 {
 			bu.WriteString(", ")
 		}
-		bu.WriteString(RyeToJSON(val))
+		bu.WriteString(RyeToJSONWithIdxs(val, idxs))
 	}
 	bu.WriteString("] ")
 	return bu.String()
 }
 
-// Inspect returns a string representation of the Integer.
+// DictToJSON converts a Dict to JSON object format.
 func DictToJSON(dict env.Dict) string {
+	return DictToJSONWithIdxs(dict, nil)
+}
+
+// DictToJSONWithIdxs converts a Dict to JSON object format with Idxs for context support.
+func DictToJSONWithIdxs(dict env.Dict, idxs *env.Idxs) string {
 	var bu strings.Builder
 	bu.WriteString("{")
 	i := 0
@@ -177,17 +224,42 @@ func DictToJSON(dict env.Dict) string {
 		if i > 0 {
 			bu.WriteString(", ")
 		}
-		bu.WriteString(RyeToJSON(key))
+		bu.WriteString(RyeToJSONWithIdxs(key, idxs))
 		bu.WriteString(": ")
-		bu.WriteString(RyeToJSON(val))
+		bu.WriteString(RyeToJSONWithIdxs(val, idxs))
 		i = i + 1
 	}
 	bu.WriteString("} ")
 	return bu.String()
 }
 
-// Inspect returns a string representation of the Integer.
+// ContextToJSON converts a RyeCtx to JSON object format.
+func ContextToJSON(ctx env.RyeCtx, idxs *env.Idxs) string {
+	var bu strings.Builder
+	bu.WriteString("{")
+	i := 0
+	for key, val := range ctx.GetState() {
+		if i > 0 {
+			bu.WriteString(", ")
+		}
+		// Convert word index to string key
+		bu.WriteString("\"")
+		bu.WriteString(EscapeJson(idxs.GetWord(key)))
+		bu.WriteString("\": ")
+		bu.WriteString(RyeToJSONWithIdxs(val, idxs))
+		i = i + 1
+	}
+	bu.WriteString("} ")
+	return bu.String()
+}
+
+// TableRowToJSON converts a TableRow to JSON object format.
 func TableRowToJSON(row env.TableRow) string {
+	return TableRowToJSONWithIdxs(row, nil)
+}
+
+// TableRowToJSONWithIdxs converts a TableRow to JSON object format with Idxs for context support.
+func TableRowToJSONWithIdxs(row env.TableRow, idxs *env.Idxs) string {
 	var bu strings.Builder
 	bu.WriteString("{")
 	for i, val := range row.Values {
@@ -197,38 +269,37 @@ func TableRowToJSON(row env.TableRow) string {
 		bu.WriteString("\"")
 		bu.WriteString(row.Uplink.GetColumnNames()[i])
 		bu.WriteString("\": ")
-		bu.WriteString(RyeToJSON(val))
+		bu.WriteString(RyeToJSONWithIdxs(val, idxs))
 	}
 	bu.WriteString("} ")
 	return bu.String()
 }
 
-// Inspect returns a string representation of the Integer.
+// TableToJSON converts a Table to JSON array format.
 func TableToJSON(s env.Table) string {
-	//fmt.Println("IN TO Html")
+	return TableToJSONWithIdxs(s, nil)
+}
+
+// TableToJSONWithIdxs converts a Table to JSON array format with Idxs for context support.
+func TableToJSONWithIdxs(s env.Table, idxs *env.Idxs) string {
 	var bu strings.Builder
 	bu.WriteString("[")
-	//fmt.Println(len(s.Rows))
 	for i, row := range s.Rows {
 		if i > 0 {
 			bu.WriteString(", ")
 		}
-		bu.WriteString(TableRowToJSON(row))
+		bu.WriteString(TableRowToJSONWithIdxs(row, idxs))
 	}
 	bu.WriteString("]")
-	//fmt.Println(bu.String())
 	return bu.String()
 }
 
 func TableToJSONLines(s env.Table) string {
-	//fmt.Println("IN TO Html")
 	var bu strings.Builder
-	//fmt.Println(len(s.Rows))
 	for _, row := range s.Rows {
 		bu.WriteString(TableRowToJSON(row))
 		bu.WriteString("\n")
 	}
-	//fmt.Println(bu.String())
 	return bu.String()
 }
 
@@ -298,15 +369,17 @@ var Builtins_json = map[string]*env.Builtin{
 	// Tests:
 	// equal { list { 1 2 3 } |to-json } "[1, 2, 3] "
 	// equal { dict { a: 1 b: 2 c: 3 } |to-json } `{"a": 1, "b": 2, "c": 3} `
+	// equal { { 1 2 3 } |to-json } "[1, 2, 3] "
+	// equal { context { a: 1 b: 2 } |to-json |parse-json -> "a" } 1
 	// Args:
-	// * value: any Rye value to encode (list, dict, string, integer, etc.)
+	// * value: any Rye value to encode (block, list, dict, context, string, integer, etc.)
 	// Returns:
 	// * string containing the JSON representation
 	"to-json": {
 		Argsn: 1,
-		Doc:   "Converts a Rye value to a JSON string.",
-		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return *env.NewString(RyeToJSON(arg0))
+		Doc:   "Converts a Rye value to a JSON string. Supports block (like list) and context (like dict).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return *env.NewString(RyeToJSONWithIdxs(arg0, ps.Idx))
 		},
 	},
 	// Tests:

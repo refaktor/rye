@@ -30,22 +30,16 @@ var Builtins_mysql = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch str := arg0.(type) {
 			case env.Uri:
-				fmt.Println(str.Path)
-				fmt.Println(str.GetPath())
-				fmt.Println(str.GetFullUri(*ps.Idx))
 				db, err := sql.Open("mysql", str.Path) // TODO -- we need to make path parser in URI then this will be path
 				if err != nil {
-					// TODO --
-					//fmt.Println("Error1")
-					ps.FailureFlag = true
-					errMsg := fmt.Sprintf("Error opening SQL: %v", err.Error())
-					return MakeBuiltinError(ps, errMsg, "mysql-uri//Open")
-				} else {
-					//fmt.Println("Error2")
-					return *env.NewNative(ps.Idx, db, "Rye-mysql")
+					return MakeBuiltinError(ps, fmt.Sprintf("Error opening MySQL: %v", err.Error()), "mysql-uri//Open")
 				}
+				// sql.Open doesn't actually connect, we need to ping to verify the connection
+				if err := db.Ping(); err != nil {
+					return MakeBuiltinError(ps, fmt.Sprintf("Error connecting to MySQL: %v", err.Error()), "mysql-uri//Open")
+				}
+				return *env.NewNative(ps.Idx, db, "Rye-mysql")
 			default:
-				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.UriType}, "mysql-uri//Open")
 			}
 
@@ -68,24 +62,19 @@ var Builtins_mysql = map[string]*env.Builtin{
 				switch pwd := arg1.(type) {
 				case env.String:
 					path := strings.Replace(str.Path, "@", ":"+pwd.Value+"@", 1)
-					fmt.Println(path)
 					db, err := sql.Open("mysql", path)
 					if err != nil {
-						// TODO --
-						//fmt.Println("Error1")
-						ps.FailureFlag = true
-						errMsg := fmt.Sprintf("Error opening SQL: %v", err.Error())
-						return MakeBuiltinError(ps, errMsg, "mysql-uri//Open\\pwd")
-					} else {
-						//fmt.Println("Error2")
-						return *env.NewNative(ps.Idx, db, "Rye-mysql")
+						return MakeBuiltinError(ps, fmt.Sprintf("Error opening MySQL: %v", err.Error()), "mysql-uri//Open\\pwd")
 					}
+					// sql.Open doesn't actually connect, we need to ping to verify the connection
+					if err := db.Ping(); err != nil {
+						return MakeBuiltinError(ps, fmt.Sprintf("Error connecting to MySQL: %v", err.Error()), "mysql-uri//Open\\pwd")
+					}
+					return *env.NewNative(ps.Idx, db, "Rye-mysql")
 				default:
-					ps.FailureFlag = true
 					return MakeArgError(ps, 2, []env.Type{env.StringType}, "mysql-uri//Open\\pwd")
 				}
 			default:
-				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.UriType}, "mysql-uri//Open\\pwd")
 			}
 		},
