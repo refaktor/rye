@@ -679,19 +679,21 @@ var builtins_string = map[string]*env.Builtin{
 	// equal { join { "Mary" "Anne" } } "MaryAnne"
 	// equal { join { "Spot" "Fido" "Rex" } } "SpotFidoRex"
 	// equal { join { 1 2 3 } } "123"
+	// equal { join { https://example.com/ "path" } |type? } 'uri
 	// Args:
-	// * collection: Block or list of strings or numbers to join
+	// * collection: Block or list of strings, numbers or URIs to join
 	// Returns:
-	// * a single string with all values concatenated together
+	// * a single string with all values concatenated together, or a URI if first element is a URI
 	"join": { // **
 		Argsn: 1,
 		Pure:  true,
-		Doc:   "Concatenates all strings or numbers in a block or list into a single string with no separator.",
+		Doc:   "Concatenates all strings, numbers or URIs in a block or list into a single string with no separator. If the first element is a URI, returns a URI.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.List:
 				var str strings.Builder
-				for _, c := range s1.Data {
+				var firstUri *env.Uri
+				for i, c := range s1.Data {
 					switch it := c.(type) {
 					case string:
 						str.WriteString(it)
@@ -701,9 +703,19 @@ var builtins_string = map[string]*env.Builtin{
 						str.WriteString(strconv.Itoa(it))
 					case env.Integer:
 						str.WriteString(strconv.Itoa(int(it.Value)))
+					case env.Uri:
+						if i == 0 {
+							firstUri = &it
+							str.WriteString(it.GetPath())
+						} else {
+							str.WriteString(it.GetPath())
+						}
 					default:
-						return MakeBuiltinError(ps, "List data should me integer or string.", "join")
+						return MakeBuiltinError(ps, "List data should be integer, string or uri.", "join")
 					}
+				}
+				if firstUri != nil {
+					return *env.NewUri(ps.Idx, firstUri.Scheme, str.String())
 				}
 				return *env.NewString(str.String())
 			case env.Block:
@@ -736,15 +748,26 @@ var builtins_string = map[string]*env.Builtin{
 				bloc := *env.NewBlock(*env.NewTSeries(res))
 
 				var str strings.Builder
-				for _, c := range bloc.Series.S {
+				var firstUri *env.Uri
+				for i, c := range bloc.Series.S {
 					switch it := c.(type) {
 					case env.String:
 						str.WriteString(it.Value)
 					case env.Integer:
 						str.WriteString(strconv.Itoa(int(it.Value)))
+					case env.Uri:
+						if i == 0 {
+							firstUri = &it
+							str.WriteString(it.GetPath())
+						} else {
+							str.WriteString(it.GetPath())
+						}
 					default:
-						return MakeBuiltinError(ps, "Block series data should be string or integer.", "join")
+						return MakeBuiltinError(ps, "Block series data should be string, integer or uri.", "join")
 					}
+				}
+				if firstUri != nil {
+					return *env.NewUri(ps.Idx, firstUri.Scheme, str.String())
 				}
 				return *env.NewString(str.String())
 			default:

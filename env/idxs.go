@@ -65,6 +65,7 @@ var NativeTypes = [...]string{ // Todo change to BuiltinTypes
 	"LocationNode",
 	"Flagword",
 	"Secret",
+	"LazyValue",
 	"PersistentTable",
 }
 

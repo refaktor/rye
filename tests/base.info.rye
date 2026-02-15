@@ -1044,16 +1044,17 @@ section "Strings " "" {
 ``	}
 
 	group "join" 
-	"Concatenates all strings or numbers in a block or list into a single string with no separator."
+	"Concatenates all strings, numbers or URIs in a block or list into a single string with no separator. If the first element is a URI, returns a URI."
 	{
-		arg `collection: Block or list of strings or numbers to join`
-		returns `a single string with all values concatenated together`
+		arg `collection: Block or list of strings, numbers or URIs to join`
+		returns `a single string with all values concatenated together, or a URI if first element is a URI`
 	}
 
 	{
 		equal { join { "Mary" "Anne" } } "MaryAnne"
 		equal { join { "Spot" "Fido" "Rex" } } "SpotFidoRex"
 		equal { join { 1 2 3 } } "123"
+		equal { join { https://example.com/ "path" } |type? } 'uri
 	}
 
 	{
@@ -2063,7 +2064,7 @@ section "Collections " "" {
 	group "concat" 
 	"Joins two series values together."
 	{
-		arg `value1: First value (string, integer, block) to concatenate`
+		arg `value1: First value (string, integer, block, uri) to concatenate`
 		arg `value2: Second value to concatenate with the first`
 		returns `result of concatenating the two values`
 	}
@@ -2072,6 +2073,7 @@ section "Collections " "" {
 		equal { "abcd" .concat "cde" } "abcdcde"
 		equal { concat { 1 2 3 4 } { 2 4 5 } } { 1 2 3 4 2 4 5 }
 		equal { 123 .concat "abc" } "123abc"
+		equal { https://example.com/ .concat "path" |type? } 'uri
 	}
 
 	{
@@ -2857,9 +2859,9 @@ section "Types and Kinds " "" {
 ``	}
 
 	group "to-block" 
-	"Turns a List or Vector to a Block"
+	"Turns a List, Vector, or TableRow to a Block"
 	{
-		arg `value: List or Vector to convert to a block`
+		arg `value: List, Vector, or TableRow to convert to a block`
 		returns `A block containing the same elements as the input`
 	}
 
@@ -2867,6 +2869,7 @@ section "Types and Kinds " "" {
 		equal { list [ 1 2 3 ] |to-block |type? } 'block
 		equal  { list [ 1 2 3 ] |to-block |first } 1
 		equal { vector [ 1 2 3 ] |to-block } { 1.0 2.0 3.0 }
+		equal { table { 'a 'b } { 1 2 3 4 } -> 1 |to-block } { 1 2 }
 	}
 
 	{
@@ -3134,8 +3137,8 @@ section "Types and Kinds " "" {
 	{
 ``	}
 
-	group "_>>" 
-	"Converts first argument to a specific kind."
+	group "lazy" 
+	"Creates a lazy value from a block. The block will only be evaluated when forced with _!."
 	{
 		arg `value: Dict or context to convert`
 		arg `kind: Kind to convert the value to`
@@ -5302,13 +5305,30 @@ section "Printing " "Functions for displaying and formatting values" {
 	group "prnf" 
 	"Formats a value according to Go's sprintf format specifiers and prints it without a newline, returning the input value."
 	{
-		arg `value: Value to format (string, integer, or decimal)`
+		arg `value: Value to format (string, integer, decimal, or block of multiple values)`
 		arg `format: String containing Go's sprintf format specifiers`
 		returns `the input value (for chaining)`
 	}
 
 	{
 		stdout { prnf 123 "num: %d" } "num: 123"
+		stdout { prnf { "hello" 42 } "%s is %d" } "hello is 42"
+	}
+
+	{
+``	}
+
+	group "printf" 
+	"Formats a value according to Go's sprintf format specifiers and prints it followed by a newline, returning the input value."
+	{
+		arg `value: Value to format (string, integer, decimal, or block of multiple values)`
+		arg `format: String containing Go's sprintf format specifiers`
+		returns `the input value (for chaining)`
+	}
+
+	{
+		stdout { printf 123 "num: %d" } "num: 123\n"
+		stdout { printf { "hello" 42 } "%s is %d" } "hello is 42\n"
 	}
 
 	{

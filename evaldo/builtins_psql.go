@@ -32,17 +32,14 @@ var Builtins_psql = map[string]*env.Builtin{
 			case env.Uri:
 				db, err := sql.Open("postgres", "postgresql://"+str.Path) // TODO -- we need to make path parser in URI then this will be path
 				if err != nil {
-					// TODO --
-					//fmt.Println("Error1")
-					ps.FailureFlag = true
-					errMsg := fmt.Sprintf("Error opening SQL: %v" + err.Error())
-					return MakeBuiltinError(ps, errMsg, "postgres-uri//Open")
-				} else {
-					//fmt.Println("Error2")
-					return *env.NewNative(ps.Idx, db, "Rye-psql")
+					return MakeBuiltinError(ps, fmt.Sprintf("Error opening PostgreSQL: %v", err.Error()), "postgres-uri//Open")
 				}
+				// sql.Open doesn't actually connect, we need to ping to verify the connection
+				if err := db.Ping(); err != nil {
+					return MakeBuiltinError(ps, fmt.Sprintf("Error connecting to PostgreSQL: %v", err.Error()), "postgres-uri//Open")
+				}
+				return *env.NewNative(ps.Idx, db, "Rye-psql")
 			default:
-				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.UriType}, "postgres-uri//Open")
 			}
 

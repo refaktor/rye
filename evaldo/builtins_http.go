@@ -156,6 +156,27 @@ var Builtins_http = map[string]*env.Builtin{
 						}
 					})
 					return arg0
+				case env.CurriedCaller:
+					// Curried caller handler - call with response writer and request
+					http.HandleFunc(path.Value, func(w http.ResponseWriter, r *http.Request) {
+						// Reset program state flags for clean handler execution
+						ps.FailureFlag = false
+						ps.ErrorFlag = false
+						ps.ReturnFlag = false
+						// Create temporary program state to avoid conflicts
+						psTemp := env.ProgramState{}
+						err := copier.Copy(&psTemp, &ps)
+						if err != nil {
+							fmt.Println(err.Error())
+						}
+						// Call curried caller with response writer and request objects
+						CallCurriedCallerArgsN(handler, ps, *env.NewNative(ps.Idx, w, "Go-server-response-writer"), *env.NewNative(ps.Idx, r, "Go-server-request"))
+						// Check for errors after calling handler and print to server console
+						if ps.FailureFlag || ps.ErrorFlag {
+							fmt.Println("Error in HTTP handler: " + ps.Res.Inspect(*ps.Idx))
+						}
+					})
+					return arg0
 				case env.Native:
 					// Native Go HTTP handler - use directly
 					http.Handle(path.Value, handler.Value.(http.Handler))
@@ -306,9 +327,18 @@ var Builtins_http = map[string]*env.Builtin{
 		},
 	},
 
+	// Example:
+	// ; srv: http-server ":8080"
+	// ; srv .Handle-ws "/ws" fn { conn } { forever { msg: conn .Read , conn .Write "GOT: " + msg } }
+	// Args:
+	// * server: Native Go-server object
+	// * path: String URL path to handle WebSocket connections (e.g., "/ws")
+	// * handler: Function that receives a WebSocket connection object
+	// Returns:
+	// * the server object to allow method chaining
 	"Go-server//Handle-ws": {
 		Argsn: 3,
-		Doc:   "Define handler for websockets",
+		Doc:   "Registers a WebSocket handler for a specific path pattern on the server, upgrading HTTP connections to WebSocket protocol.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch path := arg1.(type) {
 			case env.String:
@@ -317,69 +347,53 @@ var Builtins_http = map[string]*env.Builtin{
 					http.HandleFunc(path.Value, func(w http.ResponseWriter, r *http.Request) {
 						conn, _, _, err := ws.UpgradeHTTP(r, w)
 						if err != nil {
-							fmt.Println("< upgrade http error >")
-							// handle error
-							//TODO-FIXME
-							//return MakeBuiltinError(ps, "Unable to upgrade HTTP.", "Go-server//Handle-ws"), nil
+							// WebSocket upgrade failed - cannot return error from HTTP handler
+							return
 						}
 						go func() {
 							defer conn.Close()
 							ps.FailureFlag = false
 							ps.ErrorFlag = false
 							ps.ReturnFlag = false
-							fmt.Println("<< Call Function Args 2 >>")
-							fmt.Println(ps.Ser.PositionAndSurroundingElements(*ps.Idx))
 							psTemp := env.ProgramState{}
 							err := copier.Copy(&psTemp, &ps)
 							if err != nil {
-								fmt.Println(err.Error())
-								// return makeError(ps, "Can't Listen and Serve")
+								return
 							}
 							CallFunctionArgs2(handler, &psTemp, *env.NewNative(psTemp.Idx, conn, "Go-server-websocket"), *env.NewNative(psTemp.Idx, "asd", "Go-server-context"), nil)
-							/*							for {
-														msg, op, err := wsutil.ReadClientData(conn)
-														if err != nil {
-															// handle error
-														}
-														err = wsutil.WriteServerMessage(conn, op, msg)
-														if err != nil {
-															// handle error
-														}
-													} */
 						}()
 					})
 					return arg0
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 1, []env.Type{env.FunctionType}, "Go-server//Handle-ws")
+					return MakeArgError(ps, 3, []env.Type{env.FunctionType}, "Go-server//Handle-ws")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "Go-server//Handle-ws")
+				return MakeArgError(ps, 2, []env.Type{env.StringType}, "Go-server//Handle-ws")
 			}
 		},
 	},
 
+	// Example:
+	// ; conn .Read  ; returns the message string received from the WebSocket client
+	// Args:
+	// * conn: Native Go-server-websocket connection object
+	// Returns:
+	// * string containing the message read from the WebSocket, or error if read fails
 	"Go-server-websocket//Read": {
 		Argsn: 1,
-		Doc:   "Reading websocket.",
+		Doc:   "Reads a message from a WebSocket connection, blocking until data is available or an error occurs.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch conn := arg0.(type) {
 			case env.Native:
-				fmt.Println("BEFORE READ")
-				//					_, msg, err := path.Value.(*websocket.Conn).Read(ctx.Value.(context.Context))
-				msg, op, err := wsutil.ReadClientData(conn.Value.(io.ReadWriter))
-				fmt.Println("AFTER READ")
-				fmt.Println(op)
+				msg, _, err := wsutil.ReadClientData(conn.Value.(io.ReadWriter))
 				if err != nil {
-					fmt.Println(err.Error())
-					fmt.Println("READ ERROR !!!!")
 					ps.ReturnFlag = true
 					ps.FailureFlag = true
 					ps.ErrorFlag = true
 					return MakeBuiltinError(ps, "Error in reading client data.", "Go-server-websocket//Read")
 				}
-				// fmt.Fprintf(path.Value.(http.ResponseWriter), handler.Value)
 				return env.NewString(string(msg))
 			default:
 				ps.FailureFlag = true
@@ -388,27 +402,30 @@ var Builtins_http = map[string]*env.Builtin{
 		},
 	},
 
+	// Example:
+	// ; conn .Write "Hello from server"
+	// Args:
+	// * conn: Native Go-server-websocket connection object
+	// * message: String message to send to the WebSocket client
+	// Returns:
+	// * the message string on success, or error if write fails
 	"Go-server-websocket//Write": {
 		Argsn: 2,
-		Doc:   "Writing websocket.",
+		Doc:   "Writes a message to a WebSocket connection, sending data to the connected client.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch sock := arg0.(type) {
 			case env.Native:
 				switch message := arg1.(type) {
 				case env.String:
 					err := wsutil.WriteServerMessage(sock.Value.(io.Writer), ws.OpText, []byte(message.Value))
-					//sock_ := sock.Value.(*websocket.Conn)
-					//ctx_ := ctx.Value.(context.Context)
-					//err := sock_.Write(ctx_, websocket.MessageText, []byte(message.Value))
 					if err != nil {
-						fmt.Println("YYOOYOYOYOYOYOYYOYOYOOY")
 						ps.FailureFlag = true
 						return MakeBuiltinError(ps, "Failed to write server message.", "Go-server-websocket//Write")
 					}
 					return arg1
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.NativeType}, "Go-server-websocket//Write")
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "Go-server-websocket//Write")
 				}
 			default:
 				ps.FailureFlag = true
@@ -952,9 +969,17 @@ var Builtins_http = map[string]*env.Builtin{
 
 		},
 	},
+	// Example:
+	// ; handler: new-static-handler %static/
+	// ; stripped: handler .Strip-prefix "/static/"
+	// Args:
+	// * handler: Native Http-handler object (e.g., from new-static-handler)
+	// * prefix: String URL prefix to strip from requests before passing to the handler
+	// Returns:
+	// * new Http-handler that strips the prefix from incoming request paths
 	"Http-handler//Strip-prefix": {
 		Argsn: 2,
-		Doc:   "TODODOC.",
+		Doc:   "Wraps an HTTP handler to strip a URL prefix from requests, useful for serving static files from a subdirectory.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch prefix := arg1.(type) {
 			case env.String:
@@ -962,12 +987,11 @@ var Builtins_http = map[string]*env.Builtin{
 				case env.Native:
 					return *env.NewNative(ps.Idx, http.StripPrefix(prefix.Value, servr.Value.(http.Handler)), "Http-handler")
 				default:
-					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Http-handler//strip-prefix")
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Http-handler//Strip-prefix")
 				}
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.StringType}, "Http-handler//strip-prefix")
+				return MakeArgError(ps, 2, []env.Type{env.StringType}, "Http-handler//Strip-prefix")
 			}
-
 		},
 	},
 

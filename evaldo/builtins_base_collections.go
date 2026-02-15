@@ -1849,8 +1849,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { "abcd" .concat "cde" } "abcdcde"
 	// equal { concat { 1 2 3 4 } { 2 4 5 } } { 1 2 3 4 2 4 5 }
 	// equal { 123 .concat "abc" } "123abc"
+	// equal { https://example.com/ .concat "path" |type? } 'uri
 	// Args:
-	// * value1: First value (string, integer, block) to concatenate
+	// * value1: First value (string, integer, block, uri) to concatenate
 	// * value2: Second value to concatenate with the first
 	// Returns:
 	// * result of concatenating the two values
@@ -1875,6 +1876,17 @@ var builtins_collection = map[string]*env.Builtin{
 					return *env.NewString(s1.Value + s2.Value)
 				case env.Integer:
 					return *env.NewString(s1.Value + strconv.Itoa(int(s2.Value)))
+				case env.Uri:
+					return *env.NewString(s1.Value + s2.GetFullUri(*ps.Idx))
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType, env.IntegerType, env.UriType}, "concat")
+				}
+			case env.Uri:
+				switch s2 := arg1.(type) {
+				case env.String:
+					return *env.NewUri(ps.Idx, s1.Scheme, s1.Path+s2.Value)
+				case env.Integer:
+					return *env.NewUri(ps.Idx, s1.Scheme, s1.Path+strconv.Itoa(int(s2.Value)))
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.StringType, env.IntegerType}, "concat")
 				}
@@ -1892,7 +1904,7 @@ var builtins_collection = map[string]*env.Builtin{
 					return MakeBuiltinError(ps, "If Arg 1 is Block then Arg 2 should be Block or Object type.", "concat")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.StringType, env.BlockType}, "concat")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.StringType, env.BlockType, env.UriType}, "concat")
 			}
 		},
 	},

@@ -207,6 +207,10 @@ const (
 	// secret "password"
 	// It represents a secret value.
 	SecretType Type = 48
+	// LazyValue is a constructed type
+	// lazy { ... }
+	// It represents a lazy (deferred) value.
+	LazyValueType Type = 49
 	// PersistentTable is a constructed type
 	// (internal)
 	// It represents a persistent table.
@@ -3172,4 +3176,85 @@ func (i Secret) Equal(o Object) bool {
 
 func (i Secret) Dump(e Idxs) string {
 	return "secret \"********\""
+}
+
+//
+// LAZYVALUE
+//
+
+// LazyValue represents a lazy (deferred) value that wraps a block of code.
+// The block is only evaluated when forced with the _! builtin.
+// State: 0 = Frozen (unevaluated), 1 = Thawed (evaluated and cached), 2 = Error
+type LazyValue struct {
+	Block  Block
+	Ctx    *RyeCtx
+	Result Object // The cached active value
+	State  int    // 0: Frozen, 1: Thawed, 2: Error
+}
+
+func NewLazyValue(block Block, ctx *RyeCtx) *LazyValue {
+	return &LazyValue{Block: block, Ctx: ctx, Result: nil, State: 0}
+}
+
+func (i *LazyValue) Type() Type {
+	return LazyValueType
+}
+
+func (i *LazyValue) Inspect(e Idxs) string {
+	switch i.State {
+	case 0:
+		return "[LazyValue: frozen]"
+	case 1:
+		return "[LazyValue: thawed " + i.Result.Inspect(e) + "]"
+	case 2:
+		return "[LazyValue: error]"
+	default:
+		return "[LazyValue: unknown]"
+	}
+}
+
+func (i *LazyValue) Print(e Idxs) string {
+	switch i.State {
+	case 0:
+		return "[LazyValue: frozen]"
+	case 1:
+		return i.Result.Print(e)
+	case 2:
+		return "[LazyValue: error]"
+	default:
+		return "[LazyValue: unknown]"
+	}
+}
+
+func (i *LazyValue) Trace(msg string) {
+	fmt.Print(msg + "(lazyvalue): ")
+	fmt.Println("state:", i.State)
+}
+
+func (i *LazyValue) GetKind() int {
+	return int(LazyValueType)
+}
+
+func (i *LazyValue) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	oLazy, ok := o.(*LazyValue)
+	if !ok {
+		return false
+	}
+	if i.State != oLazy.State {
+		return false
+	}
+	if !i.Block.Equal(oLazy.Block) {
+		return false
+	}
+	if i.State == 1 && oLazy.State == 1 {
+		return i.Result.Equal(oLazy.Result)
+	}
+	return true
+}
+
+func (i *LazyValue) Dump(e Idxs) string {
+	return "lazy " + i.Block.Dump(e)
 }

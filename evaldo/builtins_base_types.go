@@ -150,13 +150,14 @@ var builtins_types = map[string]*env.Builtin{
 	// equal { list [ 1 2 3 ] |to-block |type? } 'block
 	// equal  { list [ 1 2 3 ] |to-block |first } 1
 	// equal { vector [ 1 2 3 ] |to-block } { 1.0 2.0 3.0 }
+	// equal { table { 'a 'b } { 1 2 3 4 } -> 1 |to-block } { 1 2 }
 	// Args:
-	// * value: List or Vector to convert to a block
+	// * value: List, Vector, or TableRow to convert to a block
 	// Returns:
 	// * A block containing the same elements as the input
 	"to-block": { // ***
 		Argsn: 1,
-		Doc:   "Turns a List or Vector to a Block",
+		Doc:   "Turns a List, Vector, or TableRow to a Block",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch val := arg0.(type) {
@@ -168,8 +169,14 @@ var builtins_types = map[string]*env.Builtin{
 					items[i] = *env.NewDecimal(v)
 				}
 				return *env.NewBlock(*env.NewTSeries(items))
+			case env.TableRow:
+				items := make([]env.Object, len(val.Values))
+				for i, v := range val.Values {
+					items[i] = env.ToRyeValue(v)
+				}
+				return *env.NewBlock(*env.NewTSeries(items))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.ListType, env.VectorType}, "to-block")
+				return MakeArgError(ps, 1, []env.Type{env.ListType, env.VectorType, env.TableRowType}, "to-block")
 			}
 		},
 	},
@@ -592,6 +599,53 @@ var builtins_types = map[string]*env.Builtin{
 	// * kind: Kind to convert the value to
 	// Returns:
 	// * A new context of the specified kind
+	"lazy": {
+		Argsn: 1,
+		Doc:   "Creates a lazy value from a block. The block will only be evaluated when forced with _!.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch block := arg0.(type) {
+			case env.Block:
+				return env.NewLazyValue(block, ps.Ctx)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "lazy")
+			}
+		},
+	},
+
+	"_!": {
+		Argsn: 1,
+		Doc:   "Forces evaluation of a lazy value. If frozen evaluates the block and caches the result. If already thawed returns cached result.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch lv := arg0.(type) {
+			case *env.LazyValue:
+				switch lv.State {
+				case 0: // Frozen - evaluate the block
+					ser := ps.Ser
+					ps.Ser = lv.Block.Series
+					ps.Ser.Reset()
+					EvalBlockInCtxInj(ps, lv.Ctx, nil, false)
+					ps.Ser = ser
+					if ps.ErrorFlag {
+						lv.State = 2
+						lv.Result = ps.Res
+						return ps.Res
+					}
+					lv.State = 1
+					lv.Result = ps.Res
+					return lv.Result
+				case 1: // Thawed - return cached result
+					return lv.Result
+				case 2: // Error
+					return lv.Result
+				default:
+					return MakeBuiltinError(ps, "Unknown lazy value state.", "_!")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.LazyValueType}, "_!")
+			}
+		},
+	},
+
 	"_>>": {
 		Argsn: 2,
 		Doc:   "Converts first argument to a specific kind.",
