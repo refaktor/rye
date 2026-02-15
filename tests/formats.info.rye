@@ -153,15 +153,17 @@ section "JSON " "Parsing and generating JSON" {
 ``	}
 
 	group "to-json" 
-	"Converts a Rye value to a JSON string."
+	"Converts a Rye value to a JSON string. Supports block (like list) and context (like dict)."
 	{
-		arg `value: any Rye value to encode (list, dict, string, integer, etc.)`
+		arg `value: any Rye value to encode (block, list, dict, context, string, integer, etc.)`
 		returns `string containing the JSON representation`
 	}
 
 	{
 		equal { list { 1 2 3 } |to-json } "[1, 2, 3] "
 		equal { dict { a: 1 b: 2 c: 3 } |to-json } `{"a": 1, "b": 2, "c": 3} `
+		equal { { 1 2 3 } |to-json } "[1, 2, 3] "
+		equal { context { a: 1 b: 2 } |to-json |parse-json -> "a" } 1
 	}
 
 	{

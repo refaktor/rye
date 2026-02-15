@@ -46,4 +46,4 @@
 ../cmd/rbit/rbit ../evaldo/builtins_complex.go >> dialects.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_pipes.go > pipes.info.rye
 # ../cmd/rbit/rbit ../evaldo/builtins_structures.go >> formats.info.rye
-../cmd/rbit/rbit ../evaldo/builtins_web.go > web.info.rye
+# ../cmd/rbit/rbit ../evaldo/builtins_web.go > web.info.rye

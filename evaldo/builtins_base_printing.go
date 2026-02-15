@@ -350,8 +350,9 @@ var builtins_printing = map[string]*env.Builtin{
 
 	// Tests:
 	// stdout { prnf 123 "num: %d" } "num: 123"
+	// stdout { prnf { "hello" 42 } "%s is %d" } "hello is 42"
 	// Args:
-	// * value: Value to format (string, integer, or decimal)
+	// * value: Value to format (string, integer, decimal, or block of multiple values)
 	// * format: String containing Go's sprintf format specifiers
 	// Returns:
 	// * the input value (for chaining)
@@ -368,13 +369,77 @@ var builtins_printing = map[string]*env.Builtin{
 					fmt.Printf(arg.Value, val.Value)
 				case env.Decimal:
 					fmt.Printf(arg.Value, val.Value)
-					// TODO make option with multiple values and block as second arg
+				case env.Block:
+					series := val.Series
+					vals := make([]interface{}, series.Len())
+					for i, obj := range series.GetAll() {
+						switch v := obj.(type) {
+						case env.Integer:
+							vals[i] = v.Value
+						case env.String:
+							vals[i] = v.Value
+						case env.Decimal:
+							vals[i] = v.Value
+						default:
+							vals[i] = v.Print(*ps.Idx)
+						}
+					}
+					fmt.Printf(arg.Value, vals...)
 				default:
-					return MakeArgError(ps, 1, []env.Type{env.StringType, env.DecimalType, env.IntegerType}, "prnf")
+					return MakeArgError(ps, 1, []env.Type{env.StringType, env.DecimalType, env.IntegerType, env.BlockType}, "prnf")
 				}
 				return arg0
 			default:
 				return MakeArgError(ps, 2, []env.Type{env.StringType}, "prnf")
+			}
+		},
+	},
+
+	// Tests:
+	// stdout { printf 123 "num: %d" } "num: 123\n"
+	// stdout { printf { "hello" 42 } "%s is %d" } "hello is 42\n"
+	// Args:
+	// * value: Value to format (string, integer, decimal, or block of multiple values)
+	// * format: String containing Go's sprintf format specifiers
+	// Returns:
+	// * the input value (for chaining)
+	"printf": { // **
+		Argsn: 2,
+		Doc:   "Formats a value according to Go's sprintf format specifiers and prints it followed by a newline, returning the input value.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch arg := arg1.(type) {
+			case env.String:
+				var res string
+				switch val := arg0.(type) {
+				case env.String:
+					res = fmt.Sprintf(arg.Value, val.Value)
+				case env.Integer:
+					res = fmt.Sprintf(arg.Value, val.Value)
+				case env.Decimal:
+					res = fmt.Sprintf(arg.Value, val.Value)
+				case env.Block:
+					series := val.Series
+					vals := make([]interface{}, series.Len())
+					for i, obj := range series.GetAll() {
+						switch v := obj.(type) {
+						case env.Integer:
+							vals[i] = v.Value
+						case env.String:
+							vals[i] = v.Value
+						case env.Decimal:
+							vals[i] = v.Value
+						default:
+							vals[i] = v.Print(*ps.Idx)
+						}
+					}
+					res = fmt.Sprintf(arg.Value, vals...)
+				default:
+					return MakeArgError(ps, 1, []env.Type{env.StringType, env.DecimalType, env.IntegerType, env.BlockType}, "printf")
+				}
+				fmt.Println(res)
+				return arg0
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.StringType}, "printf")
 			}
 		},
 	},
