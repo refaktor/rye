@@ -655,12 +655,12 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { Read-all Open %data/file.txt } "hello text file\n"
+	// equal { Read Open %data/file.txt } "hello text file\n"
 	// Args:
 	// * file: native file object
 	// Returns:
 	// * string containing the entire file content
-	"file//Read-all": {
+	"file//Read": {
 		Argsn: 1,
 		Doc:   "Reads the entire content of a file as a string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -669,12 +669,12 @@ var Builtins_io = map[string]*env.Builtin{
 				data, err := io.ReadAll(s.Value.(io.Reader))
 				if err != nil {
 					ps.FailureFlag = true
-					return MakeBuiltinError(ps, "Error reading file.", "__read_all")
+					return MakeBuiltinError(ps, "Error reading file.", "Read")
 				}
 				return *env.NewString(string(data))
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "__read_all")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Read")
 			}
 		},
 	},
