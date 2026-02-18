@@ -8,5 +8,5 @@ if [ -f "$FILE" ]; then
 #    echo "Starting local rye interpreter"
     $FILE "$@"
 else 
-    echo "You don't have local Ryel binary yet. Define lyel.mod if needed and run $RYE_HOME/bin/l.rye build"
+    echo "\n❌ You don't have a \e[1;36mlocal Rye\e[0m binary yet.\n\n💡 Define \e[1mlrye.mod\e[0m if needed and run \e[100ml.rye build\e[0m."
 fi

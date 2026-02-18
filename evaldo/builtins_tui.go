@@ -865,12 +865,15 @@ type TuiApp struct {
 	view           env.Object // View block or function
 	keyHandlers    map[string]env.Object
 	allKeysHandler env.Object // Handler for all keys (set via on-keys)
+	msgHandler     env.Object // Handler for async messages (set via on-message)
 	running        bool
 	stopChan       chan struct{}
+	msgChan        chan env.Object // Channel for async messages from goroutines
 	ps             *env.ProgramState
-	height         int       // Lines rendered
-	prevLines      []string  // Previous output for diff rendering
-	focusedInput   *TuiInput // Currently focused input widget
+	ctx            *env.RyeCtx // Captured context from Start time (tui context)
+	height         int         // Lines rendered
+	prevLines      []string    // Previous output for diff rendering
+	focusedInput   *TuiInput   // Currently focused input widget
 	mu             sync.Mutex
 }
 
@@ -881,6 +884,7 @@ func NewTuiApp(theme env.Dict) *TuiApp {
 		state:       *env.NewDict(make(map[string]any)),
 		keyHandlers: make(map[string]env.Object),
 		stopChan:    make(chan struct{}),
+		msgChan:     make(chan env.Object, 100),
 	}
 }
 
@@ -926,6 +930,7 @@ func (app *TuiApp) Render() {
 	app.mu.Unlock()
 
 	if view == nil || ps == nil {
+		fmt.Println("DEBUG Render: view or ps is nil", view == nil, ps == nil)
 		return
 	}
 
@@ -940,23 +945,22 @@ func (app *TuiApp) Render() {
 	case env.Block:
 		widgetBlock = v
 	case env.Function:
-		// Call function with state
-		psTemp := *ps
-		fnCtx := env.NewEnv(psTemp.Ctx)
+		// Call function with state using the captured tui context from Start time
+		ser := v.Body.Series
+		ser.Reset()
+		psX := env.NewProgramState(ser, ps.Idx)
+		psX.Ctx = env.NewEnv(app.ctx)
+		psX.PCtx = ps.PCtx
+		psX.Gen = ps.Gen
 
 		// Set first argument (state)
 		if v.Spec.Series.Len() > 0 {
 			argWord := v.Spec.Series.Get(0)
 			if word, ok := argWord.(env.Word); ok {
-				fnCtx.Set(word.Index, state)
+				psX.Ctx.Set(word.Index, state)
 			}
 		}
 
-		psX := env.NewProgramState(v.Body.Series, psTemp.Idx)
-		psX.Ctx = fnCtx
-		psX.PCtx = psTemp.PCtx
-		psX.Gen = psTemp.Gen
-		psX.Ser.SetPos(0)
 		EvalBlockInj(psX, state, true)
 
 		if psX.ErrorFlag || psX.FailureFlag {
@@ -967,9 +971,11 @@ func (app *TuiApp) Render() {
 		if block, ok := psX.Res.(env.Block); ok {
 			widgetBlock = block
 		} else {
+			fmt.Printf("DEBUG Render: view returned %T not Block: %v\n", psX.Res, psX.Res)
 			return
 		}
 	default:
+		fmt.Printf("DEBUG Render: view is %T, not Function or Block\n", view)
 		return
 	}
 
@@ -1018,6 +1024,7 @@ func (app *TuiApp) Start(ps *env.ProgramState) error {
 	}
 	app.running = true
 	app.ps = ps
+	app.ctx = ps.Ctx // Capture the current context (e.g. tui context) at Start time
 	app.stopChan = make(chan struct{})
 	app.mu.Unlock()
 
@@ -1060,67 +1067,144 @@ func (app *TuiApp) Wait() {
 	}
 }
 
-// eventLoop handles keyboard events
+// keyToString converts keyboard event to string name
+func keyToString(char rune, key keyboard.Key) string {
+	switch key {
+	case keyboard.KeyArrowUp:
+		return "up"
+	case keyboard.KeyArrowDown:
+		return "down"
+	case keyboard.KeyArrowLeft:
+		return "left"
+	case keyboard.KeyArrowRight:
+		return "right"
+	case keyboard.KeyEnter:
+		return "enter"
+	case keyboard.KeyEsc:
+		return "escape"
+	case keyboard.KeyBackspace, keyboard.KeyBackspace2:
+		return "backspace"
+	case keyboard.KeyTab:
+		return "tab"
+	case keyboard.KeySpace:
+		return " "
+	case keyboard.KeyCtrlC:
+		return "ctrl-c"
+	case keyboard.KeyCtrlA:
+		return "ctrl-a"
+	case keyboard.KeyCtrlE:
+		return "ctrl-e"
+	case keyboard.KeyCtrlW:
+		return "ctrl-w"
+	case keyboard.KeyCtrlU:
+		return "ctrl-u"
+	case keyboard.KeyCtrlK:
+		return "ctrl-k"
+	case keyboard.KeyDelete:
+		return "delete"
+	case keyboard.KeyHome:
+		return "home"
+	case keyboard.KeyEnd:
+		return "end"
+	default:
+		if char != 0 {
+			return string(char)
+		}
+		return ""
+	}
+}
+
+// eventLoop handles keyboard events and async messages
 func (app *TuiApp) eventLoop() {
+	keyChan := make(chan string, 10)
+
+	// Goroutine reads keyboard, sends to keyChan
+	go func() {
+		for {
+			char, key, err := keyboard.GetKey()
+			if err != nil {
+				// Check if app stopped
+				if !app.IsRunning() {
+					return
+				}
+				continue
+			}
+			keyStr := keyToString(char, key)
+			if keyStr == "ctrl-c" {
+				app.Stop()
+				return
+			}
+			if keyStr != "" {
+				keyChan <- keyStr
+			}
+		}
+	}()
+
 	for {
 		select {
 		case <-app.stopChan:
 			return
+		case keyStr := <-keyChan:
+			app.handleKey(keyStr)
+		case msg := <-app.msgChan:
+			app.handleMessage(msg)
+		}
+	}
+}
+
+// handleMessage handles an async message from a goroutine
+func (app *TuiApp) handleMessage(msg env.Object) {
+	app.mu.Lock()
+	handler := app.msgHandler
+	ps := app.ps
+	app.mu.Unlock()
+
+	if handler == nil || ps == nil {
+		return
+	}
+
+	switch h := handler.(type) {
+	case env.Function:
+		currentState := app.GetState()
+		fnCtx := env.NewEnv(app.ctx)
+
+		// Set first argument (state)
+		if h.Spec.Series.Len() > 0 {
+			argWord := h.Spec.Series.Get(0)
+			if word, ok := argWord.(env.Word); ok {
+				fnCtx.Set(word.Index, currentState)
+			}
+		}
+
+		// Set second argument (msg)
+		if h.Spec.Series.Len() > 1 {
+			argWord := h.Spec.Series.Get(1)
+			if word, ok := argWord.(env.Word); ok {
+				fnCtx.Set(word.Index, msg)
+			}
+		}
+
+		ser := h.Body.Series
+		ser.Reset()
+		psX := env.NewProgramState(ser, ps.Idx)
+		psX.Ctx = fnCtx
+		psX.PCtx = ps.PCtx
+		psX.Gen = ps.Gen
+		EvalBlockInj(psX, currentState, true)
+
+		if psX.ErrorFlag {
+			fmt.Println("Message handler error:", psX.Res.Inspect(*psX.Idx))
+			return
+		}
+
+		// If result is a Dict, update state
+		switch d := psX.Res.(type) {
+		case env.Dict:
+			app.Update(d)
+		case *env.Dict:
+			app.Update(*d)
 		default:
-			char, key, err := keyboard.GetKey()
-			if err != nil {
-				continue
-			}
-
-			keyStr := ""
-			switch key {
-			case keyboard.KeyArrowUp:
-				keyStr = "up"
-			case keyboard.KeyArrowDown:
-				keyStr = "down"
-			case keyboard.KeyArrowLeft:
-				keyStr = "left"
-			case keyboard.KeyArrowRight:
-				keyStr = "right"
-			case keyboard.KeyEnter:
-				keyStr = "enter"
-			case keyboard.KeyEsc:
-				keyStr = "escape"
-			case keyboard.KeyBackspace, keyboard.KeyBackspace2:
-				keyStr = "backspace"
-			case keyboard.KeyTab:
-				keyStr = "tab"
-			case keyboard.KeySpace:
-				keyStr = " "
-			case keyboard.KeyCtrlC:
-				keyStr = "ctrl-c"
-				app.Stop()
-				return
-			case keyboard.KeyCtrlA:
-				keyStr = "ctrl-a"
-			case keyboard.KeyCtrlE:
-				keyStr = "ctrl-e"
-			case keyboard.KeyCtrlW:
-				keyStr = "ctrl-w"
-			case keyboard.KeyCtrlU:
-				keyStr = "ctrl-u"
-			case keyboard.KeyCtrlK:
-				keyStr = "ctrl-k"
-			case keyboard.KeyDelete:
-				keyStr = "delete"
-			case keyboard.KeyHome:
-				keyStr = "home"
-			case keyboard.KeyEnd:
-				keyStr = "end"
-			default:
-				if char != 0 {
-					keyStr = string(char)
-				}
-			}
-
-			if keyStr != "" {
-				app.handleKey(keyStr)
-			}
+			app.Render()
 		}
 	}
 }
@@ -1156,9 +1240,8 @@ func (app *TuiApp) handleKey(key string) {
 
 	switch h := handler.(type) {
 	case env.Function:
-		psTemp := *ps
-		fnCtx := env.NewEnv(psTemp.Ctx)
 		currentState := app.GetState()
+		fnCtx := env.NewEnv(app.ctx)
 
 		// Set first argument (state)
 		if h.Spec.Series.Len() > 0 {
@@ -1176,11 +1259,12 @@ func (app *TuiApp) handleKey(key string) {
 			}
 		}
 
-		psX := env.NewProgramState(h.Body.Series, psTemp.Idx)
+		ser := h.Body.Series
+		ser.Reset()
+		psX := env.NewProgramState(ser, ps.Idx)
 		psX.Ctx = fnCtx
-		psX.PCtx = psTemp.PCtx
-		psX.Gen = psTemp.Gen
-		psX.Ser.SetPos(0)
+		psX.PCtx = ps.PCtx
+		psX.Gen = ps.Gen
 		EvalBlockInj(psX, currentState, true)
 
 		if psX.ErrorFlag {
@@ -2427,6 +2511,65 @@ var Builtins_tui = map[string]*env.Builtin{
 			app.mu.Unlock()
 			app.Render()
 			return arg0
+		},
+	},
+
+	// tui-app//Send - send async message into the event loop
+	// Args:
+	// * app: TuiApp native
+	// * msg: Any Rye value (typically a Dict) to send as message
+	// Returns:
+	// * the app
+	"tui-app//Send": {
+		Argsn: 2,
+		Doc:   "Sends a message into the app's event loop. Thread-safe, can be called from goroutines. The message is handled by the on-message handler.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			native, ok := arg0.(env.Native)
+			if !ok {
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "tui-app//Send")
+			}
+			app, ok := native.Value.(*TuiApp)
+			if !ok {
+				return MakeBuiltinError(ps, "Expected TuiApp", "tui-app//Send")
+			}
+			// Non-blocking send to buffered channel
+			select {
+			case app.msgChan <- arg1:
+				// sent
+			default:
+				// channel full, drop message (avoid blocking goroutines)
+			}
+			return arg0
+		},
+	},
+
+	// tui-app//On-message - register handler for async messages
+	// Args:
+	// * app: TuiApp native
+	// * handler: Function that takes (state, msg) and returns Dict
+	// Returns:
+	// * the app
+	"tui-app//On-message": {
+		Argsn: 2,
+		Doc:   "Registers a handler for async messages sent via Send. Function receives (state, msg). Return a dict to update state.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			native, ok := arg0.(env.Native)
+			if !ok {
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "tui-app//On-message")
+			}
+			app, ok := native.Value.(*TuiApp)
+			if !ok {
+				return MakeBuiltinError(ps, "Expected TuiApp", "tui-app//On-message")
+			}
+			switch arg1.(type) {
+			case env.Function:
+				app.mu.Lock()
+				app.msgHandler = arg1
+				app.mu.Unlock()
+				return arg0
+			default:
+				return MakeArgError(ps, 2, []env.Type{env.FunctionType}, "tui-app//On-message")
+			}
 		},
 	},
 

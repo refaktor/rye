@@ -133,7 +133,7 @@ ensure-rye-replace: fn { } {
 		print "❌ Could not open " ++ gomod-path
 		return false
 	}
-	{ .Read-all } :gomod-content
+	{ .Read } :gomod-content
 	
 	; Check if there's already a replace for github.com/refaktor/rye pointing to local path
 	either gomod-content .contains rye-home {
@@ -163,7 +163,7 @@ load-mod-file: fn { } {
 		print "Please create lrye.mod file and list modules in the format: tiny http bleve"
 		exit 1
 	}
-	{ .Read-all }
+	{ .Read }
 	|load :mod-data
 	
 	if mod-data .length? = 0 {
@@ -192,7 +192,7 @@ get-embed-command: fn { tags } {
 			print "Please create lrye.files file and list files in the format: %main.rye %lib.rye"
 			{ %main.rye }
 		}
-		{ .Read-all |load }
+		{ .Read |load }
 		:files-data
 		|for { ::f
 			; Check if main.rye exists in current directory (exists? returns 1 if exists, 0 if not)
@@ -261,7 +261,7 @@ build\fyne: fn { tags } {
 	var 'command join { 
 		cp-embed 
 		` a=$PWD ; cd $RYE_FYNE_HOME ; fyne build -os linux `
-		++ ` -tags "` ++ modules ++ " " ++ build-tags `" ; cd "$a"` 
+		++ ` -tags "` ++ modules ++ " " ++ build-tags `" -o $a/main ; cd "$a"` 
 	}
 	
 	run-build-command command
@@ -298,7 +298,7 @@ package\fyne: fn { tags } {
 	print "\nFyne package build completed."
 }
 
-build\fyne\apk: fn { tags } {
+package\fyne\apk: fn { tags } {
 	print-header
 	print "\nBuilding Fyne package for Android with modules:"
 	
@@ -386,7 +386,7 @@ switch mode {
 	build          { validate-env false |if { build tags } }
 	build-fyne     { validate-env true |if { build\fyne tags } }
 	package-fyne   { validate-env true |if { package\fyne tags } }
-	build-fyne-apk { validate-env true |if { build\fyne\apk tags } }
+	package-fyne-apk { validate-env true |if { package\fyne\apk tags } }
 	setup          { print-setup }
 	install        { install-ryel }
 	version        { print-version }
