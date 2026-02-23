@@ -64,6 +64,10 @@ const (
 	NPEG_TOKEN_BBLOCK_START
 	NPEG_TOKEN_BBLOCK_END
 	NPEG_TOKEN_OPBBLOCK_START
+	NPEG_TOKEN_LIST_BLOCK_START
+	NPEG_TOKEN_LIST_BBLOCK_START
+	NPEG_TOKEN_DICT_BLOCK_START
+	NPEG_TOKEN_DICT_BBLOCK_START
 	NPEG_TOKEN_GROUP_START
 	NPEG_TOKEN_GROUP_END
 	NPEG_TOKEN_OPGROUP_START
@@ -513,6 +517,58 @@ func (l *Lexer) NextToken() NoPEGToken {
 		if isDigit(l.ch) {
 			return l.readNumber()
 		} else if isLetter(l.ch) {
+			// Special handling for "l{ }" (LIST_BLOCK) pattern - literal list
+			if l.ch == 'l' && l.peekChar() == '{' {
+				l.readChar() // Skip 'l'
+				l.readChar() // Skip '{'
+				if isWhitespaceCh(l.ch) {
+					return l.makeToken(NPEG_TOKEN_LIST_BLOCK_START, "l{")
+				}
+				// If not followed by whitespace, reset and treat as regular word
+				l.pos -= 2
+				l.readPos -= 2
+				l.col -= 2
+				l.ch = 'l'
+			}
+			// Special handling for "l[ ]" (LIST_BBLOCK) pattern - evaluated list
+			if l.ch == 'l' && l.peekChar() == '[' {
+				l.readChar() // Skip 'l'
+				l.readChar() // Skip '['
+				if isWhitespaceCh(l.ch) {
+					return l.makeToken(NPEG_TOKEN_LIST_BBLOCK_START, "l[")
+				}
+				// If not followed by whitespace, reset and treat as regular word
+				l.pos -= 2
+				l.readPos -= 2
+				l.col -= 2
+				l.ch = 'l'
+			}
+			// Special handling for "d{ }" (DICT_BLOCK) pattern - literal dict
+			if l.ch == 'd' && l.peekChar() == '{' {
+				l.readChar() // Skip 'd'
+				l.readChar() // Skip '{'
+				if isWhitespaceCh(l.ch) {
+					return l.makeToken(NPEG_TOKEN_DICT_BLOCK_START, "d{")
+				}
+				// If not followed by whitespace, reset and treat as regular word
+				l.pos -= 2
+				l.readPos -= 2
+				l.col -= 2
+				l.ch = 'd'
+			}
+			// Special handling for "d[ ]" (DICT_BBLOCK) pattern - evaluated dict
+			if l.ch == 'd' && l.peekChar() == '[' {
+				l.readChar() // Skip 'd'
+				l.readChar() // Skip '['
+				if isWhitespaceCh(l.ch) {
+					return l.makeToken(NPEG_TOKEN_DICT_BBLOCK_START, "d[")
+				}
+				// If not followed by whitespace, reset and treat as regular word
+				l.pos -= 2
+				l.readPos -= 2
+				l.col -= 2
+				l.ch = 'd'
+			}
 			// Try to parse as word or special type
 			word := l.readWord()
 
@@ -1197,7 +1253,11 @@ func (p *NoPEGParser) parseBlock(blockType int) (env.Object, error) {
 			p.currentToken.Type == NPEG_TOKEN_GROUP_END && blockType == 2 ||
 			p.currentToken.Type == NPEG_TOKEN_BBLOCK_END && blockType == 3 ||
 			p.currentToken.Type == NPEG_TOKEN_GROUP_END && blockType == 4 ||
-			p.currentToken.Type == NPEG_TOKEN_BLOCK_END && blockType == 5 {
+			p.currentToken.Type == NPEG_TOKEN_BLOCK_END && blockType == 5 ||
+			p.currentToken.Type == NPEG_TOKEN_BLOCK_END && blockType == 6 ||
+			p.currentToken.Type == NPEG_TOKEN_BBLOCK_END && blockType == 7 ||
+			p.currentToken.Type == NPEG_TOKEN_BLOCK_END && blockType == 8 ||
+			p.currentToken.Type == NPEG_TOKEN_BBLOCK_END && blockType == 9 {
 			break
 		}
 
@@ -1231,6 +1291,22 @@ func (p *NoPEGParser) parseBlock(blockType int) (env.Object, error) {
 				blockTypeName = "opblock"
 				openingDelimiter = ".{"
 				closingDelimiter = "}"
+			case 6:
+				blockTypeName = "list"
+				openingDelimiter = "l{"
+				closingDelimiter = "}"
+			case 7:
+				blockTypeName = "list-eval"
+				openingDelimiter = "l["
+				closingDelimiter = "]"
+			case 8:
+				blockTypeName = "dict"
+				openingDelimiter = "d{"
+				closingDelimiter = "}"
+			case 9:
+				blockTypeName = "dict-eval"
+				openingDelimiter = "d["
+				closingDelimiter = "]"
 			}
 			return nil, fmt.Errorf("unexpected end of input while parsing %s (opened with '%s' at line %d, column %d). Missing closing delimiter '%s'", blockTypeName, openingDelimiter, blockLine, blockCol, closingDelimiter)
 		}
@@ -1267,6 +1343,14 @@ func (p *NoPEGParser) parseBlock(blockType int) (env.Object, error) {
 
 	// Create the block with location information
 	ser := env.NewTSeries(objects)
+	// For list blocks (type 6), return a List instead of a Block
+	if blockType == 6 {
+		return env.NewListFromSeries(*ser), nil
+	}
+	// For dict blocks (type 8), return a Dict instead of a Block
+	if blockType == 8 {
+		return env.NewDictFromSeries(*ser, p.wordIndex), nil
+	}
 	return *env.NewBlockWithLocation(*ser, blockType, p.l.scriptPath, blockLine, blockCol), nil
 }
 
@@ -1289,6 +1373,14 @@ func (p *NoPEGParser) parseToken() (env.Object, error) {
 		return p.parseBlock(4)
 	case NPEG_TOKEN_OPBLOCK_START:
 		return p.parseBlock(5)
+	case NPEG_TOKEN_LIST_BLOCK_START:
+		return p.parseBlock(6)
+	case NPEG_TOKEN_LIST_BBLOCK_START:
+		return p.parseBlock(7)
+	case NPEG_TOKEN_DICT_BLOCK_START:
+		return p.parseBlock(8)
+	case NPEG_TOKEN_DICT_BBLOCK_START:
+		return p.parseBlock(9)
 	case NPEG_TOKEN_WORD:
 		idx := p.wordIndex.IndexWord(p.currentToken.Value)
 		return *env.NewWord(idx), nil

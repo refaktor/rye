@@ -399,6 +399,36 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 			// injVal := ps.Res // Use current result as argument
 			// CallFunctionWithArgs(fn, ps, nil, injVal)
 			// return ps.Res
+		} else if block.Mode == 7 {
+			// LIST_BBLOCK l[ ] - evaluates expressions and creates a List
+			ser := ps.Ser
+			ps.Ser = block.Series
+			res := make([]any, 0)
+			for ps.Ser.Pos() < ps.Ser.Len() {
+				EvalExpression_CollectArg(ps, false)
+				if ps.ReturnFlag || ps.ErrorFlag {
+					ps.Ser = ser
+					return
+				}
+				res = append(res, ps.Res)
+			}
+			ps.Ser = ser
+			ps.Res = *env.NewList(res)
+		} else if block.Mode == 9 {
+			// DICT_BBLOCK d[ ] - evaluates expressions and creates a Dict
+			ser := ps.Ser
+			ps.Ser = block.Series
+			res := make([]env.Object, 0)
+			for ps.Ser.Pos() < ps.Ser.Len() {
+				EvalExpression_CollectArg(ps, false)
+				if ps.ReturnFlag || ps.ErrorFlag {
+					ps.Ser = ser
+					return
+				}
+				res = append(res, ps.Res)
+			}
+			ps.Ser = ser
+			ps.Res = env.NewDictFromSeries(*env.NewTSeries(res), ps.Idx)
 		}
 	case env.TagwordType:
 		ps.Res = *env.NewWord(object.(env.Tagword).Index)
@@ -592,7 +622,38 @@ func findWordValueWithFailureInfo(ps *env.ProgramState, word1 env.Object) (bool,
 				i += 1
 				goto gogo1
 			case env.Dict:
-				return found, *env.NewString("Now word value 2!!"), currCtx, ""
+				// Handle dict path traversal
+				currDict := swObj
+				for word.Cnt > i {
+					i += 1
+					keyWord := word.GetWordNumber(i)
+					keyStr := ps.Idx.GetWord(keyWord.Index)
+					// Look up in dict
+					if val, ok := currDict.Data[keyStr]; ok {
+						object = env.ToRyeValue(val)
+						// If more path segments, check what we got
+						if word.Cnt > i {
+							switch nextObj := object.(type) {
+							case env.Dict:
+								currDict = nextObj
+								continue
+							case *env.RyeCtx:
+								currCtx = nextObj
+								i += 1
+								goto gogo1
+							case env.RyeCtx:
+								currCtx = &nextObj
+								i += 1
+								goto gogo1
+							default:
+								return false, nil, currCtx, keyStr + " is not a dict or context"
+							}
+						}
+					} else {
+						return false, nil, currCtx, keyStr + " not found in dict"
+					}
+				}
+				return true, object, currCtx, ""
 			}
 		}
 		return found, object, currCtx, ""

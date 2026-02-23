@@ -2751,6 +2751,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(builtins, ps, "base")
 	RegisterBuiltins2(builtins_boolean, ps, "base")
 	RegisterBuiltins2(builtins_numbers, ps, "base")
+	RegisterBuiltins2(builtins_mth, ps, "base")
 	RegisterBuiltins2(builtins_complex, ps, "base")
 	RegisterBuiltins2(builtins_time, ps, "base")
 	RegisterBuiltins2(builtins_string, ps, "base")
