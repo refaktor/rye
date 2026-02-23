@@ -1373,7 +1373,10 @@ func DetermineContext(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx) *e
 			fnCtx = env.NewEnv(ps.PCtx)
 		} else {
 			if fn.Ctx != nil { // if context was defined at definition time, pass it as parent.
-				fn.Ctx.Parent = ctx
+				// Prevent circular parent reference
+				if fn.Ctx != ctx {
+					fn.Ctx.Parent = ctx
+				}
 				fnCtx = env.NewEnv(fn.Ctx)
 			} else {
 				fnCtx = env.NewEnv(ctx)

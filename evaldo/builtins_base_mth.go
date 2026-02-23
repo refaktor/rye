@@ -2,58 +2,164 @@ package evaldo
 
 // builtins_base_mth.go
 //
-// mth: fast single-pass infix math evaluator with proper operator precedence.
+// mth — fast single-pass infix math evaluator with proper operator precedence.
 //
 // Design: classic two-stack (values + operators) Shunting-yard algorithm that
 // evaluates *inline* instead of producing an intermediate RPN block.
-// This avoids the two-pass overhead of calc { } (shunting-yard → RPN block → Eyr eval).
 //
-// Supported: integer and decimal literals, getwords (?var) for variable access,
-// blocks (  ) for parenthesised sub-expressions, and the operators:
-//   + - * / // %    (arithmetic, precedence 1 - 2)
-//   < > = <= >=     (comparison, precedence 0 - lowest)
+// Supported: integer and decimal literals, words (var) for variable access,
+// blocks { } for parenthesised sub-expressions, and the operators:
+//   + - * / // %    (arithmetic, precedence 2–3)
+//   < > = <= >= !=  (comparison, precedence 1 — lowest)
 //
 // The result is an env.Integer, env.Decimal, or env.Boolean.
+//
+// Key design decision: operators are identified by their raw string ("+" etc.)
+// via ps.Idx.GetWord — a simple slice index, O(1), no allocation.  This means
+// no builtin dictionary lookup, no global state, no lazy init.
+// Arithmetic is done directly in Go — no builtin function call overhead.
 
 import (
 	"github.com/refaktor/rye/env"
 )
 
-// mthApplyOp pops the top operator from ops and the top two values from vals,
-// applies the operation, and pushes the result. Returns false on error.
-func mthApplyOp(
-	vals *[]env.Object,
-	ops *[]int,
-	idxAdd, idxSub, idxMul, idxDiv, idxIDiv, idxMod int,
-	idxLt, idxGt, idxEq, idxLte, idxGte int,
-) bool {
-	if len(*vals) < 2 || len(*ops) < 1 {
+// Operator codes — small constants used on the operator stack.
+const (
+	mthOpNone = iota
+	mthOpAdd  // +
+	mthOpSub  // -
+	mthOpMul  // *
+	mthOpDiv  // /   → decimal
+	mthOpIDiv // //  → integer
+	mthOpMod  // %
+	mthOpLt   // <
+	mthOpGt   // >
+	mthOpEq   // =
+	mthOpLte  // <=
+	mthOpGte  // >=
+	mthOpNeq  // !=
+)
+
+// mthOpPrec returns the precedence of an operator code.
+// 0 = unknown, 1 = comparison, 2 = add/sub, 3 = mul/div/mod.
+func mthOpPrec(op int) int8 {
+	switch op {
+	case mthOpLt, mthOpGt, mthOpEq, mthOpLte, mthOpGte, mthOpNeq:
+		return 1
+	case mthOpAdd, mthOpSub:
+		return 2
+	case mthOpMul, mthOpDiv, mthOpIDiv, mthOpMod:
+		return 3
+	}
+	return 0
+}
+
+// mthOpOf maps an opword string to an operator code.
+// In Rye, arithmetic opwords are stored with a leading underscore (_+, _-, etc.).
+// ps.Idx.GetWord is a plain slice index — O(1), no allocation.
+func mthOpOf(name string) int {
+	switch name {
+	case "_+":
+		return mthOpAdd
+	case "_-":
+		return mthOpSub
+	case "_*":
+		return mthOpMul
+	case "_/":
+		return mthOpDiv
+	case "_//":
+		return mthOpIDiv
+	case "_%":
+		return mthOpMod
+	case "_<":
+		return mthOpLt
+	case "_>":
+		return mthOpGt
+	case "_=":
+		return mthOpEq
+	case "_<=":
+		return mthOpLte
+	case "_>=":
+		return mthOpGte
+	case "_!=":
+		return mthOpNeq
+	}
+	return mthOpNone
+}
+
+// ---------------------------------------------------------------------------
+// Stack-allocated state — zero heap for typical expressions (≤8 operands).
+// ---------------------------------------------------------------------------
+
+type mthState struct {
+	vals [8]env.Object
+	ops  [4]int8 // operator codes (fit in int8)
+	vLen int
+	oLen int
+}
+
+func (s *mthState) pushVal(v env.Object) {
+	if s.vLen < len(s.vals) {
+		s.vals[s.vLen] = v
+		s.vLen++
+	}
+}
+
+func (s *mthState) topVal() env.Object     { return s.vals[s.vLen-1] }
+func (s *mthState) popVal() env.Object     { s.vLen--; return s.vals[s.vLen] }
+func (s *mthState) setTopVal(v env.Object) { s.vals[s.vLen-1] = v }
+
+func (s *mthState) pushOp(op int8) {
+	if s.oLen < len(s.ops) {
+		s.ops[s.oLen] = op
+		s.oLen++
+	}
+}
+func (s *mthState) topOp() int8 { return s.ops[s.oLen-1] }
+func (s *mthState) popOp() int8 { s.oLen--; return s.ops[s.oLen] }
+
+// ---------------------------------------------------------------------------
+// Arithmetic — pure Go, no builtin lookup.
+// ---------------------------------------------------------------------------
+
+func mthToFloat(o env.Object) (float64, bool) {
+	switch v := o.(type) {
+	case env.Integer:
+		return float64(v.Value), true
+	case env.Decimal:
+		return v.Value, true
+	}
+	return 0, false
+}
+
+// mthApply pops the top operator and two values, computes the result in Go,
+// and writes it back as the new stack top.  Returns false on type error.
+func mthApply(s *mthState) bool {
+	if s.vLen < 2 || s.oLen < 1 {
 		return false
 	}
-	right := (*vals)[len(*vals)-1]
-	left := (*vals)[len(*vals)-2]
-	*vals = (*vals)[:len(*vals)-1]
-	op := (*ops)[len(*ops)-1]
-	*ops = (*ops)[:len(*ops)-1]
+	right := s.popVal()
+	op := s.popOp()
+	left := s.topVal() // result written here in-place
 
 	switch op {
-	case idxAdd:
+	case mthOpAdd:
 		switch l := left.(type) {
 		case env.Integer:
 			switch r := right.(type) {
 			case env.Integer:
-				(*vals)[len(*vals)-1] = *env.NewInteger(l.Value + r.Value)
+				s.setTopVal(*env.NewInteger(l.Value + r.Value))
 			case env.Decimal:
-				(*vals)[len(*vals)-1] = *env.NewDecimal(float64(l.Value) + r.Value)
+				s.setTopVal(*env.NewDecimal(float64(l.Value) + r.Value))
 			default:
 				return false
 			}
 		case env.Decimal:
 			switch r := right.(type) {
 			case env.Integer:
-				(*vals)[len(*vals)-1] = *env.NewDecimal(l.Value + float64(r.Value))
+				s.setTopVal(*env.NewDecimal(l.Value + float64(r.Value)))
 			case env.Decimal:
-				(*vals)[len(*vals)-1] = *env.NewDecimal(l.Value + r.Value)
+				s.setTopVal(*env.NewDecimal(l.Value + r.Value))
 			default:
 				return false
 			}
@@ -61,23 +167,23 @@ func mthApplyOp(
 			return false
 		}
 
-	case idxSub:
+	case mthOpSub:
 		switch l := left.(type) {
 		case env.Integer:
 			switch r := right.(type) {
 			case env.Integer:
-				(*vals)[len(*vals)-1] = *env.NewInteger(l.Value - r.Value)
+				s.setTopVal(*env.NewInteger(l.Value - r.Value))
 			case env.Decimal:
-				(*vals)[len(*vals)-1] = *env.NewDecimal(float64(l.Value) - r.Value)
+				s.setTopVal(*env.NewDecimal(float64(l.Value) - r.Value))
 			default:
 				return false
 			}
 		case env.Decimal:
 			switch r := right.(type) {
 			case env.Integer:
-				(*vals)[len(*vals)-1] = *env.NewDecimal(l.Value - float64(r.Value))
+				s.setTopVal(*env.NewDecimal(l.Value - float64(r.Value)))
 			case env.Decimal:
-				(*vals)[len(*vals)-1] = *env.NewDecimal(l.Value - r.Value)
+				s.setTopVal(*env.NewDecimal(l.Value - r.Value))
 			default:
 				return false
 			}
@@ -85,23 +191,23 @@ func mthApplyOp(
 			return false
 		}
 
-	case idxMul:
+	case mthOpMul:
 		switch l := left.(type) {
 		case env.Integer:
 			switch r := right.(type) {
 			case env.Integer:
-				(*vals)[len(*vals)-1] = *env.NewInteger(l.Value * r.Value)
+				s.setTopVal(*env.NewInteger(l.Value * r.Value))
 			case env.Decimal:
-				(*vals)[len(*vals)-1] = *env.NewDecimal(float64(l.Value) * r.Value)
+				s.setTopVal(*env.NewDecimal(float64(l.Value) * r.Value))
 			default:
 				return false
 			}
 		case env.Decimal:
 			switch r := right.(type) {
 			case env.Integer:
-				(*vals)[len(*vals)-1] = *env.NewDecimal(l.Value * float64(r.Value))
+				s.setTopVal(*env.NewDecimal(l.Value * float64(r.Value)))
 			case env.Decimal:
-				(*vals)[len(*vals)-1] = *env.NewDecimal(l.Value * r.Value)
+				s.setTopVal(*env.NewDecimal(l.Value * r.Value))
 			default:
 				return false
 			}
@@ -109,7 +215,15 @@ func mthApplyOp(
 			return false
 		}
 
-	case idxDiv:
+	case mthOpDiv:
+		lf, ok1 := mthToFloat(left)
+		rf, ok2 := mthToFloat(right)
+		if !ok1 || !ok2 {
+			return false
+		}
+		s.setTopVal(*env.NewDecimal(lf / rf))
+
+	case mthOpIDiv:
 		switch l := left.(type) {
 		case env.Integer:
 			switch r := right.(type) {
@@ -117,18 +231,7 @@ func mthApplyOp(
 				if r.Value == 0 {
 					return false
 				}
-				(*vals)[len(*vals)-1] = *env.NewDecimal(float64(l.Value) / float64(r.Value))
-			case env.Decimal:
-				(*vals)[len(*vals)-1] = *env.NewDecimal(float64(l.Value) / r.Value)
-			default:
-				return false
-			}
-		case env.Decimal:
-			switch r := right.(type) {
-			case env.Integer:
-				(*vals)[len(*vals)-1] = *env.NewDecimal(l.Value / float64(r.Value))
-			case env.Decimal:
-				(*vals)[len(*vals)-1] = *env.NewDecimal(l.Value / r.Value)
+				s.setTopVal(*env.NewInteger(l.Value / r.Value))
 			default:
 				return false
 			}
@@ -136,7 +239,7 @@ func mthApplyOp(
 			return false
 		}
 
-	case idxIDiv:
+	case mthOpMod:
 		switch l := left.(type) {
 		case env.Integer:
 			switch r := right.(type) {
@@ -144,7 +247,7 @@ func mthApplyOp(
 				if r.Value == 0 {
 					return false
 				}
-				(*vals)[len(*vals)-1] = *env.NewInteger(l.Value / r.Value)
+				s.setTopVal(*env.NewInteger(l.Value % r.Value))
 			default:
 				return false
 			}
@@ -152,58 +255,55 @@ func mthApplyOp(
 			return false
 		}
 
-	case idxMod:
-		switch l := left.(type) {
-		case env.Integer:
-			switch r := right.(type) {
-			case env.Integer:
-				if r.Value == 0 {
-					return false
-				}
-				(*vals)[len(*vals)-1] = *env.NewInteger(l.Value % r.Value)
-			default:
-				return false
-			}
-		default:
+	case mthOpLt:
+		lf, ok1 := mthToFloat(left)
+		rf, ok2 := mthToFloat(right)
+		if !ok1 || !ok2 {
 			return false
 		}
+		s.setTopVal(*env.NewBoolean(lf < rf))
 
-	case idxLt:
-		lf, rf, ok := mthToFloats(left, right)
-		if !ok {
+	case mthOpGt:
+		lf, ok1 := mthToFloat(left)
+		rf, ok2 := mthToFloat(right)
+		if !ok1 || !ok2 {
 			return false
 		}
-		(*vals)[len(*vals)-1] = *env.NewBoolean(lf < rf)
+		s.setTopVal(*env.NewBoolean(lf > rf))
 
-	case idxGt:
-		lf, rf, ok := mthToFloats(left, right)
-		if !ok {
+	case mthOpEq:
+		lf, ok1 := mthToFloat(left)
+		rf, ok2 := mthToFloat(right)
+		if ok1 && ok2 {
+			s.setTopVal(*env.NewBoolean(lf == rf))
+		} else {
+			s.setTopVal(*env.NewBoolean(left.Equal(right)))
+		}
+
+	case mthOpNeq:
+		lf, ok1 := mthToFloat(left)
+		rf, ok2 := mthToFloat(right)
+		if ok1 && ok2 {
+			s.setTopVal(*env.NewBoolean(lf != rf))
+		} else {
+			s.setTopVal(*env.NewBoolean(!left.Equal(right)))
+		}
+
+	case mthOpLte:
+		lf, ok1 := mthToFloat(left)
+		rf, ok2 := mthToFloat(right)
+		if !ok1 || !ok2 {
 			return false
 		}
-		(*vals)[len(*vals)-1] = *env.NewBoolean(lf > rf)
+		s.setTopVal(*env.NewBoolean(lf <= rf))
 
-	case idxEq:
-		lf, rf, ok := mthToFloats(left, right)
-		if !ok {
-			// Fall back to generic equality
-			(*vals)[len(*vals)-1] = *env.NewBoolean(left.Equal(right))
-			return true
-		}
-		(*vals)[len(*vals)-1] = *env.NewBoolean(lf == rf)
-
-	case idxLte:
-		lf, rf, ok := mthToFloats(left, right)
-		if !ok {
+	case mthOpGte:
+		lf, ok1 := mthToFloat(left)
+		rf, ok2 := mthToFloat(right)
+		if !ok1 || !ok2 {
 			return false
 		}
-		(*vals)[len(*vals)-1] = *env.NewBoolean(lf <= rf)
-
-	case idxGte:
-		lf, rf, ok := mthToFloats(left, right)
-		if !ok {
-			return false
-		}
-		(*vals)[len(*vals)-1] = *env.NewBoolean(lf >= rf)
+		s.setTopVal(*env.NewBoolean(lf >= rf))
 
 	default:
 		return false
@@ -211,86 +311,38 @@ func mthApplyOp(
 	return true
 }
 
-// mthToFloats coerces two objects to float64 for comparison operations.
-func mthToFloats(a, b env.Object) (float64, float64, bool) {
-	var fa, fb float64
-	switch v := a.(type) {
-	case env.Integer:
-		fa = float64(v.Value)
-	case env.Decimal:
-		fa = v.Value
-	default:
-		return 0, 0, false
-	}
-	switch v := b.(type) {
-	case env.Integer:
-		fb = float64(v.Value)
-	case env.Decimal:
-		fb = v.Value
-	default:
-		return 0, 0, false
-	}
-	return fa, fb, true
-}
+// ---------------------------------------------------------------------------
+// Core evaluator
+// ---------------------------------------------------------------------------
 
 // Mth_EvalDirect is the fast single-pass math evaluator.
-// It reads tokens from ps.Ser using the two-stack Shunting-yard algorithm
-// and computes the result inline without creating an intermediate RPN block.
+// It reads tokens from ps.Ser using the Shunting-yard algorithm and computes
+// the result inline.  No builtin lookup, no global state, no init.
 func Mth_EvalDirect(ps *env.ProgramState) env.Object {
-	// Look up operator word indices once per call.
-	// These are simple map lookups in ps.Idx - very cheap.
-	idxAdd, _ := ps.Idx.GetIndex("_+")
-	idxSub, _ := ps.Idx.GetIndex("_-")
-	idxMul, _ := ps.Idx.GetIndex("_*")
-	idxDiv, _ := ps.Idx.GetIndex("_/")
-	idxIDiv, _ := ps.Idx.GetIndex("_//")
-	idxMod, _ := ps.Idx.GetIndex("_%")
-	idxLt, _ := ps.Idx.GetIndex("_<")
-	idxGt, _ := ps.Idx.GetIndex("_>")
-	idxEq, _ := ps.Idx.GetIndex("_=")
-	idxLte, _ := ps.Idx.GetIndex("_<=")
-	idxGte, _ := ps.Idx.GetIndex("_>=")
-
-	// Precedence table. Higher number = tighter binding.
-	// Comparison operators bind the most loosely so that
-	// "5 + 5 < 10" evaluates as "(5 + 5) < 10".
-	prec := map[int]int{
-		idxLt: 0, idxGt: 0, idxEq: 0, idxLte: 0, idxGte: 0,
-		idxAdd: 1, idxSub: 1,
-		idxMul: 2, idxDiv: 2, idxIDiv: 2, idxMod: 2,
-	}
-
-	// Small inline stacks - avoid interface{} allocation for the common case.
-	// Pre-allocated with reasonable capacity to avoid re-growing in typical expressions.
-	vals := make([]env.Object, 0, 8)
-	ops := make([]int, 0, 4)
-
-	applyTop := func() bool {
-		return mthApplyOp(&vals, &ops, idxAdd, idxSub, idxMul, idxDiv, idxIDiv, idxMod, idxLt, idxGt, idxEq, idxLte, idxGte)
-	}
+	var s mthState // stack-allocated, zero heap for typical expressions
 
 	for ps.Ser.Pos() < ps.Ser.Len() {
 		object := ps.Ser.Pop()
 		switch obj := object.(type) {
 
 		case env.Integer:
-			vals = append(vals, obj)
+			s.pushVal(obj)
 
 		case env.Decimal:
-			vals = append(vals, obj)
+			s.pushVal(obj)
 
-		case env.Getword:
-			// Variable access: ?varname
+		case env.Word:
+			// Variable access: varname
 			val, found := ps.Ctx.Get(obj.Index)
 			if !found {
 				ps.ErrorFlag = true
 				ps.Res = env.NewError("mth: variable not found: " + ps.Idx.GetWord(obj.Index))
 				return ps.Res
 			}
-			vals = append(vals, val)
+			s.pushVal(val)
 
 		case env.Block:
-			// Parenthesised sub-expression: ( ... )
+			// Parenthesised sub-expression: { ... }
 			ser1 := ps.Ser
 			ps.Ser = obj.Series
 			sub := Mth_EvalDirect(ps)
@@ -298,30 +350,26 @@ func Mth_EvalDirect(ps *env.ProgramState) env.Object {
 			if ps.ErrorFlag {
 				return sub
 			}
-			vals = append(vals, sub)
+			s.pushVal(sub)
 
 		case env.Opword:
-			p, known := prec[obj.Index]
-			if !known {
+			// Identify operator from its string — ps.Idx.GetWord is a slice index, O(1).
+			op := mthOpOf(ps.Idx.GetWord(obj.Index))
+			if op == mthOpNone {
 				ps.ErrorFlag = true
 				ps.Res = env.NewError("mth: unsupported operator: " + ps.Idx.GetWord(obj.Index))
 				return ps.Res
 			}
-			// While the top of the operator stack has equal or higher precedence,
-			// apply it before pushing the current operator.
-			for len(ops) > 0 {
-				topPrec := prec[ops[len(ops)-1]]
-				if topPrec >= p {
-					if !applyTop() {
-						ps.ErrorFlag = true
-						ps.Res = env.NewError("mth: type error in arithmetic expression")
-						return ps.Res
-					}
-				} else {
-					break
+			p := mthOpPrec(op)
+			// Shunting-yard: pop operators with equal or higher precedence first.
+			for s.oLen > 0 && mthOpPrec(int(s.topOp())) >= p {
+				if !mthApply(&s) {
+					ps.ErrorFlag = true
+					ps.Res = env.NewError("mth: type error in arithmetic expression")
+					return ps.Res
 				}
 			}
-			ops = append(ops, obj.Index)
+			s.pushOp(int8(op))
 
 		default:
 			ps.ErrorFlag = true
@@ -330,27 +378,29 @@ func Mth_EvalDirect(ps *env.ProgramState) env.Object {
 		}
 	}
 
-	// Drain remaining operators from the operator stack.
-	for len(ops) > 0 {
-		if !applyTop() {
+	// Drain remaining operators.
+	for s.oLen > 0 {
+		if !mthApply(&s) {
 			ps.ErrorFlag = true
 			ps.Res = env.NewError("mth: type error in arithmetic expression")
 			return ps.Res
 		}
 	}
 
-	if len(vals) == 0 {
+	if s.vLen == 0 {
 		return *env.NewVoid()
 	}
-	return vals[0]
+	return s.vals[0]
 }
+
+// ---------------------------------------------------------------------------
+// Builtin registration
+// ---------------------------------------------------------------------------
 
 var builtins_mth = map[string]*env.Builtin{
 	// Tests:
 	// equal { mth { 1 + 2 } } 3
 	// equal { mth { 2 + 3 * 4 } } 14
-	// equal { mth { ( 2 + 3 ) * 4 } } 20
-	// equal { mth { 10 - 5 - 2 } } 3
 	// equal { mth { 10 - 5 - 2 } } 3
 	// equal { mth { 8 // 3 } } 2
 	// equal { mth { 8 % 3 } } 2
@@ -358,16 +408,15 @@ var builtins_mth = map[string]*env.Builtin{
 	// equal { mth { 5 + 5 <= 10 } } true
 	// equal { mth { 5 + 4 < 10 } } true
 	// equal { mth { 1 + 2 * 3 } } 7
-	// equal { mth { ( 1 + 2 ) * 3 } } 9
-	// equal { a: 5 mth { ?a * 2 } } 10
-	// equal { a: 3 b: 4 mth { ?a * ?a + ?b * ?b } } 25
+	// equal { a: 5 mth { a * 2 } } 10
+	// equal { a: 3 b: 4 mth { a * a + b * b } } 25
 	// Args:
 	// * block: Block containing an infix math expression
 	// Returns:
 	// * result of evaluating the expression with proper operator precedence
 	"mth": {
 		Argsn: 1,
-		Doc:   "Fast infix math evaluator with proper operator precedence (+,-,*,/,//,%,<,>,=,<=,>=)",
+		Doc:   "Fast infix math evaluator with proper operator precedence (+,-,*,/,//,%,<,>,=,<=,>=,!=). Single-pass Shunting-yard, direct Go arithmetic, no builtin lookup.",
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch blk := arg0.(type) {
