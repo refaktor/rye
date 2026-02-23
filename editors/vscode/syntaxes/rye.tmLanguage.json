@@ -1,0 +1,424 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Rye",
+  "scopeName": "source.rye",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings-double" },
+    { "include": "#strings-backtick" },
+    { "include": "#numbers" },
+    { "include": "#constants" },
+    { "include": "#uris" },
+    { "include": "#emails" },
+    { "include": "#file-paths" },
+    { "include": "#shebang" },
+    { "include": "#return-keywords" },
+    { "include": "#lmod-words" },
+    { "include": "#lset-words" },
+    { "include": "#mod-words" },
+    { "include": "#set-words-function" },
+    { "include": "#set-words" },
+    { "include": "#get-cpath" },
+    { "include": "#get-words" },
+    { "include": "#tag-words" },
+    { "include": "#exwords" },
+    { "include": "#xwords" },
+    { "include": "#flag-words" },
+    { "include": "#op-cpath" },
+    { "include": "#op-words" },
+    { "include": "#pipe-cpath" },
+    { "include": "#pipe-words" },
+    { "include": "#cpath-keywords" },
+    { "include": "#context-paths" },
+    { "include": "#keywords-function-def" },
+    { "include": "#keywords-control-flow" },
+    { "include": "#keywords-error-handling" },
+    { "include": "#keywords-context" },
+    { "include": "#keywords-iteration" },
+    { "include": "#keywords-combinators" },
+    { "include": "#keywords-types" },
+    { "include": "#keywords-other" },
+    { "include": "#builtins-collections" },
+    { "include": "#builtins-strings" },
+    { "include": "#builtins-printing" },
+    { "include": "#builtins-conversion" },
+    { "include": "#builtins-math" },
+    { "include": "#builtins-io" },
+    { "include": "#builtins-time" },
+    { "include": "#builtins-testing" },
+    { "include": "#builtins-other" },
+    { "include": "#operators" },
+    { "include": "#comma" },
+    { "include": "#void" },
+    { "include": "#punctuation" }
+  ],
+  "repository": {
+
+    "comments": {
+      "name": "comment.line.semicolon.rye",
+      "match": ";.*$"
+    },
+
+    "shebang": {
+      "name": "comment.line.shebang.rye",
+      "match": "\\A#!.*$"
+    },
+
+    "strings-double": {
+      "name": "string.quoted.double.rye",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "constant.character.escape.rye",
+          "match": "\\\\(?:[nrt\\\\\"e]|x[0-9a-fA-F]{2})"
+        },
+        {
+          "name": "constant.other.placeholder.rye",
+          "match": "\\{\\}"
+        },
+        {
+          "name": "constant.other.placeholder.rye",
+          "match": "%[sdvf.0-9]*[sdvfgtTeEboxXq%]"
+        }
+      ]
+    },
+
+    "strings-backtick": {
+      "name": "string.quoted.backtick.rye",
+      "begin": "`",
+      "end": "`",
+      "patterns": [
+        {
+          "name": "constant.other.placeholder.rye",
+          "match": "\\{\\}"
+        }
+      ]
+    },
+
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.decimal.rye",
+          "match": "(?<=[\\s{\\[\\(,]|^)-?\\d+\\.\\d+(?=[\\s}\\]\\),;]|$)"
+        },
+        {
+          "name": "constant.numeric.integer.rye",
+          "match": "(?<=[\\s{\\[\\(,]|^)-?\\d+(?=[\\s}\\]\\),;]|$)"
+        }
+      ]
+    },
+
+    "constants": {
+      "patterns": [
+        {
+          "name": "constant.language.boolean.true.rye",
+          "match": "(?<=[\\s{\\[\\(,]|^)true(?=[\\s}\\]\\),;]|$)"
+        },
+        {
+          "name": "constant.language.boolean.false.rye",
+          "match": "(?<=[\\s{\\[\\(,]|^)false(?=[\\s}\\]\\),;]|$)"
+        },
+        {
+          "name": "constant.language.none.rye",
+          "match": "(?<=[\\s{\\[\\(,]|^)(?:none|nil)(?=[\\s}\\]\\),;]|$)"
+        }
+      ]
+    },
+
+    "uris": {
+      "name": "string.other.uri.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)[a-zA-Z][a-zA-Z0-9+.-]*://[^\\s{}\\[\\]]*(?=[\\s}\\]\\),;]|$)"
+    },
+
+    "emails": {
+      "name": "string.other.email.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}(?=[\\s}\\]\\),;]|$)"
+    },
+
+    "file-paths": {
+      "name": "string.other.filepath.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)%[^\\s{}\\[\\]]*(?=[\\s}\\]\\),;]|$)"
+    },
+
+    "return-keywords": {
+      "comment": "Return prefix ^word patterns like ^fail, ^check, ^ensure, ^fix, ^if",
+      "name": "keyword.control.return.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)\\^[a-zA-Z][a-zA-Z0-9\\-?!.*+<>=\\\\]*(?=[\\s}\\]\\),;]|$)"
+    },
+
+    "lmod-words": {
+      "comment": "Left mod-word ::word — used for modification injection",
+      "name": "variable.other.lmod.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)::[a-zA-Z_][a-zA-Z0-9\\-?!.*+<>=\\\\]*(?=[\\s}\\]\\),;]|$)"
+    },
+
+    "lset-words": {
+      "comment": "Left set-word :word — used for injection",
+      "name": "variable.other.lset.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^):[a-zA-Z_][a-zA-Z0-9\\-?!.*+<>=\\\\]*(?=[\\s}\\]\\),;]|$)"
+    },
+
+    "mod-words": {
+      "comment": "Mod-word word:: — variable modification/reassignment",
+      "name": "variable.other.mod.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)[a-zA-Z_][a-zA-Z0-9\\-?!.*+<>=\\\\]*::(?=[\\s}\\]\\),;]|$)"
+    },
+
+    "set-words-function": {
+      "comment": "Set-word followed by fn/does/closure — function definition",
+      "match": "(?<=[\\s{\\[\\(,]|^)([a-zA-Z_][a-zA-Z0-9\\-?!.*+<>=\\\\]*)(:)\\s+(?=fn[1c\\\\]?\\b|does\\b|closure\\b|pfn\\b)",
+      "captures": {
+        "1": { "name": "entity.name.function.rye" },
+        "2": { "name": "keyword.operator.assignment.rye" }
+      }
+    },
+
+    "set-words": {
+      "comment": "Set-word word: — variable assignment",
+      "name": "variable.other.assignment.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)[a-zA-Z_][a-zA-Z0-9\\-?!.*+<>=\\\\]*:(?=[\\s}\\]\\),;{\"'`]|$)"
+    },
+
+    "get-cpath": {
+      "comment": "Get context path ?word/word",
+      "name": "variable.other.get-cpath.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)\\?[a-zA-Z_][a-zA-Z0-9\\-?!.*+<>=\\\\]*/[a-zA-Z_][a-zA-Z0-9\\-?!.*+<>=\\\\/]*(?=[\\s}\\]\\),;]|$)"
+    },
+
+    "get-words": {
+      "comment": "Get-word ?word — value reference",
+      "name": "variable.other.get.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)\\?[a-zA-Z_][a-zA-Z0-9\\-?!.*+<>=\\\\]*(?=[\\s}\\]\\),;]|$)"
+    },
+
+    "tag-words": {
+      "comment": "Tag-word 'word — quoted symbol",
+      "name": "constant.other.symbol.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)'[a-zA-Z_][a-zA-Z0-9\\-?!.*+<>=\\\\]*(?=[\\s}\\]\\),;]|$)"
+    },
+
+    "exwords": {
+      "comment": "Closing XML-like word </word>",
+      "name": "entity.name.tag.close.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)</[a-zA-Z][a-zA-Z0-9\\-]*>(?=[\\s}\\]\\),;]|$)"
+    },
+
+    "xwords": {
+      "comment": "XML-like word <word> or <word attrs>",
+      "name": "entity.name.tag.open.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)<[a-zA-Z][a-zA-Z0-9\\-]*(?:\\s[^>]*)?>(?=[\\s}\\]\\),;]|$)"
+    },
+
+    "flag-words": {
+      "comment": "Flag words: --verbose, -v, -v|verbose",
+      "name": "constant.other.flag.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)--?[a-zA-Z][a-zA-Z0-9\\-|]*(?=[\\s}\\]\\),;]|$)"
+    },
+
+    "op-cpath": {
+      "comment": "Op context path .word/word",
+      "name": "support.function.op-cpath.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)\\.[a-zA-Z_][a-zA-Z0-9\\-?!.*+<>=\\\\]*/[a-zA-Z_][a-zA-Z0-9\\-?!.*+<>=\\\\/]*(?=[\\s}\\]\\),;]|$)"
+    },
+
+    "op-words": {
+      "comment": "Op-word .word — method-style call on left value",
+      "name": "support.function.op.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)\\.[a-zA-Z_][a-zA-Z0-9\\-?!.*+<>=\\\\]*(?=[\\s}\\]\\),;]|$)"
+    },
+
+    "pipe-cpath": {
+      "comment": "Pipe context path |word/word",
+      "name": "support.function.pipe-cpath.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)\\|[a-zA-Z_][a-zA-Z0-9\\-?!.*+<>=\\\\]*/[a-zA-Z_][a-zA-Z0-9\\-?!.*+<>=\\\\/]*(?=[\\s}\\]\\),;]|$)"
+    },
+
+    "pipe-words": {
+      "comment": "Pipe-word |word — pipe function call",
+      "name": "support.function.pipe.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)\\|[a-zA-Z_~>=][a-zA-Z0-9\\-?!.*+<>=\\\\]*(?=[\\s}\\]\\),;]|$)"
+    },
+
+    "cpath-keywords": {
+      "comment": "Common context paths used as namespace access",
+      "name": "entity.name.namespace.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)(?:term|os|math|rye|config|tools|git|luhn-checksum)/[a-zA-Z_][a-zA-Z0-9\\-?!.*+<>=\\\\/]*(?=[\\s}\\]\\),;]|$)"
+    },
+
+    "context-paths": {
+      "comment": "Context path word/word — module/namespace access",
+      "name": "variable.other.cpath.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)[a-zA-Z_][a-zA-Z0-9\\-?!.*+<>=\\\\]*/[a-zA-Z_@][a-zA-Z0-9\\-?!.*+<>=\\\\/]*(?=[\\s}\\]\\),;]|$)"
+    },
+
+    "keywords-function-def": {
+      "comment": "Function definition keywords",
+      "name": "keyword.other.function-def.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)(?:fn|fn1|fnc|does|pfn|closure|fn\\\\cc|fn\\\\in|fn\\\\inside|fn\\\\spec\\?|fn\\\\body\\?|partial|method)(?=[\\s}\\]\\),;{]|$)"
+    },
+
+    "keywords-control-flow": {
+      "comment": "Control flow keywords",
+      "name": "keyword.control.flow.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)(?:if|either|switch|cases|choose|when|return|forever|forever\\\\with)(?=[\\s}\\]\\),;{]|$)"
+    },
+
+    "keywords-error-handling": {
+      "comment": "Error handling keywords",
+      "name": "keyword.control.error.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)(?:fail|failure|failure\\\\wrap|fix|fix\\\\either|fix\\\\else|fix\\\\continue|fix\\\\match|check|ensure|requires-one-of|disarm|try|try-all|try\\\\in|finally|retry|persist|timeout|continue|is-error|is-error-of-kind|is-failure|is-success|has-failed|error-kind\\?|cause\\?|status\\?|message\\?|details\\?)(?=[\\s}\\]\\),;{]|$)"
+    },
+
+    "keywords-context": {
+      "comment": "Context-related keywords",
+      "name": "keyword.other.context.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)(?:context|context\\\\pure|raw-context|isolate|private|private\\\\|extends|bind!|unbind|clone|clone\\\\|clone\\\\deep|do|do\\\\in|do\\\\inside|do\\\\inx|with|current|parent\\?|parent\\\\of|cc|ccp|ccb|mkcc|lc|lcp|lc\\\\|lcp\\\\|lc\\\\data|lc\\\\data\\\\|whereis|get|import|load|load\\\\mod|load\\\\live|load\\\\sig|use|rye)(?=[\\s}\\]\\),;{]|$)"
+    },
+
+    "keywords-iteration": {
+      "comment": "Iteration keywords",
+      "name": "keyword.control.iteration.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)(?:for|for\\\\pos|for\\\\idx|for\\\\|for\\\\kv|loop|while|until|walk|walk\\\\pos|walk\\\\idx|produce|produce\\\\while|produce\\\\|replicate|replicate\\\\idx|recur-if|recur-if\\\\1|recur-if\\\\2|recur-if\\\\3)(?=[\\s}\\]\\),;{]|$)"
+    },
+
+    "keywords-combinators": {
+      "comment": "Combinator keywords",
+      "name": "keyword.other.combinator.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)(?:pass|keep|wrap|apply|evals|evals\\\\with|on-change)(?=[\\s}\\]\\),;{]|$)"
+    },
+
+    "keywords-types": {
+      "comment": "Type and constructor keywords",
+      "name": "storage.type.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)(?:dict|list|table|vector|ref|deref|is-ref|secret|reveal|kind|assure-kind|complex|lazy)(?=[\\s}\\]\\),;{]|$)"
+    },
+
+    "keywords-other": {
+      "comment": "Other important keywords",
+      "name": "keyword.other.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)(?:var|set|unset!|val|change!|modify!|defer|defer\\\\|assert|assert\\\\display|doc!|doc\\?|doc\\\\of\\?|save\\\\current|save\\\\current\\\\secure|scmd|scmd\\\\capture)(?=[\\s}\\]\\),;{]|$)"
+    },
+
+    "builtins-collections": {
+      "comment": "Collection manipulation builtins",
+      "name": "support.function.collection.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)(?:map|map\\\\pos|map\\\\idx|filter|purge|purge!|seek|reduce|fold|fold\\\\do|partition|group|sort|sort!|sort\\\\by|sort\\\\by\\\\key|unique|reverse|reverse!|union|intersection|intersection\\\\by|difference|zip|transpose|unpack|sample|random|first|second|third|last|rest|rest\\\\from|tail|head|before-last|nth|range|concat|append!|append\\\\many!|update!|update\\\\with!|update\\\\pos!|remove-last!|change\\\\nth!|keys|values|peek|pop|pos|next|at|is-empty|length\\?|max-idx\\?)(?=[\\s}\\]\\),;]|$)"
+    },
+
+    "builtins-strings": {
+      "comment": "String manipulation builtins",
+      "name": "support.function.string.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)(?:trim|trim\\\\|trim\\\\right|trim\\\\left|replace|substring|contains|contains\\?|has-suffix|has-prefix|index\\?|position\\?|split|split\\\\quoted|split\\\\many|split\\\\every|join|join\\\\with|capitalize|lower|upper|concat3|space|ln|encode-to\\\\base64|decode\\\\base64|regexp|match|submatch|find-all)(?=[\\s}\\]\\),;]|$)"
+    },
+
+    "builtins-printing": {
+      "comment": "Printing and display builtins",
+      "name": "support.function.printing.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)(?:print|print2|prn|prn2|prns|prns2|prnf|printf|prnv|printv|print\\\\ssv|print\\\\csv|probe|probe\\\\|inspect|format|embed|display|display\\\\custom|display-selection|display-date-input|esc|esc-val|capture-stdout|mold|mold\\\\nowrap|mold\\\\unwrap|dump|newline|tab|input)(?=[\\s}\\]\\),;]|$)"
+    },
+
+    "builtins-conversion": {
+      "comment": "Type conversion builtins",
+      "name": "support.function.conversion.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)(?:to-integer|to-decimal|to-string|to-uri|to-file|to-char|to-block|to-context|to-word|to-json|to-table|to-upper|type\\?|types\\?|kind\\?|is-string|is-integer|is-decimal|is-number|is-positive|is-zero|is-even|is-odd|is-empty|is-multiple-of|parse-json|autotype)(?=[\\s}\\]\\),;]|$)"
+    },
+
+    "builtins-math": {
+      "comment": "Math builtins",
+      "name": "support.function.math.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)(?:inc|dec|inc!|dec!|negate|invert|sign|mod|sum|mul|avg|max|min|max\\\\by|min\\\\by|avg\\\\by|sum\\\\by|clamp|abs|random\\\\integer|random\\\\decimal|add|addnums|normalize|std-deviation|cosine-similarity|correlation|dot-product|euclidean-distance|mean-vectors|unit-vector|project-vector|reject-vector)(?=[\\s}\\]\\),;]|$)"
+    },
+
+    "builtins-io": {
+      "comment": "IO and OS builtins",
+      "name": "support.function.io.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)(?:Read|Write|Write\\*|Open|Open\\\\append|Close|Does-exist|File-ext\\?|Read\\\\lines|Read\\\\string|ls|cd|cwd\\?|mkdir)(?=[\\s}\\]\\),;]|$)"
+    },
+
+    "builtins-time": {
+      "comment": "Time-related builtins",
+      "name": "support.function.time.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)(?:now|date|datetime|sleep|time-it|format-date|format-imap-date|year\\?|month\\?|day\\?|hour\\?|minute\\?|second\\?|weekday\\?|yearday\\?|date\\?|time\\?|days-in-month\\?|unix-micro\\?|unix-milli\\?|seconds|minutes|hours|days|weeks|thousands|millions)(?=[\\s}\\]\\),;]|$)"
+    },
+
+    "builtins-testing": {
+      "comment": "Testing framework builtins",
+      "name": "support.function.testing.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)(?:section|group|equal|error|stdout)(?=[\\s}\\]\\),;{\"]|$)"
+    },
+
+    "builtins-other": {
+      "comment": "Other builtins",
+      "name": "support.function.other.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)(?:collect|collect!|collected\\?|collector|needs|eyr|eyr\\\\full|eyr\\\\loop|eyr\\\\clear|calc|match|match-block|validate|validate>ctx|cmd|Run|Request|Call|Header!|Serve|Handle|http-server|Search-emails|Get-emails\\*|Select-folder|imap-client|openai|Chat\\\\opts|Chat\\\\stream|docker-client|Containers\\?|Running-containers\\?|Logs\\?|Logs\\\\tail\\?|Start|Stop|Restart|Kill|Kill\\\\signal|Inspect\\?|Reader|Get|spinner|inline-app|load-avg\\?|markdown->html|do-sxml|do-markdown|Attr\\?|Untracked-files\\?|Load\\\\csv|columns\\?|where-contains|where-equal|where-match|where-greater|where-lesser|where-between|order-by|add-col!|add-indexes!)(?=[\\s}\\]\\),;]|$)"
+    },
+
+    "operators": {
+      "patterns": [
+        {
+          "comment": "Pipe operator (standalone)",
+          "name": "keyword.operator.pipe.rye",
+          "match": "(?<=[\\s}\\]\\)]|^)\\|(?=[\\s{\\[\\(]|$)"
+        },
+        {
+          "comment": "Arrow and comparison operators",
+          "name": "keyword.operator.comparison.rye",
+          "match": "(?<=[\\s{\\[\\(,]|^)(?:->|<-|~>|<~|=>|>=|<=|>>|<<|\\.\\.|\\.\\[|\\.\\(|\\.\\{)(?=[\\s}\\]\\),;]|$)"
+        },
+        {
+          "comment": "Arithmetic operators",
+          "name": "keyword.operator.arithmetic.rye",
+          "match": "(?<=[\\s{\\[\\(,]|^)(?:\\+\\+|//|[+\\-*/%=<>@~])(?=[\\s}\\]\\),;]|$)"
+        },
+        {
+          "comment": "Logical operators",
+          "name": "keyword.operator.logical.rye",
+          "match": "(?<=[\\s{\\[\\(,]|^)(?:and|or|xor|not)(?=[\\s}\\]\\),;]|$)"
+        }
+      ]
+    },
+
+    "comma": {
+      "comment": "Comma expression separator",
+      "name": "punctuation.separator.comma.rye",
+      "match": ","
+    },
+
+    "void": {
+      "comment": "Void/placeholder underscore",
+      "name": "constant.language.void.rye",
+      "match": "(?<=[\\s{\\[\\(,]|^)_(?=[\\s}\\]\\),;]|$)"
+    },
+
+    "punctuation": {
+      "patterns": [
+        {
+          "name": "punctuation.definition.block.begin.rye",
+          "match": "\\{"
+        },
+        {
+          "name": "punctuation.definition.block.end.rye",
+          "match": "\\}"
+        },
+        {
+          "name": "punctuation.definition.bblock.begin.rye",
+          "match": "\\["
+        },
+        {
+          "name": "punctuation.definition.bblock.end.rye",
+          "match": "\\]"
+        },
+        {
+          "name": "punctuation.definition.group.begin.rye",
+          "match": "\\("
+        },
+        {
+          "name": "punctuation.definition.group.end.rye",
+          "match": "\\)"
+        }
+      ]
+    }
+
+  }
+}

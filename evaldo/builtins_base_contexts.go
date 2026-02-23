@@ -40,7 +40,7 @@ var builtins_contexts = map[string]*env.Builtin{
 				rctx := ps.Ctx
 				ps.Ctx = ctx
 				ps.Ser = ser
-				return *rctx // return the resulting context
+				return rctx // return the resulting context (pointer)
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "raw-context")
 			}
@@ -79,7 +79,7 @@ var builtins_contexts = map[string]*env.Builtin{
 				rctx.Kind = *env.NewWord(-1)
 				ps.Ctx = ctx
 				ps.Ser = ser
-				return *rctx // return the resulting context
+				return rctx // return the resulting context (pointer)
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "isolate")
 			}
@@ -115,7 +115,7 @@ var builtins_contexts = map[string]*env.Builtin{
 				rctx := ps.Ctx
 				ps.Ctx = ctx
 				ps.Ser = ser
-				return *rctx // return the resulting context
+				return rctx // return the resulting context (pointer)
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "context")
 			}
@@ -150,7 +150,7 @@ var builtins_contexts = map[string]*env.Builtin{
 				rctx := ps.Ctx
 				ps.Ctx = ctx
 				ps.Ser = ser
-				return *rctx // return the resulting context
+				return rctx // return the resulting context (pointer)
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "context\\pure")
 			}
@@ -264,7 +264,7 @@ var builtins_contexts = map[string]*env.Builtin{
 					rctx := ps.Ctx
 					ps.Ctx = ctx
 					ps.Ser = ser
-					return *rctx // return the resulting context
+					return rctx // return the resulting context (pointer)
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "extends")
 				}
@@ -744,7 +744,7 @@ var builtins_contexts = map[string]*env.Builtin{
 						rctx := ps.Ctx
 						ps.Ctx = origCtx
 						ps.Ser = ser
-						return *rctx // return the resulting cloned context
+						return rctx // return the resulting cloned context (pointer)
 					}
 					return MakeArgError(ps, 1, []env.Type{env.ContextType}, "clone\\")
 				default:
@@ -769,7 +769,7 @@ var builtins_contexts = map[string]*env.Builtin{
 						rctx := ps.Ctx
 						ps.Ctx = origCtx
 						ps.Ser = ser
-						return *rctx // return the resulting cloned context
+						return rctx // return the resulting cloned context (pointer)
 					}
 					return MakeArgError(ps, 1, []env.Type{env.ContextType}, "clone\\")
 				default:

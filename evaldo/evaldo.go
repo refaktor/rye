@@ -495,6 +495,10 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 		object, found := currCtx.Get(currWord.Index)
 		if found && word.Cnt > i {
 			switch swObj := object.(type) {
+			case *env.RyeCtx:
+				currCtx = swObj
+				i += 1
+				goto gogo1
 			case env.RyeCtx:
 				currCtx = &swObj
 				i += 1
@@ -579,6 +583,10 @@ func findWordValueWithFailureInfo(ps *env.ProgramState, word1 env.Object) (bool,
 		}
 		if found && word.Cnt > i {
 			switch swObj := object.(type) {
+			case *env.RyeCtx:
+				currCtx = swObj
+				i += 1
+				goto gogo1
 			case env.RyeCtx:
 				currCtx = &swObj
 				i += 1
@@ -887,6 +895,7 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 
 	env0 := ps.Ctx // store reference to current env in local
 	var fnCtx *env.RyeCtx
+	fnCtxFromPool := false // Track if fnCtx was obtained from pool
 	if ctx != nil { // called via contextpath and this is the context
 		//		fmt.Println("if 111")
 		if fn.Pure {
@@ -895,22 +904,30 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 			fnCtx = envPool.Get().(*env.RyeCtx)
 			fnCtx.Clear()
 			fnCtx.Parent = ps.PCtx
+			fnCtxFromPool = true
 			// fnCtx = env.NewEnv(ps.PCtx)
 		} else {
 			if fn.Ctx != nil { // if context was defined at definition time, pass it as parent.
 				if fn.InCtx {
 					fnCtx = fn.Ctx
+					// fnCtxFromPool stays false - don't return to pool
 				} else {
-					fn.Ctx.Parent = ctx
+					// Only set parent if fn.Ctx is NOT the same as ctx
+					// (prevents circular reference when closure is stored in same context it captures)
+					if fn.Ctx != ctx {
+						fn.Ctx.Parent = ctx
+					}
 					fnCtx = envPool.Get().(*env.RyeCtx)
 					fnCtx.Clear()
 					fnCtx.Parent = fn.Ctx
+					fnCtxFromPool = true
 					// fnCtx = env.NewEnv(fn.Ctx)
 				}
 			} else {
 				fnCtx = envPool.Get().(*env.RyeCtx)
 				fnCtx.Clear()
 				fnCtx.Parent = ctx
+				fnCtxFromPool = true
 				// fnCtx = env.NewEnv(ctx)
 			}
 		}
@@ -922,19 +939,26 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 			fnCtx = envPool.Get().(*env.RyeCtx)
 			fnCtx.Clear()
 			fnCtx.Parent = ps.Ctx
+			fnCtxFromPool = true
 			// fnCtx = env.NewEnv(ps.PCtx)
 		} else {
 			if fn.Ctx != nil { // if context was defined at definition time, pass it as parent.
-				// Q: Would we want to pass it directly at any point?
-				//    Maybe to remove need of creating new contexts, for reuse, of to be able to modify it?
-				fnCtx = envPool.Get().(*env.RyeCtx)
-				fnCtx.Clear()
-				fnCtx.Parent = fn.Ctx
-				// fnCtx = env.NewEnv(fn.Ctx)
+				if fn.InCtx {
+					// fn\inside: use fn.Ctx directly, don't create child context
+					fnCtx = fn.Ctx
+					// fnCtxFromPool stays false - don't return to pool
+				} else {
+					fnCtx = envPool.Get().(*env.RyeCtx)
+					fnCtx.Clear()
+					fnCtx.Parent = fn.Ctx
+					fnCtxFromPool = true
+					// fnCtx = env.NewEnv(fn.Ctx)
+				}
 			} else {
 				fnCtx = envPool.Get().(*env.RyeCtx)
 				fnCtx.Clear()
 				fnCtx.Parent = env0
+				fnCtxFromPool = true
 				// fnCtx = env.NewEnv(env0)
 			}
 		}
@@ -1038,8 +1062,10 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 	ps.BlockLine = blockLine
 	ps.ReturnFlag = false
 
-	// Don't return closure contexts to the pool to prevent context reuse issues
-	if !fnCtx.IsClosure {
+	// Only return to pool if:
+	// 1. fnCtx was obtained from pool (not a direct reference like fn\inside)
+	// 2. fnCtx is not a closure context (closures need their context preserved)
+	if fnCtxFromPool && !fnCtx.IsClosure {
 		// Observers are now automatically cleaned up with the context
 		envPool.Put(fnCtx)
 	}

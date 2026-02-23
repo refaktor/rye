@@ -1789,12 +1789,12 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Takes a Context and a Block. It Does a block inside a given Context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch ctx := arg0.(type) {
-			case env.RyeCtx:
+			case *env.RyeCtx:
 				switch bloc := arg1.(type) {
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlockInCtxInj(ps, &ctx, nil, false)
+					EvalBlockInCtxInj(ps, ctx, nil, false)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "do\\inside")
 					ps.Ser = ser
 					return ps.Res
@@ -1839,13 +1839,13 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Takes a Context and a Block. It Does a block in current context but with parent a given Context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch ctx := arg0.(type) {
-			case env.RyeCtx:
+			case *env.RyeCtx:
 				switch bloc := arg1.(type) {
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
 					// we take ARG CTX
-					tempCtx := &ctx
+					tempCtx := ctx
 					for {
 						// fmt.Println("UP ->")
 						// do we change parents globally (and we have to fix them back) or just in local copy of a value? check
@@ -1869,7 +1869,7 @@ var builtins = map[string]*env.Builtin{
 					// }
 					// set argument context as parent
 					temp := ps.Ctx.Parent
-					ps.Ctx.Parent = &ctx
+					ps.Ctx.Parent = ctx
 					EvalBlock(ps)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "do\\in")
 					// if temp != nil {
@@ -1905,13 +1905,13 @@ var builtins = map[string]*env.Builtin{
 		Doc:   "Takes a Context and a Block. It Does a block in current context but with parent a given Context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch ctx := arg0.(type) {
-			case env.RyeCtx:
+			case *env.RyeCtx:
 				switch bloc := arg1.(type) {
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
 					// we take ARG CTX
-					// tempCtx := &ctx
+					// tempCtx := ctx
 					// fmt.Println("UP ->")
 					// do we change parents globally (and we have to fix them back) or just in local copy of a value? check
 					// If it's parent is the same as current context is
@@ -1923,7 +1923,7 @@ var builtins = map[string]*env.Builtin{
 					// }
 					// set argument context as parent
 					temp := ps.Ctx.Parent
-					ps.Ctx.Parent = &ctx
+					ps.Ctx.Parent = ctx
 					EvalBlock(ps)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "for\\kv")
 					// if temp != nil {
