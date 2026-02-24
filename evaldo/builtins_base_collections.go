@@ -3337,7 +3337,7 @@ var builtins_collection = map[string]*env.Builtin{
 				res := make([]env.Object, 0)
 				for ps.Ser.Pos() < ps.Ser.Len() {
 					// ps, injnow = EvalExpressionInj(ps, inj, injnow)
-					EvalExpression_CollectArg(ps, false)
+					EvalExpression_CollectArg(ps, false, false)
 					if ps.ReturnFlag || ps.ErrorFlag {
 						return ps.Res
 					}
