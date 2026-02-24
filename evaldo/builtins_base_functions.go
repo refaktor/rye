@@ -312,10 +312,10 @@ var builtins_functions = map[string]*env.Builtin{
 					return MakeBuiltinError(ps, doc, "fn")
 				}
 				switch ctx := arg1.(type) {
-				case env.RyeCtx:
+				case *env.RyeCtx:
 					switch body := arg2.(type) {
 					case env.Block:
-						return *env.NewFunctionC(args, body, &ctx, false, false, doc)
+						return *env.NewFunctionC(args, body, ctx, false, false, doc)
 					default:
 						ps.ErrorFlag = true
 						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "fn\\in")
@@ -359,14 +359,6 @@ var builtins_functions = map[string]*env.Builtin{
 					switch body := arg2.(type) {
 					case env.Block:
 						return *env.NewFunctionC(args, body, ctx, false, true, doc)
-					default:
-						ps.ErrorFlag = true
-						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "fn\\inside")
-					}
-				case env.RyeCtx:
-					switch body := arg2.(type) {
-					case env.Block:
-						return *env.NewFunctionC(args, body, &ctx, false, true, doc)
 					default:
 						ps.ErrorFlag = true
 						return MakeArgError(ps, 3, []env.Type{env.BlockType}, "fn\\inside")

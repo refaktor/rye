@@ -399,6 +399,36 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 			// injVal := ps.Res // Use current result as argument
 			// CallFunctionWithArgs(fn, ps, nil, injVal)
 			// return ps.Res
+		} else if block.Mode == 7 {
+			// LIST_BBLOCK l[ ] - evaluates expressions and creates a List
+			ser := ps.Ser
+			ps.Ser = block.Series
+			res := make([]any, 0)
+			for ps.Ser.Pos() < ps.Ser.Len() {
+				EvalExpression_CollectArg(ps, false)
+				if ps.ReturnFlag || ps.ErrorFlag {
+					ps.Ser = ser
+					return
+				}
+				res = append(res, ps.Res)
+			}
+			ps.Ser = ser
+			ps.Res = *env.NewList(res)
+		} else if block.Mode == 9 {
+			// DICT_BBLOCK d[ ] - evaluates expressions and creates a Dict
+			ser := ps.Ser
+			ps.Ser = block.Series
+			res := make([]env.Object, 0)
+			for ps.Ser.Pos() < ps.Ser.Len() {
+				EvalExpression_CollectArg(ps, false)
+				if ps.ReturnFlag || ps.ErrorFlag {
+					ps.Ser = ser
+					return
+				}
+				res = append(res, ps.Res)
+			}
+			ps.Ser = ser
+			ps.Res = env.NewDictFromSeries(*env.NewTSeries(res), ps.Idx)
 		}
 	case env.TagwordType:
 		ps.Res = *env.NewWord(object.(env.Tagword).Index)
@@ -495,6 +525,10 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 		object, found := currCtx.Get(currWord.Index)
 		if found && word.Cnt > i {
 			switch swObj := object.(type) {
+			case *env.RyeCtx:
+				currCtx = swObj
+				i += 1
+				goto gogo1
 			case env.RyeCtx:
 				currCtx = &swObj
 				i += 1
@@ -579,12 +613,47 @@ func findWordValueWithFailureInfo(ps *env.ProgramState, word1 env.Object) (bool,
 		}
 		if found && word.Cnt > i {
 			switch swObj := object.(type) {
+			case *env.RyeCtx:
+				currCtx = swObj
+				i += 1
+				goto gogo1
 			case env.RyeCtx:
 				currCtx = &swObj
 				i += 1
 				goto gogo1
 			case env.Dict:
-				return found, *env.NewString("Now word value 2!!"), currCtx, ""
+				// Handle dict path traversal
+				currDict := swObj
+				for word.Cnt > i {
+					i += 1
+					keyWord := word.GetWordNumber(i)
+					keyStr := ps.Idx.GetWord(keyWord.Index)
+					// Look up in dict
+					if val, ok := currDict.Data[keyStr]; ok {
+						object = env.ToRyeValue(val)
+						// If more path segments, check what we got
+						if word.Cnt > i {
+							switch nextObj := object.(type) {
+							case env.Dict:
+								currDict = nextObj
+								continue
+							case *env.RyeCtx:
+								currCtx = nextObj
+								i += 1
+								goto gogo1
+							case env.RyeCtx:
+								currCtx = &nextObj
+								i += 1
+								goto gogo1
+							default:
+								return false, nil, currCtx, keyStr + " is not a dict or context"
+							}
+						}
+					} else {
+						return false, nil, currCtx, keyStr + " not found in dict"
+					}
+				}
+				return true, object, currCtx, ""
 			}
 		}
 		return found, object, currCtx, ""
@@ -887,6 +956,7 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 
 	env0 := ps.Ctx // store reference to current env in local
 	var fnCtx *env.RyeCtx
+	fnCtxFromPool := false // Track if fnCtx was obtained from pool
 	if ctx != nil { // called via contextpath and this is the context
 		//		fmt.Println("if 111")
 		if fn.Pure {
@@ -895,22 +965,30 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 			fnCtx = envPool.Get().(*env.RyeCtx)
 			fnCtx.Clear()
 			fnCtx.Parent = ps.PCtx
+			fnCtxFromPool = true
 			// fnCtx = env.NewEnv(ps.PCtx)
 		} else {
 			if fn.Ctx != nil { // if context was defined at definition time, pass it as parent.
 				if fn.InCtx {
 					fnCtx = fn.Ctx
+					// fnCtxFromPool stays false - don't return to pool
 				} else {
-					fn.Ctx.Parent = ctx
+					// Only set parent if fn.Ctx is NOT the same as ctx
+					// (prevents circular reference when closure is stored in same context it captures)
+					if fn.Ctx != ctx {
+						fn.Ctx.Parent = ctx
+					}
 					fnCtx = envPool.Get().(*env.RyeCtx)
 					fnCtx.Clear()
 					fnCtx.Parent = fn.Ctx
+					fnCtxFromPool = true
 					// fnCtx = env.NewEnv(fn.Ctx)
 				}
 			} else {
 				fnCtx = envPool.Get().(*env.RyeCtx)
 				fnCtx.Clear()
 				fnCtx.Parent = ctx
+				fnCtxFromPool = true
 				// fnCtx = env.NewEnv(ctx)
 			}
 		}
@@ -922,19 +1000,26 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 			fnCtx = envPool.Get().(*env.RyeCtx)
 			fnCtx.Clear()
 			fnCtx.Parent = ps.Ctx
+			fnCtxFromPool = true
 			// fnCtx = env.NewEnv(ps.PCtx)
 		} else {
 			if fn.Ctx != nil { // if context was defined at definition time, pass it as parent.
-				// Q: Would we want to pass it directly at any point?
-				//    Maybe to remove need of creating new contexts, for reuse, of to be able to modify it?
-				fnCtx = envPool.Get().(*env.RyeCtx)
-				fnCtx.Clear()
-				fnCtx.Parent = fn.Ctx
-				// fnCtx = env.NewEnv(fn.Ctx)
+				if fn.InCtx {
+					// fn\inside: use fn.Ctx directly, don't create child context
+					fnCtx = fn.Ctx
+					// fnCtxFromPool stays false - don't return to pool
+				} else {
+					fnCtx = envPool.Get().(*env.RyeCtx)
+					fnCtx.Clear()
+					fnCtx.Parent = fn.Ctx
+					fnCtxFromPool = true
+					// fnCtx = env.NewEnv(fn.Ctx)
+				}
 			} else {
 				fnCtx = envPool.Get().(*env.RyeCtx)
 				fnCtx.Clear()
 				fnCtx.Parent = env0
+				fnCtxFromPool = true
 				// fnCtx = env.NewEnv(env0)
 			}
 		}
@@ -1038,8 +1123,10 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 	ps.BlockLine = blockLine
 	ps.ReturnFlag = false
 
-	// Don't return closure contexts to the pool to prevent context reuse issues
-	if !fnCtx.IsClosure {
+	// Only return to pool if:
+	// 1. fnCtx was obtained from pool (not a direct reference like fn\inside)
+	// 2. fnCtx is not a closure context (closures need their context preserved)
+	if fnCtxFromPool && !fnCtx.IsClosure {
 		// Observers are now automatically cleaned up with the context
 		envPool.Put(fnCtx)
 	}
@@ -1286,7 +1373,10 @@ func DetermineContext(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx) *e
 			fnCtx = env.NewEnv(ps.PCtx)
 		} else {
 			if fn.Ctx != nil { // if context was defined at definition time, pass it as parent.
-				fn.Ctx.Parent = ctx
+				// Prevent circular parent reference
+				if fn.Ctx != ctx {
+					fn.Ctx.Parent = ctx
+				}
 				fnCtx = env.NewEnv(fn.Ctx)
 			} else {
 				fnCtx = env.NewEnv(ctx)

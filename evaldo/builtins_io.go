@@ -979,16 +979,10 @@ var Builtins_io = map[string]*env.Builtin{
 				// Allow writing to stdout/stderr but block writing to files
 				switch ww := arg0.(type) {
 				case env.Native:
-					_, ok := ww.Value.(*bufio.Writer)
+					_, ok := ww.Value.(io.Writer)
 					if !ok {
-						return MakeBuiltinError(ps, "Native not io.File", "writer//Write\\string")
+						return MakeBuiltinError(ps, "Native not io.Writer", "writer//Write")
 					}
-
-					// Check if the writer is stdout or stderr
-					// if writer != os.Stdout && writer != os.Stderr {
-					// 	ps.FailureFlag = true
-					// 	return MakeBuiltinError(ps, "write operation blocked by readonly seccomp profile", "writer//Write\\string")
-					// }
 				}
 			}
 
@@ -996,22 +990,30 @@ var Builtins_io = map[string]*env.Builtin{
 			case env.String:
 				switch ww := arg0.(type) {
 				case env.Native:
-					writer, ok := ww.Value.(*bufio.Writer)
-					if !ok {
-						return MakeBuiltinError(ps, "Native not io.File", "writer//Write\\string")
+					// Try bufio.Writer first for WriteString support
+					if bw, ok := ww.Value.(*bufio.Writer); ok {
+						_, err := bw.WriteString(s.Value)
+						if err != nil {
+							return MakeBuiltinError(ps, "Error at write: "+err.Error(), "writer//Write")
+						}
+						return arg0
 					}
-					_, err := writer.WriteString(s.Value)
-					if err != nil {
-						return MakeBuiltinError(ps, "Error at write: "+err.Error(), "writer//Write\\string")
+					// Fall back to io.Writer interface (handles *os.File, etc.)
+					if w, ok := ww.Value.(io.Writer); ok {
+						_, err := io.WriteString(w, s.Value)
+						if err != nil {
+							return MakeBuiltinError(ps, "Error at write: "+err.Error(), "writer//Write")
+						}
+						return arg0
 					}
-					return arg0
+					return MakeBuiltinError(ps, "Native not io.Writer", "writer//Write")
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "writer//Write\\string")
+					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "writer//Write")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "writer//Write\\string")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "writer//Write")
 			}
 		},
 	},

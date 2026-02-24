@@ -1,0 +1,31 @@
+{
+  "name": "rye-lang",
+  "displayName": "Rye Language",
+  "description": "Syntax highlighting for the Rye programming language",
+  "version": "0.1.0",
+  "publisher": "Ryelangorg",
+  "repository": "https://github.com/refaktor/rye",
+  "engines": {
+    "vscode": "^1.54.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "rye",
+      "aliases": ["Rye", "rye", "ryelang"],
+      "extensions": [".rye"],
+      "configuration": "./language-configuration.json",
+      "icon": {
+        "light": "./icons/rye-light.png",
+        "dark": "./icons/rye-dark.png"
+      }
+    }],
+    "grammars": [{
+      "language": "rye",
+      "scopeName": "source.rye",
+      "path": "./syntaxes/rye.tmLanguage.json"
+    }]
+  }
+}

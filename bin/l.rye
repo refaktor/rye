@@ -12,7 +12,7 @@
 ;
 ; Environment Variables Required:
 ;   RYE_HOME       - Path to the Rye source directory
-; TODO:  RYE_HOME_fyne  - Path to the Rye Fyne source directory (for Fyne builds)
+;   RYE_FYNE_HOME  - Path to the Rye Fyne source directory (for Fyne builds)
 ;
 ; Current limitations:
 ; * Work in progress
@@ -24,17 +24,17 @@
 
 rye .Args\raw? |load :args
 
-version: "0.5.1"
+version: "0.5.2"
 
 ; Helper functions
 check-env: fn { var-name } { .os/env? |is-success }
 get-rye-home: does { os/env? "RYE_HOME" |fix { "" } }
-; get-rye-home-fyne: does { os/env? "RYE_HOME_fyne" }
+get-rye-home-fyne: does { os/env? "RYE_FYNE_HOME" |fix { "" } }
 
 ; Validate environment variables and print helpful messages
 validate-env: fn { need-fyne } {
 	rye-home: get-rye-home
-	; rye-home-fyne: get-rye-home-fyne
+	rye-home-fyne: get-rye-home-fyne
 	
 	var 'errors 0
 	
@@ -43,10 +43,10 @@ validate-env: fn { need-fyne } {
 		errors:: errors + 1
 	}
 	
-	; if all { need-fyne rye-home-fyne = "" } {
-	;	print "❌ RYE_HOME_fyne is not set (required for Fyne builds)"
-	;	errors: errors + 1
-	; }
+	if all { need-fyne rye-home-fyne = "" } {
+		print "❌ RYE_FYNE_HOME is not set (required for Fyne builds)"
+		errors:: errors + 1
+	}
 	
 	if errors > 0 {
 		print "\n💡 Run 'rye l.rye setup' to see how to configure these variables."
@@ -63,16 +63,21 @@ default-config: context {
 	icon: "Icon.png"
 }
 
+
+
 ; Helper functions for better UX
 print-header: does {
-    print "┌─────────────────────────────────────────────--"
-    print "│              ___      ____           "
-    print "│              |__) \ / |__            "
-    print "│        local |  \  |  |___           "
-    print "│                                        "
-    print "│  Local Rye Binary Builder v" ++ version ++ "       "
-    print "└─────────────────────────────────────────────-"
-}
+	print ""
+	print "    local "
+	print "   ██████╗ ██╗   ██╗███████╗   \e[38;5;214m██ █\e[38;5;208m█  \e[38;5;214m ██ █\e[38;5;208m█\e[0m"
+	print "   ██╔══██╗╚██╗ ██╔╝██╔════╝  \e[38;5;214m██ █\e[38;5;208m█  \e[38;5;214m██ █\e[38;5;208m█\e[0m"
+	print "   ██████╔╝ ╚████╔╝ █████╗    \e[38;5;214m██ █\e[38;5;208m█ \e[38;5;214m██ █\e[38;5;208m█\e[0m"
+	print "   ██╔══██╗  ╚██╔╝  ██╔══╝      \e[38;5;214m█     █\e[0m"
+	print "   ██║  ██║   ██║   ███████╗    \e[38;5;214m█    █\e[0m"
+	print "   ╚═╝  ╚═╝   ╚═╝   ╚══════╝     \e[38;5;214m█   █\e[0m"
+	print "  Local Binary Builder v" ++ version
+	print "└────────────────────────────────────────────────────────────-"
+}	
 
 print-help: does {
 	print-header
@@ -81,9 +86,9 @@ print-help: does {
 	print "\nCommands:"
 	print "  build [tags]          - Build a local Rye interpreter with modules from lrye.mod"
 	print "                          Optional tags parameter for additional build tags"
-	print "  TODO: build-fyne [tags]     - Build a Fyne package with modules from lrye.mod"
+	print "  build-fyne [tags]     - Build a Fyne package with modules from lrye.mod"
 	print "                          Optional tags parameter for additional build tags"
-	print "  TODO: build-fyne-apk [tags] - Build a Fyne package for Android with modules from lrye.mod"
+	print "  build-fyne-apk [tags] - Build a Fyne package for Android with modules from lrye.mod"
 	print "                          Optional tags parameter for additional build tags"
 	print "  setup                 - Show environment variable configuration help"
 	print "  install               - Install the local Rye interpreter (not yet implemented)"
@@ -91,13 +96,13 @@ print-help: does {
 	print "  help                  - Display this help information"
 	print "\nExamples:"
 	print "  rye . build               # Build with moexistsdules from lrye.mod"
-	;print "  rye . build-fyne embed_main      # Build Fyne with embed_main tag"
-	;print "  rye . build-fyne-apk embed_main  # Build Fyne APK for Android"
+	print "  rye . build-fyne embed_main      # Build Fyne with embed_main tag"
+	print "  rye . build-fyne-apk embed_main  # Build Fyne APK for Android"
 	print "\nModule Configuration:"
 	print "  Create a lrye.mod file in your project directory with a list of modules"
 	print "  Each module will be prefixed with 'b_' automatically"
 	print "  Example lrye.mod content: tiny http bleve"
-	; print "\n  Optional configuration in lrye.mod (as context):"
+	;print "\n  Optional configuration in lrye.mod (as context):"
 	;print "    config: context {"
 	;print "      app-id: \"com.example.myapp\""
 	;print "      app-version: \"1.0.0\""
@@ -105,12 +110,47 @@ print-help: does {
 	;print "    }"
 	print "\nEnvironment Variables:"
 	print "  RYE_HOME       - Path to the Rye source directory (required)"
-	;print "  RYE_HOME-fyne  - Path to the Rye Fyne source directory (for Fyne builds)"
+	print "  RYE_FYNE_HOME  - Path to the Rye Fyne source directory (for Fyne builds)"
 }
 
 print-version: does {
 	print-header
 	print "\nrye l.rye version: " ++ version
+}
+
+; Helper function to ensure rye-fyne go.mod has a replace directive
+; pointing github.com/refaktor/rye to the local RYE_HOME
+ensure-rye-replace: fn { } {
+	rye-home: get-rye-home
+	rye-fyne-home: get-rye-home-fyne |to-string
+	
+	gomod-path: rye-fyne-home ++ "/go.mod"
+	
+	; Read the go.mod file
+	Open to-file gomod-path
+	|fix\either
+	{
+		print "❌ Could not open " ++ gomod-path
+		return false
+	}
+	{ .Read } :gomod-content
+	
+	; Check if there's already a replace for github.com/refaktor/rye pointing to local path
+	either gomod-content .contains rye-home {
+		print "✅ go.mod already has replace directive pointing to local Rye (" ++ rye-home ++ ")"
+		true
+	} {
+		print "⚙️  Adding replace directive: github.com/refaktor/rye => " ++ rye-home
+		result: scmd join [ "cd " rye-fyne-home " && go mod edit -replace github.com/refaktor/rye=" rye-home ]
+		either result > 0 {
+			print "❌ Failed to add replace directive"
+			print result
+			false
+		} {
+			print "✅ Replace directive added to " ++ gomod-path
+			true
+		}
+	}
 }
 
 ; Helper function to load modules from lrye.mod
@@ -123,7 +163,7 @@ load-mod-file: fn { } {
 		print "Please create lrye.mod file and list modules in the format: tiny http bleve"
 		exit 1
 	}
-	{ .Read-all }
+	{ .Read }
 	|load :mod-data
 	
 	if mod-data .length? = 0 {
@@ -152,8 +192,8 @@ get-embed-command: fn { tags } {
 			print "Please create lrye.files file and list files in the format: %main.rye %lib.rye"
 			{ %main.rye }
 		}
-		{ .Read-all }
-		|load :files-data
+		{ .Read |load }
+		:files-data
 		|for { ::f
 			; Check if main.rye exists in current directory (exists? returns 1 if exists, 0 if not)
 			.os/does-exist |either {
@@ -197,9 +237,16 @@ build: fn { tags } {
 	print join [ "\nBuild completed. You can use binary ./" out " to run it." ]
 }
 
+; NEEDS RYE_FYNE_HOME ... (name better)
+; Needs rye.fyne go.mod a replace to local rye not github rye for building to work 
+; result is built in RYH_FYNE_HOME ... fix that too
+
 build\fyne: fn { tags } {
 	print-header
 	print "\nBuilding Fyne package with modules:"
+	
+	; Ensure go.mod has replace directive for local Rye
+	ensure-rye-replace |^check { return 0 }
 	
 	load-mod-file :modules
 	modules |^check { return 0 }
@@ -213,7 +260,35 @@ build\fyne: fn { tags } {
 	
 	var 'command join { 
 		cp-embed 
-		` a=$PWD ; cd $RYE_HOME_fyne ; fyne package -icon ` ++ default-config/icon 
+		` a=$PWD ; cd $RYE_FYNE_HOME ; fyne build -os linux `
+		++ ` -tags "` ++ modules ++ " " ++ build-tags `" -o $a/main ; cd "$a"` 
+	}
+	
+	run-build-command command
+	
+	print "\nFyne package build completed."
+}
+
+package\fyne: fn { tags } {
+	print-header
+	print "\nBuilding Fyne package with modules:"
+	
+	; Ensure go.mod has replace directive for local Rye
+	ensure-rye-replace |^check { return 0 }
+	
+	load-mod-file :modules
+	modules |^check { return 0 }
+	print modules
+	
+	cp-embed: get-embed-command tags
+	cp-embed |^check { return 0 }
+	
+	; Use tags parameter (default to embed_main if empty)
+	build-tags: either tags = "" { "embed_main" "" } { tags }
+	
+	var 'command join { 
+		cp-embed 
+		` a=$PWD ; cd $RYE_FYNE_HOME ; fyne package -icon ` ++ default-config/icon 
 		++ ` -appVersion ` ++ default-config/app-version 
 		++ ` -tags "` ++ modules ++ " " ++ build-tags `" ; cd "$a"` 
 	}
@@ -223,9 +298,12 @@ build\fyne: fn { tags } {
 	print "\nFyne package build completed."
 }
 
-build\fyne\apk: fn { tags } {
+package\fyne\apk: fn { tags } {
 	print-header
 	print "\nBuilding Fyne package for Android with modules:"
+	
+	; Ensure go.mod has replace directive for local Rye
+	ensure-rye-replace |^check { return 0 }
 	
 	load-mod-file :modules
 	modules |^check { return 0 }
@@ -239,7 +317,7 @@ build\fyne\apk: fn { tags } {
 	
 	var 'command join { 
 		cp-embed 
-		` a=$PWD ; cd $RYE_HOME_fyne ; fyne package -os android/arm64 -appID ` ++ default-config/app-id 
+		` a=$PWD ; cd $RYE_FYNE_HOME ; fyne package -os android/arm64 -appID ` ++ default-config/app-id 
 		++ ` -icon ` ++ default-config/icon 
 		++ ` -appVersion ` ++ default-config/app-version 
 		++ ` -tags "` ++ modules ++ " " ++ build-tags `" ; cd "$a"` 
@@ -266,7 +344,7 @@ print-setup: fn { } {
 	print "Current Status:"
 	print "───────────────"
 	rye-home: get-rye-home
-	; rye-home-fyne: get-rye-home-fyne
+	rye-home-fyne: get-rye-home-fyne
 	
 	either rye-home = "" {
 		print "  RYE_HOME:      ❌ Not set"
@@ -274,11 +352,11 @@ print-setup: fn { } {
 		print "  RYE_HOME:      ✅ " ++ rye-home
 	}
 	
-	; either rye-home-fyne = "" {
-	;	print "  RYE_HOME_fyne: ❌ Not set (only needed for Fyne builds)"
-	;} {
-	;	print "  RYE_HOME_fyne: ✅ " ++ rye-home-fyne
-	; }
+	either rye-home-fyne = "" {
+		print "  RYE_FYNE_HOME: ❌ Not set (only needed for Fyne builds)"
+	} {
+		print "  RYE_FYNE_HOME: ✅ " ++ rye-home-fyne
+	}
 	
 	print "\n# How to Set Environment Variables\n"
 	
@@ -288,20 +366,15 @@ print-setup: fn { } {
 	print "┌────────────────────────────────────────────────────────────--"
 	print "│  # Rye source directory (required)                          "
 	print "│  export RYE_HOME=\"/path/to/rye\"                           "
-; 	print "│                                                             "
-;	print "│  # Rye Fyne source directory (only for Fyne builds)         "
-;	print "│  export RYE_HOME_fyne=\"/path/to/rye-fyne\"                 "
+ 	print "│                                                             "
+	print "│  # Rye Fyne source directory (only for Fyne builds)         "
+	print "│  export RYE_FYNE_HOME=\"/path/to/rye-fyne\"                 "
 	print "└────────────────────────────────────────────────────────────-"
-	
-	print "\nExample (if you cloned rye to ~/Work/rye):"
-	print "  export RYE_HOME=\"$HOME/Work/rye\""
-;	print "  export RYE_HOME_fyne=\"$HOME/Work/rye-fyne\""
-	
+		
 	print "\nAfter adding, reload your shell:"
-	print "  source ~/.bashrc   # or ~/.zshrc"
+	print "  source ~/.bashrc   # or ~/.zshrc  or ~/.profile"
 	
-	print "\nOr set them for the current session only:"
-	print "  export RYE_HOME=\"/path/to/rye\""
+	print "\nOr set them for the current session only."
 }
 
 ; Get command and tags from arguments
@@ -312,7 +385,8 @@ second args |fix { "" } |to-string :tags
 switch mode {
 	build          { validate-env false |if { build tags } }
 	build-fyne     { validate-env true |if { build\fyne tags } }
-	build-fyne-apk { validate-env true |if { build\fyne\apk tags } }
+	package-fyne   { validate-env true |if { package\fyne tags } }
+	package-fyne-apk { validate-env true |if { package\fyne\apk tags } }
 	setup          { print-setup }
 	install        { install-ryel }
 	version        { print-version }
