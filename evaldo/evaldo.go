@@ -217,7 +217,7 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 		if ps.ReturnFlag {
 			return //... not sure if we need this
 		}
-		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited)
+		// OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited)
 		return
 	case env.LSetword:
 		if limited {
@@ -478,9 +478,6 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 		ps.Res = env.NewError("Expression guard (comma) found inside an expression. Commas can only be used between block-level expressions, not within expressions.")
 		return
 	case env.ErrorType:
-		ps.ErrorFlag = true
-		ps.Res = env.NewError("Error object encountered in code block. This usually indicates a previous error that wasn't properly handled.")
-		return
 		ps.ErrorFlag = true
 		ps.Res = env.NewError("Error object encountered in code block. This usually indicates a previous error that wasn't properly handled.")
 		return
@@ -812,17 +809,6 @@ func EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toL
 		fn := object.(env.Function)
 		CallFunction_CollectArgs(fn, ps, leftVal, toLeft, ctx, pipeSecond, firstVal)
 		return
-	case env.CPathType: // RMME
-		// Check if this is a getcpath (mode 3) - behave like get-word
-		if cpath, ok := object.(env.CPath); ok && cpath.Mode == 3 {
-			// For getcpath, just return the object without calling it (like get-word behavior)
-			ps.Res = object
-			return
-		}
-		// For other CPath modes (opcpath, pipecpath), treat as function
-		fn := object.(env.Function)
-		CallFunction_CollectArgs(fn, ps, leftVal, toLeft, ctx)
-		return
 	case env.VarBuiltinType:
 		bu := object.(env.VarBuiltin)
 		if checkForFailureWithVarBuiltin(bu, ps, 333) {
@@ -934,7 +920,7 @@ func CallFunctionWithArgs(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx
 	}
 }
 
-// functionCallPool is a sync.Pool for reusing ProgramState objects specifically for function calls
+// envPool is a sync.Pool for reusing RyeCtx objects during function calls to reduce allocations
 var envPool = sync.Pool{
 	New: func() interface{} {
 		return env.NewEnv(nil)
@@ -1175,39 +1161,7 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 // Called from: CallFunctionWithArgs, builtins needing to call 2-arg functions
 // Purpose: Optimized path for 2-argument function calls from builtins
 func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, arg1 env.Object, ctx *env.RyeCtx) {
-	// fmt.Println(2)
-	var fnCtx *env.RyeCtx
-	env0 := ps.Ctx  // store reference to current env in local
-	if ctx != nil { // called via contextpath and this is the context
-		//		fmt.Println("if 111")
-		if fn.Pure {
-			//			fmt.Println("calling pure function")
-			//		fmt.Println(es.PCtx)
-			fnCtx = env.NewEnv(ps.PCtx)
-		} else {
-			if fn.Ctx != nil { // if context was defined at definition time, pass it as parent.
-				fn.Ctx.Parent = ctx
-				fnCtx = env.NewEnv(fn.Ctx)
-			} else {
-				fnCtx = env.NewEnv(ctx)
-			}
-		}
-	} else {
-		//fmt.Println("else1")
-		if fn.Pure {
-			//		fmt.Println("calling pure function")
-			//	fmt.Println(es.PCtx)
-			fnCtx = env.NewEnv(ps.PCtx)
-		} else {
-			if fn.Ctx != nil { // if context was defined at definition time, pass it as parent.
-				// Q: Would we want to pass it directly at any point?
-				//    Maybe to remove need of creating new contexts, for reuse, of to be able to modify it?
-				fnCtx = env.NewEnv(fn.Ctx)
-			} else {
-				fnCtx = env.NewEnv(env0)
-			}
-		}
-	}
+	fnCtx := DetermineContext(fn, ps, ctx)
 	if ps.ReturnFlag || ps.ErrorFlag {
 		return
 	}
@@ -1258,33 +1212,7 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 // Called from: CallFunctionWithArgs, builtins needing to call 4-arg functions
 // Purpose: Optimized path for 4-argument function calls from builtins
 func CallFunctionArgs4(fn env.Function, ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, ctx *env.RyeCtx) {
-	// fmt.Println(3)
-	var fnCtx *env.RyeCtx
-	env0 := ps.Ctx  // store reference to current env in local
-	if ctx != nil { // called via contextpath and this is the context
-		if fn.Pure {
-			fnCtx = env.NewEnv(ps.PCtx)
-		} else {
-			if fn.Ctx != nil { // if context was defined at definition time, pass it as parent.
-				fn.Ctx.Parent = ctx
-				fnCtx = env.NewEnv(fn.Ctx)
-			} else {
-				fnCtx = env.NewEnv(ctx)
-			}
-		}
-	} else {
-		if fn.Pure {
-			fnCtx = env.NewEnv(ps.PCtx)
-		} else {
-			if fn.Ctx != nil { // if context was defined at definition time, pass it as parent.
-				// Q: Would we want to pass it directly at any point?
-				//    Maybe to remove need of creating new contexts, for reuse, of to be able to modify it?
-				fnCtx = env.NewEnv(fn.Ctx)
-			} else {
-				fnCtx = env.NewEnv(env0)
-			}
-		}
-	}
+	fnCtx := DetermineContext(fn, ps, ctx)
 	if ps.ReturnFlag || ps.ErrorFlag {
 		return
 	}
@@ -1612,7 +1540,6 @@ func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Obj
 	// end of experiment
 
 	evalExprFn := EvalExpression_CollectArg
-	curry := false
 
 	//fmt.Println("*** BUILTIN ***")
 
@@ -1690,12 +1617,7 @@ func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Obj
 		}
 		ps.Res = bi.Fn(ps, args...)
 	*/
-	if curry {
-		// Currying is no longer supported since Cur fields were removed
-		ps.Res = bi.Fn(ps, arg0, arg1, arg2, arg3, arg4)
-	} else {
-		ps.Res = bi.Fn(ps, arg0, arg1, arg2, arg3, arg4)
-	}
+	ps.Res = bi.Fn(ps, arg0, arg1, arg2, arg3, arg4)
 	if ps.Res == nil {
 		ps.Res = env.NewError4(0, "Builtin returned a invalid value (nil)", nil, nil)
 		ps.ErrorFlag = true
@@ -1807,64 +1729,6 @@ func findNearestLocationNode(ps *env.ProgramState) *env.LocationNode {
 	return nil
 }
 
-// calculateErrorPosition calculates the character position of an error in a source line.
-// Called from: Error display functions (currently unused but available)
-// Purpose: Determines exact column position of error by counting characters from LocationNode
-func calculateErrorPosition(ps *env.ProgramState, locationNode *env.LocationNode) int {
-	// Get the current series position (similar to how PositionAndSurroundingElements works)
-	errorPos := ps.Ser.Pos() - 1 // The error is typically at pos-1 like in the original (here) logic
-
-	if errorPos < 0 {
-		return 0
-	}
-
-	// Count characters from the beginning of the line to find the error position
-	charCount := 0
-	foundLocationNode := false
-
-	// Go through the series and count characters from the LocationNode for this line
-	for i := 0; i < ps.Ser.Len(); i++ {
-		obj := ps.Ser.Get(i)
-		if obj == nil {
-			continue
-		}
-
-		// Check if this is a LocationNode for the current line
-		if obj.Type() == env.LocationNodeType {
-			if locNode, ok := obj.(env.LocationNode); ok && locNode.Line == locationNode.Line {
-				foundLocationNode = true
-				charCount = 0 // Reset count from this LocationNode
-				continue
-			} else if foundLocationNode {
-				// We've moved to a different line, stop counting
-				break
-			}
-			continue
-		}
-
-		// Only start counting after we've found the LocationNode for this line
-		if !foundLocationNode {
-			continue
-		}
-
-		// If this is the error position, return current character count
-		if i == errorPos {
-			return charCount
-		}
-
-		// Add the length of this object's string representation plus space
-		objStr := obj.Print(*ps.Idx)
-		charCount += len(objStr)
-
-		// Add space separator (except for the last token before error)
-		if i < errorPos {
-			charCount += 1
-		}
-	}
-
-	return charCount
-}
-
 // FormatBacktickQuotes processes an error message and highlights text within backticks
 // with a special background color for terminal display.
 // Called from: DisplayEnhancedError
@@ -1937,43 +1801,6 @@ func displayBlockWithErrorPosition(es *env.ProgramState, genv *env.Idxs) {
 	blockStr := buildBlockStringWithMarker(es.Ser.S, errorPos, genv)
 	fmt.Print(blockStr)
 	fmt.Print("\x1b[0m\n") // Reset
-}
-
-// DELETE_ME_getCurrentBlock is deprecated and marked for deletion.
-// Called from: Nowhere (deprecated)
-// Purpose: Was used to get current executing block, now replaced by better location tracking
-func DELETE_ME_getCurrentBlock(es *env.ProgramState) *env.Block {
-	// First, check if we have block location information from the program state
-	// This would be the case when we're executing inside a block with location data
-
-	// Try to find the current executing block by looking for any block with location information in the series
-	for i := 0; i < es.Ser.Len(); i++ {
-		obj := es.Ser.Get(i)
-		if obj != nil && obj.Type() == env.BlockType {
-			if block, ok := obj.(env.Block); ok {
-				// Return the first block that has location information
-				if block.FileName != "" || block.Line > 0 {
-					return &block
-				}
-			}
-		}
-	}
-
-	// If no block found in series, create a synthetic block with available location info
-	// This handles cases where we're in the root execution context
-	if es.ScriptPath != "" {
-		// Create a block representing the current execution context
-		syntheticBlock := &env.Block{
-			Series:   es.Ser,
-			Mode:     0,
-			FileName: es.ScriptPath,
-			Line:     1, // Default to line 1 if we don't have more specific info
-			Column:   1, // Default to column 1
-		}
-		return syntheticBlock
-	}
-
-	return nil
 }
 
 // truncatedDump returns a truncated string representation of an object.
@@ -2085,51 +1912,6 @@ func buildBlockStringWithMarker(currSer []env.Object, errorPos int, genv *env.Id
 
 	result.WriteString("}")
 	return result.String()
-}
-
-// displayLocationFromSeries extracts and displays location information from LocationNodes in the series.
-// Called from: Potentially error display code (legacy)
-// Purpose: Displays source location by finding LocationNodes and showing source lines with position markers
-func displayLocationFromSeries(es *env.ProgramState, genv *env.Idxs) {
-	// First try to find LocationNodes in the series and display them nicely
-	foundLocation := false
-
-	// Look through the series for LocationNodes
-	for i := 0; i < es.Ser.Len(); i++ {
-		obj := es.Ser.Get(i)
-		if obj != nil && obj.Type() == env.LocationNodeType {
-			if locNode, ok := obj.(env.LocationNode); ok {
-				if foundLocation {
-					fmt.Print(" -> ")
-				}
-				fmt.Print(locNode.String())
-				foundLocation = true
-			}
-		}
-	}
-
-	if foundLocation {
-		fmt.Println()
-
-		// Try to show the first LocationNode's source line for context
-		for i := 0; i < es.Ser.Len(); i++ {
-			obj := es.Ser.Get(i)
-			if obj != nil && obj.Type() == env.LocationNodeType {
-				if locNode, ok := obj.(env.LocationNode); ok && locNode.SourceLine != "" {
-					fmt.Println("Source:")
-					fmt.Printf("  %s\n", locNode.SourceLine)
-					if locNode.Column > 0 {
-						pointer := strings.Repeat(" ", locNode.Column+1) + "^"
-						fmt.Printf("  %s\n", pointer)
-					}
-					break
-				}
-			}
-		}
-	} else {
-		// Fallback to the original position reporting
-		fmt.Print(es.Ser.PositionAndSurroundingElements(*genv))
-	}
 }
 
 // MaybeDisplayFailureOrError displays errors/failures if error flag is set (wrapper).
@@ -2251,12 +2033,8 @@ func checkForFailureWithVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, n in
 	return false
 }
 
-// trace is an empty trace function placeholder.
-// Called from: Nowhere currently (can be used for debugging)
-// Purpose: Placeholder for debug tracing - currently unused
-func trace(s string) {
-
-}
+// trace is an empty trace function placeholder used by other files in the evaldo package.
+func trace(s string) {}
 
 // tryHandleFailure attempts to handle a failure by calling context error handlers.
 // Called from: EvalBlockInj
@@ -2377,34 +2155,3 @@ func checkContextErrorHandler(ps *env.ProgramState) bool {
 	ps.InErrHandler = false
 	return true
 }
-
-/* func tryHandleFailure_OLD(ps *env.ProgramState, n int) bool {
-	if ps.FailureFlag && !ps.ReturnFlag {
-		if !ps.InErrHandler {
-			if checkContextErrorHandler(ps) {
-				return false
-			}
-		}
-		ps.ErrorFlag = true
-		return true
-	}
-	return false
-}
-*/
-
-/* // Consolidated flag checking function
-func checkFlags(ps *env.ProgramState, n int, flags ...bool) bool {
-	if ps.ReturnFlag || ps.ErrorFlag {
-		return true
-	}
-	if ps.FailureFlag {
-		ps.ErrorFlag = true
-		return true
-	}
-	for _, flag := range flags {
-		if flag {
-			return true
-		}
-	}
-	return false
-} */
