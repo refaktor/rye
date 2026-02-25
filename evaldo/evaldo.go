@@ -74,6 +74,17 @@ func EvalBlockInj_Rye2(ps *env.ProgramState, inj env.Object, injnow bool) {
 	// nothing is passed between expressions, except through context
 	for ps.Ser.Pos() < ps.Ser.Len() {
 		injnow = EvalExpressionInj(ps, inj, injnow)
+		if ps.Injnow {
+			if ps.Inj != nil {
+				inj = ps.Inj
+				injnow = true
+			} else {
+				inj = nil
+				injnow = false
+			}
+			ps.Inj = nil
+			ps.Injnow = false
+		}
 		// Check for both failure and error flags immediately after expression evaluation
 		if ps.ErrorFlag || (ps.ReturnFlag && ps.CallDepth > 0) {
 			// fmt.Println("EVAL BLOCK INJ")
@@ -147,10 +158,10 @@ func EvalExpression(ps *env.ProgramState, inj env.Object, injnow bool, limited b
 	}
 	// look for expression continuation on the right and
 	// eval it if it's there
-	if !opword {
-		// fmt.Println("==EvalExpression:2")
-		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited)
-	}
+	// opword=true means we're collecting an opword argument; allow dotword chains
+	// but do not consume further opwords.
+	// fmt.Println("==EvalExpression:2")
+	OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, !opword)
 	return injnow
 }
 
@@ -178,7 +189,7 @@ func EvalExpressionInjLimited(ps *env.ProgramState, inj env.Object, injnow bool)
 // OptionallyEvalExpressionRight evaluates right-side constructs like opwords, pipewords, and setwords.
 // Called from: EvalExpression, recursively from itself
 // Purpose: Handles operator precedence by evaluating opwords/pipewords/setwords/modwords to the right
-func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, limited bool) {
+func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, limited bool, allowOpwords bool) {
 	// fmt.Println("--OptionallyEvalExpressionRight:1")
 	if nextObj == nil || ps.ReturnFlag || ps.ErrorFlag {
 		return
@@ -193,20 +204,44 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 	}
 	switch opword := nextObj.(type) {
 	case env.Opword:
+		if !allowOpwords {
+			return
+		}
 		// val := ps.Ser.Pop()
 		ps.Ser.Next()
 		// fmt.Println("---Opword:1")
 		EvalWord(ps, opword.ToWord(), ps.Res, false, opword.Force > 0, true)
 		// fmt.Println("---Opword:2")
 		// fmt.Println(ps.Res)
-		// OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited)
+		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, allowOpwords)
 		return
 	case env.Dotword:
 		// Dotwords are method-style operators (.add, .upper, etc.)
 		ps.Ser.Next()
 		EvalWord(ps, opword.ToWord(), ps.Res, false, opword.Force > 0, false)
-		// OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited)
-		// fmt.Println("---Dotword:2")
+		if ps.ReturnFlag || ps.ErrorFlag {
+			return
+		}
+		// Continue dotword chain if another dotword follows.
+		if _, ok := ps.Ser.Peek().(env.Dotword); ok {
+			OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, allowOpwords)
+			return
+		}
+		if !allowOpwords {
+			return
+		}
+		switch next := ps.Ser.Peek().(type) {
+		case env.Opword, env.Pipeword, env.LSetword, env.LModword:
+			OptionallyEvalExpressionRight(next, ps, limited, allowOpwords)
+			return
+		case env.CPath:
+			OptionallyEvalExpressionRight(next, ps, limited, allowOpwords)
+			return
+		}
+		// Terminate current expression after dotword and inject the result
+		// into the next expression in the block.
+		ps.Inj = ps.Res
+		ps.Injnow = true
 		return
 	case env.Pipeword:
 		if limited {
@@ -217,7 +252,6 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 		if ps.ReturnFlag {
 			return //... not sure if we need this
 		}
-		// OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited)
 		return
 	case env.LSetword:
 		if limited {
@@ -242,7 +276,7 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 			}
 		}
 		ps.Ser.Next()
-		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited)
+		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, allowOpwords)
 		return
 	case env.LModword:
 		if limited {
@@ -275,14 +309,14 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 			return
 		}
 		ps.Ser.Next()
-		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited)
+		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, allowOpwords)
 		return
 	case env.CPath:
 		if opword.Mode == 1 {
 			ps.Ser.Next()
 			EvalWord(ps, opword, ps.Res, false, false, false)
 			// when calling cpath
-			OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited)
+			OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, allowOpwords)
 			return
 		} else if opword.Mode == 2 {
 			if limited {
@@ -293,7 +327,7 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 			if ps.ReturnFlag {
 				return //... not sure if we need this
 			}
-			OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited)
+			OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, allowOpwords)
 			return
 		}
 	}
