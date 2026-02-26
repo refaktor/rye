@@ -144,6 +144,20 @@ func EvalBlockInCtxInj(ps *env.ProgramState, ctx *env.RyeCtx, inj env.Object, in
 func EvalExpression(ps *env.ProgramState, inj env.Object, injnow bool, limited bool, opword bool) bool {
 	// fmt.Println("==EvalExpression:1")
 	if inj == nil || !injnow {
+		if limited {
+			switch next := ps.Ser.Peek().(type) {
+			case env.Pipeword:
+				ps.ErrorFlag = true
+				ps.Res = env.NewError("Pipeword barrier encountered while collecting an argument. The previous expression is incomplete.")
+				return injnow
+			case env.CPath:
+				if next.Mode == 2 {
+					ps.ErrorFlag = true
+					ps.Res = env.NewError("Pipeword barrier encountered while collecting an argument. The previous expression is incomplete.")
+					return injnow
+				}
+			}
+		}
 		// Eval expression that doesn't get value from the left
 		EvalExpression_DispatchType(ps)
 		if ps.ReturnFlag || ps.ErrorFlag {

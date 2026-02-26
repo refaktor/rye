@@ -1478,13 +1478,22 @@ func (p *NoPEGParser) parseToken() (env.Object, error) {
 		return *env.NewKindword(idx), nil
 	case NPEG_TOKEN_XWORD:
 		word := p.currentToken.Value
-		parts := strings.SplitN(word[1:len(word)-1], " ", 2)
-		idx := p.wordIndex.IndexWord(parts[0])
-		args := ""
-		if len(parts) > 1 {
-			args = parts[1]
+		content := strings.TrimSpace(word[1 : len(word)-1])
+		if content == "" {
+			return nil, fmt.Errorf("empty x-word '<>' is not allowed")
 		}
-		return *env.NewXword(idx, args), nil
+		parts := strings.SplitN(content, " ", 2)
+		opword := parts[0]
+		if len(parts) > 1 {
+			return nil, fmt.Errorf("x-word '<%s>' cannot contain arguments; use op-word syntax instead", content)
+		}
+		force := 0
+		if strings.HasSuffix(opword, "*") {
+			force = 1
+			opword = strings.TrimSuffix(opword, "*")
+		}
+		idx := p.wordIndex.IndexWord(opword)
+		return *env.NewOpword(idx, force), nil
 	case NPEG_TOKEN_EXWORD:
 		word := p.currentToken.Value
 		idx := p.wordIndex.IndexWord(word[2 : len(word)-1])
