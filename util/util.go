@@ -56,24 +56,20 @@ func IsTruthy(o env.Object) bool {
 	}
 }
 
-func Dict2Context(ps *env.ProgramState, s1 env.Dict) env.RyeCtx {
+func Dict2Context(ps *env.ProgramState, s1 env.Dict) *env.RyeCtx {
 	ctx := env.NewEnv(ps.Ctx)
 	for k, v := range s1.Data {
 		word := ps.Idx.IndexWord(k)
-		switch v1 := v.(type) {
-		case env.Boolean:
-			ctx.Set(word, v1)
-		case env.Integer:
-			ctx.Set(word, v1)
-		case env.String:
-			ctx.Set(word, v1)
-		case string:
-			ctx.Set(word, *env.NewString(v1))
-		case bool:
-			ctx.Set(word, *env.NewBoolean(v1))
+		if v == nil {
+			ctx.Set(word, env.Void{})
+			continue
+		}
+		ryeVal := env.ToRyeValue(v)
+		if ryeVal != nil {
+			ctx.Set(word, ryeVal)
 		}
 	}
-	return *ctx
+	return ctx
 }
 
 func StringToFieldsWithQuoted(str string, sepa string, quote string) env.Block {

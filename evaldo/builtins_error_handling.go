@@ -1021,13 +1021,13 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 		Doc:   "Takes a Context and a Block. It Does a block inside a given Context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch ctx := arg0.(type) {
-			case env.RyeCtx:
+			case *env.RyeCtx:
 				switch bloc := arg1.(type) {
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
 					ps.InErrHandler = true
-					EvalBlockInCtxInj(ps, &ctx, nil, false)
+					EvalBlockInCtxInj(ps, ctx, nil, false)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "try\\in")
 					ps.InErrHandler = false
 					ps.ReturnFlag = false

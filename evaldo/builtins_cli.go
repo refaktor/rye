@@ -827,7 +827,7 @@ var Builtins_cli = map[string]*env.Builtin{
 						ctx.Set(idx, env.ToRyeValue(v))
 					}
 				}
-				return *ctx
+				return ctx
 			default:
 				return result
 			}

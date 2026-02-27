@@ -295,7 +295,7 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 				return env.NewError("Unhandeled value, type: " + reflect.TypeOf(v1).String())
 			}
 		}
-	case env.RyeCtx:
+	case *env.RyeCtx:
 		switch s2 := key.(type) {
 		case env.Word:
 			v, ok := s1.Get(s2.Index)
@@ -1060,11 +1060,11 @@ var builtins = map[string]*env.Builtin{
 					default:
 						return MakeBuiltinError(ps, "Conversion value isn't Dict.", "_<<")
 					}
-				case env.RyeCtx:
+				case *env.RyeCtx:
 					if spec.HasConverter(dict.Kind.Index) {
 						obj := BuiConvert(ps, dict, spec.Converters[dict.Kind.Index])
 						switch ctx := obj.(type) {
-						case env.RyeCtx:
+						case *env.RyeCtx:
 							ctx.Kind = spec.Kind
 							return ctx
 						default:
@@ -1206,7 +1206,7 @@ var builtins = map[string]*env.Builtin{
 				return *env.NewString(d.Doc)
 			case env.Builtin:
 				return *env.NewString(d.Doc)
-			case env.RyeCtx:
+			case *env.RyeCtx:
 				return *env.NewString(d.Doc)
 			default:
 				env1.ErrorFlag = true
@@ -1244,8 +1244,8 @@ var builtins = map[string]*env.Builtin{
 				return &sp
 			case env.String:
 				return &sp
-			case env.RyeCtx:
-				return &sp
+			case *env.RyeCtx:
+				return sp
 			case env.Native:
 				sp.Value = env.ReferenceAny(sp.Value)
 				return &sp
@@ -1274,20 +1274,20 @@ var builtins = map[string]*env.Builtin{
 			case env.Table:
 				return sp
 			case *env.Table:
-				return *sp
+				return sp
 			case *env.Dict:
-				return *sp
+				return sp
 			case *env.List:
-				return *sp
+				return sp
 			case *env.Block:
-				return *sp
+				return sp
 			case *env.RyeCtx:
-				return *sp
+				return sp
 			case *env.String:
-				return *sp
+				return sp
 			case *env.Native:
 				sp.Value = env.DereferenceAny(sp.Value)
-				return *sp
+				return sp
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.TableType, env.DictType, env.ListType, env.BlockType, env.StringType, env.NativeType, env.ContextType}, "deref")
 			}
@@ -1802,13 +1802,13 @@ var builtins = map[string]*env.Builtin{
 					ps.ErrorFlag = true
 					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "do\\inside")
 				}
-			case PersistentCtx:
+			case *PersistentCtx:
 				switch bloc := arg1.(type) {
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
 					// Use a special evaluation function for PersistentCtx
-					EvalBlockInPersistentCtx(ps, &ctx)
+					EvalBlockInPersistentCtx(ps, ctx)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "do\\inside")
 					ps.Ser = ser
 					return ps.Res
@@ -2909,7 +2909,7 @@ func RegisterBuiltinsInContext(builtins map[string]*env.Builtin, ps *env.Program
 	ps.Ctx = ctx
 
 	wordIdx := ps.Idx.IndexWord(name)
-	ps.Ctx.Mod(wordIdx, *newctx)
+	ps.Ctx.Mod(wordIdx, newctx)
 
 	return newctx
 }
@@ -2928,7 +2928,7 @@ func RegisterBuiltinsInSubContext(builtins map[string]*env.Builtin, ps *env.Prog
 	ps.Ctx = ctx
 
 	wordIdx := ps.Idx.IndexWord(name)
-	ps.Ctx.Mod(wordIdx, *newctx)
+	ps.Ctx.Mod(wordIdx, newctx)
 
 	return newctx
 }

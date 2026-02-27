@@ -2,8 +2,11 @@
 ; Run test cases: ../rye main.rye test
 ; Generate documentation: ../rye main.rye doc > builtins.html
 
-rye .Args\raw? |load :args
+rye .Args\raw? |load :args |probe
+
 root-ctx:: current
+
+probe args
 
 t: ?term
 

@@ -23,7 +23,7 @@ func CopyMap(m map[string]any) map[string]any {
 	return cp
 }
 
-func Conversion_EvalBlockCtx(ps *env.ProgramState, vals env.RyeCtx) env.Object {
+func Conversion_EvalBlockCtx(ps *env.ProgramState, vals *env.RyeCtx) env.Object {
 	var key int
 
 	out := env.NewEnv(nil)
@@ -41,7 +41,7 @@ func Conversion_EvalBlockCtx(ps *env.ProgramState, vals env.RyeCtx) env.Object {
 			out.Set(key, val)
 		}
 	}
-	return *out
+	return out
 }
 
 func Conversion_EvalBlockDict(ps *env.ProgramState, vals env.Dict) env.Object {
@@ -148,7 +148,7 @@ func BuiConvert(ps *env.ProgramState, arg0 env.Object, arg1 env.Object) env.Obje
 		ps.Ser = blk.Series
 		var vals env.Object
 		switch rmap := arg0.(type) {
-		case env.RyeCtx:
+		case *env.RyeCtx:
 			vals = Conversion_EvalBlockCtx(ps, rmap)
 		case env.Dict:
 			vals = Conversion_EvalBlockDict(ps, rmap)

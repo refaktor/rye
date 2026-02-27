@@ -246,14 +246,14 @@ var builtins_contexts = map[string]*env.Builtin{
 		Pure:  false,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch ctx0 := arg0.(type) {
-			case env.RyeCtx:
+			case *env.RyeCtx:
 				switch bloc := arg1.(type) {
 				case env.Block:
 					ser := ps.Ser
 					ctx := ps.Ctx
 					ps.Ser = bloc.Series
 					// ps.Ctx = ctx0.Copy() // make new context with no parent
-					ps.Ctx = env.NewEnv(&ctx0) // make new context with no parent
+					ps.Ctx = env.NewEnv(ctx0) // make new context with no parent
 					EvalBlock(ps)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "extends")
 					if ps.ReturnFlag || ps.ErrorFlag {
@@ -287,10 +287,10 @@ var builtins_contexts = map[string]*env.Builtin{
 		Doc:   "Binds a context to a parent context, allowing it to access the parent's values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch swCtx1 := arg0.(type) {
-			case env.RyeCtx:
+			case *env.RyeCtx:
 				switch swCtx2 := arg1.(type) {
-				case env.RyeCtx:
-					swCtx1.Parent = &swCtx2
+				case *env.RyeCtx:
+					swCtx1.Parent = swCtx2
 					return swCtx1
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.ContextType}, "bind!")
@@ -313,7 +313,7 @@ var builtins_contexts = map[string]*env.Builtin{
 		Doc:   "Removes the parent relationship from a context, making it a standalone context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch swCtx1 := arg0.(type) {
-			case env.RyeCtx:
+			case *env.RyeCtx:
 				swCtx1.Parent = nil
 				return swCtx1
 			default:
@@ -345,7 +345,7 @@ var builtins_contexts = map[string]*env.Builtin{
 						// Found it - return block with depth and context
 						objs := make([]env.Object, 2)
 						objs[0] = *env.NewInteger(int64(depth))
-						objs[1] = *ctx
+						objs[1] = ctx
 						return *env.NewBlock(*env.NewTSeries(objs))
 					}
 					// Move to parent
@@ -392,7 +392,7 @@ var builtins_contexts = map[string]*env.Builtin{
 		Argsn: 0,
 		Doc:   "Returns current context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return *ps.Ctx
+			return ps.Ctx
 		},
 	},
 
@@ -402,7 +402,7 @@ var builtins_contexts = map[string]*env.Builtin{
 		Argsn: 0,
 		Doc:   "Returns parent context of the current context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			return *ps.Ctx.Parent
+			return ps.Ctx.Parent
 		},
 	},
 
@@ -413,10 +413,8 @@ var builtins_contexts = map[string]*env.Builtin{
 		Doc:   "Returns parent context of the current context.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch c := arg0.(type) {
-			case env.RyeCtx:
-				return *c.Parent
 			case *env.RyeCtx:
-				return *c.Parent
+				return c.Parent
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.ContextType}, "parent?")
 			}
@@ -463,8 +461,6 @@ var builtins_contexts = map[string]*env.Builtin{
 		Doc:   "Returns words in specified context as a block.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch c := arg0.(type) {
-			case env.RyeCtx:
-				return c.GetWords(*ps.Idx)
 			case *env.RyeCtx:
 				return c.GetWords(*ps.Idx)
 			default:
@@ -505,7 +501,7 @@ var builtins_contexts = map[string]*env.Builtin{
 			case env.String:
 				fmt.Println(ps.Ctx.Preview(*ps.Idx, s1.Value))
 				return ps.Ctx
-			case env.RyeCtx:
+			case *env.RyeCtx:
 				fmt.Println(s1.Preview(*ps.Idx, ""))
 				return ps.Ctx
 			case env.Word:
@@ -570,11 +566,6 @@ var builtins_contexts = map[string]*env.Builtin{
 		Doc:   "Change to context (pushes current context to stack for ccb)",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
-			case env.RyeCtx:
-				// Push current context to stack before changing
-				ps.PushContext(ps.Ctx)
-				ps.Ctx = &s1
-				return ps.Ctx
 			case *env.RyeCtx:
 				// Push current context to stack before changing
 				ps.PushContext(ps.Ctx)
@@ -619,7 +610,7 @@ var builtins_contexts = map[string]*env.Builtin{
 				return MakeBuiltinError(ps, "No previous context in stack to return to.", "ccb")
 			}
 			ps.Ctx = prevCtx
-			return *ps.Ctx
+			return ps.Ctx
 		},
 	},
 
@@ -692,16 +683,10 @@ var builtins_contexts = map[string]*env.Builtin{
 		Doc:   "Creates a copy of a context with the same state and parent relationship.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch ctx := arg0.(type) {
-			case env.RyeCtx:
-				clonedCtx := ctx.Copy()
-				if ryeCtx, ok := clonedCtx.(*env.RyeCtx); ok {
-					return *ryeCtx
-				}
-				return MakeArgError(ps, 1, []env.Type{env.ContextType}, "clone")
 			case *env.RyeCtx:
 				clonedCtx := ctx.Copy()
 				if ryeCtx, ok := clonedCtx.(*env.RyeCtx); ok {
-					return *ryeCtx
+					return ryeCtx
 				}
 				return MakeArgError(ps, 1, []env.Type{env.ContextType}, "clone")
 			default:
@@ -725,31 +710,6 @@ var builtins_contexts = map[string]*env.Builtin{
 		Doc:   "Creates a copy of a context and evaluates a block of code inside the clone.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch ctx := arg0.(type) {
-			case env.RyeCtx:
-				switch bloc := arg1.(type) {
-				case env.Block:
-					ser := ps.Ser
-					origCtx := ps.Ctx
-					clonedCtx := ctx.Copy()
-					if ryeCtx, ok := clonedCtx.(*env.RyeCtx); ok {
-						ps.Ser = bloc.Series
-						ps.Ctx = ryeCtx
-						EvalBlock(ps)
-						MaybeDisplayFailureOrError(ps, ps.Idx, "clone\\")
-						if ps.ReturnFlag || ps.ErrorFlag {
-							ps.Ctx = origCtx
-							ps.Ser = ser
-							return ps.Res
-						}
-						rctx := ps.Ctx
-						ps.Ctx = origCtx
-						ps.Ser = ser
-						return rctx // return the resulting cloned context (pointer)
-					}
-					return MakeArgError(ps, 1, []env.Type{env.ContextType}, "clone\\")
-				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "clone\\")
-				}
 			case *env.RyeCtx:
 				switch bloc := arg1.(type) {
 				case env.Block:
@@ -794,16 +754,10 @@ var builtins_contexts = map[string]*env.Builtin{
 		Doc:   "Creates a deep copy of a context with the same state and parent relationship, recursively copying all nested objects.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch ctx := arg0.(type) {
-			case env.RyeCtx:
-				clonedCtx := ctx.DeepCopy()
-				if ryeCtx, ok := clonedCtx.(*env.RyeCtx); ok {
-					return *ryeCtx
-				}
-				return MakeArgError(ps, 1, []env.Type{env.ContextType}, "clone\\deep")
 			case *env.RyeCtx:
 				clonedCtx := ctx.DeepCopy()
 				if ryeCtx, ok := clonedCtx.(*env.RyeCtx); ok {
-					return *ryeCtx
+					return ryeCtx
 				}
 				return MakeArgError(ps, 1, []env.Type{env.ContextType}, "clone\\deep")
 			default:

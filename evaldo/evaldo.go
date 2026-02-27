@@ -266,11 +266,14 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 		if ps.ReturnFlag {
 			return //... not sure if we need this
 		}
+		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, allowOpwords)
 		return
 	case env.LSetword:
+		fmt.Println("*")
 		if limited {
 			return
 		}
+		fmt.Println("**")
 		idx := opword.Index
 		if ps.AllowMod {
 			ok := ps.Ctx.Mod(idx, ps.Res)
@@ -508,9 +511,9 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 	case env.PipewordType:
 		EvalWord(ps, object.(env.Pipeword), ps.Res, true, false, false)
 	// this functions works when there is no left value, so these should cause an error (20260224)
-	case env.LSetwordType, env.LModwordType, env.OpCPathType, env.PipeCPathType:
-		ps.Res = *env.NewError("In-stream token, but not in stream (ER1294)")
-		return
+	// case env.LSetwordType, env.LModwordType, env.OpCPathType, env.PipeCPathType:
+	//	ps.Res = *env.NewError("In-stream token, but not in stream (ER1294)")
+	//	return
 	// these are cached (inserted into block values so we can avoid the repeated lookup)
 	case env.BuiltinType:
 		CallBuiltin_CollectArgs(object.(env.Builtin), ps, nil, false, false, nil, false) // TODO .. POTENTIAL BUG, OPWORD STATE IS NOT STORED WHEN EMBEDED
@@ -577,7 +580,7 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 					goto gogo1
 				}
 				// If no more path parts, return the parent context itself
-				return true, *currCtx, currCtx
+				return true, currCtx, currCtx
 			}
 			return false, nil, currCtx
 		}
@@ -586,10 +589,6 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 			switch swObj := object.(type) {
 			case *env.RyeCtx:
 				currCtx = swObj
-				i += 1
-				goto gogo1
-			case env.RyeCtx:
-				currCtx = &swObj
 				i += 1
 				goto gogo1
 			case env.Dict:
@@ -654,7 +653,7 @@ func findWordValueWithFailureInfo(ps *env.ProgramState, word1 env.Object) (bool,
 					goto gogo1
 				}
 				// If no more path parts, return the parent context itself
-				return true, *currCtx, currCtx, ""
+				return true, currCtx, currCtx, ""
 			}
 			return false, nil, currCtx, "@ (no parent context)"
 		}
@@ -682,10 +681,6 @@ func findWordValueWithFailureInfo(ps *env.ProgramState, word1 env.Object) (bool,
 				currCtx = swObj
 				i += 1
 				goto gogo1
-			case env.RyeCtx:
-				currCtx = &swObj
-				i += 1
-				goto gogo1
 			case env.Dict:
 				// Handle dict path traversal
 				currDict := swObj
@@ -704,10 +699,6 @@ func findWordValueWithFailureInfo(ps *env.ProgramState, word1 env.Object) (bool,
 								continue
 							case *env.RyeCtx:
 								currCtx = nextObj
-								i += 1
-								goto gogo1
-							case env.RyeCtx:
-								currCtx = &nextObj
 								i += 1
 								goto gogo1
 							default:
@@ -1588,6 +1579,15 @@ func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Obj
 	// end of experiment
 
 	evalExprFn := EvalExpression_CollectArg
+	getParentErr := func() *env.Error {
+		if err, ok := ps.Res.(*env.Error); ok {
+			return err
+		}
+		if err, ok := ps.Res.(env.Error); ok {
+			return &err
+		}
+		return nil
+	}
 
 	//fmt.Println("*** BUILTIN ***")
 
@@ -1627,7 +1627,7 @@ func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Obj
 			return
 		}
 		if ps.ReturnFlag || ps.ErrorFlag {
-			ps.Res = env.NewError4(0, "Argument 2 of "+strconv.Itoa(bi.Argsn)+" missing for builtin "+FormatBuiltinReference(bi.Doc)+". Check that all required arguments are provided.", ps.Res.(*env.Error), nil)
+			ps.Res = env.NewError4(0, "Argument 2 of "+strconv.Itoa(bi.Argsn)+" missing for builtin "+FormatBuiltinReference(bi.Doc)+". Check that all required arguments are provided.", getParentErr(), nil)
 			return
 		}
 		//fmt.Println(ps.Res)
@@ -1641,7 +1641,7 @@ func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Obj
 			return
 		}
 		if ps.ReturnFlag || ps.ErrorFlag {
-			ps.Res = env.NewError4(0, "Argument 3 missing. Check that all required arguments are provided for the builtin function.", ps.Res.(*env.Error), nil)
+			ps.Res = env.NewError4(0, "Argument 3 missing. Check that all required arguments are provided for the builtin function.", getParentErr(), nil)
 			return
 		}
 		// The CallCurriedCaller is now created explicitly with partial builtin function

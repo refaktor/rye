@@ -232,7 +232,7 @@ var builtins_functions = map[string]*env.Builtin{
 						return MakeBuiltinError(ps, doc, "fn")
 					}
 					switch ctx := arg1.(type) {
-					case env.RyeCtx:
+					case *env.RyeCtx:
 						switch body := arg2.(type) {
 						case env.Block:
 							return *env.NewFunctionC(args, body, &ctx, false, false, doc)

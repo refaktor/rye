@@ -2227,7 +2227,7 @@ var builtins_collection = map[string]*env.Builtin{
 				return *env.NewBoolean(len(s1.Rows) == 0)
 			case *env.PersistentTable:
 				return *env.NewBoolean(s1.Length() == 0)
-			case env.RyeCtx:
+			case *env.RyeCtx:
 				return *env.NewBoolean(s1.GetWords(*ps.Idx).Series.Len() == 0)
 			case env.Vector:
 				return *env.NewBoolean(s1.Value.Len() == 0)
@@ -2266,7 +2266,7 @@ var builtins_collection = map[string]*env.Builtin{
 				return *env.NewInteger(int64(len(s1.Rows)))
 			case *env.PersistentTable:
 				return *env.NewInteger(int64(s1.Length()))
-			case env.RyeCtx:
+			case *env.RyeCtx:
 				return *env.NewInteger(int64(s1.GetWords(*ps.Idx).Series.Len()))
 			case env.Vector:
 				return *env.NewInteger(int64(s1.Value.Len()))
@@ -2304,7 +2304,7 @@ var builtins_collection = map[string]*env.Builtin{
 				return *env.NewInteger(int64(len(s1.Rows) - 1))
 			case *env.PersistentTable:
 				return *env.NewInteger(int64(s1.Length() - 1))
-			case env.RyeCtx:
+			case *env.RyeCtx:
 				return *env.NewInteger(int64(s1.GetWords(*ps.Idx).Series.Len() - 1))
 			case env.Vector:
 				return *env.NewInteger(int64(s1.Value.Len() - 1))
