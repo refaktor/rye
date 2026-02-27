@@ -20,7 +20,7 @@ func resultToJS(res env.Object) any {
 		return v.Value
 	case env.Integer:
 		return v.Value
-	case env.RyeCtx:
+	case *env.RyeCtx:
 		return "{ 'state': 'todo' }"
 	}
 	return nil
@@ -48,7 +48,7 @@ func RyeToJSON(res any) string {
 		} else {
 			return "null"
 		}
-	case env.RyeCtx:
+	case *env.RyeCtx:
 		return "{ 'state': 'todo' }"
 	}
 	fmt.Println(res)

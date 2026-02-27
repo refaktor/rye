@@ -1740,7 +1740,7 @@ var Builtins_tui = map[string]*env.Builtin{
 				psTemp.Ser.Reset()
 
 				for psTemp.Ser.Pos() < psTemp.Ser.Len() {
-					EvalExpression(&psTemp, nil, false, false)
+					EvalExpression(&psTemp, nil, false, false, false)
 					if psTemp.ErrorFlag || psTemp.FailureFlag {
 						return psTemp.Res
 					}
@@ -1788,7 +1788,7 @@ var Builtins_tui = map[string]*env.Builtin{
 				psTemp.Ser.Reset()
 
 				for psTemp.Ser.Pos() < psTemp.Ser.Len() {
-					EvalExpression(&psTemp, nil, false, false)
+					EvalExpression(&psTemp, nil, false, false, false)
 					if psTemp.ErrorFlag || psTemp.FailureFlag {
 						return psTemp.Res
 					}

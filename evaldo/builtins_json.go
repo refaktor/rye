@@ -28,7 +28,7 @@ func resultToJS(res env.Object) any {
 		return v.Value
 	case *env.Decimal:
 		return v.Value
-	case env.RyeCtx:
+	case *env.RyeCtx:
 		return "{ 'state': 'todo' }"
 	default:
 		fmt.Println("No matching type available.")
@@ -104,11 +104,6 @@ func RyeToJSONWithIdxs(res any, idxs *env.Idxs) string {
 		return b.String()
 	case *env.RyeCtx:
 		if idxs != nil {
-			return ContextToJSON(*v, idxs)
-		}
-		return "{ \"error\": \"context requires idxs for JSON conversion\" }"
-	case env.RyeCtx:
-		if idxs != nil {
 			return ContextToJSON(v, idxs)
 		}
 		return "{ \"error\": \"context requires idxs for JSON conversion\" }"
@@ -142,7 +137,7 @@ func RyeToJSONLines(res any) string {
 		}
 		b.WriteString("} }")
 		return b.String()
-	case env.RyeCtx:
+	case *env.RyeCtx:
 		return "{ 'state': 'todo' }"
 	default:
 		return "\"not handeled\""
@@ -234,7 +229,7 @@ func DictToJSONWithIdxs(dict env.Dict, idxs *env.Idxs) string {
 }
 
 // ContextToJSON converts a RyeCtx to JSON object format.
-func ContextToJSON(ctx env.RyeCtx, idxs *env.Idxs) string {
+func ContextToJSON(ctx *env.RyeCtx, idxs *env.Idxs) string {
 	var bu strings.Builder
 	bu.WriteString("{")
 	i := 0

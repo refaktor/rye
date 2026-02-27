@@ -663,11 +663,11 @@ var builtins_types = map[string]*env.Builtin{
 					default:
 						return obj
 					}
-				case env.RyeCtx:
+				case *env.RyeCtx:
 					if spec.HasConverter(dict.Kind.Index) {
 						obj := BuiConvert(ps, dict, spec.Converters[dict.Kind.Index])
 						switch ctx := obj.(type) {
-						case env.RyeCtx:
+						case *env.RyeCtx:
 							ctx.Kind = spec.Kind
 							return ctx
 						default:

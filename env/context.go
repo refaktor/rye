@@ -194,11 +194,11 @@ func (e *RyeCtx) Clear() {
 	clear(e.state)
 }
 
-func (e RyeCtx) GetState() map[int]Object {
+func (e *RyeCtx) GetState() map[int]Object {
 	return e.state
 }
 
-func (e RyeCtx) Print(idxs Idxs) string {
+func (e *RyeCtx) Print(idxs Idxs) string {
 	var bu strings.Builder
 	totalWords := len(e.state)
 	bu.WriteString(fmt.Sprintf("[Context (%s) \"%s\": %d words - ", e.Kind.Print(idxs), e.Doc, totalWords))
@@ -219,7 +219,7 @@ func (e RyeCtx) Print(idxs Idxs) string {
 		}
 		// v := e.state[k]
 		bu.WriteString(idxs.GetWord(k) + ", ")
-		//ctx, ok := v.(RyeCtx)
+		//ctx, ok := v.(*RyeCtx)
 		// if ok || &ctx == &e {
 		//	bu.WriteString(" [self reference] ")
 		// } else {
@@ -244,7 +244,7 @@ const color_num2 = "\033[38;5;202m"
 const color_string2 = "\033[38;5;148m"
 const color_comment = "\033[38;5;247m"
 
-func (e RyeCtx) Preview(idxs Idxs, filter string) string {
+func (e *RyeCtx) Preview(idxs Idxs, filter string) string {
 	var bu strings.Builder
 	var ks string
 	if e.GetKind() > 0 {
@@ -271,8 +271,8 @@ func (e RyeCtx) Preview(idxs Idxs, filter string) string {
 				color = color_string2
 			}
 			var strVal string
-			ctx, ok := v.(RyeCtx)
-			if ok && &ctx == &e {
+			ctx, ok := v.(*RyeCtx)
+			if ok && ctx == e {
 				strVal = " [self reference]"
 			} else {
 				strVal = v.Inspect(idxs)
@@ -292,7 +292,7 @@ func (e RyeCtx) Preview(idxs Idxs, filter string) string {
 }
 
 // TODO -- unify these previews
-func (e RyeCtx) PreviewByType(idxs Idxs, typeFilter string) string {
+func (e *RyeCtx) PreviewByType(idxs Idxs, typeFilter string) string {
 	var bu strings.Builder
 	var ks string
 	if e.GetKind() > 0 {
@@ -320,8 +320,8 @@ func (e RyeCtx) PreviewByType(idxs Idxs, typeFilter string) string {
 				color = color_string2
 			}
 			var strVal string
-			ctx, ok := v.(RyeCtx)
-			if ok && &ctx == &e {
+			ctx, ok := v.(*RyeCtx)
+			if ok && ctx == e {
 				strVal = " [self reference]"
 			} else {
 				strVal = v.Inspect(idxs)
@@ -339,7 +339,7 @@ func (e RyeCtx) PreviewByType(idxs Idxs, typeFilter string) string {
 	return bu.String()
 }
 
-func (e RyeCtx) PreviewByRegex(idxs Idxs, regexFilter interface{ MatchString(string) bool }) string {
+func (e *RyeCtx) PreviewByRegex(idxs Idxs, regexFilter interface{ MatchString(string) bool }) string {
 	var bu strings.Builder
 	var ks string
 	if e.GetKind() > 0 {
@@ -366,8 +366,8 @@ func (e RyeCtx) PreviewByRegex(idxs Idxs, regexFilter interface{ MatchString(str
 				color = color_string2
 			}
 			var strVal string
-			ctx, ok := v.(RyeCtx)
-			if ok && &ctx == &e {
+			ctx, ok := v.(*RyeCtx)
+			if ok && ctx == e {
 				strVal = " [self reference]"
 			} else {
 				strVal = v.Inspect(idxs)
@@ -386,25 +386,25 @@ func (e RyeCtx) PreviewByRegex(idxs Idxs, regexFilter interface{ MatchString(str
 }
 
 // Type returns the type of the Integer.
-func (i RyeCtx) Type() Type {
+func (i *RyeCtx) Type() Type {
 	return ContextType
 }
 
 // Inspect returns a string representation of the Integer.
-func (i RyeCtx) Inspect(e Idxs) string {
+func (i *RyeCtx) Inspect(e Idxs) string {
 	return i.Print(e)
 }
 
-func (i RyeCtx) Trace(msg string) {
+func (i *RyeCtx) Trace(msg string) {
 	fmt.Print(msg + "(env): ")
 	//fmt.Println(i.Value)
 }
 
-func (i RyeCtx) GetKind() int {
+func (i *RyeCtx) GetKind() int {
 	return i.Kind.Index
 }
 
-func (e RyeCtx) GetWordsAsStrings(idxs Idxs) Block {
+func (e *RyeCtx) GetWordsAsStrings(idxs Idxs) Block {
 	objs := make([]Object, len(e.state))
 	idx := 0
 	for k := range e.state {
@@ -414,7 +414,7 @@ func (e RyeCtx) GetWordsAsStrings(idxs Idxs) Block {
 	return *NewBlock(*NewTSeries(objs))
 }
 
-func (e RyeCtx) GetWords(idxs Idxs) Block {
+func (e *RyeCtx) GetWords(idxs Idxs) Block {
 	objs := make([]Object, len(e.state))
 	idx := 0
 	for k := range e.state {
@@ -424,11 +424,11 @@ func (e RyeCtx) GetWords(idxs Idxs) Block {
 	return *NewBlock(*NewTSeries(objs))
 }
 
-func (i RyeCtx) Equal(o Object) bool {
+func (i *RyeCtx) Equal(o Object) bool {
 	if i.Type() != o.Type() {
 		return false
 	}
-	oCtx := o.(RyeCtx)
+	oCtx, ok2 := o.(*RyeCtx); if !ok2 { return false }; oCtx = oCtx
 	if len(i.state) != len(oCtx.state) {
 		return false
 	}
@@ -449,7 +449,7 @@ func (i RyeCtx) Equal(o Object) bool {
 	return true
 }
 
-func (i RyeCtx) Dump(e Idxs) string {
+func (i *RyeCtx) Dump(e Idxs) string {
 	var bu strings.Builder
 	bu.WriteString("context {\n")
 	//bu.WriteString(fmt.Sprintf("doc \"%s\"\n", i.Doc))
@@ -459,7 +459,7 @@ func (i RyeCtx) Dump(e Idxs) string {
 }
 
 // DumpBare returns the string representation of the context without wraping it in context { ... }
-func (i RyeCtx) DumpBare(e Idxs) string {
+func (i *RyeCtx) DumpBare(e Idxs) string {
 	var bu strings.Builder
 	for j := 0; j < e.GetWordCount(); j++ {
 		if val, ok := i.state[j]; ok {

@@ -19,23 +19,6 @@ func init() {
 // NoInspectMode controls whether to exit immediately on error without showing debugging options
 var NoInspectMode bool
 
-// Flag to control whether to use the fast evaluator
-var useFastEvaluator = false
-
-// EnableFastEvaluator enables the fast evaluator for Rye0 dialect.
-// Called from: Command-line flags or configuration code
-// Purpose: Switches to optimized evaluation mode for Rye0 dialect code
-func EnableFastEvaluator() {
-	useFastEvaluator = true
-}
-
-// DisableFastEvaluator disables the fast evaluator for Rye0 dialect.
-// Called from: Command-line flags or configuration code
-// Purpose: Switches back to standard evaluation mode for Rye0 dialect code
-func DisableFastEvaluator() {
-	useFastEvaluator = false
-}
-
 // EvalBlock is the main entry point for evaluating a block of code.
 // Called from: Throughout the codebase - main evaluation loops, builtins, function calls
 // Purpose: Dispatches to the appropriate dialect-specific evaluator (Rye2, Eyr, Rye0, Rye00)
@@ -55,10 +38,6 @@ func EvalBlockInj(ps *env.ProgramState, inj env.Object, injnow bool) {
 	case env.EyrDialect:
 		Eyr_EvalBlockInside(ps, inj, injnow) // TODO ps.Stack is already in ps ... refactor
 	case env.Rye0Dialect:
-		// Check if we should use the fast evaluator
-		if useFastEvaluator && inj == nil {
-			Rye0_FastEvalBlock(ps)
-		}
 		Rye0_EvalBlockInj(ps, inj, injnow) // TODO ps.Stack is already in ps ... refactor
 	case env.Rye00Dialect:
 		Rye00_EvalBlockInj(ps, inj, injnow) // Simplified dialect for builtins and integers
@@ -91,9 +70,21 @@ func EvalBlockInj_Rye2(ps *env.ProgramState, inj env.Object, injnow bool) {
 	// fmt.Println(ps.BlockFile)
 	// fmt.Println(ps.BlockLine)
 	// fmt.Println("---------------------------------------------")
-	// // repeats until at the end of the block
+	// repeats evaluating expressions to the end of the block
+	// nothing is passed between expressions, except through context
 	for ps.Ser.Pos() < ps.Ser.Len() {
 		injnow = EvalExpressionInj(ps, inj, injnow)
+		if ps.Injnow {
+			if ps.Inj != nil {
+				inj = ps.Inj
+				injnow = true
+			} else {
+				inj = nil
+				injnow = false
+			}
+			ps.Inj = nil
+			ps.Injnow = false
+		}
 		// Check for both failure and error flags immediately after expression evaluation
 		if ps.ErrorFlag || (ps.ReturnFlag && ps.CallDepth > 0) {
 			// fmt.Println("EVAL BLOCK INJ")
@@ -150,8 +141,24 @@ func EvalBlockInCtxInj(ps *env.ProgramState, ctx *env.RyeCtx, inj env.Object, in
 // EvalExpression is the consolidated expression evaluator handling both regular and injected evaluation.
 // Called from: EvalExpressionInj, EvalExpression_CollectArg, EvalExpressionInjLimited (wrapper functions)
 // Purpose: Evaluates left side via DispatchType, then optionally evaluates right side (opwords/pipewords)
-func EvalExpression(ps *env.ProgramState, inj env.Object, injnow bool, limited bool) bool {
+func EvalExpression(ps *env.ProgramState, inj env.Object, injnow bool, limited bool, opword bool) bool {
+	// fmt.Println("==EvalExpression:1")
 	if inj == nil || !injnow {
+		if limited {
+			switch next := ps.Ser.Peek().(type) {
+			case env.Pipeword:
+				ps.ErrorFlag = true
+				ps.Res = env.NewError("Pipeword barrier encountered while collecting an argument. The previous expression is incomplete.")
+				return injnow
+			case env.CPath:
+				if next.Mode == 2 {
+					ps.ErrorFlag = true
+					ps.Res = env.NewError("Pipeword barrier encountered while collecting an argument. The previous expression is incomplete.")
+					return injnow
+				}
+			}
+		}
+		// Eval expression that doesn't get value from the left
 		EvalExpression_DispatchType(ps)
 		if ps.ReturnFlag || ps.ErrorFlag {
 			return injnow
@@ -163,35 +170,41 @@ func EvalExpression(ps *env.ProgramState, inj env.Object, injnow bool, limited b
 			return injnow
 		}
 	}
-	OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited)
+	// look for expression continuation on the right and
+	// eval it if it's there
+	// opword=true means we're collecting an opword argument; allow dotword chains
+	// but do not consume further opwords.
+	// fmt.Println("==EvalExpression:2")
+	OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, !opword)
 	return injnow
 }
 
 // EvalExpression_CollectArg evaluates an expression without injection (for collecting function arguments).
 // Called from: CallFunction_CollectArgs, CallBuiltin_CollectArgs, CallVarBuiltin, EvalWord
 // Purpose: Wrapper for EvalExpression used when collecting arguments from code
-func EvalExpression_CollectArg(ps *env.ProgramState, limited bool) {
-	EvalExpression(ps, nil, false, limited)
+func EvalExpression_CollectArg(ps *env.ProgramState, limited bool, opword bool) {
+	EvalExpression(ps, nil, false, limited, opword)
 }
 
 // EvalExpressionInj evaluates an expression with optional value injection.
 // Called from: EvalBlockInj, EvalExpression_DispatchType (OPBBLOCK mode), EvalSetword, EvalModword
 // Purpose: Wrapper for EvalExpression that allows injecting a value into the expression
 func EvalExpressionInj(ps *env.ProgramState, inj env.Object, injnow bool) bool {
-	return EvalExpression(ps, inj, injnow, false)
+	return EvalExpression(ps, inj, injnow, false, false)
 }
 
 // EvalExpressionInjLimited evaluates an expression with injection in limited mode (stops at setwords/pipewords).
 // Called from: Various places where expression evaluation should not consume setwords or pipewords
 // Purpose: Limited expression evaluation that prevents consuming certain right-side constructs
 func EvalExpressionInjLimited(ps *env.ProgramState, inj env.Object, injnow bool) bool {
-	return EvalExpression(ps, inj, injnow, true)
+	return EvalExpression(ps, inj, injnow, true, false)
 }
 
 // OptionallyEvalExpressionRight evaluates right-side constructs like opwords, pipewords, and setwords.
 // Called from: EvalExpression, recursively from itself
 // Purpose: Handles operator precedence by evaluating opwords/pipewords/setwords/modwords to the right
-func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, limited bool) {
+func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, limited bool, allowOpwords bool) {
+	// fmt.Println("--OptionallyEvalExpressionRight:1")
 	if nextObj == nil || ps.ReturnFlag || ps.ErrorFlag {
 		return
 	}
@@ -205,26 +218,62 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 	}
 	switch opword := nextObj.(type) {
 	case env.Opword:
+		if !allowOpwords {
+			return
+		}
 		// val := ps.Ser.Pop()
 		ps.Ser.Next()
-		EvalWord(ps, opword.ToWord(), ps.Res, false, opword.Force > 0)
-		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited)
+		// fmt.Println("---Opword:1")
+		EvalWord(ps, opword.ToWord(), ps.Res, false, opword.Force > 0, true)
+		// fmt.Println("---Opword:2")
+		// fmt.Println(ps.Res)
+		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, allowOpwords)
+		return
+	case env.Dotword:
+		// Dotwords are method-style operators (.add, .upper, etc.)
+		ps.Ser.Next()
+		EvalWord(ps, opword.ToWord(), ps.Res, false, opword.Force > 0, false)
+		if ps.ReturnFlag || ps.ErrorFlag {
+			return
+		}
+		// Continue dotword chain if another dotword follows.
+		if _, ok := ps.Ser.Peek().(env.Dotword); ok {
+			OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, allowOpwords)
+			return
+		}
+		if !allowOpwords {
+			return
+		}
+		switch next := ps.Ser.Peek().(type) {
+		case env.Opword, env.Pipeword, env.LSetword, env.LModword:
+			OptionallyEvalExpressionRight(next, ps, limited, allowOpwords)
+			return
+		case env.CPath:
+			OptionallyEvalExpressionRight(next, ps, limited, allowOpwords)
+			return
+		}
+		// Terminate current expression after dotword and inject the result
+		// into the next expression in the block.
+		ps.Inj = ps.Res
+		ps.Injnow = true
 		return
 	case env.Pipeword:
 		if limited {
 			return
 		}
 		ps.Ser.Next()
-		EvalWord(ps, opword.ToWord(), ps.Res, false, opword.Force > 0)
+		EvalWord(ps, opword.ToWord(), ps.Res, false, opword.Force > 0, false)
 		if ps.ReturnFlag {
 			return //... not sure if we need this
 		}
-		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited)
+		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, allowOpwords)
 		return
 	case env.LSetword:
+		fmt.Println("*")
 		if limited {
 			return
 		}
+		fmt.Println("**")
 		idx := opword.Index
 		if ps.AllowMod {
 			ok := ps.Ctx.Mod(idx, ps.Res)
@@ -244,7 +293,7 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 			}
 		}
 		ps.Ser.Next()
-		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited)
+		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, allowOpwords)
 		return
 	case env.LModword:
 		if limited {
@@ -277,25 +326,25 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 			return
 		}
 		ps.Ser.Next()
-		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited)
+		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, allowOpwords)
 		return
 	case env.CPath:
 		if opword.Mode == 1 {
 			ps.Ser.Next()
-			EvalWord(ps, opword, ps.Res, false, false)
+			EvalWord(ps, opword, ps.Res, false, false, false)
 			// when calling cpath
-			OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited)
+			OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, allowOpwords)
 			return
 		} else if opword.Mode == 2 {
 			if limited {
 				return
 			}
 			ps.Ser.Next()
-			EvalWord(ps, opword, ps.Res, false, false) // TODO .. check opword force
+			EvalWord(ps, opword, ps.Res, false, false, false) // TODO .. check opword force
 			if ps.ReturnFlag {
 				return //... not sure if we need this
 			}
-			OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited)
+			OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, allowOpwords)
 			return
 		}
 	}
@@ -306,7 +355,10 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 // Called from: EvalExpression, EvalWord, EvalGenword
 // Purpose: Main type switch - handles all Rye value types and dispatches to appropriate handlers
 // Note: This is the heart of the evaluator - if Rye were fully Polish notation, this would be most of it
+// It handles the case when there is no value on the left, so we are starting a fresh expression
 func EvalExpression_DispatchType(ps *env.ProgramState) {
+	// Pop next element from block (block has an internal cursor)
+
 	object := ps.Ser.Pop()
 	if object == nil {
 		ps.ErrorFlag = true
@@ -315,15 +367,6 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 	}
 
 	objType := object.Type()
-
-	// Skip LocationNodes - they're only used for error reporting
-	if objType == env.LocationNodeType {
-		// Skip this node and try the next one
-		if !ps.Ser.AtLast() {
-			EvalExpression_DispatchType(ps)
-		}
-		return
-	}
 
 	if objType == env.StringType ||
 		objType == env.IntegerType ||
@@ -337,15 +380,16 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 	switch object.Type() {
 	case env.BlockType:
 		block := object.(env.Block)
-		// block mode 1 is for eval blocks
+		// mode 0 just return block (pasive block) {}
 		if block.Mode == 0 {
 			ps.Res = object
+			// mode 1 is evals mode block, do the same as evals function does []
 		} else if block.Mode == 1 {
 			ser := ps.Ser
 			ps.Ser = block.Series
 			res := make([]env.Object, 0)
 			for ps.Ser.Pos() < ps.Ser.Len() {
-				EvalExpression_CollectArg(ps, false)
+				EvalExpression_CollectArg(ps, false, false)
 				if ps.ReturnFlag || ps.ErrorFlag {
 					return
 				}
@@ -353,6 +397,7 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 			}
 			ps.Ser = ser
 			ps.Res = *env.NewBlock(*env.NewTSeries(res))
+			// mode 2 is do mode block, same as do function does ()
 		} else if block.Mode == 2 {
 			ser := ps.Ser
 			ps.Ser = block.Series
@@ -362,6 +407,7 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 			}
 			ps.Ser = ser
 			// return ps.Res
+			// .[] vals\with mode block
 		} else if block.Mode == 3 {
 			// OPBBLOCK - behaves like vals\with with a block argument
 			// For now, inject nil - this might need to be the previous result or context value
@@ -380,6 +426,7 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 			}
 			ps.Ser = ser
 			ps.Res = *env.NewBlock(*env.NewTSeries(res))
+			// .() with mode block
 		} else if block.Mode == 4 {
 			// OPGROUP - behaves like with function
 			ser := ps.Ser
@@ -391,6 +438,7 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 			}
 			ps.Ser = ser
 			// return ps.Res
+			// .{} fn1 mode block
 		} else if block.Mode == 5 {
 			// OPBLOCK - behaves like fn1 function call
 			// Create a function with one anonymous argument and call it with current result
@@ -399,13 +447,14 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 			// injVal := ps.Res // Use current result as argument
 			// CallFunctionWithArgs(fn, ps, nil, injVal)
 			// return ps.Res
+			// l{} list constructor
 		} else if block.Mode == 7 {
 			// LIST_BBLOCK l[ ] - evaluates expressions and creates a List
 			ser := ps.Ser
 			ps.Ser = block.Series
 			res := make([]any, 0)
 			for ps.Ser.Pos() < ps.Ser.Len() {
-				EvalExpression_CollectArg(ps, false)
+				EvalExpression_CollectArg(ps, false, false)
 				if ps.ReturnFlag || ps.ErrorFlag {
 					ps.Ser = ser
 					return
@@ -414,13 +463,14 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 			}
 			ps.Ser = ser
 			ps.Res = *env.NewList(res)
+			// d{} dict constructor
 		} else if block.Mode == 9 {
 			// DICT_BBLOCK d[ ] - evaluates expressions and creates a Dict
 			ser := ps.Ser
 			ps.Ser = block.Series
 			res := make([]env.Object, 0)
 			for ps.Ser.Pos() < ps.Ser.Len() {
-				EvalExpression_CollectArg(ps, false)
+				EvalExpression_CollectArg(ps, false, false)
 				if ps.ReturnFlag || ps.ErrorFlag {
 					ps.Ser = ser
 					return
@@ -430,23 +480,15 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 			ps.Ser = ser
 			ps.Res = env.NewDictFromSeries(*env.NewTSeries(res), ps.Idx)
 		}
+	// specific word types 'tagword is the lit-word
 	case env.TagwordType:
 		ps.Res = *env.NewWord(object.(env.Tagword).Index)
 		return
 	case env.WordType:
-		EvalWord(ps, object.(env.Word), nil, false, false)
+		EvalWord(ps, object.(env.Word), nil, false, false, false)
 		return
 	case env.CPathType:
-		EvalWord(ps, object, nil, false, false)
-		return
-	case env.BuiltinType:
-		CallBuiltin_CollectArgs(object.(env.Builtin), ps, nil, false, false, nil)
-		return
-	case env.VarBuiltinType:
-		CallVarBuiltin(object.(env.VarBuiltin), ps, nil, false, false, nil)
-		return
-	case env.CurriedCallerType:
-		CallCurriedCaller(object.(env.CurriedCaller), ps, nil, false, false, nil)
+		EvalWord(ps, object, nil, false, false, false)
 		return
 	// case env.FunctionType: // works just for regular words ... as function
 	// 	CallFunction(object.(env.Function), ps, nil, false, nil)
@@ -462,14 +504,31 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 	case env.GetwordType:
 		EvalGetword(ps, object.(env.Getword), nil, false)
 		return
+	case env.DotwordType:
+		EvalWord(ps, object.(env.Dotword), ps.Res, true, false, false)
+	case env.OpwordType:
+		EvalWord(ps, object.(env.Opword), ps.Res, true, false, true)
+	case env.PipewordType:
+		EvalWord(ps, object.(env.Pipeword), ps.Res, true, false, false)
+	// this functions works when there is no left value, so these should cause an error (20260224)
+	// case env.LSetwordType, env.LModwordType, env.OpCPathType, env.PipeCPathType:
+	//	ps.Res = *env.NewError("In-stream token, but not in stream (ER1294)")
+	//	return
+	// these are cached (inserted into block values so we can avoid the repeated lookup)
+	case env.BuiltinType:
+		CallBuiltin_CollectArgs(object.(env.Builtin), ps, nil, false, false, nil, false) // TODO .. POTENTIAL BUG, OPWORD STATE IS NOT STORED WHEN EMBEDED
+		return
+	case env.VarBuiltinType:
+		CallVarBuiltin(object.(env.VarBuiltin), ps, nil, false, false, nil, false) // TODO .. POTENTIAL BUG, OPWORD STATE IS NOT STORED WHEN EMBEDED
+		return
+	case env.CurriedCallerType:
+		CallCurriedCaller(object.(env.CurriedCaller), ps, nil, false, false, nil, false) // TODO .. POTENTIAL BUG, OPWORD STATE IS NOT STORED WHEN EMBEDED
+		return
 	case env.CommaType:
 		ps.ErrorFlag = true
 		ps.Res = env.NewError("Expression guard (comma) found inside an expression. Commas can only be used between block-level expressions, not within expressions.")
 		return
 	case env.ErrorType:
-		ps.ErrorFlag = true
-		ps.Res = env.NewError("Error object encountered in code block. This usually indicates a previous error that wasn't properly handled.")
-		return
 		ps.ErrorFlag = true
 		ps.Res = env.NewError("Error object encountered in code block. This usually indicates a previous error that wasn't properly handled.")
 		return
@@ -499,6 +558,9 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 	case env.Opword:
 		object, found := ps.Ctx.Get(word.Index)
 		return found, object, nil
+	case env.Dotword:
+		object, found := ps.Ctx.Get(word.Index)
+		return found, object, nil
 	case env.Pipeword:
 		object, found := ps.Ctx.Get(word.Index)
 		return found, object, nil
@@ -518,7 +580,7 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 					goto gogo1
 				}
 				// If no more path parts, return the parent context itself
-				return true, *currCtx, currCtx
+				return true, currCtx, currCtx
 			}
 			return false, nil, currCtx
 		}
@@ -527,10 +589,6 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 			switch swObj := object.(type) {
 			case *env.RyeCtx:
 				currCtx = swObj
-				i += 1
-				goto gogo1
-			case env.RyeCtx:
-				currCtx = &swObj
 				i += 1
 				goto gogo1
 			case env.Dict:
@@ -555,6 +613,12 @@ func findWordValueWithFailureInfo(ps *env.ProgramState, word1 env.Object) (bool,
 		}
 		return found, object, nil, ""
 	case env.Opword:
+		object, found := ps.Ctx.Get(word.Index)
+		if !found {
+			return found, object, nil, ps.Idx.GetWord(word.Index)
+		}
+		return found, object, nil, ""
+	case env.Dotword:
 		object, found := ps.Ctx.Get(word.Index)
 		if !found {
 			return found, object, nil, ps.Idx.GetWord(word.Index)
@@ -589,7 +653,7 @@ func findWordValueWithFailureInfo(ps *env.ProgramState, word1 env.Object) (bool,
 					goto gogo1
 				}
 				// If no more path parts, return the parent context itself
-				return true, *currCtx, currCtx, ""
+				return true, currCtx, currCtx, ""
 			}
 			return false, nil, currCtx, "@ (no parent context)"
 		}
@@ -617,10 +681,6 @@ func findWordValueWithFailureInfo(ps *env.ProgramState, word1 env.Object) (bool,
 				currCtx = swObj
 				i += 1
 				goto gogo1
-			case env.RyeCtx:
-				currCtx = &swObj
-				i += 1
-				goto gogo1
 			case env.Dict:
 				// Handle dict path traversal
 				currDict := swObj
@@ -639,10 +699,6 @@ func findWordValueWithFailureInfo(ps *env.ProgramState, word1 env.Object) (bool,
 								continue
 							case *env.RyeCtx:
 								currCtx = nextObj
-								i += 1
-								goto gogo1
-							case env.RyeCtx:
-								currCtx = &nextObj
 								i += 1
 								goto gogo1
 							default:
@@ -667,7 +723,9 @@ func findWordValueWithFailureInfo(ps *env.ProgramState, word1 env.Object) (bool,
 // EvalWord evaluates a word by looking up its value and potentially dispatching to generic words.
 // Called from: EvalExpression_DispatchType, OptionallyEvalExpressionRight, EvalObject
 // Purpose: Main word evaluator - looks up in context, tries generic words if not found, handles getcpath mode
-func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft bool, pipeSecond bool) {
+//
+//	when there is a left value
+func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft bool, pipeSecond bool, opword bool) {
 	// Special handling for getcpath (mode 3) - behave like get-word
 	if cpath, ok := word.(env.CPath); ok && cpath.Mode == 3 {
 		found, object, _, failureInfo := findWordValueWithFailureInfo(ps, word)
@@ -682,7 +740,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 		}
 	}
 
-	// LOCAL FIRST
+	// LOCAL FIRST -- try finding a word locally
 	var firstVal env.Object
 	found, object, session, failureInfo := findWordValueWithFailureInfo(ps, word)
 	pos := ps.Ser.GetPos()
@@ -719,9 +777,14 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 			object, found = ps.Gen.Get(kind, rword.Index)
 		}
 	}
+
+	// fmt.Println("----EvalObject:0")
+	// If found initially or via methods namespace
 	if found {
-		EvalObject(ps, object, leftVal, toLeft, session, pipeSecond, firstVal) //ww0128a *
+		// Eval the value (object) word was bound to
+		EvalObject(ps, object, leftVal, toLeft, session, pipeSecond, firstVal, opword) //ww0128a *
 		return
+		// word is not found
 	} else {
 		ps.ErrorFlag = true
 		if !ps.FailureFlag {
@@ -745,7 +808,7 @@ func EvalGenword(ps *env.ProgramState, word env.Genword, leftVal env.Object, toL
 	var arg0 = ps.Res
 	object, found := ps.Gen.Get(arg0.GetKind(), word.Index)
 	if found {
-		EvalObject(ps, object, arg0, toLeft, nil, false, nil) //ww0128a *
+		EvalObject(ps, object, arg0, toLeft, nil, false, nil, false) //ww0128a *
 		return
 	} else {
 		ps.ErrorFlag = true
@@ -772,40 +835,29 @@ func EvalGetword(ps *env.ProgramState, word env.Getword, leftVal env.Object, toL
 // EvalObject evaluates a Rye object, particularly handling callable types (builtins, functions).
 // Called from: EvalWord, EvalGenword
 // Purpose: Evaluates found objects - dispatches builtins/functions/cpaths to their callers, returns other types
-func EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toLeft bool, ctx *env.RyeCtx, pipeSecond bool, firstVal env.Object) {
+func EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toLeft bool, ctx *env.RyeCtx, pipeSecond bool, firstVal env.Object, opword bool) {
 	switch object.Type() {
 	case env.BuiltinType:
 		bu := object.(env.Builtin)
 		if checkForFailureWithBuiltin(bu, ps, 333) {
 			return
 		}
-		CallBuiltin_CollectArgs(bu, ps, leftVal, toLeft, pipeSecond, firstVal)
+		CallBuiltin_CollectArgs(bu, ps, leftVal, toLeft, pipeSecond, firstVal, opword)
 		return
 	case env.FunctionType:
 		fn := object.(env.Function)
 		CallFunction_CollectArgs(fn, ps, leftVal, toLeft, ctx, pipeSecond, firstVal)
-		return
-	case env.CPathType: // RMME
-		// Check if this is a getcpath (mode 3) - behave like get-word
-		if cpath, ok := object.(env.CPath); ok && cpath.Mode == 3 {
-			// For getcpath, just return the object without calling it (like get-word behavior)
-			ps.Res = object
-			return
-		}
-		// For other CPath modes (opcpath, pipecpath), treat as function
-		fn := object.(env.Function)
-		CallFunction_CollectArgs(fn, ps, leftVal, toLeft, ctx)
 		return
 	case env.VarBuiltinType:
 		bu := object.(env.VarBuiltin)
 		if checkForFailureWithVarBuiltin(bu, ps, 333) {
 			return
 		}
-		CallVarBuiltin(bu, ps, leftVal, toLeft, pipeSecond, firstVal)
+		CallVarBuiltin(bu, ps, leftVal, toLeft, pipeSecond, firstVal, opword)
 		return
 	case env.CurriedCallerType:
 		cc := object.(env.CurriedCaller)
-		CallCurriedCaller(cc, ps, leftVal, toLeft, pipeSecond, firstVal)
+		CallCurriedCaller(cc, ps, leftVal, toLeft, pipeSecond, firstVal, opword)
 		return
 	default:
 		ps.Res = object
@@ -907,7 +959,7 @@ func CallFunctionWithArgs(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx
 	}
 }
 
-// functionCallPool is a sync.Pool for reusing ProgramState objects specifically for function calls
+// envPool is a sync.Pool for reusing RyeCtx objects during function calls to reduce allocations
 var envPool = sync.Pool{
 	New: func() interface{} {
 		return env.NewEnv(nil)
@@ -919,7 +971,7 @@ var envPool = sync.Pool{
 // Purpose: Main function caller in evaluator - collects args from code, sets up context, executes function body
 func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.Object, toLeft bool, ctx *env.RyeCtx, pipeSecond ...interface{}) {
 	// fmt.Println(1)
-
+	opword := false
 	// Track call depth for top-level vs function detection
 	ps.CallDepth++
 	defer func() { ps.CallDepth-- }()
@@ -947,7 +999,7 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 	} else if pipeSecondFlag && fn.Argsn > 0 {
 		// When pipeSecond is true but firstVal is nil (non-generic word),
 		// evaluate the next expression to get arg0
-		EvalExpression_CollectArg(ps, true)
+		EvalExpression_CollectArg(ps, true, opword)
 		if ps.ReturnFlag || ps.ErrorFlag {
 			return
 		}
@@ -957,7 +1009,7 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 	env0 := ps.Ctx // store reference to current env in local
 	var fnCtx *env.RyeCtx
 	fnCtxFromPool := false // Track if fnCtx was obtained from pool
-	if ctx != nil { // called via contextpath and this is the context
+	if ctx != nil {        // called via contextpath and this is the context
 		//		fmt.Println("if 111")
 		if fn.Pure {
 			//			fmt.Println("calling pure function")
@@ -1062,7 +1114,7 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 
 	// collect arguments
 	for i := ii; i < fn.Argsn; i += 1 {
-		evalExprFn(ps, true)
+		evalExprFn(ps, true, opword)
 		if ps.ReturnFlag || ps.ErrorFlag {
 			return
 		}
@@ -1148,39 +1200,7 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 // Called from: CallFunctionWithArgs, builtins needing to call 2-arg functions
 // Purpose: Optimized path for 2-argument function calls from builtins
 func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, arg1 env.Object, ctx *env.RyeCtx) {
-	// fmt.Println(2)
-	var fnCtx *env.RyeCtx
-	env0 := ps.Ctx  // store reference to current env in local
-	if ctx != nil { // called via contextpath and this is the context
-		//		fmt.Println("if 111")
-		if fn.Pure {
-			//			fmt.Println("calling pure function")
-			//		fmt.Println(es.PCtx)
-			fnCtx = env.NewEnv(ps.PCtx)
-		} else {
-			if fn.Ctx != nil { // if context was defined at definition time, pass it as parent.
-				fn.Ctx.Parent = ctx
-				fnCtx = env.NewEnv(fn.Ctx)
-			} else {
-				fnCtx = env.NewEnv(ctx)
-			}
-		}
-	} else {
-		//fmt.Println("else1")
-		if fn.Pure {
-			//		fmt.Println("calling pure function")
-			//	fmt.Println(es.PCtx)
-			fnCtx = env.NewEnv(ps.PCtx)
-		} else {
-			if fn.Ctx != nil { // if context was defined at definition time, pass it as parent.
-				// Q: Would we want to pass it directly at any point?
-				//    Maybe to remove need of creating new contexts, for reuse, of to be able to modify it?
-				fnCtx = env.NewEnv(fn.Ctx)
-			} else {
-				fnCtx = env.NewEnv(env0)
-			}
-		}
-	}
+	fnCtx := DetermineContext(fn, ps, ctx)
 	if ps.ReturnFlag || ps.ErrorFlag {
 		return
 	}
@@ -1231,33 +1251,7 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 // Called from: CallFunctionWithArgs, builtins needing to call 4-arg functions
 // Purpose: Optimized path for 4-argument function calls from builtins
 func CallFunctionArgs4(fn env.Function, ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, ctx *env.RyeCtx) {
-	fmt.Println(3)
-	var fnCtx *env.RyeCtx
-	env0 := ps.Ctx  // store reference to current env in local
-	if ctx != nil { // called via contextpath and this is the context
-		if fn.Pure {
-			fnCtx = env.NewEnv(ps.PCtx)
-		} else {
-			if fn.Ctx != nil { // if context was defined at definition time, pass it as parent.
-				fn.Ctx.Parent = ctx
-				fnCtx = env.NewEnv(fn.Ctx)
-			} else {
-				fnCtx = env.NewEnv(ctx)
-			}
-		}
-	} else {
-		if fn.Pure {
-			fnCtx = env.NewEnv(ps.PCtx)
-		} else {
-			if fn.Ctx != nil { // if context was defined at definition time, pass it as parent.
-				// Q: Would we want to pass it directly at any point?
-				//    Maybe to remove need of creating new contexts, for reuse, of to be able to modify it?
-				fnCtx = env.NewEnv(fn.Ctx)
-			} else {
-				fnCtx = env.NewEnv(env0)
-			}
-		}
-	}
+	fnCtx := DetermineContext(fn, ps, ctx)
 	if ps.ReturnFlag || ps.ErrorFlag {
 		return
 	}
@@ -1443,7 +1437,7 @@ func CallCurriedCallerArgsN(cc env.CurriedCaller, ps *env.ProgramState, args ...
 // CallCurriedCaller handles calling a curried caller (partially applied function or builtin).
 // Called from: EvalExpression_DispatchType, EvalObject
 // Purpose: Executes curried callers by filling in remaining arguments and calling the underlying builtin/function
-func CallCurriedCaller(cc env.CurriedCaller, ps *env.ProgramState, arg0_ env.Object, toLeft bool, pipeSecond bool, firstVal env.Object) {
+func CallCurriedCaller(cc env.CurriedCaller, ps *env.ProgramState, arg0_ env.Object, toLeft bool, pipeSecond bool, firstVal env.Object, opword bool) {
 	// Initialize arguments with curried values if available
 	var arg0 env.Object = cc.Cur0
 	var arg1 env.Object = cc.Cur1
@@ -1524,7 +1518,7 @@ func CallCurriedCaller(cc env.CurriedCaller, ps *env.ProgramState, arg0_ env.Obj
 
 	// Collect remaining unfilled arguments from code stream
 	for collected < argsToCollect {
-		evalExprFn(ps, true)
+		evalExprFn(ps, true, opword)
 		if ps.ReturnFlag || ps.ErrorFlag {
 			return
 		}
@@ -1565,7 +1559,7 @@ func CallCurriedCaller(cc env.CurriedCaller, ps *env.ProgramState, arg0_ env.Obj
 // CallBuiltin_CollectArgs calls a builtin by collecting up to 5 arguments from the code stream.
 // Called from: EvalExpression_DispatchType, EvalObject
 // Purpose: Main builtin caller - collects arguments, handles failure flags, calls builtin function
-func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft bool, pipeSecond bool, firstVal env.Object) {
+func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft bool, pipeSecond bool, firstVal env.Object, opword bool) {
 	////args := make([]env.Object, bi.Argsn)
 	/*pospos := ps.Ser.GetPos()
 	for i := 0; i < bi.Argsn; i += 1 {
@@ -1585,7 +1579,15 @@ func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Obj
 	// end of experiment
 
 	evalExprFn := EvalExpression_CollectArg
-	curry := false
+	getParentErr := func() *env.Error {
+		if err, ok := ps.Res.(*env.Error); ok {
+			return err
+		}
+		if err, ok := ps.Res.(env.Error); ok {
+			return &err
+		}
+		return nil
+	}
 
 	//fmt.Println("*** BUILTIN ***")
 
@@ -1601,7 +1603,7 @@ func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Obj
 	} else if bi.Argsn > 0 {
 		//fmt.Println(" ARG 1 ")
 		//fmt.Println(ps.Ser.GetPos())
-		evalExprFn(ps, true)
+		evalExprFn(ps, true, opword)
 		if checkForFailureWithBuiltin(bi, ps, 0) {
 			return
 		}
@@ -1619,13 +1621,13 @@ func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Obj
 	if arg0_ != nil && pipeSecond {
 		arg1 = arg0_
 	} else if bi.Argsn > 1 {
-		evalExprFn(ps, true) // <---- THESE DETERMINE IF IT CONSUMES WHOLE EXPRESSION OR NOT IN CASE OF PIPEWORDS .. HM*... MAYBE WOULD COULD HAVE A WORD MODIFIER?? a: 2 |add 5 a:: 2 |add 5 print* --TODO
+		evalExprFn(ps, true, opword) // <---- THESE DETERMINE IF IT CONSUMES WHOLE EXPRESSION OR NOT IN CASE OF PIPEWORDS .. HM*... MAYBE WOULD COULD HAVE A WORD MODIFIER?? a: 2 |add 5 a:: 2 |add 5 print* --TODO
 
 		if checkForFailureWithBuiltin(bi, ps, 1) {
 			return
 		}
 		if ps.ReturnFlag || ps.ErrorFlag {
-			ps.Res = env.NewError4(0, "Argument 2 of "+strconv.Itoa(bi.Argsn)+" missing for builtin "+FormatBuiltinReference(bi.Doc)+". Check that all required arguments are provided.", ps.Res.(*env.Error), nil)
+			ps.Res = env.NewError4(0, "Argument 2 of "+strconv.Itoa(bi.Argsn)+" missing for builtin "+FormatBuiltinReference(bi.Doc)+". Check that all required arguments are provided.", getParentErr(), nil)
 			return
 		}
 		//fmt.Println(ps.Res)
@@ -1633,25 +1635,25 @@ func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Obj
 		arg1 = ps.Res
 	}
 	if bi.Argsn > 2 {
-		evalExprFn(ps, true)
+		evalExprFn(ps, true, opword)
 
 		if checkForFailureWithBuiltin(bi, ps, 2) {
 			return
 		}
 		if ps.ReturnFlag || ps.ErrorFlag {
-			ps.Res = env.NewError4(0, "Argument 3 missing. Check that all required arguments are provided for the builtin function.", ps.Res.(*env.Error), nil)
+			ps.Res = env.NewError4(0, "Argument 3 missing. Check that all required arguments are provided for the builtin function.", getParentErr(), nil)
 			return
 		}
 		// The CallCurriedCaller is now created explicitly with partial builtin function
 		arg2 = ps.Res
 	}
 	if bi.Argsn > 3 {
-		evalExprFn(ps, true)
+		evalExprFn(ps, true, opword)
 		// The CallCurriedCaller is now created explicitly with partial builtin function
 		arg3 = ps.Res
 	}
 	if bi.Argsn > 4 {
-		evalExprFn(ps, true)
+		evalExprFn(ps, true, opword)
 		// The CallCurriedCaller is now created explicitly with partial builtin function
 		arg4 = ps.Res
 	}
@@ -1663,12 +1665,7 @@ func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Obj
 		}
 		ps.Res = bi.Fn(ps, args...)
 	*/
-	if curry {
-		// Currying is no longer supported since Cur fields were removed
-		ps.Res = bi.Fn(ps, arg0, arg1, arg2, arg3, arg4)
-	} else {
-		ps.Res = bi.Fn(ps, arg0, arg1, arg2, arg3, arg4)
-	}
+	ps.Res = bi.Fn(ps, arg0, arg1, arg2, arg3, arg4)
 	if ps.Res == nil {
 		ps.Res = env.NewError4(0, "Builtin returned a invalid value (nil)", nil, nil)
 		ps.ErrorFlag = true
@@ -1678,7 +1675,7 @@ func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Obj
 // CallVarBuiltin calls a variadic builtin by collecting all required arguments into a slice.
 // Called from: EvalExpression_DispatchType, EvalObject
 // Purpose: Handles builtins with variable number of arguments, collecting them into a slice
-func CallVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, arg0_ env.Object, toLeft bool, pipeSecond bool, firstVal env.Object) {
+func CallVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, arg0_ env.Object, toLeft bool, pipeSecond bool, firstVal env.Object, opword bool) {
 
 	args := make([]env.Object, bi.Argsn)
 	ii := 0
@@ -1691,7 +1688,7 @@ func CallVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, arg0_ env.Object, t
 			args[ii] = firstVal
 			ii++
 		} else if bi.Argsn > 0 {
-			EvalExpression_CollectArg(ps, true)
+			EvalExpression_CollectArg(ps, true, opword)
 			if ps.ReturnFlag || ps.ErrorFlag {
 				return
 			}
@@ -1704,7 +1701,7 @@ func CallVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, arg0_ env.Object, t
 			args[ii] = arg0_
 			ii++
 		} else if bi.Argsn > 1 {
-			EvalExpression_CollectArg(ps, true)
+			EvalExpression_CollectArg(ps, true, opword)
 			if ps.ReturnFlag || ps.ErrorFlag {
 				return
 			}
@@ -1714,7 +1711,7 @@ func CallVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, arg0_ env.Object, t
 		}
 		//variadic version
 		for i := 2; i < bi.Argsn; i += 1 {
-			EvalExpression_CollectArg(ps, true)
+			EvalExpression_CollectArg(ps, true, opword)
 			if ps.ReturnFlag || ps.ErrorFlag {
 				return
 			}
@@ -1778,64 +1775,6 @@ func findNearestLocationNode(ps *env.ProgramState) *env.LocationNode {
 	}
 
 	return nil
-}
-
-// calculateErrorPosition calculates the character position of an error in a source line.
-// Called from: Error display functions (currently unused but available)
-// Purpose: Determines exact column position of error by counting characters from LocationNode
-func calculateErrorPosition(ps *env.ProgramState, locationNode *env.LocationNode) int {
-	// Get the current series position (similar to how PositionAndSurroundingElements works)
-	errorPos := ps.Ser.Pos() - 1 // The error is typically at pos-1 like in the original (here) logic
-
-	if errorPos < 0 {
-		return 0
-	}
-
-	// Count characters from the beginning of the line to find the error position
-	charCount := 0
-	foundLocationNode := false
-
-	// Go through the series and count characters from the LocationNode for this line
-	for i := 0; i < ps.Ser.Len(); i++ {
-		obj := ps.Ser.Get(i)
-		if obj == nil {
-			continue
-		}
-
-		// Check if this is a LocationNode for the current line
-		if obj.Type() == env.LocationNodeType {
-			if locNode, ok := obj.(env.LocationNode); ok && locNode.Line == locationNode.Line {
-				foundLocationNode = true
-				charCount = 0 // Reset count from this LocationNode
-				continue
-			} else if foundLocationNode {
-				// We've moved to a different line, stop counting
-				break
-			}
-			continue
-		}
-
-		// Only start counting after we've found the LocationNode for this line
-		if !foundLocationNode {
-			continue
-		}
-
-		// If this is the error position, return current character count
-		if i == errorPos {
-			return charCount
-		}
-
-		// Add the length of this object's string representation plus space
-		objStr := obj.Print(*ps.Idx)
-		charCount += len(objStr)
-
-		// Add space separator (except for the last token before error)
-		if i < errorPos {
-			charCount += 1
-		}
-	}
-
-	return charCount
 }
 
 // FormatBacktickQuotes processes an error message and highlights text within backticks
@@ -1910,43 +1849,6 @@ func displayBlockWithErrorPosition(es *env.ProgramState, genv *env.Idxs) {
 	blockStr := buildBlockStringWithMarker(es.Ser.S, errorPos, genv)
 	fmt.Print(blockStr)
 	fmt.Print("\x1b[0m\n") // Reset
-}
-
-// DELETE_ME_getCurrentBlock is deprecated and marked for deletion.
-// Called from: Nowhere (deprecated)
-// Purpose: Was used to get current executing block, now replaced by better location tracking
-func DELETE_ME_getCurrentBlock(es *env.ProgramState) *env.Block {
-	// First, check if we have block location information from the program state
-	// This would be the case when we're executing inside a block with location data
-
-	// Try to find the current executing block by looking for any block with location information in the series
-	for i := 0; i < es.Ser.Len(); i++ {
-		obj := es.Ser.Get(i)
-		if obj != nil && obj.Type() == env.BlockType {
-			if block, ok := obj.(env.Block); ok {
-				// Return the first block that has location information
-				if block.FileName != "" || block.Line > 0 {
-					return &block
-				}
-			}
-		}
-	}
-
-	// If no block found in series, create a synthetic block with available location info
-	// This handles cases where we're in the root execution context
-	if es.ScriptPath != "" {
-		// Create a block representing the current execution context
-		syntheticBlock := &env.Block{
-			Series:   es.Ser,
-			Mode:     0,
-			FileName: es.ScriptPath,
-			Line:     1, // Default to line 1 if we don't have more specific info
-			Column:   1, // Default to column 1
-		}
-		return syntheticBlock
-	}
-
-	return nil
 }
 
 // truncatedDump returns a truncated string representation of an object.
@@ -2058,51 +1960,6 @@ func buildBlockStringWithMarker(currSer []env.Object, errorPos int, genv *env.Id
 
 	result.WriteString("}")
 	return result.String()
-}
-
-// displayLocationFromSeries extracts and displays location information from LocationNodes in the series.
-// Called from: Potentially error display code (legacy)
-// Purpose: Displays source location by finding LocationNodes and showing source lines with position markers
-func displayLocationFromSeries(es *env.ProgramState, genv *env.Idxs) {
-	// First try to find LocationNodes in the series and display them nicely
-	foundLocation := false
-
-	// Look through the series for LocationNodes
-	for i := 0; i < es.Ser.Len(); i++ {
-		obj := es.Ser.Get(i)
-		if obj != nil && obj.Type() == env.LocationNodeType {
-			if locNode, ok := obj.(env.LocationNode); ok {
-				if foundLocation {
-					fmt.Print(" -> ")
-				}
-				fmt.Print(locNode.String())
-				foundLocation = true
-			}
-		}
-	}
-
-	if foundLocation {
-		fmt.Println()
-
-		// Try to show the first LocationNode's source line for context
-		for i := 0; i < es.Ser.Len(); i++ {
-			obj := es.Ser.Get(i)
-			if obj != nil && obj.Type() == env.LocationNodeType {
-				if locNode, ok := obj.(env.LocationNode); ok && locNode.SourceLine != "" {
-					fmt.Println("Source:")
-					fmt.Printf("  %s\n", locNode.SourceLine)
-					if locNode.Column > 0 {
-						pointer := strings.Repeat(" ", locNode.Column+1) + "^"
-						fmt.Printf("  %s\n", pointer)
-					}
-					break
-				}
-			}
-		}
-	} else {
-		// Fallback to the original position reporting
-		fmt.Print(es.Ser.PositionAndSurroundingElements(*genv))
-	}
 }
 
 // MaybeDisplayFailureOrError displays errors/failures if error flag is set (wrapper).
@@ -2224,12 +2081,8 @@ func checkForFailureWithVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, n in
 	return false
 }
 
-// trace is an empty trace function placeholder.
-// Called from: Nowhere currently (can be used for debugging)
-// Purpose: Placeholder for debug tracing - currently unused
-func trace(s string) {
-
-}
+// trace is an empty trace function placeholder used by other files in the evaldo package.
+func trace(s string) {}
 
 // tryHandleFailure attempts to handle a failure by calling context error handlers.
 // Called from: EvalBlockInj
@@ -2301,8 +2154,8 @@ func ExecuteDeferredBlocks(ps *env.ProgramState) {
 		// If there was an error in a deferred block, we should still continue
 		// executing other deferred blocks but preserve the error state
 		if ps.ErrorFlag || ps.FailureFlag {
-			fmt.Println("Error or failure in deferrer block")
-			fmt.Println(ps.Res.Inspect(*ps.Idx))
+			// fmt.Println("Error or failure in deferrer block")
+			// fmt.Println(ps.Res.Inspect(*ps.Idx))
 			// Log or handle deferred block errors if needed
 			// For now, continue with other deferred blocks
 		}
@@ -2350,34 +2203,3 @@ func checkContextErrorHandler(ps *env.ProgramState) bool {
 	ps.InErrHandler = false
 	return true
 }
-
-/* func tryHandleFailure_OLD(ps *env.ProgramState, n int) bool {
-	if ps.FailureFlag && !ps.ReturnFlag {
-		if !ps.InErrHandler {
-			if checkContextErrorHandler(ps) {
-				return false
-			}
-		}
-		ps.ErrorFlag = true
-		return true
-	}
-	return false
-}
-*/
-
-/* // Consolidated flag checking function
-func checkFlags(ps *env.ProgramState, n int, flags ...bool) bool {
-	if ps.ReturnFlag || ps.ErrorFlag {
-		return true
-	}
-	if ps.FailureFlag {
-		ps.ErrorFlag = true
-		return true
-	}
-	for _, flag := range flags {
-		if flag {
-			return true
-		}
-	}
-	return false
-} */

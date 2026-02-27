@@ -410,7 +410,7 @@ var builtins_persistent_contexts = map[string]*env.Builtin{
 				if err != nil {
 					return env.NewError("Failed to open persistent context: " + err.Error())
 				}
-				return *pctx
+				return pctx
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "persistent-context")
 			}

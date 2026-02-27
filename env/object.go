@@ -32,8 +32,8 @@ const (
 	// It assigns a value to the word.
 	SetwordType Type = 4
 	// Opword is a syntax type
-	// .word
-	// It acts as an infix operator.
+	// + - * / > < (symbolic operators)
+	// It acts as an infix operator with left-to-right evaluation.
 	OpwordType Type = 5
 	// Pipeword is a syntax type
 	// |word
@@ -211,6 +211,10 @@ const (
 	// lazy { ... }
 	// It represents a lazy (deferred) value.
 	LazyValueType Type = 49
+	// Dotword is a syntax type
+	// .word
+	// It acts as a method-style operator that binds tightly to its left subject.
+	DotwordType Type = 50
 	// PersistentTable is a constructed type
 	// (internal)
 	// It represents a persistent table.
@@ -1242,7 +1246,7 @@ func (i Opword) Inspect(e Idxs) string {
 }
 
 func (b Opword) Print(e Idxs) string {
-	return "." + e.GetWord(b.Index)
+	return e.GetWord(b.Index)
 }
 
 func (i Opword) Trace(msg string) {
@@ -1267,6 +1271,61 @@ func (i Opword) Equal(o Object) bool {
 }
 
 func (i Opword) Dump(e Idxs) string {
+	var ssecond string
+	if i.Force == 1 {
+		ssecond = "*"
+	}
+	return e.GetWord(i.Index) + ssecond
+}
+
+//
+// DOTWORD
+//
+
+type Dotword struct {
+	Index int
+	Force int
+}
+
+func NewDotword(index, force int) *Dotword {
+	nat := Dotword{index, force}
+	return &nat
+}
+
+func (i Dotword) Type() Type {
+	return DotwordType
+}
+
+func (i Dotword) Inspect(e Idxs) string {
+	return "[Dotword: " + e.GetWord(i.Index) + "]"
+}
+
+func (b Dotword) Print(e Idxs) string {
+	return "." + e.GetWord(b.Index)
+}
+
+func (i Dotword) Trace(msg string) {
+	fmt.Print(msg + " (dotword): ")
+	fmt.Println(i.Index)
+}
+
+func (i Dotword) ToWord() Word {
+	return Word{i.Index}
+}
+
+func (i Dotword) GetKind() int {
+	return int(DotwordType)
+}
+
+func (i Dotword) Equal(o Object) bool {
+	if i.Type() != o.Type() {
+		return false
+	}
+	oDotword := o.(Dotword)
+	return i.Index == oDotword.Index && i.Force == oDotword.Force
+}
+
+func (i Dotword) Dump(e Idxs) string {
 	var ssecond string
 	if i.Force == 1 {
 		ssecond = "*"

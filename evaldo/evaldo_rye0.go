@@ -247,8 +247,8 @@ func Rye0_findCPathValue(ps *env.ProgramState, word env.CPath) (bool, env.Object
 
 		if word.Cnt > i {
 			switch swObj := object.(type) {
-			case env.RyeCtx:
-				currCtx = &swObj
+			case *env.RyeCtx:
+				currCtx = swObj
 				i++
 			case env.Dict:
 				// Use pre-allocated string to avoid allocation

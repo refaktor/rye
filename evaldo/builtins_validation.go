@@ -56,7 +56,7 @@ func Validation_EvalBlock(es *env.ProgramState, vals env.Dict) (env.Dict, map[st
 	return *env.NewDict(res), notes
 }
 
-func Validation_EvalBlock_Context(es *env.ProgramState, vals env.RyeCtx) (env.RyeCtx, map[string]env.Object) {
+func Validation_EvalBlock_Context(es *env.ProgramState, vals *env.RyeCtx) (*env.RyeCtx, map[string]env.Object) {
 	notes := make(map[string]env.Object, 0) // TODO ... what is this 2 here ... just for temp
 
 	var name string
@@ -103,7 +103,7 @@ func Validation_EvalBlock_Context(es *env.ProgramState, vals env.RyeCtx) (env.Ry
 		wordIdx := es.Idx.IndexWord(name)
 		resultCtx.Set(wordIdx, env.ToRyeValue(val))
 	}
-	return *resultCtx, notes
+	return resultCtx, notes
 }
 
 func Validation_EvalBlock_List(es *env.ProgramState, vals env.List) (env.Object, []env.Object) {
@@ -579,7 +579,7 @@ func BuiValidate(env1 *env.ProgramState, arg0 env.Object, arg1 env.Object) env.O
 				return env.NewError4(403, "validation error", nil, verrs)
 			}
 			return val
-		case env.RyeCtx:
+		case *env.RyeCtx:
 			ser1 := env1.Ser
 			env1.Ser = blk.Series
 			val, verrs := Validation_EvalBlock_Context(env1, rmap)

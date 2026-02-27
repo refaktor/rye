@@ -334,8 +334,8 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 			s1, ok := es.Ctx.Get(idxx)
 			if ok {
 				switch ss := s1.(type) {
-				case env.RyeCtx: /*  */
-					es.Ctx = &ss
+				case *env.RyeCtx: /*  */
+					es.Ctx = ss
 					// return s1
 				}
 			}

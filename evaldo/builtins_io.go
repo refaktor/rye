@@ -1500,7 +1500,7 @@ var Builtins_io = map[string]*env.Builtin{
 				case env.String:
 					idx, _ := ps.Idx.GetIndex("user-profile")
 					uctx_, _ := ps.Ctx.Get(idx)
-					uctx := uctx_.(env.RyeCtx)
+					uctx := uctx_.(*env.RyeCtx)
 					fmt.Println(to_)
 					fmt.Println(msg)
 					fmt.Println(uctx)
