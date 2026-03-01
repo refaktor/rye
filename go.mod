@@ -20,7 +20,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ses v1.34.18
 	github.com/bitfield/script v0.24.1
 	github.com/blevesearch/bleve/v2 v2.5.7
-	github.com/blevesearch/bleve_index_api v1.3.1
+	github.com/blevesearch/bleve_index_api v1.3.2
 	github.com/dgraph-io/badger/v4 v4.9.0
 	github.com/docker/docker v28.0.0+incompatible
 	github.com/drewlanenga/govector v0.0.0-20220726163947-b958ac08bc93
@@ -49,7 +49,6 @@ require (
 	github.com/lib/pq v1.11.1
 	github.com/mattn/go-runewidth v0.0.19
 	github.com/mhale/smtpd v0.8.3
-	github.com/mlange-42/ark v0.7.1
 	github.com/mrz1836/postmark v1.8.2
 	github.com/muesli/reflow v0.3.0
 	github.com/ollama/ollama v0.14.1
