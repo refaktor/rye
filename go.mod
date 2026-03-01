@@ -14,7 +14,7 @@ require (
 	github.com/JohannesKaufmann/html-to-markdown/v2 v2.5.0
 	github.com/PuerkitoBio/goquery v1.11.0
 	github.com/atotto/clipboard v0.1.4
-	github.com/aws/aws-sdk-go-v2 v1.41.1
+	github.com/aws/aws-sdk-go-v2 v1.41.2
 	github.com/aws/aws-sdk-go-v2/config v1.32.7
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.96.0
 	github.com/aws/aws-sdk-go-v2/service/ses v1.34.18
@@ -49,7 +49,6 @@ require (
 	github.com/lib/pq v1.11.1
 	github.com/mattn/go-runewidth v0.0.19
 	github.com/mhale/smtpd v0.8.3
-	github.com/mlange-42/ark v0.7.1
 	github.com/mrz1836/postmark v1.8.2
 	github.com/muesli/reflow v0.3.0
 	github.com/ollama/ollama v0.14.1
@@ -173,7 +172,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sso v1.30.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.35.13 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.41.6 // indirect
-	github.com/aws/smithy-go v1.24.0 // indirect
+	github.com/aws/smithy-go v1.24.1 // indirect
 	github.com/bits-and-blooms/bitset v1.22.0 // indirect
 	github.com/blevesearch/geo v0.2.4 // indirect
 	github.com/blevesearch/go-faiss v1.0.26 // indirect
