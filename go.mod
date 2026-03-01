@@ -45,11 +45,10 @@ require (
 	github.com/jwalton/go-supportscolor v1.2.0
 	github.com/kopoli/go-terminal-size v0.0.0-20170219200355-5c97524c8b54
 	github.com/labstack/echo v3.3.10+incompatible
-	github.com/landlock-lsm/go-landlock v0.0.0-20250303204525-1544bccde3a3
+	github.com/landlock-lsm/go-landlock v0.7.0
 	github.com/lib/pq v1.11.1
 	github.com/mattn/go-runewidth v0.0.19
 	github.com/mhale/smtpd v0.8.3
-	github.com/mlange-42/ark v0.7.1
 	github.com/mrz1836/postmark v1.8.2
 	github.com/muesli/reflow v0.3.0
 	github.com/ollama/ollama v0.14.1
@@ -152,7 +151,7 @@ require (
 	gopkg.in/fsnotify.v1 v1.4.7 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gotest.tools/v3 v3.5.2 // indirect
-	kernel.org/pub/linux/libs/security/libcap/psx v1.2.70 // indirect
+	kernel.org/pub/linux/libs/security/libcap/psx v1.2.77 // indirect
 )
 
 require (
