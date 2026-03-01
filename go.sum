@@ -323,8 +323,6 @@ github.com/mattn/go-runewidth v0.0.19 h1:v++JhqYnZuu5jSKrk9RbgF5v4CGUjqRfBm05byF
 github.com/mattn/go-runewidth v0.0.19/go.mod h1:XBkDxAl56ILZc9knddidhrOlY5R/pDhgLpndooCuJAs=
 github.com/mhale/smtpd v0.8.3 h1:8j8YNXajksoSLZja3HdwvYVZPuJSqAxFsib3adzRRt8=
 github.com/mhale/smtpd v0.8.3/go.mod h1:MQl+y2hwIEQCXtNhe5+55n0GZOjSmeqORDIXbqUL3x4=
-github.com/mlange-42/ark v0.7.1 h1:7bFbuUudy3Vi4V4W0yQZhueWXtQ5LgupXIXcMKZMPVk=
-github.com/mlange-42/ark v0.7.1/go.mod h1:gkS9cuklENPTmSjL2z4DcJgJsIVqF1yNwFlx48Hz/Sw=
 github.com/moby/docker-image-spec v1.3.1 h1:jMKff3w6PgbfSa69GfNg+zN/XLhfXJGnEx3Nl2EsFP0=
 github.com/moby/docker-image-spec v1.3.1/go.mod h1:eKmb5VW8vQEh/BAr2yvVNvuiJuY6UIocYsFu/DxxRpo=
 github.com/moby/term v0.5.2 h1:6qk3FJAFDs6i/q3W/pQ97SX192qKfZgGjCQqfCJkgzQ=
@@ -336,8 +334,8 @@ github.com/modern-go/reflect2 v1.0.2 h1:xBagoLtFs94CBntxluKeaWgTMpvLxC4ur3nMaC9G
 github.com/modern-go/reflect2 v1.0.2/go.mod h1:yWuevngMOJpCy52FWWMvUC8ws7m/LJsjYzDa0/r8luk=
 github.com/morikuni/aec v1.1.0 h1:vBBl0pUnvi/Je71dsRrhMBtreIqNMYErSAbEeb8jrXQ=
 github.com/morikuni/aec v1.1.0/go.mod h1:xDRgiq/iw5l+zkao76YTKzKttOp2cwPEne25HDkJnBw=
-github.com/mrz1836/postmark v1.8.2 h1:tlBx8Dyqxpc0HrgrPhHDdSc66cxrkCRBnlPZlqpwAuA=
-github.com/mrz1836/postmark v1.8.2/go.mod h1:0/7m4WMaKl72nWb55H7AIPtuCuvkdEIAjV1jAGCBFIQ=
+github.com/mrz1836/postmark v1.8.4 h1:Aim3ZI4sE6qKha4Y5MafQIMDrCGT0IMXi0kbZwc5IZY=
+github.com/mrz1836/postmark v1.8.4/go.mod h1:0/7m4WMaKl72nWb55H7AIPtuCuvkdEIAjV1jAGCBFIQ=
 github.com/mschoch/smat v0.2.0 h1:8imxQsjDm8yFEAVBe7azKmKSgzSkZXDuKkSq9374khM=
 github.com/mschoch/smat v0.2.0/go.mod h1:kc9mz7DoBKqDyiRL7VZN8KvXQMWeTaVnttLRXOlotKw=
 github.com/muesli/reflow v0.3.0 h1:IFsN6K9NfGtjeggFP+68I4chLZV2yIKsXJFNZ+eWh6s=
