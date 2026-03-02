@@ -780,6 +780,7 @@ type ProgramState struct {
 	BlockLine      int
 	CallDepth      int                  // 0 = top-level script, incremented on each function call
 	GetHistoryLast func(n int) []string // function to get last N history lines from REPL
+	PinMode        bool                 // true when collecting arguments for a dotword (PIN), blocks nested dotword chaining
 }
 
 type DoDialect int

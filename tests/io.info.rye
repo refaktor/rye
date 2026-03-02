@@ -76,7 +76,7 @@ section "File Operations " "File system operations and file manipulation" {
 	{
 ``	}
 
-	group "file-uri//File-ext?" 
+	group "file-uri//Ext?" 
 	"Gets the extension of a file."
 	{
 		arg `path: uri or string representing a file path`
@@ -84,15 +84,15 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-		equal { File-ext? %data/file.txt } ".txt"
-		equal { File-ext? %data/file.temp.png } ".png"
-		equal { File-ext? to-file "data/file.temp.png" } ".png"
+		equal { Ext? %data/file.txt } ".txt"
+		equal { Ext? %data/file.temp.png } ".png"
+		equal { Ext? file "data/file.temp.png" } ".png"
 	}
 
 	{
 ``	}
 
-	group "file-uri//Filename?" 
+	group "file-uri//Name?" 
 	"Gets the filename with extension from a file path."
 	{
 		arg `path: uri representing a file path`
@@ -100,6 +100,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
+		equal { Name? %data/file.txt } "file.txt"
 	}
 
 	{
@@ -113,6 +114,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
+		equal { Stem? %data/file.txt } "file"
 	}
 
 	{
@@ -126,6 +128,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
+		equal { Dir? %data/file.txt } "data"
 	}
 
 	{

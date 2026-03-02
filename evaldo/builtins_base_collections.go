@@ -891,6 +891,7 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { first { 1 2 3 4 } } 1
 	// equal { first "abcde" } "a"
 	// equal { first list { 1 2 3 } } 1
+	// equal { first { { "nested" } 2 3 } } { "nested" }
 	// ; equal { first table { 'a 'b } { 1 2 } { 3 4 } } table-row { 'a 1 'b 2 }
 	// Args:
 	// * collection: Block, list, string or table to get the first item from
@@ -1423,6 +1424,7 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { sort { "b" "c" "a" } } { "a" "b" "c" }
 	// equal { sort list { 5 3 1 4 } } list { 1 3 4 5 }
 	// equal { sort "cba" } "abc"
+	// equal { sort { 3.14 1.41 2.71 } } { 1.41 2.71 3.14 }
 	// Args:
 	// * collection: Block, list or string to sort
 	// Returns:
@@ -1850,6 +1852,7 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { concat { 1 2 3 4 } { 2 4 5 } } { 1 2 3 4 2 4 5 }
 	// equal { 123 .concat "abc" } "123abc"
 	// equal { https://example.com/ .concat "path" |type? } 'uri
+	// equal { { 1 } .concat { 2 } .concat { 3 } } { 1 2 3 }
 	// Args:
 	// * value1: First value (string, integer, block, uri) to concatenate
 	// * value2: Second value to concatenate with the first
@@ -2170,6 +2173,7 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { range 1 5 } { 1 2 3 4 5 }
 	// equal { range 5 10 } { 5 6 7 8 9 10 }
 	// equal { range -2 2 } { -2 -1 0 1 2 }
+	// equal { range 3 3 } { 3 }
 	// Args:
 	// * start: Integer starting value (inclusive)
 	// * end: Integer ending value (inclusive)
@@ -2243,6 +2247,7 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { table { 'val } { 1 2 3 4 } |length? } 4
 	// equal { vector { 10 20 30 } |length? } 3
 	// equal { dict { "a" 1 "b" 2 } |length? } 2
+	// equal { list { 1 2 3 4 5 } |length? } 5
 	// Args:
 	// * collection: String, block, dict, list, table, context or vector to measure
 	// Returns:

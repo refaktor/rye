@@ -303,6 +303,7 @@ var builtins_printing = map[string]*env.Builtin{
 	// Tests:
 	// equal { format 123 "num: %d" } "num: 123"
 	// equal { format "hello" "%s world" } "hello world"
+	// equal { format 3.14159 "pi: %.2f" } "pi: 3.14"
 	// Args:
 	// * value: Value to format (string, integer, or decimal)
 	// * format: String containing Go's sprintf format specifiers

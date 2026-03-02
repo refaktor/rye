@@ -77,7 +77,7 @@ var Builtins_os = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	//  equal { cc os does-exist %go.mod } true
+	//  equal { cc os does-exist %main.rye } true
 	// Args:
 	// * path: uri representing the file or directory to check
 	// Returns:

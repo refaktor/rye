@@ -34,6 +34,7 @@ var Builtins_vector = map[string]*env.Builtin{
 	//
 	// Tests:
 	// equal { vector [ 1 2 3 ] |type? } 'vector
+	// equal { vector [ 1 2 3 ] |length? } 3
 	// Args:
 	// * block: block of numbers to convert to a vector
 	// Returns:
@@ -76,7 +77,7 @@ var Builtins_vector = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { vector [ 1 2 3 4 5 ] |std-deviation |math/round 2 } 1.58
+	// equal { cc math , vector [ 1 2 3 4 5 ] |std-deviation |round\to 2 } 1.58
 	// Args:
 	// * vector: vector object
 	// Returns:
@@ -222,7 +223,7 @@ var Builtins_vector = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { mean-vectors [ vector [ 1 2 ] vector [ 3 4 ] ] |to-block } { 2.0 3.0 }
+	// equal { mean-vectors [ vector [ 1 2 ] vector [ 3 4 ] ] |block } { 2.0 3.0 }
 	// Args:
 	// * block: block of vectors to average
 	// Returns:
@@ -302,7 +303,7 @@ var Builtins_vector = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { vector [ 3 4 ] |project-vector vector [ 1 0 ] |to-block } { 3.0 0.0 }
+	// equal { vector [ 3 4 ] |project-vector vector [ 1 0 ] |block } { 3.0 0.0 }
 	// Args:
 	// * vector1: vector to project
 	// * vector2: vector to project onto
@@ -347,7 +348,7 @@ var Builtins_vector = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { vector [ 3 4 ] |reject-vector vector [ 1 0 ] |to-block } { 0.0 4.0 }
+	// equal { vector [ 3 4 ] |reject-vector vector [ 1 0 ] |block } { 0.0 4.0 }
 	// Args:
 	// * vector1: vector to reject from
 	// * vector2: vector representing the direction to remove

@@ -119,7 +119,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	//  equal { cc crypto ed25519-generate-keys |first |to-string |type? } 'string
+	//  equal { cc crypto ed25519-generate-keys |first |string |type? } 'string
 	// Args:
 	// * key: Ed25519 public key as a native value
 	// Returns:
@@ -139,7 +139,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	//  equal { cc crypto ed25519-generate-keys |second |to-string |type? } 'string
+	//  equal { cc crypto ed25519-generate-keys |second |string |type? } 'string
 	// Args:
 	// * key: Ed25519 private key as a native value
 	// Returns:
@@ -188,7 +188,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 
 	// Tests:
 	//  ; equal { cc crypto ed25519-generate-keys |second |ed25519-private-key |type? } 'native
-	//  ; equal { cc crypto ed25519-generate-keys |second |to-string |probe |ed25519-private-key |kind? } 'Ed25519-priv-key
+	//  ; equal { cc crypto ed25519-generate-keys |second |string |probe |ed25519-private-key |kind? } 'Ed25519-priv-key
 	//  equal { cc crypto "invalid" |ed25519-private-key |disarm |type? } 'error
 	// Args:
 	// * key-data: string containing hexadecimal representation of the key or bytes native value
@@ -219,8 +219,8 @@ var Builtins_crypto = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	//  ; equal { cc crypto ed25519-generate-keys |first |to-string |ed25519-public-key |type? } 'native
-	//  ; equal { cc crypto ed25519-generate-keys |first |to-string |ed25519-public-key |kind? } 'Ed25519-pub-key
+	//  ; equal { cc crypto ed25519-generate-keys |first |string |ed25519-public-key |type? } 'native
+	//  ; equal { cc crypto ed25519-generate-keys |first |string |ed25519-public-key |kind? } 'Ed25519-pub-key
 	//  equal { cc crypto "invalid" |ed25519-public-key |disarm |type? } 'error
 	// Args:
 	// * key-data: string containing hexadecimal representation of the key or bytes native value

@@ -159,8 +159,8 @@ section "Boolean " "Functions that work with true and false values." {
 		equal { any\with 10 { + 10 , * 10 } } 20
 		equal { any\with 0 { + 10 , * 10 } } 10
 		equal { any\with 5 { - 10 , + 10 } } -5
-		equal { any\with false { .not , .to-string } } true
-		; equal { any\with true { .not , .to-string } } "true"
+		equal { any\with false { .not , .string } } true
+		; equal { any\with true { .not , .string } } "true"
 		error { any\with 5 "not-a-block" }
 	}
 
@@ -492,7 +492,8 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { 1 + 1 } 2
 		equal { 3 + 4 } 7
 		equal { 5.6 + 7.8 } 13.400000
-		equal { vector [ 1 2 3 ] |+ vector [ 4 5 6 ] |to-block } { 5.0 7.0 9.0 }
+		equal { 2 + 3.5 } 5.5
+		equal { vector [ 1 2 3 ] |+ vector [ 4 5 6 ] |block } { 5.0 7.0 9.0 }
 	}
 
 	{
@@ -511,7 +512,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { 5 - 6 } -1
 		equal { 5.5 - 2.2 } 3.3
 		equal { 5 - 2.5 } 2.5
-		equal { vector [ 5 7 9 ] |- vector [ 4 5 6 ] |to-block } { 1.0 2.0 3.0 }
+		equal { vector [ 5 7 9 ] |- vector [ 4 5 6 ] |block } { 1.0 2.0 3.0 }
 	}
 
 	{
@@ -530,8 +531,8 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		equal { 2.5 * -2 } -5.0
 		equal { 0 * 5 } 0
 		equal { 1.5 * 2.5 } 3.75
-		equal { vector [ 1 2 3 ] |* 2.0 |to-block } { 2.0 4.0 6.0 }
-		equal { vector [ 10 20 ] |* 0.5 |to-block } { 5.0 10.0 }
+		equal { vector [ 1 2 3 ] |* 2.0 |block } { 2.0 4.0 6.0 }
+		equal { vector [ 10 20 ] |* 0.5 |block } { 5.0 10.0 }
 	}
 
 	{
@@ -818,6 +819,7 @@ section "Strings " "" {
 		equal { replace "...xo..." "xo" "LoL" } "...LoL..."
 		equal { replace "...xoxo..." "xo" "LoL" } "...LoLLoL..."
 		equal { replace "hello world" "world" "everyone" } "hello everyone"
+		equal { replace "remove--dashes" "-" "" } "removedashes"
 	}
 
 	{
@@ -1052,6 +1054,7 @@ section "Strings " "" {
 		equal { join { "Spot" "Fido" "Rex" } } "SpotFidoRex"
 		equal { join { 1 2 3 } } "123"
 		equal { join { https://example.com/ "path" } |type? } 'uri
+		equal { join { } } ""
 	}
 
 	{
@@ -1086,6 +1089,7 @@ section "Strings " "" {
 		equal { split "a,b,c" "," } { "a" "b" "c" }
 		equal { split "hello world" " " } { "hello" "world" }
 		equal { split "one::two::three" "::" } { "one" "two" "three" }
+		equal { split "no-separator" "," } { "no-separator" }
 	}
 
 	{
@@ -1198,6 +1202,7 @@ section "Date and Time " "" {
 	{
 		equal { date "2023-01-15" |type? } 'time
 		equal { date "2023-01-15" |day? } 15
+		equal { date "2023-06-20" |month? } 6
 	}
 
 	{
@@ -1751,6 +1756,7 @@ section "Collections " "" {
 		equal { first { 1 2 3 4 } } 1
 		equal { first "abcde" } "a"
 		equal { first list { 1 2 3 } } 1
+		equal { first { { "nested" } 2 3 } } { "nested" }
 		; equal { first table { 'a 'b } { 1 2 } { 3 4 } } table-row { 'a 1 'b 2 }
 	}
 
@@ -1947,6 +1953,7 @@ section "Collections " "" {
 		equal { sort { "b" "c" "a" } } { "a" "b" "c" }
 		equal { sort list { 5 3 1 4 } } list { 1 3 4 5 }
 		equal { sort "cba" } "abc"
+		equal { sort { 3.14 1.41 2.71 } } { 1.41 2.71 3.14 }
 	}
 
 	{
@@ -2071,6 +2078,7 @@ section "Collections " "" {
 		equal { concat { 1 2 3 4 } { 2 4 5 } } { 1 2 3 4 2 4 5 }
 		equal { 123 .concat "abc" } "123abc"
 		equal { https://example.com/ .concat "path" |type? } 'uri
+		equal { { 1 } .concat { 2 } .concat { 3 } } { 1 2 3 }
 	}
 
 	{
@@ -2133,6 +2141,7 @@ section "Collections " "" {
 		equal { range 1 5 } { 1 2 3 4 5 }
 		equal { range 5 10 } { 5 6 7 8 9 10 }
 		equal { range -2 2 } { -2 -1 0 1 2 }
+		equal { range 3 3 } { 3 }
 	}
 
 	{
@@ -2169,6 +2178,7 @@ section "Collections " "" {
 		equal { table { 'val } { 1 2 3 4 } |length? } 4
 		equal { vector { 10 20 30 } |length? } 3
 		equal { dict { "a" 1 "b" 2 } |length? } 2
+		equal { list { 1 2 3 4 5 } |length? } 5
 	}
 
 	{
@@ -2607,6 +2617,7 @@ section "Vector " "Vector operations" {
 
 	{
 		equal { vector [ 1 2 3 ] |type? } 'vector
+		equal { vector [ 1 2 3 ] |length? } 3
 	}
 
 	{
@@ -2634,7 +2645,7 @@ section "Vector " "Vector operations" {
 	}
 
 	{
-		equal { vector [ 1 2 3 4 5 ] |std-deviation |math/round 2 } 1.58
+		equal { cc math , vector [ 1 2 3 4 5 ] |std-deviation |round\to 2 } 1.58
 	}
 
 	{
@@ -2711,7 +2722,7 @@ section "Vector " "Vector operations" {
 	}
 
 	{
-		equal { mean-vectors [ vector [ 1 2 ] vector [ 3 4 ] ] |to-block } { 2.0 3.0 }
+		equal { mean-vectors [ vector [ 1 2 ] vector [ 3 4 ] ] |block } { 2.0 3.0 }
 	}
 
 	{
@@ -2740,7 +2751,7 @@ section "Vector " "Vector operations" {
 	}
 
 	{
-		equal { vector [ 3 4 ] |project-vector vector [ 1 0 ] |to-block } { 3.0 0.0 }
+		equal { vector [ 3 4 ] |project-vector vector [ 1 0 ] |block } { 3.0 0.0 }
 	}
 
 	{
@@ -2755,7 +2766,7 @@ section "Vector " "Vector operations" {
 	}
 
 	{
-		equal { vector [ 3 4 ] |reject-vector vector [ 1 0 ] |to-block } { 0.0 4.0 }
+		equal { vector [ 3 4 ] |reject-vector vector [ 1 0 ] |block } { 0.0 4.0 }
 	}
 
 	{
@@ -2764,7 +2775,7 @@ section "Vector " "Vector operations" {
 }
 
 section "Types and Kinds " "" {
-	group "to-integer" 
+	group "integer" 
 	"Tries to change a Rye value (like string) to integer."
 	{
 		arg `value: String or decimal value to convert to an integer`
@@ -2772,17 +2783,18 @@ section "Types and Kinds " "" {
 	}
 
 	{
-		equal { to-integer "1234" } 1234
-		; equal { to-integer "123.4" } 123
-		; equal { to-integer "123.6" } 123
-		; equal { to-integer "123.4" } 123
-		error { to-integer "abc" }
+		equal { integer "1234" } 1234
+		equal { integer 45.67 } 45
+		; equal { integer "123.4" } 123
+		; equal { integer "123.6" } 123
+		; equal { integer "123.4" } 123
+		error { integer "abc" }
 	}
 
 	{
 ``	}
 
-	group "to-decimal" 
+	group "decimal" 
 	"Tries to change a Rye value (like string) to decimal."
 	{
 		arg `value: String value to convert to a decimal`
@@ -2790,14 +2802,14 @@ section "Types and Kinds " "" {
 	}
 
 	{
-		equal { to-decimal "123.4" } 123.4
-		error { to-decimal "abc" }
+		equal { decimal "123.4" } 123.4
+		error { decimal "abc" }
 	}
 
 	{
 ``	}
 
-	group "to-string" 
+	group "string" 
 	"Tries to turn a Rye value to string."
 	{
 		arg `value: Any Rye value to convert to a string`
@@ -2805,42 +2817,43 @@ section "Types and Kinds " "" {
 	}
 
 	{
-		equal { to-string 'test } "test"
-		equal { to-string 123 } "123"
-		equal { to-string 123.4 } "123.400000"
-		equal { to-string "test" } "test"
+		equal { string 'test } "test"
+		equal { string 123 } "123"
+		equal { string 123.4 } "123.400000"
+		equal { string "test" } "test"
+		equal { string true } "true"
 	}
 
 	{
 ``	}
 
-	group "to-uri" 
+	group "uri" 
 	"Tries to change Rye value to an URI."
 	{
 	}
 
 	{
-		equal   { to-uri "https://example.com" } https://example.com
-		; error { to-uri "not-uri" }
+		equal   { uri "https://example.com" } https://example.com
+		; error { uri "not-uri" }
 	}
 
 	{
 ``	}
 
-	group "to-file" 
+	group "file" 
 	"Tries to change Rye value to a file."
 	{
 	}
 
 	{
-		equal   { to-file "example.txt" } %example.txt
-		equal { to-file 123 } %123
+		equal   { file "example.txt" } %example.txt
+		equal { file 123 } %123
 	}
 
 	{
 ``	}
 
-	group "to-char" 
+	group "char" 
 	"Tries to turn a Rye value (like integer) to ascii character."
 	{
 		arg `value: Integer representing an ASCII code point`
@@ -2848,14 +2861,14 @@ section "Types and Kinds " "" {
 	}
 
 	{
-		equal { to-char 42 } "*"
-		error { to-char "*" }
+		equal { char 42 } "*"
+		error { char "*" }
 	}
 
 	{
 ``	}
 
-	group "to-block" 
+	group "block" 
 	"Turns a List, Vector, or TableRow to a Block"
 	{
 		arg `value: List, Vector, or TableRow to convert to a block`
@@ -2863,31 +2876,16 @@ section "Types and Kinds " "" {
 	}
 
 	{
-		equal { list [ 1 2 3 ] |to-block |type? } 'block
-		equal  { list [ 1 2 3 ] |to-block |first } 1
-		equal { vector [ 1 2 3 ] |to-block } { 1.0 2.0 3.0 }
-		equal { table { 'a 'b } { 1 2 3 4 } -> 1 |to-block } { 1 2 }
+		equal { list [ 1 2 3 ] |block |type? } 'block
+		equal  { list [ 1 2 3 ] |block |first } 1
+		equal { vector [ 1 2 3 ] |block } { 1.0 2.0 3.0 }
+		equal { table { 'a 'b } { 1 2 3 4 } -> 0 |block } { 1 2 }
 	}
 
 	{
 ``	}
 
-	group "to-context" 
-	"Takes a Dict and returns a Context with same names and values."
-	{
-		arg `dict: Dict value to convert to a context`
-		returns `A context with the same keys and values as the input dict`
-	}
-
-	{
-		equal   { dict [ "a" 1 "b" 2 "c" 3 ] |to-context |type? } 'context
-		; equal   { dict [ "a" 1 ] |to-context do\in { a } } '1
-	}
-
-	{
-``	}
-
-	group "to-word" 
+	group "word" 
 	"Tries to change a Rye value to a word with same name."
 	{
 		arg `value: String or word-like value to convert to a word`
@@ -2895,8 +2893,8 @@ section "Types and Kinds " "" {
 	}
 
 	{
-		equal { to-word "test" } 'test
-		error { to-word 123 }
+		equal { word "test" } 'test
+		error { word 123 }
 	}
 
 	{
@@ -3187,10 +3185,10 @@ section "Contexts " "Context related functions" {
 ``	}
 
 	group "context" 
-	"Creates a new context that maintains access to its parent context."
+	"Creates a new context from a block (evaluated) or dict (converted)."
 	{
-		arg `block: Block of expressions to evaluate in a new context`
-		returns `context object with the values defined in the block and access to parent context`
+		arg `arg: Block of expressions to evaluate, or Dict to convert to context`
+		returns `context object with the values defined in the block/dict and access to parent context`
 	}
 
 	{
@@ -3198,6 +3196,8 @@ section "Contexts " "Context related functions" {
 		equal { y: 123 c: context { x: y } c/x } 123
 		equal { c: context { x: inc 10 } c/x } 11
 		equal { y: 123 c: context { x: does { y } } c/x } 123
+		equal { c: context { a: 1 b: 2 } c/a + c/b } 3
+		equal { c: context dict { "a" 1 "b" 2 } c/a + c/b } 3
 	}
 
 	{
@@ -3290,7 +3290,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-		equal { c: context { y: 123 } cc: bind! context { x: 234 z: does { x } } c , unbind cc cc/z } 123
+		equal { c: context { y: 123 } cc: bind! context { x: 234 z: does { x } } c , unbind cc cc/z } 234
 		error { c: context { y: 123 } cc: bind! context { z: does { y } } c , dd: unbind cc dd/z }
 	}
 
@@ -3306,8 +3306,8 @@ section "Contexts " "Context related functions" {
 
 	{
 		equal { x: 123 whereis 'x |first } 0
-		equal { x: 123 c: context { y: 456 } do\in c { whereis 'x } |first } 1
-		equal { x: 123 c: context { y: 456 } do\in c { whereis 'y } |first } 0
+		equal { x: 123 c: context { y: 456 } do\in c { whereis 'x } |first } 0
+		equal { x: 123 c: context { y: 456 } do\in c { whereis 'y } |first } 1
 	}
 
 	{
@@ -3640,6 +3640,7 @@ section "Flow control " "Functions for conditional execution and branching logic
 	{
 		equal  { either true { 222 } { 333 } } 222
 		equal  { either false { 222 } { 333 } } 333
+		equal  { either 5 > 3 { "yes" } { "no" } } "yes"
 		error  { either 1 { 222 } { 333 } }
 		error  { either 0 { 222 } { 333 } }
 	}
@@ -3770,7 +3771,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	{
-		equal { replicate\idx 5 { } } { 0 1 2 3 4 }
+		equal { replicate\idx 5 { + 0 } } { 0 1 2 3 4 }
 		equal { replicate\idx 3 { * 10 } } { 0 10 20 }
 		equal { replicate\idx 0 { 10 } } { }
 	}
@@ -3933,7 +3934,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	{
-		stdout { walk\idx { 1 2 3 } 'i { .prns , i .prns , .rest } } "{ 1 2 3 } 0 { 2 3 } 1 { 3 } 2 "
+		stdout { walk\idx { 1 2 3 } 'i { .prns , i .prns , .rest } } "1 2 3  0 2 3  1 3  2 "
 	}
 
 	{
@@ -3952,8 +3953,8 @@ section "Iteration " "Functions for iterating over collections and executing cod
 		equal { purge { } { .is-even } } { }
 		equal { purge list { 1 2 3 } { .is-even } } list { 1 3 }
 		equal { purge list { } { .is-even } } list { }
-		equal { purge "1234" { .probe .to-integer .is-even } } { "1" "3" }
-		equal { purge "" { .to-integer .is-even } } { }
+		equal { purge "1234" { .probe .integer .is-even } } { "1" "3" }
+		equal { purge "" { .integer .is-even } } { }
 	}
 
 	{
@@ -3987,8 +3988,8 @@ section "Iteration " "Functions for iterating over collections and executing cod
 		equal { map list { 3 4 5 6 } { .is-multiple-of 3 } } list { 1 0 0 1 }
 		equal { map list { } { + 1 } } list { }
 		; equal { map "abc" { + "-" } .join } "a-b-c-" ; TODO doesn't work, fix join
-		equal { map "123" { .to-integer } } { 1 2 3 }
-		equal { map "123" ?to-integer } { 1 2 3 }
+		equal { map "123" { .integer } } { 1 2 3 }
+		equal { map "123" ?integer } { 1 2 3 }
 		equal { map "" { + "-" } } { }
 	}
 
@@ -4045,6 +4046,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 		equal { try { reduce { } 'acc { + acc } } |type? } 'error
 		equal { try { reduce list { } 'acc { + acc } } |type? } 'error
 		equal { try { reduce "" 'acc { + acc } } |type? } 'error
+		equal { reduce { 1 2 3 4 } 'acc { * acc } } 24
 	}
 
 	{
@@ -4076,6 +4078,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 		equal { fold { 1 2 3 } 1 fn { v acc } { + acc } } 7
 		equal { fold { } 1 fn { v acc } { + acc } } 1
 		equal { fold list { 1 2 3 } 1 fn { v acc } { v + acc } } 7
+		equal { fold { "a" "b" "c" } "" fn { v acc } { acc .concat v } } "abc"
 	}
 
 	{
@@ -4138,10 +4141,11 @@ section "Iteration " "Functions for iterating over collections and executing cod
 		equal { filter { } { .is-even } } { }
 		equal { filter list { 1 2 3 4 } { .is-even } } list { 2 4 }
 		equal { filter list { 1 2 3 4 } ?is-even } list { 2 4 }
+		equal { filter { 1 3 5 7 } { .is-even } } { }
 		; equal { filter list { } { .is-even } } list { }
-		; equal { filter "1234" { .to-integer .is-even } } { "2" "4" }
-		; equal { filter "01234" ?to-integer } { "1" "2" "3" "4" }
-		; equal { filter "" { .to-integer .is-even } } { }
+		; equal { filter "1234" { .integer .is-even } } { "2" "4" }
+		; equal { filter "01234" ?integer } { "1" "2" "3" "4" }
+		; equal { filter "" { .integer .is-even } } { }
 	}
 
 	{
@@ -4158,10 +4162,10 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	{
 		equal { seek { 1 2 3 4 } { .is-even } } 2
 		equal { seek list { 1 2 3 4 } { .is-even } } 2
-		equal { seek "1234" { .to-integer .is-even } } "2"
+		equal { seek "1234" { .integer .is-even } } "2"
 		equal { try { seek { 1 2 3 4 } { > 5 } } |type? } 'error
 		equal { try { seek list { 1 2 3 4 } { > 5 } } |type? } 'error
-		equal { try { seek "1234" { .to-integer > 5 } } |type? } 'error
+		equal { try { seek "1234" { .integer > 5 } } |type? } 'error
 	}
 
 	{
@@ -4301,6 +4305,7 @@ section "Functions " "functions that create functions" {
 		equal { x: fn { } { 234 } , x } 234
 		equal { x: fn { x } { x } , x 123 } 123
 		equal { x: fn { x } { + 123 } , x 123 } 246
+		equal { add: fn { a b } { a + b } , add 10 20 } 30
 	}
 
 	{
@@ -5157,6 +5162,7 @@ section "Combinators " "Functions that combine other functions or control execut
 	{
 		equal  { 101 .pass { 202 } } 101
 		equal  { 101 .pass { 202 + 303 } } 101
+		equal  { "hello" .pass { .length? } } "hello"
 	}
 
 	{
@@ -5294,6 +5300,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	{
 		equal { format 123 "num: %d" } "num: 123"
 		equal { format "hello" "%s world" } "hello world"
+		equal { format 3.14159 "pi: %.2f" } "pi: 3.14"
 	}
 
 	{
@@ -5775,7 +5782,7 @@ section "Default" "" {
 		equal { try { fail "error" |disarm } |type? } 'error
 		equal { try { fail "error" |disarm |message? } } "error"
 		equal { try { fail "error" } |has-failed } true
-		equal { try { fail "error" |disarm } |has-failed } false
+		equal { try { fail "error" |disarm } |has-failed } true
 	}
 
 	{
@@ -5857,9 +5864,9 @@ section "Default" "" {
 	{
 		equal { "a" |requires-one-of { "a" "b" "c" } } "a"
 		equal { "b" |requires-one-of { "a" "b" "c" } } "b"
-		equal { try { "x" |requires-one-of { "a" "b" "c" } } |message? |contains "must be one of" } 1
-		equal { try { "x" |requires-one-of { "a" "b" "c" } } |message? |contains "\"x\"" } 1
-		equal { try { 5 |requires-one-of { 1 2 3 } } |message? |contains "5" } 1
+		equal { try { "x" |requires-one-of { "a" "b" "c" } } |message? |contains "must be one of" } true
+		equal { try { "x" |requires-one-of { "a" "b" "c" } } |message? |contains "[String: x]" } true
+		equal { try { 5 |requires-one-of { 1 2 3 } } |message? |contains "5" } true
 	}
 
 	{
@@ -5876,9 +5883,9 @@ section "Default" "" {
 	{
 		equal { "a" |requires-one-of { "a" "b" "c" } } "a"
 		equal { "b" |requires-one-of { "a" "b" "c" } } "b"
-		equal { try { "x" |requires-one-of { "a" "b" "c" } } |message? |contains "must be one of" } 1
-		equal { try { "x" |requires-one-of { "a" "b" "c" } } |message? |contains "\"x\"" } 1
-		equal { try { 5 |requires-one-of { 1 2 3 } } |message? |contains "5" } 1
+		equal { try { "x" |requires-one-of { "a" "b" "c" } } |message? |contains "must be one of" } true
+		equal { try { "x" |requires-one-of { "a" "b" "c" } } |message? |contains "[String: x]" } true
+		equal { try { 5 |requires-one-of { 1 2 3 } } |message? |contains "5" } true
 	}
 
 	{
@@ -6009,6 +6016,7 @@ section "Default" "" {
 		equal  { try { 123 + 123 } } 246
 		equal  { try { 123 + "asd" } |type? } 'error
 		equal  { try { 123 + } |type? } 'error
+		equal  { try { fail "oops" } |message? } "oops"
 	}
 
 	{
@@ -6036,9 +6044,9 @@ section "Default" "" {
 
 	{
 		equal  { c: context { x: 100 } try\in c { x * 9.99 } } 999.0
-		equal  { c: context { x: 100 } try\in c { inc! 'x } } 101
-		equal  { c: context { x: 100 } try\in c { x:: 200 , x } } 200
-		equal  { c: context { x: 100 } try\in c { x:: 200 } c/x } 200
+		equal  { c: context { x:: 100 } try\in c { inc! 'x } } 101
+		equal  { c: context { x:: 100 } try\in c { x:: 200 , x } } 200
+		equal  { c: context { x:: 100 } try\in c { x:: 200 } c/x } 200
 		equal  { c: context { x: 100 } try\in c { inc! 'y } |type? } 'error
 	}
 
@@ -6087,7 +6095,7 @@ section "Default" "" {
 
 	{
 		equal { persist { 10 + 1 } } 11
-		equal { counter:: 0 persist { counter:: counter + 1 , if counter > 3 { counter } { fail "not ready" } } } 4
+		equal { counter:: 0 persist { counter:: counter + 1 , either counter > 3 { counter } { fail "not ready" } } } 4
 		error { persist { fail "always fails" } }
 	}
 
@@ -6104,7 +6112,7 @@ section "Default" "" {
 
 	{
 		equal { timeout 5000 { "ok" } } "ok"
-		equal { try { timeout 100 { sleep 1000 , "ok" } } |message? |contains "timeout" } 1
+		equal { try { timeout 100 { sleep 1000 , "ok" } } |message? |contains "timed out" } true
 	}
 
 	{

@@ -12,6 +12,7 @@ var builtins_combinators = map[string]*env.Builtin{
 	// Tests:
 	// equal  { 101 .pass { 202 } } 101
 	// equal  { 101 .pass { 202 + 303 } } 101
+	// equal  { "hello" .pass { .length? } } "hello"
 	// Args:
 	// * value: Any value that will be passed to the block and returned
 	// * block: Block of code to execute with the value injected

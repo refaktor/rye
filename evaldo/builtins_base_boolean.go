@@ -230,8 +230,8 @@ var builtins_boolean = map[string]*env.Builtin{
 	// equal { any\with 10 { + 10 , * 10 } } 20
 	// equal { any\with 0 { + 10 , * 10 } } 10
 	// equal { any\with 5 { - 10 , + 10 } } -5
-	// equal { any\with false { .not , .to-string } } true
-	// ; equal { any\with true { .not , .to-string } } "true"
+	// equal { any\with false { .not , .string } } true
+	// ; equal { any\with true { .not , .string } } "true"
 	// error { any\with 5 "not-a-block" }
 	// Args:
 	// * value: Value to be used as input to each expression in the block

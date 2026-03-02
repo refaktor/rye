@@ -1,5 +1,0 @@
-{ x .word  123 } |probe
-{ x .word* 123 } |probe
-{ x |word  123 } |probe
-{ X |word* 234 } |probe
-

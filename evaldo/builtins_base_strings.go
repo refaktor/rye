@@ -202,6 +202,7 @@ var builtins_string = map[string]*env.Builtin{
 	// equal { replace "...xo..." "xo" "LoL" } "...LoL..."
 	// equal { replace "...xoxo..." "xo" "LoL" } "...LoLLoL..."
 	// equal { replace "hello world" "world" "everyone" } "hello everyone"
+	// equal { replace "remove--dashes" "-" "" } "removedashes"
 	// Args:
 	// * string: Original string
 	// * old: Substring to replace
@@ -680,6 +681,7 @@ var builtins_string = map[string]*env.Builtin{
 	// equal { join { "Spot" "Fido" "Rex" } } "SpotFidoRex"
 	// equal { join { 1 2 3 } } "123"
 	// equal { join { https://example.com/ "path" } |type? } 'uri
+	// equal { join { } } ""
 	// Args:
 	// * collection: Block or list of strings, numbers or URIs to join
 	// Returns:
@@ -847,6 +849,7 @@ var builtins_string = map[string]*env.Builtin{
 	// equal { split "a,b,c" "," } { "a" "b" "c" }
 	// equal { split "hello world" " " } { "hello" "world" }
 	// equal { split "one::two::three" "::" } { "one" "two" "three" }
+	// equal { split "no-separator" "," } { "no-separator" }
 	// Args:
 	// * string: String to split
 	// * separator: String that separates values

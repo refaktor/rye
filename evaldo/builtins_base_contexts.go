@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/refaktor/rye/env"
+	"github.com/refaktor/rye/util"
 	// JM 20230825	"github.com/refaktor/rye/term"
 )
 
@@ -91,13 +92,15 @@ var builtins_contexts = map[string]*env.Builtin{
 	// equal { y: 123 c: context { x: y } c/x } 123
 	// equal { c: context { x: inc 10 } c/x } 11
 	// equal { y: 123 c: context { x: does { y } } c/x } 123
+	// equal { c: context { a: 1 b: 2 } c/a + c/b } 3
+	// equal { c: context dict { "a" 1 "b" 2 } c/a + c/b } 3
 	// Args:
-	// * block: Block of expressions to evaluate in a new context
+	// * arg: Block of expressions to evaluate, or Dict to convert to context
 	// Returns:
-	// * context object with the values defined in the block and access to parent context
+	// * context object with the values defined in the block/dict and access to parent context
 	"context": {
 		Argsn: 1,
-		Doc:   "Creates a new context that maintains access to its parent context.",
+		Doc:   "Creates a new context from a block (evaluated) or dict (converted).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
@@ -116,8 +119,10 @@ var builtins_contexts = map[string]*env.Builtin{
 				ps.Ctx = ctx
 				ps.Ser = ser
 				return rctx // return the resulting context (pointer)
+			case env.Dict:
+				return util.Dict2Context(ps, bloc)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "context")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.DictType}, "context")
 			}
 		},
 	},
@@ -302,7 +307,7 @@ var builtins_contexts = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { c: context { y: 123 } cc: bind! context { x: 234 z: does { x } } c , unbind cc cc/z } 123
+	// equal { c: context { y: 123 } cc: bind! context { x: 234 z: does { x } } c , unbind cc cc/z } 234
 	// error { c: context { y: 123 } cc: bind! context { z: does { y } } c , dd: unbind cc dd/z }
 	// Args:
 	// * ctx: Context object to unbind from its parent
@@ -324,8 +329,8 @@ var builtins_contexts = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { x: 123 whereis 'x |first } 0
-	// equal { x: 123 c: context { y: 456 } do\in c { whereis 'x } |first } 1
-	// equal { x: 123 c: context { y: 456 } do\in c { whereis 'y } |first } 0
+	// equal { x: 123 c: context { y: 456 } do\in c { whereis 'x } |first } 0
+	// equal { x: 123 c: context { y: 456 } do\in c { whereis 'y } |first } 1
 	// Args:
 	// * word: Word to look up in current or parent contexts
 	// Returns:

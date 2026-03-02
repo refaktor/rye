@@ -185,6 +185,7 @@ var builtins_conditionals = map[string]*env.Builtin{
 	// Tests:
 	// equal  { either true { 222 } { 333 } } 222
 	// equal  { either false { 222 } { 333 } } 333
+	// equal  { either 5 > 3 { "yes" } { "no" } } "yes"
 	// error  { either 1 { 222 } { 333 } }
 	// error  { either 0 { 222 } { 333 } }
 	// Args:

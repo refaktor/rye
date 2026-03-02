@@ -174,7 +174,7 @@ var builtins_iteration = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { replicate\idx 5 { } } { 0 1 2 3 4 }
+	// equal { replicate\idx 5 { + 0 } } { 0 1 2 3 4 }
 	// equal { replicate\idx 3 { * 10 } } { 0 10 20 }
 	// equal { replicate\idx 0 { 10 } } { }
 	// Args:
@@ -731,7 +731,7 @@ var builtins_iteration = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// stdout { walk\idx { 1 2 3 } 'i { .prns , i .prns , .rest } } "{ 1 2 3 } 0 { 2 3 } 1 { 3 } 2 "
+	// stdout { walk\idx { 1 2 3 } 'i { .prns , i .prns , .rest } } "1 2 3  0 2 3  1 3  2 "
 	// Args:
 	// * block: Block to walk through
 	// * word: Word to store the current index (0-based)
@@ -789,8 +789,8 @@ var builtins_iteration = map[string]*env.Builtin{
 	//  equal { purge { } { .is-even } } { }
 	//  equal { purge list { 1 2 3 } { .is-even } } list { 1 3 }
 	//  equal { purge list { } { .is-even } } list { }
-	//  equal { purge "1234" { .probe .to-integer .is-even } } { "1" "3" }
-	//  equal { purge "" { .to-integer .is-even } } { }
+	//  equal { purge "1234" { .probe .integer .is-even } } { "1" "3" }
+	//  equal { purge "" { .integer .is-even } } { }
 	// Args:
 	// * series: Block, List, String, or Table to purge from
 	// * code: Block of code that returns true for values to remove
@@ -968,8 +968,8 @@ var builtins_iteration = map[string]*env.Builtin{
 	//  equal { map list { 3 4 5 6 } { .is-multiple-of 3 } } list { 1 0 0 1 }
 	//  equal { map list { } { + 1 } } list { }
 	//  ; equal { map "abc" { + "-" } .join } "a-b-c-" ; TODO doesn't work, fix join
-	//  equal { map "123" { .to-integer } } { 1 2 3 }
-	//  equal { map "123" ?to-integer } { 1 2 3 }
+	//  equal { map "123" { .integer } } { 1 2 3 }
+	//  equal { map "123" ?integer } { 1 2 3 }
 	//  equal { map "" { + "-" } } { }
 	"map": { // **
 		Argsn: 2,
@@ -1127,6 +1127,7 @@ var builtins_iteration = map[string]*env.Builtin{
 	//  equal { try { reduce { } 'acc { + acc } } |type? } 'error
 	//  equal { try { reduce list { } 'acc { + acc } } |type? } 'error
 	//  equal { try { reduce "" 'acc { + acc } } |type? } 'error
+	//  equal { reduce { 1 2 3 4 } 'acc { * acc } } 24
 	// Args:
 	// * collection: Collection to reduce (must not be empty)
 	// * accumulator: Word to store the accumulator value
@@ -1236,6 +1237,7 @@ var builtins_iteration = map[string]*env.Builtin{
 	//  equal { fold { 1 2 3 } 1 fn { v acc } { + acc } } 7
 	//  equal { fold { } 1 fn { v acc } { + acc } } 1
 	//  equal { fold list { 1 2 3 } 1 fn { v acc } { v + acc } } 7
+	//  equal { fold { "a" "b" "c" } "" fn { v acc } { acc .concat v } } "abc"
 	"fold": { // **
 		Argsn: 3,
 		Doc:   "Reduces values of a block to a new block by evaluating a block of code ...",
@@ -1625,10 +1627,11 @@ var builtins_iteration = map[string]*env.Builtin{
 	//  equal { filter { } { .is-even } } { }
 	//  equal { filter list { 1 2 3 4 } { .is-even } } list { 2 4 }
 	//  equal { filter list { 1 2 3 4 } ?is-even } list { 2 4 }
+	//  equal { filter { 1 3 5 7 } { .is-even } } { }
 	//  ; equal { filter list { } { .is-even } } list { }
-	//  ; equal { filter "1234" { .to-integer .is-even } } { "2" "4" }
-	//  ; equal { filter "01234" ?to-integer } { "1" "2" "3" "4" }
-	//  ; equal { filter "" { .to-integer .is-even } } { }
+	//  ; equal { filter "1234" { .integer .is-even } } { "2" "4" }
+	//  ; equal { filter "01234" ?integer } { "1" "2" "3" "4" }
+	//  ; equal { filter "" { .integer .is-even } } { }
 	"filter": { // **
 		Argsn: 2,
 		Doc:   "Filters values from a seris based on return of a injected code block.",
@@ -1756,10 +1759,10 @@ var builtins_iteration = map[string]*env.Builtin{
 	// Tests:
 	//  equal { seek { 1 2 3 4 } { .is-even } } 2
 	//  equal { seek list { 1 2 3 4 } { .is-even } } 2
-	//  equal { seek "1234" { .to-integer .is-even } } "2"
+	//  equal { seek "1234" { .integer .is-even } } "2"
 	//  equal { try { seek { 1 2 3 4 } { > 5 } } |type? } 'error
 	//  equal { try { seek list { 1 2 3 4 } { > 5 } } |type? } 'error
-	//  equal { try { seek "1234" { .to-integer > 5 } } |type? } 'error
+	//  equal { try { seek "1234" { .integer > 5 } } |type? } 'error
 	// Args:
 	// * series: Block, List, or String to search through
 	// * code: Block or Builtin that returns true when the desired value is found

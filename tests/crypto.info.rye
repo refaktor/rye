@@ -38,7 +38,7 @@ section "Basic Cryptographic Operations " "Hashing, encoding, and basic cryptogr
 	}
 
 	{
-		equal { cc crypto ed25519-generate-keys |first |to-string |type? } 'string
+		equal { cc crypto ed25519-generate-keys |first |string |type? } 'string
 	}
 
 	{
@@ -52,7 +52,7 @@ section "Basic Cryptographic Operations " "Hashing, encoding, and basic cryptogr
 	}
 
 	{
-		equal { cc crypto ed25519-generate-keys |second |to-string |type? } 'string
+		equal { cc crypto ed25519-generate-keys |second |string |type? } 'string
 	}
 
 	{
@@ -86,7 +86,7 @@ section "Basic Cryptographic Operations " "Hashing, encoding, and basic cryptogr
 
 	{
 		; equal { cc crypto ed25519-generate-keys |second |ed25519-private-key |type? } 'native
-		; equal { cc crypto ed25519-generate-keys |second |to-string |probe |ed25519-private-key |kind? } 'Ed25519-priv-key
+		; equal { cc crypto ed25519-generate-keys |second |string |probe |ed25519-private-key |kind? } 'Ed25519-priv-key
 		equal { cc crypto "invalid" |ed25519-private-key |disarm |type? } 'error
 	}
 
@@ -101,8 +101,8 @@ section "Basic Cryptographic Operations " "Hashing, encoding, and basic cryptogr
 	}
 
 	{
-		; equal { cc crypto ed25519-generate-keys |first |to-string |ed25519-public-key |type? } 'native
-		; equal { cc crypto ed25519-generate-keys |first |to-string |ed25519-public-key |kind? } 'Ed25519-pub-key
+		; equal { cc crypto ed25519-generate-keys |first |string |ed25519-public-key |type? } 'native
+		; equal { cc crypto ed25519-generate-keys |first |string |ed25519-public-key |kind? } 'Ed25519-pub-key
 		equal { cc crypto "invalid" |ed25519-public-key |disarm |type? } 'error
 	}
 

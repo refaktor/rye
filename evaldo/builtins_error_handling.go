@@ -377,7 +377,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	// equal { try { fail "error" |disarm } |type? } 'error
 	// equal { try { fail "error" |disarm |message? } } "error"
 	// equal { try { fail "error" } |has-failed } true
-	// equal { try { fail "error" |disarm } |has-failed } false
+	// equal { try { fail "error" |disarm } |has-failed } true
 	// Args:
 	// * error: Error object to disarm
 	// Returns:
@@ -509,9 +509,9 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	// Tests:
 	// equal { "a" |requires-one-of { "a" "b" "c" } } "a"
 	// equal { "b" |requires-one-of { "a" "b" "c" } } "b"
-	// equal { try { "x" |requires-one-of { "a" "b" "c" } } |message? |contains "must be one of" } 1
-	// equal { try { "x" |requires-one-of { "a" "b" "c" } } |message? |contains "\"x\"" } 1
-	// equal { try { 5 |requires-one-of { 1 2 3 } } |message? |contains "5" } 1
+	// equal { try { "x" |requires-one-of { "a" "b" "c" } } |message? |contains "must be one of" } true
+	// equal { try { "x" |requires-one-of { "a" "b" "c" } } |message? |contains "[String: x]" } true
+	// equal { try { 5 |requires-one-of { 1 2 3 } } |message? |contains "5" } true
 	// Args:
 	// * value: Value to check against valid options
 	// * options: Block containing valid values
@@ -566,9 +566,9 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	// Tests:
 	// equal { "a" |requires-one-of { "a" "b" "c" } } "a"
 	// equal { "b" |requires-one-of { "a" "b" "c" } } "b"
-	// equal { try { "x" |requires-one-of { "a" "b" "c" } } |message? |contains "must be one of" } 1
-	// equal { try { "x" |requires-one-of { "a" "b" "c" } } |message? |contains "\"x\"" } 1
-	// equal { try { 5 |requires-one-of { 1 2 3 } } |message? |contains "5" } 1
+	// equal { try { "x" |requires-one-of { "a" "b" "c" } } |message? |contains "must be one of" } true
+	// equal { try { "x" |requires-one-of { "a" "b" "c" } } |message? |contains "[String: x]" } true
+	// equal { try { 5 |requires-one-of { 1 2 3 } } |message? |contains "5" } true
 	// Args:
 	// * value: Value to check against valid options
 	// * options: Block containing valid values
@@ -939,6 +939,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	// equal  { try { 123 + 123 } } 246
 	// equal  { try { 123 + "asd" } |type? } 'error
 	// equal  { try { 123 + } |type? } 'error
+	// equal  { try { fail "oops" } |message? } "oops"
 	"try": {
 		Argsn: 1,
 		Doc:   "Takes a block of code and does (runs) it.",
@@ -1012,9 +1013,9 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal  { c: context { x: 100 } try\in c { x * 9.99 } } 999.0
-	// equal  { c: context { x: 100 } try\in c { inc! 'x } } 101
-	// equal  { c: context { x: 100 } try\in c { x:: 200 , x } } 200
-	// equal  { c: context { x: 100 } try\in c { x:: 200 } c/x } 200
+	// equal  { c: context { x:: 100 } try\in c { inc! 'x } } 101
+	// equal  { c: context { x:: 100 } try\in c { x:: 200 , x } } 200
+	// equal  { c: context { x:: 100 } try\in c { x:: 200 } c/x } 200
 	// equal  { c: context { x: 100 } try\in c { inc! 'y } |type? } 'error
 	"try\\in": {
 		Argsn: 2,
@@ -1175,7 +1176,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { persist { 10 + 1 } } 11
-	// equal { counter:: 0 persist { counter:: counter + 1 , if counter > 3 { counter } { fail "not ready" } } } 4
+	// equal { counter:: 0 persist { counter:: counter + 1 , either counter > 3 { counter } { fail "not ready" } } } 4
 	// error { persist { fail "always fails" } }
 	// Args:
 	// * block: Block of code to execute repeatedly until it succeeds
@@ -1224,7 +1225,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { timeout 5000 { "ok" } } "ok"
-	// equal { try { timeout 100 { sleep 1000 , "ok" } } |message? |contains "timeout" } 1
+	// equal { try { timeout 100 { sleep 1000 , "ok" } } |message? |contains "timed out" } true
 	// Args:
 	// * ms: Integer timeout duration in milliseconds
 	// * block: Block of code to execute with a timeout

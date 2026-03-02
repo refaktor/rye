@@ -309,6 +309,7 @@ var Builtins_json = map[string]*env.Builtin{
 	// Tests:
 	// equal { "[ 1, 2, 3 ]" |parse-json |length? } 3
 	// equal { "[ 1, 2, 3 ]" |parse-json |type? } 'list
+	// equal { `{"name": "John", "age": 30}` |parse-json -> "name" } "John"
 	// Args:
 	// * json: string containing JSON data
 	// Returns:
