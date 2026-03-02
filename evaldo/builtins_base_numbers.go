@@ -607,7 +607,8 @@ var builtins_numbers = map[string]*env.Builtin{
 	// equal { 1 + 1 } 2
 	// equal { 3 + 4 } 7
 	// equal { 5.6 + 7.8 } 13.400000
-	// equal { vector [ 1 2 3 ] |+ vector [ 4 5 6 ] |to-block } { 5.0 7.0 9.0 }
+	// equal { 2 + 3.5 } 5.5
+	// equal { vector [ 1 2 3 ] |+ vector [ 4 5 6 ] |block } { 5.0 7.0 9.0 }
 	// Args:
 	// * value1: First value (integer, decimal, complex, time, vector)
 	// * value2: Second value to add (integer, decimal, complex, duration, vector)
@@ -685,7 +686,7 @@ var builtins_numbers = map[string]*env.Builtin{
 	// equal { 5 - 6 } -1
 	// equal { 5.5 - 2.2 } 3.3
 	// equal { 5 - 2.5 } 2.5
-	// equal { vector [ 5 7 9 ] |- vector [ 4 5 6 ] |to-block } { 1.0 2.0 3.0 }
+	// equal { vector [ 5 7 9 ] |- vector [ 4 5 6 ] |block } { 1.0 2.0 3.0 }
 	// Args:
 	// * value1: First number (integer, decimal, or vector)
 	// * value2: Second number to subtract from the first
@@ -766,8 +767,8 @@ var builtins_numbers = map[string]*env.Builtin{
 	// equal { 2.5 * -2 } -5.0
 	// equal { 0 * 5 } 0
 	// equal { 1.5 * 2.5 } 3.75
-	// equal { vector [ 1 2 3 ] |* 2.0 |to-block } { 2.0 4.0 6.0 }
-	// equal { vector [ 10 20 ] |* 0.5 |to-block } { 5.0 10.0 }
+	// equal { vector [ 1 2 3 ] |* 2.0 |block } { 2.0 4.0 6.0 }
+	// equal { vector [ 10 20 ] |* 0.5 |block } { 5.0 10.0 }
 	// Args:
 	// * value1: First number (integer, decimal, or vector)
 	// * value2: Second number to multiply by (scalar for vectors)

@@ -9,6 +9,7 @@ section "Constructors " "Functions that construct a table." {
 	{
 		equal { table { "a" } { 1 2 } |type? } 'table
 		equal { table { 'a  } { 1 2 } |type? } 'table
+		equal { table { 'a 'b } { 1 2 3 4 } |length? } 2
 	}
 
 	{

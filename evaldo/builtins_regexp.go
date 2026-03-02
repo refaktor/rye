@@ -13,6 +13,7 @@ var Builtins_regexp = map[string]*env.Builtin{
 	//
 	// Tests:
 	//  equal { regexp "[0-9]" |type? } 'native
+	//  equal { regexp "[0-9]" |kind? } 'regexp
 	// Args:
 	// * pattern: String containing a regular expression pattern
 	// Returns:

@@ -109,6 +109,7 @@ var builtins_functions = map[string]*env.Builtin{
 	// equal { x: fn { } { 234 } , x } 234
 	// equal { x: fn { x } { x } , x 123 } 123
 	// equal { x: fn { x } { + 123 } , x 123 } 246
+	// equal { add: fn { a b } { a + b } , add 10 20 } 30
 	// Args:
 	// * spec: Block containing parameter specifications
 	// * body: Block containing the function body code

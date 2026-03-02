@@ -43,6 +43,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 
 	{
 		equal { log2 8 } 3.0
+		equal { log2 1 } 0.0
 	}
 
 	{
@@ -118,6 +119,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 
 	{
 		equal { sq 4 } 16.0
+		equal { sq -3 } 9.0
 	}
 
 	{
@@ -181,6 +183,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 
 	{
 		equal { sqrt 9 } 3.0
+		equal { sqrt 2.0 |round\to 4 } 1.4142
 		stdout { sqrt complex -1 0 |prn } "0.000000+1.000000i"
 	}
 
@@ -371,6 +374,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 
 	{
 		equal { round\to 3.14159 2 } 3.14
+		equal { round\to 2.71828 3 } 2.718
 	}
 
 	{
@@ -815,7 +819,7 @@ section "Match dialect " "pattern matching and deconstruction" {
 		arg `pattern: Block containing:`
 		arg `- Words to bind values to`
 		arg `- Literal values to match`
-		arg `- Xwords to check value types (e.g., <integer>, <string>)`
+		arg `- Opwords to check value types (e.g., <integer>, <string>)`
 		arg `- Get-words to match against values in the current context (e.g., ?x)`
 		arg `- Square brackets [ ] to evaluate code with the value injected`
 		arg `- Nested blocks for recursive matching`
@@ -844,7 +848,7 @@ section "Match dialect " "pattern matching and deconstruction" {
 		equal { match-block { 1 { 2 { 3 4 } 5 } 6 } { x { y { z w } v } u } w } 4
 		; equal { try { match-block { 1 { 2 3 } 4 } { a { b "wrong" } c } } |failed? } 1
 		
-		; Type checking with xwords:
+		; Type checking with opwords:
 		equal { match-block { 123 } { <integer> } } true
 		equal { match-block { "hello" } { <string> } } true
 		equal { match-block { { 1 2 3 } } { <block> } } true
@@ -1053,9 +1057,9 @@ section "Complex numbers " "Functions for working with complex numbers" {
 
 	{
 		equal { complex 3 4 |type? } 'complex
-		equal { complex 3 4 |print } "3.000000+4.000000i"
-		equal { complex 0 0 |print } "0.000000+0.000000i"
-		equal { complex -1 -2 |print } "-1.000000-2.000000i"
+		equal { complex 3 4 |string } "3.000000+4.000000i"
+		equal { complex 0 0 |string } "0.000000+0.000000i"
+		equal { complex -1 -2 |string } "-1.000000-2.000000i"
 	}
 
 	{
@@ -1117,8 +1121,8 @@ section "Complex numbers " "Functions for working with complex numbers" {
 	}
 
 	{
-		equal { complex-conj complex 3 4 |print } "3.000000-4.000000i"
-		equal { complex-conj complex 3 -4 |print } "3.000000+4.000000i"
+		equal { complex-conj complex 3 4 |string } "3.000000-4.000000i"
+		equal { complex-conj complex 3 -4 |string } "3.000000+4.000000i"
 		error { complex-conj 5 }
 	}
 

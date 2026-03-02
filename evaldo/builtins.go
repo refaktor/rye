@@ -105,35 +105,48 @@ func MakeNativeArgError(env1 *env.ProgramState, N int, knd []string, fn string) 
 
 func MakeRyeError(env1 *env.ProgramState, val env.Object, er *env.Error) *env.Error {
 	switch val := val.(type) {
-	case env.String: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+	case env.String:
 		return env.NewError4(0, val.Value, er, nil)
-	case env.Integer: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+	case env.Integer:
 		if val.Value == 0 {
 			return er
 		}
 		return env.NewError4(int(val.Value), "", er, nil)
-	case env.Word: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
+	case env.Word:
 		return env.NewError5(val, 0, "", er, nil)
-	case env.Block: // todo .. make Error type .. make error construction micro dialect, return the error wrapping error that caused it
-		// TODO -- this is only temporary it takes numeric value as first and string as second arg
-		// TODONOW implement the dialect
-		var code env.Object
-		if len(val.Series.S) > 0 {
-			code = val.Series.Get(0)
-			if code.Type() == env.IntegerType {
-				return env.NewError4(int(code.(env.Integer).Value), "", er, nil)
-			}
-		} else {
+	case env.Tagword:
+		return env.NewError5(env.Word{Index: val.Index}, 0, "", er, nil)
+	case env.Block:
+		// Parse block elements in any order: kind (word/tagword), status (integer), message (string)
+		if len(val.Series.S) == 0 {
 			return makeError(env1, "Empty error constructor block")
 		}
-		if len(val.Series.S) > 1 {
-			message := val.Series.Get(1)
-			if code.Type() == env.IntegerType && message.Type() == env.StringType {
-				return env.NewError4(int(code.(env.Integer).Value), message.(env.String).Value, er, nil)
+
+		var kind env.Word
+		var status int
+		var message string
+		hasKind := false
+
+		for i := 0; i < len(val.Series.S); i++ {
+			elem := val.Series.Get(i)
+			switch v := elem.(type) {
+			case env.Word:
+				kind = v
+				hasKind = true
+			case env.Tagword:
+				kind = env.Word{Index: v.Index}
+				hasKind = true
+			case env.Integer:
+				status = int(v.Value)
+			case env.String:
+				message = v.Value
 			}
 		}
 
-		return makeError(env1, "Wrong error constructor")
+		if hasKind {
+			return env.NewError5(kind, status, message, er, nil)
+		}
+		return env.NewError4(status, message, er, nil)
 	default:
 		return makeError(env1, "Wrong error constructor")
 	}

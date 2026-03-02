@@ -16,16 +16,17 @@ var builtins_types = map[string]*env.Builtin{
 	// ##### Types and Kinds ##### ""
 	//
 	// Tests:
-	// equal { to-integer "1234" } 1234
-	// ; equal { to-integer "123.4" } 123
-	// ; equal { to-integer "123.6" } 123
-	// ; equal { to-integer "123.4" } 123
-	// error { to-integer "abc" }
+	// equal { integer "1234" } 1234
+	// equal { integer 45.67 } 45
+	// ; equal { integer "123.4" } 123
+	// ; equal { integer "123.6" } 123
+	// ; equal { integer "123.4" } 123
+	// error { integer "abc" }
 	// Args:
 	// * value: String or decimal value to convert to an integer
 	// Returns:
 	// * An integer value
-	"to-integer": {
+	"integer": {
 		Argsn: 1,
 		Doc:   "Tries to change a Rye value (like string) to integer.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -33,25 +34,25 @@ var builtins_types = map[string]*env.Builtin{
 			case env.String:
 				iValue, err := strconv.Atoi(addr.Value)
 				if err != nil {
-					return MakeBuiltinError(ps, err.Error(), "to-integer")
+					return MakeBuiltinError(ps, err.Error(), "integer")
 				}
 				return *env.NewInteger(int64(iValue))
 			case env.Decimal:
 				return *env.NewInteger(int64(addr.Value))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "to-integer")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "integer")
 			}
 		},
 	},
 
 	// Tests:
-	// equal { to-decimal "123.4" } 123.4
-	// error { to-decimal "abc" }
+	// equal { decimal "123.4" } 123.4
+	// error { decimal "abc" }
 	// Args:
 	// * value: String value to convert to a decimal
 	// Returns:
 	// * A decimal value
-	"to-decimal": {
+	"decimal": {
 		Argsn: 1,
 		Doc:   "Tries to change a Rye value (like string) to decimal.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -61,25 +62,26 @@ var builtins_types = map[string]*env.Builtin{
 
 				if err != nil {
 					// Handle the error if the conversion fails (e.g., invalid format)
-					return MakeBuiltinError(ps, err.Error(), "to-decimal")
+					return MakeBuiltinError(ps, err.Error(), "decimal")
 				}
 				return *env.NewDecimal(floatVal)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "to-decimal")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "decimal")
 			}
 		},
 	},
 
 	// Tests:
-	// equal { to-string 'test } "test"
-	// equal { to-string 123 } "123"
-	// equal { to-string 123.4 } "123.400000"
-	// equal { to-string "test" } "test"
+	// equal { string 'test } "test"
+	// equal { string 123 } "123"
+	// equal { string 123.4 } "123.400000"
+	// equal { string "test" } "test"
+	// equal { string true } "true"
 	// Args:
 	// * value: Any Rye value to convert to a string
 	// Returns:
 	// * A string representation of the value
-	"to-string": { // ***
+	"string": { // ***
 		Argsn: 1,
 		Doc:   "Tries to turn a Rye value to string.",
 		Pure:  true,
@@ -89,9 +91,9 @@ var builtins_types = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal   { to-uri "https://example.com" } https://example.com
-	// ; error { to-uri "not-uri" }
-	"to-uri": { // ** TODO-FIXME: return possible failures
+	// equal   { uri "https://example.com" } https://example.com
+	// ; error { uri "not-uri" }
+	"uri": { // ** TODO-FIXME: return possible failures
 		Argsn: 1,
 		Doc:   "Tries to change Rye value to an URI.",
 		Pure:  true,
@@ -100,16 +102,16 @@ var builtins_types = map[string]*env.Builtin{
 			case env.String:
 				return *env.NewUri1(ps.Idx, val.Value) // TODO turn to switch
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "to-uri")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "uri")
 			}
 
 		},
 	},
 
 	// Tests:
-	// equal   { to-file "example.txt" } %example.txt
-	// equal { to-file 123 } %123
-	"to-file": { // **  TODO-FIXME: return possible failures
+	// equal   { file "example.txt" } %example.txt
+	// equal { file 123 } %123
+	"file": { // **  TODO-FIXME: return possible failures
 		Argsn: 1,
 		Doc:   "Tries to change Rye value to a file.",
 		Pure:  true,
@@ -120,19 +122,19 @@ var builtins_types = map[string]*env.Builtin{
 			case env.String:
 				return *env.NewFileUri(ps.Idx, val.Value) // TODO turn to switch
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "to-file")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "file")
 			}
 		},
 	},
 
 	// Tests:
-	// equal { to-char 42 } "*"
-	// error { to-char "*" }
+	// equal { char 42 } "*"
+	// error { char "*" }
 	// Args:
 	// * value: Integer representing an ASCII code point
 	// Returns:
 	// * A string containing the character corresponding to the ASCII code
-	"to-char": { // ***
+	"char": { // ***
 		Argsn: 1,
 		Doc:   "Tries to turn a Rye value (like integer) to ascii character.",
 		Pure:  true,
@@ -141,21 +143,21 @@ var builtins_types = map[string]*env.Builtin{
 			case env.Integer:
 				return *env.NewString(string(rune(value.Value)))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "to-char")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "char")
 			}
 		},
 	},
 
 	// Tests:
-	// equal { list [ 1 2 3 ] |to-block |type? } 'block
-	// equal  { list [ 1 2 3 ] |to-block |first } 1
-	// equal { vector [ 1 2 3 ] |to-block } { 1.0 2.0 3.0 }
-	// equal { table { 'a 'b } { 1 2 3 4 } -> 1 |to-block } { 1 2 }
+	// equal { list [ 1 2 3 ] |block |type? } 'block
+	// equal  { list [ 1 2 3 ] |block |first } 1
+	// equal { vector [ 1 2 3 ] |block } { 1.0 2.0 3.0 }
+	// equal { table { 'a 'b } { 1 2 3 4 } -> 0 |block } { 1 2 }
 	// Args:
 	// * value: List, Vector, or TableRow to convert to a block
 	// Returns:
 	// * A block containing the same elements as the input
-	"to-block": { // ***
+	"block": { // ***
 		Argsn: 1,
 		Doc:   "Turns a List, Vector, or TableRow to a Block",
 		Pure:  true,
@@ -176,42 +178,19 @@ var builtins_types = map[string]*env.Builtin{
 				}
 				return *env.NewBlock(*env.NewTSeries(items))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.ListType, env.VectorType, env.TableRowType}, "to-block")
+				return MakeArgError(ps, 1, []env.Type{env.ListType, env.VectorType, env.TableRowType}, "block")
 			}
 		},
 	},
 
 	// Tests:
-	// equal   { dict [ "a" 1 "b" 2 "c" 3 ] |to-context |type? } 'context
-	// ; equal   { dict [ "a" 1 ] |to-context do\in { a } } '1
-	// Args:
-	// * dict: Dict value to convert to a context
-	// Returns:
-	// * A context with the same keys and values as the input dict
-	"to-context": { // ***
-		Argsn: 1,
-		Doc:   "Takes a Dict and returns a Context with same names and values.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch s1 := arg0.(type) {
-			case env.Dict:
-
-				return util.Dict2Context(ps, s1)
-				// make new context with no parent
-
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.DictType}, "to-contextXX")
-			}
-		},
-	},
-
-	// Tests:
-	// equal { to-word "test" } 'test
-	// error { to-word 123 }
+	// equal { word "test" } 'test
+	// error { word 123 }
 	// Args:
 	// * value: String or word-like value to convert to a word
 	// Returns:
 	// * A word with the same name as the input value
-	"to-word": {
+	"word": {
 		Argsn: 1,
 		Doc:   "Tries to change a Rye value to a word with same name.",
 		Pure:  true,
@@ -239,7 +218,7 @@ var builtins_types = map[string]*env.Builtin{
 			case env.Getword:
 				return *env.NewWord(str.Index)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType, env.WordType, env.OpwordType, env.PipewordType, env.XwordType, env.EXwordType}, "to-word")
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.WordType, env.OpwordType, env.PipewordType, env.XwordType, env.EXwordType}, "word")
 			}
 		},
 	},

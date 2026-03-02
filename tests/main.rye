@@ -91,7 +91,7 @@ docs-framework: context {
 	}
 
 	comment: fn { str } {
-		print join [ "<p class='comment'>" to-string str "</p>" ]
+		print join [ "<p class='comment'>" string str "</p>" ]
 	}
 
 	example: fn { test } {
@@ -118,12 +118,12 @@ generate-menu: fn { menu } {
 
 generate-doc-file: fn { filename menu } {
 	join [
-		%tpl/header.html .Read .replace "{{title}}" capitalize join [ "Rye function reference: " filename " ( updated: " to-string date? now " )" ]
+		%tpl/header.html .Read .replace "{{title}}" capitalize join [ "Rye function reference: " filename " ( updated: " string date? now " )" ]
 		|replace "{{menu}}" generate-menu menu
-		capture-stdout { do\inside docs-framework load to-file filename ++ ".info.rye" }
+		capture-stdout { do\inside docs-framework load file filename ++ ".info.rye" }
 		Read %tpl/footer.html
 	 ] ; .map { .type? } |probe ; 
-	 |Write* to-file filename ++ ".html"
+	 |Write* file filename ++ ".html"
 }
 
 menu: { "base" "table" "formats" "io" "crypto" "dialects" "protocols" "system" }
@@ -157,8 +157,8 @@ test {
 	if sections .length? > 0 {  ; todo add is-empty builtin
 		var 'errors 0
 		for sections {
-			.to-string .pass { term/bold , prns "\n#" , .upper .prns , print "#\n" }
-			| ++ ".info.rye" |to-file |load |^check { "Group does not exist!" } |do\inside* test-framework |+ errors |fix { errors } ::errors }
+			.string .pass { term/bold , prns "\n#" , .upper .prns , print "#\n" }
+			| ++ ".info.rye" |file |load |^check { "Group does not exist!" } |do\inside* test-framework |+ errors |fix { errors } ::errors }
 		print ""
 	
 		; if ( length? sections ) > 1 {

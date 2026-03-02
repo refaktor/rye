@@ -352,7 +352,7 @@ func (l *Lexer) NextToken() NoPEGToken {
 		return l.readLSetWord()
 	case '?':
 		return l.readGetWord()
-	case '.', '+', '*', '/': // taken for other tokens also - <
+	case '.', '+', '*', '/', '!': // taken for other tokens also - <
 		// Special handling for ".[ ]" (OPBBLOCK) pattern
 		if l.ch == '.' && l.peekChar() == '[' {
 			l.readChar() // Skip '.'
@@ -945,12 +945,14 @@ func (l *Lexer) readOpWord() NoPEGToken {
 	tokenValue := l.input[l.tokenStart:l.pos]
 
 	// Distinguish between dotword (.word) and opword (symbolic operators)
-	// Dotword: starts with '.' followed by word characters (e.g., .add, .upper)
-	// Opword: symbolic operators like +, -, *, /, >, <, =, etc.
+	// Dotword: starts with '.' followed by word characters (e.g., .add, .upper, .+, .*)
+	// Opword: symbolic operators like +, -, *, /, >, <, =, etc. or just '.' alone
 	if firstChar == '.' && len(tokenValue) > 1 {
-		// Check if it's a dotword (. followed by word characters, not just symbols)
+		// Check if it's a dotword (. followed by any valid word character except '.')
+		// This includes letters, digits, hyphen, and single-char operators
 		secondChar := tokenValue[1]
-		if isLetter(secondChar) || secondChar == '-' {
+		if secondChar != '.' {
+			// . followed by anything other than another . is a dotword
 			return l.makeToken(NPEG_TOKEN_DOTWORD, tokenValue)
 		}
 	}
@@ -1435,15 +1437,25 @@ func (p *NoPEGParser) parseToken() (env.Object, error) {
 		}
 		return *env.NewOpword(idx, force), nil
 	case NPEG_TOKEN_DOTWORD:
-		// Dotwords are method-style operators like .add, .upper, .concat
+		// Dotwords are method-style operators like .add, .upper, .concat, .+, .*
 		word := p.currentToken.Value[1:] // Strip the leading '.'
 		var idx int
 		force := 0
-		if word[len(word)-1:] == "*" {
-			force = 1
-			word = word[:len(word)-1]
+		// Single-char operators get underscore prefix (like pipewords do)
+		// But single letters like .x should not get the prefix
+		isSingleCharOp := len(word) == 1 && (word[0] == '+' || word[0] == '-' || word[0] == '*' ||
+			word[0] == '/' || word[0] == '>' || word[0] == '<' || word[0] == '=' ||
+			word[0] == '!' || word[0] == '?' || word[0] == '%' || word[0] == '~')
+		isMultiCharOp := word == ">>" || word == "->" || word == "~>" || word == "-->" || word == "++" || word == "=>" || word == "%"
+		if isSingleCharOp || isMultiCharOp {
+			idx = p.wordIndex.IndexWord("_" + word)
+		} else {
+			if len(word) > 1 && word[len(word)-1:] == "*" {
+				force = 1
+				word = word[:len(word)-1]
+			}
+			idx = p.wordIndex.IndexWord(word)
 		}
-		idx = p.wordIndex.IndexWord(word)
 		return *env.NewDotword(idx, force), nil
 	case NPEG_TOKEN_PIPEWORD:
 		var word string

@@ -509,12 +509,13 @@ var Builtins_goroutines = map[string]*env.Builtin{
 					arg = nil
 				}
 				CallFunction_CollectArgs(fn, &psTemp, arg, false, nil)
+				return psTemp.Res
 
 			default:
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "select\\fn")
 			}
-			return arg0
+			return arg0 // unreachable, but needed for compilation
 		},
 	},
 

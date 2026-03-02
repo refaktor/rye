@@ -73,6 +73,7 @@ var builtins_time = map[string]*env.Builtin{
 	// Tests:
 	// equal { date "2023-01-15" |type? } 'time
 	// equal { date "2023-01-15" |day? } 15
+	// equal { date "2023-06-20" |month? } 6
 	// Args:
 	// * datestr: String in "YYYY-MM-DD" format
 	// Returns:

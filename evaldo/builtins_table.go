@@ -25,6 +25,7 @@ var Builtins_table = map[string]*env.Builtin{
 	// Tests:
 	//  equal { table { "a" } { 1 2 } |type? } 'table
 	//  equal { table { 'a  } { 1 2 } |type? } 'table
+	//  equal { table { 'a 'b } { 1 2 3 4 } |length? } 2
 	// Args:
 	//  * columns
 	//  * data

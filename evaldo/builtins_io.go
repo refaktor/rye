@@ -163,14 +163,14 @@ var Builtins_io = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { File-ext? %data/file.txt } ".txt"
-	// equal { File-ext? %data/file.temp.png } ".png"
-	// equal { File-ext? to-file "data/file.temp.png" } ".png"
+	// equal { Ext? %data/file.txt } ".txt"
+	// equal { Ext? %data/file.temp.png } ".png"
+	// equal { Ext? file "data/file.temp.png" } ".png"
 	// Args:
 	// * path: uri or string representing a file path
 	// Returns:
 	// * string containing the file extension (including the dot)
-	"file-uri//File-ext?": {
+	"file-uri//Ext?": {
 		Argsn: 1,
 		Doc:   "Gets the extension of a file.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -182,16 +182,18 @@ var Builtins_io = map[string]*env.Builtin{
 			ext := filepath.Ext(s.Value)
 			return *env.NewString(ext) */
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.UriType, env.StringType}, "file-ext?")
+				return MakeArgError(ps, 1, []env.Type{env.UriType, env.StringType}, "Ext?")
 			}
 		},
 	},
 
+	// Tests:
+	// equal { Name? %data/file.txt } "file.txt"
 	// Args:
 	// * path: uri representing a file path
 	// Returns:
 	// * string containing the filename with extension
-	"file-uri//Filename?": {
+	"file-uri//Name?": {
 		Argsn: 1,
 		Doc:   "Gets the filename with extension from a file path.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -200,11 +202,13 @@ var Builtins_io = map[string]*env.Builtin{
 				filename := filepath.Base(s.Path)
 				return *env.NewString(filename)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.UriType}, "file-uri//Filename?")
+				return MakeArgError(ps, 1, []env.Type{env.UriType}, "Name?")
 			}
 		},
 	},
 
+	// Tests:
+	// equal { Stem? %data/file.txt } "file"
 	// Args:
 	// * path: uri representing a file path
 	// Returns:
@@ -224,6 +228,8 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
+	// Tests:
+	// equal { Dir? %data/file.txt } "data"
 	// Args:
 	// * path: uri representing a file path
 	// Returns:

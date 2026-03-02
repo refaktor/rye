@@ -13,9 +13,9 @@ var builtins_complex = map[string]*env.Builtin{
 	//
 	// Tests:
 	// equal { complex 3 4 |type? } 'complex
-	// equal { complex 3 4 |print } "3.000000+4.000000i"
-	// equal { complex 0 0 |print } "0.000000+0.000000i"
-	// equal { complex -1 -2 |print } "-1.000000-2.000000i"
+	// equal { complex 3 4 |string } "3.000000+4.000000i"
+	// equal { complex 0 0 |string } "0.000000+0.000000i"
+	// equal { complex -1 -2 |string } "-1.000000-2.000000i"
 	// Args:
 	// * real: Real part of the complex number (integer or decimal)
 	// * imag: Imaginary part of the complex number (integer or decimal)
@@ -115,8 +115,8 @@ var builtins_complex = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { complex-conj complex 3 4 |print } "3.000000-4.000000i"
-	// equal { complex-conj complex 3 -4 |print } "3.000000+4.000000i"
+	// equal { complex-conj complex 3 4 |string } "3.000000-4.000000i"
+	// equal { complex-conj complex 3 -4 |string } "3.000000+4.000000i"
 	// error { complex-conj 5 }
 	// Args:
 	// * z: Complex number

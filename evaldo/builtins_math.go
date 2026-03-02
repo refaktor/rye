@@ -188,6 +188,7 @@ var Builtins_math = map[string]*env.Builtin{
 	},
 	// Tests:
 	// equal { log2 8 } 3.0
+	// equal { log2 1 } 0.0
 	// Args:
 	// * x: integer or decimal value
 	// Returns:
@@ -307,6 +308,7 @@ var Builtins_math = map[string]*env.Builtin{
 	},
 	// Tests:
 	// equal { sq 4 } 16.0
+	// equal { sq -3 } 9.0
 	// Args:
 	// * x: integer or decimal value
 	// Returns:
@@ -400,6 +402,7 @@ var Builtins_math = map[string]*env.Builtin{
 	},
 	// Tests:
 	// equal { sqrt 9 } 3.0
+	// equal { sqrt 2.0 |round\to 4 } 1.4142
 	// stdout { sqrt complex -1 0 |prn } "0.000000+1.000000i"
 	// Args:
 	// * x: integer, decimal, or complex value
@@ -731,6 +734,7 @@ var Builtins_math = map[string]*env.Builtin{
 	},
 	// Tests:
 	// equal { round\to 3.14159 2 } 3.14
+	// equal { round\to 2.71828 3 } 2.718
 	// Args:
 	// * x: decimal value to round
 	// * digits: integer number of decimal places to round to
