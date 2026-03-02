@@ -246,8 +246,15 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 		return
 	case env.Dotword:
 		// Dotwords are method-style operators (.add, .upper, etc.)
+		// PIN behavior: dotwords collect arguments without consuming opwords/pipewords
+		// When in PinMode (collecting args for another dotword), block nested dotword chaining
+		if ps.PinMode {
+			return
+		}
+		ps.PinMode = true // Enter PIN mode for argument collection
 		ps.Ser.Next()
-		EvalWord(ps, opword.ToWord(), ps.Res, false, opword.Force > 0, false)
+		EvalWord(ps, opword.ToWord(), ps.Res, false, opword.Force > 0, true)
+		ps.PinMode = false // Exit PIN mode after argument collection
 		if ps.ReturnFlag || ps.ErrorFlag {
 			return
 		}
