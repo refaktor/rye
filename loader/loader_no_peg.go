@@ -438,6 +438,9 @@ func (l *Lexer) NextToken() NoPEGToken {
 		if isWhitespaceOrEOF(pch) {
 			l.readChar()
 			return l.makeToken(NPEG_TOKEN_OPWORD, "~")
+		} else if pch == '>' {
+			// ~> is an opword
+			return l.readOpWord()
 		} else {
 			return l.readPipeWord()
 		}
@@ -446,6 +449,9 @@ func (l *Lexer) NextToken() NoPEGToken {
 		if isWhitespaceOrEOF(pch) {
 			l.readChar()
 			return l.makeToken(NPEG_TOKEN_OPWORD, "=")
+		} else if pch == '>' || pch == '=' {
+			// => and == are opwords
+			return l.readOpWord()
 		} else {
 			return l.readPipeWord()
 		}
@@ -499,8 +505,16 @@ func (l *Lexer) NextToken() NoPEGToken {
 			pch := l.peekChar()
 			// fmt.Println("***1")
 			if pch == '-' {
-				// Could be a long flag (--verbose)
+				// Could be a long flag (--verbose) or -- operator
+				// Check if it's followed by a letter (flag) or not (operator)
+				if l.peekCharOffs(1) == 0 || isWhitespaceCh(l.peekCharOffs(1)) {
+					// -- followed by whitespace/EOF is an operator
+					return l.readOpWord()
+				}
 				return l.readFlagword()
+			} else if pch == '>' {
+				// -> is an opword
+				return l.readOpWord()
 			} else if isLetter(pch) {
 				// Could be a short flag (-v)
 				return l.readFlagword()
@@ -627,9 +641,11 @@ func (l *Lexer) NextToken() NoPEGToken {
 			return word
 		}
 
-		// Unknown character
+		// Unknown character - report error instead of silently ignoring
+		invalidChar := l.ch
 		l.readChar()
-		return l.makeToken(NPEG_TOKEN_NONE, string(l.input[l.pos-1]))
+		errMsg := fmt.Sprintf("Unrecognized character '%c' (0x%02x) at line %d, column %d. This character cannot start a valid token.", invalidChar, invalidChar, l.startLine, l.startCol)
+		return l.makeTokenErr(NPEG_TOKEN_ERROR, errMsg, ERR_UNKNOWN)
 	}
 }
 
@@ -672,6 +688,84 @@ func isSpecialChar(ch byte) bool {
 		ch == ',' || ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '.' ||
 		ch == '>' || ch == '<' || ch == '|' || ch == '\\' || ch == ':' || ch == '?' ||
 		ch == '~' || ch == '%' || ch == ';' || ch == '@'
+}
+
+// isOpStartChar checks if a character can start an operator token
+func isOpStartChar(ch byte) bool {
+	return ch == '+' || ch == '-' || ch == '*' || ch == '/' ||
+		ch == '>' || ch == '<' || ch == '=' || ch == '!' ||
+		ch == '?' || ch == '%' || ch == '~' || ch == '.' || ch == '@'
+}
+
+// validMultiCharOps defines the set of valid multi-character operators
+var validMultiCharOps = map[string]bool{
+	// Comparison operators
+	"!=": true, "==": true, "<=": true, ">=": true, "<>": true,
+	// Shift/arrow operators
+	"<<": true, ">>": true, "->": true, "<-": true, "=>": true,
+	// Tilde arrows
+	"<~": true, "~>": true,
+	// Range/increment operators
+	"..": true, "++": true, "--": true,
+	// Division
+	"//": true,
+	// Long arrows
+	"-->": true, "<--": true,
+	// Combined comparison
+	"<=>": true,
+}
+
+// isValidOpWord checks if an operator word is valid
+// Single char operators are always valid
+// Multi-char operators must be in the validMultiCharOps map OR be a valid dotword/pipeword pattern
+func isValidOpWord(tokenValue string) bool {
+	// Single char is always valid
+	if len(tokenValue) == 1 {
+		return true
+	}
+
+	// Check if it's a known multi-char operator
+	if validMultiCharOps[tokenValue] {
+		return true
+	}
+
+	// Dotwords (.word) are valid - they start with . followed by word chars
+	if tokenValue[0] == '.' {
+		// Check if rest is a valid word (letters, digits, hyphens)
+		rest := tokenValue[1:]
+		if len(rest) > 0 {
+			// Single operator char after . is valid (.+, .*, etc.)
+			if len(rest) == 1 && isOpStartChar(rest[0]) {
+				return true
+			}
+			// Word after . is valid (.add, .upper, etc.)
+			if isLetter(rest[0]) || rest[0] == '-' {
+				return true
+			}
+		}
+		return false
+	}
+
+	// Check if it's a word-like operator (contains letters)
+	hasLetter := false
+	for i := 0; i < len(tokenValue); i++ {
+		if isLetter(tokenValue[i]) {
+			hasLetter = true
+			break
+		}
+	}
+	if hasLetter {
+		return true
+	}
+
+	// Pure symbol combinations longer than 2 chars are suspicious
+	// unless they're in the valid list
+	if len(tokenValue) > 2 {
+		return false
+	}
+
+	// Two-char symbol combinations not in the list are invalid
+	return false
 }
 
 func (l *Lexer) readOneCharToken(tokenType int, errType int) NoPEGToken {
@@ -943,6 +1037,12 @@ func (l *Lexer) readOpWord() NoPEGToken {
 	}
 
 	tokenValue := l.input[l.tokenStart:l.pos]
+
+	// Validate operator combinations - reject invalid symbol sequences
+	if !isValidOpWord(tokenValue) {
+		errMsg := fmt.Sprintf("Invalid operator '%s'. Unrecognized operator combination. Valid multi-character operators include: !=, ==, <=, >=, <>, <<, >>, ->, <-, =>, .., ++, //", tokenValue)
+		return l.makeTokenErr(NPEG_TOKEN_ERROR, errMsg, ERR_UNKNOWN)
+	}
 
 	// Distinguish between dotword (.word) and opword (symbolic operators)
 	// Dotword: starts with '.' followed by word characters (e.g., .add, .upper, .+, .*)
@@ -1426,7 +1526,11 @@ func (p *NoPEGParser) parseToken() (env.Object, error) {
 		word := p.currentToken.Value
 		var idx int
 		force := 0
-		if len(word) == 1 || word == "<<" || word == ">>" || word == "<-" || word == "=>" || word == "<~" || word == ">=" || word == "<=" || word == "//" || word == ".." || word == "++" || word == "." || word == "|" {
+		// Single-char operators and specific multi-char operators get underscore prefix
+		if len(word) == 1 || word == "<<" || word == ">>" || word == "<-" || word == "->" ||
+			word == "=>" || word == "<~" || word == "~>" || word == ">=" || word == "<=" ||
+			word == "//" || word == ".." || word == "++" || word == "--" || word == "==" ||
+			word == "." || word == "|" {
 			idx = p.wordIndex.IndexWord("_" + word)
 		} else {
 			if word[len(word)-1:] == "*" {
@@ -1711,6 +1815,58 @@ func formatErrorLocationNoPEG(line string, col int) string {
 	return bu.String()
 }
 
+// formatErrorWithContext creates an enhanced error display with surrounding source lines
+func formatErrorWithContext(fullInput string, lineNum int, col int, errorMsg string) string {
+	lines := strings.Split(fullInput, "\n")
+	var bu strings.Builder
+
+	// Header
+	bu.WriteString("\x1b[1;31m━━━ Parse Error ━━━\x1b[0m\n\n")
+
+	// Error message
+	bu.WriteString(fmt.Sprintf("\x1b[1;37m%s\x1b[0m\n\n", errorMsg))
+
+	// Calculate line range to show (2 lines before and after, if available)
+	startLine := lineNum - 2
+	if startLine < 1 {
+		startLine = 1
+	}
+	endLine := lineNum + 2
+	if endLine > len(lines) {
+		endLine = len(lines)
+	}
+
+	// Show source context
+	bu.WriteString("\x1b[36mSource:\x1b[0m\n")
+	for i := startLine; i <= endLine; i++ {
+		if i-1 >= len(lines) {
+			break
+		}
+		sourceLine := lines[i-1]
+
+		// Line number with padding
+		lineNumStr := fmt.Sprintf("%4d", i)
+
+		if i == lineNum {
+			// Error line - highlight it
+			bu.WriteString(fmt.Sprintf("\x1b[1;31m%s │ \x1b[0m\x1b[1;37m%s\x1b[0m\n", lineNumStr, sourceLine))
+
+			// Add caret pointing to error column
+			if col > 0 && col <= len(sourceLine)+1 {
+				padding := strings.Repeat(" ", 5) // For line number column
+				caretPadding := strings.Repeat(" ", col-1)
+				bu.WriteString(fmt.Sprintf("%s\x1b[1;31m│ %s^\x1b[0m\n", padding, caretPadding))
+			}
+		} else {
+			// Context line - dimmed
+			bu.WriteString(fmt.Sprintf("\x1b[2;37m%s │ %s\x1b[0m\n", lineNumStr, sourceLine))
+		}
+	}
+
+	bu.WriteString("\n")
+	return bu.String()
+}
+
 // inferErrorContextNoPEG tries to provide helpful context about what might be wrong
 func inferErrorContextNoPEG(tok NoPEGToken, err error, line string, col int, fullInput string, lineNum int) string {
 	// If the token value already contains a descriptive error message, use it
@@ -1783,6 +1939,14 @@ func inferErrorContextNoPEG(tok NoPEGToken, err error, line string, col int, ful
 	}
 	if strings.Contains(errMsg, "unknown token type") {
 		return "Unrecognized token type at position. Check for invalid characters or malformed syntax."
+	}
+
+	// Handle new error types: unrecognized characters and invalid operators
+	if strings.Contains(tok.Value, "Unrecognized character") {
+		return tok.Value
+	}
+	if strings.Contains(tok.Value, "Invalid operator") {
+		return tok.Value
 	}
 
 	// If we have a token value, include it in the error message
@@ -1974,36 +2138,61 @@ func enhanceErrorMessageNoPEG(tok NoPEGToken, err error, input string, filePath 
 	var bu strings.Builder
 
 	// Red background banner for syntax errors
-	bu.WriteString("\x1b[41m\x1b[30m SYNTAX ERROR \x1b[0m\n") // Red background, black text
+	bu.WriteString("\x1b[41m\x1b[30m SYNTAX ERROR \x1b[0m\n\n") // Red background, black text
 
 	// Add error location with colors
 	if filePath != "" {
-		bu.WriteString("\x1b[1;31mSyntax error\x1b[0m in \x1b[1;34m" + filePath +
-			"\x1b[0m at line \x1b[1;33m" + fmt.Sprintf("%d", lineNum) +
-			"\x1b[0m, column \x1b[1;33m" + fmt.Sprintf("%d", colNum) + "\x1b[0m\n")
-	} else {
-		bu.WriteString("\x1b[1;31mSyntax error\x1b[0m at line \x1b[1;33m" +
-			fmt.Sprintf("%d", lineNum) + "\x1b[0m, column \x1b[1;33m" +
-			fmt.Sprintf("%d", colNum) + "\x1b[0m\n")
+		bu.WriteString(fmt.Sprintf("\x1b[1;34mFile:\x1b[0m %s\n", filePath))
 	}
+	bu.WriteString(fmt.Sprintf("\x1b[1;34mLocation:\x1b[0m line \x1b[1;33m%d\x1b[0m, column \x1b[1;33m%d\x1b[0m\n\n", lineNum, colNum))
 
-	// Add the error location visualization
-	bu.WriteString(formatErrorLocationNoPEG(line, colNum))
-
-	// Add context about what might be wrong
+	// Get contextual error message
 	errorContext := inferErrorContextNoPEG(tok, err, line, colNum, input, lineNum)
 	if errorContext != "" {
-		bu.WriteString("\x1b[33m" + errorContext + "\x1b[0m\n")
+		bu.WriteString(fmt.Sprintf("\x1b[1;31mError:\x1b[0m %s\n\n", errorContext))
+	} else {
+		bu.WriteString(fmt.Sprintf("\x1b[1;31mError:\x1b[0m %s\n\n", err.Error()))
 	}
 
-	// Add suggestions for fixing the error
-	// suggestion := suggestFixNoPEG(line, colNum, input, lineNum)
-	// if suggestion != "" {
-	//	bu.WriteString("Suggestion: " + suggestion + "\n")
-	// }
+	// Show source context with surrounding lines
+	bu.WriteString("\x1b[1;36mSource context:\x1b[0m\n")
 
-	// Add a red separator line after error for better visibility
-	bu.WriteString("\x1b[1;31m" + strings.Repeat("─", 50) + "\x1b[0m\n")
+	// Calculate line range to show (2 lines before and after, if available)
+	startLine := lineNum - 2
+	if startLine < 1 {
+		startLine = 1
+	}
+	endLine := lineNum + 2
+	if endLine > len(lines) {
+		endLine = len(lines)
+	}
+
+	// Show source lines
+	for i := startLine; i <= endLine; i++ {
+		if i-1 >= len(lines) {
+			break
+		}
+		sourceLine := lines[i-1]
+		lineNumStr := fmt.Sprintf("%4d", i)
+
+		if i == lineNum {
+			// Error line - highlight it
+			bu.WriteString(fmt.Sprintf("  \x1b[1;31m%s │\x1b[0m \x1b[1;37m%s\x1b[0m\n", lineNumStr, sourceLine))
+
+			// Add caret pointing to error column
+			if colNum > 0 && colNum <= len(sourceLine)+1 {
+				padding := strings.Repeat(" ", 7) // For line number column + spaces
+				caretPadding := strings.Repeat(" ", colNum-1)
+				bu.WriteString(fmt.Sprintf("%s\x1b[1;31m%s^\x1b[0m\n", padding, caretPadding))
+			}
+		} else {
+			// Context line - dimmed
+			bu.WriteString(fmt.Sprintf("  \x1b[2;37m%s │ %s\x1b[0m\n", lineNumStr, sourceLine))
+		}
+	}
+
+	// Add separator line
+	bu.WriteString("\n\x1b[1;31m" + strings.Repeat("─", 60) + "\x1b[0m\n")
 
 	return bu.String()
 }
