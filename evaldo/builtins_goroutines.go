@@ -156,7 +156,7 @@ var Builtins_goroutines = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { ch: channel 1 , ch .Send 42 , ch .Read } 42
+	// equal { ch: channel 1 ,  ch .probe .lg .Send 42 , ch .Read } 42
 	// equal { ch: channel 2 , ch .Send 1 , ch .Send 2 , ch .Read } 1
 	// equal { channel 5 |type? } 'native
 	// Args:

@@ -755,7 +755,9 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 			return
 		} else {
 			ps.ErrorFlag = true
-			ps.Res = env.NewError2(5, "Word not found: `"+failureInfo+"`. Check spelling or ensure the word is defined in the current context.")
+			err := env.NewError2(5, "Word not found: `"+failureInfo+"`. Check spelling or ensure the word is defined in the current context.")
+			err.CodeBlock = ps.Ser
+			ps.Res = err
 			return
 		}
 	}
@@ -772,7 +774,13 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 		}
 		if leftVal == nil && !pipeSecond {
 			if !ps.Ser.AtLast() {
-				EvalExpression_DispatchType(ps)
+				// Use EvalExpression_CollectArg (not EvalExpression_DispatchType) so that
+				// opwords/dotwords to the right of the first argument are consumed as part
+				// of that argument — consistent with how locally-bound words collect args.
+				// E.g. "Read %file ++ ".txt"" must evaluate "%file ++ ".txt"" → %file.txt
+				// first, then call Read on that URI. Previously, EvalExpression_DispatchType
+				// only grabbed the bare next atom (%file), giving generic words wrong priority.
+				EvalExpression_CollectArg(ps, true, false)
 				if ps.ReturnFlag || ps.ErrorFlag {
 					return
 				}
@@ -782,7 +790,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 		}
 		if pipeSecond {
 			if !ps.Ser.AtLast() {
-				EvalExpression_DispatchType(ps)
+				EvalExpression_CollectArg(ps, true, false)
 				if ps.ReturnFlag || ps.ErrorFlag {
 					return
 				}
@@ -792,7 +800,27 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 			}
 		}
 		// fmt.Println(kind)
-		rword, ok := word.(env.Word)
+		// Extract the word index regardless of the concrete word type.
+		// Opwords and Pipewords arriving through OptionallyEvalExpressionRight are already
+		// converted via .ToWord(), but Dotwords (and Opwords/Pipewords when they appear as
+		// the first token of an expression in EvalExpression_DispatchType) come in as their
+		// raw types and must also be handled here so that generic method lookup works for them.
+		var rword env.Word
+		var ok bool
+		switch w := word.(type) {
+		case env.Word:
+			rword = w
+			ok = true
+		case env.Dotword:
+			rword = w.ToWord()
+			ok = true
+		case env.Opword:
+			rword = w.ToWord()
+			ok = true
+		case env.Pipeword:
+			rword = w.ToWord()
+			ok = true
+		}
 		if ok && leftVal != nil && ps.Ctx.Kind.Index != -1 { // don't use generic words if context kind is -1 --- TODO temporary solution to isolates, think about it more
 			object, found = ps.Gen.Get(kind, rword.Index)
 		}
@@ -809,7 +837,9 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 		ps.ErrorFlag = true
 		if !ps.FailureFlag {
 			ps.Ser.SetPos(pos)
-			ps.Res = env.NewError2(5, "Word not found: `"+failureInfo+"`. Check spelling or ensure the word is defined in the current context.")
+			err := env.NewError2(5, "Word not found: `"+failureInfo+"`. Check spelling or ensure the word is defined in the current context.")
+			err.CodeBlock = ps.Ser
+			ps.Res = err
 		}
 		return
 	}
@@ -1827,8 +1857,9 @@ func FormatBacktickQuotes(message string) string {
 // Called from: MaybeDisplayFailureOrError2
 // Purpose: Main error display - shows red banner, error message, block location, and <here> marker
 func DisplayEnhancedError(es *env.ProgramState, genv *env.Idxs, tag string, topLevel bool) {
-	// Red background banner for runtime errors
+	// Only display if SkipFlag is not set (prevents duplicate error display)
 	if !es.SkipFlag {
+		// Red background banner for runtime errors
 		fmt.Print("\x1b[41m\x1b[30m RUNTIME ERROR:\x1b[0m " + tag + "\n") // Magenta background, black text
 
 		// Bold red for error message, with backtick-quoted text highlighted
@@ -1836,27 +1867,63 @@ func DisplayEnhancedError(es *env.ProgramState, genv *env.Idxs, tag string, topL
 		errorMsg := es.Res.Print(*genv)
 		fmt.Println(FormatBacktickQuotes(errorMsg))
 		fmt.Print("\x1b[0m") // Reset
+
+		// Get location information from the current block
+		displayBlockWithErrorPosition(es, genv)
 	}
-	// Get location information from the current block
-	displayBlockWithErrorPosition(es, genv)
 }
 
 // displayBlockWithErrorPosition shows the current block with a <here> marker at the error position.
 // Called from: DisplayEnhancedError
 // Purpose: Displays block content with visual indicator showing exactly where the error occurred
 func displayBlockWithErrorPosition(es *env.ProgramState, genv *env.Idxs) {
+	// Check if the error has a CodeBlock with the exact error location that differs from current series
+	if err, ok := es.Res.(*env.Error); ok && err.CodeBlock.Len() > 0 {
+		// Only show CodeBlock if it's different from es.Ser (different position or different block)
+		codeBlockPos := err.CodeBlock.Pos() - 1
+		if codeBlockPos < 0 {
+			codeBlockPos = 0
+		}
+		serPos := es.Ser.Pos() - 1
+		if serPos < 0 {
+			serPos = 0
+		}
 
-	// Bold cyan for location information
-	fmt.Print("\x1b[36mBlock starting at \x1b[34m") // Bold cyan "At", bold blue for location
+		// Check if CodeBlock is different from es.Ser
+		isDifferent := err.CodeBlock.Len() != es.Ser.Len() || codeBlockPos != serPos
+		if !isDifferent && err.CodeBlock.Len() > 0 && es.Ser.Len() > 0 {
+			// Compare first element to see if it's the same block
+			if err.CodeBlock.Len() > 0 && es.Ser.Len() > 0 {
+				isDifferent = err.CodeBlock.S[0] != es.Ser.S[0]
+			}
+		}
+
+		if isDifferent {
+			// Show the error's CodeBlock first (this is where the error actually occurred)
+			fmt.Print("\x1b[36mBlock starting at \x1b[34m")
+			if es.BlockFile != "" {
+				fmt.Printf("%s:%d", es.BlockFile, es.BlockLine)
+			} else {
+				fmt.Printf("line %d", es.BlockLine)
+			}
+			fmt.Print("\x1b[0m\n")
+			fmt.Print("\x1b[37m  ")
+
+			blockStr := buildBlockStringWithMarker(err.CodeBlock.S, codeBlockPos, genv)
+			fmt.Print(blockStr)
+			fmt.Print("\x1b[0m\n")
+		}
+	}
+
+	// Show the current series context (call site)
+	fmt.Print("\x1b[36mBlock starting at \x1b[34m")
 	if es.BlockFile != "" {
 		fmt.Printf("%s:%d", es.BlockFile, es.BlockLine)
 	} else {
 		fmt.Printf("line %d", es.BlockLine)
 	}
-	fmt.Print("\x1b[0m\n") // Reset
+	fmt.Print("\x1b[0m\n")
 
-	// Show the current block content with <here> marker
-	// fmt.Print("\x1b[37mBlock:\x1b[0m\n")
 	fmt.Print("\x1b[37m  ")
 
 	// Get current position in the block
@@ -1868,7 +1935,7 @@ func displayBlockWithErrorPosition(es *env.ProgramState, genv *env.Idxs) {
 	// Build the block representation with <here> marker
 	blockStr := buildBlockStringWithMarker(es.Ser.S, errorPos, genv)
 	fmt.Print(blockStr)
-	fmt.Print("\x1b[0m\n") // Reset
+	fmt.Print("\x1b[0m\n")
 }
 
 // truncatedDump returns a truncated string representation of an object.

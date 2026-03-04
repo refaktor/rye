@@ -738,6 +738,10 @@ func isValidOpWord(tokenValue string) bool {
 			if len(rest) == 1 && isOpStartChar(rest[0]) {
 				return true
 			}
+			// Multi-char operator after . is valid (.++, .--, .==, etc.)
+			if validMultiCharOps[rest] {
+				return true
+			}
 			// Word after . is valid (.add, .upper, etc.)
 			if isLetter(rest[0]) || rest[0] == '-' {
 				return true

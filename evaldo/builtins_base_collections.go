@@ -95,7 +95,7 @@ var builtins_collection = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { sample { 1 2 3 4 } 2 |length? } 2
-	// equal { sample { 123 123 123 123 } 3 -> 0 } 123
+	// equal { sample { 123 123 123 123 } 3 |-> 0 } 123
 	// ; equal { sample list { 1 2 3 4 5 } 3 |length? } 3
 	// Args:
 	// * collection: Block, list or table to sample from
@@ -2352,7 +2352,7 @@ var builtins_collection = map[string]*env.Builtin{
 	// Tests:
 	// equal { { 23 34 45 } -> 1 } 34
 	// equal { { "a" "b" "c" } -> 0 } "a"
-	// equal { dict { "a" 1 "b" 2 } -> "b" } 2
+	// equal { dict { "a" 1 "b" 2 } |-> "b" } 2
 	// Args:
 	// * collection: Block, list, dict or other indexable collection
 	// * index: Index or key to access

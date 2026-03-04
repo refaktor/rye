@@ -12,7 +12,7 @@ section "Boolean " "Functions that work with true and false values." {
 	}
 
 	{
-``	}
+	}
 
 	group "false" 
 	"Returns a boolean false value."
@@ -27,7 +27,7 @@ section "Boolean " "Functions that work with true and false values." {
 	}
 
 	{
-``	}
+	}
 
 	group "not" 
 	"Performs logical negation on boolean values only."
@@ -44,7 +44,7 @@ section "Boolean " "Functions that work with true and false values." {
 	}
 
 	{
-``	}
+	}
 
 	group "and" 
 	"Performs a logical AND operation between two boolean values, or a bitwise AND operation between two integer values."
@@ -65,7 +65,7 @@ section "Boolean " "Functions that work with true and false values." {
 	}
 
 	{
-``	}
+	}
 
 	group "or" 
 	"Performs a logical OR operation between two boolean values, or a bitwise OR operation between two integer values."
@@ -86,7 +86,7 @@ section "Boolean " "Functions that work with true and false values." {
 	}
 
 	{
-``	}
+	}
 
 	group "xor" 
 	"Performs a logical XOR (exclusive OR) operation between two boolean values, or a bitwise XOR operation between two integer values."
@@ -107,7 +107,7 @@ section "Boolean " "Functions that work with true and false values." {
 	}
 
 	{
-``	}
+	}
 
 	group "all" 
 	"Evaluates all expressions in a block and returns the last value if all are truthy, or the first falsy value encountered."
@@ -126,7 +126,7 @@ section "Boolean " "Functions that work with true and false values." {
 	}
 
 	{
-``	}
+	}
 
 	group "any" 
 	"Evaluates expressions in a block until a truthy value is found and returns it, or returns the last value if none are truthy."
@@ -145,7 +145,7 @@ section "Boolean " "Functions that work with true and false values." {
 	}
 
 	{
-``	}
+	}
 
 	group "any\\with" 
 	"Applies each expression in the block to the provided value until a truthy result is found and returns it."
@@ -165,7 +165,7 @@ section "Boolean " "Functions that work with true and false values." {
 	}
 
 	{
-``	}
+	}
 
 }
 
@@ -185,7 +185,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	{
-``	}
+	}
 
 	group "inc" 
 	"Increments an integer value by 1."
@@ -202,7 +202,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	{
-``	}
+	}
 
 	group "dec" 
 	"Decrements an integer value by 1."
@@ -219,7 +219,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	{
-``	}
+	}
 
 	group "negate" 
 	"Negates a number by multiplying it by -1, works with integers, decimals, and complex numbers."
@@ -238,7 +238,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	{
-``	}
+	}
 
 	group "invert" 
 	"Calculates the reciprocal (1/x) of a number, works with integers, decimals, and complex numbers."
@@ -258,7 +258,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	{
-``	}
+	}
 
 	group "is-positive" 
 	"Checks if a number is positive (greater than zero)."
@@ -276,7 +276,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	{
-``	}
+	}
 
 	group "sign" 
 	"Returns the sign of a number as -1, 0, or 1."
@@ -295,7 +295,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	{
-``	}
+	}
 
 	group "is-zero" 
 	"Checks if a number is exactly zero."
@@ -312,7 +312,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	{
-``	}
+	}
 
 	group "is-multiple-of" 
 	"Checks if the first integer is evenly divisible by the second integer."
@@ -330,7 +330,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	{
-``	}
+	}
 
 	group "is-odd" 
 	"Checks if an integer is odd (not divisible by 2)."
@@ -347,7 +347,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	{
-``	}
+	}
 
 	group "is-even" 
 	"Checks if an integer is even (divisible by 2)."
@@ -364,7 +364,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	{
-``	}
+	}
 
 	group "mod" 
 	"Calculates the modulo (remainder) when dividing the first integer by the second."
@@ -382,7 +382,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	{
-``	}
+	}
 
 	group "_%" 
 	"Alias for mod - calculates the modulo (remainder) when dividing the first integer by the second."
@@ -399,7 +399,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	{
-``	}
+	}
 
 	group "random\\integer" 
 	"Generates a cryptographically secure random integer between 0 (inclusive) and the specified maximum (exclusive)."
@@ -415,7 +415,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	{
-``	}
+	}
 
 	group "random\\decimal" 
 	"Generates a cryptographically secure random decimal between 0.0 (inclusive) and the specified maximum (exclusive)."
@@ -431,7 +431,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	{
-``	}
+	}
 
 	group "inc!" 
 	"Increments an integer value stored in a variable (word) by 1 and updates the variable in-place."
@@ -447,7 +447,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	{
-``	}
+	}
 
 	group "dec!" 
 	"Decrements an integer value stored in a variable (word) by 1 and updates the variable in-place."
@@ -463,7 +463,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	{
-``	}
+	}
 
 	group "_." 
 	"Discards the input value and returns a void value, useful only for Eyr (stack based dialect)."
@@ -478,7 +478,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	{
-``	}
+	}
 
 	group "_+" 
 	"Adds two numerical values. Accepts Integer, Decimal, Complex, Time and Vector."
@@ -497,7 +497,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	{
-``	}
+	}
 
 	group "_-" 
 	"Subtracts the second number from the first, working with integers, decimals, complex numbers, and vectors."
@@ -516,7 +516,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	{
-``	}
+	}
 
 	group "_*" 
 	"Multiplies two numbers, working with integers, decimals, complex numbers, and vectors (scalar multiplication)."
@@ -536,7 +536,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	{
-``	}
+	}
 
 	group "_/" 
 	"Divides the first number by the second and returns a result, with error checking for division by zero."
@@ -554,7 +554,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	{
-``	}
+	}
 
 	group "_//" 
 	"Performs integer division, dividing the first number by the second and truncating to an integer result."
@@ -573,7 +573,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	{
-``	}
+	}
 
 	group "_=" 
 	"Compares two values for equality, returning 1 if equal or 0 if not equal."
@@ -592,7 +592,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	{
-``	}
+	}
 
 	group "_>" 
 	"Compares if the first value is greater than the second value."
@@ -611,7 +611,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	{
-``	}
+	}
 
 	group "_>=" 
 	"Compares if the first value is greater than or equal to the second value."
@@ -631,7 +631,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	{
-``	}
+	}
 
 	group "_<" 
 	"Compares if the first value is less than the second value."
@@ -650,7 +650,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	{
-``	}
+	}
 
 	group "_<=" 
 	"Compares if the first value is less than or equal to the second value."
@@ -670,7 +670,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	{
-``	}
+	}
 
 	group "clamp" 
 	"Clamps a number between a minimum and maximum value, ensuring the result stays within the specified bounds."
@@ -692,7 +692,7 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	}
 
 	{
-``	}
+	}
 
 }
 
@@ -709,7 +709,7 @@ section "Strings " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "tab" 
 	"Returns a string containing a single tab character."
@@ -723,7 +723,7 @@ section "Strings " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "ln" 
 	"Appends a newline character to the end of a string."
@@ -738,7 +738,7 @@ section "Strings " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "trim" 
 	"Removes all leading and trailing whitespace characters from a string."
@@ -754,7 +754,7 @@ section "Strings " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "trim\\" 
 	"Removes all leading and trailing occurrences of the specified characters from a string."
@@ -770,7 +770,7 @@ section "Strings " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "trim\\right" 
 	"Removes all trailing occurrences of the specified characters from a string."
@@ -787,7 +787,7 @@ section "Strings " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "trim\\left" 
 	"Removes all leading occurrences of the specified characters from a string."
@@ -804,7 +804,7 @@ section "Strings " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "replace" 
 	"Replaces all occurrences of a substring with another string."
@@ -823,7 +823,7 @@ section "Strings " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "substring" 
 	"Extracts a portion of a string between the specified start and end positions."
@@ -841,7 +841,7 @@ section "Strings " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "contains" 
 	"Checks if a string, block or list contains a specific value, returning true if found or false if not found."
@@ -860,7 +860,7 @@ section "Strings " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "has-suffix" 
 	"Checks if a string ends with a specific suffix, returning true if it does or false if it doesn't."
@@ -877,7 +877,7 @@ section "Strings " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "has-prefix" 
 	"Checks if a string starts with a specific prefix, returning true if it does or false if it doesn't."
@@ -894,7 +894,7 @@ section "Strings " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "index?" 
 	"Finds the 0-based index of the first occurrence of a value in a string or block."
@@ -912,7 +912,7 @@ section "Strings " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "position?" 
 	"Finds the 1-based position of the first occurrence of a value in a string or block."
@@ -930,7 +930,7 @@ section "Strings " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "encode-to\\base64" 
 	"Encodes a string or binary data as a base64 string."
@@ -945,7 +945,7 @@ section "Strings " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "decode\\base64" 
 	"Decodes a base64-encoded string back to its original form."
@@ -960,7 +960,7 @@ section "Strings " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "space" 
 	"Appends a space character to the end of a string."
@@ -975,7 +975,7 @@ section "Strings " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "capitalize" 
 	"Converts the first character of a string to uppercase, leaving the rest unchanged."
@@ -991,7 +991,7 @@ section "Strings " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "lower" 
 	"Converts all characters in a string to lowercase."
@@ -1007,7 +1007,7 @@ section "Strings " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "upper" 
 	"Converts all characters in a string to uppercase."
@@ -1023,7 +1023,7 @@ section "Strings " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "concat3" 
 	"Concatenates three strings together into a single string."
@@ -1040,7 +1040,7 @@ section "Strings " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "join" 
 	"Concatenates all strings, numbers or URIs in a block or list into a single string with no separator. If the first element is a URI, returns a URI."
@@ -1058,7 +1058,7 @@ section "Strings " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "join\\with" 
 	"Concatenates all strings or numbers in a block or list into a single string with a specified delimiter between values."
@@ -1075,7 +1075,7 @@ section "Strings " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "split" 
 	"Splits a string into a block of strings using a separator string."
@@ -1093,7 +1093,7 @@ section "Strings " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "split\\quoted" 
 	"Splits a string into a block of strings using a separator, while respecting quoted sections that should remain intact."
@@ -1110,7 +1110,7 @@ section "Strings " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "split\\many" 
 	"Splits a string into a block of strings using any character in the separators string as a delimiter."
@@ -1127,7 +1127,7 @@ section "Strings " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "split\\every" 
 	"Splits a string or block into chunks of the specified size, with any remaining elements in the last chunk."
@@ -1145,7 +1145,7 @@ section "Strings " "" {
 	}
 
 	{
-``	}
+	}
 
 }
 
@@ -1162,7 +1162,7 @@ section "Date and Time " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "unix-milli?" 
 	"Converts a time object to Unix time in milliseconds (milliseconds since January 1, 1970 UTC)."
@@ -1176,7 +1176,7 @@ section "Date and Time " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "weekday?" 
 	"Extracts the day of the week from a time object as an integer (0=Sunday through 6=Saturday)."
@@ -1190,7 +1190,7 @@ section "Date and Time " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "date" 
 	"Creates a time object from a date string in YYYY-MM-DD format."
@@ -1206,7 +1206,7 @@ section "Date and Time " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "datetime" 
 	"Creates a time object from a datetime string in YYYY-MM-DDThh:mm:ss format."
@@ -1221,7 +1221,7 @@ section "Date and Time " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "now" 
 	"Creates a time object representing the current local time."
@@ -1235,7 +1235,7 @@ section "Date and Time " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "yearday?" 
 	"Extracts the day of year from a time object as an integer (1-366)."
@@ -1249,7 +1249,7 @@ section "Date and Time " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "year?" 
 	"Extracts the year from a time object as an integer."
@@ -1263,7 +1263,7 @@ section "Date and Time " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "month?" 
 	"Extracts the month from a time object as an integer (1-12)."
@@ -1277,7 +1277,7 @@ section "Date and Time " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "days-in-month?" 
 	"Calculates the number of days in the month of the given time object."
@@ -1292,7 +1292,7 @@ section "Date and Time " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "time?" 
 	"Extracts the time part from a time object as a formatted string (hh:mm:ss)."
@@ -1306,7 +1306,7 @@ section "Date and Time " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "date?" 
 	"Extracts the date part from a time object as a formatted string (YYYY-MM-DD)."
@@ -1320,7 +1320,7 @@ section "Date and Time " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "format-imap-date" 
 	"Formats a time object as an IMAP search date string (DD-Mon-YYYY)."
@@ -1334,7 +1334,7 @@ section "Date and Time " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "format-date" 
 	"Formats a time object using a Go time format layout string. Reference time: Mon Jan 2 15:04:05 MST 2006"
@@ -1351,7 +1351,7 @@ section "Date and Time " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "day?" 
 	"Extracts the day of month from a time object as an integer (1-31)."
@@ -1365,7 +1365,7 @@ section "Date and Time " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "hour?" 
 	"Extracts the hour from a time object as an integer (0-23)."
@@ -1379,7 +1379,7 @@ section "Date and Time " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "minute?" 
 	"Extracts the minute from a time object as an integer (0-59)."
@@ -1393,7 +1393,7 @@ section "Date and Time " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "second?" 
 	"Extracts the second from a time object as an integer (0-59)."
@@ -1407,7 +1407,7 @@ section "Date and Time " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "sleep" 
 	"Pauses execution for the specified number of milliseconds."
@@ -1421,7 +1421,7 @@ section "Date and Time " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "thousands" 
 	"Multiplies the input by 1000 (useful for unit conversion)."
@@ -1435,7 +1435,7 @@ section "Date and Time " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "millions" 
 	"Multiplies the input by 1000000 (useful for unit conversion)."
@@ -1449,7 +1449,7 @@ section "Date and Time " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "seconds" 
 	"Converts seconds to milliseconds (multiplies by 1000)."
@@ -1463,7 +1463,7 @@ section "Date and Time " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "minutes" 
 	"Converts minutes to milliseconds (multiplies by 60000)."
@@ -1477,7 +1477,7 @@ section "Date and Time " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "hours" 
 	"Converts hours to milliseconds (multiplies by 3600000)."
@@ -1491,7 +1491,7 @@ section "Date and Time " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "days" 
 	"Converts days to milliseconds (multiplies by 86400000)."
@@ -1505,7 +1505,7 @@ section "Date and Time " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "weeks" 
 	"Converts weeks to milliseconds (multiplies by 604800000)."
@@ -1519,7 +1519,7 @@ section "Date and Time " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "time-it" 
 	"Accepts a block, does it and times it's execution time."
@@ -1533,7 +1533,7 @@ section "Date and Time " "" {
 	}
 
 	{
-``	}
+	}
 
 }
 
@@ -1551,7 +1551,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "unpack" 
 	"Flattens a block of blocks or list of lists by one level, combining all inner collections into a single collection."
@@ -1567,7 +1567,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "sample" 
 	"Randomly selects a specified number of elements from a collection without replacement."
@@ -1579,12 +1579,12 @@ section "Collections " "" {
 
 	{
 		equal { sample { 1 2 3 4 } 2 |length? } 2
-		equal { sample { 123 123 123 123 } 3 -> 0 } 123
+		equal { sample { 123 123 123 123 } 3 |-> 0 } 123
 		; equal { sample list { 1 2 3 4 5 } 3 |length? } 3
 	}
 
 	{
-``	}
+	}
 
 	group "max" 
 	"Finds the maximum value in a block or list of comparable values."
@@ -1601,7 +1601,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "max\\by" 
 	"Finds the value in a collection that produces the maximum result when transformed by a code block. Returns the original value, not the transformed result."
@@ -1619,7 +1619,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "min" 
 	"Finds the minimum value in a block or list of comparable values."
@@ -1636,7 +1636,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "min\\by" 
 	"Finds the value in a collection that produces the minimum result when transformed by a code block. Returns the original value, not the transformed result."
@@ -1654,7 +1654,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "avg" 
 	"Calculates the arithmetic mean (average) of numeric values in a collection."
@@ -1672,7 +1672,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "avg\\by" 
 	"Calculates the average of the results of transforming each value in a collection by a code block. Returns the average of all transformed results."
@@ -1690,7 +1690,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "sum" 
 	"Calculates the sum of all numeric values in a collection."
@@ -1709,7 +1709,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "sum\\by" 
 	"Sums the results of transforming each value in a collection by a code block. Returns the sum of all transformed results."
@@ -1727,7 +1727,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "mul" 
 	"Calculates the product of all numeric values in a collection."
@@ -1743,7 +1743,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "first" 
 	"Retrieves the first item from a collection (block, list, string, or table)."
@@ -1761,7 +1761,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "rest" 
 	"Creates a new collection with all items except the first one from the input collection."
@@ -1778,7 +1778,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "rest\\from" 
 	"Creates a new collection with all items starting from the specified position in the input collection."
@@ -1796,7 +1796,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "tail" 
 	"Creates a new collection with the last n items from the input collection."
@@ -1814,7 +1814,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "second" 
 	"Retrieves the second item from a collection (block, list, or string)."
@@ -1830,7 +1830,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "third" 
 	"Retrieves the third item from a collection (block, list, or string)."
@@ -1846,7 +1846,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "last" 
 	"Retrieves the last item from a collection (block, list, or string)."
@@ -1863,7 +1863,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "before-last" 
 	"Creates a new collection with all items except the last one from the input collection."
@@ -1881,7 +1881,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "head" 
 	"Creates a new collection with the first n items from the input collection, or all but the last |n| items if n is negative."
@@ -1903,7 +1903,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "nth" 
 	"Retrieves the item at the specified position (1-based indexing) from a collection."
@@ -1923,7 +1923,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "values" 
 	"Extracts all values from a dictionary and returns them as a list."
@@ -1938,7 +1938,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "sort" 
 	"Creates a new collection with items sorted in ascending order."
@@ -1957,7 +1957,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "sort!" 
 	"Sorts a block or list in-place in ascending order and returns the modified collection."
@@ -1973,7 +1973,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "sort\\by" 
 	"Creates a new collection with items sorted according to a custom comparison function."
@@ -1991,7 +1991,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "sort\\by\\key" 
 	"Efficiently sorts a collection by pre-computing a sort key for each element using a key function. Much faster than sort\\by for large datasets (Schwartzian Transform)."
@@ -2010,7 +2010,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "unique" 
 	"Creates a new collection with duplicate values removed, keeping only the first occurrence of each value."
@@ -2030,7 +2030,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "reverse" 
 	"Creates a new collection with items in reverse order from the input collection."
@@ -2047,7 +2047,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "reverse!" 
 	"Reverses a block or list in-place and returns the modified collection."
@@ -2063,7 +2063,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "concat" 
 	"Joins two series values together."
@@ -2082,7 +2082,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "_++" 
 	"Joins two values together, with behavior depending on types: concatenates strings, joins blocks, merges dictionaries, etc."
@@ -2101,7 +2101,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "union" 
 	"Combines two collections, removing any duplicate values to create a union of all unique values."
@@ -2127,7 +2127,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "range" 
 	"Creates a block containing all integers from the start value to the end value, inclusive."
@@ -2145,7 +2145,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "is-empty" 
 	"Checks if a collection is empty, returning true if empty and false otherwise."
@@ -2163,7 +2163,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "length?" 
 	"Returns the number of elements in a collection."
@@ -2182,7 +2182,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "max-idx?" 
 	"Returns the maximum valid index in a collection (length - 1)."
@@ -2199,7 +2199,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "keys" 
 	"Extracts the keys from a dictionary or column names from a table as a block."
@@ -2215,7 +2215,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "_->" 
 	"Accesses a value in a collection by index or key (0-based indexing for blocks and lists)."
@@ -2228,11 +2228,11 @@ section "Collections " "" {
 	{
 		equal { { 23 34 45 } -> 1 } 34
 		equal { { "a" "b" "c" } -> 0 } "a"
-		equal { dict { "a" 1 "b" 2 } -> "b" } 2
+		equal { dict { "a" 1 "b" 2 } |-> "b" } 2
 	}
 
 	{
-``	}
+	}
 
 	group "_<-" 
 	"Accesses a value in a collection by index or key, with reversed argument order (0-based indexing for blocks and lists)."
@@ -2249,7 +2249,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "_<~" 
 	"Accesses a value in a collection by index with reversed argument order (1-based indexing)."
@@ -2265,7 +2265,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "_~>" 
 	"Accesses a value in a collection by index (1-based indexing)."
@@ -2281,7 +2281,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "intersection" 
 	"Finds the common elements between two collections, returning only values that appear in both."
@@ -2307,7 +2307,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "intersection\\by" 
 	"Finds the intersection of two collections using a custom comparison function to determine matching elements."
@@ -2327,7 +2327,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "difference" 
 	"Creates a new collection containing elements from the first collection that are not present in the second collection."
@@ -2356,7 +2356,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "transpose" 
 	"Transposes a matrix (block of blocks), converting rows to columns and columns to rows."
@@ -2371,7 +2371,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "zip" 
 	"Combines two same-size collections into a block of pairs, where each pair contains corresponding elements from both collections."
@@ -2390,7 +2390,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "remove-last!" 
 	"Removes the last element from a block in-place and returns the modified block."
@@ -2405,7 +2405,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "append!" 
 	"Appends a value to a block, list or string in-place and returns the modified collection."
@@ -2422,7 +2422,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "update!" 
 	"Updates the value at a specific index in a block or list in-place and returns the modified collection (0-based indexing)."
@@ -2440,7 +2440,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "update\\with!" 
 	"Updates the value at a specific index by evaluating a code block with the current value injected and storing the result (0-based indexing)."
@@ -2459,7 +2459,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "update\\pos!" 
 	"Updates the value at a specific position in a block or list in-place and returns the modified collection (1-based indexing)."
@@ -2477,7 +2477,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "append\\many!" 
 	"Appends all values from a block to a collection (block, list or string) in-place and returns the modified collection."
@@ -2495,7 +2495,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "peek" 
 	"Returns the current value at a block's cursor position without advancing the cursor."
@@ -2509,7 +2509,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "pop" 
 	"Returns the current value at a block's cursor position and advances the cursor."
@@ -2523,7 +2523,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "pos" 
 	"Returns the current cursor position in a block."
@@ -2538,7 +2538,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "next" 
 	"Advances the cursor position in a block and returns the block."
@@ -2552,7 +2552,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "at" 
 	"Sets the cursor position in a block to the specified index and returns the block."
@@ -2571,7 +2571,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "evals" 
 	"Takes a block of Rye values and evaluates each value or expression."
@@ -2587,7 +2587,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "evals\\with" 
 	"Evaluate a block with injecting the first argument."
@@ -2603,7 +2603,7 @@ section "Collections " "" {
 	}
 
 	{
-``	}
+	}
 
 }
 
@@ -2621,7 +2621,7 @@ section "Vector " "Vector operations" {
 	}
 
 	{
-``	}
+	}
 
 	group "normalize" 
 	"Calculates the L2 norm (Euclidean length) of a vector."
@@ -2635,7 +2635,7 @@ section "Vector " "Vector operations" {
 	}
 
 	{
-``	}
+	}
 
 	group "std-deviation" 
 	"Calculates the standard deviation of a vector's elements."
@@ -2649,7 +2649,7 @@ section "Vector " "Vector operations" {
 	}
 
 	{
-``	}
+	}
 
 	group "cosine-similarity" 
 	"Calculates the cosine similarity between two vectors."
@@ -2665,7 +2665,7 @@ section "Vector " "Vector operations" {
 	}
 
 	{
-``	}
+	}
 
 	group "correlation" 
 	"Calculates the correlation coefficient between two vectors."
@@ -2681,7 +2681,7 @@ section "Vector " "Vector operations" {
 	}
 
 	{
-``	}
+	}
 
 	group "dot-product" 
 	"Calculates the dot product between two vectors."
@@ -2696,7 +2696,7 @@ section "Vector " "Vector operations" {
 	}
 
 	{
-``	}
+	}
 
 	group "euclidean-distance" 
 	"Calculates the Euclidean distance between two vectors. Useful for K-Means clustering."
@@ -2712,7 +2712,7 @@ section "Vector " "Vector operations" {
 	}
 
 	{
-``	}
+	}
 
 	group "mean-vectors" 
 	"Calculates the element-wise mean of multiple vectors. Useful for creating 'Master Anchors'."
@@ -2726,7 +2726,7 @@ section "Vector " "Vector operations" {
 	}
 
 	{
-``	}
+	}
 
 	group "unit-vector" 
 	"Returns a new normalized vector (length = 1). Essential for consistent dot products and overlays."
@@ -2740,7 +2740,7 @@ section "Vector " "Vector operations" {
 	}
 
 	{
-``	}
+	}
 
 	group "project-vector" 
 	"Projects vector onto another vector. Answers: 'How much of this vector is in the direction of another?'"
@@ -2755,7 +2755,7 @@ section "Vector " "Vector operations" {
 	}
 
 	{
-``	}
+	}
 
 	group "reject-vector" 
 	"Removes projection from vector. Use this to 'subtract' a concept direction from a vector."
@@ -2770,7 +2770,7 @@ section "Vector " "Vector operations" {
 	}
 
 	{
-``	}
+	}
 
 }
 
@@ -2792,7 +2792,7 @@ section "Types and Kinds " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "decimal" 
 	"Tries to change a Rye value (like string) to decimal."
@@ -2807,7 +2807,7 @@ section "Types and Kinds " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "string" 
 	"Tries to turn a Rye value to string."
@@ -2825,7 +2825,7 @@ section "Types and Kinds " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "uri" 
 	"Tries to change Rye value to an URI."
@@ -2838,7 +2838,7 @@ section "Types and Kinds " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "file" 
 	"Tries to change Rye value to a file."
@@ -2851,7 +2851,7 @@ section "Types and Kinds " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "char" 
 	"Tries to turn a Rye value (like integer) to ascii character."
@@ -2866,7 +2866,7 @@ section "Types and Kinds " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "block" 
 	"Turns a List, Vector, or TableRow to a Block"
@@ -2879,11 +2879,11 @@ section "Types and Kinds " "" {
 		equal { list [ 1 2 3 ] |block |type? } 'block
 		equal  { list [ 1 2 3 ] |block |first } 1
 		equal { vector [ 1 2 3 ] |block } { 1.0 2.0 3.0 }
-		equal { table { 'a 'b } { 1 2 3 4 } -> 0 |block } { 1 2 }
+		equal { table { 'a 'b } { 1 2 3 4 } |-> 0 |block } { 1 2 }
 	}
 
 	{
-``	}
+	}
 
 	group "word" 
 	"Tries to change a Rye value to a word with same name."
@@ -2898,7 +2898,7 @@ section "Types and Kinds " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "is-string" 
 	"Returns true if value is a string."
@@ -2914,7 +2914,7 @@ section "Types and Kinds " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "is-integer" 
 	"Returns true if value is an integer."
@@ -2930,7 +2930,7 @@ section "Types and Kinds " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "is-decimal" 
 	"Returns true if value is a decimal."
@@ -2946,7 +2946,7 @@ section "Types and Kinds " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "is-number" 
 	"Returns true if value is a number (integer or decimal)."
@@ -2962,7 +2962,7 @@ section "Types and Kinds " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "type?" 
 	"Returns the type of Rye value as a word."
@@ -2977,7 +2977,7 @@ section "Types and Kinds " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "kind?" 
 	"Returns the kind of Rye value as a word."
@@ -2991,7 +2991,7 @@ section "Types and Kinds " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "types?" 
 	"Returns the types of Rye values in a block or table row as a block of words."
@@ -3005,7 +3005,7 @@ section "Types and Kinds " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "dump" 
 	"Returns (dumps) Rye code representing the object."
@@ -3021,7 +3021,7 @@ section "Types and Kinds " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "mold" 
 	"Turn value to it's string representation."
@@ -3036,7 +3036,7 @@ section "Types and Kinds " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "mold\\nowrap" 
 	"Turn value to it's string representation. Doesn't wrap the blocks"
@@ -3052,7 +3052,7 @@ section "Types and Kinds " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "assure-kind" 
 	"Assuring kind."
@@ -3067,7 +3067,7 @@ section "Types and Kinds " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "method" 
 	"Registers a method (generic function)."
@@ -3083,7 +3083,7 @@ section "Types and Kinds " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "kind" 
 	"Creates new kind."
@@ -3098,7 +3098,7 @@ section "Types and Kinds " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "secret" 
 	"Creates a secret from a string."
@@ -3114,7 +3114,7 @@ section "Types and Kinds " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "reveal" 
 	"Reveals the secret value."
@@ -3130,7 +3130,7 @@ section "Types and Kinds " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "lazy" 
 	"Creates a lazy value from a block. The block will only be evaluated when forced with _!."
@@ -3145,7 +3145,7 @@ section "Types and Kinds " "" {
 	}
 
 	{
-``	}
+	}
 
 }
 
@@ -3164,7 +3164,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "isolate" 
 	"Creates a context that can access the parent context during creation, but becomes isolated afterward."
@@ -3182,7 +3182,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "context" 
 	"Creates a new context from a block (evaluated) or dict (converted)."
@@ -3201,7 +3201,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "context\\pure" 
 	"Creates a new context using Pure Context (PCtx) as parent, preventing access to regular context changes."
@@ -3217,7 +3217,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "private" 
 	"Creates a temporary private context for evaluating expressions, returning the last value instead of the context."
@@ -3234,7 +3234,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "private\\" 
 	"Creates a documented private context for evaluating expressions, returning the last value instead of the context."
@@ -3249,7 +3249,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "extends" 
 	"Creates a new context that inherits from a specified parent context."
@@ -3265,7 +3265,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "bind!" 
 	"Binds a context to a parent context, allowing it to access the parent's values."
@@ -3280,7 +3280,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "unbind" 
 	"Removes the parent relationship from a context, making it a standalone context."
@@ -3295,7 +3295,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "whereis" 
 	"Searches for a word in current context and its parents, returns block with [ depth context ] where word was found."
@@ -3311,7 +3311,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "get" 
 	"Gets the value of a word from current or parent contexts without calling it (similar to get-word ?word)."
@@ -3327,7 +3327,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "current" 
 	"Returns current context."
@@ -3339,7 +3339,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "parent?" 
 	"Returns parent context of the current context."
@@ -3351,7 +3351,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "parent\\of" 
 	"Returns parent context of the current context."
@@ -3363,7 +3363,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "lc" 
 	"Lists words in current context"
@@ -3376,7 +3376,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "lc\\data" 
 	"Returns words in current context as a block."
@@ -3390,7 +3390,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "lc\\data\\" 
 	"Returns words in specified context as a block."
@@ -3404,7 +3404,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "lcp" 
 	"Lists words in parent context"
@@ -3417,7 +3417,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "lc\\" 
 	"Lists words in current context with string filter, by type (word: 'function, 'builtin, 'context), or regex filter (native of kind 'regexp)"
@@ -3430,7 +3430,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "lcp\\" 
 	"Lists words in parent context with string filter"
@@ -3443,7 +3443,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "cc" 
 	"Change to context (pushes current context to stack for ccb)"
@@ -3456,7 +3456,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "ccp" 
 	"Change to parent context (pushes current context to stack for ccb)"
@@ -3469,7 +3469,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "ccb" 
 	"Change context back (pops from context stack)"
@@ -3482,7 +3482,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "mkcc" 
 	"Make context with current as parent and change to it (pushes current context to stack for ccb)."
@@ -3495,7 +3495,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "cc-stack-size" 
 	"Returns the current size of the context navigation stack."
@@ -3508,7 +3508,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "cc-clear-stack" 
 	"Clears the context navigation stack (removes all stored previous contexts)."
@@ -3521,7 +3521,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "clone" 
 	"Creates a copy of a context with the same state and parent relationship."
@@ -3538,7 +3538,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "clone\\" 
 	"Creates a copy of a context and evaluates a block of code inside the clone."
@@ -3556,7 +3556,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "clone\\deep" 
 	"Creates a deep copy of a context with the same state and parent relationship, recursively copying all nested objects."
@@ -3572,7 +3572,7 @@ section "Contexts " "Context related functions" {
 	}
 
 	{
-``	}
+	}
 
 }
 
@@ -3593,7 +3593,7 @@ section "Flow control " "Functions for conditional execution and branching logic
 	}
 
 	{
-``	}
+	}
 
 	group "when" 
 	"Conditionally executes an action block if a condition block evaluates to true, injecting the same value into both blocks and returning the value of the action block if the condition is truthy or the original value otherwise."
@@ -3610,7 +3610,7 @@ section "Flow control " "Functions for conditional execution and branching logic
 	}
 
 	{
-``	}
+	}
 
 	group "^if" 
 	"Conditional that sets the return flag when true, allowing early return from a function when the condition is a boolean."
@@ -3626,7 +3626,7 @@ section "Flow control " "Functions for conditional execution and branching logic
 	}
 
 	{
-``	}
+	}
 
 	group "either" 
 	"Executes one of two blocks based on a boolean condition, similar to if/else in other languages."
@@ -3646,7 +3646,7 @@ section "Flow control " "Functions for conditional execution and branching logic
 	}
 
 	{
-``	}
+	}
 
 	group "choose" 
 	"Returns the first or second value from a block of two values based on a boolean condition."
@@ -3666,7 +3666,7 @@ section "Flow control " "Functions for conditional execution and branching logic
 	}
 
 	{
-``	}
+	}
 
 	group "switch" 
 	"Pattern matching construct that executes a block of code corresponding to the first matching case value."
@@ -3682,7 +3682,7 @@ section "Flow control " "Functions for conditional execution and branching logic
 	}
 
 	{
-``	}
+	}
 
 	group "cases" 
 	"Evaluates multiple condition-action pairs and applies all matching actions cumulatively to the initial value."
@@ -3703,7 +3703,7 @@ section "Flow control " "Functions for conditional execution and branching logic
 	}
 
 	{
-``	}
+	}
 
 }
 
@@ -3723,7 +3723,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	{
-``	}
+	}
 
 	group "produce" 
 	"Executes a block of code a specified number of times, passing the result of each execution to the next iteration."
@@ -3743,7 +3743,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	{
-``	}
+	}
 
 	group "replicate" 
 	"Executes a block of code a specified number of times and collects all results into a block."
@@ -3760,7 +3760,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	{
-``	}
+	}
 
 	group "replicate\\idx" 
 	"Executes a block of code a specified number of times, injecting the current index (0-based), and collects all results into a block."
@@ -3777,7 +3777,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	{
-``	}
+	}
 
 	group "produce\\while" 
 	"Executes a block of code repeatedly while a condition is true, passing the result of each execution to the next iteration."
@@ -3794,7 +3794,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	{
-``	}
+	}
 
 	group "produce\\" 
 	"Executes a block of code a specified number of times, updating an accumulator word with each iteration result."
@@ -3811,7 +3811,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	{
-``	}
+	}
 
 	group "forever" 
 	"Executes a block of code repeatedly until .return is called within the block."
@@ -3826,7 +3826,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	{
-``	}
+	}
 
 	group "forever\\with" 
 	"Accepts a value and a block, and executes the block repeatedly with the value until .return is called."
@@ -3842,7 +3842,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	{
-``	}
+	}
 
 	group "for" 
 	"Accepts a block of values and a block of code, builtin, or function, does the code for each of the values, injecting them."
@@ -3858,7 +3858,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	{
-``	}
+	}
 
 	group "for\\pos" 
 	"Iterates over a collection with position tracking (1-based), setting a word to the current position and injecting each value."
@@ -3874,7 +3874,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	{
-``	}
+	}
 
 	group "for\\idx" 
 	"Iterates over a collection with index tracking (0-based), setting a word to the current index and injecting each value."
@@ -3890,7 +3890,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	{
-``	}
+	}
 
 	group "walk" 
 	"Walks through a block, executing code that can modify the block on each iteration (useful for custom iteration patterns)."
@@ -3906,7 +3906,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	{
-``	}
+	}
 
 	group "walk\\pos" 
 	"Walks through a block with position tracking (1-based), setting a word to the current position and executing code that can modify the block."
@@ -3922,7 +3922,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	{
-``	}
+	}
 
 	group "walk\\idx" 
 	"Walks through a block with index tracking (0-based), setting a word to the current index and executing code that can modify the block."
@@ -3938,7 +3938,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	{
-``	}
+	}
 
 	group "purge" 
 	"Purges values from a series based on return of a injected code block."
@@ -3958,7 +3958,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	{
-``	}
+	}
 
 	group "purge!" 
 	"Purges values from a block stored in a word (modifying it in-place), returning the purged values."
@@ -3973,7 +3973,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	{
-``	}
+	}
 
 	group "map" 
 	"Maps values of a block to a new block by evaluating a block of code or function."
@@ -3994,7 +3994,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	{
-``	}
+	}
 
 	group "map\\pos" 
 	"Maps values of a block to a new block by evaluating a block of code."
@@ -4011,7 +4011,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	{
-``	}
+	}
 
 	group "map\\idx" 
 	"Maps values of a block to a new block by evaluating a block of code."
@@ -4028,7 +4028,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	{
-``	}
+	}
 
 	group "reduce" 
 	"Reduces values of a block to a single value by evaluating a block of code, using the first element as the initial accumulator."
@@ -4050,7 +4050,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	{
-``	}
+	}
 
 	group "fold\\do" 
 	"Reduces values of a block to a new block by evaluating a block of code ..."
@@ -4067,7 +4067,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	{
-``	}
+	}
 
 	group "fold" 
 	"Reduces values of a block to a new block by evaluating a block of code ..."
@@ -4082,7 +4082,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	{
-``	}
+	}
 
 	group "partition" 
 	"Partitions a series by evaluating a block of code, grouping consecutive elements that return the same result."
@@ -4106,7 +4106,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	{
-``	}
+	}
 
 	group "group" 
 	"Groups a block or list of values by a key generated from a code block (keys must be strings)."
@@ -4128,7 +4128,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	{
-``	}
+	}
 
 	group "filter" 
 	"Filters values from a seris based on return of a injected code block."
@@ -4149,7 +4149,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	{
-``	}
+	}
 
 	group "seek" 
 	"Seek over a series until a Block of code returns True and return the value."
@@ -4169,7 +4169,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	{
-``	}
+	}
 
 	group "while" 
 	"Executes a block of code repeatedly while a condition is true."
@@ -4185,7 +4185,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	{
-``	}
+	}
 
 	group "until" 
 	"Executes a block of code repeatedly until a condition becomes true. Executes the body at least once before checking condition (do-until loop)."
@@ -4203,7 +4203,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	{
-``	}
+	}
 
 	group "for\\" 
 	"Iterates over a collection, setting a word to each value. Works with lists, blocks, and strings."
@@ -4221,7 +4221,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	{
-``	}
+	}
 
 	group "for\\kv" 
 	"Iterates over a collection with separate key and value words. For dicts, uses actual keys and values. For other collections, uses indices as keys."
@@ -4239,7 +4239,7 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	}
 
 	{
-``	}
+	}
 
 }
 
@@ -4257,7 +4257,7 @@ section "Functions " "functions that create functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "does" 
 	"Creates a function with no arguments that executes the given block when called."
@@ -4273,7 +4273,7 @@ section "Functions " "functions that create functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "fn1" 
 	"Creates a function that accepts one anonymous argument and executes the given block with that argument."
@@ -4290,7 +4290,7 @@ section "Functions " "functions that create functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "fn" 
 	"Creates a function with named parameters specified in the first block and code in the second block."
@@ -4309,7 +4309,7 @@ section "Functions " "functions that create functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "fn\\spec?" 
 	"Returns the argument specification block of a function."
@@ -4324,7 +4324,7 @@ section "Functions " "functions that create functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "fn\\body?" 
 	"Returns the body block of a function."
@@ -4339,7 +4339,7 @@ section "Functions " "functions that create functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "pfn" 
 	"Creates a pure function (no side effects allowed) with named parameters and code body."
@@ -4357,7 +4357,7 @@ section "Functions " "functions that create functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "fn\\cc" 
 	"Creates a function that captures the current context, allowing access to variables from the enclosing scope."
@@ -4373,7 +4373,7 @@ section "Functions " "functions that create functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "fn\\in" 
 	"Creates a function with a specified parent context, allowing access to variables from that context."
@@ -4389,7 +4389,7 @@ section "Functions " "functions that create functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "fn\\inside" 
 	"Creates a function that executes directly in the specified context rather than creating a new execution context."
@@ -4405,7 +4405,7 @@ section "Functions " "functions that create functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "closure" 
 	"Creates a closure that captures the current context at creation time, preserving access to variables in that scope."
@@ -4421,7 +4421,7 @@ section "Functions " "functions that create functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "partial" 
 	"Creates a partially applied function with specified arguments, using _ (void) for arguments to be filled later."
@@ -4438,7 +4438,7 @@ section "Functions " "functions that create functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "apply" 
 	"Applies a function or builtin to a block of arguments."
@@ -4455,7 +4455,7 @@ section "Functions " "functions that create functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "on-change" 
 	"Registers an observer block to be executed when a variable changes. Use with 'var' result."
@@ -4470,7 +4470,7 @@ section "Functions " "functions that create functions" {
 	}
 
 	{
-``	}
+	}
 
 }
 
@@ -4491,7 +4491,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "modify!" 
 	"Searches for a word and modifies	 it's value in-place. Only works on variables declared with var. If value changes returns true otherwise false"
@@ -4509,7 +4509,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "set" 
 	"Set word to value or words by deconstructing a block. Only works on variables declared with var."
@@ -4524,7 +4524,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "unset!" 
 	"Unset a word in current context, only meant to be used in console"
@@ -4538,7 +4538,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "val" 
 	"Returns value of the word in context"
@@ -4553,7 +4553,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "_<<" 
 	"Converts a value to specific kind (R to L)"
@@ -4568,7 +4568,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "_|" 
 	"Pipeline operator that passes the value through unchanged (used with 'not' and other operations)."
@@ -4585,7 +4585,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "save\\current" 
 	"Saves current state of the program to a file."
@@ -4599,7 +4599,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "save\\current\\secure" 
 	"Saves current state of the program to a file with password protection."
@@ -4613,7 +4613,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "doc!" 
 	"Sets docstring of the current context."
@@ -4627,7 +4627,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "doc?" 
 	"Gets docstring of the current context."
@@ -4641,7 +4641,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "doc\\of?" 
 	"Get docstring of the passed context."
@@ -4655,7 +4655,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "ref" 
 	"Makes a value mutable instead of immutable"
@@ -4674,7 +4674,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "deref" 
 	"Makes a value again immutable"
@@ -4692,7 +4692,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "is-ref" 
 	"Checks if a value is a mutable reference."
@@ -4711,7 +4711,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "dict" 
 	"Constructs a Dict from the Block of key and value pairs."
@@ -4721,17 +4721,17 @@ section "Other " "..." {
 	}
 
 	{
-		equal { dict { "a" 123 } -> "a" } 123
-		equal { dict { "name" "John" "age" 30 } -> "name" } "John"
+		equal { dict { "a" 123 } |-> "a" } 123
+		equal { dict { "name" "John" "age" 30 } |-> "name" } "John"
 		equal { dict { } |type? } 'dict
 		equal { dict { "x" 1 "y" 2 "z" 3 } |length? } 3
 		error { dict { 123 "value" } } ; integer keys should fail
 		error { dict { { } "value" } } ; block keys should fail
-		equal { dict { 'key "value" } -> "key" } "value" ; tagwords as keys
+		equal { dict { 'key "value" } |-> "key" } "value" ; tagwords as keys
 	}
 
 	{
-``	}
+	}
 
 	group "change" 
 	"Returns a new Dict with the specified key changed to the new value. Original dict is unchanged."
@@ -4743,13 +4743,13 @@ section "Other " "..." {
 	}
 
 	{
-		equal { dict { "a" 1 "b" 2 } |change "a" 99 -> "a" } 99
-		equal { dict { "a" 1 "b" 2 } |change "c" 3 -> "c" } 3
-		equal { d: dict { "x" 10 } , change d "x" 20 -> "x" } 20
+		equal { dict { "a" 1 "b" 2 } |change "a" 99 |-> "a" } 99
+		equal { dict { "a" 1 "b" 2 } |change "c" 3 |-> "c" } 3
+		equal { d: dict { "x" 10 } , change d "x" 20 |-> "x" } 20
 	}
 
 	{
-``	}
+	}
 
 	group "list" 
 	"Constructs a List from the Block of values."
@@ -4759,17 +4759,17 @@ section "Other " "..." {
 	}
 
 	{
-		equal { list { "a" 123 } -> 0 } "a"
+		equal { list { "a" 123 } |-> 0 } "a"
 		equal { list { 1 2 3 } |length? } 3
 		equal { list { } |length? } 0
-		equal { list { "hello" "world" } -> 1 } "world"
+		equal { list { "hello" "world" } |-> 1 } "world"
 		equal { list { 1 2 3 } |type? } 'list
 		equal { list { 1 2 3 } |first } 1
 		equal { list { 1 2 3 } |last } 3
 	}
 
 	{
-``	}
+	}
 
 	group "file-uri//Import" 
 	"Imports a file, loads and does it from script local path."
@@ -4783,7 +4783,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "file-uri//Import\\live" 
 	"Imports a file, loads and does it from script local path."
@@ -4797,7 +4797,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "load" 
 	"Loads a string into Rye values."
@@ -4812,7 +4812,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "file-uri//Load" 
 	"Loads a string into Rye values."
@@ -4827,7 +4827,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "load\\mod" 
 	"Loads a string into Rye values. During load it allows modification of words."
@@ -4841,7 +4841,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "load\\live" 
 	"Loads a string into Rye values. During load it allows modification of words."
@@ -4855,7 +4855,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "load\\sig" 
 	"Checks the signature, if OK then loads a string into Rye values."
@@ -4869,7 +4869,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "do" 
 	"Takes a block of code and does (runs) it."
@@ -4890,7 +4890,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "with" 
 	"Takes a value and a block of code. It does the code with the value injected."
@@ -4906,7 +4906,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "do\\inside" 
 	"Takes a Context and a Block. It Does a block inside a given Context."
@@ -4924,7 +4924,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "do\\in" 
 	"Takes a Context and a Block. It Does a block in current context but with parent a given Context."
@@ -4942,7 +4942,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "do\\inx" 
 	"Takes a Context and a Block. It Does a block in current context but with parent a given Context."
@@ -4960,7 +4960,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "return" 
 	"Accepts one value and returns it."
@@ -4972,7 +4972,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "scmd" 
 	"Execute a shell command and return its exit status code."
@@ -4986,7 +4986,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "scmd\\capture" 
 	"Execute a shell command and capture the output, return it as string"
@@ -4998,7 +4998,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "rye" 
 	""
@@ -5010,7 +5010,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "Rye-itself//History?" 
 	"Returns a block of the last N lines from REPL history."
@@ -5024,7 +5024,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "defer" 
 	"Registers a block of code to be executed when the current function exits or the program terminates."
@@ -5038,7 +5038,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "defer\\" 
 	"Registers a block of code with an injected value to be executed when the current function exits or the program terminates. Works like 'with' but deferred."
@@ -5054,7 +5054,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "assert" 
 	"Evaluates a block of code and asserts that its result equals the expected value. Returns the result if assertion passes, fails with error message if not."
@@ -5071,7 +5071,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "assert\\display" 
 	"Evaluates a block of code and displays the result. Prints the explanation in magenta followed by OK in green on success, or error message in red on failure. Does not fail - continues evaluation."
@@ -5088,7 +5088,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "recur-if" 
 	"Internal recursion control function. Resets function execution if condition > 0, otherwise returns result."
@@ -5101,7 +5101,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "recur-if\\1" 
 	"Internal recursion control function for single-argument functions. Updates first argument and resets if condition > 0."
@@ -5115,7 +5115,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "recur-if\\2" 
 	"Internal recursion control function for two-argument functions. Updates both arguments and resets if condition > 0."
@@ -5130,7 +5130,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 	group "recur-if\\3" 
 	"Internal recursion control function for three-argument functions. Updates all three arguments and resets if condition > 0."
@@ -5146,7 +5146,7 @@ section "Other " "..." {
 	}
 
 	{
-``	}
+	}
 
 }
 
@@ -5166,7 +5166,7 @@ section "Combinators " "Functions that combine other functions or control execut
 	}
 
 	{
-``	}
+	}
 
 	group "wrap" 
 	"Executes a wrapper block before and after executing a main block, returning the result of the main block."
@@ -5181,7 +5181,7 @@ section "Combinators " "Functions that combine other functions or control execut
 	}
 
 	{
-``	}
+	}
 
 	group "keep" 
 	"Do the first block, then the second one but return the result of the first one."
@@ -5197,7 +5197,7 @@ section "Combinators " "Functions that combine other functions or control execut
 	}
 
 	{
-``	}
+	}
 
 }
 
@@ -5214,7 +5214,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	}
 
 	{
-``	}
+	}
 
 	group "prn" 
 	"Prints a value without adding a newline, returning the input value."
@@ -5228,7 +5228,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	}
 
 	{
-``	}
+	}
 
 	group "print" 
 	"Prints a value followed by a newline, returning the input value."
@@ -5242,7 +5242,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	}
 
 	{
-``	}
+	}
 
 	group "print2" 
 	"Prints two values separated by a space and followed by a newline, returning the second value."
@@ -5257,7 +5257,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	}
 
 	{
-``	}
+	}
 
 	group "prn2" 
 	"Prints two values separated by a space without adding a newline, returning the second value."
@@ -5272,7 +5272,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	}
 
 	{
-``	}
+	}
 
 	group "prns2" 
 	"Prints two values separated by a space and followed by a space, returning the second value."
@@ -5287,7 +5287,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	}
 
 	{
-``	}
+	}
 
 	group "format" 
 	"Formats a value according to Go's sprintf format specifiers, returning the formatted string."
@@ -5304,7 +5304,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	}
 
 	{
-``	}
+	}
 
 	group "prnf" 
 	"Formats a value according to Go's sprintf format specifiers and prints it without a newline, returning the input value."
@@ -5320,7 +5320,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	}
 
 	{
-``	}
+	}
 
 	group "printf" 
 	"Formats a value according to Go's sprintf format specifiers and prints it followed by a newline, returning the input value."
@@ -5336,7 +5336,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	}
 
 	{
-``	}
+	}
 
 	group "embed" 
 	"Embeds a value into a string or URI by replacing {} placeholder with the string representation of the value."
@@ -5352,7 +5352,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	}
 
 	{
-``	}
+	}
 
 	group "prnv" 
 	"Embeds a value into a string by replacing {} placeholder and prints it without a newline, returning the input value."
@@ -5367,7 +5367,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	}
 
 	{
-``	}
+	}
 
 	group "printv" 
 	"Embeds a value into a string by replacing {} placeholder and prints it followed by a newline, returning the input value."
@@ -5382,7 +5382,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	}
 
 	{
-``	}
+	}
 
 	group "print\\ssv" 
 	"Prints a block of values as space-separated values followed by a newline, returning the input block."
@@ -5396,7 +5396,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	}
 
 	{
-``	}
+	}
 
 	group "print\\csv" 
 	"Prints a block of values as comma-separated values followed by a newline, returning the input block."
@@ -5410,7 +5410,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	}
 
 	{
-``	}
+	}
 
 	group "probe" 
 	"Prints detailed type and value information about a value, followed by a newline, returning the input value."
@@ -5424,7 +5424,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	}
 
 	{
-``	}
+	}
 
 	group "probe\\" 
 	"Prints a prefix string followed by detailed type and value information about a value, followed by a newline, returning the input value."
@@ -5439,7 +5439,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	}
 
 	{
-``	}
+	}
 
 	group "inspect" 
 	"Returns a string containing detailed type and value information about a value."
@@ -5453,7 +5453,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	}
 
 	{
-``	}
+	}
 
 	group "esc" 
 	"Creates an ANSI escape sequence by prepending the escape character (\\033) to the input string."
@@ -5467,7 +5467,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	}
 
 	{
-``	}
+	}
 
 	group "esc-val" 
 	"Creates an ANSI escape sequence with an embedded value by replacing {} placeholder and prepending the escape character (\\033)."
@@ -5482,7 +5482,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	}
 
 	{
-``	}
+	}
 
 	group "display" 
 	"Interactively displays a value (Block, Dict, Table, TableRow, or Markdown) in the terminal with navigation capabilities."
@@ -5496,7 +5496,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	}
 
 	{
-``	}
+	}
 
 	group "_.." 
 	"Shorthand alias for 'display' - interactively displays a value in the terminal with navigation capabilities."
@@ -5510,7 +5510,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	}
 
 	{
-``	}
+	}
 
 	group "display\\custom" 
 	"Interactively displays a Table in the terminal with a custom rendering function for each row."
@@ -5525,7 +5525,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	}
 
 	{
-``	}
+	}
 
 	group "capture-stdout" 
 	"Executes a block of code while capturing all output to stdout, returning the captured output as a string."
@@ -5540,7 +5540,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	}
 
 	{
-``	}
+	}
 
 }
 
@@ -5559,7 +5559,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 	group "^fail" 
 	"Creates an error and immediately returns from the current function with failure state."
@@ -5576,7 +5576,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 	group "failure" 
 	"Creates an error object without setting any flags (unlike fail and ^fail)."
@@ -5592,7 +5592,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 	group "failure\\wrap" 
 	"Creates a new error that wraps an existing error, allowing for error chaining."
@@ -5608,7 +5608,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 	group "is-error" 
 	"Returns true if the value is an error, false otherwise."
@@ -5623,7 +5623,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 	group "error-kind?" 
 	"Returns the kind of an error, or void if not an error."
@@ -5638,7 +5638,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 	group "is-error-of-kind" 
 	"Returns true if the value is an error of the specified kind, false otherwise."
@@ -5654,7 +5654,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 	group "cause?" 
 	"Extracts the root cause from an error chain by traversing the Parent references."
@@ -5669,7 +5669,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 	group "status?" 
 	"Extracts the numeric status code from an error object."
@@ -5685,7 +5685,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 	group "message?" 
 	"Extracts the message string from an error object."
@@ -5701,7 +5701,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 	group "details?" 
 	"Extracts additional details from an error object as a dictionary."
@@ -5717,7 +5717,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 	group "has-failed" 
 	"Tests if a value is an error object, returning true for errors and false for non-errors."
@@ -5734,7 +5734,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 	group "is-failure" 
 	"Checks if a value is a failure/error type. Unlike has-failed, this doesn't accept failures - the value must already be disarmed."
@@ -5751,7 +5751,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 	group "is-success" 
 	"Returns true for any value that is not a failure/error type. The opposite of is-failure."
@@ -5769,7 +5769,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 	group "disarm" 
 	"Clears the failure flag while preserving the error object, allowing error inspection without propagation."
@@ -5786,7 +5786,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 	group "check" 
 	"Checks if a value is in failure state and wraps it with a new error if so, otherwise returns the original value."
@@ -5803,7 +5803,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 	group "^check" 
 	"Like 'check' but also sets the return flag to immediately exit the current function."
@@ -5819,7 +5819,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 	group "^ensure" 
 	"Checks if a value is truthy and returns it if so, otherwise creates an error and immediately returns from the function."
@@ -5835,7 +5835,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 	group "ensure" 
 	"Checks if a value is truthy and returns it if so, otherwise creates an error with the failure flag set."
@@ -5851,7 +5851,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 	group "requires-one-of" 
 	"Validates that a value matches one of the provided options, failing with a descriptive error if not."
@@ -5870,7 +5870,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 	group "^requires-one-of" 
 	"Validates that a value matches one of the provided options, failing with a descriptive error if not."
@@ -5889,7 +5889,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 	group "fix" 
 	"Handles errors by executing a block if the value is in failure state, clearing the failure flag."
@@ -5906,7 +5906,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 	group "^fix" 
 	"Like 'fix' but also sets the return flag to immediately exit the current function with the handler result."
@@ -5922,7 +5922,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 	group "fix\\either" 
 	"Executes one of two blocks depending on whether the value is in failure state."
@@ -5939,7 +5939,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 	group "fix\\else" 
 	"Executes a block if the value is not in failure state, otherwise returns the original value."
@@ -5955,7 +5955,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 	group "fix\\continue" 
 	"Executes one of two blocks depending on whether the value is in failure state, like an error-handling if/else."
@@ -5972,7 +5972,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 	group "continue" 
 	"Executes a block only if the value is not in failure state, opposite of 'fix'."
@@ -5988,7 +5988,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 	group "^fix\\match" 
 	"Error handling switch that matches error codes with handler blocks and sets the return flag."
@@ -6005,7 +6005,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 	group "try" 
 	"Takes a block of code and does (runs) it."
@@ -6020,7 +6020,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 	group "try-all" 
 	"Executes a block and returns a result tuple [success, result], where success is true if no error occurred."
@@ -6035,7 +6035,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 	group "try\\in" 
 	"Takes a Context and a Block. It Does a block inside a given Context."
@@ -6051,7 +6051,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 	group "finally" 
 	"Executes a block and ensures another block is executed afterward, regardless of errors."
@@ -6067,7 +6067,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 	group "retry" 
 	"Executes a block and retries it up to N times if it results in a failure."
@@ -6084,7 +6084,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 	group "persist" 
 	"Executes a block repeatedly until it succeeds (no failure), then returns the successful result. Gives up after 1000 attempts."
@@ -6100,7 +6100,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 	group "timeout" 
 	"Executes a block of code with a timeout, failing if execution exceeds the specified duration in milliseconds."
@@ -6116,7 +6116,7 @@ section "Default" "" {
 	}
 
 	{
-``	}
+	}
 
 }
 

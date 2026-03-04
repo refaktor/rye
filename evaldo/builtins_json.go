@@ -364,9 +364,9 @@ var Builtins_json = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { list { 1 2 3 } |to-json } "[1, 2, 3] "
-	// equal { dict { a: 1 b: 2 c: 3 } |to-json } `{"a": 1, "b": 2, "c": 3} `
+	// equal { dict { a: 1 b: 2 c: 3 } |to-json |parse-json |-> "b" } 2
 	// equal { { 1 2 3 } |to-json } "[1, 2, 3] "
-	// equal { context { a: 1 b: 2 } |to-json |parse-json -> "a" } 1
+	// equal { context { a: 1 b: 2 } |to-json |parse-json |-> "a" } 1
 	// Args:
 	// * value: any Rye value to encode (block, list, dict, context, string, integer, etc.)
 	// Returns:

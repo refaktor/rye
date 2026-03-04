@@ -277,10 +277,13 @@ func Rye0_EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, to
 			kind = leftVal.GetKind()
 		}
 
-		// Evaluate next expression if needed
+		// Evaluate next expression if needed.
+		// Use Rye0_EvalExpression_CollectArg (not just DispatchType) so that opwords/dotwords
+		// to the right of the first argument are consumed as part of that argument expression —
+		// consistent with how locally-bound words collect args (same fix as in evaldo.go).
 		if (leftVal == nil && !pipeSecond) || pipeSecond {
 			if !ps.Ser.AtLast() {
-				Rye0_EvalExpression_DispatchType(ps)
+				Rye0_EvalExpression_CollectArg(ps, true)
 				if ps.ReturnFlag {
 					return ps
 				}
@@ -295,8 +298,26 @@ func Rye0_EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, to
 			}
 		}
 
-		// Try to find a generic word
-		if rword, ok := word.(env.Word); ok && leftVal != nil && ps.Ctx.Kind.Index != -1 {
+		// Try to find a generic word.
+		// Handle all word types that may reach EvalWord with their raw type
+		// (Dotwords come in as env.Dotword from EvalExpression_DispatchType).
+		var rword env.Word
+		var ok bool
+		switch w := word.(type) {
+		case env.Word:
+			rword = w
+			ok = true
+		case env.Dotword:
+			rword = w.ToWord()
+			ok = true
+		case env.Opword:
+			rword = w.ToWord()
+			ok = true
+		case env.Pipeword:
+			rword = w.ToWord()
+			ok = true
+		}
+		if ok && leftVal != nil && ps.Ctx.Kind.Index != -1 {
 			object, found = ps.Gen.Get(kind, rword.Index)
 		}
 	}

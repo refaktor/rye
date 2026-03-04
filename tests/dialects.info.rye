@@ -14,7 +14,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "pow" 
 	"Returns base raised to the power of exponent."
@@ -32,7 +32,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "log2" 
 	"Returns the binary logarithm (base-2) of x."
@@ -47,7 +47,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "log10" 
 	"Returns the decimal logarithm (base-10) of x."
@@ -61,7 +61,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "log" 
 	"Returns the natural logarithm of x."
@@ -80,7 +80,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "log1p" 
 	"Returns the natural logarithm of 1 plus its argument x."
@@ -94,7 +94,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "logb" 
 	"Returns the binary exponent of x."
@@ -108,7 +108,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "sq" 
 	"Returns the square of x."
@@ -123,7 +123,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "sin" 
 	"Returns the sine of the radian argument."
@@ -140,7 +140,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "cos" 
 	"Returns the cosine of the radian argument."
@@ -156,7 +156,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "tan" 
 	"Returns the tangent of the radian argument."
@@ -172,7 +172,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "sqrt" 
 	"Returns the square root of x."
@@ -188,7 +188,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "abs" 
 	"Returns the absolute value of a number."
@@ -204,7 +204,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "acos" 
 	"Returns the arccosine (inverse cosine) in radians."
@@ -218,7 +218,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "acosh" 
 	"Returns the inverse hyperbolic cosine."
@@ -232,7 +232,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "asin" 
 	"Returns the arcsine (inverse sine) in radians."
@@ -246,7 +246,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "asinh" 
 	"Returns the inverse hyperbolic sine."
@@ -260,7 +260,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "atan" 
 	"Returns the arctangent (inverse tangent) in radians."
@@ -274,7 +274,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "atan2" 
 	"Returns the arc tangent of y/x, using the signs of the two to determine the quadrant of the return value."
@@ -289,7 +289,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "atanh" 
 	"Returns the inverse hyperbolic tangent."
@@ -303,7 +303,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "ceil" 
 	"Returns the least integer value greater than or equal to x."
@@ -317,7 +317,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "cbrt" 
 	"Returns the cube root of x."
@@ -331,7 +331,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "copysign" 
 	"Returns a value with the magnitude of x and the sign of y."
@@ -346,7 +346,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "dim" 
 	"Returns the maximum of x-y or 0."
@@ -362,7 +362,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "round\\to" 
 	"Rounds a decimal to the specified number of decimal places."
@@ -378,7 +378,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "round" 
 	"Rounds a decimal to the nearest integer."
@@ -393,7 +393,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "roundtoeven" 
 	"Returns the nearest integer, rounding ties to even."
@@ -408,7 +408,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "erf" 
 	"Returns the error function of value."
@@ -422,7 +422,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "erfc" 
 	"Returns the complementary error function of value."
@@ -436,7 +436,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "erfcinv" 
 	"Returns the inverse of erfc(x) function."
@@ -450,7 +450,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "erfinv" 
 	"Returns the inverse error function of value."
@@ -464,7 +464,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "exp" 
 	"Returns e**x, the base-e exponential of x."
@@ -481,7 +481,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "exp2" 
 	"Returns 2**x, the base-2 exponential of x."
@@ -495,7 +495,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "expm1" 
 	"Returns e**x - 1, the base-e exponential of x minus 1. It is more accurate than exp(x) - 1 when x is near zero."
@@ -509,7 +509,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "fma" 
 	"Returns x * y + z, computed with only one rounding. (That is, FMA returns the fused multiply-add of x, y, and z.)"
@@ -525,7 +525,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "j0" 
 	"Returns the order-zero Bessel function of the first kind."
@@ -539,7 +539,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "j1" 
 	"Returns the order-one Bessel function of the first kind."
@@ -553,7 +553,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "y0" 
 	"Returns the order-zero Bessel function of the second kind."
@@ -567,7 +567,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "y1" 
 	"Returns the order-one Bessel function of the second kind."
@@ -581,7 +581,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "yn" 
 	"Returns the order-n Bessel function of the second kind."
@@ -596,7 +596,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "jn" 
 	"Returns the order-n Bessel function of the first kind."
@@ -611,7 +611,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "trunc" 
 	"Returns the integer value of input."
@@ -625,7 +625,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "pi" 
 	"Returns the mathematical constant π (pi)."
@@ -639,7 +639,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "deg->rad" 
 	"Converts degrees to radians."
@@ -653,7 +653,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "is-near" 
 	"Returns true if two decimals are close."
@@ -669,7 +669,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "near-zero" 
 	"Returns true if a decimal is close to zero."
@@ -684,7 +684,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "is-prime" 
 	"Returns true if the integer is a prime number."
@@ -699,7 +699,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "to-eyr" 
 	"Converts math dialect to Eyr dialect."
@@ -713,7 +713,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "calc" 
 	"Evaluates expressions in math dialect."
@@ -737,7 +737,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "gcd" 
 	"Returns the greatest common divisor of two integers using Euclidean algorithm."
@@ -756,7 +756,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 	group "outer-product" 
 	"Computes the outer product of two vectors (blocks), returning a matrix (block of blocks) where each element [i,j] = a[i] * b[j]. Similar to numpy.outer()."
@@ -774,7 +774,7 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	}
 
 	{
-``	}
+	}
 
 }
 
@@ -791,7 +791,7 @@ section "Validation dialect " "validation dialect for Rye values" {
 	}
 
 	{
-``	}
+	}
 
 	group "validate>ctx" 
 	"Validates and transforms data according to specified rules, returning a context object for easy field access."
@@ -803,11 +803,11 @@ section "Validation dialect " "validation dialect for Rye values" {
 
 	{
 		equal { validate>ctx dict { a: 1 } { a: required } |type? } 'context
-		equal { validate>ctx dict { a: 1 } { a: optional 0 } -> 'a } 1
+		equal { validate>ctx dict { a: 1 } { a: optional 0 } |-> 'a } 1
 	}
 
 	{
-``	}
+	}
 
 }
 
@@ -866,7 +866,7 @@ section "Match dialect " "pattern matching and deconstruction" {
 	}
 
 	{
-``	}
+	}
 
 	group "match" 
 	"Matches a value against a series of pattern/action pairs. Pattern can be a single element or block. Returns the result of the first matching action, or failure if none match."
@@ -925,7 +925,7 @@ section "Match dialect " "pattern matching and deconstruction" {
 	}
 
 	{
-``	}
+	}
 
 }
 
@@ -947,7 +947,7 @@ section "EYR Dialect " "Stack based evaluator / dialect" {
 	}
 
 	{
-``	}
+	}
 
 	group "rye0" 
 	"Evaluates Rye block as Rye0 dialect."
@@ -963,7 +963,7 @@ section "EYR Dialect " "Stack based evaluator / dialect" {
 	}
 
 	{
-``	}
+	}
 
 	group "rye00" 
 	"Evaluates Rye block as Rye00 dialect (builtins and integers only)."
@@ -979,7 +979,7 @@ section "EYR Dialect " "Stack based evaluator / dialect" {
 	}
 
 	{
-``	}
+	}
 
 	group "eyr\\clear" 
 	"Clears the EYR stack."
@@ -994,7 +994,7 @@ section "EYR Dialect " "Stack based evaluator / dialect" {
 	}
 
 	{
-``	}
+	}
 
 	group "eyr\\full" 
 	"Evaluates Rye block as Eyr (postfix) stack based code."
@@ -1010,7 +1010,7 @@ section "EYR Dialect " "Stack based evaluator / dialect" {
 	}
 
 	{
-``	}
+	}
 
 	group "eyr\\loop" 
 	"Evaluates Rye block in loop as Eyr code (postfix stack based) N times."
@@ -1027,7 +1027,7 @@ section "EYR Dialect " "Stack based evaluator / dialect" {
 	}
 
 	{
-``	}
+	}
 
 	group "to-eyr" 
 	"Evaluates Rye block as Eyr (postfix) stack based code."
@@ -1042,7 +1042,7 @@ section "EYR Dialect " "Stack based evaluator / dialect" {
 	}
 
 	{
-``	}
+	}
 
 }
 
@@ -1063,7 +1063,7 @@ section "Complex numbers " "Functions for working with complex numbers" {
 	}
 
 	{
-``	}
+	}
 
 	group "complex?" 
 	"Checks if a value is a complex number."
@@ -1079,7 +1079,7 @@ section "Complex numbers " "Functions for working with complex numbers" {
 	}
 
 	{
-``	}
+	}
 
 	group "real" 
 	"Returns the real part of a complex number."
@@ -1095,7 +1095,7 @@ section "Complex numbers " "Functions for working with complex numbers" {
 	}
 
 	{
-``	}
+	}
 
 	group "imag" 
 	"Returns the imaginary part of a complex number."
@@ -1111,7 +1111,7 @@ section "Complex numbers " "Functions for working with complex numbers" {
 	}
 
 	{
-``	}
+	}
 
 	group "complex-conj" 
 	"Returns the complex conjugate of a complex number."
@@ -1127,7 +1127,7 @@ section "Complex numbers " "Functions for working with complex numbers" {
 	}
 
 	{
-``	}
+	}
 
 	group "complex-phase" 
 	"Returns the phase (argument) of a complex number."
@@ -1143,7 +1143,7 @@ section "Complex numbers " "Functions for working with complex numbers" {
 	}
 
 	{
-``	}
+	}
 
 }
 

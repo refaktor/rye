@@ -633,17 +633,17 @@ var Builtins_validation = map[string]*env.Builtin{
 	// equal { validate dict { a: 1 } { a: optional 0 b: optional 2 } } dict { a: 1 b: 2 }
 	// equal { validate dict { a: 1 } { a: required integer } } dict { a: 1 }
 	// equal { validate dict { a: "1" } { a: required integer } } dict { a: 1 }
-	// equal { validate dict { a: "1" } { a: required integer } -> "a" |type? } 'integer
+	// equal { validate dict { a: "1" } { a: required integer } |-> "a" |type? } 'integer
 	// equal { validate dict { a: 3.14 } { a: required decimal } } dict { a: 3.14 }
 	// equal { validate dict { a: 3 } { a: required decimal } } dict { a: 3.0 }
 	// equal { validate dict { a: "3.14" } { a: required decimal } } dict { a: 3.14 }
-	// equal { validate dict { a: "3.14" } { a: required decimal } -> "a" |type? } 'decimal
+	// equal { validate dict { a: "3.14" } { a: required decimal } |-> "a" |type? } 'decimal
 	// equal { validate dict { a: "jim" } { a: required string } } dict { a: "jim" }
 	// equal { validate dict { a: "e@ma.il" } { a: required email } } dict { a: "e@ma.il" }
-	// equal { validate dict { a: "e@ma.il" } { a: required email } -> "a" |type? } 'string
+	// equal { validate dict { a: "e@ma.il" } { a: required email } |-> "a" |type? } 'string
 	// equal { validate dict { a: "30.12.2024" } { a: required date } } dict [ "a" date "2024-12-30" ]
 	// equal { validate dict { a: "2024-12-30" } { a: required date } } dict [ "a" date "2024-12-30" ]
-	// equal { validate dict { a: "2024-12-30" } { a: required date } -> "a" |type? } 'date
+	// equal { validate dict { a: "2024-12-30" } { a: required date } |-> "a" |type? } 'date
 	// equal { validate dict { a: 5 } { a: required integer check { < 10 } } } dict [ "a" 5 ]
 	// equal { validate dict { a: 5 } { a: required integer calc { + 10 } } } dict [ "a" 15 ]
 	// equal { validate dict { a: 5 } { b: required } |disarm |type? } 'error
@@ -654,9 +654,9 @@ var Builtins_validation = map[string]*env.Builtin{
 	//
 	// Context validation tests:
 	// equal { ctx: context { a: 1 } validate ctx { a: required } |type? } 'context
-	// equal { ctx: context { a: "123" } validate ctx { a: required integer } -> 'a } 123
-	// equal { ctx: context { a: "123" } validate ctx { a: required integer } -> 'a |type? } 'integer
-	// equal { ctx: context { x: 5 } validate ctx { x: optional 0 y: optional "default" } -> 'y } "default"
+	// equal { ctx: context { a: "123" } validate ctx { a: required integer } |-> 'a } 123
+	// equal { ctx: context { a: "123" } validate ctx { a: required integer } |-> 'a |type? } 'integer
+	// equal { ctx: context { x: 5 } validate ctx { x: optional 0 y: optional "default" } |-> 'y } "default"
 	//
 	// List validation tests:
 	// equal { validate [ 1 2 3 ] { some { integer } } } [ 1 2 3 ]
@@ -704,7 +704,7 @@ var Builtins_validation = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { validate>ctx dict { a: 1 } { a: required } |type? } 'context
-	// equal { validate>ctx dict { a: 1 } { a: optional 0 } -> 'a } 1
+	// equal { validate>ctx dict { a: 1 } { a: optional 0 } |-> 'a } 1
 	// Args:
 	// * data: Dictionary to validate
 	// * rules: Block containing validation rules
