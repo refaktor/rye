@@ -295,8 +295,26 @@ func Rye0_EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, to
 			}
 		}
 
-		// Try to find a generic word
-		if rword, ok := word.(env.Word); ok && leftVal != nil && ps.Ctx.Kind.Index != -1 {
+		// Try to find a generic word.
+		// Handle all word types that may reach EvalWord with their raw type
+		// (Dotwords come in as env.Dotword from EvalExpression_DispatchType).
+		var rword env.Word
+		var ok bool
+		switch w := word.(type) {
+		case env.Word:
+			rword = w
+			ok = true
+		case env.Dotword:
+			rword = w.ToWord()
+			ok = true
+		case env.Opword:
+			rword = w.ToWord()
+			ok = true
+		case env.Pipeword:
+			rword = w.ToWord()
+			ok = true
+		}
+		if ok && leftVal != nil && ps.Ctx.Kind.Index != -1 {
 			object, found = ps.Gen.Get(kind, rword.Index)
 		}
 	}

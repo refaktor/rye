@@ -794,7 +794,27 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 			}
 		}
 		// fmt.Println(kind)
-		rword, ok := word.(env.Word)
+		// Extract the word index regardless of the concrete word type.
+		// Opwords and Pipewords arriving through OptionallyEvalExpressionRight are already
+		// converted via .ToWord(), but Dotwords (and Opwords/Pipewords when they appear as
+		// the first token of an expression in EvalExpression_DispatchType) come in as their
+		// raw types and must also be handled here so that generic method lookup works for them.
+		var rword env.Word
+		var ok bool
+		switch w := word.(type) {
+		case env.Word:
+			rword = w
+			ok = true
+		case env.Dotword:
+			rword = w.ToWord()
+			ok = true
+		case env.Opword:
+			rword = w.ToWord()
+			ok = true
+		case env.Pipeword:
+			rword = w.ToWord()
+			ok = true
+		}
 		if ok && leftVal != nil && ps.Ctx.Kind.Index != -1 { // don't use generic words if context kind is -1 --- TODO temporary solution to isolates, think about it more
 			object, found = ps.Gen.Get(kind, rword.Index)
 		}
@@ -1862,7 +1882,7 @@ func displayBlockWithErrorPosition(es *env.ProgramState, genv *env.Idxs) {
 		if serPos < 0 {
 			serPos = 0
 		}
-		
+
 		// Check if CodeBlock is different from es.Ser
 		isDifferent := err.CodeBlock.Len() != es.Ser.Len() || codeBlockPos != serPos
 		if !isDifferent && err.CodeBlock.Len() > 0 && es.Ser.Len() > 0 {
@@ -1871,7 +1891,7 @@ func displayBlockWithErrorPosition(es *env.ProgramState, genv *env.Idxs) {
 				isDifferent = err.CodeBlock.S[0] != es.Ser.S[0]
 			}
 		}
-		
+
 		if isDifferent {
 			// Show the error's CodeBlock first (this is where the error actually occurred)
 			fmt.Print("\x1b[36mBlock starting at \x1b[34m")
@@ -1882,7 +1902,7 @@ func displayBlockWithErrorPosition(es *env.ProgramState, genv *env.Idxs) {
 			}
 			fmt.Print("\x1b[0m\n")
 			fmt.Print("\x1b[37m  ")
-			
+
 			blockStr := buildBlockStringWithMarker(err.CodeBlock.S, codeBlockPos, genv)
 			fmt.Print(blockStr)
 			fmt.Print("\x1b[0m\n")
