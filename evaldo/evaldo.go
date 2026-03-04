@@ -774,7 +774,13 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 		}
 		if leftVal == nil && !pipeSecond {
 			if !ps.Ser.AtLast() {
-				EvalExpression_DispatchType(ps)
+				// Use EvalExpression_CollectArg (not EvalExpression_DispatchType) so that
+				// opwords/dotwords to the right of the first argument are consumed as part
+				// of that argument — consistent with how locally-bound words collect args.
+				// E.g. "Read %file ++ ".txt"" must evaluate "%file ++ ".txt"" → %file.txt
+				// first, then call Read on that URI. Previously, EvalExpression_DispatchType
+				// only grabbed the bare next atom (%file), giving generic words wrong priority.
+				EvalExpression_CollectArg(ps, true, false)
 				if ps.ReturnFlag || ps.ErrorFlag {
 					return
 				}
@@ -784,7 +790,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 		}
 		if pipeSecond {
 			if !ps.Ser.AtLast() {
-				EvalExpression_DispatchType(ps)
+				EvalExpression_CollectArg(ps, true, false)
 				if ps.ReturnFlag || ps.ErrorFlag {
 					return
 				}

@@ -277,10 +277,13 @@ func Rye0_EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, to
 			kind = leftVal.GetKind()
 		}
 
-		// Evaluate next expression if needed
+		// Evaluate next expression if needed.
+		// Use Rye0_EvalExpression_CollectArg (not just DispatchType) so that opwords/dotwords
+		// to the right of the first argument are consumed as part of that argument expression —
+		// consistent with how locally-bound words collect args (same fix as in evaldo.go).
 		if (leftVal == nil && !pipeSecond) || pipeSecond {
 			if !ps.Ser.AtLast() {
-				Rye0_EvalExpression_DispatchType(ps)
+				Rye0_EvalExpression_CollectArg(ps, true)
 				if ps.ReturnFlag {
 					return ps
 				}
