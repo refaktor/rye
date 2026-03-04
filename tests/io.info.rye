@@ -44,7 +44,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 	group "file-uri//Open\\append" 
 	"Opens a file for appending."
@@ -59,7 +59,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 	group "file-uri//Create" 
 	"Creates a new file."
@@ -74,7 +74,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 	group "file-uri//Ext?" 
 	"Gets the extension of a file."
@@ -90,7 +90,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 	group "file-uri//Name?" 
 	"Gets the filename with extension from a file path."
@@ -104,7 +104,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 	group "file-uri//Stem?" 
 	"Gets the filename without extension from a file path."
@@ -118,7 +118,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 	group "file-uri//Dir?" 
 	"Gets the directory path from a file path."
@@ -132,7 +132,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 	group "file-uri//Split" 
 	"Splits a file path into its components."
@@ -145,7 +145,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 	group "file-uri//Is-absolute" 
 	"Checks if a file path is absolute."
@@ -158,7 +158,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 	group "file-uri//Does-exist" 
 	"Checks if a file exists."
@@ -173,7 +173,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 	group "file-uri//Delete" 
 	"Deletes a file."
@@ -186,7 +186,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 	group "file//Reader" 
 	"Creates a new reader from file object."
@@ -200,7 +200,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 	group "file//Writer" 
 	"Creates a new reader from file object."
@@ -214,7 +214,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 	group "file-uri//Reader" 
 	"Creates a new reader from a file uri/path."
@@ -228,7 +228,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 	group "reader" 
 	"Creates a new reader from a string."
@@ -242,7 +242,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 	group "stdin" 
 	"Gets a reader for standard input."
@@ -255,7 +255,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 	group "stdout" 
 	"Gets a writer for standard output."
@@ -268,7 +268,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 	group "stderr" 
 	"Gets a writer for standard error."
@@ -281,7 +281,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 	group "reader//Read\\string" 
 	"Reads all content from a reader as a string."
@@ -295,7 +295,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 	group "reader//Close" 
 	"Closes a reader if it implements io.Closer."
@@ -308,7 +308,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 	group "reader//Copy" 
 	"Copies all content from a reader to a writer."
@@ -322,7 +322,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 	group "file//Copy" 
 	"Copies content from a file to a writer."
@@ -336,7 +336,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 	group "file//Stat" 
 	"Gets file information (stat) for a file."
@@ -350,7 +350,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 	group "file-info//Size?" 
 	"Gets the size of a file in bytes."
@@ -364,7 +364,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 	group "file//Read" 
 	"Reads the entire content of a file as a string."
@@ -378,7 +378,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 	group "file//Seek\\end" 
 	"Seeks to the end of a file."
@@ -391,7 +391,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 	group "file//Write" 
 	"Writes a string directly to a file object."
@@ -405,7 +405,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 	group "file//Close" 
 	"Closes an open file."
@@ -419,7 +419,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 	group "file-uri//Read" 
 	"Reads the entire content of a file as a string."
@@ -433,7 +433,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 	group "file-uri//Read\\bytes" 
 	"Reads the entire content of a file as bytes."
@@ -447,7 +447,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 	group "file-uri//Read\\lines" 
 	"Reads a file and returns its content as a block of lines."
@@ -461,7 +461,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 	group "file-uri//Write" 
 	"Writes content to a file."
@@ -476,7 +476,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 	group "write\\bytes" 
 	"Writes bytes to a file."
@@ -490,7 +490,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 	group "append\\bytes" 
 	"Appends two byte arrays into one."
@@ -504,7 +504,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 	group "writer//Write" 
 	"Writes a string to a writer."
@@ -518,7 +518,7 @@ section "File Operations " "File system operations and file manipulation" {
 	}
 
 	{
-``	}
+	}
 
 }
 
@@ -534,7 +534,7 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "https-uri//Get" 
 	"Makes a HTTPS GET request and returns the response body as a string."
@@ -547,7 +547,7 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "https-uri//Post" 
 	"Makes a HTTPS POST request and returns the response body as a string."
@@ -562,7 +562,7 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "http-uri//Get" 
 	"Makes a HTTP GET request and returns the response body as a string."
@@ -575,7 +575,7 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "http-uri//Post" 
 	"Makes a HTTP POST request and returns the response body as a string."
@@ -590,7 +590,7 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "https-uri//Request" 
 	"Creates a new HTTPS request object."
@@ -605,7 +605,7 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "https-request//Header!" 
 	"Sets a header on a HTTPS request."
@@ -620,7 +620,7 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "https-request//Basic-auth!" 
 	"Sets Basic Authentication on a HTTPS request."
@@ -635,7 +635,7 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "https-request//Call" 
 	"Executes a HTTPS request and returns the response object. Always returns the response regardless of status code (200, 404, 500, etc.) - use Status? to check the code."
@@ -648,7 +648,7 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "https-response//Reader" 
 	"Gets a reader for the HTTPS response body that can be used with io.Copy."
@@ -661,7 +661,7 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	}
 
 	{
-``	}
+	}
 
 	group "https-response//Read-body" 
 	"Reads the body of a HTTPS response as a string."
@@ -674,7 +674,7 @@ section "HTTPs Operations " "Web requests and HTTP protocol functions" {
 	}
 
 	{
-``	}
+	}
 
 }
 
@@ -691,7 +691,7 @@ section "Email Operations " "Email sending and SMTP communication" {
 	}
 
 	{
-``	}
+	}
 
 }
 
@@ -707,7 +707,7 @@ section "FTP Operations " "File Transfer Protocol operations and connections" {
 	}
 
 	{
-``	}
+	}
 
 	group "ftp-connection//Login" 
 	"Logs in to an FTP server connection."
@@ -722,7 +722,7 @@ section "FTP Operations " "File Transfer Protocol operations and connections" {
 	}
 
 	{
-``	}
+	}
 
 	group "ftp-connection//Retrieve" 
 	"Retrieves a file from an FTP server."
@@ -736,7 +736,7 @@ section "FTP Operations " "File Transfer Protocol operations and connections" {
 	}
 
 	{
-``	}
+	}
 
 }
 
@@ -754,7 +754,7 @@ section "File Monitoring " "File watching and tailing operations" {
 	}
 
 	{
-``	}
+	}
 
 	group "tail-file//Read-line" 
 	"Reads the next line from a tailed file. Blocks until a line is available."
@@ -767,7 +767,7 @@ section "File Monitoring " "File watching and tailing operations" {
 	}
 
 	{
-``	}
+	}
 
 	group "tail-file//Close" 
 	"Closes a tailed file, stopping the monitoring."
@@ -780,7 +780,7 @@ section "File Monitoring " "File watching and tailing operations" {
 	}
 
 	{
-``	}
+	}
 
 }
 
@@ -800,7 +800,7 @@ section "Command Operations " "Running other programs" {
 	}
 
 	{
-``	}
+	}
 
 	group "command//Dir!" 
 	"Change the working directory of a command."
@@ -815,7 +815,7 @@ section "Command Operations " "Running other programs" {
 	}
 
 	{
-``	}
+	}
 
 	group "command//Stdin!" 
 	"Change the standard input of a command."
@@ -829,7 +829,7 @@ section "Command Operations " "Running other programs" {
 	}
 
 	{
-``	}
+	}
 
 	group "command//Stdout!" 
 	"Change the standard output of a command."
@@ -843,7 +843,7 @@ section "Command Operations " "Running other programs" {
 	}
 
 	{
-``	}
+	}
 
 	group "command//Stderr!" 
 	"Change the standard error of a command."
@@ -857,7 +857,7 @@ section "Command Operations " "Running other programs" {
 	}
 
 	{
-``	}
+	}
 
 	group "command//Pipe" 
 	"Pipe the output of the first command to the input of the second command."
@@ -872,7 +872,7 @@ section "Command Operations " "Running other programs" {
 	}
 
 	{
-``	}
+	}
 
 	group "command//Run" 
 	"Start a command and wait for it to finish."
@@ -886,7 +886,7 @@ section "Command Operations " "Running other programs" {
 	}
 
 	{
-``	}
+	}
 
 	group "command//Status" 
 	"Start a command, wait for it to finish, and return its exit status."
@@ -902,7 +902,7 @@ section "Command Operations " "Running other programs" {
 	}
 
 	{
-``	}
+	}
 
 	group "command//Output" 
 	"Start a command, wait for it to finish, and return its standard output"
@@ -915,7 +915,7 @@ section "Command Operations " "Running other programs" {
 	}
 
 	{
-``	}
+	}
 
 	group "command//CombinedOutput" 
 	"Start a command, wait for it to finish, and return its combined standard output and error"
@@ -928,7 +928,7 @@ section "Command Operations " "Running other programs" {
 	}
 
 	{
-``	}
+	}
 
 }
 
@@ -966,7 +966,7 @@ db .Exec { INSERT INTO users ( name , age ) VALUES ( ?name , 42 ) }
 	}
 
 	{
-``	}
+	}
 
 	group "Rye-sqlite//Exec" 
 	"Executes a SQL statement that doesn't return rows."
@@ -981,7 +981,7 @@ db .Exec { INSERT INTO users ( name , age ) VALUES ( ?name , 42 ) }
 	}
 
 	{
-``	}
+	}
 
 	group "Rye-sqlite//Query" 
 	"Executes a SQL query and returns results as a table."
@@ -996,7 +996,7 @@ db .Exec { INSERT INTO users ( name , age ) VALUES ( ?name , 42 ) }
 	}
 
 	{
-``	}
+	}
 
 	group "Rye-sqlite//Show-SQL" 
 	"Generates and returns the SQL string without executing it."
@@ -1011,7 +1011,7 @@ db .Exec { INSERT INTO users ( name , age ) VALUES ( ?name , 42 ) }
 	}
 
 	{
-``	}
+	}
 
 }
 
@@ -1028,7 +1028,7 @@ section "PostgreSQL " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "Rye-psql//Exec" 
 	"Executes a SQL statement that modifies data (INSERT, UPDATE, DELETE)."

@@ -684,7 +684,8 @@ var Builtins_markdown = map[string]*env.Builtin{
 	//
 	// ##### Markdown ##### "Functions for processing and converting Markdown documents"
 	//
-	// Example: open "doc.md" |reader |do-markdown { h1 { .print } paragraph { .print } }
+	// Tests:
+	// ; Tested manually since it requires file input
 	// Args:
 	// * reader: File reader or similar object to read markdown from
 	// * handlers: Block containing section handlers (h1, h2, paragraph, code, etc.)

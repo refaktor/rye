@@ -13,7 +13,7 @@ section "Basic Cryptographic Operations " "Hashing, encoding, and basic cryptogr
 	}
 
 	{
-``	}
+	}
 
 	group "encode-to\\hex" 
 	"Encodes a bytes native value to a hexadecimal string."
@@ -28,7 +28,7 @@ section "Basic Cryptographic Operations " "Hashing, encoding, and basic cryptogr
 	}
 
 	{
-``	}
+	}
 
 	group "Ed25519-pub-key//To-string" 
 	"Converts an Ed25519 public key to its hexadecimal string representation."
@@ -42,7 +42,7 @@ section "Basic Cryptographic Operations " "Hashing, encoding, and basic cryptogr
 	}
 
 	{
-``	}
+	}
 
 	group "Ed25519-priv-key//To-string" 
 	"Converts an Ed25519 private key to its hexadecimal string representation."
@@ -56,7 +56,7 @@ section "Basic Cryptographic Operations " "Hashing, encoding, and basic cryptogr
 	}
 
 	{
-``	}
+	}
 
 	group "ed25519-generate-keys" 
 	"Generates a new Ed25519 key pair and returns them in a block with public key first, then private key."
@@ -75,7 +75,7 @@ section "Basic Cryptographic Operations " "Hashing, encoding, and basic cryptogr
 	}
 
 	{
-``	}
+	}
 
 	group "ed25519-private-key" 
 	"Creates an Ed25519 private key from a hexadecimal string or bytes value."
@@ -91,7 +91,7 @@ section "Basic Cryptographic Operations " "Hashing, encoding, and basic cryptogr
 	}
 
 	{
-``	}
+	}
 
 	group "ed25519-public-key" 
 	"Creates an Ed25519 public key from a hexadecimal string or bytes value."
@@ -107,7 +107,7 @@ section "Basic Cryptographic Operations " "Hashing, encoding, and basic cryptogr
 	}
 
 	{
-``	}
+	}
 
 	group "Ed25519-priv-key//Sign" 
 	"Signs a string message with an Ed25519 private key and returns the signature as bytes."
@@ -129,7 +129,7 @@ section "Basic Cryptographic Operations " "Hashing, encoding, and basic cryptogr
 	}
 
 	{
-``	}
+	}
 
 	group "sha512" 
 	"Calculates the SHA-512 hash of a string and returns the result as a hexadecimal string."
@@ -145,7 +145,7 @@ section "Basic Cryptographic Operations " "Hashing, encoding, and basic cryptogr
 	}
 
 	{
-``	}
+	}
 
 }
 
@@ -163,7 +163,7 @@ section "Age " "Age encryption/decryption and key generation" {
 	}
 
 	{
-``	}
+	}
 
 	group "age-identity" 
 	"Creates an age identity from a string or bytes."
@@ -177,7 +177,7 @@ section "Age " "Age encryption/decryption and key generation" {
 	}
 
 	{
-``	}
+	}
 
 	group "age-recipient" 
 	"Creates an age recipient from a string or bytes."
@@ -191,7 +191,7 @@ section "Age " "Age encryption/decryption and key generation" {
 	}
 
 	{
-``	}
+	}
 
 	group "age-encrypt" 
 	"Encrypts a reader with age for the provided age recipient or string password and returns a reader."
@@ -207,7 +207,7 @@ section "Age " "Age encryption/decryption and key generation" {
 	}
 
 	{
-``	}
+	}
 
 	group "age-decrypt" 
 	"Decrypts a reader with age using the provided age identity or string password and returns a reader with the decrypted content."
@@ -226,7 +226,7 @@ section "Age " "Age encryption/decryption and key generation" {
 	}
 
 	{
-``	}
+	}
 
 	group "pkcs12-to-pem" 
 	"Converts a PKCS#12 (.p12) file bytes to PEM blocks using the provided password. Returns a block of pem-block native values."
@@ -243,7 +243,7 @@ section "Age " "Age encryption/decryption and key generation" {
 	}
 
 	{
-``	}
+	}
 
 	group "pkcs12-decode" 
 	"Decodes a PKCS#12 (.p12) file bytes into private key and certificates using the provided password. Returns a block with [private-key, certificates, ca-certificates]."
@@ -263,7 +263,7 @@ section "Age " "Age encryption/decryption and key generation" {
 	}
 
 	{
-``	}
+	}
 
 }
 
@@ -280,7 +280,7 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	}
 
 	{
-``	}
+	}
 
 	group "pem-block//Headers?" 
 	"Returns the headers of a PEM block as a dictionary."
@@ -294,7 +294,7 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	}
 
 	{
-``	}
+	}
 
 	group "x509-parse-certificate" 
 	"Parses a PEM block into an X.509 certificate native value."
@@ -309,7 +309,7 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	}
 
 	{
-``	}
+	}
 
 	group "x509-certificate//Not-after?" 
 	"Returns the expiration date (NotAfter) of an X.509 certificate as a time value."
@@ -323,7 +323,7 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	}
 
 	{
-``	}
+	}
 
 	group "x509-certificate//Not-before?" 
 	"Returns the start date (NotBefore) of an X.509 certificate as a time value."
@@ -337,7 +337,7 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	}
 
 	{
-``	}
+	}
 
 	group "x509-certificate//Is-expired" 
 	"Checks if an X.509 certificate has expired. Returns 1 if expired, 0 otherwise."
@@ -352,7 +352,7 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	}
 
 	{
-``	}
+	}
 
 	group "generate-self-signed-certificate" 
 	"Generates a self-signed X.509 certificate with a new RSA key pair."
@@ -373,7 +373,7 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	}
 
 	{
-``	}
+	}
 
 	group "encode-to-pem" 
 	"Encodes a certificate and private key as PEM-formatted data."
@@ -394,7 +394,7 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	}
 
 	{
-``	}
+	}
 
 	group "encode-to-p12" 
 	"Encodes a certificate and private key into a PKCS#12 (.p12) file with password protection."
@@ -411,7 +411,7 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	}
 
 	{
-``	}
+	}
 
 	group "x509-certificate//Subject?" 
 	"Returns the subject Distinguished Name (DN) of an X.509 certificate as a string."
@@ -425,7 +425,7 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	}
 
 	{
-``	}
+	}
 
 	group "x509-certificate//Issuer?" 
 	"Returns the issuer Distinguished Name (DN) of an X.509 certificate as a string."
@@ -439,7 +439,7 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	}
 
 	{
-``	}
+	}
 
 	group "x509-certificate//Serial-number?" 
 	"Returns the serial number of an X.509 certificate as a string."
@@ -453,7 +453,7 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	}
 
 	{
-``	}
+	}
 
 	group "x509-certificate//Signature-algorithm?" 
 	"Returns the signature algorithm of an X.509 certificate as a string."
@@ -467,7 +467,7 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	}
 
 	{
-``	}
+	}
 
 	group "x509-certificate//Public-key-algorithm?" 
 	"Returns the public key algorithm of an X.509 certificate as a string."
@@ -481,7 +481,7 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	}
 
 	{
-``	}
+	}
 
 	group "x509-certificate//Key-usage?" 
 	"Returns the key usage flags of an X.509 certificate as a block of strings."
@@ -495,7 +495,7 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	}
 
 	{
-``	}
+	}
 
 	group "x509-certificate//Extended-key-usage?" 
 	"Returns the extended key usage flags of an X.509 certificate as a block of strings."
@@ -509,7 +509,7 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	}
 
 	{
-``	}
+	}
 
 	group "x509-certificate//Dns-names?" 
 	"Returns the DNS names from Subject Alternative Names of an X.509 certificate as a block of strings."
@@ -523,7 +523,7 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	}
 
 	{
-``	}
+	}
 
 	group "x509-certificate//Ip-addresses?" 
 	"Returns the IP addresses from Subject Alternative Names of an X.509 certificate as a block of strings."
@@ -537,7 +537,7 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	}
 
 	{
-``	}
+	}
 
 	group "x509-certificate//Email-addresses?" 
 	"Returns the email addresses from Subject Alternative Names of an X.509 certificate as a block of strings."
@@ -551,7 +551,7 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	}
 
 	{
-``	}
+	}
 
 	group "x509-certificate//To-pem" 
 	"Converts an X.509 certificate to PEM-encoded string format."
@@ -565,7 +565,7 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	}
 
 	{
-``	}
+	}
 
 	group "private-key//Type?" 
 	"Returns the type of a private key as a string."
@@ -579,7 +579,7 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	}
 
 	{
-``	}
+	}
 
 	group "x509-certificate//To-dict" 
 	"Converts an X.509 certificate to a dictionary containing all certificate information for easy display and manipulation."
@@ -594,7 +594,7 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	}
 
 	{
-``	}
+	}
 
 }
 
@@ -610,7 +610,7 @@ section "Bcrypt " "Functions for bcrypt password hashing and token generation" {
 	}
 
 	{
-``	}
+	}
 
 	group "bcrypt-check" 
 	"Compares a bcrypt hash with a plain text password."
@@ -624,7 +624,7 @@ section "Bcrypt " "Functions for bcrypt password hashing and token generation" {
 	}
 
 	{
-``	}
+	}
 
 	group "generate-token" 
 	"Generates a cryptographically secure random token of the specified length in bytes."
@@ -637,7 +637,7 @@ section "Bcrypt " "Functions for bcrypt password hashing and token generation" {
 	}
 
 	{
-``	}
+	}
 
 }
 

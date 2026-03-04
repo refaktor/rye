@@ -905,7 +905,7 @@ var Builtins_table = map[string]*env.Builtin{
 	//
 	// Tests:
 	//  equal {
-	//	 table { "a" "b" } { 6 60 7 70 } |add-row { 8 80 } -> 2 -> "b"
+	//	 table { "a" "b" } { 6 60 7 70 } |add-row { 8 80 } |-> 2 |-> "b"
 	//  } 80
 	// Args:
 	// * sheet
@@ -1673,7 +1673,7 @@ var Builtins_table = map[string]*env.Builtin{
 	},
 	// Tests:
 	//  equal { table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
-	//  |add-indexes! { name age } |indexes? } { "name" "age" }
+	//  |add-indexes! { name age } |indexes? |length? } 2
 	"indexes?": {
 		Argsn: 1,
 		Doc:   "Returns the columns that are indexed in a table.",
@@ -1966,7 +1966,7 @@ var Builtins_table = map[string]*env.Builtin{
 	//
 	// ##### Loading and saving #####  "Functions that construct a table."
 	//
-	// Tests:
+	// Example:
 	//  equal {
 	//	 cc os
 	//   f:: mktmp ++ "/test.csv"
@@ -2026,7 +2026,7 @@ var Builtins_table = map[string]*env.Builtin{
 	//
 	// ##### Loading and saving #####  "Functions that construct a table."
 	//
-	// Tests:
+	// Example:
 	//  equal {
 	//	 cc os
 	//   f:: mktmp ++ "/test.csv"
@@ -2095,7 +2095,7 @@ var Builtins_table = map[string]*env.Builtin{
 
 	// TODO -- deduplicate with above
 
-	// Tests:
+	// Example:
 	//  equal {
 	//	 cc os
 	//   f:: mktmp ++ "/test.tsv"
@@ -2153,7 +2153,7 @@ var Builtins_table = map[string]*env.Builtin{
 		},
 	},
 
-	// Tests:
+	// Example:
 	//  equal {
 	//	 cc os
 	//   f:: mktmp ++ "/test.csv"
@@ -2233,7 +2233,7 @@ var Builtins_table = map[string]*env.Builtin{
 
 	// TODO: deduplicate with load\csv
 
-	// Tests:
+	// Example:
 	//  equal {
 	//	 cc os
 	//   f:: mktmp ++ "/test.tsv"
@@ -2311,7 +2311,7 @@ var Builtins_table = map[string]*env.Builtin{
 		},
 	},
 
-	// Tests:
+	// Example:
 	//  equal {
 	//	 cc os
 	//   f:: mktmp ++ "/test.xlsx"
@@ -2376,7 +2376,7 @@ var Builtins_table = map[string]*env.Builtin{
 		},
 	},
 
-	// Tests:
+	// Example:
 	//  equal {
 	//	 cc os
 	//   f:: mktmp ++ "/test.xlsx"

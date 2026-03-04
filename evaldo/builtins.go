@@ -28,12 +28,16 @@ func ss() {
 
 func MakeError(env1 *env.ProgramState, msg string) *env.Error {
 	env1.FailureFlag = true
-	return env.NewError(msg)
+	err := env.NewError(msg)
+	err.CodeBlock = env1.Ser
+	return err
 }
 
 func MakeBuiltinError(env1 *env.ProgramState, msg string, fn string) *env.Error {
 	env1.FailureFlag = true
-	return env.NewError(msg + " In builtin `" + fn + "`")
+	err := env.NewError(msg + " In builtin `" + fn + "`")
+	err.CodeBlock = env1.Ser
+	return err
 }
 
 // docNameRegex matches a simple name in parentheses at the end of a docstring
@@ -89,18 +93,24 @@ func MakeArgErrorMessage(N int, allowedTypes []env.Type, fn string) string {
 
 func MakeArgError(env1 *env.ProgramState, N int, typ []env.Type, fn string) *env.Error {
 	env1.FailureFlag = true
-	return env.NewError(MakeArgErrorMessage(N, typ, fn))
+	err := env.NewError(MakeArgErrorMessage(N, typ, fn))
+	err.CodeBlock = env1.Ser
+	return err
 }
 
 func MakeNeedsThawedArgError(env1 *env.ProgramState, fn string) *env.Error {
 	env1.FailureFlag = true
-	return env.NewError("builtin `" + fn + "` requires a thawed table as the first argument")
+	err := env.NewError("builtin `" + fn + "` requires a thawed table as the first argument")
+	err.CodeBlock = env1.Ser
+	return err
 }
 
 func MakeNativeArgError(env1 *env.ProgramState, N int, knd []string, fn string) *env.Error {
 	env1.FailureFlag = true
 	kinds := strings.Join(knd, ", ")
-	return env.NewError("Function " + fn + " requires native argument " + strconv.Itoa(N) + " to be of kind	: " + kinds + ".")
+	err := env.NewError("Function " + fn + " requires native argument " + strconv.Itoa(N) + " to be of kind	: " + kinds + ".")
+	err.CodeBlock = env1.Ser
+	return err
 }
 
 func MakeRyeError(env1 *env.ProgramState, val env.Object, er *env.Error) *env.Error {
@@ -1332,13 +1342,13 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { dict { "a" 123 } -> "a" } 123
-	// equal { dict { "name" "John" "age" 30 } -> "name" } "John"
+	// equal { dict { "a" 123 } |-> "a" } 123
+	// equal { dict { "name" "John" "age" 30 } |-> "name" } "John"
 	// equal { dict { } |type? } 'dict
 	// equal { dict { "x" 1 "y" 2 "z" 3 } |length? } 3
 	// error { dict { 123 "value" } } ; integer keys should fail
 	// error { dict { { } "value" } } ; block keys should fail
-	// equal { dict { 'key "value" } -> "key" } "value" ; tagwords as keys
+	// equal { dict { 'key "value" } |-> "key" } "value" ; tagwords as keys
 	// Args:
 	// * block: Block containing alternating keys and values
 	// Returns:
@@ -1371,9 +1381,9 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { dict { "a" 1 "b" 2 } |change "a" 99 -> "a" } 99
-	// equal { dict { "a" 1 "b" 2 } |change "c" 3 -> "c" } 3
-	// equal { d: dict { "x" 10 } , change d "x" 20 -> "x" } 20
+	// equal { dict { "a" 1 "b" 2 } |change "a" 99 |-> "a" } 99
+	// equal { dict { "a" 1 "b" 2 } |change "c" 3 |-> "c" } 3
+	// equal { d: dict { "x" 10 } , change d "x" 20 |-> "x" } 20
 	// Args:
 	// * dict: Dict to update
 	// * key: String key to change
@@ -1413,10 +1423,10 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { list { "a" 123 } -> 0 } "a"
+	// equal { list { "a" 123 } |-> 0 } "a"
 	// equal { list { 1 2 3 } |length? } 3
 	// equal { list { } |length? } 0
-	// equal { list { "hello" "world" } -> 1 } "world"
+	// equal { list { "hello" "world" } |-> 1 } "world"
 	// equal { list { 1 2 3 } |type? } 'list
 	// equal { list { 1 2 3 } |first } 1
 	// equal { list { 1 2 3 } |last } 3

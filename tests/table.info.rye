@@ -13,7 +13,7 @@ section "Constructors " "Functions that construct a table." {
 	}
 
 	{
-``	}
+	}
 
 	group "table\\columns" 
 	"Creats a table by accepting a block of columns"
@@ -44,7 +44,7 @@ section "Constructors " "Functions that construct a table." {
 	}
 
 	{
-``	}
+	}
 
 	group "to-table" 
 	"Creates a table by accepting block or list of dicts"
@@ -59,7 +59,7 @@ section "Constructors " "Functions that construct a table." {
 	}
 
 	{
-``	}
+	}
 
 }
 
@@ -78,7 +78,7 @@ section "Filtering " "Functions that construct a table." {
 	}
 
 	{
-``	}
+	}
 
 	group "where-not-equal" 
 	"Returns table of rows where specific colum is not equal to given value."
@@ -94,7 +94,7 @@ section "Filtering " "Functions that construct a table." {
 	}
 
 	{
-``	}
+	}
 
 	group "where-void" 
 	"Returns table of rows where specific colum is void."
@@ -109,7 +109,7 @@ section "Filtering " "Functions that construct a table." {
 	}
 
 	{
-``	}
+	}
 
 	group "where-match" 
 	"Returns table of rows where a specific colum matches a regex."
@@ -125,7 +125,7 @@ section "Filtering " "Functions that construct a table." {
 	}
 
 	{
-``	}
+	}
 
 	group "where-contains" 
 	"Returns table of rows where specific colum contains a given string value."
@@ -195,7 +195,7 @@ sheet .where-greater 'age 29
 	}
 
 	{
-``	}
+	}
 
 	group "where-between" 
 	"Returns table of rows where specific colum is between given values."
@@ -212,7 +212,7 @@ sheet .where-greater 'age 29
 	}
 
 	{
-``	}
+	}
 
 	group "where-between\\inclusive" 
 	"Returns table of rows where specific colum is between given values (inclusive)."
@@ -229,7 +229,7 @@ sheet .where-greater 'age 29
 	}
 
 	{
-``	}
+	}
 
 	group "where-in" 
 	"Returns table of rows where specific colum value is found in block of values."
@@ -247,7 +247,7 @@ sheet .where-greater 'age 29
 	}
 
 	{
-``	}
+	}
 
 	group "where-not-in" 
 	"Returns table of rows where specific colum value is not found in block of values."
@@ -265,7 +265,7 @@ sheet .where-greater 'age 29
 	}
 
 	{
-``	}
+	}
 
 	group "where" 
 	"Returns table of rows where code block evaluates to true for the column value."
@@ -356,12 +356,12 @@ section "Row level functions " "Functions that construct a table." {
 
 	{
 		equal {
-		table { "a" "b" } { 6 60 7 70 } |add-row { 8 80 } -> 2 -> "b"
+		table { "a" "b" } { 6 60 7 70 } |add-row { 8 80 } |-> 2 |-> "b"
 		} 80
 	}
 
 	{
-``	}
+	}
 
 	group "get-rows" 
 	"Get rows as a native. This value can be used in `add-rows` and `add-rows!`"
@@ -376,7 +376,7 @@ section "Row level functions " "Functions that construct a table." {
 	}
 
 	{
-``	}
+	}
 
 	group "add-rows" 
 	"Add one or more rows to a table"
@@ -397,7 +397,7 @@ section "Row level functions " "Functions that construct a table." {
 	}
 
 	{
-``	}
+	}
 
 	group "add-rows!" 
 	"Add one or more rows to a table ref"
@@ -415,7 +415,7 @@ section "Row level functions " "Functions that construct a table." {
 	}
 
 	{
-``	}
+	}
 
 	group "update-row!" 
 	"Update the row at the given index."
@@ -441,7 +441,7 @@ section "Row level functions " "Functions that construct a table." {
 	}
 
 	{
-``	}
+	}
 
 	group "remove-row!" 
 	"Remove a row from a table by index"
@@ -460,7 +460,7 @@ section "Row level functions " "Functions that construct a table." {
 	}
 
 	{
-``	}
+	}
 
 }
 
@@ -476,7 +476,7 @@ section "Column level functions " "Functions that construct a table." {
 	}
 
 	{
-``	}
+	}
 
 	group "header?" 
 	"Gets the column names (header) as block."
@@ -489,7 +489,7 @@ section "Column level functions " "Functions that construct a table." {
 	}
 
 	{
-``	}
+	}
 
 	group "column?" 
 	"Gets all values of a column as a block."
@@ -502,7 +502,7 @@ section "Column level functions " "Functions that construct a table." {
 	}
 
 	{
-``	}
+	}
 
 	group "drop-column" 
 	"Remove a column from a table. Returns new table"
@@ -515,7 +515,7 @@ section "Column level functions " "Functions that construct a table." {
 	}
 
 	{
-``	}
+	}
 
 	group "rename-column!" 
 	"Remove a column from a table. Returns new table"
@@ -528,7 +528,7 @@ section "Column level functions " "Functions that construct a table." {
 	}
 
 	{
-``	}
+	}
 
 	group "gen-column" 
 	"Adds a new column to table. Changes in-place and returns the new table."
@@ -541,7 +541,7 @@ section "Column level functions " "Functions that construct a table." {
 	}
 
 	{
-``	}
+	}
 
 	group "update-column!" 
 	"Updates all cells in a column by applying a function that receives the cell value and the row."
@@ -558,7 +558,7 @@ section "Column level functions " "Functions that construct a table." {
 	}
 
 	{
-``	}
+	}
 
 	group "add-column" 
 	"Adds a new column to table with the given data. Returns the modified table."
@@ -575,7 +575,7 @@ section "Column level functions " "Functions that construct a table." {
 	}
 
 	{
-``	}
+	}
 
 }
 
@@ -591,7 +591,7 @@ section "Miscelaneous " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "order-by" 
 	"Sorts row by given column, changes table in place."
@@ -604,7 +604,7 @@ section "Miscelaneous " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "add-indexes!" 
 	"Creates an index for all values in the provided columns. Changes in-place and returns the new table."
@@ -617,7 +617,7 @@ section "Miscelaneous " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "indexes?" 
 	"Returns the columns that are indexed in a table."
@@ -626,11 +626,11 @@ section "Miscelaneous " "" {
 
 	{
 		equal { table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
-		|add-indexes! { name age } |indexes? } { "name" "age" }
+		|add-indexes! { name age } |indexes? |length? } 2
 	}
 
 	{
-``	}
+	}
 
 	group "autotype" 
 	"Takes a table and tries to determine and change the types of columns."
@@ -643,7 +643,7 @@ section "Miscelaneous " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "left-join" 
 	"Left joins two tables on the given columns."
@@ -666,7 +666,7 @@ section "Miscelaneous " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "inner-join" 
 	"Inner joins two tables on the given columns."
@@ -689,7 +689,7 @@ section "Miscelaneous " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "group-by" 
 	"Groups a table by the given column(s) and (optional) aggregations."
@@ -712,7 +712,7 @@ section "Miscelaneous " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "A1" 
 	"Accepts a Table and returns the first row first column cell."
@@ -724,7 +724,7 @@ section "Miscelaneous " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "B1" 
 	"Accepts a Table and returns the first row second column cell."
@@ -736,7 +736,7 @@ section "Miscelaneous " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "A2" 
 	"Accepts a Table and returns the second row first column cell."
@@ -748,7 +748,7 @@ section "Miscelaneous " "" {
 	}
 
 	{
-``	}
+	}
 
 	group "B2" 
 	"Accepts a Table and returns the second row second column cell."
@@ -760,7 +760,7 @@ section "Miscelaneous " "" {
 	}
 
 	{
-``	}
+	}
 
 }
 
@@ -773,18 +773,18 @@ section "Loading and saving " "Functions that construct a table." {
 	}
 
 	{
-		equal {
-		cc os
-		f:: mktmp ++ "/test.csv"
-		spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
-		spr1 .Save\csv* f
-		spr2:: Load\csv f |autotype 1.0
-		spr1 = spr2
-		} true
 	}
 
 	{
-``	}
+`equal {
+cc os
+f:: mktmp ++ "/test.csv"
+spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+spr1 .Save\csv* f
+spr2:: Load\csv f |autotype 1.0
+spr1 = spr2
+} true
+`	}
 
 }
 
@@ -797,18 +797,18 @@ section "Loading and saving " "Functions that construct a table." {
 	}
 
 	{
-		equal {
-		cc os
-		f:: mktmp ++ "/test.csv"
-		spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
-		spr1 .Save\csv* f
-		spr2:: Load\csv f |autotype 1.0
-		spr1 = spr2
-		} true
 	}
 
 	{
-``	}
+`equal {
+cc os
+f:: mktmp ++ "/test.csv"
+spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+spr1 .Save\csv* f
+spr2:: Load\csv f |autotype 1.0
+spr1 = spr2
+} true
+`	}
 
 	group "file-uri//Load\\tsv" 
 	"Loads a .csv file to a table datatype."
@@ -817,18 +817,18 @@ section "Loading and saving " "Functions that construct a table." {
 	}
 
 	{
-		equal {
-		cc os
-		f:: mktmp ++ "/test.tsv"
-		spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
-		spr1 .Save\tsv* f
-		spr2:: Load\tsv f |autotype 1.0
-		spr1 = spr2
-		} true
 	}
 
 	{
-``	}
+`equal {
+cc os
+f:: mktmp ++ "/test.tsv"
+spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+spr1 .Save\tsv* f
+spr2:: Load\tsv f |autotype 1.0
+spr1 = spr2
+} true
+`	}
 
 	group "file-uri//Save\\csv" 
 	"Saves a table to a .csv file."
@@ -839,18 +839,18 @@ section "Loading and saving " "Functions that construct a table." {
 	}
 
 	{
-		equal {
-		cc os
-		f:: mktmp ++ "/test.csv"
-		spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
-		f .Save\csv spr1
-		spr2:: Load\csv f |autotype 1.0
-		spr1 = spr2
-		} true
 	}
 
 	{
-``	}
+`equal {
+cc os
+f:: mktmp ++ "/test.csv"
+spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+f .Save\csv spr1
+spr2:: Load\csv f |autotype 1.0
+spr1 = spr2
+} true
+`	}
 
 	group "file-uri//Save\\tsv" 
 	"Saves a table to a .tsv file."
@@ -861,18 +861,18 @@ section "Loading and saving " "Functions that construct a table." {
 	}
 
 	{
-		equal {
-		cc os
-		f:: mktmp ++ "/test.tsv"
-		spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
-		f .Save\tsv spr1
-		spr2:: Load\tsv f |autotype 1.0
-		spr1 = spr2
-		} true
 	}
 
 	{
-``	}
+`equal {
+cc os
+f:: mktmp ++ "/test.tsv"
+spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+f .Save\tsv spr1
+spr2:: Load\tsv f |autotype 1.0
+spr1 = spr2
+} true
+`	}
 
 	group "file-uri//Load\\xlsx" 
 	"Loads the first sheet in an .xlsx file to a Table."
@@ -882,18 +882,18 @@ section "Loading and saving " "Functions that construct a table." {
 	}
 
 	{
-		equal {
-		cc os
-		f:: mktmp ++ "/test.xlsx"
-		spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
-		spr1 .Save\xlsx* f
-		spr2:: Load\xlsx f |autotype 1.0
-		spr1 = spr2
-		} true
 	}
 
 	{
-``	}
+`equal {
+cc os
+f:: mktmp ++ "/test.xlsx"
+spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+spr1 .Save\xlsx* f
+spr2:: Load\xlsx f |autotype 1.0
+spr1 = spr2
+} true
+`	}
 
 	group "file-uri//Save\\xlsx" 
 	"Saves a Table to a .xlsx file."
@@ -904,18 +904,18 @@ section "Loading and saving " "Functions that construct a table." {
 	}
 
 	{
-		equal {
-		cc os
-		f:: mktmp ++ "/test.xlsx"
-		spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
-		f .Save\xlsx spr1
-		spr2:: Load\xlsx f |autotype 1.0
-		spr1 = spr2
-		} true
 	}
 
 	{
-``	}
+`equal {
+cc os
+f:: mktmp ++ "/test.xlsx"
+spr1:: table { "a" "b" "c" } { 1 1.1 "a" 2 2.2 "b" 3 3.3 "c" }
+f .Save\xlsx spr1
+spr2:: Load\xlsx f |autotype 1.0
+spr1 = spr2
+} true
+`	}
 
 	group "persistent-table" 
 	"Creates a persistent table using BadgerDB for storage"
@@ -930,7 +930,7 @@ section "Loading and saving " "Functions that construct a table." {
 	}
 
 	{
-``	}
+	}
 
 	group "close-persistent-table!" 
 	"Closes the BadgerDB connection for a persistent table"
@@ -944,7 +944,7 @@ section "Loading and saving " "Functions that construct a table." {
 	}
 
 	{
-``	}
+	}
 
 }
 

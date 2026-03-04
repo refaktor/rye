@@ -820,11 +820,12 @@ var builtins_printing = map[string]*env.Builtin{
 
 				ser := ps.Ser
 				ps.Ser = bloc.Series
+				ps.BlockFile = bloc.FileName
+				ps.BlockLine = bloc.Line
 				EvalBlock(ps)
-				MaybeDisplayFailureOrError(ps, ps.Idx, "capture-stdout")
 				ps.Ser = ser
 
-				// back to normal state
+				// back to normal state - restore stdout BEFORE displaying errors
 				w.Close()
 				os.Stdout = old // restoring the real stdout
 
@@ -832,6 +833,13 @@ var builtins_printing = map[string]*env.Builtin{
 					return MakeBuiltinError(ps, fmt.Sprintf("Error reading stdout: %v", err), "capture-stdout")
 				}
 				out := <-outC
+
+				// Reset SkipFlag since any previous error display went to the captured stdout
+				// and wasn't visible to the user. We need to display errors to real stdout.
+				ps.SkipFlag = false
+				
+				// Display error after stdout is restored so user can see it
+				MaybeDisplayFailureOrError(ps, ps.Idx, "capture-stdout")
 
 				if ps.ErrorFlag {
 					return ps.Res

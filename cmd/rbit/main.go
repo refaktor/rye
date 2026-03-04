@@ -144,11 +144,15 @@ func outputInfo(sections *[]builtinSection) {
 					fmt.Println("\t\t" + t)
 				}
 				fmt.Println("\t}\n")
-				fmt.Print("\t{\n`")
-				for _, t := range info.examples {
-					fmt.Println(t)
+				if len(info.examples) > 0 {
+					fmt.Print("\t{\n`")
+					for _, t := range info.examples {
+						fmt.Println(t)
+					}
+					fmt.Println("`\t}\n")
+				} else {
+					fmt.Println("\t{\n\t}\n")
 				}
-				fmt.Println("`\t}\n")
 			}
 		}
 		fmt.Println("}\n")

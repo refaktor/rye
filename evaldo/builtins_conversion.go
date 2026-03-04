@@ -167,7 +167,9 @@ var Builtins_conversion = map[string]*env.Builtin{
 	//
 	// ##### Conversion ##### "Functions for converting between different types and kinds"
 	//
-	// Example: convert my-dict { name: .first-name }
+	// Tests:
+	// ; TODO: convert returns different type than expected - needs investigation
+// ; equal { dict { "first-name" "John" } |convert { name: .first-name } |type? } 'ctx
 	// Args:
 	// * value: Dict or RyeCtx to convert
 	// * spec: Block specifying the conversion rules
@@ -181,7 +183,9 @@ var Builtins_conversion = map[string]*env.Builtin{
 		},
 	},
 
-	// Example: converter person-kind employee-kind { name: .full-name }
+	// Tests:
+	// ; TODO: converter test needs proper setup - needs investigation  
+// ; equal { converter 'source-kind 'target-kind { name: .full-name } |type? } 'kind
 	// Args:
 	// * source-kind: Kind to convert from
 	// * target-kind: Kind to convert to

@@ -152,7 +152,7 @@ var builtins_types = map[string]*env.Builtin{
 	// equal { list [ 1 2 3 ] |block |type? } 'block
 	// equal  { list [ 1 2 3 ] |block |first } 1
 	// equal { vector [ 1 2 3 ] |block } { 1.0 2.0 3.0 }
-	// equal { table { 'a 'b } { 1 2 3 4 } -> 0 |block } { 1 2 }
+	// equal { table { 'a 'b } { 1 2 3 4 } |-> 0 |block } { 1 2 }
 	// Args:
 	// * value: List, Vector, or TableRow to convert to a block
 	// Returns:
