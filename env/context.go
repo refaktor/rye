@@ -428,7 +428,11 @@ func (i *RyeCtx) Equal(o Object) bool {
 	if i.Type() != o.Type() {
 		return false
 	}
-	oCtx, ok2 := o.(*RyeCtx); if !ok2 { return false }; oCtx = oCtx
+	oCtx, ok2 := o.(*RyeCtx)
+	if !ok2 {
+		return false
+	}
+	oCtx = oCtx
 	if len(i.state) != len(oCtx.state) {
 		return false
 	}
@@ -535,6 +539,15 @@ func (e *RyeCtx) Set(word int, val Object) Object {
 		e.state[word] = val
 		return val
 	}
+}
+
+// SetVar sets a word in the context, marking it as a variable (mutable with word::).
+// Unlike Set, it allows overwriting existing values.
+// Used when binding function arguments so they can be modified inside the function body.
+func (e *RyeCtx) SetVar(word int, val Object) Object {
+	e.state[word] = val
+	e.varFlags[word] = true
+	return val
 }
 
 func (e *RyeCtx) Unset(word int, idxs *Idxs) Object {

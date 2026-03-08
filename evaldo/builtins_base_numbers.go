@@ -1022,6 +1022,31 @@ var builtins_numbers = map[string]*env.Builtin{
 	},
 
 	// Tests:
+	// equal { 5 != 5 } false
+	// equal { 5 != 4 } true
+	// equal { "abc" != "abc" } false
+	// equal { "abc" != "def" } true
+	// equal { { 1 2 } != { 1 2 } } false
+	// equal { { 1 2 } != { 2 1 } } true
+	// Args:
+	// * value1: First value to compare
+	// * value2: Second value to compare
+	// Returns:
+	// * boolean true if values are not equal, false otherwise
+	"_!=": { // ***
+		Argsn: 2,
+		Doc:   "Compares two values for inequality, returning true if not equal or false if equal.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			if arg0.Equal(arg1) {
+				return *env.NewBoolean(false)
+			} else {
+				return *env.NewBoolean(true)
+			}
+		},
+	},
+
+	// Tests:
 	// equal { 6 > 5 } true
 	// equal { 5 > 5 } false
 	// equal { 4 > 5 } false

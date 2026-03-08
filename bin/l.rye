@@ -122,12 +122,12 @@ print-version: does {
 ; pointing github.com/refaktor/rye to the local RYE_HOME
 ensure-rye-replace: fn { } {
 	rye-home: get-rye-home
-	rye-fyne-home: get-rye-home-fyne |to-string
+	rye-fyne-home: get-rye-home-fyne |string
 	
 	gomod-path: rye-fyne-home ++ "/go.mod"
 	
 	; Read the go.mod file
-	Open to-file gomod-path
+	Open file gomod-path
 	|fix\either
 	{
 		print "❌ Could not open " ++ gomod-path
@@ -172,7 +172,7 @@ load-mod-file: fn { } {
 
 	; Extract modules (first block in file)
 	mod-data
-	|map { .to-string .concat* "b_" }
+	|map { .string .concat* "b_" }
 	|join\with " " :modules
 	
 	; Return modules string
@@ -379,7 +379,7 @@ print-setup: fn { } {
 
 ; Get command and tags from arguments
 first args |fix { "" } :mode
-second args |fix { "" } |to-string :tags
+second args |fix { "" } |string :tags
 
 ; Process commands
 switch mode {
