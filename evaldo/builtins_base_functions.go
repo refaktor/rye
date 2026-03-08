@@ -376,6 +376,42 @@ var builtins_functions = map[string]*env.Builtin{
 	},
 
 	// Tests:
+	// equal { var 'x 0 , inc: modder { } { x:: x + 1 } , inc , inc , x } 2
+	// equal { var 'n 10 , add: modder { v } { n:: n + v } , add 5 , n } 15
+	// Args:
+	// * spec: Block containing parameter specifications
+	// * body: Block containing the function body code
+	// Returns:
+	// * function object that executes directly in the current context (captured at creation), with arguments as variables
+	"modder": {
+		Argsn: 2,
+		Doc:   "Creates a function that executes directly in the current context (like fn\\inside with current), allowing arguments and context words to be modified with word::.",
+		Pure:  false,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			ctx := ps.Ctx
+			ctx.IsClosure = true // Mark context as closure to prevent pooling
+
+			switch args := arg0.(type) {
+			case env.Block:
+				ok, doc := util.ProcessFunctionSpec(args)
+				if !ok {
+					return MakeBuiltinError(ps, doc, "modder")
+				}
+				switch body := arg1.(type) {
+				case env.Block:
+					return *env.NewFunctionC(args, body, ctx, false, true, doc)
+				default:
+					ps.ErrorFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "modder")
+				}
+			default:
+				ps.ErrorFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "modder")
+			}
+		},
+	},
+
+	// Tests:
 	// equal { y: 5 , f: closure { x } { x + y } , f 3 } 8
 	// equal { mk-cntr: does { var 'c 0 , closure { } { inc! 'c } } cnt: mk-cntr , cnt + cnt + cnt } 6
 	// Args:

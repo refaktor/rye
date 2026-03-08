@@ -1135,7 +1135,7 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 	if arg0 != nil {
 		if fn.Spec.Series.Len() > 0 {
 			index := fn.Spec.Series.Get(ii).(env.Word).Index
-			fnCtx.Set(index, arg0)
+			fnCtx.SetVar(index, arg0)
 			ps.Args[ii] = index
 			ii = 1
 			if !toLeft {
@@ -1150,7 +1150,7 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 	if arg0_ != nil && pipeSecondFlag && fn.Argsn > 1 && ii == 1 {
 		if fn.Spec.Series.Len() > 1 {
 			index := fn.Spec.Series.Get(1).(env.Word).Index
-			fnCtx.Set(index, arg0_)
+			fnCtx.SetVar(index, arg0_)
 			ps.Args[1] = index
 			ii = 2 // Skip collecting the second argument from code stream
 		}
@@ -1170,7 +1170,7 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 		}
 		// The createcurriedcaller is now created explicitly with partial builtin function
 		index := fn.Spec.Series.Get(i).(env.Word).Index
-		fnCtx.Set(index, ps.Res)
+		fnCtx.SetVar(index, ps.Res)
 		if i == 0 {
 			arg0 = ps.Res
 		}
@@ -1256,10 +1256,10 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 	}
 	i := 0
 	index := fn.Spec.Series.Get(i).(env.Word).Index
-	fnCtx.Set(index, arg0)
+	fnCtx.SetVar(index, arg0)
 	i = 1
 	index = fn.Spec.Series.Get(i).(env.Word).Index
-	fnCtx.Set(index, arg1)
+	fnCtx.SetVar(index, arg1)
 	// TRY
 	psX := env.NewProgramState(fn.Body.Series, ps.Idx)
 	psX.Ctx = fnCtx
@@ -1307,16 +1307,16 @@ func CallFunctionArgs4(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 	}
 	i := 0
 	index := fn.Spec.Series.Get(i).(env.Word).Index
-	fnCtx.Set(index, arg0)
+	fnCtx.SetVar(index, arg0)
 	i = 1
 	index = fn.Spec.Series.Get(i).(env.Word).Index
-	fnCtx.Set(index, arg1)
+	fnCtx.SetVar(index, arg1)
 	i = 2
 	index = fn.Spec.Series.Get(i).(env.Word).Index
-	fnCtx.Set(index, arg2)
+	fnCtx.SetVar(index, arg2)
 	i = 3
 	index = fn.Spec.Series.Get(i).(env.Word).Index
-	fnCtx.Set(index, arg3)
+	fnCtx.SetVar(index, arg3)
 	// TRY
 	psX := env.NewProgramState(fn.Body.Series, ps.Idx)
 	psX.Ctx = fnCtx
@@ -1362,7 +1362,7 @@ func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, a
 	for i, argWord := range fn.Spec.Series.S {
 		index := argWord.(env.Word).Index
 		arg := args[i]
-		fnCtx.Set(index, arg)
+		fnCtx.SetVar(index, arg)
 	}
 	/* for i, arg := range args {
 		index := fn.Spec.Series.Get(i).(env.Word).Index
