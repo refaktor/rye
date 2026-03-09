@@ -588,11 +588,12 @@ var builtins_functions = map[string]*env.Builtin{
 
 					// Use DetermineContext to properly set up the context
 					// This handles fn.InCtx (fn\in) and fn.Ctx (fn\par) correctly
-					ctx := DetermineContext(fn, ps, nil)
+					ctx, fromPool := DetermineContext(fn, ps, nil)
 					if ctx == nil {
 						ps.Ser = ser
 						return ps.Res
 					}
+					defer returnContextToPool(ctx, fromPool)
 
 					// Bind arguments to parameters
 					for i := 0; i < fn.Argsn; i++ {

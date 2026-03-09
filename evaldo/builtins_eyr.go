@@ -116,7 +116,7 @@ func Eyr_CallBuiltin(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toL
 
 // This is separate from CallFuncitonArgsN so it can manage pulling args directly off of the eyr stack
 func Eyr_CallFunction(fn env.Function, es *env.ProgramState, leftVal env.Object, toLeft bool, session *env.RyeCtx) *env.ProgramState {
-	var fnCtx = DetermineContext(fn, es, session)
+	fnCtx, fromPool := DetermineContext(fn, es, session)
 	if tryHandleFailure(es) {
 		return es
 	}
@@ -170,6 +170,7 @@ func Eyr_CallFunction(fn env.Function, es *env.ProgramState, leftVal env.Object,
 	es.Ser = tempSer
 	es.Ctx = tempCtx
 	es.ReturnFlag = false
+	returnContextToPool(fnCtx, fromPool)
 	return es
 }
 

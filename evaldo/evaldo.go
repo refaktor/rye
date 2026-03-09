@@ -298,7 +298,7 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 		if ps.AllowMod {
 			ok := ps.Ctx.Mod(idx, ps.Res)
 			if !ok {
-				ps.Res = env.NewError("Cannot modify constant " + ps.Idx.GetWord(idx) + ", use 'var' to declare it as a variable")
+				ps.Res = env.NewError("Cannot modify constant `" + ps.Idx.GetWord(idx) + "`, use `var` to declare it as a variable")
 				ps.FailureFlag = true
 				ps.ErrorFlag = true
 				return
@@ -306,7 +306,7 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 		} else {
 			ok := ps.Ctx.SetNew(idx, ps.Res, ps.Idx)
 			if !ok {
-				ps.Res = env.NewError("Can't set already set word " + ps.Idx.GetWord(idx) + ", try using modword (1)")
+				ps.Res = env.NewError("Can't set already set word `" + ps.Idx.GetWord(idx) + "`, try using modword")
 				ps.FailureFlag = true
 				ps.ErrorFlag = true
 				return
@@ -335,12 +335,12 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 				}
 			}
 		case env.ModErrConstant:
-			ps.Res = env.NewError("Cannot modify constant '" + ps.Idx.GetWord(idx) + "'. Use 'var' to declare it as a variable.")
+			ps.Res = env.NewError("Cannot modify constant `" + ps.Idx.GetWord(idx) + "`. Use `var` to declare it as a variable.")
 			ps.FailureFlag = true
 			ps.ErrorFlag = true
 			return
 		case env.ModErrTypeMismatch:
-			ps.Res = env.NewError("Cannot change type of variable '" + ps.Idx.GetWord(idx) + "' from " + ps.Idx.GetWord(int(existingType)) + " to " + ps.Idx.GetWord(int(ps.Res.Type())) + ".")
+			ps.Res = env.NewError("Cannot change type of variable `" + ps.Idx.GetWord(idx) + "` from `" + ps.Idx.GetWord(int(existingType)) + "` to `" + ps.Idx.GetWord(int(ps.Res.Type())) + "`.")
 			ps.FailureFlag = true
 			ps.ErrorFlag = true
 			return
@@ -586,36 +586,34 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 		return found, object, nil
 	case env.CPath:
 		currCtx := ps.Ctx
-		i := 1
-	gogo1:
-		currWord := word.GetWordNumber(i)
-		// Check if word is "_@" (parent context navigation)
-		wordStr := ps.Idx.GetWord(currWord.Index)
-		if wordStr == "_@" {
-			// Go to parent context
-			if currCtx.Parent != nil {
-				currCtx = currCtx.Parent
-				i += 1
-				if word.Cnt > i-1 {
-					goto gogo1
+		for i := 1; ; i++ {
+			currWord := word.GetWordNumber(i)
+			// Check if word is "_@" (parent context navigation)
+			wordStr := ps.Idx.GetWord(currWord.Index)
+			if wordStr == "_@" {
+				// Go to parent context
+				if currCtx.Parent != nil {
+					currCtx = currCtx.Parent
+					if word.Cnt > i {
+						continue
+					}
+					// If no more path parts, return the parent context itself
+					return true, currCtx, currCtx
 				}
-				// If no more path parts, return the parent context itself
-				return true, currCtx, currCtx
+				return false, nil, currCtx
 			}
-			return false, nil, currCtx
-		}
-		object, found := currCtx.Get(currWord.Index)
-		if found && word.Cnt > i {
-			switch swObj := object.(type) {
-			case *env.RyeCtx:
-				currCtx = swObj
-				i += 1
-				goto gogo1
-			case env.Dict:
-				return found, *env.NewString("No word value!!"), currCtx
+			object, found := currCtx.Get(currWord.Index)
+			if found && word.Cnt > i {
+				switch swObj := object.(type) {
+				case *env.RyeCtx:
+					currCtx = swObj
+					continue
+				case env.Dict:
+					return found, *env.NewString("No word value!!"), currCtx
+				}
 			}
+			return found, object, currCtx
 		}
-		return found, object, currCtx
 	default:
 		return false, nil, nil
 	}
@@ -654,85 +652,87 @@ func findWordValueWithFailureInfo(ps *env.ProgramState, word1 env.Object) (bool,
 		currCtx := ps.Ctx
 		var contextPath strings.Builder
 		i := 1
-	gogo1:
-		currWord := word.GetWordNumber(i)
-		wordName := ps.Idx.GetWord(currWord.Index)
-		if i == 1 {
-			contextPath.WriteString(wordName)
-		} else {
-			contextPath.WriteString("/" + wordName)
-		}
-
-		// Check if word is "_@" (parent context navigation)
-		if wordName == "_@" {
-			// Go to parent context
-			if currCtx.Parent != nil {
-				currCtx = currCtx.Parent
-				i += 1
-				if word.Cnt > i-1 {
-					goto gogo1
-				}
-				// If no more path parts, return the parent context itself
-				return true, currCtx, currCtx, ""
-			}
-			return false, nil, currCtx, "@ (no parent context)"
-		}
-
-		object, found := currCtx.Get(currWord.Index)
-		if !found {
-			// Word not found - report which word and in which context
+	pathLoop:
+		for {
+			currWord := word.GetWordNumber(i)
+			wordName := ps.Idx.GetWord(currWord.Index)
 			if i == 1 {
-				return false, object, currCtx, wordName
+				contextPath.WriteString(wordName)
 			} else {
-				// Build context name from previous parts of the path
-				var ctxName strings.Builder
-				for j := 1; j < i; j++ {
-					if j > 1 {
-						ctxName.WriteString("/")
-					}
-					ctxName.WriteString(ps.Idx.GetWord(word.GetWordNumber(j).Index))
-				}
-				return false, object, currCtx, wordName + " (in context " + ctxName.String() + ")"
+				contextPath.WriteString("/" + wordName)
 			}
-		}
-		if found && word.Cnt > i {
-			switch swObj := object.(type) {
-			case *env.RyeCtx:
-				currCtx = swObj
-				i += 1
-				goto gogo1
-			case env.Dict:
-				// Handle dict path traversal
-				currDict := swObj
-				for word.Cnt > i {
+
+			// Check if word is "_@" (parent context navigation)
+			if wordName == "_@" {
+				// Go to parent context
+				if currCtx.Parent != nil {
+					currCtx = currCtx.Parent
 					i += 1
-					keyWord := word.GetWordNumber(i)
-					keyStr := ps.Idx.GetWord(keyWord.Index)
-					// Look up in dict
-					if val, ok := currDict.Data[keyStr]; ok {
-						object = env.ToRyeValue(val)
-						// If more path segments, check what we got
-						if word.Cnt > i {
-							switch nextObj := object.(type) {
-							case env.Dict:
-								currDict = nextObj
-								continue
-							case *env.RyeCtx:
-								currCtx = nextObj
-								i += 1
-								goto gogo1
-							default:
-								return false, nil, currCtx, keyStr + " is not a dict or context"
-							}
-						}
-					} else {
-						return false, nil, currCtx, keyStr + " not found in dict"
+					if word.Cnt > i-1 {
+						continue
 					}
+					// If no more path parts, return the parent context itself
+					return true, currCtx, currCtx, ""
 				}
-				return true, object, currCtx, ""
+				return false, nil, currCtx, "@ (no parent context)"
 			}
+
+			object, found := currCtx.Get(currWord.Index)
+			if !found {
+				// Word not found - report which word and in which context
+				if i == 1 {
+					return false, object, currCtx, wordName
+				} else {
+					// Build context name from previous parts of the path
+					var ctxName strings.Builder
+					for j := 1; j < i; j++ {
+						if j > 1 {
+							ctxName.WriteString("/")
+						}
+						ctxName.WriteString(ps.Idx.GetWord(word.GetWordNumber(j).Index))
+					}
+					return false, object, currCtx, wordName + " (in context " + ctxName.String() + ")"
+				}
+			}
+			if found && word.Cnt > i {
+				switch swObj := object.(type) {
+				case *env.RyeCtx:
+					currCtx = swObj
+					i += 1
+					continue
+				case env.Dict:
+					// Handle dict path traversal
+					currDict := swObj
+					for word.Cnt > i {
+						i += 1
+						keyWord := word.GetWordNumber(i)
+						keyStr := ps.Idx.GetWord(keyWord.Index)
+						// Look up in dict
+						if val, ok := currDict.Data[keyStr]; ok {
+							object = env.ToRyeValue(val)
+							// If more path segments, check what we got
+							if word.Cnt > i {
+								switch nextObj := object.(type) {
+								case env.Dict:
+									currDict = nextObj
+									continue
+								case *env.RyeCtx:
+									currCtx = nextObj
+									i += 1
+									continue pathLoop
+								default:
+									return false, nil, currCtx, keyStr + " is not a dict or context"
+								}
+							}
+						} else {
+							return false, nil, currCtx, keyStr + " not found in dict"
+						}
+					}
+					return true, object, currCtx, ""
+				}
+			}
+			return found, object, currCtx, ""
 		}
-		return found, object, currCtx, ""
 	default:
 		return false, nil, nil, "unknown word type"
 	}
@@ -927,14 +927,14 @@ func EvalSetword(ps *env.ProgramState, word env.Setword) {
 	if ps.AllowMod {
 		ok := ps.Ctx.Mod(idx, ps.Res)
 		if !ok {
-			ps.Res = env.NewError("Cannot modify constant '" + ps.Idx.GetWord(idx) + "'. Use 'var' to declare it as a variable, or use modword (::) if it's already a variable.")
+			ps.Res = env.NewError("Cannot modify constant `" + ps.Idx.GetWord(idx) + "`. Use `var` to declare it as a variable, or use modword `::` if it's already a variable.")
 			ps.FailureFlag = true
 			ps.ErrorFlag = true
 		}
 	} else {
 		ok := ps.Ctx.SetNew(idx, ps.Res, ps.Idx)
 		if !ok {
-			ps.Res = env.NewError("Cannot set word '" + ps.Idx.GetWord(idx) + "' because it's already set. Use modword (::) to modify an existing word, or use a different name.")
+			ps.Res = env.NewError("Cannot set word `" + ps.Idx.GetWord(idx) + "` because it's already set. Use modword `::` to modify an existing word, or use a different name.")
 			ps.FailureFlag = true
 			ps.ErrorFlag = true
 		}
@@ -967,11 +967,11 @@ func EvalModword(ps *env.ProgramState, word env.Modword) {
 			}
 		}
 	case env.ModErrConstant:
-		ps.Res = env.NewError("Cannot modify constant '" + ps.Idx.GetWord(idx) + "'. Use 'var' to declare it as a variable before modifying it.")
+		ps.Res = env.NewError("Cannot modify constant `" + ps.Idx.GetWord(idx) + "`. Use `var` to declare it as a variable before modifying it.")
 		ps.FailureFlag = true
 		ps.ErrorFlag = true
 	case env.ModErrTypeMismatch:
-		ps.Res = env.NewError("Cannot change type of variable '" + ps.Idx.GetWord(idx) + "' from " + ps.Idx.GetWord(int(existingType)) + " to " + ps.Idx.GetWord(int(ps.Res.Type())) + ".")
+		ps.Res = env.NewError("Cannot change type of variable `" + ps.Idx.GetWord(idx) + "` from `" + ps.Idx.GetWord(int(existingType)) + "` to `" + ps.Idx.GetWord(int(ps.Res.Type())) + "`.")
 		ps.FailureFlag = true
 		ps.ErrorFlag = true
 	}
@@ -984,12 +984,8 @@ func EvalModword(ps *env.ProgramState, word env.Modword) {
 // CallFunctionWithArgs is a consolidated function caller that dispatches based on argument count.
 // Called from: Various builtins that need to call user functions
 // Purpose: Dispatcher that routes to specialized function callers based on number of arguments (0,1,2,4,N)
+// Note: Context creation is handled by the subfunctions, not here
 func CallFunctionWithArgs(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, args ...env.Object) {
-	ctx = DetermineContext(fn, ps, ctx)
-	if ctx == nil {
-		return
-	}
-
 	switch len(args) {
 	case 0:
 		CallFunction_CollectArgs(fn, ps, nil, false, ctx)
@@ -1250,7 +1246,7 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 // Called from: CallFunctionWithArgs, builtins needing to call 2-arg functions
 // Purpose: Optimized path for 2-argument function calls from builtins
 func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, arg1 env.Object, ctx *env.RyeCtx) {
-	fnCtx := DetermineContext(fn, ps, ctx)
+	fnCtx, fromPool := DetermineContext(fn, ps, ctx)
 	if ps.ReturnFlag || ps.ErrorFlag {
 		return
 	}
@@ -1276,6 +1272,7 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 		if len(psX.DeferBlocks) > 0 {
 			ExecuteDeferredBlocks(psX)
 		}
+		returnContextToPool(fnCtx, fromPool)
 	}()
 
 	psX.Ser.SetPos(0)
@@ -1301,7 +1298,7 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 // Called from: CallFunctionWithArgs, builtins needing to call 4-arg functions
 // Purpose: Optimized path for 4-argument function calls from builtins
 func CallFunctionArgs4(fn env.Function, ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, ctx *env.RyeCtx) {
-	fnCtx := DetermineContext(fn, ps, ctx)
+	fnCtx, fromPool := DetermineContext(fn, ps, ctx)
 	if ps.ReturnFlag || ps.ErrorFlag {
 		return
 	}
@@ -1329,6 +1326,7 @@ func CallFunctionArgs4(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 		if len(psX.DeferBlocks) > 0 {
 			ExecuteDeferredBlocks(psX)
 		}
+		returnContextToPool(fnCtx, fromPool)
 	}()
 
 	EvalBlockInj(psX, arg0, true)
@@ -1354,7 +1352,7 @@ func CallFunctionArgs4(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, args ...env.Object) {
 	// fmt.Println(6)
 	// ctx = nil
-	var fnCtx = DetermineContext(fn, ps, ctx)
+	fnCtx, fromPool := DetermineContext(fn, ps, ctx)
 	if ps.ReturnFlag || ps.ErrorFlag {
 		return
 	}
@@ -1381,6 +1379,7 @@ func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, a
 		if len(psX.DeferBlocks) > 0 {
 			ExecuteDeferredBlocks(psX)
 		}
+		returnContextToPool(fnCtx, fromPool)
 	}()
 
 	if len(args) > 0 {
@@ -1405,52 +1404,77 @@ func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, a
 }
 
 // DetermineContext determines the appropriate context for a function call.
-// Called from: CallFunctionWithArgs, CallFunctionArgsN
+// Called from: CallFunctionWithArgs, CallFunctionArgsN, CallFunctionArgs2, CallFunctionArgs4
 // Purpose: Sets up function execution context based on pure/impure, defined context, and parent context
-func DetermineContext(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx) *env.RyeCtx {
-	// fmt.Println(55)
+// Returns: The context to use and a boolean indicating if it was obtained from the pool (and can be returned)
+func DetermineContext(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx) (*env.RyeCtx, bool) {
 	var fnCtx *env.RyeCtx
-	env0 := ps.Ctx  // store reference to current env in local
+	fromPool := false
+	env0 := ps.Ctx // store reference to current env in local
 	if ctx != nil { // called via contextpath and this is the context
-		// fmt.Println("DIREXT CTX 0")
 		if fn.Pure {
-			fnCtx = env.NewEnv(ps.PCtx)
+			fnCtx = envPool.Get().(*env.RyeCtx)
+			fnCtx.Clear()
+			fnCtx.Parent = ps.PCtx
+			fromPool = true
 		} else {
 			if fn.Ctx != nil { // if context was defined at definition time, pass it as parent.
-				// Prevent circular parent reference
-				if fn.Ctx != ctx {
-					fn.Ctx.Parent = ctx
+				if fn.InCtx {
+					fnCtx = fn.Ctx
+					// fromPool stays false - don't return to pool
+				} else {
+					// Prevent circular parent reference
+					if fn.Ctx != ctx {
+						fn.Ctx.Parent = ctx
+					}
+					fnCtx = envPool.Get().(*env.RyeCtx)
+					fnCtx.Clear()
+					fnCtx.Parent = fn.Ctx
+					fromPool = true
 				}
-				fnCtx = env.NewEnv(fn.Ctx)
 			} else {
-				fnCtx = env.NewEnv(ctx)
+				fnCtx = envPool.Get().(*env.RyeCtx)
+				fnCtx.Clear()
+				fnCtx.Parent = ctx
+				fromPool = true
 			}
 		}
 	} else {
-		// fmt.Println("DIREXT CTX 1")
 		if fn.Pure {
-			// fmt.Println("DIREXT CTX 2")
-			fnCtx = env.NewEnv(ps.PCtx)
+			fnCtx = envPool.Get().(*env.RyeCtx)
+			fnCtx.Clear()
+			fnCtx.Parent = ps.PCtx
+			fromPool = true
 		} else {
-			// fmt.Println("DIREXT CTX 3")
-
 			if fn.Ctx != nil { // if context was defined at definition time, pass it as parent.
-				// Q: Would we want to pass it directly at any point?
-				//    Maybe to remove need of creating new contexts, for reuse, of to be able to modify it?
 				if fn.InCtx {
-					// fmt.Println("DIREXT CTX 10")
+					// fn\inside: use fn.Ctx directly, don't create child context
 					fnCtx = fn.Ctx
+					// fromPool stays false - don't return to pool
 				} else {
-					// fn.Ctx.Parent = ctx // 20250225 ... trying to make buttons example work
-					fnCtx = env.NewEnv(fn.Ctx)
+					fnCtx = envPool.Get().(*env.RyeCtx)
+					fnCtx.Clear()
+					fnCtx.Parent = fn.Ctx
+					fromPool = true
 				}
-				// fnCtx = env.NewEnv(fn.Ctx)
 			} else {
-				fnCtx = env.NewEnv(env0)
+				fnCtx = envPool.Get().(*env.RyeCtx)
+				fnCtx.Clear()
+				fnCtx.Parent = env0
+				fromPool = true
 			}
 		}
 	}
-	return fnCtx
+	return fnCtx, fromPool
+}
+
+// returnContextToPool returns a context to the pool if it's safe to do so.
+// Called from: CallFunctionArgs2, CallFunctionArgs4, CallFunctionArgsN
+// Purpose: Centralizes the logic for returning contexts to the pool
+func returnContextToPool(fnCtx *env.RyeCtx, fromPool bool) {
+	if fromPool && !fnCtx.IsClosure {
+		envPool.Put(fnCtx)
+	}
 }
 
 // CallCurriedCallerArgsN calls a curried caller with N provided arguments (not collected from code stream).
