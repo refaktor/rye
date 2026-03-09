@@ -1,0 +1,154 @@
+; Parser tests for error detection
+; These verify that the parser correctly identifies and reports syntax errors
+
+print "## Error Detection Tests"
+
+; ============================================
+; Unclosed blocks should error
+; ============================================
+
+assert\display "unclosed block error" {
+	try { do { load "{ 1 2 3" } } |type?
+} 'error
+
+assert\display "unclosed bblock error" {
+	try { do { load "[ 1 2 3" } } |type?
+} 'error
+
+assert\display "unclosed group error" {
+	try { do { load "( 1 + 2" } } |type?
+} 'error
+
+assert\display "unclosed string error" {
+	try { do { load `"hello` } } |type?
+} 'error
+
+; ============================================
+; Mismatched delimiters
+; ============================================
+
+assert\display "mismatched { ]" {
+	try { do { load "{ 1 2 ]" } } |type?
+} 'error
+
+assert\display "mismatched [ }" {
+	try { do { load "[ 1 2 }" } } |type?
+} 'error
+
+assert\display "mismatched ( }" {
+	try { do { load "( 1 + 2 }" } } |type?
+} 'error
+
+; ============================================
+; Spacing errors (should be detected)
+; ============================================
+
+; Note: These test if the parser catches missing spacing
+; The parser should error on these malformed tokens
+
+assert\display "number without space before block" {
+	try { do { load "123{ }" } } |type?
+} 'error
+
+assert\display "string without space before block" {
+	try { do { load `"hello"{ }` } } |type?
+} 'error
+
+; ============================================
+; Valid edge cases that should NOT error
+; ============================================
+
+assert\display "negative number is valid" {
+	try { load "-42" } |type?
+} 'block
+
+assert\display "decimal is valid" {
+	try { load "3.14" } |type?
+} 'block
+
+assert\display "dotword is valid" {
+	try { load ".upper" } |type?
+} 'block
+
+assert\display "pipeword is valid" {
+	try { load "|print" } |type?
+} 'block
+
+assert\display "cpath is valid" {
+	try { load "ctx/value" } |type?
+} 'block
+
+assert\display "URI is valid" {
+	try { load "http://example.com" } |type?
+} 'block
+
+assert\display "email is valid" {
+	try { load "user@example.com" } |type?
+} 'block
+
+assert\display "file path is valid" {
+	try { load "%file.txt" } |type?
+} 'block
+
+; ============================================
+; Nested error detection
+; ============================================
+
+assert\display "error in nested block" {
+	try { do { load "{ { { 1 2" } } |type?
+} 'error
+
+assert\display "error message contains line info" {
+	try { do { load "{ 1 2 3" } } |message? |contains "line"
+} true
+
+; ============================================
+; Error message content checks
+; ============================================
+
+assert\display "missing space after number - error message mentions Missing space" {
+	try { do { load "123{}" } } |message? |contains "Missing space"
+} true
+
+assert\display "missing space after string - produces error" {
+	try { do { load `"hello"{}` } } |type?
+} 'error
+
+assert\display "missing space after block delimiter - produces error" {
+	try { do { load "{ 1}2 }" } } |type?
+} 'error
+
+; ============================================
+; Nested block errors
+; ============================================
+
+assert\display "double-nested unclosed block errors" {
+	try { do { load "{ { { 1 }" } } |type?
+} 'error
+
+assert\display "unclosed group errors" {
+	try { do { load "( 1 + 2" } } |type?
+} 'error
+
+; ============================================
+; Wrong closing delimiters
+; ============================================
+
+assert\display "block closed with ] errors" {
+	try { do { load "{ 1 2 ]" } } |type?
+} 'error
+
+assert\display "bblock closed with } errors" {
+	try { do { load "[ 1 2 }" } } |type?
+} 'error
+
+assert\display "group closed with } errors" {
+	try { do { load "( 1 + 2 }" } } |type?
+} 'error
+
+; Note: <> is actually parsed as the not-equal operator opword (like !=)
+; so "{ <> }" is valid — it parses to a block with one opword.
+; Empty x-word syntax error only occurs for truly empty <> that would break
+; the xword reading, but the lexer routes it to readOpWord first.
+
+print ""

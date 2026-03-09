@@ -1,0 +1,38 @@
+; Parser tests for spacing requirements
+print "## Spacing Requirements"
+
+; These should all parse correctly (proper spacing)
+assert\display "operator with spaces" {
+	type? first { + }
+} 'opword
+
+assert\display "number followed by space" {
+	length? { 123 456 }
+} 2
+
+assert\display "string followed by space" {
+	length? { "a" "b" }
+} 2
+
+assert\display "block delimiters with spaces" {
+	length? { { } { } }
+} 2
+
+; Test that proper spacing works in expressions
+assert\display "expression with proper spacing" {
+	1 + 2
+} 3
+
+assert\display "multiple operators" {
+	1 + 2 * 3
+} 9
+
+assert\display "method chain with spacing" {
+	"hello" .upper
+} "HELLO"
+
+assert\display "pipe with spacing" {
+	5 |+ 3
+} 8
+
+print ""

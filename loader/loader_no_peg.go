@@ -1017,12 +1017,20 @@ func (l *Lexer) readOpWord() NoPEGToken {
 	l.readChar() // Skip first character
 
 	cpath := false
+	hasWordChars := false // track word chars before first '/'
 
 	// Read the word part
 	for isWordCharacter(l.ch) || l.ch == '/' || l.ch == '<' || l.ch == '~' {
 		// Check if it's a context path (word/word)
+		// For dot-prefixed tokens: only set cpath if word chars appeared before the slash.
+		// This ensures './' is a dotword (/ is an op-word), while '.ctx/word' is an opcpath.
 		if l.ch == '/' {
-			cpath = true
+			if firstChar != '.' || hasWordChars {
+				cpath = true
+			}
+		}
+		if isLetter(l.ch) || isDigit(l.ch) {
+			hasWordChars = true
 		}
 
 		l.readChar()

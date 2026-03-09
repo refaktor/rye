@@ -1,0 +1,73 @@
+; Parser tests for dot-words
+print "## Dot-words"
+
+; Basic dotword
+assert\display "basic dotword .word" {
+	type? first { .word }
+} 'dotword
+
+assert\display "dotword with hyphen .my-word" {
+	type? first { .my-word }
+} 'dotword
+
+assert\display "dotword .upper" {
+	type? first { .upper }
+} 'dotword
+
+assert\display "dotword .concat" {
+	type? first { .concat }
+} 'dotword
+
+; Dotwords with single-char operators
+assert\display "dotword .+" {
+	type? first { .+ }
+} 'dotword
+
+assert\display "dotword .*" {
+	type? first { .* }
+} 'dotword
+
+assert\display "dotword .>" {
+	type? first { .> }
+} 'dotword
+
+assert\display "dotword .<" {
+	type? first { .< }
+} 'dotword
+
+assert\display "dotword .=" {
+	type? first { .= }
+} 'dotword
+
+assert\display "dotword .!" {
+	type? first { .! }
+} 'dotword
+
+assert\display "dotword .?" {
+	type? first { .? }
+} 'dotword
+
+assert\display "dotword .%" {
+	type? first { .% }
+} 'dotword
+
+assert\display "dotword .-" {
+	type? first { .- }
+} 'dotword
+
+; Dotword with force modifier (*)
+assert\display "dotword with force .word*" {
+	type? first { .word* }
+} 'dotword
+
+; Single letter dotword
+assert\display "single letter dotword .x" {
+	type? first { .x }
+} 'dotword
+
+; Double dot is opword not dotword
+assert\display "double dot .. is opword" {
+	type? first { .. }
+} 'opword
+
+print ""

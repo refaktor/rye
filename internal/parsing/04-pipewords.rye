@@ -1,0 +1,64 @@
+; Parser tests for pipe-words
+print "## Pipe-words"
+
+; Basic pipeword
+assert\display "basic pipeword |word" {
+	type? first { |word }
+} 'pipeword
+
+assert\display "pipeword with hyphen |my-word" {
+	type? first { |my-word }
+} 'pipeword
+
+assert\display "pipeword |print" {
+	type? first { |print }
+} 'pipeword
+
+assert\display "pipeword |concat" {
+	type? first { |concat }
+} 'pipeword
+
+; Pipewords with single-char operators
+assert\display "pipeword |+" {
+	type? first { |+ }
+} 'pipeword
+
+assert\display "pipeword |*" {
+	type? first { |* }
+} 'pipeword
+
+assert\display "pipeword |-" {
+	type? first { |- }
+} 'pipeword
+
+; Note: |/ is ambiguous - / is context path separator, so |/ starts a pipe-cpath
+; assert\display "pipeword |/" { type? first { |/ } } 'pipeword
+
+assert\display "pipeword |>" {
+	type? first { |> }
+} 'pipeword
+
+assert\display "pipeword |<" {
+	type? first { |< }
+} 'pipeword
+
+assert\display "pipeword |=" {
+	type? first { |= }
+} 'pipeword
+
+; Pipeword with force modifier (*)
+assert\display "pipeword with force |word*" {
+	type? first { |word* }
+} 'pipeword
+
+; Single letter pipeword
+assert\display "single letter pipeword |x" {
+	type? first { |x }
+} 'pipeword
+
+; Multi-char pipewords
+assert\display "pipeword |++" {
+	type? first { |++ }
+} 'pipeword
+
+print ""

@@ -1,0 +1,26 @@
+; Parser Test Suite
+; Run with: rye run-tests.rye
+
+print "========================================"
+print "        PARSER TEST SUITE"
+print "========================================"
+print ""
+
+do load %01-words.rye
+do load %02-opwords.rye
+do load %03-dotwords.rye
+do load %04-pipewords.rye
+do load %05-literals.rye
+do load %06-cpaths.rye
+do load %07-blocks.rye
+do load %08-special.rye
+do load %09-spacing.rye
+do load %10-real-world-patterns.rye
+do load %11-edge-cases.rye
+do load %12-error-detection.rye
+do load %13-comments.rye
+
+print ""
+print "========================================"
+print "\x1b[32mALL PARSER TESTS COMPLETED\x1b[0m"
+print "========================================"
