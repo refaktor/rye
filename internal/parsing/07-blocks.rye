@@ -1,0 +1,66 @@
+; Parser tests for blocks and groups
+print "## Blocks and Groups"
+
+; Basic block
+assert\display "block { }" {
+	type? first { { inner } }
+} 'block
+
+assert\display "empty block" {
+	type? first { { } }
+} 'block
+
+; Bblock (square brackets)
+assert\display "bblock [ ]" {
+	type? first { [ inner ] }
+} 'block
+
+assert\display "empty bblock" {
+	type? first { [ ] }
+} 'block
+
+; Group (parentheses)
+assert\display "group ( )" {
+	type? first { ( inner ) }
+} 'block
+
+assert\display "empty group" {
+	type? first { ( ) }
+} 'block
+
+; Op-block .{ }
+assert\display "op-block .{ }" {
+	type? first { .{ inner } }
+} 'block
+
+; Op-bblock .[ ]
+assert\display "op-bblock .[ ]" {
+	type? first { .[ inner ] }
+} 'block
+
+; Op-group .( )
+assert\display "op-group .( )" {
+	type? first { .( inner ) }
+} 'block
+
+; List block l{ }
+assert\display "list block l{ }" {
+	type? first { l{ 1 2 3 } }
+} 'list
+
+; Dict block d{ }
+assert\display "dict block d{ }" {
+	type? first { d{ "a" 1 "b" 2 } }
+} 'dict
+
+; Nested blocks
+assert\display "nested blocks" {
+	type? first { { { nested } } }
+} 'block
+
+; Block length
+assert\display "block with 3 items" {
+	length? first { { a b c } }
+} 3
+
+print ""

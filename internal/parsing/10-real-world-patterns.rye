@@ -1,0 +1,250 @@
+; Parser tests for real-world Rye code patterns
+; Based on patterns found in examples/
+
+print "## Real-World Code Patterns"
+
+; ============================================
+; Function definitions
+; ============================================
+
+assert\display "fn with args" {
+	type? first { fn { x } { x + 1 } }
+} 'word
+
+assert\display "fn1 (single arg)" {
+	type? first { fn1 { .inc } }
+} 'word
+
+assert\display "does (no args function)" {
+	type? first { does { print "hello" } }
+} 'word
+
+assert\display "closure" {
+	type? first { closure { n } { inc! 'n } }
+} 'word
+
+; ============================================
+; Context patterns
+; ============================================
+
+assert\display "context creation" {
+	type? first { context { x: 100 } }
+} 'word
+
+assert\display "extends context" {
+	type? first { extends parent { x: 200 } }
+} 'word
+
+; ============================================
+; Method chaining patterns
+; ============================================
+
+assert\display "dotword chain" {
+	type? second { "hello" .upper .length? }
+} 'dotword
+
+assert\display "pipe chain" {
+	type? second { 1 |+ 2 |* 3 }
+} 'pipeword
+
+assert\display "mixed chain" {
+	length? { "hello" .upper |print }
+} 3
+
+; ============================================
+; Operator patterns
+; ============================================
+
+assert\display "comparison operators ==" {
+	type? first { == }
+} 'opword
+
+assert\display "comparison operators !=" {
+	type? first { != }
+} 'opword
+
+assert\display "arrow operator ->" {
+	type? first { -> }
+} 'opword
+
+assert\display "left arrow <-" {
+	type? first { <- }
+} 'opword
+
+assert\display "fat arrow =>" {
+	type? first { => }
+} 'opword
+
+assert\display "range operator .." {
+	type? first { .. }
+} 'opword
+
+assert\display "increment ++" {
+	type? first { ++ }
+} 'opword
+
+assert\display "integer divide //" {
+	type? first { // }
+} 'opword
+
+; ============================================
+; Special literal patterns
+; ============================================
+
+assert\display "http URI" {
+	type? first { http://example.com }
+} 'uri
+
+assert\display "https URI" {
+	type? first { https://example.com/path }
+} 'uri
+
+assert\display "email address" {
+	type? first { user@example.com }
+} 'email
+
+; Note: File paths are currently parsed as URIs
+assert\display "file path" {
+	type? first { %data/file.txt }
+} 'uri
+
+assert\display "file path with extension" {
+	type? first { %script.rye }
+} 'uri
+
+; ============================================
+; Block patterns
+; ============================================
+
+assert\display "nested blocks" {
+	length? first { { { { 1 } } } }
+} 1
+
+; Note: type? returns 'block for all block types (block, bblock, group)
+assert\display "bblock inside block" {
+	type? first first { { [ 1 2 3 ] } }
+} 'block
+
+assert\display "group inside block" {
+	type? first first { { ( 1 + 2 ) } }
+} 'block
+
+; ============================================
+; Special word patterns
+; ============================================
+
+; Note: <tag> is parsed as opword, not a distinct xword type
+assert\display "xword (tag)" {
+	type? first { <html> }
+} 'opword
+
+assert\display "exword (closing tag)" {
+	type? first { </html> }
+} 'exword
+
+assert\display "flag word short" {
+	type? first { -v }
+} 'flagword
+
+assert\display "flag word long" {
+	type? first { --verbose }
+} 'flagword
+
+assert\display "flag word combined" {
+	type? first { -v|verbose }
+} 'flagword
+
+; ============================================
+; Void and comma
+; ============================================
+
+assert\display "void (_)" {
+	type? first { _ }
+} 'void
+
+assert\display "comma (,)" {
+	type? first { , }
+} 'comma
+
+; ============================================
+; Complex expressions from real code
+; ============================================
+
+assert\display "dict arrow access" {
+	length? { container -> "name" }
+} 3
+
+assert\display "cpath access" {
+	type? first { ctx/value }
+} 'cpath
+
+assert\display "nested cpath" {
+	type? first { outer/inner/value }
+} 'cpath
+
+assert\display "parent context @/" {
+	type? first { @/value }
+} 'cpath
+
+; ============================================
+; String patterns
+; ============================================
+
+assert\display "double-quoted string" {
+	type? first { "hello world" }
+} 'string
+
+assert\display "backtick string" {
+	type? first { `hello world` }
+} 'string
+
+assert\display "string with escape" {
+	type? first { "hello\nworld" }
+} 'string
+
+; ============================================
+; Numeric patterns
+; ============================================
+
+assert\display "positive integer" {
+	first { 12345 }
+} 12345
+
+assert\display "negative integer" {
+	first { -42 }
+} -42
+
+assert\display "decimal" {
+	type? first { 3.14159 }
+} 'decimal
+
+assert\display "negative decimal" {
+	type? first { -2.718 }
+} 'decimal
+
+; ============================================
+; Syntax sugar
+; ============================================
+
+; Note: op-blocks return 'block from type?
+assert\display "opblock .{ }" {
+	type? first { .{ 1 2 3 } }
+} 'block
+
+assert\display "opbblock .[ ]" {
+	type? first { .[ 1 2 3 ] }
+} 'block
+
+assert\display "opgroup .( )" {
+	type? first { .( 1 + 2 ) }
+} 'block
+
+assert\display "list literal l{ }" {
+	type? first { l{ 1 2 3 } }
+} 'list
+
+assert\display "dict literal d{ }" {
+	type? first { d{ name "Jim" } }
+} 'dict
+
+print ""

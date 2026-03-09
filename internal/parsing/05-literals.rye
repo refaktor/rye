@@ -1,0 +1,70 @@
+; Parser tests for literal values
+print "## Literals"
+
+; Integers
+assert\display "positive integer" {
+	type? first { 123 }
+} 'integer
+
+assert\display "negative integer" {
+	type? first { -456 }
+} 'integer
+
+assert\display "zero" {
+	type? first { 0 }
+} 'integer
+
+assert\display "large integer" {
+	type? first { 999999999 }
+} 'integer
+
+; Decimals
+assert\display "decimal number" {
+	type? first { 3.14 }
+} 'decimal
+
+assert\display "negative decimal" {
+	type? first { -2.718 }
+} 'decimal
+
+assert\display "decimal with leading zero" {
+	type? first { 0.5 }
+} 'decimal
+
+; Strings
+assert\display "double-quoted string" {
+	type? first { "hello" }
+} 'string
+
+assert\display "string with spaces" {
+	type? first { "hello world" }
+} 'string
+
+assert\display "empty string" {
+	type? first { "" }
+} 'string
+
+assert\display "backtick string" {
+	type? first { `hello` }
+} 'string
+
+; String value check
+assert\display "string value" {
+	first { "hello" }
+} "hello"
+
+assert\display "string with escape" {
+	first { "line1\nline2" }
+} "line1\nline2"
+
+; Void
+assert\display "void" {
+	type? first { _ }
+} 'void
+
+; Comma
+assert\display "comma" {
+	type? first { , }
+} 'comma
+
+print ""

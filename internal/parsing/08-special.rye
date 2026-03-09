@@ -1,0 +1,58 @@
+; Parser tests for special tokens
+print "## Special Tokens"
+
+; X-word (angle brackets)
+assert\display "x-word <tag>" {
+	type? first { <tag> }
+} 'opword
+
+assert\display "x-word with force <tag*>" {
+	type? first { <tag*> }
+} 'opword
+
+; Ex-word (closing tag)
+assert\display "ex-word </tag>" {
+	type? first { </tag> }
+} 'exword
+
+; URI
+assert\display "http URI" {
+	type? first { http://example.com }
+} 'uri
+
+assert\display "https URI" {
+	type? first { https://example.com/path }
+} 'uri
+
+assert\display "file URI" {
+	type? first { file://path/to/file }
+} 'uri
+
+; Email
+assert\display "email address" {
+	type? first { user@example.com }
+} 'email
+
+; File path
+assert\display "file path" {
+	type? first { %path/to/file }
+} 'uri
+
+assert\display "file path with extension" {
+	type? first { %script.rye }
+} 'uri
+
+; Flag words
+assert\display "short flag -v" {
+	type? first { -v }
+} 'flagword
+
+assert\display "long flag --verbose" {
+	type? first { --verbose }
+} 'flagword
+
+assert\display "combined flag -v|verbose" {
+	type? first { -v|verbose }
+} 'flagword
+
+print ""

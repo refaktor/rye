@@ -1,0 +1,281 @@
+; Parser tests for edge cases and potential issues
+; These test boundary conditions and tricky parsing scenarios
+
+print "## Edge Cases and Boundary Tests"
+
+; ============================================
+; Spacing requirements (critical for Rye)
+; ============================================
+
+assert\display "space after number before op" {
+	length? { 1 + 2 }
+} 3
+
+assert\display "space after string before word" {
+	length? { "hello" .upper }
+} 2
+
+assert\display "block delimiter spacing" {
+	length? { { 1 } }
+} 1
+
+; ============================================
+; Word boundaries
+; ============================================
+
+assert\display "word with multiple hyphens" {
+	type? first { my-long-word-name }
+} 'word
+
+assert\display "word ending with ?" {
+	type? first { is-empty? }
+} 'word
+
+assert\display "word ending with !" {
+	type? first { set-value! }
+} 'word
+
+assert\display "word with numbers in middle" {
+	type? first { var2name }
+} 'word
+
+assert\display "word starting with ^" {
+	type? first { ^check }
+} 'word
+
+; ============================================
+; Set-word and mod-word variants
+; ============================================
+
+assert\display "set-word with hyphen" {
+	type? first { my-var: }
+} 'setword
+
+assert\display "mod-word with hyphen" {
+	type? first { my-var:: }
+} 'modword
+
+assert\display "lset-word" {
+	type? first { :result }
+} 'lsetword
+
+assert\display "lmod-word" {
+	type? first { ::result }
+} 'lmodword
+
+; ============================================
+; Dotword variants
+; ============================================
+
+assert\display "dotword with single char .x" {
+	type? first { .x }
+} 'dotword
+
+assert\display "dotword with operator .+" {
+	type? first { .+ }
+} 'dotword
+
+assert\display "dotword with operator .*" {
+	type? first { .* }
+} 'dotword
+
+; Fix: ./ is a dotword (/ is an op-word, so . followed immediately by / = dotword)
+; .op/word IS still a cpath (word chars before the slash trigger cpath mode)
+assert\display "dotword with operator ./" {
+	type? first { ./ }
+} 'dotword
+
+assert\display "dotword with word .concat" {
+	type? first { .concat }
+} 'dotword
+
+assert\display "dotword with force .word*" {
+	type? first { .concat* }
+} 'dotword
+
+; ============================================
+; Pipeword variants
+; ============================================
+
+assert\display "pipeword with single char |x" {
+	type? first { |x }
+} 'pipeword
+
+assert\display "pipeword with operator |+" {
+	type? first { |+ }
+} 'pipeword
+
+assert\display "pipeword with word |concat" {
+	type? first { |concat }
+} 'pipeword
+
+assert\display "pipeword with force |word*" {
+	type? first { |concat* }
+} 'pipeword
+
+; ============================================
+; Context path variants
+; ============================================
+
+assert\display "simple cpath a/b" {
+	type? first { ctx/value }
+} 'cpath
+
+assert\display "three-part cpath a/b/c" {
+	type? first { a/b/c }
+} 'cpath
+
+assert\display "parent cpath @/x" {
+	type? first { @/x }
+} 'cpath
+
+assert\display "double parent @/@/x" {
+	type? first { @/@/x }
+} 'cpath
+
+; Note: All cpath variants return 'cpath from type?
+assert\display "op-cpath .ctx/value" {
+	type? first { .ctx/value }
+} 'cpath
+
+assert\display "pipe-cpath |ctx/value" {
+	type? first { |ctx/value }
+} 'cpath
+
+assert\display "get-cpath ?ctx/value" {
+	type? first { ?ctx/value }
+} 'cpath
+
+; ============================================
+; URI edge cases
+; ============================================
+
+assert\display "URI with port" {
+	type? first { http://localhost:8080 }
+} 'uri
+
+assert\display "URI with path and query" {
+	type? first { https://api.example.com/v1/users?id=123 }
+} 'uri
+
+assert\display "file URI" {
+	type? first { file://path/to/file }
+} 'uri
+
+; ============================================
+; Comments - Note: comments inside blocks can cause parsing issues
+; These tests verify that basic comment handling works
+; ============================================
+
+; Note: Inline comments in blocks may not work as expected
+; The parser may have issues with comments inside code blocks
+
+; ============================================
+; Empty structures
+; ============================================
+
+assert\display "empty block" {
+	length? first { { } }
+} 0
+
+assert\display "empty bblock" {
+	length? first { [ ] }
+} 0
+
+assert\display "empty group" {
+	length? first { ( ) }
+} 0
+
+assert\display "empty list l{ }" {
+	length? first { l{ } }
+} 0
+
+assert\display "empty dict d{ }" {
+	length? first { d{ } }
+} 0
+
+; ============================================
+; Deeply nested structures
+; ============================================
+
+assert\display "deeply nested blocks" {
+	type? first first first first { { { { 42 } } } }
+} 'integer
+
+assert\display "mixed nesting" {
+	length? first { { [ ( 1 ) ] } }
+} 1
+
+; ============================================
+; Consecutive operators
+; ============================================
+
+assert\display "two operators in sequence" {
+	length? { 1 + - 2 }  ; 1 + (- 2)
+} 4
+
+assert\display "method chain starts" {
+	length? { .upper .lower }
+} 2
+
+; ============================================
+; Tag-word edge cases  
+; ============================================
+
+assert\display "tag-word with hyphen" {
+	type? first { 'my-tag }
+} 'tagword
+
+assert\display "tag-word with number" {
+	type? first { 'tag1 }
+} 'tagword
+
+; ============================================
+; Get-word edge cases
+; ============================================
+
+assert\display "get-word simple" {
+	type? first { ?word }
+} 'getword
+
+assert\display "get-word with hyphen" {
+	type? first { ?my-word }
+} 'getword
+
+; ============================================
+; String edge cases
+; ============================================
+
+assert\display "string with double quotes inside (backtick)" {
+	type? first { `string with "quotes"` }
+} 'string
+
+assert\display "empty string" {
+	first { "" }
+} ""
+
+assert\display "string with only spaces" {
+	first { "   " }
+} "   "
+
+; ============================================
+; Number edge cases
+; ============================================
+
+assert\display "zero" {
+	first { 0 }
+} 0
+
+assert\display "large integer" {
+	type? first { 9999999999 }
+} 'integer
+
+assert\display "decimal starting with 0" {
+	type? first { 0.5 }
+} 'decimal
+
+assert\display "decimal ending with 0" {
+	type? first { 1.50 }
+} 'decimal
+
+print ""

@@ -1,0 +1,62 @@
+; Parser tests for word types
+print "## Word Types"
+
+; Basic word
+assert\display "word" {
+	type? first { word }
+} 'word
+
+; Set-word (word:)
+assert\display "set-word" {
+	type? first { word: }
+} 'setword
+
+; Left set-word (:word)
+assert\display "lset-word" {
+	type? first { :word }
+} 'lsetword
+
+; Mod-word (word::)
+assert\display "mod-word" {
+	type? first { word:: }
+} 'modword
+
+; Left mod-word (::word)
+assert\display "lmod-word" {
+	type? first { ::word }
+} 'lmodword
+
+; Get-word (?word)
+assert\display "get-word" {
+	type? first { ?word }
+} 'getword
+
+; Tag-word ('word)
+assert\display "tag-word" {
+	type? first { 'word }
+} 'tagword
+
+; Words with special chars
+assert\display "word with hyphen" {
+	type? first { my-word }
+} 'word
+
+assert\display "word with question mark" {
+	type? first { empty? }
+} 'word
+
+assert\display "word with exclamation" {
+	type? first { inc! }
+} 'word
+
+; Words starting with underscore
+assert\display "word starting with underscore" {
+	type? first { _private }
+} 'word
+
+; Words with numbers
+assert\display "word with numbers" {
+	type? first { var1 }
+} 'word
+
+print ""

@@ -1,0 +1,112 @@
+; Parser tests for op-words (operators)
+print "## Op-words (Operators)"
+
+; Single character operators
+assert\display "plus operator" {
+	type? first { + }
+} 'opword
+
+assert\display "minus operator" {
+	type? first { - }
+} 'opword
+
+assert\display "multiply operator" {
+	type? first { * }
+} 'opword
+
+assert\display "divide operator" {
+	type? first { / }
+} 'opword
+
+assert\display "less than operator" {
+	type? first { < }
+} 'opword
+
+assert\display "greater than operator" {
+	type? first { > }
+} 'opword
+
+assert\display "equals operator" {
+	type? first { = }
+} 'opword
+
+assert\display "percent operator" {
+	type? first { % }
+} 'opword
+
+assert\display "tilde operator" {
+	type? first { ~ }
+} 'opword
+
+assert\display "exclamation operator" {
+	type? first { ! }
+} 'opword
+
+; Multi-character comparison operators
+assert\display "not-equal operator !=" {
+	type? first { != }
+} 'opword
+
+assert\display "double-equals operator ==" {
+	type? first { == }
+} 'opword
+
+assert\display "less-or-equal operator <=" {
+	type? first { <= }
+} 'opword
+
+assert\display "greater-or-equal operator >=" {
+	type? first { >= }
+} 'opword
+
+assert\display "not-equal operator <>" {
+	type? first { <> }
+} 'opword
+
+; Arrow operators
+assert\display "right arrow ->" {
+	type? first { -> }
+} 'opword
+
+assert\display "left arrow <-" {
+	type? first { <- }
+} 'opword
+
+assert\display "fat arrow =>" {
+	type? first { => }
+} 'opword
+
+assert\display "tilde arrow ~>" {
+	type? first { ~> }
+} 'opword
+
+assert\display "left tilde arrow <~" {
+	type? first { <~ }
+} 'opword
+
+; Other multi-char operators
+assert\display "range operator .." {
+	type? first { .. }
+} 'opword
+
+assert\display "increment operator ++" {
+	type? first { ++ }
+} 'opword
+
+assert\display "decrement operator --" {
+	type? first { -- }
+} 'opword
+
+assert\display "double slash //" {
+	type? first { // }
+} 'opword
+
+assert\display "shift left <<" {
+	type? first { << }
+} 'opword
+
+assert\display "shift right >>" {
+	type? first { >> }
+} 'opword
+
+print ""

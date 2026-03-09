@@ -1,0 +1,104 @@
+; Parser tests for comment handling
+; Regression tests to confirm comments work correctly inside blocks.
+;
+; KEY RULE: LoadStringNoPEG (used by 'load') wraps input in "{ input\n}" automatically.
+; So pass RAW tokens (no outer braces) to get the flat top-level block.
+;   load "42"            → block { 42 }       → length? = 1
+;   load "; cmt\n 42"   → block { 42 }       → length? = 1 (comment stripped)
+;   load "1 ; cmt\n 2"  → block { 1 2 }      → length? = 2
+; If you pass "{ ... }" in the string, load returns { { ... } } (double-wrapped)
+; and first-level length? is always 1.
+;
+; ALSO: avoid re-using setword names across assert blocks — they run in the same
+; context. Use |pipes| to inline instead.
+
+print "## Comment Handling Tests"
+
+; ============================================
+; Basic comment skipping — raw tokens, no outer braces
+; ============================================
+
+assert\display "comment-only line in block is skipped" {
+	load "; this is a comment\n 42" |length?
+} 1
+
+assert\display "comment after value on same line is skipped" {
+	load "1 ; comment after value\n 2" |length?
+} 2
+
+assert\display "multiple comments are skipped" {
+	load "; first comment\n ; second comment\n 42 ; trailing\n" |length?
+} 1
+
+assert\display "comment-only block is empty" {
+	load "; only a comment\n" |length?
+} 0
+
+assert\display "comment at start of block does not affect first value" {
+	load "; comment\n 99" |first
+} 99
+
+; ============================================
+; Comments in real patterns
+; ============================================
+
+assert\display "setword with inline comment" {
+	load "x: 1 ; set x to 1\n y: 2" |length?
+} 4
+
+assert\display "comment between setwords" {
+	load "x: 1\n ; middle comment\n y: 2" |length?
+} 4
+
+assert\display "first item after comment is correct type" {
+	load "; skip me\n 42" |first |type?
+} 'integer
+
+assert\display "comment does not consume next line" {
+	load "; comment\n word" |first |type?
+} 'word
+
+; ============================================
+; ./ dotword fix (regression test)
+; Owner confirmed: ./ should be a dotword since / is an op-word
+; Fixed in loader_no_peg.go readOpWord() — only set cpath when word chars precede /
+; ============================================
+
+assert\display "./ is a dotword not a cpath" {
+	load "./" |first |type?
+} 'dotword
+
+assert\display ".upper is still a dotword" {
+	load ".upper" |first |type?
+} 'dotword
+
+assert\display ".+ is still a dotword" {
+	load ".+" |first |type?
+} 'dotword
+
+; ============================================
+; URI / file-path (owner confirmed behavior)
+; %path → uri of kind file
+; ============================================
+
+assert\display "%path returns uri type" {
+	load "%data/file.txt" |first |type?
+} 'uri
+
+assert\display "%path also returns uri type (short name)" {
+	load "%myfile.txt" |first |type?
+} 'uri
+
+; ============================================
+; Left-to-right evaluation (owner confirmed intentional)
+; ============================================
+
+assert\display "1 + 2 * 3 evaluates left-to-right to 9" {
+	1 + 2 * 3
+} 9
+
+assert\display "2 * 3 + 1 evaluates left-to-right to 7" {
+	2 * 3 + 1
+} 7
+
+print ""

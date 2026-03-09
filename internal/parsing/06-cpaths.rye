@@ -1,0 +1,41 @@
+; Parser tests for context paths
+print "## Context Paths"
+
+; Basic context path
+assert\display "two-part cpath" {
+	type? first { ctx/word }
+} 'cpath
+
+assert\display "three-part cpath" {
+	type? first { ctx/sub/word }
+} 'cpath
+
+; Op-context path (starting with operator)
+assert\display "op-cpath with +" {
+	type? first { +ctx/word }
+} 'cpath
+
+assert\display "op-cpath with ." {
+	type? first { .ctx/word }
+} 'cpath
+
+; Pipe-context path
+assert\display "pipe-cpath" {
+	type? first { |ctx/word }
+} 'cpath
+
+; Get-context path
+assert\display "get-cpath" {
+	type? first { ?ctx/word }
+} 'cpath
+
+; Parent context reference
+assert\display "parent context @/" {
+	type? first { @/word }
+} 'cpath
+
+assert\display "double parent context @/@/" {
+	type? first { @/@/word }
+} 'cpath
+
+print ""

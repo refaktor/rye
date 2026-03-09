@@ -822,14 +822,13 @@ func (l *Lexer) readWord() NoPEGToken {
 		l.readChar()
 	}
 
-	// Ensure the word is followed by a token delimiter or a valid word terminator
+	// Ensure the word is followed by a token delimiter or a valid word terminator.
+	// e.g. word{ word} word[ word] are all invalid — missing space before delimiter.
 	if !isTokenDelimiter(l.ch) && l.ch != ':' && l.ch != '@' && l.ch != '/' {
-		// If not, this is an invalid token
-		// Continue reading until we hit a delimiter to report the full invalid token
-		for !isTokenDelimiter(l.ch) {
-			l.readChar()
-		}
-		return l.makeToken(NPEG_TOKEN_NONE, l.input[l.tokenStart:l.pos])
+		invalidChar := l.ch
+		tokenValue := l.input[l.tokenStart:l.pos]
+		errMsg := fmt.Sprintf("Missing space after word '%s'. Found '%c' immediately after. Words must be followed by whitespace.", tokenValue, invalidChar)
+		return l.makeTokenErr(NPEG_TOKEN_ERROR, errMsg, determineLexerError(l.ch))
 	}
 
 	return l.makeToken(NPEG_TOKEN_WORD, l.input[l.tokenStart:l.pos])
@@ -1017,12 +1016,20 @@ func (l *Lexer) readOpWord() NoPEGToken {
 	l.readChar() // Skip first character
 
 	cpath := false
+	hasWordChars := false // track word chars before first '/'
 
 	// Read the word part
 	for isWordCharacter(l.ch) || l.ch == '/' || l.ch == '<' || l.ch == '~' {
 		// Check if it's a context path (word/word)
+		// For dot-prefixed tokens: only set cpath if word chars appeared before the slash.
+		// This ensures './' is a dotword (/ is an op-word), while '.ctx/word' is an opcpath.
 		if l.ch == '/' {
-			cpath = true
+			if firstChar != '.' || hasWordChars {
+				cpath = true
+			}
+		}
+		if isLetter(l.ch) || isDigit(l.ch) {
+			hasWordChars = true
 		}
 
 		l.readChar()
