@@ -8,7 +8,7 @@ assert\display "words" {
 assert\display "opwords" {
 	1 + 2 * 3
 }
-( 1 + ( 2 * 3 ) )
+( ( 1 + 2 ) * 3 )
 
 assert\display "pipewords" {
 	1 |+ 2 |* 3
@@ -56,7 +56,7 @@ assert\display "Mod/Set-words: words" {
 assert\display "Mod/Set-words: opwords" {
 	x:: 1 + 2 * 3 , x
 }
-( x:: ( 1 + ( 2 * 3 ) ) )
+( x:: ( ( 1 + 2 ) * 3 ) )
 
 assert\display "Mod/Set-words: pipewords" {
 	x:: 1 |+ 2 |* 3 , x
@@ -83,7 +83,7 @@ assert\display "Mod/Set-words: words" {
 assert\display "Mod/Set-words: opwords" {
 	1 + 2 * 3 ::x , x
 }
-( x:: ( 1 + ( 2 * 3 ) ) )
+( x:: ( ( 1 + 2 ) * 3 ) )
 
 assert\display "Mod/Set-words: pipewords" {
 	1 |+ 2 |* 3 ::x , x

@@ -896,7 +896,7 @@ func EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toL
 		return
 	case env.FunctionType:
 		fn := object.(env.Function)
-		CallFunction_CollectArgs(fn, ps, leftVal, toLeft, ctx, pipeSecond, firstVal)
+		CallFunction_CollectArgs(fn, ps, leftVal, toLeft, ctx, pipeSecond, firstVal, opword)
 		return
 	case env.VarBuiltinType:
 		bu := object.(env.VarBuiltin)
@@ -1033,6 +1033,11 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 	if len(pipeSecond) >= 2 {
 		if fv, ok := pipeSecond[1].(env.Object); ok {
 			firstVal = fv
+		}
+	}
+	if len(pipeSecond) >= 3 {
+		if ow, ok := pipeSecond[2].(bool); ok {
+			opword = ow
 		}
 	}
 
@@ -1410,7 +1415,7 @@ func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, a
 func DetermineContext(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx) (*env.RyeCtx, bool) {
 	var fnCtx *env.RyeCtx
 	fromPool := false
-	env0 := ps.Ctx // store reference to current env in local
+	env0 := ps.Ctx  // store reference to current env in local
 	if ctx != nil { // called via contextpath and this is the context
 		if fn.Pure {
 			fnCtx = envPool.Get().(*env.RyeCtx)
