@@ -822,14 +822,13 @@ func (l *Lexer) readWord() NoPEGToken {
 		l.readChar()
 	}
 
-	// Ensure the word is followed by a token delimiter or a valid word terminator
+	// Ensure the word is followed by a token delimiter or a valid word terminator.
+	// e.g. word{ word} word[ word] are all invalid — missing space before delimiter.
 	if !isTokenDelimiter(l.ch) && l.ch != ':' && l.ch != '@' && l.ch != '/' {
-		// If not, this is an invalid token
-		// Continue reading until we hit a delimiter to report the full invalid token
-		for !isTokenDelimiter(l.ch) {
-			l.readChar()
-		}
-		return l.makeToken(NPEG_TOKEN_NONE, l.input[l.tokenStart:l.pos])
+		invalidChar := l.ch
+		tokenValue := l.input[l.tokenStart:l.pos]
+		errMsg := fmt.Sprintf("Missing space after word '%s'. Found '%c' immediately after. Words must be followed by whitespace.", tokenValue, invalidChar)
+		return l.makeTokenErr(NPEG_TOKEN_ERROR, errMsg, determineLexerError(l.ch))
 	}
 
 	return l.makeToken(NPEG_TOKEN_WORD, l.input[l.tokenStart:l.pos])

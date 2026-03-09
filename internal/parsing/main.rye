@@ -19,6 +19,7 @@ do load %10-real-world-patterns.rye
 do load %11-edge-cases.rye
 do load %12-error-detection.rye
 do load %13-comments.rye
+do load %bad_tokens.rye
 
 print ""
 print "========================================"
