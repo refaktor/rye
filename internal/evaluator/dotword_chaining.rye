@@ -1,0 +1,70 @@
+print "## Dotword Chaining Tests (PIN behavior)"
+
+; Basic dotword chaining - left to right
+assert\display "chain 2 dotwords" {
+	"hello" .upper .length?
+} 5
+
+assert\display "chain 3 dotwords (inc)" {
+	10 .inc .inc .inc
+} 13
+
+assert\display "chain 3 dotwords (dec)" {
+	10 .dec .dec .dec
+} 7
+
+assert\display "chain with string ops" {
+	"  hello  " .trim .upper
+} "HELLO"
+
+; Dotword with arguments
+assert\display "dotword with 1 arg" {
+	"hello world" .replace "world" "rye"
+} "hello rye"
+
+assert\display "split then length" {
+	"a b c" .split " " .length?
+} 3
+
+; Dotword + opword interaction (PIN creates atoms, then BRIDGE)
+assert\display "dotword before opword" {
+	10 .inc + 5
+} 16
+
+assert\display "dotword after opword" {
+	5 + 10 .inc
+} 16
+
+assert\display "dotwords both sides of opword" {
+	10 .inc + 10 .dec
+} 20
+
+assert\display "dotword chain then opword" {
+	10 .inc .inc + 5
+} 17
+
+; The key atom behavior test
+assert\display "multiple atoms bridged" {
+	4 .+ 2 * 2 .+ 3
+} 30
+
+assert\display "atoms with dec" {
+	10 .dec * 10 .inc
+} 99
+
+; Dotword + pipeword
+assert\display "dotword then pipeword" {
+	10 .inc |+ 5
+} 16
+
+assert\display "dotword chain then pipeword" {
+	10 .inc .inc |* 2
+} 24
+
+; Pipeword takes next arg, then opword bridges result
+assert\display "pipeword then opword" {
+	10 .inc |+ 5 * 2
+} 21
+
+print ""
+print "Dotword chaining tests completed."

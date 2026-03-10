@@ -1,0 +1,139 @@
+; Bad-token tests — near-valid inputs that MUST produce parse errors.
+;
+; Helper functions:
+;   must-fail "label" "input"           — asserts load fails with an error
+;   must-parse "label" "input" 'type   — asserts load succeeds and first token is that type
+;
+; All tokens in Rye MUST be separated by whitespace from adjacent tokens.
+; These tests verify the parser enforces that rule strictly.
+
+print "## Bad Token / Near-Valid Error Tests"
+
+; ─── helpers ─────────────────────────────────────────────────────────────────
+
+must-fail: fn { label input } {
+    assert\display label {
+        try { load input } |type? = 'error
+    } true
+}
+
+must-parse: fn { label input expected } {
+    assert\display label {
+        load input |first |type?
+    } expected
+}
+
+; ─── control: valid inputs must still parse ───────────────────────────────────
+
+print ""
+print "-- Control: valid tokens --"
+must-parse "word parses as word"       "myword"         'word
+must-parse "integer parses"            "42"             'integer
+must-parse "decimal parses"            "3.14"           'decimal
+must-parse "string parses"            `"hello"`         'string
+must-parse "+ is opword"              "+"               'opword
+must-parse "== is opword"             "=="              'opword
+must-parse ".x is dotword"            ".x"              'dotword
+must-parse ".upper is dotword"        ".upper"          'dotword
+must-parse "|word is pipeword"        "|word"           'pipeword
+must-parse "ctx/val is cpath"         "ctx/val"         'cpath
+must-parse "'tag is tagword"          "'tag"            'tagword
+must-parse "?get is getword"          "?get"            'getword
+
+; ─── numbers without required spacing ────────────────────────────────────────
+
+print ""
+print "-- Numbers: missing space after --"
+must-fail "1+2   (num directly followed by op)"          "1+2"
+must-fail "1-2   (num directly followed by -)"           "1-2"
+must-fail "1*2   (num directly followed by *)"           "1*2"
+must-fail "1{    (num directly followed by {)"           "1{"
+must-fail "1}    (num directly followed by })"           "1}"
+must-fail "1[    (num directly followed by [)"           "1["
+must-fail "42word (num directly followed by letters)"   "42word"
+must-fail "1,2   (num directly followed by ,)"           "1,2"
+must-fail "1.word (num . non-digit — not a decimal)"    "1.word"
+must-fail "99++  (num directly followed by ++)"          "99++"
+must-fail "3.14word (decimal directly followed by word)" "3.14word"
+
+; ─── strings without required spacing ────────────────────────────────────────
+
+print ""
+print "-- Strings: missing space after closing quote --"
+must-fail `"hello"world  (str+word)`     `"hello"world`
+must-fail `"hello"{}     (str+{)`        `"hello"{}`
+must-fail `"a""b"        (str+str)`      `"a""b"`
+must-fail `"x"42         (str+num)`      `"x"42`
+must-fail `"x"'tag       (str+tagword)`  `"x"'tag`
+must-fail `"x"+          (str+op)`       `"x"+`
+
+; ─── block delimiters without spacing (opening) ───────────────────────────────
+
+print ""
+print "-- Block openers: no space after {"
+must-fail "{word  ({ directly followed by word)"  "{word"
+must-fail "{1     ({ directly followed by digit)" "{1"
+must-fail `{"str  ({ directly followed by ")`     `{"hello"`
+must-fail "[word  ([ directly followed by word)"  "[word"
+must-fail "[1     ([ directly followed by digit)" "[1"
+
+; ─── words without required spacing (closing delimiters) ──────────────────────
+
+print ""
+print "-- Words: no space before block delimiter --"
+must-fail "word{  (word directly followed by {)"  "word{"
+must-fail "word}  (word directly followed by })"  "word}"
+must-fail "word[  (word directly followed by [)"  "word["
+must-fail "word]  (word directly followed by ])"  "word]"
+must-fail "word|  (word directly followed by |)"  "word|"
+
+; ─── invalid multi-character operator combinations ───────────────────────────
+
+print ""
+print "-- Invalid operator combinations --"
+must-fail "=== (triple equals)"          "==="
+must-fail "!== (JS not-equal)"           "!=="
+must-fail "<== (invalid combination)"    "<=="
+must-fail ">== (invalid combination)"    ">=="
+must-fail ">>> (triple greater)"         ">>>"
+must-fail "<<< (triple less)"            "<<<"
+must-fail "**  (double star)"            "**"
+must-fail "+*  (plus-star)"             "+*"
+; Note: =+ is a VALID pipeword in Rye (= is a pipeword start, + follows as its body)
+must-parse "=+ parses as pipeword"      "=+"  'pipeword
+
+; ─── operators without spacing from adjacent values ───────────────────────────
+
+print ""
+print "-- Operators: no space between op and next token --"
+; Note: x==y and x!=y are NOT errors: =, ! are word chars so they become single words.
+; "x==y" → one word 'x==y'   "x!=y" → one word 'x!=y'
+; The parser has no mechanism to distinguish intended operators inside word names.
+must-parse "x==y parses as single word (= is word char)"   "x==y"  'word
+must-parse "x!=y parses as single word (! is word char)"   "x!=y"  'word
+; Note: ==word is NOT an error — it parses as a word-like opword (Rye allows
+; custom operators containing letters, e.g. not=, and, or). 
+must-parse "==word parses as opword (letters make it word-like)"  "==word"  'opword
+
+; ─── tag-words without spacing ────────────────────────────────────────────────
+
+print ""
+print "-- Tag-words: no space after --"
+must-fail "'tag1'tag2  (tagword+tagword)" "'tag1'tag2"
+must-fail "'tag{ (tagword+{)"           "'tag{"
+
+; ─── get-words without spacing ────────────────────────────────────────────────
+
+print ""
+print "-- Get-words: no space after --"
+must-fail "?word{ (getword+{)" "?word{"
+
+; ─── setwords and modwords without spacing ────────────────────────────────────
+
+print ""
+print "-- Setword/modword delimiters --"
+; Note: x:y is NOT an error — it parses as word 'x' + lsetword ':y'
+; But x:: immediately followed by non-space IS an lmodword check
+must-fail ":word{  (lsetword+{)" ":word{"
+
+print ""

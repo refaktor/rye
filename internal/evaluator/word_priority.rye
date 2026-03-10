@@ -1,0 +1,79 @@
+print "## Word Priority Tests (from blog examples)"
+
+; Simple dotword examples
+assert\display "simple dec" {
+	10 .dec
+} 9
+
+assert\display "simple inc" {
+	10 .inc
+} 11
+
+assert\display "inc chain" {
+	10 .inc .inc
+} 12
+
+; Math with dotwords and opwords
+assert\display "math chain from blog" {
+	10 .inc - 10 .dec .dec
+} 3
+
+assert\display "string ops from blog" {
+	"AB" .lower ++ "bc" .upper
+} "abBC"
+
+assert\display "complex atoms from blog" {
+	4 .+ 2 * 2 .+ 3
+} 30
+
+; Opword left-to-right (no precedence)
+assert\display "left-to-right subtraction" {
+	12 - 6 - 4
+} 2
+
+assert\display "left-to-right mixed" {
+	12 + 3 - 5
+} 10
+
+assert\display "comparison after math" {
+	11 + 2 > 12
+} true
+
+assert\display "equality after math" {
+	12 + 3 = 15
+} true
+
+; Word (front) consumes opwords
+assert\display "word consumes opword result" {
+	inc 10 * 10
+} 101
+
+assert\display "word with dotword arg" {
+	inc 10 .dec
+} 10
+
+; Pipe-word wall behavior
+assert\display "pipe blocks word consumption" {
+	inc 10 |* 10
+} 110
+
+assert\display "pipe mid subtraction" {
+	12 - 6 |- 4
+} 2
+
+; Mixed priority chains
+; 10 .inc = 11 (atom), 2 .dec = 1 (atom), 11 * 1 = 11
+assert\display "dot-op-dot chain" {
+	10 .inc * 2 .dec
+} 11
+
+assert\display "multiple pipes" {
+	10 |+ 5 |* 2
+} 30
+
+assert\display "dot then multiple ops" {
+	10 .inc + 5 - 3
+} 13
+
+print ""
+print "Word priority tests completed."

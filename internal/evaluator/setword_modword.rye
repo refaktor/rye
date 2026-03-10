@@ -1,0 +1,78 @@
+print "## Setword and Modword Tests"
+
+; Basic setword (creates constant)
+assert\display "setword simple" {
+	a1: 10 , a1
+} 10
+
+assert\display "setword with opword" {
+	a2: 1 + 2 , a2
+} 3
+
+assert\display "setword with dotword chain" {
+	a3: 10 .inc .inc , a3
+} 12
+
+assert\display "setword with atoms" {
+	a4: 4 .+ 2 * 3 , a4
+} 18
+
+; Left-setword (:x at end)
+assert\display "left-setword simple" {
+	10 :b1 , b1
+} 10
+
+assert\display "left-setword with chain" {
+	10 .inc .inc :b2 , b2
+} 12
+
+assert\display "left-setword with ops" {
+	10 + 5 :b3 , b3
+} 15
+
+; Modword (requires var for mutable)
+assert\display "modword basic" {
+	var 'c1 0 , c1:: 10 , c1
+} 10
+
+assert\display "modword increment" {
+	var 'c2 5 , c2:: c2 + 1 , c2
+} 6
+
+assert\display "modword with chain" {
+	var 'c3 10 , c3:: c3 .inc .inc , c3
+} 12
+
+; Left-modword (::x at end)
+assert\display "left-modword simple" {
+	var 'd1 0 , 10 ::d1 , d1
+} 10
+
+assert\display "left-modword with chain" {
+	var 'd2 0 , 10 .inc ::d2 , d2
+} 11
+
+assert\display "left-modword with ops" {
+	var 'd3 0 , 10 + 5 ::d3 , d3
+} 15
+
+; Multiple setwords in one expression
+assert\display "two setwords" {
+	e1: 1 , e2: 2 , e1 + e2
+} 3
+
+assert\display "setword uses previous" {
+	f1: 10 , f2: f1 + 5 , f2
+} 15
+
+assert\display "chained setwords" {
+	g1: g2: 10 , g1 + g2
+} 20
+
+; Setword with pipeword
+assert\display "setword then pipe" {
+	h1: 10 |+ 5 , h1
+} 15
+
+print ""
+print "Setword and modword tests completed."

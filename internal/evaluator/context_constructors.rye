@@ -1,0 +1,94 @@
+print "## Context Constructor Tests"
+
+; Basic context creation
+assert\display "context literal" {
+	ctx1: context { x: 10 }
+	ctx1/x
+} 10
+
+assert\display "context evaluates expressions" {
+	y: 5
+	ctx2: context { x: y + 10 }
+	ctx2/x
+} 15
+
+assert\display "context multiple values" {
+	ctx3: context { a: 1 b: 2 c: 3 }
+	ctx3/a + ctx3/b + ctx3/c
+} 6
+
+assert\display "context with function" {
+	ctx4: context { 
+		val: 100
+		get-val: does { val }
+	}
+	ctx4/get-val
+} 100
+
+; Context from dict
+assert\display "context from dict" {
+	d: dict { "x" 100 "y" 200 }
+	ctx5: context d
+	ctx5/x + ctx5/y
+} 300
+
+; Extends - child context with parent
+assert\display "extends reads parent" {
+	parent1: context { x: 100 }
+	child1: extends parent1 { y: x + 50 }
+	child1/y
+} 150
+
+assert\display "extends has own values" {
+	parent2: context { x: 100 }
+	child2: extends parent2 { y: 200 }
+	child2/y
+} 200
+
+assert\display "extends can read parent" {
+	parent3: context { base: 1000 }
+	child3: extends parent3 { }
+	child3/base
+} 1000
+
+assert\display "extends doesn't modify parent" {
+	parent4: context { x: 100 }
+	child4: extends parent4 { x: 999 }
+	parent4/x
+} 100
+
+; Isolate - context that cuts off parent after creation
+assert\display "isolate creates context" {
+	iso1: isolate { x: 42 }
+	iso1/x
+} 42
+
+assert\display "isolate uses parent during creation" {
+	outer-val: 100
+	iso2: isolate { x: outer-val + 1 }
+	iso2/x
+} 101
+
+assert\display "isolate cuts parent after" {
+	outer-val2: 100
+	iso3: isolate { get-outer: does { outer-val2 } }
+	try { iso3/get-outer } |type?
+} 'error
+
+; Bind! - sets parent of existing context
+assert\display "bind sets parent" {
+	p1: context { val: 999 }
+	c1: context { get-val: does { val } }
+	bind! c1 p1
+	c1/get-val
+} 999
+
+assert\display "bind allows reading parent" {
+	p2: context { x: 50 y: 60 }
+	c2: context { sum: does { x + y } }
+	bind! c2 p2
+	c2/sum
+} 110
+
+print ""
+print "Context constructor tests completed."
