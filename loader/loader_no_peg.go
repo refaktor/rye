@@ -1541,7 +1541,7 @@ func (p *NoPEGParser) parseToken() (env.Object, error) {
 		if len(word) == 1 || word == "<<" || word == ">>" || word == "<-" || word == "->" ||
 			word == "=>" || word == "<~" || word == "~>" || word == ">=" || word == "<=" ||
 			word == "//" || word == ".." || word == "++" || word == "--" || word == "==" ||
-			word == "." || word == "|" {
+			word == "!=" || word == "." || word == "|" {
 			idx = p.wordIndex.IndexWord("_" + word)
 		} else {
 			if word[len(word)-1:] == "*" {

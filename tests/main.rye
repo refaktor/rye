@@ -144,8 +144,12 @@ Examples:
 `
 }
 
-first args |^fix { print-help } |switch {
+print "1111"
+
+first args |^fix { print-help } |probe |switch {
 test {
+	print "22222"
+
 	var 'sections { }
 	either args .length? > 1 {
 		either probe ( ( second args ) = 'ls ) {

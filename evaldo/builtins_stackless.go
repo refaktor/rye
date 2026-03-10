@@ -69,7 +69,7 @@ func Stck_EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object
 		//return ps
 	case env.CurriedCallerType:
 		cc := object.(env.CurriedCaller)
-		CallCurriedCaller(cc, ps, leftVal, toLeft, false, nil, false)
+		CallCurriedCaller(cc, ps, leftVal, toLeft, false, nil, false, false)
 		return ps
 	default:
 		//d object.Trace("DEFAULT**")
