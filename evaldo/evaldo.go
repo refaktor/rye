@@ -87,10 +87,26 @@ func EvalBlockInj_Rye2(ps *env.ProgramState, inj env.Object, injnow bool) {
 			ps.Injnow = false
 		}
 		// Check for both failure and error flags immediately after expression evaluation
-		if ps.ErrorFlag || (ps.ReturnFlag && ps.CallDepth > 0) {
+		// When ReturnFlag is set by a returning word (^fix, ^check, ^fail):
+		// - Inside a function (CallDepth > 0): always stop the block.
+		// - At top level (CallDepth == 0): only stop if the next token is a continuation
+		//   token (Pipeword, Dotword, LSetword, Opword) — an orphaned chain left by ^fix.
+		//   If the next token starts a fresh independent expression, clear ReturnFlag and
+		//   continue so that code after e.g. a "for" loop keeps running.
+		if ps.ErrorFlag || ps.ReturnFlag {
 			// fmt.Println("EVAL BLOCK INJ")
 			// fmt.Println(ps.ErrorFlag, ps.ReturnFlag, ps.CallDepth)
-			return
+			if ps.ErrorFlag || ps.CallDepth > 0 {
+				return
+			}
+			// CallDepth == 0 with ReturnFlag only:
+			if ps.Ser.Pos() < ps.Ser.Len() {
+				switch ps.Ser.Peek().(type) {
+				case env.Pipeword, env.Dotword, env.LSetword, env.Opword:
+					return // orphaned continuation token – stop to avoid "pipeword without left value"
+				}
+			}
+			ps.ReturnFlag = false // next is an independent expression – safe to continue
 		}
 		if tryHandleFailure(ps) {
 			ps.ErrorFlag = true
@@ -156,7 +172,7 @@ func EvalBlockInCtxInj(ps *env.ProgramState, ctx *env.RyeCtx, inj env.Object, in
 // EvalExpression is the consolidated expression evaluator handling both regular and injected evaluation.
 // Called from: EvalExpressionInj, EvalExpression_CollectArg, EvalExpressionInjLimited (wrapper functions)
 // Purpose: Evaluates left side via DispatchType, then optionally evaluates right side (opwords/pipewords)
-func EvalExpression(ps *env.ProgramState, inj env.Object, injnow bool, limited bool, opword bool) bool {
+func EvalExpression(ps *env.ProgramState, inj env.Object, injnow bool, limited bool, opword bool, dotword bool) bool {
 	// fmt.Println("==EvalExpression:1")
 	if inj == nil || !injnow {
 		if limited {
@@ -190,35 +206,38 @@ func EvalExpression(ps *env.ProgramState, inj env.Object, injnow bool, limited b
 	// opword=true means we're collecting an opword argument; allow dotword chains
 	// but do not consume further opwords.
 	// fmt.Println("==EvalExpression:2")
-	OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, !opword)
+	OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, !opword, !dotword)
 	return injnow
 }
 
 // EvalExpression_CollectArg evaluates an expression without injection (for collecting function arguments).
 // Called from: CallFunction_CollectArgs, CallBuiltin_CollectArgs, CallVarBuiltin, EvalWord
 // Purpose: Wrapper for EvalExpression used when collecting arguments from code
+// Note: dotword=false here - callers that need dotword blocking use EvalExpression directly with dotword=true
 func EvalExpression_CollectArg(ps *env.ProgramState, limited bool, opword bool) {
-	EvalExpression(ps, nil, false, limited, opword)
+	EvalExpression(ps, nil, false, limited, opword, false)
 }
 
 // EvalExpressionInj evaluates an expression with optional value injection.
 // Called from: EvalBlockInj, EvalExpression_DispatchType (OPBBLOCK mode), EvalSetword, EvalModword
 // Purpose: Wrapper for EvalExpression that allows injecting a value into the expression
 func EvalExpressionInj(ps *env.ProgramState, inj env.Object, injnow bool) bool {
-	return EvalExpression(ps, inj, injnow, false, false)
+	return EvalExpression(ps, inj, injnow, false, false, false)
 }
 
 // EvalExpressionInjLimited evaluates an expression with injection in limited mode (stops at setwords/pipewords).
 // Called from: Various places where expression evaluation should not consume setwords or pipewords
 // Purpose: Limited expression evaluation that prevents consuming certain right-side constructs
 func EvalExpressionInjLimited(ps *env.ProgramState, inj env.Object, injnow bool) bool {
-	return EvalExpression(ps, inj, injnow, true, false)
+	return EvalExpression(ps, inj, injnow, true, false, false)
 }
 
 // OptionallyEvalExpressionRight evaluates right-side constructs like opwords, pipewords, and setwords.
 // Called from: EvalExpression, recursively from itself
 // Purpose: Handles operator precedence by evaluating opwords/pipewords/setwords/modwords to the right
-func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, limited bool, allowOpwords bool) {
+// allowOpwords=false: prevents nested opwords from being consumed as arguments (set when collecting opword/dotword args)
+// allowDotwords=false: prevents nested dotwords from being consumed as arguments (set when collecting dotword args)
+func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, limited bool, allowOpwords bool, allowDotwords bool) {
 	// fmt.Println("--OptionallyEvalExpressionRight:1")
 	if nextObj == nil || ps.ReturnFlag || ps.ErrorFlag {
 		return
@@ -236,31 +255,28 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 		if !allowOpwords {
 			return
 		}
-		// val := ps.Ser.Pop()
 		ps.Ser.Next()
 		// fmt.Println("---Opword:1")
-		EvalWord(ps, opword.ToWord(), ps.Res, false, opword.Force > 0, true)
+		EvalWord(ps, opword.ToWord(), ps.Res, false, opword.Force > 0, true, false)
 		// fmt.Println("---Opword:2")
 		// fmt.Println(ps.Res)
-		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, allowOpwords)
+		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, allowOpwords, allowDotwords)
 		return
 	case env.Dotword:
 		// Dotwords are method-style operators (.add, .upper, etc.)
-		// PIN behavior: dotwords collect arguments without consuming opwords/pipewords
-		// When in PinMode (collecting args for another dotword), block nested dotword chaining
-		if ps.PinMode {
+		// allowDotwords=false blocks nested dotword chaining (symmetric to allowOpwords for opwords)
+		if !allowDotwords {
 			return
 		}
-		ps.PinMode = true // Enter PIN mode for argument collection
 		ps.Ser.Next()
-		EvalWord(ps, opword.ToWord(), ps.Res, false, opword.Force > 0, true)
-		ps.PinMode = false // Exit PIN mode after argument collection
+		// Pass dotword=true so argument collection blocks further dotwords (symmetric to opword blocking opwords)
+		EvalWord(ps, opword.ToWord(), ps.Res, false, opword.Force > 0, true, true)
 		if ps.ReturnFlag || ps.ErrorFlag {
 			return
 		}
-		// Continue dotword chain if another dotword follows.
+		// Continue dotword chain if another dotword follows (at same level, allowDotwords unchanged).
 		if _, ok := ps.Ser.Peek().(env.Dotword); ok {
-			OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, allowOpwords)
+			OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, allowOpwords, allowDotwords)
 			return
 		}
 		if !allowOpwords {
@@ -268,10 +284,10 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 		}
 		switch next := ps.Ser.Peek().(type) {
 		case env.Opword, env.Pipeword, env.LSetword, env.LModword:
-			OptionallyEvalExpressionRight(next, ps, limited, allowOpwords)
+			OptionallyEvalExpressionRight(next, ps, limited, allowOpwords, allowDotwords)
 			return
 		case env.CPath:
-			OptionallyEvalExpressionRight(next, ps, limited, allowOpwords)
+			OptionallyEvalExpressionRight(next, ps, limited, allowOpwords, allowDotwords)
 			return
 		}
 		// Terminate current expression after dotword and inject the result
@@ -284,11 +300,11 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 			return
 		}
 		ps.Ser.Next()
-		EvalWord(ps, opword.ToWord(), ps.Res, false, opword.Force > 0, false)
+		EvalWord(ps, opword.ToWord(), ps.Res, false, opword.Force > 0, false, false)
 		if ps.ReturnFlag {
 			return //... not sure if we need this
 		}
-		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, allowOpwords)
+		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, allowOpwords, allowDotwords)
 		return
 	case env.LSetword:
 		if limited {
@@ -298,7 +314,7 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 		if ps.AllowMod {
 			ok := ps.Ctx.Mod(idx, ps.Res)
 			if !ok {
-				ps.Res = env.NewError("Cannot modify constant " + ps.Idx.GetWord(idx) + ", use 'var' to declare it as a variable")
+				ps.Res = env.NewError("Cannot modify constant `" + ps.Idx.GetWord(idx) + "`, use `var` to declare it as a variable")
 				ps.FailureFlag = true
 				ps.ErrorFlag = true
 				return
@@ -306,14 +322,14 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 		} else {
 			ok := ps.Ctx.SetNew(idx, ps.Res, ps.Idx)
 			if !ok {
-				ps.Res = env.NewError("Can't set already set word " + ps.Idx.GetWord(idx) + ", try using modword (1)")
+				ps.Res = env.NewError("Can't set already set word `" + ps.Idx.GetWord(idx) + "`, try using modword")
 				ps.FailureFlag = true
 				ps.ErrorFlag = true
 				return
 			}
 		}
 		ps.Ser.Next()
-		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, allowOpwords)
+		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, allowOpwords, allowDotwords)
 		return
 	case env.LModword:
 		if limited {
@@ -335,36 +351,36 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 				}
 			}
 		case env.ModErrConstant:
-			ps.Res = env.NewError("Cannot modify constant '" + ps.Idx.GetWord(idx) + "'. Use 'var' to declare it as a variable.")
+			ps.Res = env.NewError("Cannot modify constant `" + ps.Idx.GetWord(idx) + "`. Use `var` to declare it as a variable.")
 			ps.FailureFlag = true
 			ps.ErrorFlag = true
 			return
 		case env.ModErrTypeMismatch:
-			ps.Res = env.NewError("Cannot change type of variable '" + ps.Idx.GetWord(idx) + "' from " + ps.Idx.GetWord(int(existingType)) + " to " + ps.Idx.GetWord(int(ps.Res.Type())) + ".")
+			ps.Res = env.NewError("Cannot change type of variable `" + ps.Idx.GetWord(idx) + "` from `" + ps.Idx.GetWord(int(existingType)) + "` to `" + ps.Idx.GetWord(int(ps.Res.Type())) + "`.")
 			ps.FailureFlag = true
 			ps.ErrorFlag = true
 			return
 		}
 		ps.Ser.Next()
-		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, allowOpwords)
+		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, allowOpwords, allowDotwords)
 		return
 	case env.CPath:
 		if opword.Mode == 1 {
 			ps.Ser.Next()
-			EvalWord(ps, opword, ps.Res, false, false, false)
+			EvalWord(ps, opword, ps.Res, false, false, false, false)
 			// when calling cpath
-			OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, allowOpwords)
+			OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, allowOpwords, allowDotwords)
 			return
 		} else if opword.Mode == 2 {
 			if limited {
 				return
 			}
 			ps.Ser.Next()
-			EvalWord(ps, opword, ps.Res, false, false, false) // TODO .. check opword force
+			EvalWord(ps, opword, ps.Res, false, false, false, false) // TODO .. check opword force
 			if ps.ReturnFlag {
 				return //... not sure if we need this
 			}
-			OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, allowOpwords)
+			OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, allowOpwords, allowDotwords)
 			return
 		}
 	}
@@ -505,10 +521,10 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 		ps.Res = *env.NewWord(object.(env.Tagword).Index)
 		return
 	case env.WordType:
-		EvalWord(ps, object.(env.Word), nil, false, false, false)
+		EvalWord(ps, object.(env.Word), nil, false, false, false, false)
 		return
 	case env.CPathType:
-		EvalWord(ps, object, nil, false, false, false)
+		EvalWord(ps, object, nil, false, false, false, false)
 		return
 	// case env.FunctionType: // works just for regular words ... as function
 	// 	CallFunction(object.(env.Function), ps, nil, false, nil)
@@ -525,24 +541,34 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 		EvalGetword(ps, object.(env.Getword), nil, false)
 		return
 	case env.DotwordType:
-		EvalWord(ps, object.(env.Dotword), ps.Res, true, false, false)
+		// A dotword appearing at the start of an expression has no left-hand value — error.
+		// Valid use is always after a value (via OptionallyEvalExpressionRight), e.g. `1 .add 2`.
+		ps.ErrorFlag = true
+		ps.Res = env.NewError("Dotword `." + ps.Idx.GetWord(object.(env.Dotword).Index) + "` used without a left-hand value. A dotword must follow an expression that produces a value (e.g. `1 .add 2`, not `.add 2`).")
+		return
 	case env.OpwordType:
-		EvalWord(ps, object.(env.Opword), ps.Res, true, false, true)
+		// An opword appearing at the start of an expression has no left-hand value — error.
+		ps.ErrorFlag = true
+		ps.Res = env.NewError("Opword `" + ps.Idx.GetWord(object.(env.Opword).Index) + "` used without a left-hand value. An opword must follow an expression that produces a value (e.g. `1 + 2`, not `+ 2`).")
+		return
 	case env.PipewordType:
-		EvalWord(ps, object.(env.Pipeword), ps.Res, true, false, false)
+		// A pipeword appearing at the start of an expression has no left-hand value — error.
+		ps.ErrorFlag = true
+		ps.Res = env.NewError("Pipeword `|" + ps.Idx.GetWord(object.(env.Pipeword).Index) + "` used without a left-hand value. A pipeword must follow an expression that produces a value (e.g. `1 |add`, not `|add`).")
+		return
 	// this functions works when there is no left value, so these should cause an error (20260224)
 	// case env.LSetwordType, env.LModwordType, env.OpCPathType, env.PipeCPathType:
 	//	ps.Res = *env.NewError("In-stream token, but not in stream (ER1294)")
 	//	return
 	// these are cached (inserted into block values so we can avoid the repeated lookup)
 	case env.BuiltinType:
-		CallBuiltin_CollectArgs(object.(env.Builtin), ps, nil, false, false, nil, false) // TODO .. POTENTIAL BUG, OPWORD STATE IS NOT STORED WHEN EMBEDED
+		CallBuiltin_CollectArgs(object.(env.Builtin), ps, nil, false, false, nil, false, false) // TODO .. POTENTIAL BUG, OPWORD STATE IS NOT STORED WHEN EMBEDED
 		return
 	case env.VarBuiltinType:
-		CallVarBuiltin(object.(env.VarBuiltin), ps, nil, false, false, nil, false) // TODO .. POTENTIAL BUG, OPWORD STATE IS NOT STORED WHEN EMBEDED
+		CallVarBuiltin(object.(env.VarBuiltin), ps, nil, false, false, nil, false, false) // TODO .. POTENTIAL BUG, OPWORD STATE IS NOT STORED WHEN EMBEDED
 		return
 	case env.CurriedCallerType:
-		CallCurriedCaller(object.(env.CurriedCaller), ps, nil, false, false, nil, false) // TODO .. POTENTIAL BUG, OPWORD STATE IS NOT STORED WHEN EMBEDED
+		CallCurriedCaller(object.(env.CurriedCaller), ps, nil, false, false, nil, false, false) // TODO .. POTENTIAL BUG, OPWORD STATE IS NOT STORED WHEN EMBEDED
 		return
 	case env.CommaType:
 		ps.ErrorFlag = true
@@ -586,36 +612,34 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 		return found, object, nil
 	case env.CPath:
 		currCtx := ps.Ctx
-		i := 1
-	gogo1:
-		currWord := word.GetWordNumber(i)
-		// Check if word is "_@" (parent context navigation)
-		wordStr := ps.Idx.GetWord(currWord.Index)
-		if wordStr == "_@" {
-			// Go to parent context
-			if currCtx.Parent != nil {
-				currCtx = currCtx.Parent
-				i += 1
-				if word.Cnt > i-1 {
-					goto gogo1
+		for i := 1; ; i++ {
+			currWord := word.GetWordNumber(i)
+			// Check if word is "_@" (parent context navigation)
+			wordStr := ps.Idx.GetWord(currWord.Index)
+			if wordStr == "_@" {
+				// Go to parent context
+				if currCtx.Parent != nil {
+					currCtx = currCtx.Parent
+					if word.Cnt > i {
+						continue
+					}
+					// If no more path parts, return the parent context itself
+					return true, currCtx, currCtx
 				}
-				// If no more path parts, return the parent context itself
-				return true, currCtx, currCtx
+				return false, nil, currCtx
 			}
-			return false, nil, currCtx
-		}
-		object, found := currCtx.Get(currWord.Index)
-		if found && word.Cnt > i {
-			switch swObj := object.(type) {
-			case *env.RyeCtx:
-				currCtx = swObj
-				i += 1
-				goto gogo1
-			case env.Dict:
-				return found, *env.NewString("No word value!!"), currCtx
+			object, found := currCtx.Get(currWord.Index)
+			if found && word.Cnt > i {
+				switch swObj := object.(type) {
+				case *env.RyeCtx:
+					currCtx = swObj
+					continue
+				case env.Dict:
+					return found, *env.NewString("No word value!!"), currCtx
+				}
 			}
+			return found, object, currCtx
 		}
-		return found, object, currCtx
 	default:
 		return false, nil, nil
 	}
@@ -654,85 +678,87 @@ func findWordValueWithFailureInfo(ps *env.ProgramState, word1 env.Object) (bool,
 		currCtx := ps.Ctx
 		var contextPath strings.Builder
 		i := 1
-	gogo1:
-		currWord := word.GetWordNumber(i)
-		wordName := ps.Idx.GetWord(currWord.Index)
-		if i == 1 {
-			contextPath.WriteString(wordName)
-		} else {
-			contextPath.WriteString("/" + wordName)
-		}
-
-		// Check if word is "_@" (parent context navigation)
-		if wordName == "_@" {
-			// Go to parent context
-			if currCtx.Parent != nil {
-				currCtx = currCtx.Parent
-				i += 1
-				if word.Cnt > i-1 {
-					goto gogo1
-				}
-				// If no more path parts, return the parent context itself
-				return true, currCtx, currCtx, ""
-			}
-			return false, nil, currCtx, "@ (no parent context)"
-		}
-
-		object, found := currCtx.Get(currWord.Index)
-		if !found {
-			// Word not found - report which word and in which context
+	pathLoop:
+		for {
+			currWord := word.GetWordNumber(i)
+			wordName := ps.Idx.GetWord(currWord.Index)
 			if i == 1 {
-				return false, object, currCtx, wordName
+				contextPath.WriteString(wordName)
 			} else {
-				// Build context name from previous parts of the path
-				var ctxName strings.Builder
-				for j := 1; j < i; j++ {
-					if j > 1 {
-						ctxName.WriteString("/")
-					}
-					ctxName.WriteString(ps.Idx.GetWord(word.GetWordNumber(j).Index))
-				}
-				return false, object, currCtx, wordName + " (in context " + ctxName.String() + ")"
+				contextPath.WriteString("/" + wordName)
 			}
-		}
-		if found && word.Cnt > i {
-			switch swObj := object.(type) {
-			case *env.RyeCtx:
-				currCtx = swObj
-				i += 1
-				goto gogo1
-			case env.Dict:
-				// Handle dict path traversal
-				currDict := swObj
-				for word.Cnt > i {
+
+			// Check if word is "_@" (parent context navigation)
+			if wordName == "_@" {
+				// Go to parent context
+				if currCtx.Parent != nil {
+					currCtx = currCtx.Parent
 					i += 1
-					keyWord := word.GetWordNumber(i)
-					keyStr := ps.Idx.GetWord(keyWord.Index)
-					// Look up in dict
-					if val, ok := currDict.Data[keyStr]; ok {
-						object = env.ToRyeValue(val)
-						// If more path segments, check what we got
-						if word.Cnt > i {
-							switch nextObj := object.(type) {
-							case env.Dict:
-								currDict = nextObj
-								continue
-							case *env.RyeCtx:
-								currCtx = nextObj
-								i += 1
-								goto gogo1
-							default:
-								return false, nil, currCtx, keyStr + " is not a dict or context"
-							}
-						}
-					} else {
-						return false, nil, currCtx, keyStr + " not found in dict"
+					if word.Cnt > i-1 {
+						continue
 					}
+					// If no more path parts, return the parent context itself
+					return true, currCtx, currCtx, ""
 				}
-				return true, object, currCtx, ""
+				return false, nil, currCtx, "@ (no parent context)"
 			}
+
+			object, found := currCtx.Get(currWord.Index)
+			if !found {
+				// Word not found - report which word and in which context
+				if i == 1 {
+					return false, object, currCtx, wordName
+				} else {
+					// Build context name from previous parts of the path
+					var ctxName strings.Builder
+					for j := 1; j < i; j++ {
+						if j > 1 {
+							ctxName.WriteString("/")
+						}
+						ctxName.WriteString(ps.Idx.GetWord(word.GetWordNumber(j).Index))
+					}
+					return false, object, currCtx, wordName + " (in context " + ctxName.String() + ")"
+				}
+			}
+			if found && word.Cnt > i {
+				switch swObj := object.(type) {
+				case *env.RyeCtx:
+					currCtx = swObj
+					i += 1
+					continue
+				case env.Dict:
+					// Handle dict path traversal
+					currDict := swObj
+					for word.Cnt > i {
+						i += 1
+						keyWord := word.GetWordNumber(i)
+						keyStr := ps.Idx.GetWord(keyWord.Index)
+						// Look up in dict
+						if val, ok := currDict.Data[keyStr]; ok {
+							object = env.ToRyeValue(val)
+							// If more path segments, check what we got
+							if word.Cnt > i {
+								switch nextObj := object.(type) {
+								case env.Dict:
+									currDict = nextObj
+									continue
+								case *env.RyeCtx:
+									currCtx = nextObj
+									i += 1
+									continue pathLoop
+								default:
+									return false, nil, currCtx, keyStr + " is not a dict or context"
+								}
+							}
+						} else {
+							return false, nil, currCtx, keyStr + " not found in dict"
+						}
+					}
+					return true, object, currCtx, ""
+				}
+			}
+			return found, object, currCtx, ""
 		}
-		return found, object, currCtx, ""
 	default:
 		return false, nil, nil, "unknown word type"
 	}
@@ -745,7 +771,7 @@ func findWordValueWithFailureInfo(ps *env.ProgramState, word1 env.Object) (bool,
 // Purpose: Main word evaluator - looks up in context, tries generic words if not found, handles getcpath mode
 //
 //	when there is a left value
-func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft bool, pipeSecond bool, opword bool) {
+func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft bool, pipeSecond bool, opword bool, dotword bool) {
 	// Special handling for getcpath (mode 3) - behave like get-word
 	if cpath, ok := word.(env.CPath); ok && cpath.Mode == 3 {
 		found, object, _, failureInfo := findWordValueWithFailureInfo(ps, word)
@@ -830,7 +856,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 	// If found initially or via methods namespace
 	if found {
 		// Eval the value (object) word was bound to
-		EvalObject(ps, object, leftVal, toLeft, session, pipeSecond, firstVal, opword) //ww0128a *
+		EvalObject(ps, object, leftVal, toLeft, session, pipeSecond, firstVal, opword, dotword) //ww0128a *
 		return
 		// word is not found
 	} else {
@@ -858,7 +884,7 @@ func EvalGenword(ps *env.ProgramState, word env.Genword, leftVal env.Object, toL
 	var arg0 = ps.Res
 	object, found := ps.Gen.Get(arg0.GetKind(), word.Index)
 	if found {
-		EvalObject(ps, object, arg0, toLeft, nil, false, nil, false) //ww0128a *
+		EvalObject(ps, object, arg0, toLeft, nil, false, nil, false, false) //ww0128a *
 		return
 	} else {
 		ps.ErrorFlag = true
@@ -885,29 +911,29 @@ func EvalGetword(ps *env.ProgramState, word env.Getword, leftVal env.Object, toL
 // EvalObject evaluates a Rye object, particularly handling callable types (builtins, functions).
 // Called from: EvalWord, EvalGenword
 // Purpose: Evaluates found objects - dispatches builtins/functions/cpaths to their callers, returns other types
-func EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toLeft bool, ctx *env.RyeCtx, pipeSecond bool, firstVal env.Object, opword bool) {
+func EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toLeft bool, ctx *env.RyeCtx, pipeSecond bool, firstVal env.Object, opword bool, dotword bool) {
 	switch object.Type() {
 	case env.BuiltinType:
 		bu := object.(env.Builtin)
 		if checkForFailureWithBuiltin(bu, ps, 333) {
 			return
 		}
-		CallBuiltin_CollectArgs(bu, ps, leftVal, toLeft, pipeSecond, firstVal, opword)
+		CallBuiltin_CollectArgs(bu, ps, leftVal, toLeft, pipeSecond, firstVal, opword, dotword)
 		return
 	case env.FunctionType:
 		fn := object.(env.Function)
-		CallFunction_CollectArgs(fn, ps, leftVal, toLeft, ctx, pipeSecond, firstVal)
+		CallFunction_CollectArgs(fn, ps, leftVal, toLeft, ctx, pipeSecond, firstVal, opword, dotword)
 		return
 	case env.VarBuiltinType:
 		bu := object.(env.VarBuiltin)
 		if checkForFailureWithVarBuiltin(bu, ps, 333) {
 			return
 		}
-		CallVarBuiltin(bu, ps, leftVal, toLeft, pipeSecond, firstVal, opword)
+		CallVarBuiltin(bu, ps, leftVal, toLeft, pipeSecond, firstVal, opword, dotword)
 		return
 	case env.CurriedCallerType:
 		cc := object.(env.CurriedCaller)
-		CallCurriedCaller(cc, ps, leftVal, toLeft, pipeSecond, firstVal, opword)
+		CallCurriedCaller(cc, ps, leftVal, toLeft, pipeSecond, firstVal, opword, dotword)
 		return
 	default:
 		ps.Res = object
@@ -927,14 +953,14 @@ func EvalSetword(ps *env.ProgramState, word env.Setword) {
 	if ps.AllowMod {
 		ok := ps.Ctx.Mod(idx, ps.Res)
 		if !ok {
-			ps.Res = env.NewError("Cannot modify constant '" + ps.Idx.GetWord(idx) + "'. Use 'var' to declare it as a variable, or use modword (::) if it's already a variable.")
+			ps.Res = env.NewError("Cannot modify constant `" + ps.Idx.GetWord(idx) + "`. Use `var` to declare it as a variable, or use modword `::` if it's already a variable.")
 			ps.FailureFlag = true
 			ps.ErrorFlag = true
 		}
 	} else {
 		ok := ps.Ctx.SetNew(idx, ps.Res, ps.Idx)
 		if !ok {
-			ps.Res = env.NewError("Cannot set word '" + ps.Idx.GetWord(idx) + "' because it's already set. Use modword (::) to modify an existing word, or use a different name.")
+			ps.Res = env.NewError("Cannot set word `" + ps.Idx.GetWord(idx) + "` because it's already set. Use modword `::` to modify an existing word, or use a different name.")
 			ps.FailureFlag = true
 			ps.ErrorFlag = true
 		}
@@ -967,11 +993,11 @@ func EvalModword(ps *env.ProgramState, word env.Modword) {
 			}
 		}
 	case env.ModErrConstant:
-		ps.Res = env.NewError("Cannot modify constant '" + ps.Idx.GetWord(idx) + "'. Use 'var' to declare it as a variable before modifying it.")
+		ps.Res = env.NewError("Cannot modify constant `" + ps.Idx.GetWord(idx) + "`. Use `var` to declare it as a variable before modifying it.")
 		ps.FailureFlag = true
 		ps.ErrorFlag = true
 	case env.ModErrTypeMismatch:
-		ps.Res = env.NewError("Cannot change type of variable '" + ps.Idx.GetWord(idx) + "' from " + ps.Idx.GetWord(int(existingType)) + " to " + ps.Idx.GetWord(int(ps.Res.Type())) + ".")
+		ps.Res = env.NewError("Cannot change type of variable `" + ps.Idx.GetWord(idx) + "` from `" + ps.Idx.GetWord(int(existingType)) + "` to `" + ps.Idx.GetWord(int(ps.Res.Type())) + "`.")
 		ps.FailureFlag = true
 		ps.ErrorFlag = true
 	}
@@ -984,12 +1010,8 @@ func EvalModword(ps *env.ProgramState, word env.Modword) {
 // CallFunctionWithArgs is a consolidated function caller that dispatches based on argument count.
 // Called from: Various builtins that need to call user functions
 // Purpose: Dispatcher that routes to specialized function callers based on number of arguments (0,1,2,4,N)
+// Note: Context creation is handled by the subfunctions, not here
 func CallFunctionWithArgs(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, args ...env.Object) {
-	ctx = DetermineContext(fn, ps, ctx)
-	if ctx == nil {
-		return
-	}
-
 	switch len(args) {
 	case 0:
 		CallFunction_CollectArgs(fn, ps, nil, false, ctx)
@@ -1039,6 +1061,13 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 			firstVal = fv
 		}
 	}
+	if len(pipeSecond) >= 3 {
+		if ow, ok := pipeSecond[2].(bool); ok {
+			opword = ow
+		}
+	}
+	// Note: dotword is intentionally not read here - user function arg collection
+	// always uses opword=false, dotword=false (see evalExprFn closure below).
 
 	// Determine arg0 based on pipeSecond flag (same logic as CallBuiltin_CollectArgs)
 	var arg0 env.Object
@@ -1130,8 +1159,13 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 	// fmt.Println(fnCtx)
 
 	ii := 0
-	// evalExprFn := EvalExpression // 2020-01-12 .. changed to ion2
-	evalExprFn := EvalExpression_CollectArg
+	// For user functions, arg collection does NOT restrict further operators (opword=false, dotword=false).
+	// This matches the original behavior where CallFunction_CollectArgs always used opword=false,
+	// enabling right-to-left grouping of middle arguments (e.g. 6 <add> 12 2 <mul> 3 4 => 42).
+	// Removing PinMode makes dotwords symmetric: 6 .add 12 2 .mul 3 4 now also gives 42.
+	evalExprFn := func(ps *env.ProgramState, limited bool, _ bool) {
+		EvalExpression(ps, nil, false, limited, false, false)
+	}
 	if arg0 != nil {
 		if fn.Spec.Series.Len() > 0 {
 			index := fn.Spec.Series.Get(ii).(env.Word).Index
@@ -1139,8 +1173,7 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 			ps.Args[ii] = index
 			ii = 1
 			if !toLeft {
-				//evalExprFn = EvalExpression_ // 2020-01-12 .. changed to ion2
-				evalExprFn = EvalExpression_CollectArg
+				// evalExprFn is already set to the non-restricting closure above
 			}
 		}
 	}
@@ -1250,7 +1283,7 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 // Called from: CallFunctionWithArgs, builtins needing to call 2-arg functions
 // Purpose: Optimized path for 2-argument function calls from builtins
 func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, arg1 env.Object, ctx *env.RyeCtx) {
-	fnCtx := DetermineContext(fn, ps, ctx)
+	fnCtx, fromPool := DetermineContext(fn, ps, ctx)
 	if ps.ReturnFlag || ps.ErrorFlag {
 		return
 	}
@@ -1276,6 +1309,7 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 		if len(psX.DeferBlocks) > 0 {
 			ExecuteDeferredBlocks(psX)
 		}
+		returnContextToPool(fnCtx, fromPool)
 	}()
 
 	psX.Ser.SetPos(0)
@@ -1301,7 +1335,7 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 // Called from: CallFunctionWithArgs, builtins needing to call 4-arg functions
 // Purpose: Optimized path for 4-argument function calls from builtins
 func CallFunctionArgs4(fn env.Function, ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, ctx *env.RyeCtx) {
-	fnCtx := DetermineContext(fn, ps, ctx)
+	fnCtx, fromPool := DetermineContext(fn, ps, ctx)
 	if ps.ReturnFlag || ps.ErrorFlag {
 		return
 	}
@@ -1329,6 +1363,7 @@ func CallFunctionArgs4(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 		if len(psX.DeferBlocks) > 0 {
 			ExecuteDeferredBlocks(psX)
 		}
+		returnContextToPool(fnCtx, fromPool)
 	}()
 
 	EvalBlockInj(psX, arg0, true)
@@ -1354,7 +1389,7 @@ func CallFunctionArgs4(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, args ...env.Object) {
 	// fmt.Println(6)
 	// ctx = nil
-	var fnCtx = DetermineContext(fn, ps, ctx)
+	fnCtx, fromPool := DetermineContext(fn, ps, ctx)
 	if ps.ReturnFlag || ps.ErrorFlag {
 		return
 	}
@@ -1381,6 +1416,7 @@ func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, a
 		if len(psX.DeferBlocks) > 0 {
 			ExecuteDeferredBlocks(psX)
 		}
+		returnContextToPool(fnCtx, fromPool)
 	}()
 
 	if len(args) > 0 {
@@ -1405,52 +1441,77 @@ func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, a
 }
 
 // DetermineContext determines the appropriate context for a function call.
-// Called from: CallFunctionWithArgs, CallFunctionArgsN
+// Called from: CallFunctionWithArgs, CallFunctionArgsN, CallFunctionArgs2, CallFunctionArgs4
 // Purpose: Sets up function execution context based on pure/impure, defined context, and parent context
-func DetermineContext(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx) *env.RyeCtx {
-	// fmt.Println(55)
+// Returns: The context to use and a boolean indicating if it was obtained from the pool (and can be returned)
+func DetermineContext(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx) (*env.RyeCtx, bool) {
 	var fnCtx *env.RyeCtx
+	fromPool := false
 	env0 := ps.Ctx  // store reference to current env in local
 	if ctx != nil { // called via contextpath and this is the context
-		// fmt.Println("DIREXT CTX 0")
 		if fn.Pure {
-			fnCtx = env.NewEnv(ps.PCtx)
+			fnCtx = envPool.Get().(*env.RyeCtx)
+			fnCtx.Clear()
+			fnCtx.Parent = ps.PCtx
+			fromPool = true
 		} else {
 			if fn.Ctx != nil { // if context was defined at definition time, pass it as parent.
-				// Prevent circular parent reference
-				if fn.Ctx != ctx {
-					fn.Ctx.Parent = ctx
+				if fn.InCtx {
+					fnCtx = fn.Ctx
+					// fromPool stays false - don't return to pool
+				} else {
+					// Prevent circular parent reference
+					if fn.Ctx != ctx {
+						fn.Ctx.Parent = ctx
+					}
+					fnCtx = envPool.Get().(*env.RyeCtx)
+					fnCtx.Clear()
+					fnCtx.Parent = fn.Ctx
+					fromPool = true
 				}
-				fnCtx = env.NewEnv(fn.Ctx)
 			} else {
-				fnCtx = env.NewEnv(ctx)
+				fnCtx = envPool.Get().(*env.RyeCtx)
+				fnCtx.Clear()
+				fnCtx.Parent = ctx
+				fromPool = true
 			}
 		}
 	} else {
-		// fmt.Println("DIREXT CTX 1")
 		if fn.Pure {
-			// fmt.Println("DIREXT CTX 2")
-			fnCtx = env.NewEnv(ps.PCtx)
+			fnCtx = envPool.Get().(*env.RyeCtx)
+			fnCtx.Clear()
+			fnCtx.Parent = ps.PCtx
+			fromPool = true
 		} else {
-			// fmt.Println("DIREXT CTX 3")
-
 			if fn.Ctx != nil { // if context was defined at definition time, pass it as parent.
-				// Q: Would we want to pass it directly at any point?
-				//    Maybe to remove need of creating new contexts, for reuse, of to be able to modify it?
 				if fn.InCtx {
-					// fmt.Println("DIREXT CTX 10")
+					// fn\inside: use fn.Ctx directly, don't create child context
 					fnCtx = fn.Ctx
+					// fromPool stays false - don't return to pool
 				} else {
-					// fn.Ctx.Parent = ctx // 20250225 ... trying to make buttons example work
-					fnCtx = env.NewEnv(fn.Ctx)
+					fnCtx = envPool.Get().(*env.RyeCtx)
+					fnCtx.Clear()
+					fnCtx.Parent = fn.Ctx
+					fromPool = true
 				}
-				// fnCtx = env.NewEnv(fn.Ctx)
 			} else {
-				fnCtx = env.NewEnv(env0)
+				fnCtx = envPool.Get().(*env.RyeCtx)
+				fnCtx.Clear()
+				fnCtx.Parent = env0
+				fromPool = true
 			}
 		}
 	}
-	return fnCtx
+	return fnCtx, fromPool
+}
+
+// returnContextToPool returns a context to the pool if it's safe to do so.
+// Called from: CallFunctionArgs2, CallFunctionArgs4, CallFunctionArgsN
+// Purpose: Centralizes the logic for returning contexts to the pool
+func returnContextToPool(fnCtx *env.RyeCtx, fromPool bool) {
+	if fromPool && !fnCtx.IsClosure {
+		envPool.Put(fnCtx)
+	}
 }
 
 // CallCurriedCallerArgsN calls a curried caller with N provided arguments (not collected from code stream).
@@ -1487,7 +1548,7 @@ func CallCurriedCallerArgsN(cc env.CurriedCaller, ps *env.ProgramState, args ...
 // CallCurriedCaller handles calling a curried caller (partially applied function or builtin).
 // Called from: EvalExpression_DispatchType, EvalObject
 // Purpose: Executes curried callers by filling in remaining arguments and calling the underlying builtin/function
-func CallCurriedCaller(cc env.CurriedCaller, ps *env.ProgramState, arg0_ env.Object, toLeft bool, pipeSecond bool, firstVal env.Object, opword bool) {
+func CallCurriedCaller(cc env.CurriedCaller, ps *env.ProgramState, arg0_ env.Object, toLeft bool, pipeSecond bool, firstVal env.Object, opword bool, dotword bool) {
 	// Initialize arguments with curried values if available
 	var arg0 env.Object = cc.Cur0
 	var arg1 env.Object = cc.Cur1
@@ -1499,7 +1560,10 @@ func CallCurriedCaller(cc env.CurriedCaller, ps *env.ProgramState, arg0_ env.Obj
 	// NOT the total arguments from the underlying function/builtin
 	argsToCollect := cc.Argsn
 
-	evalExprFn := EvalExpression_CollectArg
+	// Use a closure that captures dotword so nested dotwords are blocked when called from a dotword context
+	evalExprFn := func(ps *env.ProgramState, limited bool, opword bool) {
+		EvalExpression(ps, nil, false, limited, opword, dotword)
+	}
 
 	// Track how many arguments we've collected
 	collected := 0
@@ -1609,7 +1673,7 @@ func CallCurriedCaller(cc env.CurriedCaller, ps *env.ProgramState, arg0_ env.Obj
 // CallBuiltin_CollectArgs calls a builtin by collecting up to 5 arguments from the code stream.
 // Called from: EvalExpression_DispatchType, EvalObject
 // Purpose: Main builtin caller - collects arguments, handles failure flags, calls builtin function
-func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft bool, pipeSecond bool, firstVal env.Object, opword bool) {
+func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Object, toLeft bool, pipeSecond bool, firstVal env.Object, opword bool, dotword bool) {
 	////args := make([]env.Object, bi.Argsn)
 	/*pospos := ps.Ser.GetPos()
 	for i := 0; i < bi.Argsn; i += 1 {
@@ -1628,7 +1692,10 @@ func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Obj
 	// Removed experiment with currying since Cur fields were removed from Builtin type
 	// end of experiment
 
-	evalExprFn := EvalExpression_CollectArg
+	// Use a closure that captures dotword so nested dotwords are blocked when called from a dotword context
+	evalExprFn := func(ps *env.ProgramState, limited bool, opword bool) {
+		EvalExpression(ps, nil, false, limited, opword, dotword)
+	}
 	getParentErr := func() *env.Error {
 		if err, ok := ps.Res.(*env.Error); ok {
 			return err
@@ -1725,7 +1792,7 @@ func CallBuiltin_CollectArgs(bi env.Builtin, ps *env.ProgramState, arg0_ env.Obj
 // CallVarBuiltin calls a variadic builtin by collecting all required arguments into a slice.
 // Called from: EvalExpression_DispatchType, EvalObject
 // Purpose: Handles builtins with variable number of arguments, collecting them into a slice
-func CallVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, arg0_ env.Object, toLeft bool, pipeSecond bool, firstVal env.Object, opword bool) {
+func CallVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, arg0_ env.Object, toLeft bool, pipeSecond bool, firstVal env.Object, opword bool, dotword bool) {
 
 	args := make([]env.Object, bi.Argsn)
 	ii := 0
@@ -1738,7 +1805,7 @@ func CallVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, arg0_ env.Object, t
 			args[ii] = firstVal
 			ii++
 		} else if bi.Argsn > 0 {
-			EvalExpression_CollectArg(ps, true, opword)
+			EvalExpression(ps, nil, false, true, opword, dotword)
 			if ps.ReturnFlag || ps.ErrorFlag {
 				return
 			}
@@ -1751,7 +1818,7 @@ func CallVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, arg0_ env.Object, t
 			args[ii] = arg0_
 			ii++
 		} else if bi.Argsn > 1 {
-			EvalExpression_CollectArg(ps, true, opword)
+			EvalExpression(ps, nil, false, true, opword, dotword)
 			if ps.ReturnFlag || ps.ErrorFlag {
 				return
 			}
@@ -1761,7 +1828,7 @@ func CallVarBuiltin(bi env.VarBuiltin, ps *env.ProgramState, arg0_ env.Object, t
 		}
 		//variadic version
 		for i := 2; i < bi.Argsn; i += 1 {
-			EvalExpression_CollectArg(ps, true, opword)
+			EvalExpression(ps, nil, false, true, opword, dotword)
 			if ps.ReturnFlag || ps.ErrorFlag {
 				return
 			}

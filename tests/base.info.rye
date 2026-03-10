@@ -594,6 +594,26 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	{
 	}
 
+	group "_!=" 
+	"Compares two values for inequality, returning true if not equal or false if equal."
+	{
+		arg `value1: First value to compare`
+		arg `value2: Second value to compare`
+		returns `boolean true if values are not equal, false otherwise`
+	}
+
+	{
+		equal { 5 != 5 } false
+		equal { 5 != 4 } true
+		equal { "abc" != "abc" } false
+		equal { "abc" != "def" } true
+		equal { { 1 2 } != { 1 2 } } false
+		equal { { 1 2 } != { 2 1 } } true
+	}
+
+	{
+	}
+
 	group "_>" 
 	"Compares if the first value is greater than the second value."
 	{
@@ -4407,6 +4427,22 @@ section "Functions " "functions that create functions" {
 	{
 	}
 
+	group "modder" 
+	"Creates a function that executes directly in the current context (like fn\\inside with current), allowing arguments and context words to be modified with word::."
+	{
+		arg `spec: Block containing parameter specifications`
+		arg `body: Block containing the function body code`
+		returns `function object that executes directly in the current context (captured at creation), with arguments as variables`
+	}
+
+	{
+		equal { var 'x 0 , inc: modder { } { x:: x + 1 } , inc , inc , x } 2
+		equal { var 'n 10 , add: modder { v } { n:: n + v } , add 5 , n } 15
+	}
+
+	{
+	}
+
 	group "closure" 
 	"Creates a closure that captures the current context at creation time, preserving access to variables in that scope."
 	{
@@ -4578,10 +4614,10 @@ section "Other " "..." {
 	}
 
 	{
-		equal { 5 _| } 5
-		equal { "hello" _| } "hello"
-		equal { true _| } true
-		equal { { 1 2 3 } _| } { 1 2 3 }
+		equal { 5 | } 5
+		equal { "hello" | } "hello"
+		equal { true | } true
+		equal { { 1 2 3 } | } { 1 2 3 }
 	}
 
 	{

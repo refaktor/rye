@@ -33,12 +33,12 @@ temperature:: 15
 
 ; Test 3: Variables in different contexts
 print "\n--- Test 3: Context isolation ---"
-context ctx1 {
+ctx1: context {
     w: var 'value 1
     on-change w { print "Context 1 - value changed to:" value }
 }
 
-context ctx2 {
+ctx2: context {
     w: var 'value 100
     on-change w { print "Context 2 - value changed to:" value }
 }

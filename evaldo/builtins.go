@@ -1105,10 +1105,10 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { 5 _| } 5
-	// equal { "hello" _| } "hello"
-	// equal { true _| } true
-	// equal { { 1 2 3 } _| } { 1 2 3 }
+	// equal { 5 | } 5
+	// equal { "hello" | } "hello"
+	// equal { true | } true
+	// equal { { 1 2 3 } | } { 1 2 3 }
 	// Args:
 	// * value: Any value to be passed through unchanged
 	// Returns:
