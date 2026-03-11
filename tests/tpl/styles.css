@@ -33,6 +33,19 @@ body, html {
     color: #333;
 }
 
+.menu-kind-tag {
+    display: inline-block;
+    background-color: #6c8ebf;
+    color: #fff;
+    font-size: 0.72em;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-right: 5px;
+    vertical-align: middle;
+    letter-spacing: 0.03em;
+}
+
 .content {
     flex: 1; /* Takes up the remaining space */
     overflow-y: auto; /* Makes the main area scrollable when content exceeds viewport height */

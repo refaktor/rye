@@ -1265,7 +1265,7 @@ func (i Opword) Dump(e Idxs) string {
 	if i.Force == 1 {
 		ssecond = "*"
 	}
-	return e.GetWord(i.Index) + ssecond
+	return strings.TrimPrefix(e.GetWord(i.Index), "_") + ssecond
 }
 
 //

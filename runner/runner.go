@@ -62,6 +62,13 @@ var (
 	// Code signing options
 	CodeSigEnforced = flag.Bool("codesig", false, "Enforce code signature verification")
 
+	// Unshare options (Linux only) - namespace isolation via re-exec
+	UnshareEnabled = flag.Bool("unshare", false, "Run script in isolated Linux namespaces via re-exec (Linux only)")
+	UnshareFs      = flag.Bool("unshare-fs", true, "Isolate filesystem when using --unshare (bind-mounts current dir read-only as /app)")
+	UnshareNet     = flag.Bool("unshare-net", true, "Isolate network namespace when using --unshare (no network access)")
+	UnsharePid     = flag.Bool("unshare-pid", true, "Isolate PID namespace when using --unshare (hides host processes)")
+	UnshareUts     = flag.Bool("unshare-uts", true, "Isolate UTS/hostname namespace when using --unshare")
+
 	// Inspect/debugging options
 	NoInspect = flag.Bool("noinspect", false, "Exit immediately on error without showing debugging options")
 )
@@ -174,6 +181,21 @@ func handleError(err error, context string, fatal bool) {
 }
 
 func DoMain(regfn func(*env.ProgramState) error) {
+	// CHILD PROCESS DETECTION: Must happen before flag.Parse().
+	// If we are the sandboxed child spawned by the --unshare re-exec, set up
+	// any requested namespace isolation layers immediately, then fall through
+	// to normal flag parsing and execution (now running inside the jail).
+	if IsUnshareChild() {
+		cfg := ReadUnshareChildConfig()
+		if cfg.Fs {
+			if err := SetupUnshareFilesystem(); err != nil {
+				fmt.Fprintf(os.Stderr, "rye --unshare: filesystem jail setup failed: %v\n", err)
+				os.Exit(1)
+			}
+		}
+		// Child continues below with normal flag parsing and script execution.
+	}
+
 	// Error logging is now initialized lazily only when needed
 	defer func() {
 		if errorLogFile != nil {
@@ -231,6 +253,9 @@ func DoMain(regfn func(*env.ProgramState) error) {
 		fmt.Println("\033[33m  rye -landlock-profile=readonly       \033[36m# use the readonly profile (default)")
 		fmt.Println("\033[33m  rye -landlock-profile=readexec       \033[36m# use the readexec profile (allows execution)")
 		fmt.Println("\033[33m  rye -landlock-paths=/path1,/path2    \033[36m# specify paths to allow access to")
+		fmt.Println("\033[33m  rye -unshare script.rye              \033[36m# run script.rye in isolated Linux namespaces (no network, sees only current dir)")
+		fmt.Println("\033[33m  rye -unshare -unshare-net=false .    \033[36m# run main.rye isolated but with network access kept")
+		fmt.Println("\033[33m  rye -unshare -unshare-fs=false .     \033[36m# isolate network/pid/uts but keep full filesystem access")
 		fmt.Println("\033[33m  rye -localhist                       \033[36m# append console history to local file local_rye_history")
 		fmt.Println("\033[33m  rye -http 8080                       \033[36m# start HTTP REPL mode on port 8080 (localhost only)")
 		fmt.Println("\033[33m  rye -http 8080 main.rye              \033[36m# load main.rye and expose via HTTP console on port 8080")
@@ -239,6 +264,33 @@ func DoMain(regfn func(*env.ProgramState) error) {
 	}
 	// Parse flags
 	flag.Parse()
+
+	// PARENT RE-EXEC: If --unshare is requested (via CLI flag or .ryesec policy),
+	// re-exec this process inside Linux namespaces now, before any interpreter
+	// setup. DoReexecInUnshare never returns — it waits for the child and exits.
+	if !IsUnshareChild() {
+		shouldUnshare := *UnshareEnabled
+		uCfg := UnshareConfig{
+			Fs:  *UnshareFs,
+			Net: *UnshareNet,
+			Pid: *UnsharePid,
+			Uts: *UnshareUts,
+		}
+		// Also check .ryesec in the script directory for unshare policy.
+		if !shouldUnshare {
+			args := flag.Args()
+			if len(args) > 0 {
+				scriptDir := filepath.Dir(args[0])
+				if polEnabled, polCfg, ok := peekUnsharePolicy(scriptDir); ok && polEnabled {
+					shouldUnshare = true
+					uCfg = polCfg
+				}
+			}
+		}
+		if shouldUnshare {
+			DoReexecInUnshare(uCfg) // never returns
+		}
+	}
 
 	evaldo.ShowResults = !*silent
 
