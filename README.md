@@ -183,4 +183,5 @@ Pre-compiled binaries for **Linux**, **macOS**, **Windows**, and **WASM** are av
 - **[GitHub Discussions](https://github.com/refaktor/rye/discussions)**
 - **[Reddit](https://reddit.com/r/ryelang/)**
 - **[Issues](https://github.com/refaktor/rye/issues)**
+- **[Discord](https://discord.gg/z7NRTAFv)** - we have a small channel on a Concatenative server
 - **Email**: janko.itm+rye[at]gmail.com
