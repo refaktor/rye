@@ -1845,12 +1845,21 @@ startOfHere:
 
 				switch next.Code {
 				case 13: // Enter Newline
-					// Check if we should continue in multiline mode
-					allText := strings.Join(s.lines, "\n") + string(line)
+					// When navigating within a history-loaded multiline block,
+					// s.lines[s.currline] already holds the current line (Up arrow saves it).
+					// Save any edits back and build allText without duplicating.
+					if multiline && s.currline < len(s.lines) {
+						s.lines[s.currline] = string(line)
+					}
+					var allText string
+					if multiline && s.currline < len(s.lines) {
+						allText = strings.Join(s.lines, "\n")
+					} else {
+						allText = strings.Join(s.lines, "\n") + string(line)
+					}
 					inIncompleteBlock := s.checkIncompleteBlock(allText)
 
 					if s.inString || s.inString2 || inIncompleteBlock {
-						// This is copy from ctrl+x code above ... deduplicate and systemize TODO
 						historyStale = true
 						s.lastLineString = false
 						s.lastLineBacktick = false
@@ -1861,13 +1870,19 @@ startOfHere:
 						if s.inString2 {
 							s.lastLineBacktick = true
 						}
-						// DONT SEND LINE BACK BUT STORE IT
-						// s.enterLine(string(line) + " ")
-						s.lines = append(s.lines, string(line))
-						pos = 0
-						multiline = true
-						s.currline += 1
-						line = make([]rune, 0)
+						if multiline && s.currline < len(s.lines)-1 {
+							// Within a history block with more lines below: move to next line
+							s.currline += 1
+							line = []rune(s.lines[s.currline])
+							pos = len(line)
+						} else {
+							// At the end (fresh multiline or last line of history block): add blank line
+							s.lines = append(s.lines, string(line))
+							pos = 0
+							multiline = true
+							s.currline += 1
+							line = make([]rune, 0)
+						}
 						trace(line)
 						goto startOfHere
 					}
@@ -1878,14 +1893,13 @@ startOfHere:
 					s.sendBack("\n")
 					xx := ""
 					if multiline {
-						// fmt.Println(s.currline)
-						// fmt.Println(len(s.lines))
 						if s.currline > len(s.lines)-1 {
 							s.lines = append(s.lines, string(line))
 						} else {
 							s.lines[s.currline] = string(line)
 							if len(s.lines) > s.currline+1 {
-								CurDown(len(s.lines) - s.currline)
+								// Move cursor to the last displayed line, not past it
+								CurDown(len(s.lines) - 1 - s.currline)
 								fmt.Println("")
 							}
 						}
@@ -1908,7 +1922,21 @@ startOfHere:
 					goto startOfHere
 				case 8: // Backspace
 					if pos <= 0 {
-						s.doBeep()
+						// In multiline mode: Backspace on an empty continuation line merges back
+						// into the previous line (cursor moves up to end of previous line).
+						if multiline && s.currline > 0 && len(line) == 0 {
+							CurUp(1)
+							s.currline--
+							line = []rune(s.lines[s.currline])
+							s.lines = s.lines[:s.currline] // drop the empty line we were on
+							pos = len(line)
+							if s.currline == 0 && len(s.lines) == 0 {
+								multiline = false
+							}
+							s.needRefresh = true
+						} else {
+							s.doBeep()
+						}
 					} else {
 						// pos += 1
 						n := len(getSuffixGlyphs(line[:pos], 1))
@@ -1981,21 +2009,39 @@ startOfHere:
 						s.doBeep()
 					}
 				case 38: // Up
-					if multiline {
-						if s.currline > 0 { //  len(s.lines) {
-							CurUp(1)
-							// append the last line -- only when in last line but ok for now
-							if s.currline > len(s.lines)-1 {
-								s.lines = append(s.lines, string(line))
-							} else {
-								s.lines[s.currline] = string(line)
-							}
-							s.currline -= 1                    // later increment
-							line = []rune(s.lines[s.currline]) // + "⏎")
-							if pos > len(line) {
-								pos = len(line) - 1
-							}
+					if multiline && s.currline > 0 {
+						// Navigate upward within the multiline block
+						CurUp(1)
+						// append the last line -- only when in last line but ok for now
+						if s.currline > len(s.lines)-1 {
+							s.lines = append(s.lines, string(line))
+						} else {
+							s.lines[s.currline] = string(line)
 						}
+						s.currline -= 1                    // later increment
+						line = []rune(s.lines[s.currline]) // + "⏎")
+						if pos > len(line) {
+							pos = len(line) - 1
+						}
+					} else if multiline && s.currline == 0 {
+						// At the top of a multiline history block: clear the continuation
+						// lines below and resume normal (single-line) history navigation.
+						numBelow := len(s.lines) - 1
+						for i := 0; i < numBelow; i++ {
+							s.sendBack("\033[B\r\033[K") // move down, clear line
+						}
+						if numBelow > 0 {
+							s.sendBack(fmt.Sprintf("\033[%dA", numBelow))
+						}
+						multiline = false
+						s.currline = 0
+						s.lines = make([]string, 0)
+						s.lastLineString = false
+						s.lastLineBacktick = false
+						s.inString = false
+						s.inString2 = false
+						lastIndentLevel = 0
+						histPrev()
 					} else {
 						histPrev()
 					}
@@ -2019,6 +2065,26 @@ startOfHere:
 				case 35: // End
 					pos = len(line)
 				case 27: // Escape
+					if multiline {
+						// Cancel multiline input: move cursor past all continuation lines,
+						// emit a newline, then reset state and jump to a fresh prompt.
+						linesToEnd := len(s.lines) - s.currline
+						if linesToEnd > 0 {
+							CurDown(linesToEnd)
+						}
+						s.sendBack("\n")
+						multiline = false
+						s.currline = 0
+						s.lines = make([]string, 0)
+						line = make([]rune, 0)
+						pos = 0
+						s.lastLineString = false
+						s.lastLineBacktick = false
+						s.inString = false
+						s.inString2 = false
+						lastIndentLevel = 0
+						goto startOfHere
+					}
 
 				default:
 					// Tab completion cleanup is handled automatically in tabComplete defer

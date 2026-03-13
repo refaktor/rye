@@ -325,7 +325,14 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 
 		// EVAL THE DO DIALECT
 		if r.dialect == "rye" {
+			// Use InErrHandler=true so failures at top level are NOT auto-elevated
+			// to errors — the REPL handles the three outcomes below explicitly:
+			//   (a) ErrorFlag=true  → real error, display red banner
+			//   (b) FailureFlag=true → soft failure, display yellow warning, keep as prevResult
+			//   (c) neither         → success, display result
+			es.InErrHandler = true
 			EvalBlockInj(es, r.prevResult, true)
+			es.InErrHandler = false
 		} else if r.dialect == "eyr" {
 			es.Dialect = env.EyrDialect
 			Eyr_EvalBlock(es, true)
@@ -353,23 +360,33 @@ func (r *Repl) evalLine(es *env.ProgramState, code string) string {
 			fmt.Println("Unknown dialect: " + r.dialect)
 		}
 
-		MaybeDisplayFailureOrError2(es, genv, "Rye console line", true, false)
-
-		es.SkipFlag = false // So that erors will again display in full
-
-		if !es.ErrorFlag && es.Res != nil && es.Res.Type() != env.VoidType {
-			// fmt.Println(&es)
-			r.prevResult = es.Res
-			p := ""
-			if env.IsPointer(es.Res) {
-				p = "Ref"
+		// Three-way outcome handler:
+		// (a) ErrorFlag=true  — real error: show red banner, prevResult NOT updated
+		// (b) FailureFlag=true, no error — soft failure: show yellow warning,
+		//     store error as prevResult so user can handle it on the next REPL line
+		//     with e.g. "|fix { fallback }" or "|check "wrap""
+		// (c) neither — success: display result and update prevResult normally
+		if es.ErrorFlag {
+			MaybeDisplayFailureOrError2(es, genv, "Rye console line", true, false)
+		} else if es.FailureFlag {
+			displayReplFailureWarning(es, genv)
+			r.prevResult = es.Res // keep error object so next line can |fix / |check it
+		} else {
+			if es.Res != nil && es.Res.Type() != env.VoidType {
+				r.prevResult = es.Res
+				p := ""
+				if env.IsPointer(es.Res) {
+					p = "Ref"
+				}
+				resultStr := es.Res.Inspect(*genv)
+				if r.dialect == "eyr" {
+					resultStr = strings.Replace(resultStr, "Block:", "Stack:", 1) // TODO --- temp / hackish way ... make stack display itself or another approach
+				}
+				output = fmt.Sprint("\033[38;5;37m" + p + resultStr + "\x1b[0m")
 			}
-			resultStr := es.Res.Inspect(*genv)
-			if r.dialect == "eyr" {
-				resultStr = strings.Replace(resultStr, "Block:", "Stack:", 1) // TODO --- temp / hackish way ... make stack display itself or another approach
-			}
-			output = fmt.Sprint("\033[38;5;37m" + p + resultStr + "\x1b[0m")
 		}
+
+		es.SkipFlag = false // So that errors will again display in full
 
 		if r.captureStdout {
 			// STDOUT CAPTURE
@@ -516,6 +533,19 @@ func constructKeyEvent(r rune, k keyboard.Key) term.KeyEvent {
 		//	code = 8 // Consistent with plain Backspace
 	}
 	return term.NewKeyEvent(ch, code, ctrl, alt, false)
+}
+
+// displayReplFailureWarning prints a yellow "⚠ FAILURE:" notice for failures that
+// ended a REPL line without being handled.  It is intentionally lighter than the
+// red RUNTIME ERROR banner — the failure is stored as prevResult so the user can
+// recover it on the very next line with e.g. "|fix { fallback }" or "|check "msg"".
+func displayReplFailureWarning(es *env.ProgramState, genv *env.Idxs) {
+	fmt.Print("\x1b[33m⚠ FAILURE:\x1b[0m ")
+	if es.Res != nil {
+		fmt.Println(es.Res.Print(*genv))
+	} else {
+		fmt.Println("(unknown failure)")
+	}
 }
 
 func isCursorAtBottom() bool { // TODO --- doesn't seem to work and probably don't need it ... test and remove if doesn't work

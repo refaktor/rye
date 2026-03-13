@@ -945,8 +945,8 @@ var Builtins_os = map[string]*env.Builtin{
 	//
 	// Example:
 	//  find %src |name "*.go" |type 'file |eval
-	//  find %. |max-depth 2 |name "*.txt" |eval
-	//  find %/home |min-depth 1 |max-depth 3 |regex regexp "test.*\.go$" |eval
+	//  find %. |max-depth! 2 |name "*.txt" |eval
+	//  find %/home |min-depth! 1 |max-depth! 3 |regex regexp "test.*\.go$" |eval
 	//
 
 	// Creates a new finder starting from the given path(s).

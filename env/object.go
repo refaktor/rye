@@ -768,7 +768,10 @@ func (i Uri) Inspect(e Idxs) string {
 }
 
 func (i Uri) Print(e Idxs) string {
-	return "Uri of kind " + i.Kind.Print(e)
+	if i.Kind.Print(e) == "file-uri" {
+		return "%" + i.Path
+	}
+	return i.Kind.Print(e) + ": " + i.Path
 }
 
 func (i Uri) Trace(msg string) {

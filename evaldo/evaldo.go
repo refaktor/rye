@@ -943,6 +943,14 @@ func EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toL
 		return
 	case env.FunctionType:
 		fn := object.(env.Function)
+		// User functions refuse a live failure exactly like builtins without AcceptFailure.
+		// Without this check, a failure produced by argument evaluation would be silently
+		// discarded (stored as a plain error value in fnCtx) instead of being elevated to
+		// an error and stopping evaluation.
+		if ps.FailureFlag {
+			ps.ErrorFlag = true
+			return
+		}
 		CallFunction_CollectArgs(fn, ps, leftVal, toLeft, ctx, pipeSecond, firstVal, opword, dotword)
 		return
 	case env.VarBuiltinType:
@@ -1228,6 +1236,11 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 	for i := ii; i < fn.Argsn; i += 1 {
 		evalExprFn(ps, true, opword)
 		if ps.ReturnFlag || ps.ErrorFlag {
+			return
+		}
+		// Refuse a live failure in the argument, just like a non-AcceptFailure builtin would.
+		if ps.FailureFlag {
+			ps.ErrorFlag = true
 			return
 		}
 		// The createcurriedcaller is now created explicitly with partial builtin function
