@@ -153,7 +153,7 @@ var builtins_iteration = map[string]*env.Builtin{
 					ser := ps.Ser
 					ps.Ser = bloc.Series
 					for i := int64(0); i < cond.Value; i++ {
-						EvalBlock(ps)
+						Eval(ps)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "replicate")
 						if ps.ErrorFlag || ps.ReturnFlag {
 							ps.Ser = ser
@@ -1881,7 +1881,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						// Evaluate the condition block
 						ps.Ser = cond.Series
 						ps.Ser.Reset()
-						EvalBlock(ps)
+						Eval(ps)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "while")
 						if ps.ErrorFlag || ps.ReturnFlag {
 							ps.Ser = ser
@@ -1901,7 +1901,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						// Execute the body block
 						ps.Ser = bloc.Series
 						ps.Ser.Reset()
-						EvalBlock(ps)
+						Eval(ps)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "while")
 						if ps.ErrorFlag || ps.ReturnFlag {
 							ps.Ser = ser
@@ -1943,7 +1943,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						// Execute the body block first (do-until behavior)
 						ps.Ser = bloc.Series
 						ps.Ser.Reset()
-						EvalBlock(ps)
+						Eval(ps)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "until")
 						if ps.ErrorFlag || ps.ReturnFlag {
 							ps.Ser = ser
@@ -1953,7 +1953,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						// Then evaluate the condition block
 						ps.Ser = cond.Series
 						ps.Ser.Reset()
-						EvalBlock(ps)
+						Eval(ps)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "until")
 						if ps.ErrorFlag || ps.ReturnFlag {
 							ps.Ser = ser
@@ -2009,7 +2009,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						for _, ch := range collection.Value {
 							val := *env.NewString(string(ch))
 							ps.Ctx.Mod(valueWord.Index, val)
-							EvalBlock(ps)
+							Eval(ps)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "for\\")
 							if ps.ErrorFlag || ps.ReturnFlag {
 								ps.Ser = ser
@@ -2023,7 +2023,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						for i := 0; i < length; i++ {
 							val := collection.Get(i)
 							ps.Ctx.Mod(valueWord.Index, val)
-							EvalBlock(ps)
+							Eval(ps)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "for\\")
 							if ps.ErrorFlag || ps.ReturnFlag {
 								ps.Ser = ser

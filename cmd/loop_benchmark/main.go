@@ -116,7 +116,7 @@ func main() {
 		})
 
 		// Create a new program state for each iteration
-		ps := env.NewProgramState(standardSeries, idx)
+		ps := env.NewProgramStateOLD(standardSeries, idx)
 		ps.Ctx = ctx
 		ps.Dialect = env.Rye2Dialect
 
@@ -155,7 +155,7 @@ func main() {
 		})
 
 		// Create a new program state for each iteration
-		ps := env.NewProgramState(standardSeries, idx)
+		ps := env.NewProgramStateOLD(standardSeries, idx)
 		ps.Ctx = ctx
 		ps.Dialect = env.Rye0Dialect
 
@@ -191,7 +191,7 @@ func main() {
 		})
 
 		// Compile the block once
-		psCompile := env.NewProgramState(series, idx)
+		psCompile := env.NewProgramStateOLD(series, idx)
 		psCompile.Ctx = ctx
 		psCompile.Dialect = env.Rye0Dialect
 		program := evaldo.Rye0_CompileBlock(psCompile)

@@ -1,0 +1,49 @@
+print "## Word-type combinations (word / dot-word / op-word / pipe-word)"
+
+assert\display "word: concat" {
+	concat "aa" "bb"
+} "aabb"
+
+assert\display "dot-word: .concat" {
+	"aa" .concat "bb"
+} "aabb"
+
+assert\display "op-word: ++" {
+	"aa" ++ "bb"
+} "aabb"
+
+assert\display "pipe-word: |concat" {
+	"aa" |concat "bb"
+} "aabb"
+
+assert\display "word + dot-word" {
+	concat "aa" "bb" .concat "cc"
+} "aabbcc"
+
+assert\display "dot-word + op-word" {
+	"aa" .concat "bb" ++ "cc"
+} "aabbcc"
+
+assert\display "op-word + dot-word" {
+	"aa" ++ "bb" .upper
+} "aaBB"
+
+assert\display "op-word + pipe-word" {
+	"aa" ++ "bb" |concat "cc"
+} "aabbcc"
+
+assert\display "dot-word + pipe-word" {
+	"aa" .concat "bb" |concat "cc"
+} "aabbcc"
+
+assert\display "pipe-word barrier: missing arg (word + pipe-word)" {
+	try { concat "aa" |concat "bb" } |type?
+} 'error
+
+assert\display "pipe-word barrier: missing arg (word + pipe-word extra)" {
+	try { concat "aa" |concat "bb" "cc" } |type?
+} 'error
+
+assert\display "pipe-word barrier: missing arg (op-word + pipe-word)" {
+	try { "aa" ++ |concat "bb" } |type?
+} 'error

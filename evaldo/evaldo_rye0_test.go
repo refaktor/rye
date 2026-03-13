@@ -34,7 +34,7 @@ func TestRye0_findWordValue(t *testing.T) {
 	series := env.NewTSeries([]env.Object{*word})
 
 	// Create a program state
-	ps := env.NewProgramState(*series, idx)
+	ps := env.NewProgramStateOLD(*series, idx)
 	ps.Ctx = childCtx
 
 	// Set the position to 1 to simulate a previous Pop() operation
@@ -85,7 +85,7 @@ func TestRye0_findWordValue_NoReplacement(t *testing.T) {
 	series := env.NewTSeries([]env.Object{*word})
 
 	// Create a program state
-	ps := env.NewProgramState(*series, idx)
+	ps := env.NewProgramStateOLD(*series, idx)
 	ps.Ctx = ctx
 
 	// Call Rye0_findWordValue
@@ -135,7 +135,7 @@ func TestRye0_findWordValue_BuiltinInCurrentContext(t *testing.T) {
 	series := env.NewTSeries([]env.Object{*word})
 
 	// Create a program state
-	ps := env.NewProgramState(*series, idx)
+	ps := env.NewProgramStateOLD(*series, idx)
 	ps.Ctx = ctx
 
 	// Call Rye0_findWordValue

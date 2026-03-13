@@ -56,7 +56,7 @@ var builtins_trees = map[string]*env.Builtin{
 								// ps.Ser.Reset()
 								fmt.Println(ps)
 								fmt.Println(ps.Ser)
-								EvalBlock(ps)
+								Eval(ps)
 								if ps.ErrorFlag {
 									fmt.Println("***1")
 									ps.Ser = ser
@@ -70,7 +70,7 @@ var builtins_trees = map[string]*env.Builtin{
 									ser = ps.Ser
 									ps.Ser = bodyBlock.Series
 									ps.Ser.Reset()
-									EvalBlock(ps)
+									Eval(ps)
 									if ps.ErrorFlag || ps.ReturnFlag {
 										fmt.Println("***2")
 										ps.Ser = ser
@@ -102,7 +102,7 @@ var builtins_trees = map[string]*env.Builtin{
 									/* Get child nodes using branch block
 									ps.Ser = branchBlock.Series
 									ps.Ser.Reset()
-									EvalBlock(ps)
+									Eval(ps)
 									if ps.ErrorFlag {
 										fmt.Println("***3")
 										fmt.Println(ps.Res)

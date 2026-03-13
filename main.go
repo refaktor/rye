@@ -125,6 +125,15 @@ func buildCLIPolicy() *security.SecurityPolicy {
 		policy.CodeSig.Enforced = true
 	}
 
+	// Unshare from CLI flags (records the intent; actual re-exec happens in DoMain)
+	if *runner.UnshareEnabled {
+		policy.Unshare.Enabled = true
+		policy.Unshare.Fs = *runner.UnshareFs
+		policy.Unshare.Net = *runner.UnshareNet
+		policy.Unshare.Pid = *runner.UnsharePid
+		policy.Unshare.Uts = *runner.UnshareUts
+	}
+
 	return policy
 }
 

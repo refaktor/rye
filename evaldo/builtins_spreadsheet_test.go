@@ -34,11 +34,11 @@ func BenchmarkAutotype(b *testing.B) {
 	input := fmt.Sprintf("load\\csv file://%s |autotype 1.0", tmpfile.Name())
 	block, genv := loader.LoadStringNoPEG(input, false)
 	for i := 0; i < b.N; i++ {
-		es := env.NewProgramState(block.(env.Block).Series, genv)
+		es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 		RegisterBuiltins(es)
-		res := EvalBlock(es)
-		if res != nil && res.ErrorFlag {
-			fmt.Println(res.Res.Print(*es.Idx))
+		Eval(es)
+		if es.ErrorFlag {
+			fmt.Println(es.Res.Print(*es.Idx))
 		}
 	}
 }

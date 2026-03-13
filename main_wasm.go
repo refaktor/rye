@@ -260,7 +260,7 @@ func SetTerminalSize(this js.Value, args []js.Value) any {
 func InitRyeShell(this js.Value, args []js.Value) any {
 	// subc := false
 	// fmt.Println("INITIALIZATION")
-	ps := env.NewProgramStateNEW()
+	ps := env.NewProgramState()
 	evaldo.RegisterBuiltins(ps)
 	contrib.RegisterBuiltins(ps, &evaldo.BuiltinNames)
 	ctx := ps.Ctx
@@ -274,7 +274,7 @@ func InitRyeShell(this js.Value, args []js.Value) any {
 		if subc {
 		}
 
-		evaldo.EvalBlock(es)
+		evaldo.Eval(es)
 		evaldo.MaybeDisplayFailureOrErrorWASM(es, genv, sendMessageToJS)
 
 		ES = es
@@ -314,7 +314,7 @@ func RyeEvalShellLine(this js.Value, args []js.Value) any {
 	}
 
 	ps := ES
-	block := loader.LoadStringNEW(" "+code1+" ", sig, ps)
+	block := loader.LoadString(" "+code1+" ", sig, ps)
 	switch val := block.(type) {
 	case env.Block:
 
@@ -365,7 +365,7 @@ func RyeEvalString(this js.Value, args []js.Value) any {
 	block, genv := loader.LoadStringNoPEG(code, sig)
 	switch val := block.(type) {
 	case env.Block:
-		es := env.NewProgramState(val.Series, genv)
+		es := env.NewProgramStateOLD(val.Series, genv)
 		evaldo.RegisterBuiltins(es)
 		contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
 
@@ -374,7 +374,7 @@ func RyeEvalString(this js.Value, args []js.Value) any {
 			es.Ctx = env.NewEnv(ctx)
 		}
 
-		evaldo.EvalBlock(es)
+		evaldo.Eval(es)
 		evaldo.MaybeDisplayFailureOrError(es, genv, "rye eval string wasm")
 		return es.Res.Print(*es.Idx)
 	case env.Error:
@@ -399,7 +399,7 @@ func RyeEvalStringNoTerm(this js.Value, args []js.Value) any {
 	}
 
 	ps := ES
-	block := loader.LoadStringNEW(" "+code+" ", sig, ps)
+	block := loader.LoadString(" "+code+" ", sig, ps)
 	switch val := block.(type) {
 	case env.Block:
 

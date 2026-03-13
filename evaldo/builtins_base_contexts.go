@@ -31,7 +31,7 @@ var builtins_contexts = map[string]*env.Builtin{
 				ctx := ps.Ctx
 				ps.Ser = bloc.Series
 				ps.Ctx = env.NewEnv(nil) // make new context with no parent
-				EvalBlock(ps)
+				Eval(ps)
 				MaybeDisplayFailureOrError(ps, ps.Idx, "raw-context")
 				if ps.ReturnFlag || ps.ErrorFlag {
 					ps.Ctx = ctx
@@ -68,7 +68,7 @@ var builtins_contexts = map[string]*env.Builtin{
 				ctx := ps.Ctx
 				ps.Ser = bloc.Series
 				ps.Ctx = env.NewEnv(ps.Ctx) // make new context with no parent
-				EvalBlock(ps)
+				Eval(ps)
 				MaybeDisplayFailureOrError(ps, ps.Idx, "isolate")
 				if ps.ReturnFlag || ps.ErrorFlag {
 					ps.Ctx = ctx
@@ -108,7 +108,7 @@ var builtins_contexts = map[string]*env.Builtin{
 				ctx := ps.Ctx
 				ps.Ser = bloc.Series
 				ps.Ctx = env.NewEnv(ps.Ctx) // make new context with no parent
-				EvalBlock(ps)
+				Eval(ps)
 				MaybeDisplayFailureOrError(ps, ps.Idx, "context")
 				if ps.ReturnFlag || ps.ErrorFlag {
 					ps.Ctx = ctx
@@ -145,7 +145,7 @@ var builtins_contexts = map[string]*env.Builtin{
 				ctx := ps.Ctx
 				ps.Ser = bloc.Series
 				ps.Ctx = env.NewEnv(ps.PCtx) // make new context with PCtx as parent instead of regular Ctx
-				EvalBlock(ps)
+				Eval(ps)
 				MaybeDisplayFailureOrError(ps, ps.Idx, "context\\pure")
 				if ps.ReturnFlag || ps.ErrorFlag {
 					ps.Ctx = ctx
@@ -181,7 +181,7 @@ var builtins_contexts = map[string]*env.Builtin{
 				ctx := ps.Ctx
 				ps.Ser = bloc.Series
 				ps.Ctx = env.NewEnv(ps.Ctx) // make new context with no parent
-				EvalBlock(ps)
+				Eval(ps)
 				MaybeDisplayFailureOrError(ps, ps.Idx, "private")
 				if ps.ReturnFlag || ps.ErrorFlag {
 					ps.Ctx = ctx
@@ -217,7 +217,7 @@ var builtins_contexts = map[string]*env.Builtin{
 					ctx := ps.Ctx
 					ps.Ser = bloc.Series
 					ps.Ctx = env.NewEnv2(ps.Ctx, doc.Value) // make new context with no parent
-					EvalBlock(ps)
+					Eval(ps)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "private\\")
 					if ps.ReturnFlag || ps.ErrorFlag {
 						ps.Ctx = ctx
@@ -259,7 +259,7 @@ var builtins_contexts = map[string]*env.Builtin{
 					ps.Ser = bloc.Series
 					// ps.Ctx = ctx0.Copy() // make new context with no parent
 					ps.Ctx = env.NewEnv(ctx0) // make new context with no parent
-					EvalBlock(ps)
+					Eval(ps)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "extends")
 					if ps.ReturnFlag || ps.ErrorFlag {
 						ps.Ctx = ctx
@@ -724,7 +724,7 @@ var builtins_contexts = map[string]*env.Builtin{
 					if ryeCtx, ok := clonedCtx.(*env.RyeCtx); ok {
 						ps.Ser = bloc.Series
 						ps.Ctx = ryeCtx
-						EvalBlock(ps)
+						Eval(ps)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "clone\\")
 						if ps.ReturnFlag || ps.ErrorFlag {
 							ps.Ctx = origCtx
@@ -768,6 +768,126 @@ var builtins_contexts = map[string]*env.Builtin{
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.ContextType}, "clone\\deep")
 			}
+		},
+	},
+
+	// ===== Execution Guard Introspection =====
+
+	// Tests:
+	// equal { call-depth? } 0
+	// equal { fn test { call-depth? } test } 1
+	// Args:
+	// (none)
+	// Returns:
+	// * current function call depth as integer (0 = top-level, 1 = inside one function, etc.)
+	"call-depth?": {
+		Argsn: 0,
+		Doc:   "Returns the current function call depth as an integer (0 = top-level, 1 = inside one function call, etc.).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return *env.NewInteger(int64(ps.CallDepth))
+		},
+	},
+
+	// Tests:
+	// equal { max-call-depth! 10 , max-call-depth! 0 } 10
+	// Args:
+	// * limit: integer — new maximum call depth (0 = unlimited)
+	// Returns:
+	// * the previous MaxCallDepth value (0 = was unlimited)
+	"max-call-depth!": {
+		Argsn: 1,
+		Doc:   "Sets the maximum allowed function call depth (recursion limit). Use 0 for unlimited (default). Returns the previous limit. Calls that exceed this depth raise a stack-overflow error.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch limit := arg0.(type) {
+			case env.Integer:
+				old := ps.MaxCallDepth
+				ps.MaxCallDepth = int(limit.Value)
+				return *env.NewInteger(int64(old))
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "max-call-depth!")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { max-call-depth? } 0
+	// equal { max-call-depth! 50 max-call-depth? } 50
+	// Args:
+	// (none)
+	// Returns:
+	// * current MaxCallDepth limit as integer (0 = unlimited)
+	"max-call-depth?": {
+		Argsn: 0,
+		Doc:   "Returns the current maximum call depth limit as an integer (0 = unlimited).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return *env.NewInteger(int64(ps.MaxCallDepth))
+		},
+	},
+
+	// Tests:
+	// greater { ops-done? } 0
+	// Args:
+	// (none)
+	// Returns:
+	// * number of expression evaluations performed so far as integer
+	"ops-done?": {
+		Argsn: 0,
+		Doc:   "Returns the total number of expression evaluations performed so far in this program state as an integer.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return *env.NewInteger(ps.OpsCount)
+		},
+	},
+
+	// Tests:
+	// equal { max-ops! 100000 , max-ops! 0 } 100000
+	// Args:
+	// * limit: integer — new maximum number of expression evaluations (0 = unlimited)
+	// Returns:
+	// * the previous MaxOps value (0 = was unlimited)
+	"max-ops!": {
+		Argsn: 1,
+		Doc:   "Sets the maximum number of expression evaluations allowed. Use 0 for unlimited (default). Returns the previous limit. Exceeding the limit raises an evaluation-limit error.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch limit := arg0.(type) {
+			case env.Integer:
+				old := ps.MaxOps
+				ps.MaxOps = limit.Value
+				return *env.NewInteger(old)
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType}, "max-ops!")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { max-ops? } 0
+	// equal { max-ops! 50000 max-ops? } 50000
+	// Args:
+	// (none)
+	// Returns:
+	// * current MaxOps limit as integer (0 = unlimited)
+	"max-ops?": {
+		Argsn: 0,
+		Doc:   "Returns the current maximum ops limit as an integer (0 = unlimited).",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			return *env.NewInteger(ps.MaxOps)
+		},
+	},
+
+	// Tests:
+	// equal { max-ops! 100 reset-ops max-ops? } 0
+	// Args:
+	// (none)
+	// Returns:
+	// * the OpsCount value before reset
+	"reset-ops": {
+		Argsn: 0,
+		Doc:   "Resets the OpsCount counter to zero and clears the MaxOps limit. Returns the OpsCount value before reset. Useful for re-arming the budget inside a fresh computation phase.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			old := ps.OpsCount
+			ps.OpsCount = 0
+			ps.MaxOps = 0
+			return *env.NewInteger(old)
 		},
 	},
 }

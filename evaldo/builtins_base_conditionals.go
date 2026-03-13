@@ -412,7 +412,7 @@ var builtins_conditionals = map[string]*env.Builtin{
 						ps.Ser = cond.Series
 						// we eval the block (current context / scope stays the same as it was in parent block)
 						// Inj means we inject the condition value into the block, because it costs us very little. we could do "if name { .print }"
-						EvalBlock(ps)
+						Eval(ps)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "cases")
 						if ps.ErrorFlag || ps.ReturnFlag {
 							ps.Ser = ser

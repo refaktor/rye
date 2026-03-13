@@ -10,10 +10,10 @@ import (
 
 func TestFailures_no_error1(t *testing.T) {
 	input := "1 return 2 3 "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
-	evaldo.EvalBlock(es)
+	evaldo.Eval(es)
 
 	if es.Res.Type() != env.IntegerType {
 		t.Error("Expected result type Date")

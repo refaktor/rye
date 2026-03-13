@@ -1,0 +1,74 @@
+print "## Injection Tests (with, op-blocks)"
+
+; with builtin - injects value into block
+assert\display "with basic" {
+	10 .with { + 5 }
+} 15
+
+assert\display "with dotword" {
+	10 .with { .inc }
+} 11
+
+assert\display "with chain" {
+	10 .with { .inc .inc }
+} 12
+
+assert\display "with opword" {
+	10 .with { * 2 }
+} 20
+
+; Comma re-injects the original value
+assert\display "with comma re-inject" {
+	10 .with { + 5 , * 2 }
+} 20
+
+assert\display "with multiple commas" {
+	10 .with { + 1 , + 2 , + 3 }
+} 13
+
+; Op-group .( ) - with behavior, returns last
+assert\display "op-group basic" {
+	10 .( + 5 )
+} 15
+
+assert\display "op-group dotword" {
+	10 .( .inc .inc )
+} 12
+
+assert\display "op-group with comma" {
+	10 .( + 5 , * 2 )
+} 20
+
+; Op-bblock .[ ] - vals\with behavior, returns block
+assert\display "op-bblock returns block" {
+	10 .[ + 1 , + 2 , + 3 ] |type?
+} 'block
+
+assert\display "op-bblock length" {
+	10 .[ + 1 , + 2 , + 3 ] |length?
+} 3
+
+assert\display "op-bblock first value" {
+	10 .[ + 1 , + 2 ] |first
+} 11
+
+assert\display "op-bblock second value" {
+	10 .[ + 1 , + 2 ] |second
+} 12
+
+; Op-block .{ } - fn1 behavior, creates function
+assert\display "op-block creates function" {
+	10 .{ + 1 } |type?
+} 'function
+
+; Chaining with injection
+assert\display "chain then with" {
+	10 .inc .with { * 2 }
+} 22
+
+assert\display "with then chain" {
+	10 .with { + 5 } .inc
+} 16
+
+print ""
+print "Injection tests completed."

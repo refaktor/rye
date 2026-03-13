@@ -23,7 +23,18 @@ var NoInspectMode bool
 // Called from: Throughout the codebase - main evaluation loops, builtins, function calls
 // Purpose: Dispatches to the appropriate dialect-specific evaluator (Rye2, Eyr, Rye0, Rye00)
 // HOTCODE: Performance-critical function called frequently during execution
-func EvalBlock(ps *env.ProgramState) {
+func Eval(ps *env.ProgramState) {
+	EvalBlockInj(ps, nil, false)
+}
+
+// EvalBlock sets the block as the current series and evaluates it.
+// This is the idiomatic entry point for embedders — combining ps.SetBlock
+// and Eval into a single call:
+//
+//	blk := loader.LoadString(src, false, ps)
+//	evaldo.EvalBlock(ps, blk.(env.Block))
+func EvalBlock(ps *env.ProgramState, blk env.Block) {
+	ps.SetBlock(blk)
 	EvalBlockInj(ps, nil, false)
 }
 
@@ -74,6 +85,16 @@ func EvalBlockInj_Rye2(ps *env.ProgramState, inj env.Object, injnow bool) {
 	// nothing is passed between expressions, except through context
 	origInj := inj // save the original injection value so commas always re-inject it
 	for ps.Ser.Pos() < ps.Ser.Len() {
+		// Check MaxOps limit (instruction tally guard).
+		// MaxOps == 0 means unlimited (default); any positive value caps total expression evaluations.
+		if ps.MaxOps > 0 {
+			ps.OpsCount++
+			if ps.OpsCount > ps.MaxOps {
+				ps.ErrorFlag = true
+				ps.Res = env.NewError2(5, "Evaluation limit: exceeded "+strconv.FormatInt(ps.MaxOps, 10)+" max operations. Use `max-ops!` to configure the limit.")
+				return
+			}
+		}
 		injnow = EvalExpressionInj(ps, inj, injnow)
 		if ps.Injnow {
 			if ps.Inj != nil {
@@ -437,7 +458,7 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 		} else if block.Mode == 2 {
 			ser := ps.Ser
 			ps.Ser = block.Series
-			EvalBlock(ps)
+			Eval(ps)
 			if ps.ErrorFlag || ps.FailureFlag {
 				return
 			}
@@ -922,6 +943,14 @@ func EvalObject(ps *env.ProgramState, object env.Object, leftVal env.Object, toL
 		return
 	case env.FunctionType:
 		fn := object.(env.Function)
+		// User functions refuse a live failure exactly like builtins without AcceptFailure.
+		// Without this check, a failure produced by argument evaluation would be silently
+		// discarded (stored as a plain error value in fnCtx) instead of being elevated to
+		// an error and stopping evaluation.
+		if ps.FailureFlag {
+			ps.ErrorFlag = true
+			return
+		}
 		CallFunction_CollectArgs(fn, ps, leftVal, toLeft, ctx, pipeSecond, firstVal, opword, dotword)
 		return
 	case env.VarBuiltinType:
@@ -1046,6 +1075,14 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 	opword := false
 	// Track call depth for top-level vs function detection
 	ps.CallDepth++
+	// Check maximum call depth (stack overflow / recursion guard).
+	// MaxCallDepth == 0 means unlimited (default); any positive value caps recursion.
+	if ps.MaxCallDepth > 0 && ps.CallDepth > ps.MaxCallDepth {
+		ps.CallDepth--
+		ps.ErrorFlag = true
+		ps.Res = env.NewError2(5, "Stack overflow: call depth "+strconv.Itoa(ps.CallDepth)+" exceeded maximum of "+strconv.Itoa(ps.MaxCallDepth)+". Use `max-call-depth!` to configure the limit.")
+		return
+	}
 	defer func() { ps.CallDepth-- }()
 
 	// Handle optional pipeSecond and firstVal parameters
@@ -1201,6 +1238,11 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 		if ps.ReturnFlag || ps.ErrorFlag {
 			return
 		}
+		// Refuse a live failure in the argument, just like a non-AcceptFailure builtin would.
+		if ps.FailureFlag {
+			ps.ErrorFlag = true
+			return
+		}
 		// The createcurriedcaller is now created explicitly with partial builtin function
 		index := fn.Spec.Series.Get(i).(env.Word).Index
 		fnCtx.SetVar(index, ps.Res)
@@ -1227,7 +1269,7 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 	if arg0 != nil {
 		EvalBlockInj(ps, arg0, true)
 	} else {
-		EvalBlock(ps)
+		Eval(ps)
 	}
 	// Handle failure based on ReturnFlag:
 	// - If ReturnFlag is set (via ^fail or return), propagate failure to caller
@@ -1294,10 +1336,15 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 	index = fn.Spec.Series.Get(i).(env.Word).Index
 	fnCtx.SetVar(index, arg1)
 	// TRY
-	psX := env.NewProgramState(fn.Body.Series, ps.Idx)
+	psX := env.NewProgramStateOLD(fn.Body.Series, ps.Idx)
 	psX.Ctx = fnCtx
 	psX.PCtx = ps.PCtx
 	psX.Gen = ps.Gen
+	// Propagate execution guards so sub-calls respect the same limits
+	psX.CallDepth = ps.CallDepth + 1
+	psX.MaxCallDepth = ps.MaxCallDepth
+	psX.MaxOps = ps.MaxOps
+	psX.OpsCount = ps.OpsCount
 
 	// END TRY
 
@@ -1310,8 +1357,15 @@ func CallFunctionArgs2(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 			ExecuteDeferredBlocks(psX)
 		}
 		returnContextToPool(fnCtx, fromPool)
+		// Propagate ops count back so the parent sees work done in sub-calls
+		ps.OpsCount = psX.OpsCount
 	}()
-
+	// Check depth guard before running
+	if psX.MaxCallDepth > 0 && psX.CallDepth > psX.MaxCallDepth {
+		ps.ErrorFlag = true
+		ps.Res = env.NewError2(5, "Stack overflow: call depth "+strconv.Itoa(psX.CallDepth)+" exceeded maximum of "+strconv.Itoa(psX.MaxCallDepth)+". Use `max-call-depth!` to configure the limit.")
+		return
+	}
 	psX.Ser.SetPos(0)
 	EvalBlockInj(psX, arg0, true)
 	MaybeDisplayFailureOrError(psX, psX.Idx, "call func args 2")
@@ -1352,18 +1406,32 @@ func CallFunctionArgs4(fn env.Function, ps *env.ProgramState, arg0 env.Object, a
 	index = fn.Spec.Series.Get(i).(env.Word).Index
 	fnCtx.SetVar(index, arg3)
 	// TRY
-	psX := env.NewProgramState(fn.Body.Series, ps.Idx)
+	psX := env.NewProgramStateOLD(fn.Body.Series, ps.Idx)
 	psX.Ctx = fnCtx
 	psX.PCtx = ps.PCtx
 	psX.Gen = ps.Gen
+	// Propagate execution guards so sub-calls respect the same limits
+	psX.CallDepth = ps.CallDepth + 1
+	psX.MaxCallDepth = ps.MaxCallDepth
+	psX.MaxOps = ps.MaxOps
+	psX.OpsCount = ps.OpsCount
 
 	// END TRY
 	psX.Ser.SetPos(0)
+	// Check depth guard before running
+	if psX.MaxCallDepth > 0 && psX.CallDepth > psX.MaxCallDepth {
+		returnContextToPool(fnCtx, fromPool)
+		ps.ErrorFlag = true
+		ps.Res = env.NewError2(5, "Stack overflow: call depth "+strconv.Itoa(psX.CallDepth)+" exceeded maximum of "+strconv.Itoa(psX.MaxCallDepth)+". Use `max-call-depth!` to configure the limit.")
+		return
+	}
 	defer func() {
 		if len(psX.DeferBlocks) > 0 {
 			ExecuteDeferredBlocks(psX)
 		}
 		returnContextToPool(fnCtx, fromPool)
+		// Propagate ops count back so the parent sees work done in sub-calls
+		ps.OpsCount = psX.OpsCount
 	}()
 
 	EvalBlockInj(psX, arg0, true)
@@ -1405,24 +1473,38 @@ func CallFunctionArgsN(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx, a
 	}*/
 
 	// TRY
-	psX := env.NewProgramState(fn.Body.Series, ps.Idx)
+	psX := env.NewProgramStateOLD(fn.Body.Series, ps.Idx)
 	psX.Ctx = fnCtx
 	psX.PCtx = ps.PCtx
 	psX.Gen = ps.Gen
+	// Propagate execution guards so sub-calls respect the same limits
+	psX.CallDepth = ps.CallDepth + 1
+	psX.MaxCallDepth = ps.MaxCallDepth
+	psX.MaxOps = ps.MaxOps
+	psX.OpsCount = ps.OpsCount
 
 	// END TRY
 	psX.Ser.SetPos(0)
+	// Check depth guard before running
+	if psX.MaxCallDepth > 0 && psX.CallDepth > psX.MaxCallDepth {
+		returnContextToPool(fnCtx, fromPool)
+		ps.ErrorFlag = true
+		ps.Res = env.NewError2(5, "Stack overflow: call depth "+strconv.Itoa(psX.CallDepth)+" exceeded maximum of "+strconv.Itoa(psX.MaxCallDepth)+". Use `max-call-depth!` to configure the limit.")
+		return
+	}
 	defer func() {
 		if len(psX.DeferBlocks) > 0 {
 			ExecuteDeferredBlocks(psX)
 		}
 		returnContextToPool(fnCtx, fromPool)
+		// Propagate ops count back so the parent sees work done in sub-calls
+		ps.OpsCount = psX.OpsCount
 	}()
 
 	if len(args) > 0 {
 		EvalBlockInj(psX, args[0], true)
 	} else {
-		EvalBlock(psX)
+		Eval(psX)
 	}
 	if psX.ErrorFlag || psX.FailureFlag {
 		ps.Res = psX.Res
@@ -2303,7 +2385,7 @@ func ExecuteDeferredBlocks(ps *env.ProgramState) {
 
 		// Execute the deferred block
 		ps.Ser = block.Series
-		EvalBlock(ps)
+		Eval(ps)
 
 		// If there was an error in a deferred block, we should still continue
 		// executing other deferred blocks but preserve the error state

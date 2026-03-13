@@ -16,8 +16,8 @@ import (
 
 func TestEvaldo_function1_just_return_integer(t *testing.T) {
 	input := "  fun1  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
 	idx, found := es.Idx.GetIndex("fun1")
@@ -26,7 +26,7 @@ func TestEvaldo_function1_just_return_integer(t *testing.T) {
 		spec := []env.Object{}
 		es.Ctx.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body)), false))
 
-		EvalBlock(es)
+		Eval(es)
 
 		fmt.Print(es.Res.Inspect(*es.Idx))
 		if es.Res.Type() != env.IntegerType {
@@ -42,8 +42,8 @@ func TestEvaldo_function1_just_return_integer(t *testing.T) {
 
 func TestEvaldo_function1_just_return_integer_in_loop(t *testing.T) {
 	input := "  loop 10000 { fun1 }  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
 	idx, found := es.Idx.GetIndex("fun1")
@@ -52,7 +52,7 @@ func TestEvaldo_function1_just_return_integer_in_loop(t *testing.T) {
 		spec := []env.Object{}
 		es.Ctx.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body)), false))
 
-		EvalBlock(es)
+		Eval(es)
 
 		fmt.Print(es.Res.Inspect(*es.Idx))
 		if es.Res.Type() != env.IntegerType {
@@ -68,8 +68,8 @@ func TestEvaldo_function1_just_return_integer_in_loop(t *testing.T) {
 
 func TestEvaldo_function2_call_builtin_in_func(t *testing.T) {
 	input := "  fun1  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
 	idx, found := es.Idx.GetIndex("fun1")
@@ -82,7 +82,7 @@ func TestEvaldo_function2_call_builtin_in_func(t *testing.T) {
 			spec := []env.Object{}
 			es.Ctx.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body)), false))
 
-			EvalBlock(es)
+			Eval(es)
 
 			fmt.Print(es.Res.Inspect(*es.Idx))
 			if es.Res.Type() != env.IntegerType {
@@ -101,8 +101,8 @@ func TestEvaldo_function2_call_builtin_in_func(t *testing.T) {
 
 func TestEvaldo_function3_arg_unit_func(t *testing.T) {
 	input := "  fun1 789  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
 	idx, found := es.Idx.GetIndex("fun1")
@@ -114,7 +114,7 @@ func TestEvaldo_function3_arg_unit_func(t *testing.T) {
 		spec := []env.Object{*env.NewWord(aaaidx)}
 		es.Ctx.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body)), false))
 
-		EvalBlock(es)
+		Eval(es)
 
 		fmt.Print(es.Res.Inspect(*es.Idx))
 		if es.Res.Type() != env.IntegerType {
@@ -130,8 +130,8 @@ func TestEvaldo_function3_arg_unit_func(t *testing.T) {
 
 func TestEvaldo_function3_arg_inc_func(t *testing.T) {
 	input := "  fun1 999  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
 	idx, found := es.Idx.GetIndex("fun1")
@@ -146,7 +146,7 @@ func TestEvaldo_function3_arg_inc_func(t *testing.T) {
 			body := []env.Object{*env.NewWord(incidx), *env.NewWord(aaaidx)}
 			es.Ctx.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body)), false))
 
-			EvalBlock(es)
+			Eval(es)
 
 			fmt.Print(es.Res.Inspect(*es.Idx))
 			if es.Res.Type() != env.IntegerType {
@@ -165,8 +165,8 @@ func TestEvaldo_function3_arg_inc_func(t *testing.T) {
 
 func TestEvaldo_function3_arg_unit_func_loop(t *testing.T) {
 	input := "  loop 2 { fun1 999 }  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
 	idx, found := es.Idx.GetIndex("fun1")
@@ -182,7 +182,7 @@ func TestEvaldo_function3_arg_unit_func_loop(t *testing.T) {
 		body := []env.Object{*env.NewWord(aaaidx)}
 		es.Ctx.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body)), false))
 
-		EvalBlock(es)
+		Eval(es)
 
 		fmt.Print(es.Res.Inspect(*es.Idx))
 		if es.Res.Type() != env.IntegerType {
@@ -202,8 +202,8 @@ func TestEvaldo_function3_arg_unit_func_loop(t *testing.T) {
 func TestEvaldo_function3_arg_inc_func_loop(t *testing.T) {
 	//input := "  fun1 999  "
 	input := "  loop 1000 { fun1 999 }  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
 	idx, found := es.Idx.GetIndex("fun1")
@@ -218,7 +218,7 @@ func TestEvaldo_function3_arg_inc_func_loop(t *testing.T) {
 			body := []env.Object{*env.NewWord(incidx), *env.NewWord(aaaidx)}
 			es.Ctx.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body)), false))
 
-			EvalBlock(es)
+			Eval(es)
 
 			fmt.Print(es.Res.Inspect(*es.Idx))
 			if es.Res.Type() != env.IntegerType {
@@ -237,8 +237,8 @@ func TestEvaldo_function3_arg_inc_func_loop(t *testing.T) {
 
 func _TestEvaldo_function4_simple_recur(t *testing.T) {
 	input := "  fun1 1  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
 	idx, found := es.Idx.GetIndex("fun1")
@@ -255,7 +255,7 @@ func _TestEvaldo_function4_simple_recur(t *testing.T) {
 			body := []env.Object{*env.NewWord(printidx), *env.NewWord(aaaidx), *env.NewWord(recuridx), *env.NewWord(greateridx), *env.NewInteger(99), *env.NewWord(aaaidx), *env.NewWord(incidx), *env.NewWord(aaaidx)}
 			es.Ctx.Set(idx, *env.NewFunction(*env.NewBlock(*env.NewTSeries(spec)), *env.NewBlock(*env.NewTSeries(body)), false))
 
-			EvalBlock(es)
+			Eval(es)
 
 			fmt.Print(es.Res.Inspect(*es.Idx))
 			if es.Res.Type() != env.IntegerType {
@@ -274,11 +274,11 @@ func _TestEvaldo_function4_simple_recur(t *testing.T) {
 
 func TestEvaldo_function4_simple_fn_in_code(t *testing.T) {
 	input := "  fun1: fn { aa } { aa } fun1 1234  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	if es.Res.Type() != env.IntegerType {
 		t.Error("Expected result type integer")
@@ -290,11 +290,11 @@ func TestEvaldo_function4_simple_fn_in_code(t *testing.T) {
 
 func TestEvaldo_function4_simple_fn_in_code2(t *testing.T) {
 	input := "  fun1: fn { aa } { inc aa } fun1 1234  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	if es.Res.Type() != env.IntegerType {
 		t.Error("Expected result type integer")

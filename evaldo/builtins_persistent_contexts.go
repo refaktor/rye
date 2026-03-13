@@ -234,7 +234,7 @@ func (pc *PersistentCtx) Get(word int) (env.Object, bool) {
 
 		// Create a minimal program state for deserialization
 		ps := &env.ProgramState{Idx: pc.Idxs}
-		result = loader.LoadStringNEW(string(val), false, ps)
+		result = loader.LoadString(string(val), false, ps)
 		found = true
 		return nil
 	})
@@ -324,7 +324,7 @@ func EvalBlockInPersistentCtx(ps *env.ProgramState, pctx *PersistentCtx) {
 	}
 
 	// Execute the block with persistence intercepts
-	interceptor.EvalBlock()
+	interceptor.Eval()
 
 	// Restore the original context
 	ps.Ctx = originalCtx
@@ -338,7 +338,7 @@ type PersistentCtxEvaluator struct {
 }
 
 // EvalBlock evaluates the current series while intercepting persistence operations
-func (pce *PersistentCtxEvaluator) EvalBlock() {
+func (pce *PersistentCtxEvaluator) Eval() {
 	// Use a custom evaluation loop that handles setwords and modwords specially
 	for pce.ps.Ser.Pos() < pce.ps.Ser.Len() && !pce.ps.ErrorFlag && !pce.ps.ReturnFlag && !pce.ps.FailureFlag {
 		obj := pce.ps.Ser.Pop()

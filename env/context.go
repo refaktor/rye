@@ -792,6 +792,9 @@ type ProgramState struct {
 	BlockFile      string
 	BlockLine      int
 	CallDepth      int                  // 0 = top-level script, incremented on each function call
+	MaxCallDepth   int                  // 0 = unlimited; if > 0 function calls exceeding this depth return an error
+	MaxOps         int64                // 0 = unlimited; if > 0 expression evaluations exceeding this count return an error
+	OpsCount       int64                // number of expression evaluations performed so far
 	GetHistoryLast func(n int) []string // function to get last N history lines from REPL
 }
 
@@ -804,7 +807,7 @@ const (
 	Rye00Dialect DoDialect = 4 // Simplified dialect for builtins and integers
 )
 
-func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
+func NewProgramStateOLD(ser TSeries, idx *Idxs) *ProgramState {
 	ps := ProgramState{
 		Ser:           ser,
 		Res:           nil,
@@ -837,7 +840,7 @@ func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
 	return &ps
 }
 
-func NewProgramStateNEW() *ProgramState {
+func NewProgramState() *ProgramState {
 	ps := ProgramState{
 		Ser:           *NewTSeries(make([]Object, 0)),
 		Res:           nil,
@@ -908,6 +911,21 @@ func AddToProgramState(ps *ProgramState, ser TSeries, idx *Idxs) *ProgramState {
 	return ps
 }
 
+// SetBlock sets the series to evaluate from a parsed Block, keeping ps.Idx
+// unchanged. This is the idiomatic single-argument alternative to
+// AddToProgramState(ps, blk.Series, ps.Idx) for embedding use:
+//
+//	blk := loader.LoadString(src, false, ps)
+//	ps.SetBlock(blk.(env.Block))
+//	evaldo.Eval(ps)
+func (ps *ProgramState) SetBlock(blk Block) {
+	ps.Ser = blk.Series
+	if blk.FileName != "" {
+		ps.BlockFile = blk.FileName
+		ps.BlockLine = blk.Line
+	}
+}
+
 func AddToProgramStateNEWWithLocation(ps *ProgramState, block Block, idx *Idxs) *ProgramState {
 	ps.Ser = block.Series
 	// ps.Res = nil
@@ -929,6 +947,71 @@ func SetValue(ps *ProgramState, word string, val Object) {
 			}
 		}
 	}
+}
+
+// RegisterBuiltin registers a custom builtin function in one call.
+// It combines ps.Idx.IndexWord, env.NewBuiltin, and ps.Ctx.Set so embedders
+// don't need to write three lines of boilerplate per function.
+//
+// Example:
+//
+//	ps.RegisterBuiltin("get-env", 2, "get-env key default -- returns env var or default",
+//	    func(ps *env.ProgramState, a0, a1, a2, a3, a4 env.Object) env.Object {
+//	        if v := os.Getenv(a0.(env.String).Value); v != "" {
+//	            return *env.NewString(v)
+//	        }
+//	        if a1 != nil { return a1 }
+//	        return *env.NewString("")
+//	    })
+func (ps *ProgramState) RegisterBuiltin(name string, numArgs int, doc string, fn func(*ProgramState, Object, Object, Object, Object, Object) Object) {
+	idx := ps.Idx.IndexWord(name)
+	ps.Ctx.Set(idx, *NewBuiltin(fn, numArgs, false, false, doc))
+}
+
+// GetValue looks up a word by name in the program state, checks that it
+// exists and has the expected type, and returns the object and a boolean.
+// This eliminates the double-lookup boilerplate common when reading config
+// values after evaluating a block:
+//
+//	val, ok := ps.GetValue("port", env.StringType)
+//	if ok { port = val.(env.String).Value }
+func (ps *ProgramState) GetValue(word string, typ Type) (Object, bool) {
+	i, found := ps.Idx.GetIndex(word)
+	if !found {
+		return nil, false
+	}
+	v, exists := ps.Ctx.Get(i)
+	if !exists || v.Type() != typ {
+		return nil, false
+	}
+	return v, true
+}
+
+// GetString looks up a word and returns its string value if it is a String.
+// It is a typed convenience wrapper around GetValue for the common case of
+// reading string configuration words:
+//
+//	port, ok := ps.GetString("port")
+func (ps *ProgramState) GetString(word string) (string, bool) {
+	v, ok := ps.GetValue(word, StringType)
+	if !ok {
+		return "", false
+	}
+	return v.(String).Value, true
+}
+
+// GetFunction looks up a word and returns it as a Function if it is one.
+// Useful for reading user-defined callbacks from a config block:
+//
+//	if fn, ok := ps.GetFunction("page-title"); ok {
+//	    res := evaldo.CallFunction(fn, ps, arg, ps.Ctx)
+//	}
+func (ps *ProgramState) GetFunction(word string) (Function, bool) {
+	v, ok := ps.GetValue(word, FunctionType)
+	if !ok {
+		return Function{}, false
+	}
+	return v.(Function), true
 }
 
 const STACK_SIZE int = 1000

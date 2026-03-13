@@ -1,0 +1,43 @@
+print "## Force Modifier Tests (*)"
+
+; Force modifier swaps argument order - takes 2nd arg from left
+
+; Basic concat with dotword
+assert\display "concat normal order" {
+	"aa" .concat "bb"
+} "aabb"
+
+assert\display "concat force (swapped)" {
+	"aa" .concat* "bb"
+} "bbaa"
+
+; With pipeword
+assert\display "pipe concat normal" {
+	"aa" |concat "bb"
+} "aabb"
+
+assert\display "pipe concat force" {
+	"aa" |concat* "bb"
+} "bbaa"
+
+; With opword (angle brackets)
+assert\display "opword concat normal" {
+	"aa" <concat> "bb"
+} "aabb"
+
+assert\display "opword concat force" {
+	"aa" <concat*> "bb"
+} "bbaa"
+
+; Chaining with force
+assert\display "chain with force" {
+	"world" .concat* "hello " .upper
+} "HELLO WORLD"
+
+; Multiple force modifiers
+assert\display "double force in chain" {
+	"c" .concat* "b" .concat* "a"
+} "abc"
+
+print ""
+print "Force modifier tests completed."

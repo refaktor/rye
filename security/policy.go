@@ -41,6 +41,15 @@ type SecurityPolicy struct {
 		Paths   []string `yaml:"paths"`   // For custom profile: "/path:rw" format
 	} `yaml:"landlock"`
 
+	// Unshare configuration (namespace isolation via re-exec, Linux only)
+	Unshare struct {
+		Enabled bool `yaml:"enabled"`
+		Fs      bool `yaml:"fs"`  // Isolate filesystem: bind-mount CWD into tmpfs jail (default true)
+		Net     bool `yaml:"net"` // Isolate network namespace (default true)
+		Pid     bool `yaml:"pid"` // Isolate PID namespace (default true)
+		Uts     bool `yaml:"uts"` // Isolate UTS/hostname namespace (default true)
+	} `yaml:"unshare"`
+
 	// Code signing configuration
 	CodeSig struct {
 		Enforced       bool     `yaml:"enforced"`

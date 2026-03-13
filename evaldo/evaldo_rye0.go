@@ -166,7 +166,7 @@ func Rye0_EvaluateBlock(ps *env.ProgramState, block env.Block) *env.ProgramState
 		ps.Res = *env.NewBlock(*series)
 	case 2:
 		ps.Ser = block.Series
-		EvalBlock(ps)
+		Eval(ps)
 		ps.Ser = ser // Restore original series
 	default:
 		ps.Res = block
@@ -483,7 +483,7 @@ func Rye0_DetermineContext(fn env.Function, ps *env.ProgramState, ctx *env.RyeCt
 // functionCallPool is a sync.Pool for reusing ProgramState objects specifically for function calls
 var functionCallPool = sync.Pool{
 	New: func() interface{} {
-		return env.NewProgramStateNEW()
+		return env.NewProgramState()
 	},
 }
 
@@ -553,7 +553,7 @@ func Rye0_CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, t
 	if arg0 != nil {
 		Rye0_EvalBlockInj(psX, arg0, true)
 	} else {
-		EvalBlock(psX)
+		Eval(psX)
 	}
 
 	// Process the result
@@ -572,7 +572,7 @@ func Rye0_CallFunction(fn env.Function, ps *env.ProgramState, arg0 env.Object, t
 // programStatePool is a sync.Pool for reusing ProgramState objects
 var programStatePool = sync.Pool{
 	New: func() interface{} {
-		return env.NewProgramStateNEW()
+		return env.NewProgramState()
 	},
 }
 

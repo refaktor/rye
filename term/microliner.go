@@ -630,6 +630,7 @@ type MLState struct {
 	suggestionSpace  int                                                            // Number of lines reserved for suggestions (0 = none reserved)
 	ctrlSMode        int                                                            // Ctrl+S cycles through modes: 1=context, 2=generics (0 is Tab-only)
 	isWasmMode       bool                                                           // Flag to track if we're in WASM mode (xterm.js)
+	promptFunc       func() string                                                  // Optional dynamic prompt function; called before each input line
 }
 
 // NewMicroLiner initializes a new *MLState with the provided event channel,
@@ -667,6 +668,153 @@ func (s *MLState) SetDisplayValueFunc(fn func(*env.ProgramState, env.Object, boo
 // SetOnValueSelectedFunc sets the callback function called when user selects a value via Ctrl+x
 func (s *MLState) SetOnValueSelectedFunc(fn func(env.Object)) {
 	s.onValueSelected = fn
+}
+
+// SetPromptFunc sets an optional function that returns the prompt string.
+// When set, it is called before each new input line so the prompt can
+// reflect dynamic state (e.g. the current context kind).
+func (s *MLState) SetPromptFunc(fn func() string) {
+	s.promptFunc = fn
+}
+
+// historyBrowse opens an inline history browser below the current input line.
+// It reserves 4 lines using the same suggestion-space mechanism as tab completion.
+// Up/Down arrows scroll through history entries; the selected entry is loaded into
+// the input. Enter accepts, Escape cancels and restores the original input,
+// Ctrl+R exits with the current selection, Ctrl+X deletes the selected entry
+// from history, and any other key accepts and passes through.
+func (s *MLState) historyBrowse(p []rune, line []rune, pos int) ([]rune, int, KeyEvent, error) {
+	const numLines = 4
+
+	s.historyMutex.RLock()
+	hist := make([]string, len(s.history))
+	copy(hist, s.history)
+	s.historyMutex.RUnlock()
+
+	if len(hist) == 0 {
+		return line, pos, KeyEvent{Code: 27}, nil
+	}
+
+	// origIdx[i] is the current index of hist[i] in s.history.
+	// We track this so deletes can correctly address s.history even after previous deletes.
+	origIdx := make([]int, len(hist))
+	for i := range origIdx {
+		origIdx[i] = i
+	}
+
+	// Start at the most recent history entry
+	selectedIdx := len(hist) - 1
+
+	s.reserveSuggestionSpace(numLines)
+	defer s.clearSuggestionSpace()
+
+	maxW := s.columns - 4
+	if maxW < 10 {
+		maxW = 10
+	}
+
+	// renderDisplay writes the 4 history lines into the reserved space.
+	// content[0] → bottom line (selected / most recent visible)
+	// content[3] → top line (oldest visible)
+	renderDisplay := func() {
+		content := make([]string, numLines)
+		for i := 0; i < numLines; i++ {
+			// i=0 is bottom (selected), i=numLines-1 is top (oldest visible)
+			histIdx := selectedIdx - i
+			if histIdx < 0 || histIdx >= len(hist) {
+				content[i] = ""
+				continue
+			}
+			entry := hist[histIdx]
+			runes := []rune(entry)
+			if len(runes) > maxW {
+				entry = string(runes[:maxW-3]) + "..."
+			}
+			if histIdx == selectedIdx {
+				content[i] = "\033[38;5;37m▶ " + entry + "\033[0m"
+			} else {
+				content[i] = "\033[90m  " + entry + "\033[0m"
+			}
+		}
+		s.updateSuggestionContent(content)
+	}
+
+	// Load and display the initially selected entry
+	selectedLine := []rune(hist[selectedIdx])
+	selectedPos := len(selectedLine)
+	if err := s.refresh(p, selectedLine, selectedPos); err != nil {
+		return line, pos, KeyEvent{Code: 27}, err
+	}
+	renderDisplay()
+
+	for {
+		next := <-s.next
+
+		switch {
+		case next.Code == 38: // Up arrow → older entry
+			if selectedIdx > 0 {
+				selectedIdx--
+				selectedLine = []rune(hist[selectedIdx])
+				selectedPos = len(selectedLine)
+				s.refresh(p, selectedLine, selectedPos) //nolint:errcheck
+				renderDisplay()
+			} else {
+				s.doBeep()
+			}
+		case next.Code == 40: // Down arrow → newer entry
+			if selectedIdx < len(hist)-1 {
+				selectedIdx++
+				selectedLine = []rune(hist[selectedIdx])
+				selectedPos = len(selectedLine)
+				s.refresh(p, selectedLine, selectedPos) //nolint:errcheck
+				renderDisplay()
+			} else {
+				s.doBeep()
+			}
+		case next.Ctrl && strings.ToLower(next.Key) == "x": // Ctrl+X → delete selected entry
+			// Delete from s.history using the tracked original index
+			realIdx := origIdx[selectedIdx]
+			s.DeleteHistoryAt(realIdx)
+
+			// Adjust all origIdx entries that are above the deleted slot
+			for i := range origIdx {
+				if origIdx[i] > realIdx {
+					origIdx[i]--
+				}
+			}
+
+			// Remove from local snapshot and origIdx
+			hist = append(hist[:selectedIdx], hist[selectedIdx+1:]...)
+			origIdx = append(origIdx[:selectedIdx], origIdx[selectedIdx+1:]...)
+
+			if len(hist) == 0 {
+				// History is now empty – exit the browser
+				s.refresh(p, line, pos) //nolint:errcheck
+				return line, pos, KeyEvent{Code: 27}, nil
+			}
+
+			// Keep selectedIdx in bounds (clamp to new last entry when at end)
+			if selectedIdx >= len(hist) {
+				selectedIdx = len(hist) - 1
+			}
+
+			selectedLine = []rune(hist[selectedIdx])
+			selectedPos = len(selectedLine)
+			s.refresh(p, selectedLine, selectedPos) //nolint:errcheck
+			renderDisplay()
+
+		case next.Code == 27: // Escape → cancel, restore original input
+			s.refresh(p, line, pos) //nolint:errcheck
+			return line, pos, KeyEvent{Code: 27}, nil
+		case next.Ctrl && strings.ToLower(next.Key) == "r": // Ctrl+R again → accept without executing
+			return selectedLine, selectedPos, KeyEvent{Code: 27}, nil
+		case next.Code == 13: // Enter → accept and execute
+			return selectedLine, selectedPos, next, nil
+		default:
+			// Any other key: accept the selection and pass the key through for normal handling
+			return selectedLine, selectedPos, next, nil
+		}
+	}
 }
 
 // determineAutoMode intelligently selects the best completion mode based on context
@@ -772,6 +920,17 @@ func (s *MLState) ClearHistory() {
 	s.historyMutex.Lock()
 	defer s.historyMutex.Unlock()
 	s.history = nil
+}
+
+// DeleteHistoryAt removes the entry at the given index from the scrollback history.
+// It is a no-op when idx is out of bounds.
+func (s *MLState) DeleteHistoryAt(idx int) {
+	s.historyMutex.Lock()
+	defer s.historyMutex.Unlock()
+	if idx < 0 || idx >= len(s.history) {
+		return
+	}
+	s.history = append(s.history[:idx], s.history[idx+1:]...)
 }
 
 // Returns the history lines starting with prefix
@@ -1276,6 +1435,11 @@ func (s *MLState) MicroPrompt(prompt string, text string, pos int, ctx1 context.
 	multiline := false
 startOfHere:
 
+	// If a dynamic prompt function is set and we're on the first line, use it
+	if s.promptFunc != nil && s.currline == 0 {
+		prompt = s.promptFunc()
+	}
+
 	var p []rune
 	var line = []rune(text)
 
@@ -1487,6 +1651,9 @@ startOfHere:
 				//	histNext()
 				// case "p":
 				//	histPrev()
+				case "r": // Ctrl+R → inline history browser
+					line, pos, next, _ = s.historyBrowse(p, line, pos)
+					goto haveNext
 				case "s": // seek - cycles through modes: 0=context, 1=word index, 2=generics by Res kind
 					// Check if generic methods mode is available (Res has kind with methods)
 					hasGenericMethods := false
@@ -1678,12 +1845,21 @@ startOfHere:
 
 				switch next.Code {
 				case 13: // Enter Newline
-					// Check if we should continue in multiline mode
-					allText := strings.Join(s.lines, "\n") + string(line)
+					// When navigating within a history-loaded multiline block,
+					// s.lines[s.currline] already holds the current line (Up arrow saves it).
+					// Save any edits back and build allText without duplicating.
+					if multiline && s.currline < len(s.lines) {
+						s.lines[s.currline] = string(line)
+					}
+					var allText string
+					if multiline && s.currline < len(s.lines) {
+						allText = strings.Join(s.lines, "\n")
+					} else {
+						allText = strings.Join(s.lines, "\n") + string(line)
+					}
 					inIncompleteBlock := s.checkIncompleteBlock(allText)
 
 					if s.inString || s.inString2 || inIncompleteBlock {
-						// This is copy from ctrl+x code above ... deduplicate and systemize TODO
 						historyStale = true
 						s.lastLineString = false
 						s.lastLineBacktick = false
@@ -1694,13 +1870,19 @@ startOfHere:
 						if s.inString2 {
 							s.lastLineBacktick = true
 						}
-						// DONT SEND LINE BACK BUT STORE IT
-						// s.enterLine(string(line) + " ")
-						s.lines = append(s.lines, string(line))
-						pos = 0
-						multiline = true
-						s.currline += 1
-						line = make([]rune, 0)
+						if multiline && s.currline < len(s.lines)-1 {
+							// Within a history block with more lines below: move to next line
+							s.currline += 1
+							line = []rune(s.lines[s.currline])
+							pos = len(line)
+						} else {
+							// At the end (fresh multiline or last line of history block): add blank line
+							s.lines = append(s.lines, string(line))
+							pos = 0
+							multiline = true
+							s.currline += 1
+							line = make([]rune, 0)
+						}
 						trace(line)
 						goto startOfHere
 					}
@@ -1711,14 +1893,13 @@ startOfHere:
 					s.sendBack("\n")
 					xx := ""
 					if multiline {
-						// fmt.Println(s.currline)
-						// fmt.Println(len(s.lines))
 						if s.currline > len(s.lines)-1 {
 							s.lines = append(s.lines, string(line))
 						} else {
 							s.lines[s.currline] = string(line)
 							if len(s.lines) > s.currline+1 {
-								CurDown(len(s.lines) - s.currline)
+								// Move cursor to the last displayed line, not past it
+								CurDown(len(s.lines) - 1 - s.currline)
 								fmt.Println("")
 							}
 						}
@@ -1741,7 +1922,21 @@ startOfHere:
 					goto startOfHere
 				case 8: // Backspace
 					if pos <= 0 {
-						s.doBeep()
+						// In multiline mode: Backspace on an empty continuation line merges back
+						// into the previous line (cursor moves up to end of previous line).
+						if multiline && s.currline > 0 && len(line) == 0 {
+							CurUp(1)
+							s.currline--
+							line = []rune(s.lines[s.currline])
+							s.lines = s.lines[:s.currline] // drop the empty line we were on
+							pos = len(line)
+							if s.currline == 0 && len(s.lines) == 0 {
+								multiline = false
+							}
+							s.needRefresh = true
+						} else {
+							s.doBeep()
+						}
 					} else {
 						// pos += 1
 						n := len(getSuffixGlyphs(line[:pos], 1))
@@ -1814,21 +2009,39 @@ startOfHere:
 						s.doBeep()
 					}
 				case 38: // Up
-					if multiline {
-						if s.currline > 0 { //  len(s.lines) {
-							CurUp(1)
-							// append the last line -- only when in last line but ok for now
-							if s.currline > len(s.lines)-1 {
-								s.lines = append(s.lines, string(line))
-							} else {
-								s.lines[s.currline] = string(line)
-							}
-							s.currline -= 1                    // later increment
-							line = []rune(s.lines[s.currline]) // + "⏎")
-							if pos > len(line) {
-								pos = len(line) - 1
-							}
+					if multiline && s.currline > 0 {
+						// Navigate upward within the multiline block
+						CurUp(1)
+						// append the last line -- only when in last line but ok for now
+						if s.currline > len(s.lines)-1 {
+							s.lines = append(s.lines, string(line))
+						} else {
+							s.lines[s.currline] = string(line)
 						}
+						s.currline -= 1                    // later increment
+						line = []rune(s.lines[s.currline]) // + "⏎")
+						if pos > len(line) {
+							pos = len(line) - 1
+						}
+					} else if multiline && s.currline == 0 {
+						// At the top of a multiline history block: clear the continuation
+						// lines below and resume normal (single-line) history navigation.
+						numBelow := len(s.lines) - 1
+						for i := 0; i < numBelow; i++ {
+							s.sendBack("\033[B\r\033[K") // move down, clear line
+						}
+						if numBelow > 0 {
+							s.sendBack(fmt.Sprintf("\033[%dA", numBelow))
+						}
+						multiline = false
+						s.currline = 0
+						s.lines = make([]string, 0)
+						s.lastLineString = false
+						s.lastLineBacktick = false
+						s.inString = false
+						s.inString2 = false
+						lastIndentLevel = 0
+						histPrev()
 					} else {
 						histPrev()
 					}
@@ -1852,6 +2065,26 @@ startOfHere:
 				case 35: // End
 					pos = len(line)
 				case 27: // Escape
+					if multiline {
+						// Cancel multiline input: move cursor past all continuation lines,
+						// emit a newline, then reset state and jump to a fresh prompt.
+						linesToEnd := len(s.lines) - s.currline
+						if linesToEnd > 0 {
+							CurDown(linesToEnd)
+						}
+						s.sendBack("\n")
+						multiline = false
+						s.currline = 0
+						s.lines = make([]string, 0)
+						line = make([]rune, 0)
+						pos = 0
+						s.lastLineString = false
+						s.lastLineBacktick = false
+						s.inString = false
+						s.inString2 = false
+						lastIndentLevel = 0
+						goto startOfHere
+					}
 
 				default:
 					// Tab completion cleanup is handled automatically in tabComplete defer

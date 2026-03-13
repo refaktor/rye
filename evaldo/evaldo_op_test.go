@@ -12,11 +12,11 @@ import (
 
 func TestEvaldo_expression_maybeproctest_comma(t *testing.T) {
 	input := " 1 + 2 + 3 , 2 + 3 , 2 + 4  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -29,11 +29,11 @@ func TestEvaldo_expression_maybeproctest_comma(t *testing.T) {
 
 func TestEvaldo_OPWORD_1(t *testing.T) {
 	input := "  2 + 3  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -46,11 +46,11 @@ func TestEvaldo_OPWORD_1(t *testing.T) {
 
 func TestEvaldo_PIPEWORD_1(t *testing.T) {
 	input := "  2 + 3  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -63,11 +63,11 @@ func TestEvaldo_PIPEWORD_1(t *testing.T) {
 
 func TestEvaldo_OPWORD_2(t *testing.T) {
 	input := "  10 |- 3 |- 6  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -85,11 +85,11 @@ func TestEvaldo_OPWORD_2(t *testing.T) {
 
 func TestEvaldo_PIPEWORD_2(t *testing.T) {
 	input := "  10 |- 3 |+ 5  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -103,11 +103,11 @@ func TestEvaldo_PIPEWORD_2(t *testing.T) {
 func TestEvaldo_OPWORD_3(t *testing.T) {
 	//input := "  r: 10 |subtract 3 .add 6 |add 10 .subtract 2 |subtract 3 , 2 .add 2 .add rr  "
 	input := "  r: 10 |- 3 + 6 |+ 10 , 2 + r  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -120,11 +120,11 @@ func TestEvaldo_OPWORD_3(t *testing.T) {
 
 func _TestEvaldo_PIPEWORD_3(t *testing.T) {
 	input := "  10 |- 3 |+ 5 |- 10 |+ 8  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -139,11 +139,11 @@ func _TestEvaldo_PIPEWORD_3(t *testing.T) {
 
 func TestEvaldo_expression_first_opword_2(t *testing.T) {
 	input := "  2 |add 3 |add 5  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -156,11 +156,11 @@ func TestEvaldo_expression_first_opword_2(t *testing.T) {
 
 func TestEvaldo_expression_first_opword_mix(t *testing.T) {
 	input := "  add add 2 |add 3 |add 5 10 1  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -173,11 +173,11 @@ func TestEvaldo_expression_first_opword_mix(t *testing.T) {
 
 func TestEvaldo_expression_first_opword_4(t *testing.T) {
 	input := "  100 |add 50 |subtract 33  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -190,11 +190,11 @@ func TestEvaldo_expression_first_opword_4(t *testing.T) {
 
 func TestEvaldo_expression_first_opword_5(t *testing.T) {
 	input := "  100 |add 50 |subtract 33 add 2 5 |subtract 3  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -207,11 +207,11 @@ func TestEvaldo_expression_first_opword_5(t *testing.T) {
 
 func TestEvaldo_OPWORDS_USER_FUNC_1(t *testing.T) {
 	input := "  myadd: fn { a b } { add a b } 100 |myadd 50  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -224,11 +224,11 @@ func TestEvaldo_OPWORDS_USER_FUNC_1(t *testing.T) {
 
 func TestEvaldo_OPWORDS_USER_FUNC_2(t *testing.T) {
 	input := "  myadd: fn { a b } { add a b } 100 |myadd 50 |subtract 66  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -241,11 +241,11 @@ func TestEvaldo_OPWORDS_USER_FUNC_2(t *testing.T) {
 
 func TestEvaldo_OPWORDS_USER_FUNC_3(t *testing.T) {
 	input := "  myadd: fn { a b } { add a b } 100 |add 50 |subtract 20 |add 10  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -279,11 +279,11 @@ func TestEvaldo_OPWORDS_USER_FUNC_3(t *testing.T) {
 
 func TestEvaldo_OPWORDS_USER_FUNC_toleft_1(t *testing.T) {
 	input := "  150 |subtract 20 |add 20 |add 10 |add 10 |add 20  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -296,11 +296,11 @@ func TestEvaldo_OPWORDS_USER_FUNC_toleft_1(t *testing.T) {
 
 func __TestEvaldo_OPWORDS_USER_FUNC_toleft_2(t *testing.T) {
 	input := "  150 |subtract 20 |add 10  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {

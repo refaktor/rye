@@ -1,0 +1,199 @@
+; Syntax Sugar Test Suite
+; Tests for l{ } l[ ] d{ } d[ ] list and dict shorthand syntax
+;
+; Run with: ./rye internal/structures/syntax_sugar.rye
+
+var 'passed 0
+var 'failed 0
+
+test: fn { desc expected actual } {
+    either expected = actual {
+        print [ "  ✓" desc ]
+        inc! 'passed
+    } {
+        print [ "  ✗" desc "- expected:" expected "got:" actual ]
+        inc! 'failed
+    }
+}
+
+test-section: fn { name } {
+    print ""
+    print [ "===" name "===" ]
+}
+
+; ============================================================================
+; l{ } - Literal list (no evaluation)
+; ============================================================================
+
+test-section "l{ } literal list"
+
+test "basic list" 3 length? l{ 1 2 3 }
+test "first element" 1 first l{ 1 2 3 }
+test "second element" 2 second l{ 1 2 3 }
+test "type is list" "list" string type? l{ 1 2 3 }
+test "empty list" 0 length? l{ }
+
+; Strings are preserved in l{ }
+str-list: l{ "a" "b" "c" }
+test "strings preserved" "a" first str-list
+
+; ============================================================================
+; l[ ] - Evaluated list
+; ============================================================================
+
+test-section "l[ ] evaluated list"
+
+x: 10
+y: 20
+z: 30
+
+test "evaluates variables" 10 first l[ x y z ]
+test "second var" 20 second l[ x y z ]
+test "expressions" 30 first l[ 10 + 20 ]
+test "multiple expressions" 60 second l[ x x + y + z ]
+test "function calls" 5 first l[ length? "hello" ]
+test "type is list" "list" string type? l[ 1 2 3 ]
+test "empty evaluated list" 0 length? l[ ]
+
+; Nested lists
+nested: l[ l[ 1 2 ] l[ 3 4 ] ]
+test "nested list length" 2 length? nested
+test "nested first is list" "list" string type? first nested
+
+; ============================================================================
+; d{ } - Literal dict (no evaluation)
+; ============================================================================
+
+test-section "d{ } literal dict"
+
+dict1: d{ name "Alice" age 30 }
+test "dict type" "dict" string type? dict1
+dict1-name: dict1 -> "name"
+dict1-age: dict1 -> "age"
+test "dict value by arrow" "Alice" dict1-name
+test "dict numeric value" 30 dict1-age
+
+dict2: d{ "string-key" "value" }
+dict2-val: dict2 -> "string-key"
+test "string key works" "value" dict2-val
+
+empty-dict: d{ }
+test "empty dict type" "dict" string type? empty-dict
+
+; d{ } with literal string value
+dict3: d{ key "literal-value" }
+dict3-val: dict3 -> "key"
+test "literal string value" "literal-value" dict3-val
+
+; ============================================================================
+; d[ ] - Evaluated dict
+; ============================================================================
+
+test-section "d[ ] evaluated dict"
+
+num: 42
+str: "hello"
+
+dict4: d[ 'number num 'text str ]
+dict4-num: dict4 -> "number"
+dict4-text: dict4 -> "text"
+test "evaluated number" 42 dict4-num
+test "evaluated string" "hello" dict4-text
+
+dict5: d[ 'sum 10 + 20 'product 3 * 4 ]
+dict5-sum: dict5 -> "sum"
+dict5-product: dict5 -> "product"
+test "expression sum" 30 dict5-sum
+test "expression product" 12 dict5-product
+
+; Dynamic keys
+keyname: "dynamic-key"
+dict6: d[ keyname 123 ]
+dict6-val: dict6 -> "dynamic-key"
+test "dynamic key" 123 dict6-val
+
+; ============================================================================
+; Comparison with builtins
+; ============================================================================
+
+test-section "comparison with list/dict builtins"
+
+; list { } vs l{ }
+list1: list { 1 2 3 }
+list2: l{ 1 2 3 }
+test "list { } same as l{ }" first list1 first list2
+
+; list [ ] vs l[ ]
+v: 100
+list3: list [ v ]
+list4: l[ v ]
+test "list [ ] same as l[ ]" first list3 first list4
+
+; dict { } vs d{ }
+dict-a: dict { name "Bob" }
+dict-b: d{ name "Bob" }
+dict-a-name: dict-a -> "name"
+dict-b-name: dict-b -> "name"
+test "dict { } same as d{ }" dict-a-name dict-b-name
+
+; dict [ ] vs d[ ]
+w: 200
+dict-c: dict [ 'value w ]
+dict-d: d[ 'value w ]
+dict-c-val: dict-c -> "value"
+dict-d-val: dict-d -> "value"
+test "dict [ ] same as d[ ]" dict-c-val dict-d-val
+
+; ============================================================================
+; Mixed usage
+; ============================================================================
+
+test-section "mixed usage"
+
+; List of dicts
+people: l[ d[ 'name "Alice" 'age 30 ] d[ 'name "Bob" 'age 25 ] ]
+test "list of dicts" 2 length? people
+first-person: first people
+first-person-name: first-person -> "name"
+test "first person name" "Alice" first-person-name
+
+; Dict with list value
+data: d[ 'items l[ 1 2 3 ] 'count 3 ]
+data-items: data -> "items"
+test "dict with list" 3 length? data-items
+
+; ============================================================================
+; Dict CPath access (dict/key syntax)
+; ============================================================================
+
+test-section "dict cpath access (dict/key)"
+
+cpath-dict: d{ name "Test" value 123 }
+test "cpath string value" "Test" cpath-dict/name
+test "cpath number value" 123 cpath-dict/value
+
+; Nested dict cpath (note: CPath limited to 3 parts total)
+nested-dict: d{ outer d{ inner 42 } }
+test "nested cpath level 1" "dict" string type? nested-dict/outer
+test "nested cpath level 2" 42 nested-dict/outer/inner
+
+; Context containing dict
+ctx-with-dict: context {
+    info: d{ x 10 y 20 }
+}
+test "context then dict cpath x" 10 ctx-with-dict/info/x
+test "context then dict cpath y" 20 ctx-with-dict/info/y
+
+; ============================================================================
+; Results
+; ============================================================================
+
+print ""
+print "============================================"
+print [ "Results:" passed "passed," failed "failed" ]
+either failed > 0 {
+    print "Some tests failed! ✗"
+} {
+    print "All tests passed! ✓"
+}
+print "============================================"

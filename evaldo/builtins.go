@@ -657,7 +657,7 @@ func LoadScriptLocalFile(ps *env.ProgramState, s1 env.Uri) (env.Object, string) 
 	}
 	script_ := ps.ScriptPath
 	ps.ScriptPath = fullpath
-	block_ := loader.LoadStringNEW(str, false, ps)
+	block_ := loader.LoadString(str, false, ps)
 	return block_, script_
 }
 
@@ -667,7 +667,7 @@ func EvaluateLoadedValue(ps *env.ProgramState, block_ env.Object, script_ string
 		ser := ps.Ser
 		ps.Ser = block.Series
 		ps.AllowMod = allowMod
-		EvalBlock(ps)
+		Eval(ps)
 		ps.AllowMod = false
 		ps.Ser = ser
 		return ps.Res
@@ -751,7 +751,7 @@ var builtins = map[string]*env.Builtin{
 
 					// Create a temporary series with just this object
 					tempSeries := *env.NewTSeries([]env.Object{obj})
-					tempPS := env.NewProgramState(tempSeries, ps.Idx)
+					tempPS := env.NewProgramStateOLD(tempSeries, ps.Idx)
 					tempPS.Ctx = ps.Ctx
 					tempPS.Dialect = ps.Dialect
 
@@ -1473,14 +1473,14 @@ var builtins = map[string]*env.Builtin{
 					}
 					script_ := ps.ScriptPath
 					ps.ScriptPath = fullpath
-					block_ := loader.LoadStringNEW(str, false, ps)
+					block_ := loader.LoadString(str, false, ps)
 				*/
 				ps.Res = EvaluateLoadedValue(ps, block_, script_, false)
 				/* switch block := block_.(type) {
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = block.Series
-					EvalBlock(ps)
+					Eval(ps)
 					ps.Ser = ser
 				case env.Error:
 					ps.ScriptPath = script_
@@ -1536,7 +1536,7 @@ var builtins = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.String:
-				block := loader.LoadStringNEW(s1.Value, false, ps)
+				block := loader.LoadString(s1.Value, false, ps)
 				//ps = env.AddToProgramState(ps, block.Series, genv)
 				return block
 			// Deprecated ... should only load strings, like reader / Reader functions
@@ -1552,7 +1552,7 @@ var builtins = map[string]*env.Builtin{
 				}
 				scrip := ps.ScriptPath
 				ps.ScriptPath = s1.GetPath()
-				block := loader.LoadStringNEW(str, false, ps)
+				block := loader.LoadString(str, false, ps)
 				ps.ScriptPath = scrip
 				//ps = env.AddToProgramState(ps, block.Series, genv)
 				return block
@@ -1587,7 +1587,7 @@ var builtins = map[string]*env.Builtin{
 				}
 				scrip := ps.ScriptPath
 				ps.ScriptPath = s1.GetPath()
-				block := loader.LoadStringNEW(str, false, ps)
+				block := loader.LoadString(str, false, ps)
 				ps.ScriptPath = scrip
 				//ps = env.AddToProgramState(ps, block.Series, genv)
 				return block
@@ -1628,7 +1628,7 @@ var builtins = map[string]*env.Builtin{
 				scrip := ps.ScriptPath
 				ps.AllowMod = true
 				ps.ScriptPath = s1.GetPath()
-				block := loader.LoadStringNEW(str, false, ps)
+				block := loader.LoadString(str, false, ps)
 				ps.AllowMod = false
 				ps.ScriptPath = scrip
 				//ps = env.AddToProgramState(ps, block.Series, genv)
@@ -1669,7 +1669,7 @@ var builtins = map[string]*env.Builtin{
 				scrip := ps.ScriptPath
 				ps.AllowMod = true
 				ps.ScriptPath = s1.GetPath()
-				block := loader.LoadStringNEW(str, false, ps)
+				block := loader.LoadString(str, false, ps)
 				ps.AllowMod = false
 				ps.ScriptPath = scrip
 				//ps = env.AddToProgramState(ps, block.Series, genv)
@@ -1760,7 +1760,7 @@ var builtins = map[string]*env.Builtin{
 				ps.Ser = bloc.Series
 				ps.BlockFile = bloc.FileName
 				ps.BlockLine = bloc.Line
-				EvalBlock(ps)
+				Eval(ps)
 				MaybeDisplayFailureOrError(ps, ps.Idx, "for\\kv")
 				ps.Ser = ser
 				return ps.Res
@@ -1893,7 +1893,7 @@ var builtins = map[string]*env.Builtin{
 					// set argument context as parent
 					temp := ps.Ctx.Parent
 					ps.Ctx.Parent = ctx
-					EvalBlock(ps)
+					Eval(ps)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "do\\in")
 					// if temp != nil {
 					ps.Ctx.Parent = temp
@@ -1947,7 +1947,7 @@ var builtins = map[string]*env.Builtin{
 					// set argument context as parent
 					temp := ps.Ctx.Parent
 					ps.Ctx.Parent = ctx
-					EvalBlock(ps)
+					Eval(ps)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "for\\kv")
 					// if temp != nil {
 					ps.Ctx.Parent = temp
@@ -2516,7 +2516,7 @@ var builtins = map[string]*env.Builtin{
 			case env.Block:
 				ser := ps.Ser
 				ps.Ser = bloc.Series
-				EvalBlock(ps)
+				Eval(ps)
 				ps.Ser = ser
 
 				// Check if evaluation produced an error
@@ -2567,7 +2567,7 @@ var builtins = map[string]*env.Builtin{
 				case env.Block:
 					ser := ps.Ser
 					ps.Ser = bloc.Series
-					EvalBlock(ps)
+					Eval(ps)
 					ps.Ser = ser
 
 					// ANSI color codes
@@ -2869,7 +2869,7 @@ func executeInitializationCode(ps *env.ProgramState) {
 	origReturnFlag := ps.ReturnFlag*/
 
 	// Load and parse the initialization code
-	block := loader.LoadStringNEW(initCode, false, ps)
+	block := loader.LoadString(initCode, false, ps)
 
 	// Check if loading was successful
 	switch loadedBlock := block.(type) {
@@ -2878,7 +2878,7 @@ func executeInitializationCode(ps *env.ProgramState) {
 		ps.Ser = loadedBlock.Series
 
 		// Execute the initialization code
-		EvalBlock(ps)
+		Eval(ps)
 
 		// If there were errors, we silently ignore them for initialization
 		// This prevents initialization issues from breaking the main program
@@ -2976,6 +2976,180 @@ func registerBuiltin(ps *env.ProgramState, word string, builtin env.Builtin) {
 		}
 	} else {
 		ps.Gen.Set(idxk, idxw, builtin)
+	}
+}
+
+// builtinGroup describes a named collection of builtins and how they are registered.
+// inContext=false means flat registration into the root context (RegisterBuiltins2 style).
+// inContext=true means registration into a named child context (RegisterBuiltinsInContext style).
+type builtinGroup struct {
+	name      string
+	builtins  map[string]*env.Builtin
+	inContext bool
+}
+
+// allBuiltinGroups is the canonical registry of every builtin group, mirroring RegisterBuiltins.
+// All "base" entries share the same group name so RegisterBuiltinGroups handles them uniformly.
+var allBuiltinGroups = []builtinGroup{
+	// Base language builtins – all registered flat as group "base"
+	{"base", builtins, false},
+	{"base", builtins_boolean, false},
+	{"base", builtins_numbers, false},
+	{"base", builtins_mth, false},
+	{"base", builtins_complex, false},
+	{"base", builtins_time, false},
+	{"base", builtins_string, false},
+	{"base", builtins_collection, false},
+	{"base", builtins_conditionals, false},
+	{"base", builtins_combinators, false},
+	{"base", builtins_printing, false},
+	{"base", builtins_types, false},
+	{"base", builtins_iteration, false},
+	{"base", builtins_contexts, false},
+	{"base", builtins_persistent_contexts, false},
+	{"base", builtins_functions, false},
+	// Error handling
+	{"error-creation", Builtins_error_creation, false},
+	{"error-inspection", Builtins_error_inspection, false},
+	{"error-handling", Builtins_error_handling, false},
+	// Module builtins – flat
+	{"match", Builtins_match, false},
+	{"table", Builtins_table, false},
+	{"vector", Builtins_vector, false},
+	{"io", Builtins_io, false},
+	{"cmd", Builtins_cmd, false},
+	{"regexp", Builtins_regexp, false},
+	{"validation", Builtins_validation, false},
+	{"cli", Builtins_cli, false},
+	{"conversion", Builtins_conversion, false},
+	{"web", Builtins_web, false},
+	{"markdown", Builtins_markdown, false},
+	{"sxml", Builtins_sxml, false},
+	{"html", Builtins_html, false},
+	{"json", Builtins_json, false},
+	{"bson", Builtins_bson, false},
+	{"stackless", Builtins_stackless, false},
+	{"eyr", Builtins_eyr, false},
+	{"goroutines", Builtins_goroutines, false},
+	{"msgdispatcher", Builtins_msgdispatcher, false},
+	{"http", Builtins_http, false},
+	{"sqlite", Builtins_sqlite, false},
+	{"psql", Builtins_psql, false},
+	{"mysql", Builtins_mysql, false},
+	{"email", Builtins_email, false},
+	{"imap", Builtins_imap, false},
+	{"structs", Builtins_structures, false},
+	{"smtpd", Builtins_smtpd, false},
+	{"mail", Builtins_mail, false},
+	{"ssh", Builtins_ssh, false},
+	{"bcrypt", Builtins_bcrypt, false},
+	{"console", Builtins_console, false},
+	{"mqtt", Builtins_mqtt, false},
+	{"chitosocket", Builtins_chitosocket, false},
+	// Module builtins – in named child context
+	{"crypto", Builtins_crypto, true},
+	{"math", Builtins_math, true},
+	{"os", Builtins_os, true},
+	{"pipes", Builtins_pipes, true},
+	{"term", Builtins_term, true},
+	{"termstr", Builtins_termstr, true},
+	{"tui", Builtins_tui, true},
+	{"telegram", Builtins_telegrambot, true},
+	{"mcp", Builtins_mcp, true},
+	{"git", Builtins_git, true},
+	{"docker", Builtins_docker, true},
+	{"prometheus", Builtins_prometheus, true},
+	{"echarts", Builtins_echarts, true},
+	{"flui", Builtins_flui, true},
+}
+
+// RegisterBuiltinGroups registers all builtins belonging to the named groups.
+// Group names match the identifiers used in RegisterBuiltins (e.g. "base", "io", "http", "math").
+// Multiple groups may be passed; each is registered in order.
+//
+// Example:
+//
+//	evaldo.RegisterBuiltinGroups(ps, "base", "io", "http")
+func RegisterBuiltinGroups(ps *env.ProgramState, groups ...string) {
+	if BuiltinNames == nil {
+		BuiltinNames = make(map[string]int)
+	}
+	want := make(map[string]bool, len(groups))
+	for _, g := range groups {
+		want[g] = true
+	}
+	// Track which inContext groups we have already registered so we call
+	// RegisterBuiltinsInContext only once per group (subsequent maps for the
+	// same group are added via RegisterBuiltinsInSubContext into the same ctx).
+	doneCtx := make(map[string]*env.RyeCtx)
+	for _, grp := range allBuiltinGroups {
+		if !want[grp.name] {
+			continue
+		}
+		if !grp.inContext {
+			RegisterBuiltins2(grp.builtins, ps, grp.name)
+		} else {
+			if existing, ok := doneCtx[grp.name]; ok {
+				RegisterBuiltinsInSubContext(grp.builtins, ps, existing, grp.name)
+			} else {
+				ctx := RegisterBuiltinsInContext(grp.builtins, ps, grp.name)
+				doneCtx[grp.name] = ctx
+			}
+		}
+	}
+}
+
+// RegisterBuiltinsFilter registers only the specific named builtins from the full builtin set.
+// Each entry in names must be the plain word as it appears in Rye code (e.g. "add", "print", "http-get").
+// For context-namespaced groups (math, os, crypto, …) the word is still given without the context
+// prefix; the function creates the child context automatically and places the word there.
+//
+// Example:
+//
+//	evaldo.RegisterBuiltinsFilter(ps, []string{"add", "subtract", "print", "if", "fn", "either"})
+func RegisterBuiltinsFilter(ps *env.ProgramState, names []string) {
+	if BuiltinNames == nil {
+		BuiltinNames = make(map[string]int)
+	}
+	allow := make(map[string]bool, len(names))
+	for _, n := range names {
+		allow[n] = true
+	}
+	// ctxCache holds already-created child contexts keyed by group name so that
+	// multiple words from the same context group share one context object.
+	ctxCache := make(map[string]*env.RyeCtx)
+
+	for _, grp := range allBuiltinGroups {
+		for word, v := range grp.builtins {
+			if !allow[word] {
+				continue
+			}
+			if !grp.inContext {
+				bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc+" ("+grp.name+")")
+				registerBuiltin(ps, word, *bu)
+			} else {
+				// Get or lazily create the named child context.
+				gCtx, exists := ctxCache[grp.name]
+				if !exists {
+					widx := ps.Idx.IndexWord(grp.name)
+					if existing, ok := ps.Ctx.Get(widx); ok {
+						if ec, ok2 := existing.(*env.RyeCtx); ok2 {
+							gCtx = ec
+						}
+					}
+					if gCtx == nil {
+						gCtx = env.NewEnv(nil)
+						ps.Ctx.Set(widx, gCtx)
+					}
+					ctxCache[grp.name] = gCtx
+				}
+				bu := env.NewBuiltin(v.Fn, v.Argsn, v.AcceptFailure, v.Pure, v.Doc+" ("+word+")")
+				saved := ps.Ctx
+				ps.Ctx = gCtx
+				registerBuiltin(ps, word, *bu)
+				ps.Ctx = saved
+			}
+		}
 	}
 }
 
