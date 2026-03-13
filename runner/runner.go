@@ -485,10 +485,10 @@ func main_ryk() {
 
 	block, genv := loader.LoadStringNoPEG(input, false)
 	//block, genv := loader.LoadString("{ }", false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
 	contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
-	evaldo.EvalBlock(es)
+	evaldo.Eval(es)
 
 	if len(os.Args) >= 4 {
 		if os.Args[argIdx] == "--skip" {
@@ -657,7 +657,7 @@ func main_rye_http_repl(port string, file string, code string, lang string, regf
 		}
 		CurrentScriptDirectory = scriptDir
 
-		ps := env.NewProgramStateNEW()
+		ps := env.NewProgramState()
 		ps.Embedded = Option_Embed_Main
 		ps.ScriptPath = file
 
@@ -676,7 +676,7 @@ func main_rye_http_repl(port string, file string, code string, lang string, regf
 		}
 
 		// Load the file content plus any additional code
-		block := loader.LoadStringNEW(" "+content+"\n"+code, security.CurrentCodeSigEnabled, ps)
+		block := loader.LoadString(" "+content+"\n"+code, security.CurrentCodeSigEnabled, ps)
 		switch val := block.(type) {
 		case env.Block:
 			ps = env.AddToProgramStateNEWWithLocation(ps, val, ps.Idx)
@@ -701,7 +701,7 @@ func main_rye_http_repl(port string, file string, code string, lang string, regf
 	} else {
 		// No file, just initialize with code (original behavior)
 		block, genv := loader.LoadStringNoPEG(code, false)
-		es = env.NewProgramState(block.(env.Block).Series, genv)
+		es = env.NewProgramStateOLD(block.(env.Block).Series, genv)
 		evaldo.RegisterBuiltins(es)
 		evaldo.RegisterVarBuiltins(es)
 		contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
@@ -1017,7 +1017,7 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 		stValue = *env.NewString(stInput)
 	}
 
-	ps := env.NewProgramStateNEW()
+	ps := env.NewProgramState()
 	ps.Embedded = Option_Embed_Main
 	if Option_Embed_Main {
 		var embFS interface{} = Rye_files
@@ -1054,7 +1054,7 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 				fmt.Println("Could not read .rye-here file")
 			} else {
 				inputH := string(content)
-				block := loader.LoadStringNEW(inputH, security.CurrentCodeSigEnabled, ps)
+				block := loader.LoadString(inputH, security.CurrentCodeSigEnabled, ps)
 				block1 := block.(env.Block)
 				ps = env.AddToProgramStateNEWWithLocation(ps, block1, ps.Idx)
 				evaldo.EvalBlockInj(ps, nil, false)
@@ -1071,14 +1071,14 @@ func main_rye_file(file string, sig bool, subc bool, here bool, interactive bool
 	//ES = ps
 	// evaldo.ShowResults = false
 
-	block := loader.LoadStringNEW(" "+content+"\n"+code, security.CurrentCodeSigEnabled, ps)
+	block := loader.LoadString(" "+content+"\n"+code, security.CurrentCodeSigEnabled, ps)
 	switch val := block.(type) {
 	case env.Block:
 
 		//	block, genv := loader.LoadString(content+"\n"+code, sig)
 		//	switch val := block.(type) {
 		//	case env.Block:
-		//es := env.NewProgramState(block.(env.Block).Series, genv)
+		//es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 		//evaldo.RegisterBuiltins(es)
 		// contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
 
@@ -1131,11 +1131,11 @@ func main_cgi_file(file string, sig bool) {
 
 		input := " 123 " //" whoami: \"Rye cgi 0.001 alpha\" ctx: 0 result: \"\" session: 0 w: 0 r: 0"
 		block, genv := loader.LoadStringNoPEG(input, false)
-		es := env.NewProgramState(block.(env.Block).Series, genv)
+		es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 		evaldo.RegisterBuiltins(es)
 		contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
 
-		evaldo.EvalBlock(es)
+		evaldo.Eval(es)
 		env.SetValue(es, "w", *env.NewNative(es.Idx, w, "Go-server-response-writer"))
 		env.SetValue(es, "r", *env.NewNative(es.Idx, r, "Go-server-request"))
 
@@ -1155,7 +1155,7 @@ func main_cgi_file(file string, sig bool) {
 			evaldo.RegisterBuiltins(es)
 			contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
 
-			evaldo.EvalBlock(es)
+			evaldo.Eval(es)
 			evaldo.MaybeDisplayFailureOrError(es, genv, "main cgi file")
 		case env.Error:
 			fmt.Fprintf(w, "Error: %s", val.Message)
@@ -1215,7 +1215,7 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 	//}
 
 	block, genv := loader.LoadStringNoPEG("", false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
 	evaldo.RegisterVarBuiltins(es)
 	contrib.RegisterBuiltins(es, &evaldo.BuiltinNames)
@@ -1247,7 +1247,7 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 	} else {
 		blockS := startBlock.(env.Block)
 		es = env.AddToProgramState(es, blockS.Series, genv)
-		evaldo.EvalBlock(es)
+		evaldo.Eval(es)
 		evaldo.MaybeDisplayFailureOrError(es, es.Idx, "preload")
 	}
 
@@ -1265,7 +1265,7 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 				} else {
 					block1 := block.(env.Block)
 					es = env.AddToProgramState(es, block1.Series, genv)
-					evaldo.EvalBlock(es)
+					evaldo.Eval(es)
 					evaldo.MaybeDisplayFailureOrError(es, es.Idx, "preload")
 				}
 			}
@@ -1280,7 +1280,7 @@ func main_rye_repl(_ io.Reader, _ io.Writer, subc bool, here bool, lang string, 
 
 	if *dual {
 		// Create a second program state for the right panel
-		rightEs := env.NewProgramState(block.(env.Block).Series, genv)
+		rightEs := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 		evaldo.RegisterBuiltins(rightEs)
 		contrib.RegisterBuiltins(rightEs, &evaldo.BuiltinNames)
 		if err := regfn(rightEs); err != nil {
@@ -1487,7 +1487,7 @@ func processTemplate(file string, regfn func(*env.ProgramState) error) {
 	}
 
 	// Create a program state for evaluating Rye code
-	ps := env.NewProgramStateNEW()
+	ps := env.NewProgramState()
 	ps.ScriptPath = file
 
 	workingPath, err := os.Getwd()
@@ -1520,7 +1520,7 @@ func processTemplate(file string, regfn func(*env.ProgramState) error) {
 		ryeCode := submatch[1]
 
 		// Create a block to evaluate
-		block := loader.LoadStringNEW(ryeCode, false, ps)
+		block := loader.LoadString(ryeCode, false, ps)
 
 		// Check for errors in the code
 		if blockErr, ok := block.(env.Error); ok {
@@ -1551,7 +1551,7 @@ func processTemplate(file string, regfn func(*env.ProgramState) error) {
 		case env.Block:
 			ser := ps.Ser
 			ps.Ser = val.Series
-			evaldo.EvalBlock(ps)
+			evaldo.Eval(ps)
 			ps.Ser = ser
 		}
 

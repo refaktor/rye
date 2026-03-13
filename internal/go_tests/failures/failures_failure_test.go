@@ -13,10 +13,10 @@ import (
 
 func TestFailures_nofailure1(t *testing.T) {
 	input := " print 111 return 123 print 333 "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
-	evaldo.EvalBlock(es)
+	evaldo.Eval(es)
 
 	if es.Res.Type() != env.IntegerType {
 		t.Error("Expected result type Date")
@@ -34,10 +34,10 @@ func TestFailures_nofailure1(t *testing.T) {
 
 func TestFailures_failure1(t *testing.T) {
 	input := " print 111 failure 123 print 333 "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
-	evaldo.EvalBlock(es)
+	evaldo.Eval(es)
 
 	if es.Res.Type() != env.ErrorType {
 		t.Error("Expected result type Date")
@@ -55,10 +55,10 @@ func TestFailures_failure1(t *testing.T) {
 
 func TestFailures_fail1(t *testing.T) {
 	input := " print 111 fail 123 print 333 "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
-	evaldo.EvalBlock(es)
+	evaldo.Eval(es)
 
 	if es.Res.Type() != env.ErrorType {
 		t.Error("Expected result type Date")
@@ -76,10 +76,10 @@ func TestFailures_fail1(t *testing.T) {
 
 func TestFailures_fail2(t *testing.T) {
 	input := " f: fn { a } { 123 fail 333 444 } f 1 "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
-	evaldo.EvalBlock(es)
+	evaldo.Eval(es)
 
 	if es.Res.Type() != env.ErrorType {
 		t.Error("Expected result type Date")
@@ -97,10 +97,10 @@ func TestFailures_fail2(t *testing.T) {
 
 func TestFailures_fail3(t *testing.T) {
 	input := " f: fn { a } { 123 fail 333 444 } 2 |f 1 "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
-	evaldo.EvalBlock(es)
+	evaldo.Eval(es)
 
 	if es.Res.Type() != env.ErrorType {
 		t.Error("Expected result type Date")
@@ -118,10 +118,10 @@ func TestFailures_fail3(t *testing.T) {
 
 func TestFailures_fail4(t *testing.T) {
 	input := " f: fn { a } { 123 fail 333 444 } 2 .f + 1 "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
-	evaldo.EvalBlock(es)
+	evaldo.Eval(es)
 
 	if es.Res.Type() != env.ErrorType {
 		t.Error("Expected result type Date")
@@ -139,10 +139,10 @@ func TestFailures_fail4(t *testing.T) {
 
 func TestFailures_fail5(t *testing.T) {
 	input := " f: fn { a } { 123 fail 333 444 } 2 + f 1 "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
-	evaldo.EvalBlock(es)
+	evaldo.Eval(es)
 
 	if es.Res.Type() != env.ErrorType {
 		t.Error("Expected result type Error")
@@ -162,10 +162,10 @@ func TestFailures_fail5(t *testing.T) {
 
 func TestFailures_disarmfailure1(t *testing.T) {
 	input := " print 111 disarm fail 123 print 333 "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
-	evaldo.EvalBlock(es)
+	evaldo.Eval(es)
 
 	fmt.Println(es.Res)
 
@@ -185,10 +185,10 @@ func TestFailures_disarmfailure1(t *testing.T) {
 
 func TestFailures_disarmfailure2(t *testing.T) {
 	input := " either 1 { 123 } { fail 999 } either 0 { 321 } { fail 888 } 444 "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
-	evaldo.EvalBlock(es)
+	evaldo.Eval(es)
 
 	if es.Res.Type() != env.ErrorType {
 		t.Error("Expected result type Date")
@@ -206,10 +206,10 @@ func TestFailures_disarmfailure2(t *testing.T) {
 // maybe don't turn to error at the end of the block
 func TestFailures_disarmfailure3(t *testing.T) {
 	input := " either 1 { 123 } { fail 999 } disarm either 0 { 321 } { fail 888 } 444 "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
-	evaldo.EvalBlock(es)
+	evaldo.Eval(es)
 
 	if es.Res.Type() != env.ErrorType {
 		t.Error("Expected result type Date")
@@ -227,10 +227,10 @@ func TestFailures_disarmfailure3(t *testing.T) {
 
 func TestFailures_disarmfailure4(t *testing.T) {
 	input := " either 1 { 123 } { fail 999 } either 0 { 321 } { disarm fail 888 } 444 "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
-	evaldo.EvalBlock(es)
+	evaldo.Eval(es)
 
 	if es.Res.Type() != env.IntegerType {
 		t.Error("Expected result type Date")
@@ -250,10 +250,10 @@ func TestFailures_disarmfailure4(t *testing.T) {
 
 func TestFailures_disarmfail2(t *testing.T) {
 	input := " f: fn { a } { 123 fail 333 444 } disarm f 1 "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
-	evaldo.EvalBlock(es)
+	evaldo.Eval(es)
 
 	if es.Res.Type() != env.ErrorType {
 		t.Error("Expected result type Date")
@@ -271,10 +271,10 @@ func TestFailures_disarmfail2(t *testing.T) {
 
 func DISABLED_TestFailures_disarmfail3(t *testing.T) {
 	input := " f: fn { a } { 123 fail 333 444 } 2 |f |disarm |status |+ 1  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
-	evaldo.EvalBlock(es)
+	evaldo.Eval(es)
 
 	fmt.Println(es.Res)
 
@@ -293,10 +293,10 @@ func DISABLED_TestFailures_disarmfail3(t *testing.T) {
 }
 func DISABLED_TestFailures_disarmfail4(t *testing.T) {
 	input := " f: fn { a } { 123 fail 333 444 } 2 .f .disarm .status |+ 1 "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
-	evaldo.EvalBlock(es)
+	evaldo.Eval(es)
 
 	if es.Res.Type() != env.IntegerType {
 		t.Error("Expected result type Date")
@@ -314,10 +314,10 @@ func DISABLED_TestFailures_disarmfail4(t *testing.T) {
 
 func DISABLED_TestFailures_disarmfail5(t *testing.T) {
 	input := " f: fn { a } { 123 fail 333 444 } 2 + status disarm f 1 "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
-	evaldo.EvalBlock(es)
+	evaldo.Eval(es)
 
 	if es.Res.Type() != env.IntegerType {
 		t.Error("Expected result type Date")
@@ -335,10 +335,10 @@ func DISABLED_TestFailures_disarmfail5(t *testing.T) {
 
 func TestFailures_assert1(t *testing.T) {
 	input := " ^assert 0 \"some error\" "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
-	evaldo.EvalBlock(es)
+	evaldo.Eval(es)
 
 	if es.Res.Type() != env.ErrorType {
 		t.Error("Expected result type Error")
@@ -355,10 +355,10 @@ func TestFailures_assert1(t *testing.T) {
 }
 func TestFailures_assert2(t *testing.T) {
 	input := " ^assert 1 \"some error\" "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
-	evaldo.EvalBlock(es)
+	evaldo.Eval(es)
 
 	if es.Res.Type() != env.VoidType {
 		t.Error("Expected result type Error")
@@ -372,10 +372,10 @@ func TestFailures_assert2(t *testing.T) {
 }
 func TestFailures_assert2check(t *testing.T) {
 	input := " f1: fn { a } { ^assert 0 \"some error\" } 123 f1 1 |^check \"some other error\"  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
-	evaldo.EvalBlock(es)
+	evaldo.Eval(es)
 
 	if es.Res.Type() != env.ErrorType {
 		t.Error("Expected result type Error")
@@ -390,10 +390,10 @@ func TestFailures_assert2check(t *testing.T) {
 
 func TestFailures_assert2check2(t *testing.T) {
 	input := " f1: fn { a } { ^assert 0 \"some error\" } f2: fn { } { f1 1 |^check \"some other error\" } print disarm f2 "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
-	evaldo.EvalBlock(es)
+	evaldo.Eval(es)
 
 	if es.Res.Type() != env.ErrorType {
 		t.Error("Expected result type Error")

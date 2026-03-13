@@ -433,6 +433,9 @@ func constructKeyEvent(r rune, k keyboard.Key) term.KeyEvent {
 	case keyboard.KeyCtrlA:
 		ch = "a"
 		ctrl = true
+	case keyboard.KeyCtrlR:
+		ch = "r"
+		ctrl = true
 	case keyboard.KeyCtrlS:
 		ch = "s"
 		ctrl = true
@@ -598,6 +601,14 @@ func DoRyeRepl(es *env.ProgramState, dialect string, showResults bool, localHist
 	ml.SetDisplayValueFunc(displayRyeValue)
 	ml.SetOnValueSelectedFunc(func(obj env.Object) {
 		r.prevResult = obj // Update prevResult when user selects a value via Ctrl+x
+	})
+	// Dynamic prompt: show context kind when inside a named context (e.g. "os×> ")
+	ml.SetPromptFunc(func() string {
+		if r.ps.Ctx != nil && r.ps.Ctx.GetKind() > 0 {
+			kindName := r.ps.Idx.GetWord(r.ps.Ctx.GetKind())
+			return kindName + "×> "
+		}
+		return "×> "
 	})
 
 	// Set the history getter function on ProgramState so builtins can access history

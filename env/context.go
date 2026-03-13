@@ -792,6 +792,9 @@ type ProgramState struct {
 	BlockFile      string
 	BlockLine      int
 	CallDepth      int                  // 0 = top-level script, incremented on each function call
+	MaxCallDepth   int                  // 0 = unlimited; if > 0 function calls exceeding this depth return an error
+	MaxOps         int64                // 0 = unlimited; if > 0 expression evaluations exceeding this count return an error
+	OpsCount       int64                // number of expression evaluations performed so far
 	GetHistoryLast func(n int) []string // function to get last N history lines from REPL
 }
 
@@ -804,7 +807,7 @@ const (
 	Rye00Dialect DoDialect = 4 // Simplified dialect for builtins and integers
 )
 
-func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
+func NewProgramStateOLD(ser TSeries, idx *Idxs) *ProgramState {
 	ps := ProgramState{
 		Ser:           ser,
 		Res:           nil,
@@ -837,7 +840,7 @@ func NewProgramState(ser TSeries, idx *Idxs) *ProgramState {
 	return &ps
 }
 
-func NewProgramStateNEW() *ProgramState {
+func NewProgramState() *ProgramState {
 	ps := ProgramState{
 		Ser:           *NewTSeries(make([]Object, 0)),
 		Res:           nil,
@@ -906,6 +909,21 @@ func AddToProgramState(ps *ProgramState, ser TSeries, idx *Idxs) *ProgramState {
 	ps.Idx = idx
 	//ps.Env
 	return ps
+}
+
+// SetBlock sets the series to evaluate from a parsed Block, keeping ps.Idx
+// unchanged. This is the idiomatic single-argument alternative to
+// AddToProgramState(ps, blk.Series, ps.Idx) for embedding use:
+//
+//	blk := loader.LoadString(src, false, ps)
+//	ps.SetBlock(blk.(env.Block))
+//	evaldo.Eval(ps)
+func (ps *ProgramState) SetBlock(blk Block) {
+	ps.Ser = blk.Series
+	if blk.FileName != "" {
+		ps.BlockFile = blk.FileName
+		ps.BlockLine = blk.Line
+	}
 }
 
 func AddToProgramStateNEWWithLocation(ps *ProgramState, block Block, idx *Idxs) *ProgramState {

@@ -2208,8 +2208,8 @@ func enhanceErrorMessageNoPEG(tok NoPEGToken, err error, input string, filePath 
 	return bu.String()
 }
 
-// LoadStringNEW loads a string using the non-PEG parser with a program state
-func LoadStringNEW(input string, sig bool, ps *env.ProgramState) env.Object {
+// LoadString loads a string using the non-PEG parser with a program state
+func LoadString(input string, sig bool, ps *env.ProgramState) env.Object {
 	if sig {
 		signed := checkCodeSignature(input)
 		if signed == -1 {

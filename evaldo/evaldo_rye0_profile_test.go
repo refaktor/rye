@@ -27,10 +27,10 @@ func TestRye0Benchmark(t *testing.T) {
 	`
 
 	// Parse the code
-	block := loader.LoadStringNEW(benchmarkCode, false, &env.ProgramState{Idx: idx})
+	block := loader.LoadString(benchmarkCode, false, &env.ProgramState{Idx: idx})
 
 	// Set up the program state
-	ps := env.NewProgramState(block.(env.Block).Series, idx)
+	ps := env.NewProgramStateOLD(block.(env.Block).Series, idx)
 	ps.Ctx = ctx
 	ps.PCtx = pctx
 	ps.Gen = gen
@@ -39,7 +39,7 @@ func TestRye0Benchmark(t *testing.T) {
 	RegisterBuiltins(ps)
 
 	// Run the benchmark
-	EvalBlock(ps)
+	Eval(ps)
 }
 
 // BenchmarkRye0 benchmarks the Rye0 interpreter
@@ -60,10 +60,10 @@ func BenchmarkRye0(b *testing.B) {
 	`
 
 	// Parse the code
-	block := loader.LoadStringNEW(benchmarkCode, false, &env.ProgramState{Idx: idx})
+	block := loader.LoadString(benchmarkCode, false, &env.ProgramState{Idx: idx})
 
 	// Set up the program state
-	ps := env.NewProgramState(block.(env.Block).Series, idx)
+	ps := env.NewProgramStateOLD(block.(env.Block).Series, idx)
 	ps.Ctx = ctx
 	ps.PCtx = pctx
 	ps.Gen = gen
@@ -78,6 +78,6 @@ func BenchmarkRye0(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		// Reset the series position for each iteration
 		ps.Ser.SetPos(0)
-		EvalBlock(ps)
+		Eval(ps)
 	}
 }

@@ -822,7 +822,7 @@ var builtins_printing = map[string]*env.Builtin{
 				ps.Ser = bloc.Series
 				ps.BlockFile = bloc.FileName
 				ps.BlockLine = bloc.Line
-				EvalBlock(ps)
+				Eval(ps)
 				ps.Ser = ser
 
 				// back to normal state - restore stdout BEFORE displaying errors

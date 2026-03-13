@@ -991,7 +991,7 @@ var Builtins_os = map[string]*env.Builtin{
 	// Returns:
 	// * native finder object (for chaining)
 	// Tags: #find #filter
-	"finder//min-depth": {
+	"finder//min-depth!": {
 		Argsn: 2,
 		Doc:   "Sets the minimum depth for file traversal.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1003,12 +1003,12 @@ var Builtins_os = map[string]*env.Builtin{
 						finder.MinDepth(int(depth.Value))
 						return arg0
 					default:
-						return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "finder//min-depth")
+						return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "finder//min-depth!")
 					}
 				}
-				return MakeBuiltinError(ps, "Expected finder object", "finder//min-depth")
+				return MakeBuiltinError(ps, "Expected finder object", "finder//min-depth!")
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//min-depth")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//min-depth!")
 			}
 		},
 	},
@@ -1020,7 +1020,7 @@ var Builtins_os = map[string]*env.Builtin{
 	// Returns:
 	// * native finder object (for chaining)
 	// Tags: #find #filter
-	"finder//max-depth": {
+	"finder//max-depth!": {
 		Argsn: 2,
 		Doc:   "Sets the maximum depth for file traversal.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
@@ -1032,12 +1032,12 @@ var Builtins_os = map[string]*env.Builtin{
 						finder.MaxDepth(int(depth.Value))
 						return arg0
 					default:
-						return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "finder//max-depth")
+						return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "finder//max-depth!")
 					}
 				}
-				return MakeBuiltinError(ps, "Expected finder object", "finder//max-depth")
+				return MakeBuiltinError(ps, "Expected finder object", "finder//max-depth!")
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//max-depth")
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "finder//max-depth!")
 			}
 		},
 	},

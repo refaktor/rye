@@ -26,7 +26,7 @@ var Builtins_console = map[string]*env.Builtin{
 			case env.String:
 				ser := ps.Ser
 				/* ps.Ser = bloc.Series
-				EvalBlock(ps)
+				Eval(ps)
 				ps.Ser = ser */
 				//reader := bufio.NewReader(os.Stdin)
 
@@ -50,7 +50,7 @@ var Builtins_console = map[string]*env.Builtin{
 							// fmt.Println(1111)
 							block, genv := loader.LoadString("{ " + text + " }")
 							ps := env.AddToProgramState(ps, block.Series, genv)
-							EvalBlock(ps)
+							Eval(ps)
 							fmt.Println(ps.Res.Inspect(*ps.Idx))
 						}
 					}

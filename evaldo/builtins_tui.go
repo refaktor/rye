@@ -948,7 +948,7 @@ func (app *TuiApp) Render() {
 		// Call function with state using the captured tui context from Start time
 		ser := v.Body.Series
 		ser.Reset()
-		psX := env.NewProgramState(ser, ps.Idx)
+		psX := env.NewProgramStateOLD(ser, ps.Idx)
 		psX.Ctx = env.NewEnv(app.ctx)
 		psX.PCtx = ps.PCtx
 		psX.Gen = ps.Gen
@@ -1186,7 +1186,7 @@ func (app *TuiApp) handleMessage(msg env.Object) {
 
 		ser := h.Body.Series
 		ser.Reset()
-		psX := env.NewProgramState(ser, ps.Idx)
+		psX := env.NewProgramStateOLD(ser, ps.Idx)
 		psX.Ctx = fnCtx
 		psX.PCtx = ps.PCtx
 		psX.Gen = ps.Gen
@@ -1261,7 +1261,7 @@ func (app *TuiApp) handleKey(key string) {
 
 		ser := h.Body.Series
 		ser.Reset()
-		psX := env.NewProgramState(ser, ps.Idx)
+		psX := env.NewProgramStateOLD(ser, ps.Idx)
 		psX.Ctx = fnCtx
 		psX.PCtx = ps.PCtx
 		psX.Gen = ps.Gen
@@ -1286,7 +1286,7 @@ func (app *TuiApp) handleKey(key string) {
 		psTemp := *ps
 		psTemp.Ser = h.Series
 		psTemp.Ser.Reset()
-		EvalBlock(&psTemp)
+		Eval(&psTemp)
 
 		if psTemp.ErrorFlag {
 			fmt.Println("Block handler error:", psTemp.Res.Inspect(*psTemp.Idx))
@@ -1514,10 +1514,10 @@ func (inp *TuiInput) callCallback(callback env.Object, value string) {
 			}
 		}
 
-		psX := env.NewProgramState(fn.Body.Series, psTemp.Idx)
+		psX := env.NewProgramStateOLD(fn.Body.Series, psTemp.Idx)
 		psX.Ctx = fnCtx
 		psX.PCtx = psTemp.PCtx
-		EvalBlock(psX)
+		Eval(psX)
 	}
 }
 

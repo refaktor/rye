@@ -13,10 +13,10 @@ import (
 
 func TestFailures_return1(t *testing.T) {
 	input := " 1 return 2 3 "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
-	evaldo.EvalBlock(es)
+	evaldo.Eval(es)
 
 	if es.Res.Type() != env.IntegerType {
 		t.Error("Expected result type Date")
@@ -28,10 +28,10 @@ func TestFailures_return1(t *testing.T) {
 
 func TestFailures_return2(t *testing.T) {
 	input := " return 22 "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
-	evaldo.EvalBlock(es)
+	evaldo.Eval(es)
 
 	if es.Res.Type() != env.IntegerType {
 		t.Error("Expected result type Date")
@@ -42,10 +42,10 @@ func TestFailures_return2(t *testing.T) {
 }
 func TestFailures_return_opword(t *testing.T) {
 	input := " 11 22 .return 33 "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
-	evaldo.EvalBlock(es)
+	evaldo.Eval(es)
 
 	if es.Res.Type() != env.IntegerType {
 		t.Error("Expected result type Date")
@@ -57,10 +57,10 @@ func TestFailures_return_opword(t *testing.T) {
 
 func TestFailures_return_pipeword(t *testing.T) {
 	input := " 11 22 |return 33 "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
-	evaldo.EvalBlock(es)
+	evaldo.Eval(es)
 
 	if es.Res.Type() != env.IntegerType {
 		t.Error("Expected result type Date")
@@ -72,10 +72,10 @@ func TestFailures_return_pipeword(t *testing.T) {
 
 func TestFailures_return_opword2(t *testing.T) {
 	input := " a: 11 + 22 .return 33 "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
-	evaldo.EvalBlock(es)
+	evaldo.Eval(es)
 
 	if es.Res.Type() != env.IntegerType {
 		t.Error("Expected result type Date")
@@ -86,10 +86,10 @@ func TestFailures_return_opword2(t *testing.T) {
 }
 func TestFailures_return_pipeword2(t *testing.T) {
 	input := " a: 11 + 22 |return 44 "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
-	evaldo.EvalBlock(es)
+	evaldo.Eval(es)
 
 	if es.Res.Type() != env.IntegerType {
 		t.Error("Expected result type Date")
@@ -100,10 +100,10 @@ func TestFailures_return_pipeword2(t *testing.T) {
 }
 func TestFailures_return_infn(t *testing.T) {
 	input := " f1: fn { } { a: 11 + 22 |return 44 } 11 f1 55 "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
-	evaldo.EvalBlock(es)
+	evaldo.Eval(es)
 
 	if es.Res.Type() != env.IntegerType {
 		t.Error("Expected result type Date")
@@ -114,10 +114,10 @@ func TestFailures_return_infn(t *testing.T) {
 }
 func TestFailures_return_infn2(t *testing.T) {
 	input := " f1: fn { } { a: 11 + 22 |return 44 } 11 f1 |+ 55 "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
-	evaldo.EvalBlock(es)
+	evaldo.Eval(es)
 
 	if es.Res.Type() != env.IntegerType {
 		t.Error("Expected result type Date")
@@ -130,10 +130,10 @@ func TEST_FAILS_FIX_LATER_TestFailures_return_infn3(t *testing.T) {
 	// FAILURE: pipeword return here acts like a opword
 	//	input := " f1: fn { } { a: 11 + 22 |return 44 } f2: fn { a } { a .return 1000 } 11 f1 |+ f2 55 |return 999 "
 	input := " f1: fn { } { a: 11 + 22 |return 44 } f2: fn { a } { a .return 1000 } 11 f1 |+ f2 3 |return "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
-	evaldo.EvalBlock(es)
+	evaldo.Eval(es)
 
 	fmt.Println(es.Res)
 
@@ -153,10 +153,10 @@ func TestFailures_return_infn3_other_builtin(t *testing.T) {
 	//input := " f1: fn { } { a: add 11 22 |return 44 } f2: fn { a } { a .return 1000 } 11 f1 |add f2 3 |return " // doesn't work
 	// WE SHOULD FIND MINIMAL EXAMPLE ... does it work with builtin
 	input := " return 10 |+ 4 "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	evaldo.RegisterBuiltins(es)
-	evaldo.EvalBlock(es)
+	evaldo.Eval(es)
 
 	fmt.Println(es.Res)
 

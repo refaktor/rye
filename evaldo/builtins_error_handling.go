@@ -950,7 +950,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 				ser := ps.Ser
 				ps.Ser = bloc.Series
 				ps.InErrHandler = true
-				EvalBlock(ps)
+				Eval(ps)
 				// We don't display it in try function, that is the point
 				// MaybeDisplayFailureOrError(ps, ps.Idx, "try")
 				ps.InErrHandler = false
@@ -987,7 +987,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 				ps.InErrHandler = true
 				// Execute the block
 				ps.Ser = bloc.Series
-				EvalBlock(ps)
+				Eval(ps)
 				MaybeDisplayFailureOrError(ps, ps.Idx, "try-all")
 
 				// Create result tuple
@@ -1069,7 +1069,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 					ps.InErrHandler = true
 					// Execute the main block
 					ps.Ser = mainBlock.Series
-					EvalBlock(ps)
+					Eval(ps)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "finally")
 
 					// Save result and flags
@@ -1082,7 +1082,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 					ps.FailureFlag = false
 					ps.ErrorFlag = false
 					ps.InErrHandler = false
-					EvalBlock(ps)
+					Eval(ps)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "finally")
 
 					// Restore original result and flags
@@ -1128,7 +1128,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 
 					// Try the block initially
 					ps.Ser = bloc.Series
-					EvalBlock(ps)
+					Eval(ps)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "retry")
 
 					// If it succeeded (no failure flag), return the result immediately
@@ -1148,7 +1148,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 						ps.ErrorFlag = false
 
 						// Execute the block again
-						EvalBlock(ps)
+						Eval(ps)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "retry")
 
 						// If it succeeded, return the result
@@ -1201,7 +1201,7 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 					ps.ErrorFlag = false
 
 					// Execute the block
-					EvalBlock(ps)
+					Eval(ps)
 					MaybeDisplayFailureOrError(ps, ps.Idx, "persist")
 
 					// If it succeeded (no failure flag), return the result
@@ -1248,14 +1248,14 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 					doneChan := make(chan bool, 1)
 
 					// Create a new program state for the goroutine
-					psCopy := env.NewProgramState(bloc.Series, ps.Idx)
+					psCopy := env.NewProgramStateOLD(bloc.Series, ps.Idx)
 					psCopy.Ctx = ps.Ctx
 					psCopy.PCtx = ps.PCtx
 					psCopy.Gen = ps.Gen
 
 					// Execute the block in a goroutine
 					go func() {
-						EvalBlock(psCopy)
+						Eval(psCopy)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "timeout")
 
 						resultChan <- psCopy.Res

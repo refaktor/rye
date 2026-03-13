@@ -19,7 +19,7 @@ import (
 func DISABLED_TestBuiltin_oneone(t *testing.T) {
 	genv := loader.GetIdxs()
 	builtin := builtins["oneone"]
-	es := env.NewProgramState(env.TSeries{}, genv)
+	es := env.NewProgramStateOLD(env.TSeries{}, genv)
 	obj := builtin.Fn(es, nil, nil, nil, nil, nil)
 	fmt.Println(obj.Inspect(*genv))
 	if obj.(env.Integer).Value != 11 {
@@ -30,7 +30,7 @@ func DISABLED_TestBuiltin_oneone(t *testing.T) {
 func TestBuiltin_inc(t *testing.T) {
 	genv := loader.GetIdxs()
 	builtin := builtins["inc"]
-	es := env.NewProgramState(env.TSeries{}, genv)
+	es := env.NewProgramStateOLD(env.TSeries{}, genv)
 	obj := builtin.Fn(es, *env.NewInteger(100), nil, nil, nil, nil)
 	fmt.Println(obj.Inspect(*genv))
 	if obj.(env.Integer).Value != 101 {
@@ -41,7 +41,7 @@ func TestBuiltin_inc(t *testing.T) {
 func TestBuiltin_print(t *testing.T) {
 	genv := loader.GetIdxs()
 	builtin := builtins["print"]
-	es := env.NewProgramState(env.TSeries{}, genv)
+	es := env.NewProgramStateOLD(env.TSeries{}, genv)
 	obj := builtin.Fn(es, *env.NewInteger(1010101010101), nil, nil, nil, nil)
 	fmt.Println(obj.Inspect(*genv))
 	if obj.(env.Integer).Value != 1010101010101 {
@@ -55,11 +55,11 @@ func TestBuiltin_print(t *testing.T) {
 
 func TestEvaldo_load_builtin_if_1(t *testing.T) {
 	input := "  if 1 { 123 }  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -72,11 +72,11 @@ func TestEvaldo_load_builtin_if_1(t *testing.T) {
 
 func TestEvaldo_load_builtin_do_1(t *testing.T) {
 	input := "  123 do { 2 + 3 }  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -90,11 +90,11 @@ func TestEvaldo_load_builtin_do_1(t *testing.T) {
 
 func TestEvaldo_load_builtin_either_1(t *testing.T) {
 	input := "  either 1 { 1234 } { 9876 }  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	//fmt.Print(es.Res.Inspect(es.Idx))
 	fmt.Print(es.Res)
@@ -108,11 +108,11 @@ func TestEvaldo_load_builtin_either_1(t *testing.T) {
 
 func TestEvaldo_load_builtin_either_2(t *testing.T) {
 	input := "  either 0 { 1234 } { 9876 }  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -125,11 +125,11 @@ func TestEvaldo_load_builtin_either_2(t *testing.T) {
 
 func TestEvaldo_load_builtin_either_1_in_func(t *testing.T) {
 	input := "  func1: fn { aa } { either aa { 1234 } { 9876 } } loop 2 { func1 1 }  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -142,11 +142,11 @@ func TestEvaldo_load_builtin_either_1_in_func(t *testing.T) {
 
 func __TestEvaldo_load_builtin_either_2_in_func(t *testing.T) {
 	input := "  func1: fn { aa } { either aa { 1234 } { 9876 } } loop 2 { func1 0 }  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -159,11 +159,11 @@ func __TestEvaldo_load_builtin_either_2_in_func(t *testing.T) {
 
 func DISABLED_TestEvaldo_load_builtin_either_3_in_func(t *testing.T) {
 	input := "  func1: fn { aa bb } { either multiply aa bb { 100 + bb } { func1 1 bb + 22 } } loop 2 { func1 0 100 }  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -176,11 +176,11 @@ func DISABLED_TestEvaldo_load_builtin_either_3_in_func(t *testing.T) {
 
 func DISABLED_TestEvaldo_strings(t *testing.T) {
 	input := "  a: left \"1234567\" 3 |right 2 , \"ABCDEF\" |middle 1 3 |join a  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.StringType {
@@ -193,11 +193,11 @@ func DISABLED_TestEvaldo_strings(t *testing.T) {
 
 func DISABLED_TestEvaldo_strings_builtin_userfn_1(t *testing.T) {
 	input := "  a: join \"Woof\" \"Meow\" aa: fn { a } { join a a } aa a  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.StringType {
@@ -210,11 +210,11 @@ func DISABLED_TestEvaldo_strings_builtin_userfn_1(t *testing.T) {
 
 func DISABLED_TestEvaldo_strings_pipe_op(t *testing.T) {
 	input := "  a: \"123ščž\" |join \"4567\" .right 3  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.StringType {
@@ -227,11 +227,11 @@ func DISABLED_TestEvaldo_strings_pipe_op(t *testing.T) {
 
 func TestEvaldo_series_nth(t *testing.T) {
 	input := "  { 101 102 103 } .nth 2  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -244,11 +244,11 @@ func TestEvaldo_series_nth(t *testing.T) {
 
 func TestEvaldo_series_length(t *testing.T) {
 	input := "  { 101 102 103 } .length?  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -264,11 +264,11 @@ func TestEvaldo_series_next_pop_peek(t *testing.T) {
 	// we will still have to figure out. So internal position can't be changed. builtin can just return series with new pos
 	// like next
 	// but not return value and change the object in it's place
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -281,11 +281,11 @@ func TestEvaldo_series_next_pop_peek(t *testing.T) {
 
 func TestDict1(t *testing.T) {
 	input := "  dict { \"age\" 123 \"name\" \"Jimbo\" } 123  " // POP doesn't make sense right now as builtins can't change objects now. If is this good / safety or bad /too restricting
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -299,11 +299,11 @@ func TestDict1(t *testing.T) {
 func TestValidateDict(t *testing.T) {
 	//input := "  rm: dict { \"age1\" 1234 \"name\" \"Jimbo\" } vm: validate rm { age: optional \"123\" integer } get vm \"age\"  "
 	input := "  { \"age1\" 1234 \"name\" \"Jimbo\" } |dict |validate { age: optional \"123\" integer } -> \"age\"  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	es.Res.Trace("dasasd")
 
@@ -318,11 +318,11 @@ func TestValidateDict(t *testing.T) {
 
 func TestValidateDict2(t *testing.T) { // passing thru
 	input := "  { \"age1\" 1234 \"name\" \"Jimbo\" } |dict |validate { name: optional \"JoeDoe\" string } -> \"name\"  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	es.Res.Trace("dasasd")
 
@@ -337,11 +337,11 @@ func TestValidateDict2(t *testing.T) { // passing thru
 
 func TestValidateDict3(t *testing.T) { // using default
 	input := "  { \"age1\" 1234 \"name1\" \"Jimbo\" } |dict |validate { name: optional \"JoeDoe\" string } -> \"name\"  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	es.Res.Trace("dasasd")
 
@@ -356,11 +356,11 @@ func TestValidateDict3(t *testing.T) { // using default
 
 func TestValidateDict4(t *testing.T) { // two keys, int as string
 	input := "  { \"age1\" 1234 \"name1\" \"Jimbo\" } |dict |validate { age: optional 111 string  name: optional \"JoeDoe\" string } -> \"age\"  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	es.Res.Trace("dasasd")
 
@@ -375,11 +375,11 @@ func TestValidateDict4(t *testing.T) { // two keys, int as string
 
 func TestValidateDict5(t *testing.T) { // two keys, int as string, pass true
 	input := "  { \"age\" 1234 \"name1\" \"Jimbo\" } |dict |validate { age: required string } -> \"age\"  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	es.Res.Trace("dasasd")
 
@@ -394,11 +394,11 @@ func TestValidateDict5(t *testing.T) { // two keys, int as string, pass true
 
 func TestValidateDictEmail1(t *testing.T) { // two keys, int as string, pass true
 	input := "  { \"em\" \"toto.bam@gmail.com\" } |dict |validate { em: required email } -> \"em\"  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	es.Res.Trace("dasasd")
 
@@ -413,11 +413,11 @@ func TestValidateDictEmail1(t *testing.T) { // two keys, int as string, pass tru
 
 func TestValidateDictDate1(t *testing.T) { // two keys, int as string, pass true
 	input := "  { \"da\" \"02.01.1020\" } |dict |validate { da: required date } -> \"da\" |print  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	es.Res.Trace("dasasd")
 
@@ -429,11 +429,11 @@ func TestValidateDictDate1(t *testing.T) { // two keys, int as string, pass true
 
 func TestValidateDictCheck1(t *testing.T) { // two keys, int as string, pass true
 	input := "  { \"num\" 100 } |dict |validate { num: optional 0 check \"too-low\" { > 50 } } -> \"num\" |print  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	es.Res.Trace("dasasd")
 
@@ -448,11 +448,11 @@ func TestValidateDictCheck1(t *testing.T) { // two keys, int as string, pass tru
 
 func TestValidateDictCalc1(t *testing.T) { // two keys, int as string, pass true
 	input := "  { \"numX\" 100 } |dict |validate { num: optional 1 calc { + 10000 } } -> \"num\" |print  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	es.Res.Trace("dasasd")
 
@@ -468,11 +468,11 @@ func TestValidateDictCalc1(t *testing.T) { // two keys, int as string, pass true
 
 func TestReturn(t *testing.T) { // two keys, int as string, pass true
 	input := "  print 1 return 2 print 3  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -486,11 +486,11 @@ func TestReturn(t *testing.T) { // two keys, int as string, pass true
 
 func TestReturnDo(t *testing.T) { // two keys, int as string, pass true
 	input := "  print 1 do { print 2 return 3 print 4 } print 5  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -504,11 +504,11 @@ func TestReturnDo(t *testing.T) { // two keys, int as string, pass true
 
 func TestReturnDoIf(t *testing.T) { // two keys, int as string, pass true
 	input := "  print 1 do { print 2 if 1 { print 3 return 4 print 5 } print 6 } print 7  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -522,11 +522,11 @@ func TestReturnDoIf(t *testing.T) { // two keys, int as string, pass true
 
 func TestReturnInsideFn0(t *testing.T) { // two keys, int as string, pass true
 	input := "  print 1 a: fn { } { print 11 return 22 print 33 } print 2  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -540,11 +540,11 @@ func TestReturnInsideFn0(t *testing.T) { // two keys, int as string, pass true
 
 func TestReturnInsideFn1(t *testing.T) { // two keys, int as string, pass true
 	input := "  print 1 a: fn { } { print 11 return 22 print 33 } print 2 print a print 3  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -558,11 +558,11 @@ func TestReturnInsideFn1(t *testing.T) { // two keys, int as string, pass true
 
 func TestReturnInsideFn2(t *testing.T) { // two keys, int as string, pass true
 	input := "  print 1 a: fn { } { print 11 return 22 print 33 } b: fn { } { print 111 return a print 333 } print 2 print b print 3  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -576,11 +576,11 @@ func TestReturnInsideFn2(t *testing.T) { // two keys, int as string, pass true
 
 func TestCriticalFailureInsideFn2InBuiltinExpr(t *testing.T) { // two keys, int as string, pass true
 	input := "  print 1 a: fn { } { print 11 fail 22 print 33 } b: fn { } { print 111 return a print 333 } print 2 b + 2 print 3  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.ErrorType {
@@ -594,11 +594,11 @@ func TestCriticalFailureInsideFn2InBuiltinExpr(t *testing.T) { // two keys, int 
 
 func TestCriticalFailureInsideFn2InFnExpr(t *testing.T) { // two keys, int as string, pass true
 	input := "  print 1 a: fn { } { print 11 fail 22 print 33 } b: fn { a } { print 111 print a print 333 } print 2 b a print 3  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.ErrorType {
@@ -614,11 +614,11 @@ func TestCriticalFailureInsideFn2InFnExpr(t *testing.T) { // two keys, int as st
 
 func Test_Fnc_make_adder(t *testing.T) { // two keys, int as string, pass true
 	input := "  make-adder: fn { b } { fnc { a } context { b: b } { a + b } } add2: make-adder 2 add5: make-adder 5 add2 10  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -632,11 +632,11 @@ func Test_Fnc_make_adder(t *testing.T) { // two keys, int as string, pass true
 
 func Test_Fnc_make_adder_2(t *testing.T) { // two keys, int as string, pass true
 	input := "  make-adder: fn { b } { fnc { a } current-ctx { a + b } } add2: make-adder 2 add5: make-adder 5 add2 10 + add5 10  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -650,11 +650,11 @@ func Test_Fnc_make_adder_2(t *testing.T) { // two keys, int as string, pass true
 
 func Test_Fnc_make_adder_3_closure(t *testing.T) { // two keys, int as string, pass true
 	input := "  closure: fn { a b } { fnc a parent-ctx b } make-adder: fn { b } { closure { a } { a + b } } add3: make-adder 3 add5: make-adder 5 add3 10 + add5 10  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -668,11 +668,11 @@ func Test_Fnc_make_adder_3_closure(t *testing.T) { // two keys, int as string, p
 
 func Test_Fnc_make_adder_4_in_context(t *testing.T) { // two keys, int as string, pass true
 	input := "  closure: fn { a b } { fnc a parent-ctx b } adder: fn { b } { closure { a } { a + b } } api: context { add9: adder 9 add5: adder 5 } api/add9 10 + api/add5 10  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -690,11 +690,11 @@ func Test_Fnc_make_adder_4_in_context(t *testing.T) { // two keys, int as string
 
 func Test_hofs_map_1(t *testing.T) { // two keys, int as string, pass true
 	input := "  a: { 1 4 8 } map a { .inc } |nth 1  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -708,11 +708,11 @@ func Test_hofs_map_1(t *testing.T) { // two keys, int as string, pass true
 
 func DISABLED_Test_hofs_map_2(t *testing.T) { // two keys, int as string, pass true
 	input := "  a: { 1 4 8 } map a add 10 _ |nth 1  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -726,11 +726,11 @@ func DISABLED_Test_hofs_map_2(t *testing.T) { // two keys, int as string, pass t
 
 func Test_hofs_filter_1(t *testing.T) { // two keys, int as string, pass true
 	input := "  a: { 1 4 8 } filter a { > 5 } |nth 1  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -744,11 +744,11 @@ func Test_hofs_filter_1(t *testing.T) { // two keys, int as string, pass true
 
 func DISABLE_Test_hofs_filter_2(t *testing.T) { // two keys, int as string, pass true
 	input := "  a: { 1 4 8 } filter a lesser _ 5 |nth 1  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -762,11 +762,11 @@ func DISABLE_Test_hofs_filter_2(t *testing.T) { // two keys, int as string, pass
 
 func Test_hofs_seek_1(t *testing.T) { // two keys, int as string, pass true
 	input := "  a: { 1 4 8 } seek a { > 5 }  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {
@@ -780,11 +780,11 @@ func Test_hofs_seek_1(t *testing.T) { // two keys, int as string, pass true
 
 func DISABLED_Test_hofs_seek_2(t *testing.T) { // two keys, int as string, pass true
 	input := "  a: { 1 4 8 } seek a greater _ 3  "
-	block, genv := loader.LoadString(input, false)
-	es := env.NewProgramState(block.(env.Block).Series, genv)
+	block, genv := loader.LoadStringNoPEG(input, false)
+	es := env.NewProgramStateOLD(block.(env.Block).Series, genv)
 	RegisterBuiltins(es)
 
-	EvalBlock(es)
+	Eval(es)
 
 	fmt.Print(es.Res.Inspect(*es.Idx))
 	if es.Res.Type() != env.IntegerType {

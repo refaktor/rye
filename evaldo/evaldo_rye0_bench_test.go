@@ -41,7 +41,7 @@ func setupRye0CallBuiltinBenchmark() (*env.ProgramState, *env.Idxs, env.Builtin)
 	series := *env.NewTSeries(objects)
 
 	// Create a program state
-	ps := env.NewProgramState(series, idx)
+	ps := env.NewProgramStateOLD(series, idx)
 	ps.Ctx = ctx
 	ps.AllowMod = false
 

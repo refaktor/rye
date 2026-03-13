@@ -71,7 +71,7 @@ func FastCallFunction(fn env.Function, ps *env.ProgramState, args []env.Object, 
 	if len(args) > 0 {
 		Rye0_EvalBlockInj(psX, args[0], true)
 	} else {
-		EvalBlock(psX)
+		Eval(psX)
 	}
 
 	// Process the result

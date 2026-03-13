@@ -142,7 +142,7 @@ func Eyr_CallFunction(fn env.Function, es *env.ProgramState, leftVal env.Object,
 	es.Ctx = fnCtx
 	es.Ser = fn.Body.Series
 	// setup
-	/* psX := env.NewProgramState(fn.Body.Series, es.Idx)
+	/* psX := env.NewProgramStateOLD(fn.Body.Series, es.Idx)
 	psX.Ctx = fnCtx
 	psX.PCtx = es.PCtx
 	psX.Gen = es.Gen
@@ -153,10 +153,10 @@ func Eyr_CallFunction(fn env.Function, es *env.ProgramState, leftVal env.Object,
 	// es.Ser.SetPos(0)
 	// fmt.Println("***")
 	if fn.Argsn > 0 {
-		EvalBlock(es)
+		Eval(es)
 		// EvalBlockInj(es, arg0, arg0 != nil)
 	} else {
-		EvalBlock(es)
+		Eval(es)
 	}
 	// MaybeDisplayFailureOrError(result, result.Idx)
 

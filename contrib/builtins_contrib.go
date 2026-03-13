@@ -35,7 +35,7 @@ var Builtins_contrib = map[string]*env.Builtin{
 			case env.Block:
 				ser := ps.Ser
 				ps.Ser = bloc.Series
-				evaldo.EvalBlock(ps)
+				evaldo.Eval(ps)
 				ps.Ser = ser
 				return ps.Res
 			}

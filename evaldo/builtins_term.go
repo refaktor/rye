@@ -812,7 +812,7 @@ var Builtins_term = map[string]*env.Builtin{
 						ps.Ser = bloc.Series
 						ps.BlockFile = bloc.FileName
 						ps.BlockLine = bloc.Line
-						EvalBlock(ps)
+						Eval(ps)
 						MaybeDisplayFailureOrError(ps, ps.Idx, "spin-it")
 						ps.Ser = ser
 						done <- true
