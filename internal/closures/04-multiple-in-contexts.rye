@@ -1,17 +1,125 @@
+; Multiple Closures in Contexts Test Suite
+; Tests that multiple closures inside a context share the same state variable
+; and that state is accessible via cpath, do\in, do\inside, and ? references.
+
+; ============================================================================
+; Setup: a context with two closures sharing the same counter
+; ============================================================================
 
 cc: context {
 	var 'i 0
-	aa: closure { } { inc! 'i , print i }
-	bb: closure { } { inc! 'i inc! 'i , print i }
+	aa: closure { } { inc! 'i , i }
+	bb: closure { } { inc! 'i , inc! 'i , i }
 }
 
-aa
-;prints 1
-bb
-;prints 2
-bb
-;prints 4
-aa
-;prints 2
+; ============================================================================
+; Direct cpath calls - closures share state via 'i
+; ============================================================================
 
-enter-console ""
+assert\display "cpath aa: i goes 0->1" { capture-stdout { cc/aa } } "1\n"
+; i == 1
+
+assert\display "cpath bb: i goes 1->3" { capture-stdout { cc/bb } } "3\n"
+; i == 3
+
+assert\display "cpath bb: i goes 3->5" { capture-stdout { cc/bb } } "5\n"
+; i == 5
+
+assert\display "cpath aa: i goes 5->6" { capture-stdout { cc/aa } } "6\n"
+; i == 6
+
+; ============================================================================
+; do\in - context as parent (non-destructive), closures still share state
+; ============================================================================
+
+do\in cc {
+	assert\display "do\\in aa: i goes 6->7"  { aa } 7
+	assert\display "do\\in bb: i goes 7->9"  { bb } 9
+}
+; i == 9
+
+; ============================================================================
+; do\inside - executes directly in context, closures still share state
+; ============================================================================
+
+do\inside cc {
+	assert\display "do\\inside aa: i goes 9->10"  { aa } 10
+	assert\display "do\\inside bb: i goes 10->12" { bb } 12
+}
+; i == 12
+
+; ============================================================================
+; ? references - capture closure as a first-class value and call it directly
+; ============================================================================
+
+aaa: ?cc/aa
+bbb: ?cc/bb
+
+assert\display "? ref aaa: i goes 12->13" { aaa } 13
+; i == 13
+assert\display "? ref bbb: i goes 13->15" { bbb } 15
+; i == 15
+assert\display "? ref aaa: i goes 15->16" { aaa } 16
+; i == 16
+assert\display "? ref bbb: i goes 16->18" { bbb } 18
+; i == 18
+
+; ============================================================================
+; Multiple independent context instances share nothing between them
+; ============================================================================
+
+make-ctx: does {
+	context {
+		var 'i 0
+		aa: closure { } { inc! 'i , i }
+		bb: closure { } { inc! 'i , inc! 'i , i }
+	}
+}
+
+print "___"
+
+cx1: make-ctx
+cx2: make-ctx
+
+cx1/aa
+
+print "***"
+
+assert\display "cx1/aa first"  { cx1/aa } 1
+assert\display "cx1/aa second" { cx1/aa } 2
+assert\display "cx1/bb first"  { cx1/bb } 4
+assert\display "cx2/aa first - independent from cx1" { cx2/aa } 1
+assert\display "cx2/bb first"  { cx2/bb } 3
+assert\display "cx1/aa after cx2 ops - still own state" { cx1/aa } 5
+
+; ============================================================================
+; Nested contexts - inner closures track inner state, outer tracks outer
+; ============================================================================
+
+outer-ctx: context {
+	var 'o 0
+	inc-o: closure { } { inc! 'o , o }
+	inner-ctx: context {
+		var 'inn 0
+		inc-inn: closure { } { inc! 'inn , inn }
+	}
+}
+
+assert\display "outer inc-o: 0->1" { outer-ctx/inc-o } 1
+assert\display "outer inc-o: 1->2" { outer-ctx/inc-o } 2
+assert\display "inner inc-inn: 0->1" { outer-ctx/inner-ctx/inc-inn } 1
+assert\display "inner inc-inn: 1->2" { outer-ctx/inner-ctx/inc-inn } 2
+assert\display "outer not affected by inner" { outer-ctx/inc-o } 3
+assert\display "outer-ctx/o is 3" { outer-ctx/o } 3
+assert\display "outer-ctx/inner-ctx/inn is 2" { outer-ctx/inner-ctx/inn } 2
+
+; ============================================================================
+; ? references to closures inside nested contexts
+; ============================================================================
+
+inc-o-ref:   ?outer-ctx/inc-o
+inc-inn-ref: ?outer-ctx/inner-ctx/inc-inn
+
+assert\display "? ref to outer closure: 3->4"  { inc-o-ref } 4
+assert\display "? ref to inner closure: 2->3"  { inc-inn-ref } 3
+assert\display "? ref to outer closure: 4->5"  { inc-o-ref } 5

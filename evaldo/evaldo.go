@@ -657,6 +657,11 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 					continue
 				case env.Dict:
 					return found, *env.NewString("No word value!!"), currCtx
+				default:
+					// Bug fix: non-traversable object (not a context or dict) with more
+					// path segments remaining — this is an error, not a silent call.
+					_ = swObj
+					return false, nil, currCtx
 				}
 			}
 			return found, object, currCtx
@@ -776,6 +781,10 @@ func findWordValueWithFailureInfo(ps *env.ProgramState, word1 env.Object) (bool,
 						}
 					}
 					return true, object, currCtx, ""
+				default:
+					// Bug fix: non-traversable object (not a context or dict) with more
+					// path segments remaining — this is an error, not a silent call.
+					return false, nil, currCtx, wordName + " is not a context or dict"
 				}
 			}
 			return found, object, currCtx, ""
@@ -1148,7 +1157,12 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 					}
 					fnCtx = envPool.Get().(*env.RyeCtx)
 					fnCtx.Clear()
+					oldParentCF1 := fnCtx.Parent // save before overwriting (pool-reuse cycle detection)
 					fnCtx.Parent = fn.Ctx
+					// Bug fix: if fn.Ctx.Parent == fnCtx, that's a stale pool-reuse cycle; break it.
+					if fn.Ctx.Parent == fnCtx {
+						fn.Ctx.Parent = oldParentCF1
+					}
 					fnCtxFromPool = true
 					// fnCtx = env.NewEnv(fn.Ctx)
 				}
@@ -1179,7 +1193,12 @@ func CallFunction_CollectArgs(fn env.Function, ps *env.ProgramState, arg0_ env.O
 				} else {
 					fnCtx = envPool.Get().(*env.RyeCtx)
 					fnCtx.Clear()
+					oldParentCF2 := fnCtx.Parent // save before overwriting (pool-reuse cycle detection)
 					fnCtx.Parent = fn.Ctx
+					// Bug fix: if fn.Ctx.Parent == fnCtx, that's a stale pool-reuse cycle; break it.
+					if fn.Ctx.Parent == fnCtx {
+						fn.Ctx.Parent = oldParentCF2
+					}
 					fnCtxFromPool = true
 					// fnCtx = env.NewEnv(fn.Ctx)
 				}
@@ -1548,7 +1567,12 @@ func DetermineContext(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx) (*
 					}
 					fnCtx = envPool.Get().(*env.RyeCtx)
 					fnCtx.Clear()
+					oldParentDC1 := fnCtx.Parent // save before overwriting (pool-reuse cycle detection)
 					fnCtx.Parent = fn.Ctx
+					// Bug fix: if fn.Ctx.Parent == fnCtx, that's a stale pool-reuse cycle; break it.
+					if fn.Ctx.Parent == fnCtx {
+						fn.Ctx.Parent = oldParentDC1
+					}
 					fromPool = true
 				}
 			} else {
@@ -1573,7 +1597,12 @@ func DetermineContext(fn env.Function, ps *env.ProgramState, ctx *env.RyeCtx) (*
 				} else {
 					fnCtx = envPool.Get().(*env.RyeCtx)
 					fnCtx.Clear()
+					oldParentDC2 := fnCtx.Parent // save before overwriting (pool-reuse cycle detection)
 					fnCtx.Parent = fn.Ctx
+					// Bug fix: if fn.Ctx.Parent == fnCtx, that's a stale pool-reuse cycle; break it.
+					if fn.Ctx.Parent == fnCtx {
+						fn.Ctx.Parent = oldParentDC2
+					}
 					fromPool = true
 				}
 			} else {
