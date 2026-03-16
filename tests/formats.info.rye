@@ -2,6 +2,10 @@ section "Regexp " "Go like Regular expressions" {
 	group "regexp" 
 	"Creates a compiled regular expression object from a pattern string."
 	{
+		argsn 1
+		argtypes {
+			1 [ String ]
+		}
 		arg `pattern: String containing a regular expression pattern`
 		returns `native regexp object or error if pattern is invalid`
 	}
@@ -14,9 +18,29 @@ section "Regexp " "Go like Regular expressions" {
 	{
 	}
 
+	group "re" 
+	"Creates a compiled regular expression object from a pattern string."
+	{
+		argsn 1
+		argtypes {
+			1 [ String ]
+		}
+	}
+
+	{
+	}
+
+	{
+	}
+
 	group "regexp//Is-match" 
 	"Tests if a string matches the regular expression pattern."
 	{
+		argsn 2
+		argtypes {
+			1 [ Native ]
+			2 [ String ]
+		}
 		arg `regexp: Native regexp object`
 		arg `input: String to test against the pattern`
 		returns `boolean true if the string matches the pattern, false otherwise`
@@ -33,6 +57,11 @@ section "Regexp " "Go like Regular expressions" {
 	group "regexp//Submatch?" 
 	"Extracts the first captured group from a string using the regular expression."
 	{
+		argsn 2
+		argtypes {
+			1 [ Native ]
+			2 [ String ]
+		}
 		arg `regexp: Regular expression with capturing groups`
 		arg `input: String to search in`
 		returns `string containing the first captured group or error if no submatch found`
@@ -48,6 +77,7 @@ section "Regexp " "Go like Regular expressions" {
 	group "regexp//Submatches?" 
 	"Extracts all captured groups from the first match as a block of strings."
 	{
+		argsn 2
 		arg `regexp: Regular expression with capturing groups`
 		arg `input: String to search in`
 		returns `block containing all captured groups from the first match or error if no match found`
@@ -63,6 +93,7 @@ section "Regexp " "Go like Regular expressions" {
 	group "regexp//Submatches\\all?" 
 	"Extracts all captured groups from all matches as a nested block structure."
 	{
+		argsn 2
 		arg `regexp: Regular expression with capturing groups`
 		arg `input: String to search in`
 		returns `block of blocks, each inner block containing the captured groups from one match`
@@ -78,6 +109,7 @@ section "Regexp " "Go like Regular expressions" {
 	group "regexp//Find-all" 
 	"Finds all substrings matching the regular expression and returns them as a block."
 	{
+		argsn 2
 		arg `regexp: Regular expression pattern`
 		arg `input: String to search in`
 		returns `block containing all matching substrings or error if no matches found`
@@ -93,6 +125,11 @@ section "Regexp " "Go like Regular expressions" {
 	group "regexp//Match?" 
 	"Finds the first substring matching the regular expression."
 	{
+		argsn 2
+		argtypes {
+			1 [ Native ]
+			2 [ String ]
+		}
 		arg `regexp: Regular expression pattern`
 		arg `input: String to search in`
 		returns `string containing the first match or empty string if no match found`
@@ -108,6 +145,12 @@ section "Regexp " "Go like Regular expressions" {
 	group "regexp//Replace-all" 
 	"Replaces all occurrences of the regular expression pattern with the specified replacement string."
 	{
+		argsn 3
+		argtypes {
+			1 [ Native ]
+			2 [ String ]
+			3 [ String ]
+		}
 		arg `regexp: Regular expression pattern`
 		arg `input: String to modify`
 		arg `replacement: String to replace matches with`
@@ -127,6 +170,10 @@ section "JSON " "Parsing and generating JSON" {
 	group "parse-json" 
 	"Parses JSON string into Rye values."
 	{
+		argsn 1
+		argtypes {
+			1 [ String ]
+		}
 		arg `json: string containing JSON data`
 		returns `parsed Rye value (list, dict, string, integer, etc.)`
 	}
@@ -143,6 +190,10 @@ section "JSON " "Parsing and generating JSON" {
 	group "parse-json\\lines" 
 	"Parses JSON string into Rye values."
 	{
+		argsn 1
+		argtypes {
+			1 [ String ]
+		}
 		arg `json: string containing consecutive JSON values`
 		returns `list of parsed Rye values`
 	}
@@ -157,6 +208,7 @@ section "JSON " "Parsing and generating JSON" {
 	group "to-json" 
 	"Converts a Rye value to a JSON string. Supports block (like list) and context (like dict)."
 	{
+		argsn 1
 		arg `value: any Rye value to encode (block, list, dict, context, string, integer, etc.)`
 		returns `string containing the JSON representation`
 	}
@@ -174,6 +226,7 @@ section "JSON " "Parsing and generating JSON" {
 	group "to-json\\lines" 
 	"Converts a table to JSON with each row on a separate line."
 	{
+		argsn 1
 		arg `table: table value to encode`
 		returns `string containing the JSON representation with each row on a new line`
 	}
@@ -191,6 +244,7 @@ section "BSON " "BSON encoding and decoding" {
 	group "from-bson" 
 	"Decodes BSON data into Rye values."
 	{
+		argsn 1
 		arg `bytes: native bytes object containing BSON data`
 		returns `decoded Rye value (string, integer, decimal, block, etc.)`
 	}
@@ -207,6 +261,7 @@ section "BSON " "BSON encoding and decoding" {
 	group "to-bson" 
 	"Encodes a Rye value into BSON format."
 	{
+		argsn 1
 		arg `value: any Rye value to encode (string, integer, decimal, block, etc.)`
 		returns `native bytes object containing the BSON-encoded data`
 	}
@@ -225,6 +280,7 @@ section "SXML " "Streaming, SAX-like XML processing" {
 	group "reader//do-sxml" 
 	"Processes XML using a streaming SAX-like approach with tag handlers."
 	{
+		argsn 2
 		arg `reader: XML reader object`
 		arg `block: SXML processing block with tag handlers`
 		returns `result of processing the XML`
@@ -255,6 +311,11 @@ section "SXML " "Streaming, SAX-like XML processing" {
 	group "rye-sxml-start//Attr?" 
 	"Retrieves an attribute by index or name from an XML start element."
 	{
+		argsn 2
+		argtypes {
+			1 [ Native ]
+			2 [ Integer Word String ]
+		}
 		arg `element: XML start element`
 		arg `index: Integer index of the Attribute to retrieve`
 		returns `list [ namespace tag value ] of the attribute or void if not found`
@@ -278,6 +339,10 @@ section "SXML " "Streaming, SAX-like XML processing" {
 	group "rye-sxml-start//Attrs?" 
 	"Returns a dict of all attributes from an XML start element."
 	{
+		argsn 1
+		argtypes {
+			1 [ Native ]
+		}
 		arg `element: XML start element`
 		returns `dict with all attributes where keys are "attrname" or "namespace:attrname"`
 	}
@@ -291,6 +356,10 @@ section "SXML " "Streaming, SAX-like XML processing" {
 	group "rye-sxml-start//Name?" 
 	"Returns the name of an XML start element."
 	{
+		argsn 1
+		argtypes {
+			1 [ Native ]
+		}
 		arg `element: XML start element`
 		returns `string name of the XML element`
 	}
@@ -316,6 +385,10 @@ section "HTML " "HTML processing functions" {
 	group "unescape\\html" 
 	"Converts HTML entities to their character equivalents."
 	{
+		argsn 1
+		argtypes {
+			1 [ String ]
+		}
 		arg `text: HTML-escaped string`
 		returns `string with HTML entities converted to their character equivalents`
 	}
@@ -330,6 +403,10 @@ section "HTML " "HTML processing functions" {
 	group "escape\\html" 
 	"Converts special characters to HTML entities."
 	{
+		argsn 1
+		argtypes {
+			1 [ String ]
+		}
 		arg `text: String containing HTML special characters`
 		returns `string with special characters converted to HTML entities`
 	}
@@ -344,6 +421,10 @@ section "HTML " "HTML processing functions" {
 	group "html->markdown" 
 	"Converts HTML text to markdown format."
 	{
+		argsn 1
+		argtypes {
+			1 [ String ]
+		}
 		arg `html: HTML string to convert`
 		returns `string containing markdown equivalent of the HTML`
 	}
@@ -358,6 +439,7 @@ section "HTML " "HTML processing functions" {
 	group "reader//Parse-html" 
 	"Parses HTML using a streaming approach with tag handlers."
 	{
+		argsn 2
 		arg `reader: HTML reader object`
 		arg `block: HTML processing block with tag handlers`
 		returns `result of processing the HTML`
@@ -376,6 +458,11 @@ section "HTML " "HTML processing functions" {
 	group "rye-html-start//Attr?" 
 	"Retrieves an attribute value by name or index from an HTML element."
 	{
+		argsn 2
+		argtypes {
+			1 [ Native ]
+			2 [ Integer Word String ]
+		}
 		arg `element: HTML token element`
 		arg `name-or-index: Attribute name (as word or string) or index (as integer)`
 		returns `string value of the attribute or void if not found`
@@ -393,6 +480,10 @@ section "HTML " "HTML processing functions" {
 	group "rye-html-start//Attrs?" 
 	"Returns a dict of all attributes from an HTML element."
 	{
+		argsn 1
+		argtypes {
+			1 [ Native ]
+		}
 		arg `element: HTML token element`
 		returns `dict with all attributes where keys are attribute names`
 	}
@@ -406,6 +497,10 @@ section "HTML " "HTML processing functions" {
 	group "rye-html-start//Name?" 
 	"Returns the name of an HTML element."
 	{
+		argsn 1
+		argtypes {
+			1 [ Native ]
+		}
 		arg `element: HTML token element`
 		returns `string name of the HTML element`
 	}
@@ -424,6 +519,7 @@ section "Markdown " "Functions for processing and converting Markdown documents"
 	group "reader//do-markdown" 
 	"Processes Markdown using a streaming approach with section handlers."
 	{
+		argsn 2
 		arg `reader: File reader or similar object to read markdown from`
 		arg `handlers: Block containing section handlers (h1, h2, paragraph, code, etc.)`
 		returns `the result of processing the markdown document`
@@ -436,12 +532,133 @@ section "Markdown " "Functions for processing and converting Markdown documents"
 	{
 	}
 
+	group "markdown->html" 
+	"Converts Markdown text to HTML."
+	{
+		argsn 1
+		argtypes {
+			1 [ String ]
+		}
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "markdown" 
+	"Creates a Markdown value from a string."
+	{
+		argsn 1
+		argtypes {
+			1 [ String Markdown ]
+		}
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "markdown//text" 
+	"Gets the raw markdown text from a Markdown value."
+	{
+		argsn 1
+		argtypes {
+			1 [ Markdown ]
+		}
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "markdown//length" 
+	"Gets the length of the markdown text in characters."
+	{
+		argsn 1
+		argtypes {
+			1 [ Markdown ]
+		}
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "markdown//to-html" 
+	"Converts a Markdown value to HTML."
+	{
+		argsn 1
+		argtypes {
+			1 [ Markdown ]
+		}
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "markdown//headings" 
+	"Extracts all headings from markdown text as a list of strings."
+	{
+		argsn 1
+		argtypes {
+			1 [ Markdown ]
+		}
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "markdown//paragraphs" 
+	"Extracts all paragraphs from markdown text as a list of strings."
+	{
+		argsn 1
+		argtypes {
+			1 [ Markdown ]
+		}
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "markdown//links" 
+	"Extracts all links from markdown text as a list of dictionaries with 'text' and 'url' keys."
+	{
+		argsn 1
+		argtypes {
+			1 [ Markdown ]
+		}
+	}
+
+	{
+	}
+
+	{
+	}
+
 }
 
 section "Conversion " "Functions for converting between different types and kinds" {
 	group "convert" 
 	"Converts value from one kind to another based on a conversion specification block."
 	{
+		argsn 2
 		arg `value: Dict or RyeCtx to convert`
 		arg `spec: Block specifying the conversion rules`
 		returns `converted value based on the specification`
@@ -458,6 +675,12 @@ section "Conversion " "Functions for converting between different types and kind
 	group "converter" 
 	"Registers a converter between two kinds of objects."
 	{
+		argsn 3
+		argtypes {
+			1 [ Kind ]
+			2 [ Kind Block ]
+			3 [ Block ]
+		}
 		arg `source-kind: Kind to convert from`
 		arg `target-kind: Kind to convert to`
 		arg `spec: Block specifying conversion rules`

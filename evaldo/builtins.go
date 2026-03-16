@@ -318,6 +318,41 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 				return env.NewError("Unhandeled value, type: " + reflect.TypeOf(v1).String())
 			}
 		}
+	case *env.Dict:
+		switch s2 := key.(type) {
+		case env.String:
+			v := s1.Data[s2.Value]
+			switch v1 := v.(type) {
+			case int, int64, float64, string, []any, map[string]any:
+				return env.ToRyeValue(v1)
+			case env.Boolean:
+				return v1
+			case env.Integer:
+				return v1
+			case env.Decimal:
+				return v1
+			case env.String:
+				return v1
+			case env.Date:
+				return v1
+			case env.Block:
+				return v1
+			case env.Dict:
+				return v1
+			case env.List:
+				return v1
+			case *env.List:
+				return v1
+			case env.Native:
+				return v1
+			case nil:
+				ps.FailureFlag = true
+				return env.NewError("Key is missing in dict")
+			default:
+				ps.FailureFlag = true
+				return env.NewError("Unhandeled value, type: " + reflect.TypeOf(v1).String())
+			}
+		}
 	case *env.RyeCtx:
 		switch s2 := key.(type) {
 		case env.Word:
@@ -388,7 +423,41 @@ func getFrom(ps *env.ProgramState, data any, key any, posMode bool) env.Object {
 				return makeError(ps, "Index larger than length")
 			}
 		}
+	case *env.Block:
+		switch s2 := key.(type) {
+		case env.Integer:
+			idx := s2.Value
+			if posMode {
+				idx--
+			}
+			if idx < 0 {
+				return makeError(ps, "Index too low")
+			}
+			if len(s1.Series.S) >= int(idx)+1 {
+				v := s1.Series.Get(int(idx))
+				return v
+			} else {
+				return makeError(ps, "Index larger than length")
+			}
+		}
 	case env.Table:
+		switch s2 := key.(type) {
+		case env.Integer:
+			idx := s2.Value
+			if posMode {
+				idx--
+			}
+			if idx < 0 {
+				return makeError(ps, "Index too low")
+			}
+			if idx < int64(len(s1.Rows)) {
+				v := s1.Rows[idx]
+				return v
+			} else {
+				return makeError(ps, "Index larger than length")
+			}
+		}
+	case *env.Table:
 		switch s2 := key.(type) {
 		case env.Integer:
 			idx := s2.Value

@@ -8,6 +8,8 @@ import (
 	"go/token"
 	"os"
 	"regexp"
+	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -21,17 +23,18 @@ type builtinSection struct {
 }
 
 type builtinInfo struct {
-	name      string   // from key value
-	gentype   string   // optional from key value
-	docstring string   // part of builtin definition
-	doc       string   // free text at the top of the comment
-	nargs     int      // part of builtin definition
-	args      []string // extracted from comment or variable names
+	name      string         // from key value
+	gentype   string         // optional from key value
+	docstring string         // part of builtin definition
+	doc       string         // free text at the top of the comment
+	argsn     int            // Argsn field from builtin definition
+	pure      bool           // Pure field from builtin definition
+	args      []string       // extracted from comment or variable names
 	returns   string
-	argtypes  [][]string // extracted from switch statements or conversions
-	tests     []string   // extracted from comment
-	examples  []string   // extracted from comment
-	tags      []string   // extracted from comment
+	argtypes  map[int][]string // extracted from MakeArgError calls: arg number → allowed types
+	tests     []string         // extracted from comment
+	examples  []string         // extracted from comment
+	tags      []string         // extracted from comment
 }
 
 type counters struct {
@@ -127,11 +130,37 @@ func outputInfo(sections *[]builtinSection) {
 	for _, section := range *sections {
 		fmt.Printf("section \"%s\" \"%s\" {\n", section.name, section.docstring) // name
 		for _, info := range section.builtins {
-			if len(info.tests) > 0 || len(info.args) > 0 || len(info.examples) > 0 {
-				//				fmt.Printf("\tgroup \"%s\" \n", strings.Replace(info.name, "\\\\", "\\", -1)) // name
+			if len(info.tests) > 0 || len(info.args) > 0 || len(info.examples) > 0 || len(info.argtypes) > 0 {
 				fmt.Printf("\tgroup \"%s\" \n", info.name) // name
 				fmt.Printf("\t\"%s\"\n", info.docstring)   // docstring
-				fmt.Print("\t{\n")                         // args
+
+				fmt.Print("\t{\n") // args block - contains metadata and arg descriptions
+
+				// Output argsn and pure if available (inside args block)
+				if info.argsn > 0 {
+					fmt.Printf("\t\targsn %d\n", info.argsn)
+				}
+				if info.pure {
+					fmt.Printf("\t\tpure\n")
+				}
+
+				// Output argument types extracted from MakeArgError (inside args block)
+				if len(info.argtypes) > 0 {
+					fmt.Print("\t\targtypes {\n")
+					// Sort by arg number for consistent output
+					keys := make([]int, 0, len(info.argtypes))
+					for k := range info.argtypes {
+						keys = append(keys, k)
+					}
+					sort.Ints(keys)
+					for _, argNum := range keys {
+						types := info.argtypes[argNum]
+						fmt.Printf("\t\t\t%d [ %s ]\n", argNum, strings.Join(types, " "))
+					}
+					fmt.Print("\t\t}\n")
+				}
+
+				// Arg descriptions from comments
 				for _, t := range info.args {
 					fmt.Println("\t\targ `" + t + "`")
 				}
@@ -139,11 +168,15 @@ func outputInfo(sections *[]builtinSection) {
 					fmt.Println("\t\treturns `" + info.returns + "`")
 				}
 				fmt.Println("\t}\n")
+
+				// Tests block
 				fmt.Print("\t{\n")
 				for _, t := range info.tests {
 					fmt.Println("\t\t" + t)
 				}
 				fmt.Println("\t}\n")
+
+				// Examples block
 				if len(info.examples) > 0 {
 					fmt.Print("\t{\n`")
 					for _, t := range info.examples {
@@ -223,6 +256,76 @@ func main() {
 		doParsing(args)
 	}
 	// asd
+}
+
+// extractArgTypesFromFn walks the Fn body and finds all MakeArgError calls
+// to extract the allowed types for each argument
+func extractArgTypesFromFn(fnBody *ast.BlockStmt) map[int][]string {
+	argtypes := make(map[int][]string)
+
+	ast.Inspect(fnBody, func(n ast.Node) bool {
+		call, ok := n.(*ast.CallExpr)
+		if !ok {
+			return true
+		}
+
+		// Check if this is a MakeArgError call
+		ident, ok := call.Fun.(*ast.Ident)
+		if !ok || ident.Name != "MakeArgError" {
+			return true
+		}
+
+		// Need at least 3 args: ps, argNum, types
+		if len(call.Args) < 3 {
+			return true
+		}
+
+		// Extract argument number (Args[1])
+		argNumLit, ok := call.Args[1].(*ast.BasicLit)
+		if !ok || argNumLit.Kind != token.INT {
+			return true
+		}
+		argNum, _ := strconv.Atoi(argNumLit.Value)
+
+		// Extract type slice (Args[2])
+		typesLit, ok := call.Args[2].(*ast.CompositeLit)
+		if !ok {
+			return true
+		}
+
+		// Extract each type from the slice
+		var types []string
+		for _, elt := range typesLit.Elts {
+			if sel, ok := elt.(*ast.SelectorExpr); ok {
+				// e.g., env.StringType → "String"
+				typeName := strings.TrimSuffix(sel.Sel.Name, "Type")
+				types = append(types, typeName)
+			}
+		}
+
+		// Merge with existing types for this arg (some builtins have multiple error paths)
+		existing := argtypes[argNum]
+		for _, t := range types {
+			if !containsString(existing, t) {
+				existing = append(existing, t)
+			}
+		}
+		argtypes[argNum] = existing
+
+		return true
+	})
+
+	return argtypes
+}
+
+// containsString checks if a string slice contains a specific string
+func containsString(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
 }
 
 func doParsing(args []string) {
@@ -314,18 +417,32 @@ func doParsing(args []string) {
 								}
 							}
 
-							// Extract the Doc field from the Builtin struct
+							// Extract fields from the Builtin struct
 							if compLit, ok := kv.Value.(*ast.CompositeLit); ok {
 								for _, elt := range compLit.Elts {
 									if kvField, ok := elt.(*ast.KeyValueExpr); ok {
 										if keyField, ok := kvField.Key.(*ast.Ident); ok {
-											if keyField.Name == "Doc" {
+											switch keyField.Name {
+											case "Doc":
 												if docValue, ok := kvField.Value.(*ast.BasicLit); ok {
 													// Extract the Doc value (removing quotes)
 													docString := docValue.Value[1 : len(docValue.Value)-1]
 													info.docstring = docString
-													// Debug print
-													// fmt.Printf("Function: %s, Doc: %s\n", info.name, info.docstring)
+												}
+											case "Argsn":
+												if argsValue, ok := kvField.Value.(*ast.BasicLit); ok {
+													if argsValue.Kind == token.INT {
+														info.argsn, _ = strconv.Atoi(argsValue.Value)
+													}
+												}
+											case "Pure":
+												if pureIdent, ok := kvField.Value.(*ast.Ident); ok {
+													info.pure = pureIdent.Name == "true"
+												}
+											case "Fn":
+												// Extract argument types from MakeArgError calls in the function body
+												if fnLit, ok := kvField.Value.(*ast.FuncLit); ok {
+													info.argtypes = extractArgTypesFromFn(fnLit.Body)
 												}
 											}
 										}

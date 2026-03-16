@@ -40,6 +40,11 @@ test-framework: context {
 
 	example: fn { str } { }
 
+	; Metadata stubs - these are parsed but not used during testing
+	argsn: fn { n } { }
+	pure: does { }
+	argtypes: fn { block } { }
+
 	end: fn { } { ;prns "Tests:" term/bold prn cnt term/reset\bold , print "FAILED: " + failed , if failed > 0 { exit 1 } }
 		prns "\nGroups:" term/bold prn cnt term/reset\bold
 		either is-zero failed
@@ -104,6 +109,19 @@ docs-framework: context {
 	
 	returns: fn { str } {
 		print join [ "<p class='returns'><b>returns</b> " str "</p>" ]
+	}
+
+	; Metadata - display type info in docs
+	argsn: fn { n } { 
+		print join [ "<p class='meta'><b>Args:</b> " string n "</p>" ]
+	}
+	
+	pure: does { 
+		print "<span class='badge-pure'>pure</span>"
+	}
+	
+	argtypes: fn { block } {
+		print join [ "<p class='meta types'><b>Types:</b> <code>" mold\nowrap block "</code></p>" ]
 	}
 	
 	end: fn { } { }

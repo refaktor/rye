@@ -2353,8 +2353,11 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { { 23 34 45 } -> 1 } 34
 	// equal { { "a" "b" "c" } -> 0 } "a"
 	// equal { dict { "a" 1 "b" 2 } |-> "b" } 2
+	// equal { ref { 23 34 45 } -> 1 } 34
+	// equal { ref dict { "a" 1 "b" 2 } |-> "b" } 2
+	// equal { ref list { 10 20 30 } -> 0 } 10
 	// Args:
-	// * collection: Block, list, dict or other indexable collection
+	// * collection: Block, list, dict or other indexable collection (including refs)
 	// * index: Index or key to access
 	// Returns:
 	// * value at the specified index or key
