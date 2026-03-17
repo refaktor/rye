@@ -1525,7 +1525,7 @@ startOfHere:
 	// JM
 	//	s_instr := 0
 
-	log.Println("MicroPrompt started")
+	// log.Println("MicroPrompt started")
 
 	// mainLoop:
 	for {
@@ -1542,9 +1542,9 @@ startOfHere:
 				return "", fmt.Errorf("event channel is nil")
 			}
 
-			trace("POS: ")
-			trace(pos)
-			log.Printf("Received key event: Key='%s', Code=%d, Ctrl=%t, Alt=%t, Shift=%t", next.Key, next.Code, next.Ctrl, next.Alt, next.Shift)
+			// trace("POS: ")
+			// trace(pos)
+			// log.Printf("Received key event: Key='%s', Code=%d, Ctrl=%t, Alt=%t, Shift=%t", next.Key, next.Code, next.Ctrl, next.Alt, next.Shift)
 
 			// Debug: Check for Ctrl+Z specifically
 			if next.Ctrl && (strings.ToLower(next.Key) == "z" || next.Code == 26) {
@@ -1834,7 +1834,6 @@ startOfHere:
 				// Check for Ctrl+Z by ASCII code (26) regardless of other flags
 				if next.Code == 26 {
 					log.Println("Detected Ctrl+Z by ASCII code 26!")
-					fmt.Println("*****")
 					if err := SuspendProcess(); err != nil {
 						return "", err
 					}
@@ -2106,9 +2105,9 @@ startOfHere:
 			}
 
 			// Always refresh to keep display up to date
-			log.Println("MICROPROMPT 2")
+			// log.Println("MICROPROMPT 2")
 			if refreshAllLines {
-				log.Println("REFRESH ALL LINES")
+				// log.Println("REFRESH ALL LINES")
 				for i, line1 := range s.lines {
 					if i == 0 {
 						p = []rune(prompt)
@@ -2136,7 +2135,7 @@ startOfHere:
 				}
 				refreshAllLines = false
 			} else {
-				log.Println("SINGLE LINE REFRESH")
+				// log.Println("SINGLE LINE REFRESH")
 				if s.currline == 0 {
 					p = []rune(prompt)
 				} else {

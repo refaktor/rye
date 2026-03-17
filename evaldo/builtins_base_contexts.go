@@ -775,7 +775,7 @@ var builtins_contexts = map[string]*env.Builtin{
 
 	// Tests:
 	// equal { call-depth? } 0
-	// equal { fn test { call-depth? } test } 1
+	// equal { test: fn { } { call-depth? } test } 1
 	// Args:
 	// (none)
 	// Returns:
@@ -825,7 +825,7 @@ var builtins_contexts = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// greater { ops-done? } 0
+	// equal { ops-done? > 0 } true
 	// Args:
 	// (none)
 	// Returns:

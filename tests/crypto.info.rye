@@ -2,6 +2,10 @@ section "Basic Cryptographic Operations " "Hashing, encoding, and basic cryptogr
 	group "decode\\hex" 
 	"Decodes a hexadecimal string to a bytes native value."
 	{
+		argsn 1
+		argtypes {
+			1 [ String ]
+		}
 		arg `hex-string: hexadecimal encoded string to decode`
 		returns `native bytes object containing the decoded data`
 	}
@@ -18,6 +22,10 @@ section "Basic Cryptographic Operations " "Hashing, encoding, and basic cryptogr
 	group "encode-to\\hex" 
 	"Encodes a bytes native value to a hexadecimal string."
 	{
+		argsn 1
+		argtypes {
+			1 [ Native ]
+		}
 		arg `bytes: native bytes object to encode`
 		returns `string containing the hexadecimal representation of the bytes`
 	}
@@ -33,6 +41,10 @@ section "Basic Cryptographic Operations " "Hashing, encoding, and basic cryptogr
 	group "Ed25519-pub-key//To-string" 
 	"Converts an Ed25519 public key to its hexadecimal string representation."
 	{
+		argsn 1
+		argtypes {
+			1 [ Native ]
+		}
 		arg `key: Ed25519 public key as a native value`
 		returns `string containing the hexadecimal representation of the public key`
 	}
@@ -47,6 +59,10 @@ section "Basic Cryptographic Operations " "Hashing, encoding, and basic cryptogr
 	group "Ed25519-priv-key//To-string" 
 	"Converts an Ed25519 private key to its hexadecimal string representation."
 	{
+		argsn 1
+		argtypes {
+			1 [ Native ]
+		}
 		arg `key: Ed25519 private key as a native value`
 		returns `string containing the hexadecimal representation of the private key`
 	}
@@ -80,6 +96,10 @@ section "Basic Cryptographic Operations " "Hashing, encoding, and basic cryptogr
 	group "ed25519-private-key" 
 	"Creates an Ed25519 private key from a hexadecimal string or bytes value."
 	{
+		argsn 1
+		argtypes {
+			1 [ Native String ]
+		}
 		arg `key-data: string containing hexadecimal representation of the key or bytes native value`
 		returns `Ed25519 private key as a native value`
 	}
@@ -96,6 +116,10 @@ section "Basic Cryptographic Operations " "Hashing, encoding, and basic cryptogr
 	group "ed25519-public-key" 
 	"Creates an Ed25519 public key from a hexadecimal string or bytes value."
 	{
+		argsn 1
+		argtypes {
+			1 [ Native String ]
+		}
 		arg `key-data: string containing hexadecimal representation of the key or bytes native value`
 		returns `Ed25519 public key as a native value`
 	}
@@ -112,6 +136,10 @@ section "Basic Cryptographic Operations " "Hashing, encoding, and basic cryptogr
 	group "Ed25519-priv-key//Sign" 
 	"Signs a string message with an Ed25519 private key and returns the signature as bytes."
 	{
+		argsn 2
+		argtypes {
+			1 [ String Native ]
+		}
 		arg `key: Ed25519 private key as a native value`
 		arg `message: string to sign`
 		returns `signature as a native bytes value`
@@ -134,6 +162,10 @@ section "Basic Cryptographic Operations " "Hashing, encoding, and basic cryptogr
 	group "sha512" 
 	"Calculates the SHA-512 hash of a string and returns the result as a hexadecimal string."
 	{
+		argsn 1
+		argtypes {
+			1 [ String ]
+		}
 		arg `input: string to hash`
 		returns `string containing the hexadecimal representation of the SHA-512 hash`
 	}
@@ -168,6 +200,10 @@ section "Age " "Age encryption/decryption and key generation" {
 	group "age-identity" 
 	"Creates an age identity from a string or bytes."
 	{
+		argsn 1
+		argtypes {
+			1 [ Native String ]
+		}
 	}
 
 	{
@@ -182,6 +218,10 @@ section "Age " "Age encryption/decryption and key generation" {
 	group "age-recipient" 
 	"Creates an age recipient from a string or bytes."
 	{
+		argsn 1
+		argtypes {
+			1 [ Native String ]
+		}
 	}
 
 	{
@@ -196,6 +236,10 @@ section "Age " "Age encryption/decryption and key generation" {
 	group "age-encrypt" 
 	"Encrypts a reader with age for the provided age recipient or string password and returns a reader."
 	{
+		argsn 2
+		argtypes {
+			1 [ Native String ]
+		}
 	}
 
 	{
@@ -212,6 +256,10 @@ section "Age " "Age encryption/decryption and key generation" {
 	group "age-decrypt" 
 	"Decrypts a reader with age using the provided age identity or string password and returns a reader with the decrypted content."
 	{
+		argsn 2
+		argtypes {
+			1 [ Native String ]
+		}
 		arg `reader: encrypted data as a reader native value`
 		arg `identity-or-password: age identity native value or password string`
 		returns `decrypted data as a reader native value`
@@ -231,6 +279,11 @@ section "Age " "Age encryption/decryption and key generation" {
 	group "pkcs12-to-pem" 
 	"Converts a PKCS#12 (.p12) file bytes to PEM blocks using the provided password. Returns a block of pem-block native values."
 	{
+		argsn 2
+		argtypes {
+			1 [ Native ]
+			2 [ String ]
+		}
 		arg `p12-data: PKCS#12 file content as bytes native value`
 		arg `password: string password for the PKCS#12 file`
 		returns `block containing PEM blocks as native values`
@@ -248,6 +301,11 @@ section "Age " "Age encryption/decryption and key generation" {
 	group "pkcs12-decode" 
 	"Decodes a PKCS#12 (.p12) file bytes into private key and certificates using the provided password. Returns a block with [private-key, certificates, ca-certificates]."
 	{
+		argsn 2
+		argtypes {
+			1 [ Native ]
+			2 [ String ]
+		}
 		arg `p12-data: PKCS#12 file content as bytes native value`
 		arg `password: string password for the PKCS#12 file`
 		returns `block containing [private-key, certificates-block, ca-certificates-block] as native values`
@@ -271,6 +329,10 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	group "pem-block//Block-type?" 
 	"Returns the type of a PEM block as a string (e.g., 'CERTIFICATE', 'RSA PRIVATE KEY')."
 	{
+		argsn 1
+		argtypes {
+			1 [ Native ]
+		}
 		arg `pem-block: PEM block as a native value`
 		returns `string containing the block type (e.g., "CERTIFICATE", "RSA PRIVATE KEY")`
 	}
@@ -285,6 +347,10 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	group "pem-block//Headers?" 
 	"Returns the headers of a PEM block as a dictionary."
 	{
+		argsn 1
+		argtypes {
+			1 [ Native ]
+		}
 		arg `pem-block: PEM block as a native value`
 		returns `dictionary containing the PEM block headers`
 	}
@@ -299,6 +365,10 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	group "x509-parse-certificate" 
 	"Parses a PEM block into an X.509 certificate native value."
 	{
+		argsn 1
+		argtypes {
+			1 [ Native ]
+		}
 		arg `pem-block: PEM block as a native value containing a certificate`
 		returns `X.509 certificate as a native value`
 	}
@@ -314,6 +384,10 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	group "x509-certificate//Not-after?" 
 	"Returns the expiration date (NotAfter) of an X.509 certificate as a time value."
 	{
+		argsn 1
+		argtypes {
+			1 [ Native ]
+		}
 		arg `certificate: X.509 certificate as a native value`
 		returns `time value representing the certificate's expiration date`
 	}
@@ -328,6 +402,10 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	group "x509-certificate//Not-before?" 
 	"Returns the start date (NotBefore) of an X.509 certificate as a time value."
 	{
+		argsn 1
+		argtypes {
+			1 [ Native ]
+		}
 		arg `certificate: X.509 certificate as a native value`
 		returns `time value representing the certificate's start date`
 	}
@@ -342,6 +420,10 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	group "x509-certificate//Is-expired" 
 	"Checks if an X.509 certificate has expired. Returns 1 if expired, 0 otherwise."
 	{
+		argsn 1
+		argtypes {
+			1 [ Native ]
+		}
 		arg `certificate: X.509 certificate as a native value`
 		returns `integer 1 if the certificate has expired, 0 otherwise`
 	}
@@ -357,6 +439,11 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	group "generate-self-signed-certificate" 
 	"Generates a self-signed X.509 certificate with a new RSA key pair."
 	{
+		argsn 2
+		argtypes {
+			1 [ Integer ]
+			2 [ Dict ]
+		}
 		arg `key-size: integer, must be at least 2048 bits`
 		arg `subject: dictionary with fields like "CommonName" and "Organization"`
 		returns `block containing [certificate, private-key] as native values`
@@ -378,6 +465,11 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	group "encode-to-pem" 
 	"Encodes a certificate and private key as PEM-formatted data."
 	{
+		argsn 2
+		argtypes {
+			1 [ Native ]
+			2 [ Native ]
+		}
 		arg `certificate: X.509 certificate as a native value`
 		arg `private-key: RSA private key as a native value`
 		returns `block with [cert-bytes, key-bytes] as Go-bytes native values`
@@ -399,6 +491,12 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	group "encode-to-p12" 
 	"Encodes a certificate and private key into a PKCS#12 (.p12) file with password protection."
 	{
+		argsn 3
+		argtypes {
+			1 [ Native ]
+			2 [ Native ]
+			3 [ String ]
+		}
 		arg `certificate: X.509 certificate as a native value`
 		arg `private-key: RSA private key as a native value`
 		arg `password: string password to protect the PKCS#12 file`
@@ -416,6 +514,10 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	group "x509-certificate//Subject?" 
 	"Returns the subject Distinguished Name (DN) of an X.509 certificate as a string."
 	{
+		argsn 1
+		argtypes {
+			1 [ Native ]
+		}
 		arg `certificate: X.509 certificate as a native value`
 		returns `string containing the certificate's subject DN`
 	}
@@ -430,6 +532,10 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	group "x509-certificate//Issuer?" 
 	"Returns the issuer Distinguished Name (DN) of an X.509 certificate as a string."
 	{
+		argsn 1
+		argtypes {
+			1 [ Native ]
+		}
 		arg `certificate: X.509 certificate as a native value`
 		returns `string containing the certificate's issuer DN`
 	}
@@ -444,6 +550,10 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	group "x509-certificate//Serial-number?" 
 	"Returns the serial number of an X.509 certificate as a string."
 	{
+		argsn 1
+		argtypes {
+			1 [ Native ]
+		}
 		arg `certificate: X.509 certificate as a native value`
 		returns `string containing the certificate's serial number`
 	}
@@ -458,6 +568,10 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	group "x509-certificate//Signature-algorithm?" 
 	"Returns the signature algorithm of an X.509 certificate as a string."
 	{
+		argsn 1
+		argtypes {
+			1 [ Native ]
+		}
 		arg `certificate: X.509 certificate as a native value`
 		returns `string containing the certificate's signature algorithm`
 	}
@@ -472,6 +586,10 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	group "x509-certificate//Public-key-algorithm?" 
 	"Returns the public key algorithm of an X.509 certificate as a string."
 	{
+		argsn 1
+		argtypes {
+			1 [ Native ]
+		}
 		arg `certificate: X.509 certificate as a native value`
 		returns `string containing the certificate's public key algorithm`
 	}
@@ -486,6 +604,10 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	group "x509-certificate//Key-usage?" 
 	"Returns the key usage flags of an X.509 certificate as a block of strings."
 	{
+		argsn 1
+		argtypes {
+			1 [ Native ]
+		}
 		arg `certificate: X.509 certificate as a native value`
 		returns `block containing strings of key usage flags`
 	}
@@ -500,6 +622,10 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	group "x509-certificate//Extended-key-usage?" 
 	"Returns the extended key usage flags of an X.509 certificate as a block of strings."
 	{
+		argsn 1
+		argtypes {
+			1 [ Native ]
+		}
 		arg `certificate: X.509 certificate as a native value`
 		returns `block containing strings of extended key usage flags`
 	}
@@ -514,6 +640,10 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	group "x509-certificate//Dns-names?" 
 	"Returns the DNS names from Subject Alternative Names of an X.509 certificate as a block of strings."
 	{
+		argsn 1
+		argtypes {
+			1 [ Native ]
+		}
 		arg `certificate: X.509 certificate as a native value`
 		returns `block containing DNS names from Subject Alternative Names`
 	}
@@ -528,6 +658,10 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	group "x509-certificate//Ip-addresses?" 
 	"Returns the IP addresses from Subject Alternative Names of an X.509 certificate as a block of strings."
 	{
+		argsn 1
+		argtypes {
+			1 [ Native ]
+		}
 		arg `certificate: X.509 certificate as a native value`
 		returns `block containing IP addresses from Subject Alternative Names`
 	}
@@ -542,6 +676,10 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	group "x509-certificate//Email-addresses?" 
 	"Returns the email addresses from Subject Alternative Names of an X.509 certificate as a block of strings."
 	{
+		argsn 1
+		argtypes {
+			1 [ Native ]
+		}
 		arg `certificate: X.509 certificate as a native value`
 		returns `block containing email addresses from Subject Alternative Names`
 	}
@@ -556,6 +694,10 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	group "x509-certificate//To-pem" 
 	"Converts an X.509 certificate to PEM-encoded string format."
 	{
+		argsn 1
+		argtypes {
+			1 [ Native ]
+		}
 		arg `certificate: X.509 certificate as a native value`
 		returns `string containing the PEM-encoded certificate`
 	}
@@ -570,6 +712,10 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	group "private-key//Type?" 
 	"Returns the type of a private key as a string."
 	{
+		argsn 1
+		argtypes {
+			1 [ Native ]
+		}
 		arg `private-key: private key as a native value`
 		returns `string containing the type of the private key (e.g., "*rsa.PrivateKey", "*ecdsa.PrivateKey")`
 	}
@@ -584,6 +730,10 @@ section "PEM Operations " "PEM format encoding and decoding operations" {
 	group "x509-certificate//To-dict" 
 	"Converts an X.509 certificate to a dictionary containing all certificate information for easy display and manipulation."
 	{
+		argsn 1
+		argtypes {
+			1 [ Native ]
+		}
 		arg `certificate: X.509 certificate as a native value`
 		returns `dictionary containing all certificate information`
 	}
@@ -602,6 +752,7 @@ section "Bcrypt " "Functions for bcrypt password hashing and token generation" {
 	group "bcrypt-hash" 
 	"Generates a bcrypt hash from a password string."
 	{
+		argsn 1
 		arg `password: String to hash`
 		returns `string containing the bcrypt hash of the password`
 	}
@@ -615,6 +766,7 @@ section "Bcrypt " "Functions for bcrypt password hashing and token generation" {
 	group "bcrypt-check" 
 	"Compares a bcrypt hash with a plain text password."
 	{
+		argsn 2
 		arg `hash: String containing the bcrypt hash`
 		arg `password: Plain text password to compare`
 		returns `integer 1 if the password matches the hash, 0 otherwise`
@@ -629,6 +781,7 @@ section "Bcrypt " "Functions for bcrypt password hashing and token generation" {
 	group "generate-token" 
 	"Generates a cryptographically secure random token of the specified length in bytes."
 	{
+		argsn 1
 		arg `length: Integer number of random bytes to generate`
 		returns `string containing the hex-encoded random token`
 	}

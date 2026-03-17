@@ -179,7 +179,7 @@ func (r *Repl) recieveLine(line string) string {
 	// Use fmt.Println for terminal output, log.Println for debugging
 	// This ensures log messages go to the browser console in WASM mode
 	// and don't interfere with terminal output
-	log.Println("RECV LINE: " + line)
+	// log.Println("RECV LINE: " + line)
 	res := r.evalLine(r.ps, line)
 
 	if r.showResults && len(res) > 0 {

@@ -2,6 +2,7 @@ section "Boolean " "Functions that work with true and false values." {
 	group "true" 
 	"Returns a boolean true value."
 	{
+		pure
 		arg `none`
 		returns `boolean true value`
 	}
@@ -17,6 +18,7 @@ section "Boolean " "Functions that work with true and false values." {
 	group "false" 
 	"Returns a boolean false value."
 	{
+		pure
 		arg `none`
 		returns `boolean false value`
 	}
@@ -32,6 +34,11 @@ section "Boolean " "Functions that work with true and false values." {
 	group "not" 
 	"Performs logical negation on boolean values only."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ Boolean ]
+		}
 		arg `value: Boolean value to be negated`
 		returns `boolean false if the input is true, true if the input is false`
 	}
@@ -49,6 +56,12 @@ section "Boolean " "Functions that work with true and false values." {
 	group "and" 
 	"Performs a logical AND operation between two boolean values, or a bitwise AND operation between two integer values."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ Boolean ]
+			2 [ Boolean ]
+		}
 		arg `value1: First value (boolean)`
 		arg `value2: Second value (boolean)`
 		returns `boolean result of logical AND operation if both inputs are booleans, otherwise integer result of bitwise AND`
@@ -70,6 +83,12 @@ section "Boolean " "Functions that work with true and false values." {
 	group "or" 
 	"Performs a logical OR operation between two boolean values, or a bitwise OR operation between two integer values."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ Boolean ]
+			2 [ Boolean ]
+		}
 		arg `value1: First value (boolean)`
 		arg `value2: Second value (boolean)`
 		returns `boolean result of logical OR operation if both inputs are booleans, otherwise integer result of bitwise OR`
@@ -91,6 +110,12 @@ section "Boolean " "Functions that work with true and false values." {
 	group "xor" 
 	"Performs a logical XOR (exclusive OR) operation between two boolean values, or a bitwise XOR operation between two integer values."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ Boolean ]
+			2 [ Boolean ]
+		}
 		arg `value1: First value (boolean)`
 		arg `value2: Second value (boolean)`
 		returns `boolean result of logical XOR operation if both inputs are booleans, otherwise integer result of bitwise XOR`
@@ -112,6 +137,10 @@ section "Boolean " "Functions that work with true and false values." {
 	group "all" 
 	"Evaluates all expressions in a block and returns the last value if all are truthy, or the first falsy value encountered."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block ]
+		}
 		arg `block: Block of expressions to evaluate`
 		returns `the last value if all expressions are truthy, otherwise the first falsy value encountered`
 	}
@@ -131,6 +160,10 @@ section "Boolean " "Functions that work with true and false values." {
 	group "any" 
 	"Evaluates expressions in a block until a truthy value is found and returns it, or returns the last value if none are truthy."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block ]
+		}
 		arg `block: Block of expressions to evaluate`
 		returns `the first truthy value encountered, or the last value if none are truthy`
 	}
@@ -150,6 +183,10 @@ section "Boolean " "Functions that work with true and false values." {
 	group "any\\with" 
 	"Applies each expression in the block to the provided value until a truthy result is found and returns it."
 	{
+		argsn 2
+		argtypes {
+			2 [ Block ]
+		}
 		arg `value: Value to be used as input to each expression in the block`
 		arg `block: Block of expressions to evaluate with the provided value injected`
 		returns `the first truthy result of applying an expression to the value, or the last result if none are truthy`
@@ -173,6 +210,12 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	group "addnums" 
 	"Optimized version of + that adds two numbers, working with both integers and decimals."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ Integer Decimal Time ]
+			2 [ Integer Decimal ]
+		}
 		arg `value1: Integer, decimal, or time value`
 		arg `value2: Integer or decimal value (or integer for time addition)`
 		returns `sum of the two numbers or time shifted by the integer offset`
@@ -190,6 +233,11 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	group "inc" 
 	"Increments an integer value by 1."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ Integer ]
+		}
 		arg `value: Integer to increment`
 		returns `integer value incremented by 1`
 	}
@@ -207,6 +255,11 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	group "dec" 
 	"Decrements an integer value by 1."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ Integer ]
+		}
 		arg `value: Integer to decrement`
 		returns `integer value decremented by 1`
 	}
@@ -224,6 +277,11 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	group "negate" 
 	"Negates a number by multiplying it by -1, works with integers, decimals, and complex numbers."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ Integer Decimal Complex ]
+		}
 		arg `value: Number (integer, decimal, or complex) to negate`
 		returns `negated number of the same type`
 	}
@@ -243,6 +301,11 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	group "invert" 
 	"Calculates the reciprocal (1/x) of a number, works with integers, decimals, and complex numbers."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ Integer Decimal Complex ]
+		}
 		arg `value: Number (integer, decimal, or complex) to invert (must not be zero)`
 		returns `reciprocal (1/value) as decimal or complex number`
 	}
@@ -263,6 +326,11 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	group "is-positive" 
 	"Checks if a number is positive (greater than zero)."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ Integer Decimal ]
+		}
 		arg `value: Integer or decimal to check`
 		returns `boolean true if the value is positive, false otherwise`
 	}
@@ -281,6 +349,11 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	group "sign" 
 	"Returns the sign of a number as -1, 0, or 1."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ Integer Decimal ]
+		}
 		arg `value: Integer or decimal to check`
 		returns `integer sign of the value (-1 for negative, 0 for zero, 1 for positive)`
 	}
@@ -300,6 +373,11 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	group "is-zero" 
 	"Checks if a number is exactly zero."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ Integer Decimal ]
+		}
 		arg `value: Integer or decimal to check`
 		returns `boolean true if the value is zero, false otherwise`
 	}
@@ -317,6 +395,12 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	group "is-multiple-of" 
 	"Checks if the first integer is evenly divisible by the second integer."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ Integer ]
+			2 [ Integer ]
+		}
 		arg `value: Integer to check`
 		arg `divisor: Integer divisor to check against`
 		returns `boolean true if value is divisible by divisor with no remainder, false otherwise`
@@ -335,6 +419,11 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	group "is-odd" 
 	"Checks if an integer is odd (not divisible by 2)."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ Integer ]
+		}
 		arg `value: Integer to check`
 		returns `boolean true if the value is odd, false if even`
 	}
@@ -352,6 +441,11 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	group "is-even" 
 	"Checks if an integer is even (divisible by 2)."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ Integer ]
+		}
 		arg `value: Integer to check`
 		returns `boolean true if the value is even, false if odd`
 	}
@@ -369,6 +463,12 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	group "mod" 
 	"Calculates the modulo (remainder) when dividing the first integer by the second."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ Integer ]
+			2 [ Integer ]
+		}
 		arg `value: Integer dividend`
 		arg `divisor: Integer divisor`
 		returns `integer remainder after division`
@@ -387,6 +487,12 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	group "_%" 
 	"Alias for mod - calculates the modulo (remainder) when dividing the first integer by the second."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ Integer ]
+			2 [ Integer ]
+		}
 		arg `value: Integer dividend`
 		arg `divisor: Integer divisor`
 		returns `integer remainder after division`
@@ -404,6 +510,11 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	group "random\\integer" 
 	"Generates a cryptographically secure random integer between 0 (inclusive) and the specified maximum (exclusive)."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ Integer ]
+		}
 		arg `max: Upper bound (exclusive) for the random number`
 		returns `random integer in the range [0, max)`
 	}
@@ -420,6 +531,11 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	group "random\\decimal" 
 	"Generates a cryptographically secure random decimal between 0.0 (inclusive) and the specified maximum (exclusive)."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ Decimal Integer ]
+		}
 		arg `max: Upper bound (exclusive) for the random number`
 		returns `random decimal in the range [0.0, max)`
 	}
@@ -436,6 +552,10 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	group "inc!" 
 	"Increments an integer value stored in a variable (word) by 1 and updates the variable in-place."
 	{
+		argsn 1
+		argtypes {
+			1 [ Word ]
+		}
 		arg `word: Word referring to an integer value to increment`
 		returns `the new incremented integer value`
 	}
@@ -452,6 +572,10 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	group "dec!" 
 	"Decrements an integer value stored in a variable (word) by 1 and updates the variable in-place."
 	{
+		argsn 1
+		argtypes {
+			1 [ Word ]
+		}
 		arg `word: Word referring to an integer value to decrement`
 		returns `the new decremented integer value`
 	}
@@ -468,6 +592,8 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	group "_." 
 	"Discards the input value and returns a void value, useful only for Eyr (stack based dialect)."
 	{
+		argsn 1
+		pure
 		arg `value: Any value to discard`
 		returns `void value (used to discard values)`
 	}
@@ -483,6 +609,12 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	group "_+" 
 	"Adds two numerical values. Accepts Integer, Decimal, Complex, Time and Vector."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ Integer Decimal Complex Time Vector ]
+			2 [ Integer Decimal Complex Vector ]
+		}
 		arg `value1: First value (integer, decimal, complex, time, vector)`
 		arg `value2: Second value to add (integer, decimal, complex, duration, vector)`
 		returns `result of adding values, type depends on input types`
@@ -502,6 +634,12 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	group "_-" 
 	"Subtracts the second number from the first, working with integers, decimals, complex numbers, and vectors."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ Integer Decimal Complex Time Vector ]
+			2 [ Integer Decimal Complex Time Vector ]
+		}
 		arg `value1: First number (integer, decimal, or vector)`
 		arg `value2: Second number to subtract from the first`
 		returns `result of subtracting value2 from value1`
@@ -521,6 +659,12 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	group "_*" 
 	"Multiplies two numbers, working with integers, decimals, complex numbers, and vectors (scalar multiplication)."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ Integer Decimal Complex Vector ]
+			2 [ Integer Decimal Complex Vector ]
+		}
 		arg `value1: First number (integer, decimal, or vector)`
 		arg `value2: Second number to multiply by (scalar for vectors)`
 		returns `product of the two numbers, or scaled vector`
@@ -541,6 +685,12 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	group "_/" 
 	"Divides the first number by the second and returns a result, with error checking for division by zero."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ Integer Decimal Complex ]
+			2 [ Integer Decimal Complex ]
+		}
 		arg `value1: Dividend (integer or decimal)`
 		arg `value2: Divisor (integer or decimal, must not be zero)`
 		returns `decimal result of dividing value1 by value2`
@@ -559,6 +709,12 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	group "_//" 
 	"Performs integer division, dividing the first number by the second and truncating to an integer result."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ Integer Decimal ]
+			2 [ Integer Decimal ]
+		}
 		arg `value1: Dividend (integer or decimal)`
 		arg `value2: Divisor (integer or decimal, must not be zero)`
 		returns `integer result of dividing value1 by value2 (truncated)`
@@ -578,6 +734,8 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	group "_=" 
 	"Compares two values for equality, returning 1 if equal or 0 if not equal."
 	{
+		argsn 2
+		pure
 		arg `value1: First value to compare`
 		arg `value2: Second value to compare`
 		returns `boolean true if values are equal, false otherwise`
@@ -597,6 +755,8 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	group "_!=" 
 	"Compares two values for inequality, returning true if not equal or false if equal."
 	{
+		argsn 2
+		pure
 		arg `value1: First value to compare`
 		arg `value2: Second value to compare`
 		returns `boolean true if values are not equal, false otherwise`
@@ -617,6 +777,8 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	group "_>" 
 	"Compares if the first value is greater than the second value."
 	{
+		argsn 2
+		pure
 		arg `value1: First value to compare`
 		arg `value2: Second value to compare`
 		returns `boolean true if value1 is greater than value2, false otherwise`
@@ -636,6 +798,8 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	group "_>=" 
 	"Compares if the first value is greater than or equal to the second value."
 	{
+		argsn 2
+		pure
 		arg `value1: First value to compare`
 		arg `value2: Second value to compare`
 		returns `boolean true if value1 is greater than or equal to value2, false otherwise`
@@ -656,6 +820,8 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	group "_<" 
 	"Compares if the first value is less than the second value."
 	{
+		argsn 2
+		pure
 		arg `value1: First value to compare`
 		arg `value2: Second value to compare`
 		returns `boolean true if value1 is less than value2, false otherwise`
@@ -675,6 +841,8 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	group "_<=" 
 	"Compares if the first value is less than or equal to the second value."
 	{
+		argsn 2
+		pure
 		arg `value1: First value to compare`
 		arg `value2: Second value to compare`
 		returns `boolean true if value1 is less than or equal to value2, false otherwise`
@@ -695,6 +863,13 @@ section "Numbers " "Working with numbers, integers and decimals." {
 	group "clamp" 
 	"Clamps a number between a minimum and maximum value, ensuring the result stays within the specified bounds."
 	{
+		argsn 3
+		pure
+		argtypes {
+			1 [ Integer Decimal ]
+			2 [ Integer Decimal ]
+			3 [ Integer Decimal ]
+		}
 		arg `value: Number (integer or decimal) to clamp`
 		arg `min: Minimum value (integer or decimal)`
 		arg `max: Maximum value (integer or decimal)`
@@ -720,6 +895,7 @@ section "Strings " "" {
 	group "newline" 
 	"Returns a string containing a single newline character."
 	{
+		pure
 		arg `none`
 		returns `a string containing a single newline character`
 	}
@@ -734,6 +910,7 @@ section "Strings " "" {
 	group "tab" 
 	"Returns a string containing a single tab character."
 	{
+		pure
 		arg `none`
 		returns `a string containing a single tab character`
 	}
@@ -748,6 +925,11 @@ section "Strings " "" {
 	group "ln" 
 	"Appends a newline character to the end of a string."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ String ]
+		}
 		arg `string: String to append a newline to`
 		returns `a new string with a newline character appended`
 	}
@@ -763,6 +945,11 @@ section "Strings " "" {
 	group "trim" 
 	"Removes all leading and trailing whitespace characters from a string."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ String ]
+		}
 		arg `string: String to trim`
 		returns `a new string with leading and trailing whitespace removed`
 	}
@@ -779,6 +966,12 @@ section "Strings " "" {
 	group "trim\\" 
 	"Removes all leading and trailing occurrences of the specified characters from a string."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ String ]
+			2 [ String ]
+		}
 		arg `string: String to trim`
 		arg `cutset: String containing the characters to trim`
 		returns `a new string with specified characters removed from both ends`
@@ -795,6 +988,12 @@ section "Strings " "" {
 	group "trim\\right" 
 	"Removes all trailing occurrences of the specified characters from a string."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ String ]
+			2 [ String ]
+		}
 		arg `string: String to trim`
 		arg `cutset: String containing the characters to trim`
 		returns `a new string with specified characters removed from the right end`
@@ -812,6 +1011,12 @@ section "Strings " "" {
 	group "trim\\left" 
 	"Removes all leading occurrences of the specified characters from a string."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ String ]
+			2 [ String ]
+		}
 		arg `string: String to trim`
 		arg `cutset: String containing the characters to trim`
 		returns `a new string with specified characters removed from the left end`
@@ -829,6 +1034,13 @@ section "Strings " "" {
 	group "replace" 
 	"Replaces all occurrences of a substring with another string."
 	{
+		argsn 3
+		pure
+		argtypes {
+			1 [ String ]
+			2 [ String ]
+			3 [ String ]
+		}
 		arg `string: Original string`
 		arg `old: Substring to replace`
 		arg `new: Replacement string`
@@ -848,6 +1060,13 @@ section "Strings " "" {
 	group "substring" 
 	"Extracts a portion of a string between the specified start and end positions."
 	{
+		argsn 3
+		pure
+		argtypes {
+			1 [ String ]
+			2 [ Integer ]
+			3 [ Integer ]
+		}
 		arg `string: String to extract from`
 		arg `start: Starting position (0-based, inclusive)`
 		arg `end: Ending position (0-based, exclusive)`
@@ -866,6 +1085,12 @@ section "Strings " "" {
 	group "contains" 
 	"Checks if a string, block or list contains a specific value, returning true if found or false if not found."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ String Block List ]
+			2 [ String Integer ]
+		}
 		arg `collection: String, block or list to search in`
 		arg `value: Value to search for`
 		returns `true if the collection contains the value, false otherwise`
@@ -885,6 +1110,12 @@ section "Strings " "" {
 	group "has-suffix" 
 	"Checks if a string ends with a specific suffix, returning true if it does or false if it doesn't."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ String ]
+			2 [ String ]
+		}
 		arg `string: String to check`
 		arg `suffix: Suffix to look for`
 		returns `true if the string ends with the suffix, false otherwise`
@@ -902,6 +1133,12 @@ section "Strings " "" {
 	group "has-prefix" 
 	"Checks if a string starts with a specific prefix, returning true if it does or false if it doesn't."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ String ]
+			2 [ String ]
+		}
 		arg `string: String to check`
 		arg `prefix: Prefix to look for`
 		returns `true if the string starts with the prefix, false otherwise`
@@ -919,6 +1156,12 @@ section "Strings " "" {
 	group "index?" 
 	"Finds the 0-based index of the first occurrence of a value in a string or block."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ Block String ]
+			2 [ String ]
+		}
 		arg `collection: String or block to search in`
 		arg `value: Value to search for`
 		returns `integer index (0-based) of the first occurrence of the value, or -1 if not found`
@@ -937,6 +1180,12 @@ section "Strings " "" {
 	group "position?" 
 	"Finds the 1-based position of the first occurrence of a value in a string or block."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ String Block ]
+			2 [ String ]
+		}
 		arg `collection: String or block to search in`
 		arg `value: Value to search for`
 		returns `integer position (1-based) of the first occurrence of the value, or error if not found`
@@ -955,6 +1204,11 @@ section "Strings " "" {
 	group "encode-to\\base64" 
 	"Encodes a string or binary data as a base64 string."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ String Native ]
+		}
 		arg `data: String or native bytes/pem-block to encode`
 		returns `base64-encoded string`
 	}
@@ -970,6 +1224,11 @@ section "Strings " "" {
 	group "decode\\base64" 
 	"Decodes a base64-encoded string back to its original form."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ String ]
+		}
 		arg `string: Base64-encoded string to decode`
 		returns `decoded string`
 	}
@@ -985,6 +1244,11 @@ section "Strings " "" {
 	group "space" 
 	"Appends a space character to the end of a string."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ String ]
+		}
 		arg `string: String to append a space to`
 		returns `a new string with a space character appended`
 	}
@@ -1000,6 +1264,11 @@ section "Strings " "" {
 	group "capitalize" 
 	"Converts the first character of a string to uppercase, leaving the rest unchanged."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ String ]
+		}
 		arg `string: String to capitalize`
 		returns `a new string with the first character converted to uppercase`
 	}
@@ -1016,6 +1285,11 @@ section "Strings " "" {
 	group "lower" 
 	"Converts all characters in a string to lowercase."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ String ]
+		}
 		arg `string: String to convert`
 		returns `a new string with all characters converted to lowercase`
 	}
@@ -1032,6 +1306,11 @@ section "Strings " "" {
 	group "upper" 
 	"Converts all characters in a string to uppercase."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ String ]
+		}
 		arg `string: String to convert`
 		returns `a new string with all characters converted to uppercase`
 	}
@@ -1048,6 +1327,13 @@ section "Strings " "" {
 	group "concat3" 
 	"Concatenates three strings together into a single string."
 	{
+		argsn 3
+		pure
+		argtypes {
+			1 [ String ]
+			2 [ String ]
+			3 [ String ]
+		}
 		arg `string1: First string`
 		arg `string2: Second string`
 		arg `string3: Third string`
@@ -1065,6 +1351,11 @@ section "Strings " "" {
 	group "join" 
 	"Concatenates all strings, numbers or URIs in a block or list into a single string with no separator. If the first element is a URI, returns a URI."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ List Block ]
+		}
 		arg `collection: Block or list of strings, numbers or URIs to join`
 		returns `a single string with all values concatenated together, or a URI if first element is a URI`
 	}
@@ -1083,6 +1374,12 @@ section "Strings " "" {
 	group "join\\with" 
 	"Concatenates all strings or numbers in a block or list into a single string with a specified delimiter between values."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ List Block ]
+			2 [ String ]
+		}
 		arg `collection: Block or list of strings or numbers to join`
 		arg `delimiter: String to insert between each value`
 		returns `a single string with all values concatenated with the delimiter between them`
@@ -1100,6 +1397,12 @@ section "Strings " "" {
 	group "split" 
 	"Splits a string into a block of strings using a separator string."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ String ]
+			2 [ String ]
+		}
 		arg `string: String to split`
 		arg `separator: String that separates values`
 		returns `a block of strings resulting from splitting the input string`
@@ -1118,6 +1421,13 @@ section "Strings " "" {
 	group "split\\quoted" 
 	"Splits a string into a block of strings using a separator, while respecting quoted sections that should remain intact."
 	{
+		argsn 3
+		pure
+		argtypes {
+			1 [ String ]
+			2 [ String ]
+			3 [ String ]
+		}
 		arg `string: String to split`
 		arg `separator: String that separates values`
 		arg `quote: String that marks quoted sections that should not be split`
@@ -1135,6 +1445,12 @@ section "Strings " "" {
 	group "split\\many" 
 	"Splits a string into a block of strings using any character in the separators string as a delimiter."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ String ]
+			2 [ String ]
+		}
 		arg `string: String to split`
 		arg `separators: String containing all characters that should be treated as separators`
 		returns `a block of strings resulting from splitting the input string at any of the separator characters`
@@ -1152,6 +1468,12 @@ section "Strings " "" {
 	group "split\\every" 
 	"Splits a string or block into chunks of the specified size, with any remaining elements in the last chunk."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ String Block ]
+			2 [ Integer ]
+		}
 		arg `collection: String or block to split`
 		arg `size: Number of elements in each chunk`
 		returns `a block of strings or blocks, each containing at most 'size' elements`
@@ -1173,6 +1495,10 @@ section "Date and Time " "" {
 	group "unix-micro?" 
 	"Converts a time object to Unix time in microseconds (microseconds since January 1, 1970 UTC)."
 	{
+		argsn 1
+		argtypes {
+			1 [ Time ]
+		}
 		arg `time: Time object to convert`
 		returns `integer representing Unix time in microseconds`
 	}
@@ -1187,6 +1513,10 @@ section "Date and Time " "" {
 	group "unix-milli?" 
 	"Converts a time object to Unix time in milliseconds (milliseconds since January 1, 1970 UTC)."
 	{
+		argsn 1
+		argtypes {
+			1 [ Time ]
+		}
 		arg `time: Time object to convert`
 		returns `integer representing Unix time in milliseconds`
 	}
@@ -1201,6 +1531,10 @@ section "Date and Time " "" {
 	group "weekday?" 
 	"Extracts the day of the week from a time object as an integer (0=Sunday through 6=Saturday)."
 	{
+		argsn 1
+		argtypes {
+			1 [ Time ]
+		}
 		arg `time: Time object to extract weekday from`
 		returns `integer representing day of week (0=Sunday, 1=Monday, ..., 6=Saturday)`
 	}
@@ -1215,6 +1549,10 @@ section "Date and Time " "" {
 	group "date" 
 	"Creates a time object from a date string in YYYY-MM-DD format."
 	{
+		argsn 1
+		argtypes {
+			1 [ String ]
+		}
 		arg `datestr: String in "YYYY-MM-DD" format`
 		returns `time object representing the specified date`
 	}
@@ -1231,6 +1569,10 @@ section "Date and Time " "" {
 	group "datetime" 
 	"Creates a time object from a datetime string in YYYY-MM-DDThh:mm:ss format."
 	{
+		argsn 1
+		argtypes {
+			1 [ String ]
+		}
 		arg `datetimestr: String in "YYYY-MM-DDThh:mm:ss" format`
 		returns `time object representing the specified date and time`
 	}
@@ -1260,6 +1602,10 @@ section "Date and Time " "" {
 	group "yearday?" 
 	"Extracts the day of year from a time object as an integer (1-366)."
 	{
+		argsn 1
+		argtypes {
+			1 [ Time ]
+		}
 		arg `time: Time object to extract day of year from`
 		returns `integer representing day of year (1-366)`
 	}
@@ -1274,6 +1620,10 @@ section "Date and Time " "" {
 	group "year?" 
 	"Extracts the year from a time object as an integer."
 	{
+		argsn 1
+		argtypes {
+			1 [ Time ]
+		}
 		arg `time: Time object to extract year from`
 		returns `integer representing the year`
 	}
@@ -1288,6 +1638,10 @@ section "Date and Time " "" {
 	group "month?" 
 	"Extracts the month from a time object as an integer (1-12)."
 	{
+		argsn 1
+		argtypes {
+			1 [ Time ]
+		}
 		arg `time: Time object to extract month from`
 		returns `integer representing the month (1-12)`
 	}
@@ -1302,6 +1656,10 @@ section "Date and Time " "" {
 	group "days-in-month?" 
 	"Calculates the number of days in the month of the given time object."
 	{
+		argsn 1
+		argtypes {
+			1 [ Time ]
+		}
 		arg `time: Time object to calculate days in month for`
 		returns `integer representing the number of days in the month`
 	}
@@ -1317,6 +1675,10 @@ section "Date and Time " "" {
 	group "time?" 
 	"Extracts the time part from a time object as a formatted string (hh:mm:ss)."
 	{
+		argsn 1
+		argtypes {
+			1 [ Time ]
+		}
 		arg `time: Time object to extract time from`
 		returns `string representing the time in "hh:mm:ss" format`
 	}
@@ -1331,6 +1693,10 @@ section "Date and Time " "" {
 	group "date?" 
 	"Extracts the date part from a time object as a formatted string (YYYY-MM-DD)."
 	{
+		argsn 1
+		argtypes {
+			1 [ Time ]
+		}
 		arg `time: Time object to extract date from`
 		returns `string representing the date in "YYYY-MM-DD" format`
 	}
@@ -1345,6 +1711,10 @@ section "Date and Time " "" {
 	group "format-imap-date" 
 	"Formats a time object as an IMAP search date string (DD-Mon-YYYY)."
 	{
+		argsn 1
+		argtypes {
+			1 [ Time ]
+		}
 		arg `time: Time object to format`
 		returns `string representing the date in IMAP search format (DD-Mon-YYYY)`
 	}
@@ -1359,6 +1729,11 @@ section "Date and Time " "" {
 	group "format-date" 
 	"Formats a time object using a Go time format layout string. Reference time: Mon Jan 2 15:04:05 MST 2006"
 	{
+		argsn 2
+		argtypes {
+			1 [ Time ]
+			2 [ String ]
+		}
 		arg `time: Time object to format`
 		arg `layout: String - Go time format layout (reference time: Mon Jan 2 15:04:05 MST 2006)`
 		returns `string representing the formatted date/time`
@@ -1376,6 +1751,10 @@ section "Date and Time " "" {
 	group "day?" 
 	"Extracts the day of month from a time object as an integer (1-31)."
 	{
+		argsn 1
+		argtypes {
+			1 [ Time ]
+		}
 		arg `time: Time object to extract day from`
 		returns `integer representing the day of month (1-31)`
 	}
@@ -1390,6 +1769,10 @@ section "Date and Time " "" {
 	group "hour?" 
 	"Extracts the hour from a time object as an integer (0-23)."
 	{
+		argsn 1
+		argtypes {
+			1 [ Time ]
+		}
 		arg `time: Time object to extract hour from`
 		returns `integer representing the hour (0-23)`
 	}
@@ -1404,6 +1787,10 @@ section "Date and Time " "" {
 	group "minute?" 
 	"Extracts the minute from a time object as an integer (0-59)."
 	{
+		argsn 1
+		argtypes {
+			1 [ Time ]
+		}
 		arg `time: Time object to extract minute from`
 		returns `integer representing the minute (0-59)`
 	}
@@ -1418,6 +1805,10 @@ section "Date and Time " "" {
 	group "second?" 
 	"Extracts the second from a time object as an integer (0-59)."
 	{
+		argsn 1
+		argtypes {
+			1 [ Time ]
+		}
 		arg `time: Time object to extract second from`
 		returns `integer representing the second (0-59)`
 	}
@@ -1432,6 +1823,10 @@ section "Date and Time " "" {
 	group "sleep" 
 	"Pauses execution for the specified number of milliseconds."
 	{
+		argsn 1
+		argtypes {
+			1 [ Integer ]
+		}
 		arg `milliseconds: Integer number of milliseconds to sleep`
 		returns `the original milliseconds value`
 	}
@@ -1446,6 +1841,10 @@ section "Date and Time " "" {
 	group "thousands" 
 	"Multiplies the input by 1000 (useful for unit conversion)."
 	{
+		argsn 1
+		argtypes {
+			1 [ Integer ]
+		}
 		arg `n: Integer`
 		returns `integer multiplied by 1000`
 	}
@@ -1460,6 +1859,10 @@ section "Date and Time " "" {
 	group "millions" 
 	"Multiplies the input by 1000000 (useful for unit conversion)."
 	{
+		argsn 1
+		argtypes {
+			1 [ Integer ]
+		}
 		arg `n: Integer`
 		returns `integer multiplied by 1000000`
 	}
@@ -1474,6 +1877,10 @@ section "Date and Time " "" {
 	group "seconds" 
 	"Converts seconds to milliseconds (multiplies by 1000)."
 	{
+		argsn 1
+		argtypes {
+			1 [ Integer ]
+		}
 		arg `n: Integer number of seconds`
 		returns `integer representing the equivalent number of milliseconds`
 	}
@@ -1488,6 +1895,10 @@ section "Date and Time " "" {
 	group "minutes" 
 	"Converts minutes to milliseconds (multiplies by 60000)."
 	{
+		argsn 1
+		argtypes {
+			1 [ Integer ]
+		}
 		arg `n: Integer number of minutes`
 		returns `integer representing the equivalent number of milliseconds`
 	}
@@ -1502,6 +1913,10 @@ section "Date and Time " "" {
 	group "hours" 
 	"Converts hours to milliseconds (multiplies by 3600000)."
 	{
+		argsn 1
+		argtypes {
+			1 [ Integer ]
+		}
 		arg `n: Integer number of hours`
 		returns `integer representing the equivalent number of milliseconds`
 	}
@@ -1516,6 +1931,10 @@ section "Date and Time " "" {
 	group "days" 
 	"Converts days to milliseconds (multiplies by 86400000)."
 	{
+		argsn 1
+		argtypes {
+			1 [ Integer ]
+		}
 		arg `n: Integer number of days`
 		returns `integer representing the equivalent number of milliseconds`
 	}
@@ -1530,6 +1949,10 @@ section "Date and Time " "" {
 	group "weeks" 
 	"Converts weeks to milliseconds (multiplies by 604800000)."
 	{
+		argsn 1
+		argtypes {
+			1 [ Integer ]
+		}
 		arg `n: Integer number of weeks`
 		returns `integer representing the equivalent number of milliseconds`
 	}
@@ -1544,6 +1967,10 @@ section "Date and Time " "" {
 	group "time-it" 
 	"Accepts a block, does it and times it's execution time."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block ]
+		}
 		arg `block: Block of code to execute and time`
 		returns `integer representing execution time in milliseconds`
 	}
@@ -1561,6 +1988,11 @@ section "Collections " "" {
 	group "random" 
 	"Selects a random value from a block of values."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ Integer ]
+		}
 		arg `block: Block of values to select from`
 		returns `a randomly selected value from the block`
 	}
@@ -1576,6 +2008,10 @@ section "Collections " "" {
 	group "unpack" 
 	"Flattens a block of blocks or list of lists by one level, combining all inner collections into a single collection."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block ]
+		}
 		arg `collection: Block or list of blocks/lists to unpack`
 		returns `a flattened block or list with all inner blocks/lists unpacked`
 	}
@@ -1592,6 +2028,12 @@ section "Collections " "" {
 	group "sample" 
 	"Randomly selects a specified number of elements from a collection without replacement."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ Integer ]
+			2 [ Integer ]
+		}
 		arg `collection: Block, list or table to sample from`
 		arg `count: Number of random elements to select`
 		returns `a new collection with randomly selected elements`
@@ -1609,6 +2051,10 @@ section "Collections " "" {
 	group "max" 
 	"Finds the maximum value in a block or list of comparable values."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block List ]
+		}
 		arg `collection: Block or list of comparable values`
 		returns `the maximum value in the collection`
 	}
@@ -1626,6 +2072,11 @@ section "Collections " "" {
 	group "max\\by" 
 	"Finds the value in a collection that produces the maximum result when transformed by a code block. Returns the original value, not the transformed result."
 	{
+		argsn 2
+		argtypes {
+			1 [ Block List ]
+			2 [ Block ]
+		}
 		arg `collection: Block or list of values`
 		arg `code: Block of code to transform each value for comparison`
 		returns `the original value that produces the maximum result when transformed by the code block`
@@ -1644,6 +2095,10 @@ section "Collections " "" {
 	group "min" 
 	"Finds the minimum value in a block or list of comparable values."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block ]
+		}
 		arg `collection: Block or list of comparable values`
 		returns `the minimum value in the collection`
 	}
@@ -1661,6 +2116,11 @@ section "Collections " "" {
 	group "min\\by" 
 	"Finds the value in a collection that produces the minimum result when transformed by a code block. Returns the original value, not the transformed result."
 	{
+		argsn 2
+		argtypes {
+			1 [ Block List ]
+			2 [ Block ]
+		}
 		arg `collection: Block or list of values`
 		arg `code: Block of code to transform each value for comparison`
 		returns `the original value that produces the minimum result when transformed by the code block`
@@ -1679,6 +2139,10 @@ section "Collections " "" {
 	group "avg" 
 	"Calculates the arithmetic mean (average) of numeric values in a collection."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block Vector ]
+		}
 		arg `collection: Block, list or vector of numeric values`
 		returns `the arithmetic mean (average) of the values as a decimal`
 	}
@@ -1697,6 +2161,11 @@ section "Collections " "" {
 	group "avg\\by" 
 	"Calculates the average of the results of transforming each value in a collection by a code block. Returns the average of all transformed results."
 	{
+		argsn 2
+		argtypes {
+			1 [ Block List ]
+			2 [ Block ]
+		}
 		arg `collection: Block or list of values`
 		arg `code: Block of code to transform each value before averaging`
 		returns `the average of all transformed results as a decimal`
@@ -1715,6 +2184,10 @@ section "Collections " "" {
 	group "sum" 
 	"Calculates the sum of all numeric values in a collection."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block Vector ]
+		}
 		arg `collection: Block, list or vector of numeric values`
 		returns `the sum of all values (integer if all values are integers, decimal otherwise)`
 	}
@@ -1734,6 +2207,11 @@ section "Collections " "" {
 	group "sum\\by" 
 	"Sums the results of transforming each value in a collection by a code block. Returns the sum of all transformed results."
 	{
+		argsn 2
+		argtypes {
+			1 [ Block List ]
+			2 [ Block ]
+		}
 		arg `collection: Block or list of values`
 		arg `code: Block of code to transform each value before summing`
 		returns `the sum of all transformed results (integer if all results are integers, decimal otherwise)`
@@ -1752,6 +2230,10 @@ section "Collections " "" {
 	group "mul" 
 	"Calculates the product of all numeric values in a collection."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block Vector ]
+		}
 		arg `collection: Block, list or vector of numeric values`
 		returns `the product of all values (integer if all values are integers, decimal otherwise)`
 	}
@@ -1768,6 +2250,10 @@ section "Collections " "" {
 	group "first" 
 	"Retrieves the first item from a collection (block, list, string, or table)."
 	{
+		argsn 1
+		argtypes {
+			1 [ Table Block String List ]
+		}
 		arg `collection: Block, list, string or table to get the first item from`
 		returns `the first item in the collection`
 	}
@@ -1786,6 +2272,10 @@ section "Collections " "" {
 	group "rest" 
 	"Creates a new collection with all items except the first one from the input collection."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block String List ]
+		}
 		arg `collection: Block, list or string to get all but the first item from`
 		returns `a new collection containing all items except the first one`
 	}
@@ -1803,6 +2293,11 @@ section "Collections " "" {
 	group "rest\\from" 
 	"Creates a new collection with all items starting from the specified position in the input collection."
 	{
+		argsn 2
+		argtypes {
+			1 [ Block List String ]
+			2 [ Integer ]
+		}
 		arg `collection: Block, list or string to get items from`
 		arg `n: Integer position to start from (0-based)`
 		returns `a new collection containing all items starting from position n`
@@ -1821,6 +2316,11 @@ section "Collections " "" {
 	group "tail" 
 	"Creates a new collection with the last n items from the input collection."
 	{
+		argsn 2
+		argtypes {
+			1 [ Block List String ]
+			2 [ Integer ]
+		}
 		arg `collection: Block, list, string or table to get the last items from`
 		arg `n: Number of items to retrieve from the end`
 		returns `a new collection containing the last n items`
@@ -1839,6 +2339,10 @@ section "Collections " "" {
 	group "second" 
 	"Retrieves the second item from a collection (block, list, or string)."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block List String ]
+		}
 		arg `collection: Block, list or string to get the second item from`
 		returns `the second item in the collection`
 	}
@@ -1855,6 +2359,10 @@ section "Collections " "" {
 	group "third" 
 	"Retrieves the third item from a collection (block, list, or string)."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block List String ]
+		}
 		arg `collection: Block, list or string to get the third item from`
 		returns `the third item in the collection`
 	}
@@ -1871,6 +2379,10 @@ section "Collections " "" {
 	group "last" 
 	"Retrieves the last item from a collection (block, list, or string)."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block List String ]
+		}
 		arg `collection: Block, list or string to get the last item from`
 		returns `the last item in the collection`
 	}
@@ -1888,6 +2400,10 @@ section "Collections " "" {
 	group "before-last" 
 	"Creates a new collection with all items except the last one from the input collection."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block List String ]
+		}
 		arg `collection: Block, list or string to get all but the last item from`
 		returns `a new collection containing all items except the last one`
 	}
@@ -1906,6 +2422,11 @@ section "Collections " "" {
 	group "head" 
 	"Creates a new collection with the first n items from the input collection, or all but the last |n| items if n is negative."
 	{
+		argsn 2
+		argtypes {
+			1 [ Block List String Table ]
+			2 [ Integer ]
+		}
 		arg `collection: Block, list, string or table to get the first items from`
 		arg `n: Number of items to retrieve (if positive) or number to exclude from the end (if negative)`
 		returns `a new collection containing the first n items or all but the last |n| items`
@@ -1928,6 +2449,7 @@ section "Collections " "" {
 	group "nth" 
 	"Retrieves the item at the specified position (1-based indexing) from a collection."
 	{
+		argsn 2
 		arg `collection: Block, list, string or table to get an item from`
 		arg `n: Position of the item to retrieve (1-based)`
 		returns `the item at position n in the collection`
@@ -1948,6 +2470,10 @@ section "Collections " "" {
 	group "values" 
 	"Extracts all values from a dictionary and returns them as a list."
 	{
+		argsn 1
+		argtypes {
+			1 [ Dict ]
+		}
 		arg `dict: Dictionary object to extract values from`
 		returns `list containing all values from the dictionary`
 	}
@@ -1963,6 +2489,10 @@ section "Collections " "" {
 	group "sort" 
 	"Creates a new collection with items sorted in ascending order."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block List String ]
+		}
 		arg `collection: Block, list or string to sort`
 		returns `a new collection with items sorted in ascending order`
 	}
@@ -1982,6 +2512,10 @@ section "Collections " "" {
 	group "sort!" 
 	"Sorts a block or list in-place in ascending order and returns the modified collection."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block List ]
+		}
 		arg `collection: Reference to a block or list to sort in-place`
 		returns `the sorted collection (same reference, modified in-place)`
 	}
@@ -1998,6 +2532,11 @@ section "Collections " "" {
 	group "sort\\by" 
 	"Creates a new collection with items sorted according to a custom comparison function."
 	{
+		argsn 2
+		argtypes {
+			1 [ Block List ]
+			2 [ Function ]
+		}
 		arg `collection: Block or list to sort`
 		arg `comparator: Function that takes two arguments and returns a truthy value if they are in the correct order`
 		returns `a new collection with items sorted according to the comparator function`
@@ -2016,6 +2555,11 @@ section "Collections " "" {
 	group "sort\\by\\key" 
 	"Efficiently sorts a collection by pre-computing a sort key for each element using a key function. Much faster than sort\\by for large datasets (Schwartzian Transform)."
 	{
+		argsn 2
+		argtypes {
+			1 [ Block List ]
+			2 [ Block ]
+		}
 		arg `collection: Block or list to sort`
 		arg `key-fn: Block of code that transforms each value to a sortable key (evaluated once per element)`
 		returns `a new collection with items sorted according to the computed keys`
@@ -2035,6 +2579,10 @@ section "Collections " "" {
 	group "unique" 
 	"Creates a new collection with duplicate values removed, keeping only the first occurrence of each value."
 	{
+		argsn 1
+		argtypes {
+			1 [ List Block String ]
+		}
 		arg `collection: Block, list or string to remove duplicates from`
 		returns `a new collection with duplicate values removed`
 	}
@@ -2055,6 +2603,10 @@ section "Collections " "" {
 	group "reverse" 
 	"Creates a new collection with items in reverse order from the input collection."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block String List ]
+		}
 		arg `collection: Block, list or string to reverse`
 		returns `a new collection with items in reverse order`
 	}
@@ -2072,6 +2624,10 @@ section "Collections " "" {
 	group "reverse!" 
 	"Reverses a block or list in-place and returns the modified collection."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block String List ]
+		}
 		arg `collection: Reference to a block or list to reverse in-place`
 		returns `the reversed collection (same reference, modified in-place)`
 	}
@@ -2088,6 +2644,12 @@ section "Collections " "" {
 	group "concat" 
 	"Joins two series values together."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ Integer String Block Uri ]
+			2 [ String Integer Uri ]
+		}
 		arg `value1: First value (string, integer, block, uri) to concatenate`
 		arg `value2: Second value to concatenate with the first`
 		returns `result of concatenating the two values`
@@ -2107,6 +2669,12 @@ section "Collections " "" {
 	group "_++" 
 	"Joins two values together, with behavior depending on types: concatenates strings, joins blocks, merges dictionaries, etc."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ String Block Dict TableRow Time Uri ]
+			2 [ String Integer Decimal Secret Block Dict ]
+		}
 		arg `value1: First value (string, block, dict, etc.)`
 		arg `value2: Second value to join`
 		returns `result of joining the values, type depends on input types`
@@ -2126,6 +2694,11 @@ section "Collections " "" {
 	group "union" 
 	"Combines two collections, removing any duplicate values to create a union of all unique values."
 	{
+		argsn 2
+		argtypes {
+			1 [ Block List ]
+			2 [ Block List ]
+		}
 		arg `collection1: First block or list`
 		arg `collection2: Second block or list`
 		returns `a new collection containing all unique values from both collections`
@@ -2152,6 +2725,11 @@ section "Collections " "" {
 	group "range" 
 	"Creates a block containing all integers from the start value to the end value, inclusive."
 	{
+		argsn 2
+		argtypes {
+			1 [ Integer ]
+			2 [ Integer ]
+		}
 		arg `start: Integer starting value (inclusive)`
 		arg `end: Integer ending value (inclusive)`
 		returns `a block containing all integers from start to end, inclusive`
@@ -2170,6 +2748,10 @@ section "Collections " "" {
 	group "is-empty" 
 	"Checks if a collection is empty, returning true if empty and false otherwise."
 	{
+		argsn 1
+		argtypes {
+			2 [ String Dict List Block Table PersistentTable Vector ]
+		}
 		arg `collection: String, block, dict, list, table, context or vector to check`
 		returns `boolean true if the collection is empty, false otherwise`
 	}
@@ -2188,6 +2770,10 @@ section "Collections " "" {
 	group "length?" 
 	"Returns the number of elements in a collection."
 	{
+		argsn 1
+		argtypes {
+			2 [ String Dict List Block Table PersistentTable Vector ]
+		}
 		arg `collection: String, block, dict, list, table, context or vector to measure`
 		returns `integer count of elements in the collection`
 	}
@@ -2207,6 +2793,10 @@ section "Collections " "" {
 	group "max-idx?" 
 	"Returns the maximum valid index in a collection (length - 1)."
 	{
+		argsn 1
+		argtypes {
+			2 [ String Dict List Block Table PersistentTable Vector ]
+		}
 		arg `collection: String, block, dict, list, table, context or vector to measure`
 		returns `integer index of the last element in the collection`
 	}
@@ -2224,6 +2814,7 @@ section "Collections " "" {
 	group "keys" 
 	"Extracts the keys from a dictionary or column names from a table as a block."
 	{
+		argsn 1
 		arg `collection: Dict or table to extract keys from`
 		returns `block containing all keys from the dictionary or column names from the table`
 	}
@@ -2240,6 +2831,7 @@ section "Collections " "" {
 	group "_->" 
 	"Accesses a value in a collection by index or key (0-based indexing for blocks and lists)."
 	{
+		argsn 2
 		arg `collection: Block, list, dict or other indexable collection`
 		arg `index: Index or key to access`
 		returns `value at the specified index or key`
@@ -2257,6 +2849,7 @@ section "Collections " "" {
 	group "_<-" 
 	"Accesses a value in a collection by index or key, with reversed argument order (0-based indexing for blocks and lists)."
 	{
+		argsn 2
 		arg `index: Index or key to access`
 		arg `collection: Block, list, dict or other indexable collection`
 		returns `value at the specified index or key`
@@ -2274,6 +2867,7 @@ section "Collections " "" {
 	group "_<~" 
 	"Accesses a value in a collection by index with reversed argument order (1-based indexing)."
 	{
+		argsn 2
 		arg `index: Index to access (1-based)`
 		arg `collection: Block, list or other indexable collection`
 		returns `value at the specified index`
@@ -2290,6 +2884,7 @@ section "Collections " "" {
 	group "_~>" 
 	"Accesses a value in a collection by index (1-based indexing)."
 	{
+		argsn 2
 		arg `collection: Block, list or other indexable collection`
 		arg `index: Index to access (0-based)`
 		returns `value at the specified index`
@@ -2306,6 +2901,12 @@ section "Collections " "" {
 	group "intersection" 
 	"Finds the common elements between two collections, returning only values that appear in both."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ String Block List ]
+			2 [ String Block List ]
+		}
 		arg `collection1: First string, block or list`
 		arg `collection2: Second string, block or list (same type as first)`
 		returns `a new collection containing only values that appear in both input collections`
@@ -2332,6 +2933,13 @@ section "Collections " "" {
 	group "intersection\\by" 
 	"Finds the intersection of two collections using a custom comparison function to determine matching elements."
 	{
+		argsn 3
+		pure
+		argtypes {
+			1 [ String Block List ]
+			2 [ Function String Block ]
+			3 [ Function ]
+		}
 		arg `collection1: First string or block`
 		arg `collection2: Second string or block`
 		arg `comparator: Function that takes two arguments and returns a truthy value if they should be considered matching`
@@ -2352,6 +2960,12 @@ section "Collections " "" {
 	group "difference" 
 	"Creates a new collection containing elements from the first collection that are not present in the second collection."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ String Block List ]
+			2 [ String Block List ]
+		}
 		arg `collection1: First string, block or list`
 		arg `collection2: Second string, block or list (same type as first)`
 		returns `a new collection containing values from the first collection that do not appear in the second collection`
@@ -2381,6 +2995,10 @@ section "Collections " "" {
 	group "transpose" 
 	"Transposes a matrix (block of blocks), converting rows to columns and columns to rows."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block ]
+		}
 		arg `matrix: Block of blocks representing a matrix`
 		returns `transposed matrix (rows become columns and columns become rows)`
 	}
@@ -2396,6 +3014,11 @@ section "Collections " "" {
 	group "zip" 
 	"Combines two same-size collections into a block of pairs, where each pair contains corresponding elements from both collections."
 	{
+		argsn 2
+		argtypes {
+			1 [ Block List ]
+			2 [ Block List ]
+		}
 		arg `collection1: First block or list`
 		arg `collection2: Second block or list (must be same length as first)`
 		returns `a block of blocks, where each inner block contains paired elements from both collections`
@@ -2415,6 +3038,10 @@ section "Collections " "" {
 	group "remove-last!" 
 	"Removes the last element from a block in-place and returns the modified block."
 	{
+		argsn 1
+		argtypes {
+			1 [ Word ]
+		}
 		arg `word: Word referring to a block to modify`
 		returns `the modified block with the last element removed`
 	}
@@ -2430,6 +3057,10 @@ section "Collections " "" {
 	group "append!" 
 	"Appends a value to a block, list or string in-place and returns the modified collection."
 	{
+		argsn 2
+		argtypes {
+			2 [ String Block List ]
+		}
 		arg `value: Value to append`
 		arg `word: Word referring to a block, list or string to modify`
 		returns `the modified collection with the value appended`
@@ -2447,6 +3078,11 @@ section "Collections " "" {
 	group "update!" 
 	"Updates the value at a specific index in a block or list in-place and returns the modified collection (0-based indexing)."
 	{
+		argsn 3
+		argtypes {
+			1 [ Block List ]
+			2 [ Integer ]
+		}
 		arg `collection: Reference to a block or list to modify`
 		arg `index: Index of the element to change (0-based)`
 		arg `value: New value to set at the specified index`
@@ -2465,6 +3101,12 @@ section "Collections " "" {
 	group "update\\with!" 
 	"Updates the value at a specific index by evaluating a code block with the current value injected and storing the result (0-based indexing)."
 	{
+		argsn 3
+		argtypes {
+			1 [ Block List ]
+			2 [ Integer ]
+			3 [ Block ]
+		}
 		arg `collection: Reference to a block or list to modify`
 		arg `index: Index of the element to transform (0-based)`
 		arg `transform: Block of code that receives the current value and returns the new value`
@@ -2484,6 +3126,11 @@ section "Collections " "" {
 	group "update\\pos!" 
 	"Updates the value at a specific position in a block or list in-place and returns the modified collection (1-based indexing)."
 	{
+		argsn 3
+		argtypes {
+			1 [ Block List ]
+			2 [ Integer ]
+		}
 		arg `collection: Reference to a block or list to modify`
 		arg `position: Position of the element to change (1-based)`
 		arg `value: New value to set at the specified position`
@@ -2499,9 +3146,30 @@ section "Collections " "" {
 	{
 	}
 
+	group "change\\nth!" 
+	"Updates the value at a specific position in a block or list in-place and returns the modified collection (1-based indexing)."
+	{
+		argsn 3
+		argtypes {
+			1 [ Block List ]
+			2 [ Integer ]
+		}
+	}
+
+	{
+	}
+
+	{
+	}
+
 	group "append\\many!" 
 	"Appends all values from a block to a collection (block, list or string) in-place and returns the modified collection."
 	{
+		argsn 2
+		argtypes {
+			1 [ Block ]
+			2 [ Word Block ]
+		}
 		arg `values: Block of values to append`
 		arg `word: Word referring to a block, list or string to modify`
 		returns `the modified collection with all values from the block appended`
@@ -2520,6 +3188,10 @@ section "Collections " "" {
 	group "peek" 
 	"Returns the current value at a block's cursor position without advancing the cursor."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block ]
+		}
 		arg `block: Block to peek at`
 		returns `the current value at the block's cursor position without advancing the cursor`
 	}
@@ -2534,6 +3206,10 @@ section "Collections " "" {
 	group "pop" 
 	"Returns the current value at a block's cursor position and advances the cursor."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block ]
+		}
 		arg `block: Block to pop from`
 		returns `the current value at the block's cursor position, advancing the cursor`
 	}
@@ -2548,6 +3224,10 @@ section "Collections " "" {
 	group "pos" 
 	"Returns the current cursor position in a block."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block ]
+		}
 		arg `block: Block to get position from`
 		returns `the current cursor position in the block`
 	}
@@ -2563,6 +3243,10 @@ section "Collections " "" {
 	group "next" 
 	"Advances the cursor position in a block and returns the block."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block ]
+		}
 		arg `block: Block to advance cursor in`
 		returns `the block with its cursor advanced to the next position`
 	}
@@ -2577,6 +3261,11 @@ section "Collections " "" {
 	group "at" 
 	"Sets the cursor position in a block to the specified index and returns the block."
 	{
+		argsn 2
+		argtypes {
+			1 [ Block ]
+			2 [ Integer ]
+		}
 		arg `block: Block to set cursor position in`
 		arg `position: Integer position to set the cursor to (0-based)`
 		returns `the block with its cursor set to the specified position`
@@ -2596,6 +3285,10 @@ section "Collections " "" {
 	group "evals" 
 	"Takes a block of Rye values and evaluates each value or expression."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block Word ]
+		}
 		arg `block-or-word: Block of expressions to evaluate, or a word to resolve`
 		returns `block of evaluated results (for a block input) or the resolved word value`
 	}
@@ -2612,6 +3305,10 @@ section "Collections " "" {
 	group "evals\\with" 
 	"Evaluate a block with injecting the first argument."
 	{
+		argsn 2
+		argtypes {
+			2 [ Block ]
+		}
 		arg `value: Value injected into each expression`
 		arg `block: Block of expressions to evaluate`
 		returns `block of evaluated results`
@@ -2631,6 +3328,10 @@ section "Vector " "Vector operations" {
 	group "vector" 
 	"Creates a vector from a block of numbers."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block ]
+		}
 		arg `block: block of numbers to convert to a vector`
 		returns `vector object`
 	}
@@ -2646,6 +3347,10 @@ section "Vector " "Vector operations" {
 	group "normalize" 
 	"Calculates the L2 norm (Euclidean length) of a vector."
 	{
+		argsn 1
+		argtypes {
+			1 [ Vector ]
+		}
 		arg `vector: vector object to normalize`
 		returns `decimal representing the L2 norm (Euclidean length) of the vector`
 	}
@@ -2660,6 +3365,10 @@ section "Vector " "Vector operations" {
 	group "std-deviation" 
 	"Calculates the standard deviation of a vector's elements."
 	{
+		argsn 1
+		argtypes {
+			1 [ Vector ]
+		}
 		arg `vector: vector object`
 		returns `decimal representing the standard deviation of the vector elements`
 	}
@@ -2674,6 +3383,11 @@ section "Vector " "Vector operations" {
 	group "cosine-similarity" 
 	"Calculates the cosine similarity between two vectors."
 	{
+		argsn 2
+		argtypes {
+			1 [ Vector ]
+			2 [ Vector ]
+		}
 		arg `vector1: first vector object`
 		arg `vector2: second vector object`
 		returns `decimal representing the cosine similarity between the two vectors`
@@ -2690,6 +3404,11 @@ section "Vector " "Vector operations" {
 	group "correlation" 
 	"Calculates the correlation coefficient between two vectors."
 	{
+		argsn 2
+		argtypes {
+			1 [ Vector ]
+			2 [ Vector ]
+		}
 		arg `vector1: first vector object`
 		arg `vector2: second vector object`
 		returns `decimal representing the correlation coefficient between the two vectors`
@@ -2706,6 +3425,11 @@ section "Vector " "Vector operations" {
 	group "dot-product" 
 	"Calculates the dot product between two vectors."
 	{
+		argsn 2
+		argtypes {
+			1 [ Vector ]
+			2 [ Vector ]
+		}
 		arg `vector1: first vector object`
 		arg `vector2: second vector object`
 		returns `decimal representing the dot product of the two vectors`
@@ -2721,6 +3445,11 @@ section "Vector " "Vector operations" {
 	group "euclidean-distance" 
 	"Calculates the Euclidean distance between two vectors. Useful for K-Means clustering."
 	{
+		argsn 2
+		argtypes {
+			1 [ Vector ]
+			2 [ Vector ]
+		}
 		arg `vector1: first vector object`
 		arg `vector2: second vector object`
 		returns `decimal representing the Euclidean distance between the two vectors`
@@ -2737,6 +3466,10 @@ section "Vector " "Vector operations" {
 	group "mean-vectors" 
 	"Calculates the element-wise mean of multiple vectors. Useful for creating 'Master Anchors'."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block ]
+		}
 		arg `block: block of vectors to average`
 		returns `new vector representing the element-wise mean of all input vectors`
 	}
@@ -2751,6 +3484,10 @@ section "Vector " "Vector operations" {
 	group "unit-vector" 
 	"Returns a new normalized vector (length = 1). Essential for consistent dot products and overlays."
 	{
+		argsn 1
+		argtypes {
+			1 [ Vector ]
+		}
 		arg `vector: vector object to normalize`
 		returns `new vector with length 1 (unit vector)`
 	}
@@ -2765,6 +3502,11 @@ section "Vector " "Vector operations" {
 	group "project-vector" 
 	"Projects vector onto another vector. Answers: 'How much of this vector is in the direction of another?'"
 	{
+		argsn 2
+		argtypes {
+			1 [ Vector ]
+			2 [ Vector ]
+		}
 		arg `vector1: vector to project`
 		arg `vector2: vector to project onto`
 		returns `new vector representing the projection of vector1 onto vector2`
@@ -2780,6 +3522,11 @@ section "Vector " "Vector operations" {
 	group "reject-vector" 
 	"Removes projection from vector. Use this to 'subtract' a concept direction from a vector."
 	{
+		argsn 2
+		argtypes {
+			1 [ Vector ]
+			2 [ Vector ]
+		}
 		arg `vector1: vector to reject from`
 		arg `vector2: vector representing the direction to remove`
 		returns `new vector with the projection onto vector2 removed`
@@ -2798,6 +3545,10 @@ section "Types and Kinds " "" {
 	group "integer" 
 	"Tries to change a Rye value (like string) to integer."
 	{
+		argsn 1
+		argtypes {
+			1 [ String ]
+		}
 		arg `value: String or decimal value to convert to an integer`
 		returns `An integer value`
 	}
@@ -2817,6 +3568,10 @@ section "Types and Kinds " "" {
 	group "decimal" 
 	"Tries to change a Rye value (like string) to decimal."
 	{
+		argsn 1
+		argtypes {
+			1 [ String ]
+		}
 		arg `value: String value to convert to a decimal`
 		returns `A decimal value`
 	}
@@ -2832,6 +3587,8 @@ section "Types and Kinds " "" {
 	group "string" 
 	"Tries to turn a Rye value to string."
 	{
+		argsn 1
+		pure
 		arg `value: Any Rye value to convert to a string`
 		returns `A string representation of the value`
 	}
@@ -2850,6 +3607,11 @@ section "Types and Kinds " "" {
 	group "uri" 
 	"Tries to change Rye value to an URI."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ String ]
+		}
 	}
 
 	{
@@ -2863,6 +3625,11 @@ section "Types and Kinds " "" {
 	group "file" 
 	"Tries to change Rye value to a file."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ String ]
+		}
 	}
 
 	{
@@ -2876,6 +3643,11 @@ section "Types and Kinds " "" {
 	group "char" 
 	"Tries to turn a Rye value (like integer) to ascii character."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ Integer ]
+		}
 		arg `value: Integer representing an ASCII code point`
 		returns `A string containing the character corresponding to the ASCII code`
 	}
@@ -2891,6 +3663,11 @@ section "Types and Kinds " "" {
 	group "block" 
 	"Turns a List, Vector, or TableRow to a Block"
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ List Vector TableRow ]
+		}
 		arg `value: List, Vector, or TableRow to convert to a block`
 		returns `A block containing the same elements as the input`
 	}
@@ -2908,6 +3685,11 @@ section "Types and Kinds " "" {
 	group "word" 
 	"Tries to change a Rye value to a word with same name."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ String Word Opword Pipeword Xword EXword ]
+		}
 		arg `value: String or word-like value to convert to a word`
 		returns `A word with the same name as the input value`
 	}
@@ -2923,6 +3705,8 @@ section "Types and Kinds " "" {
 	group "is-string" 
 	"Returns true if value is a string."
 	{
+		argsn 1
+		pure
 		arg `value: Any Rye value to test`
 		returns `Boolean true if the value is a string, false otherwise`
 	}
@@ -2939,6 +3723,8 @@ section "Types and Kinds " "" {
 	group "is-integer" 
 	"Returns true if value is an integer."
 	{
+		argsn 1
+		pure
 		arg `value: Any Rye value to test`
 		returns `Boolean true if the value is an integer, false otherwise`
 	}
@@ -2955,6 +3741,8 @@ section "Types and Kinds " "" {
 	group "is-decimal" 
 	"Returns true if value is a decimal."
 	{
+		argsn 1
+		pure
 		arg `value: Any Rye value to test`
 		returns `Boolean true if the value is a decimal, false otherwise`
 	}
@@ -2971,6 +3759,8 @@ section "Types and Kinds " "" {
 	group "is-number" 
 	"Returns true if value is a number (integer or decimal)."
 	{
+		argsn 1
+		pure
 		arg `value: Any Rye value to test`
 		returns `Boolean true if the value is a number (integer or decimal), false otherwise`
 	}
@@ -2987,6 +3777,8 @@ section "Types and Kinds " "" {
 	group "type?" 
 	"Returns the type of Rye value as a word."
 	{
+		argsn 1
+		pure
 		arg `value: Any Rye value to check the type of`
 		returns `A word representing the type of the value`
 	}
@@ -3002,6 +3794,8 @@ section "Types and Kinds " "" {
 	group "kind?" 
 	"Returns the kind of Rye value as a word."
 	{
+		argsn 1
+		pure
 		arg `value: Any Rye value to check the kind of`
 		returns `A word representing the kind of the value`
 	}
@@ -3016,6 +3810,11 @@ section "Types and Kinds " "" {
 	group "types?" 
 	"Returns the types of Rye values in a block or table row as a block of words."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ Block Table TableRow ]
+		}
 		arg `collection: A block, table, or table row containing values to check types of`
 		returns `A block of words representing the types of each value in the collection`
 	}
@@ -3030,6 +3829,8 @@ section "Types and Kinds " "" {
 	group "dump" 
 	"Returns (dumps) Rye code representing the object."
 	{
+		argsn 1
+		pure
 		arg `value: Any Rye value to dump as code`
 		returns `A string containing the Rye code representation of the value`
 	}
@@ -3046,6 +3847,7 @@ section "Types and Kinds " "" {
 	group "mold" 
 	"Turn value to it's string representation."
 	{
+		argsn 1
 		arg `value: Any Rye value to convert to a string representation`
 		returns `A string containing the representation of the value`
 	}
@@ -3061,6 +3863,7 @@ section "Types and Kinds " "" {
 	group "mold\\nowrap" 
 	"Turn value to it's string representation. Doesn't wrap the blocks"
 	{
+		argsn 1
 		arg `value: Any Rye value to convert to a string representation`
 		returns `A string containing the representation of the value without block wrapping`
 	}
@@ -3077,6 +3880,11 @@ section "Types and Kinds " "" {
 	group "assure-kind" 
 	"Assuring kind."
 	{
+		argsn 2
+		argtypes {
+			1 [ Dict ]
+			2 [ Kind ]
+		}
 		arg `value: Dict to convert to a specific kind`
 		arg `kind: Kind to convert the value to`
 		returns `A new context of the specified kind`
@@ -3092,6 +3900,7 @@ section "Types and Kinds " "" {
 	group "method" 
 	"Registers a method (generic function)."
 	{
+		argsn 3
 		arg `kind: Word representing the kind for which to register the function`
 		arg `method: Word representing the method name`
 		arg `function: Function to register for the kind and method`
@@ -3108,6 +3917,11 @@ section "Types and Kinds " "" {
 	group "kind" 
 	"Creates new kind."
 	{
+		argsn 2
+		argtypes {
+			1 [ Word ]
+			2 [ Block ]
+		}
 		arg `name: Word that will be the name of the kind`
 		arg `spec: Block containing the specification for the kind`
 		returns `A new kind object`
@@ -3123,6 +3937,11 @@ section "Types and Kinds " "" {
 	group "secret" 
 	"Creates a secret from a string."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ String ]
+		}
 		arg `value: String value to convert to a secret`
 		returns `A secret value that hides the string from casual inspection`
 	}
@@ -3139,6 +3958,11 @@ section "Types and Kinds " "" {
 	group "reveal" 
 	"Reveals the secret value."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ Secret ]
+		}
 		arg `secret: Secret value to reveal`
 		returns `The string value contained in the secret`
 	}
@@ -3155,6 +3979,10 @@ section "Types and Kinds " "" {
 	group "lazy" 
 	"Creates a lazy value from a block. The block will only be evaluated when forced with _!."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block ]
+		}
 		arg `value: Dict or context to convert`
 		arg `kind: Kind to convert the value to`
 		returns `A new context of the specified kind`
@@ -3167,12 +3995,47 @@ section "Types and Kinds " "" {
 	{
 	}
 
+	group "_!" 
+	"Forces evaluation of a lazy value. If frozen evaluates the block and caches the result. If already thawed returns cached result."
+	{
+		argsn 1
+		argtypes {
+			1 [ LazyValue ]
+		}
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "_>>" 
+	"Converts first argument to a specific kind."
+	{
+		argsn 2
+		argtypes {
+			1 [ Dict Kind ]
+			2 [ Kind ]
+		}
+	}
+
+	{
+	}
+
+	{
+	}
+
 }
 
 section "Contexts " "Context related functions" {
 	group "raw-context" 
 	"Creates a completely isolated context with no parent, where only built-in functions are available."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block ]
+		}
 		arg `block: Block of expressions to evaluate in a new isolated context`
 		returns `context object with the values defined in the block`
 	}
@@ -3189,6 +4052,10 @@ section "Contexts " "Context related functions" {
 	group "isolate" 
 	"Creates a context that can access the parent context during creation, but becomes isolated afterward."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block ]
+		}
 		arg `block: Block of expressions to evaluate in a temporary context`
 		returns `context object with the values defined in the block, but isolated from parent contexts`
 	}
@@ -3207,6 +4074,10 @@ section "Contexts " "Context related functions" {
 	group "context" 
 	"Creates a new context from a block (evaluated) or dict (converted)."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block Dict ]
+		}
 		arg `arg: Block of expressions to evaluate, or Dict to convert to context`
 		returns `context object with the values defined in the block/dict and access to parent context`
 	}
@@ -3226,6 +4097,10 @@ section "Contexts " "Context related functions" {
 	group "context\\pure" 
 	"Creates a new context using Pure Context (PCtx) as parent, preventing access to regular context changes."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block ]
+		}
 		arg `block: Block of expressions to evaluate in a new pure context`
 		returns `context object with the values defined in the block, using Pure Context as parent`
 	}
@@ -3242,6 +4117,10 @@ section "Contexts " "Context related functions" {
 	group "private" 
 	"Creates a temporary private context for evaluating expressions, returning the last value instead of the context."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block ]
+		}
 		arg `block: Block of expressions to evaluate in a private context`
 		returns `the last value from evaluating the block (not the context itself)`
 	}
@@ -3259,6 +4138,11 @@ section "Contexts " "Context related functions" {
 	group "private\\" 
 	"Creates a documented private context for evaluating expressions, returning the last value instead of the context."
 	{
+		argsn 2
+		argtypes {
+			1 [ String ]
+			2 [ Block ]
+		}
 		arg `doc: String containing documentation for the context`
 		arg `block: Block of expressions to evaluate in a private context`
 		returns `the last value from evaluating the block (not the context itself)`
@@ -3274,6 +4158,11 @@ section "Contexts " "Context related functions" {
 	group "extends" 
 	"Creates a new context that inherits from a specified parent context."
 	{
+		argsn 2
+		argtypes {
+			1 [ Context ]
+			2 [ Block ]
+		}
 		arg `parent: Context object to extend`
 		arg `block: Block of expressions to evaluate in the new context`
 		returns `new context object that inherits from the parent context`
@@ -3290,6 +4179,11 @@ section "Contexts " "Context related functions" {
 	group "bind!" 
 	"Binds a context to a parent context, allowing it to access the parent's values."
 	{
+		argsn 2
+		argtypes {
+			1 [ Context ]
+			2 [ Context ]
+		}
 		arg `child: Context object to be bound`
 		arg `parent: Context object to bind to as parent`
 		returns `the modified child context with its parent set to the specified parent context`
@@ -3305,6 +4199,10 @@ section "Contexts " "Context related functions" {
 	group "unbind" 
 	"Removes the parent relationship from a context, making it a standalone context."
 	{
+		argsn 1
+		argtypes {
+			1 [ Context ]
+		}
 		arg `ctx: Context object to unbind from its parent`
 		returns `the modified context with no parent`
 	}
@@ -3320,6 +4218,10 @@ section "Contexts " "Context related functions" {
 	group "whereis" 
 	"Searches for a word in current context and its parents, returns block with [ depth context ] where word was found."
 	{
+		argsn 1
+		argtypes {
+			1 [ Word ]
+		}
 		arg `word: Word to look up in current or parent contexts`
 		returns `block with [ depth context ] where depth is the number of parent hops (0 = current context) and context is where the word was found`
 	}
@@ -3336,6 +4238,10 @@ section "Contexts " "Context related functions" {
 	group "get" 
 	"Gets the value of a word from current or parent contexts without calling it (similar to get-word ?word)."
 	{
+		argsn 1
+		argtypes {
+			1 [ Word ]
+		}
 		arg `word: Word to look up in current or parent contexts`
 		returns `the value bound to the word (including functions without calling them)`
 	}
@@ -3376,6 +4282,10 @@ section "Contexts " "Context related functions" {
 	group "parent\\of" 
 	"Returns parent context of the current context."
 	{
+		argsn 1
+		argtypes {
+			1 [ Context ]
+		}
 	}
 
 	{
@@ -3388,6 +4298,7 @@ section "Contexts " "Context related functions" {
 	group "lc" 
 	"Lists words in current context"
 	{
+		pure
 		arg `none`
 		returns `current context after printing the list of words to stdout`
 	}
@@ -3415,6 +4326,10 @@ section "Contexts " "Context related functions" {
 	group "lc\\data\\" 
 	"Returns words in specified context as a block."
 	{
+		argsn 1
+		argtypes {
+			1 [ Context ]
+		}
 		arg `ctx: Context to list words from`
 		returns `block of words defined in the specified context`
 	}
@@ -3442,6 +4357,10 @@ section "Contexts " "Context related functions" {
 	group "lc\\" 
 	"Lists words in current context with string filter, by type (word: 'function, 'builtin, 'context), or regex filter (native of kind 'regexp)"
 	{
+		argsn 1
+		argtypes {
+			1 [ String Word Native ]
+		}
 		arg `filter: String to filter by name, Word ('function, 'builtin, 'context) to filter by type, or regexp Native`
 		returns `current context after printing filtered words to stdout`
 	}
@@ -3455,6 +4374,10 @@ section "Contexts " "Context related functions" {
 	group "lcp\\" 
 	"Lists words in parent context with string filter"
 	{
+		argsn 1
+		argtypes {
+			1 [ String ]
+		}
 		arg `filter: String to filter word names`
 		returns `current context after printing filtered parent context words to stdout`
 	}
@@ -3468,6 +4391,10 @@ section "Contexts " "Context related functions" {
 	group "cc" 
 	"Change to context (pushes current context to stack for ccb)"
 	{
+		argsn 1
+		argtypes {
+			1 [ Context ]
+		}
 		arg `ctx: Context to change to`
 		returns `the new current context`
 	}
@@ -3507,6 +4434,10 @@ section "Contexts " "Context related functions" {
 	group "mkcc" 
 	"Make context with current as parent and change to it (pushes current context to stack for ccb)."
 	{
+		argsn 1
+		argtypes {
+			1 [ Word ]
+		}
 		arg `word: Word to name the new context`
 		returns `the new context (now current)`
 	}
@@ -3546,6 +4477,10 @@ section "Contexts " "Context related functions" {
 	group "clone" 
 	"Creates a copy of a context with the same state and parent relationship."
 	{
+		argsn 1
+		argtypes {
+			1 [ Context ]
+		}
 		arg `ctx: Context object to clone`
 		returns `a new context object that is a copy of the original context`
 	}
@@ -3563,6 +4498,11 @@ section "Contexts " "Context related functions" {
 	group "clone\\" 
 	"Creates a copy of a context and evaluates a block of code inside the clone."
 	{
+		argsn 2
+		argtypes {
+			1 [ Context ]
+			2 [ Block ]
+		}
 		arg `ctx: Context object to clone`
 		arg `block: Block of expressions to evaluate in the cloned context`
 		returns `the cloned context with the block evaluated inside it`
@@ -3581,6 +4521,10 @@ section "Contexts " "Context related functions" {
 	group "clone\\deep" 
 	"Creates a deep copy of a context with the same state and parent relationship, recursively copying all nested objects."
 	{
+		argsn 1
+		argtypes {
+			1 [ Context ]
+		}
 		arg `ctx: Context object to deep clone`
 		returns `a new context object that is a deep copy of the original context (including nested objects)`
 	}
@@ -3594,12 +4538,127 @@ section "Contexts " "Context related functions" {
 	{
 	}
 
+	group "call-depth?" 
+	"Returns the current function call depth as an integer (0 = top-level, 1 = inside one function call, etc.)."
+	{
+		arg `(none)`
+		returns `current function call depth as integer (0 = top-level, 1 = inside one function, etc.)`
+	}
+
+	{
+		equal { call-depth? } 0
+		equal { test: fn { } { call-depth? } test } 1
+	}
+
+	{
+	}
+
+	group "max-call-depth!" 
+	"Sets the maximum allowed function call depth (recursion limit). Use 0 for unlimited (default). Returns the previous limit. Calls that exceed this depth raise a stack-overflow error."
+	{
+		argsn 1
+		argtypes {
+			1 [ Integer ]
+		}
+		arg `limit: integer — new maximum call depth (0 = unlimited)`
+		returns `the previous MaxCallDepth value (0 = was unlimited)`
+	}
+
+	{
+		equal { max-call-depth! 10 , max-call-depth! 0 } 10
+	}
+
+	{
+	}
+
+	group "max-call-depth?" 
+	"Returns the current maximum call depth limit as an integer (0 = unlimited)."
+	{
+		arg `(none)`
+		returns `current MaxCallDepth limit as integer (0 = unlimited)`
+	}
+
+	{
+		equal { max-call-depth? } 0
+		equal { max-call-depth! 50 max-call-depth? } 50
+	}
+
+	{
+	}
+
+	group "ops-done?" 
+	"Returns the total number of expression evaluations performed so far in this program state as an integer."
+	{
+		arg `(none)`
+		returns `number of expression evaluations performed so far as integer`
+	}
+
+	{
+		equal { ops-done? > 0 } true
+	}
+
+	{
+	}
+
+	group "max-ops!" 
+	"Sets the maximum number of expression evaluations allowed. Use 0 for unlimited (default). Returns the previous limit. Exceeding the limit raises an evaluation-limit error."
+	{
+		argsn 1
+		argtypes {
+			1 [ Integer ]
+		}
+		arg `limit: integer — new maximum number of expression evaluations (0 = unlimited)`
+		returns `the previous MaxOps value (0 = was unlimited)`
+	}
+
+	{
+		equal { max-ops! 100000 , max-ops! 0 } 100000
+	}
+
+	{
+	}
+
+	group "max-ops?" 
+	"Returns the current maximum ops limit as an integer (0 = unlimited)."
+	{
+		arg `(none)`
+		returns `current MaxOps limit as integer (0 = unlimited)`
+	}
+
+	{
+		equal { max-ops? } 0
+		equal { max-ops! 50000 max-ops? } 50000
+	}
+
+	{
+	}
+
+	group "reset-ops" 
+	"Resets the OpsCount counter to zero and clears the MaxOps limit. Returns the OpsCount value before reset. Useful for re-arming the budget inside a fresh computation phase."
+	{
+		arg `(none)`
+		returns `the OpsCount value before reset`
+	}
+
+	{
+		equal { max-ops! 100 reset-ops max-ops? } 0
+	}
+
+	{
+	}
+
 }
 
 section "Flow control " "Functions for conditional execution and branching logic" {
 	group "if" 
 	"Executes a block of code only if the condition is true, returning the result of the block or false."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ Boolean ]
+			2 [ Block ]
+		}
 		arg `condition: Boolean value determining whether to execute the block`
 		arg `block: Block of code to execute if condition is true`
 		returns `result of the block if condition is true, false otherwise`
@@ -3618,6 +4677,12 @@ section "Flow control " "Functions for conditional execution and branching logic
 	group "when" 
 	"Conditionally executes an action block if a condition block evaluates to true, injecting the same value into both blocks and returning the value of the action block if the condition is truthy or the original value otherwise."
 	{
+		argsn 3
+		pure
+		argtypes {
+			2 [ Block ]
+			3 [ Block ]
+		}
 		arg `value: Value to inject into both condition and action blocks`
 		arg `condition: Block that evaluates to a truthy/falsy value with the injected value`
 		arg `action: Block to execute if condition is truthy, with the injected value`
@@ -3635,6 +4700,12 @@ section "Flow control " "Functions for conditional execution and branching logic
 	group "^if" 
 	"Conditional that sets the return flag when true, allowing early return from a function when the condition is a boolean."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ Boolean ]
+			2 [ Block ]
+		}
 		arg `condition: Value to evaluate for truthiness`
 		arg `block: Block of code to execute and return from if condition is truthy`
 		returns `result of the block if condition is truthy (with return flag set), 0 otherwise`
@@ -3651,6 +4722,12 @@ section "Flow control " "Functions for conditional execution and branching logic
 	group "either" 
 	"Executes one of two blocks based on a boolean condition, similar to if/else in other languages."
 	{
+		argsn 3
+		pure
+		argtypes {
+			1 [ Boolean ]
+			3 [ Block ]
+		}
 		arg `condition: Boolean value determining which block to execute`
 		arg `true_block: Block or value to return if condition is true`
 		arg `false_block: Block or value to return if condition is false`
@@ -3671,6 +4748,12 @@ section "Flow control " "Functions for conditional execution and branching logic
 	group "choose" 
 	"Returns the first or second value from a block of two values based on a boolean condition."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ Boolean ]
+			2 [ Block ]
+		}
 		arg `condition: Boolean value determining which value to return`
 		arg `values: Block containing exactly two values`
 		returns `first value if condition is true, second value if condition is false`
@@ -3691,6 +4774,10 @@ section "Flow control " "Functions for conditional execution and branching logic
 	group "switch" 
 	"Pattern matching construct that executes a block of code corresponding to the first matching case value."
 	{
+		argsn 2
+		argtypes {
+			2 [ Block ]
+		}
 		arg `value: Value to match against case values`
 		arg `cases: Block containing case values and corresponding handler blocks`
 		returns `result of executing the matching handler block, or the original value if no match`
@@ -3707,6 +4794,10 @@ section "Flow control " "Functions for conditional execution and branching logic
 	group "cases" 
 	"Evaluates multiple condition-action pairs and applies all matching actions cumulatively to the initial value."
 	{
+		argsn 2
+		argtypes {
+			2 [ Block ]
+		}
 		arg `initial: Initial value to be transformed by matching case blocks`
 		arg `cases: Block containing condition blocks and corresponding transformation blocks`
 		returns `cumulative result after applying all matching transformation blocks to the initial value`
@@ -3731,6 +4822,11 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	group "loop" 
 	"Executes a block of code, builtin, or function a specified number of times, injecting the current iteration number (starting from 1)."
 	{
+		argsn 2
+		argtypes {
+			1 [ Integer ]
+			2 [ Block Builtin Function ]
+		}
 		arg `count: Integer number of iterations to perform`
 		arg `block: Block of code to execute on each iteration`
 		returns `result of the last block execution`
@@ -3748,6 +4844,11 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	group "produce" 
 	"Executes a block of code a specified number of times, passing the result of each execution to the next iteration."
 	{
+		argsn 3
+		argtypes {
+			1 [ Integer ]
+			3 [ Block ]
+		}
 		arg `count: Integer number of iterations to perform`
 		arg `initial: Initial value to inject into the first block execution`
 		arg `block: Block of code to execute on each iteration`
@@ -3768,6 +4869,11 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	group "replicate" 
 	"Executes a block of code a specified number of times and collects all results into a block."
 	{
+		argsn 2
+		argtypes {
+			1 [ Integer ]
+			2 [ Block ]
+		}
 		arg `count: Integer number of times to execute the block`
 		arg `block: Block of code to execute on each iteration`
 		returns `Block containing the results of each execution`
@@ -3785,6 +4891,11 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	group "replicate\\idx" 
 	"Executes a block of code a specified number of times, injecting the current index (0-based), and collects all results into a block."
 	{
+		argsn 2
+		argtypes {
+			1 [ Integer ]
+			2 [ Block ]
+		}
 		arg `count: Integer number of times to execute the block`
 		arg `block: Block of code to execute on each iteration, with index (0-based) injected`
 		returns `Block containing the results of each execution`
@@ -3802,6 +4913,11 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	group "produce\\while" 
 	"Executes a block of code repeatedly while a condition is true, passing the result of each execution to the next iteration."
 	{
+		argsn 3
+		argtypes {
+			1 [ Integer ]
+			3 [ Block ]
+		}
 		arg `condition: Block that evaluates to a boolean to determine when to stop iterating`
 		arg `initial: Initial value to inject into the first block execution`
 		arg `block: Block of code to execute on each iteration`
@@ -3819,6 +4935,12 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	group "produce\\" 
 	"Executes a block of code a specified number of times, updating an accumulator word with each iteration result."
 	{
+		argsn 4
+		argtypes {
+			1 [ Integer ]
+			3 [ Word ]
+			4 [ Block ]
+		}
 		arg `count: Integer number of iterations to perform`
 		arg `initial: Initial value for the accumulator`
 		arg `accumulator: Word to store the accumulator value`
@@ -3836,6 +4958,10 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	group "forever" 
 	"Executes a block of code repeatedly until .return is called within the block."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block ]
+		}
 		arg `block: Block of code to execute repeatedly`
 		returns `result of the block when .return is called`
 	}
@@ -3851,6 +4977,10 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	group "forever\\with" 
 	"Accepts a value and a block, and executes the block repeatedly with the value until .return is called."
 	{
+		argsn 2
+		argtypes {
+			1 [ Block ]
+		}
 		arg `value: Value to inject into the block on each iteration`
 		arg `block: Block of code to execute repeatedly`
 		returns `result of the block when .return is called`
@@ -3867,6 +4997,11 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	group "for" 
 	"Accepts a block of values and a block of code, builtin, or function, does the code for each of the values, injecting them."
 	{
+		argsn 2
+		argtypes {
+			1 [ String Block Table ]
+			2 [ Block Builtin Function ]
+		}
 		arg `collection: Collection (Block, List, String, or Table) to iterate over`
 		arg `code: Block, Builtin, or Function to execute for each value, injecting the value`
 		returns `result of the last code execution`
@@ -3883,6 +5018,13 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	group "for\\pos" 
 	"Iterates over a collection with position tracking (1-based), setting a word to the current position and injecting each value."
 	{
+		argsn 3
+		pure
+		argtypes {
+			1 [ Block List String ]
+			2 [ Word ]
+			3 [ Block ]
+		}
 		arg `collection: Collection to iterate over`
 		arg `word: Word to store the current position (1-based index)`
 		arg `code: Block of code to execute for each value`
@@ -3899,6 +5041,13 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	group "for\\idx" 
 	"Iterates over a collection with index tracking (0-based), setting a word to the current index and injecting each value."
 	{
+		argsn 3
+		pure
+		argtypes {
+			1 [ Block List String ]
+			2 [ Word ]
+			3 [ Block ]
+		}
 		arg `collection: Collection to iterate over`
 		arg `word: Word to store the current index (0-based)`
 		arg `code: Block of code to execute for each value`
@@ -3915,6 +5064,11 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	group "walk" 
 	"Walks through a block, executing code that can modify the block on each iteration (useful for custom iteration patterns)."
 	{
+		argsn 2
+		argtypes {
+			1 [ Block ]
+			2 [ Block ]
+		}
 		arg `block: Block to walk through`
 		arg `code: Block of code to execute, which should return a modified block`
 		returns `result of the last block execution`
@@ -3931,6 +5085,12 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	group "walk\\pos" 
 	"Walks through a block with position tracking (1-based), setting a word to the current position and executing code that can modify the block."
 	{
+		argsn 3
+		argtypes {
+			1 [ Block ]
+			2 [ Word ]
+			3 [ Block ]
+		}
 		arg `block: Block to walk through`
 		arg `word: Word to store the current position (1-based index)`
 		arg `code: Block of code to execute, which should return a modified block`
@@ -3947,6 +5107,12 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	group "walk\\idx" 
 	"Walks through a block with index tracking (0-based), setting a word to the current index and executing code that can modify the block."
 	{
+		argsn 3
+		argtypes {
+			1 [ Block ]
+			2 [ Word ]
+			3 [ Block ]
+		}
 		arg `block: Block to walk through`
 		arg `word: Word to store the current index (0-based)`
 		arg `code: Block of code to execute, which should return a modified block`
@@ -3963,6 +5129,11 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	group "purge" 
 	"Purges values from a series based on return of a injected code block."
 	{
+		argsn 2
+		argtypes {
+			1 [ Block List String Table ]
+			2 [ Block ]
+		}
 		arg `series: Block, List, String, or Table to purge from`
 		arg `code: Block of code that returns true for values to remove`
 		returns `modified series with matching values removed`
@@ -3983,6 +5154,11 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	group "purge!" 
 	"Purges values from a block stored in a word (modifying it in-place), returning the purged values."
 	{
+		argsn 2
+		argtypes {
+			1 [ Block ]
+			2 [ Word ]
+		}
 		arg `code: Block of code that returns true for values to remove`
 		arg `word: Word referring to a Block to purge from (modified in-place)`
 		returns `Block containing the purged values`
@@ -3998,6 +5174,12 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	group "map" 
 	"Maps values of a block to a new block by evaluating a block of code or function."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ Block List String ]
+			2 [ Block Builtin Function ]
+		}
 	}
 
 	{
@@ -4019,6 +5201,13 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	group "map\\pos" 
 	"Maps values of a block to a new block by evaluating a block of code."
 	{
+		argsn 3
+		pure
+		argtypes {
+			1 [ Block List String ]
+			2 [ Word ]
+			3 [ Block ]
+		}
 	}
 
 	{
@@ -4036,6 +5225,13 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	group "map\\idx" 
 	"Maps values of a block to a new block by evaluating a block of code."
 	{
+		argsn 3
+		pure
+		argtypes {
+			1 [ Block List String ]
+			2 [ Word ]
+			3 [ Block ]
+		}
 	}
 
 	{
@@ -4053,6 +5249,13 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	group "reduce" 
 	"Reduces values of a block to a single value by evaluating a block of code, using the first element as the initial accumulator."
 	{
+		argsn 3
+		pure
+		argtypes {
+			1 [ Block List String ]
+			2 [ Word ]
+			3 [ Block ]
+		}
 		arg `collection: Collection to reduce (must not be empty)`
 		arg `accumulator: Word to store the accumulator value`
 		arg `code: Block of code to execute for each value, receiving accumulator as context`
@@ -4075,6 +5278,13 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	group "fold\\do" 
 	"Reduces values of a block to a new block by evaluating a block of code ..."
 	{
+		argsn 4
+		pure
+		argtypes {
+			1 [ Block List String ]
+			2 [ Word ]
+			4 [ Block ]
+		}
 	}
 
 	{
@@ -4092,6 +5302,12 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	group "fold" 
 	"Reduces values of a block to a new block by evaluating a block of code ..."
 	{
+		argsn 3
+		pure
+		argtypes {
+			1 [ Block List String ]
+			4 [ Function ]
+		}
 	}
 
 	{
@@ -4107,6 +5323,12 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	group "partition" 
 	"Partitions a series by evaluating a block of code, grouping consecutive elements that return the same result."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ Block List String ]
+			2 [ Block Builtin ]
+		}
 		arg `series: String, Block, or List to partition`
 		arg `code: Block or Builtin that returns a value for grouping consecutive elements`
 		returns `collection of partitions (each partition contains consecutive elements with the same result)`
@@ -4131,6 +5353,12 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	group "group" 
 	"Groups a block or list of values by a key generated from a code block (keys must be strings)."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ Block List ]
+			2 [ Block Builtin ]
+		}
 		arg `series: Block or List to group`
 		arg `code: Block or Builtin that returns a string key for grouping`
 		returns `Dict with string keys and List values containing grouped elements`
@@ -4153,6 +5381,12 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	group "filter" 
 	"Filters values from a seris based on return of a injected code block."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ Block List String ]
+			2 [ Block Builtin ]
+		}
 	}
 
 	{
@@ -4174,6 +5408,12 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	group "seek" 
 	"Seek over a series until a Block of code returns True and return the value."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ Block List String ]
+			2 [ Block Builtin ]
+		}
 		arg `series: Block, List, or String to search through`
 		arg `code: Block or Builtin that returns true when the desired value is found`
 		returns `first value for which the code returns true, error if none found`
@@ -4194,6 +5434,11 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	group "while" 
 	"Executes a block of code repeatedly while a condition is true."
 	{
+		argsn 2
+		argtypes {
+			1 [ Block ]
+			2 [ Block ]
+		}
 		arg `condition: Block that evaluates to a boolean to determine whether to continue`
 		arg `body: Block of code to execute repeatedly`
 		returns `result of the last body execution`
@@ -4210,6 +5455,11 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	group "until" 
 	"Executes a block of code repeatedly until a condition becomes true. Executes the body at least once before checking condition (do-until loop)."
 	{
+		argsn 2
+		argtypes {
+			1 [ Block ]
+			2 [ Block ]
+		}
 		arg `body: Block of code to execute repeatedly (executed at least once)`
 		arg `condition: Block that evaluates to a boolean to determine when to stop`
 		returns `result of the last body execution`
@@ -4228,6 +5478,12 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	group "for\\" 
 	"Iterates over a collection, setting a word to each value. Works with lists, blocks, and strings."
 	{
+		argsn 3
+		argtypes {
+			1 [ Block List String ]
+			2 [ Word ]
+			3 [ Block ]
+		}
 		arg `collection: String, Block, List, or other Collection to iterate over`
 		arg `word: Word to store each value during iteration`
 		arg `block: Block of code to execute for each value`
@@ -4246,6 +5502,13 @@ section "Iteration " "Functions for iterating over collections and executing cod
 	group "for\\kv" 
 	"Iterates over a collection with separate key and value words. For dicts, uses actual keys and values. For other collections, uses indices as keys."
 	{
+		argsn 4
+		argtypes {
+			1 [ Dict Block List String ]
+			2 [ Word ]
+			3 [ Word ]
+			4 [ Block ]
+		}
 		arg `collection: Dict, Block, List, or other Collection to iterate over`
 		arg `keyWord: Word to store the key (or index for non-dict collections)`
 		arg `valueWord: Word to store the value`
@@ -4267,6 +5530,10 @@ section "Functions " "functions that create functions" {
 	group "var" 
 	"Declares a word as a variable with the given value, allowing it to be modified. Returns the word for use with on-change."
 	{
+		argsn 2
+		argtypes {
+			1 [ Tagword Word ]
+		}
 		arg `word: Tagword representing the variable name`
 		arg `value: Initial value for the variable`
 		returns `The initial value`
@@ -4282,6 +5549,11 @@ section "Functions " "functions that create functions" {
 	group "does" 
 	"Creates a function with no arguments that executes the given block when called."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ Block ]
+		}
 		arg `body: Block containing the function body code`
 		returns `function object with no parameters`
 	}
@@ -4298,6 +5570,11 @@ section "Functions " "functions that create functions" {
 	group "fn1" 
 	"Creates a function that accepts one anonymous argument and executes the given block with that argument."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ Block ]
+		}
 		arg `body: Block containing the function body code`
 		returns `function object that accepts one anonymous argument`
 	}
@@ -4315,6 +5592,12 @@ section "Functions " "functions that create functions" {
 	group "fn" 
 	"Creates a function with named parameters specified in the first block and code in the second block."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ Block ]
+			2 [ Block ]
+		}
 		arg `spec: Block containing parameter specifications`
 		arg `body: Block containing the function body code`
 		returns `function object with the specified parameters`
@@ -4334,6 +5617,11 @@ section "Functions " "functions that create functions" {
 	group "fn\\spec?" 
 	"Returns the argument specification block of a function."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ Function ]
+		}
 		arg `function: Function to get the argument spec from`
 		returns `Block containing the function's parameter specification`
 	}
@@ -4349,6 +5637,11 @@ section "Functions " "functions that create functions" {
 	group "fn\\body?" 
 	"Returns the body block of a function."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ Function ]
+		}
 		arg `function: Function to get the body from`
 		returns `Block containing the function's body code`
 	}
@@ -4364,6 +5657,12 @@ section "Functions " "functions that create functions" {
 	group "pfn" 
 	"Creates a pure function (no side effects allowed) with named parameters and code body."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ Block ]
+			2 [ Block ]
+		}
 		arg `spec: Block containing parameter specifications`
 		arg `body: Block containing the function body code`
 		returns `pure function object with the specified parameters`
@@ -4382,6 +5681,12 @@ section "Functions " "functions that create functions" {
 	group "fn\\cc" 
 	"Creates a function that captures the current context, allowing access to variables from the enclosing scope."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ Block ]
+			2 [ Block ]
+		}
 		arg `spec: Block containing parameter specifications`
 		arg `body: Block containing the function body code`
 		returns `function object with the current context captured`
@@ -4398,6 +5703,13 @@ section "Functions " "functions that create functions" {
 	group "fn\\in" 
 	"Creates a function with a specified parent context, allowing access to variables from that context."
 	{
+		argsn 3
+		pure
+		argtypes {
+			1 [ Block ]
+			2 [ Context ]
+			3 [ Block ]
+		}
 		arg `spec: Block containing parameter specifications`
 		arg `context: Context object to use as parent context`
 		arg `body: Block containing the function body code`
@@ -4414,6 +5726,13 @@ section "Functions " "functions that create functions" {
 	group "fn\\inside" 
 	"Creates a function that executes directly in the specified context rather than creating a new execution context."
 	{
+		argsn 3
+		pure
+		argtypes {
+			1 [ Block ]
+			2 [ Context ]
+			3 [ Block ]
+		}
 		arg `spec: Block containing parameter specifications`
 		arg `context: Context object to execute the function in`
 		arg `body: Block containing the function body code`
@@ -4430,6 +5749,11 @@ section "Functions " "functions that create functions" {
 	group "modder" 
 	"Creates a function that executes directly in the current context (like fn\\inside with current), allowing arguments and context words to be modified with word::."
 	{
+		argsn 2
+		argtypes {
+			1 [ Block ]
+			2 [ Block ]
+		}
 		arg `spec: Block containing parameter specifications`
 		arg `body: Block containing the function body code`
 		returns `function object that executes directly in the current context (captured at creation), with arguments as variables`
@@ -4446,6 +5770,12 @@ section "Functions " "functions that create functions" {
 	group "closure" 
 	"Creates a closure that captures the current context at creation time, preserving access to variables in that scope."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ Block ]
+			2 [ Block ]
+		}
 		arg `spec: Block containing parameter specifications`
 		arg `body: Block containing the function body code`
 		returns `function object that captures the current context at creation time`
@@ -4462,6 +5792,12 @@ section "Functions " "functions that create functions" {
 	group "partial" 
 	"Creates a partially applied function with specified arguments, using _ (void) for arguments to be filled later."
 	{
+		argsn 2
+		pure
+		argtypes {
+			1 [ Builtin Function ]
+			2 [ Block ]
+		}
 		arg `func: Function or builtin to partially apply`
 		arg `args: Block of arguments, with _ (void) for arguments to be filled later`
 		returns `CurriedCaller object that can be called with the remaining arguments`
@@ -4479,6 +5815,11 @@ section "Functions " "functions that create functions" {
 	group "apply" 
 	"Applies a function or builtin to a block of arguments."
 	{
+		argsn 2
+		argtypes {
+			1 [ Function Builtin VarBuiltin ]
+			2 [ Block ]
+		}
 		arg `function: Function or builtin to apply`
 		arg `args: Block of arguments to pass to the function`
 		returns `The result of applying the function to the arguments`
@@ -4496,6 +5837,11 @@ section "Functions " "functions that create functions" {
 	group "on-change" 
 	"Registers an observer block to be executed when a variable changes. Use with 'var' result."
 	{
+		argsn 2
+		argtypes {
+			1 [ Word ]
+			2 [ Block ]
+		}
 		arg `word: Word representing the variable to observe`
 		arg `observer: Block containing code to execute when variable changes`
 		returns `The observer block`
@@ -4514,6 +5860,10 @@ section "Other " "..." {
 	group "change!" 
 	"Searches for a word and changes it's value in-place. Only works on variables declared with var. If value changes returns true otherwise false"
 	{
+		argsn 2
+		argtypes {
+			1 [ Word ]
+		}
 		arg `value: New value to assign to the word`
 		arg `word: Word whose value should be changed`
 		returns `Boolean true if the value changed, false if the new value is the same as the old value`
@@ -4532,6 +5882,10 @@ section "Other " "..." {
 	group "modify!" 
 	"Searches for a word and modifies	 it's value in-place. Only works on variables declared with var. If value changes returns true otherwise false"
 	{
+		argsn 2
+		argtypes {
+			1 [ Word ]
+		}
 		arg `value: New value to assign to the word`
 		arg `word: Word whose value should be changed`
 		returns `Boolean true if the value changed, false if the new value is the same as the old value, will replace change!`
@@ -4550,6 +5904,11 @@ section "Other " "..." {
 	group "set" 
 	"Set word to value or words by deconstructing a block. Only works on variables declared with var."
 	{
+		argsn 2
+		argtypes {
+			1 [ Block ]
+			2 [ Block ]
+		}
 		arg `values: Value or block of values to assign to the word(s)`
 		arg `words: Word or block of words to be set`
 		returns `The value or block of values that was assigned`
@@ -4565,6 +5924,10 @@ section "Other " "..." {
 	group "unset!" 
 	"Unset a word in current context, only meant to be used in console"
 	{
+		argsn 1
+		argtypes {
+			1 [ Word ]
+		}
 		arg `word: Word to be unset from the current context`
 		returns `Void value`
 	}
@@ -4579,6 +5942,11 @@ section "Other " "..." {
 	group "val" 
 	"Returns value of the word in context"
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ Word ]
+		}
 		arg `word: Word whose value should be retrieved`
 		returns `The value associated with the word in the current context`
 	}
@@ -4594,6 +5962,11 @@ section "Other " "..." {
 	group "_<<" 
 	"Converts a value to specific kind (R to L)"
 	{
+		argsn 2
+		argtypes {
+			1 [ Kind ]
+			2 [ Dict Context ]
+		}
 		arg `kind: Kind to convert the value to`
 		arg `value: Dict or context to convert`
 		returns `A new context of the specified kind`
@@ -4609,6 +5982,8 @@ section "Other " "..." {
 	group "_|" 
 	"Pipeline operator that passes the value through unchanged (used with 'not' and other operations)."
 	{
+		argsn 1
+		pure
 		arg `value: Any value to be passed through unchanged`
 		returns `the original value (used in pipeline operations for explicit pass-through)`
 	}
@@ -4626,6 +6001,7 @@ section "Other " "..." {
 	group "save\\current" 
 	"Saves current state of the program to a file."
 	{
+		pure
 		arg `None`
 		returns `Integer 1 on success`
 	}
@@ -4640,6 +6016,7 @@ section "Other " "..." {
 	group "save\\current\\secure" 
 	"Saves current state of the program to a file with password protection."
 	{
+		pure
 		arg `None`
 		returns `Integer 1 on success`
 	}
@@ -4654,6 +6031,11 @@ section "Other " "..." {
 	group "doc!" 
 	"Sets docstring of the current context."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ String ]
+		}
 		arg `doc: String to set as the docstring for the current context`
 		returns `Integer 1 on success`
 	}
@@ -4668,6 +6050,7 @@ section "Other " "..." {
 	group "doc?" 
 	"Gets docstring of the current context."
 	{
+		pure
 		arg `None`
 		returns `String containing the docstring of the current context`
 	}
@@ -4682,6 +6065,11 @@ section "Other " "..." {
 	group "doc\\of?" 
 	"Get docstring of the passed context."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ Context PersistentContext ]
+		}
 		arg `value: Function, builtin, or context to get the docstring from`
 		returns `String containing the docstring of the provided value`
 	}
@@ -4696,6 +6084,11 @@ section "Other " "..." {
 	group "ref" 
 	"Makes a value mutable instead of immutable"
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ Table Dict List Block String Native Context ]
+		}
 		arg `value: Value to make mutable`
 		returns `A mutable reference to the value`
 	}
@@ -4715,6 +6108,11 @@ section "Other " "..." {
 	group "deref" 
 	"Makes a value again immutable"
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ Table Dict List Block String Native Context ]
+		}
 		arg `value: Mutable reference to make immutable`
 		returns `An immutable copy of the value`
 	}
@@ -4733,6 +6131,7 @@ section "Other " "..." {
 	group "is-ref" 
 	"Checks if a value is a mutable reference."
 	{
+		argsn 1
 		arg `value: Any value to check if it's a reference`
 		returns `Integer 1 if the value is a reference, 0 otherwise`
 	}
@@ -4752,6 +6151,8 @@ section "Other " "..." {
 	group "dict" 
 	"Constructs a Dict from the Block of key and value pairs."
 	{
+		argsn 1
+		pure
 		arg `block: Block containing alternating keys and values`
 		returns `A new Dict with the specified keys and values`
 	}
@@ -4772,6 +6173,12 @@ section "Other " "..." {
 	group "change" 
 	"Returns a new Dict with the specified key changed to the new value. Original dict is unchanged."
 	{
+		argsn 3
+		pure
+		argtypes {
+			1 [ Dict ]
+			2 [ String Word ]
+		}
 		arg `dict: Dict to update`
 		arg `key: String key to change`
 		arg `value: New value for the key`
@@ -4790,6 +6197,8 @@ section "Other " "..." {
 	group "list" 
 	"Constructs a List from the Block of values."
 	{
+		argsn 1
+		pure
 		arg `block: Block containing values to put in the list`
 		returns `A new List with the values from the block`
 	}
@@ -4810,6 +6219,10 @@ section "Other " "..." {
 	group "file-uri//Import" 
 	"Imports a file, loads and does it from script local path."
 	{
+		argsn 1
+		argtypes {
+			1 [ Uri ]
+		}
 		arg `uri: URI of the file to import and execute`
 		returns `result of executing the imported file`
 	}
@@ -4824,6 +6237,10 @@ section "Other " "..." {
 	group "file-uri//Import\\live" 
 	"Imports a file, loads and does it from script local path."
 	{
+		argsn 1
+		argtypes {
+			1 [ Uri ]
+		}
 		arg `uri: URI of the file to import, execute, and watch for changes`
 		returns `result of executing the imported file`
 	}
@@ -4838,6 +6255,10 @@ section "Other " "..." {
 	group "load" 
 	"Loads a string into Rye values."
 	{
+		argsn 1
+		argtypes {
+			1 [ String Uri ]
+		}
 		arg `source: String containing Rye code or URI of file to load`
 		returns `Block containing the parsed Rye values`
 	}
@@ -4853,6 +6274,10 @@ section "Other " "..." {
 	group "file-uri//Load" 
 	"Loads a string into Rye values."
 	{
+		argsn 1
+		argtypes {
+			1 [ String Uri ]
+		}
 		arg `source: String containing Rye code or URI of file to load`
 		returns `Block containing the parsed Rye values`
 	}
@@ -4868,6 +6293,7 @@ section "Other " "..." {
 	group "load\\mod" 
 	"Loads a string into Rye values. During load it allows modification of words."
 	{
+		argsn 1
 		arg `source: String containing Rye code or URI of file to load with modification allowed`
 		returns `Block containing the parsed Rye values`
 	}
@@ -4882,6 +6308,7 @@ section "Other " "..." {
 	group "load\\live" 
 	"Loads a string into Rye values. During load it allows modification of words."
 	{
+		argsn 1
 		arg `source: String containing Rye code or URI of file to load with modification allowed and file watching`
 		returns `Block containing the parsed Rye values`
 	}
@@ -4896,6 +6323,7 @@ section "Other " "..." {
 	group "load\\sig" 
 	"Checks the signature, if OK then loads a string into Rye values."
 	{
+		argsn 1
 		arg `source: String containing signed Rye code to verify and load`
 		returns `Block containing the parsed Rye values if signature is valid`
 	}
@@ -4910,6 +6338,11 @@ section "Other " "..." {
 	group "do" 
 	"Takes a block of code and does (runs) it."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ Block ]
+		}
 		arg `block: Block of code to execute`
 		returns `result of executing the block`
 	}
@@ -4931,6 +6364,10 @@ section "Other " "..." {
 	group "with" 
 	"Takes a value and a block of code. It does the code with the value injected."
 	{
+		argsn 2
+		argtypes {
+			2 [ Block ]
+		}
 		arg `value: Value to inject into the block's execution context`
 		arg `block: Block of code to execute with the injected value`
 		returns `result of executing the block with the injected value`
@@ -4947,6 +6384,11 @@ section "Other " "..." {
 	group "do\\inside" 
 	"Takes a Context and a Block. It Does a block inside a given Context."
 	{
+		argsn 2
+		argtypes {
+			1 [ Context PersistentContext ]
+			2 [ Block ]
+		}
 		arg `context: Context in which to execute the block`
 		arg `block: Block of code to execute within the specified context`
 		returns `result of executing the block within the given context`
@@ -4965,6 +6407,11 @@ section "Other " "..." {
 	group "do\\in" 
 	"Takes a Context and a Block. It Does a block in current context but with parent a given Context."
 	{
+		argsn 2
+		argtypes {
+			1 [ Context ]
+			2 [ Block ]
+		}
 		arg `context: Context to use as parent context during execution`
 		arg `block: Block of code to execute in current context with the specified parent context`
 		returns `result of executing the block with the modified parent context`
@@ -4983,6 +6430,11 @@ section "Other " "..." {
 	group "do\\inx" 
 	"Takes a Context and a Block. It Does a block in current context but with parent a given Context."
 	{
+		argsn 2
+		argtypes {
+			1 [ Context ]
+			2 [ Block ]
+		}
 		arg `context: Context to use as parent context during execution`
 		arg `block: Block of code to execute in current context with the specified parent context`
 		returns `result of executing the block with the modified parent context`
@@ -4998,9 +6450,40 @@ section "Other " "..." {
 	{
 	}
 
+	group "lk\\" 
+	"Lists available kinds with string filter"
+	{
+		argsn 1
+		argtypes {
+			1 [ String ]
+		}
+	}
+
+	{
+	}
+
+	{
+	}
+
+	group "lg\\" 
+	"Lists generic words related to specific kind with string filter"
+	{
+		argsn 2
+		argtypes {
+			2 [ String ]
+		}
+	}
+
+	{
+	}
+
+	{
+	}
+
 	group "return" 
 	"Accepts one value and returns it."
 	{
+		argsn 1
 	}
 
 	{
@@ -5013,6 +6496,10 @@ section "Other " "..." {
 	group "scmd" 
 	"Execute a shell command and return its exit status code."
 	{
+		argsn 1
+		argtypes {
+			1 [ String ]
+		}
 	}
 
 	{
@@ -5027,6 +6514,10 @@ section "Other " "..." {
 	group "scmd\\capture" 
 	"Execute a shell command and capture the output, return it as string"
 	{
+		argsn 1
+		argtypes {
+			1 [ String ]
+		}
 	}
 
 	{
@@ -5051,6 +6542,10 @@ section "Other " "..." {
 	group "Rye-itself//History?" 
 	"Returns a block of the last N lines from REPL history."
 	{
+		argsn 2
+		argtypes {
+			1 [ Integer ]
+		}
 		arg `n: Integer specifying how many history lines to return`
 		returns `Block of strings containing the last N lines of REPL history`
 	}
@@ -5065,6 +6560,10 @@ section "Other " "..." {
 	group "defer" 
 	"Registers a block of code to be executed when the current function exits or the program terminates."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block ]
+		}
 	}
 
 	{
@@ -5079,6 +6578,10 @@ section "Other " "..." {
 	group "defer\\" 
 	"Registers a block of code with an injected value to be executed when the current function exits or the program terminates. Works like 'with' but deferred."
 	{
+		argsn 2
+		argtypes {
+			2 [ Block ]
+		}
 		arg `value: Value to inject into the deferred block`
 		arg `block: Block to execute with the injected value when function exits`
 		returns `Void value`
@@ -5095,6 +6598,10 @@ section "Other " "..." {
 	group "assert" 
 	"Evaluates a block of code and asserts that its result equals the expected value. Returns the result if assertion passes, fails with error message if not."
 	{
+		argsn 2
+		argtypes {
+			1 [ Block ]
+		}
 		arg `block: Block of code to evaluate`
 		arg `expected: Expected result value`
 		returns `The result value if assertion passes, error if it fails`
@@ -5112,6 +6619,11 @@ section "Other " "..." {
 	group "assert\\display" 
 	"Evaluates a block of code and displays the result. Prints the explanation in magenta followed by OK in green on success, or error message in red on failure. Does not fail - continues evaluation."
 	{
+		argsn 3
+		argtypes {
+			1 [ String ]
+			2 [ Block ]
+		}
 		arg `explanation: String describing the test being performed`
 		arg `block: Block of code to evaluate`
 		arg `expected: Expected result value`
@@ -5129,6 +6641,10 @@ section "Other " "..." {
 	group "recur-if" 
 	"Internal recursion control function. Resets function execution if condition > 0, otherwise returns result."
 	{
+		argsn 2
+		argtypes {
+			1 [ Integer ]
+		}
 		arg `condition: Integer value, if > 0 triggers recursion reset`
 		returns `nil if recursion continues, ps.Res if recursion ends`
 	}
@@ -5142,6 +6658,11 @@ section "Other " "..." {
 	group "recur-if\\1" 
 	"Internal recursion control function for single-argument functions. Updates first argument and resets if condition > 0."
 	{
+		argsn 2
+		argtypes {
+			1 [ Integer ]
+			2 [ Integer ]
+		}
 		arg `condition: Integer value, if > 0 triggers recursion with updated argument`
 		arg `arg1: New value for the first function argument during recursion`
 		returns `nil if recursion continues, ps.Res if recursion ends`
@@ -5156,6 +6677,12 @@ section "Other " "..." {
 	group "recur-if\\2" 
 	"Internal recursion control function for two-argument functions. Updates both arguments and resets if condition > 0."
 	{
+		argsn 3
+		argtypes {
+			1 [ Integer ]
+			2 [ Integer ]
+			3 [ Integer ]
+		}
 		arg `condition: Integer value, if > 0 triggers recursion with updated arguments`
 		arg `arg1: New value for the first function argument during recursion`
 		arg `arg2: New value for the second function argument during recursion`
@@ -5171,6 +6698,13 @@ section "Other " "..." {
 	group "recur-if\\3" 
 	"Internal recursion control function for three-argument functions. Updates all three arguments and resets if condition > 0."
 	{
+		argsn 4
+		argtypes {
+			1 [ Integer ]
+			2 [ Integer ]
+			3 [ Integer ]
+			4 [ Integer ]
+		}
 		arg `condition: Integer value, if > 0 triggers recursion with updated arguments`
 		arg `arg1: New value for the first function argument during recursion`
 		arg `arg2: New value for the second function argument during recursion`
@@ -5190,6 +6724,10 @@ section "Combinators " "Functions that combine other functions or control execut
 	group "pass" 
 	"Accepts a value and a block. It does the block, with value injected, and returns (passes on) the initial value."
 	{
+		argsn 2
+		argtypes {
+			2 [ Block ]
+		}
 		arg `value: Any value that will be passed to the block and returned`
 		arg `block: Block of code to execute with the value injected`
 		returns `The original value, regardless of what the block returns`
@@ -5207,6 +6745,11 @@ section "Combinators " "Functions that combine other functions or control execut
 	group "wrap" 
 	"Executes a wrapper block before and after executing a main block, returning the result of the main block."
 	{
+		argsn 2
+		argtypes {
+			1 [ Block ]
+			2 [ Block ]
+		}
 		arg `wrapper: Block of code to execute before and after the main block`
 		arg `block: Main block of code to execute between wrapper executions`
 		returns `The result of the main block execution`
@@ -5222,6 +6765,11 @@ section "Combinators " "Functions that combine other functions or control execut
 	group "keep" 
 	"Do the first block, then the second one but return the result of the first one."
 	{
+		argsn 3
+		argtypes {
+			2 [ Block ]
+			3 [ Block ]
+		}
 		arg `value: Value to be injected into both blocks`
 		arg `block1: First block whose result will be returned`
 		arg `block2: Second block to execute after the first one`
@@ -5241,6 +6789,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	group "prns" 
 	"Prints a value followed by a space, returning the input value."
 	{
+		argsn 1
 		arg `value: Any value to print`
 		returns `the input value (for chaining)`
 	}
@@ -5255,6 +6804,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	group "prn" 
 	"Prints a value without adding a newline, returning the input value."
 	{
+		argsn 1
 		arg `value: Any value to print`
 		returns `the input value (for chaining)`
 	}
@@ -5269,6 +6819,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	group "print" 
 	"Prints a value followed by a newline, returning the input value."
 	{
+		argsn 1
 		arg `value: Any value to print`
 		returns `the input value (for chaining)`
 	}
@@ -5283,6 +6834,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	group "print2" 
 	"Prints two values separated by a space and followed by a newline, returning the second value."
 	{
+		argsn 2
 		arg `value1: First value to print`
 		arg `value2: Second value to print`
 		returns `the second input value`
@@ -5298,6 +6850,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	group "prn2" 
 	"Prints two values separated by a space without adding a newline, returning the second value."
 	{
+		argsn 2
 		arg `value1: First value to print`
 		arg `value2: Second value to print`
 		returns `the second input value`
@@ -5313,6 +6866,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	group "prns2" 
 	"Prints two values separated by a space and followed by a space, returning the second value."
 	{
+		argsn 2
 		arg `value1: First value to print`
 		arg `value2: Second value to print`
 		returns `the second input value`
@@ -5328,6 +6882,11 @@ section "Printing " "Functions for displaying and formatting values" {
 	group "format" 
 	"Formats a value according to Go's sprintf format specifiers, returning the formatted string."
 	{
+		argsn 2
+		argtypes {
+			1 [ String Decimal Integer Block ]
+			2 [ String ]
+		}
 		arg `value: Value to format (string, integer, or decimal)`
 		arg `format: String containing Go's sprintf format specifiers`
 		returns `formatted string`
@@ -5345,6 +6904,11 @@ section "Printing " "Functions for displaying and formatting values" {
 	group "prnf" 
 	"Formats a value according to Go's sprintf format specifiers and prints it without a newline, returning the input value."
 	{
+		argsn 2
+		argtypes {
+			1 [ String Decimal Integer Block ]
+			2 [ String ]
+		}
 		arg `value: Value to format (string, integer, decimal, or block of multiple values)`
 		arg `format: String containing Go's sprintf format specifiers`
 		returns `the input value (for chaining)`
@@ -5361,6 +6925,11 @@ section "Printing " "Functions for displaying and formatting values" {
 	group "printf" 
 	"Formats a value according to Go's sprintf format specifiers and prints it followed by a newline, returning the input value."
 	{
+		argsn 2
+		argtypes {
+			1 [ String Decimal Integer Block ]
+			2 [ String ]
+		}
 		arg `value: Value to format (string, integer, decimal, or block of multiple values)`
 		arg `format: String containing Go's sprintf format specifiers`
 		returns `the input value (for chaining)`
@@ -5377,6 +6946,10 @@ section "Printing " "Functions for displaying and formatting values" {
 	group "embed" 
 	"Embeds a value into a string or URI by replacing {} placeholder with the string representation of the value."
 	{
+		argsn 2
+		argtypes {
+			1 [ String Uri ]
+		}
 		arg `value: Value to embed`
 		arg `template: String or URI containing {} as a placeholder`
 		returns `string or URI with the placeholder replaced by the value`
@@ -5393,6 +6966,10 @@ section "Printing " "Functions for displaying and formatting values" {
 	group "prnv" 
 	"Embeds a value into a string by replacing {} placeholder and prints it without a newline, returning the input value."
 	{
+		argsn 2
+		argtypes {
+			1 [ String ]
+		}
 		arg `value: Value to embed`
 		arg `template: String containing {} as a placeholder`
 		returns `the input value (for chaining)`
@@ -5408,6 +6985,10 @@ section "Printing " "Functions for displaying and formatting values" {
 	group "printv" 
 	"Embeds a value into a string by replacing {} placeholder and prints it followed by a newline, returning the input value."
 	{
+		argsn 2
+		argtypes {
+			1 [ String ]
+		}
 		arg `value: Value to embed`
 		arg `template: String containing {} as a placeholder`
 		returns `the input value (for chaining)`
@@ -5423,6 +7004,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	group "print\\ssv" 
 	"Prints a block of values as space-separated values followed by a newline, returning the input block."
 	{
+		argsn 1
 		arg `block: Block of values to format as space-separated values`
 		returns `the input block (for chaining)`
 	}
@@ -5437,6 +7019,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	group "print\\csv" 
 	"Prints a block of values as comma-separated values followed by a newline, returning the input block."
 	{
+		argsn 1
 		arg `block: Block of values to format as comma-separated values`
 		returns `the input block (for chaining)`
 	}
@@ -5451,6 +7034,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	group "probe" 
 	"Prints detailed type and value information about a value, followed by a newline, returning the input value."
 	{
+		argsn 1
 		arg `value: Any value to inspect`
 		returns `the input value (for chaining)`
 	}
@@ -5465,6 +7049,10 @@ section "Printing " "Functions for displaying and formatting values" {
 	group "probe\\" 
 	"Prints a prefix string followed by detailed type and value information about a value, followed by a newline, returning the input value."
 	{
+		argsn 2
+		argtypes {
+			2 [ String ]
+		}
 		arg `value: Any value to inspect`
 		arg `prefix: String to print before the probed value`
 		returns `the input value (for chaining)`
@@ -5480,6 +7068,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	group "inspect" 
 	"Returns a string containing detailed type and value information about a value."
 	{
+		argsn 1
 		arg `value: Any value to inspect`
 		returns `string containing detailed type and value information`
 	}
@@ -5494,6 +7083,10 @@ section "Printing " "Functions for displaying and formatting values" {
 	group "esc" 
 	"Creates an ANSI escape sequence by prepending the escape character (\\033) to the input string."
 	{
+		argsn 1
+		argtypes {
+			1 [ String ]
+		}
 		arg `sequence: String to append to the escape character`
 		returns `string with escape sequence`
 	}
@@ -5508,6 +7101,10 @@ section "Printing " "Functions for displaying and formatting values" {
 	group "esc-val" 
 	"Creates an ANSI escape sequence with an embedded value by replacing {} placeholder and prepending the escape character (\\033)."
 	{
+		argsn 2
+		argtypes {
+			2 [ String ]
+		}
 		arg `value: Value to embed`
 		arg `template: String containing {} as a placeholder`
 		returns `string with escape sequence and embedded value`
@@ -5523,6 +7120,8 @@ section "Printing " "Functions for displaying and formatting values" {
 	group "display" 
 	"Interactively displays a value (Block, Dict, Table, TableRow, or Markdown) in the terminal with navigation capabilities."
 	{
+		argsn 1
+		pure
 		arg `value: Block, Dict, Table, TableRow, or Markdown to display interactively`
 		returns `the input value or selected item from interactive display`
 	}
@@ -5537,6 +7136,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	group "_.." 
 	"Shorthand alias for 'display' - interactively displays a value in the terminal with navigation capabilities."
 	{
+		argsn 1
 		arg `value: Block, Dict, Table, or TableRow to display interactively`
 		returns `the input value or selected item from interactive display`
 	}
@@ -5551,6 +7151,7 @@ section "Printing " "Functions for displaying and formatting values" {
 	group "display\\custom" 
 	"Interactively displays a Table in the terminal with a custom rendering function for each row."
 	{
+		argsn 2
 		arg `value: Table to display interactively`
 		arg `renderer: Function that takes a row and current position indicator`
 		returns `the input value or selected item from interactive display`
@@ -5566,6 +7167,10 @@ section "Printing " "Functions for displaying and formatting values" {
 	group "capture-stdout" 
 	"Executes a block of code while capturing all output to stdout, returning the captured output as a string."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block ]
+		}
 		arg `block: Block of code to execute with captured stdout`
 		returns `string containing all output captured during block execution`
 	}
@@ -5584,6 +7189,7 @@ section "Default" "" {
 	group "fail" 
 	"Creates an error and sets the failure flag, but continues execution (unlike ^fail)."
 	{
+		argsn 1
 		arg `error_info: String message, Integer code, or block for multiple parameters`
 		returns `error object and sets the failure flag`
 	}
@@ -5600,6 +7206,7 @@ section "Default" "" {
 	group "^fail" 
 	"Creates an error and immediately returns from the current function with failure state."
 	{
+		argsn 1
 		arg `error_info: String message, Integer code, or block for multiple parameters`
 		returns `error object and sets both failure and return flags`
 	}
@@ -5614,9 +7221,25 @@ section "Default" "" {
 	{
 	}
 
+	group "refail" 
+	"Re-raises an existing error with additional context. TODO -- duplicate of check"
+	{
+		argsn 2
+		argtypes {
+			1 [ Error ]
+		}
+	}
+
+	{
+	}
+
+	{
+	}
+
 	group "failure" 
 	"Creates an error object without setting any flags (unlike fail and ^fail)."
 	{
+		argsn 1
 		arg `error_info: String message, Integer code, or block for multiple parameters`
 		returns `error object without setting any flags`
 	}
@@ -5633,6 +7256,10 @@ section "Default" "" {
 	group "failure\\wrap" 
 	"Creates a new error that wraps an existing error, allowing for error chaining."
 	{
+		argsn 2
+		argtypes {
+			2 [ Error ]
+		}
 		arg `error_info: String message, Integer code, or block for multiple parameters`
 		arg `error: Error object to wrap`
 		returns `new error object that wraps the provided error`
@@ -5649,6 +7276,7 @@ section "Default" "" {
 	group "is-error" 
 	"Returns true if the value is an error, false otherwise."
 	{
+		argsn 1
 		arg `value: Any value to check`
 		returns `boolean true if the value is an error, false otherwise`
 	}
@@ -5664,6 +7292,7 @@ section "Default" "" {
 	group "error-kind?" 
 	"Returns the kind of an error, or void if not an error."
 	{
+		argsn 1
 		arg `value: Any value to check`
 		returns `the kind of the error as a word, or void if not an error`
 	}
@@ -5679,6 +7308,10 @@ section "Default" "" {
 	group "is-error-of-kind" 
 	"Returns true if the value is an error of the specified kind, false otherwise."
 	{
+		argsn 2
+		argtypes {
+			2 [ Word Tagword ]
+		}
 		arg `error: Error object to check`
 		arg `kind: Word or tagword representing the error kind to check against`
 		returns `boolean true if the error is of the specified kind, false otherwise`
@@ -5695,6 +7328,10 @@ section "Default" "" {
 	group "cause?" 
 	"Extracts the root cause from an error chain by traversing the Parent references."
 	{
+		argsn 1
+		argtypes {
+			1 [ Error ]
+		}
 		arg `error: Error object to extract the root cause from`
 		returns `the root cause error from an error chain`
 	}
@@ -5710,6 +7347,10 @@ section "Default" "" {
 	group "status?" 
 	"Extracts the numeric status code from an error object."
 	{
+		argsn 1
+		argtypes {
+			1 [ Error ]
+		}
 		arg `error: Error object to extract status code from`
 		returns `integer status code of the error`
 	}
@@ -5726,6 +7367,10 @@ section "Default" "" {
 	group "message?" 
 	"Extracts the message string from an error object."
 	{
+		argsn 1
+		argtypes {
+			1 [ Error ]
+		}
 		arg `error: Error object to extract message from`
 		returns `string message of the error`
 	}
@@ -5742,6 +7387,10 @@ section "Default" "" {
 	group "details?" 
 	"Extracts additional details from an error object as a dictionary."
 	{
+		argsn 1
+		argtypes {
+			1 [ Error ]
+		}
 		arg `error: Error object to extract additional details from`
 		returns `dictionary containing any additional values stored in the error`
 	}
@@ -5758,6 +7407,7 @@ section "Default" "" {
 	group "has-failed" 
 	"Tests if a value is an error object, returning true for errors and false for non-errors."
 	{
+		argsn 1
 		arg `value: Any value to check`
 		returns `boolean true if the value is an error, false otherwise`
 	}
@@ -5775,6 +7425,7 @@ section "Default" "" {
 	group "is-failure" 
 	"Checks if a value is a failure/error type. Unlike has-failed, this doesn't accept failures - the value must already be disarmed."
 	{
+		argsn 1
 		arg `value: Any value to check (must already be disarmed if it was a failure)`
 		returns `boolean true if the value is an error type, false otherwise`
 	}
@@ -5792,6 +7443,7 @@ section "Default" "" {
 	group "is-success" 
 	"Returns true for any value that is not a failure/error type. The opposite of is-failure."
 	{
+		argsn 1
 		arg `value: Any value to check (must already be disarmed if it was a failure)`
 		returns `boolean true if the value is not an error type, false if it is an error`
 	}
@@ -5810,6 +7462,7 @@ section "Default" "" {
 	group "disarm" 
 	"Clears the failure flag while preserving the error object, allowing error inspection without propagation."
 	{
+		argsn 1
 		arg `error: Error object to disarm`
 		returns `the original error object, but clears the failure flag`
 	}
@@ -5827,6 +7480,7 @@ section "Default" "" {
 	group "check" 
 	"Checks if a value is in failure state and wraps it with a new error if so, otherwise returns the original value."
 	{
+		argsn 2
 		arg `value: Value to check for failure state`
 		arg `error_info: Error information to use if value is in failure state`
 		returns `original value if not in failure state, or a new error wrapping the original error`
@@ -5844,6 +7498,7 @@ section "Default" "" {
 	group "^check" 
 	"Like 'check' but also sets the return flag to immediately exit the current function."
 	{
+		argsn 2
 		arg `value: Value to check for failure state`
 		arg `error_info: Error information to use if value is in failure state`
 		returns `original value if not in failure state, or immediately returns from function with a new error`
@@ -5860,6 +7515,7 @@ section "Default" "" {
 	group "^ensure" 
 	"Checks if a value is truthy and returns it if so, otherwise creates an error and immediately returns from the function."
 	{
+		argsn 2
 		arg `condition: Value to test for truthiness`
 		arg `error_info: Error information to use if condition is not truthy`
 		returns `condition value if truthy, or immediately returns from function with an error`
@@ -5876,6 +7532,7 @@ section "Default" "" {
 	group "ensure" 
 	"Checks if a value is truthy and returns it if so, otherwise creates an error with the failure flag set."
 	{
+		argsn 2
 		arg `condition: Value to test for truthiness`
 		arg `error_info: Error information to use if condition is not truthy`
 		returns `condition value if truthy, or creates an error with failure flag set`
@@ -5892,6 +7549,10 @@ section "Default" "" {
 	group "requires-one-of" 
 	"Validates that a value matches one of the provided options, failing with a descriptive error if not."
 	{
+		argsn 2
+		argtypes {
+			2 [ Block ]
+		}
 		arg `value: Value to check against valid options`
 		arg `options: Block containing valid values`
 		returns `original value if it matches one of the options, or creates an error with failure flag set`
@@ -5911,6 +7572,10 @@ section "Default" "" {
 	group "^requires-one-of" 
 	"Validates that a value matches one of the provided options, failing with a descriptive error if not."
 	{
+		argsn 2
+		argtypes {
+			2 [ Block ]
+		}
 		arg `value: Value to check against valid options`
 		arg `options: Block containing valid values`
 		returns `original value if it matches one of the options, or creates an error with failure flag set`
@@ -5930,6 +7595,10 @@ section "Default" "" {
 	group "fix" 
 	"Handles errors by executing a block if the value is in failure state, clearing the failure flag."
 	{
+		argsn 2
+		argtypes {
+			2 [ Block ]
+		}
 		arg `value: Value to check for failure state`
 		arg `handler: Block to execute if value is in failure state`
 		returns `original value if not in failure state, or result of executing the handler block`
@@ -5947,6 +7616,10 @@ section "Default" "" {
 	group "^fix" 
 	"Like 'fix' but also sets the return flag to immediately exit the current function with the handler result."
 	{
+		argsn 2
+		argtypes {
+			2 [ Block ]
+		}
 		arg `value: Value to check for failure state`
 		arg `handler: Block to execute if value is in failure state`
 		returns `original value if not in failure state, or immediately returns from function with handler result`
@@ -5963,6 +7636,11 @@ section "Default" "" {
 	group "fix\\either" 
 	"Executes one of two blocks depending on whether the value is in failure state."
 	{
+		argsn 3
+		argtypes {
+			2 [ Block ]
+			3 [ Block ]
+		}
 		arg `value: Value to check for failure state`
 		arg `error_handler: Block to execute if value is in failure state`
 		arg `success_handler: Block to execute if value is not in failure state`
@@ -5980,6 +7658,10 @@ section "Default" "" {
 	group "fix\\else" 
 	"Executes a block if the value is not in failure state, otherwise returns the original value."
 	{
+		argsn 2
+		argtypes {
+			2 [ Block ]
+		}
 		arg `value: Value to check for failure state`
 		arg `success_handler: Block to execute if value is not in failure state`
 		returns `result of executing the success handler if value is not in failure state, or the original value`
@@ -5996,6 +7678,11 @@ section "Default" "" {
 	group "fix\\continue" 
 	"Executes one of two blocks depending on whether the value is in failure state, like an error-handling if/else."
 	{
+		argsn 3
+		argtypes {
+			2 [ Block ]
+			3 [ Block ]
+		}
 		arg `value: Value to check for failure state`
 		arg `error_handler: Block to execute if value is in failure state`
 		arg `success_handler: Block to execute if value is not in failure state`
@@ -6013,6 +7700,10 @@ section "Default" "" {
 	group "continue" 
 	"Executes a block only if the value is not in failure state, opposite of 'fix'."
 	{
+		argsn 2
+		argtypes {
+			2 [ Block ]
+		}
 		arg `value: Value to check for failure state`
 		arg `block: Block to execute if value is not in failure state`
 		returns `result of executing the block if value is not in failure state, or the original value`
@@ -6029,6 +7720,10 @@ section "Default" "" {
 	group "^fix\\match" 
 	"Error handling switch that matches error codes with handler blocks and sets the return flag."
 	{
+		argsn 2
+		argtypes {
+			2 [ Block ]
+		}
 		arg `error: Error object to match against`
 		arg `cases: Block containing error codes and corresponding handler blocks`
 		returns `result of executing the matching handler block, or the original error if no match`
@@ -6046,6 +7741,11 @@ section "Default" "" {
 	group "try" 
 	"Takes a block of code and does (runs) it."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ Block ]
+		}
 	}
 
 	{
@@ -6061,6 +7761,11 @@ section "Default" "" {
 	group "try-all" 
 	"Executes a block and returns a result tuple [success, result], where success is true if no error occurred."
 	{
+		argsn 1
+		pure
+		argtypes {
+			1 [ Block ]
+		}
 		arg `block: Block of code to execute`
 		returns `a block containing [success, result], where success is true if no error occurred`
 	}
@@ -6076,6 +7781,11 @@ section "Default" "" {
 	group "try\\in" 
 	"Takes a Context and a Block. It Does a block inside a given Context."
 	{
+		argsn 2
+		argtypes {
+			1 [ Context ]
+			2 [ Block ]
+		}
 	}
 
 	{
@@ -6092,6 +7802,11 @@ section "Default" "" {
 	group "finally" 
 	"Executes a block and ensures another block is executed afterward, regardless of errors."
 	{
+		argsn 2
+		argtypes {
+			1 [ Block ]
+			2 [ Block ]
+		}
 		arg `main-block: Block of code to execute`
 		arg `finally-block: Block to execute afterward, regardless of errors`
 		returns `result of the main block, preserving any failure state`
@@ -6108,6 +7823,11 @@ section "Default" "" {
 	group "retry" 
 	"Executes a block and retries it up to N times if it results in a failure."
 	{
+		argsn 2
+		argtypes {
+			1 [ Integer ]
+			2 [ Block ]
+		}
 		arg `retries: Integer number of retries to attempt`
 		arg `block: Block of code to execute and potentially retry`
 		returns `result of the block if successful, or the last failure if all retries fail`
@@ -6125,6 +7845,10 @@ section "Default" "" {
 	group "persist" 
 	"Executes a block repeatedly until it succeeds (no failure), then returns the successful result. Gives up after 1000 attempts."
 	{
+		argsn 1
+		argtypes {
+			1 [ Block ]
+		}
 		arg `block: Block of code to execute repeatedly until it succeeds`
 		returns `result of the block when it finally succeeds (no failure), or error if 1000 attempts exceeded`
 	}
@@ -6141,6 +7865,11 @@ section "Default" "" {
 	group "timeout" 
 	"Executes a block of code with a timeout, failing if execution exceeds the specified duration in milliseconds."
 	{
+		argsn 2
+		argtypes {
+			1 [ Integer ]
+			2 [ Block ]
+		}
 		arg `ms: Integer timeout duration in milliseconds`
 		arg `block: Block of code to execute with a timeout`
 		returns `result of the block if it completes within the timeout, or a timeout error`
