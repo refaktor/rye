@@ -272,6 +272,52 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 		return
 	}
 	switch opword := nextObj.(type) {
+	case env.CachedBuiltin:
+		// Handle cached builtins based on their original mode
+		// Only Opword/Pipeword/Dotword modes are continuations - Word mode starts a new expression
+		switch opword.Mode {
+		case env.CachedModeWord:
+			// Regular word cached builtin - NOT a continuation, starts a new expression
+			return
+		case env.CachedModeOpword:
+			if !allowOpwords {
+				return
+			}
+			ps.Ser.Next()
+			// Opword - use ps.Res as left value
+			CallBuiltin_CollectArgs(opword.Builtin, ps, ps.Res, true, false, nil, true, false)
+		case env.CachedModePipeword:
+			if limited {
+				return
+			}
+			ps.Ser.Next()
+			// Pipeword - evaluate first arg, use ps.Res as second arg (pipeSecond=true)
+			// This matches the behavior in EvalWord where firstVal is evaluated for pipeSecond
+			leftVal := ps.Res
+			var firstVal env.Object
+			if !ps.Ser.AtLast() {
+				EvalExpression_CollectArg(ps, true, false)
+				if ps.ReturnFlag || ps.ErrorFlag {
+					return
+				}
+				firstVal = ps.Res
+			}
+			CallBuiltin_CollectArgs(opword.Builtin, ps, leftVal, true, true, firstVal, false, false)
+		case env.CachedModeDotword:
+			if !allowDotwords {
+				return
+			}
+			ps.Ser.Next()
+			// Dotword - use ps.Res as left value
+			CallBuiltin_CollectArgs(opword.Builtin, ps, ps.Res, true, false, nil, true, true)
+		default:
+			return
+		}
+		if ps.ReturnFlag || ps.ErrorFlag {
+			return
+		}
+		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, allowOpwords, allowDotwords)
+		return
 	case env.Opword:
 		if !allowOpwords {
 			return
@@ -583,7 +629,28 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 	//	return
 	// these are cached (inserted into block values so we can avoid the repeated lookup)
 	case env.BuiltinType:
-		CallBuiltin_CollectArgs(object.(env.Builtin), ps, nil, false, false, nil, false, false) // TODO .. POTENTIAL BUG, OPWORD STATE IS NOT STORED WHEN EMBEDED
+		CallBuiltin_CollectArgs(object.(env.Builtin), ps, nil, false, false, nil, false, false)
+		return
+	case env.CachedBuiltinType:
+		// CachedBuiltin wraps a Builtin with its original word mode
+		cached := object.(env.CachedBuiltin)
+		switch cached.Mode {
+		case env.CachedModeWord:
+			// Regular word - no left value
+			CallBuiltin_CollectArgs(cached.Builtin, ps, nil, false, false, nil, false, false)
+		case env.CachedModeOpword:
+			// Opword at start of expression is an error (no left value)
+			ps.ErrorFlag = true
+			ps.Res = env.NewError("Cached opword used without a left-hand value.")
+		case env.CachedModePipeword:
+			// Pipeword at start of expression is an error (no left value)
+			ps.ErrorFlag = true
+			ps.Res = env.NewError("Cached pipeword used without a left-hand value.")
+		case env.CachedModeDotword:
+			// Dotword at start of expression is an error (no left value)
+			ps.ErrorFlag = true
+			ps.Res = env.NewError("Cached dotword used without a left-hand value.")
+		}
 		return
 	case env.VarBuiltinType:
 		CallVarBuiltin(object.(env.VarBuiltin), ps, nil, false, false, nil, false, false) // TODO .. POTENTIAL BUG, OPWORD STATE IS NOT STORED WHEN EMBEDED
@@ -616,11 +683,6 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 	switch word := word1.(type) {
 	case env.Word:
 		object, found := ps.Ctx.Get(word.Index)
-		// if is constant ... stamp it in
-		// TODO ... just stamp constants
-		// fmt.Println("*")
-		// ps.Ser.Put(object)
-		// }
 		return found, object, nil
 	case env.Opword:
 		object, found := ps.Ctx.Get(word.Index)

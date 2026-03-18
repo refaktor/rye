@@ -219,6 +219,9 @@ const (
 	// matrix 3 4
 	// It represents a 2D matrix of float64 values.
 	MatrixType Type = 51
+	// CachedBuiltin wraps a Builtin with its original word mode (word/opword/pipeword)
+	// Used for pre-resolved builtins in loops to avoid repeated lookups
+	CachedBuiltinType Type = 52
 	// PersistentTable is a constructed type
 	// (internal)
 	// It represents a persistent table.
@@ -1947,6 +1950,64 @@ func (i Builtin) Equal(o Object) bool {
 
 func (i Builtin) Dump(e Idxs) string {
 	// Serializing builtins is not supported
+	return ""
+}
+
+//
+// CACHED BUILTIN - Wraps a Builtin with its original word mode for optimized lookups
+//
+
+// CachedBuiltinMode indicates the original word type
+const (
+	CachedModeWord     = 0 // Regular word (prefix)
+	CachedModeOpword   = 1 // Opword (infix like +)
+	CachedModePipeword = 2 // Pipeword (pipe like |fn)
+	CachedModeDotword  = 3 // Dotword (method-like .fn)
+)
+
+// CachedBuiltin wraps a resolved Builtin with its original word semantics.
+// Used in loops to avoid repeated context lookups while preserving
+// infix/pipe/dot behavior.
+type CachedBuiltin struct {
+	Builtin Builtin
+	Mode    int // CachedModeWord, CachedModeOpword, etc.
+}
+
+func NewCachedBuiltin(builtin Builtin, mode int) *CachedBuiltin {
+	return &CachedBuiltin{builtin, mode}
+}
+
+func (b CachedBuiltin) Type() Type {
+	return CachedBuiltinType
+}
+
+func (b CachedBuiltin) Inspect(e Idxs) string {
+	modes := []string{"word", "opword", "pipeword", "dotword"}
+	return "[CachedBuiltin(" + modes[b.Mode] + "): " + b.Builtin.Doc + "]"
+}
+
+func (b CachedBuiltin) Print(e Idxs) string {
+	return b.Builtin.Print(e)
+}
+
+func (b CachedBuiltin) Trace(msg string) {
+	fmt.Print(msg + " (cached-builtin): ")
+	fmt.Println(b.Builtin.Argsn)
+}
+
+func (b CachedBuiltin) GetKind() int {
+	return int(CachedBuiltinType)
+}
+
+func (b CachedBuiltin) Equal(o Object) bool {
+	if b.Type() != o.Type() {
+		return false
+	}
+	other := o.(CachedBuiltin)
+	return b.Mode == other.Mode && b.Builtin.Equal(other.Builtin)
+}
+
+func (b CachedBuiltin) Dump(e Idxs) string {
 	return ""
 }
 

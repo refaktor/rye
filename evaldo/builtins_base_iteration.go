@@ -8,6 +8,46 @@ import (
 	// JM 20230825	"github.com/refaktor/rye/term"
 )
 
+// resolveBuiltinsInBlock scans a block and replaces Words that refer to builtins
+// with CachedBuiltin objects that preserve the original word semantics.
+// This avoids repeated context lookups during iteration.
+// Called once before loop execution for optimization.
+func resolveBuiltinsInBlock(ps *env.ProgramState, block *env.Block) {
+	ser := &block.Series
+	for i := 0; i < ser.Len(); i++ {
+		obj := ser.Get(i)
+		switch word := obj.(type) {
+		case env.Word:
+			if resolved, found := ps.Ctx.Get(word.Index); found {
+				if builtin, isBuiltin := resolved.(env.Builtin); isBuiltin {
+					ser.S[i] = env.CachedBuiltin{Builtin: builtin, Mode: env.CachedModeWord}
+				}
+			}
+		case env.Opword:
+			if resolved, found := ps.Ctx.Get(word.Index); found {
+				if builtin, isBuiltin := resolved.(env.Builtin); isBuiltin {
+					ser.S[i] = env.CachedBuiltin{Builtin: builtin, Mode: env.CachedModeOpword}
+				}
+			}
+		case env.Pipeword:
+			if resolved, found := ps.Ctx.Get(word.Index); found {
+				if builtin, isBuiltin := resolved.(env.Builtin); isBuiltin {
+					ser.S[i] = env.CachedBuiltin{Builtin: builtin, Mode: env.CachedModePipeword}
+				}
+			}
+		case env.Dotword:
+			if resolved, found := ps.Ctx.Get(word.Index); found {
+				if builtin, isBuiltin := resolved.(env.Builtin); isBuiltin {
+					ser.S[i] = env.CachedBuiltin{Builtin: builtin, Mode: env.CachedModeDotword}
+				}
+			}
+		case env.Block:
+			// Recursively resolve nested blocks
+			resolveBuiltinsInBlock(ps, &word)
+		}
+	}
+}
+
 var builtins_iteration = map[string]*env.Builtin{
 
 	//
@@ -37,6 +77,9 @@ var builtins_iteration = map[string]*env.Builtin{
 
 			switch block := arg1.(type) {
 			case env.Block:
+				// Pre-resolve builtins in the block for faster execution
+				resolveBuiltinsInBlock(ps, &block)
+
 				// Save original series
 				ser := ps.Ser
 				ps.Ser = block.Series
@@ -502,6 +545,8 @@ var builtins_iteration = map[string]*env.Builtin{
 			case env.Collection:
 				switch code := arg1.(type) {
 				case env.Block:
+					// Pre-resolve builtins in the block for faster execution
+					resolveBuiltinsInBlock(ps, &code)
 					ser := ps.Ser
 					ps.Ser = code.Series
 					for i := 0; i < block.Length(); i++ {
@@ -984,6 +1029,8 @@ var builtins_iteration = map[string]*env.Builtin{
 					newl := make([]env.Object, l)
 					switch block := block.(type) {
 					case env.Block:
+						// Pre-resolve builtins in the block for faster execution
+						resolveBuiltinsInBlock(ps, &block)
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
