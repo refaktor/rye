@@ -40,6 +40,10 @@ var CODE []any
 //
 
 func main() {
+	// CPU profiling (enabled with -tags profile)
+	stopProfile := startProfiling()
+	defer stopProfile()
+
 	// Initialize security profiles
 	// These are no-ops on non-Linux systems or when built without the appropriate tags
 	// The actual configuration will be set in runner.DoMain based on command-line flags

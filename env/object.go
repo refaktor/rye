@@ -215,6 +215,10 @@ const (
 	// .word
 	// It acts as a method-style operator that binds tightly to its left subject.
 	DotwordType Type = 50
+	// Matrix is a constructed type
+	// matrix 3 4
+	// It represents a 2D matrix of float64 values.
+	MatrixType Type = 51
 	// PersistentTable is a constructed type
 	// (internal)
 	// It represents a persistent table.
@@ -2979,6 +2983,98 @@ func (i Vector) Dump(e Idxs) string {
 	var b strings.Builder
 	b.WriteString("vector { ")
 	for _, v := range i.Value {
+		b.WriteString(fmt.Sprintf("%f ", v))
+	}
+	b.WriteString("}")
+	return b.String()
+}
+
+//
+// MATRIX
+//
+
+// Matrix represents a 2D matrix of float64 values (row-major storage)
+// Element at (i,j) is stored at Data[i*Cols + j]
+type Matrix struct {
+	Data []float64
+	Rows int
+	Cols int
+	Kind Word
+}
+
+// NewMatrix creates a new zero-initialized matrix with the given dimensions
+func NewMatrix(rows, cols int) *Matrix {
+	return &Matrix{
+		Data: make([]float64, rows*cols),
+		Rows: rows,
+		Cols: cols,
+		Kind: Word{0},
+	}
+}
+
+// NewMatrixWithData creates a new matrix with the given data (row-major order)
+func NewMatrixWithData(rows, cols int, data []float64) *Matrix {
+	if len(data) != rows*cols {
+		return nil
+	}
+	return &Matrix{
+		Data: data,
+		Rows: rows,
+		Cols: cols,
+		Kind: Word{0},
+	}
+}
+
+// Get returns element at row i, column j (0-indexed)
+func (m Matrix) Get(i, j int) float64 {
+	return m.Data[i*m.Cols+j]
+}
+
+// Set sets element at row i, column j (0-indexed)
+func (m *Matrix) Set(i, j int, val float64) {
+	m.Data[i*m.Cols+j] = val
+}
+
+func (m Matrix) Type() Type {
+	return MatrixType
+}
+
+func (m Matrix) Inspect(e Idxs) string {
+	return fmt.Sprintf("[Matrix: %dx%d]", m.Rows, m.Cols)
+}
+
+func (m Matrix) Print(e Idxs) string {
+	return fmt.Sprintf("M[%dx%d]", m.Rows, m.Cols)
+}
+
+func (m Matrix) Trace(msg string) {
+	fmt.Printf("%s(Matrix): %dx%d\n", msg, m.Rows, m.Cols)
+}
+
+func (m Matrix) GetKind() int {
+	return int(MatrixType)
+}
+
+func (m Matrix) Equal(o Object) bool {
+	if m.Type() != o.Type() {
+		return false
+	}
+	other := o.(Matrix)
+	if m.Rows != other.Rows || m.Cols != other.Cols {
+		return false
+	}
+	for i := range m.Data {
+		if m.Data[i] != other.Data[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func (m Matrix) Dump(e Idxs) string {
+	var b strings.Builder
+	b.WriteString(fmt.Sprintf("matrix %d %d { ", m.Rows, m.Cols))
+	for _, v := range m.Data {
 		b.WriteString(fmt.Sprintf("%f ", v))
 	}
 	b.WriteString("}")

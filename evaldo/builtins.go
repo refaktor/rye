@@ -2863,6 +2863,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltins2(Builtins_match, ps, "match")
 	RegisterBuiltins2(Builtins_table, ps, "table")
 	RegisterBuiltins2(Builtins_vector, ps, "vector")
+	RegisterBuiltins2(Builtins_matrix, ps, "matrix")
 	RegisterBuiltins2(Builtins_io, ps, "io")
 	RegisterBuiltins2(Builtins_cmd, ps, "cmd")
 	RegisterBuiltins2(Builtins_regexp, ps, "regexp")
@@ -3085,6 +3086,7 @@ var allBuiltinGroups = []builtinGroup{
 	{"match", Builtins_match, false},
 	{"table", Builtins_table, false},
 	{"vector", Builtins_vector, false},
+	{"matrix", Builtins_matrix, false},
 	{"io", Builtins_io, false},
 	{"cmd", Builtins_cmd, false},
 	{"regexp", Builtins_regexp, false},

@@ -675,8 +675,37 @@ var builtins_numbers = map[string]*env.Builtin{
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.VectorType}, "_+")
 				}
+			case env.Matrix:
+				switch m2 := arg1.(type) {
+				case env.Matrix:
+					if s1.Rows != m2.Rows || s1.Cols != m2.Cols {
+						return MakeBuiltinError(ps, "Matrix dimensions must match", "_+")
+					}
+					result := make([]float64, len(s1.Data))
+					for i := range s1.Data {
+						result[i] = s1.Data[i] + m2.Data[i]
+					}
+					return *env.NewMatrixWithData(s1.Rows, s1.Cols, result)
+				case env.Decimal:
+					// Matrix + scalar: add scalar to each element
+					result := make([]float64, len(s1.Data))
+					for i := range s1.Data {
+						result[i] = s1.Data[i] + m2.Value
+					}
+					return *env.NewMatrixWithData(s1.Rows, s1.Cols, result)
+				case env.Integer:
+					// Matrix + scalar: add scalar to each element
+					result := make([]float64, len(s1.Data))
+					scalar := float64(m2.Value)
+					for i := range s1.Data {
+						result[i] = s1.Data[i] + scalar
+					}
+					return *env.NewMatrixWithData(s1.Rows, s1.Cols, result)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.MatrixType, env.DecimalType, env.IntegerType}, "_+")
+				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType, env.TimeType, env.VectorType}, "_+")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType, env.TimeType, env.VectorType, env.MatrixType}, "_+")
 			}
 		},
 	},
@@ -756,8 +785,37 @@ var builtins_numbers = map[string]*env.Builtin{
 				default:
 					return MakeArgError(ps, 2, []env.Type{env.VectorType}, "_-")
 				}
+			case env.Matrix:
+				switch m2 := arg1.(type) {
+				case env.Matrix:
+					if a.Rows != m2.Rows || a.Cols != m2.Cols {
+						return MakeBuiltinError(ps, "Matrix dimensions must match", "_-")
+					}
+					result := make([]float64, len(a.Data))
+					for i := range a.Data {
+						result[i] = a.Data[i] - m2.Data[i]
+					}
+					return *env.NewMatrixWithData(a.Rows, a.Cols, result)
+				case env.Decimal:
+					// Matrix - scalar: subtract scalar from each element
+					result := make([]float64, len(a.Data))
+					for i := range a.Data {
+						result[i] = a.Data[i] - m2.Value
+					}
+					return *env.NewMatrixWithData(a.Rows, a.Cols, result)
+				case env.Integer:
+					// Matrix - scalar: subtract scalar from each element
+					result := make([]float64, len(a.Data))
+					scalar := float64(m2.Value)
+					for i := range a.Data {
+						result[i] = a.Data[i] - scalar
+					}
+					return *env.NewMatrixWithData(a.Rows, a.Cols, result)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.MatrixType, env.DecimalType, env.IntegerType}, "_-")
+				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType, env.TimeType, env.VectorType}, "_-")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType, env.TimeType, env.VectorType, env.MatrixType}, "_-")
 			}
 		},
 	},
@@ -796,8 +854,16 @@ var builtins_numbers = map[string]*env.Builtin{
 						result[i] = b.Value[i] * scalar
 					}
 					return *env.NewVector(result)
+				case env.Matrix:
+					// Integer * Matrix = scaled matrix
+					result := make([]float64, len(b.Data))
+					scalar := float64(a.Value)
+					for i := range b.Data {
+						result[i] = b.Data[i] * scalar
+					}
+					return *env.NewMatrixWithData(b.Rows, b.Cols, result)
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType, env.VectorType}, "_*")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType, env.VectorType, env.MatrixType}, "_*")
 				}
 			case env.Decimal:
 				switch b := arg1.(type) {
@@ -814,8 +880,15 @@ var builtins_numbers = map[string]*env.Builtin{
 						result[i] = b.Value[i] * a.Value
 					}
 					return *env.NewVector(result)
+				case env.Matrix:
+					// Decimal * Matrix = scaled matrix
+					result := make([]float64, len(b.Data))
+					for i := range b.Data {
+						result[i] = b.Data[i] * a.Value
+					}
+					return *env.NewMatrixWithData(b.Rows, b.Cols, result)
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType, env.VectorType}, "_*")
+					return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType, env.VectorType, env.MatrixType}, "_*")
 				}
 			case env.Complex:
 				switch b := arg1.(type) {
@@ -843,8 +916,24 @@ var builtins_numbers = map[string]*env.Builtin{
 					result[i] = a.Value[i] * scalar
 				}
 				return *env.NewVector(result)
+			case env.Matrix:
+				// Matrix * scalar = scaled matrix
+				var scalar float64
+				switch s := arg1.(type) {
+				case env.Decimal:
+					scalar = s.Value
+				case env.Integer:
+					scalar = float64(s.Value)
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.DecimalType, env.IntegerType}, "_*")
+				}
+				result := make([]float64, len(a.Data))
+				for i := range a.Data {
+					result[i] = a.Data[i] * scalar
+				}
+				return *env.NewMatrixWithData(a.Rows, a.Cols, result)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType, env.VectorType}, "_*")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType, env.VectorType, env.MatrixType}, "_*")
 			}
 		},
 	},
