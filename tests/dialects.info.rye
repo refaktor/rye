@@ -82,10 +82,10 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	{
 		argsn 1
 		argtypes {
-			1 [ Integer Decimal Complex ]
+			1 [ Integer Decimal Complex Vector Matrix ]
 		}
-		arg `x: integer, decimal, or complex value (must not be zero)`
-		returns `decimal natural logarithm of x for integer/decimal input, complex logarithm for complex input`
+		arg `x: integer, decimal, complex, vector or matrix value`
+		returns `natural logarithm of x (element-wise for vector/matrix)`
 	}
 
 	{
@@ -95,6 +95,8 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 		stdout { log complex 2.718281828459045 0 |prn } "1.000000+0.000000i"
 		; error { log 0 }
 		; error { log complex 0 0 }
+		equal { log vector { 1.0 2.718281828459045 } |vec-to-block |first } 0.0
+		equal { log matrix { 1 2 } { 1.0 2.718281828459045 } |mat-get 0 0 } 0.0
 	}
 
 	{
@@ -221,16 +223,18 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	{
 		argsn 1
 		argtypes {
-			2 [ Integer Decimal Complex ]
+			1 [ Integer Decimal Complex Vector Matrix ]
 		}
-		arg `x: integer, decimal, or complex value`
-		returns `decimal square root of x for integer/decimal input, complex square root for complex input`
+		arg `x: integer, decimal, complex, vector or matrix value`
+		returns `square root of x (element-wise for vector/matrix)`
 	}
 
 	{
 		equal { sqrt 9 } 3.0
 		equal { sqrt 2.0 |round\to 4 } 1.4142
 		stdout { sqrt complex -1 0 |prn } "0.000000+1.000000i"
+		equal { sqrt vector { 4.0 9.0 16.0 } |vec-to-block |first } 2.0
+		equal { sqrt matrix { 2 2 } { 4.0 9.0 16.0 25.0 } |mat-get 1 1 } 5.0
 	}
 
 	{
@@ -241,16 +245,18 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	{
 		argsn 1
 		argtypes {
-			2 [ Integer Decimal Complex ]
+			1 [ Integer Decimal Complex Vector Matrix ]
 		}
-		arg `x: integer, decimal, or complex value`
-		returns `absolute value of x (same type as input for integer/decimal, decimal for complex)`
+		arg `x: integer, decimal, complex, vector or matrix value`
+		returns `absolute value of x (element-wise for vector/matrix)`
 	}
 
 	{
 		equal { abs -5 } 5
 		equal { abs 5 } 5
 		equal { abs complex 3 4 } 5.0
+		equal { abs vector { -1.0 2.0 -3.0 } |vec-to-block |first } 1.0
+		equal { abs matrix { 2 2 } { -1.0 2.0 -3.0 4.0 } |mat-get 1 0 } 3.0
 	}
 
 	{
@@ -597,10 +603,10 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 	{
 		argsn 1
 		argtypes {
-			1 [ Integer Decimal Complex ]
+			1 [ Integer Decimal Complex Vector Matrix ]
 		}
-		arg `x: integer, decimal, or complex value`
-		returns `decimal e^x for integer/decimal input, complex e^z for complex input`
+		arg `x: integer, decimal, complex, vector or matrix value`
+		returns `e^x (element-wise for vector/matrix)`
 	}
 
 	{
@@ -608,6 +614,8 @@ section "Math context and dialect " "Mathematical context and dialect (calc)" {
 		equal { exp 1 } 2.718281828459045
 		stdout { exp complex 0 0 |prn } "1.000000+0.000000i" ; OQ: complex is not a literal value yet, should it be?
 		stdout { exp complex 0 3.141592653589793 |prn } "-1.000000+0.000000i"
+		equal { exp vector { 0.0 1.0 } |vec-to-block |first } 1.0
+		equal { exp matrix { 1 2 } { 0.0 1.0 } |mat-get 0 0 } 1.0
 	}
 
 	{

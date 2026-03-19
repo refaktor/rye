@@ -5,6 +5,7 @@
 ../cmd/rbit/rbit ../evaldo/builtins_base_time.go >> base.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_base_collections.go >> base.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_vector.go >> base.info.rye
+../cmd/rbit/rbit ../evaldo/builtins_matrix.go >> base.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_base_types.go >> base.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_base_contexts.go >> base.info.rye
 ../cmd/rbit/rbit ../evaldo/builtins_base_conditionals.go >> base.info.rye

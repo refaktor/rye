@@ -612,8 +612,8 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		argsn 2
 		pure
 		argtypes {
-			1 [ Integer Decimal Complex Time Vector ]
-			2 [ Integer Decimal Complex Vector ]
+			1 [ Integer Decimal Complex Time Vector Matrix ]
+			2 [ Integer Decimal Complex Vector Matrix ]
 		}
 		arg `value1: First value (integer, decimal, complex, time, vector)`
 		arg `value2: Second value to add (integer, decimal, complex, duration, vector)`
@@ -637,8 +637,8 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		argsn 2
 		pure
 		argtypes {
-			1 [ Integer Decimal Complex Time Vector ]
-			2 [ Integer Decimal Complex Time Vector ]
+			1 [ Integer Decimal Complex Time Vector Matrix ]
+			2 [ Integer Decimal Complex Time Vector Matrix ]
 		}
 		arg `value1: First number (integer, decimal, or vector)`
 		arg `value2: Second number to subtract from the first`
@@ -662,8 +662,8 @@ section "Numbers " "Working with numbers, integers and decimals." {
 		argsn 2
 		pure
 		argtypes {
-			1 [ Integer Decimal Complex Vector ]
-			2 [ Integer Decimal Complex Vector ]
+			1 [ Integer Decimal Complex Vector Matrix ]
+			2 [ Integer Decimal Complex Vector Matrix ]
 		}
 		arg `value1: First number (integer, decimal, or vector)`
 		arg `value2: Second number to multiply by (scalar for vectors)`
@@ -2053,9 +2053,9 @@ section "Collections " "" {
 	{
 		argsn 1
 		argtypes {
-			1 [ Block List ]
+			1 [ Block List Vector Matrix ]
 		}
-		arg `collection: Block or list of comparable values`
+		arg `collection: Block, list, vector or matrix of comparable values`
 		returns `the maximum value in the collection`
 	}
 
@@ -2064,6 +2064,8 @@ section "Collections " "" {
 		equal { max list { 8 2 10 6 } } 10
 		equal { try { max { } } |type? } 'error
 		equal { try { max list { } } |type? } 'error
+		equal { max vector { 8.0 2.0 10.0 6.0 } } 10.0
+		equal { max matrix { 2 2 } { 1.0 5.0 3.0 2.0 } } 5.0
 	}
 
 	{
@@ -2097,9 +2099,9 @@ section "Collections " "" {
 	{
 		argsn 1
 		argtypes {
-			1 [ Block ]
+			1 [ Block List Vector Matrix ]
 		}
-		arg `collection: Block or list of comparable values`
+		arg `collection: Block, list, vector or matrix of comparable values`
 		returns `the minimum value in the collection`
 	}
 
@@ -2108,6 +2110,8 @@ section "Collections " "" {
 		equal { min list { 8 2 10 6 } } 2
 		equal { try { min { } } |type? } 'error
 		equal { try { min list { } } |type? } 'error
+		equal { min vector { 8.0 2.0 10.0 6.0 } } 2.0
+		equal { min matrix { 2 2 } { 1.0 5.0 3.0 2.0 } } 1.0
 	}
 
 	{
@@ -2141,9 +2145,9 @@ section "Collections " "" {
 	{
 		argsn 1
 		argtypes {
-			1 [ Block Vector ]
+			1 [ Block Vector Matrix ]
 		}
-		arg `collection: Block, list or vector of numeric values`
+		arg `collection: Block, list, vector or matrix of numeric values`
 		returns `the arithmetic mean (average) of the values as a decimal`
 	}
 
@@ -2153,6 +2157,8 @@ section "Collections " "" {
 		equal { avg { 1 2 3 } } 2.0
 		equal { try { avg { } } |type? } 'error
 		equal { try { avg list { } } |type? } 'error
+		equal { avg vector { 1.0 2.0 3.0 4.0 } } 2.5
+		equal { avg matrix { 2 2 } { 1.0 2.0 3.0 4.0 } } 2.5
 	}
 
 	{
@@ -2186,9 +2192,9 @@ section "Collections " "" {
 	{
 		argsn 1
 		argtypes {
-			1 [ Block Vector ]
+			1 [ Block Vector Matrix ]
 		}
-		arg `collection: Block, list or vector of numeric values`
+		arg `collection: Block, list, vector or matrix of numeric values`
 		returns `the sum of all values (integer if all values are integers, decimal otherwise)`
 	}
 
@@ -2199,6 +2205,8 @@ section "Collections " "" {
 		equal { sum list { 8 2 10 6 } } 26
 		equal { sum list { 8 2 10 6.5 } } 26.5
 		equal { sum list { } } 0
+		equal { sum vector { 1.0 2.0 3.0 4.0 } } 10.0
+		equal { sum matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } } 21.0
 	}
 
 	{
@@ -2248,14 +2256,14 @@ section "Collections " "" {
 	}
 
 	group "first" 
-	"Retrieves the first item from a collection (block, list, string, or table)."
+	"Retrieves the first item from a collection (block, list, string, table, vector, or matrix)."
 	{
 		argsn 1
 		argtypes {
-			1 [ Table Block String List ]
+			1 [ Table Block String List Vector Matrix ]
 		}
-		arg `collection: Block, list, string or table to get the first item from`
-		returns `the first item in the collection`
+		arg `collection: Block, list, string, table, vector or matrix to get the first item from`
+		returns `the first item in the collection (for matrix: first row as vector)`
 	}
 
 	{
@@ -2264,6 +2272,9 @@ section "Collections " "" {
 		equal { first list { 1 2 3 } } 1
 		equal { first { { "nested" } 2 3 } } { "nested" }
 		; equal { first table { 'a 'b } { 1 2 } { 3 4 } } table-row { 'a 1 'b 2 }
+		equal { first vector { 1.0 2.0 3.0 } } 1.0
+		equal { first matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |type? } 'vector
+		equal { first matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |first } 1.0
 	}
 
 	{
@@ -2274,10 +2285,10 @@ section "Collections " "" {
 	{
 		argsn 1
 		argtypes {
-			1 [ Block String List ]
+			1 [ Block String List Vector Matrix ]
 		}
-		arg `collection: Block, list or string to get all but the first item from`
-		returns `a new collection containing all items except the first one`
+		arg `collection: Block, list, string, vector or matrix to get all but the first item from`
+		returns `a new collection containing all items except the first one (for matrix: all rows except first)`
 	}
 
 	{
@@ -2285,6 +2296,8 @@ section "Collections " "" {
 		equal { rest "abcde" } "bcde"
 		equal { rest list { 1 2 3 } } list { 2 3 }
 		equal { rest { 1 } } { }
+		equal { rest vector { 1.0 2.0 3.0 } |first } 2.0
+		equal { rest matrix { 3 2 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |rows? } 2
 	}
 
 	{
@@ -2295,12 +2308,12 @@ section "Collections " "" {
 	{
 		argsn 2
 		argtypes {
-			1 [ Block List String ]
+			1 [ Block List String Vector Matrix ]
 			2 [ Integer ]
 		}
-		arg `collection: Block, list or string to get items from`
+		arg `collection: Block, list, string, vector or matrix to get items from`
 		arg `n: Integer position to start from (0-based)`
-		returns `a new collection containing all items starting from position n`
+		returns `a new collection containing all items starting from position n (for matrix: from row n)`
 	}
 
 	{
@@ -2308,6 +2321,8 @@ section "Collections " "" {
 		equal { rest\from "abcdefg" 1 } "bcdefg"
 		equal { rest\from list { 1 2 3 4 } 2 } list { 3 4 }
 		equal { rest\from { 1 2 3 } 0 } { 1 2 3 }
+		equal { rest\from vector { 1.0 2.0 3.0 4.0 } 2 |first } 3.0
+		equal { rest\from matrix { 3 2 } { 1.0 2.0 3.0 4.0 5.0 6.0 } 1 |rows? } 2
 	}
 
 	{
@@ -2318,12 +2333,12 @@ section "Collections " "" {
 	{
 		argsn 2
 		argtypes {
-			1 [ Block List String ]
+			1 [ Block List String Vector Matrix ]
 			2 [ Integer ]
 		}
-		arg `collection: Block, list, string or table to get the last items from`
+		arg `collection: Block, list, string, table, vector or matrix to get the last items from`
 		arg `n: Number of items to retrieve from the end`
-		returns `a new collection containing the last n items`
+		returns `a new collection containing the last n items (for matrix: last n rows)`
 	}
 
 	{
@@ -2331,60 +2346,66 @@ section "Collections " "" {
 		equal { tail "abcdefg" 4 } "defg"
 		equal { tail list { 1 2 3 4 } 1 } list { 4 }
 		equal { tail { 1 2 } 5 } { 1 2 }
+		equal { tail vector { 1.0 2.0 3.0 4.0 } 2 |first } 3.0
+		equal { tail matrix { 3 2 } { 1.0 2.0 3.0 4.0 5.0 6.0 } 2 |rows? } 2
 	}
 
 	{
 	}
 
 	group "second" 
-	"Retrieves the second item from a collection (block, list, or string)."
+	"Retrieves the second item from a collection (block, list, string, vector, or matrix)."
 	{
 		argsn 1
 		argtypes {
-			1 [ Block List String ]
+			1 [ Block List String Vector Matrix ]
 		}
-		arg `collection: Block, list or string to get the second item from`
-		returns `the second item in the collection`
+		arg `collection: Block, list, string, vector or matrix to get the second item from`
+		returns `the second item in the collection (for matrix: second row as vector)`
 	}
 
 	{
 		equal { second { 123 234 345 } } 234
 		equal { second "abc" } "b"
 		equal { second list { 10 20 30 } } 20
+		equal { second vector { 1.0 2.0 3.0 } } 2.0
+		equal { second matrix { 3 2 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |first } 3.0
 	}
 
 	{
 	}
 
 	group "third" 
-	"Retrieves the third item from a collection (block, list, or string)."
+	"Retrieves the third item from a collection (block, list, string, vector, or matrix)."
 	{
 		argsn 1
 		argtypes {
-			1 [ Block List String ]
+			1 [ Block List String Vector Matrix ]
 		}
-		arg `collection: Block, list or string to get the third item from`
-		returns `the third item in the collection`
+		arg `collection: Block, list, string, vector or matrix to get the third item from`
+		returns `the third item in the collection (for matrix: third row as vector)`
 	}
 
 	{
 		equal { third { 123 234 345 } } 345
 		equal { third "abcde" } "c"
 		equal { third list { 10 20 30 40 } } 30
+		equal { third vector { 1.0 2.0 3.0 4.0 } } 3.0
+		equal { third matrix { 4 2 } { 1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 } |first } 5.0
 	}
 
 	{
 	}
 
 	group "last" 
-	"Retrieves the last item from a collection (block, list, or string)."
+	"Retrieves the last item from a collection (block, list, string, vector, or matrix)."
 	{
 		argsn 1
 		argtypes {
-			1 [ Block List String ]
+			1 [ Block List String Vector Matrix ]
 		}
-		arg `collection: Block, list or string to get the last item from`
-		returns `the last item in the collection`
+		arg `collection: Block, list, string, vector or matrix to get the last item from`
+		returns `the last item in the collection (for matrix: last row as vector)`
 	}
 
 	{
@@ -2392,6 +2413,8 @@ section "Collections " "" {
 		equal { last "abcd" } "d"
 		equal { last list { 4 5 6 } } 6
 		equal { try { last { } } |type? } 'error
+		equal { last vector { 1.0 2.0 3.0 } } 3.0
+		equal { last matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |first } 4.0
 	}
 
 	{
@@ -2402,10 +2425,10 @@ section "Collections " "" {
 	{
 		argsn 1
 		argtypes {
-			1 [ Block List String ]
+			1 [ Block List String Vector Matrix ]
 		}
-		arg `collection: Block, list or string to get all but the last item from`
-		returns `a new collection containing all items except the last one`
+		arg `collection: Block, list, string, vector or matrix to get all but the last item from`
+		returns `a new collection containing all items except the last one (for matrix: all rows except last)`
 	}
 
 	{
@@ -2414,6 +2437,8 @@ section "Collections " "" {
 		equal { before-last list { 4 5 6 } } list { 4 5 }
 		equal { before-last { 1 } } { }
 		equal { try { all-before-last { } } |type? } 'error
+		equal { before-last vector { 1.0 2.0 3.0 } |first } 1.0
+		equal { before-last matrix { 3 2 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |rows? } 2
 	}
 
 	{
@@ -2424,7 +2449,7 @@ section "Collections " "" {
 	{
 		argsn 2
 		argtypes {
-			1 [ Block List String Table ]
+			1 [ Block List String Table Vector Matrix ]
 			2 [ Integer ]
 		}
 		arg `collection: Block, list, string or table to get the first items from`
@@ -2832,7 +2857,7 @@ section "Collections " "" {
 	"Accesses a value in a collection by index or key (0-based indexing for blocks and lists)."
 	{
 		argsn 2
-		arg `collection: Block, list, dict or other indexable collection`
+		arg `collection: Block, list, dict or other indexable collection (including refs)`
 		arg `index: Index or key to access`
 		returns `value at the specified index or key`
 	}
@@ -2841,6 +2866,9 @@ section "Collections " "" {
 		equal { { 23 34 45 } -> 1 } 34
 		equal { { "a" "b" "c" } -> 0 } "a"
 		equal { dict { "a" 1 "b" 2 } |-> "b" } 2
+		equal { ref { 23 34 45 } |-> 1 } 34
+		equal { ref dict { "a" 1 "b" 2 } |-> "b" } 2
+		equal { ref list { 10 20 30 } |-> 0 } 10
 	}
 
 	{
@@ -3534,6 +3562,623 @@ section "Vector " "Vector operations" {
 
 	{
 		equal { vector [ 3 4 ] |reject-vector vector [ 1 0 ] |block } { 0.0 4.0 }
+	}
+
+	{
+	}
+
+}
+
+section "Matrix " "Matrix operations for 2D numerical data" {
+	group "matrix\\zeros" 
+	"Creates a new matrix with the given dimensions, initialized to zeros."
+	{
+		argsn 2
+		argtypes {
+			1 [ Integer ]
+			2 [ Integer ]
+		}
+		arg `rows: number of rows`
+		arg `cols: number of columns`
+		returns `a new zero-initialized matrix`
+	}
+
+	{
+		equal { matrix\zeros 3 4 |type? } 'matrix
+		equal { matrix\zeros 2 3 |rows? } 2
+		equal { matrix\zeros 2 3 |cols? } 3
+	}
+
+	{
+	}
+
+	group "matrix" 
+	"Creates a matrix from a shape block and a data block."
+	{
+		argsn 2
+		argtypes {
+			1 [ Block ]
+			2 [ Block ]
+		}
+		arg `shape: block with { rows cols }`
+		arg `data: block of decimal values in row-major order`
+		returns `a new matrix with the given data`
+	}
+
+	{
+		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-get 1 2 } 6.0
+	}
+
+	{
+	}
+
+	group "matrix\\randn" 
+	"Creates a matrix with random normal values (mean 0, std 1)."
+	{
+		argsn 2
+		argtypes {
+			1 [ Integer ]
+			2 [ Integer ]
+		}
+		arg `rows: number of rows`
+		arg `cols: number of columns`
+		returns `a new matrix with random normal values (mean 0, std 1)`
+	}
+
+	{
+		equal { matrix\randn 3 4 |rows? } 3
+		equal { matrix\randn 3 4 |cols? } 4
+	}
+
+	{
+	}
+
+	group "matrix\\ones" 
+	"Creates a matrix filled with ones."
+	{
+		argsn 2
+		argtypes {
+			1 [ Integer ]
+			2 [ Integer ]
+		}
+		arg `rows: number of rows`
+		arg `cols: number of columns`
+		returns `a new matrix filled with ones`
+	}
+
+	{
+		equal { matrix\ones 2 3 |mat-get 0 0 } 1.0
+		equal { matrix\ones 2 3 |mat-get 1 2 } 1.0
+	}
+
+	{
+	}
+
+	group "matrix\\eye" 
+	"Creates an identity matrix of size n×n."
+	{
+		argsn 1
+		argtypes {
+			1 [ Integer ]
+		}
+		arg `n: size of the identity matrix`
+		returns `an n×n identity matrix`
+	}
+
+	{
+		equal { matrix\eye 3 |mat-get 0 0 } 1.0
+		equal { matrix\eye 3 |mat-get 0 1 } 0.0
+		equal { matrix\eye 3 |mat-get 1 1 } 1.0
+	}
+
+	{
+	}
+
+	group "shape?" 
+	"Returns the shape of a matrix as { rows cols }."
+	{
+		argsn 1
+		argtypes {
+			1 [ Matrix ]
+		}
+		arg `mat: matrix`
+		returns `block with { rows cols }`
+	}
+
+	{
+		equal { matrix\zeros 3 4 |shape? } { 3 4 }
+	}
+
+	{
+	}
+
+	group "rows?" 
+	"Returns the number of rows in a matrix."
+	{
+		argsn 1
+		argtypes {
+			1 [ Matrix ]
+		}
+		arg `mat: matrix`
+		returns `number of rows`
+	}
+
+	{
+		equal { matrix\zeros 3 4 |rows? } 3
+	}
+
+	{
+	}
+
+	group "cols?" 
+	"Returns the number of columns in a matrix."
+	{
+		argsn 1
+		argtypes {
+			1 [ Matrix ]
+		}
+		arg `mat: matrix`
+		returns `number of columns`
+	}
+
+	{
+		equal { matrix\zeros 3 4 |cols? } 4
+	}
+
+	{
+	}
+
+	group "mat-get" 
+	"Gets the element at the specified row and column (0-indexed)."
+	{
+		argsn 3
+		argtypes {
+			1 [ Matrix ]
+			2 [ Integer ]
+			3 [ Integer ]
+		}
+		arg `mat: matrix`
+		arg `row: row index (0-based)`
+		arg `col: column index (0-based)`
+		returns `the element at (row, col)`
+	}
+
+	{
+		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-get 0 1 } 2.0
+		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-get 1 0 } 4.0
+	}
+
+	{
+	}
+
+	group "mat-set!" 
+	"Sets the element at the specified row and column (0-indexed). Modifies matrix in place."
+	{
+		argsn 4
+		argtypes {
+			1 [ Matrix ]
+			2 [ Integer ]
+			3 [ Integer ]
+			4 [ Decimal Integer ]
+		}
+		arg `mat: matrix (modified in place)`
+		arg `row: row index (0-based)`
+		arg `col: column index (0-based)`
+		arg `val: value to set`
+		returns `the modified matrix`
+	}
+
+	{
+		equal { m: matrix\zeros 2 2 , mat-set! m 0 1 5.0 , mat-get m 0 1 } 5.0
+	}
+
+	{
+	}
+
+	group "mat-row" 
+	"Returns a row of the matrix as a vector."
+	{
+		argsn 2
+		argtypes {
+			1 [ Matrix ]
+			2 [ Integer ]
+		}
+		arg `mat: matrix`
+		arg `row: row index (0-based)`
+		returns `the row as a vector`
+	}
+
+	{
+		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-row 0 |type? } 'vector
+	}
+
+	{
+	}
+
+	group "mat-col" 
+	"Returns a column of the matrix as a vector."
+	{
+		argsn 2
+		argtypes {
+			1 [ Matrix ]
+			2 [ Integer ]
+		}
+		arg `mat: matrix`
+		arg `col: column index (0-based)`
+		returns `the column as a vector`
+	}
+
+	{
+		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-col 1 |type? } 'vector
+	}
+
+	{
+	}
+
+	group "mat-transpose" 
+	"Returns the transpose of a matrix."
+	{
+		argsn 1
+		argtypes {
+			1 [ Matrix ]
+		}
+		arg `mat: matrix`
+		returns `transposed matrix`
+	}
+
+	{
+		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-transpose |shape? } { 3 2 }
+		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-transpose |mat-get 0 1 } 4.0
+	}
+
+	{
+	}
+
+	group "mat-mul" 
+	"Matrix multiplication. A (m×n) × B (n×p) = C (m×p)."
+	{
+		argsn 2
+		argtypes {
+			1 [ Matrix ]
+			2 [ Matrix Vector ]
+		}
+		arg `A: left matrix (m×n)`
+		arg `B: right matrix (n×p)`
+		returns `result matrix (m×p)`
+	}
+
+	{
+		equal { A: matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } , B: matrix { 3 2 } { 1.0 2.0 3.0 4.0 5.0 6.0 } , mat-mul A B |shape? } { 2 2 }
+		equal { A: matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } , B: matrix { 3 2 } { 1.0 2.0 3.0 4.0 5.0 6.0 } , mat-mul A B |mat-get 0 0 } 22.0
+	}
+
+	{
+	}
+
+	group "mat-hadamard" 
+	"Element-wise (Hadamard) multiplication of two matrices. In the future, could have a dedicated .* operator."
+	{
+		argsn 2
+		argtypes {
+			1 [ Matrix ]
+			2 [ Matrix ]
+		}
+		arg `A: first matrix`
+		arg `B: second matrix (same dimensions)`
+		returns `element-wise product`
+	}
+
+	{
+		equal { A: matrix\ones 2 2 , B: matrix\ones 2 2 , mat-hadamard A B |mat-get 0 0 } 1.0
+	}
+
+	{
+	}
+
+	group "mat-add" 
+	"Element-wise addition of two matrices. In the future, could have a dedicated .+ operator."
+	{
+		argsn 2
+		argtypes {
+			1 [ Matrix ]
+			2 [ Matrix ]
+		}
+		arg `A: first matrix`
+		arg `B: second matrix (same dimensions)`
+		returns `element-wise sum`
+	}
+
+	{
+		equal { A: matrix\ones 2 2 , B: matrix\ones 2 2 , mat-add A B |mat-get 0 0 } 2.0
+	}
+
+	{
+	}
+
+	group "mat-sub" 
+	"Element-wise subtraction of two matrices. In the future, could have a dedicated .- operator."
+	{
+		argsn 2
+		argtypes {
+			1 [ Matrix ]
+			2 [ Matrix ]
+		}
+		arg `A: first matrix`
+		arg `B: second matrix (same dimensions)`
+		returns `element-wise difference`
+	}
+
+	{
+		equal { A: matrix\ones 2 2 , B: matrix\ones 2 2 , mat-sub A B |mat-get 0 0 } 0.0
+	}
+
+	{
+	}
+
+	group "mat-scale" 
+	"Multiplies all elements of a matrix by a scalar."
+	{
+		argsn 2
+		argtypes {
+			1 [ Matrix ]
+			2 [ Decimal Integer ]
+		}
+		arg `mat: matrix`
+		arg `scalar: number to multiply by`
+		returns `scaled matrix`
+	}
+
+	{
+		equal { matrix\ones 2 2 |mat-scale 3.0 |mat-get 0 0 } 3.0
+	}
+
+	{
+	}
+
+	group "mat-sum-rows" 
+	"Returns a vector containing the sum of each row."
+	{
+		argsn 1
+		argtypes {
+			1 [ Matrix ]
+		}
+		arg `mat: matrix`
+		returns `vector with sum of each row`
+	}
+
+	{
+		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-sum-rows |type? } 'vector
+	}
+
+	{
+	}
+
+	group "mat-sum-cols" 
+	"Returns a vector containing the sum of each column."
+	{
+		argsn 1
+		argtypes {
+			1 [ Matrix ]
+		}
+		arg `mat: matrix`
+		returns `vector with sum of each column`
+	}
+
+	{
+		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-sum-cols |type? } 'vector
+	}
+
+	{
+	}
+
+	group "mat-max-rows" 
+	"Returns a vector containing the maximum of each row."
+	{
+		argsn 1
+		argtypes {
+			1 [ Matrix ]
+		}
+		arg `mat: matrix`
+		returns `vector with max of each row`
+	}
+
+	{
+		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-max-rows |type? } 'vector
+	}
+
+	{
+	}
+
+	group "mat-max-cols" 
+	"Returns a vector containing the maximum of each column."
+	{
+		argsn 1
+		argtypes {
+			1 [ Matrix ]
+		}
+		arg `mat: matrix`
+		returns `vector with max of each column`
+	}
+
+	{
+		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-max-cols |type? } 'vector
+	}
+
+	{
+	}
+
+	group "mat-to-block" 
+	"Converts a matrix to a block of blocks (each row is a block)."
+	{
+		argsn 1
+		argtypes {
+			1 [ Matrix ]
+		}
+		arg `mat: matrix`
+		returns `block of blocks (each inner block is a row)`
+	}
+
+	{
+		equal { matrix { 2 2 } { 1.0 2.0 3.0 4.0 } |mat-to-block |length? } 2
+	}
+
+	{
+	}
+
+	group "block-to-mat" 
+	"Converts a block of blocks (rows) to a matrix."
+	{
+		argsn 1
+		argtypes {
+			1 [ Block ]
+		}
+		arg `block: block of blocks (each inner block is a row)`
+		returns `matrix`
+	}
+
+	{
+		equal { { { 1.0 2.0 } { 3.0 4.0 } } |block-to-mat |shape? } { 2 2 }
+	}
+
+	{
+	}
+
+	group "vector-to-mat" 
+	"Converts a vector to a matrix. Use 'row for 1×n or 'col for n×1."
+	{
+		argsn 2
+		argtypes {
+			1 [ Vector ]
+			2 [ Word ]
+		}
+		arg `vec: vector`
+		arg `orientation: 'row or 'col`
+		returns `matrix (1×n or n×1)`
+	}
+
+	{
+		equal { vector { 1.0 2.0 3.0 } |vector-to-mat 'row |shape? } { 1 3 }
+		equal { vector { 1.0 2.0 3.0 } |vector-to-mat 'col |shape? } { 3 1 }
+	}
+
+	{
+	}
+
+	group "mat-slice" 
+	"Extracts a sub-matrix. Row and column ranges are { start end } (inclusive, 0-indexed)."
+	{
+		argsn 3
+		argtypes {
+			1 [ Matrix ]
+			2 [ Block ]
+			3 [ Block ]
+		}
+		arg `mat: matrix`
+		arg `row-range: { start end } (inclusive)`
+		arg `col-range: { start end } (inclusive)`
+		returns `sub-matrix`
+	}
+
+	{
+		equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-slice { 0 1 } { 1 2 } |shape? } { 2 2 }
+	}
+
+	{
+	}
+
+	group "mat-softmax" 
+	"Applies softmax to each column of the matrix. Returns a new matrix."
+	{
+		argsn 1
+		argtypes {
+			1 [ Matrix ]
+		}
+		arg `matrix: input matrix`
+		returns `a new matrix with softmax applied to each column`
+	}
+
+	{
+		equal { matrix { 2 2 } { 1.0 2.0 3.0 4.0 } |mat-softmax |mat-get 0 0 |> 0.1 } true
+	}
+
+	{
+	}
+
+	group "mat-set-col!" 
+	"Sets a column of the matrix from a vector or block. Mutates in place."
+	{
+		argsn 3
+		argtypes {
+			1 [ Matrix ]
+			2 [ Integer ]
+			3 [ Vector Block ]
+		}
+		arg `matrix: matrix to modify`
+		arg `col: column index (0-based)`
+		arg `values: vector or block of values`
+		returns `the modified matrix`
+	}
+
+	{
+		equal { m: matrix\zeros 3 2 , mat-set-col! m 0 vector { 1.0 2.0 3.0 } , mat-get m 1 0 } 2.0
+	}
+
+	{
+	}
+
+	group "vec-add" 
+	"Adds two vectors element-wise. Returns a new vector."
+	{
+		argsn 2
+		argtypes {
+			1 [ Vector ]
+			2 [ Vector ]
+		}
+		arg `v1: first vector`
+		arg `v2: second vector`
+		returns `a new vector with element-wise sum`
+	}
+
+	{
+		equal { vec-add vector { 1.0 2.0 } vector { 3.0 4.0 } |first } 4.0
+	}
+
+	{
+	}
+
+	group "vec-sub" 
+	"Subtracts two vectors element-wise (v1 - v2). Returns a new vector."
+	{
+		argsn 2
+		argtypes {
+			1 [ Vector ]
+			2 [ Vector ]
+		}
+		arg `v1: first vector`
+		arg `v2: second vector`
+		returns `a new vector with element-wise difference (v1 - v2)`
+	}
+
+	{
+		equal { vec-sub vector { 5.0 3.0 } vector { 1.0 2.0 } |first } 4.0
+	}
+
+	{
+	}
+
+	group "vec-to-block" 
+	"Converts a vector to a block of decimal values."
+	{
+		argsn 1
+		argtypes {
+			1 [ Vector ]
+		}
+		arg `v: vector to convert`
+		returns `a block containing the vector values as decimals`
+	}
+
+	{
+		equal { vec-to-block vector { 1.0 2.0 3.0 } |second } 2.0
 	}
 
 	{

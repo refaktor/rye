@@ -13,7 +13,6 @@ var Builtins_matrix = map[string]*env.Builtin{
 	//
 	// ##### Matrix ##### "Matrix operations for 2D numerical data"
 	//
-
 	// Tests:
 	// equal { matrix\zeros 3 4 |type? } 'matrix
 	// equal { matrix\zeros 2 3 |rows? } 2
@@ -58,14 +57,14 @@ var Builtins_matrix = map[string]*env.Builtin{
 			switch shape := arg0.(type) {
 			case env.Block:
 				if shape.Series.Len() != 2 {
-					return MakeBuiltinError(ps, "Shape must be { rows cols }", "matrix\\from")
+					return MakeBuiltinError(ps, "Shape must be { rows cols }", "matrix")
 				}
 				rowsObj := shape.Series.Get(0)
 				colsObj := shape.Series.Get(1)
 				rowsInt, ok1 := rowsObj.(env.Integer)
 				colsInt, ok2 := colsObj.(env.Integer)
 				if !ok1 || !ok2 {
-					return MakeBuiltinError(ps, "Shape must contain integers", "matrix\\from")
+					return MakeBuiltinError(ps, "Shape must contain integers", "matrix")
 				}
 				rows := int(rowsInt.Value)
 				cols := int(colsInt.Value)
@@ -73,7 +72,7 @@ var Builtins_matrix = map[string]*env.Builtin{
 				switch data := arg1.(type) {
 				case env.Block:
 					if data.Series.Len() != rows*cols {
-						return MakeBuiltinError(ps, "Data length must match rows*cols", "matrix\\from")
+						return MakeBuiltinError(ps, "Data length must match rows*cols", "matrix")
 					}
 					floats := make([]float64, rows*cols)
 					for i := 0; i < data.Series.Len(); i++ {
@@ -83,15 +82,15 @@ var Builtins_matrix = map[string]*env.Builtin{
 						case env.Integer:
 							floats[i] = float64(v.Value)
 						default:
-							return MakeBuiltinError(ps, "Data must contain numbers", "matrix\\from")
+							return MakeBuiltinError(ps, "Data must contain numbers", "matrix")
 						}
 					}
 					return *env.NewMatrixWithData(rows, cols, floats)
 				default:
-					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "matrix\\from")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "matrix")
 				}
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "matrix\\from")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "matrix")
 			}
 		},
 	},
@@ -200,7 +199,7 @@ var Builtins_matrix = map[string]*env.Builtin{
 	//
 
 	// Tests:
-	// equal { matrix 3 4 |shape? } { 3 4 }
+	// equal { matrix\zeros 3 4 |shape? } { 3 4 }
 	// Args:
 	// * mat: matrix
 	// Returns:
@@ -222,7 +221,7 @@ var Builtins_matrix = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { matrix 3 4 |rows? } 3
+	// equal { matrix\zeros 3 4 |rows? } 3
 	// Args:
 	// * mat: matrix
 	// Returns:
@@ -241,7 +240,7 @@ var Builtins_matrix = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { matrix 3 4 |cols? } 4
+	// equal { matrix\zeros 3 4 |cols? } 4
 	// Args:
 	// * mat: matrix
 	// Returns:
@@ -260,8 +259,8 @@ var Builtins_matrix = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { matrix\from { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-get 0 1 } 2.0
-	// equal { matrix\from { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-get 1 0 } 4.0
+	// equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-get 0 1 } 2.0
+	// equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-get 1 0 } 4.0
 	// Args:
 	// * mat: matrix
 	// * row: row index (0-based)
@@ -297,7 +296,7 @@ var Builtins_matrix = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { m: matrix 2 2 , mat-set! m 0 1 5.0 , mat-get m 0 1 } 5.0
+	// equal { m: matrix\zeros 2 2 , mat-set! m 0 1 5.0 , mat-get m 0 1 } 5.0
 	// Args:
 	// * mat: matrix (modified in place)
 	// * row: row index (0-based)
@@ -344,7 +343,7 @@ var Builtins_matrix = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { matrix\from { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-row 0 |type? } 'vector
+	// equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-row 0 |type? } 'vector
 	// Args:
 	// * mat: matrix
 	// * row: row index (0-based)
@@ -377,7 +376,7 @@ var Builtins_matrix = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { matrix\from { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-col 1 |type? } 'vector
+	// equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-col 1 |type? } 'vector
 	// Args:
 	// * mat: matrix
 	// * col: column index (0-based)
@@ -414,8 +413,8 @@ var Builtins_matrix = map[string]*env.Builtin{
 	//
 
 	// Tests:
-	// equal { matrix\from { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-transpose |shape? } { 3 2 }
-	// equal { matrix\from { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-transpose |mat-get 0 1 } 4.0
+	// equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-transpose |shape? } { 3 2 }
+	// equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-transpose |mat-get 0 1 } 4.0
 	// Args:
 	// * mat: matrix
 	// Returns:
@@ -441,8 +440,8 @@ var Builtins_matrix = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { A: matrix\from { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } , B: matrix\from { 3 2 } { 1.0 2.0 3.0 4.0 5.0 6.0 } , mat-mul A B |shape? } { 2 2 }
-	// equal { A: matrix\from { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } , B: matrix\from { 3 2 } { 1.0 2.0 3.0 4.0 5.0 6.0 } , mat-mul A B |mat-get 0 0 } 22.0
+	// equal { A: matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } , B: matrix { 3 2 } { 1.0 2.0 3.0 4.0 5.0 6.0 } , mat-mul A B |shape? } { 2 2 }
+	// equal { A: matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } , B: matrix { 3 2 } { 1.0 2.0 3.0 4.0 5.0 6.0 } , mat-mul A B |mat-get 0 0 } 22.0
 	// Args:
 	// * A: left matrix (m×n)
 	// * B: right matrix (n×p)
@@ -631,7 +630,7 @@ var Builtins_matrix = map[string]*env.Builtin{
 	//
 
 	// Tests:
-	// equal { matrix\from { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-sum-rows |type? } 'vector
+	// equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-sum-rows |type? } 'vector
 	// Args:
 	// * mat: matrix
 	// Returns:
@@ -658,7 +657,7 @@ var Builtins_matrix = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { matrix\from { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-sum-cols |type? } 'vector
+	// equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-sum-cols |type? } 'vector
 	// Args:
 	// * mat: matrix
 	// Returns:
@@ -684,10 +683,8 @@ var Builtins_matrix = map[string]*env.Builtin{
 		},
 	},
 
-
-
 	// Tests:
-	// equal { matrix\from { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-max-rows |type? } 'vector
+	// equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-max-rows |type? } 'vector
 	// Args:
 	// * mat: matrix
 	// Returns:
@@ -716,7 +713,7 @@ var Builtins_matrix = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { matrix\from { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-max-cols |type? } 'vector
+	// equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-max-cols |type? } 'vector
 	// Args:
 	// * mat: matrix
 	// Returns:
@@ -744,14 +741,12 @@ var Builtins_matrix = map[string]*env.Builtin{
 		},
 	},
 
-
-
 	//
 	// ##### Conversion ##### "Convert between matrix and other types"
 	//
 
 	// Tests:
-	// equal { matrix\from { 2 2 } { 1.0 2.0 3.0 4.0 } |mat-to-block |length? } 2
+	// equal { matrix { 2 2 } { 1.0 2.0 3.0 4.0 } |mat-to-block |length? } 2
 	// Args:
 	// * mat: matrix
 	// Returns:
@@ -863,7 +858,7 @@ var Builtins_matrix = map[string]*env.Builtin{
 	},
 
 	// Tests:
-	// equal { matrix\from { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-slice { 0 1 } { 1 2 } |shape? } { 2 2 }
+	// equal { matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-slice { 0 1 } { 1 2 } |shape? } { 2 2 }
 	// Args:
 	// * mat: matrix
 	// * row-range: { start end } (inclusive)
