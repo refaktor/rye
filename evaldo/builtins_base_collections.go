@@ -148,8 +148,10 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { max list { 8 2 10 6 } } 10
 	// equal { try { max { } } |type? } 'error
 	// equal { try { max list { } } |type? } 'error
+	// equal { max vector { 8.0 2.0 10.0 6.0 } } 10.0
+	// equal { max matrix { 2 2 } { 1.0 5.0 3.0 2.0 } } 5.0
 	// Args:
-	// * collection: Block or list of comparable values
+	// * collection: Block, list, vector or matrix of comparable values
 	// Returns:
 	// * the maximum value in the collection
 	"max": { // **
@@ -197,8 +199,30 @@ var builtins_collection = map[string]*env.Builtin{
 				} else {
 					return *env.NewDecimal(max)
 				}
+			case env.Vector:
+				if len(data.Value) == 0 {
+					return MakeBuiltinError(ps, "Vector is empty.", "max")
+				}
+				maxVal := data.Value[0]
+				for _, v := range data.Value[1:] {
+					if v > maxVal {
+						maxVal = v
+					}
+				}
+				return *env.NewDecimal(maxVal)
+			case env.Matrix:
+				if len(data.Data) == 0 {
+					return MakeBuiltinError(ps, "Matrix is empty.", "max")
+				}
+				maxVal := data.Data[0]
+				for _, v := range data.Data[1:] {
+					if v > maxVal {
+						maxVal = v
+					}
+				}
+				return *env.NewDecimal(maxVal)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "max")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.VectorType, env.MatrixType}, "max")
 			}
 		},
 	},
@@ -305,8 +329,10 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { min list { 8 2 10 6 } } 2
 	// equal { try { min { } } |type? } 'error
 	// equal { try { min list { } } |type? } 'error
+	// equal { min vector { 8.0 2.0 10.0 6.0 } } 2.0
+	// equal { min matrix { 2 2 } { 1.0 5.0 3.0 2.0 } } 1.0
 	// Args:
-	// * collection: Block or list of comparable values
+	// * collection: Block, list, vector or matrix of comparable values
 	// Returns:
 	// * the minimum value in the collection
 	"min": { // **
@@ -366,8 +392,30 @@ var builtins_collection = map[string]*env.Builtin{
 				} else {
 					return *env.NewDecimal(min)
 				}
+			case env.Vector:
+				if len(data.Value) == 0 {
+					return MakeBuiltinError(ps, "Vector is empty.", "min")
+				}
+				minVal := data.Value[0]
+				for _, v := range data.Value[1:] {
+					if v < minVal {
+						minVal = v
+					}
+				}
+				return *env.NewDecimal(minVal)
+			case env.Matrix:
+				if len(data.Data) == 0 {
+					return MakeBuiltinError(ps, "Matrix is empty.", "min")
+				}
+				minVal := data.Data[0]
+				for _, v := range data.Data[1:] {
+					if v < minVal {
+						minVal = v
+					}
+				}
+				return *env.NewDecimal(minVal)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "min")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.VectorType, env.MatrixType}, "min")
 			}
 		},
 	},
@@ -477,8 +525,10 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { avg { 1 2 3 } } 2.0
 	// equal { try { avg { } } |type? } 'error
 	// equal { try { avg list { } } |type? } 'error
+	// equal { avg vector { 1.0 2.0 3.0 4.0 } } 2.5
+	// equal { avg matrix { 2 2 } { 1.0 2.0 3.0 4.0 } } 2.5
 	// Args:
-	// * collection: Block, list or vector of numeric values
+	// * collection: Block, list, vector or matrix of numeric values
 	// Returns:
 	// * the arithmetic mean (average) of the values as a decimal
 	"avg": { // **
@@ -523,8 +573,17 @@ var builtins_collection = map[string]*env.Builtin{
 				return *env.NewDecimal(sum / float64(l))
 			case env.Vector:
 				return *env.NewDecimal(block.Value.Mean())
+			case env.Matrix:
+				if len(block.Data) == 0 {
+					return MakeBuiltinError(ps, "Matrix is empty.", "avg")
+				}
+				var sum float64
+				for _, v := range block.Data {
+					sum += v
+				}
+				return *env.NewDecimal(sum / float64(len(block.Data)))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.VectorType}, "avg")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.VectorType, env.MatrixType}, "avg")
 			}
 		},
 	},
@@ -641,8 +700,10 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { sum list { 8 2 10 6 } } 26
 	// equal { sum list { 8 2 10 6.5 } } 26.5
 	// equal { sum list { } } 0
+	// equal { sum vector { 1.0 2.0 3.0 4.0 } } 10.0
+	// equal { sum matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } } 21.0
 	// Args:
-	// * collection: Block, list or vector of numeric values
+	// * collection: Block, list, vector or matrix of numeric values
 	// Returns:
 	// * the sum of all values (integer if all values are integers, decimal otherwise)
 	"sum": { // **
@@ -694,8 +755,14 @@ var builtins_collection = map[string]*env.Builtin{
 
 			case env.Vector:
 				return *env.NewDecimal(block.Value.Sum())
+			case env.Matrix:
+				var sum float64
+				for _, v := range block.Data {
+					sum += v
+				}
+				return *env.NewDecimal(sum)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.VectorType}, "sum")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.VectorType, env.MatrixType}, "sum")
 			}
 		},
 	},
@@ -893,13 +960,16 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { first list { 1 2 3 } } 1
 	// equal { first { { "nested" } 2 3 } } { "nested" }
 	// ; equal { first table { 'a 'b } { 1 2 } { 3 4 } } table-row { 'a 1 'b 2 }
+	// equal { first vector { 1.0 2.0 3.0 } } 1.0
+	// equal { first matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |type? } 'vector
+	// equal { first matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |first } 1.0
 	// Args:
-	// * collection: Block, list, string or table to get the first item from
+	// * collection: Block, list, string, table, vector or matrix to get the first item from
 	// Returns:
-	// * the first item in the collection
+	// * the first item in the collection (for matrix: first row as vector)
 	"first": { // **
 		Argsn: 1,
-		Doc:   "Retrieves the first item from a collection (block, list, string, or table).",
+		Doc:   "Retrieves the first item from a collection (block, list, string, table, vector, or matrix).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -928,8 +998,22 @@ var builtins_collection = map[string]*env.Builtin{
 					return MakeBuiltinError(ps, "Table is empty.", "first")
 				}
 				return s1.GetRow(ps, int(0))
+			case env.Vector:
+				if len(s1.Value) == 0 {
+					return MakeBuiltinError(ps, "Vector is empty.", "first")
+				}
+				return *env.NewDecimal(s1.Value[0])
+			case env.Matrix:
+				if s1.Rows == 0 {
+					return MakeBuiltinError(ps, "Matrix is empty.", "first")
+				}
+				rowData := make([]float64, s1.Cols)
+				for j := 0; j < s1.Cols; j++ {
+					rowData[j] = s1.Get(0, j)
+				}
+				return *env.NewVector(rowData)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType, env.BlockType, env.StringType, env.ListType}, "first")
+				return MakeArgError(ps, 1, []env.Type{env.TableType, env.BlockType, env.StringType, env.ListType, env.VectorType, env.MatrixType}, "first")
 			}
 		},
 	},
@@ -939,10 +1023,12 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { rest "abcde" } "bcde"
 	// equal { rest list { 1 2 3 } } list { 2 3 }
 	// equal { rest { 1 } } { }
+	// equal { rest vector { 1.0 2.0 3.0 } |first } 2.0
+	// equal { rest matrix { 3 2 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |rows? } 2
 	// Args:
-	// * collection: Block, list or string to get all but the first item from
+	// * collection: Block, list, string, vector or matrix to get all but the first item from
 	// Returns:
-	// * a new collection containing all items except the first one
+	// * a new collection containing all items except the first one (for matrix: all rows except first)
 	"rest": { // **
 		Argsn: 1,
 		Doc:   "Creates a new collection with all items except the first one from the input collection.",
@@ -970,8 +1056,23 @@ var builtins_collection = map[string]*env.Builtin{
 					return MakeBuiltinError(ps, "Secret has only one element.", "rest")
 				}
 				return *env.NewSecret(string(str[1:]))
+			case env.Vector:
+				if len(s1.Value) == 0 {
+					return MakeBuiltinError(ps, "Vector is empty.", "rest")
+				}
+				newData := make([]float64, len(s1.Value)-1)
+				copy(newData, s1.Value[1:])
+				return *env.NewVector(newData)
+			case env.Matrix:
+				if s1.Rows == 0 {
+					return MakeBuiltinError(ps, "Matrix is empty.", "rest")
+				}
+				newRows := s1.Rows - 1
+				newData := make([]float64, newRows*s1.Cols)
+				copy(newData, s1.Data[s1.Cols:])
+				return *env.NewMatrixWithData(newRows, s1.Cols, newData)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.StringType, env.ListType}, "rest")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.StringType, env.ListType, env.VectorType, env.MatrixType}, "rest")
 			}
 		},
 	},
@@ -981,11 +1082,13 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { rest\from "abcdefg" 1 } "bcdefg"
 	// equal { rest\from list { 1 2 3 4 } 2 } list { 3 4 }
 	// equal { rest\from { 1 2 3 } 0 } { 1 2 3 }
+	// equal { rest\from vector { 1.0 2.0 3.0 4.0 } 2 |first } 3.0
+	// equal { rest\from matrix { 3 2 } { 1.0 2.0 3.0 4.0 5.0 6.0 } 1 |rows? } 2
 	// Args:
-	// * collection: Block, list or string to get items from
+	// * collection: Block, list, string, vector or matrix to get items from
 	// * n: Integer position to start from (0-based)
 	// Returns:
-	// * a new collection containing all items starting from position n
+	// * a new collection containing all items starting from position n (for matrix: from row n)
 	"rest\\from": { // **
 		Argsn: 2,
 		Doc:   "Creates a new collection with all items starting from the specified position in the input collection.",
@@ -1027,8 +1130,31 @@ var builtins_collection = map[string]*env.Builtin{
 						return MakeBuiltinError(ps, fmt.Sprintf("Secret has less than %d elements.", num.Value+1), "rest\\from")
 					}
 					return *env.NewSecret(string(str[int(num.Value):]))
+				case env.Vector:
+					n := int(num.Value)
+					if len(s1.Value) == 0 {
+						return MakeBuiltinError(ps, "Vector is empty.", "rest\\from")
+					}
+					if len(s1.Value) <= n {
+						return MakeBuiltinError(ps, fmt.Sprintf("Vector has less than %d elements.", n+1), "rest\\from")
+					}
+					newData := make([]float64, len(s1.Value)-n)
+					copy(newData, s1.Value[n:])
+					return *env.NewVector(newData)
+				case env.Matrix:
+					n := int(num.Value)
+					if s1.Rows == 0 {
+						return MakeBuiltinError(ps, "Matrix is empty.", "rest\\from")
+					}
+					if s1.Rows <= n {
+						return MakeBuiltinError(ps, fmt.Sprintf("Matrix has less than %d rows.", n+1), "rest\\from")
+					}
+					newRows := s1.Rows - n
+					newData := make([]float64, newRows*s1.Cols)
+					copy(newData, s1.Data[n*s1.Cols:])
+					return *env.NewMatrixWithData(newRows, s1.Cols, newData)
 				default:
-					return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "rest\\from")
+					return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType, env.VectorType, env.MatrixType}, "rest\\from")
 				}
 			default:
 				return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "rest\\from")
@@ -1041,11 +1167,13 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { tail "abcdefg" 4 } "defg"
 	// equal { tail list { 1 2 3 4 } 1 } list { 4 }
 	// equal { tail { 1 2 } 5 } { 1 2 }
+	// equal { tail vector { 1.0 2.0 3.0 4.0 } 2 |first } 3.0
+	// equal { tail matrix { 3 2 } { 1.0 2.0 3.0 4.0 5.0 6.0 } 2 |rows? } 2
 	// Args:
-	// * collection: Block, list, string or table to get the last items from
+	// * collection: Block, list, string, table, vector or matrix to get the last items from
 	// * n: Number of items to retrieve from the end
 	// Returns:
-	// * a new collection containing the last n items
+	// * a new collection containing the last n items (for matrix: last n rows)
 	"tail": { // **
 		Argsn: 2,
 		Doc:   "Creates a new collection with the last n items from the input collection.",
@@ -1092,8 +1220,29 @@ var builtins_collection = map[string]*env.Builtin{
 					nspr := env.NewTable(s1.Cols)
 					nspr.Rows = s1.Rows[len(s1.Rows)-numVal:]
 					return *nspr
+				case env.Vector:
+					if len(s1.Value) == 0 {
+						return *env.NewVector([]float64{})
+					}
+					if len(s1.Value) < numVal {
+						numVal = len(s1.Value)
+					}
+					newData := make([]float64, numVal)
+					copy(newData, s1.Value[len(s1.Value)-numVal:])
+					return *env.NewVector(newData)
+				case env.Matrix:
+					if s1.Rows == 0 {
+						return *env.NewMatrix(0, s1.Cols)
+					}
+					if s1.Rows < numVal {
+						numVal = s1.Rows
+					}
+					startRow := s1.Rows - numVal
+					newData := make([]float64, numVal*s1.Cols)
+					copy(newData, s1.Data[startRow*s1.Cols:])
+					return *env.NewMatrixWithData(numVal, s1.Cols, newData)
 				default:
-					return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "tail")
+					return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType, env.VectorType, env.MatrixType}, "tail")
 				}
 			default:
 				return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "tail")
@@ -1105,13 +1254,15 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { second { 123 234 345 } } 234
 	// equal { second "abc" } "b"
 	// equal { second list { 10 20 30 } } 20
+	// equal { second vector { 1.0 2.0 3.0 } } 2.0
+	// equal { second matrix { 3 2 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |first } 3.0
 	// Args:
-	// * collection: Block, list or string to get the second item from
+	// * collection: Block, list, string, vector or matrix to get the second item from
 	// Returns:
-	// * the second item in the collection
+	// * the second item in the collection (for matrix: second row as vector)
 	"second": { // **
 		Argsn: 1,
-		Doc:   "Retrieves the second item from a collection (block, list, or string).",
+		Doc:   "Retrieves the second item from a collection (block, list, string, vector, or matrix).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -1130,8 +1281,22 @@ var builtins_collection = map[string]*env.Builtin{
 					return MakeBuiltinError(ps, "String has no second element.", "second")
 				}
 				return *env.NewString(string(str[1]))
+			case env.Vector:
+				if len(s1.Value) < 2 {
+					return MakeBuiltinError(ps, "Vector has no second element.", "second")
+				}
+				return *env.NewDecimal(s1.Value[1])
+			case env.Matrix:
+				if s1.Rows < 2 {
+					return MakeBuiltinError(ps, "Matrix has no second row.", "second")
+				}
+				rowData := make([]float64, s1.Cols)
+				for j := 0; j < s1.Cols; j++ {
+					rowData[j] = s1.Get(1, j)
+				}
+				return *env.NewVector(rowData)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "second")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType, env.VectorType, env.MatrixType}, "second")
 			}
 		},
 	},
@@ -1140,13 +1305,15 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { third { 123 234 345 } } 345
 	// equal { third "abcde" } "c"
 	// equal { third list { 10 20 30 40 } } 30
+	// equal { third vector { 1.0 2.0 3.0 4.0 } } 3.0
+	// equal { third matrix { 4 2 } { 1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 } |first } 5.0
 	// Args:
-	// * collection: Block, list or string to get the third item from
+	// * collection: Block, list, string, vector or matrix to get the third item from
 	// Returns:
-	// * the third item in the collection
+	// * the third item in the collection (for matrix: third row as vector)
 	"third": {
 		Argsn: 1,
-		Doc:   "Retrieves the third item from a collection (block, list, or string).",
+		Doc:   "Retrieves the third item from a collection (block, list, string, vector, or matrix).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -1165,8 +1332,22 @@ var builtins_collection = map[string]*env.Builtin{
 					return MakeBuiltinError(ps, "String has no third element.", "third")
 				}
 				return *env.NewString(string(str[2]))
+			case env.Vector:
+				if len(s1.Value) < 3 {
+					return MakeBuiltinError(ps, "Vector has no third element.", "third")
+				}
+				return *env.NewDecimal(s1.Value[2])
+			case env.Matrix:
+				if s1.Rows < 3 {
+					return MakeBuiltinError(ps, "Matrix has no third row.", "third")
+				}
+				rowData := make([]float64, s1.Cols)
+				for j := 0; j < s1.Cols; j++ {
+					rowData[j] = s1.Get(2, j)
+				}
+				return *env.NewVector(rowData)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "third")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType, env.VectorType, env.MatrixType}, "third")
 			}
 		},
 	},
@@ -1176,13 +1357,15 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { last "abcd" } "d"
 	// equal { last list { 4 5 6 } } 6
 	// equal { try { last { } } |type? } 'error
+	// equal { last vector { 1.0 2.0 3.0 } } 3.0
+	// equal { last matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |first } 4.0
 	// Args:
-	// * collection: Block, list or string to get the last item from
+	// * collection: Block, list, string, vector or matrix to get the last item from
 	// Returns:
-	// * the last item in the collection
+	// * the last item in the collection (for matrix: last row as vector)
 	"last": { // **
 		Argsn: 1,
-		Doc:   "Retrieves the last item from a collection (block, list, or string).",
+		Doc:   "Retrieves the last item from a collection (block, list, string, vector, or matrix).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -1200,8 +1383,22 @@ var builtins_collection = map[string]*env.Builtin{
 					return MakeBuiltinError(ps, "String is empty.", "last")
 				}
 				return *env.NewString(s1.Value[len(s1.Value)-1:])
+			case env.Vector:
+				if len(s1.Value) == 0 {
+					return MakeBuiltinError(ps, "Vector is empty.", "last")
+				}
+				return *env.NewDecimal(s1.Value[len(s1.Value)-1])
+			case env.Matrix:
+				if s1.Rows == 0 {
+					return MakeBuiltinError(ps, "Matrix is empty.", "last")
+				}
+				rowData := make([]float64, s1.Cols)
+				for j := 0; j < s1.Cols; j++ {
+					rowData[j] = s1.Get(s1.Rows-1, j)
+				}
+				return *env.NewVector(rowData)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "last")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType, env.VectorType, env.MatrixType}, "last")
 			}
 		},
 	},
@@ -1212,10 +1409,12 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { before-last list { 4 5 6 } } list { 4 5 }
 	// equal { before-last { 1 } } { }
 	// equal { try { all-before-last { } } |type? } 'error
+	// equal { before-last vector { 1.0 2.0 3.0 } |first } 1.0
+	// equal { before-last matrix { 3 2 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |rows? } 2
 	// Args:
-	// * collection: Block, list or string to get all but the last item from
+	// * collection: Block, list, string, vector or matrix to get all but the last item from
 	// Returns:
-	// * a new collection containing all items except the last one
+	// * a new collection containing all items except the last one (for matrix: all rows except last)
 	"before-last": { // **
 		Argsn: 1,
 		Doc:   "Creates a new collection with all items except the last one from the input collection.",
@@ -1237,8 +1436,23 @@ var builtins_collection = map[string]*env.Builtin{
 					return MakeBuiltinError(ps, "String is empty.", "all-before-last")
 				}
 				return *env.NewString(string(str[:len(str)-1]))
+			case env.Vector:
+				if len(s1.Value) == 0 {
+					return MakeBuiltinError(ps, "Vector is empty.", "before-last")
+				}
+				newData := make([]float64, len(s1.Value)-1)
+				copy(newData, s1.Value[:len(s1.Value)-1])
+				return *env.NewVector(newData)
+			case env.Matrix:
+				if s1.Rows == 0 {
+					return MakeBuiltinError(ps, "Matrix is empty.", "before-last")
+				}
+				newRows := s1.Rows - 1
+				newData := make([]float64, newRows*s1.Cols)
+				copy(newData, s1.Data[:newRows*s1.Cols])
+				return *env.NewMatrixWithData(newRows, s1.Cols, newData)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType}, "all-before-last")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType, env.VectorType, env.MatrixType}, "all-before-last")
 			}
 		},
 	},
@@ -1326,8 +1540,40 @@ var builtins_collection = map[string]*env.Builtin{
 					nspr := env.NewTable(s1.Cols)
 					nspr.Rows = s1.Rows[0:numVal]
 					return *nspr
+				case env.Vector:
+					if len(s1.Value) == 0 {
+						return *env.NewVector([]float64{})
+					}
+					if numVal < 0 {
+						numVal = len(s1.Value) + numVal
+					}
+					if numVal < 0 {
+						numVal = 0
+					}
+					if len(s1.Value) < numVal {
+						numVal = len(s1.Value)
+					}
+					newData := make([]float64, numVal)
+					copy(newData, s1.Value[0:numVal])
+					return *env.NewVector(newData)
+				case env.Matrix:
+					if s1.Rows == 0 {
+						return *env.NewMatrix(0, s1.Cols)
+					}
+					if numVal < 0 {
+						numVal = s1.Rows + numVal
+					}
+					if numVal < 0 {
+						numVal = 0
+					}
+					if s1.Rows < numVal {
+						numVal = s1.Rows
+					}
+					newData := make([]float64, numVal*s1.Cols)
+					copy(newData, s1.Data[0:numVal*s1.Cols])
+					return *env.NewMatrixWithData(numVal, s1.Cols, newData)
 				default:
-					return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType, env.TableType}, "head")
+					return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType, env.TableType, env.VectorType, env.MatrixType}, "head")
 				}
 			default:
 				return MakeArgError(ps, 2, []env.Type{env.IntegerType}, "head")
@@ -2353,9 +2599,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { { 23 34 45 } -> 1 } 34
 	// equal { { "a" "b" "c" } -> 0 } "a"
 	// equal { dict { "a" 1 "b" 2 } |-> "b" } 2
-	// equal { ref { 23 34 45 } -> 1 } 34
+	// equal { ref { 23 34 45 } |-> 1 } 34
 	// equal { ref dict { "a" 1 "b" 2 } |-> "b" } 2
-	// equal { ref list { 10 20 30 } -> 0 } 10
+	// equal { ref list { 10 20 30 } |-> 0 } 10
 	// Args:
 	// * collection: Block, list, dict or other indexable collection (including refs)
 	// * index: Index or key to access

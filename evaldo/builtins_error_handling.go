@@ -14,7 +14,6 @@ var ErrorCreationBuiltins = map[string]*env.Builtin{
 	//
 	// ##### Failure ###### "Handling failures"
 	//
-
 	// Tests:
 	// equal { try { fail "error message" } |type? } 'error
 	// equal { try { fail "error message" } |message? } "error message"

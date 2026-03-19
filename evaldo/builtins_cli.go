@@ -23,26 +23,32 @@ type ArgSpec struct {
 	ValueType    string     // "string", "integer", "decimal", "boolean", "file", "any"
 	Default      env.Object // Default value
 	CheckBlock   *env.Block // Optional validation block
+	CheckError   string     // Error message if check fails
 	Doc          string     // Documentation string
 }
 
 // SubcommandSpec holds the specification for a subcommand
 type SubcommandSpec struct {
-	Name string
-	Args []ArgSpec
+	Name        string
+	Args        []ArgSpec
+	Subcommands map[string]*SubcommandSpec // Nested subcommands
+	Doc         string                     // Documentation for subcommand
 }
 
 // CLISpec holds the complete CLI specification
 type CLISpec struct {
 	GlobalArgs  []ArgSpec
 	Subcommands map[string]*SubcommandSpec
+	ProgramName string // Optional program name for help
+	ProgramDoc  string // Optional program description for help
 }
 
 // ParsedArgs holds the result of parsing
 type ParsedArgs struct {
-	Values     map[string]env.Object
-	Command    string // Name of subcommand if any
-	Positional []env.Object
+	Values      map[string]env.Object
+	Command     string   // Full command path: "remote add"
+	CommandPath []string // ["remote", "add"]
+	Positional  []env.Object
 }
 
 // CLI_ParseSpec parses the specification block into a CLISpec
@@ -83,6 +89,20 @@ func CLI_ParseSpec(es *env.ProgramState, specBlock env.Block) (*CLISpec, error) 
 					return nil, err
 				}
 				spec.Subcommands = subcommands
+			} else if wordName == "program" {
+				// Program name for help generation
+				if ser.Pos() < ser.Len() {
+					if str, ok := ser.Pop().(env.String); ok {
+						spec.ProgramName = str.Value
+					}
+				}
+			} else if wordName == "description" {
+				// Program description for help generation
+				if ser.Pos() < ser.Len() {
+					if str, ok := ser.Pop().(env.String); ok {
+						spec.ProgramDoc = str.Value
+					}
+				}
 			} else if wordName == "_" || strings.HasPrefix(wordName, "_") {
 				// Positional argument
 				argSpec, err := parsePositionalSpec(es, &ser, wordName)
@@ -154,10 +174,10 @@ func parseArgSpec(es *env.ProgramState, ser *env.TSeries, flagword env.Flagword)
 			case "flag":
 				spec.IsFlag = true
 				spec.ValueType = "boolean"
-				spec.Default = env.NewBoolean(false)
+				spec.Default = *env.NewBoolean(false)
 			case "string":
 				spec.ValueType = "string"
-				spec.Default = env.NewString("")
+				spec.Default = *env.NewString("")
 			case "integer":
 				spec.ValueType = "integer"
 				spec.Default = env.NewInteger(0)
@@ -166,10 +186,10 @@ func parseArgSpec(es *env.ProgramState, ser *env.TSeries, flagword env.Flagword)
 				spec.Default = env.NewDecimal(0.0)
 			case "boolean":
 				spec.ValueType = "boolean"
-				spec.Default = env.NewBoolean(false)
+				spec.Default = *env.NewBoolean(false)
 			case "file":
 				spec.ValueType = "file"
-				spec.Default = env.NewString("")
+				spec.Default = *env.NewString("")
 			case "any":
 				spec.ValueType = "any"
 				spec.Default = env.NewVoid()
@@ -189,10 +209,18 @@ func parseArgSpec(es *env.ProgramState, ser *env.TSeries, flagword env.Flagword)
 			case "list":
 				spec.IsList = true
 			case "check":
-				// Get the check block
+				// Get the check block and optional error message
+				// Syntax: check { block } "error message"
 				if ser.Pos() < ser.Len() {
 					if block, ok := ser.Pop().(env.Block); ok {
 						spec.CheckBlock = &block
+						// Check for error message after block
+						if ser.Pos() < ser.Len() {
+							if str, ok := ser.Peek().(env.String); ok {
+								spec.CheckError = str.Value
+								ser.Pop()
+							}
+						}
 					}
 				}
 			case "doc":
@@ -279,9 +307,17 @@ func parsePositionalSpec(es *env.ProgramState, ser *env.TSeries, name string) (*
 					}
 				}
 			case "check":
+				// Get the check block and optional error message
 				if ser.Pos() < ser.Len() {
 					if block, ok := ser.Pop().(env.Block); ok {
 						spec.CheckBlock = &block
+						// Check for error message after block
+						if ser.Pos() < ser.Len() {
+							if str, ok := ser.Peek().(env.String); ok {
+								spec.CheckError = str.Value
+								ser.Pop()
+							}
+						}
 					}
 				}
 			case "doc":
@@ -297,7 +333,7 @@ func parsePositionalSpec(es *env.ProgramState, ser *env.TSeries, name string) (*
 	return spec, nil
 }
 
-// parseSubcommands parses the subcommand block
+// parseSubcommands parses the subcommand block (supports nesting)
 func parseSubcommands(es *env.ProgramState, block env.Block) (map[string]*SubcommandSpec, error) {
 	subcommands := make(map[string]*SubcommandSpec)
 
@@ -324,8 +360,9 @@ func parseSubcommands(es *env.ProgramState, block env.Block) (map[string]*Subcom
 
 		// Parse subcommand's arguments
 		subSpec := &SubcommandSpec{
-			Name: cmdName,
-			Args: make([]ArgSpec, 0),
+			Name:        cmdName,
+			Args:        make([]ArgSpec, 0),
+			Subcommands: make(map[string]*SubcommandSpec),
 		}
 
 		subSer := cmdBlock.Series
@@ -344,7 +381,28 @@ func parseSubcommands(es *env.ProgramState, block env.Block) (map[string]*Subcom
 
 			case env.Word:
 				wordName := es.Idx.GetWord(item.Index)
-				if strings.HasPrefix(wordName, "_") || wordName == "_" {
+				if wordName == "subcommand" {
+					// Nested subcommand - recursive parsing
+					if subSer.Pos() >= subSer.Len() {
+						return nil, fmt.Errorf("expected block after nested 'subcommand' in '%s'", cmdName)
+					}
+					nestedBlock, ok := subSer.Pop().(env.Block)
+					if !ok {
+						return nil, fmt.Errorf("expected block after nested 'subcommand' in '%s'", cmdName)
+					}
+					nestedSubcommands, err := parseSubcommands(es, nestedBlock)
+					if err != nil {
+						return nil, err
+					}
+					subSpec.Subcommands = nestedSubcommands
+				} else if wordName == "doc" {
+					// Subcommand documentation
+					if subSer.Pos() < subSer.Len() {
+						if str, ok := subSer.Pop().(env.String); ok {
+							subSpec.Doc = str.Value
+						}
+					}
+				} else if strings.HasPrefix(wordName, "_") || wordName == "_" {
 					argSpec, err := parsePositionalSpec(es, &subSer, wordName)
 					if err != nil {
 						return nil, err
@@ -377,14 +435,59 @@ func flagwordMatches(fw env.Flagword, spec *ArgSpec, idx *env.Idxs) bool {
 	return false
 }
 
-// findFlagSpecForFlagword finds the spec that matches a given flagword
-func findFlagSpecForFlagword(specs []ArgSpec, fw env.Flagword, idx *env.Idxs) *ArgSpec {
-	for i := range specs {
-		if flagwordMatches(fw, &specs[i], idx) {
-			return &specs[i]
+// stringFlagMatches checks if a string flag (e.g., "--verbose", "-v") matches a spec
+func stringFlagMatches(flagStr string, spec *ArgSpec) bool {
+	if strings.HasPrefix(flagStr, "--") {
+		// Long flag
+		longName := strings.TrimPrefix(flagStr, "--")
+		return spec.LongFlag == longName
+	} else if strings.HasPrefix(flagStr, "-") && len(flagStr) > 1 {
+		// Short flag
+		shortName := strings.TrimPrefix(flagStr, "-")
+		return spec.ShortFlag == shortName
+	}
+	return false
+}
+
+// findFlagSpec finds the spec that matches a given flag (flagword or string)
+func findFlagSpec(specs []ArgSpec, obj env.Object, idx *env.Idxs) *ArgSpec {
+	switch item := obj.(type) {
+	case env.Flagword:
+		for i := range specs {
+			if flagwordMatches(item, &specs[i], idx) {
+				return &specs[i]
+			}
+		}
+	case env.String:
+		for i := range specs {
+			if stringFlagMatches(item.Value, &specs[i]) {
+				return &specs[i]
+			}
 		}
 	}
 	return nil
+}
+
+// isFlag checks if an object looks like a flag
+func isFlag(obj env.Object) bool {
+	switch item := obj.(type) {
+	case env.Flagword:
+		return true
+	case env.String:
+		return strings.HasPrefix(item.Value, "-")
+	}
+	return false
+}
+
+// getFlagName returns the flag name for error reporting
+func getFlagName(obj env.Object, idx *env.Idxs) string {
+	switch item := obj.(type) {
+	case env.Flagword:
+		return item.Print(*idx)
+	case env.String:
+		return item.Value
+	}
+	return "unknown"
 }
 
 // coerceToType coerces a Rye value to the expected type
@@ -447,7 +550,7 @@ func coerceToType(value env.Object, valueType string, es *env.ProgramState) (env
 		case env.Boolean:
 			return v, nil
 		case env.Integer:
-			return *env.NewBoolean(v.Value != 0), nil
+			return env.Boolean{Value: v.Value != 0}, nil
 		case env.String:
 			result, verr := evalBoolean(v)
 			if verr != nil {
@@ -465,122 +568,190 @@ func coerceToType(value env.Object, valueType string, es *env.ProgramState) (env
 	}
 }
 
+// validateWithCheck runs the check block against a value
+func validateWithCheck(es *env.ProgramState, value env.Object, spec *ArgSpec) error {
+	if spec.CheckBlock == nil {
+		return nil
+	}
+
+	// Save current series position
+	ser := es.Ser
+
+	// Create a copy of the block series for evaluation
+	blockSer := spec.CheckBlock.Series
+	blockSer.Reset()
+	es.Ser = blockSer
+
+	// Evaluate block with value injected
+	EvalBlockInj(es, value, true)
+
+	// Restore series
+	es.Ser = ser
+
+	// Check for error during evaluation
+	if es.ErrorFlag {
+		es.ErrorFlag = false
+		errMsg := spec.CheckError
+		if errMsg == "" {
+			errMsg = "validation failed"
+		}
+		return fmt.Errorf("%s", errMsg)
+	}
+
+	// Check result - integer > 0 or truthy boolean means success
+	switch result := es.Res.(type) {
+	case env.Integer:
+		if result.Value > 0 {
+			return nil
+		}
+	case env.Boolean:
+		if result.Value {
+			return nil
+		}
+	}
+
+	errMsg := spec.CheckError
+	if errMsg == "" {
+		errMsg = "validation failed"
+	}
+	return fmt.Errorf("%s", errMsg)
+}
+
+// isSubcommandWord checks if a word matches a subcommand name
+func isSubcommandWord(obj env.Object, subcommands map[string]*SubcommandSpec, es *env.ProgramState) (string, bool) {
+	switch item := obj.(type) {
+	case env.Word:
+		cmdName := es.Idx.GetWord(item.Index)
+		if _, exists := subcommands[cmdName]; exists {
+			return cmdName, true
+		}
+	case env.String:
+		// Also support string subcommand names (from command line)
+		if _, exists := subcommands[item.Value]; exists {
+			return item.Value, true
+		}
+	}
+	return "", false
+}
+
 // CLI_ParseArgs parses command line arguments (as Rye values) according to the spec
 func CLI_ParseArgs(es *env.ProgramState, args env.Block, spec *CLISpec) (*ParsedArgs, map[string]env.Object) {
 	result := &ParsedArgs{
-		Values:     make(map[string]env.Object),
-		Positional: make([]env.Object, 0),
+		Values:      make(map[string]env.Object),
+		CommandPath: make([]string, 0),
+		Positional:  make([]env.Object, 0),
 	}
 	errors := make(map[string]env.Object)
 
-	// Initialize defaults
+	// Initialize defaults for global args
 	for _, argSpec := range spec.GlobalArgs {
 		if !argSpec.IsPositional {
 			if argSpec.IsList {
-				result.Values[argSpec.Name] = env.NewList(make([]any, 0))
+				result.Values[argSpec.Name] = *env.NewList(make([]any, 0))
 			} else {
 				result.Values[argSpec.Name] = argSpec.Default
 			}
 		}
 	}
 
-	// Determine which specs to use (global or subcommand)
-	activeSpecs := spec.GlobalArgs
+	// Convert args to a slice for easier manipulation
 	argsSer := args.Series
 	argsSer.Reset()
+	argsList := make([]env.Object, 0)
+	for argsSer.Pos() < argsSer.Len() {
+		argsList = append(argsList, argsSer.Pop())
+	}
 
-	// First pass: check for subcommand (a plain word that matches a subcommand name)
-	if len(spec.Subcommands) > 0 {
-		tempSer := args.Series
-		tempSer.Reset()
-		foundSubcmdIdx := -1
+	// Track active specs and current subcommands
+	activeSpecs := spec.GlobalArgs
+	currentSubcommands := spec.Subcommands
 
-		for idx := 0; tempSer.Pos() < tempSer.Len(); idx++ {
-			obj := tempSer.Pop()
+	// Process args, looking for subcommands at each level
+	i := 0
+	for i < len(argsList) && len(currentSubcommands) > 0 {
+		obj := argsList[i]
 
-			// Skip flagwords and their values
-			if fw, ok := obj.(env.Flagword); ok {
-				flagSpec := findFlagSpecForFlagword(spec.GlobalArgs, fw, es.Idx)
-				if flagSpec != nil && !flagSpec.IsFlag {
-					// Skip the value
-					if tempSer.Pos() < tempSer.Len() {
-						tempSer.Pop()
-						idx++
-					}
-				}
-				continue
+		// Skip flags and their values
+		if isFlag(obj) {
+			flagSpec := findFlagSpec(activeSpecs, obj, es.Idx)
+			if flagSpec != nil && !flagSpec.IsFlag {
+				i += 2 // Skip flag and value
+			} else {
+				i++ // Skip just the flag
 			}
-
-			// Check if this word is a subcommand
-			if word, ok := obj.(env.Word); ok {
-				cmdName := es.Idx.GetWord(word.Index)
-				if subCmd, exists := spec.Subcommands[cmdName]; exists {
-					result.Command = cmdName
-					foundSubcmdIdx = idx
-					// Merge subcommand args with global args
-					activeSpecs = append(spec.GlobalArgs, subCmd.Args...)
-
-					// Initialize subcommand defaults
-					for _, argSpec := range subCmd.Args {
-						if !argSpec.IsPositional {
-							if argSpec.IsList {
-								result.Values[argSpec.Name] = env.NewList(make([]any, 0))
-							} else {
-								result.Values[argSpec.Name] = argSpec.Default
-							}
-						}
-					}
-					break
-				}
-			}
+			continue
 		}
 
-		// Remove subcommand from processing if found
-		if foundSubcmdIdx >= 0 {
-			newData := make([]env.Object, 0)
-			argsSer.Reset()
-			for idx := 0; argsSer.Pos() < argsSer.Len(); idx++ {
-				obj := argsSer.Pop()
-				if idx != foundSubcmdIdx {
-					newData = append(newData, obj)
+		// Check if this is a subcommand
+		if cmdName, ok := isSubcommandWord(obj, currentSubcommands, es); ok {
+			result.CommandPath = append(result.CommandPath, cmdName)
+			subCmd := currentSubcommands[cmdName]
+
+			// Merge subcommand args with active specs
+			activeSpecs = append(activeSpecs, subCmd.Args...)
+
+			// Initialize subcommand defaults
+			for _, argSpec := range subCmd.Args {
+				if !argSpec.IsPositional {
+					if argSpec.IsList {
+						result.Values[argSpec.Name] = *env.NewList(make([]any, 0))
+					} else {
+						result.Values[argSpec.Name] = argSpec.Default
+					}
 				}
 			}
-			args = *env.NewBlock(*env.NewTSeries(newData))
+
+			// Move to nested subcommands
+			currentSubcommands = subCmd.Subcommands
+
+			// Remove this subcommand from args
+			argsList = append(argsList[:i], argsList[i+1:]...)
+			// Don't increment i - we removed an element
+		} else {
+			i++
 		}
 	}
 
-	// Second pass: parse arguments
-	argsSer = args.Series
-	argsSer.Reset()
+	// Set the full command path
+	if len(result.CommandPath) > 0 {
+		result.Command = strings.Join(result.CommandPath, " ")
+	}
+
+	// Second pass: parse remaining arguments
 	positionalIndex := 0
+	for i := 0; i < len(argsList); i++ {
+		obj := argsList[i]
 
-	for argsSer.Pos() < argsSer.Len() {
-		obj := argsSer.Pop()
-
-		switch item := obj.(type) {
-		case env.Flagword:
+		if isFlag(obj) {
 			// Find matching spec
-			flagSpec := findFlagSpecForFlagword(activeSpecs, item, es.Idx)
+			flagSpec := findFlagSpec(activeSpecs, obj, es.Idx)
 			if flagSpec == nil {
-				flagName := item.Print(*es.Idx)
+				flagName := getFlagName(obj, es.Idx)
 				errors[flagName] = *env.NewString("unknown flag")
 				continue
 			}
 
 			if flagSpec.IsFlag {
 				// Boolean flag - just set to true
-				result.Values[flagSpec.Name] = env.NewBoolean(true)
+				result.Values[flagSpec.Name] = *env.NewBoolean(true)
 			} else {
 				// Option that requires a value
-				if argsSer.Pos() >= argsSer.Len() {
+				if i+1 >= len(argsList) {
 					errors[flagSpec.Name] = *env.NewString("requires a value")
 					continue
 				}
-				value := argsSer.Pop()
+				i++
+				value := argsList[i]
 
 				// Coerce to expected type
 				coerced, err := coerceToType(value, flagSpec.ValueType, es)
 				if err != nil {
+					errors[flagSpec.Name] = *env.NewString(err.Error())
+					continue
+				}
+
+				// Run check block if present
+				if err := validateWithCheck(es, coerced, flagSpec); err != nil {
 					errors[flagSpec.Name] = *env.NewString(err.Error())
 					continue
 				}
@@ -591,8 +762,7 @@ func CLI_ParseArgs(es *env.ProgramState, args env.Block, spec *CLISpec) (*Parsed
 					result.Values[flagSpec.Name] = coerced
 				}
 			}
-
-		default:
+		} else {
 			// Positional argument
 			posSpecs := findAllPositionalSpecsCli(activeSpecs)
 			if positionalIndex < len(posSpecs) || (len(posSpecs) > 0 && posSpecs[len(posSpecs)-1].IsMany) {
@@ -604,11 +774,16 @@ func CLI_ParseArgs(es *env.ProgramState, args env.Block, spec *CLISpec) (*Parsed
 				}
 
 				if posSpec != nil {
-					coerced, err := coerceToType(item, posSpec.ValueType, es)
+					coerced, err := coerceToType(obj, posSpec.ValueType, es)
 					if err != nil {
 						errors[posSpec.Name] = *env.NewString(err.Error())
 					} else {
-						result.Positional = append(result.Positional, coerced)
+						// Run check block if present
+						if err := validateWithCheck(es, coerced, posSpec); err != nil {
+							errors[posSpec.Name] = *env.NewString(err.Error())
+						} else {
+							result.Positional = append(result.Positional, coerced)
+						}
 					}
 
 					if !posSpec.IsMany {
@@ -617,7 +792,7 @@ func CLI_ParseArgs(es *env.ProgramState, args env.Block, spec *CLISpec) (*Parsed
 				}
 			} else {
 				// Extra positional argument
-				result.Positional = append(result.Positional, item)
+				result.Positional = append(result.Positional, obj)
 			}
 		}
 	}
@@ -641,7 +816,7 @@ func CLI_ParseArgs(es *env.ProgramState, args env.Block, spec *CLISpec) (*Parsed
 			for j := idx; j < len(result.Positional); j++ {
 				listData = append(listData, result.Positional[j])
 			}
-			result.Values[posSpec.Name] = env.NewList(listData)
+			result.Values[posSpec.Name] = *env.NewList(listData)
 
 			// Check required
 			if posSpec.IsRequired && len(listData) == 0 {
@@ -686,7 +861,7 @@ func appendToListCli(values map[string]env.Object, name string, value env.Object
 			values[name] = list
 		}
 	} else {
-		values[name] = env.NewList([]any{value})
+		values[name] = *env.NewList([]any{value})
 	}
 }
 
@@ -712,6 +887,195 @@ func isDefaultOrEmpty(val env.Object, defaultVal env.Object) bool {
 		return true
 	}
 	return false
+}
+
+// generateHelpText generates help text from a CLI specification
+func generateHelpText(es *env.ProgramState, spec *CLISpec, cmdPath []string) string {
+	var sb strings.Builder
+
+	// Program name and description
+	programName := spec.ProgramName
+	if programName == "" {
+		programName = "program"
+	}
+
+	// If we have a command path, we're generating help for a subcommand
+	if len(cmdPath) > 0 {
+		programName = programName + " " + strings.Join(cmdPath, " ")
+	}
+
+	sb.WriteString(fmt.Sprintf("Usage: %s [options]", programName))
+
+	// Get the relevant subcommand spec if we have a path
+	var activeSubcommands map[string]*SubcommandSpec
+	var activeArgs []ArgSpec
+
+	if len(cmdPath) > 0 {
+		// Navigate to the subcommand
+		currentSubs := spec.Subcommands
+		var currentSpec *SubcommandSpec
+		for _, cmd := range cmdPath {
+			if sub, exists := currentSubs[cmd]; exists {
+				currentSpec = sub
+				currentSubs = sub.Subcommands
+			}
+		}
+		if currentSpec != nil {
+			activeSubcommands = currentSpec.Subcommands
+			activeArgs = append(spec.GlobalArgs, currentSpec.Args...)
+		}
+	} else {
+		activeSubcommands = spec.Subcommands
+		activeArgs = spec.GlobalArgs
+	}
+
+	// Add subcommand indicator if there are subcommands
+	if len(activeSubcommands) > 0 {
+		sb.WriteString(" [command]")
+	}
+
+	// Add positional args indicator
+	posSpecs := findAllPositionalSpecsCli(activeArgs)
+	for _, pos := range posSpecs {
+		name := strings.TrimPrefix(pos.Name, "_")
+		if name == "" {
+			name = "arg"
+		}
+		if pos.IsMany {
+			sb.WriteString(fmt.Sprintf(" [%s...]", name))
+		} else if pos.IsRequired {
+			sb.WriteString(fmt.Sprintf(" <%s>", name))
+		} else {
+			sb.WriteString(fmt.Sprintf(" [%s]", name))
+		}
+	}
+
+	sb.WriteString("\n")
+
+	// Program description
+	if spec.ProgramDoc != "" && len(cmdPath) == 0 {
+		sb.WriteString(fmt.Sprintf("\n%s\n", spec.ProgramDoc))
+	}
+
+	// Options section
+	flagSpecs := make([]ArgSpec, 0)
+	for _, arg := range activeArgs {
+		if !arg.IsPositional {
+			flagSpecs = append(flagSpecs, arg)
+		}
+	}
+
+	if len(flagSpecs) > 0 {
+		sb.WriteString("\nOptions:\n")
+		for _, arg := range flagSpecs {
+			var flagStr string
+			if arg.ShortFlag != "" && arg.LongFlag != "" {
+				flagStr = fmt.Sprintf("  -%s, --%s", arg.ShortFlag, arg.LongFlag)
+			} else if arg.LongFlag != "" {
+				flagStr = fmt.Sprintf("      --%s", arg.LongFlag)
+			} else {
+				flagStr = fmt.Sprintf("  -%s", arg.ShortFlag)
+			}
+
+			// Add value placeholder for non-flags
+			if !arg.IsFlag {
+				typeName := strings.ToUpper(arg.ValueType)
+				if typeName == "ANY" {
+					typeName = "VALUE"
+				}
+				flagStr = fmt.Sprintf("%s %s", flagStr, typeName)
+			}
+
+			// Pad to align descriptions
+			for len(flagStr) < 28 {
+				flagStr += " "
+			}
+
+			// Add doc and required/default info
+			doc := arg.Doc
+			if arg.IsRequired {
+				if doc != "" {
+					doc += " (required)"
+				} else {
+					doc = "(required)"
+				}
+			} else if !arg.IsFlag {
+				switch def := arg.Default.(type) {
+				case env.String:
+					if def.Value != "" {
+						if doc != "" {
+							doc += fmt.Sprintf(" (default: %q)", def.Value)
+						} else {
+							doc = fmt.Sprintf("(default: %q)", def.Value)
+						}
+					}
+				case *env.String:
+					if def.Value != "" {
+						if doc != "" {
+							doc += fmt.Sprintf(" (default: %q)", def.Value)
+						} else {
+							doc = fmt.Sprintf("(default: %q)", def.Value)
+						}
+					}
+				case env.Integer:
+					if doc != "" {
+						doc += fmt.Sprintf(" (default: %d)", def.Value)
+					} else {
+						doc = fmt.Sprintf("(default: %d)", def.Value)
+					}
+				case *env.Integer:
+					if doc != "" {
+						doc += fmt.Sprintf(" (default: %d)", def.Value)
+					} else {
+						doc = fmt.Sprintf("(default: %d)", def.Value)
+					}
+				}
+			}
+
+			sb.WriteString(fmt.Sprintf("%s%s\n", flagStr, doc))
+		}
+	}
+
+	// Subcommands section
+	if len(activeSubcommands) > 0 {
+		sb.WriteString("\nCommands:\n")
+		for name, sub := range activeSubcommands {
+			cmdStr := fmt.Sprintf("  %s", name)
+			for len(cmdStr) < 20 {
+				cmdStr += " "
+			}
+			sb.WriteString(fmt.Sprintf("%s%s\n", cmdStr, sub.Doc))
+		}
+		sb.WriteString(fmt.Sprintf("\nRun '%s <command> --help' for more information on a command.\n", programName))
+	}
+
+	return sb.String()
+}
+
+// formatParseErrors formats error dict into user-friendly messages
+func formatParseErrors(errors map[string]env.Object) string {
+	var sb strings.Builder
+
+	for name, errObj := range errors {
+		var errStr string
+		if s, ok := errObj.(env.String); ok {
+			errStr = s.Value
+		} else if s, ok := errObj.(*env.String); ok {
+			errStr = s.Value
+		} else {
+			errStr = errObj.Print(env.Idxs{})
+		}
+
+		// Format the flag name nicely
+		flagName := name
+		if !strings.HasPrefix(name, "-") && !strings.HasPrefix(name, "_") {
+			flagName = "--" + name
+		}
+
+		sb.WriteString(fmt.Sprintf("Error: %s %s\n", flagName, errStr))
+	}
+
+	return strings.TrimSuffix(sb.String(), "\n")
 }
 
 // BuiParseArgs is the main builtin function for parse-args
@@ -753,6 +1117,15 @@ func BuiParseArgs(es *env.ProgramState, args env.Object, specBlock env.Object) e
 		resultData["command"] = *env.NewString(result.Command)
 	}
 
+	// Add command-path as a list
+	if len(result.CommandPath) > 0 {
+		pathList := make([]any, len(result.CommandPath))
+		for i, cmd := range result.CommandPath {
+			pathList[i] = *env.NewString(cmd)
+		}
+		resultData["command-path"] = *env.NewList(pathList)
+	}
+
 	return *env.NewDict(resultData)
 }
 
@@ -764,10 +1137,10 @@ var Builtins_cli = map[string]*env.Builtin{
 	// The parse-args function takes a block of Rye values (from parsed command line)
 	// and a specification block, returning a dictionary with parsed values.
 	//
-	// Args are expected to be already parsed by the Rye loader, so they come as:
-	// - Flagwords: -v, --verbose, -v|verbose
+	// Args can be:
+	// - Flagwords: -v, --verbose, -v|verbose (from Rye code)
+	// - Strings: "--verbose", "-o" (from command line via rye .Args?)
 	// - Integers: 123
-	// - Strings: "quoted string"
 	// - Words: unquoted-word
 	// - etc.
 	//
@@ -781,9 +1154,17 @@ var Builtins_cli = map[string]*env.Builtin{
 	// equal { parse-args { "file1.txt" "file2.txt" } { _ positional string many } -> "_" |length? } 2
 	// error { parse-args { } { -o|output string required } }
 	//
+	// String flag tests (for command line args):
+	// equal { parse-args { "--verbose" } { -v|verbose flag } -> "verbose" } true
+	// equal { parse-args { "-v" } { -v|verbose flag } -> "verbose" } true
+	// equal { parse-args { "-o" "file.txt" } { -o|output string required } -> "output" } "file.txt"
+	//
 	// Subcommand tests:
 	// equal { parse-args { init --force } { subcommand { init { -f|force flag } } } -> "command" } "init"
 	// equal { parse-args { init --force } { subcommand { init { -f|force flag } } } -> "force" } true
+	//
+	// Nested subcommand tests:
+	// equal { parse-args { remote add } { subcommand { remote { subcommand { add { } } } } } -> "command" } "remote add"
 	//
 	// Args:
 	// * args: Block of Rye values representing command line arguments
@@ -830,6 +1211,120 @@ var Builtins_cli = map[string]*env.Builtin{
 				return ctx
 			default:
 				return result
+			}
+		},
+	},
+
+	// Tests:
+	// ; Basic help generation
+	// equal { generate-help { -v|verbose flag doc "Enable verbose output" } |type? } 'string
+	//
+	// Args:
+	// * spec: Block containing argument specifications
+	// Returns:
+	// * String containing formatted help text
+	"generate-help": {
+		Argsn: 1,
+		Doc:   "Generates help text from a CLI specification block.",
+		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			spec, ok := arg0.(env.Block)
+			if !ok {
+				es.FailureFlag = true
+				return MakeArgError(es, 1, []env.Type{env.BlockType}, "generate-help")
+			}
+
+			cliSpec, err := CLI_ParseSpec(es, spec)
+			if err != nil {
+				es.FailureFlag = true
+				return env.NewError2(400, "spec error: "+err.Error())
+			}
+
+			helpText := generateHelpText(es, cliSpec, nil)
+			return *env.NewString(helpText)
+		},
+	},
+
+	// Tests:
+	// ; Help for specific subcommand
+	// equal { generate-help\command { subcommand { init { -f|force flag } } } "init" |type? } 'string
+	//
+	// Args:
+	// * spec: Block containing argument specifications
+	// * command: String with command path (e.g., "remote add")
+	// Returns:
+	// * String containing formatted help text for the subcommand
+	"generate-help\\command": {
+		Argsn: 2,
+		Doc:   "Generates help text for a specific subcommand.",
+		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			spec, ok := arg0.(env.Block)
+			if !ok {
+				es.FailureFlag = true
+				return MakeArgError(es, 1, []env.Type{env.BlockType}, "generate-help\\command")
+			}
+
+			cmdPath := make([]string, 0)
+			switch cmd := arg1.(type) {
+			case env.String:
+				if cmd.Value != "" {
+					cmdPath = strings.Split(cmd.Value, " ")
+				}
+			case env.Block:
+				ser := cmd.Series
+				ser.Reset()
+				for ser.Pos() < ser.Len() {
+					obj := ser.Pop()
+					if s, ok := obj.(env.String); ok {
+						cmdPath = append(cmdPath, s.Value)
+					} else if w, ok := obj.(env.Word); ok {
+						cmdPath = append(cmdPath, es.Idx.GetWord(w.Index))
+					}
+				}
+			default:
+				es.FailureFlag = true
+				return MakeArgError(es, 2, []env.Type{env.StringType, env.BlockType}, "generate-help\\command")
+			}
+
+			cliSpec, err := CLI_ParseSpec(es, spec)
+			if err != nil {
+				es.FailureFlag = true
+				return env.NewError2(400, "spec error: "+err.Error())
+			}
+
+			helpText := generateHelpText(es, cliSpec, cmdPath)
+			return *env.NewString(helpText)
+		},
+	},
+
+	// Tests:
+	// equal { format-parse-errors dict { "output" "required" } |type? } 'string
+	//
+	// Args:
+	// * errors: Dict with error information (from failed parse-args)
+	// Returns:
+	// * String with formatted error messages
+	"format-parse-errors": {
+		Argsn: 1,
+		Doc:   "Formats parse errors into human-readable messages.",
+		Fn: func(es *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch errObj := arg0.(type) {
+			case env.Dict:
+				errors := make(map[string]env.Object)
+				for k, v := range errObj.Data {
+					if obj, ok := v.(env.Object); ok {
+						errors[k] = obj
+					}
+				}
+				return *env.NewString(formatParseErrors(errors))
+			case *env.Error:
+				// Extract details from error if it has them
+				if errObj.Values != nil {
+					return *env.NewString(formatParseErrors(errObj.Values))
+				}
+				return *env.NewString(errObj.Message)
+			default:
+				es.FailureFlag = true
+				return MakeArgError(es, 1, []env.Type{env.DictType}, "format-parse-errors")
 			}
 		},
 	},

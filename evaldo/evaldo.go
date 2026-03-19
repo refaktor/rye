@@ -202,6 +202,13 @@ func EvalExpression(ps *env.ProgramState, inj env.Object, injnow bool, limited b
 				ps.ErrorFlag = true
 				ps.Res = env.NewError("Pipeword barrier encountered while collecting an argument. The previous expression is incomplete.")
 				return injnow
+			case env.CachedBuiltin:
+				// CachedBuiltin with Pipeword mode should also be a barrier
+				if next.Mode == env.CachedModePipeword {
+					ps.ErrorFlag = true
+					ps.Res = env.NewError("Pipeword barrier encountered while collecting an argument. The previous expression is incomplete.")
+					return injnow
+				}
 			case env.CPath:
 				if next.Mode == 2 {
 					ps.ErrorFlag = true
@@ -272,6 +279,54 @@ func OptionallyEvalExpressionRight(nextObj env.Object, ps *env.ProgramState, lim
 		return
 	}
 	switch opword := nextObj.(type) {
+	case env.CachedBuiltin:
+		// Handle cached builtins based on their original mode
+		// Only Opword/Pipeword/Dotword modes are continuations - Word mode starts a new expression
+		switch opword.Mode {
+		case env.CachedModeWord:
+			// Regular word cached builtin - NOT a continuation, starts a new expression
+			return
+		case env.CachedModeOpword:
+			if !allowOpwords {
+				return
+			}
+			ps.Ser.Next()
+			// Opword - use ps.Res as left value, pass Force flag as pipeSecond
+			CallBuiltin_CollectArgs(opword.Builtin, ps, ps.Res, false, opword.Force > 0, nil, true, false)
+		case env.CachedModePipeword:
+			if limited {
+				return
+			}
+			ps.Ser.Next()
+			// Pipeword - behavior depends on Force flag
+			// Force=0: piped value becomes arg0 directly (pipeSecond=false)
+			// Force>0: evaluate first arg, piped value becomes arg1 (pipeSecond=true)
+			leftVal := ps.Res
+			pipeSecond := opword.Force > 0
+			var firstVal env.Object
+			if pipeSecond && !ps.Ser.AtLast() {
+				EvalExpression_CollectArg(ps, true, false)
+				if ps.ReturnFlag || ps.ErrorFlag {
+					return
+				}
+				firstVal = ps.Res
+			}
+			CallBuiltin_CollectArgs(opword.Builtin, ps, leftVal, false, pipeSecond, firstVal, false, false)
+		case env.CachedModeDotword:
+			if !allowDotwords {
+				return
+			}
+			ps.Ser.Next()
+			// Dotword - use ps.Res as left value, Force flag determines pipeSecond
+			CallBuiltin_CollectArgs(opword.Builtin, ps, ps.Res, false, opword.Force > 0, nil, true, true)
+		default:
+			return
+		}
+		if ps.ReturnFlag || ps.ErrorFlag {
+			return
+		}
+		OptionallyEvalExpressionRight(ps.Ser.Peek(), ps, limited, allowOpwords, allowDotwords)
+		return
 	case env.Opword:
 		if !allowOpwords {
 			return
@@ -583,7 +638,28 @@ func EvalExpression_DispatchType(ps *env.ProgramState) {
 	//	return
 	// these are cached (inserted into block values so we can avoid the repeated lookup)
 	case env.BuiltinType:
-		CallBuiltin_CollectArgs(object.(env.Builtin), ps, nil, false, false, nil, false, false) // TODO .. POTENTIAL BUG, OPWORD STATE IS NOT STORED WHEN EMBEDED
+		CallBuiltin_CollectArgs(object.(env.Builtin), ps, nil, false, false, nil, false, false)
+		return
+	case env.CachedBuiltinType:
+		// CachedBuiltin wraps a Builtin with its original word mode
+		cached := object.(env.CachedBuiltin)
+		switch cached.Mode {
+		case env.CachedModeWord:
+			// Regular word - no left value
+			CallBuiltin_CollectArgs(cached.Builtin, ps, nil, false, false, nil, false, false)
+		case env.CachedModeOpword:
+			// Opword at start of expression is an error (no left value)
+			ps.ErrorFlag = true
+			ps.Res = env.NewError("Cached opword used without a left-hand value.")
+		case env.CachedModePipeword:
+			// Pipeword at start of expression is an error (no left value)
+			ps.ErrorFlag = true
+			ps.Res = env.NewError("Cached pipeword used without a left-hand value.")
+		case env.CachedModeDotword:
+			// Dotword at start of expression is an error (no left value)
+			ps.ErrorFlag = true
+			ps.Res = env.NewError("Cached dotword used without a left-hand value.")
+		}
 		return
 	case env.VarBuiltinType:
 		CallVarBuiltin(object.(env.VarBuiltin), ps, nil, false, false, nil, false, false) // TODO .. POTENTIAL BUG, OPWORD STATE IS NOT STORED WHEN EMBEDED
@@ -616,11 +692,6 @@ func findWordValue(ps *env.ProgramState, word1 env.Object) (bool, env.Object, *e
 	switch word := word1.(type) {
 	case env.Word:
 		object, found := ps.Ctx.Get(word.Index)
-		// if is constant ... stamp it in
-		// TODO ... just stamp constants
-		// fmt.Println("*")
-		// ps.Ser.Put(object)
-		// }
 		return found, object, nil
 	case env.Opword:
 		object, found := ps.Ctx.Get(word.Index)
@@ -828,6 +899,9 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 		if leftVal != nil {
 			kind = leftVal.GetKind()
 		}
+		// Track if we failed to collect an argument (e.g., pipeword barrier)
+		// so we can report "Word not found" instead of the collection error
+		argCollectionFailed := false
 		if leftVal == nil && !pipeSecond {
 			if !ps.Ser.AtLast() {
 				// Use EvalExpression_CollectArg (not EvalExpression_DispatchType) so that
@@ -838,20 +912,27 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 				// only grabbed the bare next atom (%file), giving generic words wrong priority.
 				EvalExpression_CollectArg(ps, true, false)
 				if ps.ReturnFlag || ps.ErrorFlag {
-					return
+					// Don't return yet - fall through to "Word not found" error
+					// This handles cases like "undefined_word |print" where pipeword barrier
+					// would otherwise mask the real error
+					argCollectionFailed = true
+					ps.ErrorFlag = false // Clear for now, will be set below if word not found
+				} else {
+					leftVal = ps.Res
+					kind = leftVal.GetKind()
 				}
-				leftVal = ps.Res
-				kind = leftVal.GetKind()
 			}
 		}
-		if pipeSecond {
+		if pipeSecond && !argCollectionFailed {
 			if !ps.Ser.AtLast() {
 				EvalExpression_CollectArg(ps, true, false)
 				if ps.ReturnFlag || ps.ErrorFlag {
-					return
+					argCollectionFailed = true
+					ps.ErrorFlag = false
+				} else {
+					firstVal = ps.Res
+					kind = firstVal.GetKind()
 				}
-				firstVal = ps.Res
-				kind = firstVal.GetKind()
 				// fmt.Println("pipeSecond kind")
 			}
 		}
@@ -877,7 +958,7 @@ func EvalWord(ps *env.ProgramState, word env.Object, leftVal env.Object, toLeft 
 			rword = w.ToWord()
 			ok = true
 		}
-		if ok && leftVal != nil && ps.Ctx.Kind.Index != -1 { // don't use generic words if context kind is -1 --- TODO temporary solution to isolates, think about it more
+		if ok && leftVal != nil && ps.Ctx.Kind.Index != -1 && !argCollectionFailed { // don't use generic words if context kind is -1 --- TODO temporary solution to isolates, think about it more
 			object, found = ps.Gen.Get(kind, rword.Index)
 		}
 	}
