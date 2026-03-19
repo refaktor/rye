@@ -5,6 +5,7 @@ import (
 	"math"
 	"math/cmplx"
 
+	"github.com/drewlanenga/govector"
 	"github.com/fxtlabs/primes"
 	"github.com/refaktor/rye/env"
 	"github.com/refaktor/rye/util"
@@ -234,10 +235,12 @@ var Builtins_math = map[string]*env.Builtin{
 	// stdout { log complex 2.718281828459045 0 |prn } "1.000000+0.000000i"
 	// ; error { log 0 }
 	// ; error { log complex 0 0 }
+	// equal { log vector { 1.0 2.718281828459045 } |vec-to-block |first } 0.0
+	// equal { log matrix { 1 2 } { 1.0 2.718281828459045 } |mat-get 0 0 } 0.0
 	// Args:
-	// * x: integer, decimal, or complex value (must not be zero)
+	// * x: integer, decimal, complex, vector or matrix value
 	// Returns:
-	// * decimal natural logarithm of x for integer/decimal input, complex logarithm for complex input
+	// * natural logarithm of x (element-wise for vector/matrix)
 	"log": {
 		Argsn: 1,
 		Doc:   "Returns the natural logarithm of x.",
@@ -261,8 +264,20 @@ var Builtins_math = map[string]*env.Builtin{
 					return MakeBuiltinError(ps, "Can't compute logarithm of zero.", "log")
 				}
 				return *env.NewComplex(cmplx.Log(val.Value))
+			case env.Vector:
+				data := make(govector.Vector, len(val.Value))
+				for i, v := range val.Value {
+					data[i] = math.Log(v)
+				}
+				return *env.NewVector(data)
+			case env.Matrix:
+				data := make([]float64, len(val.Data))
+				for i, v := range val.Data {
+					data[i] = math.Log(v)
+				}
+				return *env.NewMatrixWithData(val.Rows, val.Cols, data)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "log")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType, env.VectorType, env.MatrixType}, "log")
 			}
 		},
 	},
@@ -404,10 +419,12 @@ var Builtins_math = map[string]*env.Builtin{
 	// equal { sqrt 9 } 3.0
 	// equal { sqrt 2.0 |round\to 4 } 1.4142
 	// stdout { sqrt complex -1 0 |prn } "0.000000+1.000000i"
+	// equal { sqrt vector { 4.0 9.0 16.0 } |vec-to-block |first } 2.0
+	// equal { sqrt matrix { 2 2 } { 4.0 9.0 16.0 25.0 } |mat-get 1 1 } 5.0
 	// Args:
-	// * x: integer, decimal, or complex value
+	// * x: integer, decimal, complex, vector or matrix value
 	// Returns:
-	// * decimal square root of x for integer/decimal input, complex square root for complex input
+	// * square root of x (element-wise for vector/matrix)
 	"sqrt": {
 		Argsn: 1,
 		Doc:   "Returns the square root of x.",
@@ -419,8 +436,20 @@ var Builtins_math = map[string]*env.Builtin{
 				return *env.NewDecimal(math.Sqrt(val.Value))
 			case env.Complex:
 				return *env.NewComplex(cmplx.Sqrt(val.Value))
+			case env.Vector:
+				data := make(govector.Vector, len(val.Value))
+				for i, v := range val.Value {
+					data[i] = math.Sqrt(v)
+				}
+				return *env.NewVector(data)
+			case env.Matrix:
+				data := make([]float64, len(val.Data))
+				for i, v := range val.Data {
+					data[i] = math.Sqrt(v)
+				}
+				return *env.NewMatrixWithData(val.Rows, val.Cols, data)
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "sqrt")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType, env.VectorType, env.MatrixType}, "sqrt")
 			}
 		},
 	},
@@ -428,10 +457,12 @@ var Builtins_math = map[string]*env.Builtin{
 	// equal { abs -5 } 5
 	// equal { abs 5 } 5
 	// equal { abs complex 3 4 } 5.0
+	// equal { abs vector { -1.0 2.0 -3.0 } |vec-to-block |first } 1.0
+	// equal { abs matrix { 2 2 } { -1.0 2.0 -3.0 4.0 } |mat-get 1 0 } 3.0
 	// Args:
-	// * x: integer, decimal, or complex value
+	// * x: integer, decimal, complex, vector or matrix value
 	// Returns:
-	// * absolute value of x (same type as input for integer/decimal, decimal for complex)
+	// * absolute value of x (element-wise for vector/matrix)
 	"abs": {
 		Argsn: 1,
 		Doc:   "Returns the absolute value of a number.",
@@ -443,8 +474,20 @@ var Builtins_math = map[string]*env.Builtin{
 				return *env.NewDecimal(math.Abs(val.Value))
 			case env.Complex:
 				return *env.NewDecimal(cmplx.Abs(val.Value))
+			case env.Vector:
+				data := make(govector.Vector, len(val.Value))
+				for i, v := range val.Value {
+					data[i] = math.Abs(v)
+				}
+				return *env.NewVector(data)
+			case env.Matrix:
+				data := make([]float64, len(val.Data))
+				for i, v := range val.Data {
+					data[i] = math.Abs(v)
+				}
+				return *env.NewMatrixWithData(val.Rows, val.Cols, data)
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "abs")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType, env.VectorType, env.MatrixType}, "abs")
 			}
 		},
 	},
@@ -883,10 +926,12 @@ var Builtins_math = map[string]*env.Builtin{
 	// equal { exp 1 } 2.718281828459045
 	// stdout { exp complex 0 0 |prn } "1.000000+0.000000i" ; OQ: complex is not a literal value yet, should it be?
 	// stdout { exp complex 0 3.141592653589793 |prn } "-1.000000+0.000000i"
+	// equal { exp vector { 0.0 1.0 } |vec-to-block |first } 1.0
+	// equal { exp matrix { 1 2 } { 0.0 1.0 } |mat-get 0 0 } 1.0
 	// Args:
-	// * x: integer, decimal, or complex value
+	// * x: integer, decimal, complex, vector or matrix value
 	// Returns:
-	// * decimal e^x for integer/decimal input, complex e^z for complex input
+	// * e^x (element-wise for vector/matrix)
 	"exp": {
 		Argsn: 1,
 		Doc:   "Returns e**x, the base-e exponential of x.",
@@ -898,8 +943,20 @@ var Builtins_math = map[string]*env.Builtin{
 				return *env.NewDecimal(math.Exp(val.Value))
 			case env.Complex:
 				return *env.NewComplex(cmplx.Exp(val.Value))
+			case env.Vector:
+				data := make(govector.Vector, len(val.Value))
+				for i, v := range val.Value {
+					data[i] = math.Exp(v)
+				}
+				return *env.NewVector(data)
+			case env.Matrix:
+				data := make([]float64, len(val.Data))
+				for i, v := range val.Data {
+					data[i] = math.Exp(v)
+				}
+				return *env.NewMatrixWithData(val.Rows, val.Cols, data)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType}, "exp")
+				return MakeArgError(ps, 1, []env.Type{env.IntegerType, env.DecimalType, env.ComplexType, env.VectorType, env.MatrixType}, "exp")
 			}
 		},
 	},

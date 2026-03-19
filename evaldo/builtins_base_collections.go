@@ -148,8 +148,10 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { max list { 8 2 10 6 } } 10
 	// equal { try { max { } } |type? } 'error
 	// equal { try { max list { } } |type? } 'error
+	// equal { max vector { 8.0 2.0 10.0 6.0 } } 10.0
+	// equal { max matrix { 2 2 } { 1.0 5.0 3.0 2.0 } } 5.0
 	// Args:
-	// * collection: Block or list of comparable values
+	// * collection: Block, list, vector or matrix of comparable values
 	// Returns:
 	// * the maximum value in the collection
 	"max": { // **
@@ -197,8 +199,30 @@ var builtins_collection = map[string]*env.Builtin{
 				} else {
 					return *env.NewDecimal(max)
 				}
+			case env.Vector:
+				if len(data.Value) == 0 {
+					return MakeBuiltinError(ps, "Vector is empty.", "max")
+				}
+				maxVal := data.Value[0]
+				for _, v := range data.Value[1:] {
+					if v > maxVal {
+						maxVal = v
+					}
+				}
+				return *env.NewDecimal(maxVal)
+			case env.Matrix:
+				if len(data.Data) == 0 {
+					return MakeBuiltinError(ps, "Matrix is empty.", "max")
+				}
+				maxVal := data.Data[0]
+				for _, v := range data.Data[1:] {
+					if v > maxVal {
+						maxVal = v
+					}
+				}
+				return *env.NewDecimal(maxVal)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType}, "max")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.VectorType, env.MatrixType}, "max")
 			}
 		},
 	},
@@ -305,8 +329,10 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { min list { 8 2 10 6 } } 2
 	// equal { try { min { } } |type? } 'error
 	// equal { try { min list { } } |type? } 'error
+	// equal { min vector { 8.0 2.0 10.0 6.0 } } 2.0
+	// equal { min matrix { 2 2 } { 1.0 5.0 3.0 2.0 } } 1.0
 	// Args:
-	// * collection: Block or list of comparable values
+	// * collection: Block, list, vector or matrix of comparable values
 	// Returns:
 	// * the minimum value in the collection
 	"min": { // **
@@ -366,8 +392,30 @@ var builtins_collection = map[string]*env.Builtin{
 				} else {
 					return *env.NewDecimal(min)
 				}
+			case env.Vector:
+				if len(data.Value) == 0 {
+					return MakeBuiltinError(ps, "Vector is empty.", "min")
+				}
+				minVal := data.Value[0]
+				for _, v := range data.Value[1:] {
+					if v < minVal {
+						minVal = v
+					}
+				}
+				return *env.NewDecimal(minVal)
+			case env.Matrix:
+				if len(data.Data) == 0 {
+					return MakeBuiltinError(ps, "Matrix is empty.", "min")
+				}
+				minVal := data.Data[0]
+				for _, v := range data.Data[1:] {
+					if v < minVal {
+						minVal = v
+					}
+				}
+				return *env.NewDecimal(minVal)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "min")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.VectorType, env.MatrixType}, "min")
 			}
 		},
 	},
@@ -477,8 +525,10 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { avg { 1 2 3 } } 2.0
 	// equal { try { avg { } } |type? } 'error
 	// equal { try { avg list { } } |type? } 'error
+	// equal { avg vector { 1.0 2.0 3.0 4.0 } } 2.5
+	// equal { avg matrix { 2 2 } { 1.0 2.0 3.0 4.0 } } 2.5
 	// Args:
-	// * collection: Block, list or vector of numeric values
+	// * collection: Block, list, vector or matrix of numeric values
 	// Returns:
 	// * the arithmetic mean (average) of the values as a decimal
 	"avg": { // **
@@ -523,8 +573,17 @@ var builtins_collection = map[string]*env.Builtin{
 				return *env.NewDecimal(sum / float64(l))
 			case env.Vector:
 				return *env.NewDecimal(block.Value.Mean())
+			case env.Matrix:
+				if len(block.Data) == 0 {
+					return MakeBuiltinError(ps, "Matrix is empty.", "avg")
+				}
+				var sum float64
+				for _, v := range block.Data {
+					sum += v
+				}
+				return *env.NewDecimal(sum / float64(len(block.Data)))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.VectorType}, "avg")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.VectorType, env.MatrixType}, "avg")
 			}
 		},
 	},
@@ -641,8 +700,10 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { sum list { 8 2 10 6 } } 26
 	// equal { sum list { 8 2 10 6.5 } } 26.5
 	// equal { sum list { } } 0
+	// equal { sum vector { 1.0 2.0 3.0 4.0 } } 10.0
+	// equal { sum matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } } 21.0
 	// Args:
-	// * collection: Block, list or vector of numeric values
+	// * collection: Block, list, vector or matrix of numeric values
 	// Returns:
 	// * the sum of all values (integer if all values are integers, decimal otherwise)
 	"sum": { // **
@@ -694,8 +755,14 @@ var builtins_collection = map[string]*env.Builtin{
 
 			case env.Vector:
 				return *env.NewDecimal(block.Value.Sum())
+			case env.Matrix:
+				var sum float64
+				for _, v := range block.Data {
+					sum += v
+				}
+				return *env.NewDecimal(sum)
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.VectorType}, "sum")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.VectorType, env.MatrixType}, "sum")
 			}
 		},
 	},

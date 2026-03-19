@@ -183,7 +183,7 @@ test {
 		var 'errors 0
 		for sections {
 			.string .pass { term/bold , prns "\n#" , .upper .prns , print "#\n" }
-			| ++ ".info.rye" |file |load |^check { "Group does not exist!" } |do\inside* test-framework |+ errors |fix { errors } ::errors }
+			|++ ".info.rye" |file |load |^check { "Group does not exist!" } |do\inside* test-framework |+ errors |fix { errors } ::errors }
 		print ""
 	
 		; if ( length? sections ) > 1 {

@@ -14,31 +14,54 @@ import (
 // Called once before loop execution for optimization.
 func resolveBuiltinsInBlock(ps *env.ProgramState, block *env.Block) {
 	ser := &block.Series
+	
+	// First pass: collect all word indices that are set by setwords/modwords in this block
+	// These words might shadow builtins and should not be cached
+	localWords := make(map[int]bool)
+	for i := 0; i < ser.Len(); i++ {
+		obj := ser.Get(i)
+		switch word := obj.(type) {
+		case env.Setword:
+			localWords[word.Index] = true
+		case env.Modword:
+			localWords[word.Index] = true
+		case env.LSetword:
+			localWords[word.Index] = true
+		case env.LModword:
+			localWords[word.Index] = true
+		}
+	}
+	
+	// Second pass: resolve builtins, skipping words that will be locally set
 	for i := 0; i < ser.Len(); i++ {
 		obj := ser.Get(i)
 		switch word := obj.(type) {
 		case env.Word:
+			// Skip if this word is set locally (would shadow the builtin)
+			if localWords[word.Index] {
+				continue
+			}
 			if resolved, found := ps.Ctx.Get(word.Index); found {
 				if builtin, isBuiltin := resolved.(env.Builtin); isBuiltin {
-					ser.S[i] = env.CachedBuiltin{Builtin: builtin, Mode: env.CachedModeWord}
+					ser.S[i] = env.CachedBuiltin{Builtin: builtin, Mode: env.CachedModeWord, Force: 0}
 				}
 			}
 		case env.Opword:
 			if resolved, found := ps.Ctx.Get(word.Index); found {
 				if builtin, isBuiltin := resolved.(env.Builtin); isBuiltin {
-					ser.S[i] = env.CachedBuiltin{Builtin: builtin, Mode: env.CachedModeOpword}
+					ser.S[i] = env.CachedBuiltin{Builtin: builtin, Mode: env.CachedModeOpword, Force: word.Force}
 				}
 			}
 		case env.Pipeword:
 			if resolved, found := ps.Ctx.Get(word.Index); found {
 				if builtin, isBuiltin := resolved.(env.Builtin); isBuiltin {
-					ser.S[i] = env.CachedBuiltin{Builtin: builtin, Mode: env.CachedModePipeword}
+					ser.S[i] = env.CachedBuiltin{Builtin: builtin, Mode: env.CachedModePipeword, Force: word.Force}
 				}
 			}
 		case env.Dotword:
 			if resolved, found := ps.Ctx.Get(word.Index); found {
 				if builtin, isBuiltin := resolved.(env.Builtin); isBuiltin {
-					ser.S[i] = env.CachedBuiltin{Builtin: builtin, Mode: env.CachedModeDotword}
+					ser.S[i] = env.CachedBuiltin{Builtin: builtin, Mode: env.CachedModeDotword, Force: word.Force}
 				}
 			}
 		case env.Block:

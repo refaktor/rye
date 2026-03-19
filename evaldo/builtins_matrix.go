@@ -627,126 +627,8 @@ var Builtins_matrix = map[string]*env.Builtin{
 	},
 
 	//
-	// ##### Element-wise Math ##### "Apply math functions to each element"
-	//
-
-	// Note: In the future, could have syntax like exp. mat for element-wise application
-	// Tests:
-	// Args:
-	// * mat: matrix
-	// Returns:
-	// * matrix with exp applied to each element
-	"mat-exp": {
-		Argsn: 1,
-		Doc:   "Applies exp() to each element of the matrix. In the future, could have syntax like `exp. mat`.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch m := arg0.(type) {
-			case env.Matrix:
-				data := make([]float64, len(m.Data))
-				for i := range m.Data {
-					data[i] = math.Exp(m.Data[i])
-				}
-				return *env.NewMatrixWithData(m.Rows, m.Cols, data)
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.MatrixType}, "mat-exp")
-			}
-		},
-	},
-
-	// Note: In the future, could have syntax like log. mat for element-wise application
-	// Tests:
-	// Args:
-	// * mat: matrix (elements must be positive)
-	// Returns:
-	// * matrix with natural log applied to each element
-	"mat-log": {
-		Argsn: 1,
-		Doc:   "Applies log() to each element of the matrix. In the future, could have syntax like `log. mat`.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch m := arg0.(type) {
-			case env.Matrix:
-				data := make([]float64, len(m.Data))
-				for i := range m.Data {
-					data[i] = math.Log(m.Data[i])
-				}
-				return *env.NewMatrixWithData(m.Rows, m.Cols, data)
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.MatrixType}, "mat-log")
-			}
-		},
-	},
-
-	// Note: In the future, could have syntax like sqrt. mat for element-wise application
-	// Tests:
-	// Args:
-	// * mat: matrix (elements must be non-negative)
-	// Returns:
-	// * matrix with sqrt applied to each element
-	"mat-sqrt": {
-		Argsn: 1,
-		Doc:   "Applies sqrt() to each element of the matrix. In the future, could have syntax like `sqrt. mat`.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch m := arg0.(type) {
-			case env.Matrix:
-				data := make([]float64, len(m.Data))
-				for i := range m.Data {
-					data[i] = math.Sqrt(m.Data[i])
-				}
-				return *env.NewMatrixWithData(m.Rows, m.Cols, data)
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.MatrixType}, "mat-sqrt")
-			}
-		},
-	},
-
-	// Tests:
-	// Args:
-	// * mat: matrix
-	// Returns:
-	// * matrix with abs applied to each element
-	"mat-abs": {
-		Argsn: 1,
-		Doc:   "Applies abs() to each element of the matrix.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch m := arg0.(type) {
-			case env.Matrix:
-				data := make([]float64, len(m.Data))
-				for i := range m.Data {
-					data[i] = math.Abs(m.Data[i])
-				}
-				return *env.NewMatrixWithData(m.Rows, m.Cols, data)
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.MatrixType}, "mat-abs")
-			}
-		},
-	},
-
-	//
 	// ##### Reductions ##### "Aggregate matrix values"
 	//
-
-	// Tests:
-	// equal { matrix\ones 2 3 |mat-sum } 6.0
-	// Args:
-	// * mat: matrix
-	// Returns:
-	// * sum of all elements
-	"mat-sum": {
-		Argsn: 1,
-		Doc:   "Returns the sum of all elements in the matrix.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch m := arg0.(type) {
-			case env.Matrix:
-				var sum float64
-				for _, v := range m.Data {
-					sum += v
-				}
-				return *env.NewDecimal(sum)
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.MatrixType}, "mat-sum")
-			}
-		},
-	},
 
 	// Tests:
 	// equal { matrix\from { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-sum-rows |type? } 'vector
@@ -802,33 +684,7 @@ var Builtins_matrix = map[string]*env.Builtin{
 		},
 	},
 
-	// Tests:
-	// equal { matrix\from { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-max } 6.0
-	// Args:
-	// * mat: matrix
-	// Returns:
-	// * maximum element value
-	"mat-max": {
-		Argsn: 1,
-		Doc:   "Returns the maximum element in the matrix.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch m := arg0.(type) {
-			case env.Matrix:
-				if len(m.Data) == 0 {
-					return MakeBuiltinError(ps, "Matrix is empty", "mat-max")
-				}
-				maxVal := m.Data[0]
-				for _, v := range m.Data[1:] {
-					if v > maxVal {
-						maxVal = v
-					}
-				}
-				return *env.NewDecimal(maxVal)
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.MatrixType}, "mat-max")
-			}
-		},
-	},
+
 
 	// Tests:
 	// equal { matrix\from { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-max-rows |type? } 'vector
@@ -888,33 +744,7 @@ var Builtins_matrix = map[string]*env.Builtin{
 		},
 	},
 
-	// Tests:
-	// equal { matrix\from { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |mat-min } 1.0
-	// Args:
-	// * mat: matrix
-	// Returns:
-	// * minimum element value
-	"mat-min": {
-		Argsn: 1,
-		Doc:   "Returns the minimum element in the matrix.",
-		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
-			switch m := arg0.(type) {
-			case env.Matrix:
-				if len(m.Data) == 0 {
-					return MakeBuiltinError(ps, "Matrix is empty", "mat-min")
-				}
-				minVal := m.Data[0]
-				for _, v := range m.Data[1:] {
-					if v < minVal {
-						minVal = v
-					}
-				}
-				return *env.NewDecimal(minVal)
-			default:
-				return MakeArgError(ps, 1, []env.Type{env.MatrixType}, "mat-min")
-			}
-		},
-	},
+
 
 	//
 	// ##### Conversion ##### "Convert between matrix and other types"

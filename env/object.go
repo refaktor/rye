@@ -1971,10 +1971,11 @@ const (
 type CachedBuiltin struct {
 	Builtin Builtin
 	Mode    int // CachedModeWord, CachedModeOpword, etc.
+	Force   int // For Opword/Pipeword: the Force flag from original word
 }
 
-func NewCachedBuiltin(builtin Builtin, mode int) *CachedBuiltin {
-	return &CachedBuiltin{builtin, mode}
+func NewCachedBuiltin(builtin Builtin, mode int, force int) *CachedBuiltin {
+	return &CachedBuiltin{builtin, mode, force}
 }
 
 func (b CachedBuiltin) Type() Type {
