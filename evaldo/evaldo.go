@@ -1097,7 +1097,27 @@ func EvalModword(ps *env.ProgramState, word env.Modword) {
 	}
 	idx := word.Index
 
-	// Get old value for observer notification
+	// Fast path: use global flag to skip observer handling entirely when no observers exist
+	// This is O(1) instead of walking the context chain
+	if !env.GlobalHasObservers {
+		// No observers anywhere - just modify the value directly
+		result, existingType := ps.Ctx.ModWithInfo(idx, ps.Res)
+		switch result {
+		case env.ModOK:
+			// Success, nothing more to do
+		case env.ModErrConstant:
+			ps.Res = env.NewError("Cannot modify constant `" + ps.Idx.GetWord(idx) + "`. Use `var` to declare it as a variable before modifying it.")
+			ps.FailureFlag = true
+			ps.ErrorFlag = true
+		case env.ModErrTypeMismatch:
+			ps.Res = env.NewError("Cannot change type of variable `" + ps.Idx.GetWord(idx) + "` from `" + ps.Idx.GetWord(int(existingType)) + "` to `" + ps.Idx.GetWord(int(ps.Res.Type())) + "`.")
+			ps.FailureFlag = true
+			ps.ErrorFlag = true
+		}
+		return
+	}
+
+	// Slow path: observers exist, need to handle them
 	oldValue, exists := ps.Ctx.GetCurrent(idx)
 
 	result, existingType := ps.Ctx.ModWithInfo(idx, ps.Res)
@@ -1106,7 +1126,6 @@ func EvalModword(ps *env.ProgramState, word env.Modword) {
 		// Trigger observers if the variable was successfully modified
 		if exists && ps.Ctx.IsVariable(idx) {
 			// Only trigger if the value actually changed
-			// TODO ... only do comparissons if there are observables because most of the time there arent
 			if oldValue == nil || !oldValue.Equal(ps.Res) {
 				TriggerObservers(ps, ps.Ctx, idx, oldValue, ps.Res)
 			}

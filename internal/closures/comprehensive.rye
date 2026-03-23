@@ -1,37 +1,44 @@
-print "=== Closure Context Preservation Test ==="
+; Comprehensive Closure Context Preservation Tests
+print "## Closure Context Preservation"
 
-; Test 1: Basic closure
-print "Test 1: Basic closure"
-mk1: fn { } { a: 101 closure { } { print a } }
-xx1: mk1
-xx1 xx1 xx1
+; Basic closure captures context
+assert\display "basic closure captures context" {
+	mk1: fn { } { a: 101 , closure { } { a } }
+	xx1: mk1
+	xx1
+} 101
 
-; Test 2: Nested closures
-print "Test 2: Nested closures"  
-mk2: fn { } { 
-    a: 200 
-    inner: closure { } { 
-        b: 300
-        closure { } { print [ a "+" b "=" a + b ] }
-    }
-    inner
-}
-xx2: mk2
-yy2: xx2
-yy2 yy2
+; Nested closures
+assert\display "nested closures" {
+	mk2: fn { } { 
+		a: 200 
+		inner: closure { } { 
+			b: 300
+			closure { } { a + b }
+		}
+		inner
+	}
+	xx2: mk2
+	yy2: xx2
+	yy2
+} 500
 
-; Test 3: Multiple closures from same context
-print "Test 3: Multiple closures from same context"
-mk3: fn { } {
-    shared: 400
-    [ 
-        closure { } { print2 "First:" shared }
-        closure { } { print2 "Second:" shared }
-    ]
-}
-closures: mk3
-first:  0 <- closures
-second: 1 <- closures
-first second first second
+; Multiple closures from same context share state
+assert\display "multiple closures share state" {
+	mk3: fn { } {
+		var 'shared 0
+		[ 
+			closure { } { inc! 'shared }
+			closure { } { shared }
+		]
+	}
+	closures3: mk3
+	inc-fn3: first closures3
+	get-fn3: second closures3
+	inc-fn3
+	inc-fn3
+	inc-fn3
+	get-fn3
+} 3
 
-print "=== All tests passed! ==="
+print ""

@@ -1,34 +1,44 @@
-#!/usr/bin/env rye
+; Basic Variable Observer Tests
+print "## Basic Observer Tests"
 
-print "Testing basic variable observers..."
+; Observer triggers on change
+assert\display "observer triggers on change" {
+	x1: var 'counter1 0
+	var 'triggered1 false
+	on-change x1 { triggered1:: true }
+	counter1:: 5
+	triggered1
+} true
 
-; Test 1: Basic observer functionality
-print "\n=== Basic Observer Test ==="
-x: var 'counter 0
-print "Initial counter value is:" counter
+; Observer sees new value
+assert\display "observer sees new value" {
+	var 'seen-value2 0
+	x2: var 'counter2 0
+	on-change x2 { seen-value2:: counter2 }
+	counter2:: 42
+	seen-value2
+} 42
 
-; Register an observer
-on-change x { print "Observer triggered! Counter is now:" counter }
+; Multiple observers on same variable
+assert\display "multiple observers both trigger" {
+	var 'count3a 0
+	var 'count3b 0
+	y3: var 'temp3 20
+	on-change y3 { inc! 'count3a }
+	on-change y3 { inc! 'count3b }
+	temp3:: 25
+	count3a + count3b
+} 2
 
-; Modify the variable - this should trigger the observer
-print "Setting counter to 5..."
-counter:: 5
-print "Counter value after setting to 5:" counter
+; Observer triggers multiple times
+assert\display "observer triggers on each change" {
+	var 'trigger-count4 0
+	x4: var 'val4 0
+	on-change x4 { inc! 'trigger-count4 }
+	val4:: 1
+	val4:: 2
+	val4:: 3
+	trigger-count4
+} 3
 
-; Modify it again
-print "Setting counter to 10..."
-counter:: 10
-print "Final counter value:" counter
-
-print "\n=== Multiple Observers Test ==="
-y: var 'temp 20
-print "Initial temperature:" temp
-
-on-change y { print "First observer - temp changed to:" temp }
-on-change y { print "Second observer - temp is now:" temp }
-
-print "Changing temperature to 25..."
-temp:: 25
-print "Temperature is now:" temp
-
-print "\nTest completed successfully!"
+print ""

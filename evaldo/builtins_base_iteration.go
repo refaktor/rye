@@ -14,7 +14,7 @@ import (
 // Called once before loop execution for optimization.
 func resolveBuiltinsInBlock(ps *env.ProgramState, block *env.Block) {
 	ser := &block.Series
-	
+
 	// First pass: collect all word indices that are set by setwords/modwords in this block
 	// These words might shadow builtins and should not be cached
 	localWords := make(map[int]bool)
@@ -31,7 +31,7 @@ func resolveBuiltinsInBlock(ps *env.ProgramState, block *env.Block) {
 			localWords[word.Index] = true
 		}
 	}
-	
+
 	// Second pass: resolve builtins, skipping words that will be locally set
 	for i := 0; i < ser.Len(); i++ {
 		obj := ser.Get(i)
@@ -64,9 +64,6 @@ func resolveBuiltinsInBlock(ps *env.ProgramState, block *env.Block) {
 					ser.S[i] = env.CachedBuiltin{Builtin: builtin, Mode: env.CachedModeDotword, Force: word.Force}
 				}
 			}
-		case env.Block:
-			// Recursively resolve nested blocks
-			resolveBuiltinsInBlock(ps, &word)
 		}
 	}
 }
@@ -173,6 +170,8 @@ var builtins_iteration = map[string]*env.Builtin{
 			case env.Integer:
 				switch bloc := arg2.(type) {
 				case env.Block:
+					// Pre-resolve builtins in the block for faster execution
+					resolveBuiltinsInBlock(ps, &bloc)
 					acc := arg1
 					ser := ps.Ser
 					ps.Ser = bloc.Series
@@ -215,6 +214,8 @@ var builtins_iteration = map[string]*env.Builtin{
 			case env.Integer:
 				switch bloc := arg1.(type) {
 				case env.Block:
+					// Pre-resolve builtins in the block for faster execution
+					resolveBuiltinsInBlock(ps, &bloc)
 					results := make([]env.Object, 0, cond.Value)
 					ser := ps.Ser
 					ps.Ser = bloc.Series
@@ -256,6 +257,8 @@ var builtins_iteration = map[string]*env.Builtin{
 			case env.Integer:
 				switch bloc := arg1.(type) {
 				case env.Block:
+					// Pre-resolve builtins in the block for faster execution
+					resolveBuiltinsInBlock(ps, &bloc)
 					results := make([]env.Object, 0, cond.Value)
 					ser := ps.Ser
 					ps.Ser = bloc.Series
@@ -297,6 +300,9 @@ var builtins_iteration = map[string]*env.Builtin{
 			case env.Block:
 				switch bloc := arg2.(type) {
 				case env.Block:
+					// Pre-resolve builtins in both condition and body blocks for faster execution
+					resolveBuiltinsInBlock(ps, &cond)
+					resolveBuiltinsInBlock(ps, &bloc)
 					acc := arg1
 					last := arg1
 					ser := ps.Ser
@@ -355,6 +361,8 @@ var builtins_iteration = map[string]*env.Builtin{
 				case env.Block:
 					switch accu := arg2.(type) {
 					case env.Word:
+						// Pre-resolve builtins in the block for faster execution
+						resolveBuiltinsInBlock(ps, &bloc)
 						acc := arg1
 						ps.Ctx.Mod(accu.Index, acc)
 						ser := ps.Ser
@@ -397,6 +405,8 @@ var builtins_iteration = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg0.(type) {
 			case env.Block:
+				// Pre-resolve builtins in the block for faster execution
+				resolveBuiltinsInBlock(ps, &bloc)
 				ser := ps.Ser
 				ps.Ser = bloc.Series
 				for i := 0; i == i; i++ {
@@ -440,6 +450,8 @@ var builtins_iteration = map[string]*env.Builtin{
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bloc := arg1.(type) {
 			case env.Block:
+				// Pre-resolve builtins in the block for faster execution
+				resolveBuiltinsInBlock(ps, &bloc)
 				ser := ps.Ser
 				ps.Ser = bloc.Series
 				for {
@@ -632,6 +644,11 @@ var builtins_iteration = map[string]*env.Builtin{
 						ps.Ser = code.Series
 						for i := 0; i < l; i++ {
 							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i + 1)))
+							// Pre-resolve builtins in the block after defining the local word,
+							// so the word doesn't get replaced by a builtin with the same name
+							if i == 0 {
+								resolveBuiltinsInBlock(ps, &code)
+							}
 							EvalBlockInj(ps, list.Get(i), true)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "for\\pos")
 							if ps.ErrorFlag || ps.ReturnFlag {
@@ -678,6 +695,11 @@ var builtins_iteration = map[string]*env.Builtin{
 						ps.Ser = code.Series
 						for i := 0; i < l; i++ {
 							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i)))
+							// Pre-resolve builtins in the block after defining the local word,
+							// so the word doesn't get replaced by a builtin with the same name
+							if i == 0 {
+								resolveBuiltinsInBlock(ps, &code)
+							}
 							EvalBlockInj(ps, list.Get(i), true)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "for\\idx")
 							if ps.ErrorFlag || ps.ReturnFlag {
@@ -716,6 +738,8 @@ var builtins_iteration = map[string]*env.Builtin{
 			case env.Block:
 				switch code := arg1.(type) {
 				case env.Block:
+					// Pre-resolve builtins in the code block for faster execution
+					resolveBuiltinsInBlock(ps, &code)
 					ser := ps.Ser
 					ps.Ser = code.Series
 
@@ -769,6 +793,11 @@ var builtins_iteration = map[string]*env.Builtin{
 
 						for block.Series.GetPos() < block.Series.Len() {
 							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i)))
+							// Pre-resolve builtins in the block after defining the local word,
+							// so the word doesn't get replaced by a builtin with the same name
+							if i == 1 {
+								resolveBuiltinsInBlock(ps, &code)
+							}
 							EvalBlockInj(ps, block, true)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "walk\\pos")
 							if ps.ErrorFlag || ps.ReturnFlag {
@@ -822,6 +851,11 @@ var builtins_iteration = map[string]*env.Builtin{
 
 						for block.Series.GetPos() < block.Series.Len() {
 							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i)))
+							// Pre-resolve builtins in the block after defining the local word,
+							// so the word doesn't get replaced by a builtin with the same name
+							if i == 0 {
+								resolveBuiltinsInBlock(ps, &code)
+							}
 							EvalBlockInj(ps, block, true)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "walk\\idx")
 							if ps.ErrorFlag || ps.ReturnFlag {
@@ -873,6 +907,8 @@ var builtins_iteration = map[string]*env.Builtin{
 			case env.Block:
 				switch code := arg1.(type) {
 				case env.Block:
+					// Pre-resolve builtins in the code block for faster execution
+					resolveBuiltinsInBlock(ps, &code)
 					ser := ps.Ser
 					ps.Ser = code.Series
 					for i := 0; i < block.Series.Len(); i++ {
@@ -896,6 +932,8 @@ var builtins_iteration = map[string]*env.Builtin{
 			case env.List:
 				switch code := arg1.(type) {
 				case env.Block:
+					// Pre-resolve builtins in the code block for faster execution
+					resolveBuiltinsInBlock(ps, &code)
 					ser := ps.Ser
 					ps.Ser = code.Series
 					for i := 0; i < len(block.Data); i++ {
@@ -919,6 +957,8 @@ var builtins_iteration = map[string]*env.Builtin{
 			case env.String:
 				switch code := arg1.(type) {
 				case env.Block:
+					// Pre-resolve builtins in the code block for faster execution
+					resolveBuiltinsInBlock(ps, &code)
 					input := []rune(block.Value)
 					var newl []env.Object
 					ser := ps.Ser
@@ -943,6 +983,8 @@ var builtins_iteration = map[string]*env.Builtin{
 			case env.Table:
 				switch code := arg1.(type) {
 				case env.Block:
+					// Pre-resolve builtins in the code block for faster execution
+					resolveBuiltinsInBlock(ps, &code)
 					ser := ps.Ser
 					ps.Ser = code.Series
 					for i := 0; i < len(block.Rows); i++ {
@@ -989,6 +1031,8 @@ var builtins_iteration = map[string]*env.Builtin{
 					case env.Block:
 						switch code := arg0.(type) {
 						case env.Block:
+							// Pre-resolve builtins in the code block for faster execution
+							resolveBuiltinsInBlock(ps, &code)
 							ser := ps.Ser
 							ps.Ser = code.Series
 							purged := make([]env.Object, 0)
@@ -1121,6 +1165,11 @@ var builtins_iteration = map[string]*env.Builtin{
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
 							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i + 1)))
+							// Pre-resolve builtins in the block after defining the local word,
+							// so the word doesn't get replaced by a builtin with the same name
+							if i == 0 {
+								resolveBuiltinsInBlock(ps, &block)
+							}
 							EvalBlockInj(ps, list.Get(i), true)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "map\\pos")
 							if ps.ErrorFlag || ps.ReturnFlag {
@@ -1168,6 +1217,11 @@ var builtins_iteration = map[string]*env.Builtin{
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
 							ps.Ctx.Mod(accu.Index, *env.NewInteger(int64(i)))
+							// Pre-resolve builtins in the block after defining the local word,
+							// so the word doesn't get replaced by a builtin with the same name
+							if i == 0 {
+								resolveBuiltinsInBlock(ps, &block)
+							}
 							EvalBlockInj(ps, list.Get(i), true)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "map\\idx")
 							if ps.ErrorFlag || ps.ReturnFlag {
@@ -1225,6 +1279,11 @@ var builtins_iteration = map[string]*env.Builtin{
 						ps.Ser = block.Series
 						for i := 1; i < l; i++ {
 							ps.Ctx.Mod(accu.Index, acc)
+							// Pre-resolve builtins in the block after defining the local word,
+							// so the word doesn't get replaced by a builtin with the same name
+							if i == 1 {
+								resolveBuiltinsInBlock(ps, &block)
+							}
 							EvalBlockInj(ps, list.Get(i), true)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "reduce")
 							if ps.ErrorFlag || ps.ReturnFlag {
@@ -1277,6 +1336,11 @@ var builtins_iteration = map[string]*env.Builtin{
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
 							ps.Ctx.Mod(accu.Index, acc)
+							// Pre-resolve builtins in the block after defining the local word,
+							// so the word doesn't get replaced by a builtin with the same name
+							if i == 0 {
+								resolveBuiltinsInBlock(ps, &block)
+							}
 							EvalBlockInj(ps, list.Get(i), true)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "fold\\do")
 							if ps.ErrorFlag || ps.ReturnFlag {
@@ -1461,6 +1525,8 @@ var builtins_iteration = map[string]*env.Builtin{
 					var prevres env.Object
 					switch block := block.(type) {
 					case env.Block:
+						// Pre-resolve builtins in the code block for faster execution
+						resolveBuiltinsInBlock(ps, &block)
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for _, curval := range list.Value {
@@ -1512,6 +1578,8 @@ var builtins_iteration = map[string]*env.Builtin{
 					var prevres env.Object
 					switch block := block.(type) {
 					case env.Block:
+						// Pre-resolve builtins in the code block for faster execution
+						resolveBuiltinsInBlock(ps, &block)
 						ser := ps.Ser
 						ps.Ser = block.Series
 						for i := 0; i < l; i++ {
@@ -1608,6 +1676,8 @@ var builtins_iteration = map[string]*env.Builtin{
 				newd := make(map[string]any)
 				switch block := block.(type) {
 				case env.Block:
+					// Pre-resolve builtins in the code block for faster execution
+					resolveBuiltinsInBlock(ps, &block)
 					ser := ps.Ser
 					ps.Ser = block.Series
 					for i := 0; i < llen; i++ {
@@ -1735,6 +1805,8 @@ var builtins_iteration = map[string]*env.Builtin{
 				var newll []any
 				switch block := block.(type) {
 				case env.Block:
+					// Pre-resolve builtins in the code block for faster execution
+					resolveBuiltinsInBlock(ps, &block)
 					ser := ps.Ser
 					ps.Ser = block.Series
 					for i := 0; i < llen; i++ {
@@ -1868,6 +1940,8 @@ var builtins_iteration = map[string]*env.Builtin{
 			case env.Block, env.Builtin:
 				switch block := block.(type) {
 				case env.Block:
+					// Pre-resolve builtins in the code block for faster execution
+					resolveBuiltinsInBlock(ps, &block)
 					ser := ps.Ser
 					ps.Ser = block.Series
 					for i := 0; i < llen; i++ {
@@ -1938,8 +2012,11 @@ var builtins_iteration = map[string]*env.Builtin{
 			case env.Block:
 				switch bloc := arg1.(type) {
 				case env.Block:
+					// Pre-resolve builtins in both condition and body blocks for faster execution
+					resolveBuiltinsInBlock(ps, &cond)
+					resolveBuiltinsInBlock(ps, &bloc)
 					ser := ps.Ser
-					var prevRes env.Object
+					prevRes := ps.Res
 					for {
 						// Check for interrupt signal (Ctrl+C, Ctrl+Z)
 						if ps.InterruptFlag {
@@ -2008,7 +2085,11 @@ var builtins_iteration = map[string]*env.Builtin{
 			case env.Block:
 				switch bloc := arg1.(type) {
 				case env.Block:
+					// Pre-resolve builtins in both condition and body blocks for faster execution
+					resolveBuiltinsInBlock(ps, &cond)
+					resolveBuiltinsInBlock(ps, &bloc)
 					ser := ps.Ser
+					prevRes := ps.Res
 					for {
 						// Execute the body block first (do-until behavior)
 						ps.Ser = bloc.Series
@@ -2019,6 +2100,7 @@ var builtins_iteration = map[string]*env.Builtin{
 							ps.Ser = ser
 							return ps.Res
 						}
+						prevRes = ps.Res
 
 						// Then evaluate the condition block
 						ps.Ser = cond.Series
@@ -2034,7 +2116,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						res, ok := ps.Res.(env.Boolean)
 						if !ok {
 							ps.Ser = ser
-							return MakeBuiltinError(ps, "Result of condition block should be a Boolean value", "while")
+							return MakeBuiltinError(ps, "Result of condition block should be a Boolean value", "until")
 						}
 						if res.Value == true {
 							break
@@ -2042,12 +2124,12 @@ var builtins_iteration = map[string]*env.Builtin{
 
 					}
 					ps.Ser = ser
-					return ps.Res
+					return prevRes
 				default:
-					return MakeArgError(ps, 1, []env.Type{env.BlockType}, "until")
+					return MakeArgError(ps, 2, []env.Type{env.BlockType}, "until")
 				}
 			default:
-				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "until")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType}, "until")
 			}
 		},
 	},
@@ -2076,9 +2158,13 @@ var builtins_iteration = map[string]*env.Builtin{
 					switch collection := arg0.(type) {
 					case env.String:
 						// Iterate over string characters
-						for _, ch := range collection.Value {
+						for i, ch := range collection.Value {
 							val := *env.NewString(string(ch))
 							ps.Ctx.Mod(valueWord.Index, val)
+							// Pre-resolve builtins in the block for faster execution
+							if i == 0 {
+								resolveBuiltinsInBlock(ps, &block)
+							}
 							Eval(ps)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "for\\")
 							if ps.ErrorFlag || ps.ReturnFlag {
@@ -2093,6 +2179,10 @@ var builtins_iteration = map[string]*env.Builtin{
 						for i := 0; i < length; i++ {
 							val := collection.Get(i)
 							ps.Ctx.Mod(valueWord.Index, val)
+							// Pre-resolve builtins in the block for faster execution
+							if i == 0 {
+								resolveBuiltinsInBlock(ps, &block)
+							}
 							Eval(ps)
 							MaybeDisplayFailureOrError(ps, ps.Idx, "for\\")
 							if ps.ErrorFlag || ps.ReturnFlag {
@@ -2139,6 +2229,7 @@ var builtins_iteration = map[string]*env.Builtin{
 						ser := ps.Ser
 						ps.Ser = block.Series
 
+						first := true
 						switch collection := arg0.(type) {
 						case env.Dict:
 							// Iterate over dictionary key-value pairs
@@ -2146,6 +2237,12 @@ var builtins_iteration = map[string]*env.Builtin{
 								ps.Ctx.Mod(keyWord.Index, *env.NewString(key))
 								val := env.ToRyeValue(value)
 								ps.Ctx.Mod(valueWord.Index, val)
+								// Pre-resolve builtins in the block after defining the local words,
+								// so they don't get replaced by builtins with the same name
+								if first {
+									resolveBuiltinsInBlock(ps, &block)
+									first = false
+								}
 								EvalBlockInj(ps, val, true)
 								MaybeDisplayFailureOrError(ps, ps.Idx, "for\\kv")
 								if ps.ErrorFlag || ps.ReturnFlag {
@@ -2161,6 +2258,12 @@ var builtins_iteration = map[string]*env.Builtin{
 								ps.Ctx.Mod(keyWord.Index, *env.NewInteger(int64(i)))
 								val := collection.Get(i)
 								ps.Ctx.Mod(valueWord.Index, val)
+								// Pre-resolve builtins in the block after defining the local words,
+								// so they don't get replaced by builtins with the same name
+								if first {
+									resolveBuiltinsInBlock(ps, &block)
+									first = false
+								}
 								EvalBlockInj(ps, val, true)
 								// ERRORING . if we don't display here, nothing of meaning is displayed
 								// just runtime error

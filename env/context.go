@@ -63,14 +63,15 @@ type EnvR2 struct {
 }
 
 type RyeCtx struct {
-	state     map[int]Object
-	varFlags  map[int]bool    // Tracks which words are variables
-	observers map[int][]Block // Observers for variable changes: word index -> observer blocks
-	Parent    *RyeCtx
-	Kind      Word
-	Doc       string
-	locked    bool
-	IsClosure bool // Marks contexts captured by closures - should not be pooled
+	state           map[int]Object
+	varFlags        map[int]bool    // Tracks which words are variables
+	observers       map[int][]Block // Observers for variable changes: word index -> observer blocks
+	hasAnyObservers bool            // Fast-path flag: true if any observers exist in this context
+	Parent          *RyeCtx
+	Kind            Word
+	Doc             string
+	locked          bool
+	IsClosure       bool // Marks contexts captured by closures - should not be pooled
 }
 
 func NewEnv(par *RyeCtx) *RyeCtx {
@@ -498,38 +499,31 @@ func (e *RyeCtx) GetCurrent(word int) (Object, bool) {
 }
 
 func (e *RyeCtx) Get(word int) (Object, bool) {
-	obj, exists := e.state[word]
-	// recursively look at outer Environments ...
-	// only specific functions should do this and ounly for function values ... but there is only global env maybe
-	// this is simple environment setup, but we will for the sake of safety and speed change this probably
-	// maybe some caching here ... or we could inject functions directly into locked series like some idea was to avoid variable lookup
-	if !exists && e.Parent != nil {
-		par := *e.Parent
-		obj1, exists1 := par.Get(word)
-		if exists1 {
-			obj = obj1
-			exists = exists1
+	// Fast path: check current context first
+	if obj, exists := e.state[word]; exists {
+		return obj, true
+	}
+	// Walk parent chain without recursion (avoids stack frames and struct copies)
+	for ctx := e.Parent; ctx != nil; ctx = ctx.Parent {
+		if obj, exists := ctx.state[word]; exists {
+			return obj, true
 		}
 	}
-	return obj, exists
+	return nil, false
 }
 
 func (e *RyeCtx) Get2(word int) (Object, bool, Context) {
-	obj, exists := e.state[word]
-	// recursively look at outer Environments ...
-	// only specific functions should do this and ounly for function values ... but there is only global env maybe
-	// this is simple environment setup, but we will for the sake of safety and speed change this probably
-	// maybe some caching here ... or we could inject functions directly into locked series like some idea was to avoid variable lookup
-	if !exists && e.Parent != nil {
-		par := *e.Parent
-		obj1, exists1, ctx := par.Get2(word)
-		if exists1 {
-			obj = obj1
-			exists = exists1
-			return obj, exists, ctx
+	// Fast path: check current context first
+	if obj, exists := e.state[word]; exists {
+		return obj, true, e
+	}
+	// Walk parent chain without recursion
+	for ctx := e.Parent; ctx != nil; ctx = ctx.Parent {
+		if obj, exists := ctx.state[word]; exists {
+			return obj, true, ctx
 		}
 	}
-	return obj, exists, e
+	return nil, false, e
 }
 
 func (e *RyeCtx) Set(word int, val Object) Object {
@@ -668,12 +662,27 @@ func (e *RyeCtx) AsRyeCtx() *RyeCtx {
 // AddObserver registers an observer block for a specific word in this context
 func (e *RyeCtx) AddObserver(wordIndex int, observerBlock Block) {
 	e.observers[wordIndex] = append(e.observers[wordIndex], observerBlock)
+	e.hasAnyObservers = true  // Set context-level fast-path flag
+	GlobalHasObservers = true // Set global fast-path flag
 }
 
 // HasObservers checks if there are any observers for a word in this context
 func (e *RyeCtx) HasObservers(wordIndex int) bool {
 	observers, exists := e.observers[wordIndex]
 	return exists && len(observers) > 0
+}
+
+// HasAnyObserversInChain checks if this context or any parent has any observers at all
+// This is a fast-path check to skip observer processing entirely when none exist
+func (e *RyeCtx) HasAnyObserversInChain() bool {
+	ctx := e
+	for ctx != nil {
+		if ctx.hasAnyObservers {
+			return true
+		}
+		ctx = ctx.Parent
+	}
+	return false
 }
 
 // GetObservers returns a copy of observers for a word in this context
