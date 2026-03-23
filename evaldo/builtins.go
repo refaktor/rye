@@ -1411,6 +1411,61 @@ var builtins = map[string]*env.Builtin{
 	},
 
 	// Tests:
+	// equal { a: ref [ 1 2 ] same? a a } true
+	// equal { a: ref [ 1 2 ] b: ref [ 1 2 ] same? a b } false
+	// equal { a: ref [ 1 2 ] b: a same? a b } true
+	// equal { same? 123 123 } true
+	// equal { same? "abc" "abc" } false ; strings are different objects
+	// Args:
+	// * value1: First value to compare
+	// * value2: Second value to compare
+	// Returns:
+	// * Boolean true if values are the same object (identity), false otherwise
+	"same?": {
+		Argsn: 2,
+		Doc:   "Checks if two values are the same object (identity comparison, not value comparison).",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			// For pointer types, compare pointers directly
+			switch a := arg0.(type) {
+			case *env.Block:
+				if b, ok := arg1.(*env.Block); ok {
+					return *env.NewBoolean(a == b)
+				}
+				return *env.NewBoolean(false)
+			case *env.List:
+				if b, ok := arg1.(*env.List); ok {
+					return *env.NewBoolean(a == b)
+				}
+				return *env.NewBoolean(false)
+			case *env.Dict:
+				if b, ok := arg1.(*env.Dict); ok {
+					return *env.NewBoolean(a == b)
+				}
+				return *env.NewBoolean(false)
+			case *env.Table:
+				if b, ok := arg1.(*env.Table); ok {
+					return *env.NewBoolean(a == b)
+				}
+				return *env.NewBoolean(false)
+			case *env.String:
+				if b, ok := arg1.(*env.String); ok {
+					return *env.NewBoolean(a == b)
+				}
+				return *env.NewBoolean(false)
+			case *env.RyeCtx:
+				if b, ok := arg1.(*env.RyeCtx); ok {
+					return *env.NewBoolean(a == b)
+				}
+				return *env.NewBoolean(false)
+			default:
+				// For value types (Integer, Decimal, Boolean), use value equality
+				return *env.NewBoolean(arg0.Equal(arg1))
+			}
+		},
+	},
+
+	// Tests:
 	// equal { dict { "a" 123 } |-> "a" } 123
 	// equal { dict { "name" "John" "age" 30 } |-> "name" } "John"
 	// equal { dict { } |type? } 'dict

@@ -1,5 +1,9 @@
 package env
 
+// GlobalHasObservers is a fast-path flag that's set to true when any observer is registered anywhere
+// This allows skipping observer checks entirely when no observers exist in the entire program
+var GlobalHasObservers bool = false
+
 // TriggerObserversInChain triggers all observers for a word change by searching up the context chain
 // This function searches for observers in all contexts in the chain (starting from current context going up to parents)
 func TriggerObserversInChain(ps *ProgramState, ctx *RyeCtx, wordIndex int, oldValue, newValue Object) {

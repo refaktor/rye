@@ -922,6 +922,10 @@ func (i Block) GetKind() int {
 }
 
 func (i Block) Equal(o Object) bool {
+	// Handle *Block (ref) - dereference and compare by value
+	if oBlockPtr, ok := o.(*Block); ok {
+		return i.Equal(*oBlockPtr)
+	}
 	if i.Type() != o.Type() {
 		return false
 	}

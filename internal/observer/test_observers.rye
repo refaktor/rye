@@ -1,50 +1,75 @@
-#!/usr/bin/env rye
+; Variable Observer Tests
+print "## Observer Tests"
 
-print "Testing variable observers..."
+; Basic observer functionality
+assert\display "basic observer" {
+	x5: var 'counter5 0
+	var 'last-seen5 0
+	on-change x5 { last-seen5:: counter5 }
+	counter5:: 5
+	counter5:: 10
+	last-seen5
+} 10
 
-; Test 1: Basic observer functionality
-print "\n--- Test 1: Basic observer functionality ---"
-x: var 'counter 0
-print "Initial counter value:" counter
-on-change x { print "Counter changed to:" counter }
+; Multiple observers on same variable
+assert\display "multiple observers" {
+	var 'obs6a-count 0
+	var 'obs6b-count 0
+	y6: var 'temperature6 20
+	on-change y6 { inc! 'obs6a-count }
+	on-change y6 { inc! 'obs6b-count }
+	temperature6:: 30
+	temperature6:: 15
+	obs6a-count + obs6b-count
+} 4
 
-; Modify the variable - this should trigger the observer
-counter:: 5
-print "Counter is now:" counter
+; Context isolation - observers in different contexts
+assert\display "context isolated observers" {
+	ctx7a: context {
+		w: var 'value 1
+		var 'triggered false
+		on-change w { triggered:: true }
+	}
+	ctx7b: context {
+		w: var 'value 100
+		var 'triggered false
+		on-change w { triggered:: true }
+	}
+	; Modify ctx7a value
+	ctx7a/value:: 42
+	; ctx7b should not be affected
+	ctx7b/triggered
+} false
 
-; Modify it again
-counter:: 10
-print "Final counter value:" counter
+assert\display "context1 observer triggers" {
+	ctx8: context {
+		w: var 'value 1
+		var 'triggered false
+		on-change w { triggered:: true }
+	}
+	ctx8/value:: 42
+	ctx8/triggered
+} true
 
-; Test 2: Multiple observers on same variable
-print "\n--- Test 2: Multiple observers on same variable ---"
-y: var 'temperature 20
-print "Initial temperature:" temperature
+; Observer with conditional logic
+assert\display "observer with conditional" {
+	var 'high-temp-alert9 false
+	y9: var 'temperature9 20
+	on-change y9 { 
+		if temperature9 > 25 { high-temp-alert9:: true }
+	}
+	temperature9:: 30
+	high-temp-alert9
+} true
 
-on-change y { print "Temperature alert: new value is" temperature }
-on-change y { 
-    either temperature > 25 
-        { print "Warning: Temperature is high!" }
-        { print "Temperature is normal" }
-}
+assert\display "observer conditional not triggered" {
+	var 'high-temp-alert10 false
+	y10: var 'temperature10 20
+	on-change y10 { 
+		if temperature10 > 25 { high-temp-alert10:: true }
+	}
+	temperature10:: 20
+	high-temp-alert10
+} false
 
-temperature:: 30
-temperature:: 15
-
-; Test 3: Variables in different contexts
-print "\n--- Test 3: Context isolation ---"
-ctx1: context {
-    w: var 'value 1
-    on-change w { print "Context 1 - value changed to:" value }
-}
-
-ctx2: context {
-    w: var 'value 100
-    on-change w { print "Context 2 - value changed to:" value }
-}
-
-; Modify variables in different contexts
-ctx1/value:: 42
-ctx2/value:: 999
-
-print "\nAll observer tests completed!"
+print ""

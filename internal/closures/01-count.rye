@@ -1,10 +1,33 @@
+; Basic closure counter test
+print "## Basic Closure Counter"
+
 make-counter: does { var 'cnt 0 , closure { } { inc! 'cnt } }
 
-cc: make-counter
-cc2: make-counter
+; Test counter increments
+assert\display "counter increments" {
+	cc1: make-counter
+	cc1
+	cc1
+	cc1
+} 3
 
-loop 10 { print cc , sleep 10 }
+assert\display "independent counters" {
+	cc2a: make-counter
+	cc2b: make-counter
+	cc2a
+	cc2a
+	cc2b
+	cc2a
+	cc2b
+	cc2a  ; cc2a should be at 4
+} 4
 
-loop 10 { print cc2 , sleep 10 }
+assert\display "second counter independent" {
+	cc3a: make-counter
+	cc3b: make-counter
+	cc3a
+	cc3a
+	cc3b  ; cc3b should be at 1
+} 1
 
-loop 10 { print cc , sleep 10 }
+print ""

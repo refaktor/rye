@@ -6793,6 +6793,27 @@ section "Other " "..." {
 	{
 	}
 
+	group "same?" 
+	"Checks if two values are the same object (identity comparison, not value comparison)."
+	{
+		argsn 2
+		pure
+		arg `value1: First value to compare`
+		arg `value2: Second value to compare`
+		returns `Boolean true if values are the same object (identity), false otherwise`
+	}
+
+	{
+		equal { a: ref [ 1 2 ] same? a a } true
+		equal { a: ref [ 1 2 ] b: ref [ 1 2 ] same? a b } false
+		equal { a: ref [ 1 2 ] b: a same? a b } true
+		equal { same? 123 123 } true
+		equal { same? "abc" "abc" } false ; strings are different objects
+	}
+
+	{
+	}
+
 	group "dict" 
 	"Constructs a Dict from the Block of key and value pairs."
 	{
