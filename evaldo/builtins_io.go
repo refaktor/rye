@@ -1488,6 +1488,29 @@ var Builtins_io = map[string]*env.Builtin{
 		},
 	},
 
+	// Args:
+	// * response: native https-response object
+	// Returns:
+	// * empty string if close succeeds
+	"https-response//Close-body!": {
+		Argsn: 1,
+		Doc:   "Closes the HTTPS response body to free network resources.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch resp := arg0.(type) {
+			case env.Native:
+				err := resp.Value.(*http.Response).Body.Close()
+				if err != nil {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, err.Error(), "https-response//Close-body!")
+				}
+				return *env.NewString("")
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "https-response//Close-body!")
+			}
+		},
+	},
+
 	//
 	// ##### Email Operations ##### "Email sending and SMTP communication"
 	//

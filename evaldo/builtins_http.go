@@ -297,6 +297,43 @@ var Builtins_http = map[string]*env.Builtin{
 	},
 
 	// Example:
+	// ; Inside a handler: w .Add-header 'set-cookie "a=1; Path=/; HttpOnly"
+	// ; Inside a handler: w .Add-header 'vary "Accept-Encoding"
+	// Args:
+	// * writer: Native Go-server-response-writer object from HTTP handler
+	// * name: Word representing the header name (e.g., 'set-cookie, 'vary)
+	// * value: String value to add for the header
+	// Returns:
+	// * the response writer object for method chaining
+	"Go-server-response-writer//Add-header": {
+		Argsn: 3,
+		Doc:   "Adds a custom HTTP header value in the response, preserving existing values for multi-value headers.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch writer := arg0.(type) {
+			case env.Native:
+				switch name := arg1.(type) {
+				case env.Word:
+					name_ := ps.Idx.GetWord(name.Index)
+					switch value := arg2.(type) {
+					case env.String:
+						writer.Value.(http.ResponseWriter).Header().Add(name_, value.Value)
+						return arg0
+					default:
+						ps.FailureFlag = true
+						return MakeArgError(ps, 3, []env.Type{env.StringType}, "Go-server-response-writer//Add-header")
+					}
+				default:
+					ps.FailureFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.WordType}, "Go-server-response-writer//Add-header")
+				}
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-response-writer//Add-header")
+			}
+		},
+	},
+
+	// Example:
 	// ; Inside a handler: w .Write-header 404
 	// ; Inside a handler: w .Write-header 200
 	// ; Inside a handler: w .Write-header 500
@@ -489,6 +526,148 @@ var Builtins_http = map[string]*env.Builtin{
 			default:
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-request//query?")
+			}
+		},
+	},
+
+	// Example:
+	// ; Inside a handler: req .Header? "authorization"
+	// ; Inside a handler: req .Header? "content-type"
+	// Args:
+	// * request: Native Go-server-request object from HTTP handler
+	// * name: String header name to retrieve (e.g., "authorization", "content-type")
+	// Returns:
+	// * string header value (empty string if header is missing)
+	"Go-server-request//Header?": {
+		Argsn: 2,
+		Doc:   "Gets a header value from the HTTP request by name.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch req := arg0.(type) {
+			case env.Native:
+				switch name := arg1.(type) {
+				case env.String:
+					val := req.Value.(*http.Request).Header.Get(name.Value)
+					return *env.NewString(val)
+				default:
+					ps.FailureFlag = true
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "Go-server-request//header?")
+				}
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-request//header?")
+			}
+		},
+	},
+
+	// Example:
+	// ; Inside a handler: creds: req .Basic-auth?
+	// ; user: creds |first
+	// ; pass: creds |second
+	// Args:
+	// * request: Native Go-server-request object from HTTP handler
+	// Returns:
+	// * block with username and password strings when Basic Auth is present
+	// * error when Basic Auth credentials are missing
+	"Go-server-request//Basic-auth?": {
+		Argsn: 1,
+		Doc:   "Gets HTTP Basic Authentication credentials from the request as [username password].",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch req := arg0.(type) {
+			case env.Native:
+				username, password, ok := req.Value.(*http.Request).BasicAuth()
+				if !ok {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, "Basic auth credentials are missing.", "Go-server-request//basic-auth?")
+				}
+				pair := make([]env.Object, 2)
+				pair[0] = *env.NewString(username)
+				pair[1] = *env.NewString(password)
+				return *env.NewBlock(*env.NewTSeries(pair))
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-request//basic-auth?")
+			}
+		},
+	},
+
+	// Example:
+	// ; Inside a handler: req .Method?
+	// ; equal { req .Method? } "GET"
+	// Args:
+	// * request: Native Go-server-request object from HTTP handler
+	// Returns:
+	// * string containing HTTP method (GET, POST, PUT, DELETE, ...)
+	"Go-server-request//Method?": {
+		Argsn: 1,
+		Doc:   "Gets the HTTP request method.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch req := arg0.(type) {
+			case env.Native:
+				return *env.NewString(req.Value.(*http.Request).Method)
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-request//method?")
+			}
+		},
+	},
+
+	// Example:
+	// ; Inside a handler: body: req .Read-body
+	// ; Inside a handler: print body
+	// Args:
+	// * request: Native Go-server-request object from HTTP handler
+	// Returns:
+	// * string containing the request body
+	"Go-server-request//Read-body": {
+		Argsn: 1,
+		Doc:   "Reads the HTTP request body as a string.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch req := arg0.(type) {
+			case env.Native:
+				data, err := io.ReadAll(req.Value.(*http.Request).Body)
+				if err != nil {
+					ps.FailureFlag = true
+					return MakeBuiltinError(ps, err.Error(), "Go-server-request//read-body")
+				}
+				return *env.NewString(string(data))
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-request//read-body")
+			}
+		},
+	},
+
+	// Example:
+	// ; Inside a handler: req .Headers?
+	// ; Inside a handler: req .Headers? |print
+	// Args:
+	// * request: Native Go-server-request object from HTTP handler
+	// Returns:
+	// * dict containing all request headers
+	"Go-server-request//Headers?": {
+		Argsn: 1,
+		Doc:   "Gets all HTTP request headers as a dictionary.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch req := arg0.(type) {
+			case env.Native:
+				headers := make(map[string]any)
+				for key, values := range req.Value.(*http.Request).Header {
+					if len(values) == 0 {
+						headers[key] = ""
+					} else if len(values) == 1 {
+						headers[key] = values[0]
+					} else {
+						vals := make([]env.Object, len(values))
+						for i, v := range values {
+							vals[i] = *env.NewString(v)
+						}
+						headers[key] = *env.NewBlock(*env.NewTSeries(vals))
+					}
+				}
+				return *env.NewDict(headers)
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "Go-server-request//headers?")
 			}
 		},
 	},
