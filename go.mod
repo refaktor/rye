@@ -51,7 +51,7 @@ require (
 	github.com/mhale/smtpd v0.8.3
 	github.com/mrz1836/postmark v1.8.4
 	github.com/muesli/reflow v0.3.0
-	github.com/ollama/ollama v0.17.5
+	github.com/ollama/ollama v0.19.0
 	github.com/openai/openai-go v1.12.0
 	github.com/pkg/term v1.2.0-beta.2.0.20211217091447-1a4a3b719465
 	github.com/prometheus/client_golang v1.23.2
