@@ -49,7 +49,7 @@ require (
 	github.com/lib/pq v1.11.2
 	github.com/mattn/go-runewidth v0.0.20
 	github.com/mhale/smtpd v0.8.3
-	github.com/mrz1836/postmark v1.8.4
+	github.com/mrz1836/postmark v1.9.0
 	github.com/muesli/reflow v0.3.0
 	github.com/ollama/ollama v0.17.5
 	github.com/openai/openai-go v1.12.0
