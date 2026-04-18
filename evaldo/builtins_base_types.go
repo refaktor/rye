@@ -149,6 +149,33 @@ var builtins_types = map[string]*env.Builtin{
 	},
 
 	// Tests:
+	// equal { ascii "*" } 42
+	// equal { ascii "A" } 65
+	// error { ascii "ab" }
+	// error { ascii 42 }
+	// Args:
+	// * value: String containing a single character
+	// Returns:
+	// * An integer representing the ASCII code of the character
+	"ascii": { // ***
+		Argsn: 1,
+		Doc:   "Tries to turn a single character string to its ASCII code integer.",
+		Pure:  true,
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch value := arg0.(type) {
+			case env.String:
+				if len(value.Value) == 1 {
+					return *env.NewInteger(int64(value.Value[0]))
+				} else {
+					return MakeBuiltinError(ps, "String must contain exactly one character", "ascii")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "ascii")
+			}
+		},
+	},
+
+	// Tests:
 	// equal { list [ 1 2 3 ] |block |type? } 'block
 	// equal  { list [ 1 2 3 ] |block |first } 1
 	// equal { vector [ 1 2 3 ] |block } { 1.0 2.0 3.0 }

@@ -7,94 +7,12 @@ package evaldo
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/refaktor/rye/env"
 
-	"fmt"
-	"strconv"
-	"strings"
-
 	_ "github.com/glebarez/sqlite"
 )
-
-const MODE_SQLITE = 1
-const MODE_PSQL = 2
-
-func SQL_EvalBlock(es *env.ProgramState, mode int, values []any) (*env.ProgramState, []any) {
-	var bu strings.Builder
-	var str string
-	for es.Ser.Pos() < es.Ser.Len() {
-		es, str, values = SQL_EvalExpression(es, values, mode)
-		bu.WriteString(str + " ")
-		//fmt.Println(bu.String())
-	}
-	//fmt.Println(bu.String())
-	es.Res = *env.NewString(bu.String())
-	return es, values
-}
-
-// mode 1 SQLite, 2 postgresql
-
-func SQL_EvalExpression(es *env.ProgramState, vals []any, mode int) (*env.ProgramState, string, []any) {
-	object := es.Ser.Pop()
-
-	switch obj := object.(type) {
-	case env.Integer:
-		return es, strconv.FormatInt(obj.Value, 10), vals
-	case env.Decimal:
-		return es, strconv.FormatFloat(obj.Value, 'f', 6, 64), vals
-	case env.String:
-		return es, "'" + obj.Value + "'", vals
-	/*case env.VoidType:
-		es.Res = object
-	case env.TagwordType:
-		es.Res = object
-	case env.UriType:
-		es.Res = object */
-	case env.Word:
-		return es, es.Idx.GetWord(obj.Index), vals
-	case env.Opword:
-		return es, es.Idx.GetWord(obj.Index)[1:], vals
-	case env.Pipeword:
-		return es, es.Idx.GetWord(obj.Index)[1:], vals
-	case env.Block:
-		ser := es.Ser
-		es.Ser = obj.Series
-		es1, vals1 := SQL_EvalBlock(es, mode, vals)
-		//trace("VALS")
-		// trace(vals1)
-		es.Ser = ser
-		//vals2 := append(vals, vals1)
-		if obj.Mode == 2 {
-			return es1, "( " + es.Res.(env.String).Value + " )", vals1
-		} else if obj.Mode == 1 {
-			return es1, "[ " + es.Res.(env.String).Value + " ]", vals1
-		} else {
-			return es1, "{ " + es.Res.(env.String).Value + " }", vals1
-		}
-	/*case env.GenwordType:
-		return EvalGenword(es, object.(env.Genword), nil, false)
-	case env.SetwordType:
-		return EvalSetword(es, object.(env.Setword)) */
-	case env.Getword:
-		val, _ := es.Ctx.Get(obj.Index)
-		vals = append(vals, resultToJS(val))
-		var ph string
-		switch mode {
-		case 1:
-			ph = "?"
-		case 2:
-			ph = "$" + strconv.Itoa(len(vals))
-		}
-		return es, ph, vals
-	case env.Comma:
-		return es, ", ", vals
-	default:
-		fmt.Println("OTHER SQL NODE")
-		return es, "Error 123112431", vals
-	}
-	// return es, "ERROR", vals
-}
 
 var Builtins_sqlite = map[string]*env.Builtin{
 
