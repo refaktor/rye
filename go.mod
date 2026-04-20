@@ -1,6 +1,6 @@
 module github.com/refaktor/rye
 
-go 1.25.0
+go 1.26.1
 
 retract v0.0.11 // Published accidentally with a bug
 
@@ -10,7 +10,7 @@ replace github.com/jaytaylor/go-find => github.com/refaktor/go-find v0.0.0-20260
 
 require (
 	filippo.io/age v1.3.1
-	github.com/BrianLeishman/go-imap v0.1.21
+	github.com/BrianLeishman/go-imap v0.1.28
 	github.com/JohannesKaufmann/html-to-markdown/v2 v2.5.0
 	github.com/PuerkitoBio/goquery v1.12.0
 	github.com/atotto/clipboard v0.1.4
@@ -47,7 +47,7 @@ require (
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/landlock-lsm/go-landlock v0.7.0
 	github.com/lib/pq v1.12.1
-	github.com/mattn/go-runewidth v0.0.20
+	github.com/mattn/go-runewidth v0.0.21
 	github.com/mhale/smtpd v0.8.3
 	github.com/mrz1836/postmark v1.9.0
 	github.com/muesli/reflow v0.3.0
@@ -62,11 +62,11 @@ require (
 	github.com/xuri/excelize/v2 v2.10.1
 	github.com/yuin/goldmark v1.7.16
 	go.mongodb.org/mongo-driver v1.17.9
-	golang.org/x/crypto v0.49.0
-	golang.org/x/net v0.52.0
+	golang.org/x/crypto v0.50.0
+	golang.org/x/net v0.53.0
 	golang.org/x/sync v0.20.0
-	golang.org/x/term v0.41.0
-	golang.org/x/text v0.35.0
+	golang.org/x/term v0.42.0
+	golang.org/x/text v0.36.0
 	gopkg.in/headzoo/surf.v1 v1.0.1
 	gopkg.in/yaml.v3 v3.0.1
 	software.sslmate.com/src/go-pkcs12 v0.7.0
@@ -86,7 +86,7 @@ require (
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/cention-sany/utf7 v0.0.0-20170124080048-26cad61bd60a // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/clipperhouse/displaywidth v0.10.0 // indirect
+	github.com/clipperhouse/displaywidth v0.11.0 // indirect
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/cloudflare/circl v1.6.1 // indirect
 	github.com/containerd/errdefs v1.0.0 // indirect
@@ -100,13 +100,14 @@ require (
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/ebitengine/purego v0.7.1 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
-	github.com/fatih/color v1.18.0 // indirect
+	github.com/fatih/color v1.19.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/frankban/quicktest v1.14.6 // indirect
 	github.com/go-git/gcfg/v2 v2.0.2 // indirect
 	github.com/go-git/go-billy/v6 v6.0.0-20250627091229-31e2a16eef30 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
+	github.com/goccy/go-json v0.10.6 // indirect
 	github.com/gogs/chardet v0.0.0-20211120154057-b7413eaefb8f // indirect
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
 	github.com/google/flatbuffers v25.2.10+incompatible // indirect
@@ -125,8 +126,8 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/olekukonko/cat v0.0.0-20250911104152-50322a0618f6 // indirect
 	github.com/olekukonko/errors v1.2.0 // indirect
-	github.com/olekukonko/ll v0.1.6 // indirect
-	github.com/olekukonko/tablewriter v1.1.3 // indirect
+	github.com/olekukonko/ll v0.1.8 // indirect
+	github.com/olekukonko/tablewriter v1.1.4 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.1 // indirect
 	github.com/pjbgf/sha1cd v0.3.2 // indirect
@@ -237,7 +238,7 @@ require (
 	github.com/xuri/nfp v0.0.2-0.20250530014748-2ddeb826f9a9 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	go.etcd.io/bbolt v1.4.0 // indirect
-	golang.org/x/sys v0.42.0 // indirect
+	golang.org/x/sys v0.43.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df // indirect
