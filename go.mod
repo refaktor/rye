@@ -47,7 +47,7 @@ require (
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/landlock-lsm/go-landlock v0.7.0
 	github.com/lib/pq v1.12.1
-	github.com/mattn/go-runewidth v0.0.21
+	github.com/mattn/go-runewidth v0.0.23
 	github.com/mhale/smtpd v0.8.3
 	github.com/mrz1836/postmark v1.9.0
 	github.com/muesli/reflow v0.3.0
