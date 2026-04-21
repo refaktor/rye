@@ -59,6 +59,16 @@ func RyeToJSONWithIdxs(res any, idxs *env.Idxs) string {
 			return v
 		}
 		return "\"" + EscapeJson(v) + "\""
+	case bool:
+		if v {
+			return "true"
+		}
+		return "false"
+	case env.Boolean:
+		if v.Value {
+			return "true"
+		}
+		return "false"
 	case env.String:
 		return "\"" + EscapeJson(v.Value) + "\""
 	case env.Integer:
@@ -367,6 +377,9 @@ var Builtins_json = map[string]*env.Builtin{
 	// equal { dict { a: 1 b: 2 c: 3 } |to-json |parse-json |-> "b" } 2
 	// equal { { 1 2 3 } |to-json } "[1, 2, 3] "
 	// equal { context { a: 1 b: 2 } |to-json |parse-json |-> "a" } 1
+	// equal { true |to-json } "true"
+	// equal { false |to-json } "false"
+	// equal { `[true, false]` |parse-json |to-json } "[true, false] "
 	// Args:
 	// * value: any Rye value to encode (block, list, dict, context, string, integer, etc.)
 	// Returns:
