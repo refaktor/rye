@@ -218,6 +218,9 @@ section "JSON " "Parsing and generating JSON" {
 		equal { dict { a: 1 b: 2 c: 3 } |to-json |parse-json |-> "b" } 2
 		equal { { 1 2 3 } |to-json } "[1, 2, 3] "
 		equal { context { a: 1 b: 2 } |to-json |parse-json |-> "a" } 1
+		equal { true |to-json } "true"
+		equal { false |to-json } "false"
+		equal { `[true, false]` |parse-json |to-json } "[true, false] "
 	}
 
 	{
