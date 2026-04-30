@@ -87,12 +87,12 @@ var Builtins_crypto = map[string]*env.Builtin{
 				r, err := hex.DecodeString(addr.Value)
 				if err != nil {
 					ps.FailureFlag = true
-					return MakeBuiltinError(ps, "Failure to decode string.", "string//to-bytes")
+					return MakeBuiltinError(ps, "Failure to decode string.", "decode\\hex")
 				}
 				return *env.NewNative(ps.Idx, r, "bytes")
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.StringType}, "string//to-bytes")
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "decode\\hex")
 			}
 		},
 	},

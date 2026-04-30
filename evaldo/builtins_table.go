@@ -2593,6 +2593,128 @@ var Builtins_table = map[string]*env.Builtin{
 			}
 		},
 	},
+
+	// Tests:
+	//  equal { `a,b\n1,2\n3,4` |parse\csv |length? } 2
+	//  equal { `a,b\n1,2\n3,4` |parse\csv |column? "a" } { "1" "3" }
+	// Args:
+	// * csv-string - string containing CSV data
+	// Tags: #table #parsing #csv
+	"parse\\csv": {
+		Argsn: 1,
+		Doc:   "Parses a CSV string to a table datatype.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch csvData := arg0.(type) {
+			case env.String:
+				csvReader := csv.NewReader(strings.NewReader(csvData.Value))
+				rows, err := csvReader.ReadAll()
+				if err != nil {
+					return MakeBuiltinError(ps, "Unable to parse string as CSV: "+err.Error(), "parse\\csv")
+				}
+				if len(rows) == 0 {
+					return MakeBuiltinError(ps, "CSV data is empty", "parse\\csv")
+				}
+				spr := env.NewTable(rows[0])
+				if len(rows) > 1 {
+					for _, row := range rows[1:] {
+						anyRow := make([]any, len(row))
+						for i, v := range row {
+							anyRow[i] = *env.NewString(v)
+						}
+						spr.AddRow(*env.NewTableRow(anyRow, spr))
+					}
+				}
+				return *spr
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "parse\\csv")
+			}
+		},
+	},
+
+	// Tests:
+	//  equal { `a,b\n1,2\n3,4` |parse\csv\ "," |length? } 2
+	//  equal { `a;b\n1;2\n3;4` |parse\csv\ ";" |column? "a" } { "1" "3" }
+	// Args:
+	// * csv-string - string containing CSV data
+	// * separator - single character separator
+	// Tags: #table #parsing #csv
+	"parse\\csv\\": {
+		Argsn: 2,
+		Doc:   "Parses a CSV string to a table datatype with custom separator.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch csvData := arg0.(type) {
+			case env.String:
+				switch separator := arg1.(type) {
+				case env.String:
+					csvReader := csv.NewReader(strings.NewReader(csvData.Value))
+					if len(separator.Value) != 1 {
+						return MakeBuiltinError(ps, "Separator must be exactly 1 character long", "parse\\csv\\")
+					}
+					csvReader.Comma = rune(separator.Value[0])
+					rows, err := csvReader.ReadAll()
+					if err != nil {
+						return MakeBuiltinError(ps, "Unable to parse string as CSV: "+err.Error(), "parse\\csv\\")
+					}
+					if len(rows) == 0 {
+						return MakeBuiltinError(ps, "CSV data is empty", "parse\\csv\\")
+					}
+					spr := env.NewTable(rows[0])
+					if len(rows) > 1 {
+						for _, row := range rows[1:] {
+							anyRow := make([]any, len(row))
+							for i, v := range row {
+								anyRow[i] = *env.NewString(v)
+							}
+							spr.AddRow(*env.NewTableRow(anyRow, spr))
+						}
+					}
+					return *spr
+				default:
+					return MakeArgError(ps, 2, []env.Type{env.StringType}, "parse\\csv\\")
+				}
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "parse\\csv\\")
+			}
+		},
+	},
+
+	// Tests:
+	//  equal { `a	b\n1	2\n3	4` |parse\tsv |length? } 2
+	//  equal { `a	b\n1	2\n3	4` |parse\tsv |column? "a" } { "1" "3" }
+	// Args:
+	// * tsv-string - string containing TSV (tab-separated values) data
+	// Tags: #table #parsing #tsv
+	"parse\\tsv": {
+		Argsn: 1,
+		Doc:   "Parses a TSV (tab-separated values) string to a table datatype.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch tsvData := arg0.(type) {
+			case env.String:
+				csvReader := csv.NewReader(strings.NewReader(tsvData.Value))
+				csvReader.Comma = '\t'
+				rows, err := csvReader.ReadAll()
+				if err != nil {
+					return MakeBuiltinError(ps, "Unable to parse string as TSV: "+err.Error(), "parse\\tsv")
+				}
+				if len(rows) == 0 {
+					return MakeBuiltinError(ps, "TSV data is empty", "parse\\tsv")
+				}
+				spr := env.NewTable(rows[0])
+				if len(rows) > 1 {
+					for _, row := range rows[1:] {
+						anyRow := make([]any, len(row))
+						for i, v := range row {
+							anyRow[i] = *env.NewString(v)
+						}
+						spr.AddRow(*env.NewTableRow(anyRow, spr))
+					}
+				}
+				return *spr
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.StringType}, "parse\\tsv")
+			}
+		},
+	},
 }
 
 func RyeValueToTableRow(spr *env.Table, obj env.Object) (bool, string, *env.TableRow) {

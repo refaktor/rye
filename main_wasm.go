@@ -263,6 +263,14 @@ func InitRyeShell(this js.Value, args []js.Value) any {
 	ps := env.NewProgramState()
 	evaldo.RegisterBuiltins(ps)
 	contrib.RegisterBuiltins(ps, &evaldo.BuiltinNames)
+
+	/* bu := env.NewBuiltin(func(ps env.ProgramState, a1 env.Object, a2 env.Object, a3 env.Object, a4 env.Object, a5 env.Object) {
+		fn_name := a1.(env.String)
+		arg1 := a2.(env.String)
+		js.Global().Call(fn_name, arg1)
+	}, 2, false, false, "call javascript function with one arg")
+	registerBuiltin(ps, "js-call-1", *bu)*/
+
 	ctx := ps.Ctx
 	ps.Ctx = env.NewEnv(ctx)
 	ES = ps

@@ -620,6 +620,84 @@ var ErrorHandlingBuiltins = map[string]*env.Builtin{
 	},
 
 	// Tests:
+	// equal { req: Request "GET" "http://example.com" req |ensure\with { .Status? = 200 } "request failed" } req
+	// equal { dict { "status" 200 } |ensure\with { .status = 200 } "status check failed" } dict { "status" 200 }
+	// equal { try { dict { "status" 404 } |ensure\with { .status = 200 } "status check failed" } |message? } "status check failed"
+	// Args:
+	// * value: Value to inject into the validation block
+	// * block: Block that receives the value and returns truthy/falsy result
+	// * error_info: Error information to use if block returns falsy
+	// Returns:
+	// * original value if block returns truthy, or creates an error with failure flag set
+	"ensure\\with": {
+		AcceptFailure: true,
+		Argsn:         3,
+		Doc:           "Injects a value into a validation block and returns the value if the block is truthy, otherwise creates an error.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg1.(type) {
+			case env.Block:
+				ser := ps.Ser
+				ps.Ser = bloc.Series
+				EvalBlockInj(ps, arg0, true)
+				if ps.ErrorFlag {
+					ps.Ser = ser
+					return ps.Res
+				}
+				ps.Ser = ser
+				if util.IsTruthy(ps.Res) {
+					return arg0
+				} else {
+					ps.FailureFlag = true
+					return MakeRyeError(ps, arg2, nil)
+				}
+			default:
+				ps.FailureFlag = true
+				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "ensure\\with")
+			}
+		},
+	},
+
+	// Tests:
+	// equal { fn { req } { req |^ensure\with { .Status? = 200 } "request failed" } |apply [ Request "GET" "http://example.com" ] } Request "GET" "http://example.com"
+	// equal { ff:: fn { val } { val |^ensure\with { .status = 200 } "status check failed" } ff dict { "status" 404 } |disarm |message? } "status check failed"
+	// Args:
+	// * value: Value to inject into the validation block
+	// * block: Block that receives the value and returns truthy/falsy result
+	// * error_info: Error information to use if block returns falsy
+	// Returns:
+	// * original value if block returns truthy, or immediately returns from function with an error
+	"^ensure\\with": {
+		AcceptFailure: true,
+		Argsn:         3,
+		Doc:           "Like ensure\\with but also sets the return flag to immediately exit the current function.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch bloc := arg1.(type) {
+			case env.Block:
+				ser := ps.Ser
+				ps.Ser = bloc.Series
+				EvalBlockInj(ps, arg0, true)
+				if ps.ErrorFlag {
+					ps.Ser = ser
+					ps.ReturnFlag = true
+					return ps.Res
+				}
+				ps.Ser = ser
+				if util.IsTruthy(ps.Res) {
+					return arg0
+				} else {
+					ps.FailureFlag = true
+					ps.ReturnFlag = true
+					return MakeRyeError(ps, arg2, nil)
+				}
+			default:
+				ps.FailureFlag = true
+				ps.ReturnFlag = true
+				return MakeArgError(ps, 2, []env.Type{env.BlockType}, "^ensure\\with")
+			}
+		},
+	},
+
+	// Tests:
 	// equal { 5 |fix { + 10 } } 5
 	// equal { try { fail "error" |fix { "fixed" } } } "fixed"
 	// equal { try { fail "error" |fix { fail "new error" } } |message? } "new error"

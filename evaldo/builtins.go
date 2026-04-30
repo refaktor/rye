@@ -2964,6 +2964,7 @@ func RegisterBuiltins(ps *env.ProgramState) {
 	RegisterBuiltinsInContext(Builtins_prometheus, ps, "prometheus")
 	RegisterBuiltinsInContext(Builtins_echarts, ps, "echarts")
 	RegisterBuiltinsInContext(Builtins_flui, ps, "flui")
+	RegisterBuiltins2(Builtins_js_interop, ps, "jsinterop")
 	// RegisterBuiltinsInContext(Builtins_flui_v2, ps, "flui2")
 	// ## Archived modules
 	// RegisterBuiltins2(Builtins_gtk, ps, "gtk")
@@ -3104,6 +3105,30 @@ func registerBuiltin(ps *env.ProgramState, word string, builtin env.Builtin) {
 	}
 }
 
+// TODO -- remove registerBuiltin
+func RegisterBuiltin(ps *env.ProgramState, word string, builtin env.Builtin) {
+	// indexWord
+	// TODO -- this with string separator is a temporary way of how we define generic builtins
+	// in future a map will probably not be a map but an array and builtin will also support the Kind value
+	builtin.Doc = builtin.Doc + " (" + word + ")"
+	idxk := 0
+	if word != "_//" && strings.Index(word, "//") > 0 {
+		temp := strings.Split(word, "//")
+		word = temp[1]
+		idxk = ps.Idx.IndexWord(temp[0])
+	}
+	idxw := ps.Idx.IndexWord(word)
+	// set global word with builtin
+	if idxk == 0 {
+		ps.Ctx.Set(idxw, builtin)
+		if builtin.Pure {
+			ps.PCtx.Set(idxw, builtin)
+		}
+	} else {
+		ps.Gen.Set(idxk, idxw, builtin)
+	}
+}
+
 // builtinGroup describes a named collection of builtins and how they are registered.
 // inContext=false means flat registration into the root context (RegisterBuiltins2 style).
 // inContext=true means registration into a named child context (RegisterBuiltinsInContext style).
@@ -3187,6 +3212,7 @@ var allBuiltinGroups = []builtinGroup{
 	{"prometheus", Builtins_prometheus, true},
 	{"echarts", Builtins_echarts, true},
 	{"flui", Builtins_flui, true},
+	{"js", Builtins_js_interop, true},
 }
 
 // RegisterBuiltinGroups registers all builtins belonging to the named groups.
