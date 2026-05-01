@@ -25,7 +25,7 @@ require (
 	github.com/docker/docker v28.5.2+incompatible
 	github.com/drewlanenga/govector v0.0.0-20220726163947-b958ac08bc93
 	github.com/eclipse/paho.mqtt.golang v1.5.1
-	github.com/fsnotify/fsnotify v1.9.0
+	github.com/fsnotify/fsnotify v1.10.0
 	github.com/fxtlabs/primes v0.0.0-20150821004651-dad82d10a449
 	github.com/gdamore/tcell/v2 v2.13.8
 	github.com/gen2brain/go-mpv v0.2.3
