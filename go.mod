@@ -17,7 +17,7 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.41.7
 	github.com/aws/aws-sdk-go-v2/config v1.32.16
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.100.1
-	github.com/aws/aws-sdk-go-v2/service/ses v1.34.23
+	github.com/aws/aws-sdk-go-v2/service/ses v1.34.24
 	github.com/bitfield/script v0.24.1
 	github.com/blevesearch/bleve/v2 v2.5.7
 	github.com/blevesearch/bleve_index_api v1.3.7
