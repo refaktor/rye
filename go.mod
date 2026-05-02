@@ -45,7 +45,7 @@ require (
 	github.com/jwalton/go-supportscolor v1.2.0
 	github.com/kopoli/go-terminal-size v0.0.0-20170219200355-5c97524c8b54
 	github.com/labstack/echo v3.3.10+incompatible
-	github.com/landlock-lsm/go-landlock v0.7.0
+	github.com/landlock-lsm/go-landlock v0.8.1
 	github.com/lib/pq v1.12.3
 	github.com/mattn/go-runewidth v0.0.23
 	github.com/mhale/smtpd v0.8.3
