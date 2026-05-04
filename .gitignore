@@ -74,3 +74,6 @@ analyses/
 security/policy_embedded_gen.go
 *.zip
 *.tgz
+step_*.md*
+stepi_*md*
+stepi_*csv*

@@ -1364,9 +1364,14 @@ var Builtins_table = map[string]*env.Builtin{
 	// Example: Add a column to a sheet
 	//  sheet: table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
 	//  sheet .gen-column 'job_title { "Jantior" "Librarian" "Line Cook" } ;
+	// Example: Generate column using regex replacement
+	//  sheet: table { "email" } { "john@example.com" "jane@test.org" "bob@company.net" }
+	//  sheet .gen-column 'domain 'email { regexp "@(.+)$" "$1" }
 	// Tests:
 	//  equal { table { "name" "age" } { "Bob" 25 "Alice" 29 "Charlie" 19 }
 	//  |gen-column 'job { } { "Cook" } |column? "job" } { "Cook" "Cook" "Cook" }
+	//  equal { table { "email" } { "john@example.com" "jane@test.org" }
+	//  |gen-column 'domain 'email { regexp ".*@(.+)$" "$1" } |column? "domain" } { "example.com" "test.org" }
 	"gen-column": {
 		Argsn: 4,
 		Doc:   "Adds a new column to table. Changes in-place and returns the new table.",
@@ -2712,6 +2717,66 @@ var Builtins_table = map[string]*env.Builtin{
 				return *spr
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "parse\\tsv")
+			}
+		},
+	},
+
+	// Tests:
+	//  equal { table { "a" "b" } { 1 2 3 4 } |format\csv } "a,b\n1,3\n2,4\n"
+	//  equal { table { "name" "age" } { "Jim" 30 "Jane" 25 } |format\csv |split "\n" |length? } 4
+	// Args:
+	// * table - the table to convert to CSV string
+	// Tags: #table #formatting #csv
+	"format\\csv": {
+		Argsn: 1,
+		Doc:   "Converts a table to a CSV string.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			switch spr := arg0.(type) {
+			case env.Table:
+				var buf strings.Builder
+				csvWriter := csv.NewWriter(&buf)
+
+				cLen := len(spr.Cols)
+
+				// Write header
+				err1 := csvWriter.Write(spr.Cols)
+				if err1 != nil {
+					return MakeBuiltinError(ps, "Unable to write header.", "format\\csv")
+				}
+
+				// Write data rows
+				for ir, row := range spr.Rows {
+					strVals := make([]string, cLen)
+					// Convert values to strings using the same logic as Save\csv
+					for i, v := range row.Values {
+						var sv string
+						switch tv := v.(type) {
+						case string:
+							sv = tv
+						case int64:
+							sv = strconv.Itoa(int(tv))
+						case float64:
+							sv = strconv.FormatFloat(tv, 'f', -1, 64)
+						case env.String:
+							sv = tv.Value
+						case env.Integer:
+							sv = strconv.Itoa(int(tv.Value))
+						case env.Decimal:
+							sv = fmt.Sprintf("%f", tv.Value)
+						}
+						if i < cLen {
+							strVals[i] = sv
+						}
+					}
+					err := csvWriter.Write(strVals)
+					if err != nil {
+						return MakeBuiltinError(ps, "Unable to write line: "+strconv.Itoa(ir), "format\\csv")
+					}
+				}
+				csvWriter.Flush()
+				return *env.NewString(buf.String())
+			default:
+				return MakeArgError(ps, 1, []env.Type{env.TableType}, "format\\csv")
 			}
 		},
 	},
