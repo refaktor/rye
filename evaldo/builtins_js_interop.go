@@ -559,6 +559,37 @@ var Builtins_js_interop = map[string]*env.Builtin{
 			return *env.NewString("async-initiated")
 		},
 	},
+
+	// Tests:
+	// js-display-table [ { "name" "John" "age" 30 } { "name" "Jane" "age" 25 } ]
+	// js-display-table spreadsheet
+	// Args:
+	// * data: Block of dictionaries or Spreadsheet object to display as a table
+	// Returns:
+	// * String confirmation message
+	"js-display-table": {
+		Argsn: 1,
+		Doc:   "Displays data as a table using JavaScript ryeDisplayTable function.",
+		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
+			jsFunc := js.Global().Get("ryeDisplayTable")
+			if jsFunc.IsUndefined() {
+				return MakeBuiltinError(ps, "JavaScript function 'ryeDisplayTable' not available", "js-display-table")
+			}
+
+			// Convert data to JS value
+			jsData := ryeToJS(arg0, ps)
+
+			// Call ryeDisplayTable function
+			result := jsFunc.Invoke(jsData)
+
+			// Return confirmation message
+			if result.Type() == js.TypeString {
+				return *env.NewString(result.String())
+			} else {
+				return *env.NewString("Table displayed successfully")
+			}
+		},
+	},
 }
 
 // Helper function to convert Rye values to JavaScript values
