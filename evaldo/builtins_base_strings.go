@@ -494,15 +494,11 @@ var builtins_string = map[string]*env.Builtin{
 		Pure:  true,
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
+			case env.Bytes:
+				ata := base64.StdEncoding.EncodeToString(s1.Value)
+				return *env.NewString(string(ata))
 			case env.Native:
 				switch ps.Idx.GetWord(s1.GetKind()) {
-				case "bytes":
-					bb, ok := s1.Value.([]byte)
-					if ok {
-						ata := base64.StdEncoding.EncodeToString(bb)
-						return *env.NewString(string(ata))
-					}
-					return MakeError(ps, "Native not of kind 1: bytes")
 				case "pem-block":
 					bb, ok := s1.Value.(*pem.Block)
 					if ok {
@@ -516,7 +512,7 @@ var builtins_string = map[string]*env.Builtin{
 				ata := base64.StdEncoding.EncodeToString([]byte(s1.Value))
 				return *env.NewString(string(ata))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.StringType, env.NativeType}, "base64-encode")
+				return MakeArgError(ps, 1, []env.Type{env.StringType, env.NativeType, env.BytesType}, "base64-encode")
 			}
 		},
 	},

@@ -89,7 +89,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 					ps.FailureFlag = true
 					return MakeBuiltinError(ps, "Failure to decode string.", "decode\\hex")
 				}
-				return *env.NewNative(ps.Idx, r, "bytes")
+				return *env.NewBytes(r)
 			default:
 				ps.FailureFlag = true
 				return MakeArgError(ps, 1, []env.Type{env.StringType}, "decode\\hex")
@@ -109,11 +109,11 @@ var Builtins_crypto = map[string]*env.Builtin{
 		Doc:   "Encodes a bytes native value to a hexadecimal string.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch addr := arg0.(type) {
-			case env.Native:
-				return *env.NewString(hex.EncodeToString(addr.Value.([]byte)))
+			case env.Bytes:
+				return *env.NewString(hex.EncodeToString(addr.Value))
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "bytes//to-string")
+				return MakeArgError(ps, 1, []env.Type{env.BytesType}, "bytes//to-string")
 			}
 		},
 	},
@@ -273,7 +273,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 				switch buff := arg1.(type) {
 				case env.String:
 					sigb := ed25519.Sign(pvk.Value.(ed25519.PrivateKey), []byte(buff.Value))
-					return *env.NewNative(ps.Idx, sigb, "bytes")
+					return *env.NewBytes(sigb)
 				default:
 					ps.FailureFlag = true
 					return MakeArgError(ps, 1, []env.Type{env.StringType}, "Ed25519-priv-key//Sign")
@@ -346,12 +346,8 @@ var Builtins_crypto = map[string]*env.Builtin{
 			var identity *age.X25519Identity
 			var err error
 			switch ident := arg0.(type) {
-			case env.Native:
-				if ps.Idx.GetWord(ident.GetKind()) != "bytes" {
-					ps.FailureFlag = true
-					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "age-identity")
-				}
-				identity, err = age.ParseX25519Identity(hex.EncodeToString(ident.Value.([]byte)))
+			case env.Bytes:
+				identity, err = age.ParseX25519Identity(hex.EncodeToString(ident.Value))
 				if err != nil {
 					ps.FailureFlag = true
 					return MakeBuiltinError(ps, "Error in parsing identity: "+err.Error(), "age-identity")
@@ -364,7 +360,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType, env.StringType}, "age-identity")
+				return MakeArgError(ps, 1, []env.Type{env.BytesType, env.StringType}, "age-identity")
 			}
 			return *env.NewNative(ps.Idx, identity, "age-identity")
 		},
@@ -381,12 +377,8 @@ var Builtins_crypto = map[string]*env.Builtin{
 			var recipient *age.X25519Recipient
 			var err error
 			switch rec := arg0.(type) {
-			case env.Native:
-				if ps.Idx.GetWord(rec.GetKind()) != "bytes" {
-					ps.FailureFlag = true
-					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "age-recipient")
-				}
-				recipient, err = age.ParseX25519Recipient(hex.EncodeToString(rec.Value.([]byte)))
+			case env.Bytes:
+				recipient, err = age.ParseX25519Recipient(hex.EncodeToString(rec.Value))
 				if err != nil {
 					ps.FailureFlag = true
 					return MakeBuiltinError(ps, "Error in parsing recipient: "+err.Error(), "age-recipient")
@@ -399,7 +391,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType, env.StringType}, "age-recipient")
+				return MakeArgError(ps, 1, []env.Type{env.BytesType, env.StringType}, "age-recipient")
 			}
 			return *env.NewNative(ps.Idx, recipient, "age-recipient")
 		},
@@ -538,14 +530,10 @@ var Builtins_crypto = map[string]*env.Builtin{
 		Doc:   "Converts a PKCS#12 (.p12) file bytes to PEM blocks using the provided password. Returns a block of pem-block native values.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p12Data := arg0.(type) {
-			case env.Native:
-				if ps.Idx.GetWord(p12Data.GetKind()) != "bytes" {
-					ps.FailureFlag = true
-					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "pkcs12-to-pem")
-				}
+			case env.Bytes:
 				switch password := arg1.(type) {
 				case env.String:
-					blocks, err := pkcs12.ToPEM(p12Data.Value.([]byte), password.Value)
+					blocks, err := pkcs12.ToPEM(p12Data.Value, password.Value)
 					if err != nil {
 						ps.FailureFlag = true
 						return MakeBuiltinError(ps, fmt.Sprintf("Failed to convert .p12 to PEM: %v", err), "pkcs12-to-pem")
@@ -563,7 +551,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "pkcs12-to-pem")
+				return MakeArgError(ps, 1, []env.Type{env.BytesType}, "pkcs12-to-pem")
 			}
 		},
 	},
@@ -621,14 +609,10 @@ var Builtins_crypto = map[string]*env.Builtin{
 		Doc:   "Decodes a PKCS#12 (.p12) file bytes into private key and certificates using the provided password. Returns a block with [private-key, certificates, ca-certificates].",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch p12Data := arg0.(type) {
-			case env.Native:
-				if ps.Idx.GetWord(p12Data.GetKind()) != "bytes" {
-					ps.FailureFlag = true
-					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "pkcs12-decode")
-				}
+			case env.Bytes:
 				switch password := arg1.(type) {
 				case env.String:
-					key, cert, caCerts, err := sslmate.DecodeChain(p12Data.Value.([]byte), password.Value)
+					key, cert, caCerts, err := sslmate.DecodeChain(p12Data.Value, password.Value)
 					if err != nil {
 						ps.FailureFlag = true
 						return MakeBuiltinError(ps, fmt.Sprintf("Failed to decode .p12: %v", err), "pkcs12-decode")
@@ -667,7 +651,7 @@ var Builtins_crypto = map[string]*env.Builtin{
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "pkcs12-decode")
+				return MakeArgError(ps, 1, []env.Type{env.BytesType}, "pkcs12-decode")
 			}
 		},
 	},
