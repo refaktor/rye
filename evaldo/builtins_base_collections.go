@@ -959,17 +959,18 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { first "abcde" } "a"
 	// equal { first list { 1 2 3 } } 1
 	// equal { first { { "nested" } 2 3 } } { "nested" }
+	// equal { table { 'a } { 42 } |format\xlsx |first |greater 0 } true  ; first byte should be positive integer
 	// ; equal { first table { 'a 'b } { 1 2 } { 3 4 } } table-row { 'a 1 'b 2 }
 	// equal { first vector { 1.0 2.0 3.0 } } 1.0
 	// equal { first matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |type? } 'vector
 	// equal { first matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |first } 1.0
 	// Args:
-	// * collection: Block, list, string, table, vector or matrix to get the first item from
+	// * collection: Block, list, string, table, vector, matrix or bytes to get the first item from
 	// Returns:
 	// * the first item in the collection (for matrix: first row as vector)
 	"first": { // **
 		Argsn: 1,
-		Doc:   "Retrieves the first item from a collection (block, list, string, table, vector, or matrix).",
+		Doc:   "Retrieves the first item from a collection (block, list, string, table, vector, matrix, or bytes).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -1012,8 +1013,13 @@ var builtins_collection = map[string]*env.Builtin{
 					rowData[j] = s1.Get(0, j)
 				}
 				return *env.NewVector(rowData)
+			case env.Bytes:
+				if len(s1.Value) == 0 {
+					return MakeBuiltinError(ps, "Bytes is empty.", "first")
+				}
+				return *env.NewInteger(int64(s1.Value[0]))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.TableType, env.BlockType, env.StringType, env.ListType, env.VectorType, env.MatrixType}, "first")
+				return MakeArgError(ps, 1, []env.Type{env.TableType, env.BlockType, env.StringType, env.ListType, env.VectorType, env.MatrixType, env.BytesType}, "first")
 			}
 		},
 	},
@@ -1256,13 +1262,14 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { second list { 10 20 30 } } 20
 	// equal { second vector { 1.0 2.0 3.0 } } 2.0
 	// equal { second matrix { 3 2 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |first } 3.0
+	// equal { table { 'a } { 1 } |format\xlsx |second |type? } 'integer
 	// Args:
 	// * collection: Block, list, string, vector or matrix to get the second item from
 	// Returns:
 	// * the second item in the collection (for matrix: second row as vector)
 	"second": { // **
 		Argsn: 1,
-		Doc:   "Retrieves the second item from a collection (block, list, string, vector, or matrix).",
+		Doc:   "Retrieves the second item from a collection (block, list, string, vector, matrix, or bytes).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -1295,8 +1302,13 @@ var builtins_collection = map[string]*env.Builtin{
 					rowData[j] = s1.Get(1, j)
 				}
 				return *env.NewVector(rowData)
+			case env.Bytes:
+				if len(s1.Value) < 2 {
+					return MakeBuiltinError(ps, "Bytes has no second element.", "second")
+				}
+				return *env.NewInteger(int64(s1.Value[1]))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType, env.VectorType, env.MatrixType}, "second")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType, env.VectorType, env.MatrixType, env.BytesType}, "second")
 			}
 		},
 	},
@@ -1307,13 +1319,14 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { third list { 10 20 30 40 } } 30
 	// equal { third vector { 1.0 2.0 3.0 4.0 } } 3.0
 	// equal { third matrix { 4 2 } { 1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 } |first } 5.0
+	// equal { table { 'a } { 1 } |format\xlsx |third |type? } 'integer
 	// Args:
 	// * collection: Block, list, string, vector or matrix to get the third item from
 	// Returns:
 	// * the third item in the collection (for matrix: third row as vector)
 	"third": {
 		Argsn: 1,
-		Doc:   "Retrieves the third item from a collection (block, list, string, vector, or matrix).",
+		Doc:   "Retrieves the third item from a collection (block, list, string, vector, matrix, or bytes).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -1346,8 +1359,13 @@ var builtins_collection = map[string]*env.Builtin{
 					rowData[j] = s1.Get(2, j)
 				}
 				return *env.NewVector(rowData)
+			case env.Bytes:
+				if len(s1.Value) < 3 {
+					return MakeBuiltinError(ps, "Bytes has no third element.", "third")
+				}
+				return *env.NewInteger(int64(s1.Value[2]))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType, env.VectorType, env.MatrixType}, "third")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType, env.VectorType, env.MatrixType, env.BytesType}, "third")
 			}
 		},
 	},
@@ -1359,13 +1377,14 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { try { last { } } |type? } 'error
 	// equal { last vector { 1.0 2.0 3.0 } } 3.0
 	// equal { last matrix { 2 3 } { 1.0 2.0 3.0 4.0 5.0 6.0 } |first } 4.0
+	// equal { table { 'a } { 42 } |format\xlsx |last |greater -1 } true  ; last byte should be >= 0
 	// Args:
-	// * collection: Block, list, string, vector or matrix to get the last item from
+	// * collection: Block, list, string, vector, matrix or bytes to get the last item from
 	// Returns:
 	// * the last item in the collection (for matrix: last row as vector)
 	"last": { // **
 		Argsn: 1,
-		Doc:   "Retrieves the last item from a collection (block, list, string, vector, or matrix).",
+		Doc:   "Retrieves the last item from a collection (block, list, string, vector, matrix, or bytes).",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch s1 := arg0.(type) {
 			case env.Block:
@@ -1397,8 +1416,13 @@ var builtins_collection = map[string]*env.Builtin{
 					rowData[j] = s1.Get(s1.Rows-1, j)
 				}
 				return *env.NewVector(rowData)
+			case env.Bytes:
+				if len(s1.Value) == 0 {
+					return MakeBuiltinError(ps, "Bytes is empty.", "last")
+				}
+				return *env.NewInteger(int64(s1.Value[len(s1.Value)-1]))
 			default:
-				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType, env.VectorType, env.MatrixType}, "last")
+				return MakeArgError(ps, 1, []env.Type{env.BlockType, env.ListType, env.StringType, env.VectorType, env.MatrixType, env.BytesType}, "last")
 			}
 		},
 	},
@@ -1587,9 +1611,10 @@ var builtins_collection = map[string]*env.Builtin{
 	// ; equal { nth "abcde" 3 } "c"
 	// equal { nth list { 10 20 30 40 } 2 } 20
 	// error { nth list { 10 20 30 40 } 0 }
+	// equal { table { 'a } { 1 } |format\xlsx |nth 1 |type? } 'integer
 	// ; equal { nth table { 'a 'b } { 1 2 } { 3 4 } 2 } table-row { 'a 3 'b 4 }
 	// Args:
-	// * collection: Block, list, string or table to get an item from
+	// * collection: Block, list, string, table, vector, matrix or bytes to get an item from
 	// * n: Position of the item to retrieve (1-based)
 	// Returns:
 	// * the item at position n in the collection
@@ -2494,8 +2519,9 @@ var builtins_collection = map[string]*env.Builtin{
 	// equal { vector { 10 20 30 } |length? } 3
 	// equal { dict { "a" 1 "b" 2 } |length? } 2
 	// equal { list { 1 2 3 4 5 } |length? } 5
+	// equal { table { 'a } { 1 } |format\xlsx |length? |greater 100 } true  ; xlsx bytes should have decent length
 	// Args:
-	// * collection: String, block, dict, list, table, context or vector to measure
+	// * collection: String, block, dict, list, table, context, vector or bytes to measure
 	// Returns:
 	// * integer count of elements in the collection
 	"length?": { // **
@@ -2521,9 +2547,11 @@ var builtins_collection = map[string]*env.Builtin{
 				return *env.NewInteger(int64(s1.GetWords(*ps.Idx).Series.Len()))
 			case env.Vector:
 				return *env.NewInteger(int64(s1.Value.Len()))
+			case env.Bytes:
+				return *env.NewInteger(int64(len(s1.Value)))
 			default:
 				// fmt.Println(s1)
-				return MakeArgError(ps, 2, []env.Type{env.StringType, env.DictType, env.ListType, env.BlockType, env.TableType, env.PersistentTableType, env.VectorType}, "length?")
+				return MakeArgError(ps, 2, []env.Type{env.StringType, env.DictType, env.ListType, env.BlockType, env.TableType, env.PersistentTableType, env.VectorType, env.BytesType}, "length?")
 			}
 		},
 	},

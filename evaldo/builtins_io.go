@@ -815,7 +815,7 @@ var Builtins_io = map[string]*env.Builtin{
 				if err != nil {
 					return MakeBuiltinError(ps, err.Error(), "__fs_read_bytes")
 				}
-				return *env.NewNative(ps.Idx, data, "bytes")
+				return *env.NewBytes(data)
 			default:
 				return MakeArgError(ps, 1, []env.Type{env.UriType}, "__fs_read_bytes")
 			} // return __fs_read_bytes(ps, arg0, arg1, arg2, arg3, arg4)
@@ -946,26 +946,18 @@ var Builtins_io = map[string]*env.Builtin{
 		Doc:   "Appends two byte arrays into one.",
 		Fn: func(ps *env.ProgramState, arg0 env.Object, arg1 env.Object, arg2 env.Object, arg3 env.Object, arg4 env.Object) env.Object {
 			switch bytes1 := arg0.(type) {
-			case env.Native:
-				if ps.Idx.GetWord(bytes1.GetKind()) != "bytes" {
-					ps.FailureFlag = true
-					return MakeArgError(ps, 1, []env.Type{env.NativeType}, "append-bytes")
-				}
+			case env.Bytes:
 				switch bytes2 := arg1.(type) {
-				case env.Native:
-					if ps.Idx.GetWord(bytes2.GetKind()) != "bytes" {
-						ps.FailureFlag = true
-						return MakeArgError(ps, 2, []env.Type{env.NativeType}, "append-bytes")
-					}
-					combined := append(bytes1.Value.([]byte), bytes2.Value.([]byte)...)
-					return *env.NewNative(ps.Idx, combined, "bytes")
+				case env.Bytes:
+					combined := append(bytes1.Value, bytes2.Value...)
+					return *env.NewBytes(combined)
 				default:
 					ps.FailureFlag = true
-					return MakeArgError(ps, 2, []env.Type{env.NativeType}, "append-bytes")
+					return MakeArgError(ps, 2, []env.Type{env.BytesType}, "append-bytes")
 				}
 			default:
 				ps.FailureFlag = true
-				return MakeArgError(ps, 1, []env.Type{env.NativeType}, "append-bytes")
+				return MakeArgError(ps, 1, []env.Type{env.BytesType}, "append-bytes")
 			}
 		},
 	},

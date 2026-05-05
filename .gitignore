@@ -77,3 +77,4 @@ security/policy_embedded_gen.go
 step_*.md*
 stepi_*md*
 stepi_*csv*
+step*-*.md

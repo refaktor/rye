@@ -225,7 +225,7 @@ var Builtins_bson = map[string]*env.Builtin{
 			if err != nil {
 				return MakeBuiltinError(ps, err.Error(), "to-bson")
 			}
-			return *env.NewNative(ps.Idx, encoded, "bytes")
+			return *env.NewBytes(encoded)
 		},
 	},
 }
